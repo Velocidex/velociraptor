@@ -60,16 +60,13 @@ func (self SigmaPlugin) Call(
 				continue
 			}
 
-			if arg.RuleFilter != nil &&
-				!scope.Bool(arg.RuleFilter.Reduce(ctx, scope, []vfilter.Any{rule})) {
+			// A rule must have a title
+			if rule.Title == "" {
 				continue
 			}
 
-			// Check rule for sanity
-			err = CheckRule(&rule)
-			if err != nil {
-				scope.Log("sigma: Error parsing: %v in rule '%v'",
-					err, utils.Elide(r, 20))
+			if arg.RuleFilter != nil &&
+				!scope.Bool(arg.RuleFilter.Reduce(ctx, scope, []vfilter.Any{rule})) {
 				continue
 			}
 
@@ -96,6 +93,7 @@ func (self SigmaPlugin) Call(
 		for row := range sigma_context.Rows(ctx, scope) {
 			output_chan <- row
 		}
+		scope.Log("INFO:sigma: Completed with %v hits", sigma_context.GetHitCount())
 	}()
 
 	return output_chan

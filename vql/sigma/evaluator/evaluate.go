@@ -20,6 +20,11 @@ type VQLRuleEvaluator struct {
 	sigma.Rule
 	scope types.Scope
 
+	// If the rule specifies a VQL transformer we use that to
+	// transform the event.
+	lambda      *vfilter.Lambda
+	lambda_args *ordereddict.Dict
+
 	fieldmappings []FieldMappingRecord
 }
 
@@ -47,6 +52,27 @@ func (self *VQLRuleEvaluator) evaluateAggregationExpression(
 	return false, nil
 }
 
+func (self *VQLRuleEvaluator) MaybeEnrichWithVQL(
+	ctx context.Context, scope types.Scope, event *Event) *Event {
+	if self.lambda != nil {
+		new_event := NewEvent(event.Copy())
+		subscope := scope.Copy().AppendVars(self.lambda_args)
+		defer subscope.Close()
+
+		row := self.lambda.Reduce(ctx, subscope, []vfilter.Any{event})
+
+		// Merge the row into the event. This allows the VQL lambda to
+		// set any field.
+		for _, k := range scope.GetMembers(row) {
+			v, _ := scope.Associative(row, k)
+			new_event.Set(k, v)
+		}
+		return new_event
+	}
+
+	return event
+}
+
 func (self *VQLRuleEvaluator) Match(ctx context.Context,
 	scope types.Scope, event *Event) (Result, error) {
 	subscope := scope.Copy().AppendVars(
@@ -70,7 +96,6 @@ func (self *VQLRuleEvaluator) Match(ctx context.Context,
 		if err != nil {
 			return Result{}, fmt.Errorf("error evaluating search %s: %w", identifier, err)
 		}
-
 		result.SearchResults[identifier] = eval_result
 	}
 
