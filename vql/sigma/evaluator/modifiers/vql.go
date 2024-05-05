@@ -72,6 +72,7 @@ func (self vql) Matches(
 		}
 		lambda_cache.Set(expected_str, lambda)
 	}
+
 	return scope.Bool(
 		lambda.Reduce(ctx, scope, []types.Any{actual})), nil
 }

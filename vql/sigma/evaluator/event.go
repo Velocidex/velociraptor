@@ -25,8 +25,13 @@ import (
 // lambda for each rule and instead call it once for the first rule to
 // use this field.
 type Event struct {
+	// This is the original event from the log source.
 	*ordereddict.Dict
 
+	// This caches the sigma fields which are reduced by the sigma
+	// field mapping lambdas. The same event is passed through the
+	// entire rule chain so this caching avoids calculating the sigma
+	// fields multiple times.
 	mu         sync.Mutex
 	cache      map[string]types.Any
 	cache_json string

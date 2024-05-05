@@ -30,7 +30,8 @@ func (self *workerJob) Run() {
 	defer self.wg.Done()
 
 	for _, rule := range self.rules {
-		match, err := rule.Match(self.ctx, self.scope, self.event)
+		event := rule.MaybeEnrichWithVQL(self.ctx, self.scope, self.event)
+		match, err := rule.Match(self.ctx, self.scope, event)
 		if err != nil {
 			functions.DeduplicatedLog(self.ctx, self.scope,
 				"While evaluating rule %v: %v", rule.Title, err)
@@ -44,16 +45,17 @@ func (self *workerJob) Run() {
 		// Make a copy here because another thread might match at the same
 		// time.
 		event_copy := self.sigma_context.AddDetail(
-			self.ctx, self.scope, self.event, rule)
+			self.ctx, self.scope, event, rule)
 		event_copy.Set("_Match", match).
 			Set("_Rule", rule)
+
+		self.sigma_context.IncHitCount()
 
 		select {
 		case <-self.ctx.Done():
 			return
 
 		case self.output_chan <- event_copy:
-			self.sigma_context.IncHitCount()
 		}
 	}
 }
