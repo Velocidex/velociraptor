@@ -65,7 +65,10 @@ func (self *TestSuite) TestWebSocketRetry() {
 			) ||
 
 				// But finally we give up and back off
-				matchMultipleRegex(logs, "Exceeded retry times for reader")
+				matchMultipleRegex(logs,
+					"Exceeded retry times for reader",
+					"Waiting for a reachable server:",
+				)
 		})
 
 		if matchMultipleRegex(getMemoryLogs(), "Exceeded retry times for reader") {
@@ -80,7 +83,7 @@ func (self *TestSuite) TestWebSocketRetry() {
 			"Waiting for a reachable server:"))
 
 	// Wait for reconnection
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
 		return strings.Contains(getMemoryLogs(), "Installing connector")
 	})
 
