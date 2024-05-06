@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package http_comms
 
@@ -37,6 +37,8 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	crypto_test "www.velocidex.com/golang/velociraptor/crypto/testing"
 	"www.velocidex.com/golang/velociraptor/executor"
+	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
@@ -137,6 +139,8 @@ type CommsTestSuite struct {
 	config_obj           *config_proto.Config
 
 	empty_response []byte
+
+	writeback_path string
 }
 
 func (self *CommsTestSuite) SetupTest() {
@@ -164,11 +168,22 @@ func (self *CommsTestSuite) SetupTest() {
 	mu.Lock()
 	Rand = func(int) int { return 0 }
 	mu.Unlock()
+
+	// Initialize the writeback
+	self.writeback_path = getTempFile(self.T())
+	self.config_obj.Client.WritebackLinux = self.writeback_path
+	self.config_obj.Client.WritebackWindows = self.writeback_path
+	self.config_obj.Client.WritebackDarwin = self.writeback_path
+
+	writeback_service := writeback.GetWritebackService()
+	writeback_service.LoadWriteback(self.config_obj)
 }
 
 func (self *CommsTestSuite) TearDownTest() {
 	self.frontend1.Close()
 	self.frontend2.Close()
+
+	os.Remove(self.writeback_path)
 }
 
 // Check that unexpected closing of the executor calls the abort
@@ -254,6 +269,8 @@ func (self *CommsTestSuite) TestEnrollment() {
 	communicator.receiver.sendMessageList(
 		context.Background(), nil, !URGENT,
 		crypto_proto.PackedMessageList_ZCOMPRESSION)
+
+	json.Dump(self.frontend1.events)
 
 	checkResponses(self.T(), self.frontend1.events, []string{
 		// First request looks for server.pem but fails on frontend1
