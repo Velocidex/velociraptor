@@ -79,8 +79,6 @@ func (self *TestSuite) TestWebSocketRetry() {
 			"Exceeded retry times for reader",
 			"Waiting for a reachable server:"))
 
-	logging.ClearMemoryLogs()
-
 	// Wait for reconnection
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		return strings.Contains(getMemoryLogs(), "Installing connector")
@@ -91,7 +89,7 @@ func (self *TestSuite) TestWebSocketRetry() {
 	server_cancel()
 	ws_connections_factory.Shutdown()
 
-	// The client will try connecting 3 times and then give up
+	// The client will try connecting 3 times and then give up and back off
 	vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
 		logs := getMemoryLogs()
 		return matchMultipleRegex(logs,
