@@ -1180,6 +1180,10 @@ message Defaults {
 
     // Period in seconds when to produce a backup
     int64 backup_period_seconds = 47;
+
+    // How often to run the client info's house keeping thread in
+    // seconds (default 60 sec)
+    int64 client_info_housekeeping_period = 48;
 }
 
 // Configures crypto preferences
