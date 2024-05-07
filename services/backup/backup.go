@@ -295,9 +295,9 @@ func NewBackupService(
 					continue
 				}
 
-				export_path := paths.NewBackupPathManager().
-					BackupFile()
+				export_path := paths.NewBackupPathManager().BackupFile()
 				result.CreateBackup(export_path)
+				last_run = utils.GetTime().Now()
 			}
 		}
 	}()

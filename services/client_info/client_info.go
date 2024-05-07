@@ -481,6 +481,8 @@ func NewClientInfoManager(
 		})
 	}
 
+	service.storage.StartHouseKeep(ctx, config_obj)
+
 	return service, nil
 }
 

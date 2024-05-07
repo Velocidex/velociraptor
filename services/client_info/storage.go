@@ -46,6 +46,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -59,6 +60,87 @@ type Store struct {
 	uuid int64
 
 	dirty bool
+}
+
+// Runs periodically for housekeeping.
+func (self *Store) StartHouseKeep(
+	ctx context.Context, config_obj *config_proto.Config) {
+
+	delay := 60 * time.Second
+	if config_obj.Defaults != nil {
+		if config_obj.Defaults.ClientInfoHousekeepingPeriod < 0 {
+			return
+		}
+
+		if config_obj.Defaults.ClientInfoHousekeepingPeriod > 0 {
+			delay = time.Duration(
+				config_obj.Defaults.ClientInfoHousekeepingPeriod) * time.Second
+		}
+	}
+
+	go func() {
+		last_run := utils.GetTime().Now()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case <-utils.GetTime().After(delay):
+				if utils.GetTime().Now().Sub(last_run) < time.Second {
+					utils.SleepWithCtx(ctx, time.Minute)
+					continue
+				}
+
+				self.houseKeep(ctx, config_obj)
+				last_run = utils.GetTime().Now()
+			}
+
+		}
+	}()
+}
+
+// This function ensures that any outstanding notifications are sent
+// to clients in case any were lost when the collections were
+// initially scheduled.
+func (self *Store) houseKeep(
+	ctx context.Context, config_obj *config_proto.Config) {
+
+	start := utils.GetTime().Now()
+
+	defer func() {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Debug(
+			"<green>ClientInfoManager</> Scaned for outstanding tasks in %v in %v",
+			services.GetOrgName(config_obj), utils.GetTime().Now().Sub(start))
+	}()
+
+	notifier, err := services.GetNotifier(config_obj)
+	if err != nil {
+		return
+	}
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return
+	}
+
+	for _, client_id := range self.Keys() {
+		if !notifier.IsClientDirectlyConnected(client_id) {
+			continue
+		}
+
+		client_path_manager := paths.NewClientPathManager(client_id)
+		tasks, err := db.ListChildren(
+			config_obj, client_path_manager.TasksDirectory())
+		if err != nil {
+			continue
+		}
+
+		if len(tasks) > 0 {
+			notifier.NotifyDirectListener(client_id)
+		}
+	}
 }
 
 func (self *Store) Keys() []string {
