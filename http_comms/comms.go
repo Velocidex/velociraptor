@@ -62,6 +62,8 @@ var (
 	Rand func(int) int = rand.Intn
 
 	proxyHandler = http.ProxyFromEnvironment
+
+	MaxRetryCount = 2
 )
 
 // Responsible for maybe enrolling the client. Enrollments should not
@@ -234,10 +236,9 @@ func (self *HTTPConnector) GetCurrentUrl(handler string) string {
 	return self.urls[self.current_url_idx] + handler
 }
 
-func (self *HTTPConnector) Post(
+func (self *HTTPConnector) prepareRequest(
 	ctx context.Context, name, handler string,
-	data []byte, urgent bool) (*bytes.Buffer, error) {
-
+	data []byte, urgent bool) (*http.Request, error) {
 	reader := bytes.NewReader(data)
 	req, err := http.NewRequestWithContext(ctx,
 		"POST", self.GetCurrentUrl(handler), reader)
@@ -266,8 +267,84 @@ func (self *HTTPConnector) Post(
 		req.Header.Set("X-Priority", "urgent")
 	}
 
+	return req, nil
+}
+
+// Implement retry behavior so we can retry some errors
+// immediately. This avoids having to backoff for temporary errors.
+func (self *HTTPConnector) retryPost(
+	ctx context.Context, name, handler string,
+	data []byte, urgent bool) (resp *http.Response, err error) {
+
+	logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
+	count := 0
+
+	for {
+		req, err := self.prepareRequest(ctx, name, handler, data, urgent)
+		if err != nil {
+			return nil, err
+		}
+
+		resp, err = self.client.Do(req)
+		// Represents a retryable error in websockets.
+		if resp != nil {
+			switch resp.StatusCode {
+
+			// 408 is infinitely retryable as it indicates the server
+			// closed the connection.
+			case http.StatusRequestTimeout:
+				logger.Debug("%v: Retrying connection to %v: Status %v",
+					name, handler, resp.StatusCode)
+				continue
+
+				// 503 is retryable a couple times.
+			case http.StatusServiceUnavailable:
+				logger.Debug("%v: Retrying connection to %v: Status %v, %v",
+					name, handler, resp.StatusCode, resp.Status)
+
+				count++
+				continue
+			}
+		}
+
+		// Try to connect a couple times before giving up.
+		if err == notConnectedError {
+			logger.Debug("%v: Retrying connection to %v: %v",
+				name, handler, notConnectedError)
+			count++
+			continue
+		}
+
+		// No errors - we are good!
+		if resp != nil && err == nil {
+			return resp, err
+		}
+
+		if count > MaxRetryCount {
+			logger.Debug("%v: Exceeded retry times for %v",
+				name, handler)
+			break
+		}
+
+		logger.Debug("%v: Retrying connection to %v for %v time",
+			name, handler, count)
+		count++
+	}
+
+	// Should not happen unless we messed up the logic above.
+	if resp == nil && err == nil {
+		err = notConnectedError
+	}
+
+	return resp, err
+}
+
+func (self *HTTPConnector) Post(
+	ctx context.Context, name, handler string,
+	data []byte, urgent bool) (*bytes.Buffer, error) {
+
 	now := utils.GetTime().Now()
-	resp, err := self.client.Do(req)
+	resp, err := self.retryPost(ctx, name, handler, data, urgent)
 	if resp != nil {
 		defer resp.Body.Close()
 	}
@@ -493,6 +570,14 @@ func (self *HTTPConnector) rekeyNextServer(ctx context.Context) error {
 	// Try to get the server.pem over plain https
 	if strings.HasPrefix(url, "wss://") {
 		url = strings.Replace(url, "wss://", "https://", 1)
+		err := self.rekeyWithURL(ctx, url)
+		if err == nil {
+			return nil
+		}
+	}
+
+	if strings.HasPrefix(url, "ws://") {
+		url = strings.Replace(url, "ws://", "http://", 1)
 		err := self.rekeyWithURL(ctx, url)
 		if err == nil {
 			return nil
