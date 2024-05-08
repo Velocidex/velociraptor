@@ -1,3 +1,4 @@
+//go:build darwin
 // +build darwin
 
 /*
@@ -82,7 +83,7 @@ func doInstall() error {
 
 	service_name := config_obj.Client.DarwinInstaller.ServiceName
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-	target_path := os.ExpandEnv(config_obj.Client.DarwinInstaller.InstallPath)
+	target_path := utils.ExpandEnv(config_obj.Client.DarwinInstaller.InstallPath)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

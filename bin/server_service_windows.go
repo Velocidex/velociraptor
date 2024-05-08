@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -76,7 +77,7 @@ func doInstallServerService(config_obj *config_proto.Config) (err error) {
 	service_name := config_obj.Client.WindowsInstaller.ServiceName
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
-	target_path := os.ExpandEnv(config_obj.Client.WindowsInstaller.InstallPath)
+	target_path := utils.ExpandEnv(config_obj.Client.WindowsInstaller.InstallPath)
 
 	executable, err := os.Executable()
 	kingpin.FatalIfError(err, "unable to determine executable path")
@@ -356,6 +357,14 @@ func doRunServerService() error {
 	if err == nil {
 		name = config_obj.Client.WindowsInstaller.ServiceName
 	}
+
+	if config_obj != nil {
+		maybeWritePanicFile(name, config_obj)
+		if config_obj.Client != nil {
+			config_obj.Client.PanicFile = ""
+		}
+	}
+
 	service, err := NewVelociraptorServerService(name)
 	if err != nil {
 		return err
@@ -395,12 +404,6 @@ func (self *VelociraptorServerService) Execute(args []string,
 	// Start running and tell the SCM about it.
 	changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
 
-	elog, err := getLogger(self.name)
-	if err != nil {
-		return
-	}
-	defer elog.Close()
-
 loop:
 	for {
 		select {
@@ -416,7 +419,7 @@ loop:
 					Accepts: cmdsAccepted,
 				}
 				self.SetPause(true)
-				elog.Info(1, "Service Paused")
+				tryToLog(self.name, "Service Paused")
 
 			case svc.Continue:
 				changes <- svc.Status{
@@ -424,45 +427,36 @@ loop:
 					Accepts: cmdsAccepted,
 				}
 				self.SetPause(false)
-				elog.Info(1, "Service Resumed")
+				tryToLog(self.name, "Service Resumed")
 
 			default:
-				elog.Error(1, fmt.Sprintf(
+				tryToLog(self.name, fmt.Sprintf(
 					"unexpected control request #%d", c))
 			}
 		}
 	}
 
 	changes <- svc.Status{State: svc.StopPending}
-	elog.Info(1, "Service Shutting Down")
+	tryToLog(self.name, "Service Shutting Down")
 	return
 }
 
 func (self *VelociraptorServerService) Close() {
-	elog, err := getLogger(self.name)
-	if err == nil {
-		elog.Info(1, fmt.Sprintf("%s service stopped", self.name))
-		elog.Close()
-	}
+	tryToLog(self.name, fmt.Sprintf("%s service stopped", self.name))
 }
 
 func NewVelociraptorServerService(name string) (
 	*VelociraptorServerService, error) {
 	result := &VelociraptorServerService{name: name}
 
-	elog, err := getLogger(name)
-	if err != nil {
-		return nil, err
-	}
-
 	go func() {
 		for {
-			elog.Info(1, "Loading service\n")
+			tryToLog(name, "Loading service\n")
 			// Spin forever waiting for a config file to be
 			// dropped into place.
 			config_obj, err := loadServerConfig()
 			if err != nil {
-				elog.Info(1, fmt.Sprintf(
+				tryToLog(name, fmt.Sprintf(
 					"Unable to load config: %v", err))
 				time.Sleep(10 * time.Second)
 				continue
@@ -478,12 +472,12 @@ func NewVelociraptorServerService(name string) (
 			// Now start the frontend services
 			sm, err := startup.StartFrontendServices(ctx, config_obj)
 			if err != nil {
-				elog.Info(1, fmt.Sprintf("starting frontend: %v", err))
+				tryToLog(name, fmt.Sprintf("starting frontend: %v", err))
 				return
 			}
 			defer sm.Close()
 
-			elog.Info(1, fmt.Sprintf("%s service started", name))
+			tryToLog(name, fmt.Sprintf("%s service started", name))
 			// Wait here until everything is done.
 			sm.Wg.Wait()
 
@@ -523,11 +517,7 @@ func init() {
 			name := "velociraptor"
 			err = doRunServerService()
 			if err != nil {
-				elog, err := getLogger(name)
-				kingpin.FatalIfError(err, "Unable to get logger")
-				defer elog.Close()
-
-				elog.Info(1, fmt.Sprintf(
+				tryToLog(name, fmt.Sprintf(
 					"Failed to start service: %v", err))
 			}
 

@@ -2,19 +2,14 @@ package functions
 
 import (
 	"context"
-	"os"
-	"regexp"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
-)
-
-var (
-	expand_regex = regexp.MustCompile("%([a-zA-Z_0-9]+)%")
 )
 
 type ExpandPathArgs struct {
@@ -42,20 +37,7 @@ func (self ExpandPath) Call(
 	}
 
 	// Support windows style expansion on all platforms.
-	return expand_env(arg.Path)
-}
-
-func expand_env(v string) string {
-	return os.Expand(expand_regex.ReplaceAllString(v, "$${$1}"), getenv)
-}
-
-func getenv(v string) string {
-	// Allow $ to be escaped (#850) by doubling up $
-	switch v {
-	case "$":
-		return "$"
-	}
-	return os.Getenv(v)
+	return utils.ExpandEnv(arg.Path)
 }
 
 func (self ExpandPath) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
