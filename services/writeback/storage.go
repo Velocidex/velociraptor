@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"regexp"
 	"runtime"
 
@@ -154,5 +153,5 @@ var (
 
 func expandOrgId(path, nonce string) string {
 	path = org_id_regex.ReplaceAllString(path, utils.SanitizeString(nonce))
-	return os.ExpandEnv(path)
+	return utils.ExpandEnv(path)
 }

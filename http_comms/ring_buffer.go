@@ -674,11 +674,11 @@ func NewRingBuffer(config_obj *config_proto.Config,
 func getLocalBufferName(config_obj *config_proto.Config) string {
 	switch runtime.GOOS {
 	case "windows":
-		return os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameWindows)
+		return utils.ExpandEnv(config_obj.Client.LocalBuffer.FilenameWindows)
 	case "linux":
-		return os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameLinux)
+		return utils.ExpandEnv(config_obj.Client.LocalBuffer.FilenameLinux)
 	case "darwin":
-		return os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameDarwin)
+		return utils.ExpandEnv(config_obj.Client.LocalBuffer.FilenameDarwin)
 	default:
 		return ""
 	}
