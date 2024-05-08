@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package logging
 
@@ -91,10 +91,17 @@ func InitLogging(config_obj *config_proto.Config) error {
 		contexts: make(map[*string]*LogContext),
 	}
 
-	for _, component := range []*string{
+	components := []*string{
 		&GenericComponent, &FrontendComponent, &ClientComponent,
-		&GUIComponent, &ToolComponent, &APICmponent, &Audit} {
+		&GUIComponent, &ToolComponent, &APICmponent, &Audit}
 
+	// User asked for all components to go in the same log.
+	if config_obj.Logging != nil &&
+		!config_obj.Logging.SeparateLogsPerComponent {
+		components = []*string{&GenericComponent}
+	}
+
+	for _, component := range components {
 		logger, err := Manager.makeNewComponent(config_obj, component)
 		if err != nil {
 			mu.Unlock()
@@ -363,8 +370,8 @@ func (self *LogManager) makeNewComponent(
 		config_obj.Logging != nil &&
 		config_obj.Logging.OutputDirectory != "" {
 
-		base_directory := filepath.Join(
-			config_obj.Logging.OutputDirectory, node_name)
+		output_directory := utils.ExpandEnv(config_obj.Logging.OutputDirectory)
+		base_directory := filepath.Join(output_directory, node_name)
 		err := os.MkdirAll(base_directory, 0700)
 		if err != nil {
 			return nil, errors.New("Unable to create logging directory.")

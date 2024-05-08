@@ -31,6 +31,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/proxy"
 
 	// Import all vql plugins.
@@ -143,7 +144,7 @@ func main() {
 		if err == nil && config_obj.Autoexec != nil && config_obj.Autoexec.Argv != nil {
 			args = nil
 			for _, arg := range config_obj.Autoexec.Argv {
-				args = append(args, os.ExpandEnv(arg))
+				args = append(args, utils.ExpandEnv(arg))
 			}
 			args = append(args, post...)
 			logging.Prelog("Autoexec with parameters: %v", args)

@@ -341,6 +341,15 @@ Client:
     filename_windows: $TEMP/Velociraptor_Buffer.bin
     filename_darwin: /var/tmp/Velociraptor_Buffer.bin
 
+  # This is path which will accept the windows service panic
+  # messages. On windows, the client usually runs in a service. If a
+  # crash occurs the traceback of the error is printed to Stderr but a
+  # Windows service ignores these messages making it very hard to
+  # debug the reason for the crash. This setting can specify the path
+  # to a local file which will be used to collect such panic messages
+  # from the running service.
+  panic: $TEMP/panic.log
+
 ## This section configures the API service. The API server accepts
 ## connections from the GUI gRPC gateway, as well as connections from
 ## the gRPC API clients (e.g. with pyvelociraptor).
@@ -1276,6 +1285,12 @@ defaults:
   # default this happens daily but you can change it here (set to -1)
   # to disable backups.
   backup_period_seconds: 86400
+
+  # The server's client info manager runs housekeeping tasks
+  # periodically to determine if clients need to be notified. This
+  # setting controls how often to run the client info's house keeping
+  # thread in seconds (default 60 sec)
+  client_info_housekeeping_period: 60
 
 # The Velociraptor server may be placed into "lockdown" mode. While in
 # lockdown mode certain permissions are denied - even for
