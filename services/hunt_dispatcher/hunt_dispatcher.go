@@ -61,7 +61,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -192,37 +191,8 @@ func (self *HuntDispatcher) ProcessUpdate(
 // modify the hunts since it is getting a copy of the hunt object.
 func (self *HuntDispatcher) ApplyFuncOnHunts(
 	ctx context.Context, options services.HuntSearchOptions,
-	cb func(hunt *api_proto.Hunt) error) (res_error error) {
-
-	// Page through the hunts table and apply the function on each
-	// page.
-	var offset, length int64
-	length = 1000
-	rs_options := result_sets.ResultSetOptions{}
-	for {
-		hunts, total, err := self.Store.ListHunts(ctx, rs_options, offset, length)
-		if err != nil {
-			return err
-		}
-
-		for _, hunt := range hunts {
-			if options == services.OnlyRunningHunts &&
-				hunt.State != api_proto.Hunt_RUNNING {
-				continue
-			}
-
-			err := cb(hunt)
-			if err != nil {
-				res_error = err
-			}
-		}
-
-		offset += int64(len(hunts))
-		if offset >= total {
-			break
-		}
-	}
-	return res_error
+	cb func(hunt *api_proto.Hunt) error) error {
+	return self.Store.ApplyFuncOnHunts(ctx, options, cb)
 }
 
 func (self *HuntDispatcher) GetHunt(
