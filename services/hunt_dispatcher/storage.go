@@ -40,10 +40,15 @@ type HuntIndexEntry struct {
 }
 
 type HuntStorageManager interface {
+	// NOTE: This function is very slow! It should only be used by the GUI!
 	ListHunts(
 		ctx context.Context,
 		options result_sets.ResultSetOptions,
 		offset int64, length int64) ([]*api_proto.Hunt, int64, error)
+
+	ApplyFuncOnHunts(
+		ctx context.Context, options services.HuntSearchOptions,
+		cb func(hunt *api_proto.Hunt) error) (res_error error)
 
 	// Gets a copy of the hunt object
 	GetHunt(ctx context.Context,
@@ -375,4 +380,28 @@ func (self *HuntStorageManagerImpl) Refresh(
 
 	// Create an index file.
 	return self.FlushIndex(ctx)
+}
+
+// Applies a callback on all hunts. The callback is not allowed to
+// modify the hunts.
+func (self *HuntStorageManagerImpl) ApplyFuncOnHunts(
+	ctx context.Context, options services.HuntSearchOptions,
+	cb func(hunt *api_proto.Hunt) error) (res_error error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for _, record := range self.hunts {
+		if options == services.OnlyRunningHunts &&
+			record.State != api_proto.Hunt_RUNNING {
+			continue
+		}
+
+		err := cb(record.Hunt)
+		if err != nil {
+			res_error = err
+		}
+	}
+
+	return res_error
 }
