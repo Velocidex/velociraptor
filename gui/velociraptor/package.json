@@ -58,7 +58,7 @@
         "react-split-grid": "^1.0.4",
         "react-split-pane": "^0.1.92",
         "react-step-wizard": "^5.3.11",
-        "recharts": "^2.12.5",
+        "recharts": "^2.12.6",
         "styled-components": "^5.3.11",
         "svgo": "2.8.0",
         "url-parse": "^1.5.10",
