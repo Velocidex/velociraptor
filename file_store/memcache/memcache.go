@@ -9,6 +9,7 @@ package memcache
 import (
 	"bytes"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Velocidex/ttlcache/v2"
@@ -41,8 +42,10 @@ type MemcacheFileWriter struct {
 	// Is the writer currently closed? NOTE!!! There is an implicit
 	// assumption that there is only one concurrent writer to the same
 	// result set! Writers are all cached in the same data_cache keyed
-	// by the same key and are flushed separately.
-	closed bool
+	// by the same key and are flushed separately. Writers may be
+	// closed at any time but this does not mean they get
+	// flushed. Flushing is delayed until the lru flush cycle.
+	closed int32
 	buffer bytes.Buffer
 	size   int64
 
@@ -59,6 +62,11 @@ type MemcacheFileWriter struct {
 	// to combine writes to the underlying storage, but if a file is
 	// opened, closed then opened again, we need to fire all the
 	// completions without losing any.
+
+	// NOTE: When the file is closed, this just tags the closed flag
+	// but does not lead to immediate flushing. A syncronous write
+	// must have a completion function here to wait for the ultimate
+	// flush.
 	completions []func()
 }
 
@@ -121,6 +129,18 @@ func (self *MemcacheFileWriter) Truncate() error {
 	return nil
 }
 
+// Lock free to avoid deadlocks
+func (self *MemcacheFileWriter) IsClosed() bool {
+	return atomic.LoadInt32(&self.closed) > 0
+}
+
+func (self *MemcacheFileWriter) AddCompletion(cb func()) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.completions = append(self.completions, cb)
+}
+
 // Closing the file does not trigger a flush - we just return a
 // success status and wait for the file to be written asynchronously.
 // We assume no concurrent writes to the same file but closing and
@@ -128,18 +148,18 @@ func (self *MemcacheFileWriter) Truncate() error {
 // usually give the same writer.
 func (self *MemcacheFileWriter) Close() error {
 	self.mu.Lock()
-	self.closed = true
+	atomic.StoreInt32(&self.closed, 1)
 
 	// Convert all utils.SyncCompleter calls to sync waits on return
 	// from Close(). The writer pool will release us when done.
 	wg := sync.WaitGroup{}
+	defer wg.Wait()
+
 	sync_call := false
 	for idx, c := range self.completions {
 		if utils.CompareFuncs(c, utils.SyncCompleter) {
 			wg.Add(1)
 
-			// Wait for the flusher to close us.
-			defer wg.Wait()
 			self.completions[idx] = wg.Done
 			sync_call = true
 		}
@@ -148,8 +168,9 @@ func (self *MemcacheFileWriter) Close() error {
 	// Release the lock before we wait for the flusher.
 	self.mu.Unlock()
 
-	// If any of the calls were synchronous do not wait - just write
-	// them now.
+	// If any of the calls were synchronous do not wait for the cache
+	// expiry - just write them now immediately. We will wait here for
+	// them to complete.
 	if sync_call {
 		return self.Flush()
 	}
@@ -158,7 +179,6 @@ func (self *MemcacheFileWriter) Close() error {
 }
 
 func (self *MemcacheFileWriter) Flush() error {
-
 	// While the file is flushed it blocks other writers to the same
 	// file (which will be blocked on the mutex. This ensures writes
 	// to the underlying filestore occur in order).
@@ -168,12 +188,13 @@ func (self *MemcacheFileWriter) Flush() error {
 	return self._Flush()
 }
 
+// This function has lock held
 func (self *MemcacheFileWriter) _Flush() error {
 	defer func() {
 		// Only send completions once the file is actually closed. It
 		// is possible for the file to flush many times before it is
 		// being closed but this does not count as a completion.
-		if self.closed {
+		if atomic.LoadInt32(&self.closed) > 0 {
 			for _, c := range self.completions {
 				c()
 			}
@@ -218,7 +239,7 @@ type MemcacheFileStore struct {
 	min_age time.Duration
 	max_age time.Duration
 
-	closed bool
+	closed int32
 }
 
 func NewMemcacheFileStore(config_obj *config_proto.Config) *MemcacheFileStore {
@@ -248,26 +269,31 @@ func NewMemcacheFileStore(config_obj *config_proto.Config) *MemcacheFileStore {
 	result.data_cache.SetTTL(result.min_age)
 	result.data_cache.SkipTTLExtensionOnHit(true)
 	result.data_cache.SetCacheSizeLimit(int(max_writers))
-	result.data_cache.SetNewItemCallback(func(key string, value interface{}) {
+	result.data_cache.SetNewItemCallback(func(key string, value interface{}) error {
 		metricDataLRU.Inc()
+		return nil
 	})
 
-	result.data_cache.SetExpirationCallback(func(key string, value interface{}) {
-		writer, ok := value.(*MemcacheFileWriter)
-		if ok {
-			writer.mu.Lock()
-			defer writer.mu.Unlock()
+	result.data_cache.SetExpirationCallback(
+		func(key string, value interface{}) error {
+			writer, ok := value.(*MemcacheFileWriter)
+			if ok {
+				// We are not done with it yet - return it to the cache.
+				if !result.IsClosed() && !writer.IsClosed() {
+					return ttlcache.NoExpireError
+				}
 
-			writer._Flush()
-
-			// We are not done with it yet - return it to the cache.
-			if !result.IsClosed() && !writer.closed {
-				result.data_cache.Set(writer.key, writer)
+				// This callback happens under global cache lock. The
+				// below Flush operation may take an unspecified
+				// amount of time, so we need to do it in a goroutine
+				// so as not to hold the cache locked.
+				go writer.Flush()
 			}
-		}
 
-		metricDataLRU.Dec()
-	})
+			// The cache will now expire this item.
+			metricDataLRU.Dec()
+			return nil
+		})
 
 	return result
 }
@@ -286,9 +312,6 @@ func (self *MemcacheFileStore) WriteFile(path api.FSPathSpec) (api.FileWriter, e
 func (self *MemcacheFileStore) WriteFileWithCompletion(
 	path api.FSPathSpec, completion func()) (api.FileWriter, error) {
 	defer api.Instrument("write_open", "MemcacheFileStore", path)()
-
-	self.mu.Lock()
-	defer self.mu.Unlock()
 
 	key := path.AsClientPath()
 
@@ -309,7 +332,7 @@ func (self *MemcacheFileStore) WriteFileWithCompletion(
 
 	} else {
 		result = result_any.(*MemcacheFileWriter)
-		result.closed = false
+		atomic.StoreInt32(&result.closed, 0)
 
 		// If we have more time until the max_age, re-set it into the
 		// cache and extend ttl, otherwise, let it expire normally
@@ -321,7 +344,7 @@ func (self *MemcacheFileStore) WriteFileWithCompletion(
 
 	// Add the completion to the writer.
 	if completion != nil {
-		result.completions = append(result.completions, completion)
+		result.AddCompletion(completion)
 	}
 
 	return result, nil
@@ -339,16 +362,11 @@ func (self *MemcacheFileStore) Flush() {
 }
 
 func (self *MemcacheFileStore) IsClosed() bool {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self.closed
+	return atomic.LoadInt32(&self.closed) > 0
 }
 
 func (self *MemcacheFileStore) Close() error {
-	self.mu.Lock()
-	self.closed = true
-	self.mu.Unlock()
+	atomic.StoreInt32(&self.closed, 1)
 
 	self.Flush()
 	return nil
