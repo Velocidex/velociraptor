@@ -286,7 +286,7 @@ func NewBackupService(
 			case <-ctx.Done():
 				return
 
-			case <-utils.GetTime().After(delay):
+			case <-utils.GetTime().After(utils.Jitter(delay)):
 				// Avoid doing backups too quickly. This is mainly for
 				// tests where the time is mocked for the After(delay)
 				// above does not work.

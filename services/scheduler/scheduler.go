@@ -249,7 +249,7 @@ func (self *Scheduler) Schedule(ctx context.Context,
 			close(result_chan)
 			return result_chan, errors.New("Cancelled")
 
-		case <-time.After(200 * time.Microsecond):
+		case <-time.After(utils.Jitter(200 * time.Microsecond)):
 		}
 	}
 }

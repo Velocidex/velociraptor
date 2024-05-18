@@ -514,7 +514,7 @@ func NewHuntDispatcher(
 				service.Close(ctx)
 				return
 
-			case <-time.After(time.Duration(refresh) * time.Second):
+			case <-time.After(utils.Jitter(time.Duration(refresh) * time.Second)):
 				// Re-read the hunts from the data store.
 				err := service.Refresh(ctx, config_obj)
 				if err != nil {

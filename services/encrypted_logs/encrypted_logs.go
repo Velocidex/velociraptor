@@ -85,7 +85,7 @@ func StartEncryptedLog(
 			case <-ctx.Done():
 				return
 
-			case <-utils.GetTime().After(max_wait):
+			case <-utils.GetTime().After(utils.Jitter(max_wait)):
 				err := fd.Flush(!storage.KEEP_ON_ERROR)
 				if err != nil {
 					logger.Error("StartEncryptedLog: %v", err)

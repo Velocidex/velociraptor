@@ -66,7 +66,7 @@ type Store struct {
 func (self *Store) StartHouseKeep(
 	ctx context.Context, config_obj *config_proto.Config) {
 
-	delay := 60 * time.Second
+	delay := 600 * time.Second
 	if config_obj.Defaults != nil {
 		if config_obj.Defaults.ClientInfoHousekeepingPeriod < 0 {
 			return
@@ -86,7 +86,7 @@ func (self *Store) StartHouseKeep(
 			case <-ctx.Done():
 				return
 
-			case <-utils.GetTime().After(delay):
+			case <-utils.GetTime().After(utils.Jitter(utils.Jitter(delay))):
 				if utils.GetTime().Now().Sub(last_run) < time.Second {
 					utils.SleepWithCtx(ctx, time.Minute)
 					continue
@@ -111,7 +111,7 @@ func (self *Store) houseKeep(
 	defer func() {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Debug(
-			"<green>ClientInfoManager</> Scaned for outstanding tasks in %v in %v",
+			"<green>ClientInfoManager</> Scanned for outstanding tasks in %v in %v",
 			services.GetOrgName(config_obj), utils.GetTime().Now().Sub(start))
 	}()
 
