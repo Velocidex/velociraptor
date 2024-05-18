@@ -35,18 +35,17 @@ func (self *HuntStorageManagerImpl) FlushIndex(
 	// Debounce the flushing a bit so we dont overload the system for
 	// fast events. Note that flushes occur periodically anyway so if
 	// we skip a flush we will get it later.
-	now := utils.GetTime().Now()
-	if now.Sub(self.last_flush_time) < 5*time.Second {
+	start := utils.GetTime().Now()
+	if start.Sub(self.last_flush_time) < 5*time.Second {
 		return nil
 	}
-	self.last_flush_time = now
+	self.last_flush_time = start
 
 	hunt_ids := make([]string, 0, len(self.hunts))
 	for hunt_id := range self.hunts {
 		hunt_ids = append(hunt_ids, hunt_id)
 	}
 
-	start := utils.GetTime().Now()
 	defer func() {
 		now := utils.GetTime().Now()
 
@@ -60,7 +59,7 @@ func (self *HuntStorageManagerImpl) FlushIndex(
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
 		hunt_path_manager.HuntIndex(),
-		json.DefaultEncOpts(), utils.SyncCompleter, result_sets.TruncateMode)
+		json.DefaultEncOpts(), utils.BackgroundWriter, result_sets.TruncateMode)
 	if err != nil {
 		return err
 	}

@@ -11,6 +11,7 @@ import (
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 const (
@@ -113,14 +114,17 @@ func NewTimelineWriter(
 
 	result := &TimelineWriter{}
 
+	// Call the completer when both index and file are done.
+	completer := utils.NewCompleter(completion)
+
 	fd, err := file_store_factory.WriteFileWithCompletion(
-		path_manager.Path(), completion)
+		path_manager.Path(), completer.GetCompletionFunc())
 	if err != nil {
 		return nil, err
 	}
 
-	index_fd, err := file_store_factory.WriteFile(
-		path_manager.Index())
+	index_fd, err := file_store_factory.WriteFileWithCompletion(
+		path_manager.Index(), completer.GetCompletionFunc())
 	if err != nil {
 		fd.Close()
 		return nil, err

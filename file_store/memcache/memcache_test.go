@@ -144,6 +144,9 @@ func (self *MemcacheTestSuite) TestDelayedWrites() {
 		}
 		file_store.Flush()
 
+		mu.Lock()
+		defer mu.Unlock()
+
 		return write_times
 	}
 

@@ -27,6 +27,7 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Select from 'react-select';
 
+import { JSONparse } from '../utils/json_parse.jsx';
 
 class _PasswordChange extends React.Component {
     static propTypes = {
@@ -412,7 +413,7 @@ export default class UserLabel extends React.Component {
 
     setSettings = (options) => {
         // Set the ACE theme according to the theme so they match.
-        let ace_options = JSON.parse(this.context.traits.ui_settings || "{}");
+        let ace_options = JSONparse(this.context.traits.ui_settings, {});
         if (options.theme === "no-theme") {
             ace_options.theme = "ace/theme/xcode";
             ace_options.fontFamily = "Iosevka Term";

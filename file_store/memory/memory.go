@@ -274,7 +274,7 @@ func (self *MemoryFileStore) ReadFile(path api.FSPathSpec) (api.FileReader, erro
 }
 
 func (self *MemoryFileStore) WriteFile(path api.FSPathSpec) (api.FileWriter, error) {
-	return self.WriteFileWithCompletion(path, nil)
+	return self.WriteFileWithCompletion(path, utils.SyncCompleter)
 }
 
 func (self *MemoryFileStore) WriteFileWithCompletion(

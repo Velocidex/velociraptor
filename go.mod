@@ -15,7 +15,7 @@ require (
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
 	github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a
 	github.com/Velocidex/sflags v0.3.1-0.20231011011525-620ab7ca8617
-	github.com/Velocidex/ttlcache/v2 v2.9.1-0.20230724083715-1eb048b1f6d6
+	github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130
 	github.com/Velocidex/yaml/v2 v2.2.8
 	github.com/Velocidex/zip v0.0.0-20210101070220-e7ecefb7aad7
 	github.com/alecthomas/assert v1.0.0
@@ -233,7 +233,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/goleak v1.2.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/sync v0.4.0 // indirect
+	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.8 // indirect

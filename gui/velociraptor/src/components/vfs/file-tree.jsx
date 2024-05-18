@@ -11,6 +11,8 @@ import { EncodePathInURL, DecodePathInURL, SplitPathComponents, Join } from '../
 
 import api from '../core/api-service.jsx';
 import { withRouter }  from "react-router-dom";
+import { JSONparse } from '../utils/json_parse.jsx';
+
 
 class VeloFileTree extends Component {
     static contextType = UserConfig;
@@ -174,7 +176,7 @@ class VeloFileTree extends Component {
 
                 if (response && response.data) {
                     // Hold on to the raw data.
-                    node.raw_data = JSON.parse(response.data.Response || '[]');
+                    node.raw_data = JSONparse(response.data.Response,  []);
                     node.flow_id = response.data.flow_id;
                     node.start_idx = response.data.start_idx;
                     node.end_idx = response.data.end_idx;

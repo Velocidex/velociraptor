@@ -198,8 +198,14 @@ func createDownloadFile(
 		"download_file": download_file,
 	}).Info("CreateDownload")
 
+	completion := utils.BackgroundWriter
+	if wait {
+		completion = utils.SyncCompleter
+	}
+
 	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.WriteFile(download_file)
+	fd, err := file_store_factory.WriteFileWithCompletion(
+		download_file, completion)
 	if err != nil {
 		return nil, err
 	}
@@ -257,8 +263,6 @@ func createDownloadFile(
 
 	if wait {
 		wg.Wait()
-
-		file_store.FlushFilestore(config_obj)
 	}
 
 	return download_file, nil
@@ -707,8 +711,14 @@ func createHuntDownloadFile(
 	}).Info("CreateHuntDownload")
 
 	// Write the download file
+	completion := utils.BackgroundWriter
+	if wait {
+		completion = utils.SyncCompleter
+	}
+
 	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.WriteFile(download_file)
+	fd, err := file_store_factory.WriteFileWithCompletion(
+		download_file, completion)
 	if err != nil {
 		return nil, err
 	}
@@ -831,8 +841,6 @@ func createHuntDownloadFile(
 
 	if wait {
 		wg.Wait()
-
-		file_store.FlushFilestore(config_obj)
 	}
 
 	return download_file, nil

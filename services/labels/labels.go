@@ -343,12 +343,16 @@ func (self *Labeler) Start(ctx context.Context,
 
 	self.lru = ttlcache.NewCache()
 	self.lru.SetCacheSizeLimit(int(expected_clients))
-	self.lru.SetNewItemCallback(func(key string, value interface{}) {
-		metricLabelLRU.Inc()
-	})
-	self.lru.SetExpirationCallback(func(key string, value interface{}) {
-		metricLabelLRU.Dec()
-	})
+	self.lru.SetNewItemCallback(
+		func(key string, value interface{}) error {
+			metricLabelLRU.Inc()
+			return nil
+		})
+	self.lru.SetExpirationCallback(
+		func(key string, value interface{}) error {
+			metricLabelLRU.Dec()
+			return nil
+		})
 
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
