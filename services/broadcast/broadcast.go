@@ -77,7 +77,7 @@ func (self *BroadcastService) WaitForListeners(
 		case <-ctx.Done():
 			return
 
-		case <-time.After(100 * time.Millisecond):
+		case <-time.After(utils.Jitter(100 * time.Millisecond)):
 			self.mu.Lock()
 			closers, _ := self.listener_closers[name]
 			listeners := int64(len(closers))

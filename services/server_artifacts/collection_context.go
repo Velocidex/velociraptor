@@ -205,7 +205,7 @@ func (self *contextManager) StartRefresh(wg *sync.WaitGroup) {
 				self.Save()
 				return
 
-			case <-time.After(time.Duration(10) * time.Second):
+			case <-time.After(utils.Jitter(time.Duration(10) * time.Second)):
 				self.Save()
 			}
 		}

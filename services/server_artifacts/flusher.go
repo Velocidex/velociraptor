@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func ResultSetFlusher(ctx context.Context, rs_writer result_sets.ResultSetWriter) func() {
@@ -15,7 +16,7 @@ func ResultSetFlusher(ctx context.Context, rs_writer result_sets.ResultSetWriter
 			case <-sub_ctx.Done():
 				return
 
-			case <-time.After(time.Duration(10) * time.Second):
+			case <-time.After(utils.Jitter(time.Duration(10) * time.Second)):
 				rs_writer.Flush()
 			}
 		}

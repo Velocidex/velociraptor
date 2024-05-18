@@ -162,7 +162,7 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 				utils.GetTime().Now().Sub(start_time))
 
 			// Set a timeout.
-		case <-time.After(time.Duration(default_notebook_expiry) * time.Minute):
+		case <-time.After(utils.Jitter(time.Duration(default_notebook_expiry) * time.Minute)):
 			tmpl.Scope.Log("ERROR:Query timed out after %v !",
 				utils.GetTime().Now().Sub(start_time))
 		}
@@ -372,7 +372,7 @@ func (self *NotebookWorker) Start(
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(10 * time.Second):
+		case <-time.After(utils.Jitter(10 * time.Second)):
 		}
 	}
 
@@ -569,7 +569,7 @@ func (self *NotebookWorker) startNanny(
 			return
 
 			// Wait for a bit then check if the query is cancelled.
-		case <-time.After(time.Second):
+		case <-time.After(utils.Jitter(time.Second)):
 		}
 
 		// Check the cell for cancellation or errors
@@ -621,7 +621,7 @@ func waitForMemoryLimit(
 			case <-ctx.Done():
 				scope.Log("ERROR:Unable to start query before timeout - insufficient resourcs.")
 				return
-			case <-time.After(time.Second):
+			case <-time.After(utils.Jitter(time.Second)):
 			}
 		}
 	}
