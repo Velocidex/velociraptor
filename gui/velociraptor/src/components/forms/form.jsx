@@ -20,6 +20,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CSVForm from './csv.jsx';
 import Select from 'react-select';
 import T from '../i8n/i8n.jsx';
+import { JSONparse } from '../utils/json_parse.jsx';
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import cellEditFactory, { Type } from 'react-bootstrap-table2-editor';
@@ -428,10 +429,8 @@ export default class VeloForm extends React.Component {
                 options.push({value: x, label: x});
             });
 
-            let defaults = [];
-            try {
-                defaults = _.map(JSON.parse(this.props.value), x=>{return {value: x, label: x};});
-            } catch(e){};
+            let defaults = _.map(JSONparse(this.props.value, []),
+                                 x=>{return {value: x, label: x};});
 
             return (
                 <Form.Group as={Row}>

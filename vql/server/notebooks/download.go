@@ -6,7 +6,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -54,7 +53,6 @@ func (self *CreateNotebookDownload) Call(ctx context.Context,
 
 	// Wait here until the notebook is fully exported.
 	wg.Wait()
-	file_store.FlushFilestore(config_obj)
 
 	return path
 }

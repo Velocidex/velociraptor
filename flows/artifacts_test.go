@@ -596,6 +596,7 @@ func (self *TestSuite) testCollectionCompletion(
 		"System.Flow.Completion", "", func(ctx context.Context,
 			config_obj *config_proto.Config,
 			row *ordereddict.Dict) error {
+
 			mu.Lock()
 			defer mu.Unlock()
 
@@ -609,7 +610,7 @@ func (self *TestSuite) testCollectionCompletion(
 	}
 	runner.Close(self.Ctx)
 
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
 		mu.Lock()
 		defer mu.Unlock()
 

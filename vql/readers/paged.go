@@ -257,11 +257,12 @@ func GetReaderPool(scope vfilter.Scope, lru_size int64) *ReaderPool {
 
 		// Close the item on expiration
 		pool.lru.SetExpirationReasonCallback(
-			func(key string, reason ttlcache.EvictionReason, value interface{}) {
+			func(key string, reason ttlcache.EvictionReason, value interface{}) error {
 				accessor, ok := value.(*AccessorReader)
 				if ok {
 					accessor.Close()
 				}
+				return nil
 			})
 
 		// When the item expires from the cache we need to close it.

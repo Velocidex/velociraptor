@@ -5,6 +5,7 @@ import {CancelToken} from 'axios';
 import PropTypes from 'prop-types';
 import qs from "qs";
 import { withRouter }  from "react-router-dom";
+import { JSONparse } from '../utils/json_parse.jsx';
 
 const UserConfig = React.createContext({
     traits: {},
@@ -87,7 +88,7 @@ class _UserSettings extends React.Component {
     }
 
     getUserOptions = (traits) => {
-        return JSON.parse(traits.ui_settings || "{}");
+        return JSONparse(traits.ui_settings, {});
     }
 
     render() {

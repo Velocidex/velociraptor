@@ -26,7 +26,7 @@ const (
 
 /*
   The Completer is a helper that is used to ensure a completion
-  funciton is called when several asynchronous operations are
+  function is called when several asynchronous operations are
   finished. Only when all operations are done, the completion function
   will be called.
 
@@ -48,8 +48,7 @@ const (
   }
 
   NOTE: As a special case, if the completer is created with
-  SyncCompleter it meands all completion functions will be
-  synchronous.
+  SyncCompleter it means all completion functions will be synchronous.
 */
 
 type Completer struct {

@@ -77,10 +77,6 @@ func (self ExportNotebookFunction) Call(ctx context.Context,
 	defer func() {
 		// Wait here until the export is done.
 		wg.Wait()
-
-		// Make sure the data is flushed to disk so the VQL can get
-		// it.
-		file_store.FlushFilestore(config_obj)
 	}()
 
 	principal := vql_subsystem.GetPrincipal(scope)
@@ -341,7 +337,8 @@ func ExportNotebookToZip(
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.WriteFile(output_filename)
+	fd, err := file_store_factory.WriteFileWithCompletion(
+		output_filename, utils.SyncCompleter)
 	if err != nil {
 		return nil, err
 	}
@@ -493,7 +490,8 @@ func ExportNotebookToHTML(
 
 		file_store_factory := file_store.GetFileStore(config_obj)
 
-		output, err := file_store_factory.WriteFile(output_filename)
+		output, err := file_store_factory.WriteFileWithCompletion(
+			output_filename, utils.SyncCompleter)
 		if err != nil {
 			return nil, err
 		}
