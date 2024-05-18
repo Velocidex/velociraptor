@@ -401,7 +401,7 @@ func (self *EventTable) RunQuery(
 					query_log.Close()
 					return
 
-				case <-time.After(time.Second * time.Duration(heartbeat)):
+				case <-time.After(utils.Jitter(time.Second * time.Duration(heartbeat))):
 					scope.Log("Time %v: %s: Waiting for rows.",
 						(uint64(utils.GetTime().Now().UTC().UnixNano()/1000)-
 							query_start)/1000000, query.Name)

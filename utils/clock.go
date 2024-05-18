@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/binary"
 	"sync"
 	"time"
 )
@@ -132,4 +134,19 @@ func (self *IncClock) After(d time.Duration) <-chan time.Time {
 
 func (self *IncClock) Sleep(d time.Duration) {
 	time.Sleep(0)
+}
+
+var (
+	JitterPercent = uint32(10)
+)
+
+// Add 10%  of jitter to ensure things dont synchronize
+func Jitter(in time.Duration) time.Duration {
+	buf := make([]byte, 4)
+	_, _ = rand.Read(buf)
+
+	// Random number between 90 to 110 - Small bias but close enough.
+	jitter_pc := uint64((binary.BigEndian.Uint32(buf) % (2 * JitterPercent)) - JitterPercent + 100)
+
+	return time.Duration(uint64(in) * jitter_pc / 100)
 }

@@ -83,7 +83,7 @@ func NewNotebookStore(
 			select {
 			case <-ctx.Done():
 				return
-			case <-utils.GetTime().After(time.Minute):
+			case <-utils.GetTime().After(utils.Jitter(time.Minute)):
 				result.syncAllNotebooks()
 			}
 		}

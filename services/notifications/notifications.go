@@ -364,7 +364,7 @@ func (self *Notifier) IsClientConnected(
 		// Signal that all minions indicated if the client was found
 		// or not.
 
-	case <-time.After(time.Duration(timeout) * time.Second):
+	case <-time.After(utils.Jitter(time.Duration(timeout) * time.Second)):
 		if timeout > 0 {
 			timeoutClientPing.Inc()
 		}

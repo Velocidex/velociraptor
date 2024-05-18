@@ -130,7 +130,7 @@ func (self *ReplicationService) pumpEventFromBufferFile() error {
 			case <-self.ctx.Done():
 				return nil
 
-			case <-time.After(self.RetryDuration()):
+			case <-time.After(utils.Jitter(self.RetryDuration())):
 				continue
 			}
 		}
@@ -160,7 +160,7 @@ func (self *ReplicationService) pumpEventFromBufferFile() error {
 				closer()
 				return nil
 
-			case <-time.After(self.RetryDuration()):
+			case <-time.After(utils.Jitter(self.RetryDuration())):
 			}
 			closer()
 		}
@@ -184,7 +184,7 @@ func (self *ReplicationService) startAsyncLoop(
 			case <-ctx.Done():
 				return
 
-			case <-time.After(200 * time.Millisecond):
+			case <-time.After(utils.Jitter(200 * time.Millisecond)):
 				// Work on the batch without a lock
 				self.mu.Lock()
 				todo := self.batch
@@ -624,7 +624,7 @@ func (self *ReplicationService) Watch(
 			select {
 			case <-self.ctx.Done():
 				return
-			case <-time.After(self.RetryDuration()):
+			case <-time.After(utils.Jitter(self.RetryDuration())):
 			}
 
 			logger := logging.GetLogger(self.config_obj,
