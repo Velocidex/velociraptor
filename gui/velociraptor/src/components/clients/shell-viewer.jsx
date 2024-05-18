@@ -19,6 +19,7 @@ import Completer from '../artifacts/syntax.jsx';
 import { DeleteFlowDialog } from "../flows/flows-list.jsx";
 import Button from 'react-bootstrap/Button';
 import { withRouter }  from "react-router-dom";
+import { JSONparse } from '../utils/json_parse.jsx';
 
 // Refresh every 5 seconds
 const SHELL_POLL_TIME = 5000;
@@ -620,11 +621,7 @@ class ShellViewer extends Component {
                        // Column 8 is the _Flow column;
                        let flow_json = rows[i] && rows[i].cell &&
                            rows[i].cell[column_idx];
-                       try {
-                           var flow = JSON.parse(flow_json);
-                       } catch(e) {
-                           continue;
-                       }
+                       let flow = JSONparse(flow_json);
                        if (!flow || !flow.request) {
                            continue;
                        }

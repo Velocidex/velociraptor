@@ -19,9 +19,11 @@ import { NotebookLineChart, NotebookTimeChart,
 import NotebookTableRenderer from './notebook-table-renderer.jsx';
 
 import VeloValueRenderer from '../utils/value.jsx';
+import { JSONparse } from '../utils/json_parse.jsx';
 
-const parse_param = domNode=>JSON.parse(decodeURIComponent(
-    domNode.attribs.params || "{}"));
+
+const parse_param = domNode=>JSONparse(decodeURIComponent(
+    domNode.attribs.params, {}));
 
 export default class NotebookReportRenderer extends React.Component {
     static propTypes = {
@@ -69,7 +71,7 @@ export default class NotebookReportRenderer extends React.Component {
         let value = decodeURIComponent(domNode.attribs.value || "");
         let match = re.exec(value);
         let data = this.state.data[match[1]];
-        let rows = JSON.parse(data.Response);
+        let rows = JSONparse(data.Response, []);
 
         switch  (domNode.name) {
         case "grr-line-chart":
@@ -108,10 +110,10 @@ export default class NotebookReportRenderer extends React.Component {
                 // A table which contains the data inline.
                 if (domNode.name === "inline-table-viewer") {
                     try {
-                        let data = JSON.parse(this.props.cell.data || '{}');
+                        let data = JSONparse(this.props.cell.data, {});
                         let value = decodeURIComponent(domNode.attribs.value || "");
                         let response = data[value] || {};
-                        let rows = JSON.parse(response.Response);
+                        let rows = JSONparse(response.Response, []);
                         if(this.props.completion_reporter) {
                             this.props.completion_reporter(response.Columns);
                         }

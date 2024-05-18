@@ -32,7 +32,7 @@ import TreeCell from './tree-cell.jsx';
 import ContextMenu from '../utils/context.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
 import filterFactory from 'react-bootstrap-table2-filter';
-
+import { JSONparse } from '../utils/json_parse.jsx';
 import Download from "../widgets/download.jsx";
 
 // Shows the InspectRawJson modal dialog UI.
@@ -422,9 +422,9 @@ export function PrepareData(value) {
 
             // A bit of a hack for now, this represents an object.
             if (cell === null || cell === "null")  {
-                cell = null
+                cell = null;
             } else if (cell[0] === "{" || cell[0] === "[") {
-                cell = JSON.parse(cell);
+                cell = JSONparse(cell);
             } else if(cell.match(int_regex)) {
                 cell = parseInt(cell);
             } else if(cell[0] === " ") {
