@@ -219,6 +219,11 @@ func (self *Listener) Debug() *ordereddict.Dict {
 	if err == nil {
 		result.Set("Size", int64(st.Size()))
 	}
+
+	if self.file_buffer != nil {
+		result.Set("PendingSize", self.file_buffer.PendingSize())
+	}
+
 	return result
 }
 

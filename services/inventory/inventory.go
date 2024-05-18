@@ -663,7 +663,7 @@ func NewInventoryService(
 					logger.Error("StartInventoryService: %v", err)
 				}
 
-			case <-time.After(600 * time.Second):
+			case <-time.After(utils.Jitter(600 * time.Second)):
 				err := inventory_service.LoadFromFile(config_obj)
 				if err != nil {
 					logger.Error("StartInventoryService: %v", err)

@@ -41,8 +41,6 @@ import (
 
 type HuntsPluginArgs struct {
 	HuntId string `vfilter:"optional,field=hunt_id,doc=A hunt id to read, if not specified we list all of them."`
-	Offset uint64 `vfilter:"optional,field=offset,doc=Start offset."`
-	Count  uint64 `vfilter:"optional,field=count,doc=Max number of results to return."`
 }
 
 type HuntsPlugin struct{}
@@ -74,11 +72,6 @@ func (self HuntsPlugin) Call(
 			return
 		}
 
-		count := arg.Count
-		if count == 0 {
-			count = 1000
-		}
-
 		hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
 		if err != nil {
 			scope.Log("hunts: %v", err)
@@ -99,17 +92,20 @@ func (self HuntsPlugin) Call(
 		}
 
 		// Show all hunts.
-		hunts, err := hunt_dispatcher.ListHunts(
-			ctx, config_obj, &api_proto.ListHuntsRequest{
-				Count:  count,
-				Offset: arg.Offset,
+		var hunts []*api_proto.Hunt
+
+		err = hunt_dispatcher.ApplyFuncOnHunts(
+			ctx, services.AllHunts,
+			func(hunt *api_proto.Hunt) error {
+				hunts = append(hunts, hunt)
+				return nil
 			})
 		if err != nil {
 			scope.Log("hunts: %v", err)
 			return
 		}
 
-		for _, hunt_obj := range hunts.Items {
+		for _, hunt_obj := range hunts {
 			select {
 			case <-ctx.Done():
 				return
