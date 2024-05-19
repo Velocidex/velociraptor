@@ -36,6 +36,7 @@ func (self LevelDBPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer utils.RecoverVQL(scope)
+		defer vql_subsystem.RegisterMonitor("leveldb", args)()
 
 		arg := &LevelDBPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

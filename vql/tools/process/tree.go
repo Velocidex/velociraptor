@@ -31,6 +31,7 @@ type getProcessTree struct{}
 
 func (self getProcessTree) Call(ctx context.Context,
 	scope types.Scope, args *ordereddict.Dict) types.Any {
+	defer vql_subsystem.RegisterMonitor("process_tracker_tree", args)()
 
 	arg := &getProcessTreeArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

@@ -329,6 +329,7 @@ func (self *_HttpPlugin) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
+
 	output_chan := make(chan vfilter.Row)
 	arg := &HttpPluginRequest{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -351,6 +352,7 @@ func (self *_HttpPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("http_client", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
 		if err != nil {

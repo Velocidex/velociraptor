@@ -59,6 +59,7 @@ func (self DelayPlugin) Call(ctx context.Context,
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("delay", args)()
 
 		arg := &DelayPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

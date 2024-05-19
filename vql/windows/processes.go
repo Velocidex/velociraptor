@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -192,6 +193,7 @@ func (self PslistPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("pslist", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {

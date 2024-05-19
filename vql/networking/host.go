@@ -26,6 +26,9 @@ type HostFunction struct{}
 func (self *HostFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("host", args)()
+
 	arg := &HostFunctionArgs{}
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)

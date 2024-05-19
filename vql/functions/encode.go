@@ -27,6 +27,8 @@ type EncodeFunction struct{}
 func (self *EncodeFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+	defer vql_subsystem.RegisterMonitor("encode", args)()
+
 	arg := &EncodeFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {

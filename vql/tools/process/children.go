@@ -15,6 +15,8 @@ type getChildren struct{}
 func (self getChildren) Call(ctx context.Context,
 	scope types.Scope, args *ordereddict.Dict) types.Any {
 
+	defer vql_subsystem.RegisterMonitor("process_tracker_children", args)()
+
 	arg := &getChainArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -44,6 +46,8 @@ type getAll struct{}
 
 func (self getAll) Call(ctx context.Context,
 	scope types.Scope, args *ordereddict.Dict) types.Any {
+
+	defer vql_subsystem.RegisterMonitor("process_tracker_all", args)()
 
 	tracker := GetGlobalTracker()
 	if tracker == nil {

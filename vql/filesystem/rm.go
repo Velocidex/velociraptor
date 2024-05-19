@@ -22,6 +22,8 @@ func (self *_RmFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
+	defer vql_subsystem.RegisterMonitor("rm", args)()
+
 	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 	if err != nil {
 		scope.Log("rm: %s", err)

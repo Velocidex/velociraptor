@@ -1,3 +1,4 @@
+//go:build windows && 386 && cgo
 // +build windows,386,cgo
 
 package process
@@ -50,6 +51,7 @@ func (self ModulesPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("modules", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
@@ -109,8 +111,8 @@ func (self VADPlugin) Call(
 		defer close(output_chan)
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
-
-		defer vql_subsystem.CheckForPanic(scope, "module")
+		defer vql_subsystem.RegisterMonitor("vad", args)()
+		defer vql_subsystem.CheckForPanic(scope, "vad")
 
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {

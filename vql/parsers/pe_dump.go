@@ -43,6 +43,7 @@ func (self _PEDumpFunction) Call(
 	args *ordereddict.Dict) vfilter.Any {
 
 	defer utils.RecoverVQL(scope)
+	defer vql_subsystem.RegisterMonitor("pe_dump", args)()
 
 	arg := &_PEDumpFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

@@ -57,6 +57,8 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
+	defer vql_subsystem.RegisterMonitor("import_collection", args)()
+
 	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
 	if err != nil {
 		scope.Log("import_collection: %s", err)

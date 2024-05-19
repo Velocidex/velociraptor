@@ -1,4 +1,5 @@
-//+build extras
+//go:build extras
+// +build extras
 
 package tools
 
@@ -40,6 +41,8 @@ type SFTPUploadFunction struct{}
 func (self *SFTPUploadFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("upload_sftp", args)()
 
 	arg := &SFTPUploadArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

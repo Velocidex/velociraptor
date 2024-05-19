@@ -27,7 +27,10 @@ func (self XAttrFunction) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("xattr", args)()
 	defer vql_subsystem.CheckForPanic(scope, "xattr")
+
 	arg := &XAttrArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {

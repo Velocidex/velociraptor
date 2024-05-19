@@ -1,3 +1,4 @@
+//go:build windows && amd64 && cgo
 // +build windows,amd64,cgo
 
 // References: https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ex/sysinfo/query.htm
@@ -72,6 +73,7 @@ func (self HandlesPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("handles", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
