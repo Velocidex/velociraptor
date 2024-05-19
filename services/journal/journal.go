@@ -15,6 +15,7 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/alitto/pond"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -39,6 +40,8 @@ type JournalService struct {
 	// process!
 	mu    sync.Mutex
 	locks map[string]*sync.Mutex
+
+	pool *pond.WorkerPool
 }
 
 func (self *JournalService) GetWatchers() []string {
@@ -163,14 +166,25 @@ func (self *JournalService) PushRowsToArtifactAsync(
 	ctx context.Context, config_obj *config_proto.Config, row *ordereddict.Dict,
 	artifact string) {
 
-	go func() {
+	f := func() {
 		err := self.PushRowsToArtifact(ctx, config_obj, []*ordereddict.Dict{row},
 			artifact, "server", "")
 		if err != nil {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			logger.Error("<red>PushRowsToArtifactAsync</> %v", err)
 		}
-	}()
+	}
+
+	// If the pool is full, run this synchronously. This is necessary
+	// to prevent deadlocks because some of the tasks may also call
+	// the journal service to write asynchronously which they can not
+	// do when taking up a pool slot.
+	if self.pool.WaitingTasks() > 0 {
+		f()
+		return
+	}
+
+	self.pool.Submit(f)
 }
 
 func (self *JournalService) Broadcast(
@@ -279,6 +293,7 @@ func NewJournalService(
 	service := &JournalService{
 		config_obj: config_obj,
 		locks:      make(map[string]*sync.Mutex),
+		pool:       pond.New(100, 1000),
 	}
 
 	qm, err := file_store.GetQueueManager(config_obj)
