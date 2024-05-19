@@ -300,21 +300,40 @@ func (self *Store) SaveSnapshot(
 
 	now := time.Now()
 
+	// Critical Section....
 	self.mu.Lock()
-	defer self.mu.Unlock()
 
 	// Noop - nothing needs to be done if we are not dirty
 	if !self.dirty {
+		self.mu.Unlock()
 		return nil
 	}
+
+	// Take a copy of the snapshot to ensure we dont block under lock.
+
+	// Write to memory buffer first then flush to disk in one
+	// operation to reduce IO overheads.
+	buffer := new(bytes.Buffer)
+
+	for client_id, serialized := range self.data {
+		// Use fmt to encode very quickly
+		line := fmt.Sprintf("{\"client_id\":%q,\"info\":%q}\n",
+			client_id, hex.EncodeToString(serialized))
+		buffer.Write([]byte(line))
+	}
+
+	self.dirty = false
+
+	// Total number of records we flush to disk.
+	record_count := uint64(len(self.data))
+
+	// Release the lock here as we dont need it for the rest.
+	self.mu.Unlock()
 
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
-
-	// Total number of records we flush to disk.
-	record_count := uint64(len(self.data))
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	writer, err := result_sets.NewResultSetWriter(
@@ -338,20 +357,8 @@ func (self *Store) SaveSnapshot(
 	}
 	defer writer.Close()
 
-	// Write to memory buffer first then flush to disk in one
-	// operation to reduce IO overheads.
-	buffer := new(bytes.Buffer)
-
-	for client_id, serialized := range self.data {
-		// Use fmt to encode very quickly
-		line := fmt.Sprintf("{\"client_id\":%q,\"info\":%q}\n",
-			client_id, hex.EncodeToString(serialized))
-		buffer.Write([]byte(line))
-	}
-
 	writer.WriteJSONL(buffer.Bytes(), record_count)
 
-	self.dirty = false
 	return nil
 }
 
