@@ -244,7 +244,7 @@ func (self *MemcacheTestSuite) TestFileWriteCompletions() {
 		return len(result) == 2
 	})
 
-p	mu.Lock()
+	mu.Lock()
 	assert.Equal(self.T(), len(result), 2)
 	assert.Equal(self.T(), "Done", result[0])
 	assert.Equal(self.T(), "Done", result[1])
