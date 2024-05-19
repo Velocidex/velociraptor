@@ -25,8 +25,12 @@ type MemcacheTestSuite struct {
 }
 
 func (self *MemcacheTestSuite) TestWriterExpiry() {
-	self.config_obj.Datastore.MemcacheWriteMutationMaxAge = 1 // 100 Ms
-	file_store := NewTestMemcacheFilestore(self.config_obj)
+	config_obj := config.GetDefaultConfig()
+	config_obj.Datastore.Implementation = "MemcacheFileDataStore"
+	config_obj.Datastore.MemcacheWriteMutationBuffer = 100
+	config_obj.Datastore.MemcacheWriteMutationMaxAge = 1 // 100 Ms
+
+	file_store := NewTestMemcacheFilestore(config_obj)
 
 	data := []byte("Hello")
 
@@ -44,14 +48,18 @@ func (self *MemcacheTestSuite) TestWriterExpiry() {
 	file_store.FlushCycle(context.Background())
 
 	// Still there.
+	file_store.mu.Lock()
 	assert.Equal(self.T(), 1, len(file_store.data_cache))
+	file_store.mu.Unlock()
 
 	time.Sleep(100 * time.Millisecond)
 
 	file_store.FlushCycle(context.Background())
 
 	// Old writers are cleared after max_age
+	file_store.mu.Lock()
 	assert.Equal(self.T(), 0, len(file_store.data_cache))
+	file_store.mu.Unlock()
 }
 
 // Size reporting is very important to keep track of the result set
@@ -146,12 +154,15 @@ func (self *MemcacheTestSuite) TestFileAsyncWrite() {
 }
 
 func (self *MemcacheTestSuite) TestFileSyncWrite() {
-	self.config_obj.Datastore.MemcacheWriteMutationMinAge = 0
+	config_obj := config.GetDefaultConfig()
+	config_obj.Datastore.Implementation = "MemcacheFileDataStore"
+	config_obj.Datastore.MemcacheWriteMutationBuffer = 100
+	config_obj.Datastore.MemcacheWriteMutationMinAge = 0
 
 	// Stop automatic flushing
-	self.config_obj.Datastore.MemcacheWriteMutationMaxAge = 40000000000
+	config_obj.Datastore.MemcacheWriteMutationMaxAge = 40000000000
 
-	file_store := NewTestMemcacheFilestore(self.config_obj)
+	file_store := NewTestMemcacheFilestore(config_obj)
 
 	filename := path_specs.NewSafeFilestorePath("test", "sync")
 	fd, err := file_store.WriteFileWithCompletion(filename, utils.SyncCompleter)
@@ -226,7 +237,14 @@ func (self *MemcacheTestSuite) TestFileWriteCompletions() {
 	file_store.Flush()
 
 	// Both completions are fired.
-	mu.Lock()
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+
+		return len(result) == 2
+	})
+
+p	mu.Lock()
 	assert.Equal(self.T(), len(result), 2)
 	assert.Equal(self.T(), "Done", result[0])
 	assert.Equal(self.T(), "Done", result[1])

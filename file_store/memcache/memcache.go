@@ -26,12 +26,6 @@ import (
 
 type FlushOptions bool
 
-const (
-	// Total count of cached memory we strive to achieve. When our use
-	// exceeds this limit we stop caching and force syncronous writes.
-	MAX_MEMCACHE_MEMORY = 100 * 1024 * 1024 // 1Gb
-)
-
 var (
 	metricDataLRU = promauto.NewGauge(
 		prometheus.GaugeOpts{
