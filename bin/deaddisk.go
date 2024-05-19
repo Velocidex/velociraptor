@@ -443,6 +443,10 @@ func addCommonPermissions(config_obj *config_proto.Config) {
 	addPermission(config_obj, "READ_RESULTS")
 	addPermission(config_obj, "MACHINE_STATE")
 	addPermission(config_obj, "SERVER_ADMIN")
+
+	// For http_client
+	addPermission(config_obj, "COLLECT_SERVER")
+	addPermission(config_obj, "EXECVE")
 }
 
 func addWindowsPartition(

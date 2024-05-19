@@ -902,6 +902,9 @@ message DatastoreConfig {
     // filesystems (default 100).
     int64 memcache_write_mutation_writers = 6;
 
+    // Aim to not exceed this memory limit.
+    int64 memcache_write_max_memory = 17;  // Default 100Mb
+
     // How long to delay writes so they can be combined. This applies
     // for writing result sets - we keep the writes in memory for
     // min_age seconds in order to combine further writes. If another
