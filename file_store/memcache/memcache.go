@@ -11,8 +11,10 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
+	"github.com/alitto/pond"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -41,6 +43,12 @@ var (
 		prometheus.GaugeOpts{
 			Name: "memcache_filestore_current_writers",
 			Help: "Total number of current writers flushing (capped at concurrency)",
+		})
+
+	metricTotalSyncWrites = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "memcache_filestore_total_sync_writes",
+			Help: "Total number of syncronous writer operations done on the memcache filestore",
 		})
 
 	metricTotalWrites = promauto.NewCounter(
@@ -172,6 +180,7 @@ func (self *MemcacheFileWriter) Write(data []byte) (int, error) {
 
 	self.written_size += int64(len(data))
 
+	self.owner.ChargeBytes(int64(len(data)))
 	metricCachedBytes.Add(float64(len(data)))
 	metricTotalWrites.Inc()
 	metricTotalWritesBytes.Add(float64(len(data)))
@@ -239,6 +248,7 @@ func (self *MemcacheFileWriter) Close() error {
 	// flush cycle, instead force a flush now and wait for it to
 	// complete.
 	if sync_call {
+		metricTotalSyncWrites.Inc()
 		return self.Flush()
 	}
 
@@ -270,6 +280,12 @@ func (self *MemcacheFileWriter) timeToExpire() bool {
 	return utils.GetTime().Now().Sub(self.last_close_time) > self.max_age
 }
 
+func (self *MemcacheFileWriter) callCompletions(completions []func()) {
+	for _, c := range completions {
+		c()
+	}
+}
+
 // Begin the flush cycle
 func (self *MemcacheFileWriter) Flush() error {
 	// While the file is flushed it blocks other writers to the same
@@ -277,20 +293,6 @@ func (self *MemcacheFileWriter) Flush() error {
 	// to the underlying filestore occur in order).
 	self.mu.Lock()
 	defer self.mu.Unlock()
-
-	// Nothing to do
-	if self.last_flush.IsZero() {
-		return nil
-	}
-
-	// Not really an error but we can not flush while we are already
-	// flushing - will try again in the next flush cycle.
-	if self.flushing {
-		return currentlyFlushingError
-	}
-
-	// Will be cleared when the flush is done and we can flush again.
-	self.flushing = true
 
 	// Copy the completions and buffer so we can serve writes while
 	// flushing.
@@ -303,6 +305,22 @@ func (self *MemcacheFileWriter) Flush() error {
 		completions = append(completions, self.completions...)
 		self.completions = nil
 	}
+
+	// Nothing to do
+	if self.last_flush.IsZero() {
+		self.callCompletions(completions)
+		return nil
+	}
+
+	// Not really an error but we can not flush while we are already
+	// flushing - will try again in the next flush cycle.
+	if self.flushing {
+		self.callCompletions(completions)
+		return currentlyFlushingError
+	}
+
+	// Will be cleared when the flush is done and we can flush again.
+	self.flushing = true
 
 	truncated := self.truncated
 	self.truncated = false
@@ -322,8 +340,11 @@ func (self *MemcacheFileWriter) Flush() error {
 	// Flush in the background and return immediately. We can collect
 	// writes into memory in the meantime.
 	self.wg.Add(1)
-	go self._FlushInBackground(
-		buffer.Bytes(), truncated, completions, self.wg)
+	self.owner.pool.Submit(func() {
+		defer self.wg.Done()
+
+		self._FlushInBackground(buffer.Bytes(), truncated, completions)
+	})
 
 	return nil
 }
@@ -347,20 +368,24 @@ func (self *MemcacheFileWriter) Size() (int64, error) {
 
 // Flush the data in the background.
 func (self *MemcacheFileWriter) _FlushInBackground(
-	data []byte, truncate bool, completions []func(),
-	wg *sync.WaitGroup) {
+	data []byte, truncate bool, completions []func()) {
 
 	defer func() {
-		for _, c := range completions {
-			c()
-		}
+		// We guarantee to call the completions after this had been
+		// flushed but we can not wait for them to exit before we
+		// release the writer. Therefore we call these in the
+		// background so we can return immediately and release our
+		// concurrency slot.
+		go func() {
+			for _, c := range completions {
+				c()
+			}
+		}()
 
 		// We are ready to flush again!
 		self.mu.Lock()
 		self.flushing = false
 		self.mu.Unlock()
-
-		wg.Done()
 	}()
 
 	// The below is covered by concurrency control - will wait here
@@ -393,6 +418,7 @@ func (self *MemcacheFileWriter) _FlushInBackground(
 		writer.Truncate()
 	}
 
+	self.owner.ChargeBytes(-int64((len(data))))
 	metricCachedBytes.Sub(float64(len(data)))
 	_, err = writer.Write(data)
 	if err != nil {
@@ -426,6 +452,16 @@ type MemcacheFileStore struct {
 	max_age time.Duration
 
 	closed bool
+
+	// Total number of bytes in flight right now. If this gets too
+	// large we start turning writes to be synchronous to push back
+	// against writers and protect our memory usage.
+	total_cached_bytes int64
+
+	// Pool of flusher workers
+	pool *pond.WorkerPool
+
+	target_memory_use int64
 }
 
 func NewMemcacheFileStore(
@@ -448,6 +484,11 @@ func NewMemcacheFileStore(
 		max_writers = 200
 	}
 
+	target_memory_use := config_obj.Datastore.MemcacheWriteMaxMemory
+	if target_memory_use == 0 {
+		target_memory_use = 100 * 1024 * 1024
+	}
+
 	result := &MemcacheFileStore{
 		id:         utils.GetId(),
 		ctx:        ctx,
@@ -457,13 +498,19 @@ func NewMemcacheFileStore(
 		data_cache: make(map[string]*MemcacheFileWriter),
 		concurrency: utils.NewConcurrencyControl(
 			int(max_writers), time.Hour),
-		max_age: time.Duration(max_age) * time.Millisecond,
-		min_age: time.Duration(ttl) * time.Millisecond,
+		max_age:           time.Duration(max_age) * time.Millisecond,
+		min_age:           time.Duration(ttl) * time.Millisecond,
+		pool:              pond.New(int(max_writers), int(max_writers*10)),
+		target_memory_use: target_memory_use,
 	}
 
 	go result.Start(ctx)
 
 	return result
+}
+
+func (self *MemcacheFileStore) ChargeBytes(count int64) {
+	atomic.AddInt64(&self.total_cached_bytes, count)
 }
 
 func (self *MemcacheFileStore) FlushCycle(ctx context.Context) {
@@ -567,6 +614,11 @@ func (self *MemcacheFileStore) WriteFileWithCompletion(
 		result.AddCompletion(completion)
 	}
 
+	// Turn the call into syncronous if our memory is exceeded.
+	if atomic.LoadInt64(&self.total_cached_bytes) > self.target_memory_use {
+		result.AddCompletion(utils.SyncCompleter)
+	}
+
 	return result, nil
 }
 
@@ -588,6 +640,10 @@ func (self *MemcacheFileStore) Flush() {
 	for _, writer := range self.data_cache {
 		writer.Flush()
 	}
+
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger.Info("<red>MemcacheFileStore</>: Shutdown: Waiting to flush %v bytes",
+		atomic.LoadInt64(&self.total_cached_bytes))
 
 	// Wait for all the flushers to finish
 	self.wg.Wait()
