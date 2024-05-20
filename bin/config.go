@@ -107,20 +107,20 @@ var (
 		File()
 
 	config_rotate_server_key = config_command.Command(
-		"rotate_key",
-		"Generate a new config file with a rotates server key.")
+		"rotate_keys",
+		"Regenerate server private keys and reissue certificates.")
 
-	config_rotate_server_key_valitidy = config_rotate_server_key.Flag(
+	config_rotate_server_key_validity = config_rotate_server_key.Flag(
 		"validity",
-		"How long should the cert be valid from in days (default 365).").Int64()
+		"How long should the new certs be valid for in days (default 365).").Int64()
 
 	config_reissue_server_key = config_command.Command(
-		"reissue_key",
-		"Reissue all certificates with the same keys.")
+		"reissue_certs",
+		"Reissue server certificates for the existing private keys.")
 
-	config_reissue_server_key_valitidy = config_reissue_server_key.Flag(
+	config_reissue_server_key_validity = config_reissue_server_key.Flag(
 		"validity",
-		"How long should the cert be valid from in days (default 365).").Int64()
+		"How long should the new certs be valid for in days (default 365).").Int64()
 )
 
 func maybeGetOrgConfig(
@@ -284,11 +284,11 @@ func doRotateKeyConfig() error {
 		return err
 	}
 
-	if *config_rotate_server_key_valitidy > 0 {
+	if *config_rotate_server_key_validity > 0 {
 		if config_obj.Defaults == nil {
 			config_obj.Defaults = &config_proto.Defaults{}
 		}
-		config_obj.Defaults.CertificateValidityDays = *config_rotate_server_key_valitidy
+		config_obj.Defaults.CertificateValidityDays = *config_rotate_server_key_validity
 	}
 
 	// Frontends must have a well known common name.
@@ -329,11 +329,11 @@ func doReissueServerKeys() error {
 		return err
 	}
 
-	if *config_reissue_server_key_valitidy > 0 {
+	if *config_reissue_server_key_validity > 0 {
 		if config_obj.Defaults == nil {
 			config_obj.Defaults = &config_proto.Defaults{}
 		}
-		config_obj.Defaults.CertificateValidityDays = *config_reissue_server_key_valitidy
+		config_obj.Defaults.CertificateValidityDays = *config_reissue_server_key_validity
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
