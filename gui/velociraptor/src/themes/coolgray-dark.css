@@ -484,6 +484,7 @@ body.coolgray-dark {
 
 .coolgray-dark .react-bootstrap-table-pagination-total {
   color: var(--color-foreground);
+  padding-left: 15px;
 }
 
 /* Tables */

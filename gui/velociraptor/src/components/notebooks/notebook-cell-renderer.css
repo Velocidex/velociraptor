@@ -3,6 +3,7 @@
 
 .debug-message {
     color: var(--color-foreground-dimmed);
+    margin-left: 15px;
 }
 
 .info-message {

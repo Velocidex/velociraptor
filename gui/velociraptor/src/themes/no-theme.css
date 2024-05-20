@@ -207,3 +207,8 @@ body.no-theme {
     background: var(--color-nav-link-active-background);
     font-weight: 700;
   }
+
+  .no-theme .react-bootstrap-table-pagination-total {
+    color: var(--color-foreground);
+    padding-left: 15px;
+  }

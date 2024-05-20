@@ -418,6 +418,7 @@ body.github-dimmed-dark {
 
 .github-dimmed-dark .react-bootstrap-table-pagination-total {
   color: var(--color-foreground);
+  padding-left: 15px;
 }
 
 /* Tables */

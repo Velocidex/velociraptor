@@ -251,7 +251,9 @@ class UserSettings extends React.PureComponent {
                       <option value="veloci-dark">{T("Velociraptor (dark)")}</option>
                       <option value="no-theme">{T("Velociraptor Classic (light)")}</option>
                       <option value="pink-light">{T("Strawberry Milkshake (light)")}</option>
-                      <option value="ncurses">{T("Ncurses (light)")}</option>
+                      <option value="ncurses-light">{T("Ncurses (light)")}</option>
+                      <option value="ncurses-dark">{T("Ncurses (dark)")}</option>
+                      {/* <option value="github-light">{T("Github (light)")}</option> */}
                       <option value="github-dimmed-dark">{T("Github dimmed (dark)")}</option>
                       <option value="coolgray-dark">{T("Cool Gray (dark)")}</option>
                       <option value="midnight">{T("Midnight Inferno (very dark)")}</option>
@@ -429,10 +431,16 @@ export default class UserLabel extends React.Component {
         } else if(options.theme === "ncurses") {
             ace_options.theme = "ace/theme/sqlserver";
             ace_options.fontFamily = "fixedsys";
+        } else if(options.theme === "ncurses-dark") {
+            ace_options.theme = "ace/theme/tomorrow_night_eighties";
+            ace_options.fontFamily = "fixedsys";
+        } else if(options.theme === "github-default-light") {
+            ace_options.theme = "ace/theme/dracula";
+            ace_options.fontFamily = "Iosevka Term";
         } else if(options.theme === "github-dimmed-dark") {
           ace_options.theme = "ace/theme/dracula";
           ace_options.fontFamily = "Iosevka Term";
-        } else if(options.theme === "github-dimmed-light") {
+        } else if(options.theme === "github-default-light") {
           ace_options.theme = "ace/theme/sqlserver";
           ace_options.fontFamily = "Iosevka Term";
         } else if(options.theme === "coolgray-dark") {
