@@ -506,6 +506,7 @@ body.midnight {
 
 .midnight .react-bootstrap-table-pagination-total {
   color: var(--color-foreground);
+  padding-left: 15px;
 }
 
 /* Tables */
