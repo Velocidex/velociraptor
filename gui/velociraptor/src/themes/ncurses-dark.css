@@ -1137,17 +1137,17 @@ body.ncurses-dark {
 
 .ncurses-dark .file-tree > ul > ul > li {
   font-weight: normal;
-  color: #42a5f5;
+  color: var(--color-foreground);
 }
 
 .ncurses-dark .file-tree .isActive {
-  color: #42a5f5;
+  color: var(--color-foreground);
   background-color: var(--color-accent-100);
 }
 
 .ncurses-dark .file-tree,
 .ncurses-dark .file-tree ul {
-  background: var(--color-foreground);
+  background: var(--color-foreground-inverse);
 }
 
 /* Cards */
