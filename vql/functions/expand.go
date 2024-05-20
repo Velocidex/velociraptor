@@ -23,6 +23,8 @@ func (self ExpandPath) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
+	defer vql_subsystem.RegisterMonitor("expand", args)()
+
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
 		scope.Log("expand: %s", err)

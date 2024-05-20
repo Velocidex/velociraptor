@@ -46,6 +46,9 @@ func (self _Base64Decode) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("base64decode", args)()
+
 	arg := &_Base64DecodeArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -73,6 +76,9 @@ func (self _Base85Decode) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("base85decode", args)()
+
 	arg := &_Base64DecodeArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -106,6 +112,8 @@ func (self _Base64Encode) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+	defer vql_subsystem.RegisterMonitor("base64encode", args)()
+
 	arg := &_Base64EncodeArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -135,6 +143,7 @@ func (self _ToLower) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+	defer vql_subsystem.RegisterMonitor("lowcase", args)()
 	arg := &_ToLowerArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -159,6 +168,7 @@ func (self _ToUpper) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+	defer vql_subsystem.RegisterMonitor("upcase", args)()
 	arg := &_ToLowerArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -187,6 +197,8 @@ func (self _ToInt) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+	defer vql_subsystem.RegisterMonitor("atoi", args)()
+
 	arg := &_ToIntArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -219,10 +231,13 @@ func (self _ParseFloat) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("parse_float", args)()
+
 	arg := &_ToIntArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("atoi: %s", err.Error())
+		scope.Log("parse_float: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -280,6 +295,7 @@ func (self _UTF16) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+	defer vql_subsystem.RegisterMonitor("utf16", args)()
 
 	arg := &_Base64DecodeArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -311,6 +327,7 @@ func (self _UTF16Encode) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+	defer vql_subsystem.RegisterMonitor("utf16_encode", args)()
 
 	arg := &_Base64EncodeArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -359,6 +376,8 @@ func (self _GetFunction) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+	defer vql_subsystem.RegisterMonitor("get", args)()
+
 	arg := &_GetFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -425,6 +444,8 @@ func (self _SetFunction) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+	defer vql_subsystem.RegisterMonitor("set", args)()
+
 	arg := &_SetFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {

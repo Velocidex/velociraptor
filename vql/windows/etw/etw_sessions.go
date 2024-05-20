@@ -1,3 +1,4 @@
+//go:build windows && amd64
 // +build windows,amd64
 
 package etw
@@ -72,6 +73,7 @@ func (self EtwSessions) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("etw_sessions", args)()
 
 		arg := &EtwSessionsArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

@@ -152,6 +152,9 @@ func (self _Timestamp) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 
 func (self _Timestamp) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("timestamp", args)()
+
 	arg := &_TimestampArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {

@@ -38,6 +38,9 @@ func (self ParseBinaryFunction) Info(scope vfilter.Scope, type_map *vfilter.Type
 func (self ParseBinaryFunction) Call(
 	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("parse_binary", args)()
+
 	arg := &ParseBinaryFunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {

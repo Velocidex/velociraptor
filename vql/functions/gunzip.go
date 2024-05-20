@@ -38,6 +38,9 @@ type Gunzip struct{}
 func (self *Gunzip) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("gunzip", args)()
+
 	arg := &GunzipArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {

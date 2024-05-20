@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package windows
@@ -26,6 +27,9 @@ func (self _AMSIFunction) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("amsi", args)()
+
 	arg := &_AMSIFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {

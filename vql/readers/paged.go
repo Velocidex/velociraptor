@@ -257,10 +257,13 @@ func GetReaderPool(scope vfilter.Scope, lru_size int64) *ReaderPool {
 
 		// Close the item on expiration
 		pool.lru.SetExpirationReasonCallback(
-			func(key string, reason ttlcache.EvictionReason, value interface{}) error {
+			func(key string,
+				reason ttlcache.EvictionReason, value interface{}) error {
 				accessor, ok := value.(*AccessorReader)
 				if ok {
-					accessor.Close()
+					// We may not block this callback so close the
+					// accessor in the background.
+					go accessor.Close()
 				}
 				return nil
 			})

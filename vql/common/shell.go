@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package common
 
@@ -62,24 +62,25 @@ func (self ShellPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("execve", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.EXECVE)
 		if err != nil {
-			scope.Log("shell: %v", err)
+			scope.Log("execve: %v", err)
 			return
 		}
 
 		// Check the config if we are allowed to execve at all.
 		config_obj, ok := artifacts.GetConfig(scope)
 		if ok && config_obj.PreventExecve {
-			scope.Log("shell: Not allowed to execve by configuration.")
+			scope.Log("execve: Not allowed to execve by configuration.")
 			return
 		}
 
 		arg := &ShellPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("shell: %v", err)
+			scope.Log("execve: %v", err)
 			return
 		}
 
@@ -89,7 +90,7 @@ func (self ShellPlugin) Call(
 		}
 
 		if len(arg.Argv) == 0 {
-			scope.Log("shell: no command to run")
+			scope.Log("execve: no command to run")
 			return
 		}
 
@@ -105,7 +106,7 @@ func (self ShellPlugin) Call(
 
 		// Report the command we ran for auditing
 		// purposes. This will be collected in the flow logs.
-		scope.Log("shell: Running external command %v", arg.Argv)
+		scope.Log("execve: Running external command %v", arg.Argv)
 
 		if arg.Length == 0 {
 			arg.Length = 10240
@@ -125,19 +126,19 @@ func (self ShellPlugin) Call(
 
 		stdout_pipe, err := command.StdoutPipe()
 		if err != nil {
-			scope.Log("shell: no command to run")
+			scope.Log("execve: no command to run")
 			return
 		}
 
 		stderr_pipe, err := command.StderrPipe()
 		if err != nil {
-			scope.Log("shell: no command to run")
+			scope.Log("execve: no command to run")
 			return
 		}
 
 		err = command.Start()
 		if err != nil {
-			scope.Log("shell: %v", err)
+			scope.Log("execve: %v", err)
 			select {
 			case <-ctx.Done():
 				return
@@ -194,7 +195,7 @@ func (self ShellPlugin) Call(
 					}
 				}, wg)
 			if err != nil {
-				scope.Log("shell: %v", err)
+				scope.Log("execve: %v", err)
 			}
 		}()
 
@@ -230,7 +231,7 @@ func (self ShellPlugin) Call(
 					}
 				}, wg)
 			if err != nil {
-				scope.Log("shell: %v", err)
+				scope.Log("execve: %v", err)
 			}
 		}()
 

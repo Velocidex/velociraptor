@@ -1,3 +1,4 @@
+//go:build windows && amd64
 // +build windows,amd64
 
 // References
@@ -41,10 +42,11 @@ func (self WinObjPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("winobj", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
-			scope.Log("proc_dump: %s", err)
+			scope.Log("winobj: %s", err)
 			return
 		}
 

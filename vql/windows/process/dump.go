@@ -1,3 +1,4 @@
+//go:build windows && cgo
 // +build windows,cgo
 
 /*
@@ -54,6 +55,7 @@ func (self ProcDumpPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("proc_dump", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
