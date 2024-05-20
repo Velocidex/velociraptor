@@ -166,7 +166,8 @@ func NewSMBMountCache(scope vfilter.Scope) *SMBMountCache {
 		func(key string, value interface{}) error {
 			ctx, ok := value.(*SMBConnectionContext)
 			if ok {
-				ctx.Close()
+				// Do not block the lru while closing.
+				go ctx.Close()
 			}
 			return nil
 		})

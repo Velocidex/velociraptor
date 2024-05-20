@@ -40,6 +40,7 @@ func (self ThreadPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer vql_subsystem.CheckForPanic(scope, "thread")
+		defer vql_subsystem.RegisterMonitor("thread", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {

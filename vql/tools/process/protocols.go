@@ -33,6 +33,7 @@ func (self ProcessTrackerUpdater) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("process_tracker_updates", args)()
 
 		if tracker == nil {
 			return

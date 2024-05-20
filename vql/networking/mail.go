@@ -90,6 +90,8 @@ func (self MailFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
+	defer vql_subsystem.RegisterMonitor("mail", args)()
+
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
 		scope.Log("ERROR:mail: %s", err)

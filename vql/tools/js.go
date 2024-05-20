@@ -60,6 +60,9 @@ func getVM(ctx context.Context,
 func (self *JSCompile) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("js", args)()
+
 	arg := &JSCompileArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -99,6 +102,9 @@ type JSCall struct{}
 func (self *JSCall) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("js_call", args)()
+
 	arg := &JSCallArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -157,6 +163,9 @@ type JSSet struct{}
 func (self *JSSet) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("js_set", args)()
+
 	arg := &JSSetArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -211,6 +220,9 @@ type JSGet struct{}
 func (self *JSGet) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("js_get", args)()
+
 	arg := &JSGetArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {

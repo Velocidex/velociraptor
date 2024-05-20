@@ -1,4 +1,5 @@
-//+build extras
+//go:build extras
+// +build extras
 
 package tools
 
@@ -30,6 +31,8 @@ type GCSPubsubPublishFunction struct{}
 func (self *GCSPubsubPublishFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("gcs_pubsub_publish", args)()
 
 	arg := &GCSPubsubPublishArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -67,7 +70,7 @@ func (self *GCSPubsubPublishFunction) Call(ctx context.Context,
 	}
 
 	result := t.Publish(ctx, &pubsub.Message{
-		Data: []byte(serialized),
+		Data:       []byte(serialized),
 		Attributes: attributesStringMap,
 	})
 

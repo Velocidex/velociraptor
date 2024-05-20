@@ -75,6 +75,9 @@ type GeneratorFunction struct{}
 func (self *GeneratorFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("generate", args)()
+
 	arg := &GeneratorArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {

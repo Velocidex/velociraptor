@@ -66,6 +66,7 @@ func (self VADPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer vql_subsystem.CheckForPanic(scope, "vad")
+		defer vql_subsystem.RegisterMonitor("vad", args)()
 
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {

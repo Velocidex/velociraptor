@@ -30,6 +30,8 @@ func (self *TraceFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
+	defer vql_subsystem.RegisterMonitor("trace", args)()
+
 	buf := new(bytes.Buffer)
 	lf := []byte("\n")
 	zipfile := zip.NewWriter(buf)

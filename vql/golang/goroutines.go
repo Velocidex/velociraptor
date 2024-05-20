@@ -28,6 +28,7 @@ func (self GoRoutinesPlugin) Call(ctx context.Context,
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("profile_goroutines", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {

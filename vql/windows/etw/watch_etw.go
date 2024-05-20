@@ -40,6 +40,7 @@ func (self WatchETWPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("watch_etw", args)()
 
 		arg := &WatchETWArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
