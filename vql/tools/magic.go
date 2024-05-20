@@ -1,3 +1,4 @@
+//go:build cgo
 // +build cgo
 
 package tools
@@ -34,6 +35,8 @@ func (self MagicFunction) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("magic", args)()
 
 	arg := &MagicFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

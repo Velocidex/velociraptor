@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -152,17 +153,18 @@ type LookupSidFunction struct{}
 func (self *LookupSidFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+	defer vql_subsystem.RegisterMonitor("lookupSID", args)()
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
-		scope.Log("LookupSID: %s", err)
+		scope.Log("lookupSID: %s", err)
 		return false
 	}
 
 	arg := &LookupSidFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("LookupSID: %s", err.Error())
+		scope.Log("lookupSID: %s", err.Error())
 		return false
 	}
 

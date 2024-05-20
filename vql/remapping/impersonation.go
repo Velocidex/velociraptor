@@ -8,6 +8,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
@@ -32,6 +33,8 @@ func (self ImpersonatedExpand) Copy() types.FunctionInterface {
 func (self ImpersonatedExpand) Call(
 	ctx context.Context,
 	scope vfilter.Scope, args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("expand", args)()
 
 	arg := &ExpandPathArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

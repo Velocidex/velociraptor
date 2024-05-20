@@ -20,6 +20,7 @@ type getChain struct{}
 
 func (self getChain) Call(ctx context.Context,
 	scope types.Scope, args *ordereddict.Dict) types.Any {
+	defer vql_subsystem.RegisterMonitor("process_tracker_callchain", args)()
 
 	arg := &getChainArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

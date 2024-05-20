@@ -1,3 +1,4 @@
+//go:build windows && cgo
 // +build windows,cgo
 
 /*
@@ -119,6 +120,7 @@ func (self WmiEventPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("wmi_events", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {

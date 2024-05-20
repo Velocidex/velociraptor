@@ -43,6 +43,8 @@ func (self *PKEncryptFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
+	defer vql_subsystem.RegisterMonitor("pk_encrypt", args)()
+
 	arg := &PKEncryptArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -152,6 +154,7 @@ func encryptPGP(recip []*openpgp.Entity,
 func (self *PKDecryptFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+	defer vql_subsystem.RegisterMonitor("pk_decrypt", args)()
 
 	arg := &PKDecryptArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

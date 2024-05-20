@@ -174,6 +174,7 @@ func (self SplitRecordParser) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("split_records", args)()
 
 		arg := _SplitRecordParserArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)

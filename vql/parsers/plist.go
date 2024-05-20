@@ -49,6 +49,9 @@ func (self PlistFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 func (self *PlistFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) (result vfilter.Any) {
+
+	defer vql_subsystem.RegisterMonitor("plist", args)()
+
 	arg := &_PlistFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {

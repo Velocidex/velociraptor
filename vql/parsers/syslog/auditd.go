@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 // Parse auditd log files.
@@ -36,6 +37,7 @@ func (self AuditdPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("parse_auditd", args)()
 
 		reassembler, err := libaudit.NewReassembler(5, 2*time.Second,
 			&streamHandler{scope: scope, ctx: ctx, output_chan: output_chan})
@@ -124,6 +126,7 @@ func (self WatchAuditdPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("watch_auditd", args)()
 
 		reassembler, err := libaudit.NewReassembler(5, 2*time.Second,
 			&streamHandler{scope: scope, ctx: ctx, output_chan: output_chan})

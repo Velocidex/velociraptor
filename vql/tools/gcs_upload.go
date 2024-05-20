@@ -1,4 +1,5 @@
-//+build extras
+//go:build extras
+// +build extras
 
 package tools
 
@@ -37,6 +38,8 @@ type GCSUploadFunction struct{}
 func (self *GCSUploadFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("upload_gcs", args)()
 
 	arg := &GCSUploadArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

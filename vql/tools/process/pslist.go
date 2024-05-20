@@ -26,6 +26,7 @@ func (self _ProcessTrackerPsList) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("process_tracker_pslist", args)()
 
 		for _, proc := range GetGlobalTracker().Processes(ctx, scope) {
 			select {

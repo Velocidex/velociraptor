@@ -7,6 +7,8 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/types"
+	"www.velocidex.com/golang/vfilter/utils/dict"
 )
 
 type _ToDictFunctionArgs struct {
@@ -27,6 +29,8 @@ func (self _ToDictFunc) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 
 func (self _ToDictFunc) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("to_dict", args)()
 
 	arg := &_ToDictFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -71,6 +75,7 @@ func (self _ItemsFunc) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 
 func (self _ItemsFunc) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+	defer vql_subsystem.RegisterMonitor("items", args)()
 
 	arg := &_ToDictFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -96,7 +101,23 @@ func (self _ItemsFunc) Call(ctx context.Context, scope vfilter.Scope,
 	return result
 }
 
+type _DictFunc struct{}
+
+func (self _DictFunc) Info(scope types.Scope, type_map *types.TypeMap) *types.FunctionInfo {
+	return &types.FunctionInfo{
+		Name: "dict",
+		Doc:  "Construct a dict from arbitrary keyword args.",
+	}
+}
+
+func (self _DictFunc) Call(ctx context.Context, scope types.Scope, args *ordereddict.Dict) types.Any {
+	defer vql_subsystem.RegisterMonitor("dict", args)()
+
+	return dict.RowToDict(ctx, scope, args)
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&_ItemsFunc{})
 	vql_subsystem.RegisterFunction(&_ToDictFunc{})
+	vql_subsystem.OverrideFunction(&_DictFunc{})
 }

@@ -45,6 +45,9 @@ func (self *PatchFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &PatchFunctionArgs{}
+
+	defer vql_subsystem.RegisterMonitor("patch", args)()
+
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("patch: %s", err.Error())

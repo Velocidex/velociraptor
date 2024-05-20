@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package parsers
 
@@ -63,6 +63,9 @@ func (self ParseJsonFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 func (self ParseJsonFunction) Call(
 	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("parse_json", args)()
+
 	arg := &ParseJsonFunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -92,6 +95,9 @@ func (self ParseJsonArray) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 func (self ParseJsonArray) Call(
 	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("parse_json_array", args)()
+
 	arg := &ParseJsonFunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -144,6 +150,7 @@ func (self ParseJsonlPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("parse_jsonl", args)()
 
 		arg := &ParseJsonlPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -259,6 +266,7 @@ func (self ParseJsonArrayPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("parse_json_array", args)()
 
 		result := ParseJsonArray{}.Call(ctx, scope, args)
 		result_value := reflect.Indirect(reflect.ValueOf(result))
@@ -344,16 +352,16 @@ func (self _MapInterfaceAssociativeProtocol) GetMembers(
 }
 
 /*
- When JSON encoding a protobuf, the output uses the original
- protobuf field names, however within Go they are converted to go
- style. For example if the protobuf has os_info, then Go fields will
- be OsInfo.
+When JSON encoding a protobuf, the output uses the original
+protobuf field names, however within Go they are converted to go
+style. For example if the protobuf has os_info, then Go fields will
+be OsInfo.
 
- This is very confusing to users since they first use SELECT * from
- plugin(), the * expands to Associative.GetMembers(). This should emit
- the field names that occur in the JSON. The user will then attempt to
- select such a field, and Associative() should therefore convert to
- the go style automatically.
+This is very confusing to users since they first use SELECT * from
+plugin(), the * expands to Associative.GetMembers(). This should emit
+the field names that occur in the JSON. The user will then attempt to
+select such a field, and Associative() should therefore convert to
+the go style automatically.
 */
 type _ProtobufAssociativeProtocol struct{}
 
@@ -545,6 +553,7 @@ func (self WriteJSONPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("write_jsonl", args)()
 
 		arg := &WriteJSONPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -639,6 +648,8 @@ func (self WatchJsonlPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("watch_jsonl", args)()
+
 		arg := &syslog.ScannerPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {

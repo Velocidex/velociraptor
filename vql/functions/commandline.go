@@ -20,6 +20,9 @@ type CommandlineToArgvFunction struct{}
 func (self *CommandlineToArgvFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("commandline", args)()
+
 	arg := &CommandlineToArgvArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {

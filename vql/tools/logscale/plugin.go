@@ -16,19 +16,19 @@ import (
 )
 
 type logscalePluginArgs struct {
-	Query              vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
-	ApiBaseUrl	   string   `vfilter:"required,field=apibaseurl,doc=Base URL for Ingestion API"`
-	IngestToken	   string   `vfilter:"required,field=ingest_token,doc=Ingest token for API"`
-	Threads            int      `vfilter:"optional,field=threads,doc=How many threads to use to post batched events."`
-	HttpTimeoutSec	   int	    `vfilter:"optional,field=http_timeout,doc=Timeout for http requests (default: 10s)"`
-	MaxRetries	   int      `vfilter:"optional,field=max_retries,doc=Maximum number of retries before failing an operation. A value < 0 means retry forever. (default: 7200)"`
-	RootCerts          string   `vfilter:"optional,field=root_ca,doc=As a better alternative to skip_verify, allows root ca certs to be added here."`
-	SkipVerify	   bool	    `vfilter:"optional,field=skip_verify,doc=Skip verification of server certificates (default: false)"`
-	BatchingTimeoutMs  int      `vfilter:"optional,field=batching_timeout_ms,doc=Timeout between posts (default: 3000ms)"`
-	EventBatchSize	   int	    `vfilter:"optional,field=event_batch_size,doc=Items to batch before post (default: 2000)"`
-	TagFields	   []string `vfilter:"optional,field=tag_fields,doc=Name of fields to be used as tags. Fields can be renamed using =<newname>"`
-	StatsInterval	   int	    `vfilter:"optional,field=stats_interval,doc=Interval, in seconds, to post statistics to the log (default: 600, 0 to disable)"`
-	Debug		   bool     `vfilter:"optional,field=debug,doc=Enable verbose logging."`
+	Query             vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
+	ApiBaseUrl        string              `vfilter:"required,field=apibaseurl,doc=Base URL for Ingestion API"`
+	IngestToken       string              `vfilter:"required,field=ingest_token,doc=Ingest token for API"`
+	Threads           int                 `vfilter:"optional,field=threads,doc=How many threads to use to post batched events."`
+	HttpTimeoutSec    int                 `vfilter:"optional,field=http_timeout,doc=Timeout for http requests (default: 10s)"`
+	MaxRetries        int                 `vfilter:"optional,field=max_retries,doc=Maximum number of retries before failing an operation. A value < 0 means retry forever. (default: 7200)"`
+	RootCerts         string              `vfilter:"optional,field=root_ca,doc=As a better alternative to skip_verify, allows root ca certs to be added here."`
+	SkipVerify        bool                `vfilter:"optional,field=skip_verify,doc=Skip verification of server certificates (default: false)"`
+	BatchingTimeoutMs int                 `vfilter:"optional,field=batching_timeout_ms,doc=Timeout between posts (default: 3000ms)"`
+	EventBatchSize    int                 `vfilter:"optional,field=event_batch_size,doc=Items to batch before post (default: 2000)"`
+	TagFields         []string            `vfilter:"optional,field=tag_fields,doc=Name of fields to be used as tags. Fields can be renamed using =<newname>"`
+	StatsInterval     int                 `vfilter:"optional,field=stats_interval,doc=Interval, in seconds, to post statistics to the log (default: 600, 0 to disable)"`
+	Debug             bool                `vfilter:"optional,field=debug,doc=Enable verbose logging."`
 }
 
 func (args *logscalePluginArgs) validate() error {
@@ -58,7 +58,7 @@ func (args *logscalePluginArgs) validate() error {
 		return errInvalidArgument{
 			Arg: "threads",
 			Err: fmt.Errorf("invalid value %v - must be 0 or positive integer",
-					args.Threads),
+				args.Threads),
 		}
 	}
 
@@ -66,7 +66,7 @@ func (args *logscalePluginArgs) validate() error {
 		return errInvalidArgument{
 			Arg: "batching_timeout_ms",
 			Err: fmt.Errorf("invalid value %v - must be 0 or positive integer",
-					args.BatchingTimeoutMs),
+				args.BatchingTimeoutMs),
 		}
 	}
 
@@ -74,7 +74,7 @@ func (args *logscalePluginArgs) validate() error {
 		return errInvalidArgument{
 			Arg: "event_batch_size",
 			Err: fmt.Errorf("invalid value %v - must be 0 or positive integer",
-					args.EventBatchSize),
+				args.EventBatchSize),
 		}
 	}
 
@@ -82,7 +82,7 @@ func (args *logscalePluginArgs) validate() error {
 		return errInvalidArgument{
 			Arg: "http_timeout",
 			Err: fmt.Errorf("invalid value %v - must be 0 or positive integer",
-					args.HttpTimeoutSec),
+				args.HttpTimeoutSec),
 		}
 	}
 
@@ -90,7 +90,7 @@ func (args *logscalePluginArgs) validate() error {
 		return errInvalidArgument{
 			Arg: "stats_interval",
 			Err: fmt.Errorf("invalid value %v - must be 0 or positive integer",
-					args.StatsInterval),
+				args.StatsInterval),
 		}
 	}
 
@@ -155,6 +155,7 @@ func (self logscalePlugin) Call(ctx context.Context,
 
 	go func() {
 		defer close(outputChan)
+		defer vql_subsystem.RegisterMonitor("logscale", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
 		if err != nil {
@@ -199,7 +200,7 @@ func (self logscalePlugin) Call(ctx context.Context,
 
 		if arg.SkipVerify {
 			err = networking.EnableSkipVerify(transport.TLSClientConfig,
-							  config_obj.Client)
+				config_obj.Client)
 			if err != nil {
 				scope.Log("logscale: %v", err)
 				return
@@ -221,8 +222,7 @@ func (self logscalePlugin) Call(ctx context.Context,
 
 		rowChan := arg.Query.Eval(ctx, scope)
 
-
-		var tickerChan <- chan time.Time
+		var tickerChan <-chan time.Time
 		if arg.StatsInterval != 0 {
 			ticker := time.NewTicker(time.Duration(arg.StatsInterval) * time.Second)
 			tickerChan = ticker.C
@@ -231,12 +231,12 @@ func (self logscalePlugin) Call(ctx context.Context,
 			tickerChan = make(chan time.Time)
 		}
 
-		done:
+	done:
 		for {
 			select {
-			case <- ctx.Done():
+			case <-ctx.Done():
 				break done
-			case row, ok := <- rowChan:
+			case row, ok := <-rowChan:
 				if !ok {
 					break done
 				}
