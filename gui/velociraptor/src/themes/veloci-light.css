@@ -729,6 +729,7 @@ body.veloci-light {
 
 .veloci-light .react-bootstrap-table-pagination-total {
   color: var(--color-foreground);
+  padding-left: 15px;
 }
 
 .veloci-light .flow-log-filter,
