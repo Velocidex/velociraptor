@@ -1079,9 +1079,9 @@ body.ncurses-dark {
   color: #66bb6a;
 }
 
-.ncurses-dark .report-viewer pre * {
+.ncurses-dark .report-viewer pre {
   font-weight: normal;
-  filter: invert(1) hue-rotate(4rad);;
+  filter: invert(1) hue-rotate(4rad);
   border-radius: 0;
   border: none;
   padding-top: 2px;
