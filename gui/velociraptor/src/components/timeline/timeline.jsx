@@ -13,6 +13,7 @@ import { PrepareData } from '../core/table.jsx';
 import VeloTimestamp from "../utils/time.jsx";
 import VeloValueRenderer from '../utils/value.jsx';
 import Form from 'react-bootstrap/Form';
+import { JSONparse } from '../utils/json_parse.jsx';
 
 // make sure you include the timeline stylesheet or the timeline will not be styled
 import 'react-calendar-timeline/lib/Timeline.css';
@@ -284,9 +285,8 @@ export default class TimelineRenderer extends React.Component {
     render() {
         let super_timeline = {timelines:[]};
         if (_.isString(this.props.params)) {
-            try {
-                super_timeline = JSON.parse(this.props.params);
-            } catch(e) {
+            super_timeline = JSONparse(this.props.params);
+            if(!super_timeline) {
                 return <></>;
             }
         } else if(_.isObject(this.props.params)) {

@@ -48,7 +48,7 @@ parameters:
 sources:
   - query: |
         LET VSS_MAX_AGE_DAYS <= VSSAnalysisAge
-        LET Accessor = if(condition=VSSAnalysisAge > 0, then="ntfs_vss", else="auto")
+        LET Accessor <= if(condition=VSSAnalysisAge > 0, then="ntfs_vss", else="auto")
 
         -- Build time bounds
         LET DateAfterTime <= if(condition=DateAfter,
@@ -104,4 +104,3 @@ sources:
             Task,
             Source
         FROM hits
-        GROUP BY EventRecordID, Channel

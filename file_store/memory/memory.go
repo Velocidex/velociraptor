@@ -138,7 +138,7 @@ func (self *MemoryWriter) Size() (int64, error) {
 }
 
 func (self *MemoryWriter) Update(data []byte, offset int64) error {
-	defer api.InstrumentWithDelay("update", "MemoryReader", nil)()
+	defer api.InstrumentWithDelay("update", "MemoryWriter", nil)()
 
 	err := self._Flush()
 	if err != nil {
@@ -173,7 +173,7 @@ func (self *MemoryWriter) Update(data []byte, offset int64) error {
 }
 
 func (self *MemoryWriter) Write(data []byte) (int, error) {
-	defer api.InstrumentWithDelay("write", "MemoryReader", nil)()
+	defer api.InstrumentWithDelay("write", "MemoryWriter", nil)()
 
 	self.buf = append(self.buf, data...)
 	return len(data), nil
@@ -213,7 +213,7 @@ func (self *MemoryWriter) Close() error {
 }
 
 func (self *MemoryWriter) Truncate() error {
-	defer api.InstrumentWithDelay("truncate", "MemoryReader", nil)()
+	defer api.InstrumentWithDelay("truncate", "MemoryWriter", nil)()
 
 	self.buf = nil
 	return nil
@@ -274,7 +274,7 @@ func (self *MemoryFileStore) ReadFile(path api.FSPathSpec) (api.FileReader, erro
 }
 
 func (self *MemoryFileStore) WriteFile(path api.FSPathSpec) (api.FileWriter, error) {
-	return self.WriteFileWithCompletion(path, nil)
+	return self.WriteFileWithCompletion(path, utils.SyncCompleter)
 }
 
 func (self *MemoryFileStore) WriteFileWithCompletion(

@@ -163,11 +163,13 @@ func NewSMBMountCache(scope vfilter.Scope) *SMBMountCache {
 	}
 	result.lru.SetTTL(time.Hour)
 	result.lru.SetExpirationCallback(
-		func(key string, value interface{}) {
+		func(key string, value interface{}) error {
 			ctx, ok := value.(*SMBConnectionContext)
 			if ok {
-				ctx.Close()
+				// Do not block the lru while closing.
+				go ctx.Close()
 			}
+			return nil
 		})
 
 	vql_subsystem.GetRootScope(scope).AddDestructor(func() {

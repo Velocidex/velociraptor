@@ -199,14 +199,18 @@ func (self ResultSetFactory) NewResultSetWriter(
 		return &NullResultSetWriter{}, nil
 	}
 
+	// Call the completion when both files are done.
+	completer := utils.NewCompleter(completion)
+
 	fd, err := file_store_factory.WriteFileWithCompletion(
-		log_path, completion)
+		log_path, completer.GetCompletionFunc())
 	if err != nil {
 		return nil, err
 	}
 
-	idx_fd, err := file_store_factory.WriteFile(log_path.
-		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
+	idx_fd, err := file_store_factory.WriteFileWithCompletion(
+		log_path.SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX),
+		completer.GetCompletionFunc())
 	if err != nil {
 		fd.Close()
 		return nil, err

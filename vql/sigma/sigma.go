@@ -35,6 +35,7 @@ func (self SigmaPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("sigma", args)()
 
 		arg := &SigmaPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

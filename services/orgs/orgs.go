@@ -322,7 +322,7 @@ func (self *OrgManager) Start(
 			case <-ctx.Done():
 				return
 
-			case <-time.After(10 * time.Second):
+			case <-time.After(utils.Jitter(10 * time.Second)):
 				self.Scan()
 			}
 		}

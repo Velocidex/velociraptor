@@ -54,7 +54,7 @@ func PushMetrics(ctx context.Context, wg *sync.WaitGroup,
 			case <-ctx.Done():
 				return
 
-			case <-time.After(10 * time.Second):
+			case <-time.After(utils.Jitter(10 * time.Second)):
 			}
 
 			// Journal may not be ready yet so it is not
@@ -273,7 +273,7 @@ func (self *MasterFrontendManager) UpdateStats(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(10 * time.Second):
+		case <-time.After(utils.Jitter(10 * time.Second)):
 		}
 
 		all_stats, err := self.prepareOrgStats()

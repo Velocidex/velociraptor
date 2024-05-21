@@ -5,6 +5,7 @@ import {CancelToken} from 'axios';
 import PropTypes from 'prop-types';
 import qs from "qs";
 import { withRouter }  from "react-router-dom";
+import { JSONparse } from '../utils/json_parse.jsx';
 
 const UserConfig = React.createContext({
     traits: {},
@@ -62,8 +63,8 @@ class _UserSettings extends React.Component {
             document.body.classList.remove('veloci-light');
             document.body.classList.remove('pink-light');
             document.body.classList.remove('github-dimmed-dark');
-            document.body.classList.remove('github-dimmed-light');
-            document.body.classList.remove('ncurses');
+            document.body.classList.remove('ncurses-light');
+            document.body.classList.remove('ncurses-dark');
             document.body.classList.remove('coolgray-dark');
             document.body.classList.remove('midnight');
             document.body.classList.add(traits.theme || "veloci-light");
@@ -87,7 +88,7 @@ class _UserSettings extends React.Component {
     }
 
     getUserOptions = (traits) => {
-        return JSON.parse(traits.ui_settings || "{}");
+        return JSONparse(traits.ui_settings, {});
     }
 
     render() {

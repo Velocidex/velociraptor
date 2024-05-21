@@ -180,7 +180,7 @@ func (self *DirectoryFileStore) StatFile(
 
 func (self *DirectoryFileStore) WriteFile(
 	filename api.FSPathSpec) (api.FileWriter, error) {
-	return self.WriteFileWithCompletion(filename, nil)
+	return self.WriteFileWithCompletion(filename, utils.SyncCompleter)
 }
 
 func (self *DirectoryFileStore) WriteFileWithCompletion(

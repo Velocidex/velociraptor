@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package registry
@@ -28,6 +29,9 @@ type RegSetValueFunction struct{}
 func (self *RegSetValueFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("reg_set_value", args)()
+
 	arg := &RegSetValueFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -129,6 +133,9 @@ type RegDeleteValueFunction struct{}
 func (self *RegDeleteValueFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("reg_rm_value", args)()
+
 	arg := &RegDeleteValueFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -189,6 +196,9 @@ type RegDeleteKeyFunction struct{}
 func (self *RegDeleteKeyFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("reg_rm_key", args)()
+
 	arg := &RegDeleteKeyFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {

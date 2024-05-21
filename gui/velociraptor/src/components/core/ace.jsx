@@ -93,7 +93,7 @@ import UserConfig from './user.jsx';
 
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
-
+import { JSONparse } from '../utils/json_parse.jsx';
 
 export class SettingsButton extends Component {
     static propTypes = {
@@ -168,7 +168,7 @@ export default class VeloAce extends Component {
 
     getUserOptions = () => {
         let user_options = this.normalizeOptions(
-            JSON.parse(this.context.traits.ui_settings || "{}"));
+            JSONparse(this.context.traits.ui_settings, {}));
         return Object.assign(user_options, this.props.options || {});
     }
 

@@ -359,6 +359,9 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	config_obj *config_proto.Config,
 	client_id, flow_id, artifact string) error {
 
+	subctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	file_store_factory := file_store.GetFileStore(config_obj)
 	path_manager, err := artifacts.NewArtifactPathManager(ctx, config_obj,
 		client_id, flow_id, artifact)
@@ -379,7 +382,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	}
 
 	// Should return only one row
-	for row := range rs_reader.Rows(ctx) {
+	for row := range rs_reader.Rows(subctx) {
 		err := client_info_manager.Modify(ctx, client_id,
 			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 				return modifyRecord(ctx, config_obj, client_info,

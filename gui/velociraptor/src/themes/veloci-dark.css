@@ -667,6 +667,7 @@ body.veloci-dark {
 
 .veloci-dark .react-bootstrap-table-pagination-total {
   color: var(--color-foreground);
+  padding-left: 15px;
 }
 
 /* Artifact viewer screen */

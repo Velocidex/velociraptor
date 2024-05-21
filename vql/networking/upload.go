@@ -51,6 +51,8 @@ func (self *UploadFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
+	defer vql_subsystem.RegisterMonitor("upload", args)()
+
 	uploader, ok := artifacts.GetUploader(scope)
 	if !ok {
 		scope.Log("upload: Uploader not configured.")
@@ -151,6 +153,8 @@ type UploadDirectoryFunction struct{}
 func (self *UploadDirectoryFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("upload_directory", args)()
 
 	arg := &UploadDirectoryFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

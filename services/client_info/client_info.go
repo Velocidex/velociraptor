@@ -203,7 +203,7 @@ func (self *ClientInfoManager) Start(
 				case <-ctx.Done():
 					return
 
-				case <-time.After(write_time):
+				case <-time.After(utils.Jitter(write_time)):
 					err := self.storage.SaveSnapshot(ctx, config_obj)
 					if err != nil {
 						logger.Error(
@@ -298,7 +298,7 @@ func (self *ClientInfoManager) MutationSync(
 		case <-ctx.Done():
 			return
 
-		case <-time.After(sync_time):
+		case <-time.After(utils.Jitter(sync_time)):
 			// Single server deployment does not need to sync
 			// anything. We only sync on multi-frontend deployments
 			// for the master to announce changes to the minions and

@@ -18,10 +18,11 @@ import { NotebookLineChart, NotebookTimeChart,
        } from '../notebooks/notebook-chart-renderer.jsx';
 
 import VeloValueRenderer from '../utils/value.jsx';
+import { JSONparse } from '../utils/json_parse.jsx';
 
 // Renders a report in the DOM.
-const parse_param = domNode=>JSON.parse(decodeURIComponent(
-    domNode.attribs.params || "{}"));
+const parse_param = domNode=>JSONparse(decodeURIComponent(
+    domNode.attribs.params, {}));
 
 // NOTE: The server sanitizes reports using the bluemonday
 // sanitization. We therefore trust the output and are allowed to
@@ -111,7 +112,7 @@ export default class VeloReportViewer extends React.Component {
             let new_state  = {
                 template: response.data.template || "No Reports",
                 messages: response.data.messages || [],
-                data: JSON.parse(response.data.data),
+                data: JSONparse(response.data.data),
                 loading: false,
                 version: this.state.version + 1,
             };
@@ -155,7 +156,7 @@ export default class VeloReportViewer extends React.Component {
                         let data = this.state.data;
                         let value = decodeURIComponent(domNode.attribs.value || "");
                         let response = data[value] || {};
-                        let rows = JSON.parse(response.Response);
+                        let rows = JSONparse(response.Response, []);
                         return (
                             <VeloTable
                               rows={rows}
@@ -172,7 +173,7 @@ export default class VeloReportViewer extends React.Component {
                     if (value) {
                         let match = re.exec(value);
                         let data = this.state.data[match[1]];
-                        let rows = JSON.parse(data.Response);
+                        let rows = JSONparse(data.Response, []);
 
                         return (
                             <VeloTable rows={rows} columns={data.Columns} />
@@ -223,8 +224,8 @@ export default class VeloReportViewer extends React.Component {
                     let match = re.exec(value);
                     let data = this.state.data[match[1]];
                     try {
-                        let rows = JSON.parse(data.Response);
-                        let params = JSON.parse(decodeURIComponent(domNode.attribs.params));
+                        let rows = JSONparse(data.Response, []);
+                        let params = JSONparse(decodeURIComponent(domNode.attribs.params), {});
                         return (
                             <VeloLineChart data={rows}
                                            columns={data.Columns}
@@ -244,8 +245,9 @@ export default class VeloReportViewer extends React.Component {
                     let match = re.exec(value);
                     let data = this.state.data[match[1]];
                     try {
-                        let rows = JSON.parse(data.Response);
-                        let params = JSON.parse(decodeURIComponent(domNode.attribs.params));
+                        let rows = JSONparse(data.Response, []);
+                        let params = JSONparse(
+                            decodeURIComponent(domNode.attribs.params), {});
                         return (
                             <VeloTimeChart data={rows}
                                            columns={data.Columns}

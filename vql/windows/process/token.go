@@ -1,3 +1,4 @@
+//go:build windows && amd64
 // +build windows,amd64
 
 package process
@@ -37,6 +38,8 @@ func (self TokenFunction) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor("token", args)()
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
