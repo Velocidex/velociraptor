@@ -76,10 +76,10 @@ LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict
   "Family": "IPv6",
   "Type": "TCP",
   "Status": "LISTEN",
-  "SrcIP": "::",
-  "SrcPort": 3889,
-  "DestIP": "::",
-  "DestPort": 0,
+  "Laddr": "::",
+  "Lport": 3889,
+  "Raddr": "::",
+  "Rport": 0,
   "Timestamp": "2019-11-27T01:18:15Z",
   "_Source": "Windows.Network.NetstatEnriched/Netstat"
  }
@@ -112,10 +112,10 @@ LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict
   "Family": "IPv6",
   "Type": "TCP",
   "Status": "LISTEN",
-  "SrcIP": "::",
-  "SrcPort": 3889,
-  "DestIP": "::",
-  "DestPort": 0,
+  "Laddr": "::",
+  "Lport": 3889,
+  "Raddr": "::",
+  "Rport": 0,
   "Timestamp": "2019-11-27T01:18:15Z",
   "_Source": "Windows.Network.NetstatEnriched/Netstat"
  }
@@ -148,10 +148,10 @@ LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict
   "Family": "IPv4",
   "Type": "TCP",
   "Status": "ESTAB",
-  "SrcIP": "172.168.101.128",
-  "SrcPort": 64371,
-  "DestIP": "10.179.67.176",
-  "DestPort": 443,
+  "Laddr": "172.168.101.128",
+  "Lport": 64371,
+  "Raddr": "10.179.67.176",
+  "Rport": 443,
   "Timestamp": "2019-12-07T03:30:58Z",
   "_Source": "Windows.Network.NetstatEnriched/Netstat"
  }
