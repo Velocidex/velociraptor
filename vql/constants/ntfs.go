@@ -25,7 +25,7 @@ func GetNTFSCacheTime(ctx context.Context, scope vfilter.Scope) time.Duration {
 		cache_life, _ = utils.ToInt64(cache_life_any)
 	}
 	if cache_life == 0 {
-		cache_life = 60
+		cache_life = 600
 	}
 
 	res := time.Duration(cache_life) * time.Second
