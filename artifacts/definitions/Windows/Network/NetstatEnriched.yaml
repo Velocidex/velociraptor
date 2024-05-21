@@ -176,10 +176,10 @@ sources:
                 FamilyString as Family,
                 TypeString as Type,
                 Status,
-                Laddr.IP as SrcIP,
-                Laddr.Port as SrcPort,
-                Raddr.IP as DestIP,
-                Raddr.Port as DestPort,
+                Laddr.IP as Laddr,
+                Laddr.Port as Lport,
+                Raddr.IP as Raddr,
+                Raddr.Port as Rport,
                 Timestamp
             FROM netstat()
             WHERE
@@ -197,10 +197,10 @@ sources:
                 and Status =~ StatusRegex.Regex[0]
                 and Family =~ FamilyRegex.Regex[0]
                 and Type =~ TypeRegex.Regex[0]
-                and ( format(format="%v", args=SrcIP) =~ IPRegex
-                    or format(format="%v", args=DestIP) =~ IPRegex )
-                and ( format(format="%v", args=SrcPort) =~ PortRegex
-                    or format(format="%v", args=DestPort) =~ PortRegex )
+                and ( format(format="%v", args=Laddr) =~ IPRegex
+                    or format(format="%v", args=Raddr) =~ IPRegex )
+                and ( format(format="%v", args=Lport) =~ PortRegex
+                    or format(format="%v", args=Rport) =~ PortRegex )
 
       LET Regions(Pid) = SELECT dict(Offset=Address, Length=Size) AS Sparse
         FROM vad(pid=Pid)
