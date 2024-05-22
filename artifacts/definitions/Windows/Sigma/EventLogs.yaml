@@ -278,7 +278,7 @@ export: |
 sources:
 - query: |
     LET Rules = InlineSigmaRules ||
-       if(condition=SigmaRuleFile, then=read_file(path=SigmaRuleFile, length=10000000))
+       if(condition=SigmaRuleFile, then=read_file(filename=SigmaRuleFile, length=10000000))
 
     SELECT * FROM sigma(
        rules=split(string= Rules, sep_string="\n---\n"),
