@@ -28,7 +28,7 @@
 
   --accent-color: #7e57c2;
   --color-accent: 126, 87, 194;
-  --color-accent-complement: #9bc257;
+  --color-accent-complement: #ccff00;
   --color-accent-100: rgba(var(--color-accent), 1);
   --color-accent-75: rgba(var(--color-accent), 0.75);
   --color-accent-50: rgba(var(--color-accent), 0.5);
@@ -86,7 +86,7 @@
   --color-page-link-background: var(--color-btn-default-background);
   --color-pagination-disabled: #888;
 
-  --color-timeline-header: #cdcdcd20;
+  --color-timeline-header: var(--color-accent-100);
   --color-timeline-table-shown: #66bb6a;
   --color-timeline-1: #dff0d820;
   --color-timeline-2: #a9444220;
@@ -637,7 +637,8 @@ body.ncurses-dark {
 }
 
 .ncurses-dark .nav-tabs .nav-link:hover {
-  background: var(--color-accent-50);
+  color: var(--color-accent-complement);
+  background: var(--color-accent-75);
 }
 
 .ncurses-dark .nav-tabs .nav-link.active {
@@ -836,6 +837,7 @@ body.ncurses-dark {
   border-right: 1px solid darkgrey;
   border-left: 1px solid black;
   border-bottom: 1px solid darkgrey;
+  color: var(--color-foreground);
   background-color: var(--color-form-control-background);
 }
 
@@ -1002,7 +1004,7 @@ body.ncurses-dark {
 
 .ncurses-dark .table-hover tbody tr:hover {
   background: var(--color-table-row-hover);
-  color: var(--color-foreground-dimmed);
+  color: var(--color-foreground);
 }
 
 .ncurses-dark .table tbody tr.row-selected,
@@ -1273,6 +1275,16 @@ body.ncurses-dark {
 /* Timelines */
 .ncurses-dark .react-calendar-timeline {
   /* background: var(--color-foreground); */
+}
+
+.ncurses-dark .react-calendar-timeline .rct-sidebar,
+.ncurses-dark .react-calendar-timeline .rct-dateHeader {
+  color: var(--color-foreground);
+  font-size: var(--font-size-small);
+}
+
+.ncurses-dark .timeline-table-item {
+  border: 1px solid var(--color-timeline-table-shown) !important;
 }
 
 .ncurses-dark .react-calendar-timeline .rct-calendar-header {
