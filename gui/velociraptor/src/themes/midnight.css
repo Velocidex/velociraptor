@@ -1349,6 +1349,10 @@ body.midnight {
   box-shadow: none;
 }
 
+.midnight .custom-file-input:focus ~ .custom-file-label {
+  box-shadow: none;
+  color: #FFD500;
+}
 
 .midnight .json-index {
     color: #d90429;
