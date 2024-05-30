@@ -1340,8 +1340,12 @@ body.midnight {
   border-color: var(--color-btn-border);
 }
 
-.midnight .error-message {
+.midnight div.error-message {
   color: #daaa3f !important;
+}
+
+.midnight div.info-message {
+  color: grey !important;
 }
 
 .midnight .alert {
