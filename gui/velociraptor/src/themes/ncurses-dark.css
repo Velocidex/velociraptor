@@ -97,7 +97,7 @@
   --color-timeline-7: #471ecb;
 
   --color-vfs-files-timestomped: #ed5d40;
-  --color-level-error: #aa0000;
+  --color-level-error: #ef5350;
 
   --invalid-form-control-error: #ff6666;
 }
@@ -1327,8 +1327,8 @@ body.ncurses-dark {
   background: var(--color-btn-default-background-hover);
 }
 
-.ncurses-dark div.error-message {
-  color: var(--color-level-error) !important;
+.ncurses-dark div.info-message {
+  color: grey !important;
 }
 
 .ncurses-dark .json-expand-button {
