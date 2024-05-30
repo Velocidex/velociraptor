@@ -14,7 +14,9 @@ export default class LogLevel extends Component {
         switch (this.props.type) {
         case "ERROR":
         case "INFO":
+        case "WARN":
         case "DEBUG":
+        case "DEFAULT":
         case "ALERT":
             icon = T(this.props.type);
             break;
