@@ -1094,7 +1094,7 @@ export default class NotebookCellRenderer extends React.Component {
                           // Extract the log level and render the
                           // classes based on it
                           let className = "";
-                          let match = msg.match(/(ERROR|DEBUG|INFO):(.+)/);
+                          let match = msg.match(/(ERROR|DEBUG|WARN|INFO|DEFAULT):(.+)/);
                           if (match) {
                               msg = match[2];
 
@@ -1105,7 +1105,13 @@ export default class NotebookCellRenderer extends React.Component {
                                   className = "debug-message"; break;
                               case "INFO":
                                   className = "info-message"; break;
+                              case "WARN":
+                                  className = "info-message"; break;
+                              case "DEFAULT":
+                                  className = "info-message"; break;
                               }
+                          } else {
+                            className = "info-message";
                           };
                           return <div key={idx} className={className}>
                                    {msg}

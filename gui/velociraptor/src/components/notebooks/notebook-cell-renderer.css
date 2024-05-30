@@ -1,11 +1,23 @@
 .error-message {
+    color: var(--color-level-error);
+    font-size: var(--font-size-small);
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
 
 .debug-message {
-    color: var(--color-foreground-dimmed);
+    color: var(--color-foreground);
+    font-size: var(--font-size-small);
     margin-left: 15px;
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
 
 .info-message {
     color: var(--color-foreground-dimmed);
+    font-size: var(--font-size-small);
+    margin-left: 15px;
+    margin-top: 5px;
+    margin-bottom: 5px;
 }

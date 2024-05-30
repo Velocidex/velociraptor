@@ -10,11 +10,6 @@
     vertical-align: middle;
 }
 
-div.error-message {
-    font-size: var(--font-size-small);
-    color: var(--color-level-error) !important;
-}
-
 .notebook-output {
     overflow-x: visible;
 }

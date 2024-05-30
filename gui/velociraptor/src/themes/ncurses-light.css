@@ -1282,8 +1282,12 @@ body.ncurses-light {
   background: var(--color-btn-default-background-hover);
 }
 
-.ncurses-light div.error-message {
-  color: var(--color-level-error) !important;
+.ncurses-light div.info-message {
+  color: grey !important;
+}
+
+.ncurses-light div.debug-message {
+  color: var(--color-foreground) !important;
 }
 
 .ncurses-light .json-expand-button {
