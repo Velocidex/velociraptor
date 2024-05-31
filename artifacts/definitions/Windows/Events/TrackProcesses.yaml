@@ -117,6 +117,7 @@ sources:
               FROM pslist()
 
       LET Tracker <= process_tracker(
+         max_size=MaxSize,
          enrichments=if(condition=AddEnrichments, then=[
            '''x=>if(
                 condition=NOT x.Data.VersionInformation AND x.Data.Image,
