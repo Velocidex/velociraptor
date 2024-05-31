@@ -30,7 +30,7 @@
         "lodash": "^4.17.21",
         "moment": "^2.30.1",
         "moment-timezone": "0.5.45",
-        "npm-watch": "^0.12.0",
+        "npm-watch": "^0.13.0",
         "prop-types": "^15.8.1",
         "qs": "^6.12.1",
         "query-string": "^6.14.1",
