@@ -527,7 +527,8 @@ func send_client_messages(
 			http.Error(w, "", http.StatusForbidden)
 			return
 		}
-		message_info.RemoteAddr = req.RemoteAddr
+		message_info.RemoteAddr = utils.RemoteAddr(
+			req, config_obj.Frontend.GetProxyHeader())
 
 		// Reject unauthenticated messages. This ensures
 		// untrusted clients are not allowed to keep
