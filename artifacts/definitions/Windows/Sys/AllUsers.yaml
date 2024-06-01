@@ -28,7 +28,7 @@ sources:
                 then=timestamp(winfiletime=High * 4294967296 + Low))
 
         -- lookupSID() may not be available on deaddisk analysis
-        LET roaming_users <= memoize(query={
+        LET roaming_users <=
           SELECT
              split(string=Key.OSPath.Basename, sep="-")[-1] as Uid,
              "" AS Gid,
@@ -43,20 +43,28 @@ sources:
              } AS HomedirMtime,
              dict(ProfileLoadTime=GetTimestamp(
                   High=LocalProfileLoadTimeHigh, Low=LocalProfileLoadTimeLow),
-                ProfileUnloadTime=GetTimestamp(
-                  High=LocalProfileUnloadTimeHigh, Low=LocalProfileUnloadTimeLow)
+                  ProfileUnloadTime=GetTimestamp(
+                  High=LocalProfileUnloadTimeHigh, Low=LocalProfileUnloadTimeLow),
+                  ProfileImagePath=ProfileImagePath,
+                  ProfileKey=Key.OSPath
              ) AS Data
            FROM read_reg_key(globs=remoteRegKey, accessor="registry")
-        }, key="UUID")
+
+
+        LET roaming_users_lookup <= memoize(query=roaming_users, key="UUID")
 
         -- On a DC the NetUserEnum API will return the entire domain!
-        LET local_users = select User_id as Uid,
+        LET local_users <= select User_id as Uid,
            Primary_group_id as Gid, Name,
            Comment as Description,
-           get(item=roaming_users, field=User_sid) AS  RoamingData,
+           get(item=roaming_users_lookup, field=User_sid) AS  RoamingData,
            User_sid as UUID
         FROM users()
         LIMIT 1000
+
+        LET local_users_lookup <= memoize(query={
+            SELECT UUID FROM local_users
+        }, key="UUID")
 
         -- Populate the mtime from the user's home directory.
         LET local_users_with_mtime = SELECT Uid, Gid, Name, Description,
@@ -69,46 +77,25 @@ sources:
 
         SELECT * from chain(
            q1=local_users_with_mtime,
-           q2=roaming_users)
-         ORDER BY Gid DESC
+           q2={
+             SELECT * FROM roaming_users
+             -- Only show records who were not shown before
+             WHERE NOT get(item=local_users_lookup, field=UUID)
+           })
+         --ORDER BY Gid DESC
+    notebook:
+      - type: VQL
+        template: |
+          /*
+          # Users Hunt
 
-
-reports:
-  - type: HUNT
-    template: |
-      # Users Hunt
-
-      Enumerating all the users on all endpoints can reveal machines
-      which had an unexpected login activity. For example, if a user
-      from an unrelated department is logging into an endpoint by
-      virtue of domain credentials, this could mean their account is
-      compromised and the attackers are laterally moving through the
-      network.
-
-      {{ define "users" }}
-         SELECT Name, UUID, Fqdn, Mtime as LastMod FROM source()
-         WHERE NOT UUID =~ "(-5..$|S-1-5-18|S-1-5-19|S-1-5-20)"
-      {{ end }}
-
-      {{ Query "users" | Table }}
-
-  - type: CLIENT
-    template: |
-
-      System Users
-      ============
-
-      {{ .Description }}
-
-      The following table shows basic information about the users on this system.
-
-      * Remote users also show the modification timestamp from the
-        registry key.
-
-      * Local users show the mtime of their home directory.
-
-      {{ define "users" }}
-         LET users <= SELECT Name, UUID, Type, Mtime
-         FROM source()
-      {{ end }}
-      {{ Query "users" "SELECT Name, UUID, Type, Mtime FROM users" | Table }}
+          Enumerating all the users on all endpoints can reveal machines
+          which had an unexpected login activity. For example, if a user
+          from an unrelated department is logging into an endpoint by
+          virtue of domain credentials, this could mean their account is
+          compromised and the attackers are laterally moving through the
+          network.
+          */
+          LET s = scope()
+          SELECT Name, UUID, s.Fqdn AS Fqdn, HomedirMtime as LastMod, Data FROM source()
+          WHERE NOT UUID =~ "(-5..$|S-1-5-18|S-1-5-19|S-1-5-20)"

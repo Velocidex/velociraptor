@@ -20,5 +20,6 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/accessors/sparse"
 	_ "www.velocidex.com/golang/velociraptor/accessors/ssh"
 	_ "www.velocidex.com/golang/velociraptor/accessors/vfs"
+	_ "www.velocidex.com/golang/velociraptor/accessors/vhdx"
 	_ "www.velocidex.com/golang/velociraptor/accessors/zip"
 )
