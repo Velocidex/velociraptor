@@ -655,7 +655,7 @@ export: |
             ["StringData", 2, "String", {
                 "encoding": "utf16",
                 "length": "x=>x.Size",
-                "max_length": 10000,
+                "max_length": 50000,
                 "term": "",
             }],
         ]],
