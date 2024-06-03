@@ -5461,7 +5461,7 @@
   args:
   - name: artifact
     type: string
-    description: The name of the artifact to add
+    description: The name of the artifact to remove
     required: true
   - name: parameters
     type: LazyExpr
