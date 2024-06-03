@@ -77,7 +77,7 @@ func (self RemoveClientMonitoringFunction) Info(scope vfilter.Scope, type_map *v
 }
 
 type RemoveServerMonitoringFunctionArgs struct {
-	Artifact string `vfilter:"required,field=artifact,doc=The name of the artifact to add"`
+	Artifact string `vfilter:"required,field=artifact,doc=The name of the artifact to remove"`
 }
 
 type RemoveServerMonitoringFunction struct{}

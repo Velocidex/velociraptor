@@ -5444,14 +5444,14 @@
   args:
   - name: artifact
     type: string
-    description: The name of the artifact to add
+    description: The name of the artifact to remove
     required: true
   - name: parameters
     type: LazyExpr
     description: A dict of artifact parameters
   - name: label
     type: string
-    description: Add this artifact to this label group (default all)
+    description: Remove this artifact from this label group (default all)
   category: server
   metadata:
     permissions: COLLECT_CLIENT
