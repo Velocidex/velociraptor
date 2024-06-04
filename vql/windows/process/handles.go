@@ -19,6 +19,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	gowin "golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows"
@@ -138,8 +139,7 @@ func SaneNtQuerySystemInformation(class uint32) ([]byte, error) {
 
 	// A hard upper limit on the buffer.
 	for buffer_size < 32*1024*1024 {
-		buffer := make([]byte, buffer_size)
-
+		buffer := utils.AllocateBuff(buffer_size)
 		status := windows.NtQuerySystemInformation(class,
 			&buffer[0], uint32(len(buffer)), &length)
 		if status == windows.STATUS_SUCCESS {
@@ -382,7 +382,7 @@ func GetThreadInfo(scope vfilter.Scope, handle syscall.Handle, result *HandleInf
 }
 
 func GetProcessName(scope vfilter.Scope, handle syscall.Handle) *ProcessHandleInfo {
-	buffer := make([]byte, 1024*2)
+	buffer := utils.AllocateBuff(1024 * 2)
 
 	handle_info := windows.PROCESS_BASIC_INFORMATION{}
 	var length uint32
@@ -415,7 +415,7 @@ func GetProcessName(scope vfilter.Scope, handle syscall.Handle) *ProcessHandleIn
 }
 
 func GetObjectName(scope vfilter.Scope, handle syscall.Handle, result *HandleInfo) {
-	buffer := make([]byte, 1024*2)
+	buffer := utils.AllocateBuff(1024 * 2)
 
 	var length uint32
 
@@ -435,7 +435,7 @@ func GetObjectName(scope vfilter.Scope, handle syscall.Handle, result *HandleInf
 }
 
 func GetObjectType(handle syscall.Handle, scope vfilter.Scope) string {
-	buffer := make([]byte, 1024*10)
+	buffer := utils.AllocateBuff(1024 * 10)
 	length := uint32(0)
 	status, _ := windows.NtQueryObject(handle, windows.ObjectTypeInformation,
 		&buffer[0], uint32(len(buffer)), &length)
