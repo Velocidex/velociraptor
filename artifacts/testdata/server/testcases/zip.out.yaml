@@ -1,5 +1,9 @@
 LET zip_files = SELECT OSPath, Size FROM glob( globs=srcDir+"/artifacts/testdata/files/**/*.zip") WHERE Name =~ "test"[]SELECT OSPath.Basename as Name, Size FROM zip_files[
  {
+  "Name": "test.vhdx.zip",
+  "Size": 192870
+ },
+ {
   "Name": "test.zip",
   "Size": 1064
  }

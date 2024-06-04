@@ -1,0 +1,113 @@
+SELECT OSPath.Path AS OSPath, Size, Mode.String
+FROM glob(
+   globs="*", accessor="raw_ntfs", root=pathspec(
+      Path="/",
+      DelegateAccessor="offset",
+      DelegatePath=pathspec(
+        Path="/65536",  -- Data partition is 128 sectors in
+        DelegateAccessor="vhdx",
+        DelegatePath=pathspec(
+           -- the vhdx accessor does not support a Path
+           -- since the image does not contain multiple streams.
+           DelegateAccessor="zip",
+           DelegatePath=pathspec(
+             -- For this test we compress the image in a zip file to save space.
+             Path="test.vhdx",
+             DelegatePath=srcDir + "/artifacts/testdata/files/test.vhdx.zip")))))
+[
+ {
+  "OSPath": "$AttrDef",
+  "Size": 2560,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "$BadClus",
+  "Size": 0,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "$BadClus:$Bad",
+  "Size": 3141632,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "$Bitmap",
+  "Size": 96,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "$Boot",
+  "Size": 8192,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "$Extend",
+  "Size": 0,
+  "Mode.String": "drwxr-xr-x"
+ },
+ {
+  "OSPath": "$LogFile",
+  "Size": 2097152,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "$MFT",
+  "Size": 262144,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "$MFTMirr",
+  "Size": 4096,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "$RECYCLE.BIN",
+  "Size": 0,
+  "Mode.String": "drwxr-xr-x"
+ },
+ {
+  "OSPath": "$Secure",
+  "Size": 0,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "$Secure:$SDS",
+  "Size": 263836,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "$UpCase",
+  "Size": 131072,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "$UpCase:$Info",
+  "Size": 32,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "$Volume",
+  "Size": 0,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "Hello.txt.txt",
+  "Size": 11,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "System Volume Information",
+  "Size": 0,
+  "Mode.String": "drwxr-xr-x"
+ },
+ {
+  "OSPath": "Users",
+  "Size": 0,
+  "Mode.String": "drwxr-xr-x"
+ },
+ {
+  "OSPath": "Windows",
+  "Size": 0,
+  "Mode.String": "drwxr-xr-x"
+ }
+]

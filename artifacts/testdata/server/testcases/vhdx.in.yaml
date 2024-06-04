@@ -1,0 +1,18 @@
+Queries:
+  - |
+    SELECT OSPath.Path AS OSPath, Size, Mode.String
+    FROM glob(
+       globs="*", accessor="raw_ntfs", root=pathspec(
+          Path="/",
+          DelegateAccessor="offset",
+          DelegatePath=pathspec(
+            Path="/65536",  -- Data partition is 128 sectors in
+            DelegateAccessor="vhdx",
+            DelegatePath=pathspec(
+               -- the vhdx accessor does not support a Path
+               -- since the image does not contain multiple streams.
+               DelegateAccessor="zip",
+               DelegatePath=pathspec(
+                 -- For this test we compress the image in a zip file to save space.
+                 Path="test.vhdx",
+                 DelegatePath=srcDir + "/artifacts/testdata/files/test.vhdx.zip")))))
