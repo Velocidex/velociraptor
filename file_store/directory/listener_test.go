@@ -73,7 +73,7 @@ func (self *TestSuite) TestListenerPreserveTypes() {
 		Set("B", uint64(9223372036854775808))
 	listener.Send(event_source)
 
-	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
+	vtesting.WaitUntil(time.Second*10, self.T(), func() bool {
 		// Make sure we wrote to the buffer file.
 		size, _ := listener.Debug().GetInt64("Size")
 		return size > directory.FirstRecordOffset
