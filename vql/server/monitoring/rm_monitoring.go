@@ -71,13 +71,13 @@ func (self RemoveClientMonitoringFunction) Info(scope vfilter.Scope, type_map *v
 	return &vfilter.FunctionInfo{
 		Name:     "rm_client_monitoring",
 		Doc:      "Remove an artifact from the client monitoring table.",
-		ArgType:  type_map.AddType(scope, &AddClientMonitoringFunctionArgs{}),
+		ArgType:  type_map.AddType(scope, &RemoveClientMonitoringFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_CLIENT).Build(),
 	}
 }
 
 type RemoveServerMonitoringFunctionArgs struct {
-	Artifact string `vfilter:"required,field=artifact,doc=The name of the artifact to add"`
+	Artifact string `vfilter:"required,field=artifact,doc=The name of the artifact to remove"`
 }
 
 type RemoveServerMonitoringFunction struct{}
@@ -132,7 +132,7 @@ func (self RemoveServerMonitoringFunction) Info(scope vfilter.Scope, type_map *v
 	return &vfilter.FunctionInfo{
 		Name:     "rm_server_monitoring",
 		Doc:      "Remove an artifact from the server monitoring table.",
-		ArgType:  type_map.AddType(scope, &AddServerMonitoringFunctionArgs{}),
+		ArgType:  type_map.AddType(scope, &RemoveServerMonitoringFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
 	}
 }
