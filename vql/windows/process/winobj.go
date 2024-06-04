@@ -15,6 +15,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/hillu/go-ntdll"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows"
@@ -107,7 +108,7 @@ func GetObjects(ctx context.Context,
 	}
 	defer ntdll.NtClose(dir_handle)
 
-	buffer := make([]byte, 1024*1024)
+	buffer := utils.AllocateBuff(1024 * 1024)
 	length := uint32(0)
 	index := uint32(0)
 

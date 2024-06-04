@@ -1,3 +1,4 @@
+//go:build windows && amd64
 // +build windows,amd64
 
 package authenticode
@@ -67,7 +68,7 @@ func VerifyCatalogSignature(
 	defer windows.CryptCATAdminReleaseContext(CatAdminHandle, 0)
 
 	hash_length := uint32(100)
-	hash := make([]byte, 100)
+	hash := utils.AllocateBuff(100)
 
 	err = windows.CryptCATAdminCalcHashFromFileHandle2(CatAdminHandle, fd.Fd(),
 		&hash_length, &hash[0], 0)
