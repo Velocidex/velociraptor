@@ -7,9 +7,11 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"golang.org/x/sys/windows"
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -110,11 +112,18 @@ func TryToGrantSeSystemEnvironmentPrivilege() error {
 }
 
 func GetEfiVariableValue(namespace string, name string) ([]byte, error) {
-	buff := make([]byte, 1024)
-	length, err := GetFirmwareEnvironmentVariable(windows.StringToUTF16Ptr(name), windows.StringToUTF16Ptr(namespace), &buff[0], 1024)
+	buff := utils.AllocateBuff(1024)
+	length, err := GetFirmwareEnvironmentVariable(
+		windows.StringToUTF16Ptr(name),
+		windows.StringToUTF16Ptr(namespace),
+		&buff[0], 1024)
+
 	if errors.Is(err, syscall.ERROR_INSUFFICIENT_BUFFER) {
-		buff = make([]byte, 32*1024)
-		length, err = GetFirmwareEnvironmentVariable(windows.StringToUTF16Ptr(name), windows.StringToUTF16Ptr(namespace), &buff[0], 32*1024)
+		buff = utils.AllocateBuff(32 * 1024)
+		length, err = GetFirmwareEnvironmentVariable(
+			windows.StringToUTF16Ptr(name),
+			windows.StringToUTF16Ptr(namespace),
+			&buff[0], 32*1024)
 	}
 	if err != nil {
 		return nil, err

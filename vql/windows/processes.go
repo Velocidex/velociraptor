@@ -32,6 +32,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -120,7 +121,7 @@ func (self *Win32_Process) getTimes(handle syscall.Handle) {
 }
 
 func (self *Win32_Process) getCmdLine(handle syscall.Handle) {
-	buffer := make([]byte, 1024*2)
+	buffer := utils.AllocateBuff(1024 * 2)
 	length := uint32(0)
 	status := NtQueryInformationProcess(handle, ProcessCommandLineInformation,
 		(*byte)(unsafe.Pointer(&buffer[0])), uint32(len(buffer)), &length)
