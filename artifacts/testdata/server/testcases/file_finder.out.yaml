@@ -4,6 +4,13 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
  }
 ]SELECT basename(path=OSPath) AS File, Hash, Size, Upload, Keywords FROM Artifact.Windows.Search.FileFinder( SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip") WHERE File =~ "test"[
  {
+  "File": "test.vhdx.zip",
+  "Hash": null,
+  "Size": 192870,
+  "Upload": null,
+  "Keywords": ""
+ },
+ {
   "File": "test.zip",
   "Hash": null,
   "Size": 1064,
@@ -11,6 +18,17 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "Keywords": ""
  }
 ]SELECT basename(path=OSPath) AS File, Hash, Size, Upload, Keywords FROM Artifact.Windows.Search.FileFinder( Calculate_Hash="Y", SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip") WHERE File =~ "test"[
+ {
+  "File": "test.vhdx.zip",
+  "Hash": {
+   "MD5": "7ffbe185fdfed557158391e8d12f3a30",
+   "SHA1": "008e94af3cf841fbc4f3902033ef8d67b6571b57",
+   "SHA256": "97de40bfa23c7c59947b5c04f88e1abcb9a1d7dc926072fe12a84e18d0b4d585"
+  },
+  "Size": 192870,
+  "Upload": null,
+  "Keywords": ""
+ },
  {
   "File": "test.zip",
   "Hash": {
@@ -23,6 +41,13 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "Keywords": ""
  }
 ]SELECT basename(path=OSPath) AS File, Hash, Size, Upload.md5, Keywords FROM Artifact.Windows.Search.FileFinder( Upload_File="Y", SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip") WHERE File =~ "test"[
+ {
+  "File": "test.vhdx.zip",
+  "Hash": null,
+  "Size": 192870,
+  "Upload.md5": "7ffbe185fdfed557158391e8d12f3a30",
+  "Keywords": ""
+ },
  {
   "File": "test.zip",
   "Hash": null,
@@ -41,6 +66,13 @@ FROM Artifact.Windows.Search.FileFinder(
     SearchFilesGlobTable="Glob\n"+ srcDir + "/artifacts/testdata/files/*.zip\n")
 WHERE File =~ "test"
 [
+ {
+  "File": "test.vhdx.zip",
+  "Hash": null,
+  "Size": 192870,
+  "Upload": null,
+  "Keywords": ""
+ },
  {
   "File": "test.zip",
   "Hash": null,
