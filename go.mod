@@ -77,10 +77,10 @@ require (
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
 	golang.org/x/crypto v0.21.0
-	golang.org/x/mod v0.10.0
+	golang.org/x/mod v0.17.0
 	golang.org/x/net v0.23.0
 	golang.org/x/sys v0.18.0
-	golang.org/x/text v0.15.0
+	golang.org/x/text v0.16.0
 	golang.org/x/time v0.3.0
 	google.golang.org/api v0.146.0
 	google.golang.org/genproto v0.0.0-20231009173412-8bfb1ae86b6c // indirect
@@ -99,7 +99,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe
 	www.velocidex.com/golang/regparser v0.0.0-20240404115756-2169ac0e3c09
-	www.velocidex.com/golang/vfilter v0.0.0-20240507155450-520bec263d49
+	www.velocidex.com/golang/vfilter v0.0.0-20240605081519-e681962fca60
 )
 
 require (
