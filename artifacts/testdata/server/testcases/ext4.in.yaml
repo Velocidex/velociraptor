@@ -15,3 +15,4 @@ Queries:
             Path="hierarchy_64.ext4",
             DelegateAccessor="file",
             DelegatePath=srcDir+'/artifacts/testdata/files/ext4_tests.zip')))
+    ORDER BY OSPath

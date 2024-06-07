@@ -10,6 +10,7 @@ FROM glob(globs='/**', accessor="raw_ext4",
         Path="hierarchy_64.ext4",
         DelegateAccessor="file",
         DelegatePath=srcDir+'/artifacts/testdata/files/ext4_tests.zip')))
+ORDER BY OSPath
 [
  {
   "Name": "directory1",
@@ -39,109 +40,10 @@ FROM glob(globs='/**', accessor="raw_ext4",
    }
   },
   "Globs": [
-   "**"
+   "/**"
   ],
-  "OSPath": "directory1",
+  "OSPath": "/directory1",
   "Contents": null
- },
- {
-  "Name": "directory2",
-  "Mtime": "2018-09-16T11:26:44.384292851Z",
-  "Atime": "2018-09-17T08:03:24.384292851Z",
-  "Ctime": "2018-09-17T08:03:24.000000256Z",
-  "Btime": "2018-09-16T11:25:30Z",
-  "Size": 1024,
-  "Mode": 2147500525,
-  "IsDir": true,
-  "IsLink": false,
-  "Data": {
-   "Name": "directory2",
-   "FullPath": "directory2",
-   "Size": 1024,
-   "Mode": 2147500525,
-   "ModeStr": "drwxr-xr-x",
-   "ModTime": "2018-09-16T11:26:44.384292851Z",
-   "Mtime": "2018-09-16T11:26:44.384292851Z",
-   "Atime": "2018-09-17T08:03:24.384292851Z",
-   "Ctime": "2018-09-17T08:03:24.000000256Z",
-   "Btime": "2018-09-16T11:25:30Z",
-   "Data": {
-    "Inode": 13,
-    "Uid": 0,
-    "Gid": 0
-   }
-  },
-  "Globs": [
-   "**"
-  ],
-  "OSPath": "directory2",
-  "Contents": null
- },
- {
-  "Name": "lost+found",
-  "Mtime": "2018-09-08T05:48:46.384292851Z",
-  "Atime": "2018-09-17T08:03:24.384292851Z",
-  "Ctime": "2018-09-17T08:03:24.000000256Z",
-  "Btime": "2018-09-16T11:26:12Z",
-  "Size": 12288,
-  "Mode": 2147500480,
-  "IsDir": true,
-  "IsLink": false,
-  "Data": {
-   "Name": "lost+found",
-   "FullPath": "lost+found",
-   "Size": 12288,
-   "Mode": 2147500480,
-   "ModeStr": "drwx------",
-   "ModTime": "2018-09-08T05:48:46.384292851Z",
-   "Mtime": "2018-09-08T05:48:46.384292851Z",
-   "Atime": "2018-09-17T08:03:24.384292851Z",
-   "Ctime": "2018-09-17T08:03:24.000000256Z",
-   "Btime": "2018-09-16T11:26:12Z",
-   "Data": {
-    "Inode": 11,
-    "Uid": 0,
-    "Gid": 0
-   }
-  },
-  "Globs": [
-   "**"
-  ],
-  "OSPath": "lost+found",
-  "Contents": null
- },
- {
-  "Name": "thejungle.txt",
-  "Mtime": "2018-09-08T06:08:45.384292851Z",
-  "Atime": "2018-09-17T08:03:24.384292851Z",
-  "Ctime": "2018-09-17T08:03:24.000000012Z",
-  "Btime": "2018-09-16T11:25:09Z",
-  "Size": 849597,
-  "Mode": 33188,
-  "IsDir": false,
-  "IsLink": false,
-  "Data": {
-   "Name": "thejungle.txt",
-   "FullPath": "thejungle.txt",
-   "Size": 849597,
-   "Mode": 33188,
-   "ModeStr": "-rw-r--r--",
-   "ModTime": "2018-09-08T06:08:45.384292851Z",
-   "Mtime": "2018-09-08T06:08:45.384292851Z",
-   "Atime": "2018-09-17T08:03:24.384292851Z",
-   "Ctime": "2018-09-17T08:03:24.000000012Z",
-   "Btime": "2018-09-16T11:25:09Z",
-   "Data": {
-    "Inode": 16,
-    "Uid": 0,
-    "Gid": 0
-   }
-  },
-  "Globs": [
-   "**"
-  ],
-  "OSPath": "thejungle.txt",
-  "Contents": "﻿The Pro"
  },
  {
   "Name": "fortune1",
@@ -171,9 +73,9 @@ FROM glob(globs='/**', accessor="raw_ext4",
    }
   },
   "Globs": [
-   "**"
+   "/**"
   ],
-  "OSPath": "directory1\\fortune1",
+  "OSPath": "/directory1/fortune1",
   "Contents": "You love y"
  },
  {
@@ -204,9 +106,9 @@ FROM glob(globs='/**', accessor="raw_ext4",
    }
   },
   "Globs": [
-   "**"
+   "/**"
   ],
-  "OSPath": "directory1\\fortune2",
+  "OSPath": "/directory1/fortune2",
   "Contents": "An exotic "
  },
  {
@@ -237,9 +139,9 @@ FROM glob(globs='/**', accessor="raw_ext4",
    }
   },
   "Globs": [
-   "**"
+   "/**"
   ],
-  "OSPath": "directory1\\fortune5",
+  "OSPath": "/directory1/fortune5",
   "Contents": "Unless hou"
  },
  {
@@ -270,9 +172,9 @@ FROM glob(globs='/**', accessor="raw_ext4",
    }
   },
   "Globs": [
-   "**"
+   "/**"
   ],
-  "OSPath": "directory1\\fortune6",
+  "OSPath": "/directory1/fortune6",
   "Contents": "When you a"
  },
  {
@@ -303,42 +205,9 @@ FROM glob(globs='/**', accessor="raw_ext4",
    }
   },
   "Globs": [
-   "**"
+   "/**"
   ],
-  "OSPath": "directory1\\subdirectory1",
-  "Contents": null
- },
- {
-  "Name": "subdirectory2",
-  "Mtime": "2018-09-16T11:26:26.384292851Z",
-  "Atime": "2018-09-17T08:03:24.384292851Z",
-  "Ctime": "2018-09-17T08:03:24.000212399Z",
-  "Btime": "2018-09-08T06:08:45Z",
-  "Size": 1024,
-  "Mode": 2147500525,
-  "IsDir": true,
-  "IsLink": false,
-  "Data": {
-   "Name": "subdirectory2",
-   "FullPath": "directory1/subdirectory2",
-   "Size": 1024,
-   "Mode": 2147500525,
-   "ModeStr": "drwxr-xr-x",
-   "ModTime": "2018-09-16T11:26:26.384292851Z",
-   "Mtime": "2018-09-16T11:26:26.384292851Z",
-   "Atime": "2018-09-17T08:03:24.384292851Z",
-   "Ctime": "2018-09-17T08:03:24.000212399Z",
-   "Btime": "2018-09-08T06:08:45Z",
-   "Data": {
-    "Inode": 15,
-    "Uid": 0,
-    "Gid": 0
-   }
-  },
-  "Globs": [
-   "**"
-  ],
-  "OSPath": "directory1\\subdirectory2",
+  "OSPath": "/directory1/subdirectory1",
   "Contents": null
  },
  {
@@ -369,9 +238,9 @@ FROM glob(globs='/**', accessor="raw_ext4",
    }
   },
   "Globs": [
-   "**"
+   "/**"
   ],
-  "OSPath": "directory1\\subdirectory1\\fortune3",
+  "OSPath": "/directory1/subdirectory1/fortune3",
   "Contents": "Excellent "
  },
  {
@@ -402,10 +271,43 @@ FROM glob(globs='/**', accessor="raw_ext4",
    }
   },
   "Globs": [
-   "**"
+   "/**"
   ],
-  "OSPath": "directory1\\subdirectory1\\fortune4",
+  "OSPath": "/directory1/subdirectory1/fortune4",
   "Contents": "Dont let y"
+ },
+ {
+  "Name": "subdirectory2",
+  "Mtime": "2018-09-16T11:26:26.384292851Z",
+  "Atime": "2018-09-17T08:03:24.384292851Z",
+  "Ctime": "2018-09-17T08:03:24.000212399Z",
+  "Btime": "2018-09-08T06:08:45Z",
+  "Size": 1024,
+  "Mode": 2147500525,
+  "IsDir": true,
+  "IsLink": false,
+  "Data": {
+   "Name": "subdirectory2",
+   "FullPath": "directory1/subdirectory2",
+   "Size": 1024,
+   "Mode": 2147500525,
+   "ModeStr": "drwxr-xr-x",
+   "ModTime": "2018-09-16T11:26:26.384292851Z",
+   "Mtime": "2018-09-16T11:26:26.384292851Z",
+   "Atime": "2018-09-17T08:03:24.384292851Z",
+   "Ctime": "2018-09-17T08:03:24.000212399Z",
+   "Btime": "2018-09-08T06:08:45Z",
+   "Data": {
+    "Inode": 15,
+    "Uid": 0,
+    "Gid": 0
+   }
+  },
+  "Globs": [
+   "/**"
+  ],
+  "OSPath": "/directory1/subdirectory2",
+  "Contents": null
  },
  {
   "Name": "fortune7",
@@ -435,9 +337,9 @@ FROM glob(globs='/**', accessor="raw_ext4",
    }
   },
   "Globs": [
-   "**"
+   "/**"
   ],
-  "OSPath": "directory1\\subdirectory2\\fortune7",
+  "OSPath": "/directory1/subdirectory2/fortune7",
   "Contents": "Do somethi"
  },
  {
@@ -468,10 +370,43 @@ FROM glob(globs='/**', accessor="raw_ext4",
    }
   },
   "Globs": [
-   "**"
+   "/**"
   ],
-  "OSPath": "directory1\\subdirectory2\\fortune8",
+  "OSPath": "/directory1/subdirectory2/fortune8",
   "Contents": "You should"
+ },
+ {
+  "Name": "directory2",
+  "Mtime": "2018-09-16T11:26:44.384292851Z",
+  "Atime": "2018-09-17T08:03:24.384292851Z",
+  "Ctime": "2018-09-17T08:03:24.000000256Z",
+  "Btime": "2018-09-16T11:25:30Z",
+  "Size": 1024,
+  "Mode": 2147500525,
+  "IsDir": true,
+  "IsLink": false,
+  "Data": {
+   "Name": "directory2",
+   "FullPath": "directory2",
+   "Size": 1024,
+   "Mode": 2147500525,
+   "ModeStr": "drwxr-xr-x",
+   "ModTime": "2018-09-16T11:26:44.384292851Z",
+   "Mtime": "2018-09-16T11:26:44.384292851Z",
+   "Atime": "2018-09-17T08:03:24.384292851Z",
+   "Ctime": "2018-09-17T08:03:24.000000256Z",
+   "Btime": "2018-09-16T11:25:30Z",
+   "Data": {
+    "Inode": 13,
+    "Uid": 0,
+    "Gid": 0
+   }
+  },
+  "Globs": [
+   "/**"
+  ],
+  "OSPath": "/directory2",
+  "Contents": null
  },
  {
   "Name": "fortune10",
@@ -501,9 +436,9 @@ FROM glob(globs='/**', accessor="raw_ext4",
    }
   },
   "Globs": [
-   "**"
+   "/**"
   ],
-  "OSPath": "directory2\\fortune10",
+  "OSPath": "/directory2/fortune10",
   "Contents": "I will hon"
  },
  {
@@ -534,9 +469,75 @@ FROM glob(globs='/**', accessor="raw_ext4",
    }
   },
   "Globs": [
-   "**"
+   "/**"
   ],
-  "OSPath": "directory2\\fortune9",
+  "OSPath": "/directory2/fortune9",
   "Contents": "Courage is"
+ },
+ {
+  "Name": "lost+found",
+  "Mtime": "2018-09-08T05:48:46.384292851Z",
+  "Atime": "2018-09-17T08:03:24.384292851Z",
+  "Ctime": "2018-09-17T08:03:24.000000256Z",
+  "Btime": "2018-09-16T11:26:12Z",
+  "Size": 12288,
+  "Mode": 2147500480,
+  "IsDir": true,
+  "IsLink": false,
+  "Data": {
+   "Name": "lost+found",
+   "FullPath": "lost+found",
+   "Size": 12288,
+   "Mode": 2147500480,
+   "ModeStr": "drwx------",
+   "ModTime": "2018-09-08T05:48:46.384292851Z",
+   "Mtime": "2018-09-08T05:48:46.384292851Z",
+   "Atime": "2018-09-17T08:03:24.384292851Z",
+   "Ctime": "2018-09-17T08:03:24.000000256Z",
+   "Btime": "2018-09-16T11:26:12Z",
+   "Data": {
+    "Inode": 11,
+    "Uid": 0,
+    "Gid": 0
+   }
+  },
+  "Globs": [
+   "/**"
+  ],
+  "OSPath": "/lost+found",
+  "Contents": null
+ },
+ {
+  "Name": "thejungle.txt",
+  "Mtime": "2018-09-08T06:08:45.384292851Z",
+  "Atime": "2018-09-17T08:03:24.384292851Z",
+  "Ctime": "2018-09-17T08:03:24.000000012Z",
+  "Btime": "2018-09-16T11:25:09Z",
+  "Size": 849597,
+  "Mode": 33188,
+  "IsDir": false,
+  "IsLink": false,
+  "Data": {
+   "Name": "thejungle.txt",
+   "FullPath": "thejungle.txt",
+   "Size": 849597,
+   "Mode": 33188,
+   "ModeStr": "-rw-r--r--",
+   "ModTime": "2018-09-08T06:08:45.384292851Z",
+   "Mtime": "2018-09-08T06:08:45.384292851Z",
+   "Atime": "2018-09-17T08:03:24.384292851Z",
+   "Ctime": "2018-09-17T08:03:24.000000012Z",
+   "Btime": "2018-09-16T11:25:09Z",
+   "Data": {
+    "Inode": 16,
+    "Uid": 0,
+    "Gid": 0
+   }
+  },
+  "Globs": [
+   "/**"
+  ],
+  "OSPath": "/thejungle.txt",
+  "Contents": "﻿The Pro"
  }
 ]
