@@ -5,6 +5,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/accessors/collector"
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 	_ "www.velocidex.com/golang/velociraptor/accessors/ewf"
+	_ "www.velocidex.com/golang/velociraptor/accessors/ext4"
 	_ "www.velocidex.com/golang/velociraptor/accessors/fat"
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
 	_ "www.velocidex.com/golang/velociraptor/accessors/file_store"
