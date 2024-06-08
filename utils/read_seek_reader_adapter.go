@@ -5,10 +5,6 @@ import (
 	"io"
 )
 
-type Flusher interface {
-	Flush()
-}
-
 type Closer interface {
 	Close() error
 }

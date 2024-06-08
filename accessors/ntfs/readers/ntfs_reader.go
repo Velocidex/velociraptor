@@ -77,7 +77,7 @@ func (self *NTFSCachedContext) Start(
 
 	lru_size := vql_subsystem.GetIntFromRow(
 		self.scope, self.scope, constants.NTFS_CACHE_SIZE)
-	self.paged_reader, err = readers.NewPagedReader(
+	self.paged_reader, err = readers.NewAccessorReader(
 		self.scope, self.accessor, self.device, int(lru_size))
 
 	if err != nil {

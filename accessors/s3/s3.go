@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -201,7 +200,7 @@ func (self RawS3SystemAccessor) OpenWithOSPath(
 
 	// Wrap the reader in an in memory cache so we do not have many
 	// small reads from the network.
-	paged_reader, err := ntfs.NewPagedReader(
+	paged_reader, err := utils.NewPagedReader(
 		utils.MakeReaderAtter(reader), 1024*1024, 20)
 	return utils.NewReadSeekReaderAdapter(paged_reader), err
 }
