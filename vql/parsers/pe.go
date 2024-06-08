@@ -72,7 +72,7 @@ func (self _PEFunction) Call(
 	}
 
 	lru_size := vql_subsystem.GetIntFromRow(scope, scope, constants.BINARY_CACHE_SIZE)
-	paged_reader, err := readers.NewPagedReader(
+	paged_reader, err := readers.NewAccessorReader(
 		scope, arg.Accessor, arg.Filename, int(lru_size))
 	if err != nil {
 		return &vfilter.Null{}

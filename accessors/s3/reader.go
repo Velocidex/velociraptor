@@ -2,9 +2,12 @@ package s3
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
@@ -30,6 +33,13 @@ func (self *S3Reader) Read(buff []byte) (int, error) {
 		manager.NewWriteAtBuffer(buff), req)
 
 	if err != nil {
+		var re *awshttp.ResponseError
+		if errors.As(err, &re) {
+			if re.HTTPStatusCode() == 416 {
+				return 0, io.EOF
+			}
+		}
+
 		return 0, err
 	}
 	self.offset += n

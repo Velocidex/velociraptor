@@ -287,7 +287,7 @@ func GetReaderPool(scope vfilter.Scope, lru_size int64) *ReaderPool {
 	return pool
 }
 
-func NewPagedReader(scope vfilter.Scope,
+func NewAccessorReader(scope vfilter.Scope,
 	accessor string,
 	filename *accessors.OSPath,
 	lru_size int) (*AccessorReader, error) {
