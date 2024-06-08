@@ -34,7 +34,7 @@ func GetExt4Cache(scope vfilter.Scope,
 		lru_size := vql_subsystem.GetIntFromRow(
 			scope, scope, constants.NTFS_CACHE_SIZE)
 
-		paged_reader, err := readers.NewPagedReader(
+		paged_reader, err := readers.NewAccessorReader(
 			scope, accessor, device, int(lru_size))
 
 		cache_ctx, err = ext4.GetEXT4Context(paged_reader)

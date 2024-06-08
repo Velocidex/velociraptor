@@ -307,7 +307,7 @@ func getRegHive(scope vfilter.Scope,
 		return nil, err
 	}
 
-	paged_reader, err := readers.NewPagedReader(
+	paged_reader, err := readers.NewAccessorReader(
 		scope, pathspec.DelegateAccessor, delegate, int(lru_size))
 	if err != nil {
 		scope.Log("%v: did you provide a URL or Pathspec?", err)
