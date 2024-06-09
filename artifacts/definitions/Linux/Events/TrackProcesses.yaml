@@ -187,7 +187,9 @@ sources:
                         CurrentDirectory=get(
                           item=Process,
                           member='CWD'),
-                        TerminalSessionId=Session) AS data,
+                        TerminalSessionId=Session,
+                        User=User,
+                        Process=Process) AS data,
                       timestamp(
                         string=Timestamp) AS start_time,
                       NULL AS end_time
