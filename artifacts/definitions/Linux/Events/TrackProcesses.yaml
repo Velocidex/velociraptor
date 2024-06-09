@@ -1,4 +1,5 @@
 name: Linux.Events.TrackProcesses
+author: Andreas Misje – @misje
 description: |
   This artifact uses auditd and pslist to keep track of running
   processes using the Velociraptor process tracker.
