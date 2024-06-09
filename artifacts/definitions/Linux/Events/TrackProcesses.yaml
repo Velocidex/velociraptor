@@ -2,34 +2,34 @@ name: Linux.Events.TrackProcesses
 description: |
   This artifact uses auditd and pslist to keep track of running
   processes using the Velociraptor process tracker.
-  
+
   The process tracker keeps track of exited processes, and resolves
   process call chains from it in memory cache.
 
   This event artifact enables the global process tracker and makes it
   possible to run many other artifacts that depend on the process
   tracker.
-  
+
   auditd is used to track processes, and it must be installed on the
   system. If InstallAudit is enabled, the artifact will install it
   using apt-get (which only works on Debian-like operating systems,
   like Debian and Ubuntu).
-  
+
   When the artifact starts, it will insert audit rules that track
   the syscalls *execve*, *exit* and *exit_group*. These rules are removed
   when the event artifact is disabled. However, in case they are not
   removed automatically, for instance if velociraptor were to crash,
   the following commands (which must be run as root) will remove then:
-  
+
   ```
   auditctl -d exit,always -F arch=b64 -S execve -k procmon
   auditctl -d exit,always -F arch=b32 -S execve -k procmon
   auditctl -d exit,always -F arch=b64 -S exit,exit_group -k procmon_exit
   auditctl -d exit,always -F arch=b32 -S exit,exit_group -k procmon_exit
   ```
-  
+
   Remember to replace the keys if you used keys other than the defaults.
-  
+
   Note that processes that are killed or do not shut down properly will
   note get their exit timestamps registered.
 
