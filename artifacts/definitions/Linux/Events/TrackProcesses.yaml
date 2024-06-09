@@ -64,24 +64,50 @@ parameters:
   - name: AddEnrichments
     type: bool
     description: Calculate hashes on process binaries
+  - name: AuditCtlExe
+    description: Path to the auditctl binary
+    default: /sbin/auditctl
 
 sources:
   - query: |
+     /* Test whether the auditctl binary exists at the expected path: */
+     LET AuditInstalled = SELECT *
+       FROM stat(filename=AuditCtlExe)
+
      LET _ <= SELECT *
-       FROM execve(argv=['apt-get', '-y', 'update'])
-       WHERE InstallAudit
-     LET _ <= SELECT *
-       FROM execve(
-         argv=['apt-get', '-y', '-o', 'Debug::pkgProblemResolver=yes', '--no-install-recommends', 'auditd'])
-       WHERE InstallAudit
+       FROM if(
+         condition=NOT AuditInstalled
+          AND InstallAudit,
+         then={
+           SELECT *
+           FROM chain(
+             a_update={
+               SELECT 
+                      log(
+                        message='Updating package index before installing auditd',
+                        level='INFO')
+               FROM execve(argv=['apt-get', '-y', 'update'])
+             },
+             b_install={
+               SELECT log(message='Installing auditd using apt-get', level='INFO')
+               FROM execve(
+                 argv=['apt-get', '-y', '-o', 'Debug::pkgProblemResolver=yes', '--no-install-recommends', 'install', 'auditd'])
+             })
+         })
 
      LET AuditCtl(action, syscalls, key) = SELECT *
-       FROM foreach(
-         row=('b64', 'b32', ),
-         query={
+       FROM if(
+         condition=AuditInstalled,
+         then={
            SELECT *
-           FROM execve(
-             argv=['auditctl', action, 'exit,always', '-F', 'arch='+_value, '-S', syscalls, '-k', key])
+           FROM foreach(
+             row=('b64', 'b32', ),
+             query={
+               SELECT *
+               FROM execve(
+                 argv=['auditctl', action, 'exit,always', '-F', 'arch=' + _value, '-S', syscalls, '-k', key])
+               WHERE AuditInstalled
+             })
          })
 
      LET _ <= SELECT *
@@ -92,23 +118,31 @@ sources:
        FROM AuditCtl(action='-a',
                      syscalls='exit,exit_group',
                      key=AuditKeyExit)
+
      LET _ <= atexit(
          query={
            SELECT *
-           FROM chain(
-             r1={
-               SELECT *
-               FROM AuditCtl(action='-d',
-                             syscalls='execve',
-                             key=AuditKeyExecve)
-             },
-             r2={
-               SELECT *
-               FROM AuditCtl(action='-d',
-                             syscalls='exit,exit_group',
-                             key=AuditKeyExit)
+           FROM if(
+             condition=RemoveRules,
+             then={
+               SELECT 
+                      log(
+                        message='Removing audit rules',
+                        level='INFO')
+               FROM chain(
+                 r1={
+                   SELECT *
+                   FROM AuditCtl(action='-d',
+                                 syscalls='execve',
+                                 key=AuditKeyExecve)
+                 },
+                 r2={
+                   SELECT *
+                   FROM AuditCtl(action='-d',
+                                 syscalls='exit,exit_group',
+                                 key=AuditKeyExit)
+                 })
              })
-           WHERE RemoveRules
          })
 
      LET Users <= memoize(
@@ -197,5 +231,17 @@ sources:
            else=[]))
 
      SELECT *
-     FROM process_tracker_updates()
-     WHERE update_type = 'stats' OR AlsoForwardUpdates
+     FROM if(
+       condition=AuditInstalled,
+       then={
+         SELECT *
+         FROM process_tracker_updates()
+         WHERE update_type = 'stats' OR AlsoForwardUpdates
+       },
+       else={
+         SELECT 
+                log(
+                  message='auditd is not installed, and it is either set not to be installed or failed to install, aborting',
+                  level='INFO')
+         FROM scope()
+       })
