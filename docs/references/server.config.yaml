@@ -525,6 +525,9 @@ GUI:
     saml_idp_metadata_url: http://localhost:8080/simplesaml/saml2/idp/metadata.php
     saml_root_url: https://localhost:8889
     saml_user_attribute: email
+    saml_user_roles:
+      - analyst
+      - investigator
 
     # URL to OIDC Configuration Document. The configuration should be
     # available in the 'oidc_issuer + /.well-known/openid-configuration' endpoint.

@@ -446,6 +446,9 @@ message Authenticator {
     string saml_user_attribute = 16 [(sem_type) = {
             description: "SAML attribute containing value for user identification."
         }];
+    repeated string saml_user_roles = 23 [(sem_type) = {
+            description: "List of roles to assign authenticated SAML users. If this option is not set then no users will be created automatically."
+        }];
 
     // MultiAuthenticator delegates to multiple other authenticators.
     repeated Authenticator sub_authenticators = 17;
