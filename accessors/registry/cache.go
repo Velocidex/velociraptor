@@ -40,7 +40,9 @@ func (self *RegFileSystemAccessorCache) GetDir(key string) (*readDirLRUItem, boo
 }
 
 func (self *RegFileSystemAccessorCache) SetDir(key string, dir *readDirLRUItem) {
-	self.readdir_lru.Set(key, dir)
+	if self.readdir_lru != nil {
+		self.readdir_lru.Set(key, dir)
+	}
 }
 
 func (self *RegFileSystemAccessorCache) Get(key string) (*RegKeyInfo, bool) {
@@ -62,7 +64,9 @@ func (self *RegFileSystemAccessorCache) Get(key string) (*RegKeyInfo, bool) {
 }
 
 func (self *RegFileSystemAccessorCache) Set(key string, value *RegKeyInfo) {
-	self.lru.Set(key, value)
+	if self.lru != nil {
+		self.lru.Set(key, value)
+	}
 }
 
 func (self *RegFileSystemAccessorCache) Close() {
