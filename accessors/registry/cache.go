@@ -1,3 +1,6 @@
+//go:build windows
+// +build windows
+
 package registry
 
 import (
@@ -18,12 +21,73 @@ type RegFileSystemAccessorCache struct {
 	readdir_lru *ttlcache.Cache
 }
 
+func (self *RegFileSystemAccessorCache) GetDir(key string) (*readDirLRUItem, bool) {
+	if self.readdir_lru == nil {
+		return nil, false
+	}
+
+	cached, err := self.readdir_lru.Get(key)
+	if err == nil {
+		cached_res, ok := cached.(*readDirLRUItem)
+		if ok {
+			metricsReadDirLruHit.Inc()
+			return cached_res, true
+		}
+	}
+	metricsReadDirLruMiss.Inc()
+
+	return nil, false
+}
+
+func (self *RegFileSystemAccessorCache) SetDir(key string, dir *readDirLRUItem) {
+	self.readdir_lru.Set(key, dir)
+}
+
+func (self *RegFileSystemAccessorCache) Get(key string) (*RegKeyInfo, bool) {
+	if self.lru == nil {
+		return nil, false
+	}
+
+	cached, err := self.lru.Get(key)
+	if err == nil {
+		res, ok := cached.(*RegKeyInfo)
+		if ok {
+			metricsLruHit.Inc()
+			return res, true
+		}
+	}
+
+	metricsLruMiss.Inc()
+	return nil, false
+}
+
+func (self *RegFileSystemAccessorCache) Set(key string, value *RegKeyInfo) {
+	self.lru.Set(key, value)
+}
+
 func (self *RegFileSystemAccessorCache) Close() {
 	self.lru.Close()
 	self.readdir_lru.Close()
 }
 
 func getRegFileSystemAccessorCache(scope vfilter.Scope) *RegFileSystemAccessorCache {
+	cache_size := int(vql_subsystem.GetIntFromRow(
+		scope, scope, constants.REG_CACHE_SIZE))
+	if cache_size == 0 {
+		cache_size = 1000
+	}
+
+	// Cache is disabled.
+	if cache_size < 0 {
+		return &RegFileSystemAccessorCache{}
+	}
+
+	cache_time := vql_subsystem.GetIntFromRow(
+		scope, scope, constants.REG_CACHE_TIME)
+	if cache_time == 0 {
+		cache_time = 10
+	}
+
 	cache, ok := vql_subsystem.CacheGet(scope, CACHE_TAG).(*RegFileSystemAccessorCache)
 	if ok {
 		return cache
@@ -32,18 +96,6 @@ func getRegFileSystemAccessorCache(scope vfilter.Scope) *RegFileSystemAccessorCa
 	cache = &RegFileSystemAccessorCache{
 		lru:         ttlcache.NewCache(),
 		readdir_lru: ttlcache.NewCache(),
-	}
-
-	cache_size := int(vql_subsystem.GetIntFromRow(
-		scope, scope, constants.REG_CACHE_SIZE))
-	if cache_size == 0 {
-		cache_size = 1000
-	}
-
-	cache_time := vql_subsystem.GetIntFromRow(
-		scope, scope, constants.REG_CACHE_TIME)
-	if cache_time == 0 {
-		cache_time = 10
 	}
 
 	cache.lru.SetCacheSizeLimit(cache_size)

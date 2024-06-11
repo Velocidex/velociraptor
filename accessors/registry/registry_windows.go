@@ -404,19 +404,14 @@ func (self RegFileSystemAccessor) ReadDirWithOSPath(
 	full_path *accessors.OSPath) (result []accessors.FileInfo, err error) {
 
 	cache_key := full_path.String()
-	cached, err := self.cache.readdir_lru.Get(cache_key)
-	if err == nil {
-		cached_res, ok := cached.(*readDirLRUItem)
-		if ok {
-			metricsReadDirLruHit.Inc()
-			return cached_res.children, cached_res.err
-		}
+	cached, ok := self.cache.GetDir(cache_key)
+	if ok {
+		return cached.children, cached.err
 	}
-	metricsReadDirLruMiss.Inc()
 
 	// Cache the result of this function
 	defer func() {
-		self.cache.readdir_lru.Set(cache_key, &readDirLRUItem{
+		self.cache.SetDir(cache_key, &readDirLRUItem{
 			children: result,
 			err:      err,
 			age:      utils.GetTime().Now(),
@@ -457,8 +452,8 @@ func (self RegFileSystemAccessor) ReadDirWithOSPath(
 	}
 
 	for _, subkey_name := range subkeys {
-		key_info, err := self.getCachedKeyInfo(full_path.Append(subkey_name))
-		if err == nil {
+		key_info, ok := self.cache.Get(full_path.Append(subkey_name).String())
+		if ok {
 			result = append(result, key_info)
 			continue
 		}
@@ -489,8 +484,8 @@ func (self RegFileSystemAccessor) ReadDirWithOSPath(
 	}
 
 	if len(values) > 0 {
-		cached, err := self.getCachedKeyInfo(full_path)
-		if err != nil {
+		cached, ok := self.cache.Get(full_path.String())
+		if !ok {
 			cached, _ = self.buildAndCacheKeyInfo(key, full_path)
 		}
 
@@ -565,8 +560,8 @@ func (self *RegFileSystemAccessor) LstatWithOSPath(
 	metricsStat.Inc()
 
 	// Is the full path a key ?
-	cached, err := self.getCachedKeyInfo(full_path)
-	if err == nil {
+	cached, ok := self.cache.Get(full_path.String())
+	if ok {
 		return cached, nil
 	}
 
@@ -588,8 +583,8 @@ func (self *RegFileSystemAccessor) LstatWithOSPath(
 		containing_key := full_path.Dirname()
 
 		// We have the containing key in cache - use it.
-		cached, err := self.getCachedKeyInfo(containing_key)
-		if err == nil {
+		cached, ok := self.cache.Get(containing_key.String())
+		if ok {
 			return getValueInfo(cached.ModTime(), full_path)
 		}
 
@@ -623,22 +618,6 @@ func (self *RegFileSystemAccessor) LstatWithOSPath(
 	return res, nil
 }
 
-func (self *RegFileSystemAccessor) getCachedKeyInfo(full_path *accessors.OSPath) (
-	*RegKeyInfo, error) {
-	cache_key := full_path.String()
-	cached, err := self.cache.lru.Get(cache_key)
-	if err == nil {
-		res, ok := cached.(*RegKeyInfo)
-		if ok {
-			metricsLruHit.Inc()
-			return res, nil
-		}
-	}
-
-	metricsLruMiss.Inc()
-	return nil, err
-}
-
 func (self *RegFileSystemAccessor) buildAndCacheKeyInfo(
 	key registry.Key, full_path *accessors.OSPath) (
 	*RegKeyInfo, error) {
@@ -655,7 +634,7 @@ func (self *RegFileSystemAccessor) buildAndCacheKeyInfo(
 	}
 
 	cache_key := full_path.String()
-	self.cache.lru.Set(cache_key, res)
+	self.cache.Set(cache_key, res)
 	return res, nil
 }
 

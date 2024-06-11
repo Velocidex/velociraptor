@@ -37,6 +37,9 @@ Queries:
                          value="Hello", type="SZ", create=TRUE)
     FROM scope()
 
+  # Disabled registry accessor cache
+  - LET REG_CACHE_SIZE <= -1
+
   # We should be able to see the new value in there
   - SELECT OSPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")
 
