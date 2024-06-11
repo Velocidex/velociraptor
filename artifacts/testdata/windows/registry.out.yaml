@@ -93,7 +93,7 @@ SELECT OSPath FROM glob(globs="/*", accessor="registry")[
  {
   "reg_set_value(path=KeyPath + \"Value\", value=\"Hello\", type=\"SZ\", create=TRUE)": true
  }
-]SELECT OSPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")[
+]LET REG_CACHE_SIZE <= -1[]SELECT OSPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")[
  {
   "OSPath": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WINEVT\\Channels\\\"Microsoft-Windows-Application Server-Applications/Debug\"\\Foobar2\\Value",
   "Data": {
@@ -105,15 +105,7 @@ SELECT OSPath FROM glob(globs="/*", accessor="registry")[
  {
   "reg_rm_key(path=KeyPath)": true
  }
-]SELECT OSPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")[
- {
-  "OSPath": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WINEVT\\Channels\\\"Microsoft-Windows-Application Server-Applications/Debug\"\\Foobar2\\Value",
-  "Data": {
-   "type": "SZ",
-   "value": "Hello"
-  }
- }
-]SELECT *, Key.OSPath AS Key, Key.Name AS Name FROM read_reg_key(globs="*", root='''HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion''') WHERE Name = "Run"[
+]SELECT OSPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")[]SELECT *, Key.OSPath AS Key, Key.Name AS Name FROM read_reg_key(globs="*", root='''HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion''') WHERE Name = "Run"[
  {
   "c:\\windows\\system32\\msht.exe": "Hello",
   "Key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
