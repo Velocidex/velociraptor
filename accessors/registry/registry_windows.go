@@ -37,13 +37,13 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/Velocidex/ttlcache/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"golang.org/x/sys/windows/registry"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -373,33 +373,14 @@ func NewValueBuffer(buf []byte, stat accessors.FileInfo) *ValueBuffer {
 }
 
 type RegFileSystemAccessor struct {
-	lru         *ttlcache.Cache
-	readdir_lru *ttlcache.Cache
+	cache *RegFileSystemAccessorCache
 }
 
 func (self *RegFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
-	my_lru := self.lru
-	if my_lru == nil {
-		my_lru = ttlcache.NewCache()
-		my_lru.SetCacheSizeLimit(1000)
-		my_lru.SetTTL(time.Minute)
-	}
-
-	my_readdir_lru := self.readdir_lru
-	if my_readdir_lru == nil {
-		my_readdir_lru = ttlcache.NewCache()
-		my_readdir_lru.SetCacheSizeLimit(1000)
-		my_readdir_lru.SetTTL(time.Minute)
-	}
-	scope.AddDestructor(func() {
-		my_lru.Close()
-		my_readdir_lru.Close()
-	})
 
 	return &RegFileSystemAccessor{
-		lru:         my_lru,
-		readdir_lru: my_readdir_lru,
+		cache: getRegFileSystemAccessorCache(scope),
 	}, nil
 }
 
@@ -423,7 +404,7 @@ func (self RegFileSystemAccessor) ReadDirWithOSPath(
 	full_path *accessors.OSPath) (result []accessors.FileInfo, err error) {
 
 	cache_key := full_path.String()
-	cached, err := self.readdir_lru.Get(cache_key)
+	cached, err := self.cache.readdir_lru.Get(cache_key)
 	if err == nil {
 		cached_res, ok := cached.(*readDirLRUItem)
 		if ok {
@@ -435,9 +416,10 @@ func (self RegFileSystemAccessor) ReadDirWithOSPath(
 
 	// Cache the result of this function
 	defer func() {
-		self.readdir_lru.Set(cache_key, &readDirLRUItem{
+		self.cache.readdir_lru.Set(cache_key, &readDirLRUItem{
 			children: result,
 			err:      err,
+			age:      utils.GetTime().Now(),
 		})
 	}()
 
@@ -644,7 +626,7 @@ func (self *RegFileSystemAccessor) LstatWithOSPath(
 func (self *RegFileSystemAccessor) getCachedKeyInfo(full_path *accessors.OSPath) (
 	*RegKeyInfo, error) {
 	cache_key := full_path.String()
-	cached, err := self.lru.Get(cache_key)
+	cached, err := self.cache.lru.Get(cache_key)
 	if err == nil {
 		res, ok := cached.(*RegKeyInfo)
 		if ok {
@@ -673,7 +655,7 @@ func (self *RegFileSystemAccessor) buildAndCacheKeyInfo(
 	}
 
 	cache_key := full_path.String()
-	self.lru.Set(cache_key, res)
+	self.cache.lru.Set(cache_key, res)
 	return res, nil
 }
 

@@ -37,7 +37,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/Velocidex/ttlcache/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
@@ -261,8 +260,7 @@ type RawRegFileSystemAccessor struct {
 	scope vfilter.Scope
 	root  *accessors.OSPath
 
-	lru         *ttlcache.Cache
-	readdir_lru *ttlcache.Cache
+	cache *RawRegFileSystemAccessorCache
 }
 
 func getRegHiveCache(scope vfilter.Scope) *rawHiveCache {
@@ -310,7 +308,7 @@ func getRegHive(scope vfilter.Scope,
 	paged_reader, err := readers.NewAccessorReader(
 		scope, pathspec.DelegateAccessor, delegate, int(lru_size))
 	if err != nil {
-		scope.Log("%v: did you provide a URL or Pathspec?", err)
+		scope.Log("%v: did you provide a Pathspec?", err)
 		return nil, err
 	}
 
@@ -339,30 +337,10 @@ const RawRegFileSystemTag = "_RawReg"
 func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 
-	my_lru := self.lru
-	if my_lru == nil {
-		my_lru = ttlcache.NewCache()
-		my_lru.SetCacheSizeLimit(1000)
-		my_lru.SetTTL(time.Minute)
-	}
-
-	my_readdir_lru := self.readdir_lru
-	if my_readdir_lru == nil {
-		my_readdir_lru = ttlcache.NewCache()
-		my_readdir_lru.SetCacheSizeLimit(1000)
-		my_readdir_lru.SetTTL(time.Minute)
-	}
-	scope.AddDestructor(func() {
-		my_lru.Close()
-		my_readdir_lru.Close()
-	})
-
 	return &RawRegFileSystemAccessor{
 		scope: scope,
 		root:  self.root,
-
-		lru:         my_lru,
-		readdir_lru: my_readdir_lru,
+		cache: getRegFileSystemAccessorCache(scope),
 	}, nil
 }
 
@@ -467,7 +445,7 @@ func (self *RawRegFileSystemAccessor) _readDirWithOSPath(
 	full_path *accessors.OSPath) (result []accessors.FileInfo, key *regparser.CM_KEY_NODE, err error) {
 
 	cache_key := full_path.String()
-	cached, err := self.readdir_lru.Get(cache_key)
+	cached, err := self.cache.readdir_lru.Get(cache_key)
 	if err == nil {
 		cached_res, ok := cached.(*readDirLRUItem)
 		if ok {
@@ -479,7 +457,7 @@ func (self *RawRegFileSystemAccessor) _readDirWithOSPath(
 
 	// Cache the result of this function
 	defer func() {
-		self.readdir_lru.Set(cache_key, &readDirLRUItem{
+		self.cache.readdir_lru.Set(cache_key, &readDirLRUItem{
 			children: result,
 			err:      err,
 			key:      key,

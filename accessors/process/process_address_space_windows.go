@@ -1,3 +1,4 @@
+//go:build windows && amd64 && cgo
 // +build windows,amd64,cgo
 
 // An accessor for process address space.
@@ -233,6 +234,7 @@ func (self ProcessAccessor) New(scope vfilter.Scope) (
 			scope: scope,
 		}
 		result.lru.SetTTL(time.Second)
+		result.lru.SkipTTLExtensionOnHit(true)
 		result.lru.SetCheckExpirationCallback(func(key string, value interface{}) bool {
 			info, ok := value.(*ProcessReader)
 			if ok {

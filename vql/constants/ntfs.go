@@ -5,25 +5,13 @@ import (
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
-	"www.velocidex.com/golang/vfilter/types"
 )
 
 func GetNTFSCacheTime(ctx context.Context, scope vfilter.Scope) time.Duration {
-	cache_life := int64(0)
-	cache_life_any, pres := scope.Resolve(constants.NTFS_CACHE_TIME)
-	if pres {
-		switch t := cache_life_any.(type) {
-		case *vfilter.StoredExpression:
-			cache_life_any = t.Reduce(ctx, scope)
-
-		case types.LazyExpr:
-			cache_life_any = t.Reduce(ctx)
-		}
-
-		cache_life, _ = utils.ToInt64(cache_life_any)
-	}
+	cache_life := vql_subsystem.GetIntFromRow(
+		scope, scope, constants.NTFS_CACHE_TIME)
 	if cache_life == 0 {
 		cache_life = 600
 	}

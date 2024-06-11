@@ -85,7 +85,12 @@ const (
 	// Max age of VSS in (int) days we will consider.
 	VSS_MAX_AGE_DAYS = "VSS_MAX_AGE_DAYS"
 
+	// Controls the lifetime of the registry cache.
+	REG_CACHE_SIZE = "REG_CACHE_SIZE"
+	REG_CACHE_TIME = "REG_CACHE_TIME"
+
 	RAW_REG_CACHE_SIZE  = "RAW_REG_CACHE_SIZE"
+	RAW_REG_CACHE_TIME  = "RAW_REG_CACHE_TIME"
 	BINARY_CACHE_SIZE   = "BINARY_CACHE_SIZE"
 	EVTX_FREQUENCY      = "EVTX_FREQUENCY"
 	USN_FREQUENCY       = "USN_FREQUENCY"
