@@ -55,11 +55,13 @@ func (self *FlowStorageManager) DeleteFlow(
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 
 	upload_metadata_path := flow_path_manager.UploadMetadata()
+
 	r := &reporter{
 		really_do_it: really_do_it,
 		ctx:          ctx,
 		config_obj:   config_obj,
 		seen:         make(map[string]bool),
+		pool:         pond.New(100, 1000),
 	}
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(
@@ -153,7 +155,7 @@ func (self *FlowStorageManager) DeleteFlow(
 	if really_do_it {
 		err = self.buildFlowIndexFromLegacy(ctx, config_obj, client_id)
 	}
-
+	r.pool.StopAndWait()
 	return r.responses, err
 }
 
@@ -163,6 +165,7 @@ type reporter struct {
 	seen         map[string]bool
 	config_obj   *config_proto.Config
 	really_do_it bool
+	pool         *pond.WorkerPool
 }
 
 func (self *reporter) emit_ds(
@@ -195,11 +198,7 @@ func (self *reporter) emit_ds(
 
 func (self *reporter) emit_fs(
 	item_type string, target api.FSPathSpec) {
-	pool := pond.New(100, 1000)
-	defer pool.StopAndWait()
-	group := pool.Group()
-
-	group.Submit(func() {
+	self.pool.Submit(func() {
 		client_path := target.String()
 		var error_message string
 
@@ -223,7 +222,6 @@ func (self *reporter) emit_fs(
 			Error: error_message,
 		})
 	})
-	group.Wait()
 }
 
 /*
