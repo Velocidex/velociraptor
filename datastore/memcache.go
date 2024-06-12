@@ -402,7 +402,10 @@ func unmarshalData(serialized_content []byte,
 
 func (self *MemcacheDatastore) SetTimeout(duration time.Duration) {
 	self.data_cache.SetTTL(duration)
+	self.data_cache.SkipTTLExtensionOnHit(true)
+
 	self.dir_cache.SetTTL(duration)
+	self.dir_cache.SkipTTLExtensionOnHit(true)
 }
 
 func (self *MemcacheDatastore) SetCheckExpirationCallback(

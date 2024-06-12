@@ -400,8 +400,11 @@ func NewSecretsService(
 	}
 	result.definitions_lru.SetCacheSizeLimit(100)
 	result.definitions_lru.SetTTL(time.Minute)
+	result.definitions_lru.SkipTTLExtensionOnHit(true)
+
 	result.secrets_lru.SetCacheSizeLimit(100)
 	result.secrets_lru.SetTTL(time.Minute)
+	result.secrets_lru.SkipTTLExtensionOnHit(true)
 
 	return result, nil
 }

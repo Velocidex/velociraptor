@@ -152,6 +152,7 @@ func NewCachedFilesystem(fs http.FileSystem) *CachedFilesystem {
 	}
 
 	result.lru.SetTTL(10 * time.Minute)
+	result.lru.SkipTTLExtensionOnHit(true)
 	return result
 }
 

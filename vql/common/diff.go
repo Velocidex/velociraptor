@@ -16,7 +16,8 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-/* Plugin diff.
+/*
+Plugin diff.
 
 The diff plugin runs a query periodically and stores the result set in
 memory. The next time the query is run, any rows not present in the
@@ -29,19 +30,18 @@ single column name.
 Here is an example for a query which monitors a directory for the
 presence or removal of text files:
 
-SELECT * FROM diff(
-  query={
-    SELECT FullPath, Size FROM glob(globs='/etc/*.txt')
-  },
-  period=10,
-  key='FullPath')
+	 SELECT * FROM diff(
+		query={
+		  SELECT FullPath, Size FROM glob(globs='/etc/*.txt')
+		},
+		period=10,
+		key='FullPath')
 
 The key must be a string. You can create the key using the format()
 VQL function where you can combine several columns to create a unique
 key. For example watching for new files or modified files can be achieved by:
 
 SELECT format(format="%v@%v", args=[FullPath, Mtime.Unix]) as Key, ....
-
 */
 package common
 
@@ -68,7 +68,10 @@ func (self *_DiffCache) Eval(ctx context.Context, scope vfilter.Scope) []vfilter
 	old_rows_map := self.rows
 	self.rows = make(map[string][]*ordereddict.Dict)
 
-	row_chan := self.stored_query.Eval(ctx, scope)
+	subscope := scope.Copy()
+	defer subscope.Close()
+
+	row_chan := self.stored_query.Eval(ctx, subscope)
 	added_keys := []string{}
 
 check_row:
@@ -88,7 +91,7 @@ check_row:
 			}
 			new_key := fmt.Sprintf("%v", new_key_any)
 
-			dict_row := vfilter.RowToDict(ctx, scope, row)
+			dict_row := vfilter.RowToDict(ctx, subscope, row)
 
 			self.rows[new_key] = append(self.rows[new_key], dict_row)
 
