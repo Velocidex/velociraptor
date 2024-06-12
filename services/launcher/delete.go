@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
 	"sync"
 	"time"
 
@@ -156,6 +157,12 @@ func (self *FlowStorageManager) DeleteFlow(
 		err = self.buildFlowIndexFromLegacy(ctx, config_obj, client_id)
 	}
 	r.pool.StopAndWait()
+
+	// Sort responses to keep output stable
+	sort.Slice(r.responses, func(i, j int) bool {
+		return r.responses[i].Id < r.responses[j].Id
+	})
+
 	return r.responses, err
 }
 
@@ -166,37 +173,50 @@ type reporter struct {
 	config_obj   *config_proto.Config
 	really_do_it bool
 	mu           sync.Mutex
+	id           int
 	pool         *pond.WorkerPool
 }
 
 func (self *reporter) emit_ds(
 	item_type string, target api.DSPathSpec) {
+
 	client_path := target.String()
 	var error_message string
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	if self.seen[client_path] {
 		return
 	}
 	self.seen[client_path] = true
 
-	if self.really_do_it {
-		db, err := datastore.GetDB(self.config_obj)
-		if err == nil {
-			err = db.DeleteSubject(self.config_obj, target)
-			if err != nil {
-				error_message = fmt.Sprintf(
-					"Error deleting %v: %v", client_path, err)
+	id := self.id
+	self.id++
+
+	self.pool.Submit(func() {
+		self.mu.Lock()
+		defer self.mu.Unlock()
+
+		if self.really_do_it {
+			db, err := datastore.GetDB(self.config_obj)
+			if err == nil {
+				err = db.DeleteSubject(self.config_obj, target)
+				if err != nil {
+					error_message = fmt.Sprintf(
+						"Error deleting %v: %v", client_path, err)
+				}
 			}
 		}
-	}
 
-	self.mu.Lock()
-	defer self.mu.Unlock()
-	self.responses = append(self.responses, &services.DeleteFlowResponse{
-		Type:  item_type,
-		Data:  ordereddict.NewDict().Set("VFSPath", client_path),
-		Error: error_message,
+		self.responses = append(self.responses, &services.DeleteFlowResponse{
+			Id:    id,
+			Type:  item_type,
+			Data:  ordereddict.NewDict().Set("VFSPath", client_path),
+			Error: error_message,
+		})
 	})
+
 }
 
 func (self *reporter) emit_fs(
@@ -204,12 +224,21 @@ func (self *reporter) emit_fs(
 	client_path := target.String()
 	var error_message string
 
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	if self.seen[client_path] {
 		return
 	}
 	self.seen[client_path] = true
 
+	self.id++
+	id := self.id
+
 	self.pool.Submit(func() {
+		self.mu.Lock()
+		defer self.mu.Unlock()
+
 		if self.really_do_it {
 			file_store_factory := file_store.GetFileStore(self.config_obj)
 			err := file_store_factory.Delete(target)
@@ -219,9 +248,8 @@ func (self *reporter) emit_fs(
 			}
 		}
 
-		self.mu.Lock()
-		defer self.mu.Unlock()
 		self.responses = append(self.responses, &services.DeleteFlowResponse{
+			Id:    id,
 			Type:  item_type,
 			Data:  ordereddict.NewDict().Set("VFSPath", client_path),
 			Error: error_message,
@@ -231,9 +259,8 @@ func (self *reporter) emit_fs(
 
 /*
 For now we do not bisect the event log files - we just remove the
-
-	entire file if the time stamp requested is in it. Since files are
-	split by day this will remove the entire day's worth of data.
+entire file if the time stamp requested is in it. Since files are
+split by day this will remove the entire day's worth of data.
 */
 func (self *Launcher) DeleteEvents(
 	ctx context.Context,
