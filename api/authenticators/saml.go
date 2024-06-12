@@ -2,6 +2,7 @@ package authenticators
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -10,6 +11,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/crewjam/saml/samlsp"
 	"github.com/gorilla/csrf"
+	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -17,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var samlMiddleware *samlsp.Middleware
@@ -25,6 +28,7 @@ type SamlAuthenticator struct {
 	config_obj     *config_proto.Config
 	user_attribute string
 	authenticator  *config_proto.Authenticator
+	user_roles     []string
 }
 
 func (self *SamlAuthenticator) IsPasswordLess() bool {
@@ -128,29 +132,82 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 		username := sa.GetAttributes().Get(self.user_attribute)
 		users := services.GetUserManager()
 		user_record, err := users.GetUser(r.Context(), username, username)
-		if err == nil {
-			// Does the user have access to the specified org?
-			err = CheckOrgAccess(self.config_obj, r, user_record)
+		if err != nil {
+			if !errors.Is(err, utils.NotFoundError) {
+				http.Error(w,
+					fmt.Sprintf("authorization failed: %v", err),
+					http.StatusUnauthorized)
+
+				services.LogAudit(r.Context(),
+					self.config_obj, username, "Authorization failed",
+					ordereddict.NewDict().
+						Set("error", err).
+						Set("username", username).
+						Set("roles", self.user_roles).
+						Set("remote", r.RemoteAddr))
+				return
+			}
+
+			if len(self.user_roles) == 0 {
+				http.Error(w,
+					"authorization failed: no saml user roles assigned",
+					http.StatusUnauthorized)
+
+				services.LogAudit(r.Context(),
+					self.config_obj, username, "Authorization failed: no saml user roles assigned",
+					ordereddict.NewDict().
+						Set("username", username).
+						Set("roles", self.user_roles).
+						Set("remote", r.RemoteAddr))
+				return
+			}
+
+			// Create a new user role on the fly.
+			policy := &acl_proto.ApiClientACL{
+				Roles: self.user_roles,
+			}
+			services.LogAudit(r.Context(),
+				self.config_obj, username, "Automatic User Creation",
+				ordereddict.NewDict().
+					Set("username", username).
+					Set("roles", self.user_roles).
+					Set("remote", r.RemoteAddr))
+
+			// Use the super user principal to actually add the
+			// username so we have enough permissions.
+			err = users.AddUserToOrg(r.Context(), services.AddNewUser,
+				constants.PinnedServerName, username,
+				[]string{"root"}, policy)
+			if err != nil {
+				http.Error(w,
+					fmt.Sprintf("authorization failed: automatic user creation: %v", err),
+					http.StatusUnauthorized)
+				return
+			}
+
+			user_record, err = users.GetUser(r.Context(), username, username)
+			if err != nil {
+				http.Error(w,
+					fmt.Sprintf("Failed creating user for %v: %v", username, err),
+					http.StatusUnauthorized)
+				return
+			}
 		}
 
+		// Does the user have access to the specified org?
+		err = CheckOrgAccess(self.config_obj, r, user_record)
 		if err != nil {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			w.WriteHeader(http.StatusUnauthorized)
-
-			fmt.Fprintf(w, `
-<html><body>
-Authorization failed. You are not registered on this system as %v.
-Contact your system administrator to get an account, then try again.
-</body></html>
-`, username)
-
 			services.LogAudit(r.Context(),
-				self.config_obj, username, "User rejected by GUI",
+				self.config_obj, username, "authorization failed: user not registered and no saml_user_roles set",
 				ordereddict.NewDict().
+					Set("username", username).
+					Set("roles", self.user_roles).
 					Set("remote", r.RemoteAddr).
-					Set("method", r.Method).
-					Set("error", err.Error()))
+					Set("status", http.StatusUnauthorized))
 
+			http.Error(w,
+				fmt.Sprintf("authorization failed: user not registered - contact your system administrator: %v", err),
+				http.StatusUnauthorized)
 			return
 		}
 
@@ -164,7 +221,6 @@ Contact your system administrator to get an account, then try again.
 			string(serialized))
 		GetLoggingHandler(self.config_obj)(parent).ServeHTTP(
 			w, r.WithContext(ctx))
-		return
 	})
 }
 
@@ -175,6 +231,7 @@ func NewSamlAuthenticator(
 		config_obj:     config_obj,
 		user_attribute: "name",
 		authenticator:  auther,
+		user_roles:     auther.SamlUserRoles,
 	}
 
 	if auther.SamlUserAttribute != "" {
