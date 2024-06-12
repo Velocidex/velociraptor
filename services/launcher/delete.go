@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/alitto/pond"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -194,33 +195,42 @@ func (self *reporter) emit_ds(
 
 func (self *reporter) emit_fs(
 	item_type string, target api.FSPathSpec) {
-	client_path := target.String()
-	var error_message string
+	pool := pond.New(100, 1000)
+	defer pool.StopAndWait()
+	group := pool.Group()
 
-	if self.seen[client_path] {
-		return
-	}
-	self.seen[client_path] = true
+	group.Submit(func() {
+		client_path := target.String()
+		var error_message string
 
-	if self.really_do_it {
-		file_store_factory := file_store.GetFileStore(self.config_obj)
-		err := file_store_factory.Delete(target)
-		if err != nil {
-			error_message = fmt.Sprintf(
-				"Error deleting %v: %v", client_path, err)
+		if self.seen[client_path] {
+			return
 		}
-	}
+		self.seen[client_path] = true
 
-	self.responses = append(self.responses, &services.DeleteFlowResponse{
-		Type:  item_type,
-		Data:  ordereddict.NewDict().Set("VFSPath", client_path),
-		Error: error_message,
+		if self.really_do_it {
+			file_store_factory := file_store.GetFileStore(self.config_obj)
+			err := file_store_factory.Delete(target)
+			if err != nil {
+				error_message = fmt.Sprintf(
+					"Error deleting %v: %v", client_path, err)
+			}
+		}
+
+		self.responses = append(self.responses, &services.DeleteFlowResponse{
+			Type:  item_type,
+			Data:  ordereddict.NewDict().Set("VFSPath", client_path),
+			Error: error_message,
+		})
 	})
+	group.Wait()
 }
 
-/* For now we do not bisect the event log files - we just remove the
-   entire file if the time stamp requested is in it. Since files are
-   split by day this will remove the entire day's worth of data.
+/*
+For now we do not bisect the event log files - we just remove the
+
+	entire file if the time stamp requested is in it. Since files are
+	split by day this will remove the entire day's worth of data.
 */
 func (self *Launcher) DeleteEvents(
 	ctx context.Context,
