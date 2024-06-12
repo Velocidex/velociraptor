@@ -108,12 +108,15 @@ func NewCryptoManager(config_obj *config_proto.Config,
 	}
 
 	result.unauthenticated_lru.SetTTL(time.Second * 60)
+	result.unauthenticated_lru.SkipTTLExtensionOnHit(true)
+
 	return result, nil
 }
 
-/* Verify the HMAC protecting the cipher properties blob.
+/*
+Verify the HMAC protecting the cipher properties blob.
 
-   The HMAC ensures that the cipher properties can not be modified.
+The HMAC ensures that the cipher properties can not be modified.
 */
 func CalcHMAC(
 	comms *crypto_proto.ClientCommunication,

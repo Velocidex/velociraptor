@@ -93,7 +93,7 @@ SELECT OSPath FROM glob(globs="/*", accessor="registry")[
  {
   "reg_set_value(path=KeyPath + \"Value\", value=\"Hello\", type=\"SZ\", create=TRUE)": true
  }
-]SELECT OSPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")[
+]LET REG_CACHE_SIZE <= -1[]SELECT OSPath, Data FROM glob(globs=KeyPath + "/*", accessor="registry")[
  {
   "OSPath": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WINEVT\\Channels\\\"Microsoft-Windows-Application Server-Applications/Debug\"\\Foobar2\\Value",
   "Data": {

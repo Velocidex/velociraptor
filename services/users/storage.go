@@ -542,6 +542,7 @@ func NewUserStorageManager(
 
 	result.lru.SetCacheSizeLimit(1000)
 	result.lru.SetTTL(time.Minute)
+	result.lru.SkipTTLExtensionOnHit(true)
 
 	// Get initial mapping between lower case usernames and correct usernames
 	err := result.buildUsernameLookup(ctx)

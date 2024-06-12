@@ -66,6 +66,9 @@ windows_bare:
 windowsx86:
 	go run make.go -v windowsx86
 
+windowsarm:
+	go run make.go -v windowsarm
+
 clean:
 	go run make.go -v clean
 
