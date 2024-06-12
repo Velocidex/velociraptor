@@ -372,6 +372,14 @@ func Windowsx86() error {
 		arch:       "386"}.Run()
 }
 
+func WindowsArm() error {
+	return Builder{
+		extra_tags:  " release yara ",
+		goos:        "windows",
+		disable_cgo: true,
+		arch:        "arm64"}.Run()
+}
+
 func Darwin() error {
 	return Builder{goos: "darwin",
 		extra_tags: " release yara ",

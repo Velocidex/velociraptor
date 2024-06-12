@@ -16,11 +16,6 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-const (
-	// Scope cache tag for the FAT parser
-	Ext4FileSystemTag = "_EXT4"
-)
-
 type Ext4FileInfo struct {
 	*ext4.FileInfo
 	_full_path *accessors.OSPath

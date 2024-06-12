@@ -44,6 +44,7 @@ func NewACLManager(
 
 	// ACLs do not typically change that quickly, cache for 60 sec.
 	result.lru.SetTTL(timeout)
+	result.lru.SkipTTLExtensionOnHit(true)
 
 	backups, err := services.GetBackupService(config_obj)
 	if err == nil {

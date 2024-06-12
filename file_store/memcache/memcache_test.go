@@ -28,7 +28,7 @@ func (self *MemcacheTestSuite) TestWriterExpiry() {
 	config_obj := config.GetDefaultConfig()
 	config_obj.Datastore.Implementation = "MemcacheFileDataStore"
 	config_obj.Datastore.MemcacheWriteMutationBuffer = 100
-	config_obj.Datastore.MemcacheWriteMutationMaxAge = 1 // 100 Ms
+	config_obj.Datastore.MemcacheWriteMutationMaxAge = 400 // 400 Ms
 
 	file_store := NewTestMemcacheFilestore(config_obj)
 
@@ -43,7 +43,9 @@ func (self *MemcacheTestSuite) TestWriterExpiry() {
 	fd.Close()
 
 	// The writer is cached.
+	file_store.mu.Lock()
 	assert.Equal(self.T(), 1, len(file_store.data_cache))
+	file_store.mu.Unlock()
 
 	file_store.FlushCycle(context.Background())
 
@@ -52,7 +54,7 @@ func (self *MemcacheTestSuite) TestWriterExpiry() {
 	assert.Equal(self.T(), 1, len(file_store.data_cache))
 	file_store.mu.Unlock()
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(400 * time.Millisecond)
 
 	file_store.FlushCycle(context.Background())
 

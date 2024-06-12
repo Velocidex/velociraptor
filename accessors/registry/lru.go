@@ -3,9 +3,14 @@
 
 package registry
 
-import "www.velocidex.com/golang/velociraptor/accessors"
+import (
+	"time"
+
+	"www.velocidex.com/golang/velociraptor/accessors"
+)
 
 type readDirLRUItem struct {
 	children []accessors.FileInfo
 	err      error
+	age      time.Time
 }

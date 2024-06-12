@@ -207,6 +207,7 @@ func NewServerPublicKeyResolver(
 	}
 
 	result.negative_lru.SetTTL(timeout)
+	result.negative_lru.SkipTTLExtensionOnHit(true)
 
 	// Close the LRU when we are done here.
 	wg.Add(1)
