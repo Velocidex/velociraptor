@@ -322,9 +322,10 @@ func (self HuntResultsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 }
 
 type HuntFlowsPluginArgs struct {
-	HuntId   string `vfilter:"required,field=hunt_id,doc=The hunt id to inspect."`
-	StartRow int64  `vfilter:"optional,field=start_row,doc=The first row to show (used for paging)."`
-	Limit    int64  `vfilter:"optional,field=limit,doc=Number of rows to show (used for paging)."`
+	HuntId           string `vfilter:"required,field=hunt_id,doc=The hunt id to inspect."`
+	StartRow         int64  `vfilter:"optional,field=start_row,doc=The first row to show (used for paging)."`
+	Limit            int64  `vfilter:"optional,field=limit,doc=Number of rows to show (used for paging)."`
+	BasicInformation bool   `vfilter:"optional,field=basic_info,doc=If specified we onlyh return basic information like flow id and client id."`
 }
 
 type HuntFlowsPlugin struct{}
@@ -362,7 +363,10 @@ func (self HuntFlowsPlugin) Call(
 			return
 		}
 
-		options := services.FlowSearchOptions{BasicInformation: true}
+		// Get full information about all the flows in the hunt.
+		options := services.FlowSearchOptions{
+			BasicInformation: arg.BasicInformation,
+		}
 		flow_chan, _, err := hunt_dispatcher.GetFlows(
 			ctx, config_obj, options,
 			scope, arg.HuntId, int(arg.StartRow))
