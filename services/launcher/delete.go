@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -148,7 +149,6 @@ func (self *FlowStorageManager) DeleteFlow(
 			r.emit_fs("NotebookItem", path)
 			return nil
 		})
-
 	// Rebuild the flow index to ensure GUI paging works
 	// properly. This is pretty slow but we do not expect to delete
 	// flows that often.
@@ -165,6 +165,7 @@ type reporter struct {
 	seen         map[string]bool
 	config_obj   *config_proto.Config
 	really_do_it bool
+	mu           sync.Mutex
 	pool         *pond.WorkerPool
 }
 
@@ -189,6 +190,8 @@ func (self *reporter) emit_ds(
 		}
 	}
 
+	self.mu.Lock()
+	defer self.mu.Unlock()
 	self.responses = append(self.responses, &services.DeleteFlowResponse{
 		Type:  item_type,
 		Data:  ordereddict.NewDict().Set("VFSPath", client_path),
@@ -198,15 +201,15 @@ func (self *reporter) emit_ds(
 
 func (self *reporter) emit_fs(
 	item_type string, target api.FSPathSpec) {
+	client_path := target.String()
+	var error_message string
+
+	if self.seen[client_path] {
+		return
+	}
+	self.seen[client_path] = true
+
 	self.pool.Submit(func() {
-		client_path := target.String()
-		var error_message string
-
-		if self.seen[client_path] {
-			return
-		}
-		self.seen[client_path] = true
-
 		if self.really_do_it {
 			file_store_factory := file_store.GetFileStore(self.config_obj)
 			err := file_store_factory.Delete(target)
@@ -216,6 +219,8 @@ func (self *reporter) emit_fs(
 			}
 		}
 
+		self.mu.Lock()
+		defer self.mu.Unlock()
 		self.responses = append(self.responses, &services.DeleteFlowResponse{
 			Type:  item_type,
 			Data:  ordereddict.NewDict().Set("VFSPath", client_path),
