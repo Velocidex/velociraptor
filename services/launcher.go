@@ -70,6 +70,7 @@ var (
 )
 
 type DeleteFlowResponse struct {
+	Id    int               `json:"-"`
 	Type  string            `json:"type"`
 	Data  *ordereddict.Dict `json:"data"`
 	Error string            `json:"error"`
