@@ -134,6 +134,9 @@ type MemoryWriter struct {
 }
 
 func (self *MemoryWriter) Size() (int64, error) {
+	self.memory_file_store.mu.Lock()
+	defer self.memory_file_store.mu.Unlock()
+
 	return int64(len(self.buf)), nil
 }
 
@@ -175,6 +178,9 @@ func (self *MemoryWriter) Update(data []byte, offset int64) error {
 func (self *MemoryWriter) Write(data []byte) (int, error) {
 	defer api.InstrumentWithDelay("write", "MemoryWriter", nil)()
 
+	self.memory_file_store.mu.Lock()
+	defer self.memory_file_store.mu.Unlock()
+
 	self.buf = append(self.buf, data...)
 	return len(data), nil
 }
@@ -214,6 +220,9 @@ func (self *MemoryWriter) Close() error {
 
 func (self *MemoryWriter) Truncate() error {
 	defer api.InstrumentWithDelay("truncate", "MemoryWriter", nil)()
+
+	self.memory_file_store.mu.Lock()
+	defer self.memory_file_store.mu.Unlock()
 
 	self.buf = nil
 	return nil

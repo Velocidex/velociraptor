@@ -7,6 +7,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -105,7 +106,7 @@ func (self *HuntDispatcher) syncFlowTables(
 func (self *HuntDispatcher) GetFlows(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	options result_sets.ResultSetOptions, scope vfilter.Scope,
+	options services.FlowSearchOptions, scope vfilter.Scope,
 	hunt_id string, start int) (chan *api_proto.FlowDetails, int64, error) {
 
 	output_chan := make(chan *api_proto.FlowDetails)
@@ -124,7 +125,7 @@ func (self *HuntDispatcher) GetFlows(
 	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_reader, err := result_sets.NewResultSetReaderWithOptions(
 		ctx, self.config_obj, file_store_factory,
-		table_to_query, options)
+		table_to_query, options.ResultSetOptions)
 	if err != nil {
 		close(output_chan)
 		return output_chan, 0, err
@@ -166,10 +167,26 @@ func (self *HuntDispatcher) GetFlows(
 				}
 			}
 
-			collection_context, err := launcher.GetFlowDetails(
-				ctx, config_obj, client_id, flow_id)
-			if err != nil {
-				continue
+			var collection_context *api_proto.FlowDetails
+
+			if options.BasicInformation {
+				collection_context = &api_proto.FlowDetails{
+					Context: &flows_proto.ArtifactCollectorContext{
+						ClientId:  client_id,
+						SessionId: flow_id,
+					},
+				}
+
+				// If the user wants detailed flow information we need
+				// to fetch this now. For many uses this is not
+				// necessary so we can get away with very basic
+				// information.
+			} else {
+				collection_context, err = launcher.GetFlowDetails(
+					ctx, config_obj, client_id, flow_id)
+				if err != nil {
+					continue
+				}
 			}
 
 			select {

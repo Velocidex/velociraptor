@@ -33,12 +33,14 @@ parameters:
   - name: Allocs
     description: A sampling of all past memory allocations
     type: bool
+    default: Y
   - name: Block
     description: Stack traces that led to blocking on synchronization primitives
     type: bool
   - name: Goroutine
     description: Stack traces of all current goroutines
     type: bool
+    default: Y
   - name: Heap
     description: A sampling of memory allocations of live objects
     type: bool

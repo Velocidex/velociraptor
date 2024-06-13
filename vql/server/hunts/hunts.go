@@ -246,7 +246,7 @@ func (self HuntResultsPlugin) Call(
 				return
 			}
 
-			options := result_sets.ResultSetOptions{}
+			options := services.FlowSearchOptions{BasicInformation: true}
 			flow_chan, _, err := hunt_dispatcher.GetFlows(
 				ctx, org_config_obj, options, scope, arg.HuntId, 0)
 			if err != nil {
@@ -362,7 +362,7 @@ func (self HuntFlowsPlugin) Call(
 			return
 		}
 
-		options := result_sets.ResultSetOptions{}
+		options := services.FlowSearchOptions{BasicInformation: true}
 		flow_chan, _, err := hunt_dispatcher.GetFlows(
 			ctx, config_obj, options,
 			scope, arg.HuntId, int(arg.StartRow))
@@ -372,13 +372,12 @@ func (self HuntFlowsPlugin) Call(
 		}
 
 		for flow_details := range flow_chan {
-
-			client_id := ""
-			flow_id := ""
-			if flow_details.Context != nil {
-				client_id = flow_details.Context.ClientId
-				flow_id = flow_details.Context.SessionId
+			if flow_details == nil || flow_details.Context == nil {
+				continue
 			}
+
+			client_id := flow_details.Context.ClientId
+			flow_id := flow_details.Context.SessionId
 
 			result := ordereddict.NewDict().
 				Set("HuntId", arg.HuntId).

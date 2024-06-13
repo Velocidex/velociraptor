@@ -8,7 +8,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
-	"github.com/sebdah/goldie"
+	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -232,7 +232,12 @@ func (self *TestSuite) TestHuntsSource() {
 
 	// Stable sort the section list so we can goldie it.
 	sort.Strings(sections)
-	goldie.Assert(self.T(), "TestHuntsSource", json.MustMarshalIndent(sections))
+
+	g := goldie.New(self.T(),
+		goldie.WithFixtureDir("fixtures"),
+		goldie.WithDiffEngine(goldie.ClassicDiff))
+
+	g.Assert(self.T(), "TestHuntsSource", json.MustMarshalIndent(sections))
 
 	vql, err := vfilter.Parse(`
 SELECT * FROM parallelize(

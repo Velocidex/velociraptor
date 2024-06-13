@@ -8,7 +8,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -227,7 +226,7 @@ func breakHuntIntoScopes(
 			return
 		}
 
-		options := result_sets.ResultSetOptions{}
+		options := services.FlowSearchOptions{BasicInformation: true}
 		flow_chan, _, err := hunt_dispatcher.GetFlows(
 			ctx, config_obj, options, scope, arg.HuntId, 0)
 		if err != nil {
@@ -235,6 +234,10 @@ func breakHuntIntoScopes(
 		}
 
 		for flow_details := range flow_chan {
+			if flow_details == nil || flow_details.Context == nil {
+				continue
+			}
+
 			flow_job, err := breakIntoScopes(ctx, config_obj, scope,
 				&ParallelPluginArgs{
 					Artifact:  arg.Artifact,

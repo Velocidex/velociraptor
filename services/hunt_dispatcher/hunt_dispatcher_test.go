@@ -99,13 +99,22 @@ type: INTERNAL
 func (self *HuntDispatcherTestSuite) TestLoadingFromDisk() {
 	// All hunts are now running.
 	hunts := self.getAllHunts()
-	assert.Equal(self.T(), len(hunts), 5)
-	for _, h := range hunts {
-		assert.Equal(self.T(), h.State, api_proto.Hunt_RUNNING)
-	}
+
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		if len(hunts) != 5 {
+			return false
+		}
+		for _, h := range hunts {
+			if h.State != api_proto.Hunt_RUNNING {
+				return false
+			}
+		}
+		return true
+	})
 }
 
 func (self *HuntDispatcherTestSuite) TearDownTest() {
+	self.TestSuite.TearDownTest()
 	if self.time_closer != nil {
 		self.time_closer()
 	}

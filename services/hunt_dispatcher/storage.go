@@ -90,7 +90,8 @@ type HuntStorageManagerImpl struct {
 	I_am_master bool
 
 	// If any of the hunt objects are dirty this will be set.
-	dirty bool
+	dirty  bool
+	closed int64
 
 	last_flush_time time.Time
 }
@@ -122,6 +123,7 @@ func (self *HuntStorageManagerImpl) GetLastTimestamp() uint64 {
 
 func (self *HuntStorageManagerImpl) Close(ctx context.Context) {
 	atomic.SwapUint64(&self.last_timestamp, 0)
+	atomic.SwapInt64(&self.closed, 1)
 	self.FlushIndex(ctx)
 }
 
@@ -211,6 +213,7 @@ func (self *HuntStorageManagerImpl) SetHunt(
 
 	if hunt.State == api_proto.Hunt_ARCHIVED {
 		delete(self.hunts, hunt.HuntId)
+		self.dirty = true
 		return db.DeleteSubject(self.config_obj, hunt_path_manager.Path())
 	}
 
@@ -267,6 +270,11 @@ func (self *HuntStorageManagerImpl) ListHunts(
 		// Get the full record from memory cache
 		hunt_obj, err := self.GetHunt(ctx, summary.HuntId)
 		if err != nil {
+			// Something is wrong! The index is referring to a hunt we
+			// dont know about - we should re-flush to sync the index.
+			self.mu.Lock()
+			self.dirty = true
+			self.mu.Unlock()
 			continue
 		}
 

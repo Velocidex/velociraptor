@@ -53,7 +53,11 @@ func (self *ApiServer) GetHuntFlows(
 
 	scope := vql_subsystem.MakeScope()
 	flow_chan, total_rows, err := hunt_dispatcher.GetFlows(
-		ctx, org_config_obj, options, scope, in.HuntId, int(in.StartRow))
+		ctx, org_config_obj,
+		services.FlowSearchOptions{
+			ResultSetOptions: options,
+		},
+		scope, in.HuntId, int(in.StartRow))
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
