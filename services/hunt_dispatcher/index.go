@@ -3,6 +3,7 @@ package hunt_dispatcher
 import (
 	"context"
 	"sort"
+	"sync/atomic"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -29,6 +30,10 @@ func (self *HuntStorageManagerImpl) FlushIndex(
 
 	// Nothing to do because none of the records are dirty.
 	if !self.dirty {
+		return nil
+	}
+
+	if atomic.LoadInt64(&self.closed) > 0 {
 		return nil
 	}
 

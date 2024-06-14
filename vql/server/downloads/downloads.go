@@ -801,7 +801,7 @@ func createHuntDownloadFile(
 			return
 		}
 
-		options := result_sets.ResultSetOptions{}
+		options := services.FlowSearchOptions{BasicInformation: true}
 		flow_chan, _, err := hunt_dispatcher.GetFlows(sub_ctx,
 			config_obj, options, scope, hunt_id, 0)
 		if err != nil {
@@ -809,7 +809,6 @@ func createHuntDownloadFile(
 		}
 
 		for flow_details := range flow_chan {
-
 			if flow_details == nil || flow_details.Context == nil {
 				continue
 			}
@@ -875,7 +874,7 @@ func generateCombinedResults(
 		defer maybeClose(json_writer)
 		defer maybeClose(csv_writer)
 
-		options := result_sets.ResultSetOptions{}
+		options := services.FlowSearchOptions{BasicInformation: true}
 		flow_chan, _, err := hunt_dispatcher.GetFlows(ctx,
 			config_obj, options, scope, hunt_details.HuntId, 0)
 		if err != nil {

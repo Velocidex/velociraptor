@@ -191,8 +191,8 @@ func (self *reporter) emit_ds(
 	}
 	self.seen[client_path] = true
 
-	id := self.id
 	self.id++
+	id := self.id
 
 	self.pool.Submit(func() {
 		self.mu.Lock()

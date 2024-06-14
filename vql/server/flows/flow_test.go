@@ -8,7 +8,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
-	"github.com/sebdah/goldie"
+	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/emptypb"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -107,7 +107,11 @@ func (self *FilestoreTestSuite) TestEnumerateFlow() {
 			Set("flow_id", self.flow_id).
 			Set("client_id", self.client_id)))
 
-	goldie.Assert(self.T(), "TestEnumerateFlow", json.MustMarshalIndent(result))
+	g := goldie.New(self.T(),
+		goldie.WithFixtureDir("fixtures"),
+		goldie.WithDiffEngine(goldie.ClassicDiff))
+
+	g.Assert(self.T(), "TestEnumerateFlow", json.MustMarshalIndent(result))
 }
 
 func TestFilestorePlugin(t *testing.T) {

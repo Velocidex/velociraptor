@@ -71,6 +71,15 @@ const (
 	OnlyRunningHunts
 )
 
+type FlowSearchOptions struct {
+	result_sets.ResultSetOptions
+
+	// Additional Options for efficient search.
+
+	// BasicInformation includes only client id and flow id.
+	BasicInformation bool
+}
+
 type IHuntDispatcher interface {
 	// Applies the function on all the hunts. Functions may not
 	// modify the hunt but will have read only access to the hunt
@@ -106,7 +115,7 @@ type IHuntDispatcher interface {
 
 	// Paged view into the flows in the hunt
 	GetFlows(ctx context.Context, config_obj *config_proto.Config,
-		options result_sets.ResultSetOptions, scope vfilter.Scope,
+		options FlowSearchOptions, scope vfilter.Scope,
 		hunt_id string, start int) (
 		output chan *api_proto.FlowDetails, total_rows int64, err error)
 
