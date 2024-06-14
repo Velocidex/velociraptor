@@ -1,6 +1,3 @@
-//go:build !windows
-// +build !windows
-
 package readers
 
 import (
@@ -80,7 +77,7 @@ func (self *TestSuite) TestPagedReader() {
 	buff := make([]byte, 4)
 
 	for i := 0; i < 10; i++ {
-		reader, err := NewPagedReader(
+		reader, err := NewAccessorReader(
 			self.scope, "file", self.filenames[i], 100)
 		assert.NoError(self.T(), err)
 		_, err = reader.ReadAt(buff, 0)
@@ -90,7 +87,7 @@ func (self *TestSuite) TestPagedReader() {
 	}
 
 	for i := 0; i < 10; i++ {
-		reader, err := NewPagedReader(self.scope, "file", self.filenames[i], 100)
+		reader, err := NewAccessorReader(self.scope, "file", self.filenames[i], 100)
 		assert.NoError(self.T(), err)
 		_, err = reader.ReadAt(buff, 0)
 		assert.NoError(self.T(), err)
@@ -99,7 +96,7 @@ func (self *TestSuite) TestPagedReader() {
 
 	// Open the same reader 10 time returns from the cache.
 	for i := 0; i < 10; i++ {
-		reader, err := NewPagedReader(self.scope, "file", self.filenames[1], 100)
+		reader, err := NewAccessorReader(self.scope, "file", self.filenames[1], 100)
 		assert.NoError(self.T(), err)
 
 		_, err = reader.ReadAt(buff, 0)
@@ -110,7 +107,7 @@ func (self *TestSuite) TestPagedReader() {
 
 	// Make sure that it is ok to close the reader at any time -
 	// the next read will be valid.
-	reader, err := NewPagedReader(self.scope, "file", self.filenames[1], 100)
+	reader, err := NewAccessorReader(self.scope, "file", self.filenames[1], 100)
 	assert.NoError(self.T(), err)
 
 	for i := 0; i < 10; i++ {
