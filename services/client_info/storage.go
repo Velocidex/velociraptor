@@ -87,7 +87,7 @@ func (self *Store) StartHouseKeep(
 				return
 
 			case <-utils.GetTime().After(utils.Jitter(utils.Jitter(delay))):
-				if utils.GetTime().Now().Sub(last_run) < time.Second {
+				if utils.GetTime().Now().Sub(last_run) < 10*time.Second {
 					utils.SleepWithCtx(ctx, time.Minute)
 					continue
 				}

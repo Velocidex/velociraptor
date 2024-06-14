@@ -123,7 +123,7 @@ func (self UploadsPlugins) Call(
 			return
 		}
 
-		options := result_sets.ResultSetOptions{}
+		options := services.FlowSearchOptions{BasicInformation: true}
 		flow_chan, _, err := hunt_dispatcher.GetFlows(
 			ctx, config_obj, options, scope, arg.HuntId, 0)
 		if err != nil {
@@ -132,6 +132,10 @@ func (self UploadsPlugins) Call(
 		}
 
 		for flow_details := range flow_chan {
+			if flow_details == nil || flow_details.Context == nil {
+				continue
+			}
+
 			client_id := flow_details.Context.ClientId
 			flow_id := flow_details.Context.SessionId
 
