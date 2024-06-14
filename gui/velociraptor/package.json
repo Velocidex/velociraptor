@@ -10,7 +10,7 @@
         "@babel/runtime": "^7.24.5",
         "@fortawesome/fontawesome-svg-core": "^6.5.2",
         "@fortawesome/free-solid-svg-icons": "^6.5.2",
-        "@fortawesome/react-fontawesome": "0.2.1",
+        "@fortawesome/react-fontawesome": "0.2.2",
         "@popperjs/core": "^2.11.8",
         "axios": ">=1.7.1",
         "ace-builds": "1.34.0",
