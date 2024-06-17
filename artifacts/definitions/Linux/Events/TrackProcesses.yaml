@@ -149,8 +149,7 @@ sources:
      LET Users <= memoize(
          query={
            SELECT 
-                  int(
-                    int=Uid) AS UID,
+                  Uid AS UID,
                   User
            FROM Artifact.Linux.Sys.Users()
          },
