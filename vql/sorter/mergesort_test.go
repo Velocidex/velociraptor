@@ -27,6 +27,9 @@ func TestDataFile(t *testing.T) {
 	data_file := newDataFile(scope, rows, "X")
 	defer data_file.Close()
 
+	// Wait here until its ready
+	data_file.Last()
+
 	// Check the content of the backing file.
 	fd, err := os.Open(data_file.fd.Name())
 	defer fd.Close()
