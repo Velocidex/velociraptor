@@ -468,6 +468,9 @@ func (self *scanReporter) RuleMatching(
 			Meta:     metas,
 			File:     self.file_info,
 			FileName: self.filename,
+
+			// There are no strings so produce an empty String member.
+			String: &YaraHit{},
 		}
 
 		select {
