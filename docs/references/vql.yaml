@@ -2714,6 +2714,10 @@
   - name: limit
     type: int64
     description: Number of rows to show (used for paging).
+  - name: basic_info
+    type: bool
+    description: If specified we onlyh return basic information like flow id and client
+      id.
   category: server
   metadata:
     permissions: READ_RESULTS
@@ -6287,7 +6291,6 @@
       globs="C:/Users/*/*",
       recursion_callback="x=> NOT x.OSPath =~ Exclude")
     ```
-
   type: Function
   args:
   - name: epoch
@@ -7420,3 +7423,4 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+
