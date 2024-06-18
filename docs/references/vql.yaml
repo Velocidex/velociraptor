@@ -2716,7 +2716,7 @@
     description: Number of rows to show (used for paging).
   - name: basic_info
     type: bool
-    description: If specified we onlyh return basic information like flow id and client
+    description: If specified we only return basic information like flow id and client
       id.
   category: server
   metadata:
