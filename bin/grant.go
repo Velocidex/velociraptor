@@ -139,7 +139,13 @@ func doGrant() error {
 		}
 	}
 
-	return services.SetPolicy(org_config_obj, principal, new_policy)
+	err = services.SetPolicy(org_config_obj, principal, new_policy)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(ServerChangeWarning)
+	return nil
 }
 
 func doShow() error {

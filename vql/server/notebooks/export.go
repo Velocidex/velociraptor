@@ -67,6 +67,12 @@ func (self ExportNotebookFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("notebook_export: %v", err)
+		return vfilter.Null{}
+	}
+
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("notebook_export: Command can only run on the server")

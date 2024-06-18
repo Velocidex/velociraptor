@@ -9,6 +9,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -31,6 +32,12 @@ func (self *AddFavorite) Call(ctx context.Context,
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("favorites_save: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("favorites_save: %v", err)
 		return vfilter.Null{}
 	}
 

@@ -42,6 +42,12 @@ func (self DeleteFlowPlugin) Call(
 			return
 		}
 
+		err = services.RequireFrontend()
+		if err != nil {
+			scope.Log("delete_flow: %v", err)
+			return
+		}
+
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("delete_flow: Command can only run on the server")

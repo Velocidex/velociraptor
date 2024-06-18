@@ -37,6 +37,12 @@ func (self RemoveClientMonitoringFunction) Call(
 		return vfilter.Null{}
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("rm_client_monitoring: %v", err)
+		return vfilter.Null{}
+	}
+
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("rm_client_monitoring: Command can only run on the server")
@@ -95,6 +101,12 @@ func (self RemoveServerMonitoringFunction) Call(
 
 	arg := &AddServerMonitoringFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("rm_server_monitoring: %v", err)
+		return vfilter.Null{}
+	}
+
+	err = services.RequireFrontend()
 	if err != nil {
 		scope.Log("rm_server_monitoring: %v", err)
 		return vfilter.Null{}

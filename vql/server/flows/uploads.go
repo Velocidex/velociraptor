@@ -44,6 +44,12 @@ func (self UploadsPlugins) Call(
 			return
 		}
 
+		err = services.RequireFrontend()
+		if err != nil {
+			scope.Log("uploads: %v", err)
+			return
+		}
+
 		arg := &UploadsPluginsArgs{}
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)

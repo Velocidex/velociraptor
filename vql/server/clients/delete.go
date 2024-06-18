@@ -56,6 +56,12 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 			return
 		}
 
+		err = services.RequireFrontend()
+		if err != nil {
+			scope.Log("client_delete: %v", err)
+			return
+		}
+
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("client_delete: Command can only run on the server")

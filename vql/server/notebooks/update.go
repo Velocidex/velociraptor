@@ -42,6 +42,12 @@ func (self UpdateNotebookCellFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("notebook_update_cell: %v", err)
+		return vfilter.Null{}
+	}
+
 	config_obj, pres := vql_subsystem.GetServerConfig(scope)
 	if !pres {
 		scope.Log("notebook_update_cell: must be running on the server")
@@ -153,6 +159,12 @@ func (self UpdateNotebookFunction) Call(ctx context.Context,
 
 	arg := &UpdateNotebookFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("notebook_update: %v", err)
+		return vfilter.Null{}
+	}
+
+	err = services.RequireFrontend()
 	if err != nil {
 		scope.Log("notebook_update: %v", err)
 		return vfilter.Null{}
