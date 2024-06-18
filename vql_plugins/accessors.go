@@ -9,6 +9,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/accessors/fat"
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
 	_ "www.velocidex.com/golang/velociraptor/accessors/file_store"
+	_ "www.velocidex.com/golang/velociraptor/accessors/mscfb"
 	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
 	_ "www.velocidex.com/golang/velociraptor/accessors/offset"
 	_ "www.velocidex.com/golang/velociraptor/accessors/pipe"

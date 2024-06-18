@@ -111,6 +111,7 @@ require (
 	github.com/Velocidex/go-ewf v0.0.0-20240210123447-97dc81b7d8c3
 	github.com/Velocidex/go-ext4 v0.0.0-20240608083317-8dd00855b069
 	github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a
+	github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002
 	github.com/Velocidex/go-vhdx v0.0.0-20240601014259-b204818c95fd
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
@@ -270,6 +271,7 @@ require (
 // replace github.com/go-errors/errors => ../errors
 // replace github.com/Velocidex/ttlcache/v2 => ../ttlcache
 // replace github.com/Velocidex/go-vhdx => ../go-vhdx
+// replace github.com/Velocidex/go-mscfb => ../go-mscfb
 
 // Remove search for html end block. This allows inserting unbalanced
 // HTML tags into the markdown
