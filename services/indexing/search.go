@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -450,8 +451,11 @@ func (self *Indexer) searchVerbs(ctx context.Context,
 	in *api_proto.SearchClientsRequest,
 	limit uint64) (*api_proto.SearchClientsResponse, error) {
 
+	total := uint64(0)
 	terms := []string{}
-	items := []*api_proto.ApiClient{}
+
+	// Dedup by client id
+	items := ordereddict.NewDict()
 
 	term := strings.ToLower(in.Query)
 	for _, verb := range verbs {
@@ -472,7 +476,10 @@ func (self *Indexer) searchVerbs(ctx context.Context,
 			}, limit)
 		if err == nil {
 			terms = append(terms, res.Names...)
-			items = append(items, res.Items...)
+			for _, i := range res.Items {
+				items.Update(i.ClientId, i)
+			}
+			total += res.Total
 		}
 	}
 
@@ -487,12 +494,23 @@ func (self *Indexer) searchVerbs(ctx context.Context,
 			}, limit)
 		if err == nil {
 			terms = append(terms, res.Names...)
-			items = append(items, res.Items...)
+			for _, i := range res.Items {
+				items.Update(i.ClientId, i)
+			}
+			total += res.Total
 		}
 	}
 
-	return &api_proto.SearchClientsResponse{
-		Names: terms,
-		Items: items,
-	}, nil
+	res := &api_proto.SearchClientsResponse{
+		Names:      terms,
+		Total:      total,
+		SearchTerm: in,
+	}
+
+	for _, k := range items.Keys() {
+		v, _ := items.Get(k)
+		res.Items = append(res.Items, v.(*api_proto.ApiClient))
+	}
+
+	return res, nil
 }

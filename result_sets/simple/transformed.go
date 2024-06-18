@@ -294,20 +294,25 @@ func (self *Stacker) Start(ctx context.Context) {
 	for row := range self.sorted_chan {
 		// Get the value for the sorted column
 		value, pres := self.scope.Associative(row, self.sort_column)
-		if pres {
-			// Flush the current value
-			if !self.scope.Eq(value, self.value) {
-				if self.count > 0 {
-					self.writer.WriteJSONL(
-						[]byte(json.Format(`{"value":%q,"idx":%q,"c":%q}
-`, self.value, self.index, self.count)), 1)
-				}
-				self.count = 0
-				self.value = value
-				self.index = index
-			}
-			self.count++
+
+		// Empty values are treated as an empty string so they can be
+		// grouped into a single group.
+		if !pres || utils.IsNil(value) {
+			value = ""
 		}
+
+		// Flush the current value
+		if !self.scope.Eq(value, self.value) {
+			if self.count > 0 {
+				self.writer.WriteJSONL(
+					[]byte(json.Format(`{"value":%q,"idx":%q,"c":%q}
+`, self.value, self.index, self.count)), 1)
+			}
+			self.count = 0
+			self.value = value
+			self.index = index
+		}
+		self.count++
 
 		select {
 		case <-ctx.Done():
