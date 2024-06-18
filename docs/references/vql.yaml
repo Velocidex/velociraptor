@@ -2216,7 +2216,7 @@
 
     ```vql
     SELECT * FROM glob(globs='/**/*.pem',
-        recursion_callback="x=>NOT x.Name =~ '^/(proc|sys|snap)'")
+        recursion_callback="x=>NOT x.OSPath =~ '^/(proc|sys|snap)'")
     ```
   type: Plugin
   version: 3
@@ -6217,7 +6217,77 @@
     ```vql
     SELECT timestamp(string="8/30/2021 6:01:28 PM",
                      format="1/2/2006 3:04:05 PM")
+    FROM scope()
     ```
+
+    Internally VQL uses Golang's
+    [time.Time](https://golang.org/pkg/time/#Time) object to represent
+    times and this is what is returned by the `timestamp()` VQL
+    function. This object has a number of useful methods which are
+    available via fields on the timestamp object:
+
+    ```json
+    {
+      "Day": 26,
+      "Hour": 8,
+      "ISOWeek": 2024,
+      "IsDST": "false",
+      "IsZero": "false",
+      "Minute": 53,
+      "Month": 3,
+      "Nanosecond": 231540468,
+      "Second": 37,
+      "String": "2024-03-26T06:53:37Z",
+      "UTC": "2024-03-26T06:53:37.231540468Z",
+      "Unix": 1711436017,
+      "UnixMicro": 1711436017231540,
+      "UnixMilli": 1711436017231,
+      "UnixNano": 1711436017231540500,
+      "Weekday": 2,
+      "Year": 2024,
+      "YearDay": 86,
+      "Zone": "SAST"
+    }
+    ```
+
+    For example `timestamp(epoch=now()).Month` is the current month.
+
+    To perform time manipulations you can convert times back to the
+    seconds from epoch, then add/subtract times. For example the
+    following calculates the time exactly one day (24 hours) before
+    the stated time:
+
+    ```sql
+    SELECT timestamp(epoch=timestamp(epoch="2024-03-26T06:53:37Z").Unix - 86400)
+    FROM scope()
+    ```
+
+    ## A note about escaping.
+
+    Windows paths often contain backslashes which are difficult to
+    work with because they need to be escaped both by regular
+    expressions **and** VQL strings.
+
+    This means that trying to add a recursion callback will expand
+    each backslash into 8 backslashes (once for regular expressions
+    and twice for nested strings).
+
+    ```sql
+    SELECT * FROM glob(
+      globs="C:/Users/*/*",
+      recursion_callback="x=> NOT x.OSPath =~ 'C:\\\\\\\\Users\\\\\\\\Admini'")
+    ```
+
+    It is a bit easier to use variables and raw strings
+
+    ```sql
+    LET Exclude <= '''C:\\Users\\Admin'''
+
+    SELECT * FROM glob(
+      globs="C:/Users/*/*",
+      recursion_callback="x=> NOT x.OSPath =~ Exclude")
+    ```
+
   type: Function
   args:
   - name: epoch
@@ -7350,4 +7420,3 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
-
