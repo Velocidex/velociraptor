@@ -88,8 +88,9 @@ Queries:
        DriveLetter=srcDir,
        PathRegex='wkscli.dll', ContextBytes=10, YaraRule=MZRule)
 
+  # This rule has no strings so HitContext should be NULL
   - SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,
-           Size, Rule, CleanContext(HitContext=HitContext), HitOffset
+           Size, Rule, HitContext, HitOffset
     FROM Artifact.Windows.Detection.Yara.NTFS(
          DriveLetter=srcDir,
          PathRegex='wkscli.dll', YaraRule=IsPE)

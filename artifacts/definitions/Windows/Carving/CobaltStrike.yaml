@@ -462,7 +462,7 @@ sources:
             FROM switch( -- switchcase will find beacon as priority, then search for shellcode
                 beacon = {
                     SELECT *,
-                        substr(start=0,end=1,str=String.Data) as Xor,
+                        substr(start=0, end=1, str=String.Data) as Xor,
                         read_file(accessor='data',
                                   filename=TargetBytes,
                                   offset= String.Offset,

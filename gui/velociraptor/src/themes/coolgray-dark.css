@@ -241,7 +241,6 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .react-autosuggest__suggestions-container--open {
-  margin-left: 5px;
   background: var(--color-form-control-background);
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
