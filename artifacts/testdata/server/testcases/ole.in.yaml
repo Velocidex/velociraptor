@@ -17,6 +17,13 @@ Parameters:
           path_type: "windows"
 
 Queries:
+  # Test the jumplist artifact
+  - SELECT AutomaticDestinationsPath.Basename, Stream,
+           ApplicationId, Application, LinkTarget,
+           FileSize , CreationTime , AccessTime, WriteTime
+    FROM Artifact.Windows.Forensics.JumpLists(
+        Globs=srcDir+"/artifacts/testdata/files/*-ms")
+
   # Generate this file with
   # SELECT copy(accessor="data", filename=xor(key="infected",
   # string=read_file(filename="/tmp/malware.zip")),
