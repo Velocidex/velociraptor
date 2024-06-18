@@ -105,11 +105,13 @@ sources:
                                 Rule, Tags, Meta,
                                 String.Name as YaraString,
                                 String.Offset as HitOffset,
-                                upload( accessor='scope',
+                                if(condition=String.Data,
+                                   then=upload(
+                                    accessor='scope',
                                     file='String.Data',
                                     name=format(format="%v_%v",
                                     args=[ OSPath.HumanString, String.Offset ]
-                                        )) as HitContext
+                                   ))) as HitContext
                               FROM yara(accessor='zip',files=OSPath,rules=YaraRule,
                                 context=ContextBytes, number=NumberOfHits)
                             })

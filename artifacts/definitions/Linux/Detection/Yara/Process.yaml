@@ -95,11 +95,13 @@ sources:
                 Meta,
                 String.Name as YaraString,
                 String.Offset as HitOffset,
-                upload( accessor='scope',
-                    file='String.Data',
-                    name=format(format="%v-%v_%v_%v",
-                    args=[ ProcessName, Pid, String.Offset, ContextBytes ]
-                        )) as HitContext
+                if(condition=String.Data,
+                   then=upload(
+                     accessor='scope',
+                     file='String.Data',
+                     name=format(format="%v-%v_%v_%v",
+                     args=[ ProcessName, Pid, String.Offset, ContextBytes ]
+                    ))) as HitContext
              FROM proc_yara(
                         pid=Pid,
                         rules=yara_rules,

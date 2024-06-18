@@ -80,18 +80,13 @@ FROM scope()
   },
   "HitOffset": 0
  }
-]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, Size, Rule, CleanContext(HitContext=HitContext), HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', YaraRule=IsPE)[
+]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', YaraRule=IsPE)[
  {
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
   "Rule": "IsPE",
-  "CleanContext(HitContext=HitContext)": {
-   "StoredSize": 4,
-   "Path": "String.Data",
-   "Size": 4,
-   "sha256": "fa1d2db62d4d952e2031452e1bc1ddcad0b192c2e29a706f11ce426ae5acddea"
-  },
-  "HitOffset": null
+  "HitContext": null,
+  "HitOffset": 0
  }
 ]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(YaraRule=IsPE)[
  {
