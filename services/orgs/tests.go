@@ -38,7 +38,8 @@ func (self *TestOrgManager) Start(
 		service:    service_container,
 		sm:         services.NewServiceManager(ctx, org_config),
 	}
-	self.orgs[""] = org_context
+
+	self.orgs[services.ROOT_ORG_ID] = org_context
 	self.mu.Unlock()
 
 	return self.startOrgFromContext(org_context)

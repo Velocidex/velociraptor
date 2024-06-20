@@ -293,6 +293,9 @@ func (self *ServiceContainer) ACLManager() (services.ACLManager, error) {
 // manager. This function is used both in the client and the server to
 // start all the needed services.
 func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
+
+	org_record.Id = utils.NormalizedOrgId(org_record.Id)
+
 	org_config := self.makeNewConfigObj(org_record)
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting services for %v", services.GetOrgName(org_config))
@@ -732,6 +735,8 @@ func maybeFlushFilesOnClose(
 func (self *OrgManager) Services(org_id string) services.ServiceContainer {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	org_id = utils.NormalizedOrgId(org_id)
 
 	service_container, pres := self.orgs[org_id]
 	if !pres {

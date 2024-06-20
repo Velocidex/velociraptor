@@ -22,6 +22,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
+type JournalOptions struct {
+	Sync bool
+}
+
 func GetJournal(config_obj *config_proto.Config) (JournalService, error) {
 	org_manager, err := GetOrgManager()
 	if err != nil {
@@ -48,7 +52,8 @@ type JournalService interface {
 	// Push the rows into the result set in the filestore. NOTE: This
 	// method synchronises access to the files within the process.
 	AppendToResultSet(config_obj *config_proto.Config,
-		path api.FSPathSpec, rows []*ordereddict.Dict) error
+		path api.FSPathSpec, rows []*ordereddict.Dict,
+		options JournalOptions) error
 
 	Broadcast(ctx context.Context, config_obj *config_proto.Config,
 		rows []*ordereddict.Dict, name, client_id, flows_id string) error
