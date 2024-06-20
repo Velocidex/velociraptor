@@ -86,6 +86,8 @@ func (self *ServerUploader) Upload(
 			Set("_Components", result.Components).
 			Set("file_size", result.Size).
 			Set("uploaded_size", result.Size),
+		}, services.JournalOptions{
+			Sync: true,
 		},
 	)
 	if err != nil {

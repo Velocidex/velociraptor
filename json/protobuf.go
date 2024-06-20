@@ -8,6 +8,11 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+func MustMarshalProtobufString(v interface{}, opts *json.EncOpts) string {
+	res, _ := MarshalProtobuf(v, opts)
+	return string(res)
+}
+
 func MarshalProtobuf(v interface{}, opts *json.EncOpts) ([]byte, error) {
 	self, ok := v.(proto.Message)
 	if !ok {

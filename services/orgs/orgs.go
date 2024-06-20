@@ -69,8 +69,8 @@ func (self *OrgManager) ListOrgs() []*api_proto.OrgRecord {
 	for _, item := range self.orgs {
 		copy := proto.Clone(item.record).(*api_proto.OrgRecord)
 		if utils.IsRootOrg(copy.Id) {
-			copy.Id = "root"
-			copy.Name = "<root>"
+			copy.Id = services.ROOT_ORG_ID
+			copy.Name = services.ROOT_ORG_NAME
 			if self.config_obj.Client != nil {
 				copy.Nonce = self.config_obj.Client.Nonce
 			}
@@ -90,6 +90,8 @@ func (self *OrgManager) GetOrgConfig(org_id string) (*config_proto.Config, error
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	org_id = utils.NormalizedOrgId(org_id)
+
 	// An empty org id corresponds to the root org.
 	if utils.IsRootOrg(org_id) {
 		return self.config_obj, nil
@@ -106,9 +108,7 @@ func (self *OrgManager) GetOrg(org_id string) (*api_proto.OrgRecord, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if utils.IsRootOrg(org_id) {
-		org_id = ""
-	}
+	org_id = utils.NormalizedOrgId(org_id)
 
 	result, pres := self.orgs[org_id]
 	if !pres {
@@ -140,6 +140,8 @@ func (self *OrgManager) CreateNewOrg(name, id string) (
 	if id == "" {
 		id = self.NewOrgId()
 	}
+
+	id = utils.NormalizedOrgId(id)
 
 	_, err := self.GetOrg(id)
 	if err == nil {
@@ -184,7 +186,7 @@ func (self *OrgManager) makeNewConfigObj(
 
 	result := proto.Clone(self.config_obj).(*config_proto.Config)
 
-	result.OrgId = record.Id
+	result.OrgId = utils.NormalizedOrgId(record.Id)
 	result.OrgName = record.Name
 
 	if result.Client != nil {
@@ -193,7 +195,12 @@ func (self *OrgManager) makeNewConfigObj(
 		result.Client.Nonce = record.Nonce
 	}
 
-	if result.Datastore != nil && record.Id != "" {
+	// Adjust the datastore directories to point at a per-org
+	// location:
+
+	// The root location remains at the top level but suborgs will
+	// live in <fs>/orgs/<orgid>
+	if result.Datastore != nil && !utils.IsRootOrg(record.Id) {
 		result.Datastore.Location = filepath.Join(
 			result.Datastore.Location, "orgs", record.Id)
 		result.Datastore.FilestoreDirectory = filepath.Join(
@@ -254,6 +261,8 @@ func (self *OrgManager) Scan() error {
 
 	// Now shut down the orgs that were removed
 	for org_id := range existing {
+		org_id = utils.NormalizedOrgId(org_id)
+
 		// Do not remove the root org
 		if utils.IsRootOrg(org_id) {
 			continue
@@ -292,8 +301,8 @@ func (self *OrgManager) Start(
 
 	// First start all services for the root org
 	err := self.startOrg(&api_proto.OrgRecord{
-		Id:    "",
-		Name:  "<root org>",
+		Id:    services.ROOT_ORG_ID,
+		Name:  services.ROOT_ORG_NAME,
 		Nonce: nonce,
 	})
 	if err != nil {
