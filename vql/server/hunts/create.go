@@ -94,6 +94,12 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		expires = uint64(expiry_time.UnixNano() / 1000)
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("hunt: %v", err)
+		return vfilter.Null{}
+	}
+
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("hunt: Command can only run on the server")
@@ -310,6 +316,12 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 
 	arg := &AddToHuntFunctionArg{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("hunt_add: %v", err)
+		return vfilter.Null{}
+	}
+
+	err = services.RequireFrontend()
 	if err != nil {
 		scope.Log("hunt_add: %v", err)
 		return vfilter.Null{}

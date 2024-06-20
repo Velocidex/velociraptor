@@ -69,6 +69,12 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("create_flow_download: %v", err)
+		return vfilter.Null{}
+	}
+
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("create_flow_download: Command can only run on the server")
@@ -136,6 +142,12 @@ func (self *CreateHuntDownload) Call(ctx context.Context,
 	err = vql_subsystem.CheckAccess(scope, acls.PREPARE_RESULTS)
 	if err != nil {
 		scope.Log("create_hunt_download: %s", err)
+		return vfilter.Null{}
+	}
+
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("create_hunt_download: %v", err)
 		return vfilter.Null{}
 	}
 

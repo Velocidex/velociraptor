@@ -51,6 +51,12 @@ func (self *CreateNotebookFunction) Call(ctx context.Context,
 		Public:        arg.Public,
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("notebook_create: %v", err)
+		return vfilter.Null{}
+	}
+
 	config_obj, pres := vql_subsystem.GetServerConfig(scope)
 	if !pres {
 		scope.Log("notebook_create: must be running on the server")

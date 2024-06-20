@@ -8,6 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -37,6 +38,12 @@ func (self FlowLogsPlugin) Call(
 
 		arg := &FlowLogsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("flow_logs: %v", err)
+			return
+		}
+
+		err = services.RequireFrontend()
 		if err != nil {
 			scope.Log("flow_logs: %v", err)
 			return

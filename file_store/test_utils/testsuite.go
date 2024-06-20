@@ -123,6 +123,8 @@ func (self *TestSuite) LoadConfig() *config_proto.Config {
 }
 
 func (self *TestSuite) SetupTest() {
+	services.AllowFrontendPlugins.Store(true)
+
 	if self.ConfigObj == nil {
 		self.ConfigObj = self.LoadConfig()
 	}

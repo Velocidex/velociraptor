@@ -38,6 +38,12 @@ func (self GetClientMonitoring) Call(
 		return vfilter.Null{}
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("get_client_monitoring: %v", err)
+		return vfilter.Null{}
+	}
+
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("get_client_monitoring: Command can only run on the server")
@@ -81,6 +87,12 @@ func (self SetClientMonitoring) Call(
 
 	arg := &SetClientMonitoringArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("set_client_monitoring: %v", err)
+		return vfilter.Null{}
+	}
+
+	err = services.RequireFrontend()
 	if err != nil {
 		scope.Log("set_client_monitoring: %v", err)
 		return vfilter.Null{}
@@ -163,6 +175,12 @@ func (self GetServerMonitoring) Call(
 		return vfilter.Null{}
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("get_server_monitoring: %v", err)
+		return vfilter.Null{}
+	}
+
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("get_server_monitoring: Command can only run on the server")
@@ -216,6 +234,12 @@ func (self SetServerMonitoring) Call(
 
 	arg := &SetServerMonitoringArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("set_server_monitoring: %v", err)
+		return vfilter.Null{}
+	}
+
+	err = services.RequireFrontend()
 	if err != nil {
 		scope.Log("set_server_monitoring: %v", err)
 		return vfilter.Null{}
