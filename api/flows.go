@@ -88,7 +88,7 @@ func (self *ApiServer) GetClientFlows(
 			json.AnyToString(flow.Request.Creator, vjson.DefaultEncOpts()),
 			json.AnyToString(flow.TotalUploadedBytes, vjson.DefaultEncOpts()),
 			json.AnyToString(flow.TotalCollectedRows, vjson.DefaultEncOpts()),
-			json.MustMarshalString(flow),
+			json.MustMarshalProtobufString(flow, vjson.DefaultEncOpts()),
 			json.AnyToString(flow.Request.Urgent, vjson.DefaultEncOpts()),
 			json.AnyToString(flow.ArtifactsWithResults, vjson.DefaultEncOpts()),
 		}

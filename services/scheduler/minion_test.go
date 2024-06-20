@@ -71,7 +71,7 @@ func (self *MinionSchedulerTestSuite) TestNotebookMinionScheduler() {
 	org_manager, err := services.GetOrgManager()
 	assert.NoError(self.T(), err)
 
-	org_manager.Services("").(*orgs.ServiceContainer).MockFrontendManager(
+	org_manager.Services(services.ROOT_ORG_ID).(*orgs.ServiceContainer).MockFrontendManager(
 		frontend.NewMinionFrontendManager(self.ConfigObj, ""))
 
 	// Get a minion scheduler that will connect to the api server.

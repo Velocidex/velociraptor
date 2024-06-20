@@ -95,7 +95,8 @@ func (self *JournalService) Watch(
 func (self *JournalService) AppendToResultSet(
 	config_obj *config_proto.Config,
 	path api.FSPathSpec,
-	rows []*ordereddict.Dict) error {
+	rows []*ordereddict.Dict,
+	options services.JournalOptions) error {
 
 	// Key a lock to manage access to this file.
 	self.mu.Lock()
@@ -113,9 +114,14 @@ func (self *JournalService) AppendToResultSet(
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
+	sync := utils.BackgroundWriter
+	if options.Sync {
+		sync = utils.SyncCompleter
+	}
+
 	// Append the data to the end of the file.
 	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
-		path, json.DefaultEncOpts(), utils.BackgroundWriter, result_sets.AppendMode)
+		path, json.DefaultEncOpts(), sync, result_sets.AppendMode)
 	if err != nil {
 		return err
 	}
@@ -247,7 +253,8 @@ func (self *JournalService) PushRowsToArtifact(
 		if err != nil {
 			return err
 		}
-		return self.AppendToResultSet(config_obj, path, rows)
+		return self.AppendToResultSet(config_obj, path, rows,
+			services.JournalOptions{})
 	}
 
 	// The Queue manager will manage writing event artifacts to a

@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memcache"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -44,7 +45,9 @@ func GetFileStore(config_obj *config_proto.Config) api.FileStore {
 	defer fs_mu.Unlock()
 
 	// Maintain a different filestore for each org.
-	impl, pres := g_impl[config_obj.OrgId]
+	org_id := utils.NormalizedOrgId(config_obj.OrgId)
+
+	impl, pres := g_impl[org_id]
 	if pres {
 		return impl
 	}
@@ -59,7 +62,7 @@ func GetFileStore(config_obj *config_proto.Config) api.FileStore {
 	}
 
 	res, _ := getImpl(implementation, config_obj)
-	g_impl[config_obj.OrgId] = res
+	g_impl[org_id] = res
 	return res
 }
 
@@ -87,7 +90,8 @@ func OverrideFilestoreImplementation(
 	fs_mu.Lock()
 	defer fs_mu.Unlock()
 
-	g_impl[config_obj.OrgId] = impl
+	org_id := utils.NormalizedOrgId(config_obj.OrgId)
+	g_impl[org_id] = impl
 }
 
 func SetGlobalFilestore(
@@ -96,12 +100,14 @@ func SetGlobalFilestore(
 	fs_mu.Lock()
 	defer fs_mu.Unlock()
 
+	org_id := utils.NormalizedOrgId(config_obj.OrgId)
+
 	impl, err := getImpl(implementation, config_obj)
 	if err != nil {
 		return err
 	}
 
-	g_impl[config_obj.OrgId] = impl
+	g_impl[org_id] = impl
 	return nil
 }
 
