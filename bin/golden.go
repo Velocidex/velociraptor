@@ -291,6 +291,7 @@ func doGolden() error {
 	defer closer()
 
 	logging.DisableLogging()
+	services.AllowFrontendPlugins.Store(true)
 
 	vql_subsystem.RegisterPlugin(&MemoryLogPlugin{})
 	vql_subsystem.RegisterFunction(&WriteFilestoreFunction{})

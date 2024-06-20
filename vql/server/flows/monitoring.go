@@ -73,6 +73,12 @@ func (self MonitoringPlugin) Call(
 			return
 		}
 
+		err = services.RequireFrontend()
+		if err != nil {
+			scope.Log("monitoring: %v", err)
+			return
+		}
+
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("monitoring: Command can only run on the server")
@@ -167,6 +173,12 @@ func (self WatchMonitoringPlugin) Call(
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
 			scope.Log("watch_monitoring: %s", err)
+			return
+		}
+
+		err = services.RequireFrontend()
+		if err != nil {
+			scope.Log("watch_monitoring: %v", err)
 			return
 		}
 

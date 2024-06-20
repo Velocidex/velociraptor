@@ -45,7 +45,7 @@ func (self *NotebookManagerTestSuite) SetupTest() {
 	self.LoadArtifactsIntoConfig(mock_definitions)
 
 	// Stop automatic syncing
-	notebook.DO_NOT_SYNC_NOTEBOOKS_FOR_TEST = true
+	notebook.DO_NOT_SYNC_NOTEBOOKS_FOR_TEST.Store(true)
 
 	self.TestSuite.SetupTest()
 

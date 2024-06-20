@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -33,6 +34,12 @@ func (self *CreateNotebookDownload) Call(ctx context.Context,
 	err = vql_subsystem.CheckAccess(scope, acls.PREPARE_RESULTS)
 	if err != nil {
 		scope.Log("create_notebook_download: %s", err)
+		return vfilter.Null{}
+	}
+
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("create_notebook_download: %v", err)
 		return vfilter.Null{}
 	}
 

@@ -40,6 +40,12 @@ func (self BackupPlugin) Call(
 			return
 		}
 
+		err = services.RequireFrontend()
+		if err != nil {
+			scope.Log("backup: %v", err)
+			return
+		}
+
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("backup: Command can only run on the server")
@@ -99,6 +105,12 @@ func (self RestoreBackupPlugin) Call(
 
 		arg := &BackupPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("backup_restore: %v", err)
+			return
+		}
+
+		err = services.RequireFrontend()
 		if err != nil {
 			scope.Log("backup_restore: %v", err)
 			return
