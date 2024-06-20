@@ -306,6 +306,8 @@ func (self *HuntManager) maybeDirectlyAssignFlow(
 				Set("ClientId", assignment.ClientId).
 				Set("FlowId", assignment.FlowId).
 				Set("Timestamp", utils.GetTime().Now().Unix()),
+		}, services.JournalOptions{
+			Sync: true,
 		})
 	if err != nil {
 		return err
@@ -425,7 +427,7 @@ func (self *HuntManager) ProcessFlowCompletion(
 			Set("StartTime", time.Unix(0, int64(flow.StartTime*1000))).
 			Set("EndTime", time.Unix(0, int64(flow.ActiveTime*1000))).
 			Set("Status", flow.State.String()).
-			Set("Error", flow.Status)})
+			Set("Error", flow.Status)}, services.JournalOptions{})
 }
 
 // When a label is changed we check all the active hunts to see if any
@@ -785,7 +787,8 @@ func scheduleHuntOnClient(
 
 	path_manager := paths.NewHuntPathManager(hunt_id)
 	err = journal.AppendToResultSet(config_obj,
-		path_manager.Clients(), []*ordereddict.Dict{row})
+		path_manager.Clients(), []*ordereddict.Dict{row},
+		services.JournalOptions{})
 	if err != nil {
 		return err
 	}

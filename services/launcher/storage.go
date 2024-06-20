@@ -61,7 +61,10 @@ func (self *FlowStorageManager) WriteFlowIndex(
 			Set("FlowId", flow.SessionId).
 			Set("Artifacts", flow.Request.Artifacts).
 			Set("Created", flow.CreateTime).
-			Set("Creator", flow.Request.Creator)})
+			Set("Creator", flow.Request.Creator)},
+		services.JournalOptions{
+			Sync: true,
+		})
 }
 
 func (self *FlowStorageManager) WriteTask(

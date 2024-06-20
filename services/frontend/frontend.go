@@ -437,7 +437,7 @@ func NewFrontendService(ctx context.Context, wg *sync.WaitGroup,
 	}
 
 	// Sub orgs just use the same frontend manager
-	if config_obj.OrgId != "" {
+	if !utils.IsRootOrg(config_obj.OrgId) {
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
 			return nil, err

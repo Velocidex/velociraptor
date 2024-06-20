@@ -327,7 +327,26 @@ class FlowsList extends React.Component {
         this.props.collapseToggle(SLIDE_STATES[next_slide].level);
     };
 
+    copyCollection = ()=> {
+        let selected_flows = this.props.selected_flow &&
+            this.props.selected_flow.artifacts_with_results;
 
+        // Special handling for offline collector
+        if (_.isEqual(selected_flows, ["Server.Utils.CreateCollector"])) {
+            let specs = this.props.selected_flow.request &&
+                this.props.selected_flow.request.specs;
+
+            if (!_.isArray(specs) || specs.length != 1) {
+                specs = [];
+            }
+
+            this.setState({
+                offlineSpecs: specs[0].parameters,
+                showOfflineWizard: true});
+        } else {
+            this.setState({showCopyWizard: true});
+        }
+    };
 
     render() {
         let tab = this.props.match && this.props.match.params &&
@@ -411,7 +430,7 @@ class FlowsList extends React.Component {
                   baseFlow={this.props.selected_flow}
                   onCancel={(e) => this.setState({showCopyWizard: false})}
                   onResolve={this.setCollectionRequest} />
-        }
+              }
 
               { this.state.showNewFromRouterWizard &&
                 <NewCollectionWizard
@@ -423,6 +442,7 @@ class FlowsList extends React.Component {
 
               { this.state.showOfflineWizard &&
                 <OfflineCollectorWizard
+                  collector_parameters={this.state.offlineSpecs}
                   onCancel={(e) => this.setState({showOfflineWizard: false})}
                   onResolve={this.setCollectionRequest} />
               }
@@ -483,7 +503,7 @@ class FlowsList extends React.Component {
                   <Button data-tooltip={T("Copy Collection")}
                           data-position="right"
                           className="btn-tooltip"
-                          onClick={() => this.setState({showCopyWizard: true})}
+                          onClick={this.copyCollection}
                           variant="default">
                     <FontAwesomeIcon icon="copy"/>
                     <span className="sr-only">{T("Copy Collection")}</span>
