@@ -59,6 +59,12 @@ func (self ClientsPlugin) Call(
 			return
 		}
 
+		err = services.RequireFrontend()
+		if err != nil {
+			scope.Log("clients: %v", err)
+			return
+		}
+
 		arg := &ClientsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
@@ -156,6 +162,12 @@ func (self *ClientInfoFunction) Call(ctx context.Context,
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("client_info: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("client_info: %v", err)
 		return vfilter.Null{}
 	}
 

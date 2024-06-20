@@ -23,6 +23,12 @@ func (self UserDeleteFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
+	err := services.RequireFrontend()
+	if err != nil {
+		scope.Log("user_delete: %v", err)
+		return vfilter.Null{}
+	}
+
 	// ACLs are checked by the users module
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
@@ -31,7 +37,7 @@ func (self UserDeleteFunction) Call(
 	}
 
 	arg := &UserDeleteFunctionArgs{}
-	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("user_delete: %s", err)
 		return vfilter.Null{}

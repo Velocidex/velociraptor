@@ -65,6 +65,12 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("file_store_delete: %v", err)
+		return vfilter.Null{}
+	}
+
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("file_store_delete: Command can only run on the server")
@@ -151,6 +157,12 @@ func (self *FileStore) Call(ctx context.Context,
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("file_store: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("file_store: %v", err)
 		return vfilter.Null{}
 	}
 

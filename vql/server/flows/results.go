@@ -103,6 +103,12 @@ func (self SourcePlugin) Call(
 		return output_chan
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("uploads: %v", err)
+		return output_chan
+	}
+
 	arg := &SourcePluginArgs{}
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
@@ -413,6 +419,12 @@ func (self FlowResultsPlugin) Call(
 
 		arg := &FlowResultsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("flow_results: %v", err)
+			return
+		}
+
+		err = services.RequireFrontend()
 		if err != nil {
 			scope.Log("flow_results: %v", err)
 			return

@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -24,6 +25,12 @@ func (self *RmFavorite) Call(ctx context.Context,
 
 	arg := &RmFavoriteArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("favorites_delete: %v", err)
+		return vfilter.Null{}
+	}
+
+	err = services.RequireFrontend()
 	if err != nil {
 		scope.Log("favorites_delete: %v", err)
 		return vfilter.Null{}

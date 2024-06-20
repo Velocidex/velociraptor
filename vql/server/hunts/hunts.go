@@ -66,6 +66,12 @@ func (self HuntsPlugin) Call(
 			return
 		}
 
+		err = services.RequireFrontend()
+		if err != nil {
+			scope.Log("hunts: %v", err)
+			return
+		}
+
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("hunts: Command can only run on the server")
@@ -153,6 +159,12 @@ func (self HuntResultsPlugin) Call(
 
 		arg := &HuntResultsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("hunt_results: %v", err)
+			return
+		}
+
+		err = services.RequireFrontend()
 		if err != nil {
 			scope.Log("hunt_results: %v", err)
 			return
@@ -346,6 +358,12 @@ func (self HuntFlowsPlugin) Call(
 
 		arg := &HuntFlowsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("hunt_flows: %v", err)
+			return
+		}
+
+		err = services.RequireFrontend()
 		if err != nil {
 			scope.Log("hunt_flows: %v", err)
 			return

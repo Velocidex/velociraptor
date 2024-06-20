@@ -42,6 +42,12 @@ func (self *UpdateHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("hunt_update: %v", err)
+		return vfilter.Null{}
+	}
+
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("hunt_update: GetServerConfig not found")
