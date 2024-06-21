@@ -199,6 +199,8 @@ func (self *TestSuite) SetupTest() {
 	self.ConfigObj.Services.ServerArtifacts = true
 	self.LoadArtifactsIntoConfig([]string{customCollectionWithTypes})
 	self.LoadArtifactsIntoConfig(importHuntArtifacts)
+	self.ConfigObj.Frontend.Certificate = TestFrontendCertificate
+	self.ConfigObj.Frontend.PrivateKey = TestFrontendPrivateKey
 
 	self.TestSuite.SetupTest()
 

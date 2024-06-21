@@ -173,11 +173,10 @@ func (self *CollectorAccessor) maybeSetZipPassword(
 	}
 
 	// Check if data.zip exists at the top level.
-	if len(full_path.Components) > 0 {
-		return full_path, nil
-	}
+	root := full_path.Copy()
+	root.Components = nil
 
-	datazip := full_path.Dirname().Append("data.zip")
+	datazip := root.Append("data.zip")
 	_, err := self.ZipFileSystemAccessor.LstatWithOSPath(datazip)
 	if err != nil {
 		// Nope - no data.zip so do not transform the pathspec.
@@ -185,7 +184,7 @@ func (self *CollectorAccessor) maybeSetZipPassword(
 	}
 
 	// Check if metadata.json exists. If so, try to extract password
-	meta := full_path.Dirname().Append("metadata.json")
+	meta := root.Append("metadata.json")
 	mhandle, err := self.ZipFileSystemAccessor.OpenWithOSPath(meta)
 	if err != nil {
 		// No metadata file is found - this might be a plain
