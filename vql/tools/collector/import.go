@@ -298,11 +298,13 @@ func (self ImportCollectionFunction) importFlow(
 	flow_path_manager := paths.NewFlowPathManager(client_id,
 		collection_context.SessionId)
 	err = self.copyResultSet(ctx, config_obj, scope,
-		accessor, root.Append("log.json"), flow_path_manager.Log())
+		accessor, root.Append("log.json"), flow_path_manager.Log(),
+		PassThroughTransform)
 	if err != nil {
 		// Support older containers who had this spelled different
 		err = self.copyResultSet(ctx, config_obj, scope,
-			accessor, root.Append("logs.json"), flow_path_manager.Log())
+			accessor, root.Append("logs.json"), flow_path_manager.Log(),
+			PassThroughTransform)
 		if err != nil {
 			scope.Log("import_flow: %v", err)
 		}
@@ -315,7 +317,8 @@ func (self ImportCollectionFunction) importFlow(
 			artifact, paths.MODE_CLIENT)
 		err = self.copyResultSet(ctx, config_obj, scope,
 			accessor, root.Append("results", artifact+".json"),
-			artifact_path_manager.Path())
+			artifact_path_manager.Path(),
+			PassThroughTransform)
 		if err != nil {
 			scope.Log("import_flow: %v", err)
 		}
@@ -324,47 +327,11 @@ func (self ImportCollectionFunction) importFlow(
 	// Now copy any uploads - first get the metadata.
 	err = self.copyResultSet(ctx, config_obj, scope,
 		accessor, root.Append("uploads.json"),
-		flow_path_manager.UploadMetadata())
-	if err == nil {
-		// It is not an error if there is no uploads metadata - it
-		// just means that there were no uploads.
-
-		// Open the upload metadata and try to find the actual files in
-		// the container.
-		file_store_factory := file_store.GetFileStore(config_obj)
-		reader, err := result_sets.NewResultSetReader(file_store_factory,
-			flow_path_manager.UploadMetadata())
-		if err != nil {
-			return nil, err
-		}
-		defer reader.Close()
-
-		for row := range reader.Rows(ctx) {
-			// Do not copy index files specifically - the index file
-			// will be copied as part of the file it belongs to.
-			row_type, _ := row.GetString("Type")
-			if row_type == "idx" {
-				continue
-			}
-
-			components, pres := row.GetStrings("_Components")
-			if !pres || len(components) < 1 {
-				continue
-			}
-
-			// Copy from the archive to the file store at these locations.
-			src := root.Append(components...)
-
-			// First directory in zip file is "upload" we skip that
-			// and append the other components to the filestore path.
-			dest := flow_path_manager.UploadContainer().AddChild(components[1:]...)
-
-			err := self.copyFileWithIndex(ctx, config_obj, scope,
-				accessor, src, dest)
-			if err != nil {
-				scope.Log("import_flow: %v", err)
-			}
-		}
+		flow_path_manager.UploadMetadata(),
+		self.UploadMetadataTransform(ctx, config_obj, scope,
+			accessor, root, flow_path_manager))
+	if err != nil {
+		return nil, err
 	}
 
 	// If we got here - all went well and we can emit an event to let
@@ -525,7 +492,8 @@ func (self ImportCollectionFunction) copyResultSet(
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
 	accessor accessors.FileSystemAccessor,
-	src *accessors.OSPath, dest api.FSPathSpec) error {
+	src *accessors.OSPath, dest api.FSPathSpec,
+	transformer func(json []byte) []byte) error {
 
 	fd, err := accessor.OpenWithOSPath(src)
 	if err != nil {
@@ -568,7 +536,8 @@ func (self ImportCollectionFunction) copyResultSet(
 			if err != nil {
 				return nil
 			}
-			buffer.Write(row_data)
+
+			buffer.Write(transformer(row_data))
 			count++
 
 			// Dump chunks into the result set - this is much faster
@@ -685,6 +654,69 @@ func (self ImportCollectionFunction) checkHuntInfo(
 	err = json.Unmarshal(data, hunt_info)
 
 	return hunt_info, err
+}
+
+func PassThroughTransform(x []byte) []byte {
+	return x
+}
+
+// The collection zip file treats uploads relative to the zip file but
+// when we store them into the filestore they are normally rooted at
+// the flow_path_manager so we need to adjust the components.
+func (self ImportCollectionFunction) UploadMetadataTransform(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	scope vfilter.Scope,
+	accessor accessors.FileSystemAccessor,
+	root *accessors.OSPath,
+	flow_path_manager *paths.FlowPathManager) func(in []byte) []byte {
+
+	base := flow_path_manager.UploadContainer()
+
+	// Callback is invoked for each upload in the zip file.
+	return func(in []byte) []byte {
+		row := ordereddict.NewDict()
+		err := json.Unmarshal(in, &row)
+		if err != nil {
+			// Line is not valid, drop it.
+			return nil
+		}
+
+		components, pres := row.GetStrings("_Components")
+		if !pres || len(components) == 0 || components[0] != "uploads" {
+			// Drop the line as the upload is not valid.
+			return nil
+		}
+
+		// Now copy the file from the zip into the filestore.
+
+		// First directory in zip file is "upload" we skip that
+		// and append the other components to the filestore path.
+		dest := base.AddChild(components[1:]...)
+
+		// Copy from the archive to the file store at these locations.
+		src := root.Append(components...)
+
+		// Do not copy index files specifically - the index file
+		// will be copied as part of the file it belongs to.
+		row_type, _ := row.GetString("Type")
+		if row_type != "idx" {
+			err := self.copyFileWithIndex(ctx, config_obj, scope,
+				accessor, src, dest)
+			if err != nil {
+				scope.Log("import_flow: %v", err)
+			}
+		}
+
+		row.Update("_Components", dest.Components())
+		serialized, err := row.MarshalJSON()
+		if err == nil {
+			serialized = append(serialized, '\n')
+			return serialized
+		}
+
+		return in
+	}
 }
 
 func init() {

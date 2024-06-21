@@ -57,11 +57,13 @@ var (
 type NTFSCachedContext struct {
 	mu sync.Mutex
 
-	accessor     string
-	device       *accessors.OSPath
-	scope        vfilter.Scope
-	paged_reader *readers.AccessorReader
-	ntfs_ctx     *ntfs.NTFSContext
+	accessor string
+	device   *accessors.OSPath
+
+	device_is_raw_mft bool
+	scope             vfilter.Scope
+	paged_reader      *readers.AccessorReader
+	ntfs_ctx          *ntfs.NTFSContext
 
 	// When this is closed we stop refreshing the cache. Normally
 	// only closed when the scope is destroyed.
@@ -86,14 +88,27 @@ func (self *NTFSCachedContext) Start(
 
 	// Read the header to make sure we can actually read the raw
 	// device.
-	header := make([]byte, 8)
-	_, err = self.paged_reader.ReadAt(header, 3)
-	if err != nil {
-		return err
-	}
+	if self.device_is_raw_mft {
+		header := make([]byte, 4)
+		_, err = self.paged_reader.ReadAt(header, 0)
+		if err != nil {
+			return err
+		}
 
-	if string(header) != "NTFS    " {
-		return errors.New("No NTFS Magic")
+		if string(header) != "FILE" {
+			return errors.New("File does not have an MFT Magic")
+		}
+
+	} else {
+		header := make([]byte, 8)
+		_, err = self.paged_reader.ReadAt(header, 3)
+		if err != nil {
+			return err
+		}
+
+		if string(header) != "NTFS    " {
+			return errors.New("No NTFS Magic")
+		}
 	}
 
 	go func() {
@@ -131,7 +146,26 @@ func (self *NTFSCachedContext) _CloseWithLock() {
 	self.paged_reader.Close()
 }
 
-func (self *NTFSCachedContext) GetNTFSContext() (*ntfs.NTFSContext, error) {
+func (self *NTFSCachedContext) detectClusterSize() (int64, int64, error) {
+	// We need to detect the cluster size or the MFT entry size. We do
+	// this by checking the signature for the MFT entry. Normally this
+	// information is given in the boot sector but without the boot
+	// sector we make do.
+	buf := make([]byte, 4)
+	for i := int64(512); i < 8192; i += 512 {
+		n, err := self.paged_reader.ReadAt(buf, i)
+		if err != nil || n != 4 {
+			return 0, 0, err
+		}
+		if string(buf) == "FILE" {
+			return 4096, i, nil
+		}
+	}
+
+	return 0, 0, errors.New("Unknown MFT Cluster Size")
+}
+
+func (self *NTFSCachedContext) GetNTFSContext() (ntfs_ctx *ntfs.NTFSContext, err error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -142,10 +176,21 @@ func (self *NTFSCachedContext) GetNTFSContext() (*ntfs.NTFSContext, error) {
 		return self.ntfs_ctx, nil
 	}
 
-	ntfs_ctx, err := ntfs.GetNTFSContext(self.paged_reader, 0)
-	if err != nil {
-		self._CloseWithLock()
-		return nil, err
+	if self.device_is_raw_mft {
+		cluster_size, record_size, err := self.detectClusterSize()
+		if err != nil {
+			return nil, err
+		}
+
+		ntfs_ctx = ntfs.GetNTFSContextFromRawMFT(
+			self.paged_reader, cluster_size, record_size)
+
+	} else {
+		ntfs_ctx, err = ntfs.GetNTFSContext(self.paged_reader, 0)
+		if err != nil {
+			self._CloseWithLock()
+			return nil, err
+		}
 	}
 
 	ntfs_ctx.SetOptions(GetScopeOptions(self.scope))
@@ -157,7 +202,8 @@ func (self *NTFSCachedContext) GetNTFSContext() (*ntfs.NTFSContext, error) {
 
 func GetNTFSContext(scope vfilter.Scope,
 	device *accessors.OSPath, accessor string) (*ntfs.NTFSContext, error) {
-	result, err := GetNTFSCache(scope, device, accessor)
+	result, err := getNTFSCache(scope, device, accessor,
+		false /* device_is_raw_mft */)
 	if err != nil {
 		return nil, err
 	}
@@ -165,18 +211,31 @@ func GetNTFSContext(scope vfilter.Scope,
 	return result.GetNTFSContext()
 }
 
-func GetNTFSCache(scope vfilter.Scope,
-	device *accessors.OSPath, accessor string) (*NTFSCachedContext, error) {
+func GetNTFSContextFromRawMFT(scope vfilter.Scope,
+	mft_filename *accessors.OSPath, accessor string) (*ntfs.NTFSContext, error) {
+	result, err := getNTFSCache(scope, mft_filename, accessor,
+		true /* device_is_raw_mft */)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.GetNTFSContext()
+}
+
+func getNTFSCache(scope vfilter.Scope,
+	device *accessors.OSPath, accessor string,
+	device_is_raw_mft bool) (*NTFSCachedContext, error) {
 	key := "ntfsctx_cache" + device.String() + accessor
 
 	// Get the cache context from the root scope's cache
 	cache_ctx, ok := vql_subsystem.CacheGet(scope, key).(*NTFSCachedContext)
 	if !ok {
 		cache_ctx = &NTFSCachedContext{
-			accessor: accessor,
-			device:   device,
-			scope:    scope,
-			done:     make(chan bool),
+			accessor:          accessor,
+			device:            device,
+			device_is_raw_mft: device_is_raw_mft,
+			scope:             scope,
+			done:              make(chan bool),
 		}
 		err := cache_ctx.Start(context.Background(), scope)
 		if err != nil {
