@@ -38,7 +38,7 @@ import (
 type NTFSFunctionArgs struct {
 	Device      string            `vfilter:"optional,field=device,doc=The device file to open. This may be a full path for example C:\\Windows - we will figure out the device automatically."`
 	Filename    *accessors.OSPath `vfilter:"optional,field=filename,doc=A raw image to open. You can also provide the accessor if using a raw image file."`
-	MFTFilename *accessors.OSPath `vfilter:"optional,field=mft_filename,doc=A path to a faw $MFT file to parse."`
+	MFTFilename *accessors.OSPath `vfilter:"optional,field=mft_filename,doc=A path to a raw $MFT file to parse."`
 	Accessor    string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
 	Inode       string            `vfilter:"optional,field=inode,doc=The MFT entry to parse in inode notation (5-144-1)."`
 	MFT         int64             `vfilter:"optional,field=mft,doc=The MFT entry to parse."`
