@@ -37,4 +37,464 @@ LET NTFSInfoFromImage <= parse_ntfs( filename=srcDir+'/artifacts/testdata/files/
   "LastAccess0x30": "2018-09-24T07:55:29.7664719Z",
   "LogFileSeqNum": 1096672
  }
+]LET MFTFile <= tempfile()[]LET _ <= copy(filename=pathspec( Path="$MFT", DelegateAccessor="file", DelegatePath=srcDir+'/artifacts/testdata/files/test.ntfs.dd'), accessor="raw_ntfs", dest=MFTFile)[]SELECT EntryNumber, OSPath, parse_ntfs(mft_filename=MFTFile, mft=EntryNumber) AS Details FROM parse_mft(filename=MFTFile, start=45) LIMIT 10[
+ {
+  "EntryNumber": 45,
+  "OSPath": "Folder A\\Folder B",
+  "Details": {
+   "FullPath": "/Folder A/Folder B",
+   "MFTID": 45,
+   "SequenceNumber": 1,
+   "Size": 0,
+   "Allocated": true,
+   "IsDir": true,
+   "SI_Times": {
+    "CreateTime": "2018-09-24T07:55:20.6489276Z",
+    "FileModifiedTime": "2018-09-24T07:55:44.4592119Z",
+    "MFTModifiedTime": "2018-09-24T07:55:44.4592119Z",
+    "AccessedTime": "2022-03-18T04:09:07.2885951Z"
+   },
+   "Filenames": [
+    {
+     "Times": {
+      "CreateTime": "2018-09-24T07:55:20.6489276Z",
+      "FileModifiedTime": "2018-09-24T07:55:20.6489276Z",
+      "MFTModifiedTime": "2018-09-24T07:55:20.6489276Z",
+      "AccessedTime": "2018-09-24T07:55:20.6489276Z"
+     },
+     "Type": "POSIX",
+     "Name": "Folder B",
+     "ParentEntryNumber": 41,
+     "ParentSequenceNumber": 1
+    }
+   ],
+   "Attributes": [
+    {
+     "Type": "$STANDARD_INFORMATION",
+     "TypeId": 16,
+     "Id": 0,
+     "Inode": "45-16-0",
+     "Size": 72,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$FILE_NAME",
+     "TypeId": 48,
+     "Id": 3,
+     "Inode": "45-48-3",
+     "Size": 82,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$OBJECT_ID",
+     "TypeId": 64,
+     "Id": 4,
+     "Inode": "45-64-4",
+     "Size": 16,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$INDEX_ROOT",
+     "TypeId": 144,
+     "Id": 1,
+     "Inode": "45-144-1",
+     "Size": 192,
+     "Name": "$I30",
+     "Resident": true
+    }
+   ],
+   "Hardlinks": [
+    "Folder A\\Folder B"
+   ],
+   "Device": null,
+   "OSPath": "Folder A\\Folder B"
+  }
+ },
+ {
+  "EntryNumber": 46,
+  "OSPath": "Folder A\\Folder B\\Hello world text document.txt",
+  "Details": {
+   "FullPath": "/Folder A/Folder B/Hello world text document.txt",
+   "MFTID": 46,
+   "SequenceNumber": 1,
+   "Size": 12,
+   "Allocated": true,
+   "IsDir": false,
+   "SI_Times": {
+    "CreateTime": "2018-09-24T07:55:29.7664719Z",
+    "FileModifiedTime": "2018-09-24T07:56:35.3135567Z",
+    "MFTModifiedTime": "2018-09-24T07:56:35.3135567Z",
+    "AccessedTime": "2018-09-24T07:56:35.3135567Z"
+   },
+   "Filenames": [
+    {
+     "Times": {
+      "CreateTime": "2018-09-24T07:55:29.7664719Z",
+      "FileModifiedTime": "2018-09-24T07:55:29.7664719Z",
+      "MFTModifiedTime": "2018-09-24T07:55:29.7664719Z",
+      "AccessedTime": "2018-09-24T07:55:29.7664719Z"
+     },
+     "Type": "POSIX",
+     "Name": "Hello world text document.txt",
+     "ParentEntryNumber": 45,
+     "ParentSequenceNumber": 1
+    }
+   ],
+   "Attributes": [
+    {
+     "Type": "$STANDARD_INFORMATION",
+     "TypeId": 16,
+     "Id": 0,
+     "Inode": "46-16-0",
+     "Size": 72,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$FILE_NAME",
+     "TypeId": 48,
+     "Id": 3,
+     "Inode": "46-48-3",
+     "Size": 124,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$OBJECT_ID",
+     "TypeId": 64,
+     "Id": 4,
+     "Inode": "46-64-4",
+     "Size": 16,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$DATA",
+     "TypeId": 128,
+     "Id": 1,
+     "Inode": "46-128-1",
+     "Size": 12,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$DATA",
+     "TypeId": 128,
+     "Id": 5,
+     "Inode": "46-128-5",
+     "Size": 20,
+     "Name": "goodbye.txt",
+     "Resident": true
+    }
+   ],
+   "Hardlinks": [
+    "Folder A\\Folder B\\Hello world text document.txt"
+   ],
+   "Device": null,
+   "OSPath": "Folder A\\Folder B\\Hello world text document.txt"
+  }
+ },
+ {
+  "EntryNumber": 46,
+  "OSPath": "Folder A\\Folder B\\Hello world text document.txt:goodbye.txt",
+  "Details": {
+   "FullPath": "/Folder A/Folder B/Hello world text document.txt",
+   "MFTID": 46,
+   "SequenceNumber": 1,
+   "Size": 12,
+   "Allocated": true,
+   "IsDir": false,
+   "SI_Times": {
+    "CreateTime": "2018-09-24T07:55:29.7664719Z",
+    "FileModifiedTime": "2018-09-24T07:56:35.3135567Z",
+    "MFTModifiedTime": "2018-09-24T07:56:35.3135567Z",
+    "AccessedTime": "2018-09-24T07:56:35.3135567Z"
+   },
+   "Filenames": [
+    {
+     "Times": {
+      "CreateTime": "2018-09-24T07:55:29.7664719Z",
+      "FileModifiedTime": "2018-09-24T07:55:29.7664719Z",
+      "MFTModifiedTime": "2018-09-24T07:55:29.7664719Z",
+      "AccessedTime": "2018-09-24T07:55:29.7664719Z"
+     },
+     "Type": "POSIX",
+     "Name": "Hello world text document.txt",
+     "ParentEntryNumber": 45,
+     "ParentSequenceNumber": 1
+    }
+   ],
+   "Attributes": [
+    {
+     "Type": "$STANDARD_INFORMATION",
+     "TypeId": 16,
+     "Id": 0,
+     "Inode": "46-16-0",
+     "Size": 72,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$FILE_NAME",
+     "TypeId": 48,
+     "Id": 3,
+     "Inode": "46-48-3",
+     "Size": 124,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$OBJECT_ID",
+     "TypeId": 64,
+     "Id": 4,
+     "Inode": "46-64-4",
+     "Size": 16,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$DATA",
+     "TypeId": 128,
+     "Id": 1,
+     "Inode": "46-128-1",
+     "Size": 12,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$DATA",
+     "TypeId": 128,
+     "Id": 5,
+     "Inode": "46-128-5",
+     "Size": 20,
+     "Name": "goodbye.txt",
+     "Resident": true
+    }
+   ],
+   "Hardlinks": [
+    "Folder A\\Folder B\\Hello world text document.txt"
+   ],
+   "Device": null,
+   "OSPath": "Folder A\\Folder B\\Hello world text document.txt"
+  }
+ },
+ {
+  "EntryNumber": 47,
+  "OSPath": "$RECYCLE.BIN\\S-1-5-21-128822557-2730879828-3162054034-1000",
+  "Details": {
+   "FullPath": "/$RECYCLE.BIN/S-1-5-21-128822557-2730879828-3162054034-1000",
+   "MFTID": 47,
+   "SequenceNumber": 1,
+   "Size": 0,
+   "Allocated": true,
+   "IsDir": true,
+   "SI_Times": {
+    "CreateTime": "2022-03-18T04:08:57.9205772Z",
+    "FileModifiedTime": "2022-03-18T04:08:57.9205772Z",
+    "MFTModifiedTime": "2022-03-18T04:08:57.9205772Z",
+    "AccessedTime": "2022-03-18T04:17:06.3246666Z"
+   },
+   "Filenames": [
+    {
+     "Times": {
+      "CreateTime": "2022-03-18T04:08:57.9205772Z",
+      "FileModifiedTime": "2022-03-18T04:08:57.9205772Z",
+      "MFTModifiedTime": "2022-03-18T04:08:57.9205772Z",
+      "AccessedTime": "2022-03-18T04:08:57.9205772Z"
+     },
+     "Type": "POSIX",
+     "Name": "S-1-5-21-128822557-2730879828-3162054034-1000",
+     "ParentEntryNumber": 42,
+     "ParentSequenceNumber": 1
+    }
+   ],
+   "Attributes": [
+    {
+     "Type": "$STANDARD_INFORMATION",
+     "TypeId": 16,
+     "Id": 0,
+     "Inode": "47-16-0",
+     "Size": 72,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$FILE_NAME",
+     "TypeId": 48,
+     "Id": 2,
+     "Inode": "47-48-2",
+     "Size": 156,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$INDEX_ROOT",
+     "TypeId": 144,
+     "Id": 1,
+     "Inode": "47-144-1",
+     "Size": 152,
+     "Name": "$I30",
+     "Resident": true
+    }
+   ],
+   "Hardlinks": [
+    "$RECYCLE.BIN\\S-1-5-21-128822557-2730879828-3162054034-1000"
+   ],
+   "Device": null,
+   "OSPath": "$RECYCLE.BIN\\S-1-5-21-128822557-2730879828-3162054034-1000"
+  }
+ },
+ {
+  "EntryNumber": 48,
+  "OSPath": "$RECYCLE.BIN\\S-1-5-21-128822557-2730879828-3162054034-1000\\desktop.ini",
+  "Details": {
+   "FullPath": "/$RECYCLE.BIN/S-1-5-21-128822557-2730879828-3162054034-1000/desktop.ini",
+   "MFTID": 48,
+   "SequenceNumber": 1,
+   "Size": 129,
+   "Allocated": true,
+   "IsDir": false,
+   "SI_Times": {
+    "CreateTime": "2022-03-18T04:08:57.9205772Z",
+    "FileModifiedTime": "2022-03-18T04:08:57.9205772Z",
+    "MFTModifiedTime": "2022-03-18T04:08:57.9205772Z",
+    "AccessedTime": "2022-03-18T04:22:28.8037876Z"
+   },
+   "Filenames": [
+    {
+     "Times": {
+      "CreateTime": "2022-03-18T04:08:57.9205772Z",
+      "FileModifiedTime": "2022-03-18T04:08:57.9205772Z",
+      "MFTModifiedTime": "2022-03-18T04:08:57.9205772Z",
+      "AccessedTime": "2022-03-18T04:08:57.9205772Z"
+     },
+     "Type": "POSIX",
+     "Name": "desktop.ini",
+     "ParentEntryNumber": 47,
+     "ParentSequenceNumber": 1
+    }
+   ],
+   "Attributes": [
+    {
+     "Type": "$STANDARD_INFORMATION",
+     "TypeId": 16,
+     "Id": 0,
+     "Inode": "48-16-0",
+     "Size": 72,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$FILE_NAME",
+     "TypeId": 48,
+     "Id": 2,
+     "Inode": "48-48-2",
+     "Size": 88,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$DATA",
+     "TypeId": 128,
+     "Id": 1,
+     "Inode": "48-128-1",
+     "Size": 129,
+     "Name": "",
+     "Resident": true
+    }
+   ],
+   "Hardlinks": [
+    "$RECYCLE.BIN\\S-1-5-21-128822557-2730879828-3162054034-1000\\desktop.ini"
+   ],
+   "Device": null,
+   "OSPath": "$RECYCLE.BIN\\S-1-5-21-128822557-2730879828-3162054034-1000\\desktop.ini"
+  }
+ },
+ {
+  "EntryNumber": 49,
+  "OSPath": "just_a_file.txt",
+  "Details": {
+   "FullPath": "/just_a_file.txt",
+   "MFTID": 49,
+   "SequenceNumber": 1,
+   "Size": 12,
+   "Allocated": true,
+   "IsDir": false,
+   "SI_Times": {
+    "CreateTime": "2022-03-18T04:15:18.5166156Z",
+    "FileModifiedTime": "2022-01-06T14:13:46.9839391Z",
+    "MFTModifiedTime": "2022-02-23T03:41:48.391796Z",
+    "AccessedTime": "2022-03-18T04:17:08.7362551Z"
+   },
+   "Filenames": [
+    {
+     "Times": {
+      "CreateTime": "2022-03-18T04:15:18.5166156Z",
+      "FileModifiedTime": "2022-03-18T04:15:18.5166156Z",
+      "MFTModifiedTime": "2022-03-18T04:15:18.5166156Z",
+      "AccessedTime": "2022-03-18T04:15:18.5166156Z"
+     },
+     "Type": "POSIX",
+     "Name": "just_a_file.txt",
+     "ParentEntryNumber": 5,
+     "ParentSequenceNumber": 5
+    }
+   ],
+   "Attributes": [
+    {
+     "Type": "$STANDARD_INFORMATION",
+     "TypeId": 16,
+     "Id": 0,
+     "Inode": "49-16-0",
+     "Size": 72,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$FILE_NAME",
+     "TypeId": 48,
+     "Id": 2,
+     "Inode": "49-48-2",
+     "Size": 96,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$DATA",
+     "TypeId": 128,
+     "Id": 1,
+     "Inode": "49-128-1",
+     "Size": 12,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$EA_INFORMATION",
+     "TypeId": 208,
+     "Id": 3,
+     "Inode": "49-208-3",
+     "Size": 8,
+     "Name": "",
+     "Resident": true
+    },
+    {
+     "Type": "$EA",
+     "TypeId": 224,
+     "Id": 4,
+     "Inode": "49-224-4",
+     "Size": 10268,
+     "Name": "",
+     "Resident": false
+    }
+   ],
+   "Hardlinks": [
+    "just_a_file.txt"
+   ],
+   "Device": null,
+   "OSPath": "just_a_file.txt"
+  }
+ }
 ]

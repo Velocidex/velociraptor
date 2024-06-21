@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
@@ -330,7 +331,9 @@ func (self ImportCollectionFunction) importFlow(
 		flow_path_manager.UploadMetadata(),
 		self.UploadMetadataTransform(ctx, config_obj, scope,
 			accessor, root, flow_path_manager))
-	if err != nil {
+
+	// It is ok that there are no uploads - just ignore it.
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nil, err
 	}
 
