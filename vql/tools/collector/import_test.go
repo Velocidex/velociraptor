@@ -1,7 +1,9 @@
 package collector_test
 
 import (
+	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -10,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/flows/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -212,9 +215,11 @@ func (self *TestSuite) TestImportCollectionFromFixture() {
 		&api_proto.SearchClientsRequest{Query: "host:MyNewHost"}, "")
 	assert.NoError(self.T(), err)
 
-	// There is one hit - a new client is added to the index.
+	new_client_id := search_resp.Items[0].ClientId
+
+	// There is one hit - a new clientis added to the index.
 	assert.Equal(self.T(), 1, len(search_resp.Items))
-	assert.Equal(self.T(), search_resp.Items[0].ClientId, context.ClientId)
+	assert.Equal(self.T(), new_client_id, context.ClientId)
 
 	// Importing the collection again and providing the same host name
 	// will reuse the client id
@@ -229,6 +234,19 @@ func (self *TestSuite) TestImportCollectionFromFixture() {
 
 	// The new flow was created on the same client id as before.
 	assert.Equal(self.T(), context2.ClientId, context.ClientId)
+	assert.Equal(self.T(), context2.ClientId, new_client_id)
+
+	// Now ensure the uploads file is properly adjusted to refer to
+	// the client's file store.
+	golden := ordereddict.NewDict()
+	self.getData("/clients/%s/collections/F.1234/uploads.json",
+		"UploadMetadata", golden, new_client_id)
+
+	self.getData("/clients/%s/collections/F.1234/uploads/file/tmp/ls%%5Cwith%%5Cback%%3Aslash",
+		"ls\\with\\back\\slash:", golden, new_client_id)
+
+	goldie.Assert(self.T(), "TestImportCollectionFromFixture",
+		json.MustMarshalIndent(golden))
 }
 
 func (self *TestSuite) TestImportX509CollectionFromFixture() {
@@ -260,4 +278,20 @@ func (self *TestSuite) TestImportX509CollectionFromFixture() {
 	assert.Equal(self.T(), uint64(1), context.TotalCollectedRows)
 	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_FINISHED,
 		context.State)
+}
+
+func (self *TestSuite) getData(
+	path string,
+	field string,
+	golden *ordereddict.Dict,
+	new_client_id string) {
+
+	upload_data, pres := test_utils.GetMemoryFileStore(
+		self.T(), self.ConfigObj).Get(fmt.Sprintf(path, new_client_id))
+	assert.True(self.T(), pres)
+
+	golden.Set(field,
+		strings.ReplaceAll(string(upload_data),
+			new_client_id, "<client_id>"))
+
 }
