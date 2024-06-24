@@ -2244,7 +2244,6 @@
       globs="C:/Users/*/*",
       recursion_callback="x=> NOT x.OSPath =~ Exclude")
     ```
-
   type: Plugin
   version: 3
   args:
@@ -4361,7 +4360,7 @@
     entry including listing all its attributes.
 
     It can either operate on an image file or the raw device (on
-    windows).
+    windows), or alternatively you can provide a raw $MFT file.
 
     ### Example:
 
@@ -4374,6 +4373,23 @@
 
     You can get the MFT entry number from `parse_mft()` or from the
     Data attribute of a `glob()` using the `ntfs` accessor.
+
+    ### Example 2: Using a raw $MFT file
+
+    If you have previously collected the $MFT file (e.g. using the
+    `Windows.KapeFiles.Targets` artifact, you can use `parse_ntfs()`
+    to get more information about each MFT entry:
+
+    ```vql
+    SELECT EntryNumber, OSPath,
+       parse_ntfs(mft_filename=MFTFile, mft=EntryNumber) AS Details
+    FROM parse_mft(filename=MFTFile)
+    ```
+
+    Note that the raw $MFT file is sometimes not sufficient to
+    reconstruct all attributes (for example if attributes are not
+    stored in the $MFT but in external clusters).
+
   type: Function
   args:
   - name: device
@@ -4384,6 +4400,9 @@
     type: accessors.OSPath
     description: A raw image to open. You can also provide the accessor if using a
       raw image file.
+  - name: mft_filename
+    type: accessors.OSPath
+    description: A path to a raw $MFT file to parse.
   - name: accessor
     type: string
     description: The accessor to use.
@@ -4403,6 +4422,10 @@
 
     This is similar in use to the parse_ntfs() function but parses the
     $I30 stream.
+
+    Note: You can also use a raw $MFT file to operate on - see
+    `parse_ntfs()` for a full description.
+
   type: Plugin
   args:
   - name: device
@@ -4413,6 +4436,9 @@
     type: accessors.OSPath
     description: A raw image to open. You can also provide the accessor if using a
       raw image file.
+  - name: mft_filename
+    type: accessors.OSPath
+    description: A path to a raw $MFT file to parse.
   - name: accessor
     type: string
     description: The accessor to use.
@@ -4427,7 +4453,12 @@
     description: The offset to the MFT entry to parse.
   category: parsers
 - name: parse_ntfs_ranges
-  description: Show the run ranges for an NTFS stream.
+  description: |
+    Show the run ranges for an NTFS stream.
+
+    Note: You can also use a raw $MFT file to operate on - see
+    `parse_ntfs()` for a full description.
+
   type: Plugin
   args:
   - name: device
@@ -4438,6 +4469,9 @@
     type: accessors.OSPath
     description: A raw image to open. You can also provide the accessor if using a
       raw image file.
+  - name: mft_filename
+    type: accessors.OSPath
+    description: A path to a raw $MFT file to parse.
   - name: accessor
     type: string
     description: The accessor to use.
@@ -6292,7 +6326,6 @@
     SELECT timestamp(epoch=timestamp(epoch="2024-03-26T06:53:37Z").Unix - 86400)
     FROM scope()
     ```
-
   type: Function
   args:
   - name: epoch

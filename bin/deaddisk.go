@@ -10,6 +10,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
+	errors "github.com/go-errors/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
@@ -272,6 +273,13 @@ func doDeadDisk() error {
 	}
 
 	accessor := "file"
+
+	if (*deaddisk_command_add_windows_disk == "" &&
+		*deaddisk_command_add_windows_directory == "") ||
+		(*deaddisk_command_add_windows_disk != "" &&
+			*deaddisk_command_add_windows_directory != "") {
+		return errors.New("One of --add_windows_directory or --add_windows_disk are required.")
+	}
 
 	if *deaddisk_command_add_windows_disk != "" {
 		abs_path, err := filepath.Abs(*deaddisk_command_add_windows_disk)
