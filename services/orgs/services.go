@@ -685,17 +685,6 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.mu.Unlock()
 	}
 
-	if spec.ServerArtifacts {
-		server_artifact_manager, err := server_artifacts.NewServerArtifactService(ctx, wg, org_config)
-		if err != nil {
-			return err
-		}
-
-		service_container.mu.Lock()
-		service_container.server_artifact_manager = server_artifact_manager
-		service_container.mu.Unlock()
-	}
-
 	// Must be run after all the other services are up
 	if spec.SanityChecker {
 		err = sanity.NewSanityCheckService(ctx, wg, org_config)
