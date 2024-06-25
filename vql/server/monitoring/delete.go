@@ -55,6 +55,12 @@ func (self DeleteEventsPlugin) Call(
 			arg.EndTime = time.Now()
 		}
 
+		err = services.RequireFrontend()
+		if err != nil {
+			scope.Log("delete_events: %v", err)
+			return
+		}
+
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("delete_events: Command can only run on the server")

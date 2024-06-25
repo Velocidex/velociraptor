@@ -18,6 +18,10 @@ import T from '../i8n/i8n.jsx';
 import ToolViewer from "../tools/tool-viewer.jsx";
 import ValidatedInteger from '../forms/validated_int.jsx';
 import _ from 'lodash';
+import api from '../core/api-service.jsx';
+import {CancelToken} from 'axios';
+
+import { JSONparse } from "../utils/json_parse.jsx";
 
 // The offline collection wizard is built upon the new collection
 // wizard with some extra steps.
@@ -720,53 +724,146 @@ class OfflineCollectionResources extends React.Component {
     }
 }
 
+function getDefaultCollectionParameters() {
+    return {
+        target_os: "Windows",
+        target: "ZIP",
+        target_args: {
+            // Common
+            bucket: "",
+
+            // For GCS Buckets
+            GCSKey: "",
+
+            // For S3 buckets.
+            credentialsKey: "",
+            credentialsSecret: "",
+            credentialsToken: "",
+            region: "",
+            endpoint: "",
+            serverSideEncryption: "",
+            kmsEncryptionKey: "",
+            s3UploadRoot: "",
+
+            // For Azure
+            sas_url: "",
+        },
+        password: "",
+        pubkey: "",
+        encryption_scheme: "None",
+        encryption_args: {
+            public_key: "",
+            password: ""
+        },
+        opt_level: 5,
+        opt_output_directory: "",
+        opt_tempdir: "",
+        opt_filename_template: "Collection-%FQDN%-%TIMESTAMP%",
+        opt_format: "jsonl",
+        opt_prompt: "N",
+    };
+}
 
 
 export default class OfflineCollectorWizard extends React.Component {
     static propTypes = {
+        collector_parameters: PropTypes.object,
         onResolve: PropTypes.func,
         onCancel: PropTypes.func,
     };
 
+    componentDidMount = () => {
+        this.source = CancelToken.source();
+        if (this.props.collector_parameters) {
+
+            // This is basically the reverse of prepareRequest
+            let collector_parameters = this.state.collector_parameters;
+            let resources = {};
+            let env = this.props.collector_parameters &&
+                this.props.collector_parameters.env;
+
+            _.each(env, x=>{
+                if (_.isUndefined(x.value)) {
+                    return;
+                }
+
+                switch(x.key) {
+                case "artifacts":
+                    let artifact_list = JSONparse(x.value);
+                    // Resolve the artifacts from the request into a
+                    // list of descriptors.
+                    api.post("v1/GetArtifacts", {names: artifact_list},
+                             this.source.token).then(response=>{
+                                 if (response && response.data &&
+                                     response.data.items &&
+                                     response.data.items.length) {
+
+                                     this.setState({artifacts: [...response.data.items]});
+                                 }});
+
+                    break;
+                case "OS":
+                    collector_parameters.target_os = x.value;
+                    break;
+                case "parameters":
+                    this.setState({parameters: JSONparse(x.value)});
+                    break;
+                case "target":
+                    collector_parameters.target = x.value;
+                    break;
+                case "target_args":
+                    let target_args = JSONparse(x.value);
+                    Object.assign(collector_parameters.target_args, target_args);
+                    break;
+                case "encryption_scheme":
+                    collector_parameters.encryption_scheme= x.value;
+                    break;
+                case "encryption_args":
+                    collector_parameters.encryption_args = JSONparse(x.value);
+                    break;
+                case "opt_prompt":
+                    collector_parameters.opt_prompt = x.value;
+                    break;
+                case "opt_tempdir":
+                    collector_parameters.opt_tempdir = x.value;
+                    break;
+                case "opt_level":
+                    collector_parameters.opt_level = x.value;
+                    break;
+                case "opt_output_directory":
+                    collector_parameters.opt_output_directory = x.value;
+                    break;
+                case "opt_filename_template":
+                    collector_parameters.opt_filename_template = x.value;
+                    break;
+                case "opt_progress_timeout":
+                    resources.progress_timeout =  JSONparse(x.value);
+                    break;
+                case "opt_timeout":
+                    resources.timeout = JSONparse(x.value);
+                    break;
+                case "opt_cpu_limit":
+                    resources.cpu_limit = JSONparse(x.value);
+                    break;
+                case "opt_format":
+                    collector_parameters.opt_format = x.value;
+                    break;
+                };
+            });
+            this.setResources(resources);
+            this.setState({collector_parameters: collector_parameters});
+        }
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
+
     state = {
         artifacts: [],
         parameters: {},
-        collector_parameters: {
-            target_os: "Windows",
-            target: "ZIP",
-            target_args: {
-                // Common
-                bucket: "",
-
-                // For GCS Buckets
-                GCSKey: "",
-
-                // For S3 buckets.
-                credentialsKey: "",
-                credentialsSecret: "",
-                credentialsToken: "",
-                region: "",
-                endpoint: "",
-                serverSideEncryption: "",
-                kmsEncryptionKey: "",
-                s3UploadRoot: "",
-
-                // For Azure
-                sas_url: "",
-            },
-            password: "",
-            pubkey: "",
-            encryption_scheme: "None",
-            encryption_args: {
-                public_key: "",
-                password: ""
-            },
-            opt_level: 5,
-            opt_output_directory: "",
-            opt_filename_template: "Collection-%FQDN%-%TIMESTAMP%",
-            opt_format: "jsonl",
-            opt_prompt: "N",
-        },
+        collector_parameters: getDefaultCollectionParameters(),
         resources: {},
     }
 

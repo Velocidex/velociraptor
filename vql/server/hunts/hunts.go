@@ -66,6 +66,12 @@ func (self HuntsPlugin) Call(
 			return
 		}
 
+		err = services.RequireFrontend()
+		if err != nil {
+			scope.Log("hunts: %v", err)
+			return
+		}
+
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("hunts: Command can only run on the server")
@@ -153,6 +159,12 @@ func (self HuntResultsPlugin) Call(
 
 		arg := &HuntResultsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("hunt_results: %v", err)
+			return
+		}
+
+		err = services.RequireFrontend()
 		if err != nil {
 			scope.Log("hunt_results: %v", err)
 			return
@@ -325,7 +337,7 @@ type HuntFlowsPluginArgs struct {
 	HuntId           string `vfilter:"required,field=hunt_id,doc=The hunt id to inspect."`
 	StartRow         int64  `vfilter:"optional,field=start_row,doc=The first row to show (used for paging)."`
 	Limit            int64  `vfilter:"optional,field=limit,doc=Number of rows to show (used for paging)."`
-	BasicInformation bool   `vfilter:"optional,field=basic_info,doc=If specified we onlyh return basic information like flow id and client id."`
+	BasicInformation bool   `vfilter:"optional,field=basic_info,doc=If specified we only return basic information like flow id and client id."`
 }
 
 type HuntFlowsPlugin struct{}
@@ -346,6 +358,12 @@ func (self HuntFlowsPlugin) Call(
 
 		arg := &HuntFlowsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("hunt_flows: %v", err)
+			return
+		}
+
+		err = services.RequireFrontend()
 		if err != nil {
 			scope.Log("hunt_flows: %v", err)
 			return

@@ -1,7 +1,9 @@
 package collector_test
 
 import (
+	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -10,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/flows/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -26,6 +29,56 @@ import (
 	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
+)
+
+const (
+	TestFrontendCertificate = `-----BEGIN CERTIFICATE-----
+MIIDWTCCAkGgAwIBAgIQcyUFy1oMUr4O4sIOhom/jDANBgkqhkiG9w0BAQsFADAa
+MRgwFgYDVQQKEw9WZWxvY2lyYXB0b3IgQ0EwIBcNMjMwNDEzMTgzMjUzWhgPMjEy
+MzAzMjAxODMyNTNaMDQxFTATBgNVBAoTDFZlbG9jaXJhcHRvcjEbMBkGA1UEAxMS
+VmVsb2NpcmFwdG9yU2VydmVyMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKC
+AQEA9MSMbrFjmZs9bnpkel4vTQIyf+6Bpg60ByC7d6WWfBwvHdF1Qnfn1JO3Xo6p
+53I1jPoagt0cZCzd6nwJXJ/3pclprmIOEBSc20pg5E0A/kpwn+bBoPNSrMF7+2/t
+DvXP0Lvs/1OqUMjF8pCs6vnSKigaptn+0Et3GpzWjwCghqPcJBOuEuPQmR3HyHfs
+dsMooCjuYcRcS9MXioT97SSjxeug0oTXHaKCnQ7txoxuN2+nNdr03mUu07TOUbRp
+X3NsiaoESl/9IDC/tz2XTBD3UxLze9pX9t4tdKEMK2+gdnrnioOw1D7WBoElECj9
++89CRXlu3K15P1cNVB5htPzOgwIDAQABo38wfTAOBgNVHQ8BAf8EBAMCBaAwHQYD
+VR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwHwYDVR0j
+BBgwFoAUO2IRSDwqgkZt5pkXdScs5BjoULEwHQYDVR0RBBYwFIISVmVsb2NpcmFw
+dG9yU2VydmVyMA0GCSqGSIb3DQEBCwUAA4IBAQAhwcTMIdHqeR3FXOUREGjkjzC9
+vz+hPdXB6w9CMYDOAsmQojuo09h84xt7jD0iqs/K1WJpLSNV3FG5C0TQXa3PD1l3
+SsD5p4FfuqFACbPkm/oy+NA7E/0BZazC7iaZYjQw7a8FUx/P+eKo1S7z7Iq8HfmJ
+yus5NlnoLmqb/3nZ7DyRWSo9HApmMdNjB6oJWrupSJajsw4Lsos2aJjkfzkg82W7
+aGSh9S6Icn1f78BAjJVLv1QBNlb+yGOhrcUWQHERPEpkb1oZJwkVVE1XCZ1C4tVj
+PtlBbpcpPHB/R5elxfo+We6vmC8+8XBlNPFFp8LAAile4uQPVQjqy7k/MZ4W
+-----END CERTIFICATE-----`
+	TestFrontendPrivateKey = `-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEA9MSMbrFjmZs9bnpkel4vTQIyf+6Bpg60ByC7d6WWfBwvHdF1
+Qnfn1JO3Xo6p53I1jPoagt0cZCzd6nwJXJ/3pclprmIOEBSc20pg5E0A/kpwn+bB
+oPNSrMF7+2/tDvXP0Lvs/1OqUMjF8pCs6vnSKigaptn+0Et3GpzWjwCghqPcJBOu
+EuPQmR3HyHfsdsMooCjuYcRcS9MXioT97SSjxeug0oTXHaKCnQ7txoxuN2+nNdr0
+3mUu07TOUbRpX3NsiaoESl/9IDC/tz2XTBD3UxLze9pX9t4tdKEMK2+gdnrnioOw
+1D7WBoElECj9+89CRXlu3K15P1cNVB5htPzOgwIDAQABAoIBAGAAy3gLOZ6hBgpU
+FR7t3C2fRAFrogxozfHRw9Xc69ZIE67lXdGxSAvX2F9NI5T09c4Stt1HLoCYHH6B
+Igbjc3XiNwI/0XY7L37PgItrLI2Q0vXUw3OGnJHH3gIz10472cPsQbuvrCi9Zu6K
+ElijnewNCM8Sx+AZCWE1zO4P9+Z2kF9LvWzDwAa643jQ/Dg+S68zCFqjJCVJBGm+
+LQxDs6dbArvOiEbuZs2wDt0d1kZF+BRljUTMoCpdf3jmFj3f0Jc1AFaz1eHG9Gte
+XIUpbWmV2ATABSW2kDkVdXx+m/w1r9PZCLLfq54fIOlm2IeAiM3rDmM4ZSTUYEPn
+mJP03xECgYEA+jS7DiS3bB/MeD+5qsgS07qJhOrX17s/SlamC1dQqz+koJLl98JX
+CqyafFmdSz7PK2S2+OOazngwx26Kc3MZFoD9IQ2tuWmwDgbY8EQs5Cs37By2YRZJ
+DdjvVf48pCKiXxIhvFjW/5CTemNAAu4CXg5Lkp7UVVrOmf5BmjMmE0sCgYEA+m+U
+QMF0f7KLM4MU81yAMJdG4Sq4s9i4RmXes2FOUd4UoG7vEpycMKkmEaqiUVmRHPjp
+P6Dwq3CK+FVFMpCeWjn6KkxwpdWWO9lglI0npFcPNW/PzPOv4mSNtCAcpHrKFP0R
+3jbc8UhgtFxDZoeUih7cO2iTO7kELBCeKUzw9qkCgYBgVYcj1e0tWzztm5OP9sKQ
+9MRYAdei/zxKEfySZ0bu+G0ZShXzA8dhm71LXXGbdA5t5bQxNej3z/zv/FagRtOE
+/5r2a/7UYaXgcLB8KbOjEiTQ6ukpjlwIUdssn9uXUqJzulZ03zvAYFj4CVivCBav
+Qg/E3xRf3LupPOTjSwhA6wKBgQDAH3tnlkHueSWLNiOLc0owfM12jhS2fCsabqpD
+iQHRkoLWdWRZLeYw+oLnCLWPnRvTUy11j90yWJt0Wc5FNWcWJuZBLvU4c7vWXDRY
+olVoIRXc09NiEwy6rJN9PSlcEYsYQPFFPWeQfwsZMrLOZHLS50vjE53oMk7+Ex2S
+56DwSQKBgQC+iHbsbxloZjVMy01V21Sh9RwIpYrodEmwlTZf2jzaYloPadHu4MX1
+jHG+zzeC/EJ3wFOKTSJ/Tmjo6N3Xaq9V7WeL8eBdtBtPztqN1yveTt94mZZ+fuID
+BhI8P2RbNR2Yey5nnhFQcoTxpmVw3EYwE01nkxoPJRs/QVvxi9Mepg==
+-----END RSA PRIVATE KEY-----`
 )
 
 func (self *TestSuite) TestCreateAndImportCollection() {
@@ -162,9 +215,11 @@ func (self *TestSuite) TestImportCollectionFromFixture() {
 		&api_proto.SearchClientsRequest{Query: "host:MyNewHost"}, "")
 	assert.NoError(self.T(), err)
 
-	// There is one hit - a new client is added to the index.
+	new_client_id := search_resp.Items[0].ClientId
+
+	// There is one hit - a new clientis added to the index.
 	assert.Equal(self.T(), 1, len(search_resp.Items))
-	assert.Equal(self.T(), search_resp.Items[0].ClientId, context.ClientId)
+	assert.Equal(self.T(), new_client_id, context.ClientId)
 
 	// Importing the collection again and providing the same host name
 	// will reuse the client id
@@ -179,4 +234,64 @@ func (self *TestSuite) TestImportCollectionFromFixture() {
 
 	// The new flow was created on the same client id as before.
 	assert.Equal(self.T(), context2.ClientId, context.ClientId)
+	assert.Equal(self.T(), context2.ClientId, new_client_id)
+
+	// Now ensure the uploads file is properly adjusted to refer to
+	// the client's file store.
+	golden := ordereddict.NewDict()
+	self.getData("/clients/%s/collections/F.1234/uploads.json",
+		"UploadMetadata", golden, new_client_id)
+
+	self.getData("/clients/%s/collections/F.1234/uploads/file/tmp/ls%%5Cwith%%5Cback%%3Aslash",
+		"ls\\with\\back\\slash:", golden, new_client_id)
+
+	goldie.Assert(self.T(), "TestImportCollectionFromFixture",
+		json.MustMarshalIndent(golden))
+}
+
+func (self *TestSuite) TestImportX509CollectionFromFixture() {
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
+
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
+		Env:        ordereddict.NewDict(),
+	}
+
+	ctx := self.Ctx
+	scope := manager.BuildScope(builder)
+
+	import_file_path, err := filepath.Abs("fixtures/offline_encrypted.zip")
+	assert.NoError(self.T(), err)
+
+	result := collector.ImportCollectionFunction{}.Call(ctx, scope,
+		ordereddict.NewDict().
+			Set("client_id", "auto").
+			Set("hostname", "MyNewHost").
+			Set("filename", import_file_path))
+	context, ok := result.(*proto.ArtifactCollectorContext)
+	assert.True(self.T(), ok)
+
+	assert.Equal(self.T(), []string{"Demo.Plugins.GUI"},
+		context.ArtifactsWithResults)
+	assert.Equal(self.T(), uint64(1), context.TotalCollectedRows)
+	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_FINISHED,
+		context.State)
+}
+
+func (self *TestSuite) getData(
+	path string,
+	field string,
+	golden *ordereddict.Dict,
+	new_client_id string) {
+
+	upload_data, pres := test_utils.GetMemoryFileStore(
+		self.T(), self.ConfigObj).Get(fmt.Sprintf(path, new_client_id))
+	assert.True(self.T(), pres)
+
+	golden.Set(field,
+		strings.ReplaceAll(string(upload_data),
+			new_client_id, "<client_id>"))
+
 }

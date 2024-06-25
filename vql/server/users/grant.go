@@ -35,6 +35,12 @@ func (self GrantFunction) Call(
 		return vfilter.Null{}
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("user_grant: %v", err)
+		return vfilter.Null{}
+	}
+
 	org_config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("user_grant: Command can only run on the server")

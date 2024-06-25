@@ -34,6 +34,12 @@ func (self SetPasswordFunction) Call(
 		return vfilter.Null{}
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("password: %v", err)
+		return vfilter.Null{}
+	}
+
 	principal := vql_subsystem.GetPrincipal(scope)
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {

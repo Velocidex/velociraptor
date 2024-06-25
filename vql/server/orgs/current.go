@@ -16,6 +16,12 @@ func (self *CurrentOrgFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
+	err := services.RequireFrontend()
+	if err != nil {
+		scope.Log("org: %v", err)
+		return vfilter.Null{}
+	}
+
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("org: Command can only run on the server")

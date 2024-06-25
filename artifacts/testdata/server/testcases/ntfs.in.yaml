@@ -19,3 +19,16 @@ Queries:
          DelegatePath=srcDir+'/artifacts/testdata/files/test.ntfs.dd'),
       accessor="raw_ntfs")
     WHERE OSPath =~ "document.txt:goodbye.txt"
+
+  # Copy the MFT file out so we can parse it by itself.
+  - LET MFTFile <= tempfile()
+  - LET _ <= copy(filename=pathspec(
+         Path="$MFT",
+         DelegateAccessor="file",
+         DelegatePath=srcDir+'/artifacts/testdata/files/test.ntfs.dd'),
+      accessor="raw_ntfs", dest=MFTFile)
+
+  - SELECT EntryNumber, OSPath,
+       parse_ntfs(mft_filename=MFTFile, mft=EntryNumber) AS Details
+    FROM parse_mft(filename=MFTFile, start=45)
+    LIMIT 10

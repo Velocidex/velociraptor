@@ -43,6 +43,12 @@ func (self FlowsPlugin) Call(
 			return
 		}
 
+		err = services.RequireFrontend()
+		if err != nil {
+			scope.Log("flows: %v", err)
+			return
+		}
+
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("flows: Command can only run on the server")
@@ -137,6 +143,12 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("cancel_flow: %v", err)
+		return vfilter.Null{}
+	}
+
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("cancel_flow: Command can only run on the server")
@@ -186,6 +198,12 @@ func (self EnumerateFlowPlugin) Call(
 
 		arg := &FlowsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("enumerate_flow: %v", err)
+			return
+		}
+
+		err = services.RequireFrontend()
 		if err != nil {
 			scope.Log("enumerate_flow: %v", err)
 			return
@@ -251,6 +269,12 @@ func (self *GetFlowFunction) Call(ctx context.Context,
 	}
 
 	err = vql_subsystem.CheckAccess(scope, permissions)
+	if err != nil {
+		scope.Log("get_flow: %v", err)
+		return vfilter.Null{}
+	}
+
+	err = services.RequireFrontend()
 	if err != nil {
 		scope.Log("get_flow: %v", err)
 		return vfilter.Null{}

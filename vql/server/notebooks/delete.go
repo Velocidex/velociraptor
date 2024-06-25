@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -43,6 +44,12 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("notebook_delete: %s", err.Error())
+			return
+		}
+
+		err = services.RequireFrontend()
+		if err != nil {
+			scope.Log("notebook_delete: %v", err)
 			return
 		}
 

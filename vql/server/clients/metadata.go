@@ -44,6 +44,12 @@ func (self *ClientMetadataFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log(self.name+": %v", err)
+		return vfilter.Null{}
+	}
+
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log(self.name + ": Command can only run on the server")
@@ -114,6 +120,12 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 	err := vql_subsystem.CheckAccess(scope, permission)
 	if err != nil {
 		scope.Log(self.name+": %s", err)
+		return vfilter.Null{}
+	}
+
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log(self.name+": %v", err)
 		return vfilter.Null{}
 	}
 

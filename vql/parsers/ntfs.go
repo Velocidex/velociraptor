@@ -36,12 +36,52 @@ import (
 )
 
 type NTFSFunctionArgs struct {
-	Device    string            `vfilter:"optional,field=device,doc=The device file to open. This may be a full path for example C:\\Windows - we will figure out the device automatically."`
-	Filename  *accessors.OSPath `vfilter:"optional,field=filename,doc=A raw image to open. You can also provide the accessor if using a raw image file."`
-	Accessor  string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
-	Inode     string            `vfilter:"optional,field=inode,doc=The MFT entry to parse in inode notation (5-144-1)."`
-	MFT       int64             `vfilter:"optional,field=mft,doc=The MFT entry to parse."`
-	MFTOffset int64             `vfilter:"optional,field=mft_offset,doc=The offset to the MFT entry to parse."`
+	Device      string            `vfilter:"optional,field=device,doc=The device file to open. This may be a full path for example C:\\Windows - we will figure out the device automatically."`
+	Filename    *accessors.OSPath `vfilter:"optional,field=filename,doc=A raw image to open. You can also provide the accessor if using a raw image file."`
+	MFTFilename *accessors.OSPath `vfilter:"optional,field=mft_filename,doc=A path to a raw $MFT file to parse."`
+	Accessor    string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Inode       string            `vfilter:"optional,field=inode,doc=The MFT entry to parse in inode notation (5-144-1)."`
+	MFT         int64             `vfilter:"optional,field=mft,doc=The MFT entry to parse."`
+	MFTOffset   int64             `vfilter:"optional,field=mft_offset,doc=The offset to the MFT entry to parse."`
+}
+
+func (self *NTFSFunctionArgs) getNTFSContext(
+	scope vfilter.Scope) (ntfs_ctx *parser.NTFSContext, err error) {
+
+	// Normalize some other args
+	if self.Inode != "" {
+		mft_idx, _, _, _, err := ntfs.ParseMFTId(self.Inode)
+		if err != nil {
+			return nil, err
+		}
+		self.MFT = mft_idx
+
+	}
+
+	if self.Device != "" {
+		ntfs_ctx, self.Filename, self.Accessor, err = getNTFSContextFromDevice(
+			scope, self.Device)
+
+	} else if self.Filename != nil {
+		ntfs_ctx, err = getNTFSContextFromImage(scope, self.Filename, self.Accessor)
+
+	} else if self.MFTFilename != nil {
+		ntfs_ctx, err = getNTFSContextFromMFT(scope, self.MFTFilename, self.Accessor)
+
+	} else {
+		return nil, errors.New(
+			"Either filename, mft_filename or device must be specified")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if self.MFTOffset > 0 {
+		self.MFT = self.MFTOffset / ntfs_ctx.ClusterSize
+	}
+
+	return ntfs_ctx, err
 }
 
 type NTFSModel struct {
@@ -75,12 +115,12 @@ func (self NTFSFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	arg.Filename, arg.Accessor, err = getOSPathAndAccessor(arg.Device,
-		arg.Filename, arg.Accessor)
+	ntfs_ctx, err := arg.getNTFSContext(scope)
 	if err != nil {
 		scope.Log("parse_ntfs: %v", err)
 		return &vfilter.Null{}
 	}
+	defer ntfs_ctx.Close()
 
 	if arg.Inode != "" {
 		mft_idx, _, _, _, err := ntfs.ParseMFTId(arg.Inode)
@@ -91,20 +131,13 @@ func (self NTFSFunction) Call(
 		arg.MFT = mft_idx
 	}
 
-	ntfs_ctx, err := readers.GetNTFSContext(scope, arg.Filename, arg.Accessor)
-	if err != nil {
-		scope.Log("parse_ntfs: GetNTFSContext %v", err)
-		return &vfilter.Null{}
-	}
-	defer ntfs_ctx.Close()
-
-	if ntfs_ctx == nil || ntfs_ctx.Boot == nil {
+	if ntfs_ctx == nil {
 		scope.Log("parse_ntfs: invalid context")
 		return &vfilter.Null{}
 	}
 
 	if arg.MFTOffset > 0 {
-		arg.MFT = arg.MFTOffset / ntfs_ctx.Boot.ClusterSize()
+		arg.MFT = arg.MFTOffset / ntfs_ctx.ClusterSize
 	}
 
 	mft_entry, err := ntfs_ctx.GetMFT(arg.MFT)
@@ -119,6 +152,10 @@ func (self NTFSFunction) Call(
 		return &vfilter.Null{}
 	}
 
+	// Come up with a reasonable value for OSPath in the
+	// output. Typically we can use this to open the actual file, but
+	// if the context is really a raw $MFT file then we can not
+	// actually open any file.
 	var ospath *accessors.OSPath
 
 	// A Device was given the OSPath should be relative to the device
@@ -127,7 +164,8 @@ func (self NTFSFunction) Call(
 		if len(result.Hardlinks) > 0 {
 			ospath = arg.Filename.Append(strings.Split(result.Hardlinks[0], "\\")...)
 		}
-	} else {
+
+	} else if arg.Filename != nil {
 
 		// A filename was given - we just return the OSPath relative
 		// to the root of the filesystem. This can be used to open the
@@ -138,6 +176,15 @@ func (self NTFSFunction) Call(
 				DelegateAccessor: arg.Accessor,
 				DelegatePath:     arg.Filename.Path(),
 				Path:             result.Hardlinks[0],
+			})
+		}
+
+		// An MFT file was given, cant really open the file anyway.
+	} else if arg.MFTFilename != nil {
+		if len(result.Hardlinks) > 0 {
+			ospath, _ = accessors.NewWindowsNTFSPath("")
+			ospath.SetPathSpec(&accessors.PathSpec{
+				Path: result.Hardlinks[0],
 			})
 		}
 	}
@@ -253,32 +300,12 @@ func (self NTFSI30ScanPlugin) Call(
 			return
 		}
 
-		arg.Filename, arg.Accessor, err = getOSPathAndAccessor(arg.Device,
-			arg.Filename, arg.Accessor)
-		if err != nil {
-			scope.Log("parse_ntfs_i30: %v", err)
-			return
-		}
-
-		if arg.Inode != "" {
-			mft_idx, _, _, _, err := ntfs.ParseMFTId(arg.Inode)
-			if err != nil {
-				scope.Log("parse_ntfs_i30: %v", err)
-				return
-			}
-			arg.MFT = mft_idx
-		}
-
-		ntfs_ctx, err := readers.GetNTFSContext(scope, arg.Filename, arg.Accessor)
+		ntfs_ctx, err := arg.getNTFSContext(scope)
 		if err != nil {
 			scope.Log("parse_ntfs_i30: %v", err)
 			return
 		}
 		defer ntfs_ctx.Close()
-
-		if arg.MFTOffset > 0 {
-			arg.MFT = arg.MFTOffset / ntfs_ctx.Boot.ClusterSize()
-		}
 
 		mft_entry, err := ntfs_ctx.GetMFT(arg.MFT)
 		if err != nil {
@@ -327,8 +354,7 @@ func (self NTFSRangesPlugin) Call(
 			return
 		}
 
-		arg.Filename, arg.Accessor, err = getOSPathAndAccessor(arg.Device,
-			arg.Filename, arg.Accessor)
+		ntfs_ctx, err := arg.getNTFSContext(scope)
 		if err != nil {
 			scope.Log("parse_ntfs_ranges: %v", err)
 			return
@@ -339,25 +365,17 @@ func (self NTFSRangesPlugin) Call(
 		mft_idx := int64(arg.MFT)
 		stream_name := ""
 
+		// Callers can view ranges for any stream type.
 		if arg.Inode != "" {
 			mft_idx, attr_type, attr_id, stream_name, err = ntfs.ParseMFTId(arg.Inode)
 			if err != nil {
 				scope.Log("parse_ntfs_ranges: %v", err)
 				return
 			}
+
+			// By default only view $DATA stream.
 		} else {
 			attr_type = 128
-		}
-
-		ntfs_ctx, err := readers.GetNTFSContext(scope, arg.Filename, arg.Accessor)
-		if err != nil {
-			scope.Log("parse_ntfs_ranges: %v", err)
-			return
-		}
-		defer ntfs_ctx.Close()
-
-		if arg.MFTOffset > 0 {
-			mft_idx = arg.MFTOffset / ntfs_ctx.Boot.ClusterSize()
 		}
 
 		mft_entry, err := ntfs_ctx.GetMFT(mft_idx)
@@ -394,38 +412,26 @@ func (self NTFSRangesPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 	}
 }
 
-func getOSPathAndAccessor(
-	device string,
-	filename *accessors.OSPath,
-	accessor string) (*accessors.OSPath, string, error) {
+func getOSPathAndAccessor(device string) (*accessors.OSPath, string, error) {
 
 	// Extract the device from the device string
-	if device != "" {
-		filename, err := accessors.NewWindowsNTFSPath(device)
-		if err != nil {
-			return nil, "", err
-		}
-
-		if filename == nil || len(filename.Components) == 0 {
-			return nil, "", errors.New("Invalid device")
-		}
-
-		if !strings.HasPrefix(filename.Components[0], "\\\\.\\") {
-			return nil, "", errors.New("Device should begin with \\\\.\\")
-		}
-
-		// The device is the first component (e.g. \\.\C:) so make a
-		// new OSPath for it to be accessed using "ntfs".
-		filename, err = accessors.NewWindowsNTFSPath(filename.Components[0])
-		accessor = "ntfs"
-		return filename, accessor, nil
+	filename, err := accessors.NewWindowsNTFSPath(device)
+	if err != nil {
+		return nil, "", err
 	}
 
-	if filename == nil {
-		return nil, "", errors.New("either filename or device must be provided")
+	if filename == nil || len(filename.Components) == 0 {
+		return nil, "", errors.New("Invalid device")
 	}
 
-	return filename, accessor, nil
+	if !strings.HasPrefix(filename.Components[0], "\\\\.\\") {
+		return nil, "", errors.New("Device should begin with \\\\.\\")
+	}
+
+	// The device is the first component (e.g. \\.\C:) so make a
+	// new OSPath for it to be accessed using "ntfs".
+	filename, err = accessors.NewWindowsNTFSPath(filename.Components[0])
+	return filename, "ntfs", nil
 }
 
 func init() {

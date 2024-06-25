@@ -5,6 +5,7 @@ import (
 	"os"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -21,7 +22,7 @@ import (
 var (
 	IGNORE_REPORT chan *ordereddict.Dict = nil
 
-	DO_NOT_SYNC_NOTEBOOKS_FOR_TEST = true
+	DO_NOT_SYNC_NOTEBOOKS_FOR_TEST = atomic.Bool{}
 )
 
 type NotebookStore interface {
@@ -74,8 +75,7 @@ func NewNotebookStore(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-
-		if DO_NOT_SYNC_NOTEBOOKS_FOR_TEST {
+		if DO_NOT_SYNC_NOTEBOOKS_FOR_TEST.Load() {
 			return
 		}
 

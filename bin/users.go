@@ -33,6 +33,18 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+const (
+	ServerChangeWarning = `
+NOTE: This command changes the underlying data in the data store.
+
+These changes may not be immediately visible to a running server
+so you should restart the server to pick up these changes.
+The recommended way to make these changes is via the API.
+See the following for more information
+
+https://docs.velociraptor.app/docs/server_automation/server_api/`
+)
+
 var (
 	user_command  = app.Command("user", "Manage GUI users")
 	user_add      = user_command.Command("add", "Add a user. If the user already exists this allows to change their password.")
@@ -49,11 +61,6 @@ var (
 		"username", "Username to show").Required().String()
 	user_show_hashes = user_show.Flag("with_hashes", "Displays the password hashes too.").
 				Bool()
-
-	user_lock = user_command.Command(
-		"lock", "Lock a user immediately by locking their account.")
-	user_lock_name = user_lock.Arg(
-		"username", "Username to lock").Required().String()
 )
 
 func doAddUser() error {
@@ -128,7 +135,7 @@ func doAddUser() error {
 	if err != nil {
 		return fmt.Errorf("Unable to set user account: %w", err)
 	}
-	fmt.Printf("\r\n")
+	fmt.Println(ServerChangeWarning)
 	return nil
 }
 
@@ -179,51 +186,11 @@ func doShowUser() error {
 	return nil
 }
 
-func doLockUser() error {
-	logging.DisableLogging()
-
-	config_obj, err := makeDefaultConfigLoader().
-		WithRequiredFrontend().LoadAndValidate()
-	if err != nil {
-		return fmt.Errorf("Unable to load config file: %w", err)
-	}
-
-	config_obj.Services = services.GenericToolServices()
-
-	ctx, cancel := install_sig_handler()
-	defer cancel()
-
-	sm, err := startup.StartToolServices(ctx, config_obj)
-	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
-	}
-	defer sm.Close()
-
-	users_manager := services.GetUserManager()
-	user_record, err := users_manager.GetUser(ctx,
-		utils.GetSuperuserName(config_obj), *user_lock_name)
-	if err != nil {
-		return fmt.Errorf("Unable to find user %s", *user_lock_name)
-	}
-
-	user_record.Locked = true
-
-	err = users_manager.SetUser(ctx, user_record)
-	if err != nil {
-		return fmt.Errorf("Unable to set user account: %w", err)
-	}
-	fmt.Printf("\r\n")
-	return nil
-}
-
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case user_add.FullCommand():
 			FatalIfError(user_add, doAddUser)
-
-		case user_lock.FullCommand():
-			FatalIfError(user_lock, doLockUser)
 
 		case user_show.FullCommand():
 			FatalIfError(user_show, doShowUser)

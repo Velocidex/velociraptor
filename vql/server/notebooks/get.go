@@ -37,6 +37,12 @@ func (self GetNotebookFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = services.RequireFrontend()
+	if err != nil {
+		scope.Log("notebook_get: %v", err)
+		return vfilter.Null{}
+	}
+
 	config_obj, pres := vql_subsystem.GetServerConfig(scope)
 	if !pres {
 		scope.Log("notebook_get: must be running on the server")

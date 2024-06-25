@@ -293,6 +293,9 @@ func (self *ServiceContainer) ACLManager() (services.ACLManager, error) {
 // manager. This function is used both in the client and the server to
 // start all the needed services.
 func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
+
+	org_record.Id = utils.NormalizedOrgId(org_record.Id)
+
 	org_config := self.makeNewConfigObj(org_record)
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting services for %v", services.GetOrgName(org_config))
@@ -682,17 +685,6 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.mu.Unlock()
 	}
 
-	if spec.ServerArtifacts {
-		server_artifact_manager, err := server_artifacts.NewServerArtifactService(ctx, wg, org_config)
-		if err != nil {
-			return err
-		}
-
-		service_container.mu.Lock()
-		service_container.server_artifact_manager = server_artifact_manager
-		service_container.mu.Unlock()
-	}
-
 	// Must be run after all the other services are up
 	if spec.SanityChecker {
 		err = sanity.NewSanityCheckService(ctx, wg, org_config)
@@ -732,6 +724,8 @@ func maybeFlushFilesOnClose(
 func (self *OrgManager) Services(org_id string) services.ServiceContainer {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	org_id = utils.NormalizedOrgId(org_id)
 
 	service_container, pres := self.orgs[org_id]
 	if !pres {

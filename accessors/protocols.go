@@ -191,8 +191,12 @@ func (self _AssociativeOSPath) Associative(
 		second_item := length
 		if t[1] != nil {
 			second_item = *t[1]
+			if second_item > length {
+				second_item = length
+			}
 		}
 
+		// Wrap around behavior for negative index.
 		if first_item < 0 {
 			first_item += length
 		}

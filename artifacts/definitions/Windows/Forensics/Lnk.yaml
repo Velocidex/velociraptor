@@ -1281,34 +1281,19 @@ export: |
      ]
      '''
 
-sources:
-  - query: |
-     LET hostname <= if(condition=CheckHostnameMismatch, then={ SELECT Hostname FROM info()})
-
-     LET targets = SELECT OSPath, Mtime,Atime,Ctime,Btime,Size,
-            read_file(filename=OSPath,offset=0,length=2) as _Header
-        FROM glob(globs=TargetGlob)
-        WHERE NOT IsDir AND _Header =~ '^L\x00$'
-
-     LET lnk_files = SELECT *,
-            parse_binary(filename=OSPath,
-                profile=Profile, struct="ShellLinkHeader")  AS Parsed
-        FROM targets
-
      LET fixpath(data) = regex_transform(key='x', source=join(sep='\\',array=data),
             map=dict( `My Computer\\\\` = '', `:\\\\\\\\` = ''':\''',`\\\\\\\\\\\\` = '\\'))
 
-     LET property_store(data) = SELECT * FROM foreach(row=data,query={SELECT * FROM foreach(row=_value,
-            query={
-                SELECT GuidId,Description,Type,Value FROM foreach(row=_value)
-            })})
+     // Pretty format the PropertyStorage
+     LET property_store(Parsed) = SELECT * FROM foreach(
+       row=Parsed.ExtraData.Data.PropertyStorage.PropertyValue,
+       query={
+         SELECT * FROM foreach(row=_value,
+           query={
+             SELECT GuidId,Description,Type,Value FROM foreach(row=_value)
+      })})
 
-
-
-     LET parsed = SELECT
-            dict(OSPath=OSPath, Size=Size,
-                Mtime=Mtime,Btime=Btime) as SourceFile,
-            dict(
+      LET ShowHeader(Parsed) = dict(
                 Headersize = Parsed.HeaderSize,
                 LinkClsID = Parsed.LinkClsID,
                 LinkFlags = Parsed.LinkFlags,
@@ -1320,34 +1305,61 @@ sources:
                 IconIndex = Parsed.IconIndex,
                 ShowCommand = Parsed.ShowCommand,
                 HotKey = Parsed.HotKey
-            ) as ShellLinkHeader,
-            Parsed.LinkInfo as LinkInfo,
-            dict(
-                LinkTarget= if(condition= len(list=fixpath(data=Parsed.LinkTargetIDList.IDList.ShellBag.Description.LongName))
-                    <   len(list=fixpath(data=Parsed.LinkTargetIDList.IDList.ShellBag.Description.ShortName)),
-                        then= fixpath(data=Parsed.LinkTargetIDList.IDList.ShellBag.Description.ShortName),
-                        else= fixpath(data=Parsed.LinkTargetIDList.IDList.ShellBag.Description.LongName)),
-                LinkTargetIDList = Parsed.LinkTargetIDList
-            ) as LinkTarget,
-            Parsed.StringData as StringData,
-            to_dict(item={
-                    SELECT
-                        BlockClass as _key,
-                        if(condition= Data.DataValue,
-                            then= Data.DataValue, else= Data)  as _value
-                    FROM foreach(row=Parsed.ExtraData)
-                }) as ExtraData,
-            property_store(data=Parsed.ExtraData.Data.PropertyStorage.PropertyValue) as PropertyStore
-        FROM lnk_files
+            )
 
-      LET results = SELECT SourceFile,ShellLinkHeader,LinkInfo,LinkTarget,StringData,
-            if(condition=PropertyStore,
-                then= ExtraData + dict(PropertyStore=PropertyStore),
-                else= ExtraData ) as ExtraData
-        FROM parsed
-        WHERE if(condition= IocRegex,
-                    then= format(format='%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\s%s',
-                        args=[
+      LET ShowLinkTarget(Parsed) = dict(
+         LinkTarget= if(
+            condition= len(list=fixpath(data=Parsed.LinkTargetIDList.IDList.ShellBag.Description.LongName)) < len(list=fixpath(data=Parsed.LinkTargetIDList.IDList.ShellBag.Description.ShortName)),
+        then= fixpath(data=Parsed.LinkTargetIDList.IDList.ShellBag.Description.ShortName),
+        else= fixpath(data=Parsed.LinkTargetIDList.IDList.ShellBag.Description.LongName)),
+        LinkTargetIDList = Parsed.LinkTargetIDList
+      )
+
+      LET ShowExtraData(Parsed) = to_dict(item={
+        SELECT BlockClass as _key,
+               if(condition= Data.DataValue,
+                  then= Data.DataValue, else= Data)  as _value
+        FROM foreach(row=Parsed.ExtraData)
+      })
+
+sources:
+  - query: |
+     LET hostname <= if(condition=CheckHostnameMismatch,
+        then={ SELECT Hostname FROM info()})
+
+     LET targets = SELECT OSPath, Mtime,Atime,Ctime,Btime,Size,
+            read_file(filename=OSPath,offset=0,length=2) as _Header
+        FROM glob(globs=TargetGlob)
+        WHERE NOT IsDir AND _Header =~ '^L\x00$'
+
+     LET lnk_files = SELECT *,
+            parse_binary(filename=OSPath,
+                profile=Profile, struct="ShellLinkHeader")  AS Parsed
+        FROM targets
+
+     LET parsed = SELECT
+       dict(OSPath=OSPath, Size=Size,
+            Mtime=Mtime,Btime=Btime) as SourceFile,
+       ShowHeader(Parsed=Parsed) as ShellLinkHeader,
+       Parsed.LinkInfo as LinkInfo,
+       ShowLinkTarget(Parsed=Parsed) as LinkTarget,
+       Parsed.StringData as StringData,
+       ShowExtraData(Parsed=Parsed) as ExtraData,
+       property_store(data=Parsed) as PropertyStore
+     FROM lnk_files
+
+     LET results = SELECT SourceFile,
+                          ShellLinkHeader,
+                          LinkInfo,
+                          LinkTarget,
+                          StringData,
+                          if(condition=PropertyStore,
+                             then= ExtraData + dict(PropertyStore=PropertyStore),
+                             else= ExtraData ) as ExtraData
+     FROM parsed
+     WHERE if(condition= IocRegex,
+              then= format(format='%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\s%s',
+                           args=[
                             StringData.TargetPath,
                             StringData.Name,
                             StringData.RelativePath,
@@ -1360,8 +1372,8 @@ sources:
                             join(array=PropertyStore.Value,sep='\n')
                         ]) =~ IocRegex,
                     else= True)
-                AND NOT if(condition= IgnoreRegex,
-                    then= format(format='%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\s%s',
+      AND NOT if(condition= IgnoreRegex,
+                 then= format(format='%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\s%s',
                         args=[
                             StringData.TargetPath,
                             StringData.Name,

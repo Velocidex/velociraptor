@@ -1,0 +1,4 @@
+{
+ "UploadMetadata": "{\"Timestamp\":\"2022-10-16T16:20:30.199781115Z\",\"started\":\"2022-10-16 16:20:30.199783036 +0000 UTC\",\"vfs_path\":\"/tmp/\\\"ls\\\\with\\\\back:slash\\\"\",\"_Components\":[\"clients\",\"\u003cclient_id\u003e\",\"collections\",\"F.1234\",\"uploads\",\"file\",\"tmp\",\"ls\\\\with\\\\back:slash\"],\"file_size\":12,\"uploaded_size\":12}\n",
+ "ls\\with\\back\\slash:": "hello world\n"
+}

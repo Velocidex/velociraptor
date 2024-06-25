@@ -13,6 +13,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -56,7 +57,7 @@ func (self *UserManager) SetUserPassword(
 	}
 
 	// Update the current org if needed
-	if current_org != "" {
+	if !utils.IsRootOrg(current_org) {
 		// Check if the current_org is in the list of user orgs
 		if !inUserOrgs(current_org, user_record) {
 			return fmt.Errorf("Error %v: Org %v does not include User %v",
