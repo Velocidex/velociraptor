@@ -120,7 +120,7 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 
 	// This will contain the HTML output of the rendered query.
 	assert.Contains(self.T(),
-		notebook.CellMetadata[0].Output, "grr-csv-viewer")
+		notebook.CellMetadata[0].Output, "velo-csv-viewer")
 
 	// Now there are two versions of this cell.
 	assert.Equal(self.T(),

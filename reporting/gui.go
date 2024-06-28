@@ -218,7 +218,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 			options.Set("Version", utils.GetTime().Now().Unix())
 
 			result += fmt.Sprintf(
-				`<div class="panel"><grr-csv-viewer base-url="'v1/GetTable'" `+
+				`<div class="panel"><velo-csv-viewer base-url="'v1/GetTable'" `+
 					`params='%s' /></div>`,
 				utils.QueryEscape(options.String()))
 		}
@@ -248,7 +248,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 }
 
 func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
-	return self.genericChart("grr-line-chart", "notebook-line-chart", values...)
+	return self.genericChart("velo-line-chart", "notebook-line-chart", values...)
 }
 
 func (self *GuiTemplateEngine) TimeChart(values ...interface{}) string {
@@ -339,7 +339,7 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 		}
 
 		return fmt.Sprintf(
-			`<div class="panel"><grr-timeline name='%s' `+
+			`<div class="panel"><velo-timeline name='%s' `+
 				`params='%s' /></div>`, utils.QueryEscape(t),
 			utils.QueryEscape(parameters))
 
@@ -347,7 +347,7 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 		result := ""
 		for _, item := range t {
 			result += fmt.Sprintf(
-				`<div class="panel"><grr-timeline base-url="'v1/GetTable'" `+
+				`<div class="panel"><velo-timeline base-url="'v1/GetTable'" `+
 					`params='%s' /></div>`,
 				utils.QueryEscape(item.Params().String()))
 		}
@@ -374,7 +374,7 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 			Columns:  self.Scope.GetMembers(t[0]),
 		}
 		return fmt.Sprintf(
-			`<grr-timeline value="data['%s']" params='%s' />`,
+			`<velo-timeline value="data['%s']" params='%s' />`,
 			key, utils.QueryEscape(string(parameters)))
 	}
 }
@@ -642,9 +642,9 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	p.AllowURLSchemes("http", "https", "data")
 
 	// Directives for the GUI.
-	p.AllowAttrs("value", "params").OnElements("grr-csv-viewer")
+	p.AllowAttrs("value", "params").OnElements("velo-csv-viewer")
 	p.AllowAttrs("value", "params").OnElements("inline-table-viewer")
-	p.AllowAttrs("value", "params").OnElements("grr-line-chart")
+	p.AllowAttrs("value", "params").OnElements("velo-line-chart")
 	p.AllowAttrs("value", "params").OnElements("bar-chart")
 	p.AllowAttrs("value", "params").OnElements("scatter-chart")
 	p.AllowAttrs("value", "params").OnElements("time-chart")
@@ -655,8 +655,8 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	p.AllowAttrs("params").OnElements("notebook-line-chart")
 	p.AllowAttrs("params").OnElements("notebook-scatter-chart")
 	p.AllowAttrs("params").OnElements("notebook-time-chart")
-	p.AllowAttrs("name", "params").OnElements("grr-timeline")
-	p.AllowAttrs("name", "version").OnElements("grr-tool-viewer")
+	p.AllowAttrs("name", "params").OnElements("velo-timeline")
+	p.AllowAttrs("name", "version").OnElements("velo-tool-viewer")
 
 	// Required for syntax highlighting.
 	p.AllowAttrs("class").OnElements("span")

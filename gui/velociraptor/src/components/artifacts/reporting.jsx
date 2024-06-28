@@ -166,7 +166,7 @@ export default class VeloReportViewer extends React.Component {
                     } catch(e) {};
                 }
 
-                if (domNode.name === "grr-csv-viewer") {
+                if (domNode.name === "velo-csv-viewer") {
                     // Figure out where the data is: attribs.value is something like data['table2']
                     let re = /'([^']+)'/;
                     let value = decodeURIComponent(domNode.attribs.value || "");
@@ -192,7 +192,7 @@ export default class VeloReportViewer extends React.Component {
                     }
                 };
 
-                if (domNode.name === "grr-tool-viewer") {
+                if (domNode.name === "velo-tool-viewer") {
                     let name = decodeURIComponent(domNode.attribs.name ||"");
                     let tool_version = decodeURIComponent(
                         domNode.attribs.version ||"");
@@ -203,7 +203,7 @@ export default class VeloReportViewer extends React.Component {
                     );
                 };
 
-                if (domNode.name === "grr-timeline") {
+                if (domNode.name === "velo-timeline") {
                     let name = decodeURIComponent(domNode.attribs.name ||"");
                     return (
                         <Timeline name={name}/>
@@ -216,7 +216,7 @@ export default class VeloReportViewer extends React.Component {
 
                 };
 
-                if (domNode.name === "grr-line-chart") {
+                if (domNode.name === "velo-line-chart") {
                     // Figure out where the data is: attribs.value is
                     // something like data['table2']
                     let re = /'([^']+)'/;
