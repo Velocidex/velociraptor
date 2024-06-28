@@ -130,7 +130,7 @@ func init() {
 var (
 	// Must match the output emitted by GuiTemplateEngine.Table
 	csvViewerRegexp = regexp.MustCompile(
-		`<grr-csv-viewer base-url="'v1/GetTable'" params='([^']+)' />`)
+		`<velo-csv-viewer base-url="'v1/GetTable'" params='([^']+)' />`)
 
 	imageRegex = regexp.MustCompile(
 		`<img src=".+?/(?P<NotebookId>N\.[^/]+)/attach/(?P<Attachment>NA\.[^\?"]+)(?P<Extra>[^>]*)>`)

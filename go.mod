@@ -76,16 +76,16 @@ require (
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
-	golang.org/x/crypto v0.21.0
+	golang.org/x/crypto v0.24.0
 	golang.org/x/mod v0.17.0
 	golang.org/x/net v0.23.0
-	golang.org/x/sys v0.20.0
+	golang.org/x/sys v0.21.0
 	golang.org/x/text v0.16.0
 	golang.org/x/time v0.3.0
 	google.golang.org/api v0.146.0
 	google.golang.org/genproto v0.0.0-20231009173412-8bfb1ae86b6c // indirect
 	google.golang.org/grpc v1.58.3
-	google.golang.org/protobuf v1.33.0
+	google.golang.org/protobuf v1.34.2
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
@@ -147,7 +147,7 @@ require (
 	github.com/valyala/fastjson v1.6.4
 	github.com/vincent-petithory/dataurl v1.0.0
 	github.com/virtuald/go-paniclog v0.0.0-20190812204905-43a7fa316459
-	golang.org/x/oauth2 v0.13.0
+	golang.org/x/oauth2 v0.21.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231009173412-8bfb1ae86b6c
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -158,8 +158,7 @@ require (
 
 require (
 	cloud.google.com/go v0.110.8 // indirect
-	cloud.google.com/go/compute v1.23.0 // indirect
-	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	cloud.google.com/go/iam v1.1.2 // indirect
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.3.0 // indirect
@@ -238,9 +237,8 @@ require (
 	go.uber.org/goleak v1.2.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/term v0.18.0 // indirect
+	golang.org/x/term v0.21.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
-	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231009173412-8bfb1ae86b6c // indirect
 	www.velocidex.com/golang/binparsergen v0.1.1-0.20220107080050-ae6122c5ed14 // indirect
 )

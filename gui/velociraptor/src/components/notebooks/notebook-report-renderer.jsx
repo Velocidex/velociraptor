@@ -16,6 +16,8 @@ import { NotebookLineChart, NotebookTimeChart,
          NotebookScatterChart, NotebookBarChart
        } from './notebook-chart-renderer.jsx';
 
+import ToolViewer from "../tools/tool-viewer.jsx";
+
 import NotebookTableRenderer from './notebook-table-renderer.jsx';
 
 import VeloValueRenderer from '../utils/value.jsx';
@@ -74,10 +76,11 @@ export default class NotebookReportRenderer extends React.Component {
         let rows = JSONparse(data.Response, []);
 
         switch  (domNode.name) {
-        case "grr-line-chart":
+        case "velo-line-chart":
                     return <VeloLineChart data={rows}
                                           columns={data.Columns}
                                           params={parse_param(domNode)} />;
+
         case  "time-chart":
                     return <VeloTimeChart data={rows}
                                           columns={data.Columns}
@@ -135,7 +138,7 @@ export default class NotebookReportRenderer extends React.Component {
                     return <VeloValueRenderer value={value}/>;
                 };
 
-                if (domNode.name === "grr-timeline") {
+                if (domNode.name === "velo-timeline") {
                     let name = decodeURIComponent(domNode.attribs.name || "");
                     return (
                         <TimelineRenderer
@@ -145,8 +148,16 @@ export default class NotebookReportRenderer extends React.Component {
                     );
                 };
 
+                if (domNode.name ===  "velo-tool-viewer") {
+                    let name = decodeURIComponent(domNode.attribs.name ||"");
+                    let tool_version = decodeURIComponent(
+                        domNode.attribs.version ||"");
+                    return <ToolViewer name={name}
+                                       tool_version={tool_version}/>;
+                };
+
                 // A tag that loads a table from a notebook cell.
-                if (domNode.name === "grr-csv-viewer") {
+                if (domNode.name === "velo-csv-viewer") {
                     try {
                         return (
                             <NotebookTableRenderer
