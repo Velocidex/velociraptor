@@ -1,7 +1,7 @@
 {
  "Updated Cell": {
   "input": "/*\n# 1\n*/\nselect sleep(ms=500) FROM scope()\n",
-  "output": "\u003ch1\u003e1\u003c/h1\u003e\n\u003cdiv class=\"panel\"\u003e\u003cgrr-csv-viewer base-url=\"'v1/GetTable'\" params='%7B%22notebook_id%22%3A%22N.XXX%22%2C%22client_id%22%3A%22%22%2C%22cell_id%22%3A%22NC.XXX-XXX%22%2C%22table_id%22%3A1%2C%22TableOptions%22%3A%7B%7D%2C%22Version%22%3A10%7D' /\u003e\u003c/div\u003e",
+  "output": "\u003ch1\u003e1\u003c/h1\u003e\n\u003cdiv class=\"panel\"\u003e\u003cvelo-csv-viewer base-url=\"'v1/GetTable'\" params='%7B%22notebook_id%22%3A%22N.XXX%22%2C%22client_id%22%3A%22%22%2C%22cell_id%22%3A%22NC.XXX-XXX%22%2C%22table_id%22%3A1%2C%22TableOptions%22%3A%7B%7D%2C%22Version%22%3A10%7D' /\u003e\u003c/div\u003e",
   "data": "{}",
   "cell_id": "NC.XXX",
   "messages": [

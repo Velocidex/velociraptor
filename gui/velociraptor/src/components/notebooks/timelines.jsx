@@ -120,7 +120,7 @@ export class AddVQLCellToTimeline extends React.Component {
 
         parseHTML(this.props.cell.output, {
             replace: (domNode) => {
-                if (domNode.name === "grr-csv-viewer") {
+                if (domNode.name === "velo-csv-viewer") {
                     let value = JSONparse(
                         decodeURIComponent(domNode.attribs.params), "");
                     tags.push(value);

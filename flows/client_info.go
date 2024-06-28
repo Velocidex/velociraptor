@@ -59,6 +59,19 @@ func (self *ClientFlowRunner) maybeProcessClientInfo(
 			if !dirty {
 				return nil, nil
 			}
+
+			// Update the index
+			indexer, err := services.GetIndexer(self.config_obj)
+			if err == nil {
+				for _, term := range []string{
+					"all",
+					client_id,
+					"host:" + client_info.Fqdn,
+					"host:" + client_info.Hostname} {
+					indexer.SetIndex(client_id, term)
+				}
+			}
+
 			return old_client_info, nil
 		})
 	if err != nil {

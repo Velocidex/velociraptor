@@ -62,7 +62,12 @@ func (self FormUploadPathManager) URL() string {
 		return ""
 	}
 
+	// Force https scheme instead of wss.
 	dest_url.Path = self.path().AsClientPath()
+	if dest_url.Scheme == "wss" {
+		dest_url.Scheme = "https"
+	}
+
 	return dest_url.String()
 }
 

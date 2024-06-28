@@ -37,7 +37,7 @@ func (self *progressReporter) Report(message string) {
    Calculating...  (%v after %v)
 </div>
 <div class="panel">
-   <grr-csv-viewer base-url="'v1/GetTable'"
+   <velo-csv-viewer base-url="'v1/GetTable'"
                    params='{"notebook_id":"%s","cell_id":"%s","table_id":1,"cell_version": "%s", "message": "%s"}' />
 </div>
 `,

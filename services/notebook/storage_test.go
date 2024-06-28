@@ -1,21 +1,28 @@
 package notebook_test
 
 import (
+	"time"
+
 	"github.com/alecthomas/assert"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 func (self *NotebookManagerTestSuite) TestNotebookStorage() {
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	// Create a notebook the usual way.
-	global_notebook, err := notebook_manager.NewNotebook(
-		self.Ctx, "admin", &api_proto.NotebookMetadata{
-			Name: "Test Global Notebook",
-		})
-	assert.NoError(self.T(), err)
+	var global_notebook *api_proto.NotebookMetadata
+
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		// Create a notebook the usual way.
+		global_notebook, err = notebook_manager.NewNotebook(
+			self.Ctx, "admin", &api_proto.NotebookMetadata{
+				Name: "Test Global Notebook",
+			})
+		return err == nil
+	})
 
 	// Now create a flow notebook - these have pre-determined ID
 	_, err = notebook_manager.NewNotebook(
