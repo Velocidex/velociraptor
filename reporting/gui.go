@@ -641,6 +641,12 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	// DATA urls are useful for markdown cells
 	p.AllowURLSchemes("http", "https", "data")
 
+	// Deprecated but may still appear in older notebooks.
+	p.AllowAttrs("value", "params").OnElements("grr-csv-viewer")
+	p.AllowAttrs("value", "params").OnElements("grr-line-chart")
+	p.AllowAttrs("name", "params").OnElements("grr-timeline")
+	p.AllowAttrs("name", "version").OnElements("grr-tool-viewer")
+
 	// Directives for the GUI.
 	p.AllowAttrs("value", "params").OnElements("velo-csv-viewer")
 	p.AllowAttrs("value", "params").OnElements("inline-table-viewer")

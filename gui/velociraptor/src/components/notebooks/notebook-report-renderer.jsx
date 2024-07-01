@@ -77,6 +77,7 @@ export default class NotebookReportRenderer extends React.Component {
 
         switch  (domNode.name) {
         case "velo-line-chart":
+        case "grr-line-chart":
                     return <VeloLineChart data={rows}
                                           columns={data.Columns}
                                           params={parse_param(domNode)} />;
@@ -133,12 +134,14 @@ export default class NotebookReportRenderer extends React.Component {
                     };
                 }
 
-                if (domNode.name === "velo-value") {
+                if (domNode.name === "velo-value" ||
+                    domNode.name === "grr-value") {
                     let value = decodeURIComponent(domNode.attribs.value || "");
                     return <VeloValueRenderer value={value}/>;
                 };
 
-                if (domNode.name === "velo-timeline") {
+                if (domNode.name === "velo-timeline" ||
+                    domNode.name === "grr-timeline") {
                     let name = decodeURIComponent(domNode.attribs.name || "");
                     return (
                         <TimelineRenderer
@@ -148,7 +151,8 @@ export default class NotebookReportRenderer extends React.Component {
                     );
                 };
 
-                if (domNode.name ===  "velo-tool-viewer") {
+                if (domNode.name ===  "velo-tool-viewer"||
+                    domNode.name === "grr-tool-viewer") {
                     let name = decodeURIComponent(domNode.attribs.name ||"");
                     let tool_version = decodeURIComponent(
                         domNode.attribs.version ||"");
@@ -157,7 +161,8 @@ export default class NotebookReportRenderer extends React.Component {
                 };
 
                 // A tag that loads a table from a notebook cell.
-                if (domNode.name === "velo-csv-viewer") {
+                if (domNode.name === "velo-csv-viewer" ||
+                    domNode.name === "grr-csv-viewer") {
                     try {
                         return (
                             <NotebookTableRenderer

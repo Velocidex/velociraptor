@@ -2,6 +2,14 @@
     width: fit-content;
 }
 
+.report-viewer {
+    min-height: 10px;
+}
+
+.report-viewer:hover {
+    cursor: pointer;
+}
+
 .report-viewer h1 {
         font-size: 24px;
         margin-top: 1rem;
