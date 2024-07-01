@@ -166,7 +166,8 @@ export default class VeloReportViewer extends React.Component {
                     } catch(e) {};
                 }
 
-                if (domNode.name === "velo-csv-viewer") {
+                if (domNode.name === "velo-csv-viewer" ||
+                    domNode.name === "grr-csv-viewer") {
                     // Figure out where the data is: attribs.value is something like data['table2']
                     let re = /'([^']+)'/;
                     let value = decodeURIComponent(domNode.attribs.value || "");
@@ -192,7 +193,8 @@ export default class VeloReportViewer extends React.Component {
                     }
                 };
 
-                if (domNode.name === "velo-tool-viewer") {
+                if (domNode.name === "velo-tool-viewer" ||
+                    domNode.name === "grr-tool-viewer") {
                     let name = decodeURIComponent(domNode.attribs.name ||"");
                     let tool_version = decodeURIComponent(
                         domNode.attribs.version ||"");
@@ -203,20 +205,23 @@ export default class VeloReportViewer extends React.Component {
                     );
                 };
 
-                if (domNode.name === "velo-timeline") {
+                if (domNode.name === "velo-timeline" ||
+                    domNode.name === "grr-timeline") {
                     let name = decodeURIComponent(domNode.attribs.name ||"");
                     return (
                         <Timeline name={name}/>
                     );
                 };
 
-                if (domNode.name === "velo-value") {
+                if (domNode.name === "velo-value" ||
+                    domNode.name === "grr-value") {
                     let value = decodeURIComponent(domNode.attribs.value || "");
                     return <VeloValueRenderer value={value}/>;
 
                 };
 
-                if (domNode.name === "velo-line-chart") {
+                if (domNode.name === "velo-line-chart" ||
+                    domNode.name === "grr-line-chart") {
                     // Figure out where the data is: attribs.value is
                     // something like data['table2']
                     let re = /'([^']+)'/;
