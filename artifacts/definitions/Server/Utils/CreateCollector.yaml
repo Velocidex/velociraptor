@@ -17,6 +17,8 @@ parameters:
       - Windows_x86
       - Linux
       - MacOS
+      - MacOSArm
+      - Generic
 
   - name: artifacts
     description: A list of artifacts to collect
