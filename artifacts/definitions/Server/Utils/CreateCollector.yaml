@@ -103,6 +103,12 @@ parameters:
       The filename to use. You can expand environment variables as
       well as the following %FQDN% and %TIMESTAMP%.
 
+  - name: opt_collector_filename_prefix
+    default: ""
+    type: string
+    description: |
+      If used, this option adds a prefix to the filename of the collector being built.
+
   - name: opt_cpu_limit
     default: "0"
     type: int
@@ -389,8 +395,8 @@ sources:
 
       // This is what we will call it.
       LET CollectorName <= format(
-          format='Collector_%v',
-          args=inventory_get(tool=Target).Definition.filename)
+          format='%sCollector_%v',
+          args=[opt_collector_filename_prefix, inventory_get(tool=Target).Definition.filename])
 
       LET CollectionArtifact <= SELECT Value FROM switch(
         a = { SELECT CommonCollections + StandardCollection AS Value
