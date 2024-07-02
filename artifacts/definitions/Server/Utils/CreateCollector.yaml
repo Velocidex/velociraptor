@@ -1,3 +1,4 @@
+name: Server.Utils.CreateCollector
 description: |
   A utility artifact to create a stand alone collector.
 
