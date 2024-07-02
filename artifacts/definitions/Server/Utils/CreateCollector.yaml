@@ -391,11 +391,10 @@ sources:
       )
 
       LET Target <= tool_name[0].Type
-      
+
       // This is what we will call it.
-      LET CollectorName <= if(condition=opt_collector_filename, 
-       then=opt_collector_filename, 
-       else=format(format='Collector_%v', args=inventory_get(tool=Target).Definition.filename))
+      LET CollectorName <= opt_collector_filename ||
+          format(format='Collector_%v', args=inventory_get(tool=Target).Definition.filename)
 
       LET CollectionArtifact <= SELECT Value FROM switch(
         a = { SELECT CommonCollections + StandardCollection AS Value
@@ -458,7 +457,6 @@ sources:
                     dict(name="Format", default=opt_format),
                     dict(name="OutputPrefix", default=opt_output_directory),
                     dict(name="FilenameTemplate", default=opt_filename_template),
-                    dict(name="CollectorFilename", default=opt_collector_filename),
                     dict(name="CpuLimit", type="int",
                          default=opt_cpu_limit),
                     dict(name="ProgressTimeout", type="int",
