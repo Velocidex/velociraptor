@@ -459,6 +459,7 @@ sources:
                     dict(name="Format", default=opt_format),
                     dict(name="OutputPrefix", default=opt_output_directory),
                     dict(name="FilenameTemplate", default=opt_filename_template),
+                    dict(name="CollectorFilenamePrefix", default=opt_collector_filename_prefix),
                     dict(name="CpuLimit", type="int",
                          default=opt_cpu_limit),
                     dict(name="ProgressTimeout", type="int",
