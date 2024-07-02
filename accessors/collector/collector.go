@@ -2,6 +2,7 @@ package collector
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -194,13 +195,13 @@ func (self *CollectorAccessor) maybeSetZipPassword(
 
 	buf, err := ioutil.ReadAll(mhandle)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Decoding metadata.json: %w", err)
 	}
 
 	rows := []*ordereddict.Dict{}
 	err = json.Unmarshal(buf, &rows)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Decoding metadata.json: %w", err)
 	}
 
 	// metadata.json can be multiple rows
@@ -226,12 +227,12 @@ func (self *CollectorAccessor) maybeSetZipPassword(
 
 			key, err := crypto_utils.GetPrivateKeyFromScope(self.scope)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("GetPrivateKeyFromScope: %w", err)
 			}
 
 			zip_pass, err := crypto_utils.Base64DecryptRSAOAEP(key, ep)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("Unable to extract zip password: %w", err)
 			}
 
 			self.scope.SetContext(constants.ZIP_PASSWORDS, string(zip_pass))
@@ -311,6 +312,7 @@ func (self *CollectorAccessor) OpenWithOSPath(
 	updated_full_path, err := self.maybeSetZipPassword(full_path)
 	if err != nil {
 		self.scope.Log(err.Error())
+		return nil, err
 	}
 
 	reader, err := self.ZipFileSystemAccessor.OpenWithOSPath(updated_full_path)

@@ -4389,7 +4389,6 @@
     Note that the raw $MFT file is sometimes not sufficient to
     reconstruct all attributes (for example if attributes are not
     stored in the $MFT but in external clusters).
-
   type: Function
   args:
   - name: device
@@ -4425,7 +4424,6 @@
 
     Note: You can also use a raw $MFT file to operate on - see
     `parse_ntfs()` for a full description.
-
   type: Plugin
   args:
   - name: device
@@ -4458,7 +4456,6 @@
 
     Note: You can also use a raw $MFT file to operate on - see
     `parse_ntfs()` for a full description.
-
   type: Plugin
   args:
   - name: device
@@ -7458,3 +7455,4 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+

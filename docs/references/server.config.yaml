@@ -317,6 +317,15 @@ Client:
   logfile_name: "logfile.log"
   logfile_size: 10000000
 
+  # When Velociraptor is running as a Windows service the system can
+  # not capture any messages printed to stdout or stderr. This means
+  # that if Velociraptor crashes we lose the panic backtrace the helps
+  # debug why it crashed. Setting this to a path on the client, will
+  # cause Velociraptor to redirect stdout and stderr to this file from
+  # the Windows service.
+  panic_file: ""
+
+
   ## Velociraptor keeps a local buffer file to store query results
   ## while they are being shipped across the network. There are two
   ## types of buffers - an in memory buffer and a local file based
@@ -951,6 +960,11 @@ Monitoring:
   bind_address: 127.0.0.1
   bind_port: 8003
 
+  # If set we use this in links etc, otherwise we take a guess
+  #  based on bind_address and bind_port above.
+  metrics_url: "http://localhost:8003/metrics"
+
+
 ## Run these automatically when the binary starts.
 autoexec:
   # When starting without any command line parameters, this argv array
@@ -1294,6 +1308,14 @@ defaults:
   # setting controls how often to run the client info's house keeping
   # thread in seconds (default 60 sec)
   client_info_housekeeping_period: 60
+
+  # Disable unicode usernames. By default Velociraptor allows
+  # usernames to consist of any Unicode character for i8n support,
+  # however this opens the possibility for Homoglyph attacks. Setting
+  # the following to true will restrict usernames to the set a-z and
+  # 0-9
+  disable_unicode_usernames: false
+
 
 # The Velociraptor server may be placed into "lockdown" mode. While in
 # lockdown mode certain permissions are denied - even for
