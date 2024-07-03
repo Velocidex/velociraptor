@@ -61,6 +61,7 @@ SELECT * FROM Artifact.Server.Utils.CreateCollector(
    opt_tempdir=Spec.OptTempdir,
    opt_level=Spec.OptLevel,
    opt_filename_template=Spec.OptFilenameTemplate,
+   opt_collector_filename=Spec.OptCollectorTemplate,
    opt_format=Spec.OptFormat,
    opt_output_directory=Spec.OptOutputDirectory,
    opt_cpu_limit=Spec.OptCpuLimit,
