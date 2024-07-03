@@ -101,8 +101,11 @@ type UserManager struct {
 // Prevent certificates from being minted for critical privileged
 // accounts.
 func ValidateUsername(config_obj *config_proto.Config, name string) error {
-	if !validUsernameRegEx.MatchString(name) {
-		return fmt.Errorf("Unacceptable username %v", name)
+	if config_obj.Defaults == nil ||
+		config_obj.Defaults.DisableUnicodeUsernames {
+		if !validUsernameRegEx.MatchString(name) {
+			return fmt.Errorf("Unacceptable username %v", name)
+		}
 	}
 
 	if utils.GetSuperuserName(config_obj) == name {

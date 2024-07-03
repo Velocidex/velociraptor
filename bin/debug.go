@@ -291,10 +291,12 @@ func handleProfile(config_obj *config_proto.Config) func(w http.ResponseWriter, 
 	}
 }
 
-func handleIndex(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+func handleIndex(config_obj *config_proto.Config) func(
+	w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	w.Write([]byte(`
+		w.Write([]byte(`
 <html><body>
 <h1>Debug Server</h1>
 <ul>
@@ -304,14 +306,28 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 <li><a href="/debug/profile/all/html">Show all profile items</a></li>
 `))
 
-	for _, i := range debug.GetProfileWriters() {
-		w.Write([]byte(fmt.Sprintf(`
-<li><a href="/debug/profile/%s/html">%s</a></li>`,
-			url.QueryEscape(i.Name),
-			html.EscapeString(i.Description))))
-	}
+		if config_obj.Monitoring != nil && config_obj.GUI != nil {
+			metrics_url := config_obj.Monitoring.MetricsUrl
+			if metrics_url == "" {
+				metrics_url = fmt.Sprintf("http://%v:%v/metrics",
+					config_obj.Monitoring.BindAddress,
+					config_obj.Monitoring.BindPort)
+			}
 
-	w.Write([]byte(`</body></html>`))
+			w.Write([]byte(fmt.Sprintf(
+				"<li><a href=\"%s\">Metrics</a></li>\n",
+				url.QueryEscape(metrics_url))))
+		}
+
+		for _, i := range debug.GetProfileWriters() {
+			w.Write([]byte(fmt.Sprintf(`
+<li><a href="/debug/profile/%s/html">%s</a></li>`,
+				url.QueryEscape(i.Name),
+				html.EscapeString(i.Description))))
+		}
+
+		w.Write([]byte(`</body></html>`))
+	}
 }
 
 func initDebugServer(config_obj *config_proto.Config) error {
@@ -326,7 +342,7 @@ func initDebugServer(config_obj *config_proto.Config) error {
 			handleProfile(config_obj)))
 		http.HandleFunc("/debug/queries/running/",
 			maybeRenderHTML(handleRunningQueries))
-		http.HandleFunc("/", handleIndex)
+		http.HandleFunc("/", handleIndex(config_obj))
 
 		// Switch off the debug flag so we do not run this again. (The
 		// GUI runs this function multiple times).

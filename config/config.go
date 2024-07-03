@@ -23,6 +23,8 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/go-errors/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -34,6 +36,11 @@ var (
 	build_time  string
 	commit_hash string
 	ci_run_url  string
+
+	versionCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "velociraptor_build",
+		Help: "Current version of running binary.",
+	}, []string{"commit_hash", "build_time"})
 )
 
 func GetVersion() *config_proto.Version {
@@ -209,4 +216,11 @@ func WriteConfigToFile(filename string, config *config_proto.Config) error {
 	}
 
 	return nil
+}
+
+func init() {
+	// Tag the metrics with a build time. This is useful in a cluster
+	// to see if all nodes are upgraded.
+	versionCounter.With(prometheus.Labels{
+		"commit_hash": commit_hash, "build_time": build_time}).Inc()
 }
