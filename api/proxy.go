@@ -241,7 +241,9 @@ func GetAPIHandler(
 				username, ok := req.Context().Value(
 					constants.GRPC_USER_CONTEXT).(string)
 				if ok {
-					md["USER"] = username
+					// gRPC metadata can only contain ASCII so we make
+					// sure to escape if needed.
+					md["USER"] = utils.Quote(username)
 				}
 
 				return metadata.New(md)
