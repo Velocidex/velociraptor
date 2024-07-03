@@ -33,6 +33,7 @@ OptTempdir:
 # Compression level to use
 OptLevel: 5
 OptFilenameTemplate: "Collection-%FQDN%-%TIMESTAMP%"
+OptCollectorTemplate: ""
 
 # Can be jsonl or csv
 OptFormat: jsonl
