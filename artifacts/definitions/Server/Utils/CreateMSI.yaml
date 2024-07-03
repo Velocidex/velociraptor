@@ -2,6 +2,13 @@ name: Server.Utils.CreateMSI
 description: |
   Build an MSI ready for deployment in the current org.
 
+  This artifact depends on the following tools:
+
+  * <velo-tool-viewer name="VelociraptorWindowsMSI" />
+  * <velo-tool-viewer name="VelociraptorWindows_x86MSI" />
+
+  You can replace those with suitable MSI builds.
+
 type: SERVER
 
 parameters:

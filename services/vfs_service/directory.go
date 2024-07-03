@@ -3,6 +3,7 @@ package vfs_service
 import (
 	"context"
 	"errors"
+	"io"
 
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
@@ -102,6 +103,10 @@ func renderDBVFS(
 	defer reader.Close()
 
 	err = reader.SeekToRow(int64(result.StartIdx))
+	if errors.Is(err, io.EOF) {
+		return nil, nil
+	}
+
 	if err != nil {
 		return nil, err
 	}

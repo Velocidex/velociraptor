@@ -2,7 +2,9 @@ package hunt_dispatcher
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -249,6 +251,10 @@ func (self *HuntStorageManagerImpl) ListHunts(
 	defer rs_reader.Close()
 
 	err = rs_reader.SeekToRow(offset)
+	if errors.Is(err, io.EOF) {
+		return nil, 0, nil
+	}
+
 	if err != nil {
 		return nil, 0, err
 	}
