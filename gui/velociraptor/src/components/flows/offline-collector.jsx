@@ -595,6 +595,21 @@ class OfflineCollectorParameters  extends React.Component {
                       />
                     </Col>
                   </Form.Group>
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">{T("Collector Name")}</Form.Label>
+                    <Col sm="8">
+                      <Form.Control
+                        as="input"
+                        placeholder={T("Collector Name")}
+                        spellCheck="false"
+                        value={this.props.parameters.opt_collector_filename}
+                        onChange={e => {
+                            this.props.parameters.opt_collector_filename = e.target.value;
+                            this.props.setParameters(this.props.parameters);
+                        }}
+                      />
+                    </Col>
+                  </Form.Group>
 
                 </Form>
               </Modal.Body>
@@ -759,6 +774,7 @@ function getDefaultCollectionParameters() {
         opt_output_directory: "",
         opt_tempdir: "",
         opt_filename_template: "Collection-%FQDN%-%TIMESTAMP%",
+        opt_collector_filename: "",
         opt_format: "jsonl",
         opt_prompt: "N",
     };
@@ -836,6 +852,10 @@ export default class OfflineCollectorWizard extends React.Component {
                 case "opt_filename_template":
                     collector_parameters.opt_filename_template = x.value;
                     break;
+                case "opt_collector_filename":
+                    collector_parameters.opt_collector_filename = x.value;
+                    break;
+
                 case "opt_progress_timeout":
                     resources.progress_timeout =  JSONparse(x.value);
                     break;
@@ -901,6 +921,7 @@ export default class OfflineCollectorWizard extends React.Component {
         env.push({key: "opt_level", value: this.state.collector_parameters.opt_level.toString()});
         env.push({key: "opt_output_directory", value: this.state.collector_parameters.opt_output_directory});
         env.push({key: "opt_filename_template", value: this.state.collector_parameters.opt_filename_template});
+        env.push({key: "opt_collector_filename", value: this.state.collector_parameters.opt_collector_filename});
         env.push({key: "opt_progress_timeout", value: JSON.stringify(
             this.state.resources.progress_timeout)});
         env.push({key: "opt_timeout", value: JSON.stringify(
