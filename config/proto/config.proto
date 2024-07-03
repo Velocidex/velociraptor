@@ -1014,6 +1014,10 @@ message MonitoringConfig {
     uint32 bind_port = 2 [(sem_type) = {
             description: "Port to bind monitoring port."
         }];
+
+    // If set we use this in links etc, otherwise we take a guess
+    // based on bind_address and bind_port above.
+    string metrics_url = 3;
 }
 
 message AutoExecConfig {
@@ -1190,6 +1194,13 @@ message Defaults {
     // How often to run the client info's house keeping thread in
     // seconds (default 60 sec)
     int64 client_info_housekeeping_period = 48;
+
+    // Disable unicode usernames. By default Velociraptor allows
+    // usernames to consist of any Unicode character for i8n support,
+    // however this opens the possibility for Homoglyph
+    // attacks. Setting the following to true will restrict usernames
+    // to the set a-z and 0-9
+    bool disable_unicode_usernames = 49;
 }
 
 // Configures crypto preferences

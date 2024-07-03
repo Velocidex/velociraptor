@@ -81,6 +81,8 @@ var (
 		"GUI.authenticator.oidc_issuer",
 		"Frontend.use_plain_http",
 		"Frontend.require_client_certificates",
+		"defaults.disable_unicode_usernames",
+		"Client.panic_file",
 
 		"Client.nanny_max_connection_delay",
 		"Client.prevent_execve",
