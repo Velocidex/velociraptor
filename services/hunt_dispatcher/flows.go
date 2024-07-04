@@ -2,6 +2,8 @@ package hunt_dispatcher
 
 import (
 	"context"
+	"errors"
+	"io"
 	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -133,6 +135,13 @@ func (self *HuntDispatcher) GetFlows(
 
 	// Seek to the row we need.
 	err = rs_reader.SeekToRow(int64(start))
+	if errors.Is(err, io.EOF) {
+		close(output_chan)
+		rs_reader.Close()
+
+		return output_chan, 0, nil
+	}
+
 	if err != nil {
 		close(output_chan)
 		rs_reader.Close()
