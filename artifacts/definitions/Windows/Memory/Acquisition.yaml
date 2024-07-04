@@ -12,13 +12,18 @@ tools:
     github_asset_regex: winpmem_mini_x64.+exe
     serve_locally: true
 
-precondition: SELECT OS From info() where OS = 'windows' AND Architecture = "amd64"
+precondition: |
+  SELECT OS FROM info()
+  WHERE OS = 'windows'
+    AND Architecture = "amd64"
 
 sources:
   - query: |
+      LET Tempfile <= tempfile(extension=".raw")
+
       SELECT * FROM foreach(
           row={
-            SELECT OSPath, tempfile(extension=".raw", remove_last=TRUE) AS Tempfile
+            SELECT OSPath
             FROM Artifact.Generic.Utils.FetchBinary(ToolName="WinPmem64")
           },
           query={

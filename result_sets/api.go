@@ -45,6 +45,7 @@ type TimedResultSetWriter interface {
 }
 
 type ResultSetReader interface {
+	// Returns EOF if the row does not exist in the result set.
 	SeekToRow(start int64) error
 	Rows(ctx context.Context) <-chan *ordereddict.Dict
 
