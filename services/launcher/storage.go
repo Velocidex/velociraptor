@@ -3,6 +3,7 @@ package launcher
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/Velocidex/ordereddict"
@@ -101,30 +102,37 @@ func (self *FlowStorageManager) ListFlows(
 		// Try to rebuild the index
 		err = self.buildFlowIndexFromLegacy(ctx, config_obj, client_id)
 		if err != nil {
-			return nil, 0, err
+			return nil, 0, fmt.Errorf("buildFlowIndexFromLegacy %w", err)
 		}
 
 		rs_reader, err = result_sets.NewResultSetReaderWithOptions(
 			ctx, config_obj, file_store_factory,
 			client_path_manager.FlowIndex(), options)
+		if err != nil {
+			return nil, 0, fmt.Errorf("NewResultSetReaderWithOptions %w", err)
+		}
 	}
 
-	if err != nil {
-		return nil, 0, err
-	}
-
-	err = rs_reader.SeekToRow(offset)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// Highly optimized reader for speed.
-	json_chan, err := rs_reader.JSON(ctx)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	result := []*services.FlowSummary{}
+	err = rs_reader.SeekToRow(offset)
+	if errors.Is(err, io.EOF) {
+		return result, 0, nil
+	}
+
+	if err != nil {
+		return nil, 0, fmt.Errorf("SeekToRow %v %w", offset, err)
+	}
+
+	// Highly optimized reader for speed.
+	json_chan, err := rs_reader.JSON(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("JSON %w", err)
+	}
+
 	for serialized := range json_chan {
 		summary := &services.FlowSummary{}
 		err = json.Unmarshal(serialized, summary)

@@ -21,6 +21,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -181,6 +182,10 @@ func (self SourcePlugin) Call(
 
 		if arg.StartRow > 0 {
 			err = result_set_reader.SeekToRow(arg.StartRow)
+			if errors.Is(err, io.EOF) {
+				return
+			}
+
 			if err != nil {
 				scope.Log("source: %v", err)
 				return

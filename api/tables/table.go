@@ -147,7 +147,7 @@ func getTable(
 
 	// Seek to the row we need.
 	err = rs_reader.SeekToRow(int64(in.StartRow))
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		return result, nil
 	}
 
@@ -207,7 +207,7 @@ func getStackTable(
 
 	// Seek to the row we need.
 	err = rs_reader.SeekToRow(int64(in.StartRow))
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		return result, nil
 	}
 
