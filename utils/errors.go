@@ -19,6 +19,7 @@ var (
 	NotFoundError       = Wrap(os.ErrNotExist, "NotFoundError")
 	InvalidArgError     = errors.New("InvalidArgError")
 	IOError             = errors.New("IOError")
+	NoAccessToOrgError  = errors.New("No access to org")
 )
 
 // This is a custom error type that wraps an inner error but does not

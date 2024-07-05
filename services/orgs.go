@@ -19,7 +19,7 @@ var (
 	mu          sync.Mutex
 	org_manager OrgManager
 
-	NotFoundError = errors.New("Org not found")
+	OrgNotFoundError = errors.New("Org not found")
 )
 
 // Currently the org manager is the only binary wide global - all

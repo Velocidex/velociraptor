@@ -110,12 +110,15 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		err = CheckOrgAccess(self.config_obj, r, user_record)
 		if err != nil {
 			services.LogAudit(r.Context(),
-				self.config_obj, user_record.Name, "Unauthorized username",
+				self.config_obj, user_record.Name, "User Unauthorized for Org",
 				ordereddict.NewDict().
+					Set("err", err.Error()).
 					Set("remote", r.RemoteAddr).
 					Set("status", http.StatusUnauthorized))
 
-			http.Error(w, "authorization failed", http.StatusUnauthorized)
+			// Return status forbidden because we dont want the user
+			// to reauthenticate
+			http.Error(w, err.Error(), http.StatusForbidden)
 			return
 		}
 

@@ -93,14 +93,14 @@ func (self *CachedFilesystem) Open(name string) (http.File, error) {
 	// We do not support gz files at all - it is either brotli or
 	// uncompressed.
 	if strings.HasSuffix(name, ".gz") {
-		return nil, services.NotFoundError
+		return nil, services.OrgNotFoundError
 	}
 
 	fd, err := self.FileSystem.Open(name)
 	if err != nil {
 		// If there is not brotli file, it is just not there.
 		if strings.HasSuffix(name, ".br") {
-			return nil, services.NotFoundError
+			return nil, services.OrgNotFoundError
 		}
 
 		// Check if a compressed .br file exists
