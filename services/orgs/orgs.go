@@ -99,7 +99,7 @@ func (self *OrgManager) GetOrgConfig(org_id string) (*config_proto.Config, error
 
 	result, pres := self.orgs[org_id]
 	if !pres {
-		return nil, services.NotFoundError
+		return nil, services.OrgNotFoundError
 	}
 	return result.config_obj, nil
 }
@@ -112,7 +112,7 @@ func (self *OrgManager) GetOrg(org_id string) (*api_proto.OrgRecord, error) {
 
 	result, pres := self.orgs[org_id]
 	if !pres {
-		return nil, services.NotFoundError
+		return nil, services.OrgNotFoundError
 	}
 	return result.record, nil
 }
@@ -129,7 +129,7 @@ func (self *OrgManager) OrgIdByNonce(nonce string) (string, error) {
 
 	result, pres := self.org_id_by_nonce[nonce]
 	if !pres {
-		return "", services.NotFoundError
+		return "", services.OrgNotFoundError
 	}
 	return result, nil
 }

@@ -121,9 +121,9 @@ export default class VeloReportViewer extends React.Component {
             }
             this.setState(new_state);
         }).catch((err) => {
-            let response = err.response && err.response.data;
+            let response = err.response && (err.response.data || err.response.message);
             if (response) {
-                let templ = "<div class='no-content'>" + response.message + "</div>";
+                let templ = "<div class='no-content'>" + response + "</div>";
                 this.setState({"template": templ,loading: false});
             } else {
                 this.setState({"template": "Error " + err.message, loading: false});

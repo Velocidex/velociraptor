@@ -2,6 +2,7 @@ package authenticators
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -9,6 +10,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func GetOrgIdFromRequest(r *http.Request) string {
@@ -44,7 +46,7 @@ func GetOrgIdFromRequest(r *http.Request) string {
 // requested. If they do not have access to the org they requested we
 // switch them to any org in which they have at least read
 // access. This behaviour ensures that when a user's access is removed
-// from an org the GUI immediately switched to the next available org.
+// from an org the GUI immediately switches to the next available org.
 func CheckOrgAccess(
 	config_obj *config_proto.Config,
 	r *http.Request,
@@ -54,6 +56,14 @@ func CheckOrgAccess(
 	err := _checkOrgAccess(r, org_id, user_record)
 	if err == nil {
 		return nil
+	}
+
+	// For the root org or an unknown org we switch to another org,
+	// otherwise we need to give the user a more specific error that
+	// they are not authorized for this org.
+	if !utils.IsRootOrg(org_id) &&
+		!errors.Is(err, services.OrgNotFoundError) {
+		return err
 	}
 
 	ctx := r.Context()
@@ -111,7 +121,8 @@ func _checkOrgAccess(r *http.Request, org_id string, user_record *api_proto.Velo
 	}
 
 	if !perm || user_record.Locked {
-		return errors.New("Unauthorized username")
+		return fmt.Errorf("User %v accessing %v: %w",
+			user_record.Name, org_id, utils.NoAccessToOrgError)
 	}
 
 	return nil

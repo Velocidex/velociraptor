@@ -61,7 +61,7 @@ func (self *HumanizeFunction) Call(ctx context.Context,
 		return humanize.Bytes(uint64(arg.Bytes))
 	}
 
-	return humanize.IBytes(uint64(arg.Bytes))
+	return humanize.IBytes(uint64(arg.IBytes))
 }
 
 func (self HumanizeFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

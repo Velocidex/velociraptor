@@ -103,12 +103,26 @@ class VeloTimestamp extends Component {
         }
 
         let timezone = this.context.traits.timezone || "UTC";
-        var when = moment(ts);
+        let when = moment(ts);
+        let when_tz = moment.tz(when, timezone);
+        let formatted_ts = when_tz.format("YYYY-MM-DDTHH:mm:ss");
+
+        let fractional_part = when_tz.format(".SSS");
+        if (fractional_part === ".000") {
+            fractional_part = "";
+        }
+        formatted_ts += fractional_part;
+        if (when_tz.isUtc()) {
+            formatted_ts += "Z";
+        } else {
+            formatted_ts += when_tz.format("Z");
+        }
+
         return <OverlayTrigger
                  delay={{show: 250, hide: 400}}
                  overlay={(props)=>renderToolTip(props, ts)}>
                  <div className="timestamp">
-                   {moment.tz(when, timezone).format()}
+                   {formatted_ts}
                  </div>
                </OverlayTrigger>;
     };
