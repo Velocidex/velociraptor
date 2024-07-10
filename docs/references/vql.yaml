@@ -3345,6 +3345,8 @@
     description: 'A SID to lookup using LookupAccountSid '
     required: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: lowcase
   description: Returns the lowercase version of a string.
   type: Function
@@ -6178,6 +6180,16 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_WRITE
+- name: threads
+  description: Enumerate threads in a process.
+  type: Plugin
+  args:
+  - name: pid
+    type: int64
+    description: The PID to get the thread for.
+    required: true
+  metadata:
+    permissions: MACHINE_STATE
 - name: timeline
   description: Read a timeline. You can create a timeline with the timeline_add()
     function
@@ -7082,6 +7094,17 @@
   - name: timeout
     type: uint64
     description: If provided we stop after this much time
+  - name: capture_state
+    type: bool
+    description: If true, capture the state of the provider when the event is triggered
+  - name: enable_map_info
+    type: bool
+    description: Resolving MapInfo with TdhGetEventMapInformation is very expensive
+      and causes events to be dropped so we disabled it by default. Enable with this
+      flag.
+  - name: description
+    type: string
+    description: Description for this GUID provider
   category: event
 - name: watch_evtx
   description: |
@@ -7187,6 +7210,50 @@
     type: string
     description: Object namespace path.
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
+- name: winpmem
+  description: |
+    Uses the `winpmem` driver to take a memory image.
+
+    This plugin is also needed to facilitate the winpmem accessor.
+
+    When the `image_path` parameter is not set this function will load
+    the `winpmem` driver until the scope is destroyed at the end of
+    the query (where the driver will be unloaded).
+
+    If the `image_path` parameter is give, the path will be used to
+    create a raw memory image. The image can be compressed using a
+    number of algorithms such as:
+
+    1. None - no compression (default)
+
+    2. S2 or snappy - these are fast algorithms with poor compression
+       ratio but should result in some speed up over no compression.
+
+    3. The Gzip method is used to produce a compatible gzip file. This
+       is very slow and so it is not suitable for large memory systems
+       as there will be too much smear.
+
+
+    # Example
+
+    ```vql
+    SELECT winpmem(image_path='c:/test.dd', compression='s2') FROM scope()"
+    ```
+
+  type: Function
+  args:
+  - name: service
+    type: string
+    description: The name of the driver service to install.
+  - name: image_path
+    type: string
+    description: If specified we write a physical memory image on this path.
+  - name: compression
+    type: string
+    description: When writing a memory image use this compression (default none) can
+      be none, s2, snappy, gzip.
   metadata:
     permissions: MACHINE_STATE
 - name: wmi
@@ -7455,4 +7522,3 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
-
