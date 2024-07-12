@@ -1,0 +1,131 @@
+SELECT
+    -- Empty array
+    array(),
+
+    -- Initialize from keywords in order of appearance.
+    array(b=1, a=2),
+
+    -- Nested arrays are not expanded
+    array(a=[1,2], b=[3,4]),
+
+    -- Explicit initializer
+    array(_=[1, 2]),
+    array(_=[1, 2], extra=3),
+    array(_=dict(Foo=1)),
+
+    -- Explicit initializer with subquery
+    array(_={SELECT * FROM range(end=5) }),
+
+    -- Array addition is concatenation
+    array(a=1, b=2) + array(a=3, b=4),
+
+    -- Nested array with dict
+    array(a=dict(Key=1), b=dict(Key=2)),
+
+    -- Mixed types for arrays
+    array(a={ SELECT * FROM range(end=5)},
+          b={ SELECT * FROM range(end=5)},
+          c="I am a string")
+
+FROM scope()
+[
+ {
+  "array()": [],
+  "array(b=1, a=2)": [
+   1,
+   2
+  ],
+  "array(a=[1, 2], b=[3, 4])": [
+   [
+    1,
+    2
+   ],
+   [
+    3,
+    4
+   ]
+  ],
+  "array(_=[1, 2])": [
+   1,
+   2
+  ],
+  "array(_=[1, 2], extra=3)": [
+   1,
+   2,
+   3
+  ],
+  "array(_=dict(Foo=1))": [
+   {
+    "Foo": 1
+   }
+  ],
+  "array(_={ SELECT * FROM range(end=5) })": [
+   {
+    "_value": 0
+   },
+   {
+    "_value": 1
+   },
+   {
+    "_value": 2
+   },
+   {
+    "_value": 3
+   },
+   {
+    "_value": 4
+   }
+  ],
+  "array(a=1, b=2) + array(a=3, b=4)": [
+   1,
+   2,
+   3,
+   4
+  ],
+  "array(a=dict(Key=1), b=dict(Key=2))": [
+   {
+    "Key": 1
+   },
+   {
+    "Key": 2
+   }
+  ],
+  "array(a={ SELECT * FROM range(end=5) }, b={ SELECT * FROM range(end=5) }, c=\"I am a string\")": [
+   [
+    {
+     "_value": 0
+    },
+    {
+     "_value": 1
+    },
+    {
+     "_value": 2
+    },
+    {
+     "_value": 3
+    },
+    {
+     "_value": 4
+    }
+   ],
+   [
+    {
+     "_value": 0
+    },
+    {
+     "_value": 1
+    },
+    {
+     "_value": 2
+    },
+    {
+     "_value": 3
+    },
+    {
+     "_value": 4
+    }
+   ],
+   "I am a string"
+  ]
+ }
+]

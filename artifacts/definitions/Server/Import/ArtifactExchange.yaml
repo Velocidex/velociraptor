@@ -1,7 +1,27 @@
 name: Server.Import.ArtifactExchange
 description: |
-   This artifact will automatically import the latest
-   artifact exchange bundle into the current server.
+   This artifact will automatically import the latest artifact
+   exchange bundle into the current server.
+
+   ## Security note
+
+   The artifact exchange is not officially supported by the
+   Velociraptor team and contains contributions from the
+   community. The quality, security and stability of artifacts from
+   the exchange is not guaranteed. Some artifacts from the exchange
+   will fetch external binaries and run them on your endpoints! These
+   binaries are not reviewed or endorsed by the Velociraptor team or
+   Rapid7!
+
+   Contributions to the exchange must meet a lower quality bar than
+   built in artifacts (for example lacking tests), which means that
+   they may break at any time or not work as described!
+
+   Collecting any of the artifacts in the exchange is purely at your
+   own risk!.
+
+   We strongly suggest users review exchange artifacts carefully
+   before deploying them on their network!
 
 type: SERVER
 

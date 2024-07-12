@@ -29,67 +29,45 @@ import (
 	"www.velocidex.com/golang/vfilter/types"
 )
 
-type ArrayFunction struct{}
-
-func flatten(ctx context.Context, scope vfilter.Scope, a vfilter.Any, depth int) []vfilter.Any {
-	var result []vfilter.Any
-
-	if depth > 4 {
-		return result
-	}
-
-	switch t := a.(type) {
-	case types.LazyExpr:
-		a = t.Reduce(ctx)
-
-	case types.StoredQuery:
-		for row := range t.Eval(ctx, scope) {
-			// Special case a single column means the
-			// value is taken directly.
-			members := scope.GetMembers(row)
-			if len(members) == 1 {
-				row, _ = scope.Associative(row, members[0])
-			}
-			flattened := flatten(ctx, scope, row, depth+1)
-			result = append(result, flattened...)
-		}
-		return result
-	}
-
-	a_value := reflect.Indirect(reflect.ValueOf(a))
-	a_type := a_value.Type()
-
-	if a_type.Kind() == reflect.Slice {
-		for i := 0; i < a_value.Len(); i++ {
-			element := a_value.Index(i).Interface()
-			flattened := flatten(ctx, scope, element, depth+1)
-
-			result = append(result, flattened...)
-		}
-		return result
-	}
-
-	members := scope.GetMembers(a)
-	if len(members) > 0 {
-		for _, item := range members {
-			value, pres := scope.Associative(a, item)
-			if pres {
-				result = append(result, flatten(
-					ctx, scope, value, depth+1)...)
-			}
-		}
-
-		return result
-	}
-
-	return []vfilter.Any{a}
+type ArrayFunctionArgs struct {
+	Value vfilter.Any `vfilter:"optional,field=_,doc=If specified we initialize the array from this parameter."`
 }
+
+type ArrayFunction struct{}
 
 func (self *ArrayFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	defer vql_subsystem.RegisterMonitor("flatten", args)()
-	return flatten(ctx, scope, args, 0)
+	defer vql_subsystem.RegisterMonitor("array", args)()
+
+	result := []vfilter.Any{}
+
+	value, pres := args.Get("_")
+	if pres {
+		value = vql_subsystem.Materialize(ctx, scope, value)
+
+		a_value := reflect.Indirect(reflect.ValueOf(value))
+		a_type := a_value.Type()
+		if a_type.Kind() == reflect.Slice {
+			for i := 0; i < a_value.Len(); i++ {
+				result = append(result, a_value.Index(i).Interface())
+			}
+		} else {
+			result = append(result, value)
+		}
+	}
+
+	for _, key := range args.Keys() {
+		if key == "_" {
+			continue
+		}
+
+		value, _ := args.Get(key)
+		value = vql_subsystem.Materialize(ctx, scope, value)
+		result = append(result, value)
+	}
+
+	return result
 }
 
 func (self ArrayFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
