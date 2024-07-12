@@ -207,7 +207,7 @@ func send_error(ws *http_comms.Conn, err error, code int) error {
 	ws.WriteMessageWithDeadline(websocket.BinaryMessage, serialized, deadline)
 
 	// Wait for the message to be sent to the client side
-	time.Sleep(time.Second)
+	// time.Sleep(time.Second)
 
 	return nil
 }

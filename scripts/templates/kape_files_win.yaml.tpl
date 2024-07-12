@@ -71,11 +71,19 @@ sources:
     query: |
       LET VSS_MAX_AGE_DAYS <= VSSAnalysisAge
 
-      -- Select all the rule Ids to be included depending on the group
-      -- selection.
-      LET targets <= SELECT * FROM parse_csv(
-           filename=KapeTargets, accessor="data")
-      WHERE get(member=Group) AND log(message="Selecting " + Group)
+      -- Filter the KapeTargets list by the groups that are enabled in
+      -- the scope. Only the rows which contain a Group name defined
+      -- as TRUE in the scope (parameter) will be included. We then
+      -- merge all the Ids into a single flattened list we can check
+      -- against.
+      LET targets <= SELECT * FROM foreach(row={
+        SELECT * FROM parse_csv(accessor="data", filename=KapeTargets)
+        WHERE get(member=Group) AND log(message="Selecting " + Group)
+      }, query={
+        SELECT _value AS Id FROM foreach(row=RuleIds)
+      })
+
+      LET EnabledIds <= targets.Id
 
       -- Filter only the rules in the rule table that have an Id we
       -- want. Targets with $ in their name probably refer to ntfs
@@ -84,12 +92,12 @@ sources:
       -- necessary - they are designated with the lazy_ntfs accessor.
       LET rule_specs_ntfs <= SELECT Id, Glob
         FROM parse_csv(filename=KapeRules, accessor="data")
-        WHERE Id in array(array=targets.RuleIds) AND Accessor='ntfs'
+        WHERE Id in EnabledIds AND Accessor='ntfs'
         AND log(message="ntfs: Selecting glob " + Glob)
 
       LET rule_specs_lazy_ntfs <= SELECT Id, Glob
         FROM parse_csv(filename=KapeRules, accessor="data")
-        WHERE Id in array(array=targets.RuleIds) AND Accessor='lazy_ntfs'
+        WHERE Id in EnabledIds AND Accessor='lazy_ntfs'
         AND log(message="auto: Selecting glob " + Glob)
 
       -- Call the generic VSS file collector with the globs we want in

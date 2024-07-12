@@ -1,34 +1,50 @@
 name: Windows.Memory.Acquisition
 description: |
-  Acquires a full memory image. We download winpmem and use it to
-  acquire a full memory image.
+  Acquires a full memory image using the built in WinPmem driver.
 
   NOTE: This artifact usually transfers a lot of data. You should
   increase the default timeout to allow it to complete.
 
-tools:
-  - name: WinPmem64
-    github_project: Velocidex/WinPmem
-    github_asset_regex: winpmem_mini_x64.+exe
-    serve_locally: true
+  Memory images are typically susceptible to a lot of smear. To
+  minimize this we need to acquire memory as quickly as possible. This
+  artifact offers a few compression methods for the output
+  file. Reducing the size of the file will decrease time needed for IO
+  but will increase CPU requirements so this is a
+  tradeoff. Empirically we found that using S2 compression gives a
+  reasonable compression and very high speed reducing acquisition time
+  from the no compression options significantly.
+
+  To decompress the image you can use the [Go Winpmem binary](https://github.com/Velocidex/WinPmem/releases/download/v4.0.rc1/go-winpmem_amd64_1.0-rc1.exe)
+
+  ```
+  go-winpmem.exe expand image.compressed image.raw
+  ```
 
 precondition: |
   SELECT OS FROM info()
   WHERE OS = 'windows'
     AND Architecture = "amd64"
+    AND version(function='winpmem') >= 0
+
+parameters:
+  - name: ServiceName
+    description: Override the name of the driver service to install.
+  - name: Compression
+    default: None
+    type: choices
+    description: Type of compression to use (Recommended None, S2 or Snappy).
+    choices:
+      - None
+      - S2
+      - Snappy
+      - Gzip
 
 sources:
   - query: |
-      LET Tempfile <= tempfile(extension=".raw")
+      LET Tempfile <= tempfile(extension=".pmem")
 
-      SELECT * FROM foreach(
-          row={
-            SELECT OSPath
-            FROM Artifact.Generic.Utils.FetchBinary(ToolName="WinPmem64")
-          },
-          query={
-            SELECT Stdout, Stderr,
-                   if(condition=Complete,
-                      then=upload(file=Tempfile, name="PhysicalMemory.raw")) As Upload
-            FROM execve(argv=[OSPath, Tempfile], sep="\r\n")
-        })
+      LET ImageInfo <= winpmem(image_path=Tempfile, compression=Compression)
+
+      SELECT ImageInfo, upload(file=Tempfile, name="PhysicalMemory.dd") AS Upload
+      FROM stat(filename=Tempfile)
+      WHERE log(message="Uploading %v bytes", args=Size)

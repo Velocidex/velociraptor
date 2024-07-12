@@ -49,11 +49,18 @@ parameters:
 sources:
   - name: All File Metadata
     query: |
-      -- Select all the rule Ids to be included depending on the group
-      -- selection.
-      LET targets <= SELECT * FROM parse_csv(
-           filename=KapeTargets, accessor="data")
-      WHERE get(member=Group) AND log(message="Selecting " + Group)
+      -- Filter the KapeTargets list by the groups that are enabled in
+      -- the scope. Only the rows which contain a Group name defined
+      -- as TRUE in the scope (parameter) will be included. We then
+      -- merge all the Ids into a single flattened list we can check
+      -- against.
+      LET targets <= SELECT RuleIds
+      FROM flatten(
+          query={
+            SELECT Group, RuleIds
+            FROM parse_csv(accessor="data", filename=KapeTargets)
+            WHERE get(member=Group) AND log(message="Selecting " + Group)
+      })
 
       -- Filter only the rules in the rule table that have an Id we
       -- want. Targets with $ in their name probably refer to ntfs
@@ -62,7 +69,7 @@ sources:
       -- necessary - they are designated with the lazy_ntfs accessor.
       LET rule_specs <= SELECT Id, Glob
         FROM parse_csv(filename=KapeRules, accessor="data")
-        WHERE Id in array(array=targets.RuleIds)
+        WHERE Id in targets.RuleIds
         AND log(message="file: Selecting glob " + Glob)
 
       -- Call the generic VSS file collector with the globs we want in
