@@ -98,7 +98,7 @@ func (self *MEFileSystemAccessor) LstatWithOSPath(
 		return nil, err
 	}
 
-	return root.GetZipInfo(full_path)
+	return root.GetZipInfo(full_path, false)
 }
 
 func (self *MEFileSystemAccessor) Open(serialized_path string) (
@@ -121,7 +121,7 @@ func (self *MEFileSystemAccessor) OpenWithOSPath(
 	}
 
 	// Get the zip member from the zip file.
-	fd, err := zip_file_cache.Open(full_path)
+	fd, err := zip_file_cache.Open(full_path, false)
 	if err != nil {
 		zip_file_cache.Close()
 		return nil, err
@@ -148,7 +148,7 @@ func (self *MEFileSystemAccessor) ReadDirWithOSPath(
 		return nil, err
 	}
 
-	children, err := root.GetChildren(full_path)
+	children, err := root.GetChildren(full_path, false)
 	if err != nil {
 		return nil, err
 	}
