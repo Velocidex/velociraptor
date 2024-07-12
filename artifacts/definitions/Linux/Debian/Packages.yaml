@@ -1,30 +1,146 @@
 name: Linux.Debian.Packages
-description: Parse dpkg status file.
+description: |
+ List all packages installed on the system, both deb packages and "snaps".
+ The installed deb package information is fetched from the DPKG status file,
+ while the snap package list is fetched from the snap daemon through a UNIX
+ socket HTTP call (since detailed snap package information is not easily
+ in files).
+
+ The following columns are parsed from the DPKG status file:
+
+  - Package
+  - InstalledSize
+  - Version
+  - Source
+  - _Description
+  - Architecture
+
+ The following columns are parsed from the snap package response (/v2/snaps):
+
+ - Name
+ - _Summary
+ - _Description
+ - InstalledSize
+ - Publisher
+ - InstalledAt
+ - Version
+ - Channel
+
+ Both package sources provide more information than this and, and the artifact
+ can easily be modified to include more details.
+
 parameters:
   - name: linuxDpkgStatus
+    description: The DPKG status file to read deb package information from
     default: /var/lib/dpkg/status
+  - name: snapdSocket
+    description: |
+     The location of the snap deamon UNIX socket, used for fetching the snap
+     list through a HTTP API call. If snap is not used, the failed query
+     response will simply be ignored.
+    default: /run/snapd.socket
+
+precondition: |
+ SELECT OS
+ FROM info()
+ WHERE OS = 'linux'
+
 sources:
-  - precondition: |
-      SELECT OS From info() where OS = 'linux'
+  - name: DebPackages
     query: |
-        /* First pass - split file into records start with
-           Package and end with \n\n.
+     LET ColumnTypes <= dict(`_Description`='nobreak')
 
-           Then parse each record using multiple RegExs.
-        */
-        LET packages = SELECT parse_string_with_regex(
-            string=Record,
-            regex=['Package:\\s(?P<Package>.+)',
-                   'Installed-Size:\\s(?P<InstalledSize>.+)',
-                   'Version:\\s(?P<Version>.+)',
-                   'Source:\\s(?P<Source>.+)',
-                   'Architecture:\\s(?P<Architecture>.+)']) as Record
-            FROM parse_records_with_regex(
-                   file=linuxDpkgStatus,
-                   regex='(?sm)^(?P<Record>Package:.+?)\\n\\n')
+     /* First pass - split file into records start with
+        Package and end with \n\n.
+        Then parse each record using multiple RegExs.
+     */
+     LET packages = SELECT 
+                           parse_string_with_regex(
+                             string=Record,
+                             regex=['Package:\\s(?P<Package>.+)', 'Installed-Size:\\s(?P<InstalledSize>.+)', 'Version:\\s(?P<Version>.+)', 'Source:\\s(?P<Source>.+)', '''Description:\s+(?P<Description>.+(\n\s+.+)*)''', 'Architecture:\\s(?P<Architecture>.+)']) AS Record
+       FROM parse_records_with_regex(file=linuxDpkgStatus,
+                                     regex='(?sm)^(?P<Record>Package:.+?)\\n\\n')
 
-        SELECT Record.Package as Package,
-               atoi(string=Record.InstalledSize) as InstalledSize,
-               Record.Version as Version,
-               Record.Source as Source,
-               Record.Architecture as Architecture from packages
+     LET DebPackages <= SELECT 
+                               Record.Package AS Package,
+                               humanize(
+                                 bytes=atoi(
+                                   string=Record.InstalledSize)) AS InstalledSize,
+                               Record.Version AS Version,
+                               Record.Source AS Source,
+                               regex_replace(
+                                 source=Record.Description,
+                                 re='''^\s+\.$''') AS _Description,
+                               Record.Architecture AS Architecture
+       FROM packages
+     SELECT *
+     FROM DebPackages
+
+  - name: Snaps
+    query: |
+     LET ColumnTypes <= dict(`_Summary`='nobreak', `_Description`='nobreak')
+
+     LET Response <= SELECT Response,
+                            Content
+       FROM http_client(url=snapdSocket + ':unix/v2/snaps')
+
+     LET Snaps = SELECT *
+       FROM if(
+         condition={
+           SELECT *
+           FROM Response
+           WHERE Response = 200
+         },
+         then={
+           SELECT 
+                  parse_json(data=Content).result AS result
+           FROM Response
+         },
+         else={
+           /* Return an empty array if the query failed: */
+           SELECT 
+                  filter(list=array(), condition='x=>x') AS result
+           FROM scope()
+         })
+
+     LET Snaps <= SELECT *
+       FROM foreach(
+         row=Snaps.result,
+         query={
+           SELECT name AS Name,
+                  summary AS _Summary,
+                  description AS _Description,
+                  humanize(bytes=`installed-size`) AS InstalledSize,
+                  publisher.`display-name` AS Publisher,
+                  timestamp(string=`install-date`) AS InstalledAt,
+                  version AS Version,
+                  channel AS Channel
+           FROM _value
+         })
+     SELECT *
+     FROM Snaps
+
+  - name: Packages
+    query: |
+     LET ColumnTypes <= dict(`_Description`='nobreak')
+
+     SELECT *
+     FROM chain(
+       debs={
+         SELECT Package AS Name,
+                'deb' AS Type,
+                InstalledSize,
+                Version,
+                _Description,
+                Architecture
+         FROM DebPackages
+       },
+       snaps={
+         SELECT Name,
+                'snap' AS Type,
+                InstalledSize,
+                Version,
+                _Description,
+                NULL AS Architecture
+         FROM Snaps
+       })

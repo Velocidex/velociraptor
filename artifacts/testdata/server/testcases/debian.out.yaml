@@ -663,45 +663,95 @@ FROM Artifact.Linux.Debian.AptSources( source="SourcesCacheFiles", linuxAptSourc
   "URIs": "http://au.archive.ubuntu.com/ubuntu",
   "_Source": "Linux.Debian.AptSources/SourcesCacheFiles"
  }
-]SELECT * FROM Artifact.Linux.Debian.Packages( linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status")[
+]SELECT * FROM Artifact.Linux.Debian.Packages( linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status", snapdSocket=srcDir + "/artifacts/testdata/files/debian/snaps.json" )[
  {
   "Package": "adduser",
-  "InstalledSize": 608,
+  "InstalledSize": "608 B",
   "Version": "3.118ubuntu5",
   "Source": null,
+  "_Description": "add and remove users and groups\n This package includes the 'adduser' and 'deluser' commands for creating\n and removing users.\n .\n  - 'adduser' creates new users and groups and adds existing users to\n    existing groups;\n  - 'deluser' removes users and groups and removes users from a given\n    group.\n .\n Adding users with 'adduser' is much easier than adding them manually.\n Adduser will choose appropriate UID and GID values, create a home\n directory, copy skeletal user configuration, and automate setting\n initial values for the user's password, real name and so on.\n .\n Deluser can back up and remove users' home directories\n and mail spool or all the files they own on the system.\n .\n A custom script can be executed after each of the commands.",
   "Architecture": "all",
-  "_Source": "Linux.Debian.Packages"
+  "_Source": "Linux.Debian.Packages/DebPackages"
  },
  {
   "Package": "adwaita-icon-theme",
-  "InstalledSize": 5234,
+  "InstalledSize": "5.2 kB",
   "Version": "41.0-1ubuntu1",
   "Source": null,
+  "_Description": "default icon theme of GNOME (small subset)\n This package contains the default icon theme used by the GNOME desktop.\n The icons are used in many of the official gnome applications like eog,\n evince, system monitor, and many more.\n .\n This package only contains a small subset of the original GNOME icons which\n are not provided by the Humanity icon theme, to avoid installing many\n duplicated icons. Please install adwaita-icon-theme-full if you want the full\n set.",
   "Architecture": "all",
-  "_Source": "Linux.Debian.Packages"
+  "_Source": "Linux.Debian.Packages/DebPackages"
  },
  {
   "Package": "adwaita-icon-theme-full",
-  "InstalledSize": 21330,
+  "InstalledSize": "21 kB",
   "Version": "41.0-1ubuntu1",
   "Source": "adwaita-icon-theme",
+  "_Description": "default icon theme of GNOME\n This package contains the default icon theme used by the GNOME desktop.\n The icons are used in many of the official GNOME applications like eog,\n Evince, system monitor, and many more.",
   "Architecture": "all",
-  "_Source": "Linux.Debian.Packages"
+  "_Source": "Linux.Debian.Packages/DebPackages"
  },
  {
   "Package": "alsa-topology-conf",
-  "InstalledSize": 420,
+  "InstalledSize": "420 B",
   "Version": "1.2.5.1-2",
   "Source": null,
+  "_Description": "ALSA topology configuration files\n This package contains ALSA topology configuration files that can be used\n by libasound2 for specific audio hardware.\n .\n ALSA is the Advanced Linux Sound Architecture.",
   "Architecture": "all",
-  "_Source": "Linux.Debian.Packages"
+  "_Source": "Linux.Debian.Packages/DebPackages"
  },
  {
   "Package": "alsa-ucm-conf",
-  "InstalledSize": 560,
+  "InstalledSize": "560 B",
   "Version": "1.2.6.3-1ubuntu1.7",
   "Source": null,
+  "_Description": "ALSA Use Case Manager configuration files\n This package contains ALSA Use Case Manager configuration of audio\n input/output names and routing for specific audio hardware. They can be\n used with the alsaucm tool.\n .\n ALSA is the Advanced Linux Sound Architecture.",
   "Architecture": "all",
-  "_Source": "Linux.Debian.Packages"
+  "_Source": "Linux.Debian.Packages/DebPackages"
+ },
+ {
+  "Name": "adduser",
+  "Type": "deb",
+  "InstalledSize": "608 B",
+  "Version": "3.118ubuntu5",
+  "_Description": "add and remove users and groups\n This package includes the 'adduser' and 'deluser' commands for creating\n and removing users.\n .\n  - 'adduser' creates new users and groups and adds existing users to\n    existing groups;\n  - 'deluser' removes users and groups and removes users from a given\n    group.\n .\n Adding users with 'adduser' is much easier than adding them manually.\n Adduser will choose appropriate UID and GID values, create a home\n directory, copy skeletal user configuration, and automate setting\n initial values for the user's password, real name and so on.\n .\n Deluser can back up and remove users' home directories\n and mail spool or all the files they own on the system.\n .\n A custom script can be executed after each of the commands.",
+  "Architecture": "all",
+  "_Source": "Linux.Debian.Packages/Packages"
+ },
+ {
+  "Name": "adwaita-icon-theme",
+  "Type": "deb",
+  "InstalledSize": "5.2 kB",
+  "Version": "41.0-1ubuntu1",
+  "_Description": "default icon theme of GNOME (small subset)\n This package contains the default icon theme used by the GNOME desktop.\n The icons are used in many of the official gnome applications like eog,\n evince, system monitor, and many more.\n .\n This package only contains a small subset of the original GNOME icons which\n are not provided by the Humanity icon theme, to avoid installing many\n duplicated icons. Please install adwaita-icon-theme-full if you want the full\n set.",
+  "Architecture": "all",
+  "_Source": "Linux.Debian.Packages/Packages"
+ },
+ {
+  "Name": "adwaita-icon-theme-full",
+  "Type": "deb",
+  "InstalledSize": "21 kB",
+  "Version": "41.0-1ubuntu1",
+  "_Description": "default icon theme of GNOME\n This package contains the default icon theme used by the GNOME desktop.\n The icons are used in many of the official GNOME applications like eog,\n Evince, system monitor, and many more.",
+  "Architecture": "all",
+  "_Source": "Linux.Debian.Packages/Packages"
+ },
+ {
+  "Name": "alsa-topology-conf",
+  "Type": "deb",
+  "InstalledSize": "420 B",
+  "Version": "1.2.5.1-2",
+  "_Description": "ALSA topology configuration files\n This package contains ALSA topology configuration files that can be used\n by libasound2 for specific audio hardware.\n .\n ALSA is the Advanced Linux Sound Architecture.",
+  "Architecture": "all",
+  "_Source": "Linux.Debian.Packages/Packages"
+ },
+ {
+  "Name": "alsa-ucm-conf",
+  "Type": "deb",
+  "InstalledSize": "560 B",
+  "Version": "1.2.6.3-1ubuntu1.7",
+  "_Description": "ALSA Use Case Manager configuration files\n This package contains ALSA Use Case Manager configuration of audio\n input/output names and routing for specific audio hardware. They can be\n used with the alsaucm tool.\n .\n ALSA is the Advanced Linux Sound Architecture.",
+  "Architecture": "all",
+  "_Source": "Linux.Debian.Packages/Packages"
  }
 ]

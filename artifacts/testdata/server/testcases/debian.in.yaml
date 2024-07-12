@@ -29,4 +29,6 @@ Queries:
 
  - SELECT *
    FROM Artifact.Linux.Debian.Packages(
-      linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status")
+      linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status",
+      snapdSocket=srcDir + "/artifacts/testdata/files/debian/snaps.json"
+      )
