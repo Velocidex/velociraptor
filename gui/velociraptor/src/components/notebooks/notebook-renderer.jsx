@@ -189,6 +189,7 @@ export default class NotebookRenderer extends React.Component {
                            notebook_id={this.props.notebook.notebook_id}
                            notebook_metadata={this.props.notebook}
                            cell_metadata={cell_md} key={idx}
+                           fetchNotebooks={this.props.fetchNotebooks}
                            upCell={this.upCell}
                            downCell={this.downCell}
                            deleteCell={this.deleteCell}

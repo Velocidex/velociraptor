@@ -453,7 +453,9 @@ GUI:
   ## Bind the GUI to this port. By default: For self signed SSL the
   ## GUI will be bound to the localhost only!  For Let's Encrypt
   ## deployments the GUI will be bound on 0.0.0.0 making it accessible
-  ## from anywhere.
+  ## from anywhere. NOTE: The **only** valid settings here are 0.0.0.0
+  ## for external access and 127.0.0.1 for localhost - Do not specify
+  ## any other address unless you know what you are doing!
   bind_address: 127.0.0.1
 
   ## Bind port for the GUI. When using Let's Encrypt the GUI is bound

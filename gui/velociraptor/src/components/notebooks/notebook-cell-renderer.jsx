@@ -158,6 +158,9 @@ export default class NotebookCellRenderer extends React.Component {
 
         // func(notebook_cell_id, text, type, env)
         addCell: PropTypes.func,
+
+        // Causes the notebooks to be refreshed
+        fetchNotebooks: PropTypes.func,
     };
 
     state = {
@@ -468,9 +471,9 @@ export default class NotebookCellRenderer extends React.Component {
                     this.state.ace.setValue(response.data.input);
                 }
 
-            } else {
-                this.fetchCellContents();
-            }
+            };
+        }).catch(response=>{
+            this.props.fetchNotebooks();
         });
     };
 
@@ -488,7 +491,9 @@ export default class NotebookCellRenderer extends React.Component {
             if (response.cancel) {
                 return;
             }
-            this.fetchCellContents();
+
+            // Refresh the notebook with the current cell version.
+            this.props.fetchNotebooks();
         });
     }
 
