@@ -179,7 +179,7 @@ func (self *LogContext) AddListener(c chan string) func() {
 	defer self.mu.Unlock()
 
 	if self.listeners == nil {
-		self.listeners = make(map[uint64]chan string)
+		self.listeners = make(map[uint64]chan string, 10)
 	}
 
 	id := utils.GetId()
