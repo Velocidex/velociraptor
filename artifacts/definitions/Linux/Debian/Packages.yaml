@@ -47,6 +47,9 @@ precondition: |
 
 sources:
   - name: DebPackages
+    notebook:
+      - type: none
+
     query: |
      LET ColumnTypes <= dict(`_Description`='nobreak')
 
@@ -54,58 +57,39 @@ sources:
         Package and end with \n\n.
         Then parse each record using multiple RegExs.
      */
-     LET packages = SELECT 
-                           parse_string_with_regex(
-                             string=Record,
-                             regex=['Package:\\s(?P<Package>.+)', 'Installed-Size:\\s(?P<InstalledSize>.+)', 'Version:\\s(?P<Version>.+)', 'Source:\\s(?P<Source>.+)', '''Description:\s+(?P<Description>.+(\n\s+.+)*)''', 'Architecture:\\s(?P<Architecture>.+)']) AS Record
-       FROM parse_records_with_regex(file=linuxDpkgStatus,
+     LET packages = SELECT parse_string_with_regex(
+         string=Record,
+         regex=['Package:\\s(?P<Package>.+)',
+                'Installed-Size:\\s(?P<InstalledSize>.+)',
+                'Version:\\s(?P<Version>.+)',
+                'Source:\\s(?P<Source>.+)',
+                '''Description:\s+(?P<Description>.+(\n\s+.+)*)''',
+                'Architecture:\\s(?P<Architecture>.+)']) AS Record
+     FROM parse_records_with_regex(file=linuxDpkgStatus,
                                      regex='(?sm)^(?P<Record>Package:.+?)\\n\\n')
 
-     LET DebPackages <= SELECT 
-                               Record.Package AS Package,
-                               humanize(
-                                 bytes=atoi(
-                                   string=Record.InstalledSize)) AS InstalledSize,
-                               Record.Version AS Version,
-                               Record.Source AS Source,
-                               regex_replace(
-                                 source=Record.Description,
-                                 re='''^\s+\.$''') AS _Description,
-                               Record.Architecture AS Architecture
-       FROM packages
-     SELECT *
-     FROM DebPackages
+     SELECT Record.Package AS Package,
+            humanize(bytes=atoi(string=Record.InstalledSize)) AS InstalledSize,
+            Record.Version AS Version,
+            Record.Source AS Source,
+            regex_replace(source=Record.Description,
+                          re='''^\s+\.$''') AS _Description,
+            Record.Architecture AS Architecture
+     FROM packages
 
   - name: Snaps
     query: |
      LET ColumnTypes <= dict(`_Summary`='nobreak', `_Description`='nobreak')
 
-     LET Response <= SELECT Response,
-                            Content
+     LET SnapSocketCheck = SELECT
+         parse_json(data=Content).result AS Result
        FROM http_client(url=snapdSocket + ':unix/v2/snaps')
+       WHERE if(condition=Response != 200,
+          then=log(message="Error fetching snap: %v", args=Content),
+          else=TRUE)
 
-     LET Snaps = SELECT *
-       FROM if(
-         condition={
-           SELECT *
-           FROM Response
-           WHERE Response = 200
-         },
-         then={
-           SELECT 
-                  parse_json(data=Content).result AS result
-           FROM Response
-         },
-         else={
-           /* Return an empty array if the query failed: */
-           SELECT 
-                  filter(list=array(), condition='x=>x') AS result
-           FROM scope()
-         })
-
-     LET Snaps <= SELECT *
-       FROM foreach(
-         row=Snaps.result,
+     SELECT * FROM foreach(
+         row=SnapSocketCheck,
          query={
            SELECT name AS Name,
                   summary AS _Summary,
@@ -114,33 +98,36 @@ sources:
                   publisher.`display-name` AS Publisher,
                   timestamp(string=`install-date`) AS InstalledAt,
                   version AS Version,
-                  channel AS Channel
-           FROM _value
+                  channel AS Channel,
+                  id AS PackageId
+           FROM foreach(row=Result)
          })
-     SELECT *
-     FROM Snaps
 
-  - name: Packages
-    query: |
-     LET ColumnTypes <= dict(`_Description`='nobreak')
+    notebook:
+      - type: vql
+        template: |
+          /*
+          ## Combined results
+          */
+          LET ColumnTypes <= dict(`_Description`='nobreak')
 
-     SELECT *
-     FROM chain(
-       debs={
-         SELECT Package AS Name,
-                'deb' AS Type,
-                InstalledSize,
-                Version,
-                _Description,
-                Architecture
-         FROM DebPackages
-       },
-       snaps={
-         SELECT Name,
-                'snap' AS Type,
-                InstalledSize,
-                Version,
-                _Description,
-                NULL AS Architecture
-         FROM Snaps
-       })
+          SELECT *
+          FROM chain(
+            debs={
+              SELECT Package AS Name,
+                     'deb' AS Type,
+                     InstalledSize,
+                     Version,
+                     _Description,
+                     Architecture
+              FROM source(artifact="Linux.Debian.Packages/DebPackages")
+            },
+            snaps={
+              SELECT Name,
+                     'snap' AS Type,
+                     InstalledSize,
+                     Version,
+                     _Description,
+                     NULL AS Architecture
+              FROM source(artifact="Linux.Debian.Packages/Snaps")
+            })

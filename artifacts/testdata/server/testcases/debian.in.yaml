@@ -26,9 +26,17 @@ Queries:
    )
    WHERE Record
 
+ # Mock http_client() with the content of snaps.json
+ - LET _ <= mock(plugin="http_client", results=[
+     dict(Response=200,
+          Content=read_file(filename=srcDir + "/artifacts/testdata/files/debian/snaps.json"))
+   ])
+
+ # Check both sources separately - first the DebPackages then the Snaps
+ - SELECT *
+   FROM Artifact.Linux.Debian.Packages(
+      linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status", source="DebPackages")
 
  - SELECT *
    FROM Artifact.Linux.Debian.Packages(
-      linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status",
-      snapdSocket=srcDir + "/artifacts/testdata/files/debian/snaps.json"
-      )
+      linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status", source="Snaps")

@@ -663,7 +663,7 @@ FROM Artifact.Linux.Debian.AptSources( source="SourcesCacheFiles", linuxAptSourc
   "URIs": "http://au.archive.ubuntu.com/ubuntu",
   "_Source": "Linux.Debian.AptSources/SourcesCacheFiles"
  }
-]SELECT * FROM Artifact.Linux.Debian.Packages( linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status", snapdSocket=srcDir + "/artifacts/testdata/files/debian/snaps.json" )[
+]LET _ <= mock(plugin="http_client", results=[ dict(Response=200, Content=read_file(filename=srcDir + "/artifacts/testdata/files/debian/snaps.json")) ])[]SELECT * FROM Artifact.Linux.Debian.Packages( linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status", source="DebPackages")[
  {
   "Package": "adduser",
   "InstalledSize": "608 B",
@@ -708,50 +708,198 @@ FROM Artifact.Linux.Debian.AptSources( source="SourcesCacheFiles", linuxAptSourc
   "_Description": "ALSA Use Case Manager configuration files\n This package contains ALSA Use Case Manager configuration of audio\n input/output names and routing for specific audio hardware. They can be\n used with the alsaucm tool.\n .\n ALSA is the Advanced Linux Sound Architecture.",
   "Architecture": "all",
   "_Source": "Linux.Debian.Packages/DebPackages"
+ }
+]SELECT * FROM Artifact.Linux.Debian.Packages( linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status", source="Snaps")[
+ {
+  "Name": "snapd-desktop-integration",
+  "_Summary": "Desktop Integration for snapd",
+  "_Description": "Provides a user session daemon used to provide a bridge between the user's session and snapd.  Used for things like automatic theme installation.",
+  "InstalledSize": "487 kB",
+  "Publisher": "Canonical",
+  "InstalledAt": "2024-04-05T07:13:42.855089577Z",
+  "Version": "0.9",
+  "Channel": "latest/stable",
+  "PackageId": "IrwRHakqtzhFRHJOOPxKVPU0Kk7Erhcu",
+  "_Source": "Linux.Debian.Packages/Snaps"
  },
  {
-  "Name": "adduser",
-  "Type": "deb",
-  "InstalledSize": "608 B",
-  "Version": "3.118ubuntu5",
-  "_Description": "add and remove users and groups\n This package includes the 'adduser' and 'deluser' commands for creating\n and removing users.\n .\n  - 'adduser' creates new users and groups and adds existing users to\n    existing groups;\n  - 'deluser' removes users and groups and removes users from a given\n    group.\n .\n Adding users with 'adduser' is much easier than adding them manually.\n Adduser will choose appropriate UID and GID values, create a home\n directory, copy skeletal user configuration, and automate setting\n initial values for the user's password, real name and so on.\n .\n Deluser can back up and remove users' home directories\n and mail spool or all the files they own on the system.\n .\n A custom script can be executed after each of the commands.",
-  "Architecture": "all",
-  "_Source": "Linux.Debian.Packages/Packages"
+  "Name": "gtk-common-themes",
+  "_Summary": "All the (common) themes",
+  "_Description": "A snap that exports the GTK and icon themes used on various Linux distros.\n",
+  "InstalledSize": "96 MB",
+  "Publisher": "Canonical",
+  "InstalledAt": "2023-04-30T12:50:44.726909645Z",
+  "Version": "0.1-81-g442e511",
+  "Channel": "",
+  "PackageId": "jZLfBRzf1cYlYysIjD2bwSzNtngY0qit",
+  "_Source": "Linux.Debian.Packages/Snaps"
  },
  {
-  "Name": "adwaita-icon-theme",
-  "Type": "deb",
-  "InstalledSize": "5.2 kB",
-  "Version": "41.0-1ubuntu1",
-  "_Description": "default icon theme of GNOME (small subset)\n This package contains the default icon theme used by the GNOME desktop.\n The icons are used in many of the official gnome applications like eog,\n evince, system monitor, and many more.\n .\n This package only contains a small subset of the original GNOME icons which\n are not provided by the Humanity icon theme, to avoid installing many\n duplicated icons. Please install adwaita-icon-theme-full if you want the full\n set.",
-  "Architecture": "all",
-  "_Source": "Linux.Debian.Packages/Packages"
+  "Name": "postman",
+  "_Summary": "API Development Environment",
+  "_Description": "Postman is an API platform for building and using APIs. Postman simplifies each step of the API lifecycle and streamlines collaboration so you can create better APIs -- faster. Over 30 million developers and 500,000 organizations use Postman, which is available for Mac OS X, Windows, Linux, and Chrome users.",
+  "InstalledSize": "181 MB",
+  "Publisher": "Postman, Inc.",
+  "InstalledAt": "2024-06-03T08:50:11.400598595Z",
+  "Version": "10.24.26",
+  "Channel": "v10/stable",
+  "PackageId": "fFcOtEEF4EdyYb95IUE5Isy28tICYMLf",
+  "_Source": "Linux.Debian.Packages/Snaps"
  },
  {
-  "Name": "adwaita-icon-theme-full",
-  "Type": "deb",
-  "InstalledSize": "21 kB",
-  "Version": "41.0-1ubuntu1",
-  "_Description": "default icon theme of GNOME\n This package contains the default icon theme used by the GNOME desktop.\n The icons are used in many of the official GNOME applications like eog,\n Evince, system monitor, and many more.",
-  "Architecture": "all",
-  "_Source": "Linux.Debian.Packages/Packages"
+  "Name": "gnome-3-28-1804",
+  "_Summary": "Shared GNOME 3.28 runtime for Ubuntu 18.04",
+  "_Description": "This snap includes a GNOME 3.28 stack (the base libraries and desktop \nintegration components) and shares it through the content interface.",
+  "InstalledSize": "173 MB",
+  "Publisher": "Canonical",
+  "InstalledAt": "2023-05-24T18:45:23.77639024Z",
+  "Version": "3.28.0-19-g98f9e67.98f9e67",
+  "Channel": "stable",
+  "PackageId": "TKv5Fm000l4XiUYJW9pjWHLkCPlDbIg1",
+  "_Source": "Linux.Debian.Packages/Snaps"
  },
  {
-  "Name": "alsa-topology-conf",
-  "Type": "deb",
-  "InstalledSize": "420 B",
-  "Version": "1.2.5.1-2",
-  "_Description": "ALSA topology configuration files\n This package contains ALSA topology configuration files that can be used\n by libasound2 for specific audio hardware.\n .\n ALSA is the Advanced Linux Sound Architecture.",
-  "Architecture": "all",
-  "_Source": "Linux.Debian.Packages/Packages"
+  "Name": "gnome-3-38-2004",
+  "_Summary": "Shared GNOME 3.38 Ubuntu stack",
+  "_Description": "This snap includes a GNOME 3.38 stack (the base libraries and desktop \nintegration components) and shares it through the content interface. \n",
+  "InstalledSize": "367 MB",
+  "Publisher": "Canonical",
+  "InstalledAt": "2023-07-12T01:15:28.348764031Z",
+  "Version": "0+git.efb213a",
+  "Channel": "latest/stable",
+  "PackageId": "rw36mkAjdIKl13dzfwyxP87cejpyIcct",
+  "_Source": "Linux.Debian.Packages/Snaps"
  },
  {
-  "Name": "alsa-ucm-conf",
-  "Type": "deb",
-  "InstalledSize": "560 B",
-  "Version": "1.2.6.3-1ubuntu1.7",
-  "_Description": "ALSA Use Case Manager configuration files\n This package contains ALSA Use Case Manager configuration of audio\n input/output names and routing for specific audio hardware. They can be\n used with the alsaucm tool.\n .\n ALSA is the Advanced Linux Sound Architecture.",
-  "Architecture": "all",
-  "_Source": "Linux.Debian.Packages/Packages"
+  "Name": "core18",
+  "_Summary": "Snap runtime environment",
+  "_Description": "Base snaps are a specific type of snap that include libraries and dependencies common to many applications. They provide a consistent and reliable execution environment for the snap packages that use them.\n\nThe core18 base snap provides a runtime environment based on Ubuntu 18.04 LTS (Bionic Beaver).\n\nOther Ubuntu environment base snaps include:\n-   Core 20: \u003chttps://snapcraft.io/core20\u003e\n-   Core 22: \u003chttps://snapcraft.io/core22\u003e \n-   Core 24: \u003chttps://snapcraft.io/core24\u003e\n\n**Using a base snap**\n\nBase snaps are installed automatically when a snap package requires them. Only one of each type of base snap is ever installed.\n\nManually removing a base snap may affect the stability of your system.\n\n**Building snaps with core18**\n\nSnap developers can use this base in their own snaps by adding the following to the snap's snapcraft.yaml:\n\n    base: core18\n\n**Additional Information***\n\nFor more details, and guidance on using base snaps, see our documentation: \u003chttps://snapcraft.io/docs/base-snaps\u003e",
+  "InstalledSize": "58 MB",
+  "Publisher": "Canonical",
+  "InstalledAt": "2024-06-24T22:58:22.493399592Z",
+  "Version": "20240612",
+  "Channel": "latest/stable",
+  "PackageId": "CSO04Jhav2yK0uz97cr0ipQRyqg0qQL6",
+  "_Source": "Linux.Debian.Packages/Snaps"
+ },
+ {
+  "Name": "gnome-42-2204",
+  "_Summary": "Shared GNOME 42 Ubuntu stack",
+  "_Description": "This snap provides the GNOME 42 stack to other snaps that use it. It shares the base GNOME libraries and desktop integration components through the content interface. This helps reduce the size of snaps and helps developers to easily snap desktop applications.\n\n**For users**\n\nThis snap is automatically installed and removed when needed. **Manually adding or removing this snap is not recommended** and might break things.\n\n* If you are having issues with **snaps** using GNOME, please contact the experts on the Snapcraft forum: https://forum.snapcraft.io/\n* If you want to install the GNOME Desktop Environment, then you are in the wrong place. Please take a look at https://www.gnome.org/ for more information on how to get it.\n\n**For developers**\n\n* The `gnome` extension is the recommended way to use this in your own snap: https://snapcraft.io/docs/gnome-extension\n* You can report issues with this content snap on GitHub: https://github.com/ubuntu/gnome-sdk/issues\n* The source code of this snap is available on GitHub in the `gnome-42-2204` branch: https://github.com/ubuntu/gnome-sdk/tree/gnome-42-2204\n",
+  "InstalledSize": "530 MB",
+  "Publisher": "Canonical",
+  "InstalledAt": "2024-04-04T12:55:46.203452698Z",
+  "Version": "0+git.510a601",
+  "Channel": "latest/stable",
+  "PackageId": "lATO8HzwVvrAPrlZRAWpfyrJKlAJrZS3",
+  "_Source": "Linux.Debian.Packages/Snaps"
+ },
+ {
+  "Name": "remmina",
+  "_Summary": "Remote Desktop Client",
+  "_Description": "Remmina is a remote desktop client written in GTK+, aiming to be useful for\nsystem administrators and travellers, who need to work with lots of remote\ncomputers in front of either large monitors or tiny netbooks.\n\nRemmina supports multiple network protocols in an integrated and consistent user interface.\n\nCurrently RDP, VNC, SPICE, NX, XDMCP, SSH and WWW are supported.\n\nRemmina is free and open-source software, released under GNU GPL license.",
+  "InstalledSize": "104 MB",
+  "Publisher": "Remmina Upstream Developers",
+  "InstalledAt": "2024-02-23T19:28:37.788647988Z",
+  "Version": "v1.4.35+git1.e0692befd",
+  "Channel": "latest/stable",
+  "PackageId": "XC73ux8XOHjoahd9keAyvM3LVkPBLTzy",
+  "_Source": "Linux.Debian.Packages/Snaps"
+ },
+ {
+  "Name": "superproductivity",
+  "_Summary": "The ToDo List for Digital Professionals",
+  "_Description": "🚀 Experience the best ToDo app for digital professionals and get more done! 🚀\n\n\n\n🕐 Personal Task Management with integrated Time Tracking \n* Efficiently manage your tasks and track the time spent on each one. Utilize timeboxing to maintain focus and prevent getting overwhelmed. Effortlessly generate timesheets and work summaries for comprehensive work documentation.\n\n\n🌍 Seamless Integration with Jira, GitHub, GitLab, OpenProject \u0026 More\n\n* Stay updated with all crucial ticket changes without drowning in a sea of email notifications. Keep everything that matters to you at your fingertips, while effectively filtering out unnecessary information. \n\n\n✓ Take advantage of a variation productivity helpers\n\n* Recognizing that everyone's work style and challenges vary, Super Productivity provides a range of customizable productivity tool. These include a Pomodoro timer, a focus mode, self-evaluation tools, and a break reminder.\n\n\n📅 Connect your Calendars\n\n* Import your calendar events as tasks whenever needed. Leverage the timeline feature for a swift, at-a-glance overview of your day.\n\n\n🔒 Data Privacy and Ownership\n\n* The app does NOT collect any data and there are no user accounts or registration required. It's a free and open source and always will be.",
+  "InstalledSize": "96 MB",
+  "Publisher": "johannesjo",
+  "InstalledAt": "2024-06-17T15:55:15.693447702Z",
+  "Version": "8.0.10",
+  "Channel": "latest/stable",
+  "PackageId": "wZo5sef6NuUKCW6DP83fJ6zIZyd5R1sA",
+  "_Source": "Linux.Debian.Packages/Snaps"
+ },
+ {
+  "Name": "bw",
+  "_Summary": "Bitwarden CLI - A secure and free password manager for all of your devices.",
+  "_Description": "Bitwarden, Inc. is the parent company of 8bit Solutions LLC.\n\nNAMED BEST PASSWORD MANAGER BY THE VERGE, U.S. NEWS \u0026amp; WORLD REPORT, CNET, AND MORE.\n\nManage, store, secure, and share unlimited passwords across unlimited devices from anywhere. Bitwarden delivers open source password management solutions to everyone, whether at  home, at work, or on the go.\n\nGenerate strong, unique, and random passwords based on security requirements for every website you frequent.\n\nBitwarden Send quickly transmits encrypted information --- files and plaintext -- directly to anyone.\n\nBitwarden offers Teams and Enterprise plans for companies so you can securely share passwords with colleagues.\n\nWhy Choose Bitwarden:\n\nWorld-Class Encryption\nPasswords are protected with advanced end-to-end encryption (AES-256 bit, salted hashing, and PBKDF2 SHA-256) so your data stays secure and private.\n\nBuilt-in Password Generator\nGenerate strong, unique, and random passwords based on security requirements for every website you frequent.\n\nGlobal Translations\nBitwarden translations exist in 40 languages and are growing, thanks to our global community.\n\nCross-Platform Applications\nSecure and share sensitive data within your Bitwarden Vault from any browser, mobile device, or desktop OS, and more.\n",
+  "InstalledSize": "30 MB",
+  "Publisher": "8bit Solutions LLC",
+  "InstalledAt": "2024-07-02T14:01:58.472672353Z",
+  "Version": "2024.6.1",
+  "Channel": "latest/stable",
+  "PackageId": "n0XNnJXxSdYYHRYwtfYV2mBSkzH1Fbkn",
+  "_Source": "Linux.Debian.Packages/Snaps"
+ },
+ {
+  "Name": "snapd",
+  "_Summary": "Daemon and tooling that enable snap packages",
+  "_Description": "Install, configure, refresh and remove snap packages. Snaps are\n'universal' packages that work across many different Linux systems,\nenabling secure distribution of the latest apps and utilities for\ncloud, servers, desktops and the internet of things.\n\nStart with 'snap list' to see installed snaps.",
+  "InstalledSize": "41 MB",
+  "Publisher": "Canonical",
+  "InstalledAt": "2024-05-23T09:36:58.580126818Z",
+  "Version": "2.63",
+  "Channel": "latest/stable",
+  "PackageId": "PMrrV4ml8uWuEUDBT8dSGnKUYbevVhc4",
+  "_Source": "Linux.Debian.Packages/Snaps"
+ },
+ {
+  "Name": "core20",
+  "_Summary": "Runtime environment based on Ubuntu 20.04",
+  "_Description": "The base snap based on the Ubuntu 20.04 release.",
+  "InstalledSize": "67 MB",
+  "Publisher": "Canonical",
+  "InstalledAt": "2024-05-13T05:04:34.317503781Z",
+  "Version": "20240416",
+  "Channel": "latest/stable",
+  "PackageId": "DLqre5XGLbDqg9jPtiAhRRjDuPVa5X1q",
+  "_Source": "Linux.Debian.Packages/Snaps"
+ },
+ {
+  "Name": "bare",
+  "_Summary": "Empty base snap, useful for testing and fully statically linked snaps",
+  "_Description": "",
+  "InstalledSize": "4.1 kB",
+  "Publisher": "Canonical",
+  "InstalledAt": "2023-04-30T12:50:44.726909645Z",
+  "Version": "1.0",
+  "Channel": "",
+  "PackageId": "EISPgh06mRh1vordZY9OZ34QHdd7OrdR",
+  "_Source": "Linux.Debian.Packages/Snaps"
+ },
+ {
+  "Name": "core22",
+  "_Summary": "Runtime environment based on Ubuntu 22.04",
+  "_Description": "The base snap based on the Ubuntu 22.04 release.",
+  "InstalledSize": "78 MB",
+  "Publisher": "Canonical",
+  "InstalledAt": "2024-04-26T05:53:07.757125702Z",
+  "Version": "20240408",
+  "Channel": "latest/stable",
+  "PackageId": "amcUKQILKXHHTlmSa7NMdnXSx02dNeeT",
+  "_Source": "Linux.Debian.Packages/Snaps"
+ },
+ {
+  "Name": "spotify",
+  "_Summary": "Music for everyone",
+  "_Description": "Love music? Play your favorite songs and albums free on Linux with\nSpotify.\n\nStream the tracks you love instantly, browse the charts or fire up\nreadymade playlists in every genre and mood. Radio plays you great\nsong after great song, based on your music taste. Discover new music\ntoo, with awesome playlists built just for you.\n\nStream Spotify free, with occasional ads, or go Premium.\n\nFree:\n• Play any song, artist, album or playlist instantly\n• Browse hundreds of readymade playlists in every genre and mood\n• Stay on top of the Charts\n• Stream Radio\n• Enjoy podcasts, audiobooks and videos\n• Discover more music with personalized playlists\n\nPremium:\n• Download tunes and play offline\n• Listen ad-free\n• Get even better sound quality\n• Try it free for 30 days, no strings attached\n\nLike us on Facebook: http://www.facebook.com/spotify\nFollow us on Twitter: http://twitter.com/spotify\n\nNote: Spotify for Linux is a labor of love from our engineers that\nwanted to listen to Spotify on their Linux development machines. They\nwork on it in their spare time and it is currently not a platform\nthat we actively support. The experience may differ from our other\nSpotify Desktop clients, such as Windows and Mac.\n",
+  "InstalledSize": "189 MB",
+  "Publisher": "Spotify",
+  "InstalledAt": "2024-05-31T12:31:32.283235666Z",
+  "Version": "1.2.37.701.ge66eb7bc",
+  "Channel": "latest/stable",
+  "PackageId": "pOBIoZ2LrCB3rDohMxoYGnbN14EHOgD7",
+  "_Source": "Linux.Debian.Packages/Snaps"
+ },
+ {
+  "Name": "snap-store",
+  "_Summary": "Snap Store is a graphical desktop application for discovering, installing and managing snaps on Linux.",
+  "_Description": "Snap Store showcases featured and popular applications with useful descriptions, ratings, reviews and screenshots.\n\n\nApplications can be found either through browsing categories\nor by searching.\n\n\nSnap Store can also be used to switch channels, view and alter snap permissions and view and submit reviews and ratings.\n\n\nSnap Store is based on GNOME Software, optimized for the Snap experience.",
+  "InstalledSize": "14 MB",
+  "Publisher": "Canonical",
+  "InstalledAt": "2024-03-06T05:38:22.343038445Z",
+  "Version": "41.3-77-g7dc86c8",
+  "Channel": "latest/stable",
+  "PackageId": "gjf3IPXoRiipCu9K0kVu52f0H56fIksg",
+  "_Source": "Linux.Debian.Packages/Snaps"
  }
 ]
