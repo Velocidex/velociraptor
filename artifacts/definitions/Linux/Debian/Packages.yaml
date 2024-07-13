@@ -84,9 +84,8 @@ sources:
      LET SnapSocketCheck = SELECT
          parse_json(data=Content).result AS Result
        FROM http_client(url=snapdSocket + ':unix/v2/snaps')
-       WHERE if(condition=Response != 200,
-          then=log(message="Error fetching snap: %v", args=Content),
-          else=TRUE)
+       WHERE Response = 200
+         OR NOT log(message="Error fetching snap: %v", args=Content)
 
      SELECT * FROM foreach(
          row=SnapSocketCheck,
