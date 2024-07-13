@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	ZipFileSystemAccessorTag = "_ZipFS"
+	ZipFileSystemAccessorTag       = "_ZipFS"
+	ZipFileNoCaseSystemAccessorTag = "_ZipFSNoCase"
 )
 
 var (
@@ -342,7 +343,7 @@ func (self *ZipFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 	tag := ZipFileSystemAccessorTag
 	if self.nocase {
-		tag += "NoCase"
+		tag = ZipFileNoCaseSystemAccessorTag
 	}
 
 	result_any := vql_subsystem.CacheGet(scope, tag)

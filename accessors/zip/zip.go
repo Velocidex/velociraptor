@@ -29,8 +29,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"sync"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -251,6 +251,34 @@ type ZipFileCache struct {
 	scope vfilter.Scope
 }
 
+func (self *ZipFileCache) isComponentEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := 0; i < len(b); i++ {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (self *ZipFileCache) isComponentEqualNoCase(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := 0; i < len(b); i++ {
+		if !strings.EqualFold(a[i], b[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (self *ZipFileCache) maybeGetPassword() string {
 	password_any, pres := self.scope.Resolve(constants.ZIP_PASSWORDS)
 	if pres {
@@ -344,22 +372,16 @@ func (self *ZipFileCache) GetZipInfo(full_path *accessors.OSPath, nocase bool) (
 func (self *ZipFileCache) _GetZipInfo(full_path *accessors.OSPath, nocase bool) (
 	*ZipFileInfo, error) {
 
-	// This is O(n) but due to the components length check it is
-	// very fast.
-loop:
-	for _, cd_cache := range self.lookup {
-		if len(full_path.Components) != len(cd_cache.full_path.Components) {
-			continue
-		}
+	eq := self.isComponentEqual
+	if nocase {
+		eq = self.isComponentEqualNoCase
+	}
 
-		for j := range full_path.Components {
-			if full_path.Components[j] != cd_cache.full_path.Components[j] {
-				if !nocase || !strings.EqualFold(
-					full_path.Components[j],
-					cd_cache.full_path.Components[j]) {
-					continue loop
-				}
-			}
+	// This is O(n) but due to the components length check it is very
+	// fast.
+	for _, cd_cache := range self.lookup {
+		if !eq(full_path.Components, cd_cache.full_path.Components) {
+			continue
 		}
 
 		return &ZipFileInfo{
