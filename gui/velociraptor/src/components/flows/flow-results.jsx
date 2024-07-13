@@ -75,6 +75,8 @@ export default class FlowResults extends React.Component {
                      No Data Available.
                    </div>;
         }
+        let flow_id = this.props.flow && this.props.flow.session_id;
+        let artifact = this.state.params && this.state.params.artifact;
 
         return (
             <>
@@ -88,9 +90,10 @@ export default class FlowResults extends React.Component {
               <VeloPagedTable
                 env={{
                     client_id: this.props.flow.client_id,
-                    flow_id: this.props.flow.session_id,
+                    flow_id: flow_id,
                 }}
                 className="col-12"
+                name={"FlowResults" + flow_id + artifact}
                 params={this.state.params}
                 version={getFlowState(this.props.flow)}
               />

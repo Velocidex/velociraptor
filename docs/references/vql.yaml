@@ -142,7 +142,6 @@
 
     This works because the `.` operator on a list, creates another
     list with the `.` operator applying on each member.
-
   type: Function
   category: basic
 - name: artifact_definitions
@@ -3374,8 +3373,6 @@
     description: 'A SID to lookup using LookupAccountSid '
     required: true
   category: windows
-  metadata:
-    permissions: MACHINE_STATE
 - name: lowcase
   description: Returns the lowercase version of a string.
   type: Function
@@ -5211,6 +5208,11 @@
   - name: env
     type: ordereddict.Dict
     description: A dict of args to insert into the scope.
+  - name: copy_env
+    type: string
+    description: A list of variables in the current scope that will be copied into
+      the new scope.
+    repeated: true
   - name: cpu_limit
     type: float64
     description: Average CPU usage in percent of a core.
@@ -7270,7 +7272,6 @@
     ```vql
     SELECT winpmem(image_path='c:/test.dd', compression='s2') FROM scope()"
     ```
-
   type: Function
   args:
   - name: service
@@ -7551,3 +7552,4 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+

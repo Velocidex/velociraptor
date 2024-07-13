@@ -612,6 +612,7 @@ class HuntList extends React.Component {
                         this.setState({transform: x, filter: ""});
                     }}
                     no_toolbar={true}
+                    name="HuntList"
                   />
                 </div>
             </>
