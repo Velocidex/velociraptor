@@ -17,6 +17,7 @@ sources:
           query={
              SELECT OSPath, Mtime, Ctime, User, Uid
              FROM glob(root=Homedir, globs=sshKeyFiles)
+             WHERE log(message="Parsing file %v", args=OSPath, dedup=-1)
           })
 
       SELECT * from foreach(
