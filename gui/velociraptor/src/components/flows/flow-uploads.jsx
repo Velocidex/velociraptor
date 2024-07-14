@@ -30,6 +30,8 @@ export default class FlowUploads extends React.Component {
     };
 
     render() {
+        let flow_id = this.props.flow && this.props.flow.session_id;
+
         let renderers = {
             Preview: (cell, row, rowIndex) => {
                 let client_id = this.props.flow && this.props.flow.client_id;
@@ -114,6 +116,7 @@ export default class FlowUploads extends React.Component {
                   flow_id: this.props.flow.session_id,
                   type: "uploads",
               }}
+              name={"FlowUploads" + flow_id}
             />
         );
     }

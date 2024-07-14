@@ -629,6 +629,7 @@ class FlowsList extends React.Component {
                         this.setState({transform: x});
                     }}
                     no_toolbar={true}
+                    name={"GetClientFlows" + client_id}
                   />
                 </HotKeys>
               </div>

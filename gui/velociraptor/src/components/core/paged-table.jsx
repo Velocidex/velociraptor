@@ -341,6 +341,13 @@ class VeloPagedTable extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+        // If the table has changed we need to clear the state
+        // completely as it is a new table.
+        if (!_.isUndefined(this.props.name) &&
+            !_.isEqual(this.props.name, prevProps.name)) {
+            this.setState({toggles: {}, rows: [], columns: []});
+        }
+
         if (this.props.transform &&
             !_.isEqual(prevProps.transform, this.props.transform)) {
             this.setState({transform: this.props.transform});
@@ -440,7 +447,6 @@ class VeloPagedTable extends Component {
 
         return result;
     }
-
 
     fetchRows = () => {
         if (_.isEmpty(this.props.params)) {

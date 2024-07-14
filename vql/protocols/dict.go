@@ -79,6 +79,75 @@ func (self _AddDict) Add(scope types.Scope, a types.Any, b types.Any) types.Any 
 	return res
 }
 
+type _SubDict struct{}
+
+func (self _SubDict) Applicable(a types.Any, b types.Any) bool {
+	_, a_ok := a.(*ordereddict.Dict)
+	_, b_ok := b.(*ordereddict.Dict)
+	return a_ok && b_ok
+}
+
+// Substituting one dict from the other removes keys from the first
+// dict.
+func (self _SubDict) Sub(scope types.Scope, a types.Any, b types.Any) types.Any {
+	a_dict, a_ok := a.(*ordereddict.Dict)
+	if !a_ok {
+		return &vfilter.Null{}
+	}
+	b_dict, b_ok := b.(*ordereddict.Dict)
+	if !b_ok {
+		return &vfilter.Null{}
+	}
+
+	// Copy values to new dict if the key is not present in the b
+	// dict.
+	res := ordereddict.NewDict()
+
+	for _, k := range a_dict.Keys() {
+		_, pres := b_dict.Get(k)
+		if !pres {
+			v, _ := a_dict.Get(k)
+			res.Set(k, v)
+		}
+	}
+
+	return res
+}
+
+type _MulDict struct{}
+
+func (self _MulDict) Applicable(a types.Any, b types.Any) bool {
+	_, a_ok := a.(*ordereddict.Dict)
+	_, b_ok := b.(*ordereddict.Dict)
+	return a_ok && b_ok
+}
+
+// Multiplying dicts results in an intersection operation
+func (self _MulDict) Mul(scope types.Scope, a types.Any, b types.Any) types.Any {
+	a_dict, a_ok := a.(*ordereddict.Dict)
+	if !a_ok {
+		return &vfilter.Null{}
+	}
+	b_dict, b_ok := b.(*ordereddict.Dict)
+	if !b_ok {
+		return &vfilter.Null{}
+	}
+
+	// Copy values to new dict if the key is also present in the b
+	// dict.
+	res := ordereddict.NewDict()
+
+	for _, k := range a_dict.Keys() {
+		_, pres := b_dict.Get(k)
+		if pres {
+			v, _ := a_dict.Get(k)
+			res.Set(k, v)
+		}
+	}
+
+	return res
+}
+
 // Handle a map adding with a dict.
 type _AddMap struct{}
 
@@ -132,5 +201,7 @@ func init() {
 	vql_subsystem.RegisterProtocol(&_RegexDict{})
 	vql_subsystem.RegisterProtocol(&_BoolDict{})
 	vql_subsystem.RegisterProtocol(&_AddDict{})
+	vql_subsystem.RegisterProtocol(&_SubDict{})
+	vql_subsystem.RegisterProtocol(&_MulDict{})
 	vql_subsystem.RegisterProtocol(&_AddMap{})
 }

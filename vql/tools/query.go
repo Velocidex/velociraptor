@@ -18,6 +18,7 @@ import (
 type QueryPluginArgs struct {
 	Query           vfilter.Any       `vfilter:"required,field=query,doc=A VQL Query to parse and execute."`
 	Env             *ordereddict.Dict `vfilter:"optional,field=env,doc=A dict of args to insert into the scope."`
+	CopyEnv         []string          `vfilter:"optional,field=copy_env,doc=A list of variables in the current scope that will be copied into the new scope."`
 	CpuLimit        float64           `vfilter:"optional,field=cpu_limit,doc=Average CPU usage in percent of a core."`
 	IopsLimit       float64           `vfilter:"optional,field=iops_limit,doc=Average IOPs to target."`
 	Timeout         float64           `vfilter:"optional,field=timeout,doc=Cancel the query after this many seconds"`
@@ -75,6 +76,11 @@ func (self QueryPlugin) Call(
 		// Did the user request running in the specified org? Switch
 		// orgs if so.
 		if arg.OrgId != "" {
+			if arg.InheritScope {
+				scope.Log("query: inherit flag is specified at the same time as an org id - these options are not compatible!")
+				return
+			}
+
 			org_config_obj, err = org_manager.GetOrgConfig(arg.OrgId)
 			if err != nil {
 				scope.Log("query: %v", err)
@@ -116,7 +122,17 @@ func (self QueryPlugin) Call(
 		var subscope vfilter.Scope
 		if arg.InheritScope {
 			subscope = scope.Copy()
+
 		} else {
+			if arg.Env == nil {
+				arg.Env = ordereddict.NewDict()
+			}
+			for _, env := range arg.CopyEnv {
+				item, pres := scope.Resolve(env)
+				if pres {
+					arg.Env.Set(env, item)
+				}
+			}
 			subscope = manager.BuildScope(builder).AppendVars(arg.Env)
 		}
 		defer subscope.Close()

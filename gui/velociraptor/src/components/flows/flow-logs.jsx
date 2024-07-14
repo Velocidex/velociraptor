@@ -46,6 +46,8 @@ export default class FlowLogs extends React.Component {
     }
 
     render() {
+        let flow_id = this.props.flow && this.props.flow.session_id;
+
         let renderers = {
             client_time: (cell, row, rowIndex) => {
                 return (
@@ -95,6 +97,7 @@ export default class FlowLogs extends React.Component {
               setTransform={x=>{
                   this.setState({level_filter: "all"});
               }}
+              name={"FlowLogs" + flow_id}
             />
         );
     }
