@@ -1,4 +1,8 @@
-LET _ <= mock(artifact='Artifact.Linux.Sys.Users', results={ SELECT 1000 AS Uid, 'foouser' AS User, 'bardir' AS Homedir FROM scope() })[]LET _ <= mock(plugin='glob', results={ SELECT srcDir + '/artifacts/testdata/files/linux/authorized_keys' AS OSPath, NULL AS Mtime, NULL AS Ctime FROM scope() })[]SELECT KeyType, Key, Comment, Opts FROM Artifact.Linux.Ssh.AuthorizedKeys( sshKeyFiles='authorized_keys' )[
+LET _ <= mock(artifact=Artifact.Linux.Sys.Users, results={ SELECT 1000 AS Uid, 'foouser' AS User, 'bardir' AS Homedir FROM scope() })[]LET _ <= mock(plugin='glob', results={ SELECT srcDir + '/artifacts/testdata/files/linux/authorized_keys' AS OSPath, NULL AS Mtime, NULL AS Ctime FROM scope() })[]SELECT KeyType, Key, Comment, Opts
+FROM Artifact.Linux.Ssh.AuthorizedKeys(
+   sshKeyFiles='authorized_keys'
+)
+[
  {
   "KeyType": "ssh-rsa",
   "Key": "AAAAB3NzaC1yc2EAAAADAQABAAABAQCQlAeyU7XfZ30pPxPN01x1wzT1Lqka+dIU/D9OhvquGroKh11JlqX0cbShcnlI3OqHr4QFfWqAnLE6zdL2NeUzYk88fx4wvBIjrpSmcQR04p6bIgvgslMUTOb1evT2xEVJi9qRIJnAX+djD9W/NeImHzVhNCIjfp5gIhA+e1JCX3wLz09lwaoRq2E7P/EuM2iqDXpNc0obataW9qMsRdq3J6zqwl48m78qmuSZJR7ZYuHmIyC9nEydzO2NjD0+ngJkWU5YTjBtrSeex8SvkHx7KDGNMyjMC0LTi1zGzz+t8SiAol2yuFBxWwSzlH8ray54/2juzl7TSS27f3sGTLLX",
