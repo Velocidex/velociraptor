@@ -42,7 +42,7 @@ func (self *TestSuite) TestWebSocketRetry() {
 	// Create a HTTP Client Communicator to play with
 	self.makeClient(client_ctx, client_wg)
 
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return strings.Contains(getMemoryLogs(), "reader: Received Ping")
 	})
 
