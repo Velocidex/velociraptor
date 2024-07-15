@@ -85,6 +85,13 @@ sources:
         FROM glob(globs=expand(path=EvtxGlob), accessor=Accessor)
         WHERE OSPath =~ PathRegex
 
+      -- Cache function for lookupSID
+      LET LookupSIDCache(SID) = cache(name="SID1", key=SID, func=lookupSID(sid=SID))
+
+      -- resolve usernames via registry if lookupSID is not available or yields no results
+      LET ResolveSIDCache(SID) = cache(name="SID2", key=SID, func=pathspec(parse=stat(accessor="registry",
+              filename="HKEY_LOCAL_MACHINE/Software/Microsoft/Windows NT/CurrentVersion/ProfileList/" + SID + "/ProfileImagePath").Data.value).Basename)
+
       -- function returning IOC hits
       LET evtxsearch(PathList) = SELECT * FROM foreach(
             row=PathList,
@@ -97,7 +104,7 @@ sources:
                     System.EventID.Value as EventID,
                     System.EventRecordID as EventRecordID,
                     System.Security.UserID as UserSID,
-                    lookupSID(sid=System.Security.UserID) as Username,
+                    LookupSIDCache(SID=System.Security.UserID) || ResolveSIDCache(SID=System.Security.UserID) || "" as Username,
                     get(field="EventData") as EventData,
                     get(field="UserData") as UserData,
                     get(field="Message") as Message,

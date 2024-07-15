@@ -20,10 +20,13 @@ sources:
         LET GetTimestamp(High, Low) = if(condition=High,
                 then=timestamp(winfiletime=High * 4294967296 + Low))
 
+        LET ResolveSID(SID) = pathspec(parse=stat(accessor="registry",
+            filename="HKEY_LOCAL_MACHINE/Software/Microsoft/Windows NT/CurrentVersion/ProfileList/" + SID + "/ProfileImagePath").Data.value).Basename
+
         -- lookupSID() may not be available on deaddisk analysis
         SELECT split(string=Key.OSPath.Basename, sep="-")[-1] as Uid,
            "" AS Gid,
-           lookupSID(sid=Key.OSPath.Basename) || "" AS Name,
+           lookupSID(sid=Key.OSPath.Basename) || ResolveSID(SID=Key.OSPath.Basename) || "" AS Name,
            Key.OSPath as Description,
            ProfileImagePath as Directory,
            Key.OSPath.Basename as UUID,
