@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	ZipFileSystemAccessorTag = "_ZipFS"
+	ZipFileSystemAccessorTag       = "_ZipFS"
+	ZipFileNoCaseSystemAccessorTag = "_ZipFSNoCase"
 )
 
 var (
@@ -28,6 +29,7 @@ var (
 type ZipFileSystemAccessor struct {
 	fd_cache map[string]*ZipFileCache
 	scope    vfilter.Scope
+	nocase   bool
 }
 
 func (self *ZipFileSystemAccessor) Copy(
@@ -37,6 +39,7 @@ func (self *ZipFileSystemAccessor) Copy(
 
 	return &ZipFileSystemAccessor{
 		fd_cache: self.fd_cache,
+		nocase:   self.nocase,
 		scope:    scope,
 	}
 }
@@ -269,7 +272,7 @@ func (self *ZipFileSystemAccessor) LstatWithOSPath(
 	}
 	defer root.Close()
 
-	return root.GetZipInfo(full_path)
+	return root.GetZipInfo(full_path, self.nocase)
 }
 
 func (self *ZipFileSystemAccessor) Open(
@@ -294,7 +297,7 @@ func (self *ZipFileSystemAccessor) OpenWithOSPath(
 	defer zip_file_cache.Close()
 
 	// Get the zip member from the zip file.
-	return zip_file_cache.Open(full_path)
+	return zip_file_cache.Open(full_path, self.nocase)
 }
 
 func (self *ZipFileSystemAccessor) ReadDir(
@@ -317,7 +320,7 @@ func (self *ZipFileSystemAccessor) ReadDirWithOSPath(
 	}
 	defer root.Close()
 
-	children, err := root.GetChildren(full_path)
+	children, err := root.GetChildren(full_path, self.nocase)
 	if err != nil {
 		return nil, err
 	}
@@ -338,14 +341,20 @@ func (self ZipFileSystemAccessor) ParsePath(path string) (
 
 func (self *ZipFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
-	result_any := vql_subsystem.CacheGet(scope, ZipFileSystemAccessorTag)
+	tag := ZipFileSystemAccessorTag
+	if self.nocase {
+		tag = ZipFileNoCaseSystemAccessorTag
+	}
+
+	result_any := vql_subsystem.CacheGet(scope, tag)
 	if result_any == nil {
 		// Create a new cache in the scope.
 		result := &ZipFileSystemAccessor{
 			fd_cache: make(map[string]*ZipFileCache),
 			scope:    scope,
+			nocase:   self.nocase,
 		}
-		vql_subsystem.CacheSet(scope, ZipFileSystemAccessorTag, result)
+		vql_subsystem.CacheSet(scope, tag, result)
 
 		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 			result.CloseAll()

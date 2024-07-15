@@ -254,6 +254,32 @@ j={ SELECT read_file(accessor="zip", filename=PathSpec10) AS Data, PathSpec10 FR
 	assert.Equal(self.T(), int64(10), value)
 }
 
+func (self *ZipTestSuite) TestNoCaseZip() {
+	// Read nested ZIP files - the nested.zip contains another zip
+	// file, hello.zip which in turn contains some txt files.
+	zip_file, _ := filepath.Abs("../../artifacts/testdata/files/hello.zip")
+	zip_file_pathspec := accessors.PathSpec{
+		DelegateAccessor: "file",
+		DelegatePath:     zip_file,
+		Path:             "HeLLo1.TxT",
+	}
+
+	// Read some non existant files to check that we close everything
+	// on error paths.
+	rows, err := test_utils.RunQuery(self.ConfigObj, `
+LET ZIP_FILE_CACHE_SIZE <= 30
+
+SELECT read_file(accessor="zip_nocase", filename=PathSpec) AS Data FROM scope()
+`, ordereddict.NewDict().
+		Set("PathSpec", zip_file_pathspec))
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), 1, len(rows))
+
+	data, _ := rows[0].Get("Data")
+	assert.Equal(self.T(), "hello1\n", data)
+}
+
 func TestZipAccessor(t *testing.T) {
 	suite.Run(t, &ZipTestSuite{})
 }

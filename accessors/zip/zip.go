@@ -29,6 +29,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -250,6 +251,34 @@ type ZipFileCache struct {
 	scope vfilter.Scope
 }
 
+func (self *ZipFileCache) isComponentEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := 0; i < len(b); i++ {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (self *ZipFileCache) isComponentEqualNoCase(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := 0; i < len(b); i++ {
+		if !strings.EqualFold(a[i], b[i]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (self *ZipFileCache) maybeGetPassword() string {
 	password_any, pres := self.scope.Resolve(constants.ZIP_PASSWORDS)
 	if pres {
@@ -283,14 +312,14 @@ func (self *ZipFileCache) maybeGetPassword() string {
 // zip.File object, and increase its reference. NOTE: The returned
 // object must be closed to decrement the ZipFileCache reference
 // count.
-func (self *ZipFileCache) Open(full_path *accessors.OSPath) (
+func (self *ZipFileCache) Open(full_path *accessors.OSPath, nocase bool) (
 	accessors.ReadSeekCloser, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	self.last_active = time.Now()
 
-	info, err := self._GetZipInfo(full_path)
+	info, err := self._GetZipInfo(full_path, nocase)
 	if err != nil {
 		return nil, err
 	}
@@ -330,31 +359,29 @@ func (self *ZipFileCache) Open(full_path *accessors.OSPath) (
 	}, nil
 }
 
-func (self *ZipFileCache) GetZipInfo(full_path *accessors.OSPath) (
+func (self *ZipFileCache) GetZipInfo(full_path *accessors.OSPath, nocase bool) (
 	*ZipFileInfo, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self._GetZipInfo(full_path)
+	return self._GetZipInfo(full_path, nocase)
 }
 
 // Searches our lookup table of components to zip.File objects, and
 // wraps the zip.File object with a ZipFileInfo object.
-func (self *ZipFileCache) _GetZipInfo(full_path *accessors.OSPath) (
+func (self *ZipFileCache) _GetZipInfo(full_path *accessors.OSPath, nocase bool) (
 	*ZipFileInfo, error) {
 
-	// This is O(n) but due to the components length check it is
-	// very fast.
-loop:
-	for _, cd_cache := range self.lookup {
-		if len(full_path.Components) != len(cd_cache.full_path.Components) {
-			continue
-		}
+	eq := self.isComponentEqual
+	if nocase {
+		eq = self.isComponentEqualNoCase
+	}
 
-		for j := range full_path.Components {
-			if full_path.Components[j] != cd_cache.full_path.Components[j] {
-				continue loop
-			}
+	// This is O(n) but due to the components length check it is very
+	// fast.
+	for _, cd_cache := range self.lookup {
+		if !eq(full_path.Components, cd_cache.full_path.Components) {
+			continue
 		}
 
 		return &ZipFileInfo{
@@ -368,7 +395,7 @@ loop:
 }
 
 func (self *ZipFileCache) GetChildren(
-	full_path *accessors.OSPath) ([]*ZipFileInfo, error) {
+	full_path *accessors.OSPath, nocase bool) ([]*ZipFileInfo, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -381,7 +408,10 @@ loop:
 		// prefix as required.
 		for j, component := range full_path.Components {
 			if component != cd_cache.full_path.Components[j] {
-				continue loop
+				if !nocase || !strings.EqualFold(
+					component, cd_cache.full_path.Components[j]) {
+					continue loop
+				}
 			}
 		}
 
@@ -558,7 +588,7 @@ func (self *SeekableZip) ReadAt(buf []byte, offset int64) (int, error) {
 func (self *SeekableZip) createTmpBackup() (err error) {
 	// Make a fresh reader to the member so we are seeked to the
 	// start of it.
-	reader, err := self.zip_file.Open(self.full_path)
+	reader, err := self.zip_file.Open(self.full_path, false)
 	if err != nil {
 		return err
 	}
@@ -630,7 +660,9 @@ func (self *SeekableZip) seek(offset int64, whence int) (int64, error) {
 }
 
 func init() {
-	accessors.Register("zip", &ZipFileSystemAccessor{},
+	accessors.Register("zip", &ZipFileSystemAccessor{
+		nocase: false,
+	},
 		`Open a zip file as if it was a directory.
 
 Filename is a pathspec with a delegate accessor opening the Zip file,
@@ -646,6 +678,9 @@ Example:
          accessor='zip')
 
 `)
+	accessors.Register("zip_nocase", &ZipFileSystemAccessor{
+		nocase: true,
+	}, `Open a zip file as if it was a directory. Although zip files are case sensitive, this accessor behaves case insensitive`)
 
 	json.RegisterCustomEncoder(&ZipFileInfo{}, accessors.MarshalGlobFileInfo)
 }
