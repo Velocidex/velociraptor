@@ -14,17 +14,22 @@ func SetTempfile(config_obj *config_proto.Config) {
 	if config_obj.Client != nil {
 		tmpdir := ""
 
+		// We must set some temp directory that is reasonable even if
+		// the config does not specify.
 		switch runtime.GOOS {
 		case "windows":
 			tmpdir = config_obj.Client.TempdirWindows
+
 		case "linux":
 			tmpdir = config_obj.Client.TempdirLinux
+
 		case "darwin":
 			tmpdir = config_obj.Client.TempdirDarwin
+
 		}
 
 		if tmpdir == "" {
-			return
+			tmpdir = os.TempDir()
 		}
 
 		// Expand the tmpdir if needed.
@@ -34,20 +39,18 @@ func SetTempfile(config_obj *config_proto.Config) {
 		// we have permissions and the directory exists.
 		tmpfile, err := ioutil.TempFile(tmpdir, "tmp")
 		if err != nil {
-			// No we dont have permission there, fall back
-			// to system default.
-			return
+			// No we dont have permission there, fall back to system
+			// default, that is the best we can do we hope we can
+			// write there.
+			tmpdir = os.TempDir()
 		}
 		defer os.Remove(tmpfile.Name())
 
-		switch runtime.GOOS {
-		case "windows":
-			os.Setenv("TMP", tmpdir)
-			os.Setenv("TEMP", tmpdir)
-		case "linux", "darwin":
-			os.Setenv("TMP", tmpdir)
-			os.Setenv("TMPDIR", tmpdir)
-		}
+		// Set the env vars the same on all platforms to be consistent
+		// across OSs
+		os.Setenv("TMP", tmpdir)
+		os.Setenv("TEMP", tmpdir)
+		os.Setenv("TMPDIR", tmpdir)
 
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 		logger.Info("Setting temp directory to <green>%v", tmpdir)

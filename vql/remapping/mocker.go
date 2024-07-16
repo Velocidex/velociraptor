@@ -257,7 +257,7 @@ func (self *MockFunction) Call(ctx context.Context,
 
 		artifact_plugin, ok := item.(services.MockablePlugin)
 		if !ok {
-			scope.Log("mock: artifact is not defined")
+			scope.Log("mock: artifact parameter should be an artifact not %T", item)
 			return types.Null{}
 		}
 		artifact_plugin.SetMock(artifact_plugin.Name(), rows)
