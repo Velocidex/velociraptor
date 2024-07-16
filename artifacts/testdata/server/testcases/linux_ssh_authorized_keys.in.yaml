@@ -3,11 +3,11 @@ Queries:
      SELECT 1000 AS Uid, 'foouser' AS User, 'bardir' AS Homedir FROM scope()
    })
  - LET _ <= mock(plugin='glob', results={
-     SELECT srcDir + '/artifacts/testdata/files/linux/authorized_keys' AS OSPath,
+     SELECT pathspec(parse=srcDir + '/artifacts/testdata/files/linux/authorized_keys') AS OSPath,
        NULL AS Mtime, NULL AS Ctime FROM scope()
    })
  - |
-   SELECT KeyType, Key, Comment, Opts
+   SELECT *, OSPath.Basename AS OSPath
    FROM Artifact.Linux.Ssh.AuthorizedKeys(
       sshKeyFiles='authorized_keys'
    )
