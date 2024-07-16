@@ -45,7 +45,7 @@ sources:
       LET Parse(OSPath) =
          SELECT ParseParts(Parts=commandline_split(command=Line, bash_style=TRUE)) AS Parsed
          FROM parse_lines(filename=OSPath)
-         WHERE NOT Line =~ "^#"
+         WHERE NOT Line =~ "^#" AND Parsed.keytype =~ keyTypes
 
       -- The option may or may not be there - determine by the key regex
       LET ParseParts(Parts) = if(condition= Parts[0] =~ keyTypes,
