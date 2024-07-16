@@ -43,7 +43,8 @@ sources:
 
       -- Split each line into parts considering possible quoting
       LET Parse(OSPath) =
-         SELECT ParseParts(Parts=commandline_split(command=Line, bash_style=TRUE)) AS Parsed
+         -- Pad a bit so index does not wrap.
+         SELECT ParseParts(Parts=commandline_split(command=Line, bash_style=TRUE) + ("", "", "", "", "")) AS Parsed
          FROM parse_lines(filename=OSPath)
          WHERE NOT Line =~ "^#" AND Parsed.keytype =~ keyTypes
 
