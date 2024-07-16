@@ -20,6 +20,18 @@ parameters:
   - name: remoteRegKey
     default: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\*
 
+export: |
+  -- Cache function for lookupSID
+  LET LookupSIDCache(SID) = cache(name="SID", key=SID,
+     func=lookupSID(sid=SID) ||
+
+     -- resolve usernames via registry if lookupSID is not available
+     -- or yields no results
+
+          pathspec(parse=stat(accessor="registry",
+               filename="HKEY_LOCAL_MACHINE/Software/Microsoft/Windows NT/CurrentVersion/ProfileList/" +
+                      SID + "/ProfileImagePath").Data.value).Basename || "")
+
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
@@ -32,7 +44,7 @@ sources:
           SELECT
              split(string=Key.OSPath.Basename, sep="-")[-1] as Uid,
              "" AS Gid,
-             lookupSID(sid=Key.OSPath.Basename) || "" AS Name,
+             LookupSIDCache(SID=Key.OSPath.Basename || "") AS Name,
              Key.OSPath as Description,
              ProfileImagePath as Directory,
              Key.OSPath.Basename as UUID,

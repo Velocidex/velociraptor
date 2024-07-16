@@ -12,6 +12,9 @@ parameters:
   - name: remoteRegKey
     default: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\*
 
+imports:
+  - Windows.Sys.AllUsers
+
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
@@ -23,7 +26,7 @@ sources:
         -- lookupSID() may not be available on deaddisk analysis
         SELECT split(string=Key.OSPath.Basename, sep="-")[-1] as Uid,
            "" AS Gid,
-           lookupSID(sid=Key.OSPath.Basename) || "" AS Name,
+           LookupSIDCache(SID=Key.OSPath.Basename || "") AS Name,
            Key.OSPath as Description,
            ProfileImagePath as Directory,
            Key.OSPath.Basename as UUID,

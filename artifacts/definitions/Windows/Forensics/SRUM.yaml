@@ -32,15 +32,13 @@ parameters:
     type: bool
 
 export: |
-  LET resolveESEId(OSPath, Accessor, Id) = cache(
+  LET ResolveESEId(OSPath, Accessor, Id) = cache(
       name="ESE",
       func=srum_lookup_id(file=OSPath, accessor=Accessor, id=Id),
       key=format(format="%v-%v-%v", args=[OSPath, Accessor, Id]))
 
-  LET lookupSIDCache(OSPath, Accessor, Id) = cache(
-      name="SID",
-      func=lookupSID(sid=srum_lookup_id(file=OSPath, accessor=Accessor, id=Id)),
-      key=format(format="%v-%v-%v", args=[OSPath, Accessor, Id]))
+imports:
+  - Windows.Sys.AllUsers
 
 sources:
   - name: Upload
@@ -56,12 +54,12 @@ sources:
 
         SELECT  AutoIncId AS ID,
                 TimeStamp,
-                resolveESEId(OSPath=SRUMFiles.OSPath,
+                ResolveESEId(OSPath=SRUMFiles.OSPath,
                              Accessor=accessor, Id=AppId) AS App,
-                resolveESEId(OSPath=SRUMFiles.OSPath,
+                ResolveESEId(OSPath=SRUMFiles.OSPath,
                              Accessor=accessor, Id=UserId) AS UserSid,
-                lookupSIDCache(OSPath=SRUMFiles.OSPath,
-                          Accessor=accessor, Id=UserId) AS User,
+                LookupSIDCache(SID=srum_lookup_id(
+                    file=SRUMFiles, accessor=accessor, id=UserId) || "") AS User,
                 timestamp(winfiletime=EndTime) AS EndTime,
                 DurationMS,
                 NetworkBytesRaw
@@ -75,12 +73,12 @@ sources:
 
         SELECT AutoIncId as SRUMId,
                TimeStamp,
-               resolveESEId(OSPath=SRUMFiles.OSPath,
+               ResolveESEId(OSPath=SRUMFiles.OSPath,
                             Accessor=accessor, Id=AppId) AS App,
-               resolveESEId(OSPath=SRUMFiles.OSPath,
+               ResolveESEId(OSPath=SRUMFiles.OSPath,
                             Accessor=accessor, Id=UserId) AS UserSid,
-               lookupSIDCache(OSPath=SRUMFiles.OSPath,
-                         Accessor=accessor, Id=UserId) AS User,
+               LookupSIDCache(SID=srum_lookup_id(
+                    file=SRUMFiles, accessor=accessor, id=UserId) || "") AS User,
                ForegroundCycleTime,
                BackgroundCycleTime,
                FaceTime,
@@ -106,12 +104,12 @@ sources:
 
         SELECT AutoIncId as SRUMId,
              TimeStamp,
-             resolveESEId(OSPath=SRUMFiles.OSPath,
+             ResolveESEId(OSPath=SRUMFiles.OSPath,
                           Accessor=accessor, Id=AppId) AS App,
-             resolveESEId(OSPath=SRUMFiles.OSPath,
+             ResolveESEId(OSPath=SRUMFiles.OSPath,
                           Accessor=accessor, Id=UserId) AS UserSid,
-             lookupSIDCache(OSPath=SRUMFiles.OSPath,
-                       Accessor=accessor, Id=UserId) AS User,
+             LookupSIDCache(SID=srum_lookup_id(
+                    file=SRUMFiles, accessor=accessor, id=UserId) || "") AS User,
              InterfaceLuid,
              ConnectedTime,
              timestamp(winfiletime=ConnectStartTime) AS StartTime
@@ -125,12 +123,12 @@ sources:
 
         SELECT AutoIncId as SRUMId,
              TimeStamp,
-             resolveESEId(OSPath=SRUMFiles.OSPath,
+             ResolveESEId(OSPath=SRUMFiles.OSPath,
                           Accessor=accessor, Id=AppId) AS App,
-             resolveESEId(OSPath=SRUMFiles.OSPath,
+             ResolveESEId(OSPath=SRUMFiles.OSPath,
                           Accessor=accessor, Id=UserId) AS UserSid,
-             lookupSID(OSPath=SRUMFiles.OSPath,
-                       Accessor=accessor, Id=UserId) AS User,
+             LookupSIDCache(SID=srum_lookup_id(
+                    file=SRUMFiles, accessor=accessor, id=UserId) || "") AS User,
              UserId,
              BytesSent,
              BytesRecvd,
