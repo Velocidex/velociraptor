@@ -2,6 +2,7 @@ package client_info_test
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -140,7 +141,11 @@ func (self *ClientInfoTestSuite) TestMasterMinion() {
 	minion_config.Frontend.Resources.ClientInfoWriteTime = 1
 	minion_config.Frontend.Resources.ClientInfoSyncTime = 1
 
-	minion_client_info_manager, err := client_info.NewClientInfoManager(self.Ctx, minion_config)
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+
+	minion_client_info_manager, err := client_info.NewClientInfoManager(
+		self.Ctx, wg, minion_config)
 	assert.NoError(self.T(), err)
 
 	err = minion_client_info_manager.Start(

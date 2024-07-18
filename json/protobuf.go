@@ -48,13 +48,30 @@ func descriptorToDict(message protoreflect.Message) *ordereddict.Dict {
 		value := message.Get(field)
 
 		if field.Cardinality() == protoreflect.Repeated {
-			setRepeatedValue(result, value, field)
+			if field.IsMap() {
+				setMapValue(result, value, field)
+			} else {
+				setRepeatedValue(result, value, field)
+			}
 		} else {
 			setOneValue(result, value, field)
 		}
 	}
 
 	return result
+}
+
+func setMapValue(result *ordereddict.Dict, value protoreflect.Value,
+	field protoreflect.FieldDescriptor) {
+	field_name := string(field.Name())
+
+	m := ordereddict.NewDict()
+	value.Map().Range(func(key protoreflect.MapKey, value protoreflect.Value) bool {
+		m.Set(key.String(), value.Interface())
+		return true
+	})
+
+	result.Set(field_name, m)
 }
 
 func setRepeatedValue(result *ordereddict.Dict, value protoreflect.Value,

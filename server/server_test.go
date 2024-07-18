@@ -73,6 +73,9 @@ sources:
 `, `
 name: Server.Internal.Alerts
 type: SERVER_EVENT
+`, `
+name: Server.Internal.ClientScheduled
+type: SERVER_EVENT
 `}
 )
 
@@ -98,6 +101,7 @@ func (self *ServerTestSuite) SetupTest() {
 	self.ConfigObj.Services.HuntDispatcher = true
 	self.ConfigObj.Services.ClientMonitoring = true
 	self.ConfigObj.Services.Interrogation = true
+	self.ConfigObj.Client.Concurrency = 1
 
 	self.LoadArtifactsIntoConfig(mock_definitions)
 
@@ -125,6 +129,189 @@ func (self *ServerTestSuite) SetupTest() {
 		actions_proto.ClientInfo{ClientId: self.client_id},
 	})
 	assert.NoError(self.T(), err)
+}
+
+// Check that flows go through their respective states
+func (self *ServerTestSuite) TestFlowStates() {
+	var flow_ids []string
+
+	time_origin := int64(100)
+
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(time_origin, 0)))
+	defer closer()
+
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Create 5 flows to the client.
+	for i := 0; i < 5; i++ {
+		flow_id, err := self.createArtifactCollection()
+		require.NoError(self.T(), err)
+
+		flow_ids = append(flow_ids, flow_id)
+
+		flow_details, err := launcher.GetFlowDetails(
+			self.Ctx, self.ConfigObj, self.client_id, flow_id)
+		assert.NoError(self.T(), err)
+
+		// Our initial state is RUNNING
+		assert.Equal(self.T(), flow_details.Context.State,
+			flows_proto.ArtifactCollectorContext_RUNNING)
+	}
+
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Should be one flow request scheduled.
+	messages, err := client_info_manager.PeekClientTasks(self.Ctx, self.client_id)
+	assert.NoError(self.T(), err)
+
+	// We should have 5 messages waiting for the client - one for each flow.
+	assert.Equal(self.T(), len(messages), 5)
+
+	// Now draine some messages to the client - concurrency is set to
+	// 1 so we will pull 3 messages from the queue.
+	tasks, err := client_info_manager.GetClientTasks(self.Ctx, self.client_id)
+
+	// For backwards compatibility tasks are expanded so we only care
+	// about the flow requests in current version.
+	requests := getFlowRequests(tasks)
+	assert.Equal(self.T(), len(requests), 3)
+
+	// Two tasks remain in the queue.
+	tasks_remaining, err := client_info_manager.PeekClientTasks(self.Ctx, self.client_id)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(tasks_remaining), 2)
+
+	// We do not send any more tasks to the client until these ones
+	// are done
+	tasks, err = client_info_manager.GetClientTasks(self.Ctx, self.client_id)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(tasks), 0)
+
+	// The client info record shows which flows are currently in
+	// flight.
+	var client_info *services.ClientInfo
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		client_info, err = client_info_manager.Get(self.Ctx, self.client_id)
+		assert.NoError(self.T(), err)
+
+		return len(client_info.InFlightFlows) > 0
+	})
+
+	// Each flow is set to be in flight now
+	assert.Equal(self.T(), len(client_info.InFlightFlows), 3)
+
+	for in_flight := range client_info.InFlightFlows {
+		flow_details, err := launcher.GetFlowDetails(
+			self.Ctx, self.ConfigObj, self.client_id, in_flight)
+		assert.NoError(self.T(), err)
+
+		// The flow is in the WAITING state now until the client sends
+		// any status updates
+		assert.Equal(self.T(), flow_details.Context.State,
+			flows_proto.ArtifactCollectorContext_WAITING)
+
+		// Emulate a response from the flow - just some progress
+		// report - this acks that we are running the query now.
+		runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+		runner.ProcessSingleMessage(self.Ctx,
+			&crypto_proto.VeloMessage{
+				Source:    self.client_id,
+				SessionId: in_flight,
+				RequestId: constants.ProcessVQLResponses,
+				FlowStats: &crypto_proto.FlowStats{
+					QueryStatus: []*crypto_proto.VeloStatus{
+						{
+							Status: crypto_proto.VeloStatus_PROGRESS,
+						},
+					},
+				},
+			})
+		runner.Close(self.Ctx)
+
+		flow_details, err = launcher.GetFlowDetails(
+			self.Ctx, self.ConfigObj, self.client_id, in_flight)
+		assert.NoError(self.T(), err)
+
+		// The flow is in the IN_PROGRESS state now.
+		assert.Equal(self.T(), flow_details.Context.State,
+			flows_proto.ArtifactCollectorContext_IN_PROGRESS)
+
+		// Advance time by 10 minutes to emulate client going away for
+		// a while.
+		time_origin += 600
+		closer := utils.MockTime(utils.NewMockClock(time.Unix(time_origin, 0)))
+		defer closer()
+
+		flow_details, err = launcher.GetFlowDetails(
+			self.Ctx, self.ConfigObj, self.client_id, in_flight)
+		assert.NoError(self.T(), err)
+
+		// The flow is in the UNRESPONSIVE state now.
+		assert.Equal(self.T(), flow_details.Context.State,
+			flows_proto.ArtifactCollectorContext_UNRESPONSIVE)
+
+		// Lets complete the flow.
+		runner = flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+		runner.ProcessSingleMessage(self.Ctx,
+			&crypto_proto.VeloMessage{
+				Source:    self.client_id,
+				SessionId: in_flight,
+				RequestId: constants.ProcessVQLResponses,
+				FlowStats: &crypto_proto.FlowStats{
+					QueryStatus: []*crypto_proto.VeloStatus{
+						{
+							Status: crypto_proto.VeloStatus_OK,
+						},
+					},
+					FlowComplete: true,
+				},
+			})
+		runner.Close(self.Ctx)
+
+		flow_details, err = launcher.GetFlowDetails(
+			self.Ctx, self.ConfigObj, self.client_id, in_flight)
+		assert.NoError(self.T(), err)
+
+		// The flow is in the FINISHED state now.
+		assert.Equal(self.T(), flow_details.Context.State,
+			flows_proto.ArtifactCollectorContext_FINISHED)
+	}
+
+	// The client record should not have any in flight flows now.
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		client_info, err = client_info_manager.Get(self.Ctx, self.client_id)
+		assert.NoError(self.T(), err)
+
+		return len(client_info.InFlightFlows) == 0
+	})
+
+	// Lets get the next batch of flows off the queue. This is now
+	// possible because the in_flight flows have been cleared.
+	tasks, err = client_info_manager.GetClientTasks(self.Ctx, self.client_id)
+
+	// For backwards compatibility tasks are expanded so we only care
+	// about the flow requests in current version.
+	requests = getFlowRequests(tasks)
+	assert.Equal(self.T(), len(requests), 2)
+
+	// Now lets simulate the client crashing... Advance time by 10 minutes
+	time_origin += 600
+
+	closer = utils.MockTime(utils.NewMockClock(time.Unix(time_origin, 0)))
+	defer closer()
+
+	// Get the next set of tasks for the client.
+	tasks, err = client_info_manager.GetClientTasks(self.Ctx, self.client_id)
+	assert.NoError(self.T(), err)
+
+	// The server will send the client a flow stats request - please
+	// tell me about these flows. If the client really crashed it will
+	// know nothing about these flows and send an automated
+	// termination for them.
+	assert.Equal(self.T(), len(tasks), 1)
+	assert.Equal(self.T(), len(tasks[0].FlowStatsRequest.FlowId), 2)
 }
 
 func (self *ServerTestSuite) TestEnrollment() {
@@ -645,8 +832,9 @@ func (self *ServerTestSuite) TestCompletions() {
 		details, err := launcher.GetFlowDetails(
 			self.Ctx, self.ConfigObj, self.client_id, flow_id)
 		require.NoError(t, err)
+
 		// Flow not complete yet - still an outstanding request.
-		return flows_proto.ArtifactCollectorContext_RUNNING ==
+		return flows_proto.ArtifactCollectorContext_IN_PROGRESS ==
 			details.Context.State
 	})
 
@@ -777,6 +965,15 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 	// The flow stats are written as normal.
 	err = db.GetSubject(self.ConfigObj, path_manager.Stats(), collection_context)
 	assert.NoError(t, err)
+}
+
+func getFlowRequests(messages []*crypto_proto.VeloMessage) (res []*crypto_proto.VeloMessage) {
+	for _, m := range messages {
+		if m.FlowRequest != nil {
+			res = append(res, m)
+		}
+	}
+	return res
 }
 
 func TestServerTestSuite(t *testing.T) {

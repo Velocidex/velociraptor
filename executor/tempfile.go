@@ -38,13 +38,15 @@ func SetTempfile(config_obj *config_proto.Config) {
 		// Try to create a file in the directory to make sure
 		// we have permissions and the directory exists.
 		tmpfile, err := ioutil.TempFile(tmpdir, "tmp")
-		if err != nil {
+		if err == nil {
+			defer os.Remove(tmpfile.Name())
+
+		} else {
 			// No we dont have permission there, fall back to system
 			// default, that is the best we can do we hope we can
 			// write there.
 			tmpdir = os.TempDir()
 		}
-		defer os.Remove(tmpfile.Name())
 
 		// Set the env vars the same on all platforms to be consistent
 		// across OSs

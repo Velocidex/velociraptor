@@ -98,6 +98,7 @@ type CompilerOptions struct {
 	LogBatchTime uint64
 }
 
+// Written in the flow index
 type FlowSummary struct {
 	FlowId    string   `json:"FlowId"`
 	Artifacts []string `json:"Artifacts"`

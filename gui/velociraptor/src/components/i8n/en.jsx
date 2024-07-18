@@ -290,6 +290,12 @@ const English = {
         <>
           You are about to remove user {user} from Org {org} <br/>
         </>),
+    "RUNNING": "Scheduled",
+    "WAITING": "Waiting to run",
+    "IN_PROGRESS": "In Progress",
+    "UNRESPONSIVE": "Unresponsive",
+    "FINISHED": "Completed",
+    "ERROR": "Error",
 };
 
 export default English;

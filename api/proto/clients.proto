@@ -53,6 +53,8 @@ message ApiClient {
 
     // Last time the labels on this client were updated.
     uint64 last_label_timestamp = 24;
+
+    map<string, int64> in_flight_flows = 25;
 }
 
 message SearchClientsRequest {

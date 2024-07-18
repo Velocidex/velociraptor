@@ -217,6 +217,24 @@ func (self *FlowStorageManager) LoadCollectionContext(
 	config_obj *config_proto.Config,
 	client_id, flow_id string) (*flows_proto.ArtifactCollectorContext, error) {
 
+	in_flight_time := int64(0)
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	err = client_info_manager.Modify(ctx, client_id,
+		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+			if client_info != nil &&
+				client_info.InFlightFlows != nil {
+				in_flight_time, _ = client_info.InFlightFlows[flow_id]
+			}
+			return nil, nil
+		})
+	if err != nil {
+		return nil, err
+	}
+
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	db, err := datastore.GetDB(config_obj)
@@ -243,6 +261,9 @@ func (self *FlowStorageManager) LoadCollectionContext(
 	stats_context := &flows_proto.ArtifactCollectorContext{}
 	err = db.GetSubject(
 		config_obj, flow_path_manager.Stats(), stats_context)
+
+	collection_context.InflightTime = uint64(in_flight_time)
+
 	// Stats file is missing that is ok and not an error.
 	if err != nil {
 		UpdateFlowStats(collection_context)

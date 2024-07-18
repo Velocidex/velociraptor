@@ -315,8 +315,7 @@ func handleIndex(config_obj *config_proto.Config) func(
 			}
 
 			w.Write([]byte(fmt.Sprintf(
-				"<li><a href=\"%s\">Metrics</a></li>\n",
-				url.QueryEscape(metrics_url))))
+				"<li><a href=\"%s\">Metrics</a></li>\n", metrics_url)))
 		}
 
 		for _, i := range debug.GetProfileWriters() {

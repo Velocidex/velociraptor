@@ -93,7 +93,8 @@ code {
 }
 
 .btn-tooltip[data-tooltip] {
-  position: relative;
+    position: relative;
+    z-index: 1000;
 }
 
 .btn-tooltip[data-tooltip]:hover::before {
@@ -127,7 +128,7 @@ code {
   transition: opacity ease-out 150ms, bottom ease-out 150ms;
   transition-property: opacity;
   transition-delay: 300ms;
-  z-index: 100000;
+  z-index: 10000;
   box-shadow: 4px 4px 4px rgba(0,0,0,.5);
 }
 
@@ -153,5 +154,5 @@ code {
 }
 
 .btn-tooltip:disabled:hover::before {
-   display: none;
+    display: none;
 }

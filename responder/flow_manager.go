@@ -23,10 +23,13 @@ import (
 	"context"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 // A Flow Manager runs on the client and keeps track of all flows that
@@ -58,7 +61,33 @@ func NewFlowManager(ctx context.Context,
 		in_flight:  make(map[string]*FlowContext),
 		cancelled:  make(map[string]bool),
 	}
+
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:          "ClientFlowManager",
+		Description:   "Report the state of the client's flow manager",
+		ProfileWriter: result.WriteProfile,
+	})
+
 	return result
+}
+
+func (self *FlowManager) WriteProfile(ctx context.Context,
+	scope vfilter.Scope, output_chan chan vfilter.Row) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for flow_id, flow_context := range self.in_flight {
+		output_chan <- ordereddict.NewDict().
+			Set("FlowId", flow_id).
+			Set("State", "In Flight").
+			Set("Stats", flow_context.GetStats())
+	}
+
+	for flow_id := range self.cancelled {
+		output_chan <- ordereddict.NewDict().
+			Set("FlowId", flow_id).
+			Set("State", "Cancelled")
+	}
 }
 
 func (self *FlowManager) removeFlowContext(flow_id string) {
@@ -95,6 +124,18 @@ func (self *FlowManager) Cancel(ctx context.Context, flow_id string) {
 	if pres {
 		flow_context.Cancel()
 	}
+}
+
+func (self *FlowManager) Get(flow_id string) (*FlowContext, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	flow_context, pres := self.in_flight[flow_id]
+	if !pres {
+		return nil, utils.NotFoundError
+	}
+
+	return flow_context, nil
 }
 
 func (self *FlowManager) FlowContext(

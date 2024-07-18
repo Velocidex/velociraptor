@@ -25,7 +25,7 @@ events sent. Timing is not critical or guaranteed. The mechanism is
 designed for listeners which are mostly idle but need to be notified
 with low latency when something is available to do.
 
-Therefore notifications are debounced so ensure that rapid
+Therefore notifications are debounced to ensure that rapid
 notifications do not result in too many checking loops.
 
 1. Race detection between listener and sender: If the listener calls
@@ -153,6 +153,7 @@ func (self *clientNotifier) Notify() {
 	}
 
 	// We can notify right now.
+	fmt.Printf("Notification called!!!!\n")
 	close(self.done)
 	self.done = nil
 	self.fire(now)

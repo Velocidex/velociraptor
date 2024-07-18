@@ -238,6 +238,25 @@ func (self *ClientInfoManager) Start(
 		return err
 	}
 
+	// Watch for flow completions and unset the inflight status.
+	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
+		"System.Flow.Completion",
+		"ClientInfoManager",
+		self.ProcessFlowCompletion)
+	if err != nil {
+		return err
+	}
+
+	// This is a queue that synchronizes all nodes on which flows are
+	// in flight.
+	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
+		"Server.Internal.ClientScheduled",
+		"ClientInfoManager",
+		self.ProcessInFlightNotifications)
+	if err != nil {
+		return err
+	}
+
 	// The master will be informed when new clients appear.
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.ClientPing",
@@ -248,6 +267,89 @@ func (self *ClientInfoManager) Start(
 	}
 
 	return nil
+}
+
+func (self *ClientInfoManager) ProcessFlowCompletion(
+	ctx context.Context, config_obj *config_proto.Config,
+	row *ordereddict.Dict) error {
+	client_id, pres := row.GetString("ClientId")
+	if !pres {
+		return nil
+	}
+
+	flow_id, pres := row.GetString("FlowId")
+	if !pres {
+		return nil
+	}
+
+	err := self.storage.Modify(ctx, client_id,
+		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+			if client_info == nil || client_info.InFlightFlows == nil {
+				return nil, utils.NotFoundError
+			}
+
+			delete(client_info.InFlightFlows, flow_id)
+			return client_info, nil
+		})
+	if err != nil {
+		return err
+	}
+
+	notifier, err := services.GetNotifier(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	return notifier.NotifyListener(
+		ctx, self.config_obj, client_id, "ClientInfoManager")
+}
+
+func (self *ClientInfoManager) ProcessInFlightNotifications(
+	ctx context.Context, config_obj *config_proto.Config,
+	row *ordereddict.Dict) error {
+
+	client_id, pres := row.GetString("ClientId")
+	if !pres {
+		return nil
+	}
+
+	remove, pres := row.GetBool("ClearFlows")
+	// Just clear all the flows - we dont need to track
+	// them. This only happens when communicating with older
+	// clients that do not support it.
+	if remove || pres {
+		return self.storage.Modify(ctx, client_id,
+			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+				if client_info == nil {
+					return nil, utils.NotFoundError
+				}
+
+				// Just clear all the flows - we dont need to track
+				// them. This only happens when communicating with older
+				// clients that do not support it.
+				client_info.InFlightFlows = nil
+				return client_info, nil
+			})
+	}
+
+	in_flight, _ := row.GetStrings("InFlight")
+	return self.storage.Modify(ctx, client_id,
+		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+			if client_info == nil {
+				return nil, utils.NotFoundError
+			}
+
+			if client_info.InFlightFlows == nil {
+				client_info.InFlightFlows = make(map[string]int64)
+			}
+
+			now := utils.GetTime().Now().Unix()
+			for _, flow_id := range in_flight {
+				client_info.InFlightFlows[flow_id] = now
+			}
+
+			return client_info, nil
+		})
 }
 
 func (self *ClientInfoManager) ProcessSnapshotWrites(
@@ -458,6 +560,7 @@ func (self *ClientInfoManager) Set(
 
 func NewClientInfoManager(
 	ctx context.Context,
+	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (*ClientInfoManager, error) {
 
 	// Calculate a unique id for each service.
@@ -482,6 +585,17 @@ func NewClientInfoManager(
 	}
 
 	service.storage.StartHouseKeep(ctx, config_obj)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		// When we shut down make sure to save the snapshot.
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		service.storage.SaveSnapshot(ctx, config_obj)
+	}()
 
 	return service, nil
 }

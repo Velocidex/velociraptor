@@ -9,6 +9,7 @@ package client_info
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync/atomic"
 
 	"github.com/Velocidex/ordereddict"
@@ -17,9 +18,11 @@ import (
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -109,6 +112,7 @@ func (self *ClientInfoManager) QueueMessagesForClient(
 					return nil, utils.NotFoundError
 				}
 				client_info.HasTasks = true
+
 				return client_info, nil
 			})
 
@@ -118,6 +122,15 @@ func (self *ClientInfoManager) QueueMessagesForClient(
 					Set("ClientId", client_id).
 					Set("Notify", notify),
 				"Server.Internal.ClientTasks")
+		}
+
+		if notify {
+			notifier, err := services.GetNotifier(self.config_obj)
+			if err != nil {
+				return
+			}
+
+			notifier.NotifyDirectListener(client_id)
 		}
 	})
 	defer completer.GetCompletionFunc()()
@@ -163,22 +176,46 @@ func (self *ClientInfoManager) QueueMessageForClient(
 		return err
 	}
 
+	completer := utils.NewCompleter(func() {
+		if completion != nil {
+			completion()
+		}
+
+		err := self.storage.Modify(ctx, client_id,
+			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+				if client_info == nil {
+					return nil, utils.NotFoundError
+				}
+				client_info.HasTasks = true
+
+				return client_info, nil
+			})
+
+		if err != nil {
+			return
+		}
+
+		journal.PushRowsToArtifactAsync(ctx, self.config_obj,
+			ordereddict.NewDict().
+				Set("ClientId", client_id).
+				Set("Notify", notify),
+			"Server.Internal.ClientTasks")
+
+		if notify {
+			notifier, err := services.GetNotifier(self.config_obj)
+			if err != nil {
+				return
+			}
+
+			notifier.NotifyDirectListener(client_id)
+		}
+	})
+	defer completer.GetCompletionFunc()()
+
 	client_path_manager := paths.NewClientPathManager(client_id)
 	return db.SetSubjectWithCompletion(self.config_obj,
 		client_path_manager.Task(req.TaskId),
-		req, func() {
-			if completion != nil {
-				completion()
-			}
-
-			// This message will be received by all nodes and cause
-			// the client's recrod to update the has_tasks field.
-			journal.PushRowsToArtifactAsync(ctx, self.config_obj,
-				ordereddict.NewDict().
-					Set("ClientId", client_id).
-					Set("Notify", notify),
-				"Server.Internal.ClientTasks")
-		})
+		req, completer.GetCompletionFunc())
 }
 
 // Get the client tasks but do not dequeue them (Generally only called
@@ -228,19 +265,160 @@ var (
 	noTasksError = errors.New("No Tasks")
 )
 
-// Gets all the tasks from the client and remove from the datastore.
+// Fetch the next number of flow_request tasks off the queue and
+// dequeue them.
+func (self *ClientInfoManager) getClientTasks(
+	ctx context.Context, client_id string, number int) (
+	[]*crypto_proto.VeloMessage, error) {
+
+	var result []*crypto_proto.VeloMessage
+	var tasks []api.DSPathSpec
+	total_flow_requests := 0
+	more_requests_available := false
+
+	// Fetch all the tasks.
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	client_path_manager := paths.NewClientPathManager(client_id)
+	tasks, err = db.ListChildren(
+		self.config_obj, client_path_manager.TasksDirectory())
+	if err != nil {
+		return nil, err
+	}
+
+	for _, task_urn := range tasks {
+		task_urn = task_urn.SetTag("ClientTask")
+
+		// Here we read the task from the task_urn and remove
+		// it from the queue.
+		message := &crypto_proto.VeloMessage{}
+		err = db.GetSubject(self.config_obj, task_urn, message)
+		if err != nil {
+			// The file seems invalid, just delete it.
+			_ = db.DeleteSubject(self.config_obj, task_urn)
+			continue
+		}
+
+		// Handle backwards compatibility with older clients by expanding
+		// FlowRequest into separate VQLClientActions. Newer clients will
+		// ignore bare VQLClientActions and older clients will ignore
+		// FlowRequest.
+		if message.FlowRequest != nil {
+			total_flow_requests++
+
+			// Only include the first number requests
+			if total_flow_requests <= number {
+				result = append(result, message)
+
+				// Add extra backwards compatibility messages for
+				// older clients.
+				if len(message.FlowRequest.VQLClientActions) > 0 {
+
+					// Tack the first VQLClientAction on top of the
+					// FlowRequest for backwards compatibility. Newer clients
+					// procees FlowRequest first and ignore VQLClientAction
+					// while older clients will process the VQLClientAction
+					// and ignore the FlowRequest message. In both cases the
+					// message will be valid.
+					message.VQLClientAction = proto.Clone(
+						message.FlowRequest.VQLClientActions[0]).(*actions_proto.VQLCollectorArgs)
+
+					// Send the rest of the VQLClientAction as distinct messages.
+					for idx, request := range message.FlowRequest.VQLClientActions {
+						if idx > 0 {
+							result = append(result, &crypto_proto.VeloMessage{
+								SessionId:       message.SessionId,
+								RequestId:       message.RequestId,
+								VQLClientAction: request,
+							})
+						}
+					}
+				}
+
+				// Delete the scheduled tasks
+				err = db.DeleteSubject(self.config_obj, task_urn)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				// Skip additional FlowRequest packets
+				more_requests_available = true
+				continue
+			}
+
+		} else {
+			// Non FlowRequest packets are always included
+			// (e.g. Cancel)
+			result = append(result, message)
+
+			// Delete the scheduled tasks
+			err = db.DeleteSubject(self.config_obj, task_urn)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+	}
+
+	if more_requests_available {
+		client_info_manager, err := services.GetClientInfoManager(self.config_obj)
+		if err != nil {
+			return nil, err
+		}
+
+		client_info_manager.Modify(ctx, client_id,
+			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+				client_info.HasTasks = true
+				return client_info, nil
+			})
+	}
+
+	return result, nil
+}
+
+// Gets the tasks from the client queue and remove from the datastore.
 func (self *ClientInfoManager) GetClientTasks(
 	ctx context.Context, client_id string) (
 	[]*crypto_proto.VeloMessage, error) {
+
+	// This list holds the flows that are inflight and we have not
+	// heard from them for some time. We can actively request the
+	// client to report on them again to see how they are going.
+	var inflight_notifications []string
+
+	// Number of currently in flight flows to the client. This is the
+	// total number, including those that were recently scheduled - it
+	// is not the same as len(inflight_notifications)
+	inflight_requests := 0
+
+	now := utils.GetTime().Now().Unix()
 
 	err := self.storage.Modify(ctx, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if client_info == nil {
 				return nil, utils.NotFoundError
 			}
-			if !client_info.HasTasks {
+
+			// Gather up any stats notifications we might have
+			inflight_requests = len(client_info.InFlightFlows)
+
+			// No tasks to send and we dont have anything in flight -
+			// just exit quickly.
+			if !client_info.HasTasks && inflight_requests == 0 {
 				return nil, noTasksError
 			}
+
+			// Check up on in flight flows every 60 sec at least
+			// (could be more depending on poll).
+			for k, v := range client_info.InFlightFlows {
+				if now-v > 10 {
+					inflight_notifications = append(inflight_notifications, k)
+				}
+			}
+
 			// Reset the HasTasks flag
 			client_info.HasTasks = false
 			return client_info, nil
@@ -257,70 +435,80 @@ func (self *ClientInfoManager) GetClientTasks(
 		return nil, nil
 	}
 
-	var tasks []api.DSPathSpec
+	var result []*crypto_proto.VeloMessage
 
-	// Fetch all the tasks.
-	db, err := datastore.GetDB(self.config_obj)
+	// We only allow a maximum of 2 tasks above client concurrency to
+	// be in flight at any time. We know there are some requests
+	// already in flight, so we only fetch as many as we need.
+	max_inflight_requests := 4
+	if self.config_obj.Client != nil && self.config_obj.Client.Concurrency > 0 {
+		max_inflight_requests = 2 + int(self.config_obj.Client.Concurrency)
+	}
+
+	result, err = self.getClientTasks(ctx, client_id,
+		max_inflight_requests-inflight_requests)
 	if err != nil {
 		return nil, err
 	}
 
-	client_path_manager := paths.NewClientPathManager(client_id)
-	tasks, err = db.ListChildren(
-		self.config_obj, client_path_manager.TasksDirectory())
-	if err != nil {
-		return nil, err
+	// Add a notification request to the client asking about the
+	// status of currently in flight requests.
+	if len(inflight_notifications) > 0 {
+		result = append(result, &crypto_proto.VeloMessage{
+			SessionId: constants.STATUS_CHECK_WELL_KNOWN_FLOW,
+			FlowStatsRequest: &crypto_proto.FlowStatsRequest{
+				FlowId: inflight_notifications,
+			},
+		})
 	}
 
-	result := []*crypto_proto.VeloMessage{}
-	for _, task_urn := range tasks {
-		task_urn = task_urn.SetTag("ClientTask")
-
-		// Here we read the task from the task_urn and remove
-		// it from the queue.
-		message := &crypto_proto.VeloMessage{}
-		err = db.GetSubject(self.config_obj, task_urn, message)
-		if err != nil {
-			// The file seems invalid, just delete it.
-			_ = db.DeleteSubject(self.config_obj, task_urn)
-			continue
+	// What new flows were added?
+	var inflight_flows []string
+	for _, message := range result {
+		if message.FlowRequest != nil && message.SessionId != "" {
+			inflight_flows = append(inflight_flows, message.SessionId)
 		}
+	}
 
-		err = db.DeleteSubject(self.config_obj, task_urn)
+	if len(inflight_flows) > 0 {
+
+		// Add the inflight tags to the client record immediately.
+		err := self.storage.Modify(ctx, client_id,
+			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+				if client_info == nil {
+					return nil, nil
+				}
+
+				if client_info.InFlightFlows == nil {
+					client_info.InFlightFlows = make(map[string]int64)
+				}
+
+				for _, flow_id := range inflight_flows {
+					client_info.InFlightFlows[flow_id] = now
+				}
+
+				return client_info, nil
+			})
 		if err != nil {
 			return nil, err
 		}
 
-		// Handle backwards compatibility with older clients by expanding
-		// FlowRequest into separate VQLClientActions. Newer clients will
-		// ignore bare VQLClientActions and older clients will ignore
-		// FlowRequest.
-		if message.FlowRequest != nil &&
-			len(message.FlowRequest.VQLClientActions) > 0 {
-
-			// Tack the first VQLClientAction on top of the
-			// FlowRequest for backwards compatibility. Newer clients
-			// procees FlowRequest first and ignore VQLClientAction
-			// while older clients will process the VQLClientAction
-			// and ignore the FlowRequest message. In both cases the
-			// message will be valid.
-			message.VQLClientAction = proto.Clone(
-				message.FlowRequest.VQLClientActions[0]).(*actions_proto.VQLCollectorArgs)
-
-			// Send the rest of the VQLClientAction as distinct messages.
-			for idx, request := range message.FlowRequest.VQLClientActions {
-				if idx > 0 {
-					result = append(result, &crypto_proto.VeloMessage{
-						SessionId:       message.SessionId,
-						RequestId:       message.RequestId,
-						VQLClientAction: request,
-					})
-				}
-			}
+		// Message all the other nodes that these new flows are in
+		// flight. The event listener will add them to the client info
+		// service.
+		journal, err := services.GetJournal(self.config_obj)
+		if err != nil {
+			return nil, err
 		}
 
-		result = append(result, message)
+		journal.PushRowsToArtifactAsync(ctx, self.config_obj,
+			ordereddict.NewDict().
+				Set("ClientId", client_id).
+				Set("InFlight", inflight_flows),
+			"Server.Internal.ClientScheduled")
 	}
+
+	fmt.Printf("Sending tasks %v\n", json.MustMarshalString(result))
 
 	return result, nil
 }

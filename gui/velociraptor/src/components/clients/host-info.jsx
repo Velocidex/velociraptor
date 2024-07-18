@@ -24,6 +24,8 @@ import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 import "./host-info.css";
 import { runArtifact } from "../flows/utils.jsx";
+import InFlightViewer from "./inflight_viewer.jsx";
+
 import T from '../i8n/i8n.jsx';
 
 const INTERROGATE_POLL_TIME = 2000;
@@ -370,14 +372,19 @@ class VeloHostInfo extends Component {
                         <dd className="col-sm-9">
                           { info.os_info.machine }
                         </dd>
-            <dt className="col-sm-3">MAC Addresses</dt>
-            <dd className="col-sm-9">
-              { _.map(info.os_info.mac_addresses, (address, idx) => {
-                  return <div key={idx}>{address}</div>;
-              })}
-            </dd>
+                        <dt className="col-sm-3">MAC Addresses</dt>
+                        <dd className="col-sm-9">
+                          { _.map(info.os_info.mac_addresses, (address, idx) => {
+                              return <div key={idx}>{address}</div>;
+                          })}
+                        </dd>
                       </dl>
                       <hr />
+                      { info.in_flight_flows &&
+                        <>
+                          <InFlightViewer client_info={info}/>
+                          <hr />
+                        </>}
                       <Card.Header>{T("Client Metadata")}</Card.Header>
                       <MetadataEditor client_id={client_id} />
                     </Card.Body>

@@ -1,0 +1,4 @@
+.tooltip-inner {
+    background-color: var(--color-canvas-background);
+    color: var(--color-foreground);
+}

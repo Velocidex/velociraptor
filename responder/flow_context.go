@@ -455,6 +455,13 @@ func (self *FlowContext) sendStats() {
 	}
 }
 
+func (self *FlowContext) GetStats() *crypto_proto.VeloMessage {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.getStats()
+}
+
 // Prepare a FlowStat message to send the server.
 func (self *FlowContext) getStats() *crypto_proto.VeloMessage {
 	result := &crypto_proto.VeloMessage{
