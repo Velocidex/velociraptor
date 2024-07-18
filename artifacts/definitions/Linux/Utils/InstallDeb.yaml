@@ -7,6 +7,9 @@ description: |
 
 type: CLIENT
 
+required_permissions:
+   - EXECVE
+
 reference:
    - https://manpages.debian.org/bookworm/debconf-doc/debconf-devel.7.en.html#Type
 
