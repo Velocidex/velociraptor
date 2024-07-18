@@ -29,6 +29,20 @@ BLACKLISTED = ["!ALL.tkape"]
 # The following paths are not NTFS files, so they can be read normally.
 NOT_NTFS = ["$Recycle.Bin"]
 
+# Some rules are specified in terms of regex instead of globs so we convert them with this lookup table.
+REGEX_TO_GLOB = {
+    r"*.+\.(db|db-wal|db-shm)": "*.{db,db-wal,db-shm}",
+    r"*.+\.(3gp|aa|aac|act|aiff|alac|amr|ape|au|awb|dss|dvf|flac|gsm|iklax|ivs|m4a|m4b|m4p|mmf|mp3|mpc|msv|nmf|ogg|oga|mogg|opus|ra|rm|raw|rf64|sln|tta|voc|vox|wav|wma|wv|webm)": "*.{3gp,aa,aac,act,aiff,alac,amr,ape,au,awb,dss,dvf,flac,gsm,iklax,ivs,m4a,m4b,m4p,mmf,mp3,mpc,msv,nmf,ogg,oga,mogg,opus,ra,rm,raw,rf64,sln,tta,voc,vox,wav,wma,wv,webm}",
+    r"*.+\.(xls|xlsx|csv|tsv|xlt|xlm|xlsm|xltx|xltm|xlsb|xla|xlam|xll|xlw|ods|fodp|qpw)": "*.{xls,xlsx,csv,tsv,xlt,xlm,xlsm,xltx,xltm,xlsb,xla,xlam,xll,xlw,ods,fodp,qpw}",
+    r"*.+\.(pdf|xps|oxps)": "*.{pdf,xps,oxps}",
+    r"*.+\.(ai|bmp|bpg|cdr|cpc|eps|exr|flif|gif|heif|ilbm|ima|jp2|j2k|jpf|jpm|jpg2|j2c|jpc|jpx|mj2jpeg|jpg|jxl|kra|ora|pcx|pgf|pgm|png|pnm|ppm|psb|psd|psp|svg|tga|tiff|webp|xaml|xcf)": "*.{ai,bmp,bpg,cdr,cpc,eps,exr,flif,gif,heif,ilbm,ima,jp2,j2k,jpf,jpm,jpg2,j2c,jpc,jpx,mj2jpeg,jpg,jxl,kra,ora,pcx,pgf,pgm,png,pnm,ppm,psb,psd,psp,svg,tga,tiff,webp,xaml,xcf}",
+    r"*.+\.(db*|sqlite*|)": "*.{db,sqlite}*)",
+    r"*.+\.(3g2|3gp|amv|asf|avi|drc|flv|f4v|f4p|f4a|f4b|gif|gifv|m4v|mkv|mov|qt|mp4|m4p|mpg|mpeg|m2v|mp2|mpe|mpv|mts|m2ts|ts|mxf|nsv|ogv|ogg|rm|rmvb|roq|svi|viv|vob|webm|wmv|yuv)": "*.{3g2,3gp,amv,asf,avi,drc,flv,f4v,f4p,f4a,f4b,gif,gifv,m4v,mkv,mov,qt,mp4,m4p,mpg,mpeg,m2v,mp2,mpe,mpv,mts,m2ts,ts,mxf,nsv,ogv,ogg,rm,rmvb,roq,svi,viv,vob,webm,wmv,yuv}",
+    r"*.+\.(doc|docx|docm|dotx|dotm|docb|dot|wbk|odt|fodt|rtf|wp*|tmd)": "*.{doc,docx,docm,dotx,dotm,docb,dot,wbk,odt,fodt,rtf,wp*,tmd}",
+    r".*\.(jpg|mp4|pdf|webp)": "*.{jpg,mp4,pdf,webp}",
+    r"*.\b[a-zA-Z0-9_-]{8}\b.compiled": "*.compiled",
+}
+
 
 def pathsep_converter_win(path):
     return path.replace("/", "\\")
@@ -38,6 +52,14 @@ def pathsep_converter_nix(path):
 
 def pathsep_converter_identity(path):
     return path
+
+
+def unregexify(regex):
+    res = REGEX_TO_GLOB.get(regex)
+    if not res:
+        print("Unknown regex file mask: %s" % regex, file=sys.stderr)
+        return regex
+    return res
 
 
 class KapeContext:
@@ -77,6 +99,8 @@ def read_targets(ctx, project_path):
 
             mask = target.get("FileMask")
             if mask:
+                if mask.lower().startswith("regex:"):
+                    mask = unregexify(mask[6:])
                 glob = glob.rstrip("\\") + "/" + mask
 
             # If the glob ends with \\ it means that it is a directory
