@@ -454,9 +454,6 @@ func (self *ClientFlowRunner) FlowStats(
 	ctx context.Context, client_id, flow_id string,
 	msg *crypto_proto.FlowStats) error {
 
-	fmt.Printf("Received client FlowStats for %v flow_id: %v\n",
-		flow_id, json.MustMarshalString(msg))
-
 	// Write a partial ArtifactCollectorContext protobuf containing
 	// all the dynamic fields
 	stats := &flows_proto.ArtifactCollectorContext{

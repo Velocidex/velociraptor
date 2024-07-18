@@ -9,7 +9,6 @@ package client_info
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync/atomic"
 
 	"github.com/Velocidex/ordereddict"
@@ -22,7 +21,6 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -507,8 +505,6 @@ func (self *ClientInfoManager) GetClientTasks(
 				Set("InFlight", inflight_flows),
 			"Server.Internal.ClientScheduled")
 	}
-
-	fmt.Printf("Sending tasks %v\n", json.MustMarshalString(result))
 
 	return result, nil
 }

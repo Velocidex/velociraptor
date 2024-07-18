@@ -153,7 +153,6 @@ func (self *clientNotifier) Notify() {
 	}
 
 	// We can notify right now.
-	fmt.Printf("Notification called!!!!\n")
 	close(self.done)
 	self.done = nil
 	self.fire(now)

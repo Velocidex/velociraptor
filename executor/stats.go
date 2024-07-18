@@ -3,12 +3,10 @@ package executor
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -42,9 +40,6 @@ func (self *ClientExecutor) ProcessStatRequest(
 
 		// Make sure responses get there immediately.
 		stats.Urgent = true
-
-		fmt.Printf("Stat response %v: %v\n",
-			flow_id, json.MustMarshalString(stats))
 		self.SendToServer(stats)
 	}
 }

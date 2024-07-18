@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"fmt"
 	"regexp"
 	"strings"
 	"sync"
@@ -113,7 +112,8 @@ func (self *RepositoryManager) StartWatchingForUpdates(
 					}
 
 				default:
-					fmt.Printf("Unknown op %v\n", op)
+					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+					logger.Error("RepositoryManager: <red>Unknown op %v</>", op)
 				}
 			}
 		}
