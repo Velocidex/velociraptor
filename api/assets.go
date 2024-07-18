@@ -26,6 +26,7 @@ import (
 
 	"github.com/gorilla/csrf"
 	"github.com/lpar/gzipped"
+	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/api/proto"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -34,11 +35,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
-func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) {
+func install_static_assets(
+	ctx context.Context,
+	config_obj *config_proto.Config, mux *http.ServeMux) {
 	base := utils.GetBasePath(config_obj)
 	dir := utils.Join(base, "/app/")
 	mux.Handle(dir, ipFilter(config_obj, http.StripPrefix(
-		dir, gzipped.FileServer(NewCachedFilesystem(gui_assets.HTTP)))))
+		dir, gzipped.FileServer(NewCachedFilesystem(ctx, gui_assets.HTTP)))))
 
 	mux.Handle("/favicon.png",
 		http.RedirectHandler(utils.Join(base, "/favicon.ico"),

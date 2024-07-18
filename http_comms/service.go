@@ -30,7 +30,7 @@ func StartHttpCommunicatorService(
 		return nil, err
 	}
 
-	crypto_manager, err := crypto_client.NewClientCryptoManager(
+	crypto_manager, err := crypto_client.NewClientCryptoManager(ctx,
 		config_obj, []byte(writeback.PrivateKey))
 	if err != nil {
 		return nil, err

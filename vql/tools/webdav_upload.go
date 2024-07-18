@@ -147,7 +147,8 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 		}
 	}
 
-	req, err := http.NewRequest(http.MethodPut, parsedUrl.String(), reader)
+	req, err := http.NewRequestWithContext(ctx,
+		http.MethodPut, parsedUrl.String(), reader)
 	if err != nil {
 		return &uploads.UploadResponse{
 			Error: err.Error(),

@@ -24,6 +24,7 @@ import (
 	errors "github.com/go-errors/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -145,7 +146,8 @@ func (self *CachedFilesystem) Exists(path string) bool {
 	return true
 }
 
-func NewCachedFilesystem(fs http.FileSystem) *CachedFilesystem {
+func NewCachedFilesystem(
+	ctx context.Context, fs http.FileSystem) *CachedFilesystem {
 	result := &CachedFilesystem{
 		FileSystem: fs,
 		lru:        ttlcache.NewCache(),
@@ -153,6 +155,12 @@ func NewCachedFilesystem(fs http.FileSystem) *CachedFilesystem {
 
 	result.lru.SetTTL(10 * time.Minute)
 	result.lru.SkipTTLExtensionOnHit(true)
+
+	go func() {
+		<-ctx.Done()
+		result.lru.Close()
+	}()
+
 	return result
 }
 

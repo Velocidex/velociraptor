@@ -1,6 +1,7 @@
 package datastore
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -265,7 +266,7 @@ func (self *DirectoryLRUCache) Count() int {
 }
 
 func NewDirectoryLRUCache(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	max_size, max_item_size int) *DirectoryLRUCache {
 
 	result := &DirectoryLRUCache{
@@ -275,6 +276,11 @@ func NewDirectoryLRUCache(
 		// children).
 		max_item_size: max_item_size,
 	}
+
+	go func() {
+		<-ctx.Done()
+		result.Cache.Close()
+	}()
 
 	result.Cache.SetCacheSizeLimit(max_size)
 	return result
@@ -668,12 +674,13 @@ func (self *MemcacheDatastore) Stats() *MemcacheStats {
 	}
 }
 
-func NewMemcacheDataStore(config_obj *config_proto.Config) *MemcacheDatastore {
+func NewMemcacheDataStore(
+	ctx context.Context, config_obj *config_proto.Config) *MemcacheDatastore {
 	// This data store is used for testing so we really do not want to
 	// expire anything.
 	result := &MemcacheDatastore{
-		data_cache:       NewDataLRUCache(config_obj, 100000, 1000000),
-		dir_cache:        NewDirectoryLRUCache(config_obj, 100000, 100000),
+		data_cache:       NewDataLRUCache(ctx, config_obj, 100000, 1000000),
+		dir_cache:        NewDirectoryLRUCache(ctx, config_obj, 100000, 100000),
 		get_dir_metadata: get_dir_metadata,
 	}
 

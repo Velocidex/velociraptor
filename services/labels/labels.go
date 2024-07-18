@@ -354,6 +354,11 @@ func (self *Labeler) Start(ctx context.Context,
 			return nil
 		})
 
+	go func() {
+		<-ctx.Done()
+		self.lru.Close()
+	}()
+
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err

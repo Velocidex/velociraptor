@@ -588,7 +588,7 @@ func (self *HTTPConnector) rekeyNextServer(ctx context.Context) error {
 }
 
 func (self *HTTPConnector) rekeyWithURL(ctx context.Context, url string) error {
-	req, err := http.NewRequest("GET", url+"server.pem", nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", url+"server.pem", nil)
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}

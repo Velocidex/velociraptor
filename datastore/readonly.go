@@ -4,6 +4,8 @@
 package datastore
 
 import (
+	"context"
+
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -48,8 +50,10 @@ func (self *ReadOnlyDataStore) DeleteSubject(
 	return self.cache.DeleteSubject(config_obj, urn)
 }
 
-func NewReadOnlyDataStore(config_obj *config_proto.Config) *ReadOnlyDataStore {
+func NewReadOnlyDataStore(
+	ctx context.Context,
+	config_obj *config_proto.Config) *ReadOnlyDataStore {
 	return &ReadOnlyDataStore{&MemcacheFileDataStore{
-		cache: NewMemcacheDataStore(config_obj),
+		cache: NewMemcacheDataStore(ctx, config_obj),
 	}}
 }

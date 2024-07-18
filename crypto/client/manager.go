@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"crypto"
 	"crypto/aes"
 	"crypto/cipher"
@@ -85,7 +86,9 @@ func (self *CryptoManager) GetCSR() ([]byte, error) {
 		Bytes: csrBytes}), nil
 }
 
-func NewCryptoManager(config_obj *config_proto.Config,
+func NewCryptoManager(
+	ctx context.Context,
+	config_obj *config_proto.Config,
 	client_id string,
 	private_key_pem []byte,
 	public_key_resolver PublicKeyResolver,
@@ -109,6 +112,11 @@ func NewCryptoManager(config_obj *config_proto.Config,
 
 	result.unauthenticated_lru.SetTTL(time.Second * 60)
 	result.unauthenticated_lru.SkipTTLExtensionOnHit(true)
+
+	go func() {
+		<-ctx.Done()
+		result.unauthenticated_lru.Close()
+	}()
 
 	return result, nil
 }
