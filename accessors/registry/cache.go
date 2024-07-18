@@ -116,8 +116,8 @@ func getRegFileSystemAccessorCache(scope vfilter.Scope) *RegFileSystemAccessorCa
 
 	root_scope.AddDestructor(func() {
 		cache.Close()
-		self.lru.Close()
-		self.readdir_lru.Close()
+		cache.lru.Close()
+		cache.readdir_lru.Close()
 	})
 	vql_subsystem.CacheSet(root_scope, CACHE_TAG, cache)
 
