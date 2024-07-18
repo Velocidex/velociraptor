@@ -130,8 +130,7 @@ func (self *ClientExecutor) processRequestPlugin(
 		r := recover()
 		if r != nil {
 			logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-			logger.Error(fmt.Sprintf("Panic %v: %v",
-				r, string(debug.Stack())))
+			logger.Error("Panic %v: %v", r, string(debug.Stack()))
 		}
 	}()
 
@@ -144,6 +143,9 @@ func (self *ClientExecutor) processRequestPlugin(
 	}
 
 	if req.Cancel != nil {
+		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+		logger.Info("Received cancel for flow %v", req.SessionId)
+
 		// Try to cancel the flow and send a message if it worked
 		self.flow_manager.Cancel(ctx, req.SessionId)
 		return
@@ -170,6 +172,11 @@ func (self *ClientExecutor) processRequestPlugin(
 
 	// This action is deprecated now.
 	if req.UpdateForeman != nil {
+		return
+	}
+
+	if req.FlowStatsRequest != nil {
+		self.ProcessStatRequest(ctx, config_obj, req)
 		return
 	}
 

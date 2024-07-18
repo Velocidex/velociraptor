@@ -1,26 +1,25 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package launcher
 
 import (
 	"context"
 
-	"github.com/go-errors/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -133,9 +132,15 @@ func (self *Launcher) CancelFlow(
 	collection_context, err := self.Storage().LoadCollectionContext(
 		ctx, config_obj, client_id, flow_id)
 	if err == nil {
-		if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
-			return nil, errors.New("Flow is not in the running state. " +
-				"Can only cancel running flows.")
+		switch collection_context.State {
+		case flows_proto.ArtifactCollectorContext_RUNNING,
+			flows_proto.ArtifactCollectorContext_WAITING,
+			flows_proto.ArtifactCollectorContext_IN_PROGRESS,
+			flows_proto.ArtifactCollectorContext_UNRESPONSIVE:
+
+		default:
+			//			return nil, errors.New("Flow is not in the running state. " +
+			//	"Can only cancel running flows.")
 		}
 
 		collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
@@ -181,9 +186,10 @@ func (self *Launcher) CancelFlow(
 
 	err = client_manager.QueueMessageForClient(ctx, client_id,
 		&crypto_proto.VeloMessage{
+			Urgent:    true,
 			Cancel:    cancel_msg,
 			SessionId: flow_id,
-		}, services.NOTIFY_CLIENT, utils.BackgroundWriter)
+		}, services.NOTIFY_CLIENT, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -197,8 +203,13 @@ func (self *Launcher) CancelFlow(
 // colletion. We derive this information from the specific results of
 // each query.
 func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
+	if collection_context.InflightTime > 0 {
+		utils.DlvBreak()
+	}
+
 	// Support older colletions which do not have this info
-	if len(collection_context.QueryStats) == 0 {
+	if len(collection_context.QueryStats) == 0 &&
+		collection_context.InflightTime == 0 {
 		return
 	}
 
@@ -274,10 +285,34 @@ func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 		int64(completed_count)
 
 	// All queries are accounted for.
-	if collection_context.OutstandingRequests <= 0 &&
+	if collection_context.TotalRequests > 0 &&
+		collection_context.OutstandingRequests <= 0 &&
 		collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
 		collection_context.State = flows_proto.ArtifactCollectorContext_FINISHED
 	}
+
+	// The flow has been scheduled - either indicate it as waiting, in
+	// progress or unresponsive.
+	if collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING &&
+		collection_context.InflightTime > 0 {
+
+		// If the client did not send any status updates yet the query
+		// is not running yet - lets put it in the WAITING state.
+		if len(collection_context.QueryStats) == 0 {
+			collection_context.State = flows_proto.ArtifactCollectorContext_WAITING
+
+		} else {
+
+			// Determine how long ago did we get an update?
+			now := uint64(utils.GetTime().Now().Unix())
+			if now-collection_context.InflightTime > 300 {
+				collection_context.State = flows_proto.ArtifactCollectorContext_UNRESPONSIVE
+			} else {
+				collection_context.State = flows_proto.ArtifactCollectorContext_IN_PROGRESS
+			}
+		}
+	}
+
 }
 
 func (self *Launcher) Storage() services.FlowStorer {

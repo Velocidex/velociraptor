@@ -61,6 +61,7 @@ func GetApiClient(
 
 	result.LastInterrogateFlowId = client_info.LastInterrogateFlowId
 	result.LastInterrogateArtifactName = client_info.LastInterrogateArtifactName
+	result.InFlightFlows = client_info.InFlightFlows
 	result.AgentInformation = &api_proto.AgentInformation{
 		Version:   client_info.ClientVersion,
 		BuildTime: client_info.BuildTime,
@@ -152,5 +153,6 @@ func (self *Indexer) _FastGetApiClient(
 		LastIp:                      client_info.IpAddress,
 		LastInterrogateFlowId:       client_info.LastInterrogateFlowId,
 		LastInterrogateArtifactName: client_info.LastInterrogateArtifactName,
+		InFlightFlows:               client_info.InFlightFlows,
 	}, nil
 }

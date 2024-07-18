@@ -9,6 +9,7 @@ import VeloPagedTable from '../core/paged-table.jsx';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
+import ToolTip from '../widgets/tooltip.jsx';
 
 import api from '../core/api-service.jsx';
 import { formatColumns } from "../core/table.jsx";
@@ -641,6 +642,7 @@ class FlowsList extends React.Component {
 export default withRouter(FlowsList);
 
 
+
 const stateRenderer = (cell, row) => {
     let result = <></>;
 
@@ -648,13 +650,24 @@ const stateRenderer = (cell, row) => {
         result = <FontAwesomeIcon icon="check"/>;
 
     } else if (cell === "RUNNING") {
+        result = <FontAwesomeIcon icon="calendar-plus" />;
+
+    } else if (cell === "WAITING") {
         result = <FontAwesomeIcon icon="hourglass"/>;
+
+    } else if (cell === "IN_PROGRESS") {
+        result = <FontAwesomeIcon icon="person-running"/>;
+
+    } else if (cell === "UNRESPONSIVE") {
+        result = <FontAwesomeIcon icon="question"/>;
 
     } else {
         result = <FontAwesomeIcon icon="exclamation"/>;
     }
 
-    return <div className="flow-status-icon">{result}</div>;
+    return <ToolTip tooltip={T(cell)}>
+             <div className="flow-status-icon">{result}</div>
+           </ToolTip>;
 };
 
 export const flowRowRenderer = {

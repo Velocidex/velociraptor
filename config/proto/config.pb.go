@@ -3752,7 +3752,7 @@ type Defaults struct {
 	// Disable unicode usernames. By default Velociraptor allows
 	// usernames to consist of any Unicode character for i8n support,
 	// however this opens the possibility for Homoglyph
-	// attacks. Setting the followingh to true will restrict usernames
+	// attacks. Setting the following to true will restrict usernames
 	// to the set a-z and 0-9
 	DisableUnicodeUsernames bool `protobuf:"varint,49,opt,name=disable_unicode_usernames,json=disableUnicodeUsernames,proto3" json:"disable_unicode_usernames,omitempty"`
 }

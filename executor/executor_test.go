@@ -7,13 +7,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -470,6 +473,90 @@ func (self *ExecutorTestSuite) TestLogMessages() {
 
 	// Log messages should be combined into few messages.
 	assert.True(self.T(), len(log_messages) <= 2, "Too many log messages")
+}
+
+// Check that the executor returns the correct status for running flows.
+func (self *ExecutorTestSuite) TestFlowStatsRequest() {
+	t := self.T()
+
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(100, 0)))
+	defer closer()
+
+	// Max time for deadlock detection.
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
+	defer cancel()
+
+	config_obj := config.GetDefaultConfig()
+	executor, err := NewClientExecutor(ctx, "", config_obj)
+	require.NoError(t, err)
+
+	flow_id := "F.XXX_TestFlowStatsRequest"
+
+	actions.QueryLog.Clear()
+
+	var mu sync.Mutex
+	var received_messages []*crypto_proto.VeloMessage
+
+	// Collect outbound messages
+	go func() {
+		for {
+			select {
+			// Wait here until the executor is fully cancelled.
+			case <-ctx.Done():
+				return
+
+			case message := <-executor.Outbound:
+				mu.Lock()
+				received_messages = append(
+					received_messages, message)
+				mu.Unlock()
+			}
+		}
+	}()
+
+	// Send the executor a flow request
+	executor.Inbound <- &crypto_proto.VeloMessage{
+		AuthState: crypto_proto.VeloMessage_AUTHENTICATED,
+		SessionId: flow_id,
+		FlowRequest: &crypto_proto.FlowRequest{
+			VQLClientActions: []*actions_proto.VQLCollectorArgs{{
+				Query: []*actions_proto.VQLRequest{
+					{
+						Name: "Query",
+						VQL:  "SELECT sleep(time=1000) FROM scope()",
+					},
+				},
+			}},
+		},
+	}
+
+	// Wait until the query starts running.
+	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
+		return len(actions.QueryLog.Get()) > 0
+	})
+
+	// Send the executor a flow request
+	executor.Inbound <- &crypto_proto.VeloMessage{
+		AuthState: crypto_proto.VeloMessage_AUTHENTICATED,
+		SessionId: constants.STATUS_CHECK_WELL_KNOWN_FLOW,
+		FlowStatsRequest: &crypto_proto.FlowStatsRequest{
+			FlowId: []string{flow_id, "F.NotExists"},
+		},
+	}
+
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+
+		// Should be two messages - first is status of the real flow,
+		// second is a "Flow not known - maybe the client crashed?"
+		// message for the not existant flow we dont know about. This
+		// should cause the server to error out that outstanding flow.
+		return len(received_messages) == 2
+	})
+
+	goldie.Assert(self.T(), "TestFlowStatsRequest",
+		json.MustMarshalIndent(received_messages))
 }
 
 func TestExecutorTestSuite(t *testing.T) {

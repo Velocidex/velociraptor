@@ -449,6 +449,7 @@ func (self *MemoryFileStore) Delete(path api.FSPathSpec) error {
 
 func (self *MemoryFileStore) Trace(name, filename string) {
 	return
+
 	fmt.Printf("Trace MemoryFileStore: %v: %v\n", name, filename)
 }
 

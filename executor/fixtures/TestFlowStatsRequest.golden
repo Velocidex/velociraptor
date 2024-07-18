@@ -1,0 +1,31 @@
+[
+ {
+  "session_id": "F.XXX_TestFlowStatsRequest",
+  "request_id": 981,
+  "urgent": true,
+  "flow_stats": {
+   "query_status": [
+    {
+     "status": 4,
+     "last_active": 100000000,
+     "first_active": 100000000,
+     "log_rows": 1
+    }
+   ]
+  }
+ },
+ {
+  "session_id": "F.NotExists",
+  "request_id": 981,
+  "urgent": true,
+  "flow_stats": {
+   "query_status": [
+    {
+     "status": 10,
+     "error_message": "Flow not known - maybe the client crashed?"
+    }
+   ],
+   "flow_complete": true
+  }
+ }
+]

@@ -29,7 +29,8 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
   "labels": [],
   "last_hunt_timestamp": 0,
   "last_event_table_version": 0,
-  "last_label_timestamp": 0
+  "last_label_timestamp": 0,
+  "in_flight_flows": {}
  }
 ]SELECT client_id, timestamp(epoch=create_time/1000000) as CreateTime, request.artifacts as Artifacts, session_id as Flow FROM flows(client_id='C.4f5e52adf0a337a9') WHERE Artifacts =~ "Netstat"[
  {
@@ -96,6 +97,7 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
   "last_hunt_timestamp": 0,
   "last_event_table_version": 0,
   "last_label_timestamp": 0,
+  "in_flight_flows": {},
   "client_record": {
    "client_id": "C.12345678",
    "hostname": "myHostname",

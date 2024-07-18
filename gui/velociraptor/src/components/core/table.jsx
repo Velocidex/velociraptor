@@ -19,7 +19,6 @@ import Modal from 'react-bootstrap/Modal';
 import Navbar from 'react-bootstrap/Navbar';
 import VeloTimestamp from "../utils/time.jsx";
 import URLViewer from "../utils/url.jsx";
-import VeloNotImplemented from '../core/notimplemented.jsx';
 import VeloAce, { SettingsButton } from '../core/ace.jsx';
 import VeloValueRenderer from '../utils/value.jsx';
 import { NavLink } from "react-router-dom";
@@ -242,10 +241,12 @@ class VeloTable extends Component {
         headers: PropTypes.object,
 
         column_renderers: PropTypes.object,
+
+        // If set we do not render any toolbar
+        no_toolbar: PropTypes.bool,
     }
 
     state = {
-        download: false,
         toggles: {},
         from_page: 0,
         page_size: 10,
@@ -325,7 +326,7 @@ class VeloTable extends Component {
 
             if (this.props.renderers && this.props.renderers[name]) {
                 definition.formatter = this.props.renderers[name];
-            } else {
+            } else if(!definition.formatter) {
                 definition.formatter = this.defaultFormatter;
             }
 
@@ -350,33 +351,31 @@ class VeloTable extends Component {
                 toggles={this.state.toggles}
                 columnToggle
             >
-            {
-                props => (
-                    <div className="col-12">
-                      <VeloNotImplemented
-                        show={this.state.download}
-                        resolve={() => this.setState({download: false})}
-                      />
-                      <Navbar className="toolbar">
-                        <ButtonGroup>
-                          <ColumnToggleList { ...props.columnToggleProps }
-                                            onColumnToggle={(c)=>{
-                                                // Do not make a copy
-                                                // here because set
-                                                // state is not
-                                                // immediately visible
-                                                // and this will be
-                                                // called for each
-                                                // column.
-                                                let toggles = this.state.toggles;
-                                                toggles[c] = !toggles[c];
-                                                this.setState({toggles: toggles});
-                                            }}
-                                            toggles={this.state.toggles} />
-                          <InspectRawJson rows={this.props.rows}
-                                          start={start}/>
-                        </ButtonGroup>
-                      </Navbar>
+                {
+                    props => (
+                        <div className="col-12">
+                          { !this.props.no_toolbar &&
+                            <Navbar className="toolbar">
+                              <ButtonGroup>
+                                <ColumnToggleList { ...props.columnToggleProps }
+                                                  onColumnToggle={(c)=>{
+                                                      // Do not make a copy
+                                                      // here because set
+                                                      // state is not
+                                                      // immediately visible
+                                                      // and this will be
+                                                      // called for each
+                                                      // column.
+                                                      let toggles = this.state.toggles;
+                                                      toggles[c] = !toggles[c];
+                                                      this.setState({toggles: toggles});
+                                                  }}
+                                                  toggles={this.state.toggles} />
+                                <InspectRawJson rows={this.props.rows}
+                                                start={start}/>
+                              </ButtonGroup>
+                            </Navbar>
+                          }
                       <div className="row col-12">
                         <BootstrapTable
                           { ...props.baseProps }

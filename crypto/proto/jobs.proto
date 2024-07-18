@@ -120,6 +120,10 @@ message VeloMessage {
   // make up the collection.
   FlowRequest FlowRequest = 42;
 
+  // Check up on in progress flows. Causes the client to return a set
+  // of FlowStats for inflight flows.
+  FlowStatsRequest flow_stats_request = 43;
+
   Cancel Cancel = 32;
   ForemanCheckin UpdateForeman = 35;
 
@@ -191,6 +195,14 @@ message FlowStats {
     bool flow_complete = 8;
 }
 
+// Sent from the server to the client to check up on in flight flows.
+message FlowStatsRequest {
+    repeated string flow_id = 1;
+}
+
+message FlowStatsSummaryItem {
+    string flow_id = 1;
+}
 
 // This is a status response that is sent for each complete
 // query. Velociraptor collections consist of multiple queries (for

@@ -208,4 +208,8 @@ message ClientInfo {
     uint64 last_hunt_timestamp = 17;
     uint64 last_event_table_version = 18;
     uint64 labels_timestamp = 23;
+
+    // A List of flows that are currently in flight and their last
+    // update epoch time.
+    map<string, int64> in_flight_flows = 28;
 }

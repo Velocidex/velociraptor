@@ -141,6 +141,8 @@ message ArtifactCollectorContext {
     // Last time this collection was active (receiving data).
     uint64 active_time = 17;
 
+    uint64 inflight_time = 36;
+
     // A total count of files uploaded by this query.  This is now
     // tracked on the client and synced to the server so the server
     // does not need to keep track of it.
@@ -160,11 +162,32 @@ message ArtifactCollectorContext {
     // client's status message at the end of the query).
     int64 execution_duration = 29;
 
+
+    // Flows go through the following state transitions:
+    // 1. The start by
     enum State {
         UNSET = 0;
-        RUNNING = 1;  // Flow is scheduled and active. If the client
-                      // is not online, it will receive the collection
-                      // later.
+
+        // Flow is scheduled and active. If the client is not online,
+        // it will receive the collection later.
+        RUNNING = 1;
+
+        // Flow was delivered to the client and is waiting on the
+        // client for a concurrency slot.
+        WAITING = 6;
+
+        // Flow is currently in progress on the client. This indicates
+        // the client was sent the collection and it is currently
+        // executing. Progress should be updated periodically from the
+        // client.
+        IN_PROGRESS = 4;
+
+        // This state indicates the client is non-responsive. The
+        // client had not sent an update in a while and might have
+        // crashed, shutdown or become disconnected. When the client
+        // connects next we will update this status when we know more
+        // about it.
+        UNRESPONSIVE = 5;
 
         FINISHED = 2; // Flow completed normally.
         ERROR = 3;   // Flows which raise are marked as having an error.

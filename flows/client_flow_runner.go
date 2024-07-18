@@ -245,6 +245,22 @@ func (self *ClientFlowRunner) MonitoringVQLResponse(
 		query_name, client_id, flow_id)
 }
 
+func (self *ClientFlowRunner) removeInflightChecks(
+	ctx context.Context, client_id string) error {
+	journal, err := services.GetJournal(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	journal.PushRowsToArtifactAsync(ctx, self.config_obj,
+		ordereddict.NewDict().
+			Set("ClientId", client_id).
+			Set("ClearFlows", true),
+		"Server.Internal.ClientScheduled")
+
+	return nil
+}
+
 func (self *ClientFlowRunner) ProcessSingleMessage(
 	ctx context.Context, msg *crypto_proto.VeloMessage) error {
 
@@ -253,6 +269,13 @@ func (self *ClientFlowRunner) ProcessSingleMessage(
 
 	if flow_id == constants.MONITORING_WELL_KNOWN_FLOW {
 		return self.ProcessMonitoringMessage(ctx, msg)
+	}
+
+	// This response can only happen when an error occured to the flow
+	// status request. This means this old client does not support the
+	// new check. We remove all inflight checks.
+	if flow_id == constants.STATUS_CHECK_WELL_KNOWN_FLOW {
+		return self.removeInflightChecks(ctx, client_id)
 	}
 
 	// Should never happen because these are filled in from the crypto
@@ -481,7 +504,20 @@ func (self *ClientFlowRunner) FlowStats(
 				Set("ClientId", client_id))
 	}
 
-	return nil
+	// Update the client's in flight flow tracker.
+	client_info_manager, err := services.GetClientInfoManager(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	return client_info_manager.Modify(ctx, client_id,
+		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+			if client_info.InFlightFlows == nil {
+				client_info.InFlightFlows = make(map[string]int64)
+			}
+			client_info.InFlightFlows[flow_id] = utils.GetTime().Now().Unix()
+			return client_info, nil
+		})
 }
 
 func (self *ClientFlowRunner) VQLResponse(
