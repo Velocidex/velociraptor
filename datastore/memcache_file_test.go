@@ -54,7 +54,7 @@ func (self *MemcacheFileTestSuite) SetupTest() {
 	self.ctx, self.cancel = context.WithCancel(context.Background())
 
 	// Clear the cache between runs
-	db := datastore.NewMemcacheFileDataStore(self.config_obj)
+	db := datastore.NewMemcacheFileDataStore(self.ctx, self.config_obj)
 	self.datastore = db
 
 	db.Clear()
@@ -118,7 +118,7 @@ func (self MemcacheFileTestSuite) TestDirectoryOverflow() {
 	// Expire directories larger than 2 items.
 	self.config_obj.Datastore.MemcacheDatastoreMaxDirSize = 4
 
-	db := datastore.NewMemcacheFileDataStore(self.config_obj)
+	db := datastore.NewMemcacheFileDataStore(self.ctx, self.config_obj)
 	db.StartWriter(self.ctx, &self.wg, self.config_obj)
 
 	client_record := &api_proto.ClientMetadata{

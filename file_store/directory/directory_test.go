@@ -1,4 +1,4 @@
-package directory
+package directory_test
 
 import (
 	"io/ioutil"
@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/tests"
 )
 
@@ -16,7 +17,7 @@ type DirectoryTestSuite struct {
 	*tests.FileStoreTestSuite
 
 	config_obj *config_proto.Config
-	file_store *DirectoryFileStore
+	file_store *directory.DirectoryFileStore
 }
 
 func (self *DirectoryTestSuite) SetupTest() {
@@ -34,7 +35,7 @@ func (self *DirectoryTestSuite) TearDownTest() {
 
 func TestDirectoryFileStore(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
-	file_store := NewDirectoryFileStore(config_obj)
+	file_store := directory.NewDirectoryFileStore(config_obj)
 	suite.Run(t, &DirectoryTestSuite{
 		FileStoreTestSuite: tests.NewFileStoreTestSuite(config_obj, file_store),
 		file_store:         file_store,

@@ -15,6 +15,7 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -128,6 +129,9 @@ func (self *TestSuite) SetupTest() {
 	if self.ConfigObj == nil {
 		self.ConfigObj = self.LoadConfig()
 	}
+
+	datastore.SetGlobalDatastore(context.Background(),
+		self.ConfigObj.Datastore.Implementation, self.ConfigObj)
 
 	self.LoadArtifactsIntoConfig(definitions)
 
