@@ -73,7 +73,7 @@ func (self WriteCryptFilePlugin) Call(
 			arg.MaxSize = 1024 * 1024 * 1024 * 1024 // 1Gb
 		}
 
-		fd, err := storage.NewCryptoFileWriter(&config_proto.Config{
+		fd, err := storage.NewCryptoFileWriter(ctx, &config_proto.Config{
 			Client: config_obj,
 		}, arg.MaxSize, arg.Filename.String())
 		if err != nil {

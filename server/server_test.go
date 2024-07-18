@@ -111,7 +111,7 @@ func (self *ServerTestSuite) SetupTest() {
 	self.server, err = server.NewServer(self.Sm.Ctx, self.ConfigObj, self.Sm.Wg)
 	require.NoError(self.T(), err)
 
-	self.client_crypto, err = crypto_client.NewClientCryptoManager(
+	self.client_crypto, err = crypto_client.NewClientCryptoManager(self.Ctx,
 		self.ConfigObj, []byte(self.ConfigObj.Writeback.PrivateKey))
 	require.NoError(self.T(), err)
 

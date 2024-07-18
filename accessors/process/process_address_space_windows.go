@@ -269,6 +269,7 @@ func (self ProcessAccessor) New(scope vfilter.Scope) (
 					reader.mu.Unlock()
 				}
 			}
+			result.lru.Close()
 		})
 		return result, nil
 	}

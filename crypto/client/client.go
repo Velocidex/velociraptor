@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"crypto/rsa"
 	"crypto/x509"
 
@@ -54,7 +55,9 @@ func (self *ClientCryptoManager) AddCertificate(
 	return server_name, nil
 }
 
-func NewClientCryptoManager(config_obj *config_proto.Config, client_private_key_pem []byte) (
+func NewClientCryptoManager(
+	ctx context.Context,
+	config_obj *config_proto.Config, client_private_key_pem []byte) (
 	*ClientCryptoManager, error) {
 	private_key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr(client_private_key_pem)
 	if err != nil {
@@ -77,7 +80,7 @@ func NewClientCryptoManager(config_obj *config_proto.Config, client_private_key_
 		lru_size = config_obj.Frontend.Resources.ExpectedClients
 	}
 
-	return &ClientCryptoManager{CryptoManager{
+	result := &ClientCryptoManager{CryptoManager{
 		client_id:           client_id,
 		private_key:         private_key,
 		Resolver:            NewInMemoryPublicKeyResolver(),
@@ -85,5 +88,12 @@ func NewClientCryptoManager(config_obj *config_proto.Config, client_private_key_
 		unauthenticated_lru: ttlcache.NewCache(),
 		caPool:              roots,
 		logger:              logger,
-	}}, nil
+	}}
+
+	go func() {
+		<-ctx.Done()
+		result.unauthenticated_lru.Close()
+	}()
+
+	return result, nil
 }

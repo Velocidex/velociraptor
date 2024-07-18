@@ -334,7 +334,7 @@ func (self *MasterFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup
 		return err
 	}
 
-	err = datastore.SetGlobalDatastore(implementation, config_obj)
+	err = datastore.SetGlobalDatastore(ctx, implementation, config_obj)
 	if err != nil {
 		return err
 	}
@@ -418,7 +418,7 @@ func (self *MinionFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup
 		return err
 	}
 
-	err = datastore.SetGlobalDatastore(implementation, config_obj)
+	err = datastore.SetGlobalDatastore(ctx, implementation, config_obj)
 	if err != nil {
 		return err
 	}

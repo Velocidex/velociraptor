@@ -19,6 +19,7 @@
 package datastore
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"time"
@@ -125,17 +126,20 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 		return nil, err
 	}
 
-	return getImpl(config_obj, implementation)
+	ctx := context.Background()
+	return getImpl(ctx, config_obj, implementation)
 }
 
-func getImpl(config_obj *config_proto.Config, implementation string) (DataStore, error) {
+func getImpl(
+	ctx context.Context, config_obj *config_proto.Config,
+	implementation string) (DataStore, error) {
 	switch implementation {
 	case "FileBaseDataStore":
 		return file_based_imp, nil
 
 	case "ReadOnlyDataStore":
 		if read_only_imp == nil {
-			read_only_imp = NewReadOnlyDataStore(config_obj)
+			read_only_imp = NewReadOnlyDataStore(ctx, config_obj)
 		}
 		return read_only_imp, nil
 
@@ -144,7 +148,7 @@ func getImpl(config_obj *config_proto.Config, implementation string) (DataStore,
 
 	case "Memcache":
 		if memcache_imp == nil {
-			memcache_imp_ := NewMemcacheDataStore(config_obj)
+			memcache_imp_ := NewMemcacheDataStore(ctx, config_obj)
 			memcache_imp = memcache_imp_
 			RegisterMemcacheDatastoreMetrics(memcache_imp_)
 		}
@@ -152,7 +156,7 @@ func getImpl(config_obj *config_proto.Config, implementation string) (DataStore,
 
 	case "MemcacheFileDataStore":
 		if memcache_file_imp == nil {
-			memcache_imp_ := NewMemcacheFileDataStore(config_obj)
+			memcache_imp_ := NewMemcacheFileDataStore(ctx, config_obj)
 			memcache_file_imp = memcache_imp_
 			RegisterMemcacheDatastoreMetrics(memcache_imp_)
 		}
@@ -160,7 +164,7 @@ func getImpl(config_obj *config_proto.Config, implementation string) (DataStore,
 
 	case "Test":
 		if memcache_imp == nil {
-			memcache_imp = NewMemcacheDataStore(config_obj)
+			memcache_imp = NewMemcacheDataStore(ctx, config_obj)
 		}
 		return memcache_imp, nil
 
@@ -171,12 +175,13 @@ func getImpl(config_obj *config_proto.Config, implementation string) (DataStore,
 }
 
 func SetGlobalDatastore(
+	ctx context.Context,
 	implementation string,
 	config_obj *config_proto.Config) (err error) {
 	ds_mu.Lock()
 	defer ds_mu.Unlock()
 
-	g_impl, err = getImpl(config_obj, implementation)
+	g_impl, err = getImpl(ctx, config_obj, implementation)
 	return err
 }
 

@@ -70,7 +70,7 @@ func (self *TestSuite) SetupTest() {
 	self.ConfigObj.Writeback.PrivateKey = string(key)
 
 	// Configure the client manager.
-	self.client_manager, err = crypto_client.NewClientCryptoManager(
+	self.client_manager, err = crypto_client.NewClientCryptoManager(self.Ctx,
 		self.ConfigObj, []byte(self.ConfigObj.Writeback.PrivateKey))
 	require.NoError(self.T(), err)
 

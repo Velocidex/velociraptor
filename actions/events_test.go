@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -69,6 +70,10 @@ func (self *EventsTestSuite) SetupTest() {
 	self.ConfigObj.Client.WritebackDarwin = self.writeback
 	self.ConfigObj.Services.ClientMonitoring = true
 	self.ConfigObj.Services.IndexServer = true
+
+	datastore.SetGlobalDatastore(context.Background(),
+		self.ConfigObj.Datastore.Implementation, self.ConfigObj)
+
 	self.TestSuite.SetupTest()
 
 	writeback_service := writeback.GetWritebackService()

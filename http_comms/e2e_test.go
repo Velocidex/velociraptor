@@ -130,7 +130,8 @@ func (self *TestSuite) makeServer(
 func (self *TestSuite) makeClient(
 	client_ctx context.Context,
 	client_wg *sync.WaitGroup) *http_comms.HTTPCommunicator {
-	manager, err := crypto_client.NewClientCryptoManager(
+	ctx := context.Background()
+	manager, err := crypto_client.NewClientCryptoManager(ctx,
 		self.ConfigObj, []byte(self.ConfigObj.Writeback.PrivateKey))
 	assert.NoError(self.T(), err)
 

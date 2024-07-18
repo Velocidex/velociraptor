@@ -406,5 +406,11 @@ func NewSecretsService(
 	result.secrets_lru.SetTTL(time.Minute)
 	result.secrets_lru.SkipTTLExtensionOnHit(true)
 
+	go func() {
+		<-ctx.Done()
+		result.definitions_lru.Close()
+		result.secrets_lru.Close()
+	}()
+
 	return result, nil
 }

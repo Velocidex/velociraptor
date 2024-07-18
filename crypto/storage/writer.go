@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"crypto/rsa"
 	"errors"
 	"os"
@@ -29,6 +30,7 @@ var (
 type CryptoFileWriter struct {
 	mu sync.Mutex
 
+	ctx        context.Context
 	config_obj *config_proto.Config
 	fd         *os.File
 	header     *Header
@@ -78,7 +80,7 @@ func (self *CryptoFileWriter) serverPem() ([]byte, error) {
 // the crypto manager until we have contacted the server and fetched
 // its certificate. This code delays use of the crypto manager until
 // it becomes available.
-func (self *CryptoFileWriter) cryptoManager() (
+func (self *CryptoFileWriter) cryptoManager(ctx context.Context) (
 	*crypto_client.ClientCryptoManager, error) {
 
 	server_pem, err := self.serverPem()
@@ -98,7 +100,7 @@ func (self *CryptoFileWriter) cryptoManager() (
 		return nil, err
 	}
 
-	crypto_manager, err := crypto_client.NewClientCryptoManager(
+	crypto_manager, err := crypto_client.NewClientCryptoManager(ctx,
 		self.config_obj, []byte(writeback.PrivateKey))
 	if err != nil {
 		return nil, err
@@ -168,7 +170,7 @@ func (self *CryptoFileWriter) Flush(keep_on_error KeepPolicy) error {
 
 	nonce := self.config_obj.Client.Nonce
 
-	manager, err := self.cryptoManager()
+	manager, err := self.cryptoManager(self.ctx)
 	if err != nil {
 		return err
 	}
@@ -222,7 +224,7 @@ func (self *CryptoFileWriter) writeCerts() error {
 
 	self.header.Next = pub_key.Next
 
-	manager, err := self.cryptoManager()
+	manager, err := self.cryptoManager(self.ctx)
 	if err != nil {
 		return err
 	}
@@ -250,6 +252,7 @@ func (self *CryptoFileWriter) writeCerts() error {
 }
 
 func NewCryptoFileWriter(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	max_size uint64,
 	filename string) (*CryptoFileWriter, error) {
@@ -279,6 +282,7 @@ func NewCryptoFileWriter(
 	result := &CryptoFileWriter{
 		config_obj: config_obj,
 		fd:         fd,
+		ctx:        ctx,
 		header:     &Header{},
 		max_size:   max_size,
 	}

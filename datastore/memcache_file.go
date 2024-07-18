@@ -638,7 +638,9 @@ func get_file_dir_metadata(
 	return nil, errorNoDirectoryMetadata
 }
 
-func NewMemcacheFileDataStore(config_obj *config_proto.Config) *MemcacheFileDataStore {
+func NewMemcacheFileDataStore(
+	ctx context.Context,
+	config_obj *config_proto.Config) *MemcacheFileDataStore {
 	data_max_size := 10000
 	if config_obj.Datastore != nil &&
 		config_obj.Datastore.MemcacheDatastoreMaxSize > 0 {
@@ -657,9 +659,9 @@ func NewMemcacheFileDataStore(config_obj *config_proto.Config) *MemcacheFileData
 
 	result := &MemcacheFileDataStore{
 		cache: &MemcacheDatastore{
-			data_cache: NewDataLRUCache(config_obj,
+			data_cache: NewDataLRUCache(ctx, config_obj,
 				data_max_size, data_max_item_size),
-			dir_cache: NewDirectoryLRUCache(config_obj,
+			dir_cache: NewDirectoryLRUCache(ctx, config_obj,
 				data_max_size, dir_max_item_size),
 			get_dir_metadata: get_file_dir_metadata,
 		},

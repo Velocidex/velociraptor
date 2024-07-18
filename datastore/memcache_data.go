@@ -1,6 +1,7 @@
 package datastore
 
 import (
+	"context"
 	"sync"
 
 	"github.com/Velocidex/ttlcache/v2"
@@ -56,7 +57,8 @@ func (self *DataLRUCache) Set(key string, value *BulkData) error {
 	return self.Cache.Set(key, value)
 }
 
-func NewDataLRUCache(config_obj *config_proto.Config,
+func NewDataLRUCache(
+	ctx context.Context, config_obj *config_proto.Config,
 	data_max_size, data_max_item_size int) *DataLRUCache {
 
 	result := &DataLRUCache{
@@ -65,6 +67,11 @@ func NewDataLRUCache(config_obj *config_proto.Config,
 	}
 
 	result.SetCacheSizeLimit(data_max_size)
+
+	go func() {
+		<-ctx.Done()
+		result.Cache.Close()
+	}()
 
 	return result
 }

@@ -66,7 +66,7 @@ func StartEncryptedLog(
 	// logs are relatively fresh
 	max_wait := time.Second * 10
 
-	fd, err := storage.NewCryptoFileWriter(config_obj, max_size, filename)
+	fd, err := storage.NewCryptoFileWriter(ctx, config_obj, max_size, filename)
 	if err != nil {
 		logger.Error("StartEncryptedLog: %v", err)
 		return nil

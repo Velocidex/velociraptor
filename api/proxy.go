@@ -192,7 +192,7 @@ func PrepareGUIMux(
 					downloadFileStore([]string{"clients"}))))))
 
 	// Assets etc do not need auth.
-	install_static_assets(config_obj, mux)
+	install_static_assets(ctx, config_obj, mux)
 
 	// Add reverse proxy support.
 	err = AddProxyMux(config_obj, mux)

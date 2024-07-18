@@ -46,6 +46,11 @@ func NewACLManager(
 	result.lru.SetTTL(timeout)
 	result.lru.SkipTTLExtensionOnHit(true)
 
+	go func() {
+		<-ctx.Done()
+		result.lru.Close()
+	}()
+
 	backups, err := services.GetBackupService(config_obj)
 	if err == nil {
 		backups.Register(&ACLBackupProvider{
