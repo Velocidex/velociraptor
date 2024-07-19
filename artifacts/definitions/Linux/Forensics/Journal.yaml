@@ -7,7 +7,8 @@ description: |
 
   This artifact uses the Velociraptor Binary parser to parse the
   binary format. The format is documented
-  https://www.freedesktop.org/wiki/Software/systemd/journal-files/
+  https://systemd.io/JOURNAL_FILE_FORMAT/
+
 
 parameters:
 - name: JournalGlob
@@ -28,6 +29,22 @@ export: |
     ["Header", "x=>x.header_size", [
       ["Signature", 0, "String", {
           "length": 8,
+      }],
+      ["compatible_flags", 8, uint32],
+      ["incompatible_flags", 12, Flags, {
+        type: uint32,
+        bitmap: {
+          COMPRESSED_XZ: 0,
+          COMPRESSED_LZ4: 1,
+          KEYED_HASH: 2,
+          COMPRESSED_ZSTD: 3,
+          COMPACT: 4,
+        }
+      }],
+      ["IsCompact", 12, BitField, {
+         type: uint32,
+         start_bit: 4,
+         end_bit: 5,
       }],
       ["header_size", 88, "uint64"],
       ["arena_size", 96, "uint64"],
@@ -74,7 +91,7 @@ export: |
      }]
     ]],
     ["DataObject", 0, [
-      ["payload", 48, String]
+      ["payload", "x=>DataOffset",  String]
     ]],
 
     # This is basically a single log line -
@@ -83,17 +100,27 @@ export: |
       ["seqnum", 0, "uint64"],
       ["realtime", 8, "uint64"],
       ["monotonic", 16, "uint64"],
-      ["items", 48, Array, {
-          "type": EntryItem,
-          "count": 50,
-          "sentinel": "x=>x.object.payload = NULL",
+      ["_items", 48, Array, {
+         "type": EntryItem,
+         "count": 50,
+         "sentinel": "x=>NOT x.object",
+      }],
+      ["_items_compact", 48, Array, {
+         "type": CompatEntryItem,
+         "count": 50,
+         "sentinel": "x=>NOT x.object",
+      }],
+      ["items", 0, Value, {
+         value: "x=>if(condition=IsCompact, then=x._items_compact, else=x._items)",
       }]
     ]],
+
+    ["CompatEntryItem", 4, [
+       ["object", 0, uint32]
+    ]],
     ["EntryItem", 16, [
-     ["object", 0, "Pointer", {
-         "type": "ObjectHeader",
-     }],
-    ]]
+       ["object", 0, "uint64"],
+    ]],
     ]
     '''
 
@@ -106,18 +133,43 @@ export: |
          struct="Header").Objects)
       WHERE type = "OBJECT_ENTRY"
 
+
     -- Now parse the ObjectEntry in each offset
-    LET _ParseFile(File) = SELECT Offset,
+    LET _ParseFile(File) =
+      SELECT Offset,
         parse_binary(
          filename=File, profile=JournalProfile,
          struct="ObjectHeader", offset=Offset) AS Parsed
-    FROM Offsets(File=File)
+      FROM Offsets(File=File)
+
 
     -- Extract the timestamps and all the attributes
-    LET ParseFile(File) = SELECT File, Offset,
-       timestamp(epoch=Parsed.payload.realtime) AS Timestamp,
-       Parsed.payload.items.object.payload.payload AS Data
-    FROM _ParseFile(File=File)
+    LET ParseFile(File) = SELECT * FROM foreach(row={
+       -- If the file is compact the payload is shifted by 8 bytes.
+       SELECT parse_binary(
+          filename=File,
+          profile=JournalProfile,
+          struct="Header").IsCompact * 8 + 48 AS DataOffset,
+       parse_binary(
+          filename=File,
+          profile=JournalProfile,
+          struct="Header").IsCompact AS IsCompact
+       FROM scope()
+
+    }, query={
+      SELECT File, Offset,
+         timestamp(epoch=Parsed.payload.realtime) AS Timestamp,
+         {
+           SELECT parse_binary(
+              filename=File,
+              profile=JournalProfile,
+              struct="ObjectHeader",
+              offset=_value).payload.payload AS Line
+           FROM foreach(row=Parsed.payload.items.object)
+           WHERE Line
+        } AS Data
+      FROM _ParseFile(File=File)
+    })
 
 sources:
 - query: |
