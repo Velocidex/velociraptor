@@ -1,8 +1,36 @@
+Parameters:
+  RemappingTemplate: |
+    remappings:
+      - type: mount
+        from:
+          accessor: zip
+          path_type: linux
+          prefix: |
+            {
+              "DelegateAccessor": "file",
+              "DelegatePath": "%v/artifacts/testdata/files/system.journal.zip",
+              "Path": "/"
+            }
+        on:
+          accessor: "auto"
+          prefix: "/"
+          path_type: "linux"
+
+
 Queries:
+- LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir),
+                 copy=["zip", "file"], clear=TRUE)
+
 - SELECT Offset, Timestamp, Data
    FROM Artifact.Linux.Forensics.Journal(
-     JournalGlob=srcDir + '/artifacts/testdata/files/system.journal')
+     JournalGlob='/system.journal')
 
 - SELECT Offset, Timestamp, Data
    FROM Artifact.Linux.Forensics.Journal(OnlyShowMessage=TRUE,
-     JournalGlob=srcDir + '/artifacts/testdata/files/system.journal')
+     JournalGlob='/system.journal')
+
+# Check that we also support compact style files
+- SELECT Offset, Timestamp, Data
+   FROM Artifact.Linux.Forensics.Journal(
+     JournalGlob='/compact.journal')
+  LIMIT 10
