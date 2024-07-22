@@ -4270,6 +4270,23 @@
     description: A string to convert to int
     required: true
   category: parsers
+- name: parse_journald
+  description: Parse a journald file.
+  type: Plugin
+  args:
+  - name: filename
+    type: accessors.OSPath
+    description: A list of journal log files to parse.
+    repeated: true
+    required: true
+  - name: accessor
+    type: string
+    description: The accessor to use.
+  - name: raw
+    type: bool
+    description: Emit raw events (no parsed).
+  metadata:
+    permissions: FILESYSTEM_READ
 - name: parse_json
   description: |
     Parse a JSON string into an object.
@@ -7170,6 +7187,23 @@
     description: If specified we use this many workers to parse the file in parallel
       (default 1).
   category: event
+  metadata:
+    permissions: FILESYSTEM_READ
+- name: watch_journald
+  description: 'Watch a journald file and stream events from it. '
+  type: Plugin
+  args:
+  - name: filename
+    type: accessors.OSPath
+    description: A list of journal log files to parse.
+    repeated: true
+    required: true
+  - name: accessor
+    type: string
+    description: The accessor to use.
+  - name: raw
+    type: bool
+    description: Emit raw events (no parsed).
   metadata:
     permissions: FILESYSTEM_READ
 - name: watch_jsonl

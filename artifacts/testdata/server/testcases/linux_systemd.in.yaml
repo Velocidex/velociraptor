@@ -34,3 +34,7 @@ Queries:
    FROM Artifact.Linux.Forensics.Journal(
      JournalGlob='/compact.journal')
   LIMIT 10
+
+# Test native parsing with the parse_journald() plugin
+- SELECT * FROM parse_journald(filename='/system.journal') LIMIT 2
+- SELECT * FROM parse_journald(filename='/compact.journal') LIMIT 2
