@@ -125,6 +125,8 @@ github.com/Velocidex/go-ext4 v0.0.0-20240608083317-8dd00855b069 h1:9OVXv4dSnn23i
 github.com/Velocidex/go-ext4 v0.0.0-20240608083317-8dd00855b069/go.mod h1:Sbqqh1t+nYXmNWw0dZC8LOIxP7z5Wg94SP+4Ej1QZqg=
 github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a h1:dWHPlB3C86vh+M5P14dZxF6Hh8o2/u8FTRF/bs2EM+Q=
 github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a/go.mod h1:g74FCv59tsVP48V2o1eyIK8aKbNKPLJIJ+HuiUPVc6E=
+github.com/Velocidex/go-journalctl v0.0.0-20240721235158-d5e988dd16d2 h1:NKVH1COab/TNZEkovPt6D8cRVP7zT63AGQTwkFGpsZg=
+github.com/Velocidex/go-journalctl v0.0.0-20240721235158-d5e988dd16d2/go.mod h1:5WxXsCtLdEvnc4FsFa+QfMwOWYkfey3nlQbPssZWqjc=
 github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28 h1:3FMhXfGzZR4oNHmV8NizrviyaTv+2SmLuj+43cMJCUQ=
 github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28/go.mod h1:n9o/44DFcqU/E55pWoIt4sKkxBC3k4JVNqvTAb9kZlI=
 github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002 h1:FWeeVb/x+XvaIKZyMdxwB+JYmj4dSATSuu+DBfCXFVU=

@@ -453,4 +453,124 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir), copy=["zip"
    "_SOURCE_REALTIME_TIMESTAMP=1721375548561670"
   ]
  }
+]SELECT * FROM parse_journald(filename='/system.journal') LIMIT 2[
+ {
+  "System": {
+   "Seq": 19161,
+   "Timestamp": "2023-05-09T01:31:12.435195Z",
+   "_TRANSPORT": "journal",
+   "_PID": 1,
+   "_UID": 0,
+   "_GID": 0,
+   "_COMM": "systemd",
+   "_EXE": "/usr/lib/systemd/systemd",
+   "_CMDLINE": "/sbin/init",
+   "_CAP_EFFECTIVE": "1ffffffffff",
+   "_SELINUX_CONTEXT": "unconfined\n",
+   "_SYSTEMD_CGROUP": "/init.scope",
+   "_SYSTEMD_UNIT": "init.scope",
+   "_SYSTEMD_SLICE": "-.slice",
+   "SOURCE_REALTIME_TIMESTAMP": "2023-05-09T01:31:04.438049Z",
+   "_BOOT_ID": "25557887eed141e0ad99932789c02184",
+   "_MACHINE_ID": "4e7cbddbe9494fb9876af4e3e85c9eb4",
+   "_HOSTNAME": "devbox"
+  },
+  "EventData": {
+   "PRIORITY": 6,
+   "SYSLOG_FACILITY": 3,
+   "TID": 1,
+   "CODE_FILE": "src/core/unit.c",
+   "CODE_LINE": 2474,
+   "CODE_FUNC": "unit_log_resources",
+   "SYSLOG_IDENTIFIER": "systemd",
+   "CPU_USAGE_NSEC": "5643944000",
+   "MESSAGE": "session-717.scope: Consumed 5.643s CPU time.",
+   "MESSAGE_ID": "ae8f7b866b0347b9af31fe1c80b127c0",
+   "UNIT": "session-717.scope",
+   "INVOCATION_ID": "b1659c39e4e94e9ca8fdb5ba9f9f6cb3"
+  }
+ }
+]SELECT * FROM parse_journald(filename='/compact.journal') LIMIT 2[
+ {
+  "System": {
+   "Seq": 4837,
+   "Timestamp": "2024-07-19T07:52:28.539547Z",
+   "_TRANSPORT": "journal",
+   "_PID": 3137,
+   "_UID": 1000,
+   "_GID": 1000,
+   "_COMM": "systemd",
+   "_EXE": "/usr/lib/systemd/systemd",
+   "_CMDLINE": "/usr/lib/systemd/systemd --user",
+   "_CAP_EFFECTIVE": "800000000",
+   "_SELINUX_CONTEXT": "unconfined\n",
+   "_AUDIT_SESSION": 3,
+   "_AUDIT_LOGINUID": 1000,
+   "_SYSTEMD_CGROUP": "/user.slice/user-1000.slice/user@1000.service/init.scope",
+   "_SYSTEMD_OWNER_UID": "1000",
+   "_SYSTEMD_UNIT": "user@1000.service",
+   "_SYSTEMD_USER_UNIT": "init.scope",
+   "_SYSTEMD_SLICE": "user-1000.slice",
+   "_SYSTEMD_USER_SLICE": "-.slice",
+   "SOURCE_REALTIME_TIMESTAMP": "2024-07-19T07:52:28.539281Z",
+   "_BOOT_ID": "23a9ab0f82de434496c353945dcf5919",
+   "_MACHINE_ID": "832249f87a0d447097d88407cb0c44e1",
+   "_HOSTNAME": "devbox",
+   "_RUNTIME_SCOPE": "system"
+  },
+  "EventData": {
+   "PRIORITY": 6,
+   "SYSLOG_FACILITY": 3,
+   "TID": 3137,
+   "CODE_FILE": "src/core/main.c",
+   "CODE_LINE": 2382,
+   "CODE_FUNC": "do_queue_default_job",
+   "SYSLOG_IDENTIFIER": "systemd",
+   "MESSAGE": "Queued start job for default target default.target."
+  }
+ },
+ {
+  "System": {
+   "Seq": 4838,
+   "Timestamp": "2024-07-19T07:52:28.556361Z",
+   "_TRANSPORT": "journal",
+   "_PID": 3137,
+   "_UID": 1000,
+   "_GID": 1000,
+   "_COMM": "systemd",
+   "_EXE": "/usr/lib/systemd/systemd",
+   "_CMDLINE": "/usr/lib/systemd/systemd --user",
+   "_CAP_EFFECTIVE": "800000000",
+   "_SELINUX_CONTEXT": "unconfined\n",
+   "_AUDIT_SESSION": 3,
+   "_AUDIT_LOGINUID": 1000,
+   "_SYSTEMD_CGROUP": "/user.slice/user-1000.slice/user@1000.service/init.scope",
+   "_SYSTEMD_OWNER_UID": "1000",
+   "_SYSTEMD_UNIT": "user@1000.service",
+   "_SYSTEMD_USER_UNIT": "init.scope",
+   "_SYSTEMD_SLICE": "user-1000.slice",
+   "_SYSTEMD_USER_SLICE": "-.slice",
+   "_BOOT_ID": "23a9ab0f82de434496c353945dcf5919",
+   "_MACHINE_ID": "832249f87a0d447097d88407cb0c44e1",
+   "_HOSTNAME": "devbox",
+   "_RUNTIME_SCOPE": "system",
+   "SOURCE_REALTIME_TIMESTAMP": "2024-07-19T07:52:28.556287Z"
+  },
+  "EventData": {
+   "PRIORITY": 6,
+   "SYSLOG_FACILITY": 3,
+   "TID": 3137,
+   "SYSLOG_IDENTIFIER": "systemd",
+   "CODE_FILE": "src/core/job.c",
+   "CODE_LINE": 796,
+   "CODE_FUNC": "job_emit_done_message",
+   "MESSAGE": "Created slice app.slice - User Application Slice.",
+   "JOB_ID": "11",
+   "JOB_TYPE": "start",
+   "JOB_RESULT": "done",
+   "USER_INVOCATION_ID": "cd69d947db534ca480f9052257dccc86",
+   "MESSAGE_ID": "39f53479d3a045ac8e11786248231fbf",
+   "USER_UNIT": "app.slice"
+  }
+ }
 ]
