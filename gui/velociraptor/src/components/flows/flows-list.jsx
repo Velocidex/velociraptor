@@ -405,6 +405,7 @@ class FlowsList extends React.Component {
               }
               { this.state.showSaveCollectionDialog &&
                 <SaveCollectionDialog
+                  client={this.props.client}
                   flow={this.props.selected_flow}
                   onClose={e=>{
                       this.setState({showSaveCollectionDialog: false});

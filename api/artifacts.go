@@ -452,6 +452,16 @@ func searchArtifact(
 					new_item.Type = artifact.Type
 				}
 
+				if fields.Sources {
+					for _, s := range artifact.Sources {
+						new_item.Sources = append(new_item.Sources,
+							&artifacts_proto.ArtifactSource{
+								Name:        s.Name,
+								Description: s.Description,
+							})
+					}
+				}
+
 				result.Items = append(result.Items, new_item)
 			}
 		}
