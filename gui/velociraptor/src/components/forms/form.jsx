@@ -116,6 +116,11 @@ export default class VeloForm extends React.Component {
         this.source.cancel();
         this.source = CancelToken.source();
 
+        let fields = {name: true};
+        if (this.props.param.sources) {
+            fields["sources"] = true;
+        };
+
         // Load all artifacts, but only keep the ones that match the
         // specified type
         api.post("v1/GetArtifacts",
@@ -123,7 +128,7 @@ export default class VeloForm extends React.Component {
                     search_term: "...",
                     type: artifact_type,
 
-                    // No field type: We want the list of sources too
+                    fields: fields,
 
                     // This might be too many to fetch at once but we
                     // are still fast enough for now.
@@ -166,6 +171,10 @@ export default class VeloForm extends React.Component {
                             } else {
                                 unnamed_sources++;
                             }
+                        }
+
+                        if(_.isEmpty(sources)) {
+                            selectable_names.push(desc.name);
                         }
 
                         // If there is a mix of unnamed sources and named
@@ -479,6 +488,17 @@ export default class VeloForm extends React.Component {
                   </Form.Group>
                 );
             }
+
+            let a_options = [];
+            let a_defaults = [];
+
+            _.each(this.state.multichoices, (v, k)=>{
+                a_options.push({value: k, label: k});
+                if(v.enabled) {
+                    a_defaults.push({value: k, label: k});
+                }
+            });
+
             return (
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
@@ -491,21 +511,19 @@ export default class VeloForm extends React.Component {
                     </OverlayTrigger>
                   </Form.Label>
                   <Col sm="8">
-                      { _.map(Object.keys(this.state.multichoices), (key, idx) => {
-                        return (
-                            <OverlayTrigger
-                              key={key}
-                              delay={{show: 250, hide: 400}}
-                              overlay={(props)=>renderToolTip(props, this.state.multichoices[key])}>
-                              <div>
-                                <Form.Switch label={key}
-                                             id={key}
-                                             checked={this.state.multichoices[key].enabled}
-                                             onChange={this.setMulti.bind(this, key)} />
-                              </div>
-                            </OverlayTrigger>
-                        );
-                      })}
+                    <Select
+                      placeholder={T("Choose one or more items")}
+                      className="velo"
+                      classNamePrefix="velo"
+                      closeMenuOnSelect={false}
+                      isMulti
+                      defaultValue={a_defaults}
+                      onChange={e=>{
+                          let data = _.map(e, x=>x.value);
+                          this.props.setValue(JSON.stringify(data));
+                      }}
+                      options={a_options}
+                      />
                   </Col>
                 </Form.Group>
             );

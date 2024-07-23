@@ -42,6 +42,9 @@ message ArtifactParameter {
 
     // For type = artifactset
     string artifact_type = 8;
+
+    // For type = artifactset;
+    bool sources = 9;
 }
 
 message NotebookSourceCell {
