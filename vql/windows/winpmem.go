@@ -93,10 +93,11 @@ func (self WinpmemFunction) Call(
 		}
 
 		// Driver will only be uninstalled when then root scope is destroyed.
-		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+		root_scope := vql_subsystem.GetRootScope(scope)
+		root_scope.AddDestructor(func() {
 			err := winpmem.UninstallDriver(tmpfile.Name(), arg.ServiceName, logger)
 			if err == nil {
-				filesystem.RemoveFile(scope, tmpfile.Name())
+				filesystem.RemoveFile(0, tmpfile.Name(), root_scope)
 			}
 		})
 

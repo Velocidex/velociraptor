@@ -109,10 +109,10 @@ func (self _PEDumpFunction) Call(
 			return false
 		}
 		defer tmpfile.Close()
-		_ = vql_subsystem.GetRootScope(scope).
-			AddDestructor(func() {
-				filesystem.RemoveFile(scope, tmpfile.Name())
-			})
+		root_scope := vql_subsystem.GetRootScope(scope)
+		_ = root_scope.AddDestructor(func() {
+			filesystem.RemoveFile(0, tmpfile.Name(), root_scope)
+		})
 
 		writer = tmpfile
 

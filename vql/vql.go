@@ -195,7 +195,8 @@ func MakeNewScope() vfilter.Scope {
 	return result
 }
 
-// Used in tests to flush the global scope - needed **after** .
+// Used in tests to flush the global scope - needed **after**
+// overriding plugins with OverridePlugin, OverrideFunction etc.
 func ResetGlobalScopeCache() {
 	mu.Lock()
 	defer mu.Unlock()
