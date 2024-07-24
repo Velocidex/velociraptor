@@ -45,12 +45,14 @@ var (
 
 func GetVersion() *config_proto.Version {
 	return &config_proto.Version{
-		Name:       "velociraptor",
-		Version:    constants.VERSION,
-		BuildTime:  build_time,
-		Commit:     commit_hash,
-		CiBuildUrl: ci_run_url,
-		Compiler:   runtime.Version(),
+		Name:         "velociraptor",
+		Version:      constants.VERSION,
+		BuildTime:    build_time,
+		Commit:       commit_hash,
+		CiBuildUrl:   ci_run_url,
+		Compiler:     runtime.Version(),
+		System:       runtime.GOOS,
+		Architecture: runtime.GOARCH,
 	}
 }
 

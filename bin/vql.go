@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package main
 
@@ -28,7 +28,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	vutils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
@@ -53,6 +55,10 @@ func formatPlugins(
 	names := []string{}
 
 	for _, item := range info.Plugins {
+		if strings.HasPrefix(item.Doc, "Unimplemented") {
+			continue
+		}
+
 		record := fmt.Sprintf("## %s\n\n%s\n\n", item.Name, item.Doc)
 		arg_desc, pres := type_map.Get(scope, item.ArgType)
 		if pres {
@@ -106,6 +112,10 @@ func formatFunctions(
 	names := []string{}
 
 	for _, item := range info.Functions {
+		if strings.HasPrefix(item.Doc, "Unimplemented") {
+			continue
+		}
+
 		record := fmt.Sprintf("## %s\n\n%s\n\n", item.Name, item.Doc)
 		arg_desc, pres := type_map.Get(scope, item.ArgType)
 		if pres {
@@ -218,8 +228,13 @@ func doVQLExport() error {
 	new_data := []*api_proto.Completion{}
 	seen_plugins := make(map[string]bool)
 	seen_functions := make(map[string]bool)
+	platform := utils.GetMyPlatform()
 
 	for _, item := range info.Plugins {
+		if strings.HasPrefix(item.Doc, "Unimplemented") {
+			continue
+		}
+
 		seen_plugins[item.Name] = true
 
 		// We maintain the following fields from old plugins:
@@ -258,6 +273,11 @@ func doVQLExport() error {
 			new_item.Metadata = metadata
 		}
 
+		if !vutils.InString(new_item.Platforms, platform) {
+			new_item.Platforms = append(new_item.Platforms, platform)
+			sort.Strings(new_item.Platforms)
+		}
+
 		arg_desc, pres := type_map.Get(scope, item.ArgType)
 		if pres {
 			for _, k := range arg_desc.Fields.Keys() {
@@ -289,6 +309,10 @@ func doVQLExport() error {
 	}
 
 	for _, item := range info.Functions {
+		if strings.HasPrefix(item.Doc, "Unimplemented") {
+			continue
+		}
+
 		seen_functions[item.Name] = true
 
 		new_item := getOldItem(item.Name, "Function", old_data)
@@ -314,6 +338,11 @@ func doVQLExport() error {
 			new_item.Args = nil
 			new_item.Version = uint64(item.Version)
 			new_item.Metadata = metadata
+		}
+
+		if !vutils.InString(new_item.Platforms, platform) {
+			new_item.Platforms = append(new_item.Platforms, platform)
+			sort.Strings(new_item.Platforms)
 		}
 
 		arg_desc, pres := type_map.Get(scope, item.ArgType)

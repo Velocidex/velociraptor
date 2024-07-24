@@ -20,6 +20,7 @@ message Completion {
     repeated ArgDescriptor args = 4;
     string category = 5;
     map<string, string> metadata = 7;
+    repeated string platforms = 8;
 }
 
 message KeywordCompletions {
