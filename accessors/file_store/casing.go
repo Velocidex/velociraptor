@@ -13,12 +13,8 @@ func getCorrectCase(
 	filename api.FSPathSpec) (api.FSPathSpec, error) {
 
 	// File is exactly fine.
-	s, err := file_store.StatFile(filename)
+	_, err := file_store.StatFile(filename)
 	if err == nil {
-		if !s.IsDir() {
-			return nil, utils.IsDirectoryError
-		}
-
 		return filename, nil
 	}
 

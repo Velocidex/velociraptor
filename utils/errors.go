@@ -17,7 +17,6 @@ var (
 	NotImplementedError = errors.New("Not implemented")
 	InvalidConfigError  = errors.New("InvalidConfigError")
 	NotFoundError       = Wrap(os.ErrNotExist, "NotFoundError")
-	IsDirectoryError    = Wrap(NotFoundError, "IsDirectoryError")
 	InvalidArgError     = errors.New("InvalidArgError")
 	IOError             = errors.New("IOError")
 	NoAccessToOrgError  = errors.New("No access to org")

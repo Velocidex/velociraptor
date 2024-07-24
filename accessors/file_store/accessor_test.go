@@ -1,7 +1,7 @@
 package file_store
 
 import (
-	"strings"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -10,13 +10,33 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
+
+type testCase struct {
+	checked string
+	err     error
+}
 
 var (
 	files = []string{
 		"fs:/Windows/System32/notepad.exe",
 		"fs:/Windows/System32/NotePad2.exe",
+
+		// Filestores allow data to be stored in a "directory"
+		"fs:/Windows/System32",
+	}
+
+	checked_files = []testCase{
+		{checked: "fs:/WinDowS/SySteM32/NotePad.exe"},
+		{checked: "fs:/Windows/System32/NotePad2.exe"},
+
+		// Filestores allow data to be stored in a "directory"
+		{checked: "fs:/windows/system32"},
+
+		{checked: "fs:/Windows/System32/DoesNotExist.exe",
+			err: utils.NotFoundError},
 	}
 )
 
@@ -53,12 +73,18 @@ func (self *FSAccessorTest) TestCaseInsensitive() {
 		assert.NoError(self.T(), err)
 		assert.Equal(self.T(), n, 5)
 		assert.Equal(self.T(), string(buf[:n]), "hello")
+	}
 
+	for _, testcase := range checked_files {
 		// Now open the same file with the wrong casing.
-		fd, err = accessor.Open(strings.ToLower(f))
+		fd, err := accessor.Open(testcase.checked)
+		if testcase.err != nil {
+			assert.True(self.T(), errors.Is(err, testcase.err))
+			continue
+		}
 		assert.NoError(self.T(), err)
 
-		n, err = fd.Read(buf)
+		n, err := fd.Read(buf)
 		assert.NoError(self.T(), err)
 		assert.Equal(self.T(), n, 5)
 		assert.Equal(self.T(), string(buf[:n]), "hello")
