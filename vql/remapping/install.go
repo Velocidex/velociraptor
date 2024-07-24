@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime"
 
 	"github.com/Velocidex/ordereddict"
 
@@ -219,6 +220,7 @@ func ApplyRemappingOnScope(
 						Set("VirtualizationRole", "").
 						Set("HostID", "").
 						Set("Exe", "").
+						Set("Architecture", runtime.GOARCH).
 						Set("IsAdmin", true),
 				}))
 			disablePlugins(remapped_scope, remapping)

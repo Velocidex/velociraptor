@@ -20,23 +20,30 @@ func GetClientInfo(
 	config_obj *config_proto.Config) *actions_proto.ClientInfo {
 	result := &actions_proto.ClientInfo{}
 
-	info, err := psutils.InfoWithContext(ctx)
-	if err == nil {
-		result = &actions_proto.ClientInfo{
-			Hostname:     info.Hostname,
-			System:       info.OS,
-			Release:      info.Platform + info.PlatformVersion,
-			Architecture: runtime.GOARCH,
-			Fqdn:         fqdn.Get(),
-		}
-	}
-
 	if config_obj.Version != nil {
 		result.ClientName = config_obj.Version.Name
 		result.ClientVersion = config_obj.Version.Version
 		result.BuildUrl = config_obj.Version.CiBuildUrl
 		result.BuildTime = config_obj.Version.BuildTime
 		result.InstallTime = config_obj.Version.InstallTime
+	}
+
+	for _, remapping := range config_obj.Remappings {
+		if remapping.Type == "impersonation" {
+			result.Hostname = remapping.Hostname
+			result.Fqdn = remapping.Hostname
+			result.System = remapping.Os
+			return result
+		}
+	}
+
+	info, err := psutils.InfoWithContext(ctx)
+	if err == nil {
+		result.Hostname = info.Hostname
+		result.System = info.OS
+		result.Release = info.Platform + info.PlatformVersion
+		result.Architecture = runtime.GOARCH
+		result.Fqdn = fqdn.Get()
 	}
 
 	if config_obj.Client != nil {
