@@ -158,6 +158,8 @@ github.com/Velocidex/yaml/v2 v2.2.8 h1:GUrSy4SBJ6RjGt43k6MeBKtw2z/27gh4A3hfFmFY3
 github.com/Velocidex/yaml/v2 v2.2.8/go.mod h1:PlXIg/Pxmoja48C1vMHo7C5pauAZvLq/UEPOQ3DsjS4=
 github.com/Velocidex/zip v0.0.0-20210101070220-e7ecefb7aad7 h1:IAry9WUMrVYA+XPvMF5UMN56ya5II/hoUOtqaHKOHrs=
 github.com/Velocidex/zip v0.0.0-20210101070220-e7ecefb7aad7/go.mod h1:1p8CU2cp64BG4334sKzhuyH/vm3k1OXEdeBCwYTssAs=
+github.com/VirusTotal/gyp v0.9.0 h1:jhOBl93jfStmAcKLa/EcTmdPng5bn5kvJJZqQqJ5R4g=
+github.com/VirusTotal/gyp v0.9.0/go.mod h1:nmcW15dQ1657PmMcG9X/EZmp6rTQsyo9g8r6Cz1/AHc=
 github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38/go.mod h1:r7bzyVFMNntcxPZXK3/+KdruV1H5KSlyVY0gc+NgInI=
 github.com/alecthomas/assert v1.0.0 h1:3XmGh/PSuLzDbK3W2gUbRXwgW5lqPkuqvRgeQ30FI5o=
 github.com/alecthomas/assert v1.0.0/go.mod h1:va/d2JC+M7F6s+80kl/R3G7FUiW6JzUO+hPhLyJ36ZY=

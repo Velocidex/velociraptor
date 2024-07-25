@@ -18,6 +18,9 @@ func StartFrontendServices(
 	ctx context.Context,
 	config_obj *config_proto.Config) (*services.Service, error) {
 
+	scope := vql_subsystem.MakeScope()
+	vql_subsystem.InstallUnimplemented(scope)
+
 	// Set the temp directory if needed
 	executor.SetTempfile(config_obj)
 

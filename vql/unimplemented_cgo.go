@@ -1,6 +1,6 @@
 //go:build cgo
 
-package utils
+package vql
 
 func GetMyPlatform() string {
 	return _GetMyPlatform() + "_cgo"

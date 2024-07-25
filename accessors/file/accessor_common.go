@@ -1,3 +1,4 @@
+//go:build linux || darwin || freebsd
 // +build linux darwin freebsd
 
 package file
@@ -177,8 +178,7 @@ func (self *OSFileInfo) _Sys() *syscall.Stat_t {
 type OSFileSystemAccessor struct {
 	context *AccessorContext
 
-	allow_raw_access bool
-	nocase           bool
+	nocase bool
 
 	root *accessors.OSPath
 }
@@ -200,9 +200,8 @@ func (self OSFileSystemAccessor) New(scope vfilter.Scope) (
 		context: &AccessorContext{
 			links: make(map[_inode]bool),
 		},
-		allow_raw_access: self.allow_raw_access,
-		root:             self.root,
-		nocase:           self.nocase,
+		root:   self.root,
+		nocase: self.nocase,
 	}, nil
 }
 
@@ -455,17 +454,15 @@ func (self OSFileSystemAccessor) OpenWithOSPath(
 	// recursive yara scan can get into /proc/ and crash the
 	// kernel. Sometimes this is exactly what we want so we provide
 	// the "raw_file" accessor.
-	if !self.allow_raw_access {
-		lstat, err := os.Stat(path)
-		if err != nil {
-			return nil, err
-		}
+	lstat, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
 
-		if !lstat.Mode().IsDir() &&
-			!lstat.Mode().IsRegular() {
-			return nil, fmt.Errorf(
-				"Only regular files supported (not %v)", path)
-		}
+	if !lstat.Mode().IsDir() &&
+		!lstat.Mode().IsRegular() {
+		return nil, fmt.Errorf(
+			"Only regular files supported (not %v)", path)
 	}
 
 	file, err := os.Open(path)

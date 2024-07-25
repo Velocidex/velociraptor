@@ -1,0 +1,22 @@
+{
+ "CleanedRules": [
+  "import \"pe\"",
+  "import \"time\"",
+  "",
+  "rule TestPE {",
+  "  strings:",
+  "    $a = \"Hello\"",
+  "  condition:",
+  "    pe.is_pe",
+  "}",
+  "",
+  "rule UnimportedModule {",
+  "  condition:",
+  "    time.now \u003e 0",
+  "}",
+  ""
+ ],
+ "Errors": [
+  "Rule TestIssuer: accesses undefined field number_of_signatures in module pe"
+ ]
+}

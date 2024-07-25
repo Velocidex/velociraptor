@@ -272,7 +272,7 @@ func doDeadDisk() error {
 		Remappings: full_config_obj.Remappings,
 	}
 
-	accessor := "file"
+	accessor := "raw_file"
 
 	if (*deaddisk_command_add_windows_disk == "" &&
 		*deaddisk_command_add_windows_directory == "") ||

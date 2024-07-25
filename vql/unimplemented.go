@@ -1,4 +1,4 @@
-package utils
+package vql
 
 import (
 	"context"
@@ -8,11 +8,12 @@ import (
 	"gopkg.in/yaml.v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
-	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
+)
+
+const (
+	LOG_TAG = "unimplemented_log"
 )
 
 type UnimplementedFunction struct {
@@ -23,7 +24,8 @@ type UnimplementedFunction struct {
 func (self *UnimplementedFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	functions.DeduplicatedLog(ctx, scope,
+
+	DeduplicatedLog(scope, self.Name,
 		"VQL Function %v() is not implemented for this architecture (%v). It is only available for the following platforms %v",
 		self.Name, GetMyPlatform(), self.Platforms)
 
@@ -55,7 +57,7 @@ func (self *UnimplementedPlugin) Call(ctx context.Context,
 
 	output_chan := make(chan vfilter.Row)
 
-	functions.DeduplicatedLog(ctx, scope,
+	DeduplicatedLog(scope, self.Name,
 		"VQL Plugin %v() is not implemented for this architecture (%v). It is only available for the following platforms %v",
 		self.Name, GetMyPlatform(), self.Platforms)
 
@@ -75,9 +77,26 @@ func _GetMyPlatform() string {
 	return runtime.GOOS + "_" + runtime.GOARCH
 }
 
+func DeduplicatedLog(scope vfilter.Scope, key string, fmt string, args ...interface{}) {
+	log_cache_any := CacheGet(scope, LOG_TAG)
+	log_cache, ok := log_cache_any.(map[string]bool)
+	if !ok {
+		log_cache = make(map[string]bool)
+	}
+
+	_, ok = log_cache[key]
+	if !ok {
+		scope.Log(fmt, args...)
+	}
+
+	log_cache[key] = true
+	CacheSet(scope, LOG_TAG, log_cache)
+}
+
 // Add unimplemented stubs for any plugins that are not available on
-// this platform.
-func init() {
+// this platform. This is normally only called once when the global
+// scope is created.
+func InstallUnimplemented(scope vfilter.Scope) {
 	platform := GetMyPlatform()
 
 	switch platform {
@@ -97,23 +116,25 @@ func init() {
 		err = yaml.Unmarshal(data, &result)
 		if err == nil {
 			for _, item := range result {
-				// Skip plugins that are already supported.
-				if utils.InString(item.Platforms, platform) {
-					continue
-				}
-
 				// Add a placeholder
 				if item.Type == "Plugin" {
-					vql_subsystem.RegisterPlugin(&UnimplementedPlugin{
-						Name:      item.Name,
-						Platforms: item.Platforms,
-					})
+					// Skip plugins that are already supported.
+					_, ok := scope.GetPlugin(item.Name)
+					if !ok {
+						RegisterPlugin(&UnimplementedPlugin{
+							Name:      item.Name,
+							Platforms: item.Platforms,
+						})
+					}
 
 				} else if item.Type == "Function" {
-					vql_subsystem.RegisterFunction(&UnimplementedFunction{
-						Name:      item.Name,
-						Platforms: item.Platforms,
-					})
+					_, ok := scope.GetFunction(item.Name)
+					if !ok {
+						RegisterFunction(&UnimplementedFunction{
+							Name:      item.Name,
+							Platforms: item.Platforms,
+						})
+					}
 				}
 			}
 		}

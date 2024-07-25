@@ -8,6 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/encrypted_logs"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 // StartClientServices starts the various services needed by the
@@ -17,6 +18,9 @@ func StartClientServices(
 	config_obj *config_proto.Config,
 	on_error func(ctx context.Context,
 		config_obj *config_proto.Config)) (*services.Service, error) {
+
+	scope := vql_subsystem.MakeScope()
+	vql_subsystem.InstallUnimplemented(scope)
 
 	// Create a suitable service plan.
 	if config_obj.Services == nil {
