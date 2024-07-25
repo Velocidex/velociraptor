@@ -40,6 +40,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/filesystem"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -510,21 +511,23 @@ func (self *_HttpPlugin) Call(
 				return
 			}
 
-			remove := func() {
-				remove_tmpfile(tmpfile.Name(), scope)
-			}
 			if arg.RemoveLast {
 				scope.Log("Adding global destructor for %v", tmpfile.Name())
-				err := vql_subsystem.GetRootScope(scope).AddDestructor(remove)
+				root_scope := vql_subsystem.GetRootScope(scope)
+				err := root_scope.AddDestructor(func() {
+					filesystem.RemoveFile(0, tmpfile.Name(), root_scope)
+				})
 				if err != nil {
-					remove()
+					filesystem.RemoveFile(0, tmpfile.Name(), scope)
 					scope.Log("http_client: %v", err)
 					return
 				}
 			} else {
-				err := scope.AddDestructor(remove)
+				err := scope.AddDestructor(func() {
+					filesystem.RemoveFile(0, tmpfile.Name(), scope)
+				})
 				if err != nil {
-					remove()
+					filesystem.RemoveFile(0, tmpfile.Name(), scope)
 					scope.Log("http_client: %v", err)
 					return
 				}
@@ -594,23 +597,6 @@ func (self _HttpPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		ArgType:  type_map.AddType(scope, &HttpPluginRequest{}),
 		Version:  2,
 		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
-	}
-}
-
-// Make sure the file is removed when the query is done.
-func remove_tmpfile(tmpfile string, scope vfilter.Scope) {
-	scope.Log("tempfile: removing tempfile %v", tmpfile)
-
-	// On windows especially we can not remove files that
-	// are opened by something else, so we keep trying for
-	// a while.
-	for i := 0; i < 100; i++ {
-		err := os.Remove(tmpfile)
-		if err == nil {
-			break
-		}
-		scope.Log("tempfile: Error %v - will retry", err)
-		time.Sleep(time.Second)
 	}
 }
 

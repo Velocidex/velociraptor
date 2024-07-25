@@ -39,6 +39,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -99,6 +100,7 @@ func (self *Tracker) Debug() string {
 func (self *Tracker) Reset() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
 	self.refs = make(map[string]int)
 }
 
@@ -114,8 +116,22 @@ func (self *Tracker) Dec(filename string) {
 		} else {
 			self.refs[filename] = prev
 		}
+
 	} else {
 		panic(filename)
+	}
+}
+
+func (self *Tracker) ProfileWriter(ctx context.Context,
+	scope vfilter.Scope, output_chan chan vfilter.Row) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for filename, ref := range self.refs {
+		output_chan <- ordereddict.NewDict().
+			Set("Filename", filename).
+			Set("ReferenceCount", ref)
 	}
 }
 
@@ -683,4 +699,10 @@ Example:
 	}, `Open a zip file as if it was a directory. Although zip files are case sensitive, this accessor behaves case insensitive`)
 
 	json.RegisterCustomEncoder(&ZipFileInfo{}, accessors.MarshalGlobFileInfo)
+
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:          "ZipTracker",
+		Description:   "Reference counting for open Zip files",
+		ProfileWriter: tracker.ProfileWriter,
+	})
 }

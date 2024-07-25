@@ -22,7 +22,6 @@ import (
 	"io/ioutil"
 	"os"
 	"runtime"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -97,18 +96,20 @@ func (self *TempfileFunction) Call(ctx context.Context,
 
 	if arg.RemoveLast {
 		scope.Log("Adding global destructor for %v", tmpfile.Name())
-		err := vql_subsystem.GetRootScope(scope).
-			AddDestructor(func() { RemoveFile(scope, tmpfile.Name()) })
+		root_scope := vql_subsystem.GetRootScope(scope)
+		err := root_scope.AddDestructor(func() {
+			RemoveFile(0, tmpfile.Name(), root_scope)
+		})
 		if err != nil {
-			RemoveFile(scope, tmpfile.Name())
+			RemoveFile(0, tmpfile.Name(), scope)
 			scope.Log("tempfile: %v", err)
 		}
 	} else {
 		err := scope.AddDestructor(func() {
-			RemoveFile(scope, tmpfile.Name())
+			RemoveFile(0, tmpfile.Name(), scope)
 		})
 		if err != nil {
-			RemoveFile(scope, tmpfile.Name())
+			RemoveFile(0, tmpfile.Name(), scope)
 			scope.Log("tempfile: %v", err)
 		}
 	}
@@ -156,37 +157,25 @@ func (self *TempdirFunction) Call(ctx context.Context,
 		return false
 	}
 
-	// Make sure the file is removed when the query is done.
-	removal := func() {
-		scope.Log("tempdir: removing tempdir %v", dir)
-
-		// On windows especially we can not remove files that
-		// are opened by something else, so we keep trying for
-		// a while.
-		for i := 0; i < 100; i++ {
-			err := os.RemoveAll(dir)
-			if err == nil {
-				break
-			}
-			time.Sleep(time.Second)
-		}
-	}
-
 	if arg.RemoveLast {
 		scope.Log("Adding global destructor for %v", dir)
-		err := vql_subsystem.GetRootScope(scope).AddDestructor(removal)
+		root_scope := vql_subsystem.GetRootScope(scope)
+		err := root_scope.AddDestructor(func() {
+			RemoveDirectory(0, dir, root_scope)
+		})
 		if err != nil {
-			removal()
+			RemoveDirectory(0, dir, scope)
 			scope.Log("tempdir: %v", err)
 		}
 
 	} else {
-		err := scope.AddDestructor(removal)
+		err := scope.AddDestructor(func() {
+			RemoveDirectory(0, dir, scope)
+		})
 		if err != nil {
-			removal()
+			RemoveDirectory(0, dir, scope)
 			scope.Log("tempdir: %v", err)
 		}
-
 	}
 	return dir
 }
@@ -201,18 +190,73 @@ func (self TempdirFunction) Info(scope vfilter.Scope,
 	}
 }
 
-func RemoveFile(scope vfilter.Scope, filename string) {
-	scope.Log("tempfile: removing tempfile %v", filename)
+// Make sure the file is removed when the query is done.
+func RemoveDirectory(retry int, tmpdir string, scope vfilter.Scope) {
+	if retry >= 10 {
+		scope.Log("RemoveDirectory: Retry count exceeded - giving up")
+		return
+	}
+
+	if retry > 0 {
+		scope.Log("RemoveDirectory: removing tempdir %v (Try %v)",
+			tmpdir, retry)
+	} else {
+		scope.Log("RemoveDirectory: removing tempdir %v", tmpdir)
+	}
 
 	// On windows especially we can not remove files that
 	// are opened by something else, so we keep trying for
 	// a while.
-	for i := 0; i < 100; i++ {
-		err := os.Remove(filename)
-		if err == nil {
-			break
+	err := os.RemoveAll(tmpdir)
+	if err != nil {
+		scope.Log("RemoveDirectory: Failed to remove %v: %v, reschedule", tmpdir, err)
+
+		// Add another detructor to try again a bit later.
+		scope.AddDestructor(func() {
+			RemoveFile(retry+1, tmpdir, scope)
+		})
+	} else {
+		if retry > 0 {
+			scope.Log("RemoveDirectory: removed tempdir %v (Try %v)",
+				tmpdir, retry)
+		} else {
+			scope.Log("RemoveDirectory: removed tempdir %v", tmpdir)
 		}
-		time.Sleep(time.Second)
+	}
+}
+
+// Make sure the file is removed when the query is done.
+func RemoveFile(retry int, tmpfile string, scope vfilter.Scope) {
+	if retry >= 10 {
+		scope.Log("tempfile: Retry count exceeded - giving up")
+		return
+	}
+
+	if retry > 0 {
+		scope.Log("tempfile: removing tempfile %v (Try %v)",
+			tmpfile, retry)
+	} else {
+		scope.Log("tempfile: removing tempfile %v", tmpfile)
+	}
+
+	// On windows especially we can not remove files that
+	// are opened by something else, so we keep trying for
+	// a while.
+	err := os.Remove(tmpfile)
+	if err != nil {
+		scope.Log("tempfile: Failed to remove %v: %v, reschedule", tmpfile, err)
+
+		// Add another detructor to try again a bit later.
+		scope.AddDestructor(func() {
+			RemoveFile(retry+1, tmpfile, scope)
+		})
+	} else {
+		if retry > 0 {
+			scope.Log("tempfile: removed tempfile %v (Try %v)",
+				tmpfile, retry)
+		} else {
+			scope.Log("tempfile: removed tempfile %v", tmpfile)
+		}
 	}
 }
 
