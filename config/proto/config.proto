@@ -40,6 +40,9 @@ message Version {
     string ci_build_url = 6;
 
     string compiler = 7;
+
+    string system = 9;
+    string architecture = 10;
 }
 
 // A pointer to cuurently executing flows.

@@ -16,6 +16,11 @@
   category: server
   metadata:
     permissions: COLLECT_CLIENT
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: add_server_monitoring
   description: Adds a new artifact to the server monitoring table.
   type: Function
@@ -30,6 +35,11 @@
   category: server
   metadata:
     permissions: COLLECT_SERVER
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: alert
   description: Generate an alert message.
   type: Function
@@ -46,6 +56,11 @@
   - name: condition
     type: Any
     description: If specified we ignore the alert unless the condition is true
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: all
   description: Returns TRUE if all items are true.
   type: Function
@@ -62,6 +77,11 @@
     type: string
     description: Optionally one or more regex can be provided for convenience
     repeated: true
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: amsi
   description: |
     AMSI is an interface on windows to scan a string for malware. This
@@ -74,6 +94,9 @@
     description: A string to scan
     required: true
   category: windows
+  platforms:
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: any
   description: Returns TRUE if any items are true.
   type: Function
@@ -90,10 +113,21 @@
     type: string
     description: Optionally one or more regex can be provided for convenience
     repeated: true
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: appcompatcache
   description: Parses the appcompatcache.
   type: Plugin
   category: windows
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: array
   description: |
     Create an array.
@@ -144,6 +178,11 @@
     list with the `.` operator applying on each member.
   type: Function
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: artifact_definitions
   description: Dump artifact definitions from the internal repository.
   type: Plugin
@@ -161,6 +200,12 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: artifact_delete
   description: Deletes an artifact from the global repository.
   type: Function
@@ -171,6 +216,11 @@
   category: server
   metadata:
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: artifact_set
   description: Sets an artifact into the global repository.
   type: Function
@@ -184,6 +234,11 @@
   category: server
   metadata:
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: artifact_set_metadata
   description: |
     Sets metadata about the artifact.
@@ -221,6 +276,11 @@
       with the COLLECT_BASIC permission able to collect it.
   metadata:
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: atexit
   description: |
     Install a query to run when the query is unwound. This is used to
@@ -247,6 +307,11 @@
     type: uint64
     description: How long to wait for destructors to run (default 60 seconds).
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: atoi
   description: |
     Convert a string to an integer.
@@ -264,6 +329,11 @@
     description: A string to convert to int
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: audit
   description: |
     Register as an audit daemon in the kernel.
@@ -278,6 +348,8 @@
   category: linux
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - linux_amd64_cgo
 - name: authenticode
   description: |
     Parses authenticode information from PE files.
@@ -299,6 +371,11 @@
   category: windows
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: backup
   description: Generates a backup file.
   type: Plugin
@@ -307,6 +384,12 @@
     type: string
     description: The name of the backup file.
     required: true
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: backup_restore
   description: Restore state from a backup file.
   type: Plugin
@@ -315,6 +398,12 @@
     type: string
     description: The name of the backup file.
     required: true
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: base64decode
   description: Decodes a base64 encoded string.
   type: Function
@@ -324,6 +413,11 @@
     description: A string to decode
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: base64encode
   description: Encodes a string into base64.
   type: Function
@@ -333,6 +427,11 @@
     description: A string to decode
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: base85decode
   description: Decode a base85 encoded string.
   type: Function
@@ -341,6 +440,11 @@
     type: string
     description: A string to decode
     required: true
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: basename
   description: |
     Return the basename of the path.
@@ -364,6 +468,11 @@
     type: string
     description: Type of path (e.g. windows, linux)
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: batch
   description: |
     Batches query rows into multiple arrays.
@@ -393,6 +502,12 @@
     description: Run this query over the item.
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: cache
   description: |
     Creates a cache object.
@@ -432,6 +547,11 @@
     type: int64
     description: The latest age of the cache.
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: cancel_flow
   description: |
     Cancels the flow.
@@ -449,6 +569,11 @@
   category: server
   metadata:
     permissions: COLLECT_SERVER,COLLECT_CLIENT
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: certificates
   description: |
     Collect certificate from the system trust store.
@@ -460,6 +585,9 @@
   category: windows
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: chain
   description: |
     Chain the output of several queries into the same table.
@@ -489,6 +617,12 @@
     type: bool
     description: If specified we run all queries asynchronously and combine the output.
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: cidr_contains
   description: |
     Calculates if an IP address falls within a range of CIDR specified
@@ -511,6 +645,11 @@
     repeated: true
     required: true
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: client_create
   description: Create a new client in the data store.
   type: Function
@@ -536,6 +675,11 @@
     repeated: true
   metadata:
     permissions: SERVER_ADMIN
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: client_delete
   description: |
     Delete all information related to a client from the filestore.
@@ -549,6 +693,12 @@
   category: server
   metadata:
     permissions: DELETE_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: client_info
   description: |
     Returns client info (like the fqdn) from the datastore.
@@ -582,6 +732,11 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: client_metadata
   description: |
     Returns client metadata from the datastore.
@@ -597,6 +752,11 @@
   category: server
   metadata:
     permissions: READ_RESULTS,SERVER_ADMIN
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: client_set_metadata
   description: |
     Sets client metadata.
@@ -624,6 +784,11 @@
   category: server
   metadata:
     permissions: COLLECT_CLIENT,SERVER_ADMIN
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: clients
   description: Retrieve the list of clients.
   type: Plugin
@@ -643,6 +808,12 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: clock
   description: |
     Generate a timestamp periodically. This is mostly useful for event
@@ -676,6 +847,12 @@
     type: int64
     description: Wait this many ms between events.
   category: event
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: collect
   description: |
     Collect artifacts into a local file.
@@ -741,6 +918,12 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_WRITE
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: collect_client
   description: |
     Launch an artifact collection against a client. If the client_id
@@ -860,6 +1043,11 @@
   category: server
   metadata:
     permissions: COLLECT_CLIENT,COLLECT_SERVER
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: column_filter
   description: |
     Select columns from another query using regex.
@@ -896,11 +1084,23 @@
     description: One of more regular expressions that will include columns.
     repeated: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: combine
   description: Combine the output of several queries into the same result set.A convenience
     plugin acting like chain(async=TRUE).
   type: Plugin
   category: event
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: commandline_split
   description: |
     Split a commandline into separate components following the windows
@@ -923,6 +1123,11 @@
     type: bool
     description: Use bash rules (Uses Windows rules by default).
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: compress
   description: |
     Compress a file.
@@ -941,6 +1146,11 @@
   category: server
   metadata:
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: connections
   description: |
     List all active connections
@@ -950,6 +1160,8 @@
   category: plugin
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - linux_amd64_cgo
 - name: copy
   description: |
     Copy a file.
@@ -993,6 +1205,11 @@
   category: basic
   metadata:
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: count
   description: |
     Counts the items.
@@ -1014,6 +1231,11 @@
     type: Any
     description: Not used anymore
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: create_flow_download
   description: |
     Creates a download pack for the flow.
@@ -1059,6 +1281,11 @@
   category: server
   metadata:
     permissions: PREPARE_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: create_hunt_download
   description: |
     Creates a download pack for a hunt.
@@ -1096,6 +1323,11 @@
   category: server
   metadata:
     permissions: PREPARE_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: create_notebook_download
   description: Creates a notebook export zip file.
   type: Function
@@ -1110,6 +1342,11 @@
       the notebook id and timestamp
   metadata:
     permissions: PREPARE_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: crypto_rc4
   description: Apply rc4 to the string and key.
   type: Function
@@ -1123,6 +1360,11 @@
     description: Rc4 key (1-256bytes).
     required: true
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: delay
   description: Executes 'query' and delays relaying the rows by the specified number
     of seconds.
@@ -1139,6 +1381,12 @@
   - name: buffer_size
     type: int64
     description: Maximum number of rows to buffer (default 1000).
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: delete_events
   description: Delete all the files that make up a flow.
   type: Plugin
@@ -1162,6 +1410,12 @@
     description: If not specified, just show what files will be removed
   metadata:
     permissions: DELETE_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: delete_flow
   description: Delete all the files that make up a flow.
   type: Plugin
@@ -1176,6 +1430,12 @@
     type: bool
   metadata:
     permissions: DELETE_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: dict
   description: |
     Construct a dict from arbitrary keyword args.
@@ -1194,6 +1454,11 @@
     unpredictable key names.
   type: Function
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: diff
   description: |
     Executes 'query' periodically and emit differences from the last query.
@@ -1281,6 +1546,12 @@
     type: int64
     description: Number of seconds between evaluation of the query.
   category: event
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: dirname
   description: |
     Return the directory path.
@@ -1304,6 +1575,11 @@
     type: string
     description: Type of path (e.g. windows, linux)
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: dns
   description: |
     Monitor dns queries.
@@ -1343,6 +1619,12 @@
     description: Read variable value
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: elastic_upload
   description: |
     Upload rows to elastic.
@@ -1420,6 +1702,12 @@
   category: server
   metadata:
     permissions: COLLECT_SERVER
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: encode
   description: Encodes a string as as different type. Currently supported types include
     'hex', 'base64'.
@@ -1432,6 +1720,11 @@
     type: string
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: entropy
   description: Calculates shannon scale entropy of a string.
   type: Function
@@ -1439,6 +1732,11 @@
   - name: string
     type: string
     required: true
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: enumerate
   description: |
     Collect all the items in each group by bin.
@@ -1455,6 +1753,11 @@
     type: Any
     description: The items to enumerate
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: enumerate_flow
   description: |
     Enumerate all the files that make up a flow.
@@ -1474,6 +1777,12 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: environ
   description: |
     Get an environment variable.
@@ -1486,6 +1795,11 @@
   category: basic
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: environ
   description: |
     The row returned will have all environment variables as
@@ -1499,6 +1813,12 @@
       per row
     repeated: true
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: etw_sessions
   description: Enumerates all active ETW sessions
   type: Plugin
@@ -1508,6 +1828,8 @@
     description: 'The count of sessions to retrieve (default 64) '
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - windows_amd64_cgo
 - name: eval
   description: |
     Evaluate a vql lambda function on the current scope.
@@ -1535,6 +1857,11 @@
     description: Lambda function to evaluate e.g. x=>1+1 where x will be the current
       scope.
     required: true
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: execve
   description: |
     This plugin launches an external command and captures its STDERR,
@@ -1606,6 +1933,12 @@
   category: plugin
   metadata:
     permissions: EXECVE
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: expand
   description: |
     Expand the path using the environment.
@@ -1640,6 +1973,11 @@
   category: basic
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: favorites_delete
   description: Delete a favorite.
   type: Function
@@ -1653,6 +1991,11 @@
     description: The type of favorite.
     required: true
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: favorites_save
   description: |
     Save a collection into the favorites.
@@ -1684,6 +2027,11 @@
     description: The type of favorite.
     required: true
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: fifo
   description: |
     Executes 'query' and cache a number of rows from it. For each invocation
@@ -1751,6 +2099,12 @@
     type: bool
     description: If specified we flush all rows from cache after the call.
   category: event
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: file_store
   description: |
     Resolves file store paths into full filesystem paths.
@@ -1779,6 +2133,11 @@
     description: A VFS path to convert
     required: true
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: file_store_delete
   description: |
     Delete file store paths.
@@ -1791,11 +2150,22 @@
   category: server
   metadata:
     permissions: SERVER_ADMIN
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: filesystems
   description: |
     Enumerates mounted filesystems.
   type: Plugin
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: filter
   description: |
     Filters an array by regex or condition.
@@ -1823,6 +2193,11 @@
     type: vfilter.Lambda
     description: A VQL lambda to use to filter elements
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: flatten
   description: Flatten the columns in query. If any column repeats then we repeat
     the entire row once for each item.
@@ -1832,6 +2207,12 @@
     type: StoredQuery
     required: true
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: flow_logs
   description: Retrieve the query logs of a flow.
   type: Plugin
@@ -1846,6 +2227,12 @@
     required: true
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: flow_results
   description: |
     Retrieve the results of a flow.
@@ -1873,6 +2260,12 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: flows
   description: |
     Retrieve the flows launched on each client.
@@ -1889,6 +2282,12 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: for
   description: |
     Iterate over a list.
@@ -1908,6 +2307,12 @@
     type: StoredQuery
     description: Run this query over the item.
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: foreach
   description: |
     Executes 'query' once for each row in the 'row' query.
@@ -1942,6 +2347,12 @@
     type: string
     description: If set we only extract the column from row.
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: format
   description: |
     Format one or more items according to a format string.
@@ -1966,6 +2377,11 @@
     type: Any
     description: An array of elements to apply into the format string.
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: gcs_pubsub_publish
   description: Publish a message to Google PubSub.
   type: Function
@@ -1991,6 +2407,11 @@
     description: The publish attributes
     required: true
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: generate
   description: |
     Create a named generator that receives rows from the query.
@@ -2062,6 +2483,11 @@
     type: int64
     description: Wait for this many listeners to connect before starting the query
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: geoip
   description: |
     Lookup an IP Address using the MaxMind GeoIP database. You can get
@@ -2080,6 +2506,11 @@
     description: Path to the MaxMind GeoIP Database.
     required: true
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: get
   description: |
     Gets the member field from item.
@@ -2115,6 +2546,11 @@
   - name: default
     type: Any
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: get_client_monitoring
   description: |
     Retrieve the current client monitoring state.
@@ -2132,6 +2568,11 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: get_flow
   description: Gets flow details.
   type: Function
@@ -2143,6 +2584,11 @@
     type: string
   metadata:
     permissions: COLLECT_CLIENT,COLLECT_SERVER
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: get_server_monitoring
   description: |
     Retrieve the current server monitoring state.
@@ -2152,6 +2598,11 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: getpid
   description: |
     Returns the current pid of the Velociraptor process.
@@ -2161,6 +2612,11 @@
   category: basic
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: glob
   description: |
     Retrieve files based on a list of glob expressions
@@ -2299,6 +2755,12 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: grep
   description: |
     Search a file for keywords.
@@ -2347,6 +2809,11 @@
     type: bool
     description: Extract all captures.
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: gui_users
   description: |
     Retrieve the list of users on the server.
@@ -2357,6 +2824,12 @@
     description: If set we enumerate permission for all orgs, otherwise just for this
       org.
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: gunzip
   description: |
     Uncompress a gzip-compressed block of data.
@@ -2371,6 +2844,11 @@
     type: string
     description: Data to apply Gunzip
     required: true
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: handles
   description: |
     Enumerate process handles.
@@ -2386,6 +2864,8 @@
   category: windows
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - windows_amd64_cgo
 - name: hash
   description: |
     Calculate the hash of a file.
@@ -2408,6 +2888,11 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: host
   description: |
     Perform a DNS resolution.
@@ -2447,6 +2932,11 @@
     description: Prefer calling the native Go implementation rather than the system.
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: http_client
   description: |
     Make a http request.
@@ -2585,6 +3075,12 @@
   category: plugin
   metadata:
     permissions: COLLECT_SERVER
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: humanize
   description: |
     Format items in human readable way.
@@ -2605,6 +3101,11 @@
     type: int64
     description: Format integer with comma (e.g. 1,230)
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: hunt
   description: |
     Create and launch a hunt.
@@ -2690,6 +3191,11 @@
   category: server
   metadata:
     permissions: START_HUNT,ORG_ADMIN
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: hunt_add
   description: |
     Assign a client to a hunt.
@@ -2736,6 +3242,11 @@
   category: server
   metadata:
     permissions: START_HUNT
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: hunt_delete
   description: 'Delete a hunt. '
   type: Plugin
@@ -2747,6 +3258,12 @@
     type: bool
   metadata:
     permissions: SERVER_ADMIN
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: hunt_flows
   description: |
     Retrieve the flows launched by a hunt.
@@ -2775,6 +3292,12 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: hunt_results
   description: |
     Retrieve the results of a hunt.
@@ -2806,6 +3329,12 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: hunt_update
   description: Update a hunt.
   type: Function
@@ -2828,6 +3357,11 @@
     description: Update hunt expiry
   metadata:
     permissions: START_HUNT
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: hunts
   description: |
     Retrieve the list of hunts.
@@ -2839,6 +3373,12 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: if
   description: |
     Conditional execution of query
@@ -2860,6 +3400,11 @@
   - name: else
     type: types.LazyAny
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: if
   description: |
     Conditional execution of query
@@ -2883,6 +3428,12 @@
   - name: else
     type: StoredQuery
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: import
   description: Imports an artifact into the current scope. This only works in notebooks!
   type: Function
@@ -2891,6 +3442,11 @@
     type: string
     description: The Artifact to import
     required: true
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: import_collection
   description: |
     Imports an offline collection zip file (experimental).
@@ -2932,6 +3488,11 @@
   category: server
   metadata:
     permissions: COLLECT_SERVER,FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: info
   description: |
     Get information about the running host.
@@ -2946,6 +3507,12 @@
   category: plugin
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: int
   description: |
     Truncate to an integer.
@@ -2957,6 +3524,11 @@
     type: Any
     description: The integer to round
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: interfaces
   description: |
     List all active network interfaces using the API.
@@ -2964,6 +3536,12 @@
   category: windows
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: inventory
   description: |
     Retrieve the tools inventory.
@@ -2974,6 +3552,12 @@
     See https://docs.velociraptor.app/docs/extending_vql/#using-external-tools
   type: Plugin
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: inventory_add
   description: |
     Add or reconfigure a tool into the inventory.
@@ -3006,6 +3590,11 @@
   category: server
   metadata:
     permissions: SERVER_ADMIN
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: inventory_get
   description: Get tool info from inventory service.
   type: Function
@@ -3021,6 +3610,11 @@
   category: server
   metadata:
     permissions: SERVER_ADMIN
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: ip
   description: |
     Format an IP address.
@@ -3045,6 +3639,11 @@
     type: int64
     description: A network order IPv4 address (as big endian).
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: items
   description: |
     Iterate over dict members producing _key and _value columns
@@ -3056,6 +3655,11 @@
   - name: item
     type: Any
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: items
   description: |
     Enumerate all members of the item (similar to Python's items() method).
@@ -3109,6 +3713,12 @@
     type: Any
     description: The item to enumerate.
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: join
   description: |
     Join all the args on a separator.
@@ -3125,6 +3735,11 @@
     type: string
     description: The separator. Defaults to an empty string if not explicitly set
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: js
   description: Compile and run javascript code.
   type: Function
@@ -3137,6 +3752,11 @@
     type: string
     description: If set use this key to cache the JS VM.
   category: experimental
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: js_call
   description: Compile and run javascript code.
   type: Function
@@ -3152,6 +3772,11 @@
     type: string
     description: If set use this key to cache the JS VM.
   category: experimental
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: js_get
   description: Get a variable's value from the JS VM.
   type: Function
@@ -3164,6 +3789,11 @@
     type: string
     description: If set use this key to cache the JS VM.
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: js_set
   description: Set a variables value in the JS VM.
   type: Function
@@ -3180,6 +3810,11 @@
     type: string
     description: If set use this key to cache the JS VM.
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: killkillkill
   description: Kills the client and forces a restart - this is very aggressive!
   type: Function
@@ -3190,6 +3825,11 @@
   category: basic
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: label
   description: |
     Add the labels to the client. If op is 'remove' then remove these labels.
@@ -3221,6 +3861,11 @@
   category: server
   metadata:
     permissions: LABEL_CLIENT
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: len
   description: |
     Returns the length of an object.
@@ -3235,6 +3880,11 @@
     description: A list of items to filter
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: leveldb
   description: Enumerate all items in a level db database
   type: Plugin
@@ -3247,6 +3897,12 @@
     description: The accessor to use.
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: log
   description: |
     Log the message and return TRUE.
@@ -3306,6 +3962,11 @@
     type: string
     description: Level to log at (DEFAULT, WARN, ERROR, INFO, DEBUG).
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: logging
   description: Watch the logs emitted by the server.
   type: Plugin
@@ -3314,6 +3975,12 @@
     type: string
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: logscale_upload
   description: Upload rows to LogScale ingestion server.
   type: Plugin
@@ -3364,6 +4031,12 @@
   - name: debug
     type: bool
     description: Enable verbose logging.
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: lookupSID
   description: Get information about the SID.
   type: Function
@@ -3373,6 +4046,12 @@
     description: 'A SID to lookup using LookupAccountSid '
     required: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
+  platforms:
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: lowcase
   description: Returns the lowercase version of a string.
   type: Function
@@ -3382,6 +4061,11 @@
     description: The string to process
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: lru
   description: |
     Creates an LRU object
@@ -3414,6 +4098,11 @@
   - name: size
     type: int64
     description: Size of the LRU (default 1000)
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: lzxpress_decompress
   description: |
     Decompress an lzxpress blob.
@@ -3425,6 +4114,11 @@
     type: string
     description: The lzxpress stream (bytes)
     required: true
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: magic
   description: |
     Identify a file using magic rules.
@@ -3479,6 +4173,10 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: mail
   description: Send Email to a remote server.
   type: Function
@@ -3527,6 +4225,11 @@
       to be added here.
   metadata:
     permissions: SERVER_ADMIN
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: mail
   description: Send Email to a remote server.
   type: Plugin
@@ -3574,6 +4277,12 @@
     description: As a better alternative to disable_ssl_security, allows root ca certs
       to be added here.
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: max
   description: |
     Finds the largest item in the aggregate.
@@ -3594,6 +4303,11 @@
     type: LazyExpr
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: memoize
   description: |
     Memoize a query into memory.
@@ -3655,6 +4369,11 @@
     type: string
     description: The name of this cache.
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: min
   description: |
     Finds the smallest item in the aggregate.
@@ -3675,6 +4394,11 @@
     type: LazyExpr
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: mock
   description: Mock a plugin.
   type: Function
@@ -3693,6 +4417,11 @@
     description: The result to return
     required: true
   category: utils
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: mock_check
   description: Check expectations on a mock.
   type: Function
@@ -3710,9 +4439,19 @@
     type: bool
     description: This call will clear previous mocks for this plugin
   category: utils
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: mock_clear
   description: Resets all mocks.
   type: Function
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: mock_replay
   description: Replay recorded calls on a mock.
   type: Function
@@ -3729,6 +4468,11 @@
   - name: clear
     type: bool
     description: This call will clear previous mocks for this plugin
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: modules
   description: Enumerate Loaded DLLs.
   type: Plugin
@@ -3740,6 +4484,9 @@
   category: windows
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: monitoring
   description: Extract monitoring log from a client. If client_id is not specified
     we watch the global journal which contains event logs from all clients.
@@ -3771,6 +4518,12 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: monitoring_logs
   description: Retrieve log messages from client event monitoring for the specified
     client id and artifact
@@ -3795,6 +4548,12 @@
     description: Stop end events reach this time (event sources).
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: netcat
   description: Make a tcp connection and read data from a socket.
   type: Plugin
@@ -3822,12 +4581,22 @@
   category: plugin
   metadata:
     permissions: COLLECT_SERVER
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: netstat
   description: Collect network information.
   type: Plugin
   category: plugin
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: notebook_create
   description: Create a new notebook.
   type: Function
@@ -3854,6 +4623,11 @@
     description: An environment to initialize the notebook with
   metadata:
     permissions: COLLECT_SERVER
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: notebook_delete
   description: 'Delete a notebook with all its cells. '
   type: Plugin
@@ -3866,6 +4640,12 @@
   category: server
   metadata:
     permissions: SERVER_ADMIN
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: notebook_export
   description: Exports a notebook to a zip file or HTML.
   type: Function
@@ -3883,6 +4663,11 @@
     description: Set the type of the export (html or zip).
   metadata:
     permissions: PREPARE_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: notebook_get
   description: Get a notebook.
   type: Function
@@ -3893,6 +4678,11 @@
     required: true
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: notebook_update_cell
   description: Update a notebook cell.
   type: Function
@@ -3918,6 +4708,11 @@
       rendered output.
   metadata:
     permissions: COLLECT_SERVER
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: now
   description: Returns current time in seconds since epoch.
   type: Function
@@ -3927,6 +4722,11 @@
     description: A string to convert to int
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: olevba
   description: |
     Extracts VBA Macros from Office documents.
@@ -3950,9 +4750,20 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: org
   description: Return the details of the current org.
   type: Function
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: org_create
   description: Creates a new organization.
   type: Function
@@ -3966,6 +4777,11 @@
     description: An ID for the new org (if not set use a random ID).
   metadata:
     permissions: ORG_ADMIN
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: org_delete
   description: Deletes an Org from the server.
   type: Function
@@ -3979,14 +4795,31 @@
     description: If not specified, just show what org will be removed
   metadata:
     permissions: ORG_ADMIN
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: orgs
   description: Retrieve the list of orgs on this server.
   type: Plugin
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: panic
   description: Crash the program with a panic!
   type: Plugin
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parallelize
   description: |
     Runs query on result batches in parallel.
@@ -4063,6 +4896,12 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_auditd
   description: Parse log files generated by auditd.
   type: Plugin
@@ -4079,6 +4918,8 @@
     type: int
     description: Maximum size of line buffer.
   category: parsers
+  platforms:
+  - linux_amd64_cgo
 - name: parse_binary
   description: |
     Parse a binary file into a data structure using a profile.
@@ -4130,6 +4971,11 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_csv
   description: |
     Parses events from a CSV file.
@@ -4185,6 +5031,12 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_ese
   description: Opens an ESE file and dump a table.
   type: Plugin
@@ -4202,6 +5054,12 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_ese_catalog
   description: Opens an ESE file and dump the schema.
   type: Plugin
@@ -4215,6 +5073,12 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_evtx
   description: |
     Parses events from an EVTX file.
@@ -4261,6 +5125,12 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_float
   description: Convert a string to a float.
   type: Function
@@ -4270,6 +5140,11 @@
     description: A string to convert to int
     required: true
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_journald
   description: Parse a journald file.
   type: Plugin
@@ -4287,6 +5162,12 @@
     description: Emit raw events (no parsed).
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_json
   description: |
     Parse a JSON string into an object.
@@ -4301,6 +5182,11 @@
     description: Json encoded string.
     required: true
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_json_array
   description: |
     Parse a JSON string into an array.
@@ -4314,6 +5200,11 @@
     description: Json encoded string.
     required: true
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_json_array
   description: Parses events from a line oriented json file.
   type: Plugin
@@ -4323,6 +5214,12 @@
     description: Json encoded string.
     required: true
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_jsonl
   description: Parses a line oriented json file.
   type: Plugin
@@ -4337,6 +5234,12 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_lines
   description: Parse a file separated into lines.
   type: Plugin
@@ -4355,6 +5258,12 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_mft
   description: |
     Scan the $MFT from an NTFS volume.
@@ -4397,6 +5306,12 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_ntfs
   description: |
     Parse specific inodes from an NTFS image file or the raw device.
@@ -4460,6 +5375,11 @@
     type: int64
     description: The offset to the MFT entry to parse.
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_ntfs_i30
   description: |
     Scan the $I30 stream from an NTFS MFT entry.
@@ -4495,6 +5415,12 @@
     type: int64
     description: The offset to the MFT entry to parse.
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_ntfs_ranges
   description: |
     Show the run ranges for an NTFS stream.
@@ -4527,6 +5453,12 @@
     type: int64
     description: The offset to the MFT entry to parse.
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_pe
   description: Parse a PE file.
   type: Function
@@ -4544,6 +5476,11 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_pkcs7
   description: Parse a DER encoded pkcs7 string into an object.
   type: Function
@@ -4553,6 +5490,11 @@
     description: PKCS7 DER encoded string.
     required: true
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_records_with_regex
   description: |
     Parses a file with a set of regexp and yields matches as records.  The
@@ -4646,6 +5588,12 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_recyclebin
   description: Parses a $I file found in the $Recycle.Bin
   type: Plugin
@@ -4661,6 +5609,12 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_string_with_regex
   description: Parse a string with a set of regex and extract fields. Returns a dict
     with fields populated from all regex capture variables.
@@ -4676,6 +5630,11 @@
     repeated: true
     required: true
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_usn
   description: Parse the USN journal from a device.
   type: Plugin
@@ -4691,6 +5650,12 @@
     type: int64
     description: The starting offset of the first USN record to parse.
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_x509
   description: Parse a DER encoded x509 string into an object.
   type: Function
@@ -4700,6 +5665,11 @@
     description: X509 DER encoded string.
     required: true
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_xml
   description: |
     Parse an XML document into a dict like object.
@@ -4715,6 +5685,11 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: parse_yaml
   description: Parse yaml into an object.
   type: Function
@@ -4729,10 +5704,21 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: partitions
   description: List all partitions
   type: Plugin
   category: windows
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: passwd
   description: Updates the user's password.
   type: Function
@@ -4745,6 +5731,11 @@
     type: string
     description: The new password to set.
     required: true
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: patch
   description: |
     Patch a JSON object with a json patch or merge.
@@ -4798,6 +5789,11 @@
     type: Any
     description: A merge-patch to apply
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: path_join
   description: Build a path by joining all components.
   type: Function
@@ -4814,6 +5810,11 @@
     type: string
     description: Type of path (e.g. 'windows')
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: path_split
   description: Split a path into components. Note this is more complex than just split()
     because it takes into account path escaping.
@@ -4827,6 +5828,11 @@
     type: string
     description: Type of path (e.g. 'windows')
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: pathspec
   description: Create a structured path spec to pass to certain accessors.
   type: Function
@@ -4851,6 +5857,11 @@
     type: string
     description: The accessor to use to parse the path with
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: pe_dump
   description: Dump a PE file from process memory.
   type: Function
@@ -4870,6 +5881,11 @@
       to avoid AV alerts on disk access.
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: pipe
   description: |
     A pipe allows plugins that use files to read data from a vql
@@ -4912,6 +5928,11 @@
     description: 'The separator that will be used to split each read (default: no
       separator will be used)'
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: pk_decrypt
   description: Decrypt files using pubkey encryption
   type: Function
@@ -4930,6 +5951,11 @@
     type: string
     description: 'Encryption scheme to use. Defaults to RSA. Currently supported:
       PGP,RSA'
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: pk_encrypt
   description: Encrypt files using pubkey encryption
   type: Function
@@ -4950,6 +5976,11 @@
       PGP,X509'
   metadata:
     permissions: SERVER_ADMIN
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: plist
   description: Parse plist file
   type: Function
@@ -4964,6 +5995,11 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: plist
   description: Parses a plist file.
   type: Plugin
@@ -4979,6 +6015,12 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: prefetch
   description: Parses a prefetch file.
   type: Plugin
@@ -4994,6 +6036,12 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: proc_dump
   description: |
     Dumps process memory.
@@ -5013,6 +6061,9 @@
   category: windows
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: proc_yara
   description: |
     Scan processes using yara rules.
@@ -5052,6 +6103,10 @@
   category: windows
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: process_tracker
   description: Install a global process tracker.
   type: Function
@@ -5074,9 +6129,19 @@
     description: One or more VQL lambda functions that can enrich the data for the
       process.
     repeated: true
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: process_tracker_all
   description: Get all processes stored in the tracker.
   type: Function
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: process_tracker_callchain
   description: Get a call chain from the global process tracker.
   type: Function
@@ -5085,6 +6150,11 @@
     type: string
     description: Process ID.
     required: true
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: process_tracker_children
   description: Get all children of a process.
   type: Function
@@ -5093,6 +6163,11 @@
     type: string
     description: Process ID.
     required: true
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: process_tracker_get
   description: Get a single process from the global tracker.
   type: Function
@@ -5101,9 +6176,20 @@
     type: string
     description: Process ID.
     required: true
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: process_tracker_pslist
   description: List all processes from the process tracker.
   type: Plugin
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: process_tracker_tree
   description: Get the full process tree under the process id.
   type: Function
@@ -5115,9 +6201,20 @@
     type: vfilter.Lambda
     description: A VQL Lambda function to that receives a ProcessEntry and returns
       the data node for each process.
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: process_tracker_updates
   description: Get the process tracker update events from the global process tracker.
   type: Plugin
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: profile
   description: Returns a profile dump from the running process.
   type: Plugin
@@ -5165,16 +6262,34 @@
   category: plugin
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: profile_goroutines
   description: Enumerates all running goroutines.
   type: Plugin
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: profile_memory
   description: Enumerates all in use memory within the runtime.
   type: Plugin
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: pskill
   description: Kill the specified process.
   type: Function
@@ -5185,6 +6300,11 @@
     required: true
   metadata:
     permissions: EXECVE
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: pslist
   description: |
     Enumerate running processes.
@@ -5202,6 +6322,12 @@
   category: plugin
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: query
   description: Launch a subquery and materialize it into a list of rows.
   type: Function
@@ -5255,6 +6381,12 @@
     description: If specified we inherit the scope instead of building a new one.
   metadata:
     permissions: IMPERSONATION
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: rand
   description: Selects a random number.
   type: Function
@@ -5263,6 +6395,11 @@
     type: int64
     description: Selects a random number up to this range.
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: range
   description: Iterate over range.
   type: Plugin
@@ -5278,6 +6415,12 @@
     type: int64
     description: Step (default 1)
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: rate
   description: |
     Calculates the rate (derivative) between two quantities.
@@ -5299,6 +6442,11 @@
     description: The Y float
     required: true
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: read_crypto_file
   description: Read a previously stored encrypted local storage file.
   type: Plugin
@@ -5312,6 +6460,12 @@
     description: The accessor to use
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: read_file
   description: Read a file into a string.
   type: Function
@@ -5332,6 +6486,11 @@
   category: basic
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: read_file
   description: |
     Read files in chunks.
@@ -5361,6 +6520,12 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: read_reg_key
   description: |
     This is a convenience plugin which applies the globs to the registry
@@ -5383,6 +6548,12 @@
     type: accessors.OSPath
     description: The root directory to glob from (default '/').
   category: windows
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: reg_rm_key
   description: Removes a key and all its values from the registry.
   type: Function
@@ -5392,6 +6563,9 @@
     description: Registry key path.
     required: true
   category: plugin
+  platforms:
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: reg_rm_value
   description: Removes a value in the registry.
   type: Function
@@ -5401,6 +6575,9 @@
     description: Registry value path.
     required: true
   category: plugin
+  platforms:
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: reg_set_value
   description: Set a value in the registry.
   type: Function
@@ -5421,6 +6598,9 @@
     type: bool
     description: Set to create missing intermediate keys
   category: plugin
+  platforms:
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: regex_replace
   description: Search and replace a string with a regexp. Note you can use $1 to replace
     the capture string.
@@ -5441,6 +6621,11 @@
     description: A regex to apply
     required: true
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: regex_transform
   description: |
     Search and replace a string with multiple regex. Note you can use $1
@@ -5466,6 +6651,11 @@
     type: string
     description: A key for caching
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: rekey
   description: Causes the client to rekey and regenerate a new client ID. DANGEROUS!
     This will change the client's identity and it will appear as a new client in the
@@ -5477,6 +6667,11 @@
     description: Wait this long before rekeying the client.
   metadata:
     permissions: EXECVE
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: relpath
   description: Return the relative path of .
   type: Function
@@ -5493,6 +6688,11 @@
     type: string
     description: Separator to use (default native)
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: remap
   description: Apply a remapping configuration to the root scope.
   type: Function
@@ -5508,6 +6708,11 @@
   - name: clear
     type: bool
     description: If set we clear all accessors from the device manager
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: repack
   description: Repack and upload a repacked binary or MSI to the server.
   type: Function
@@ -5539,6 +6744,11 @@
     required: true
   metadata:
     permissions: COLLECT_SERVER
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: rm
   description: Remove a file from the filesystem using the API.
   type: Function
@@ -5550,6 +6760,11 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_WRITE
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: rm_client_monitoring
   description: Remove an artifact from the client monitoring table.
   type: Function
@@ -5564,6 +6779,11 @@
   category: server
   metadata:
     permissions: COLLECT_CLIENT
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: rm_server_monitoring
   description: Remove an artifact from the server monitoring table.
   type: Function
@@ -5575,6 +6795,11 @@
   category: server
   metadata:
     permissions: COLLECT_SERVER
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: rot13
   description: Apply rot13 deobfuscation to the string.
   type: Function
@@ -5582,6 +6807,11 @@
   - name: string
     type: string
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: sample
   description: |
     Executes 'query' and samples every n'th row.
@@ -5599,10 +6829,21 @@
     description: Pick every n row from query.
     required: true
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: scope
   description: return the scope.
   type: Function
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: scope
   description: |
     The scope plugin returns the current scope as a single row.
@@ -5617,6 +6858,12 @@
     ```
   type: Plugin
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: send_event
   description: |
     Sends an event to a server event monitoring queue.
@@ -5637,6 +6884,11 @@
   category: event
   metadata:
     permissions: SERVER_ADMIN,PUBLISH
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: sequence
   description: |
     Combines the output of many queries into an in memory fifo. After
@@ -5681,6 +6933,12 @@
     type: int64
     description: Maximum number of seconds to hold rows in the sequence.
   category: experimental
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: serialize
   description: Encode an object as a string (csv or json).
   type: Function
@@ -5693,11 +6951,21 @@
     type: string
     description: Encoding format (csv,json,yaml,hex,base64)
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: server_frontend_cert
   description: Get Server Frontend Certificate
   type: Function
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: server_metadata
   description: |
     Returns server metadata from the datastore. Server metadata is a
@@ -5706,6 +6974,11 @@
   category: server
   metadata:
     permissions: SERVER_ADMIN
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: server_set_metadata
   description: |
     Sets server metadata. Server metadata is a set of free form
@@ -5726,6 +6999,11 @@
     type: ordereddict.Dict
     description: A dict containing metadata. If not specified we use kwargs.
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: set
   description: Sets the member field of the item. If item is omitted sets the scope.
   type: Function
@@ -5742,6 +7020,11 @@
     type: Any
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: set_client_monitoring
   description: Sets the current client monitoring state.
   type: Function
@@ -5753,6 +7036,11 @@
   category: server
   metadata:
     permissions: COLLECT_CLIENT
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: set_server_monitoring
   description: Sets the current server monitoring state.
   type: Function
@@ -5764,6 +7052,11 @@
   category: server
   metadata:
     permissions: COLLECT_SERVER
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: sigma
   description: Evaluate sigma rules.
   type: Plugin
@@ -5793,11 +7086,22 @@
     type: vfilter.Lambda
     description: If specified we use this callback to determine a details column if
       the sigma rule does not specify it.
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: sigma_log_sources
   description: Constructs a Log sources object to be used in sigma rules. Call with
     args being category/product/service and values being stored queries. You may use
     a * as a placeholder for any of these fields.
   type: Function
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: sleep
   description: Sleep for the specified number of seconds. Always returns true.
   type: Function
@@ -5809,6 +7113,11 @@
     type: int64
     description: The number of ms to sleep
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: slice
   description: Slice an array.
   type: Function
@@ -5826,6 +7135,11 @@
     description: End index (0 based)
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: source
   description: |
     Retrieve rows from an artifact's source.
@@ -5887,6 +7201,12 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: split
   description: Splits a string into an array based on a regexp separator.
   type: Function
@@ -5902,6 +7222,11 @@
     type: string
     description: The separator as string that will be used to split
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: split_records
   description: Parses files by splitting lines into records.
   type: Plugin
@@ -5937,6 +7262,12 @@
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: splunk_upload
   description: Upload rows to splunk.
   type: Plugin
@@ -5994,6 +7325,12 @@
   category: server
   metadata:
     permissions: COLLECT_SERVER
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: sql
   description: Run queries against sqlite, mysql, and postgres databases
   type: Plugin
@@ -6019,6 +7356,12 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: sqlite
   description: Opens an SQLite file and run a query against it.
   type: Plugin
@@ -6035,6 +7378,12 @@
   - name: args
     type: Any
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: srum_lookup_id
   description: Lookup a SRUM id.
   type: Function
@@ -6049,6 +7398,11 @@
     type: int64
     required: true
   category: windows
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: starl
   description: |
     Compile a starlark code block - returns a module usable in VQL
@@ -6089,6 +7443,11 @@
     type: Any
     description: Dictionary of values to feed into Starlark environment
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: stat
   description: Get file information. Unlike glob() this does not support wildcards.
   type: Function
@@ -6102,6 +7461,11 @@
     description: An accessor to use.
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: stat
   description: Get file information. Unlike glob() this does not support wildcards.
   type: Plugin
@@ -6117,6 +7481,12 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: str
   description: Returns the string representation of provided data
   type: Function
@@ -6126,6 +7496,11 @@
     description: The string to normalize
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: strip
   description: |
     Strip prefix and/or suffix from a string
@@ -6154,6 +7529,11 @@
     type: string
     description: The suffix to strip
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: substr
   description: |
     Create a substring from a string
@@ -6173,6 +7553,11 @@
     type: int
     description: End index of substring
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: sum
   description: Sums the items.
   type: Function
@@ -6181,6 +7566,11 @@
     type: int64
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: switch
   description: |
     Conditional execution of multiple queries in order
@@ -6189,11 +7579,19 @@
     are emitted. Any further queries are ignored.
   type: Plugin
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: sysinfo
   description: Collect system information on Linux clients
   type: Function
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - linux_amd64_cgo
 - name: tempdir
   description: Create a temporary directory. The directory will be removed when the
     query ends.
@@ -6205,6 +7603,11 @@
   category: basic
   metadata:
     permissions: FILESYSTEM_WRITE
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: tempfile
   description: |
     Create a temporary file and write some data into it.
@@ -6228,6 +7631,11 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_WRITE
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: threads
   description: Enumerate threads in a process.
   type: Plugin
@@ -6238,6 +7646,8 @@
     required: true
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - windows_amd64_cgo
 - name: timeline
   description: Read a timeline. You can create a timeline with the timeline_add()
     function
@@ -6260,6 +7670,12 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: timeline_add
   description: Add a new query to a timeline.
   type: Function
@@ -6286,6 +7702,11 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: timestamp
   description: |
     Convert from different types to a time.Time.
@@ -6404,6 +7825,11 @@
     type: string
     description: A format specifier as per the Golang time.Parse
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: tlsh_hash
   description: Calculate the tlsh hash of a file.
   type: Function
@@ -6417,6 +7843,11 @@
     description: The accessor to use
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: to_dict
   description: |
     Construct a dict from a query.
@@ -6458,6 +7889,11 @@
   - name: item
     type: Any
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: token
   description: Extract process token.
   type: Function
@@ -6469,10 +7905,17 @@
   category: windows
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - windows_amd64_cgo
 - name: trace
   description: Upload a trace file.
   type: Function
   version: 1
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: unhex
   description: |
     Apply hex decoding to the string.
@@ -6494,6 +7937,11 @@
     type: string
     description: Hex string to decode
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: unzip
   description: |
     Unzips a file into a directory.
@@ -6528,6 +7976,12 @@
   category: basic
   metadata:
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: upcase
   description: Returns an uppercase version of the string.
   type: Function
@@ -6537,6 +7991,11 @@
     description: The string to process
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: upload
   description: |
     Upload a file to the upload service. For a Velociraptor client this
@@ -6571,6 +8030,11 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: upload
   description: |
     Upload files to the server.
@@ -6615,6 +8079,11 @@
     required: true
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: upload_directory
   description: Upload a file to an upload directory. The final filename will be the
     output directory path followed by the filename path.
@@ -6649,6 +8118,11 @@
   category: server
   metadata:
     permissions: FILESYSTEM_WRITE
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: upload_gcs
   description: Upload files to GCS.
   type: Function
@@ -6678,6 +8152,11 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: upload_s3
   description: Upload files to S3.
   type: Function
@@ -6731,6 +8210,11 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: upload_sftp
   description: Upload files to SFTP.
   type: Function
@@ -6767,6 +8251,11 @@
   category: basic
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: upload_smb
   description: Upload files using the SMB file share protocol.
   type: Function
@@ -6796,6 +8285,11 @@
     required: true
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: upload_webdav
   description: Upload files to a WebDAV server.
   type: Function
@@ -6832,6 +8326,11 @@
   category: basic
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: uploads
   description: Retrieve information about a flow's uploads.
   type: Plugin
@@ -6851,6 +8350,12 @@
   category: server
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: url
   description: |
     Construct a URL or parse one.
@@ -6896,6 +8401,11 @@
     type: string
     description: A url to parse
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: user
   description: Retrieves information about the Velociraptor user.
   type: Function
@@ -6907,6 +8417,11 @@
   - name: org
     type: string
     description: The org under which we query the user's ACL.
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: user_create
   description: Creates a new user from the server, or updates their permissions or
     reset their password.
@@ -6930,6 +8445,11 @@
       org.
     repeated: true
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: user_delete
   description: Deletes a user from the server.
   type: Function
@@ -6947,6 +8467,11 @@
     type: bool
     description: If not specified, just show what user will be removed
   category: server
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: user_grant
   description: Grants the user the specified roles.
   type: Function
@@ -6968,11 +8493,19 @@
     type: ordereddict.Dict
     description: A dict of permissions to set (e.g. as obtained from the gui_users()
       function).
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: users
   description: Display information about workstation local users. This is obtained
     through the NetUserEnum() API.
   type: Plugin
   category: windows
+  platforms:
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: utf16
   description: |
     Parse input from utf16.
@@ -6988,6 +8521,11 @@
     description: A string to decode
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: utf16_encode
   description: |
     Encode a string to utf16 bytes.
@@ -7003,10 +8541,20 @@
     description: A string to decode
     required: true
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: uuid
   description: Generate a UUID.
   type: Function
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: vad
   description: Enumerate process memory regions.
   type: Plugin
@@ -7016,6 +8564,9 @@
     description: The PID to dump out.
     required: true
   category: windows
+  platforms:
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: version
   description: |2
 
@@ -7042,6 +8593,11 @@
   - name: plugin
     type: string
   category: basic
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: vfs_ls
   description: |
     List directory and build a VFS object.
@@ -7066,6 +8622,12 @@
     description: Depth of directory to list (default 0).
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: watch_auditd
   description: Watch log files generated by auditd.
   type: Plugin
@@ -7082,6 +8644,8 @@
     type: int
     description: Maximum size of line buffer.
   category: event
+  platforms:
+  - linux_amd64_cgo
 - name: watch_csv
   description: |
     Watch a CSV file and stream events from it. Note: This is an event
@@ -7115,6 +8679,12 @@
   category: event
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: watch_etw
   description: Watch for events from an ETW provider.
   type: Plugin
@@ -7154,6 +8724,9 @@
     type: string
     description: Description for this GUID provider
   category: event
+  platforms:
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: watch_evtx
   description: |
     Watch an EVTX file and stream events from it.
@@ -7189,6 +8762,12 @@
   category: event
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: watch_journald
   description: 'Watch a journald file and stream events from it. '
   type: Plugin
@@ -7206,6 +8785,12 @@
     description: Emit raw events (no parsed).
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: watch_jsonl
   description: Watch a jsonl file and stream events from it.
   type: Plugin
@@ -7223,6 +8808,12 @@
     description: Maximum size of line buffer.
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: watch_monitoring
   description: |
     Watch clients' monitoring log. This is an event plugin. This
@@ -7236,6 +8827,12 @@
   category: event
   metadata:
     permissions: READ_RESULTS
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: watch_syslog
   description: 'Watch a syslog file and stream events from it. '
   type: Plugin
@@ -7254,6 +8851,12 @@
   category: event
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: watch_usn
   description: Watch the USN journal from a device.
   type: Plugin
@@ -7263,10 +8866,21 @@
     description: The device file to open (as an NTFS device).
     required: true
   category: event
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: whoami
   description: Returns the username that is running the query.
   type: Function
   category: plugin
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: winobj
   description: Enumerate The Windows Object Manager namespace.
   type: Plugin
@@ -7277,6 +8891,8 @@
   category: windows
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - windows_amd64_cgo
 - name: winpmem
   description: |
     Uses the `winpmem` driver to take a memory image.
@@ -7320,6 +8936,8 @@
       be none, s2, snappy, gzip.
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - windows_amd64_cgo
 - name: wmi
   description: |
     Execute simple WMI queries synchronously.
@@ -7341,6 +8959,9 @@
   category: windows
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: wmi_events
   description: |
     Executes an evented WMI queries asynchronously.
@@ -7363,6 +8984,9 @@
   category: event
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: write_crypto_file
   description: Write a query into an encrypted local storage file.
   type: Plugin
@@ -7386,6 +9010,12 @@
     description: When the file grows to this size, truncate it (default 1Gb).
   metadata:
     permissions: FILESYSTEM_WRITE
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: write_csv
   description: Write a query into a CSV file.
   type: Plugin
@@ -7404,6 +9034,12 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_WRITE
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: write_jsonl
   description: Write a query into a JSONL file.
   type: Plugin
@@ -7424,6 +9060,12 @@
     description: Maximum size of buffer before flushing to file.
   metadata:
     permissions: FILESYSTEM_WRITE
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: xattr
   description: |
     Query a file for the specified extended attribute.
@@ -7450,6 +9092,8 @@
     description: File accessor
   metadata:
     permissions: FILESYSTEM_READ
+  platforms:
+  - darwin_amd64_cgo
 - name: xor
   description: Apply xor to the string and key.
   type: Function
@@ -7463,89 +9107,13 @@
     description: Xor key.
     required: true
   category: parsers
+  platforms:
+  - darwin_amd64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: yara
-  description: |
-    Scan files using yara rules.
-
-    The `yara()` plugin applies a signature consisting of multiple rules
-    across files. You can read more about [yara rules](https://yara.readthedocs.io/en/v4.2.3/writingrules.html). The
-    accessor is used to open the various files which allows this plugin to
-    work across raw ntfs, zip members or indeed process memory.
-
-    There are two modes supported. If the accessor is "process" or
-    "file", we delegate scanning directly to the yara library. This
-    allows yara to see the entire file and apply signatures that span
-    large offset differences (e.g. a signature looking for a string in
-    the middle of the file and the header).
-
-    For other accessors we need to use buffer scanning. In this mode,
-    Velociraptor will read buffers from the accessor and apply the
-    yara library to the buffer. Due to limitations in the yara API, it
-    is not possible to match signatures that are split on buffer
-    boundaries. You can choose the block size to try to fit the entire
-    signature with each block.
-
-    If the accessor is **not** specified we use the yara library to
-    directly open the file itself without Velociraptor's accessor
-    API. This allows Yara to mmap the file which has a number of
-    benefits including:
-
-      1. The ability to scan without reading in blocks - so a
-         signature matching the file header as well as a string deep
-         within the file works.
-
-      2. Various Yara extensions like the `pe` extension work allowing
-         rules that use such extensions to work properly.
-
-    If we are not able to open the file (for example due to sharing
-    violations), Velociraptor will automatically fall back to the ntfs
-    accessor (on Windows) and will automatically switch to block by
-    block scanning.
-
-    Typically the yara rule does not change for the life of the query,
-    so Velociraptor caches it to avoid having to recompile it each
-    time. The `key` variable can be used to uniquely identify the
-    cache key for the rule. If the `key` variable is not specified, we
-    use the rule text itself to generate the cache key. It is
-    recommended that the `key` parameter be specified because it makes
-    it more efficient since we do not need to hash the rules each time.
-
-    You can supply a `compiled yara rule` as produced by the `yarac`
-    program. This is not recommended because it is not portable - the
-    rule must have been compiled with the exact same version of Yara
-    that is embedded in Velociraptor (Currently 4.5.0). Compiled rules
-    are generally larger too than the plain text rules.
-
-    When creating an artifact which requires a yara rule, set the type
-    of the parameter to `yara` and Velociraptor will offer a context
-    sensitive Yara rule editor in the GUI (simply press ? to bring up
-    a rule template). This makes it easier to write quick rules in the
-    GUI.
-
-    {{% notice note %}}
-
-    By default only the first 100mb of the file are scanned and
-    scanning stops after one hit is found.
-
-    {{% /notice %}}
-
-    ### Compatibility with yara rules.
-
-    The YARA engine supports a number of directives that bring in
-    unreasonably sized dependencies. Velociraptor's Yara integration
-    disables directive importing dependencies such as openssl and
-    libmagic. This means that some rule conditions do not work (for
-    example `pe.number_of_signatures`). Other condition are still
-    supported (e.g. `pe.imphash()`). You can usually find equivalents
-    to the Yara plugins in VQL plugins so rules can be rewritten to
-    avoid this limitation.
-
-    If you have a large number of rules, you may use the `yara-tools`
-    repository https://github.com/Velocidex/yara-tools to clean up the
-    rules and verify that they will work with Velociraptor's yara
-    engine. The tool will automatically remove rules that are
-    incompatible with Velociraptor and reduce the size of the rules by
-    removing metadata and extra fluff.
+  description: Scan files using yara rules.
   type: Plugin
   args:
   - name: rules
@@ -7583,7 +9151,9 @@
   - name: vars
     type: ordereddict.Dict
     description: The Yara variables to use.
-  category: plugin
   metadata:
     permissions: FILESYSTEM_READ
-
+  platforms:
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
