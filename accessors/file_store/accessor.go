@@ -58,7 +58,15 @@ func (self FileStoreFileSystemAccessor) LstatWithOSPath(filename *accessors.OSPa
 	fullpath := path_specs.FromGenericComponentList(filename.Components)
 	lstat, err := self.file_store.StatFile(fullpath)
 	if err != nil {
-		return nil, err
+		// If it didnt work, we try case insensitive open
+		corrected_path, err := getCorrectCase(self.file_store, fullpath)
+		if err != nil {
+			return nil, err
+		}
+		lstat, err = self.file_store.StatFile(corrected_path)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return file_store_file_info.NewFileStoreFileInfoWithOSPath(
@@ -87,7 +95,16 @@ func (self FileStoreFileSystemAccessor) ReadDirWithOSPath(
 	fullpath := path_specs.FromGenericComponentList(filename.Components)
 	files, err := self.file_store.ListDirectory(fullpath)
 	if err != nil {
-		return nil, err
+		// If it didnt work, we try case insensitive
+		corrected_path, err := getCorrectCase(self.file_store, fullpath)
+		if err != nil {
+			return nil, err
+		}
+
+		files, err = self.file_store.ListDirectory(corrected_path)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var result []accessors.FileInfo
@@ -142,7 +159,16 @@ func (self FileStoreFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPat
 		}
 
 		if err != nil {
-			return nil, err
+			// If it didnt work, we try case insensitive open
+			corrected_path, err := getCorrectCase(self.file_store, fullpath)
+			if err != nil {
+				return nil, err
+			}
+
+			file, err = self.file_store.ReadFile(corrected_path)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
