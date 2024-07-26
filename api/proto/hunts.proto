@@ -107,6 +107,9 @@ message Hunt {
             description: "Hunt's description",
         }];
 
+    // Hunts can be tagged.
+    repeated string tags = 23;
+
     ArtifactCollectorArgs start_request = 16 [(sem_type) = {
             description: "Launch this collection on the client if the condition is true",
         }];
@@ -196,4 +199,6 @@ message HuntMutation {
     // hunt. This allows a flow to be rerun and added to the hunt
     // later.
     FlowAssignment assignment = 6;
+
+    repeated string tags = 8;
 }

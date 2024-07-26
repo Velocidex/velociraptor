@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vutils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter/types"
@@ -277,6 +278,9 @@ func doVQLExport() error {
 			sort.Strings(new_item.Platforms)
 		}
 
+		new_item.Platforms = utils.DeduplicateStringSlice(new_item.Platforms)
+		sort.Strings(new_item.Platforms)
+
 		arg_desc, pres := type_map.Get(scope, item.ArgType)
 		if pres {
 			for _, k := range arg_desc.Fields.Keys() {
@@ -343,6 +347,9 @@ func doVQLExport() error {
 			new_item.Platforms = append(new_item.Platforms, platform)
 			sort.Strings(new_item.Platforms)
 		}
+
+		new_item.Platforms = utils.DeduplicateStringSlice(new_item.Platforms)
+		sort.Strings(new_item.Platforms)
 
 		arg_desc, pres := type_map.Get(scope, item.ArgType)
 		if pres {
