@@ -592,6 +592,50 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: carve_usn
+  description: |
+    Carve for the USN journal entries from a device.
+
+    In practice the USN journal is set to roll over fairly quickly
+    (default size is usually 32Mb). On busy systems this will lead to
+    loss of valuable information.
+
+    This plugin carves the raw device for USN entries. Usual caveates
+    apply for all carved data, however this will often recover entries
+    from a long time before the roll over.
+
+    This plugin can take a long time!
+
+    Example:
+
+    ```vql
+    SELECT * FROM carve_usn(device='''\\.\C:''')
+    ```
+
+  type: Plugin
+  version: 2
+  args:
+  - name: device
+    type: accessors.OSPath
+    description: The device file to open.
+  - name: image_filename
+    type: accessors.OSPath
+    description: A raw image to open. You can also provide the accessor if using a
+      raw image file.
+  - name: accessor
+    type: string
+    description: The accessor to use.
+  - name: mft_filename
+    type: accessors.OSPath
+    description: A path to a raw $MFT file to use for path resolution.
+  - name: usn_filename
+    type: accessors.OSPath
+    description: A path to a raw USN file to carve. If not provided we carve the image
+      file or the device.
+  metadata:
+    permissions: FILESYSTEM_READ
+  platforms:
+  - linux_amd64_cgo
 - name: certificates
   description: |
     Collect certificate from the system trust store.
@@ -9405,4 +9449,3 @@
   platforms:
   - darwin_arm64_cgo
   - linux_amd64_cgo
-

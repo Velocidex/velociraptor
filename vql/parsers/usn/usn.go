@@ -2,6 +2,7 @@ package usn
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/Velocidex/ordereddict"
@@ -64,7 +65,7 @@ func (self *USNPluginArgs) GetStreams(scope types.Scope) (
 		ntfs_ctx, err = readers.GetNTFSContextFromRawMFT(
 			scope, self.MFTFilename, self.Accessor)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("%v: %w", self.MFTFilename, err)
 		}
 		source = self.MFTFilename
 
@@ -87,12 +88,12 @@ func (self *USNPluginArgs) GetStreams(scope types.Scope) (
 
 		stat, err := accessor.LstatWithOSPath(self.USNFilename)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("%v: %w", self.USNFilename, err)
 		}
 
 		reader, err := accessor.OpenWithOSPath(self.USNFilename)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("%v: %w", self.USNFilename, err)
 		}
 
 		usn_stream = NewRangeReaderAtWrapper(reader, stat.Size())
@@ -178,7 +179,11 @@ func (self USNPlugin) Call(
 		}
 
 		for item := range ntfs.ParseUSN(ctx, ntfs_ctx, usn_stream, arg.StartUSN) {
-			output_chan <- makeUSNRecord(item)
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- makeUSNRecord(item):
+			}
 		}
 	}()
 

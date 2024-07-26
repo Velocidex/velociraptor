@@ -29,9 +29,16 @@ description: |
      Windows.Carving.USNFiles artifact instead.
 
 parameters:
-  - name: DriveToScan
+  - name: Device
     default: "C:"
-  - name: FileRegex
+    description: The NTFS drive to carve
+  - name: MFTFile
+    description: Alternatively provide an MFTFile to use for resolving paths.
+  - name: USNFile
+    description: Alternatively provide a previously extracted USN file to carve or an image file.
+  - name: Accessor
+    description: The accessor to use.
+  - name: FileNameRegex
     description: "Regex search over File Name"
     default: "."
     type: regex
@@ -41,102 +48,6 @@ parameters:
   - name: DateBefore
     type: timestamp
     description: "search for events before this date. YYYY-MM-DDTmm:hh:ssZ"
-
-export: |
-  -- Profile to parse the USN record
-  LET USNProfile = '''[
-            ["USN_RECORD_V2", 4, [
-                ["RecordLength", 0, "unsigned long"],
-                ["MajorVersion", 4, "unsigned short"],
-                ["MinorVersion", 6, "unsigned short"],
-                ["FileReferenceNumberSequence", 8, "BitField", {
-                    "type": "unsigned long long",
-                    "start_bit": 48,
-                    "end_bit": 63
-                }],
-                ["FileReferenceNumberID", 8, "BitField", {
-                    "type": "unsigned long long",
-                    "start_bit": 0,
-                    "end_bit": 48
-                }],
-                ["ParentFileReferenceNumberSequence", 16, "BitField", {
-                    "type": "unsigned long long",
-                    "start_bit": 48,
-                    "end_bit": 63
-                }],
-                ["ParentFileReferenceNumberID", 16, "BitField", {
-                    "type": "unsigned long long",
-                    "start_bit": 0,
-                    "end_bit": 48
-                }],
-
-                ["Usn", 24, "unsigned long long"],
-                ["TimeStamp", 32, "WinFileTime"],
-                ["Reason", 40, "Flags", {
-                    "type": "unsigned long",
-                    "bitmap": {
-                        "DATA_OVERWRITE": 0,
-                        "DATA_EXTEND": 1,
-                        "DATA_TRUNCATION": 2,
-                        "NAMED_DATA_OVERWRITE": 4,
-                        "NAMED_DATA_EXTEND": 5,
-                        "NAMED_DATA_TRUNCATION": 6,
-                        "FILE_CREATE": 8,
-                        "FILE_DELETE": 9,
-                        "EA_CHANGE": 10,
-                        "SECURITY_CHANGE": 11,
-                        "RENAME_OLD_NAME": 12,
-                        "RENAME_NEW_NAME": 13,
-                        "INDEXABLE_CHANGE": 14,
-                        "BASIC_INFO_CHANGE": 15,
-                        "HARD_LINK_CHANGE": 16,
-                        "COMPRESSION_CHANGE": 17,
-                        "ENCRYPTION_CHANGE": 18,
-                        "OBJECT_ID_CHANGE": 19,
-                        "REPARSE_POINT_CHANGE": 20,
-                        "STREAM_CHANGE": 21,
-                        "CLOSE": 31
-                    }
-                }],
-                ["SourceInfo", 44, "Flags", {
-                    "type": "unsigned long",
-                    "bitmap": {
-                        "DATA_MANAGEMENT": 0,
-                        "AUXILIARY_DATA": 1,
-                        "REPLICATION_MANAGEMENT": 2
-                    }
-                }],
-                ["SecurityId", 48, "unsigned long"],
-                ["FileAttributes", 52, "Flags", {
-                    "type": "unsigned long",
-                    "bitmap": {
-                        "READONLY": 0,
-                        "HIDDEN": 1,
-                        "SYSTEM": 2,
-                        "DIRECTORY": 4,
-                        "ARCHIVE": 5,
-                        "DEVICE": 6,
-                        "NORMAL": 7,
-                        "TEMPORARY": 8,
-                        "SPARSE_FILE": 9,
-                        "REPARSE_POINT": 10,
-                        "COMPRESSED": 11,
-                        "OFFLINE": 12,
-                        "NOT_CONTENT_INDEXED": 13,
-                        "ENCRYPTED": 14,
-                        "INTEGRITY_STREAM": 15,
-                        "VIRTUAL": 16,
-                        "NO_SCRUB_DATA": 17
-                    }
-                }],
-                ["FileNameLength", 56, "unsigned short"],
-                ["FileNameOffset", 58, "unsigned short"],
-                ["Filename", "x=>x.FileNameOffset", "String", {
-                    encoding: "utf16",
-                    length: "x=>x.FileNameLength",
-                }]
-            ]]]
-        '''
 
 sources:
   - precondition:
@@ -149,41 +60,48 @@ sources:
         LET DateBeforeTime <= if(condition=DateBefore,
             then=DateBefore, else="2200-01-01")
 
-        LET Device <= '''\\.\''' + DriveToScan
+        -- If the user specified an MFTFile then ignore the device
+        LET Device <= if(condition=MFTFile OR USNFile, then=NULL,
+          else=if(condition=Device,
+          then=pathspec(parse=Device, path_type="ntfs")))
 
-        -- This rule performs an initial reduction for speed, then we
-        -- reduce further using other conditions.
-        LET YaraRule = '''rule X {
-            strings:
-              // First byte is the record length < 255 second byte should be 0-1 (0-512 bytes per record)
-              // Version Major and Minor must be 2 and 0
-              // D7 01 is the ending of a reasonable WinFileTime
-              // Name Offset and Name Length are short ints but should be < 255
-              $a = { ?? (00 | 01) 00 00 02 00 00 00 [24] ?? ?? ?? ?? ?? ?? D? 01 [16] ?? 00 3c 00  }
-            condition:
-              any of them
-        }
-        '''
+        LET Parse(MFT, USN, Accessor) = SELECT *
+              FROM carve_usn(accessor=Accessor,
+                             mft_filename=MFT, usn_filename=USN)
+              WHERE Filename =~ FileNameRegex
+                AND Timestamp < DateBeforeTime
+                AND Timestamp > DateAfterTime
 
-        -- Find all the records in the drive.
-        LET Hits = SELECT String.Offset AS Offset, parse_binary(
-           filename=Device, accessor="ntfs", struct="USN_RECORD_V2",
-           profile=USNProfile, offset=String.Offset) AS _Parsed
-        FROM yara(files=Device, accessor="ntfs", rules=YaraRule, number=200000000)
-        WHERE _Parsed.RecordLength > 60 AND  // Record must be at least 60 bytes
-              _Parsed.FileNameLength > 3 AND _Parsed.FileNameLength < 100
-
-        LET FlatHits = SELECT Offset, _Parsed.TimeStamp AS TimeStamp, _Parsed.Filename AS Name,
-               _Parsed.FileReferenceNumberID AS MFTId,
-               parse_ntfs(device=Device, mft=_Parsed.FileReferenceNumberID) AS MFTEntry,
-               _Parsed.ParentFileReferenceNumberID AS ParentMFTId,
-               _Parsed.Reason AS Reason
-        FROM Hits
-        WHERE Name =~ FileRegex AND
-              TimeStamp < DateBeforeTime AND
-              TimeStamp > DateAfterTime
-
-        SELECT Offset, TimeStamp, Name, MFTId,
-               MFTEntry.OSPath AS OSPath,
-               ParentMFTId, Reason
-        FROM FlatHits
+        SELECT *
+        FROM if(condition=Device, then={
+          SELECT Timestamp,
+            Filename,
+            Device + OSPath AS OSPath,
+            _Links,
+            Reason,
+            _FileMFTID as MFTId,
+            _FileMFTSequence as Sequence,
+            _ParentMFTID as ParentMFTId,
+            _ParentMFTSequence as ParentSequence,
+            FileAttributes,
+            SourceInfo,
+            Usn
+          FROM Parse(Accessor="ntfs",
+              MFT=Device + "$MFT",
+              USN=Device)
+        }, else={
+          SELECT Timestamp,
+            Filename,
+            OSPath,
+            _Links,
+            Reason,
+            _FileMFTID as MFTId,
+            _FileMFTSequence as Sequence,
+            _ParentMFTID as ParentMFTId,
+            _ParentMFTSequence as ParentSequence,
+            FileAttributes,
+            SourceInfo,
+            Usn
+          FROM Parse(Accessor=Accessor,
+              MFT=MFTFile, USN=USNFile)
+        })

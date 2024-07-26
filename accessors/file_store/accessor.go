@@ -25,12 +25,24 @@ import (
 type FileStoreFileSystemAccessor struct {
 	file_store api.FileStore
 	config_obj *config_proto.Config
+
+	sparse bool
 }
 
-func NewFileStoreFileSystemAccessor(config_obj *config_proto.Config) *FileStoreFileSystemAccessor {
+func NewFileStoreFileSystemAccessor(
+	config_obj *config_proto.Config) *FileStoreFileSystemAccessor {
 	return &FileStoreFileSystemAccessor{
 		file_store: file_store.GetFileStore(config_obj),
 		config_obj: config_obj,
+	}
+}
+
+func NewSparseFileStoreFileSystemAccessor(
+	config_obj *config_proto.Config) *FileStoreFileSystemAccessor {
+	return &FileStoreFileSystemAccessor{
+		file_store: file_store.GetFileStore(config_obj),
+		config_obj: config_obj,
+		sparse:     true,
 	}
 }
 
@@ -41,10 +53,15 @@ func (self FileStoreFileSystemAccessor) New(
 		return &FileStoreFileSystemAccessor{
 			file_store: self.file_store,
 			config_obj: self.config_obj,
+			sparse:     self.sparse,
 		}, nil
 	}
 
-	return NewFileStoreFileSystemAccessor(config_obj), nil
+	return &FileStoreFileSystemAccessor{
+		file_store: file_store.GetFileStore(config_obj),
+		config_obj: config_obj,
+		sparse:     self.sparse,
+	}, nil
 }
 
 func (self FileStoreFileSystemAccessor) Lstat(filename string) (
@@ -74,8 +91,22 @@ func (self FileStoreFileSystemAccessor) LstatWithOSPath(filename *accessors.OSPa
 		}
 	}
 
-	return file_store_file_info.NewFileStoreFileInfoWithOSPath(
-		self.config_obj, filename, fullpath, lstat), nil
+	stat := file_store_file_info.NewFileStoreFileInfoWithOSPath(
+		self.config_obj, filename, fullpath, lstat)
+
+	if self.sparse {
+		index, err := getIndex(self.config_obj, fullpath)
+		if err != nil {
+			return stat, nil
+		}
+
+		if len(index.Ranges) > 0 {
+			run := index.Ranges[len(index.Ranges)-1]
+			stat.SizeOverride_ = run.OriginalOffset + run.FileLength
+		}
+	}
+
+	return stat, nil
 }
 
 func (self FileStoreFileSystemAccessor) ParsePath(path string) (
@@ -184,6 +215,10 @@ func (self FileStoreFileSystemAccessor) openFile(filename api.FSPathSpec) (
 	file, err := self.file_store.ReadFile(filename)
 	if err != nil {
 		return nil, err
+	}
+
+	if !self.sparse {
+		return file, err
 	}
 
 	index, err := getIndex(self.config_obj, filename)

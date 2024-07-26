@@ -105,6 +105,11 @@ func (self *FSAccessorTest) TestSparseFiles() {
 	w.Write([]byte("HelloWorld"))
 	w.Close()
 
+	// Only 10 bytes are written to the filestore.
+	stat_file, err := file_store_factory.StatFile(filename)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), stat_file.Size(), int64(10))
+
 	w, err = file_store_factory.WriteFile(filename_idx)
 	assert.NoError(self.T(), err)
 
@@ -135,7 +140,7 @@ func (self *FSAccessorTest) TestSparseFiles() {
 }`)) // This represents: Hello<.....>World with the gap being sparse.
 	w.Close()
 
-	accessor := NewFileStoreFileSystemAccessor(self.ConfigObj)
+	accessor := NewSparseFileStoreFileSystemAccessor(self.ConfigObj)
 	fd, err := accessor.Open(filename.Components()[0])
 	assert.NoError(self.T(), err)
 
@@ -148,6 +153,12 @@ func (self *FSAccessorTest) TestSparseFiles() {
 	// Check that the file handle can report its ranges
 	fd_ranges, ok := fd.(uploads.RangeReader)
 	assert.True(self.T(), ok)
+
+	// An Lstat() reports the sparse file size as 15 - including the sparse hole.
+	stat, err := accessor.Lstat(filename.Components()[0])
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), stat.Size(), int64(15))
 
 	goldie.Assert(self.T(), "TestSparseFiles",
 		json.MustMarshalIndent(fd_ranges.Ranges()))
