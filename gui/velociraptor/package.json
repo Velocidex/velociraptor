@@ -19,7 +19,7 @@
         "classnames": "^2.5.1",
         "csv-parse": "4.16.3",
         "csv-stringify": "5.6.5",
-        "dompurify": "3.1.5",
+        "dompurify": "3.1.6",
         "dotenv": "^8.6.0",
         "env-cmd": "^10.1.0",
         "hosted-git-info": "^2.8.9",
