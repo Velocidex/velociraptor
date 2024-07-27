@@ -30,7 +30,6 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	vutils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
@@ -228,7 +227,7 @@ func doVQLExport() error {
 	new_data := []*api_proto.Completion{}
 	seen_plugins := make(map[string]bool)
 	seen_functions := make(map[string]bool)
-	platform := utils.GetMyPlatform()
+	platform := vql_subsystem.GetMyPlatform()
 
 	for _, item := range info.Plugins {
 		if strings.HasPrefix(item.Doc, "Unimplemented") {

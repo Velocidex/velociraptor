@@ -4,6 +4,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 // StartClientServices starts the various services needed by the
@@ -11,6 +12,9 @@ import (
 func StartPoolClientServices(
 	sm *services.Service,
 	config_obj *config_proto.Config) error {
+
+	scope := vql_subsystem.MakeScope()
+	vql_subsystem.InstallUnimplemented(scope)
 
 	// Create a suitable service plan.
 	if config_obj.Services == nil {

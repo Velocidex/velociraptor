@@ -1,3 +1,4 @@
+//go:build cgo && yara
 // +build cgo,yara
 
 package common
@@ -6,6 +7,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
@@ -14,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/vfilter/types"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
@@ -66,6 +69,51 @@ func (self *YaraTestSuite) TestCSVParser() {
 		result.Set(test_case.description, rows)
 	}
 	goldie.Assert(self.T(), "TestYara", json.MustMarshalIndent(result))
+}
+
+func (self *YaraTestSuite) TestYaraLinter() {
+	rule := `
+import "pe"
+
+rule TestIssuer {
+    condition:
+        for any i in (0..pe.number_of_signatures) : ( pe.signatures[i].issuer contains "DigiCert Trusted G4 Code Signing RSA4096 SHA384 2021 CA1" )
+}
+
+rule TestPE {
+    meta:
+      comment = "Some useless metadata"
+
+    strings:
+      $a = "Hello"
+
+    condition:
+      pe.is_pe
+}
+
+rule UnimportedModule {
+   condition:
+      time.now > 0
+}
+`
+	linter, err := NewRuleLinter(rule)
+	assert.NoError(self.T(), err)
+
+	linter.ClearMetadata = true
+
+	clean, errors := linter.Lint()
+	var err_str []string
+	for _, err := range errors {
+		err_str = append(err_str, err.Error())
+	}
+
+	result := ordereddict.NewDict().
+		Set("CleanedRules", strings.Split(clean.String(), "\n")).
+		Set("Errors", err_str)
+
+	goldie.Assert(self.T(), "TestYaraLinter",
+		json.MustMarshalIndent(result))
+
 }
 
 func TestYara(t *testing.T) {

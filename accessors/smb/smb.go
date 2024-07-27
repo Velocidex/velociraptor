@@ -20,9 +20,6 @@ const (
 
 // Real implementation for non windows OSs:
 type SMBFileSystemAccessor struct {
-	allow_raw_access bool
-	nocase           bool
-
 	root *accessors.OSPath
 
 	scope vfilter.Scope
@@ -42,10 +39,8 @@ func (self *SMBFileSystemAccessor) New(scope vfilter.Scope) (
 	}
 
 	return &SMBFileSystemAccessor{
-		allow_raw_access: self.allow_raw_access,
-		root:             self.root,
-		nocase:           self.nocase,
-		scope:            scope,
+		root:  self.root,
+		scope: scope,
 	}, nil
 }
 
