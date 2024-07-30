@@ -149,6 +149,9 @@ type IHuntDispatcher interface {
 
 	// Clean up and close the hunt dispatcher. Only used in tests.
 	Close(ctx context.Context)
+
+	// Get all known tags. Used for GUI suggestions
+	GetTags(ctx context.Context) []string
 }
 
 func GetHuntDispatcher(config_obj *config_proto.Config) (IHuntDispatcher, error) {

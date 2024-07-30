@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -39,6 +40,7 @@ type HuntIndexEntry struct {
 	// The hunt object is serialized into JSON here to make it quicker
 	// to write the index if nothing is changed.
 	Hunt []byte `json:"Hunt"`
+	Tags string `json:"Tags"`
 }
 
 type HuntStorageManager interface {
@@ -72,6 +74,8 @@ type HuntStorageManager interface {
 	GetLastTimestamp() uint64
 
 	Close(ctx context.Context)
+
+	GetTags(ctx context.Context) []string
 }
 
 type HuntStorageManagerImpl struct {
@@ -233,6 +237,21 @@ func (self *HuntStorageManagerImpl) SetHunt(
 	self.dirty = true
 
 	return db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt)
+}
+
+func (self *HuntStorageManagerImpl) GetTags(
+	ctx context.Context) (res []string) {
+
+	self.ApplyFuncOnHunts(ctx, services.AllHunts,
+		func(hunt *api_proto.Hunt) error {
+			if hunt != nil {
+				res = append(res, hunt.Tags...)
+			}
+
+			return nil
+		})
+	sort.Strings(res)
+	return res
 }
 
 func (self *HuntStorageManagerImpl) ListHunts(

@@ -50,6 +50,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -243,6 +244,14 @@ func (self *HuntManager) processMutation(
 
 			if mutation.Description != "" {
 				hunt_obj.HuntDescription = mutation.Description
+
+				modification = services.HuntPropagateChanges
+			}
+
+			if len(mutation.Tags) > 0 &&
+				!utils.StringSliceEq(mutation.Tags, hunt_obj.Tags) {
+				hunt_obj.Tags = utils.DeduplicateStringSlice(mutation.Tags)
+				sort.Strings(hunt_obj.Tags)
 
 				modification = services.HuntPropagateChanges
 			}

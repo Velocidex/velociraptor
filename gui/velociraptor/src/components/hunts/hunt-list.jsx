@@ -10,6 +10,11 @@ import Modal from 'react-bootstrap/Modal';
 import filterFactory from 'react-bootstrap-table2-filter';
 import cellEditFactory from 'react-bootstrap-table2-editor';
 import VeloTimestamp from "../utils/time.jsx";
+import CreatableSelect from 'react-select/creatable';
+import Form from 'react-bootstrap/Form';
+import ToolTip from '../widgets/tooltip.jsx';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter } from "react-router-dom";
@@ -51,11 +56,22 @@ class ModifyHuntDialog extends React.Component {
 
     state = {
         description: "",
-        expires: ""
+        expires: "",
+        tags: [],
+    }
+
+    getTags = ()=>{
+        api.get("v1/GetHuntTags", {}, this.source.token).then(response=>{
+                if (response && response.data &&
+                    response.data.tags && response.data.tags.length) {
+                    this.setState({tags: response.data.tags});
+                };
+        });
     }
 
     componentDidMount = () => {
         this.source = CancelToken.source();
+        this.getTags();
     }
 
     componentWillUnmount() {
@@ -75,11 +91,13 @@ class ModifyHuntDialog extends React.Component {
             this.props.hunt.hunt_id;
 
         let description = this.state.description || this.props.hunt.hunt_description;
+        let tags = this.state.tags || this.props.hunt.tags || [];
 
         if (!hunt_id) { return; };
 
         api.post("v1/ModifyHunt", {
             hunt_description: description,
+            tags: tags,
             expires: this.getExpiryEpoch() * 1000000,
             hunt_id: hunt_id,
         }, this.source.token).then((response) => {
@@ -92,6 +110,13 @@ class ModifyHuntDialog extends React.Component {
         let expires = this.getExpiryEpoch();
         let now = Date.now() / 1000;
 
+        let options = _.map(this.state.tags, x=>{
+            return {value: x, label: x, isFixed: true, color: "#00B8D9"};
+        });
+
+        let tag_defaults = _.map(this.props.hunt.tags,
+                             x=>{return {value: x, label: x};});
+
         return <Modal show={true}
                       onHide={this.props.onCancel} >
                  <Modal.Header closeButton>
@@ -99,6 +124,30 @@ class ModifyHuntDialog extends React.Component {
                  </Modal.Header>
 
                  <Modal.Body>
+                   <Form.Group as={Row}>
+                     <Form.Label column sm="3">
+                       <ToolTip tooltip={T("Set Tags")}>
+                         <div>
+                           {T("Tags")}
+                         </div>
+                       </ToolTip>
+                     </Form.Label>
+                     <Col sm="8">
+                       <CreatableSelect
+                         isMulti
+                         isClearable
+                         className="labels"
+                         classNamePrefix="velo"
+                         options={options}
+                         onChange={(e)=>{
+                             this.setState({tags: _.map(e, x=>x.value)});
+                         }}
+                         placeholder={T("Hunt Tags")}
+                         spellCheck="false"
+                         defaultValue={tag_defaults}
+                       />
+                     </Col>
+                   </Form.Group>
                    <VeloForm
                      param={{name: T("Description"), description: T("Hunt description")}}
                      value={description}
@@ -607,7 +656,7 @@ class HuntList extends React.Component {
                     version={{version: this.state.version}}
                     no_spinner={true}
                     transform={this.state.transform}
-                    renderers={huntRowRenderer}
+                    renderers={huntRowRenderer(this)}
                     setTransform={x=>{
                         this.setState({transform: x, filter: ""});
                     }}
@@ -641,18 +690,37 @@ const stateRenderer = (cell, row) => {
     return <div className="flow-status-icon">{result}</div>;
 };
 
-const huntRowRenderer = {
-    State: stateRenderer,
-    Created:  (cell, row) => {
-        return <VeloTimestamp usec={cell}/>;
-    },
-    Started:  (cell, row) => {
-        if (cell === 0) {
-            return <></>;
-        }
-        return <VeloTimestamp usec={cell}/>;
-    },
-    Expires:  (cell, row) => {
-        return <VeloTimestamp usec={cell}/>;
-    },
+const huntRowRenderer = self=>{
+    return {
+        State: stateRenderer,
+        Created:  (cell, row) => {
+            return <VeloTimestamp usec={cell}/>;
+        },
+        HuntId: (cell, row) => {
+            return <div className="no-break">{cell}</div>;
+        },
+        Started:  (cell, row) => {
+            if (cell === 0) {
+                return <></>;
+            }
+            return <VeloTimestamp usec={cell}/>;
+        },
+        Expires:  (cell, row) => {
+            return <VeloTimestamp usec={cell}/>;
+        },
+        Tags: (cell, row)=>{
+            return _.map(cell, tag=>{
+                return <Button variant="outline-info" key={tag}
+                               onClick={x=>self.setState({
+                                   transform: {
+                                       editing: "",
+                                       filter_column: "Tags",
+                                       filter_regex: tag
+                                   },
+                               })}>
+                         {tag}
+                       </Button>;
+            });
+        },
+    };
 };

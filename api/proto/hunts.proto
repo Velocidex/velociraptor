@@ -202,3 +202,7 @@ message HuntMutation {
 
     repeated string tags = 8;
 }
+
+message HuntTags {
+    repeated string tags = 1;
+}

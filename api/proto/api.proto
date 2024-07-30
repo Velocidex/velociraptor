@@ -126,7 +126,7 @@ service API {
         };
     }
 
-    // Deprecated
+    // Deprecated - hunts are now listed with GetHuntTable()
     rpc ListHunts(ListHuntsRequest) returns (ListHuntsResponse) {
         option (google.api.http) = {
             get: "/api/v1/ListHunts",
@@ -136,6 +136,12 @@ service API {
     rpc GetHunt(GetHuntRequest) returns (Hunt) {
         option (google.api.http) = {
             get: "/api/v1/GetHunt",
+        };
+    }
+
+    rpc GetHuntTags(google.protobuf.Empty) returns (HuntTags) {
+        option (google.api.http) = {
+            get: "/api/v1/GetHuntTags",
         };
     }
 

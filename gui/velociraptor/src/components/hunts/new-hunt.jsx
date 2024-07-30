@@ -18,6 +18,8 @@ import api from '../core/api-service.jsx';
 import NewCollectionConfigParameters from '../flows/new-collections-parameters.jsx';
 import { OrgSelectorForm } from './orgs.jsx';
 
+import CreatableSelect from 'react-select/creatable';
+
 import {
     NewCollectionSelectArtifacts,
     NewCollectionResources,
@@ -49,6 +51,28 @@ class NewHuntConfigureHunt extends React.Component {
         this.props.setHuntParameters(this.props.parameters);
     }
 
+    componentDidMount = () => {
+        this.source = CancelToken.source();
+        this.getTags();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
+    state = {
+        tags: [],
+    }
+
+    getTags = ()=>{
+        api.get("v1/GetHuntTags", {}, this.source.token).then(response=>{
+                if (response && response.data &&
+                    response.data.tags && response.data.tags.length) {
+                    this.setState({tags: response.data.tags});
+                };
+        });
+    }
+
     render() {
         let is_admin = this.context.traits &&
             this.context.traits.Permissions &&
@@ -58,6 +82,13 @@ class NewHuntConfigureHunt extends React.Component {
             this.context.traits.Permissions &&
             this.context.traits.Permissions.start_hunt;
 
+        let options = _.map(this.state.tags, x=>{
+            return {value: x, label: x, isFixed: true, color: "#00B8D9"};
+        });
+
+        let tag_defaults = _.map(this.props.parameters.tags,
+                             x=>{return {value: x, label: x};});
+
         return (
             <>
               <Modal.Header closeButton>
@@ -65,6 +96,24 @@ class NewHuntConfigureHunt extends React.Component {
               </Modal.Header>
               <Modal.Body>
                 <Form>
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">{T("Tags")}</Form.Label>
+                    <Col sm="8">
+                      <CreatableSelect
+                        isMulti
+                        isClearable
+                        className="labels"
+                        classNamePrefix="velo"
+                        options={options}
+                        onChange={(e)=>{
+                            this.setParam("tags", _.map(e, x=>x.value));
+                        }}
+                        placeholder={T("Hunt Tags")}
+                        spellCheck="false"
+                        defaultValue={tag_defaults}
+                      />
+                    </Col>
+                  </Form.Group>
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">{T("Description")}</Form.Label>
                     <Col sm="8">
@@ -211,6 +260,7 @@ export default class NewHuntWizard extends React.Component {
         resources: {},
 
         hunt_parameters: {
+            tags: [],
             include_condition: "",
             include_labels: [],
             include_os: "ALL", // Default selector
@@ -296,6 +346,7 @@ export default class NewHuntWizard extends React.Component {
                 state.hunt_parameters.excluded_labels = excluded;
             }
             state.hunt_parameters.description = hunt.hunt_description;
+            state.hunt_parameters.tags = hunt.tags || [];
             state.hunt_parameters.expires = expiry;
             state.hunt_parameters.org_ids = hunt.org_ids || [];
 
@@ -421,6 +472,10 @@ export default class NewHuntWizard extends React.Component {
 
         if (hunt_parameters.description) {
             result.hunt_description = hunt_parameters.description;
+        }
+
+        if (hunt_parameters.tags) {
+            result.tags = hunt_parameters.tags;
         }
 
         if (hunt_parameters.org_ids) {

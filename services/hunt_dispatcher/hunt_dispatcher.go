@@ -343,6 +343,10 @@ func (self *HuntDispatcher) Refresh(
 	return self.Store.Refresh(ctx, config_obj)
 }
 
+func (self *HuntDispatcher) GetTags(ctx context.Context) []string {
+	return self.Store.GetTags(ctx)
+}
+
 func (self *HuntDispatcher) CreateHunt(
 	ctx context.Context,
 	config_obj *config_proto.Config,

@@ -28,9 +28,10 @@ type APIClient interface {
 	// affected by a hunt.
 	EstimateHunt(ctx context.Context, in *HuntEstimateRequest, opts ...grpc.CallOption) (*HuntStats, error)
 	GetHuntTable(ctx context.Context, in *GetTableRequest, opts ...grpc.CallOption) (*GetTableResponse, error)
-	// Deprecated
+	// Deprecated - hunts are now listed with GetHuntTable()
 	ListHunts(ctx context.Context, in *ListHuntsRequest, opts ...grpc.CallOption) (*ListHuntsResponse, error)
 	GetHunt(ctx context.Context, in *GetHuntRequest, opts ...grpc.CallOption) (*Hunt, error)
+	GetHuntTags(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*HuntTags, error)
 	ModifyHunt(ctx context.Context, in *Hunt, opts ...grpc.CallOption) (*empty.Empty, error)
 	GetHuntFlows(ctx context.Context, in *GetTableRequest, opts ...grpc.CallOption) (*GetTableResponse, error)
 	GetHuntResults(ctx context.Context, in *GetHuntResultsRequest, opts ...grpc.CallOption) (*GetTableResponse, error)
@@ -187,6 +188,15 @@ func (c *aPIClient) ListHunts(ctx context.Context, in *ListHuntsRequest, opts ..
 func (c *aPIClient) GetHunt(ctx context.Context, in *GetHuntRequest, opts ...grpc.CallOption) (*Hunt, error) {
 	out := new(Hunt)
 	err := c.cc.Invoke(ctx, "/proto.API/GetHunt", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) GetHuntTags(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*HuntTags, error) {
+	out := new(HuntTags)
+	err := c.cc.Invoke(ctx, "/proto.API/GetHuntTags", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -946,9 +956,10 @@ type APIServer interface {
 	// affected by a hunt.
 	EstimateHunt(context.Context, *HuntEstimateRequest) (*HuntStats, error)
 	GetHuntTable(context.Context, *GetTableRequest) (*GetTableResponse, error)
-	// Deprecated
+	// Deprecated - hunts are now listed with GetHuntTable()
 	ListHunts(context.Context, *ListHuntsRequest) (*ListHuntsResponse, error)
 	GetHunt(context.Context, *GetHuntRequest) (*Hunt, error)
+	GetHuntTags(context.Context, *empty.Empty) (*HuntTags, error)
 	ModifyHunt(context.Context, *Hunt) (*empty.Empty, error)
 	GetHuntFlows(context.Context, *GetTableRequest) (*GetTableResponse, error)
 	GetHuntResults(context.Context, *GetHuntResultsRequest) (*GetTableResponse, error)
@@ -1077,6 +1088,9 @@ func (UnimplementedAPIServer) ListHunts(context.Context, *ListHuntsRequest) (*Li
 }
 func (UnimplementedAPIServer) GetHunt(context.Context, *GetHuntRequest) (*Hunt, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHunt not implemented")
+}
+func (UnimplementedAPIServer) GetHuntTags(context.Context, *empty.Empty) (*HuntTags, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHuntTags not implemented")
 }
 func (UnimplementedAPIServer) ModifyHunt(context.Context, *Hunt) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ModifyHunt not implemented")
@@ -1402,6 +1416,24 @@ func _API_GetHunt_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(APIServer).GetHunt(ctx, req.(*GetHuntRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _API_GetHuntTags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).GetHuntTags(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/GetHuntTags",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).GetHuntTags(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2796,6 +2828,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetHunt",
 			Handler:    _API_GetHunt_Handler,
+		},
+		{
+			MethodName: "GetHuntTags",
+			Handler:    _API_GetHuntTags_Handler,
 		},
 		{
 			MethodName: "ModifyHunt",

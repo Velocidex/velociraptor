@@ -3,6 +3,7 @@ package hunt_dispatcher
 import (
 	"context"
 	"sort"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -99,6 +100,8 @@ func (self *HuntStorageManagerImpl) FlushIndex(
 		rs_writer.Write(ordereddict.NewDict().
 			Set("HuntId", hunt_record.HuntId).
 			Set("Description", hunt_record.HuntDescription).
+			// Store the tags in the index so we can search for them.
+			Set("Tags", strings.Join(hunt_record.Tags, "\n")).
 			Set("Created", hunt_record.CreateTime).
 			Set("Started", hunt_record.StartTime).
 			Set("Expires", hunt_record.Expires).
