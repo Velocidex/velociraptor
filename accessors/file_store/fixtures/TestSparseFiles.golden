@@ -1,0 +1,17 @@
+[
+ {
+  "Offset": 0,
+  "Length": 5,
+  "IsSparse": false
+ },
+ {
+  "Offset": 5,
+  "Length": 5,
+  "IsSparse": true
+ },
+ {
+  "Offset": 10,
+  "Length": 5,
+  "IsSparse": false
+ }
+]

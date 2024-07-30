@@ -389,6 +389,13 @@ func initFilestoreAccessor(config_obj *config_proto.Config) error {
 
 Many VQL plugins produce references to files stored on the server. This accessor can be used to open those files and read them. Typically references to filestore or datastore files have the "fs:" or "ds:" prefix.
 `)
+
+		sparse_fs_factory := file_store_accessor.NewSparseFileStoreFileSystemAccessor(config_obj)
+		accessors.Register("fs_sparse", sparse_fs_factory,
+			`Provide access to the server's filestore and datastore.
+
+This accessor expands sparse files. Reading from a sparse region will result in zeros being returned.
+`)
 	}
 	return nil
 }

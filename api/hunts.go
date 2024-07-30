@@ -133,6 +133,7 @@ func (self *ApiServer) GetHuntTable(
 		Columns: []string{
 			"State", "HuntId", "Description", "Created",
 			"Started", "Expires", "Scheduled", "Creator",
+			"Tags",
 		}}
 
 	for _, hunt := range hunts {
@@ -150,6 +151,7 @@ func (self *ApiServer) GetHuntTable(
 			json.AnyToString(hunt.Expires, vjson.DefaultEncOpts()),
 			fmt.Sprintf("%v", total_clients_scheduled),
 			hunt.Creator,
+			json.AnyToString(hunt.Tags, vjson.DefaultEncOpts()),
 		}
 
 		result.Rows = append(result.Rows, &api_proto.Row{Cell: row_data})

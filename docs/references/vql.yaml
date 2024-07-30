@@ -18,6 +18,7 @@
     permissions: COLLECT_CLIENT
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -37,6 +38,7 @@
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -58,6 +60,7 @@
     description: If specified we ignore the alert unless the condition is true
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -79,6 +82,7 @@
     repeated: true
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -115,6 +119,7 @@
     repeated: true
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -124,7 +129,7 @@
   category: windows
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -180,6 +185,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -202,7 +208,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -218,6 +224,7 @@
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -236,6 +243,7 @@
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -278,6 +286,7 @@
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -309,6 +318,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -331,6 +341,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -373,6 +384,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -386,7 +398,7 @@
     required: true
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -400,7 +412,7 @@
     required: true
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -415,6 +427,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -429,6 +442,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -442,6 +456,7 @@
     required: true
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -470,6 +485,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -504,7 +520,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -549,6 +565,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -571,9 +588,54 @@
     permissions: COLLECT_SERVER,COLLECT_CLIENT
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: carve_usn
+  description: |
+    Carve for the USN journal entries from a device.
+
+    In practice the USN journal is set to roll over fairly quickly
+    (default size is usually 32Mb). On busy systems this will lead to
+    loss of valuable information.
+
+    This plugin carves the raw device for USN entries. Usual caveates
+    apply for all carved data, however this will often recover entries
+    from a long time before the roll over.
+
+    This plugin can take a long time!
+
+    Example:
+
+    ```vql
+    SELECT * FROM carve_usn(device='''\\.\C:''')
+    ```
+
+  type: Plugin
+  version: 2
+  args:
+  - name: device
+    type: accessors.OSPath
+    description: The device file to open.
+  - name: image_filename
+    type: accessors.OSPath
+    description: A raw image to open. You can also provide the accessor if using a
+      raw image file.
+  - name: accessor
+    type: string
+    description: The accessor to use.
+  - name: mft_filename
+    type: accessors.OSPath
+    description: A path to a raw $MFT file to use for path resolution.
+  - name: usn_filename
+    type: accessors.OSPath
+    description: A path to a raw USN file to carve. If not provided we carve the image
+      file or the device.
+  metadata:
+    permissions: FILESYSTEM_READ
+  platforms:
+  - linux_amd64_cgo
 - name: certificates
   description: |
     Collect certificate from the system trust store.
@@ -619,7 +681,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -647,6 +709,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -677,6 +740,7 @@
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -695,7 +759,7 @@
     permissions: DELETE_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -734,6 +798,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -754,6 +819,7 @@
     permissions: READ_RESULTS,SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -786,6 +852,7 @@
     permissions: COLLECT_CLIENT,SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -810,7 +877,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -849,7 +916,7 @@
   category: event
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -920,7 +987,7 @@
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1045,6 +1112,7 @@
     permissions: COLLECT_CLIENT,COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1086,7 +1154,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1097,7 +1165,7 @@
   category: event
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1125,6 +1193,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1148,6 +1217,7 @@
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1207,6 +1277,7 @@
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1233,6 +1304,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1283,6 +1355,7 @@
     permissions: PREPARE_RESULTS
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1325,6 +1398,7 @@
     permissions: PREPARE_RESULTS
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1344,6 +1418,7 @@
     permissions: PREPARE_RESULTS
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1362,6 +1437,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1383,7 +1459,7 @@
     description: Maximum number of rows to buffer (default 1000).
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1412,7 +1488,7 @@
     permissions: DELETE_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1432,7 +1508,7 @@
     permissions: DELETE_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1456,6 +1532,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1548,7 +1625,7 @@
   category: event
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1577,6 +1654,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1621,7 +1699,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1704,7 +1782,7 @@
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1722,6 +1800,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1734,6 +1813,7 @@
     required: true
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1755,6 +1835,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1779,7 +1860,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1797,6 +1878,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1815,7 +1897,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1859,6 +1941,7 @@
     required: true
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1935,7 +2018,7 @@
     permissions: EXECVE
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1975,6 +2058,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -1993,6 +2077,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2029,6 +2114,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2101,7 +2187,7 @@
   category: event
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2135,6 +2221,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2152,6 +2239,7 @@
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2162,7 +2250,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2195,6 +2283,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2209,7 +2298,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2229,7 +2318,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2262,7 +2351,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2284,7 +2373,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2309,7 +2398,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2349,7 +2438,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2379,6 +2468,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2409,6 +2499,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2485,6 +2576,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2508,6 +2600,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2548,6 +2641,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2570,6 +2664,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2586,6 +2681,7 @@
     permissions: COLLECT_CLIENT,COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2600,6 +2696,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2614,6 +2711,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2757,7 +2855,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2811,6 +2909,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2826,7 +2925,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2846,6 +2945,7 @@
     required: true
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2890,6 +2990,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2934,6 +3035,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3077,7 +3179,7 @@
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3103,6 +3205,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3193,6 +3296,7 @@
     permissions: START_HUNT,ORG_ADMIN
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3244,6 +3348,7 @@
     permissions: START_HUNT
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3260,7 +3365,7 @@
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3294,7 +3399,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3331,7 +3436,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3359,6 +3464,7 @@
     permissions: START_HUNT
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3375,7 +3481,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3402,6 +3508,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3430,7 +3537,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3444,6 +3551,7 @@
     required: true
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3490,6 +3598,7 @@
     permissions: COLLECT_SERVER,FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3509,7 +3618,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3526,6 +3635,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3538,7 +3648,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3554,7 +3664,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3592,6 +3702,7 @@
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3612,6 +3723,7 @@
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3641,6 +3753,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3657,6 +3770,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3715,7 +3829,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3737,6 +3851,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3754,6 +3869,7 @@
   category: experimental
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3774,6 +3890,7 @@
   category: experimental
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3791,6 +3908,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3812,6 +3930,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3827,6 +3946,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3863,6 +3983,7 @@
     permissions: LABEL_CLIENT
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3882,6 +4003,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3899,7 +4021,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3964,6 +4086,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -3977,7 +4100,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4033,7 +4156,7 @@
     description: Enable verbose logging.
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4061,6 +4184,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4098,6 +4222,7 @@
     description: Size of the LRU (default 1000)
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4114,6 +4239,7 @@
     required: true
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4172,6 +4298,7 @@
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4225,6 +4352,7 @@
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4277,7 +4405,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4303,6 +4431,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4369,6 +4498,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4394,6 +4524,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4417,6 +4548,7 @@
   category: utils
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4439,6 +4571,7 @@
   category: utils
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4447,6 +4580,7 @@
   type: Function
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4468,6 +4602,7 @@
     description: This call will clear previous mocks for this plugin
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4518,7 +4653,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4548,7 +4683,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4581,7 +4716,7 @@
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4592,6 +4727,7 @@
   metadata:
     permissions: MACHINE_STATE
   platforms:
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4623,6 +4759,7 @@
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4640,7 +4777,7 @@
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4663,6 +4800,7 @@
     permissions: PREPARE_RESULTS
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4678,6 +4816,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4708,6 +4847,7 @@
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4722,6 +4862,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4750,7 +4891,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4759,6 +4900,7 @@
   type: Function
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4777,6 +4919,7 @@
     permissions: ORG_ADMIN
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4795,6 +4938,7 @@
     permissions: ORG_ADMIN
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4803,7 +4947,7 @@
   type: Plugin
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4814,7 +4958,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4896,7 +5040,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -4971,6 +5115,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5031,7 +5176,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5054,7 +5199,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5073,7 +5218,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5125,7 +5270,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5140,6 +5285,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5162,7 +5308,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5182,6 +5328,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5200,6 +5347,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5214,7 +5362,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5234,7 +5382,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5258,7 +5406,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5306,7 +5454,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5375,6 +5523,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5415,7 +5564,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5453,7 +5602,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5476,6 +5625,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5490,6 +5640,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5588,7 +5739,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5609,7 +5760,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5630,27 +5781,56 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
 - name: parse_usn
-  description: Parse the USN journal from a device.
+  description: |
+    Parse the USN journal from a device, image file or USN file.
+
+    This plugin calculates the full path of a USN entry by tracing its
+    parent MFT entries through the MFT file. The MFT can be found in
+    the same device or image that the USN is read from, or provided
+    separately using a different file.
+
+    The plugin also considers information from the USN itself in
+    resolving the full path. This technique is described here
+    https://cybercx.com.au/blog/ntfs-usnjrnl-rewind/ in detail but it
+    can result in more accurate path resolution when the directories
+    have also been removed.
   type: Plugin
+  version: 2
   args:
   - name: device
     type: accessors.OSPath
     description: The device file to open.
-    required: true
+  - name: image_filename
+    type: accessors.OSPath
+    description: A raw image to open. You can also provide the accessor if using a
+      raw image file.
   - name: accessor
     type: string
     description: The accessor to use.
+  - name: mft_filename
+    type: accessors.OSPath
+    description: A path to a raw $MFT file to use for path resolution.
+  - name: usn_filename
+    type: accessors.OSPath
+    description: A path to a raw USN file to parse. If not provided we extract it
+      from the Device or Image file.
   - name: start_offset
     type: int64
     description: The starting offset of the first USN record to parse.
+  - name: fast_paths
+    type: bool
+    description: If set we resolve full paths using faster but less accurate algorithm.
   category: parsers
+  metadata:
+    permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5665,6 +5845,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5685,6 +5866,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5704,6 +5886,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5713,7 +5896,7 @@
   category: windows
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5731,6 +5914,7 @@
     required: true
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5789,6 +5973,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5810,6 +5995,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5828,6 +6014,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5857,6 +6044,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5881,6 +6069,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5928,6 +6117,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5951,6 +6141,7 @@
       PGP,RSA'
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5976,6 +6167,7 @@
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -5995,6 +6187,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6015,7 +6208,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6036,7 +6229,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6102,6 +6295,7 @@
   metadata:
     permissions: MACHINE_STATE
   platforms:
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6129,6 +6323,7 @@
     repeated: true
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6137,6 +6332,7 @@
   type: Function
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6150,6 +6346,7 @@
     required: true
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6163,6 +6360,7 @@
     required: true
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6176,6 +6374,7 @@
     required: true
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6184,7 +6383,7 @@
   type: Plugin
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6201,6 +6400,7 @@
       the data node for each process.
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6209,7 +6409,7 @@
   type: Plugin
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6262,7 +6462,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6273,7 +6473,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6284,7 +6484,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6300,6 +6500,7 @@
     permissions: EXECVE
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6322,7 +6523,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6381,7 +6582,7 @@
     permissions: IMPERSONATION
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6395,6 +6596,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6415,7 +6617,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6442,6 +6644,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6460,7 +6663,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6486,6 +6689,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6520,7 +6724,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6548,7 +6752,7 @@
   category: windows
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6621,6 +6825,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6651,6 +6856,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6667,6 +6873,7 @@
     permissions: EXECVE
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6688,6 +6895,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6708,6 +6916,7 @@
     description: If set we clear all accessors from the device manager
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6744,6 +6953,7 @@
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6760,6 +6970,7 @@
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6779,6 +6990,7 @@
     permissions: COLLECT_CLIENT
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6795,6 +7007,7 @@
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6807,6 +7020,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6829,7 +7043,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6839,6 +7053,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6858,7 +7073,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6884,6 +7099,7 @@
     permissions: SERVER_ADMIN,PUBLISH
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6933,7 +7149,7 @@
   category: experimental
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6951,6 +7167,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6961,6 +7178,7 @@
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6974,6 +7192,7 @@
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -6999,6 +7218,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7020,6 +7240,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7036,6 +7257,7 @@
     permissions: COLLECT_CLIENT
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7052,6 +7274,7 @@
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7086,7 +7309,7 @@
       the sigma rule does not specify it.
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7097,6 +7320,7 @@
   type: Function
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7113,6 +7337,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7135,6 +7360,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7201,7 +7427,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7222,6 +7448,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7262,7 +7489,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7325,7 +7552,7 @@
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7356,7 +7583,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7378,7 +7605,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7398,6 +7625,7 @@
   category: windows
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7443,6 +7671,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7461,6 +7690,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7481,7 +7711,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7496,6 +7726,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7529,6 +7760,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7553,6 +7785,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7566,6 +7799,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7579,7 +7813,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7603,6 +7837,7 @@
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7631,6 +7866,7 @@
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7670,7 +7906,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7702,6 +7938,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7825,6 +8062,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7843,6 +8081,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7889,6 +8128,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7911,6 +8151,7 @@
   version: 1
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7937,6 +8178,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7976,7 +8218,7 @@
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7991,6 +8233,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8030,6 +8273,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8079,6 +8323,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8118,6 +8363,7 @@
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8152,6 +8398,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8210,6 +8457,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8251,6 +8499,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8285,6 +8534,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8326,6 +8576,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8350,7 +8601,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8401,6 +8652,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8417,6 +8669,7 @@
     description: The org under which we query the user's ACL.
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8445,6 +8698,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8467,6 +8721,7 @@
   category: server
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8493,6 +8748,7 @@
       function).
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8521,6 +8777,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8541,6 +8798,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8550,6 +8808,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8563,6 +8822,7 @@
     required: true
   category: windows
   platforms:
+  - darwin_arm64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
 - name: version
@@ -8593,6 +8853,7 @@
   category: basic
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8622,7 +8883,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8679,7 +8940,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8762,7 +9023,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8785,7 +9046,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8808,7 +9069,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8827,7 +9088,7 @@
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8851,7 +9112,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8866,7 +9127,7 @@
   category: event
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8876,6 +9137,7 @@
   category: plugin
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -9010,7 +9272,7 @@
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -9034,7 +9296,7 @@
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -9060,7 +9322,7 @@
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
-  - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -9092,6 +9354,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
 - name: xor
   description: Apply xor to the string and key.
   type: Function
@@ -9107,6 +9370,7 @@
   category: parsers
   platforms:
   - darwin_amd64_cgo
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -9152,6 +9416,7 @@
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
+  - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -9172,7 +9437,6 @@
     Additionally, providing the clean parameter will also remove all
     the metadata from rules to save space and execution memory for
     large rule sets.
-
   type: Function
   args:
   - name: rules
@@ -9183,4 +9447,5 @@
     type: bool
     description: Remove metadata to make rules smaller.
   platforms:
+  - darwin_arm64_cgo
   - linux_amd64_cgo

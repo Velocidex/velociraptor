@@ -55,6 +55,15 @@ type FileStoreFileInfo struct {
 	fullpath   api.FSPathSpec
 	config_obj *config_proto.Config
 	Data_      *ordereddict.Dict
+
+	SizeOverride_ int64
+}
+
+func (self FileStoreFileInfo) Size() int64 {
+	if self.SizeOverride_ == 0 {
+		return self.FileInfo.Size()
+	}
+	return self.SizeOverride_
 }
 
 // We return multiple files as the base (for example the json file and

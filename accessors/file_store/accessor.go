@@ -4,14 +4,19 @@ package file_store
 // the generic filestore. This allows us to run globs on the file
 // store regardless of the specific filestore implementation.
 import (
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/file_store_file_info"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -20,12 +25,24 @@ import (
 type FileStoreFileSystemAccessor struct {
 	file_store api.FileStore
 	config_obj *config_proto.Config
+
+	sparse bool
 }
 
-func NewFileStoreFileSystemAccessor(config_obj *config_proto.Config) *FileStoreFileSystemAccessor {
+func NewFileStoreFileSystemAccessor(
+	config_obj *config_proto.Config) *FileStoreFileSystemAccessor {
 	return &FileStoreFileSystemAccessor{
 		file_store: file_store.GetFileStore(config_obj),
 		config_obj: config_obj,
+	}
+}
+
+func NewSparseFileStoreFileSystemAccessor(
+	config_obj *config_proto.Config) *FileStoreFileSystemAccessor {
+	return &FileStoreFileSystemAccessor{
+		file_store: file_store.GetFileStore(config_obj),
+		config_obj: config_obj,
+		sparse:     true,
 	}
 }
 
@@ -36,10 +53,15 @@ func (self FileStoreFileSystemAccessor) New(
 		return &FileStoreFileSystemAccessor{
 			file_store: self.file_store,
 			config_obj: self.config_obj,
+			sparse:     self.sparse,
 		}, nil
 	}
 
-	return NewFileStoreFileSystemAccessor(config_obj), nil
+	return &FileStoreFileSystemAccessor{
+		file_store: file_store.GetFileStore(config_obj),
+		config_obj: config_obj,
+		sparse:     self.sparse,
+	}, nil
 }
 
 func (self FileStoreFileSystemAccessor) Lstat(filename string) (
@@ -69,8 +91,22 @@ func (self FileStoreFileSystemAccessor) LstatWithOSPath(filename *accessors.OSPa
 		}
 	}
 
-	return file_store_file_info.NewFileStoreFileInfoWithOSPath(
-		self.config_obj, filename, fullpath, lstat), nil
+	stat := file_store_file_info.NewFileStoreFileInfoWithOSPath(
+		self.config_obj, filename, fullpath, lstat)
+
+	if self.sparse {
+		index, err := getIndex(self.config_obj, fullpath)
+		if err != nil {
+			return stat, nil
+		}
+
+		if len(index.Ranges) > 0 {
+			run := index.Ranges[len(index.Ranges)-1]
+			stat.SizeOverride_ = run.OriginalOffset + run.FileLength
+		}
+	}
+
+	return stat, nil
 }
 
 func (self FileStoreFileSystemAccessor) ParsePath(path string) (
@@ -150,12 +186,11 @@ func (self FileStoreFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPat
 		fullpath = path_specs.FromGenericComponentList(filename.Components)
 	}
 
-	file, err := self.file_store.ReadFile(fullpath)
+	file, err := self.openFile(fullpath)
 	if err != nil {
 		// Try to open the old protobuf style files as a fallback.
 		if fullpath.Type() == api.PATH_TYPE_FILESTORE_DB_JSON {
-			file, err = self.file_store.ReadFile(
-				fullpath.SetType(api.PATH_TYPE_FILESTORE_DB))
+			file, err = self.openFile(fullpath.SetType(api.PATH_TYPE_FILESTORE_DB))
 		}
 
 		if err != nil {
@@ -165,7 +200,7 @@ func (self FileStoreFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPat
 				return nil, err
 			}
 
-			file, err = self.file_store.ReadFile(corrected_path)
+			file, err = self.openFile(corrected_path)
 			if err != nil {
 				return nil, err
 			}
@@ -173,6 +208,56 @@ func (self FileStoreFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPat
 	}
 
 	return file, nil
+}
+
+func (self FileStoreFileSystemAccessor) openFile(filename api.FSPathSpec) (
+	accessors.ReadSeekCloser, error) {
+	file, err := self.file_store.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	if !self.sparse {
+		return file, err
+	}
+
+	index, err := getIndex(self.config_obj, filename)
+	if err != nil {
+		return file, nil
+	}
+
+	// Wrap the file with the index.
+	reader_at, err := utils.NewPagedReader(&utils.RangedReader{
+		ReaderAt: utils.MakeReaderAtter(file),
+		Index:    index,
+	}, 0x1000, 100)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ReaderWrapper{
+		ReadSeekCloser: utils.NewReadSeekReaderAdapter(reader_at),
+		Index:          index,
+	}, nil
+}
+
+type ReaderWrapper struct {
+	accessors.ReadSeekCloser
+	Index *actions_proto.Index
+}
+
+// ReaderWrapper provides a Ranges() method so consumers can see
+// the sparse regions.
+func (self *ReaderWrapper) Ranges() (res []uploads.Range) {
+	for _, run := range self.Index.Ranges {
+		res = append(res, uploads.Range{
+			Offset:   run.OriginalOffset,
+			Length:   run.Length,
+			IsSparse: run.FileLength == 0,
+		})
+	}
+
+	return res
 }
 
 func getDSPathSpec(filename *accessors.OSPath) api.DSPathSpec {
@@ -185,4 +270,30 @@ func getDSPathSpec(filename *accessors.OSPath) api.DSPathSpec {
 		return result.SetType(name_type)
 	}
 	return result
+}
+
+// Load the index from the filestore if it is there.
+func getIndex(config_obj *config_proto.Config,
+	vfs_path api.FSPathSpec) (*actions_proto.Index, error) {
+	index := &actions_proto.Index{}
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	fd, err := file_store_factory.ReadFile(
+		vfs_path.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX))
+	if err != nil {
+		return nil, err
+	}
+	defer fd.Close()
+
+	data, err := ioutil.ReadAll(fd)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(data, &index)
+	if err != nil {
+		return nil, err
+	}
+
+	return index, nil
 }

@@ -24,6 +24,12 @@ parameters:
   - name: Device
     description: The NTFS drive to parse
     default: "C:\\"
+  - name: MFTFile
+    description: Alternatively provide an MFTFile to use for resolving paths.
+  - name: USNFile
+    description: Alternatively provide a previously extracted USN file to parse.
+  - name: Accessor
+    description: The accessor to use.
   - name: AllDrives
     description: Dump USN from all drives and VSC
     type: bool
@@ -48,6 +54,11 @@ parameters:
   - name: DateBefore
     type: timestamp
     description: "search for events before this date. YYYY-MM-DDTmm:hh:ssZ"
+  - name: FastPaths
+    type: bool
+    description: When set use a faster but less accurate path reassembly algorithm.
+
+
 sources:
   - precondition:
       SELECT OS From info() where OS =~ 'windows'
@@ -59,44 +70,79 @@ sources:
       LET DateBeforeTime <= if(condition=DateBefore,
             then=timestamp(epoch=DateBefore), else=timestamp(epoch="2200-01-01"))
 
-      LET all_drives = SELECT OSPath.Components[0] AS Drive
-        FROM glob(globs="/*/$Extend/$UsnJrnl:$J", accessor="ntfs")
-        WHERE log(message="Processing " + Drive)
+      -- If the user specified an MFTFile then ignore the device
+      LET Device <= if(condition=MFTFile OR USNFile, then="",
+          else=if(condition=Device,
+          then=pathspec(parse=Device, path_type="ntfs")))
 
-      SELECT
-            Timestamp,
-            Filename,
-            Device, OSPath,
-            _Links,
-            Reason,
-            _FileMFTID as MFTId,
-            _FileMFTSequence as Sequence,
-            _ParentMFTID as ParentMFTId,
-            _ParentMFTSequence as ParentSequence,
-            FileAttributes,
-            SourceInfo,
-            Usn
-      FROM if(condition=AllDrives,
-          then={
-            SELECT * FROM foreach(row=all_drives,
-            query={
-              SELECT *, Drive AS Device
-              FROM parse_usn(
-                 device=Drive, accessor="ntfs")
+      LET Parse(MFT, USN, Accessor) = SELECT *
+              FROM parse_usn(accessor=Accessor, fast_paths=FastPaths,
+                             mft_filename=MFT, usn_filename=USN)
               WHERE Filename =~ FileNameRegex
-                AND str(str=_FileMFTID) =~ MFT_ID_Regex
-                AND str(str=_ParentMFTID) =~ Parent_MFT_ID_Regex
+                AND _FileMFTID =~ MFT_ID_Regex
+                AND _ParentMFTID =~ Parent_MFT_ID_Regex
                 AND Timestamp < DateBeforeTime
                 AND Timestamp > DateAfterTime
                 AND _Links =~ PathRegex
-            })
+
+      LET all_drives = SELECT * FROM foreach(
+      row={
+        SELECT OSPath[:1] AS Drive
+        FROM glob(globs="/*/$Extend/$UsnJrnl:$J", accessor="ntfs")
+        WHERE log(message=format(format="Processing Drive %v", args=Drive))
+      }, query={
+        SELECT Timestamp,
+               Filename,
+               Drive + OSPath AS OSPath,
+               _Links,
+               Reason,
+               _FileMFTID as MFTId,
+               _FileMFTSequence as Sequence,
+               _ParentMFTID as ParentMFTId,
+               _ParentMFTSequence as ParentSequence,
+               FileAttributes,
+               SourceInfo,
+               Usn
+        FROM Parse(MFT=Drive + "$MFT",
+                   USN=Drive + "$Extend/$UsnJrnl:$J",
+                   Accessor="ntfs")
+      })
+
+      SELECT *
+      FROM if(condition=AllDrives, then=all_drives, else={
+        SELECT * FROM if(condition=Device AND
+              log(message=format(format="Processing Device %v", args=Device)),
+          then={
+            SELECT Timestamp,
+               Filename,
+               Device + OSPath AS OSPath,
+               _Links,
+               Reason,
+               _FileMFTID as MFTId,
+               _FileMFTSequence as Sequence,
+               _ParentMFTID as ParentMFTId,
+               _ParentMFTSequence as ParentSequence,
+               FileAttributes,
+               SourceInfo,
+               Usn
+            FROM Parse(MFT=Device + "$MFT",
+                 USN=Device + "$Extend/$UsnJrnl:$J",
+                 Accessor="ntfs")
+
           }, else={
-            SELECT *, Device
-            FROM parse_usn(device=Device, accessor="ntfs")
-            WHERE Filename =~ FileNameRegex
-                AND str(str=_FileMFTID) =~ MFT_ID_Regex
-                AND str(str=_ParentMFTID) =~ Parent_MFT_ID_Regex
-                AND Timestamp < DateBeforeTime
-                AND Timestamp > DateAfterTime
-                AND _Links =~ PathRegex
+            SELECT Timestamp,
+               Filename,
+               OSPath,
+               _Links,
+               Reason,
+               _FileMFTID as MFTId,
+               _FileMFTSequence as Sequence,
+               _ParentMFTID as ParentMFTId,
+               _ParentMFTSequence as ParentSequence,
+               FileAttributes,
+               SourceInfo,
+               Usn
+            FROM Parse(MFT=MFTFile,
+                 USN=USNFile, Accessor=Accessor)
           })
+      })
