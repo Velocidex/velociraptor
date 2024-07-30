@@ -561,6 +561,26 @@ func (mr *MockAPIClientMockRecorder) GetHuntTable(arg0, arg1 interface{}, arg2 .
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHuntTable", reflect.TypeOf((*MockAPIClient)(nil).GetHuntTable), varargs...)
 }
 
+// GetHuntTags mocks base method.
+func (m *MockAPIClient) GetHuntTags(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.HuntTags, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetHuntTags", varargs...)
+	ret0, _ := ret[0].(*proto0.HuntTags)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHuntTags indicates an expected call of GetHuntTags.
+func (mr *MockAPIClientMockRecorder) GetHuntTags(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHuntTags", reflect.TypeOf((*MockAPIClient)(nil).GetHuntTags), varargs...)
+}
+
 // GetKeywordCompletions mocks base method.
 func (m *MockAPIClient) GetKeywordCompletions(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.KeywordCompletions, error) {
 	m.ctrl.T.Helper()
