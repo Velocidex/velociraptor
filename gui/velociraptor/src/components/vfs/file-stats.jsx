@@ -13,6 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {CancelToken} from 'axios';
 import T from '../i8n/i8n.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
+import ToolTip from '../widgets/tooltip.jsx';
 
 class VeloFileStats extends Component {
     static propTypes = {
@@ -140,19 +141,19 @@ class VeloFileStats extends Component {
                           <dd className="col-8">
                             <VeloTimestamp usec={ selectedRow.Download.mtime / 1000 } />
                             { !_.isEmpty(selectedRow.Download.components) &&
-                              <Button variant="outline-default"
-                                      data-tooltip={T("Download")}
-                                      data-position="right"
-                                      className="btn-tooltip"
-                                      href={api.href("/api/v1/DownloadVFSFile", {
-                                          client_id: client_id,
-                                          fs_components: selectedRow.Download.components,
-                                          vfs_path: selectedRow.Name,
-                                      }, {
-                                          internal: true,
-                                          arrayFormat: 'brackets'})}>
-                                <FontAwesomeIcon icon="download"/>
-                              </Button>}
+                              <ToolTip tooltip={T("Download")}>
+                                <Button variant="outline-default"
+                                        href={api.href("/api/v1/DownloadVFSFile", {
+                                            client_id: client_id,
+                                            fs_components: selectedRow.Download.components,
+                                            vfs_path: selectedRow.Name,
+                                        }, {
+                                            internal: true,
+                                            arrayFormat: 'brackets'})}>
+                                  <FontAwesomeIcon icon="download"/>
+                                </Button>
+                              </ToolTip>
+                            }
                           </dd>
                         </>
                       }

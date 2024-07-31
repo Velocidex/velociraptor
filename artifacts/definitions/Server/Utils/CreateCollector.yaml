@@ -89,6 +89,11 @@ parameters:
     type: int
     description: Compression level (0=no compression).
 
+  - name: opt_concurrency
+    default: "2"
+    type: int
+    description: Number of concurrency queries
+
   - name: opt_format
     default: "jsonl"
     description: Output format (jsonl or csv)
@@ -151,6 +156,7 @@ parameters:
             timeout=Timeout,
             password=pass[0].Pass,
             level=Level,
+            concurrency=Concurrency,
             format=Format,
             metadata=ContainerMetadata)
 
@@ -329,6 +335,7 @@ parameters:
           timeout=Timeout,
           password=pass[0].Pass,
           level=Level,
+          concurrency=Concurrency,
           metadata=ContainerMetadata)
 
       LET _ <= if(condition=NOT Result[0].Upload.Path,
@@ -454,6 +461,7 @@ sources:
                          type="json"
                          ),
                     dict(name="Level", default=opt_level, type="int"),
+                    dict(name="Concurrency", default=opt_concurrency, type="int"),
                     dict(name="Format", default=opt_format),
                     dict(name="OutputPrefix", default=opt_output_directory),
                     dict(name="FilenameTemplate", default=opt_filename_template),

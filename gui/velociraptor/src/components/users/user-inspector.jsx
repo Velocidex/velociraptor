@@ -24,6 +24,7 @@ import EditUserDialog from './edit-user.jsx';
 
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
+import ToolTip from '../widgets/tooltip.jsx';
 
 const POLL_TIME = 5000;
 
@@ -387,36 +388,36 @@ class UsersOverview extends Component {
                           <th>
                             {T("Users")}
                             { !this.context.traits.password_less &&
+                              <ToolTip tooltip={T("Update User Password")}>
+                                <Button
+                                  disabled={!this.state.user_name}
+                                  onClick={()=>this.setState({
+                                      showEditUserDialog: true
+                                  })}
+                                  className="new-user-btn"
+                                  variant="outline-default"
+                                  as="button">
+                                  <FontAwesomeIcon icon="edit"/>
+                                  <span className="sr-only">
+                                    {T("Update User Password")}
+                                  </span>
+                                </Button>
+                              </ToolTip>
+                            }
+                            <ToolTip tooltip={T("Add a new user")}>
                               <Button
-                                disabled={!this.state.user_name}
-                                data-tooltip={T("Update User Password")}
-                                data-position="left"
                                 onClick={()=>this.setState({
-                                    showEditUserDialog: true
+                                    showAddUserDialog: true
                                 })}
-                                className="btn-tooltip new-user-btn"
+                                className="new-user-btn"
                                 variant="outline-default"
                                 as="button">
-                                <FontAwesomeIcon icon="edit"/>
+                                <FontAwesomeIcon icon="plus"/>
                                 <span className="sr-only">
-                                  {T("Update User Password")}
+                                  {T("Add a new user")}
                                 </span>
                               </Button>
-                            }
-                            <Button
-                              data-tooltip={T("Add a new user")}
-                              data-position="left"
-                              onClick={()=>this.setState({
-                                  showAddUserDialog: true
-                              })}
-                              className="btn-tooltip new-user-btn"
-                              variant="outline-default"
-                              as="button">
-                              <FontAwesomeIcon icon="plus"/>
-                              <span className="sr-only">
-                                {T("Add a new user")}
-                              </span>
-                            </Button>
+                            </ToolTip>
                           </th>
                         </tr>
                       </thead>
@@ -445,27 +446,27 @@ class UsersOverview extends Component {
                         <tr>
                           <th>
                             {T("Orgs")}
-                            <Button
-                              disabled={!this.state.user_name}
-                              data-tooltip={T("Assign user to Orgs")}
-                              data-position="left"
-                              onClick={()=>this.setState({
-                                  showAddOrgDialog: true
-                              })}
-                              className="new-user-btn btn-tooltip"
-                              variant="outline-default"
-                              as="button">
-                              <FontAwesomeIcon icon="plus"/>
-                              <span className="sr-only">
-                                {T("Assign user to Orgs")}
-                              </span>
-                            </Button>
+                            <ToolTip tooltip={T("Assign user to Orgs")}>
+                              <Button
+                                disabled={!this.state.user_name}
+                                onClick={()=>this.setState({
+                                    showAddOrgDialog: true
+                                })}
+                                className="new-user-btn"
+                                variant="outline-default"
+                                as="button">
+                                <FontAwesomeIcon icon="plus"/>
+                                <span className="sr-only">
+                                  {T("Assign user to Orgs")}
+                                </span>
+                              </Button>
+                            </ToolTip>
                           </th></tr>
                       </thead>
                       <tbody>
-                        { _.isEmpty(selected_orgs) &&
-                          <tr className="no-content">
-                            <td>
+                      { _.isEmpty(selected_orgs) &&
+                        <tr className="no-content">
+                          <td>
                               <FontAwesomeIcon icon="angles-left"
                                                className="fa-fade"/>
                               {T("Please Select a User")}

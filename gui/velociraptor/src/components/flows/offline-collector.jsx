@@ -526,7 +526,19 @@ class OfflineCollectorParameters  extends React.Component {
                           this.props.setParameters(this.props.parameters);
                       }}
                                         value={this.props.parameters.opt_level}
-                                        placeholder="Compression Level (0 - 9)"
+                                        placeholder={T("Compression Level (0 - 9)")}
+                      />
+                    </Col>
+                  </Form.Group>
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">{T("Concurrency")}</Form.Label>
+                    <Col sm="8">
+                      <ValidatedInteger setValue={value=>{
+                          this.props.parameters.opt_concurrency = value;
+                          this.props.setParameters(this.props.parameters);
+                      }}
+                                        value={this.props.parameters.opt_concurrency}
+                                        placeholder={T("Number of concurrent queries")}
                       />
                     </Col>
                   </Form.Group>
@@ -770,15 +782,32 @@ function getDefaultCollectionParameters() {
             public_key: "",
             password: ""
         },
-        opt_level: 5,
-        opt_output_directory: "",
-        opt_tempdir: "",
+        opt_level: undefined,
+        opt_concurrency: undefined,
+        opt_output_directory: undefined,
+        opt_tempdir: undefined,
         opt_filename_template: "Collection-%FQDN%-%TIMESTAMP%",
-        opt_collector_filename: "",
+        opt_collector_filename: undefined,
         opt_format: "jsonl",
         opt_prompt: "N",
     };
 }
+
+const str = x=>{
+    if(_.isNumber(x)) {
+        return x.toString();
+    }
+
+    if(_.isString(x)) {
+        return x;
+    };
+
+    if(_.isUndefined(x)) {
+        return x;
+    }
+
+    return JSON.stringify(x);
+};
 
 
 export default class OfflineCollectorWizard extends React.Component {
@@ -799,13 +828,14 @@ export default class OfflineCollectorWizard extends React.Component {
                 this.props.collector_parameters.env;
 
             _.each(env, x=>{
-                if (_.isUndefined(x.value)) {
-                    return;
+                let value = x.value;
+                if (_.isUndefined(value)) {
+                    value = getDefaultCollectionParameters()[x.key];
                 }
 
                 switch(x.key) {
                 case "artifacts":
-                    let artifact_list = JSONparse(x.value);
+                    let artifact_list = JSONparse(value);
                     // Resolve the artifacts from the request into a
                     // list of descriptors.
                     api.post("v1/GetArtifacts", {names: artifact_list},
@@ -819,54 +849,57 @@ export default class OfflineCollectorWizard extends React.Component {
 
                     break;
                 case "OS":
-                    collector_parameters.target_os = x.value;
+                    collector_parameters.target_os = value;
                     break;
                 case "parameters":
-                    this.setState({parameters: JSONparse(x.value)});
+                    this.setState({parameters: JSONparse(value)});
                     break;
                 case "target":
-                    collector_parameters.target = x.value;
+                    collector_parameters.target = value;
                     break;
                 case "target_args":
-                    let target_args = JSONparse(x.value);
+                    let target_args = JSONparse(value);
                     Object.assign(collector_parameters.target_args, target_args);
                     break;
                 case "encryption_scheme":
-                    collector_parameters.encryption_scheme= x.value;
+                    collector_parameters.encryption_scheme= value;
                     break;
                 case "encryption_args":
-                    collector_parameters.encryption_args = JSONparse(x.value);
+                    collector_parameters.encryption_args = JSONparse(value);
                     break;
                 case "opt_prompt":
-                    collector_parameters.opt_prompt = x.value;
+                    collector_parameters.opt_prompt = value;
                     break;
                 case "opt_tempdir":
-                    collector_parameters.opt_tempdir = x.value;
+                    collector_parameters.opt_tempdir = value;
                     break;
                 case "opt_level":
-                    collector_parameters.opt_level = x.value;
+                    collector_parameters.opt_level = value;
+                    break;
+                case "opt_concurrency":
+                    collector_parameters.opt_concurrency = value;
                     break;
                 case "opt_output_directory":
-                    collector_parameters.opt_output_directory = x.value;
+                    collector_parameters.opt_output_directory = value;
                     break;
                 case "opt_filename_template":
-                    collector_parameters.opt_filename_template = x.value;
+                    collector_parameters.opt_filename_template = value;
                     break;
                 case "opt_collector_filename":
-                    collector_parameters.opt_collector_filename = x.value;
+                    collector_parameters.opt_collector_filename = value;
                     break;
 
                 case "opt_progress_timeout":
-                    resources.progress_timeout =  JSONparse(x.value);
+                    resources.progress_timeout =  JSONparse(value);
                     break;
                 case "opt_timeout":
-                    resources.timeout = JSONparse(x.value);
+                    resources.timeout = JSONparse(value);
                     break;
                 case "opt_cpu_limit":
-                    resources.cpu_limit = JSONparse(x.value);
+                    resources.cpu_limit = JSONparse(value);
                     break;
                 case "opt_format":
-                    collector_parameters.opt_format = x.value;
+                    collector_parameters.opt_format = value;
                     break;
                 };
             });
@@ -903,32 +936,30 @@ export default class OfflineCollectorWizard extends React.Component {
             specs: [{artifact: "Server.Utils.CreateCollector", parameters: {env: env}}],
         };
 
-        env.push({key: "OS",
-                  value: this.state.collector_parameters.target_os});
-        env.push({key: "artifacts", value: JSON.stringify(
+        let params = this.state.collector_parameters;
+
+        env.push({key: "OS", value: str(params.target_os)});
+        env.push({key: "artifacts", value: str(
             _.map(this.state.artifacts, (item) => item.name))});
-        env.push({key: "parameters", value: JSON.stringify(this.state.parameters)});
-        env.push({key: "target", value: this.state.collector_parameters.target});
-        env.push({key: "target_args", value: JSON.stringify(
-            this.state.collector_parameters.target_args)});
-        env.push({key: "encryption_scheme", value: this.state.collector_parameters.encryption_scheme});
-        env.push({key: "encryption_args", value: JSON.stringify(this.state.collector_parameters.encryption_args)});
+        env.push({key: "parameters", value: str(this.state.parameters)});
+        env.push({key: "target", value: str(params.target)});
+        env.push({key: "target_args", value: str(params.target_args)});
+        env.push({key: "encryption_scheme", value: str(params.encryption_scheme)});
+        env.push({key: "encryption_args", value: str(params.encryption_args)});
         env.push({key: "opt_verbose", value: "Y"});
         env.push({key: "opt_banner", value: "Y"});
-        env.push({key: "opt_prompt", value: this.state.collector_parameters.opt_prompt});
+        env.push({key: "opt_prompt", value: str(params.opt_prompt)});
         env.push({key: "opt_admin", value: "Y"});
-        env.push({key: "opt_tempdir", value: this.state.collector_parameters.opt_tempdir});
-        env.push({key: "opt_level", value: this.state.collector_parameters.opt_level.toString()});
-        env.push({key: "opt_output_directory", value: this.state.collector_parameters.opt_output_directory});
-        env.push({key: "opt_filename_template", value: this.state.collector_parameters.opt_filename_template});
-        env.push({key: "opt_collector_filename", value: this.state.collector_parameters.opt_collector_filename});
-        env.push({key: "opt_progress_timeout", value: JSON.stringify(
-            this.state.resources.progress_timeout)});
-        env.push({key: "opt_timeout", value: JSON.stringify(
-            this.state.resources.timeout)});
-        env.push({key: "opt_cpu_limit", value: JSON.stringify(
-            this.state.resources.cpu_limit)});
-        env.push({key: "opt_format", value: this.state.collector_parameters.opt_format});
+        env.push({key: "opt_tempdir", value: str(params.opt_tempdir)});
+        env.push({key: "opt_level", value: str(params.opt_level)});
+        env.push({key: "opt_concurrency", value: str(params.opt_concurrency)});
+        env.push({key: "opt_output_directory", value: str(params.opt_output_directory)});
+        env.push({key: "opt_filename_template", value: str(params.opt_filename_template)});
+        env.push({key: "opt_collector_filename", value: str(params.opt_collector_filename)});
+        env.push({key: "opt_progress_timeout", value: str(this.state.resources.progress_timeout)});
+        env.push({key: "opt_timeout", value: str(this.state.resources.timeout)});
+        env.push({key: "opt_cpu_limit", value: str( this.state.resources.cpu_limit)});
+        env.push({key: "opt_format", value: str(params.opt_format)});
 
         return request;
     }

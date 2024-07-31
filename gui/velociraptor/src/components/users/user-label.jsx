@@ -22,10 +22,9 @@ import Row from 'react-bootstrap/Row';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 import T from '../i8n/i8n.jsx';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Tooltip from 'react-bootstrap/Tooltip';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Select from 'react-select';
+import ToolTip from '../widgets/tooltip.jsx';
 
 import { JSONparse } from '../utils/json_parse.jsx';
 
@@ -206,13 +205,9 @@ class UserSettings extends React.PureComponent {
                 { this.context.traits.orgs &&
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">
-                      <OverlayTrigger
-                        delay={{show: 250, hide: 400}}
-                        overlay={(props)=><Tooltip {...props}>
-                                            {T("Switch to a different org")}
-                                          </Tooltip>}>
+                      <ToolTip tooltip={T("Switch to a different org")}>
                         <div>{T("Organization")}</div>
-                      </OverlayTrigger>
+                      </ToolTip>
                     </Form.Label>
                     <Col sm="8">
                       <Form.Control as="select"
@@ -263,13 +258,9 @@ class UserSettings extends React.PureComponent {
 
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=><Tooltip {...props}>
-                                                {T("Default password to use for downloads")}
-                                              </Tooltip>}>
+                    <ToolTip tooltip={T("Default password to use for downloads")}>
                       <div>{T("Downloads Password")}</div>
-                    </OverlayTrigger>
+                    </ToolTip>
                   </Form.Label>
                   <Col sm="8">
                     <InputGroup className="mb-3">
@@ -298,13 +289,9 @@ class UserSettings extends React.PureComponent {
 
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=><Tooltip {...props}>
-                                          {T("Select a language")}
-                                        </Tooltip>}>
+                    <ToolTip tooltip={T("Select a language")}>
                       <div>{T("Language")}</div>
-                    </OverlayTrigger>
+                    </ToolTip>
                   </Form.Label>
                   <Col sm="8">
                     <Form.Control as="select"
@@ -333,13 +320,9 @@ class UserSettings extends React.PureComponent {
 
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=><Tooltip {...props}>
-                                          {T("Select a timezone")}
-                                        </Tooltip>}>
+                    <ToolTip tooltip={T("Select a timezone")}>
                       <div>{T("Display timezone")}</div>
-                    </OverlayTrigger>
+                    </ToolTip>
                   </Form.Label>
                   <Col sm="8">
                     <InputGroup className="mb-3">

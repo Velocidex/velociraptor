@@ -9,7 +9,7 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
-
+import ToolTip from '../widgets/tooltip.jsx';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -260,21 +260,19 @@ export default class NewCollectionConfigParameters extends React.Component {
                     );
                 }
                 return (<ButtonGroup>
-                          <Button
-                            className="btn-tooltip"
-                            data-position="right"
-                            data-tooltip={T("Configure")}
-                            variant="outline-default">
-                            <FontAwesomeIcon icon="wrench"/></Button>
-                          <Button variant="outline-default"
-                                  className="btn-tooltip"
-                                  data-position="right"
-                                  data-tooltip={T("Remove")}
-                                  onClick={
-                              () => this.props.setArtifacts(remove_artifact(
-                                  this.props.artifacts, rowKey))} >
-                            <FontAwesomeIcon icon="trash"/>
-                          </Button>
+                          <ToolTip tooltip={T("Configure")}>
+                            <Button variant="outline-default">
+                              <FontAwesomeIcon icon="wrench"/>
+                            </Button>
+                          </ToolTip>
+                          <ToolTip tooltip={T("Remove")}>
+                            <Button variant="outline-default"
+                                    onClick={
+                                        () => this.props.setArtifacts(remove_artifact(
+                                            this.props.artifacts, rowKey))} >
+                              <FontAwesomeIcon icon="trash"/>
+                            </Button>
+                          </ToolTip>
                         </ButtonGroup>
                 );
             },

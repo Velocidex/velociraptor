@@ -4,6 +4,7 @@ import _ from 'lodash';
 
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
+import ToolTip from '../widgets/tooltip.jsx';
 
 import Form from 'react-bootstrap/Form';
 import FormGroup from 'react-bootstrap/FormGroup';
@@ -89,19 +90,19 @@ export default class ExportNotebook extends React.Component {
         let columns = formatColumns([
             {dataField: "type", text: T("Type"), formatter: (cell, row) => {
                 if (cell === "html") {
-                    return <Button className="btn-tooltip"
-                                   disabled={true}
-                                   variant="outline-info"
-                                   data-tooltip="Zip">
-                             <FontAwesomeIcon icon="flag"/>
-                           </Button>;
+                    return <ToolTip tooltip={T("Zip")}>
+                             <Button disabled={true}
+                                     variant="outline-info">
+                               <FontAwesomeIcon icon="flag"/>
+                             </Button>
+                           </ToolTip>;
                 } else if (cell === "zip") {
-                    return <Button className="btn-tooltip"
-                                   disabled={true}
-                                   variant="outline-info"
-                                   data-tooltip="HTML">
-                             <FontAwesomeIcon icon="archive"/>
-                           </Button>;
+                    return <ToolTip tooltip={T("HTML")}>
+                             <Button disabled={true}
+                                     variant="outline-info">
+                               <FontAwesomeIcon icon="archive"/>
+                             </Button>
+                           </ToolTip>;
                 };
                 return cell;
             }, sort: true},

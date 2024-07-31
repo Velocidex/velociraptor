@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Modal from 'react-bootstrap/Modal';
 import T from '../i8n/i8n.jsx';
 import Form from 'react-bootstrap/Form';
+import ToolTip from '../widgets/tooltip.jsx';
 
 export class HexViewDialog extends React.PureComponent {
     static propTypes = {
@@ -276,15 +277,15 @@ export default class HexView extends React.Component {
                   <thead>
                     <tr>
                       <th className="offset-area">
-                        <Button
-                          variant="default-outline"
-                          data-tooltip={T("Hex Offset")}
-                          data-position="right"
-                          className="btn-tooltip"
-                          onClick={()=>this.setState({
-                              hex_offset: !this.state.hex_offset
-                          })}
-                        >{T("Offset")}</Button>
+                        <ToolTip tooltip={T("Hex Offset")}>
+                          <Button
+                            variant="default-outline"
+                            onClick={()=>this.setState({
+                                hex_offset: !this.state.hex_offset
+                            })}
+                          >{T("Offset")}
+                          </Button>
+                        </ToolTip>
                       </th>
                       <th className="padding-area">
                         {_.map(_.range(0, columns), (x, idx)=>{
@@ -344,24 +345,22 @@ export default class HexView extends React.Component {
                     { more && (this.state.expanded ?
                                <tr>
                                  <td colSpan="16">
-                                   <Button variant="default-outline"
-                                           data-tooltip={T("Collapse")}
-                                           data-position="right"
-                                           className="btn-tooltip"
-                                           onClick={()=>this.setState({expanded: false})} >
-                                     <i><FontAwesomeIcon icon="arrow-up"/></i>
-                                   </Button>
+                                   <ToolTip tooltip={T("Collapse")}>
+                                     <Button variant="default-outline"
+                                             onClick={()=>this.setState({expanded: false})} >
+                                       <i><FontAwesomeIcon icon="arrow-up"/></i>
+                                     </Button>
+                                   </ToolTip>
                                  </td>
                                </tr>
                                : <tr>
                                    <td colSpan="16">
-                                     <Button variant="default-outline"
-                                             data-tooltip="Expand"
-                                             data-position="right"
-                                             className="btn-tooltip"
-                                             onClick={()=>this.setState({expanded: true})} >
-                                       <i><FontAwesomeIcon icon="arrow-down"/></i>
-                                     </Button>
+                                     <ToolTip tooltip={T("Expand")}>
+                                       <Button variant="default-outline"
+                                               onClick={()=>this.setState({expanded: true})} >
+                                         <i><FontAwesomeIcon icon="arrow-down"/></i>
+                                       </Button>
+                                     </ToolTip>
                                    </td>
                                  </tr>) }
                   </tbody>

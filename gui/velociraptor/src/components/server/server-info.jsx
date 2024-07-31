@@ -12,6 +12,7 @@ import Button from 'react-bootstrap/Button';
 import T from '../i8n/i8n.jsx';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
+import ToolTip from '../widgets/tooltip.jsx';
 
 import {CancelToken} from 'axios';
 import "../clients/host-info.css";
@@ -60,12 +61,11 @@ class ServerInfo extends Component {
                     <Card.Body>
                       <MetadataEditor
                         valueRenderer={(cell, row)=>{
-                            return <Button
-                                     className="btn-tooltip"
-                                     data-tooltip={T("Click to view or edit")}
-                                     variant="default-outline" size="sm">
-                                     <FontAwesomeIcon icon="wrench"/>
-                                   </Button>;
+                            return <ToolTip tooltip={T("Click to view or edit")}>
+                                     <Button variant="default-outline" size="sm">
+                                       <FontAwesomeIcon icon="wrench"/>
+                                     </Button>
+                                   </ToolTip>;
                         }}
                         client_id="server" />
                     </Card.Body>

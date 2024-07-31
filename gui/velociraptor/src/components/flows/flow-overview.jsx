@@ -10,8 +10,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { requestToParameters } from "./utils.jsx";
 import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
-import Tooltip from 'react-bootstrap/Tooltip';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import ToolTip from '../widgets/tooltip.jsx';
 import T from '../i8n/i8n.jsx';
 import _ from 'lodash';
 import {CancelToken} from 'axios';
@@ -244,14 +243,7 @@ export default class FlowOverview extends React.Component {
                              <FontAwesomeIcon icon="lock-open"/> }
                           </Button>
                           :
-                          <OverlayTrigger
-                            delay={{show: 250, hide: 400}}
-                            overlay={
-                                <Tooltip
-                                  id='download-tooltip'>
-                                  {T("Set a password in user preferences to lock the download file.")}
-                                </Tooltip>
-                            }>
+                          <ToolTip tooltip={T("Set a password in user preferences to lock the download file.")}>
                             <span className="d-inline-block">
                               <Button
                                 style={{ pointerEvents: "none"}}
@@ -260,17 +252,10 @@ export default class FlowOverview extends React.Component {
                                 <FontAwesomeIcon icon="lock-open"/>
                               </Button>
                             </span>
-                          </OverlayTrigger>
+                          </ToolTip>
                         }
                         {this.state.expand_sparse ?
-                         <OverlayTrigger
-                           delay={{show: 250, hide: 400}}
-                           overlay={
-                               <Tooltip
-                                 id='expand-sparse'>
-                                 {T("Sparse files will be expanded in export.")}
-                               </Tooltip>
-                           }>
+                         <ToolTip tooltip={T("Sparse files will be expanded in export.")}>
                            <span className="d-inline-block">
                              <Button
                                onClick={()=>this.setState({expand_sparse: false})}
@@ -278,15 +263,8 @@ export default class FlowOverview extends React.Component {
                                <FontAwesomeIcon icon="expand"/>
                              </Button>
                            </span>
-                         </OverlayTrigger> :
-                         <OverlayTrigger
-                           delay={{show: 250, hide: 400}}
-                           overlay={
-                               <Tooltip
-                                 id='expand-sparse'>
-                                 {T("Sparse files will remain sparse in export.")}
-                               </Tooltip>
-                           }>
+                         </ToolTip> :
+                         <ToolTip tooltip={T("Sparse files will remain sparse in export.")}>
                            <span className="d-inline-block">
                              <Button
                                onClick={()=>this.setState({expand_sparse: !this.state.expand_sparse})}
@@ -294,7 +272,7 @@ export default class FlowOverview extends React.Component {
                                <FontAwesomeIcon icon="compress"/>
                              </Button>
                            </span>
-                         </OverlayTrigger>
+                         </ToolTip>
                         }
                         <Dropdown>
                           <Dropdown.Toggle variant="default">

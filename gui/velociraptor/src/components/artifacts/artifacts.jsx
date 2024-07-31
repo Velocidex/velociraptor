@@ -23,6 +23,7 @@ import ArtifactsUpload from './artifacts-upload.jsx';
 import T from '../i8n/i8n.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter }  from "react-router-dom";
+import ToolTip from '../widgets/tooltip.jsx';
 
 import SplitPane from 'react-split-pane';
 
@@ -40,6 +41,7 @@ const presetFilters = ()=>[
     {value: "^exchange.+", label: T("Exchange")},
     {value: "builtin:yes", label: T("BuiltIn Only")},
     {value: "builtin:no", label: T("Custom Only")},
+    {value: "metadata:basic", label: T("Basic Only")},
 ];
 
 
@@ -344,70 +346,59 @@ class ArtifactInspector extends React.Component {
               }
               <Navbar className="artifact-toolbar justify-content-between">
                 <ButtonGroup>
-                  <Button data-tooltip={T("Add an Artifact")}
-                          data-position="right"
-                          className="btn-tooltip"
-                          onClick={() => this.setState({showNewArtifactDialog: true})}
-                          variant="default">
-                    <FontAwesomeIcon icon="plus"/>
-                    <span className="sr-only">{T("Add an Artifact")}</span>
-                  </Button>
-
-                  <Button data-tooltip={T("Edit an Artifact")}
-                          data-position="right"
-                          className="btn-tooltip"
-                          onClick={() => {
-                              this.setState({showEditedArtifactDialog: true});
-                          }}
-                          disabled={!selected}
-                          variant="default">
-                    <FontAwesomeIcon icon="pencil-alt"/>
-                    <span className="sr-only">{T("Edit an Artifact")}</span>
-                  </Button>
-
-                  <Button data-tooltip={T("Delete Artifact")}
-                          data-position="right"
-                          className="btn-tooltip"
-                          onClick={() => this.setState({showDeleteArtifactDialog: true})}
-                          disabled={!deletable}
-                          variant="default">
-                    <FontAwesomeIcon icon="trash"/>
-                    <span className="sr-only">{T("Delete Artifact")}</span>
-                  </Button>
-
-                  <Button data-tooltip={T("Hunt Artifact")}
-                          data-position="right"
-                          className="btn-tooltip"
-                          onClick={this.huntArtifact}
-                          disabled={!this.huntArtifactEnabled()}
-                          variant="default">
-                    <FontAwesomeIcon icon="crosshairs"/>
-                    <span className="sr-only">{T("Hunt Artifact")}</span>
-                  </Button>
-
-                  <Button data-tooltip={T("Collect Artifact")}
-                          data-position="right"
-                          className="btn-tooltip"
-                          onClick={this.collectArtifact}
-                          disabled={!this.collectArtifactEnabled()}
-                          variant="default">
-                    <FontAwesomeIcon icon="cloud-download-alt"/>
-                    <span className="sr-only">{T("Collect Artifact")}</span>
-                  </Button>
-
-                  <Button data-tooltip={T("Upload Artifact Pack")}
-                          data-position="right"
-                          className="btn-tooltip"
-                          onClick={()=>this.setState({showArtifactsUploadDialog: true})}
-                          variant="default">
-                    <FontAwesomeIcon icon="upload"/>
-                    <span className="sr-only">{T("Upload Artifact Pack")}</span>
-                  </Button>
+                  <ToolTip tooltip={T("Add an Artifact")}>
+                    <Button onClick={() => this.setState({showNewArtifactDialog: true})}
+                            variant="default">
+                      <FontAwesomeIcon icon="plus"/>
+                      <span className="sr-only">{T("Add an Artifact")}</span>
+                    </Button>
+                  </ToolTip>
+                  <ToolTip tooltip={T("Edit an Artifact")} >
+                    <Button onClick={() => {
+                                this.setState({showEditedArtifactDialog: true});
+                            }}
+                            disabled={!selected}
+                            variant="default">
+                      <FontAwesomeIcon icon="pencil-alt"/>
+                      <span className="sr-only">{T("Edit an Artifact")}</span>
+                    </Button>
+                  </ToolTip>
+                  <ToolTip tooltip={T("Delete Artifact")} >
+                    <Button onClick={() => this.setState({showDeleteArtifactDialog: true})}
+                            disabled={!deletable}
+                            variant="default">
+                      <FontAwesomeIcon icon="trash"/>
+                      <span className="sr-only">{T("Delete Artifact")}</span>
+                    </Button>
+                  </ToolTip>
+                  <ToolTip tooltip={T("Hunt Artifact")} >
+                    <Button onClick={this.huntArtifact}
+                            disabled={!this.huntArtifactEnabled()}
+                            variant="default">
+                      <FontAwesomeIcon icon="crosshairs"/>
+                      <span className="sr-only">{T("Hunt Artifact")}</span>
+                    </Button>
+                  </ToolTip>
+                  <ToolTip tooltip={T("Collect Artifact")} >
+                    <Button onClick={this.collectArtifact}
+                            disabled={!this.collectArtifactEnabled()}
+                            variant="default">
+                      <FontAwesomeIcon icon="cloud-download-alt"/>
+                      <span className="sr-only">{T("Collect Artifact")}</span>
+                    </Button>
+                  </ToolTip>
+                  <ToolTip tooltip={T("Upload Artifact Pack")} >
+                    <Button onClick={()=>this.setState({showArtifactsUploadDialog: true})}
+                            variant="default">
+                      <FontAwesomeIcon icon="upload"/>
+                      <span className="sr-only">{T("Upload Artifact Pack")}</span>
+                    </Button>
+                  </ToolTip>
                 </ButtonGroup>
                 <Form inline className="artifact-search">
                   <InputGroup >
                     <InputGroup.Prepend>
-                        { this.renderFilter() }
+                      { this.renderFilter() }
                       <FormControl className="artifact-search-input"
                                    ref={(input) => { this.searchInput = input; }}
                                    value={this.state.current_filter}
@@ -416,14 +407,13 @@ class ArtifactInspector extends React.Component {
                                    placeholder={T("Search for artifact")}
                                    spellCheck="false"
                       />
-                      <Button data-tooltip={T("Clear")}
-                              data-position="right"
-                              className="btn-tooltip"
-                              onClick={()=>this.updateSearch("")}
-                              variant="light">
-                        <FontAwesomeIcon icon="broom"/>
-                        <span className="sr-only">{T("Clear")}</span>
-                      </Button>
+                      <ToolTip tooltip={T("Clear")}  >
+                        <Button onClick={()=>this.updateSearch("")}
+                                variant="light">
+                          <FontAwesomeIcon icon="broom"/>
+                          <span className="sr-only">{T("Clear")}</span>
+                        </Button>
+                      </ToolTip>
                     </InputGroup.Prepend>
                   </InputGroup>
                 </Form>

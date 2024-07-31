@@ -9,18 +9,10 @@ import Form from 'react-bootstrap/Form';
 import cellEditFactory, { Type } from 'react-bootstrap-table2-editor';
 import Row from 'react-bootstrap/Row';
 import React, { Component } from 'react';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Tooltip from 'react-bootstrap/Tooltip';
 import Col from 'react-bootstrap/Col';
 import BootstrapTable from 'react-bootstrap-table-next';
 import Alert from 'react-bootstrap/Alert';
-
-
-const renderToolTip = (props, params) => (
-    <Tooltip show={params.description} {...props}>
-       {params.description}
-     </Tooltip>
-);
+import ToolTip from '../widgets/tooltip.jsx';
 
 export default class CSVForm extends Component {
     static propTypes = {
@@ -54,13 +46,11 @@ export default class CSVForm extends Component {
         return (
             <Form.Group as={Row}>
               <Form.Label column sm="3">
-                <OverlayTrigger
-                  delay={{show: 250, hide: 400}}
-                  overlay={(props)=>renderToolTip(props, param)}>
+                <ToolTip tooltip={param.description}>
                   <div>
                     {name}
                   </div>
-                </OverlayTrigger>
+                </ToolTip>
               </Form.Label>
 
               <Col sm="8">
@@ -165,13 +155,11 @@ export default class CSVForm extends Component {
         return (
             <Form.Group as={Row}>
               <Form.Label column sm="3">
-                <OverlayTrigger
-                  delay={{show: 250, hide: 400}}
-                  overlay={(props)=>renderToolTip(props, param)}>
+                <ToolTip tooltip={param.description}>
                   <div>
                     {name}
                   </div>
-                </OverlayTrigger>
+                </ToolTip>
               </Form.Label>
 
               <Col sm="8">

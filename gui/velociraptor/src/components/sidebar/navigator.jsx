@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import classNames from "classnames";
 import { NavLink } from "react-router-dom";
 import T from '../i8n/i8n.jsx';
+import ToolTip from '../widgets/tooltip.jsx';
 
 import { EncodePathInURL } from '../utils/paths.jsx';
 
@@ -71,29 +72,29 @@ class VeloNavigator extends Component {
         return (
             <>
               <div className="float-left navigator">
-                <button
-                  data-tooltip={T("Expand sidebar")}
-                  data-position="right"
-                  className="hamburger toolbar-buttons btn-tooltip"
-                  onClick={this.toggle}
-                  aria-expanded={!this.state.collapsed}
+                <ToolTip tooltip={T("Expand sidebar")}>
+                  <button
+                    className="hamburger toolbar-buttons"
+                    onClick={this.toggle}
+                    aria-expanded={!this.state.collapsed}
+                  >
+                    <span aria-hidden="true">
+                      <FontAwesomeIcon icon="bars"/>
+                    </span>
+                    <span className="sr-only">{T("Toggle Main Menu")}</span>
+                  </button>
+                </ToolTip>
+                <a href="#welcome">
+                  <img src={api.src_of(logo)} className="velo-logo" alt={T("Welcome")} />
+                </a>
+                <div
+                  className={classNames({
+                      collapsed: this.state.collapsed,
+                      uncollapsed: !this.state.collapsed,
+                  })}
+                  id="navigator"
+                  onClick={this.collapse}
                 >
-                  <span aria-hidden="true">
-                     <FontAwesomeIcon icon="bars"/>
-                  </span>
-                  <span className="sr-only">{T("Toggle Main Menu")}</span>
-              </button>
-              <a href="#welcome">
-                <img src={api.src_of(logo)} className="velo-logo" alt={T("Welcome")} />
-              </a>
-              <div
-                className={classNames({
-                  collapsed: this.state.collapsed,
-                  uncollapsed: !this.state.collapsed,
-                })}
-                id="navigator"
-                onClick={this.collapse}
-              >
                 <div>
                   <nav className="navigator" aria-labelledby="mainmenu">
                     <h2 id="mainmenu" className="sr-only">

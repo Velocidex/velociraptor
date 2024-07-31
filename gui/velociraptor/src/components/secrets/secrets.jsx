@@ -18,6 +18,7 @@ import DictEditor from '../forms/dict.jsx';
 import UserForm from '../utils/users.jsx';
 import Form from 'react-bootstrap/Form';
 import Alert from 'react-bootstrap/Alert';
+import ToolTip from '../widgets/tooltip.jsx';
 
 import "./secrets.css";
 
@@ -586,37 +587,36 @@ export default class SecretManager extends Component {
                       <tr>
                         <th>
                           {T("Secret Types")}
-                          <Button
-                            data-tooltip={T("Delete Secret Type")}
-                            data-position="left"
-                            onClick={()=>this.setState({
-                                showDeleteSecretTypeDialog: true
-                            })}
-                            className="btn-tooltip new-user-btn"
-                            variant="outline-default"
-                            disabled={_.isEmpty(this.state.current_definition) ||
-                                      this.state.current_definition.built_in}
-                            as="button">
-                            <FontAwesomeIcon icon="trash"/>
-                            <span className="sr-only">
-                              {T("Delete Secret Type")}
-                            </span>
-                          </Button>
-
-                          <Button
-                            data-tooltip={T("Add new type")}
-                            data-position="left"
-                            onClick={()=>this.setState({
-                                showAddSecretTypeDialog: true
-                            })}
-                            className="btn-tooltip new-user-btn"
-                            variant="outline-default"
-                            as="button">
-                            <FontAwesomeIcon icon="plus"/>
-                            <span className="sr-only">
-                              {T("Add new type")}
-                            </span>
-                          </Button>
+                          <ToolTip tooltip={T("Delete Secret Type")}>
+                            <Button
+                              onClick={()=>this.setState({
+                                  showDeleteSecretTypeDialog: true
+                              })}
+                              className="new-user-btn"
+                              variant="outline-default"
+                              disabled={_.isEmpty(this.state.current_definition) ||
+                                        this.state.current_definition.built_in}
+                              as="button">
+                              <FontAwesomeIcon icon="trash"/>
+                              <span className="sr-only">
+                                {T("Delete Secret Type")}
+                              </span>
+                            </Button>
+                          </ToolTip>
+                          <ToolTip tooltip={T("Add new type")}>
+                            <Button
+                              onClick={()=>this.setState({
+                                  showAddSecretTypeDialog: true
+                              })}
+                              className="new-user-btn"
+                              variant="outline-default"
+                              as="button">
+                              <FontAwesomeIcon icon="plus"/>
+                              <span className="sr-only">
+                                {T("Add new type")}
+                              </span>
+                            </Button>
+                          </ToolTip>
                         </th>
                       </tr>
                     </thead>
@@ -650,50 +650,53 @@ export default class SecretManager extends Component {
                         <tr>
                           <th>
                             {T("Secret Names")}
-                            <Button
-                              data-tooltip={T("Add new secret")}
-                              data-position="left"
-                              onClick={()=>{
-                                  this.setState({showAddSecretDialog: true});
-                                  this.updateTemplate();
-                              }}
-                              className="btn-tooltip new-user-btn"
-                              variant="outline-default"
-                              as="button">
-                              <FontAwesomeIcon icon="plus"/>
-                              <span className="sr-only">
-                                {T("Add new secret")}
-                              </span>
-                            </Button>
-                            { this.state.current_secret && this.state.current_secret.name && <>
+                            <ToolTip tooltip={T("Add new secret")}>
                               <Button
-                                data-tooltip={T("Edit secret")}
-                                data-position="left"
-                                onClick={()=>this.setState({
-                                    showEditSecretDialog: true
-                                })}
-                                className="btn-tooltip new-user-btn"
+                                onClick={()=>{
+                                    this.setState({showAddSecretDialog: true});
+                                    this.updateTemplate();
+                                }}
+                                className="new-user-btn"
                                 variant="outline-default"
                                 as="button">
-                                <FontAwesomeIcon icon="edit"/>
+                                <FontAwesomeIcon icon="plus"/>
                                 <span className="sr-only">
-                                  {T("Edit secret")}
+                                  {T("Add new secret")}
                                 </span>
                               </Button>
-                              <Button
-                                data-tooltip={T("Delete secret")}
-                                data-position="left"
-                                onClick={()=>this.setState({
-                                    showDeleteSecretDialog: true
-                                })}
-                                className="btn-tooltip new-user-btn"
-                                variant="outline-default"
-                                as="button">
-                                <FontAwesomeIcon icon="trash"/>
-                                <span className="sr-only">
-                                  {T("Delete secret")}
-                                </span>
-                              </Button> </>
+                            </ToolTip>
+                            { this.state.current_secret &&
+                              this.state.current_secret.name &&
+                              <>
+                                <ToolTip tooltip={T("Edit secret")}>
+                                  <Button
+                                    onClick={()=>this.setState({
+                                        showEditSecretDialog: true
+                                    })}
+                                    className="new-user-btn"
+                                    variant="outline-default"
+                                    as="button">
+                                    <FontAwesomeIcon icon="edit"/>
+                                    <span className="sr-only">
+                                      {T("Edit secret")}
+                                    </span>
+                                  </Button>
+                                </ToolTip>
+                                <ToolTip tooltip={T("Delete secret")}>
+                                  <Button
+                                    onClick={()=>this.setState({
+                                        showDeleteSecretDialog: true
+                                    })}
+                                    className="new-user-btn"
+                                    variant="outline-default"
+                                    as="button">
+                                    <FontAwesomeIcon icon="trash"/>
+                                    <span className="sr-only">
+                                      {T("Delete secret")}
+                                    </span>
+                                  </Button>
+                                </ToolTip>
+                              </>
                             }
                           </th>
                         </tr>

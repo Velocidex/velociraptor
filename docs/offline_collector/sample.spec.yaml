@@ -32,6 +32,7 @@ OptTempdir:
 
 # Compression level to use
 OptLevel: 5
+OptConcurrency: 2
 OptFilenameTemplate: "Collection-%FQDN%-%TIMESTAMP%"
 OptCollectorTemplate: ""
 

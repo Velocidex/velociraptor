@@ -91,6 +91,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import UserConfig from './user.jsx';
 
+import ToolTip from '../widgets/tooltip.jsx';
+
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 import { JSONparse } from '../utils/json_parse.jsx';
@@ -102,17 +104,14 @@ export class SettingsButton extends Component {
 
     render() {
         return (
-            <>
+            <ToolTip tooltip={T("Configure Editor")}>
               <Button variant="default"
-                      className="float-left btn-tooltip"
-                      data-tooltip={T("Configure Editor")}
-                      data-position="right"
-
+                      className="float-left"
                       onClick={() => this.props.ace.execCommand("showSettingsMenu")} >
                 <FontAwesomeIcon icon="text-height"/>
         <span className="sr-only">{T("Configure Editor")}</span>
               </Button>
-            </>
+            </ToolTip>
         );
     }
 }

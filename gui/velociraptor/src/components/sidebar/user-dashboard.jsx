@@ -11,6 +11,7 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import VeloReportViewer from "../artifacts/reporting.jsx";
 import T from '../i8n/i8n.jsx';
+import ToolTip from '../widgets/tooltip.jsx';
 
 import { withRouter }  from "react-router-dom";
 
@@ -67,25 +68,22 @@ class UserDashboard extends React.Component {
             <>
               <Navbar className="toolbar">
                 <ButtonGroup>
-                  <Button variant="default"
-                          data-position="right"
-                          className="btn-tooltip"
-                          data-tooltip={T("Redraw dashboard")}
-                          onClick={() => this.setState({
-                      version: this.state.version + 1,
-                  })} >
-                    <FontAwesomeIcon icon="sync"/>
-                  </Button>
-
-                  <Button variant="default"
-                          data-position="right"
-                          className="btn-tooltip"
-                          data-tooltip={T("Edit the dashboard")}
-                          onClick={() => {
-                      this.props.history.push("/artifacts/Server.Monitor.Health");
-                  }} >
-                    <FontAwesomeIcon icon="pencil-alt"/>
-                  </Button>
+                  <ToolTip tooltip={T("Redraw dashboard")}>
+                    <Button variant="default"
+                            onClick={() => this.setState({
+                                version: this.state.version + 1,
+                            })} >
+                      <FontAwesomeIcon icon="sync"/>
+                    </Button>
+                  </ToolTip>
+                  <ToolTip tooltip={T("Edit the dashboard")}>
+                    <Button variant="default"
+                            onClick={() => {
+                                this.props.history.push("/artifacts/Server.Monitor.Health");
+                            }} >
+                      <FontAwesomeIcon icon="pencil-alt"/>
+                    </Button>
+                  </ToolTip>
                 </ButtonGroup>
                 <ButtonGroup className="float-right">
                   <Dropdown>
