@@ -12,10 +12,10 @@ import (
 
 // This method modifies the hunt. Only the following modifications are allowed:
 
-// 1. A hunt in the paused state can go to the running state. This
-//    will update the StartTime.
-// 2. A hunt in the running state can go to the Stop state
-// 3. A hunt's description can be modified.
+//  1. A hunt in the paused state can go to the running state. This
+//     will update the StartTime.
+//  2. A hunt in the running state can go to the Stop state
+//  3. A hunt's description can be modified.
 func (self *HuntDispatcher) ModifyHunt(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -32,6 +32,7 @@ func (self *HuntDispatcher) ModifyHunt(
 	if hunt_modification.HuntDescription != "" || hunt_modification.Expires > 0 {
 		mutation.Description = hunt_modification.HuntDescription
 		mutation.Expires = hunt_modification.Expires
+		mutation.Tags = hunt_modification.Tags
 
 		// Archive the hunt.
 	} else if hunt_modification.State == api_proto.Hunt_ARCHIVED {
