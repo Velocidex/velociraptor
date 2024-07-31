@@ -12,7 +12,7 @@ import { LabelClients } from './clients-list.jsx';
 
 import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
 import ToggleButton from 'react-bootstrap/ToggleButton';
-import CardDeck from 'react-bootstrap/CardDeck';
+import Row from 'react-bootstrap/Row';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
@@ -297,7 +297,7 @@ class VeloHostInfo extends Component {
         let client_id = this.props.client && this.props.client.client_id;
         if (this.state.mode === 'brief') {
             return (
-                <CardDeck className="dashboard">
+                <Row className="dashboard">
                   <Card>
                     <Card.Header>{ info.os_info.fqdn }</Card.Header>
                     <Card.Body>
@@ -390,7 +390,7 @@ class VeloHostInfo extends Component {
                       <MetadataEditor client_id={client_id} />
                     </Card.Body>
                   </Card>
-                </CardDeck>
+                </Row>
             );
         };
 

@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import T from '../i8n/i8n.jsx';
 import VeloAce from '../core/ace.jsx';
-import CardDeck from 'react-bootstrap/CardDeck';
+import Row from 'react-bootstrap/Row';
 import Card from 'react-bootstrap/Card';
 import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
@@ -50,7 +50,7 @@ export default class FlowRequests extends React.Component {
         };
 
         return (
-            <CardDeck>
+            <Row>
               <Card>
                 <Card.Header>{T("Request sent to client")}</Card.Header>
                 <Card.Body>
@@ -59,7 +59,7 @@ export default class FlowRequests extends React.Component {
                            options={options} />
                 </Card.Body>
               </Card>
-            </CardDeck>
+            </Row>
         );
     }
 };

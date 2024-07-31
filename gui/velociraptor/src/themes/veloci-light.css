@@ -500,12 +500,6 @@ body.veloci-light {
   font-weight: 400;
 }
 
-.veloci-light input[type='checkbox'] {
-  transform: scale(1.2);
-  accent-color: var(--color-foreground);
-  box-shadow: none;
-}
-
 /* Tables */
 
 .veloci-light .table {

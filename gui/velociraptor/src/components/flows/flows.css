@@ -30,3 +30,7 @@ div .flow-status-icon {
     width: 100%;
     text-align: left;
 }
+
+.card-deck {
+    padding-top: 5px;
+}

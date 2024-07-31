@@ -6,7 +6,8 @@ import _ from 'lodash';
 
 import Button from 'react-bootstrap/Button';
 import VeloTimestamp from "../utils/time.jsx";
-import CardDeck from 'react-bootstrap/CardDeck';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
 import api from '../core/api-service.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -100,7 +101,8 @@ class VeloFileStats extends Component {
 
         let client_id = this.props.client && this.props.client.client_id;
         return (
-            <CardDeck className="file-stats">
+            <Row className="file-stats">
+              <Col sm="6">
               <Card>
                 <Card.Header>{selectedRow._OSPath || selectedRow._FullPath || selectedRow.Name}</Card.Header>
                 <Card.Body>
@@ -176,8 +178,10 @@ class VeloFileStats extends Component {
                         </> }
                     </dl>
                 </Card.Body>
-              </Card>
-              <Card>
+            </Card>
+              </Col>
+            <Col sm="6">
+            <Card>
                 <Card.Header>{T("Properties")}</Card.Header>
                 <Card.Body>
                   { _.map(selectedRow._Data, function(v, k) {
@@ -219,8 +223,9 @@ class VeloFileStats extends Component {
                       </dd>
                     </div>}
                 </Card.Body>
-              </Card>
-            </CardDeck>
+            </Card>
+            </Col>
+            </Row>
         );
     };
 }

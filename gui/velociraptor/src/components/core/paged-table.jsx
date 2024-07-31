@@ -27,6 +27,7 @@ import ClientLink from '../clients/client-link.jsx';
 import HexView from '../utils/hex.jsx';
 import StackDialog from './stack.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
+import Col from 'react-bootstrap/Col';
 
 import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
@@ -58,38 +59,40 @@ const pageListRenderer = ({
         }
     }
     return (
-        <Pagination>
-          <Pagination.First
-            disabled={currentPage===0}
-            onClick={()=>onPageChange(0)}/>
-          {
-              pageWithoutIndication.map((p, idx)=>(
-                <Pagination.Item
-                  key={idx}
-                  active={p.active}
-                  onClick={ () => onPageChange(p.page) } >
-                  { p.page }
-                </Pagination.Item>
-            ))
-          }
-          <Pagination.Last
-            disabled={currentPage===totalPages}
-            onClick={()=>onPageChange(totalPages)}/>
-          <Form.Control
-            as="input"
-            className="pagination-form"
-            placeholder={T("Goto Page")}
-            spellCheck="false"
-            id="goto-page"
-            value={currentPage || ""}
-            onChange={e=> {
-                let page = parseInt(e.currentTarget.value || 0);
-                if (page >= 0 && page < totalPages) {
-                    onPageChange(page);
-                }
-            }}/>
+        <Col sm="8" className="col-md-6 col-xs-6 col-sm-6 col-lg-6">
+          <Pagination>
+            <Pagination.First
+              disabled={currentPage===0}
+              onClick={()=>onPageChange(0)}/>
+            {
+                pageWithoutIndication.map((p, idx)=>(
+                    <Pagination.Item
+                      key={idx}
+                      active={p.active}
+                      onClick={ () => onPageChange(p.page) } >
+                      { p.page }
+                    </Pagination.Item>
+                ))
+            }
+            <Pagination.Last
+              disabled={currentPage===totalPages}
+              onClick={()=>onPageChange(totalPages)}/>
+            <Form.Control
+              as="input"
+              className="pagination-form"
+              placeholder={T("Goto Page")}
+              spellCheck="false"
+              id="goto-page"
+              value={currentPage || ""}
+              onChange={e=> {
+                  let page = parseInt(e.currentTarget.value || 0);
+                  if (page >= 0 && page < totalPages) {
+                      onPageChange(page);
+                  }
+              }}/>
 
-        </Pagination>
+          </Pagination>
+        </Col>
     );
 };
 

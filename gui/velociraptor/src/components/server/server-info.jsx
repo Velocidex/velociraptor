@@ -10,8 +10,8 @@ import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
 import ToggleButton from 'react-bootstrap/ToggleButton';
 import Button from 'react-bootstrap/Button';
 import T from '../i8n/i8n.jsx';
-import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
+import Row from 'react-bootstrap/Row';
 import ToolTip from '../widgets/tooltip.jsx';
 
 import {CancelToken} from 'axios';
@@ -55,7 +55,7 @@ class ServerInfo extends Component {
     renderContent = () => {
         if (this.state.mode === 'brief') {
             return (
-                <CardDeck className="dashboard">
+                <Row className="dashboard">
                   <Card>
                     <Card.Header>Server configuration</Card.Header>
                     <Card.Body>
@@ -70,7 +70,7 @@ class ServerInfo extends Component {
                         client_id="server" />
                     </Card.Body>
                   </Card>
-                </CardDeck>
+                </Row>
             );
         };
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import T from '../i8n/i8n.jsx';
-import CardDeck from 'react-bootstrap/CardDeck';
+import Row from 'react-bootstrap/Row';
 import Card from 'react-bootstrap/Card';
 import VeloAce from '../core/ace.jsx';
 
@@ -17,7 +17,7 @@ export default class HuntRequest extends React.Component {
         };
 
         return (
-            <CardDeck>
+            <Row>
               <Card>
                 <Card.Header>{T("Request sent to client")}</Card.Header>
                 <Card.Body>
@@ -25,7 +25,7 @@ export default class HuntRequest extends React.Component {
                            options={options} />
                 </Card.Body>
               </Card>
-            </CardDeck>
+            </Row>
         );
     }
 };

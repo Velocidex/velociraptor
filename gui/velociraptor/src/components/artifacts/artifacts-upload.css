@@ -2,3 +2,8 @@
     height: 200px;
     overflow-y: auto;
 }
+
+
+#upload {
+    display: none;
+}

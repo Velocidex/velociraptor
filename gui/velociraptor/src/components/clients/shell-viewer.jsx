@@ -722,7 +722,7 @@ class ShellViewer extends Component {
             <>
               <div className="shell-command">
                 <InputGroup className="mb-3 d-flex">
-                  <InputGroup.Prepend>
+                  <InputGroup.Text>
                     <DropdownButton as={InputGroup}
                                     title={this.state.shell_type}
                                     onSelect={(e) => this.setType(e)}
@@ -734,7 +734,7 @@ class ShellViewer extends Component {
                         <Dropdown.Item eventKey="Bash">Bash</Dropdown.Item> }
                       <Dropdown.Item eventKey="VQL">VQL</Dropdown.Item>
                     </DropdownButton>
-                  </InputGroup.Prepend>
+                  </InputGroup.Text>
                   { simple_textarea ?
                     <textarea focus-me="controller.focus" rows="1"
                               className="form-control"

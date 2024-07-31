@@ -103,14 +103,11 @@ class _PasswordChangeForm extends React.PureComponent {
               </Form.Label>
               <Col sm="8">
                 <Accordion>
-                  <Card>
-                    <Accordion.Toggle as={Card.Header} eventKey="0">
+                  <Accordion.Item eventKey="0">
+                    <Accordion.Header>
                       {T("Update Password")}
-                      <span className="float-right">
-                        <FontAwesomeIcon icon="chevron-down"/>
-                      </span>
-                    </Accordion.Toggle>
-                    <Accordion.Collapse eventKey="0">
+                    </Accordion.Header>
+                    <Accordion.Body>
                       <PasswordChange
                         username={this.props.username}
                         onClose={()=>{
@@ -119,8 +116,8 @@ class _PasswordChangeForm extends React.PureComponent {
                             this.props.history.push("/welcome");
                             this.props.onClose();
                         }}/>
-                    </Accordion.Collapse>
-                  </Card>
+                    </Accordion.Body>
+                  </Accordion.Item>
                 </Accordion>
               </Col>
             </Form.Group>
@@ -272,18 +269,16 @@ class UserSettings extends React.PureComponent {
                                               default_password: e.currentTarget.value
                                           });
                                          }}/>
-                      <div className="input-group-append">
-                        <Button as="button" variant="default"
-                                disabled = {!this.state.edited}
-                                onClick={e => {
-                                    this.props.setSetting({
-                                        default_password: this.state.default_password
-                                    });
-                                    this.setState({"edited": false});
-                                }}>
-                          <FontAwesomeIcon icon="save" />
-                        </Button>
-                      </div>
+                      <Button as="button" variant="default"
+                              disabled = {!this.state.edited}
+                              onClick={e => {
+                                  this.props.setSetting({
+                                      default_password: this.state.default_password
+                                  });
+                                  this.setState({"edited": false});
+                              }}>
+                        <FontAwesomeIcon icon="save" />
+                      </Button>
                     </InputGroup></Col>
                 </Form.Group>
 
@@ -326,9 +321,7 @@ class UserSettings extends React.PureComponent {
                   </Form.Label>
                   <Col sm="8">
                     <InputGroup className="mb-3">
-                      <InputGroup.Prepend>
-                        <InputGroup.Text
-                          as="button"
+                        <Button
                           className="btn btn-default"
                           onClick={()=>{
                               this.setState({timezone: "UTC"});
@@ -337,8 +330,7 @@ class UserSettings extends React.PureComponent {
                               });
                           }}>
                           UTC
-                        </InputGroup.Text>
-                      </InputGroup.Prepend>
+                        </Button>
                       <Select
                         className="timezone-selector"
                         classNamePrefix="velo"

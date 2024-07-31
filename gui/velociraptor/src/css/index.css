@@ -156,3 +156,69 @@ code {
 .btn-tooltip:disabled:hover::before {
     display: none;
 }
+
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+    color: var(--color-foreground);
+}
+
+
+.paged-table-header td {
+    padding: 0.3rem;
+}
+
+
+.nav button.nav-link:hover {
+    background: var(--color-btn-outline-link-hover);
+    border-color: var(--color-btn-border);
+}
+
+.nav button.nav-link {
+    background: var(--color-tab);
+    color: var(--color-foreground);
+    border-top-color: var(--color-btn-border);
+    border-right-color: var(--color-btn-border);
+    border-bottom-color: var(--color-btn-border);
+    border-left-color: var(--color-btn-border);
+}
+
+.nav button.nav-link.active {
+    background: var(--color-tab-active);
+    color: var(--color-foreground);
+    border-top-color: var(--color-btn-border);
+    border-right-color: var(--color-btn-border);
+    border-bottom-color: transparent;
+    border-left-color: var(--color-btn-border);
+}
+
+.nav.nav-tab {
+    border-bottom: 1px solid var(--color-btn-border);
+}
+
+.nav.nav-tab .nav-item button {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.float-right {
+    float: right;
+}
+
+div.dropdown-menu hr {
+    margin-top: 2px;
+    margin-bottom: 3px;
+}
+
+
+.form-switch input.form-check-input:checked {
+    background-color: var(--accent-color);
+    border-color: var(--color-btn-default-background-hover);
+    color: var(--color-foreground);
+}
+
+
+input[type='checkbox'] {
+    transform: scale(1.2);
+    background-color: var(--color-btn-border);
+    box-shadow: none;
+}

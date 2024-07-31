@@ -263,7 +263,7 @@ class ArtifactInspector extends React.Component {
             return x.label === this.state.filter_name;
         });
         return <Select
-                 className="org-selector artifact-filter"
+                 className="artifact-filter"
                  classNamePrefix="velo"
                  options={presetFilters()}
                  value={option_value}
@@ -395,26 +395,24 @@ class ArtifactInspector extends React.Component {
                     </Button>
                   </ToolTip>
                 </ButtonGroup>
-                <Form inline className="artifact-search">
-                  <InputGroup >
-                    <InputGroup.Prepend>
-                      { this.renderFilter() }
-                      <FormControl className="artifact-search-input"
-                                   ref={(input) => { this.searchInput = input; }}
-                                   value={this.state.current_filter}
-                                   onChange={(e) => this.updateSearch(
-                                       e.currentTarget.value)}
-                                   placeholder={T("Search for artifact")}
-                                   spellCheck="false"
-                      />
-                      <ToolTip tooltip={T("Clear")}  >
-                        <Button onClick={()=>this.updateSearch("")}
-                                variant="light">
-                          <FontAwesomeIcon icon="broom"/>
-                          <span className="sr-only">{T("Clear")}</span>
-                        </Button>
-                      </ToolTip>
-                    </InputGroup.Prepend>
+                <Form className="artifact-search">
+                  <InputGroup>
+                    { this.renderFilter() }
+                    <Form.Control className="artifact-search-input"
+                                 ref={(input) => { this.searchInput = input; }}
+                                 value={this.state.current_filter}
+                                 onChange={(e) => this.updateSearch(
+                                     e.currentTarget.value)}
+                                 placeholder={T("Search for artifact")}
+                                 spellCheck="false"
+                    />
+                    <ToolTip tooltip={T("Clear")}  >
+                      <Button onClick={()=>this.updateSearch("")}
+                              variant="light">
+                        <FontAwesomeIcon icon="broom"/>
+                        <span className="sr-only">{T("Clear")}</span>
+                      </Button>
+                    </ToolTip>
                   </InputGroup>
                 </Form>
               </Navbar>

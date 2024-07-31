@@ -10,7 +10,7 @@ import classNames from "classnames";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import ToolTip from '../widgets/tooltip.jsx';
 import T from '../i8n/i8n.jsx';
-
+import Button from 'react-bootstrap/Button';
 
 export default class UploadFileForm extends Component {
     static propTypes = {
@@ -74,17 +74,15 @@ export default class UploadFileForm extends Component {
               </Form.Label>
               <Col sm="8">
                 <InputGroup className="mb-3">
-                  <InputGroup.Prepend>
-                    <InputGroup.Text
-                      as="button"
+                  <InputGroup.Text>
+                    <Button
                       className="btn btn-default"
                       onClick={()=>{
                           this.setState({upload_mode: !this.state.upload_mode});
                       }}>
                       <FontAwesomeIcon icon="cloud" />
-                    </InputGroup.Text>
-                    <InputGroup.Text
-                      as="button"
+                    </Button>
+                    <Button
                       className={classNames({
                           "btn": true,
                           "btn-default": true,
@@ -96,8 +94,8 @@ export default class UploadFileForm extends Component {
                         <FontAwesomeIcon icon="spinner" spin /> :
                         T("Upload")
                       }
-                    </InputGroup.Text>
-                  </InputGroup.Prepend>
+                    </Button>
+                  </InputGroup.Text>
                   <Form.File custom>
                     <Form.File.Input
                       onChange={e => {
@@ -143,16 +141,15 @@ export default class UploadFileForm extends Component {
               </Form.Label>
               <Col sm="8">
                 <InputGroup className="mb-3">
-                  <InputGroup.Prepend>
-                    <InputGroup.Text
-                      as="button"
+                  <InputGroup.Text>
+                    <Button
                       className="btn btn-default"
                       onClick={()=>{
                           this.setState({upload_mode: !this.state.upload_mode});
                       }}>
                       <FontAwesomeIcon icon="upload" />
-                    </InputGroup.Text>
-                  </InputGroup.Prepend>
+                    </Button>
+                  </InputGroup.Text>
                   <Form.Control as="textarea"
                                 rows={1}
                                 placeholder={T("Type a URL")}

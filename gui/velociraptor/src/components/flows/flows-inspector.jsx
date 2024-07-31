@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Tabs from 'react-bootstrap/Tabs';
-import Tab from 'react-bootstrap/Tab';
+import Nav from 'react-bootstrap/Nav';
 import T from '../i8n/i8n.jsx';
 import FlowOverview from './flow-overview.jsx';
 import FlowUploads from './flow-uploads.jsx';
@@ -112,33 +111,47 @@ class FlowInspector extends React.Component {
 
         return (
             <div className="padded">
-              <Tabs activeKey={this.state.tab}
-                    onSelect={this.setDefaultTab}>
-                <Tab eventKey="overview" title={T("Artifact Collection")}>
-                  { this.state.tab === "overview" &&
-                    <FlowOverview flow={this.state.detailed_flow.context}/>}
-                </Tab>
-                <Tab eventKey="uploads" title={T("Uploaded Files")}>
-                  { this.state.tab === "uploads" &&
-                    <FlowUploads flow={this.props.flow}/> }
-                </Tab>
-                <Tab eventKey="requests" title={T("Requests")}>
-                  { this.state.tab === "requests" &&
-                    <FlowRequests flow={this.props.flow} />}
-                </Tab>
-                <Tab eventKey="results" title={T("Results")}>
-                  { this.state.tab === "results" &&
-                    <FlowResults flow={this.state.detailed_flow.context} />}
-                </Tab>
-                <Tab eventKey="logs" title={T("Log")}>
-                  { this.state.tab === "logs" &&
-                    <FlowLogs flow={this.state.detailed_flow.context} />}
-                </Tab>
-                <Tab eventKey="notebook" title={T("Notebook")}>
-                  { this.state.tab === "notebook" &&
-                    <FlowNotebook flow={this.props.flow} />}
-                </Tab>
-              </Tabs>
+              <Nav variant="tab" activeKey={this.state.tab}
+                   onSelect={this.setDefaultTab}>
+                <Nav.Item>
+                  <Nav.Link as="button" className="btn btn-default"
+                            eventKey="overview">{T("Artifact Collection")}</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link as="button" className="btn btn-default"
+                            eventKey="uploads">{T("Uploaded Files")}</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link as="button" className="btn btn-default"
+                            eventKey="requests">{T("Requests")}</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link as="button" className="btn btn-default"
+                            eventKey="results">{T("Results")}</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link as="button" className="btn btn-default"
+                            eventKey="logs">{T("Log")}</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link as="button" className="btn btn-default"
+                            eventKey="notebook">{T("Notebook")}</Nav.Link>
+                </Nav.Item>
+              </Nav>
+              <div className="card-deck">
+                { this.state.tab === "overview" &&
+                  <FlowOverview flow={this.state.detailed_flow.context}/>}
+                { this.state.tab === "uploads" &&
+                  <FlowUploads flow={this.props.flow}/> }
+                { this.state.tab === "requests" &&
+                  <FlowRequests flow={this.props.flow} />}
+                { this.state.tab === "results" &&
+                  <FlowResults flow={this.state.detailed_flow.context} />}
+                { this.state.tab === "logs" &&
+                  <FlowLogs flow={this.state.detailed_flow.context} />}
+                { this.state.tab === "notebook" &&
+                  <FlowNotebook flow={this.props.flow} />}
+              </div>
             </div>
         );
     }

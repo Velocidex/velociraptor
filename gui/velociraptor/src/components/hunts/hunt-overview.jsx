@@ -6,7 +6,8 @@ import _ from 'lodash';
 import VeloTimestamp from "../utils/time.jsx";
 import VeloValueRenderer from "../utils/value.jsx";
 import ArtifactLink from '../artifacts/artifacts-link.jsx';
-import CardDeck from 'react-bootstrap/CardDeck';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
 import Dropdown from 'react-bootstrap/Dropdown';
 import UserConfig from '../core/user.jsx';
@@ -131,7 +132,8 @@ export default class HuntOverview extends React.Component {
         files = files || [];
 
         return (
-            <CardDeck>
+            <Row>
+              <Col sm="6">
               <Card>
                 <Card.Header>{T("Overview")}</Card.Header>
                 <Card.Body>
@@ -217,7 +219,9 @@ export default class HuntOverview extends React.Component {
                     })}
                   </dl>
                 </Card.Body>
-              </Card>
+            </Card>
+              </Col>
+              <Col sm="6">
               <Card>
                   <Card.Header>{T("Results")}</Card.Header>
                 <Card.Body>
@@ -290,8 +294,9 @@ export default class HuntOverview extends React.Component {
                     </dd>
                   </dl>
                 </Card.Body>
-              </Card>
-            </CardDeck>
+            </Card>
+            </Col>
+            </Row>
         );
     }
 };

@@ -4,8 +4,7 @@ import "./user.css";
 
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import Tabs from 'react-bootstrap/Tabs';
-import Tab from 'react-bootstrap/Tab';
+import Nav from 'react-bootstrap/Nav';
 import T from '../i8n/i8n.jsx';
 import { withRouter }  from "react-router-dom";
 import UserConfig from '../core/user.jsx';
@@ -652,21 +651,28 @@ class UserInspector extends Component {
         return (
             <div className="users-search-panel">
               <div className="padded">
-                <Tabs activeKey={this.state.tab}
+                <Nav activeKey={this.state.tab}
                       onSelect={this.setDefaultTab}>
-                  <Tab eventKey="users" title={T("Users")}>
-                    { this.state.tab === "users" &&
-                      <UsersOverview
-                        updateUsers={this.loadUsers}
-                        users={this.state.users} />}
-                  </Tab>
-                  <Tab eventKey="orgs" title={T("Orgs")}>
-                    { this.state.tab === "orgs" &&
-                      <OrgsOverview
-                        updateUsers={this.loadUsers}
-                        users={this.state.users} /> }
-                  </Tab>
-                </Tabs>
+                  <Nav.Item>
+                    <Nav.Link as="button" className="btn btn-default"
+                              eventKey="users">{T("Users")}</Nav.Link>
+                  </Nav.Item>
+
+                  <Nav.Item>
+                    <Nav.Link as="button" className="btn btn-default"
+                              eventKey="orgs">{T("Orgs")}</Nav.Link>
+                  </Nav.Item>
+                </Nav>
+                <div className="card-deck">
+                  { this.state.tab === "users" &&
+                    <UsersOverview
+                      updateUsers={this.loadUsers}
+                      users={this.state.users} />}
+                  { this.state.tab === "orgs" &&
+                    <OrgsOverview
+                      updateUsers={this.loadUsers}
+                      users={this.state.users} /> }
+                </div>
               </div>
             </div>
         );

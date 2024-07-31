@@ -128,7 +128,7 @@ export class InspectRawJson extends Component {
 // Toggle columns on or off - helps when the table is very wide.
 export const ColumnToggleList = (e) => {
     const [open, setOpen] = React.useState(false);
-    const onToggle = (isOpen, ev, metadata) => {
+    const onToggle = (isOpen, metadata) => {
         if (metadata.source === "select") {
             setOpen(true);
             return;
@@ -147,21 +147,21 @@ export const ColumnToggleList = (e) => {
         if (!hidden) {
             enabled_columns.push(column);
         }
-        return <ToolTip tooltip={T("Show/Hide Columns")} key={idx}>
-                 <Dropdown.Item
+        return <Dropdown.Item
                  key={ column.dataField }
                  eventKey={column.dataField}
                  active={!hidden}
-                   onSelect={c=>onColumnToggle(c)}
-                 >
-                   { column.text }
-                 </Dropdown.Item>
-               </ToolTip>;
+               >
+                 { column.text }
+               </Dropdown.Item>;
     });
 
     return (
         <ToolTip tooltip={T("Show/Hide Columns")}>
           <Dropdown show={open}
+                    onSelect={c=>{
+                        onColumnToggle(c);
+                      }}
                     onToggle={onToggle}>
             <Dropdown.Toggle variant="default" id="dropdown-basic">
               <FontAwesomeIcon icon="columns"/>
@@ -180,7 +180,7 @@ export const ColumnToggleList = (e) => {
                   {T("Set All")}
                 </Dropdown.Item> :
                 <Dropdown.Item
-                  onSelect={()=>{
+                  onClick={()=>{
                       _.each(columns, c=>{
                           if(!toggles[c.dataField]){
                               onColumnToggle(c.dataField);

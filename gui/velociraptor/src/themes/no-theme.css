@@ -132,12 +132,6 @@ body.no-theme {
     text-align: left;
 }
 
-.no-theme input[type='checkbox'] {
-    transform: scale(1.2);
-    accent-color: var(--color-foreground);
-    box-shadow: none;
-}
-
 .no-theme .react-autosuggest__input {
     background: var(--color-form-control-background);
     border: 1px solid #ccc;
@@ -188,20 +182,20 @@ body.no-theme {
     border: 1px solid;
     background-color: var(--color-proto-background);
   }
-  
+
   .no-theme .velo__multi-value__label {
     color: var(--color-foreground);
     border: none;
     background-color: var(--color-proto-background);
     font-size: var(--font-size-small);
   }
-  
+
   .no-theme .velo__multi-value__remove {
     color: var(--color-foreground);
     background-color: var(--color-proto-background);
     border: none;
   }
-  
+
   .no-theme .velo__multi-value__remove:hover {
     color: var(--color-foreground);
     background: var(--color-nav-link-active-background);
