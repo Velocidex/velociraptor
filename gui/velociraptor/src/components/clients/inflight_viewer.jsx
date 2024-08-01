@@ -1,8 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
-import VeloTable from "../core/table.jsx";
-import { formatColumns } from "../core/table.jsx";
+import VeloTable,  { formatColumns } from "../core/table.jsx";
 import T from '../i8n/i8n.jsx';
 
 
