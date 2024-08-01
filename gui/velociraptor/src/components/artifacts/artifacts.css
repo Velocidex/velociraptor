@@ -27,6 +27,7 @@
 .artifact-search-table tr td {
     padding-left: 7px;
     line-height: 2;
+    background-color: var(--color-canvas-background);
 }
 
 .artifact-search-report {

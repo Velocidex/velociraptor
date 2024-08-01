@@ -55,8 +55,18 @@
     overflow-x: hidden;
 }
 
+.user-list tr td {
+    background-color: var(--color-table-row-stripe);
+    color: var(--color-foreground);
+}
+
 .org-list {
     max-height: calc(100vh - 180px);
     overflow-y: auto;
     overflow-x: hidden;
+}
+
+.org-list tr td {
+    background-color: var(--color-table-row-stripe);
+    color: var(--color-foreground);
 }

@@ -3,11 +3,20 @@ import Tooltip from 'react-bootstrap/Tooltip';
 
 import "./tooltip.css";
 
-const ToolTip = ({ id, children, tooltip }) => (
-    <OverlayTrigger
-      overlay={<Tooltip id={id}>{tooltip}</Tooltip>}>
-      {children}
-    </OverlayTrigger>
-);
+const ToolTip = ({ id, children, tooltip }) => {
+    return (
+        <OverlayTrigger
+          overlay={
+              <Tooltip id={id}>
+                {tooltip}
+                <span className="sr-only">
+                  {tooltip}
+                </span>
+              </Tooltip>
+          }>
+          {children}
+        </OverlayTrigger>
+    );
+};
 
 export default ToolTip;

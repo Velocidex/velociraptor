@@ -11,6 +11,9 @@ import VeloReportViewer from "../artifacts/reporting.jsx";
 import { LabelClients } from './clients-list.jsx';
 
 import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
+import Navbar from 'react-bootstrap/Navbar';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+
 import ToggleButton from 'react-bootstrap/ToggleButton';
 import Row from 'react-bootstrap/Row';
 import Card from 'react-bootstrap/Card';
@@ -504,8 +507,8 @@ class VeloHostInfo extends Component {
                                 })}
               />}
               <div className="full-width-height">
-                <div className="client-info">
-                  <div className="btn-group float-left toolbar" data-toggle="buttons">
+                <Navbar className="toolbar">
+                  <ButtonGroup className="" data-toggle="buttons">
                     <Button variant="default"
                             as="a"
                             onClick={this.startInterrogate}
@@ -543,30 +546,26 @@ class VeloHostInfo extends Component {
                         <FontAwesomeIcon icon="tags" />
                       </Button>
                     </ToolTip>
-                  </div>
+                  </ButtonGroup>
 
-                  <ToggleButtonGroup type="radio"
-                                     name="mode"
-                                     defaultValue={this.state.mode}
-                                     onChange={(mode) => this.setMode(mode)}
-                                     className="mb-2">
-                    <ToggleButton variant="default"
-                                  value='brief'>
+                  <ButtonGroup className="float-right">
+                    <Button variant="default"
+                            onClick={(mode) => this.setMode("brief")}>
                       <FontAwesomeIcon icon="laptop"/>
                       <span className="button-label">{T("Overview")}</span>
-                    </ToggleButton>
-                    <ToggleButton variant="default"
-                                  value='detailed'>
+                    </Button>
+                    <Button variant="default"
+                            onClick={(mode) => this.setMode("detailed")}>
                       <FontAwesomeIcon icon="tasks"/>
                       <span className="button-label">{T("VQL Drilldown")}</span>
-                    </ToggleButton>
-                    <ToggleButton variant="default"
-                                  value='shell'>
+                    </Button>
+                    <Button variant="default"
+                            onClick={(mode) => this.setMode("shell")}>
                       <FontAwesomeIcon icon="terminal"/>
                       <span className="button-label">{T("Shell")}</span>
-                    </ToggleButton>
-                  </ToggleButtonGroup>
-                </div>
+                    </Button>
+                  </ButtonGroup>
+                </Navbar>
                 <div className="clearfix"></div>
                 { this.renderContent() }
               </div>

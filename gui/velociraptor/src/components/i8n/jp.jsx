@@ -560,8 +560,6 @@ const Japanese = {
     "vfs_path":"VFSパス",
     "file_size":"ファイルサイズ",
     "uploaded_size":"アップロードサイズ",
-    "TablePagination": (from, to, size)=>
-    <>{ size }単位で{ from }から{ to }まで表示している</>,
 
     "Select a language":"言語を選択する",
     "Japanese": "日本語",

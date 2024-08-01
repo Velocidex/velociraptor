@@ -6,11 +6,22 @@ export default defineConfig({
     root: 'src',
     base: '/app',
     build: {
-      // Relative to the root
-      outDir: '../build',
-      emptyOutDir: true,
-      copyPublicDir: true,
-      sourcemap: false,
+        // Relative to the root
+        outDir: '../build',
+        emptyOutDir: true,
+        copyPublicDir: true,
+        // We dont really care about this.
+        chunkSizeWarningLimit: 10000000,
+        sourcemap: false,
+        rollupOptions: {
+            onwarn(warning, warn) {
+                // Pointless warning we cant do anything about.
+                if (warning.code === "MODULE_LEVEL_DIRECTIVE") {
+                    return;
+                }
+                warn(warning);
+            },
+        },
     },
     define: {
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
