@@ -381,7 +381,7 @@ class UsersOverview extends Component {
 
               <Col sm="4">
                   <Container className="selectable user-list">
-                    <Table  bordered hover size="sm">
+                    <Table size="sm">
                       <thead>
                         <tr>
                           <th>
@@ -440,7 +440,7 @@ class UsersOverview extends Component {
               </Col>
               <Col sm="4">
                   <Container className="selectable org-list">
-                    <Table  bordered hover size="sm">
+                    <Table size="sm">
                       <thead>
                         <tr>
                           <th>
@@ -527,7 +527,7 @@ class OrgsOverview extends UsersOverview {
             <Row>
                  <Col sm="4">
                    <Container className="selectable org-list">
-                    <Table  bordered hover size="sm">
+                    <Table size="sm">
                      <thead>
                        <tr><th>{T("Orgs")}</th></tr>
                        </thead>
@@ -558,7 +558,7 @@ class OrgsOverview extends UsersOverview {
                    </Col>
                  <Col sm="4">
             <Container className="selectable user-list">
-             <Table  bordered hover size="sm">
+             <Table size="sm">
                      <thead>
                        <tr><th>{T("Users")}</th></tr>
                      </thead>
@@ -651,8 +651,8 @@ class UserInspector extends Component {
         return (
             <div className="users-search-panel">
               <div className="padded">
-                <Nav activeKey={this.state.tab}
-                      onSelect={this.setDefaultTab}>
+                <Nav activeKey={this.state.tab} variant="tab"
+                     onSelect={this.setDefaultTab}>
                   <Nav.Item>
                     <Nav.Link as="button" className="btn btn-default"
                               eventKey="users">{T("Users")}</Nav.Link>

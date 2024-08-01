@@ -92,6 +92,7 @@
   --color-btn-default-background-hover: var(--color-btn-outline-link-hover);
   --color-btn-outline-link: var(--color-accent-25);
   --color-btn-outline-link-hover: var(--color-accent-50);
+  --color-btn-active-background: var(--color-btn-default-background)
 
   --color-card-heading-background: var(--color-table-heading-background);
 
@@ -164,18 +165,6 @@ body.veloci-light {
   color: var(--color-sidebar-foreground);
 }
 
-.veloci-light #client-search-bar {
-  background: var(--color-canvas-background);
-  border: 1px solid var(--color-btn-default-border);
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  color: var(--color-foreground);
-  font-family: var(--font-family-sans-serif);
-  padding-top: 5px;
-  padding-bottom: 5px;
-  margin-left: 5px;
-  height: 25px;
-}
 
 .veloci-light .dropdown .dropdown-toggle.btn.btn-default {
   border-top-left-radius: 0;
@@ -269,7 +258,7 @@ body.veloci-light {
   border-color: var(--color-btn-border);
 }
 
-.veloci-light .btn-default.active {
+.veloci-light .btn.btn-default.active {
   box-shadow: none;
   background: var(--color-tab-active);
   color: var(--color-foreground);
@@ -514,7 +503,6 @@ body.veloci-light {
 
 .veloci-light .table thead th {
   border: none;
-  background: var(--color-table-heading-background);
   vertical-align: text-bottom;
 }
 
@@ -523,12 +511,10 @@ body.veloci-light {
 }
 
 .veloci-light .table tbody tr:nth-of-type(2n) {
-  background: var(--color-table-row-stripe);
   border: none;
 }
 
 .veloci-light .table tbody tr:nth-of-type(odd) {
-  background: unset;
   border: none;
 }
 
@@ -736,11 +722,7 @@ body.veloci-light {
 }
 
 .veloci-light ::placeholder {
-  color: var(--color-foreground-dimmed) !important;
-}
-
-.veloci-light .velo__placeholder {
-  color: var(--color-foreground-dimmed);
+  color: var(--color-foreground-dimmed)
 }
 
 .veloci-light .ace_placeholder {

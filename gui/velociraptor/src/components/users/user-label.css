@@ -23,12 +23,19 @@
     width: 100%;
 }
 
+.accordion {
+    background: initial;
+}
+
 .accordion-button, .accordion-button:not(.collapsed) {
     padding-left: 12px;
     padding-top: 8px;
     padding-bottom: 8px;
     color: var(--color-foreground);
     background: var(--color-form-control-background);
+    border: 1px;
+    border-color: var(--color-btn-default-border);
+    border-style: solid;
 }
 
 .accordion-item {
@@ -39,6 +46,9 @@
     padding: 10px;
     color: var(--color-foreground);
     background: var(--color-form-control-background);
+    border: 1px;
+    border-color: var(--color-btn-default-border);
+    border-style: solid;
 }
 
 input.form-control {

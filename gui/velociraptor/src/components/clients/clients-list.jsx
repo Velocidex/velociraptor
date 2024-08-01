@@ -546,7 +546,7 @@ class VeloClientList extends Component {
                              </Button>
                      }
                      <TablePaginationControl
-                       total_size={this.state.total}
+                       total_size={parseInt(this.state.total) || 0}
                        start_row={this.state.start_row}
                        page_size={this.state.page_size}
                        current_page={this.state.start_row / this.state.page_size}

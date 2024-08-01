@@ -5,12 +5,13 @@ import Tooltip from 'react-bootstrap/Tooltip';
 
 import "./tooltip.css";
 
-const ToolTip = ({ id, children, tooltip }) => {
+const ToolTip = ({ id, children, tooltip, placement }) => {
     if (!tooltip) {
         return <>{children}</>;
     }
     return (
         <OverlayTrigger
+          placement={placement || "top"}
           overlay={
               <Tooltip id={id}>
                 {tooltip}
@@ -28,6 +29,7 @@ ToolTip.propTypes = {
     id: PropTypes.string,
     children: PropTypes.node.isRequired,
     tooltip: PropTypes.any,
-}
+    placement: PropTypes.string,
+};
 
 export default ToolTip;

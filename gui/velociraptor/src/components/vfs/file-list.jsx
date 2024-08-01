@@ -455,7 +455,9 @@ class VeloFileList extends Component {
                     </Button>
                   </ToolTip>
                   :
-                  <ToolTip tooltip={T("Refresh this directory (sync its listing with the client)")}>
+                  <ToolTip
+                    placement="bottom"
+                    tooltip={T("Refresh this directory (sync its listing with the client)")}>
                     <Button disabled={!this.props.node.path}
                             onClick={this.startVfsRefreshOperation}
                             variant="default">
@@ -464,7 +466,9 @@ class VeloFileList extends Component {
                   </ToolTip>
                 }
                 { this.shouldSpinRecursiveSyncDir() ?
-                  <ToolTip tooltip={T("Currently refreshing from the client")}>
+                  <ToolTip
+                    placement="bottom"
+                    tooltip={T("Currently refreshing from the client")}>
                     <Button onClick={this.cancelRecursiveRefresh}
                             variant="default">
                       <FontAwesomeIcon icon="spinner" spin/>
@@ -474,7 +478,9 @@ class VeloFileList extends Component {
                       <span className="button-label"><FontAwesomeIcon icon="stop"/></span>
                     </Button>
                   </ToolTip>  :
-                  <ToolTip tooltip={T("Recursively refresh this directory (sync its listing with the client)")}>
+                  <ToolTip
+                    placement="bottom"
+                    tooltip={T("Recursively refresh this directory (sync its listing with the client)")}>
                     <Button disabled={!this.props.node.path}
                             onClick={this.startRecursiveVfsRefreshOperation}
                             variant="default">
@@ -485,7 +491,9 @@ class VeloFileList extends Component {
                 }
 
                 { this.state.lastRecursiveDownloadFlowId ?
-                  <ToolTip tooltip={T("Currently fetching files from the client")}>
+                  <ToolTip
+                    placement="bottom"
+                    tooltip={T("Currently fetching files from the client")}>
                     <Button onClick={this.cancelRecursiveDownload}
                             variant="default">
                       <FontAwesomeIcon icon="spinner" spin/>
@@ -497,7 +505,9 @@ class VeloFileList extends Component {
                       <span className="button-label"><FontAwesomeIcon icon="stop"/></span>
                     </Button>
                   </ToolTip>  :
-                  <ToolTip tooltip={T("Recursively download this directory from the client")}>
+                  <ToolTip
+                    placement="bottom"
+                    tooltip={T("Recursively download this directory from the client")}>
                     <Button onClick={()=>this.setState({showDownloadAllDialog: true})}
                             disabled={_.isEmpty(this.props.node && this.props.node.path)}
                             variant="default">

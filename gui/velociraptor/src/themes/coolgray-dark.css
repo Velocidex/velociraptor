@@ -87,7 +87,7 @@
   --color-table-row-selected-text: var(--color-foreground);
   --color-table-row-hover: rgba(135, 184, 221, 0.1);
   --color-table-heading-foreground: var(--color-foreground-dimmed);
-  --color-table-heading-background: rgba(0,0,0,.2);
+  --color-table-heading-background: #222a3000;
 
   --color-no-content: var(--color-foreground-dimmed);
 
@@ -189,18 +189,6 @@ body.coolgray-dark {
 
 .coolgray-dark .hamburger {
   color: var(--color-sidebar-foreground);
-}
-
-.coolgray-dark #client-search-bar {
-  background: var(--color-canvas-background);
-  border: 1px solid var(--color-btn-default-border);
-  border-radius: 0;
-  color: var(--color-foreground);
-  font-family: var(--font-family-sans-serif);
-  padding-top: 5px;
-  padding-bottom: 5px;
-  margin-left: 5px;
-  height: 26px;
 }
 
 .coolgray-dark .dropdown .dropdown-toggle.btn.btn-default {
@@ -512,27 +500,17 @@ body.coolgray-dark {
 .coolgray-dark .table-bordered thead th {
   color: var(--color-foreground);
   border: 1px solid var(--color-btn-default-border);
-  /* background: var(--color-table-heading-background); */
+  background: var(--color-table-heading-background);
 }
 
 .coolgray-dark .table thead th {
   color: var(--color-foreground);
   border: 1px solid var(--color-btn-default-border);
-  /* background: var(--color-table-heading-background); */
+  background: var(--color-table-heading-background);
   vertical-align: text-bottom;
 }
 
 .coolgray-dark .table tbody tr td {
-  border: none;
-}
-
-.coolgray-dark .table tbody tr:nth-of-type(2n) {
-  background: var(--color-table-row-stripe);
-  border: none;
-}
-
-.coolgray-dark .table tbody tr:nth-of-type(odd) {
-  background: unset;
   border: none;
 }
 
@@ -1256,4 +1234,9 @@ body.coolgray-dark {
 .coolgray-dark .json-boolean {
   padding-left: 5px;
   color: #7e57c2;
+}
+
+.coolgray-dark .accordion-item,
+.coolgray-dark .accordion .accordion-item .accordion-header .accordion-button {
+    border-radius: 0;
 }

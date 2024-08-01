@@ -652,6 +652,9 @@ export function getFormatter(column_type, text) {
     case undefined:
         return (cell, row) => <VeloValueRenderer value={cell} />;
 
+    case "hidden":
+        return (cell, row) =><></>;
+
     default:
         console.log("Unsupported column type " + column_type);
         return (cell, row) => <VeloValueRenderer value={cell} />;

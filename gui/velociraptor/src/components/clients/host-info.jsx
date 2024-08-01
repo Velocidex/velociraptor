@@ -26,6 +26,7 @@ import "./host-info.css";
 import { runArtifact } from "../flows/utils.jsx";
 import InFlightViewer from "./inflight_viewer.jsx";
 import ToolTip from '../widgets/tooltip.jsx';
+import classNames from "classnames";
 
 import T from '../i8n/i8n.jsx';
 
@@ -552,16 +553,22 @@ class VeloHostInfo extends Component {
 
                   <ButtonGroup className="float-right">
                     <Button variant="default"
+                            className={classNames({
+                                active: this.state.mode === "brief"})}
                             onClick={(mode) => this.setMode("brief")}>
                       <FontAwesomeIcon icon="laptop"/>
                       <span className="button-label">{T("Overview")}</span>
                     </Button>
                     <Button variant="default"
+                            className={classNames({
+                                active: this.state.mode === "detailed"})}
                             onClick={(mode) => this.setMode("detailed")}>
                       <FontAwesomeIcon icon="tasks"/>
                       <span className="button-label">{T("VQL Drilldown")}</span>
                     </Button>
                     <Button variant="default"
+                            className={classNames({
+                                active: this.state.mode === "shell"})}
                             onClick={(mode) => this.setMode("shell")}>
                       <FontAwesomeIcon icon="terminal"/>
                       <span className="button-label">{T("Shell")}</span>

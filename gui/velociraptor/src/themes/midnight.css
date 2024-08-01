@@ -201,18 +201,6 @@ body.midnight {
   color: var(--color-sidebar-foreground);
 }
 
-.midnight #client-search-bar {
-  background: var(--color-canvas-background);
-  border: 1px solid var(--color-btn-default-border);
-  border-radius: 0;
-  color: var(--color-foreground);
-  font-family: var(--font-family-sans-serif);
-  padding-top: 5px;
-  padding-bottom: 5px;
-  margin-left: 5px;
-  height: 26px;
-}
-
 .midnight .dropdown .dropdown-toggle.btn.btn-default {
   border-radius: 0;
   border-left-width: 0;

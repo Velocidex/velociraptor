@@ -96,7 +96,7 @@ class VeloClientSearch extends Component {
                         placeholder: T("SEARCH_CLIENTS"),
                         spellCheck: "false",
                         value: this.state.query,
-                        id: "SEARCH_CLIENTS",
+                        id: "client-search-bar",
                         onChange: (e, {newValue, method}) => {
                             this.setState({query: newValue});
                             e.preventDefault();
