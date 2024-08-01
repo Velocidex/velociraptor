@@ -1057,6 +1057,13 @@ message Defaults {
     // Normally the inventory service attempts to download tools in
     // its own but if this is set, we prevent any external access.
     bool disable_inventory_service_external_access = 34;
+
+    // Disable unicode usernames. By default Velociraptor allows
+    // usernames to consist of any Unicode character for i8n support,
+    // however this opens the possibility for Homoglyph
+    // attacks. Setting the following to true will restrict usernames
+    // to the set a-z and 0-9
+    bool disable_unicode_usernames = 49;
 }
 
 // Configures crypto preferences

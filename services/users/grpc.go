@@ -74,7 +74,9 @@ func GetGRPCUserInfo(
 					if ok {
 						userinfo := md.Get("USER")
 						if len(userinfo) > 0 {
-							data := []byte(userinfo[0])
+							// gRPC metadata can only contain ASCII so
+							// we recover the UTF8 string from there.
+							data := []byte(utils.UnQuote(userinfo[0]))
 							err := json.Unmarshal(data, result)
 							if err != nil {
 								logger := logging.GetLogger(config_obj,

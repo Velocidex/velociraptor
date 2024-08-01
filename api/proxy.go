@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2022 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2022 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package api
 
@@ -34,12 +34,13 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	utils "www.velocidex.com/golang/velociraptor/api/utils"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // A Mux for the reverse proxy feature.
@@ -134,50 +135,50 @@ func PrepareGUIMux(
 		return nil, err
 	}
 
-	base := utils.GetBasePath(config_obj)
-	mux.Handle(utils.Join(base, "/api/"), ipFilter(config_obj,
+	base := api_utils.GetBasePath(config_obj)
+	mux.Handle(api_utils.Join(base, "/api/"), ipFilter(config_obj,
 		csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(h))))
 
-	mux.Handle(utils.Join(base, "/api/v1/DownloadTable"),
+	mux.Handle(api_utils.Join(base, "/api/v1/DownloadTable"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(downloadTable()))))
 
-	mux.Handle(utils.Join(base, "/api/v1/DownloadVFSFile"),
+	mux.Handle(api_utils.Join(base, "/api/v1/DownloadVFSFile"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(vfsFileDownloadHandler()))))
 
-	mux.Handle(utils.Join(base, "/api/v1/UploadTool"),
+	mux.Handle(api_utils.Join(base, "/api/v1/UploadTool"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(toolUploadHandler()))))
 
-	mux.Handle(utils.Join(base, "/api/v1/UploadFormFile"),
+	mux.Handle(api_utils.Join(base, "/api/v1/UploadFormFile"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(formUploadHandler()))))
 
 	// Serve prepared zip files.
-	mux.Handle(utils.Join(base, "/downloads/"),
+	mux.Handle(api_utils.Join(base, "/downloads/"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				http.StripPrefix(base,
 					downloadFileStore([]string{"downloads"}))))))
 
 	// Serve notebook items
-	mux.Handle(utils.Join(base, "/notebooks/"),
+	mux.Handle(api_utils.Join(base, "/notebooks/"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				http.StripPrefix(base,
 					downloadFileStore([]string{"notebooks"}))))))
 
 	// Serve files from hunt notebooks
-	mux.Handle(utils.Join(base, "/hunts/"),
+	mux.Handle(api_utils.Join(base, "/hunts/"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				http.StripPrefix(base,
 					downloadFileStore([]string{"hunts"}))))))
 
 	// Serve files from client notebooks
-	mux.Handle(utils.Join(base, "/clients/"),
+	mux.Handle(api_utils.Join(base, "/clients/"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				http.StripPrefix(base,
@@ -196,14 +197,14 @@ func PrepareGUIMux(
 	if err != nil {
 		return nil, err
 	}
-	mux.Handle(utils.Join(base, "/app/index.html"),
+	mux.Handle(api_utils.Join(base, "/app/index.html"),
 		ipFilter(config_obj,
 			csrfProtect(config_obj, auther.AuthenticateUserHandler(h))))
 
 	// Redirect everything else to the app
-	mux.Handle(utils.GetBaseDirectory(config_obj),
+	mux.Handle(api_utils.GetBaseDirectory(config_obj),
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.Redirect(w, r, utils.Join(base, "/app/index.html"), 302)
+			http.Redirect(w, r, api_utils.Join(base, "/app/index.html"), 302)
 		}))
 
 	return mux, nil
@@ -241,7 +242,9 @@ func GetAPIHandler(
 				username, ok := req.Context().Value(
 					constants.GRPC_USER_CONTEXT).(string)
 				if ok {
-					md["USER"] = username
+					// gRPC metadata can only contain ASCII so we make
+					// sure to escape if needed.
+					md["USER"] = utils.Quote(username)
 				}
 
 				return metadata.New(md)
@@ -295,9 +298,9 @@ func GetAPIHandler(
 		return nil, err
 	}
 
-	base := utils.GetBasePath(config_obj)
+	base := api_utils.GetBasePath(config_obj)
 	reverse_proxy_mux := http.NewServeMux()
-	reverse_proxy_mux.Handle(utils.Join(base, "/api/v1/"),
+	reverse_proxy_mux.Handle(api_utils.Join(base, "/api/v1/"),
 		http.StripPrefix(base, grpc_proxy_mux))
 
 	return reverse_proxy_mux, nil
