@@ -2,7 +2,6 @@ import './artifacts.css';
 import React from 'react';
 import PropTypes from 'prop-types';
 import api from '../core/api-service.jsx';
-import classNames from "classnames";
 import VeloReportViewer from "../artifacts/reporting.jsx";
 import Select from 'react-select';
 import Spinner from '../utils/spinner.jsx';
@@ -15,7 +14,6 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Form from 'react-bootstrap/Form';
-import FormControl from 'react-bootstrap/FormControl';
 import Table  from 'react-bootstrap/Table';
 import NewArtifactDialog from './new-artifact.jsx';
 import Container from  'react-bootstrap/Container';
@@ -432,7 +430,7 @@ class ArtifactInspector extends React.Component {
                     }
                   </div>
                   <Container className="artifact-search-table selectable">
-                    <Table  bordered hover size="sm">
+                    <Table  hover size="sm">
                       <tbody>
                         { _.map(this.state.matchingDescriptors, (item, idx) => {
                             return <tr key={idx} className={

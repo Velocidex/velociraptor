@@ -123,8 +123,9 @@ export default class FlowOverview extends React.Component {
                         <dd className="col-8">
                           { _.map(artifacts, function(v, idx) {
                               return <ArtifactLink
-                              artifact={v}
-                              key={idx}>{v}</ArtifactLink>;
+                                       artifact={v}
+                                       key={idx}>{v}
+                                     </ArtifactLink>;
                           })}
                         </dd>
 
@@ -248,34 +249,28 @@ export default class FlowOverview extends React.Component {
                               </Button>
                               :
                               <ToolTip tooltip={T("Set a password in user preferences to lock the download file.")}>
-                                <span className="d-inline-block">
-                                  <Button
-                                    style={{ pointerEvents: "none"}}
-                                    disabled={true}
-                                    variant="default">
-                                    <FontAwesomeIcon icon="lock-open"/>
-                                  </Button>
-                                </span>
+                                <Button
+                                  style={{ pointerEvents: "none"}}
+                                  disabled={true}
+                                  variant="default">
+                                  <FontAwesomeIcon icon="lock-open"/>
+                                </Button>
                               </ToolTip>
                             }
                             {this.state.expand_sparse ?
                              <ToolTip tooltip={T("Sparse files will be expanded in export.")}>
-                               <span className="d-inline-block">
-                                 <Button
-                                   onClick={()=>this.setState({expand_sparse: false})}
-                                   variant="default">
-                                   <FontAwesomeIcon icon="expand"/>
-                                 </Button>
-                               </span>
+                               <Button
+                                 onClick={()=>this.setState({expand_sparse: false})}
+                                 variant="default">
+                                 <FontAwesomeIcon icon="expand"/>
+                               </Button>
                              </ToolTip> :
                              <ToolTip tooltip={T("Sparse files will remain sparse in export.")}>
-                               <span className="d-inline-block">
-                                 <Button
-                                   onClick={()=>this.setState({expand_sparse: !this.state.expand_sparse})}
-                                   variant="default">
-                                   <FontAwesomeIcon icon="compress"/>
-                                 </Button>
-                               </span>
+                               <Button
+                                 onClick={()=>this.setState({expand_sparse: !this.state.expand_sparse})}
+                                 variant="default">
+                                 <FontAwesomeIcon icon="compress"/>
+                               </Button>
                              </ToolTip>
                             }
                             <Dropdown>

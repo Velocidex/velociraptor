@@ -110,7 +110,6 @@ class ExportDialog extends Component {
     }
 
     render() {
-        let client_id = this.props.client && this.props.client.client_id;
         let path = "/" + this.props.node.path.join("/");
         return (
             <Modal show={true} onHide={this.props.onCancel}>
@@ -161,7 +160,10 @@ function DownloadContextMenu({children, value}) {
     );
 }
 
-
+DownloadContextMenu.propTypes = {
+    children: PropTypes.node,
+    value: PropTypes.any,
+};
 
 class VeloFileList extends Component {
     static propTypes = {

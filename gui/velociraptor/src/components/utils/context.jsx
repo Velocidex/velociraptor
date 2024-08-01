@@ -27,6 +27,7 @@ function guessValue(x) {
     return JSON.stringify(x);
 }
 
+
 export default function ContextMenu({children, value}) {
   const { show } = useContextMenu({
       id: MENU_ID,
@@ -43,6 +44,11 @@ export default function ContextMenu({children, value}) {
       </div>
   );
 }
+
+ContextMenu.propTypes = {
+    children: PropTypes.node.isRequired,
+    value: PropTypes.any,
+};
 
 // Render the main popup menu on the root DOM page. Should only be
 // called once.
@@ -65,7 +71,7 @@ export class ContextMenuPopup extends Component {
         form.target = "_blank";
 
         for (const key in params) {
-            if (params.hasOwnProperty(key)) {
+            if (params[key]) {
                 const hiddenField = document.createElement('input');
                 hiddenField.type = 'hidden';
                 hiddenField.name = key;

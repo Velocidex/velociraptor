@@ -369,23 +369,13 @@ body.veloci-dark {
   border: 1px solid var(--color-table-heading-background);
 }
 
-.veloci-dark .table thead th {
+.veloci-dark .table thead th,
+.veloci-dark .table thead th td {
   border: 1px solid var(--color-table-heading-background);
   background: var(--color-table-heading-background);
-  vertical-align: text-bottom;
 }
 
 .veloci-dark .table tbody tr td {
-  border: none;
-}
-
-.veloci-dark .table tbody tr:nth-of-type(2n) {
-  background: var(--color-table-row-stripe);
-  border: none;
-}
-
-.veloci-dark .table tbody tr:nth-of-type(odd) {
-  background: unset;
   border: none;
 }
 
@@ -413,35 +403,28 @@ body.veloci-dark {
   color: unset;
 }
 
-.veloci-dark .new-artifact-search-table.selectable .table.table-bordered,
-.veloci-dark .new-artifact-search-table.selectable .table.table-bordered tbody tr,
-.veloci-dark .new-artifact-search-table.selectable .table.table-bordered thead th {
+.veloci-dark .new-artifact-search-table.selectable .table,
+.veloci-dark .new-artifact-search-table.selectable .table tbody tr,
+.veloci-dark .new-artifact-search-table.selectable .table thead th {
   background: none;
   border: none;
 }
 
-.veloci-dark .new-artifact-search-table.selectable .table.table-bordered tbody tr > td > button.btn.btn-link:hover {
+.veloci-dark .new-artifact-search-table.selectable .btn.btn-link:hover {
   background: var(--color-btn-outline-link-hover);
 }
 
-.veloci-dark .new-artifact-search-table.selectable .table.table-bordered tbody tr > td > button.btn.btn-link {
+.veloci-dark .new-artifact-search-table.selectable .btn.btn-link {
   background: var(--color-accent-25);
 }
 
-.veloci-dark .new-artifact-search-table.selectable .table.table-bordered tbody > tr.row-selected > td > button.btn.btn-link,
-.veloci-dark .new-artifact-search-table.selectable .table.table-bordered tbody > tr.row-selected > td > button.btn.btn-link:hover {
+.veloci-dark .new-artifact-search-table.selectable .table.table tbody > tr.row-selected > td > button.btn.btn-link,
+.veloci-dark .new-artifact-search-table.selectable .table.table tbody > tr.row-selected > td > button.btn.btn-link:hover {
   background: var(--color-accent-75);
   color: var(--color-foreground-inverse);
   font-weight: 700;
   text-decoration: none;
 }
-
-/* .veloci-dark .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td {
-  background: var(--color-accent-50);
-  border: 1px solid var(--color-foreground-inverse);
-  font-weight: 700;
-  text-decoration: none;
-} */
 
 .veloci-dark .new-artifact-search-table .btn-link:hover,
 .veloci-dark .new-artifact-search-table .btn-link:focus,
@@ -1012,7 +995,7 @@ body.veloci-dark {
   color: #7e57c2;
 }
 
-  .veloci-dark .json-boolean {
+.veloci-dark .json-boolean {
   padding-left: 5px;
   color: #ffca28;
 }

@@ -8,9 +8,9 @@ import { withRouter }  from "react-router-dom";
 import T from '../i8n/i8n.jsx';
 import api from '../core/api-service.jsx';
 import VeloClientStatusIcon from "./client-status.jsx";
-import { formatColumns, sizePerPageRenderer } from "../core/table.jsx";
-import filterFactory from 'react-bootstrap-table2-filter';
-import BootstrapTable from 'react-bootstrap-table-next';
+import { TablePaginationControl } from '../core/paged-table.jsx';
+
+import ClientLink from '../clients/client-link.jsx';
 import Spinner from '../utils/spinner.jsx';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
@@ -20,20 +20,54 @@ import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import LabelForm from '../utils/labels.jsx';
 import Row from 'react-bootstrap/Row';
-import Pagination from 'react-bootstrap/Pagination';
-import paginationFactory from 'react-bootstrap-table2-paginator';
 import Alert from 'react-bootstrap/Alert';
 import UserConfig from '../core/user.jsx';
+import Table from 'react-bootstrap/Table';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 
 const UNSORTED = 0;
-const SORT_UP = 1;
-const SORT_DOWN = 2;
-
 const UNFILTERED = 0;
 const ONLINE = 1;
+
+
+class SimpleClientList extends Component {
+    static propTypes = {
+        clients: PropTypes.array,
+    }
+
+    render() {
+        return (
+            <Table className="paged-table">
+              <thead>
+                <tr className="paged-table-header">
+                  <th>{T("Online")}</th>
+                  <th>{T("Client ID")}</th>
+                  <th>{T("Hostname")}</th>
+                </tr>
+              </thead>
+              <tbody className="fixed-table-body">
+                {_.map(this.props.clients, (c, i)=>{
+                    return (
+                        <tr key={i}>
+                          <td>
+                            <Button variant="outline-default"
+                                    className="online-status">
+                              <span className="button-label">
+                                <VeloClientStatusIcon client={c}/>
+                              </span>
+                            </Button>
+                          </td>
+                          <td><ClientLink client_id={c && c.client_id}/></td>
+                          <td>{c && c.os_info && c.os_info.hostname}</td>
+                        </tr>);
+                })}
+              </tbody>
+            </Table>
+        );
+    }
+}
 
 export class LabelClients extends Component {
     static propTypes = {
@@ -69,21 +103,9 @@ export class LabelClients extends Component {
 
     state = {
         labels: [],
-        new_label: "",
     }
 
-
     render() {
-        let clients = this.props.affectedClients || [];
-        let columns = formatColumns([
-            {dataField: "last_seen_at", text: T("Online"), sort: true,
-             formatter: (cell, row) => {
-                 return <VeloClientStatusIcon client={row}/>;
-             }},
-            {dataField: "client_id", text: T("Client ID")},
-            {dataField: "os_info.hostname", text: T("Hostname"), sort: false},
-        ]);
-
         return (
             <Modal show={true}
                    size="lg"
@@ -94,33 +116,14 @@ export class LabelClients extends Component {
 
               <Modal.Body>
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">{T("Existing")}</Form.Label>
+                  <Form.Label column sm="3">{T("Select Label")}</Form.Label>
                   <Col sm="8">
                     <LabelForm
                       value={this.state.labels}
                       onChange={(value) => this.setState({labels: value})}/>
                   </Col>
                 </Form.Group>
-                <Form.Group as={Row}>
-                  <Form.Label column sm="3">{T("A new label")}</Form.Label>
-                  <Col sm="8">
-                    <Form.Control as="textarea"
-                      rows={1}
-                      value={this.state.new_label}
-                      onChange={(e) => this.setState({new_label: e.currentTarget.value})}
-                    />
-                  </Col>
-                </Form.Group>
-                <BootstrapTable
-                    hover
-                    condensed
-                    keyField="client_id"
-                    bootstrap4
-                    headerClasses="alert alert-secondary"
-                    bodyClasses="fixed-table-body"
-                    data={clients}
-                    columns={columns}
-                />
+                <SimpleClientList clients={this.props.affectedClients || []}/>
               </Modal.Body>
 
               <Modal.Footer>
@@ -200,15 +203,6 @@ class DeleteClients extends Component {
 
     render() {
         let clients = this.props.affectedClients || [];
-        let columns = formatColumns([
-            {dataField: "last_seen_at", text: T("Online"), sort: true,
-             formatter: (cell, row) => {
-                 return <VeloClientStatusIcon client={row}/>;
-             }},
-            {dataField: "client_id", text: T("Client ID")},
-            {dataField: "os_info.hostname", text: T("Hostname"), sort: false},
-        ]);
-
         return (
             <Modal show={true}
                    size="lg"
@@ -222,17 +216,8 @@ class DeleteClients extends Component {
                   {T("DeleteMessage")}
                 </Alert>
                 <div className="deleted-client-list">
-                <BootstrapTable
-                    hover
-                    condensed
-                    keyField="client_id"
-                    bootstrap4
-                    headerClasses="alert alert-secondary"
-                    bodyClasses="fixed-table-body"
-                    data={clients}
-                    columns={columns}
-                />
-                  </div>
+                  <SimpleClientList clients={clients}/>
+                </div>
               </Modal.Body>
 
               <Modal.Footer>
@@ -310,15 +295,6 @@ class KillClients extends Component {
 
     render() {
         let clients = this.props.affectedClients || [];
-        let columns = formatColumns([
-            {dataField: "last_seen_at", text: T("Online"), sort: true,
-             formatter: (cell, row) => {
-                 return <VeloClientStatusIcon client={row}/>;
-             }},
-            {dataField: "client_id", text: T("Client ID")},
-            {dataField: "os_info.hostname", text: T("Hostname"), sort: false},
-        ]);
-
         return (
             <Modal show={true}
                    size="lg"
@@ -332,17 +308,8 @@ class KillClients extends Component {
                   {T("KillMessage")}
                 </Alert>
                 <div className="deleted-client-list">
-                <BootstrapTable
-                    hover
-                    condensed
-                    keyField="client_id"
-                    bootstrap4
-                    headerClasses="alert alert-secondary"
-                    bodyClasses="fixed-table-body"
-                    data={clients}
-                    columns={columns}
-                />
-                  </div>
+                  <SimpleClientList clients={clients}/>
+                </div>
               </Modal.Body>
 
               <Modal.Footer>
@@ -363,65 +330,6 @@ class KillClients extends Component {
     }
 }
 
-
-const pageListRenderer = ({
-    pages,
-    currentPage,
-    totalRows,
-    pageSize,
-    onPageChange
-}) => {
-    // just exclude <, <<, >>, >
-    const pageWithoutIndication = pages.filter(p => typeof p.page !== 'string');
-    let totalPages = parseInt(totalRows / pageSize);
-
-    // Only allow changing to a page if there are any rows in that
-    // page.
-    if (totalPages * pageSize + 1 > totalRows) {
-        totalPages--;
-        if (totalPages<0) {
-            totalPages = 0;
-        }
-    }
-    return (
-        <Col sm="6">
-          <Pagination>
-            <Pagination.First
-              disabled={currentPage===0}
-              onClick={()=>onPageChange(0)}/>
-            {
-                pageWithoutIndication.map((p, idx)=>(
-                    <Pagination.Item
-                      key={idx}
-                      active={p.active}
-                      onClick={ () => onPageChange(p.page) } >
-                      { p.page }
-                    </Pagination.Item>
-                ))
-            }
-            <Pagination.Last
-              disabled={currentPage===totalPages}
-              onClick={()=>onPageChange(totalPages)}/>
-            <Form.Control
-              as="input"
-              className="pagination-form"
-              placeholder={T("Goto Page")}
-              id="goto-page"
-              spellCheck="false"
-              value={currentPage || ""}
-              onChange={e=> {
-                  let page = parseInt(e.currentTarget.value || 0);
-                  if (page >= 0 && page < totalPages) {
-                      onPageChange(page);
-                  }
-              }}/>
-
-          </Pagination>
-        </Col>
-    );
-};
-
-
 class VeloClientList extends Component {
     static contextType = UserConfig;
 
@@ -439,6 +347,7 @@ class VeloClientList extends Component {
     state = {
         clients: [],
         selected: [],
+        selected_icon: "square",
         loading: false,
         showLabelDialog: false,
         showDeleteDialog: false,
@@ -509,21 +418,14 @@ class VeloClientList extends Component {
     renderSearchStats = ()=>{
         let search_term = <></>;
         if (!_.isUndefined(this.state.search_term)) {
-            search_term = <Button disabled={true} variant="outline-info"
-                          >{
-                T("Query:") + " " + this.state.search_term.query
+            search_term = <Button disabled={true} variant="outline-info">
+                            {this.state.search_term.query
             } { this.state.search_term.filter == "ONLINE" &&
                 <span>{T("ONLINE")}</span>}
             </Button>;
         }
         return <ButtonGroup>
                  {search_term}
-
-                 { !_.isUndefined(this.state.total) &&
-                   <Button  disabled={true} variant="outline-info">
-                     { T("Total Matching Clients") + " " + this.state.total + " "}
-                   </Button>}
-
                </ButtonGroup>;
     }
 
@@ -587,180 +489,202 @@ class VeloClientList extends Component {
         });
     }
 
-    render() {
-        let columns = getClientColumns();
-        columns[0].headerFormatter = (column, colIndex, { sortElement, filterElement }) => {
-            return (
-                <Button variant="outline-default"
-                        onClick={()=>{
-                            let filter = this.state.filter === ONLINE ? UNFILTERED : ONLINE;
-                            this.setState({filter: filter});
-                        }}
-                  >
-                  <span className="button-label">
-                    { this.state.filter === ONLINE ?
-                      <span className="online-btn" alt="online" />  :
-                      <span className="any-btn" alt="any state" />
-                    }
-                  </span>
-                </Button>
-            );
-        };
+    isSelected = c=>{
+        return _.includes(this.state.selected, c.client_id);
+    }
 
-        columns[2].onSort = (field, order) => {
-            if (order === "asc") {
-                this.setState({sort: SORT_UP});
-            } else if (order === "desc") {
-                this.setState({sort: SORT_DOWN});
-            };
-        };
-
-        columns.push({
-            dataField: "labels", text: T("Labels"),
-            sort:true, filtered: true,
-            formatter: (cell, row) => {
-                return _.map(cell, (label, idx) => {
-                    return <Button size="sm" key={idx}
-                                   onClick={() => this.removeLabel(label, row)}
-                                   variant="default">
-                             <span className="button-label">{label}</span>
-                             <span className="button-label">
-                               <FontAwesomeIcon icon="window-close"/>
-                             </span>
-                           </Button>;
-                });
-            }});
-
-        const selectRow = {
-            mode: "checkbox",
-            clickToSelect: true,
-            classes: "row-selected",
-            selected: this.state.selected,
-            onSelect: this.handleOnSelect,
-            onSelectAll: this.handleOnSelectAll
-        };
-
+    renderToolbar = ()=>{
         let affected_clients = this.getAffectedClients();
-        let total_rows = parseInt(this.state.total) || 0;
-        let page_size = this.state.page_size || 10;
-        let currentPage = this.state.start_row / this.state.page_size;
-        if (currentPage > total_rows / page_size) {
-            currentPage = 0;
-        };
+        return <>
+                 { this.state.showDeleteDialog &&
+                   <DeleteClients
+                     affectedClients={affected_clients}
+                     onResolve={() => {
+                         this.setState({showDeleteDialog: false});
+                         this.searchClients();
+                     }}/>}
+                 { this.state.showKillDialog &&
+                   <KillClients
+                     affectedClients={affected_clients}
+                     onResolve={() => {
+                         this.setState({showKillDialog: false});
+                         this.searchClients();
+                     }}/>}
+                 { this.state.showLabelDialog &&
+                   <LabelClients
+                     affectedClients={affected_clients}
+                     onResolve={() => {
+                         this.setState({showLabelDialog: false});
+                         this.searchClients();
+                     }}/>}
+                 <Spinner loading={this.state.loading}/>
+                 <Navbar className="toolbar">
+                   <ButtonGroup>
+                     <Button title={T("Label Clients")}
+                             disabled={_.isEmpty(this.state.selected)}
+                             onClick={() => this.setState({showLabelDialog: true})}
+                             variant="default">
+                       <FontAwesomeIcon icon="tags"/>
+                     </Button>
+                     <Button title={T("Delete Clients")}
+                             disabled={_.isEmpty(this.state.selected)}
+                             onClick={() => this.setState({showDeleteDialog: true})}
+                             variant="default">
+                       <FontAwesomeIcon icon="trash"/>
+                     </Button>
+                     { // Kiling clients requires the machine_state
+                         // permission. Hide this button for users who do
+                         // not have it.
+                         this.context && this.context.traits &&
+                             this.context.traits.Permissions &&
+                             this.context.traits.Permissions.machine_state &&
+                             <Button title={T("Kill Clients")}
+                                     disabled={_.isEmpty(this.state.selected)}
+                                     onClick={() => this.setState({showKillDialog: true})}
+                                     variant="default">
+                               <FontAwesomeIcon icon="ban"/>
+                             </Button>
+                     }
+                     <TablePaginationControl
+                       total_size={this.state.total}
+                       start_row={this.state.start_row}
+                       page_size={this.state.page_size}
+                       current_page={this.state.start_row / this.state.page_size}
+                       onRowChange={row=>this.setState({start_row: row})}
+                       onPageSizeChange={size=>this.setState({page_size: size})}
+                     />
+                   </ButtonGroup>
+                   <ButtonGroup className="float-right">
+                     {this.renderSearchStats()}
+                   </ButtonGroup>
+                 </Navbar>
+               </>;
+    }
 
+    renderBasicTable = ()=>{
         return (
             <>
-              { this.state.showDeleteDialog &&
-                <DeleteClients
-                  affectedClients={affected_clients}
-                  onResolve={() => {
-                      this.setState({showDeleteDialog: false});
-                      this.searchClients();
-                  }}/>}
-              { this.state.showKillDialog &&
-                <KillClients
-                  affectedClients={affected_clients}
-                  onResolve={() => {
-                      this.setState({showKillDialog: false});
-                      this.searchClients();
-                  }}/>}
-              { this.state.showLabelDialog &&
-                <LabelClients
-                  affectedClients={affected_clients}
-                  onResolve={() => {
-                      this.setState({showLabelDialog: false});
-                      this.searchClients();
-                  }}/>}
-              <Spinner loading={this.state.loading}/>
-              <Navbar className="toolbar">
-                <ButtonGroup>
-                  <Button title={T("Label Clients")}
-                          disabled={_.isEmpty(this.state.selected)}
-                          onClick={() => this.setState({showLabelDialog: true})}
-                          variant="default">
-                    <FontAwesomeIcon icon="tags"/>
-                  </Button>
-                  <Button title={T("Delete Clients")}
-                          disabled={_.isEmpty(this.state.selected)}
-                          onClick={() => this.setState({showDeleteDialog: true})}
-                          variant="default">
-                    <FontAwesomeIcon icon="trash"/>
-                  </Button>
-                  { // Kiling clients requires the machine_state
-                    // permission. Hide this button for users who do
-                    // not have it.
-                    this.context && this.context.traits &&
-                    this.context.traits.Permissions &&
-                    this.context.traits.Permissions.machine_state &&
-                    <Button title={T("Kill Clients")}
-                            disabled={_.isEmpty(this.state.selected)}
-                            onClick={() => this.setState({showKillDialog: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="ban"/>
-                    </Button>
-                  }
+              <Table className="paged-table">
+                <thead>
+                  <tr className="paged-table-header">
+                    <th>
+                      <Button variant="outline-default"
+                              onClick={()=>{
+                                  // Now clients are selected - select all
+                                  if(this.state.selected.length === 0) {
+                                      this.setState({
+                                          selected: _.map(this.state.clients, c=>c.client_id),
+                                          selected_icon: "square-check"});
+                                  } else {
+                                      // Reset all clients
+                                      this.setState({
+                                          selected: [],
+                                          selected_icon: "square",
+                                      });
+                                  }}}
+                      >
+                        <span className="button-label">
+                          <FontAwesomeIcon icon={this.state.selected_icon}/>
+                        </span>
+                      </Button>
+                    </th>
+                    <th>
+                      <Button variant="outline-default"
+                              onClick={()=>{
+                                  let filter = this.state.filter === ONLINE ? UNFILTERED : ONLINE;
+                                  this.setState({filter: filter});
+                              }}
+                      >
+                        <span className="button-label">
+                          { this.state.filter === ONLINE ?
+                            <span className="online-btn" alt="online" />  :
+                            <span className="any-btn" alt="any state" />
+                          }
+                        </span>
+                      </Button>
+                    </th>
+                    <th>{T("Client ID")}</th>
+                    <th>{T("Hostname")}</th>
+                    <th>{T("FQDN")}</th>
+                    <th>{T("OS Version")}</th>
+                    <th>{T("Labels")}</th>
+                  </tr>
+                </thead>
+                <tbody className="fixed-table-body">
+                  {_.map(this.state.clients, (c, i)=>{
+                      let client_id = c.client_id;
+                      let is_selected = _.includes(this.state.selected, client_id);
+                      let num_clients = this.state.clients.length;
 
-                </ButtonGroup>
-              </Navbar>
+                      return (
+                          <tr key={i}
+                              className={(is_selected && "row-selected") || ""}
+                              onClick={()=>{
+                                  if(is_selected) {
+                                      let new_selected = _.filter(this.state.selected, x=>x !== c.client_id );
+                                      this.setState({
+                                          selected: new_selected,
+                                          selected_icon: new_selected.length ? "square-minus" : "square",
+                                      });
+
+                                  } else {
+                                      let new_selected = [...this.state.selected, client_id];
+                                      this.setState({
+                                          selected: new_selected,
+                                          selected_icon: new_selected.length === num_clients ? "square-check" : "square-minus" ,
+                                      });
+                                  }
+                              }}>
+                            <td>
+                              <Button variant="outline-default">
+                                <span className="button-label">
+                                  <FontAwesomeIcon icon={
+                                      this.isSelected(c) ?
+                                          "square-check" : "square"
+                                  }/>
+                                </span>
+                              </Button>
+                            </td>
+                            <td>
+                              <Button variant="outline-default"
+                                      className="online-status">
+                                <span className="button-label">
+                                  <VeloClientStatusIcon client={c}/>
+                                </span>
+                              </Button>
+                            </td>
+                            <td><ClientLink client_id={c && c.client_id}/></td>
+                            <td>{c && c.os_info && c.os_info.hostname}</td>
+                            <td>{c && c.os_info && c.os_info.fqdn}</td>
+                            <td>{c && c.os_info && c.os_info.release}</td>
+                            <td>{_.map(c.labels, (label, idx)=>{
+                                return <Button size="sm" key={idx}
+                                          onClick={() => this.removeLabel(label, c)}
+                                          variant="default">
+                                         <span className="button-label">{label}</span>
+                                         <span className="button-label">
+                                           <FontAwesomeIcon icon="window-close"/>
+                                         </span>
+                                       </Button>;
+                            })}</td>
+                          </tr>);
+                  })}
+                </tbody>
+              </Table>
+            </>);
+    }
+
+    render() {
+        return (
+            <>
+              { this.renderToolbar() }
               <div className="fill-parent no-margins toolbar-margin selectable">
-                { this.renderSearchStats() }
-                <BootstrapTable
-                  hover
-                  remote
-                  condensed
-                  noDataIndication={T("Table is Empty")}
-                  keyField="client_id"
-                  bootstrap4
-                  headerClasses="alert alert-secondary"
-                  bodyClasses="fixed-table-body"
-                  data={this.state.clients}
-                  columns={columns}
-                  selectRow={ selectRow }
-                  filter={ filterFactory() }
-                  onTableChange={(type, { page, sizePerPage }) => {
-                      this.setState({start_row: page * sizePerPage});
-                  }}
-
-                  pagination={ paginationFactory({
-                      sizePerPage: page_size,
-                      totalSize: total_rows,
-                      currSizePerPage: page_size,
-                      onSizePerPageChange: value=>{
-                          this.setState({page_size: value});
-                      },
-                      pageStartIndex: 0,
-                      pageListRenderer: ({pages, onPageChange})=>pageListRenderer({
-                          pageSize: page_size,
-                          pages: pages,
-                          totalRows: total_rows,
-                          currentPage: currentPage,
-                          onPageChange: onPageChange}),
-                      sizePerPageRenderer
-                  }) }
-
-                />
-              </div>
-            </>
+                { this.renderBasicTable() }
+                </div>
+              </>
         );
     }
 };
 
 
 export default withRouter(VeloClientList);
-
-export function getClientColumns() {
-    return formatColumns([
-        {dataField: "last_seen_at", text: T("Online"),
-         formatter: (cell, row) => {
-             return <Button variant="outline-default" className="online-status">
-             <span className="button-label">
-             <VeloClientStatusIcon client={row}/>
-             </span>
-             </Button>;
-         }},
-        {dataField: "client_id", text: T("Client ID"), type: "client"},
-        {dataField: "os_info.hostname", text: T("Hostname"), sort: true},
-        {dataField: "os_info.fqdn", text: T("FQDN"), sort: false},
-        {dataField: "os_info.release", text: T("OS Version")},
-    ]);
-}

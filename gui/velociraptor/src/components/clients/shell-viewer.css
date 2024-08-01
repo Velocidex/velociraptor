@@ -120,6 +120,8 @@ div.dt-buttons {
     padding: 5px;
 }
 
-.shell-command .vql-shell-input {
+.shell-command .vql-shell-input,
+.vql-shell-input .ace_editor  {
     min-height: 38px;
+    border: 1px solid var(--color-btn-border);
 }

@@ -100,10 +100,12 @@
         "@testing-library/react": "12",
         "@vitejs/plugin-react": "^3.0.0",
         "eslint": "^8.35.0",
+        "eslint-config-react-app": "7.0.1",
         "eslint-plugin-import": "^2.27.5",
         "eslint-plugin-jsx-a11y": "^6.7.1",
         "eslint-plugin-react": "^7.32.2",
         "vite": "^4.5.3",
-        "vite-plugin-compression": "^0.5.1"
+        "vite-plugin-compression": "^0.5.1",
+        "vite-plugin-eslint": "1.8.1"
     }
 }

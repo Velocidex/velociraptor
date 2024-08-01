@@ -8,7 +8,6 @@ import ToolkitProvider from 'react-bootstrap-table2-toolkit/dist/react-bootstrap
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { textFilter } from 'react-bootstrap-table2-filter';
 import { Type } from 'react-bootstrap-table2-editor';
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
@@ -24,13 +23,12 @@ import VeloValueRenderer from '../utils/value.jsx';
 import { NavLink } from "react-router-dom";
 import ClientLink from '../clients/client-link.jsx';
 import { HexViewPopup } from '../utils/hex.jsx';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import ToolTip from '../widgets/tooltip.jsx';
 import T from '../i8n/i8n.jsx';
 import TreeCell from './tree-cell.jsx';
 import ContextMenu from '../utils/context.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
-import filterFactory from 'react-bootstrap-table2-filter';
+import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
 import { JSONparse } from '../utils/json_parse.jsx';
 import Download from "../widgets/download.jsx";
 
@@ -466,6 +464,201 @@ export function sortCaret(order, column) {
 
     return null;
 }
+
+// Returns a formatter by type.
+export function getFormatter(column_type, text) {
+    switch(column_type) {
+    case "number":
+        return (cell, row) => <span className="right-align">{cell}</span>;
+
+    case "mb":
+        return (cell, row) => {
+            let result = parseInt(cell/1024/1024);
+            let value = cell;
+            let suffix = "";
+            if (_.isFinite(result) && result > 0) {
+                suffix = "Mb";
+                value = parseInt(result);
+            } else {
+                result = parseInt(cell /1024);
+                if (_.isFinite(result) && result > 0) {
+                    suffix = "Kb";
+                    value = parseInt(result);
+                } else {
+                    if (_.isFinite(cell)) {
+                        suffix = "b";
+                        value = parseInt(cell);
+                    }
+                }
+            }
+            return <ToolTip tooltip={cell}>
+                     <span className="number right-align">
+                       {value} {suffix}
+                     </span>
+                   </ToolTip>;
+        };
+    case "timestamp":
+    case "nano_timestamp":
+        return (cell, row) => {
+            return <VeloTimestamp usec={cell}/>;
+        };
+
+    case "nobreak":
+        return (cell, row) => {
+            return <div className="no-break">{cell}</div>;
+        };
+
+    case "tree":
+        return (cell, row) => {
+            if (_.isObject(cell)) {
+                return <TreeCell
+                         name={text}
+                         data={cell}/>;
+            };
+            return cell;
+        };
+
+        // A URL can be formatted as a markdown URL: [desc](url)
+        // or can be a JSON object {url:"...", desc:"..."}
+    case "url":
+        return (cell, row) => {
+            if(_.isObject(cell)) {
+                return <URLViewer url={cell.url} desc={cell.desc}/>;
+            }
+            return <URLViewer url={cell}/>;
+        };
+
+    case "url_internal":
+        return (cell, row) => {
+            if(_.isObject(cell)) {
+                return <URLViewer internal={true}
+                             url={cell.url} desc={cell.desc}/>;
+            }
+            return <URLViewer url={cell}/>;
+        };
+
+    case "safe_url":
+        return (cell, row) => {
+            return <URLViewer url={cell} safe={true}/>;
+        };
+
+    case "flow":
+        return (cell, row) => {
+            let client_id = row["ClientId"];
+            if (!client_id) {
+                return cell;
+            };
+            return <NavLink
+                     tabIndex="0"
+                     id={cell}
+                     to={"/collected/" + client_id + "/" + cell}>{cell}
+                   </NavLink>;
+        };
+
+    case "collapsed":
+        return (cell, row) => {
+            return <VeloValueRenderer
+                    value={cell} collapsed={true}/>;
+        };
+
+    case "download":
+        return (cell, row) => {
+            // Ideally this is a UploadResponse object described
+            // in /uploads/api.go. Such an object is emitted by
+            // the uploads() VQL plugin.
+            if(_.isObject(cell)) {
+                let description = cell.Path;
+                let fs_components = cell.Components || [];
+                return <Download fs_components={fs_components}
+                                              text={description}
+                                     filename={description}/>;
+            }
+
+            let components = row._Components;
+            let description = cell;
+            let filename = row.client_path;
+
+            return <Download fs_components={components}
+                                                text={description}
+                                 filename={filename}/>;
+        };
+
+    case "preview_upload":
+    case "upload_preview":
+        return (cell, row, env) => {
+            let new_env = Object.assign({}, env || {});
+
+            // If the row has a more updated client id and flow id
+            // use them, otherwise use the ones from the query
+            // env. For example when this component is viewed in a
+            // hunt notebook we require the client id and flow id
+            // to be in the table. But when viewed in the client
+            // notebook we can use the client id and flow id from
+            // the notebook env.
+            if(row.ClientId) {
+                new_env.client_id = row.ClientId;
+            }
+            if(row.FlowId) {
+                new_env.flow_id = row.FlowId;
+            }
+            return <PreviewUpload
+                     env={new_env}
+                     upload={cell}/>;
+        };
+
+    case "client":
+    case "client_id":
+        return (cell, row) => {
+            return <ClientLink client_id={cell}/>;
+        };
+
+    case "hex":
+        return (cell, row) => {
+            if (!cell.substr) return <></>;
+            let bytearray = [];
+            for (let c = 0; c < cell.length; c += 2) {
+                let term = cell.substr(c, 2);
+                if (term.match(/[0-9a-fA-F]{2}/)) {
+                    bytearray.push(parseInt(term, 16));
+                } else {
+                    c--;
+                }
+            }
+            return <ContextMenu value={cell}>
+                  <HexViewPopup byte_array={bytearray}/>
+                       </ContextMenu>;
+        };
+    case "base64hex":
+    case "base64":
+        return (cell, row) => {
+            try {
+                let binary_string = atob(cell);
+                var len = binary_string.length;
+                var bytes = new Uint8Array(len);
+                for (var i = 0; i < len; i++) {
+                    bytes[i] = binary_string.charCodeAt(i);
+                }
+                return <ContextMenu value={cell}>
+                                                    <HexViewPopup byte_array={bytes}/>
+                           </ContextMenu>;
+            } catch(e) {
+                return <></>;
+            };
+        };
+
+    case "string":
+    case "bool":
+    case "date":
+    case undefined:
+        return (cell, row) => <VeloValueRenderer value={cell} />;
+
+    default:
+        console.log("Unsupported column type " + column_type);
+        return (cell, row) => <VeloValueRenderer value={cell} />;
+    };
+}
+
+
 
 export function formatColumns(columns, env, column_formatter) {
     _.each(columns, (x) => {

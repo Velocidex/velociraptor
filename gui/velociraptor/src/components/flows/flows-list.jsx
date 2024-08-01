@@ -4,18 +4,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import T from '../i8n/i8n.jsx';
 import _ from 'lodash';
-import VeloPagedTable from '../core/paged-table.jsx';
-import { TablePaginationControl } from '../core/paged-table.jsx';
-
-
+import VeloPagedTable, { TablePaginationControl } from '../core/paged-table.jsx';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import ToolTip from '../widgets/tooltip.jsx';
 
 import api from '../core/api-service.jsx';
-import { formatColumns } from "../core/table.jsx";
-
 import NewCollectionWizard from './new-collection.jsx';
 import OfflineCollectorWizard from './offline-collector.jsx';
 import DeleteNotebookDialog from '../notebooks/notebook-delete.jsx';
@@ -191,7 +186,6 @@ class FlowsList extends React.Component {
 
     static propTypes = {
         client: PropTypes.object,
-        flows: PropTypes.array,
         setSelectedFlow: PropTypes.func,
         selected_flow: PropTypes.object,
         collapseToggle: PropTypes.func,
@@ -567,7 +561,7 @@ class FlowsList extends React.Component {
                       page_size={this.state.page_state.page_size}
                       current_page={this.state.page_state.start_row /
                                     this.state.page_state.page_size}
-                      onPageChange={this.state.page_state.onPageChange}
+                      onRowChange={this.state.page_state.onRowChange}
                       onPageSizeChange={this.state.page_state.onPageSizeChange}
                     />
                   </ButtonGroup> }
@@ -680,13 +674,43 @@ export const flowRowRenderer = {
 
 const rowClassRenderer = (selected_flow_id) => {
     return (row, rowIndex) => {
-        let session_id = row._Flow && row._Flow.session_id;
-        if (session_id === selected_flow_id) {
-            return "row-selected";
-        }
         if (row._Urgent === "true") {
             return 'flow-urgent';
         }
-        return '';
+        return "";
     };
-}
+};
+
+
+export class SimpleFlowsList extends React.Component {
+    static propTypes = {
+        client_id: PropTypes.string,
+        setSelectedFlow: PropTypes.func,
+        selected_flow: PropTypes.object,
+    };
+
+    render() {
+        const selectRow = {
+            onSelect: row=>{
+                this.props.setSelectedFlow(row._Flow);
+            },
+        };
+
+        return (
+            <>
+              <VeloPagedTable
+                url="v1/GetClientFlows"
+                params={{client_id: this.props.client_id}}
+                translate_column_headers={true}
+                prevent_transformations={{
+                    Mb: true, Rows: true,
+                    State: true, "Last Active": true}}
+                selectRow={selectRow}
+                renderers={flowRowRenderer}
+                version={this.state.version}
+                setPageState={x=>this.setState({page_state: x})}
+              />
+            </>
+        );
+    }
+};

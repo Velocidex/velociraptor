@@ -111,7 +111,7 @@ class TextViewTab extends React.Component {
                     response.blob.headers["content-range"];
                 if(content_range) {
                     const matches = content_range.match(/^(\w+) ((\d+)-(\d+)|\*)\/(\d+|\*)$/);
-                    const [, unit, , start, end, size] = matches;
+                    const [, , , , end, size] = matches;
                     this.setState({next_offset: Number(end || 0), total_size: Number(size || 0)});
                 }
 

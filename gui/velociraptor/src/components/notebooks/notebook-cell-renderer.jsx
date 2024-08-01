@@ -1054,7 +1054,6 @@ export default class NotebookCellRenderer extends React.Component {
                     "notebook-output": true,
                 })}
                      type="button"
-                     tabIndex={0}
                      onKeyPress={()=>this.props.setSelectedCellId(
                          this.state.cell.cell_id)}
                      onClick={()=>this.props.setSelectedCellId(

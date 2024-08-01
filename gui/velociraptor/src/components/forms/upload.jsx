@@ -64,7 +64,7 @@ export default class UploadFileForm extends Component {
         let name = param.friendly_name || param.name;
 
         return (
-            <Form.Group as={Row}>
+            <Form as={Row}>
               <Form.Label column sm="3">
                 <ToolTip tooltip={param.description}>
                   <div>
@@ -74,55 +74,58 @@ export default class UploadFileForm extends Component {
               </Form.Label>
               <Col sm="8">
                 <InputGroup className="mb-3">
-                  <InputGroup.Text>
-                    <Button
-                      className="btn btn-default"
-                      onClick={()=>{
-                          this.setState({upload_mode: !this.state.upload_mode});
-                      }}>
-                      <FontAwesomeIcon icon="cloud" />
-                    </Button>
-                    <Button
-                      className={classNames({
-                          "btn": true,
-                          "btn-default": true,
-                          "disabled": !this.state.upload.name,
-                      })}
-                      disabled={!this.state.upload.name}
-                      onClick={this.uploadFile}>
-                      { this.state.loading ?
-                        <FontAwesomeIcon icon="spinner" spin /> :
-                        T("Upload")
-                      }
-                    </Button>
-                  </InputGroup.Text>
-                  <Form.File custom>
-                    <Form.File.Input
-                      onChange={e => {
-                          if (!_.isEmpty(e.currentTarget.files)) {
-                              this.setState({
-                                  upload_info: {},
-                                  upload: e.currentTarget.files[0],
-                              });
-                          }
-                      }}
-                    />
-                    { this.state.upload_info.filename ?
-                      <Form.File.Label data-browse="Select a different file">
-                        <a href={ api.href(this.state.upload_info.url) }>
-                          { this.state.upload_info.filename }
-                        </a>
-                      </Form.File.Label>:
-                      <Form.File.Label data-browse="Select file">
-                        { this.state.upload.name ?
-                          this.state.upload.name:
-                          T("Click to upload file")}
-                      </Form.File.Label>
+                  <Button
+                    className="btn btn-default"
+                    onClick={()=>{
+                        this.setState({upload_mode: !this.state.upload_mode});
+                    }}>
+                    <FontAwesomeIcon icon="cloud" />
+                  </Button>
+                  <Button
+                    className={classNames({
+                        "btn": true,
+                        "btn-default": true,
+                        "disabled": !this.state.upload.name,
+                    })}
+                    disabled={!this.state.upload.name}
+                    onClick={this.uploadFile}>
+                    { this.state.loading ?
+                      <FontAwesomeIcon icon="spinner" spin /> :
+                      T("Upload")
                     }
-                  </Form.File>
+                  </Button>
+
+                  <Form.Control type="file" id="upload"
+                                onChange={e => {
+                                    if (!_.isEmpty(e.currentTarget.files)) {
+                                        this.setState({
+                                            upload_info: {},
+                                            upload: e.currentTarget.files[0],
+                                        });
+                                    }
+                                }}
+                  />
+                  { this.state.upload_info.filename &&
+                    <a className="btn btn-default-outline"
+                       href={ api.href(this.state.upload_info.url) }>
+                        { this.state.upload_info.filename }
+                    </a>
+                  }
+
+                  <ToolTip tooltip={T("Click to upload file")}>
+                    <Button variant="default-outline"
+                            className="flush-right">
+                      <label data-browse="Select file" htmlFor="upload">
+                        {this.state.upload.name ?
+                         this.state.upload.name :
+                         T("Select local file")}
+                      </label>
+                    </Button>
+                  </ToolTip>
                 </InputGroup>
+
               </Col>
-            </Form.Group>
+            </Form>
         );
     }
 

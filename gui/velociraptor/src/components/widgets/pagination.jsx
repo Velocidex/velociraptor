@@ -10,6 +10,12 @@ export class TextPaginationControl extends React.Component {
     static propTypes = {
         base_offset: PropTypes.number,
         setBaseOffset: PropTypes.func,
+
+        page_size:  PropTypes.number,
+        total_pages: PropTypes.number,
+        current_page: PropTypes.number,
+        total_size: PropTypes.number,
+        onPageChange: PropTypes.func,
     }
 
     state = {

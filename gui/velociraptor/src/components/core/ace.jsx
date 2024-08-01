@@ -117,6 +117,11 @@ export class SettingsButton extends Component {
 }
 
 export default class VeloAce extends Component {
+    constructor() {
+        super();
+        this.aceRef= React.createRef();
+    }
+
     static contextType = UserConfig;
     static propTypes = {
         text: PropTypes.string,
@@ -200,19 +205,21 @@ export default class VeloAce extends Component {
     }
 
     componentDidUpdate() {
-        if (this.props.mode !== this.state.mode) {
+        let ref = this.aceRef.current;
+
+        if (ref && this.props.mode !== this.state.mode) {
             this.setState({mode: this.props.mode});
 
             if (this.props.mode === "vql") {
-                this.refs.ace.editor.getSession().setMode(new VqlMode());
+                ref.editor.getSession().setMode(new VqlMode());
             } else if(this.props.mode === "markdown") {
-                this.refs.ace.editor.getSession().setMode(new MarkdownMode());
+                ref.editor.getSession().setMode(new MarkdownMode());
             } else if(this.props.mode === "yaml") {
-                this.refs.ace.editor.getSession().setMode(new YamlMode());
+                ref.editor.getSession().setMode(new YamlMode());
             } else if(this.props.mode === "regex") {
-                this.refs.ace.editor.getSession().setMode(new RegexMode());
+                ref.editor.getSession().setMode(new RegexMode());
             } else if(this.props.mode === "yara") {
-                this.refs.ace.editor.getSession().setMode(new YaraMode());
+                ref.editor.getSession().setMode(new YaraMode());
             }
         }
     }
@@ -235,7 +242,7 @@ export default class VeloAce extends Component {
                   "velo-ace-editor",
                   this.props.className)}>
                 <AceEditor
-                  ref="ace"
+                  ref={this.aceRef}
                   className="full-height"
                   showGutter={true}
                   focus={focus}

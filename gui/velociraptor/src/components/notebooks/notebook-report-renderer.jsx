@@ -6,7 +6,6 @@ import PropTypes from 'prop-types';
 import T from '../i8n/i8n.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import Button from 'react-bootstrap/Button';
 import parseHTML from '../core/sanitize.jsx';
 
 import VeloTable from '../core/table.jsx';

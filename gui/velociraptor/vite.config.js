@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import viteCompression from 'vite-plugin-compression';
+import eslint from 'vite-plugin-eslint';
 
 export default defineConfig({
     root: 'src',
@@ -55,6 +56,7 @@ export default defineConfig({
           algorithm: 'brotliCompress',
           deleteOriginFile: true,
       }),
+      eslint(),
     ],
     server: {
       port: 3000,
