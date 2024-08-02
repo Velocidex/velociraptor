@@ -390,7 +390,7 @@ const Spanish = {
     "ServedFromGithub": (github_project, github_asset_regex)=>
     <>
     La URL de la herramienta será actualizada por
-    GitHub como la última versión del 
+    GitHub como la última versión del
     proyecto <b>{github_project}</b> que coincida
     con <b>{github_asset_regex}</b>
     </>,
@@ -582,8 +582,6 @@ const Spanish = {
     "vfs_path":"Ruta VFS",
     "file_size":"Tamaño del archivo",
     "uploaded_size":"Tamaño de la subida",
-    "TablePagination": (from, to, size)=>
-    <>Mostrar línea { from } a { to } de { size }</>,
 
     "Select a language":"Seleccione un idioma",
     "English":"Inglés",

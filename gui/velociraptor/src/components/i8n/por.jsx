@@ -584,8 +584,6 @@ const Portuguese = {
     "vfs_path":"vfs_path",
     "file_size":"file_size",
     "uploaded_size":"uploaded_size",
-    "TablePagination": (from, to, size)=>
-    <>Mostrar linha { from } a { to } de { size }</>,
 
     "Select a language":"Selecionar idioma",
     "English":"Inglês",

@@ -403,6 +403,10 @@ export default VeloTable;
 
 const int_regex = /^-?[0-9]+$/;
 
+// The JSON response from the server is encoded as a strict protobuf
+// with string cell values. Here we expand it into arbitrary JSON objects.
+
+// TODO: This needs to be changed on the server to deliver a proper JSON response.
 export function PrepareData(value) {
     var rows = [];
     let columns = value.columns || [];

@@ -5,6 +5,8 @@ import PropTypes from 'prop-types';
 import T from '../i8n/i8n.jsx';
 import _ from 'lodash';
 import VeloPagedTable from '../core/paged-table.jsx';
+import { TablePaginationControl } from '../core/paged-table.jsx';
+
 
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
@@ -556,6 +558,20 @@ class FlowsList extends React.Component {
                   }
 
                 </ButtonGroup>
+
+                { this.state.page_state &&
+                  <ButtonGroup>
+                    <TablePaginationControl
+                      total_size={this.state.page_state.total_size}
+                      start_row={this.state.page_state.start_row}
+                      page_size={this.state.page_state.page_size}
+                      current_page={this.state.page_state.start_row /
+                                    this.state.page_state.page_size}
+                      onPageChange={this.state.page_state.onPageChange}
+                      onPageSizeChange={this.state.page_state.onPageSizeChange}
+                    />
+                  </ButtonGroup> }
+
                 { tab === "notebook" &&
                   <ButtonGroup className="float-right">
                     <ToolTip tooltip={T("Notebooks")} >
@@ -613,6 +629,7 @@ class FlowsList extends React.Component {
                     }}
                     no_toolbar={true}
                     name={"GetClientFlows" + client_id}
+                    setPageState={x=>this.setState({page_state: x})}
                   />
                 </HotKeys>
               </div>

@@ -222,3 +222,14 @@ input[type='checkbox'] {
     background-color: var(--color-btn-border);
     box-shadow: none;
 }
+
+.react-bootstrap-table .table td {
+    background-color: var(--color-table-row-stripe);
+    color: var(--color-foreground);
+}
+
+
+.paged-table.table td {
+    background-color: var(--color-table-row-stripe);
+    color: var(--color-foreground);
+}

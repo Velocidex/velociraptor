@@ -43,3 +43,23 @@ table.paged-table-header .hidden-edit {
 table.paged-table-header:hover .hidden-edit {
     visibility: visible;
 }
+
+
+.btn-group > button.goto-start.btn.btn-default {
+    margin-left: 5px;
+}
+
+.goto-end {
+}
+
+
+.goto-input {
+    margin: 0;
+    padding: 0;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.goto-input input {
+    width: 100%;
+}

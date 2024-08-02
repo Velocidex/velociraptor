@@ -172,7 +172,7 @@ const English = {
     "Deutsch": "German",
     "_ts": "ServerTime",
     "TablePagination": (from, to, size)=>
-    <>Showing { from } to { to } of { size }</>,
+    <>{ from.toString() }-{ to.toString() }/{ size.toString() }</>,
     "Verified Email" : "Verified Email",
     "Account Locked" : "Account Locked",
     "Role_administrator" : "Server Administrator",

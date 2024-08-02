@@ -582,9 +582,6 @@ const Deutsch = {
     "vfs_path":"VFS Pfad",
     "file_size":"Dateigröße",
     "uploaded_size":"Hochgeladene Größe",
-    "TablePagination": (from, to, size)=>
-    <>Zeigt Zeile { from } bis { to } von { size }</>,
-
     "Select a language":"Sprache auswählen",
     "English":"Englisch",
     "Deutsch":"Deutsch",

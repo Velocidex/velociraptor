@@ -22,6 +22,7 @@ import { formatColumns } from "../core/table.jsx";
 
 import VeloForm from '../forms/form.jsx';
 import VeloPagedTable from '../core/paged-table.jsx';
+import { TablePaginationControl } from '../core/paged-table.jsx';
 
 import NewHuntWizard from './new-hunt.jsx';
 import DeleteNotebookDialog from '../notebooks/notebook-delete.jsx';
@@ -594,6 +595,20 @@ class HuntList extends React.Component {
                     </ToolTip>
                   }
                 </ButtonGroup>
+
+                { this.state.page_state &&
+                  <ButtonGroup>
+                    <TablePaginationControl
+                      total_size={this.state.page_state.total_size}
+                      start_row={this.state.page_state.start_row}
+                      page_size={this.state.page_state.page_size}
+                      current_page={this.state.page_state.start_row /
+                                    this.state.page_state.page_size}
+                      onPageChange={this.state.page_state.onPageChange}
+                      onPageSizeChange={this.state.page_state.onPageSizeChange}
+                    />
+                  </ButtonGroup> }
+
                 {tab === "notebook" &&
                  <ButtonGroup className="float-right">
                    <ToolTip tooltip={T("Notebooks")}>
@@ -646,6 +661,7 @@ class HuntList extends React.Component {
                     }}
                     no_toolbar={true}
                     name="HuntList"
+                    setPageState={x=>this.setState({page_state: x})}
                   />
                 </div>
             </>

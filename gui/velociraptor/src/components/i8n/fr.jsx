@@ -588,8 +588,6 @@ const French = {
     "vfs_path":"Chemin VFS",
     "file_size":"Taille du fichier",
     "uploaded_size":"Taille téléversée",
-    "TablePagination": (from, to, size)=>
-    <>Afficher la ligne { from } à { to } de { size }</>,
 
     "Select a language":"Sélectionner la langue",
     "English":"Anglais",

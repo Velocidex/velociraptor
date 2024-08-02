@@ -119,9 +119,6 @@ const Vietnamese = {
     <>
     Giám sát sự kiện nhắm tới nhóm nhãn cụ thể. Chọn một nhóm nhãn ở trên để cấu hình các sự kiện, artifacts nhắm tới nhóm đó.
     </>,
-    "TablePagination": (from, to, size)=>
-    <>Hiển thị { from } đến { to } của { size }</>,
-
     // Below need verification
     "Role_administrator": "Quản trị viên của Server",
      "Role_org_admin": "Quản trị viên của Tổ chức",
