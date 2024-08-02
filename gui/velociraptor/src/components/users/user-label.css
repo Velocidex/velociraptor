@@ -22,3 +22,26 @@
 .set-password-button {
     width: 100%;
 }
+
+.accordion-button, .accordion-button:not(.collapsed) {
+    padding-left: 12px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    color: var(--color-foreground);
+    background: var(--color-form-control-background);
+}
+
+.accordion-item {
+    border: 0px;
+}
+
+.accordion-body {
+    padding: 10px;
+    color: var(--color-foreground);
+    background: var(--color-form-control-background);
+}
+
+input.form-control {
+    color: var(--color-foreground);
+    background: var(--color-form-control-background);
+}

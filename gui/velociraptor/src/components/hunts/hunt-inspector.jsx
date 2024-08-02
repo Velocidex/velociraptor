@@ -1,8 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import Tabs from 'react-bootstrap/Tabs';
-import Tab from 'react-bootstrap/Tab';
+import Nav from 'react-bootstrap/Nav';
 
 import HuntOverview from './hunt-overview.jsx';
 import HuntRequest from './hunt-request.jsx';
@@ -48,27 +47,36 @@ class HuntInspector extends React.Component {
 
         return (
             <div className="padded">
-              <Tabs defaultActiveKey={tab} onSelect={this.setDefaultTab}>
-                <Tab eventKey="overview" title={T("Overview")}>
-                  { tab === "overview" &&
-                    <HuntOverview
-                      fetch_hunts={this.props.fetch_hunts}
-                      hunt={this.props.hunt}/> }
-                </Tab>
-                <Tab eventKey="requests" title={T("Requests")}>
-                  { tab === "requests" &&
-                    <HuntRequest hunt={this.props.hunt}/> }
-                </Tab>
-                <Tab eventKey="clients" title={T("Clients")}>
-                  { tab === "clients" &&
-                    <HuntClients hunt={this.props.hunt} />}
-                </Tab>
-                <Tab eventKey="notebook" title={T("Notebook")}>
-                  { tab === "notebook" &&
-                    <HuntNotebook hunt={this.props.hunt} />}
-                </Tab>
+              <Nav variant="tab" defaultActiveKey={tab}
+                   onSelect={this.setDefaultTab}>
+                <Nav.Item>
+                  <Nav.Link as="button" className="btn btn-default"
+                            eventKey="overview">{T("Overview")}</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link as="button" className="btn btn-default"
+                            eventKey="requests">{T("Requests")}</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link as="button" className="btn btn-default"
+                            eventKey="clients">{T("Clients")}</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link as="button" className="btn btn-default"
+                            eventKey="notebook">{T("Notebook")}</Nav.Link>
+                </Nav.Item>
+              </Nav>
 
-              </Tabs>
+              { tab === "overview" &&
+                <HuntOverview
+                  fetch_hunts={this.props.fetch_hunts}
+                  hunt={this.props.hunt}/> }
+              { tab === "requests" &&
+                <HuntRequest hunt={this.props.hunt}/> }
+              { tab === "clients" &&
+                <HuntClients hunt={this.props.hunt} />}
+              { tab === "notebook" &&
+                <HuntNotebook hunt={this.props.hunt} />}
             </div>
         );
     }

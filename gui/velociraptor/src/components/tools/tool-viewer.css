@@ -9,3 +9,26 @@
     text-align: right;
     font-weight: bold;
 }
+
+.tool-card {
+    height: 100%;
+}
+
+
+.custom-file-button input[type=file] {
+    margin-left: -2px !important;
+}
+
+.custom-file-button input[type=file]::-webkit-file-upload-button {
+    display: none;
+}
+
+.custom-file-button input[type=file]::file-selector-button {
+    display: none;
+}
+
+.custom-file-button .form-label {
+    padding: 5px;
+    margin: 0;
+    padding-right: 10px;
+}

@@ -21,6 +21,7 @@ import EventTimelineViewer from "./timeline-viewer.jsx";
 import EventNotebook, { get_notebook_id } from "./event-notebook.jsx";
 import DeleteNotebookDialog from '../notebooks/notebook-delete.jsx';
 import T from '../i8n/i8n.jsx';
+import ToolTip from '../widgets/tooltip.jsx';
 
 import { withRouter }  from "react-router-dom";
 
@@ -305,83 +306,76 @@ class EventMonitoring extends React.Component {
                 <ButtonGroup>
                   { client_id === "server" || client_id === "" ?
                     <>
-                      <Button data-tooltip={T("Update server monitoring table")}
-                              data-position="right"
-                              className="btn-tooltip"
-                              onClick={() => this.setState({showServerEventTableWizard: true})}
-                              variant="default">
-                        <FontAwesomeIcon icon="edit"/>
-                <span className="sr-only">{T("Update server monitoring tables")}</span>
-                      </Button>
-                      <Button data-tooltip={T("Show server monitoring tables")}
-                              data-position="right"
-                              className="btn-tooltip"
-                              onClick={() => this.setState({showEventMonitoringPopup: true})}
-                              variant="default">
-                        <FontAwesomeIcon icon="binoculars"/>
-                <span className="sr-only">{T("Show server monitoring tables")}</span>
-                      </Button>
-
+                      <ToolTip tooltip={T("Update server monitoring table")}>
+                        <Button onClick={() => this.setState({showServerEventTableWizard: true})}
+                                variant="default">
+                          <FontAwesomeIcon icon="edit"/>
+                          <span className="sr-only">{T("Update server monitoring tables")}</span>
+                        </Button>
+                      </ToolTip>
+                      <ToolTip tooltip={T("Show server monitoring tables")}>
+                        <Button onClick={() => this.setState({showEventMonitoringPopup: true})}
+                                variant="default">
+                          <FontAwesomeIcon icon="binoculars"/>
+                          <span className="sr-only">{T("Show server monitoring tables")}</span>
+                        </Button>
+                      </ToolTip>
                     </>:
                     <>
-                      <Button data-tooltip={T("Update client monitoring table")}
-                              data-position="right"
-                              className="btn-tooltip"
-                              onClick={() => this.setState({showEventTableWizard: true})}
-                              variant="default">
-                        <FontAwesomeIcon icon="edit"/>
-                <span className="sr-only">{T("Update client monitoring table")}</span>
-                      </Button>
-                      <Button data-tooltip={T("Show client monitoring tables")}
-                              data-position="right"
-                              className="btn-tooltip"
-                              onClick={() => this.setState({showEventMonitoringPopup: true})}
-                              variant="default">
-                        <FontAwesomeIcon icon="binoculars"/>
-                <span className="sr-only">{T("Show client monitoring tables")}</span>
-                      </Button>
+                      <ToolTip tooltip={T("Update client monitoring table")}>
+                        <Button onClick={() => this.setState({showEventTableWizard: true})}
+                                variant="default">
+                          <FontAwesomeIcon icon="edit"/>
+                          <span className="sr-only">{T("Update client monitoring table")}</span>
+                        </Button>
+                      </ToolTip>
+                      <ToolTip tooltip={T("Show client monitoring tables")}>
+                        <Button onClick={() => this.setState({showEventMonitoringPopup: true})}
+                                variant="default">
+                          <FontAwesomeIcon icon="binoculars"/>
+                          <span className="sr-only">{T("Show client monitoring tables")}</span>
+                        </Button>
+                      </ToolTip>
                     </>
                   }
                   { this.state.buttonsRenderer() }
-                  <Dropdown data-tooltip={this.state.artifact.artifact ||
-                                   T("Select artifact")}
-                            data-position="right"
-                            className="btn-tooltip"
-                            variant="default">
-                    <Dropdown.Toggle variant="default">
-                      <FontAwesomeIcon icon="book"/>
-                      <span className="button-label">
-                        {this.state.artifact.artifact || T("Select artifact")}
-                      </span>
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu>
-                      { _.map(this.state.available_artifacts, (x, idx) => {
-                          let active_artifact = this.state.artifact &&
-                              this.state.artifact.artifact;
-                          return <Dropdown.Item
-                                   key={idx}
-                                   title={x.artifact}
-                                   active={x.artifact === active_artifact}
-                                   onClick={() => {
-                                       this.setArtifact(x);
-                                   }}>
-                                   {x.artifact}
-                                 </Dropdown.Item>;
-                      })}
-                    </Dropdown.Menu>
-                  </Dropdown>
+                  <ToolTip tooltip={this.state.artifact.artifact ||
+                                    T("Select artifact")}>
+                    <Dropdown variant="default">
+                      <Dropdown.Toggle variant="default">
+                        <FontAwesomeIcon icon="book"/>
+                        <span className="button-label">
+                          {this.state.artifact.artifact || T("Select artifact")}
+                        </span>
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu>
+                        { _.map(this.state.available_artifacts, (x, idx) => {
+                            let active_artifact = this.state.artifact &&
+                                this.state.artifact.artifact;
+                            return <Dropdown.Item
+                            key={idx}
+                            title={x.artifact}
+                            active={x.artifact === active_artifact}
+                            onClick={() => {
+                                this.setArtifact(x);
+                            }}>
+     {x.artifact}
+   </Dropdown.Item>;
+                        })}
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </ToolTip>
                 </ButtonGroup>
 
                 <ButtonGroup className="float-right">
                   { this.state.mode === mode_notebook &&
-                    <Button data-tooltip={T("Delete Notebook")}
-                            data-position="right"
-                            className="btn-tooltip"
-                            onClick={() => this.setState({showDeleteNotebook: true})}
+                     <ToolTip tooltip={T("Delete Notebook")}>
+                    <Button onClick={() => this.setState({showDeleteNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="trash"/>
               <span className="sr-only">{T("Delete Notebook")}</span>
                     </Button>
+                    </ToolTip>
                   }
                   <Dropdown title="mode" variant="default">
                     <Dropdown.Toggle variant="default">

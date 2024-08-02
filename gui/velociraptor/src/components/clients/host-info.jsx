@@ -12,7 +12,7 @@ import { LabelClients } from './clients-list.jsx';
 
 import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
 import ToggleButton from 'react-bootstrap/ToggleButton';
-import CardDeck from 'react-bootstrap/CardDeck';
+import Row from 'react-bootstrap/Row';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
@@ -25,6 +25,7 @@ import {CancelToken} from 'axios';
 import "./host-info.css";
 import { runArtifact } from "../flows/utils.jsx";
 import InFlightViewer from "./inflight_viewer.jsx";
+import ToolTip from '../widgets/tooltip.jsx';
 
 import T from '../i8n/i8n.jsx';
 
@@ -296,7 +297,7 @@ class VeloHostInfo extends Component {
         let client_id = this.props.client && this.props.client.client_id;
         if (this.state.mode === 'brief') {
             return (
-                <CardDeck className="dashboard">
+                <Row className="dashboard">
                   <Card>
                     <Card.Header>{ info.os_info.fqdn }</Card.Header>
                     <Card.Body>
@@ -389,7 +390,7 @@ class VeloHostInfo extends Component {
                       <MetadataEditor client_id={client_id} />
                     </Card.Body>
                   </Card>
-                </CardDeck>
+                </Row>
             );
         };
 
@@ -474,23 +475,21 @@ class VeloHostInfo extends Component {
         let is_quarantined = info.labels.includes("Quarantine");
 
         if (is_quarantined) {
-            return <Button variant="default"
-                           data-tooltip={T("Unquarantine Host")}
-                           data-position="right"
-                           className="btn-tooltip"
-                           onClick={this.unquarantineHost}>
-                     <FontAwesomeIcon icon="virus-slash" />
-                   </Button>;
+            return <ToolTip tooltip={T("Unquarantine Host")}>
+                     <Button variant="default"
+                             onClick={this.unquarantineHost}>
+                       <FontAwesomeIcon icon="virus-slash" />
+                     </Button>
+                   </ToolTip>;
         }
-        return <Button variant="default"
-                       data-tooltip={T("Quarantine Host")}
-                       data-position="right"
-                       className="btn-tooltip"
-                       onClick={()=>this.setState({
-                           showQuarantineDialog: true,
-                       })}>
-                 <FontAwesomeIcon icon="medkit" />
-               </Button>;
+        return <ToolTip tooltip={T("Quarantine Host")}>
+                 <Button variant="default"
+                         onClick={()=>this.setState({
+                             showQuarantineDialog: true,
+                         })}>
+                   <FontAwesomeIcon icon="medkit" />
+                 </Button>
+               </ToolTip>;
     }
 
     render() {
@@ -536,15 +535,14 @@ class VeloHostInfo extends Component {
                             this.setState({showLabelDialog: false});
                             this.updateClientInfo();
                         }}/>}
-                    <Button variant="default"
-                            data-tooltip={T("Add Label")}
-                            data-position="right"
-                            className="btn-tooltip"
-                            onClick={()=>this.setState({
-                                showLabelDialog: true,
-                            })}>
+                    <ToolTip tooltip={T("Add Label")}>
+                      <Button variant="default"
+                              onClick={()=>this.setState({
+                                  showLabelDialog: true,
+                              })}>
                         <FontAwesomeIcon icon="tags" />
-                    </Button>
+                      </Button>
+                    </ToolTip>
                   </div>
 
                   <ToggleButtonGroup type="radio"

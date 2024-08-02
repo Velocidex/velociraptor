@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import Button from 'react-bootstrap/Button';
 import VeloPagedTable from '../core/paged-table.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Tooltip from 'react-bootstrap/Tooltip';
+import T from '../i8n/i8n.jsx';
+import ToolTip from '../widgets/tooltip.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
 import api from '../core/api-service.jsx';
 
@@ -56,13 +56,7 @@ export default class FlowUploads extends React.Component {
                 if (filename.endsWith(".idx")) {
                     filename = filename.slice(0, -4);
                     return <>
-                             <OverlayTrigger
-                               delay={{show: 250, hide: 400}}
-                               overlay={(props)=>{
-                                   return <Tooltip {...props}>
-                                            Download padded file.
-                                          </Tooltip>;
-                               }}>
+                             <ToolTip tooltip={T("Download padded file.")}>
                                <Button as="a"
                                        className="flow-file-download-button"
                                        target="_blank"
@@ -77,17 +71,11 @@ export default class FlowUploads extends React.Component {
                                                arrayFormat: 'brackets'})}>
                                  {filename} &nbsp;&nbsp; <FontAwesomeIcon icon="expand"/>
                                </Button>
-                             </OverlayTrigger>
+                             </ToolTip>
                            </>;
                 }
 
-                return <OverlayTrigger
-                         delay={{show: 250, hide: 400}}
-                         overlay={(props)=>{
-                             return <Tooltip {...props}>
-                                      Download file.
-                                    </Tooltip>;
-                         }}>
+                return <ToolTip tooltip={T("Download file.")}>
                          <Button as="a"
                                  className="flow-file-download-button"
                                  target="_blank"
@@ -102,7 +90,7 @@ export default class FlowUploads extends React.Component {
                                          arrayFormat: 'brackets'})}>
                            {filename}
                          </Button>
-                       </OverlayTrigger>;
+                       </ToolTip>;
             },
         };
 

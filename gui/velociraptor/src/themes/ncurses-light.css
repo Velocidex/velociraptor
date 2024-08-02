@@ -196,11 +196,6 @@ body.ncurses-light {
   color: var(--color-canvas-background);
 }
 
-.ncurses-light input[type="checkbox"], input[type="radio"] {
-  accent-color: white;
-  transform: scale(1.5);
-}
-
 .ncurses-light .icon-small[alt="online"] {
   -ms-interpolation-mode: nearest-neighbor;
   image-rendering: -webkit-optimize-contrast;

@@ -197,19 +197,6 @@ body.ncurses-dark {
   color: var(--color-canvas-background);
 }
 
-/* Disable 'filters' while checked since they impact 'accent-color'. */
-.ncurses-dark input[type='checkbox']:checked {
-  filter: none;
-  box-shadow: none;
-}
-
-.ncurses-dark input[type='checkbox'] {
-  transform: scale(1.5);
-  accent-color: var(--color-canvas-background);
-  filter: invert(1);
-  box-shadow: none;
-}
-
 .ncurses-dark .icon-small[alt="online"] {
   -ms-interpolation-mode: nearest-neighbor;
   image-rendering: -webkit-optimize-contrast;

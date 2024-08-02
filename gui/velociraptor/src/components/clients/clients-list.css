@@ -15,6 +15,7 @@ button.btn.online-status {
 
 .selection-cell input {
     vertical-align: text-bottom;
+    padding: 0.3rem;
 }
 
 .online-status {

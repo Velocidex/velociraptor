@@ -3,15 +3,15 @@ import PropTypes from 'prop-types';
 import VeloTimestamp from "../utils/time.jsx";
 import VeloValueRenderer from "../utils/value.jsx";
 import ArtifactLink from '../artifacts/artifacts-link.jsx';
-import CardDeck from 'react-bootstrap/CardDeck';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { requestToParameters } from "./utils.jsx";
 import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
-import Tooltip from 'react-bootstrap/Tooltip';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import ToolTip from '../widgets/tooltip.jsx';
 import T from '../i8n/i8n.jsx';
 import _ from 'lodash';
 import {CancelToken} from 'axios';
@@ -113,226 +113,209 @@ export default class FlowOverview extends React.Component {
 
         return (
             <>
-            <CardDeck>
-              <Card>
-                <Card.Header>{T("Overview")}</Card.Header>
-                <Card.Body>
-                  <dl className="row">
-                    <dt className="col-4">{T("Artifact Names")}</dt>
-                    <dd className="col-8">
-                      { _.map(artifacts, function(v, idx) {
-                          return <ArtifactLink
-                                   artifact={v}
-                                   key={idx}>{v}</ArtifactLink>;
-                      })}
-                    </dd>
+              <Row>
+                <Col sm="6">
+                  <Card>
+                    <Card.Header>{T("Overview")}</Card.Header>
+                    <Card.Body>
+                      <dl className="row">
+                        <dt className="col-4">{T("Artifact Names")}</dt>
+                        <dd className="col-8">
+                          { _.map(artifacts, function(v, idx) {
+                              return <ArtifactLink
+                              artifact={v}
+                              key={idx}>{v}</ArtifactLink>;
+                          })}
+                        </dd>
 
-                    <dt className="col-4">{T("Flow ID")}</dt>
-                    <dd className="col-8">
-                      { flow.session_id } { flow.request.urgent && "( " + T("Urgent") + " )" }
-                    </dd>
+                        <dt className="col-4">{T("Flow ID")}</dt>
+                        <dd className="col-8">
+                          { flow.session_id } { flow.request.urgent && "( " + T("Urgent") + " )" }
+                        </dd>
 
-                    <dt className="col-4">{T("Creator")}</dt>
-                    <dd className="col-8"> { flow.request.creator } </dd>
+                        <dt className="col-4">{T("Creator")}</dt>
+                        <dd className="col-8"> { flow.request.creator } </dd>
 
-                    <dt className="col-4">{T("Create Time")}</dt>
-                    <dd className="col-8">
-                      <VeloTimestamp usec={flow.create_time / 1000}/>
-                    </dd>
+                        <dt className="col-4">{T("Create Time")}</dt>
+                        <dd className="col-8">
+                          <VeloTimestamp usec={flow.create_time / 1000}/>
+                        </dd>
 
-                    <dt className="col-4">{T("Start Time")}</dt>
-                    <dd className="col-8">
-                      <VeloTimestamp usec={flow.start_time / 1000}/>
-                    </dd>
+                        <dt className="col-4">{T("Start Time")}</dt>
+                        <dd className="col-8">
+                          <VeloTimestamp usec={flow.start_time / 1000}/>
+                        </dd>
 
-                    <dt className="col-4">{T("Last Active")}</dt>
-                    <dd className="col-8">
-                      <VeloTimestamp usec={flow.active_time / 1000}/>
-                    </dd>
+                        <dt className="col-4">{T("Last Active")}</dt>
+                        <dd className="col-8">
+                          <VeloTimestamp usec={flow.active_time / 1000}/>
+                        </dd>
 
-                    <dt className="col-4">{T("Duration")}</dt>
-                    <dd className="col-8">
-                      { flow.execution_duration ?
-                        ((flow.execution_duration)/1000000000).toFixed(2) +
-                        " " + T("seconds") :
-                        flow.state === "RUNNING" && T(" Running...")}
-                    </dd>
+                        <dt className="col-4">{T("Duration")}</dt>
+                        <dd className="col-8">
+                          { flow.execution_duration ?
+                            ((flow.execution_duration)/1000000000).toFixed(2) +
+                            " " + T("seconds") :
+                            flow.state === "RUNNING" && T(" Running...")}
+                        </dd>
 
-                    <dt className="col-4">{T("State")}</dt>
-                    <dd className="col-8">{ T(flow.state) }</dd>
+                        <dt className="col-4">{T("State")}</dt>
+                        <dd className="col-8">{ T(flow.state) }</dd>
 
-                    { flow.state === "ERROR" &&
-                      <Fragment>
-                        <dt className="col-4">{T("Error")}</dt>
-                        <dd className="col-8">{ flow.status }</dd>
-                      </Fragment>
-                    }
+                        { flow.state === "ERROR" &&
+                          <Fragment>
+                            <dt className="col-4">{T("Error")}</dt>
+                            <dd className="col-8">{ flow.status }</dd>
+                          </Fragment>
+                        }
 
-                    <dt className="col-4">{T("Ops/Sec")}</dt>
-                    <dd className="col-8"> {flow.request.ops_per_second || T('Unlimited')} </dd>
-                    <dt className="col-4">{T("CPU Limit")}</dt>
-                    <dd className="col-8"> {flow.request.cpu_limit || T('Unlimited')} </dd>
-                    <dt className="col-4">{T("IOPS Limit")}</dt>
-                    <dd className="col-8"> {flow.request.iops_limit || T('Unlimited')} </dd>
-                    <dt className="col-4">{T("Timeout")}</dt>
-                    <dd className="col-8"> {flow.request.timeout || '600' } {T("seconds")}</dd>
-                    <dt className="col-4">{T("Max Rows")}</dt>
-                    <dd className="col-8"> {flow.request.max_rows || '1m'} {T("rows")}</dd>
-                    <dt className="col-4">{T("Max Mb")}</dt>
-                    <dd className="col-8"> { ((flow.request.max_upload_bytes || 1048576000)
-                                              / 1024 / 1024).toFixed(2) } Mb</dd>
-                    <br />
-                  </dl>
+                        <dt className="col-4">{T("Ops/Sec")}</dt>
+                        <dd className="col-8"> {flow.request.ops_per_second || T('Unlimited')} </dd>
+                        <dt className="col-4">{T("CPU Limit")}</dt>
+                        <dd className="col-8"> {flow.request.cpu_limit || T('Unlimited')} </dd>
+                        <dt className="col-4">{T("IOPS Limit")}</dt>
+                        <dd className="col-8"> {flow.request.iops_limit || T('Unlimited')} </dd>
+                        <dt className="col-4">{T("Timeout")}</dt>
+                        <dd className="col-8"> {flow.request.timeout || '600' } {T("seconds")}</dd>
+                        <dt className="col-4">{T("Max Rows")}</dt>
+                        <dd className="col-8"> {flow.request.max_rows || '1m'} {T("rows")}</dd>
+                        <dt className="col-4">{T("Max Mb")}</dt>
+                        <dd className="col-8"> { ((flow.request.max_upload_bytes || 1048576000)
+                                                  / 1024 / 1024).toFixed(2) } Mb</dd>
+                        <br />
+                      </dl>
 
-                  <h5> {T("Parameters")} </h5>
-                  <dl className="row">
-                    {_.map(artifacts, function(name, idx) {
-                        return <React.Fragment key={idx}>
-                                 <dt className="col-11">{name}</dt><dd className="col-1"/>
-                                 {_.map(parameters[name], function(value, key) {
-                                     if (value) {
-                                         return <React.Fragment key={key}>
-                                                  <dt className="col-4">{key}</dt>
-                                                  <dd className="col-8">
-                                                    <VeloValueRenderer value={value}/>
-                                                  </dd>
-                                                </React.Fragment>;
-                                     };
-                                     return <React.Fragment key={key}/>;
-                                 })}
-                               </React.Fragment>;
-                    })}
-                  </dl>
-                </Card.Body>
-              </Card>
-              <Card>
-                <Card.Header>{T("Results")}</Card.Header>
-                <Card.Body>
-                  <dl className="row">
-                    <dt className="col-4">{T("Artifacts with Results")}</dt>
-                    <dd className="col-8">
-                      { _.map(artifacts_with_results, function(item, idx) {
-                          return <VeloValueRenderer value={item} key={idx}/>;
-                      })}
-                    </dd>
+                      <h5> {T("Parameters")} </h5>
+                      <dl className="row">
+                        {_.map(artifacts, function(name, idx) {
+                            return <React.Fragment key={idx}>
+                 <dt className="col-11">{name}</dt><dd className="col-1"/>
+                 {_.map(parameters[name], function(value, key) {
+                     if (value) {
+                         return <React.Fragment key={key}>
+                                  <dt className="col-4">{key}</dt>
+                                  <dd className="col-8">
+                                    <VeloValueRenderer value={value}/>
+                                  </dd>
+                                </React.Fragment>;
+                     };
+                     return <React.Fragment key={key}/>;
+                 })}
+               </React.Fragment>;
+                        })}
+                      </dl>
+                    </Card.Body>
+                  </Card>
+                </Col>
+                <Col sm="6">
+                  <Card>
+                    <Card.Header>{T("Results")}</Card.Header>
+                    <Card.Body>
+                      <dl className="row">
+                        <dt className="col-4">{T("Artifacts with Results")}</dt>
+                        <dd className="col-8">
+                          { _.map(artifacts_with_results, function(item, idx) {
+                              return <VeloValueRenderer value={item} key={idx}/>;
+                          })}
+                        </dd>
 
-                    <dt className="col-4">{T("Total Rows")}</dt>
-                    <dd className="col-8">
-                      { flow.total_collected_rows || 0 }
-                    </dd>
+                        <dt className="col-4">{T("Total Rows")}</dt>
+                        <dd className="col-8">
+                          { flow.total_collected_rows || 0 }
+                        </dd>
 
-                    <dt className="col-4">{T("Uploaded Bytes")}</dt>
-                    <dd className="col-8">
-                      { (flow.total_uploaded_bytes || 0) } / {
-                        (flow.total_expected_uploaded_bytes || 0) }
-                    </dd>
+                        <dt className="col-4">{T("Uploaded Bytes")}</dt>
+                        <dd className="col-8">
+                          { (flow.total_uploaded_bytes || 0) } / {
+                              (flow.total_expected_uploaded_bytes || 0) }
+                        </dd>
 
-                    <dt className="col-4">{T("Files uploaded")}</dt>
-                    <dd className="col-8">
-                      {uploaded_files.length || flow.total_uploaded_files || 0 }
-                    </dd>
+                        <dt className="col-4">{T("Files uploaded")}</dt>
+                        <dd className="col-8">
+                          {uploaded_files.length || flow.total_uploaded_files || 0 }
+                        </dd>
 
-                    <dt className="col-4">{T("Download Results")}</dt>
-                    <dd className="col-8">
-                      <ButtonGroup>
-                        { lock_password ?
-                          <Button
-                            onClick={()=>this.setState({lock: !this.state.lock})}
-                            variant="default">
-                            {this.state.lock ?
-                             <FontAwesomeIcon icon="lock"/> :
-                             <FontAwesomeIcon icon="lock-open"/> }
-                          </Button>
-                          :
-                          <OverlayTrigger
-                            delay={{show: 250, hide: 400}}
-                            overlay={
-                                <Tooltip
-                                  id='download-tooltip'>
-                                  {T("Set a password in user preferences to lock the download file.")}
-                                </Tooltip>
-                            }>
-                            <span className="d-inline-block">
+                        <dt className="col-4">{T("Download Results")}</dt>
+                        <dd className="col-8">
+                          <ButtonGroup>
+                            { lock_password ?
                               <Button
-                                style={{ pointerEvents: "none"}}
-                                disabled={true}
+                                onClick={()=>this.setState({lock: !this.state.lock})}
                                 variant="default">
-                                <FontAwesomeIcon icon="lock-open"/>
+                                {this.state.lock ?
+                                 <FontAwesomeIcon icon="lock"/> :
+                                 <FontAwesomeIcon icon="lock-open"/> }
                               </Button>
-                            </span>
-                          </OverlayTrigger>
-                        }
-                        {this.state.expand_sparse ?
-                         <OverlayTrigger
-                           delay={{show: 250, hide: 400}}
-                           overlay={
-                               <Tooltip
-                                 id='expand-sparse'>
-                                 {T("Sparse files will be expanded in export.")}
-                               </Tooltip>
-                           }>
-                           <span className="d-inline-block">
-                             <Button
-                               onClick={()=>this.setState({expand_sparse: false})}
-                               variant="default">
-                               <FontAwesomeIcon icon="expand"/>
-                             </Button>
-                           </span>
-                         </OverlayTrigger> :
-                         <OverlayTrigger
-                           delay={{show: 250, hide: 400}}
-                           overlay={
-                               <Tooltip
-                                 id='expand-sparse'>
-                                 {T("Sparse files will remain sparse in export.")}
-                               </Tooltip>
-                           }>
-                           <span className="d-inline-block">
-                             <Button
-                               onClick={()=>this.setState({expand_sparse: !this.state.expand_sparse})}
-                               variant="default">
-                               <FontAwesomeIcon icon="compress"/>
-                             </Button>
-                           </span>
-                         </OverlayTrigger>
-                        }
-                        <Dropdown>
-                          <Dropdown.Toggle variant="default">
-                            <FontAwesomeIcon icon="archive"/>
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu>
-                            <Dropdown.Item
-                              onClick={()=>this.prepareDownload({
-                                  json_format: true,
-                              })}>
-                              {T("Prepare Download")}
-                            </Dropdown.Item>
-                            <Dropdown.Item
-                              onClick={()=>this.prepareDownload({
-                                  csv_format: true,
-                              })}>
-                              {T("Prepare CSV Download")}
-                            </Dropdown.Item>
-                            <Dropdown.Item
-                              onClick={()=>this.prepareDownload({
-                                  json_format: true,
-                                  csv_format: true,
-                              })}>
-                              {T("Prepare CSV And JSON Download")}
-                            </Dropdown.Item>
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </ButtonGroup>
-                    </dd>
-                  </dl>
-                  <dl>
-                    <dd>
-                      <AvailableDownloads files={this.state.available_downloads}/>
-                    </dd>
-                  </dl>
-                </Card.Body>
-              </Card>
-            </CardDeck>
+                              :
+                              <ToolTip tooltip={T("Set a password in user preferences to lock the download file.")}>
+                                <span className="d-inline-block">
+                                  <Button
+                                    style={{ pointerEvents: "none"}}
+                                    disabled={true}
+                                    variant="default">
+                                    <FontAwesomeIcon icon="lock-open"/>
+                                  </Button>
+                                </span>
+                              </ToolTip>
+                            }
+                            {this.state.expand_sparse ?
+                             <ToolTip tooltip={T("Sparse files will be expanded in export.")}>
+                               <span className="d-inline-block">
+                                 <Button
+                                   onClick={()=>this.setState({expand_sparse: false})}
+                                   variant="default">
+                                   <FontAwesomeIcon icon="expand"/>
+                                 </Button>
+                               </span>
+                             </ToolTip> :
+                             <ToolTip tooltip={T("Sparse files will remain sparse in export.")}>
+                               <span className="d-inline-block">
+                                 <Button
+                                   onClick={()=>this.setState({expand_sparse: !this.state.expand_sparse})}
+                                   variant="default">
+                                   <FontAwesomeIcon icon="compress"/>
+                                 </Button>
+                               </span>
+                             </ToolTip>
+                            }
+                            <Dropdown>
+                              <Dropdown.Toggle variant="default">
+                                <FontAwesomeIcon icon="archive"/>
+                              </Dropdown.Toggle>
+                              <Dropdown.Menu>
+                                <Dropdown.Item
+                                  onClick={()=>this.prepareDownload({
+                                      json_format: true,
+                                  })}>
+                                  {T("Prepare Download")}
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                  onClick={()=>this.prepareDownload({
+                                      csv_format: true,
+                                  })}>
+                                  {T("Prepare CSV Download")}
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                  onClick={()=>this.prepareDownload({
+                                      json_format: true,
+                                      csv_format: true,
+                                  })}>
+                                  {T("Prepare CSV And JSON Download")}
+                                </Dropdown.Item>
+                              </Dropdown.Menu>
+                            </Dropdown>
+                          </ButtonGroup>
+                        </dd>
+                      </dl>
+                      <dl>
+                        <dd>
+                          <AvailableDownloads files={this.state.available_downloads}/>
+                        </dd>
+                      </dl>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              </Row>
             </>
         );
     }

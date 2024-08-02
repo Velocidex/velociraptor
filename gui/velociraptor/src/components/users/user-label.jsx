@@ -22,10 +22,9 @@ import Row from 'react-bootstrap/Row';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 import T from '../i8n/i8n.jsx';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Tooltip from 'react-bootstrap/Tooltip';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Select from 'react-select';
+import ToolTip from '../widgets/tooltip.jsx';
 
 import { JSONparse } from '../utils/json_parse.jsx';
 
@@ -104,14 +103,11 @@ class _PasswordChangeForm extends React.PureComponent {
               </Form.Label>
               <Col sm="8">
                 <Accordion>
-                  <Card>
-                    <Accordion.Toggle as={Card.Header} eventKey="0">
+                  <Accordion.Item eventKey="0">
+                    <Accordion.Header>
                       {T("Update Password")}
-                      <span className="float-right">
-                        <FontAwesomeIcon icon="chevron-down"/>
-                      </span>
-                    </Accordion.Toggle>
-                    <Accordion.Collapse eventKey="0">
+                    </Accordion.Header>
+                    <Accordion.Body>
                       <PasswordChange
                         username={this.props.username}
                         onClose={()=>{
@@ -120,8 +116,8 @@ class _PasswordChangeForm extends React.PureComponent {
                             this.props.history.push("/welcome");
                             this.props.onClose();
                         }}/>
-                    </Accordion.Collapse>
-                  </Card>
+                    </Accordion.Body>
+                  </Accordion.Item>
                 </Accordion>
               </Col>
             </Form.Group>
@@ -206,13 +202,9 @@ class UserSettings extends React.PureComponent {
                 { this.context.traits.orgs &&
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">
-                      <OverlayTrigger
-                        delay={{show: 250, hide: 400}}
-                        overlay={(props)=><Tooltip {...props}>
-                                            {T("Switch to a different org")}
-                                          </Tooltip>}>
+                      <ToolTip tooltip={T("Switch to a different org")}>
                         <div>{T("Organization")}</div>
-                      </OverlayTrigger>
+                      </ToolTip>
                     </Form.Label>
                     <Col sm="8">
                       <Form.Control as="select"
@@ -263,13 +255,9 @@ class UserSettings extends React.PureComponent {
 
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=><Tooltip {...props}>
-                                                {T("Default password to use for downloads")}
-                                              </Tooltip>}>
+                    <ToolTip tooltip={T("Default password to use for downloads")}>
                       <div>{T("Downloads Password")}</div>
-                    </OverlayTrigger>
+                    </ToolTip>
                   </Form.Label>
                   <Col sm="8">
                     <InputGroup className="mb-3">
@@ -281,30 +269,24 @@ class UserSettings extends React.PureComponent {
                                               default_password: e.currentTarget.value
                                           });
                                          }}/>
-                      <div className="input-group-append">
-                        <Button as="button" variant="default"
-                                disabled = {!this.state.edited}
-                                onClick={e => {
-                                    this.props.setSetting({
-                                        default_password: this.state.default_password
-                                    });
-                                    this.setState({"edited": false});
-                                }}>
-                          <FontAwesomeIcon icon="save" />
-                        </Button>
-                      </div>
+                      <Button as="button" variant="default"
+                              disabled = {!this.state.edited}
+                              onClick={e => {
+                                  this.props.setSetting({
+                                      default_password: this.state.default_password
+                                  });
+                                  this.setState({"edited": false});
+                              }}>
+                        <FontAwesomeIcon icon="save" />
+                      </Button>
                     </InputGroup></Col>
                 </Form.Group>
 
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=><Tooltip {...props}>
-                                          {T("Select a language")}
-                                        </Tooltip>}>
+                    <ToolTip tooltip={T("Select a language")}>
                       <div>{T("Language")}</div>
-                    </OverlayTrigger>
+                    </ToolTip>
                   </Form.Label>
                   <Col sm="8">
                     <Form.Control as="select"
@@ -333,19 +315,13 @@ class UserSettings extends React.PureComponent {
 
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=><Tooltip {...props}>
-                                          {T("Select a timezone")}
-                                        </Tooltip>}>
+                    <ToolTip tooltip={T("Select a timezone")}>
                       <div>{T("Display timezone")}</div>
-                    </OverlayTrigger>
+                    </ToolTip>
                   </Form.Label>
                   <Col sm="8">
                     <InputGroup className="mb-3">
-                      <InputGroup.Prepend>
-                        <InputGroup.Text
-                          as="button"
+                        <Button
                           className="btn btn-default"
                           onClick={()=>{
                               this.setState({timezone: "UTC"});
@@ -354,8 +330,7 @@ class UserSettings extends React.PureComponent {
                               });
                           }}>
                           UTC
-                        </InputGroup.Text>
-                      </InputGroup.Prepend>
+                        </Button>
                       <Select
                         className="timezone-selector"
                         classNamePrefix="velo"

@@ -577,8 +577,10 @@ body.veloci-dark {
   background: #3f4754;
 }
 
-.veloci-dark .custom-switch .custom-control-input:disabled:checked~.custom-control-label:before {
-  background-color: var(--color-accent-25);
+.veloci-dark .form-switch input.form-check-input:checked {
+    background-color: var(--color-accent-25);
+    border-color: var(--color-accent-25);
+    accent-color: var(--color-accent-25);
 }
 
 .veloci-dark .form-control,
@@ -617,19 +619,6 @@ body.veloci-dark {
   color: var(--color-foreground);
   text-shadow: none;
   font-weight: 500;
-}
-
-/* Disable 'filters' while checked since they impact 'accent-color'. */
-.veloci-dark input[type='checkbox']:checked {
-  filter: none;
-  box-shadow: none;
-}
-
-.veloci-dark input[type='checkbox'] {
-  transform: scale(1.2);
-  accent-color: var(--accent-color);
-  filter: brightness(0%) saturate(100%) invert(34%) sepia(96%) saturate(901%) hue-rotate(86deg) brightness(96%) contrast(95%);
-  box-shadow: none;
 }
 
 /* Pagination */

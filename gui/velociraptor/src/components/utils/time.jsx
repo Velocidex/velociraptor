@@ -4,17 +4,14 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 import 'moment-timezone';
-import Tooltip from 'react-bootstrap/Tooltip';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
+import ToolTip from '../widgets/tooltip.jsx';
 
-const renderToolTip = (props, ts) => {
+const renderHumanTime = ts=> {
     let now = new Date().getTime();
     let difference = (now-ts.getTime());
-    return <Tooltip {...props}>
-             {T("HumanizeDuration", difference)}
-           </Tooltip>;
+    return T("HumanizeDuration", difference);
 };
 
 const digitsRegex = /^[0-9.]+$/;
@@ -118,13 +115,11 @@ class VeloTimestamp extends Component {
             formatted_ts += when_tz.format("Z");
         }
 
-        return <OverlayTrigger
-                 delay={{show: 250, hide: 400}}
-                 overlay={(props)=>renderToolTip(props, ts)}>
+        return <ToolTip tooltip={renderHumanTime(ts)}>
                  <div className="timestamp">
                    {formatted_ts}
                  </div>
-               </OverlayTrigger>;
+               </ToolTip>;
     };
 }
 

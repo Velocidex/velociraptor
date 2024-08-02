@@ -1311,19 +1311,6 @@ body.midnight {
   opacity: 0.8;
 }
 
-/* Disable 'filters' while checked since they impact 'accent-color'. */
-.midnight input[type='checkbox']:checked {
-  filter: none;
-  box-shadow: none;
-}
-
-.midnight input[type='checkbox'] {
-  transform: scale(1.2);
-  accent-color: var(--accent-color);
-  filter: brightness(0%) saturate(100%) invert(16%) sepia(93%) saturate(5000%) hue-rotate(356deg) brightness(99%) contrast(122%);
-  box-shadow: none;
-}
-
 .midnight .no-content {
   text-align: center;
   margin-top: 50px;

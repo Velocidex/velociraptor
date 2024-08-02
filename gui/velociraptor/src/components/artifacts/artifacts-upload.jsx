@@ -17,6 +17,7 @@ import filterFactory from 'react-bootstrap-table2-filter';
 import { formatColumns } from "../core/table.jsx";
 import T from '../i8n/i8n.jsx';
 import Alert from 'react-bootstrap/Alert';
+import ToolTip from '../widgets/tooltip.jsx';
 
 import "./artifacts-upload.css";
 
@@ -84,9 +85,16 @@ export default class ArtifactsUpload extends React.Component {
                                  return {name: x, id: idx};
                              });
                          this.setState({loading:false,
+                                        current_error: undefined,
                                         errors: response.data.errors || [],
                                         vfs_path: response.data.vfs_path,
                                         uploaded: uploaded});
+                     }).catch(err=>{
+                         let data = err.response &&
+                             err.response.data && err.response.data.message;
+                         this.setState({current_error: data,
+                                        loading:false,
+                                        pack_file: undefined});
                      });
         };
         reader.readAsDataURL(this.state.pack_file);
@@ -153,32 +161,36 @@ export default class ArtifactsUpload extends React.Component {
                   <Form className="selectable">
                     <Form.Group as={Row}>
                       <Col sm="12">
-                        <InputGroup className="full-width">
-                          <InputGroup.Prepend>
-                            <InputGroup.Text
-                              className={classNames({"disabled": !this.state.pack_file})}
-                              onClick={()=>this.uploadFile()}>
-                              { this.state.loading ?
-                                <FontAwesomeIcon icon="spinner" spin/> :
-                                T("Upload") }
-                            </InputGroup.Text>
-                          </InputGroup.Prepend>
-                          <Form.File
-                            label={T("Select artifact pack (Zip file with YAML definitions)")}
-                            custom>
-                            <Form.File.Input
-                              onChange={e => {
-                                  if (!_.isEmpty(e.currentTarget.files)) {
-                                      this.setState({pack_file: e.currentTarget.files[0]});
-                                  }
-                              }}
-                            />
-                            <Form.File.Label data-browse="Select file">
-                              { this.state.pack_file ? this.state.pack_file.name :
-                                T("Click to upload artifact pack file")}
-                            </Form.File.Label>
-                          </Form.File>
+                        <InputGroup className="full-width custom-file-button">
+                          <Button variant="default"
+                            className={classNames({"disabled": !this.state.pack_file})}
+                            onClick={()=>this.uploadFile()}>
+                            { this.state.loading ?
+                              <FontAwesomeIcon icon="spinner" spin/> :
+                              T("Click to Upload") }
+                          </Button>
+                          <Form.Control type="file" id="upload"
+                                        onChange={e => {
+                                            if (!_.isEmpty(e.currentTarget.files)) {
+                                                this.setState({pack_file: e.currentTarget.files[0]});
+                                            }
+                                        }}
+                          />
+                          <ToolTip tooltip={T("Select artifact pack (Zip file with YAML definitions)")}>
+                            <Button variant="default-outline"
+                                    className="flush-right">
+                              <Form.Label data-browse="Select file" htmlFor="upload">
+                                {this.state.pack_file ? this.state.pack_file.name :
+                                 T("Select artifact pack (Zip file with YAML definitions)")}
+                              </Form.Label>
+                            </Button>
+                          </ToolTip>
+
                         </InputGroup>
+                        { this.state.current_error &&
+                          <Alert variant="danger" className="text-center">
+                            {this.state.current_error}
+                          </Alert> }
                       </Col>
                     </Form.Group>
                   </Form>

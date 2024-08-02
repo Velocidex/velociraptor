@@ -1206,19 +1206,6 @@ body.coolgray-dark {
   opacity: 0.8;
 }
 
-/* Disable 'filters' while checked since they impact 'accent-color'. */
-.coolgray-dark input[type='checkbox']:checked {
-  filter: none;
-  box-shadow: none;
-}
-
-.coolgray-dark input[type='checkbox'] {
-  transform: scale(1.2);
-  accent-color: var(--color-foreground-dimmed);
-  filter: brightness(0%) saturate(100%) invert(80%) sepia(8%) saturate(190%) hue-rotate(166deg) brightness(110%) contrast(89%);
-  box-shadow: none;
-}
-
 .coolgray-dark .no-content {
   text-align: center;
   margin-top: 50px;

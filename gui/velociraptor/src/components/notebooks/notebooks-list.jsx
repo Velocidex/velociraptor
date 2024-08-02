@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BootstrapTable from 'react-bootstrap-table-next';
 import ExportNotebook from './export-notebook.jsx';
 import NotebookUploads from './notebook-uploads.jsx';
+import ToolTip from '../widgets/tooltip.jsx';
 
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
@@ -198,63 +199,54 @@ class NotebooksList extends React.Component {
               { !this.props.hideToolbar &&
                 <Navbar className="toolbar">
                   <ButtonGroup>
-                    <Button data-tooltip="Full Screen"
-                            data-position="right"
-                            className="btn-tooltip"
-                            disabled={!this.props.selected_notebook ||
-                                      !this.props.selected_notebook.notebook_id}
-                            onClick={this.setFullScreen}
-                            variant="default">
-                      <FontAwesomeIcon icon="expand"/>
-                      <span className="sr-only">{T("Full Screen")}</span>
-                    </Button>
-
-                    <Button data-tooltip="NewNotebook"
-                            data-position="right"
-                            className="btn-tooltip"
-                            onClick={()=>this.setState({showNewNotebookDialog: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="plus"/>
-                      <span className="sr-only">{T("New Notebook")}</span>
-                    </Button>
-
-                    <Button data-tooltip="Delete Notebook"
-                            data-position="right"
-                            className="btn-tooltip"
-                            disabled={_.isEmpty(this.props.selected_notebook)}
-                            onClick={()=>this.setState({showDeleteNotebookDialog: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="trash"/>
-                      <span className="sr-only">{T("Delete Notebook")}</span>
-                    </Button>
-
-                    <Button data-tooltip="Edit Notebook"
-                            data-position="right"
-                            className="btn-tooltip"
-                            disabled={_.isEmpty(this.props.selected_notebook)}
-                            onClick={()=>this.setState({showEditNotebookDialog: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="wrench"/>
-                      <span className="sr-only">{T("Edit Notebook")}</span>
-                    </Button>
-                    <Button data-tooltip="NotebookUploads"
-                            data-position="right"
-                            className="btn-tooltip"
-                            disabled={_.isEmpty(this.props.selected_notebook)}
-                            onClick={()=>this.setState({showNotebookUploadsDialog: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="fa-file-download"/>
-                      <span className="sr-only">{T("Notebook Uploads")}</span>
-                    </Button>
-                    <Button data-tooltip="ExportNotebook"
-                            data-position="right"
-                            className="btn-tooltip"
-                            disabled={_.isEmpty(this.props.selected_notebook)}
-                            onClick={()=>this.setState({showExportNotebookDialog: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="download"/>
-                      <span className="sr-only">{T("Export Notebook")}</span>
-                    </Button>
+                    <ToolTip tooltip={T("Full Screen")}>
+                      <Button disabled={!this.props.selected_notebook ||
+                                        !this.props.selected_notebook.notebook_id}
+                              onClick={this.setFullScreen}
+                              variant="default">
+                        <FontAwesomeIcon icon="expand"/>
+                        <span className="sr-only">{T("Full Screen")}</span>
+                      </Button>
+                    </ToolTip>
+                    <ToolTip tooltip={T("New Notebook")}>
+                      <Button onClick={()=>this.setState({showNewNotebookDialog: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="plus"/>
+                        <span className="sr-only">{T("New Notebook")}</span>
+                      </Button>
+                    </ToolTip>
+                    <ToolTip tooltip={T("Delete Notebook")}>
+                      <Button disabled={_.isEmpty(this.props.selected_notebook)}
+                              onClick={()=>this.setState({showDeleteNotebookDialog: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="trash"/>
+                        <span className="sr-only">{T("Delete Notebook")}</span>
+                      </Button>
+                    </ToolTip>
+                    <ToolTip tooltip={T("Edit Notebook")}>
+                      <Button disabled={_.isEmpty(this.props.selected_notebook)}
+                              onClick={()=>this.setState({showEditNotebookDialog: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="wrench"/>
+                        <span className="sr-only">{T("Edit Notebook")}</span>
+                      </Button>
+                    </ToolTip>
+                    <ToolTip tooltip={T("Notebook Uploads")}>
+                      <Button disabled={_.isEmpty(this.props.selected_notebook)}
+                              onClick={()=>this.setState({showNotebookUploadsDialog: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="fa-file-download"/>
+                        <span className="sr-only">{T("Notebook Uploads")}</span>
+                      </Button>
+                    </ToolTip>
+                    <ToolTip tooltip={T("Export Notebook")}>
+                      <Button disabled={_.isEmpty(this.props.selected_notebook)}
+                              onClick={()=>this.setState({showExportNotebookDialog: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="download"/>
+                        <span className="sr-only">{T("Export Notebook")}</span>
+                      </Button>
+                    </ToolTip>
                   </ButtonGroup>
                 </Navbar>
               }

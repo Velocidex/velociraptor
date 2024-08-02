@@ -609,12 +609,6 @@ body.pink-light {
   font-weight: 400;
 }
 
-.pink-light input[type='checkbox'] {
-  transform: scale(1.2);
-  accent-color: var(--accent-color);
-  box-shadow: none;
-}
-
 /* Pagination */
 
 .pink-light .page-item .page-link {

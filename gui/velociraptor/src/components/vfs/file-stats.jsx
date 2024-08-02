@@ -6,13 +6,15 @@ import _ from 'lodash';
 
 import Button from 'react-bootstrap/Button';
 import VeloTimestamp from "../utils/time.jsx";
-import CardDeck from 'react-bootstrap/CardDeck';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
 import api from '../core/api-service.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {CancelToken} from 'axios';
 import T from '../i8n/i8n.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
+import ToolTip from '../widgets/tooltip.jsx';
 
 class VeloFileStats extends Component {
     static propTypes = {
@@ -99,7 +101,8 @@ class VeloFileStats extends Component {
 
         let client_id = this.props.client && this.props.client.client_id;
         return (
-            <CardDeck className="file-stats">
+            <Row className="file-stats">
+              <Col sm="6">
               <Card>
                 <Card.Header>{selectedRow._OSPath || selectedRow._FullPath || selectedRow.Name}</Card.Header>
                 <Card.Body>
@@ -140,19 +143,19 @@ class VeloFileStats extends Component {
                           <dd className="col-8">
                             <VeloTimestamp usec={ selectedRow.Download.mtime / 1000 } />
                             { !_.isEmpty(selectedRow.Download.components) &&
-                              <Button variant="outline-default"
-                                      data-tooltip={T("Download")}
-                                      data-position="right"
-                                      className="btn-tooltip"
-                                      href={api.href("/api/v1/DownloadVFSFile", {
-                                          client_id: client_id,
-                                          fs_components: selectedRow.Download.components,
-                                          vfs_path: selectedRow.Name,
-                                      }, {
-                                          internal: true,
-                                          arrayFormat: 'brackets'})}>
-                                <FontAwesomeIcon icon="download"/>
-                              </Button>}
+                              <ToolTip tooltip={T("Download")}>
+                                <Button variant="outline-default"
+                                        href={api.href("/api/v1/DownloadVFSFile", {
+                                            client_id: client_id,
+                                            fs_components: selectedRow.Download.components,
+                                            vfs_path: selectedRow.Name,
+                                        }, {
+                                            internal: true,
+                                            arrayFormat: 'brackets'})}>
+                                  <FontAwesomeIcon icon="download"/>
+                                </Button>
+                              </ToolTip>
+                            }
                           </dd>
                         </>
                       }
@@ -175,8 +178,10 @@ class VeloFileStats extends Component {
                         </> }
                     </dl>
                 </Card.Body>
-              </Card>
-              <Card>
+            </Card>
+              </Col>
+            <Col sm="6">
+            <Card>
                 <Card.Header>{T("Properties")}</Card.Header>
                 <Card.Body>
                   { _.map(selectedRow._Data, function(v, k) {
@@ -218,8 +223,9 @@ class VeloFileStats extends Component {
                       </dd>
                     </div>}
                 </Card.Body>
-              </Card>
-            </CardDeck>
+            </Card>
+            </Col>
+            </Row>
         );
     };
 }

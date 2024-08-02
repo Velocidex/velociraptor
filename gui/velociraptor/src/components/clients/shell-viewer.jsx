@@ -20,6 +20,7 @@ import { DeleteFlowDialog } from "../flows/flows-list.jsx";
 import Button from 'react-bootstrap/Button';
 import { withRouter }  from "react-router-dom";
 import { JSONparse } from '../utils/json_parse.jsx';
+import ToolTip from '../widgets/tooltip.jsx';
 
 // Refresh every 5 seconds
 const SHELL_POLL_TIME = 5000;
@@ -133,21 +134,21 @@ class _VeloShellCell extends Component {
         // expanded. These buttons can switch between the two modes.
         if (this.state.collapsed) {
             buttons.push(
-                <button className="btn-tooltip btn btn-default" key={1}
-                        data-tooltip={T("Expand")}
-                        data-position="right"
-                        onClick={() => this.setState({collapsed: false})} >
-                  <i><FontAwesomeIcon icon="expand"/></i>
-                </button>
+                <ToolTip tooltip={T("Expand")}>
+                  <Button key={1} variant="default"
+                          onClick={() => this.setState({collapsed: false})} >
+                    <i><FontAwesomeIcon icon="expand"/></i>
+                  </Button>
+                </ToolTip>
             );
         } else {
             buttons.push(
-                <button className="btn-tooltip btn btn-default" key={2}
-                        data-tooltip={T("Collapse")}
-                        data-position="right"
-                        onClick={() => this.setState({collapsed: true})} >
-                  <i><FontAwesomeIcon icon="compress"/></i>
-                </button>
+                <ToolTip tooltip={T("Collapse")}>
+                  <button key={2} variant="default"
+                          onClick={() => this.setState({collapsed: true})} >
+                    <i><FontAwesomeIcon icon="compress"/></i>
+                  </button>
+                </ToolTip>
             );
         }
 
@@ -155,40 +156,40 @@ class _VeloShellCell extends Component {
         // large so we dont fetch it until the user asks)
         if (this.state.loaded) {
             buttons.push(
-                <button className="btn-tooltip btn btn-default" key={3}
-                        data-tooltip={T("Hide Output")}
-                        data-position="right"
-                        onClick={() => this.setState({"loaded": false})} >
-                  <i><FontAwesomeIcon icon="eye-slash"/></i>
-                </button>
+                <ToolTip tooltip={T("Hide Output")}>
+                  <Button key={3} variant="default"
+                          onClick={() => this.setState({"loaded": false})} >
+                    <i><FontAwesomeIcon icon="eye-slash"/></i>
+                  </Button>
+                </ToolTip>
             );
         } else {
             buttons.push(
-                <button className="btn-tooltip btn btn-default" key={4}
-                        data-tooltip={T("Load Output")}
-                        data-position="right"
-                        onClick={this.loadData}>
-                  <i><FontAwesomeIcon icon="eye"/></i>
-                </button>
+                <ToolTip tooltip={T("Load Output")}>
+                  <Button key={4} variant="default"
+                          onClick={this.loadData}>
+                    <i><FontAwesomeIcon icon="eye"/></i>
+                  </Button>
+                </ToolTip>
             );
         }
 
         let flow_status = [
-            <button className="btn btn-outline-info" key="1"
+            <Button className="btn btn-outline-info" key="1"
               onClick={e=>{this.viewFlow("overview");}}
             >
               <i><FontAwesomeIcon icon="external-link-alt"/></i>
-            </button>];
+            </Button>];
 
         // If the flow is currently running we may be able to stop it.
         if (this.props.flow.state  === 'RUNNING') {
             buttons.push(
-                <button className="btn-tooltip btn btn-default" key={5}
-                        data-tooltip={T("Stop")}
-                        data-position="right"
-                        onClick={this.cancelFlow}>
-                  <i><FontAwesomeIcon icon="stop"/></i>
-                </button>
+                <ToolTip tooltip={T("Stop")}>
+                  <Button key={5} variant="default"
+                          onClick={this.cancelFlow}>
+                    <i><FontAwesomeIcon icon="stop"/></i>
+                  </Button>
+                </ToolTip>
             );
 
             flow_status.push(
@@ -221,12 +222,12 @@ class _VeloShellCell extends Component {
         }
 
         flow_status.push(
-            <button className="btn-tooltip btn btn-default" key={9}
-                    data-tooltip={T("Delete")}
-                    data-position="right"
-                    onClick={()=>this.setState({showDeleteWizard: true})}>
-              <i><FontAwesomeIcon icon="trash"/></i>
-            </button>
+            <ToolTip tooltip={T("Delete")}>
+              <Button key={9} variant="default"
+                     onClick={()=>this.setState({showDeleteWizard: true})}>
+                <i><FontAwesomeIcon icon="trash"/></i>
+              </Button>
+            </ToolTip>
         );
 
 
@@ -368,21 +369,21 @@ class _VeloVQLCell extends Component {
         // expanded. These buttons can switch between the two modes.
         if (this.state.collapsed) {
             buttons.push(
-                <button className="btn-tooltip btn btn-default" key={1}
-                        data-tooltip={T("Expand")}
-                        data-position="right"
-                        onClick={() => this.setState({collapsed: false})} >
-                  <i><FontAwesomeIcon icon="expand"/></i>
-                </button>
+                <ToolTip tooltip={T("Expand")}>
+                  <Button key={1} variant="default"
+                          onClick={() => this.setState({collapsed: false})} >
+                    <i><FontAwesomeIcon icon="expand"/></i>
+                  </Button>
+                </ToolTip>
             );
         } else {
             buttons.push(
-                <button className="btn-tooltip btn btn-default" key={2}
-                        data-tooltip={T("Collapse")}
-                        data-position="right"
-                        onClick={() => this.setState({collapsed: true})} >
-                  <i><FontAwesomeIcon icon="compress"/></i>
-                </button>
+                <ToolTip tooltip={T("Collapse")}>
+                  <Button key={2} variant="default"
+                          onClick={() => this.setState({collapsed: true})} >
+                    <i><FontAwesomeIcon icon="compress"/></i>
+                  </Button>
+                </ToolTip>
             );
         }
 
@@ -390,21 +391,21 @@ class _VeloVQLCell extends Component {
         // large so we dont fetch it until the user asks)
         if (this.state.loaded) {
             buttons.push(
-                <button className="btn-tooltip btn btn-default" key={3}
-                        data-tooltip={T("Hide Output")}
-                        data-position="right"
-                        onClick={() => this.setState({"loaded": false})} >
-                  <i><FontAwesomeIcon icon="eye-slash"/></i>
-                </button>
+                <ToolTip tooltip={T("Hide Output")}>
+                  <Button key={3} variant="default"
+                          onClick={() => this.setState({"loaded": false})} >
+                    <i><FontAwesomeIcon icon="eye-slash"/></i>
+                  </Button>
+                </ToolTip>
             );
         } else {
             buttons.push(
-                <button className="btn-tooltip btn btn-default" key={4}
-                        data-tooltip={T("Load Output")}
-                        data-position="right"
-                        onClick={() => this.setState({"loaded": true})}>
-                  <i><FontAwesomeIcon icon="eye"/></i>
-                </button>
+                <ToolTip tooltip={T("Load Output")}>
+                  <Button key={4} variant="default"
+                          onClick={() => this.setState({"loaded": true})}>
+                    <i><FontAwesomeIcon icon="eye"/></i>
+                  </Button>
+                </ToolTip>
             );
         }
 
@@ -418,12 +419,12 @@ class _VeloVQLCell extends Component {
         // If the flow is currently running we may be able to stop it.
         if (this.props.flow.state  === 'RUNNING') {
             buttons.push(
-                <button className="btn-tooltip btn btn-default" key={5}
-                        data-tooltip={T("Stop")}
-                        data-position="right"
+                <ToolTip tooltip={T("Stop")}>
+                <button key={5} variant="default"
                         onClick={this.cancelFlow}>
                   <i><FontAwesomeIcon icon="stop"/></i>
                 </button>
+                </ToolTip>
             );
 
             flow_status.push(
@@ -456,12 +457,12 @@ class _VeloVQLCell extends Component {
         }
 
         flow_status.push(
-            <button className="btn-tooltip btn btn-default" key={50}
-                    data-tooltip={T("Delete")}
-                    data-position="right"
-                    onClick={()=>this.setState({showDeleteWizard: true})}>
-              <i><FontAwesomeIcon icon="trash"/></i>
-            </button>
+            <ToolTip tooltip={T("Delete")}>
+              <button key={50} variant="default"
+                      onClick={()=>this.setState({showDeleteWizard: true})}>
+                <i><FontAwesomeIcon icon="trash"/></i>
+              </button>
+            </ToolTip>
         );
 
         let output = <div></div>;
@@ -721,7 +722,7 @@ class ShellViewer extends Component {
             <>
               <div className="shell-command">
                 <InputGroup className="mb-3 d-flex">
-                  <InputGroup.Prepend>
+                  <InputGroup.Text>
                     <DropdownButton as={InputGroup}
                                     title={this.state.shell_type}
                                     onSelect={(e) => this.setType(e)}
@@ -733,7 +734,7 @@ class ShellViewer extends Component {
                         <Dropdown.Item eventKey="Bash">Bash</Dropdown.Item> }
                       <Dropdown.Item eventKey="VQL">VQL</Dropdown.Item>
                     </DropdownButton>
-                  </InputGroup.Prepend>
+                  </InputGroup.Text>
                   { simple_textarea ?
                     <textarea focus-me="controller.focus" rows="1"
                               className="form-control"

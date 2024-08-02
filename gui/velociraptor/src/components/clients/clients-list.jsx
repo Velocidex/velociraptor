@@ -384,38 +384,40 @@ const pageListRenderer = ({
         }
     }
     return (
-        <Pagination>
-          <Pagination.First
-            disabled={currentPage===0}
-            onClick={()=>onPageChange(0)}/>
-          {
-              pageWithoutIndication.map((p, idx)=>(
-                <Pagination.Item
-                  key={idx}
-                  active={p.active}
-                  onClick={ () => onPageChange(p.page) } >
-                  { p.page }
-                </Pagination.Item>
-            ))
-          }
-          <Pagination.Last
-            disabled={currentPage===totalPages}
-            onClick={()=>onPageChange(totalPages)}/>
-          <Form.Control
-            as="input"
-            className="pagination-form"
-            placeholder={T("Goto Page")}
-            id="goto-page"
-            spellCheck="false"
-            value={currentPage || ""}
-            onChange={e=> {
-                let page = parseInt(e.currentTarget.value || 0);
-                if (page >= 0 && page < totalPages) {
-                    onPageChange(page);
-                }
-            }}/>
+        <Col sm="6">
+          <Pagination>
+            <Pagination.First
+              disabled={currentPage===0}
+              onClick={()=>onPageChange(0)}/>
+            {
+                pageWithoutIndication.map((p, idx)=>(
+                    <Pagination.Item
+                      key={idx}
+                      active={p.active}
+                      onClick={ () => onPageChange(p.page) } >
+                      { p.page }
+                    </Pagination.Item>
+                ))
+            }
+            <Pagination.Last
+              disabled={currentPage===totalPages}
+              onClick={()=>onPageChange(totalPages)}/>
+            <Form.Control
+              as="input"
+              className="pagination-form"
+              placeholder={T("Goto Page")}
+              id="goto-page"
+              spellCheck="false"
+              value={currentPage || ""}
+              onChange={e=> {
+                  let page = parseInt(e.currentTarget.value || 0);
+                  if (page >= 0 && page < totalPages) {
+                      onPageChange(page);
+                  }
+              }}/>
 
-        </Pagination>
+          </Pagination>
+        </Col>
     );
 };
 

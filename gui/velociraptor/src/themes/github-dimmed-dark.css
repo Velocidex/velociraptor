@@ -168,6 +168,11 @@ body.github-dimmed-dark {
   color: var(--color-sidebar-foreground);
 }
 
+.github-dimmed-dark .nav-link {
+    border-top-right-radius: 0;
+    border-top-left-radius: 0;
+}
+
 .github-dimmed-dark #client-search-bar {
   background: var(--color-canvas-background);
   border: 1px solid var(--color-btn-default-border);
@@ -587,7 +592,8 @@ body.github-dimmed-dark {
   padding-block-start: 3px;
 }
 
-.github-dimmed-dark .nav-tabs {
+.github-dimmed-dark .nav-tabs,
+.github-dimmed-dark .nav-tabs .nav-item {
   border-bottom: none;
 }
 
@@ -1095,21 +1101,9 @@ body.github-dimmed-dark {
   opacity: 0.8;
 }
 
-/* Disable 'filters' while checked since they impact 'accent-color'. */
-.github-dimmed-dark input[type='checkbox']:checked {
-  filter: none;
-  box-shadow: none;
-}
-
-.github-dimmed-dark input[type='checkbox'] {
-  transform: scale(1.2);
-  accent-color: var(--color-foreground);
-  filter: brightness(0%) saturate(100%) invert(100%) sepia(52%) saturate(2024%) hue-rotate(175deg) brightness(103%) contrast(82%);
-  box-shadow: none;
-}
 
 .github-dimmed-dark .no-content {
-  color: var(--color-foreground-dimmed);
+    color: var(--color-foreground-dimmed);
 }
 
 .github-dimmed-dark .velo-ace-editor {

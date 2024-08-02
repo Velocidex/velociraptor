@@ -12,8 +12,7 @@ import RegEx from './regex.jsx';
 import RegExArray from './regex_array.jsx';
 import UploadFileForm from './upload.jsx';
 import YaraEditor from './yara.jsx';
-import Tooltip from 'react-bootstrap/Tooltip';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import ToolTip from '../widgets/tooltip.jsx';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Alert from 'react-bootstrap/Alert';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -65,12 +64,6 @@ function convertToDate(x) {
 
     return null;
 }
-
-const renderToolTip = (props, params) => (
-    <Tooltip show={params.description} {...props}>
-       {params.description}
-     </Tooltip>
-);
 
 export default class VeloForm extends React.Component {
     static propTypes = {
@@ -276,13 +269,11 @@ export default class VeloForm extends React.Component {
             return (
                   <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=>renderToolTip(props, param)}>
+                    <ToolTip tooltip={param.description}>
                       <div>
                         {name}
                       </div>
-                    </OverlayTrigger>
+                    </ToolTip>
                   </Form.Label>
                     <Col sm="8">
                       <RegEx
@@ -318,13 +309,11 @@ export default class VeloForm extends React.Component {
             return (
                   <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=>renderToolTip(props, param)}>
+                    <ToolTip tooltip={param.description}>
                       <div>
                         {name}
                       </div>
-                    </OverlayTrigger>
+                    </ToolTip>
                   </Form.Label>
                     <Col sm="8">
                       <YaraEditor
@@ -350,13 +339,11 @@ export default class VeloForm extends React.Component {
             return (
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=>renderToolTip(props, param)}>
+                    <ToolTip tooltip={param.description}>
                       <div>
                         {name}
                       </div>
-                    </OverlayTrigger>
+                    </ToolTip>
                   </Form.Label>
                   <Col sm="8">
                     <ButtonGroup>
@@ -410,13 +397,11 @@ export default class VeloForm extends React.Component {
             return (
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=>renderToolTip(props, param)}>
+                    <ToolTip tooltip={param.description}>
                       <div>
                         {name}
                       </div>
-                    </OverlayTrigger>
+                    </ToolTip>
                   </Form.Label>
                   <Col sm="8">
                     <Form.Control as="select"
@@ -444,13 +429,11 @@ export default class VeloForm extends React.Component {
             return (
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=>renderToolTip(props, param)}>
+                    <ToolTip tooltip={param.description}>
                       <div>
                         {name}
                       </div>
-                    </OverlayTrigger>
+                    </ToolTip>
                   </Form.Label>
                   <Col sm="8">
                     <Select
@@ -502,13 +485,11 @@ export default class VeloForm extends React.Component {
             return (
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=>renderToolTip(props, param)}>
+                    <ToolTip tooltip={param.description}>
                       <div>
                         {name}
                       </div>
-                    </OverlayTrigger>
+                    </ToolTip>
                   </Form.Label>
                   <Col sm="8">
                     <Select
@@ -532,13 +513,11 @@ export default class VeloForm extends React.Component {
             return (
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=>renderToolTip(props, param)}>
+                    <ToolTip tooltip={param.description}>
                       <div>
                         {name}
                       </div>
-                    </OverlayTrigger>
+                    </ToolTip>
                   </Form.Label>
                   <Col sm="8">
                     <Form.Check
@@ -567,13 +546,11 @@ export default class VeloForm extends React.Component {
             return (
                   <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=>renderToolTip(props, param)}>
+                    <ToolTip tooltip={param.description}>
                       <div>
                         {name}
                       </div>
-                    </OverlayTrigger>
+                    </ToolTip>
                   </Form.Label>
                   <Col sm="8">
                     <Form.Control as="textarea"

@@ -16,6 +16,7 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import VeloValueRenderer from '../utils/value.jsx';
 import Dropdown from 'react-bootstrap/Dropdown';
 import T from '../i8n/i8n.jsx';
+import ToolTip from '../widgets/tooltip.jsx';
 
 import DeleteTimelineRanges from './delete.jsx';
 import Button from 'react-bootstrap/Button';
@@ -405,38 +406,30 @@ export default class EventTimelineViewer extends React.Component {
                      </Dropdown.Item>
                    </Dropdown.Menu>
                  </Dropdown>
-
-                 <Button data-tooltip="Delete"
-                         data-position="right"
-                         className="btn-tooltip"
-                         onClick={() => this.setState({showDeleteDialog: true})}
-                         variant="default">
-                   <FontAwesomeIcon icon="trash"/>
-                 </Button>
-
-                 <Button data-tooltip="Previous"
-                         data-position="right"
-                         className="btn-tooltip"
-                         onClick={() => this.prevPage()}
-                         variant="default">
-                   <FontAwesomeIcon icon="backward"/>
-                 </Button>
-
-                 <Button data-tooltip="Center"
-                         data-position="right"
-                         className="btn-tooltip"
-                         onClick={() => this.centerPage()}
-                         variant="default">
-                   <FontAwesomeIcon icon="crosshairs"/>
-                 </Button>
-
-                 <Button data-tooltip="Next"
-                         data-position="right"
-                         className="btn-tooltip"
-                         onClick={() => this.nextPage()}
-                         variant="default">
-                   <FontAwesomeIcon icon="forward"/>
-                 </Button>
+                 <ToolTip tooltip={T("Delete")}>
+                   <Button onClick={() => this.setState({showDeleteDialog: true})}
+                           variant="default">
+                     <FontAwesomeIcon icon="trash"/>
+                   </Button>
+                 </ToolTip>
+                 <ToolTip tooltip={T("Previous")}>
+                   <Button onClick={() => this.prevPage()}
+                           variant="default">
+                     <FontAwesomeIcon icon="backward"/>
+                   </Button>
+                 </ToolTip>
+                 <ToolTip tooltip={T("Center")}>
+                   <Button onClick={() => this.centerPage()}
+                           variant="default">
+                     <FontAwesomeIcon icon="crosshairs"/>
+                   </Button>
+                 </ToolTip>
+                 <ToolTip tooltip={T("Next")}>
+                   <Button onClick={() => this.nextPage()}
+                           variant="default">
+                     <FontAwesomeIcon icon="forward"/>
+                   </Button>
+                 </ToolTip>
                </>;
     }
 

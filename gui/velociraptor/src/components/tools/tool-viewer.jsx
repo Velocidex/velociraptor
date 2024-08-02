@@ -5,12 +5,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {CancelToken} from 'axios';
 import Modal from 'react-bootstrap/Modal';
+import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
 import api from '../core/api-service.jsx';
 import Card from 'react-bootstrap/Card';
-import CardDeck from 'react-bootstrap/CardDeck';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
-import InputGroup from 'react-bootstrap/InputGroup';
 import T from '../i8n/i8n.jsx';
 import Select from 'react-select';
 import VeloValueRenderer from '../utils/value.jsx';
@@ -188,7 +189,7 @@ export default class ToolViewer extends React.Component {
 
         if (tool.serve_locally && !this.state.hide_1) {
             cards.push(
-                <Card key={1}>
+                <Card key={1} className="tool-card ">
                   <Card.Header>
                     {T("Served Locally")}
                     <span className="float-right clickable close-icon"
@@ -212,7 +213,7 @@ export default class ToolViewer extends React.Component {
         }
         if (!tool.serve_locally && !this.state.hide_2) {
             cards.push(
-                <Card key={2}>
+                <Card key={2} className="tool-card " >
                   <Card.Header>
                     {T("Served from URL")}
                     <span className="float-right clickable close-icon"
@@ -237,7 +238,7 @@ export default class ToolViewer extends React.Component {
 
         if (tool.github_project && !this.state.hide_3) {
             cards.push(
-                <Card key={3}>
+                <Card key={3} className="tool-card" >
                   <Card.Header>
                     {T("Served from GitHub")}
                     <span className="float-right clickable close-icon"
@@ -263,7 +264,7 @@ export default class ToolViewer extends React.Component {
 
         if (!tool.hash && !this.state.hide_4) {
             cards.push(
-                <Card key={4}>
+                <Card key={4}  className="tool-card ">
                   <Card.Header>
                     {T("Placeholder Definition")}
                     <span className="float-right clickable close-icon"
@@ -288,7 +289,7 @@ export default class ToolViewer extends React.Component {
 
         if (tool.hash && !this.state.hide_5) {
             cards.push(
-                <Card key={5}>
+                <Card key={5}  className="tool-card ">
                   <Card.Header>
                      {T("Tool Hash Known")}
                     <span className="float-right clickable close-icon"
@@ -313,7 +314,7 @@ export default class ToolViewer extends React.Component {
 
         if(tool.admin_override && !this.state.hide_6) {
             cards.push(
-                <Card key={6}>
+                <Card key={6}  className="tool-card ">
                   <Card.Header>
                     {T("Admin Override")}
                     <span className="float-right clickable close-icon"
@@ -333,7 +334,7 @@ export default class ToolViewer extends React.Component {
 
         if (!tool.hash && !this.state.url && !this.state.github_project) {
             cards.push(
-                <Card key={7}>
+                <Card key={7}  className="tool-card ">
                   <Card.Header>
                      {T("Error")}
                   </Card.Header>
@@ -461,18 +462,18 @@ export default class ToolViewer extends React.Component {
                         <dt className="col-4">{T("Admin Override")}</dt>
                         <dd className="col-8">{ tool.admin_override }</dd></>}
                   </dl>
-                  <CardDeck>
-                    <Card>
-                      <Card.Header className="text-center">{T("Override Tool")}</Card.Header>
-                      <Card.Body>
-                        <Card.Text>
-                          {T("OverrideToolDesc")}
-                        </Card.Text>
-                        <Form className="selectable">
-                          <InputGroup className="mb-3">
-                            <InputGroup.Prepend>
+                  <Row>
+                    <Col sm="12">
+                      <Card>
+                        <Card.Header className="text-center">{T("Override Tool")}</Card.Header>
+                        <Card.Body>
+                          <Card.Text>
+                            {T("OverrideToolDesc")}
+                          </Card.Text>
+                          <Form className="selectable">
+                            <InputGroup className="mb-3 custom-file-button">
                               { this.state.tool_file ?
-                                <InputGroup.Text
+                                <Form.Label
                                   className={classNames({"foo": "bar","disabled": !this.state.tool_file})}
                                   disabled={!this.state.tool_file}
                                   onClick={this.uploadFile}>
@@ -480,48 +481,47 @@ export default class ToolViewer extends React.Component {
                                     <FontAwesomeIcon icon="spinner" spin /> :
                                     T("Click to upload file")
                                   }
-                                </InputGroup.Text> : <></>
+                                </Form.Label> :
+
+                                <Form.Label data-browse={T("Select file")}>
+                                  { this.state.tool_file ? this.state.tool_file.name :
+                                    T("Select file")}
+                                </Form.Label>
                               }
-                            </InputGroup.Prepend>
-                            <Form.File custom>
-                              <Form.File.Input
-                                onChange={e => {
-                                    if (!_.isEmpty(e.currentTarget.files)) {
-                                        this.setState({tool_file: e.currentTarget.files[0]});
-                                    }
-                                }}
+                              <Form.Control type="file"
+                                            onChange={e => {
+                                                if (!_.isEmpty(e.currentTarget.files)) {
+                                                    this.setState({tool_file: e.currentTarget.files[0]});
+                                                }
+                                            }}
                               />
-                              <Form.File.Label data-browse={T("Select file")}>
-                                { this.state.tool_file ? this.state.tool_file.name :
-                                  T("Select file")}
-                              </Form.File.Label>
-                            </Form.File>
-                          </InputGroup>
-                        </Form>
-                        <Form className="selectable">
-                          <InputGroup>
-                            <InputGroup.Prepend>
-                              <InputGroup.Text  as="button"
+                            </InputGroup>
+                          </Form>
+                          <Form className="selectable">
+                            <InputGroup>
+                              <Button
                                 disabled={this.state.inflight || !this.state.remote_url}
                                 onClick={this.setServeUrl}>
                                 { this.state.inflight ?
                                   <FontAwesomeIcon icon="spinner" spin /> :
                                   T("Set Serve URL") }
-                              </InputGroup.Text>
-                            </InputGroup.Prepend>
-                            <Form.Control as="input"
-                                          value={this.state.remote_url}
-                                          onChange={e=>this.setState(
-                                              {remote_url: e.currentTarget.value})}
-                            />
-                          </InputGroup>
-                        </Form>
-                      </Card.Body>
-                    </Card>
-                  </CardDeck>
-                  <CardDeck>
-                    { cards }
-                  </CardDeck>
+                              </Button>
+                              <Form.Control as="input"
+                                            value={this.state.remote_url}
+                                            onChange={e=>this.setState(
+                                                {remote_url: e.currentTarget.value})}
+                              />
+                            </InputGroup>
+                          </Form>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                  <Row>
+                    { _.map(cards, (x, i)=>{
+                        return <Col key={i}>{x}</Col>;
+                    })}
+                  </Row>
                 </Modal.Body>
                 <Modal.Footer>
                 </Modal.Footer>

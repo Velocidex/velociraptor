@@ -26,6 +26,8 @@ import VeloTimestamp from "../utils/time.jsx";
 import ClientLink from '../clients/client-link.jsx';
 import HexView from '../utils/hex.jsx';
 import StackDialog from './stack.jsx';
+import ToolTip from '../widgets/tooltip.jsx';
+import Col from 'react-bootstrap/Col';
 
 import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
@@ -57,38 +59,40 @@ const pageListRenderer = ({
         }
     }
     return (
-        <Pagination>
-          <Pagination.First
-            disabled={currentPage===0}
-            onClick={()=>onPageChange(0)}/>
-          {
-              pageWithoutIndication.map((p, idx)=>(
-                <Pagination.Item
-                  key={idx}
-                  active={p.active}
-                  onClick={ () => onPageChange(p.page) } >
-                  { p.page }
-                </Pagination.Item>
-            ))
-          }
-          <Pagination.Last
-            disabled={currentPage===totalPages}
-            onClick={()=>onPageChange(totalPages)}/>
-          <Form.Control
-            as="input"
-            className="pagination-form"
-            placeholder={T("Goto Page")}
-            spellCheck="false"
-            id="goto-page"
-            value={currentPage || ""}
-            onChange={e=> {
-                let page = parseInt(e.currentTarget.value || 0);
-                if (page >= 0 && page < totalPages) {
-                    onPageChange(page);
-                }
-            }}/>
+        <Col sm="8" className="col-md-6 col-xs-6 col-sm-6 col-lg-6">
+          <Pagination>
+            <Pagination.First
+              disabled={currentPage===0}
+              onClick={()=>onPageChange(0)}/>
+            {
+                pageWithoutIndication.map((p, idx)=>(
+                    <Pagination.Item
+                      key={idx}
+                      active={p.active}
+                      onClick={ () => onPageChange(p.page) } >
+                      { p.page }
+                    </Pagination.Item>
+                ))
+            }
+            <Pagination.Last
+              disabled={currentPage===totalPages}
+              onClick={()=>onPageChange(totalPages)}/>
+            <Form.Control
+              as="input"
+              className="pagination-form"
+              placeholder={T("Goto Page")}
+              spellCheck="false"
+              id="goto-page"
+              value={currentPage || ""}
+              onChange={e=> {
+                  let page = parseInt(e.currentTarget.value || 0);
+                  if (page >= 0 && page < totalPages) {
+                      onPageChange(page);
+                  }
+              }}/>
 
-        </Pagination>
+          </Pagination>
+        </Col>
     );
 };
 
@@ -413,35 +417,36 @@ class VeloPagedTable extends Component {
 
         if (transform.filter_column) {
             result.push(
-                <Button key="1"
-                        data-tooltip={T("Transformed")}  disabled={true}
-                        data-position="right"
-                        className="btn-tooltip table-transformed"
-                        variant="outline-dark">
-                  { transform.filter_column } ( {transform.filter_regex} )
-                  <span className="transform-button">
-                    <FontAwesomeIcon icon="filter"/>
-                  </span>
-                </Button>
+                <ToolTip tooltip={T("Transformed")}>
+                  <Button key="1"
+                          disabled={true}
+                          className="table-transformed"
+                          variant="outline-dark">
+                    { transform.filter_column } ( {transform.filter_regex} )
+                    <span className="transform-button">
+                      <FontAwesomeIcon icon="filter"/>
+                    </span>
+                  </Button>
+                </ToolTip>
             );
         }
 
         if (transform.sort_column) {
             result.push(
-                <Button key="2"
-                        data-tooltip={T("Transformed")}  disabled={true}
-                        data-position="right"
-                        className="btn-tooltip"
-                  variant="outline-dark">
-                  {transform.sort_column}
-                  <span className="transform-button">
-                    {
-                        transform.sort_direction === "Ascending" ?
-                            <FontAwesomeIcon icon="sort-alpha-up"/> :
-                        <FontAwesomeIcon icon="sort-alpha-down"/>
-                    }
-                  </span>
-                </Button>
+                <ToolTip tooltip={T("Transformed")}>
+                  <Button key="2"
+                          disabled={true}
+                          variant="outline-dark">
+                    {transform.sort_column}
+                    <span className="transform-button">
+                      {
+                          transform.sort_direction === "Ascending" ?
+                              <FontAwesomeIcon icon="sort-alpha-up"/> :
+                              <FontAwesomeIcon icon="sort-alpha-down"/>
+                      }
+                    </span>
+                  </Button>
+                </ToolTip>
             );
         }
 
@@ -573,17 +578,16 @@ class VeloPagedTable extends Component {
                   <td className="sort-element">
                     <ButtonGroup>
                       { this.isColumnStacked(column.text) &&
-                        <Button variant="default"
-                                target="_blank" rel="noopener noreferrer"
-                                data-tooltip={T("Stack")}
-                                data-position="right"
-                                onClick={()=>this.setState({
-                                    showStackDialog: column.text,
-                                })}
-                                className="btn-tooltip">
-                          <FontAwesomeIcon icon="layer-group"/>
-                          <span className="sr-only">{T("Stack")}</span>
-                        </Button>
+                        <ToolTip tooltip={T("Stack")}>
+                          <Button variant="default"
+                                  target="_blank" rel="noopener noreferrer"
+                                  onClick={()=>this.setState({
+                                      showStackDialog: column.text,
+                                  })}>
+                            <FontAwesomeIcon icon="layer-group"/>
+                            <span className="sr-only">{T("Stack")}</span>
+                          </Button>
+                        </ToolTip>
                       }
                       <ColumnSort column={column.dataField}
                                   transform={this.state.transform}
@@ -766,32 +770,30 @@ class VeloPagedTable extends Component {
                                               }}
                                               toggles={this.state.toggles} />
                             <InspectRawJson rows={this.state.rows} />
-                            <Button variant="default"
-                                    target="_blank" rel="noopener noreferrer"
-                                    data-tooltip={T("Download JSON")}
-                                    data-position="right"
-                                    className="btn-tooltip"
-                                    href={api.href("/api/v1/DownloadTable",
-                                                   Object.assign(downloads, {
-                                                       timezone: timezone,
-                                                       download_format: "json",
-                                                   }), {internal: true})}>
-                              <FontAwesomeIcon icon="download"/>
-                              <span className="sr-only">{T("Download JSON")}</span>
-                            </Button>
-                            <Button variant="default"
-                                    target="_blank" rel="noopener noreferrer"
-                                    data-tooltip={T("Download CSV")}
-                                    data-position="right"
-                                    className="btn-tooltip"
-                                    href={api.href("/api/v1/DownloadTable",
-                                                   Object.assign(downloads, {
-                                                       timezone: timezone,
-                                                       download_format: "csv",
-                                                   }), {internal: true})}>
-                              <FontAwesomeIcon icon="file-csv"/>
-                              <span className="sr-only">{T("Download CSV")}</span>
-                            </Button>
+                            <ToolTip tooltip={T("Download JSON")}>
+                              <Button variant="default"
+                                      target="_blank" rel="noopener noreferrer"
+                                      href={api.href("/api/v1/DownloadTable",
+                                                     Object.assign(downloads, {
+                                                         timezone: timezone,
+                                                         download_format: "json",
+                                                     }), {internal: true})}>
+                                <FontAwesomeIcon icon="download"/>
+                                <span className="sr-only">{T("Download JSON")}</span>
+                              </Button>
+                            </ToolTip>
+                            <ToolTip tooltip={T("Download CSV")}>
+                              <Button variant="default"
+                                      target="_blank" rel="noopener noreferrer"
+                                      href={api.href("/api/v1/DownloadTable",
+                                                     Object.assign(downloads, {
+                                                         timezone: timezone,
+                                                         download_format: "csv",
+                                                     }), {internal: true})}>
+                                <FontAwesomeIcon icon="file-csv"/>
+                                <span className="sr-only">{T("Download CSV")}</span>
+                              </Button>
+                            </ToolTip>
                           </ButtonGroup>
                           { transformed.length > 0 &&
                             <ButtonGroup className="float-right">

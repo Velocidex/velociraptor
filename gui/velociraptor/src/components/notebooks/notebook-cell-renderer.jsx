@@ -28,6 +28,7 @@ import CopyCellToNotebookDialog from './notebook-copy-cell.jsx';
 import FormatTableDialog from './notebook-format-tables.jsx';
 import NotebookUploads from '../notebooks/notebook-uploads.jsx';
 import { formatColumns } from "../core/table.jsx";
+import ToolTip from '../widgets/tooltip.jsx';
 
 import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
@@ -700,264 +701,236 @@ export default class NotebookCellRenderer extends React.Component {
         // 3. The cell is not selected or edited - no decorations.
         let non_editing_toolbar = (
             <>
-            <ButtonGroup>
-              <Button data-tooltip={T("Cancel")}
-                      data-position="right"
-                      className="btn-tooltip"
-                      onClick={() => {this.props.setSelectedCellId("");}}
-                      variant="default">
-                <FontAwesomeIcon icon="window-close"/>
-              </Button>
+              <ButtonGroup>
+                <ToolTip tooltip={T("Cancel")}>
+                  <Button onClick={() => {this.props.setSelectedCellId("");}}
+                          variant="default">
+                    <FontAwesomeIcon icon="window-close"/>
+                  </Button>
+                </ToolTip>
+                <ToolTip tooltip={T("Recalculate")}>
+                  <Button disabled={this.state.cell.calculating}
+                          onClick={()=>this.recalculate(this.state.cell)}
+                          variant="default">
+                    <FontAwesomeIcon icon="sync"/>
+                  </Button>
+                </ToolTip>
 
-              <Button data-tooltip={T("Recalculate")}
-                      data-position="right"
-                      className="btn-tooltip"
-                      disabled={this.state.cell.calculating}
-                      onClick={()=>this.recalculate(this.state.cell)}
-                      variant="default">
-                <FontAwesomeIcon icon="sync"/>
-              </Button>
+                <ToolTip tooltip={T("Stop Calculating")}>
+                  <Button disabled={!this.state.cell.calculating ||
+                                    this.state.loading}
+                          onClick={this.stopCalculating}
+                          variant="default">
+                    <FontAwesomeIcon icon="stop"/>
+                  </Button>
+                </ToolTip>
+                { !this.state.collapsed &&
+                  <ToolTip tooltip={T("Collapse")}>
+                    <Button onClick={() => this.setState({collapsed: true})}
+                            variant="default">
+                      <FontAwesomeIcon icon="compress"/>
+                    </Button>
+                  </ToolTip>
+                }
+                { this.state.collapsed &&
+                  <ToolTip tooltip={T("Expand")}>
+                    <Button onClick={() => this.setState({collapsed: false})}
+                            variant="default">
+                      <FontAwesomeIcon icon="expand"/>
+                    </Button>
+                  </ToolTip>
+                }
+                <ToolTip tooltip={T("Edit Cell")}>
+                  <Button disabled={this.state.cell.calculating}
+                          onClick={() => { this.setEditing(true); }}
+                          variant="default">
+                    <FontAwesomeIcon icon="pencil-alt"/>
+                  </Button>
+                </ToolTip>
+                <ToolTip tooltip={T("Up Cell")}>
+                  <Button disabled={this.props.notebookLocked}
+                          onClick={() => {
+                              this.props.upCell(this.state.cell.cell_id);
+                          }}
+                          variant="default">
+                    <FontAwesomeIcon icon="arrow-up"/>
+                  </Button>
+                </ToolTip>
+                <ToolTip tooltip={T("Down Cell")}>
+                  <Button disabled={this.props.notebookLocked}
+                          onClick={() => {
+                              this.props.downCell(this.state.cell.cell_id);
+                          }}
+                          variant="default">
+                    <FontAwesomeIcon icon="arrow-down"/>
+                  </Button>
+                </ToolTip>
+                <ToolTip tooltip={T("Undo")}>
+                  <Button disabled={!this.undo_available()}
+                          onClick={this.undo}
+                          variant="default">
+                    <FontAwesomeIcon icon="rotate-left"/>
+                  </Button>
+                </ToolTip>
+                <ToolTip tooltip={T("Redo")}>
+                  <Button disabled={!this.redo_available()}
+                          onClick={this.redo}
+                          variant="default">
+                    <FontAwesomeIcon icon="rotate-right"/>
+                  </Button>
+                </ToolTip>
+                <ToolTip tooltip={T("Copy Cell")}>
+                  <Button onClick={()=>this.setState({showCopyCellToNotebook: true})}
+                          variant="default">
+                    <FontAwesomeIcon icon="file-import"/>
+                  </Button>
+                </ToolTip>
 
-              <Button data-tooltip={T("Stop Calculating")}
-                      data-position="right"
-                      className="btn-tooltip"
-                      disabled={!this.state.cell.calculating ||
-                                this.state.loading}
-                      onClick={this.stopCalculating}
-                      variant="default">
-                <FontAwesomeIcon icon="stop"/>
-              </Button>
-              { !this.state.collapsed &&
-                <Button data-tooltip={T("Collapse")}
-                        data-position="right"
-                        className="btn-tooltip"
-                        onClick={() => this.setState({collapsed: true})}
-                        variant="default">
-                  <FontAwesomeIcon icon="compress"/>
-                </Button>
-              }
-              { this.state.collapsed &&
-                <Button data-tooltip={T("Expand")}
-                        data-position="right"
-                        className="btn-tooltip"
-                        onClick={() => this.setState({collapsed: false})}
-                        variant="default">
-                  <FontAwesomeIcon icon="expand"/>
-                </Button>
-              }
-              <Button data-tooltip={T("Edit Cell")}
-                      data-position="right"
-                      className="btn-tooltip"
-                      disabled={this.state.cell.calculating}
-                      onClick={() => { this.setEditing(true); }}
-                      variant="default">
-                <FontAwesomeIcon icon="pencil-alt"/>
-              </Button>
-
-              <Button data-tooltip={T("Up Cell")}
-                      data-position="right"
-                      className="btn-tooltip"
-                      disabled={this.props.notebookLocked}
-                      onClick={() => {
-                          this.props.upCell(this.state.cell.cell_id);
-                      }}
-                      variant="default">
-                <FontAwesomeIcon icon="arrow-up"/>
-              </Button>
-
-              <Button data-tooltip={T("Down Cell")}
-                      data-position="right"
-                      className="btn-tooltip"
-                      disabled={this.props.notebookLocked}
-                      onClick={() => {
-                          this.props.downCell(this.state.cell.cell_id);
-                      }}
-                      variant="default">
-                <FontAwesomeIcon icon="arrow-down"/>
-              </Button>
-
-              <Button data-tooltip={T("Undo")}
-                      data-position="right"
-                      disabled={!this.undo_available()}
-                      className="btn-tooltip"
-                      onClick={this.undo}
-                      variant="default">
-                <FontAwesomeIcon icon="rotate-left"/>
-              </Button>
-              <Button data-tooltip={T("Redo")}
-                      data-position="right"
-                      disabled={!this.redo_available()}
-                      className="btn-tooltip"
-                      onClick={this.redo}
-                      variant="default">
-                <FontAwesomeIcon icon="rotate-right"/>
-              </Button>
-
-              <Button data-tooltip={T("Copy Cell")}
-                      data-position="right"
-                      className="btn-tooltip"
-                      onClick={()=>this.setState({showCopyCellToNotebook: true})}
-                      variant="default">
-                <FontAwesomeIcon icon="file-import"/>
-              </Button>
-
-              {this.state.cell && this.state.cell.type === "vql" &&
-               <>
-                 <Button data-tooltip={T("Add Timeline")}
-                         data-position="right"
-                         className="btn-tooltip"
-                         onClick={()=>this.setState({showAddCellToTimeline: true})}
-                         variant="default">
-                   <FontAwesomeIcon icon="calendar-alt"/>
-                 </Button>
-
-                 <Button data-tooltip={T("Format Columns")}
-                         data-position="right"
-                         className="btn-tooltip"
-                         onClick={()=>this.setState({showFormatTablesDialog: true})}
-                         variant="default">
-                   <FontAwesomeIcon icon="table"/>
-                 </Button>
-
-                 <Button data-tooltip={T("Notebook Uploads")}
-                         data-position="left"
-                         className="btn-tooltip"
-                         onClick={() => this.setState({ showNotebookUploadsDialog: true })}
-                         variant="default">
-                   <FontAwesomeIcon icon="fa-file-download" />
-                   <span className="sr-only">{T("Notebook Uploads")}</span>
-                 </Button>
-               </>
-              }
-              <Dropdown data-tooltip={T("Add Cell")}
-                        data-position="right"
-                        className="btn-tooltip"
-                        variant="default">
-                <Dropdown.Toggle variant="default">
-                  <FontAwesomeIcon icon="plus"/>
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item
-                    title="Markdown"
-                    onClick={() => {
-                        // Preserve the current cell's environemnt for the new cell
-                        this.props.addCell(this.state.cell.cell_id, "Markdown", "", this.state.cell.env);
-                    }}>
-                    Markdown
-                  </Dropdown.Item>
-                  <Dropdown.Item
-                    title="VQL"
-                    onClick={() => {
-                        this.props.addCell(this.state.cell.cell_id, "VQL", "", this.state.cell.env);
-                    }}>
-                    VQL
-                  </Dropdown.Item>
-                  <hr/>
-
-                  <Dropdown
-                    title={T("Suggestion")}
-                    drop="right"
-                    variant="default-outline">
-                    <Dropdown.Toggle
-                      className="dropdown-item"
-                      variant="default-outline">
-                      {T("Suggestions")}
+                {this.state.cell && this.state.cell.type === "vql" &&
+                 <>
+                   <ToolTip tooltip={T("Add Timeline")}>
+                     <Button onClick={()=>this.setState({showAddCellToTimeline: true})}
+                             variant="default">
+                       <FontAwesomeIcon icon="calendar-alt"/>
+                     </Button>
+                   </ToolTip>
+                   <ToolTip tooltip={T("Format Columns")}>
+                     <Button onClick={()=>this.setState({showFormatTablesDialog: true})}
+                             variant="default">
+                       <FontAwesomeIcon icon="table"/>
+                     </Button>
+                   </ToolTip>
+                   <ToolTip tooltip={T("Notebook Uploads")}>
+                     <Button onClick={() => this.setState({ showNotebookUploadsDialog: true })}
+                             variant="default">
+                       <FontAwesomeIcon icon="fa-file-download" />
+                       <span className="sr-only">{T("Notebook Uploads")}</span>
+                     </Button>
+                   </ToolTip>
+                 </>
+                }
+                <ToolTip tooltip={T("Add Cell")}>
+                  <Dropdown variant="default">
+                    <Dropdown.Toggle variant="default">
+                      <FontAwesomeIcon icon="plus"/>
                     </Dropdown.Toggle>
-                    { this.showSuggestions() }
-                  </Dropdown>
-                  <hr/>
+                    <Dropdown.Menu>
+                      <Dropdown.Item
+                        title="Markdown"
+                        onClick={() => {
+                            // Preserve the current cell's environemnt for the new cell
+                            this.props.addCell(this.state.cell.cell_id, "Markdown", "", this.state.cell.env);
+                        }}>
+                        Markdown
+                      </Dropdown.Item>
+                      <Dropdown.Item
+                        title="VQL"
+                        onClick={() => {
+                            this.props.addCell(this.state.cell.cell_id, "VQL", "", this.state.cell.env);
+                        }}>
+                        VQL
+                      </Dropdown.Item>
+                      <hr/>
 
-                  <Dropdown.Item
-                    title={T("Add Timeline")}
-                    onClick={()=>this.setState({showAddTimeline: true})}>
-                    {T("Add Timeline")}
-                  </Dropdown.Item>
-                  <Dropdown.Item
-                    title={T("Add Cell From This Cell")}
-                    onClick={this.addCellFromCell}>
-                    {T("Add Cell From This Cell")}
-                  </Dropdown.Item>
-                  <Dropdown.Item
-                    title={T("Add Cell From Hunt")}
-                    onClick={()=>this.setState({showAddCellFromHunt: true})}>
-                    {T("Add Cell From Hunt")}
-                  </Dropdown.Item>
-                  <Dropdown.Item
-                    title={T("Add Cell From Flow")}
-                    onClick={()=>this.setState({showAddCellFromFlow: true})}>
-                    {T("Add Cell From Flow")}
-                  </Dropdown.Item>
-                  {this.state.cell && this.state.cell.type === "VQL" &&
-                   <Dropdown.Item
-                     title={T("Create Artifact from VQL")}
-                     onClick={()=>this.setState({showCreateArtifactFromCell: true})}>
-                     {T("Create Artifact from VQL")}
-                   </Dropdown.Item>}
-                </Dropdown.Menu>
-              </Dropdown>
-            </ButtonGroup>
-            <ButtonGroup className="float-right">
-              <Button data-tooltip={T("Rendered")} disabled
-                      data-position="left"
-                      className="btn-tooltip"
-                      variant="outline-info">
-                <VeloTimestamp usec={this.state.cell.timestamp * 1000} />
-                { this.state.cell.duration &&
-                  <span>&nbsp;({this.state.cell.duration}s) </span> }
-              </Button>
-            </ButtonGroup>
+                      <Dropdown
+                        title={T("Suggestion")}
+                        drop="right"
+                        variant="default-outline">
+                        <Dropdown.Toggle
+                          className="dropdown-item"
+                          variant="default-outline">
+                          {T("Suggestions")}
+                        </Dropdown.Toggle>
+                        { this.showSuggestions() }
+                      </Dropdown>
+                      <hr/>
+
+                      <Dropdown.Item
+                        title={T("Add Timeline")}
+                        onClick={()=>this.setState({showAddTimeline: true})}>
+                        {T("Add Timeline")}
+                      </Dropdown.Item>
+                      <Dropdown.Item
+                        title={T("Add Cell From This Cell")}
+                        onClick={this.addCellFromCell}>
+                        {T("Add Cell From This Cell")}
+                      </Dropdown.Item>
+                      <Dropdown.Item
+                        title={T("Add Cell From Hunt")}
+                        onClick={()=>this.setState({showAddCellFromHunt: true})}>
+                        {T("Add Cell From Hunt")}
+                      </Dropdown.Item>
+                      <Dropdown.Item
+                        title={T("Add Cell From Flow")}
+                        onClick={()=>this.setState({showAddCellFromFlow: true})}>
+                        {T("Add Cell From Flow")}
+                      </Dropdown.Item>
+                      {this.state.cell && this.state.cell.type === "VQL" &&
+                       <Dropdown.Item
+                         title={T("Create Artifact from VQL")}
+                         onClick={()=>this.setState({showCreateArtifactFromCell: true})}>
+                         {T("Create Artifact from VQL")}
+                       </Dropdown.Item>}
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </ToolTip>
+              </ButtonGroup>
+              <ButtonGroup className="float-right">
+                <ToolTip tooltip={T("Rendered")}>
+                  <Button variant="outline-info">
+                    <VeloTimestamp usec={this.state.cell.timestamp * 1000} />
+                    { this.state.cell.duration &&
+                      <span>&nbsp;({this.state.cell.duration}s) </span> }
+                  </Button>
+                </ToolTip>
+              </ButtonGroup>
             </>
         );
 
         let ace_toolbar = (
             <>
               <ButtonGroup>
-                <Button data-tooltip={T("Undo")}
-                        data-position="right"
-                        className="btn-tooltip"
-                        onClick={() => {this.setEditing(false); }}
-                        variant="default">
-                  <FontAwesomeIcon icon="window-close"/>
-                </Button>
+                <ToolTip tooltip={T("Undo")}>
+                  <Button onClick={() => {this.setEditing(false); }}
+                          variant="default">
+                    <FontAwesomeIcon icon="window-close"/>
+                  </Button>
+                </ToolTip>
 
                 <SettingsButton ace={this.state.ace}/>
 
                 { this.state.cell.type === "vql" &&
-                  <Button data-tooltip={T("Reformat Format VQL")}
-                          data-position="right"
-                          className="btn-tooltip"
-                          onClick={this.formatCell}
-                          variant="default">
-                    <FontAwesomeIcon icon="indent"/>
-                  </Button>
+                  <ToolTip tooltip={T("Reformat VQL")}>
+                    <Button onClick={this.formatCell}
+                            variant="default">
+                      <FontAwesomeIcon icon="indent"/>
+                    </Button>
+                  </ToolTip>
                 }
-                <Button data-tooltip={T("Save")}
-                        data-position="right"
-                        className="btn-tooltip"
-                        onClick={()=>{
-                            let cell = this.state.cell;
-                            cell.input = this.state.ace.getValue();
-                            this.saveCell(cell);
+                <ToolTip tooltip={T("Save")}>
+                  <Button onClick={()=>{
+                              let cell = this.state.cell;
+                              cell.input = this.state.ace.getValue();
+                              this.saveCell(cell);
 
-                            // Do not allow the calculation to be
-                            // cancelled until we receive the version
-                            // id from the update API.
-                            this.setState({loading: true});
-                        }}
-                        variant="default">
-                  <FontAwesomeIcon icon="save"/>
-                </Button>
-
+                              // Do not allow the calculation to be
+                              // cancelled until we receive the version
+                              // id from the update API.
+                              this.setState({loading: true});
+                          }}
+                          variant="default">
+                    <FontAwesomeIcon icon="save"/>
+                  </Button>
+                </ToolTip>
               </ButtonGroup>
 
               <ButtonGroup className="float-right">
-                <Button data-tooltip={T("Delete Cell")}
-                        data-position="right"
-                        className="btn-tooltip"
-                        onClick={this.deleteCell}
-                        variant="default">
-                  <FontAwesomeIcon icon="trash"/>
-                </Button>
+                <ToolTip tooltip={T("Delete Cell")}>
+                  <Button onClick={this.deleteCell}
+                          variant="default">
+                    <FontAwesomeIcon icon="trash"/>
+                  </Button>
+                </ToolTip>
 
                 <FormControl as="select"
                              ref={ (el) => this.element=el }
@@ -969,8 +942,8 @@ export default class NotebookCellRenderer extends React.Component {
                              }} >
                   { _.map(cell_types, (v, idx) => {
                       return <option value={v.toLowerCase()} key={idx}>
-                               {v}
-                             </option>;
+              {v}
+            </option>;
                   })}
                 </FormControl>
               </ButtonGroup>

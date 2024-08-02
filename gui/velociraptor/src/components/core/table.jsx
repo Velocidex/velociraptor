@@ -25,7 +25,7 @@ import { NavLink } from "react-router-dom";
 import ClientLink from '../clients/client-link.jsx';
 import { HexViewPopup } from '../utils/hex.jsx';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Tooltip from 'react-bootstrap/Tooltip';
+import ToolTip from '../widgets/tooltip.jsx';
 import T from '../i8n/i8n.jsx';
 import TreeCell from './tree-cell.jsx';
 import ContextMenu from '../utils/context.jsx';
@@ -64,28 +64,27 @@ export class InspectRawJson extends Component {
 
     render() {
         if (!this.state.show) {
-            return <Button variant="default"
-                      data-tooltip={T("Inspect Raw JSON")}
-                      data-position="right"
-                      className="btn-tooltip"
+            return <ToolTip tooltip={T("Inspect Raw JSON")}>
+                     <Button variant="default"
                       onClick={() => this.setState({show: true})} >
-                <FontAwesomeIcon icon="binoculars"/>
-            </Button>;
+                       <FontAwesomeIcon icon="binoculars"/>
+                     </Button>
+                   </ToolTip>;
         }
 
         let rows = [];
         let start = this.props.start || 0;
         let max_rows = 100;
 
+        if (max_rows > this.props.rows.length) {
+            max_rows = this.props.rows.length;
+        }
+
         for(var i=start;i<start + max_rows;i++) {
-            if (this.props.rows.length < i) {
-                break;
-            }
             let copy = Object.assign({}, this.props.rows[i]);
             delete copy["_id"];
             rows.push(copy);
         }
-
         let serialized = JSON.stringify(rows, null, 2);
 
         return (
@@ -129,7 +128,7 @@ export class InspectRawJson extends Component {
 // Toggle columns on or off - helps when the table is very wide.
 export const ColumnToggleList = (e) => {
     const [open, setOpen] = React.useState(false);
-    const onToggle = (isOpen, ev, metadata) => {
+    const onToggle = (isOpen, metadata) => {
         if (metadata.source === "select") {
             setOpen(true);
             return;
@@ -152,21 +151,17 @@ export const ColumnToggleList = (e) => {
                  key={ column.dataField }
                  eventKey={column.dataField}
                  active={!hidden}
-                 onSelect={c=>onColumnToggle(c)}
-                 data-position="right"
-                 className="btn-tooltip"
-                 data-tooltip={T("Show/Hide Columns")}
                >
                  { column.text }
                </Dropdown.Item>;
     });
 
     return (
-        <>
+        <ToolTip tooltip={T("Show/Hide Columns")}>
           <Dropdown show={open}
-                    data-position="right"
-                    data-tooltip={T("Show/Hide Columns")}
-                    className="btn-tooltip"
+                    onSelect={c=>{
+                        onColumnToggle(c);
+                      }}
                     onToggle={onToggle}>
             <Dropdown.Toggle variant="default" id="dropdown-basic">
               <FontAwesomeIcon icon="columns"/>
@@ -185,7 +180,7 @@ export const ColumnToggleList = (e) => {
                   {T("Set All")}
                 </Dropdown.Item> :
                 <Dropdown.Item
-                  onSelect={()=>{
+                  onClick={()=>{
                       _.each(columns, c=>{
                           if(!toggles[c.dataField]){
                               onColumnToggle(c.dataField);
@@ -198,7 +193,7 @@ export const ColumnToggleList = (e) => {
               { buttons }
             </Dropdown.Menu>
           </Dropdown>
-        </>
+        </ToolTip>
     );
 };
 
@@ -528,15 +523,11 @@ export function formatColumns(columns, env, column_formatter) {
                         }
                     }
                 }
-                return <OverlayTrigger
-                         delay={{show: 250, hide: 400}}
-                         overlay={(props)=>{
-                             return <Tooltip {...props}>{cell}</Tooltip>;
-                         }}>
+                return <ToolTip tooltip={cell}>
                          <span className="number">
                          {value} {suffix}
                          </span>
-                       </OverlayTrigger>;
+                       </ToolTip>;
             };
             if (!_.isObject(x.style)) {
                 x.style = {};

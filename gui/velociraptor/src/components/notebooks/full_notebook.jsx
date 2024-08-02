@@ -11,6 +11,7 @@ import api from '../core/api-service.jsx';
 import Spinner from '../utils/spinner.jsx';
 import { withRouter }  from "react-router-dom";
 import T from '../i8n/i8n.jsx';
+import ToolTip from '../widgets/tooltip.jsx';
 
 // Poll for new notebooks list.
 const POLL_TIME = 5000;
@@ -86,13 +87,12 @@ class FullScreenNotebook extends React.Component {
               <Spinner loading={this.state.loading} />
               <Navbar className="toolbar">
                 <ButtonGroup className="float-right floating-button">
-                  <Button data-tooltip={T("Exit Fullscreen")}
-                          data-position="left"
-                          className="btn-tooltip"
-                          onClick={this.setSelectedNotebook}
-                          variant="default">
-                    <FontAwesomeIcon icon="compress"/>
-                  </Button>
+                  <ToolTip tooltip={T("Exit Fullscreen")}>
+                    <Button onClick={this.setSelectedNotebook}
+                            variant="default">
+                      <FontAwesomeIcon icon="compress"/>
+                    </Button>
+                  </ToolTip>
                 </ButtonGroup>
               </Navbar>
               <div className="fill-parent no-margins selectable">

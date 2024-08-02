@@ -463,150 +463,131 @@ class FlowsList extends React.Component {
 
               <Navbar className="flow-toolbar">
                 <ButtonGroup>
-                  <Button data-tooltip={T("New Collection")}
-                          data-position="right"
-                          className="btn-tooltip"
-                          onClick={() => this.setState({showWizard: true})}
-                          variant="default">
-                    <FontAwesomeIcon icon="plus"/>
-                    <span className="sr-only">{T("New Collection")}</span>
-                  </Button>
+                  <ToolTip tooltip={T("New Collection")}>
+                    <Button onClick={() => this.setState({showWizard: true})}
+                            variant="default">
+                      <FontAwesomeIcon icon="plus"/>
+                      <span className="sr-only">{T("New Collection")}</span>
+                    </Button>
+                  </ToolTip>
 
                   { client_id !== "server" &&
-                    <Button data-tooltip={T("Add to hunt")}
-                            data-position="right"
-                            className="btn-tooltip"
-                            onClick={()=>this.setState({showAddToHunt: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="crosshairs"/>
-                      <span className="sr-only">{T("Add to hunt")}</span>
-                    </Button>
+                    <ToolTip tooltip={T("Add to hunt")} >
+                      <Button onClick={()=>this.setState({showAddToHunt: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="crosshairs"/>
+                        <span className="sr-only">{T("Add to hunt")}</span>
+                      </Button>
+                    </ToolTip>
                   }
-                  <Button data-tooltip={T("Delete Artifact Collection")}
-                          data-position="right"
-                          className="btn-tooltip"
-                          onClick={()=>this.setState({showDeleteWizard: true}) }
-                          variant="default">
-                    <FontAwesomeIcon icon="trash-alt"/>
-                    <span className="sr-only">{T("Delete Artifact Collection")}</span>
-                  </Button>
-
-                  <Button data-tooltip={T("Cancel Artifact Collection")}
-                          data-position="right"
-                          disabled={this.props.selected_flow.state === "FINISHED" ||
-                                    this.props.selected_flow.state === "ERROR"}
-                          className="btn-tooltip"
-                          onClick={this.cancelButtonClicked}
-                          variant="default">
-                    <FontAwesomeIcon icon="stop"/>
-                    <span className="sr-only">{T("Cancel Artifact Collection")}</span>
-                  </Button>
-
-                  <Button data-tooltip={T("Copy Collection")}
-                          data-position="right"
-                          className="btn-tooltip"
-                          onClick={this.copyCollection}
-                          variant="default">
-                    <FontAwesomeIcon icon="copy"/>
-                    <span className="sr-only">{T("Copy Collection")}</span>
-                  </Button>
-                  <Button data-tooltip={T("Save Collection")}
-                          data-position="right"
-                          className="btn-tooltip"
-                          onClick={() => this.setState({
-                              showSaveCollectionDialog: true
-                          })}
-                          variant="default">
-                    <FontAwesomeIcon icon="save"/>
-                    <span className="sr-only">{T("Save Collection")}</span>
-                  </Button>
-
-                  <Button data-tooltip={T("Stats Toggle")}
-                          data-position="left"
-                          className="btn-tooltip"
-                          variant="default"
-                          onClick={this.expandSlider}>
-                    <FontAwesomeIcon icon={SLIDE_STATES[this.state.slider].icon}/>
-                  </Button>
+                  <ToolTip tooltip={T("Delete Artifact Collection")}>
+                    <Button onClick={()=>this.setState({showDeleteWizard: true}) }
+                            variant="default">
+                      <FontAwesomeIcon icon="trash-alt"/>
+                      <span className="sr-only">{T("Delete Artifact Collection")}</span>
+                    </Button>
+                  </ToolTip>
+                  <ToolTip tooltip={T("Cancel Artifact Collection")}>
+                    <Button disabled={this.props.selected_flow.state === "FINISHED" ||
+                                      this.props.selected_flow.state === "ERROR"}
+                            onClick={this.cancelButtonClicked}
+                            variant="default">
+                      <FontAwesomeIcon icon="stop"/>
+                      <span className="sr-only">{T("Cancel Artifact Collection")}</span>
+                    </Button>
+                  </ToolTip>
+                  <ToolTip tooltip={T("Copy Collection")}>
+                    <Button onClick={this.copyCollection}
+                            variant="default">
+                      <FontAwesomeIcon icon="copy"/>
+                      <span className="sr-only">{T("Copy Collection")}</span>
+                    </Button>
+                  </ToolTip>
+                  <ToolTip tooltip={T("Save Collection")} >
+                    <Button onClick={() => this.setState({
+                                showSaveCollectionDialog: true
+                            })}
+                            variant="default">
+                      <FontAwesomeIcon icon="save"/>
+                      <span className="sr-only">{T("Save Collection")}</span>
+                    </Button>
+                  </ToolTip>
+                  <ToolTip tooltip={T("Stats Toggle")}  >
+                    <Button variant="default"
+                            onClick={this.expandSlider}>
+                      <FontAwesomeIcon icon={SLIDE_STATES[this.state.slider].icon}/>
+                    </Button>
+                  </ToolTip>
 
                   { _.isEmpty(this.state.transform) ?
-                    <Button data-tooltip={T("Show only my collections")}
-                            data-position="right"
-                            className="btn-tooltip"
-                            onClick={()=>{
-                                this.setState({transform: {
-                                    filter_regex: username,
-                                    filter_column: "Creator"}});
-                                this.incrementVersion();
-                            }}
-                            variant="default">
-                      <FontAwesomeIcon icon="user" />
-                      <span className="sr-only">{T("Show only my hunts")}</span>
-                    </Button>
+                    <ToolTip tooltip={T("Show only my collections")}>
+                      <Button onClick={()=>{
+                                  this.setState({transform: {
+                                      filter_regex: username,
+                                      filter_column: "Creator"}});
+                                  this.incrementVersion();
+                              }}
+                              variant="default">
+                        <FontAwesomeIcon icon="user" />
+                        <span className="sr-only">{T("Show only my hunts")}</span>
+                      </Button>
+                    </ToolTip>
                     :
-                    <Button data-tooltip={T("Show all collections")}
-                            data-position="right"
-                            className="btn-tooltip"
-                            onClick={()=>{
-                                this.setState({transform: {}});
-                                this.incrementVersion();
-                            }}
-                            variant="default">
-                      <FontAwesomeIcon icon="user-large-slash" />
-                      <span className="sr-only">{T("Show all hunts")}</span>
-                    </Button>
+                    <ToolTip tooltip={T("Show all collections")}>
+                      <Button onClick={()=>{
+                                  this.setState({transform: {}});
+                                  this.incrementVersion();
+                              }}
+                              variant="default">
+                        <FontAwesomeIcon icon="user-large-slash" />
+                        <span className="sr-only">{T("Show all hunts")}</span>
+                      </Button>
+                    </ToolTip>
                   }
 
                   { isServer &&
-                    <Button data-tooltip={T("Build offline collector")}
-                            data-position="right"
-                            className="btn-tooltip"
-                            onClick={() => this.setState({showOfflineWizard: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="paper-plane"/>
-                      <span className="sr-only">{T("Build offline collector")}</span>
-                    </Button>
+                    <ToolTip tooltip={T("Build offline collector")}>
+                      <Button onClick={() => this.setState({showOfflineWizard: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="paper-plane"/>
+                        <span className="sr-only">{T("Build offline collector")}</span>
+                      </Button>
+                    </ToolTip>
                   }
 
                 </ButtonGroup>
                 { tab === "notebook" &&
                   <ButtonGroup className="float-right">
-                    <Button data-tooltip={T("Notebooks")}
-                            data-position="left"
-                            className="btn-tooltip"
-                            disabled={true}
-                            variant="outline-dark">
-                      <FontAwesomeIcon icon="book"/>
-                      <span className="sr-only">{T("Notebooks")}</span>
-                    </Button>
+                    <ToolTip tooltip={T("Notebooks")} >
+                      <Button disabled={true}
+                              variant="outline-dark">
+                        <FontAwesomeIcon icon="book"/>
+                        <span className="sr-only">{T("Notebooks")}</span>
+                      </Button>
+                    </ToolTip>
+                    <ToolTip tooltip={T("Full Screen")}>
 
-                    <Button data-tooltip={T("Full Screen")}
-                            data-position="left"
-                            className="btn-tooltip"
-                            onClick={this.setFullScreen}
-                            variant="default">
-                      <FontAwesomeIcon icon="expand"/>
-                      <span className="sr-only">{T("Full Screen")}</span>
-                    </Button>
+                      <Button onClick={this.setFullScreen}
+                              variant="default">
+                        <FontAwesomeIcon icon="expand"/>
+                        <span className="sr-only">{T("Full Screen")}</span>
+                      </Button>
+                    </ToolTip>
+                    <ToolTip tooltip={T("Delete Notebook")}>
+                      <Button onClick={() => this.setState({showDeleteNotebook: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="trash"/>
+                        <span className="sr-only">{T("Delete Notebook")}</span>
+                      </Button>
+                    </ToolTip>
 
-                    <Button data-tooltip={T("Delete Notebook")}
-                            data-position="left"
-                            className="btn-tooltip"
-                            onClick={() => this.setState({showDeleteNotebook: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="trash"/>
-                      <span className="sr-only">{T("Delete Notebook")}</span>
-                    </Button>
-
-
-                    <Button data-tooltip={T("Export Notebook")}
-                            data-position="left"
-                            className="btn-tooltip"
-                            onClick={() => this.setState({showExportNotebook: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="download"/>
-                      <span className="sr-only">{T("Export Notebook")}</span>
-                    </Button>
+                    <ToolTip tooltip={T("Export Notebook")}>
+                      <Button onClick={() => this.setState({showExportNotebook: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="download"/>
+                        <span className="sr-only">{T("Export Notebook")}</span>
+                      </Button>
+                    </ToolTip>
 
                   </ButtonGroup>
                 }

@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import classNames from "classnames";
 
 import { Link, withRouter } from  "react-router-dom";
+import ToolTip from '../widgets/tooltip.jsx';
 
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button';
@@ -445,99 +446,91 @@ class VeloFileList extends Component {
             <>
               <ButtonGroup className="float-right vfs-toolbar">
                 { this.shouldSpinSyncDir() ?
-                  <Button data-tooltip={T("Currently refreshing")}
-                          data-position="left"
-                          className="btn-tooltip"
-                          onClick={this.startVfsRefreshOperation}
-                          variant="default">
-                    <FontAwesomeIcon icon="spinner" spin/>
-                  </Button>
+                  <ToolTip tooltip={T("Currently refreshing")}>
+                    <Button onClick={this.startVfsRefreshOperation}
+                            variant="default">
+                      <FontAwesomeIcon icon="spinner" spin/>
+                    </Button>
+                  </ToolTip>
                   :
-                  <Button data-tooltip={T("Refresh this directory (sync its listing with the client)")}
-                          data-position="left"
-                          disabled={!this.props.node.path}
-                          className="btn-tooltip"
-                          onClick={this.startVfsRefreshOperation}
-                          variant="default">
-                    <FontAwesomeIcon icon="folder-open"/>
-                  </Button>
+                  <ToolTip tooltip={T("Refresh this directory (sync its listing with the client)")}>
+                    <Button disabled={!this.props.node.path}
+                            onClick={this.startVfsRefreshOperation}
+                            variant="default">
+                      <FontAwesomeIcon icon="folder-open"/>
+                    </Button>
+                  </ToolTip>
                 }
                 { this.shouldSpinRecursiveSyncDir() ?
-                  <Button data-tooltip={T("Currently refreshing from the client")}
-                          data-position="left"
-                          className="btn-tooltip"
-                          onClick={this.cancelRecursiveRefresh}
-                          variant="default">
-                    <FontAwesomeIcon icon="spinner" spin/>
-                    <span className="button-label">Synced {(
-                        this.state.lastRecursiveRefreshData.total_collected_rows || 0) + " files"}
-                    </span>
-                    <span className="button-label"><FontAwesomeIcon icon="stop"/></span>
-                  </Button> :
-                  <Button data-tooltip={T("Recursively refresh this directory (sync its listing with the client)")}
-                          data-position="left"
-                          className="btn-tooltip"
-                          disabled={!this.props.node.path}
-                          onClick={this.startRecursiveVfsRefreshOperation}
-                          variant="default">
-                    <FontAwesomeIcon icon="folder-open"/>
-                    <span className="recursive-list-button">R</span>
-                  </Button>
+                  <ToolTip tooltip={T("Currently refreshing from the client")}>
+                    <Button onClick={this.cancelRecursiveRefresh}
+                            variant="default">
+                      <FontAwesomeIcon icon="spinner" spin/>
+                      <span className="button-label">Synced {(
+                          this.state.lastRecursiveRefreshData.total_collected_rows || 0) + " files"}
+                      </span>
+                      <span className="button-label"><FontAwesomeIcon icon="stop"/></span>
+                    </Button>
+                  </ToolTip>  :
+                  <ToolTip tooltip={T("Recursively refresh this directory (sync its listing with the client)")}>
+                    <Button disabled={!this.props.node.path}
+                            onClick={this.startRecursiveVfsRefreshOperation}
+                            variant="default">
+                      <FontAwesomeIcon icon="folder-open"/>
+                      <span className="recursive-list-button">R</span>
+                    </Button>
+                  </ToolTip>
                 }
 
                 { this.state.lastRecursiveDownloadFlowId ?
-                  <Button data-tooltip={T("Currently fetching files from the client")}
-                          data-position="left"
-                          className="btn-tooltip"
-                          onClick={this.cancelRecursiveDownload}
-                          variant="default">
-                    <FontAwesomeIcon icon="spinner" spin/>
-                    <span className="button-label">Downloaded {
-                        (this.state.lastRecursiveDownloadData.total_uploaded_files || 0) + " files (" +
-                            (this.state.lastRecursiveDownloadData.total_uploaded_bytes/1024/1024 ||
-                             0).toFixed(0) + "Mb)"}
-                    </span>
-                    <span className="button-label"><FontAwesomeIcon icon="stop"/></span>
-                  </Button> :
-                  <Button data-tooltip={T("Recursively download this directory from the client")}
-                          data-position="left"
-                          className="btn-tooltip"
-                          onClick={()=>this.setState({showDownloadAllDialog: true})}
-                          disabled={_.isEmpty(this.props.node && this.props.node.path)}
-                          variant="default">
-                    <FontAwesomeIcon icon="file-download"/>
-                    <span className="recursive-list-button">R</span>
-                    &nbsp;
-                  </Button>
+                  <ToolTip tooltip={T("Currently fetching files from the client")}>
+                    <Button onClick={this.cancelRecursiveDownload}
+                            variant="default">
+                      <FontAwesomeIcon icon="spinner" spin/>
+                      <span className="button-label">Downloaded {
+                          (this.state.lastRecursiveDownloadData.total_uploaded_files || 0) + " files (" +
+                              (this.state.lastRecursiveDownloadData.total_uploaded_bytes/1024/1024 ||
+                               0).toFixed(0) + "Mb)"}
+                      </span>
+                      <span className="button-label"><FontAwesomeIcon icon="stop"/></span>
+                    </Button>
+                  </ToolTip>  :
+                  <ToolTip tooltip={T("Recursively download this directory from the client")}>
+                    <Button onClick={()=>this.setState({showDownloadAllDialog: true})}
+                            disabled={_.isEmpty(this.props.node && this.props.node.path)}
+                            variant="default">
+                      <FontAwesomeIcon icon="file-download"/>
+                      <span className="recursive-list-button">R</span>
+                      &nbsp;
+                    </Button>
+                  </ToolTip>
                 }
 
-                <Link to={"/collected/" +this.props.client.client_id +
-                          "/" + this.props.node.flow_id + "/overview"}
-                      data-tooltip={T("View Collection")}
-                      data-position="left"
-                      role="button"
-                      className={classNames({
-                          "btn": true,
-                          "btn-tooltip": true,
-                          "btn-default": true,
-                          "disabled":  !this.props.node.flow_id,
-                      })}>
-                  <FontAwesomeIcon icon="eye"/>
-                </Link>
-                <Button data-tooltip={T("Stats Toggle")}
-                        data-position="left"
-                        className="btn-tooltip"
-                        variant="default"
-                        onClick={this.props.collapseToggle}>
-                  <FontAwesomeIcon icon="expand"/>
-                </Button>
-                <Button data-tooltip={T("Prepare Download")}
-                        data-position="left"
-                        className="btn-tooltip"
-                        onClick={()=>this.setState({showExportDialog: true})}
-                        variant="default">
-                  <FontAwesomeIcon icon="file-export" />
-                </Button>
+                <ToolTip tooltip={T("View Collection")}>
+                  <Link to={"/collected/" +this.props.client.client_id +
+                            "/" + this.props.node.flow_id + "/overview"}
+                        role="button"
+                        className={classNames({
+                            "btn": true,
+                            "btn-tooltip": true,
+                            "btn-default": true,
+                            "disabled":  !this.props.node.flow_id,
+                        })}>
+                    <FontAwesomeIcon icon="eye"/>
+                  </Link>
+                </ToolTip>
+                <ToolTip tooltip={T("Stats Toggle")}>
+                  <Button variant="default"
+                          onClick={this.props.collapseToggle}>
+                    <FontAwesomeIcon icon="expand"/>
+                  </Button>
+                </ToolTip>
+                <ToolTip tooltip={T("Prepare Download")}>
+                  <Button onClick={()=>this.setState({showExportDialog: true})}
+                          variant="default">
+                    <FontAwesomeIcon icon="file-export" />
+                  </Button>
+                </ToolTip>
               </ButtonGroup>
             </>
         );

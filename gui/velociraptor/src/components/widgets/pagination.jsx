@@ -17,6 +17,11 @@ export class TextPaginationControl extends React.Component {
     }
 
     render() {
+        let last_page = this.props.total_pages-1;
+        if (last_page <= 0) {
+            last_page = 0;
+        }
+
         return (
             <Pagination className="hex-goto">
               <Pagination.First
