@@ -7,8 +7,6 @@ import T from '../i8n/i8n.jsx';
 import Alert from 'react-bootstrap/Alert';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
-import BootstrapTable from 'react-bootstrap-table-next';
 import Pagination from 'react-bootstrap/Pagination';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
@@ -19,6 +17,7 @@ import NewCollectionConfigParameters from './new-collections-parameters.jsx';
 import Dropdown from 'react-bootstrap/Dropdown';
 import Spinner from '../utils/spinner.jsx';
 import Col from 'react-bootstrap/Col';
+import Table  from 'react-bootstrap/Table';
 
 import StepWizard from 'react-step-wizard';
 
@@ -130,6 +129,20 @@ class NewCollectionSelectArtifacts extends React.Component {
 
     componentDidMount = () => {
         this.source = CancelToken.source();
+
+        // Prepare the debounced function in advance.
+        this._doSearch = _.debounce((value)=>{
+            api.post("v1/GetArtifacts", {
+                type: this.props.artifactType,
+                fields: {
+                    name: true,
+                },
+                search_term: this.state.filter,
+            }, this.source.token).then((response) => {
+                    let items = response.data.items || [];
+                    this.setState({matchingDescriptors: items, loading: false});
+                });
+        }, 400);
         this.doSearch("...");
     }
 
@@ -172,27 +185,13 @@ class NewCollectionSelectArtifacts extends React.Component {
         _.each(rows, (row) => this.onSelect(row, isSelect));
     }
 
-    updateSearch = (type, filters) => {
-        let value = filters && filters.filters && filters.filters.name &&
-            filters.filters.name.filterVal;
-        if (!value) {
-            this.doSearch("...");
-            return;
-        }
-        this.doSearch(value);
-    }
 
     doSearch = (value) => {
-        this.setState({loading: true});
-        api.post("v1/GetArtifacts", {
-            type: this.props.artifactType,
-            fields: {
-                name: true,
-            },
-            search_term: value}, this.source.token).then((response) => {
-                let items = response.data.items || [];
-                this.setState({matchingDescriptors: items, loading: false});
-            });
+        this.setState({
+            filter: value,
+        });
+
+        this._doSearch(value);
     }
 
     toggleSelection = (row, e) => {
@@ -270,25 +269,6 @@ class NewCollectionSelectArtifacts extends React.Component {
     }
 
     render() {
-        let columns = [{dataField: "name", text: "",
-                        formatter: (cell, row) => {
-                            return <Button tabIndex={0} variant="link"
-                                           onClick={(e)=>this.toggleSelection(row, e)}
-                                   >{cell}</Button>;
-                        },
-                        filter: textFilter({
-                            id: "search-for-artifact-input",
-                            placeholder: T("Search for artifacts..."),
-                        })}];
-
-        let selectRow = {mode: "checkbox",
-                         clickToSelect: true,
-                         classes: "row-selected",
-                         selected: _.map(this.props.artifacts, x=>x.name),
-                         onSelect: this.onSelect,
-                         hideSelectColumn: true,
-                         onSelectAll: this.onSelectAll,
-                        };
         return (
             <>
               <Modal.Header closeButton>
@@ -338,19 +318,38 @@ class NewCollectionSelectArtifacts extends React.Component {
                 <div className="row new-artifact-page">
                   <div className="col-4 new-artifact-search-table selectable">
                     { this.state.loading && <Spinner loading={this.state.loading}/> }
-                    <BootstrapTable
-                      hover
-                      condensed
-                      bootstrap4
-                      remote={ { filter: true } }
-                      filter={ filterFactory() }
-                      keyField="name"
-                      data={this.state.matchingDescriptors}
-                      columns={columns}
-                      selectRow={ selectRow }
-                      onTableChange={ this.updateSearch }
-                    />
-
+                    <Table>
+                      <thead>
+                        <tr>
+                          <th>
+                            <Form>
+                              <Form.Control type="text"
+                                            onChange={e=>this.doSearch(e.target.value)}
+                                            placeholder={T("Search for artifacts...")}
+                              />
+                            </Form>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {_.map(this.state.matchingDescriptors, (row, i)=>{
+                            let classname = "";
+                            _.each(this.props.artifacts, x=>{
+                                if(x.name===row.name) {
+                                    classname = "row-selected";
+                                }
+                            });
+                            return <tr key={i} className={classname}>
+                                     <td>
+                                       <Button
+                                         variant="link"
+                                         onClick={(e)=>this.toggleSelection(row, e)} >
+                                         {row.name}
+                                       </Button>
+                                     </td></tr>;
+                        })}
+                      </tbody>
+                    </Table>
                   </div>
                   <div name="ArtifactInfo" className="col-8 new-artifact-description">
                     { this.state.selectedDescriptor &&

@@ -3,6 +3,23 @@
     overflow: auto;
 }
 
+.new-artifact-search-table table.table td {
+    padding-bottom: 0.3rem;
+    padding-top: 0.3rem;
+    background-color: var(--color-table-heading-background);
+}
+
+.new-artifact-search-table th,
+.new-artifact-search-table tr {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    border: none;
+}
+
+.new-artifact-search-table button {
+    text-decoration-line: none;
+}
+
 .new-artifact-description .report-viewer {
     height: calc(100vh - 232px);
     overflow: auto;

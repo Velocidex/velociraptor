@@ -15,12 +15,7 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import Navbar from 'react-bootstrap/Navbar';
 import Modal from 'react-bootstrap/Modal';
-import Form from 'react-bootstrap/Form';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
 import Alert from 'react-bootstrap/Alert';
-
-import UserForm from '../utils/users.jsx';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 

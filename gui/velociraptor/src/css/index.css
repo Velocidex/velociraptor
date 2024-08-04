@@ -162,6 +162,13 @@ code {
     color: var(--color-foreground);
 }
 
+table.table td {
+    background-color: var(--color-canvas-background);
+}
+
+table.table th {
+    color: var(--color-foreground);
+}
 
 .paged-table-header td {
     padding: 0.3rem;
@@ -180,6 +187,10 @@ code {
     border-right-color: var(--color-btn-border);
     border-bottom-color: var(--color-btn-border);
     border-left-color: var(--color-btn-border);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-left-style: solid;
+    border-right-style: solid;
 }
 
 .nav button.nav-link.active {
@@ -229,7 +240,34 @@ input[type='checkbox'] {
 }
 
 
-.paged-table.table td {
+.paged-table.table td,
+.paged-table.table th {
     background-color: var(--color-table-row-stripe);
     color: var(--color-foreground);
+}
+
+.paged-table.table tr:hover,
+.paged-table.table tbody tr:nth-of-type(2n):hover {
+    background-color: var(--color-table-row-hover);
+}
+
+
+.paged-table.table tbody tr:nth-of-type(2n) {
+  background-color: var(--color-table-row-stripe);
+}
+
+.table.table-striped tr td {
+    background-color: var(--color-table-row-stripe);
+    color: var(--color-foreground);
+}
+
+.velo-form.row, form > .row {
+    margin-bottom: 1rem;
+    margin-left: 15px;
+    margin-right: 15px;
+}
+
+
+button.link {
+    border: none;
 }

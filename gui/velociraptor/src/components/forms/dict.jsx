@@ -18,6 +18,7 @@ export default class DictEditor extends Component {
         // ordering.
         value: PropTypes.array,
         setValue: PropTypes.func.isRequired,
+        valueRenderer: PropTypes.func,
     }
 
     deleteMetadata = k=>{

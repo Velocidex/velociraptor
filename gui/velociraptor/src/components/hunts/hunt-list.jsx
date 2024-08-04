@@ -2,13 +2,10 @@ import "./hunt.css";
 import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
-import BootstrapTable from 'react-bootstrap-table-next';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-import filterFactory from 'react-bootstrap-table2-filter';
-import cellEditFactory from 'react-bootstrap-table2-editor';
 import VeloTimestamp from "../utils/time.jsx";
 import CreatableSelect from 'react-select/creatable';
 import Form from 'react-bootstrap/Form';
@@ -18,11 +15,9 @@ import Col from 'react-bootstrap/Col';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter } from "react-router-dom";
-import { formatColumns } from "../core/table.jsx";
 
 import VeloForm from '../forms/form.jsx';
-import VeloPagedTable from '../core/paged-table.jsx';
-import { TablePaginationControl } from '../core/paged-table.jsx';
+import VeloPagedTable, { TablePaginationControl } from '../core/paged-table.jsx';
 
 import NewHuntWizard from './new-hunt.jsx';
 import DeleteNotebookDialog from '../notebooks/notebook-delete.jsx';
@@ -604,7 +599,7 @@ class HuntList extends React.Component {
                       page_size={this.state.page_state.page_size}
                       current_page={this.state.page_state.start_row /
                                     this.state.page_state.page_size}
-                      onPageChange={this.state.page_state.onPageChange}
+                      onRowChange={this.state.page_state.onRowChange}
                       onPageSizeChange={this.state.page_state.onPageSizeChange}
                     />
                   </ButtonGroup> }

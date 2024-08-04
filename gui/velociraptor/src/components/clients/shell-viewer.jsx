@@ -144,10 +144,10 @@ class _VeloShellCell extends Component {
         } else {
             buttons.push(
                 <ToolTip tooltip={T("Collapse")}>
-                  <button key={2} variant="default"
+                  <Button key={2} variant="default"
                           onClick={() => this.setState({collapsed: true})} >
                     <i><FontAwesomeIcon icon="compress"/></i>
-                  </button>
+                  </Button>
                 </ToolTip>
             );
         }
@@ -420,10 +420,10 @@ class _VeloVQLCell extends Component {
         if (this.props.flow.state  === 'RUNNING') {
             buttons.push(
                 <ToolTip tooltip={T("Stop")}>
-                <button key={5} variant="default"
+                <Button key={5} variant="default"
                         onClick={this.cancelFlow}>
                   <i><FontAwesomeIcon icon="stop"/></i>
-                </button>
+                </Button>
                 </ToolTip>
             );
 
@@ -458,10 +458,10 @@ class _VeloVQLCell extends Component {
 
         flow_status.push(
             <ToolTip tooltip={T("Delete")}>
-              <button key={50} variant="default"
+              <Button key={50} variant="default"
                       onClick={()=>this.setState({showDeleteWizard: true})}>
                 <i><FontAwesomeIcon icon="trash"/></i>
-              </button>
+              </Button>
             </ToolTip>
         );
 
@@ -722,21 +722,19 @@ class ShellViewer extends Component {
             <>
               <div className="shell-command">
                 <InputGroup className="mb-3 d-flex">
-                  <InputGroup.Text>
-                    <DropdownButton as={InputGroup}
-                                    title={this.state.shell_type}
-                                    onSelect={(e) => this.setType(e)}
-                                    id="bg-nested-dropdown">
-                      <Dropdown.Item eventKey="Powershell">Powershell</Dropdown.Item>
-                      { (!this.state.client_os || this.state.client_os === "windows") &&
-                        <Dropdown.Item eventKey="Cmd">Cmd</Dropdown.Item> }
-                      { (!this.state.client_os || this.state.client_os !== "windows") &&
-                        <Dropdown.Item eventKey="Bash">Bash</Dropdown.Item> }
-                      <Dropdown.Item eventKey="VQL">VQL</Dropdown.Item>
-                    </DropdownButton>
-                  </InputGroup.Text>
+                  <DropdownButton as={InputGroup}
+                                  title={this.state.shell_type}
+                                  onSelect={(e) => this.setType(e)}
+                                  id="bg-nested-dropdown">
+                    <Dropdown.Item eventKey="Powershell">Powershell</Dropdown.Item>
+                    { (!this.state.client_os || this.state.client_os === "windows") &&
+                      <Dropdown.Item eventKey="Cmd">Cmd</Dropdown.Item> }
+                    { (!this.state.client_os || this.state.client_os !== "windows") &&
+                      <Dropdown.Item eventKey="Bash">Bash</Dropdown.Item> }
+                    <Dropdown.Item eventKey="VQL">VQL</Dropdown.Item>
+                  </DropdownButton>
                   { simple_textarea ?
-                    <textarea focus-me="controller.focus" rows="1"
+                    <textarea rows="1"
                               className="form-control"
                               placeholder={T("Run command on client")}
                               spellCheck="false"
@@ -759,12 +757,10 @@ class ShellViewer extends Component {
                     />
                   }
 
-                  <InputGroup.Append className="input-group-append">
-                    <button className="btn btn-danger" type="button"
-                            disabled={!this.state.command}
-                            onClick={this.launchCommand}
-                    >Launch</button>
-                  </InputGroup.Append>
+                  <Button disabled={!this.state.command}
+                          onClick={this.launchCommand}
+                  >{T("Launch")}
+                  </Button>
                 </InputGroup>
               </div>
               <div className="shell-results">

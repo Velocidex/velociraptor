@@ -11,8 +11,6 @@ import  {CancelToken} from 'axios';
 
 import { withRouter }  from "react-router-dom";
 
-const POLL_TIME = 5000;
-
 class VeloHunts extends React.Component {
     static propTypes = {
         // React router props.

@@ -2,14 +2,10 @@ import _ from 'lodash';
 import React, { PureComponent, Component } from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import Button from 'react-bootstrap/Button';
 import "./json.css";
 import Modal from 'react-bootstrap/Modal';
 import T from '../i8n/i8n.jsx';
-import BootstrapTable from 'react-bootstrap-table-next';
-import filterFactory from 'react-bootstrap-table2-filter';
-import { formatColumns } from "../core/table.jsx";
-import VeloTable from '../core/table.jsx';
+import VeloTable, { formatColumns } from "../core/table.jsx";
 
 const scale = 5;
 const collapse_string_length = 50;
@@ -47,9 +43,10 @@ class RenderString extends Component {
 
         let b64 = "";
         if (this.state.base64_str) {
-            b64 = <a onClick={()=>this.setState({base64: !this.state.base64})}>
+            b64 = <button className="link"
+                    onClick={()=>this.setState({base64: !this.state.base64})}>
                     <FontAwesomeIcon icon="eye"/>
-                  </a>;
+                  </button>;
         }
 
         if (value.length > collapse_string_length) {
@@ -59,9 +56,10 @@ class RenderString extends Component {
                 ellipsis = <FontAwesomeIcon icon="ellipsis"/>;
             }
             return <>
-                     <a onClick={x=>this.setState({expanded: !this.state.expanded})}>
+                     <button className="link"
+                       onClick={x=>this.setState({expanded: !this.state.expanded})}>
                        <span className="json-string">"{value}" {ellipsis}</span>
-                     </a> { b64 }
+                     </button> { b64 }
                    </>;
         }
 
@@ -188,9 +186,10 @@ class RenderObject extends Component {
         elements = _.concat(elements, this.props.trailingComponents || []);
 
         return <>
-                 <a onClick={x=>this.setState({expanded:!this.state.expanded})}>
+                 <button className="link"
+                   onClick={x=>this.setState({expanded:!this.state.expanded})}>
                    { pad } { opener }
-                 </a>
+                 </button>
                  { elements }
                  <div>{ pad } <span className="json-closer">
                        {this.state.close_symbol}
@@ -222,9 +221,10 @@ class RenderObject extends Component {
                      </>;
 
 
-        return <a onClick={x=>this.setState({expanded:!this.state.expanded})}>
+        return <button className="link"
+                 onClick={x=>this.setState({expanded:!this.state.expanded})}>
                  { pad } { opener }
-               </a>;
+               </button>;
     }
 
     render() {
@@ -316,14 +316,14 @@ class RenderArray extends RenderObject {
             let abridged = this.props.value.slice(0, collapse_array_length-1);
             let indent = this.props.indent || 0;
             let buttons = [
-                <a className="json-expand-button" key="1"
+                <button className="json-expand-button link" key="1"
                    onClick={x=>this.setState({showModal: true})}>
                   <span className="json-pad json-expand-button" style={{
                       paddingLeft: indent + 3 * scale}}>
                     <FontAwesomeIcon icon="ellipsis"/>&nbsp;
                     { this.props.value.length } {T("Total Rows")}
                   </span>
-                </a>];
+                </button>];
 
             return <>
                      <RenderArray

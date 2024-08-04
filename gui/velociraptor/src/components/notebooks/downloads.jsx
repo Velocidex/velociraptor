@@ -5,9 +5,7 @@ import React, { Component } from 'react';
 import { formatColumns } from "../core/table.jsx";
 import T from '../i8n/i8n.jsx';
 import Card from 'react-bootstrap/Card';
-import Button from 'react-bootstrap/Button';
 import Alert from 'react-bootstrap/Alert';
-import Row from 'react-bootstrap/Row';
 
 import api from '../core/api-service.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

@@ -834,7 +834,7 @@ export default class OfflineCollectorWizard extends React.Component {
                 }
 
                 switch(x.key) {
-                case "artifacts":
+                case "artifacts": {
                     let artifact_list = JSONparse(value);
                     // Resolve the artifacts from the request into a
                     // list of descriptors.
@@ -848,6 +848,7 @@ export default class OfflineCollectorWizard extends React.Component {
                                  }});
 
                     break;
+                }
                 case "OS":
                     collector_parameters.target_os = value;
                     break;
@@ -857,10 +858,11 @@ export default class OfflineCollectorWizard extends React.Component {
                 case "target":
                     collector_parameters.target = value;
                     break;
-                case "target_args":
+                case "target_args": {
                     let target_args = JSONparse(value);
                     Object.assign(collector_parameters.target_args, target_args);
                     break;
+                }
                 case "encryption_scheme":
                     collector_parameters.encryption_scheme= value;
                     break;

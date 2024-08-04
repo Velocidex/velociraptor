@@ -45,3 +45,8 @@
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
 }
+
+.velo-form .form-switch {
+    margin-top: 7px;
+    margin-left: 20px;
+}

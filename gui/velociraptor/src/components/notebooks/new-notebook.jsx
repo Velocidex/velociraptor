@@ -8,9 +8,7 @@ import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Button from 'react-bootstrap/Button';
-import Pagination from 'react-bootstrap/Pagination';
 import StepWizard from 'react-step-wizard';
-import Alert from 'react-bootstrap/Alert';
 
 import {
     NewCollectionSelectArtifacts,

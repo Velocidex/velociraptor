@@ -7,6 +7,7 @@ import ContextMenu from './context.jsx';
 import JsonView from './json.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Modal from 'react-bootstrap/Modal';
+import Button from 'react-bootstrap/Button';
 
 // Try to detect something that looks like a timestamp.
 const timestamp_regex = /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d(?:\.\d+)?(?:[+-][0-2]\d:?[0-5]\d|Z))/;
@@ -81,9 +82,9 @@ export default class VeloValueRenderer extends React.Component {
 
         let button = "";
         if (this.estimateJsonSize(v) > maxSizeDialog) {
-            button = <a onClick={x=>this.setState({showDialog:true})}>
+            button = <Button onClick={x=>this.setState({showDialog:true})}>
                        <FontAwesomeIcon icon="plus"/>
-                     </a>;
+                     </Button>;
         }
 
         return <>

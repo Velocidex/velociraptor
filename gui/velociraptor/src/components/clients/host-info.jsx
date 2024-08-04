@@ -10,11 +10,8 @@ import ShellViewer from "./shell-viewer.jsx";
 import VeloReportViewer from "../artifacts/reporting.jsx";
 import { LabelClients } from './clients-list.jsx';
 
-import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
-
-import ToggleButton from 'react-bootstrap/ToggleButton';
 import Row from 'react-bootstrap/Row';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
@@ -511,7 +508,11 @@ class VeloHostInfo extends Component {
                   <ButtonGroup className="" data-toggle="buttons">
                     <Button variant="default"
                             as="a"
-                            onClick={this.startInterrogate}
+                            onClick={e=>{
+                                this.startInterrogate();
+                                e.preventDefault();
+                                return false;
+                            }}
                             disabled={this.state.interrogateOperationId}>
                       { this.state.interrogateOperationId ?
                         <FontAwesomeIcon icon="spinner" spin/>:
@@ -540,9 +541,10 @@ class VeloHostInfo extends Component {
                         }}/>}
                     <ToolTip tooltip={T("Add Label")}>
                       <Button variant="default"
-                              onClick={()=>this.setState({
-                                  showLabelDialog: true,
-                              })}>
+                              onClick={e=>{
+                                  this.setState({showLabelDialog: true});
+                                  e.preventDefault();
+                              }}>
                         <FontAwesomeIcon icon="tags" />
                       </Button>
                     </ToolTip>

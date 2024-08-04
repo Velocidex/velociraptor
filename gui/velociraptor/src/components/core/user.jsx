@@ -18,6 +18,7 @@ const POLL_TIME = 5000;
 class _UserSettings extends React.Component {
     static propTypes = {
         children: PropTypes.node,
+        history: PropTypes.object,
     }
 
     updateTraits = () => {

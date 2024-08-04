@@ -10,19 +10,15 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Button from 'react-bootstrap/Button';
-import Pagination from 'react-bootstrap/Pagination';
 import Form from 'react-bootstrap/Form';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Navbar from 'react-bootstrap/Navbar';
 import VeloValueRenderer from '../utils/value.jsx';
-import Spinner from '../utils/spinner.jsx';
 import api from '../core/api-service.jsx';
 import VeloTimestamp from "../utils/time.jsx";
 import ClientLink from '../clients/client-link.jsx';
 import HexView from '../utils/hex.jsx';
-import StackDialog from './stack.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
-import Col from 'react-bootstrap/Col';
 import Table from 'react-bootstrap/Table';
 import Dropdown from 'react-bootstrap/Dropdown';
 
@@ -249,7 +245,7 @@ export class TablePaginationControl extends React.Component {
         total_size: PropTypes.number,
         current_page: PropTypes.number,
         start_row: PropTypes.number,
-        onPageChange: PropTypes.func,
+        onRowChange: PropTypes.func,
         onPageSizeChange: PropTypes.func,
         direction: PropTypes.string,
     }
@@ -257,12 +253,6 @@ export class TablePaginationControl extends React.Component {
     state = {
         goto_offset: "",
         goto_error: false,
-    }
-
-    gotoPage = page=>{
-        let new_offset = page*this.props.page_size;
-        this.setState({goto_offset: new_offset});
-        this.props.onPageChange(page);
     }
 
     render() {
@@ -278,9 +268,9 @@ export class TablePaginationControl extends React.Component {
         }
 
         let pages = [];
-        let current_page = this.props.current_page;
-        let start_page = this.props.current_page - 2;
-        let end_page = this.props.current_page + 2;
+        let current_page = parseInt(this.props.start_row / this.props.page_size);
+        let start_page = current_page - 4;
+        let end_page = current_page + 4;
 
         let end = this.props.start_row + this.props.page_size;
         if(end>this.props.total_size) {
@@ -304,13 +294,14 @@ export class TablePaginationControl extends React.Component {
         }
 
         for(let i=start_page; i<end_page + 1; i++) {
+            let row_offset = i * this.props.page_size;
             pages.push(
                 <Dropdown.Item as={Button}
                                variant="default"
                                key={i}
-                               active={i === this.props.current_page}
-                               onClick={ () => this.props.onPageChange(i) } >
-                  { i }
+                               active={i === current_page}
+                               onClick={ () => this.props.onRowChange(row_offset)} >
+                  { row_offset }
                 </Dropdown.Item>);
         };
 
@@ -328,15 +319,15 @@ export class TablePaginationControl extends React.Component {
         return (
             <>
               <Button variant="default" className="goto-start"
-                      disabled={this.props.current_page===0}
-                      onClick={()=>this.props.onPageChange(0)}>
+                      disabled={current_page===0}
+                      onClick={()=>this.props.onRowChange(0)}>
                 <FontAwesomeIcon icon="backward-fast"/>
               </Button>
 
               <Button variant="default" className="goto-prev"
-                      disabled={this.props.current_page===0}
-                      onClick={()=>this.props.onPageChange(
-                          this.props.current_page-1)}>
+                      disabled={current_page===0}
+                      onClick={()=>this.props.onRowChange(
+                          (current_page-1) * this.props.page_size)}>
                 <FontAwesomeIcon icon="backward"/>
               </Button>
 
@@ -363,11 +354,11 @@ export class TablePaginationControl extends React.Component {
                         placeholder={T("Goto Page")}
                         spellCheck="false"
                         id="goto-page"
-                        value={this.props.current_page || ""}
+                        value={this.props.start_row || ""}
                         onChange={e=> {
-                            let page = parseInt(e.currentTarget.value || 0);
-                            if (page >= 0 && page < total_pages) {
-                                this.props.onPageChange(page);
+                            let new_row = parseInt(e.currentTarget.value || 0);
+                            if (new_row >= 0 && new_row < this.props.total_size) {
+                                this.props.onRowChange(new_row);
                             }
                         }}/>
                     </Dropdown.Item>
@@ -379,14 +370,15 @@ export class TablePaginationControl extends React.Component {
 
               <Button variant="default" className="goto-next"
                       disabled={this.props.current_page >= last_page}
-                      onClick={()=>this.props.onPageChange(
-                        this.props.current_page+1)}>
+                      onClick={()=>this.props.onRowChange(
+                          (current_page+1) * this.props.page_size)}>
                 <FontAwesomeIcon icon="forward"/>
               </Button>
 
               <Button variant="default" className="goto-end"
                       disabled={this.props.current_page === last_page}
-                      onClick={()=>this.props.onPageChange(last_page)}>
+                      onClick={()=>this.props.onRowChange(
+                          last_page * this.props.page_size)}>
                     <FontAwesomeIcon icon="forward-fast"/>
               </Button>
 
@@ -410,32 +402,6 @@ export class TablePaginationControl extends React.Component {
                 </Dropdown>
               </ToolTip>
             </>
-        );
-
-        // TODO: Decide which style
-        return (
-            <Pagination>
-              <Pagination.First
-                disabled={this.props.current_page===0}
-                onClick={()=>this.props.onPageChange(0)}/>
-              { pages }
-              <Pagination.Last
-                disabled={this.props.current_page === last_page}
-                onClick={()=>this.props.onPageChange(last_page)}/>
-              <Form.Control
-                as="input"
-                className="pagination-form"
-                placeholder={T("Goto Page")}
-                spellCheck="false"
-                id="goto-page"
-                value={this.props.current_page || ""}
-                onChange={e=> {
-                    let page = parseInt(e.currentTarget.value || 0);
-                    if (page >= 0 && page < total_pages) {
-                        this.props.onPageChange(page);
-                    }
-                }}/>
-            </Pagination>
         );
     }
 }
@@ -511,7 +477,7 @@ class VeloPagedTable extends Component {
         completion_reporter: PropTypes.func,
 
         // If set we update the callback with the pagination state.
-        setPageStat: PropTypes.func,
+        setPageState: PropTypes.func,
     }
 
     state = {
@@ -751,8 +717,7 @@ class VeloPagedTable extends Component {
                     total_size: parseInt(response.data.total_rows || 0),
                     start_row: this.state.start_row,
                     page_size: this.state.page_size,
-                    onPageChange: page=>this.setState({
-                        start_row: page * this.state.page_size}),
+                    onRowChange: row_offset=>this.setState({start_row: row_offset}),
                     onPageSizeChange: size=>this.setState({page_size: size}),
                 });
             }
@@ -956,6 +921,10 @@ class VeloPagedTable extends Component {
             selected_cls = "";
         }
 
+        if(this.props.row_classes) {
+            selected_cls += " " + this.props.row_classes(row,idx);
+        }
+
         return (
             <tr key={idx}
                 onClick={x=>this.selectRow(row, idx)}
@@ -977,8 +946,7 @@ class VeloPagedTable extends Component {
                 start_row={this.state.start_row}
                 page_size={this.state.page_size}
                 current_page={this.state.start_row / this.state.page_size}
-                onPageChange={page=>this.setState({
-                    start_row: page * this.state.page_size})}
+                onRowChange={row_offset=>this.setState({start_row: row_offset})}
                 onPageSizeChange={size=>this.setState({page_size: size})}
                 direction={direction}
               />

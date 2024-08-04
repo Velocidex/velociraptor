@@ -13,7 +13,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter }  from "react-router-dom";
 
 import Accordion from 'react-bootstrap/Accordion';
-import Card  from 'react-bootstrap/Card';
 import UserConfig from '../core/user.jsx';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
@@ -132,6 +131,8 @@ class UserSettings extends React.PureComponent {
     static propTypes = {
         onClose: PropTypes.func.isRequired,
         setSetting: PropTypes.func.isRequired,
+
+        history: PropTypes.object,
     }
 
     componentDidMount = () => {
@@ -414,9 +415,6 @@ export default class UserLabel extends React.Component {
             ace_options.fontFamily = "Iosevka Term";
         } else if(options.theme === "github-dimmed-dark") {
           ace_options.theme = "ace/theme/dracula";
-          ace_options.fontFamily = "Iosevka Term";
-        } else if(options.theme === "github-default-light") {
-          ace_options.theme = "ace/theme/sqlserver";
           ace_options.fontFamily = "Iosevka Term";
         } else if(options.theme === "coolgray-dark") {
           ace_options.theme = "ace/theme/nord_dark";
