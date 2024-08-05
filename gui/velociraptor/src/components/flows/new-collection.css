@@ -6,14 +6,18 @@
 .new-artifact-search-table table.table td {
     padding-bottom: 0.3rem;
     padding-top: 0.3rem;
-    background-color: var(--color-table-heading-background);
+    border: none;
 }
 
 .new-artifact-search-table th,
-.new-artifact-search-table tr {
+.new-artifact-search-table tr,
+.new-artifact-search-table td {
     padding-top: 0px;
     padding-bottom: 0px;
-    border: none;
+}
+
+.new-artifact-search-table.selectable tr.row-selected button {
+  background: var(--color-accent-50);
 }
 
 .new-artifact-search-table button {

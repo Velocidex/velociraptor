@@ -191,6 +191,9 @@ table.table th {
     border-right-width: 1px;
     border-left-style: solid;
     border-right-style: solid;
+    border-top-color: var(--color-btn-border);
+    border-top-style: solid;
+    border-top-width: 1px;
 }
 
 .nav button.nav-link.active {
@@ -240,10 +243,16 @@ input[type='checkbox'] {
 }
 
 
-.paged-table.table td,
-.paged-table.table th {
+.paged-table.table td {
     background-color: var(--color-table-row-stripe);
     color: var(--color-foreground);
+}
+
+.paged-table.table thead th,
+.paged-table.table thead th tr:hover,
+.paged-table.table thead th td {
+    border: 1px solid var(--color-table-heading-background);
+    background: var(--color-table-heading-background);
 }
 
 .paged-table.table tr:hover,
@@ -256,8 +265,26 @@ input[type='checkbox'] {
   background-color: var(--color-table-row-stripe);
 }
 
-.table.table-striped tr td {
+.paged-table.table tbody tr.row_selected td,
+.paged-table.table tbody tr.row-selected {
+    background-color: var(--color-table-row-selected);
+    color: var(--color-table-row-selected-text);
+}
+
+
+.table-striped tr td {
+    background-color: var(--color-table-row);
+    color: var(--color-foreground);
+}
+
+
+.table-striped tr:nth-of-type(odd) > *  {
     background-color: var(--color-table-row-stripe);
+}
+
+.table.table-striped thead tr th,
+.table.table-sm thead tr th {
+    background-color: var(--color-table-heading-background);
     color: var(--color-foreground);
 }
 
@@ -270,4 +297,6 @@ input[type='checkbox'] {
 
 button.link {
     border: none;
+    background-color: initial;
+    color: var(--color-foreground);
 }

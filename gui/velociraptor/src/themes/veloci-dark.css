@@ -103,6 +103,7 @@
   --color-pagination-disabled: #3f4754;
 
   --color-table-row-stripe: rgba(63,71,84,.2);
+  --color-table-row: var(--color-canvas-background);
   --color-table-row-selected: rgba(63,71,84,1);
   --color-table-row-selected-text: var(--color-foreground);
   --color-table-row-hover: rgba(63,71,84,.8);
@@ -178,19 +179,6 @@ body.veloci-dark {
 
 .veloci-dark .hamburger {
   color: var(--color-sidebar-foreground);
-}
-
-.veloci-dark #client-search-bar {
-  background: var(--color-canvas-background);
-  border: 1px solid var(--color-btn-border);
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  color: var(--color-foreground);
-  font-family: var(--font-family-sans-serif);
-  padding-top: 5px;
-  padding-bottom: 5px;
-  margin-left: 5px;
-  height: 26px;
 }
 
 .veloci-dark .dropdown .dropdown-toggle.btn.btn-default {
@@ -284,7 +272,7 @@ body.veloci-dark {
   border-color: var(--color-btn-border);
 }
 
-.veloci-dark .btn-default.active {
+.veloci-dark .btn.btn-default.active {
   box-shadow: none;
   color: var(--color-sidebar-background);
 }
@@ -367,12 +355,6 @@ body.veloci-dark {
   text-shadow: none;
   box-shadow: none;
   border: 1px solid var(--color-table-heading-background);
-}
-
-.veloci-dark .table thead th,
-.veloci-dark .table thead th td {
-  border: 1px solid var(--color-table-heading-background);
-  background: var(--color-table-heading-background);
 }
 
 .veloci-dark .table tbody tr td {
@@ -899,7 +881,6 @@ body.veloci-dark {
 .veloci-dark .accordion,
 .veloci-dark .accordion > .card,
 .veloci-dark .accordion > .card > .card-header {
-  background: var(--color-form-control-background);
   border-color: var(--color-btn-default-border);
   color: var(--color-foreground);
 }
@@ -998,4 +979,8 @@ body.veloci-dark {
 .veloci-dark .json-boolean {
   padding-left: 5px;
   color: #ffca28;
+}
+
+.veloci-dark .new-artifact-search-table  table.table td  {
+   background-color: var(--color-table-heading-background);
 }

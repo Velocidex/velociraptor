@@ -35,6 +35,6 @@
 }
 
 .json-expand-button {
-    width: 100%;
+    width: auto;
     cursor: pointer;
 }

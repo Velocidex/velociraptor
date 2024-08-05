@@ -179,19 +179,6 @@ body.pink-light {
   color: var(--color-sidebar-foreground);
 }
 
-.pink-light #client-search-bar {
-  background: var(--color-canvas-background);
-  border: 1px solid var(--color-sidebar-foreground);
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  color: var(--color-foreground);
-  font-family: var(--font-family-sans-serif);
-  padding-top: 5px;
-  padding-bottom: 5px;
-  margin-left: 5px;
-  height: 26px;
-}
-
 .pink-light .dropdown .dropdown-toggle.btn.btn-default {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
@@ -289,7 +276,7 @@ body.pink-light {
   background: var(--color-btn-default-background);
 }
 
-.pink-light .btn-default.active {
+.pink-light .btn.btn-default.active {
   box-shadow: none;
   color: var(--color-sidebar-background);
 }
@@ -369,7 +356,6 @@ body.pink-light {
 
 .pink-light .table thead th {
   border: none;
-  background: var(--color-table-row-selected);
   vertical-align: text-bottom;
 }
 
@@ -998,4 +984,9 @@ color: #8d6e63;
 .pink-light .json-boolean {
 padding-left: 5px;
 color: #7e57c2;
+}
+
+.new-artifact-search-table tr th,
+.new-artifact-search-table tr td {
+    background-color: var(--color-tab);
 }

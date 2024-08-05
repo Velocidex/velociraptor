@@ -103,6 +103,8 @@
   --color-tab: var(--color-canvas-background);
   --color-tab-active: var(--color-canvas-background);
   --color-tab-active-border: #ec775c;
+  --color-table-row-stripe: rgba(0, 0, 0, 0.1);
+  --color-table-row: var(--color-canvas-background);
   --color-table-heading-foreground: var(--color-foreground-dimmed);
   --color-table-heading-background: var(--color-card-heading-background);
   --color-client-link-hover: var(--color-btn-outline-link-hover);
@@ -169,21 +171,7 @@ body.github-dimmed-dark {
 }
 
 .github-dimmed-dark .nav-link {
-    border-top-right-radius: 0;
-    border-top-left-radius: 0;
-}
-
-.github-dimmed-dark #client-search-bar {
-  background: var(--color-canvas-background);
-  border: 1px solid var(--color-btn-default-border);
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  color: var(--color-foreground);
-  font-family: var(--font-family-sans-serif);
-  padding-top: 5px;
-  padding-bottom: 5px;
-  margin-left: 5px;
-  height: 26px;
+    border-radius: 0;
 }
 
 .github-dimmed-dark .dropdown .dropdown-toggle.btn.btn-default {
@@ -442,15 +430,11 @@ body.github-dimmed-dark {
 .github-dimmed-dark .table-bordered thead th {
   color: var(--color-foreground);
   font-weight: 700;
-  border: 1px solid var(--color-table-heading-background);
-  color: var(--color-foreground);
 }
 
 .github-dimmed-dark .table thead th {
   color: var(--color-foreground);
   font-weight: 700;
-  border: 1px solid var(--color-table-heading-background);
-  background: var(--color-table-heading-background);
   vertical-align: text-bottom;
 }
 
@@ -466,21 +450,6 @@ body.github-dimmed-dark {
 
 .github-dimmed-dark .table tbody tr td {
   border: none;
-}
-
-.github-dimmed-dark .table tbody tr:nth-of-type(2n) {
-  background: rgba(83, 155, 245, 0.1);
-  border: none;
-}
-
-.github-dimmed-dark .table tbody tr:nth-of-type(odd) {
-  background: rgba(83, 155, 245, 0.05);
-  border: none;
-}
-
-.github-dimmed-dark .table-hover tbody tr:hover {
-  background: var(--color-table-row-hover);
-  color: unset;
 }
 
 .github-dimmed-dark .new-artifact-search-table.selectable .table.table-bordered,

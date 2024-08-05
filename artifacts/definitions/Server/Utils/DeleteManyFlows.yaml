@@ -23,10 +23,10 @@ parameters:
      description: Only select flows created before this date. If not set we choose all flows.
      type: timestamp
    - name: CreatorRegex
-     default: "H\\..+"
+     default: "."
      type: regex
      description: |
-       Match flows created by this user (e.g. hunts all start with "H.")
+       Match flows created by this user.
    - name: ReallyDoIt
      type: bool
      description: Does not delete until you press the ReallyDoIt button!

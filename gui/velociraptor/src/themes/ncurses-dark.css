@@ -768,8 +768,8 @@ body.ncurses-dark {
   color: var(--color-foreground);
 }
 
-.veloci-light ::placeholder {
-  color: var(--color-foreground-inverse) !important;
+.ncurses-dark ::placeholder {
+  color: var(--color-foreground-dimmed) !important;
 }
 
 .ncurses-dark .velo__placeholder {
@@ -999,8 +999,8 @@ body.ncurses-dark {
   color: var(--color-foreground);
 }
 
-.ncurses-dark .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td {
-  background: var(--color-accent-100);
+.ncurses-dark .new-artifact-search-table.selectable tr.row-selected td {
+    background: var(--color-accent-100);
 }
 
 .ncurses-dark th > button.btn.btn-outline-default {
@@ -1355,4 +1355,9 @@ color: #f06292;
   background-color: unset;
   border-color: var(--color-btn-border);
   font-size: inherit;
+}
+
+.ncurses-dark .accordion-item,
+.ncurses-dark .accordion .accordion-item .accordion-header .accordion-button {
+    border-radius: 0;
 }
