@@ -63,3 +63,8 @@ table.paged-table-header:hover .hidden-edit {
 .goto-input input {
     width: 100%;
 }
+
+.hidden-sorter {
+    width: 0px;
+    visibility: hidden;
+}

@@ -248,10 +248,13 @@ input[type='checkbox'] {
     color: var(--color-foreground);
 }
 
+.paged-table.table thead th {
+    padding-left: 8px;
+}
+
 .paged-table.table thead th,
-.paged-table.table thead th tr:hover,
+.paged-table.table thead tr:hover,
 .paged-table.table thead th td {
-    border: 1px solid var(--color-table-heading-background);
     background: var(--color-table-heading-background);
 }
 
@@ -299,4 +302,10 @@ button.link {
     border: none;
     background-color: initial;
     color: var(--color-foreground);
+}
+
+
+.Pane .fill-parent {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-scrollbar-main) var(--color-scrollbar-background);
 }

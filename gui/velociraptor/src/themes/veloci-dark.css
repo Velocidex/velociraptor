@@ -92,6 +92,8 @@
   --color-scrollbar-track: var(--color-btn-border);
   --color-scrollbar-thumb: #555d6e;
   --color-scrollbar-thumb-hover: #767c89;
+  --color-scrollbar-main: var(--color-accent-25);
+  --color-scrollbar-background: rgba(var(--color-accent), 0.1);
 
   --color-cell-toolbar-background: #121212;
   --color-card-heading-background: #3f4754;

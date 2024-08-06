@@ -15,9 +15,6 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Navbar from 'react-bootstrap/Navbar';
 import VeloValueRenderer from '../utils/value.jsx';
 import api from '../core/api-service.jsx';
-import VeloTimestamp from "../utils/time.jsx";
-import ClientLink from '../clients/client-link.jsx';
-import HexView from '../utils/hex.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
 import Table from 'react-bootstrap/Table';
 import Dropdown from 'react-bootstrap/Dropdown';
@@ -26,6 +23,7 @@ import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
 
 import {
+    getFormatter,
     InspectRawJson,
     PrepareData,
 } from './table.jsx';
@@ -255,6 +253,24 @@ export class TablePaginationControl extends React.Component {
         goto_error: false,
     }
 
+    renderLabel = (start, end, total_size)=>{
+        end = end || 0;
+        start = start || 0;
+        total_size = total_size || 0;
+        let total_size_len = total_size.toString().length;
+        let total_length = total_size_len * 3 + 2;
+        let start_row_len = start.toString().length;
+        let end_len = end.toString().length;
+        let padding_len = total_length - total_size_len -
+            start_row_len - end_len - 2;
+        let padding =  [];
+        for(let i = 0; i<padding_len;i++) {
+            padding.push(<span key={i}>&nbsp;</span>);
+        };
+
+        return <>{padding}{start}-{end}/{total_size}</>;
+    }
+
     render() {
         let total_size = parseInt(this.props.total_size || 0);
         if (total_size <=0) {
@@ -342,8 +358,8 @@ export class TablePaginationControl extends React.Component {
                               });
                           }}>
                   <Dropdown.Toggle variant="default" id="dropdown-basic">
-                    {T("TablePagination", this.props.start_row || 0,
-                       end || 0, this.props.total_size || 0)}
+                    {this.renderLabel(this.props.start_row,
+                                      end, this.props.total_size)}
                   </Dropdown.Toggle>
 
                   <Dropdown.Menu>
@@ -561,29 +577,7 @@ class VeloPagedTable extends Component {
 
         for (let i=0; i<column_types.length; i++) {
             if (column === column_types[i].name) {
-                let type = column_types[i].type;
-                switch (type) {
-                case "base64":
-                    return (cell, row, rowIndex)=>{
-                        let decoded = cell.slice(0,1000);
-                        try {
-                            decoded = atob(cell);
-                        } catch(e) {}
-
-                        return <HexView data={decoded} height="2"/>;
-                    };
-                case "timestamp":
-                    return (cell, row, rowIndex)=>{
-                        return <VeloTimestamp usec={cell * 1000} iso={cell}/>;
-                    };
-                case "client_id":
-                    return (cell, row, rowIndex)=>{
-                        return <ClientLink client_id={cell}/>;
-                    };
-
-                default:
-                    return this.defaultFormatter;
-                }
+                return getFormatter(column_types[i].type, column_types[i].name);
             }
         }
         return this.defaultFormatter;
@@ -846,6 +840,15 @@ class VeloPagedTable extends Component {
                        <tbody>
                          <tr>
                            <td>{ column_name }</td>
+                           <td className="sort-element">
+                             <ButtonGroup>
+                               <Button
+                                 className="hidden-sorter"
+                                 size="sm"
+                               ></Button>
+                             </ButtonGroup>
+
+                           </td>
                          </tr>
                        </tbody>
                      </table>
@@ -899,7 +902,7 @@ class VeloPagedTable extends Component {
         let renderer = this.getColumnRenderer(column);
 
         return <td key={column}>
-                 { renderer(cell, row, rowIdx)}
+                 { renderer(cell, row, this.props.env)}
                </td>;
     };
 

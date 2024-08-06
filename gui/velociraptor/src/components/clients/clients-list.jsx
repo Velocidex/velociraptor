@@ -569,6 +569,7 @@ class VeloClientList extends Component {
                   <tr className="paged-table-header">
                     <th>
                       <Button variant="outline-default"
+                              className="checkbox"
                               onClick={()=>{
                                   // Now clients are selected - select all
                                   if(this.state.selected.length === 0) {
@@ -584,7 +585,7 @@ class VeloClientList extends Component {
                                   }}}
                       >
                         <span className="button-label">
-                          <FontAwesomeIcon icon={this.state.selected_icon}/>
+                          <FontAwesomeIcon icon={["far", this.state.selected_icon]}/>
                         </span>
                       </Button>
                     </th>
@@ -637,10 +638,10 @@ class VeloClientList extends Component {
                               }}>
                             <td>
                               <Button variant="outline-default">
-                                <span className="button-label">
+                                <span className="button-label checkbox">
                                   <FontAwesomeIcon icon={
-                                      this.isSelected(c) ?
-                                          "square-check" : "square"
+                                      ["far", this.isSelected(c) ?
+                                          "square-check" : "square"]
                                   }/>
                                 </span>
                               </Button>

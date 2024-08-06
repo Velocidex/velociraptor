@@ -99,6 +99,8 @@
   --color-scrollbar-track: var(--color-canvas-background);
   --color-scrollbar-thumb: var(--color-accent-25);
   --color-scrollbar-thumb-hover: var(--color-accent-75);
+  --color-scrollbar-main: var(--color-accent-25);
+  --color-scrollbar-background: rgba(var(--color-accent), 0.1);
 
   --color-tab: var(--color-canvas-background);
   --color-tab-active: var(--color-canvas-background);

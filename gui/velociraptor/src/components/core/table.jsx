@@ -255,7 +255,7 @@ class VeloTable extends Component {
         this.setState({toggles: toggles});
     }
 
-    defaultFormatter = (cell, row, rowIndex) => {
+    defaultFormatter = (cell, row, env) => {
         return <VeloValueRenderer value={cell}/>;
     }
 
@@ -570,8 +570,8 @@ export function getFormatter(column_type, text) {
                 let description = cell.Path;
                 let fs_components = cell.Components || [];
                 return <Download fs_components={fs_components}
-                                              text={description}
-                                     filename={description}/>;
+                                 text={description}
+                                 filename={description}/>;
             }
 
             let components = row._Components;
@@ -579,14 +579,16 @@ export function getFormatter(column_type, text) {
             let filename = row.client_path;
 
             return <Download fs_components={components}
-                                                text={description}
-                                 filename={filename}/>;
+                             text={description}
+                             filename={filename}/>;
         };
 
     case "preview_upload":
     case "upload_preview":
         return (cell, row, env) => {
             let new_env = Object.assign({}, env || {});
+
+            console.log(cell, row, env);
 
             // If the row has a more updated client id and flow id
             // use them, otherwise use the ones from the query
@@ -625,8 +627,8 @@ export function getFormatter(column_type, text) {
                 }
             }
             return <ContextMenu value={cell}>
-                  <HexViewPopup byte_array={bytearray}/>
-                       </ContextMenu>;
+                     <HexViewPopup byte_array={bytearray}/>
+                   </ContextMenu>;
         };
     case "base64hex":
     case "base64":
@@ -639,8 +641,8 @@ export function getFormatter(column_type, text) {
                     bytes[i] = binary_string.charCodeAt(i);
                 }
                 return <ContextMenu value={cell}>
-                                                    <HexViewPopup byte_array={bytes}/>
-                           </ContextMenu>;
+                         <HexViewPopup byte_array={bytes}/>
+                       </ContextMenu>;
             } catch(e) {
                 return <></>;
             };
@@ -650,7 +652,9 @@ export function getFormatter(column_type, text) {
     case "bool":
     case "date":
     case undefined:
-        return (cell, row) => <VeloValueRenderer value={cell} />;
+        return (cell, row) => <ContextMenu value={cell}>
+                                <VeloValueRenderer value={cell} />
+                              </ContextMenu>;
 
     case "hidden":
         return (cell, row) =><></>;
