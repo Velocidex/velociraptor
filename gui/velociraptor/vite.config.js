@@ -50,13 +50,21 @@ export default defineConfig({
               if (/html$/.test(x)) {
                   return false;
               }
+
+              // We implement brotli compression in the Go server
+              // because this needs to be mutated - so we build it uncompressed
+              // in the bundle.
+              if (/css$/.test(x)) {
+                  return false;
+              }
               return true;
           },
           verbose: true,
           algorithm: 'brotliCompress',
           deleteOriginFile: true,
       }),
-      eslint(),
+        // This adds significant time to build. Only enable sometimes.
+        // eslint(),
     ],
     server: {
       port: 3000,

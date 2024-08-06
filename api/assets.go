@@ -20,10 +20,14 @@
 package api
 
 import (
+	"bytes"
+	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/andybalholm/brotli"
 	"github.com/gorilla/csrf"
 	"github.com/lpar/gzipped"
 	context "golang.org/x/net/context"
@@ -33,6 +37,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	gui_assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/services"
+	vutils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 func install_static_assets(
@@ -41,7 +46,8 @@ func install_static_assets(
 	base := utils.GetBasePath(config_obj)
 	dir := utils.Join(base, "/app/")
 	mux.Handle(dir, ipFilter(config_obj, http.StripPrefix(
-		dir, gzipped.FileServer(NewCachedFilesystem(ctx, gui_assets.HTTP)))))
+		dir, fixCSSURLs(config_obj,
+			gzipped.FileServer(NewCachedFilesystem(ctx, gui_assets.HTTP))))))
 
 	mux.Handle("/favicon.png",
 		http.RedirectHandler(utils.Join(base, "/favicon.ico"),
@@ -98,4 +104,78 @@ func GetTemplateHandler(
 			w.WriteHeader(500)
 		}
 	}), nil
+}
+
+// Vite hard compiles the css urls into the bundle so we can not move
+// the base_path. This handler fixes this.
+func fixCSSURLs(config_obj *config_proto.Config,
+	parent http.Handler) http.Handler {
+
+	if config_obj.GUI == nil || config_obj.GUI.BasePath == "" {
+		return parent
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasSuffix(r.URL.Path, ".css") {
+			parent.ServeHTTP(w, r)
+		} else {
+			parent.ServeHTTP(
+				NewInterceptingResponseWriter(
+					w, r, config_obj.GUI.BasePath), r)
+		}
+	})
+}
+
+type interceptingResponseWriter struct {
+	http.ResponseWriter
+
+	from, to string
+
+	br_writer *brotli.Writer
+}
+
+// Replace base path in the CSS url properties.
+func (self *interceptingResponseWriter) Write(buf []byte) (int, error) {
+	new_buf := bytes.ReplaceAll(buf, []byte(self.from), []byte(self.to))
+	// No compression
+	if self.br_writer == nil {
+		_, err := self.ResponseWriter.Write(new_buf)
+		return len(buf), err
+	}
+
+	// Implement brotli compression
+	_, err := self.br_writer.Write(new_buf)
+	if err != nil {
+		return 0, err
+	}
+	err = self.br_writer.Flush()
+	return len(buf), err
+}
+
+func NewInterceptingResponseWriter(
+	w http.ResponseWriter, r *http.Request,
+	base_path string) http.ResponseWriter {
+
+	// Try to do brotli compression if it is available.
+	accept_encoding, pres := r.Header["Accept-Encoding"]
+	if pres && len(accept_encoding) > 0 {
+		parts := strings.Split(accept_encoding[0], ", ")
+		if vutils.InString(parts, "br") {
+			w.Header()["Content-Encoding"] = []string{"br"}
+
+			return &interceptingResponseWriter{
+				ResponseWriter: w,
+				from:           "url(/app/assets/",
+				to:             fmt.Sprintf("url(/%v/app/assets/", base_path),
+				br_writer:      brotli.NewWriter(w),
+			}
+		}
+	}
+
+	// Otherwise just pass through
+	return &interceptingResponseWriter{
+		ResponseWriter: w,
+		from:           "url(/app/assets/",
+		to:             fmt.Sprintf("url(/%v/app/assets/", base_path),
+	}
 }

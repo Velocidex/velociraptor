@@ -27,7 +27,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Embed build time constants into here for reporting client version.
@@ -193,9 +192,14 @@ func GetDefaultConfig() *config_proto.Config {
 
 	// The client's version needs to keep in sync with the
 	// server's version.
-	result.Client.Version = GetVersion()
-	result.Version = result.Client.Version
-	result.Client.Version.InstallTime = uint64(utils.GetTime().Now().Unix())
+	result.Version = GetVersion()
+
+	// Only record some info about the server version.
+	result.Client.ServerVersion = &config_proto.Version{
+		Version:   result.Version.Version,
+		BuildTime: result.Version.BuildTime,
+		Commit:    result.Version.Commit,
+	}
 
 	// On windows we need slightly different defaults.
 	if runtime.GOOS == "windows" {
