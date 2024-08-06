@@ -60,6 +60,8 @@
   --color-scrollbar-track: #808080;
   --color-scrollbar-thumb: var(--color-tab);
   --color-scrollbar-thumb-hover: var(--color-accent-100);
+  --color-scrollbar-main: var(--color-accent-25);
+  --color-scrollbar-background: rgba(var(--color-accent), 0.1);
 
   --color-btn-border: var(--color-btn-default-border);
   --color-btn-default-border: grey;

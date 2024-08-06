@@ -83,8 +83,8 @@
   --color-resizer: var(--color-accent-50);
   --color-resizer-hover: var(--color-accent-100);
   --color-scrollbar-track: var(--color-sidebar-background);
-  --color-scrollbar-thumb: var(--color-accent-25);
-  --color-scrollbar-thumb-hover: var(--color-accent-50);
+  --color-scrollbar-main: var(--color-accent-25);
+  --color-scrollbar-background: rgba(var(--color-accent), 0.1);
 
   --color-btn-border: #C4C4C4;
   --color-btn-default-border: var(--color-btn-border);
@@ -92,7 +92,7 @@
   --color-btn-default-background-hover: var(--color-btn-outline-link-hover);
   --color-btn-outline-link: var(--color-accent-25);
   --color-btn-outline-link-hover: var(--color-accent-50);
-  --color-btn-active-background: var(--color-btn-default-background)
+  --color-btn-active-background: var(--color-btn-default-background);
 
   --color-card-heading-background: var(--color-table-heading-background);
 

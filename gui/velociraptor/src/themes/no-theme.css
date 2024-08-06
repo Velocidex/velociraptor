@@ -224,8 +224,3 @@ body.no-theme {
     text-shadow: none;
     transition: none;
 }
-
-
-.Pane {
-    scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-thumb-hover);
-}

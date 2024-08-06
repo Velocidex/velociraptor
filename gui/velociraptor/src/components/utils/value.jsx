@@ -87,7 +87,7 @@ export default class VeloValueRenderer extends React.Component {
                      </button>;
         }
 
-        return <>
+        return <ContextMenu value={this.props.value}>
                  <div>{ button }
                  </div>
                  <JsonView value={v} indent={0}/>
@@ -95,6 +95,6 @@ export default class VeloValueRenderer extends React.Component {
                    <ValueModal
                      onClose={x=>this.setState({showDialog:false})}
                      value={this.props.value}/> }
-               </>;
+               </ContextMenu>;
     }
 }
