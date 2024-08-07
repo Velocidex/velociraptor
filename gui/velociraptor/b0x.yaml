@@ -7,9 +7,7 @@ dest: "gui/velociraptor/"
 
 fmt: false
 compression:
-  # All files are now compressed with brotli so no need to compress
-  # again.
-  compress: false
+  compress: true
 
 output: "ab0x.go"
 custom:

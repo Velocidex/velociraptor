@@ -234,9 +234,12 @@ message ClientConfig {
             description: "If this is set, prevent arbitrary code execution on clients."
         }];
 
-    Version version = 18 [(sem_type) = {
-            description: "The version information for this client.",
-        }];
+    // Deprecated, new configs use server_version
+    Version version = 18;
+
+    // The version of the server that originally generated this config
+    // file.
+    Version server_version = 50;
 
     uint64 default_max_wait = 19 [(sem_type) = {
             description: "The default max time to wait before we send partial VQL results.",

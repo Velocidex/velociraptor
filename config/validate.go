@@ -33,6 +33,13 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 		return errors.New("No Client.server_urls configured")
 	}
 
+	// Rename fields as needed.
+	if config_obj.Client.ServerVersion == nil &&
+		config_obj.Client.Version != nil {
+		config_obj.Client.ServerVersion = config_obj.Client.Version
+		config_obj.Client.Version = nil
+	}
+
 	// Add defaults
 	if config_obj.Logging == nil {
 		config_obj.Logging = &config_proto.LoggingConfig{}
@@ -65,13 +72,15 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 	}
 
 	config_obj.Version = GetVersion()
-	config_obj.Client.Version = config_obj.Version
 
 	// Ensure the writeback service is configured.
 	writeback_service := writeback.GetWritebackService()
 	writeback, err := writeback_service.GetWriteback(config_obj)
 	if err == nil && writeback.InstallTime != 0 {
-		config_obj.Client.Version.InstallTime = writeback.InstallTime
+
+		// Sync the version InstallTime from the writeback. This way
+		// VQL can see that through the config VQL env variable.
+		config_obj.Version.InstallTime = writeback.InstallTime
 	}
 
 	for _, url := range config_obj.Client.ServerUrls {

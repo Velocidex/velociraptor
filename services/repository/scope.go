@@ -67,8 +67,9 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 		if self.Config.Client != nil {
 			env.Set(constants.SCOPE_CONFIG, self.Config.Client)
 		} else {
+			// Running on the server, use our own version here.
 			env.Set(constants.SCOPE_CONFIG, &config_proto.ClientConfig{
-				Version: config.GetVersion(),
+				ServerVersion: config.GetVersion(),
 			})
 		}
 	}
