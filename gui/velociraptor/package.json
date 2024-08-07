@@ -4,7 +4,7 @@
     "private": true,
     "type": "module",
     "dependencies": {
-        "@babel/core": "^7.24.8",
+        "@babel/core": "^7.24.9",
         "@babel/plugin-syntax-flow": "^7.24.7",
         "@babel/plugin-transform-react-jsx": "^7.24.7",
         "@babel/runtime": "^7.24.8",
