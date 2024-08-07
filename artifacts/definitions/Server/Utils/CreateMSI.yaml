@@ -21,7 +21,13 @@ parameters:
 
 sources:
 - query: |
-    LET client_config <= CustomConfig || org()._client_config
+    LET ValidateConfig(Config) = Config.Client.server_urls
+          AND Config.Client.ca_certificate =~ "(?ms)-----BEGIN CERTIFICATE-----.+-----END CERTIFICATE-----"
+          AND Config.Client.nonce
+
+    LET client_config <= if(condition=ValidateConfig(Config=CustomConfig),
+                         then=CustomConfig,
+                         else=org()._client_config)
 
     LET Build(Target) = repack(
         upload_name=format(
