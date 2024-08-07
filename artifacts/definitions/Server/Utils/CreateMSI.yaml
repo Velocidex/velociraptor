@@ -12,18 +12,23 @@ description: |
 type: SERVER
 
 parameters:
+  - name: CustomConfig
+    description: Supply a custom client config instead of using the one from the current org
+    type: yaml
   - name: AlsoBuild_x86
     description: Also build 32 bit MSI for deployment.
     type: bool
 
 sources:
 - query: |
+    LET client_config <= CustomConfig || org()._client_config
+
     LET Build(Target) = repack(
         upload_name=format(
           format='Org_%v_%v',
           args=[org().name, inventory_get(tool=Target).Definition.filename]),
         target=Target,
-        config=serialize(format='yaml', item=org()._client_config))
+        config=serialize(format='yaml', item=client_config))
 
     SELECT * FROM chain(a={
        SELECT Build(Target="VelociraptorWindowsMSI") FROM scope()
