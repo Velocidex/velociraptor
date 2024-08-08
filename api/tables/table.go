@@ -20,6 +20,7 @@ package tables
 import (
 	"io"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -494,6 +495,14 @@ func GetTableOptions(in *api_proto.GetTableRequest) (
 	if in.FilterColumn != "" &&
 		in.FilterRegex != "" {
 		options.FilterColumn = in.FilterColumn
+
+		// If the filter has a ! in the first position it excludes the
+		// match.
+		if strings.HasPrefix(in.FilterRegex, "!") {
+			in.FilterRegex = in.FilterRegex[1:]
+			options.FilterExclude = true
+		}
+
 		options.FilterRegex, err = regexp.Compile("(?i)" + in.FilterRegex)
 		if err != nil {
 			return options, err

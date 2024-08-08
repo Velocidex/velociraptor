@@ -49,18 +49,16 @@ export default class OrgSelector extends Component {
 
         return (
             <InputGroup className="mb-3">
-              <InputGroup.Text>
-                <Button
-                  className="btn btn-default"
-                  onClick={e=>{
-                      this.props.onChange(_.map(orgs, x=>x.id));
-                      e.preventDefault();
-                      return false;
-                  }}
-                >
-                  {T("All Orgs")}
-                </Button>
-              </InputGroup.Text>
+              <Button
+                className="btn btn-default"
+                onClick={e=>{
+                    this.props.onChange(_.map(orgs, x=>x.id));
+                    e.preventDefault();
+                    return false;
+                }}
+              >
+                {T("All Orgs")}
+              </Button>
               <Select
                 className="org-selector"
                 isMulti

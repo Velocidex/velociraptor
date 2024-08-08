@@ -102,10 +102,23 @@ func (self ParallelPlugin) Call(
 				defer wg.Done()
 
 				for job := range job_chan {
+					client_id, _ := job.GetString("ClientId")
+					flow_id, _ := job.GetString("FlowId")
+
 					subscope := scope.Copy()
 					subscope.AppendVars(job)
 
 					for row := range arg.Query.Eval(ctx, subscope) {
+						// When operating on a hunt we tag each row
+						// with its client id and flow id
+						if arg.HuntId != "" {
+							row_dict, ok := row.(*ordereddict.Dict)
+							if ok {
+								row_dict.Set("ClientId", client_id).
+									Set("FlowId", flow_id)
+							}
+						}
+
 						select {
 						case <-ctx.Done():
 							return
@@ -238,11 +251,13 @@ func breakHuntIntoScopes(
 				continue
 			}
 
+			client_id := flow_details.Context.ClientId
+			flow_id := flow_details.Context.SessionId
 			flow_job, err := breakIntoScopes(ctx, config_obj, scope,
 				&ParallelPluginArgs{
 					Artifact:  arg.Artifact,
-					ClientId:  flow_details.Context.ClientId,
-					FlowId:    flow_details.Context.SessionId,
+					ClientId:  client_id,
+					FlowId:    flow_id,
 					Workers:   arg.Workers,
 					BatchSize: arg.BatchSize,
 				})
