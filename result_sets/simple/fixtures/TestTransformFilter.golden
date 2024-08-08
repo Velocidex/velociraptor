@@ -1,22 +1,22 @@
 {
  "Filtered by Str Sort Asc": [
   {
-   "Str": "Another string",
-   "Int": 12
-  },
-  {
    "Str": "This is a string",
    "Int": 6
+  },
+  {
+   "Str": "Another string",
+   "Int": 12
   }
  ],
  "Filtered out by Str Sort Asc": [
   {
-   "Str": null,
-   "Int": -10
-  },
-  {
    "Str": "Hello world",
    "Int": 12
+  },
+  {
+   "Str": null,
+   "Int": -10
   }
  ],
  "Filtered by Str - nil": [
@@ -27,16 +27,16 @@
  ],
  "Filtered by Int Sort Asc": [
   {
-   "Str": null,
-   "Int": -10
+   "Str": "Hello world",
+   "Int": 12
   },
   {
    "Str": "Another string",
    "Int": 12
   },
   {
-   "Str": "Hello world",
-   "Int": 12
+   "Str": null,
+   "Int": -10
   }
  ]
 }

@@ -337,14 +337,17 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 	self.start_time = Clock.Now()
 	self.collection_context.Request = request
 
+	scope := self.scope.Copy()
+	defer scope.Close()
+
 	// Create a sub scope to run the new collection in - based on our
 	// existing scope but override the uploader with the container.
-	builder := services.ScopeBuilderFromScope(self.scope)
+	builder := services.ScopeBuilderFromScope(scope)
 	builder.Uploader = self.container
 
 	if self.log_file != nil {
 		self.logger = &logWriter{
-			parent_scope: self.scope, log_file: self.log_file,
+			parent_scope: scope, log_file: self.log_file,
 		}
 
 		builder.Logger = log.New(self.logger, "", 0)
@@ -353,7 +356,7 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 	// When run within an ACL context, copy the ACL manager to the
 	// subscope - otherwise the user can bypass the ACL manager and
 	// get more permissions.
-	acl_manager, ok := artifacts.GetACLManager(self.scope)
+	acl_manager, ok := artifacts.GetACLManager(scope)
 	if !ok {
 		acl_manager = acl_managers.NullACLManager{}
 	}
@@ -392,9 +395,6 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 		go func(vql_request *actions_proto.VQLCollectorArgs) {
 			defer wg.Done()
 
-			self.mu.Lock()
-			defer self.mu.Unlock()
-
 			// Create a new environment for each request.
 			env := ordereddict.NewDict()
 			for _, env_spec := range vql_request.Env {
@@ -414,6 +414,9 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 			query_start_time := Clock.Now()
 
 			defer func() {
+				self.mu.Lock()
+				defer self.mu.Unlock()
+
 				status.Duration = Clock.Now().UnixNano() - query_start_time.UnixNano()
 				self.collection_context.QueryStats = append(
 					self.collection_context.QueryStats, status)

@@ -24,6 +24,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
@@ -220,6 +221,18 @@ func doArtifactCollect() error {
 	scope.AddDestructor(func() {
 		sm.Wg.Done()
 	})
+
+	// If interrupt has occured we cancel everything and wait for any
+	// cleanups to occur. If we return too quickly from the main
+	// thread, we might leave some tempfiles behind.
+	defer func() {
+		select {
+		case <-ctx.Done():
+			scope.Log("ERROR:Interrupted! Sleeping on exit to allow cleanup")
+			time.Sleep(time.Second)
+		default:
+		}
+	}()
 
 	if *artifact_command_collect_hardmemory > 0 {
 		scope.Log("Installing hard memory limit of %v bytes",
