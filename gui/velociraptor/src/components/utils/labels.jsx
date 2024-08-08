@@ -61,7 +61,7 @@ export default class LabelForm extends React.Component {
                 classNamePrefix="velo"
                 options={this.state.options}
                 onChange={this.handleChange}
-                placeholder={T("Select a label")}
+                placeholder={T("Select a label or type to create new label.")}
               />
             </>
         );

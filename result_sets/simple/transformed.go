@@ -50,6 +50,10 @@ func (self ResultSetFactory) getFilteredReader(
 	transformed_path = transformed_path.AddUnsafeChild(
 		"filter", options.FilterColumn, options.FilterRegex.String())
 
+	if options.FilterExclude {
+		transformed_path = transformed_path.AddChild("exclude")
+	}
+
 	// Try to open the transformed result set if it is already cached.
 	base_stat, err := file_store_factory.StatFile(log_path)
 	if err != nil {
@@ -101,7 +105,10 @@ outer:
 			value, pres := row.Get(options.FilterColumn)
 			if pres {
 				value_str := utils.ToString(value)
-				if options.FilterRegex.FindStringIndex(value_str) != nil {
+				matched := options.FilterRegex.FindStringIndex(value_str) != nil
+
+				if (options.FilterExclude && !matched) ||
+					(!options.FilterExclude && matched) {
 					writer.Write(row)
 				}
 			}
@@ -203,7 +210,7 @@ func (self ResultSetFactory) getSortedReader(
 		file_store_factory, self,
 		sorter.MergeSorter{10000}.Sort(
 			ctx, scope, sorter_input_chan,
-			options.SortColumn, options.SortAsc),
+			options.SortColumn, !options.SortAsc),
 		options.SortColumn)
 	if err != nil {
 		return nil, err

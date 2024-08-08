@@ -18,12 +18,13 @@ var (
 )
 
 type ResultSetOptions struct {
-	SortColumn   string
-	SortAsc      bool
-	FilterColumn string
-	FilterRegex  *regexp.Regexp
-	StartIdx     uint64
-	EndIdx       uint64
+	SortColumn    string
+	SortAsc       bool
+	FilterColumn  string
+	FilterRegex   *regexp.Regexp
+	FilterExclude bool // If true we exclude the regex
+	StartIdx      uint64
+	EndIdx        uint64
 }
 
 type TimedFactory interface {
