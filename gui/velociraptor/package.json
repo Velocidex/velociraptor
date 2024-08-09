@@ -13,7 +13,7 @@
         "@fortawesome/free-solid-svg-icons": "^6.6.0",
         "@fortawesome/react-fontawesome": "0.2.2",
         "@popperjs/core": "^2.11.8",
-        "ace-builds": "1.35.2",
+        "ace-builds": "1.35.3",
         "axios": ">=1.7.2",
         "axios-retry": "3.9.1",
         "bootstrap": "5.3.3",
