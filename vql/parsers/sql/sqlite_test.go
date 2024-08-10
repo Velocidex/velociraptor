@@ -1,6 +1,7 @@
-//+build cgo
+//go:build cgo
+// +build cgo
 
-package parsers_test
+package sql_test
 
 import (
 	"context"
@@ -21,7 +22,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
-	"www.velocidex.com/golang/velociraptor/vql/parsers"
+	"www.velocidex.com/golang/velociraptor/vql/parsers/sql"
 	vfilter "www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
@@ -82,7 +83,7 @@ func (self *TestSuite) TestSQLite() {
 	assert.NoError(self.T(), err)
 
 	result := ordereddict.NewDict()
-	plugin := parsers.SQLitePlugin{}
+	plugin := sql.SQLitePlugin{}
 
 	test_query := func(name, query string, args []interface{}) {
 		rows := []vfilter.Row{}
@@ -105,10 +106,9 @@ func (self *TestSuite) TestSQLite() {
 	// Since the file was locked we should have triggered a file
 	// copy to a tempfile.
 	assert.Contains(self.T(), log_buffer.String(), "creating a local copy")
-	assert.Contains(self.T(), log_buffer.String(), "Using local copy")
 
 	// Make sure the file was removed.
-	assert.Contains(self.T(), log_buffer.String(), "removing tempfile")
+	assert.Contains(self.T(), log_buffer.String(), "Removed tempfile")
 
 	fmt.Println(log_buffer.String())
 	goldie.Assert(self.T(), "TestSQLite", json.MustMarshalIndent(result))

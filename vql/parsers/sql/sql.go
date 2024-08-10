@@ -1,7 +1,8 @@
-package parsers
+package sql
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"reflect"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -37,7 +37,10 @@ type SQLPluginArgs struct {
 type SQLPlugin struct{}
 
 // Get DB handle from cache if it exists, else create a new connection
-func (self SQLPlugin) GetHandleOther(scope vfilter.Scope, connstring string, driver string) (*sqlx.DB, error) {
+func (self SQLPlugin) GetHandleOther(
+	scope vfilter.Scope, connstring string,
+	driver string) (*DB, error) {
+
 	if connstring == "" {
 		return nil, fmt.Errorf("file parameter required for %s driver!", driver)
 	}
@@ -46,7 +49,7 @@ func (self SQLPlugin) GetHandleOther(scope vfilter.Scope, connstring string, dri
 	client := vql_subsystem.CacheGet(scope, cacheKey)
 
 	if utils.IsNil(client) {
-		client, err := sqlx.Open(driver, connstring)
+		client, err := sql.Open(driver, connstring)
 		if err != nil {
 			// Cache failure to connect.
 			vql_subsystem.CacheSet(scope, cacheKey, err)
@@ -63,20 +66,23 @@ func (self SQLPlugin) GetHandleOther(scope vfilter.Scope, connstring string, dri
 		err = vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 			client.Close()
 		})
+
 		if err != nil {
 			client.Close()
 			return nil, err
 		}
 
 		vql_subsystem.CacheSet(scope, cacheKey, client)
-		return client, nil
+		return &DB{DB: client}, nil
 
 	}
+
+	// Cache errors to avoid making lots of bad connections.
 	switch t := client.(type) {
 	case error:
 		return nil, t
 
-	case *sqlx.DB:
+	case *DB:
 		return t, nil
 
 	default:
@@ -106,7 +112,7 @@ func (self SQLPlugin) Call(
 			arg.Accessor = "file"
 		}
 
-		var handle *sqlx.DB
+		var handle *DB
 
 		switch arg.Driver {
 		default:
@@ -138,6 +144,8 @@ func (self SQLPlugin) Call(
 			}
 		}
 
+		defer handle.Close()
+
 		query_parameters := []interface{}{}
 		if arg.Args != nil {
 			args_value := reflect.Indirect(reflect.ValueOf(arg.Args))
@@ -155,31 +163,47 @@ func (self SQLPlugin) Call(
 		if query == "" {
 			return
 		}
-		rows, err := handle.Queryx(query, query_parameters...)
+		rows, err := handle.Query(query, query_parameters...)
 		if err != nil {
 			scope.Log("sql: %v", err)
 			return
 		}
 		defer rows.Close()
+
 		columns, err := rows.Columns()
 		if err != nil {
-			scope.Log("sql: %s", err)
+			scope.Log("sql: %v", err)
 		}
+
 		for rows.Next() {
-			row := ordereddict.NewDict()
-			values, err := rows.SliceScan()
+			// Create a slice of interface{}'s to represent each
+			// column, and a second slice to contain pointers to each
+			// item in the columns slice.
+			row_values := make([]interface{}, len(columns))
+			row_pointers := make([]interface{}, len(columns))
+			for i, _ := range columns {
+				row_pointers[i] = &row_values[i]
+			}
+
+			// Scan the result into the column pointers...
+			err = rows.Scan(row_pointers...)
 			if err != nil {
 				scope.Log("sql: %v", err)
 				return
 			}
 
-			for idx, item := range columns {
-				var value interface{} = values[idx]
+			row := ordereddict.NewDict()
+			for i, name := range columns {
+				value_pointer := row_pointers[i].(*interface{})
+				value := *value_pointer
+
+				// Special case raw []bytes to be strings.
 				bytes_value, ok := value.([]byte)
 				if ok {
 					value = string(bytes_value)
 				}
-				row.Set(item, value)
+
+				row.Set(name, value)
 			}
 
 			select {

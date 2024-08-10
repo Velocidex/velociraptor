@@ -210,7 +210,7 @@ func (self ResultSetFactory) getSortedReader(
 		file_store_factory, self,
 		sorter.MergeSorter{10000}.Sort(
 			ctx, scope, sorter_input_chan,
-			options.SortColumn, !options.SortAsc),
+			options.SortColumn, options.SortAsc),
 		options.SortColumn)
 	if err != nil {
 		return nil, err
