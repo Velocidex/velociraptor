@@ -5,7 +5,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"syscall"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -173,12 +172,6 @@ func makeLocalCopy(
 		"tmp directory %v (Copied %v files, %v bytes)\n",
 		filename.String(), accessor_name, tmpdir, len(files), total_bytes)
 	return tmpdir, nil
-}
-
-// Retry if the error is SHARING_VIOLATION on windows.
-func retriableError(err error) bool {
-	errno, ok := err.(syscall.Errno)
-	return ok && errno == 32
 }
 
 func init() {

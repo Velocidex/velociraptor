@@ -120,3 +120,6 @@ translations:
 
 config_check:
 	go run ./docs/references/sample_config/main.go ./docs/references/server.config.yaml
+
+deadcode:
+	go run make.go -v deadcode

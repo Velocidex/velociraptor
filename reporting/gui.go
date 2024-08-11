@@ -10,7 +10,6 @@ import (
 	"log"
 	"regexp"
 	"strings"
-	"sync"
 	"text/template"
 	"time"
 
@@ -551,31 +550,6 @@ func (self *GuiTemplateEngine) Close() {
 		self.log_writer.Close()
 	}
 	self.BaseTemplateEngine.Close()
-}
-
-type logWriter struct {
-	mu       sync.Mutex
-	messages []string
-}
-
-func (self *logWriter) Write(b []byte) (int, error) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	// Do not allow the log messages to accumulate too much.
-	self.messages = append(self.messages, string(b))
-	if len(self.messages) > 1000 {
-		self.messages = nil
-	}
-
-	return len(b), nil
-}
-
-func (self *logWriter) Messages() []string {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self.messages[:]
 }
 
 func NewGuiTemplateEngine(

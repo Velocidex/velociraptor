@@ -418,7 +418,7 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 	assert.Equal(self.T(), vfs_path, "foo")
 
 	// The _Components field is the path to the filestore components
-	vfs_components := utils.DictGetStringSlice(upload_metadata_rows[0], "_Components")
+	vfs_components, _ := upload_metadata_rows[0].GetStrings("_Components")
 	assert.Equal(self.T(), vfs_components,
 		flow_path_manager.GetUploadsFile("ntfs", "foo", []string{"foo"}).
 			Path().Components())
@@ -708,7 +708,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 	vfs_path, _ := upload_metadata_rows[0].GetString("vfs_path")
 	assert.Equal(self.T(), vfs_path, "sparse")
 
-	vfs_components := utils.DictGetStringSlice(upload_metadata_rows[0], "_Components")
+	vfs_components, _ := upload_metadata_rows[0].GetStrings("_Components")
 	assert.Equal(self.T(), vfs_components,
 		flow_path_manager.GetUploadsFile(
 			"ntfs", "sparse", []string{"sparse"}).Path().Components())
@@ -725,7 +725,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 	vfs_path, _ = upload_metadata_rows[1].GetString("vfs_path")
 	assert.Equal(self.T(), vfs_path, "sparse.idx")
 
-	vfs_components = utils.DictGetStringSlice(upload_metadata_rows[0], "_Components")
+	vfs_components, _ = upload_metadata_rows[0].GetStrings("_Components")
 	assert.Equal(self.T(), vfs_components,
 		flow_path_manager.GetUploadsFile(
 			"ntfs", "sparse", []string{"sparse"}).IndexPath().Components())
@@ -837,7 +837,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 	vfs_path, _ := upload_metadata_rows[0].GetString("vfs_path")
 	assert.Equal(self.T(), vfs_path, "sparse")
 
-	vfs_components := utils.DictGetStringSlice(upload_metadata_rows[0], "_Components")
+	vfs_components, _ := upload_metadata_rows[0].GetStrings("_Components")
 	assert.Equal(self.T(), vfs_components,
 		flow_path_manager.GetUploadsFile(
 			"ntfs", "sparse", []string{"sparse"}).Path().Components())
@@ -854,7 +854,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 	vfs_path, _ = upload_metadata_rows[1].GetString("vfs_path")
 	assert.Equal(self.T(), vfs_path, "sparse.idx")
 
-	vfs_components = utils.DictGetStringSlice(upload_metadata_rows[0], "_Components")
+	vfs_components, _ = upload_metadata_rows[0].GetStrings("_Components")
 	assert.Equal(self.T(), vfs_components,
 		flow_path_manager.GetUploadsFile(
 			"ntfs", "sparse", []string{"sparse"}).IndexPath().Components())

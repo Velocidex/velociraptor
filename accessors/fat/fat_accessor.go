@@ -111,18 +111,6 @@ type FATFileSystemAccessor struct {
 	root *accessors.OSPath
 }
 
-func NewFATFileSystemAccessor(
-	scope vfilter.Scope,
-	root_path *accessors.OSPath,
-	device *accessors.OSPath, accessor string) *FATFileSystemAccessor {
-	return &FATFileSystemAccessor{
-		scope:    scope,
-		accessor: accessor,
-		device:   device,
-		root:     root_path,
-	}
-}
-
 func (self FATFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 	// Create a new cache in the scope.

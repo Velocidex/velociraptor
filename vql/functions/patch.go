@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -103,8 +104,7 @@ func (self *PatchFunction) Call(
 		return vfilter.Null{}
 	}
 
-	item := ordereddict.NewDict()
-	err = json.Unmarshal(patched, &item)
+	item, err := utils.ParseJsonToObject(patched)
 	if err != nil {
 		scope.Log("patch: %v", err)
 		return vfilter.Null{}

@@ -85,8 +85,7 @@ func cookies_to_dicts(cookies []*http.Cookie) []*ordereddict.Dict {
 			continue
 		}
 
-		item := ordereddict.NewDict()
-		err = json.Unmarshal(serialized, item)
+		item, err := utils.ParseJsonToObject(serialized)
 		if err != nil {
 			continue
 		}

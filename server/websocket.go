@@ -89,7 +89,7 @@ func ws_receive_client_messages(
 	ws := &http_comms.Conn{Conn: ws_}
 
 	ws.SetPongHandler(func(string) error {
-		deadline := utils.GetTime().Now().Add(
+		deadline := utils.Now().Add(
 			http_comms.PongPeriod(config_obj))
 		ws.SetReadDeadline(deadline)
 		return nil
@@ -114,7 +114,7 @@ func ws_receive_client_messages(
 	// them.
 	for {
 		ws.SetReadLimit(maxMessageSize)
-		ws.SetReadDeadline(time.Now().Add(
+		ws.SetReadDeadline(utils.Now().Add(
 			http_comms.PongPeriod(config_obj)))
 		_, message, err := ws.ReadMessage()
 		if err != nil {
@@ -188,7 +188,7 @@ func send_message(ws *http_comms.Conn, message []byte) error {
 		Data:     message,
 	}
 	serialized, _ := json.Marshal(msg)
-	deadline := utils.GetTime().Now().Add(writeWait)
+	deadline := utils.Now().Add(writeWait)
 	return ws.WriteMessageWithDeadline(websocket.BinaryMessage, serialized, deadline)
 }
 
@@ -203,7 +203,7 @@ func send_error(ws *http_comms.Conn, err error, code int) error {
 
 	serialized, _ := json.Marshal(msg)
 
-	deadline := utils.GetTime().Now().Add(writeWait)
+	deadline := utils.Now().Add(writeWait)
 	ws.WriteMessageWithDeadline(websocket.BinaryMessage, serialized, deadline)
 
 	// Wait for the message to be sent to the client side
@@ -215,7 +215,7 @@ func send_error(ws *http_comms.Conn, err error, code int) error {
 func send_ping(
 	ws *http_comms.Conn,
 	config_obj *config_proto.Config) error {
-	deadline := utils.GetTime().Now().Add(http_comms.PongPeriod(config_obj))
+	deadline := utils.Now().Add(http_comms.PongPeriod(config_obj))
 	return ws.WriteMessageWithDeadline(websocket.PingMessage, nil, deadline)
 }
 
@@ -236,7 +236,7 @@ func ws_send_client_messages(
 	defer currentWSConnections.Dec()
 
 	ws.SetPongHandler(func(string) error {
-		deadline := utils.GetTime().Now().Add(http_comms.PongPeriod(config_obj))
+		deadline := utils.Now().Add(http_comms.PongPeriod(config_obj))
 		ws.SetReadDeadline(deadline)
 		return nil
 	})
@@ -246,7 +246,7 @@ func ws_send_client_messages(
 	for {
 		// Read the first message to authenticate the client's connection
 		ws.SetReadLimit(maxMessageSize)
-		ws.SetReadDeadline(utils.GetTime().Now().Add(http_comms.PongPeriod(config_obj)))
+		ws.SetReadDeadline(utils.Now().Add(http_comms.PongPeriod(config_obj)))
 		_, message, err := http_comms.ReadMessageWithCtx(
 			ws, ctx, config_obj)
 		if err != nil {
@@ -351,7 +351,7 @@ func ws_send_client_messages(
 		// https://github.com/gorilla/websocket/issues/633)
 		go func() {
 			for {
-				deadline := utils.GetTime().Now().Add(http_comms.PongPeriod(config_obj))
+				deadline := utils.Now().Add(http_comms.PongPeriod(config_obj))
 				ws.SetReadDeadline(deadline)
 				_, _, err := ws.NextReader()
 				if err != nil {

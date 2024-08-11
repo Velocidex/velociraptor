@@ -343,7 +343,7 @@ func loadServerConfig() (*config_proto.Config, error) {
 		// Config obj is not valid here, we can not actually
 		// log anything since we dont know where to send it so
 		// prelog instead.
-		logging.Prelog("Failed to load %v will try again soon.\n", *config_path)
+		Prelog("Failed to load %v will try again soon.\n", *config_path)
 
 		return nil, err
 	}

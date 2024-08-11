@@ -28,12 +28,19 @@ func parseOSPath(ctx context.Context,
 		return nil, err
 	}
 
+	return ParseOSPath(ctx, scope, accessor, value)
+}
+
+func ParseOSPath(ctx context.Context,
+	scope types.Scope, accessor FileSystemAccessor,
+	value interface{}) (*OSPath, error) {
+
 	switch t := value.(type) {
 	case types.LazyExpr:
-		return parseOSPath(ctx, scope, args, t.ReduceWithScope(ctx, scope))
+		return ParseOSPath(ctx, scope, accessor, t.ReduceWithScope(ctx, scope))
 
 	case types.Materializer:
-		return parseOSPath(ctx, scope, args, t.Materialize(ctx, scope))
+		return ParseOSPath(ctx, scope, accessor, t.Materialize(ctx, scope))
 
 	case *OSPath:
 		return t, nil
@@ -88,7 +95,7 @@ func parseOSPath(ctx context.Context,
 		if a_value.Type().Kind() == reflect.Slice {
 			for idx := 0; idx < a_value.Len(); idx++ {
 				slice_item := a_value.Index(int(idx)).Interface()
-				item, err := parseOSPath(ctx, scope, args, slice_item)
+				item, err := ParseOSPath(ctx, scope, accessor, slice_item)
 				if err != nil {
 					string_item, ok := slice_item.(string)
 					if ok {
@@ -96,43 +103,12 @@ func parseOSPath(ctx context.Context,
 					}
 					continue
 				}
-				item_os_path, ok := item.(*OSPath)
-				if ok {
-					result = result.Append(item_os_path.Components...)
-				}
+				result = result.Append(item.Components...)
 			}
 			return result, nil
 		}
 
 		// This is a fatal error on the client.
-		return nil, fmt.Errorf("Expecting a path arg type, not %T", t)
-	}
-}
-
-func ParseOSPath(ctx context.Context,
-	scope types.Scope, accessor FileSystemAccessor,
-	value interface{}) (*OSPath, error) {
-
-	switch t := value.(type) {
-	case types.LazyExpr:
-		return ParseOSPath(ctx, scope, accessor, t.ReduceWithScope(ctx, scope))
-
-	case *OSPath:
-		return t, nil
-
-	case *PathSpec:
-		return accessor.ParsePath(t.String())
-
-	case PathSpec:
-		return accessor.ParsePath(t.String())
-
-	case string:
-		return accessor.ParsePath(t)
-
-	case []uint8:
-		return accessor.ParsePath(string(t))
-
-	default:
 		return nil, fmt.Errorf("Expecting a path arg type, not %T", t)
 	}
 }

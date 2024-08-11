@@ -52,14 +52,4 @@ func (self *PathManagerTestSuite) TestClientPathManager() {
 	data_store_path := "/ds/clients/C.123/vfs_files/file/%5C%5C.%5CC%3A/%E4%BD%A0%E5%A5%BD%E4%B8%96%E7%95%8C/%E4%BD%A0%E5%A5%BD%2F%E4%B8%96%E7%95%8C.db_.json.db"
 	assert.Equal(self.T(), data_store_path,
 		self.getDatastorePath(path_spec))
-
-	// Should be the same as above. The following path comes from
-	// the client (e.g. from a glob() output). Components that
-	// contain a path separator within them are extra quoted
-	path_spec = manager.VFSDownloadInfoFromClientPath(
-		"file", []string{`\\.\C:`, `你好世界`, `你好/世界.db`})
-
-	assert.Equal(self.T(), data_store_path,
-		self.getDatastorePath(path_spec))
-
 }

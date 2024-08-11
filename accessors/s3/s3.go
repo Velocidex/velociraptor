@@ -283,7 +283,7 @@ FROM glob(globs='/velociraptor/orgs/root/clients/C.39a107c4c58c5efa/collections/
 }
 
 // Set the page size for tests. Normally we dont need to adjust this
-// at all.
+// at all. Used in tests.
 func SetPageSize(size int32) {
 	mu.Lock()
 	defer mu.Unlock()

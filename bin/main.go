@@ -147,7 +147,7 @@ func main() {
 				args = append(args, utils.ExpandEnv(arg))
 			}
 			args = append(args, post...)
-			logging.Prelog("Autoexec with parameters: %v", args)
+			Prelog("Autoexec with parameters: %v", args)
 		}
 	}
 

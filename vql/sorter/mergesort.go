@@ -120,26 +120,6 @@ func (self *MergeSorterCtx) Feed(row types.Row) {
 	}
 }
 
-func (self *MergeSorterCtx) Close() {}
-
-func (self *MergeSorterCtx) Consume() {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	self.idx++
-}
-
-// Returns the last row
-func (self *MergeSorterCtx) Last() types.Row {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	if self.idx < len(self.memory_sorter.Items) {
-		return self.memory_sorter.Items[self.idx]
-	}
-	return nil
-}
-
 func (self *MergeSorterCtx) Merge(ctx context.Context, output_chan chan types.Row) {
 	// Close all the files when we are done.
 	defer func() {

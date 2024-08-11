@@ -117,15 +117,6 @@ func (self PathSpecFunction) Call(ctx context.Context,
 	return result
 }
 
-func parseOSPath(path *accessors.OSPath) *ordereddict.Dict {
-	pathspec := path.PathSpec()
-	return ordereddict.NewDict().
-		Set("DelegateAccessor", pathspec.DelegateAccessor).
-		Set("DelegatePath", pathspec.DelegatePath).
-		Set("Path", pathspec.Path).
-		Set("Components", path.Components)
-}
-
 func (self PathSpecFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "pathspec",

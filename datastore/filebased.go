@@ -38,7 +38,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -49,7 +48,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -201,15 +199,6 @@ func (self *FileBaseDataStore) DeleteSubject(
 	// Note: We do not currently remove empty intermediate
 	// directories.
 	return nil
-}
-
-func listChildNames(config_obj *config_proto.Config,
-	urn api.DSPathSpec) (
-	[]string, error) {
-	defer InstrumentWithDelay("list", "FileBaseDataStore", urn)()
-
-	return utils.ReadDirNames(
-		urn.AsDatastoreDirectory(config_obj))
 }
 
 func listChildren(config_obj *config_proto.Config,
@@ -391,34 +380,6 @@ func readContentFromFile(
 		}
 	}
 	return nil, errors.Wrap(err, 0)
-}
-
-// Convert a file name from the data store to a DSPathSpec
-func FilenameToURN(config_obj *config_proto.Config,
-	filename string) api.DSPathSpec {
-	if runtime.GOOS == "windows" {
-		filename = strings.TrimPrefix(filename, WINDOWS_LFN_PREFIX)
-	}
-
-	filename = strings.TrimPrefix(filename, config_obj.Datastore.Location)
-
-	components := []string{}
-	// DS filenames are always clean so a strings split is fine.
-	for _, component := range strings.Split(
-		filename, string(os.PathSeparator)) {
-		if component != "" {
-			components = append(components, component)
-		}
-	}
-
-	// Strip any extension from the last component.
-	if len(components) > 0 {
-		last := len(components) - 1
-		components[last] = strings.TrimPrefix(
-			strings.TrimSuffix(components[last], ".db"), ".json")
-	}
-
-	return path_specs.NewSafeDatastorePath(components...)
 }
 
 func Trace(config_obj *config_proto.Config,

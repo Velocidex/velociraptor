@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -76,8 +75,7 @@ func (self *HuntStorageManagerImpl) BackupResults(
 				continue
 			}
 
-			record := ordereddict.NewDict()
-			err = json.Unmarshal(serialized, &record)
+			record, err := utils.ParseJsonToObject(serialized)
 			if err != nil {
 				continue
 			}

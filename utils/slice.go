@@ -2,17 +2,7 @@ package utils
 
 import (
 	"reflect"
-
-	"github.com/Velocidex/ordereddict"
 )
-
-func DictGetStringSlice(a *ordereddict.Dict, field string) []string {
-	value, ok := a.Get(field)
-	if ok {
-		return ConvertToStringSlice(value)
-	}
-	return nil
-}
 
 func ConvertToStringSlice(a interface{}) []string {
 	result := []string{}

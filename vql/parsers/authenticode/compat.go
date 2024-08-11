@@ -1,3 +1,4 @@
+//go:build !windows || !amd64
 // +build !windows !amd64
 
 package authenticode
@@ -29,8 +30,4 @@ func VerifyCatalogSignature(
 
 func ParseCatFile(cat_file string, output *ordereddict.Dict, verbose bool) error {
 	return nil
-}
-
-func GetNativePath(path string) string {
-	return path
 }

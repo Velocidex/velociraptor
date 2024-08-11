@@ -252,7 +252,7 @@ func (self *Server) Process(
 	}
 	err = client_info_manager.UpdateStats(ctx, message_info.Source,
 		&services.Stats{
-			Ping:      uint64(time.Now().UnixNano() / 1000),
+			Ping:      uint64(utils.Now().UnixNano() / 1000),
 			IpAddress: message_info.RemoteAddr,
 		})
 	if err != nil {
@@ -265,7 +265,7 @@ func (self *Server) Process(
 		err = client_info_manager.Set(ctx, &services.ClientInfo{
 			actions_proto.ClientInfo{
 				ClientId:  message_info.Source,
-				Ping:      uint64(time.Now().UnixNano() / 1000),
+				Ping:      uint64(utils.Now().UnixNano() / 1000),
 				IpAddress: message_info.RemoteAddr,
 			}})
 		if err != nil {

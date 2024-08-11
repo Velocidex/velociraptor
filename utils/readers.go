@@ -188,15 +188,3 @@ func NewOffsetReader(reader io.ReaderAt, offset, size int64) io.ReaderAt {
 		length: offset + size,
 	}
 }
-
-type nopSeekCloser struct {
-	io.ReadSeeker
-}
-
-func (self nopSeekCloser) Close() error {
-	return nil
-}
-
-func NopSeekCloser(reader io.ReadSeeker) nopSeekCloser {
-	return nopSeekCloser{reader}
-}

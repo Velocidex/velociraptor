@@ -13,6 +13,8 @@ const (
 	WORKERS = 100
 )
 
+// An efficient reader that uses multiple threads in parallel to real
+// the small flow metadata files.
 type FlowReader struct {
 	client_id string
 
@@ -42,11 +44,6 @@ func (self *FlowReader) Close() {
 
 	// Close the output channel to signal to listeners they are done.
 	close(self.out)
-}
-
-// Cancel and abort in flight requests.
-func (self *FlowReader) Cancel() {
-	self.cancel()
 }
 
 func NewFlowReader(

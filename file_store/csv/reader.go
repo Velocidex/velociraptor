@@ -80,6 +80,7 @@ import (
 	"unicode/utf8"
 
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 const (
@@ -271,8 +272,8 @@ func (r *Reader) ReadAny() ([]interface{}, error) {
 		}
 		// It is a Json object
 		if strings.HasPrefix(item, "{") {
-			value := make(map[string]interface{})
-			err := json.Unmarshal([]byte(item), &value)
+			value, err := utils.ParseJsonToObject([]byte(item))
+
 			// Its not really a json object - just include
 			// it as a string (this might happen when
 			// parsing CSV files not produced by
