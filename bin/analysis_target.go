@@ -8,7 +8,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
@@ -46,7 +45,7 @@ func applyAnalysisTarget(config_obj *config_proto.Config) error {
 		return nil
 	}
 
-	logging.Prelog("Applying remapping from %v", *remapping_flag)
+	Prelog("Applying remapping from %v", *remapping_flag)
 
 	// Apply the remapping once to check for syntax errors so we can
 	// fail early.

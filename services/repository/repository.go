@@ -21,7 +21,6 @@ package repository
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"regexp"
 	"sort"
 	"strings"
@@ -485,22 +484,6 @@ func NewArtifactRepositoryPlugin(
 		config_obj: config_obj,
 		mocks:      make(map[string][]vfilter.Row),
 	}
-}
-
-func Parse(filename string) (*artifacts_proto.Artifact, error) {
-	result := &artifacts_proto.Artifact{}
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, errors.Wrap(err, 0)
-	}
-
-	err = yaml.UnmarshalStrict(data, result)
-	if err != nil {
-		return nil, errors.Wrap(err, 0)
-	}
-	result.Raw = string(data)
-
-	return result, nil
 }
 
 func splitQueryToQueries(query string) ([]string, error) {

@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"sync/atomic"
 	"time"
 
 	"github.com/Velocidex/json"
@@ -11,13 +10,13 @@ import (
 
 var (
 	loc = time.UTC
-
-	// The current time in second resolution
-	now_sec int64 = time.Now().Unix()
 )
 
-func Now() int64 {
-	return atomic.LoadInt64(&now_sec)
+// Get the current approximate time - this is useful for code that
+// needs to check the time very frequently but does not care too much
+// about accuracy.
+func Now() time.Time {
+	return GetTime().Now()
 }
 
 func SetGlobalTimezone(timezone string) error {
@@ -78,14 +77,4 @@ func MarshalTimes(v interface{}, opts *json.EncOpts) ([]byte, error) {
 func init() {
 	vjson.RegisterCustomEncoder(time.Time{}, MarshalTimes)
 	vjson.RegisterCustomEncoder(&time.Time{}, MarshalTimes)
-
-	go func() {
-		for {
-			select {
-			case <-time.After(time.Second):
-				now := time.Now().Unix()
-				atomic.StoreInt64(&now_sec, now)
-			}
-		}
-	}()
 }

@@ -318,10 +318,10 @@ func send_to_elastic(
 		return
 	}
 
-	response := make(map[string]interface{})
+	var response *ordereddict.Dict
 	b1, err := ioutil.ReadAll(res.Body)
 	if err == nil {
-		_ = json.Unmarshal(b1, &response)
+		response, err = utils.ParseJsonToObject(b1)
 	}
 
 	select {

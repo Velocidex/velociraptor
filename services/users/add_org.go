@@ -93,16 +93,6 @@ func (self *UserManager) AddUserToOrg(
 	return self.SetUser(ctx, user_record)
 }
 
-func GrantUserToOrg(
-	ctx context.Context,
-	principal, username string,
-	orgs []string, policy *acl_proto.ApiClientACL) error {
-
-	user_manager := services.GetUserManager()
-	return user_manager.AddUserToOrg(ctx, services.UseExistingUser,
-		principal, username, orgs, policy)
-}
-
 // We dont expect too many orgs so O(1) is ok.
 func inUserOrgs(org_id string, user_record *api_proto.VelociraptorUser) bool {
 	for _, org := range user_record.Orgs {

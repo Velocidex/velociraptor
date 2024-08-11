@@ -38,9 +38,3 @@ func GetProfileWriters() (result []ProfileWriterInfo) {
 
 	return result
 }
-
-func WriteProfile(ctx context.Context, scope vfilter.Scope, output_chan chan vfilter.Row) {
-	for _, w := range handlers {
-		w.ProfileWriter(ctx, scope, output_chan)
-	}
-}

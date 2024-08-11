@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Velocidex/ordereddict"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
@@ -99,8 +98,7 @@ func writeLogMessages(
 			getLogErrorRegex(config_obj).FindStringIndex(payload) != nil {
 			for _, line := range strings.Split(payload, "\n") {
 				if getLogErrorRegex(config_obj).FindStringIndex(line) != nil {
-					msg := ordereddict.NewDict()
-					err := json.Unmarshal([]byte(line), msg)
+					msg, err := utils.ParseJsonToObject([]byte(line))
 					if err == nil {
 						error_message, _ = msg.GetString("message")
 					}

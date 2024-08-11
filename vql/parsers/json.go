@@ -73,8 +73,7 @@ func (self ParseJsonFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	result := ordereddict.NewDict()
-	err = json.Unmarshal([]byte(arg.Data), result)
+	result, err := utils.ParseJsonToObject([]byte(arg.Data))
 	if err != nil {
 		scope.Log("parse_json: %v", err)
 		return &vfilter.Null{}
@@ -114,8 +113,7 @@ func (self ParseJsonArray) Call(
 
 	result := make([]vfilter.Any, 0, len(result_array))
 	for _, item := range result_array {
-		dict := ordereddict.NewDict()
-		err = json.Unmarshal(item, dict)
+		dict, err := utils.ParseJsonToObject(item)
 		if err != nil {
 			// It might not be a dict - support any value.
 			var any_value interface{}
@@ -210,8 +208,7 @@ func (self ParseJsonlPlugin) Call(
 				// This looks like a dict - parse it as and ordered
 				// dict so we preserve key order.
 				if row_data[0] == '{' {
-					item_dict := ordereddict.NewDict()
-					err = item_dict.UnmarshalJSON(row_data)
+					item_dict, err := utils.ParseJsonToObject(row_data)
 					if err != nil {
 						// Skip lines that are not valid - they might be corrupted
 						functions.DeduplicatedLog(ctx, scope,
@@ -702,8 +699,7 @@ func (self WatchJsonlPlugin) Call(
 					continue
 				}
 
-				json_event := ordereddict.NewDict()
-				err := json.Unmarshal([]byte(line), json_event)
+				json_event, err := utils.ParseJsonToObject([]byte(line))
 				if err != nil {
 					scope.Log("Invalid jsonl: %v\n", line)
 					continue

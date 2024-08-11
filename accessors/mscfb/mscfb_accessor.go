@@ -94,18 +94,6 @@ type MscfbFileSystemAccessor struct {
 	root *accessors.OSPath
 }
 
-func NewMscfbFileSystemAccessor(
-	scope vfilter.Scope,
-	root_path *accessors.OSPath,
-	device *accessors.OSPath, accessor string) *MscfbFileSystemAccessor {
-	return &MscfbFileSystemAccessor{
-		scope:    scope,
-		accessor: accessor,
-		device:   device,
-		root:     root_path,
-	}
-}
-
 func (self MscfbFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 	// Create a new cache in the scope.

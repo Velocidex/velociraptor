@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -65,8 +65,7 @@ func (self *Store) BackupResults(
 				continue
 			}
 
-			record := ordereddict.NewDict()
-			err = json.Unmarshal(serialized, &record)
+			record, err := utils.ParseJsonToObject(serialized)
 			if err != nil {
 				continue
 			}

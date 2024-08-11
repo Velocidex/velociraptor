@@ -29,6 +29,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -37,6 +38,7 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+	"gopkg.in/yaml.v2"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 )
@@ -655,5 +657,90 @@ func UpdateVersionInfo() error {
 		return err
 	}
 
+	return nil
+}
+
+type Package struct {
+	Name  string     // declared name
+	Path  string     // full import path
+	Funcs []Function // list of dead functions within it
+}
+
+type Function struct {
+	Name     string   // name (sans package qualifier)
+	Position Position // file/line/column of function declaration
+}
+
+type Position struct {
+	File      string // name of file
+	Line, Col int    // line and byte index, both 1-based
+}
+
+type Ignore struct {
+	IgnoreFiles     []string `yaml:"IgnoreFiles"`
+	IgnoreFunctions []string `yaml:"IgnoreFunctions"`
+	IgnoreMatches   []string `yaml:"IgnoreMatches"`
+}
+
+func Deadcode() error {
+	fd, err := os.Open("./docs/deadcode.yaml")
+	if err != nil {
+		return err
+	}
+
+	data, err := ioutil.ReadAll(fd)
+	if err != nil {
+		return err
+	}
+
+	ignore := &Ignore{}
+	err = yaml.Unmarshal(data, ignore)
+	if err != nil {
+		return err
+	}
+
+	ignore_filenames := regexp.MustCompile(strings.Join(ignore.IgnoreFiles, "|"))
+	ignore_functions := regexp.MustCompile(strings.Join(ignore.IgnoreFunctions, "|"))
+	ignore_matches := regexp.MustCompile(strings.Join(ignore.IgnoreMatches, "|"))
+
+	out, err := sh.OutCmd("deadcode")("-tags", "server_vql extras", "-json", "./bin")
+	if err != nil {
+		return err
+	}
+
+	var packages []Package
+	err = json.Unmarshal([]byte(out), &packages)
+	if err != nil {
+		return err
+	}
+
+	count := 0
+	suppressed := 0
+	for _, p := range packages {
+		for _, i := range p.Funcs {
+			count++
+			if ignore_filenames.MatchString(i.Position.File) {
+				suppressed++
+				continue
+			}
+
+			if ignore_functions.MatchString(i.Name) {
+				suppressed++
+				continue
+			}
+
+			line := fmt.Sprintf("%v:%v (Line %v)",
+				i.Position.File, i.Name, i.Position.Line)
+			if ignore_matches.MatchString(line) {
+				suppressed++
+				continue
+			}
+
+			fmt.Println(line)
+		}
+	}
+
+	fmt.Printf("deadcode reported %v functions, %v were suppressed\n",
+		count, suppressed)
 	return nil
 }

@@ -4,15 +4,11 @@ import (
 	"archive/zip"
 	"bufio"
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -215,21 +211,7 @@ func (self *BackupService) feedProvider(
 	}()
 
 	// Now dump the rows into the provider.
-	for {
-		row_data, err := reader.ReadBytes('\n')
-		if len(row_data) == 0 || errors.Is(err, io.EOF) {
-			return stat, nil
-		}
-		if err != nil {
-			return stat, err
-		}
-
-		row := ordereddict.NewDict()
-		err = json.Unmarshal(row_data, &row)
-		if err != nil {
-			return stat, err
-		}
-
+	for row := range utils.ReadJsonFromFile(sub_ctx, reader) {
 		select {
 		case <-sub_ctx.Done():
 			return stat, nil
@@ -237,6 +219,8 @@ func (self *BackupService) feedProvider(
 		case output <- row:
 		}
 	}
+
+	return stat, nil
 }
 
 func (self *BackupService) Register(provider services.BackupProvider) {

@@ -2,7 +2,6 @@ package crypto
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 
 	"github.com/Velocidex/ordereddict"
@@ -91,8 +90,8 @@ func (self ReadCryptFilePlugin) Call(
 				continue
 			}
 
-			row := ordereddict.NewDict()
-			err = json.Unmarshal([]byte(packet.VQLResponse.JSONLResponse), row)
+			row, err := utils.ParseJsonToObject(
+				[]byte(packet.VQLResponse.JSONLResponse))
 			if err != nil {
 				continue
 			}

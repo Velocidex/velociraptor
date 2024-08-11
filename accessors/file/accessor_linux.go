@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 /*
@@ -25,8 +26,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-
-	"www.velocidex.com/golang/velociraptor/accessors"
 )
 
 // On Linux we need xstat() support to get birth time.
@@ -47,13 +46,6 @@ func (self *OSFileInfo) Ctime() time.Time {
 func (self *OSFileInfo) Atime() time.Time {
 	ts := int64(self._Sys().Atim.Sec)
 	return time.Unix(ts, 0)
-}
-
-func NewOSFileSystemAccessor() *OSFileSystemAccessor {
-	root_path, _ := accessors.NewLinuxOSPath("")
-	return &OSFileSystemAccessor{
-		root: root_path,
-	}
 }
 
 func splitDevNumber(dev uint64) (major, minor uint64) {

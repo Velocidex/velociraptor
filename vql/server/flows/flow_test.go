@@ -71,7 +71,7 @@ func (self *FilestoreTestSuite) TestEnumerateFlow() {
 		ClientId: self.client_id,
 	}
 	client_path_manager := paths.NewClientPathManager(self.client_id)
-	flow_pm := client_path_manager.Flow(self.flow_id)
+	flow_pm := paths.NewFlowPathManager(self.client_id, self.flow_id)
 
 	db.SetSubject(self.ConfigObj,
 		client_path_manager.Path(), client_info)

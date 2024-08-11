@@ -79,7 +79,7 @@ func newStatsCollector(ctx context.Context) (*statsCollector, error) {
 	}
 	result.cond = sync.NewCond(&result.mu)
 
-	now := float64(time.Now().UnixNano()) / 1000000
+	now := float64(utils.Now().UnixNano()) / 1000000
 	result.samples[1].timestamp_ms = now - result.check_duration_msec
 	result.updateStats(context.Background())
 
@@ -158,7 +158,7 @@ func (self *statsCollector) updateStats(ctx context.Context) {
 	total_cpu_time := self.getCpuTime(ctx)
 	iops := self.getIops(ctx)
 
-	now := float64(time.Now().UnixNano()) / 1000000
+	now := float64(utils.Now().UnixNano()) / 1000000
 
 	last_sample := self.samples[1]
 

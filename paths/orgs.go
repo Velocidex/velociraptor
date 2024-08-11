@@ -6,10 +6,6 @@ type OrgPathManager struct {
 	org_id string
 }
 
-func (self OrgPathManager) OrgDirectories() api.DSPathSpec {
-	return ORGS_ROOT
-}
-
 func (self OrgPathManager) Path() api.DSPathSpec {
 	return ORGS_ROOT.AddChild(self.org_id)
 }

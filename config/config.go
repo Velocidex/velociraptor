@@ -18,11 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package config
 
 import (
-	"io/ioutil"
 	"runtime"
 
-	"github.com/Velocidex/yaml/v2"
-	"github.com/go-errors/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -208,20 +205,6 @@ func GetDefaultConfig() *config_proto.Config {
 	}
 
 	return result
-}
-
-func WriteConfigToFile(filename string, config *config_proto.Config) error {
-	bytes, err := yaml.Marshal(config)
-	if err != nil {
-		return err
-	}
-	// Make sure the new file is only readable by root.
-	err = ioutil.WriteFile(filename, bytes, 0600)
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
-
-	return nil
 }
 
 func init() {

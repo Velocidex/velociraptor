@@ -240,6 +240,7 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 	}
 
 	// Set the new zip cache tracker in the fd cache.
+	tracker.Inc(zip_file_cache.zip_file_name)
 
 	// Leaking a zip file from this function, increase its reference -
 	// callers have to close it.

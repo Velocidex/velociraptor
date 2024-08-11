@@ -505,6 +505,7 @@ func (self *ZipFileCache) Close() {
 		self.fd.Close()
 		self.is_closed = true
 		zipAccessorCurrentOpened.Dec()
+		tracker.Dec(self.zip_file_name)
 	}
 }
 

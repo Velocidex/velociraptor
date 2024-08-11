@@ -151,35 +151,6 @@ func runUnzipPrint(builder services.ScopeBuilder) error {
 	return runQueryWithEnv(query, builder, *unzip_format)
 }
 
-func getAllStats(
-	query string, builder services.ScopeBuilder) (
-	[]*ordereddict.Dict, error) {
-	manager, err := services.GetRepositoryManager(builder.Config)
-	if err != nil {
-		return nil, err
-	}
-
-	scope := manager.BuildScope(builder)
-	defer scope.Close()
-
-	vql, err := vfilter.Parse(query)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to parse VQL Query: %w", err)
-	}
-
-	ctx, cancel := InstallSignalHandler(nil, scope)
-	defer cancel()
-
-	result := []*ordereddict.Dict{}
-	for row := range vql.Eval(ctx, scope) {
-		d, ok := row.(*ordereddict.Dict)
-		if ok {
-			result = append(result, d)
-		}
-	}
-	return result, nil
-}
-
 func runQueryWithEnv(
 	query string, builder services.ScopeBuilder, format string) error {
 	manager, err := services.GetRepositoryManager(builder.Config)

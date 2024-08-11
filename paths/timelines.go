@@ -43,14 +43,6 @@ type SuperTimelinePathManager struct {
 	Root api.DSPathSpec
 }
 
-func NewSuperTimelinePathManager(
-	name string, root api.DSPathSpec) *SuperTimelinePathManager {
-	return &SuperTimelinePathManager{
-		Name: name,
-		Root: root,
-	}
-}
-
 func (self *SuperTimelinePathManager) Path() api.DSPathSpec {
 	return self.Root.AddUnsafeChild(self.Name)
 }

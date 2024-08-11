@@ -43,10 +43,6 @@ func NewHuntPathManager(hunt_id string) *HuntPathManager {
 	}
 }
 
-func (self HuntPathManager) Stats() api.DSPathSpec {
-	return self.path.AddChild("stats")
-}
-
 func (self HuntPathManager) HuntDirectory() api.DSPathSpec {
 	return HUNTS_ROOT
 }

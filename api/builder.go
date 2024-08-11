@@ -98,12 +98,6 @@ func NewServerBuilder(ctx context.Context,
 	return result, nil
 }
 
-func (self *Builder) Close() {
-	if self.server_obj != nil {
-		self.server_obj.Close()
-	}
-}
-
 func (self *Builder) WithAPIServer(ctx context.Context, wg *sync.WaitGroup) error {
 	return startAPIServer(ctx, wg, self.config_obj, self.server_obj)
 }

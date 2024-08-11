@@ -9,7 +9,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/config"
-	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
@@ -144,7 +143,7 @@ func doCollector() error {
 		// Need to generate a new config. This config is the same as
 		// the `gui` command makes. You can keep this datastore around
 		// for the next collector.
-		logging.Prelog("No valid config found - " +
+		Prelog("No valid config found - " +
 			"will generare a new one at <green>" + server_config_path)
 
 		config_obj, err = generateGUIConfig(

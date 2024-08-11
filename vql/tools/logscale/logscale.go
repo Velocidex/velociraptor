@@ -659,11 +659,6 @@ func (self *LogScaleQueue) QueueEvent(row *ordereddict.Dict) {
 	atomic.AddInt64(&self.currentQueueDepth, 1)
 }
 
-// This can be racy but it's only used to determine whether we should skip retries
-func (self *LogScaleQueue) Closing() bool {
-	return atomic.LoadInt64(&self.queueClosing) != 0
-}
-
 func (self *LogScaleQueue) Close(scope vfilter.Scope) {
 	self.lock.Lock()
 	defer self.lock.Unlock()

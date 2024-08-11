@@ -9,11 +9,6 @@ type NotebookExportPathManager struct {
 	root        *accessors.OSPath
 }
 
-func (self *NotebookExportPathManager) CellMetadata(
-	cell_id string) *accessors.OSPath {
-	return self.root.Append(self.notebook_id, cell_id+".db")
-}
-
 func (self *NotebookExportPathManager) AttachmentRoot() *accessors.OSPath {
 	return self.root.Append(self.notebook_id, "attach")
 }

@@ -1,33 +1,30 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package api
 
 import (
 	"context"
-	"net/http"
 
-	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
-	http_utils "www.velocidex.com/golang/velociraptor/utils/http"
 )
 
 func GetUserInfo(ctx context.Context,
@@ -44,44 +41,4 @@ func GetUserInfo(ctx context.Context,
 		}
 	}
 	return result
-}
-
-func GetLoggingHandler(config_obj *config_proto.Config) func(http.Handler) http.Handler {
-	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			rec := &http_utils.StatusRecorder{
-				w,
-				w.(http.Flusher),
-				200, nil}
-			defer func() {
-				if rec.Status == 500 {
-					logger.WithFields(
-						logrus.Fields{
-							"method":     r.Method,
-							"url":        r.URL.Path,
-							"remote":     r.RemoteAddr,
-							"error":      string(rec.Error),
-							"user-agent": r.UserAgent(),
-							"status":     rec.Status,
-							"user": GetUserInfo(
-								r.Context(), config_obj).Name,
-						}).Error("")
-
-				} else {
-					logger.WithFields(
-						logrus.Fields{
-							"method":     r.Method,
-							"url":        r.URL.Path,
-							"remote":     r.RemoteAddr,
-							"user-agent": r.UserAgent(),
-							"status":     rec.Status,
-							"user": GetUserInfo(
-								r.Context(), config_obj).Name,
-						}).Info("")
-				}
-			}()
-			next.ServeHTTP(rec, r)
-		})
-	}
 }

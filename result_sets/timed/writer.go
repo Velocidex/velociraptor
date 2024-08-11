@@ -60,7 +60,7 @@ func (self *TimedResultSetWriterImpl) Write(row *ordereddict.Dict) {
 	self.rows = append(self.rows, rowContainer{
 		serialized: serialized,
 		count:      1,
-		ts:         utils.GetTime().Now(),
+		ts:         utils.Now(),
 	})
 	self.total_rows_cached += 1
 
@@ -73,7 +73,7 @@ func (self *TimedResultSetWriterImpl) WriteJSONL(jsonl []byte, count int) {
 	self.rows = append(self.rows, rowContainer{
 		serialized: jsonl,
 		count:      count,
-		ts:         utils.GetTime().Now(),
+		ts:         utils.Now(),
 	})
 	self.total_rows_cached += count
 

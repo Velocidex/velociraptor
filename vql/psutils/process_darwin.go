@@ -108,3 +108,26 @@ func getProcessData(ctx context.Context,
 func IOCountersWithContext(ctx context.Context, pid int32) (*IOCountersStat, error) {
 	return nil, NotImplementedError
 }
+
+func ByteToString(orig []byte) string {
+	n := -1
+	l := -1
+	for i, b := range orig {
+		// skip left side null
+		if l == -1 && b == 0 {
+			continue
+		}
+		if l == -1 {
+			l = i
+		}
+
+		if b == 0 {
+			break
+		}
+		n = i + 1
+	}
+	if n == -1 {
+		return string(orig)
+	}
+	return string(orig[l:n])
+}

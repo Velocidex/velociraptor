@@ -249,5 +249,6 @@ func (self UpdateNotebookFunction) Info(scope vfilter.Scope, type_map *vfilter.T
 }
 
 func init() {
+	vql_subsystem.RegisterFunction(&UpdateNotebookFunction{})
 	vql_subsystem.RegisterFunction(&UpdateNotebookCellFunction{})
 }
