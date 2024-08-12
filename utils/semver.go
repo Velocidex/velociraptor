@@ -53,7 +53,7 @@ func normalizeVelciraptorVersion(v string) string {
 func normalizeSemVer(version string) string {
 	if version == "" {
 		version = "0"
-	}9
+	}
 	if !strings.HasPrefix(version, "v") {
 		return "v" + version
 	}
