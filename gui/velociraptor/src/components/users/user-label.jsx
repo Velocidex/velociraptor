@@ -264,8 +264,9 @@ class UserSettings extends React.PureComponent {
                     <InputGroup className="mb-3">
                       <Form.Control
                         type="text"
-                        placeholder = {(this.state.default_password)}
-                        onChange = {e => {this.setState({"edited": true});
+                        value={this.state.default_password}
+                        placeholder={T("Default password to use for downloads")}
+                        onChange={e => {this.setState({"edited": true});
                                           this.setState({
                                               default_password: e.currentTarget.value
                                           });
@@ -276,9 +277,23 @@ class UserSettings extends React.PureComponent {
                                   this.props.setSetting({
                                       default_password: this.state.default_password
                                   });
-                                  this.setState({"edited": false});
+                                  this.setState({
+                                      edited: false,
+                                  });
                               }}>
                         <FontAwesomeIcon icon="save" />
+                      </Button>
+                      <Button variant="default"
+                              disabled={!this.state.default_password}
+                              onClick={()=>{
+                                  this.props.setSetting({
+                                      default_password: "",
+                                  });
+                                  this.setState({
+                                      default_password: "",
+                                      edited: false});
+                              }}>
+                        <FontAwesomeIcon icon="broom"/>
                       </Button>
                     </InputGroup></Col>
                 </Form.Group>
@@ -390,42 +405,47 @@ export default class UserLabel extends React.Component {
     }
 
     setSettings = (options) => {
+        let params = Object.assign({}, options);
+
+
         // Set the ACE theme according to the theme so they match.
         let ace_options = JSONparse(this.context.traits.ui_settings, {});
-        if (options.theme === "no-theme") {
+        if (params.theme === "no-theme") {
             ace_options.theme = "ace/theme/xcode";
             ace_options.fontFamily = "Iosevka Term";
-        } else if (options.theme === "veloci-dark") {
+        } else if (params.theme === "veloci-dark") {
             ace_options.theme = "ace/theme/vibrant_ink";
             ace_options.fontFamily = "Iosevka Term";
-        } else if(options.theme === "veloci-light") {
+        } else if(params.theme === "veloci-light") {
             ace_options.theme = "ace/theme/xcode";
             ace_options.fontFamily = "Iosevka Term";
-        } else if(options.theme === "pink-light") {
+        } else if(params.theme === "pink-light") {
             ace_options.theme = "ace/theme/xcode";
             ace_options.fontFamily = "Iosevka Term";
-        } else if(options.theme === "ncurses") {
+        } else if(params.theme === "ncurses") {
             ace_options.theme = "ace/theme/sqlserver";
             ace_options.fontFamily = "fixedsys";
-        } else if(options.theme === "ncurses-dark") {
+        } else if(params.theme === "ncurses-dark") {
             ace_options.theme = "ace/theme/tomorrow_night_eighties";
             ace_options.fontFamily = "fixedsys";
-        } else if(options.theme === "github-default-light") {
+        } else if(params.theme === "github-default-light") {
             ace_options.theme = "ace/theme/dracula";
             ace_options.fontFamily = "Iosevka Term";
-        } else if(options.theme === "github-dimmed-dark") {
+        } else if(params.theme === "github-dimmed-dark") {
           ace_options.theme = "ace/theme/dracula";
           ace_options.fontFamily = "Iosevka Term";
-        } else if(options.theme === "coolgray-dark") {
+        } else if(params.theme === "coolgray-dark") {
           ace_options.theme = "ace/theme/nord_dark";
           ace_options.fontFamily = "Iosevka Term";
-        } else if(options.theme === "midnight") {
+        } else if(params.theme === "midnight") {
           ace_options.theme = "ace/theme/terminal";
           ace_options.fontFamily = "Iosevka Term";
         }
-        options.options = JSON.stringify(ace_options);
+        params.options = JSON.stringify(ace_options);
+        params.default_password = options.default_password || "-";
 
-        api.post("v1/SetGUIOptions", options, this.source.token).then((response) => {
+        api.post("v1/SetGUIOptions", params,
+                 this.source.token).then((response) => {
           if (response.status === 200) {
               // Check for redirect from the server - this is normally
               // set by the authenticator to redirect to a better server.

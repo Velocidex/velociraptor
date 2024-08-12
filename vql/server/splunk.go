@@ -48,9 +48,9 @@ type _SplunkPluginArgs struct {
 	Threads        int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
 	URL            string              `vfilter:"required,field=url,doc=The Splunk Event Collector URL."`
 	Token          string              `vfilter:"optional,field=token,doc=Splunk HEC Token."`
-	Index          string              `vfilter:"required,field=index,doc=The name of the index to upload to. If not specified, ensure a column is named _index."`
-	Source         string              `vfilter:"optional,field=source,doc=The source field for splunk. If not specified ensure a column is named _source or this will be 'velociraptor'."`
-	SourceType     string              `vfilter:"optional,field=sourcetype,doc=The sourcetype field for splunk. If not specified ensure a column is named _source_type or this will 'vql'"`
+	Index          string              `vfilter:"required,field=index,doc=The name of the index to upload to. If not specified, ensure a column is named _splunk_index."`
+	Source         string              `vfilter:"optional,field=source,doc=The source field for splunk. If not specified ensure a column is named _splunk_source or this will be 'velociraptor'."`
+	SourceType     string              `vfilter:"optional,field=sourcetype,doc=The sourcetype field for splunk. If not specified ensure a column is named _splunk_source_type or this will 'vql'"`
 	ChunkSize      int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
 	SkipVerify     bool                `vfilter:"optional,field=skip_verify,doc=Skip SSL verification(default: False)."`
 	RootCerts      string              `vfilter:"optional,field=root_ca,doc=As a better alternative to skip_verify, allows root ca certs to be added here."`
@@ -100,6 +100,14 @@ func (self _SplunkPlugin) Call(ctx context.Context,
 
 		if arg.WaitTime == 0 {
 			arg.WaitTime = 2
+		}
+
+		if len(arg.SourceType) == 0 {
+			arg.SourceType = "vql"
+		}
+
+		if len(arg.Source) == 0 {
+			arg.Source = "velociraptor"
 		}
 
 		config_obj, _ := artifacts.GetConfig(scope)
@@ -216,19 +224,25 @@ func send_to_splunk(
 			}
 		}
 
-		source, ok := dict.GetString("_source")
+		source, ok := dict.GetString("_splunk_source")
 		if !ok {
 			source = arg.Source
+		} else {
+			dict.Delete("_splunk_source")
 		}
 
-		source_type, ok := dict.GetString("_source_type")
+		source_type, ok := dict.GetString("_splunk_source_type")
 		if !ok {
 			source_type = arg.SourceType
+		} else {
+			dict.Delete("_splunk_source_type")
 		}
 
-		index, ok := dict.GetString("_index")
+		index, ok := dict.GetString("_splunk_index")
 		if !ok {
 			index = arg.Index
+		} else {
+			dict.Delete("_splunk_index")
 		}
 
 		// Extract timestamp_field if exists

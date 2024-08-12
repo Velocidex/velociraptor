@@ -34,3 +34,8 @@ div .flow-status-icon {
 .card-deck {
     padding-top: 5px;
 }
+
+.velo-icon {
+    display: inline;
+    padding-right: 5px;
+}

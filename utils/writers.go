@@ -42,3 +42,11 @@ func NewTee(writers ...io.Writer) *TeeWriter {
 		writers: writers,
 	}
 }
+
+type NopWriteCloser struct {
+	io.Writer
+}
+
+func (self NopWriteCloser) Close() error {
+	return nil
+}
