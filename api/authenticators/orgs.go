@@ -83,7 +83,8 @@ func CheckOrgAccess(
 
 		// Log them into their org
 		user_options.Org = user_options.Org
-		user_manager.SetUserOptions(ctx, user_record.Name, user_options)
+		user_manager.SetUserOptions(ctx, user_record.Name,
+			user_record.Name, user_options)
 		return nil
 	}
 
@@ -95,7 +96,8 @@ func CheckOrgAccess(
 
 			// Log them into their org
 			user_options.Org = org.Id
-			user_manager.SetUserOptions(ctx, user_record.Name, user_options)
+			user_manager.SetUserOptions(ctx, user_record.Name,
+				user_record.Name, user_options)
 			return nil
 		}
 	}

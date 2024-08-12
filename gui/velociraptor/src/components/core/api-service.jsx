@@ -299,7 +299,7 @@ const delete_req = function(url, params, cancel_token) {
 var hooks = [];
 
 const src_of = function (url) {
-    if (url.match(/^data/)) {
+    if (url && url.match(/^data/)) {
         return url;
     }
     return window.base_path + url;

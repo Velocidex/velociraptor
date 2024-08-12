@@ -78,7 +78,7 @@ type UserManager interface {
 		*api_proto.VelociraptorUser, error)
 
 	// Used to set and retrieve user GUI options.
-	SetUserOptions(ctx context.Context, username string,
+	SetUserOptions(ctx context.Context, principal, username string,
 		options *api_proto.SetGUIOptionsRequest) error
 
 	GetUserOptions(ctx context.Context, username string) (

@@ -611,7 +611,6 @@
     ```vql
     SELECT * FROM carve_usn(device='''\\.\C:''')
     ```
-
   type: Plugin
   version: 2
   args:
@@ -4820,6 +4819,34 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: notebook_update
+  description: Update a notebook metadata.
+  type: Function
+  args:
+  - name: notebook_id
+    type: string
+    description: The id of the notebook to update
+    required: true
+  - name: description
+    type: string
+    description: The description of the notebook
+  - name: collaborators
+    type: string
+    description: A list of users to share the notebook with.
+    repeated: true
+  - name: public
+    type: bool
+    description: If set the notebook will be public.
+  - name: attachment
+    type: string
+    description: Raw data of an attachment to be added to the notebook
+  - name: attachment_filename
+    type: string
+    description: The name of the attachment
+  metadata:
+    permissions: COLLECT_SERVER
+  platforms:
+  - linux_amd64_cgo
 - name: notebook_update_cell
   description: Update a notebook cell.
   type: Function
@@ -7513,14 +7540,17 @@
     description: Splunk HEC Token.
   - name: index
     type: string
-    description: The name of the index to upload to.
+    description: The name of the index to upload to. If not specified, ensure a column
+      is named _splunk_index.
     required: true
   - name: source
     type: string
-    description: The source field for splunk. If not specified this will be 'velociraptor'.
+    description: The source field for splunk. If not specified ensure a column is
+      named _splunk_source or this will be 'velociraptor'.
   - name: sourcetype
     type: string
-    description: The sourcetype field for splunk. If not specified this will 'vql'
+    description: The sourcetype field for splunk. If not specified ensure a column
+      is named _splunk_source_type or this will 'vql'
   - name: chunk_size
     type: int64
     description: The number of rows to send at the time.
@@ -8752,6 +8782,54 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: user_options
+  description: |
+    Update and read the user GUI options
+
+    Example: The following will set the user language to french, dark
+    theme and add a sidebar link named Foobar. The default password
+    for Zip exports will also be set to 'foorbar'.
+
+    ```vql
+    SELECT user_options(user=whoami(),
+           lang="fr",
+           theme="veloci-dark",
+           links=[dict(
+              text="Foobar",
+              url="https://www.google.com",
+              type="sidebar",
+              new_tab=TRUE), ],
+            default_password="foobar")
+    FROM scope()
+    ```
+
+  type: Function
+  args:
+  - name: user
+    type: string
+    description: The user to create or update.
+    required: true
+  - name: theme
+    type: string
+    description: Set the user's theme.
+  - name: timezone
+    type: string
+    description: Set the user's timezone.
+  - name: lang
+    type: string
+    description: Set the user's language.
+  - name: org
+    type: string
+    description: Set the user's default org id.
+  - name: links
+    type: StoredQuery
+    description: 'Set the user''s default links. This should be a list of dicts with
+      columns: type, text, url, icon_url, new_tab, encode, parameter, method, disabled.'
+  - name: default_password
+    type: string
+    description: Set the user's default password for Zip Exports.
+  platforms:
+  - linux_amd64_cgo
 - name: users
   description: Display information about workstation local users. This is obtained
     through the NetUserEnum() API.
