@@ -156,7 +156,9 @@ message SetGUIOptionsRequest {
     string timezone = 6;
     string lang = 5;
 
-    // Downloads will be protected using this password.
+    // Downloads will be protected using this password. If this is
+    // empty we do not update the password. If it is set to "-" we
+    // reset the password to the empty string.
     string default_password = 3;
 
     // Offer to protect download exports by default.

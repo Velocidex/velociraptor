@@ -7,6 +7,8 @@ import T from '../i8n/i8n.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
 import api from '../core/api-service.jsx';
+import UserConfig from '../core/user.jsx';
+
 
 // Older collections had the upload includes the full filestore path
 // to the file, but this is un necessary because the file must reside
@@ -25,6 +27,8 @@ const normalizeComponentList = (components, client_id, flow_id)=>{
 
 
 export default class FlowUploads extends React.Component {
+    static contextType = UserConfig;
+
     static propTypes = {
         flow: PropTypes.object,
     };
@@ -52,11 +56,13 @@ export default class FlowUploads extends React.Component {
             // make a zip file.
             vfs_path: (cell, row, rowIndex) => {
                 let filename = cell;
+                let no_password = !this.context.traits.default_password;
 
                 if (filename.endsWith(".idx")) {
                     filename = filename.slice(0, -4);
                     return <>
-                             <ToolTip tooltip={T("Download padded file.")}>
+                             <ToolTip tooltip={T("Download padded file.")}
+                                      key={rowIndex}>
                                <Button as="a"
                                        className="flow-file-download-button"
                                        target="_blank"
@@ -66,16 +72,23 @@ export default class FlowUploads extends React.Component {
                                                row._Components, this.props.flow.client_id,
                                                this.props.flow.session_id),
                                            padding: true,
+                                           zip: !no_password,
                                            vfs_path: filename}, {
                                                internal: true,
                                                arrayFormat: 'brackets'})}>
-                                 {filename} &nbsp;&nbsp; <FontAwesomeIcon icon="expand"/>
+                                 {filename} &nbsp;&nbsp;
+                                 <FontAwesomeIcon icon="expand"/>
+                                 { !no_password &&
+                                   <div className="velo-icon">
+                                     <FontAwesomeIcon icon="lock" />
+                                   </div>}
                                </Button>
                              </ToolTip>
                            </>;
                 }
 
-                return <ToolTip tooltip={T("Download file.")}>
+                return <ToolTip tooltip={T("Download file.")}
+                                key={rowIndex}>
                          <Button as="a"
                                  className="flow-file-download-button"
                                  target="_blank"
@@ -85,9 +98,14 @@ export default class FlowUploads extends React.Component {
                                          row._Components, this.props.flow.client_id,
                                          this.props.flow.session_id),
                                      padding: false,
+                                     zip: !no_password,
                                      vfs_path: filename}, {
                                          internal: true,
                                          arrayFormat: 'brackets'})}>
+                           { !no_password &&
+                             <div className="velo-icon">
+                               <FontAwesomeIcon icon="lock" />
+                             </div>}
                            {filename}
                          </Button>
                        </ToolTip>;

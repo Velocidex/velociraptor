@@ -15,8 +15,11 @@ import {CancelToken} from 'axios';
 import T from '../i8n/i8n.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
+import UserConfig from '../core/user.jsx';
 
 class VeloFileStats extends Component {
+    static contextType = UserConfig;
+
     static propTypes = {
         client: PropTypes.object,
 
@@ -100,6 +103,8 @@ class VeloFileStats extends Component {
         }
 
         let client_id = this.props.client && this.props.client.client_id;
+        let no_password = !this.context.traits.default_password;
+
         return (
             <Row className="file-stats">
               <Col sm="6">
@@ -141,18 +146,27 @@ class VeloFileStats extends Component {
                             {T("Last Collected")}
                           </dt>
                           <dd className="col-8">
-                            <VeloTimestamp usec={ selectedRow.Download.mtime / 1000 } />
                             { !_.isEmpty(selectedRow.Download.components) &&
                               <ToolTip tooltip={T("Download")}>
-                                <Button variant="outline-default"
+                                <Button variant="default"
                                         href={api.href("/api/v1/DownloadVFSFile", {
                                             client_id: client_id,
                                             fs_components: selectedRow.Download.components,
                                             vfs_path: selectedRow.Name,
+                                            zip: !no_password,
                                         }, {
                                             internal: true,
                                             arrayFormat: 'brackets'})}>
-                                  <FontAwesomeIcon icon="download"/>
+                                  { !no_password &&
+                                    <div className="velo-icon">
+                                      <FontAwesomeIcon icon="lock" />
+                                    </div>}
+                                  <div className="velo-icon">
+                                    <FontAwesomeIcon icon="download"/>
+                                  </div>
+                                  <VeloTimestamp usec={
+                                      selectedRow.Download.mtime / 1000
+                                  } />
                                 </Button>
                               </ToolTip>
                             }
