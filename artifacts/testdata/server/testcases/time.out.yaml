@@ -39,4 +39,42 @@ FROM scope()
  {
   "Unix \u003e 1630414425": true
  }
+]SELECT timestamp(epoch=1723428985) < 1118628985,
+     1118628985 < timestamp(epoch=1723428985),
+     timestamp(epoch=1723428985) < timestamp(epoch=1118628985),
+     timestamp(epoch=1118628985) < timestamp(epoch=1723428985),
+     timestamp(epoch=1723428985) > 1118628985,
+     1118628985 > timestamp(epoch=1723428985),
+     timestamp(epoch=1723428985) > timestamp(epoch=1118628985),
+     timestamp(epoch=1118628985) > timestamp(epoch=1723428985),
+     timestamp(epoch=1723428985) < 1118628985.0,
+     1118628985.0 < timestamp(epoch=1723428985),
+     timestamp(epoch=1723428985) > 1118628985.0,
+     1118628985.0 > timestamp(epoch=1723428985),
+     timestamp(epoch=1723428985),
+     timestamp(epoch=1723428985) < "2024-08-12T02:15:25.176Z",
+     "2024-08-12T02:15:25.176Z" < timestamp(epoch=1723428985),
+     timestamp(epoch=1723428985) > "2024-08-12T02:15:25.176Z",
+     "2024-08-12T02:15:25.176Z" > timestamp(epoch=1723428985)
+FROM scope()
+[
+ {
+  "timestamp(epoch=1723428985) \u003c 1118628985": false,
+  "1118628985 \u003c timestamp(epoch=1723428985)": true,
+  "timestamp(epoch=1723428985) \u003c timestamp(epoch=1118628985)": false,
+  "timestamp(epoch=1118628985) \u003c timestamp(epoch=1723428985)": true,
+  "timestamp(epoch=1723428985) \u003e 1118628985": true,
+  "1118628985 \u003e timestamp(epoch=1723428985)": false,
+  "timestamp(epoch=1723428985) \u003e timestamp(epoch=1118628985)": true,
+  "timestamp(epoch=1118628985) \u003e timestamp(epoch=1723428985)": false,
+  "timestamp(epoch=1723428985) \u003c 1118628985.0": false,
+  "1118628985.0 \u003c timestamp(epoch=1723428985)": true,
+  "timestamp(epoch=1723428985) \u003e 1118628985.0": true,
+  "1118628985.0 \u003e timestamp(epoch=1723428985)": false,
+  "timestamp(epoch=1723428985)": "2024-08-12T02:16:25Z",
+  "timestamp(epoch=1723428985) \u003c \"2024-08-12T02:15:25.176Z\"": false,
+  "\"2024-08-12T02:15:25.176Z\" \u003c timestamp(epoch=1723428985)": true,
+  "timestamp(epoch=1723428985) \u003e \"2024-08-12T02:15:25.176Z\"": true,
+  "\"2024-08-12T02:15:25.176Z\" \u003e timestamp(epoch=1723428985)": false
+ }
 ]

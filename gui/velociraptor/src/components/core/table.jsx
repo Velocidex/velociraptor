@@ -588,8 +588,6 @@ export function getFormatter(column_type, text) {
         return (cell, row, env) => {
             let new_env = Object.assign({}, env || {});
 
-            console.log(cell, row, env);
-
             // If the row has a more updated client id and flow id
             // use them, otherwise use the ones from the query
             // env. For example when this component is viewed in a

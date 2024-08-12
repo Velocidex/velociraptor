@@ -32,3 +32,25 @@ Queries:
 
   # Start the clock immediately - this should not block due to LIMIT 1
   - SELECT Unix > 1630414425 FROM clock(period=60, start=0) LIMIT 1
+
+  # Test time comparison operators. Comparing times vs int, float and
+  # strings
+  - |
+    SELECT timestamp(epoch=1723428985) < 1118628985,
+         1118628985 < timestamp(epoch=1723428985),
+         timestamp(epoch=1723428985) < timestamp(epoch=1118628985),
+         timestamp(epoch=1118628985) < timestamp(epoch=1723428985),
+         timestamp(epoch=1723428985) > 1118628985,
+         1118628985 > timestamp(epoch=1723428985),
+         timestamp(epoch=1723428985) > timestamp(epoch=1118628985),
+         timestamp(epoch=1118628985) > timestamp(epoch=1723428985),
+         timestamp(epoch=1723428985) < 1118628985.0,
+         1118628985.0 < timestamp(epoch=1723428985),
+         timestamp(epoch=1723428985) > 1118628985.0,
+         1118628985.0 > timestamp(epoch=1723428985),
+         timestamp(epoch=1723428985),
+         timestamp(epoch=1723428985) < "2024-08-12T02:15:25.176Z",
+         "2024-08-12T02:15:25.176Z" < timestamp(epoch=1723428985),
+         timestamp(epoch=1723428985) > "2024-08-12T02:15:25.176Z",
+         "2024-08-12T02:15:25.176Z" > timestamp(epoch=1723428985)
+    FROM scope()
