@@ -64,7 +64,7 @@ function convertToDate(x) {
 export default class VeloForm extends React.Component {
     static propTypes = {
         param: PropTypes.object,
-        value: PropTypes.string,
+        value: PropTypes.any,
         setValue: PropTypes.func.isRequired,
     };
 
@@ -338,7 +338,7 @@ export default class VeloForm extends React.Component {
                     </ToolTip>
                   </Form.Label>
                   <Col sm="8">
-                    <ButtonGroup>
+                    <ButtonGroup className="velo-datetime-picker">
                       <DateTimePicker
                         className="btn-group"
                         showLeadingZeros={true}

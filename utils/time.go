@@ -52,7 +52,8 @@ func ParseTimeFromInt64(t int64) time.Time {
 
 func IsTime(a vfilter.Any) (time.Time, bool) {
 	switch t := a.(type) {
-
+	case *time.Time:
+		return *t, true
 	case time.Time:
 		return t, true
 	default:

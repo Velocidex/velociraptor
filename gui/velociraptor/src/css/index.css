@@ -59,6 +59,10 @@ code {
 }
 
 
+.react-datetime-picker, .velo-datetime-picker {
+    width: 100%;
+}
+
 .react-datetime-picker__clock {
     display: none;
 }

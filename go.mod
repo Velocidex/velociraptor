@@ -79,7 +79,7 @@ require (
 	golang.org/x/mod v0.17.0
 	golang.org/x/net v0.23.0
 	golang.org/x/sys v0.22.0
-	golang.org/x/text v0.16.0
+	golang.org/x/text v0.17.0
 	golang.org/x/time v0.3.0
 	google.golang.org/api v0.146.0
 	google.golang.org/genproto v0.0.0-20231009173412-8bfb1ae86b6c // indirect
@@ -98,7 +98,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe
 	www.velocidex.com/golang/regparser v0.0.0-20240404115756-2169ac0e3c09
-	www.velocidex.com/golang/vfilter v0.0.0-20240725055846-2a1740af9bab
+	www.velocidex.com/golang/vfilter v0.0.0-20240812032614-1f95429e06af
 )
 
 require (
@@ -238,7 +238,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/goleak v1.2.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/term v0.21.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231009173412-8bfb1ae86b6c // indirect

@@ -12,6 +12,7 @@ import Form from 'react-bootstrap/Form';
 import ToolTip from '../widgets/tooltip.jsx';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import Alert from 'react-bootstrap/Alert';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter } from "react-router-dom";
@@ -114,13 +115,14 @@ class ModifyHuntDialog extends React.Component {
                              x=>{return {value: x, label: x};});
 
         return <Modal show={true}
+                      size="lg"
                       onHide={this.props.onCancel} >
                  <Modal.Header closeButton>
                    <Modal.Title>{T("Modify Hunt")}</Modal.Title>
                  </Modal.Header>
 
                  <Modal.Body>
-                   <Form.Group as={Row}>
+                   <Form.Group as={Row} className="velo-form">
                      <Form.Label column sm="3">
                        <ToolTip tooltip={T("Set Tags")}>
                          <div>
@@ -155,6 +157,10 @@ class ModifyHuntDialog extends React.Component {
                      value={expires}
                      setValue={x=>this.setState({expires:x})}
                    />
+                   { expires < now &&
+                     <Alert variant="danger">
+                       {T("Expiry time is in the past!")}
+                     </Alert>}
                  </Modal.Body>
 
                  <Modal.Footer>
@@ -165,7 +171,7 @@ class ModifyHuntDialog extends React.Component {
                    <Button variant="primary"
                            disabled={expires < now}
                            onClick={this.modifyHunt}>
-                     {T("Run it!")}
+                     {T("Apply")}
                    </Button>
                  </Modal.Footer>
                </Modal>;
