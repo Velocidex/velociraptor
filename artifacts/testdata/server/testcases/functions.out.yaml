@@ -151,6 +151,6 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
   "similarity(set1=dict(field1=1, field2=4, field2=3), set2=dict(field2=4, field1=1, field2=3))": 1,
   "similarity(set1=dict(field1=1, field2=4, field2=3), set2=dict(field1=1))": 0.5,
   "similarity(set1=teststoredquery[0], set2=teststoredquery[0])": 1,
-  "similarity(set1=\"yolo!\", set2=dict(field1=1))": false
+  "similarity(set1=\"yolo!\", set2=dict(field1=1))": 0
  }
 ]

@@ -27,12 +27,12 @@ import (
 )
 
 type similarityArgs struct {
-	Set1 vfilter.Any `vfilter:"required,field=set1,doc=The first set to compare. *ordereddict.Dict vfilter.Any"`
-	Set2 vfilter.Any `vfilter:"required,field=set2,doc=The second set to compare."`
+	Set1 *ordereddict.Dict `vfilter:"required,field=set1,doc=The first set to compare."`
+	Set2 *ordereddict.Dict `vfilter:"required,field=set2,doc=The second set to compare."`
 }
 
 type SimilarityFunction struct{}
-		
+
 func (self *SimilarityFunction) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
@@ -44,37 +44,25 @@ func (self *SimilarityFunction) Call(
 	arg := &similarityArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("similarity: %s", err.Error())
+		scope.Log("similarity: %v", err.Error())
 		return false
 	}
-
-	setA, okA := arg.Set1.(*ordereddict.Dict)
-	setB, okB := arg.Set2.(*ordereddict.Dict)
-
-	if !okA || !okB {
-		if !okA { scope.Log("similarity: set1 parameter invalid") }
-		if !okB { scope.Log("similarity: set2 parameter invalid") }
-		return false
-	}
-
-	if scope.Eq(setA, setB){ return 1 }
 
 	allKeys := ordereddict.NewDict()
 
 	// Collect all unique keys from both sets
-	for _, key := range setA.Keys() {
+	for _, key := range arg.Set1.Keys() {
 		allKeys.Set(key, nil)
 	}
-	for _, key := range setB.Keys() {
+	for _, key := range arg.Set2.Keys() {
 		allKeys.Set(key, nil)
 	}
 
 	// Calculate differences
 	differences := 0
 	for _, key := range allKeys.Keys() {
-		valueA, okA := setA.Get(key)
-		valueB, okB := setB.Get(key)
-		//if !okA || !okB || valueA != valueB {
+		valueA, okA := arg.Set1.Get(key)
+		valueB, okB := arg.Set2.Get(key)
 		if !okA || !okB || !scope.Eq(valueA, valueB) {
 			differences++
 		}
@@ -86,9 +74,9 @@ func (self *SimilarityFunction) Call(
 
 func (self SimilarityFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "similarity",
-		Doc:      "Compare two Dicts for similarity.",
-		ArgType:  type_map.AddType(scope, &similarityArgs{}),
+		Name:    "similarity",
+		Doc:     "Compare two Dicts for similarity.",
+		ArgType: type_map.AddType(scope, &similarityArgs{}),
 	}
 }
 
