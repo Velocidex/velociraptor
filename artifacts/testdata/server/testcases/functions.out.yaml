@@ -146,4 +146,11 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
    0
   ]
  }
+]LET teststoredquery  = SELECT 1 as field1, 2 as field2 FROM scope()[]SELECT  similarity(set1=dict(field1=1,field2=4,field2=3),set2=dict(field2=4,field1=1,field2=3)), similarity(set1=dict(field1=1,field2=4,field2=3),set2=dict(field1=1)), similarity(set1=teststoredquery[0],set2=teststoredquery[0]), similarity(set1="yolo!",set2=dict(field1=1)) FROM scope()[
+ {
+  "similarity(set1=dict(field1=1, field2=4, field2=3), set2=dict(field2=4, field1=1, field2=3))": 1,
+  "similarity(set1=dict(field1=1, field2=4, field2=3), set2=dict(field1=1))": 0.5,
+  "similarity(set1=teststoredquery[0], set2=teststoredquery[0])": 1,
+  "similarity(set1=\"yolo!\", set2=dict(field1=1))": 0
+ }
 ]
