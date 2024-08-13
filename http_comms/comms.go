@@ -94,7 +94,7 @@ func (self *Enroller) MaybeEnrol() {
 			return
 		}
 
-		self.last_enrollment_time = time.Now()
+		self.last_enrollment_time = utils.Now()
 		self.logger.Info("Enrolling")
 
 		go self.executor.SendToServer(&crypto_proto.VeloMessage{
@@ -343,7 +343,7 @@ func (self *HTTPConnector) Post(
 	ctx context.Context, name, handler string,
 	data []byte, urgent bool) (*bytes.Buffer, error) {
 
-	now := utils.GetTime().Now()
+	now := utils.Now()
 	resp, err := self.retryPost(ctx, name, handler, data, urgent)
 	if resp != nil {
 		defer resp.Body.Close()
@@ -359,7 +359,7 @@ func (self *HTTPConnector) Post(
 	}
 
 	self.logger.Info("%s: sent %d bytes, response with status: %v after %v, waiting for server messages",
-		name, len(data), resp.StatusCode, utils.GetTime().Now().Sub(now))
+		name, len(data), resp.StatusCode, utils.Now().Sub(now))
 
 	// Handle redirect. Frontends may redirect us to other
 	// frontends.
@@ -450,7 +450,7 @@ func (self *HTTPConnector) Post(
 		}
 
 		self.logger.Info("%s: received %d bytes in %v",
-			name, n, utils.GetTime().Now().Sub(now))
+			name, n, utils.Now().Sub(now))
 
 		// Remember the last successful index.
 		self.mu.Lock()
@@ -832,7 +832,7 @@ func (self *NotificationReader) SendToURL(
 		return err
 	}
 
-	now := utils.GetTime().Now()
+	now := utils.Now()
 	if !urgent {
 		self.limiter.Wait(ctx)
 	}
@@ -840,7 +840,7 @@ func (self *NotificationReader) SendToURL(
 	self.logger.Info(
 		"%s: Connected to %s after waiting for limiter for %v",
 		self.name, self.connector.GetCurrentUrl(self.handler),
-		utils.GetTime().Now().Sub(now))
+		utils.Now().Sub(now))
 
 	encrypted, err := self.connector.Post(ctx, self.name,
 		self.handler, cipher_text, urgent)
@@ -966,7 +966,7 @@ func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 
 	// Attach the Server.Internal.ClientInfo message very
 	// infrequently.
-	now := utils.GetTime().Now()
+	now := utils.Now()
 	if now.Add(-self.last_update_period).After(self.last_update_time) {
 		self.last_update_time = now
 
@@ -1013,6 +1013,7 @@ type HTTPCommunicator struct {
 	Manager crypto.ICryptoManager
 }
 
+// Used in e2e test.
 func (self *HTTPCommunicator) SetPause(is_paused bool) {
 	value := int32(0)
 	if is_paused {
@@ -1054,7 +1055,7 @@ func NewHTTPCommunicator(
 	// Shuffle the list of URLs so that if a server goes down,
 	// clients will be distributed better accross
 	// the remaining servers.
-	rand.Seed(utils.GetTime().Now().UnixNano())
+	rand.Seed(utils.Now().UnixNano())
 	rand.Shuffle(len(urls), func(i, j int) {
 		urls[i], urls[j] = urls[j], urls[i]
 	})
@@ -1172,5 +1173,5 @@ func GetProxy() func(*http.Request) (*url.URL, error) {
 }
 
 func init() {
-	rand.Seed(time.Now().UTC().UnixNano())
+	rand.Seed(utils.Now().UTC().UnixNano())
 }

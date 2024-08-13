@@ -3,6 +3,7 @@ package utils
 import (
 	"testing"
 
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -20,6 +21,8 @@ var testCases = []testCaseSemVer{
 	{"Velociraptor", "v0.7.0-4", "v0.7.1-rc1"},
 	{"Velociraptor", "v0.7.0-rc1", "v0.7.0-5"},
 	{"Velociraptor", "v0.7.0-4", "v0.7.0-5"},
+	{"Velociraptor", "v0", constants.VERSION},
+	{"Velociraptor", constants.VERSION, "v1011.12.121"},
 }
 
 func TestSemver(t *testing.T) {

@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package actions
 
@@ -37,6 +37,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
@@ -67,7 +68,7 @@ func (self VQLClientAction) StartQuery(
 	arg *actions_proto.VQLCollectorArgs) {
 
 	// Just ignore requests that are too old.
-	if arg.Expiry > 0 && arg.Expiry < uint64(time.Now().Unix()) {
+	if arg.Expiry > 0 && arg.Expiry < uint64(utils.Now().Unix()) {
 		responder.RaiseError(ctx, "Query expired.")
 		return
 	}
@@ -108,7 +109,7 @@ func (self VQLClientAction) StartQuery(
 
 	// Cancel the query after this deadline
 	deadline := time.After(time.Second * time.Duration(timeout))
-	started := time.Now().Unix()
+	started := utils.Now().Unix()
 	sub_ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -196,7 +197,7 @@ func (self VQLClientAction) StartQuery(
 	}
 	scope.SetThrottler(throttler)
 
-	start := time.Now()
+	start := utils.Now()
 
 	// If we panic we need to recover and report this to the
 	// server.
@@ -232,7 +233,7 @@ func (self VQLClientAction) StartQuery(
 	for query_idx, query := range arg.Query {
 		query_log := QueryLog.AddQuery(query.VQL)
 
-		query_start := uint64(time.Now().UTC().UnixNano() / 1000)
+		query_start := uint64(utils.Now().UTC().UnixNano() / 1000)
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
 			responder.RaiseError(ctx, err.Error())
@@ -248,7 +249,7 @@ func (self VQLClientAction) StartQuery(
 			select {
 			case <-deadline:
 				msg := fmt.Sprintf("Query timed out after %v seconds",
-					time.Now().Unix()-started)
+					utils.Now().Unix()-started)
 				scope.Log(msg)
 
 				// Queries that time out are an error on the server.
@@ -268,7 +269,7 @@ func (self VQLClientAction) StartQuery(
 			case <-time.After(time.Second * time.Duration(heartbeat)):
 				responder.Log(ctx, logging.DEFAULT,
 					fmt.Sprintf("%v: Time %v: %s: Waiting for rows.", name,
-						(uint64(time.Now().UTC().UnixNano()/1000)-
+						(uint64(utils.Now().UTC().UnixNano()/1000)-
 							query_start)/1000000, query.Name))
 
 			case result, ok := <-result_chan:
@@ -284,7 +285,7 @@ func (self VQLClientAction) StartQuery(
 					JSONLResponse: string(result.Payload),
 					TotalRows:     uint64(result.TotalRows),
 					QueryStartRow: row_tracker.GetStartRow(query),
-					Timestamp:     uint64(time.Now().UTC().UnixNano() / 1000),
+					Timestamp:     uint64(utils.Now().UTC().UnixNano() / 1000),
 				}
 
 				// Do not send empty responses

@@ -53,7 +53,7 @@ func (self *UserManager) AddUserToOrg(
 			ok, _ := services.CheckAccess(
 				org_config_obj, principal, acls.SERVER_ADMIN)
 			if !ok {
-				return fmt.Errorf("Error: %v, User %v is not admin on %v",
+				return fmt.Errorf("Error: %w, User %v is not admin on %v",
 					acls.PermissionDenied, principal, org_config_obj.OrgName)
 			}
 		}
@@ -91,16 +91,6 @@ func (self *UserManager) AddUserToOrg(
 	}
 
 	return self.SetUser(ctx, user_record)
-}
-
-func GrantUserToOrg(
-	ctx context.Context,
-	principal, username string,
-	orgs []string, policy *acl_proto.ApiClientACL) error {
-
-	user_manager := services.GetUserManager()
-	return user_manager.AddUserToOrg(ctx, services.UseExistingUser,
-		principal, username, orgs, policy)
 }
 
 // We dont expect too many orgs so O(1) is ok.

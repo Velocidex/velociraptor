@@ -33,7 +33,7 @@ parameters:
 
 sources:
   - query: |
-        LET DateBefore <= DateBefore || now()
+        LET DateBefore <= DateBefore || timestamp(epoch=now())
         LET hits = SELECT * FROM foreach(row={
             SELECT client_id,
                    os_info.hostname AS hostname

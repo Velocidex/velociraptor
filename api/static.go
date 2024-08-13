@@ -26,7 +26,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -162,21 +161,4 @@ func NewCachedFilesystem(
 	}()
 
 	return result
-}
-
-func serveStaticAsset(fs http.FileSystem) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
-		fd, err := fs.Open(path)
-		if err != nil {
-			returnError(w, 404, "Not Found")
-			return
-		}
-		defer fd.Close()
-
-		w.Header().Set("Content-Type", "binary/octet-stream")
-		w.WriteHeader(200)
-
-		utils.Copy(r.Context(), w, fd)
-	})
 }

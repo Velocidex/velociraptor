@@ -282,23 +282,6 @@ func (self *Container) WriteJSON(name string, data interface{}) error {
 	return err
 }
 
-// Parse the path according to the accessor to return the components
-func (self *Container) getPathComponents(
-	scope vfilter.Scope, accessor string, path string) ([]string, error) {
-
-	file_store_factory, err := accessors.GetAccessor(accessor, scope)
-	if err != nil {
-		return nil, err
-	}
-
-	os_path, err := file_store_factory.ParsePath(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return os_path.Components, nil
-}
-
 func formatFilename(filename *accessors.OSPath, accessor string) string {
 	result := filename.String()
 

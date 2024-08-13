@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -99,9 +100,7 @@ var writeAnyTests = []struct {
 		Output: "1,\" 2\",4.5,abc\n"},
 
 	// Ints, maps and strings.
-	{Input: [][]interface{}{{1, map[string]interface{}{
-		"foo": "bar",
-	}, "hello"}},
+	{Input: [][]interface{}{{1, ordereddict.NewDict().Set("foo", "bar"), "hello"}},
 		Output: "1,\"{\n \"\"foo\"\": \"\"bar\"\"\n}\",hello\n",
 	},
 

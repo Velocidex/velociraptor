@@ -5,6 +5,7 @@ package sql_test
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -15,14 +16,13 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
-	"github.com/jmoiron/sqlx"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
-	"www.velocidex.com/golang/velociraptor/vql/parsers/sql"
+	vsql "www.velocidex.com/golang/velociraptor/vql/parsers/sql"
 	vfilter "www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
@@ -35,7 +35,7 @@ type TestSuite struct {
 }
 
 func (self *TestSuite) createSqliteFile(filename string) error {
-	handle, err := sqlx.Connect("sqlite3", filename+"?_locking=EXCLUSIVE")
+	handle, err := sql.Open("sqlite3", filename+"?_locking=EXCLUSIVE")
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (self *TestSuite) TestSQLite() {
 	assert.NoError(self.T(), err)
 
 	result := ordereddict.NewDict()
-	plugin := sql.SQLitePlugin{}
+	plugin := vsql.SQLitePlugin{}
 
 	test_query := func(name, query string, args []interface{}) {
 		rows := []vfilter.Row{}

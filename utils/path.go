@@ -126,42 +126,6 @@ func SplitComponents(path string) []string {
 	return components
 }
 
-func consumePlainComponent(path string) (next_path string, component string) {
-	if len(path) == 0 {
-		return "", ""
-	}
-	length := len(path)
-
-	switch path[0] {
-	case '/', '\\':
-		return path[1:], ""
-
-	default:
-		for i := 0; i < length; i++ {
-			switch path[i] {
-			case '/', '\\':
-				return path[i:length], path[:i]
-			}
-		}
-	}
-
-	return "", path
-}
-
-func SplitPlainComponents(path string) []string {
-	var components []string
-	var component string
-
-	for path != "" {
-		path, component = consumePlainComponent(path)
-		if component != "" {
-			components = append(components, component)
-		}
-	}
-
-	return components
-}
-
 func escapeComponent(component string) string {
 	length := len(component)
 	if length > 1024 {
@@ -210,57 +174,10 @@ func JoinComponents(components []string, sep string) string {
 	return strings.Join(result, sep)
 }
 
-func PathJoin(root, stem, sep string) string {
-	return strings.TrimSuffix(root, sep) + sep + escapeComponent(stem)
-}
-
-func Dir(path string) string {
-	components := SplitComponents(path)
-	if len(components) > 0 {
-		return JoinComponents(components[:len(components)-1], "/")
-	}
-	return ""
-}
-
 func Base(path string) string {
 	components := SplitComponents(path)
 	if len(components) > 0 {
 		return components[len(components)-1]
 	}
 	return ""
-}
-
-// A compbined Dir and Base
-func PathSplit(path string) (string, string) {
-	components := SplitComponents(path)
-	length := len(components)
-	if length > 0 {
-		return JoinComponents(components[:length-1], "/"), components[length-1]
-	}
-	return "", ""
-}
-
-func Clean(path string) string {
-	return JoinComponents(SplitComponents(path), "/")
-}
-
-func PathTrim(components []string, trim []string) []string {
-	for idx, c := range components {
-		if idx >= len(trim) || c != trim[idx] {
-			return CopySlice(components[idx:])
-		}
-	}
-	return nil
-}
-
-func PathComponentsJoin(prefix, path []string) []string {
-	result := make([]string, 0, len(prefix)+len(path))
-	for _, c := range prefix {
-		result = append(result, c)
-	}
-
-	for _, c := range path {
-		result = append(result, c)
-	}
-	return result
 }

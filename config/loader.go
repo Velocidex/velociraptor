@@ -212,14 +212,6 @@ func (self *Loader) WithWriteback() *Loader {
 	return self
 }
 
-func (self *Loader) WithCustomLoader(loader func(self *Loader) (*config_proto.Config, error)) *Loader {
-	self = self.Copy()
-	self.loaders = append(self.loaders, loaderFunction{
-		name:        "WithCustomLoader",
-		loader_func: loader})
-	return self
-}
-
 func (self *Loader) WithConfigMutator(
 	name string,
 	mutator func(self *config_proto.Config) error) *Loader {

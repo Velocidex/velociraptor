@@ -678,8 +678,7 @@ func (self ImportCollectionFunction) UploadMetadataTransform(
 
 	// Callback is invoked for each upload in the zip file.
 	return func(in []byte) []byte {
-		row := ordereddict.NewDict()
-		err := json.Unmarshal(in, &row)
+		row, err := utils.ParseJsonToObject(in)
 		if err != nil {
 			// Line is not valid, drop it.
 			return nil

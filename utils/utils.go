@@ -115,20 +115,6 @@ func Stringify(value interface{}, scope vfilter.Scope, min_width int) string {
 	}
 }
 
-func SlicesEqual(a []string, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	for idx, a_item := range a {
-		if a_item != b[idx] {
-			return false
-		}
-	}
-
-	return true
-}
-
 func BytesEqual(a []byte, b []byte) bool {
 	if len(a) != len(b) {
 		return false

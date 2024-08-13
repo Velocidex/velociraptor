@@ -70,10 +70,6 @@ func (self ClientPathManager) Task(task_id uint64) api.DSPathSpec {
 		SetTag("ClientTask")
 }
 
-func (self ClientPathManager) Flow(flow_id string) *FlowPathManager {
-	return NewFlowPathManager(self.client_id, flow_id)
-}
-
 // Where we store client VFS information - depends on client paths.
 func (self ClientPathManager) VFSPath(vfs_components []string) api.DSPathSpec {
 	return CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs").
@@ -107,15 +103,6 @@ func (self ClientPathManager) VFSDownloadInfoResultSet(
 	return CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs_files").
 		AddChild(directory_vfs_components...).AsFilestorePath().
 		SetTag("VFSDownloadInfoResultSet")
-}
-
-func (self ClientPathManager) VFSDownloadInfoFromClientPath(
-	accessor string, components []string) api.DSPathSpec {
-	return CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs_files").
-		AddChild(accessor).
-		AddChild(components...).
-		SetType(api.PATH_TYPE_DATASTORE_JSON).
-		SetTag("VFSFile")
 }
 
 // The uploads tab contains the full VFS path. This function parses

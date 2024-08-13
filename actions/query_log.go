@@ -10,6 +10,8 @@ package actions
 import (
 	"sync"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -44,7 +46,7 @@ func (self *QueryLogEntry) Close() {
 		return
 	}
 
-	self.Duration = time.Now().UnixNano() - self.Start.UnixNano()
+	self.Duration = utils.Now().UnixNano() - self.Start.UnixNano()
 
 	// We represent Duration == 0 as not yet complete but sometimes
 	// the query is closed so fast that self.Duration above is still
@@ -74,7 +76,7 @@ func (self *QueryLogType) AddQuery(query string) *QueryLogEntry {
 
 	q := &QueryLogEntry{
 		Query: query,
-		Start: time.Now(),
+		Start: utils.Now(),
 	}
 
 	self.Queries = append(self.Queries, q)

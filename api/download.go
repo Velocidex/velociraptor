@@ -57,6 +57,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
@@ -103,6 +104,9 @@ type vfsFileDownloadRequest struct {
 	// If set we filter binary chars to reveal only text
 	TextFilter bool `schema:"text_filter"`
 	Lines      int  `schema:"lines"`
+
+	// Encapsulate the file in a zip file.
+	ZipFile bool `schema:"zip"`
 }
 
 // URL format: /api/v1/DownloadVFSFile
@@ -228,6 +232,15 @@ func vfsFileDownloadHandler() http.Handler {
 
 			_, _ = w.Write(output)
 			return
+		}
+
+		// If the user requested the whole file, and also has password
+		// set we send them a zip file with the entire thing
+		if request.ZipFile {
+			err = streamZipFile(r.Context(), org_config_obj, w, file, filename)
+			if err == nil {
+				return
+			}
 		}
 
 		emitContentLength(w, int(request.Offset), int(request.Length), total_size)
@@ -774,4 +787,62 @@ func emitContentLength(w http.ResponseWriter, offset int, req_length int, size i
 	}
 
 	w.Header().Set("Content-Length", fmt.Sprintf("%v", available))
+}
+
+func streamZipFile(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	w http.ResponseWriter,
+	file io.Reader, filename string) error {
+	buf := pool.Get().([]byte)
+	defer pool.Put(buf)
+
+	w.Header().Set("Content-Disposition", "attachment; "+
+		sanitizeFilenameForAttachment(filename+".zip"))
+	w.Header().Set("Content-Type", "application/zip")
+	w.WriteHeader(200)
+
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromHTTPContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Get the user's preferences to set the container password
+	password := ""
+	options, err := users.GetUserOptions(ctx, user_record.Name)
+	if err == nil {
+		password = options.DefaultPassword
+	}
+
+	container, err := reporting.NewContainerFromWriter(
+		config_obj, utils.NopWriteCloser{w}, password, 5, nil)
+	if err != nil {
+		return err
+	}
+	defer container.Close()
+
+	file_writer, err := container.Create(filename, utils.Now())
+	if err != nil {
+		return err
+	}
+	defer file_writer.Close()
+
+	for {
+		n, err := file.Read(buf)
+		if n == 0 || err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return err
+		}
+
+		_, err = file_writer.Write(buf[:n])
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

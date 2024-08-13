@@ -54,7 +54,6 @@ table.table tbody tr.row-selected {
 }
 
 .file-hints {
-    position: absolute;
     min-height: 24px;
     min-width: 32px;
     cursor: context-menu;

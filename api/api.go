@@ -471,8 +471,11 @@ func (self *ApiServer) SetGUIOptions(
 	principal := user_record.Name
 
 	defer Instrument("SetGUIOptions")()
+
+	// This API is only used for the user to change their own options
+	// so it is always allowed.
 	return &api_proto.SetGUIOptionsResponse{},
-		users.SetUserOptions(ctx, principal, in)
+		users.SetUserOptions(ctx, principal, principal, in)
 }
 
 // Only list the child directories - used by the tree widget.

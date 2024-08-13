@@ -107,6 +107,8 @@ type UserStorageManager struct {
 	username_lookup map[string]string
 
 	id int64
+
+	validator Validator
 }
 
 func (self *UserStorageManager) GetUserWithHashes(ctx context.Context, username string) (
@@ -348,26 +350,64 @@ func (self *UserStorageManager) SetUserOptions(ctx context.Context,
 	// old_options.Links = options.Links
 
 	if options.Lang != "" {
-		old_options.Lang = options.Lang
+		lang, err := self.validator.validateLang(options.Lang)
+		if err != nil {
+			return err
+		}
+		old_options.Lang = lang
 	}
 
 	if options.Theme != "" {
-		old_options.Theme = options.Theme
+		theme, err := self.validator.validateTheme(options.Theme)
+		if err != nil {
+			return err
+		}
+		old_options.Theme = theme
 	}
 
 	if options.Timezone != "" {
-		old_options.Timezone = options.Timezone
+		tz, err := self.validator.validateTimezone(options.Timezone)
+		if err != nil {
+			return err
+		}
+		old_options.Timezone = tz
 	}
 
 	if options.Org != "" {
-		old_options.Org = options.Org
+		org, err := self.validator.validateOrg(options.Org)
+		if err != nil {
+			return err
+		}
+		old_options.Org = org
+	}
+
+	if len(options.Links) > 0 {
+		links, err := self.validator.validateLinks(self.config_obj, options.Links)
+		if err != nil {
+			return err
+		}
+		old_options.Links = links
 	}
 
 	if options.Options != "" {
 		old_options.Options = options.Options
 	}
 
-	old_options.DefaultPassword = options.DefaultPassword
+	// We need to distinguish between the case where the password is
+	// reset to the empty string and the password is simply not
+	// updated at all. In both cases the password will be an empty
+	// string. Therefore in the JS code we force the password of "-"
+	// to mean reset the password to empty string. If the field is
+	// empty we do not update the password at all.
+	if options.DefaultPassword != "" {
+		// Means to reset the password.
+		if options.DefaultPassword == "-" {
+			old_options.DefaultPassword = ""
+		} else {
+			// Set the password to something.
+			old_options.DefaultPassword = options.DefaultPassword
+		}
+	}
 	old_options.DefaultDownloadsLock = options.DefaultDownloadsLock
 
 	err = db.SetSubject(self.config_obj, path_manager.GUIOptions(), old_options)

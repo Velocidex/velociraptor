@@ -13,11 +13,6 @@ func (self UserPathManager) Path() api.DSPathSpec {
 		SetTag("User")
 }
 
-// The directory containing all user related info.
-func (self UserPathManager) Directory() api.DSPathSpec {
-	return USERS_ROOT.AddChild(self.Name)
-}
-
 // Where we store the user's ACLs
 func (self UserPathManager) ACL() api.DSPathSpec {
 	return ACL_ROOT.AddChild(self.Name).

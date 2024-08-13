@@ -101,8 +101,7 @@ func ReadJsonFromFile(ctx context.Context, fd io.Reader) chan *ordereddict.Dict 
 				if len(row_data) == 0 || err != nil {
 					return
 				}
-				item := ordereddict.NewDict()
-				err = item.UnmarshalJSON(row_data)
+				item, err := ParseJsonToObject(row_data)
 				if err != nil {
 					continue
 				}

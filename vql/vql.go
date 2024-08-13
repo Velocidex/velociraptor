@@ -93,11 +93,6 @@ func RegisterProtocol(plugin vfilter.Any) {
 	ResetGlobalScopeCache()
 }
 
-func GetFunction(name string) (vfilter.FunctionInterface, bool) {
-	res, pres := exportedFunctions[name]
-	return res, pres
-}
-
 func EnforceVQLAllowList(
 	allowed_plugins []string, allowed_functions []string) error {
 

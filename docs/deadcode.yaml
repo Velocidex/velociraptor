@@ -1,0 +1,77 @@
+IgnoreFiles:
+  # Used for testing
+  - vtesting/.+
+  - executor/testutils.go
+  - file_store/tests/testsuite.go
+  - json/debug.go
+
+  # Third party code
+  - third_party/zip/.+
+
+  # Generated files
+  - .+_gen.go
+
+
+IgnoreFunctions:
+  # Test helpers
+  - InstallClockForTests
+  - DebugPathSpecList
+  - Globber.DebugString
+  - Globber._DebugString
+  - WebSocketConnectionFactoryForTests
+  - SetClock
+  - MustNewWindowsOSPath
+  - WindowsNTFSPathFromOSPath
+  - MustNewWindowsRegistryPath
+  - Tracker.Reset
+  - Tracker.Debug
+  - QueryLogType.Clear
+  - SetPageSize
+
+  # Used to support cloudvelo
+  - OverrideDatastoreImplementation
+  - OverrideFilestoreImplementation
+  - OverridePlugin
+
+  # Used by Windows
+  - ConvertToDevice
+  - NewNTFSFileSystemAccessor
+
+IgnoreMatches:
+  # Third party code
+  - third_party/zip/.+
+  - file_store/csv/.+
+
+  # Used by tests.
+  - http_comms/comms.go:HTTPCommunicator.SetPause
+  - http_comms/ring_buffer.go:OpenFileBasedRingBuffer
+  - json/wrappers.go:MarshalIndentNormalized
+  - logging/logging.go:ClearMemoryLogs
+  - responder/testutils.go:.+
+  - result_sets/simple/simple.go:GetAllResults
+  - services/test_utils.go:GetPublishedEvents
+  - services/hunt_dispatcher/hunt_dispatcher.go:SetHuntIdForTests
+  - services/orgs/tests.go:TestOrgManager.SetOrgIdForTesting
+  - services/orgs/tests.go:TestOrgManager.Start
+  - services/orgs/tests.go:StartTestOrgManager
+  - services/repository/manager.go:NewRepositoryManagerForTest
+  - services/users/test_utils.go.+
+  - utils/clock.go:RealClockWithOffset.+
+  - utils/clock.go:IncClock.+
+  - utils/counter.go:Counter.+
+  - utils/debug.go
+  - utils/file.go:CopyFile
+  - utils/file.go:copyFileContents
+  - services/frontend/frontend.go:NewMinionFrontendManager
+  - services/scheduler/minion.go:NewMinionScheduler
+  - vql/tools/logscale/logscale.go:LogScaleQueue.addDebugCallback
+  - config/loader.go:Loader.WithEnvLiteralLoader
+
+  # Used for debugging
+  - vql/networking/multipart.go:multiPartReader.Debug
+
+  # Used by Windows
+  - utils/alloc.go:AllocateBuff
+  - vql/utils.go:GetStringsFromRow
+  - vql/utils.go:GetFloatFromRow
+  - vql/utils.go:CheckForPanic

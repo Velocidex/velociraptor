@@ -223,17 +223,6 @@ type RawValueBuffer struct {
 	info *RawRegValueInfo
 }
 
-func (self *RawValueBuffer) Close() error {
-	return nil
-}
-
-func NewRawValueBuffer(buf string, stat *RawRegValueInfo) *RawValueBuffer {
-	return &RawValueBuffer{
-		bytes.NewReader(stat._value.ValueData().Data),
-		stat,
-	}
-}
-
 type rawHiveCache struct {
 	mu sync.Mutex
 

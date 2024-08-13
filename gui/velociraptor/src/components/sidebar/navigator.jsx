@@ -287,13 +287,15 @@ class VeloNavigator extends Component {
                               rel="noreferrer"
                               target={x.new_tab ? "_blank" : ""}
                             >
-                              <span>
-                                <img
-                                  className="sidebar-icon"
-                                  alt=""
-                                  src={api.src_of(x.icon_url)}
-                                />
-                              </span>
+                              <ToolTip tooltip={T(x.text)}>
+                                <span>
+                                  <img
+                                    className="sidebar-icon"
+                                    alt=""
+                                    src={api.src_of(x.icon_url)}
+                                  />
+                                </span>
+                              </ToolTip>
                               {T(x.text)}
                             </a>
                           </li>

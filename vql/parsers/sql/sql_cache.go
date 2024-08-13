@@ -306,14 +306,6 @@ func NewSQLCache(ctx context.Context, scope types.Scope) *sqlCache {
 	return result
 }
 
-// Velociraptor always uses the path separator at the root of
-// filesystem (on windows this means before the drive letter). This
-// convension confuses the sqlite driver. So convert
-// "\C:\Windows\X.sqlite" to "C:\Windows\X.sqlite"
-func VFSPathToFilesystemPath(path string) string {
-	return strings.TrimPrefix(path, "\\")
-}
-
 // Check the file header - ignore if this is not really an sqlite
 // file.
 func checkSQLiteHeader(scope vfilter.Scope,

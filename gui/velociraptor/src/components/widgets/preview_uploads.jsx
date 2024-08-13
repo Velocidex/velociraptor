@@ -533,7 +533,10 @@ export default class PreviewUpload extends Component {
     };
 
     uintToString = (uintArray) => {
-        return String.fromCharCode.apply(null, uintArray);
+        if (_.isEmpty(uintArray)) {
+            uintArray=new Uint8Array("");
+        }
+        return String.fromCharCode.apply(null, uintArray.slice(0, 25));
     }
 
     render() {

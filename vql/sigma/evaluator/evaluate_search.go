@@ -173,11 +173,6 @@ func (self *VQLRuleEvaluator) applyModifiers(
 	return false
 }
 
-func (self *VQLRuleEvaluator) getMatcherValues(
-	ctx context.Context, matcher sigma.FieldMatcher) ([]interface{}, error) {
-	return matcher.Values, nil
-}
-
 func (self *VQLRuleEvaluator) GetFieldValuesFromEvent(
 	ctx context.Context, scope types.Scope,
 	field string, event *Event) ([]interface{}, error) {

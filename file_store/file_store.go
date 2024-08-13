@@ -110,10 +110,3 @@ func SetGlobalFilestore(
 	g_impl[org_id] = impl
 	return nil
 }
-
-func Reset() {
-	fs_mu.Lock()
-	defer fs_mu.Unlock()
-
-	g_impl = make(map[string]api.FileStore)
-}
