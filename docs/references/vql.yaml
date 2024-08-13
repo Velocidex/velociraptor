@@ -863,12 +863,6 @@
     type: string
     description: 'Client search string. Can have the following prefixes: ''label:'',
       ''host:'''
-  - name: start
-    type: uint64
-    description: First client to fetch (0)'
-  - name: count
-    type: uint64
-    description: Maximum number of clients to fetch (1000)'
   - name: client_id
     type: string
   category: server

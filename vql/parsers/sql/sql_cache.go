@@ -9,13 +9,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	_ "github.com/mattn/go-sqlite3"
 
 	"database/sql"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
@@ -28,19 +31,41 @@ const (
 type DB struct {
 	*sql.DB
 	tmpfile string
+	created time.Time
 	scope   types.Scope
 
 	mu       sync.Mutex
 	in_use   int
-	last_use int64
+	last_use time.Time
 }
 
-func (self *DB) ShouldExpire(now int64) bool {
+func (self *DB) Profile() *ordereddict.Dict {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self.in_use <= 0 &&
-		now-self.last_use > 5
+	return ordereddict.NewDict().
+		Set("Tempfile", self.tmpfile).
+		Set("InUse", self.in_use > 0).
+		Set("Created", self.created).
+		Set("LastUsed", self.last_use)
+}
+
+func (self *DB) ShouldExpire(now int64, total_handles int) bool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Never expire an in use handle.
+	if self.in_use > 0 {
+		return false
+	}
+
+	// If the handle is more than 5 sec old, expire it
+	if now-self.last_use.Unix() > 5 {
+		return true
+	}
+
+	// If we have too many handles just expire them at random.
+	return total_handles > 500
 }
 
 func (self *DB) SetInUse() {
@@ -53,6 +78,8 @@ func (self *DB) SetInUse() {
 func (self *DB) remove() {
 	// Try to remove it immediately
 	err := os.Remove(self.tmpfile)
+	utils_tempfile.RemoveTmpFile(self.tmpfile, err)
+
 	if err == nil || errors.Is(err, os.ErrNotExist) {
 		self.scope.Log("DEBUG:Removed tempfile: %v", self.tmpfile)
 		return
@@ -60,8 +87,10 @@ func (self *DB) remove() {
 
 	// On windows especially, we can not remove files that are opened
 	// by something else, so we keep trying for a while.
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		err := os.Remove(self.tmpfile)
+		utils_tempfile.RemoveTmpFile(self.tmpfile, err)
+
 		if err == nil || errors.Is(err, os.ErrNotExist) {
 			self.scope.Log("DEBUG:Removed tempfile: %v after %v tries",
 				self.tmpfile, i)
@@ -77,7 +106,7 @@ func (self *DB) Close() {
 	defer self.mu.Unlock()
 
 	self.in_use--
-	self.last_use = utils.GetTime().Now().Unix()
+	self.last_use = utils.Now()
 }
 
 func (self *DB) Destroy() {
@@ -96,6 +125,7 @@ func (self *DB) Destroy() {
 }
 
 type sqlCache struct {
+	id    uint64
 	cache map[string]*DB
 	scope types.Scope
 
@@ -111,10 +141,10 @@ func (self *sqlCache) Reap() {
 }
 
 func (self *sqlCache) reap() {
-	now := utils.GetTime().Now().Unix()
+	now := utils.Now().Unix()
 
 	for k, v := range self.cache {
-		if v.ShouldExpire(now) {
+		if v.ShouldExpire(now, len(self.cache)) {
 			v.Destroy()
 			delete(self.cache, k)
 		}
@@ -130,6 +160,25 @@ func (self *sqlCache) Close() {
 	for k, handle := range self.cache {
 		handle.Destroy()
 		delete(self.cache, k)
+	}
+
+	gSqlCacheTracker.Untrack(self)
+}
+
+func (self *sqlCache) ProfileWriter(ctx context.Context,
+	scope vfilter.Scope, output_chan chan vfilter.Row) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for k, handle := range self.cache {
+		select {
+		case <-ctx.Done():
+			return
+
+		case output_chan <- handle.Profile().
+			Set("CacheID", self.id).
+			Set("OriginalFile", k):
+		}
 	}
 }
 
@@ -217,7 +266,9 @@ func (self *sqlCache) GetHandleSqlite(ctx context.Context,
 		}
 		if err != nil {
 			scope.Log("ERROR:Unable to open sqlite file %v: %v", tempfile, err)
-			os.Remove(tempfile)
+			err1 := os.Remove(tempfile)
+			utils_tempfile.RemoveTmpFile(tempfile, err1)
+
 			return nil, err
 		}
 
@@ -264,7 +315,9 @@ func (self *sqlCache) GetHandleSqlite(ctx context.Context,
 			}
 			if err != nil {
 				scope.Log("ERROR:Unable to open sqlite file %v: %v", tempfile, err)
-				os.Remove(tempfile)
+				err1 := os.Remove(tempfile)
+				utils_tempfile.RemoveTmpFile(tempfile, err1)
+
 				return nil, err
 			}
 		}
@@ -273,6 +326,7 @@ func (self *sqlCache) GetHandleSqlite(ctx context.Context,
 	// If we get here, sqlx_handle is valid - wrap it in the cache and return it.
 	result := &DB{
 		DB:      sql_handle,
+		created: utils.Now(),
 		scope:   scope,
 		tmpfile: tempfile, // This will be empty if we didnt use a temp file.
 		in_use:  1,        // We have one user - our caller.
@@ -286,9 +340,12 @@ func (self *sqlCache) GetHandleSqlite(ctx context.Context,
 
 func NewSQLCache(ctx context.Context, scope types.Scope) *sqlCache {
 	result := &sqlCache{
+		id:    utils.GetId(),
 		cache: make(map[string]*DB),
 		scope: scope,
 	}
+
+	gSqlCacheTracker.Track(result)
 
 	// Close the entire cache when the scope is done.
 	vql_subsystem.GetRootScope(scope).AddDestructor(result.Close)
@@ -354,6 +411,8 @@ func _MakeTempfile(ctx context.Context,
 	}
 	defer tmpfile.Close()
 
+	utils_tempfile.AddTmpFile(tmpfile.Name())
+
 	fs, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		return "", err
@@ -371,4 +430,50 @@ func _MakeTempfile(ctx context.Context,
 	}
 
 	return tmpfile.Name(), nil
+}
+
+var (
+	gSqlCacheTracker *sqlCacheTracker
+)
+
+type sqlCacheTracker struct {
+	mu     sync.Mutex
+	caches map[uint64]*sqlCache
+}
+
+func (self *sqlCacheTracker) Track(c *sqlCache) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.caches[c.id] = c
+}
+
+func (self *sqlCacheTracker) Untrack(c *sqlCache) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	delete(self.caches, c.id)
+}
+
+func (self *sqlCacheTracker) ProfileWriter(ctx context.Context,
+	scope vfilter.Scope, output_chan chan vfilter.Row) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for _, v := range self.caches {
+		v.ProfileWriter(ctx, scope, output_chan)
+	}
+}
+
+func init() {
+	gSqlCacheTracker = &sqlCacheTracker{
+		caches: make(map[uint64]*sqlCache),
+	}
+
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:          "sqlite_files",
+		Description:   "Track SQLite handles used by the process.",
+		ProfileWriter: gSqlCacheTracker.ProfileWriter,
+	})
+
 }

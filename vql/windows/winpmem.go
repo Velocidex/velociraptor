@@ -13,6 +13,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	winpmem_accessor "www.velocidex.com/golang/velociraptor/accessors/winpmem"
 	"www.velocidex.com/golang/velociraptor/acls"
+	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/filesystem"
@@ -82,6 +83,8 @@ func (self WinpmemFunction) Call(
 			scope.Log("winpmem: %v", err)
 			return vfilter.Null{}
 		}
+		utils_tempfile.AddTmpFile(tmpfile.Name())
+
 		tmpfile.Write([]byte(driver))
 		tmpfile.Close()
 

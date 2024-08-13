@@ -11,6 +11,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
+	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/vfilter"
 	vsort "www.velocidex.com/golang/vfilter/sort"
 	"www.velocidex.com/golang/vfilter/types"
@@ -241,7 +242,9 @@ func (self *dataFile) Close() {
 func (self *dataFile) _Close() {
 	if self.fd != nil {
 		self.fd.Close()
-		os.Remove(self.fd.Name())
+		err := os.Remove(self.fd.Name())
+		utils_tempfile.RemoveTmpFile(self.fd.Name(), err)
+
 		self.fd = nil
 		self.reader = nil
 	}
@@ -301,6 +304,8 @@ func (self *dataFile) prepareFile(scope vfilter.Scope, items []vfilter.Row) {
 			scope.Log("Unable to create tempfile: %v", err)
 			return
 		}
+
+		utils_tempfile.AddTmpFile(tmpfile.Name())
 
 		// Serialize all the rows into the file.
 		serialized, err := json.MarshalJsonl(items)

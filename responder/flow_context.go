@@ -123,7 +123,9 @@ func newFlowContext(ctx context.Context,
 		config_obj:     config_obj,
 		flow_id:        flow_id,
 		owner:          owner,
-		checkpoint:     makeCheckpoint(config_obj, flow_id),
+		// Disable checkpoints for now since the server will get the
+		// flow state anyway.
+		// checkpoint:     makeCheckpoint(config_obj, flow_id),
 	}
 
 	go func() {
