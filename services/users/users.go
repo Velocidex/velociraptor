@@ -26,6 +26,7 @@ import (
 	"regexp"
 	"sync"
 
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -152,8 +153,21 @@ func (self UserManager) SetUser(
 }
 
 func (self UserManager) SetUserOptions(ctx context.Context,
-	username string,
+	principal, username string,
 	options *api_proto.SetGUIOptionsRequest) error {
+
+	// Any user can modify their own permissions but only the admin
+	// can modify someone else's permissions.
+	if principal != username {
+		permissions := acls.SERVER_ADMIN
+		perm, err := services.CheckAccess(self.config_obj, principal, permissions)
+		if !perm || err != nil {
+			return fmt.Errorf(
+				"Error: %w, User %v is not allowed to change options for %v",
+				acls.PermissionDenied, principal, username)
+		}
+	}
+
 	return self.storage.SetUserOptions(ctx, username, options)
 }
 

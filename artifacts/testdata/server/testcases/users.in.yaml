@@ -54,3 +54,15 @@ Queries:
        roles=["investigator"]) FROM scope()
 
   - SELECT * FROM test_read_logs() WHERE Log =~ "Username is reserved" AND NOT Log =~ "SELECT"
+
+  # Set user options.
+  - SELECT user_options(user=whoami(),
+           lang="fr",
+           theme="veloci-dark",
+           links=[dict(
+              text="Foobar",
+              url="https://www.google.com",
+              type="sidebar",
+              new_tab=TRUE), ],
+            default_password="foobar")
+    FROM scope()

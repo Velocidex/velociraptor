@@ -107,6 +107,8 @@ type UserStorageManager struct {
 	username_lookup map[string]string
 
 	id int64
+
+	validator Validator
 }
 
 func (self *UserStorageManager) GetUserWithHashes(ctx context.Context, username string) (
@@ -348,19 +350,43 @@ func (self *UserStorageManager) SetUserOptions(ctx context.Context,
 	// old_options.Links = options.Links
 
 	if options.Lang != "" {
-		old_options.Lang = options.Lang
+		lang, err := self.validator.validateLang(options.Lang)
+		if err != nil {
+			return err
+		}
+		old_options.Lang = lang
 	}
 
 	if options.Theme != "" {
-		old_options.Theme = options.Theme
+		theme, err := self.validator.validateTheme(options.Theme)
+		if err != nil {
+			return err
+		}
+		old_options.Theme = theme
 	}
 
 	if options.Timezone != "" {
-		old_options.Timezone = options.Timezone
+		tz, err := self.validator.validateTimezone(options.Timezone)
+		if err != nil {
+			return err
+		}
+		old_options.Timezone = tz
 	}
 
 	if options.Org != "" {
-		old_options.Org = options.Org
+		org, err := self.validator.validateOrg(options.Org)
+		if err != nil {
+			return err
+		}
+		old_options.Org = org
+	}
+
+	if len(options.Links) > 0 {
+		links, err := self.validator.validateLinks(self.config_obj, options.Links)
+		if err != nil {
+			return err
+		}
+		old_options.Links = links
 	}
 
 	if options.Options != "" {

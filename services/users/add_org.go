@@ -53,7 +53,7 @@ func (self *UserManager) AddUserToOrg(
 			ok, _ := services.CheckAccess(
 				org_config_obj, principal, acls.SERVER_ADMIN)
 			if !ok {
-				return fmt.Errorf("Error: %v, User %v is not admin on %v",
+				return fmt.Errorf("Error: %w, User %v is not admin on %v",
 					acls.PermissionDenied, principal, org_config_obj.OrgName)
 			}
 		}
