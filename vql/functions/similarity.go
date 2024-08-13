@@ -45,7 +45,7 @@ func (self *SimilarityFunction) Call(
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("similarity: %v", err.Error())
-		return false
+		return 0
 	}
 
 	allKeys := ordereddict.NewDict()
@@ -56,6 +56,10 @@ func (self *SimilarityFunction) Call(
 	}
 	for _, key := range arg.Set2.Keys() {
 		allKeys.Set(key, nil)
+	}
+
+	if allKeys.Len() == 0 {
+		return 0
 	}
 
 	// Calculate differences
