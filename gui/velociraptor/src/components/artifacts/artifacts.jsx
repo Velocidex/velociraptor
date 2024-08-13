@@ -40,6 +40,7 @@ const presetFilters = ()=>[
     {value: "builtin:yes", label: T("BuiltIn Only")},
     {value: "builtin:no", label: T("Custom Only")},
     {value: "metadata:basic", label: T("Basic Only")},
+    {value: "empty:true", label: T("Include Empty sources")},
 ];
 
 

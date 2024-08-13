@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/filesystem"
@@ -109,6 +110,9 @@ func (self _PEDumpFunction) Call(
 			return false
 		}
 		defer tmpfile.Close()
+
+		utils_tempfile.AddTmpFile(tmpfile.Name())
+
 		root_scope := vql_subsystem.GetRootScope(scope)
 		_ = root_scope.AddDestructor(func() {
 			filesystem.RemoveFile(0, tmpfile.Name(), root_scope)

@@ -27,6 +27,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 var (
@@ -227,6 +228,7 @@ func (self *ReplicationService) Start(
 	if err != nil {
 		return err
 	}
+	utils_tempfile.AddTmpFile(self.tmpfile.Name())
 
 	self.Buffer, err = NewBufferFile(self.config_obj, self.tmpfile)
 	if err != nil {
@@ -721,7 +723,8 @@ func (self *ReplicationService) watchOnce(
 
 func (self *ReplicationService) Close() {
 	self.Buffer.Close()
-	os.Remove(self.tmpfile.Name()) // clean up file buffer
+	err := os.Remove(self.tmpfile.Name()) // clean up file buffer
+	utils_tempfile.RemoveTmpFile(self.tmpfile.Name(), err)
 }
 
 func NewReplicationService(

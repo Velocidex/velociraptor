@@ -215,6 +215,9 @@ type matchPlan struct {
 	// Show hidden artifacts
 	hidden bool
 
+	// Show empty artifacts (those without sources)
+	empty_source bool
+
 	builtin *bool
 
 	// Show basic artifacts
@@ -324,6 +327,10 @@ func (self *matchPlan) matchArtifact(artifact *artifacts_proto.Artifact) bool {
 		return false
 	}
 
+	if !self.empty_source && len(artifact.Sources) == 0 {
+		return false
+	}
+
 	if !self.matchType(artifact) {
 		return false
 	}
@@ -364,6 +371,12 @@ func prepareMatchPlan(search string) *matchPlan {
 			verb := parts[0]
 			term := parts[1]
 			switch verb {
+			case "empty":
+				if term == "true" {
+					result.empty_source = true
+				}
+				continue
+
 			case "hidden":
 				if term == "true" {
 					result.hidden = true

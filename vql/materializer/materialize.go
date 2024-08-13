@@ -13,6 +13,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
+	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/filesystem"
 	"www.velocidex.com/golang/vfilter"
@@ -43,6 +44,8 @@ func NewTempFileMatrializer(
 	if err != nil {
 		return nil, err
 	}
+	utils_tempfile.AddTmpFile(tmpfile.Name())
+
 	root_scope := vql_subsystem.GetRootScope(scope)
 	root_scope.AddDestructor(func() {
 		filesystem.RemoveFile(0, tmpfile.Name(), root_scope)

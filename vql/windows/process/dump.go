@@ -38,6 +38,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -78,11 +79,15 @@ func (self ProcDumpPlugin) Call(
 			return
 		}
 
+		utils_tempfile.AddTmpFile(tmpfile.Name())
+
 		// Close the file and remove it because the dump file
 		// will be written in its place.
 		filename := tmpfile.Name()
 		tmpfile.Close()
-		os.Remove(filename)
+
+		err = os.Remove(filename)
+		utils_tempfile.RemoveTmpFile(filename, err)
 
 		// Use a dmp extension to make it easier to open.
 		filename += ".dmp"

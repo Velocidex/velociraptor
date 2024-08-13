@@ -25,6 +25,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -78,6 +79,8 @@ func (self *TempfileFunction) Call(ctx context.Context,
 		scope.Log("tempfile: %v", err)
 		return false
 	}
+
+	utils_tempfile.AddTmpFile(tmpfile.Name())
 
 	// Try to set the permissions to the desired level.
 	_ = os.Chmod(tmpfile.Name(), permissions)
@@ -258,6 +261,7 @@ func RemoveFile(retry int, tmpfile string, scope vfilter.Scope) {
 			scope.Log("tempfile: removed tempfile %v", tmpfile)
 		}
 	}
+	utils_tempfile.RemoveTmpFile(tmpfile, err)
 }
 
 func init() {

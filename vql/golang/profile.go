@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services/debug"
+	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -45,8 +46,10 @@ func remove(scope vfilter.Scope, name string) {
 	// On windows especially we can not remove files that
 	// are opened by something else, so we keep trying for
 	// a while.
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		err := os.Remove(name)
+		utils_tempfile.RemoveTmpFile(name, err)
+
 		if err == nil {
 			break
 		}
@@ -82,6 +85,8 @@ func writeProfile(
 		return
 	}
 	defer tmpfile.Close()
+
+	utils_tempfile.AddTmpFile(tmpfile.Name())
 
 	dest := func() { remove(scope, tmpfile.Name()) }
 	err = scope.AddDestructor(dest)

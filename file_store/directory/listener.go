@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 // A listener wraps a channel that our client will listen on. The
@@ -197,7 +198,8 @@ func (self *Listener) Close() {
 	self.cancel()
 
 	if self.tmpfile != "" {
-		os.Remove(self.tmpfile) // clean up file buffer
+		err := os.Remove(self.tmpfile) // clean up file buffer
+		utils_tempfile.RemoveTmpFile(self.tmpfile, err)
 	}
 }
 
@@ -261,6 +263,8 @@ func NewListener(
 		if err != nil {
 			return nil, err
 		}
+
+		utils_tempfile.AddTmpFile(tmpfile.Name())
 
 		file_buffer, err := NewFileBasedRingBuffer(config_obj, tmpfile)
 		if err != nil {

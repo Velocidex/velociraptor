@@ -24,6 +24,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
@@ -43,6 +44,7 @@ func (self *Dummy) getTempFile(
 	if err != nil {
 		return nil, err
 	}
+	utils_tempfile.AddTmpFile(file.Name())
 
 	self.filenames = append(self.filenames, file.Name())
 
@@ -64,13 +66,15 @@ func (self *Dummy) Close(config_obj *config_proto.Config) {
 		// On windows especially we can not remove files that
 		// are opened by something else, so we keep trying for
 		// a while.
-		for i := 0; i < 100; i++ {
-			err := os.Remove(filename)
+		var err error
+		for i := 0; i < 10; i++ {
+			err = os.Remove(filename)
 			if err == nil {
 				break
 			}
 			time.Sleep(time.Second)
 		}
+		utils_tempfile.RemoveTmpFile(filename, err)
 	}
 
 	for _, filename := range self.filenames {

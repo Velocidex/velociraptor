@@ -37,8 +37,6 @@ import (
 
 type ClientsPluginArgs struct {
 	Search   string `vfilter:"optional,field=search,doc=Client search string. Can have the following prefixes: 'label:', 'host:'"`
-	Start    uint64 `vfilter:"optional,field=start,doc=First client to fetch (0)'"`
-	Limit    uint64 `vfilter:"optional,field=count,doc=Maximum number of clients to fetch (1000)'"`
 	ClientId string `vfilter:"optional,field=client_id"`
 }
 
@@ -101,11 +99,6 @@ func (self ClientsPlugin) Call(
 		search_term := arg.Search
 		if search_term == "" {
 			search_term = "all"
-		}
-
-		limit := arg.Limit
-		if limit == 0 {
-			limit = 100000
 		}
 
 		indexer, err := services.GetIndexer(config_obj)
@@ -199,6 +192,7 @@ func (self ClientInfoFunction) Info(
 		Doc:      "Returns client info (like the fqdn) from the datastore.",
 		ArgType:  type_map.AddType(scope, &ClientInfoFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Version:  2,
 	}
 }
 
