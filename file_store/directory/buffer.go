@@ -8,7 +8,7 @@ package directory
 import (
 	"encoding/binary"
 	"errors"
-	"io"
+	"io/ioutil"
 	"os"
 	"sync"
 
@@ -18,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 // The below is similar to http_comms.FileBasedRingBuffer except:
@@ -64,8 +65,9 @@ type FileBasedRingBuffer struct {
 
 	mu sync.Mutex
 
-	fd     *os.File
-	header *Header
+	base_name string
+	fd        *os.File
+	header    *Header
 
 	read_buf  []byte
 	write_buf []byte
@@ -90,13 +92,18 @@ func (self *FileBasedRingBuffer) Enqueue(item interface{}) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	fd, err := self.getFd()
+	if err != nil {
+		return err
+	}
+
 	// If the file is too large we truncate it and report that we lost
 	// some data.
 	if self.max_size > 0 && self.header.WritePointer > self.max_size {
 		logger := logging.GetLogger(
 			self.config_obj, &logging.FrontendComponent)
 		logger.WithFields(logrus.Fields{
-			"name":       self.fd.Name(),
+			"name":       fd.Name(),
 			"bytes_lost": self.header.WritePointer - self.header.ReadPointer,
 		}).Error("Buffer file too large")
 		self._Truncate()
@@ -104,14 +111,14 @@ func (self *FileBasedRingBuffer) Enqueue(item interface{}) error {
 
 	// Write the new message to the end of the file at the WritePointer
 	binary.LittleEndian.PutUint64(self.write_buf, uint64(len(serialized)))
-	_, err = self.fd.WriteAt(self.write_buf, int64(self.header.WritePointer))
+	_, err = fd.WriteAt(self.write_buf, int64(self.header.WritePointer))
 	if err != nil {
 		// File is corrupt now, reset it.
 		self._Truncate()
 		return err
 	}
 
-	n, err := self.fd.WriteAt(serialized, int64(self.header.WritePointer+8))
+	n, err := fd.WriteAt(serialized, int64(self.header.WritePointer+8))
 	if err != nil {
 		self._Truncate()
 		return err
@@ -124,7 +131,7 @@ func (self *FileBasedRingBuffer) Enqueue(item interface{}) error {
 	if err != nil {
 		return err
 	}
-	_, err = self.fd.WriteAt(serialized, 0)
+	_, err = fd.WriteAt(serialized, 0)
 	if err != nil {
 		self._Truncate()
 		return err
@@ -140,10 +147,20 @@ func (self *FileBasedRingBuffer) Lease(count int) []*ordereddict.Dict {
 
 	result := make([]*ordereddict.Dict, 0, count)
 
+	// If there is no backing file there are no messages to be leased.
+	if self.fd == nil || self.header == nil {
+		return nil
+	}
+
+	fd, err := self.getFd()
+	if err != nil || fd == nil {
+		return nil
+	}
+
 	// The file contains more data.
 	for self.header.WritePointer > self.header.ReadPointer {
 		// Read the next chunk (length+value) from the current leased pointer.
-		n, err := self.fd.ReadAt(self.read_buf, self.header.ReadPointer)
+		n, err := fd.ReadAt(self.read_buf, self.header.ReadPointer)
 		if err != nil || n != len(self.read_buf) {
 			self.log_ctx.Error(
 				"Possible corruption detected: file too short Writer %v, Reader %v.",
@@ -163,7 +180,7 @@ func (self *FileBasedRingBuffer) Lease(count int) []*ordereddict.Dict {
 
 		// Unmarshal one item at a time.
 		serialized := make([]byte, length)
-		n, _ = self.fd.ReadAt(serialized, self.header.ReadPointer+8)
+		n, _ = fd.ReadAt(serialized, self.header.ReadPointer+8)
 		if int64(n) != length {
 			self.log_ctx.Errorf(
 				"Possible corruption detected - expected item of length %v received %v.",
@@ -183,6 +200,8 @@ func (self *FileBasedRingBuffer) Lease(count int) []*ordereddict.Dict {
 		// We read up to the write pointer, we may truncate the file now.
 		if self.header.ReadPointer == self.header.WritePointer {
 			self._Truncate()
+			self.Wg.Add(len(result))
+			return result
 		}
 
 		if len(result) >= count {
@@ -194,19 +213,30 @@ func (self *FileBasedRingBuffer) Lease(count int) []*ordereddict.Dict {
 	return result
 }
 
-// _Truncate returns the file to a virgin state. Assumes
+// _Truncate returns the buffer to a virgin state - it removed the
+// backing file so next call to getFd() will reuse it.  Assume that
 // FileBasedRingBuffer is already under lock.
 func (self *FileBasedRingBuffer) _Truncate() {
-	_ = self.fd.Truncate(0)
-	self.header.ReadPointer = FirstRecordOffset
-	self.header.WritePointer = FirstRecordOffset
-	serialized, _ := self.header.MarshalBinary()
-	_, _ = self.fd.WriteAt(serialized, 0)
+	if self.fd != nil {
+		self.header = nil
+		self.fd.Close()
+
+		filename := self.fd.Name()
+		err := os.Remove(filename) // clean up file buffer
+		utils_tempfile.RemoveTmpFile(filename, err)
+
+		self.fd = nil
+	}
 }
 
 func (self *FileBasedRingBuffer) PendingSize() int64 {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if self.header == nil {
+		return 0
+	}
+
 	return self.header.WritePointer - self.header.ReadPointer
 }
 
@@ -219,11 +249,53 @@ func (self *FileBasedRingBuffer) Reset() {
 
 // Closes the underlying file and shut down the readers.
 func (self *FileBasedRingBuffer) Close() {
-	self.fd.Close()
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.fd != nil {
+		self.fd.Close()
+		self.fd = nil
+		self.header = nil
+	}
+}
+
+func (self *FileBasedRingBuffer) getFd() (*os.File, error) {
+	if self.fd != nil {
+		return self.fd, nil
+	}
+
+	// Create a tempfile on demand.
+	self.header = &Header{
+		WritePointer: FirstRecordOffset,
+		ReadPointer:  FirstRecordOffset,
+	}
+
+	fd, err := ioutil.TempFile("", self.base_name)
+	if err != nil {
+		return nil, err
+	}
+
+	utils_tempfile.AddTmpFile(fd.Name())
+
+	self.fd = fd
+
+	return self.fd, nil
+}
+
+func (self *FileBasedRingBuffer) GetBackingFile() string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.fd == nil {
+		return ""
+	}
+
+	return self.fd.Name()
 }
 
 func NewFileBasedRingBuffer(
-	config_obj *config_proto.Config, fd *os.File) (*FileBasedRingBuffer, error) {
+	config_obj *config_proto.Config,
+	base_name string) (*FileBasedRingBuffer, error) {
 
 	log_ctx := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	header := &Header{
@@ -231,32 +303,10 @@ func NewFileBasedRingBuffer(
 		WritePointer: FirstRecordOffset,
 		ReadPointer:  FirstRecordOffset,
 	}
-	data := make([]byte, FirstRecordOffset)
-	n, err := fd.ReadAt(data, 0)
-	if n > 0 && n < FirstRecordOffset && err == io.EOF {
-		log_ctx.Error("Possible corruption detected: file too short.")
-		err = fd.Truncate(0)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if n > 0 && (err == nil || err == io.EOF) {
-		err := header.UnmarshalBinary(data[:n])
-		// The header is not valid, truncate the file and
-		// start again.
-		if err != nil {
-			log_ctx.Errorf("Possible corruption detected: %v.", err)
-			err = fd.Truncate(0)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
 
 	result := &FileBasedRingBuffer{
 		config_obj: config_obj,
-		fd:         fd,
+		base_name:  base_name,
 		header:     header,
 		read_buf:   make([]byte, 8),
 		write_buf:  make([]byte, 8),

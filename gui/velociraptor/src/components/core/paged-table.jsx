@@ -168,7 +168,7 @@ class ColumnSort extends Component {
 }
 
 
-class ColumnToggle extends Component {
+export class ColumnToggle extends Component {
     static propTypes = {
         columns: PropTypes.array,
         toggles: PropTypes.object,
@@ -919,7 +919,8 @@ class VeloPagedTable extends Component {
     }
 
     renderRow = (row, idx)=>{
-        let selected_cls = this.props.selectRow && this.props.selectRow.classes;
+        let selected_cls = (this.props.selectRow &&
+                            this.props.selectRow.classes) || "row-selected";
         if(this.state.selected_row_idx !== idx) {
             selected_cls = "";
         }
