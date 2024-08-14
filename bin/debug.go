@@ -249,7 +249,7 @@ func handleProfile(config_obj *config_proto.Config) func(w http.ResponseWriter, 
 		}
 
 		if profile_type == "profile" || profile_type == "all" {
-			profile_type = "."
+			profile_type = ".+"
 		} else {
 			// Take the profile type as a literal string not a regex
 			profile_type = regexp.QuoteMeta(profile_type)

@@ -269,7 +269,7 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 
 		// Now add any other interesting things
 		if len(types) > 0 {
-			re, err := regexp.Compile("(?i)" + strings.Join(types, "|"))
+			re, err := regexp.Compile("(?i)^" + strings.Join(types, "|") + "$")
 			if err != nil {
 				scope.Log("profile: %s", err.Error())
 				return

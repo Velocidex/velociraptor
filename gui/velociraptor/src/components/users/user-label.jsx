@@ -156,14 +156,39 @@ class UserSettings extends React.PureComponent {
         edited: false
     }
 
-    saveSettings = ()=> {
-        this.props.setSetting({
-            theme: this.state.theme,
-            timezone: this.state.timezone,
-            lang: this.state.lang,
-            org: this.state.org,
-            default_password: this.state.default_password,
-        });
+    saveSettings = (settings)=> {
+        // Only update the settings that changed.
+        let state = Object.assign({}, this.state);
+        if(settings) {
+            state = Object.assign(state, settings);
+        }
+
+        let params = {};
+        if (state.previous_org) {
+            params.previous_org = state.previous_org;
+        }
+
+        if (state.theme !== this.context.traits.theme) {
+            params.theme = state.theme;
+        }
+
+        if (state.timezone !== this.context.traits.timezone) {
+            params.timezone = state.timezone;
+        }
+
+        if (state.lang !== this.context.traits.lang) {
+            params.lang = state.lang;
+        }
+
+        if (state.org_changed) {
+            params.org = state.org;
+        }
+
+        if (state.default_password !== (this.context.traits.default_password || "")) {
+            params.default_password = state.default_password || "-";
+        }
+
+        this.props.setSetting(params);
     }
 
     changeOrg = org=>{
@@ -171,22 +196,22 @@ class UserSettings extends React.PureComponent {
         let search = window.location.search.replace('?', '');
         let params = qs.parse(search);
         params.org_id = org;
+
+        // Revert to this org on error.
+        let previous_org = window.globals.OrgId;
+
         window.globals.OrgId = org;
 
         // Force navigation to the welcome screen to make sure the GUI
         // is reset.
-        window.history.pushState({}, "", api.href("/app/index.html", {}));
+        window.history.pushState({}, "", api.href("/app/index.html", params));
         this.props.history.replace("/welcome");
 
         // Set the new settings for the next reload. This will be the
         // default org id next time the user loads up the main page.
-        this.props.setSetting({
-            theme: this.state.theme,
-            timezone: this.state.timezone,
-            lang: this.state.lang,
-            org: org,
-            default_password: this.state.default_password,
-        });
+        this.saveSettings({org: org,
+                           org_changed: true,
+                           previous_org: previous_org});
         this.props.onClose();
     }
 
@@ -314,7 +339,7 @@ class UserSettings extends React.PureComponent {
                                       // Change the language instantly
                                       // (We might still need to wait
                                       // for a react render event).
-                                      this.props.setSetting({
+                                      this.saveSettings({
                                           lang: e.currentTarget.value,
                                       });
                                   }}>
@@ -404,59 +429,74 @@ export default class UserLabel extends React.Component {
         this.source.cancel("unmounted");
     }
 
-    setSettings = (options) => {
-        let params = Object.assign({}, options);
+    setSettings = (params) => {
+        if (params.theme) {
+            // Set the ACE theme according to the theme so they match.
+            let ace_options = JSONparse(this.context.traits.ui_settings, {});
+            if (params.theme === "no-theme") {
+                ace_options.theme = "ace/theme/xcode";
+                ace_options.fontFamily = "Iosevka Term";
+            } else if (params.theme === "veloci-dark") {
+                ace_options.theme = "ace/theme/vibrant_ink";
+                ace_options.fontFamily = "Iosevka Term";
+            } else if(params.theme === "veloci-light") {
+                ace_options.theme = "ace/theme/xcode";
+                ace_options.fontFamily = "Iosevka Term";
+            } else if(params.theme === "pink-light") {
+                ace_options.theme = "ace/theme/xcode";
+                ace_options.fontFamily = "Iosevka Term";
+            } else if(params.theme === "ncurses") {
+                ace_options.theme = "ace/theme/sqlserver";
+                ace_options.fontFamily = "fixedsys";
+            } else if(params.theme === "ncurses-dark") {
+                ace_options.theme = "ace/theme/tomorrow_night_eighties";
+                ace_options.fontFamily = "fixedsys";
+            } else if(params.theme === "github-default-light") {
+                ace_options.theme = "ace/theme/dracula";
+                ace_options.fontFamily = "Iosevka Term";
+            } else if(params.theme === "github-dimmed-dark") {
+                ace_options.theme = "ace/theme/dracula";
+                ace_options.fontFamily = "Iosevka Term";
+            } else if(params.theme === "coolgray-dark") {
+                ace_options.theme = "ace/theme/nord_dark";
+                ace_options.fontFamily = "Iosevka Term";
+            } else if(params.theme === "midnight") {
+                ace_options.theme = "ace/theme/terminal";
+                ace_options.fontFamily = "Iosevka Term";
+            }
 
-
-        // Set the ACE theme according to the theme so they match.
-        let ace_options = JSONparse(this.context.traits.ui_settings, {});
-        if (params.theme === "no-theme") {
-            ace_options.theme = "ace/theme/xcode";
-            ace_options.fontFamily = "Iosevka Term";
-        } else if (params.theme === "veloci-dark") {
-            ace_options.theme = "ace/theme/vibrant_ink";
-            ace_options.fontFamily = "Iosevka Term";
-        } else if(params.theme === "veloci-light") {
-            ace_options.theme = "ace/theme/xcode";
-            ace_options.fontFamily = "Iosevka Term";
-        } else if(params.theme === "pink-light") {
-            ace_options.theme = "ace/theme/xcode";
-            ace_options.fontFamily = "Iosevka Term";
-        } else if(params.theme === "ncurses") {
-            ace_options.theme = "ace/theme/sqlserver";
-            ace_options.fontFamily = "fixedsys";
-        } else if(params.theme === "ncurses-dark") {
-            ace_options.theme = "ace/theme/tomorrow_night_eighties";
-            ace_options.fontFamily = "fixedsys";
-        } else if(params.theme === "github-default-light") {
-            ace_options.theme = "ace/theme/dracula";
-            ace_options.fontFamily = "Iosevka Term";
-        } else if(params.theme === "github-dimmed-dark") {
-          ace_options.theme = "ace/theme/dracula";
-          ace_options.fontFamily = "Iosevka Term";
-        } else if(params.theme === "coolgray-dark") {
-          ace_options.theme = "ace/theme/nord_dark";
-          ace_options.fontFamily = "Iosevka Term";
-        } else if(params.theme === "midnight") {
-          ace_options.theme = "ace/theme/terminal";
-          ace_options.fontFamily = "Iosevka Term";
+            params.options = JSON.stringify(ace_options);
         }
-        params.options = JSON.stringify(ace_options);
-        params.default_password = options.default_password || "-";
+
+        if(_.isEmpty(params)) {
+            return;
+        }
 
         api.post("v1/SetGUIOptions", params,
                  this.source.token).then((response) => {
-          if (response.status === 200) {
-              // Check for redirect from the server - this is normally
-              // set by the authenticator to redirect to a better server.
-              if (response.data && response.data.redirect_url &&
-                  response.data.redirect_url !== "") {
-                  window.location.assign(response.data.redirect_url);
-              }
-          }
+                     if (response.status === 200) {
+                         // Check for redirect from the server - this is normally
+                         // set by the authenticator to redirect to a better server.
+                         if (response.data && response.data.redirect_url &&
+                             response.data.redirect_url !== "") {
+                             window.location.assign(response.data.redirect_url);
+                         }
+                     }
 
-          this.context.updateTraits();
-        });
+                     this.context.updateTraits();
+                 }).catch(response=>{
+                     // If we tried to set the org but we dont have
+                     // permission in it, we switch rightr back to the
+                     // previous org.
+                     if (response.response &&
+                         response.response.status === 403 &&
+                         params.org) {
+                         window.globals.OrgId = params.previous_org;
+                         window.history.pushState(
+                             {}, "", api.href("/app/index.html", {}));
+
+                     }
+                 });
     }
 
     orgName() {
@@ -480,7 +520,8 @@ export default class UserLabel extends React.Component {
               { this.state.showUserSettings &&
                 <UserSettingsWithRouter
                   setSetting={this.setSettings}
-                  onClose={()=>this.setState({showUserSettings: false})} /> }
+                  onClose={()=>this.setState({showUserSettings: false})} />
+              }
               <ButtonGroup className="user-label">
                 <Button href={api.href("/app/logoff.html", {
                     username: this.context.traits.username,
