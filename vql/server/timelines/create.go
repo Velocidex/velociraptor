@@ -5,16 +5,9 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/timelines"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/functions"
-	"www.velocidex.com/golang/velociraptor/vql/sorter"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
@@ -69,78 +62,40 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
-	super, err := timelines.NewSuperTimelineWriter(
-		config_obj, notebook_path_manager.SuperTimeline(arg.Timeline))
+	notebook_manager, err := services.GetNotebookManager(config_obj)
 	if err != nil {
 		scope.Log("timeline_add: %v", err)
 		return vfilter.Null{}
 	}
-	defer super.Close()
 
-	// make a new timeline to store in the super timeline.
-	writer, err := super.AddChild(arg.Name)
-	if err != nil {
-		scope.Log("timeline_add: %v", err)
-		return vfilter.Null{}
-	}
-	defer writer.Close()
-
-	writer.Truncate()
-
-	subscope := scope.Copy()
 	sub_ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	// Timelines have to be sorted, so we force them to be sorted
-	// by the key.
-	sorter := sorter.MergeSorter{10000}
-	sorted_chan := sorter.Sort(sub_ctx, subscope, arg.Query.Eval(sub_ctx, subscope),
-		arg.Key, false /* desc */)
+	in := make(chan types.Row)
+	super, err := notebook_manager.AddTimeline(sub_ctx, scope,
+		notebook_id, arg.Timeline, arg.Name, arg.Key, in)
 
-	for row := range sorted_chan {
-		key, pres := scope.Associative(row, arg.Key)
-		if !pres {
-			scope.Log("timeline_add: Key %v is not found in query", arg.Key)
-			return vfilter.Null{}
-		}
+	for event := range arg.Query.Eval(sub_ctx, scope) {
+		select {
+		case <-ctx.Done():
+			break
 
-		if !utils.IsNil(key) {
-			ts, err := functions.TimeFromAny(ctx, scope, key)
-			if err == nil {
-				writer.Write(ts, vfilter.RowToDict(sub_ctx, subscope, row))
-			}
+		case in <- event:
 		}
 	}
 
-	// Now record the new timeline in the notebook if needed.
-	db, err := datastore.GetDB(config_obj)
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
-		scope.Log("timeline_add: can only be used on the server: %v", err)
-		return vfilter.Null{}
+		journal.PushRowsToArtifactAsync(ctx, config_obj,
+			ordereddict.NewDict().
+				Set("NotebookId", notebook_id).
+				Set("SuperTimelineName", arg.Timeline).
+				Set("Timeline", arg.Name).
+				Set("TimestampColumn", arg.Key),
+			"Server.Internal.TimelineAdd")
 	}
 
-	notebook_metadata := &api_proto.NotebookMetadata{}
-	err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook_metadata)
-	if err != nil {
-		scope.Log("timeline_add: %v", err)
-		return vfilter.Null{}
-	}
-
-	for _, item := range notebook_metadata.Timelines {
-		if item == arg.Timeline {
-			return super.SuperTimeline
-		}
-	}
-
-	notebook_metadata.Timelines = append(notebook_metadata.Timelines, arg.Timeline)
-	err = db.SetSubject(config_obj, notebook_path_manager.Path(), notebook_metadata)
-	if err != nil {
-		scope.Log("timeline_add: %v", err)
-		return vfilter.Null{}
-	}
-
-	return super.SuperTimeline
+	return super
 }
 
 func (self AddTimelineFunction) Info(

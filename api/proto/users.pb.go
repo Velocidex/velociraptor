@@ -768,7 +768,9 @@ type SetGUIOptionsRequest struct {
 	Theme    string `protobuf:"bytes,2,opt,name=theme,proto3" json:"theme,omitempty"`
 	Timezone string `protobuf:"bytes,6,opt,name=timezone,proto3" json:"timezone,omitempty"`
 	Lang     string `protobuf:"bytes,5,opt,name=lang,proto3" json:"lang,omitempty"`
-	// Downloads will be protected using this password.
+	// Downloads will be protected using this password. If this is
+	// empty we do not update the password. If it is set to "-" we
+	// reset the password to the empty string.
 	DefaultPassword string `protobuf:"bytes,3,opt,name=default_password,json=defaultPassword,proto3" json:"default_password,omitempty"`
 	// Offer to protect download exports by default.
 	DefaultDownloadsLock bool   `protobuf:"varint,4,opt,name=default_downloads_lock,json=defaultDownloadsLock,proto3" json:"default_downloads_lock,omitempty"`

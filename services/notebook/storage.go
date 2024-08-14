@@ -16,7 +16,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
+	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -54,6 +56,18 @@ type NotebookStore interface {
 		*api_proto.AvailableDownloads, error)
 
 	GetAllNotebooks() ([]*api_proto.NotebookMetadata, error)
+
+	Timelines(ctx context.Context,
+		notebook_id string) ([]*timelines_proto.SuperTimeline, error)
+
+	ReadTimeline(ctx context.Context, notebook_id string,
+		timeline string, start time.Time,
+		include_components, exclude_components []string) (
+		<-chan *ordereddict.Dict, error)
+
+	AddTimeline(ctx context.Context, scope vfilter.Scope,
+		notebook_id string, timeline string, component string,
+		key string, in <-chan vfilter.Row) (*timelines_proto.SuperTimeline, error)
 }
 
 type NotebookStoreImpl struct {

@@ -446,7 +446,7 @@ func getTimeline(
 	path_manager := paths.NewNotebookPathManager(in.NotebookId).
 		SuperTimeline(in.Timeline)
 	reader, err := timelines.NewSuperTimelineReader(
-		config_obj, path_manager, in.SkipComponents)
+		config_obj, path_manager, in.IncludeComponents, in.SkipComponents)
 	if err != nil {
 		return nil, err
 	}

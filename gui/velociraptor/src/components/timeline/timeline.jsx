@@ -25,6 +25,7 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Navbar from 'react-bootstrap/Navbar';
 import T from '../i8n/i8n.jsx';
+import Table from 'react-bootstrap/Table';
 
 class TimelineValueRenderer extends Component {
     static propTypes = {
@@ -85,47 +86,44 @@ class TimelineTableRenderer  extends Component {
         return "";
     }
 
+    renderCell = (column, row, rowIdx) => {
+        let cell = row[column];
+        if(column === "Data") {
+            return <td key={column}>
+                     <TimelineValueRenderer value={cell}/>
+                   </td>;
+        }
+
+        if(column === "Time") {
+            return <td key={column}>
+                     <div className={this.getTimelineClass(
+                         _.toString(row._Source))}>
+                       <VeloTimestamp usec={cell}/>
+                     </div>
+                   </td>;
+        }
+        return <td key={column}> </td>;
+    };
+
+    renderRow = (row, idx)=>{
+        let columns = ["Time", "Data"];
+        return (
+            <tr key={idx}
+                className="row-selected">
+              {_.map(columns, c=>this.renderCell(c, row, idx))}
+            </tr>);
+    }
+
     render() {
         if (_.isEmpty(this.props.rows)) {
             return <div className="no-content velo-table">{T("No events")}</div>;
         }
 
-        let rows = this.props.rows;
-        let columns = [
-            {dataField: '_id', hidden: true},
-            {dataField: 'Time',
-             text: T("Time"),
-             classes: "timeline-time",
-             formatter: (cell, row, rowIndex) => {
-                 return <div className={this.getTimelineClass(
-                     _.toString(row._Source))}>
-                          <VeloTimestamp usec={cell}/>
-                        </div>;
-             }},
-            {dataField: 'Data',
-             text: T("Data"),
-             formatter: (cell, row, rowIndex) => {
-                 return <TimelineValueRenderer value={cell}/>;
-             }},
-        ];
-
-        // Add an id field for react ordering.
-        for (var j=0; j<rows.length; j++) {
-            rows[j]["_id"] = j;
-        }
-        return (
-            <div className="velo-table">
-              <BootstrapTable
-                hover
-                condensed
-                data={rows}
-                columns={columns}
-                keyField="_id"
-                headerClasses="hidden-header"
-                bodyClasses="fixed-table-body"
-              />
-            </div>
-        );
+        return <Table className="paged-table">
+                 <tbody className="fixed-table-body">
+                   {_.map(this.props.rows, this.renderRow)}
+                 </tbody>
+               </Table>;
     }
 }
 

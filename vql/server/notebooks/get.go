@@ -16,6 +16,7 @@ import (
 
 type GetNotebookFunctionArg struct {
 	NotebookId string `vfilter:"required,field=notebook_id,doc=The id of the notebook to fetch"`
+	Verbose    bool   `vfilter:"optional,field=verbose,doc=Include more information"`
 }
 
 type GetNotebookFunction struct{}
@@ -55,8 +56,13 @@ func (self GetNotebookFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	uploads_flag := services.DO_NOT_INCLUDE_UPLOADS
+	if arg.Verbose {
+		uploads_flag = services.INCLUDE_UPLOADS
+	}
+
 	notebook, err := notebook_manager.GetNotebook(
-		ctx, arg.NotebookId, services.DO_NOT_INCLUDE_UPLOADS)
+		ctx, arg.NotebookId, uploads_flag)
 	if err != nil {
 		scope.Log("notebook_get: %v", err)
 		return vfilter.Null{}
