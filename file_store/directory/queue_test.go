@@ -120,10 +120,14 @@ func (self *TestSuite) TestQueueManager() {
 		// The file should contain all the rows now.  File size is not
 		// exact due to timestamps but it should be larger than 300.
 		dbg = manager.Debug()
-		return utils.GetInt64(dbg, "TestQueue.0.Size") > int64(300)
+		return utils.GetInt64(dbg, "TestQueue.0.Size") > int64(300) &&
+			utils.GetString(dbg, "TestQueue.0.BackingFile") != ""
 	})
 
-	// Now read all the rows from the file.
+	dbg = manager.Debug()
+	backing_file := utils.GetString(dbg, "TestQueue.0.BackingFile")
+
+	// Now read 10 rows from the file.
 	count := 0
 	for row := range reader {
 		count++
@@ -135,9 +139,10 @@ func (self *TestSuite) TestQueueManager() {
 		}
 	}
 
-	// Now check the file - it should be truncated since we read all messages.
+	// Now check the file - it should be truncated since we read all
+	// messages. This will also clear the tempfile.
 	dbg = manager.Debug()
-	assert.Equal(self.T(), int64(50), utils.GetInt64(dbg, "TestQueue.0.Size"))
+	assert.Equal(self.T(), "", utils.GetString(dbg, "TestQueue.0.BackingFile"))
 
 	// Now cancel the watcher - further reads from the channel
 	// should not block - the channel is closed.
@@ -147,8 +152,7 @@ func (self *TestSuite) TestQueueManager() {
 	}
 
 	// Now make sure the tempfile is removed.
-	tempfile := utils.GetString(dbg, "TestQueue.0.BackingFile")
-	_, err = os.Stat(tempfile)
+	_, err = os.Stat(backing_file)
 	assert.Error(self.T(), err)
 }
 
