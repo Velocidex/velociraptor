@@ -1,4 +1,4 @@
-LET ClientId <= client_create(hostname="TestVirtualClient").client_id[]LET FlowId <= import_collection(client_id=ClientId, filename=srcDir+TestFile).session_id[]LET _ <= import(artifact="Windows.KapeFiles.Remapping")[]LET tmp <= tempfile()[]LET tmp <= "/tmp/1.zip"[]LET Results <= SELECT import_collection(filename=Container, client_id=ClientId) AS Import
+LET ClientId <= client_create(hostname="TestVirtualClient").client_id[]LET FlowId <= import_collection(client_id=ClientId, filename=srcDir+TestFile).session_id[]LET _ <= import(artifact="Windows.KapeFiles.Remapping")[]LET tmp <= tempfile()[]LET Results <= SELECT import_collection(filename=Container, client_id=ClientId) AS Import
 FROM collect(artifacts=["Windows.Forensics.Usn", "Windows.Search.FileFinder"],
    args=dict(`Windows.Forensics.Usn`=dict(),
              `Windows.Search.FileFinder`=dict(
