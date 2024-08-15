@@ -332,7 +332,8 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 		timeline_path_manager := self.path_manager.Notebook().
 			SuperTimeline(t)
 		parameters := "{}"
-		reader, err := timelines.NewSuperTimelineReader(self.config_obj, timeline_path_manager, nil)
+		reader, err := timelines.NewSuperTimelineReader(
+			self.config_obj, timeline_path_manager, nil, nil)
 		if err == nil {
 			parameters = json.MustMarshalString(reader.Stat())
 		}

@@ -68,7 +68,8 @@ func (self *TimelineTestSuite) TestSuperTimelineWriter() {
 	super.Close()
 
 	// test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
-	reader, err := timelines.NewSuperTimelineReader(self.config_obj, path_manager, nil)
+	reader, err := timelines.NewSuperTimelineReader(
+		self.config_obj, path_manager, nil, nil)
 	assert.NoError(self.T(), err)
 	defer reader.Close()
 

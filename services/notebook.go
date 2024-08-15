@@ -2,9 +2,13 @@ package services
 
 import (
 	"context"
+	"time"
 
+	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
+	"www.velocidex.com/golang/vfilter"
 )
 
 const (
@@ -68,4 +72,19 @@ type NotebookManager interface {
 
 	RemoveNotebookAttachment(ctx context.Context,
 		notebook_id string, components []string) error
+
+	// List all timelines in this notebook
+	Timelines(ctx context.Context,
+		notebook_id string) ([]*timelines_proto.SuperTimeline, error)
+
+	// Read a timeline, merging a set of components from it.
+	ReadTimeline(ctx context.Context, notebook_id string,
+		timeline string, start_time time.Time,
+		include_components, exclude_components []string) (
+		<-chan *ordereddict.Dict, error)
+
+	// Add events to a timeline
+	AddTimeline(ctx context.Context, scope vfilter.Scope,
+		notebook_id string, timeline string, component string,
+		key string, in <-chan vfilter.Row) (*timelines_proto.SuperTimeline, error)
 }

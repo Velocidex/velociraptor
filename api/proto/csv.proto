@@ -44,6 +44,7 @@ message GetTableRequest {
     string timeline = 16;
 
     // Skip these timeline components.
+    repeated string include_components = 31;
     repeated string skip_components = 17;
 
     // For download handler when creating an export file - control

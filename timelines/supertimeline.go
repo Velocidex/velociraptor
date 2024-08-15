@@ -117,7 +117,8 @@ func (self *SuperTimelineReader) Read(ctx context.Context) <-chan TimelineItem {
 func NewSuperTimelineReader(
 	config_obj *config_proto.Config,
 	path_manager *paths.SuperTimelinePathManager,
-	skip_components []string) (*SuperTimelineReader, error) {
+	include_components []string,
+	exclude_components []string) (*SuperTimelineReader, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
@@ -137,7 +138,12 @@ func NewSuperTimelineReader(
 
 	// Open all the readers.
 	for _, timeline := range result.Timelines {
-		if utils.InString(skip_components, timeline.Id) {
+		if len(include_components) > 0 &&
+			!utils.InString(include_components, timeline.Id) {
+			continue
+		}
+
+		if utils.InString(exclude_components, timeline.Id) {
 			continue
 		}
 		file_store_factory := file_store.GetFileStore(config_obj)
