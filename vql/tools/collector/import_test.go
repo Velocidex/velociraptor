@@ -217,7 +217,7 @@ func (self *TestSuite) TestImportCollectionFromFixture() {
 
 	new_client_id := search_resp.Items[0].ClientId
 
-	// There is one hit - a new clientis added to the index.
+	// There is one hit - a new client is added to the index.
 	assert.Equal(self.T(), 1, len(search_resp.Items))
 	assert.Equal(self.T(), new_client_id, context.ClientId)
 

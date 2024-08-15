@@ -531,6 +531,7 @@ func (self *MemcacheDatastore) DeleteSubject(
 	if err == nil {
 		// Update the directory metadata.
 		md.Remove(urn)
+		return nil
 	}
 	return utils.Wrap(utils.NotFoundError, "DeleteSubject")
 }
