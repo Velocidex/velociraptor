@@ -82,7 +82,7 @@ Queries:
   # is set in the scope so it can not leak in output
   - LET ZIP_PASSWORDS = 'hello'
   - |
-    SELECT read_file(filename=OSPath, accessor='zip'), OSPath
+    SELECT read_file(filename=OSPath, accessor='zip'), OSPath.Basename
     FROM glob(globs='**/BasicInformation.json',
       accessor='zip',
       root=pathspec(
