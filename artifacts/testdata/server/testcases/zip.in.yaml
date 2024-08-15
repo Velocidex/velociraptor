@@ -82,7 +82,7 @@ Queries:
   # is set in the scope so it can not leak in output
   - LET ZIP_PASSWORDS = 'hello'
   - |
-    SELECT read_file(filename=OSPath, accessor='zip')
+    SELECT read_file(filename=OSPath, accessor='zip'), OSPath
     FROM glob(globs='**/BasicInformation.json',
       accessor='zip',
       root=pathspec(
@@ -90,3 +90,19 @@ Queries:
         DelegatePath=pathspec(DelegateAccessor='file',
           DelegatePath=srcDir + '/artifacts/testdata/files/encrypted_collector_password.zip',
           Path='/data.zip')))
+
+  # Test no case accessor
+  - |
+    LET BasePath <= pathspec(
+      DelegateAccessor='zip',
+      DelegatePath=pathspec(
+        DelegateAccessor='file',
+        DelegatePath=srcDir + '/artifacts/testdata/files/encrypted_collector_password.zip',
+        Path='/data.zip'))
+  # Read the file with messed up casing.
+  # Check that OSPath Basename returns the correct casing so we can
+  # open it with the regular zip accessor.
+  - |
+    SELECT read_file(filename=OSPath, accessor='zip'), OSPath.Basename
+    FROM stat(filename=BasePath + '/generic.client.INFO/basicinformation.JSON',
+              accessor='zip_nocase')

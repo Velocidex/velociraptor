@@ -9,6 +9,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -131,7 +132,7 @@ func (self NewClientFunction) Call(ctx context.Context,
 			Set("client_id", record.ClientId).
 			Set("details", record))
 
-	return record
+	return json.ConvertProtoToOrderedDict(&record)
 }
 
 func (self NewClientFunction) Info(

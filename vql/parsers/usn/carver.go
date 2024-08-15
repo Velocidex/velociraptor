@@ -1,6 +1,7 @@
 package usn
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -24,9 +25,11 @@ type CarveUSNPluginArgs struct {
 	Accessor      string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
 	MFTFilename   *accessors.OSPath `vfilter:"optional,field=mft_filename,doc=A path to a raw $MFT file to use for path resolution."`
 	USNFilename   *accessors.OSPath `vfilter:"optional,field=usn_filename,doc=A path to a raw USN file to carve. If not provided we carve the image file or the device."`
+
+	disable_full_path_resolution bool
 }
 
-func (self CarveUSNPluginArgs) GetStreams(scope types.Scope) (
+func (self *CarveUSNPluginArgs) GetStreams(scope types.Scope) (
 	ntfs_ctx *ntfs.NTFSContext,
 	usn_stream io.ReaderAt,
 	size int64,
@@ -93,11 +96,8 @@ func (self CarveUSNPluginArgs) GetStreams(scope types.Scope) (
 		// Failing this we add an empty MFT - this helps to resolve
 		// some names in the case of just a USN journal $J dump.
 	} else {
-		ntfs_ctx, err = readers.GetNTFSContextFromRawMFT(
-			scope, accessors.MustNewGenericOSPath(""), "data")
-		if err != nil {
-			return nil, nil, 0, err
-		}
+		ntfs_ctx = ntfs.GetNTFSContextFromRawMFT(
+			bytes.NewReader(nil), 0x200, 0x200)
 
 		if self.USNFilename == nil || len(self.USNFilename.Components) == 0 {
 			return nil, nil, 0,
@@ -105,6 +105,7 @@ func (self CarveUSNPluginArgs) GetStreams(scope types.Scope) (
 		}
 
 		mft_source = accessors.MustNewGenericOSPath("")
+		self.disable_full_path_resolution = true
 	}
 
 	// The USN stream to carve may be given as a separate file.
@@ -175,6 +176,9 @@ func (self CarveUSNPlugin) Call(
 		options := readers.GetScopeOptions(scope)
 		if arg.Device != nil {
 			options.PrefixComponents = arg.Device.Components
+		}
+		if !options.DisableFullPathResolution && arg.disable_full_path_resolution {
+			options.DisableFullPathResolution = true
 		}
 		ntfs_ctx.SetOptions(options)
 

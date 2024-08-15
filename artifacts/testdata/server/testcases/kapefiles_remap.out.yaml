@@ -1,0 +1,85 @@
+LET ClientId <= client_create(hostname="TestVirtualClient").client_id[]LET FlowId <= import_collection(client_id=ClientId, filename=srcDir+TestFile).session_id[]LET _ <= import(artifact="Windows.KapeFiles.Remapping")[]LET tmp <= tempfile()[]LET tmp <= "/tmp/1.zip"[]LET Results <= SELECT import_collection(filename=Container, client_id=ClientId) AS Import
+FROM collect(artifacts=["Windows.Forensics.Usn", "Windows.Search.FileFinder"],
+   args=dict(`Windows.Forensics.Usn`=dict(),
+             `Windows.Search.FileFinder`=dict(
+                  SearchFilesGlob="HKEY_USERS/*/*",
+                  Accessor="registry")),
+   output=tmp,
+   remapping=GetRemapping(FlowId=FlowId, ClientId=ClientId))
+[]SELECT * FROM source(client_id=Results[0].Import.client_id, flow_id=Results[0].Import.session_id, artifact="Windows.Forensics.Usn") LIMIT 2[
+ {
+  "Timestamp": "2024-08-14T15:29:55.239237Z",
+  "Filename": "2024-08-14.json.tidx",
+  "OSPath": "\\\\.\\C:\\2024-08-14.json.tidx",
+  "_Links": [
+   "2024-08-14.json.tidx"
+  ],
+  "Reason": [
+   "DATA_EXTEND"
+  ],
+  "MFTId": 73625,
+  "Sequence": 12,
+  "ParentMFTId": 243846,
+  "ParentSequence": 2,
+  "FileAttributes": [
+   "ARCHIVE"
+  ],
+  "SourceInfo": [],
+  "Usn": 637534208
+ },
+ {
+  "Timestamp": "2024-08-14T15:29:55.239237Z",
+  "Filename": "2024-08-14.json.tidx",
+  "OSPath": "\\\\.\\C:\\2024-08-14.json.tidx",
+  "_Links": [
+   "2024-08-14.json.tidx"
+  ],
+  "Reason": [
+   "DATA_EXTEND"
+  ],
+  "MFTId": 73624,
+  "Sequence": 12,
+  "ParentMFTId": 243851,
+  "ParentSequence": 2,
+  "FileAttributes": [
+   "ARCHIVE"
+  ],
+  "SourceInfo": [],
+  "Usn": 637534312
+ }
+]SELECT * FROM source(client_id=Results[0].Import.client_id, flow_id=Results[0].Import.session_id, artifact="Windows.Search.FileFinder") LIMIT 2[
+ {
+  "OSPath": "HKEY_USERS\\Administrator\\AppEvents",
+  "Inode": null,
+  "Mode": "drwxr-xr-x",
+  "Size": 0,
+  "MTime": "2009-08-04T15:12:23Z",
+  "ATime": "2009-08-04T15:12:23Z",
+  "CTime": "2009-08-04T15:12:23Z",
+  "BTime": "2009-08-04T15:12:23Z",
+  "Keywords": "",
+  "IsDir": true,
+  "Upload": null,
+  "Hash": null,
+  "Data": {
+   "type": "Key"
+  }
+ },
+ {
+  "OSPath": "HKEY_USERS\\Administrator\\Console",
+  "Inode": null,
+  "Mode": "drwxr-xr-x",
+  "Size": 0,
+  "MTime": "2009-08-04T15:12:23Z",
+  "ATime": "2009-08-04T15:12:23Z",
+  "CTime": "2009-08-04T15:12:23Z",
+  "BTime": "2009-08-04T15:12:23Z",
+  "Keywords": "",
+  "IsDir": true,
+  "Upload": null,
+  "Hash": null,
+  "Data": {
+   "type": "Key"
+  }
+ }
+]LET _ <= SELECT * FROM client_delete(client_id=ClientId, really_do_it=TRUE)[]

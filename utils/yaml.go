@@ -19,3 +19,14 @@ func YamlUnmarshal(data []byte, target interface{}) (err error) {
 
 	return yaml.Unmarshal(data, target)
 }
+
+func YamlUnmarshalStrict(data []byte, target interface{}) (err error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			err = fmt.Errorf("Invalid YAML file.")
+		}
+	}()
+
+	return yaml.UnmarshalStrict(data, target)
+}

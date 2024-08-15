@@ -190,8 +190,7 @@ func main() {
 		WithCustomValidator("validator: initDebugServer", initDebugServer).
 		WithCustomValidator("validator: timezone", initTimezone).
 		WithConfigMutator("Mutator: applyMinionRole", applyMinionRole).
-		WithCustomValidator("validator: applyAnalysisTarget",
-			applyAnalysisTarget).
+		WithCustomValidator("validator: applyRemapping", applyRemapping).
 		WithConfigMutator("OverrideFlag", deprecatedOverride).
 		WithLogFile(*logging_flag).
 		WithConfigMutator("Mutator maybeAddDefinitionsDirectory", maybeAddDefinitionsDirectory)
@@ -240,7 +239,7 @@ func makeDefaultConfigLoader() *config.Loader {
 		WithConfigMutator("OverrideFlag", deprecatedOverride).
 		WithConfigMutator("Mutator applyMinionRole", applyMinionRole).
 		WithCustomValidator("validator: ensureProxy", proxy.ConfigureProxy).
-		WithConfigMutator("Mutator applyAnalysisTarget", applyAnalysisTarget).
+		WithConfigMutator("Mutator applyRemapping", applyRemapping).
 		WithConfigMutator("Mutator maybeAddDefinitionsDirectory", maybeAddDefinitionsDirectory)
 }
 

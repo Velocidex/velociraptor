@@ -277,9 +277,13 @@ func GetScopeOptions(scope vfilter.Scope) parser.Options {
 	include_short_names := vql_subsystem.GetBoolFromRow(
 		scope, scope, constants.NTFS_INCLUDE_SHORT_NAMES)
 
+	full_path_resolution := vql_subsystem.GetBoolFromRow(
+		scope, scope, constants.NTFS_DISABLE_FULL_PATH_RESOLUTION)
+
 	return parser.Options{
-		MaxDirectoryDepth: int(directory_depth),
-		MaxLinks:          int(max_links),
-		IncludeShortNames: include_short_names,
+		MaxDirectoryDepth:         int(directory_depth),
+		MaxLinks:                  int(max_links),
+		IncludeShortNames:         include_short_names,
+		DisableFullPathResolution: full_path_resolution,
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -37,10 +36,18 @@ func (self RemappingFunc) Call(ctx context.Context,
 	}
 
 	config_obj := &config_proto.Config{}
-	err = yaml.UnmarshalStrict([]byte(arg.Configuration), config_obj)
-	if err != nil {
-		scope.Log("remap: %v", err)
-		return vfilter.Null{}
+	remapping_config := []*config_proto.RemappingConfig{}
+	err = utils.YamlUnmarshalStrict([]byte(arg.Configuration), remapping_config)
+	if err == nil {
+		config_obj.Remappings = remapping_config
+
+	} else {
+		// It might be a regular config file
+		err = utils.YamlUnmarshalStrict([]byte(arg.Configuration), config_obj)
+		if err != nil {
+			scope.Log("remap: %v", err)
+			return vfilter.Null{}
+		}
 	}
 
 	// It is possible that yaml.UnmarshalStrict can unmarshal nil!
@@ -50,7 +57,7 @@ func (self RemappingFunc) Call(ctx context.Context,
 		}
 	}
 
-	remapping_config := config_obj.Remappings
+	remapping_config = config_obj.Remappings
 	elided := json.MustMarshalString(remapping_config)
 	if len(elided) > 100 {
 		elided = elided[:100] + " ..."
@@ -96,7 +103,7 @@ func (self RemappingFunc) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return remapping_config
+	return config_obj
 }
 
 func (self RemappingFunc) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

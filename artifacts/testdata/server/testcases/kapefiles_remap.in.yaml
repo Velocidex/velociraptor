@@ -1,0 +1,32 @@
+Parameters:
+  TestFile: /artifacts/testdata/files/Collection-WIN-E5K9RC5GU23-2021-11-21T18_05_56-08_00.zip
+
+Queries:
+  # Import the collection
+  - LET ClientId <= client_create(hostname="TestVirtualClient").client_id
+  - LET FlowId <= import_collection(client_id=ClientId, filename=srcDir+TestFile).session_id
+
+  - LET _ <= import(artifact="Windows.KapeFiles.Remapping")
+  - LET tmp <= tempfile()
+  - |
+    LET Results <= SELECT import_collection(filename=Container, client_id=ClientId) AS Import
+    FROM collect(artifacts=["Windows.Forensics.Usn", "Windows.Search.FileFinder"],
+       args=dict(`Windows.Forensics.Usn`=dict(),
+                 `Windows.Search.FileFinder`=dict(
+                      SearchFilesGlob="HKEY_USERS/*/*",
+                      Accessor="registry")),
+       output=tmp,
+       remapping=GetRemapping(FlowId=FlowId, ClientId=ClientId))
+
+  # Prove that we parsed the USN fie.
+  - SELECT * FROM source(client_id=Results[0].Import.client_id,
+       flow_id=Results[0].Import.session_id, artifact="Windows.Forensics.Usn")
+    LIMIT 2
+
+  # Prove that registry mapping worked
+  - SELECT * FROM source(client_id=Results[0].Import.client_id,
+       flow_id=Results[0].Import.session_id, artifact="Windows.Search.FileFinder")
+    LIMIT 2
+
+  # Clean up the new client.
+  - LET _ <= SELECT * FROM client_delete(client_id=ClientId, really_do_it=TRUE)
