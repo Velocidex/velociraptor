@@ -92,10 +92,23 @@ func (self TimelinePlugin) Call(
 		}
 
 		for event := range events {
+			ts, pres := event.Get("_ts")
+			if !pres {
+				continue
+			}
+
+			row := ordereddict.NewDict().Set("Timestamp", ts)
+			for _, k := range event.Keys() {
+				if k != "_ts" {
+					v, _ := event.Get(k)
+					row.Set(k, v)
+				}
+			}
+
 			select {
 			case <-ctx.Done():
 				return
-			case output_chan <- event:
+			case output_chan <- row:
 			}
 		}
 	}()

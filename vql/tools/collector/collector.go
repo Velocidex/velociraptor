@@ -47,6 +47,7 @@ type CollectPluginArgs struct {
 	Timeout             float64             `vfilter:"optional,field=timeout,doc=Total amount of time in seconds, this collection will take. Collection is cancelled when timeout is exceeded."`
 	Metadata            vfilter.StoredQuery `vfilter:"optional,field=metadata,doc=Metadata to store in the zip archive. Outputs to metadata.json in top level of zip file."`
 	Concurrency         int64               `vfilter:"optional,field=concurrency,doc=Number of concurrent collections."`
+	Remapping           string              `vfilter:"optional,field=remapping,doc=A Valid remapping configuration in YAML or JSON format."`
 }
 
 type CollectPlugin struct{}
@@ -84,6 +85,8 @@ func (self CollectPlugin) Call(
 
 		collection_manager := newCollectionManager(ctx, config_obj,
 			output_chan, int(arg.Concurrency), scope)
+
+		collection_manager.remapping = arg.Remapping
 
 		// Make sure the Close() is called under any circumstances.
 		vql_subsystem.GetRootScope(scope).AddDestructor(func() {

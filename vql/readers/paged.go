@@ -309,14 +309,18 @@ func NewAccessorReader(scope vfilter.Scope,
 
 	// If we can figure out the size of the file we might do this now.
 	var max_size int64
+
+	// Account for possible case conversions.
+	correct_filename := filename
 	stat, err := accessor_obj.LstatWithOSPath(filename)
 	if err == nil {
 		max_size = stat.Size()
+		correct_filename = stat.OSPath()
 	}
 
 	result := &AccessorReader{
 		Accessor: accessor,
-		File:     filename,
+		File:     correct_filename,
 		key:      key,
 		max_size: max_size,
 		Scope:    scope,

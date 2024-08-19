@@ -31,6 +31,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/psutils"
+	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	vql_utils "www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
@@ -62,7 +63,8 @@ type collectionManager struct {
 
 	metadata []vfilter.Row
 
-	format reporting.ContainerFormat
+	format    reporting.ContainerFormat
+	remapping string
 
 	scope vfilter.Scope
 
@@ -406,6 +408,15 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 			subscope.SetThrottler(self.throttler)
 
 			defer subscope.Close()
+
+			// Apply remappings if necessary
+			if self.remapping != "" {
+				res := remapping.RemappingFunc{}.Call(self.ctx, subscope,
+					ordereddict.NewDict().Set("config", self.remapping))
+				if utils.IsNil(res) {
+					return
+				}
+			}
 
 			status := &crypto_proto.VeloStatus{
 				Status: crypto_proto.VeloStatus_OK,

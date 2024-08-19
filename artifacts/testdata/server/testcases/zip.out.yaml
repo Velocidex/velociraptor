@@ -64,7 +64,7 @@ LET zip_files = SELECT OSPath, Size FROM glob( globs=srcDir+"/artifacts/testdata
  {
   "Member": "/test/secret.txt"
  }
-]LET ZIP_PASSWORDS = 'hello'[]SELECT read_file(filename=OSPath, accessor='zip')
+]LET ZIP_PASSWORDS = 'hello'[]SELECT read_file(filename=OSPath, accessor='zip'), OSPath.Basename
 FROM glob(globs='**/BasicInformation.json',
   accessor='zip',
   root=pathspec(
@@ -74,6 +74,21 @@ FROM glob(globs='**/BasicInformation.json',
       Path='/data.zip')))
 [
  {
-  "read_file(filename=OSPath, accessor='zip')": "{\"Name\":\"velociraptor\",\"BuildTime\":\"2022-10-10T07:34:08+10:00\",\"Version\":\"0.6.7-dev\",\"build_url\":\"\",\"Labels\":null,\"Hostname\":\"DESKTOP-SU8FH31\",\"OS\":\"windows\",\"Architecture\":\"amd64\",\"Platform\":\"Microsoft Windows 11 Enterprise Evaluation\",\"PlatformVersion\":\"10.0.22000 Build 22000\",\"KernelVersion\":\"10.0.22000 Build 22000\",\"Fqdn\":\"DESKTOP-SU8FH31.lan\",\"MACAddresses\":[\"00:0c:29:00:26:7e\"]}\n"
+  "read_file(filename=OSPath, accessor='zip')": "{\"Name\":\"velociraptor\",\"BuildTime\":\"2022-10-10T07:34:08+10:00\",\"Version\":\"0.6.7-dev\",\"build_url\":\"\",\"Labels\":null,\"Hostname\":\"DESKTOP-SU8FH31\",\"OS\":\"windows\",\"Architecture\":\"amd64\",\"Platform\":\"Microsoft Windows 11 Enterprise Evaluation\",\"PlatformVersion\":\"10.0.22000 Build 22000\",\"KernelVersion\":\"10.0.22000 Build 22000\",\"Fqdn\":\"DESKTOP-SU8FH31.lan\",\"MACAddresses\":[\"00:0c:29:00:26:7e\"]}\n",
+  "OSPath.Basename": "BasicInformation.json"
+ }
+]LET BasePath <= pathspec(
+  DelegateAccessor='zip',
+  DelegatePath=pathspec(
+    DelegateAccessor='file',
+    DelegatePath=srcDir + '/artifacts/testdata/files/encrypted_collector_password.zip',
+    Path='/data.zip'))
+[]SELECT read_file(filename=OSPath, accessor='zip'), OSPath.Basename
+FROM stat(filename=BasePath + '/generic.client.INFO/basicinformation.JSON',
+          accessor='zip_nocase')
+[
+ {
+  "read_file(filename=OSPath, accessor='zip')": "{\"Name\":\"velociraptor\",\"BuildTime\":\"2022-10-10T07:34:08+10:00\",\"Version\":\"0.6.7-dev\",\"build_url\":\"\",\"Labels\":null,\"Hostname\":\"DESKTOP-SU8FH31\",\"OS\":\"windows\",\"Architecture\":\"amd64\",\"Platform\":\"Microsoft Windows 11 Enterprise Evaluation\",\"PlatformVersion\":\"10.0.22000 Build 22000\",\"KernelVersion\":\"10.0.22000 Build 22000\",\"Fqdn\":\"DESKTOP-SU8FH31.lan\",\"MACAddresses\":[\"00:0c:29:00:26:7e\"]}\n",
+  "OSPath.Basename": "BasicInformation.json"
  }
 ]

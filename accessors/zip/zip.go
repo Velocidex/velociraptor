@@ -403,7 +403,8 @@ func (self *ZipFileCache) _GetZipInfo(full_path *accessors.OSPath, nocase bool) 
 
 		return &ZipFileInfo{
 			member_file: cd_cache.member_file,
-			_full_path:  full_path.Copy(),
+			// Return the actual correct casing
+			_full_path: cd_cache.full_path.Copy(),
 		}, nil
 	}
 

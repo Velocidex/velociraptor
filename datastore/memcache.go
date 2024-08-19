@@ -517,7 +517,7 @@ func (self *MemcacheDatastore) DeleteSubject(
 
 	err := self.data_cache.Remove(urn.AsDatastoreFilename(config_obj))
 	if err != nil {
-		return err
+		return utils.Wrap(utils.NotFoundError, "DeleteSubject")
 	}
 
 	// Try to remove it from the DirectoryMetadata if it exists.
@@ -531,8 +531,9 @@ func (self *MemcacheDatastore) DeleteSubject(
 	if err == nil {
 		// Update the directory metadata.
 		md.Remove(urn)
+		return nil
 	}
-	return err
+	return utils.Wrap(utils.NotFoundError, "DeleteSubject")
 }
 
 func (self *MemcacheDatastore) SetChildren(

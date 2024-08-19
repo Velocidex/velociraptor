@@ -150,7 +150,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 		if arg.ReallyDoIt {
 			err = reallyDeleteClient(ctx, config_obj, scope, db, arg)
 			if err != nil {
-				scope.Log("client_delete: %s", err)
+				scope.Log("client_delete: reallyDeleteClient %s", err)
 				return
 			}
 
@@ -158,8 +158,8 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 			err = db.DeleteSubject(
 				config_obj,
 				paths.NewClientPathManager(arg.ClientId).Path().SetDir())
-			if err != nil {
-				scope.Log("client_delete: %s", err)
+			if err != nil && !errors.Is(err, os.ErrNotExist) {
+				scope.Log("client_delete: %v", err)
 			}
 		}
 
@@ -187,7 +187,7 @@ func reallyDeleteClient(ctx context.Context,
 		return err
 	}
 
-	client_info_manager.Remove(ctx, arg.ClientId)
+	defer client_info_manager.Remove(ctx, arg.ClientId)
 
 	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
@@ -202,7 +202,7 @@ func reallyDeleteClient(ctx context.Context,
 
 	client_path_manager := paths.NewClientPathManager(arg.ClientId)
 	err = db.DeleteSubject(config_obj, client_path_manager.Path())
-	if err != nil && errors.Is(err, os.ErrNotExist) {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
 
@@ -210,7 +210,7 @@ func reallyDeleteClient(ctx context.Context,
 	labeler := services.GetLabeler(config_obj)
 	for _, label := range labeler.GetClientLabels(ctx, config_obj, arg.ClientId) {
 		err := labeler.RemoveClientLabel(ctx, config_obj, arg.ClientId, label)
-		if err != nil && errors.Is(err, os.ErrNotExist) {
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			return err
 		}
 	}
@@ -224,7 +224,7 @@ func reallyDeleteClient(ctx context.Context,
 	}
 	for _, keyword := range keywords {
 		err = indexer.UnsetIndex(arg.ClientId, keyword)
-		if err != nil && errors.Is(err, os.ErrNotExist) {
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			return err
 		}
 	}

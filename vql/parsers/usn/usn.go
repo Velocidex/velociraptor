@@ -1,7 +1,9 @@
 package usn
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
@@ -28,6 +30,8 @@ type USNPluginArgs struct {
 
 	StartUSN  int64 `vfilter:"optional,field=start_offset,doc=The starting offset of the first USN record to parse."`
 	FastPaths bool  `vfilter:"optional,field=fast_paths,doc=If set we resolve full paths using faster but less accurate algorithm."`
+
+	disable_full_path_resolution bool
 }
 
 func (self *USNPluginArgs) GetStreams(scope types.Scope) (
@@ -35,48 +39,21 @@ func (self *USNPluginArgs) GetStreams(scope types.Scope) (
 	usn_stream ntfs.RangeReaderAt,
 	err error,
 ) {
-	var source *accessors.OSPath
-
 	// First get the ntfs_ctx from the args provided
 
 	// If we specified the device then we open the streams directly
 	// from it.
-	if self.Device != nil && len(self.Device.Components) > 0 {
-		ntfs_ctx, err = readers.GetNTFSContext(scope, self.Device, "ntfs")
-		if err != nil {
-			return nil, nil, err
-		}
-		source = self.Device
-
-		// Alternatively we can specify an image file.
-	} else if self.ImageFilename != nil &&
-		len(self.ImageFilename.Components) > 0 {
-		ntfs_ctx, err = readers.GetNTFSContext(
-			scope, self.ImageFilename, self.Accessor)
-		if err != nil {
-			return nil, nil, err
-		}
-		source = self.ImageFilename
-
-		// We can read an $MFT dump directly.
-	} else if self.MFTFilename != nil &&
-		len(self.MFTFilename.Components) > 0 {
-
-		ntfs_ctx, err = readers.GetNTFSContextFromRawMFT(
-			scope, self.MFTFilename, self.Accessor)
-		if err != nil {
-			return nil, nil, fmt.Errorf("%v: %w", self.MFTFilename, err)
-		}
-		source = self.MFTFilename
-
-		// Failing this we add an empty MFT - this helps to resolve
-		// some names in the case of just a USN journal $J dump.
-	} else {
-		ntfs_ctx, err = readers.GetNTFSContextFromRawMFT(
-			scope, accessors.MustNewGenericOSPath(""), "data")
-		if err != nil {
-			return nil, nil, err
-		}
+	ntfs_ctx, source, err := self.getNTFSContext(scope)
+	if err != nil {
+		// Failing this we add an empty MFT and disable the full name
+		// resolution. This helps to resolve some names in the case
+		// of just a USN journal $J dump.
+		scope.Log("parse_usn: Unable to get MFT, Name resolution will be disabled.")
+		// Create an empty ntfs context
+		ntfs_ctx = ntfs.GetNTFSContextFromRawMFT(
+			bytes.NewReader(nil), 0x200, 0x200)
+		err = nil
+		self.disable_full_path_resolution = true
 	}
 
 	// Now resolve the USN stream.
@@ -110,6 +87,41 @@ func (self *USNPluginArgs) GetStreams(scope types.Scope) (
 	return ntfs_ctx, usn_stream, err
 }
 
+func (self *USNPluginArgs) getNTFSContext(scope types.Scope) (
+	*ntfs.NTFSContext, *accessors.OSPath, error) {
+
+	if self.Device != nil && len(self.Device.Components) > 0 {
+		ntfs_ctx, err := readers.GetNTFSContext(scope, self.Device, "ntfs")
+		if err != nil {
+			return nil, nil, fmt.Errorf("%v: %w", self.Device, err)
+		}
+		return ntfs_ctx, self.Device, nil
+
+		// Alternatively we can specify an image file.
+	} else if self.ImageFilename != nil &&
+		len(self.ImageFilename.Components) > 0 {
+		ntfs_ctx, err := readers.GetNTFSContext(
+			scope, self.ImageFilename, self.Accessor)
+		if err != nil {
+			return nil, nil, fmt.Errorf("%v: %w", self.ImageFilename, err)
+		}
+		return ntfs_ctx, self.ImageFilename, nil
+
+		// We can read an $MFT dump directly.
+	} else if self.MFTFilename != nil &&
+		len(self.MFTFilename.Components) > 0 {
+
+		ntfs_ctx, err := readers.GetNTFSContextFromRawMFT(
+			scope, self.MFTFilename, self.Accessor)
+		if err != nil {
+			return nil, nil, fmt.Errorf("%v: %w", self.MFTFilename, err)
+		}
+		return ntfs_ctx, self.MFTFilename, nil
+	}
+
+	return nil, nil, errors.New("No MFT specified")
+}
+
 type USNPlugin struct{}
 
 func (self USNPlugin) Call(
@@ -140,6 +152,10 @@ func (self USNPlugin) Call(
 		options := readers.GetScopeOptions(scope)
 		if arg.Device != nil {
 			options.PrefixComponents = arg.Device.Components
+		}
+
+		if !options.DisableFullPathResolution && arg.disable_full_path_resolution {
+			options.DisableFullPathResolution = true
 		}
 		ntfs_ctx.SetOptions(options)
 

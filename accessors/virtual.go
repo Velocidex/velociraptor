@@ -41,6 +41,9 @@ func (self *VirtualFileInfo) IsDir() bool {
 }
 
 func (self *VirtualFileInfo) OSPath() *OSPath {
+	if self.Path == nil {
+		return MustNewGenericOSPath("")
+	}
 	return self.Path
 }
 

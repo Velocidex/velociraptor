@@ -146,57 +146,43 @@ sources:
     query: |
       SELECT * FROM all_results WHERE _Source =~ "Uploads"
 
-reports:
-  - type: CLIENT
-    template: |
-      {{ import "Reporting.Default" "Templates" }}
+    notebook:
+    - type: vql_suggestion
+      name: Post process collection
+      template: |
+        /*
 
-      <!-- Default report in case the artifact does not have one -->
-      ## {{ .Name }}
+        # Post process this collection.
 
-      {{ $name := .Name }}
+        Uncomment the following and evaluate the cell to create new
+        collections based on the files collected from this artifact.
 
-      {{ template "hidden_paragraph_start" dict "description" "View Artifact Description" }}
+        The below VQL will apply remapping so standard artifacts will
+        see the KapeFiles.Targets collection below as a virtual
+        Windows Client. The artifacts will be collected to a temporary
+        container and then re-imported as new collections into this
+        client.
 
-      {{ Markdown .Description }}
+        NOTE: This is only a stop gap in case the proper artifacts
+        were not collected in the first place. Parsing artifacts
+        through a remapped collection is not as accurate as parsing
+        directly on the endpoint. See
+        https://docs.velociraptor.app/training/playbooks/preservation/
+        for more info.
 
-      ### References</h3>
+        */
+        LET _ <= import(artifact="Windows.KapeFiles.Remapping")
 
-      {{ range .Reference }}
-      * [{{ . }}]({{.}})
-      {{- end }}
+        LET tmp <= tempfile()
 
-      {{ template "hidden_paragraph_end" }}
+        LET Results = SELECT import_collection(filename=Container, client_id=ClientId) AS Import
+        FROM collect(artifacts=[
+                       "Windows.Forensics.Usn",
+                       "Windows.NTFS.MFT",
+                     ],
+                     args=dict(`Windows.Forensics.Usn`=dict(),
+                               `Windows.NTFS.MFT`=dict()),
+                     output=tmp,
+                     remapping=GetRemapping(FlowId=FlowId, ClientId=ClientId))
 
-      {{ $query := print "SELECT SourceFile, Size, Modified, LastAccessed, Created \
-          FROM source(source='All File Metadata')" }}
-
-      <!-- There could be a huge number of rows just to get the count, so we cap at 10000 -->
-      {{ $count := Get ( Query (print "LET X = " $query " LIMIT 10000 " \
-         " SELECT 1 AS ALL, count() AS Count FROM X Group BY ALL") | Expand ) \
-         "0.Count" 0 }}
-
-      <!-- If this is a flow show the parameters. -->
-      {{ $flow := Query "LET X = SELECT Request.Parameters.env AS \
-         Env FROM flows(client_id=ClientId, flow_id=FlowId)" \
-         "SELECT * FROM foreach(row=X[0].Env, query={ \
-             SELECT Key, Value FROM scope()})" | Expand }}
-
-      {{ if $flow }}
-
-      ### Selected Targets
-
-      {{- range $flow -}}{{- if eq (Get . "Value") "Y" }}
-      * {{ Get . "Key" }}
-      {{- end -}}{{- end }}
-      {{ end }}
-
-      ## Files collected
-
-      {{ if gt $count 9999 }}
-      Collected more than {{ $count }} files.
-      {{ else }}
-      Collected a total of {{ $count }} files.
-      {{ end }}
-
-      {{ Query $query | Table }}
+        // SELECT * FROM Results

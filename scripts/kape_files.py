@@ -215,7 +215,7 @@ def format(ctx):
 if __name__ == "__main__":
     argument_parser = argparse.ArgumentParser()
     argument_parser.add_argument("kape_file_path", help="Path to the KapeFiles project")
-    argument_parser.add_argument("-t", "--target", choices=("win", "nix"), help="Which template to fill with data")
+    argument_parser.add_argument("-t", "--target", choices=("win",), help="Which template to fill with data")
 
     args = argument_parser.parse_args()
 
@@ -224,9 +224,7 @@ if __name__ == "__main__":
     if args.target == "win":
         ctx.pathsep_converter = pathsep_converter_win
         ctx.template = "templates/kape_files_win.yaml.tpl"
-    elif args.target == "nix":
-        ctx.pathsep_converter = pathsep_converter_nix
-        ctx.template = "templates/kape_files_nix.yaml.tpl"
+
     else:
         # fallback to former default behavior
         ctx.pathsep_converter = pathsep_converter_identity

@@ -13,6 +13,16 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+type OffsetFileInfo struct {
+	accessors.FileInfo
+
+	_full_path *accessors.OSPath
+}
+
+func (self *OffsetFileInfo) OSPath() *accessors.OSPath {
+	return self._full_path
+}
+
 type OffsetReader struct {
 	reader io.ReadSeekCloser
 	info   accessors.FileInfo
@@ -22,6 +32,10 @@ type OffsetReader struct {
 
 	// Constant offset we add the the delegate reader.
 	base_offset int64
+
+	// The OSPath object that is required to access this
+	// file. (includes delegate and offset).
+	_full_path *accessors.OSPath
 }
 
 func (self *OffsetReader) Close() error {
@@ -61,7 +75,10 @@ func (self *OffsetReader) Seek(offset int64, whence int) (int64, error) {
 }
 
 func (self *OffsetReader) LStat() (accessors.FileInfo, error) {
-	return self.info, nil
+	return &OffsetFileInfo{
+		FileInfo:   self.info,
+		_full_path: self._full_path,
+	}, nil
 }
 
 func GetOffsetFile(full_path *accessors.OSPath, scope vfilter.Scope) (
@@ -115,6 +132,7 @@ func GetOffsetFile(full_path *accessors.OSPath, scope vfilter.Scope) (
 		info:        stat,
 		offset:      offset,
 		base_offset: offset,
+		_full_path:  full_path,
 	}, nil
 }
 

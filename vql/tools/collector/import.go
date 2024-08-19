@@ -433,7 +433,7 @@ func (self ImportCollectionFunction) getClientIdFromHostname(
 		Set("last_seen_at", time.Now()).
 		Set("hostname", hostname))
 	if !utils.IsNil(res) {
-		client_id_any, pres := scope.Associative(res, "ClientId")
+		client_id_any, pres := scope.Associative(res, "client_id")
 		if pres {
 			client_id, ok := client_id_any.(string)
 			if ok {

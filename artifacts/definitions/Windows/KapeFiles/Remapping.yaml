@@ -1,0 +1,152 @@
+name: Windows.KapeFiles.Remapping
+description: |
+   This artifact automates the rebuilding of remapping rules to be
+   able to easily post process the results of the
+   Windows.KapeFiles.Targets.
+
+   Use as follows in the flow notebook cell of a collection:
+
+   ```vql
+   LET _ <=
+      SELECT * FROM Artifact.Windows.KapeFiles.Remapping(ClientId=ClientId, FlowId=FlowId)
+
+   SELECT * FROM Artifact.Windows.System.TaskScheduler()
+   ```
+
+   NOTE: Not all plugins are enabled in this mode for obvious reasons
+   (e.g. pslist, wmi etc).
+
+   See https://docs.velociraptor.app/blog/2022/2022-08-04-post-processing/
+
+type: CLIENT
+
+parameters:
+   - name: ClientId
+     description: The ClientID of the collection we need to remap
+   - name: FlowId
+     description: The FlowID of the collection
+
+export: |
+   -- Get the base path of files in the filestore for this client id
+   -- and flow id
+   LET GetBasePath(FlowId, ClientId) = regex_transform(
+     source="/clients/ClientId/collections/FlowId/uploads",
+     map=dict(FlowId=FlowId, ClientId=ClientId))
+
+   -- Get the registry mount for the users
+   LET HiveMount(BasePath, Target) = regex_transform(source='''
+   - type: mount
+     from:
+       accessor: raw_reg
+       prefix: |-
+         {
+           "Path": "/",
+           "DelegateAccessor": "fs",
+           "DelegatePath": "BasePath"
+         }
+       path_type: registry
+     "on":
+       accessor: registry
+       prefix: Target
+       path_type: registry
+   ''', map=dict(BasePath=BasePath, Target=Target), key=Target)
+
+   -- Map regular files from the fs accessor to the designated accessor
+   LET AccessorMount(Accessor, BasePath) = regex_transform(source='''
+   - type: mount
+     from:
+       accessor: fs
+       prefix: "BasePath/AccessorName"
+     "on":
+       accessor: AccessorName
+       prefix: ""
+       path_type: AccessorName
+   ''', map=dict(BasePath=BasePath, AccessorName=Accessor), key=Accessor)
+
+   -- ShadowMount just copy accessors into the new remapped environment.
+   LET ShadowMount(Accessor) = regex_transform(source='''
+   - type: shadow
+     from:
+       accessor: AccessorName
+     "on":
+       accessor: AccessorName
+   ''', map=dict(AccessorName=Accessor), key=Accessor)
+
+   -- Common mounts that are used in all cases.
+   LET CommonMount = '''remappings:
+   - type: permissions
+     permissions:
+       - COLLECT_CLIENT
+       - FILESYSTEM_READ
+       - FILESYSTEM_WRITE
+       - READ_RESULTS
+       - MACHINE_STATE
+       - SERVER_ADMIN
+   - type: impersonation
+     os: windows
+     hostname: Virtual Host
+     env:
+       - key: SystemRoot
+         value: C:\Windows
+       - key: WinDir
+         value: C:\Windows
+     disabled_functions:
+       - amsi
+       - lookupSID
+       - token
+     disabled_plugins:
+       - users
+       - certificates
+       - handles
+       - pslist
+       - interfaces
+       - modules
+       - netstat
+       - partitions
+       - proc_dump
+       - proc_yara
+       - vad
+       - winobj
+       - wmi
+   '''
+
+   -- Build remapping parts by searching for registry hives to mount.
+   LET Parts(BasePath) = SELECT * FROM chain(
+   a={
+
+     -- Mount all ntuser.dat hives that were fetched. Username is
+     -- taken to be containing directory.
+     SELECT OSPath,
+             HiveMount(BasePath=OSPath.String,
+                       Target="HKEY_USERS/" + OSPath[-2]) AS Mount
+     FROM glob(globs="*/C:/Users/*/ntuser.dat", accessor="fs", root=BasePath)
+     WHERE NOT OSPath.Basename =~ "idx$"
+
+   }, b={
+     -- Mount the main system registry hives
+     SELECT OSPath,
+            HiveMount(BasePath=OSPath.String,
+                      Target="HKEY_LOCAL_MACHINE/" + OSPath[-1]) AS Mount
+     FROM glob(globs="*/C:/Windows/System32/Config/{SOFTWARE,SYSTEM}",
+               accessor="fs", root=BasePath)
+     WHERE NOT OSPath.Basename =~ "idx$"
+
+   }, e={
+     SELECT ShadowMount(Accessor=_value) AS Mount
+     FROM foreach(row=["raw_reg", "zip", "data", "scope", "gzip"])
+   })
+
+   -- Mount all files to be accessible by auto, ntfs and file accessor.
+   LET GetRemappingByBase(BasePath) = join(array=CommonMount +
+       AccessorMount(BasePath=BasePath, Accessor="auto") +
+       AccessorMount(BasePath=BasePath, Accessor="ntfs") +
+       AccessorMount(BasePath=BasePath, Accessor="file") +
+       Parts(BasePath=BasePath).Mount, sep="")
+
+   LET GetRemapping(FlowId, ClientId) = GetRemappingByBase(
+       BasePath=GetBasePath(FlowId=FlowId, ClientId=ClientId))
+
+sources:
+  - query: |
+      SELECT remap(clear=TRUE, config=GetRemapping) AS Remapping
+      FROM scope()

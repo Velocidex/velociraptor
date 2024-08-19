@@ -12,7 +12,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -281,8 +280,9 @@ func (self *TestSuite) TestExportHunt() {
 			Set("client_id", self.client_id).
 			Set("hostname", "TestClient"))
 
-	client_info := result.(actions_proto.ClientInfo)
-	assert.Equal(self.T(), self.client_id, client_info.ClientId)
+	client_info := result.(*ordereddict.Dict)
+	client_id, _ := client_info.Get("client_id")
+	assert.Equal(self.T(), self.client_id, client_id)
 
 	result = collector.ImportCollectionFunction{}.Call(ctx, scope,
 		ordereddict.NewDict().

@@ -19,7 +19,7 @@ var (
 		"remap", "A remapping configuration file for dead disk analysis.").String()
 )
 
-func applyAnalysisTarget(config_obj *config_proto.Config) error {
+func applyRemapping(config_obj *config_proto.Config) error {
 	if remapping_flag == nil || *remapping_flag == "" {
 		return nil
 	}
@@ -31,11 +31,11 @@ func applyAnalysisTarget(config_obj *config_proto.Config) error {
 	}
 
 	remapping_config := []*config_proto.RemappingConfig{}
-	err = utils.YamlUnmarshal(data, remapping_config)
+	err = utils.YamlUnmarshalStrict(data, remapping_config)
 	if err != nil {
 		// It might be a regular config file
 		full_config := &config_proto.Config{}
-		err := utils.YamlUnmarshal(data, full_config)
+		err := utils.YamlUnmarshalStrict(data, full_config)
 		if err != nil {
 			return err
 		}
