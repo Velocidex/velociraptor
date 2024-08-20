@@ -127,7 +127,7 @@ func (self *TimelineTestSuite) TestTimelineWriter() {
 	//test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
 
 	reader, err := timelines.NewTimelineReader(
-		file_store_factory, &timelines_proto.Timeline{}, path_manager)
+		file_store_factory, timelines.UnitTransformer, path_manager)
 	assert.NoError(self.T(), err)
 	defer reader.Close()
 
