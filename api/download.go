@@ -545,7 +545,10 @@ func sanitizeFilenameForAttachment(base_filename string) string {
 		}
 	}
 
-	return fmt.Sprintf("filename*=utf-8''\"%s\"; filename=\"%s\" ",
+	// The `filename*` parameter has to be encoded accroding to
+	// RFC5987 without leading and trailing quotes or this fails in
+	// Firefox.
+	return fmt.Sprintf("filename*=utf-8''%s; filename=\"%s\" ",
 		url.PathEscape(base_filename), url.PathEscape(string(base_filename_ascii)))
 }
 

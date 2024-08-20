@@ -226,6 +226,7 @@ func (self InventoryPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("inventory", args)()
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {

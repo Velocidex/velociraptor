@@ -21,57 +21,75 @@ import moment from 'moment';
 import 'moment-timezone';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import BootstrapTable from 'react-bootstrap-table-next';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Navbar from 'react-bootstrap/Navbar';
 import T from '../i8n/i8n.jsx';
 import Table from 'react-bootstrap/Table';
+import ToolTip from '../widgets/tooltip.jsx';
+import { ColumnToggle } from '../core/paged-table.jsx';
 
-class TimelineValueRenderer extends Component {
+const FixedColumns = {
+    "Time": 1,
+    "Desc": 1,
+    "Message": 1,
+    "Data": 1,
+    "TimestampDesc": 1,
+}
+
+class TimelineTableRow extends Component {
     static propTypes = {
-        value: PropTypes.object,
+        row: PropTypes.object,
+        columns: PropTypes.array,
+        timeline_class: PropTypes.string,
     }
+
     state = {
-        expanded: false,
+        expanded: false
     }
+
+    renderCell = (column, rowIdx) => {
+        let data = this.props.row.Data || {};
+        let cell = this.props.row[column] || data[column] || "";
+        if(column === "Time") {
+            return <td key={column}>
+                     <div className={this.props.timeline_class}>
+                       <VeloTimestamp usec={cell}/>
+                     </div>
+                   </td>;
+        }
+        return <td key={column}> <VeloValueRenderer value={cell}/> </td>;
+    };
+
     render() {
+        let data = this.props.row["Data"] || {};
+        let row_class = "timeline-data ";
+        if(!this.state.expanded) {
+            row_class += "hidden";
+        }
         return (
-            <div className="timeline-value-container">
-              { this.state.expanded ?
-                <span>
-                  <Button
-                    variant="default-outline" size="sm"
-                    onClick={()=>this.setState({expanded: false})} >
-                    <FontAwesomeIcon icon="minus"/>
-                  </Button>
-                  <div className="timeline-value">
-                    <VeloValueRenderer value={this.props.value}/>
-                  </div>
-                </span>
-                :
-                <span>
-                  <Button
-                    variant="default-outline" size="sm"
-                    onClick={()=>this.setState({expanded: true})} >
-                    <FontAwesomeIcon icon="plus"/>
-                  </Button>
-                  { _.map(this.props.value, (v, k) => {
-                      let value = JSON.stringify(v);
-                      return <span key={k} className="timeline-value-item">
-                               {k}: {value}
-                             </span>;
-                  })}
-                </span>
-              }
-            </div>
+            <React.Fragment >
+              <tr className="row-selected"
+                  onClick={e=>this.setState({expanded: !this.state.expanded})}
+                >
+                {_.map(this.props.columns, this.renderCell)}
+              </tr>
+              <tr className={row_class}>
+                <td colSpan="30">
+                  <VeloValueRenderer value={data} />
+                </td>
+              </tr>
+            </React.Fragment>
         );
     }
 }
+
+
 
 class TimelineTableRenderer  extends Component {
     static propTypes = {
         rows: PropTypes.array,
         timelines: PropTypes.object,
+        extra_columns: PropTypes.array,
     }
 
     getTimelineClass = (name) => {
@@ -86,32 +104,17 @@ class TimelineTableRenderer  extends Component {
         return "";
     }
 
-    renderCell = (column, row, rowIdx) => {
-        let cell = row[column];
-        if(column === "Data") {
-            return <td key={column}>
-                     <TimelineValueRenderer value={cell}/>
-                   </td>;
-        }
-
-        if(column === "Time") {
-            return <td key={column}>
-                     <div className={this.getTimelineClass(
-                         _.toString(row._Source))}>
-                       <VeloTimestamp usec={cell}/>
-                     </div>
-                   </td>;
-        }
-        return <td key={column}> </td>;
-    };
+    columns = ["Time", "Desc", "Message"];
 
     renderRow = (row, idx)=>{
-        let columns = ["Time", "Data"];
+        let columns = this.columns.concat(this.props.extra_columns);
         return (
-            <tr key={idx}
-                className="row-selected">
-              {_.map(columns, c=>this.renderCell(c, row, idx))}
-            </tr>);
+            <TimelineTableRow key={idx}
+              timeline_class={this.getTimelineClass(_.toString(row._Source))}
+              row={row}
+              columns={columns}
+            />
+        );
     }
 
     render() {
@@ -120,6 +123,20 @@ class TimelineTableRenderer  extends Component {
         }
 
         return <Table className="paged-table">
+                <thead>
+                  <tr className="paged-table-header">
+                    {_.map(this.columns, (x, i)=>{
+                        return <th key={i} className={i == 0 ? "time" : ""}>
+                                 { T(x) }
+                               </th>;
+                    })}
+                    {_.map(this.props.extra_columns || [], (x, i)=>{
+                        return <th key={i}>
+                                 { x }
+                               </th>;
+                    })}
+                  </tr>
+                </thead>
                  <tbody className="fixed-table-body">
                    {_.map(this.props.rows, this.renderRow)}
                  </tbody>
@@ -180,6 +197,7 @@ export default class TimelineRenderer extends React.Component {
         row_count: 10,
         visibleTimeStart: 0,
         visibleTimeEnd: 0,
+        toggles: {},
     };
 
     fetchRows = () => {
@@ -231,6 +249,8 @@ export default class TimelineRenderer extends React.Component {
                 this.setState({visibleTimeStart: visibleTimeStart,
                                visibleTimeEnd: visibleTimeEnd});
             }
+
+            this.updateToggles(pageData.rows);
         });
     };
 
@@ -278,6 +298,45 @@ export default class TimelineRenderer extends React.Component {
         if (this.state.table_end > 0) {
             this.setState({start_time: this.state.table_end + 1});
         }
+    }
+
+    updateToggles = rows=>{
+        // Find all unique columns
+        let _columns={};
+        let columns = [];
+        let toggles = {...this.state.toggles};
+
+        _.each(this.state.rows, row=>{
+            let data = row.Data || {};
+            _.each(data, (v, k)=>{
+                if (_.isUndefined(_columns[k]) && !FixedColumns[k]) {
+                    _columns[k]=1;
+                    columns.push(k);
+
+                    if(_.isUndefined(toggles[k])) {
+                        toggles[k] = true;
+                    }
+                }
+            });
+        });
+
+        this.setState({toggles: toggles, columns: columns});
+    }
+
+    renderColumnSelector = ()=>{
+        return (
+            <ColumnToggle
+              columns={this.state.columns}
+              toggles={this.state.toggles}
+              onToggle={c=>{
+                  if(c) {
+                      let toggles = this.state.toggles;
+                      toggles[c] = !toggles[c];
+                      this.setState({toggles: toggles});
+                  }
+              }}
+            />
+        );
     }
 
     render() {
@@ -354,9 +413,14 @@ export default class TimelineRenderer extends React.Component {
             largest =0;
         }
 
+        let extra_columns = [];
+        _.each(this.state.toggles, (v,k)=>{
+            if(!v) { extra_columns.push(k); }});
+
         return <div className="super-timeline">Super-timeline {this.props.name}
                  <Navbar className="toolbar">
                    <ButtonGroup>
+                     { this.renderColumnSelector() }
                      { this.pageSizeSelector() }
                      <Button title="Next"
                              onClick={() => {this.nextPage(); }}
@@ -405,6 +469,7 @@ export default class TimelineRenderer extends React.Component {
                  { this.state.columns &&
                    <TimelineTableRenderer
                      timelines={super_timeline}
+                     extra_columns={extra_columns}
                      rows={this.state.rows} />
                  }
                </div>;

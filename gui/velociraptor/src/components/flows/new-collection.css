@@ -88,3 +88,7 @@ table.param-form-table {
     width: 100%;
     white-space: break-spaces;
 }
+
+.accordion-icon {
+    padding: 10px;
+}

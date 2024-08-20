@@ -24,6 +24,7 @@ func (self ItemsPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("items", args)()
 
 		arg := &ItemsPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

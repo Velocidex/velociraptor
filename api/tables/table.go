@@ -453,7 +453,7 @@ func getTimeline(
 	defer reader.Close()
 
 	result := &api_proto.GetTableResponse{
-		Columns:   []string{"_Source", "Time", "Data"},
+		Columns:   []string{"_Source", "Time", "Desc", "Message", "Data"},
 		StartTime: int64(in.StartTime),
 	}
 
@@ -473,6 +473,8 @@ func getTimeline(
 			Cell: []string{
 				item.Source,
 				json.AnyToString(item.Time, opts),
+				item.TimestampDescription,
+				item.Message,
 				json.AnyToString(item.Row, opts)},
 		})
 

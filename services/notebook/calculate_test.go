@@ -52,6 +52,10 @@ func (self *NotebookManagerTestSuite) SetupTest() {
 	// Mock out cell ID generation for tests
 	gen := utils.IncrementalIdGenerator(0)
 	utils.SetIdGenerator(&gen)
+
+	// Create an administrator user
+	err := services.GrantRoles(self.ConfigObj, "admin", []string{"administrator"})
+	assert.NoError(self.T(), err)
 }
 
 func (self *NotebookManagerTestSuite) TearDownTest() {
@@ -72,10 +76,11 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
 	// Create a notebook the usual way.
 	var notebook *api_proto.NotebookMetadata
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		notebook, err = notebook_manager.NewNotebook(self.Ctx, "admin", &api_proto.NotebookMetadata{
-			Name:        "Test Notebook",
-			Description: "This is a test",
-		})
+		notebook, err = notebook_manager.NewNotebook(
+			self.Ctx, "admin", &api_proto.NotebookMetadata{
+				Name:        "Test Notebook",
+				Description: "This is a test",
+			})
 		return err == nil
 	})
 

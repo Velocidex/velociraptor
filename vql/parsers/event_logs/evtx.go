@@ -48,6 +48,7 @@ func (self _ParseEvtxPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("parse_evtx", args)()
 
 		arg := &_ParseEvtxPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -141,6 +142,7 @@ func (self _WatchEvtxPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("watch_evtx", args)()
 
 		// Do not close output_chan - The event log service
 		// owns it and it will be closed by it.

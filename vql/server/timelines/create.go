@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/services"
+	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -14,11 +15,13 @@ import (
 )
 
 type AddTimelineFunctionArgs struct {
-	Timeline   string            `vfilter:"required,field=timeline,doc=Supertimeline to add to"`
-	Name       string            `vfilter:"required,field=name,doc=Name of child timeline"`
-	Query      types.StoredQuery `vfilter:"required,field=query,doc=Run this query to generate the timeline."`
-	Key        string            `vfilter:"required,field=key,doc=The column representing the time."`
-	NotebookId string            `vfilter:"optional,field=notebook_id,doc=The notebook ID the timeline is stored in."`
+	Timeline                   string            `vfilter:"required,field=timeline,doc=Supertimeline to add to. If a super timeline does not exist, creates a new one."`
+	Name                       string            `vfilter:"required,field=name,doc=Name/Id of child timeline to add."`
+	Query                      types.StoredQuery `vfilter:"required,field=query,doc=Run this query to generate the timeline."`
+	Key                        string            `vfilter:"required,field=key,doc=The column representing the time to key off."`
+	MessageColumn              string            `vfilter:"optional,field=message_column,doc=The column representing the message."`
+	TimestampDescriptionColumn string            `vfilter:"optional,field=ts_desc_column,doc=The column representing the timestamp description."`
+	NotebookId                 string            `vfilter:"optional,field=notebook_id,doc=The notebook ID the timeline is stored in."`
 }
 
 type AddTimelineFunction struct{}
@@ -72,16 +75,30 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 	defer cancel()
 
 	in := make(chan types.Row)
-	super, err := notebook_manager.AddTimeline(sub_ctx, scope,
-		notebook_id, arg.Timeline, arg.Name, arg.Key, in)
+	go func() {
+		defer close(in)
 
-	for event := range arg.Query.Eval(sub_ctx, scope) {
-		select {
-		case <-ctx.Done():
-			break
+		for event := range arg.Query.Eval(sub_ctx, scope) {
+			select {
+			case <-ctx.Done():
+				break
 
-		case in <- event:
+			case in <- event:
+			}
 		}
+
+	}()
+
+	super, err := notebook_manager.AddTimeline(sub_ctx, scope,
+		notebook_id, arg.Timeline, &timelines_proto.Timeline{
+			Id:                         arg.Name,
+			TimestampColumn:            arg.Key,
+			MessageColumn:              arg.MessageColumn,
+			TimestampDescriptionColumn: arg.TimestampDescriptionColumn,
+		}, in)
+	if err != nil {
+		scope.Log("timeline_add: %v", err)
+		return vfilter.Null{}
 	}
 
 	journal, err := services.GetJournal(config_obj)
@@ -90,6 +107,7 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 			ordereddict.NewDict().
 				Set("NotebookId", notebook_id).
 				Set("SuperTimelineName", arg.Timeline).
+				Set("Action", "AddTimeline").
 				Set("Timeline", arg.Name).
 				Set("TimestampColumn", arg.Key),
 			"Server.Internal.TimelineAdd")

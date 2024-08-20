@@ -152,7 +152,8 @@ func (self *TimedResultSetReader) getReader() (*timelines.TimelineReader, error)
 		path_manager := paths.NewTimelinePathManager(
 			"", current_file.Path)
 		reader, err := timelines.NewTimelineReader(
-			self.file_store_factory, path_manager)
+			self.file_store_factory,
+			timelines.UnitTransformer, path_manager)
 		if err != nil {
 			// Try to upgrade the index from older
 			// versions.
@@ -212,7 +213,7 @@ func (self *TimedResultSetReader) maybeUpgradeIndex(
 
 	// Try to open the file again.
 	return timelines.NewTimelineReader(
-		self.file_store_factory, path_manager)
+		self.file_store_factory, timelines.UnitTransformer, path_manager)
 }
 
 func (self *TimedResultSetReader) Rows(

@@ -18,9 +18,11 @@ import (
 )
 
 type TimelineItem struct {
-	Row    *ordereddict.Dict
-	Time   time.Time
-	Source string
+	Row                  *ordereddict.Dict
+	Time                 time.Time
+	Message              string
+	TimestampDescription string
+	Source               string
 }
 
 type TimelineReader struct {
@@ -32,6 +34,8 @@ type TimelineReader struct {
 	index_fd          api.FileReader
 	buffered_index_fd io.ReadSeeker
 	index_stat        api.FileInfo
+
+	transformer Transformer
 }
 
 func (self *TimelineReader) getIndex(i int) (*IndexRecord, error) {
@@ -132,11 +136,10 @@ func (self *TimelineReader) Read(ctx context.Context) <-chan TimelineItem {
 					continue
 				}
 
-				output_chan <- TimelineItem{
-					Source: self.id,
-					Row:    item,
-					Time:   time.Unix(0, idx_record.Timestamp),
-				}
+				event := self.transformer.Transform(
+					self.id, time.Unix(0, idx_record.Timestamp), item)
+
+				output_chan <- event
 			}
 		}
 	}()
@@ -152,6 +155,7 @@ func (self *TimelineReader) Close() {
 
 func NewTimelineReader(
 	file_store_factory api.FileStore,
+	transformer Transformer,
 	path_manager paths.TimelinePathManagerInterface) (*TimelineReader, error) {
 	fd, err := file_store_factory.ReadFile(path_manager.Path())
 	if err != nil {
@@ -184,6 +188,7 @@ func NewTimelineReader(
 		end_idx:           int(stats.Size()/IndexRecordSize - 1),
 		buffered_index_fd: utils.NewReadSeekReaderAdapter(paged),
 		index_stat:        stats,
+		transformer:       transformer,
 	}, nil
 
 }

@@ -11,7 +11,6 @@ import moment from 'moment';
 import 'moment-timezone';
 import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
-import BootstrapTable from 'react-bootstrap-table-next';
 import VeloValueRenderer from '../utils/value.jsx';
 import Dropdown from 'react-bootstrap/Dropdown';
 import T from '../i8n/i8n.jsx';
@@ -26,7 +25,6 @@ import { ColumnToggle } from '../core/paged-table.jsx';
 
 import {
     getFormatter,
-    InspectRawJson,
     PrepareData,
 } from '../core/table.jsx';
 
@@ -56,6 +54,7 @@ class EventTableRenderer  extends Component {
         columns: PropTypes.array,
         rows: PropTypes.array,
         toggles: PropTypes.object,
+        env: PropTypes.object,
     }
 
     state = {
@@ -120,22 +119,13 @@ class EventTableRenderer  extends Component {
 
     selectRow = (row, idx)=>{
         this.setState({selected_row: row, selected_row_idx: idx});
-
-        if (this.props.selectRow && this.props.selectRow.onSelect) {
-            this.props.selectRow.onSelect(row);
-        }
     }
 
     renderRow = (row, idx)=>{
-        let selected_cls = (this.props.selectRow &&
-                            this.props.selectRow.classes) || "row-selected";
+        let selected_cls = "row-selected";
 
         if(this.state.selected_row_idx !== idx) {
             selected_cls = "";
-        }
-
-        if(this.props.row_classes) {
-            selected_cls += " " + this.props.row_classes(row,idx);
         }
 
         return (

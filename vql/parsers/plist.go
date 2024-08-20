@@ -132,6 +132,7 @@ func (self _PlistPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("plist", args)()
 
 		arg := &_PlistPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

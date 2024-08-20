@@ -2,8 +2,21 @@
     margin-right: 2ex;
 }
 
-.timeline-value {
-    display: inline-flex;
+.timeline-data {
+    display: table-row;
+    width: 100%;
+}
+
+.timeline-data.hidden {
+    display: none;
+}
+
+.timeline-value-container {
+    width: auto;
+}
+
+th.time {
+    width: 15em;
 }
 
 .timeline-table-item {

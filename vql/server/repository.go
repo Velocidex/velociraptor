@@ -205,6 +205,7 @@ func (self ArtifactsPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("artifact_definitions", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {

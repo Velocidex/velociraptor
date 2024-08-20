@@ -36,6 +36,7 @@ func (self WriteCryptFilePlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("write_crypto_file", args)()
 
 		arg := &WriteCryptFilePluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

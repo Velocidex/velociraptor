@@ -175,6 +175,7 @@ func (self _ParseFileWithRegex) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("parse_records_with_regex", args)()
 
 		for _, filename := range arg.Filenames {
 			_ParseFile(ctx, filename, scope, arg, output_chan)

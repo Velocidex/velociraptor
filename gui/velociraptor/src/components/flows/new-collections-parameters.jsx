@@ -15,7 +15,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import Modal from 'react-bootstrap/Modal';
 import T from '../i8n/i8n.jsx';
-import BootstrapTable from 'react-bootstrap-table-next';
+import Accordion from 'react-bootstrap/Accordion';
+
 
 class ResourceControl extends React.Component {
     static propTypes = {
@@ -246,40 +247,6 @@ export default class NewCollectionConfigParameters extends React.Component {
     }
 
     render() {
-        const expandRow = {
-            expandHeaderColumnRenderer: ({ isAnyExpands }) => {
-                if (isAnyExpands) {
-                    return <b>-</b>;
-                }
-                return <b>+</b>;
-            },
-            expandColumnRenderer: ({ expanded, rowKey }) => {
-                if (expanded) {
-                    return (
-                        <b key={rowKey}>-</b>
-                    );
-                }
-                return (<ButtonGroup>
-                          <ToolTip tooltip={T("Configure")}>
-                            <Button variant="outline-default">
-                              <FontAwesomeIcon icon="wrench"/>
-                            </Button>
-                          </ToolTip>
-                          <ToolTip tooltip={T("Remove")}>
-                            <Button variant="outline-default"
-                                    onClick={
-                                        () => this.props.setArtifacts(remove_artifact(
-                                            this.props.artifacts, rowKey))} >
-                              <FontAwesomeIcon icon="trash"/>
-                            </Button>
-                          </ToolTip>
-                        </ButtonGroup>
-                );
-            },
-            showExpandColumn: true,
-            renderer: this.artifactParameterRenderer,
-        };
-
         return (
             <>
               <Modal.Header closeButton>
@@ -287,18 +254,38 @@ export default class NewCollectionConfigParameters extends React.Component {
               </Modal.Header>
 
               <Modal.Body className="new-collection-parameter-page selectable">
-
-                { !_.isEmpty(this.props.artifacts) ?
-                  <BootstrapTable
-                    keyField="name"
-                    expandRow={ expandRow }
-                    columns={[{dataField: "name", text: T("Artifact")},
-                              {dataField: "parameter", text: "", hidden: true}]}
-                    data={this.props.artifacts} /> :
-                 <div className="no-content">
-                   {T("No artifacts configured. Please add some artifacts to collect")}
-                 </div>
-                }
+                <Accordion>
+                  { _.map(this.props.artifacts, (x, idx)=>{
+                      return <Accordion.Item eventKey={idx} key={idx}>
+                               <Accordion.Header>
+                                 <ButtonGroup>
+                                   <ToolTip tooltip={T("Configure")}>
+                                     <div className="accordion-icon"
+                                          tabIndex={idx}
+                                          role="button">
+                                       <FontAwesomeIcon icon="wrench"/>
+                                     </div>
+                                   </ToolTip>
+                                   <ToolTip tooltip={T("Remove")}>
+                                     <div className="accordion-icon"
+                                          role="button" tabIndex={idx}
+                                          onClick={
+                                              () => this.props.setArtifacts(
+                                                  remove_artifact(
+                                                      this.props.artifacts,
+                                                      x.name))} >
+                                       <FontAwesomeIcon icon="trash"/>
+                                     </div>
+                                   </ToolTip>
+                                 </ButtonGroup>
+                                 {x.name}
+                               </Accordion.Header>
+                             <Accordion.Body>
+                               {this.artifactParameterRenderer(x)}
+                             </Accordion.Body>
+                           </Accordion.Item>;
+                })}
+                </Accordion>
               </Modal.Body>
               <Modal.Footer>
                 { this.props.paginator.makePaginator({

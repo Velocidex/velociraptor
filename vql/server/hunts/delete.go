@@ -28,6 +28,7 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("hunt_delete", args)()
 
 		arg := &DeleteHuntArgs{}
 

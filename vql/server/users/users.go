@@ -28,6 +28,7 @@ func (self UsersPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("users", args)()
 
 		// Access checks are done by the users module.
 

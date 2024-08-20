@@ -24,6 +24,8 @@ func (self AppCompatCache) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("AppCompatCache", args)()
+
 		arg := AppCompatCacheArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)
 		if err != nil {

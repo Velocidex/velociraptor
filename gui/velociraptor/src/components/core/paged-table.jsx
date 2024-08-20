@@ -18,6 +18,7 @@ import api from '../core/api-service.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
 import Table from 'react-bootstrap/Table';
 import Dropdown from 'react-bootstrap/Dropdown';
+import StackDialog from './stack.jsx';
 
 import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
@@ -181,7 +182,6 @@ export class ColumnToggle extends Component {
 
     render() {
         let enabled_columns = [];
-
         let buttons = _.map(this.props.columns, (column, idx) => {
             if (!column) {
                 return <React.Fragment key={idx}></React.Fragment>;
@@ -594,9 +594,8 @@ class VeloPagedTable extends Component {
 
         if (transform.filter_column) {
             result.push(
-                <ToolTip tooltip={T("Transformed")}>
-                  <Button key="1"
-                          disabled={true}
+                <ToolTip tooltip={T("Transformed")} key="1" >
+                  <Button disabled={true}
                           className="table-transformed"
                           variant="outline-dark">
                     { transform.filter_column } ( {transform.filter_regex} )
@@ -610,9 +609,8 @@ class VeloPagedTable extends Component {
 
         if (transform.sort_column) {
             result.push(
-                <ToolTip tooltip={T("Transformed")}>
-                  <Button key="2"
-                          disabled={true}
+                <ToolTip tooltip={T("Transformed")} key="2" >
+                  <Button disabled={true}
                           variant="outline-dark">
                     {transform.sort_column}
                     <span className="transform-button">
@@ -827,7 +825,12 @@ class VeloPagedTable extends Component {
     }
 
     renderHeader = (column, idx)=>{
-        let column_name = column;
+        // Derive the name of the column to put in the header.
+        // It can be set by specifying the `text` attribute
+        // of the columns prop.
+        let columns = this.props.columns;
+        let column_name = (
+            columns && columns[column] && columns[column].text) || column;
         if (this.props.translate_column_headers) {
             column_name = T(column_name);
         }
@@ -864,7 +867,7 @@ class VeloPagedTable extends Component {
                     <td className="sort-element">
                       <ButtonGroup>
                         { this.isColumnStacked(column) &&
-                          <ToolTip tooltip={T("Stack")}  key={idx}>
+                          <ToolTip tooltip={T("Stack")} key={idx}>
                             <Button variant="default"
                                     target="_blank" rel="noopener noreferrer"
                                     onClick={e=>{
@@ -970,6 +973,22 @@ class VeloPagedTable extends Component {
                   {_.map(this.state.rows, this.renderRow)}
                 </tbody>
               </Table>
+              { this.state.showStackDialog &&
+                <StackDialog
+                  name={this.state.showStackDialog}
+                  onClose={()=>this.setState({showStackDialog: false})}
+                  navigateToRow={row=>this.setState({start_row: row})}
+                  stack_path={this.state.stack_path}
+
+                  transform={this.state.stack_transforms[
+                      this.state.showStackDialog] || {}}
+                  setTransform={t=>{
+                      let stack_transforms = this.state.stack_transforms;
+                      stack_transforms[this.state.showStackDialog] = t;
+                      this.setState({stack_transforms: stack_transforms});
+                  }}
+                />
+              }
             </>);
     }
 }
