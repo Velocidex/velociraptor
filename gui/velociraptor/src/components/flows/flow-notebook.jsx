@@ -64,7 +64,7 @@ export default class FlowNotebook extends React.Component {
         this.setState({loading: true});
         api.get("v1/GetNotebooks", {
             notebook_id: notebook_id,
-            include_uploads: false,
+            include_uploads: true,
         }, this.source.token).then(response=>{
             if (response.cancel) return;
 

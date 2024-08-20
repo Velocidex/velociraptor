@@ -23,6 +23,8 @@ import T from '../i8n/i8n.jsx';
 
 const POLL_TIME = 2000;
 
+const timestampRegex = /\d{4}-\d{2}-\d{2}[T ]\d{1,2}:\d{2}:\d{2}/;
+
 // Adds a new timeline cell below this one.
 export class AddTimelineDialog extends React.Component {
     static propTypes = {
@@ -47,7 +49,9 @@ export class AddTimelineDialog extends React.Component {
     }
 
     render() {
-        let options = _.map(this.props.notebook_metadata.timelines, x=>{
+        let timelines = this.props.notebook_metadata &&
+            this.props.notebook_metadata.timelines;
+        let options = _.map(timelines, x=>{
             return {value: x, label: x, isFixed: true, color: "#00B8D9"};
         });
         return (
@@ -96,6 +100,7 @@ export class AddVQLCellToTimeline extends React.Component {
         // Super timeline - Can be created
         timeline: "",
         time_column: "",
+        message_column: "",
 
         // name for new child timeline
         name: "",
@@ -113,6 +118,14 @@ export class AddVQLCellToTimeline extends React.Component {
             clearInterval(this.interval);
         }
         this.source.cancel();
+    }
+
+    isTimestamp = x=>{
+        if (timestampRegex.test(x)) {
+            return true;
+        }
+
+        return false;
     }
 
     getTables = ()=>{
@@ -143,19 +156,21 @@ export class AddVQLCellToTimeline extends React.Component {
 
             if(response && response.data && response.data.columns) {
                 // Filter all columns that look like a time
-                let columns = [];
+                let time_columns = [];
+                let all_columns = [];
                 let rows = response.data.rows;
                 if (!rows) {
                     return;
                 }
                 _.each(response.data.rows[0].cell, (x, idx)=>{
-                    let parsed = ToStandardTime(x);
-                    if (_.isDate(parsed)) {
-                        columns.push(response.data.columns[idx]);
+                    if (this.isTimestamp(x)) {
+                        time_columns.push(response.data.columns[idx]);
                     };
+                    all_columns.push(response.data.columns[idx]);
                 });
 
-                this.setState({columns: columns});
+                this.setState({time_columns: time_columns,
+                               all_columns: all_columns});
             }
         });
     };
@@ -179,6 +194,8 @@ export class AddVQLCellToTimeline extends React.Component {
                          {"key": "Timeline", "value": this.state.timeline},
                          {"key": "ChildName", "value": this.state.name},
                          {"key": "Key", "value": this.state.time_column},
+                         {"key": "MessageColumn",
+                          "value": this.state.message_column},
                          {"key": "Query", "value": this.props.cell.input},
                          {"key": "RemoveLimit", "value": "Y"},
                          {"key": "Env", "value": JSON.stringify(env)},
@@ -214,13 +231,18 @@ export class AddVQLCellToTimeline extends React.Component {
     }
 
     render() {
-        let options = _.map(this.props.notebook_metadata.timelines, x=>{
+        let timelines = this.props.notebook_metadata &&
+            this.props.notebook_metadata.timelines;
+        let options = _.map(timelines, x=>{
+            return {value: x, label: x, isFixed: true, color: "#00B8D9"};
+        });
+        let all_column_options = _.map(this.state.all_columns, x=>{
+            return {value: x, label: x, isFixed: true, color: "#00B8D9"};
+        });
+        let time_column_options = _.map(this.state.time_columns, x=>{
             return {value: x, label: x, isFixed: true, color: "#00B8D9"};
         });
 
-        let column_options = _.map(this.state.columns, x=>{
-            return {value: x, label: x, isFixed: true, color: "#00B8D9"};
-        });
         return (
             <Modal show={true}
                    size="lg"
@@ -262,9 +284,23 @@ export class AddVQLCellToTimeline extends React.Component {
                     <Select
                       className="time-column"
                       classNamePrefix="velo"
-                      options={column_options}
+                      options={time_column_options}
                       onChange={(e)=>this.setState({time_column: e && e.value})}
                       placeholder={T("Time Column")}
+                      spellCheck="false"
+                    />
+                  </Col>
+                </Form.Group>
+
+                <Form.Group as={Row}>
+                  <Form.Label column sm="3">{T("Message column")}</Form.Label>
+                  <Col sm="8">
+                    <Select
+                      className="time-column"
+                      classNamePrefix="velo"
+                      options={all_column_options}
+                      onChange={(e)=>this.setState({message_column: e && e.value})}
+                      placeholder={T("Message Column")}
                       spellCheck="false"
                     />
                   </Col>
@@ -278,7 +314,8 @@ export class AddVQLCellToTimeline extends React.Component {
                 </Button>
                 <Button variant="primary"
                         disabled={!this.state.timeline || !this.state.time_column ||
-                                  !this.state.name || this.state.loading }
+                                  !this.state.name || !this.state.time_column ||
+                                  this.state.loading }
                         onClick={this.addTimeline}>
                   { this.state.loading ?  <><FontAwesomeIcon icon="spinner" spin /> {T("Running")} </>:
                     <> {T("Add Timeline")} </> }

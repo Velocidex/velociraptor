@@ -51,12 +51,15 @@ type NotebookStore interface {
 
 	GetAvailableDownloadFiles(notebook_id string) (
 		*api_proto.AvailableDownloads, error)
+
 	GetAvailableTimelines(notebook_id string) []string
+
 	GetAvailableUploadFiles(notebook_id string) (
 		*api_proto.AvailableDownloads, error)
 
 	GetAllNotebooks() ([]*api_proto.NotebookMetadata, error)
 
+	// Manage timeline operations.
 	Timelines(ctx context.Context,
 		notebook_id string) ([]*timelines_proto.SuperTimeline, error)
 

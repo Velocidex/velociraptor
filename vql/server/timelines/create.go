@@ -102,7 +102,7 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 	}
 
 	journal, err := services.GetJournal(config_obj)
-	if err != nil {
+	if err == nil {
 		journal.PushRowsToArtifactAsync(ctx, config_obj,
 			ordereddict.NewDict().
 				Set("NotebookId", notebook_id).

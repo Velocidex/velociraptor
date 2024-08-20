@@ -9,4 +9,6 @@ column_types:
   - name: NotebookId
   - name: SuperTimelineName
   - name: Timeline
-  - name: TimestampColumn
+
+  # What type of event this is: can be Delete, AddTimeline
+  - name: Action

@@ -44,6 +44,9 @@ func (self timelineTransformer) Transform(
 	message, _ := event.GetString(self.MessageColumn)
 	timestamp_description, _ := event.GetString(self.TimestampDescriptionColumn)
 
+	event.Delete(self.MessageColumn)
+	event.Delete(self.TimestampDescriptionColumn)
+
 	return TimelineItem{
 		Row:                  event,
 		Time:                 timestamp,
