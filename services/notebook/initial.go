@@ -8,6 +8,7 @@ import (
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -97,6 +98,25 @@ func (self *NotebookManager) NewNotebookCell(
 	return notebook, err
 }
 
+func getSpec(name string,
+	env []*api_proto.Env,
+	specs []*flows_proto.ArtifactSpec) []*api_proto.Env {
+	for _, spec := range specs {
+		if spec.Artifact == name {
+			if spec.Parameters != nil {
+				for _, e := range spec.Parameters.Env {
+					env = append(env, &api_proto.Env{
+						Key:   e.Key,
+						Value: e.Value,
+					})
+				}
+			}
+		}
+	}
+
+	return env
+}
+
 func getInitialCellsFromArtifacts(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -128,6 +148,9 @@ func getInitialCellsFromArtifacts(
 					})
 				}
 
+				// Add any specs from the template parameters.
+				env = getSpec(artifact_name, env, in.Specs)
+
 				switch strings.ToLower(n.Type) {
 				case "none":
 					// Means no cell to be produced.
@@ -140,6 +163,7 @@ func getInitialCellsFromArtifacts(
 						Type:   n.Type,
 						Input:  n.Template,
 						Output: n.Output,
+						Env:    env,
 
 						// Need to wait for all cells to calculate or
 						// we will overload the netowork workers if

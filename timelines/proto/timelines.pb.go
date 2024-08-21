@@ -25,9 +25,10 @@ type Timeline struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	StartTime int64  `protobuf:"varint,1,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	EndTime   int64  `protobuf:"varint,2,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
-	Id        string `protobuf:"bytes,4,opt,name=id,proto3" json:"id,omitempty"`
+	StartTime int64 `protobuf:"varint,1,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	EndTime   int64 `protobuf:"varint,2,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	// The name of the timeline.
+	Id string `protobuf:"bytes,4,opt,name=id,proto3" json:"id,omitempty"`
 	// The name of the timestamp column. If not specified it is _ts
 	TimestampColumn string `protobuf:"bytes,5,opt,name=timestamp_column,json=timestampColumn,proto3" json:"timestamp_column,omitempty"`
 	// The name of the message column. If not specified it is
@@ -119,7 +120,9 @@ type SuperTimeline struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Name      string      `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// The name of the super timeline.
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// A list of timelines contained in the super timeline.
 	Timelines []*Timeline `protobuf:"bytes,2,rep,name=timelines,proto3" json:"timelines,omitempty"`
 }
 
