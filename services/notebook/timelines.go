@@ -73,6 +73,21 @@ func (self *NotebookStoreImpl) ReadTimeline(ctx context.Context, notebook_id str
 	include_components, exclude_components []string) (
 	<-chan *ordereddict.Dict, error) {
 
+	// Make sure the timeline exists in the notebook.
+	notebook_metadata, err := self.GetNotebook(notebook_id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !utils.InString(notebook_metadata.Timelines, timeline) {
+		notebook_metadata.Timelines = append(notebook_metadata.Timelines,
+			timeline)
+		err := self.SetNotebook(notebook_metadata)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	super_path_manager := paths.NewNotebookPathManager(notebook_id).
 		SuperTimeline(timeline)
 
@@ -110,6 +125,8 @@ func (self *NotebookStoreImpl) ReadTimeline(ctx context.Context, notebook_id str
 					row.Set(k, v)
 				}
 			}
+
+			row.Set("_Source", event.Source)
 
 			select {
 			case <-ctx.Done():
@@ -229,5 +246,18 @@ func (self *NotebookStoreImpl) DeleteTimeline(ctx context.Context, scope vfilter
 	}
 
 	// Now delete the actual record.
-	return db.DeleteSubject(self.config_obj, timeline_path.Path())
+	err = db.DeleteSubject(self.config_obj, timeline_path.Path())
+	if err != nil {
+		return err
+	}
+
+	notebook_metadata, err := self.GetNotebook(notebook_id)
+	if err != nil {
+		return err
+	}
+
+	notebook_metadata.Timelines = utils.FilterSlice(
+		notebook_metadata.Timelines, supertimeline)
+
+	return self.SetNotebook(notebook_metadata)
 }

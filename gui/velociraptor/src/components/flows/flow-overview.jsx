@@ -83,6 +83,8 @@ export default class FlowOverview extends React.Component {
             flow_id: flow_id,
             client_id: client_id,
         }, this.source.token).then((response) => {
+            if (response.cancel) return;
+
             let available_downloads = response.data.available_downloads &&
                 response.data.available_downloads.files;
             this.setState({available_downloads: available_downloads || []});

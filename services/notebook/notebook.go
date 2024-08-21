@@ -41,17 +41,20 @@ func (self *NotebookManager) GetNotebook(
 		return nil, err
 	}
 
-	if include_uploads {
-		// An error here just means there are no AvailableDownloads.
-		notebook.AvailableDownloads, _ = self.Store.GetAvailableDownloadFiles(
-			notebook_id)
-		notebook.AvailableUploads, _ = self.Store.GetAvailableUploadFiles(
-			notebook_id)
-		notebook.Timelines = self.Store.GetAvailableTimelines(notebook_id)
-	} else {
-		notebook.AvailableUploads = nil
-		notebook.AvailableDownloads = nil
-		notebook.Timelines = nil
+	// Global notebooks keep these internally.
+	if !isGlobalNotebooks(notebook_id) {
+		if include_uploads {
+			// An error here just means there are no AvailableDownloads.
+			notebook.AvailableDownloads, _ = self.Store.GetAvailableDownloadFiles(
+				notebook_id)
+			notebook.AvailableUploads, _ = self.Store.GetAvailableUploadFiles(
+				notebook_id)
+			notebook.Timelines = self.Store.GetAvailableTimelines(notebook_id)
+		} else {
+			notebook.AvailableUploads = nil
+			notebook.AvailableDownloads = nil
+			notebook.Timelines = nil
+		}
 	}
 
 	return notebook, nil

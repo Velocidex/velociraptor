@@ -55,9 +55,9 @@ func StringSliceEq(a []string, b []string) bool {
 	return true
 }
 
-func FilterSlice(a []string) (res []string) {
+func FilterSlice(a []string, needle string) (res []string) {
 	for _, i := range a {
-		if i != "" {
+		if i != needle {
 			res = append(res, i)
 		}
 	}

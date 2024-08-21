@@ -493,6 +493,13 @@ service API {
         };
     }
 
+   rpc DeleteNotebook(NotebookMetadata) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/DeleteNotebook",
+            body: "*",
+        };
+    }
+
     rpc NewNotebookCell(NotebookCellRequest) returns (NotebookMetadata) {
         option (google.api.http) = {
             post: "/api/v1/NewNotebookCell",

@@ -31,7 +31,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/timelines"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -329,19 +328,27 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 		return ""
 
 	case string:
-		timeline_path_manager := self.path_manager.Notebook().
-			SuperTimeline(t)
-		parameters := "{}"
-		reader, err := timelines.NewSuperTimelineReader(
-			self.config_obj, timeline_path_manager, nil, nil)
-		if err == nil {
-			parameters = json.MustMarshalString(reader.Stat())
+		notebook_manager, err := services.GetNotebookManager(self.config_obj)
+		if err != nil {
+			return ""
 		}
 
-		return fmt.Sprintf(
-			`<div class="panel"><velo-timeline name='%s' `+
-				`params='%s' /></div>`, utils.QueryEscape(t),
-			utils.QueryEscape(parameters))
+		timelines, err := notebook_manager.Timelines(self.ctx,
+			self.path_manager.NotebookId())
+		if err != nil {
+			return ""
+		}
+
+		for _, timeline := range timelines {
+			if timeline.Name == t {
+				parameters := json.MustMarshalString(timeline)
+				return fmt.Sprintf(
+					`<div class="panel"><velo-timeline name='%s' `+
+						`params='%s' /></div>`, utils.QueryEscape(t),
+					utils.QueryEscape(parameters))
+			}
+		}
+		return ""
 
 	case []*paths.NotebookCellQuery:
 		result := ""

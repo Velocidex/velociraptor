@@ -29,11 +29,9 @@ import ToolTip from '../widgets/tooltip.jsx';
 import { ColumnToggle } from '../core/paged-table.jsx';
 
 const FixedColumns = {
-    "Time": 1,
-    "Desc": 1,
+    "Timestamp": 1,
+    "Description": 1,
     "Message": 1,
-    "Data": 1,
-    "TimestampDesc": 1,
 }
 
 class TimelineTableRow extends Component {
@@ -48,9 +46,8 @@ class TimelineTableRow extends Component {
     }
 
     renderCell = (column, rowIdx) => {
-        let data = this.props.row.Data || {};
-        let cell = this.props.row[column] || data[column] || "";
-        if(column === "Time") {
+        let cell = this.props.row[column] || "";
+        if(column === "Timestamp") {
             return <td key={column}>
                      <div className={this.props.timeline_class}>
                        <VeloTimestamp usec={cell}/>
@@ -61,7 +58,7 @@ class TimelineTableRow extends Component {
     };
 
     render() {
-        let data = this.props.row["Data"] || {};
+        let data = this.props.row || {};
         let row_class = "timeline-data ";
         if(!this.state.expanded) {
             row_class += "hidden";
@@ -104,7 +101,7 @@ class TimelineTableRenderer  extends Component {
         return "";
     }
 
-    columns = ["Time", "Desc", "Message"];
+    columns = ["Timestamp", "Message", "Description"];
 
     renderRow = (row, idx)=>{
         let columns = this.columns.concat(this.props.extra_columns);
@@ -307,8 +304,7 @@ export default class TimelineRenderer extends React.Component {
         let toggles = {...this.state.toggles};
 
         _.each(this.state.rows, row=>{
-            let data = row.Data || {};
-            _.each(data, (v, k)=>{
+            _.each(row, (v, k)=>{
                 if (_.isUndefined(_columns[k]) && !FixedColumns[k]) {
                     _columns[k]=1;
                     columns.push(k);

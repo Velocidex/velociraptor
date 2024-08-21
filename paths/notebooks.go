@@ -171,6 +171,10 @@ func (self *NotebookCellPathManager) Path() api.DSPathSpec {
 		SetTag("NotebookCell")
 }
 
+func (self *NotebookCellPathManager) NotebookId() string {
+	return self.notebook_id
+}
+
 func (self *NotebookCellPathManager) Notebook() *NotebookPathManager {
 	return &NotebookPathManager{
 		notebook_id: self.notebook_id,

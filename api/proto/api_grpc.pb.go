@@ -103,6 +103,7 @@ type APIClient interface {
 	GetNotebooks(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*Notebooks, error)
 	NewNotebook(ctx context.Context, in *NotebookMetadata, opts ...grpc.CallOption) (*NotebookMetadata, error)
 	UpdateNotebook(ctx context.Context, in *NotebookMetadata, opts ...grpc.CallOption) (*NotebookMetadata, error)
+	DeleteNotebook(ctx context.Context, in *NotebookMetadata, opts ...grpc.CallOption) (*empty.Empty, error)
 	NewNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*NotebookMetadata, error)
 	GetNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*NotebookCell, error)
 	UpdateNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*NotebookCell, error)
@@ -653,6 +654,15 @@ func (c *aPIClient) UpdateNotebook(ctx context.Context, in *NotebookMetadata, op
 	return out, nil
 }
 
+func (c *aPIClient) DeleteNotebook(ctx context.Context, in *NotebookMetadata, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/proto.API/DeleteNotebook", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *aPIClient) NewNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*NotebookMetadata, error) {
 	out := new(NotebookMetadata)
 	err := c.cc.Invoke(ctx, "/proto.API/NewNotebookCell", in, out, opts...)
@@ -1031,6 +1041,7 @@ type APIServer interface {
 	GetNotebooks(context.Context, *NotebookCellRequest) (*Notebooks, error)
 	NewNotebook(context.Context, *NotebookMetadata) (*NotebookMetadata, error)
 	UpdateNotebook(context.Context, *NotebookMetadata) (*NotebookMetadata, error)
+	DeleteNotebook(context.Context, *NotebookMetadata) (*empty.Empty, error)
 	NewNotebookCell(context.Context, *NotebookCellRequest) (*NotebookMetadata, error)
 	GetNotebookCell(context.Context, *NotebookCellRequest) (*NotebookCell, error)
 	UpdateNotebookCell(context.Context, *NotebookCellRequest) (*NotebookCell, error)
@@ -1241,6 +1252,9 @@ func (UnimplementedAPIServer) NewNotebook(context.Context, *NotebookMetadata) (*
 }
 func (UnimplementedAPIServer) UpdateNotebook(context.Context, *NotebookMetadata) (*NotebookMetadata, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateNotebook not implemented")
+}
+func (UnimplementedAPIServer) DeleteNotebook(context.Context, *NotebookMetadata) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteNotebook not implemented")
 }
 func (UnimplementedAPIServer) NewNotebookCell(context.Context, *NotebookCellRequest) (*NotebookMetadata, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NewNotebookCell not implemented")
@@ -2338,6 +2352,24 @@ func _API_UpdateNotebook_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _API_DeleteNotebook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NotebookMetadata)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).DeleteNotebook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/DeleteNotebook",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).DeleteNotebook(ctx, req.(*NotebookMetadata))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _API_NewNotebookCell_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(NotebookCellRequest)
 	if err := dec(in); err != nil {
@@ -3032,6 +3064,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateNotebook",
 			Handler:    _API_UpdateNotebook_Handler,
+		},
+		{
+			MethodName: "DeleteNotebook",
+			Handler:    _API_DeleteNotebook_Handler,
 		},
 		{
 			MethodName: "NewNotebookCell",

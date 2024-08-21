@@ -6,7 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -100,18 +102,30 @@ func (self *NotebookManager) NewNotebookCell(
 
 func getSpec(name string,
 	env []*api_proto.Env,
-	specs []*flows_proto.ArtifactSpec) []*api_proto.Env {
+	specs []*flows_proto.ArtifactSpec,
+	artifact *artifacts_proto.Artifact) []*api_proto.Env {
+
+	env_dict := ordereddict.NewDict()
+
 	for _, spec := range specs {
 		if spec.Artifact == name {
 			if spec.Parameters != nil {
 				for _, e := range spec.Parameters.Env {
-					env = append(env, &api_proto.Env{
-						Key:   e.Key,
-						Value: e.Value,
-					})
+					env_dict.Set(e.Key, e.Value)
 				}
 			}
 		}
+	}
+
+	for _, p := range artifact.Parameters {
+		value, pres := env_dict.GetString(p.Name)
+		if !pres {
+			value = p.Default
+		}
+		env = append(env, &api_proto.Env{
+			Key:   p.Name,
+			Value: value,
+		})
 	}
 
 	return env
@@ -149,7 +163,7 @@ func getInitialCellsFromArtifacts(
 				}
 
 				// Add any specs from the template parameters.
-				env = getSpec(artifact_name, env, in.Specs)
+				env = getSpec(artifact_name, env, in.Specs, artifact)
 
 				switch strings.ToLower(n.Type) {
 				case "none":
@@ -569,6 +583,13 @@ func getCellsForFlow(ctx context.Context,
 SELECT * FROM flow_logs(client_id=ClientId, flow_id=FlowId)
 `,
 		})
+
+	if len(sources) == 0 {
+		return []*api_proto.NotebookCellRequest{{
+			Type:  "markdown",
+			Input: "# Error\n\nNo known artifacts\n",
+		}}
+	}
 
 	return getDefaultCellsForSources(
 		ctx, config_obj, sources, notebook_metadata)

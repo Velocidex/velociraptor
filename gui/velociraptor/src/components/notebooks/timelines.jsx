@@ -298,8 +298,8 @@ export class AddVQLCellToTimeline extends React.Component {
               <Modal.Body>
 
                 <Form.Group as={Row}>
-                  <ToolTip tooltip={T("Select timeline from this notebook")}>
-                    <Form.Label column sm="3">
+                  <ToolTip tooltip={T("Select timeline type")}>
+                    <Form.Label column sm="3" className="global-timeline-button">
                       <Button
                         variant="secondary"
                         onClick={e=>{
