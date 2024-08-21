@@ -25,6 +25,7 @@ func (self ForPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("for", args)()
 
 		arg := &ForPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

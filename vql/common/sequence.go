@@ -91,6 +91,7 @@ func (self _SequencePlugin) Call(ctx context.Context,
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("sequence", args)()
 
 		query_any, pres := args.Get("query")
 		if !pres {

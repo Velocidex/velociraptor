@@ -33,6 +33,7 @@ func (self DeleteEventsPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("delete_events", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.DELETE_RESULTS)
 		if err != nil {

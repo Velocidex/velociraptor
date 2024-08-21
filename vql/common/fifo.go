@@ -16,7 +16,8 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-/* Plugin FIFO.
+/*
+	Plugin FIFO.
 
 The fifo plugin collects the more recent rows from a subquery and holds
 them in memory. Subsequent calls to it will return the entire cached
@@ -29,7 +30,6 @@ group (For example, what were the last X failed logon events).
 Note that the fifo() lifetime is tied with the root scope - it will
 remain active for the entire query duration but will be torn down when
 the query is cancelled.
-
 */
 package common
 
@@ -190,6 +190,7 @@ func (self _FIFOPlugin) Call(ctx context.Context,
 	wg.Add(1)
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("fifo", args)()
 
 		arg := &_FIFOPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

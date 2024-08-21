@@ -28,6 +28,7 @@ func (self DeleteFlowPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("delete_flow", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.DELETE_RESULTS)
 		if err != nil {

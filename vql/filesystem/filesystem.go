@@ -273,6 +273,7 @@ func (self ReadFilePlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("read_file", args)()
 
 		err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {

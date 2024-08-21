@@ -54,6 +54,7 @@ func (self _RecycleBinPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("parse_recyclebin", args)()
 
 		arg := &_RecycleBinPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

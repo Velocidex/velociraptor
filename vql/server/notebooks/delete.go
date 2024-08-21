@@ -32,6 +32,7 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("notebook_delete", args)()
 
 		arg := &DeleteNotebookArgs{}
 

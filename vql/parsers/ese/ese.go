@@ -297,6 +297,7 @@ func (self _ESECatalogPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer utils.RecoverVQL(scope)
+		defer vql_subsystem.RegisterMonitor("parse_ese_catalog", args)()
 
 		arg := &_ESECatalogArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

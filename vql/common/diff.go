@@ -169,6 +169,7 @@ func (self _DiffPlugin) Call(ctx context.Context,
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("diff", args)()
 
 		arg := &_DiffPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

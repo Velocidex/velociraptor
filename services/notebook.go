@@ -85,6 +85,11 @@ type NotebookManager interface {
 
 	// Add events to a timeline
 	AddTimeline(ctx context.Context, scope vfilter.Scope,
-		notebook_id string, timeline string, component string,
-		key string, in <-chan vfilter.Row) (*timelines_proto.SuperTimeline, error)
+		notebook_id string, supertimeline string,
+		timeline *timelines_proto.Timeline,
+		in <-chan vfilter.Row) (*timelines_proto.SuperTimeline, error)
+
+	// Add events to a timeline
+	DeleteTimeline(ctx context.Context, scope vfilter.Scope,
+		notebook_id string, supertimeline string) error
 }

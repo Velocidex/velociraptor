@@ -39,7 +39,7 @@ export default class StackDialog extends Component {
         let name = this.props.name || T("Value");
         let columns = {
             value: {text: name},
-            idx: {hidden: true},
+            idx: {text: T("Row Index")},
             c:{text: T("Count")},
         };
 

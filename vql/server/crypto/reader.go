@@ -39,6 +39,7 @@ func (self ReadCryptFilePlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("read_crypto_file", args)()
 
 		arg := &ReadCryptFilePluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

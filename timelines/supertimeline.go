@@ -2,6 +2,7 @@ package timelines
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"google.golang.org/protobuf/proto"
@@ -147,8 +148,14 @@ func NewSuperTimelineReader(
 			continue
 		}
 		file_store_factory := file_store.GetFileStore(config_obj)
+
+		// Transform the timeline event based on the timeline
+		// specifications. This allows us to re-define standard fields
+		// like timestamp, message and timestamp_description.
+		transformer := timelineTransformer{timeline}
+
 		reader, err := NewTimelineReader(
-			file_store_factory, path_manager.GetChild(timeline.Id))
+			file_store_factory, transformer, path_manager.GetChild(timeline.Id))
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 			logger.Debug("NewSuperTimelineReader err: %v\n", err)
@@ -161,12 +168,18 @@ func NewSuperTimelineReader(
 }
 
 type SuperTimelineWriter struct {
+	// Protected by mutex
 	*timelines_proto.SuperTimeline
+
+	mu           sync.Mutex
 	config_obj   *config_proto.Config
 	path_manager *paths.SuperTimelinePathManager
 }
 
 func (self *SuperTimelineWriter) Close() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return
@@ -175,29 +188,66 @@ func (self *SuperTimelineWriter) Close() {
 		self.config_obj, self.path_manager.Path(), self.SuperTimeline, nil)
 }
 
-func (self *SuperTimelineWriter) AddChild(name string) (*TimelineWriter, error) {
-	new_timeline_path_manager := self.path_manager.GetChild(name)
+func (self *SuperTimelineWriter) AddChild(
+	timeline *timelines_proto.Timeline, completer func()) (*TimelineWriter, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	new_timeline_path_manager := self.path_manager.GetChild(timeline.Id)
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 
-	writer, err := NewTimelineWriter(
+	var writer *TimelineWriter
+	var err error
+
+	writer, err = NewTimelineWriter(
 		file_store_factory,
 		new_timeline_path_manager,
-		utils.BackgroundWriter,
+
+		// When we are complete we update the timeline stats
+		func() {
+			self.mu.Lock()
+			defer self.mu.Unlock()
+
+			// The writer.Close() will wait for this completion
+			// function to return.
+			defer writer.wg.Done()
+
+			if completer != nil {
+				defer completer()
+			}
+
+			stats := writer.Stats()
+
+			// Only add a new child if it is not already in there.
+			for _, item := range self.Timelines {
+				if item.Id == timeline.Id {
+					item.StartTime = stats.StartTime
+					item.EndTime = stats.EndTime
+					item.TimestampColumn = timeline.TimestampColumn
+					item.MessageColumn = timeline.MessageColumn
+					item.TimestampDescriptionColumn = timeline.TimestampDescriptionColumn
+					return
+				}
+			}
+
+			item := &timelines_proto.Timeline{
+				Id:                         timeline.Id,
+				StartTime:                  stats.StartTime,
+				EndTime:                    stats.EndTime,
+				TimestampColumn:            timeline.TimestampColumn,
+				MessageColumn:              timeline.MessageColumn,
+				TimestampDescriptionColumn: timeline.TimestampDescriptionColumn,
+			}
+			self.Timelines = append(self.Timelines, item)
+		},
 		result_sets.TruncateMode)
 	if err != nil {
 		return nil, err
 	}
 
-	// Only add a new child if it is not already in there.
-	for _, item := range self.Timelines {
-		if item.Id == new_timeline_path_manager.Name() {
-			return writer, err
-		}
-	}
+	// For the completer to run before closing.
+	writer.wg.Add(1)
 
-	self.Timelines = append(self.Timelines, &timelines_proto.Timeline{
-		Id: new_timeline_path_manager.Name(),
-	})
 	return writer, err
 }
 

@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/timelines"
+	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -50,13 +51,19 @@ func (self *TimelineTestSuite) TestSuperTimelineWriter() {
 	super, err := timelines.NewSuperTimelineWriter(self.config_obj, path_manager)
 	assert.NoError(self.T(), err)
 
-	timeline, err := super.AddChild("1")
+	var timeline *timelines.TimelineWriter
+	timeline, err = super.AddChild(&timelines_proto.Timeline{
+		Id: "1",
+	}, utils.BackgroundWriter)
 	assert.NoError(self.T(), err)
 
-	timeline2, err := super.AddChild("2")
+	var timeline2 *timelines.TimelineWriter
+	timeline2, err = super.AddChild(&timelines_proto.Timeline{
+		Id: "2",
+	}, utils.BackgroundWriter)
 	assert.NoError(self.T(), err)
 
-	for i := int64(0); i <= 10; i++ {
+	for i := int64(10); i <= 20; i++ {
 		// This timeline contains evens
 		timeline.Write(time.Unix(i*2, 0), ordereddict.NewDict().Set("Item", i*2))
 
@@ -119,7 +126,8 @@ func (self *TimelineTestSuite) TestTimelineWriter() {
 
 	//test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
 
-	reader, err := timelines.NewTimelineReader(file_store_factory, path_manager)
+	reader, err := timelines.NewTimelineReader(
+		file_store_factory, timelines.UnitTransformer, path_manager)
 	assert.NoError(self.T(), err)
 	defer reader.Close()
 

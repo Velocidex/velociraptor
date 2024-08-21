@@ -164,10 +164,11 @@ body.ncurses-dark {
 
 
 
-.ncurses-dark code, .ncurses-dark pre, .ncurses-dark .monospace {
+.ncurses-dark code, .ncurses-dark .notebook-output pre, .ncurses-dark .monospace {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-base);
   color: var(--color-code);
+  background-color: inherit;
 }
 
 .ncurses-dark h1,

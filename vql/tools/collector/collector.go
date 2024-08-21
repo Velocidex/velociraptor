@@ -60,7 +60,6 @@ func (self CollectPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-
 		defer vql_subsystem.RegisterMonitor("collect", args)()
 
 		// This plugin allows one to create files (for the output

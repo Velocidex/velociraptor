@@ -788,6 +788,7 @@
     FROM source()
     ```
   type: Function
+  version: 2
   args:
   - name: client_id
     type: string
@@ -975,6 +976,9 @@
   - name: concurrency
     type: int64
     description: Number of concurrent collections.
+  - name: remapping
+    type: string
+    description: A Valid remapping configuration in YAML or JSON format.
   category: plugin
   metadata:
     permissions: FILESYSTEM_WRITE
@@ -4805,6 +4809,9 @@
     type: string
     description: The id of the notebook to fetch
     required: true
+  - name: verbose
+    type: bool
+    description: Include more information
   metadata:
     permissions: READ_RESULTS
   platforms:
@@ -6490,6 +6497,10 @@
 - name: profile_goroutines
   description: Enumerates all running goroutines.
   type: Plugin
+  args:
+  - name: verbose
+    type: bool
+    description: Emit information in verbose form.
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -7345,6 +7356,20 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: similarity
+  description: Compare two Dicts for similarity.
+  type: Function
+  args:
+  - name: set1
+    type: ordereddict.Dict
+    description: The first set to compare.
+    required: true
+  - name: set2
+    type: ordereddict.Dict
+    description: The second set to compare.
+    required: true
+  platforms:
+  - linux_amd64_cgo
 - name: sleep
   description: Sleep for the specified number of seconds. Always returns true.
   type: Function
@@ -7915,6 +7940,10 @@
     type: string
     description: Name of the timeline to read
     required: true
+  - name: components
+    type: string
+    description: List of child components to include
+    repeated: true
   - name: skip
     type: string
     description: List of child components to skip
@@ -7940,11 +7969,12 @@
   args:
   - name: timeline
     type: string
-    description: Supertimeline to add to
+    description: Supertimeline to add to. If a super timeline does not exist, creates
+      a new one.
     required: true
   - name: name
     type: string
-    description: Name of child timeline
+    description: Name/Id of child timeline to add.
     required: true
   - name: query
     type: StoredQuery
@@ -7954,6 +7984,12 @@
     type: string
     description: The column representing the time.
     required: true
+  - name: message_column
+    type: string
+    description: The column representing the message.
+  - name: ts_desc_column
+    type: string
+    description: The column representing the timestamp description.
   - name: notebook_id
     type: string
     description: The notebook ID the timeline is stored in.
@@ -7966,6 +8002,33 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: timeline_delete
+  description: Delete a super timeline.
+  type: Function
+  args:
+  - name: timeline
+    type: string
+    description: Supertimeline to add to. If a super timeline does not exist, creates
+      a new one.
+    required: true
+  - name: notebook_id
+    type: string
+    description: The notebook ID the timeline is stored in.
+  metadata:
+    permissions: NOTEBOOK_EDITOR
+  platforms:
+  - linux_amd64_cgo
+- name: timelines
+  description: List all timelines in a notebook
+  type: Plugin
+  args:
+  - name: notebook_id
+    type: string
+    description: The notebook ID the timeline is stored in.
+  metadata:
+    permissions: READ_RESULTS
+  platforms:
+  - linux_amd64_cgo
 - name: timestamp
   description: |
     Convert from different types to a time.Time.
@@ -8796,7 +8859,6 @@
             default_password="foobar")
     FROM scope()
     ```
-
   type: Function
   args:
   - name: user
@@ -9521,3 +9583,4 @@
   platforms:
   - darwin_arm64_cgo
   - linux_amd64_cgo
+

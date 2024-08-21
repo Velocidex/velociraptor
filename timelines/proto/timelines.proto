@@ -4,14 +4,34 @@ package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/timelines/proto";
 
+// A Timeline is a collection of timed events. The timeline is written
+// to storage as a ResultSet with some mandated columns and the rest
+// being free form.
 message Timeline {
     int64 start_time = 1;
     int64 end_time = 2;
-    string name = 3;
+
+    // The name of the timeline.
     string id = 4;
+
+    // The name of the timestamp column. If not specified it is _ts
+    string timestamp_column = 5;
+
+    // The name of the message column. If not specified it is
+    // 'message'. If there is no such column we render an elided
+    // message with some of the fields.
+    string message_column = 6;
+
+    // The name of the timestamp description. If not specified it is
+    // 'timestamp_description'. If not specified it is empty.
+    string timestamp_description_column = 7;
 }
 
+// A SuperTimeline is a collection of individual timelines.
 message SuperTimeline {
+    // The name of the super timeline.
     string name = 1;
+
+    // A list of timelines contained in the super timeline.
     repeated Timeline timelines = 2;
 }

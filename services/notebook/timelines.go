@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/timelines"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
@@ -30,10 +31,16 @@ func (self *NotebookManager) ReadTimeline(ctx context.Context, notebook_id strin
 
 func (self *NotebookManager) AddTimeline(
 	ctx context.Context, scope vfilter.Scope,
-	notebook_id string, timeline string, component string,
-	key string, in <-chan vfilter.Row) (*timelines_proto.SuperTimeline, error) {
+	notebook_id string, supertimeline string,
+	timeline *timelines_proto.Timeline,
+	in <-chan vfilter.Row) (*timelines_proto.SuperTimeline, error) {
 	return self.Store.AddTimeline(
-		ctx, scope, notebook_id, timeline, component, key, in)
+		ctx, scope, notebook_id, supertimeline, timeline, in)
+}
+
+func (self *NotebookManager) DeleteTimeline(ctx context.Context, scope vfilter.Scope,
+	notebook_id string, supertimeline string) error {
+	return self.Store.DeleteTimeline(ctx, scope, notebook_id, supertimeline)
 }
 
 func (self *NotebookStoreImpl) Timelines(ctx context.Context,
@@ -99,19 +106,22 @@ func (self *NotebookStoreImpl) ReadTimeline(ctx context.Context, notebook_id str
 
 func (self *NotebookStoreImpl) AddTimeline(
 	ctx context.Context, scope vfilter.Scope,
-	notebook_id string, timeline string, component string, key string,
+	notebook_id string, supertimeline string,
+	timeline *timelines_proto.Timeline,
 	in <-chan vfilter.Row) (*timelines_proto.SuperTimeline, error) {
 	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
 
 	super, err := timelines.NewSuperTimelineWriter(
-		self.config_obj, notebook_path_manager.SuperTimeline(timeline))
+		self.config_obj, notebook_path_manager.SuperTimeline(supertimeline))
 	if err != nil {
 		return nil, err
 	}
 	defer super.Close()
 
 	// make a new timeline to store in the super timeline.
-	writer, err := super.AddChild(component)
+	var writer *timelines.TimelineWriter
+
+	writer, err = super.AddChild(timeline, utils.BackgroundWriter)
 	if err != nil {
 		return nil, err
 	}
@@ -119,31 +129,33 @@ func (self *NotebookStoreImpl) AddTimeline(
 
 	writer.Truncate()
 
-	// Push data into the timeline in the background
-	go func() {
-		subscope := scope.Copy()
-		sub_ctx, cancel := context.WithCancel(ctx)
-		defer cancel()
+	subscope := scope.Copy()
+	sub_ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
-		// Timelines have to be sorted, so we force them to be sorted
-		// by the key.
-		sorter := sorter.MergeSorter{10000}
-		sorted_chan := sorter.Sort(sub_ctx, subscope, in, key, false /* desc */)
+	key := timeline.TimestampColumn
+	if key == "" {
+		key = "_ts"
+	}
 
-		for row := range sorted_chan {
-			key, pres := scope.Associative(row, key)
-			if !pres {
-				return
-			}
+	// Timelines have to be sorted, so we force them to be sorted
+	// by the key.
+	sorter := sorter.MergeSorter{10000}
+	sorted_chan := sorter.Sort(sub_ctx, subscope, in, key, false /* desc */)
 
-			if !utils.IsNil(key) {
-				ts, err := functions.TimeFromAny(ctx, scope, key)
-				if err == nil {
-					writer.Write(ts, vfilter.RowToDict(sub_ctx, subscope, row))
-				}
+	for row := range sorted_chan {
+		key, pres := scope.Associative(row, key)
+		if !pres {
+			continue
+		}
+
+		if !utils.IsNil(key) {
+			ts, err := functions.TimeFromAny(ctx, scope, key)
+			if err == nil {
+				writer.Write(ts, vfilter.RowToDict(sub_ctx, subscope, row))
 			}
 		}
-	}()
+	}
 
 	notebook_metadata, err := self.GetNotebook(notebook_id)
 	if err != nil {
@@ -151,7 +163,7 @@ func (self *NotebookStoreImpl) AddTimeline(
 	}
 
 	notebook_metadata.Timelines = utils.DeduplicateStringSlice(
-		append(notebook_metadata.Timelines, timeline))
+		append(notebook_metadata.Timelines, timeline.Id))
 
 	err = self.SetNotebook(notebook_metadata)
 	if err != nil {
@@ -159,4 +171,41 @@ func (self *NotebookStoreImpl) AddTimeline(
 	}
 
 	return super.SuperTimeline, nil
+}
+
+func (self *NotebookStoreImpl) DeleteTimeline(ctx context.Context, scope vfilter.Scope,
+	notebook_id string, supertimeline string) error {
+
+	timeline_path := paths.NewNotebookPathManager(notebook_id).
+		SuperTimeline(supertimeline)
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	timeline := &timelines_proto.SuperTimeline{}
+	err = db.GetSubject(self.config_obj, timeline_path.Path(), timeline)
+	if err != nil {
+		return err
+	}
+
+	file_store_factory := file_store.GetFileStore(self.config_obj)
+
+	for _, component := range timeline.Timelines {
+		// Now delete all the filestore files associated with the timeline.
+		child := timeline_path.GetChild(component.Id)
+
+		err = file_store_factory.Delete(child.Path())
+		if err != nil {
+			continue
+		}
+
+		err = file_store_factory.Delete(child.Index())
+		if err != nil {
+			continue
+		}
+	}
+
+	// Now delete the actual record.
+	return db.DeleteSubject(self.config_obj, timeline_path.Path())
 }

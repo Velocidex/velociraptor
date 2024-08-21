@@ -134,8 +134,8 @@ class _VeloShellCell extends Component {
         // expanded. These buttons can switch between the two modes.
         if (this.state.collapsed) {
             buttons.push(
-                <ToolTip tooltip={T("Expand")}>
-                  <Button key={1} variant="default"
+                <ToolTip tooltip={T("Expand")} key={1}>
+                  <Button variant="default"
                           onClick={() => this.setState({collapsed: false})} >
                     <i><FontAwesomeIcon icon="expand"/></i>
                   </Button>
@@ -143,8 +143,8 @@ class _VeloShellCell extends Component {
             );
         } else {
             buttons.push(
-                <ToolTip tooltip={T("Collapse")}>
-                  <Button key={2} variant="default"
+                <ToolTip tooltip={T("Collapse")} key={2}>
+                  <Button variant="default"
                           onClick={() => this.setState({collapsed: true})} >
                     <i><FontAwesomeIcon icon="compress"/></i>
                   </Button>
@@ -156,8 +156,8 @@ class _VeloShellCell extends Component {
         // large so we dont fetch it until the user asks)
         if (this.state.loaded) {
             buttons.push(
-                <ToolTip tooltip={T("Hide Output")}>
-                  <Button key={3} variant="default"
+                <ToolTip tooltip={T("Hide Output")} key={3}>
+                  <Button variant="default"
                           onClick={() => this.setState({"loaded": false})} >
                     <i><FontAwesomeIcon icon="eye-slash"/></i>
                   </Button>
@@ -165,8 +165,8 @@ class _VeloShellCell extends Component {
             );
         } else {
             buttons.push(
-                <ToolTip tooltip={T("Load Output")}>
-                  <Button key={4} variant="default"
+                <ToolTip tooltip={T("Load Output")} key={4}>
+                  <Button variant="default"
                           onClick={this.loadData}>
                     <i><FontAwesomeIcon icon="eye"/></i>
                   </Button>
@@ -184,8 +184,8 @@ class _VeloShellCell extends Component {
         // If the flow is currently running we may be able to stop it.
         if (this.props.flow.state  === 'RUNNING') {
             buttons.push(
-                <ToolTip tooltip={T("Stop")}>
-                  <Button key={5} variant="default"
+                <ToolTip tooltip={T("Stop")} key={5}>
+                  <Button variant="default"
                           onClick={this.cancelFlow}>
                     <i><FontAwesomeIcon icon="stop"/></i>
                   </Button>
@@ -222,8 +222,8 @@ class _VeloShellCell extends Component {
         }
 
         flow_status.push(
-            <ToolTip tooltip={T("Delete")}>
-              <Button key={9} variant="default"
+            <ToolTip tooltip={T("Delete")} key={9}>
+              <Button variant="default"
                      onClick={()=>this.setState({showDeleteWizard: true})}>
                 <i><FontAwesomeIcon icon="trash"/></i>
               </Button>
@@ -369,8 +369,8 @@ class _VeloVQLCell extends Component {
         // expanded. These buttons can switch between the two modes.
         if (this.state.collapsed) {
             buttons.push(
-                <ToolTip tooltip={T("Expand")}>
-                  <Button key={1} variant="default"
+                <ToolTip tooltip={T("Expand")} key={1} >
+                  <Button variant="default"
                           onClick={() => this.setState({collapsed: false})} >
                     <i><FontAwesomeIcon icon="expand"/></i>
                   </Button>
@@ -378,8 +378,8 @@ class _VeloVQLCell extends Component {
             );
         } else {
             buttons.push(
-                <ToolTip tooltip={T("Collapse")}>
-                  <Button key={2} variant="default"
+                <ToolTip tooltip={T("Collapse")} key={2} >
+                  <Button variant="default"
                           onClick={() => this.setState({collapsed: true})} >
                     <i><FontAwesomeIcon icon="compress"/></i>
                   </Button>
@@ -391,8 +391,8 @@ class _VeloVQLCell extends Component {
         // large so we dont fetch it until the user asks)
         if (this.state.loaded) {
             buttons.push(
-                <ToolTip tooltip={T("Hide Output")}>
-                  <Button key={3} variant="default"
+                <ToolTip tooltip={T("Hide Output")} key={3} >
+                  <Button variant="default"
                           onClick={() => this.setState({"loaded": false})} >
                     <i><FontAwesomeIcon icon="eye-slash"/></i>
                   </Button>
@@ -400,8 +400,8 @@ class _VeloVQLCell extends Component {
             );
         } else {
             buttons.push(
-                <ToolTip tooltip={T("Load Output")}>
-                  <Button key={4} variant="default"
+                <ToolTip tooltip={T("Load Output")} key={4} >
+                  <Button variant="default"
                           onClick={() => this.setState({"loaded": true})}>
                     <i><FontAwesomeIcon icon="eye"/></i>
                   </Button>
@@ -419,8 +419,8 @@ class _VeloVQLCell extends Component {
         // If the flow is currently running we may be able to stop it.
         if (this.props.flow.state  === 'RUNNING') {
             buttons.push(
-                <ToolTip tooltip={T("Stop")}>
-                <Button key={5} variant="default"
+                <ToolTip tooltip={T("Stop")}  key={5}>
+                <Button variant="default"
                         onClick={this.cancelFlow}>
                   <i><FontAwesomeIcon icon="stop"/></i>
                 </Button>
@@ -457,8 +457,8 @@ class _VeloVQLCell extends Component {
         }
 
         flow_status.push(
-            <ToolTip tooltip={T("Delete")}>
-              <Button key={50} variant="default"
+            <ToolTip tooltip={T("Delete")} key={50}>
+              <Button variant="default"
                       onClick={()=>this.setState({showDeleteWizard: true})}>
                 <i><FontAwesomeIcon icon="trash"/></i>
               </Button>

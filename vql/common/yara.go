@@ -158,7 +158,10 @@ func (self YaraScanPlugin) Call(
 			// which mmaps the entire file into memory avoiding the
 			// need for buffering.
 			raw_accessor, ok := accessor.(accessors.RawFileAPIAccessor)
-			if ok {
+
+			// If the start offset is specified we always use the
+			// accessor.
+			if arg.Start == 0 && ok {
 				underlying_file, err := raw_accessor.GetUnderlyingAPIFilename(filename)
 				if err == nil {
 					err := matcher.scanFile(ctx, underlying_file, output_chan)
