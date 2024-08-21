@@ -459,7 +459,8 @@ func getTimeline(
 	}
 
 	result := &api_proto.GetTableResponse{}
-	return ConvertRowsToTableResponse(rows, result, in.Timezone, in.Rows), nil
+	return ConvertTimelineRowsToTableResponse(
+		rows, result, in.Timezone, in.Rows), nil
 }
 
 func GetTableOptions(in *api_proto.GetTableRequest) (

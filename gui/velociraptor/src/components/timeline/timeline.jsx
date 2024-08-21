@@ -27,6 +27,13 @@ import T from '../i8n/i8n.jsx';
 import Table from 'react-bootstrap/Table';
 import ToolTip from '../widgets/tooltip.jsx';
 import { ColumnToggle } from '../core/paged-table.jsx';
+import Modal from 'react-bootstrap/Modal';
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
+import { ToStandardTime } from '../utils/time.jsx';
+
+const TenYears =  10 * 365 * 24 * 60 * 60 * 1000;
+
 
 const FixedColumns = {
     "Timestamp": 1,
@@ -34,15 +41,89 @@ const FixedColumns = {
     "Message": 1,
 }
 
+class AnnotationDialog extends Component {
+    static propTypes = {
+        Timestamp: PropTypes.number,
+        event: PropTypes.object,
+        notebook_id: PropTypes.string,
+        super_timeline: PropTypes.string,
+        onClose: PropTypes.func,
+    }
+
+    state = {
+        note: "",
+    }
+
+    componentDidMount = () => {
+        this.source = CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
+    }
+
+    updateNote = ()=>{
+        api.post("v1/AnnotateTimeline", {
+            notebook_id: this.props.notebook_id,
+            super_timeline: this.props.super_timeline,
+            timestamp: this.props.timestamp,
+            note: this.state.note,
+            event_json: JSON.stringify(this.props.event),
+        }, this.source.token).then(response=>{
+            this.props.onClose();
+        });
+    }
+
+    render() {
+        return <Modal show={true}
+                      size="lg"
+                      dialogClassName="modal-90w"
+                      onHide={this.props.onClose}>
+                 <Modal.Header closeButton>
+                   <Modal.Title>{T("Annotate Event")}</Modal.Title>
+                 </Modal.Header>
+                 <Modal.Body>
+                   <VeloValueRenderer value={this.props.event}/>
+                   <Form>
+                     <Form.Group as={Row}>
+                       <Form.Label column sm="3">{T("Note")}</Form.Label>
+                       <Col sm="8">
+                         <Form.Control as="textarea" rows={1}
+                                       placeholder={T("Enter short annotation")}
+                                       spellCheck="true"
+                                       value={this.state.note}
+                                       onChange={e => this.setState({note: e.target.value})}
+                         />
+                         </Col>
+                     </Form.Group>
+                   </Form>
+                 </Modal.Body>
+                 <Modal.Footer>
+                   <Button variant="secondary" onClick={this.props.onClose}>
+                     {T("Close")}
+                   </Button>
+                   <Button variant="primary" onClick={this.updateNote}>
+                     {T("Yes do it!")}
+                   </Button>
+                 </Modal.Footer>
+               </Modal>;
+    }
+}
+
+
 class TimelineTableRow extends Component {
     static propTypes = {
         row: PropTypes.object,
         columns: PropTypes.array,
+        notebook_id: PropTypes.string,
+        super_timeline: PropTypes.string,
         timeline_class: PropTypes.string,
+        onUpdate: PropTypes.func,
     }
 
     state = {
-        expanded: false
+        expanded: false,
+        showAnnotateDialog: false,
     }
 
     renderCell = (column, rowIdx) => {
@@ -63,6 +144,9 @@ class TimelineTableRow extends Component {
         if(!this.state.expanded) {
             row_class += "hidden";
         }
+
+        let timestamp = ToStandardTime(data.Timestamp).getTime() * 1000000;
+
         return (
             <React.Fragment >
               <tr className="row-selected"
@@ -72,9 +156,31 @@ class TimelineTableRow extends Component {
               </tr>
               <tr className={row_class}>
                 <td colSpan="30">
+                  { data._Source !== "Annotation" &&
+                    <ButtonGroup>
+                      <Button variant="default"
+                              onClick={()=>this.setState(
+                                  {showAnnotateDialog: true})}
+                      >
+                        <FontAwesomeIcon icon="note-sticky"/>
+                      </Button>
+                    </ButtonGroup>}
                   <VeloValueRenderer value={data} />
                 </td>
               </tr>
+              { this.state.showAnnotateDialog &&
+                <AnnotationDialog
+                  timestamp={timestamp}
+                  notebook_id={this.props.notebook_id}
+                  super_timeline={this.props.super_timeline}
+                  event={data}
+                  onClose={() => {
+                      this.setState({showAnnotateDialog: false});
+                      if(this.props.onUpdate) {
+                          this.props.onUpdate();
+                      };
+                  }}
+                />}
             </React.Fragment>
         );
     }
@@ -87,6 +193,9 @@ class TimelineTableRenderer  extends Component {
         rows: PropTypes.array,
         timelines: PropTypes.object,
         extra_columns: PropTypes.array,
+        notebook_id: PropTypes.string,
+        super_timeline: PropTypes.string,
+        onUpdate: PropTypes.func,
     }
 
     getTimelineClass = (name) => {
@@ -106,10 +215,14 @@ class TimelineTableRenderer  extends Component {
     renderRow = (row, idx)=>{
         let columns = this.columns.concat(this.props.extra_columns);
         return (
-            <TimelineTableRow key={idx}
+            <TimelineTableRow
+              key={idx}
+              notebook_id={this.props.notebook_id}
+              super_timeline={this.props.super_timeline}
               timeline_class={this.getTimelineClass(_.toString(row._Source))}
               row={row}
               columns={columns}
+              onUpdate={this.props.onUpdate}
             />
         );
     }
@@ -231,6 +344,7 @@ export default class TimelineRenderer extends React.Component {
                 return;
             }
             let start_time = (response.data.start_time / 1000000) || 0;
+            let end_time = (response.data.end_time / 1000000) || 0;
             let pageData = PrepareData(response.data);
             this.setState({
                 table_start: start_time,
@@ -240,9 +354,16 @@ export default class TimelineRenderer extends React.Component {
                 version: Date(),
             });
 
-            if (this.state.visibleTimeStart === 0) {
-                let visibleTimeStart = start_time || Date.now();
-                let visibleTimeEnd = visibleTimeStart + 60 * 60 * 10000;
+            // If the visible table is outside the view port, adjust
+            // the view port.
+            if (this.state.visibleTimeStart === 0 ||
+                start_time > this.state.visibleTimeEnd ||
+                start_time < this.state.visibleTimeStart) {
+                let diff = (this.state.visibleTimeEnd -
+                            this.state.visibleTimeStart) || (60 * 60 * 10000);
+
+                let visibleTimeStart = start_time - diff * 0.1;
+                let visibleTimeEnd = start_time + diff * 0.9;
                 this.setState({visibleTimeStart: visibleTimeStart,
                                visibleTimeEnd: visibleTimeEnd});
             }
@@ -368,8 +489,8 @@ export default class TimelineRenderer extends React.Component {
 
         for (let i=0;i<timelines.length;i++) {
             let timeline = super_timeline.timelines[i];
-            let start = timeline.start_time / 1000000;
-            let end = timeline.end_time / 1000000;
+            let start = timeline.start_time * 1000;
+            let end = timeline.end_time * 1000;
             if (start < smallest) {
                 smallest = start;
             }
@@ -404,9 +525,13 @@ export default class TimelineRenderer extends React.Component {
             smallest = largest;
         }
 
-        if (_.isNaN(smallest)) {
+        if (_.isNaN(smallest) || smallest < 0) {
             smallest = 0;
-            largest =0;
+            largest = 0;
+        }
+
+        if (largest - smallest > TenYears) {
+            largest = smallest + TenYears;
         }
 
         let extra_columns = [];
@@ -464,8 +589,11 @@ export default class TimelineRenderer extends React.Component {
                  </Timeline>
                  { this.state.columns &&
                    <TimelineTableRenderer
+                     super_timeline={this.props.name}
+                     notebook_id={this.props.notebook_id}
                      timelines={super_timeline}
                      extra_columns={extra_columns}
+                     onUpdate={this.fetchRows}
                      rows={this.state.rows} />
                  }
                </div>;

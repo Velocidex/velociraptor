@@ -93,6 +93,11 @@ type NotebookManager interface {
 		timeline *timelines_proto.Timeline,
 		in <-chan vfilter.Row) (*timelines_proto.SuperTimeline, error)
 
+	AnnotateTimeline(ctx context.Context, scope vfilter.Scope,
+		notebook_id string, supertimeline string,
+		message, principal string,
+		timestamp time.Time, event *ordereddict.Dict) error
+
 	// Add events to a timeline
 	DeleteTimeline(ctx context.Context, scope vfilter.Scope,
 		notebook_id string, supertimeline string) error

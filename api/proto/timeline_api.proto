@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
+
+message AnnotationRequest {
+    int64 timestamp = 1;
+    string super_timeline = 2;
+    string notebook_id = 3;
+    string note = 4;
+    string event_json = 5;
+}

@@ -17,6 +17,7 @@
 
 th.time {
     width: 15em;
+    white-space: nowrap;
 }
 
 .timeline-table-item {

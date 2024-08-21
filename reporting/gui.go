@@ -348,7 +348,13 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 					utils.QueryEscape(parameters))
 			}
 		}
-		return ""
+
+		// If we get here the timeline does not exist, we just make it
+		// up
+		return fmt.Sprintf(
+			`<div class="panel"><velo-timeline name='%s' `+
+				`params='%s' /></div>`, utils.QueryEscape(t),
+			utils.QueryEscape("{}"))
 
 	case []*paths.NotebookCellQuery:
 		result := ""
