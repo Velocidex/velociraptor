@@ -147,6 +147,9 @@ func getTypedOSPath(path_type string, path string) (*accessors.OSPath, error) {
 	case "ntfs":
 		return accessors.NewWindowsNTFSPath(path)
 
+	case "zip":
+		return accessors.NewZipFilePath(path)
+
 	default:
 		return accessors.NewGenericOSPath(path)
 	}

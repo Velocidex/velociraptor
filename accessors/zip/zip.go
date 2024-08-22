@@ -367,9 +367,11 @@ func (self *ZipFileCache) Open(full_path *accessors.OSPath, nocase bool) (
 	self.refs++
 	zipAccessorCurrentReferences.Inc()
 	return &SeekableZip{
-		delegate:  fd,
-		info:      info,
-		full_path: full_path,
+		delegate: fd,
+		info:     info,
+
+		// Use the correct path
+		full_path: info.OSPath(),
 
 		// We will be closed when done - Leak a reference.
 		zip_file: self,
@@ -466,7 +468,7 @@ loop:
 			// A directory has no member file
 		} else {
 			seen[member_name] = &ZipFileInfo{
-				_full_path: full_path.Append(member_name),
+				_full_path: cd_cache.full_path.Append(member_name),
 			}
 		}
 	}
@@ -610,7 +612,7 @@ func (self *SeekableZip) createTmpBackup() (err error) {
 	// start of it.
 	reader, err := self.zip_file.Open(self.full_path, false)
 	if err != nil {
-		return err
+		return utils.Wrap(io.EOF, err.Error())
 	}
 	defer reader.Close()
 
