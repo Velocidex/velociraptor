@@ -91,12 +91,31 @@ func (self *NotebookStoreImpl) ReadTimeline(ctx context.Context, notebook_id str
 		defer close(output_chan)
 		defer reader.Close()
 
-		for item := range reader.Read(ctx) {
+		for event := range reader.Read(ctx) {
+			if event.Row == nil {
+				continue
+			}
+
+			// Enforce a column order on the result.
+			row := ordereddict.NewDict().
+				Set("Timestamp", event.Time).
+				Set("Message", event.Message).
+				Set("Description", event.TimestampDescription)
+
+			for _, k := range event.Row.Keys() {
+				switch k {
+				case "Timestamp", "TimestampDesc", "Message", "Description":
+				default:
+					v, _ := event.Row.Get(k)
+					row.Set(k, v)
+				}
+			}
+
 			select {
 			case <-ctx.Done():
 				return
 
-			case output_chan <- item.Row.Set("_ts", item.Time):
+			case output_chan <- row:
 			}
 		}
 	}()
@@ -162,12 +181,15 @@ func (self *NotebookStoreImpl) AddTimeline(
 		return nil, err
 	}
 
-	notebook_metadata.Timelines = utils.DeduplicateStringSlice(
-		append(notebook_metadata.Timelines, timeline.Id))
+	// The notebook should hold a reference to all the supertimelines.
+	if !utils.InString(notebook_metadata.Timelines, supertimeline) {
+		notebook_metadata.Timelines = append(notebook_metadata.Timelines,
+			supertimeline)
 
-	err = self.SetNotebook(notebook_metadata)
-	if err != nil {
-		return nil, err
+		err = self.SetNotebook(notebook_metadata)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return super.SuperTimeline, nil

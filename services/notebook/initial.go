@@ -445,10 +445,13 @@ WHERE FlowState =~ 'ERROR'
 --    hunt_add(client_id=ClientId, hunt_id=HuntId, relaunch=TRUE) AS NewCollection
 -- FROM ERRORS
 
--- Uncomment the below to reissue a new collection and add to the same hunt
+-- Uncomment the below to reissue a new collection and add to the same hunt.
+-- You will have to also change "UpdateArtifactName" and add a spec for
+-- the parameters. (See docs for collect_client())
 -- SELECT *,
 --   hunt_add(client_id=ClientId, hunt_id=HuntId,
---     flow_id=collect_client(artifacts="UpdateArtifactName").flow_id) AS NewCollection
+--     flow_id=collect_client(artifacts="UpdateArtifactName",
+--                            client_id=ClientId).flow_id) AS NewCollection
 -- FROM ERRORS
 SELECT * FROM ERRORS
 

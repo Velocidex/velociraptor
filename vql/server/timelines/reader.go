@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -92,20 +93,7 @@ func (self TimelinePlugin) Call(
 			return
 		}
 
-		for event := range events {
-			ts, pres := event.Get("_ts")
-			if !pres {
-				continue
-			}
-
-			row := ordereddict.NewDict().Set("Timestamp", ts)
-			for _, k := range event.Keys() {
-				if k != "_ts" {
-					v, _ := event.Get(k)
-					row.Set(k, v)
-				}
-			}
-
+		for row := range events {
 			select {
 			case <-ctx.Done():
 				return
@@ -197,9 +185,7 @@ func (self TimelineListPlugin) Call(
 			select {
 			case <-ctx.Done():
 				return
-			case output_chan <- ordereddict.NewDict().
-				Set("Name", item.Name).
-				Set("Timelines", timelines):
+			case output_chan <- json.ConvertProtoToOrderedDict(item):
 			}
 		}
 	}()
