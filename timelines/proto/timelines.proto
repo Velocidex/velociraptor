@@ -25,6 +25,10 @@ message Timeline {
     // The name of the timestamp description. If not specified it is
     // 'timestamp_description'. If not specified it is empty.
     string timestamp_description_column = 7;
+
+    // When we return from GetTable() indicates if the timeline is
+    // active.
+    bool active = 8;
 }
 
 // A SuperTimeline is a collection of individual timelines.

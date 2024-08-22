@@ -3,13 +3,56 @@ package tables
 import (
 	"time"
 
-	"github.com/Velocidex/ordereddict"
+	errors "github.com/go-errors/errors"
+	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
+func getTimeline(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
+
+	if in.NotebookId == "" {
+		return nil, errors.New("NotebookId must be specified")
+	}
+
+	notebook_manager, err := services.GetNotebookManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	options := services.TimelineOptions{
+		IncludeComponents: in.IncludeComponents,
+		ExcludeComponents: in.SkipComponents}
+
+	if in.StartTime != 0 {
+		options.StartTime = time.Unix(0, int64(in.StartTime))
+	}
+
+	if in.FilterRegex != "" {
+		options.Filter = in.FilterRegex
+	}
+
+	reader, err := notebook_manager.ReadTimeline(ctx, in.NotebookId,
+		in.Timeline, options)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &api_proto.GetTableResponse{
+		Timelines: reader.Stat().Timelines,
+	}
+	return ConvertTimelineRowsToTableResponse(
+		ctx, reader, result, in.Timezone, in.Rows), nil
+}
+
 func ConvertTimelineRowsToTableResponse(
-	in <-chan *ordereddict.Dict,
+	ctx context.Context,
+	reader services.TimelineReader,
 	result *api_proto.GetTableResponse,
 	timezone string,
 	limit uint64,
@@ -18,7 +61,7 @@ func ConvertTimelineRowsToTableResponse(
 
 	var rows uint64
 	column_known := make(map[string]bool)
-	for row := range in {
+	for row := range reader.Read(ctx) {
 		// Row has timestamp
 		timestamp_any, pres := row.Get("Timestamp")
 		if !pres {

@@ -30,7 +30,7 @@ import {
 } from './table.jsx';
 
 
-class ColumnFilter extends Component {
+export class ColumnFilter extends Component {
     static propTypes = {
         column:  PropTypes.string,
         transform: PropTypes.object,
@@ -87,7 +87,12 @@ class ColumnFilter extends Component {
         let classname = "hidden-edit";
 
         if(this.state.edit_visible) {
-            return <Form onSubmit={()=>this.submitSearch()}>
+            return <Form
+                     onSubmit={e=>{
+                         e.preventDefault();
+                         this.submitSearch();
+                         return false;
+                     }}>
                      <Form.Control
                        as="input"
                        className="visible"
@@ -104,19 +109,28 @@ class ColumnFilter extends Component {
             classname = "visible";
         }
 
-        return <Button
-                 size="sm"
-                 variant="outline-dark"
-                 className={classname}
-                 onClick={()=>{
-                     this.setState({
-                         edit_visible: true,
-                     });
-                     this.props.setTransform({editing: this.props.column});
-                 }}>
-                 <FontAwesomeIcon icon="filter"/>
-                 { this.state.edit_filter }
-               </Button>;
+        return (<>
+                <Form
+                  onSubmit={e=>{
+                      e.preventDefault();
+                      return false;
+                  }}>
+                  <Button
+                    size="sm"
+                    type="button"
+                    variant="outline-dark"
+                    className={classname}
+                    onClick={()=>{
+                        this.setState({
+                            edit_visible: true,
+                        });
+                        this.props.setTransform({editing: this.props.column});
+                    }}>
+                    <FontAwesomeIcon icon="filter"/>
+                    { this.state.edit_filter }
+                </Button>
+                </Form>
+                </>);
     }
 }
 

@@ -43,38 +43,52 @@
  "Events": [
   {
    "Timestamp": "2024-05-15T12:19:47Z",
-   "Message": "Foo is suspicious at being Bar!",
+   "Message": "Original Event Message 1",
    "Description": "",
-   "User": "admin",
-   "Annotated At": "2024-05-15T12:19:47Z",
-   "Event": {
-    "Foo": "Bar"
-   },
+   "OriginalEventField": "Extra field 1",
+   "Foo": "Bar 1",
+   "Notes": "Foo is suspicious at being Bar!",
+   "AnnotatedBy": "admin",
+   "AnnotatedAt": "2024-05-15T12:19:47Z",
    "_Source": "Annotation"
   }
  ],
  "Next Annotation": [
   {
    "Timestamp": "2024-03-30T05:13:07Z",
-   "Message": "An Earlier Foo is suspicious at being Older Bar!",
+   "Message": "Original Event Message 2",
    "Description": "",
-   "User": "mike",
-   "Annotated At": "2024-05-15T12:19:47Z",
-   "Event": {
-    "Foo": "Older Bar"
-   },
+   "OriginalEventField": "Extra field 2",
+   "Foo": "Older Bar 2",
+   "Notes": "An Earlier Foo is suspicious at being Older Bar!",
+   "AnnotatedBy": "mike",
+   "AnnotatedAt": "2024-05-15T12:19:47Z",
    "_Source": "Annotation"
   },
   {
    "Timestamp": "2024-05-15T12:19:47Z",
-   "Message": "Foo is suspicious at being Bar!",
+   "Message": "Original Event Message 1",
    "Description": "",
-   "User": "admin",
-   "Annotated At": "2024-05-15T12:19:47Z",
-   "Event": {
-    "Foo": "Bar"
-   },
+   "OriginalEventField": "Extra field 1",
+   "Foo": "Bar 1",
+   "Notes": "Foo is suspicious at being Bar!",
+   "AnnotatedBy": "admin",
+   "AnnotatedAt": "2024-05-15T12:19:47Z",
    "_Source": "Annotation"
+  }
+ ],
+ "Timelines Metadata": [
+  {
+   "name": "supertimeline",
+   "timelines": [
+    {
+     "start_time": 1711775587,
+     "end_time": 1715775587,
+     "id": "Annotation",
+     "timestamp_column": "Timestamp",
+     "message_column": "Message"
+    }
+   ]
   }
  ]
 }

@@ -2,13 +2,13 @@
  "Notebook Metadata": {
   "name": "Timeline Notebook",
   "creator": "admin",
-  "created_time": 10,
-  "modified_time": 10,
+  "created_time": 1715775587,
+  "modified_time": 1715775587,
   "notebook_id": "N.01",
   "cell_metadata": [
    {
     "cell_id": "NC.02",
-    "timestamp": 10,
+    "timestamp": 1715775587,
     "type": "markdown",
     "current_version": "03",
     "available_versions": [
@@ -21,13 +21,95 @@
   "name": "supertimeline",
   "timelines": [
    {
-    "start_time": 1724123887,
-    "end_time": 1724123977,
+    "start_time": 1724123887000000000,
+    "end_time": 1724123977000000000,
+    "id": "test",
     "timestamp_column": "Time",
     "message_column": "MessageColumn",
     "timestamp_description_column": "description"
    }
   ]
  },
- "Events": []
+ "Events": [
+  {
+   "Timestamp": "2024-08-20T03:18:07Z",
+   "Message": "Message 1724123887",
+   "Description": "Description 1724123887",
+   "Time": 1724123887,
+   "Foo": "Bar",
+   "_Source": "test"
+  },
+  {
+   "Timestamp": "2024-08-20T03:18:17Z",
+   "Message": "Message 1724123897",
+   "Description": "Description 1724123897",
+   "Time": 1724123897,
+   "Foo": "Bar",
+   "_Source": "test"
+  },
+  {
+   "Timestamp": "2024-08-20T03:18:27Z",
+   "Message": "Message 1724123907",
+   "Description": "Description 1724123907",
+   "Time": 1724123907,
+   "Foo": "Bar",
+   "_Source": "test"
+  },
+  {
+   "Timestamp": "2024-08-20T03:18:37Z",
+   "Message": "Message 1724123917",
+   "Description": "Description 1724123917",
+   "Time": 1724123917,
+   "Foo": "Bar",
+   "_Source": "test"
+  },
+  {
+   "Timestamp": "2024-08-20T03:18:47Z",
+   "Message": "Message 1724123927",
+   "Description": "Description 1724123927",
+   "Time": 1724123927,
+   "Foo": "Bar",
+   "_Source": "test"
+  },
+  {
+   "Timestamp": "2024-08-20T03:18:57Z",
+   "Message": "Message 1724123937",
+   "Description": "Description 1724123937",
+   "Time": 1724123937,
+   "Foo": "Bar",
+   "_Source": "test"
+  },
+  {
+   "Timestamp": "2024-08-20T03:19:07Z",
+   "Message": "Message 1724123947",
+   "Description": "Description 1724123947",
+   "Time": 1724123947,
+   "Foo": "Bar",
+   "_Source": "test"
+  },
+  {
+   "Timestamp": "2024-08-20T03:19:17Z",
+   "Message": "Message 1724123957",
+   "Description": "Description 1724123957",
+   "Time": 1724123957,
+   "Foo": "Bar",
+   "_Source": "test"
+  },
+  {
+   "Timestamp": "2024-08-20T03:19:27Z",
+   "Message": "Message 1724123967",
+   "Description": "Description 1724123967",
+   "Time": 1724123967,
+   "Foo": "Bar",
+   "_Source": "test"
+  },
+  {
+   "Timestamp": "2024-08-20T03:19:37Z",
+   "Message": "Message 1724123977",
+   "Description": "Description 1724123977",
+   "Time": 1724123977,
+   "Foo": "Bar",
+   "_Source": "test"
+  }
+ ]
 }

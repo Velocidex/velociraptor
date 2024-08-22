@@ -108,13 +108,14 @@
 
   --color-timeline-header: #cdcdcd20;
   --color-timeline-table-shown: #5cd00a80;
-  --color-timeline-1: #dff0d820;
-  --color-timeline-2: #a9444220;
+  --color-timeline-1: #dff0d8;
+  --color-timeline-2: #a94442;
   --color-timeline-3: #2aabd2;
   --color-timeline-4: #f0c36d;
   --color-timeline-5: #bbb;
   --color-timeline-6: #008000;
   --color-timeline-7: #471ecb;
+  --color-timeline-annotation: #5cd00a;
 
   --color-page-link-active-background: var(--color-accent-50);
   --color-page-link-hover-background: var(--color-accent-25);

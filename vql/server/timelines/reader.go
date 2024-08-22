@@ -86,14 +86,18 @@ func (self TimelinePlugin) Call(
 			}
 		}
 
-		events, err := notebook_manager.ReadTimeline(ctx, notebook_id, arg.Timeline,
-			start, arg.IncludeComponents, arg.SkipComponents)
+		events, err := notebook_manager.ReadTimeline(
+			ctx, notebook_id, arg.Timeline,
+			services.TimelineOptions{
+				StartTime:         start,
+				IncludeComponents: arg.IncludeComponents,
+				ExcludeComponents: arg.SkipComponents})
 		if err != nil {
 			scope.Log("timeline: %v", err)
 			return
 		}
 
-		for row := range events {
+		for row := range events.Read(ctx) {
 			select {
 			case <-ctx.Done():
 				return

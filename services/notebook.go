@@ -25,6 +25,17 @@ func GetNotebookManager(config_obj *config_proto.Config) (NotebookManager, error
 	return org_manager.Services(config_obj.OrgId).NotebookManager()
 }
 
+type TimelineOptions struct {
+	IncludeComponents, ExcludeComponents []string
+	Filter                               string
+	StartTime                            time.Time
+}
+
+type TimelineReader interface {
+	Read(ctx context.Context) <-chan *ordereddict.Dict
+	Stat() *timelines_proto.SuperTimeline
+}
+
 type NotebookManager interface {
 	GetNotebook(ctx context.Context, notebook_id string, include_uploads bool) (
 		*api_proto.NotebookMetadata, error)
@@ -83,9 +94,8 @@ type NotebookManager interface {
 
 	// Read a timeline, merging a set of components from it.
 	ReadTimeline(ctx context.Context, notebook_id string,
-		timeline string, start_time time.Time,
-		include_components, exclude_components []string) (
-		<-chan *ordereddict.Dict, error)
+		timeline string, options TimelineOptions) (
+		TimelineReader, error)
 
 	// Add events to a timeline
 	AddTimeline(ctx context.Context, scope vfilter.Scope,

@@ -1,6 +1,7 @@
 package notebook_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -19,6 +20,9 @@ import (
 )
 
 func (self *NotebookManagerTestSuite) TestNotebookManagerTimelines() {
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(1715775587, 0)))
+	defer closer()
+
 	// Mock out cell ID generation for tests
 	gen := utils.IncrementalIdGenerator(0)
 	utils.SetIdGenerator(&gen)
@@ -49,11 +53,14 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelines() {
 
 		for i := 1724123887; i < 1724123987; i += 10 {
 			in <- ordereddict.NewDict().
-				Set("Time", i).Set("Foo", "Bar")
+				Set("MessageColumn", fmt.Sprintf("Message %v", i)).
+				Set("Time", i).Set("Foo", "Bar").
+				Set("description", fmt.Sprintf("Description %v", i))
 		}
 	}()
 
 	timeline := &timelines_proto.Timeline{
+		Id:                         "test",
 		TimestampColumn:            "Time",
 		MessageColumn:              "MessageColumn",
 		TimestampDescriptionColumn: "description",
@@ -66,16 +73,18 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelines() {
 
 	golden.Set("Supertimeline", super)
 
-	//	test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
+	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
 
 	// Read the timeline out again.
-	events_chan, err := notebook_manager.ReadTimeline(
-		self.Ctx, notebook.NotebookId,
-		"supertimeline", time.Time{}, []string{"test"}, nil)
+	reader, err := notebook_manager.ReadTimeline(
+		self.Ctx, notebook.NotebookId, "supertimeline",
+		services.TimelineOptions{
+			IncludeComponents: []string{"test"},
+		})
 	assert.NoError(self.T(), err)
 
 	events := []vfilter.Row{}
-	for event := range events_chan {
+	for event := range reader.Read(self.Ctx) {
 		events = append(events, event)
 	}
 	golden.Set("Events", events)
@@ -117,7 +126,10 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
 		notebook.NotebookId, "supertimeline",
 		"Foo is suspicious at being Bar!", "admin",
 		time.Unix(1715775587, 0),
-		ordereddict.NewDict().Set("Foo", "Bar"))
+		ordereddict.NewDict().
+			Set("Message", "Original Event Message 1").
+			Set("OriginalEventField", "Extra field 1").
+			Set("Foo", "Bar 1"))
 	assert.NoError(self.T(), err)
 
 	// Make sure the timeline is added automatically
@@ -129,13 +141,14 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
 
 	read_all_events := func() (events []vfilter.Row) {
 		// Read the timeline out again.
-		events_chan, err := notebook_manager.ReadTimeline(
-			self.Ctx, notebook.NotebookId,
-			"supertimeline", time.Unix(0, 0),
-			[]string{constants.TIMELINE_ANNOTATION}, nil)
+		reader, err := notebook_manager.ReadTimeline(
+			self.Ctx, notebook.NotebookId, "supertimeline",
+			services.TimelineOptions{
+				IncludeComponents: []string{constants.TIMELINE_ANNOTATION},
+			})
 		assert.NoError(self.T(), err)
 
-		for event := range events_chan {
+		for event := range reader.Read(self.Ctx) {
 			events = append(events, event)
 		}
 		return events
@@ -147,12 +160,24 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
 		notebook.NotebookId, "supertimeline",
 		"An Earlier Foo is suspicious at being Older Bar!", "mike",
 		time.Unix(1711775587, 0),
-		ordereddict.NewDict().Set("Foo", "Older Bar"))
+		// This is normally the event that is being annotated in
+		// full. It will be copied into the Annotation event.
+		ordereddict.NewDict().
+			Set("Message", "Original Event Message 2").
+			Set("OriginalEventField", "Extra field 2").
+			Set("Foo", "Older Bar 2"))
 	assert.NoError(self.T(), err)
 
 	golden.Set("Next Annotation", read_all_events())
 
 	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
+
+	// Make sure that timeline metadata is updated
+	timelines_metadata, err := notebook_manager.Timelines(
+		self.Ctx, notebook.NotebookId)
+	assert.NoError(self.T(), err)
+
+	golden.Set("Timelines Metadata", timelines_metadata)
 
 	goldie.Assert(self.T(), "TestNotebookManagerTimelineAnnotations",
 		json.MustMarshalIndent(golden))

@@ -169,7 +169,9 @@ const (
 	ELASTIC_CREDS   = "Elastic Creds"
 
 	// The name of the annotation timeline
-	TIMELINE_ANNOTATION = "Annotation"
+	TIMELINE_ANNOTATION      = "Annotation"
+	TIMELINE_DEFAULT_KEY     = "Timestamp"
+	TIMELINE_DEFAULT_MESSAGE = "Message"
 )
 
 type key int

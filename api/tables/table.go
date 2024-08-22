@@ -433,36 +433,6 @@ func getEventTableWithPathManager(
 		rs_reader.Rows(ctx), result, in.Timezone, in.Rows), nil
 }
 
-func getTimeline(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
-
-	if in.NotebookId == "" {
-		return nil, errors.New("NotebookId must be specified")
-	}
-
-	notebook_manager, err := services.GetNotebookManager(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	start_time := time.Time{}
-	if in.StartTime != 0 {
-		start_time = time.Unix(0, int64(in.StartTime))
-	}
-
-	rows, err := notebook_manager.ReadTimeline(ctx, in.NotebookId,
-		in.Timeline, start_time, in.IncludeComponents, in.SkipComponents)
-	if err != nil {
-		return nil, err
-	}
-
-	result := &api_proto.GetTableResponse{}
-	return ConvertTimelineRowsToTableResponse(
-		rows, result, in.Timezone, in.Rows), nil
-}
-
 func GetTableOptions(in *api_proto.GetTableRequest) (
 	options result_sets.ResultSetOptions, err error) {
 	if in.SortColumn != "" {

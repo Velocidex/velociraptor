@@ -31,6 +31,7 @@ import Modal from 'react-bootstrap/Modal';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import { ToStandardTime } from '../utils/time.jsx';
+import { ColumnFilter } from '../core/paged-table.jsx';
 
 const TenYears =  10 * 365 * 24 * 60 * 60 * 1000;
 
@@ -126,18 +127,6 @@ class TimelineTableRow extends Component {
         showAnnotateDialog: false,
     }
 
-    renderCell = (column, rowIdx) => {
-        let cell = this.props.row[column] || "";
-        if(column === "Timestamp") {
-            return <td key={column}>
-                     <div className={this.props.timeline_class}>
-                       <VeloTimestamp usec={cell}/>
-                     </div>
-                   </td>;
-        }
-        return <td key={column}> <VeloValueRenderer value={cell}/> </td>;
-    };
-
     render() {
         let data = this.props.row || {};
         let row_class = "timeline-data ";
@@ -147,12 +136,32 @@ class TimelineTableRow extends Component {
 
         let timestamp = ToStandardTime(data.Timestamp).getTime() * 1000000;
 
+        // For normal rows we show the raw data.
+        let message = data.Message;
+        let event = data;
+        let notes = data.Notes || "";
+
         return (
             <React.Fragment >
               <tr className="row-selected"
                   onClick={e=>this.setState({expanded: !this.state.expanded})}
-                >
-                {_.map(this.props.columns, this.renderCell)}
+              >
+                <td className={"timeline-group " + this.props.timeline_class}>
+                </td>
+                <td className="time">
+                  <VeloTimestamp usec={event.Timestamp || ""}/>
+                </td>
+                <td>
+                  <VeloValueRenderer value={message}/>
+                </td>
+                {_.map(this.props.columns || [], (x, i)=>{
+                    return <td key={i}>
+                             <VeloValueRenderer value={event[x] || ""}/>
+                           </td>;
+                })}
+                <td>
+                  <VeloValueRenderer value={notes}/>
+                </td>
               </tr>
               <tr className={row_class}>
                 <td colSpan="30">
@@ -165,7 +174,7 @@ class TimelineTableRow extends Component {
                         <FontAwesomeIcon icon="note-sticky"/>
                       </Button>
                     </ButtonGroup>}
-                  <VeloValueRenderer value={data} />
+                  <VeloValueRenderer value={event} />
                 </td>
               </tr>
               { this.state.showAnnotateDialog &&
@@ -196,9 +205,15 @@ class TimelineTableRenderer  extends Component {
         notebook_id: PropTypes.string,
         super_timeline: PropTypes.string,
         onUpdate: PropTypes.func,
+        transform: PropTypes.object,
+        setTransform: PropTypes.func,
     }
 
     getTimelineClass = (name) => {
+        if (name === "Annotation") {
+            return "timeline-annotation";
+        }
+
         let timelines = this.props.timelines.timelines;
         if (_.isArray(timelines)) {
             for(let i=0;i<timelines.length;i++) {
@@ -210,7 +225,7 @@ class TimelineTableRenderer  extends Component {
         return "";
     }
 
-    columns = ["Timestamp", "Message", "Description"];
+    columns = [];
 
     renderRow = (row, idx)=>{
         let columns = this.columns.concat(this.props.extra_columns);
@@ -228,29 +243,87 @@ class TimelineTableRenderer  extends Component {
     }
 
     render() {
-        if (_.isEmpty(this.props.rows)) {
-            return <div className="no-content velo-table">{T("No events")}</div>;
-        }
-
         return <Table className="paged-table">
                 <thead>
                   <tr className="paged-table-header">
-                    {_.map(this.columns, (x, i)=>{
-                        return <th key={i} className={i == 0 ? "time" : ""}>
-                                 { T(x) }
-                               </th>;
-                    })}
+                    <th></th>
+                    <th className="time">
+                      { T("Timestamp") }
+                    </th>
+
+                    <th className="message">
+                      <table className="paged-table-header">
+                        <tbody>
+                          <tr>
+                            <td>{ T("Message") }</td>
+                            <td className="sort-element">
+                              <ButtonGroup>
+                                <ColumnFilter column="message"
+                                              transform={this.props.transform}
+                                              setTransform={this.props.setTransform}
+                                />
+                              </ButtonGroup>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </th>
+
                     {_.map(this.props.extra_columns || [], (x, i)=>{
                         return <th key={i}>
                                  { x }
                                </th>;
                     })}
+                    <th className="notes">
+                      { T("Notes") }
+                    </th>
+
                   </tr>
                 </thead>
                  <tbody className="fixed-table-body">
                    {_.map(this.props.rows, this.renderRow)}
                  </tbody>
                </Table>;
+    }
+}
+
+class GroupRenderer extends Component {
+    static propTypes = {
+        group: PropTypes.object,
+        setGroup: PropTypes.func,
+        disabled: PropTypes.bool,
+    }
+
+    toggle = ()=>{
+        let group = Object.assign({}, this.props.group);
+        group.disabled = !group.disabled;
+        this.props.setGroup(group);
+    }
+
+    render() {
+        let group = this.props.group || {};
+        let icon_class = "";
+        if (this.props.disabled) {
+            icon_class = "hidden_icon";
+        }
+
+        return (
+            <ButtonGroup>
+              <Button variant="outline-default"
+                      onClick={this.toggle}>
+                <span className={icon_class}>
+                  <FontAwesomeIcon icon={
+                      ["far", !group.disabled ?
+                       "square-check" : "square"]
+                  }/>
+                </span>
+              </Button>
+              <Button variant="outline-default"
+                onClick={this.toggle}>
+                { group.title }
+              </Button>
+            </ButtonGroup>
+        );
     }
 }
 
@@ -286,6 +359,11 @@ export default class TimelineRenderer extends React.Component {
             return true;
         };
 
+        if (!_.isEqual(prevState.transform, this.state.transform)) {
+            this.fetchRows();
+            return true;
+        }
+
         return false;
     }
 
@@ -308,6 +386,8 @@ export default class TimelineRenderer extends React.Component {
         visibleTimeStart: 0,
         visibleTimeEnd: 0,
         toggles: {},
+        transform: {},
+        timelines: [],
     };
 
     fetchRows = () => {
@@ -323,6 +403,8 @@ export default class TimelineRenderer extends React.Component {
             start_time = 0;
         }
 
+        let transform = this.state.transform || {};
+
         let params = {
             type: "TIMELINE",
             timeline: this.props.name,
@@ -330,6 +412,8 @@ export default class TimelineRenderer extends React.Component {
             rows: this.state.row_count,
             skip_components: skip_components,
             notebook_id: this.props.notebook_id,
+            filter_column: transform.filter_column,
+            filter_regex: transform.filter_regex,
         };
 
         let url = "v1/GetTable";
@@ -346,12 +430,15 @@ export default class TimelineRenderer extends React.Component {
             let start_time = (response.data.start_time / 1000000) || 0;
             let end_time = (response.data.end_time / 1000000) || 0;
             let pageData = PrepareData(response.data);
+            let timelines = response.data.timelines;
+
             this.setState({
                 table_start: start_time,
                 table_end:  response.data.end_time / 1000000 || 0,
                 columns: pageData.columns,
                 rows: pageData.rows,
                 version: Date(),
+                timelines: timelines,
             });
 
             // If the visible table is outside the view port, adjust
@@ -373,24 +460,41 @@ export default class TimelineRenderer extends React.Component {
     };
 
     groupRenderer = ({ group }) => {
+        return <GroupRenderer
+                 setGroup={group=>{
+                     let disabled = this.state.disabled;
+                     disabled[group.id] = group.disabled;
+                     this.setState({disabled: disabled});
+                     this.fetchRows();
+                 }}
+                 group={group}
+                 disabled={group.id === -1}
+               />;
+
+
         if (group.id < 0) {
             return <div>{group.title}</div>;
         }
 
         return (
             <Form>
-              <Form.Check
-                className="custom-group"
-                type="checkbox"
-                label={group.title}
-                checked={!group.disabled}
-                onChange={()=>{
-                    let disabled = this.state.disabled;
-                    disabled[group.id] = !disabled[group.id];
-                    this.setState({disabled: disabled});
-                    this.fetchRows();
-                }}
-              />
+              <ButtonGroup>
+                <Form.Check
+                  className="custom-group"
+                  type="checkbox"
+                  label={group.title}
+                  checked={!group.disabled}
+                  onChange={()=>{
+                      let disabled = this.state.disabled;
+                      disabled[group.id] = !disabled[group.id];
+                      this.setState({disabled: disabled});
+                      this.fetchRows();
+                  }}
+                />
+                <Button variant="default">
+                  <FontAwesomeIcon icon="wrench" />
+                </Button>
+              </ButtonGroup>
             </Form>
         );
     };
@@ -457,17 +561,22 @@ export default class TimelineRenderer extends React.Component {
     }
 
     render() {
-        let super_timeline = {timelines:[]};
-        if (_.isString(this.props.params)) {
-            super_timeline = JSONparse(this.props.params);
-            if(!super_timeline) {
-                return <></>;
+        let super_timeline = {timelines: this.state.timelines || []};
+        if(_.isEmpty(super_timeline.timelines)) {
+            if (_.isString(this.props.params)) {
+                super_timeline = JSONparse(this.props.params);
+                if(!super_timeline) {
+                    return <></>;
+                }
+            } else if(_.isObject(this.props.params)) {
+                super_timeline = this.props.params;
             }
-        } else if(_.isObject(this.props.params)) {
-            super_timeline = this.props.params;
         }
 
-        let groups = [{id: -1, title: "Table View"}];
+        // Special groups must come first.
+        let groups = [{id: -1, title: "Table View"},
+                      {id: "Annotation", title: "Annotation",
+                       disabled: this.state.disabled.Annotation}];
         let items = [{
             id:-1, group: -1,
             start_time: this.state.table_start,
@@ -499,26 +608,47 @@ export default class TimelineRenderer extends React.Component {
                 largest = end;
             }
 
-            groups.push({
-                id: timeline.id,
-                disabled: this.state.disabled[timeline.id],
-                title: timeline.id,
-            });
-            items.push({
-                id: i+1, group: timeline.id,
-                start_time: start,
-                end_time: end,
-                canMove: false,
-                canResize: false,
-                canChangeGroup: false,
-                itemProps: {
-                    className: 'timeline-item-' + ((i + 1) % 8),
-                    style: {
-                        background: undefined,
-                        color: undefined,
-                    }
-                },
-            });
+            // Handle the annotation timeline specifically
+            if (timeline.id === "Annotation") {
+                items.push({
+                    id: i+1, group: timeline.id,
+                    start_time: start,
+                    end_time: end,
+                    canMove: false,
+                    canResize: false,
+                    canChangeGroup: false,
+                    itemProps: {
+                        className: 'timeline-annotation',
+                        style: {
+                            background: undefined,
+                            color: undefined,
+                        }
+                    },
+                });
+
+            } else {
+                groups.push({
+                    id: timeline.id,
+                    disabled: this.state.disabled[timeline.id],
+                    title: timeline.id,
+                });
+
+                items.push({
+                    id: i+1, group: timeline.id,
+                    start_time: start,
+                    end_time: end,
+                    canMove: false,
+                    canResize: false,
+                    canChangeGroup: false,
+                    itemProps: {
+                        className: 'timeline-item-' + ((i + 1) % 8),
+                        style: {
+                            background: undefined,
+                            color: undefined,
+                        }
+                    },
+                });
+            }
         }
 
         if (smallest > largest) {
@@ -594,6 +724,8 @@ export default class TimelineRenderer extends React.Component {
                      timelines={super_timeline}
                      extra_columns={extra_columns}
                      onUpdate={this.fetchRows}
+                     transform={this.state.transform}
+                     setTransform={x=>this.setState({transform:x})}
                      rows={this.state.rows} />
                  }
                </div>;
