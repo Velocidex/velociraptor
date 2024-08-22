@@ -468,7 +468,7 @@ loop:
 			// A directory has no member file
 		} else {
 			seen[member_name] = &ZipFileInfo{
-				_full_path: cd_cache.full_path.Append(member_name),
+				_full_path: full_path.Append(member_name),
 			}
 		}
 	}
