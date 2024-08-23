@@ -42,6 +42,10 @@ type NotebookManager interface {
 		in *api_proto.NotebookCellRequest, username string) (
 		*api_proto.NotebookMetadata, error)
 
+	DeleteNotebook(ctx context.Context,
+		notebook_id string, progress chan vfilter.Row,
+		really_do_it bool) error
+
 	UpdateNotebook(ctx context.Context, in *api_proto.NotebookMetadata) error
 
 	GetNotebookCell(ctx context.Context,

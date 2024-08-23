@@ -75,6 +75,10 @@ type NotebookStore interface {
 
 	DeleteTimeline(ctx context.Context, scope vfilter.Scope,
 		notebook_id string, supertimeline string) error
+
+	DeleteNotebook(ctx context.Context,
+		notebook_id string, progress chan vfilter.Row,
+		really_do_it bool) error
 }
 
 type NotebookStoreImpl struct {

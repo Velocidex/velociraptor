@@ -34,7 +34,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/timelines"
 	"www.velocidex.com/golang/velociraptor/utils"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -175,7 +174,7 @@ func getStackTable(
 	}
 
 	path_spec := path_specs.NewUnsafeFilestorePath(
-		utils.FilterSlice(in.StackPath)...).
+		utils.FilterSlice(in.StackPath, "")...).
 		SetType(api.PATH_TYPE_FILESTORE_JSON)
 	file_store_factory := file_store.GetFileStore(config_obj)
 
@@ -443,48 +442,24 @@ func getTimeline(
 		return nil, errors.New("NotebookId must be specified")
 	}
 
-	path_manager := paths.NewNotebookPathManager(in.NotebookId).
-		SuperTimeline(in.Timeline)
-	reader, err := timelines.NewSuperTimelineReader(
-		config_obj, path_manager, in.IncludeComponents, in.SkipComponents)
+	notebook_manager, err := services.GetNotebookManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
-	defer reader.Close()
 
-	result := &api_proto.GetTableResponse{
-		Columns:   []string{"_Source", "Time", "Desc", "Message", "Data"},
-		StartTime: int64(in.StartTime),
-	}
-
+	start_time := time.Time{}
 	if in.StartTime != 0 {
-		ts := time.Unix(0, int64(in.StartTime))
-		reader.SeekToTime(ts)
+		start_time = time.Unix(0, int64(in.StartTime))
 	}
 
-	rows := uint64(0)
-	opts := json.GetJsonOptsForTimezone(in.Timezone)
-	for item := range reader.Read(ctx) {
-		if result.StartTime == 0 {
-			result.StartTime = item.Time.UnixNano()
-		}
-		result.EndTime = item.Time.UnixNano()
-		result.Rows = append(result.Rows, &api_proto.Row{
-			Cell: []string{
-				item.Source,
-				json.AnyToString(item.Time, opts),
-				item.TimestampDescription,
-				item.Message,
-				json.AnyToString(item.Row, opts)},
-		})
-
-		rows += 1
-		if rows > in.Rows {
-			break
-		}
+	rows, err := notebook_manager.ReadTimeline(ctx, in.NotebookId,
+		in.Timeline, start_time, in.IncludeComponents, in.SkipComponents)
+	if err != nil {
+		return nil, err
 	}
 
-	return result, nil
+	result := &api_proto.GetTableResponse{}
+	return ConvertRowsToTableResponse(rows, result, in.Timezone, in.Rows), nil
 }
 
 func GetTableOptions(in *api_proto.GetTableRequest) (

@@ -9,6 +9,7 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Button from 'react-bootstrap/Button';
 import StepWizard from 'react-step-wizard';
+import NewCollectionConfigParameters from '../flows/new-collections-parameters.jsx';
 
 import {
     NewCollectionSelectArtifacts,
@@ -24,7 +25,8 @@ import api from '../core/api-service.jsx';
 
 
 class NotebookPaginationBuilder extends PaginationBuilder {
-    PaginationSteps = [T("Configure Parameters"), T("Select Template"),
+    PaginationSteps = [T("Configure Notebook"),
+                       T("Select Template"), T("Configure Parameters"),
                        T("Review"), T("Launch")];
 }
 
@@ -181,9 +183,11 @@ export class NewNotebook extends React.Component {
         artifacts: [],
 
         // Filled by step 2
-        parameters: {
+        notebook_parameters: {
             name: "New Notebook",
         },
+
+        parameters: {},
     }
 
     setArtifacts = (artifacts) => {
@@ -194,6 +198,10 @@ export class NewNotebook extends React.Component {
         this.setState({parameters: params});
     }
 
+    setNotebookParameters = (params) => {
+        this.setState({notebook_parameters: params});
+    }
+
     launch = () =>{
         let api_url = "v1/NewNotebook";
         api.post(api_url, this.prepareRequest(), this.source.token).
@@ -201,13 +209,24 @@ export class NewNotebook extends React.Component {
     }
 
     prepareRequest = () => {
-        let p = this.state.parameters || {};
+        let p = this.state.notebook_parameters || {};
+        let specs = _.map(this.state.parameters, (args, artifact)=>{
+            let spec = {
+                artifact: artifact,
+                parameters: {env: []},
+            };
+            _.each(args, (v, k) => {
+                spec.parameters.env.push({key: k, value: v});
+            });
+            return spec;
+        });
         return {
             name: p.name,
             description: p.description,
             collaborators: p.collaborators,
             public: p.public,
             artifacts: _.map(this.state.artifacts || [], x=>x.name),
+            specs: specs,
         };
     }
 
@@ -220,10 +239,10 @@ export class NewNotebook extends React.Component {
                    onHide={this.props.closeDialog}>
               <StepWizard ref={n=>this.step=n}>
                 <NewNotebookParameters
-                  parameters={this.state.parameters}
-                  setParameters={this.setParameters}
+                  parameters={this.state.notebook_parameters}
+                  setParameters={this.setNotebookParameters}
                   paginator={new NotebookPaginationBuilder(
-                      T("Configure Parameters"),
+                      T("Configure Notebook"),
                       T("New Notebook: Configure Parameters"))}
                 />
                 <NewCollectionSelectArtifacts
@@ -236,10 +255,21 @@ export class NewNotebook extends React.Component {
                   setParameters={p=>1}
                 />
 
+                <NewCollectionConfigParameters
+                  parameters={this.state.parameters}
+                  setParameters={this.setParameters}
+                  artifacts={this.state.artifacts}
+                  setArtifacts={this.setArtifacts}
+                  configureResourceControl={true}
+                  paginator={new NotebookPaginationBuilder(
+                      T("Configure Parameters"),
+                      T("New Notebook: Configure Parameters"))}
+                  request={this.prepareRequest()}/>
+
                 <NewCollectionRequest
                   paginator={new NotebookPaginationBuilder(
                       T("Review"),
-                      T("New Collection: Review request"))}
+                      T("New Notebook: Review request"))}
                   request={this.prepareRequest()} />
 
                 <NewNotebookLaunch

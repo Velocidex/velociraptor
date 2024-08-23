@@ -41,6 +41,7 @@ func (self *NotebookManager) GetNotebook(
 		return nil, err
 	}
 
+	// Global notebooks keep these internally.
 	if include_uploads {
 		// An error here just means there are no AvailableDownloads.
 		notebook.AvailableDownloads, _ = self.Store.GetAvailableDownloadFiles(

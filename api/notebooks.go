@@ -215,6 +215,52 @@ func (self *ApiServer) UpdateNotebook(
 	return in, notebook_manager.UpdateNotebook(ctx, in)
 }
 
+func (self *ApiServer) DeleteNotebook(
+	ctx context.Context,
+	in *api_proto.NotebookMetadata) (*emptypb.Empty, error) {
+
+	defer Instrument("DeleteNotebook")()
+
+	if !strings.HasPrefix(in.NotebookId, "N.") {
+		return nil, InvalidStatus("Invalid NoteboookId")
+	}
+
+	users := services.GetUserManager()
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+	principal := user_record.Name
+
+	permissions := acls.NOTEBOOK_EDITOR
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
+	if !perm || err != nil {
+		return nil, PermissionDenied(err,
+			"User is not allowed to delete notebooks.")
+	}
+
+	// If the notebook is not properly shared with the user they
+	// may not edit it.
+	notebook_manager, err := services.GetNotebookManager(org_config_obj)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	old_notebook, err := notebook_manager.GetNotebook(ctx, in.NotebookId, SKIP_UPLOADS)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	if !notebook_manager.CheckNotebookAccess(old_notebook, principal) {
+		return nil, InvalidStatus("Notebook is not shared with user.")
+	}
+
+	err = notebook_manager.DeleteNotebook(ctx, in.NotebookId, nil,
+		true /* really_do_it */)
+
+	return &emptypb.Empty{}, Status(self.verbose, err)
+}
+
 func (self *ApiServer) GetNotebookCell(
 	ctx context.Context,
 	in *api_proto.NotebookCellRequest) (*api_proto.NotebookCell, error) {

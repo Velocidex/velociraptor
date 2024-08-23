@@ -18,6 +18,10 @@ import Row from 'react-bootstrap/Row';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ToStandardTime } from '../utils/time.jsx';
 import { JSONparse } from '../utils/json_parse.jsx';
+import ToolTip from '../widgets/tooltip.jsx';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import ToggleButton from 'react-bootstrap/ToggleButton';
+import { sprintf } from 'sprintf-js';
 
 import T from '../i8n/i8n.jsx';
 
@@ -106,6 +110,11 @@ export class AddVQLCellToTimeline extends React.Component {
         name: "",
 
         loading: false,
+
+        // Toggle between viewing timelines in global notebooks or
+        // this current notebook.
+        use_global_timelines: false,
+        global_timelines: [],
     }
 
     componentDidMount = () => {
@@ -126,6 +135,29 @@ export class AddVQLCellToTimeline extends React.Component {
         }
 
         return false;
+    }
+
+    fetchGlobalTimelines = ()=>{
+        api.get("v1/GetNotebooks", {
+            count: 100,
+            offset: 0,
+        }, this.source.token).then(response=>{
+            if (response.cancel) {
+                return;
+            }
+
+            if(response && response.data && response.data.items) {
+                let timelines = [];
+                _.each(response.data.items, x=>{
+                    _.each(x.timelines, y=>{
+                        timelines.push({notebook_id: x.notebook_id,
+                                        title: x.name,
+                                        name: y});
+                    });
+                });
+                this.setState({global_timelines: timelines});
+            }
+        });
     }
 
     getTables = ()=>{
@@ -190,7 +222,7 @@ export class AddVQLCellToTimeline extends React.Component {
             artifacts: ["Server.Utils.AddTimeline"],
             specs: [{artifact: "Server.Utils.AddTimeline",
                      parameters:{"env": [
-                         {"key": "NotebookId", "value": this.props.notebook_metadata.notebook_id},
+                         {"key": "NotebookId", "value": this.state.timeline_notebook_id},
                          {"key": "Timeline", "value": this.state.timeline},
                          {"key": "ChildName", "value": this.state.name},
                          {"key": "Key", "value": this.state.time_column},
@@ -233,9 +265,22 @@ export class AddVQLCellToTimeline extends React.Component {
     render() {
         let timelines = this.props.notebook_metadata &&
             this.props.notebook_metadata.timelines;
-        let options = _.map(timelines, x=>{
-            return {value: x, label: x, isFixed: true, color: "#00B8D9"};
+        let local_timeline_options = _.map(timelines, x=>{
+            return {value: x,
+                    label: x,
+                    notebook_id: this.props.notebook_metadata.notebook_id,
+                    isFixed: true,
+                    color: "#00B8D9"};
         });
+
+        let global_timeline_options = _.map(this.state.global_timelines, x=>{
+            return {value: x.name,
+                    label: sprintf(T("%s (notebook %s)"), x.name, x.title),
+                    notebook_id: x.notebook_id,
+                    isFixed: true,
+                    color: "#00B8D9"};
+        });
+
         let all_column_options = _.map(this.state.all_columns, x=>{
             return {value: x, label: x, isFixed: true, color: "#00B8D9"};
         });
@@ -251,18 +296,56 @@ export class AddVQLCellToTimeline extends React.Component {
                 <Modal.Title>{T("Add Timeline")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
+
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">{T("Super Timeline")}</Form.Label>
+                  <ToolTip tooltip={T("Select timeline type")}>
+                    <Form.Label column sm="3" className="global-timeline-button">
+                      <Button
+                        variant="secondary"
+                        onClick={e=>{
+                            if (!this.state.use_global_timelines) {
+                                this.fetchGlobalTimelines();
+                                this.setState({use_global_timelines: true});
+                            } else {
+                                this.setState({use_global_timelines: false});
+                            };
+                        }}
+                      >
+                        {!this.state.use_global_timelines ?
+                         T("Local Timeline"):
+                         T("Global Timeline")
+                        }
+                      </Button>
+                    </Form.Label>
+                  </ToolTip>
                   <Col sm="8">
-                    <CreatableSelect
-                      isClearable
-                      className="labels"
-                      classNamePrefix="velo"
-                      options={options}
-                      onChange={(e)=>this.setState({timeline: e && e.value})}
-                      placeholder={T("Super-timeline name")}
-                      spellCheck="false"
-                    />
+                    {this.state.use_global_timelines ?
+                     <Select
+                       isClearable
+                       className="labels"
+                       classNamePrefix="velo"
+                       options={global_timeline_options}
+                       onChange={(e)=>this.setState({
+                           timeline: e && e.value,
+                           timeline_notebook_id: e && e.notebook_id,
+                       })}
+                       placeholder={T("Select timeline name from global notebook")}
+                       spellCheck="false"
+                     />
+                     :
+                     <CreatableSelect
+                       isClearable
+                       className="labels"
+                       classNamePrefix="velo"
+                       options={local_timeline_options}
+                       onChange={(e)=>this.setState({
+                           timeline: e && e.value,
+                           timeline_notebook_id: e && e.notebook_id,
+                       })}
+                       placeholder={T("Select or create timeline name in this notebook")}
+                       spellCheck="false"
+                     />
+                    }
                   </Col>
                 </Form.Group>
 
