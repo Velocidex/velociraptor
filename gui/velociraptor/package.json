@@ -33,7 +33,7 @@
         "moment-timezone": "0.5.45",
         "npm-watch": "^0.13.0",
         "prop-types": "^15.8.1",
-        "qs": "6.12.3",
+        "qs": "6.13.0",
         "query-string": "^6.14.1",
         "react": "^16.14.0",
         "react-ace": "^9.5.0",
