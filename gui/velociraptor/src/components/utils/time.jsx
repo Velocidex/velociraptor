@@ -124,3 +124,20 @@ class VeloTimestamp extends Component {
 }
 
 export default VeloTimestamp;
+
+
+
+// Returns a date object in local timestamp which represents the UTC
+// date. This is needed because the date selector widget expects to
+// work in local time.
+export function localTimeFromUTCTime(date) {
+    let msSinceEpoch = date.getTime();
+    let tzoffset = (new Date()).getTimezoneOffset();
+    return new Date(msSinceEpoch + tzoffset * 60000);
+}
+
+export function utcTimeFromLocalTime(date) {
+    let msSinceEpoch = date.getTime();
+    let tzoffset = (new Date()).getTimezoneOffset();
+    return new Date(msSinceEpoch - tzoffset * 60000);
+}

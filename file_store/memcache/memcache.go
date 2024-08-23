@@ -599,6 +599,7 @@ func (self *MemcacheFileStore) WriteFileWithCompletion(
 			min_age:       self.min_age,
 			max_age:       self.max_age,
 			delegate_size: -1,
+			last_flush:    utils.GetTime().Now(),
 		}
 		self.data_cache[key] = result
 		metricDataLRU.Inc()

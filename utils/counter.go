@@ -10,7 +10,36 @@ import (
 
 var (
 	idx uint64 = uint64(GetGUID() >> 4)
+
+	mock_uuid UUIDGenerator = &RealUUID{}
 )
+
+type UUIDGenerator interface {
+	GetGUID() int64
+}
+
+type RealUUID struct{}
+
+func (self *RealUUID) GetGUID() int64 {
+	u := uuid.New()
+	return int64(binary.BigEndian.Uint64(u[0:8]) >> 2)
+}
+
+type mockUUID struct {
+	counter int64
+}
+
+func (self *mockUUID) GetGUID() int64 {
+	self.counter++
+	return self.counter
+}
+
+func MockGUID(id int64) func() {
+	mock_uuid = &mockUUID{id}
+	return func() {
+		mock_uuid = &RealUUID{}
+	}
+}
 
 // Get unique ID
 func GetId() uint64 {
@@ -18,8 +47,7 @@ func GetId() uint64 {
 }
 
 func GetGUID() int64 {
-	u := uuid.New()
-	return int64(binary.BigEndian.Uint64(u[0:8]) >> 2)
+	return mock_uuid.GetGUID()
 }
 
 type Counter struct {

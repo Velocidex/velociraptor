@@ -98,6 +98,9 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
 	closer := utils.MockTime(utils.NewMockClock(time.Unix(1715775587, 0)))
 	defer closer()
 
+	closer2 := utils.MockGUID(53324)
+	defer closer2()
+
 	// Mock out cell ID generation for tests
 	gen := utils.IncrementalIdGenerator(0)
 	utils.SetIdGenerator(&gen)
@@ -178,6 +181,19 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
 	assert.NoError(self.T(), err)
 
 	golden.Set("Timelines Metadata", timelines_metadata)
+
+	// Now update the first annotation.
+	first_event := ordereddict.NewDict()
+	first_event.MergeFrom(read_all_events()[0].(*ordereddict.Dict))
+	golden.Set("First Event Updated", first_event)
+
+	err = notebook_manager.AnnotateTimeline(self.Ctx, scope,
+		notebook.NotebookId, "supertimeline",
+		"Updated First Annotation - all other fields remain", "admin",
+		time.Unix(1715776587, 0), first_event)
+	assert.NoError(self.T(), err)
+
+	golden.Set("Updated Annotations", read_all_events())
 
 	goldie.Assert(self.T(), "TestNotebookManagerTimelineAnnotations",
 		json.MustMarshalIndent(golden))

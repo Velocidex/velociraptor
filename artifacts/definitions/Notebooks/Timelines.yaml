@@ -31,3 +31,16 @@ sources:
           3. Select the timestamp and message columns to add a timeline.
 
           {{ Scope "TimelineName" | Timeline }}
+
+      - type: vql
+        template: |
+          /*
+          # Timeline Annotations
+
+          Refresh this to list all timeline annotations as a table.
+          */
+          SELECT *
+          FROM timeline(notebook_id=NotebookId,
+                        components="Annotation",
+                        timeline=TimelineName)
+          ORDER BY Timestamp
