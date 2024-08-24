@@ -113,6 +113,7 @@ type APIClient interface {
 	UploadNotebookAttachment(ctx context.Context, in *NotebookFileUploadRequest, opts ...grpc.CallOption) (*NotebookFileUploadResponse, error)
 	// Remove a notebook attachment.
 	RemoveNotebookAttachment(ctx context.Context, in *NotebookFileUploadRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	AnnotateTimeline(ctx context.Context, in *AnnotationRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	// Secret management
 	DefineSecret(ctx context.Context, in *SecretDefinition, opts ...grpc.CallOption) (*empty.Empty, error)
 	DeleteSecretDefinition(ctx context.Context, in *SecretDefinition, opts ...grpc.CallOption) (*empty.Empty, error)
@@ -735,6 +736,15 @@ func (c *aPIClient) RemoveNotebookAttachment(ctx context.Context, in *NotebookFi
 	return out, nil
 }
 
+func (c *aPIClient) AnnotateTimeline(ctx context.Context, in *AnnotationRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/proto.API/AnnotateTimeline", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *aPIClient) DefineSecret(ctx context.Context, in *SecretDefinition, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/DefineSecret", in, out, opts...)
@@ -1051,6 +1061,7 @@ type APIServer interface {
 	UploadNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*NotebookFileUploadResponse, error)
 	// Remove a notebook attachment.
 	RemoveNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*empty.Empty, error)
+	AnnotateTimeline(context.Context, *AnnotationRequest) (*empty.Empty, error)
 	// Secret management
 	DefineSecret(context.Context, *SecretDefinition) (*empty.Empty, error)
 	DeleteSecretDefinition(context.Context, *SecretDefinition) (*empty.Empty, error)
@@ -1279,6 +1290,9 @@ func (UnimplementedAPIServer) UploadNotebookAttachment(context.Context, *Noteboo
 }
 func (UnimplementedAPIServer) RemoveNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveNotebookAttachment not implemented")
+}
+func (UnimplementedAPIServer) AnnotateTimeline(context.Context, *AnnotationRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AnnotateTimeline not implemented")
 }
 func (UnimplementedAPIServer) DefineSecret(context.Context, *SecretDefinition) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DefineSecret not implemented")
@@ -2514,6 +2528,24 @@ func _API_RemoveNotebookAttachment_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _API_AnnotateTimeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AnnotationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).AnnotateTimeline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/AnnotateTimeline",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).AnnotateTimeline(ctx, req.(*AnnotationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _API_DefineSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SecretDefinition)
 	if err := dec(in); err != nil {
@@ -3100,6 +3132,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveNotebookAttachment",
 			Handler:    _API_RemoveNotebookAttachment_Handler,
+		},
+		{
+			MethodName: "AnnotateTimeline",
+			Handler:    _API_AnnotateTimeline_Handler,
 		},
 		{
 			MethodName: "DefineSecret",

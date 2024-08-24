@@ -167,6 +167,9 @@ const (
 	HTTP_SECRETS    = "HTTP Secrets"
 	SPLUNK_CREDS    = "Splunk Creds"
 	ELASTIC_CREDS   = "Elastic Creds"
+
+	// The name of the annotation timeline
+	TIMELINE_ANNOTATION = "Annotation"
 )
 
 type key int

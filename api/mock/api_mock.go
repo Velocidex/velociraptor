@@ -61,6 +61,26 @@ func (mr *MockAPIClientMockRecorder) AddSecret(arg0, arg1 interface{}, arg2 ...i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSecret", reflect.TypeOf((*MockAPIClient)(nil).AddSecret), varargs...)
 }
 
+// AnnotateTimeline mocks base method.
+func (m *MockAPIClient) AnnotateTimeline(arg0 context.Context, arg1 *proto0.AnnotationRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AnnotateTimeline", varargs...)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AnnotateTimeline indicates an expected call of AnnotateTimeline.
+func (mr *MockAPIClientMockRecorder) AnnotateTimeline(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AnnotateTimeline", reflect.TypeOf((*MockAPIClient)(nil).AnnotateTimeline), varargs...)
+}
+
 // CancelFlow mocks base method.
 func (m *MockAPIClient) CancelFlow(arg0 context.Context, arg1 *proto0.ApiFlowRequest, arg2 ...grpc.CallOption) (*proto0.StartFlowResponse, error) {
 	m.ctrl.T.Helper()

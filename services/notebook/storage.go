@@ -73,6 +73,11 @@ type NotebookStore interface {
 		timeline *timelines_proto.Timeline,
 		in <-chan vfilter.Row) (*timelines_proto.SuperTimeline, error)
 
+	AnnotateTimeline(ctx context.Context, scope vfilter.Scope,
+		notebook_id string, supertimeline string,
+		message, principal string,
+		timestamp time.Time, event *ordereddict.Dict) error
+
 	DeleteTimeline(ctx context.Context, scope vfilter.Scope,
 		notebook_id string, supertimeline string) error
 

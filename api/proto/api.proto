@@ -23,6 +23,7 @@ import "completions.proto";
 import "vfs_api.proto";
 import "scheduler.proto";
 import "secrets.proto";
+import "timeline_api.proto";
 
 package proto;
 
@@ -552,6 +553,13 @@ service API {
     rpc RemoveNotebookAttachment(NotebookFileUploadRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {
             post: "/api/v1/RemoveNotebookAttachment",
+            body: "*",
+        };
+    }
+
+    rpc AnnotateTimeline(AnnotationRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/AnnotateTimeline",
             body: "*",
         };
     }
