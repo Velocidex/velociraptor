@@ -15,9 +15,17 @@
     width: auto;
 }
 
-th.time {
+span.hidden_icon {
+    visibility: hidden;
+}
+
+.time {
     width: 15em;
     white-space: nowrap;
+}
+
+.timeline-group {
+    width: 20px;
 }
 
 .timeline-table-item {
@@ -65,34 +73,39 @@ td.timeline-time {
     overflow-x: hidden;
 }
 
-.timeline-item-1 {
+tr td.timeline-group.timeline-annotation, .timeline-annotation {
+    background: var(--color-timeline-annotation);
+    color: var(--color-foreground);
+}
+
+tr td.timeline-group.timeline-item-1, .timeline-item-1 {
     background: var(--color-timeline-1);
     color: var(--color-foreground);
   }
 
-.timeline-item-2 {
+tr td.timeline-group.timeline-item-2, .timeline-item-2 {
     background: var(--color-timeline-2);
     color: var(--color-foreground);
 }
 
-.timeline-item-3 {
+tr td.timeline-group.timeline-item-3, .timeline-item-3 {
     background: var(--color-timeline-3);
     color: var(--color-foreground);
 }
 
-.timeline-item-4 {
+tr td.timeline-group.timeline-item-4, .timeline-item-4 {
     background: var(--color-timeline-4);
 }
 
-.timeline-item-5 {
+tr td.timeline-group.timeline-item-5, .timeline-item-5 {
     background: var(--color-timeline-5);
 }
 
-.timeline-item-6 {
+tr td.timeline-group.timeline-item-6, .timeline-item-6 {
     background: var(--color-timeline-6);
 }
 
-.timeline-item-7 {
+tr td.timeline-group.timeline-item-7, .timeline-item-7 {
     background: var(--color-timeline-7);
 }
 

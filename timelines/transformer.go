@@ -41,8 +41,17 @@ func (self timelineTransformer) Transform(
 	timestamp time.Time, event *ordereddict.Dict) TimelineItem {
 
 	// Extract some standard fields
-	message, _ := event.GetString(self.MessageColumn)
-	timestamp_description, _ := event.GetString(self.TimestampDescriptionColumn)
+	message_column := self.MessageColumn
+	if message_column == "" {
+		message_column = "Message"
+	}
+	message, _ := event.GetString(message_column)
+
+	timestamp_description_column := self.TimestampDescriptionColumn
+	if timestamp_description_column == "" {
+		timestamp_description_column = "Description"
+	}
+	timestamp_description, _ := event.GetString(timestamp_description_column)
 
 	event.Delete(self.MessageColumn)
 	event.Delete(self.TimestampDescriptionColumn)

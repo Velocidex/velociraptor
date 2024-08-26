@@ -2,6 +2,7 @@ package timelines
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -23,11 +24,6 @@ type SuperTimelineReader struct {
 
 func (self *SuperTimelineReader) Stat() *timelines_proto.SuperTimeline {
 	result := proto.Clone(self.SuperTimeline).(*timelines_proto.SuperTimeline)
-	result.Timelines = nil
-	for _, reader := range self.readers {
-		result.Timelines = append(result.Timelines, reader.Stat())
-	}
-
 	return result
 }
 
@@ -153,6 +149,9 @@ func NewSuperTimelineReader(
 		// like timestamp, message and timestamp_description.
 		transformer := timelineTransformer{timeline}
 
+		// We are going to use this timeline.
+		timeline.Active = true
+
 		reader, err := NewTimelineReader(
 			file_store_factory, transformer, path_manager.GetChild(timeline.Id))
 		if err != nil {
@@ -190,6 +189,10 @@ func (self *SuperTimelineWriter) AddChild(
 	timeline *timelines_proto.Timeline, completer func()) (*TimelineWriter, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if timeline.Id == "" {
+		return nil, errors.New("SuperTimelineWriter: Must specify a component name")
+	}
 
 	new_timeline_path_manager := self.path_manager.GetChild(timeline.Id)
 	file_store_factory := file_store.GetFileStore(self.config_obj)

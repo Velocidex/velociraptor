@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "proto/semantic.proto";
 import "artifacts/proto/artifact.proto";
+import "timelines/proto/timelines.proto";
 
 package proto;
 
@@ -101,8 +102,11 @@ message GetTableResponse {
 
     repeated ColumnType column_types = 4;
 
+    // Used for time based data.
     int64 start_time = 5;
     int64 end_time = 6;
+
+    repeated Timeline timelines = 8;
 
     // If there is a stack table this is the path to it.
     repeated string stack_path = 7;

@@ -2,6 +2,8 @@ package notebook
 
 import (
 	"context"
+	"errors"
+	"os"
 	"sync"
 	"time"
 
@@ -12,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/timelines"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -27,11 +30,9 @@ func (self *NotebookManager) Timelines(ctx context.Context,
 }
 
 func (self *NotebookManager) ReadTimeline(ctx context.Context, notebook_id string,
-	timeline string, start time.Time,
-	include_components, exclude_components []string) (
-	<-chan *ordereddict.Dict, error) {
-	return self.Store.ReadTimeline(ctx, notebook_id, timeline, start,
-		include_components, exclude_components)
+	timeline string, options services.TimelineOptions) (
+	services.TimelineReader, error) {
+	return self.Store.ReadTimeline(ctx, notebook_id, timeline, options)
 }
 
 func (self *NotebookManager) AddTimeline(
@@ -82,9 +83,8 @@ func (self *NotebookStoreImpl) Timelines(ctx context.Context,
 }
 
 func (self *NotebookStoreImpl) ReadTimeline(ctx context.Context, notebook_id string,
-	timeline string, start_time time.Time,
-	include_components, exclude_components []string) (
-	<-chan *ordereddict.Dict, error) {
+	supertimeline string, options services.TimelineOptions) (
+	services.TimelineReader, error) {
 
 	// Make sure the timeline exists in the notebook.
 	notebook_metadata, err := self.GetNotebook(notebook_id)
@@ -92,9 +92,9 @@ func (self *NotebookStoreImpl) ReadTimeline(ctx context.Context, notebook_id str
 		return nil, err
 	}
 
-	if !utils.InString(notebook_metadata.Timelines, timeline) {
+	if !utils.InString(notebook_metadata.Timelines, supertimeline) {
 		notebook_metadata.Timelines = append(notebook_metadata.Timelines,
-			timeline)
+			supertimeline)
 		err := self.SetNotebook(notebook_metadata)
 		if err != nil {
 			return nil, err
@@ -102,55 +102,29 @@ func (self *NotebookStoreImpl) ReadTimeline(ctx context.Context, notebook_id str
 	}
 
 	super_path_manager := paths.NewNotebookPathManager(notebook_id).
-		SuperTimeline(timeline)
+		SuperTimeline(supertimeline)
 
 	reader, err := timelines.NewSuperTimelineReader(self.config_obj,
-		super_path_manager, include_components, exclude_components)
+		super_path_manager, options.IncludeComponents,
+		options.ExcludeComponents)
 	if err != nil {
 		return nil, err
 	}
 
-	if !start_time.IsZero() {
-		reader.SeekToTime(start_time)
+	if !options.StartTime.IsZero() {
+		reader.SeekToTime(options.StartTime)
 	}
 
-	output_chan := make(chan *ordereddict.Dict)
-	go func() {
-		defer close(output_chan)
-		defer reader.Close()
+	// Filter the rows based on the user's options.
+	filter, err := NewTimelineFilter(options)
+	if err != nil {
+		return nil, err
+	}
 
-		for event := range reader.Read(ctx) {
-			if event.Row == nil {
-				continue
-			}
-
-			// Enforce a column order on the result.
-			row := ordereddict.NewDict().
-				Set("Timestamp", event.Time).
-				Set("Message", event.Message).
-				Set("Description", event.TimestampDescription)
-
-			for _, k := range event.Row.Keys() {
-				switch k {
-				case "Timestamp", "TimestampDesc", "Message", "Description":
-				default:
-					v, _ := event.Row.Get(k)
-					row.Set(k, v)
-				}
-			}
-
-			row.Set("_Source", event.Source)
-
-			select {
-			case <-ctx.Done():
-				return
-
-			case output_chan <- row:
-			}
-		}
-	}()
-
-	return output_chan, nil
+	return &TimelineReader{
+		SuperTimelineReader: reader,
+		filter:              filter,
+	}, nil
 }
 
 func (self *NotebookStoreImpl) AddTimeline(
@@ -178,6 +152,8 @@ func (self *NotebookStoreImpl) AddTimeline(
 
 	writer.Truncate()
 
+	timeline.StartTime = 0
+
 	subscope := scope.Copy()
 	sub_ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -203,26 +179,14 @@ func (self *NotebookStoreImpl) AddTimeline(
 			if err == nil {
 				writer.Write(ts, vfilter.RowToDict(sub_ctx, subscope, row))
 			}
+			if timeline.StartTime == 0 {
+				timeline.StartTime = ts.UnixNano()
+			}
+			timeline.EndTime = ts.UnixNano()
 		}
 	}
 
-	notebook_metadata, err := self.GetNotebook(notebook_id)
-	if err != nil {
-		return nil, err
-	}
-
-	// The notebook should hold a reference to all the supertimelines.
-	if !utils.InString(notebook_metadata.Timelines, supertimeline) {
-		notebook_metadata.Timelines = append(notebook_metadata.Timelines,
-			supertimeline)
-
-		err = self.SetNotebook(notebook_metadata)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return super.SuperTimeline, nil
+	return self.UpdateTimeline(ctx, notebook_id, supertimeline, timeline)
 }
 
 func (self *NotebookStoreImpl) DeleteTimeline(ctx context.Context, scope vfilter.Scope,
@@ -300,10 +264,52 @@ func (self *NotebookStoreImpl) ensureAnnotationComponent(
 	_, err = self.AddTimeline(ctx, scope, notebook_id, supertimeline,
 		&timelines_proto.Timeline{
 			Id:              constants.TIMELINE_ANNOTATION,
-			TimestampColumn: "Timestamp",
-			MessageColumn:   "Message",
+			TimestampColumn: constants.TIMELINE_DEFAULT_KEY,
+			MessageColumn:   constants.TIMELINE_DEFAULT_MESSAGE,
 		}, in)
 	return err
+}
+
+// Add or update the super timeline record in the data store.
+func (self *NotebookStoreImpl) UpdateTimeline(ctx context.Context,
+	notebook_id string, supertimeline string,
+	timeline *timelines_proto.Timeline) (*timelines_proto.SuperTimeline, error) {
+
+	timeline_path := paths.NewNotebookPathManager(notebook_id).
+		SuperTimeline(supertimeline)
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	super_timeline := &timelines_proto.SuperTimeline{}
+	err = db.GetSubject(self.config_obj, timeline_path.Path(), super_timeline)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return nil, err
+	}
+
+	super_timeline.Name = supertimeline
+
+	// Find the existing timeline or add a new one.
+	var existing_timeline *timelines_proto.Timeline
+	for _, component := range super_timeline.Timelines {
+		if component.Id == timeline.Id {
+			existing_timeline = component
+			break
+		}
+	}
+
+	if existing_timeline == nil {
+		existing_timeline = timeline
+		super_timeline.Timelines = append(super_timeline.Timelines, timeline)
+	} else {
+		// Make a copy
+		*existing_timeline = *timeline
+	}
+
+	// Now delete the actual record.
+	return super_timeline, db.SetSubject(
+		self.config_obj, timeline_path.Path(), super_timeline)
 }
 
 // An annotation is just another timeline that is added to the super
@@ -320,8 +326,6 @@ func (self *NotebookStoreImpl) AnnotateTimeline(
 	if err != nil {
 		return err
 	}
-
-	time_key := "Timestamp"
 
 	// Re-sort the annotation timeline into a tempfile.
 	tmp_path := paths.NewTempPathManager("").Path()
@@ -347,13 +351,22 @@ func (self *NotebookStoreImpl) AnnotateTimeline(
 		defer wg.Done()
 		defer writer.Close()
 
+		// The Annotation timeline is always the same.
+		timeline := &timelines_proto.Timeline{
+			Id:              constants.TIMELINE_ANNOTATION,
+			TimestampColumn: constants.TIMELINE_DEFAULT_KEY,
+			MessageColumn:   constants.TIMELINE_DEFAULT_MESSAGE,
+		}
+		defer self.UpdateTimeline(ctx, notebook_id, supertimeline, timeline)
+
 		// Timelines have to be sorted, so we force them to be sorted
 		// by the key.
 		sorter := sorter.MergeSorter{10000}
-		sorted_chan := sorter.Sort(ctx, scope, in, time_key, false /* desc */)
+		sorted_chan := sorter.Sort(ctx, scope, in,
+			constants.TIMELINE_DEFAULT_KEY, false /* desc */)
 
 		for row := range sorted_chan {
-			key, pres := scope.Associative(row, time_key)
+			key, pres := scope.Associative(row, constants.TIMELINE_DEFAULT_KEY)
 			if !pres {
 				continue
 			}
@@ -363,17 +376,27 @@ func (self *NotebookStoreImpl) AnnotateTimeline(
 				if err == nil {
 					writer.Write(ts, vfilter.RowToDict(ctx, scope, row))
 				}
+
+				if timeline.StartTime == 0 {
+					timeline.StartTime = ts.Unix()
+				}
+				timeline.EndTime = ts.Unix()
 			}
 		}
 	}()
 
+	// If the event does not already have a message we replace it with
+	// the annotation message.
+	_, pres := event.GetString("Message")
+	if !pres {
+		event.Set("Message", message)
+	}
+
 	// Add the annotation event
-	row := ordereddict.NewDict().
-		Set("Timestamp", timestamp).
-		Set("Message", message).
-		Set("User", principal).
-		Set("Annotated At", utils.GetTime().Now()).
-		Set("Event", event)
+	row := event.Update(constants.TIMELINE_DEFAULT_KEY, timestamp).
+		Set("Notes", message).
+		Set("AnnotatedBy", principal).
+		Set("AnnotatedAt", utils.GetTime().Now())
 
 	// Push it into the sorter
 	in <- row
@@ -381,13 +404,15 @@ func (self *NotebookStoreImpl) AnnotateTimeline(
 	// Now read all the current events and replay them in order to
 	// sort.  NOTE: This is not very efficient way but we dont expect
 	// too many annotations so for now this is good enough.
-	rows, err := self.ReadTimeline(ctx, notebook_id, supertimeline,
-		time.Time{}, []string{constants.TIMELINE_ANNOTATION}, nil)
+	reader, err := self.ReadTimeline(ctx, notebook_id, supertimeline,
+		services.TimelineOptions{
+			IncludeComponents: []string{constants.TIMELINE_ANNOTATION},
+		})
 	if err != nil {
 		return err
 	}
 
-	for row := range rows {
+	for row := range reader.Read(ctx) {
 		select {
 		case <-ctx.Done():
 			return nil
@@ -416,4 +441,56 @@ func (self *NotebookStoreImpl) AnnotateTimeline(
 		dest.Index())
 
 	return err
+}
+
+type TimelineReader struct {
+	*timelines.SuperTimelineReader
+
+	filter *TimelineFilter
+}
+
+func (self *TimelineReader) Read(ctx context.Context) <-chan *ordereddict.Dict {
+	output_chan := make(chan *ordereddict.Dict)
+
+	go func() {
+		defer close(output_chan)
+		defer self.Close()
+
+		for event := range self.SuperTimelineReader.Read(ctx) {
+			if event.Row == nil {
+				continue
+			}
+
+			if self.filter.ShouldFilter(&event) {
+				continue
+			}
+
+			// Enforce a column order on the result.
+			row := ordereddict.NewDict().
+				Set(constants.TIMELINE_DEFAULT_KEY, event.Time).
+				Set("Message", event.Message).
+				Set("Description", event.TimestampDescription)
+
+			for _, k := range event.Row.Keys() {
+				switch k {
+				case constants.TIMELINE_DEFAULT_KEY, "Message", "Description":
+				default:
+					v, _ := event.Row.Get(k)
+					row.Set(k, v)
+				}
+			}
+
+			row.Set("_Source", event.Source)
+
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- row:
+			}
+		}
+	}()
+
+	return output_chan
+
 }
