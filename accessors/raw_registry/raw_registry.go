@@ -75,6 +75,8 @@ var (
 )
 
 type RawRegKeyInfo struct {
+	mu sync.Mutex
+
 	_full_path *accessors.OSPath
 	_data      *ordereddict.Dict
 	_modtime   time.Time
@@ -87,9 +89,13 @@ func (self *RawRegKeyInfo) IsDir() bool {
 }
 
 func (self *RawRegKeyInfo) Data() *ordereddict.Dict {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	if self._data == nil {
 		self._data = ordereddict.NewDict().Set("type", "Key")
 	}
+
 	return self._data
 }
 
@@ -198,6 +204,9 @@ func (self *RawRegValueInfo) Size() int64 {
 }
 
 func (self *RawRegValueInfo) Data() *ordereddict.Dict {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	if self._data != nil {
 		return self._data
 	}
@@ -223,6 +232,7 @@ func (self *RawRegValueInfo) Data() *ordereddict.Dict {
 			result.Set("value", value_data.Data)
 		}
 	}
+
 	self._data = result
 	return result
 }
@@ -363,42 +373,8 @@ func (self *RawRegFileSystemAccessor) ReadDir(key_path string) (
 	return self.ReadDirWithOSPath(full_path)
 }
 
-// Get the default value of a Registry Key if possible.
-func (self *RawRegFileSystemAccessor) getDefaultValue(
-	full_path *accessors.OSPath) (result *RawRegValueInfo, err error) {
-
-	// A Key has a default value if its parent directory contains a
-	// value with the same name as the key.
-	basename := full_path.Basename()
-	contents, _, err := self._readDirWithOSPath(full_path.Dirname())
-	if err != nil {
-		return nil, err
-	}
-
-	for _, item := range contents {
-		value_item, ok := item.(*RawRegValueInfo)
-		if !ok {
-			continue
-		}
-
-		if strings.EqualFold(item.Name(), basename) {
-			item_copy := value_item.Copy()
-			item_copy._full_path = item_copy._full_path.Append("@")
-			return item_copy, nil
-		}
-	}
-
-	return nil, utils.NotFoundError
-}
-
 func (self *RawRegFileSystemAccessor) ReadDirWithOSPath(
 	full_path *accessors.OSPath) (result []accessors.FileInfo, err error) {
-
-	// Add the default value if the key has one
-	default_value, err := self.getDefaultValue(full_path)
-	if err == nil {
-		result = append(result, default_value)
-	}
 
 	contents, _, err := self._readDirWithOSPath(full_path)
 	return contents, err
@@ -407,6 +383,13 @@ func (self *RawRegFileSystemAccessor) ReadDirWithOSPath(
 // Return all the contents in the directory including all keys and all
 // values, even if some keys have a default value.
 // Additionally returns the CM_KEY_NODE for this actual directory.
+
+// This function is recursive! It ascends to the root cell recursively
+// and resolves all keys along the path to the required key. On each
+// level the function tries the LRU to avoid further recursion. This
+// means that in practice most of the time we wont actually be
+// recursing more than a few levels because top level keys will be
+// cached in the LRU.
 func (self *RawRegFileSystemAccessor) _readDirWithOSPath(
 	full_path *accessors.OSPath) (result []accessors.FileInfo, key *regparser.CM_KEY_NODE, err error) {
 
@@ -529,20 +512,24 @@ func (self *RawRegFileSystemAccessor) Open(path string) (
 
 func (self *RawRegFileSystemAccessor) OpenWithOSPath(path *accessors.OSPath) (
 	accessors.ReadSeekCloser, error) {
-	stat, err := self.LstatWithOSPath(path)
+	stats, err := self.multiLstat(path)
 	if err != nil {
 		return nil, err
 	}
 
-	value_info, ok := stat.(*RawRegValueInfo)
-	if ok {
-		return NewValueBuffer(
-			value_info._value.ValueData().Data, stat), nil
+	// We are looking for a value to open try to find one but if now,
+	// just serialize the key data.
+	for _, stat := range stats {
+		value_info, ok := stat.(*RawRegValueInfo)
+		if ok {
+			return NewValueBuffer(
+				value_info._value.ValueData().Data, stat), nil
+		}
 	}
 
 	// Keys do not have any data.
-	serialized, _ := json.Marshal(stat.Data)
-	return NewValueBuffer(serialized, stat), nil
+	serialized, _ := json.Marshal(stats[0].Data)
+	return NewValueBuffer(serialized, stats[0]), nil
 }
 
 func (self *RawRegFileSystemAccessor) Lstat(filename string) (
@@ -559,6 +546,7 @@ func (self *RawRegFileSystemAccessor) LstatWithOSPath(
 	full_path *accessors.OSPath) (
 	accessors.FileInfo, error) {
 
+	// Top level stat
 	if len(full_path.Components) == 0 {
 		return &accessors.VirtualFileInfo{
 			Path:   full_path,
@@ -566,13 +554,28 @@ func (self *RawRegFileSystemAccessor) LstatWithOSPath(
 		}, nil
 	}
 
+	res, err := self.multiLstat(full_path)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return the first one.
+	return res[0], nil
+}
+
+// The registry can have keys and values named the same so an Lstat
+// can actually return two separate entities. This function returns
+// both.
+func (self *RawRegFileSystemAccessor) multiLstat(
+	full_path *accessors.OSPath) (res []accessors.FileInfo, err error) {
+
 	name := full_path.Basename()
 	container := full_path.Dirname()
 
 	// If the full_path refers to the default value of the key, return
 	// it.
 	if name == "@" {
-		return self.getDefaultValue(container)
+		name = ""
 	}
 
 	children, err := self.ReadDirWithOSPath(container)
@@ -582,11 +585,15 @@ func (self *RawRegFileSystemAccessor) LstatWithOSPath(
 
 	for _, child := range children {
 		if strings.EqualFold(child.Name(), name) {
-			return child, nil
+			res = append(res, child)
 		}
 	}
 
-	return nil, errors.New("Key not found")
+	if len(res) == 0 {
+		return nil, errors.New("Key not found")
+	}
+
+	return res, nil
 }
 
 func init() {

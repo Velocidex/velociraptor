@@ -2,23 +2,24 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
  {
   "mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')])": null
  }
-]SELECT OSPath.Path AS Key, Data FROM glob(globs="*", accessor="raw_reg", root=pathspec( Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU", DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat")) WHERE OSPath.Basename =~ "0"[
+]SELECT OSPath.Path AS Key, Data, Data.type AS Type FROM glob(globs="*", accessor="raw_reg", root=pathspec( Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU", DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat")) WHERE OSPath.Basename =~ "0" ORDER BY Type[
  {
   "Key": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\0",
   "Data": {
    "type": "Key"
-  }
- }
-]SELECT OSPath.Path AS Key, Data FROM glob(globs="*", accessor="raw_reg", root=pathspec( Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU/0", DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat")) WHERE OSPath.Basename =~ "@"[
+  },
+  "Type": "Key"
+ },
  {
-  "Key": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\0\\@",
+  "Key": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\0",
   "Data": {
    "type": "REG_BINARY",
    "data_len": 22,
    "value": "FAAfgMuFn2cgAoBAsptVQMwFqrYAAA=="
-  }
+  },
+  "Type": "REG_BINARY"
  }
-]SELECT format(format="%02x", args=read_file(accessor='raw_reg', filename=pathspec( Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU/0/@", DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat"))) AS ValueContent FROM scope()[
+]SELECT format(format="%02x", args=read_file(accessor='raw_reg', filename=pathspec( Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU/0", DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat"))) AS ValueContent FROM scope()[
  {
   "ValueContent": "14001f80cb859f6720028040b29b5540cc05aab60000"
  }
@@ -72,7 +73,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
  {
   "ModTime": "2021-06-01T06:28:19Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\0",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU",
   "Description": {
    "ShortName": "My Computer",
    "Type": "Root"
@@ -94,7 +95,51 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
  {
   "ModTime": "2021-06-01T06:28:19Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\1",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU",
+  "Description": {
+   "ShortName": "My Computer",
+   "Type": "Root"
+  },
+  "Path": "My Computer",
+  "_Parsed": {
+   "ItemIDSize": 20,
+   "Offset": 0,
+   "Type": 1,
+   "Subtype": 1,
+   "ShellBag": {
+    "Description": {
+     "ShortName": "My Computer",
+     "Type": "Root"
+    }
+   }
+  }
+ },
+ {
+  "ModTime": "2021-06-01T06:28:19Z",
+  "basename(path=Hive)": "UsrClass.dat",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU",
+  "Description": {
+   "ShortName": "My Computer",
+   "Type": "Root"
+  },
+  "Path": "My Computer",
+  "_Parsed": {
+   "ItemIDSize": 85,
+   "Offset": 0,
+   "Type": 1,
+   "Subtype": 1,
+   "ShellBag": {
+    "Description": {
+     "ShortName": "My Computer",
+     "Type": "Root"
+    }
+   }
+  }
+ },
+ {
+  "ModTime": "2021-06-01T06:28:19Z",
+  "basename(path=Hive)": "UsrClass.dat",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU",
   "Description": {
    "ShortName": "My Computer",
    "Type": "Root"
@@ -116,7 +161,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
  {
   "ModTime": "2021-06-01T06:27:57Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\1\\0",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\1",
   "Description": {
    "LongName": "",
    "ShortName": "",
@@ -139,53 +184,9 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   }
  },
  {
-  "ModTime": "2021-06-01T06:28:19Z",
-  "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\2",
-  "Description": {
-   "ShortName": "My Computer",
-   "Type": "Root"
-  },
-  "Path": "My Computer",
-  "_Parsed": {
-   "ItemIDSize": 85,
-   "Offset": 0,
-   "Type": 1,
-   "Subtype": 1,
-   "ShellBag": {
-    "Description": {
-     "ShortName": "My Computer",
-     "Type": "Root"
-    }
-   }
-  }
- },
- {
-  "ModTime": "2021-06-01T06:28:19Z",
-  "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3",
-  "Description": {
-   "ShortName": "My Computer",
-   "Type": "Root"
-  },
-  "Path": "My Computer",
-  "_Parsed": {
-   "ItemIDSize": 20,
-   "Offset": 0,
-   "Type": 1,
-   "Subtype": 1,
-   "ShellBag": {
-    "Description": {
-     "ShortName": "My Computer",
-     "Type": "Root"
-    }
-   }
-  }
- },
- {
   "ModTime": "2021-06-01T06:28:10Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3",
   "Description": null,
   "Path": "My Computer -\u003e ?",
   "_Parsed": {
@@ -199,7 +200,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
  {
   "ModTime": "2021-06-01T06:28:10Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0\\0",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0",
   "Description": {
    "Type": "NetworkLocation",
    "ShortName": "\\\\vmware-host\\Shared Folders"
@@ -222,7 +223,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
  {
   "ModTime": "2021-06-01T06:28:12Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0\\0\\0",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0\\0",
   "Description": {
    "Type": [
     "Directory",
@@ -282,7 +283,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
  {
   "ModTime": "2021-06-01T06:28:19Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0\\0\\0\\0",
+  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0\\0\\0",
   "Description": {
    "Type": [
     "Directory",

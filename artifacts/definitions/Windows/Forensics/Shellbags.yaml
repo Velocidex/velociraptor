@@ -41,7 +41,7 @@ sources:
               root=pathspec(DelegatePath=HivePath),
               globs=KeyGlob,
               accessor="raw_reg")
-           WHERE Data.type =~ "BINARY" AND OSPath.Path =~ "[0-9]\\\\@$"
+           WHERE Data.type =~ "BINARY" AND OSPath.Basename =~ "^[0-9]+$"
         })
 
       LET ParsedValues = SELECT

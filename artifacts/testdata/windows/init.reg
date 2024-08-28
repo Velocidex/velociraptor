@@ -18,3 +18,10 @@ Windows Registry Editor Version 5.00
 
 [HKEY_CURRENT_USER\Software\Test]
 @="Test Data"
+
+[HKEY_CURRENT_USER\Software\Test]
+"KeyWithValue"="Test Data"
+
+[HKEY_CURRENT_USER\Software\Test\KeyWithValue]
+@="Default Value Data"
+"Value"="Value content"
