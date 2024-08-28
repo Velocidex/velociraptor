@@ -10,10 +10,11 @@ import Timeline, {
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 import { PrepareData } from '../core/table.jsx';
-import VeloTimestamp from "../utils/time.jsx";
 import VeloValueRenderer from '../utils/value.jsx';
 import Form from 'react-bootstrap/Form';
 import { JSONparse } from '../utils/json_parse.jsx';
+import VeloTimestamp from "../utils/time.jsx";
+import { localTimeFromUTCTime, utcTimeFromLocalTime } from '../utils/time.jsx';
 
 // make sure you include the timeline stylesheet or the timeline will not be styled
 import 'react-calendar-timeline/lib/Timeline.css';
@@ -32,9 +33,10 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import { ToStandardTime } from '../utils/time.jsx';
 import { ColumnFilter } from '../core/paged-table.jsx';
+import DateTimePicker from 'react-datetime-picker';
+import Dropdown from 'react-bootstrap/Dropdown';
 
 const TenYears =  10 * 365 * 24 * 60 * 60 * 1000;
-
 
 const FixedColumns = {
     "Timestamp": 1,
@@ -57,6 +59,11 @@ class AnnotationDialog extends Component {
 
     componentDidMount = () => {
         this.source = CancelToken.source();
+
+        // If this is already an annotation, start with the previous
+        // note.
+        let event = this.props.event || {};
+        this.setState({note: event.Notes});
     }
 
     componentWillUnmount() {
@@ -120,11 +127,34 @@ class TimelineTableRow extends Component {
         super_timeline: PropTypes.string,
         timeline_class: PropTypes.string,
         onUpdate: PropTypes.func,
+        seekToTime: PropTypes.func,
     }
 
     state = {
         expanded: false,
         showAnnotateDialog: false,
+    }
+
+    componentDidMount = () => {
+        this.source = CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
+    }
+
+    // To delete the note we propagate the GUID and unset the time.
+    deleteNote = ()=>{
+        api.post("v1/AnnotateTimeline", {
+            notebook_id: this.props.notebook_id,
+            super_timeline: this.props.super_timeline,
+            event_json: JSON.stringify({
+                AnnotationID: this.props.row.AnnotationID,
+            }),
+        }, this.source.token).then(response=>{
+            this.props.onUpdate();
+            this.setState({expanded: false});
+        });
     }
 
     render() {
@@ -164,16 +194,49 @@ class TimelineTableRow extends Component {
                 </td>
               </tr>
               <tr className={row_class}>
+                <td className={"timeline-group " + this.props.timeline_class}>
+                </td>
                 <td colSpan="30">
-                  { data._Source !== "Annotation" &&
-                    <ButtonGroup>
+                  <ButtonGroup>
+                    <ToolTip tooltip={T("Recenter event")}>
                       <Button variant="default"
-                              onClick={()=>this.setState(
-                                  {showAnnotateDialog: true})}
+                              onClick={()=>{
+                                  this.props.seekToTime(event.Timestamp);
+                                  this.setState({expanded: false});
+                              }}
                       >
-                        <FontAwesomeIcon icon="note-sticky"/>
+                        <FontAwesomeIcon icon="crosshairs"/>
                       </Button>
-                    </ButtonGroup>}
+                    </ToolTip>
+
+                    { data._Source !== "Annotation" ?
+                      <ToolTip tooltip={T("Annotate event")}>
+                        <Button variant="default"
+                                onClick={()=>this.setState(
+                                    {showAnnotateDialog: true})}
+                        >
+                          <FontAwesomeIcon icon="note-sticky"/>
+                        </Button>
+                      </ToolTip>
+                      : <>
+                          <ToolTip tooltip={T("Update Annotation")}>
+                            <Button variant="default"
+                                    onClick={()=>this.setState(
+                                        {showAnnotateDialog: true})}
+                            >
+                              <FontAwesomeIcon icon="edit"/>
+                            </Button>
+                          </ToolTip>
+                          <ToolTip tooltip={T("Delete Annotation")}>
+                            <Button variant="default"
+                                    onClick={()=>this.deleteNote()}
+                            >
+                              <FontAwesomeIcon icon="trash"/>
+                            </Button>
+                          </ToolTip>
+                        </>
+                    }
+                  </ButtonGroup>
                   <VeloValueRenderer value={event} />
                 </td>
               </tr>
@@ -207,6 +270,7 @@ class TimelineTableRenderer  extends Component {
         onUpdate: PropTypes.func,
         transform: PropTypes.object,
         setTransform: PropTypes.func,
+        seekToTime: PropTypes.func,
     }
 
     getTimelineClass = (name) => {
@@ -237,6 +301,7 @@ class TimelineTableRenderer  extends Component {
               timeline_class={this.getTimelineClass(_.toString(row._Source))}
               row={row}
               columns={columns}
+              seekToTime={this.props.seekToTime}
               onUpdate={this.props.onUpdate}
             />
         );
@@ -390,7 +455,7 @@ export default class TimelineRenderer extends React.Component {
         timelines: [],
     };
 
-    fetchRows = () => {
+    fetchRows = (go_to_start_time) => {
         let skip_components = [];
         _.map(this.state.disabled, (v,k)=>{
             if(v) {
@@ -398,7 +463,7 @@ export default class TimelineRenderer extends React.Component {
             };
         });
 
-        let start_time = this.state.start_time * 1000000;
+        let start_time = (go_to_start_time || this.state.start_time) * 1000000;
         if (start_time < 1000000000) {
             start_time = 0;
         }
@@ -451,7 +516,8 @@ export default class TimelineRenderer extends React.Component {
 
                 let visibleTimeStart = start_time - diff * 0.1;
                 let visibleTimeEnd = start_time + diff * 0.9;
-                this.setState({visibleTimeStart: visibleTimeStart,
+                this.setState({start_time: start_time,
+                               visibleTimeStart: visibleTimeStart,
                                visibleTimeEnd: visibleTimeEnd});
             }
 
@@ -499,23 +565,6 @@ export default class TimelineRenderer extends React.Component {
         );
     };
 
-    pageSizeSelector = () => {
-        let options = [10, 20, 50, 100];
-
-        return <div className="btn-group" role="group">
-                 { _.map(options, option=>{
-                     return <button
-                              key={ option }
-                              type="button"
-                              onClick={()=>this.setState({row_count: option})}
-                              className={ `btn ${option === this.state.row_count ? 'btn-secondary' : 'btn-default'}` }
-                            >
-                              { option }
-                            </button>;
-                     }) }
-               </div>;
-    }
-
     nextPage = ()=>{
         if (this.state.table_end > 0) {
             this.setState({start_time: this.state.table_end + 1});
@@ -558,6 +607,17 @@ export default class TimelineRenderer extends React.Component {
               }}
             />
         );
+    }
+
+    lastEvent = ()=>{
+        let timelines = this.state.timelines || [];
+        let last_event = 0;
+        for(let i=0;i<timelines.length;i++) {
+            if(last_event < timelines[i].end_time) {
+                last_event = timelines[i].end_time;
+            }
+        }
+        return last_event * 1000;
     }
 
     render() {
@@ -668,16 +728,67 @@ export default class TimelineRenderer extends React.Component {
         _.each(this.state.toggles, (v,k)=>{
             if(!v) { extra_columns.push(k); }});
 
+        let page_sizes = _.map([10, 25, 30, 50, 100], x=>{
+            return <Dropdown.Item
+                     as={Button}
+                     variant="default"
+                     key={x}
+                     active={x===this.state.row_count}
+                     onClick={()=>this.setState({row_count: x})} >
+                     { x }
+                   </Dropdown.Item>;
+        });
+
         return <div className="super-timeline">Super-timeline {this.props.name}
                  <Navbar className="toolbar">
                    <ButtonGroup>
                      { this.renderColumnSelector() }
-                     { this.pageSizeSelector() }
-                     <Button title="Next"
-                             onClick={() => {this.nextPage(); }}
-                             variant="default">
-                       <FontAwesomeIcon icon="forward"/>
-                     </Button>
+                     <ToolTip tooltip={T("Go to First Event")}>
+                       <Button title="Start"
+                               onClick={()=>this.fetchRows(1)}
+                               variant="default">
+                         <FontAwesomeIcon icon="backward-fast"/>
+                       </Button>
+                     </ToolTip>
+
+                     <ToolTip tooltip={T("Page Size")}>
+                       <Dropdown as={ButtonGroup} >
+                         <Dropdown.Toggle variant="default" id="dropdown-basic">
+                           {this.state.row_count || 0}
+                         </Dropdown.Toggle>
+
+                         <Dropdown.Menu>
+                           { page_sizes }
+                         </Dropdown.Menu>
+                       </Dropdown>
+                     </ToolTip>
+                     <DateTimePicker
+                       value={localTimeFromUTCTime(new Date(this.state.start_time))}
+                       className="btn-group"
+                       showLeadingZeros={true}
+                       onChange={value=>{
+                           if (_.isDate(value)) {
+                               let time = utcTimeFromLocalTime(value).getTime();
+                               this.fetchRows(time);
+                               this.setState({start_time: time});
+                           }
+                       }}/>
+                     <ToolTip tooltip={T("Next Page")}>
+                       <Button title="Next"
+                               onClick={() => {this.nextPage(); }}
+                               variant="default">
+                         <FontAwesomeIcon icon="forward"/>
+                       </Button>
+                     </ToolTip>
+                     <ToolTip tooltip={T("Last Event")}>
+                       <Button title="Last"
+                               onClick={() => {this.fetchRows(
+                                   this.lastEvent() - 1000); }}
+                               variant="default">
+                         <FontAwesomeIcon icon="forward-fast"/>
+                       </Button>
+                     </ToolTip>
+
                    </ButtonGroup>
                  </Navbar>
                  <Timeline
@@ -726,6 +837,13 @@ export default class TimelineRenderer extends React.Component {
                      onUpdate={this.fetchRows}
                      transform={this.state.transform}
                      setTransform={x=>this.setState({transform:x})}
+                     seekToTime={t=>{
+                         let time = ToStandardTime(t);
+                         if (_.isDate(time)) {
+                             this.setState({start_time: time.getTime()});
+                             this.fetchRows(time.getTime());
+                         }
+                     }}
                      rows={this.state.rows} />
                  }
                </div>;

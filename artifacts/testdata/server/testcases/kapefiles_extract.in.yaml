@@ -20,3 +20,4 @@ Queries:
         CheckTime(Time=Ctime.Unix, Default=1629576251) AS Ctime,
         CheckTime(Time=Atime.Unix, Default=1629576251) AS Atime
     FROM glob(globs="/**", root=tmpdir) WHERE NOT IsDir
+    ORDER BY Name

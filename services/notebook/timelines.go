@@ -2,6 +2,8 @@ package notebook
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/binary"
 	"errors"
 	"os"
 	"sync"
@@ -22,6 +24,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/sorter"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
+)
+
+const (
+	AnnotationID = "AnnotationID"
+)
+
+var (
+	epoch = time.Unix(0, 0)
 )
 
 func (self *NotebookManager) Timelines(ctx context.Context,
@@ -346,6 +356,22 @@ func (self *NotebookStoreImpl) AnnotateTimeline(
 
 	in := make(chan types.Row)
 
+	// The GUID is used to allow replacing items in the timeline:
+
+	// 1. When an item is **added** to the timeline, the GUID is empty
+	//    and gets assigned a new value.
+
+	// 2. When updating the item, the GUID is propagated, and we
+	//    filter the second duplicate of the same GUID. This allows us to
+	//    replace the GUID.
+
+	// 3. When deleting the item, the timestamp is set to 0, while the
+	//    GUID is propagated. We never write items with timestamp of 0.
+	guid, pres := event.GetString(AnnotationID)
+	if !pres {
+		guid = GetGUID()
+	}
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -387,19 +413,25 @@ func (self *NotebookStoreImpl) AnnotateTimeline(
 
 	// If the event does not already have a message we replace it with
 	// the annotation message.
-	_, pres := event.GetString("Message")
+	_, pres = event.GetString("Message")
 	if !pres {
 		event.Set("Message", message)
 	}
 
-	// Add the annotation event
-	row := event.Update(constants.TIMELINE_DEFAULT_KEY, timestamp).
-		Set("Notes", message).
-		Set("AnnotatedBy", principal).
-		Set("AnnotatedAt", utils.GetTime().Now())
+	// Add the annotation event only if the time is valid.
+	if timestamp.After(epoch) {
+		row := event.Update(constants.TIMELINE_DEFAULT_KEY, timestamp).
+			Set("Notes", message).
+			Set("AnnotatedBy", principal).
+			Set("AnnotatedAt", utils.GetTime().Now()).
+			Set(AnnotationID, guid)
 
-	// Push it into the sorter
-	in <- row
+		// Push it into the sorter
+		in <- row
+	}
+
+	seen := make(map[string]bool)
+	seen[guid] = true
 
 	// Now read all the current events and replay them in order to
 	// sort.  NOTE: This is not very efficient way but we dont expect
@@ -413,6 +445,17 @@ func (self *NotebookStoreImpl) AnnotateTimeline(
 	}
 
 	for row := range reader.Read(ctx) {
+		guid, pres := row.GetString(AnnotationID)
+		if pres {
+			// Filter out seen GUIDs to allow replacing old items with
+			// new items.
+			_, pres = seen[guid]
+			if pres {
+				continue
+			}
+			seen[guid] = true
+		}
+
 		select {
 		case <-ctx.Done():
 			return nil
@@ -493,4 +536,10 @@ func (self *TimelineReader) Read(ctx context.Context) <-chan *ordereddict.Dict {
 
 	return output_chan
 
+}
+
+func GetGUID() string {
+	buff := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buff, uint64(utils.GetGUID()))
+	return base64.StdEncoding.EncodeToString(buff)
 }

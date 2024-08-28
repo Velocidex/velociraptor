@@ -50,6 +50,7 @@
    "Notes": "Foo is suspicious at being Bar!",
    "AnnotatedBy": "admin",
    "AnnotatedAt": "2024-05-15T12:19:47Z",
+   "AnnotationID": "TdAAAAAAAAA=",
    "_Source": "Annotation"
   }
  ],
@@ -63,6 +64,7 @@
    "Notes": "An Earlier Foo is suspicious at being Older Bar!",
    "AnnotatedBy": "mike",
    "AnnotatedAt": "2024-05-15T12:19:47Z",
+   "AnnotationID": "TtAAAAAAAAA=",
    "_Source": "Annotation"
   },
   {
@@ -74,6 +76,7 @@
    "Notes": "Foo is suspicious at being Bar!",
    "AnnotatedBy": "admin",
    "AnnotatedAt": "2024-05-15T12:19:47Z",
+   "AnnotationID": "TdAAAAAAAAA=",
    "_Source": "Annotation"
   }
  ],
@@ -89,6 +92,44 @@
      "message_column": "Message"
     }
    ]
+  }
+ ],
+ "First Event Updated": {
+  "Timestamp": "2024-05-15T12:36:27Z",
+  "Message": "Original Event Message 2",
+  "Description": "",
+  "OriginalEventField": "Extra field 2",
+  "Foo": "Older Bar 2",
+  "_Source": "Annotation",
+  "Notes": "Updated First Annotation - all other fields remain",
+  "AnnotatedBy": "admin",
+  "AnnotatedAt": "2024-05-15T12:19:47Z",
+  "AnnotationID": "TtAAAAAAAAA="
+ },
+ "Updated Annotations": [
+  {
+   "Timestamp": "2024-05-15T12:19:47Z",
+   "Message": "Original Event Message 1",
+   "Description": "",
+   "OriginalEventField": "Extra field 1",
+   "Foo": "Bar 1",
+   "Notes": "Foo is suspicious at being Bar!",
+   "AnnotatedBy": "admin",
+   "AnnotatedAt": "2024-05-15T12:19:47Z",
+   "AnnotationID": "TdAAAAAAAAA=",
+   "_Source": "Annotation"
+  },
+  {
+   "Timestamp": "2024-05-15T12:36:27Z",
+   "Message": "Original Event Message 2",
+   "Description": "",
+   "OriginalEventField": "Extra field 2",
+   "Foo": "Older Bar 2",
+   "Notes": "Updated First Annotation - all other fields remain",
+   "AnnotatedBy": "admin",
+   "AnnotatedAt": "2024-05-15T12:19:47Z",
+   "AnnotationID": "TtAAAAAAAAA=",
+   "_Source": "Annotation"
   }
  ]
 }
