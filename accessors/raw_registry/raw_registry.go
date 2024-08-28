@@ -97,6 +97,12 @@ func (self *RawRegKeyInfo) Size() int64 {
 	return 0
 }
 
+func (self *RawRegKeyInfo) UniqueName() string {
+	// Key names can not have \ in them so it is safe to add this
+	// without risk of collisions.
+	return self._full_path.String() + "\\"
+}
+
 func (self *RawRegKeyInfo) FullPath() string {
 	return self._full_path.String()
 }
@@ -173,6 +179,10 @@ func (self *RawRegValueInfo) Copy() *RawRegValueInfo {
 
 func (self *RawRegValueInfo) IsDir() bool {
 	return false
+}
+
+func (self *RawRegValueInfo) UniqueName() string {
+	return self._full_path.String()
 }
 
 func (self *RawRegValueInfo) Mode() os.FileMode {
@@ -391,40 +401,7 @@ func (self *RawRegFileSystemAccessor) ReadDirWithOSPath(
 	}
 
 	contents, _, err := self._readDirWithOSPath(full_path)
-	if err != nil {
-		return nil, err
-	}
-
-	seen := make(map[string]bool)
-
-	for _, item := range contents {
-		basename := item.Name()
-
-		// Does this value have the same name as one of the keys? We
-		// special case it as a subdirectory with a file called @ in
-		// it:
-		// Subkeys: A, B, C
-		// Values: B -> Means Subkey B has default values.
-		//
-		// This will end up being:
-		// A/ -> Directory
-		// B/ -> Directory
-		// C/ -> Directory
-		// B/@ -> File
-		//
-		// Therefore skip such values at this level - a Glob will
-		// fetch them at the next level down.
-		_, pres := seen[basename]
-		if pres {
-			continue
-		}
-
-		seen[basename] = true
-
-		result = append(result, item)
-	}
-
-	return result, nil
+	return contents, err
 }
 
 // Return all the contents in the directory including all keys and all
@@ -517,6 +494,9 @@ func (self *RawRegFileSystemAccessor) _readDirFromKey(
 	key_mod_time := key.LastWriteTime().Time
 	for _, value := range key.Values() {
 		basename := value.ValueName()
+		if basename == "" {
+			basename = "@"
+		}
 		value_obj := &RawRegValueInfo{
 			RawRegKeyInfo: &RawRegKeyInfo{
 				_full_path: parent.Append(basename),

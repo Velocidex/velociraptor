@@ -47,7 +47,7 @@ export default class URLViewer extends Component {
                      className="url-link"
                      size="sm"
                      variant="outline-info"
-                     href={api.href(url, {
+                     href={api.href(url, {}, {
                          internal: this.props.internal,
                      })} target="_blank">
                      <FontAwesomeIcon icon="external-link-alt"/>

@@ -145,6 +145,12 @@ func (self *RegKeyInfo) Size() int64 {
 	return 0
 }
 
+func (self *RegKeyInfo) UniqueName() string {
+	// Key names can not have \ in them so it is safe to add this
+	// without risk of collisions.
+	return self._full_path.String() + "\\"
+}
+
 func (self *RegKeyInfo) FullPath() string {
 	return self._full_path.String()
 }
@@ -211,6 +217,10 @@ type RegValueInfo struct {
 
 func (self *RegValueInfo) IsDir() bool {
 	return false
+}
+
+func (self *RegValueInfo) UniqueName() string {
+	return self._full_path.String()
 }
 
 func (self *RegValueInfo) Mode() os.FileMode {
