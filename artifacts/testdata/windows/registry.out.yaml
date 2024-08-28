@@ -132,13 +132,23 @@ SELECT OSPath FROM glob(globs="/*", accessor="registry")[
    "type": "key"
   }
  }
-]SELECT OSPath.Path AS Key, Data, read_file(accessor='registry', filename=OSPath) AS Content FROM glob(globs='Test/*', root='HKEY_CURRENT_USER/Software', accessor='registry')[
+]SELECT OSPath.Path AS Key, Data, Data.type AS Type, read_file(accessor='registry', filename=OSPath) AS Content FROM glob(globs='Test/*', root='HKEY_CURRENT_USER/Software', accessor='registry') ORDER BY Type[
  {
   "Key": "HKEY_CURRENT_USER\\Software\\Test\\@",
   "Data": {
    "type": "SZ",
    "value": "Test Data"
   },
+  "Type": "SZ",
+  "Content": "Test Data"
+ },
+ {
+  "Key": "HKEY_CURRENT_USER\\Software\\Test\\KeyWithValue",
+  "Data": {
+   "type": "SZ",
+   "value": "Test Data"
+  },
+  "Type": "SZ",
   "Content": "Test Data"
  },
  {
@@ -146,14 +156,7 @@ SELECT OSPath FROM glob(globs="/*", accessor="registry")[
   "Data": {
    "type": "key"
   },
-  "Content": "Test Data"
- },
- {
-  "Key": "HKEY_CURRENT_USER\\Software\\Test\\KeyWithValue",
-  "Data": {
-   "type": "SZ",
-   "value": "Test Data"
-  },
+  "Type": "key",
   "Content": "Test Data"
  }
 ]
