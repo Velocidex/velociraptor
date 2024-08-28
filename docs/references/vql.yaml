@@ -4022,6 +4022,35 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: link_to
+  description: Create a url linking to a particular part in the Velociraptor GUI.
+  type: Function
+  args:
+  - name: type
+    type: string
+    description: The type of link. Currently one of collection, hunt, artifact, event
+  - name: client_id
+    type: string
+  - name: flow_id
+    type: string
+  - name: tab
+    type: string
+    description: The tab to focus - can be overview, request, results, logs, notebook
+  - name: text
+    type: string
+    description: If specified we emit a markdown style URL with a text
+  - name: hunt_id
+    type: string
+    description: The hunt id to read.
+  - name: artifact
+    type: string
+    description: The artifact to retrieve
+  - name: org
+    type: string
+    description: If set the link accesses a different org. Otherwise we accesses the
+      current org.
+  platforms:
+  - linux_amd64_cgo
 - name: log
   description: |
     Log the message and return TRUE.
@@ -7982,7 +8011,7 @@
     required: true
   - name: key
     type: string
-    description: The column representing the time.
+    description: The column representing the time to key off.
     required: true
   - name: message_column
     type: string

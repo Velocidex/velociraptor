@@ -807,7 +807,7 @@ class VeloPagedTable extends Component {
                                          Object.assign(downloads, {
                                              timezone: timezone,
                                              download_format: "json",
-                                         }), {internal: true})}>
+                                         }))}>
                     <FontAwesomeIcon icon="download"/>
                     <span className="sr-only">{T("Download JSON")}</span>
                   </Button>
@@ -819,7 +819,7 @@ class VeloPagedTable extends Component {
                                          Object.assign(downloads, {
                                              timezone: timezone,
                                              download_format: "csv",
-                                         }), {internal: true})}>
+                                         }))}>
                     <FontAwesomeIcon icon="file-csv"/>
                     <span className="sr-only">{T("Download CSV")}</span>
                   </Button>

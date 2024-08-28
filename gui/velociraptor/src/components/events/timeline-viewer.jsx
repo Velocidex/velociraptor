@@ -438,8 +438,7 @@ export default class EventTimelineViewer extends React.Component {
                    </Dropdown.Toggle>
                    <Dropdown.Menu>
                      <Dropdown.Item as="a"
-                       href={api.href("/api/v1/DownloadTable", downloads_csv,
-                                      {internal: true})}
+                       href={api.href("/api/v1/DownloadTable", downloads_csv)}
                        variant="default" type="button">
                        <FontAwesomeIcon icon="file-csv"/>
                        <span className="button-label">
@@ -450,8 +449,7 @@ export default class EventTimelineViewer extends React.Component {
                        </span>
                      </Dropdown.Item>
                      <Dropdown.Item as="a"
-                       href={api.href("/api/v1/DownloadTable",
-                                      downloads_json, {internal: true})}
+                       href={api.href("/api/v1/DownloadTable", downloads_json)}
                        variant="default" type="button">
                        <FontAwesomeIcon icon="file-code"/>
                        <span className="button-label">

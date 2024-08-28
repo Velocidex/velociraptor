@@ -13,7 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 // components/core/table.jsx formatColumns
 const column_types = [
-    "string", "number", "mb", "timestamp", "nobreak", "tree", "url",
+    "string", "number", "mb", "timestamp", "nobreak", "tree", "url", "url_internal",
     "safe_url", "flow", "preview_upload", "download", "client", "hex",
     "base64", "collapsed"
 ];

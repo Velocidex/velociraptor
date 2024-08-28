@@ -268,15 +268,18 @@ const href = function(url, params, options) {
         if (_.isEmpty(params.org_id)) {
             params.org_id = window.globals.OrgId || "root";
         }
+
+        // All internal links must point to the same page since this
+        // is a SPA
+        if (options && options.internal) {
+            parsed.pathname = window.location.pathname;
+        }
     }
 
     // Options control the type of encoding.
     options = options || {};
     Object.assign(options, {indices: false});
 
-    if (base_path) {
-        parsed.pathname = base_path + parsed.pathname;
-    }
     parsed.search = qs.stringify(params, options);
 
     return parsed.href;

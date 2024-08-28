@@ -534,7 +534,7 @@ export function getFormatter(column_type, text) {
                 return <URLViewer internal={true}
                              url={cell.url} desc={cell.desc}/>;
             }
-            return <URLViewer url={cell}/>;
+            return <URLViewer url={cell} internal={true}/>;
         };
 
     case "safe_url":
@@ -782,7 +782,7 @@ export function formatColumns(columns, env, column_formatter) {
                     return <URLViewer internal={true}
                                       url={cell.url} desc={cell.desc}/>;
                 }
-                return <URLViewer url={cell}/>;
+                return <URLViewer url={cell} internal={true} />;
             };
             x.type = null;
             break;
