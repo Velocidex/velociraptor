@@ -69,5 +69,6 @@ Queries:
   # with name KeyWithValue and a value with name KeyWithValue. We can
   # have key and values with the same name.
   # Reading such a path with read_file() will open the value in preference to the key.
-  - SELECT OSPath.Path AS Key, Data, read_file(accessor='registry', filename=OSPath) AS Content
+  - SELECT OSPath.Path AS Key, Data, Data.type AS Type, read_file(accessor='registry', filename=OSPath) AS Content
     FROM glob(globs='Test/*', root='HKEY_CURRENT_USER/Software', accessor='registry')
+    ORDER BY Type

@@ -1,0 +1,7 @@
+Queries:
+  - |
+    SELECT link_to(hunt_id="H.1234", type="hunt", text="Hunt Link") ,
+           link_to(client_id="C.123", flow_id="F.123", text='Flow link'),
+           link_to(client_id="C.123", artifact="Custom.Artifact.Name", text='Event link', type="event"),
+           link_to(artifact="Custom.Artifact.Name", text='Artifact link', type="artifact")
+    FROM scope()
