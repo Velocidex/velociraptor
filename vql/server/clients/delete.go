@@ -77,10 +77,14 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 			defer wg.Done()
 
 			for item := range progress {
+				var vfs_path string
+				if item.Data != nil {
+					vfs_path, _ = item.Data.GetString("vfs_path")
+				}
 				output_chan <- ordereddict.NewDict().
 					Set("client_id", arg.ClientId).
 					Set("type", item.Type).
-					Set("data", item.Data).
+					Set("vfs_path", vfs_path).
 					Set("error", item.Error)
 			}
 		}()

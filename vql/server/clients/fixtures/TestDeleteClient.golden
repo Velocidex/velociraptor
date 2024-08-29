@@ -62,207 +62,157 @@
   {
    "client_id": "C.12312",
    "type": "",
-   "data": {},
+   "vfs_path": "",
    "error": "client_delete: clearIndexer: file does not exist"
   },
   {
    "client_id": "C.12312",
-   "type": "Datastore",
-   "data": {
-    "vfs_path": "/clients/C.12312/vfs_files/file/C%3A/Users/mike/test/1.txt.db"
-   },
+   "type": "Filestore",
+   "vfs_path": "/clients/C.12312/artifacts/Generic.Client.Info/F.C49TC44OSO62E/BasicInformation.json",
    "error": ""
   },
   {
    "client_id": "C.12312",
-   "type": "Datastore",
-   "data": {
-    "vfs_path": "/clients/C.12312/tasks/task1123.db"
-   },
+   "type": "Filestore",
+   "vfs_path": "/clients/C.12312/artifacts/Generic.Client.Info/F.C49TC44OSO62E/BasicInformation.json.index",
    "error": ""
   },
   {
    "client_id": "C.12312",
-   "type": "Datastore",
-   "data": {
-    "vfs_path": "/clients/C.12312/vfs/file/C%3A/Users.db"
-   },
+   "type": "Filestore",
+   "vfs_path": "/clients/C.12312/artifacts/Generic.Client.Info/F.C49TC44OSO62E/Users.json",
    "error": ""
   },
   {
    "client_id": "C.12312",
-   "type": "Datastore",
-   "data": {
-    "vfs_path": "/clients/C.12312/vfs/file/C%3A.db"
-   },
+   "type": "Filestore",
+   "vfs_path": "/clients/C.12312/artifacts/Generic.Client.Info/F.C49TC44OSO62E/Users.json.index",
    "error": ""
   },
   {
    "client_id": "C.12312",
-   "type": "Datastore",
-   "data": {
-    "vfs_path": "/clients/C.12312/vfs/file.db"
-   },
+   "type": "Filestore",
+   "vfs_path": "/clients/C.12312/collections/F.1234/logs",
+   "error": ""
+  },
+  {
+   "client_id": "C.12312",
+   "type": "Filestore",
+   "vfs_path": "/clients/C.12312/collections/F.1234/logs.json.index",
    "error": ""
   },
   {
    "client_id": "C.12312",
    "type": "Datastore",
-   "data": {
-    "vfs_path": "/clients/C.12312/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU.json.db"
-   },
+   "vfs_path": "/clients/C.12312/collections/F.1234/notebook/N.F.1234-C.123.json.db",
    "error": ""
   },
   {
    "client_id": "C.12312",
    "type": "Datastore",
-   "data": {
-    "vfs_path": "/clients/C.12312/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT16FBL4PM.json.db"
-   },
+   "vfs_path": "/clients/C.12312/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU.json.db",
+   "error": ""
+  },
+  {
+   "client_id": "C.12312",
+   "type": "Filestore",
+   "vfs_path": "/clients/C.12312/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json",
+   "error": ""
+  },
+  {
+   "client_id": "C.12312",
+   "type": "Filestore",
+   "vfs_path": "/clients/C.12312/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json.index",
    "error": ""
   },
   {
    "client_id": "C.12312",
    "type": "Datastore",
-   "data": {
-    "vfs_path": "/clients/C.12312/collections/F.1234/notebook/N.F.1234-C.123.json.db"
-   },
+   "vfs_path": "/clients/C.12312/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT16FBL4PM.json.db",
    "error": ""
   },
   {
    "client_id": "C.12312",
    "type": "Datastore",
-   "data": {
-    "vfs_path": "/clients/C.12312/collections/F.1234/task.db"
-   },
+   "vfs_path": "/clients/C.12312/collections/F.1234/task.db",
+   "error": ""
+  },
+  {
+   "client_id": "C.12312",
+   "type": "Filestore",
+   "vfs_path": "/clients/C.12312/collections/F.1234/uploads.json",
+   "error": ""
+  },
+  {
+   "client_id": "C.12312",
+   "type": "Filestore",
+   "vfs_path": "/clients/C.12312/collections/F.1234/uploads.json.index",
+   "error": ""
+  },
+  {
+   "client_id": "C.12312",
+   "type": "Filestore",
+   "vfs_path": "/clients/C.12312/collections/F.1234/uploads/ntfs/\"\\\\.\\C:\"/Windows/notepad.exe",
    "error": ""
   },
   {
    "client_id": "C.12312",
    "type": "Datastore",
-   "data": {
-    "vfs_path": "/clients/C.12312/ping.db"
-   },
+   "vfs_path": "/clients/C.12312/labels.json.db",
+   "error": ""
+  },
+  {
+   "client_id": "C.12312",
+   "type": "Filestore",
+   "vfs_path": "/clients/C.12312/monitoring_logs/Generic.Client.Stats/2021-08-14.json",
+   "error": ""
+  },
+  {
+   "client_id": "C.12312",
+   "type": "Filestore",
+   "vfs_path": "/clients/C.12312/monitoring_logs/Generic.Client.Stats/2021-08-14.json.tidx",
    "error": ""
   },
   {
    "client_id": "C.12312",
    "type": "Datastore",
-   "data": {
-    "vfs_path": "/clients/C.12312/labels.json.db"
-   },
+   "vfs_path": "/clients/C.12312/ping.db",
    "error": ""
   },
   {
    "client_id": "C.12312",
    "type": "Datastore",
-   "data": {
-    "vfs_path": "/clients/C.12312/ping.json.db"
-   },
+   "vfs_path": "/clients/C.12312/ping.json.db",
    "error": ""
   },
   {
    "client_id": "C.12312",
-   "type": "Filestore",
-   "data": {
-    "vfs_path": "/clients/C.12312/artifacts/Generic.Client.Info/F.C49TC44OSO62E/BasicInformation.json"
-   },
+   "type": "Datastore",
+   "vfs_path": "/clients/C.12312/tasks/task1123.db",
    "error": ""
   },
   {
    "client_id": "C.12312",
-   "type": "Filestore",
-   "data": {
-    "vfs_path": "/clients/C.12312/artifacts/Generic.Client.Info/F.C49TC44OSO62E/BasicInformation.json.index"
-   },
+   "type": "Datastore",
+   "vfs_path": "/clients/C.12312/vfs/file.db",
    "error": ""
   },
   {
    "client_id": "C.12312",
-   "type": "Filestore",
-   "data": {
-    "vfs_path": "/clients/C.12312/artifacts/Generic.Client.Info/F.C49TC44OSO62E/Users.json"
-   },
+   "type": "Datastore",
+   "vfs_path": "/clients/C.12312/vfs/file/C%3A.db",
    "error": ""
   },
   {
    "client_id": "C.12312",
-   "type": "Filestore",
-   "data": {
-    "vfs_path": "/clients/C.12312/artifacts/Generic.Client.Info/F.C49TC44OSO62E/Users.json.index"
-   },
+   "type": "Datastore",
+   "vfs_path": "/clients/C.12312/vfs/file/C%3A/Users.db",
    "error": ""
   },
   {
    "client_id": "C.12312",
-   "type": "Filestore",
-   "data": {
-    "vfs_path": "/clients/C.12312/collections/F.1234/logs"
-   },
-   "error": ""
-  },
-  {
-   "client_id": "C.12312",
-   "type": "Filestore",
-   "data": {
-    "vfs_path": "/clients/C.12312/collections/F.1234/logs.json.index"
-   },
-   "error": ""
-  },
-  {
-   "client_id": "C.12312",
-   "type": "Filestore",
-   "data": {
-    "vfs_path": "/clients/C.12312/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json"
-   },
-   "error": ""
-  },
-  {
-   "client_id": "C.12312",
-   "type": "Filestore",
-   "data": {
-    "vfs_path": "/clients/C.12312/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json.index"
-   },
-   "error": ""
-  },
-  {
-   "client_id": "C.12312",
-   "type": "Filestore",
-   "data": {
-    "vfs_path": "/clients/C.12312/collections/F.1234/uploads/ntfs/\"\\\\.\\C:\"/Windows/notepad.exe"
-   },
-   "error": ""
-  },
-  {
-   "client_id": "C.12312",
-   "type": "Filestore",
-   "data": {
-    "vfs_path": "/clients/C.12312/collections/F.1234/uploads.json"
-   },
-   "error": ""
-  },
-  {
-   "client_id": "C.12312",
-   "type": "Filestore",
-   "data": {
-    "vfs_path": "/clients/C.12312/collections/F.1234/uploads.json.index"
-   },
-   "error": ""
-  },
-  {
-   "client_id": "C.12312",
-   "type": "Filestore",
-   "data": {
-    "vfs_path": "/clients/C.12312/monitoring_logs/Generic.Client.Stats/2021-08-14.json"
-   },
-   "error": ""
-  },
-  {
-   "client_id": "C.12312",
-   "type": "Filestore",
-   "data": {
-    "vfs_path": "/clients/C.12312/monitoring_logs/Generic.Client.Stats/2021-08-14.json.tidx"
-   },
+   "type": "Datastore",
+   "vfs_path": "/clients/C.12312/vfs_files/file/C%3A/Users/mike/test/1.txt.db",
    "error": ""
   }
  ]
