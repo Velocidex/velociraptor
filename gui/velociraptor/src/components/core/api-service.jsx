@@ -258,23 +258,28 @@ const upload = function(url, files, params) {
 
 // Prepare a suitable href link for <a>
 const href = function(url, params, options) {
-    params = params || {};
+    let parsed = parse_url(url);
+
+    // The params form the query string (after ? and before #)
+    params = Object.assign(parsed.params, params || {});
+
     // Relative URLs are always internal.
     if(url.startsWith("/") || (options && options.internal)) {
-        Object.assign(params, {org_id: window.globals.OrgId || "root"});
+        if (_.isEmpty(params.org_id)) {
+            params.org_id = window.globals.OrgId || "root";
+        }
     }
 
+    // Options control the type of encoding.
     options = options || {};
     Object.assign(options, {indices: false});
 
-    // If the URL already contains a query string, we need to append
-    // to it with &
-    let joiner = "?";
-    if (url.match(/[&]/)) {
-        joiner = "&";
+    if (base_path) {
+        parsed.pathname = base_path + parsed.pathname;
     }
+    parsed.search = qs.stringify(params, options);
 
-    return base_path + url + joiner + qs.stringify(params, options);
+    return parsed.href;
 };
 
 const delete_req = function(url, params, cancel_token) {
@@ -321,4 +326,29 @@ export default {
     error: error,
     delete_req: delete_req,
     src_of: src_of,
+};
+
+
+function parse_url(url) {
+    if (_.isObject(url)) {
+        return url;
+    }
+
+    if (_.isString(url)) {
+        try {
+            let parsed =  new URL(url, window.location.origin);
+            if(!_.isEmpty(parsed.search) && parsed.search[0] == "?") {
+                parsed.params = qs.parse(parsed.search.substr(1));
+            } else {
+                parsed.params = {};
+            }
+
+            return parsed;
+
+        } catch(e) {
+            return {};
+        }
+    }
+
+    return {};
 };

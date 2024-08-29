@@ -17,6 +17,12 @@
           window.base_path = "";
       }
 
+      // Set the OrgId from the URL if possible.
+      let url = new URL(window.location.href)
+      if (url.searchParams.get("org_id")) {
+          window.globals.OrgId = url.searchParams.get("org_id");
+      }
+
     </script>
     <script type="text/javascript">
       // Used to launch the application in an error state - allows the

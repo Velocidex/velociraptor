@@ -48,9 +48,9 @@
    "OriginalEventField": "Extra field 1",
    "Foo": "Bar 1",
    "Notes": "Foo is suspicious at being Bar!",
-   "AnnotatedBy": "admin",
-   "AnnotatedAt": "2024-05-15T12:19:47Z",
-   "AnnotationID": "TdAAAAAAAAA=",
+   "_AnnotatedBy": "admin",
+   "_AnnotatedAt": "2024-05-15T12:19:47Z",
+   "_AnnotationID": "TdAAAAAAAAA=",
    "_Source": "Annotation"
   }
  ],
@@ -62,9 +62,9 @@
    "OriginalEventField": "Extra field 2",
    "Foo": "Older Bar 2",
    "Notes": "An Earlier Foo is suspicious at being Older Bar!",
-   "AnnotatedBy": "mike",
-   "AnnotatedAt": "2024-05-15T12:19:47Z",
-   "AnnotationID": "TtAAAAAAAAA=",
+   "_AnnotatedBy": "mike",
+   "_AnnotatedAt": "2024-05-15T12:19:47Z",
+   "_AnnotationID": "TtAAAAAAAAA=",
    "_Source": "Annotation"
   },
   {
@@ -74,9 +74,9 @@
    "OriginalEventField": "Extra field 1",
    "Foo": "Bar 1",
    "Notes": "Foo is suspicious at being Bar!",
-   "AnnotatedBy": "admin",
-   "AnnotatedAt": "2024-05-15T12:19:47Z",
-   "AnnotationID": "TdAAAAAAAAA=",
+   "_AnnotatedBy": "admin",
+   "_AnnotatedAt": "2024-05-15T12:19:47Z",
+   "_AnnotationID": "TdAAAAAAAAA=",
    "_Source": "Annotation"
   }
  ],
@@ -102,9 +102,9 @@
   "Foo": "Older Bar 2",
   "_Source": "Annotation",
   "Notes": "Updated First Annotation - all other fields remain",
-  "AnnotatedBy": "admin",
-  "AnnotatedAt": "2024-05-15T12:19:47Z",
-  "AnnotationID": "TtAAAAAAAAA="
+  "_AnnotatedBy": "admin",
+  "_AnnotatedAt": "2024-05-15T12:19:47Z",
+  "_AnnotationID": "TtAAAAAAAAA="
  },
  "Updated Annotations": [
   {
@@ -114,9 +114,9 @@
    "OriginalEventField": "Extra field 1",
    "Foo": "Bar 1",
    "Notes": "Foo is suspicious at being Bar!",
-   "AnnotatedBy": "admin",
-   "AnnotatedAt": "2024-05-15T12:19:47Z",
-   "AnnotationID": "TdAAAAAAAAA=",
+   "_AnnotatedBy": "admin",
+   "_AnnotatedAt": "2024-05-15T12:19:47Z",
+   "_AnnotationID": "TdAAAAAAAAA=",
    "_Source": "Annotation"
   },
   {
@@ -126,9 +126,9 @@
    "OriginalEventField": "Extra field 2",
    "Foo": "Older Bar 2",
    "Notes": "Updated First Annotation - all other fields remain",
-   "AnnotatedBy": "admin",
-   "AnnotatedAt": "2024-05-15T12:19:47Z",
-   "AnnotationID": "TtAAAAAAAAA=",
+   "_AnnotatedBy": "admin",
+   "_AnnotatedAt": "2024-05-15T12:19:47Z",
+   "_AnnotationID": "TtAAAAAAAAA=",
    "_Source": "Annotation"
   }
  ]

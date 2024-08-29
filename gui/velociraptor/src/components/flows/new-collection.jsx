@@ -43,6 +43,7 @@ class PaginationBuilder {
         }
     }
 
+    active = false
     title = ""
     name = ""
     shouldFocused = (isFocused, step) => isFocused;
@@ -55,6 +56,7 @@ class PaginationBuilder {
     // navigators are disabled.
     makePaginator = (spec) => {
         let {props, onBlur, isFocused} = spec;
+        this.active = this.name === this.PaginationSteps[props.currentStep-1];
         return <Col md="12">
                  <Pagination>
                    { _.map(this.PaginationSteps, (step, i) => {
@@ -97,6 +99,8 @@ const remove_artifact = (artifacts, name) => {
 
 
 class NewCollectionSelectArtifacts extends React.Component {
+    inputRef = React.createRef(null);
+
     static propTypes = {
         // A list of artifact descriptors that are selected.
         artifacts: PropTypes.array,
@@ -125,10 +129,13 @@ class NewCollectionSelectArtifacts extends React.Component {
         showFavoriteSelector: false,
 
         current_favorite: null,
+
+        active: false,
     }
 
     componentDidMount = () => {
         this.source = CancelToken.source();
+        this.focusSearch();
 
         // Prepare the debounced function in advance.
         this._doSearch = _.debounce((value)=>{
@@ -156,6 +163,24 @@ class NewCollectionSelectArtifacts extends React.Component {
         if(_.isEmpty(prevProps.artifacts) && !_.isEmpty(this.props.artifacts)) {
             this.onSelect(this.props.artifacts[0], true);
         }
+
+        if(this.props.paginator.active && !this.state.active) {
+            this.focusSearch();
+            this.setState({active: true});
+        }
+
+        if(!this.props.paginator.active && this.state.active) {
+            this.setState({active: false});
+        }
+    }
+
+    focusSearch() {
+        const input = this.inputRef.current;
+
+        // Focus the input box once all the form is rendered.
+        setTimeout(function() {
+            input.select();
+        }, 400);
     }
 
     onSelect = (row, isSelect) => {
@@ -322,10 +347,15 @@ class NewCollectionSelectArtifacts extends React.Component {
                       <thead>
                         <tr>
                           <th>
-                            <Form>
-                              <Form.Control type="text"
-                                            onChange={e=>this.doSearch(e.target.value)}
-                                            placeholder={T("Search for artifacts...")}
+                            <Form onSubmit={e=>{
+                                e.preventDefault();
+                                return false;
+                            }}>
+                              <Form.Control
+                                type="text"
+                                ref={this.inputRef}
+                                onChange={e=>this.doSearch(e.target.value)}
+                                placeholder={T("Search for artifacts...")}
                               />
                             </Form>
                           </th>

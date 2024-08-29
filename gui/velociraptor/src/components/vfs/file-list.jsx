@@ -692,6 +692,7 @@ class VeloFileList extends Component {
                   params={{
                       client_id: this.props.client.client_id,
                       flow_id: this.props.node.flow_id,
+                      artifact: "System.VFS.ListDirectory/Listing",
                       vfs_components: this.props.node.path,
                   }}
                   selectRow={ selectRow }

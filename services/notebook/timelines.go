@@ -27,7 +27,10 @@ import (
 )
 
 const (
-	AnnotationID = "AnnotationID"
+	// Annotation fields are hidden by default.
+	AnnotationID = "_AnnotationID"
+	AnnotatedBy  = "_AnnotatedBy"
+	AnnotatedAt  = "_AnnotatedAt"
 )
 
 var (
@@ -422,8 +425,8 @@ func (self *NotebookStoreImpl) AnnotateTimeline(
 	if timestamp.After(epoch) {
 		row := event.Update(constants.TIMELINE_DEFAULT_KEY, timestamp).
 			Set("Notes", message).
-			Set("AnnotatedBy", principal).
-			Set("AnnotatedAt", utils.GetTime().Now()).
+			Set(AnnotatedBy, principal).
+			Set(AnnotatedAt, utils.GetTime().Now()).
 			Set(AnnotationID, guid)
 
 		// Push it into the sorter

@@ -99,7 +99,7 @@ class AnnotationDialog extends Component {
                          <Form.Control as="textarea" rows={1}
                                        placeholder={T("Enter short annotation")}
                                        spellCheck="true"
-                                       value={this.state.note}
+                                       value={this.state.note || ""}
                                        onChange={e => this.setState({note: e.target.value})}
                          />
                          </Col>
@@ -149,7 +149,7 @@ class TimelineTableRow extends Component {
             notebook_id: this.props.notebook_id,
             super_timeline: this.props.super_timeline,
             event_json: JSON.stringify({
-                AnnotationID: this.props.row.AnnotationID,
+                _AnnotationID: this.props.row._AnnotationID,
             }),
         }, this.source.token).then(response=>{
             this.props.onUpdate();
