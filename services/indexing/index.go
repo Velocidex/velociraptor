@@ -33,6 +33,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type SearchOptions int
@@ -144,7 +145,41 @@ func (self *Indexer) Ascend(iterator btree.ItemIterator) {
 func (self *Indexer) Start(
 	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
-	return self.RebuildIndex(ctx, config_obj)
+
+	err := self.RebuildIndex(ctx, config_obj)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		delay := 5 * time.Minute
+		if config_obj.Defaults != nil && config_obj.Defaults.ReindexPeriodSeconds > 0 {
+			delay = time.Duration(config_obj.Defaults.ReindexPeriodSeconds) * time.Second
+		}
+
+		last_run := utils.GetTime().Now()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case <-utils.GetTime().After(utils.Jitter(delay)):
+				// Avoid doing snapshots too quickly. This is mainly for
+				// tests where the time is mocked for the After(delay)
+				// above does not work.
+				if utils.GetTime().Now().Sub(last_run) < time.Second {
+					utils.SleepWithCtx(ctx, time.Minute)
+					continue
+				}
+
+				self.RebuildIndex(ctx, config_obj)
+				last_run = utils.GetTime().Now()
+			}
+		}
+	}()
+
+	return err
 }
 
 // Set in memory indexer - it will be flushed later.
@@ -166,6 +201,17 @@ func (self *Indexer) setIndex(client_id, term string) error {
 		self.items++
 	}
 	metricLRUTotalTerms.Inc()
+	return nil
+}
+
+func (self *Indexer) setIndexTree(
+	client_id, term string, btree *btree.BTree) error {
+	record := NewRecord(&api_proto.IndexRecord{
+		Term:   term,
+		Entity: client_id,
+	})
+
+	btree.ReplaceOrInsert(record)
 	return nil
 }
 

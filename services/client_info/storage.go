@@ -49,6 +49,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+const (
+	SYNC_UPDATE = true
+)
+
 var (
 	info_regex = regexp.MustCompile(`"client_id":"([^"]+)","info":"([^"]+)"`)
 )
@@ -158,6 +162,7 @@ func (self *Store) Remove(client_id string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	self.dirty = true
 	delete(self.data, client_id)
 }
 
@@ -291,7 +296,7 @@ func (self *Store) LoadFromSnapshot(
 
 // Write the snapshot to storage.
 func (self *Store) SaveSnapshot(
-	ctx context.Context, config_obj *config_proto.Config) error {
+	ctx context.Context, config_obj *config_proto.Config, sync bool) error {
 
 	// Only the master can write the snapshot.
 	if !services.IsMaster(config_obj) {
@@ -335,23 +340,31 @@ func (self *Store) SaveSnapshot(
 		return err
 	}
 
+	completion := func() {
+		// We do not have to send the update that urgently so it
+		// can be async.
+		journal.PushRowsToArtifactAsync(ctx, config_obj,
+			ordereddict.NewDict().
+				Set("From", self.uuid),
+			"Server.Internal.ClientInfoSnapshot")
+
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Info("<green>ClientInfo Manager</> Written snapshot for org %v in %v (%v records)",
+			services.GetOrgName(config_obj), time.Now().Sub(now), record_count)
+
+	}
+
+	// The final write must be synchronous because we need to
+	// guarantee it hits the disk
+	if sync {
+		completion = utils.SyncCompleter
+	}
+
 	file_store_factory := file_store.GetFileStore(config_obj)
 	writer, err := result_sets.NewResultSetWriter(
 		file_store_factory, paths.CLIENTS_INFO_SNAPSHOT,
 		json.DefaultEncOpts(),
-		func() {
-			// We do not have to send the update that urgently so it
-			// can be async.
-			journal.PushRowsToArtifactAsync(ctx, config_obj,
-				ordereddict.NewDict().
-					Set("From", self.uuid),
-				"Server.Internal.ClientInfoSnapshot")
-
-			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.Info("<green>ClientInfo Manager</> Written snapshot for org %v in %v (%v records)",
-				services.GetOrgName(config_obj), time.Now().Sub(now), record_count)
-
-		}, result_sets.TruncateMode)
+		completion, result_sets.TruncateMode)
 	if err != nil {
 		return err
 	}
@@ -460,7 +473,7 @@ func (self *Store) LoadSnapshotFromLegacyData(
 	logger.Debug("<green>ClientInfo Manager</> Rebuilt %v clients from Legacy data.", count)
 
 	// Save the data for next time.
-	return self.SaveSnapshot(ctx, config_obj)
+	return self.SaveSnapshot(ctx, config_obj, !SYNC_UPDATE)
 }
 
 func NewStorage(uuid int64) *Store {

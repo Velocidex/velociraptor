@@ -196,7 +196,7 @@ func (self *ClientInfoManager) Start(
 			defer wg.Done()
 
 			// When we teardown write the data to storage if needed.
-			defer self.storage.SaveSnapshot(ctx, config_obj)
+			defer self.storage.SaveSnapshot(ctx, config_obj, SYNC_UPDATE)
 
 			for {
 				select {
@@ -204,7 +204,7 @@ func (self *ClientInfoManager) Start(
 					return
 
 				case <-time.After(utils.Jitter(write_time)):
-					err := self.storage.SaveSnapshot(ctx, config_obj)
+					err := self.storage.SaveSnapshot(ctx, config_obj, !SYNC_UPDATE)
 					if err != nil {
 						logger.Error(
 							"<red>ClientInfo Manager</>: writing snapshot: %v for org %v",
@@ -594,7 +594,7 @@ func NewClientInfoManager(
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		service.storage.SaveSnapshot(ctx, config_obj)
+		service.storage.SaveSnapshot(ctx, config_obj, SYNC_UPDATE)
 	}()
 
 	return service, nil

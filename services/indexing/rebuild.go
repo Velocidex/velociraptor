@@ -18,12 +18,8 @@ import (
 func (self *Indexer) RebuildIndex(
 	ctx context.Context, config_obj *config_proto.Config) error {
 
-	// Hold a lock on the index while we rebuild it.
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	// Clear the index completely.
-	self.btree = btree.New(10)
+	btree := btree.New(10)
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
@@ -48,29 +44,35 @@ func (self *Indexer) RebuildIndex(
 		count++
 
 		// The all item corresponds to the "." search term.
-		self.setIndex(client_id, "all")
-		self.setIndex(client_id, client_id)
+		self.setIndexTree(client_id, "all", btree)
+		self.setIndexTree(client_id, client_id, btree)
 
 		if client_info.Hostname != "" {
-			self.setIndex(client_id, "host:"+client_info.Hostname)
+			self.setIndexTree(client_id, "host:"+client_info.Hostname, btree)
 		}
 
 		// Add labels to the index.
 		for _, label := range client_info.Labels {
-			self.setIndex(client_id, "label:"+strings.ToLower(label))
+			self.setIndexTree(client_id, "label:"+strings.ToLower(label), btree)
 		}
 
 		// Add MAC addresses to the index.
 		for _, mac := range client_info.MacAddresses {
-			self.setIndex(client_id, "mac:"+mac)
+			self.setIndexTree(client_id, "mac:"+mac, btree)
 		}
 	}
 
-	logger.Info("<green>Indexing service</> search index loaded %v items in %v",
+	logger.Debug("<green>Indexing service</> search index loaded %v items in %v",
 		count, time.Now().Sub(now))
 
 	// Merge the new index quickly and mark ourselves as ready.
+	// Hold a lock on the index while we rebuild it.
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.ready = true
+	self.btree = btree
+	self.items = btree.Len()
 
 	return nil
 }
