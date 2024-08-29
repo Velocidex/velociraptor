@@ -124,6 +124,7 @@ class ArtifactInspector extends React.Component {
                        preset_filter: "",
                        current_filter: artifact_name});
         this.updateSearch(artifact_name);
+        this.getArtifactDescription(artifact_name);
     }
 
     componentWillUnmount() {
@@ -293,9 +294,11 @@ class ArtifactInspector extends React.Component {
 
     render() {
         let selected = this.state.selectedDescriptor && this.state.selectedDescriptor.name;
-        let deletable = this.state.selectedDescriptor &&
-            !this.state.selectedDescriptor.built_in &&
-            !this.state.selectedDescriptor.is_inherited;
+        let descriptor = this.state.fullSelectedDescriptor || this.state.selectedDescriptor;
+        let deletable = descriptor &&
+            !descriptor.built_in &&
+            !descriptor.is_alias &&
+            !descriptor.is_inherited;
 
         return (
             <div className="full-width-height"><Spinner loading={this.state.loading}/>
