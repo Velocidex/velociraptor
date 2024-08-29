@@ -28,6 +28,15 @@ func (self *ClientInfoManager) DeleteClient(
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	client_path_manager := paths.NewClientPathManager(client_id)
 
+	if really_do_it {
+		err := self.clearIndexer(ctx, client_id, principal)
+		if err != nil {
+			progress <- services.DeleteFlowResponse{
+				Error: fmt.Sprintf("client_delete: clearIndexer: %v", err),
+			}
+		}
+	}
+
 	// Indiscriminately delete all the client's datastore files.
 	_ = datastore.Walk(self.config_obj, db, client_path_manager.Path(),
 		datastore.WalkWithoutDirectories,
@@ -103,6 +112,7 @@ func (self *ClientInfoManager) DeleteClient(
 
 	// Delete the actual client record.
 	if really_do_it {
+		utils.DlvBreak()
 		err = self.reallyDeleteClient(ctx, client_id, principal)
 		if err != nil {
 			progress <- services.DeleteFlowResponse{
@@ -137,10 +147,8 @@ func (self *ClientInfoManager) DeleteClient(
 	return nil
 }
 
-func (self *ClientInfoManager) reallyDeleteClient(ctx context.Context,
+func (self *ClientInfoManager) clearIndexer(ctx context.Context,
 	client_id string, principal string) error {
-
-	defer self.Remove(ctx, client_id)
 
 	indexer, err := services.GetIndexer(self.config_obj)
 	if err != nil {
@@ -150,17 +158,6 @@ func (self *ClientInfoManager) reallyDeleteClient(ctx context.Context,
 	client_info, err := indexer.FastGetApiClient(ctx,
 		self.config_obj, client_id)
 	if err != nil {
-		return err
-	}
-
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return err
-	}
-
-	client_path_manager := paths.NewClientPathManager(client_id)
-	err = db.DeleteSubject(self.config_obj, client_path_manager.Path())
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
 
@@ -186,6 +183,25 @@ func (self *ClientInfoManager) reallyDeleteClient(ctx context.Context,
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (self *ClientInfoManager) reallyDeleteClient(ctx context.Context,
+	client_id string, principal string) error {
+
+	defer self.Remove(ctx, client_id)
+
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	client_path_manager := paths.NewClientPathManager(client_id)
+	err = db.DeleteSubject(self.config_obj, client_path_manager.Path())
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
 	}
 
 	journal, err := services.GetJournal(self.config_obj)
