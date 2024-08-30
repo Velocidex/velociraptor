@@ -55,7 +55,8 @@ func (self *DummyProcessTracker) getLookup(
 	self.age = now
 
 	for row := range pslist.Call(ctx, scope, ordereddict.NewDict()) {
-		entry, pres := getProcessEntry(scope, vfilter.RowToDict(ctx, scope, row))
+		entry, pres := getProcessEntry(
+			ctx, scope, vfilter.RowToDict(ctx, scope, row))
 		if pres {
 			self.lookup[entry.Id] = entry
 		}
@@ -150,7 +151,7 @@ type ProcessInfoLinux struct {
 
 // Parses the output of various pslist implementations to give a
 // ProcessEntry item.
-func getProcessEntry(
+func getProcessEntry(ctx context.Context,
 	scope vfilter.Scope, row *ordereddict.Dict) (*ProcessEntry, bool) {
 	serialized, err := row.MarshalJSON()
 	if err != nil {
@@ -176,7 +177,7 @@ func getProcessEntry(
 		return nil, false
 	}
 
-	create_time, _ := functions.ParseTimeFromString(scope,
+	create_time, _ := functions.ParseTimeFromString(ctx, scope,
 		windows_item.StartTime)
 
 	return &ProcessEntry{

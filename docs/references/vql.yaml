@@ -8114,6 +8114,26 @@
     FROM scope()
     ```
 
+    If the timestamp is ambiguous - i.e. does not specify a timezone
+    you can provide a timezone hint using the `PARSE_TZ` VQL
+    variable. This will only be used if the timestamp is ambiguous. If
+    `PARSE_TZ` is `local` then we use the local timezone on the
+    endpoint.
+
+    For example:
+
+    ```vql
+    LET PARSE_TZ <= "local"
+
+    SELECT timestamp(string="Thu Aug 29 2024 21:03"),
+           timestamp(string="Thu Aug 29 2024 21:03 CEST")
+    FROM scope()
+    ```
+
+    The first timestamp will be parsed according to the local timezone
+    because it is ambiguous. However, the second timestamp is not
+    ambiguous and `PARSE_TZ` has no effect.
+
     Internally VQL uses Golang's
     [time.Time](https://golang.org/pkg/time/#Time) object to represent
     times and this is what is returned by the `timestamp()` VQL
@@ -8156,6 +8176,7 @@
     FROM scope()
     ```
   type: Function
+  version: 2
   args:
   - name: epoch
     type: Any
@@ -8169,9 +8190,6 @@
   - name: string
     type: string
     description: Guess a timestamp from a string
-  - name: timezone
-    type: string
-    description: A default timezone (UTC)
   - name: format
     type: string
     description: A format specifier as per the Golang time.Parse
@@ -8182,6 +8200,41 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: timestamp_format
+  description: |
+    Format a timestamp into a string.
+
+    This uses the same type of format string as described
+    https://pkg.go.dev/time#Time.Format . You can also use any of the
+    constants described in https://pkg.go.dev/time#pkg-constants as a
+    shorthand to common time formatting directives.
+
+    The output timezone is UTC by default but can be changed using the
+    `TZ` VQL variable.
+
+    Example:
+
+    ```vql
+    LET TZ="Europe/Berlin"
+
+    SELECT timestamp_format(time=now(), format="RFC3339") FROM scope()
+
+    > "2024-08-29T02:05:23+02:00"
+    ```
+
+  type: Function
+  version: 1
+  args:
+  - name: time
+    type: Any
+    description: Time to format
+    required: true
+  - name: format
+    type: string
+    description: A format specifier as per the Golang time.Format. Additionally any
+      constants specified in https://pkg.go.dev/time#pkg-constants can be used.
+  platforms:
+  - linux_amd64_cgo
 - name: tlsh_hash
   description: Calculate the tlsh hash of a file.
   type: Function
@@ -9612,4 +9665,3 @@
   platforms:
   - darwin_arm64_cgo
   - linux_amd64_cgo
-
