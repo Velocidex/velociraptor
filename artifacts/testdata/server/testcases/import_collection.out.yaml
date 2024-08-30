@@ -4,6 +4,9 @@ LET Sanitize(X) = regex_replace(re="[C]\\.[0-9a-z]+", replace="C.ID", source=X)[
  }
 ]SELECT Sanitize(X=vfs_path) AS vfs_path FROM Artifact.Server.Utils.DeleteClient( ClientIdList=[X[0].ClientId, Y[0].ClientId], ReallyDoIt=TRUE) WHERE NOT vfs_path =~ "monitoring" Order by vfs_path[
  {
+  "vfs_path": ""
+ },
+ {
   "vfs_path": "/clients/C.ID/artifacts/Linux.Search.FileFinder/F.01.json"
  },
  {
@@ -14,6 +17,12 @@ LET Sanitize(X) = regex_replace(re="[C]\\.[0-9a-z]+", replace="C.ID", source=X)[
  },
  {
   "vfs_path": "/clients/C.ID/artifacts/Linux.Search.FileFinder/F.CD62UJJO259A4.json.index"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections"
  },
  {
   "vfs_path": "/clients/C.ID/collections/F.01.json.db"
@@ -32,6 +41,12 @@ LET Sanitize(X) = regex_replace(re="[C]\\.[0-9a-z]+", replace="C.ID", source=X)[
  },
  {
   "vfs_path": "/clients/C.ID/collections/F.01/uploads/file/tmp/\"ls\\with\\back:slash\""
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/F.CD62UJJO259A4"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/F.CD62UJJO259A4"
  },
  {
   "vfs_path": "/clients/C.ID/collections/F.CD62UJJO259A4.json.db"

@@ -119,6 +119,9 @@ type ClientInfoManager interface {
 		client_id string, metadata *ordereddict.Dict, principal string) error
 
 	ValidateClientId(client_id string) error
+
+	DeleteClient(ctx context.Context, client_id, principal string,
+		progress chan DeleteFlowResponse, really_do_it bool) error
 }
 
 func GetHostname(

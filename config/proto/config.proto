@@ -1207,6 +1207,9 @@ message Defaults {
     // attacks. Setting the following to true will restrict usernames
     // to the set a-z and 0-9
     bool disable_unicode_usernames = 49;
+
+    // How often to refresh the search index (default 5 min)
+    int64 reindex_period_seconds = 50;
 }
 
 // Configures crypto preferences
