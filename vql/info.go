@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package vql
 
@@ -39,11 +39,13 @@ var (
 func GetInfo(host *psutils.InfoStat) *ordereddict.Dict {
 	me, _ := os.Executable()
 	cwd, _ := os.Getwd()
+
+	zone, tz_offset := time.Now().Local().Zone()
+
 	return ordereddict.NewDict().
 		Set("Hostname", host.Hostname).
 		Set("Uptime", host.Uptime).
 		Set("BootTime", host.BootTime).
-		Set("Procs", host.Procs).
 		Set("OS", host.OS).
 		Set("Platform", host.Platform).
 		Set("PlatformFamily", host.PlatformFamily).
@@ -52,11 +54,14 @@ func GetInfo(host *psutils.InfoStat) *ordereddict.Dict {
 		Set("VirtualizationSystem", host.VirtualizationSystem).
 		Set("VirtualizationRole", host.VirtualizationRole).
 		Set("CompilerVersion", runtime.Version()).
-		Set("HostID", host.HostID).
+		Set("HostID", psutils.HostID()).
 		Set("Exe", me).
 		Set("CWD", cwd).
 		Set("IsAdmin", IsAdmin()).
-		Set("ClientStart", start_time)
+		Set("ClientStart", start_time).
+		Set("LocalTZ", zone).
+		Set("LocalTZOffset", tz_offset)
+
 }
 
 func init() {

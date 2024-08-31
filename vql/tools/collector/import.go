@@ -45,7 +45,7 @@ const (
 )
 
 type ImportCollectionFunctionArgs struct {
-	ClientId   string `vfilter:"optional,field=client_id,doc=The client id to import to. Use 'auto' to generate a new client id."`
+	ClientId   string `vfilter:"optional,field=client_id,doc=The client id to import to. Use 'auto' to generate a new client id or use the host info from the collection."`
 	Hostname   string `vfilter:"optional,field=hostname,doc=When creating a new client, set this as the hostname."`
 	Filename   string `vfilter:"required,field=filename,doc=Path on server to the collector zip."`
 	Accessor   string `vfilter:"optional,field=accessor,doc=The accessor to use."`
@@ -245,8 +245,8 @@ func (self ImportCollectionFunction) importFlow(
 	}
 
 	if client_id == "auto" || client_id == "" {
-		client_id, err = self.getClientIdFromHostname(
-			ctx, scope, config_obj, hostname)
+		client_id, err = self.getClientIdFromHostnameOrCollection(
+			ctx, scope, config_obj, hostname, root, accessor)
 		if err != nil {
 			return nil, err
 		}
@@ -400,11 +400,49 @@ func (self ImportCollectionFunction) importHuntObject(
 	return hunt.HuntId, err
 }
 
-func (self ImportCollectionFunction) getClientIdFromHostname(
+func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 	ctx context.Context,
 	scope types.Scope,
 	config_obj *config_proto.Config,
-	hostname string) (string, error) {
+	hostname string,
+	root *accessors.OSPath,
+	accessor accessors.FileSystemAccessor) (string, error) {
+
+	// Try to get the host info from the collection.
+	host_info := ordereddict.NewDict()
+	path := root.Append("client_info.json")
+	err := self.getFile(accessor, path, host_info)
+	if err == nil {
+		host_id, pres := host_info.GetString("HostID")
+		if pres {
+			// Make the client id based on the host id. This is used
+			// to ensure that the client id is consistent each time
+			// the offline collector is run on the same endpoint.
+			client_id := "C." + strings.TrimPrefix(host_id, "C.")
+
+			// Check if the client is already known.
+			client_info_manager, err := services.GetClientInfoManager(config_obj)
+			if err != nil {
+				return "", err
+			}
+
+			_, err = client_info_manager.Get(ctx, client_id)
+			if err != nil {
+				hostname, _ := host_info.GetString("Hostname")
+
+				// Client is not known, create it.
+				clients.NewClientFunction{}.Call(ctx, scope, ordereddict.NewDict().
+					Set("client_id", client_id).
+					Set("first_seen_at", time.Now()).
+					Set("last_seen_at", time.Now()).
+					Set("hostname", hostname))
+			}
+
+			scope.Log("Found client_info.json file in collection: Using client id as GUID %v, with hostname %v",
+				client_id, hostname)
+			return client_id, nil
+		}
+	}
 
 	if hostname != "" {
 		indexer, err := services.GetIndexer(config_obj)

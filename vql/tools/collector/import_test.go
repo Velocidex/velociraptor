@@ -189,12 +189,17 @@ func (self *TestSuite) TestImportCollectionFromFixture() {
 	ctx := self.Ctx
 	scope := manager.BuildScope(builder)
 
+	// This file contains an client_info.json file with the real client's
+	// HostID and Hostname.
 	import_file_path, err := filepath.Abs("fixtures/import.zip")
 	assert.NoError(self.T(), err)
 
 	result := collector.ImportCollectionFunction{}.Call(ctx, scope,
 		ordereddict.NewDict().
 			Set("client_id", "auto").
+
+			// This will be ingnored as the new client will be added
+			// with the TestHost hostname in the host.json file.
 			Set("hostname", "MyNewHost").
 			Set("filename", import_file_path))
 	context, ok := result.(*proto.ArtifactCollectorContext)
@@ -212,8 +217,10 @@ func (self *TestSuite) TestImportCollectionFromFixture() {
 
 	// Check the indexes are correct for the new client_id
 	search_resp, err := indexer.SearchClients(ctx, self.ConfigObj,
-		&api_proto.SearchClientsRequest{Query: "host:MyNewHost"}, "")
+		&api_proto.SearchClientsRequest{Query: "host:TestHost"}, "")
 	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), 1, len(search_resp.Items))
 
 	new_client_id := search_resp.Items[0].ClientId
 

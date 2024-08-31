@@ -101,6 +101,7 @@
     ]
    }
   ],
+  "client_info.json": "{\n \"Hostname\": \"TestHost\",\n \"HostID\": \"1234-56\",\n \"Name\": \"velociraptor\",\n \"BuildTime\": \"\",\n \"build_url\": \"\"\n}",
   "uploads.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0001\u0000\u0000\u0000\u0001\u0000\u0000",
   "uploads.json": [
    {

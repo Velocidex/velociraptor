@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/shirou/gopsutil/v3/host"
 	"golang.org/x/sys/windows"
 )
 
@@ -150,4 +151,10 @@ func IOCountersWithContext(ctx context.Context, pid int32) (*IOCountersStat, err
 	}
 
 	return stats, nil
+}
+
+// Pretty cheap as it is just a reg lookup
+func HostID() string {
+	id, _ := host.HostID()
+	return id
 }
