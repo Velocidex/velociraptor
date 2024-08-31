@@ -33,6 +33,11 @@ sources:
                Interfaces.MAC AS MACAddresses
         FROM info()
 
+  - name: DetailedInfo
+    query: |
+      LET Info = SELECT * FROM info()
+      SELECT _key AS Param, _value AS Value FROM items(item=Info[0])
+
   - name: LinuxInfo
     description: Linux specific information about the host
     precondition: SELECT OS From info() where OS = 'linux'

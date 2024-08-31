@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/shirou/gopsutil/v3/host"
 	"github.com/shirou/gopsutil/v3/process"
 )
 
@@ -115,4 +116,10 @@ func IOCountersWithContext(ctx context.Context, pid int32) (*IOCountersStat, err
 		ReadBytes:  counters.ReadBytes,
 		WriteBytes: counters.WriteBytes,
 	}, nil
+}
+
+// Pretty cheap as it is just a /proc read.
+func HostID() string {
+	id, _ := host.HostID()
+	return id
 }

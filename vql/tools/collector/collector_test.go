@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/filesystem"
+	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/vfilter"
 
@@ -212,6 +213,16 @@ func (self *TestSuite) SetupTest() {
 
 }
 
+func (self *TestSuite) mockInfo(scope vfilter.Scope) vfilter.Scope {
+	// Mock the info plugin for stable host.json
+	mock_info := remapping.NewMockerPlugin("info", []*ordereddict.Dict{
+		ordereddict.NewDict().
+			Set("Hostname", "TestHost").
+			Set("HostID", "1234-56")})
+
+	return remapping.NewMockScope(scope, []*remapping.MockerPlugin{mock_info})
+}
+
 func (self *TestSuite) TestCollectionWithDirectories() {
 	// Create a directory structure with files and directories.
 	dir, err := ioutil.TempDir("", "zip")
@@ -245,6 +256,8 @@ func (self *TestSuite) TestCollectionWithDirectories() {
 
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
+
+	scope = self.mockInfo(scope)
 
 	for _ = range (collector.CollectPlugin{}).Call(self.Ctx,
 		scope, ordereddict.NewDict().
@@ -343,6 +356,8 @@ func (self *TestSuite) TestCollectionWithArtifacts() {
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
+	scope = self.mockInfo(scope)
+
 	additionalArtifactCollectorArgs.Set("output", output_file.Name())
 	additionalArtifactCollectorArgs.Set("report", report_file.Name())
 
@@ -377,6 +392,8 @@ func (self *TestSuite) TestCollectionWithTypes() {
 
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
+
+	scope = self.mockInfo(scope)
 
 	results := []vfilter.Row{}
 	args := ordereddict.NewDict().
@@ -414,6 +431,8 @@ func (self *TestSuite) TestCollectionWithUpload() {
 
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
+
+	scope = self.mockInfo(scope)
 
 	results := []vfilter.Row{}
 

@@ -28,9 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
-	"www.velocidex.com/golang/velociraptor/vql/psutils"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	vql_utils "www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -212,28 +210,26 @@ func (self *collectionManager) SetFormat(
 }
 
 func (self *collectionManager) storeHostInfo() error {
-	return nil
-
-	fd, err := self.container.Create("info.json", Clock.Now())
+	fd, err := self.container.Create("client_info.json", Clock.Now())
 	if err != nil {
 		return err
 	}
 	defer fd.Close()
 
-	version := config.GetVersion()
-	var info_dict *ordereddict.Dict
-	host_info, err := psutils.InfoWithContext(self.ctx)
-	if err != nil {
-		info_dict = ordereddict.NewDict()
-	} else {
-		info_dict = vql.GetInfo(host_info)
+	// Call the info plugin so it can be mocked
+	info, ok := self.scope.GetPlugin("info")
+	if !ok {
+		return nil
 	}
 
-	fd.Write(json.MustMarshalIndent(info_dict.
-		Set("Name", version.Name).
-		Set("BuildTime", version.BuildTime).
-		Set("build_url", version.CiBuildUrl)))
-
+	version := config.GetVersion()
+	for row := range info.Call(self.ctx, self.scope, ordereddict.NewDict()) {
+		info_dict := vfilter.RowToDict(self.ctx, self.scope, row)
+		fd.Write(json.MustMarshalIndent(info_dict.
+			Set("Name", version.Name).
+			Set("BuildTime", version.BuildTime).
+			Set("build_url", version.CiBuildUrl)))
+	}
 	return nil
 }
 

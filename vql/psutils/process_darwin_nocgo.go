@@ -5,6 +5,8 @@ package psutils
 
 import (
 	"context"
+
+	"github.com/shirou/gopsutil/v3/host"
 )
 
 func cmdNameWithContext(ctx context.Context, pid int32) (string, error) {
@@ -29,4 +31,11 @@ func CwdWithContext(ctx context.Context, pid int32) (string, error) {
 
 func MemoryInfoWithContext(ctx context.Context, pid int32) (*MemoryInfoStat, error) {
 	return nil, NotImplementedError
+}
+
+// This is really slow and shells out but it is ok for the nocgo debug
+// build. The CGO production build calls the right API.
+func HostID() string {
+	id, _ := host.HostID()
+	return id
 }

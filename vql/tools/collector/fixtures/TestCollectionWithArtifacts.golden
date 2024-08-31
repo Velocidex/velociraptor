@@ -49,6 +49,7 @@
    ]
   }
  ],
+ "client_info.json": "{\n \"Hostname\": \"TestHost\",\n \"HostID\": \"1234-56\",\n \"Name\": \"velociraptor\",\n \"BuildTime\": \"\",\n \"build_url\": \"\"\n}",
  "collection_context.json": {
   "session_id": "F.1234",
   "request": {

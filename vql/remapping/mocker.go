@@ -434,6 +434,37 @@ func (self MockClearFunction) Info(
 	}
 }
 
+type MockedScope struct {
+	vfilter.Scope
+
+	mu      sync.Mutex
+	plugins map[string]*MockerPlugin
+}
+
+func (self MockedScope) GetPlugin(name string) (types.PluginGeneratorInterface, bool) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	mock, pres := self.plugins[name]
+	if pres {
+		return mock, true
+	}
+
+	return self.Scope.GetPlugin(name)
+}
+
+func NewMockScope(scope vfilter.Scope, plugins []*MockerPlugin) MockedScope {
+	res := MockedScope{
+		Scope:   scope,
+		plugins: make(map[string]*MockerPlugin),
+	}
+
+	for _, p := range plugins {
+		res.plugins[p.name] = p
+	}
+	return res
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&MockFunction{})
 	vql_subsystem.RegisterFunction(&MockCheckFunction{})
