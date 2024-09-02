@@ -159,7 +159,7 @@ func (self *ClientInfoManager) UpdateStats(
 		record.LastEventTableVersion = stats.LastEventTableVersion
 	}
 
-	return self.storage.SetRecord(record)
+	return self.storage.SetRecord(self.config_obj, record)
 }
 
 func (self *ClientInfoManager) Start(
@@ -282,7 +282,7 @@ func (self *ClientInfoManager) ProcessFlowCompletion(
 		return nil
 	}
 
-	err := self.storage.Modify(ctx, client_id,
+	err := self.storage.Modify(ctx, config_obj, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if client_info == nil || client_info.InFlightFlows == nil {
 				return nil, utils.NotFoundError
@@ -318,7 +318,7 @@ func (self *ClientInfoManager) ProcessInFlightNotifications(
 	// them. This only happens when communicating with older
 	// clients that do not support it.
 	if remove || pres {
-		return self.storage.Modify(ctx, client_id,
+		return self.storage.Modify(ctx, config_obj, client_id,
 			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 				if client_info == nil {
 					return nil, utils.NotFoundError
@@ -333,7 +333,7 @@ func (self *ClientInfoManager) ProcessInFlightNotifications(
 	}
 
 	in_flight, _ := row.GetStrings("InFlight")
-	return self.storage.Modify(ctx, client_id,
+	return self.storage.Modify(ctx, config_obj, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if client_info == nil {
 				return nil, utils.NotFoundError
@@ -461,7 +461,7 @@ func (self *ClientInfoManager) ProcessPing(
 			record, err := self.storage.GetRecord(client_id)
 			if err == nil {
 				record.Ping = uint64(value)
-				self.storage.SetRecord(record)
+				self.storage.SetRecord(self.config_obj, record)
 			}
 		}
 	}
@@ -476,7 +476,7 @@ func (self *ClientInfoManager) ProcessPing(
 			record, err := self.storage.GetRecord(client_id)
 			if err == nil {
 				record.IpAddress = value
-				self.storage.SetRecord(record)
+				self.storage.SetRecord(self.config_obj, record)
 			}
 		}
 	}
@@ -492,7 +492,7 @@ func (self *ClientInfoManager) ProcessPing(
 			record, err := self.storage.GetRecord(client_id)
 			if err == nil {
 				record.LastHuntTimestamp = uint64(value)
-				self.storage.SetRecord(record)
+				self.storage.SetRecord(self.config_obj, record)
 			}
 		}
 	}
@@ -508,7 +508,7 @@ func (self *ClientInfoManager) ProcessPing(
 			record, err := self.storage.GetRecord(client_id)
 			if err == nil {
 				record.LastEventTableVersion = uint64(value)
-				self.storage.SetRecord(record)
+				self.storage.SetRecord(self.config_obj, record)
 			}
 		}
 	}
@@ -520,7 +520,7 @@ func (self *ClientInfoManager) Modify(
 	ctx context.Context, client_id string,
 	modifier func(client_info *services.ClientInfo) (
 		*services.ClientInfo, error)) error {
-	return self.storage.Modify(ctx, client_id, modifier)
+	return self.storage.Modify(ctx, self.config_obj, client_id, modifier)
 }
 
 func (self *ClientInfoManager) Get(
@@ -537,7 +537,7 @@ func (self *ClientInfoManager) Get(
 	if err == nil {
 		if notifier.IsClientDirectlyConnected(client_id) {
 			record.Ping = uint64(utils.GetTime().Now().UnixNano() / 1000)
-			self.storage.SetRecord(record)
+			self.storage.SetRecord(self.config_obj, record)
 		}
 	}
 
@@ -545,7 +545,7 @@ func (self *ClientInfoManager) Get(
 }
 
 func (self *ClientInfoManager) Remove(ctx context.Context, client_id string) {
-	self.storage.Remove(client_id)
+	self.storage.Remove(self.config_obj, client_id)
 }
 
 func (self *ClientInfoManager) Set(
@@ -555,7 +555,7 @@ func (self *ClientInfoManager) Set(
 		return invalidClientError
 	}
 
-	return self.storage.SetRecord(&client_info.ClientInfo)
+	return self.storage.SetRecord(self.config_obj, &client_info.ClientInfo)
 }
 
 func NewClientInfoManager(
@@ -590,11 +590,15 @@ func NewClientInfoManager(
 	go func() {
 		defer wg.Done()
 
+		<-ctx.Done()
+
+		utils.DlvBreak()
+
 		// When we shut down make sure to save the snapshot.
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		subctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
-		service.storage.SaveSnapshot(ctx, config_obj, SYNC_UPDATE)
+		service.storage.SaveSnapshot(subctx, config_obj, SYNC_UPDATE)
 	}()
 
 	return service, nil

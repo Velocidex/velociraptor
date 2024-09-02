@@ -7,6 +7,8 @@ import (
 	"context"
 	"os"
 	"strings"
+
+	"golang.org/x/sys/unix"
 )
 
 func PlatformInformationWithContext(ctx context.Context) (string, string, string, error) {

@@ -90,6 +90,8 @@ type Indexer struct {
 	last_snapshot_read time.Time
 
 	config_obj *config_proto.Config
+
+	_verbs []string
 }
 
 func NewIndexer(config_obj *config_proto.Config) *Indexer {

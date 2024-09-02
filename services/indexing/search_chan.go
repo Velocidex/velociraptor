@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -68,6 +69,11 @@ func (self *Indexer) SearchClientsChan(
 	config_obj *config_proto.Config,
 	search_term string, principal string) (chan *api_proto.ApiClient, error) {
 
+	var custom_verbs []string
+	if config_obj.Defaults != nil {
+		custom_verbs = config_obj.Defaults.IndexedClientMetadata
+	}
+
 	operator, term := splitIntoOperatorAndTerms(search_term)
 	switch operator {
 	case "label", "host", "all", "mac":
@@ -84,6 +90,10 @@ func (self *Indexer) SearchClientsChan(
 		return self.searchRecentsChan(ctx, scope, config_obj, principal)
 
 	default:
+		if utils.InString(custom_verbs, operator) {
+			return self.searchClientIndexChan(ctx, scope, config_obj, search_term)
+		}
+
 		return nil, errors.New("Invalid search operator " + operator)
 	}
 }

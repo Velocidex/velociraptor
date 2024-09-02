@@ -69,7 +69,7 @@ export default class NotebookUploads extends Component {
         return <a href={api.href("/api/v1/DownloadVFSFile", {
             fs_components: components,
             vfs_path: cell + type,
-        }, {internal: true, arrayFormat: 'brackets'})}
+        }, {arrayFormat: 'brackets'})}
                   target="_blank" download
                   rel="noopener noreferrer">
                  {row.name} { type && <FontAwesomeIcon icon="note-sticky"/>}
