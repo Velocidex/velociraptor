@@ -128,7 +128,8 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
    "last_hunt_timestamp": 0,
    "last_event_table_version": 0,
    "labels_timestamp": 0,
-   "in_flight_flows": {}
+   "in_flight_flows": {},
+   "metadata": {}
   }
  }
 ]SELECT * FROM client_delete(client_id=client_record.client_id, really_do_it=TRUE)[]SELECT * FROM clients(client_id=client_record.client_id)[]
