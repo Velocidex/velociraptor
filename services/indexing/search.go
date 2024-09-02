@@ -20,7 +20,8 @@ import (
 )
 
 var (
-	verbs = []string{
+	// List of built in verbs.
+	buiilt_in_verbs = []string{
 		"label:",
 		"host:",
 		"mac:",
@@ -29,6 +30,22 @@ var (
 		"ip:",
 	}
 )
+
+func (self *Indexer) getVerbs() (res []string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if len(self._verbs) == 0 {
+		self._verbs = append(self._verbs, buiilt_in_verbs...)
+		if self.config_obj.Defaults != nil {
+			for _, operator := range self.config_obj.Defaults.IndexedClientMetadata {
+				self._verbs = append(self._verbs, operator+":")
+			}
+		}
+	}
+
+	return self._verbs
+}
 
 func splitIntoOperatorAndTerms(term string) (string, string) {
 	if term == "all" {
@@ -147,6 +164,11 @@ func (self *Indexer) SearchClients(
 		limit = in.Limit
 	}
 
+	var custom_verbs []string
+	if config_obj.Defaults != nil {
+		custom_verbs = config_obj.Defaults.IndexedClientMetadata
+	}
+
 	operator, term := splitIntoOperatorAndTerms(in.Query)
 	switch operator {
 	case "label", "host", "all", "mac":
@@ -166,6 +188,10 @@ func (self *Indexer) SearchClients(
 		return self.searchLastIP(ctx, config_obj, in, term, limit)
 
 	default:
+		if utils.InString(custom_verbs, operator) {
+			return self.searchClientIndex(ctx, config_obj, in, limit)
+		}
+
 		return self.searchVerbs(ctx, config_obj, in, limit)
 	}
 }
@@ -458,7 +484,7 @@ func (self *Indexer) searchVerbs(ctx context.Context,
 	items := ordereddict.NewDict()
 
 	term := strings.ToLower(in.Query)
-	for _, verb := range verbs {
+	for _, verb := range self.getVerbs() {
 		if strings.HasPrefix(verb, term) {
 			terms = append(terms, verb)
 		}

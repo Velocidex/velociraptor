@@ -60,6 +60,11 @@ func (self *Indexer) RebuildIndex(
 		for _, mac := range client_info.MacAddresses {
 			self.setIndexTree(client_id, "mac:"+mac, btree)
 		}
+
+		// Now add user custom search verbs.
+		for k, v := range client_info.Metadata {
+			self.setIndexTree(client_id, k+":"+v, btree)
+		}
 	}
 
 	logger.Debug("<green>Indexing service</> search index loaded %v items in %v",

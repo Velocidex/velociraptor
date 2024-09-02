@@ -1210,6 +1210,28 @@ message Defaults {
 
     // How often to refresh the search index (default 5 min)
     int64 reindex_period_seconds = 50;
+
+    // The client metadata is an arbitrary key/value store that holds
+    // user defined information per client. You can normally store
+    // anything in the client metadata but this information is not
+    // indexed, making searching on it slow (using VQL each client's
+    // metadata blob needs to be opened, read and matched).
+
+    // This setting allows you to define **some** fields in the client
+    // metadata that will be indexed. These fields should not be too
+    // large so as to keep the index size smallish so it is
+    // recommended to use only small strings. Once fields are defined
+    // here, the extra data can be searched in the GUI search bar
+    // using a verb such as <field_name>:match.
+
+    // For example, define here:
+    // indexed_client_metadata:
+    //  - department
+    //
+    // Then a search for `department:accounting` will match all
+    // clients with the key department and value contains accounting
+    // in their client metadata.
+    repeated string indexed_client_metadata = 51;
 }
 
 // Configures crypto preferences

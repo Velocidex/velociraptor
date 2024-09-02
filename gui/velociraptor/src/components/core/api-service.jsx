@@ -257,6 +257,21 @@ const upload = function(url, files, params) {
 };
 
 // Prepare a suitable href link for <a>
+// This function accepts a number of options:
+
+// - internal: This option means the link is an internl link to
+//   another part of the SPA. The function will update the path and
+//   host parts of the URL to point at the current page. This is
+//   useful because the caller does not need to know where the
+//   application is served from.
+
+// - arrayFormat: bracket means that arrays will be encoded by
+//   using the backet convention to the parameter name.
+
+// NOTE: Relative URLs will be converted to absolute URLs based
+// on the current location so they can be bookmarked or shared.
+// The org id is automatically added if needed to ensure the URLs
+// refer to the correct org.
 const href = function(url, params, options) {
     let parsed = parse_url(url);
 

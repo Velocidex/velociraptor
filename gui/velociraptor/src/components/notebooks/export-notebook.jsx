@@ -72,7 +72,7 @@ export default class ExportNotebook extends React.Component {
             return <a href={api.href("/api/v1/DownloadVFSFile", {
                 fs_components: stats.components,
                 vfs_path: row.path,
-            }, {internal: true, arrayFormat: 'brackets'})}
+            }, {arrayFormat: 'brackets'})}
                       target="_blank" download
                       rel="noopener noreferrer">{row.name}</a>;
         };

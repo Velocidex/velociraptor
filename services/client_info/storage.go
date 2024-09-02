@@ -35,6 +35,8 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -55,6 +57,11 @@ const (
 
 var (
 	info_regex = regexp.MustCompile(`"client_id":"([^"]+)","info":"([^"]+)"`)
+
+	clientInfoDirty = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "client_info_dirty",
+		Help: "Is the current client info cache dirty.",
+	}, []string{"org"})
 )
 
 type Store struct {
@@ -64,87 +71,6 @@ type Store struct {
 	uuid int64
 
 	dirty bool
-}
-
-// Runs periodically for housekeeping.
-func (self *Store) StartHouseKeep(
-	ctx context.Context, config_obj *config_proto.Config) {
-
-	delay := 600 * time.Second
-	if config_obj.Defaults != nil {
-		if config_obj.Defaults.ClientInfoHousekeepingPeriod < 0 {
-			return
-		}
-
-		if config_obj.Defaults.ClientInfoHousekeepingPeriod > 0 {
-			delay = time.Duration(
-				config_obj.Defaults.ClientInfoHousekeepingPeriod) * time.Second
-		}
-	}
-
-	go func() {
-		last_run := utils.GetTime().Now()
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-
-			case <-utils.GetTime().After(utils.Jitter(utils.Jitter(delay))):
-				if utils.GetTime().Now().Sub(last_run) < 10*time.Second {
-					utils.SleepWithCtx(ctx, time.Minute)
-					continue
-				}
-
-				self.houseKeep(ctx, config_obj)
-				last_run = utils.GetTime().Now()
-			}
-
-		}
-	}()
-}
-
-// This function ensures that any outstanding notifications are sent
-// to clients in case any were lost when the collections were
-// initially scheduled.
-func (self *Store) houseKeep(
-	ctx context.Context, config_obj *config_proto.Config) {
-
-	start := utils.GetTime().Now()
-
-	defer func() {
-		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Debug(
-			"<green>ClientInfoManager</> Scanned for outstanding tasks in %v in %v",
-			services.GetOrgName(config_obj), utils.GetTime().Now().Sub(start))
-	}()
-
-	notifier, err := services.GetNotifier(config_obj)
-	if err != nil {
-		return
-	}
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return
-	}
-
-	for _, client_id := range self.Keys() {
-		if !notifier.IsClientDirectlyConnected(client_id) {
-			continue
-		}
-
-		client_path_manager := paths.NewClientPathManager(client_id)
-		tasks, err := db.ListChildren(
-			config_obj, client_path_manager.TasksDirectory())
-		if err != nil {
-			continue
-		}
-
-		if len(tasks) > 0 {
-			notifier.NotifyDirectListener(client_id)
-		}
-	}
 }
 
 func (self *Store) Keys() []string {
@@ -158,16 +84,18 @@ func (self *Store) Keys() []string {
 	return result
 }
 
-func (self *Store) Remove(client_id string) {
+func (self *Store) Remove(
+	config_obj *config_proto.Config, client_id string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	self.dirty = true
+	clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(1.0)
 	delete(self.data, client_id)
 }
 
 func (self *Store) Modify(
-	ctx context.Context, client_id string,
+	ctx context.Context, config_obj *config_proto.Config, client_id string,
 	modifier func(client_info *services.ClientInfo) (
 		*services.ClientInfo, error)) error {
 
@@ -194,7 +122,7 @@ func (self *Store) Modify(
 	}
 
 	// Write the modified record to the LRU
-	return self._SetRecord(&new_record.ClientInfo)
+	return self._SetRecord(config_obj, &new_record.ClientInfo)
 }
 
 func (self *Store) GetRecord(client_id string) (*actions_proto.ClientInfo, error) {
@@ -224,14 +152,18 @@ func (self *Store) _GetRecord(client_id string) (*actions_proto.ClientInfo, erro
 	return client_info, nil
 }
 
-func (self *Store) SetRecord(record *actions_proto.ClientInfo) error {
+func (self *Store) SetRecord(
+	config_obj *config_proto.Config,
+	record *actions_proto.ClientInfo) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self._SetRecord(record)
+	return self._SetRecord(config_obj, record)
 }
 
-func (self *Store) _SetRecord(record *actions_proto.ClientInfo) error {
+func (self *Store) _SetRecord(
+	config_obj *config_proto.Config,
+	record *actions_proto.ClientInfo) error {
 	serialized, err := proto.Marshal(record)
 	if err != nil {
 		return err
@@ -239,7 +171,13 @@ func (self *Store) _SetRecord(record *actions_proto.ClientInfo) error {
 
 	self.data[record.ClientId] = serialized
 	self.dirty = true
+	clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(1.0)
 	return nil
+}
+
+func (self *ClientInfoManager) LoadFromSnapshot(
+	ctx context.Context, config_obj *config_proto.Config) error {
+	return self.storage.LoadFromSnapshot(ctx, config_obj)
 }
 
 func (self *Store) LoadFromSnapshot(
@@ -264,6 +202,7 @@ func (self *Store) LoadFromSnapshot(
 
 	self.data = make(map[string][]byte)
 	self.dirty = false
+	clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(0.0)
 
 	// Highly optimized reader for speed.
 	json_chan, err := reader.JSON(ctx)
@@ -328,6 +267,7 @@ func (self *Store) SaveSnapshot(
 	}
 
 	self.dirty = false
+	clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(0)
 
 	// Total number of records we flush to disk.
 	record_count := uint64(len(self.data))
@@ -335,18 +275,16 @@ func (self *Store) SaveSnapshot(
 	// Release the lock here as we dont need it for the rest.
 	self.mu.Unlock()
 
-	journal, err := services.GetJournal(config_obj)
-	if err != nil {
-		return err
-	}
-
 	completion := func() {
-		// We do not have to send the update that urgently so it
-		// can be async.
-		journal.PushRowsToArtifactAsync(ctx, config_obj,
-			ordereddict.NewDict().
-				Set("From", self.uuid),
-			"Server.Internal.ClientInfoSnapshot")
+		journal, err := services.GetJournal(config_obj)
+		if err == nil {
+			// We do not have to send the update that urgently so it
+			// can be async.
+			journal.PushRowsToArtifactAsync(ctx, config_obj,
+				ordereddict.NewDict().
+					Set("From", self.uuid),
+				"Server.Internal.ClientInfoSnapshot")
+		}
 
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>ClientInfo Manager</> Written snapshot for org %v in %v (%v records)",
@@ -357,6 +295,8 @@ func (self *Store) SaveSnapshot(
 	// The final write must be synchronous because we need to
 	// guarantee it hits the disk
 	if sync {
+		defer completion()
+
 		completion = utils.SyncCompleter
 	}
 
@@ -466,6 +406,7 @@ func (self *Store) LoadSnapshotFromLegacyData(
 		self.mu.Lock()
 		self.data[client_id] = serialized
 		self.dirty = true
+		clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(1.0)
 		self.mu.Unlock()
 
 	}

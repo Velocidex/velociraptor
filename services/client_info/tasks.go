@@ -47,7 +47,7 @@ func (self *ClientInfoManager) ProcessNotification(
 	row *ordereddict.Dict) error {
 	client_id, pres := row.GetString("ClientId")
 	if pres {
-		err := self.storage.Modify(ctx, client_id,
+		err := self.storage.Modify(ctx, self.config_obj, client_id,
 			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 				if client_info == nil {
 					return nil, utils.NotFoundError
@@ -104,7 +104,7 @@ func (self *ClientInfoManager) QueueMessagesForClient(
 	// node this information will be flushed on the next snapshot
 	// write.
 	completer := utils.NewCompleter(func() {
-		err := self.storage.Modify(ctx, client_id,
+		err := self.storage.Modify(ctx, self.config_obj, client_id,
 			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 				if client_info == nil {
 					return nil, utils.NotFoundError
@@ -179,7 +179,7 @@ func (self *ClientInfoManager) QueueMessageForClient(
 			completion()
 		}
 
-		err := self.storage.Modify(ctx, client_id,
+		err := self.storage.Modify(ctx, self.config_obj, client_id,
 			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 				if client_info == nil {
 					return nil, utils.NotFoundError
@@ -394,7 +394,7 @@ func (self *ClientInfoManager) GetClientTasks(
 
 	now := utils.GetTime().Now().Unix()
 
-	err := self.storage.Modify(ctx, client_id,
+	err := self.storage.Modify(ctx, self.config_obj, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if client_info == nil {
 				return nil, utils.NotFoundError
@@ -471,7 +471,7 @@ func (self *ClientInfoManager) GetClientTasks(
 	if len(inflight_flows) > 0 {
 
 		// Add the inflight tags to the client record immediately.
-		err := self.storage.Modify(ctx, client_id,
+		err := self.storage.Modify(ctx, self.config_obj, client_id,
 			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 				if client_info == nil {
 					return nil, nil
