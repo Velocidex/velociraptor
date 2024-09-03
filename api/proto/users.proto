@@ -149,6 +149,8 @@ message GUICustomizations {
 
     // Updated from config_obj.Defaults.HuntExpiryHours
     int64 hunt_expiry_hours = 4;
+
+    repeated string indexed_client_metadata = 5;
 }
 
 message SetGUIOptionsRequest {
