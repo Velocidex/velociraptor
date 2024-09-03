@@ -39,6 +39,9 @@ func (self *Launcher) CompileSingleArtifact(
 	artifact *artifacts_proto.Artifact,
 	result *actions_proto.VQLCollectorArgs) error {
 
+	// Allow the artifact to dictate the effective user.
+	result.EffectivePrincipal = artifact.Impersonate
+
 	for _, parameter := range artifact.Parameters {
 		value := parameter.Default
 		name := parameter.Name

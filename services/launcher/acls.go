@@ -46,9 +46,20 @@ func CheckAccess(
 	// artifact metadata.
 	perm, err = acl_manager.CheckAccess(permissions)
 	if !perm || err != nil {
-		return fmt.Errorf(
-			"%w: User is not allowed to launch flows %v.",
-			acls.PermissionDenied, permissions)
+
+		// The user can not directly launch the artifact but maybe the
+		// artifact is marked as Basic and users have the
+		// COLLECT_BASIC permission.
+		if artifact.Metadata != nil &&
+			artifact.Metadata.Basic {
+			perm, err = acl_manager.CheckAccess(acls.COLLECT_BASIC)
+		}
+
+		if !perm || err != nil {
+			return fmt.Errorf(
+				"%w: User is not allowed to launch flows %v.",
+				acls.PermissionDenied, permissions)
+		}
 	}
 
 	if artifact.RequiredPermissions != nil {

@@ -2,7 +2,8 @@
 
    This service provides a runner to execute artifacts on the server.
    Server artifacts run with high privilege and so only users with the
-   COLLECT_SERVER permission can run those.
+   COLLECT_SERVER permission can run those, unless the artifact is
+   marked as BASIC by the artifact metadata.
 
    Server artifacts are used for administration or information purposes.
 
