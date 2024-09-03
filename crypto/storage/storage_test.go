@@ -2,7 +2,6 @@ package storage
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -15,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -47,7 +47,7 @@ func (self *CrytpoStoreTestSuite) SetupTest() {
 	err := utils.VerifyConfig(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	self.tmp_dir, err = ioutil.TempDir("", "tmp")
+	self.tmp_dir, err = tempfile.TempDir("tmp")
 	assert.NoError(self.T(), err)
 }
 

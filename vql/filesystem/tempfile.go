@@ -19,12 +19,12 @@ package filesystem
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"runtime"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -74,7 +74,7 @@ func (self *TempfileFunction) Call(ctx context.Context,
 		permissions = 0400
 	}
 
-	tmpfile, err := ioutil.TempFile("", "tmp*"+arg.Extension)
+	tmpfile, err := tempfile.TempFile("tmp*" + arg.Extension)
 	if err != nil {
 		scope.Log("tempfile: %v", err)
 		return false
@@ -154,7 +154,7 @@ func (self *TempdirFunction) Call(ctx context.Context,
 		return false
 	}
 
-	dir, err := ioutil.TempDir("", "tmp")
+	dir, err := tempfile.TempDir("tmp")
 	if err != nil {
 		scope.Log("tempdir: %v", err)
 		return false

@@ -3,7 +3,7 @@ package client
 import (
 	"testing"
 
-	"github.com/alecthomas/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
 func TestClientKeyLRU(t *testing.T) {

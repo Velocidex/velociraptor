@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/startup"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 var (
@@ -161,7 +162,8 @@ func doGUI() error {
 
 	datastore_directory := *gui_command_datastore
 	if datastore_directory == "" {
-		datastore_directory = filepath.Join(os.TempDir(), "gui_datastore")
+		datastore_directory = filepath.Join(
+			tempfile.GetTempDir(), "gui_datastore")
 		// Ensure the directory exists
 		err := os.MkdirAll(datastore_directory, 0o777)
 		if err != nil {

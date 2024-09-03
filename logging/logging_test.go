@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -40,7 +41,7 @@ type: SERVER_EVENT
 func (self *LoggingTestSuite) TestAuditLog() {
 	t := self.T()
 
-	dir, err := ioutil.TempDir("", "file_store_test")
+	dir, err := tempfile.TempDir("file_store_test")
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)
 

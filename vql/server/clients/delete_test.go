@@ -3,7 +3,6 @@ package clients
 import (
 	"context"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -12,7 +11,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -24,8 +22,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
@@ -68,7 +68,7 @@ func (self *DeleteTestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
 
 	var err error
-	self.dir, err = ioutil.TempDir("", "delete_test")
+	self.dir, err = tempfile.TempDir("delete_test")
 	assert.NoError(self.T(), err)
 
 	self.ConfigObj.Datastore.Implementation = "FileBaseDataStore"

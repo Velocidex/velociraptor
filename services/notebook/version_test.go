@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/alecthomas/assert"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
 func (self *NotebookManagerTestSuite) TestUpdateCellVersions() {

@@ -2,13 +2,11 @@ package journal_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -17,7 +15,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
@@ -34,7 +34,7 @@ func (self *JournalTestSuite) SetupTest() {
 		WithVerbose(true).LoadAndValidate()
 	require.NoError(self.T(), err)
 
-	dir, err := ioutil.TempDir("", "file_store_test")
+	dir, err := tempfile.TempDir("file_store_test")
 	assert.NoError(self.T(), err)
 
 	self.ConfigObj.Datastore.Implementation = "MemcacheFileDataStore"

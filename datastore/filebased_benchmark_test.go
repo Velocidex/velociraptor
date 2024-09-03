@@ -1,7 +1,6 @@
 package datastore_test
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -9,10 +8,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 func BenchmarkSetSubject(b *testing.B) {
-	dir, _ := ioutil.TempDir("", "datastore_test")
+	dir, _ := tempfile.TempDir("datastore_test")
 	defer os.RemoveAll(dir) // clean up
 
 	config_obj := config.GetDefaultConfig()

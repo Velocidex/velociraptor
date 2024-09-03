@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -18,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 // Represents a single flow on the client. Previously flows were
@@ -161,7 +161,7 @@ func makeCheckpoint(
 		return ""
 	}
 
-	checkpoint, err := ioutil.TempFile("",
+	checkpoint, err := tempfile.TempFile(
 		fmt.Sprintf("checkpoint_*.%s", flow_id))
 	if err != nil {
 		return ""

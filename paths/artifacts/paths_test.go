@@ -1,7 +1,6 @@
 package artifacts_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"runtime"
@@ -17,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
@@ -58,7 +58,7 @@ func (self *PathManageTestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
 
 	var err error
-	self.dirname, err = ioutil.TempDir("", "path_manager_test")
+	self.dirname, err = tempfile.TempDir("path_manager_test")
 	assert.NoError(self.T(), err)
 
 	self.ConfigObj.Datastore.Implementation = "FileBaseDataStore"

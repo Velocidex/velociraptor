@@ -1,8 +1,8 @@
 package paths_test
 
 import (
-	"github.com/alecthomas/assert"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
 func (self *PathManagerTestSuite) TestUserPathManager() {

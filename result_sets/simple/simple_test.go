@@ -1,14 +1,12 @@
 package simple_test
 
 import (
-	"io/ioutil"
 	"os"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -20,7 +18,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/result_sets/simple"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
@@ -421,7 +421,7 @@ func (self *ResultSetTestSuiteFileBased) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
 
 	var err error
-	self.dir, err = ioutil.TempDir("", "file_store_test")
+	self.dir, err = tempfile.TempDir("file_store_test")
 	assert.NoError(self.T(), err)
 
 	self.ConfigObj.Datastore.Implementation = "FileBaseDataStore"

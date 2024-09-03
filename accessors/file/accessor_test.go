@@ -3,7 +3,6 @@ package file_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,13 +11,14 @@ import (
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
 )
@@ -29,7 +29,7 @@ type AccessorWindowsTestSuite struct {
 }
 
 func (self *AccessorWindowsTestSuite) SetupTest() {
-	tmpdir, err := ioutil.TempDir("", "accessor_test")
+	tmpdir, err := tempfile.TempDir("accessor_test")
 	assert.NoError(self.T(), err)
 
 	self.tmpdir = strings.ReplaceAll(tmpdir, "\\", "/")

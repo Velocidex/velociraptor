@@ -167,6 +167,7 @@ func (self *ApiServer) CollectArtifact(
 	request := &flows_proto.ArtifactCollectorArgs{
 		ClientId:       in.ClientId,
 		Artifacts:      in.Artifacts,
+		Specs:          in.Specs,
 		Creator:        user_record.Name,
 		OpsPerSecond:   in.OpsPerSecond,
 		CpuLimit:       in.CpuLimit,
@@ -175,6 +176,7 @@ func (self *ApiServer) CollectArtifact(
 		MaxRows:        in.MaxRows,
 		MaxUploadBytes: in.MaxUploadBytes,
 		Urgent:         in.Urgent,
+		TraceFreqSec:   in.TraceFreqSec,
 	}
 
 	acl_manager := acl_managers.NewServerACLManager(

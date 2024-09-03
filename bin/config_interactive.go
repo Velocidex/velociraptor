@@ -18,6 +18,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services/users"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 const (
@@ -90,7 +91,7 @@ portable than plain HTTP. Be sure to test this in you environment.
 
 	log_question = &survey.Input{
 		Message: "Path to the logs directory.",
-		Default: os.TempDir(),
+		Default: tempfile.GetTempDir(),
 	}
 
 	output_question = &survey.Input{

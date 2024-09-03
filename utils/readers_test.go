@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/alecthomas/assert"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
 func TestReaderAt(t *testing.T) {

@@ -1,7 +1,6 @@
 package directory_test
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -11,6 +10,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/tests"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 type DirectoryTestSuite struct {
@@ -21,7 +21,7 @@ type DirectoryTestSuite struct {
 }
 
 func (self *DirectoryTestSuite) SetupTest() {
-	dir, err := ioutil.TempDir("", "file_store_test")
+	dir, err := tempfile.TempDir("file_store_test")
 	assert.NoError(self.T(), err)
 
 	self.config_obj.Datastore.FilestoreDirectory = dir

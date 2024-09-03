@@ -2,7 +2,6 @@ package syslog
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"sync"
 	"testing"
@@ -17,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -89,7 +89,7 @@ func (self *SyslogWatcherTestSuite) SetupTest() {
 
 	self.scope = manager.BuildScope(builder)
 
-	fd, err := ioutil.TempFile("", "tmp")
+	fd, err := tempfile.TempFile("tmp")
 	assert.NoError(self.T(), err)
 	fd.Close()
 

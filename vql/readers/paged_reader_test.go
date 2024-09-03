@@ -3,19 +3,19 @@ package readers
 import (
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
@@ -39,7 +39,7 @@ func (self *TestSuite) SetupTest() {
 	self.pool = GetReaderPool(self.scope, 5)
 
 	var err error
-	self.tmp_dir, err = ioutil.TempDir("", "tmp")
+	self.tmp_dir, err = tempfile.TempDir("tmp")
 	assert.NoError(self.T(), err)
 
 	// Create 10 files with data

@@ -1,10 +1,10 @@
+//go:build linux
 // +build linux
 
 package file
 
 import (
 	"context"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,15 +12,16 @@ import (
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
 type AccessorLinuxTestSuite struct {
@@ -29,7 +30,7 @@ type AccessorLinuxTestSuite struct {
 }
 
 func (self *AccessorLinuxTestSuite) TestLinuxSymlinks() {
-	tmpdir, err := ioutil.TempDir("", "accessor_test")
+	tmpdir, err := tempfile.TempDir("accessor_test")
 	assert.NoError(self.T(), err)
 
 	// Create two symlinks.

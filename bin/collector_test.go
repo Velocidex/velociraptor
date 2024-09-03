@@ -23,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 var (
@@ -73,7 +74,7 @@ func (self *CollectorTestSuite) findAndPrepareBinary() {
 	self.binary, _ = filepath.Abs(binaries[0])
 	fmt.Printf("Found binary %v\n", self.binary)
 
-	self.tmpdir, err = ioutil.TempDir("", "tmp")
+	self.tmpdir, err = tempfile.TempDir("tmp")
 	assert.NoError(t, err)
 
 	// Copy the binary into the tmpdir

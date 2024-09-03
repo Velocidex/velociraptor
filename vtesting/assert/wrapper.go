@@ -5,6 +5,7 @@ package assert
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -22,6 +23,13 @@ func ProtoEqual(t TestingT, expected, actual proto.Message) {
 	)
 }
 
+func NotProtoEqual(t TestingT, expected, actual proto.Message) {
+	assert.False(t,
+		proto.Equal(expected, actual),
+		fmt.Sprintf("These two protobuf messages are equal:\nexpected: %v\nactual:  %v", expected, actual),
+	)
+}
+
 func Equal(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) {
 	msg_left, ok := expected.(proto.Message)
 	if ok {
@@ -33,6 +41,19 @@ func Equal(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) 
 	}
 
 	assert.Equal(t, expected, actual, msgAndArgs...)
+}
+
+func NotEqual(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) {
+	msg_left, ok := expected.(proto.Message)
+	if ok {
+		msg_right, ok := actual.(proto.Message)
+		if ok {
+			NotProtoEqual(t, msg_left, msg_right)
+			return
+		}
+	}
+
+	assert.NotEqual(t, expected, actual, msgAndArgs...)
 }
 
 func NoError(t TestingT, err error, msgAndArgs ...interface{}) {
@@ -92,4 +113,12 @@ func NotNil(t TestingT, expected interface{}, msgAndArgs ...interface{}) {
 
 func Nil(t TestingT, expected interface{}, msgAndArgs ...interface{}) {
 	assert.Nil(t, expected, msgAndArgs...)
+}
+
+func False(t TestingT, expected bool, msgAndArgs ...interface{}) {
+	assert.False(t, expected, msgAndArgs...)
+}
+
+func IsType(t TestingT, a interface{}, b interface{}) {
+	assert.Equal(t, reflect.TypeOf(a).String(), reflect.TypeOf(b).String())
 }

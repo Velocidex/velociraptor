@@ -2,7 +2,6 @@ package http_comms
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -14,6 +13,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 var (
@@ -21,7 +21,7 @@ var (
 )
 
 func getTempFile(t *testing.T) string {
-	fd, err := ioutil.TempFile("", "")
+	fd, err := tempfile.TempFile("")
 	assert.NoError(t, err)
 	defer os.Remove(fd.Name())
 	defer fd.Close()

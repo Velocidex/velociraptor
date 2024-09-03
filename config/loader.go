@@ -7,7 +7,6 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
-	"runtime"
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/go-errors/errors"
@@ -15,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 var (
@@ -72,30 +72,13 @@ func (self *Loader) WithTempdir(tmpdir string) *Loader {
 			// Expand the tmpdir if needed.
 			tmpdir = utils.ExpandEnv(tmpdir)
 
-			// Try to create a file in the directory to make sure
-			// we have permissions and the directory exists.
-			tmpfile, err := ioutil.TempFile(tmpdir, "tmp")
+			err := tempfile.SetTempDir(tmpdir)
 			if err != nil {
-				// No we dont have permission there, fall back
-				// to system default.
-				self.Log("Can not write in temp directory to <red>%v</red> - falling back to default %v",
-					tmpdir, os.Getenv("TMP"))
-				return nil
-			}
-			tmpfile.Close()
-
-			defer os.Remove(tmpfile.Name())
-
-			switch runtime.GOOS {
-			case "windows":
-				os.Setenv("TMP", tmpdir)
-				os.Setenv("TEMP", tmpdir)
-			case "linux", "darwin":
-				os.Setenv("TMP", tmpdir)
-				os.Setenv("TMPDIR", tmpdir)
+				self.Log("Can not write in temp directory to <red>%v</red>",
+					tmpdir)
+				return err
 			}
 			self.Log("Setting temp directory to <green>%v", tmpdir)
-
 			return nil
 		}})
 	return self

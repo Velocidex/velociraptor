@@ -11,6 +11,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -27,7 +28,7 @@ var marshalTestCases = []struct {
 }
 
 func TestMarshal(t *testing.T) {
-	tmpfile, err := ioutil.TempFile("", "")
+	tmpfile, err := tempfile.TempFile("")
 	assert.NoError(t, err)
 	tmpfile.Close()
 

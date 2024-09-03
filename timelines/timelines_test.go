@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -19,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/timelines"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
 type TimelineTestSuite struct {

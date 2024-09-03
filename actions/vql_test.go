@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -14,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
 type ClientVQLTestSuite struct {

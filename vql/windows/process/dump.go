@@ -30,7 +30,6 @@ import "C"
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"runtime"
 	"unsafe"
@@ -73,7 +72,7 @@ func (self ProcDumpPlugin) Call(
 			return
 		}
 
-		tmpfile, err := ioutil.TempFile(os.TempDir(), "dmp")
+		tmpfile, err := tempfiles.TempFile("dmp")
 		if err != nil {
 			scope.Log("proc_dump: %s", err.Error())
 			return

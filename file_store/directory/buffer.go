@@ -8,7 +8,6 @@ package directory
 import (
 	"encoding/binary"
 	"errors"
-	"io/ioutil"
 	"os"
 	"sync"
 
@@ -18,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
@@ -270,7 +270,7 @@ func (self *FileBasedRingBuffer) getFd() (*os.File, error) {
 		ReadPointer:  FirstRecordOffset,
 	}
 
-	fd, err := ioutil.TempFile("", self.base_name)
+	fd, err := tempfile.TempFile(self.base_name)
 	if err != nil {
 		return nil, err
 	}

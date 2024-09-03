@@ -3,7 +3,6 @@ package directory_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -21,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
@@ -35,7 +35,7 @@ type: SERVER_EVENT
 )
 
 func TestDirectoryQueueManager(t *testing.T) {
-	dir, err := ioutil.TempDir("", "file_store_test")
+	dir, err := tempfile.TempDir("file_store_test")
 	assert.NoError(t, err)
 
 	defer os.RemoveAll(dir) // clean up
@@ -60,7 +60,7 @@ type TestSuite struct {
 func (self *TestSuite) SetupTest() {
 	self.TestSuite.SetupTest()
 
-	dir, err := ioutil.TempDir("", "file_store_test")
+	dir, err := tempfile.TempDir("file_store_test")
 	assert.NoError(self.T(), err)
 	self.dir = dir
 

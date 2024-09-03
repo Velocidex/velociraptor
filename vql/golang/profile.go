@@ -3,7 +3,6 @@ package golang
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"runtime/pprof"
@@ -12,11 +11,11 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/tink-ab/tempfile"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services/debug"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -79,7 +78,7 @@ func writeMetrics(
 func writeProfile(
 	ctx context.Context, scope vfilter.Scope,
 	output_chan chan vfilter.Row, name string, debug int64) {
-	tmpfile, err := ioutil.TempFile("", "tmp*.tmp")
+	tmpfile, err := tempfile.TempFile("tmp*.tmp")
 	if err != nil {
 		scope.Log("profile: %s", err)
 		return
@@ -123,7 +122,7 @@ func writeCPUProfile(
 	ctx context.Context,
 	scope vfilter.Scope,
 	output_chan chan vfilter.Row, duration int64) {
-	tmpfile, err := tempfile.TempFile("", "tmp", ".tmp")
+	tmpfile, err := tempfile.TempFile("tmp*.tmp")
 	if err != nil {
 		scope.Log("profile: %s", err)
 		return
@@ -162,7 +161,7 @@ func writeTraceProfile(
 	ctx context.Context,
 	scope vfilter.Scope,
 	output_chan chan vfilter.Row, duration int64) {
-	tmpfile, err := tempfile.TempFile("", "tmp", ".tmp")
+	tmpfile, err := tempfile.TempFile("tmp/*.tmp")
 	if err != nil {
 		scope.Log("profile: %s", err)
 		return

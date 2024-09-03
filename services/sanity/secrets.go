@@ -38,6 +38,7 @@ var built_in_definitions = []string{`{
   "description": "Credentials to be used in HTTP requests with http_client() calls.",
   "template": {
      "url": "",
+     "url_regex": "",
      "method": "",
      "user_agent": "",
      "root_ca": "",
@@ -46,7 +47,7 @@ var built_in_definitions = []string{`{
      "extra_headers": "# Add extra headers as YAML strings\n#Authorization: Value\n",
      "cookies": "# Add cookies as YAML strings\n#Cookie1: Value\n#Cookie2: Value2\n"
   },
-  "verifier": "x=>x.url"
+  "verifier": "x=>x.url || x.url_regex"
 }`, `{
   "typeName":"Splunk Creds",
   "description": "Credentials to be used in upload_splunk() calls.",

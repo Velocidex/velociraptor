@@ -30,6 +30,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/startup"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 )
 
@@ -121,7 +122,7 @@ func runClientOnce(
 		return fmt.Errorf("Invalid config: %w", err)
 	}
 
-	executor.SetTempfile(config_obj)
+	tempfile.SetTempfile(config_obj)
 
 	writeback_service := writeback.GetWritebackService()
 	writeback, err := writeback_service.GetWriteback(config_obj)

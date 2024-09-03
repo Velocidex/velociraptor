@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -24,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/server/flows"
 	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
 	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"

@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
@@ -111,7 +112,8 @@ func doCollector() error {
 
 	datastore_directory := *collector_command_datastore
 	if datastore_directory == "" {
-		datastore_directory = filepath.Join(os.TempDir(), "gui_datastore")
+		datastore_directory = filepath.Join(
+			tempfile.GetTempDir(), "gui_datastore")
 
 		// Ensure the directory exists
 		err := os.MkdirAll(datastore_directory, 0o777)
