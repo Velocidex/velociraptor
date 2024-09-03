@@ -163,11 +163,22 @@ func (self *ApiServer) CollectArtifact(
 		return nil, Status(self.verbose, err)
 	}
 
-	// Ensure the request is marked with the real caller.
-	in.Creator = user_record.Name
+	// Build a request based on user input.
+	request := &flows_proto.ArtifactCollectorArgs{
+		ClientId:       in.ClientId,
+		Artifacts:      in.Artifacts,
+		Creator:        user_record.Name,
+		OpsPerSecond:   in.OpsPerSecond,
+		CpuLimit:       in.CpuLimit,
+		IopsLimit:      in.IopsLimit,
+		Timeout:        in.Timeout,
+		MaxRows:        in.MaxRows,
+		MaxUploadBytes: in.MaxUploadBytes,
+		Urgent:         in.Urgent,
+	}
 
 	acl_manager := acl_managers.NewServerACLManager(
-		org_config_obj, in.Creator)
+		org_config_obj, user_record.Name)
 
 	manager, err := services.GetRepositoryManager(org_config_obj)
 	if err != nil {
@@ -185,7 +196,7 @@ func (self *ApiServer) CollectArtifact(
 	}
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
-		ctx, org_config_obj, acl_manager, repository, in,
+		ctx, org_config_obj, acl_manager, repository, request,
 		utils.BackgroundWriter)
 	if err != nil {
 		return nil, Status(self.verbose, err)
@@ -195,11 +206,11 @@ func (self *ApiServer) CollectArtifact(
 
 	// Log this event as an Audit event.
 	services.LogAudit(ctx,
-		org_config_obj, in.Creator, "ScheduleFlow",
+		org_config_obj, request.Creator, "ScheduleFlow",
 		ordereddict.NewDict().
-			Set("client", in.ClientId).
+			Set("client", request.ClientId).
 			Set("flow_id", flow_id).
-			Set("details", in))
+			Set("details", request))
 
 	return result, nil
 }

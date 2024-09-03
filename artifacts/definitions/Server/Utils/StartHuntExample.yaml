@@ -1,0 +1,51 @@
+name: Server.Utils.StartHuntExample
+description: |
+  This example artifact shows how to create a utility artifact to
+  provide low privileged users with a controlled ability to perform
+  high privileged operations.
+
+  This server artifact launches a new `Generic.Client.Info` hunt, but
+  the parameters for the hunt are not determined by the initiating
+  user. This makes is safe for unprivileged users to schedule this
+  hunt whenever they want.
+
+  Usually to start a hunt, the user must have the `START_HUNT`
+  permission - usually granted by the `administrator` or
+  `investigator` roles. Additionally, in order to collect this
+  artifact, a user must have the `COLLECT_SERVER` permission - usually
+  only granted by the `administrator` role.
+
+  So by default this artifact does not give any additional permissions
+  and usually has to be collected by an `administrator` (which would
+  be able to schedule hunts anyway).
+
+  However, it is possible to mark the artifact as basic using the VQL
+
+  ```vql
+  SELECT artifact_set_metadata(
+      artifact="Server.Utils.StartHuntExample", basic=TRUE)
+  FROM scope()
+  ```
+
+  This will allow users with the `COLLECT_BASIC` permission to also
+  collect it. Once collected the artifact specifies an impersonation
+  field to `admin` which will cause it to run under the `admin` user's
+  permissions.
+
+  This combination allows us to now grant the `COLLECT_BASIC`
+  permission to any user and they will be able to start the hunt via
+  this artifact, but have no additional permissions to start arbitrary
+  hunts or collections.
+
+type: SERVER
+
+# Collect this artifact under the admin user permissions.
+impersonation: admin
+
+source:
+  - query: |
+      -- This query will run with admin ACLs.
+      SELECT hunt(
+        description="A general hunt",
+        artifacts='Generic.Client.Info')
+      FROM scope()

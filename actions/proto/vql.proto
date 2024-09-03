@@ -41,6 +41,10 @@ message VQLCollectorArgs {
     // each query.
     string principal = 28;
 
+    // The effective ACLs that will be used for this query. This is
+    // usually set by the artifact's suid field.
+    string effective_principal = 38;
+
     repeated VQLEnv env = 3 [(sem_type) = {
             description: "Environment variables to be provided for the query.",
         }];

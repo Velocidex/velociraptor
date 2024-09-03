@@ -358,6 +358,12 @@ func (self *contextManager) RunQuery(
 		return errors.New("Principal must be set")
 	}
 
+	// Allow the query to run as a different user.
+	effective_principal := arg.EffectivePrincipal
+	if effective_principal == "" {
+		effective_principal = principal
+	}
+
 	flow_path_manager := paths.NewFlowPathManager("server", self.session_id)
 	scope := manager.BuildScope(services.ScopeBuilder{
 		Config: self.config_obj,
@@ -371,12 +377,17 @@ func (self *contextManager) RunQuery(
 
 		// Run this query on behalf of the caller so they are
 		// subject to ACL checks
-		ACLManager: acl_managers.NewServerACLManager(self.config_obj, principal),
+		ACLManager: acl_managers.NewServerACLManager(self.config_obj, effective_principal),
 		Logger:     log.New(query_context.Logger(), "", 0),
 	})
 	defer scope.Close()
 
-	scope.Log("Running query on behalf of user %v", principal)
+	if effective_principal == principal {
+		scope.Log("Running query on behalf of user %v", principal)
+	} else {
+		scope.Log("Running query on behalf of user %v with effective permissions for %v",
+			principal, effective_principal)
+	}
 
 	env := ordereddict.NewDict()
 	for _, env_spec := range arg.Env {

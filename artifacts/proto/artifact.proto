@@ -150,6 +150,14 @@ message Artifact {
             description: "A list of required permissions to collect this artifact."
         }];
 
+    // If this is specified, we run this artifact as the named user,
+    // with that user's ACL token. This is similar to the Unix suid
+    // mechanism or the Windows impersonation mechanism in that it
+    // allows artifact writers to craft a curated set of powerful
+    // artifacts that can be run by low privileged users in a
+    // controlled way.
+    string impersonate = 27;
+
     // Default resource limits.
     Resources resources = 19;
 
