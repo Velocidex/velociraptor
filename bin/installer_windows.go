@@ -46,6 +46,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 )
 
@@ -408,7 +409,7 @@ func loadClientConfig() (*config_proto.Config, error) {
 		return nil, err
 	}
 
-	executor.SetTempfile(config_obj)
+	tempfile.SetTempfile(config_obj)
 
 	// Make sure the config is ok.
 	err = crypto_utils.VerifyConfig(config_obj)
@@ -427,7 +428,7 @@ func maybeWritePanicFile(name string, config_obj *config_proto.Config) {
 	}
 
 	// Make sure %TEMP% is set correctly here
-	executor.SetTempfile(config_obj)
+	tempfile.SetTempfile(config_obj)
 
 	panic_file_path := utils.ExpandEnv(config_obj.Client.PanicFile)
 	fd, err := os.OpenFile(panic_file_path,
