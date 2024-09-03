@@ -387,7 +387,9 @@ class VeloHostInfo extends Component {
                           <InFlightViewer client_info={info}/>
                           <hr />
                         </>}
-                      <Card.Header>{T("Client Metadata")}</Card.Header>
+                    </Card.Body>
+                    <Card.Header>{T("Client Metadata")}</Card.Header>
+                    <Card.Body>
                       <MetadataEditor client_id={client_id} />
                     </Card.Body>
                   </Card>

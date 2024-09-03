@@ -496,6 +496,9 @@ func (self *UserStorageManager) getUserOptions(ctx context.Context, username str
 	options.Customizations.HuntExpiryHours = defaults.HuntExpiryHours
 	options.Customizations.DisableServerEvents = defaults.DisableServerEvents
 	options.Customizations.DisableQuarantineButton = defaults.DisableQuarantineButton
+	if self.config_obj.Defaults != nil {
+		options.Customizations.IndexedClientMetadata = self.config_obj.Defaults.IndexedClientMetadata
+	}
 
 	// Specify a default theme if specified in the config file.
 	if options.Theme == "" {
