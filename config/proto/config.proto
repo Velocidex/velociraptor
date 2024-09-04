@@ -322,6 +322,19 @@ message ClientConfig {
     uint64 logfile_size = 48;
 
     string panic_file = 49;
+
+    // Setting this will write clear text network traces to this
+    // file. This is used for debugging network communications in
+    // complex scenarios (e.g. in the presence of proxies etc). Do not
+    // leave this configured in production! This setting will also
+    // disable TLS verification for the server name so it will be
+    // possible to MITM the client->server connection.
+
+    // NOTE: Velociraptor has 2 layers of encryption - this setting
+    // bypasses the outer TLS layer to expose the underlying HTTP
+    // communications. Client->server communication still remain
+    // encrypted however.
+    string insecure_network_trace_file = 51;
 }
 
 message APIConfig {

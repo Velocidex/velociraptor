@@ -150,10 +150,11 @@ func (WebSocketConnectionFactoryImpl) NewWebSocketConnection(
 	// Need to create a new dialer with a new tlsConfig so it is not
 	// shared with http dialer.
 	// See https://github.com/gorilla/websocket/issues/601
-	dialer := websocket.Dialer{
-		Proxy:           GetProxy(),
-		TLSClientConfig: tls_config,
-	}
+	dialer := networking.MaybeSpyOnWSDialer(self.config_obj,
+		&websocket.Dialer{
+			Proxy:           GetProxy(),
+			TLSClientConfig: tls_config,
+		})
 
 	key := req.URL.String()
 	ws_, _, err := dialer.Dial(key, nil)

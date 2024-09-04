@@ -185,6 +185,8 @@ func NewHTTPConnector(
 		return nil, err
 	}
 
+	transport = networking.MaybeSpyOnTransport(config_obj, transport)
+
 	if config_obj.Client.UseSelfSignedSsl {
 		logger.Info("Expecting self signed certificate for server.")
 
