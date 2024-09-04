@@ -68,6 +68,7 @@ func loadRepositoryFromDirectory(
 			}
 
 			if !strings.HasSuffix(path, ".yaml") ||
+				!strings.HasSuffix(path, ".yml") ||
 				finfo.IsDir() {
 				return nil
 			}

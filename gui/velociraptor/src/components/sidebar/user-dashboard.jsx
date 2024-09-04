@@ -79,7 +79,8 @@ class UserDashboard extends React.Component {
                   <ToolTip tooltip={T("Edit the dashboard")}>
                     <Button variant="default"
                             onClick={() => {
-                                this.props.history.push("/artifacts/Server.Monitor.Health");
+                                this.props.history.push(
+                                    "/artifacts/Server.Monitor.Health");
                             }} >
                       <FontAwesomeIcon icon="pencil-alt"/>
                     </Button>

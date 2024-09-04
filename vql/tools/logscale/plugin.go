@@ -9,6 +9,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -260,7 +261,8 @@ func (self logscalePlugin) Info(
 		Name: "logscale_upload",
 		Doc:  "Upload rows to LogScale ingestion server.",
 
-		ArgType: type_map.AddType(scope, &logscalePluginArgs{}),
+		ArgType:  type_map.AddType(scope, &logscalePluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
 	}
 }
 

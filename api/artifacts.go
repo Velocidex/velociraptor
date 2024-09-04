@@ -552,7 +552,8 @@ func (self *ApiServer) LoadArtifactPack(
 		VfsPath: in.VfsPath,
 	}
 	for _, file := range zip_reader.File {
-		if strings.HasSuffix(file.Name, ".yaml") {
+		if strings.HasSuffix(file.Name, ".yaml") ||
+			strings.HasSuffix(file.Name, ".yml") {
 			fd, err := file.Open()
 			if err != nil {
 				continue
