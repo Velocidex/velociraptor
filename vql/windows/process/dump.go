@@ -30,7 +30,6 @@ import "C"
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"runtime"
 	"unsafe"
@@ -38,7 +37,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
-	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -73,13 +72,13 @@ func (self ProcDumpPlugin) Call(
 			return
 		}
 
-		tmpfile, err := ioutil.TempFile(os.TempDir(), "dmp")
+		tmpfile, err := tempfile.TempFile("dmp")
 		if err != nil {
 			scope.Log("proc_dump: %s", err.Error())
 			return
 		}
 
-		utils_tempfile.AddTmpFile(tmpfile.Name())
+		tempfile.AddTmpFile(tmpfile.Name())
 
 		// Close the file and remove it because the dump file
 		// will be written in its place.
@@ -87,7 +86,7 @@ func (self ProcDumpPlugin) Call(
 		tmpfile.Close()
 
 		err = os.Remove(filename)
-		utils_tempfile.RemoveTmpFile(filename, err)
+		tempfile.RemoveTmpFile(filename, err)
 
 		// Use a dmp extension to make it easier to open.
 		filename += ".dmp"

@@ -3,7 +3,6 @@ package sorter
 import (
 	"bufio"
 	"context"
-	"io/ioutil"
 	"os"
 	"sort"
 	"sync"
@@ -11,6 +10,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/vfilter"
 	vsort "www.velocidex.com/golang/vfilter/sort"
@@ -299,7 +299,7 @@ func (self *dataFile) prepareFile(scope vfilter.Scope, items []vfilter.Row) {
 	go func() {
 		defer self.mu.Unlock()
 
-		tmpfile, err := ioutil.TempFile("", "vql")
+		tmpfile, err := tempfile.TempFile("vql")
 		if err != nil {
 			scope.Log("Unable to create tempfile: %v", err)
 			return

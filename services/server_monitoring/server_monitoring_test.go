@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
@@ -25,8 +24,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/server_monitoring"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
@@ -324,7 +325,7 @@ func (self *ServerMonitoringTestSuite) TestQueriesAreCancelled() {
 }
 
 func (self *ServerMonitoringTestSuite) TestUpdateWhenArtifactModified() {
-	tempdir, err := ioutil.TempDir("", "server_monitoring_test")
+	tempdir, err := tempfile.TempDir("server_monitoring_test")
 	assert.NoError(self.T(), err)
 
 	defer os.RemoveAll(tempdir)

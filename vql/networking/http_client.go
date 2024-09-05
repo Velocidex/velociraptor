@@ -21,11 +21,13 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -193,6 +195,21 @@ func (self *HTTPClientCache) mergeSecretToRequest(
 	}
 
 	get("url", &arg.real_url)
+	url_regex := ""
+	get("url_regex", &url_regex)
+	if url_regex != "" {
+		re, err := regexp.Compile(url_regex)
+		if err != nil {
+			return fmt.Errorf("HTTP Secret has invalid URL regex: %v: %w",
+				url_regex, err)
+		}
+
+		if !re.MatchString(arg.real_url) {
+			return fmt.Errorf("HTTP Secret URL regex %v forbids connection to %v",
+				url_regex, arg.real_url)
+		}
+	}
+
 	get("method", &arg.Method)
 	get("user_agent", &arg.UserAgent)
 	get("root_ca", &arg.RootCerts)

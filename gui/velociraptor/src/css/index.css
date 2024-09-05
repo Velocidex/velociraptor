@@ -309,7 +309,7 @@ button.link {
 }
 
 
-.Pane .fill-parent {
+.Pane .fill-parent, .Pane {
     scrollbar-width: thin;
     scrollbar-color: var(--color-scrollbar-main) var(--color-scrollbar-background);
 }

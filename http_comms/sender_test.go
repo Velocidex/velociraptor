@@ -20,7 +20,6 @@ package http_comms
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"os"
 	"sync"
 	"testing"
@@ -38,6 +37,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -224,7 +224,7 @@ func TestSender(t *testing.T) {
 
 func TestSenderWithFileBuffer(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
-	tmpfile, err := ioutil.TempFile("", "test")
+	tmpfile, err := tempfile.TempFile("test")
 	require.NoError(t, err)
 	defer os.Remove(tmpfile.Name())
 

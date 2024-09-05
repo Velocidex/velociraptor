@@ -27,6 +27,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/filesystem"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -225,7 +226,7 @@ func (self *TestSuite) mockInfo(scope vfilter.Scope) vfilter.Scope {
 
 func (self *TestSuite) TestCollectionWithDirectories() {
 	// Create a directory structure with files and directories.
-	dir, err := ioutil.TempDir("", "zip")
+	dir, err := tempfile.TempDir("zip")
 	assert.NoError(self.T(), err)
 
 	defer os.RemoveAll(dir)
@@ -331,13 +332,13 @@ func (self *TestSuite) TestCollectionWithDirectories() {
 }
 
 func (self *TestSuite) TestCollectionWithArtifacts() {
-	output_file, err := ioutil.TempFile(os.TempDir(), "zip")
+	output_file, err := tempfile.TempFile("zip")
 	assert.NoError(self.T(), err)
 	output_file.Close()
 
 	defer os.Remove(output_file.Name())
 
-	report_file, err := ioutil.TempFile(os.TempDir(), "html")
+	report_file, err := tempfile.TempFile("html")
 	assert.NoError(self.T(), err)
 	report_file.Close()
 	defer os.Remove(report_file.Name())
@@ -375,7 +376,7 @@ func (self *TestSuite) TestCollectionWithArtifacts() {
 }
 
 func (self *TestSuite) TestCollectionWithTypes() {
-	output_file, err := ioutil.TempFile(os.TempDir(), "zip")
+	output_file, err := tempfile.TempFile("zip")
 	assert.NoError(self.T(), err)
 	output_file.Close()
 	defer os.Remove(output_file.Name())
@@ -414,7 +415,7 @@ func (self *TestSuite) TestCollectionWithTypes() {
 }
 
 func (self *TestSuite) TestCollectionWithUpload() {
-	output_file, err := ioutil.TempFile(os.TempDir(), "zip")
+	output_file, err := tempfile.TempFile("zip")
 	assert.NoError(self.T(), err)
 	output_file.Close()
 	defer os.Remove(output_file.Name())

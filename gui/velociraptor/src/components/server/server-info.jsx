@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter, Link }  from "react-router-dom";
 import ShellViewer from "../clients/shell-viewer.jsx";
 import MetadataEditor from "../clients/metadata.jsx";
+import classNames from "classnames";
 
 import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
 import ToggleButton from 'react-bootstrap/ToggleButton';
@@ -13,6 +14,8 @@ import T from '../i8n/i8n.jsx';
 import Card from 'react-bootstrap/Card';
 import Row from 'react-bootstrap/Row';
 import ToolTip from '../widgets/tooltip.jsx';
+import Navbar from 'react-bootstrap/Navbar';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
 import {CancelToken} from 'axios';
 import "../clients/host-info.css";
@@ -57,7 +60,7 @@ class ServerInfo extends Component {
             return (
                 <Row className="dashboard">
                   <Card>
-                    <Card.Header>Server configuration</Card.Header>
+                    <Card.Header>{T("Server configuration")}</Card.Header>
                     <Card.Body>
                       <MetadataEditor
                         valueRenderer={(cell, row)=>{
@@ -92,32 +95,31 @@ class ServerInfo extends Component {
         return (
             <>
               <div className="full-width-height">
-                <div className="client-info">
-                  <div className="btn-group float-left toolbar" data-toggle="buttons">
+                <Navbar className="toolbar">
+                  <ButtonGroup className="" data-toggle="buttons">
                     <Link to={"/collected/server"}
                           role="button" className="btn btn-default">
                       <i><FontAwesomeIcon icon="history"/></i>
-                      <span className="button-label">Collected</span>
+                      <span className="button-label">{T("Collected")}</span>
                     </Link>
-                  </div>
-
-                  <ToggleButtonGroup type="radio"
-                                     name="mode"
-                                     defaultValue={this.state.mode}
-                                     onChange={(mode) => this.setMode(mode)}
-                                     className="mb-2">
-                    <ToggleButton variant="default"
-                                  value='brief'>
+                  </ButtonGroup>
+                  <ButtonGroup className="float-right">
+                    <Button variant="default"
+                            className={classNames({
+                                active: this.state.mode === "brief"})}
+                            onClick={(mode) => this.setMode("brief")}>
                       <FontAwesomeIcon icon="laptop"/>
-                      <span className="button-label">Overview</span>
-                    </ToggleButton>
-                    <ToggleButton variant="default"
-                                  value='shell'>
+                      <span className="button-label">{T("Overview")}</span>
+                    </Button>
+                    <Button variant="default"
+                            className={classNames({
+                                active: this.state.mode === "shell"})}
+                            onClick={(mode) => this.setMode("shell")}>
                       <FontAwesomeIcon icon="terminal"/>
-                      <span className="button-label">Server Shell</span>
-                    </ToggleButton>
-                  </ToggleButtonGroup>
-                </div>
+                      <span className="button-label">{T("Server Shell")}</span>
+                    </Button>
+                  </ButtonGroup>
+              </Navbar>
                 <div className="clearfix"></div>
                 { this.renderContent() }
               </div>

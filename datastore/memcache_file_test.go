@@ -3,7 +3,6 @@ package datastore_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"sort"
 	"sync"
@@ -22,6 +21,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -41,7 +41,7 @@ type MemcacheFileTestSuite struct {
 func (self *MemcacheFileTestSuite) SetupTest() {
 	// Make a tempdir
 	var err error
-	self.dirname, err = ioutil.TempDir("", "datastore_test")
+	self.dirname, err = tempfile.TempDir("datastore_test")
 	assert.NoError(self.T(), err)
 
 	self.config_obj = config.GetDefaultConfig()

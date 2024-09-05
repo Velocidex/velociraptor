@@ -6,10 +6,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/api"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -22,7 +22,7 @@ func StartFrontendServices(
 	vql_subsystem.InstallUnimplemented(scope)
 
 	// Set the temp directory if needed
-	executor.SetTempfile(config_obj)
+	tempfile.SetTempfile(config_obj)
 
 	sm := services.NewServiceManager(ctx, config_obj)
 	_, err := orgs.NewOrgManager(sm.Ctx, sm.Wg, config_obj)

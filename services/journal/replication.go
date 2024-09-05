@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"io/ioutil"
 	"os"
 	"sync"
 	"time"
@@ -27,6 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
@@ -224,7 +224,7 @@ func (self *ReplicationService) Start(
 	self.sender = make(chan *api_proto.PushEventRequest)
 	self.SetRetryDuration(5 * time.Second)
 
-	self.tmpfile, err = ioutil.TempFile("", "replication")
+	self.tmpfile, err = tempfile.TempFile("replication")
 	if err != nil {
 		return err
 	}

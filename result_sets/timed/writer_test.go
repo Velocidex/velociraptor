@@ -2,7 +2,6 @@ package timed_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"sync"
 	"testing"
@@ -19,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/result_sets/timed"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -285,7 +285,7 @@ type TimedResultSetTestSuiteFileBased struct {
 
 func (self *TimedResultSetTestSuiteFileBased) SetupTest() {
 	var err error
-	self.dir, err = ioutil.TempDir("", "file_store_test")
+	self.dir, err = tempfile.TempDir("file_store_test")
 	assert.NoError(self.T(), err)
 
 	self.ConfigObj = self.LoadConfig()

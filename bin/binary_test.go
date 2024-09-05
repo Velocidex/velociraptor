@@ -5,7 +5,6 @@ package main_test
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,6 +20,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 var (
@@ -94,14 +94,14 @@ func TestAutoexec(t *testing.T) {
 	binary, extension := SetupTest(t)
 
 	// Create a tempfile for the repacked binary.
-	exe, err := ioutil.TempFile("", "exe*"+extension)
+	exe, err := tempfile.TempFile("exe*" + extension)
 	assert.NoError(t, err)
 
 	defer os.Remove(exe.Name())
 	exe.Close()
 
 	// A temp file for the config.
-	config_file, err := ioutil.TempFile("", "config")
+	config_file, err := tempfile.TempFile("config")
 	assert.NoError(t, err)
 
 	defer os.Remove(config_file.Name())
@@ -149,7 +149,7 @@ func TestTimeout(t *testing.T) {
 	binary, _ := SetupTest(t)
 
 	// A temp file for the config.
-	config_file, err := ioutil.TempFile("", "config")
+	config_file, err := tempfile.TempFile("config")
 	assert.NoError(t, err)
 
 	defer os.Remove(config_file.Name())
@@ -172,7 +172,7 @@ func TestProgressTimeout(t *testing.T) {
 	binary, _ := SetupTest(t)
 
 	// A temp file for the config.
-	config_file, err := ioutil.TempFile("", "config")
+	config_file, err := tempfile.TempFile("config")
 	assert.NoError(t, err)
 
 	defer os.Remove(config_file.Name())
@@ -216,7 +216,7 @@ func TestCPULimit(t *testing.T) {
 	binary, _ := SetupTest(t)
 
 	// A temp file for the config.
-	config_file, err := ioutil.TempFile("", "config")
+	config_file, err := tempfile.TempFile("config")
 	assert.NoError(t, err)
 
 	defer os.Remove(config_file.Name())
@@ -242,7 +242,7 @@ func TestBuildDeb(t *testing.T) {
 	binary, _ := SetupTest(t)
 
 	// A temp file for the generated config.
-	config_file, err := ioutil.TempFile("", "config")
+	config_file, err := tempfile.TempFile("config")
 	assert.NoError(t, err)
 	defer os.Remove(config_file.Name())
 
@@ -258,7 +258,7 @@ func TestBuildDeb(t *testing.T) {
 
 	binary_file, _ := filepath.Abs("../artifacts/testdata/files/test.elf")
 
-	output_file, err := ioutil.TempFile("", "output*.deb")
+	output_file, err := tempfile.TempFile("output*.deb")
 	assert.NoError(t, err)
 	output_file.Close()
 	defer os.Remove(output_file.Name())
@@ -280,7 +280,7 @@ func TestBuildDeb(t *testing.T) {
 	assert.Greater(t, stat.Size(), int64(0))
 
 	// Now the server deb
-	output_file, err = ioutil.TempFile("", "output*.deb")
+	output_file, err = tempfile.TempFile("output*.deb")
 	assert.NoError(t, err)
 	output_file.Close()
 	defer os.Remove(output_file.Name())
@@ -306,7 +306,7 @@ func TestGenerateConfigWithMerge(t *testing.T) {
 	binary, extension := SetupTest(t)
 
 	// A temp file for the generated config.
-	config_file, err := ioutil.TempFile("", "config")
+	config_file, err := tempfile.TempFile("config")
 	assert.NoError(t, err)
 	defer os.Remove(config_file.Name())
 
@@ -366,7 +366,7 @@ func TestGenerateConfigWithMerge(t *testing.T) {
 	require.Error(t, err)
 
 	// Create a tempfile for the repacked binary.
-	exe, err := ioutil.TempFile("", "exe*"+extension)
+	exe, err := tempfile.TempFile("exe*" + extension)
 	assert.NoError(t, err)
 
 	defer os.Remove(exe.Name())
@@ -390,7 +390,7 @@ func TestGenerateConfigWithMerge(t *testing.T) {
 	require.Contains(t, string(out), "Foo")
 
 	// Make second copy of config file and store modified version
-	second_config_file, err := ioutil.TempFile("", "config")
+	second_config_file, err := tempfile.TempFile("config")
 	assert.NoError(t, err)
 
 	defer os.Remove(second_config_file.Name())
@@ -426,7 +426,7 @@ func TestShowConfigWithMergePatch(t *testing.T) {
 	binary, _ := SetupTest(t)
 
 	// A temp file for the generated config.
-	config_file, err := ioutil.TempFile("", "config")
+	config_file, err := tempfile.TempFile("config")
 	assert.NoError(t, err)
 
 	defer os.Remove(config_file.Name())

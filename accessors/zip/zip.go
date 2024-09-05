@@ -27,7 +27,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
@@ -42,6 +41,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
@@ -617,7 +617,7 @@ func (self *SeekableZip) createTmpBackup() (err error) {
 	defer reader.Close()
 
 	// Create a tmp file to unpack the zip member into
-	self.tmp_file_backing, err = ioutil.TempFile("", "zip*.tmp")
+	self.tmp_file_backing, err = tempfile.TempFile("zip*.tmp")
 	if err != nil {
 		return err
 	}

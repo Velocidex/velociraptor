@@ -691,8 +691,10 @@ class ShellViewer extends Component {
 
             return (
                 <VeloShellCell key={index}
-                               fetchLastShellCollections={this.fetchLastShellCollections}
-                               flow={flow} client={this.props.client} />
+                               fetchLastShellCollections={
+                                   this.fetchLastShellCollections}
+                               flow={flow}
+                               client={this.props.client} />
             );
         });
     };

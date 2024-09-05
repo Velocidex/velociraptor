@@ -17,6 +17,9 @@ import UserConfig from '../core/user.jsx';
 import VeloForm from '../forms/form.jsx';
 import Modal from 'react-bootstrap/Modal';
 import Alert from 'react-bootstrap/Alert';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import ToolTip from '../widgets/tooltip.jsx';
 
 const POLL_TIME = 5000;
 
@@ -133,8 +136,16 @@ export default class MetadataEditor extends Component {
         clearInterval(this.interval);
     }
 
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        if (this.props.client_id !== prevProps.client_id) {
+            this.fetchMetadata();
+        }
+    }
 
     fetchMetadata = () => {
+        this.source.cancel();
+        this.source = CancelToken.source();
+
         let client_id = this.props.client_id;
         if (!client_id) {
             return;
@@ -206,28 +217,57 @@ export default class MetadataEditor extends Component {
         });
 
         return <> {_.map(indexed, (x, i)=>{
-            return <VeloForm key={i}
-                             param={{name: x}}
-                             value={this.state.custom_metadata[x]}
-                             setValue={v=>{
-                                    let new_value = Object.assign(
-                                        {}, this.state.custom_metadata);
-                                    new_value[x] = v;
-                                    this.setState({custom_metadata: new_value});
-                                }}
-                   />;
+            return <Row className="metadata-row">
+                     <Col sm="11">
+                       <VeloForm key={i}
+                                 param={{name: x}}
+                                 value={this.state.custom_metadata[x]}
+                                 setValue={v=>{
+                                     let new_value = Object.assign(
+                                         {}, this.state.custom_metadata);
+                                     new_value[x] = v;
+                                     this.setState({custom_metadata: new_value});
+                                 }}
+                       />
+                     </Col>
+                     <Col sm="1">
+                       <ToolTip tooltip={T("Common metadata")}>
+                         <Button variant="primary" disabled={true}>
+                           <FontAwesomeIcon icon="trash"/>
+                         </Button>
+                       </ToolTip>
+                     </Col>
+                   </Row>;
         })}
                  {_.map(non_indexed, (x, i)=>{
-            return <VeloForm key={i}
-                             param={{name: x}}
-                             value={this.state.custom_metadata[x]}
-                             setValue={v=>{
-                                    let new_value = Object.assign(
-                                        {}, this.state.custom_metadata);
-                                    new_value[x] = v;
-                                    this.setState({custom_metadata: new_value});
-                                }}
-                   />;
+                     return <Row className="metadata-row">
+                     <Col sm="11">
+                       <VeloForm key={i}
+                                 param={{name: x}}
+                                 value={this.state.custom_metadata[x]}
+                                 setValue={v=>{
+                                     let new_value = Object.assign(
+                                         {}, this.state.custom_metadata);
+                                     new_value[x] = v;
+                                     this.setState({custom_metadata: new_value});
+                                 }}
+                       />
+                     </Col>
+                     <Col sm="1">
+                       <ToolTip tooltip={T("Clear")}>
+                         <Button variant="primary"
+                                 onClick={()=>{
+                                     let new_value = Object.assign(
+                                         {}, this.state.custom_metadata);
+                                     new_value[x] = "";
+                                     this.setMetadata(new_value);
+                                 }}
+                         >
+                           <FontAwesomeIcon icon="trash"/>
+                         </Button>
+                       </ToolTip>
+                     </Col>
+                   </Row>;
         })}
                  <ButtonGroup>
                    <Button variant="default"

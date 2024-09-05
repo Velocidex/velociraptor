@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/server"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -34,14 +35,14 @@ var (
 	repacked_dst     = ""
 
 /*
-	// Set these to capture the repacked file for manual inspection.
-	repacked_msi_dst = "/tmp/m_repacked.msi"
-	repacked_dst     = "/tmp/m_repacked.exe"
+// Set these to capture the repacked file for manual inspection.
+repacked_msi_dst = "/tmp/m_repacked.msi"
+repacked_dst     = "/tmp/m_repacked.exe"
 
-	// Provide the real binary and msi so they can be packed then
-	// inspect the produced data
-	binary_src = "../../output/velociraptor.exe"
-	msi_src    = "/tmp/velociraptor-v0.6.8-rc1-windows-amd64.msi"
+// Provide the real binary and msi so they can be packed then
+// inspect the produced data
+binary_src = "../../output/velociraptor.exe"
+msi_src    = "/tmp/velociraptor-v0.6.8-rc1-windows-amd64.msi"
 */
 )
 
@@ -52,7 +53,7 @@ type RepackTestSuite struct {
 func (self *RepackTestSuite) TestRepackBinary() {
 	ctx := self.Ctx
 
-	dir, err := ioutil.TempDir("", "tmp")
+	dir, err := tempfile.TempDir("tmp")
 	assert.NoError(self.T(), err)
 
 	defer os.RemoveAll(dir)
@@ -150,7 +151,7 @@ autoexec:
 func (self *RepackTestSuite) TestRepackGenericContainer() {
 	ctx := self.Ctx
 
-	dir, err := ioutil.TempDir("", "tmp")
+	dir, err := tempfile.TempDir("tmp")
 	assert.NoError(self.T(), err)
 
 	defer os.RemoveAll(dir)
@@ -268,7 +269,7 @@ autoexec:
 func (self *RepackTestSuite) TestRepackMSI() {
 	ctx := self.Ctx
 
-	dir, err := ioutil.TempDir("", "tmp")
+	dir, err := tempfile.TempDir("tmp")
 	assert.NoError(self.T(), err)
 
 	defer os.RemoveAll(dir)

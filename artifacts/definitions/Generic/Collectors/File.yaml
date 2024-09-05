@@ -57,7 +57,8 @@ sources:
         FROM glob(globs=specs.Glob, accessor=Accessor)
         WHERE NOT IsDir AND log(message="Found " + SourceFile)
 
-      -- Pass all the results to the next query.
+      -- Pass all the results to the next query. This will serialize
+      -- to disk if there are too many results.
       LET all_results <=
          SELECT Created, Changed, LastAccessed, Modified, Size, SourceFile
          FROM hits

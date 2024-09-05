@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/Velocidex/yaml/v2"
-	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"

@@ -3,7 +3,6 @@ package sql
 import (
 	"context"
 	"errors"
-	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
@@ -18,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services/debug"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -405,7 +405,7 @@ func _MakeTempfile(ctx context.Context,
 	scope vfilter.Scope) (
 	string, error) {
 
-	tmpfile, err := ioutil.TempFile("", "tmp*.sqlite")
+	tmpfile, err := tempfile.TempFile("tmp*.sqlite")
 	if err != nil {
 		return "", err
 	}

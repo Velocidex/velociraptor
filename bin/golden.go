@@ -50,6 +50,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/psutils"
@@ -202,7 +203,7 @@ func runTest(fixture *testFixture, sm *services.Service,
 	}
 
 	// Create an output container.
-	tmpfile, err := ioutil.TempFile("", "golden")
+	tmpfile, err := tempfile.TempFile("golden")
 	if err != nil {
 		log.Fatal(err)
 	}

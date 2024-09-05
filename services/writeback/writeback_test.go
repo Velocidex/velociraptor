@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -33,7 +34,7 @@ func TestWriteback(t *testing.T) {
 	level2_suffix := "l2"
 
 	// Set a tempfile for the writeback.
-	writeback_fd, err := ioutil.TempFile("", "")
+	writeback_fd, err := tempfile.TempFile("")
 	assert.NoError(t, err)
 	writeback_fd.Close()
 

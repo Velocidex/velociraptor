@@ -2,7 +2,6 @@ package repository_test
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"sync"
 	"testing"
@@ -19,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 func TestLoadingFromFilestore(t *testing.T) {
@@ -27,7 +27,7 @@ func TestLoadingFromFilestore(t *testing.T) {
 		LoadAndValidate()
 	assert.NoError(t, err)
 
-	tmpdir, err := ioutil.TempDir("", "tmp")
+	tmpdir, err := tempfile.TempDir("tmp")
 	assert.NoError(t, err)
 	defer os.RemoveAll(tmpdir)
 

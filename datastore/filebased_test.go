@@ -3,7 +3,6 @@ package datastore_test
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,6 +14,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 type FilebasedTestSuite struct {
@@ -133,7 +133,7 @@ func (self FilebasedTestSuite) TestSetGetJSON() {
 
 func (self *FilebasedTestSuite) SetupTest() {
 	var err error
-	self.dirname, err = ioutil.TempDir("", "datastore_test")
+	self.dirname, err = tempfile.TempDir("datastore_test")
 	assert.NoError(self.T(), err)
 
 	self.config_obj = config.GetDefaultConfig()

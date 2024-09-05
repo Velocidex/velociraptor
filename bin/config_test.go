@@ -8,13 +8,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 func TestGenerateAPIConfig(t *testing.T) {
 	binary, _ := SetupTest(t)
 
 	// A temp file for the generated config.
-	config_file, err := ioutil.TempFile("", "config")
+	config_file, err := tempfile.TempFile("config")
 	assert.NoError(t, err)
 	defer os.Remove(config_file.Name())
 
@@ -27,7 +28,7 @@ func TestGenerateAPIConfig(t *testing.T) {
 	config_file.Write(out)
 	config_file.Close()
 
-	api_config_file, err := ioutil.TempFile("", "api_config")
+	api_config_file, err := tempfile.TempFile("api_config")
 	assert.NoError(t, err)
 	defer os.Remove(api_config_file.Name())
 

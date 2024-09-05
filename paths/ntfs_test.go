@@ -3,7 +3,7 @@ package paths
 import (
 	"testing"
 
-	"github.com/alecthomas/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
 var (

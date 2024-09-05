@@ -205,6 +205,35 @@ func getOldItem(name, item_type string, old_data []*api_proto.Completion) *api_p
 	return nil
 }
 
+func exportAccessors(old_data []*api_proto.Completion) []*api_proto.Completion {
+	var completions []*api_proto.Completion
+
+	description := accessors.DescribeAccessors()
+	if description == nil {
+		return completions
+	}
+
+	for _, k := range description.Keys() {
+		v, _ := description.Get(k)
+		v_str, ok := v.(string)
+		if !ok {
+			continue
+		}
+
+		new_item := getOldItem(k, "Accessor", old_data)
+		if new_item == nil {
+			new_item = &api_proto.Completion{
+				Name:        k,
+				Description: v_str,
+				Type:        "Accessor",
+			}
+		}
+		completions = append(completions, new_item)
+	}
+
+	return completions
+}
+
 func doVQLExport() error {
 	logging.DisableLogging()
 
@@ -225,10 +254,10 @@ func doVQLExport() error {
 		}
 	}
 
-	new_data := []*api_proto.Completion{}
 	seen_plugins := make(map[string]bool)
 	seen_functions := make(map[string]bool)
 	platform := vql_subsystem.GetMyPlatform()
+	new_data := exportAccessors(old_data)
 
 	for _, item := range info.Plugins {
 		if strings.HasPrefix(item.Doc, "Unimplemented") {

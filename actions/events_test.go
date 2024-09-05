@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
@@ -24,7 +23,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
@@ -60,7 +61,7 @@ func (self *EventsTestSuite) SetupTest() {
 
 	// Set a tempfile for the writeback we need to check that the
 	// new event query is written there.
-	tmpfile, err := ioutil.TempFile("", "")
+	tmpfile, err := tempfile.TempFile("")
 	assert.NoError(self.T(), err)
 	tmpfile.Close()
 

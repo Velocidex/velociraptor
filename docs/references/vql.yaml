@@ -307,8 +307,7 @@
   args:
   - name: query
     type: Any
-    description: |
-      A VQL Query to parse and execute.
+    description: A VQL Query to parse and execute.
     required: true
   - name: env
     type: ordereddict.Dict
@@ -389,6 +388,16 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: auto
+  description: |
+    Access the file using the best accessor possible.
+
+    On windows we fall back to NTFS parsing in case the file is locked
+    or unreadable. This is usually the fastest accessor to use on
+    Windows: Using the API is faster than the internal NTFS parser but
+    if the API stops us from accessing the file, we can still get it
+    with the NTFS accessor.
+  type: Accessor
 - name: backup
   description: Generates a backup file.
   type: Plugin
@@ -525,6 +534,13 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: bzip2
+  description: |
+    Access the content of bzip2 files.
+
+    The filename is a pathspec with a delegate accessor opening the
+    actual gzip file.
+  type: Accessor
 - name: cache
   description: |
     Creates a cache object.
@@ -1114,6 +1130,21 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: collector
+  description: |
+    Open a collector zip file as if it was a directory - automatically
+    expand sparse files.
+
+    Collector files are created by the offline collection - they are
+    simple Zip files but have some additional path escaping and can
+    include sparse indexes. The accessor automatically takes care of
+    these convensions.
+  type: Accessor
+- name: collector_sparse
+  description: |
+    Open a collector zip file as if it was a directory - does not
+    expand sparse files.
+  type: Accessor
 - name: column_filter
   description: |
     Select columns from another query using regex.
@@ -1439,6 +1470,14 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: data
+  description: |
+    Makes a string appears as an in memory file. Path is taken as a
+    literal string to use as the file's data
+
+    This is useful for applying plugins and functions that normally
+    expect files, on simple strings.
+  type: Accessor
 - name: delay
   description: Executes 'query' and delays relaying the rows by the specified number
     of seconds.
@@ -1943,6 +1982,39 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: ewf
+  description: |
+    Allow reading an ewf file.
+
+    Note that usually EWF files form a set of files with extensions
+    like .E01, .E02 etc. This accessor will automatically try to find
+    all parts of the same volume set if the file name ends with a '.E01'.
+
+    ## Example
+
+    ```vql
+    SELECT * FROM glob(
+      globs="*", accessor="raw_ntfs", root=pathspec(
+        Path="/",
+        DelegateAccessor="ewf",
+        DelegatePath="C:/test.ntfs.dd.E01"))
+    ```
+
+    The next example reads a FAT partition through the offset
+    accessor (32256 is the byte offset of the first FAT partition).
+
+    ```vql
+    SELECT OSPath.Path AS OSPath, Size, Mode.String
+    FROM glob(
+           globs="*", accessor="fat", root=pathspec(
+              Path="/",
+              DelegateAccessor="offset",
+              DelegatePath=pathspec(
+                Path="/32256",
+                DelegateAccessor="ewf",
+                DelegatePath="/tmp/ubnist1.gen3.E01")))
+    ```
+  type: Accessor
 - name: execve
   description: |
     This plugin launches an external command and captures its STDERR,
@@ -2060,6 +2132,49 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: ext4
+  description: |
+    Access files by parsing the raw ext4 filesystems.
+
+    This accessor is designed to operate on a live system. It
+    automatically enumerates the mount points and attaches a raw ext4
+    mount to each mounted device.
+
+    Users can use the same path as is presented on the real system, but
+    the raw ext4 partitions will be parsed instead.
+
+    This accessor is only available under linux.
+
+    ## Example
+
+    ```vql
+    SELECT *
+    FROM glob(globs='/boot/*', accessor="ext4")
+    ```
+  type: Accessor
+- name: fat
+  description: |
+    Access the FAT filesystem inside an image by parsing FAT.
+
+    This accessor is designed to operate on images directly. It requires a
+    delegate accessor to get the raw image and will open files using the
+    FAT full path rooted at the top of the filesystem.
+
+    ## Example
+
+    The following query will glob all the files under the directory 'a'
+    inside a FAT image file
+
+    ```vql
+    SELECT *
+    FROM glob(globs='/**',
+      accessor="fat",
+      root=pathspec(
+        Path="a",
+        DelegateAccessor="file",
+        DelegatePath='fat.dd'))
+    ```
+  type: Accessor
 - name: favorites_delete
   description: Delete a favorite.
   type: Function
@@ -2189,6 +2304,20 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: file
+  description: |
+    Access files using the operating system's API.
+
+    Does not allow access to raw devices.
+  type: Accessor
+- name: file_nocase
+  description: |
+    Access files using the operating system's API.
+
+    This accessor is case insensitive - even on Unix Operating
+    systems. It is useful when looking at files that are unpacked from
+    Windows and might have inconsistant casing.
+  type: Accessor
 - name: file_store
   description: |
     Resolves file store paths into full filesystem paths.
@@ -2947,6 +3076,13 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: gzip
+  description: |
+    Access the content of gzip files.
+
+    The filename is a pathspec with a delegate accessor opening the
+    actual gzip file.
+  type: Accessor
 - name: handles
   description: |
     Enumerate process handles.
@@ -3577,7 +3713,8 @@
   args:
   - name: client_id
     type: string
-    description: The client id to import to. Use 'auto' to generate a new client id.
+    description: The client id to import to. Use 'auto' to generate a new client id
+      or use the host info from the collection.
   - name: hostname
     type: string
     description: When creating a new client, set this as the hostname.
@@ -4462,6 +4599,12 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: me
+  description: |
+    Access files bundled inside the Velociraptor binary itself. This
+    is used for unpacking extra files delivered by the Offline
+    Collector and is probably not generally useful.
+  type: Accessor
 - name: memoize
   description: |
     Memoize a query into memory.
@@ -4529,6 +4672,20 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: mft
+  description: |
+    Access arbitrary MFT streams as files.
+
+    The filename is taken as an MFT inode number in the
+    form `<entry_id>-<stream_type>-<id>`, e.g. 203-128-0
+
+    An example of using this artifact:
+
+    ```vql
+    SELECT upload(accessor="mft", filename="C:/203-128-0")
+    FROM scope()
+    ```
+  type: Accessor
 - name: min
   description: |
     Finds the smallest item in the aggregate.
@@ -4714,6 +4871,10 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: mscfb
+  description: |
+    Parse a MSCFB file as an archive.
+  type: Accessor
 - name: netcat
   description: Make a tcp connection and read data from a socket.
   type: Plugin
@@ -4924,6 +5085,19 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: offset
+  description: |
+    Allow reading another file from a specific offset.
+
+    ## Example
+
+    ```vql
+    LET FileName = pathspec(
+          DelegateAccessor="data",
+          DelegatePath=MyData,
+          Path="/5")
+    ```
+  type: Accessor
 - name: olevba
   description: |
     Extracts VBA Macros from Office documents.
@@ -6133,6 +6307,24 @@
   - windows_amd64_cgo
 - name: pipe
   description: |
+    Read from a VQL pipe.
+
+    A VQL pipe allows data to be generated from a VQL query, as the
+    pipe is read, the query proceeds to feed more data to it.
+
+    ## Example
+
+    ```vql
+    LET MyPipe = pipe(query={
+            SELECT _value FROM range(start=0, end=10, step=1)
+    }, sep="\n")
+
+    SELECT read_file(filename="MyPipe", accessor="pipe")
+    FROM scope()
+    ```
+  type: Accessor
+- name: pipe
+  description: |
     A pipe allows plugins that use files to read data from a vql
     query. This is needed to be able to use the "pipe" accessor.
 
@@ -6357,6 +6549,13 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: process
+  description: |
+    Access process memory like a file.
+
+    The Path is taken in the form "/<pid>", i.e. the pid appears as
+    the top level file.
+  type: Accessor
 - name: process_tracker
   description: Install a global process tracker.
   type: Function
@@ -6716,7 +6915,6 @@
     this (Usually only admins have it). This permission is equivalent
     to administrator because a user with this permission can become
     any user they want including the administrator.
-
   type: Plugin
   args:
   - name: query
@@ -6797,6 +6995,9 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: ranged
+  description: Reconstruct sparse files from idx and base
+  type: Accessor
 - name: rate
   description: |
     Calculates the rate (derivative) between two quantities.
@@ -6824,6 +7025,60 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: raw_ext4
+  description: |+
+    Access the Ext4 filesystem inside an image by parsing the image.
+
+    This accessor is designed to operate on images directly. It requires a
+    delegate accessor to get the raw image and will open files using the
+    FAT full path rooted at the top of the filesystem.
+
+    ## Example
+
+    The following query will glob all the files under the directory 'a'
+    inside a Ext4 image file
+
+    ```vql
+    SELECT *
+    FROM glob(globs='/**',
+      accessor="raw_ext4",
+      root=pathspec(
+        Path="a",
+        DelegateAccessor="file",
+        DelegatePath='ext4.dd'))
+    ```
+
+  type: Accessor
+- name: raw_file
+  description: Access the filesystem using the OS API.
+  type: Accessor
+- name: raw_ntfs
+  description: |+
+    Access the NTFS filesystem inside an image by parsing NTFS.
+
+    This accessor is designed to operate on images directly. It requires a
+    delegate accessor to get the raw image and will open files using the
+    NTFS full path rooted at the top of the filesystem.
+
+    ## Example
+
+    The following query will open the $MFT file from the raw image file
+    that will be accessed using the file accessor.
+
+    ```vql
+    SELECT * FROM parse_mft(
+      filename=pathspec(
+        Path="$MFT",
+        DelegateAccessor="file",
+        DelegatePath='ntfs.dd'),
+      accessor="raw_ntfs")
+    ```
+
+  type: Accessor
+- name: raw_reg
+  description: Access keys and values by parsing the raw registry hive. Path is a
+    pathspec having delegate opening the raw registry hive.
+  type: Accessor
 - name: read_crypto_file
   description: Read a previously stored encrypted local storage file.
   type: Plugin
@@ -7200,6 +7455,33 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: s3
+  description: |
+    Access S3 Buckets.
+
+    This artifact allows access to S3 buckets:
+
+    1. The first component is interpreted as the bucket name.
+
+    2. Provide credentials through the VQL environment
+       variable S3_CREDENTIALS. This should be a dict with
+       a key of the bucket name and the value being the credentials.
+
+    ## Example
+
+    ```vql
+    LET S3_CREDENTIALS<=dict(endpoint='http://127.0.0.1:4566/',
+      credentials_key='admin',
+      credentials_secret='password',
+      no_verify_cert=1)
+
+    SELECT *, read_file(filename=OSPath,
+       length=10, accessor='s3') AS Data
+    FROM glob(
+       globs='/velociraptor/orgs/root/clients/C.39a107c4c58c5efa/collections/*/uploads/auto/*',
+       accessor='s3')
+    ```
+  type: Accessor
 - name: sample
   description: |
     Executes 'query' and samples every n'th row.
@@ -7223,6 +7505,13 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: scope
+  description: Similar to the "data" accessor, this makes a string appears as a file.
+    However, instead of the Filename containing the file content itself, the Filename
+    refers to the name of a variable in the current scope that contains the data.
+    This is useful when the binary data is not unicode safe and can not be properly
+    represented by JSON.
+  type: Accessor
 - name: scope
   description: return the scope.
   type: Function
@@ -7554,6 +7843,9 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: smb
+  description: Access smb shares.
+  type: Accessor
 - name: source
   description: |
     Retrieve rows from an artifact's source.
@@ -7621,6 +7913,24 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: sparse
+  description: |
+    Allow reading another file by overlaying a sparse map on top of
+    it.
+
+    The map excludes reading from certain areas which are considered
+    sparse.
+
+    The resulting file is sparse (and therefore uploading it excludes
+    the masked out regions). The filename is taken as a list of
+    ranges. For example:
+
+    ```vql
+    LET FileName = pathspec(
+          DelegateAccessor="data", DelegatePath=MyData,
+          Path=[dict(Offset=0,Length=5), dict(Offset=10,Length=5)])
+    ```
+  type: Accessor
 - name: split
   description: Splits a string into an array based on a regexp separator.
   type: Function
@@ -7822,6 +8132,32 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: ssh
+  description: |2+
+
+    Access a remote system's filesystem via SSH/SFTP.
+
+    This accessor allows accessing remote systems via SFTP/SSH.
+    This is useful for being able to search remote systems where it is not possible
+    to run a Velociraptor client directly on the endpoint. For example, on embedded
+    edge devices such as routers/firewalls/VPNs etc.
+
+    To use this accessor you will need to provide credentials via the SSH_CONFIG
+    scope variable:
+
+    ```vql
+    LET SSH_CONFIG <= dict(hostname='localhost:22',
+        username='mic',
+        private_key=read_file(filename='/home/mic/.ssh/id_rsa'))
+    ```
+
+    NOTES:
+
+    1. hostname must have a port after the column.
+    2. You can provide a password via the password parameter
+    3. The private_key parameter must contain an unencrypted PEM encoded SSH private key pair.
+
+  type: Accessor
 - name: starl
   description: |
     Compile a starlark code block - returns a module usable in VQL
@@ -8336,7 +8672,6 @@
 
     > "2024-08-29T02:05:23+02:00"
     ```
-
   type: Function
   version: 1
   args:
@@ -8612,8 +8947,9 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: upload_directory
-  description: Upload a file to an upload directory. The final filename will be the
-    output directory path followed by the filename path.
+  description: |
+    Upload a file to an upload directory. The final filename will be
+    the output directory path followed by the filename path.
   type: Function
   args:
   - name: file
@@ -9188,6 +9524,9 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: vfs
+  description: Access client's VFS filesystem on the server.
+  type: Accessor
 - name: vfs_ls
   description: |
     List directory and build a VFS object.
@@ -9218,6 +9557,30 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: vhdx
+  description: |+
+    Allow reading a vhdx file.
+
+    This accessor allows access to the content of VHDX files. Note that usually
+    VHDX files are disk images with a partition table and an NTFS volume. You
+    will usually need to wrap this accessor with a suitable Offset (to account
+    for the parition) and parse it with the the "raw_ntfs" accessor.
+
+    ## Example
+
+    ```vql
+    SELECT OSPath.Path AS OSPath, Size, Mode.String
+    FROM glob(
+       globs="*", accessor="raw_ntfs", root=pathspec(
+         Path="/",
+         DelegateAccessor="offset",
+         DelegatePath=pathspec(
+           Path="/65536",
+           DelegateAccessor="vhdx",
+           DelegatePath="/tmp/test.vhdx")))
+    ```
+
+  type: Accessor
 - name: watch_auditd
   description: Watch log files generated by auditd.
   type: Plugin
@@ -9780,3 +10143,32 @@
   platforms:
   - darwin_arm64_cgo
   - linux_amd64_cgo
+- name: zip
+  description: |+
+    Open a zip file as if it was a directory.
+
+    Filename is a pathspec with a delegate accessor opening the Zip file,
+    and the Path representing the file within the zip file.
+
+    ## Example
+
+    ```vql
+    SELECT OSPath, Mtime, Size from glob(
+       globs='/**/*.txt',
+       root=pathspec(DelegateAccessor='file',
+         DelegatePath="File.zip",
+         Path='/'),
+       accessor='zip')
+    ```
+
+  type: Accessor
+- name: zip_nocase
+  description: |
+    Open a zip file as if it was a directory.
+
+    Although zip files are case sensitive, this accessor treats file
+    names inside the zip file as case insensitive. This is useful when
+    remapping an offline collector from a Windows system for post
+    processing.
+  type: Accessor
+

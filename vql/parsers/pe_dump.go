@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 
 	"github.com/Velocidex/ordereddict"
@@ -14,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -104,7 +104,7 @@ func (self _PEDumpFunction) Call(
 	var memory_buffer *utils.MemoryBuffer
 
 	if arg.InMemory == 0 {
-		tmpfile, err = ioutil.TempFile("", "tmp*exe")
+		tmpfile, err = tempfile.TempFile("tmp*exe")
 		if err != nil {
 			scope.Log("pe_dump: %v", err)
 			return false
