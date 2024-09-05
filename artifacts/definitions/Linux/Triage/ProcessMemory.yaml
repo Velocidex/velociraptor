@@ -9,6 +9,10 @@ parameters:
     type: int
     default: 2215
 
+column_types:
+  - name: CrashDump
+    type: preview_upload
+
 sources:
   - query: |
       SELECT Name as ProcessName, CommandLine, Pid,
