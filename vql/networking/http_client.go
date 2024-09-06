@@ -293,6 +293,9 @@ func (self *HTTPClientCache) GetHttpClient(
 			return nil, err
 		}
 
+		transport = MaybeSpyOnTransport(
+			&config_proto.Config{Client: config_obj}, transport)
+
 		if err = EnableSkipVerify(transport.TLSClientConfig, config_obj); err != nil {
 			return nil, err
 		}
@@ -331,6 +334,9 @@ func GetDefaultHTTPClient(
 	if err != nil {
 		return nil, err
 	}
+
+	transport = MaybeSpyOnTransport(
+		&config_proto.Config{Client: config_obj}, transport)
 
 	return &httpClientWrapper{
 		Client: http.Client{

@@ -34,6 +34,10 @@ version:
   # The time the client was installed (as written in the writeback file).
   install_time: 1680267359
 
+  # The operating system this binary is running under.
+  system: linux
+  architecture: amd64
+
 ## The Client block will be copied into the client.config.yaml and it
 ## is expected to be used by clients. It contains no secrets and can
 ## be embedded into clients. The server must also have this block as
@@ -358,6 +362,23 @@ Client:
   # to a local file which will be used to collect such panic messages
   # from the running service.
   panic: $TEMP/panic.log
+
+  # Setting this will write clear text network traces to this
+  # file. This is used for debugging network communications in complex
+  # scenarios (e.g. in the presence of proxies etc). Do not leave this
+  # configured in production! This setting will also disable TLS
+  # verification for the server name so it will be possible to MITM
+  # the client->server connection.
+
+  # NOTE: Velociraptor has 2 layers of encryption - this setting
+  # bypasses the outer TLS layer to expose the underlying HTTP
+  # communications. Client->server communication still remain
+  # encrypted however.
+  insecure_network_trace_file: "/tmp/trace.txt"
+
+  # The server that created this config file - this is only a hint.
+  server_version:
+    system: linux
 
 ## This section configures the API service. The API server accepts
 ## connections from the GUI gRPC gateway, as well as connections from
@@ -911,6 +932,8 @@ Datastore:
   memcache_datastore_max_item_size: 1000
   memcache_datastore_max_dir_size: 50000
 
+
+
 ## Configure logging behavior
 Logging:
   ## A directory to write log files in .
@@ -1318,6 +1341,32 @@ defaults:
   # 0-9
   disable_unicode_usernames: false
 
+  # How often to refresh the search index (default 5 min). This
+  # rebuilds the search index periodically to avoid inconsitancies
+  reindex_period_seconds: 300
+
+  # The client metadata is an arbitrary key/value store that holds
+  # user defined information per client. You can normally store
+  # anything in the client metadata but this information is not
+  # indexed, making searching on it slow (using VQL each client's
+  # metadata blob needs to be opened, read and matched).
+
+  # This setting allows you to define **some** fields in the client
+  # metadata that will be indexed. These fields should not be too
+  # large so as to keep the index size smallish so it is recommended
+  # to use only small strings. Once fields are defined here, the extra
+  # data can be searched in the GUI search bar using a verb such as
+  # <field_name>:match.
+
+  # For example, define here:
+  # indexed_client_metadata:
+  #  - department
+  #
+  # Then a search for `department:accounting` will match all clients
+  # with the key department and value contains accounting in their
+  # client metadata.
+  indexed_client_metadata:
+    - department
 
 # The Velociraptor server may be placed into "lockdown" mode. While in
 # lockdown mode certain permissions are denied - even for
