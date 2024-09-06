@@ -321,13 +321,16 @@ Client:
   logfile_name: "logfile.log"
   logfile_size: 10000000
 
-  # When Velociraptor is running as a Windows service the system can
-  # not capture any messages printed to stdout or stderr. This means
-  # that if Velociraptor crashes we lose the panic backtrace the helps
-  # debug why it crashed. Setting this to a path on the client, will
-  # cause Velociraptor to redirect stdout and stderr to this file from
-  # the Windows service.
-  panic_file: ""
+  # On Windows, the client usually runs as a service. If a crash occurs
+  # while Velociraptor is running as a Windows service the traceback of
+  # the error is printed to Stderr, however a Windows service discards
+  # these messages. This means that if Velociraptor crashes we lose the
+  # panic backtrace which is useful for debugging why it crashed. This
+  # setting allows us to specify a path to a log file on the client where
+  # Velociraptor will write stdout and stderr in the event of a crash.
+  # This feature is currently not implemented for non-Windows platforms
+  # where this setting will have no effect.
+  panic_file: $TEMP/panic.log
 
 
   ## Velociraptor keeps a local buffer file to store query results
@@ -353,15 +356,6 @@ Client:
     filename_linux: /var/tmp/Velociraptor_Buffer.bin
     filename_windows: $TEMP/Velociraptor_Buffer.bin
     filename_darwin: /var/tmp/Velociraptor_Buffer.bin
-
-  # This is path which will accept the windows service panic
-  # messages. On windows, the client usually runs in a service. If a
-  # crash occurs the traceback of the error is printed to Stderr but a
-  # Windows service ignores these messages making it very hard to
-  # debug the reason for the crash. This setting can specify the path
-  # to a local file which will be used to collect such panic messages
-  # from the running service.
-  panic: $TEMP/panic.log
 
   # Setting this will write clear text network traces to this
   # file. This is used for debugging network communications in complex
@@ -1342,7 +1336,7 @@ defaults:
   disable_unicode_usernames: false
 
   # How often to refresh the search index (default 5 min). This
-  # rebuilds the search index periodically to avoid inconsitancies
+  # rebuilds the search index periodically to avoid inconsistencies.
   reindex_period_seconds: 300
 
   # The client metadata is an arbitrary key/value store that holds
