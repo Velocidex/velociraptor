@@ -158,6 +158,20 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 		config_obj.API.PinnedGwName = constants.PinnedGwName
 	}
 
+	// The server should always update the client part to ensure new
+	// clients created from this server will keep the correct server
+	// version.
+	if config_obj.Client != nil {
+		version := GetVersion()
+
+		config_obj.Client.ServerVersion = &config_proto.Version{
+			Version:   version.Version,
+			BuildTime: version.BuildTime,
+			Commit:    version.Commit,
+		}
+
+	}
+
 	return nil
 }
 

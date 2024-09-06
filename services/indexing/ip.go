@@ -7,7 +7,9 @@ import (
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
 )
 
 func (self *Indexer) searchLastIP(
@@ -63,4 +65,47 @@ func (self *Indexer) searchLastIP(
 	}
 
 	return result, nil
+}
+
+func (self *Indexer) searchLastIPChan(
+	ctx context.Context,
+	scope vfilter.Scope,
+	config_obj *config_proto.Config,
+	term string) (chan *api_proto.ApiClient, error) {
+
+	output_chan := make(chan *api_proto.ApiClient)
+
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	go func() {
+		defer close(output_chan)
+
+		prefix, filter := splitSearchTermIntoPrefixAndFilter(scope, term)
+
+		for client_id := range client_info_manager.ListClients(ctx) {
+			api_client, err := self.FastGetApiClient(ctx, config_obj, client_id)
+			if err != nil {
+				continue
+			}
+
+			if !strings.HasPrefix(api_client.LastIp, prefix) {
+				continue
+			}
+
+			if filter != nil && !filter.MatchString(api_client.LastIp) {
+				continue
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- api_client:
+			}
+		}
+	}()
+
+	return output_chan, nil
 }

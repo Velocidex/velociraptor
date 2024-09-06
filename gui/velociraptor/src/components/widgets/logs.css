@@ -1,0 +1,7 @@
+.log-green {
+    background-color: var(--color-accent-25);
+}
+
+.log-red {
+    background-color: var(--color-level-error);
+}

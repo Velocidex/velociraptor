@@ -392,12 +392,27 @@
   description: |
     Access the file using the best accessor possible.
 
-    On windows we fall back to NTFS parsing in case the file is locked
-    or unreadable. This is usually the fastest accessor to use on
-    Windows: Using the API is faster than the internal NTFS parser but
-    if the API stops us from accessing the file, we can still get it
-    with the NTFS accessor.
+    The `auto` accessor is the default accessor that is used when a VQL
+    query does not specify an `accessor` parameter.
+
+    On Windows it attempts to open the file using the `file` accessor and
+    if that fails (for example due to permission errors), the `auto`
+    accessor automatically tries the `ntfs` accessor to access the file
+    using raw level filesystem parsing.
+
+    The overall effect is that the Velociraptor is able to transparently
+    access files that are locked (for example registry hives) or are
+    protected by filter drivers (e.g. some endpoint security software). In
+    general you should use the `auto` accessor to open files on the local
+    filesystem in all cases since it will be much faster than using the
+    `ntfs` accessor for every file (most files are not actually locked).
+
+    On other operating systems, the `auto` accessor is an alias to the
+    `file` accessor.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: backup
   description: Generates a backup file.
   type: Plugin
@@ -538,9 +553,28 @@
   description: |
     Access the content of bzip2 files.
 
-    The filename is a pathspec with a delegate accessor opening the
-    actual gzip file.
+    The bzip2 accessor is able to read the content of `bz2` compressed
+    files. It is very similar to the `gzip` accessor.
+
+    Since `bzip2` compressed files do not have an actual file hierarchy,
+    they can not be directly searched with `glob()`. This accessor is
+    therefore only really useful for opening the file for reading - or for
+    chaining with another accessor.
+
+    ```sql
+    SELECT read_file(accessor="bzip2", filename="F:/hello.txt.bz2", length=10)
+    FROM scope()
+    ```
+
+    Performance: Bzip2 files are non-seekable. This means they must be
+    read in sequence from start to finish. If the VQL query attempts to
+    seek within the file, this accessor will automatically decompress the
+    entire file into a temporary file so it can seek within it. This means
+    that performance can be extremely bad in some cases.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: cache
   description: |
     Creates a cache object.
@@ -652,6 +686,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: certificates
   description: |
     Collect certificate from the system trust store.
@@ -1135,16 +1170,27 @@
     Open a collector zip file as if it was a directory - automatically
     expand sparse files.
 
-    Collector files are created by the offline collection - they are
-    simple Zip files but have some additional path escaping and can
-    include sparse indexes. The accessor automatically takes care of
-    these convensions.
+    Open an offline collector zip file as if it was a directory. This
+    is similar to the `zip` accessor (see below) but it automatically
+    decrypts collections protected using the x509 scheme. Use this
+    accessor to transparently read inside encrypted collections.
+
+    This accessor also automatically expands sparse files by zero
+    padding them (when possible - if zero padding is unreasonable
+    large for this file, we do not expand it).
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: collector_sparse
   description: |
-    Open a collector zip file as if it was a directory - does not
-    expand sparse files.
+    Open a collector zip file as if it was a directory.
+
+    Same as the `collector` accessor but does not expand sparse files.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: column_filter
   description: |
     Select columns from another query using regex.
@@ -1472,12 +1518,16 @@
   - windows_amd64_cgo
 - name: data
   description: |
-    Makes a string appears as an in memory file. Path is taken as a
-    literal string to use as the file's data
+    Makes a string appears as an in memory file.
 
-    This is useful for applying plugins and functions that normally
-    expect files, on simple strings.
+    Path is taken as a literal string to use as the file's data
+
+    This accessor is useful to allow plugins that normally accept files to
+    also accept a plain string (for example `parse_binary()`).
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: delay
   description: Executes 'query' and delays relaying the rows by the specified number
     of seconds.
@@ -1984,7 +2034,7 @@
   - windows_amd64_cgo
 - name: ewf
   description: |
-    Allow reading an ewf file.
+    Allow reading an `EWF` file.
 
     Note that usually EWF files form a set of files with extensions
     like .E01, .E02 etc. This accessor will automatically try to find
@@ -2015,6 +2065,9 @@
                 DelegatePath="/tmp/ubnist1.gen3.E01")))
     ```
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: execve
   description: |
     This plugin launches an external command and captures its STDERR,
@@ -2152,6 +2205,8 @@
     FROM glob(globs='/boot/*', accessor="ext4")
     ```
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
 - name: fat
   description: |
     Access the FAT filesystem inside an image by parsing FAT.
@@ -2175,6 +2230,9 @@
         DelegatePath='fat.dd'))
     ```
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: favorites_delete
   description: Delete a favorite.
   type: Function
@@ -2309,15 +2367,40 @@
     Access files using the operating system's API.
 
     Does not allow access to raw devices.
+
+    NOTE: This accessor does not follow symbolic links on `Windows` or
+    `Linux` in order to avoid being trapped by cycles. This means that
+    on some Linux systems you will find `/usr/bin/ls` instead of
+    `/bin/ls` since `/bin` is a symlink to `/usr/bin/`
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
+- name: file_links
+  description: |
+    Access the filesystem using the OS APIs.
+
+    Note: Take care with this accessor because there may be circular
+    links. In particular this is dangerous on Linux when accidentally
+    entering the `/proc` part of the filesystem because it contains
+    circular links to everywhere.
+  type: Accessor
+  platforms:
+  - windows_amd64_cgo
 - name: file_nocase
   description: |
     Access files using the operating system's API.
 
-    This accessor is case insensitive - even on Unix Operating
-    systems. It is useful when looking at files that are unpacked from
-    Windows and might have inconsistant casing.
+    On Linux this accessor implements case insensitive comparisons
+    over the usual case sensitive filesystem. This is important for
+    cases where Windows files are unpacked on a Linux system and you
+    are trying to use artifacts written for Windows - they may fail
+    due to incorrect casing making it impossible to find the right
+    files.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: file_store
   description: |
     Resolves file store paths into full filesystem paths.
@@ -3082,7 +3165,26 @@
 
     The filename is a pathspec with a delegate accessor opening the
     actual gzip file.
+
+    Since `gzip` compressed files do not have an actual file hierarchy,
+    they can not be directly searched with `glob()`. This accessor is
+    therefore only really useful for opening the file for reading - or for
+    chaining with another accessor.
+
+    ```sql
+    SELECT read_file(accessor="gzip", filename="F:/hello.txt.gz", length=10)
+    FROM scope()
+    ```
+
+    Performance: `GZIP` files are non-seekable. This means they must be
+    read in sequence from start to finish. If the VQL query attempts to
+    seek within the file, this accessor will automatically decompress the
+    entire file into a temporary file so it can seek within it. This means
+    that performance can be extremely bad in some cases.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: handles
   description: |
     Enumerate process handles.
@@ -4122,6 +4224,21 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: lazy_ntfs
+  description: |
+    Access the NTFS filesystem by parsing NTFS structures.
+
+    This accessor is a variation of the `ntfs` accessor. It is a bit
+    faster because it does not enumerate all the attributes in files
+    contained in directories, instead relying only on the `I30` index
+    streams. This means it is unable to find Alternate Data Streams in
+    directories (because ADS are not stored in the I30 stream).
+
+    Usually the extra performance is not worth these limitations since the
+    `ntfs` accessor is pretty fast these days already.
+  type: Accessor
+  platforms:
+  - windows_amd64_cgo
 - name: len
   description: |
     Returns the length of an object.
@@ -4189,6 +4306,7 @@
       current org.
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: log
   description: |
     Log the message and return TRUE.
@@ -4318,6 +4436,8 @@
   - name: debug
     type: bool
     description: Enable verbose logging.
+  metadata:
+    permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4601,10 +4721,21 @@
   - windows_amd64_cgo
 - name: me
   description: |
-    Access files bundled inside the Velociraptor binary itself. This
-    is used for unpacking extra files delivered by the Offline
+    Access files bundled inside the Velociraptor binary itself.
+
+    The `me` accessor is used to retrieve files packed inside the
+    Velociraptor binary (for example in the offline
+    collector). Currently this is similar to the zip accessor but it
+    might change in future. Do not use this accessor directly, instead
+    use the supported `Generic.Utils.FetchBinary` artifact to retrieve
+    packed files.
+
+    This is used for unpacking extra files delivered by the Offline
     Collector and is probably not generally useful.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: memoize
   description: |
     Memoize a query into memory.
@@ -4674,10 +4805,15 @@
   - windows_amd64_cgo
 - name: mft
   description: |
-    Access arbitrary MFT streams as files.
+    The `mft` accessor is used to access arbitrary MFT streams as
+    files.
 
-    The filename is taken as an MFT inode number in the
-    form `<entry_id>-<stream_type>-<id>`, e.g. 203-128-0
+    The filename is taken as an MFT inode number in the form
+    `<entry_id>-<stream_type>-<id>`, e.g. `203-128-0`. The first
+    component of the file is the device number to open (e.g. `C:`)
+
+    This accessor does not support directories and so can not be used
+    in `glob()`
 
     An example of using this artifact:
 
@@ -4686,6 +4822,9 @@
     FROM scope()
     ```
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: min
   description: |
     Finds the smallest item in the aggregate.
@@ -4875,6 +5014,9 @@
   description: |
     Parse a MSCFB file as an archive.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: netcat
   description: Make a tcp connection and read data from a socket.
   type: Plugin
@@ -5039,6 +5181,7 @@
     permissions: COLLECT_SERVER
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: notebook_update_cell
   description: Update a notebook cell.
   type: Function
@@ -5085,19 +5228,70 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: ntfs
+  description: |
+    Access the NTFS filesystem by parsing NTFS structures.
+
+    This accessor uses an NTFS parser to present the content of the
+    NTFS filesystem as a simple filesystem. It emulates the regular
+    `file` accessor and its interpretation of the paths:
+
+    1. At the top level of the filesystem, this accessor enumerates all
+    fixed drives and VSS devices to present a list of valid devices
+    that may be parsed. For example a glob of `/*` gives:
+
+    - `\\.\C:` - The C drive device
+    - `\\\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1` - The first VSS device.
+
+    2. The accessor will automatically convert from Windows paths to
+    NTFS paths. For example the path `C:/Windows` will be converted to
+    `\\.\C:\Windows`
+
+    This accessor is only available on Windows.
+
+    See the `raw_ntfs` accessor for more information and comparisons.
+  type: Accessor
+  platforms:
+  - windows_amd64_cgo
+- name: ntfs_vss
+  description: |
+    Access the NTFS filesystem by considering all VSS.
+
+    This accessor considers all Volume Shadow Copies available on the
+    system to deduplicate all files which are identical across all
+    VSS. Only files that have been modified are shown.
+
+    This makes it easier to compare files across VSS copies. If the
+    file is the same across all VSS then the accessor prefers to show
+    the one of the main device (i.e. `\\.\C:`)
+  type: Accessor
+  platforms:
+  - windows_amd64_cgo
 - name: offset
   description: |
     Allow reading another file from a specific offset.
 
+    The filename is taken as an offset into the delegate.
+
     ## Example
 
-    ```vql
-    LET FileName = pathspec(
-          DelegateAccessor="data",
-          DelegatePath=MyData,
-          Path="/5")
+    ```sql
+    SELECT read_file(accessor="offset", filename=pathspec(
+    DelegateAccessor="data",
+    DelegatePath="Hello world",
+    Path="/6"))
+    FROM scope()
+
+    -> "world"
     ```
+
+    This accessor is useful in cases where we need to rebase the zero
+    offset into the file. For example when reading a filesystem
+    partition from an image.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: olevba
   description: |
     Extracts VBA Macros from Office documents.
@@ -6309,6 +6503,8 @@
   description: |
     Read from a VQL pipe.
 
+    **NOTE: this is not the same as a windows named pipe**.
+
     A VQL pipe allows data to be generated from a VQL query, as the
     pipe is read, the query proceeds to feed more data to it.
 
@@ -6322,11 +6518,22 @@
     SELECT read_file(filename="MyPipe", accessor="pipe")
     FROM scope()
     ```
+
+    It is mostly useful for redirecting the output of one query to
+    another without using temp files. You probably do not want to use
+    it!
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: pipe
   description: |
     A pipe allows plugins that use files to read data from a vql
-    query. This is needed to be able to use the "pipe" accessor.
+    query.
+
+    **NOTE: this is not the same as a windows named pipe**.
+
+    This is needed to be able to use the "pipe" accessor.
 
     ### Example
 
@@ -6553,9 +6760,27 @@
   description: |
     Access process memory like a file.
 
-    The Path is taken in the form "/<pid>", i.e. the pid appears as
-    the top level file.
+    The Path is taken in the form `/<pid>`, i.e. the pid appears as
+    the top level path component.
+
+    The accessor does not support directories so it can not be used
+    with the `glob()` plugin. It is useful for any functions or
+    plugins that need to read from process memory.
+
+    Note that process memory is typically very sparse (on 64 bit
+    systems it covers the entire address space). Therefore,
+    Velociraptor will treat it as sparse - various plugins that
+    support sparse files (such as the `upload()` plugin or `yara()`
+    plugin) will automatically handle the unmapped regions.
+
+    You will therefore need other plugins like `vad()` to figure out
+    the exact process memory layout where there is data to read. It is
+    not an error to read from unmapped regions, but it will just
+    return nulls.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: process_tracker
   description: Install a global process tracker.
   type: Function
@@ -6998,6 +7223,9 @@
 - name: ranged
   description: Reconstruct sparse files from idx and base
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: rate
   description: |
     Calculates the rate (derivative) between two quantities.
@@ -7049,11 +7277,31 @@
     ```
 
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: raw_file
-  description: Access the filesystem using the OS API.
+  description: |
+    Access the filesystem using the OS API.
+
+    This accessor allows to read raw devices. On Windows, raw files
+    need to be read in aligned page size. This accessor ensures reads
+    are buffered into page size buffers to make it safe for VQL to
+    read the device in arbitrary alignment.
+
+    We do not support directory operations on raw devices, so this
+    accessor can not be used in the `glob()` plugin.
+
+    Additionally this accessor does not attempt to interpret the
+    device part of the path components. It will pass the full path
+    string to the underlying OS APIs. This allows us to read arbitrary
+    devices.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: raw_ntfs
-  description: |+
+  description: |
     Access the NTFS filesystem inside an image by parsing NTFS.
 
     This accessor is designed to operate on images directly. It requires a
@@ -7074,11 +7322,60 @@
       accessor="raw_ntfs")
     ```
 
+    Note that this accessor is different than the standard `ntfs`
+    accessor which attempts to emulate the simpler `file`
+    accessor. This is so the paths can be easily interchanged between
+    `file` and `ntfs`.
+
+    The `ntfs` accessor automatically calculates the raw device needed
+    to open the ntfs partition. The following queries are equivalent:
+
+    ```
+    SELECT * FROM parse_mft(
+      filename=pathspec(
+        Path="$MFT",
+        DelegateAccessor="raw_file",
+        DelegatePath='''\\.\C:'''),
+      accessor="raw_ntfs")
+
+    SELECT * FROM parse_mft(
+      filename='''\\.\C:\$MFT''',
+      accessor="ntfs")
+    ```
+
+    The `raw_ntfs` accessor is available in all supported platforms
+    (i.e. not only Windows) and uses the same filesystem parser as the
+    `ntfs` accessor. You can use this in conjunction with the
+    `remap()` function to analyse raw NTFS volumes on any supported
+    platform.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: raw_reg
-  description: Access keys and values by parsing the raw registry hive. Path is a
-    pathspec having delegate opening the raw registry hive.
+  description: |
+    Access keys and values by parsing a raw registry hive.
+
+    Path is a OSPath having delegate opening the raw registry hive.
+
+    For example we can search the raw registry for the System hive:
+
+    ```sql
+    SELECT OSPath
+    FROM glob(globs='*',
+        accessor="raw_reg",
+        root=pathspec(
+          Path="ControlSet001",
+          DelegateAccessor="auto",
+          DelegatePath="C:/Windows/System32/config/System"))
+    ```
+
+    This accessor is available on all supported platforms and uses the
+    internal raw registry parser.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: read_crypto_file
   description: Read a previously stored encrypted local storage file.
   type: Plugin
@@ -7187,6 +7484,11 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: reg
+  description: Access the registery like a filesystem using the OS APIs.
+  type: Accessor
+  platforms:
+  - windows_amd64_cgo
 - name: reg_rm_key
   description: Removes a key and all its values from the registry.
   type: Function
@@ -7290,6 +7592,11 @@
   - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
+  - windows_amd64_cgo
+- name: registry
+  description: Access the registery like a filesystem using the OS APIs.
+  type: Accessor
+  platforms:
   - windows_amd64_cgo
 - name: rekey
   description: Causes the client to rekey and regenerate a new client ID. DANGEROUS!
@@ -7481,7 +7788,14 @@
        globs='/velociraptor/orgs/root/clients/C.39a107c4c58c5efa/collections/*/uploads/auto/*',
        accessor='s3')
     ```
+
+    NOTE: It is more convenient to use the [secrets support]({{< ref
+    "/blog/2024/2024-03-10-release-notes-0.72/#secret-management" >}}) in
+    0.72 to manage these credentials.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: sample
   description: |
     Executes 'query' and samples every n'th row.
@@ -7506,12 +7820,30 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: scope
-  description: Similar to the "data" accessor, this makes a string appears as a file.
-    However, instead of the Filename containing the file content itself, the Filename
-    refers to the name of a variable in the current scope that contains the data.
-    This is useful when the binary data is not unicode safe and can not be properly
-    represented by JSON.
+  description: |
+    Present the content of a scope variable as a file.
+
+    Similar to the `data` accessor, this makes a string appears as the
+    file contents. However, instead of the filename itself containing
+    the file content, the filename refers to the name of a variable in
+    the current scope that contains the data.
+
+    This is useful when the binary data is not unicode safe and can
+    not be properly represented by JSON. Sometimes the filename is
+    echoed in various log messages and with the `data` accessor this
+    will echo some binary data into the logs.
+
+    ## Example
+
+    ```sql
+    LET MyData <= "This is a test string"
+
+    SELECT read_file(accessor="scope", filename="MyData") FROM scope()
+    ```
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: scope
   description: return the scope.
   type: Function
@@ -7803,6 +8135,7 @@
     required: true
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: sleep
   description: Sleep for the specified number of seconds. Always returns true.
   type: Function
@@ -7844,8 +8177,38 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: smb
-  description: Access smb shares.
+  description: |
+    Access smb shares (e.g. Windows shares).
+
+    This accessor is similar to the `s3` accessor in allowing access
+    to remote network shares. The credentials are passed in a scope
+    variable called `SMB_CREDENTIALS`. The credentials are a dict with
+    the server name being the key and the username and password joined
+    with ":".
+
+    The first element in the path is treated as the server name (top
+    level directory). The accessor then looks up the relevant
+    credentials from the `SMB_CREDENTIALS` dict. This allows multiple
+    servers and multiple credentials to be defined at the same time.
+
+    ## Example:
+
+    ```
+    LET SMB_CREDENTIALS <= dict(ServerName="Username:Password")
+
+    SELECT OSPath,
+    FROM glob(globs='*',
+      root="/ServerName/Windows/System32",
+      accessor="smb")
+    ```
+
+    NOTE: It is more convenient to use the [secrets support]({{< ref
+    "/blog/2024/2024-03-10-release-notes-0.72/#secret-management" >}})
+    in 0.72 to manage these credentials.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: source
   description: |
     Retrieve rows from an artifact's source.
@@ -7923,14 +8286,33 @@
 
     The resulting file is sparse (and therefore uploading it excludes
     the masked out regions). The filename is taken as a list of
-    ranges. For example:
+    ranges.
+
+    For example here we create a sparse file over the delegate which only
+    defines the first 5 bytes, then a 5 byte sparse region then another 5
+    bytes.
 
     ```vql
-    LET FileName = pathspec(
-          DelegateAccessor="data", DelegatePath=MyData,
-          Path=[dict(Offset=0,Length=5), dict(Offset=10,Length=5)])
+    SELECT upload(accessor="sparse", path=pathspec(
+      DelegateAccessor="data", DelegatePath=MyData,
+      Path=[dict(Offset=0,Length=5), dict(Offset=10,Length=5)])
+    FROM scope()
     ```
+
+    The uploaded file will contain only 10 bytes but will retain the 5
+    byte "hole" in the middle.
+
+    This accessor is most useful when uploading or masking parts of other
+    files - for example uploading a carved files from a larger image. NOTE
+    that delegate offsets are retained in this accessor (so for example
+    offset 10 in this accessor corresponds to offset 10 in the delegate
+    regardless of the sparse map).
+
+    For more flexibility than this use the "ranged" accessor.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: split
   description: Splits a string into an array based on a regexp separator.
   type: Function
@@ -8133,31 +8515,41 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: ssh
-  description: |2+
+  description: |
+    Access a remote system's filesystem via `SSH/SFTP`.
 
-    Access a remote system's filesystem via SSH/SFTP.
+    This accessor allows accessing remote systems via `SFTP/SSH`.  This is
+    useful for being able to search remote systems where it is not
+    possible to run a Velociraptor client directly on the endpoint. For
+    example, on embedded edge devices such as routers/firewalls/VPN
+    servers etc.
 
-    This accessor allows accessing remote systems via SFTP/SSH.
-    This is useful for being able to search remote systems where it is not possible
-    to run a Velociraptor client directly on the endpoint. For example, on embedded
-    edge devices such as routers/firewalls/VPNs etc.
-
-    To use this accessor you will need to provide credentials via the SSH_CONFIG
-    scope variable:
+    To use this accessor you will need to provide credentials via the
+    SSH_CONFIG scope variable:
 
     ```vql
     LET SSH_CONFIG <= dict(hostname='localhost:22',
-        username='mic',
-        private_key=read_file(filename='/home/mic/.ssh/id_rsa'))
+      username='mic',
+      private_key=read_file(filename='/home/mic/.ssh/id_rsa'))
+
+    SELECT OSPath FROM glob(accessor="ssh", globs="/*")
     ```
 
     NOTES:
 
     1. hostname must have a port after the column.
-    2. You can provide a password via the password parameter
-    3. The private_key parameter must contain an unencrypted PEM encoded SSH private key pair.
+    2. You can provide a password instead of a private key via the
+       password parameter to the `SSH_CONFIG`
+    3. The private_key parameter must contain an unencrypted PEM encoded
+       SSH private key pair.
 
+    NOTE: It is more convenient to use the [secrets support]({{< ref
+    "/blog/2024/2024-03-10-release-notes-0.72/#secret-management" >}}) in
+    0.72 to manage these credentials.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: starl
   description: |
     Compile a starlark code block - returns a module usable in VQL
@@ -8498,6 +8890,7 @@
     permissions: NOTEBOOK_EDITOR
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: timelines
   description: List all timelines in a notebook
   type: Plugin
@@ -8509,6 +8902,7 @@
     permissions: READ_RESULTS
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: timestamp
   description: |
     Convert from different types to a time.Time.
@@ -8685,6 +9079,7 @@
       constants specified in https://pkg.go.dev/time#pkg-constants can be used.
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: tlsh_hash
   description: Calculate the tlsh hash of a file.
   type: Function
@@ -9419,6 +9814,7 @@
     description: Set the user's default password for Zip Exports.
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: users
   description: Display information about workstation local users. This is obtained
     through the NetUserEnum() API.
@@ -9525,8 +9921,34 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: vfs
-  description: Access client's VFS filesystem on the server.
+  description: |
+    Access client's VFS filesystem on the server.
+
+    On the Velociraptor server, the Virtual File System (VFS)
+    represents a cached copy of the files and directories we have
+    collected from the client using the `VFS` GUI.
+
+    Since it is a snapshot formed over multiple collections from the
+    GUI it may change in future (for example if a file is added or
+    removed, the next time the directory is refreshed the VFS view
+    will change).
+
+    Due to the interactive nature of the VFS collections, the VFS is
+    constructed over many collections in different times.
+
+    Sometimes we want to directly read those cached files and
+    directories and this is where the `vfs` accessor comes in.
+
+    The accessor gets the client's ID from the `ClientId` scope
+    variable. The first component of the path is taken to be the
+    accessor (top level of the VFS GUI).
+
+    This accessor is mostly used in the `System.VFS.Export` artifact
+    to facilitate snapshotting of the VFS view in the GUI.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: vfs_ls
   description: |
     List directory and build a VFS object.
@@ -9581,6 +10003,9 @@
     ```
 
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: watch_auditd
   description: Watch log files generated by auditd.
   type: Plugin
@@ -9845,6 +10270,12 @@
   category: windows
   metadata:
     permissions: MACHINE_STATE
+  platforms:
+  - windows_amd64_cgo
+- name: winpmem
+  description: Access physical memory like a file. Any filename will result in a sparse
+    view of physical memory.
+  type: Accessor
   platforms:
   - windows_amd64_cgo
 - name: winpmem
@@ -10143,8 +10574,9 @@
   platforms:
   - darwin_arm64_cgo
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: zip
-  description: |+
+  description: |
     Open a zip file as if it was a directory.
 
     Filename is a pathspec with a delegate accessor opening the Zip file,
@@ -10160,8 +10592,10 @@
          Path='/'),
        accessor='zip')
     ```
-
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: zip_nocase
   description: |
     Open a zip file as if it was a directory.
@@ -10171,4 +10605,7 @@
     remapping an offline collector from a Windows system for post
     processing.
   type: Accessor
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 

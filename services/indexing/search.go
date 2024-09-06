@@ -171,10 +171,13 @@ func (self *Indexer) SearchClients(
 
 	operator, term := splitIntoOperatorAndTerms(in.Query)
 	switch operator {
-	case "label", "host", "all", "mac":
+	case "label":
 		if term == "none" {
 			return self.searchUnlabeledClients(ctx, config_obj, in, limit)
 		}
+		return self.searchClientIndex(ctx, config_obj, in, limit)
+
+	case "host", "all", "mac":
 		return self.searchClientIndex(ctx, config_obj, in, limit)
 
 	case "client":

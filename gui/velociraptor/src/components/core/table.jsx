@@ -31,6 +31,8 @@ import PreviewUpload from '../widgets/preview_uploads.jsx';
 import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
 import { JSONparse } from '../utils/json_parse.jsx';
 import Download from "../widgets/download.jsx";
+import VeloLog from "../widgets/logs.jsx";
+
 
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
@@ -656,6 +658,9 @@ export function getFormatter(column_type, text) {
 
     case "hidden":
         return (cell, row) =><></>;
+
+    case "log":
+        return (cell, row) =><VeloLog value={cell}/>;
 
     default:
         console.log("Unsupported column type " + column_type);

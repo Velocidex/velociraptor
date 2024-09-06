@@ -208,6 +208,8 @@ func getOldItem(name, item_type string, old_data []*api_proto.Completion) *api_p
 func exportAccessors(old_data []*api_proto.Completion) []*api_proto.Completion {
 	var completions []*api_proto.Completion
 
+	platform := vql_subsystem.GetMyPlatform()
+
 	description := accessors.DescribeAccessors()
 	if description == nil {
 		return completions
@@ -228,7 +230,24 @@ func exportAccessors(old_data []*api_proto.Completion) []*api_proto.Completion {
 				Type:        "Accessor",
 			}
 		}
+
+		if !vutils.InString(new_item.Platforms, platform) {
+			new_item.Platforms = append(new_item.Platforms, platform)
+			sort.Strings(new_item.Platforms)
+		}
+
 		completions = append(completions, new_item)
+	}
+
+	// Also copy all existing accessors which are not known by this
+	// implementation. They could be defined in other architectures.
+	for _, i := range old_data {
+		if i.Type == "Accessor" {
+			_, pres := description.Get(i.Name)
+			if !pres {
+				completions = append(completions, i)
+			}
+		}
 	}
 
 	return completions
