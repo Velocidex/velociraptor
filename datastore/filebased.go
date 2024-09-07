@@ -82,8 +82,8 @@ func (self *FileBaseDataStore) GetSubject(
 
 	defer InstrumentWithDelay("read", "FileBaseDataStore", urn)()
 
-	Trace(config_obj, "GetSubject", urn)
-	serialized_content, err := readContentFromFile(config_obj, urn)
+	Trace(self, config_obj, "GetSubject", urn)
+	serialized_content, err := readContentFromFile(self, config_obj, urn)
 	if err != nil {
 		return fmt.Errorf("While opening %v: %w", urn.AsClientPath(),
 			os.ErrNotExist)
@@ -150,7 +150,7 @@ func (self *FileBaseDataStore) SetSubjectWithCompletion(
 		}
 	}()
 
-	Trace(config_obj, "SetSubject", urn)
+	Trace(self, config_obj, "SetSubject", urn)
 
 	// Encode as JSON
 	if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
@@ -158,14 +158,14 @@ func (self *FileBaseDataStore) SetSubjectWithCompletion(
 		if err != nil {
 			return err
 		}
-		return writeContentToFile(config_obj, urn, serialized_content)
+		return writeContentToFile(self, config_obj, urn, serialized_content)
 	}
 	serialized_content, err := proto.Marshal(message)
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
 
-	return writeContentToFile(config_obj, urn, serialized_content)
+	return writeContentToFile(self, config_obj, urn, serialized_content)
 }
 
 func (self *FileBaseDataStore) DeleteSubjectWithCompletion(
@@ -187,9 +187,9 @@ func (self *FileBaseDataStore) DeleteSubject(
 
 	defer InstrumentWithDelay("delete", "FileBaseDataStore", urn)()
 
-	Trace(config_obj, "DeleteSubject", urn)
+	Trace(self, config_obj, "DeleteSubject", urn)
 
-	err := os.Remove(urn.AsDatastoreFilename(config_obj))
+	err := os.Remove(AsDatastoreFilename(self, config_obj, urn))
 
 	// It is ok to remove a file that does not exist.
 	if err != nil && os.IsExist(err) {
@@ -201,13 +201,13 @@ func (self *FileBaseDataStore) DeleteSubject(
 	return nil
 }
 
-func listChildren(config_obj *config_proto.Config,
+func (self *FileBaseDataStore) listChildren(config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]os.FileInfo, error) {
 
 	defer InstrumentWithDelay("list", "FileBaseDataStore", urn)()
 
 	children, err := utils.ReadDirUnsorted(
-		urn.AsDatastoreDirectory(config_obj))
+		AsDatastoreDirectory(self, config_obj, urn))
 	if err != nil {
 		if os.IsNotExist(err) {
 			return []os.FileInfo{}, nil
@@ -237,9 +237,9 @@ func (self *FileBaseDataStore) ListChildren(
 	urn api.DSPathSpec) (
 	[]api.DSPathSpec, error) {
 
-	TraceDirectory(config_obj, "ListChildren", urn)
+	TraceDirectory(self, config_obj, "ListChildren", urn)
 
-	all_children, err := listChildren(config_obj, urn)
+	all_children, err := self.listChildren(config_obj, urn)
 	if err != nil {
 		return nil, err
 	}
@@ -257,13 +257,18 @@ func (self *FileBaseDataStore) ListChildren(
 		return children[i].ModTime().UnixNano() < children[j].ModTime().UnixNano()
 	})
 
+	db, err := GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	// Slice the result according to the required offset and count.
 	result := make([]api.DSPathSpec, 0, len(children))
 	for _, child := range children {
 		var child_pathspec api.DSPathSpec
 
 		if child.IsDir() {
-			name := utils.UnsanitizeComponent(child.Name())
+			name := UncompressComponent(db, config_obj, child.Name())
 			result = append(result, urn.AddUnsafeChild(name).SetDir())
 			continue
 		}
@@ -275,7 +280,8 @@ func (self *FileBaseDataStore) ListChildren(
 			continue
 		}
 
-		name := utils.UnsanitizeComponent(child.Name()[:len(extension)])
+		name := UncompressComponent(db,
+			config_obj, child.Name()[:len(extension)])
 
 		// Skip over files that do not belong in the data store.
 		if spec_type == api.PATH_TYPE_DATASTORE_UNKNOWN {
@@ -294,14 +300,15 @@ func (self *FileBaseDataStore) ListChildren(
 // Called to close all db handles etc. Not thread safe.
 func (self *FileBaseDataStore) Close() {}
 
-func writeContentToFile(config_obj *config_proto.Config,
+func writeContentToFile(
+	db DataStore, config_obj *config_proto.Config,
 	urn api.DSPathSpec, data []byte) error {
 
 	if config_obj.Datastore == nil {
 		return datastoreNotConfiguredError
 	}
 
-	filename := urn.AsDatastoreFilename(config_obj)
+	filename := AsDatastoreFilename(db, config_obj, urn)
 
 	// Truncate the file immediately so we dont need to make a seocnd
 	// syscall. Empirically on Linux, a truncate call always works,
@@ -339,13 +346,14 @@ func writeContentToFile(config_obj *config_proto.Config,
 }
 
 func readContentFromFile(
-	config_obj *config_proto.Config, urn api.DSPathSpec) ([]byte, error) {
+	db DataStore, config_obj *config_proto.Config,
+	urn api.DSPathSpec) ([]byte, error) {
 
 	if config_obj.Datastore == nil {
 		return nil, datastoreNotConfiguredError
 	}
 
-	file, err := os.Open(urn.AsDatastoreFilename(config_obj))
+	file, err := os.Open(AsDatastoreFilename(db, config_obj, urn))
 	if err == nil {
 		defer file.Close()
 
@@ -363,9 +371,8 @@ func readContentFromFile(
 	if os.IsNotExist(err) &&
 		urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
 
-		file, err := os.Open(urn.
-			SetType(api.PATH_TYPE_DATASTORE_PROTO).
-			AsDatastoreFilename(config_obj))
+		file, err := os.Open(AsDatastoreFilename(
+			db, config_obj, urn.SetType(api.PATH_TYPE_DATASTORE_PROTO)))
 
 		if err == nil {
 			defer file.Close()
@@ -382,22 +389,25 @@ func readContentFromFile(
 	return nil, errors.Wrap(err, 0)
 }
 
-func Trace(config_obj *config_proto.Config,
+func Trace(
+	db DataStore,
+	config_obj *config_proto.Config,
 	name string, filename api.DSPathSpec) {
 
 	return
 
 	fmt.Printf("Trace FileBaseDataStore: %v: %v\n", name,
-		filename.AsDatastoreFilename(config_obj))
+		AsDatastoreFilename(db, config_obj, filename))
 }
 
-func TraceDirectory(config_obj *config_proto.Config,
+func TraceDirectory(
+	db DataStore, config_obj *config_proto.Config,
 	name string, filename api.DSPathSpec) {
 
 	return
 
 	fmt.Printf("Trace FileBaseDataStore: %v: %v\n", name,
-		filename.AsDatastoreDirectory(config_obj))
+		AsDatastoreDirectory(db, config_obj, filename))
 }
 
 // Support RawDataStore interface
@@ -405,7 +415,7 @@ func (self *FileBaseDataStore) GetBuffer(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]byte, error) {
 
-	return readContentFromFile(config_obj, urn)
+	return readContentFromFile(self, config_obj, urn)
 }
 
 func (self *FileBaseDataStore) Error() error {
@@ -431,7 +441,7 @@ func (self *FileBaseDataStore) SetBuffer(
 		return err
 	}
 
-	err = writeContentToFile(config_obj, urn, data)
+	err = writeContentToFile(self, config_obj, urn, data)
 	if completion != nil &&
 		!utils.CompareFuncs(completion, utils.SyncCompleter) {
 		completion()

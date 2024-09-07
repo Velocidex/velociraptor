@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -326,6 +327,44 @@ func (self BaseTestSuite) TestListChildrenSubdirs() {
 		"/Root/Subdir1",
 		"/Root/Subdir1:dir",
 		"/Root/item"}, asStrings(children))
+}
+
+// Make sure all the other data stores handle very long filenames
+func (self BaseTestSuite) TestVeryLongFilename() {
+	message := &crypto_proto.VeloMessage{Source: "Server"}
+	very_long_filename := strings.Repeat("Very Long Filename", 100)
+	assert.Equal(self.T(), len(very_long_filename), 1800)
+
+	path := path_specs.NewUnsafeDatastorePath("longfiles", very_long_filename)
+	filename := datastore.AsDatastoreFilename(
+		self.datastore, self.config_obj, path)
+
+	// Filename should be smaller than the read filename because it is
+	// compressed into a hash.
+	assert.True(self.T(), len(filename) < 250)
+	err := self.datastore.SetSubject(
+		self.config_obj, path, message)
+	assert.NoError(self.T(), err)
+
+	read_message := &crypto_proto.VeloMessage{}
+	err = self.datastore.GetSubject(self.config_obj,
+		path, read_message)
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), message.Source, read_message.Source)
+
+	// Now test that ListChildren works properly.
+	children, err := self.datastore.ListChildren(
+		self.config_obj, path_specs.NewUnsafeDatastorePath("longfiles"))
+	assert.NoError(self.T(), err)
+
+	results := []string{}
+	for _, i := range children {
+		results = append(results, i.Base())
+
+		// Make sure the resulting filename is very long
+		assert.Equal(self.T(), i.Base(), very_long_filename)
+	}
 }
 
 func benchmarkSearchClient(b *testing.B,

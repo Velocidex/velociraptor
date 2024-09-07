@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"github.com/Velocidex/ttlcache/v2"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -31,12 +30,19 @@ var (
 	errorNoDirectoryMetadata = errors.New("No Directory Metadata")
 )
 
+// Prometheus panics with multiple registrations which trigger on
+// tests.
+func registerGauge(g prometheus.Collector) {
+	prometheus.Unregister(g)
+	prometheus.Register(g)
+}
+
 func RegisterMemcacheDatastoreMetrics(db MemcacheStater) error {
 	// These might return an error if they are called more than once,
 	// but we assume under normal operation the config_obj does not
 	// change, therefore the datastore does not really change. So it
 	// is ok to ignore these errors.
-	_ = prometheus.Register(promauto.NewGaugeFunc(
+	registerGauge(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Name: "memcache_dir_lru_total",
 			Help: "Total directories cached",
@@ -45,7 +51,7 @@ func RegisterMemcacheDatastoreMetrics(db MemcacheStater) error {
 			return float64(stats.DirItemCount)
 		}))
 
-	_ = prometheus.Register(promauto.NewGaugeFunc(
+	registerGauge(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Name: "memcache_data_lru_total",
 			Help: "Total files cached",
@@ -54,7 +60,7 @@ func RegisterMemcacheDatastoreMetrics(db MemcacheStater) error {
 			return float64(stats.DataItemCount)
 		}))
 
-	_ = prometheus.Register(promauto.NewGaugeFunc(
+	registerGauge(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Name: "memcache_dir_lru_total_bytes",
 			Help: "Total directories cached",
@@ -63,7 +69,7 @@ func RegisterMemcacheDatastoreMetrics(db MemcacheStater) error {
 			return float64(stats.DirItemSize)
 		}))
 
-	_ = prometheus.Register(promauto.NewGaugeFunc(
+	registerGauge(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Name: "memcache_data_lru_total_bytes",
 			Help: "Total bytes cached",
@@ -300,7 +306,7 @@ type MemcacheDatastore struct {
 	// errorNoDirectoryMetadata then we skip updating the metadata.
 	get_dir_metadata func(
 		dir_cache *DirectoryLRUCache,
-		config_obj *config_proto.Config,
+		db DataStore, config_obj *config_proto.Config,
 		urn api.DSPathSpec) (*DirectoryMetadata, error)
 }
 
@@ -308,11 +314,11 @@ type MemcacheDatastore struct {
 // return a DirectoryMetadata object for the urn.
 func get_dir_metadata(
 	dir_cache *DirectoryLRUCache,
-	config_obj *config_proto.Config, urn api.DSPathSpec) (
+	db DataStore, config_obj *config_proto.Config, urn api.DSPathSpec) (
 	*DirectoryMetadata, error) {
 
 	// Check if the top level directory contains metadata.
-	path := urn.AsDatastoreDirectory(config_obj)
+	path := AsDatastoreDirectory(db, config_obj, urn)
 	md, pres := dir_cache.Get(path)
 	if pres {
 		return md, nil
@@ -324,7 +330,7 @@ func get_dir_metadata(
 
 	for len(urn.Components()) > 0 {
 		parent := urn.Dir()
-		path := parent.AsDatastoreDirectory(config_obj)
+		path := AsDatastoreDirectory(db, config_obj, parent)
 
 		intermediate_md, ok := dir_cache.Get(path)
 		if !ok {
@@ -358,7 +364,7 @@ func (self *MemcacheDatastore) GetSubject(
 
 	defer Instrument("read", "MemcacheDatastore", urn)()
 
-	path := urn.AsDatastoreFilename(config_obj)
+	path := AsDatastoreFilename(self, config_obj, urn)
 	bulk_data_any, err := self.data_cache.Get(path)
 	if err != nil {
 		// Second try the old DB without json. This supports
@@ -367,7 +373,8 @@ func (self *MemcacheDatastore) GetSubject(
 		// read old files.
 		if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
 			bulk_data_any, err = self.data_cache.Get(
-				urn.SetType(api.PATH_TYPE_DATASTORE_PROTO).AsDatastoreFilename(config_obj))
+				AsDatastoreFilename(self, config_obj,
+					urn.SetType(api.PATH_TYPE_DATASTORE_PROTO)))
 		}
 
 		if err != nil {
@@ -476,16 +483,17 @@ func (self *MemcacheDatastore) SetData(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec, data []byte) (err error) {
 
-	err = self.data_cache.Set(urn.AsDatastoreFilename(config_obj), &BulkData{
-		data: data,
-	})
+	err = self.data_cache.Set(
+		AsDatastoreFilename(self, config_obj, urn), &BulkData{
+			data: data,
+		})
 	if err != nil {
 		return err
 	}
 
 	// Try to update the DirectoryMetadata cache if possible.
 	parent := urn.Dir()
-	md, err := self.get_dir_metadata(self.dir_cache, config_obj, parent)
+	md, err := self.get_dir_metadata(self.dir_cache, self, config_obj, parent)
 	if err == errorNoDirectoryMetadata {
 		return nil
 	}
@@ -515,13 +523,14 @@ func (self *MemcacheDatastore) DeleteSubject(
 	urn api.DSPathSpec) error {
 	defer Instrument("delete", "MemcacheDatastore", urn)()
 
-	err := self.data_cache.Remove(urn.AsDatastoreFilename(config_obj))
+	err := self.data_cache.Remove(
+		AsDatastoreFilename(self, config_obj, urn))
 	if err != nil {
 		return utils.Wrap(utils.NotFoundError, "DeleteSubject")
 	}
 
 	// Try to remove it from the DirectoryMetadata if it exists.
-	md, err := self.get_dir_metadata(self.dir_cache, config_obj, urn.Dir())
+	md, err := self.get_dir_metadata(self.dir_cache, self, config_obj, urn.Dir())
 
 	// No DirectoryMetadata, nothing to do.
 	if err == errorNoDirectoryMetadata {
@@ -540,7 +549,7 @@ func (self *MemcacheDatastore) SetChildren(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec, children []api.DSPathSpec) {
 
-	path := urn.AsDatastoreDirectory(config_obj)
+	path := AsDatastoreDirectory(self, config_obj, urn)
 	md, pres := self.dir_cache.Get(path)
 	if !pres {
 		md = self.dir_cache.NewDirectoryMetadata(path)
@@ -565,7 +574,7 @@ func (self *MemcacheDatastore) ListChildren(
 
 	defer Instrument("list", "MemcacheDatastore", urn)()
 
-	path := urn.AsDatastoreDirectory(config_obj)
+	path := AsDatastoreDirectory(self, config_obj, urn)
 	md, pres := self.dir_cache.Get(path)
 	if !pres {
 		return nil, nil
@@ -615,7 +624,7 @@ func (self *MemcacheDatastore) GetForTests(
 func (self *MemcacheDatastore) GetBuffer(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]byte, error) {
-	path := urn.AsDatastoreFilename(config_obj)
+	path := AsDatastoreFilename(self, config_obj, urn)
 	bulk_data_any, err := self.data_cache.Get(path)
 	bulk_data, ok := bulk_data_any.(*BulkData)
 	if !ok {
@@ -661,7 +670,7 @@ func (self *MemcacheDatastore) Dump() []api.DSPathSpec {
 
 func (self *MemcacheDatastore) SetDirLoader(cb func(
 	dir_cache *DirectoryLRUCache,
-	config_obj *config_proto.Config,
+	db DataStore, config_obj *config_proto.Config,
 	urn api.DSPathSpec) (*DirectoryMetadata, error)) {
 	self.get_dir_metadata = cb
 }

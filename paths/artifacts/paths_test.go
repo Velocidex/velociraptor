@@ -11,6 +11,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -97,6 +98,9 @@ func (self *PathManageTestSuite) TestPathManager() {
 	closer := utils.MockTime(utils.NewMockClock(time.Unix(ts, 0)))
 	defer closer()
 
+	db, err := datastore.GetDB(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	for _, testcase := range path_tests {
 		path_manager, err := artifacts.NewArtifactPathManager(
 			self.Ctx, self.ConfigObj,
@@ -108,7 +112,8 @@ func (self *PathManageTestSuite) TestPathManager() {
 		path, err := path_manager.GetPathForWriting()
 		assert.NoError(self.T(), err)
 		assert.Equal(self.T(),
-			cleanPath(path.AsFilestoreFilename(self.ConfigObj)),
+			cleanPath(datastore.AsFilestoreFilename(
+				db, self.ConfigObj, path)),
 			cleanPath(self.dirname+"/"+testcase.expected))
 
 		file_store := memory.NewMemoryFileStore(self.ConfigObj)

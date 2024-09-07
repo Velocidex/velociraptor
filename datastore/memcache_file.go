@@ -133,10 +133,10 @@ func (self *MemcacheFileDataStore) invalidateDirCache(
 	config_obj *config_proto.Config, urn api.DSPathSpec) {
 
 	for len(urn.Components()) > 0 {
-		path := urn.AsDatastoreDirectory(config_obj)
+		path := AsDatastoreDirectory(self, config_obj, urn)
 		md, pres := self.cache.dir_cache.Get(path)
 		if pres && !md.IsFull() {
-			key_path := urn.AsDatastoreDirectory(config_obj)
+			key_path := AsDatastoreDirectory(self, config_obj, urn)
 			self.cache.dir_cache.Remove(key_path)
 		}
 		urn = urn.Dir()
@@ -232,7 +232,7 @@ func (self *MemcacheFileDataStore) processMutation(mutation *Mutation) {
 	metricIdleWriters.Dec()
 	switch mutation.op {
 	case MUTATION_OP_SET_SUBJECT:
-		writeContentToFile(mutation.org_config_obj, mutation.urn, mutation.data)
+		writeContentToFile(self, mutation.org_config_obj, mutation.urn, mutation.data)
 		self.invalidateDirCache(mutation.org_config_obj, mutation.urn)
 
 		// Call the completion function once we hit
@@ -272,7 +272,7 @@ func (self *MemcacheFileDataStore) GetSubject(
 	if errors.Is(err, os.ErrNotExist) {
 		// The file is not in the cache, read it from the file system
 		// instead.
-		serialized_content, err := readContentFromFile(config_obj, urn)
+		serialized_content, err := readContentFromFile(self, config_obj, urn)
 		if err != nil {
 			return err
 		}
@@ -404,7 +404,7 @@ func (self *MemcacheFileDataStore) SetSubject(
 		return err
 	}
 
-	err = writeContentToFile(config_obj, urn, serialized_content)
+	err = writeContentToFile(self, config_obj, urn, serialized_content)
 	if err != nil {
 		return err
 	}
@@ -548,7 +548,7 @@ func (self *MemcacheFileDataStore) GetBuffer(
 		return bulk_data, err
 	}
 
-	bulk_data, err = readContentFromFile(config_obj, urn)
+	bulk_data, err = readContentFromFile(self, config_obj, urn)
 	if err != nil {
 		return nil, err
 	}
@@ -598,11 +598,11 @@ func (self *MemcacheFileDataStore) SetBuffer(
 // Recursively makes sure the directories are added to the cache.
 func get_file_dir_metadata(
 	dir_cache *DirectoryLRUCache,
-	config_obj *config_proto.Config, urn api.DSPathSpec) (
+	db DataStore, config_obj *config_proto.Config, urn api.DSPathSpec) (
 	*DirectoryMetadata, error) {
 
 	// Check if the top level directory contains metadata.
-	path := urn.AsDatastoreDirectory(config_obj)
+	path := AsDatastoreDirectory(db, config_obj, urn)
 
 	// Fast path - the directory exists in the cache. NOTE: We dont
 	// need to maintain the directories on the filesystem as the
@@ -626,10 +626,10 @@ func get_file_dir_metadata(
 	// perform a filesystem op and fill in the cache if needed.
 	urn = urn.Dir()
 	for len(urn.Components()) > 0 {
-		path := urn.AsDatastoreDirectory(config_obj)
+		path := AsDatastoreDirectory(db, config_obj, urn)
 		md, pres := dir_cache.Get(path)
 		if pres && !md.IsFull() {
-			key_path := urn.AsDatastoreDirectory(config_obj)
+			key_path := AsDatastoreDirectory(db, config_obj, urn)
 			dir_cache.Remove(key_path)
 		}
 		urn = urn.Dir()

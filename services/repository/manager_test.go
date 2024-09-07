@@ -10,6 +10,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -62,8 +63,11 @@ name: TestArtifact
 		self.ConfigObj, "", "", "Server.Internal.ArtifactModification")
 	assert.NoError(self.T(), err)
 
+	db, err := datastore.GetDB(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	data, pres = file_store.Get(
-		path_manager.Path().AsFilestoreFilename(self.ConfigObj))
+		datastore.AsFilestoreFilename(db, self.ConfigObj, path_manager.Path()))
 	assert.True(self.T(), pres)
 
 	assert.Contains(self.T(), string(data), `"op":"set"`)

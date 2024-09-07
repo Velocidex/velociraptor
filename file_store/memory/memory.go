@@ -12,6 +12,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -34,10 +35,16 @@ func NewMemoryFileStore(config_obj *config_proto.Config) *MemoryFileStore {
 	mu.Lock()
 	defer mu.Unlock()
 
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil
+	}
+
 	if Test_memory_file_store == nil {
 		Test_memory_file_store = &MemoryFileStore{
 			Data:       ordereddict.NewDict(),
 			Paths:      ordereddict.NewDict(),
+			db:         db,
 			config_obj: config_obj,
 		}
 	}
@@ -234,6 +241,7 @@ type MemoryFileStore struct {
 	config_obj *config_proto.Config
 	Data       *ordereddict.Dict
 	Paths      *ordereddict.Dict
+	db         datastore.DataStore
 }
 
 func (self *MemoryFileStore) Debug() {
@@ -268,7 +276,7 @@ func (self *MemoryFileStore) ReadFile(path api.FSPathSpec) (api.FileReader, erro
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	filename := pathSpecToPath(path, self.config_obj)
+	filename := pathSpecToPath(self.db, self.config_obj, path)
 	self.Trace("ReadFile", filename)
 	_, pres := self.Data.Get(filename)
 	if pres {
@@ -294,7 +302,7 @@ func (self *MemoryFileStore) WriteFileWithCompletion(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	filename := pathSpecToPath(path, self.config_obj)
+	filename := pathSpecToPath(self.db, self.config_obj, path)
 	self.Trace("WriteFile", filename)
 	buf, pres := self.Data.Get(filename)
 	if !pres {
@@ -317,7 +325,7 @@ func (self *MemoryFileStore) StatFile(path api.FSPathSpec) (api.FileInfo, error)
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	filename := pathSpecToPath(path, self.config_obj)
+	filename := pathSpecToPath(self.db, self.config_obj, path)
 	self.Trace("StatFile", filename)
 	buff, pres := self.Data.Get(filename)
 	if !pres {
@@ -337,8 +345,8 @@ func (self *MemoryFileStore) Move(src, dest api.FSPathSpec) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	src_filename := pathSpecToPath(src, self.config_obj)
-	dest_filename := pathSpecToPath(dest, self.config_obj)
+	src_filename := pathSpecToPath(self.db, self.config_obj, src)
+	dest_filename := pathSpecToPath(self.db, self.config_obj, dest)
 	buff, pres := self.Data.Get(src_filename)
 	if !pres {
 		return os.ErrNotExist
@@ -355,7 +363,7 @@ func (self *MemoryFileStore) ListDirectory(root_path api.FSPathSpec) ([]api.File
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	dirname := pathDirSpecToPath(root_path, self.config_obj)
+	dirname := pathDirSpecToPath(self.db, self.config_obj, root_path)
 	self.Trace("ListDirectory", dirname)
 
 	root_components := root_path.Components()
@@ -440,7 +448,7 @@ func (self *MemoryFileStore) Delete(path api.FSPathSpec) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	filename := pathSpecToPath(path, self.config_obj)
+	filename := pathSpecToPath(self.db, self.config_obj, path)
 	self.Trace("Delete", filename)
 	self.Data.Delete(filename)
 	self.Paths.Delete(filename)
@@ -481,8 +489,9 @@ func (self *MemoryFileStore) Close() error {
 }
 
 func pathSpecToPath(
-	p api.FSPathSpec, config_obj *config_proto.Config) string {
-	return cleanPathForWindows(p.AsFilestoreFilename(config_obj))
+	db datastore.DataStore,
+	config_obj *config_proto.Config, p api.FSPathSpec) string {
+	return cleanPathForWindows(datastore.AsFilestoreFilename(db, config_obj, p))
 }
 
 func cleanPathForWindows(result string) string {
@@ -496,7 +505,9 @@ func cleanPathForWindows(result string) string {
 	return result
 }
 
-func pathDirSpecToPath(p api.FSPathSpec,
-	config_obj *config_proto.Config) string {
-	return cleanPathForWindows(p.AsFilestoreDirectory(config_obj))
+func pathDirSpecToPath(
+	db datastore.DataStore,
+	config_obj *config_proto.Config, p api.FSPathSpec) string {
+	return cleanPathForWindows(
+		datastore.AsFilestoreDirectory(db, config_obj, p))
 }

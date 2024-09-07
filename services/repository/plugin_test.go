@@ -1,23 +1,24 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package repository_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -53,9 +54,15 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
+	logging.ClearMemoryLogs()
+
 	err = repository.LoadBuiltInArtifacts(
 		self.Ctx, self.ConfigObj, manager.(*repository.RepositoryManager))
 	assert.NoError(self.T(), err)
+
+	assert.NotContains(self.T(),
+		strings.Join(logging.GetMemoryLogs(), "\n"),
+		"Cant parse asset")
 
 	ConfigObj := self.ConfigObj
 	repository, err := manager.GetGlobalRepository(ConfigObj)

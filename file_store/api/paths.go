@@ -1,9 +1,5 @@
 package api
 
-import (
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-)
-
 /*
 
 # How paths are handled in Velociraptor.
@@ -117,12 +113,13 @@ type _PathSpec interface {
 	Type() PathType
 
 	String() string
+
+	// Does any of the components need escaping?
+	IsSafe() bool
 }
 
 type DSPathSpec interface {
 	_PathSpec
-	AsDatastoreDirectory(config_obj *config_proto.Config) string
-	AsDatastoreFilename(config_obj *config_proto.Config) string
 
 	Dir() DSPathSpec
 
@@ -147,8 +144,6 @@ type DSPathSpec interface {
 
 type FSPathSpec interface {
 	_PathSpec
-	AsFilestoreFilename(config_obj *config_proto.Config) string
-	AsFilestoreDirectory(config_obj *config_proto.Config) string
 
 	Dir() FSPathSpec
 

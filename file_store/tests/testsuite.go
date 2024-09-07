@@ -202,8 +202,7 @@ func (self *FileStoreTestSuite) TestListDirectory() {
 	names = nil
 	err = api.Walk(self.filestore, filename.AddChild("nonexistant"),
 		func(path api.FSPathSpec, info os.FileInfo) error {
-			names = append(names, path.AsFilestoreFilename(
-				self.config_obj))
+			names = append(names, path.String())
 			return nil
 		})
 	assert.NoError(self.T(), err)
