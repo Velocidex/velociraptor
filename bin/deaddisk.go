@@ -289,8 +289,11 @@ func doDeadDisk() error {
 
 		if strings.HasSuffix(strings.ToLower(abs_path), ".e01") {
 			accessor = "ewf"
+		} else if strings.HasSuffix(strings.ToLower(abs_path), "vhdx") {
+			accessor = "vhdx"
+		} else if strings.HasSuffix(strings.ToLower(abs_path), "vmdk") {
+			accessor = "vmdk"
 		}
-
 		err = addWindowsHardDisk(accessor, abs_path, config_obj)
 		if err != nil {
 			return err

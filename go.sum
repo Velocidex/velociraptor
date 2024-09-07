@@ -76,6 +76,10 @@ github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002 h1:FWeeVb/x+Xva
 github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002/go.mod h1:YvYAfyK6Jg2WIaqvK42KPmVDfU8FSVxoSiZSVJfihDo=
 github.com/Velocidex/go-vhdx v0.0.0-20240601014259-b204818c95fd h1:znnjIQdOK6aqsG/crrEBAWBJzYdg1+jn/IGLdozC0qU=
 github.com/Velocidex/go-vhdx v0.0.0-20240601014259-b204818c95fd/go.mod h1:lBB+XfppHmYxIfnWDszC78x1iMq8088nMnMYQFQovM4=
+github.com/Velocidex/go-vmdk v0.0.0-20240907200901-a6d9154b7c6b h1:V8+kHpemgk+lWbTe89mXGN9T5eS36uheUQpf1OJ+VFs=
+github.com/Velocidex/go-vmdk v0.0.0-20240907200901-a6d9154b7c6b/go.mod h1:9avYIdKoZoSGjOGeJII/mqDVtqxDcdDdcK4tiPI82jE=
+github.com/Velocidex/go-vmdk v0.0.0-20240909080044-e373986b6517 h1:6/UGPskHUCHknG8RSWWx0Kzx3x7Y4n756LUMWLAB+m8=
+github.com/Velocidex/go-vmdk v0.0.0-20240909080044-e373986b6517/go.mod h1:GLNH1h3hHOeOWzFIDdBGXUtROaMZR1KF4U3DnoQdxHw=
 github.com/Velocidex/go-yara v1.1.10-0.20240309155455-3f491847cec9 h1:m+sfPvJnRTDL9EoJdlBOGa1dQlm0NPJgcXB/zpK/W7Y=
 github.com/Velocidex/go-yara v1.1.10-0.20240309155455-3f491847cec9/go.mod h1:5KKwF74avzF4GPZg37NoWfJiDgrBF5ASHH27g1p83zk=
 github.com/Velocidex/grok v0.0.1 h1:bOaqowsW9ecfJISQOM9K47Jk/ID9V945BLfKngUZEjo=
@@ -583,8 +587,6 @@ github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8
 github.com/syndtr/goleveldb v1.0.0 h1:fBdIW9lB4Iz0n9khmH8w27SJ3QEJ7+IgjPEwGSZiFdE=
 github.com/syndtr/goleveldb v1.0.0/go.mod h1:ZVVdQEZoIme9iO1Ch2Jdy24qqXrMMOU6lpPAyBWyWuQ=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
-github.com/tink-ab/tempfile v0.0.0-20180226111222-33beb0518f1a h1:Qhm/9UKGO1+AjEKIsq8G72uCq4SrYxSxS5wiD0F3IC4=
-github.com/tink-ab/tempfile v0.0.0-20180226111222-33beb0518f1a/go.mod h1:Wt5qSdcHgX6XkqZKAZTxnN+93jnqtx0jEgTQakpZ1CE=
 github.com/tklauser/go-sysconf v0.3.9 h1:JeUVdAOWhhxVcU6Eqr/ATFHgXk/mmiItdKeJPev3vTo=
 github.com/tklauser/go-sysconf v0.3.9/go.mod h1:11DU/5sG7UexIrp/O6g35hrWzu0JxlwQ3LSFUzyeuhs=
 github.com/tklauser/numcpus v0.3.0 h1:ILuRUQBtssgnxw0XXIjKUC56fgnOrFoQQ/4+DeU2biQ=
