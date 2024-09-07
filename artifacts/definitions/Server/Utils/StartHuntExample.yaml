@@ -28,7 +28,7 @@ description: |
   ```
 
   This will allow users with the `COLLECT_BASIC` permission to also
-  collect it. Once collected the artifact specifies an impersonation
+  collect it. Once collected the artifact specifies the impersonate
   field to `admin` which will cause it to run under the `admin` user's
   permissions.
 
@@ -40,9 +40,9 @@ description: |
 type: SERVER
 
 # Collect this artifact under the admin user permissions.
-impersonation: admin
+impersonate: admin
 
-source:
+sources:
   - query: |
       -- This query will run with admin ACLs.
       SELECT hunt(

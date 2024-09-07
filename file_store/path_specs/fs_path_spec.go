@@ -3,7 +3,6 @@ package path_specs
 import (
 	"strconv"
 
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -70,25 +69,6 @@ func (self FSPathSpec) SetType(ext api.PathType) api.FSPathSpec {
 		path_type:  ext,
 		is_safe:    self.is_safe,
 	}}
-}
-
-func (self FSPathSpec) AsFilestoreFilename(
-	config_obj *config_proto.Config) string {
-	return self.AsFilestoreDirectory(config_obj) +
-		api.GetExtensionForFilestore(self)
-}
-
-func (self FSPathSpec) AsFilestoreDirectory(
-	config_obj *config_proto.Config) string {
-	data_store_root := ""
-	if config_obj != nil && config_obj.Datastore != nil {
-		data_store_root = config_obj.Datastore.FilestoreDirectory
-	}
-
-	if self.is_safe {
-		return self.asSafeDirWithRoot(data_store_root)
-	}
-	return self.asUnsafeDirWithRoot(data_store_root)
 }
 
 func (self FSPathSpec) AsClientPath() string {

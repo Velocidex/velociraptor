@@ -478,8 +478,11 @@ func (self *ServerTestSuite) RequiredFilestoreContains(
 
 	file_store_factory := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
 
-	value, pres := file_store_factory.Get(filename.AsFilestoreFilename(
-		self.ConfigObj))
+	db, err := datastore.GetDB(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	value, pres := file_store_factory.Get(datastore.AsFilestoreFilename(
+		db, self.ConfigObj, filename))
 	if !pres {
 		self.T().FailNow()
 	}

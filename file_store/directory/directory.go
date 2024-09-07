@@ -35,6 +35,7 @@ import (
 	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/accessors/file_store_file_info"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -96,15 +97,23 @@ func (self *DirectoryFileWriter) Close() error {
 
 type DirectoryFileStore struct {
 	config_obj *config_proto.Config
+	db         datastore.DataStore
 }
 
 func NewDirectoryFileStore(config_obj *config_proto.Config) *DirectoryFileStore {
-	return &DirectoryFileStore{config_obj}
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil
+	}
+	return &DirectoryFileStore{
+		config_obj: config_obj,
+		db:         db,
+	}
 }
 
 func (self *DirectoryFileStore) Move(src, dest api.FSPathSpec) error {
-	src_path := src.AsFilestoreFilename(self.config_obj)
-	dest_path := dest.AsFilestoreFilename(self.config_obj)
+	src_path := datastore.AsFilestoreFilename(self.db, self.config_obj, src)
+	dest_path := datastore.AsFilestoreFilename(self.db, self.config_obj, dest)
 
 	return os.Rename(src_path, dest_path)
 }
@@ -118,7 +127,8 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 
 	defer api.InstrumentWithDelay("list", "DirectoryFileStore", dirname)()
 
-	file_path := dirname.AsFilestoreDirectory(self.config_obj)
+	file_path := datastore.AsFilestoreDirectory(
+		self.db, self.config_obj, dirname)
 	files, err := utils.ReadDir(file_path)
 	if err != nil {
 		return nil, err
@@ -139,7 +149,8 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 		result = append(result, file_store_file_info.NewFileStoreFileInfo(
 			self.config_obj,
 			dirname.AddUnsafeChild(
-				utils.UnsanitizeComponent(name)).
+				datastore.UncompressComponent(
+					self.db, self.config_obj, name)).
 				SetType(name_type),
 			fileinfo))
 	}
@@ -149,7 +160,8 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 
 func (self *DirectoryFileStore) ReadFile(
 	filename api.FSPathSpec) (api.FileReader, error) {
-	file_path := filename.AsFilestoreFilename(self.config_obj)
+	file_path := datastore.AsFilestoreFilename(
+		self.db, self.config_obj, filename)
 
 	defer api.InstrumentWithDelay("open_read", "DirectoryFileStore", filename)()
 
@@ -168,7 +180,8 @@ func (self *DirectoryFileStore) StatFile(
 
 	defer api.Instrument("stat", "DirectoryFileStore", filename)()
 
-	file_path := filename.AsFilestoreFilename(self.config_obj)
+	file_path := datastore.AsFilestoreFilename(
+		self.db, self.config_obj, filename)
 	file, err := os.Stat(file_path)
 	if err != nil {
 		return nil, err
@@ -188,7 +201,8 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 
 	defer api.InstrumentWithDelay("open_write", "DirectoryFileStore", filename)()
 
-	file_path := filename.AsFilestoreFilename(self.config_obj)
+	file_path := datastore.AsFilestoreFilename(
+		self.db, self.config_obj, filename)
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
@@ -214,7 +228,8 @@ func (self *DirectoryFileStore) Delete(filename api.FSPathSpec) error {
 
 	defer api.InstrumentWithDelay("delete", "DirectoryFileStore", filename)()
 
-	file_path := filename.AsFilestoreFilename(self.config_obj)
+	file_path := datastore.AsFilestoreFilename(
+		self.db, self.config_obj, filename)
 	err := os.Remove(file_path)
 	if err != nil {
 		return err

@@ -50,6 +50,12 @@ func SanitizeString(component string) string {
 		return "%2E" + SanitizeString(component[1:])
 	}
 
+	// Escape components that start with # as the data store
+	// represents those as hashes.
+	if component[0] == '#' {
+		return "%23" + SanitizeString(component[1:])
+	}
+
 	// Windows can not have a trailing "." instead swallowing it
 	// completely.
 	if component[length-1] == '.' {

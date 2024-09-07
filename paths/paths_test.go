@@ -59,7 +59,7 @@ func (self *PathManagerTestSuite) getDatastorePath(path_spec api.DSPathSpec) str
 			continue
 		}
 		results = append(results, normalize_path(
-			k.AsDatastoreFilename(self.config_obj)))
+			datastore.AsDatastoreFilename(ds, self.config_obj, k)))
 	}
 	assert.Equal(self.T(), 1, len(results))
 

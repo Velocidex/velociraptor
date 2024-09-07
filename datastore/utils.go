@@ -76,7 +76,7 @@ func Walk(config_obj *config_proto.Config,
 	with_directories bool,
 	walkFn WalkFunc) error {
 
-	TraceDirectory(config_obj, "Walk", root)
+	TraceDirectory(datastore, config_obj, "Walk", root)
 	all_children, err := datastore.ListChildren(config_obj, root)
 	if err != nil {
 		return err

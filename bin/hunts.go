@@ -95,7 +95,7 @@ func doHuntReconstruct() error {
 					return err
 				}
 				fmt.Printf("Rebuilding %v to %v\n", hunt.HuntId,
-					target.AsDatastoreFilename(config_obj))
+					target.String())
 			}
 		}
 	}

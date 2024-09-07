@@ -1,12 +1,8 @@
 package path_specs
 
 import (
-	"path/filepath"
-	"runtime"
 	"strconv"
-	"strings"
 
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -33,6 +29,10 @@ func (self DSPathSpec) String() string {
 
 func (self DSPathSpec) IsDir() bool {
 	return self.is_dir
+}
+
+func (self DSPathSpec) IsSafe() bool {
+	return self.is_safe
 }
 
 func (self DSPathSpec) SetDir() api.DSPathSpec {
@@ -112,46 +112,6 @@ func (self DSPathSpec) AsClientPath() string {
 		api.GetExtensionForDatastore(self)
 }
 
-func (self DSPathSpec) AsDatastoreDirectory(
-	config_obj *config_proto.Config) string {
-	location := ""
-	if config_obj.Datastore != nil {
-		location = config_obj.Datastore.Location
-	}
-
-	if self.is_safe {
-		return self.asSafeDirWithRoot(location)
-	}
-	return self.asUnsafeDirWithRoot(location)
-}
-
-// When we are unsafe we need to Sanitize components hitting the
-// filesystem.
-func (self DSPathSpec) asUnsafeDirWithRoot(root string) string {
-	sep := string(filepath.Separator)
-	new_components := make([]string, 0, len(self.components))
-	for _, i := range self.components {
-		if i != "" {
-			new_components = append(new_components, utils.SanitizeString(i))
-		}
-	}
-	result := sep + strings.Join(new_components, sep)
-
-	// This relies on the filepath starting with a drive letter
-	// and having \ as path separators. Main's
-	// validateServerConfig() ensures this is the case.
-	if runtime.GOOS == "windows" {
-		return "\\\\?\\" + root + result
-	}
-	return root + result
-}
-
-func (self DSPathSpec) AsDatastoreFilename(
-	config_obj *config_proto.Config) string {
-	return self.AsDatastoreDirectory(config_obj) +
-		api.GetExtensionForDatastore(self)
-}
-
 func (self DSPathSpec) AsFilestorePath() api.FSPathSpec {
 	return &FSPathSpec{DSPathSpec: DSPathSpec{
 		components: self.components,
@@ -179,30 +139,4 @@ func NewSafeDatastorePath(path_components ...string) DSPathSpec {
 	}
 
 	return result
-}
-
-// If the path spec is already safe we can shortcut it and not
-// sanitize.
-func (self DSPathSpec) asSafeDirWithRoot(root string) string {
-	// No need to sanitize here because the DSPathSpec is already
-	// safe.
-	sep := string(filepath.Separator)
-
-	// This relies on the filepath starting with a drive letter
-	// and having \ as path separators, and having a trailing
-	// \. Main's config.ValidateDatastoreConfig() ensures this is
-	// the case.
-	if runtime.GOOS == "windows" {
-		// Remove empty components which are broken on windows due to
-		// the long filename hack.
-		components := make([]string, 0, len(self.components))
-		for _, c := range self.components {
-			if c != "" {
-				components = append(components, c)
-			}
-		}
-		return WINDOWS_LFN_PREFIX + root + sep + strings.Join(components, sep)
-	}
-
-	return root + sep + strings.Join(self.components, sep)
 }

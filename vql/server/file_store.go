@@ -172,36 +172,43 @@ func (self *FileStore) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		scope.Log("file_store: %v", err)
+		return vfilter.Null{}
+	}
+
 	vfs_path := arg.VFSPath.Reduce(ctx)
 	switch t := vfs_path.(type) {
 	case *path_specs.FSPathSpec:
-		return t.AsFilestoreFilename(config_obj)
+		return datastore.AsFilestoreFilename(db, config_obj, t)
 
 	case path_specs.FSPathSpec:
-		return t.AsFilestoreFilename(config_obj)
+		return datastore.AsFilestoreFilename(db, config_obj, t)
 
 	case *path_specs.DSPathSpec:
-		return t.AsDatastoreFilename(config_obj)
+		return datastore.AsDatastoreFilename(db, config_obj, t)
 
 	case path_specs.DSPathSpec:
-		return t.AsDatastoreFilename(config_obj)
+		return datastore.AsDatastoreFilename(db, config_obj, t)
 
 	case *accessors.OSPath:
-		return path_specs.NewUnsafeFilestorePath(t.Components...).AsFilestoreFilename(config_obj)
+		return datastore.AsFilestoreFilename(db, config_obj,
+			path_specs.NewUnsafeFilestorePath(t.Components...))
 
 	case string:
 		// Things that produce strings normally encode the path spec
 		// with a prefix to let us know if this is a data store path
 		// or a filestore path..
 		if strings.HasPrefix(t, "ds:") {
-			return paths.DSPathSpecFromClientPath(
-				strings.TrimPrefix(t, "ds:")).
-				AsDatastoreFilename(config_obj)
+			return datastore.AsDatastoreFilename(db, config_obj,
+				paths.DSPathSpecFromClientPath(
+					strings.TrimPrefix(t, "ds:")))
 		}
 
-		return paths.FSPathSpecFromClientPath(
-			strings.TrimPrefix(t, "fs:")).
-			AsFilestoreFilename(config_obj)
+		return datastore.AsFilestoreFilename(db, config_obj,
+			paths.FSPathSpecFromClientPath(
+				strings.TrimPrefix(t, "fs:")))
 	}
 
 	return vfilter.Null{}
