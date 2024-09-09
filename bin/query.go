@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -49,6 +50,10 @@ var (
 	query   = app.Command("query", "Run a VQL query")
 	queries = query.Arg("queries", "The VQL Query to run.").
 		Required().Strings()
+
+	query_command_is_file = query.Flag(
+		"from_files", "Args are actually file names which will contain the VQL query").
+		Short('f').Bool()
 
 	query_command_collect_timeout = query.Flag(
 		"timeout", "Time collection out after this many seconds.").
@@ -289,11 +294,28 @@ func doQuery() error {
 		env.Set(k, v)
 	}
 
+	vql_queries := *queries
+	if *query_command_is_file {
+		vql_queries = []string{}
+		for _, q := range *queries {
+			fd, err := os.Open(q)
+			if err != nil {
+				return fmt.Errorf("While opening query file %v: %w", q, err)
+			}
+			data, err := ioutil.ReadAll(fd)
+			if err != nil {
+				return fmt.Errorf("While opening query file %v: %w", q, err)
+			}
+			fd.Close()
+			vql_queries = append(vql_queries, string(data))
+		}
+	}
+
 	if config_obj.ApiConfig != nil && config_obj.ApiConfig.Name != "" {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
 			Info("API Client configuration loaded - will make gRPC connection.")
 		return doRemoteQuery(
-			config_obj, *format, *query_org_id, *queries, env)
+			config_obj, *format, *query_org_id, vql_queries, env)
 	}
 
 	if *query_org_id != "" {
@@ -407,7 +429,7 @@ func doQuery() error {
 	if *trace_vql_flag {
 		scope.SetTracer(log.New(os.Stderr, "VQL Trace: ", 0))
 	}
-	for _, query := range *queries {
+	for _, query := range vql_queries {
 		statements, err := vfilter.MultiParse(query)
 		kingpin.FatalIfError(err, "Unable to parse VQL Query")
 

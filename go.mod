@@ -71,7 +71,6 @@ require (
 	github.com/sergi/go-diff v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.9.0
-	github.com/tink-ab/tempfile v0.0.0-20180226111222-33beb0518f1a
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
@@ -113,6 +112,7 @@ require (
 	github.com/Velocidex/go-journalctl v0.0.0-20240721235158-d5e988dd16d2
 	github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002
 	github.com/Velocidex/go-vhdx v0.0.0-20240601014259-b204818c95fd
+	github.com/Velocidex/go-vmdk v0.0.0-20240909080044-e373986b6517
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
 	github.com/VirusTotal/gyp v0.9.0
@@ -250,6 +250,7 @@ require (
 // replace www.velocidex.com/golang/regparser => ../regparser
 // replace www.velocidex.com/golang/go-ntfs => ../go-ntfs
 // replace github.com/Velocidex/go-fat => ../go-fat
+// replace github.com/Velocidex/go-vmdk => ../go-vmdk
 // replace www.velocidex.com/golang/go-pe => ../go-pe
 // replace www.velocidex.com/golang/evtx => ../evtx
 // replace www.velocidex.com/golang/go-ese => ../go-ese
@@ -278,7 +279,9 @@ require (
 // HTML tags into the markdown
 replace github.com/russross/blackfriday/v2 => github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b
 
-go 1.22.2
+go 1.23
+
+toolchain go1.23.1
 
 // Needed for syntax highlighting VQL. Removes extra fat.
 replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c
