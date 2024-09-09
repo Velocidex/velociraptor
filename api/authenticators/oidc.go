@@ -130,8 +130,7 @@ func (self *OidcAuthenticator) oauthOidcLogin(
 			oauthState = generateStateOauthCookie(self.config_obj, w)
 		}
 
-		url := oidcOauthConfig.AuthCodeURL(oauthState.Value,
-			oauth2.SetAuthURLParam("prompt", "login"))
+		url := oidcOauthConfig.AuthCodeURL(oauthState.Value)
 		http.Redirect(w, r, url, http.StatusFound)
 	})
 }
