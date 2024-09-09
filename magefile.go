@@ -272,9 +272,10 @@ func LinuxMusl386() error {
 // A Linux binary without the GUI
 func LinuxBare() error {
 	return Builder{
-		extra_tags: " release yara disable_gui ",
-		goos:       "linux",
-		arch:       "amd64"}.Run()
+		extra_tags:  " release yara disable_gui ",
+		goos:        "linux",
+		disable_cgo: runtime.GOOS != "freebsd",
+		arch:        "amd64"}.Run()
 }
 
 func Freebsd() error {

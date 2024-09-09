@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Velocidex/yaml/v2"
 	"github.com/google/rpmpack"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -113,7 +114,7 @@ start()
 
 	echo -n $"Starting $prog: "
 	$VELOCIRAPTOR --config "$VELOCIRAPTOR_CONFIG" client &
-	RETVAL=$? 
+	RETVAL=$?
 	[ $RETVAL -eq 0 ] && /sbin/pidof $prog > $PID_FILE
 	echo
 	return $RETVAL
@@ -303,25 +304,6 @@ func doClientRPM() error {
 	config_path := "/etc/velociraptor/client.config.yaml"
 	velociraptor_bin := "/usr/local/bin/velociraptor_client"
 
-	r.AddFile(
-		rpmpack.RPMFile{
-			Name: "/tmp/systemd_velociraptor",
-			Body: []byte(fmt.Sprintf(
-				client_service_definition, velociraptor_bin, config_path)),
-			Mode:  0644,
-			Owner: "root",
-			Group: "root",
-		})
-
-	r.AddFile(
-		rpmpack.RPMFile{
-			Name:  "/tmp/sysv_velociraptor",
-			Body:  []byte(rpm_sysv_client_service_definition),
-			Mode:  0755,
-			Owner: "root",
-			Group: "root",
-		})
-
 	r.AddPrein(`
 if ! [ -f /bin/systemctl ] ; then
    getent group velociraptor >/dev/null || groupadd -g 115 -r velociraptor || :
@@ -331,18 +313,20 @@ if ! [ -f /bin/systemctl ] ; then
 fi
 `)
 
-	r.AddPostin(`
+	r.AddPostin(fmt.Sprintf(`
 if [ -f /bin/systemctl ] ; then
-    mkdir /etc/systemd/system > /dev/null 2>&1
-    mv /tmp/systemd_velociraptor /etc/systemd/system/velociraptor_client.service
-    /sbin/chkconfig --add velociraptor
-else
-    mkdir /etc/rc.d/init.d > /dev/null 2>&1
-    mv /tmp/sysv_velociraptor /etc/rc.d/init.d/velociraptor
+	sudo tee /etc/systemd/system/velociraptor_client.service > /dev/null << SYSTEMDSCRIPT
+%s
+SYSTEMDSCRIPT
     /bin/systemctl enable velociraptor_client.service
     /bin/systemctl start velociraptor_client.service
+else
+    sudo tee /etc/rc.d/init.d/velociraptor > /dev/null << SYSVSCRIPT
+%s
+SYSVSCRIPT
+    /sbin/chkconfig --add velociraptor
 fi
-`)
+`, fmt.Sprintln(client_service_definition, velociraptor_bin, config_path), rpm_sysv_client_service_definition))
 
 	r.AddPreun(`
 if [ -f /bin/systemctl ]; then
