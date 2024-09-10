@@ -217,7 +217,7 @@ export default class MetadataEditor extends Component {
         });
 
         return <> {_.map(indexed, (x, i)=>{
-            return <Row className="metadata-row">
+            return <Row className="metadata-row" key={i}>
                      <Col sm="11">
                        <VeloForm key={i}
                                  param={{name: x}}
@@ -240,7 +240,7 @@ export default class MetadataEditor extends Component {
                    </Row>;
         })}
                  {_.map(non_indexed, (x, i)=>{
-                     return <Row className="metadata-row">
+                     return <Row className="metadata-row" key={i}>
                      <Col sm="11">
                        <VeloForm key={i}
                                  param={{name: x}}
