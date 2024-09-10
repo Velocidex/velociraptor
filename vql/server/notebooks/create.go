@@ -51,6 +51,16 @@ func (self *CreateNotebookFunction) Call(ctx context.Context,
 		Public:        arg.Public,
 	}
 
+	if arg.Env != nil {
+		for _, k := range arg.Env.Keys() {
+			v := vql_subsystem.GetStringFromRow(scope, arg.Env, k)
+			new_notebook.Env = append(new_notebook.Env, &api_proto.Env{
+				Key:   k,
+				Value: v,
+			})
+		}
+	}
+
 	err = services.RequireFrontend()
 	if err != nil {
 		scope.Log("notebook_create: %v", err)

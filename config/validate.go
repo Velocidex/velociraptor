@@ -73,6 +73,10 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 
 	config_obj.Version = GetVersion()
 
+	// The client's config contains the running version of the client
+	// itself.
+	config_obj.Client.Version = GetVersion()
+
 	// Ensure the writeback service is configured.
 	writeback_service := writeback.GetWritebackService()
 	writeback, err := writeback_service.GetWriteback(config_obj)
