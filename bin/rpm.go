@@ -101,7 +101,7 @@ setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor
 RETVAL=0
 prog="velociraptor"
 lockfile=/var/lock/subsys/$prog
-VELOCIRAPTOR=/usr/local/bin/velociraptor
+VELOCIRAPTOR=/usr/local/bin/velociraptor_client
 VELOCIRAPTOR_CONFIG=/etc/velociraptor/client.config.yaml
 PID_FILE=/var/run/velociraptor.pid
 
@@ -315,18 +315,20 @@ fi
 
 	r.AddPostin(fmt.Sprintf(`
 if [ -f /bin/systemctl ] ; then
-	sudo tee /etc/systemd/system/velociraptor_client.service > /dev/null << SYSTEMDSCRIPT
+cat << SYSTEMDSCRIPT >> /etc/systemd/system/velociraptor_client.service
+%s
+%s
 %s
 SYSTEMDSCRIPT
-    /bin/systemctl enable velociraptor_client.service
-    /bin/systemctl start velociraptor_client.service
+/bin/systemctl enable velociraptor_client.service
+/bin/systemctl start velociraptor_client.service
 else
-    sudo tee /etc/rc.d/init.d/velociraptor > /dev/null << SYSVSCRIPT
+cat << SYSVSCRIPT >> /etc/rc.d/init.d/velociraptor
 %s
 SYSVSCRIPT
-    /sbin/chkconfig --add velociraptor
+/sbin/chkconfig --add velociraptor
 fi
-`, fmt.Sprintln(client_service_definition, velociraptor_bin, config_path), rpm_sysv_client_service_definition))
+`, client_service_definition, velociraptor_bin, config_path, rpm_sysv_client_service_definition))
 
 	r.AddPreun(`
 if [ -f /bin/systemctl ]; then
