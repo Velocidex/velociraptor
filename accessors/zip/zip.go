@@ -422,6 +422,11 @@ func (self *ZipFileCache) GetChildren(
 	// Determine if we already emitted this file.
 	seen := make(map[string]*ZipFileInfo)
 
+	normalizer := func(x string) string { return x }
+	if nocase {
+		normalizer = strings.ToLower
+	}
+
 loop:
 	for _, cd_cache := range self.lookup {
 		// This breaks if the cd component does not have the same
@@ -442,7 +447,7 @@ loop:
 		}
 
 		// Get the part of the path that is at the required depth.
-		member_name := cd_cache.full_path.Components[depth]
+		member_name := normalizer(cd_cache.full_path.Components[depth])
 
 		// Have we seen this before?
 		old_result, pres := seen[member_name]
