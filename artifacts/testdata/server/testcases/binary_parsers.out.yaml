@@ -154,15 +154,12 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
    },
    "TrackerData": {
     "MachineID": "cthdsk",
-    "MacAddress": "B42E99AFADFA",
-    "Droid": [
-     "7C96CA62-E939-4B3D-A1E1-48D9DD63DF46",
-     "07CAD38B-F90F-11EB-9AA3-B42E99AFADFA"
-    ],
-    "DroidBirth": [
-     "7C96CA62-E939-4B3D-A1E1-48D9DD63DF46",
-     "7C96CA62-E939-4B3D-A1E1-48D9DD63DF46"
-    ]
+    "MacAddress": "B4:2E:99:AF:AD:FA",
+    "CreationTime": "2021-08-09T12:40:51.549Z",
+    "VolumeDroid": "7C96CA62-E939-4B3D-A1E1-48D9DD63DF46",
+    "VolumeDroidBirth": "7C96CA62-E939-4B3D-A1E1-48D9DD63DF46",
+    "FileDroid": "07CAD38B-F90F-11EB-9AA3-B42E99AFADFA",
+    "FileDroidBirth": "07CAD38B-F90F-11EB-9AA3-B42E99AFADFA"
    },
    "PropertyStore": [
     {
