@@ -130,8 +130,16 @@ func (self *OidcAuthenticator) oauthOidcLogin(
 			oauthState = generateStateOauthCookie(self.config_obj, w)
 		}
 
-		url := oidcOauthConfig.AuthCodeURL(oauthState.Value,
-			oauth2.SetAuthURLParam("prompt", "login"))
+		url := oidcOauthConfig.AuthCodeURL(oauthState.Value)
+
+		// Needed for Okta to specify `prompt: login` to avoid consent
+		// auth on each login.
+		if self.authenticator.OidcAuthUrlParams != nil {
+			for k, v := range self.authenticator.OidcAuthUrlParams {
+				oauth2.SetAuthURLParam(k, v)
+			}
+		}
+
 		http.Redirect(w, r, url, http.StatusFound)
 	})
 }
