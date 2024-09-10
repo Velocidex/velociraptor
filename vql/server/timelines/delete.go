@@ -13,8 +13,9 @@ import (
 )
 
 type DeleteTimelineFunctionArgs struct {
-	Timeline   string `vfilter:"required,field=timeline,doc=Supertimeline to add to. If a super timeline does not exist, creates a new one."`
+	Timeline   string `vfilter:"required,field=timeline,doc=Supertimeline to delete."`
 	NotebookId string `vfilter:"optional,field=notebook_id,doc=The notebook ID the timeline is stored in."`
+	Component  string `vfilter:"optional,field=name,doc=Name/Id of child timeline to delete. If not specified deletes the entire timeline"`
 }
 
 type DeleteTimelineFunction struct{}
@@ -65,9 +66,9 @@ func (self *DeleteTimelineFunction) Call(ctx context.Context,
 	}
 
 	err = notebook_manager.DeleteTimeline(
-		ctx, scope, notebook_id, arg.Timeline)
+		ctx, scope, notebook_id, arg.Timeline, arg.Component)
 	if err != nil {
-		scope.Log("timeline_add: %v", err)
+		scope.Log("timeline_delete: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -77,6 +78,7 @@ func (self *DeleteTimelineFunction) Call(ctx context.Context,
 			ordereddict.NewDict().
 				Set("NotebookId", notebook_id).
 				Set("SuperTimelineName", arg.Timeline).
+				Set("Component", arg.Component).
 				Set("Action", "Delete"),
 			"Server.Internal.TimelineAdd")
 	}

@@ -35,13 +35,101 @@ import { ToStandardTime } from '../utils/time.jsx';
 import { ColumnFilter } from '../core/paged-table.jsx';
 import DateTimePicker from 'react-datetime-picker';
 import Dropdown from 'react-bootstrap/Dropdown';
+import Alert from 'react-bootstrap/Alert';
 
+// In ms
 const TenYears =  10 * 365 * 24 * 60 * 60 * 1000;
+const POLL_TIME = 2000;
 
 const FixedColumns = {
     "Timestamp": 1,
     "Description": 1,
     "Message": 1,
+};
+
+class DeleteComponentDialog extends Component {
+    static propTypes = {
+        notebook_id: PropTypes.string,
+        super_timeline: PropTypes.string,
+        component: PropTypes.string,
+        onClose: PropTypes.func,
+    }
+
+    componentDidMount = () => {
+        this.source = CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        if (this.interval) {
+            clearInterval(this.interval);
+        }
+        this.source.cancel();
+    }
+
+    removeTimeline = ()=>{
+        api.post("v1/CollectArtifact", {
+            client_id: "server",
+            artifacts: ["Server.Utils.RemoveTimeline"],
+            specs: [{artifact: "Server.Utils.RemoveTimeline",
+                     parameters:{"env": [
+                         {"key": "NotebookId", "value": this.props.notebook_id},
+                         {"key": "Timeline", "value": this.props.super_timeline},
+                         {"key": "ChildName", "value": this.props.component},
+                     ]},
+                    }],
+        }, this.source.token).then(response=>{
+            // Hold onto the flow id.
+            this.setState({
+                loading: true,
+                lastOperationId: response.data.flow_id,
+            });
+
+            // Start polling for flow completion.
+            this.interval = setInterval(() => {
+                api.get("v1/GetFlowDetails", {
+                    client_id: "server",
+                    flow_id: this.state.lastOperationId,
+                }, this.source.token).then((response) => {
+                    let context = response.data.context;
+                    if (context.state === "RUNNING") {
+                        return;
+                    }
+
+                    // Done! Close the dialog.
+                    clearInterval(this.interval);
+                    this.interval = undefined;
+                    this.props.onClose();
+                    this.setState({loading: false});
+                });
+            }, POLL_TIME);
+        });
+    }
+
+    render() {
+        return <Modal show={true}
+                      size="lg"
+                      dialogClassName="modal-90w"
+                      onHide={this.props.onClose}>
+                 <Modal.Header closeButton>
+                   <Modal.Title>{T("Remove Timeline")}</Modal.Title>
+                 </Modal.Header>
+                 <Modal.Body>
+                   <Alert variant="warning">
+                     <h1>{this.props.component}</h1>
+                     {T("You are about to remove this timeline")}
+                   </Alert>
+                 </Modal.Body>
+                 <Modal.Footer>
+                   <Button variant="secondary" onClick={this.props.onClose}>
+                     {T("Close")}
+                   </Button>
+                   <Button variant="primary" onClick={this.removeTimeline}>
+                     {T("Yes do it!")}
+                   </Button>
+                 </Modal.Footer>
+               </Modal>;
+
+    }
 }
 
 class AnnotationDialog extends Component {
@@ -354,15 +442,23 @@ class TimelineTableRenderer  extends Component {
 
 class GroupRenderer extends Component {
     static propTypes = {
+        notebook_id: PropTypes.string,
+        super_timeline: PropTypes.string,
         group: PropTypes.object,
         setGroup: PropTypes.func,
         disabled: PropTypes.bool,
+        deletable: PropTypes.bool,
+        onUpdate: PropTypes.func,
     }
 
     toggle = ()=>{
         let group = Object.assign({}, this.props.group);
         group.disabled = !group.disabled;
         this.props.setGroup(group);
+    }
+
+    state = {
+        showDeleteDialog: false,
     }
 
     render() {
@@ -372,22 +468,45 @@ class GroupRenderer extends Component {
             icon_class = "hidden_icon";
         }
 
+        let del_class = "";
+        if (!this.props.deletable) {
+            del_class = "hidden_icon";
+        }
+
         return (
-            <ButtonGroup>
-              <Button variant="outline-default"
-                      onClick={this.toggle}>
-                <span className={icon_class}>
-                  <FontAwesomeIcon icon={
-                      ["far", !group.disabled ?
-                       "square-check" : "square"]
-                  }/>
-                </span>
-              </Button>
-              <Button variant="outline-default"
-                onClick={this.toggle}>
-                { group.title }
-              </Button>
-            </ButtonGroup>
+            <ToolTip tooltip={group.title}>
+              <ButtonGroup>
+                <Button
+                  className={del_class}
+                  onClick={()=>this.setState({showDeleteDialog: true})}
+                  variant="outline-default">
+                  <FontAwesomeIcon icon="trash"/>
+                </Button>
+                <Button variant="outline-default"
+                        onClick={this.toggle}>
+                  <span className={icon_class}>
+                    <FontAwesomeIcon icon={
+                        ["far", !group.disabled ?
+                         "square-check" : "square"]
+                    }/>
+                  </span>
+                </Button>
+                <Button variant="outline-default"
+                        onClick={this.toggle}>
+                  { group.title }
+                </Button>
+                {this.state.showDeleteDialog &&
+                 <DeleteComponentDialog
+                   notebook_id={this.props.notebook_id}
+                   super_timeline={this.props.super_timeline}
+                   component={group.title}
+                   onClose={()=>{
+                       this.setState({showDeleteDialog: false});
+                       this.props.onUpdate();
+                   }}
+                 />}
+              </ButtonGroup>
+            </ToolTip>
         );
     }
 }
@@ -533,8 +652,12 @@ export default class TimelineRenderer extends React.Component {
                      this.setState({disabled: disabled});
                      this.fetchRows();
                  }}
+                 notebook_id={this.props.notebook_id}
+                 super_timeline={this.props.name}
                  group={group}
                  disabled={group.id === -1}
+                 deletable={group.id !== -1 && group.id !== "Annotation"}
+                 onUpdate={this.fetchRows}
                />;
 
 
@@ -814,6 +937,7 @@ export default class TimelineRenderer extends React.Component {
                    onTimeChange={this.handleTimeChange}
                    visibleTimeStart={this.state.visibleTimeStart}
                    visibleTimeEnd={this.state.visibleTimeEnd}
+                   sidebarWidth={200}
                  >
                    <TimelineMarkers>
                      <CustomMarker

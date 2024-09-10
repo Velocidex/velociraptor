@@ -66,8 +66,9 @@ func (self *NotebookManager) AnnotateTimeline(ctx context.Context, scope vfilter
 }
 
 func (self *NotebookManager) DeleteTimeline(ctx context.Context, scope vfilter.Scope,
-	notebook_id string, supertimeline string) error {
-	return self.Store.DeleteTimeline(ctx, scope, notebook_id, supertimeline)
+	notebook_id string, supertimeline, component string) error {
+	return self.Store.DeleteTimeline(
+		ctx, scope, notebook_id, supertimeline, component)
 }
 
 func (self *NotebookStoreImpl) Timelines(ctx context.Context,
@@ -202,8 +203,9 @@ func (self *NotebookStoreImpl) AddTimeline(
 	return self.UpdateTimeline(ctx, notebook_id, supertimeline, timeline)
 }
 
-func (self *NotebookStoreImpl) DeleteTimeline(ctx context.Context, scope vfilter.Scope,
-	notebook_id string, supertimeline string) error {
+func (self *NotebookStoreImpl) DeleteTimeline(
+	ctx context.Context, scope vfilter.Scope,
+	notebook_id string, supertimeline, del_component string) error {
 
 	timeline_path := paths.NewNotebookPathManager(notebook_id).
 		SuperTimeline(supertimeline)
@@ -220,7 +222,13 @@ func (self *NotebookStoreImpl) DeleteTimeline(ctx context.Context, scope vfilter
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 
+	var new_timelines []*timelines_proto.Timeline
 	for _, component := range timeline.Timelines {
+		if del_component != "" && del_component != component.Id {
+			new_timelines = append(new_timelines, component)
+			continue
+		}
+
 		// Now delete all the filestore files associated with the timeline.
 		child := timeline_path.GetChild(component.Id)
 
@@ -233,6 +241,12 @@ func (self *NotebookStoreImpl) DeleteTimeline(ctx context.Context, scope vfilter
 		if err != nil {
 			continue
 		}
+	}
+
+	if len(new_timelines) != 0 {
+		timeline.Timelines = new_timelines
+		return db.SetSubject(
+			self.config_obj, timeline_path.Path(), timeline)
 	}
 
 	// Now delete the actual record.

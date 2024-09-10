@@ -15,7 +15,7 @@
     width: auto;
 }
 
-span.hidden_icon {
+span.hidden_icon, button.hidden_icon {
     visibility: hidden;
 }
 

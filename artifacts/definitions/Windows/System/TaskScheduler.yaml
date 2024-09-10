@@ -28,13 +28,13 @@ sources:
     query: |
       LET Uploads = SELECT Name, OSPath, if(
            condition=AlsoUpload='Y',
-           then=upload(file=OSPath)) as Upload
+           then=upload(file=OSPath)) as Upload, Mtime
         FROM glob(globs=TasksPath)
         WHERE NOT IsDir
 
       // Job files contain invalid XML which confuses the parser - we
       // use regex to remove the invalid tags.
-      LET parse_task = select OSPath, parse_xml(
+      LET parse_task = select OSPath, Mtime, parse_xml(
                accessor='data',
                file=regex_replace(
                     source=utf16(string=Data),
@@ -42,12 +42,13 @@ sources:
                     replace='')) AS XML
         FROM read_file(filenames=OSPath)
 
-      LET Results = SELECT OSPath,
+      LET Results = SELECT OSPath, Mtime,
             XML.Task.Actions.Exec.Command as Command,
             expand(path=XML.Task.Actions.Exec.Command)  AS ExpandedCommand,
             XML.Task.Actions.Exec.Arguments as Arguments,
             XML.Task.Actions.ComHandler.ClassId as ComHandler,
             XML.Task.Principals.Principal.UserId as UserId,
+            timestamp(epoch=XML.Task.Triggers.CalendarTrigger.StartBoundary) AS StartBoundary,
             XML as _XML
         FROM foreach(row=Uploads, query=parse_task)
 
