@@ -77,7 +77,7 @@ require (
 	golang.org/x/crypto v0.26.0
 	golang.org/x/mod v0.17.0
 	golang.org/x/net v0.27.0
-	golang.org/x/sys v0.23.0
+	golang.org/x/sys v0.25.0
 	golang.org/x/text v0.17.0
 	golang.org/x/time v0.3.0
 	google.golang.org/api v0.146.0
@@ -93,7 +93,7 @@ require (
 	www.velocidex.com/golang/go-ese v0.2.1-0.20240207005444-85d57b555f8b
 	www.velocidex.com/golang/go-ntfs v0.2.1-0.20240818145200-04736de821dc
 	www.velocidex.com/golang/go-pe v0.1.1-0.20230228112150-ef2eadf34bc3
-	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
+	www.velocidex.com/golang/go-prefetch v0.0.0-20240910051453-2385582c1c22
 	www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe
 	www.velocidex.com/golang/regparser v0.0.0-20240404115756-2169ac0e3c09
 	www.velocidex.com/golang/vfilter v0.0.0-20240812032614-1f95429e06af

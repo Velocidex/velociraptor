@@ -59,7 +59,8 @@ export: |
                "17": "WinXP (17)",
                "23": "Vista (23)",
                "26": "Win8.1 (26)",
-               "30": "Win10 (30)"
+               "30": "Win10 (30)",
+               "31": "Win11 (31)"
              }
          }],
          ["Signature", 4, "String", {"length": 4}],
@@ -77,6 +78,7 @@ export: |
                  "Vista (23)": "FileInformationVista",
                  "Win8.1 (26)": "FileInformationWin81",
                  "Win10 (30)": "FileInformationWin10",
+                 "Win11 (31)": "FileInformationWin10"
              }
          }]
         ]],
