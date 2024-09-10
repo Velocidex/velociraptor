@@ -437,6 +437,8 @@ message Authenticator {
         }];
     string oidc_name = 18;
 
+    map<string, string> oidc_auth_url_params = 24;
+
     // Can be an img src for the avatar
     string avatar = 19;
     string oauth_client_id = 5 [(sem_type) = {
