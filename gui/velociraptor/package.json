@@ -52,7 +52,7 @@
         "react-dom": "^16.14.0",
         "react-hotkeys": "^2.0.0",
         "react-overlays": "5.2.1",
-        "react-router-dom": "^5.3.4",
+        "react-router-dom": "^6.26.2",
         "react-select": "^3.2.0",
         "react-simple-snackbar": "^1.1.11",
         "react-split-grid": "^1.0.4",
