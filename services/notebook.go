@@ -110,5 +110,5 @@ type NotebookManager interface {
 
 	// Add events to a timeline
 	DeleteTimeline(ctx context.Context, scope vfilter.Scope,
-		notebook_id string, supertimeline string) error
+		notebook_id string, supertimeline, component string) error
 }

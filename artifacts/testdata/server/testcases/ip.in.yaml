@@ -1,0 +1,4 @@
+Queries:
+  - SELECT ip(parse='0:0:0:0:0:FFFF:129.144.52.38'),
+           ip(parse='192.168.1.2').IsPrivate
+    FROM scope()
