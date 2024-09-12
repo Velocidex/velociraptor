@@ -99,7 +99,7 @@ setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor
 . /etc/rc.d/init.d/functions
 
 RETVAL=0
-prog="velociraptor"
+prog="velociraptor_client"
 lockfile=/var/lock/subsys/$prog
 VELOCIRAPTOR=/usr/local/bin/velociraptor_client
 VELOCIRAPTOR_CONFIG=/etc/velociraptor/client.config.yaml
@@ -326,8 +326,13 @@ else
 cat << SYSVSCRIPT > /etc/rc.d/init.d/velociraptor
 %s
 SYSVSCRIPT
-chmod +x /etc/rc.d/init.d/velociraptor
+/bin/chmod +x /etc/rc.d/init.d/velociraptor
+
+## Set it to start at boot
 /sbin/chkconfig --add velociraptor
+
+## Start the service immediately
+service velociraptor start
 fi
 `, client_service_definition, velociraptor_bin, config_path,
 		escape_sh(rpm_sysv_client_service_definition)))
