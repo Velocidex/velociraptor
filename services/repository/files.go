@@ -67,9 +67,12 @@ func loadRepositoryFromDirectory(
 					"InitializeGlobalRepositoryFromFilesystem: %w", err)
 			}
 
-			if !strings.HasSuffix(path, ".yaml") ||
-				!strings.HasSuffix(path, ".yml") ||
-				finfo.IsDir() {
+			if finfo.IsDir() {
+				return nil
+			}
+
+			if !strings.HasSuffix(path, ".yaml") &&
+				!strings.HasSuffix(path, ".yml") {
 				return nil
 			}
 

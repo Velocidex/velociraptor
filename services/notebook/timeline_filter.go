@@ -40,7 +40,7 @@ func NewTimelineFilter(options services.TimelineOptions) (
 	result *TimelineFilter, err error) {
 	result = &TimelineFilter{}
 	if options.Filter != "" {
-		result.regex, err = regexp.Compile(options.Filter)
+		result.regex, err = regexp.Compile("(?i)" + options.Filter)
 		if err != nil {
 			return nil, err
 		}
