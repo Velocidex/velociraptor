@@ -315,7 +315,7 @@ fi
 
 	r.AddPostin(fmt.Sprintf(`
 if [ -f /bin/systemctl ] ; then
-cat << SYSTEMDSCRIPT >> /etc/systemd/system/velociraptor_client.service
+cat << SYSTEMDSCRIPT > /etc/systemd/system/velociraptor_client.service
 %s
 %s
 %s
@@ -323,12 +323,14 @@ SYSTEMDSCRIPT
 /bin/systemctl enable velociraptor_client.service
 /bin/systemctl start velociraptor_client.service
 else
-cat << SYSVSCRIPT >> /etc/rc.d/init.d/velociraptor
+cat << SYSVSCRIPT > /etc/rc.d/init.d/velociraptor
 %s
 SYSVSCRIPT
+chmod +x /etc/rc.d/init.d/velociraptor
 /sbin/chkconfig --add velociraptor
 fi
-`, client_service_definition, velociraptor_bin, config_path, rpm_sysv_client_service_definition))
+`, client_service_definition, velociraptor_bin, config_path,
+		escape_sh(rpm_sysv_client_service_definition)))
 
 	r.AddPreun(`
 if [ -f /bin/systemctl ]; then
@@ -528,4 +530,9 @@ func init() {
 		}
 		return true
 	})
+}
+
+func escape_sh(in string) string {
+	in = strings.ReplaceAll(in, "\\", "\\\\")
+	return strings.ReplaceAll(in, "$", "\\$")
 }
