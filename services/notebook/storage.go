@@ -79,7 +79,7 @@ type NotebookStore interface {
 		timestamp time.Time, event *ordereddict.Dict) error
 
 	DeleteTimeline(ctx context.Context, scope vfilter.Scope,
-		notebook_id string, supertimeline string) error
+		notebook_id string, supertimeline, component string) error
 
 	DeleteNotebook(ctx context.Context,
 		notebook_id string, progress chan vfilter.Row,
