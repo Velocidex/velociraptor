@@ -21,24 +21,35 @@ func _get(dict *ordereddict.Dict, key string) (*ordereddict.Dict, string) {
 	// Iterate over all but the last component fetching the nested
 	// dicts. If any of these are not present or not a dict,
 	// return an empty containing dict.
-	for _, member := range components[:len(components)-1] {
+	for i := 0; i < len(components)-1; i++ {
+		member := components[i]
 		result, pres := dict.Get(member)
 		if !pres {
-			// Maybe it is an array
-			if reflect.TypeOf(dict).Kind() == reflect.Slice {
-				a_value := reflect.ValueOf(dict)
-				index, err := strconv.Atoi(member)
-				if err == nil && index > 0 && index < a_value.Len() {
-					result = a_value.Index(index).Interface()
+			return ordereddict.NewDict(), ""
+		}
+
+		// Maybe it is an array. If it is check if the next component
+		// is an index.
+		if reflect.TypeOf(result).Kind() == reflect.Slice &&
+			i < len(components)-1 {
+			a_value := reflect.ValueOf(result)
+
+			next_member := components[i+1]
+			index, err := strconv.Atoi(next_member)
+			if err == nil {
+				// Index out of range
+				if index < 0 || index > a_value.Len() {
+					return ordereddict.NewDict(), ""
 				}
 
-			} else {
-				return ordereddict.NewDict(), ""
+				dict = ordereddict.NewDict().
+					Set(next_member, a_value.Index(index).Interface())
+				continue
 			}
 		}
 
 		nested, ok := result.(*ordereddict.Dict)
-		if !ok {
+		if !ok || nested == nil {
 			return ordereddict.NewDict(), ""
 		}
 		dict = nested
