@@ -317,8 +317,6 @@ fi
 if [ -f /bin/systemctl ] ; then
 cat << SYSTEMDSCRIPT > /etc/systemd/system/velociraptor_client.service
 %s
-%s
-%s
 SYSTEMDSCRIPT
 /bin/systemctl enable velociraptor_client.service
 /bin/systemctl start velociraptor_client.service
@@ -334,7 +332,7 @@ SYSVSCRIPT
 ## Start the service immediately
 service velociraptor start
 fi
-`, client_service_definition, velociraptor_bin, config_path,
+`, fmt.Sprintf(client_service_definition, velociraptor_bin, config_path),
 		escape_sh(rpm_sysv_client_service_definition)))
 
 	r.AddPreun(`
