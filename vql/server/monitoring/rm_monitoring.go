@@ -14,7 +14,7 @@ import (
 
 type RemoveClientMonitoringFunctionArgs struct {
 	Artifact string `vfilter:"required,field=artifact,doc=The name of the artifact to remove from the event table"`
-	Label    string `vfilter:"optional,field=label,doc=Remove this artifact from this label group (default the 'all'  group)"`
+	Label    string `vfilter:"optional,field=label,doc=Remove the artifact from this label group (default the 'all'  group)"`
 }
 
 type RemoveClientMonitoringFunction struct{}

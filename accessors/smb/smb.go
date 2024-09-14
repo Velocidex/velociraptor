@@ -266,5 +266,5 @@ func init() {
 	}
 	accessors.Register("smb", &SMBFileSystemAccessor{
 		root: root_path,
-	}, `Access smb shares.`)
+	}, `Allows access SMB shares.`)
 }

@@ -210,15 +210,5 @@ func (self *MFTFileSystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) 
 
 func init() {
 	accessors.Register("mft", &MFTFileSystemAccessor{},
-		`Access arbitrary MFT streams as files.
-
-The filename is taken as an MFT inode number in the
-form <entry_id>-<stream_type>-<id>, e.g. 203-128-0
-
-An example of using this artifact:
-
-SELECT upload(accessor="mft", filename="C:/203-128-0")
-FROM scope()
-
-`)
+		`Access arbitrary MFT streams as files.`)
 }

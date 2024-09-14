@@ -250,8 +250,7 @@ func (self *MscfbFileSystemAccessor) LstatWithOSPath(
 
 func init() {
 	accessors.Register("mscfb", &MscfbFileSystemAccessor{},
-		`Parse a MSCFB file as an archive.
-`)
+		`Parse a MSCFB file as an archive.`)
 
 	json.RegisterCustomEncoder(&MscfbFileInfo{}, accessors.MarshalGlobFileInfo)
 }
