@@ -562,7 +562,7 @@
     therefore only really useful for opening the file for reading - or for
     chaining with another accessor.
 
-    ```sql
+    ```vql
     SELECT read_file(accessor="bzip2", filename="F:/hello.txt.bz2", length=10)
     FROM scope()
     ```
@@ -3025,7 +3025,7 @@
     each backslash into 8 backslashes (once for regular expressions
     and twice for nested strings).
 
-    ```sql
+    ```vql
     SELECT * FROM glob(
       globs="C:/Users/*/*",
       recursion_callback="x=> NOT x.OSPath =~ 'C:\\\\\\\\Users\\\\\\\\Admini'")
@@ -3033,7 +3033,7 @@
 
     It is a bit easier to use variables and raw strings
 
-    ```sql
+    ```vql
     LET Exclude <= '''C:\\Users\\Admin'''
 
     SELECT * FROM glob(
@@ -3176,7 +3176,7 @@
     therefore only really useful for opening the file for reading - or for
     chaining with another accessor.
 
-    ```sql
+    ```vql
     SELECT read_file(accessor="gzip", filename="F:/hello.txt.gz", length=10)
     FROM scope()
     ```
@@ -3985,7 +3985,7 @@
 
     ### Example - Parse IPv4-mapped IPv6 addresses
 
-    ```sql
+    ```vql
     SELECT ip(parse='0:0:0:0:0:FFFF:129.144.52.38') FROM scope()
     ```
 
@@ -4003,7 +4003,7 @@
     - IsMulticast
     - IsPrivate
 
-    ```sql
+    ```vql
     SELECT ip(parse='192.168.1.2').IsPrivate FROM scope()
     ```
 
@@ -5307,7 +5307,7 @@
 
     ### Example
 
-    ```sql
+    ```vql
     SELECT read_file(accessor="offset", filename=pathspec(
     DelegateAccessor="data",
     DelegatePath="Hello world",
@@ -7083,7 +7083,7 @@
     `Artifact` plugin, for example the following accesses the
     `Custom.VQL` artifact:
 
-    ```sql
+    ```vql
     SELECT * FROM Artifact.Custom.VQL()
     ```
 
@@ -7091,7 +7091,7 @@
     isolated. If you want to use the `Artifact` plugin in the new
     scope you need to pass it through the `env` variable:
 
-    ```sql
+    ```vql
     SELECT * FROM query(query={
           SELECT * FROM Artifact.Custom.VQL()
     }, env=dict(artifact=Artifact))
@@ -7116,7 +7116,7 @@
     statement it is no possible to use a LET expression (since LET is
     a separate statement). So this is not valid VQL syntax:
 
-    ```sql
+    ```vql
     SELECT * FROM query(query={
       LET Foo(X) = ....
       SELECT * FROM Foo(X=1)
@@ -7124,7 +7124,7 @@
     ```
 
     You can define the LET statements outside the query block and pass them in:
-    ```sql
+    ```vql
     LET Foo(X) = ....
 
     SELECT * FROM query(query={
@@ -7393,7 +7393,7 @@
 
     For example we can search the raw registry for the System hive:
 
-    ```sql
+    ```vql
     SELECT OSPath
     FROM glob(globs='*',
         accessor="raw_reg",
@@ -7866,7 +7866,7 @@
 
     ### Example
 
-    ```sql
+    ```vql
     LET MyData <= "This is a test string"
 
     SELECT read_file(accessor="scope", filename="MyData") FROM scope()
@@ -9052,7 +9052,7 @@
     following calculates the time exactly one day (24 hours) before
     the stated time:
 
-    ```sql
+    ```vql
     SELECT timestamp(epoch=timestamp(epoch="2024-03-26T06:53:37Z").Unix - 86400)
     FROM scope()
     ```
