@@ -89,7 +89,7 @@ type vfsFileDownloadRequest struct {
 	VfsPath string `schema:"vfs_path"`
 
 	// This is the file store path to fetch.
-	FSComponents []string `schema:"fs_components[]"`
+	FSComponents []string `schema:"fs_components"`
 	Offset       int64    `schema:"offset"`
 	Length       int      `schema:"length"`
 	OrgId        string   `schema:"org_id"`
