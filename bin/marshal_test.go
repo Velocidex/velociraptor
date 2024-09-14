@@ -9,10 +9,10 @@ import (
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -84,11 +84,5 @@ func TestMarshal(t *testing.T) {
 		results.Set(fmt.Sprintf("%v: Rows %v", idx, testCase.name), rows)
 	}
 
-	g := goldie.New(
-		t,
-		goldie.WithFixtureDir("fixtures"),
-		goldie.WithNameSuffix(".golden"),
-		goldie.WithDiffEngine(goldie.ColoredDiff),
-	)
-	g.AssertJson(t, "Serialization", results)
+	goldie.AssertJson(t, "Serialization", results)
 }

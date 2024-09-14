@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
 func TestDictUtils(t *testing.T) {

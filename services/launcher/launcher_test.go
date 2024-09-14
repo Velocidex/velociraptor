@@ -13,7 +13,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/go-errors/errors"
-	"github.com/sebdah/goldie"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/acls"
