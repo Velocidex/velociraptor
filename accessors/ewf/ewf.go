@@ -93,32 +93,5 @@ func GetEWFImage(full_path *accessors.OSPath, scope vfilter.Scope) (
 func init() {
 	accessors.Register("ewf", zip.NewGzipFileSystemAccessor(
 		accessors.MustNewLinuxOSPath(""), GetEWFImage),
-		`Allow reading an ewf file.
-
-Note that usually EWF files form a set of files with extensions
-like .E01, .E02 etc. This accessor will automatically try to find
-all parts of the same volume set if the file name ends with a '.E01'.
-
-For Example
-
-SELECT * FROM glob(
-  globs="*", accessor="raw_ntfs", root=pathspec(
-    Path="/",
-    DelegateAccessor="ewf",
-    DelegatePath="C:/test.ntfs.dd.E01"))
-
-The next example reads a FAT partition through the offset
-accessor (32256 is the byte offset of the first FAT partition).
-
-    SELECT OSPath.Path AS OSPath, Size, Mode.String
-    FROM glob(
-       globs="*", accessor="fat", root=pathspec(
-          Path="/",
-          DelegateAccessor="offset",
-          DelegatePath=pathspec(
-            Path="/32256",
-            DelegateAccessor="ewf",
-            DelegatePath="/tmp/ubnist1.gen3.E01")))
-
-`)
+		`Allow reading an EWF file.`)
 }

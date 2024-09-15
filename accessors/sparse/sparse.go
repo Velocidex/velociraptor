@@ -247,14 +247,5 @@ func GetSparseFile(full_path *accessors.OSPath, scope vfilter.Scope) (
 func init() {
 	accessors.Register("sparse", zip.NewGzipFileSystemAccessor(
 		accessors.MustNewPathspecOSPath(""), GetSparseFile),
-		`Allow reading another file by overlaying a sparse map on top of it.
-
-The map excludes reading from certain areas which are considered sparse.
-
-The resulting file is sparse (and therefore uploading it excludes the masked out regions). The filename is taken as a list of ranges. For example:
-
-FileName = pathspec(
-      DelegateAccessor="data", DelegatePath=MyData,
-      Path=[dict(Offset=0,Length=5), dict(Offset=10,Length=5)])
-`)
+		`Allows reading another file by overlaying a sparse map on top of it.`)
 }
