@@ -18,7 +18,7 @@ import (
 type AddClientMonitoringFunctionArgs struct {
 	Artifact   string           `vfilter:"required,field=artifact,doc=The name of the artifact to add"`
 	Parameters vfilter.LazyExpr `vfilter:"optional,field=parameters,doc=A dict of artifact parameters"`
-	Label      string           `vfilter:"optional,field=label,doc=Add this artifact to this label group (default all)"`
+	Label      string           `vfilter:"optional,field=label,doc=Add the artifact to this label group (default all)"`
 }
 
 type AddClientMonitoringFunction struct{}

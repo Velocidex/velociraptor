@@ -189,7 +189,7 @@ func doVQLList() error {
 	if description != nil {
 		for _, k := range keys {
 			v, _ := description.Get(k)
-			fmt.Printf("%s: %s\n", k, v)
+			fmt.Printf("**%s**: %s\n\n", k, v)
 		}
 	}
 
