@@ -7,7 +7,7 @@
         "@babel/core": "^7.25.2",
         "@babel/plugin-syntax-flow": "^7.24.7",
         "@babel/plugin-transform-react-jsx": "^7.25.2",
-        "@babel/runtime": "^7.25.0",
+        "@babel/runtime": "^7.25.4",
         "@fortawesome/fontawesome-svg-core": "6.6.0",
         "@fortawesome/free-regular-svg-icons": "6.6.0",
         "@fortawesome/free-solid-svg-icons": "^6.6.0",
