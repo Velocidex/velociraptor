@@ -357,7 +357,7 @@ fi
 if [ -f /bin/systemctl ] ; then
 	rm /etc/systemd/system/velociraptor_client.service
 else
-    /sbin/service velociraptor start  > /dev/null 2>&1 || :
+	/sbin/service velociraptor start  > /dev/null 2>&1 || :
 	rm /etc/rc.d/init.d/velociraptor
 fi
 `)
