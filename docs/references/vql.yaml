@@ -3997,13 +3997,13 @@
 
     VQL will also expose the following attributes of the IP address:
 
-    - IsGlobalUnicast
-    - IsInterfaceLocalMulticast
-    - IsLinkLocalMulticast
-    - IsLinkLocalUnicast
-    - IsLoopback
-    - IsMulticast
-    - IsPrivate
+    - `IsGlobalUnicast`
+    - `IsInterfaceLocalMulticast`
+    - `IsLinkLocalMulticast`
+    - `IsLinkLocalUnicast`
+    - `IsLoopback`
+    - `IsMulticast`
+    - `IsPrivate`
 
     ```vql
     SELECT ip(parse='192.168.1.2').IsPrivate FROM scope()
@@ -7520,7 +7520,7 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: reg
-  description: Access the registery like a filesystem using the OS APIs.
+  description: Access the registry like a filesystem using the OS APIs.
   type: Accessor
   platforms:
   - windows_amd64_cgo
@@ -7629,7 +7629,7 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: registry
-  description: Access the registery like a filesystem using the OS APIs.
+  description: Access the registry like a filesystem using the OS APIs.
   type: Accessor
   platforms:
   - windows_amd64_cgo
@@ -10028,7 +10028,7 @@
     This accessor allows access to the content of VHDX files. Note that usually
     VHDX files are disk images with a partition table and an NTFS volume. You
     will usually need to wrap this accessor with a suitable Offset (to account
-    for the parition) and parse it with the the "raw_ntfs" accessor.
+    for the partition) and parse it with the the "raw_ntfs" accessor.
 
     ### Example
 
@@ -10055,7 +10055,7 @@
     This accessor allows access to the content of VMDK files. Note
     that usually VMDK files are disk images with a partition table and
     an NTFS volume. You will usually need to wrap this accessor with a
-    suitable Offset (to account for the parition) and parse it with
+    suitable Offset (to account for the partition) and parse it with
     the the "raw_ntfs" accessor.
 
     The VMDK file should be the metadata file (i.e. not the extent

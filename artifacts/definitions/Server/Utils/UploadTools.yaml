@@ -1,0 +1,60 @@
+name: Server.Utils.UploadTools
+description: |
+  Velociraptor can use external tools to deploy binaries on the
+  endpoint for some artifacts that require it. Usually these binaries
+  are automatically downloaded by the server when required. However,
+  sometimes a server is deployed on an air gapped network, or has
+  egress filtering implemented such that the server is unable to
+  download binaries on demand.
+
+  In these cases it is useful to automatically pre-populate tools into
+  a server manually. This artifact simplies the process.
+
+  1. The artifact produces a curl based script that helps to download
+     required binaries on an internet connect system.
+
+  2. When binaries are placed on a directory in the server's
+     filesystem, the artifact can then be used to automatically upload
+     the binaries as tools to the server.
+
+  NOTE that in Velociraptor each org is completely separated, so you
+  will need to re-upload the binaries when you create each org.
+
+type: SERVER
+
+parameters:
+  - name: BasePath
+    description: |
+      The directory on the server that contains all the binaries that
+      are to be synced.
+
+sources:
+  - name: DownloaderScript
+    query: |
+      LET AllCurlCommands =
+        SELECT format(format="curl -O -L -C - %v", args=url) AS Curl
+        FROM inventory()
+        WHERE url
+          AND NOT admin_override
+
+      LET Script <= join(sep="\r\n", array=AllCurlCommands.Curl)
+
+      SELECT upload(accessor="scope", file="Script", name="Script.bat") AS Script
+      FROM scope()
+
+  - name:
+    query: |
+      LET BasePath <= pathspec(parse=BasePath)
+
+      SELECT name,
+             filename,
+             BasePath + filename AS UploadedFile,
+             inventory_add(file=BasePath + filename, tool=name, serve_locally=TRUE).hash AS UpdatedHash
+      FROM inventory()
+      WHERE url
+        AND NOT admin_override
+        AND stat(filename=BasePath + filename).Size > 100
+
+column_types:
+  - name: Script
+    type: preview_upload

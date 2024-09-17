@@ -73,8 +73,7 @@ export default class FlowUploads extends React.Component {
                                                this.props.flow.session_id),
                                            padding: true,
                                            zip: !no_password,
-                                           vfs_path: filename},
-                                                      {arrayFormat: 'brackets'})}>
+                                           vfs_path: filename})}>
                                  {filename} &nbsp;&nbsp;
                                  <FontAwesomeIcon icon="expand"/>
                                  { !no_password &&
@@ -98,8 +97,7 @@ export default class FlowUploads extends React.Component {
                                          this.props.flow.session_id),
                                      padding: false,
                                      zip: !no_password,
-                                     vfs_path: filename}, {
-                                         arrayFormat: 'brackets'})}>
+                                     vfs_path: filename})}>
                            { !no_password &&
                              <div className="velo-icon">
                                <FontAwesomeIcon icon="lock" />

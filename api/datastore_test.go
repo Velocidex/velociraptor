@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/api"
@@ -17,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
 type DatastoreAPITest struct {
