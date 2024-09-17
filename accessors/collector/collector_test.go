@@ -5,14 +5,13 @@ import (
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/filesystem"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
@@ -110,8 +109,7 @@ func (self *TestSuite) TestAutomaticDecryption() {
 		lines = append(lines, full_path)
 	}
 
-	g := goldie.New(self.T())
-	g.Assert(self.T(), "TestAutomaticDecryption", json.MustMarshalIndent(lines))
+	goldie.AssertJson(self.T(), "TestAutomaticDecryption", lines)
 }
 
 func TestCollectorAccessor(t *testing.T) {

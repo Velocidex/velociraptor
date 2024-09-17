@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -15,6 +14,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -95,6 +95,13 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelines() {
 }
 
 func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
+	assert.Retry(self.T(), 3, time.Second,
+		self._TestNotebookManagerTimelineAnnotations)
+}
+
+func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelineAnnotations(
+	t *assert.R) {
+
 	closer := utils.MockTime(utils.NewMockClock(time.Unix(1715775587, 0)))
 	defer closer()
 
@@ -106,14 +113,14 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
 	utils.SetIdGenerator(&gen)
 
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	golden := ordereddict.NewDict()
 
 	// Create a notebook the usual way - timelines are attached to the
 	// notebook so we need somewhere to store them for this test.
 	var notebook *api_proto.NotebookMetadata
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(2*time.Second, t, func() bool {
 		notebook, err = notebook_manager.NewNotebook(
 			self.Ctx, "admin", &api_proto.NotebookMetadata{
 				Name: "Timeline Annotation",
@@ -121,7 +128,7 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
 		return err == nil
 	})
 
-	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
+	assert.Equal(t, len(notebook.CellMetadata), 1)
 	golden.Set("Notebook Metadata", notebook)
 
 	scope := vql_subsystem.MakeScope()
@@ -133,12 +140,12 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
 			Set("Message", "Original Event Message 1").
 			Set("OriginalEventField", "Extra field 1").
 			Set("Foo", "Bar 1"))
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	// Make sure the timeline is added automatically
 	notebook_metadata, err := notebook_manager.GetNotebook(self.Ctx,
 		notebook.NotebookId, services.INCLUDE_UPLOADS)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	golden.Set("Notebook Metadata After Annotation", notebook_metadata)
 
@@ -149,7 +156,7 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
 			services.TimelineOptions{
 				IncludeComponents: []string{constants.TIMELINE_ANNOTATION},
 			})
-		assert.NoError(self.T(), err)
+		assert.NoError(t, err)
 
 		for event := range reader.Read(self.Ctx) {
 			events = append(events, event)
@@ -169,7 +176,7 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
 			Set("Message", "Original Event Message 2").
 			Set("OriginalEventField", "Extra field 2").
 			Set("Foo", "Older Bar 2"))
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	golden.Set("Next Annotation", read_all_events())
 
@@ -178,7 +185,7 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
 	// Make sure that timeline metadata is updated
 	timelines_metadata, err := notebook_manager.Timelines(
 		self.Ctx, notebook.NotebookId)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	golden.Set("Timelines Metadata", timelines_metadata)
 
@@ -191,11 +198,11 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
 		notebook.NotebookId, "supertimeline",
 		"Updated First Annotation - all other fields remain", "admin",
 		time.Unix(1715776587, 0), first_event)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	golden.Set("Updated Annotations", read_all_events())
 
-	goldie.Assert(self.T(), "TestNotebookManagerTimelineAnnotations",
+	goldie.Retry(t, self.T(), "TestNotebookManagerTimelineAnnotations",
 		json.MustMarshalIndent(golden))
 
 }

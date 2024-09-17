@@ -1,10 +1,10 @@
 {
-  "/server_artifacts/Server.Internal.Alerts/2020-10-07.json": [
-    "{\"client_id\":\"server\",\"name\":\"TestAlert\",\"timestamp\":\"2020-10-07T20:43:08Z\",\"event_data\":{\"field\":\"Field1\"},\"artifact\":\"EventTest.Alert\",\"artifact_type\":\"SERVER_MONITORING\",\"_ts\":1602103388}",
-    ""
-  ],
-  "/server_artifacts/EventTest.Alert/2020-10-07.json": [
-    "{\"_ts\":1602103388}",
-    ""
-  ]
+ "/server_artifacts/Server.Internal.Alerts/2020-10-07.json": [
+  "{\"client_id\":\"server\",\"name\":\"TestAlert\",\"timestamp\":\"2020-10-07T20:43:08Z\",\"event_data\":{\"field\":\"Field1\"},\"artifact\":\"EventTest.Alert\",\"artifact_type\":\"SERVER_MONITORING\",\"_ts\":1602103388}",
+  ""
+ ],
+ "/server_artifacts/EventTest.Alert/2020-10-07.json": [
+  "{\"_ts\":1602103388}",
+  ""
+ ]
 }

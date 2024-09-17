@@ -2,11 +2,11 @@ package users_test
 
 import (
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
 func (self *UserManagerTestSuite) TestDeleteUser() {

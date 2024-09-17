@@ -23,19 +23,18 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 	"www.velocidex.com/golang/vfilter"
 
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
@@ -159,8 +158,7 @@ func (self *PluginTestSuite) TestArtifactPluginWithPrecondition() {
 		results.Set(query, rows)
 	}
 
-	g := goldie.New(self.T())
-	g.Assert(self.T(), "TestArtifactPluginWithPrecondition", json.MustMarshalIndent(results))
+	goldie.AssertJson(self.T(), "TestArtifactPluginWithPrecondition", results)
 }
 
 var (
@@ -219,8 +217,7 @@ func (self *PluginTestSuite) TestClientPluginMultipleSources() {
 		}
 	}
 
-	g := goldie.New(self.T())
-	g.Assert(self.T(), "TestClientPluginMultipleSources", []byte(results))
+	goldie.Assert(self.T(), "TestClientPluginMultipleSources", []byte(results))
 }
 
 var (
@@ -277,8 +274,8 @@ func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtions() {
 		results.Set(query, rows)
 	}
 
-	g := goldie.New(self.T())
-	g.Assert(self.T(), "TestClientPluginMultipleSourcesAndPrecondtions", json.MustMarshalIndent(results))
+	goldie.AssertJson(
+		self.T(), "TestClientPluginMultipleSourcesAndPrecondtions", results)
 
 }
 
@@ -331,8 +328,8 @@ func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtionsEvent
 		results.Set(query, rows)
 	}
 
-	g := goldie.New(self.T())
-	g.Assert(self.T(), "TestClientPluginMultipleSourcesAndPrecondtionsEvents", json.MustMarshalIndent(results))
+	goldie.AssertJson(self.T(),
+		"TestClientPluginMultipleSourcesAndPrecondtionsEvents", results)
 
 }
 
