@@ -5,11 +5,11 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
 func (self *TestSuite) TestWildCardSearch() {

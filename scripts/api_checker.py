@@ -40,6 +40,11 @@ checks = [Check(re=re.compile("ioutil.TempFile"),
           Check(re=re.compile("github.com/alecthomas/assert"),
                 allowed=re.compile("vtesting/assert"),
                 replaced="/vtesting/assert/"),
+
+          # Wrap goldie for tests.
+          Check(re=re.compile("github.com/sebdah/goldie"),
+                allowed=re.compile("vtesting/goldie"),
+                replaced="/vtesting/goldie/"),
           ]
 
 def DiscoverAPI(path):

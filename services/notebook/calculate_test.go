@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -16,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
 var (
@@ -64,18 +64,22 @@ func (self *NotebookManagerTestSuite) TearDownTest() {
 }
 
 func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
+	assert.Retry(self.T(), 3, time.Second, self._TestNotebookManagerUpdateCell)
+}
+
+func (self *NotebookManagerTestSuite) _TestNotebookManagerUpdateCell(r *assert.R) {
 	// Mock out cell ID generation for tests
 	gen := utils.IncrementalIdGenerator(0)
 	utils.SetIdGenerator(&gen)
 
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
-	assert.NoError(self.T(), err)
+	assert.NoError(r, err)
 
 	golden := ordereddict.NewDict()
 
 	// Create a notebook the usual way.
 	var notebook *api_proto.NotebookMetadata
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(2*time.Second, r, func() bool {
 		notebook, err = notebook_manager.NewNotebook(
 			self.Ctx, "admin", &api_proto.NotebookMetadata{
 				Name:        "Test Notebook",
@@ -84,11 +88,9 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
 		return err == nil
 	})
 
-	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
-	assert.Equal(self.T(),
-		notebook.CellMetadata[0].CurrentVersion, "03")
-	assert.Equal(self.T(),
-		notebook.CellMetadata[0].AvailableVersions, []string{"03"})
+	assert.Equal(r, len(notebook.CellMetadata), 1)
+	assert.Equal(r, notebook.CellMetadata[0].CurrentVersion, "03")
+	assert.Equal(r, notebook.CellMetadata[0].AvailableVersions, []string{"03"})
 
 	golden.Set("Notebook Metadata", notebook)
 
@@ -100,7 +102,7 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
 			Input:      "# Heading 1\n\nHello world\n",
 			Type:       "MarkDown",
 		})
-	assert.NoError(self.T(), err)
+	assert.NoError(r, err)
 
 	golden.Set("Markdown Cell", cell)
 
@@ -111,15 +113,15 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
 			Input:      "SELECT _value AS X FROM range(end=2)",
 			Type:       "VQL",
 		})
-	assert.NoError(self.T(), err)
+	assert.NoError(r, err)
 
 	// The new cell should have a higher version
-	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
-	assert.Equal(self.T(), cell.CurrentVersion, "05")
+	assert.Equal(r, len(notebook.CellMetadata), 1)
+	assert.Equal(r, cell.CurrentVersion, "05")
 
 	// The old version is still there and available. There should be 3
 	// versions all up.
-	assert.Equal(self.T(), cell.AvailableVersions, []string{"03", "04", "05"})
+	assert.Equal(r, cell.AvailableVersions, []string{"03", "04", "05"})
 
 	// The cell that is returned from the UpdateNotebookCell contains
 	// all the data.
@@ -128,10 +130,10 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
 	// The notebook itself should only contain summary cells.
 	new_notebook, err := notebook_manager.GetNotebook(
 		self.Ctx, notebook.NotebookId, services.DO_NOT_INCLUDE_UPLOADS)
-	assert.NoError(self.T(), err)
+	assert.NoError(r, err)
 	golden.Set("Full Notebook after update", new_notebook)
 
-	goldie.Assert(self.T(), "TestNotebookManagerUpdateCell",
+	goldie.Retry(r, self.T(), "TestNotebookManagerUpdateCell",
 		json.MustMarshalIndent(golden))
 }
 

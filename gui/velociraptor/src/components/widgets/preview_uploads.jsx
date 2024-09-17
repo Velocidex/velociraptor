@@ -568,9 +568,8 @@ export default class PreviewUpload extends Component {
                 // Only view first 1mb
                 length: 1000000,
             };
-            params["fs_components[]"] = this.state.params.fs_components;
-            let url = api.base_path + "/api/" + this.state.url + "?" +
-                 qs.stringify(params, {indices: false});
+            params["fs_components"] = this.state.params.fs_components;
+            let url = api.url("/api/" + this.state.url, params);
             string_data = <img className="preview-thumbnail"
                                src={url} alt="preview upload" />;
         }

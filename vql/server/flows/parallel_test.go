@@ -7,13 +7,11 @@ import (
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
@@ -22,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
@@ -233,11 +232,7 @@ func (self *TestSuite) TestHuntsSource() {
 	// Stable sort the section list so we can goldie it.
 	sort.Strings(sections)
 
-	g := goldie.New(self.T(),
-		goldie.WithFixtureDir("fixtures"),
-		goldie.WithDiffEngine(goldie.ClassicDiff))
-
-	g.Assert(self.T(), "TestHuntsSource", json.MustMarshalIndent(sections))
+	goldie.AssertJson(self.T(), "TestHuntsSource", sections)
 
 	vql, err := vfilter.Parse(`
 SELECT * FROM parallelize(

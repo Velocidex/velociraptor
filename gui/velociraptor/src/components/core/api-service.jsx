@@ -184,6 +184,9 @@ const get_blob = function(url, params, cancel_token) {
         method: 'get',
         url: api_handlers + url,
         params: params,
+        paramsSerializer: params => {
+            return qs.stringify(params, {indices: false});
+        },
         headers: {
             "X-CSRF-Token": window.CsrfToken,
             "Grpc-Metadata-OrgId": window.globals.OrgId || "root",
@@ -264,9 +267,6 @@ const upload = function(url, files, params) {
 //   host parts of the URL to point at the current page. This is
 //   useful because the caller does not need to know where the
 //   application is served from.
-
-// - arrayFormat: bracket means that arrays will be encoded by
-//   using the backet convention to the parameter name.
 
 // NOTE: Relative URLs will be converted to absolute URLs based
 // on the current location so they can be bookmarked or shared.

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/emptypb"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -15,7 +14,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -23,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/server/flows"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
 var (
@@ -106,12 +105,7 @@ func (self *FilestoreTestSuite) TestEnumerateFlow() {
 		ordereddict.NewDict().
 			Set("flow_id", self.flow_id).
 			Set("client_id", self.client_id)))
-
-	g := goldie.New(self.T(),
-		goldie.WithFixtureDir("fixtures"),
-		goldie.WithDiffEngine(goldie.ClassicDiff))
-
-	g.Assert(self.T(), "TestEnumerateFlow", json.MustMarshalIndent(result))
+	goldie.AssertJson(self.T(), "TestEnumerateFlow", result)
 }
 
 func TestFilestorePlugin(t *testing.T) {
