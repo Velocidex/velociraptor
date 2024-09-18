@@ -416,6 +416,14 @@ detection:
         - " -param-name "
         - " -f "
 
+  windash_bar:
+     CommandLine|windash|contains:
+        - " -g "
+
+  windash_emdash:
+     CommandLine|windash|contains:
+        - " -h "
+
   windash_all:
      CommandLine|windash|contains|all:
         - " -param-name "
@@ -445,7 +453,8 @@ detection:
 					Set("ip_address2", "192.168.0.2").
 					Set("fieldname", "needle is a needle").
 					Set("fieldname_int", 15).
-					Set("CommandLine", "ping /f ").
+					// This is a horizontal bar ―
+					Set("CommandLine", "ping /f ―g —h ").
 					Set("CommandLineWide", base64.StdEncoding.EncodeToString([]byte("p\x00i\x00n\x00g\x00 \x00"))),
 			},
 		},

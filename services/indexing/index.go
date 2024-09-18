@@ -150,14 +150,14 @@ func (self *Indexer) Start(
 
 	err := self.RebuildIndex(ctx, config_obj)
 
+	delay := 5 * time.Minute
+	if config_obj.Defaults != nil && config_obj.Defaults.ReindexPeriodSeconds > 0 {
+		delay = time.Duration(config_obj.Defaults.ReindexPeriodSeconds) * time.Second
+	}
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-
-		delay := 5 * time.Minute
-		if config_obj.Defaults != nil && config_obj.Defaults.ReindexPeriodSeconds > 0 {
-			delay = time.Duration(config_obj.Defaults.ReindexPeriodSeconds) * time.Second
-		}
 
 		last_run := utils.GetTime().Now()
 

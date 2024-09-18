@@ -96,7 +96,10 @@ type CollectorAccessor struct {
 }
 
 func (self *CollectorAccessor) New(scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
-	delegate, err := (&zip.ZipFileSystemAccessor{}).New(scope)
+	delegate, err := accessors.GetAccessor("zip_nocase", scope)
+	if err != nil {
+		return nil, err
+	}
 	return &CollectorAccessor{
 		expandSparse:          self.expandSparse,
 		ZipFileSystemAccessor: delegate.(*zip.ZipFileSystemAccessor),

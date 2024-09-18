@@ -82,8 +82,8 @@ BhI8P2RbNR2Yey5nnhFQcoTxpmVw3EYwE01nkxoPJRs/QVvxi9Mepg==
 )
 
 func (self *TestSuite) TestCreateAndImportCollection() {
-	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
-	defer closer()
+	defer utils.SetFlowIdForTests("F.1234")()
+	defer utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))()
 
 	fs_factory := file_store_accessor.NewFileStoreFileSystemAccessor(self.ConfigObj)
 	accessors.Register("fs", fs_factory, "")
@@ -170,6 +170,8 @@ func (self *TestSuite) TestCreateAndImportCollection() {
 }
 
 func (self *TestSuite) TestImportCollectionFromFixture() {
+	defer utils.SetFlowIdForTests("F.1234")()
+
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
 	_, err := repository.LoadYaml(CustomTestArtifactDependent,

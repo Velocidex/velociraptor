@@ -20,22 +20,27 @@ import (
 )
 
 func (self *NotebookManagerTestSuite) TestNotebookManagerTimelines() {
+	assert.Retry(self.T(), 3, time.Second,
+		self._TestNotebookManagerTimelines)
+}
+
+func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelines(t *assert.R) {
 	closer := utils.MockTime(utils.NewMockClock(time.Unix(1715775587, 0)))
 	defer closer()
 
 	// Mock out cell ID generation for tests
 	gen := utils.IncrementalIdGenerator(0)
-	utils.SetIdGenerator(&gen)
+	defer utils.SetIdGenerator(&gen)()
 
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	golden := ordereddict.NewDict()
 
 	// Create a notebook the usual way - timelines are attached to the
 	// notebook so we need somewhere to store them for this test.
 	var notebook *api_proto.NotebookMetadata
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(2*time.Second, t, func() bool {
 		notebook, err = notebook_manager.NewNotebook(
 			self.Ctx, "admin", &api_proto.NotebookMetadata{
 				Name: "Timeline Notebook",
@@ -43,7 +48,7 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelines() {
 		return err == nil
 	})
 
-	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
+	assert.Equal(t, len(notebook.CellMetadata), 1)
 	golden.Set("Notebook Metadata", notebook)
 
 	// Feed some data to the timeline.
@@ -69,11 +74,11 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelines() {
 	scope := vql_subsystem.MakeScope()
 	super, err := notebook_manager.AddTimeline(self.Ctx, scope,
 		notebook.NotebookId, "supertimeline", timeline, in)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	golden.Set("Supertimeline", super)
 
-	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
+	// test_utils.GetMemoryFileStore(t, self.ConfigObj).Debug()
 
 	// Read the timeline out again.
 	reader, err := notebook_manager.ReadTimeline(
@@ -81,7 +86,7 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelines() {
 		services.TimelineOptions{
 			IncludeComponents: []string{"test"},
 		})
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	events := []vfilter.Row{}
 	for event := range reader.Read(self.Ctx) {
@@ -89,9 +94,8 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelines() {
 	}
 	golden.Set("Events", events)
 
-	goldie.Assert(self.T(), "TestNotebookManagerTimelines",
+	goldie.Retry(t, self.T(), "TestNotebookManagerTimelines",
 		json.MustMarshalIndent(golden))
-
 }
 
 func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
@@ -110,7 +114,7 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelineAnnotations(
 
 	// Mock out cell ID generation for tests
 	gen := utils.IncrementalIdGenerator(0)
-	utils.SetIdGenerator(&gen)
+	defer utils.SetIdGenerator(&gen)()
 
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
 	assert.NoError(t, err)

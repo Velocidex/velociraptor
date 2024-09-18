@@ -320,7 +320,7 @@ body.pink-light {
 
 .pink-light .btn-outline-default {
   border-width: 0;
-  background: var(--color-btn-default-background);
+  background: none;
 }
 
 .pink-light .btn-outline-info,

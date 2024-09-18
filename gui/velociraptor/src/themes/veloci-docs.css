@@ -1,0 +1,20 @@
+.veloci-docs .modal-backdrop {
+    /* Reduce opacity for better illustration */
+    --bs-backdrop-opacity: .15;
+}
+
+body.veloci-light.veloci-docs {
+  font-weight: 500;
+}
+
+
+.veloci-light.veloci-docs {
+    --color-foreground: #00000;
+    --color-foreground-inverse: #00000;
+}
+
+
+.veloci-light.veloci-docs :target {
+    box-shadow: 0px 0px 10px 5px rgba(34,139,230,0.9) !important;
+    z-index: 1000;
+}

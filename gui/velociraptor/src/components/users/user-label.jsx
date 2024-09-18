@@ -275,6 +275,7 @@ class UserSettings extends React.PureComponent {
                       <option value="github-dimmed-dark">{T("Github dimmed (dark)")}</option>
                       <option value="coolgray-dark">{T("Cool Gray (dark)")}</option>
                       <option value="midnight">{T("Midnight Inferno (very dark)")}</option>
+                      <option value="veloci-docs">{T("Standard Docs")}</option>
                     </Form.Control>
                   </Col>
                 </Form.Group>
@@ -439,7 +440,7 @@ export default class UserLabel extends React.Component {
             } else if (params.theme === "veloci-dark") {
                 ace_options.theme = "ace/theme/vibrant_ink";
                 ace_options.fontFamily = "Iosevka Term";
-            } else if(params.theme === "veloci-light") {
+            } else if(params.theme === "veloci-light" || params.theme === "veloci-docs") {
                 ace_options.theme = "ace/theme/xcode";
                 ace_options.fontFamily = "Iosevka Term";
             } else if(params.theme === "pink-light") {
