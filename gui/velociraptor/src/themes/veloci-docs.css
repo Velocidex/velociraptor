@@ -36,7 +36,7 @@ body.veloci-light.veloci-docs {
 .veloci-light.veloci-docs .btn,
 .veloci-light.veloci-docs .btn-default,
 .veloci-light.veloci-docs .react-autosuggest__input {
-    font-weight: 500;
+  font-weight: 500;
 }
 
 .veloci-light.veloci-docs :target {
