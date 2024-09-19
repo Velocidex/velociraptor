@@ -21,16 +21,12 @@ Queries:
 - LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir),
                  copy=["zip", "file"], clear=TRUE)
 
-- SELECT Offset, Timestamp, Data
+- SELECT *
    FROM Artifact.Linux.Forensics.Journal(
      JournalGlob='/system.journal')
 
-- SELECT Offset, Timestamp, Data
-   FROM Artifact.Linux.Forensics.Journal(OnlyShowMessage=TRUE,
-     JournalGlob='/system.journal')
-
 # Check that we also support compact style files
-- SELECT Offset, Timestamp, Data
+- SELECT *
    FROM Artifact.Linux.Forensics.Journal(
      JournalGlob='/compact.journal')
   LIMIT 10
