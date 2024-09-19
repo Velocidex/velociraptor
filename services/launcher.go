@@ -152,9 +152,6 @@ type FlowStorer interface {
 }
 
 type Launcher interface {
-	// Only used for tests to force a predictable flow id.
-	SetFlowIdForTests(flow_id string)
-
 	Storage() FlowStorer
 
 	// Check any declared tools exist and are available - possibly

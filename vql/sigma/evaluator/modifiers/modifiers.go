@@ -138,6 +138,9 @@ func (windash) Modify(ctx context.Context, scope types.Scope,
 		new_expected = append(new_expected, []string{
 			expected_str,
 			cmdflagRegex.ReplaceAllString(coerceString(expected_str), " /$1"),
+			cmdflagRegex.ReplaceAllString(coerceString(expected_str), " ―$1"),
+			cmdflagRegex.ReplaceAllString(coerceString(expected_str), " —$1"),
+			cmdflagRegex.ReplaceAllString(coerceString(expected_str), " –$1"),
 		})
 	}
 	return value, new_expected, nil

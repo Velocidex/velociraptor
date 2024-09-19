@@ -78,12 +78,8 @@ sources:
 	Clock = utils.NewMockClock(time.Unix(1602103388, 0))
 	reporting.Clock = Clock
 
-	launcher, err := services.GetLauncher(self.ConfigObj)
-	assert.NoError(self.T(), err)
-	launcher.SetFlowIdForTests("F.1234")
-
 	// Create an administrator user
-	err = services.GrantRoles(self.ConfigObj, "admin", []string{"administrator"})
+	err := services.GrantRoles(self.ConfigObj, "admin", []string{"administrator"})
 	assert.NoError(self.T(), err)
 
 	self.acl_manager = acl_managers.NewServerACLManager(
@@ -91,8 +87,8 @@ sources:
 }
 
 func (self *TestSuite) TestExportCollectionServerArtifact() {
-	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
-	defer closer()
+	defer utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))()
+	defer utils.SetFlowIdForTests("F.1234")()
 
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository, err := manager.GetGlobalRepository(self.ConfigObj)

@@ -368,7 +368,7 @@ body.coolgray-dark {
 
 .coolgray-dark .btn-outline-default {
   border: none;
-  background: var(--color-btn-default-background);
+  background: none;
   border-radius: 0;
 }
 

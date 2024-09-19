@@ -14,16 +14,31 @@ description: |
 
   NOTE: This artifact is experimental and can crash the system!
 
-tools:
-  - name: WinPmem
-    url: https://github.com/Velocidex/WinPmem/releases/download/v4.0.rc1/winpmem_mini_x64_rc2.exe
-    serve_locally: true
+  ### Handling signatures with fixed strings.
+
+  When the signature specifies fixed strings, the Yara engine will
+  load it into memory, causing the signature to match memory used by
+  Velociraptor. To avoid this false positive encode the fixed
+  string as an alternative string.
+
+  For example instead of:
+  ```
+  $sequence_5 = { 250000ff00 33d0 8b4db0 c1e908 }
+  ```
+
+  Write as:
+  ```
+  $sequence_5 = { 250000ff00 33d0 8b4db0 c1e9 ( 08 | 08 ) }
+  ```
 
 type: CLIENT
 parameters:
+  - name: ServiceName
+    description: Override the name of the driver service to install.
+
   - name: NumberOfHits
     description: THis artifact will stop by default at one hit. This setting allows additional hits
-    default: 1
+    default: 100
     type: int64
   - name: ContextBytes
     description: Include this amount of bytes around hit as context.
@@ -53,17 +68,17 @@ parameters:
            $sequence_2 = { 8bd0 e8???????? 85c0 7e0e }
            $sequence_3 = { ffb5f8f9ffff ff15???????? 8b4dfc 33cd e8???????? c9 c3 }
            $sequence_4 = { e8???????? e9???????? 833d?????????? 7505 e8???????? }
-           $sequence_5 = { 250000ff00 33d0 8b4db0 c1e908 }
-           $sequence_6 = { ff75f4 ff7610 ff761c ff75fc }
-           $sequence_7 = { 8903 6a06 eb39 33ff 85c0 762b 03f1 }
-           $sequence_8 = { 894dd4 8b458c d1f8 894580 8b45f8 c1e818 0fb6c8 }
-           $sequence_9 = { 890a 8b4508 0fb64804 81e1ff000000 c1e118 8b5508 0fb64205 }
+           $sequence_5 = { 250000ff00 33d0 8b4db0 c1e9 ( 08 | 08 ) }
+           $sequence_6 = { ff75f4 ff7610 ff761c ff75 (fc | fc) }
+           $sequence_7 = { 8903 6a06 eb39 33ff 85c0 762b 03 ( f1 | f1 ) }
+           $sequence_8 = { 894d ( d4 | d4 ) 8b458c d1f8 894580 8b45f8 c1e818 0fb6c8 }
+           $sequence_9 = { 890a 8b45 ( 08 | 08 ) 0fb64804 81e1ff000000 c1e118 8b5508 0fb64205 }
            $sequence_10 = { 33d2 e8???????? 48b873797374656d3332 4c8bc7 488903 49ffc0 }
-           $sequence_11 = { 488bd1 498d4bd8 498943e0 498943e8 }
-           $sequence_12 = { b904000000 486bc90e 488b542430 4c8b442430 418b0c08 8b0402 }
+           $sequence_11 = { 488bd1 498d4b ( d8 | d8 ) 498943e0 498943e8 }
+           $sequence_12 = { b904000000 486bc9 ( 0e | 0e ) 488b542430 4c8b442430 418b0c08 8b0402 }
            $sequence_13 = { ba80000000 e8???????? 488d4c2438 e8???????? 488d4c2420 8bd0 e8???????? }
-           $sequence_14 = { 488b4c2430 8b0401 89442428 b804000000 486bc004 }
-           $sequence_15 = { 4883c708 4883c304 49ffc3 48ffcd 0f854fffffff 488d4c2420 }
+           $sequence_14 = { 488b4c2430 8b0401 ( 89 | 89 ) 442428 b804000000 486bc004 }
+           $sequence_15 = { 4883c708 4883c304 49ff ( c3 | c3 ) 48ffcd 0f854fffffff 488d4c2420 }
 
         condition:
             7 of them
@@ -88,20 +103,7 @@ sources:
            })
 
       -- Load the winpmem binary
-      LET WinpmemBinary = SELECT OSPath
-        FROM Artifact.Generic.Utils.FetchBinary(ToolName="WinPmem")
-
-      -- Install the driver and schedule an uninstall when the query
-      -- is done.  We must load the driver on the system drive or it
-      -- wont load properly.
-      LET _ <= SELECT *
-      FROM foreach(row=WinpmemBinary,
-      query={
-         SELECT *, atexit(query={
-            SELECT * FROM execve(argv=[OSPath, "-u"])
-          }, env=dict(OSPath=OSPath)) AS AtExit
-         FROM execve(argv=[OSPath, "-l"], env=dict(TMP="C:\\Windows\\Temp"))
-      })
+      LET _ <= winpmem(service=ServiceName)
 
       SELECT
          Rule,
@@ -109,5 +111,5 @@ sources:
          String.Offset as HitOffset,
          String.Name as HitName,
          String.HexData as HitHexData
-      FROM yara(files=SparsePath, accessor='sparse',
+      FROM yara(files=SparsePath, accessor='winpmem',
                 rules=yara_rules, context=ContextBytes, number=NumberOfHits)

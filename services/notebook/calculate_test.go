@@ -34,7 +34,7 @@ type NotebookManagerTestSuite struct {
 }
 
 func (self *NotebookManagerTestSuite) SetupTest() {
-	self.closer = utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	self.ConfigObj = self.TestSuite.LoadConfig()
 	self.ConfigObj.Services.NotebookService = true
 	self.ConfigObj.Services.SchedulerService = true
@@ -50,8 +50,9 @@ func (self *NotebookManagerTestSuite) SetupTest() {
 	self.TestSuite.SetupTest()
 
 	// Mock out cell ID generation for tests
-	gen := utils.IncrementalIdGenerator(0)
-	utils.SetIdGenerator(&gen)
+	self.closer = func() {
+		closer()
+	}
 
 	// Create an administrator user
 	err := services.GrantRoles(self.ConfigObj, "admin", []string{"administrator"})
@@ -70,7 +71,8 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
 func (self *NotebookManagerTestSuite) _TestNotebookManagerUpdateCell(r *assert.R) {
 	// Mock out cell ID generation for tests
 	gen := utils.IncrementalIdGenerator(0)
-	utils.SetIdGenerator(&gen)
+	closer := utils.SetIdGenerator(&gen)
+	defer closer()
 
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
 	assert.NoError(r, err)
