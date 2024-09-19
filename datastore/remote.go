@@ -197,6 +197,9 @@ func (self *RemoteDataStore) _SetSubjectWithCompletion(
 	// Make the call as the superuser
 	conn, closer, err := grpc_client.Factory.GetAPIClient(
 		ctx, grpc_client.SuperUser, config_obj)
+	if err != nil {
+		return err
+	}
 	defer closer()
 
 	_, err = conn.SetSubject(ctx, &api_proto.DataRequest{
@@ -232,6 +235,9 @@ func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
 
 	conn, closer, err := grpc_client.Factory.GetAPIClient(
 		ctx, grpc_client.SuperUser, config_obj)
+	if err != nil {
+		return err
+	}
 	defer closer()
 
 	_, err = conn.DeleteSubject(ctx, &api_proto.DataRequest{
@@ -270,6 +276,9 @@ func (self *RemoteDataStore) _DeleteSubject(
 
 	conn, closer, err := grpc_client.Factory.GetAPIClient(
 		ctx, grpc_client.SuperUser, config_obj)
+	if err != nil {
+		return err
+	}
 	defer closer()
 
 	_, err = conn.DeleteSubject(ctx, &api_proto.DataRequest{
@@ -311,6 +320,9 @@ func (self *RemoteDataStore) _ListChildren(
 
 	conn, closer, err := grpc_client.Factory.GetAPIClient(
 		ctx, grpc_client.SuperUser, config_obj)
+	if err != nil {
+		return nil, err
+	}
 	defer closer()
 
 	result, err := conn.ListChildren(ctx, &api_proto.DataRequest{
