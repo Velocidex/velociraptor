@@ -318,7 +318,7 @@ body.github-dimmed-dark {
 
 .github-dimmed-dark .btn-outline-default {
   border: none;
-  background: var(--color-btn-default-background);
+  background: none;
 }
 
 .github-dimmed-dark .btn-outline-info,

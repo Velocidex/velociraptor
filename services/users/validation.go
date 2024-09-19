@@ -47,7 +47,7 @@ func (self Validator) validateLang(lang string) (string, error) {
 func (self Validator) validateTheme(theme string) (string, error) {
 	theme = strings.ToLower(theme)
 	switch theme {
-	case "veloci-light", "veloci-dark",
+	case "veloci-light", "veloci-dark", "veloci-docs",
 		"no-theme", "pink-light",
 		"ncurses-light", "ncurses-dark",
 		"github-dimmed-dark",
@@ -55,7 +55,7 @@ func (self Validator) validateTheme(theme string) (string, error) {
 		return theme, nil
 
 	default:
-		return "", fmt.Errorf("Invalid theme %v. Can only be veloci-light, veloci-dark, no-theme, pink-light, ncurses-light, ncurses-dark, github-dimmed-dark, coolgray-dark, midnight", theme)
+		return "", fmt.Errorf("Invalid theme %v. Can only be veloci-light, veloci-dark, veloci-docs, no-theme, pink-light, ncurses-light, ncurses-dark, github-dimmed-dark, coolgray-dark, midnight", theme)
 	}
 }
 

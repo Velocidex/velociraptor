@@ -31,6 +31,7 @@ type: SERVER
 
 type MinionSchedulerTestSuite struct {
 	test_utils.TestSuite
+	closer func()
 }
 
 func (self *MinionSchedulerTestSuite) SetupTest() {
@@ -46,10 +47,15 @@ func (self *MinionSchedulerTestSuite) SetupTest() {
 
 	// Mock out cell ID generation for tests
 	gen := utils.ConstantIdGenerator("XXX")
-	utils.SetIdGenerator(gen)
+	self.closer = utils.SetIdGenerator(gen)
 
 	self.LoadArtifactsIntoConfig(mock_definitions)
 	self.TestSuite.SetupTest()
+}
+
+func (self *MinionSchedulerTestSuite) TearDownTest() {
+	self.closer()
+	self.TestSuite.TearDownTest()
 }
 
 func (self *MinionSchedulerTestSuite) startAPIServer() {

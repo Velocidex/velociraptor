@@ -88,7 +88,7 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 
 	acl_manager := acl_managers.NewServerACLManager(self.ConfigObj, user)
 
-	launcher.SetFlowIdForTests(flow_id)
+	defer utils.SetFlowIdForTests(flow_id)()
 
 	// Schedule a job for the server runner.
 	flow_id, err = launcher.ScheduleArtifactCollection(

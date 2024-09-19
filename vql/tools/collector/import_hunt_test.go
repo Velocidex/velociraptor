@@ -57,8 +57,8 @@ sources:
 )
 
 func (self *TestSuite) TestCreateAndImportHunt() {
-	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
-	defer closer()
+	defer utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))()
+	defer utils.SetFlowIdForTests("F.1234")()
 
 	hunt_dispatcher_service.SetHuntIdForTests("H.1234")
 
@@ -78,9 +78,6 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 		},
 	}
 
-	launcher, err := services.GetLauncher(self.ConfigObj)
-	assert.NoError(self.T(), err)
-
 	acl_manager := acl_managers.NullACLManager{}
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -98,6 +95,9 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 	hunt, err := hunt_dispatcher.CreateHunt(
 		self.Ctx, self.ConfigObj, acl_manager, request)
 
+	assert.NoError(self.T(), err)
+
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
@@ -196,16 +196,12 @@ func (self *TestSuite) snapshotHuntFlow() *ordereddict.Dict {
 }
 
 func (self *TestSuite) TestImportHuntFromFixture() {
-	launcher, err := services.GetLauncher(self.ConfigObj)
-	assert.NoError(self.T(), err)
-	launcher.SetFlowIdForTests("F.1234XX")
-
-	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
-	defer closer()
+	defer utils.SetFlowIdForTests("F.1234XX")()
+	defer utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))()
 
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
-	_, err = repository.LoadYaml(CustomTestArtifactDependent,
+	_, err := repository.LoadYaml(CustomTestArtifactDependent,
 		services.ArtifactOptions{
 			ValidateArtifact:  true,
 			ArtifactIsBuiltIn: true})

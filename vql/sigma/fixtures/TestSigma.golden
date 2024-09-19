@@ -741,7 +741,7 @@
    "ip_address2": "192.168.0.2",
    "fieldname": "needle is a needle",
    "fieldname_int": 15,
-   "CommandLine": "ping /f ",
+   "CommandLine": "ping /f ―g —h ",
    "CommandLineWide": "cABpAG4AZwAgAA==",
    "Details": null,
    "_Match": {
@@ -766,7 +766,9 @@
      "wide_all": false,
      "wide_any": true,
      "windash": true,
-     "windash_all": false
+     "windash_all": false,
+     "windash_bar": true,
+     "windash_emdash": true
     },
     "ConditionResults": [
      true
@@ -1096,6 +1098,38 @@
           "Values": [
            " -param-name ",
            " -f "
+          ]
+         }
+        ]
+       ]
+      },
+      "windash_bar": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "CommandLine",
+          "Modifiers": [
+           "windash",
+           "contains"
+          ],
+          "Values": [
+           " -g "
+          ]
+         }
+        ]
+       ]
+      },
+      "windash_emdash": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "CommandLine",
+          "Modifiers": [
+           "windash",
+           "contains"
+          ],
+          "Values": [
+           " -h "
           ]
          }
         ]

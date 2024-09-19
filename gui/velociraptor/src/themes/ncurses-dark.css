@@ -403,7 +403,6 @@ body.ncurses-dark {
 }
 
 .ncurses-dark .btn,
-.ncurses-dark .btn-outline-default
 .ncurses-dark .btn.btn-default,
 .ncurses-dark .report-viewer .btn-group a.btn {
   font-family: var(--font-family-sans-serif);
@@ -419,6 +418,11 @@ body.ncurses-dark {
   border-top: 1px solid darkgrey;
   border-right: 1px solid #000000;
   border-bottom: 1px solid #000000;
+}
+
+.ncurses-dark .btn.btn-outline-default {
+    border: none;
+    background: none;
 }
 
 .ncurses-dark .btn:hover,

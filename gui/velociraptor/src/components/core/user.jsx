@@ -62,6 +62,7 @@ class _UserSettings extends React.Component {
             document.body.classList.remove('no-theme');
             document.body.classList.remove('veloci-dark');
             document.body.classList.remove('veloci-light');
+            document.body.classList.remove('veloci-docs');
             document.body.classList.remove('pink-light');
             document.body.classList.remove('github-dimmed-dark');
             document.body.classList.remove('ncurses-light');
@@ -69,6 +70,11 @@ class _UserSettings extends React.Component {
             document.body.classList.remove('coolgray-dark');
             document.body.classList.remove('midnight');
             document.body.classList.add(traits.theme || "veloci-light");
+
+            // veloci-docs is just a modified version of veloci-light
+            if (traits.theme === "veloci-docs") {
+                document.body.classList.add("veloci-light");
+            }
         });
     }
 
