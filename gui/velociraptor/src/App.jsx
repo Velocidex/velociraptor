@@ -43,6 +43,7 @@ import SidebarKeyNavigator from './components/sidebar/hotkeys.jsx';
 
 import './themes/no-theme.css';
 import './themes/veloci-light.css';
+import './themes/veloci-docs.css';
 import './themes/veloci-dark.css';
 import './themes/pink-light.css';
 import './themes/github-dimmed-dark.css';

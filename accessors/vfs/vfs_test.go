@@ -80,15 +80,11 @@ func (self *TestSuite) SetupTest() {
 	self.ConfigObj.Services.VfsService = true
 
 	self.TestSuite.SetupTest()
-
-	launcher, err := services.GetLauncher(self.ConfigObj)
-	assert.NoError(self.T(), err)
-	launcher.SetFlowIdForTests("F.1234")
 }
 
 func (self *TestSuite) TestVFSAccessor() {
-	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
-	defer closer()
+	defer utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))()
+	defer utils.SetFlowIdForTests("F.1234")()
 
 	setVirtualFilesystem()
 

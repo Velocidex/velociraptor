@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"sync"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
@@ -161,9 +162,11 @@ func (self *TestSuite) TestHuntsSource() {
 		file_store_factory, hunt_path_manager, nil,
 		utils.SyncCompleter, true /* truncate */)
 
+	gen := &ConstantIdGenerator{}
+	defer utils.SetIdGenerator(gen)()
+
 	for client_number := 0; client_number < 10; client_number++ {
-		launcher.SetFlowIdForTests(fmt.Sprintf(
-			"%s_%v", self.flow_id, client_number))
+		gen.SetId(fmt.Sprintf("%s_%v", self.flow_id, client_number))
 
 		client_id := fmt.Sprintf("%s_%v", self.client_id, client_number)
 		flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx,
@@ -258,4 +261,23 @@ func TestParallelPlugin(t *testing.T) {
 		client_id: "C.123",
 		flow_id:   "F.123",
 	})
+}
+
+type ConstantIdGenerator struct {
+	mu sync.Mutex
+	id string
+}
+
+func (self *ConstantIdGenerator) Next(client_id string) string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.id
+}
+
+func (self *ConstantIdGenerator) SetId(id string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.id = id
 }

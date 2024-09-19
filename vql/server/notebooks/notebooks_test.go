@@ -43,6 +43,8 @@ name: Server.Internal.ArtifactDescription
 type NotebookTestSuite struct {
 	test_utils.TestSuite
 	acl_manager vql_subsystem.ACLManager
+
+	closer func()
 }
 
 func (self *NotebookTestSuite) SetupTest() {
@@ -61,7 +63,12 @@ func (self *NotebookTestSuite) SetupTest() {
 		self.ConfigObj, "admin")
 
 	gen := utils.IncrementalIdGenerator(0)
-	utils.SetIdGenerator(&gen)
+	self.closer = utils.SetIdGenerator(&gen)
+}
+
+func (self *NotebookTestSuite) TearDownTest() {
+	self.closer()
+	self.TestSuite.TearDownTest()
 }
 
 func (self *NotebookTestSuite) TestCreateNotebook() {
