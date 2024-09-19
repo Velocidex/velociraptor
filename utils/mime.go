@@ -15,7 +15,7 @@ func GetMimeString(buffer []byte, detect_mime AutoDetectMime) string {
 			return "image/png"
 		}
 
-		if strings.HasPrefix(
+		if len(buffer) > 20 && strings.HasPrefix(
 			strings.ToLower(string(buffer[:20])), `<svg version=`) {
 			return "image/svg+xml"
 		}
