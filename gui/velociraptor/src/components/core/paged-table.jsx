@@ -293,14 +293,15 @@ export class TablePaginationControl extends React.Component {
 
         let total_pages = parseInt(total_size / this.props.page_size) + 1;
         let last_page = total_pages - 1;
-        if (last_page <= 0) {
-            last_page = 0;
-        }
 
         // Ensure the last page has some data - otherwise back up one
         // page.
         if (last_page * this.props.page_size===this.props.total_size) {
             last_page -= 1;
+        }
+
+        if (last_page <= 0) {
+            last_page = 0;
         }
 
         let pages = [];
