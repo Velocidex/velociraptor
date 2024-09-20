@@ -41,6 +41,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -372,7 +373,7 @@ func (self *InventoryService) materializeTool(
 		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 	}
 
-	if tool.ExpectedHash != "" && tool.ExpectedHash != tool.Hash {
+	if tool.ExpectedHash != "" && !strings.EqualFold(tool.ExpectedHash, tool.Hash) {
 		err := fmt.Errorf(
 			"Downloaded tool hash of %v does not match the expected hash of %v\n",
 			tool.Hash, tool.ExpectedHash)
