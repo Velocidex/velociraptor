@@ -467,8 +467,6 @@ func (self *ApiServer) UploadNotebookAttachment(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
-
-	res.MimeType = detectMime([]byte(in.Data), true)
 	return res, nil
 }
 

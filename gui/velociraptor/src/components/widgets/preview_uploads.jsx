@@ -569,7 +569,7 @@ export default class PreviewUpload extends Component {
                 length: 1000000,
             };
             params["fs_components"] = this.state.params.fs_components;
-            let url = api.url("/api/" + this.state.url, params);
+            let url = api.href("/api/" + this.state.url, params);
             string_data = <img className="preview-thumbnail"
                                src={url} alt="preview upload" />;
         }
