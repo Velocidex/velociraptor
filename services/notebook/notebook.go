@@ -192,6 +192,8 @@ func (self *NotebookManager) UploadNotebookAttachment(
 		Filename: filename,
 	}
 
+	result.MimeType = utils.GetMimeString(decoded, utils.AutoDetectMime(true))
+
 	return result, nil
 }
 
