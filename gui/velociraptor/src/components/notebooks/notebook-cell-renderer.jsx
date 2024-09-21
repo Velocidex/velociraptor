@@ -528,7 +528,8 @@ export default class NotebookCellRenderer extends React.Component {
                         // it.
                         let filename = encodeURI(blob.name);
                         let url = encodeURI(response.data.url);
-                        if (/image/.test(response.mime_type)) {
+                        let mime_type = response.data && response.data.mime_type;
+                        if (/image/.test(mime_type || "")) {
                             this.state.ace.insert(
                                 "\n<img src=\"" +
                                     url + "\" alt=\"" +
