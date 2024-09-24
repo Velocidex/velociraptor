@@ -9,8 +9,12 @@ description: |
   developers troubleshoot legacy functions and contains data related to Windows
   features.
 
-  Note: the appcompatcache plugin does not currently support execution flag in
-  Windows 7 and 8/8.1 Systems.
+  Note: 
+  
+  - Windows 10+ systems Execution flag of 1 indicates execution.
+  - The appcompatcache artifact does not currently support execution flag in
+  Windows 7 and 8 / 8.1 Systems.
+ 
 
 reference:
   - https://www.mandiant.com/resources/caching-out-the-val
@@ -122,6 +126,7 @@ sources:
       LET results <= SELECT
             ModificationTime,
             Name as Path,
+            Execution, --Windows 10+
             ControlSet,
             Key
           FROM foreach(
@@ -131,6 +136,7 @@ sources:
               }, query={
                   SELECT OSPath AS Key, Path AS Name,
                      LastMod AS ModificationTime,
+                     Execution, --Windows 10+
                      OSPath[2] as ControlSet
                   FROM AppCompatCache(Blob=read_file(
                       accessor='registry', filename=OSPath))
@@ -154,10 +160,11 @@ sources:
                 })
 
       -- output results
-      SELECT
+      SELECT 
         Position,
         ModificationTime,
         Path,
+        Execution as ExecutionFlag,
         ControlSet,
         Key
       FROM if(condition= len(list=AppCompatKeys.OSPath)=1,
