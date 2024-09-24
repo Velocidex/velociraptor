@@ -3,6 +3,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 0,
   "ModificationTime": "2017-03-16T22:56:01Z",
   "Path": "C:\\Program Files (x86)\\NVIDIA Corporation\\3D Vision\\nvstreg.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -11,6 +12,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 1,
   "ModificationTime": "2017-03-18T20:58:23Z",
   "Path": "C:\\WINDOWS\\system32\\SystemSettingsAdminFlows.exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -19,6 +21,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 2,
   "ModificationTime": "2017-03-18T20:58:57Z",
   "Path": "C:\\Windows\\System32\\grpconv.exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -27,6 +30,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 3,
   "ModificationTime": "2017-03-18T20:58:57Z",
   "Path": "C:\\Windows\\SysWOW64\\grpconv.exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -35,6 +39,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 4,
   "ModificationTime": "2017-03-18T20:58:56Z",
   "Path": "C:\\WINDOWS\\system32\\runonce.exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -43,6 +48,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 5,
   "ModificationTime": "2017-03-18T20:58:56Z",
   "Path": "C:\\Windows\\SysWOW64\\rundll32.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -51,6 +57,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 6,
   "ModificationTime": "2017-03-16T22:56:00Z",
   "Path": "C:\\Temp\\NVIDIA\\3DVision\\nvStInst.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -59,6 +66,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 7,
   "ModificationTime": "2007-04-24T21:22:32Z",
   "Path": "C:\\Users\\eric\\AppData\\Local\\Temp\\{0E5D1094-B962-4212-AAE0-596961FC0007}\\ISBEW64.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -67,6 +75,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 8,
   "ModificationTime": "2017-03-16T22:55:52Z",
   "Path": "C:\\Temp\\NVIDIA\\3DVision\\setup.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -75,6 +84,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 9,
   "ModificationTime": "2017-03-17T01:01:06Z",
   "Path": "C:\\Program Files\\NVIDIA Corporation\\Installer2\\Display.3DVision.{DA27F5CA-7F04-4931-82CF-C499793E4712}\\3DVision.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -83,6 +93,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 10,
   "ModificationTime": "2017-03-17T01:01:06Z",
   "Path": "C:\\Program Files\\NVIDIA Corporation\\Installer2\\Display.Driver.{919DBA2F-A7B0-440B-9146-F54455220921}\\NVCPLSetupInt.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -91,6 +102,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 11,
   "ModificationTime": "2017-03-18T20:57:35Z",
   "Path": "C:\\Windows\\System32\\conhost.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -99,6 +111,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 12,
   "ModificationTime": "2017-01-26T00:47:28Z",
   "Path": "C:\\Program Files (x86)\\VulkanRT\\1.0.39.1\\ConfigureRT.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -107,6 +120,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 13,
   "ModificationTime": "2017-03-17T01:01:06Z",
   "Path": "C:\\Program Files\\NVIDIA Corporation\\Installer2\\Display.Driver.{919DBA2F-A7B0-440B-9146-F54455220921}\\NvContainerSetup.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -115,6 +129,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 14,
   "ModificationTime": "2017-01-26T00:47:38Z",
   "Path": "C:\\Users\\eric\\AppData\\Local\\Temp\\~nsuA.tmp\\Au_.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -123,6 +138,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 15,
   "ModificationTime": "2017-01-26T00:47:38Z",
   "Path": "C:\\Program Files (x86)\\VulkanRT\\1.0.39.1\\UninstallVulkanRT.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -131,6 +147,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 16,
   "ModificationTime": "2017-03-18T20:57:05Z",
   "Path": "C:\\Windows\\System32\\CastSrv.exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -139,6 +156,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 17,
   "ModificationTime": "2017-02-23T08:17:01Z",
   "Path": "C:\\Users\\eric\\AppData\\Local\\Temp\\nvStInst.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -147,6 +165,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 18,
   "ModificationTime": "2017-03-16T22:56:00Z",
   "Path": "C:\\Program Files (x86)\\NVIDIA Corporation\\3D Vision\\nvStInst.exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10Creators_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -155,6 +174,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 19,
   "ModificationTime": "2015-03-14T08:51:44Z",
   "Path": "C:\\WINDOWS\\System32\\vds.exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -163,6 +183,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 20,
   "ModificationTime": "2015-03-14T08:51:54Z",
   "Path": "C:\\WINDOWS\\System32\\msdtc.exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -171,6 +192,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 21,
   "ModificationTime": "2015-03-14T07:39:04Z",
   "Path": "C:\\$Windows.~BT\\Work\\81859520-B46E-4FE3-9566-E56BD110C270\\DismHost.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -179,6 +201,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 22,
   "ModificationTime": "2015-03-26T06:47:26Z",
   "Path": "C:\\$Windows.~BT\\Work\\FDAA346E-BA9D-420F-9BC6-DEC3E9A20583\\DismHost.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -187,6 +210,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 23,
   "ModificationTime": "2015-03-14T07:39:04Z",
   "Path": "C:\\$Windows.~BT\\Work\\46E6F081-B127-4DD5-9F47-63E02679507B\\DismHost.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -195,6 +219,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 24,
   "ModificationTime": "2015-03-26T06:47:26Z",
   "Path": "C:\\$Windows.~BT\\Work\\13A559E1-8FE1-4014-9BBE-7BA068A2CC01\\DismHost.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -203,6 +228,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 25,
   "ModificationTime": "2015-03-14T08:51:47Z",
   "Path": "C:\\WINDOWS\\system32\\wimserv.exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -211,6 +237,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 26,
   "ModificationTime": "2015-03-14T08:53:53Z",
   "Path": "C:\\WINDOWS\\system32\\mstsc.exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -219,6 +246,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 27,
   "ModificationTime": "2015-03-14T07:39:04Z",
   "Path": "C:\\Users\\eric.ZIM\\AppData\\Local\\Temp\\6234DD12-17A9-46BF-9940-2F3E8BE76687\\dismhost.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -227,6 +255,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 28,
   "ModificationTime": "2015-03-14T08:51:44Z",
   "Path": "C:\\WINDOWS\\System32\\vdsldr.exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -235,6 +264,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 29,
   "ModificationTime": "2015-03-26T05:47:44Z",
   "Path": "C:\\$Windows.~BT\\Sources\\SetupHost.Exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -243,6 +273,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 30,
   "ModificationTime": "2015-03-14T08:55:44Z",
   "Path": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\PowerShell.exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -251,6 +282,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 31,
   "ModificationTime": "2015-03-26T06:49:25Z",
   "Path": "C:\\WINDOWS\\SoftwareDistribution\\Download\\0f5f91def7110078b4c9c91d0e94ca76\\WindowsStoreSetupBox.exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -259,6 +291,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 32,
   "ModificationTime": "2015-03-30T20:06:38Z",
   "Path": "C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Delta_Patch_1.195.901.0.exe",
+  "ExecutionFlag": 1,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -267,6 +300,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 33,
   "ModificationTime": "2015-03-14T07:39:04Z",
   "Path": "C:\\Users\\eric.ZIM\\AppData\\Local\\Temp\\9336C276-1E29-4743-8D17-2F8E3F5671B0\\dismhost.exe",
+  "ExecutionFlag": 0,
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win10_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -275,6 +309,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 34,
   "ModificationTime": "2012-07-26T03:20:49Z",
   "Path": "SYSVOL\\Windows\\System32\\LogonUI.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -283,6 +318,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 35,
   "ModificationTime": "2015-04-20T19:59:39Z",
   "Path": "SYSVOL\\Program Files\\Winamp\\UninstWA.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -291,6 +327,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 36,
   "ModificationTime": "2015-02-23T13:37:00Z",
   "Path": "SYSVOL\\Program Files\\Just Great Software\\EditPad Lite 7\\EditPadLite7.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -299,6 +336,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 37,
   "ModificationTime": "2013-12-13T02:47:54Z",
   "Path": "SYSVOL\\Program Files\\Winamp\\winamp.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -307,6 +345,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 38,
   "ModificationTime": "2012-07-26T03:20:45Z",
   "Path": "SYSVOL\\Windows\\System32\\dllhost.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -315,6 +354,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 39,
   "ModificationTime": "2012-07-26T03:20:55Z",
   "Path": "SYSVOL\\Windows\\System32\\rundll32.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -323,6 +363,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 40,
   "ModificationTime": "2013-12-13T02:47:54Z",
   "Path": "SYSVOL\\Program Files\\Winamp\\Elevator.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -331,6 +372,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 41,
   "ModificationTime": "2012-07-26T03:39:13Z",
   "Path": "SYSVOL\\Windows\\System32\\consent.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -339,6 +381,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 42,
   "ModificationTime": "2012-07-26T03:20:58Z",
   "Path": "SYSVOL\\Windows\\System32\\svchost.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -347,6 +390,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 43,
   "ModificationTime": "2012-07-26T03:21:00Z",
   "Path": "SYSVOL\\Windows\\System32\\VSSVC.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -355,6 +399,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 44,
   "ModificationTime": "2009-09-05T01:01:08Z",
   "Path": "SYSVOL\\Users\\eric\\AppData\\Local\\Temp\\nsmADEC.tmp\\d3dx9_31_42_x86\\DXSETUP.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -363,6 +408,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 45,
   "ModificationTime": "2015-04-20T19:59:35Z",
   "Path": "SYSVOL\\Users\\eric\\AppData\\Local\\Temp\\nsm6910.tmp\\wadxsetup.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -371,6 +417,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 46,
   "ModificationTime": "2012-07-26T03:20:52Z",
   "Path": "SYSVOL\\Windows\\System32\\PING.EXE",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -379,6 +426,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 47,
   "ModificationTime": "2015-04-20T19:59:32Z",
   "Path": "SYSVOL\\Users\\eric\\AppData\\Local\\Temp\\nsm6910.tmp\\nsA18E.tmp",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -387,6 +435,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 48,
   "ModificationTime": "2011-03-04T19:44:14Z",
   "Path": "SYSVOL\\Users\\eric\\AppData\\Local\\Temp\\nsm6910.tmp\\PrimoRedist\\pxsetup.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -395,6 +444,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 49,
   "ModificationTime": "2012-07-26T03:20:51Z",
   "Path": "SYSVOL\\Windows\\System32\\netsh.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -403,6 +453,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 50,
   "ModificationTime": "1601-01-01T00:00:00Z",
   "Path": "SYSVOL\\Users\\eric\\AppData\\Local\\Microsoft\\Wi",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win80_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -411,6 +462,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 51,
   "ModificationTime": "2013-12-04T23:47:23Z",
   "Path": "SYSVOL\\Program Files\\CrashPlan\\jre\\bin\\java.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -419,6 +471,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 52,
   "ModificationTime": "2013-08-22T11:03:41Z",
   "Path": "SYSVOL\\Windows\\System32\\rundll32.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -427,6 +480,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 53,
   "ModificationTime": "2014-12-18T19:48:38Z",
   "Path": "SYSVOL\\Users\\eric\\AppData\\Roaming\\Spotify\\Data\\SpotifyHelper.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -435,6 +489,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 54,
   "ModificationTime": "2013-05-07T16:52:24Z",
   "Path": "SYSVOL\\Program Files (x86)\\ATI Technologies\\ATI.ACE\\Core-Static\\CLI.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -443,6 +498,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 55,
   "ModificationTime": "2013-08-22T11:32:21Z",
   "Path": "SYSVOL\\Windows\\System32\\LogonUI.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -451,6 +507,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 56,
   "ModificationTime": "2014-10-30T22:33:40Z",
   "Path": "SYSVOL\\Windows\\WinSxS\\amd64_microsoft-windows-servicingstack_31bf3856ad364e35_6.3.9600.17477_none_fa2b7d3b9b36c7b4\\TiWorker.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -459,6 +516,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 57,
   "ModificationTime": "2014-03-18T10:05:07Z",
   "Path": "SYSVOL\\Windows\\servicing\\TrustedInstaller.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -467,6 +525,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 58,
   "ModificationTime": "2013-08-22T12:45:17Z",
   "Path": "SYSVOL\\Windows\\System32\\svchost.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -475,6 +534,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 59,
   "ModificationTime": "2013-08-22T12:35:25Z",
   "Path": "SYSVOL\\Windows\\System32\\dllhost.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -483,6 +543,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 60,
   "ModificationTime": "2013-08-22T11:01:57Z",
   "Path": "SYSVOL\\Windows\\System32\\ThumbnailExtractionHost.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -491,6 +552,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 61,
   "ModificationTime": "2013-08-22T10:03:11Z",
   "Path": "SYSVOL\\Windows\\System32\\sc.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -499,6 +561,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 62,
   "ModificationTime": "2014-05-20T14:23:06Z",
   "Path": "SYSVOL\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -507,6 +570,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 63,
   "ModificationTime": "2014-03-18T10:05:16Z",
   "Path": "SYSVOL\\Windows\\System32\\taskeng.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -515,6 +579,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 64,
   "ModificationTime": "2015-02-04T23:01:12Z",
   "Path": "\\??\\F:\\15b25f69aaa0999d37f224116fca\\SetupUtility.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -523,6 +588,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 65,
   "ModificationTime": "2014-10-18T09:55:17Z",
   "Path": "SYSVOL\\Windows\\System32\\wuauclt.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -531,6 +597,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 66,
   "ModificationTime": "2014-03-13T06:51:36Z",
   "Path": "SYSVOL\\Windows\\SysWOW64\\wusa.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -539,6 +606,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 67,
   "ModificationTime": "2013-11-26T13:49:20Z",
   "Path": "SYSVOL\\Program Files (x86)\\Stardock\\Fences\\Fences.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -547,6 +615,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 68,
   "ModificationTime": "2015-02-04T23:01:12Z",
   "Path": "\\??\\F:\\15b25f69aaa0999d37f224116fca\\Setup.exe",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
@@ -555,6 +624,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "Position": 69,
   "ModificationTime": "1601-01-01T00:00:00Z",
   "Path": "SYSVOL\\ProgramData\\Package Cache\\4FF9C5BBD102B4816BE0FB4E642AE94BFE4B73A5\\packages\\d",
+  "ExecutionFlag": "N/A",
   "ControlSet": "ControlSet01",
   "Key": "/HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/Win81_trunc.bin",
   "_Source": "Windows.Registry.AppCompatCache"
