@@ -53,7 +53,8 @@ export: |
           length: "x=>x.PathSize",
           encoding: "utf16",
       }],
-      ["LastMod", "x=>x.PathSize + 14 + 10", "WinFileTime"]
+      ["LastMod", "x=>x.PathSize + 14 + 10", "WinFileTime"],
+      ["Execution", 0, "Value",{"value":"N/A"}],
     ]],
 
     ["Entry", "x=>x.Size + 12", [
@@ -92,7 +93,9 @@ export: |
           encoding: "utf16",
           length: "x=>x.PathSize",
       }],
-      ["LastMod", 16, "WinFileTime"]
+      ["LastMod", 16, "WinFileTime"],
+      ["Execution", 0, "Value",{"value":"N/A"}],
+
     ]]
 
     ]'''
@@ -126,7 +129,7 @@ sources:
       LET results <= SELECT
             ModificationTime,
             Name as Path,
-            Execution, --Windows 10+
+            ExecutionFlag,
             ControlSet,
             Key
           FROM foreach(
@@ -136,7 +139,7 @@ sources:
               }, query={
                   SELECT OSPath AS Key, Path AS Name,
                      LastMod AS ModificationTime,
-                     Execution, --Windows 10+
+                     Execution as ExecutionFlag,
                      OSPath[2] as ControlSet
                   FROM AppCompatCache(Blob=read_file(
                       accessor='registry', filename=OSPath))
@@ -164,7 +167,7 @@ sources:
         Position,
         ModificationTime,
         Path,
-        Execution as ExecutionFlag,
+        ExecutionFlag,
         ControlSet,
         Key
       FROM if(condition= len(list=AppCompatKeys.OSPath)=1,
