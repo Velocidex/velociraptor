@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -22,6 +21,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 
 	"www.velocidex.com/golang/velociraptor/accessors/file_store"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
@@ -80,15 +80,11 @@ func (self *TestSuite) SetupTest() {
 	self.ConfigObj.Services.VfsService = true
 
 	self.TestSuite.SetupTest()
-
-	launcher, err := services.GetLauncher(self.ConfigObj)
-	assert.NoError(self.T(), err)
-	launcher.SetFlowIdForTests("F.1234")
 }
 
 func (self *TestSuite) TestVFSAccessor() {
-	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
-	defer closer()
+	defer utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))()
+	defer utils.SetFlowIdForTests("F.1234")()
 
 	setVirtualFilesystem()
 

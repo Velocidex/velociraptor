@@ -422,6 +422,11 @@ func (self *ZipFileCache) GetChildren(
 	// Determine if we already emitted this file.
 	seen := make(map[string]*ZipFileInfo)
 
+	normalizer := func(x string) string { return x }
+	if nocase {
+		normalizer = strings.ToLower
+	}
+
 loop:
 	for _, cd_cache := range self.lookup {
 		// This breaks if the cd component does not have the same
@@ -442,7 +447,7 @@ loop:
 		}
 
 		// Get the part of the path that is at the required depth.
-		member_name := cd_cache.full_path.Components[depth]
+		member_name := normalizer(cd_cache.full_path.Components[depth])
 
 		// Have we seen this before?
 		old_result, pres := seen[member_name]
@@ -686,24 +691,10 @@ func init() {
 	accessors.Register("zip", &ZipFileSystemAccessor{
 		nocase: false,
 	},
-		`Open a zip file as if it was a directory.
-
-Filename is a pathspec with a delegate accessor opening the Zip file,
-and the Path representing the file within the zip file.
-
-Example:
-
-       select FullPath, Mtime, Size from glob(
-         globs='/**/*.txt',
-         root=pathspec(DelegateAccessor='file',
-              DelegatePath="File.zip",
-              Path='/'),
-         accessor='zip')
-
-`)
+		`Open a zip file as if it was a directory.`)
 	accessors.Register("zip_nocase", &ZipFileSystemAccessor{
 		nocase: true,
-	}, `Open a zip file as if it was a directory. Although zip files are case sensitive, this accessor behaves case insensitive`)
+	}, `Open a zip file as if it was a directory. Although zip files are case-sensitive, this accessor behaves case-insensitive`)
 
 	json.RegisterCustomEncoder(&ZipFileInfo{}, accessors.MarshalGlobFileInfo)
 

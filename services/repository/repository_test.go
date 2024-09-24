@@ -7,18 +7,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
 func TestLoadingFromFilestore(t *testing.T) {
@@ -185,7 +184,5 @@ func TestArtifactMetadata(t *testing.T) {
 	err = db.GetSubject(config_obj, path_manager.Metadata(), metadata_storage)
 	assert.NoError(t, err)
 
-	g := goldie.New(t)
-	g.Assert(t, "TestArtifactMetadata",
-		json.MustMarshalIndent(metadata_storage))
+	goldie.AssertJson(t, "TestArtifactMetadata", metadata_storage)
 }

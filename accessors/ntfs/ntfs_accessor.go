@@ -577,25 +577,7 @@ func Open(scope vfilter.Scope, self *ntfs.MFT_ENTRY,
 
 func init() {
 	accessors.Register("raw_ntfs", &NTFSFileSystemAccessor{},
-		`Access the NTFS filesystem inside an image by parsing NTFS.
-
-This accessor is designed to operate on images directly. It requires a
-delegate accessor to get the raw image and will open files using the
-NTFS full path rooted at the top of the filesystem.
-
-## Example
-
-The following query will open the $MFT file from the raw image file
-that will be accessed using the file accessor.
-
-SELECT * FROM parse_mft(
-  filename=pathspec(
-    Path="$MFT",
-    DelegateAccessor="file",
-    DelegatePath='ntfs.dd'),
-  accessor="raw_ntfs")
-
-`)
+		`Access the NTFS filesystem inside an image by parsing NTFS.`)
 
 	json.RegisterCustomEncoder(&NTFSFileInfo{}, accessors.MarshalGlobFileInfo)
 }

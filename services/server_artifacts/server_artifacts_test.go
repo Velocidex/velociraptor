@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
@@ -27,6 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
@@ -88,7 +88,7 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 
 	acl_manager := acl_managers.NewServerACLManager(self.ConfigObj, user)
 
-	launcher.SetFlowIdForTests(flow_id)
+	defer utils.SetFlowIdForTests(flow_id)()
 
 	// Schedule a job for the server runner.
 	flow_id, err = launcher.ScheduleArtifactCollection(

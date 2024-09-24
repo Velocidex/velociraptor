@@ -26,7 +26,6 @@
 package api
 
 import (
-	"bytes"
 	"fmt"
 	"html"
 	"io"
@@ -89,7 +88,7 @@ type vfsFileDownloadRequest struct {
 	VfsPath string `schema:"vfs_path"`
 
 	// This is the file store path to fetch.
-	FSComponents []string `schema:"fs_components[]"`
+	FSComponents []string `schema:"fs_components"`
 	Offset       int64    `schema:"offset"`
 	Length       int      `schema:"length"`
 	OrgId        string   `schema:"org_id"`
@@ -225,7 +224,7 @@ func vfsFileDownloadHandler() http.Handler {
 			w.Header().Set("Content-Disposition", "attachment; "+
 				sanitizeFilenameForAttachment(filename))
 			w.Header().Set("Content-Type",
-				detectMime(output, request.DetectMime))
+				utils.GetMimeString(output, utils.AutoDetectMime(request.DetectMime)))
 			w.Header().Set("Content-Range",
 				fmt.Sprintf("bytes %d-%d/%d", request.Offset, next_offset, total_size))
 			w.WriteHeader(200)
@@ -288,7 +287,8 @@ func vfsFileDownloadHandler() http.Handler {
 				w.Header().Set("Content-Disposition", "attachment; "+
 					sanitizeFilenameForAttachment(filename))
 				w.Header().Set("Content-Type",
-					detectMime(buf[:n], request.DetectMime))
+					utils.GetMimeString(buf[:n],
+						utils.AutoDetectMime(request.DetectMime)))
 				w.WriteHeader(200)
 				headers_sent = true
 			}
@@ -367,16 +367,6 @@ func filterData(reader_at io.ReaderAt,
 	}
 
 	return output, offset, nil
-}
-
-func detectMime(buffer []byte, detect_mime bool) string {
-	if detect_mime && len(buffer) > 8 {
-		if 0 == bytes.Compare(
-			[]byte("\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"), buffer[:8]) {
-			return "image/png"
-		}
-	}
-	return "binary/octet-stream"
 }
 
 func getRows(
@@ -507,14 +497,27 @@ func downloadFileStore(prefix []string) http.Handler {
 			return
 		}
 
+		buf := pool.Get().([]byte)
+		defer pool.Put(buf)
+
+		// Read the first buffer for mime detection.
+		n, err := fd.Read(buf)
+		if err != nil {
+			returnError(w, 404, err.Error())
+			return
+		}
+
 		// From here on we already sent the headers and we can
 		// not really report an error to the client.
 		w.Header().Set("Content-Disposition", "attachment; "+
 			sanitizePathspecForAttachment(path_spec))
 
-		w.Header().Set("Content-Type", "binary/octet-stream")
+		w.Header().Set("Content-Type",
+			utils.GetMimeString(buf[:n], utils.AutoDetectMime(true)))
 		w.WriteHeader(200)
+		w.Write(buf[:n])
 
+		// Copy the rest directly.
 		utils.Copy(r.Context(), w, fd)
 	})
 }

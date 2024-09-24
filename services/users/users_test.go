@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -12,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
 type UserManagerTestSuite struct {

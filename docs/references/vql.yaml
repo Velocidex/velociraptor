@@ -12,7 +12,7 @@
     description: A dict of artifact parameters
   - name: label
     type: string
-    description: Add this artifact to this label group (default all)
+    description: Add the artifact to this label group (default all)
   category: server
   metadata:
     permissions: COLLECT_CLIENT
@@ -490,6 +490,7 @@
     Return the basename of the path.
 
     ### Example
+
     ```vql
     basename(path="/foo/bar") -> "bar"
     ```
@@ -561,7 +562,7 @@
     therefore only really useful for opening the file for reading - or for
     chaining with another accessor.
 
-    ```sql
+    ```vql
     SELECT read_file(accessor="bzip2", filename="F:/hello.txt.bz2", length=10)
     FROM scope()
     ```
@@ -657,7 +658,7 @@
 
     This plugin can take a long time!
 
-    Example:
+    ### Example
 
     ```vql
     SELECT * FROM carve_usn(device='''\\.\C:''')
@@ -826,7 +827,7 @@
     database so it is very fast and suitable to be called frequently
     on each row.
 
-    # Example - enriching hostnames
+    ### Example - enriching hostnames
 
     Internally, Velociraptor uses client id to uniquely identify the
     client. But often we want to provide a hostname as well. In the
@@ -1084,7 +1085,7 @@
     you will often need to specify a field name containing full
     stop. You can escape this using the backticks like the example above.
 
-    # Example - conditional collections
+    ### Example - conditional collections
 
     In this example we wish to create an artifact with check buttons
     for selecting groups of artifacts to launch. Assume `Do1` and
@@ -1250,6 +1251,7 @@
     conventions.
 
     ### Example
+
     ```vql
     SELECT
       commandline_split(command='''"C:\Program Files\Velociraptor\Velociraptor.exe" service run'''),
@@ -1317,7 +1319,7 @@
     accessor into a file on disk.
 
     This function can also be used to create new files with prescribed
-    content - for example:
+    content, for example:
 
     ```vql
     SELECT copy(filename="Hello world", accessor="data", dest="C:/hi.txt")
@@ -1721,6 +1723,7 @@
     Return the directory path.
 
     ### Example
+
     ```vql
     dirname(path="/usr/bin/ls") -> "/usr/bin"
     ```
@@ -2012,7 +2015,7 @@
     Note that when eval calls the function, the current scope will be
     passed as the first parameter to the lambda.
 
-    Example:
+    ### Example
 
     ```vql
     LET AddTwo(x) = x + 2
@@ -2034,13 +2037,13 @@
   - windows_amd64_cgo
 - name: ewf
   description: |
-    Allow reading an `EWF` file.
+    Allow reading an EWF file.
 
     Note that usually EWF files form a set of files with extensions
     like .E01, .E02 etc. This accessor will automatically try to find
     all parts of the same volume set if the file name ends with a '.E01'.
 
-    ## Example
+    ### Example
 
     ```vql
     SELECT * FROM glob(
@@ -2198,7 +2201,7 @@
 
     This accessor is only available under linux.
 
-    ## Example
+    ### Example
 
     ```vql
     SELECT *
@@ -2215,7 +2218,7 @@
     delegate accessor to get the raw image and will open files using the
     FAT full path rooted at the top of the filesystem.
 
-    ## Example
+    ### Example
 
     The following query will glob all the files under the directory 'a'
     inside a FAT image file
@@ -2413,7 +2416,7 @@
     information about clients etc. The VFS path is a path into the file
     store. Of course ultimately (at least in the current implementation)
     the file store is storing files on disk, but the disk filename is not
-    necessarily the same as the VFS path (for example non representable
+    necessarily the same as the VFS path (for example non-representable
     characters are escaped).
 
     You can use the `file_store()` function to return the real file path
@@ -2472,9 +2475,12 @@
     the condition is applied.
 
     ### Examples
+
     ```vql
     filter(list=["AA", "AB", "BA", "BB"], regex="^A") -> ["AA", "AB"]
+    ```
 
+    ```vql
     filter(list=[1, 2, 3, 4, 5, 6], condition="x=>x > 3") -> [4, 5, 6]
     ```
   type: Function
@@ -2818,7 +2824,7 @@
   description: |
     Gets the member field from item.
 
-    This is useful to index an item from an array. For example:
+    This is useful to index an item from an array.
 
     ### Example
 
@@ -2977,7 +2983,7 @@
     parameter.  The `root` parameter is useful if the directory name
     itself may contain glob characters.
 
-    ## Following symlinks
+    ### Following symlinks
 
     On Unix like operating systems symlinks are used
     extensively. Symlinks complicate the job of the glob() plugin
@@ -2989,7 +2995,7 @@
     checking that a target of a symlink has not been seen before. You
     can disable this behavior with `nosymlink=TRUE`
 
-    ## Setting a recursion callback
+    ### Setting a recursion callback
 
     Sometimes it is useful to prevent glob() from recursing into a
     directory. For example, if we know a directory can not possibly
@@ -3011,7 +3017,7 @@
         recursion_callback="x=>NOT x.OSPath =~ '^/(proc|sys|snap)'")
     ```
 
-    ## A note about escaping.
+    ### A note about escaping.
 
     Windows paths often contain backslashes which are difficult to
     work with because they need to be escaped both by regular
@@ -3021,7 +3027,7 @@
     each backslash into 8 backslashes (once for regular expressions
     and twice for nested strings).
 
-    ```sql
+    ```vql
     SELECT * FROM glob(
       globs="C:/Users/*/*",
       recursion_callback="x=> NOT x.OSPath =~ 'C:\\\\\\\\Users\\\\\\\\Admini'")
@@ -3029,7 +3035,7 @@
 
     It is a bit easier to use variables and raw strings
 
-    ```sql
+    ```vql
     LET Exclude <= '''C:\\Users\\Admin'''
 
     SELECT * FROM glob(
@@ -3144,6 +3150,7 @@
     Uncompress a gzip-compressed block of data.
 
     ### Example
+
     ```vql
     gunzip(string=base64decode(string="H4sIAAAAAAACA3N0pC4AAKAb0QxQAAAA")) -> "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     ```
@@ -3171,7 +3178,7 @@
     therefore only really useful for opening the file for reading - or for
     chaining with another accessor.
 
-    ```sql
+    ```vql
     SELECT read_file(accessor="gzip", filename="F:/hello.txt.gz", length=10)
     FROM scope()
     ```
@@ -3244,7 +3251,9 @@
     NOTE: No caching is currently provided so this may generate a lot
     of load on DNS servers when scanning many rows.
 
-    Example: The first query resolves through an external DNS server
+    ### Example
+
+    The first query resolves through an external DNS server
     while the second uses the local resolver.
 
     ```
@@ -3334,7 +3343,7 @@
     `Content` being the name of the file. The file will be
     automatically removed when the query ends.
 
-    ### Example: Uploading files
+    ### Example - Uploading files
 
     Many API handlers support uploading files via POST messages. This
     is supported using the `files` parameter for this plugin. The
@@ -3553,7 +3562,7 @@
     a specific label and then just assign the label to specific
     clients.
 
-    ## Adding an existing flow to a hunt.
+    ### Adding an existing flow to a hunt.
 
     If a flow_id is specified, this function will just immediately add
     the collection to the hunt, without scheduling a new
@@ -3972,15 +3981,40 @@
     encoded as 32 bit integer we can use netaddr4_le or netaddr4_be to
     print it in a human readable way.
 
-    This currently does not support IPv6 addresses. Those are usually
-    encoded as an array of 8 bytes which makes it easy to format using the
-    `format()` function:
+    This function wraps the Golang net.IP library
+    (https://pkg.go.dev/net#IP ). This makes it easy to deal with
+    various IP address notations. Some use cases:
+
+    ### Example - Parse IPv4-mapped IPv6 addresses
 
     ```vql
-      format(format="%x:%x:%x:%x:%x:%x:%x:%x", value)
+    SELECT ip(parse='0:0:0:0:0:FFFF:129.144.52.38') FROM scope()
     ```
+
+    Will return the string "129.144.52.38"
+
+    ### Example - Get information about IP addresses
+
+    VQL will also expose the following attributes of the IP address:
+
+    - `IsGlobalUnicast`
+    - `IsInterfaceLocalMulticast`
+    - `IsLinkLocalMulticast`
+    - `IsLinkLocalUnicast`
+    - `IsLoopback`
+    - `IsMulticast`
+    - `IsPrivate`
+
+    ```vql
+    SELECT ip(parse='192.168.1.2').IsPrivate FROM scope()
+    ```
+
+    Return "true" since this is a private address block.
   type: Function
   args:
+  - name: parse
+    type: string
+    description: Parse the IP as an IPv4 or IPv6 address.
   - name: netaddr4_le
     type: int64
     description: A network order IPv4 address (as little endian).
@@ -4324,7 +4358,7 @@
     WHERE log(message="Value of OSPath is %v", args=OSPath)
     ```
 
-    ## Deduplication
+    ### Deduplication
 
     Log messages will be deduped according to the `dedup`
     parameter - each distinct format string will not be emitted more
@@ -4815,7 +4849,7 @@
     This accessor does not support directories and so can not be used
     in `glob()`
 
-    An example of using this artifact:
+    ### Example
 
     ```vql
     SELECT upload(accessor="mft", filename="C:/203-128-0")
@@ -5273,9 +5307,9 @@
 
     The filename is taken as an offset into the delegate.
 
-    ## Example
+    ### Example
 
-    ```sql
+    ```vql
     SELECT read_file(accessor="offset", filename=pathspec(
     DelegateAccessor="data",
     DelegatePath="Hello world",
@@ -5411,7 +5445,7 @@
     - each client's result set will be filtered in parallel on a
     different core.
 
-    ### Example:
+    ### Example
 
     ```vql
     SELECT * FROM parallelize(hunt_id=HuntId, artifact=ArtifactName, query={
@@ -5894,7 +5928,7 @@
     It can either operate on an image file or the raw device (on
     windows), or alternatively you can provide a raw $MFT file.
 
-    ### Example:
+    ### Example
 
     ```vql
     SELECT parse_ntfs(
@@ -5906,7 +5940,7 @@
     You can get the MFT entry number from `parse_mft()` or from the
     Data attribute of a `glob()` using the `ntfs` accessor.
 
-    ### Example 2: Using a raw $MFT file
+    ### Example - Using a raw $MFT file
 
     If you have previously collected the $MFT file (e.g. using the
     `Windows.KapeFiles.Targets` artifact, you can use `parse_ntfs()`
@@ -6358,6 +6392,7 @@
     ```vql
     SELECT get_client_monitoring() FROM scope()
     ```
+
     ```json
     [
       {
@@ -6388,14 +6423,14 @@
   args:
   - name: item
     type: Any
-    description: The item to path
+    description: The item to patch
     required: true
   - name: patch
     type: Any
-    description: A JSON Patch to apply
+    description: A JSON patch to apply
   - name: merge
     type: Any
-    description: A merge-patch to apply
+    description: A merge patch to apply
   category: server
   platforms:
   - darwin_amd64_cgo
@@ -6508,7 +6543,7 @@
     A VQL pipe allows data to be generated from a VQL query, as the
     pipe is read, the query proceeds to feed more data to it.
 
-    ## Example
+    ### Example
 
     ```vql
     LET MyPipe = pipe(query={
@@ -7043,14 +7078,14 @@
     Below we describe a few quirks that users might encounter with
     this plugin.
 
-    ## Custom artifacts
+    ### Custom artifacts
 
     The isolated scope does not contain any artifacts by
     default. Usually artifacts are accessible from VQL using the
     `Artifact` plugin, for example the following accesses the
     `Custom.VQL` artifact:
 
-    ```sql
+    ```vql
     SELECT * FROM Artifact.Custom.VQL()
     ```
 
@@ -7058,13 +7093,13 @@
     isolated. If you want to use the `Artifact` plugin in the new
     scope you need to pass it through the `env` variable:
 
-    ```sql
+    ```vql
     SELECT * FROM query(query={
           SELECT * FROM Artifact.Custom.VQL()
     }, env=dict(artifact=Artifact))
     ```
 
-    ## Remapping rules
+    ### Remapping rules
 
     When using the `remap()` function to install a new remapping
     configuration, the remapping applies on the current scope and
@@ -7076,14 +7111,14 @@
     inside an isolated `query()` scope. This way the remapping will
     only apply for the like of the `query()` plugin invocation.
 
-    ## Using LET statements inside the query
+    ### Using LET statements inside the query
 
     The `query` parameter can specify a VQL statement or a string
     which will be parsed into a VQL statement. If you use a VQL
     statement it is no possible to use a LET expression (since LET is
     a separate statement). So this is not valid VQL syntax:
 
-    ```sql
+    ```vql
     SELECT * FROM query(query={
       LET Foo(X) = ....
       SELECT * FROM Foo(X=1)
@@ -7091,7 +7126,7 @@
     ```
 
     You can define the LET statements outside the query block and pass them in:
-    ```sql
+    ```vql
     LET Foo(X) = ....
 
     SELECT * FROM query(query={
@@ -7106,7 +7141,7 @@
     ''')
     ```
 
-    ## Running a query in a different org
+    ### Running a query in a different org
 
     Normally a VQL query runs in the org context in which it was
     started. However sometimes it is useful to run in different
@@ -7130,7 +7165,7 @@
     })
     ```
 
-    ## Running as a different user
+    ### Running as a different user
 
     You can specify a different user to run the VQL. This will load
     the other user's ACL token and username (basically this acts like
@@ -7261,10 +7296,10 @@
     delegate accessor to get the raw image and will open files using the
     FAT full path rooted at the top of the filesystem.
 
-    ## Example
+    ### Example
 
     The following query will glob all the files under the directory 'a'
-    inside a Ext4 image file
+    inside a Ext4 image file:
 
     ```vql
     SELECT *
@@ -7308,7 +7343,7 @@
     delegate accessor to get the raw image and will open files using the
     NTFS full path rooted at the top of the filesystem.
 
-    ## Example
+    ### Example
 
     The following query will open the $MFT file from the raw image file
     that will be accessed using the file accessor.
@@ -7360,7 +7395,7 @@
 
     For example we can search the raw registry for the System hive:
 
-    ```sql
+    ```vql
     SELECT OSPath
     FROM glob(globs='*',
         accessor="raw_reg",
@@ -7485,7 +7520,7 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: reg
-  description: Access the registery like a filesystem using the OS APIs.
+  description: Access the registry like a filesystem using the OS APIs.
   type: Accessor
   platforms:
   - windows_amd64_cgo
@@ -7594,7 +7629,7 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: registry
-  description: Access the registery like a filesystem using the OS APIs.
+  description: Access the registry like a filesystem using the OS APIs.
   type: Accessor
   platforms:
   - windows_amd64_cgo
@@ -7722,7 +7757,7 @@
     required: true
   - name: label
     type: string
-    description: Remove this artifact from this label group (default the 'all'  group)
+    description: Remove the artifact from this label group (default the 'all'  group)
   category: server
   metadata:
     permissions: COLLECT_CLIENT
@@ -7764,17 +7799,15 @@
   - windows_amd64_cgo
 - name: s3
   description: |
-    Access S3 Buckets.
-
-    This artifact allows access to S3 buckets:
+    Allows access to S3 buckets.
 
     1. The first component is interpreted as the bucket name.
 
     2. Provide credentials through the VQL environment
-       variable S3_CREDENTIALS. This should be a dict with
+       variable `S3_CREDENTIALS`. This should be a dict with
        a key of the bucket name and the value being the credentials.
 
-    ## Example
+    ### Example
 
     ```vql
     LET S3_CREDENTIALS<=dict(endpoint='http://127.0.0.1:4566/',
@@ -7790,8 +7823,8 @@
     ```
 
     NOTE: It is more convenient to use the [secrets support]({{< ref
-    "/blog/2024/2024-03-10-release-notes-0.72/#secret-management" >}}) in
-    0.72 to manage these credentials.
+    "/blog/2024/2024-03-10-release-notes-0.72/#secret-management" >}})
+    introduced in version 0.72 to manage these credentials.
   type: Accessor
   platforms:
   - linux_amd64_cgo
@@ -7833,9 +7866,9 @@
     echoed in various log messages and with the `data` accessor this
     will echo some binary data into the logs.
 
-    ## Example
+    ### Example
 
-    ```sql
+    ```vql
     LET MyData <= "This is a test string"
 
     SELECT read_file(accessor="scope", filename="MyData") FROM scope()
@@ -7913,6 +7946,7 @@
     network event closely followed by a process event.
 
     ### Example
+
     ```vql
     SELECT * FROM sequence(
     network={
@@ -8191,7 +8225,7 @@
     credentials from the `SMB_CREDENTIALS` dict. This allows multiple
     servers and multiple credentials to be defined at the same time.
 
-    ## Example:
+    ### Example
 
     ```
     LET SMB_CREDENTIALS <= dict(ServerName="Username:Password")
@@ -8278,7 +8312,7 @@
   - windows_amd64_cgo
 - name: sparse
   description: |
-    Allow reading another file by overlaying a sparse map on top of
+    Allows reading another file by overlaying a sparse map on top of
     it.
 
     The map excludes reading from certain areas which are considered
@@ -8663,6 +8697,7 @@
     ```vql
     strip(string=">>  lorem ipsum  <<", prefix=">>", suffix="<<") -> "  lorem ipsum  "
     ```
+
     ```vql
     strip(string="   lorem ipsum   ") -> "lorem ipsum"
     ```
@@ -8880,12 +8915,15 @@
   args:
   - name: timeline
     type: string
-    description: Supertimeline to add to. If a super timeline does not exist, creates
-      a new one.
+    description: Supertimeline to delete.
     required: true
   - name: notebook_id
     type: string
     description: The notebook ID the timeline is stored in.
+  - name: name
+    type: string
+    description: Name/Id of child timeline to delete. If not specified deletes the
+      entire timeline
   metadata:
     permissions: NOTEBOOK_EDITOR
   platforms:
@@ -8924,7 +8962,7 @@
     ```
 
     You can also provide a string, and `timestamp()` will try to parse
-    it by guessing what it represents. For example
+    it by guessing what it represents. For example:
 
     ```vql
     SELECT timestamp(string='March 3 2019'),
@@ -8965,7 +9003,7 @@
     `PARSE_TZ` is `local` then we use the local timezone on the
     endpoint.
 
-    For example:
+    ### Example
 
     ```vql
     LET PARSE_TZ <= "local"
@@ -9016,7 +9054,7 @@
     following calculates the time exactly one day (24 hours) before
     the stated time:
 
-    ```sql
+    ```vql
     SELECT timestamp(epoch=timestamp(epoch="2024-03-26T06:53:37Z").Unix - 86400)
     FROM scope()
     ```
@@ -9057,7 +9095,7 @@
     The output timezone is UTC by default but can be changed using the
     `TZ` VQL variable.
 
-    Example:
+    ### Example
 
     ```vql
     LET TZ="Europe/Berlin"
@@ -9771,9 +9809,11 @@
   description: |
     Update and read the user GUI options
 
-    Example: The following will set the user language to french, dark
+    ### Example
+
+    The following will set the user language to French, dark
     theme and add a sidebar link named Foobar. The default password
-    for Zip exports will also be set to `foorbar`.
+    for zip exports will also be set to `foobar`.
 
     ```vql
     SELECT user_options(user=whoami(),
@@ -9828,6 +9868,7 @@
     Parse input from utf16.
 
     ### Example
+
     ```vql
     utf16(string='A\x00B\x00C\x00D\x00') -> "ABCD"
     ```
@@ -9849,6 +9890,7 @@
     Encode a string to utf16 bytes.
 
     ### Example
+
     ```vql
     utf16_encode(string="ABCD") -> "A\u0000B\u0000C\u0000D\u0000"
     ```
@@ -9889,8 +9931,7 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: version
-  description: |2
-
+  description: |
     Gets the version of a VQL plugin or function.
 
     This is useful when writing portable VQL which can work with
@@ -9901,6 +9942,7 @@
 
     For example the following can chose from a legacy query or a
     modern query based on the plugin version:
+
     ```vql
      SELECT * FROM if(
       condition=version(plugin="glob") >= 1,
@@ -9981,14 +10023,14 @@
   - windows_amd64_cgo
 - name: vhdx
   description: |+
-    Allow reading a vhdx file.
+    Allow reading a VHDX file.
 
     This accessor allows access to the content of VHDX files. Note that usually
     VHDX files are disk images with a partition table and an NTFS volume. You
     will usually need to wrap this accessor with a suitable Offset (to account
-    for the parition) and parse it with the the "raw_ntfs" accessor.
+    for the partition) and parse it with the the "raw_ntfs" accessor.
 
-    ## Example
+    ### Example
 
     ```vql
     SELECT OSPath.Path AS OSPath, Size, Mode.String
@@ -10008,19 +10050,19 @@
   - windows_amd64_cgo
 - name: vmdk
   description: |+
-    Allow reading a vmdk file.
+    Allow reading a VMDK file.
 
     This accessor allows access to the content of VMDK files. Note
     that usually VMDK files are disk images with a partition table and
     an NTFS volume. You will usually need to wrap this accessor with a
-    suitable Offset (to account for the parition) and parse it with
+    suitable Offset (to account for the partition) and parse it with
     the the "raw_ntfs" accessor.
 
     The VMDK file should be the metadata file (i.e. not the extent
     files).  The extent files are expected to be in the same directory
     as the metadata file and this accessor will open them separately.
 
-    ## Example
+    ### Example
 
     ```vql
     SELECT OSPath.Path AS OSPath, Size, Mode.String
@@ -10333,7 +10375,7 @@
        as there will be too much smear.
 
 
-    # Example
+    ### Example
 
     ```vql
     SELECT winpmem(image_path='c:/test.dd', compression='s2') FROM scope()"
@@ -10613,7 +10655,7 @@
     Filename is a pathspec with a delegate accessor opening the Zip file,
     and the Path representing the file within the zip file.
 
-    ## Example
+    ### Example
 
     ```vql
     SELECT OSPath, Mtime, Size from glob(
@@ -10631,11 +10673,12 @@
   description: |
     Open a zip file as if it was a directory.
 
-    Although zip files are case sensitive, this accessor treats file
-    names inside the zip file as case insensitive. This is useful when
+    Although zip files are case-sensitive, this accessor treats file
+    names inside the zip file as case-insensitive. This is useful when
     remapping an offline collector from a Windows system for post
     processing.
   type: Accessor
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
+

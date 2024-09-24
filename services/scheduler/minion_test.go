@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -20,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
 var (
@@ -31,6 +31,7 @@ type: SERVER
 
 type MinionSchedulerTestSuite struct {
 	test_utils.TestSuite
+	closer func()
 }
 
 func (self *MinionSchedulerTestSuite) SetupTest() {
@@ -46,10 +47,15 @@ func (self *MinionSchedulerTestSuite) SetupTest() {
 
 	// Mock out cell ID generation for tests
 	gen := utils.ConstantIdGenerator("XXX")
-	utils.SetIdGenerator(gen)
+	self.closer = utils.SetIdGenerator(gen)
 
 	self.LoadArtifactsIntoConfig(mock_definitions)
 	self.TestSuite.SetupTest()
+}
+
+func (self *MinionSchedulerTestSuite) TearDownTest() {
+	self.closer()
+	self.TestSuite.TearDownTest()
 }
 
 func (self *MinionSchedulerTestSuite) startAPIServer() {

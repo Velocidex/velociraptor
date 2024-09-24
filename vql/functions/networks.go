@@ -19,7 +19,7 @@ package functions
 
 import (
 	"context"
-	"fmt"
+	"net"
 
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -28,8 +28,9 @@ import (
 )
 
 type IpArgs struct {
-	Netaddr4LE int64 `vfilter:"optional,field=netaddr4_le,doc=A network order IPv4 address (as little endian)."`
-	Netaddr4BE int64 `vfilter:"optional,field=netaddr4_be,doc=A network order IPv4 address (as big endian)."`
+	Parse      string `vfilter:"optional,field=parse,doc=Parse the IP as an IPv4 or IPv6 address."`
+	Netaddr4LE int64  `vfilter:"optional,field=netaddr4_le,doc=A network order IPv4 address (as little endian)."`
+	Netaddr4BE int64  `vfilter:"optional,field=netaddr4_be,doc=A network order IPv4 address (as big endian)."`
 }
 
 type IpFunction struct{}
@@ -47,23 +48,31 @@ func (self *IpFunction) Call(ctx context.Context,
 		return false
 	}
 
-	if arg.Netaddr4LE > 0 {
-		ip := uint32(arg.Netaddr4LE)
-		return fmt.Sprintf(
-			"%d.%d.%d.%d",
-			byte(ip),
-			byte(ip>>8),
-			byte(ip>>16),
-			byte(ip>>24))
-	} else {
-		ip := uint32(arg.Netaddr4BE)
-		return fmt.Sprintf(
-			"%d.%d.%d.%d",
-			byte(ip>>24),
-			byte(ip>>16),
-			byte(ip>>8),
-			byte(ip))
+	to_parse := arg.Parse
+	if to_parse == "" {
+		if arg.Netaddr4LE > 0 {
+			ip := uint32(arg.Netaddr4LE)
+			return net.IPv4(
+				byte(ip),
+				byte(ip>>8),
+				byte(ip>>16),
+				byte(ip>>24))
+		} else {
+			ip := uint32(arg.Netaddr4BE)
+			return net.IPv4(
+				byte(ip>>24),
+				byte(ip>>16),
+				byte(ip>>8),
+				byte(ip))
+		}
 	}
+
+	ip := net.ParseIP(to_parse)
+	if ip == nil {
+		return vfilter.Null{}
+	}
+
+	return ip
 }
 
 func (self IpFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

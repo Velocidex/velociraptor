@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
@@ -20,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 )

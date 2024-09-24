@@ -12,8 +12,9 @@ import (
 )
 
 func (self *NotebookManagerTestSuite) TestUpdateCellVersions() {
-	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
-	defer closer()
+	defer utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))()
+	gen := utils.IncrementalIdGenerator(0)
+	defer utils.SetIdGenerator(&gen)()
 
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
 	assert.NoError(self.T(), err)

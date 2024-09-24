@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -31,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/filesystem"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 	"www.velocidex.com/golang/vfilter"
 
 	// Load all needed plugins
@@ -208,10 +208,6 @@ func (self *TestSuite) SetupTest() {
 
 	collector.Clock = utils.NewMockClock(time.Unix(1602103388, 0))
 	reporting.Clock = collector.Clock
-	launcher, err := services.GetLauncher(self.ConfigObj)
-	assert.NoError(self.T(), err)
-	launcher.SetFlowIdForTests("F.1234")
-
 }
 
 func (self *TestSuite) mockInfo(scope vfilter.Scope) vfilter.Scope {
@@ -332,6 +328,8 @@ func (self *TestSuite) TestCollectionWithDirectories() {
 }
 
 func (self *TestSuite) TestCollectionWithArtifacts() {
+	defer utils.SetFlowIdForTests("F.1234")()
+
 	output_file, err := tempfile.TempFile("zip")
 	assert.NoError(self.T(), err)
 	output_file.Close()
@@ -376,6 +374,8 @@ func (self *TestSuite) TestCollectionWithArtifacts() {
 }
 
 func (self *TestSuite) TestCollectionWithTypes() {
+	defer utils.SetFlowIdForTests("F.1234")()
+
 	output_file, err := tempfile.TempFile("zip")
 	assert.NoError(self.T(), err)
 	output_file.Close()
@@ -415,6 +415,8 @@ func (self *TestSuite) TestCollectionWithTypes() {
 }
 
 func (self *TestSuite) TestCollectionWithUpload() {
+	defer utils.SetFlowIdForTests("F.1234")()
+
 	output_file, err := tempfile.TempFile("zip")
 	assert.NoError(self.T(), err)
 	output_file.Close()

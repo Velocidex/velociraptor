@@ -98,24 +98,5 @@ func GetVHDXImage(full_path *accessors.OSPath, scope vfilter.Scope) (
 func init() {
 	accessors.Register("vhdx", zip.NewGzipFileSystemAccessor(
 		accessors.MustNewLinuxOSPath(""), GetVHDXImage),
-		`Allow reading a vhdx file.
-
-This accessor allows access to the content of VHDX files. Note that usually
-VHDX files are disk images with a partition table and an NTFS volume. You
-will usually need to wrap this accessor with a suitable Offset (to account
-for the parition) and parse it with the the "raw_ntfs" accessor.
-
-For Example
-
-    SELECT OSPath.Path AS OSPath, Size, Mode.String
-    FROM glob(
-       globs="*", accessor="raw_ntfs", root=pathspec(
-          Path="/",
-          DelegateAccessor="offset",
-          DelegatePath=pathspec(
-            Path="/65536",
-            DelegateAccessor="vhdx",
-            DelegatePath="/tmp/test.vhdx")))
-
-`)
+		`Allow reading a VHDX file.`)
 }

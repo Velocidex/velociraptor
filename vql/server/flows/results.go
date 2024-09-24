@@ -107,6 +107,7 @@ func (self SourcePlugin) Call(
 	err = services.RequireFrontend()
 	if err != nil {
 		scope.Log("uploads: %v", err)
+		close(output_chan)
 		return output_chan
 	}
 

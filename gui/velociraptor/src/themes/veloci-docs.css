@@ -1,0 +1,45 @@
+@font-face {
+  font-family: "Iosevka Term";
+  font-style: normal;
+  font-weight: 500;
+  src: local(""),
+    url("../fonts/iosevka-term-medium-subset.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+0080-00FF;
+  font-display: block;
+}
+
+.veloci-docs .modal-backdrop {
+  /* Reduce opacity for better illustration */
+  --bs-backdrop-opacity: 0.15;
+}
+
+body.veloci-light.veloci-docs {
+  font-weight: 500;
+}
+
+.veloci-light.veloci-docs {
+  --color-foreground: #000000;
+  --color-foreground-inverse: #ffffff;
+}
+
+.veloci-light.veloci-docs .input-group .custom-file-label:after,
+.veloci-light.veloci-docs .table,
+.veloci-light.veloci-docs .table-bordered thead th,
+.veloci-light.veloci-docs .report-viewer h3,
+.veloci-light.veloci-docs .report-viewer h4,
+.veloci-light.veloci-docs .report-viewer h5,
+.veloci-light.veloci-docs .form-control,
+.veloci-light.veloci-docs .custom-file-input,
+.veloci-light.veloci-docs .artifact-search-table button,
+.veloci-light.veloci-docs .btn-group .btn,
+.veloci-light.veloci-docs .btn-primary,
+.veloci-light.veloci-docs .btn,
+.veloci-light.veloci-docs .btn-default,
+.veloci-light.veloci-docs .react-autosuggest__input {
+  font-weight: 500;
+}
+
+.veloci-light.veloci-docs :target {
+  box-shadow: 0px 0px 10px 5px rgba(34, 139, 230, 0.9) !important;
+  z-index: 1000;
+}

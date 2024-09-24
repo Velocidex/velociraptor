@@ -756,10 +756,6 @@ func addOrReplaceParameter(
 	return append(result, param)
 }
 
-func (self *Launcher) SetFlowIdForTests(id string) {
-	utils.SetIdGenerator(utils.ConstantIdGenerator(id))
-}
-
 func NewLauncherService(
 	ctx context.Context,
 	wg *sync.WaitGroup,

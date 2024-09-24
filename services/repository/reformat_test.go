@@ -5,9 +5,8 @@ import (
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
-	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
 type reformatCases_t struct {
@@ -58,7 +57,5 @@ func TestReformat(t *testing.T) {
 		assert.NoError(t, err)
 		golden.Set(c.name, strings.Split(out, "\n"))
 	}
-
-	g := goldie.New(t)
-	g.Assert(t, "TestReformat", json.MustMarshalIndent(golden))
+	goldie.AssertJson(t, "TestReformat", golden)
 }

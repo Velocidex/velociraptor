@@ -22,7 +22,7 @@ export default class Download extends Component {
 
         let url = api.href(
             "/api/v1/DownloadVFSFile",
-            {"fs_components[]": this.props.fs_components,
+            {"fs_components": this.props.fs_components,
              vfs_path: this.props.filename || T("Download")});
 
         return (
