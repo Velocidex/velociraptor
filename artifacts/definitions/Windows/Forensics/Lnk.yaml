@@ -39,7 +39,7 @@ description: |
     - TrackerData.MacAddress
 
     NOTE: regex startof (^) and endof ($) line modifiers will not work.
-
+    
 
     Windows.Forensics.Lnk also will highlight suspicious lnk attributes in a Suspicious field.
 
@@ -346,9 +346,11 @@ export: |
                 "count": 1000,
                 "sentinel": "x=>x.Size < 0x00000004"
             }],
+        ["Overlay", "x=>x.ExtraData.EndOf", "Overlay"],
+
       ]],
       ["Empty", 0, []],
-
+      
       # Struct size includes the size field
       ["LinkTargetIDList", "x=>x.IDListSize + 2", [
         ["IDListSize", 0, "uint16"],
@@ -706,6 +708,7 @@ export: |
         ["ExtraData","x=>x.Size",[
             ["Offset",0,"Value",{"value":"x=>x.StartOf"}],
             ["Size",0,"uint32"],
+            ["EndOf",0,"Value",{"value":"x=>x.EndOf"}],
             ["__Header",4,"uint32"],
             ["Header",0,"Value",{"value":"x=>'0x' + upcase(string=format(format='%08x',args=x.__Header))"}],
             ["BlockClass", 4, "Enumeration", {
@@ -1314,7 +1317,14 @@ export: |
             ["Value", 0, "Value", { "value": "x=>upcase(string=
                     format(format='%08x-%04x-%04x-%02x-%02x',
                         args=[x.__D1, x.__D2, x.__D3, x.__D4, x.__D5]))" }],
-        ]]
+        ]],
+        ["Overlay", "x=>x.Length", [
+            ["Header", 0, "Value", {"value": "x=>format(format='0x%08x',args=read_file(filename=OSPath,offset=x.StartOf + 4,length=4))"}],
+            ["Offset", 0, "Value", {"value": "x=>x.StartOf + 4"}],
+            ["Length", 0, "Value", {"value": "x=>len(list=read_file(filename=OSPath, offset=x.StartOf + 4))"}],
+            ["Entropy", 0, "Value", {"value": "x=>entropy(string=read_file(filename=OSPath,offset=x.StartOf + 4))"}],
+            ["Magic", 0, "Value", {"value": "x=>magic(accessor='data',path=read_file(filename=OSPath,offset=x.StartOf + 4))"}],
+        ]],
      ]
      '''
 
@@ -1395,6 +1405,7 @@ sources:
         Parsed.StringData as StringData,
         ShowExtraData(Parsed=Parsed) as ExtraData,
         property_store(data=Parsed) as PropertyStore,
+        Parsed.Overlay as Overlay,
         Parsed
       FROM lnk_files
      
@@ -1410,8 +1421,19 @@ sources:
                           LinkTarget,
                           StringData,
                           if(condition=PropertyStore,
-                             then= ExtraData + dict(PropertyStore=PropertyStore),
-                             else= ExtraData ) as ExtraData,
+                             then= if(condition= ExtraData.Overlay,
+                                        then= ExtraData + dict(PropertyStore=PropertyStore),
+                                        else= if(condition= Overlay.Length > 4,
+                                                    then= ExtraData + dict(PropertyStore=PropertyStore) + dict(Overlay=to_dict(item=Overlay)),
+                                                    else= ExtraData + dict(PropertyStore=PropertyStore) 
+                                                )),
+                             else= if(condition= ExtraData.Overlay,
+                                        then= ExtraData,
+                                        else= if(condition= Overlay.Length > 4,
+                                                    then= ExtraData + dict(Overlay=to_dict(item=Overlay)),
+                                                    else= ExtraData 
+                                                )
+                                        )) as ExtraData,
                           find_uid(propertystore=PropertyStore)[0].Value as UID,
                           find_oldpath(propertystore=PropertyStore)[0].Value as OldPath,
                           find_oldsize(propertystore=PropertyStore)[0].Value as OldSize
@@ -1467,7 +1489,8 @@ sources:
                 ORDER BY Length DESC 
                 LIMIT 1
             },
-            else=null )    
+            else=null )
+    
       
       LET add_suspicious = SELECT *, dict(
                 `Large Size` = SourceFile.Size > SusSize,
@@ -1501,7 +1524,7 @@ sources:
             then= join(array=Suspicious) =~ ''':(true|0x|\d)''' OR join(array=SuspiciousCli) =~ ''':(true|0x|\d)''' OR len(list=ArgumentsDecoded) > 20,
             else= True )
 
-      LET add_suspiciousb64 = SELECT *,
+      LET add_suspiciousb64 = SELECT *
             if(condition= len(list=ArgumentsDecoded) > 20, then = dict(`Long Base64`=True) + sus_cli(data=ArgumentsDecoded)) as SuspiciousCliB64
         FROM add_suspicious
       
@@ -1517,7 +1540,10 @@ sources:
             LinkTarget,
             if(condition= SuspiciousCliB64,
                 then= to_dict(item=StringData) + dict(`DecodedBase64`=ArgumentsDecoded),
-                else = StringData) as StringData,
+                else= StringData) as StringData,
+            --if(condition=Overlay, 
+            --    then= to_dict(item=ExtraData) + dict(Overlay=to_dict(item=Overlay)), 
+            --    else= to_dict(item=ExtraData) ) as ExtraData,
             ExtraData,
             to_dict(item={SELECT * FROM items(item=Suspicious) WHERE _value }) + 
                 to_dict(item={SELECT * FROM items(item=SuspiciousCli) WHERE _value }) + 
