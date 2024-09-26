@@ -121,7 +121,7 @@ parameters:
   - name: RiskyExe
     description: Regex target exe to flag as risky.
     type: regex
-    default: ^\\(cmd|powershell|cscript|wscript|rundll32|regsvr32|mshta|wmic|netsh)\.exe$
+    default: \\(cmd|powershell|cscript|wscript|rundll32|regsvr32|mshta|wmic|netsh)\.exe$
     
 
 export: |
