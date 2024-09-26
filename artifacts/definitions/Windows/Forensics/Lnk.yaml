@@ -1462,11 +1462,12 @@ sources:
         FROM if(condition=data, 
             then={
                 SELECT Base64,  len(list=Base64) as Length 
-                FROM parse_records_with_regex(accessor='data',file=data, regex='''(?P<Base64>[A-Za-z0-9+/]{10,}={0,2})''')
-                ORDER BY Length DESC LIMIT 1
+                FROM parse_records_with_regex(accessor='data',file=data, regex='''(?P<Base64>(https?://[^\s]+/)*[A-Za-z0-9+/]{10,}={0,2})''')
+                WHERE NOT Base64 =~ '^http' -- Implementing negative regex match: We exclude b64 strings with http prefix.
+                ORDER BY Length DESC 
+                LIMIT 1
             },
-            else=null )
-    
+            else=null )    
       
       LET add_suspicious = SELECT *, dict(
                 `Large Size` = SourceFile.Size > SusSize,
