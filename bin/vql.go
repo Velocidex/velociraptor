@@ -27,6 +27,7 @@ import (
 	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vutils "www.velocidex.com/golang/velociraptor/utils"
@@ -255,6 +256,13 @@ func exportAccessors(old_data []*api_proto.Completion) []*api_proto.Completion {
 
 func doVQLExport() error {
 	logging.DisableLogging()
+
+	config_obj, err := makeDefaultConfigLoader().LoadAndValidate()
+	if err != nil {
+		config_obj = config.GetDefaultConfig()
+	}
+
+	_ = initFilestoreAccessor(config_obj)
 
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()

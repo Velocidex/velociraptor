@@ -265,7 +265,7 @@ func (self *sqlCache) GetHandleSqlite(ctx context.Context,
 			err = sql_handle.Ping()
 		}
 		if err != nil {
-			scope.Log("ERROR:Unable to open sqlite file %v: %v", tempfile, err)
+			scope.Log("DEBUG:Unable to open sqlite file %v: %v", tempfile, err)
 			err1 := os.Remove(tempfile)
 			utils_tempfile.RemoveTmpFile(tempfile, err1)
 
@@ -283,9 +283,9 @@ func (self *sqlCache) GetHandleSqlite(ctx context.Context,
 			// An error occurred maybe the database is locked, we try to
 			// copy it to temp file and try again.
 			if arg.Accessor != "data" {
-				scope.Log("ERROR:Unable to open sqlite file %v: %v", filename, err)
+				scope.Log("DEBUG:Unable to open sqlite file %v: %v", filename, err)
 			} else {
-				scope.Log("ERROR:Unable to open sqlite file: %v", err)
+				scope.Log("DEBUG:Unable to open sqlite file: %v", err)
 			}
 
 			// If the database is missing etc we just return the error,

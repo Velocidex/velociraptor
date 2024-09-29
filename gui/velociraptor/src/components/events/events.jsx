@@ -22,6 +22,7 @@ import EventNotebook, { get_notebook_id } from "./event-notebook.jsx";
 import DeleteNotebookDialog from '../notebooks/notebook-delete.jsx';
 import T from '../i8n/i8n.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
+import VeloLog from "../widgets/logs.jsx";
 
 import { withRouter }  from "react-router-dom";
 
@@ -30,7 +31,6 @@ import api from '../core/api-service.jsx';
 
 const mode_raw_data = "Raw Data";
 const mode_logs = "Logs";
-const mode_report = "Report";
 const mode_notebook = "Notebook";
 
 
@@ -273,11 +273,16 @@ class EventMonitoring extends React.Component {
                 <VeloTimestamp usec={cell}/>
             );
         };
+        let message_renderer = (cell, row, rowIndex) => {
+            return <VeloLog value={cell}/>;
+        };
 
         let renderers = {
             "_ts": timestamp_renderer,
             "Timestamp": timestamp_renderer,
             "client_time": timestamp_renderer,
+            "message": message_renderer,
+            "Message": message_renderer,
         };
 
         let column_types = this.state.artifact && this.state.artifact.definition &&
@@ -396,12 +401,6 @@ class EventMonitoring extends React.Component {
                         {T(mode_logs)}
                       </Dropdown.Item>
                       <Dropdown.Item
-                        title={T(mode_report)}
-                        active={this.state.mode === mode_report}
-                        onClick={() => this.setState({mode: mode_report})}>
-                        {T(mode_report)}
-                      </Dropdown.Item>
-                      <Dropdown.Item
                         title={T(mode_notebook)}
                         active={this.state.mode === mode_notebook}
                         onClick={() => this.setState({mode: mode_notebook})}>
@@ -428,19 +427,6 @@ class EventMonitoring extends React.Component {
                     time_range_setter={this.setTimeRange}
                   />
                 </Container> }
-
-            { this.state.mode === mode_report &&
-              <Container className="event-report-viewer">
-                { this.state.artifact.artifact ?
-                  <VeloReportViewer
-                    artifact={this.state.artifact.artifact}
-                    type="CLIENT_EVENT"
-                    client={this.props.client}
-                  /> :
-                  <div className="no-content">Please select an artifact to view above.</div>
-                }
-              </Container>
-            }
 
             { this.state.mode === mode_notebook &&
               <Container className="event-report-viewer">

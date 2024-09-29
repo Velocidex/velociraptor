@@ -133,6 +133,14 @@ func (self *Store) GetRecord(client_id string) (*actions_proto.ClientInfo, error
 }
 
 func (self *Store) _GetRecord(client_id string) (*actions_proto.ClientInfo, error) {
+	if client_id == "server" {
+		return &actions_proto.ClientInfo{
+			ClientId: client_id,
+			Hostname: client_id,
+			Fqdn:     client_id,
+		}, nil
+	}
+
 	serialized, pres := self.data[client_id]
 	if !pres {
 		return nil, os.ErrNotExist
