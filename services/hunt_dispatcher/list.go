@@ -67,8 +67,12 @@ func (self *HuntDispatcher) ListHunts(
 
 				// Clone the hunts so we can remove
 				// them from the locked section.
-				items = append(items,
-					proto.Clone(hunt).(*api_proto.Hunt))
+				clone := proto.Clone(hunt).(*api_proto.Hunt)
+				if clone.StartRequest != nil {
+					clone.StartRequest.CompiledCollectorArgs = nil
+				}
+
+				items = append(items, clone)
 			}
 			return nil
 		})

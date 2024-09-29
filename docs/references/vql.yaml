@@ -2688,6 +2688,26 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: fs
+  description: |
+    Provide access to the server's filestore and datastore.
+
+    Many VQL plugins produce references to files stored on the
+    server. This accessor can be used to open those files and read
+    them. Typically references to filestore or datastore files have
+    the "fs:" or "ds:" prefix.
+  type: Accessor
+  platforms:
+  - linux_amd64_cgo
+- name: fs_sparse
+  description: |
+    Provide access to the server's filestore and datastore.
+
+    This accessor expands sparse files. Reading from a sparse region
+    will result in zeros being returned.
+  type: Accessor
+  platforms:
+  - linux_amd64_cgo
 - name: gcs_pubsub_publish
   description: Publish a message to Google PubSub.
   type: Function
@@ -10681,4 +10701,3 @@
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
-

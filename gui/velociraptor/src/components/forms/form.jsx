@@ -114,7 +114,7 @@ export default class VeloForm extends React.Component {
         // specified type
         api.post("v1/GetArtifacts",
                 {
-                    search_term: "...",
+                    search_term: "empty:true",
                     type: artifact_type,
 
                     fields: fields,

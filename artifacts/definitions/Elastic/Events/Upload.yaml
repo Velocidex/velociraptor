@@ -57,13 +57,15 @@ sources:
       WHERE NOT Artifact =~ "Elastic.Events.Upload"
         AND log(message="Uploading artifact " + Artifact + " to Elastic")
 
+      LET s = scope()
+
       LET events = SELECT * FROM foreach(
           row=artifacts_to_watch,
           async=TRUE,   // Required for event queries in foreach()
           query={
              SELECT *, "Artifact_" + Artifact as _index,
                     Artifact,
-                    client_info(client_id=ClientId).os_info.hostname AS Hostname,
+                    client_info(client_id=s.ClientId || "server").os_info.hostname AS Hostname,
                     timestamp(epoch=now()) AS timestamp
              FROM watch_monitoring(artifact=Artifact)
           })

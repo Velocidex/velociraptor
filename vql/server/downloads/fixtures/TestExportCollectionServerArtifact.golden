@@ -1,6 +1,8 @@
 {
  "client_info.json": {
-  "client_id": "server"
+  "client_id": "server",
+  "hostname": "server",
+  "fqdn": "server"
  },
  "collection_context.json": {
   "client_id": "server",
