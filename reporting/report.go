@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"google.golang.org/protobuf/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -154,12 +155,29 @@ func GenerateMonitoringDailyReport(template_engine TemplateEngine,
 	return result, nil
 }
 
+func truncateLongLines(in string) string {
+	q_lines := strings.Split(in, "\n")
+	for i := range q_lines {
+		if len(q_lines[i]) > 200 {
+			q_lines[i] = q_lines[i][:200] + " ..."
+		}
+	}
+	return strings.Join(q_lines, "\n")
+}
+
 func GenerateArtifactDescriptionReport(
 	ctx context.Context,
 	template_engine TemplateEngine,
 	config_obj *config_proto.Config) (
 	string, error) {
-	artifact := template_engine.GetArtifact()
+	artifact := proto.Clone(template_engine.GetArtifact()).(*artifacts_proto.Artifact)
+
+	// Ensure long lines in the artifact are truncated- This ensures
+	// the html DOM is not too large and keeps the browser fast.
+	for _, s := range artifact.Sources {
+		s.Query = truncateLongLines(s.Query)
+	}
+	artifact.Export = truncateLongLines(artifact.Export)
 
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {

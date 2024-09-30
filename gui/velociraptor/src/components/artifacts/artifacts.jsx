@@ -176,6 +176,7 @@ class ArtifactInspector extends React.Component {
         this.setState({
             selectedDescriptor: row,
             fullSelectedDescriptor: {},
+            version: this.state.version+1,
         });
         this.props.history.push("/artifacts/" + row.name);
         e.preventDefault();
@@ -193,7 +194,6 @@ class ArtifactInspector extends React.Component {
             if (items.length > 0) {
                 this.setState({
                     fullSelectedDescriptor: items[0],
-                    version: this.state.version+1,
                 });
             };
         });
@@ -323,7 +323,10 @@ class ArtifactInspector extends React.Component {
                       this.fetchRows(this.state.current_filter,
                                      this.state.preset_filter);
                       this.getArtifactDescription(selected);
-                      this.setState({showEditedArtifactDialog: false});
+                      this.setState({
+                          showEditedArtifactDialog: false,
+                          version: this.state.version+1,
+                      });
                   }}
                 />
               }
