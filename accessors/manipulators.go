@@ -25,9 +25,9 @@ var (
 
 // This is a generic Path manipulator that implements the escaping
 // standard as used by Velociraptor:
-// 1. Path separators are / but will be able to use \\ to parse.
-// 2. Each component is optionally quoted if it contains special
-//    characters (like path separators).
+//  1. Path separators are / but will be able to use \\ to parse.
+//  2. Each component is optionally quoted if it contains special
+//     characters (like path separators).
 type GenericPathManipulator struct {
 	Sep string
 }
@@ -122,6 +122,16 @@ func (self LinuxPathManipulator) PathParse(path string, result *OSPath) error {
 		result.Components = append(result.Components, c)
 	}
 	return nil
+}
+
+func (self LinuxPathManipulator) PathJoin(path *OSPath) string {
+	osPathSerializations.Inc()
+
+	result := self.AsPathSpec(path)
+	if result.GetDelegateAccessor() == "" && result.GetDelegatePath() == "" {
+		return result.Path
+	}
+	return result.String()
 }
 
 func (self LinuxPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
