@@ -12,10 +12,42 @@ type testcase struct {
 	expected_path   string
 }
 
+var generic_testcases = []testcase{
+	// Generic paths try to take a good guess of the path type:
+	// 1. Use / or \ as path separator
+	// 2. Quotes represent unbroken paths.
+	{"/bin/file\\1.txt", []string{"bin", "file", "1.txt"}, "/bin/file/1.txt"},
+
+	// Quotes in the filename are escaped by doubling up and enclosing
+	// the component with a single quote.
+	{"/bin/file\"1\".txt", []string{"bin", "file\"1\".txt"},
+		`/bin/"file""1"".txt"`},
+
+	{`/bin/"file""1"".txt"`, []string{"bin", "file\"1\".txt"},
+		`/bin/"file""1"".txt"`},
+
+	// Enclosing a path in quotes treats it as a single literal
+	// component.
+	{"/bin/\"file\\1.txt\"", []string{"bin", "file\\1.txt"}, "/bin/\"file\\1.txt\""},
+}
+
+func TestGenericManipulators(t *testing.T) {
+	for _, testcase := range generic_testcases {
+		path, err := NewGenericOSPath(testcase.serialized_path)
+		assert.NoError(t, err)
+		assert.Equal(t, testcase.components, path.Components)
+		assert.Equal(t, testcase.expected_path, path.String())
+	}
+}
+
 var linux_testcases = []testcase{
 	{"/bin/ls", []string{"bin", "ls"}, "/bin/ls"},
 	{"bin////ls", []string{"bin", "ls"}, "/bin/ls"},
 	{"/bin/ls////", []string{"bin", "ls"}, "/bin/ls"},
+
+	// Files with non-path backslash characters should be parsed as
+	// one filename. They should also be serialized as a single file.
+	{"/bin/file\\1.txt", []string{"bin", "file\\1.txt"}, "/bin/file\\1.txt"},
 
 	// Ignore and dont support directory traversal at all
 	{"/bin/../../../.././../../ls", []string{"bin", "ls"}, "/bin/ls"},
