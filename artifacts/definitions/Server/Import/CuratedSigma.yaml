@@ -36,4 +36,5 @@ sources:
                             query={SELECT * FROM
                                 Artifact.Server.Import.ArtifactExchange(
                                 Prefix=Prefix,
+                                ArchiveGlob="*.yaml",
                                 ExchangeURL=get(item= URLlookup, member= _value))})

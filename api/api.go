@@ -38,11 +38,11 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
-	"www.velocidex.com/golang/velociraptor/api/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/api/tables"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -62,7 +62,7 @@ import (
 )
 
 type ApiServer struct {
-	proto.UnimplementedAPIServer
+	api_proto.UnimplementedAPIServer
 	server_obj         *server.Server
 	ca_pool            *x509.CertPool
 	wg                 *sync.WaitGroup
@@ -713,8 +713,14 @@ func (self *ApiServer) GetArtifacts(
 
 		for _, name := range in.Names {
 			artifact, pres := repository.Get(ctx, org_config_obj, name)
+			artifact_clone := proto.Clone(artifact).(*artifacts_proto.Artifact)
+			for _, s := range artifact_clone.Sources {
+				s.Queries = nil
+			}
+			artifact_clone.Raw = ""
+
 			if pres {
-				result.Items = append(result.Items, artifact)
+				result.Items = append(result.Items, artifact_clone)
 			}
 		}
 		return result, nil
