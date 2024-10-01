@@ -492,8 +492,11 @@ export default class VeloForm extends React.Component {
                       isMulti
                       defaultValue={a_defaults}
                       onChange={e=>{
-                          let data = _.map(e, x=>x.value);
-                          this.props.setValue(JSON.stringify(data));
+                          let data = _.map(e, x=>{
+                              return {Artifact: x.value};
+                          });
+                          // artifact sets require csv style output.
+                          this.props.setValue(serializeCSV(data, ["Artifact"]));
                       }}
                       options={a_options}
                       />
