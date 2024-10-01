@@ -20,7 +20,6 @@ description: |
   - SusArgSize: Any lnk with Argument strings over this size is suspicious.
   - SusArgRegex: Regex for suspicious strings in Arguments.
   - SusHostnameRegex: Regex for suspicious TrackerData Hostname.
-  - CheckHostnameMismatch: Compare TrackerData.MachineID with Hostname (noisy in many networks)
   - VmPrefixMAC: Regex to match known Virtual Machine MacAddress prefix in TrackerData. 
   - RiskyExe: Regex target exe to flag as risky.
   
@@ -54,10 +53,8 @@ description: |
     * Line break in StringData.Name
     * Suspicious argument size - large sized arguments over 250 characters as default
     * Environment variable script - environment vatiable with a common script configured (bat|cmd|ps1|js|vbs|vbe|py)
-    * Environment variable script
     * No Target with environmant variable - environment variable only execution
-    * Suspicious hostname - some common malicious hostnames    
-    * Hostname mismatch - if selected will compare trackerdata hostname to machine name (lots of FPs)  
+    * Suspicious hostname - some common malicious hostnames
     * Created in VM - Check TrackerData MacAddress for known VM prefix
     * Local Admin- check PropertyStore for indications LNK created by local admin UID 500
     * Cyrillic Language - check PropertyStore for Cyrillic strings
@@ -1383,9 +1380,6 @@ export: |
         
 sources:
   - query: |
-     LET hostname <= if(condition=CheckHostnameMismatch,
-        then={ SELECT Hostname FROM info()})
-
      LET targets = SELECT OSPath, Mtime,Atime,Ctime,Btime,Size,
             read_file(filename=OSPath,offset=0,length=2) as _Header
         FROM glob(globs=TargetGlob)
@@ -1475,7 +1469,7 @@ sources:
                 `Arguments have rare characters` = data=~'''\?\!\~\@''',
                 `Arguments have leading space` = data=~ '^ ',
                 `Arguments have http strings` = data=~'''(http|ftp)s?://''',
-                `Arguments have UNC strings` = data=~'''\\\\''',
+                `Arguments have UNC strings` = data=~'''(\s|^)\\\\[a-z0-9$_.-]+''',
                 `Suspicious arguments` = data=~SusArgRegex
             )
             
@@ -1505,8 +1499,7 @@ sources:
                 `Suspicious argument size` = len(list=StringData.Arguments) > SusArgSize,
                 `Environment variable script` = ExtraData.EnvironmentVariable =~ '''\.(bat|cmd|ps1|js|vbs|vbe|py)$''',
                 `No Target with environment variable` = ExtraData.EnvironmentVariable AND StringData.Arguments AND NOT (StringData.TargetPath OR StringData.RelativePath),
-                `Suspicious hostname` = ExtraData.TrackerData.MachineID AND SusHostnameRegex AND ExtraData.TrackerData.MachineID=~SusHostnameRegex AND NOT lowcase(string=ExtraData.TrackerData.MachineID)=~lowcase(string=hostname[0].Hostname),
-                `Hostname mismatch` = CheckHostnameMismatch AND ExtraData.TrackerData.MachineID AND NOT lowcase(string=ExtraData.TrackerData.MachineID)=~lowcase(string=hostname[0].Hostname),
+                `Suspicious hostname` = ExtraData.TrackerData.MachineID AND SusHostnameRegex AND ExtraData.TrackerData.MachineID=~SusHostnameRegex,
                 `Created in VM` = ExtraData.TrackerData.MacAddress =~ VmPrefixMAC,
                 `Local Admin` = UID='500',
                 `Cyrillic Language` = format(format='%s%s',args=[LinkTarget,ExtraData])=~ '''[\x{0400}-\x{04FF}]''',
@@ -1541,9 +1534,6 @@ sources:
             if(condition= SuspiciousCliB64,
                 then= to_dict(item=StringData) + dict(`DecodedBase64`=ArgumentsDecoded),
                 else= StringData) as StringData,
-            --if(condition=Overlay, 
-            --    then= to_dict(item=ExtraData) + dict(Overlay=to_dict(item=Overlay)), 
-            --    else= to_dict(item=ExtraData) ) as ExtraData,
             ExtraData,
             to_dict(item={SELECT * FROM items(item=Suspicious) WHERE _value }) + 
                 to_dict(item={SELECT * FROM items(item=SuspiciousCli) WHERE _value }) + 
