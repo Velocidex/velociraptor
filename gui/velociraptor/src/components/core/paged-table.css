@@ -91,7 +91,7 @@ td.column-resizer {
 }
 
 .paged-table tbody tr td.compact div {
-    height: 2em;
+    max-height: 2em;
 }
 
 .paged-table tbody tr td.compact {
