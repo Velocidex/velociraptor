@@ -68,3 +68,21 @@ table.paged-table-header:hover .hidden-edit {
     width: 0px;
     visibility: hidden;
 }
+
+td.column-resizer {
+    width: 0px;
+    padding: 5px;
+    cursor: col-resize;
+    min-width: 5px;
+    max-width: 5px;
+    background-color: var(--color-table-heading-background);
+}
+
+.paged-table thead td.column-resizer {
+    background-color: var(--color-table-heading-background);
+}
+
+.paged-table thead td.column-resizer:hover,
+.paged-table tbody td.column-resizer:hover {
+    background-color: var(--color-table-row-selected);
+}
