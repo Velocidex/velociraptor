@@ -731,7 +731,7 @@ class VeloPagedTable extends Component {
                            toggles: toggles,
                            stack_path: stack_path || [],
                            column_types: response.data.column_types,
-                           columns: columns });
+                           columns: this.mergeColumns(columns) });
 
             if(this.props.setPageState) {
                 this.props.setPageState({
@@ -746,6 +746,36 @@ class VeloPagedTable extends Component {
         }).catch(() => {
             this.setState({loading: false, rows: [], columns: [], stack_path: []});
         });
+    }
+
+    // Merge new columns into the current table state in such a way
+    // that the existing column ordering will not be changed.
+    mergeColumns = columns=>{
+        let lookup = {};
+        _.each(columns, x=>{
+            lookup[x] = true;
+        });
+        let new_columns = [];
+        let new_lookup = {};
+
+        // Add the old columns only if they are also in the new set,
+        // preserving their order.
+        _.each(this.state.columns, c=>{
+            if(lookup[c]) {
+                new_columns.push(c);
+                new_lookup[c] = true;
+            }
+        });
+
+        // Add new columns if they were not already, preserving their
+        // order.
+        _.each(columns, c=>{
+            if(!new_lookup[c])  {
+                new_columns.push(c);
+            }
+        });
+
+        return new_columns;
     }
 
     // Update the transform specification between all the columns
@@ -857,9 +887,11 @@ class VeloPagedTable extends Component {
         // Derive the name of the column to put in the header.
         // It can be set by specifying the `text` attribute
         // of the columns prop.
-        let columns = this.props.columns;
+        let extra_columns = this.props.columns;
         let column_name = (
-            columns && columns[column] && columns[column].text) || column;
+            extra_columns &&
+                extra_columns[column] &&
+                extra_columns[column].text) || column;
         if (this.props.translate_column_headers) {
             column_name = T(column_name);
         }
@@ -878,7 +910,21 @@ class VeloPagedTable extends Component {
         if (this.props.prevent_transformations &&
             this.props.prevent_transformations[column]) {
             return <React.Fragment key={idx}>
-                     <th style={styles}>
+                     <th style={styles}
+                         onDragStart={e=>{
+                             e.dataTransfer.setData("column", column);
+                         }}
+                         onDrop={e=>{
+                             e.preventDefault();
+                             this.swapColumns(
+                                 e.dataTransfer.getData("column"), column);
+                         }}
+                         onDragOver={e=>{
+                             e.preventDefault();
+                             e.dataTransfer.dropEffect = "move";
+                         }}
+                         draggable="true">
+
                        <table className="paged-table-header">
                          <tbody>
                            <tr>
@@ -910,7 +956,19 @@ class VeloPagedTable extends Component {
 
         return (
             <React.Fragment key={idx}>
-              <th style={styles}>
+              <th style={styles}
+                  onDragStart={e=>{
+                      e.dataTransfer.setData("column", column);
+                  }}
+                  onDrop={e=>{
+                      e.preventDefault();
+                      this.swapColumns(e.dataTransfer.getData("column"), column);
+                  }}
+                  onDragOver={e=>{
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                  }}
+                  draggable="true">
                 <table className="paged-table-header">
                   <tbody>
                     <tr>
@@ -1010,6 +1068,20 @@ class VeloPagedTable extends Component {
                 className={selected_cls}>
               {_.map(this.activeColumns(), c=>this.renderCell(c, row, idx))}
             </tr>);
+    }
+
+    swapColumns = (from_col, to_col)=>{
+        let new_columns = [];
+        _.each(this.state.columns, x=>{
+            if(x === to_col) {
+                new_columns.push(from_col);
+            } else if(x == from_col) {
+                new_columns.push(to_col);
+            } else {
+                new_columns.push(x);
+            }
+        });
+        this.setState({columns: new_columns});
     }
 
     renderPaginator = (direction)=>{
