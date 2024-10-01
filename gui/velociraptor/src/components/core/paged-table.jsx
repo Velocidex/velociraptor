@@ -19,6 +19,7 @@ import ToolTip from '../widgets/tooltip.jsx';
 import Table from 'react-bootstrap/Table';
 import Dropdown from 'react-bootstrap/Dropdown';
 import StackDialog from './stack.jsx';
+import ColumnResizer from "./column-resizer.jsx";
 
 import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
@@ -543,6 +544,9 @@ class VeloPagedTable extends Component {
 
         // Keep state for individual stacking transforms
         stack_transforms: {},
+
+        // Map between columns and their widths.
+        column_widths: {},
     }
 
     componentDidMount = () => {
@@ -860,65 +864,97 @@ class VeloPagedTable extends Component {
             column_name = T(column_name);
         }
 
+        let styles = {};
+        let col_width = this.state.column_widths[column_name];
+        if (col_width) {
+            styles = {
+                minWidth: col_width,
+                maxWidth: col_width,
+                width: col_width,
+            };
+        }
+
         // Do not allow this column to be sorted/filtered
         if (this.props.prevent_transformations &&
             this.props.prevent_transformations[column]) {
-            return <th key={idx}>
-                     <table className="paged-table-header">
-                       <tbody>
-                         <tr>
-                           <td>{ column_name }</td>
-                           <td className="sort-element">
-                             <ButtonGroup>
-                               <Button
-                                 className="hidden-sorter"
-                                 size="sm"
-                               ></Button>
-                             </ButtonGroup>
+            return <React.Fragment key={idx}>
+                     <th style={styles}>
+                       <table className="paged-table-header">
+                         <tbody>
+                           <tr>
+                             <td>{ column_name }</td>
+                             <td className="sort-element">
+                               <ButtonGroup>
+                                 <Button
+                                   className="hidden-sorter"
+                                   size="sm"
+                                 ></Button>
+                               </ButtonGroup>
 
-                           </td>
-                         </tr>
-                       </tbody>
-                     </table>
-                   </th>;
+                             </td>
+                           </tr>
+                         </tbody>
+                       </table>
+                     </th>
+                     <ColumnResizer
+                       width={this.state.column_widths[column]}
+                       setWidth={x=>{
+                           let column_widths = Object.assign(
+                               {}, this.state.column_widths);
+                           column_widths[column] = x;
+                           this.setState({column_widths: column_widths});
+                       }}
+                     />
+                   </React.Fragment>;
         }
 
         return (
-            <th key={idx}>
-              <table className="paged-table-header">
-                <tbody>
-                  <tr>
-                    <td>{ column_name }</td>
-                    <td className="sort-element">
-                      <ButtonGroup>
-                        { this.isColumnStacked(column) &&
-                          <ToolTip tooltip={T("Stack")} key={idx}>
-                            <Button variant="default"
-                                    target="_blank" rel="noopener noreferrer"
-                                    onClick={e=>{
-                                        this.setState({showStackDialog: column});
-                                        e.preventDefault();
-                                        return false;
-                                    }}>
-                              <FontAwesomeIcon icon="layer-group"/>
-                            </Button>
-                          </ToolTip>
-                        }
-                        <ColumnSort column={column}
-                                    transform={this.state.transform}
-                                    setTransform={this.setTransform}
-                        />
-
-                        <ColumnFilter column={column}
+            <React.Fragment key={idx}>
+              <th style={styles}>
+                <table className="paged-table-header">
+                  <tbody>
+                    <tr>
+                      <td>{ column_name }</td>
+                      <td className="sort-element">
+                        <ButtonGroup>
+                          { this.isColumnStacked(column) &&
+                            <ToolTip tooltip={T("Stack")} key={idx}>
+                              <Button variant="default"
+                                      target="_blank" rel="noopener noreferrer"
+                                      onClick={e=>{
+                                          this.setState({showStackDialog: column});
+                                          e.preventDefault();
+                                          return false;
+                                      }}>
+                                <FontAwesomeIcon icon="layer-group"/>
+                              </Button>
+                            </ToolTip>
+                          }
+                          <ColumnSort column={column}
                                       transform={this.state.transform}
                                       setTransform={this.setTransform}
-                        />
-                      </ButtonGroup>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </th>
+                          />
+
+                          <ColumnFilter column={column}
+                                        transform={this.state.transform}
+                                        setTransform={this.setTransform}
+                          />
+                        </ButtonGroup>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </th>
+              <ColumnResizer
+                width={this.state.column_widths[column]}
+                setWidth={x=>{
+                    let column_widths = Object.assign(
+                        {}, this.state.column_widths);
+                    column_widths[column] = x;
+                    this.setState({column_widths: column_widths});
+                }}
+              />
+            </React.Fragment>
         );
     }
 
@@ -929,9 +965,20 @@ class VeloPagedTable extends Component {
         let cell = row[column];
         let renderer = this.getColumnRenderer(column);
 
-        return <td key={column}>
-                 { renderer(cell, row, this.props.env)}
-               </td>;
+        return <React.Fragment key={column}>
+                 <td>
+                   { renderer(cell, row, this.props.env)}
+                 </td>
+                 <ColumnResizer
+                   width={this.state.column_widths[column]}
+                   setWidth={x=>{
+                       let column_widths = Object.assign(
+                           {}, this.state.column_widths);
+                       column_widths[column] = x;
+                       this.setState({column_widths: column_widths});
+                   }}
+                 />
+               </React.Fragment>;
     };
 
     selectRow = (row, idx)=>{
