@@ -7,7 +7,6 @@ import React, { Component } from 'react';
 import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 import Button from 'react-bootstrap/Button';
-import qs from 'qs';
 import Modal from 'react-bootstrap/Modal';
 import Container from  'react-bootstrap/Container';
 import HexView from '../utils/hex.jsx';

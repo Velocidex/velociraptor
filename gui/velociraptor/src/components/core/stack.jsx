@@ -6,7 +6,6 @@ import T from '../i8n/i8n.jsx';
 import VeloPagedTable from './paged-table.jsx';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { formatColumns } from "../core/table.jsx";
 
 
 export default class StackDialog extends Component {
