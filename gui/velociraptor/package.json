@@ -1,6 +1,6 @@
 {
     "name": "velociraptor",
-    "version": "0.72",
+    "version": "0.73",
     "private": true,
     "type": "module",
     "dependencies": {
