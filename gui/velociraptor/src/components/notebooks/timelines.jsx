@@ -16,11 +16,8 @@ import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { ToStandardTime } from '../utils/time.jsx';
 import { JSONparse } from '../utils/json_parse.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
-import ButtonGroup from 'react-bootstrap/ButtonGroup';
-import ToggleButton from 'react-bootstrap/ToggleButton';
 import { sprintf } from 'sprintf-js';
 
 import T from '../i8n/i8n.jsx';

@@ -10,6 +10,7 @@ export default class ColumnResizer extends Component {
         // Called to set the width of the previous column.
         setWidth: PropTypes.func,
         width: PropTypes.number,
+        className: PropTypes.string,
     }
 
     componentDidMount() {
@@ -69,10 +70,14 @@ export default class ColumnResizer extends Component {
     }
 
     render() {
+        let clsname = "column-resizer ";
+        if (this.props.className) {
+            clsname += this.props.className;
+        }
         return (
             <td
               ref={this.ref}
-              className="column-resizer"
+              className={clsname}
               onMouseDown={this.startDrag}
             />
         );

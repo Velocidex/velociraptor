@@ -13,8 +13,10 @@ import { PrepareData } from '../core/table.jsx';
 import VeloValueRenderer from '../utils/value.jsx';
 import Form from 'react-bootstrap/Form';
 import { JSONparse } from '../utils/json_parse.jsx';
-import VeloTimestamp from "../utils/time.jsx";
-import { localTimeFromUTCTime, utcTimeFromLocalTime } from '../utils/time.jsx';
+import VeloTimestamp, {
+    localTimeFromUTCTime,
+    utcTimeFromLocalTime,
+    ToStandardTime } from '../utils/time.jsx';
 
 // make sure you include the timeline stylesheet or the timeline will not be styled
 import 'react-calendar-timeline/lib/Timeline.css';
@@ -27,12 +29,10 @@ import Navbar from 'react-bootstrap/Navbar';
 import T from '../i8n/i8n.jsx';
 import Table from 'react-bootstrap/Table';
 import ToolTip from '../widgets/tooltip.jsx';
-import { ColumnToggle } from '../core/paged-table.jsx';
 import Modal from 'react-bootstrap/Modal';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
-import { ToStandardTime } from '../utils/time.jsx';
-import { ColumnFilter } from '../core/paged-table.jsx';
+import { ColumnFilter, ColumnToggle } from '../core/paged-table.jsx';
 import DateTimePicker from 'react-datetime-picker';
 import Dropdown from 'react-bootstrap/Dropdown';
 import Alert from 'react-bootstrap/Alert';
@@ -134,7 +134,7 @@ class DeleteComponentDialog extends Component {
 
 class AnnotationDialog extends Component {
     static propTypes = {
-        Timestamp: PropTypes.number,
+        timestamp: PropTypes.number,
         event: PropTypes.object,
         notebook_id: PropTypes.string,
         super_timeline: PropTypes.string,
@@ -612,7 +612,6 @@ export default class TimelineRenderer extends React.Component {
                 return;
             }
             let start_time = (response.data.start_time / 1000000) || 0;
-            let end_time = (response.data.end_time / 1000000) || 0;
             let pageData = PrepareData(response.data);
             let timelines = response.data.timelines;
 
@@ -659,33 +658,6 @@ export default class TimelineRenderer extends React.Component {
                  deletable={group.id !== -1 && group.id !== "Annotation"}
                  onUpdate={this.fetchRows}
                />;
-
-
-        if (group.id < 0) {
-            return <div>{group.title}</div>;
-        }
-
-        return (
-            <Form>
-              <ButtonGroup>
-                <Form.Check
-                  className="custom-group"
-                  type="checkbox"
-                  label={group.title}
-                  checked={!group.disabled}
-                  onChange={()=>{
-                      let disabled = this.state.disabled;
-                      disabled[group.id] = !disabled[group.id];
-                      this.setState({disabled: disabled});
-                      this.fetchRows();
-                  }}
-                />
-                <Button variant="default">
-                  <FontAwesomeIcon icon="wrench" />
-                </Button>
-              </ButtonGroup>
-            </Form>
-        );
     };
 
     nextPage = ()=>{

@@ -20,6 +20,8 @@ import Table from 'react-bootstrap/Table';
 import Dropdown from 'react-bootstrap/Dropdown';
 import StackDialog from './stack.jsx';
 import ColumnResizer from "./column-resizer.jsx";
+import InputGroup from 'react-bootstrap/InputGroup';
+
 
 import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
@@ -88,29 +90,40 @@ export class ColumnFilter extends Component {
         let classname = "hidden-edit";
 
         if(this.state.edit_visible) {
-            return <Form
-                     onSubmit={e=>{
-                         e.preventDefault();
-                         this.submitSearch();
-                         return false;
-                     }}>
-                     <Form.Control
-                       as="input"
-                       className="visible"
-                       placeholder={T("Regex")}
-                       spellCheck="false"
-                       value={this.state.edit_filter}
-                       onChange={e=> {
-                           this.setState({edit_filter: e.currentTarget.value});
-                       }}/>
-                   </Form>;
+            return (
+                <ToolTip tooltip={this.props.column}>
+                  <Form
+                    onSubmit={e=>{
+                        e.preventDefault();
+                        this.submitSearch();
+                        return false;
+                    }}>
+                    <InputGroup className="mb-3">
+                      <Button
+                        size="sm"
+                        type="button"
+                        variant="default"
+                        className="visible"
+                        onClick={this.submitSearch}>
+                        <FontAwesomeIcon icon="filter"/>
+                      </Button>
+                      <Form.Control
+                        as="input"
+                        placeholder={T("Regex Filter")}
+                        spellCheck="false"
+                        className="visible"
+                        value={this.state.edit_filter}
+                        onChange={e=> {
+                          this.setState({edit_filter: e.currentTarget.value});
+                      }}/>
+                    </InputGroup>
+                  </Form>
+                </ToolTip>
+            );
         }
 
-        if (this.state.edit_filter) {
-            classname = "visible";
-        }
-
-        return (<>
+        return (
+            <ToolTip tooltip={T("Filter")}>
                 <Form
                   onSubmit={e=>{
                       e.preventDefault();
@@ -128,10 +141,10 @@ export class ColumnFilter extends Component {
                         this.props.setTransform({editing: this.props.column});
                     }}>
                     <FontAwesomeIcon icon="filter"/>
-                    { this.state.edit_filter }
-                </Button>
+                  </Button>
                 </Form>
-                </>);
+              </ToolTip>
+            );
     }
 }
 
@@ -172,14 +185,18 @@ class ColumnSort extends Component {
         }
 
 
-        return <Button
-                 size="sm"
-                 className={classname}
-                 variant="outline-dark"
-                 onClick={()=>this.submitSort(next_dir)}
-               >
-                 <FontAwesomeIcon icon={icon}/>
-               </Button>;
+        return (
+            <ToolTip tooltip={T("Sort")}>
+              <Button
+                size="sm"
+                className={classname}
+                variant="outline-dark"
+                onClick={()=>this.submitSort(next_dir)}
+              >
+                <FontAwesomeIcon icon={icon}/>
+              </Button>
+            </ToolTip>
+        );
     }
 }
 
@@ -189,6 +206,7 @@ export class ColumnToggle extends Component {
         columns: PropTypes.array,
         toggles: PropTypes.object,
         onToggle: PropTypes.func,
+        swapColumns: PropTypes.func,
     }
 
     state = {
@@ -209,6 +227,19 @@ export class ColumnToggle extends Component {
                      key={ column }
                      eventKey={column}
                      active={!hidden}
+                     draggable="true"
+                     onDragStart={e=>{
+                         e.dataTransfer.setData("column", column);
+                     }}
+                     onDrop={e=>{
+                         e.preventDefault();
+                         this.props.swapColumns(
+                             e.dataTransfer.getData("column"), column);
+                     }}
+                     onDragOver={e=>{
+                         e.preventDefault();
+                         e.dataTransfer.dropEffect = "move";
+                     }}
                    >
                      { column }
             </Dropdown.Item>;
@@ -547,6 +578,8 @@ class VeloPagedTable extends Component {
 
         // Map between columns and their widths.
         column_widths: {},
+
+        compact_columns: {},
     }
 
     componentDidMount = () => {
@@ -831,9 +864,38 @@ class VeloPagedTable extends Component {
             downloads.columns = active_columns;
         }
 
+        let all_compacted = true;
+        let none_compacted = true;
+
+        _.each(this.state.compact_columns, (v, k)=>{
+            if (v === true) {
+                none_compacted = false;
+            } else {
+                all_compacted = false;
+            };
+        });
+
         return (
             <Navbar className="toolbar">
               <ButtonGroup>
+                <ToolTip tooltip={!all_compacted ?
+                                  T("Collapse all columns") :
+                                  T("Expand all columns")}>
+                  <Button variant="default"
+                          onClick={()=>{
+                              // Compact all columns if any columns are expanded.
+                              // If they are all compacted then expand them all.
+                              let compact = none_compacted || !all_compacted;
+                              let compact_columns = {};
+                              _.each(this.state.columns, c=>{
+                                  compact_columns[c] = compact;
+                              });
+                              this.setState({compact_columns: compact_columns});
+                    }}
+                  >
+                    <FontAwesomeIcon icon={!all_compacted ? "compress": "expand"}/>
+                  </Button>
+                </ToolTip>
                 <ColumnToggle onToggle={(c)=>{
                     // Do not make a copy here because set state is
                     // not immediately visible and this will be called
@@ -843,6 +905,7 @@ class VeloPagedTable extends Component {
                     this.setState({toggles: toggles});
                 }}
                               columns={this.state.columns}
+                              swapColumns={this.swapColumns}
                               toggles={this.state.toggles} />
                 <InspectRawJson rows={this.state.rows} />
                 <ToolTip tooltip={T("Download JSON")}>
@@ -906,11 +969,19 @@ class VeloPagedTable extends Component {
             };
         }
 
+        // Only show those icons on columns which have transformations
+        // applied on them.
+        let transformed_class = "";
+        if (this.isColumnStacked(column)) {
+            transformed_class = "transformed";
+        }
+
         // Do not allow this column to be sorted/filtered
         if (this.props.prevent_transformations &&
             this.props.prevent_transformations[column]) {
             return <React.Fragment key={idx}>
                      <th style={styles}
+                         className={transformed_class + " paged-table-header"}
                          onDragStart={e=>{
                              e.dataTransfer.setData("column", column);
                          }}
@@ -924,23 +995,9 @@ class VeloPagedTable extends Component {
                              e.dataTransfer.dropEffect = "move";
                          }}
                          draggable="true">
-
-                       <table className="paged-table-header">
-                         <tbody>
-                           <tr>
-                             <td>{ column_name }</td>
-                             <td className="sort-element">
-                               <ButtonGroup>
-                                 <Button
-                                   className="hidden-sorter"
-                                   size="sm"
-                                 ></Button>
-                               </ButtonGroup>
-
-                             </td>
-                           </tr>
-                         </tbody>
-                       </table>
+                       <span className="column-name">
+                             { column_name }
+                       </span>
                      </th>
                      <ColumnResizer
                        width={this.state.column_widths[column]}
@@ -957,6 +1014,7 @@ class VeloPagedTable extends Component {
         return (
             <React.Fragment key={idx}>
               <th style={styles}
+                  className={transformed_class + " paged-table-header"}
                   onDragStart={e=>{
                       e.dataTransfer.setData("column", column);
                   }}
@@ -969,39 +1027,67 @@ class VeloPagedTable extends Component {
                       e.dataTransfer.dropEffect = "move";
                   }}
                   draggable="true">
-                <table className="paged-table-header">
-                  <tbody>
-                    <tr>
-                      <td>{ column_name }</td>
-                      <td className="sort-element">
-                        <ButtonGroup>
-                          { this.isColumnStacked(column) &&
-                            <ToolTip tooltip={T("Stack")} key={idx}>
-                              <Button variant="default"
-                                      target="_blank" rel="noopener noreferrer"
-                                      onClick={e=>{
-                                          this.setState({showStackDialog: column});
-                                          e.preventDefault();
-                                          return false;
-                                      }}>
-                                <FontAwesomeIcon icon="layer-group"/>
-                              </Button>
-                            </ToolTip>
-                          }
-                          <ColumnSort column={column}
-                                      transform={this.state.transform}
-                                      setTransform={this.setTransform}
-                          />
+                <span className="column-name">
+                  { column_name }
+                </span>
+                <span className="sort-element">
+                  { this.state.transform.editing ?
+                    <ButtonGroup className="hover-buttons">
+                      <ColumnFilter column={column}
+                                    transform={this.state.transform}
+                                    setTransform={this.setTransform}
+                      />
+                    </ButtonGroup>
+                    :
+                    <ButtonGroup className="hover-buttons">
+                      { this.isColumnStacked(column) &&
+                        <ToolTip tooltip={T("Stack")} key={idx}>
+                          <Button variant="default"
+                                  className="visible"
+                                  target="_blank" rel="noopener noreferrer"
+                                  onClick={e=>{
+                                      this.setState({showStackDialog: column});
+                                      e.preventDefault();
+                                      return false;
+                                  }}>
+                            <FontAwesomeIcon icon="layer-group"/>
+                          </Button>
+                        </ToolTip>
+                      }
+                      <ColumnSort column={column}
+                                  transform={this.state.transform}
+                                  setTransform={this.setTransform}
+                      />
 
-                          <ColumnFilter column={column}
-                                        transform={this.state.transform}
-                                        setTransform={this.setTransform}
-                          />
-                        </ButtonGroup>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                      <ColumnFilter column={column}
+                                    transform={this.state.transform}
+                                    setTransform={this.setTransform}
+                      />
+                      <Button
+                        size="sm"
+                        type="button"
+                        variant="outline-dark"
+                        className="hidden-edit"
+                        onClick={()=>{
+                            let compact_columns = Object.assign(
+                                {}, this.state.compact_columns);
+                            compact_columns[column] = !compact_columns[column];
+                            this.setState({
+                                compact_columns: compact_columns,
+                            });
+                        }}>
+                        { !this.state.compact_columns[column] ?
+                          <ToolTip tooltip={T("Compact Column")}>
+                            <FontAwesomeIcon icon="compress"/>
+                          </ToolTip> :
+                          <ToolTip tooltip={T("Expand Column")}>
+                            <FontAwesomeIcon icon="expand"/>
+                          </ToolTip>
+                        }
+                      </Button>
+                    </ButtonGroup>
+            }
+                </span>
               </th>
               <ColumnResizer
                 width={this.state.column_widths[column]}
@@ -1016,18 +1102,57 @@ class VeloPagedTable extends Component {
         );
     }
 
+    isCellCollapsed = (column, rowIdx) => {
+        let column_desc = this.state.compact_columns[column];
+        // True represents all the cells are collapsed
+        if (column_desc === true) {
+            return true;
+        }
+        // If we store an object here then the object represents only
+        // cells which are **not** collapsed.
+        if(_.isObject(column_desc)) {
+            if(column_desc[rowIdx.toString()]) {
+                return false;
+            }
+            return true;
+        };
+        return false;
+    }
+
     renderCell = (column, row, rowIdx) => {
         let t = this.state.toggles[column];
         if(t) {return undefined;};
 
         let cell = row[column];
         let renderer = this.getColumnRenderer(column);
+        let is_collapsed = this.isCellCollapsed(column, rowIdx);
+        let clsname = is_collapsed ? "compact": "";
 
         return <React.Fragment key={column}>
-                 <td>
+                 <td className={clsname}
+                     onClick={()=>{
+                         // If the column is not collapsed no click handler!
+                         if(!is_collapsed) return;
+
+                         // The cell is collapsed, we need to expand it:
+
+                         // If the entire column is collapsed we need
+                         // to specify that only this row is expanded.
+                         let column_desc = this.state.compact_columns[column];
+                         if(column_desc === true) {
+                             column_desc = {};
+                         }
+                         column_desc[rowIdx.toString()]=true;
+                         let compact_columns = Object.assign(
+                             {}, this.state.compact_columns);
+                         compact_columns[column] = column_desc;
+                         this.setState({compact_columns: compact_columns});
+                     }}
+                   >
                    { renderer(cell, row, this.props.env)}
                  </td>
                  <ColumnResizer
+                   className={clsname}
                    width={this.state.column_widths[column]}
                    setWidth={x=>{
                        let column_widths = Object.assign(
@@ -1070,14 +1195,15 @@ class VeloPagedTable extends Component {
             </tr>);
     }
 
+    // Insert the to_col right before the from_col
     swapColumns = (from_col, to_col)=>{
         let new_columns = [];
         _.each(this.state.columns, x=>{
             if(x === to_col) {
                 new_columns.push(from_col);
-            } else if(x == from_col) {
-                new_columns.push(to_col);
-            } else {
+            }
+
+            if(x !== from_col) {
                 new_columns.push(x);
             }
         });
