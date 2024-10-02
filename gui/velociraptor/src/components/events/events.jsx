@@ -13,7 +13,6 @@ import "react-datepicker/dist/react-datepicker.css";
 
 import { EventTableWizard, ServerEventTableWizard } from './event-table.jsx';
 import Container from  'react-bootstrap/Container';
-import VeloReportViewer from "../artifacts/reporting.jsx";
 import Modal from 'react-bootstrap/Modal';
 import VeloAce, { SettingsButton } from '../core/ace.jsx';
 import VeloTimestamp from "../utils/time.jsx";

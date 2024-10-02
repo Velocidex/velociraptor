@@ -33,17 +33,16 @@ table.paged-table-header .sort-element {
 }
 
 tr.paged-table-header th {
-    padding: 0;
+
 }
 
-table.paged-table-header .hidden-edit {
+th.paged-table-header .sort-element {
     visibility: hidden;
 }
 
-table.paged-table-header:hover .hidden-edit {
+th.paged-table-header:hover .sort-element {
     visibility: visible;
 }
-
 
 .btn-group > button.goto-start.btn.btn-default {
     margin-left: 5px;
@@ -85,4 +84,39 @@ td.column-resizer {
 .paged-table thead td.column-resizer:hover,
 .paged-table tbody td.column-resizer:hover {
     background-color: var(--color-table-row-selected);
+}
+
+.paged-table tbody tr td {
+    vertical-align: top;
+}
+
+.paged-table tbody tr td.compact div {
+    max-height: 2em;
+}
+
+.paged-table tbody tr td.compact {
+    mask-image: -webkit-gradient(linear, left top, left bottom,
+                                 from(rgba(0,0,0,1)), to(rgba(0,0,0,0)));
+}
+
+.column-name {
+    margin-right: 60px;
+}
+
+.transformed .column-name {
+    margin-right: 100px;
+}
+
+.transformed .sort-element .hover-buttons {
+    margin-left: -80px;
+}
+
+.sort-element .hover-buttons {
+    position: absolute;
+    margin-top: -8px;
+    margin-left: -40px;
+}
+
+th.paged-table-header {
+    white-space: nowrap;
 }

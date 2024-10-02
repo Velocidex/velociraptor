@@ -7,8 +7,6 @@ import ShellViewer from "../clients/shell-viewer.jsx";
 import MetadataEditor from "../clients/metadata.jsx";
 import classNames from "classnames";
 
-import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
-import ToggleButton from 'react-bootstrap/ToggleButton';
 import Button from 'react-bootstrap/Button';
 import T from '../i8n/i8n.jsx';
 import Card from 'react-bootstrap/Card';
