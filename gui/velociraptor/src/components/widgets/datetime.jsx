@@ -302,11 +302,11 @@ export default class DateTimePicker extends Component {
         let timezone = this.context.traits.timezone || "UTC";
 
         let presets = [
-            [T("A week from now"), ()=>this.getTime(week)],
-            [T("Now"), ()=>this.getTime(0)],
-            [T("A day ago"), ()=>this.getTime(- day)],
-            [T("A week ago"), ()=>this.getTime(- week)],
-            [T("A month ago"), ()=>this.getMonth(-1)],
+            [()=>T("A week from now"), ()=>this.getTime(week)],
+            [()=>T("Now"), ()=>this.getTime(0)],
+            [()=>T("A day ago"), ()=>this.getTime(- day)],
+            [()=>T("A week ago"), ()=>this.getTime(- week)],
+            [()=>T("A month ago"), ()=>this.getMonth(-1)],
         ];
 
         return (
@@ -375,7 +375,7 @@ export default class DateTimePicker extends Component {
                                onClick={e=>this.setTime(
                                    FormatRFC3339(new_ts, timezone))}
                              >
-                               {x[0]}
+                               {x[0]()}
                              </Dropdown.Item>;
                   })}
                   <Dropdown.Divider />

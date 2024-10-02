@@ -509,14 +509,14 @@ const Japanese = {
           return <>
                    In {humanizeDuration(difference, {
                        round: true,
-                       language: "jp",
+                       language: "ja",
                    })}
                  </>;
       }
       return <>
                {humanizeDuration(difference, {
                    round: true,
-                   language: "jp",
+                   language: "ja",
                })} 前
              </>;
     },

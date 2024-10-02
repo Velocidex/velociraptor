@@ -49,6 +49,7 @@ def ProcessFile(filename):
 
     discovered = DiscoverTranslations('./gui/velociraptor/src/components/')
 
+    print("Loading %s" % filename)
     with open(os.path.splitext(filename)[0] + ".json") as fd:
         encoded_existing = json.loads(fd.read())
         existing = dict()
