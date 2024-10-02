@@ -226,6 +226,7 @@ export class ColumnToggle extends Component {
             return <Dropdown.Item
                      key={ column }
                      eventKey={column}
+                     className="draggable"
                      active={!hidden}
                      draggable="true"
                      onDragStart={e=>{
@@ -981,7 +982,7 @@ class VeloPagedTable extends Component {
             this.props.prevent_transformations[column]) {
             return <React.Fragment key={idx}>
                      <th style={styles}
-                         className={transformed_class + " paged-table-header"}
+                         className={transformed_class + " draggable paged-table-header"}
                          onDragStart={e=>{
                              e.dataTransfer.setData("column", column);
                          }}
@@ -1014,7 +1015,7 @@ class VeloPagedTable extends Component {
         return (
             <React.Fragment key={idx}>
               <th style={styles}
-                  className={transformed_class + " paged-table-header"}
+                  className={transformed_class + " draggable paged-table-header"}
                   onDragStart={e=>{
                       e.dataTransfer.setData("column", column);
                   }}
@@ -1198,12 +1199,24 @@ class VeloPagedTable extends Component {
     // Insert the to_col right before the from_col
     swapColumns = (from_col, to_col)=>{
         let new_columns = [];
+        let from_seen = false;
+
         _.each(this.state.columns, x=>{
             if(x === to_col) {
-                new_columns.push(from_col);
+                if (from_seen) {
+                    new_columns.push(to_col);
+                    new_columns.push(from_col);
+                } else {
+                    new_columns.push(from_col);
+                    new_columns.push(to_col);
+                }
             }
 
-            if(x !== from_col) {
+            if(x === from_col) {
+                from_seen = true;
+            }
+
+            if(x !== from_col && x !== to_col) {
                 new_columns.push(x);
             }
         });
