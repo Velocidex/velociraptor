@@ -301,19 +301,15 @@ export default class DateTimePicker extends Component {
         return (
             <>
               <Dropdown as={InputGroup} className="datetime-selector">
-                <Button variant="default-outline">
+                <Button
+                  onClick={()=>{
+                       this.setState({showEdit: !this.state.showEdit});
+                  }}
+                  variant="default-outline">
                   { formatted_ts ? <VeloTimestamp iso={formatted_ts}/> : T("Select Time")}
                 </Button>
 
-                {!this.state.showEdit ?
-                 <Button
-                   onClick={()=>{
-                       this.setState({showEdit: true});
-                   }}
-                   variant="default">
-                   <FontAwesomeIcon icon="edit"/>
-                 </Button>
-                 :
+                {this.state.showEdit &&
                  <>
                    <Button variant="default"
                            type="submit"
