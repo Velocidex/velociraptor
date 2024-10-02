@@ -166,7 +166,7 @@ func PrepareFrontendMux(
 func healthz(server_obj *Server) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if atomic.LoadInt32(&server_obj.Healthy) == 1 {
-			w.WriteHeader(http.StatusNoContent)
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 		w.WriteHeader(http.StatusServiceUnavailable)

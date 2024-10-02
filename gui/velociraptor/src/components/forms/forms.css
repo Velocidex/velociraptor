@@ -1,28 +1,3 @@
-/* react calendar */
-.react-calendar {
-    background: var(--color-calendar-background);
-}
-
-.react-calendar .react-calendar__navigation button,
-.react-calendar .react-calendar__tile {
-    color: var(--color-foreground-dimmed);
-}
-
-.react-calendar .react-calendar__tile--now {
-    background: var(--background-calendar-tile-now);
-    color: var(--color-calendar-tile);
-}
-
-.react-calendar .react-calendar__tile--active,
-.react-calendar .react-calendar__tile--active:hover {
-    background: var(--background-calendar-tile-active);
-    color: var(--color-calendar-tile);
-}
-
-.react-calendar .react-calendar__month-view__days__day--weekend {
-    color: var(--accent-color);
-}
-
 .regex_array_item {
     display: flex;
 }
@@ -34,16 +9,6 @@
 
 .full-width {
     width: 100%;
-}
-
-
-.react-datetime-picker.btn-group {
-    height: 38px;
-}
-
-.react-datetime-picker.btn-group  .react-datetime-picker__wrapper {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
 }
 
 .velo-form .form-switch {

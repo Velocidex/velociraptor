@@ -643,68 +643,7 @@ body.ncurses-dark {
   color: var(--color-sidebar-disabled-foreground);
 }
 
-/* Datepicker */
-
-.ncurses-dark .react-datetime-picker__wrapper {
-  border: 1px solid var(--color-btn-border);
-  color: var(--color-foreground);
-  border-radius: 0.25rem;
-}
-
-.ncurses-dark .react-datepicker,
-.ncurses-dark .react-datetime-picker__calendar .react-calendar,
-.ncurses-dark .react-datetime-picker {
-  font-family: var(--font-family-sans-serif);
-  background: var(--color-form-control-background);
-  color: var(--color-foreground);
-}
-
-.ncurses-dark .react-datetime-picker__inputGroup__input,
-.ncurses-dark .react-datetime-picker__button {
-  filter: invert(91%) sepia(8%) saturate(48%) hue-rotate(171deg) brightness(106%) contrast(93%);
-  stroke: var(--color-accent-100) !important;
-}
-
-.ncurses-dark .react-datetime-picker__button:enabled:hover .react-datetime-picker__button__icon,
-.ncurses-dark .react-datetime-picker__button:enabled:focus .react-datetime-picker__button__icon,
-.ncurses-dark .react-datetime-picker__button:hover {
-  stroke: var(--color-accent-100) !important;
-  filter: none;
-}
-
-.ncurses-dark .react-calendar button:enabled:hover {
-  background-color: var(--color-accent-100);
-  border: none;
-}
-
-.ncurses-dark .react-calendar__navigation button:disabled,
-.ncurses-dark .react-calendar__navigation button:enabled:focus {
-  background-color: unset;
-}
-
-.ncurses-dark .react-calendar__tile:enabled:hover {
-  background-color: var(--color-accent-25);
-  border: none;
-}
-
-.ncurses-dark .react-calendar .react-calendar__tile--now {
-  background-color: magenta;
-  color: var(--color-foreground);
-}
-
-.ncurses-dark .react-calendar .react-calendar__tile--active,
-.ncurses-dark .react-calendar .react-calendar__tile--active:hover {
-  background-color: var(--color-accent-100);
-  font-weight: 400;
-  color: var(--color-foreground-inverse);
-}
-
-.ncurses-dark .react-calendar .react-calendar__month-view__days__day--weekend {
-  color: var(--color-canvas-background);
-}
-
 /* Form controls */
-
 .ncurses-dark .custom-switch .custom-control-input:disabled:checked~.custom-control-label:before {
   background-color: var(--color-accent-25);
 }
@@ -1367,4 +1306,21 @@ color: #f06292;
 .ncurses-dark .accordion-item,
 .ncurses-dark .accordion .accordion-item .accordion-header .accordion-button {
     border-radius: 0;
+}
+
+
+/* Calendar */
+.ncurses-dark .calendar-selector:hover {
+    background: var(--btn-default-background);
+}
+
+.ncurses-dark div.calendar-other-day {
+    color: var(--color-canvas-background);
+}
+
+.ncurses-dark div.calendar-day:hover,
+.ncurses-dark div.calendar-other-day:hover,
+.ncurses-dark div.calendar-selected-date {
+    background: var(--color-accent-75);
+    color: var(--color-foreground);
 }

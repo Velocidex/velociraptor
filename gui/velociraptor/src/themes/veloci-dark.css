@@ -756,66 +756,6 @@ body.veloci-dark {
     color: var(--color-foreground);
 }
 
-/* Datepicker */
-
-.veloci-dark .react-datetime-picker__wrapper {
-  border: 1px solid var(--color-btn-border);
-  color: var(--color-foreground);
-  border-radius: 0.25rem;
-}
-
-.veloci-dark .react-datepicker,
-.veloci-dark .react-datetime-picker__calendar .react-calendar,
-.veloci-dark .react-datetime-picker {
-  font-family: var(--font-family-sans-serif);
-  background: var(--color-form-control-background);
-  color: var(--color-foreground);
-}
-
-.veloci-dark .react-datetime-picker__inputGroup__input,
-.veloci-dark .react-datetime-picker__button {
-  filter: invert(91%) sepia(8%) saturate(48%) hue-rotate(171deg) brightness(106%) contrast(93%);
-  stroke: var(--color-accent-100) !important;
-}
-
-.veloci-dark .react-datetime-picker__button:enabled:hover .react-datetime-picker__button__icon,
-.veloci-dark .react-datetime-picker__button:enabled:focus .react-datetime-picker__button__icon,
-.veloci-dark .react-datetime-picker__button:hover {
-  stroke: var(--color-accent-100) !important;
-  filter: none;
-}
-
-.veloci-dark .react-calendar button:enabled:hover {
-  background-color: var(--color-accent-25);
-  border: none;
-}
-
-.veloci-dark .react-calendar__navigation button:disabled,
-.veloci-dark .react-calendar__navigation button:enabled:focus {
-  background-color: unset;
-}
-
-.veloci-dark .react-calendar__tile:enabled:hover {
-  background-color: var(--color-accent-25);
-  border: none;
-}
-
-.veloci-dark .react-calendar .react-calendar__tile--now {
-  background-color: var(--color-accent-50);
-  color: var(--color-foreground);
-}
-
-.veloci-dark .react-calendar .react-calendar__tile--active,
-.veloci-dark .react-calendar .react-calendar__tile--active:hover {
-  background-color: var(--color-accent-100);
-  font-weight: 700;
-  color: var(--color-foreground-inverse);
-}
-
-.veloci-dark .react-calendar__month-view__days__day--neighboringMonth {
-  color: var(--color-btn-border);
-}
-
 /* Footer */
 .veloci-dark .app-footer.fixed-bottom {
   background: var(--color-footer-background);
@@ -976,4 +916,16 @@ body.veloci-dark {
 
 .veloci-dark .new-artifact-search-table  table.table td  {
    background-color: var(--color-table-heading-background);
+}
+
+/* Calendar */
+.veloci-dark .calendar-selector:hover {
+    background: var(--color-canvas-background);
+}
+
+.veloci-dark div.calendar-day:hover,
+.veloci-dark div.calendar-other-day:hover,
+.veloci-dark div.calendar-selected-date {
+    background: var(--color-accent-75);
+    color: var(--color-foreground-inverse);
 }
