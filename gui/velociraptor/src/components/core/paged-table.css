@@ -95,8 +95,7 @@ td.column-resizer {
 }
 
 .paged-table tbody tr td.compact {
-    mask-image: -webkit-gradient(linear, left top, left bottom,
-                                 from(rgba(0,0,0,1)), to(rgba(0,0,0,0)));
+    mask-image: -webkit-linear-gradient(top,rgba(0,0,0,1) 50%,rgba(0,0,0,0));
 }
 
 .column-name {
@@ -119,4 +118,13 @@ td.column-resizer {
 
 th.paged-table-header {
     white-space: nowrap;
+}
+
+.draggable {
+    cursor: move;
+    cursor: grab;
+}
+
+.draggable:active {
+    cursor: grabbing;
 }
