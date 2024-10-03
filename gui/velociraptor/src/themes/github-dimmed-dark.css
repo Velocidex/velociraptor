@@ -438,6 +438,7 @@ body.github-dimmed-dark {
   color: var(--color-foreground);
   font-weight: 700;
   vertical-align: text-bottom;
+  background: var(--color-table-heading-background);
 }
 
 .github-dimmed-dark .table {
@@ -626,7 +627,7 @@ body.github-dimmed-dark {
 }
 
 .github-dimmed-dark .velo__control:hover {
-  box-shadow: 0 0 0 1px var(--color-foreground);
+  box-shadow: none;
   border-color: var(--color-btn-default-border);
 }
 

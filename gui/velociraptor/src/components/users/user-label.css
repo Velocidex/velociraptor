@@ -36,6 +36,11 @@
     border: 1px;
     border-color: var(--color-btn-default-border);
     border-style: solid;
+    font-size: var(--font-size-base);
+}
+
+.accordion-button:focus {
+    box-shadow: none;
 }
 
 .accordion-item {

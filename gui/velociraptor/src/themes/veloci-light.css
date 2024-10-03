@@ -462,7 +462,7 @@ body.veloci-light {
 
 .veloci-light .form-control:focus {
   background: var(--color-canvas-background);
-  box-shadow: 0 0 0 1px var(--color-foreground);
+  box-shadow: none;
 }
 
 .veloci-light .input-group-prepend .input-group-text {
@@ -591,6 +591,16 @@ body.veloci-light {
 
 /* file tree */
 
+/* Dropdown menus */
+.veloci-light .dropdown-menu {
+  background: var(--color-btn-default-background);
+}
+
+.veloci-light .dropdown-item:hover,
+.veloci-light .dropdown-item.active:hover {
+  background: var(--color-accent-75);
+  color: var(--color-canvas-background);
+}
 
 /* Artifact viewer screen */
 
@@ -743,13 +753,13 @@ body.veloci-light {
 .veloci-light .velo__control--is-focused,
 .veloci-light .velo__control--menu-is-open {
   background: var(--color-form-control-background);
-  box-shadow: 0 0 0 1px var(--color-foreground);
+  box-shadow: none;
   border-color: var(--color-btn-default-border);
   color: var(--color-foreground)--------
 }
 
 .veloci-light .velo__control:hover {
-  box-shadow: 0 0 0 1px var(--color-foreground);
+  box-shadow: none;
   border-color: var(--color-btn-default-border);
 }
 
@@ -807,4 +817,16 @@ body.veloci-light {
 .veloci-light .json-boolean {
   padding-left: 5px;
   color: #7e57c2;
+}
+
+/* Calendar */
+.veloci-light .calendar-selector:hover {
+  background: var(--color-btn-default-background);
+}
+
+.veloci-light div.calendar-day:hover,
+.veloci-light div.calendar-other-day:hover,
+.veloci-light div.calendar-selected-date {
+  background: var(--color-accent-75);
+  color: var(--color-canvas-background);
 }

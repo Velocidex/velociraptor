@@ -276,7 +276,6 @@ body.veloci-dark {
 
 .veloci-dark .btn.btn-default.active {
   box-shadow: none;
-  color: var(--color-sidebar-background);
 }
 
 .veloci-dark .btn-default:hover {
@@ -552,7 +551,7 @@ body.veloci-dark {
 
 .veloci-dark .form-control:focus {
   background: var(--color-form-control-background);
-  box-shadow: 0 0 0 1px var(--color-foreground);
+  box-shadow: 0 0 1px 1px var(--color-foreground);
 }
 
 .veloci-dark .input-group-prepend .input-group-text {
