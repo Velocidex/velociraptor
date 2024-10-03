@@ -335,8 +335,8 @@ export default class DateTimePicker extends Component {
                            }}>
                      <FontAwesomeIcon icon="save"/>
                    </Button>
-                   <ToolTip tooltip={T("Select time and date in RFC3339 format")}>
-                     <Form.Control as="input" rows={1}
+                   <ToolTip tooltip={T("Specify date and time in RFC3339 format")}>
+                     <Form.Control as="textarea" rows={1}
                                    spellCheck="false"
                                    className={ this.state.invalid && 'invalid' }
                                    value={this.state.value}

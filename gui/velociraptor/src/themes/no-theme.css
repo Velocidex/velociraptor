@@ -187,31 +187,36 @@ body.no-theme {
   padding-left: 12px;
 }
 
+/* Dropdown menus */
+.no-theme .dropdown-menu {
+    background: var(--color-sidebar-inactive-background-hover);
+  }
+
 .no-theme .velo__multi-value {
     border: 1px solid;
     background-color: var(--color-proto-background);
-  }
+}
 
-  .no-theme .velo__multi-value__label {
+.no-theme .velo__multi-value__label {
     color: var(--color-foreground);
     border: none;
     background-color: var(--color-proto-background);
     font-size: var(--font-size-small);
-  }
+}
 
-  .no-theme .velo__multi-value__remove {
+.no-theme .velo__multi-value__remove {
     color: var(--color-foreground);
     background-color: var(--color-proto-background);
     border: none;
-  }
+}
 
-  .no-theme .velo__multi-value__remove:hover {
+.no-theme .velo__multi-value__remove:hover {
     color: var(--color-foreground);
     background: var(--color-nav-link-active-background);
     font-weight: 700;
-  }
+}
 
-  .no-theme .react-bootstrap-table-pagination-total {
+.no-theme .react-bootstrap-table-pagination-total {
     color: var(--color-foreground);
     padding-left: 15px;
 }
