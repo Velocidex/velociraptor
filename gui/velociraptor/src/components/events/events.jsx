@@ -9,8 +9,6 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Dropdown from 'react-bootstrap/Dropdown';
-import "react-datepicker/dist/react-datepicker.css";
-
 import { EventTableWizard, ServerEventTableWizard } from './event-table.jsx';
 import Container from  'react-bootstrap/Container';
 import Modal from 'react-bootstrap/Modal';

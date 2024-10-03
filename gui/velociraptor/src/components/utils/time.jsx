@@ -7,6 +7,7 @@ import 'moment-timezone';
 import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
+import ContextMenu from './context.jsx';
 
 const renderHumanTime = ts=> {
     let now = new Date().getTime();
@@ -78,6 +79,25 @@ export const ToStandardTime = value => {
     return value;
 };
 
+export const FormatRFC3339 = (ts, timezone) => {
+    let when = moment(ts);
+    let when_tz = moment.tz(when, timezone);
+    let formatted_ts = when_tz.format("YYYY-MM-DDTHH:mm:ss");
+
+    let fractional_part = when_tz.format(".SSS");
+    if (fractional_part === ".000") {
+        fractional_part = "";
+    }
+    formatted_ts += fractional_part;
+    if (when_tz.isUtc()) {
+        formatted_ts += "Z";
+    } else {
+        formatted_ts += when_tz.format("Z");
+    }
+
+    return formatted_ts;
+};
+
 class VeloTimestamp extends Component {
     static contextType = UserConfig;
 
@@ -100,32 +120,20 @@ class VeloTimestamp extends Component {
         }
 
         let timezone = this.context.traits.timezone || "UTC";
-        let when = moment(ts);
-        let when_tz = moment.tz(when, timezone);
-        let formatted_ts = when_tz.format("YYYY-MM-DDTHH:mm:ss");
-
-        let fractional_part = when_tz.format(".SSS");
-        if (fractional_part === ".000") {
-            fractional_part = "";
-        }
-        formatted_ts += fractional_part;
-        if (when_tz.isUtc()) {
-            formatted_ts += "Z";
-        } else {
-            formatted_ts += when_tz.format("Z");
-        }
-
-        return <ToolTip tooltip={renderHumanTime(ts)}>
-                 <div className="timestamp">
-                   {formatted_ts}
-                 </div>
-               </ToolTip>;
+        let formatted_ts = FormatRFC3339(ts, timezone);
+        return <>
+                 <ContextMenu value={formatted_ts}>
+                   <ToolTip tooltip={renderHumanTime(ts)}>
+                     <div className="timestamp">
+                       {formatted_ts}
+                     </div>
+                   </ToolTip>
+                 </ContextMenu>
+               </>;
     };
 }
 
 export default VeloTimestamp;
-
-
 
 // Returns a date object in local timestamp which represents the UTC
 // date. This is needed because the date selector widget expects to

@@ -247,7 +247,6 @@ body.veloci-light {
 }
 
 /* Buttons */
-
 .veloci-light .btn,
 .veloci-light .btn-default {
   font-family: var(--font-family-sans-serif);
@@ -776,64 +775,6 @@ body.veloci-light {
   color: var(--color-foreground-inverse);
   background-color: var(--color-accent-50);
   font-weight: 700;
-}
-
-/* Datepicker */
-
-.veloci-light .react-datetime-picker__wrapper {
-  border: 1px solid var(--color-btn-border);
-  border-radius: 0.25rem;
-  color: var(--color-foreground);
-}
-
-.veloci-light .react-datetime-picker.btn-group {
-    height: 37px;
-}
-
-.veloci-light .react-datepicker,
-.veloci-light .react-datetime-picker__calendar .react-calendar,
-.veloci-light .react-datetime-picker {
-  font-family: var(--font-family-sans-serif);
-  background: var(--color-form-control-background);
-  color: var(--color-foreground);
-}
-
-.veloci-light .react-datetime-picker__button:enabled:hover .react-datetime-picker__button__icon,
-.veloci-light .react-datetime-picker__button:enabled:focus .react-datetime-picker__button__icon,
-.veloci-light .react-datetime-picker__button:hover {
-  stroke: var(--color-accent-100) !important;
-  filter: none;
-}
-
-.veloci-light .react-calendar button:enabled:hover {
-  background-color: var(--color-accent-25);
-  border: none;
-}
-
-.veloci-light .react-calendar__navigation button:disabled,
-.veloci-light .react-calendar__navigation button:enabled:focus {
-  background-color: unset;
-}
-
-.veloci-light .react-calendar__tile:enabled:hover {
-  background-color: var(--color-accent-25);
-  border: none;
-}
-
-.veloci-light .react-calendar .react-calendar__tile--now {
-  background-color: var(--color-accent-50);
-  color: var(--color-foreground);
-}
-
-.veloci-light .react-calendar .react-calendar__tile--active,
-.veloci-light .react-calendar .react-calendar__tile--active:hover {
-  background-color: var(--color-accent-75);
-  font-weight: 700;
-  color: var(--color-foreground-inverse);
-}
-
-.veloci-light .react-calendar__month-view__days__day--neighboringMonth {
-  color: var(--color-btn-border);
 }
 
 .veloci-light .json-expand-button {

@@ -58,19 +58,9 @@ code {
   color: var(--color-foreground);
 }
 
-
-.react-datetime-picker, .velo-datetime-picker {
-    width: 100%;
-}
-
-.react-datetime-picker__clock {
-    display: none;
-}
-
 .input-group-text.disabled {
     opacity: 0.65;
 }
-
 
 .dropdown-item,
 .dropdown-item:focus {

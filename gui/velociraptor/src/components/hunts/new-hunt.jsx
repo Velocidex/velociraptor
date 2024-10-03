@@ -11,7 +11,7 @@ import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import { HotKeys, ObserveKeys } from "react-hotkeys";
-import DateTimePicker from 'react-datetime-picker';
+import DateTimePicker from '../widgets/datetime.jsx';
 import EstimateHunt from './estimate.jsx';
 import LabelForm from '../utils/labels.jsx';
 import api from '../core/api-service.jsx';
@@ -28,7 +28,12 @@ import {
     PaginationBuilder
 } from '../flows/new-collection.jsx';
 
+import { FormatRFC3339, ToStandardTime } from '../utils/time.jsx';
+
 import UserConfig from '../core/user.jsx';
+
+const hour = 60 * 60 * 1000;
+
 
 // The hunt wizard is built upon the new collection wizard with some extra steps.
 class HuntPaginator extends PaginationBuilder {
@@ -130,7 +135,15 @@ class NewHuntConfigureHunt extends React.Component {
                     <Form.Label column sm="3">{T("Expiry")}</Form.Label>
                     <Col sm="8">
                       <DateTimePicker value={this.props.parameters.expires}
-                                      onChange={(value) => this.setParam("expires", value)}
+                                      onChange={(value)=>{
+                                          let ts = ToStandardTime(value);
+                                          let now = new Date();
+                                          if (ts < now) {
+                                              api.error(T("Expiry time is in the past"));
+                                              return;
+                                          }
+                                          this.setParam("expires", value);
+                                      }}
                       />
                     </Col>
                   </Form.Group>
@@ -306,12 +319,15 @@ export default class NewHuntWizard extends React.Component {
     setStateFromBase = (hunt) => {
         let request = hunt && hunt.start_request;
         let expiry = new Date();
-
+        let timezone = this.context.traits.timezone || "UTC";
         let hunt_expiry_hours = this.context.traits && this.context.traits.customizations &&
             this.context.traits.customizations.hunt_expiry_hours;
-        if (!hunt_expiry_hours) {hunt_expiry_hours = 7 * 24;};
+        if (!hunt_expiry_hours) {
+            hunt_expiry_hours = 7 * 24;
+        };
 
-        expiry.setTime(expiry.getTime() + hunt_expiry_hours * 60 * 60 * 1000);
+        // Calcuate the default expiry to 1 week from now.
+        expiry.setTime(expiry.getTime() + hunt_expiry_hours * hour);
 
         if (request) {
             let state = {
@@ -347,7 +363,7 @@ export default class NewHuntWizard extends React.Component {
             }
             state.hunt_parameters.description = hunt.hunt_description;
             state.hunt_parameters.tags = hunt.tags || [];
-            state.hunt_parameters.expires = expiry;
+            state.hunt_parameters.expires = FormatRFC3339(expiry, timezone);
             state.hunt_parameters.org_ids = hunt.org_ids || [];
 
             if (_.isEmpty(request.artifacts)) {
@@ -399,7 +415,7 @@ export default class NewHuntWizard extends React.Component {
         };
 
         let state = this.state;
-        state.hunt_parameters.expires = expiry;
+        state.hunt_parameters.expires = FormatRFC3339(expiry, timezone);
         return state;
     }
 
@@ -455,7 +471,8 @@ export default class NewHuntWizard extends React.Component {
 
         let hunt_parameters = this.state.hunt_parameters;
         if (hunt_parameters.expires) {
-            result.expires = hunt_parameters.expires.getTime() * 1000;
+            // hunt_parameters.expires is already an RFC3339 string.
+            result.expires = hunt_parameters.expires;
         }
 
         if (hunt_parameters.include_condition === "labels") {

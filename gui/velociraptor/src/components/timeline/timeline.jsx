@@ -14,9 +14,9 @@ import VeloValueRenderer from '../utils/value.jsx';
 import Form from 'react-bootstrap/Form';
 import { JSONparse } from '../utils/json_parse.jsx';
 import VeloTimestamp, {
-    localTimeFromUTCTime,
-    utcTimeFromLocalTime,
-    ToStandardTime } from '../utils/time.jsx';
+    FormatRFC3339,
+    ToStandardTime,
+} from '../utils/time.jsx';
 
 // make sure you include the timeline stylesheet or the timeline will not be styled
 import 'react-calendar-timeline/lib/Timeline.css';
@@ -33,9 +33,10 @@ import Modal from 'react-bootstrap/Modal';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import { ColumnFilter, ColumnToggle } from '../core/paged-table.jsx';
-import DateTimePicker from 'react-datetime-picker';
+import DateTimePicker from '../widgets/datetime.jsx';
 import Dropdown from 'react-bootstrap/Dropdown';
 import Alert from 'react-bootstrap/Alert';
+import UserConfig from '../core/user.jsx';
 
 // In ms
 const TenYears =  10 * 365 * 24 * 60 * 60 * 1000;
@@ -513,6 +514,8 @@ class GroupRenderer extends Component {
 
 
 export default class TimelineRenderer extends React.Component {
+    static contextType = UserConfig;
+
     static propTypes = {
         name: PropTypes.string,
         notebook_id: PropTypes.string,
@@ -560,6 +563,7 @@ export default class TimelineRenderer extends React.Component {
     };
 
     state = {
+        start_time_iso: "",
         start_time: 0,
         table_start: 0,
         table_end: 0,
@@ -573,6 +577,15 @@ export default class TimelineRenderer extends React.Component {
         transform: {},
         timelines: [],
     };
+
+    setStartTime = ts_ms=>{
+        let ts = ToStandardTime(ts_ms);
+        let timezone = this.context.traits.timezone || "UTC";
+        this.setState({
+            start_time: ts_ms,
+            start_time_iso: FormatRFC3339(ts, timezone),
+        });
+    }
 
     fetchRows = (go_to_start_time) => {
         let skip_components = [];
@@ -634,9 +647,11 @@ export default class TimelineRenderer extends React.Component {
 
                 let visibleTimeStart = start_time - diff * 0.1;
                 let visibleTimeEnd = start_time + diff * 0.9;
-                this.setState({start_time: start_time,
-                               visibleTimeStart: visibleTimeStart,
+                this.setState({visibleTimeStart: visibleTimeStart,
                                visibleTimeEnd: visibleTimeEnd});
+
+                this.setStartTime(start_time);
+
             }
 
             this.updateToggles(pageData.rows);
@@ -662,7 +677,7 @@ export default class TimelineRenderer extends React.Component {
 
     nextPage = ()=>{
         if (this.state.table_end > 0) {
-            this.setState({start_time: this.state.table_end + 1});
+            this.setStartTime(this.state.table_end + 1);
         }
     }
 
@@ -858,14 +873,13 @@ export default class TimelineRenderer extends React.Component {
                        </Dropdown>
                      </ToolTip>
                      <DateTimePicker
-                       value={localTimeFromUTCTime(new Date(this.state.start_time))}
-                       className="btn-group"
-                       showLeadingZeros={true}
+                       value={this.state.start_time_iso}
                        onChange={value=>{
-                           if (_.isDate(value)) {
-                               let time = utcTimeFromLocalTime(value).getTime();
+                           let ts = ToStandardTime(value);
+                           if (_.isDate(ts)) {
+                               let time = ts.getTime();
                                this.fetchRows(time);
-                               this.setState({start_time: time});
+                               this.setStartTime(time);
                            }
                        }}/>
                      <ToolTip tooltip={T("Next Page")}>
@@ -895,14 +909,14 @@ export default class TimelineRenderer extends React.Component {
                    minZoom={5*60*1000}
                    dragSnap={1000}
                    onCanvasClick={(groupId, time, e) => {
-                       this.setState({start_time: time});
+                       this.setStartTime(time);
                    }}
                    onItemSelect={(itemId, e, time) => {
-                       this.setState({start_time: time});
+                       this.setStartTime(time);
                        return false;
                    }}
                    onItemClick={(itemId, e, time) => {
-                       this.setState({start_time: time});
+                       this.setStartTime(time);
                        return false;
                    }}
                    groupRenderer={this.groupRenderer}
@@ -936,7 +950,7 @@ export default class TimelineRenderer extends React.Component {
                      seekToTime={t=>{
                          let time = ToStandardTime(t);
                          if (_.isDate(time)) {
-                             this.setState({start_time: time.getTime()});
+                             this.setStartTime(time.getTime());
                              this.fetchRows(time.getTime());
                          }
                      }}

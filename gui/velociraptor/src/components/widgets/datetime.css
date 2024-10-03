@@ -1,0 +1,33 @@
+.datetime-selector textarea.form-control {
+    min-width: 21em;
+}
+
+.datetime-selector div.timestamp {
+    text-wrap: nowrap;
+}
+
+.calendar-day {
+    width: 4em;
+}
+
+.calendar-selector:hover {
+    background: var(--color-btn-default-background);
+}
+
+table.calendar-month {
+    width: 80%;
+    text-align: right;
+    margin-right: 20px;
+    color: var(--color-foreground);
+}
+
+div.calendar-day:hover,
+div.calendar-other-day:hover,
+div.calendar-selected-date {
+    background: var(--color-accent-75);
+    color: var(--color-btn-default-background);
+}
+
+div.calendar-other-day {
+    color: var(--color-accent-50);
+}

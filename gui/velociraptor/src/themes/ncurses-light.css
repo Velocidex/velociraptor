@@ -634,54 +634,7 @@ body.ncurses-light {
   color: var(--color-sidebar-disabled-foreground);
 }
 
-/* Datepicker */
-
-.ncurses-light .react-calendar__month-view__days__day--neighboringMonth {
-  color: var(--color-btn-border);
-}
-
-.ncurses-light .react-datepicker,
-.ncurses-light .react-datetime-picker__calendar .react-calendar,
-.ncurses-light .react-datetime-picker {
-  font-family: var(--font-family-sans-serif);
-  border: 1px solid var(--color-btn-border);
-  background: white;
-  z-index: 10;
-}
-
-.ncurses-light .react-calendar button:enabled:hover {
-  background-color: var(--color-accent-100);
-  border: none;
-}
-
-.ncurses-light .react-calendar__navigation button:disabled,
-.ncurses-light .react-calendar__navigation button:enabled:focus {
-  background-color: unset;
-}
-
-.ncurses-light .react-calendar__tile:enabled:hover {
-  background-color: var(--color-accent-25);
-  border: none;
-}
-
-.ncurses-light .react-calendar .react-calendar__tile--now {
-  background-color: magenta;
-  color: var(--color-foreground);
-}
-
-.ncurses-light .react-calendar .react-calendar__tile--active,
-.ncurses-light .react-calendar .react-calendar__tile--active:hover {
-  background-color: var(--color-accent-100);
-  font-weight: 400;
-  color: var(--color-foreground-inverse);
-}
-
-.ncurses-light .react-calendar .react-calendar__month-view__days__day--weekend {
-  color: var(--color-canvas-background);
-}
-
 /* Form controls */
-
 .ncurses-light .custom-switch .custom-control-input:disabled:checked~.custom-control-label:before {
   background-color: var(--color-accent-25);
 }
@@ -1315,4 +1268,20 @@ color: #ff00ff;
 .ncurses-light .accordion-item,
 .ncurses-light .accordion .accordion-item .accordion-header .accordion-button {
     border-radius: 0;
+}
+
+/* Calendar */
+.ncurses-light .calendar-selector:hover {
+    background: var(--btn-default-background);
+}
+
+.ncurses-light div.calendar-other-day {
+    color: var(--color-canvas-background);
+}
+
+.ncurses-light div.calendar-day:hover,
+.ncurses-light div.calendar-other-day:hover,
+.ncurses-light div.calendar-selected-date {
+    background: var(--color-accent-75);
+    color: var(--color-foreground);
 }
