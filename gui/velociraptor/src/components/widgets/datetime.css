@@ -1,5 +1,6 @@
 .datetime-selector textarea.form-control {
     min-width: 21em;
+    max-width: 21em;
 }
 
 .datetime-selector div.timestamp {
