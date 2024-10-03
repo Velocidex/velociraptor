@@ -763,64 +763,7 @@ body.pink-light {
   color: var(--color-foreground);
 }
 
-
-/* Datepicker */
-
-.pink-light .react-datetime-picker__wrapper {
-  border: 1px solid var(--color-btn-border);
-  border-radius: 0.25rem;
-  color: var(--color-foreground);
-}
-
-.pink-light .react-datepicker,
-.pink-light .react-datetime-picker__calendar .react-calendar,
-.pink-light .react-datetime-picker {
-  font-family: var(--font-family-sans-serif);
-  background: var(--color-form-control-background);
-  color: var(--color-foreground);
-  z-index: 10;
-}
-
-.pink-light .react-datetime-picker__button:enabled:hover .react-datetime-picker__button__icon,
-.pink-light .react-datetime-picker__button:enabled:focus .react-datetime-picker__button__icon,
-.pink-light .react-datetime-picker__button:hover {
-  stroke: var(--color-accent-100) !important;
-  filter: none;
-}
-
-.pink-light .react-calendar button:enabled:hover {
-  background-color: var(--color-accent-25);
-  border: none;
-}
-
-.pink-light .react-calendar__navigation button:disabled,
-.pink-light .react-calendar__navigation button:enabled:focus {
-  background-color: unset;
-}
-
-.pink-light .react-calendar__tile:enabled:hover {
-  background-color: var(--color-accent-25);
-  border: none;
-}
-
-.pink-light .react-calendar .react-calendar__tile--now {
-  background-color: var(--color-accent-50);
-  color: var(--color-foreground);
-}
-
-.pink-light .react-calendar .react-calendar__tile--active,
-.pink-light .react-calendar .react-calendar__tile--active:hover {
-  background-color: var(--color-accent-75);
-  font-weight: 700;
-  color: var(--color-foreground-inverse);
-}
-
-.pink-light .react-calendar__month-view__days__day--neighboringMonth {
-  color: var(--color-btn-border);
-}
-
 /* Footer */
-
 .pink-light .app-footer.fixed-bottom {
   background: var(--color-footer-background);
   color: var(--color-sidebar-inactive-foreground-hover);
@@ -988,7 +931,19 @@ padding-left: 5px;
 color: #7e57c2;
 }
 
-.new-artifact-search-table tr th,
-.new-artifact-search-table tr td {
+.pink-light .new-artifact-search-table tr th,
+.pink-light .new-artifact-search-table tr td {
     background-color: var(--color-tab);
+}
+
+/* Calendar */
+.pink-light .calendar-selector:hover {
+    background: var(--color-canvas-background);
+}
+
+.pink-light div.calendar-day:hover,
+.pink-light div.calendar-other-day:hover,
+.pink-light div.calendar-selected-date {
+    background: var(--color-accent-75);
+    color: var(--color-foreground-inverse);
 }

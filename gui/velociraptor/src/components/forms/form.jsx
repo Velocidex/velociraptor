@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import api from '../core/api-service.jsx';
 import _ from 'lodash';
 import {CancelToken} from 'axios';
-import DateTimePicker from 'react-datetime-picker';
+import DateTimePicker from '../widgets/datetime.jsx';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
@@ -69,7 +69,6 @@ export default class VeloForm extends React.Component {
     };
 
     state = {
-        isUTC: true,
 
         // A Date() object that is parsed from value in local time.
         timestamp: null,
@@ -318,15 +317,7 @@ export default class VeloForm extends React.Component {
 
         case "timestamp": {
             // value prop is always a string in ISO format in UTC timezone.
-            let date = convertToDate(this.props.value);
-
-            // Internally the date selector always uses local browser
-            // time. If the form is configured to use utc mode, then
-            // we convert the UTC time to the equivalent time in local
-            // just for the form.
-            if(_.isDate(date) && this.state.isUTC) {
-                date = localTimeFromUTCTime(date);
-            }
+            let date = this.props.value;
 
             return (
                 <Form.Group as={Row} className="velo-form">
@@ -338,48 +329,20 @@ export default class VeloForm extends React.Component {
                     </ToolTip>
                   </Form.Label>
                   <Col sm="8">
-                    <ButtonGroup className="velo-datetime-picker">
-                      <DateTimePicker
-                        className="btn-group"
-                        showLeadingZeros={true}
-                        onChange={(value) => {
-                            // Clear the prop value
-                            if (!_.isDate(value)) {
-                                this.props.setValue(undefined);
-
-                                // If the form is in UTC we take the
-                                // date the form gives us (which is in
-                                // local timezone) and force the same
-                                // date into a serialized ISO in Z time.
-                            } else if(this.state.isUTC) {
-                                let local_time = convertToDate(value);
-                                let utc_time = utcTimeFromLocalTime(local_time);
-                                this.props.setValue(utc_time.toISOString());
-
-                            } else {
-                                // When in local time we just set the
-                                // time as it is.
-                                let local_time = convertToDate(value);
-                                this.props.setValue(local_time.toISOString());
-                            }
-                        }}
-                        value={date}
-                      />
-                      {this.state.isUTC ?
-                       <Button variant="default-outline"
-                               onClick={() => this.setState({isUTC: false})}
-                               size="sm">UTC</Button>:
-                       <Button variant="default-outline"
-                               onClick={() => this.setState({isUTC: true})}
-                               size="sm">{T("Local")}</Button>
-                      }
-                      <Button variant="default-outline"
-                              onClick={() => {
-                                  let now = new Date();
-                                  this.props.setValue(now.toISOString());
-                              }}
-                              size="sm">{T("Now")}</Button>
-                    </ButtonGroup>
+                    <DateTimePicker
+                      onChange={(value) => {
+                          // Clear the prop value if the value is not
+                          // a real date.
+                          if (_.isDate(value)) {
+                              this.props.setValue(value.toISOString());
+                          } else if (_.isString(value)) {
+                              this.props.setValue(value);
+                          } else {
+                              this.props.setValue(undefined);
+                          }
+                      }}
+                      value={date}
+                    />
                   </Col>
                 </Form.Group>
             );
