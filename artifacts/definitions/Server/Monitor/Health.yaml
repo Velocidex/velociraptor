@@ -25,17 +25,38 @@ reports:
 
     template: |
       {{ define "CPU" }}
-          SELECT _ts as Timestamp,
-              CPUPercent,
-              int(int=MemoryUse / 1048576) AS MemoryUse_Mb,
-              TotalFrontends
-          FROM source(source="Prometheus",
-                      start_time=StartTime, end_time=EndTime,
-                      artifact="Server.Monitor.Health")
+        LET SampledData <= SELECT * FROM sample(
+             n=atoi(string=Sample),
+             query={
+              SELECT _ts as Timestamp,
+                  CPUPercent,
+                  int(int=MemoryUse / 1048576) AS MemoryUse_Mb,
+                  TotalFrontends
+              FROM source(source="Prometheus",
+                  start_time=StartTime, end_time=EndTime,
+                  artifact="Server.Monitor.Health")
+        })
+
+        LET Stats <= SELECT count() AS Count,
+            timestamp(epoch=min(item=Timestamp)) AS MinTime,
+            timestamp(epoch=max(item=Timestamp)) AS MaxTime,
+            timestamp(epoch=StartTime) AS StartTime
+        FROM SampledData
+        GROUP BY 1
+
+        // Include a log for verification. Last data should always be
+        // very recent and sample should be passed properly.
+        LET _ <= log(message="Graphs cover times from %v (%v). Actual data available from %v (%v) to %v (%v) with %v rows. Data is sampled every %v samples.", args=[
+           Stats[0].StartTime.String, humanize(time=Stats[0].StartTime),
+           Stats[0].MinTime.String, humanize(time=Stats[0].MinTime),
+           Stats[0].MaxTime.String, humanize(time=Stats[0].MaxTime),
+           Stats[0].Count, Sample])
+
+        SELECT * FROM SampledData
       {{ end }}
 
       {{ define "CurrentConnections" }}
-           SELECT * FROM sample(
+        SELECT * FROM sample(
              n=atoi(string=Sample),
              query={
                SELECT _ts as Timestamp,
@@ -43,12 +64,11 @@ reports:
                FROM source(source="Prometheus",
                            start_time=StartTime, end_time=EndTime,
                            artifact="Server.Monitor.Health")
-            })
+        })
       {{ end }}
 
       {{ $time_rows := Query "SELECT timestamp(epoch=now()) AS Now FROM scope()" | Expand }}
-      {{ $time := Get $time_rows "0.Now" }}
-      ## Server status @ <velo-value value="{{ $time.Format "2006-01-02T15:04:05Z07:00" }}" />
+      ## Server status @ {{ Render ( Get $time_rows "0.Now" ) }}
 
       <p>The following are total across all frontends.</p>
           <span class="container">
@@ -62,7 +82,7 @@ reports:
                {{- Query "CurrentConnections" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 -}}
               </span>
             </span>
-      </span>
+          </span>
 
       ## Current Orgs
 
