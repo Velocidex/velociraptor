@@ -545,6 +545,18 @@ func (self *GuiTemplateEngine) queryRows(queries ...string) []*ordereddict.Dict 
 	return result
 }
 
+// Render the special GUI markup for given value.
+func (self *GuiTemplateEngine) renderFunction(a interface{}, opts ...interface{}) interface{} {
+	switch t := a.(type) {
+	case time.Time:
+		res := fmt.Sprintf(`<velo-value value="%v"></velo-value>`,
+			t.Format(time.RFC3339))
+		return res
+	}
+
+	return a
+}
+
 func (self *GuiTemplateEngine) Error(fmt_str string, argv ...interface{}) string {
 	self.Scope.Log(fmt_str, argv...)
 	return ""
@@ -615,6 +627,7 @@ func NewGuiTemplateEngine(
 			"TimeChart":    template_engine.TimeChart,
 			"Timeline":     template_engine.Timeline,
 			"Get":          template_engine.getFunction,
+			"Render":       template_engine.renderFunction,
 			"Expand":       template_engine.Expand,
 			"import":       template_engine.Import,
 			"str":          strval,
