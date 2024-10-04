@@ -46,7 +46,7 @@ func getSignedJWTTokenCookie(
 	// replay sessioon cookies past expiry.
 	expiry := time.Now().Add(time.Minute * time.Duration(expiry_min))
 
-	// Enfore the JWT to expire
+	// Enforce the JWT to expire
 	claims.Expires = float64(expiry.Unix())
 
 	// Make a JWT and sign it.
