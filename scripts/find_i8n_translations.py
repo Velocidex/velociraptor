@@ -54,9 +54,23 @@ def ProcessFile(filename):
         encoded_existing = json.loads(fd.read())
         existing = dict()
         existing_translations = dict()
+
+        encoded_existing_new = dict()
         for k, v in encoded_existing.items():
-            existing[Decode(k)] = True
-            existing_translations[Decode(k)] = v
+            decoded = Decode(k)
+            # Discard translations that are no longer needed.
+            if not decoded in discovered:
+                print("Translation %s no longer needed" % decoded)
+                continue
+
+            existing[decoded] = True
+            existing_translations[decoded] = v
+            encoded_existing_new[k] = v
+
+    # Update the automated translations if they are no longer needed.
+    if len(encoded_existing) != len(encoded_existing_new):
+        with open(os.path.splitext(filename)[0] + ".json", "w") as outfd:
+            outfd.write(json.dumps(encoded_existing_new, sort_keys=True, indent=4))
 
     # The automated translations
     automated = dict()

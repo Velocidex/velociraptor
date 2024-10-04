@@ -12,6 +12,8 @@ import Row from 'react-bootstrap/Row';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Dropdown from 'react-bootstrap/Dropdown';
+import moment from 'moment';
+import 'moment-timezone';
 
 import Form from 'react-bootstrap/Form';
 
@@ -36,28 +38,41 @@ class Calendar extends Component {
     }
 
     componentDidMount = () => {
-        if(this.props.value) {
-            this.setState({
-                value: this.props.value,
-                first_day_to_render: this.getFirstDayToRender(this.props.value)});
+        let ts = this.parseDate(this.props.value);
+        if(ts.isValid()) {
+            this.setState({focus: ts});
         }
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
-        if (this.props.value !== this.state.value) {
-            this.setState({
-                value: this.props.value,
-                first_day_to_render: this.getFirstDayToRender(this.props.value)});
+        if (_.isUndefined(this.state.focus)) {
+            let ts = this.parseDate(this.props.value);
+            if(ts.isValid()) {
+                this.setState({focus: ts});
+            }
         }
+    }
+
+    parseDate = x=>{
+        let timezone = this.context.traits.timezone || "UTC";
+        let ts = ToStandardTime(x);
+        return moment(ts, timezone).tz(timezone);
+    }
+
+    now = ()=>{
+        let timezone = this.context.traits.timezone || "UTC";
+        return moment().tz(timezone);
     }
 
     setTime = t=>{
         let timezone = this.context.traits.timezone || "UTC";
-        this.props.onChange(FormatRFC3339(t, timezone));
+        let str = FormatRFC3339(t, timezone);
+        this.setState({edited_value: str, invalid: false});
+        this.props.onChange(str);
     }
 
     getMonthName = x=>{
-        switch (x % 12) {
+        switch (x.month() % 12) {
         case 0: return T("January"); break;
         case 1: return T("February"); break;
         case 2: return T("March"); break;
@@ -74,54 +89,51 @@ class Calendar extends Component {
         };
     }
 
-    renderDay = (ts, base)=>{
+    renderDay = (ts, focus, base)=>{
         let classname = "calendar-day";
-        let day_of_month = ts.getDate();
-        if (day_of_month === base.getDate() &&
-            ts.getMonth() === base.getMonth() &&
-            ts.getFullYear() == base.getFullYear()) {
+        let day_of_month = ts.date();
+        if (day_of_month === base.date() &&
+            ts.month() == base.month() &&
+            ts.year() == base.year()) {
             classname = "calendar-selected-date";
         }
 
-        if (ts.getMonth() !== base.getMonth()) {
+        if (ts.month() !== focus.month()) {
             classname = "calendar-other-day";
         }
-
-        let str = day_of_month.toString();
-        if (day_of_month < 10) {
-            str = " " + str;
-        }
-
         return <div
-                 onClick={()=>this.setTime(ts)}
+                 onClick={()=>{
+                     let x = moment(ts).
+                         millisecond(0).hours(0).minutes(0).seconds(0);
+                     this.setTime(x);
+                 }}
                  className={classname}>
-                 {str}
+                 {day_of_month.toString()}
                </div>;
     }
 
-    renderWeek = (ts, base)=>{
+    renderWeek = (ts, focus, base)=>{
         let res = [];
         for(let j=0;j<7;j++) {
-            let day_ts = new Date();
-            day_ts.setTime(ts.getTime() + j * day);
-
+            let day_ts = moment(ts).add(j, "days");
             res.push(<td key={j}>
-                       {this.renderDay(day_ts, base)}
+                       {this.renderDay(day_ts, focus, base)}
                      </td>);
         }
         return res;
     }
 
-    renderMonth = (ts, base)=>{
+    renderMonth = (ts, focus, base)=>{
         let res = [];
         for(let j=0;j<=5;j++) {
-            let week_start = new Date();
-            let week_start_sec = ts.getTime() + j * week;
-            week_start.setTime(week_start_sec);
-
+            let week_start = moment(ts).add(j, "weeks");
+            if (week_start.year() == focus.year() &&
+                week_start.month() > focus.month()) {
+                break;
+            }
             res.push(<tr key={j}
                          className="calendar-week">
-                       {this.renderWeek(week_start, base)}
+                       {this.renderWeek(week_start, focus, base)}
                      </tr>);
         }
         return <table className="calendar-month">
@@ -131,57 +143,42 @@ class Calendar extends Component {
                </table>;
     }
 
-    getFirstDayToRender = t=>{
-        let ts = ToStandardTime(t);
-        if (!_.isDate(ts)) {
-            return undefined;
-        }
-
-        let year = ts.getFullYear();
-        let prev_month = ts.getMonth() -1;
-        if (prev_month < 0) {
-            prev_month = 11;
-            year -= 1;
-        }
-
-        let first_day_of_month = new Date(ts.getTime());
-        first_day_of_month.setDate(0);
-
-        let day_of_week = first_day_of_month.getDay();
-        let first_day_to_render = new Date();
-        first_day_to_render.setTime(first_day_of_month.getTime() - day_of_week * day);
-
-        // Reset the time to the start of the day.
-        first_day_to_render.setMilliseconds(0);
-        first_day_to_render.setSeconds(0);
-        first_day_to_render.setMinutes(0);
-        first_day_to_render.setHours(0);
+    // Figure out where to start rendering the calendar. We start at the
+    // first day of the first week of the month. This means we need
+    // to go back a bit into the previous month to get thee first full
+    // week start.
+    getFirstDayToRender = ts=>{
+        let first_day_of_month = moment(ts).date(1);
+        let day_of_week = first_day_of_month.day();
+        let first_day_to_render = first_day_of_month.subtract(day_of_week, "days");
 
         return first_day_to_render;
     }
 
     state = {
-        value: undefined,
-        first_day_to_render: undefined,
+        // The date the calendar is currently focused on. As the user
+        // navigates the calendar this focus will change.
+        focus: undefined,
     }
 
     render() {
-        // Figure out the start of the month block.
-        let ts = ToStandardTime(this.props.value);
-        let start = this.state.first_day_to_render;
-        if (!_.isDate(ts) || !_.isDate(start)) {
-            return <></>;
+        let ts = this.parseDate(this.props.value);
+        if (!ts.isValid()) {
+            // use current time.
+            ts = this.now();
         }
 
-
+        // Where the calendar will be focused on.
+        let focus = this.state.focus;
+        if (_.isUndefined(focus)) {
+            focus = moment(ts);
+        }
+        let start = this.getFirstDayToRender(focus);
         return <div className="calendar-selector">
                  <Row>
                    <ButtonGroup>
                      <Button onClick={e=>{
-                         let ts = new Date();
-                         ts.setTime(start.getTime());
-                         ts.setMonth(start.getMonth() - 1);
-                         this.setState({first_day_to_render: ts});
+                         this.setState({focus: moment(focus).subtract(1, "months")});
 
                          e.stopPropagation();
                          e.preventDefault();
@@ -190,13 +187,10 @@ class Calendar extends Component {
                        <FontAwesomeIcon icon="backward"/>
                      </Button>
                      <Button>
-                       {this.getMonthName(start.getMonth() + 1)}
+                       {this.getMonthName(focus)}
                      </Button>
                      <Button onClick={e=>{
-                         let ts = new Date();
-                         ts.setTime(start.getTime());
-                         ts.setMonth(start.getMonth() + 1);
-                         this.setState({first_day_to_render: ts});
+                         this.setState({focus: moment(focus).add(1, "months")});
 
                          e.preventDefault();
                          e.stopPropagation();
@@ -207,15 +201,13 @@ class Calendar extends Component {
                    </ButtonGroup>
                  </Row>
                  <Row>
-                   {this.renderMonth(start, ts)}
+                   {this.renderMonth(start, focus, ts)}
                  </Row>
                  <Row>
                    <ButtonGroup>
                      <Button onClick={e=>{
                          let ts = new Date();
-                         ts.setTime(start.getTime());
-                         ts.setFullYear(start.getFullYear() - 1);
-                         this.setState({first_day_to_render: ts});
+                         this.setState({focus: moment(focus).subtract(1, "years")});
 
                          e.stopPropagation();
                          e.preventDefault();
@@ -224,13 +216,10 @@ class Calendar extends Component {
                        <FontAwesomeIcon icon="backward"/>
                      </Button>
                      <Button>
-                       {T("Year") + " " + start.getFullYear().toString()}
+                       {T("Year") + " " + focus.year().toString()}
                      </Button>
                      <Button onClick={e=>{
-                         let ts = new Date();
-                         ts.setTime(start.getTime());
-                         ts.setFullYear(start.getFullYear() + 1);
-                         this.setState({first_day_to_render: ts});
+                         this.setState({focus: moment(focus).add(1, "years")});
 
                          e.stopPropagation();
                          e.preventDefault();
@@ -259,7 +248,7 @@ export default class DateTimePicker extends Component {
     state = {
         // Current edited time - it will be parsed from RFC3339 format
         // when the user clicks the save button.
-        value: "",
+        edited_value: "",
         invalid: false,
     }
 
@@ -281,7 +270,7 @@ export default class DateTimePicker extends Component {
 
     getMonth = offset=>{
         let date = new Date();
-        date.setMonth(date.getMonth() + offset);
+        date.setUTCMonth(date.getUTCMonth() + offset);
         return date;
     }
 
@@ -291,7 +280,7 @@ export default class DateTimePicker extends Component {
         if(_.isString(t)) {
             let ts = ToStandardTime(t);
             if (_.isDate(ts)) {
-                this.setState({value: t, invalid: false});
+                this.setState({edited_value: t, invalid: false});
                 this.props.onChange(t);
             }
         }
@@ -312,34 +301,30 @@ export default class DateTimePicker extends Component {
         return (
             <>
               <Dropdown as={InputGroup} className="datetime-selector">
-                <Button variant="default-outline">
+                <Button
+                  onClick={()=>{
+                       this.setState({showEdit: !this.state.showEdit});
+                  }}
+                  variant="default-outline">
                   { formatted_ts ? <VeloTimestamp iso={formatted_ts}/> : T("Select Time")}
                 </Button>
 
-                {!this.state.showEdit ?
-                 <Button
-                   onClick={()=>{
-                       this.setState({showEdit: true});
-                   }}
-                   variant="default">
-                   <FontAwesomeIcon icon="edit"/>
-                 </Button>
-                 :
+                {this.state.showEdit &&
                  <>
                    <Button variant="default"
                            type="submit"
                            disabled={this.state.invalid}
                            onClick={()=>{
-                               this.setTime(this.state.value);
+                               this.setTime(this.state.edited_value);
                                this.setState({showEdit: false});
                            }}>
                      <FontAwesomeIcon icon="save"/>
                    </Button>
                    <ToolTip tooltip={T("Specify date and time in RFC3339 format")}>
-                     <Form.Control as="textarea" rows={1}
+                     <Form.Control as="input" rows={1}
                                    spellCheck="false"
                                    className={ this.state.invalid && 'invalid' }
-                                   value={this.state.value}
+                                   value={this.state.edited_value}
 
                                    onChange={e=>{
                                        // Check if the time is invalid
@@ -348,7 +333,7 @@ export default class DateTimePicker extends Component {
                                        // time.
                                        let ts = ToStandardTime(e.target.value);
                                        this.setState({
-                                           value: e.target.value,
+                                           edited_value: e.target.value,
                                            invalid: !_.isDate(ts),
                                        });
                                    }}

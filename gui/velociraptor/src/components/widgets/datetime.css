@@ -7,7 +7,9 @@
     text-wrap: nowrap;
 }
 
-.calendar-day {
+.calendar-day,
+.calendar-other-day,
+.calendar-selected-date {
     width: 4em;
 }
 
