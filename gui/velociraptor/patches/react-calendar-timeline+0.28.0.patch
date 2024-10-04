@@ -1,0 +1,27 @@
+diff --git a/node_modules/react-calendar-timeline/lib/lib/scroll/ScrollElement.js b/node_modules/react-calendar-timeline/lib/lib/scroll/ScrollElement.js
+index ead0a36..31cb6a7 100644
+--- a/node_modules/react-calendar-timeline/lib/lib/scroll/ScrollElement.js
++++ b/node_modules/react-calendar-timeline/lib/lib/scroll/ScrollElement.js
+@@ -72,7 +72,7 @@ function (_Component) {
+         e.preventDefault();
+         var parentPosition = (0, _domHelpers.getParentPosition)(e.currentTarget);
+         var xPosition = e.clientX - parentPosition.x;
+-        var speed = e.ctrlKey ? 10 : e.metaKey ? 3 : 1; // convert vertical zoom to horiziontal
++        var speed = e.ctrlKey ? 1 : e.metaKey ? 3 : 1; // convert vertical zoom to horiziontal
+ 
+         _this.props.onWheelZoom(speed, xPosition, e.deltaY);
+       } else if (e.shiftKey) {
+diff --git a/node_modules/react-calendar-timeline/src/lib/scroll/ScrollElement.js b/node_modules/react-calendar-timeline/src/lib/scroll/ScrollElement.js
+index 5f79ae6..503fc03 100644
+--- a/node_modules/react-calendar-timeline/src/lib/scroll/ScrollElement.js
++++ b/node_modules/react-calendar-timeline/src/lib/scroll/ScrollElement.js
+@@ -49,8 +49,7 @@ class ScrollElement extends Component {
+       e.preventDefault()
+       const parentPosition = getParentPosition(e.currentTarget)
+       const xPosition = e.clientX - parentPosition.x
+-
+-      const speed = e.ctrlKey ? 10 : e.metaKey ? 3 : 1
++      const speed = e.ctrlKey ? 1 : e.metaKey ? 3 : 1
+ 
+       // convert vertical zoom to horiziontal
+       this.props.onWheelZoom(speed, xPosition, e.deltaY)

@@ -1243,9 +1243,9 @@ class VeloPagedTable extends Component {
             </>    );
     }
 
-    render = ()=>{
+    renderTable = ()=>{
         return (
-            <>{ this.renderToolbar() }
+            <>
               <Table className="paged-table">
                 <thead>
                   <tr className="paged-table-header">
@@ -1272,6 +1272,18 @@ class VeloPagedTable extends Component {
                   }}
                 />
               }
+            </>
+        );
+    }
+
+    render = ()=>{
+        return (
+            <>{ this.renderToolbar() }
+            { _.isEmpty(this.state.columns) ?
+              <div className="no-content">
+                {T("Table contains no data")}
+              </div>
+              : this.renderTable()}
             </>);
     }
 }
