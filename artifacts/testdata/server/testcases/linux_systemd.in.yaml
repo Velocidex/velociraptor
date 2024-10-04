@@ -31,6 +31,13 @@ Queries:
      JournalGlob='/compact.journal')
   LIMIT 10
 
+# Check for time boxing
+- SELECT System.Timestamp
+   FROM Artifact.Linux.Forensics.Journal(
+     DateAfter='2024-07-19T07:52:34.531807Z',
+     DateBefore='2024-07-19T07:52:48.259133Z',
+     JournalGlob='/compact.journal')
+
 # Test native parsing with the parse_journald() plugin
 - SELECT * FROM parse_journald(filename='/system.journal') LIMIT 2
 - SELECT * FROM parse_journald(filename='/compact.journal') LIMIT 2

@@ -2,6 +2,7 @@ package journald
 
 import (
 	"context"
+	"time"
 
 	"github.com/Velocidex/go-journalctl/parser"
 	"github.com/Velocidex/ordereddict"
@@ -21,6 +22,8 @@ type JournalPluginArgs struct {
 	Filenames []*accessors.OSPath `vfilter:"required,field=filename,doc=A list of journal log files to parse."`
 	Accessor  string              `vfilter:"optional,field=accessor,doc=The accessor to use."`
 	Raw       bool                `vfilter:"optional,field=raw,doc=Emit raw events (no parsed)."`
+	StartTime time.Time           `vfilter:"optional,field=start_time,doc=Only parse events newer than this time (default all times)."`
+	EndTime   time.Time           `vfilter:"optional,field=end_time,doc=Only parse events older than this time (default all times)."`
 }
 
 type JournalPlugin struct{}
@@ -85,6 +88,8 @@ func (self JournalPlugin) Call(
 				}
 
 				journal.RawLogs = arg.Raw
+				journal.MinTime = arg.StartTime
+				journal.MaxTime = arg.EndTime
 
 				for log := range journal.GetLogs() {
 					select {
