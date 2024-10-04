@@ -9,7 +9,8 @@ import { ReferenceArea, ResponsiveContainer,
          Bar, Line, Scatter,
          CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
 
-import { ToStandardTime } from '../utils/time.jsx';
+import { ToStandardTime, FormatRFC3339 } from '../utils/time.jsx';
+import UserConfig from '../core/user.jsx';
 
 const strokes = [
     "#ff7300", "#f48f8f", "#207300", "#f4208f"
@@ -20,15 +21,17 @@ const shapes = [
 ];
 
 class CustomTooltip extends React.Component {
-  static propTypes = {
+    static contextType = UserConfig;
+
+    static propTypes = {
       type: PropTypes.string,
       payload: PropTypes.array,
       columns: PropTypes.array,
       data: PropTypes.array,
       active: PropTypes.any,
-  }
+    }
 
-  render() {
+    render() {
       const { active } = this.props;
       if (active) {
           const { payload } = this.props;
@@ -51,7 +54,8 @@ class CustomTooltip extends React.Component {
           if (_.isNaN(now)) {
               value = "";
           } else if(_.isDate(now)) {
-              value = now.toISOString();
+              let timezone = this.context.traits.timezone || "UTC";
+              value = FormatRFC3339(now, timezone);
           }
 
           return (
