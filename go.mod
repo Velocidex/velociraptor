@@ -109,7 +109,7 @@ require (
 	github.com/Velocidex/go-ewf v0.0.0-20240210123447-97dc81b7d8c3
 	github.com/Velocidex/go-ext4 v0.0.0-20240608083317-8dd00855b069
 	github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a
-	github.com/Velocidex/go-journalctl v0.0.0-20240721235158-d5e988dd16d2
+	github.com/Velocidex/go-journalctl v0.0.0-20241004063153-cc1c858415bd
 	github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002
 	github.com/Velocidex/go-vhdx v0.0.0-20240601014259-b204818c95fd
 	github.com/Velocidex/go-vmdk v0.0.0-20240909080044-e373986b6517

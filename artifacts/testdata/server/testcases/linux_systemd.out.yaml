@@ -480,6 +480,13 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir), copy=["zip"
   },
   "_Source": "Linux.Forensics.Journal"
  }
+]SELECT System.Timestamp FROM Artifact.Linux.Forensics.Journal( DateAfter='2024-07-19T07:52:34.531807Z', DateBefore='2024-07-19T07:52:48.259133Z', JournalGlob='/compact.journal')[
+ {
+  "System.Timestamp": "2024-07-19T07:52:34.531807Z"
+ },
+ {
+  "System.Timestamp": "2024-07-19T07:52:48.259133Z"
+ }
 ]SELECT * FROM parse_journald(filename='/system.journal') LIMIT 2[
  {
   "System": {
