@@ -471,8 +471,12 @@ export default class NewHuntWizard extends React.Component {
 
         let hunt_parameters = this.state.hunt_parameters;
         if (hunt_parameters.expires) {
-            // hunt_parameters.expires is already an RFC3339 string.
-            result.expires = hunt_parameters.expires;
+            // hunt_parameters.expires is an RFC3339 string but we
+            // expect microseconds here.
+            let ts = ToStandardTime(hunt_parameters.expires);
+            if (_.isDate(ts)) {
+                result.expires = ts.getTime() * 1000;
+            }
         }
 
         if (hunt_parameters.include_condition === "labels") {
