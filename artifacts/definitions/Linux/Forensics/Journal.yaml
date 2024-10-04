@@ -38,3 +38,19 @@ sources:
       FROM parse_journald(filename=OSPath,
           start_time=DateAfter, end_time=DateBefore)
     })
+
+  notebook:
+    - type: vql_suggestion
+      name: Simplified syslog-like view
+      template: |
+        /*
+        # Simplified log view
+        */
+        LET ColumnTypes<=dict(`_ClientId`='client')
+
+        SELECT System.Timestamp AS Timestamp,
+               ClientId AS _ClientId,
+               client_info(client_id=ClientId).os_info.hostname AS Hostname,
+               EventData.SYSLOG_IDENTIFIER AS Unit,
+               EventData.MESSAGE AS Message
+        FROM source()
