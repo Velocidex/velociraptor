@@ -8,7 +8,6 @@ import ToolkitProvider from 'react-bootstrap-table2-toolkit/dist/react-bootstrap
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Type } from 'react-bootstrap-table2-editor';
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import Dropdown from 'react-bootstrap/Dropdown';
@@ -678,13 +677,6 @@ export function formatColumns(columns, env, column_formatter) {
         }
         if (x.sort) {
             x.sortCaret = sortCaret;
-        }
-        if (!x.editable) {
-            x.editable = false;
-        } else {
-            x.editor = {
-             type: Type.TEXTAREA,
-            };
         }
         if (x.filtered) {
             x.filter = textFilter({

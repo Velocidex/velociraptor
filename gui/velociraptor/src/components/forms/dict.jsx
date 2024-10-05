@@ -2,14 +2,14 @@ import _ from 'lodash';
 
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { formatColumns } from "../core/table.jsx";
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import T from '../i8n/i8n.jsx';
-import cellEditFactory, { Type } from 'react-bootstrap-table2-editor';
-import BootstrapTable from 'react-bootstrap-table-next';
-import filterFactory from 'react-bootstrap-table2-filter';
+import Form from 'react-bootstrap/Form';
+import Table from 'react-bootstrap/Table';
+
+import './dict.css';
 
 
 export default class DictEditor extends Component {
@@ -19,6 +19,8 @@ export default class DictEditor extends Component {
         value: PropTypes.array,
         setValue: PropTypes.func.isRequired,
         valueRenderer: PropTypes.func,
+        editableKeys: PropTypes.bool,
+        deletableKeys: PropTypes.bool,
     }
 
     deleteMetadata = k=>{
@@ -46,93 +48,81 @@ export default class DictEditor extends Component {
         this.props.setValue(new_obj);
     }
 
+    getRows = x=>{
+        return x.split("\n").length;
+    }
+
     render() {
-        let columns = formatColumns([{
-            dataField: "_id",
-            text: "",
-            style: {
-                width: '8%',
-            },
-            formatter: (cell, row) => {
-                return <ButtonGroup>
-                    <Button variant="default-outline" size="sm"
-                            onClick={() => {
-                                // Drop the current row at the
-                                // current row index.
-                                this.deleteMetadata(row.key);
-                            }}
-                    >
-                      <FontAwesomeIcon icon="trash"/>
-                    </Button>
-                  </ButtonGroup>;
-            },
-        }, {
-            dataField: "key",
-            sort: true,
-            editable: true,
-            filtered: true,
-            classes: "metadata-key",
-            text: T("Key"),
-        }, {
-            dataField: "value",
-            editable: true,
-            sort: true,
-            formatter: this.props.valueRenderer,
-            text: T("Value"),
-        }]);
-
-        columns[0].headerFormatter = (column, colIndex) => {
-            if (colIndex === 0) {
-                return <ButtonGroup>
-                         <Button variant="default-outline" size="sm"
-                                 onClick={() => {
-                                     this.setMetadata(
-                                         T(" New Key"),
-                                         T("New Value"));
-                                 }}
-                         >
-                           <FontAwesomeIcon icon="plus"/>
-                         </Button>
-                       </ButtonGroup>;
-            };
-            return column;
-        };
-
-        columns[1].editor = {type: Type.TEXTAREA};
-        columns[2].editor = {type: Type.TEXTAREA};
-
-        let data = _.map(this.props.value, (x, idx)=>{
-            return {_id: idx, key: x[0] || "" , value: x[1] || ""};
-        });
-
         return (
-            <BootstrapTable
-              hover condensed bootstrap4
-              data={data}
-              keyField="_id"
-              headerClasses="alert alert-secondary"
-              columns={columns}
-              defaultSorted={[{dataField: "key", order:"asc"}]}
-              filter={ filterFactory() }
-              cellEdit={ cellEditFactory({
-                  mode: 'click',
-                  afterSaveCell: (oldValue, newValue, row, column) => {
-                      if (oldValue === newValue) return;
-
-                      // We are changing the key value, remove the
-                      // old key and store the new value.
-                      if (column.dataField == "key" &&
-                          oldValue !== row.key) {
-                          this.setMetadata(row.key, row.value, oldValue);
-                          return;
-                      }
-
-                      // We are changing the value
-                      this.setMetadata(row.key, newValue);
-                  },
-                  blurToSave: true,
-              }) }
-            />
+            <Table className="paged-table dict-table">
+              <thead>
+                <tr>
+                  <th className="metadata-control paged-table-header">
+                    { this.props.editableKeys &&
+                      <ButtonGroup>
+                        <Button variant="default-outline" size="sm"
+                                onClick={() => {
+                                    this.setMetadata(
+                                        T(" New Key"),
+                                        T("New Value"));
+                                }}
+                        >
+                          <FontAwesomeIcon icon="plus"/>
+                        </Button>
+                      </ButtonGroup>
+                    }
+                  </th>
+                  <th className="metadata-key paged-table-header">
+                    {T("Key")}
+                  </th>
+                  <th className="metadata-value paged-table-header">
+                    {T("Value")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {_.map(this.props.value, (x, idx)=>{
+                    let key = x[0];
+                    let value = x[1];
+                    return <tr key={idx}>
+                             <td className="metadata-control">
+                               { this.props.deletableKeys &&
+                                 <ButtonGroup>
+                                   <Button variant="default-outline" size="sm"
+                                           onClick={() => {
+                                               // Drop the current row
+                                               this.deleteMetadata(key);
+                                           }}
+                                   >
+                                     <FontAwesomeIcon icon="trash"/>
+                                   </Button>
+                                 </ButtonGroup>
+                               }
+                             </td>
+                             <td className="metadata-key">
+                               {this.props.editableKeys ?
+                                <Form.Control as="textarea" rows={1}
+                                              value={key}
+                                              onChange={e=>{
+                                                  this.setMetadata(
+                                                      e.currentTarget.value, value);
+                                              }}
+                                /> : key
+                               }
+                             </td>
+                             <td className="metadata-value">
+                               <Form.Control as="textarea" rows={this.getRows(value)}
+                                             value={value}
+                                             onChange={e=>{
+                                                 this.setMetadata(
+                                                     key, e.currentTarget.value);
+                                             }}
+                               />
+                             </td>
+                           </tr>;
+                })}
+              </tbody>
+            </Table>
         );
-    };
+    }
 };

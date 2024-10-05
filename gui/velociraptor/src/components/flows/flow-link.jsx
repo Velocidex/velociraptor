@@ -21,14 +21,16 @@ class FlowPopupInspector extends React.Component {
     };
 
     state = {
-        // Show by default the results tab.
+        // Show by default the logs tab.
         tab: "logs",
     }
 
     render() {
         let flow = this.props.flow;
         if (!flow || !flow.session_id)  {
-            return <h5 className="no-content">Please click a collection in the above table</h5>;
+            return <h5 className="no-content">
+                     { T("Please click a collection in the above table") }
+                   </h5>;
         }
 
         return (

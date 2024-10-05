@@ -406,21 +406,17 @@ class TimelineTableRenderer  extends Component {
                     </th>
 
                     <th className="message">
-                      <table className="paged-table-header">
-                        <tbody>
-                          <tr>
-                            <td>{ T("Message") }</td>
-                            <td className="sort-element">
-                              <ButtonGroup>
-                                <ColumnFilter column="message"
-                                              transform={this.props.transform}
-                                              setTransform={this.props.setTransform}
-                                />
-                              </ButtonGroup>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
+                      <span className="column-name">
+                        { T("Message") }
+                      </span>
+                      <span className="sort-element">
+                        <ButtonGroup>
+                          <ColumnFilter column="message"
+                                        transform={this.props.transform}
+                                        setTransform={this.props.setTransform}
+                          />
+                        </ButtonGroup>
+                      </span>
                     </th>
 
                     {_.map(this.props.extra_columns || [], (x, i)=>{
@@ -556,8 +552,8 @@ export default class TimelineRenderer extends React.Component {
 
     handleTimeChange = (visibleTimeStart, visibleTimeEnd) => {
         this.setState({
-            visibleTimeStart,
-            visibleTimeEnd,
+            visibleTimeStart: this.fromLocalTZ(visibleTimeStart),
+            visibleTimeEnd: this.fromLocalTZ(visibleTimeEnd),
             scrolling: true
         });
     };
@@ -730,6 +726,24 @@ export default class TimelineRenderer extends React.Component {
         return last_event * 1000;
     }
 
+    toLocalTZ = ts=>{
+        let timezone = this.context.traits.timezone || "UTC";
+        let zone = moment.tz.zone(timezone);
+        if (!zone) {
+            return ts;
+        }
+        return moment.utc(ts).subtract(zone.utcOffset(), "minutes").valueOf();
+    }
+
+    fromLocalTZ = ts=>{
+        let timezone = this.context.traits.timezone || "UTC";
+        let zone = moment.tz.zone(timezone);
+        if (!zone) {
+            return moment(ts);
+        }
+        return moment.utc(ts).add(zone.utcOffset(), "minutes");
+    }
+
     render() {
         let super_timeline = {timelines: this.state.timelines || []};
         if(_.isEmpty(super_timeline.timelines)) {
@@ -749,8 +763,8 @@ export default class TimelineRenderer extends React.Component {
                        disabled: this.state.disabled.Annotation}];
         let items = [{
             id:-1, group: -1,
-            start_time: this.state.table_start,
-            end_time: this.state.table_end,
+            start_time: this.toLocalTZ(this.state.table_start),
+            end_time: this.toLocalTZ(this.state.table_end),
             canMove: false,
             canResize: false,
             canChangeGroup: false,
@@ -782,8 +796,8 @@ export default class TimelineRenderer extends React.Component {
             if (timeline.id === "Annotation") {
                 items.push({
                     id: i+1, group: timeline.id,
-                    start_time: start,
-                    end_time: end,
+                    start_time: this.toLocalTZ(start),
+                    end_time: this.toLocalTZ(end),
                     canMove: false,
                     canResize: false,
                     canChangeGroup: false,
@@ -805,8 +819,8 @@ export default class TimelineRenderer extends React.Component {
 
                 items.push({
                     id: i+1, group: timeline.id,
-                    start_time: start,
-                    end_time: end,
+                    start_time: this.toLocalTZ(start),
+                    end_time: this.toLocalTZ(end),
                     canMove: false,
                     canResize: false,
                     canChangeGroup: false,
@@ -903,34 +917,36 @@ export default class TimelineRenderer extends React.Component {
                  <Timeline
                    groups={groups}
                    items={items}
-                   defaultTimeStart={moment(smallest).add(-1, "day")}
-                   defaultTimeEnd={moment(largest).add(1, "day")}
+                   defaultTimeStart={moment(this.toLocalTZ(smallest)).add(-1, "day")}
+                   defaultTimeEnd={moment(this.toLocalTZ(largest)).add(1, "day")}
                    itemTouchSendsClick={true}
-                   minZoom={5*60*1000}
+                   minZoom={60*1000}
                    dragSnap={1000}
+                   traditionalZoom={true}
                    onCanvasClick={(groupId, time, e) => {
-                       this.setStartTime(time);
+                       this.setStartTime(this.fromLocalTZ(time));
                    }}
                    onItemSelect={(itemId, e, time) => {
-                       this.setStartTime(time);
+                       this.setStartTime(this.fromLocalTZ(time));
                        return false;
                    }}
                    onItemClick={(itemId, e, time) => {
-                       this.setStartTime(time);
+                       this.setStartTime(this.fromLocalTZ(time));
                        return false;
                    }}
                    groupRenderer={this.groupRenderer}
                    onTimeChange={this.handleTimeChange}
-                   visibleTimeStart={this.state.visibleTimeStart}
-                   visibleTimeEnd={this.state.visibleTimeEnd}
+                   visibleTimeStart={this.toLocalTZ(this.state.visibleTimeStart)}
+                   visibleTimeEnd={this.toLocalTZ(this.state.visibleTimeEnd)}
                    sidebarWidth={200}
                  >
                    <TimelineMarkers>
                      <CustomMarker
-                       date={this.state.start_time} >
+                       date={this.toLocalTZ(this.state.start_time) || 0} >
                        { ({ styles, date }) => {
                            styles.backgroundColor = undefined;
                            styles.width = undefined;
+                           styles.left = styles.left || 0;
                            return <div style={styles}
                                        className="timeline-marker"
                                   />;
@@ -948,7 +964,7 @@ export default class TimelineRenderer extends React.Component {
                      transform={this.state.transform}
                      setTransform={x=>this.setState({transform:x})}
                      seekToTime={t=>{
-                         let time = ToStandardTime(t);
+                         let time = ToStandardTime(this.fromLocalTZ(t));
                          if (_.isDate(time)) {
                              this.setStartTime(time.getTime());
                              this.fetchRows(time.getTime());

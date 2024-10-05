@@ -20,6 +20,7 @@ import Table from 'react-bootstrap/Table';
 import DeleteTimelineRanges from './delete.jsx';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import UserConfig from '../core/user.jsx';
 
 import { ColumnToggle } from '../core/paged-table.jsx';
 
@@ -158,6 +159,8 @@ class EventTableRenderer  extends Component {
 }
 
 export default class EventTimelineViewer extends React.Component {
+    static contextType = UserConfig;
+
     static propTypes = {
         // Render the toolbar buttons in our parent component.
         toolbar: PropTypes.func,
@@ -490,8 +493,8 @@ export default class EventTimelineViewer extends React.Component {
 
     handleTimeChange = (visibleTimeStart, visibleTimeEnd) => {
         this.setState({
-            visibleTimeStart,
-            visibleTimeEnd,
+            visibleTimeStart: this.fromLocalTZ(visibleTimeStart),
+            visibleTimeEnd: this.fromLocalTZ(visibleTimeEnd),
             scrolling: true
         });
         this.props.time_range_setter(visibleTimeStart, visibleTimeEnd);
@@ -513,6 +516,26 @@ export default class EventTimelineViewer extends React.Component {
         toggles: {},
     }
 
+    // Here Local TZ means the timezone the user chose in the GUI preferences.
+    toLocalTZ = ts=>{
+        let timezone = this.context.traits.timezone || "UTC";
+        let zone = moment.tz.zone(timezone);
+        if (!zone) {
+            return ts;
+        }
+        return moment.utc(ts).subtract(zone.utcOffset(), "minutes").valueOf();
+    }
+
+    fromLocalTZ = ts=>{
+        let timezone = this.context.traits.timezone || "UTC";
+        let zone = moment.tz.zone(timezone);
+        if (!zone) {
+            return moment(ts);
+        }
+        return moment.utc(ts).add(zone.utcOffset(), "minutes");
+    }
+
+
     render() {
         let groups =  [
             {
@@ -531,8 +554,8 @@ export default class EventTimelineViewer extends React.Component {
 
         let items = [{
             id:-1, group: -1,
-            start_time: moment(this.state.table_start),
-            end_time: moment(this.state.table_end),
+            start_time: this.toLocalTZ(this.state.table_start),
+            end_time: this.toLocalTZ(this.state.table_end),
             canMove: false,
             canResize: false,
             canChangeGroup: false,
@@ -551,8 +574,8 @@ export default class EventTimelineViewer extends React.Component {
             items.push({
                 id: items.length, group: group_id,
                 ts: ts,
-                start_time: ts * 1000,
-                end_time: (ts + 60*60*24)*1000,
+                start_time: this.toLocalTZ(ts * 1000),
+                end_time: this.toLocalTZ((ts + 60*60*24)*1000),
                 canMove: false,
                 canResize: false,
                 canChangeGroup: false,
@@ -595,36 +618,36 @@ export default class EventTimelineViewer extends React.Component {
                    defaultTimeStart={moment().add(-1, "day")}
                    defaultTimeEnd={moment().add(1, "day")}
                    itemTouchSendsClick={true}
-                   minZoom={5*60*1000}
-                   buffer={1}
+                   minZoom={60*1000}
                    dragSnap={1000}
                    onCanvasClick={(groupId, time, e) => {
                        if(time) {
-                           this.setState({start_time: time});
+                           this.setState({start_time: this.fromLocalTZ(time)});
                        }
                    }}
                    onItemSelect={(itemId, e, time) => {
                        if(time) {
-                           this.setState({start_time: time});
+                           this.setState({start_time: this.fromLocalTZ(time)});
                        }
                        return false;
                    }}
                    onItemClick={(itemId, e, time) => {
                        if(time) {
-                           this.setState({start_time: time});
+                           this.setState({start_time: this.fromLocalTZ(time)});
                        }
                        return false;
                    }}
-                   visibleTimeStart={this.state.visibleTimeStart}
-                   visibleTimeEnd={this.state.visibleTimeEnd}
+                   visibleTimeStart={this.toLocalTZ(this.state.visibleTimeStart)}
+                   visibleTimeEnd={this.toLocalTZ(this.state.visibleTimeEnd)}
                    onTimeChange={this.handleTimeChange}
                  >
                    <TimelineMarkers>
                      <CustomMarker
-                       date={this.state.start_time || Date.now()} >
+                       date={this.toLocalTZ(this.state.start_time || Date.now())} >
                        { ({ styles, date }) => {
                            styles.backgroundColor = undefined;
                            styles.width = undefined;
+                           styles.left = styles.left || 0;
                            return <div style={styles}
                                        className="timeline-marker"
                                   />;
