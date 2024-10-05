@@ -7,13 +7,11 @@ import DateTimePicker from '../widgets/datetime.jsx';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import Button from 'react-bootstrap/Button';
 import RegEx from './regex.jsx';
 import RegExArray from './regex_array.jsx';
 import UploadFileForm from './upload.jsx';
 import YaraEditor from './yara.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
-import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Alert from 'react-bootstrap/Alert';
 import CSVForm from './csv.jsx';
 import Select from 'react-select';
@@ -23,43 +21,8 @@ import { parseCSV, serializeCSV } from '../utils/csv.jsx';
 import "./validated.css";
 import "./forms.css";
 
-const numberRegex = RegExp("^[0-9]+$");
-
 // Should match the code in services/launcher/compiler.go
 const boolRegex = RegExp('^(Y|TRUE|YES|OK)$', "i");
-
-// Returns a date object in local timestamp which represents the UTC
-// date. This is needed because the date selector widget expects to
-// work in local time.
-function localTimeFromUTCTime(date) {
-    let msSinceEpoch = date.getTime();
-    let tzoffset = (new Date()).getTimezoneOffset();
-    return new Date(msSinceEpoch + tzoffset * 60000);
-}
-
-function utcTimeFromLocalTime(date) {
-    let msSinceEpoch = date.getTime();
-    let tzoffset = (new Date()).getTimezoneOffset();
-    return new Date(msSinceEpoch - tzoffset * 60000);
-}
-
-function convertToDate(x) {
-    // Allow the value to be specified in a number of ways.
-    if (_.isNumber(x) || numberRegex.test(x)) {
-        try {
-            return new Date(parseInt(x) * 1000);
-        } catch(e) {};
-    }
-
-    try {
-        let res = Date.parse(x);
-        if (!_.isNaN(res)) {
-            return new Date(res);
-        }
-    } catch (e) {};
-
-    return null;
-}
 
 export default class VeloForm extends React.Component {
     static propTypes = {

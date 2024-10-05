@@ -1,6 +1,5 @@
 import _ from 'lodash';
 
-import "./metadata.css";
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import {CancelToken} from 'axios';

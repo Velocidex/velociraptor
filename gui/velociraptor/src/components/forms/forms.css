@@ -15,3 +15,8 @@
     margin-top: 7px;
     margin-left: 20px;
 }
+
+.csv-table tr td,
+.csv-table tr th.metadata-control {
+    padding: 0px;
+}

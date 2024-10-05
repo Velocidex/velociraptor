@@ -433,7 +433,9 @@ class EventMonitoring extends React.Component {
                     client_id={client_id}
                     start_time={this.state.start_time}
                   /> :
-                  <div className="no-content">Please select an artifact to view above.</div>
+                  <div className="no-content">
+                    {T("Please select an artifact to view above.")}
+                  </div>
                 }
               </Container>
             }
