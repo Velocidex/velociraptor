@@ -114,3 +114,8 @@ tr td.timeline-group.timeline-item-7, .timeline-item-7 {
     color: var(--color-foreground);
     width: 5px;
 }
+
+th.message .sort-element .input-group {
+    padding-bottom: 0px;
+    margin-bottom: 0px !important;
+}

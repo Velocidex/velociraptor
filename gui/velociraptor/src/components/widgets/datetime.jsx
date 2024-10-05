@@ -22,10 +22,6 @@ import VeloTimestamp, {
     FormatRFC3339,
 } from '../utils/time.jsx';
 
-
-const day = 1000 * 60 * 60 * 24;
-const week = 7 * day;
-
 class Calendar extends Component {
     static contextType = UserConfig;
 
@@ -73,18 +69,18 @@ class Calendar extends Component {
 
     getMonthName = x=>{
         switch (x.month() % 12) {
-        case 0: return T("January"); break;
-        case 1: return T("February"); break;
-        case 2: return T("March"); break;
-        case 3: return T("April"); break;
-        case 4: return T("May"); break;
-        case 5: return T("June"); break;
-        case 6: return T("July"); break;
-        case 7: return T("August"); break;
-        case 8: return T("September"); break;
-        case 9: return T("October"); break;
-        case 10: return T("November"); break;
-        case 11: return T("December"); break;
+        case 0: return T("January");
+        case 1: return T("February");
+        case 2: return T("March");
+        case 3: return T("April");
+        case 4: return T("May");
+        case 5: return T("June");
+        case 6: return T("July");
+        case 7: return T("August");
+        case 8: return T("September");
+        case 9: return T("October");
+        case 10: return T("November");
+        case 11: return T("December");
         default: return "";
         };
     }
@@ -206,7 +202,6 @@ class Calendar extends Component {
                  <Row>
                    <ButtonGroup>
                      <Button onClick={e=>{
-                         let ts = new Date();
                          this.setState({focus: moment(focus).subtract(1, "years")});
 
                          e.stopPropagation();
@@ -262,18 +257,6 @@ export default class DateTimePicker extends Component {
         }
     }
 
-    getTime = offset=>{
-        let date = new Date();
-        date.setTime(date.getTime() + offset);
-        return date;
-    }
-
-    getMonth = offset=>{
-        let date = new Date();
-        date.setUTCMonth(date.getUTCMonth() + offset);
-        return date;
-    }
-
     setTime = t=>{
         // Make sure the time is valid before setting it but we still
         // set the RFC3339 string.
@@ -291,11 +274,11 @@ export default class DateTimePicker extends Component {
         let timezone = this.context.traits.timezone || "UTC";
 
         let presets = [
-            [()=>T("A week from now"), ()=>this.getTime(week)],
-            [()=>T("Now"), ()=>this.getTime(0)],
-            [()=>T("A day ago"), ()=>this.getTime(- day)],
-            [()=>T("A week ago"), ()=>this.getTime(- week)],
-            [()=>T("A month ago"), ()=>this.getMonth(-1)],
+            [()=>T("A week from now"), ()=>moment().add(1, "week")],
+            [()=>T("Now"), ()=>moment()],
+            [()=>T("A day ago"), ()=>moment().subtract(1, "day")],
+            [()=>T("A week ago"), ()=>moment().subtract(1, "week")],
+            [()=>T("A month ago"), ()=>moment().subtract(1, "month")],
         ];
 
         return (

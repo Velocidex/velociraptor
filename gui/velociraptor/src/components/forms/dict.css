@@ -1,0 +1,20 @@
+td.metadata-key {
+    width: 20em;
+}
+
+.metadata-row {
+
+}
+
+td.metadata-value {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+.metadata-control {
+    width: 30px;
+}
+
+.dict-table {
+    margin-top: 20px;
+}
