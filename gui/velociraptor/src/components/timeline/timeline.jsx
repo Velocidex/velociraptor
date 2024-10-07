@@ -48,6 +48,18 @@ const FixedColumns = {
     "Message": 1,
 };
 
+const ms_to_ns = (t)=>{
+    return (t || 0) * 1000000;
+};
+
+const ns_to_ms = (t)=>{
+    return (t || 0) / 1000000;
+};
+
+const sec_to_ms = t=>{
+    return (t || 0) * 1000;
+}
+
 class DeleteComponentDialog extends Component {
     static propTypes = {
         notebook_id: PropTypes.string,
@@ -532,7 +544,7 @@ export default class TimelineRenderer extends React.Component {
             return true;
         }
 
-        if (!_.isEqual(prevState.start_time, this.state.start_time)) {
+        if (!_.isEqual(prevState.start_time_ms, this.state.start_time_ms)) {
             this.fetchRows();
             return true;
         };
@@ -560,9 +572,9 @@ export default class TimelineRenderer extends React.Component {
 
     state = {
         start_time_iso: "",
-        start_time: 0,
-        table_start: 0,
-        table_end: 0,
+        start_time_ms: 0,
+        table_start_ms: 0,
+        table_end_ms: 0,
         loading: true,
         disabled: {},
         version: 0,
@@ -575,15 +587,15 @@ export default class TimelineRenderer extends React.Component {
     };
 
     setStartTime = ts_ms=>{
-        let ts = ToStandardTime(ts_ms);
+        let ts = new Date(ts_ms);
         let timezone = this.context.traits.timezone || "UTC";
         this.setState({
-            start_time: ts_ms,
+            start_time_ms: ts_ms,
             start_time_iso: FormatRFC3339(ts, timezone),
         });
     }
 
-    fetchRows = (go_to_start_time) => {
+    fetchRows = (go_to_start_time_ms) => {
         let skip_components = [];
         _.map(this.state.disabled, (v,k)=>{
             if(v) {
@@ -591,9 +603,9 @@ export default class TimelineRenderer extends React.Component {
             };
         });
 
-        let start_time = (go_to_start_time || this.state.start_time) * 1000000;
-        if (start_time < 1000000000) {
-            start_time = 0;
+        let start_time_ms = this.state.start_time_ms || 0;
+        if (go_to_start_time_ms) {
+            start_time_ms = go_to_start_time_ms;
         }
 
         let transform = this.state.transform || {};
@@ -601,7 +613,7 @@ export default class TimelineRenderer extends React.Component {
         let params = {
             type: "TIMELINE",
             timeline: this.props.name,
-            start_time: start_time,
+            start_time: ms_to_ns(start_time_ms),
             rows: this.state.row_count,
             skip_components: skip_components,
             notebook_id: this.props.notebook_id,
@@ -620,13 +632,16 @@ export default class TimelineRenderer extends React.Component {
             if (response.cancel) {
                 return;
             }
-            let start_time = (response.data.start_time / 1000000) || 0;
+            let start_time_ms = ns_to_ms(response.data.start_time);
             let pageData = PrepareData(response.data);
             let timelines = response.data.timelines;
+            if (_.isEmpty(pageData.rows)) {
+                return;
+            }
 
             this.setState({
-                table_start: start_time,
-                table_end:  response.data.end_time / 1000000 || 0,
+                table_start_ms: start_time_ms,
+                table_end_ms:  ns_to_ms(response.data.end_time),
                 columns: pageData.columns,
                 rows: pageData.rows,
                 version: Date(),
@@ -636,18 +651,17 @@ export default class TimelineRenderer extends React.Component {
             // If the visible table is outside the view port, adjust
             // the view port.
             if (this.state.visibleTimeStart === 0 ||
-                start_time > this.state.visibleTimeEnd ||
-                start_time < this.state.visibleTimeStart) {
+                start_time_ms > this.state.visibleTimeEnd ||
+                start_time_ms < this.state.visibleTimeStart) {
                 let diff = (this.state.visibleTimeEnd -
                             this.state.visibleTimeStart) || (60 * 60 * 10000);
 
-                let visibleTimeStart = start_time - diff * 0.1;
-                let visibleTimeEnd = start_time + diff * 0.9;
+                let visibleTimeStart = start_time_ms - diff * 0.1;
+                let visibleTimeEnd = start_time_ms + diff * 0.9;
                 this.setState({visibleTimeStart: visibleTimeStart,
                                visibleTimeEnd: visibleTimeEnd});
 
-                this.setStartTime(start_time);
-
+                this.setStartTime(start_time_ms);
             }
 
             this.updateToggles(pageData.rows);
@@ -672,8 +686,8 @@ export default class TimelineRenderer extends React.Component {
     };
 
     nextPage = ()=>{
-        if (this.state.table_end > 0) {
-            this.setStartTime(this.state.table_end + 1);
+        if (this.state.table_end_ms > 0) {
+            this.setStartTime(this.state.table_end_ms + 1);
         }
     }
 
@@ -719,8 +733,8 @@ export default class TimelineRenderer extends React.Component {
         let timelines = this.state.timelines || [];
         let last_event = 0;
         for(let i=0;i<timelines.length;i++) {
-            if(last_event < timelines[i].end_time) {
-                last_event = timelines[i].end_time;
+            if(last_event < timelines[i].end_time_ms) {
+                last_event = timelines[i].end_time_ms;
             }
         }
         return last_event * 1000;
@@ -739,9 +753,9 @@ export default class TimelineRenderer extends React.Component {
         let timezone = this.context.traits.timezone || "UTC";
         let zone = moment.tz.zone(timezone);
         if (!zone) {
-            return moment(ts);
+            return ts;
         }
-        return moment.utc(ts).add(zone.utcOffset(), "minutes");
+        return moment.utc(ts).add(zone.utcOffset(), "minutes").valueOf();
     }
 
     render() {
@@ -763,8 +777,8 @@ export default class TimelineRenderer extends React.Component {
                        disabled: this.state.disabled.Annotation}];
         let items = [{
             id:-1, group: -1,
-            start_time: this.toLocalTZ(this.state.table_start),
-            end_time: this.toLocalTZ(this.state.table_end),
+            start_time: this.toLocalTZ(this.state.table_start_ms),
+            end_time: this.toLocalTZ(this.state.table_end_ms),
             canMove: false,
             canResize: false,
             canChangeGroup: false,
@@ -782,22 +796,22 @@ export default class TimelineRenderer extends React.Component {
 
         for (let i=0;i<timelines.length;i++) {
             let timeline = super_timeline.timelines[i];
-            let start = timeline.start_time * 1000;
-            let end = timeline.end_time * 1000;
-            if (start < smallest) {
-                smallest = start;
+            let start_ms = sec_to_ms(timeline.start_time);
+            let end_ms = sec_to_ms(timeline.end_time);
+            if (start_ms < smallest) {
+                smallest = start_ms;
             }
 
-            if (end > largest) {
-                largest = end;
+            if (end_ms > largest) {
+                largest = end_ms;
             }
 
             // Handle the annotation timeline specifically
             if (timeline.id === "Annotation") {
                 items.push({
                     id: i+1, group: timeline.id,
-                    start_time: this.toLocalTZ(start),
-                    end_time: this.toLocalTZ(end),
+                    start_time: this.toLocalTZ(start_ms),
+                    end_time: this.toLocalTZ(end_ms),
                     canMove: false,
                     canResize: false,
                     canChangeGroup: false,
@@ -819,8 +833,8 @@ export default class TimelineRenderer extends React.Component {
 
                 items.push({
                     id: i+1, group: timeline.id,
-                    start_time: this.toLocalTZ(start),
-                    end_time: this.toLocalTZ(end),
+                    start_time: this.toLocalTZ(start_ms),
+                    end_time: this.toLocalTZ(end_ms),
                     canMove: false,
                     canResize: false,
                     canChangeGroup: false,
@@ -869,7 +883,9 @@ export default class TimelineRenderer extends React.Component {
                      { this.renderColumnSelector() }
                      <ToolTip tooltip={T("Go to First Event")}>
                        <Button title="Start"
-                               onClick={()=>this.fetchRows(1)}
+                               onClick={()=>{
+                                   this.fetchRows(1);
+                               }}
                                variant="default">
                          <FontAwesomeIcon icon="backward-fast"/>
                        </Button>
@@ -942,7 +958,7 @@ export default class TimelineRenderer extends React.Component {
                  >
                    <TimelineMarkers>
                      <CustomMarker
-                       date={this.toLocalTZ(this.state.start_time) || 0} >
+                       date={this.toLocalTZ(this.state.start_time_ms)} >
                        { ({ styles, date }) => {
                            styles.backgroundColor = undefined;
                            styles.width = undefined;

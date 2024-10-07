@@ -31,7 +31,6 @@ import LoginPage from './components/welcome/login.jsx';
 import LogoffPage from './components/welcome/logoff.jsx';
 import KeyboardHelp from './components/core/keyboard-help.jsx';
 import { UserSettings } from './components/core/user.jsx';
-import { ContextMenuPopup } from './components/utils/context.jsx';
 import { Switch, Route, withRouter } from "react-router-dom";
 import { Join } from './components/utils/paths.jsx';
 import SecretManager from './components/secrets/secrets.jsx';
@@ -249,7 +248,6 @@ class App extends Component {
                   </Switch>
                   <KeyboardHelp />
                 </SnackbarProvider>
-                <ContextMenuPopup/>
               </UserSettings>
             </div>
         );
