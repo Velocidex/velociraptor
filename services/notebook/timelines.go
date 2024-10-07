@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -73,6 +74,16 @@ func (self *NotebookManager) DeleteTimeline(ctx context.Context, scope vfilter.S
 
 func (self *NotebookStoreImpl) Timelines(ctx context.Context,
 	notebook_id string) ([]*timelines_proto.SuperTimeline, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	_, pres := self.global_notebooks[notebook_id]
+	if !pres {
+		return nil, fmt.Errorf("Global notebook %v not found: %w",
+			notebook_id, utils.NotFoundError)
+	}
+
 	dir := paths.NewNotebookPathManager(notebook_id).SuperTimelineDir()
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
@@ -436,7 +447,7 @@ func (self *NotebookStoreImpl) AnnotateTimeline(
 	}
 
 	// Add the annotation event only if the time is valid.
-	if timestamp.After(epoch) {
+	if !timestamp.IsZero() && timestamp.After(epoch) {
 		row := event.Update(constants.TIMELINE_DEFAULT_KEY, timestamp).
 			Set("Notes", message).
 			Set(AnnotatedBy, principal).

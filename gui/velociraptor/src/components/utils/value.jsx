@@ -40,6 +40,7 @@ export default class VeloValueRenderer extends React.Component {
     static contextType = UserConfig;
     static propTypes = {
         value: PropTypes.any,
+        row: PropTypes.object,
         collapsed: PropTypes.bool,
     };
 
@@ -66,9 +67,11 @@ export default class VeloValueRenderer extends React.Component {
 
     render() {
         let v = this.props.value;
-
         if (_.isString(v)) {
-            return <ContextMenu value={v}>{this.maybeFormatTime(v)}</ContextMenu>;
+            return <ContextMenu value={v}
+                                row={this.props.row}>
+                     {this.maybeFormatTime(v)}
+                   </ContextMenu>;
         }
 
         if (_.isNumber(v)) {
@@ -87,7 +90,8 @@ export default class VeloValueRenderer extends React.Component {
                      </button>;
         }
 
-        return <ContextMenu value={this.props.value}>
+        return <ContextMenu value={this.props.value}
+                            row={this.props.row}>
                  {button && <div>{ button }</div> }
                  <JsonView value={v} indent={0} collapsed={this.props.collapsed}/>
                  { this.state.showDialog &&
