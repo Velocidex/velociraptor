@@ -23,6 +23,7 @@ import re
 import os
 import yaml
 from collections import OrderedDict
+import subprocess
 
 BLACKLISTED = ["!ALL.tkape"]
 
@@ -43,6 +44,16 @@ REGEX_TO_GLOB = {
     r"*.\b[a-zA-Z0-9_-]{8}\b.compiled": "*.compiled",
 }
 
+# Kape Target rules add some undocumented expansions that dont mean
+# anything and can not really be expanded in runtime - we just replace
+# them with * glob.
+fluff_table = {
+    "%user%": "*",
+    "%users%": "*",
+    "%User%": "*",
+    "%Users%": "*",
+}
+
 
 def pathsep_converter_win(path):
     return path.replace("/", "\\")
@@ -53,7 +64,10 @@ def pathsep_converter_nix(path):
 def pathsep_converter_identity(path):
     return path
 
-
+# Kape targets sometimes have a regex instead of a glob - it is not
+# trivial to convert a regex to a glob automatically. A regex is not
+# generally necessary and just makes life complicated, so we just hard
+# code these translations manually and alert when a new regex pops up.
 def unregexify(regex):
     res = REGEX_TO_GLOB.get(regex)
     if not res:
@@ -185,11 +199,32 @@ def get_csv(rows):
     return out.getvalue()
 
 def remove_fluff(glob):
-    return glob.replace('%user%', '*')
+    for k,v in fluff_table.items():
+        glob = glob.replace(k, v)
+    return glob
 
-def format(ctx):
+def run(*argv, path):
+    try:
+        return subprocess.run(
+            argv , cwd=path,
+            stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+    except Exception:
+        return ""
+
+
+def format(ctx, kape_file_path):
     parameters_str = ""
     rules = [["Group", "RuleIds"]]
+
+    # Get the latest commit date
+    kape_latest_date = run(
+        'git', 'log', '-1',
+        '--date=format:%Y-%m-%dT%T%z', '--format=%ad',
+        path=kape_file_path)
+
+    # Get latest commit hash
+    kape_latest_hash = run('git', 'rev-parse', '--short', 'HEAD',
+                           path=kape_file_path)
 
     for k, v in sorted(ctx.groups.items()):
         parameters_str += "  - name: %s\n    description: \"%s (by %s): %s\"\n    type: bool\n" % (
@@ -206,6 +241,8 @@ def format(ctx):
         template = fp.read()
 
     print (template % dict(
+        kape_latest_hash=kape_latest_hash,
+        kape_latest_date=kape_latest_date,
         parameters=parameters_str,
         rules="\n".join(["      " + x for x in get_csv(rules).splitlines()]),
         csv="\n".join(["      " + x for x in get_csv(ctx.rows).splitlines()]),
@@ -231,4 +268,4 @@ if __name__ == "__main__":
         ctx.template = "templates/kape_files_win.yaml.tpl"
 
     read_targets(ctx, args.kape_file_path)
-    format(ctx)
+    format(ctx, args.kape_file_path)
