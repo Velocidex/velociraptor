@@ -41,7 +41,8 @@ class Calendar extends Component {
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
-        if (_.isUndefined(this.state.focus)) {
+        if (_.isUndefined(this.state.focus) ||
+            this.props.value !== prevProps.value) {
             let ts = this.parseDate(this.props.value);
             if(ts.isValid()) {
                 this.setState({focus: ts});
