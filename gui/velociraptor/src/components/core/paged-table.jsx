@@ -621,7 +621,11 @@ class VeloPagedTable extends Component {
     }
 
     defaultFormatter = (cell, row, rowIndex) => {
-        return <VeloValueRenderer value={cell}/>;
+        let row_data = {};
+        _.each(this.activeColumns(), x=>{
+            row_data[x] = row[x];
+        });
+        return <VeloValueRenderer value={cell} row={row_data} />;
     }
 
     getColumnRenderer = column => {
