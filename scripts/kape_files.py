@@ -24,6 +24,7 @@ import os
 import yaml
 from collections import OrderedDict
 import subprocess
+import json
 
 BLACKLISTED = ["!ALL.tkape"]
 
@@ -82,6 +83,41 @@ class KapeContext:
     kape_files = []
     kape_data = OrderedDict()
     pathsep_converter = pathsep_converter_identity
+    ids = {}
+    dirty = False
+    last_id = 0
+    state_file_path = None
+
+    def __init__(self, state_file_path=None):
+        self.state_file_path = state_file_path
+
+        # Keep the mapping between rule names and IDs in a state
+        # file. This ensures that output remains stable from run to
+        # run and reduces churn through commits.
+        if self.state_file_path:
+            try:
+                with open(state_file_path) as fd:
+                    self.ids = json.loads(fd.read())
+            except (IOError, json.decoder.JSONDecodeError) as e:
+                pass
+
+    def resolve_id(self, name, glob):
+        key = name + glob
+        res = self.ids.get(key)
+        if res is None:
+            res = self.last_id + 1
+            self.dirty = True
+            self.last_id = res
+            self.ids[key] = res
+
+        return res
+
+    def flush(self):
+        if not self.dirty or not self.state_file_path:
+            return
+
+        with open(self.state_file_path, "w") as outfd:
+            outfd.write(json.dumps(self.ids, sort_keys=True, indent=4))
 
 def read_targets(ctx, project_path):
     for root, dirs, files in sorted(os.walk(
@@ -126,7 +162,8 @@ def read_targets(ctx, project_path):
             if ".tkape" in glob:
                 continue
 
-            row_id = len(ctx.rows)
+            row_id = ctx.resolve_id(name, glob)
+            #row_id = len(ctx.rows)
             ctx.groups[name].add(row_id)
 
             glob = strip_drive(glob)
@@ -251,12 +288,12 @@ def format(ctx, kape_file_path):
 
 if __name__ == "__main__":
     argument_parser = argparse.ArgumentParser()
+    argument_parser.add_argument("--state_file_path", help="Path to a state file")
     argument_parser.add_argument("kape_file_path", help="Path to the KapeFiles project")
     argument_parser.add_argument("-t", "--target", choices=("win",), help="Which template to fill with data")
 
     args = argument_parser.parse_args()
-
-    ctx = KapeContext()
+    ctx = KapeContext(state_file_path=args.state_file_path)
 
     if args.target == "win":
         ctx.pathsep_converter = pathsep_converter_win
@@ -269,3 +306,5 @@ if __name__ == "__main__":
 
     read_targets(ctx, args.kape_file_path)
     format(ctx, args.kape_file_path)
+
+    ctx.flush()
