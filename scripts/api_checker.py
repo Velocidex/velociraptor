@@ -12,7 +12,6 @@ import re
 import os
 import sys
 import binascii
-import json
 import base64
 
 class Check:
