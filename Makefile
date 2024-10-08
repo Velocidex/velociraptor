@@ -92,7 +92,7 @@ lint:
 	golangci-lint run
 
 KapeFilesSync:
-	python3 scripts/kape_files.py -t win ~/projects/KapeFiles/ > artifacts/definitions/Windows/KapeFiles/Targets.yaml
+	python3 scripts/kape_files.py -t win --state_file_path scripts/templates/kape_files_state.json ~/projects/KapeFiles/ > artifacts/definitions/Windows/KapeFiles/Targets.yaml
 
 SQLECmdSync:
 	python3 scripts/sqlecmd_convert.py ~/projects/SQLECmd/ ~/projects/KapeFiles/ artifacts/definitions/Generic/Collectors/SQLECmd.yaml

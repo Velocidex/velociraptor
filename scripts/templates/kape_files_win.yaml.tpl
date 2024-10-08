@@ -18,6 +18,9 @@ description: |
     conservatively with this artifact because we can upload really
     vast quantities of data very quickly.
 
+    NOTE: This artifact was built from The KapeFile Repository
+    commit %(kape_latest_hash)s dated %(kape_latest_date)s.
+
 reference:
   - https://www.kroll.com/en/insights/publications/cyber/kroll-artifact-parser-extractor-kape
   - https://github.com/EricZimmerman/KapeFiles

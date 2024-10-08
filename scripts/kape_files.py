@@ -23,6 +23,8 @@ import re
 import os
 import yaml
 from collections import OrderedDict
+import subprocess
+import json
 
 BLACKLISTED = ["!ALL.tkape"]
 
@@ -43,6 +45,16 @@ REGEX_TO_GLOB = {
     r"*.\b[a-zA-Z0-9_-]{8}\b.compiled": "*.compiled",
 }
 
+# Kape Target rules add some undocumented expansions that dont mean
+# anything and can not really be expanded in runtime - we just replace
+# them with * glob.
+fluff_table = {
+    "%user%": "*",
+    "%users%": "*",
+    "%User%": "*",
+    "%Users%": "*",
+}
+
 
 def pathsep_converter_win(path):
     return path.replace("/", "\\")
@@ -53,7 +65,10 @@ def pathsep_converter_nix(path):
 def pathsep_converter_identity(path):
     return path
 
-
+# Kape targets sometimes have a regex instead of a glob - it is not
+# trivial to convert a regex to a glob automatically. A regex is not
+# generally necessary and just makes life complicated, so we just hard
+# code these translations manually and alert when a new regex pops up.
 def unregexify(regex):
     res = REGEX_TO_GLOB.get(regex)
     if not res:
@@ -68,6 +83,41 @@ class KapeContext:
     kape_files = []
     kape_data = OrderedDict()
     pathsep_converter = pathsep_converter_identity
+    ids = {}
+    dirty = False
+    last_id = 0
+    state_file_path = None
+
+    def __init__(self, state_file_path=None):
+        self.state_file_path = state_file_path
+
+        # Keep the mapping between rule names and IDs in a state
+        # file. This ensures that output remains stable from run to
+        # run and reduces churn through commits.
+        if self.state_file_path:
+            try:
+                with open(state_file_path) as fd:
+                    self.ids = json.loads(fd.read())
+            except (IOError, json.decoder.JSONDecodeError) as e:
+                pass
+
+    def resolve_id(self, name, glob):
+        key = name + glob
+        res = self.ids.get(key)
+        if res is None:
+            res = self.last_id + 1
+            self.dirty = True
+            self.last_id = res
+            self.ids[key] = res
+
+        return res
+
+    def flush(self):
+        if not self.dirty or not self.state_file_path:
+            return
+
+        with open(self.state_file_path, "w") as outfd:
+            outfd.write(json.dumps(self.ids, sort_keys=True, indent=4))
 
 def read_targets(ctx, project_path):
     for root, dirs, files in sorted(os.walk(
@@ -112,7 +162,8 @@ def read_targets(ctx, project_path):
             if ".tkape" in glob:
                 continue
 
-            row_id = len(ctx.rows)
+            row_id = ctx.resolve_id(name, glob)
+            #row_id = len(ctx.rows)
             ctx.groups[name].add(row_id)
 
             glob = strip_drive(glob)
@@ -185,11 +236,32 @@ def get_csv(rows):
     return out.getvalue()
 
 def remove_fluff(glob):
-    return glob.replace('%user%', '*')
+    for k,v in fluff_table.items():
+        glob = glob.replace(k, v)
+    return glob
 
-def format(ctx):
+def run(*argv, path):
+    try:
+        return subprocess.run(
+            argv , cwd=path,
+            stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+    except Exception:
+        return ""
+
+
+def format(ctx, kape_file_path):
     parameters_str = ""
     rules = [["Group", "RuleIds"]]
+
+    # Get the latest commit date
+    kape_latest_date = run(
+        'git', 'log', '-1',
+        '--date=format:%Y-%m-%dT%T%z', '--format=%ad',
+        path=kape_file_path)
+
+    # Get latest commit hash
+    kape_latest_hash = run('git', 'rev-parse', '--short', 'HEAD',
+                           path=kape_file_path)
 
     for k, v in sorted(ctx.groups.items()):
         parameters_str += "  - name: %s\n    description: \"%s (by %s): %s\"\n    type: bool\n" % (
@@ -206,6 +278,8 @@ def format(ctx):
         template = fp.read()
 
     print (template % dict(
+        kape_latest_hash=kape_latest_hash,
+        kape_latest_date=kape_latest_date,
         parameters=parameters_str,
         rules="\n".join(["      " + x for x in get_csv(rules).splitlines()]),
         csv="\n".join(["      " + x for x in get_csv(ctx.rows).splitlines()]),
@@ -214,12 +288,12 @@ def format(ctx):
 
 if __name__ == "__main__":
     argument_parser = argparse.ArgumentParser()
+    argument_parser.add_argument("--state_file_path", help="Path to a state file")
     argument_parser.add_argument("kape_file_path", help="Path to the KapeFiles project")
     argument_parser.add_argument("-t", "--target", choices=("win",), help="Which template to fill with data")
 
     args = argument_parser.parse_args()
-
-    ctx = KapeContext()
+    ctx = KapeContext(state_file_path=args.state_file_path)
 
     if args.target == "win":
         ctx.pathsep_converter = pathsep_converter_win
@@ -231,4 +305,6 @@ if __name__ == "__main__":
         ctx.template = "templates/kape_files_win.yaml.tpl"
 
     read_targets(ctx, args.kape_file_path)
-    format(ctx)
+    format(ctx, args.kape_file_path)
+
+    ctx.flush()
