@@ -1,6 +1,7 @@
 package timelines
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -45,7 +46,8 @@ func (self timelineTransformer) Transform(
 	if message_column == "" {
 		message_column = "Message"
 	}
-	message, _ := event.GetString(message_column)
+	message_any, _ := event.Get(message_column)
+	message := toStr(message_any)
 
 	timestamp_description_column := self.TimestampDescriptionColumn
 	if timestamp_description_column == "" {
@@ -63,4 +65,13 @@ func (self timelineTransformer) Transform(
 		TimestampDescription: timestamp_description,
 		Source:               source,
 	}
+}
+
+func toStr(in interface{}) string {
+	s, ok := in.(string)
+	if ok {
+		return s
+	}
+
+	return fmt.Sprintf("%v", in)
 }
