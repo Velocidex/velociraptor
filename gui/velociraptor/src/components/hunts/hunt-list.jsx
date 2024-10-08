@@ -18,7 +18,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter } from "react-router-dom";
 
 import VeloForm from '../forms/form.jsx';
-import VeloPagedTable, { TablePaginationControl } from '../core/paged-table.jsx';
+import VeloPagedTable, {
+    TablePaginationControl,
+    TransformViewer,
+} from '../core/paged-table.jsx';
 
 import NewHuntWizard from './new-hunt.jsx';
 import DeleteNotebookDialog from '../notebooks/notebook-delete.jsx';
@@ -439,11 +442,16 @@ class HuntList extends React.Component {
         };
 
         let state = this.props.selected_hunt && this.props.selected_hunt.state;
-        if (this.props.selected_hunt.stats && this.props.selected_hunt.stats.stopped) {
+        if (this.props.selected_hunt.stats &&
+            this.props.selected_hunt.stats.stopped) {
             state = 'STOPPED';
         }
 
-        let tab = this.props.match && this.props.match.params && this.props.match.params.tab;
+        let tab = this.props.match && this.props.match.params &&
+            this.props.match.params.tab;
+
+        let transform = this.state.transform || {};
+
         return (
             <>
               {this.state.showWizard &&
@@ -588,13 +596,15 @@ class HuntList extends React.Component {
                     </Button>
                   </ToolTip>
 
-                  { !this.state.filter ?
+                  { transform.filter_column !== "Creator" ?
                     <ToolTip tooltip={T("Show only my hunts")}>
                       <Button onClick={()=>{
-                                  this.setState({transform: {editing: "", filter_column: "Creator", filter_regex: username},
-                                                 filter: username});
-                                  this.incrementVersion();
-                              }}
+                          this.setState({transform: {
+                              filter_column: "Creator",
+                              filter_regex: username,
+                          }});
+                          this.incrementVersion();
+                      }}
                               variant="default">
                         <FontAwesomeIcon icon="user" />
                         <span className="sr-only">{T("Show only my hunts")}</span>
@@ -603,7 +613,7 @@ class HuntList extends React.Component {
                     :
                     <ToolTip tooltip={T("Show all hunts")}>
                       <Button onClick={()=>{
-                                  this.setState({transform: {}, filter: ""});
+                                  this.setState({transform: {}});
                                   this.incrementVersion();
                               }}
                               variant="default">
@@ -614,8 +624,8 @@ class HuntList extends React.Component {
                   }
                 </ButtonGroup>
 
-                { this.state.page_state &&
-                  <ButtonGroup>
+                <ButtonGroup>
+                { this.state.page_state ?
                     <TablePaginationControl
                       total_size={this.state.page_state.total_size}
                       start_row={this.state.page_state.start_row}
@@ -624,8 +634,12 @@ class HuntList extends React.Component {
                                     this.state.page_state.page_size}
                       onRowChange={this.state.page_state.onRowChange}
                       onPageSizeChange={this.state.page_state.onPageSizeChange}
-                    />
-                  </ButtonGroup> }
+                    /> :  <TablePaginationControl total_size={0}/> }
+                  <TransformViewer
+                    transform={this.state.transform}
+                    setTransform={t=>this.setState({transform: t})}
+                  />
+                </ButtonGroup>
 
                 {tab === "notebook" &&
                  <ButtonGroup className="float-right">
