@@ -653,8 +653,6 @@ class VeloPagedTable extends Component {
         if(_.isEmpty(transform)) {
             return <></>;
         }
-        console.log(transform);
-
         return <TransformViewer
                  transform={transform}
                  setTransform={t=>this.setState({transform: t})}
