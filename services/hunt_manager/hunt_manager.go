@@ -250,7 +250,12 @@ func (self *HuntManager) processMutation(
 
 			if len(mutation.Tags) > 0 &&
 				!utils.StringSliceEq(mutation.Tags, hunt_obj.Tags) {
-				hunt_obj.Tags = utils.DeduplicateStringSlice(mutation.Tags)
+
+				// The "-" label is not valid and should never be
+				// added. We use it to signify that labels should be
+				// completely cleared.
+				hunt_obj.Tags = utils.DeduplicateStringSlice(
+					utils.FilterSlice(mutation.Tags, "-"))
 				sort.Strings(hunt_obj.Tags)
 
 				modification = services.HuntPropagateChanges

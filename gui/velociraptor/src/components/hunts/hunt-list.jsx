@@ -53,15 +53,29 @@ class ModifyHuntDialog extends React.Component {
 
     state = {
         description: "",
+
+        // In RFC3339
         expires: "",
-        tags: [],
+
+        // All the tags we know about from all hunts
+        all_tags: [],
+
+        // Tags to be assigned to the hunt
+        tags: undefined,
     }
 
     getTags = ()=>{
         api.get("v1/GetHuntTags", {}, this.source.token).then(response=>{
                 if (response && response.data &&
                     response.data.tags && response.data.tags.length) {
-                    this.setState({tags: response.data.tags});
+                    this.setState({
+                        all_tags: response.data.tags,
+                    });
+
+                    let hunt = this.props.hunt;
+                    if(hunt) {
+                        this.setState({tags: [...this.props.hunt.tags]});
+                    }
                 };
         });
     }
@@ -88,13 +102,12 @@ class ModifyHuntDialog extends React.Component {
             this.props.hunt.hunt_id;
 
         let description = this.state.description || this.props.hunt.hunt_description;
-        let tags = this.state.tags || this.props.hunt.tags || [];
 
         if (!hunt_id) { return; };
 
         api.post("v1/ModifyHunt", {
             hunt_description: description,
-            tags: tags,
+            tags: this.state.tags,
             expires: this.getExpiryEpoch() * 1000000,
             hunt_id: hunt_id,
         }, this.source.token).then((response) => {
@@ -103,16 +116,20 @@ class ModifyHuntDialog extends React.Component {
     }
 
     render() {
+        if(_.isUndefined(this.state.tags)) {
+            return <></>;
+        }
+
         let description = this.state.description || this.props.hunt.hunt_description;
         let expires = this.getExpiryEpoch();
         let now = Date.now() / 1000;
 
-        let options = _.map(this.state.tags, x=>{
-            return {value: x, label: x, isFixed: true, color: "#00B8D9"};
+        let options = _.map(this.state.all_tags, x=>{
+            return {value: x, label: x};
         });
 
-        let tag_defaults = _.map(this.props.hunt.tags,
-                             x=>{return {value: x, label: x};});
+        let tag_defaults = _.map(this.state.tags,
+                                 x=>{return {value: x, label: x};});
 
         return <Modal show={true}
                       size="lg"
@@ -140,7 +157,7 @@ class ModifyHuntDialog extends React.Component {
                          onChange={(e)=>{
                              this.setState({tags: _.map(e, x=>x.value)});
                          }}
-                         placeholder={T("Hunt Tags")}
+                         placeholder={T("Hunt Tags (Type to create new Tag)")}
                          spellCheck="false"
                          defaultValue={tag_defaults}
                        />
@@ -154,7 +171,7 @@ class ModifyHuntDialog extends React.Component {
                    <VeloForm
                      param={{name: T("Expiry"), type: "timestamp",
                              description: T("Time hunt will expire")}}
-                     value={expires}
+                     value={this.state.expires}
                      setValue={x=>this.setState({expires:x})}
                    />
                    { expires < now &&

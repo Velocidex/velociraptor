@@ -3677,15 +3677,12 @@
     id. As a convenience, the function will also accept a flow id for
     flows which were launched by the hunt. These flow IDs have a
     specific format indicating they were launched from a hunt.
-
   type: Function
   args:
   - name: hunt_id
     type: string
-    description: |
-      Hunt Id to look up or a flow id created by that hunt
-      (e.g. F.CRUU3KIE5D73G.H).
-
+    description: Hunt Id to look up or a flow id created by that hunt (e.g. F.CRUU3KIE5D73G.H
+      ).
   metadata:
     permissions: READ_RESULTS
   platforms:
@@ -3747,6 +3744,14 @@
   - name: expires
     type: time.Time
     description: Update hunt expiry
+  - name: add_labels
+    type: string
+    description: Labels to be added to hunt
+    repeated: true
+  - name: del_labels
+    type: string
+    description: Labels to be removed from hunt
+    repeated: true
   metadata:
     permissions: START_HUNT
   platforms:
@@ -10735,3 +10740,4 @@
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
+

@@ -250,6 +250,8 @@ func (self *HuntStorageManagerImpl) GetTags(
 
 			return nil
 		})
+
+	res = utils.DeduplicateStringSlice(res)
 	sort.Strings(res)
 	return res
 }
