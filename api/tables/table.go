@@ -363,7 +363,7 @@ func ConvertRowsToTableResponse(
 	var rows uint64
 	column_known := make(map[string]bool)
 	for row := range in {
-		data := make(map[string]string)
+		data := make(map[string]interface{})
 		for _, key := range row.Keys() {
 			// Do we already know about this column?
 			_, pres := column_known[key]
@@ -374,21 +374,25 @@ func ConvertRowsToTableResponse(
 
 			value, pres := row.Get(key)
 			if pres {
-				data[key] = json.AnyToString(value, opts)
+				data[key] = value
 			} else {
-				data[key] = "null"
+				data[key] = nil
 			}
 		}
 
-		row_proto := &api_proto.Row{}
+		json_out := make([]interface{}, 0, len(result.Columns))
 		for _, k := range result.Columns {
-			value, pres := data[k]
-			if !pres {
-				value = "null"
-			}
-			row_proto.Cell = append(row_proto.Cell, value)
+			value, _ := data[k]
+			json_out = append(json_out, value)
 		}
-		result.Rows = append(result.Rows, row_proto)
+		serialized, err := json.MarshalWithOptions(json_out, opts)
+		if err != nil {
+			continue
+		}
+
+		result.Rows = append(result.Rows, &api_proto.Row{
+			Json: string(serialized),
+		})
 
 		rows += 1
 		if rows >= limit {
