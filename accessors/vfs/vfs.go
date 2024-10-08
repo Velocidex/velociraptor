@@ -2,7 +2,6 @@ package vfs
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 
 	"github.com/Velocidex/ordereddict"
@@ -11,7 +10,9 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -19,6 +20,7 @@ import (
 var (
 	ErrNotFound     = errors.New("file not found")
 	ErrNotAvailable = errors.New("File content not available")
+	ErrInvalidRow   = errors.New("Stored row is invalid")
 )
 
 type VFSFileSystemAccessor struct {
@@ -97,14 +99,18 @@ func (self VFSFileSystemAccessor) LstatWithOSPath(filename *accessors.OSPath) (
 	if err != nil {
 		return nil, err
 	}
+
 	// Find the row that matches this filename
 	for _, r := range res.Rows {
-		if len(r.Cell) < 12 {
+		var row []interface{}
+		_ = json.Unmarshal([]byte(r.Json), &row)
+		if len(row) < 12 {
 			continue
 		}
 
-		if r.Cell[5] == filename.Basename() {
-			return rowCellToFSInfo(r.Cell)
+		name, ok := row[5].(string)
+		if ok && name == filename.Basename() {
+			return rowCellToFSInfo(row)
 		}
 	}
 
@@ -147,11 +153,13 @@ func (self VFSFileSystemAccessor) ReadDirWithOSPath(
 
 	result := []accessors.FileInfo{}
 	for _, r := range res.Rows {
-		if len(r.Cell) < 12 {
+		var row []interface{}
+		_ = json.Unmarshal([]byte(r.Json), &row)
+		if len(row) < 12 {
 			continue
 		}
 
-		fs_info, err := rowCellToFSInfo(r.Cell)
+		fs_info, err := rowCellToFSInfo(row)
 		if err != nil {
 			continue
 		}
@@ -191,14 +199,21 @@ func (self VFSFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPath) (
 
 	// Find the row that matches this filename
 	for _, r := range res.Rows {
-		if len(r.Cell) < 12 {
+		var row []interface{}
+		_ = json.Unmarshal([]byte(r.Json), &row)
+		if len(row) < 12 {
 			continue
 		}
 
-		if r.Cell[5] == filename.Basename() {
+		name, ok := row[5].(string)
+		if !ok {
+			continue
+		}
+
+		if name == filename.Basename() {
 			// Check if it has a download link
 			record := &flows_proto.VFSDownloadInfo{}
-			err = json.Unmarshal([]byte(r.Cell[0]), record)
+			err = utils.ParseIntoProtobuf(row[0], record)
 			if err != nil || record.Name == "" {
 				return nil, ErrNotAvailable
 			}
@@ -211,23 +226,31 @@ func (self VFSFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPath) (
 	return nil, ErrNotFound
 }
 
-func rowCellToFSInfo(cell []string) (accessors.FileInfo, error) {
-	components := []string{}
-	err := json.Unmarshal([]byte(cell[2]), &components)
-	if err != nil {
-		return nil, err
+func rowCellToFSInfo(cell []interface{}) (accessors.FileInfo, error) {
+	components := utils.ConvertToStringSlice(cell[2])
+	if len(components) == 0 {
+		return nil, ErrInvalidRow
 	}
 
-	size := int64(0)
-	_ = json.Unmarshal([]byte(cell[6]), &size)
-
-	is_dir := false
-	if len(cell[7]) > 1 && cell[7][0] == 'd' {
-		is_dir = true
+	size, ok := utils.ToInt64(cell[6])
+	if !ok {
+		return nil, ErrInvalidRow
 	}
+
+	mode, ok := cell[7].(string)
+	if !ok {
+		return nil, ErrInvalidRow
+	}
+
+	is_dir := len(mode) > 1 && mode[0] == 'd'
 
 	// The Accessor + components is the path of the item
-	path := accessors.MustNewGenericOSPath(cell[3]).Append(components...)
+	ospath, ok := cell[3].(string)
+	if !ok {
+		return nil, ErrInvalidRow
+	}
+
+	path := accessors.MustNewGenericOSPath(ospath).Append(components...)
 	fs_info := &accessors.VirtualFileInfo{
 		Path:   path,
 		IsDir_: is_dir,
@@ -237,7 +260,7 @@ func rowCellToFSInfo(cell []string) (accessors.FileInfo, error) {
 
 	// The download pointer allows us to fetch the file itself.
 	record := &flows_proto.VFSDownloadInfo{}
-	err = json.Unmarshal([]byte(cell[0]), record)
+	err := utils.ParseIntoProtobuf(cell[0], record)
 	if err == nil {
 		fs_info.Data_.Set("DownloadInfo", record)
 	}

@@ -372,12 +372,8 @@ func ConvertRowsToTableResponse(
 				column_known[key] = true
 			}
 
-			value, pres := row.Get(key)
-			if pres {
-				data[key] = value
-			} else {
-				data[key] = nil
-			}
+			value, _ := row.Get(key)
+			data[key] = value
 		}
 
 		json_out := make([]interface{}, 0, len(result.Columns))
