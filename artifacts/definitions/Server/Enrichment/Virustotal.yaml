@@ -8,7 +8,7 @@ description: |
   Ex.
 
     `SELECT * from Artifact.Server.Enrichment.Virustotal(Hash=$YOURHASH)`
-    `SELECT * from Artifact.Server.Enrichment.Virustotal(IP=$YOURIP)`
+    `SELECT * from Artifact.Server.Enrichment.Virustotal(IP=$YOURIP,QueryType='ip')`
 
   `TO-DO`: Implement a timer to spread out requests
 
