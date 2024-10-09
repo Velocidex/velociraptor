@@ -1,4 +1,4 @@
-name: Custom.Server.Enrichment.Virustotal
+name: Server.Enrichment.Virustotal
 author: Wes Lambert -- @therealwlambert, Whitney Champion -- @shortxstack
 description: |
   Submit a file hash or IP to Virustotal for details. Default Public API restriction is 4 requests/min.
