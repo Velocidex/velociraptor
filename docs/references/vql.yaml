@@ -3668,6 +3668,28 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: hunt_info
+  description: |
+    Retrieve the hunt information.
+
+    This function is a convenience function to the full hunts()
+    plugin, and can retrieve the hunt information for a specific hunt
+    id. As a convenience, the function will also accept a flow id for
+    flows which were launched by the hunt. These flow IDs have a
+    specific format indicating they were launched from a hunt.
+
+  type: Function
+  args:
+  - name: hunt_id
+    type: string
+    description: |
+      Hunt Id to look up or a flow id created by that hunt
+      (e.g. F.CRUU3KIE5D73G.H).
+
+  metadata:
+    permissions: READ_RESULTS
+  platforms:
+  - linux_amd64_cgo
 - name: hunt_results
   description: |
     Retrieve the results of a hunt.
@@ -5784,6 +5806,12 @@
   - name: raw
     type: bool
     description: Emit raw events (no parsed).
+  - name: start_time
+    type: time.Time
+    description: Only parse events newer than this time (default all times).
+  - name: end_time
+    type: time.Time
+    description: Only parse events older than this time (default all times).
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -10254,6 +10282,12 @@
   - name: raw
     type: bool
     description: Emit raw events (no parsed).
+  - name: start_time
+    type: time.Time
+    description: Only parse events newer than this time (default all times).
+  - name: end_time
+    type: time.Time
+    description: Only parse events older than this time (default all times).
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
