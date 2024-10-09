@@ -1,4 +1,4 @@
-name: Server.Enrichment.Virustotal
+name: Custom.Server.Enrichment.Virustotal
 author: Wes Lambert -- @therealwlambert, Whitney Champion -- @shortxstack
 description: |
   Submit a file hash or IP to Virustotal for details. Default Public API restriction is 4 requests/min.
@@ -16,9 +16,12 @@ type: SERVER
 
 parameters:
     - name: QueryType
-      type: string 
+      type: choices 
       description: The type of query--hash or IP
-      default: hash 
+      default: hash
+      choices:
+         - hash
+         - ip
 
     - name: Hash
       type: string
