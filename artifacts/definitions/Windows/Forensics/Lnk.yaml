@@ -118,7 +118,7 @@ parameters:
   - name: RiskyExe
     description: Regex target exe to flag as risky.
     type: regex
-    default: \\(cmd|powershell|cscript|wscript|rundll32|regsvr32|mshta|wmic|netsh)\.exe$
+    default: \\(cmd|powershell|cscript|wscript|rundll32|regsvr32|mshta|wmic|conhost)\.exe$
     
 
 export: |
@@ -1464,7 +1464,7 @@ sources:
                     else= False)
 
       LET sus_cli(data) = dict(
-                `Arguments have ticks` = data=~'''\^|\`''',
+                `Arguments have ticks` = data=~'''\^|\`|[a-z][\'\"]{2}[a-z]''',
                 `Arguments have environment variables` = data=~'''\%|\$env:''',
                 `Arguments have rare characters` = data=~'''\?\!\~\@''',
                 `Arguments have leading space` = data=~ '^ ',
@@ -1489,7 +1489,7 @@ sources:
       LET add_suspicious = SELECT *, dict(
                 `Large Size` = SourceFile.Size > SusSize,
                 `Startup Path` = SourceFile.OSPath =~ '''\\Startup\\''',
-                `Zeroed Headers` = ( ShellLinkHeader.FileSize=0 or ShellLinkHeader.CreationTime=0),
+                `Zeroed Headers` = ( ShellLinkHeader.FileSize=0 AND ShellLinkHeader.CreationTime=~'^1601-01' AND len(list=LinkInfo.LinkInfoFlags)=0 ),
                 `Hidden window` = ShellLinkHeader.ShowCommand = 'SHOWMINNOACTIVE',
                 `Target Changed path` = lowcase(string=LinkInfo.Target.Path) != lowcase(string=OldPath) AND OldPath,
                 `Target Changed size` = ( ShellLinkHeader.FileSize - OldSize != 0 ) AND ShellLinkHeader.FileSize AND OldSize,
