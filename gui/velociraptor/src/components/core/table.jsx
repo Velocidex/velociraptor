@@ -400,7 +400,7 @@ class VeloTable extends Component {
 
 export default VeloTable;
 
-const int_regex = /^-?[0-9]+$/;
+const int_regex = /^-?[0-9.]+$/;
 
 // The JSON response from the server is encoded as a strict protobuf
 // with string cell values. Here we expand it into arbitrary JSON objects.
@@ -423,7 +423,8 @@ export function PrepareData(value) {
             } else if (cell[0] === "{" || cell[0] === "[") {
                 cell = JSONparse(cell);
             } else if(cell.match(int_regex)) {
-                cell = parseInt(cell);
+                // This works on int or floats the same.
+                cell = parseFloat(cell);
             } else if(cell[0] === " ") {
                 cell = cell.substr(1);
             }
