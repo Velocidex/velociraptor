@@ -746,7 +746,7 @@ export default class TimelineRenderer extends React.Component {
         if (!zone) {
             return ts;
         }
-        return moment.utc(ts).subtract(zone.utcOffset(), "minutes").valueOf();
+        return moment.utc(ts).subtract(zone.utcOffset(ts), "minutes").valueOf();
     }
 
     fromLocalTZ = ts=>{
@@ -755,7 +755,7 @@ export default class TimelineRenderer extends React.Component {
         if (!zone) {
             return ts;
         }
-        return moment.utc(ts).add(zone.utcOffset(), "minutes").valueOf();
+        return moment.utc(ts).add(zone.utcOffset(ts), "minutes").valueOf();
     }
 
     render() {
