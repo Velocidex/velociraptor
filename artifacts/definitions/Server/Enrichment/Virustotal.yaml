@@ -1,22 +1,36 @@
-name: Server.Enrichment.Virustotal
-author: Wes Lambert -- @therealwlambert
+name: Custom.Server.Enrichment.Virustotal
+author: Wes Lambert -- @therealwlambert, Whitney Champion -- @shortxstack
 description: |
-  Submit a file hash to Virustotal for details. Default Public API restriction is 4 requests/min.
+  Submit a file hash or IP to Virustotal for details. Default Public API restriction is 4 requests/min.
 
   This artifact can be called from within another artifact (such as one looking for files) to enrich the data made available by that artifact.
 
   Ex.
 
     `SELECT * from Artifact.Server.Enrichment.Virustotal(Hash=$YOURHASH)`
+    `SELECT * from Artifact.Server.Enrichment.Virustotal(IP=$YOURIP,QueryType='ip')`
 
   `TO-DO`: Implement a timer to spread out requests
 
 type: SERVER
 
 parameters:
+    - name: QueryType
+      type: choices 
+      description: The type of query--hash or IP
+      default: hash
+      choices:
+         - hash
+         - ip
+
     - name: Hash
       type: string
       description: The file hash to submit to Hybrid Analysis (MD5, SHA1, SHA256).
+      default:
+
+    - name: IP
+      type: string
+      description: The IP address to submit to Hybrid Analysis.
       default:
 
     - name: VirustotalKey
@@ -31,7 +45,10 @@ sources:
            then=VirustotalKey,
            else=server_metadata().VirustotalKey)
 
-        LET URL <= 'https://www.virustotal.com/api/v3/files/' + Hash
+        LET URL = if(
+           condition= QueryType='hash',
+           then= 'https://www.virustotal.com/api/v3/files/' + Hash,
+           else= 'https://www.virustotal.com/api/v3/ip_addresses/' + IP)
 
         LET Data = SELECT parse_json(data=Content) AS VTData
         FROM http_client(url=URL, headers=dict(`x-apikey`=Creds))
@@ -43,6 +60,8 @@ sources:
             timestamp(epoch=VTData.data.attributes.first_seen_itw_date) AS FirstSeen,
             timestamp(epoch=VTData.data.attributes.first_submission_date) AS FirstSubmitted,
             timestamp(epoch=VTData.data.attributes.last_analysis_date) AS LastAnalysis,
+            VTData.data.attributes.as_owner AS Owner, 
+            VTData.data.attributes.whois AS WhoIs,
             VTData.data.attributes.crowdsourced_yara_results AS YARAResults,
             VTData AS _Data
         FROM Data
