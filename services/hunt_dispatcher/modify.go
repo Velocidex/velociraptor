@@ -29,10 +29,10 @@ func (self *HuntDispatcher) ModifyHunt(
 	}
 
 	// Is the description changed?
-	if hunt_modification.HuntDescription != "" || hunt_modification.Expires > 0 {
+	if hunt_modification.HuntDescription != "" ||
+		hunt_modification.Expires > 0 {
 		mutation.Description = hunt_modification.HuntDescription
 		mutation.Expires = hunt_modification.Expires
-		mutation.Tags = hunt_modification.Tags
 
 		// Archive the hunt.
 	} else if hunt_modification.State == api_proto.Hunt_ARCHIVED {
@@ -75,6 +75,11 @@ func (self *HuntDispatcher) ModifyHunt(
 	} else if hunt_modification.State == api_proto.Hunt_STOPPED ||
 		hunt_modification.State == api_proto.Hunt_PAUSED {
 		mutation.State = api_proto.Hunt_STOPPED
+	}
+
+	// Allow tags to be modified.
+	if len(hunt_modification.Tags) > 0 {
+		mutation.Tags = hunt_modification.Tags
 	}
 
 	return self.MutateHunt(ctx, config_obj, mutation)

@@ -4,7 +4,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import T from '../i8n/i8n.jsx';
 import _ from 'lodash';
-import VeloPagedTable, { TablePaginationControl } from '../core/paged-table.jsx';
+import VeloPagedTable, {
+    TablePaginationControl,
+    TransformViewer,
+} from '../core/paged-table.jsx';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
@@ -388,6 +391,8 @@ class FlowsList extends React.Component {
             COLLECT: ()=>this.setState({showWizard: true}),
         };
 
+        let transform = this.state.transform || {};
+
         return (
             <>
               { this.state.showDeleteWizard &&
@@ -515,7 +520,7 @@ class FlowsList extends React.Component {
                     </Button>
                   </ToolTip>
 
-                  { _.isEmpty(this.state.transform) ?
+                  { transform.filter_column !== "Creator" ?
                     <ToolTip tooltip={T("Show only my collections")}>
                       <Button onClick={()=>{
                                   this.setState({transform: {
@@ -550,11 +555,9 @@ class FlowsList extends React.Component {
                       </Button>
                     </ToolTip>
                   }
-
                 </ButtonGroup>
-
-                { this.state.page_state &&
-                  <ButtonGroup>
+                <ButtonGroup>
+                  { this.state.page_state ?
                     <TablePaginationControl
                       total_size={this.state.page_state.total_size}
                       start_row={this.state.page_state.start_row}
@@ -564,7 +567,12 @@ class FlowsList extends React.Component {
                       onRowChange={this.state.page_state.onRowChange}
                       onPageSizeChange={this.state.page_state.onPageSizeChange}
                     />
-                  </ButtonGroup> }
+                    : <TablePaginationControl total_size={0}/> }
+                  <TransformViewer
+                    transform={this.state.transform}
+                    setTransform={t=>this.setState({transform: t})}
+                  />
+                </ButtonGroup>
 
                 { tab === "notebook" &&
                   <ButtonGroup className="float-right">
