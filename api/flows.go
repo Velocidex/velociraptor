@@ -88,7 +88,7 @@ func (self *ApiServer) GetClientFlows(
 			flow.Request.Creator,
 			flow.TotalUploadedBytes,
 			flow.TotalCollectedRows,
-			flow,
+			json.ConvertProtoToOrderedDict(flow),
 			flow.Request.Urgent,
 			flow.ArtifactsWithResults,
 		}
