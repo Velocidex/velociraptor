@@ -400,38 +400,29 @@ class VeloTable extends Component {
 
 export default VeloTable;
 
-const int_regex = /^-?[0-9.]+$/;
-
 // The JSON response from the server is encoded as a strict protobuf
 // with string cell values. Here we expand it into arbitrary JSON objects.
 
 // TODO: This needs to be changed on the server to deliver a proper JSON response.
 export function PrepareData(value) {
-    var rows = [];
+    let rows = [];
     let columns = value.columns || [];
     let value_rows = value.rows || [];
-    for (var i=0; i < value_rows.length; i++) {
-        var row = value_rows[i].cell;
-        var new_row = {};
-        for (var j=0; j<columns.length; j++) {
-            var cell = j >= row.length ? null : row[j];
-            var column = columns[j];
-
-            // A bit of a hack for now, this represents an object.
-            if (cell === null || cell === "null")  {
-                cell = null;
-            } else if (cell[0] === "{" || cell[0] === "[") {
-                cell = JSONparse(cell);
-            } else if(cell.match(int_regex)) {
-                // This works on int or floats the same.
-                cell = parseFloat(cell);
-            } else if(cell[0] === " ") {
-                cell = cell.substr(1);
+    for (let i=0; i < value_rows.length; i++) {
+        let new_row = {};
+        let json_row = value_rows[i].json;
+        if (json_row) {
+            let parsed = JSONparse(json_row);
+            if (parsed && _.isArray(parsed)) {
+                for (let j=0; j<columns.length; j++) {
+                    let cell = j >= parsed.length ? null : parsed[j];
+                    let column = columns[j];
+                    new_row[column] = cell;
+                }
+                rows.push(new_row);
+                continue;
             }
-
-            new_row[column] = cell;
         }
-        rows.push(new_row);
     }
 
     return {columns: value.columns, rows: rows};

@@ -79,20 +79,27 @@ func (self *ApiServer) GetClientFlows(
 		if flow.Request == nil {
 			continue
 		}
-		row_data := []string{
+		row_data := []interface{}{
 			flow.State.String(),
 			flow.SessionId,
-			json.AnyToString(flow.Request.Artifacts, vjson.DefaultEncOpts()),
-			json.AnyToString(flow.CreateTime, vjson.DefaultEncOpts()),
-			json.AnyToString(flow.ActiveTime, vjson.DefaultEncOpts()),
-			json.AnyToString(flow.Request.Creator, vjson.DefaultEncOpts()),
-			json.AnyToString(flow.TotalUploadedBytes, vjson.DefaultEncOpts()),
-			json.AnyToString(flow.TotalCollectedRows, vjson.DefaultEncOpts()),
-			json.MustMarshalProtobufString(flow, vjson.DefaultEncOpts()),
-			json.AnyToString(flow.Request.Urgent, vjson.DefaultEncOpts()),
-			json.AnyToString(flow.ArtifactsWithResults, vjson.DefaultEncOpts()),
+			flow.Request.Artifacts,
+			flow.CreateTime,
+			flow.ActiveTime,
+			flow.Request.Creator,
+			flow.TotalUploadedBytes,
+			flow.TotalCollectedRows,
+			flow,
+			flow.Request.Urgent,
+			flow.ArtifactsWithResults,
 		}
-		result.Rows = append(result.Rows, &api_proto.Row{Cell: row_data})
+		opts := vjson.DefaultEncOpts()
+		serialized, err := json.MarshalWithOptions(row_data, opts)
+		if err != nil {
+			continue
+		}
+		result.Rows = append(result.Rows, &api_proto.Row{
+			Json: string(serialized),
+		})
 	}
 
 	return result, nil

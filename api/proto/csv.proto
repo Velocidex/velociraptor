@@ -88,7 +88,12 @@ message GetTableRequest {
 }
 
 message Row {
-    repeated string cell = 1;
+    // Deprecated - Old code serializes each cell separately.
+    // repeated string cell = 1;
+
+    // The row encoded as a JSON array: Current code encodes the
+    // entire JSON []interface{} into a single JSON string.
+    string json = 2;
 }
 
 message GetTableResponse {

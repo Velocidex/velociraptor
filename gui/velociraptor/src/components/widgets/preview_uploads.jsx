@@ -479,7 +479,12 @@ export default class PreviewUpload extends Component {
     }
 
     fetchPreview_ = () => {
-        let accessor = this.props.upload.Accessor || "auto";
+        let upload = this.props.upload;
+        if (_.isEmpty(upload)) {
+            return;
+        }
+
+        let accessor = upload.Accessor || "auto";
         let components = this.props.upload.Components;
         if (_.isUndefined(components)) {
             // No components available - do our best
