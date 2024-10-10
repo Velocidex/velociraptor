@@ -21,6 +21,8 @@ type UpdateHuntFunctionArg struct {
 	Start       bool      `vfilter:"optional,field=start,doc=Start the hunt"`
 	Description string    `vfilter:"optional,field=description,doc=Update hunt description"`
 	Expires     time.Time `vfilter:"optional,field=expires,doc=Update hunt expiry"`
+	AddLabel    []string  `vfilter:"optional,field=add_labels,doc=Labels to be added to hunt"`
+	DelLabel    []string  `vfilter:"optional,field=del_labels,doc=Labels to be removed from hunt"`
 }
 
 type UpdateHuntFunction struct{}
@@ -97,6 +99,40 @@ func (self *UpdateHuntFunction) Call(ctx context.Context,
 			scope.Log("hunt_update: %v", err)
 			return vfilter.Null{}
 		}
+	}
+
+	if len(arg.AddLabel) > 0 || len(arg.DelLabel) > 0 {
+		hunt_obj, pres := hunt_dispatcher.GetHunt(ctx, arg.HuntId)
+		if !pres {
+			scope.Log("hunt_update: %v", err)
+			return &vfilter.Null{}
+		}
+
+		tags := hunt_obj.Tags
+		for _, tag := range arg.AddLabel {
+			if !utils.InStringFolding(tags, tag) {
+				tags = append(tags, tag)
+			}
+		}
+
+		for _, tag := range arg.DelLabel {
+			tags = utils.FilterSliceFolding(tags, tag)
+		}
+
+		if len(tags) == 0 {
+			tags = append(tags, "-")
+		}
+
+		err = hunt_dispatcher.MutateHunt(
+			ctx, config_obj, &api_proto.HuntMutation{
+				HuntId: arg.HuntId,
+				Tags:   tags,
+			})
+		if err != nil {
+			scope.Log("hunt_update: %v", err)
+			return vfilter.Null{}
+		}
+		return utils.FilterSlice(tags, "-")
 	}
 
 	return arg.HuntId

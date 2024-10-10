@@ -2,6 +2,7 @@ package utils
 
 import (
 	"reflect"
+	"strings"
 )
 
 func ConvertToStringSlice(a interface{}) []string {
@@ -41,6 +42,16 @@ func InString(hay []string, needle string) bool {
 	return false
 }
 
+func InStringFolding(hay []string, needle string) bool {
+	for _, x := range hay {
+		if strings.EqualFold(x, needle) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func StringSliceEq(a []string, b []string) bool {
 	if len(a) != len(b) {
 		return false
@@ -58,6 +69,15 @@ func StringSliceEq(a []string, b []string) bool {
 func FilterSlice(a []string, needle string) (res []string) {
 	for _, i := range a {
 		if i != needle {
+			res = append(res, i)
+		}
+	}
+	return res
+}
+
+func FilterSliceFolding(a []string, needle string) (res []string) {
+	for _, i := range a {
+		if !strings.EqualFold(i, needle) {
 			res = append(res, i)
 		}
 	}

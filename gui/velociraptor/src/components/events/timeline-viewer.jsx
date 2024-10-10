@@ -21,6 +21,7 @@ import DeleteTimelineRanges from './delete.jsx';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import UserConfig from '../core/user.jsx';
+import ColumnResizer from "../core/column-resizer.jsx";
 
 import { ColumnToggle } from '../core/paged-table.jsx';
 
@@ -56,13 +57,54 @@ class EventTableRenderer  extends Component {
         rows: PropTypes.array,
         toggles: PropTypes.object,
         env: PropTypes.object,
+        name: PropTypes.string,
     }
 
     state = {
         download: false,
+        column_widths: {},
+        compact_columns: {},
+        columns: [],
+        original_cols: [],
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+        if(!_.isEqual(this.state.original_cols, this.props.columns)) {
+            this.setState({
+                original_cols: this.props.columns,
+                columns: this.mergeColumns(this.props.columns),
+            });
+        }
+    }
+
+    // Merge new columns into the current table state in such a way
+    // that the existing column ordering will not be changed.
+    mergeColumns = columns=>{
+        let lookup = {};
+        _.each(columns, x=>{
+            lookup[x] = true;
+        });
+        let new_columns = [];
+        let new_lookup = {};
+
+        // Add the old columns only if they are also in the new set,
+        // preserving their order.
+        _.each(this.state.columns, c=>{
+            if(lookup[c]) {
+                new_columns.push(c);
+                new_lookup[c] = true;
+            }
+        });
+
+        // Add new columns if they were not already, preserving their
+        // order.
+        _.each(columns, c=>{
+            if(!new_lookup[c])  {
+                new_columns.push(c);
+            }
+        });
+
+        return new_columns;
     }
 
     defaultFormatter = (cell, row, rowIndex) => {
@@ -71,12 +113,39 @@ class EventTableRenderer  extends Component {
 
     activeColumns = ()=>{
         let res = [];
-        _.each(this.props.columns, c=>{
+        _.each(this.state.columns, c=>{
             if(!this.props.toggles[c]) {
                 res.push(c);
             }
         });
         return res;
+    }
+
+    // Insert the to_col right before the from_col
+    swapColumns = (from_col, to_col)=>{
+        let new_columns = [];
+        let from_seen = false;
+
+        _.each(this.state.columns, x=>{
+            if(x === to_col) {
+                if (from_seen) {
+                    new_columns.push(to_col);
+                    new_columns.push(from_col);
+                } else {
+                    new_columns.push(from_col);
+                    new_columns.push(to_col);
+                }
+            }
+
+            if(x === from_col) {
+                from_seen = true;
+            }
+
+            if(x !== from_col && x !== to_col) {
+                new_columns.push(x);
+            }
+        });
+        this.setState({columns: new_columns});
     }
 
     renderHeader = (column, idx)=>{
@@ -85,7 +154,44 @@ class EventTableRenderer  extends Component {
             column_name = "Server Time";
         }
 
-        return <th key={idx}>{ T(column_name) } </th>;
+        let styles = {};
+        let col_width = this.state.column_widths[column];
+        if (col_width) {
+            styles = {
+                minWidth: col_width,
+                maxWidth: col_width,
+                width: col_width,
+            };
+        }
+
+        return <React.Fragment key={idx}>
+                 <th className=" paged-table-header"
+                     style={styles}
+                     onDragStart={e=>{
+                         e.dataTransfer.setData("column", column);
+                     }}
+                     onDrop={e=>{
+                         e.preventDefault();
+                         this.swapColumns(
+                             e.dataTransfer.getData("column"), column);
+                     }}
+                     onDragOver={e=>{
+                         e.preventDefault();
+                         e.dataTransfer.dropEffect = "move";
+                     }}
+                     draggable="true">
+                   { T(column_name) }
+                 </th>
+                 <ColumnResizer
+                   width={this.state.column_widths[column]}
+                   setWidth={x=>{
+                       let column_widths = Object.assign(
+                           {}, this.state.column_widths);
+                       column_widths[column] = x;
+                       this.setState({column_widths: column_widths});
+                   }}
+                 />
+               </React.Fragment>;
     }
 
     getColumnRenderer = column => {
@@ -106,16 +212,47 @@ class EventTableRenderer  extends Component {
         return this.defaultFormatter;
     }
 
+    isCellCollapsed = (column, rowIdx) => {
+        let column_desc = this.state.compact_columns[column];
+        // True represents all the cells are collapsed
+        if (column_desc === true) {
+            return true;
+        }
+        // If we store an object here then the object represents only
+        // cells which are **not** collapsed.
+        if(_.isObject(column_desc)) {
+            if(column_desc[rowIdx.toString()]) {
+                return false;
+            }
+            return true;
+        };
+        return false;
+    }
+
     renderCell = (column, row, rowIdx) => {
         let t = this.props.toggles[column];
         if(t) {return undefined;};
 
         let cell = row[column];
         let renderer = this.getColumnRenderer(column);
+        let is_collapsed = this.isCellCollapsed(column, rowIdx);
+        let clsname = is_collapsed ? "compact": "";
 
-        return <td key={column}>
-                 { renderer(cell, row, this.props.env)}
-               </td>;
+        return <React.Fragment key={column}>
+                 <td key={column}>
+                   { renderer(cell, row, this.props.env)}
+                 </td>
+                 <ColumnResizer
+                   className={clsname}
+                   width={this.state.column_widths[column]}
+                   setWidth={x=>{
+                       let column_widths = Object.assign(
+                           {}, this.state.column_widths);
+                       column_widths[column] = x;
+                       this.setState({column_widths: column_widths});
+                   }}
+                 />
+               </React.Fragment>;
     };
 
     selectRow = (row, idx)=>{
@@ -523,7 +660,7 @@ export default class EventTimelineViewer extends React.Component {
         if (!zone) {
             return ts;
         }
-        return moment.utc(ts).subtract(zone.utcOffset(), "minutes").valueOf();
+        return moment.utc(ts).subtract(zone.utcOffset(ts), "minutes").valueOf();
     }
 
     fromLocalTZ = ts=>{
@@ -532,7 +669,7 @@ export default class EventTimelineViewer extends React.Component {
         if (!zone) {
             return moment(ts);
         }
-        return moment.utc(ts).add(zone.utcOffset(), "minutes");
+        return moment.utc(ts).add(zone.utcOffset(ts), "minutes");
     }
 
 

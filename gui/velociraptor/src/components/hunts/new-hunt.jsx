@@ -113,7 +113,7 @@ class NewHuntConfigureHunt extends React.Component {
                         onChange={(e)=>{
                             this.setParam("tags", _.map(e, x=>x.value));
                         }}
-                        placeholder={T("Hunt Tags")}
+                        placeholder={T("Hunt Tags (Type to create new Tag)")}
                         spellCheck="false"
                         defaultValue={tag_defaults}
                       />
