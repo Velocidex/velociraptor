@@ -74,18 +74,26 @@ func (self *ApiServer) GetHuntFlows(
 			continue
 		}
 
-		row_data := []string{
+		row_data := []interface{}{
 			flow.Context.ClientId,
 			services.GetHostname(ctx, org_config_obj, flow.Context.ClientId),
 			flow.Context.SessionId,
-			json.AnyToString(flow.Context.StartTime/1000, vjson.DefaultEncOpts()),
+			flow.Context.StartTime / 1000,
 			flow.Context.State.String(),
-			json.AnyToString(flow.Context.ExecutionDuration/1000000000,
-				vjson.DefaultEncOpts()),
-			json.AnyToString(flow.Context.TotalUploadedBytes, vjson.DefaultEncOpts()),
-			json.AnyToString(flow.Context.TotalCollectedRows, vjson.DefaultEncOpts())}
+			flow.Context.ExecutionDuration / 1000000000,
+			flow.Context.TotalUploadedBytes,
+			flow.Context.TotalCollectedRows,
+		}
 
-		result.Rows = append(result.Rows, &api_proto.Row{Cell: row_data})
+		opts := vjson.DefaultEncOpts()
+		serialized, err := json.MarshalWithOptions(row_data, opts)
+		if err != nil {
+			continue
+		}
+
+		result.Rows = append(result.Rows, &api_proto.Row{
+			Json: string(serialized),
+		})
 
 		if uint64(len(result.Rows)) > in.Rows {
 			break
@@ -142,19 +150,25 @@ func (self *ApiServer) GetHuntTable(
 			total_clients_scheduled = hunt.Stats.TotalClientsScheduled
 		}
 
-		row_data := []string{
+		row_data := []interface{}{
 			fmt.Sprintf("%v", hunt.State),
-			json.AnyToString(hunt.Tags, vjson.DefaultEncOpts()),
+			hunt.Tags,
 			hunt.HuntId,
 			hunt.HuntDescription,
-			json.AnyToString(hunt.CreateTime, vjson.DefaultEncOpts()),
-			json.AnyToString(hunt.StartTime, vjson.DefaultEncOpts()),
-			json.AnyToString(hunt.Expires, vjson.DefaultEncOpts()),
-			fmt.Sprintf("%v", total_clients_scheduled),
+			hunt.CreateTime,
+			hunt.StartTime,
+			hunt.Expires,
+			total_clients_scheduled,
 			hunt.Creator,
 		}
-
-		result.Rows = append(result.Rows, &api_proto.Row{Cell: row_data})
+		opts := vjson.DefaultEncOpts()
+		serialized, err := json.MarshalWithOptions(row_data, opts)
+		if err != nil {
+			continue
+		}
+		result.Rows = append(result.Rows, &api_proto.Row{
+			Json: string(serialized),
+		})
 
 		if uint64(len(result.Rows)) > in.Rows {
 			break

@@ -98,6 +98,7 @@ class KapeContext:
             try:
                 with open(state_file_path) as fd:
                     self.ids = json.loads(fd.read())
+                    self.last_id = len(self.ids) + 1
             except (IOError, json.decoder.JSONDecodeError) as e:
                 pass
 
@@ -263,12 +264,14 @@ def format(ctx, kape_file_path):
     kape_latest_hash = run('git', 'rev-parse', '--short', 'HEAD',
                            path=kape_file_path)
 
+    sorted_rows = [ctx.rows[0]] + sorted(ctx.rows[1:], key=lambda x: int(x[0]))
+
     for k, v in sorted(ctx.groups.items()):
         parameters_str += "  - name: %s\n    description: \"%s (by %s): %s\"\n    type: bool\n" % (
             sanitize(k),
             ctx.kape_data[k].get("Description"),
             ctx.kape_data[k].get("Author"),
-            ", ".join(sorted([ctx.rows[x][1] for x in sorted(v)])))
+            ", ".join([sorted_rows[x][1] for x in sorted(v)]))
 
         ids = ['%s' % x for x in sorted(v)]
         if len(ids) > 0:
@@ -277,12 +280,13 @@ def format(ctx, kape_file_path):
     with open(os.path.dirname(__file__) + "/" + ctx.template, "r") as fp:
         template = fp.read()
 
+
     print (template % dict(
         kape_latest_hash=kape_latest_hash,
         kape_latest_date=kape_latest_date,
         parameters=parameters_str,
         rules="\n".join(["      " + x for x in get_csv(rules).splitlines()]),
-        csv="\n".join(["      " + x for x in get_csv(ctx.rows).splitlines()]),
+        csv="\n".join(["      " + x for x in get_csv(sorted_rows).splitlines()]),
     ))
 
 
