@@ -9260,6 +9260,21 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: typeof
+  description: |
+    Print the underlying Go type of the variable.
+
+    You can use any Keyword arg, the first one will be returned.
+
+    ### Example
+
+    ```sql
+    SELECT typeof(x=1) AS Type FROM scope()
+    ```
+
+  type: Function
+  platforms:
+  - linux_amd64_cgo
 - name: unhex
   description: |
     Apply hex decoding to the string.
@@ -10740,4 +10755,3 @@
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
-

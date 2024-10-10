@@ -129,3 +129,8 @@ div.dt-buttons {
     min-height: 38px;
     border: 1px solid var(--color-btn-border);
 }
+
+.shell-info {
+    white-space: nowrap;
+    display: inline-flex;
+}
