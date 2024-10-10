@@ -196,13 +196,9 @@ export default class MetadataEditor extends Component {
     }
 
     render() {
-        let indexed = this.context && this.context.traits &&
-            this.context.traits.customizations &&
-            this.context.traits.customizations.indexed_client_metadata;
-
-        if(_.isEmpty(indexed)) {
-            return <></>;
-        }
+        let indexed = (this.context && this.context.traits &&
+                       this.context.traits.customizations &&
+                       this.context.traits.customizations.indexed_client_metadata) || [];
 
         let non_indexed = [];
         _.each(this.state.metadata, (v, k)=>{
@@ -277,12 +273,12 @@ export default class MetadataEditor extends Component {
                      <FontAwesomeIcon icon="save"/>
                    </Button>
                  </ButtonGroup>
-        { this.state.showAddDialog &&
-          <AddMetadataModal
-            setMetadata={this.setMetadata}
-            onClose={()=>this.setState({showAddDialog: false})}
-            metadata={this.state.custom_metadata}
-          />}
+                 { this.state.showAddDialog &&
+                   <AddMetadataModal
+                     setMetadata={this.setMetadata}
+                     onClose={()=>this.setState({showAddDialog: false})}
+                     metadata={this.state.custom_metadata}
+                   />}
                </>;
     }
 }
