@@ -78,7 +78,7 @@ func ConvertTimelineRowsToTableResponse(
 		}
 		result.EndTime = timestamp.UnixNano()
 
-		data := make(map[string]string)
+		data := make(map[string]interface{})
 		for _, key := range row.Keys() {
 			// Do we already know about this column?
 			_, pres := column_known[key]
@@ -87,23 +87,23 @@ func ConvertTimelineRowsToTableResponse(
 				column_known[key] = true
 			}
 
-			value, pres := row.Get(key)
-			if pres {
-				data[key] = json.AnyToString(value, opts)
-			} else {
-				data[key] = "null"
-			}
+			value, _ := row.Get(key)
+			data[key] = value
 		}
 
-		row_proto := &api_proto.Row{}
+		json_out := make([]interface{}, 0, len(result.Columns))
 		for _, k := range result.Columns {
-			value, pres := data[k]
-			if !pres {
-				value = "null"
-			}
-			row_proto.Cell = append(row_proto.Cell, value)
+			value, _ := data[k]
+			json_out = append(json_out, value)
 		}
-		result.Rows = append(result.Rows, row_proto)
+		serialized, err := json.MarshalWithOptions(json_out, opts)
+		if err != nil {
+			continue
+		}
+
+		result.Rows = append(result.Rows, &api_proto.Row{
+			Json: string(serialized),
+		})
 
 		rows += 1
 		if rows >= limit {
