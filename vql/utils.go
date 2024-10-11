@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -70,6 +71,16 @@ func GetStringsFromRow(scope vfilter.Scope,
 			value_str, ok := value.(string)
 			if ok {
 				res = append(res, value_str)
+			}
+
+			// Some iterators return a list of dicts with _value
+			// column.
+			value_dict, ok := value.(*ordereddict.Dict)
+			if ok {
+				value_str, pres := value_dict.GetString("_value")
+				if pres {
+					res = append(res, value_str)
+				}
 			}
 		}
 	}

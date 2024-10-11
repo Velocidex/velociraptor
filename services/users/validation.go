@@ -116,12 +116,3 @@ func (self Validator) validateLinks(
 
 	return links, nil
 }
-
-func get_link(links []*config_proto.GUILink, text string) *config_proto.GUILink {
-	for _, l := range links {
-		if l.Text == text {
-			return l
-		}
-	}
-	return nil
-}

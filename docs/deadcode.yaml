@@ -27,6 +27,12 @@ IgnoreFunctions:
   - Tracker.Debug
   - QueryLogType.Clear
   - SetPageSize
+  - mockUUID.GetGUID
+  - MockGUID
+  - SetFlowIdForTests
+  - ConstantIdGenerator.Next
+  - MockedScope.GetPlugin
+  - NewMockScope
 
   # Used to support cloudvelo
   - OverrideDatastoreImplementation

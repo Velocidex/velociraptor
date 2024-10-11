@@ -19,7 +19,6 @@ parameters:
       - Velociraptor Hayabusa Ruleset
       - Velociraptor Hayabusa Live Detection
       - Velociraptor ChopChopGo Ruleset (Linux)
-      - Velociraptor Curated Windows Ruleset
 
   - name: Prefix
     description: Add this prefix to imported artifacts
