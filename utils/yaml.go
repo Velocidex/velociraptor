@@ -9,17 +9,6 @@ import (
 // The yaml library is flakey and can sometimes crash on invalid
 // input. This wrapper makes sure we dont lose it if the input is not
 // valid.
-func YamlUnmarshal(data []byte, target interface{}) (err error) {
-	defer func() {
-		r := recover()
-		if r != nil {
-			err = fmt.Errorf("Invalid YAML file.")
-		}
-	}()
-
-	return yaml.Unmarshal(data, target)
-}
-
 func YamlUnmarshalStrict(data []byte, target interface{}) (err error) {
 	defer func() {
 		r := recover()
