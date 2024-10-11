@@ -1,7 +1,16 @@
 Queries:
+  # Client links automatically add hostname by default. Lets create a client to show it.
+  - LET ClientId <= client_create(client_id="C.123", hostname="My Client Hostname")
+  - LET Upload <= upload(accessor='data', file="hello", name="Text.txt")
+
   - |
-    SELECT link_to(hunt_id="H.1234", type="hunt", text="Hunt Link") ,
-           link_to(client_id="C.123", flow_id="F.123", text='Flow link'),
-           link_to(client_id="C.123", artifact="Custom.Artifact.Name", text='Event link', type="event"),
-           link_to(artifact="Custom.Artifact.Name", text='Artifact link', type="artifact")
+    SELECT link_to(hunt_id="H.1234", text="Hunt Link") AS HuntLink,
+           link_to(client_id="C.123", flow_id="F.123") AS FlowLink,
+           link_to(client_id="C.123") AS ClientLink,
+           link_to(client_id="C.123", artifact="Custom.Artifact.Name",
+                   text='Event link') AS ArtifactLink,
+           link_to(artifact="Custom.Artifact.Name", text='Artifact link'),
+           link_to(upload=Upload) AS Download
     FROM scope()
+
+  - LET _ <= SELECT * FROM client_delete(client_id="C.123", really_do_it=TRUE)
