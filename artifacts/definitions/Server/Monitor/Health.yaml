@@ -75,24 +75,28 @@ reports:
             <span class="row">
               <span class="col-sm panel">
                CPU and Memory Utilization
-               {{- Query "CPU" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 -}}
+               {{- Query "CPU" | TimeChart "RSS.yaxis" 2 -}}
               </span>
               <span class="col-sm panel">
                Currently Connected Clients
-               {{- Query "CurrentConnections" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 -}}
+               {{- Query "CurrentConnections" | TimeChart "RSS.yaxis" 2 -}}
               </span>
             </span>
           </span>
 
       ## Current Orgs
+      {{ define "OrgsTable" }}
+         LET ColumnTypes <= dict(ClientConfig='url_internal')
+         LET OrgsTable = SELECT Name, OrgId,
+                         upload(accessor='data', file=_client_config,
+                                name='client.'+OrgId+'.config.yaml') AS _Upload
+         FROM orgs()
 
-      {{ Query "LET ColumnTypes <= dict(ClientConfig='url_internal') \
-                SELECT Name, OrgId, \
-                       format(format='[%s](/notebooks/Dashboards/%s/uploads/data/client.%s.config.yaml)', \
-                       args=[OrgId, ArtifactName, OrgId]) AS ClientConfig, \
-                       upload(accessor='data', file=_client_config, \
-                              name='client.'+OrgId+'.config.yaml') AS _Upload \
-                FROM orgs() " | Table }}
+         SELECT Name, OrgId, link_to(upload=_Upload) AS ClientConfig
+         FROM OrgsTable
+      {{ end }}
+
+      {{ Query "OrgsTable" | Table }}
 
       ## Disk Space
 
