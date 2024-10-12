@@ -7,7 +7,8 @@
   {
    "Name": "TestProvider",
    "Error": null,
-   "Message": "Wrote 1 rows"
+   "Message": "Wrote 1 rows",
+   "OrgId": ""
   }
  ],
  "RestoredTestProvider": [
@@ -20,7 +21,8 @@
   {
    "Name": "TestProvider",
    "Error": null,
-   "Message": "All good!"
+   "Message": "All good!",
+   "OrgId": "root"
   }
  ],
  "RestoredTestProvider With Error": null,
@@ -28,7 +30,8 @@
   {
    "Name": "TestProvider",
    "Error": {},
-   "Message": "I have an error"
+   "Message": "I have an error",
+   "OrgId": "root"
   }
  ]
 }
