@@ -30,15 +30,14 @@ func (self HuntBackupProvider) Name() []string {
 
 // The backup will just dump out the contents of the hunt dispatcher.
 func (self HuntBackupProvider) BackupResults(
-	ctx context.Context, wg *sync.WaitGroup) (
-	<-chan vfilter.Row, error) {
+	ctx context.Context, wg *sync.WaitGroup,
+	container services.BackupContainerWriter) (<-chan vfilter.Row, error) {
 
 	return self.store.BackupResults(ctx, wg)
 }
 
 func (self *HuntStorageManagerImpl) BackupResults(
-	ctx context.Context, wg *sync.WaitGroup) (
-	<-chan vfilter.Row, error) {
+	ctx context.Context, wg *sync.WaitGroup) (<-chan vfilter.Row, error) {
 
 	// We dont lock the data so we can take as long as needed.
 	self.mu.Lock()
@@ -93,6 +92,7 @@ func (self *HuntStorageManagerImpl) BackupResults(
 }
 
 func (self HuntBackupProvider) Restore(ctx context.Context,
+	container services.BackupContainerReader,
 	in <-chan vfilter.Row) (stat services.BackupStat, err error) {
 	return self.store.Restore(ctx, self.config_obj, in)
 }
