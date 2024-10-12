@@ -68,14 +68,16 @@ export default class VeloValueRenderer extends React.Component {
     render() {
         let v = this.props.value;
         if (_.isString(v)) {
-            return <ContextMenu value={v}
-                                row={this.props.row}>
+            return <ContextMenu value={v} row={this.props.row}>
                      {this.maybeFormatTime(v)}
                    </ContextMenu>;
         }
 
-        if (_.isNumber(v)) {
-            return JSON.stringify(v);
+        if (_.isNumber(v) || _.isBoolean(v) || _.isNumber(v)) {
+            v = JSON.stringify(v);
+            return <ContextMenu value={v} row={this.props.row}>
+                     {v}
+                   </ContextMenu>;
         }
 
         if (_.isNull(v)) {
