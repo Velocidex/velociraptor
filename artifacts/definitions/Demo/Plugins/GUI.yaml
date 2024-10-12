@@ -195,7 +195,8 @@ sources:
 
                  FlowId, ClientId, URL, URL AS SafeURL, Base64Data,
 
-                 format(format="%02x", args="Hello") AS Data
+                 format(format="%02x", args="Hello") AS Data,
+                 TRUE, 4, NULL
           FROM scope()
 
       - type: Markdown
