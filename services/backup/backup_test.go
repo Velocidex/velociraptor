@@ -136,11 +136,13 @@ func (self *BackupTestSuite) TestBackups() {
 		Set("TestProvider.json", test_provider).
 		Set("TestProvider Stats", filterStats(stats))
 
+	opts := services.BackupRestoreOptions{}
+
 	// Now restore the data from backup. NOTE: Each org restores only
 	// its own data from the zip file. This allows the same zip file
 	// to be shared between all the orgs.
 	stats, err = backup_service.(*backup.BackupService).
-		RestoreBackup(export_path)
+		RestoreBackup(export_path, opts)
 	assert.NoError(self.T(), err)
 
 	golden.Set("RestoredTestProvider", provider.restored).
@@ -151,7 +153,7 @@ func (self *BackupTestSuite) TestBackups() {
 	provider.restored = nil
 
 	stats, err = backup_service.(*backup.BackupService).
-		RestoreBackup(export_path)
+		RestoreBackup(export_path, opts)
 	assert.NoError(self.T(), err)
 
 	golden.Set("RestoredTestProvider With Error", provider.restored).
