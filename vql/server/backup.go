@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"regexp"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -87,6 +88,12 @@ func (self BackupPlugin) Info(scope vfilter.Scope,
 	}
 }
 
+type RestoreBackupPluginArgs struct {
+	Name      string `vfilter:"required,field=name,doc=The name of the backup file."`
+	Prefix    string `vfilter:"optional,field=prefix,doc=Restore the backup from under this prefix in the zip file (defaults to org id)."`
+	Providers string `vfilter:"optional,field=providers,doc=If provided only restore providers matching this regex."`
+}
+
 type RestoreBackupPlugin struct{}
 
 func (self RestoreBackupPlugin) Call(
@@ -105,7 +112,7 @@ func (self RestoreBackupPlugin) Call(
 			return
 		}
 
-		arg := &BackupPluginArgs{}
+		arg := &RestoreBackupPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("backup_restore: %v", err)
@@ -131,7 +138,20 @@ func (self RestoreBackupPlugin) Call(
 		}
 
 		path_spec := paths.NewBackupPathManager().CustomBackup(arg.Name)
-		stats, err := backups.RestoreBackup(path_spec)
+		opts := services.BackupRestoreOptions{
+			Prefix: arg.Prefix,
+		}
+
+		if arg.Providers != "" {
+			opts.ProviderRegex, err = regexp.Compile("(?i)" + arg.Providers)
+			if err != nil {
+				scope.Log(
+					"backup_restore: Providers regex expression invalid: %v", err)
+				return
+			}
+		}
+
+		stats, err := backups.RestoreBackup(path_spec, opts)
 		if err != nil {
 			scope.Log("backup_restore: %v", err)
 			return
@@ -167,7 +187,7 @@ func (self RestoreBackupPlugin) Info(scope vfilter.Scope,
 	return &vfilter.PluginInfo{
 		Name:    "backup_restore",
 		Doc:     "Restore state from a backup file.",
-		ArgType: type_map.AddType(scope, &BackupPluginArgs{}),
+		ArgType: type_map.AddType(scope, &RestoreBackupPluginArgs{}),
 	}
 }
 
