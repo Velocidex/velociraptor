@@ -26,8 +26,8 @@ func (self ACLBackupProvider) Name() []string {
 }
 
 func (self ACLBackupProvider) BackupResults(
-	ctx context.Context, wg *sync.WaitGroup) (
-	<-chan vfilter.Row, error) {
+	ctx context.Context, wg *sync.WaitGroup,
+	container services.BackupContainerWriter) (<-chan vfilter.Row, error) {
 
 	users_manager := services.GetUserManager()
 	user_list, err := users_manager.ListUsers(ctx,
@@ -70,6 +70,7 @@ func (self ACLBackupProvider) BackupResults(
 // because this may represent a security compromise but we want to
 // allow users to see the ACL permissions that were backed up.
 func (self ACLBackupProvider) Restore(ctx context.Context,
+	container services.BackupContainerReader,
 	in <-chan vfilter.Row) (stat services.BackupStat, err error) {
 
 	count := 0

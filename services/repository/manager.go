@@ -361,6 +361,16 @@ func NewRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 	// move on.
 	_ = self.metadata.loadMetadata(ctx, config_obj)
 
+	// Backup the custom artifacts - only for the Master node.
+	if services.IsMaster(config_obj) {
+		backup_service, err := services.GetBackupService(config_obj)
+		if err == nil {
+			backup_service.Register(&RepositoryBackupProvider{
+				config_obj: config_obj,
+			})
+		}
+	}
+
 	return self, self.StartWatchingForUpdates(ctx, wg, config_obj)
 }
 

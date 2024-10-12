@@ -29,15 +29,14 @@ func (self ClientInfoBackupProvider) Name() []string {
 
 // The backup will just dump out the contents of the client info manager.
 func (self ClientInfoBackupProvider) BackupResults(
-	ctx context.Context, wg *sync.WaitGroup) (
-	<-chan vfilter.Row, error) {
+	ctx context.Context, wg *sync.WaitGroup,
+	container services.BackupContainerWriter) (<-chan vfilter.Row, error) {
 
 	return self.store.BackupResults(ctx, wg)
 }
 
 func (self *Store) BackupResults(
-	ctx context.Context, wg *sync.WaitGroup) (
-	<-chan vfilter.Row, error) {
+	ctx context.Context, wg *sync.WaitGroup) (<-chan vfilter.Row, error) {
 
 	// We dont lock the data so we can take as long as needed.
 	clients := self.Keys()
@@ -83,6 +82,7 @@ func (self *Store) BackupResults(
 }
 
 func (self ClientInfoBackupProvider) Restore(ctx context.Context,
+	container services.BackupContainerReader,
 	in <-chan vfilter.Row) (stat services.BackupStat, err error) {
 	return self.store.Restore(ctx, self.config_obj, in)
 }
