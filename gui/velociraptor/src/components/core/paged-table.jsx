@@ -300,6 +300,19 @@ export class TablePaginationControl extends React.Component {
         goto_error: false,
     }
 
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        // The current cursor points beyond the end of the table, seek
+        // to the last page. This can happen if the table suddenly
+        // shrinks.
+        if (this.props.start_row > this.props.total_size) {
+            let last_page = this.getLastPage();
+            let last_row = last_page * this.props.page_size;
+            if(last_row !== this.props.start_row) {
+                this.props.onRowChange(last_row);
+            }
+        }
+    }
+
     renderLabel = (start, end, total_size)=>{
         end = end || 0;
         start = start || 0;
@@ -318,7 +331,7 @@ export class TablePaginationControl extends React.Component {
         return <>{padding}{start}-{end}/{total_size}</>;
     }
 
-    render() {
+    getLastPage = ()=>{
         let total_size = parseInt(this.props.total_size || 0);
         let total_pages = parseInt(total_size / this.props.page_size) + 1;
         let last_page = total_pages - 1;
@@ -333,6 +346,11 @@ export class TablePaginationControl extends React.Component {
             last_page = 0;
         }
 
+        return last_page;
+    }
+
+    render() {
+        let last_page = this.getLastPage();
         let pages = [];
         let current_page = parseInt(this.props.start_row / this.props.page_size);
         let start_page = current_page - 4;
