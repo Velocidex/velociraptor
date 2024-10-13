@@ -72,12 +72,9 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 		notebook_metadata.NotebookId)
 
 	// The query will run in a sub context of the main context to
-	// allow our notification to cancel it.  NOTE: The
-	// updateCellContents() function itself must run as the parent
-	// context to ensure we are able to write **after** the query is
-	// cancelled. Otherwise the template will not be able to write any
-	// error messages or flush any queues after cancellation.
+	// allow our notification to cancel it.
 	query_ctx, query_cancel := context.WithCancel(ctx)
+	defer query_cancel()
 
 	// Run this query as the specified username
 	acl_manager := acl_managers.NewServerACLManager(config_obj, user_name)
@@ -140,12 +137,15 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 	// The notification is removed either inline or in the background.
 	cancel_notify, remove_notification := notifier.ListenForNotification(
 		in.CellId + in.Version)
-	defer remove_notification()
 
 	// Watcher thread: Wait for cancellation from the GUI or a 10 min timeout.
 	go func() {
 		defer query_cancel()
 		defer remove_notification()
+		defer func() {
+			utils.GetTime().Sleep(time.Second)
+			runtime.GC()
+		}()
 
 		default_notebook_expiry := config_obj.Defaults.NotebookCellTimeoutMin
 		if default_notebook_expiry == 0 {
@@ -153,7 +153,7 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 		}
 
 		select {
-		case <-ctx.Done():
+		case <-query_ctx.Done():
 			return
 
 		// Active cancellation from the GUI.
@@ -168,9 +168,8 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 		}
 	}()
 
-	// This must run with the parent context not the query_ctx to
-	// ensure we can still write after query cancellation.
-	resp, err := self.updateCellContents(ctx, config_obj, store, tmpl,
+	resp, err := self.updateCellContents(query_ctx,
+		config_obj, store, tmpl,
 		in.CurrentlyEditing, in.NotebookId,
 		in.CellId, in.Version, in.AvailableVersions,
 		cell_type, in.Env, query_cancel, input, in.Input)
@@ -184,7 +183,7 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 }
 
 func (self *NotebookWorker) updateCellContents(
-	ctx context.Context,
+	query_ctx context.Context,
 	config_obj *config_proto.Config,
 	store NotebookStore,
 	tmpl *reporting.GuiTemplateEngine,
@@ -197,7 +196,7 @@ func (self *NotebookWorker) updateCellContents(
 	input, original_input string) (res *api_proto.NotebookCell, err error) {
 
 	// Start a nanny to watch this calculation
-	go self.startNanny(ctx, config_obj, tmpl.Scope, store, query_cancel,
+	go self.startNanny(query_ctx, config_obj, tmpl.Scope, store, query_cancel,
 		notebook_id, cell_id, version)
 
 	output := ""
@@ -263,7 +262,7 @@ func (self *NotebookWorker) updateCellContents(
 		return nil, err
 	}
 
-	waitForMemoryLimit(ctx, tmpl.Scope, config_obj)
+	waitForMemoryLimit(query_ctx, tmpl.Scope, config_obj)
 
 	switch cell_type {
 
@@ -540,7 +539,7 @@ func (self *NotebookWorker) startNanny(
 
 	// Reduce memory use now so the next measure of memory use is more
 	// reflective of our current workload.
-	debug.FreeOSMemory()
+	runtime.GC()
 
 	// Running in a goroutine it's ok to block.
 	for {
@@ -595,6 +594,9 @@ func (self *NotebookWorker) startNanny(
 
 func waitForMemoryLimit(
 	ctx context.Context, scope types.Scope, config_obj *config_proto.Config) {
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+
 	// Wait until memory is below the low water mark.
 	if config_obj.Defaults != nil &&
 		config_obj.Defaults.NotebookMemoryLowWaterMark > 0 {
@@ -604,7 +606,7 @@ func waitForMemoryLimit(
 		for {
 			// Reduce memory use now so the next measure of memory use
 			// is more reflective of our current workload.
-			debug.FreeOSMemory()
+			runtime.GC()
 
 			var m runtime.MemStats
 			runtime.ReadMemStats(&m)
@@ -616,6 +618,9 @@ func waitForMemoryLimit(
 
 			functions.DeduplicatedLog(ctx, scope,
 				"INFO:Waiting for memory use to allow starting the query.")
+
+			logger.Debug("Waiting for memory use to allow starting the query (current memory %v, low water mark %v)",
+				m.Alloc, low_memory_level)
 
 			select {
 			case <-ctx.Done():
