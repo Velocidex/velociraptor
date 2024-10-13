@@ -188,10 +188,11 @@ export class AddVQLCellToTimeline extends React.Component {
                 let time_columns = [];
                 let all_columns = [];
                 let rows = response.data.rows;
-                if (!rows) {
+                if (_.isEmpty(rows)) {
                     return;
                 }
-                _.each(response.data.rows[0].cell, (x, idx)=>{
+                let row = JSONparse(rows[0].json) || [];
+                _.each(row, (x, idx)=>{
                     if (this.isTimestamp(x)) {
                         time_columns.push(response.data.columns[idx]);
                     };

@@ -22,6 +22,7 @@ import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import UserConfig from '../core/user.jsx';
 import ColumnResizer from "../core/column-resizer.jsx";
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
 import { ColumnToggle } from '../core/paged-table.jsx';
 
@@ -180,7 +181,35 @@ class EventTableRenderer  extends Component {
                          e.dataTransfer.dropEffect = "move";
                      }}
                      draggable="true">
-                   { T(column_name) }
+                   <span className="column-name">
+                      { T(column_name) }
+                   </span>
+                   <span className="sort-element">
+                     <ButtonGroup className="hover-buttons">
+                       <Button
+                         size="sm"
+                         type="button"
+                         variant="outline-dark"
+                         className="hidden-edit"
+                         onClick={()=>{
+                             let compact_columns = Object.assign(
+                                 {}, this.state.compact_columns);
+                             compact_columns[column] = !compact_columns[column];
+                             this.setState({
+                                 compact_columns: compact_columns,
+                             });
+                         }}>
+                         { !this.state.compact_columns[column] ?
+                           <ToolTip tooltip={T("Compact Column")}>
+                             <FontAwesomeIcon icon="compress"/>
+                           </ToolTip> :
+                           <ToolTip tooltip={T("Expand Column")}>
+                             <FontAwesomeIcon icon="expand"/>
+                           </ToolTip>
+                         }
+                       </Button>
+                     </ButtonGroup>
+                   </span>
                  </th>
                  <ColumnResizer
                    width={this.state.column_widths[column]}
@@ -239,11 +268,30 @@ class EventTableRenderer  extends Component {
         let clsname = is_collapsed ? "compact": "";
 
         return <React.Fragment key={column}>
-                 <td key={column}>
+                 <td key={column}
+                     className={clsname}
+                     onClick={()=>{
+                         // If the column is not collapsed no click handler!
+                         if(!is_collapsed) return;
+
+                         // The cell is collapsed, we need to expand it:
+
+                         // If the entire column is collapsed we need
+                         // to specify that only this row is expanded.
+                         let column_desc = this.state.compact_columns[column];
+                         if(column_desc === true) {
+                             column_desc = {};
+                         }
+                         column_desc[rowIdx.toString()]=true;
+                         let compact_columns = Object.assign(
+                             {}, this.state.compact_columns);
+                         compact_columns[column] = column_desc;
+                         this.setState({compact_columns: compact_columns});
+                     }}>
+
                    { renderer(cell, row, this.props.env)}
                  </td>
                  <ColumnResizer
-                   className={clsname}
                    width={this.state.column_widths[column]}
                    setWidth={x=>{
                        let column_widths = Object.assign(
