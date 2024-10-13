@@ -21,7 +21,7 @@
   "name": "Timeline Annotation",
   "creator": "admin",
   "created_time": 1715775587,
-  "modified_time": 1715775587,
+  "modified_time": 1715775588,
   "notebook_id": "N.01",
   "cell_metadata": [
    {
@@ -49,8 +49,20 @@
    "Foo": "Bar 1",
    "Notes": "Foo is suspicious at being Bar!",
    "_AnnotatedBy": "admin",
-   "_AnnotatedAt": "2024-05-15T12:19:47Z",
+   "_AnnotatedAt": "2024-05-15T12:19:48Z",
    "_AnnotationID": "TdAAAAAAAAA=",
+   "_Source": "Annotation"
+  },
+  {
+   "Timestamp": "2024-05-15T12:36:27Z",
+   "Message": "Original Event Message 2",
+   "Description": "",
+   "OriginalEventField": "Extra field 2",
+   "Foo": "Older Bar 2",
+   "Notes": "Updated First Annotation - all other fields remain",
+   "_AnnotatedBy": "admin",
+   "_AnnotatedAt": "2024-05-15T12:19:48Z",
+   "_AnnotationID": "TtAAAAAAAAA=",
    "_Source": "Annotation"
   }
  ],
@@ -63,7 +75,7 @@
    "Foo": "Older Bar 2",
    "Notes": "An Earlier Foo is suspicious at being Older Bar!",
    "_AnnotatedBy": "mike",
-   "_AnnotatedAt": "2024-05-15T12:19:47Z",
+   "_AnnotatedAt": "2024-05-15T12:19:48Z",
    "_AnnotationID": "TtAAAAAAAAA=",
    "_Source": "Annotation"
   },
@@ -75,7 +87,7 @@
    "Foo": "Bar 1",
    "Notes": "Foo is suspicious at being Bar!",
    "_AnnotatedBy": "admin",
-   "_AnnotatedAt": "2024-05-15T12:19:47Z",
+   "_AnnotatedAt": "2024-05-15T12:19:48Z",
    "_AnnotationID": "TdAAAAAAAAA=",
    "_Source": "Annotation"
   }
@@ -103,7 +115,7 @@
   "_Source": "Annotation",
   "Notes": "Updated First Annotation - all other fields remain",
   "_AnnotatedBy": "admin",
-  "_AnnotatedAt": "2024-05-15T12:19:47Z",
+  "_AnnotatedAt": "2024-05-15T12:19:48Z",
   "_AnnotationID": "TtAAAAAAAAA="
  },
  "Updated Annotations": [
@@ -115,7 +127,7 @@
    "Foo": "Bar 1",
    "Notes": "Foo is suspicious at being Bar!",
    "_AnnotatedBy": "admin",
-   "_AnnotatedAt": "2024-05-15T12:19:47Z",
+   "_AnnotatedAt": "2024-05-15T12:19:48Z",
    "_AnnotationID": "TdAAAAAAAAA=",
    "_Source": "Annotation"
   },
@@ -127,7 +139,7 @@
    "Foo": "Older Bar 2",
    "Notes": "Updated First Annotation - all other fields remain",
    "_AnnotatedBy": "admin",
-   "_AnnotatedAt": "2024-05-15T12:19:47Z",
+   "_AnnotatedAt": "2024-05-15T12:19:48Z",
    "_AnnotationID": "TtAAAAAAAAA=",
    "_Source": "Annotation"
   }
