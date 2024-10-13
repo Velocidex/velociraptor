@@ -90,7 +90,7 @@ td.column-resizer {
     vertical-align: top;
 }
 
-.paged-table tbody tr td.compact div {
+.paged-table tbody tr td.compact > div {
     max-height: 2em;
 }
 
