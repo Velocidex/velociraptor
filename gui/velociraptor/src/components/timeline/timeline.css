@@ -119,3 +119,8 @@ th.message .sort-element .input-group {
     padding-bottom: 0px;
     margin-bottom: 0px !important;
 }
+
+.timeline-sidebar-buttons {
+    padding-left: 14px;
+    padding-top: 20px;
+}
