@@ -6,6 +6,9 @@ import _ from 'lodash';
 import Timeline, {
     TimelineMarkers,
     CustomMarker,
+    TimelineHeaders,
+    SidebarHeader,
+    DateHeader,
 } from 'react-calendar-timeline';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
@@ -37,6 +40,7 @@ import DateTimePicker from '../widgets/datetime.jsx';
 import Dropdown from 'react-bootstrap/Dropdown';
 import Alert from 'react-bootstrap/Alert';
 import UserConfig from '../core/user.jsx';
+import ColumnResizer from "../core/column-resizer.jsx";
 
 // In ms
 const TenYears =  10 * 365 * 24 * 60 * 60 * 1000;
@@ -229,6 +233,8 @@ class TimelineTableRow extends Component {
         timeline_class: PropTypes.string,
         onUpdate: PropTypes.func,
         seekToTime: PropTypes.func,
+        column_widths: PropTypes.object,
+        setWidth: PropTypes.func,  // func(column, width)
     }
 
     state = {
@@ -258,6 +264,32 @@ class TimelineTableRow extends Component {
         });
     }
 
+    renderCell = (row, column, i)=>{
+        let td = <></>;
+
+        if(column=="Message") {
+            td = <td>
+                   <VeloValueRenderer value={row.Message}/>
+                 </td>;
+        } else if(column=="Notes") {
+            td = <td>
+                   <VeloValueRenderer value={row.Notes}/>
+                 </td>;
+        } else {
+            td = <td>
+                   <VeloValueRenderer value={row[column]}/>
+                 </td>;
+        }
+
+        return  <React.Fragment key={i}>
+                  {td}
+                  <ColumnResizer
+                    width={this.props.column_widths[column]}
+                    setWidth={x=>this.props.setWidth(column, x)}
+                  />
+                </React.Fragment>;
+    };
+
     render() {
         let data = this.props.row || {};
         let row_class = "timeline-data ";
@@ -282,17 +314,8 @@ class TimelineTableRow extends Component {
                 <td className="time">
                   <VeloTimestamp usec={event.Timestamp || ""}/>
                 </td>
-                <td>
-                  <VeloValueRenderer value={message}/>
-                </td>
-                {_.map(this.props.columns || [], (x, i)=>{
-                    return <td key={i}>
-                             <VeloValueRenderer value={event[x] || ""}/>
-                           </td>;
-                })}
-                <td>
-                  <VeloValueRenderer value={notes}/>
-                </td>
+                {_.map(this.props.columns || [],
+                       (x, i)=>this.renderCell(event, x, i))}
               </tr>
               <tr className={row_class}>
                 <td className={"timeline-group " + this.props.timeline_class}>
@@ -359,7 +382,7 @@ class TimelineTableRow extends Component {
     }
 }
 
-
+const fixed_columns = ["Message", "Notes"];
 
 class TimelineTableRenderer  extends Component {
     static propTypes = {
@@ -374,6 +397,93 @@ class TimelineTableRenderer  extends Component {
         seekToTime: PropTypes.func,
     }
 
+    state = {
+        column_widths: {},
+        columns: [],
+        extra_columns: [],
+    }
+
+    componentDidMount = () => {
+        this.setState({
+            extra_columns: this.props.extra_columns,
+            columns: fixed_columns.concat(this.props.extra_columns)
+        });
+    }
+
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        if(!_.isEqual(this.props.extra_columns, this.state.extra_columns)) {
+            let columns = fixed_columns.concat(this.props.extra_columns);
+            this.setState({
+                columns: this.mergeColumns(columns),
+                extra_columns: this.props.extra_columns,
+            });
+            return true;
+        }
+        return false;
+    }
+
+    // Insert the to_col right before the from_col
+    swapColumns = (from_col, to_col)=>{
+        let new_columns = [];
+        let from_seen = false;
+
+        if (from_col === to_col) {
+            return;
+        }
+
+        _.each(this.state.columns, x=>{
+            if(x === to_col) {
+                if (from_seen) {
+                    new_columns.push(to_col);
+                    new_columns.push(from_col);
+                } else {
+                    new_columns.push(from_col);
+                    new_columns.push(to_col);
+                }
+            }
+
+            if(x === from_col) {
+                from_seen = true;
+            }
+
+            if(x !== from_col && x !== to_col) {
+                new_columns.push(x);
+            }
+        });
+        this.setState({columns: new_columns});
+    }
+
+    // Merge new columns into the current table state in such a way
+    // that the existing column ordering will not be changed.
+    mergeColumns = columns=>{
+        let lookup = {};
+        _.each(columns, x=>{
+            lookup[x] = true;
+        });
+        let new_columns = [];
+        let new_lookup = {};
+
+        // Add the old columns only if they are also in the new set,
+        // preserving their order.
+        _.each(this.state.columns, c=>{
+            if(lookup[c]) {
+                new_columns.push(c);
+                new_lookup[c] = true;
+            }
+        });
+
+        // Add new columns if they were not already, preserving their
+        // order.
+        _.each(columns, c=>{
+            if(!new_lookup[c])  {
+                new_columns.push(c);
+            }
+        });
+
+        return new_columns;
+    }
+
+
     getTimelineClass = (name) => {
         if (name === "Annotation") {
             return "timeline-annotation";
@@ -383,17 +493,14 @@ class TimelineTableRenderer  extends Component {
         if (_.isArray(timelines)) {
             for(let i=0;i<timelines.length;i++) {
                 if (timelines[i].id === name) {
-                    return "timeline-item-" + (i + 1);
+                    return "timeline-item-" + ((i%7) + 1);
                 };
             }
         }
         return "";
     }
 
-    columns = [];
-
     renderRow = (row, idx)=>{
-        let columns = this.columns.concat(this.props.extra_columns);
         return (
             <TimelineTableRow
               key={idx}
@@ -401,11 +508,96 @@ class TimelineTableRenderer  extends Component {
               super_timeline={this.props.super_timeline}
               timeline_class={this.getTimelineClass(_.toString(row._Source))}
               row={row}
-              columns={columns}
+              columns={this.state.columns}
               seekToTime={this.props.seekToTime}
               onUpdate={this.props.onUpdate}
+              column_widths={this.state.column_widths}
+              setWidth={(column, width)=>{
+                  let column_widths = Object.assign({}, this.state.column_widths);
+                  column_widths[column] = width;
+                  this.setState({column_widths: column_widths});
+              }}
             />
         );
+    }
+
+    renderHeader = (column, idx)=>{
+        let styles = {};
+        let col_width = this.state.column_widths[column];
+        if (col_width) {
+            styles = {
+                minWidth: col_width,
+                maxWidth: col_width,
+                width: col_width,
+            };
+        }
+
+        let th = <></>;
+        let classname = column==="Notes" ? "notes" : "";
+
+        if(column==="Message") {
+            th = (
+                <th className="message"
+                    style={styles}
+                    onDragStart={e=>{
+                        e.dataTransfer.setData("column", column);
+                    }}
+                    onDrop={e=>{
+                        e.preventDefault();
+                        this.swapColumns(
+                            e.dataTransfer.getData("column"), column);
+                    }}
+                    onDragOver={e=>{
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "move";
+                    }}
+                    draggable="true">
+                  <span className="column-name">
+                    { T("Message") }
+                  </span>
+                  <span className="sort-element">
+                    <ButtonGroup>
+                      <ColumnFilter column="message"
+                                    transform={this.props.transform}
+                                    setTransform={this.props.setTransform}
+                      />
+                    </ButtonGroup>
+                  </span>
+                </th>
+            );
+
+        } else {
+            th = <th className={classname}
+                     style={styles}
+                     onDragStart={e=>{
+                         e.dataTransfer.setData("column", column);
+                     }}
+                     onDrop={e=>{
+                         e.preventDefault();
+                         this.swapColumns(
+                             e.dataTransfer.getData("column"), column);
+                     }}
+                     onDragOver={e=>{
+                         e.preventDefault();
+                         e.dataTransfer.dropEffect = "move";
+                     }}
+                     draggable="true">
+                   { T(column) }
+                 </th>;
+        }
+
+        return  <React.Fragment key={idx}>
+                 { th }
+                  <ColumnResizer
+                    width={this.state.column_widths[column]}
+                    setWidth={x=>{
+                        let column_widths = Object.assign(
+                            {}, this.state.column_widths);
+                        column_widths[column] = x;
+                        this.setState({column_widths: column_widths});
+                    }}
+                  />
+                </React.Fragment>;
     }
 
     render() {
@@ -416,30 +608,7 @@ class TimelineTableRenderer  extends Component {
                     <th className="time">
                       { T("Timestamp") }
                     </th>
-
-                    <th className="message">
-                      <span className="column-name">
-                        { T("Message") }
-                      </span>
-                      <span className="sort-element">
-                        <ButtonGroup>
-                          <ColumnFilter column="message"
-                                        transform={this.props.transform}
-                                        setTransform={this.props.setTransform}
-                          />
-                        </ButtonGroup>
-                      </span>
-                    </th>
-
-                    {_.map(this.props.extra_columns || [], (x, i)=>{
-                        return <th key={i}>
-                                 { x }
-                               </th>;
-                    })}
-                    <th className="notes">
-                      { T("Notes") }
-                    </th>
-
+                    {_.map(this.state.columns || [], this.renderHeader)}
                   </tr>
                 </thead>
                  <tbody className="fixed-table-body">
@@ -635,19 +804,21 @@ export default class TimelineRenderer extends React.Component {
             let start_time_ms = ns_to_ms(response.data.start_time);
             let pageData = PrepareData(response.data);
             let timelines = response.data.timelines;
-            if (_.isEmpty(pageData.rows)) {
-                return;
-            }
 
             this.setState({
                 table_start_ms: start_time_ms,
                 table_end_ms:  ns_to_ms(response.data.end_time),
                 columns: pageData.columns,
-                rows: pageData.rows,
+                rows: pageData.rows || [],
                 version: Date(),
                 timelines: timelines,
             });
 
+            // If no rows, return after the setState to make sure to
+            // clear the rows to force the table to clear.
+            if (_.isEmpty(pageData.rows)) {
+                return;
+            }
             // If the visible table is outside the view port, adjust
             // the view port.
             if (this.state.visibleTimeStart === 0 ||
@@ -756,6 +927,51 @@ export default class TimelineRenderer extends React.Component {
             return ts;
         }
         return moment.utc(ts).add(zone.utcOffset(ts), "minutes").valueOf();
+    }
+
+    renderSidebarHeader = getRootProps=>{
+        let icon_class = "";
+        let icon = "";
+        let enabled = _.filter(this.state.timelines, x=>x.active);
+        let all_disabled = enabled.length === 0;
+        let all_enabled = enabled.length === this.state.timelines.length;
+
+        if (all_enabled) {
+            icon = "square-check";
+        } else if(all_disabled) {
+            icon = "square";
+        } else {
+            icon = "square-minus";
+        }
+
+        return <div {...getRootProps()}>
+                 <ButtonGroup className="timeline-sidebar-buttons">
+                   <Button
+                     className="hidden_icon"
+                     variant="outline-default">
+                   </Button>
+                   <Button variant="outline-default"
+                           onClick={()=>{
+                               // Clear all the disabled timelines
+                               // (i.e. show them all).
+                               let disabled = {};
+
+                               // Unless they are all enabled, in
+                               // which case we disable them all.
+                               if(all_enabled) {
+                                   _.each(this.state.timelines, x=>{
+                                       disabled[x.id] = true;
+                                   });
+                               }
+                               this.setState({disabled: disabled});
+                               setTimeout(this.fetchRows, 100);
+                           }}>
+                     <span className={icon_class}>
+                       <FontAwesomeIcon icon={["far", icon]}/>
+                     </span>
+                   </Button>
+                 </ButtonGroup>
+               </div>;
     }
 
     render() {
@@ -956,6 +1172,15 @@ export default class TimelineRenderer extends React.Component {
                    visibleTimeEnd={this.toLocalTZ(this.state.visibleTimeEnd)}
                    sidebarWidth={200}
                  >
+                   <TimelineHeaders>
+                     <SidebarHeader>
+                       {({ getRootProps }) => {
+                           return this.renderSidebarHeader(getRootProps);
+                       }}
+                     </SidebarHeader>
+                     <DateHeader unit="primaryHeader" />
+                     <DateHeader />
+                   </TimelineHeaders>
                    <TimelineMarkers>
                      <CustomMarker
                        date={this.toLocalTZ(this.state.start_time_ms)} >
