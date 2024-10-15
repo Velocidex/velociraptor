@@ -62,6 +62,10 @@ func (self *Launcher) GetFlows(
 			LoadCollectionContext(ctx, config_obj,
 				client_id, flow_summary.FlowId)
 		if err == nil {
+			// Remove certain fields that are not necessary.
+			if collection_context.Request != nil {
+				collection_context.Request.CompiledCollectorArgs = nil
+			}
 			items = append(items, collection_context)
 		}
 	}

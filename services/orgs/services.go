@@ -496,8 +496,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	// Inventory service needs to start before we import built in
 	// artifacts so they can add their tool dependencies.
 	if spec.InventoryService {
-		i, err := inventory.NewInventoryService(
-			ctx, wg, org_config)
+		i, err := inventory.NewInventoryService(ctx, wg, org_config)
 		if err != nil {
 			return err
 		}

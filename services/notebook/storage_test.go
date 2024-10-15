@@ -4,6 +4,7 @@ import (
 	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -40,6 +41,10 @@ func (self *NotebookManagerTestSuite) TestNotebookStorage() {
 	// Now list all notebooks - should only see the global one.
 	notebooks, err = notebook_manager.GetAllNotebooks()
 	assert.NoError(self.T(), err)
+
+	if len(notebooks) != 1 {
+		json.Dump(notebooks)
+	}
 
 	assert.Equal(self.T(), 1, len(notebooks))
 	assert.Equal(self.T(), global_notebook.NotebookId, notebooks[0].NotebookId)

@@ -50,6 +50,7 @@ func MinionServicesSpec() *config_proto.ServerServicesConfig {
 		JournalService:      true,
 		SchedulerService:    true,
 		DynDns:              true,
+		InventoryService:    true,
 
 		// Run the notebook service on the minion so it can run
 		// notebook jobs remotely.
