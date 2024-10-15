@@ -1016,6 +1016,7 @@ body.ncurses-dark {
 .ncurses-dark .report-viewer pre {
   font-weight: normal;
   filter: invert(1) hue-rotate(4rad);
+  color: var(--color-canvas-background);
   border-radius: 0;
   border: none;
   padding-top: 2px;
