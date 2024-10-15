@@ -657,6 +657,7 @@ body.veloci-dark {
 .veloci-dark .report-viewer pre {
   filter: invert(1);
   background: rgba(255,255,255,.05);
+  color: var(--color-canvas-background);
   border-radius: 4px;
   border: none;
   padding-top: 2px;

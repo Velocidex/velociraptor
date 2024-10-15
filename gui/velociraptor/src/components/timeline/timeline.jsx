@@ -932,9 +932,10 @@ export default class TimelineRenderer extends React.Component {
     renderSidebarHeader = getRootProps=>{
         let icon_class = "";
         let icon = "";
-        let enabled = _.filter(this.state.timelines, x=>x.active);
+        let timelines = this.state.timelines || [];
+        let enabled = _.filter(timelines, x=>x.active);
         let all_disabled = enabled.length === 0;
-        let all_enabled = enabled.length === this.state.timelines.length;
+        let all_enabled = enabled.length === timelines.length;
 
         if (all_enabled) {
             icon = "square-check";

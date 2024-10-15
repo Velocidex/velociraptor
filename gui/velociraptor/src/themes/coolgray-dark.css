@@ -875,6 +875,7 @@ body.coolgray-dark {
 .coolgray-dark .report-viewer pre {
   font-size: var(--font-size-base);
   filter: invert(1);
+  color: var(--color-canvas-background);
   background: rgba(255,255,255,.2);
   border-radius: 4px;
   border: none;
