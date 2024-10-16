@@ -162,8 +162,8 @@ class EventTableLabelGroup extends React.Component {
                     </Card.Text>
                     { !_.isEmpty(current_artifacts) &&
                       <><h2>{T("Label")} { current_label.label}</h2>
-                        <Table>
-                          <thead><tr>
+                        <Table className="paged-table">
+                          <thead><tr className="paged-table-header">
                                    <th>
                                      {T("Artifact Collected")}
                                    </th>

@@ -119,7 +119,6 @@ func (self *Repository) LoadYaml(
 	}
 
 	artifact.Raw = data
-	artifact.Compiled = false
 
 	return self.LoadProto(artifact, options)
 }
@@ -134,6 +133,13 @@ func (self *Repository) LoadProto(
 
 	// Make a copy of the artifact to store in the repository.
 	artifact = proto.Clone(artifact).(*artifacts_proto.Artifact)
+
+	// Clear fields that are used internally and should not be set by
+	// the yaml.
+	artifact.Compiled = false
+	artifact.IsAlias = false
+	artifact.IsInherited = false
+	artifact.Metadata = nil
 	artifact.BuiltIn = options.ArtifactIsBuiltIn
 	artifact.CompiledIn = options.ArtifactIsCompiledIn
 

@@ -24,6 +24,7 @@ import (
 	"os"
 	"runtime/pprof"
 	"runtime/trace"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	kingpin "github.com/alecthomas/kingpin/v2"
@@ -68,6 +69,10 @@ var (
 
 	profile_flag = app.Flag(
 		"profile", "Write profiling information to this file.").String()
+
+	profile_duration = app.Flag(
+		"profile_duration", "Generate a profile file for each period in seconds.").
+		Int64()
 
 	trace_flag = app.Flag(
 		"trace", "Write trace information to this file.").String()
@@ -204,13 +209,31 @@ func main() {
 	}
 
 	if *profile_flag != "" {
-		f2, err := os.Create(*profile_flag)
-		kingpin.FatalIfError(err, "Profile file.")
+		if *profile_duration > 0 {
+			go func() {
+				for i := 0; ; i++ {
+					filename := fmt.Sprintf("%s_%d.profile", *profile_flag, i)
+					fmt.Printf("Writing profile at %v", filename)
+					f2, err := os.Create(filename)
+					if err != nil {
+						return
+					}
 
-		err = pprof.StartCPUProfile(f2)
-		kingpin.FatalIfError(err, "Profile file.")
-		defer pprof.StopCPUProfile()
+					pprof.StartCPUProfile(f2)
+					time.Sleep(time.Duration(*profile_duration) * time.Second)
+					pprof.StopCPUProfile()
+					f2.Close()
+				}
+			}()
 
+		} else {
+			f2, err := os.Create(*profile_flag)
+			kingpin.FatalIfError(err, "Profile file.")
+
+			err = pprof.StartCPUProfile(f2)
+			kingpin.FatalIfError(err, "Profile file.")
+			defer pprof.StopCPUProfile()
+		}
 	}
 
 	for _, command_handler := range command_handlers {
