@@ -945,6 +945,9 @@ message DatastoreConfig {
     int64 memcache_datastore_max_item_size = 11;
     int64 memcache_datastore_max_dir_size = 12;
 
+    // Remote datastore is used by the minion (default 1000 sec)
+    int64 remote_datastore_rpc_deadline = 18;
+
     // Experimental - do not set in configs yet!
     string minion_implementation = 7;
     string master_implementation = 8;
