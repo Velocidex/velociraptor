@@ -589,9 +589,10 @@ export default class NotebookCellRenderer extends React.Component {
 
         return <>
                    <Dropdown.Menu>
-                     { _.map(suggestions, x=>{
+                     { _.map(suggestions, (x, i)=>{
                          return <Dropdown.Item
-                                  key={x.name}
+                                  key={i}
+
                                   onClick={()=>{
                                       this.props.addCell(
                                           this.state.cell.cell_id,
@@ -599,7 +600,7 @@ export default class NotebookCellRenderer extends React.Component {
                                           x.input,
                                           x.env);
                                   }}
-                                  title="{x.name}">
+                                  title={x.name}>
                                   {x.name}
                                 </Dropdown.Item>;
                      })}
@@ -835,7 +836,7 @@ export default class NotebookCellRenderer extends React.Component {
 
                       <Dropdown
                         title={T("Suggestion")}
-                        drop="right"
+                        drop="end"
                         variant="default-outline">
                         <Dropdown.Toggle
                           className="dropdown-item"
