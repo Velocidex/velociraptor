@@ -27,6 +27,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -71,6 +72,8 @@ type Notifier struct {
 	uuid int64
 
 	client_connection_tracker map[string]*tracker
+
+	config_obj *config_proto.Config
 }
 
 // The notifier service watches for events from
@@ -87,6 +90,7 @@ func NewNotificationService(
 		notification_pool:         notifications.NewNotificationPool(ctx, wg),
 		uuid:                      utils.GetGUID(),
 		client_connection_tracker: make(map[string]*tracker),
+		config_obj:                config_obj,
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -148,6 +152,14 @@ func NewNotificationService(
 			}
 		}
 	}()
+
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name: "notifier-" + utils.GetOrgId(config_obj),
+		Description: fmt.Sprintf(
+			"Information about directly connected clients for org %v.",
+			services.GetOrgName(config_obj)),
+		ProfileWriter: self.WriteProfile,
+	})
 
 	return self, nil
 }

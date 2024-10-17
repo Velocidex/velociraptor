@@ -258,7 +258,19 @@ func (self *ClientFlowRunner) removeInflightChecks(
 			Set("ClearFlows", true),
 		"Server.Internal.ClientScheduled")
 
-	return nil
+	// Update the client's in flight flow tracker on the local system
+	// as well. This helps to update this record ASAP before waiting
+	// for the minion message to arrive.
+	client_info_manager, err := services.GetClientInfoManager(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	return client_info_manager.Modify(ctx, client_id,
+		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+			client_info.InFlightFlows = nil
+			return client_info, nil
+		})
 }
 
 func (self *ClientFlowRunner) ProcessSingleMessage(
@@ -493,6 +505,12 @@ func (self *ClientFlowRunner) FlowStats(
 		return err
 	}
 
+	// Update the client's in flight flow tracker.
+	client_info_manager, err := services.GetClientInfoManager(self.config_obj)
+	if err != nil {
+		return err
+	}
+
 	// If this is the final response, then we will notify a flow
 	// completion.
 	if msg.FlowComplete {
@@ -502,12 +520,20 @@ func (self *ClientFlowRunner) FlowStats(
 				Set("Flow", stats).
 				Set("FlowId", flow_id).
 				Set("ClientId", client_id))
-	}
 
-	// Update the client's in flight flow tracker.
-	client_info_manager, err := services.GetClientInfoManager(self.config_obj)
-	if err != nil {
-		return err
+		// Immediately remove this flow from the local InFlightFlows
+		// so we dont schedule it again.
+		return client_info_manager.Modify(ctx, client_id,
+			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+				if client_info.InFlightFlows == nil {
+					client_info.InFlightFlows = make(map[string]int64)
+				}
+
+				// Update the timestamp that we last received a stats
+				// update from this flow.
+				delete(client_info.InFlightFlows, flow_id)
+				return client_info, nil
+			})
 	}
 
 	return client_info_manager.Modify(ctx, client_id,
@@ -515,6 +541,9 @@ func (self *ClientFlowRunner) FlowStats(
 			if client_info.InFlightFlows == nil {
 				client_info.InFlightFlows = make(map[string]int64)
 			}
+
+			// Update the timestamp that we last received a stats
+			// update from this flow.
 			client_info.InFlightFlows[flow_id] = utils.GetTime().Now().Unix()
 			return client_info, nil
 		})

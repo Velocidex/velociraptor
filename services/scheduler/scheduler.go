@@ -133,6 +133,22 @@ func (self *Scheduler) WriteProfile(ctx context.Context,
 	self.mu.Unlock()
 }
 
+func (self *Scheduler) AvailableWorkers() int {
+	count := 0
+
+	self.mu.Lock()
+
+	for _, workers := range self.queues {
+		for _, w := range workers {
+			if !w.IsBusy() {
+				count++
+			}
+		}
+	}
+	self.mu.Unlock()
+	return count
+}
+
 func (self *Scheduler) Schedule(ctx context.Context,
 	job services.SchedulerJob) (chan services.JobResponse, error) {
 
@@ -176,7 +192,8 @@ func (self *Scheduler) Schedule(ctx context.Context,
 
 			// Give up after 10 seconds.
 			if utils.GetTime().Now().Sub(start) > wait_time {
-				return nil, fmt.Errorf("No workers available on queue %v!", job.Queue)
+				return nil, fmt.Errorf(
+					"No workers available on queue %v!", job.Queue)
 			}
 
 			// Try again soon

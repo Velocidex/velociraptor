@@ -194,27 +194,6 @@ func server_pem(config_obj *config_proto.Config, server_obj *Server) http.Handle
 	})
 }
 
-// Redirect client to another active frontend.
-/* Experimental code disabled for now.
-func maybeRedirectFrontend(handler string, w http.ResponseWriter, r *http.Request) bool {
-	_, pres := r.URL.Query()["r"]
-	if pres {
-		return false
-	}
-
-	redirect_url, ok := services.Frontend.GetFrontendURL()
-	if ok {
-		redirectedFrontendCounter.Inc()
-		// We should redirect to another frontend.
-		http.Redirect(w, r, redirect_url, 301)
-		return true
-	}
-
-	// Handle request ourselves.
-	return false
-}
-*/
-
 // Read the message from the client carefully. Due to concurrency
 // control we want to dismiss slow clients as soon as possible since
 // processing them is taking a concurrency slot and causes slow down
@@ -303,7 +282,9 @@ func receive_client_messages(
 
 		// Allow a limited time to read from the client because this
 		// is the hot path.
-		ctx, cancel := context.WithTimeout(req.Context(), 600*time.Second)
+		ctx, cancel := context.WithTimeoutCause(
+			req.Context(), 600*time.Second,
+			errors.New("receive_client_messages: deadline reached processing message"))
 		defer cancel()
 
 		// If the client connection drops we close the reader.
@@ -491,7 +472,7 @@ func send_client_messages(
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 
-		// Keep track of currently connected clients - this account
+		// Keep track of currently connected clients - this accounts
 		// for clients using http and websocket.
 		currentConnections.Inc()
 		defer currentConnections.Dec()

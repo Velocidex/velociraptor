@@ -912,6 +912,10 @@ export function formatColumns(columns, env, column_formatter) {
         case undefined:
             break;
 
+        case "hidden":
+            x.type = null;
+            break;
+
         default:
             console.log("Unsupported column type " + x.type);
             x.type = null;
