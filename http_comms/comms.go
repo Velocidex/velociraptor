@@ -969,7 +969,8 @@ func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 	// Attach the Server.Internal.ClientInfo message very
 	// infrequently.
 	now := utils.Now()
-	if now.Add(-self.last_update_period).After(self.last_update_time) {
+	if self.last_update_period > 0 &&
+		now.Add(-self.last_update_period).After(self.last_update_time) {
 		self.last_update_time = now
 
 		client_info := self.executor.GetClientInfo()

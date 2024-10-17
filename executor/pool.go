@@ -309,6 +309,14 @@ func (self *PoolClientExecutor) ProcessRequest(
 	ctx context.Context,
 	message *crypto_proto.VeloMessage) {
 
+	// Handle FlowStatsRequest specially - we just pretend this client
+	// does not support this feature.
+	if message.FlowStatsRequest != nil {
+		responder.MakeErrorResponse(self.Outbound, message.SessionId,
+			"Unsupported in Pool Client")
+		return
+	}
+
 	if message.UpdateEventTable != nil {
 		self.delegate.maybeUpdateEventTable(ctx, message)
 		return

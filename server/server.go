@@ -274,6 +274,9 @@ func (self *Server) Process(
 	}
 
 	message_list := &crypto_proto.MessageList{}
+
+	// Check if any messages are queued for the client. This also
+	// checks for any outstanding status checks.
 	if drain_requests_for_client {
 		tasks, err := client_info_manager.GetClientTasks(ctx, message_info.Source)
 		if err == nil {

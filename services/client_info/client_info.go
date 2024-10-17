@@ -282,28 +282,21 @@ func (self *ClientInfoManager) ProcessFlowCompletion(
 		return nil
 	}
 
-	err := self.storage.Modify(ctx, config_obj, client_id,
+	// The flow is completed, remove it from the flow completion.
+	return self.storage.Modify(ctx, config_obj, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
-			if client_info == nil || client_info.InFlightFlows == nil {
+			if client_info == nil {
 				return nil, utils.NotFoundError
 			}
 
-			delete(client_info.InFlightFlows, flow_id)
+			if client_info.InFlightFlows != nil {
+				delete(client_info.InFlightFlows, flow_id)
+			}
 			return client_info, nil
 		})
-	if err != nil {
-		return err
-	}
-
-	notifier, err := services.GetNotifier(self.config_obj)
-	if err != nil {
-		return err
-	}
-
-	return notifier.NotifyListener(
-		ctx, self.config_obj, client_id, "ClientInfoManager")
 }
 
+// Messages from other nodes to update the client info record.
 func (self *ClientInfoManager) ProcessInFlightNotifications(
 	ctx context.Context, config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
@@ -595,7 +588,9 @@ func NewClientInfoManager(
 		utils.DlvBreak()
 
 		// When we shut down make sure to save the snapshot.
-		subctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+		subctx, cancel := context.WithTimeoutCause(
+			context.Background(), 100*time.Second,
+			errors.New("ClientInfoService: deadline reached saving snapshot"))
 		defer cancel()
 
 		service.storage.SaveSnapshot(subctx, config_obj, SYNC_UPDATE)

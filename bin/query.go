@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	errors "github.com/go-errors/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -390,8 +391,9 @@ func doQuery() error {
 
 	if *query_command_collect_timeout > 0 {
 		start := time.Now()
-		timed_ctx, timed_cancel := context.WithTimeout(ctx,
-			time.Second*time.Duration(*query_command_collect_timeout))
+		timed_ctx, timed_cancel := context.WithTimeoutCause(ctx,
+			time.Second*time.Duration(*query_command_collect_timeout),
+			errors.New("Query: deadline reached"))
 
 		go func() {
 			select {

@@ -383,8 +383,9 @@ func StartFrontendHttps(
 		server_obj.Info("<red>Shutting down</> frontend")
 		atomic.StoreInt32(&server_obj.Healthy, 0)
 
-		time_ctx, cancel := context.WithTimeout(
-			context.Background(), 10*time.Second)
+		time_ctx, cancel := context.WithTimeoutCause(
+			context.Background(), 10*time.Second,
+			errors.New("Deadline exceeded shuttin down frontend"))
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
@@ -580,8 +581,9 @@ func StartFrontendWithAutocert(
 		server_obj.Info("<red>Stopping Frontend Server")
 		atomic.StoreInt32(&server_obj.Healthy, 0)
 
-		timeout_ctx, cancel := context.WithTimeout(
-			context.Background(), 10*time.Second)
+		timeout_ctx, cancel := context.WithTimeoutCause(
+			context.Background(), 10*time.Second,
+			errors.New("Deadline exceeded shuttin down frontend"))
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
@@ -641,8 +643,9 @@ func StartHTTPGUI(
 		<-ctx.Done()
 
 		logger.Info("<red>Stopping GUI Server")
-		timeout_ctx, cancel := context.WithTimeout(
-			context.Background(), 10*time.Second)
+		timeout_ctx, cancel := context.WithTimeoutCause(
+			context.Background(), 10*time.Second,
+			errors.New("Deadline exceeded shuttin down GUI"))
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
@@ -720,8 +723,9 @@ func StartSelfSignedGUI(
 		<-ctx.Done()
 
 		logger.Info("<red>Stopping GUI Server")
-		timeout_ctx, cancel := context.WithTimeout(
-			context.Background(), 10*time.Second)
+		timeout_ctx, cancel := context.WithTimeoutCause(
+			context.Background(), 10*time.Second,
+			errors.New("Deadline exceeded shuttin down GUI"))
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
