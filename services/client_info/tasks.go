@@ -412,9 +412,14 @@ func (self *ClientInfoManager) GetClientTasks(
 			// Check up on in flight flows every 60 sec at least
 			// (could be more depending on poll).
 			for k, v := range client_info.InFlightFlows {
-				if now-v > 10 {
+				if now-v > 60 {
 					inflight_notifications = append(inflight_notifications, k)
 				}
+			}
+
+			// Update the time to ensure we dont send these too often.
+			for _, k := range inflight_notifications {
+				client_info.InFlightFlows[k] = utils.GetTime().Now().Unix()
 			}
 
 			// Reset the HasTasks flag
