@@ -77,7 +77,8 @@ class ModifyHuntDialog extends React.Component {
 
                     let hunt = this.props.hunt;
                     if(hunt) {
-                        this.setState({tags: [...this.props.hunt.tags]});
+                        let tags = this.props.hunt.tags || [];
+                        this.setState({tags: [...tags]});
                     }
                 };
         });

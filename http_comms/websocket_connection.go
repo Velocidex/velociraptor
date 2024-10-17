@@ -238,7 +238,7 @@ type WebSocketConnectionFactoryForTests struct {
 	Connections map[string]*WebSocketConnection
 }
 
-func (self WebSocketConnectionFactoryForTests) NewWebSocketConnection(
+func (self *WebSocketConnectionFactoryForTests) NewWebSocketConnection(
 	ctx context.Context,
 	transport *HTTPClientWithWebSocketTransport,
 	req *http.Request) (*WebSocketConnection, error) {
@@ -251,7 +251,7 @@ func (self WebSocketConnectionFactoryForTests) NewWebSocketConnection(
 	return conn, err
 }
 
-func (self WebSocketConnectionFactoryForTests) Shutdown() {
+func (self *WebSocketConnectionFactoryForTests) Shutdown() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -260,7 +260,7 @@ func (self WebSocketConnectionFactoryForTests) Shutdown() {
 	}
 }
 
-func (self WebSocketConnectionFactoryForTests) GetConn(key string) (*WebSocketConnection, bool) {
+func (self *WebSocketConnectionFactoryForTests) GetConn(key string) (*WebSocketConnection, bool) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -268,8 +268,8 @@ func (self WebSocketConnectionFactoryForTests) GetConn(key string) (*WebSocketCo
 	return con, pres
 }
 
-func NewWebSocketConnectionFactoryForTests() WebSocketConnectionFactoryForTests {
-	return WebSocketConnectionFactoryForTests{
+func NewWebSocketConnectionFactoryForTests() *WebSocketConnectionFactoryForTests {
+	return &WebSocketConnectionFactoryForTests{
 		Connections: make(map[string]*WebSocketConnection),
 	}
 }

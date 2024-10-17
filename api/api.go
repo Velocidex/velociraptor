@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package api
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -32,7 +33,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -713,6 +713,10 @@ func (self *ApiServer) GetArtifacts(
 
 		for _, name := range in.Names {
 			artifact, pres := repository.Get(ctx, org_config_obj, name)
+			if !pres {
+				continue
+			}
+
 			artifact_clone := proto.Clone(artifact).(*artifacts_proto.Artifact)
 			for _, s := range artifact_clone.Sources {
 				s.Queries = nil
@@ -1238,8 +1242,9 @@ func StartMonitoringService(
 		<-ctx.Done()
 
 		logger.Info("<red>Shutting down</> Prometheus monitoring service")
-		timeout_ctx, cancel := context.WithTimeout(
-			context.Background(), 10*time.Second)
+		timeout_ctx, cancel := context.WithTimeoutCause(
+			context.Background(), 10*time.Second,
+			errors.New("Monitoring Service deadline reached"))
 		defer cancel()
 
 		err := server.Shutdown(timeout_ctx)
