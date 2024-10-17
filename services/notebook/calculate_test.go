@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/notebook"
+	"www.velocidex.com/golang/velociraptor/services/scheduler"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -73,6 +74,13 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerUpdateCell(r *assert.R
 	gen := utils.IncrementalIdGenerator(0)
 	closer := utils.SetIdGenerator(&gen)
 	defer closer()
+
+	scheduler_service, err := services.GetSchedulerService(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	vtesting.WaitUntil(2*time.Second, r, func() bool {
+		return scheduler_service.(*scheduler.Scheduler).AvailableWorkers() > 0
+	})
 
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
 	assert.NoError(r, err)

@@ -1,9 +1,13 @@
 package notebook_test
 
 import (
+	"time"
+
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/scheduler"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -15,6 +19,13 @@ func (self *NotebookManagerTestSuite) TestNotebookStorage() {
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), 0, len(notebooks))
+
+	scheduler_service, err := services.GetSchedulerService(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		return scheduler_service.(*scheduler.Scheduler).AvailableWorkers() > 0
+	})
 
 	var global_notebook *api_proto.NotebookMetadata
 
