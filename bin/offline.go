@@ -146,7 +146,7 @@ func doCollector() error {
 		// the `gui` command makes. You can keep this datastore around
 		// for the next collector.
 		Prelog("No valid config found - " +
-			"will generare a new one at <green>" + server_config_path)
+			"will generate a new one at <green>" + server_config_path)
 
 		config_obj, err = generateGUIConfig(
 			datastore_directory, server_config_path, client_config_path)
