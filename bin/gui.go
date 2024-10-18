@@ -198,7 +198,7 @@ func doGUI() error {
 		// to just be able to use the notebook and build an
 		// offline collector.
 		logging.Prelog("No valid config found - " +
-			"will generare a new one at <green>" + server_config_path)
+			"will generate a new one at <green>" + server_config_path)
 
 		config_obj, err = generateGUIConfig(
 			datastore_directory, server_config_path, client_config_path)
