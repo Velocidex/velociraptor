@@ -291,18 +291,13 @@ class TimelineTableRow extends Component {
     };
 
     render() {
-        let data = this.props.row || {};
+        let event = this.props.row || {};
         let row_class = "timeline-data ";
         if(!this.state.expanded) {
             row_class += "hidden";
         }
 
-        let timestamp = ToStandardTime(data.Timestamp).getTime() * 1000000;
-
-        // For normal rows we show the raw data.
-        let message = data.Message;
-        let event = data;
-        let notes = data.Notes || "";
+        let timestamp = ToStandardTime(event.Timestamp).getTime() * 1000000;
 
         return (
             <React.Fragment >
@@ -333,7 +328,7 @@ class TimelineTableRow extends Component {
                       </Button>
                     </ToolTip>
 
-                    { data._Source !== "Annotation" ?
+                    { event._Source !== "Annotation" ?
                       <ToolTip tooltip={T("Annotate event")}>
                         <Button variant="default"
                                 onClick={()=>this.setState(
@@ -369,7 +364,7 @@ class TimelineTableRow extends Component {
                   timestamp={timestamp}
                   notebook_id={this.props.notebook_id}
                   super_timeline={this.props.super_timeline}
-                  event={data}
+                  event={event}
                   onClose={() => {
                       this.setState({showAnnotateDialog: false});
                       if(this.props.onUpdate) {
