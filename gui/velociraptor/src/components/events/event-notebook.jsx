@@ -4,6 +4,8 @@ import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 import NotebookRenderer from '../notebooks/notebook-renderer.jsx';
 import _ from 'lodash';
+import UserConfig from '../core/user.jsx';
+import moment from 'moment';
 
 const POLL_TIME = 5000;
 
@@ -13,10 +15,13 @@ export const get_notebook_id = (artifact, client_id)=>{
 
 
 export default class EventNotebook extends React.Component {
+    static contextType = UserConfig;
+
     static propTypes = {
         artifact: PropTypes.string,
         client_id: PropTypes.string,
         start_time: PropTypes.number,
+        end_time: PropTypes.number,
     };
 
     state = {
@@ -46,6 +51,12 @@ export default class EventNotebook extends React.Component {
     componentWillUnmount() {
         this.source.cancel();
         clearInterval(this.interval);
+    }
+
+
+    formatTime = ts=>{
+        let timezone = this.context.traits.timezone || "UTC";
+        return moment.tz(ts, timezone).format();
     }
 
     fetchNotebooks = () => {
@@ -81,7 +92,10 @@ export default class EventNotebook extends React.Component {
                 env: [
                     {key: "ArtifactName", value: this.props.artifact},
                     {key: "ClientId", value: this.props.client_id},
-                    {key: "StartTime", value: JSON.stringify(this.props.start_time)},
+                    {key: "StartTime",
+                     value: this.formatTime(this.props.start_time)},
+                    {key: "EndTime",
+                     value: this.formatTime(this.props.end_time)},
                     {key: "NotebookId", value: notebook_id},
                 ],
             };
