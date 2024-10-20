@@ -542,7 +542,11 @@ export default class EventTimelineViewer extends React.Component {
             visibleTimeStart: visibleTimeStart,
             visibleTimeEnd: visibleTimeEnd,
         });
-        this.props.time_range_setter(visibleTimeStart, visibleTimeEnd);
+
+        // Set the time ranges in real UTC times
+        this.props.time_range_setter(
+            moment(visibleTimeStart).valueOf(),
+            moment(visibleTimeEnd).valueOf());
     }
 
     // Jump to the previous page.
@@ -568,7 +572,9 @@ export default class EventTimelineViewer extends React.Component {
                     visibleTimeStart: visibleTimeStart,
                     visibleTimeEnd: visibleTimeEnd,
                 });
-                this.props.time_range_setter(visibleTimeStart, visibleTimeEnd);
+                this.props.time_range_setter(
+                    moment(visibleTimeStart).valueOf(),
+                    moment(visibleTimeEnd).valueOf());
             }
 
             this.fetchRows();
