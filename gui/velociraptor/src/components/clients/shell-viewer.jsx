@@ -624,7 +624,7 @@ class ShellViewer extends Component {
                        return;
                    }
                    for(let i=0; i<rows.length; i++) {
-                       let row_json = JSONparse(rows[0].json);
+                       let row_json = JSONparse(rows[i].json);
                        if (!_.isArray(row_json) || row_json.length < column_idx) {
                            continue;
                        }
