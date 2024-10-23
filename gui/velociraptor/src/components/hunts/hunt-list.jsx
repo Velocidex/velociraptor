@@ -64,9 +64,10 @@ class ModifyHuntDialog extends React.Component {
         all_tags: [],
 
         // Tags to be assigned to the hunt
-        tags: undefined,
+        tags: [],
     }
 
+    // Fetch all available tags to prefill the selector box.
     getTags = ()=>{
         api.get("v1/GetHuntTags", {}, this.source.token).then(response=>{
                 if (response && response.data &&
@@ -75,6 +76,7 @@ class ModifyHuntDialog extends React.Component {
                         all_tags: response.data.tags,
                     });
 
+                    // Prefill the current set of tags for this hunt.
                     let hunt = this.props.hunt;
                     if(hunt) {
                         let tags = this.props.hunt.tags || [];
@@ -105,7 +107,8 @@ class ModifyHuntDialog extends React.Component {
         let hunt_id = this.props.hunt &&
             this.props.hunt.hunt_id;
 
-        let description = this.state.description || this.props.hunt.hunt_description;
+        let description = this.state.description ||
+            this.props.hunt.hunt_description;
 
         if (!hunt_id) { return; };
 
@@ -120,10 +123,6 @@ class ModifyHuntDialog extends React.Component {
     }
 
     render() {
-        if(_.isUndefined(this.state.tags)) {
-            return <></>;
-        }
-
         let description = this.state.description || this.props.hunt.hunt_description;
         let expires = this.getExpiryEpoch();
         let now = Date.now() / 1000;
