@@ -91,7 +91,13 @@ func (self CollectPlugin) Call(
 		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 			collection_manager.Close()
 		})
-		defer collection_manager.Close()
+
+		defer func() {
+			err := collection_manager.Close()
+			if err != nil {
+				scope.Log("collect: While closing container: %v", err)
+			}
+		}()
 
 		request, err := self.configureCollection(ctx, collection_manager, arg)
 		if err != nil {

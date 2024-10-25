@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/bradleyjkemp/sigma-go"
+	"github.com/Velocidex/sigma-go"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"

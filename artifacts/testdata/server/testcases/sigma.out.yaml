@@ -55,13 +55,13 @@ SELECT * FROM Artifact.Windows.Sigma.EventLogs( EventLogDirectory=srcDir + "/art
   "Message": "",
   "Details": null,
   "_Match": {
-   "Match": true,
-   "SearchResults": {
+   "match": true,
+   "search_results": {
     "process_creation": true,
     "selection_img": true,
     "selection_user": true
    },
-   "ConditionResults": [
+   "condition_results": [
     true
    ]
   },
@@ -74,17 +74,17 @@ SELECT * FROM Artifact.Windows.Sigma.EventLogs( EventLogDirectory=srcDir + "/art
    "Detection": {
     "Searches": {
      "process_creation": {
-      "EventMatchers": [
+      "event_matchers": [
        [
         {
-         "Field": "EventID",
-         "Values": [
+         "field": "EventID",
+         "values": [
           1
          ]
         },
         {
-         "Field": "Channel",
-         "Values": [
+         "field": "Channel",
+         "values": [
           "Microsoft-Windows-Sysmon/Operational"
          ]
         }
@@ -92,22 +92,22 @@ SELECT * FROM Artifact.Windows.Sigma.EventLogs( EventLogDirectory=srcDir + "/art
       ]
      },
      "selection_img": {
-      "EventMatchers": [
+      "event_matchers": [
        [
         {
-         "Field": "OriginalFileName",
-         "Values": [
+         "field": "OriginalFileName",
+         "values": [
           "whoami.exe"
          ]
         }
        ],
        [
         {
-         "Field": "Image",
-         "Modifiers": [
+         "field": "Image",
+         "modifiers": [
           "endswith"
          ],
-         "Values": [
+         "values": [
           "\\whoami.exe"
          ]
         }
@@ -115,14 +115,14 @@ SELECT * FROM Artifact.Windows.Sigma.EventLogs( EventLogDirectory=srcDir + "/art
       ]
      },
      "selection_user": {
-      "EventMatchers": [
+      "event_matchers": [
        [
         {
-         "Field": "User",
-         "Modifiers": [
+         "field": "User",
+         "modifiers": [
           "contains"
          ],
-         "Values": [
+         "values": [
           "AUTHORI",
           "AUTORI"
          ]
@@ -131,7 +131,7 @@ SELECT * FROM Artifact.Windows.Sigma.EventLogs( EventLogDirectory=srcDir + "/art
       ]
      }
     },
-    "condition": [
+    "Condition": [
      {
       "Search": [
        {
@@ -144,8 +144,8 @@ SELECT * FROM Artifact.Windows.Sigma.EventLogs( EventLogDirectory=srcDir + "/art
      }
     ]
    },
-   "ID": "80167ada-7a12-41ed-b8e9-aa47195c66a1",
-   "Status": "deprecated",
+   "Id": "80167ada-7a12-41ed-b8e9-aa47195c66a1",
+   "status": "deprecated",
    "Description": "Detects a whoami.exe executed by LOCAL SYSTEM. This may be a sign of a successful local privilege escalation.",
    "Author": "Teymur Kheirkhabarov, Florian Roth",
    "Level": "high",
