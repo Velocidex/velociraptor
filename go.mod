@@ -114,6 +114,7 @@ require (
 	github.com/Velocidex/go-vmdk v0.0.0-20240909080044-e373986b6517
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
+	github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9
 	github.com/VirusTotal/gyp v0.9.0
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/alitto/pond v1.8.3
@@ -123,7 +124,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.6
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.8
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.51.3
-	github.com/bradleyjkemp/sigma-go v0.6.4
 	github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221027171526-76a36be4fa02
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/elastic/go-libaudit/v2 v2.4.0
@@ -272,6 +272,7 @@ require (
 // replace github.com/Velocidex/go-vhdx => ../go-vhdx
 // replace github.com/Velocidex/go-mscfb => ../go-mscfb
 // replace github.com/Velocidex/WinPmem/go-winpmem => ../WinPmem/go-winpmem
+// replace github.com/Velocidex/sigma-go => ../sigma-go
 
 // Remove search for html end block. This allows inserting unbalanced
 // HTML tags into the markdown
@@ -286,6 +287,6 @@ replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.202
 
 replace github.com/go-errors/errors => github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26
 
-replace github.com/bradleyjkemp/sigma-go => github.com/Velocidex/sigma-go v0.0.0-20240505024531-e8ce54ec3aed
+// replace github.com/bradleyjkemp/sigma-go => github.com/Velocidex/sigma-go v0.0.0-20240505024531-e8ce54ec3aed
 
 //replace github.com/bradleyjkemp/sigma-go => ../sigma-go

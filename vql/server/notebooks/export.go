@@ -357,6 +357,7 @@ func ExportNotebookToZip(
 	// Create a new ZipContainer to write on. The container will close
 	// the underlying writer.
 	zip_writer, err := reporting.NewContainerFromWriter(
+		output_filename.String(),
 		config_obj, fd, "", reporting.DEFAULT_COMPRESSION, reporting.NO_METADATA)
 	if err != nil {
 		return nil, err

@@ -9,7 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/sigma/evaluator/modifiers"
 	"www.velocidex.com/golang/vfilter/types"
 
-	"github.com/bradleyjkemp/sigma-go"
+	"github.com/Velocidex/sigma-go"
 )
 
 func (self *VQLRuleEvaluator) evaluateSearchExpression(

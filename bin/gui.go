@@ -225,7 +225,18 @@ func doGUI() error {
 	// Just try to open the browser in the background.
 	if !*gui_command_no_browser {
 		go func() {
-			url := fmt.Sprintf("https://admin:password@%v:%v/",
+			// Recent chrome browsers do not forward the auth dialog
+			// when the URL contains passwords. Therefore we can only
+			// add the hard coded passwords if the actual password is
+			// set to that.
+			user_manager := services.GetUserManager()
+			creds := ""
+			ok, _ := user_manager.VerifyPassword(sm.Ctx, "admin", "admin", "password")
+			if ok {
+				creds = "admin:password"
+			}
+
+			url := fmt.Sprintf("https://%v@%v:%v/", creds,
 				config_obj.GUI.BindAddress,
 				config_obj.GUI.BindPort)
 			res := OpenBrowser(url)
