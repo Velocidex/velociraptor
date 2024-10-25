@@ -230,6 +230,7 @@ func createDownloadFile(
 	// Create a new ZipContainer to write on. The container will close
 	// the underlying writer.
 	zip_writer, err := reporting.NewContainerFromWriter(
+		download_file.String(),
 		config_obj, fd, password,
 		reporting.DEFAULT_COMPRESSION, reporting.NO_METADATA)
 	if err != nil {
@@ -757,6 +758,7 @@ func createHuntDownloadFile(
 	// Do these first to ensure errors are returned if the zip file
 	// is not writable.
 	zip_writer, err := reporting.NewContainerFromWriter(
+		download_file.String(),
 		config_obj, fd, password, 5, nil /* metadata */)
 	if err != nil {
 		fd.Close()

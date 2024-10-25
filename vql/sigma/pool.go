@@ -46,8 +46,12 @@ func (self *workerJob) Run() {
 		// time.
 		event_copy := self.sigma_context.AddDetail(
 			self.ctx, self.scope, event, rule)
-		event_copy.Set("_Match", match).
-			Set("_Rule", rule)
+		if match.CorrelationHits == nil {
+			event_copy.Set("_Match", match)
+		} else {
+			event_copy.Set("_Correlations", match.CorrelationHits)
+		}
+		event_copy.Set("_Rule", rule)
 
 		self.sigma_context.IncHitCount()
 
@@ -70,11 +74,33 @@ type workerPool struct {
 	debug bool
 }
 
+func (self *workerPool) RunInline(
+	ctx context.Context,
+	scope vfilter.Scope,
+	event *evaluator.Event,
+	rules []*evaluator.VQLRuleEvaluator) {
+
+	job := &workerJob{
+		sigma_context: self.sigma_context,
+		output_chan:   self.output_chan,
+		event:         event,
+		rules:         rules,
+		scope:         scope,
+		ctx:           ctx,
+		wg:            self.wg,
+		debug:         self.debug,
+	}
+
+	self.wg.Add(1)
+	job.Run()
+}
+
 func (self *workerPool) Run(
 	ctx context.Context,
 	scope vfilter.Scope,
 	event *evaluator.Event,
 	rules []*evaluator.VQLRuleEvaluator) {
+
 	job := &workerJob{
 		sigma_context: self.sigma_context,
 		output_chan:   self.output_chan,

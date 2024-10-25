@@ -1,0 +1,195 @@
+{
+ "Correlation Test Too few hits": [],
+ "Correlation Test Right number of hits": [
+  {
+   "Timestamp": "2024-10-10T12:25:00+10",
+   "EventID": 4625,
+   "TargetDomainName": "Domain",
+   "TargetUserName": "A",
+   "Details": null,
+   "_Correlations": [
+    {
+     "Timestamp": "2024-10-10T12:22:00+10",
+     "EventID": 4625,
+     "TargetDomainName": "Domain",
+     "TargetUserName": "A"
+    },
+    {
+     "Timestamp": "2024-10-10T12:24:00+10",
+     "EventID": 4625,
+     "TargetDomainName": "Domain",
+     "TargetUserName": "A"
+    },
+    {
+     "Timestamp": "2024-10-10T12:25:00+10",
+     "EventID": 4625,
+     "TargetDomainName": "Domain",
+     "TargetUserName": "A"
+    }
+   ],
+   "_Rule": {
+    "Title": "Failed logon",
+    "Name": "failed_logon",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "security"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "event_matchers": [
+        [
+         {
+          "field": "EventID",
+          "values": [
+           4625
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "Condition": [
+      {
+       "Search": {
+        "Name": "selection"
+       }
+      }
+     ]
+    },
+    "Description": "Detect when logon is failed",
+    "correlator": {
+     "Title": "Multiple failed logons for a single user (possible brute force attack)",
+     "Correlation": {
+      "type": "event_count",
+      "rules": [
+       "failed_logon"
+      ],
+      "group-by": [
+       "TargetUserName",
+       "TargetDomainName"
+      ],
+      "timespan": "5m",
+      "condition": {
+       "gte": 3
+      }
+     }
+    }
+   }
+  }
+ ],
+ "Correlation Test VALUE_COUNT": [
+  {
+   "Timestamp": "2024-10-10T12:25:00+10",
+   "EventID": 4799,
+   "SubjectUserName": "admin",
+   "TargetUserName": "Distributed COM Users",
+   "Details": null,
+   "_Correlations": [
+    {
+     "Timestamp": "2024-10-10T12:22:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Administrators"
+    },
+    {
+     "Timestamp": "2024-10-10T12:23:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Remote Desktop Users"
+    },
+    {
+     "Timestamp": "2024-10-10T12:24:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Remote Management Users"
+    },
+    {
+     "Timestamp": "2024-10-10T12:25:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Distributed COM Users"
+    }
+   ],
+   "_Rule": {
+    "Title": "High-privilege group enumeration",
+    "Name": "privileged_group_enumeration",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "security"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "event_matchers": [
+        [
+         {
+          "field": "EventID",
+          "values": [
+           4799
+          ]
+         },
+         {
+          "field": "CallerProcessId",
+          "values": [
+           0
+          ]
+         },
+         {
+          "field": "TargetUserName",
+          "values": [
+           "Administrators",
+           "Remote Desktop Users",
+           "Remote Management Users",
+           "Distributed COM Users"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "Condition": [
+      {
+       "Search": {
+        "Name": "selection"
+       }
+      }
+     ]
+    },
+    "status": "stable",
+    "Level": "informational",
+    "AdditionalFields": {
+     "falsepositives": [
+      "Administrative activity",
+      "Directory assessment tools"
+     ]
+    },
+    "correlator": {
+     "Title": "Enumeration of multiple high-privilege groups by tools like BloodHound",
+     "Correlation": {
+      "type": "value_count",
+      "rules": [
+       "privileged_group_enumeration"
+      ],
+      "group-by": [
+       "SubjectUserName"
+      ],
+      "timespan": "15m",
+      "condition": {
+       "field": "TargetUserName",
+       "gte": 4
+      }
+     },
+     "status": "stable",
+     "Level": "high",
+     "AdditionalFields": {
+      "falsepositives": [
+       "Administrative activity",
+       "Directory assessment tools"
+      ]
+     }
+    }
+   }
+  }
+ ]
+}
