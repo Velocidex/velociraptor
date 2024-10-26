@@ -200,6 +200,8 @@ func NewSigmaContext(
 
 				if r.Name != "" {
 					rules_by_name[r.Name] = evaluator_rule
+				} else if r.ID != "" {
+					rules_by_name[r.ID] = evaluator_rule
 				}
 			}
 		}
