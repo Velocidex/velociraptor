@@ -130,12 +130,6 @@
           ]
          },
          {
-          "field": "CallerProcessId",
-          "values": [
-           0
-          ]
-         },
-         {
           "field": "TargetUserName",
           "values": [
            "Administrators",
@@ -188,6 +182,106 @@
        "Directory assessment tools"
       ]
      }
+    }
+   }
+  }
+ ],
+ "Correlation Test TEMPORAL": [
+  {
+   "Timestamp": "2024-10-10T12:23:00+10",
+   "cs-method": "POST",
+   "cs-uri-query": "/app//json/setup-restore-local.action",
+   "sc-status": 200,
+   "Details": null,
+   "_Correlations": [
+    {
+     "Timestamp": "2024-10-10T12:22:00+10",
+     "ParentImage": "C:\\Windows\\tomcat9.exe",
+     "ParentCommandLine": "confluence",
+     "Image": "C:\\Windows\\cmd.exe",
+     "OriginalFileName": "Cmd.Exe"
+    },
+    {
+     "Timestamp": "2024-10-10T12:23:00+10",
+     "cs-method": "POST",
+     "cs-uri-query": "/app//json/setup-restore-local.action",
+     "sc-status": 200
+    }
+   ],
+   "_Rule": {
+    "Title": "CVE-2023-22518 Exploitation Attempt - Vulnerable Endpoint Connection (Webserver)",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "security"
+    },
+    "Detection": {
+     "Searches": {
+      "selection_method": {
+       "event_matchers": [
+        [
+         {
+          "field": "cs-method",
+          "values": [
+           "POST"
+          ]
+         }
+        ]
+       ]
+      },
+      "selection_status": {
+       "event_matchers": [
+        [
+         {
+          "field": "sc-status",
+          "values": [
+           200,
+           302,
+           405
+          ]
+         }
+        ]
+       ]
+      },
+      "selection_uris": {
+       "event_matchers": [
+        [
+         {
+          "field": "cs-uri-query",
+          "modifiers": [
+           "contains"
+          ],
+          "values": [
+           "/json/setup-restore-local.action",
+           "/json/setup-restore-progress.action",
+           "/json/setup-restore.action",
+           "/server-info.action",
+           "/setup/setupadministrator.action"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "Condition": [
+      {
+       "Search": {
+        "Pattern": "selection_*"
+       }
+      }
+     ]
+    },
+    "Id": "a902d249-9b9c-4dc4-8fd0-fbe528ef965c",
+    "correlator": {
+     "Title": "CVE-2023-22518 Exploit Chain",
+     "Correlation": {
+      "type": "temporal",
+      "rules": [
+       "a902d249-9b9c-4dc4-8fd0-fbe528ef965c",
+       "1ddaa9a4-eb0b-4398-a9fe-7b018f9e23db"
+      ],
+      "timespan": "10m"
+     },
+     "Level": "high"
     }
    }
   }

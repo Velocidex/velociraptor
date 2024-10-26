@@ -142,7 +142,7 @@ func (self *VQLRuleEvaluator) Match(ctx context.Context,
 
 	// If we get here the base rule would have matched - if there is a
 	// correlator tell it about it.
-	if self.Correlator != nil {
+	if result.Match && self.Correlator != nil {
 		return self.Correlator.Match(ctx, scope, self, event)
 	}
 
