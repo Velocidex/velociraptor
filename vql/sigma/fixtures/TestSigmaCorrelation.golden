@@ -78,70 +78,77 @@
    }
   }
  ],
- "Correlation Test VALUE_COUNT": [
+ "Correlation Test VALUE_COUNT": [],
+ "Correlation Test TEMPORAL": [
   {
-   "Timestamp": "2024-10-10T12:25:00+10",
-   "EventID": 4799,
-   "SubjectUserName": "admin",
-   "TargetUserName": "Distributed COM Users",
+   "Timestamp": "2024-10-10T12:23:00+10",
+   "cs-method": "POST",
+   "cs-uri-query": "/app//json/setup-restore-local.action",
+   "sc-status": 200,
    "Details": null,
    "_Correlations": [
     {
      "Timestamp": "2024-10-10T12:22:00+10",
-     "EventID": 4799,
-     "SubjectUserName": "admin",
-     "TargetUserName": "Administrators"
+     "ParentImage": "C:\\Windows\\tomcat9.exe",
+     "ParentCommandLine": "confluence",
+     "Image": "C:\\Windows\\cmd.exe",
+     "OriginalFileName": "Cmd.Exe"
     },
     {
      "Timestamp": "2024-10-10T12:23:00+10",
-     "EventID": 4799,
-     "SubjectUserName": "admin",
-     "TargetUserName": "Remote Desktop Users"
-    },
-    {
-     "Timestamp": "2024-10-10T12:24:00+10",
-     "EventID": 4799,
-     "SubjectUserName": "admin",
-     "TargetUserName": "Remote Management Users"
-    },
-    {
-     "Timestamp": "2024-10-10T12:25:00+10",
-     "EventID": 4799,
-     "SubjectUserName": "admin",
-     "TargetUserName": "Distributed COM Users"
+     "cs-method": "POST",
+     "cs-uri-query": "/app//json/setup-restore-local.action",
+     "sc-status": 200
     }
    ],
    "_Rule": {
-    "Title": "High-privilege group enumeration",
-    "Name": "privileged_group_enumeration",
+    "Title": "CVE-2023-22518 Exploitation Attempt - Vulnerable Endpoint Connection (Webserver)",
     "Logsource": {
      "Product": "windows",
      "Service": "security"
     },
     "Detection": {
      "Searches": {
-      "selection": {
+      "selection_method": {
        "event_matchers": [
         [
          {
-          "field": "EventID",
+          "field": "cs-method",
           "values": [
-           4799
+           "POST"
           ]
-         },
+         }
+        ]
+       ]
+      },
+      "selection_status": {
+       "event_matchers": [
+        [
          {
-          "field": "CallerProcessId",
+          "field": "sc-status",
           "values": [
-           0
+           200,
+           302,
+           405
           ]
-         },
+         }
+        ]
+       ]
+      },
+      "selection_uris": {
+       "event_matchers": [
+        [
          {
-          "field": "TargetUserName",
+          "field": "cs-uri-query",
+          "modifiers": [
+           "contains"
+          ],
           "values": [
-           "Administrators",
-           "Remote Desktop Users",
-           "Remote Management Users",
-           "Distributed COM Users"
+           "/json/setup-restore-local.action",
+           "/json/setup-restore-progress.action",
+           "/json/setup-restore.action",
+           "/server-info.action",
+           "/setup/setupadministrator.action"
           ]
          }
         ]
@@ -151,43 +158,23 @@
      "Condition": [
       {
        "Search": {
-        "Name": "selection"
+        "Pattern": "selection_*"
        }
       }
      ]
     },
-    "status": "stable",
-    "Level": "informational",
-    "AdditionalFields": {
-     "falsepositives": [
-      "Administrative activity",
-      "Directory assessment tools"
-     ]
-    },
+    "Id": "a902d249-9b9c-4dc4-8fd0-fbe528ef965c",
     "correlator": {
-     "Title": "Enumeration of multiple high-privilege groups by tools like BloodHound",
+     "Title": "CVE-2023-22518 Exploit Chain",
      "Correlation": {
-      "type": "value_count",
+      "type": "temporal",
       "rules": [
-       "privileged_group_enumeration"
+       "a902d249-9b9c-4dc4-8fd0-fbe528ef965c",
+       "1ddaa9a4-eb0b-4398-a9fe-7b018f9e23db"
       ],
-      "group-by": [
-       "SubjectUserName"
-      ],
-      "timespan": "15m",
-      "condition": {
-       "field": "TargetUserName",
-       "gte": 4
-      }
+      "timespan": "10m"
      },
-     "status": "stable",
-     "Level": "high",
-     "AdditionalFields": {
-      "falsepositives": [
-       "Administrative activity",
-       "Directory assessment tools"
-      ]
-     }
+     "Level": "high"
     }
    }
   }

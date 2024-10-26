@@ -168,6 +168,51 @@ func (self *valueCount) evictEvent(
 	}
 }
 
+type temporal struct {
+	value_map       map[string]int
+	number_of_rules int
+}
+
+func NewTemporal(
+	ctx context.Context, scope types.Scope,
+	rule sigma.Rule) (*temporal, error) {
+	return &temporal{
+		value_map:       make(map[string]int),
+		number_of_rules: len(rule.Correlation.Rules),
+	}, nil
+}
+
+func (self *temporal) check() bool {
+	return len(self.value_map) >= self.number_of_rules
+}
+
+func (self *temporal) addEvent(
+	ctx context.Context, scope types.Scope,
+	event *TimedEvent, rule *VQLRuleEvaluator) {
+	name := rule.Name
+	if name == "" {
+		name = rule.ID
+	}
+
+	count, _ := self.value_map[name]
+	self.value_map[name] = count + 1
+}
+
+func (self *temporal) evictEvent(
+	ctx context.Context, scope types.Scope,
+	event *TimedEvent, rule *VQLRuleEvaluator) {
+	name := rule.Name
+	if name == "" {
+		name = rule.ID
+	}
+
+	count, _ := self.value_map[name]
+	self.value_map[name] = count - 1
+	if count-1 <= 0 {
+		delete(self.value_map, name)
+	}
+}
+
 type timespanManager struct {
 	timespan time.Duration
 	times    []*TimedEvent
@@ -216,8 +261,10 @@ func (self *timespanManager) addTime(
 	}
 
 	new_event := &TimedEvent{
-		ts:    ts,
-		Event: event,
+		ts: ts,
+		Event: &Event{
+			Dict: event.Copy(),
+		},
 	}
 	self.correlator.addEvent(ctx, scope, new_event, rule)
 
@@ -333,7 +380,22 @@ func NewSigmaCorrelatorGroup(
 			correlator:      correlator,
 		}, nil
 
-	//case "temporal":
+	case "temporal":
+		correlator, err := NewTemporal(ctx, scope, rule)
+		if err != nil {
+			return nil, err
+		}
+
+		ts, err := NewTimespanManager(correlator, rule)
+		if err != nil {
+			return nil, err
+		}
+
+		return &SigmaCorrelatorGroup{
+			timespanManager: ts,
+			correlator:      correlator,
+		}, nil
+
 	//case "ordered_temporal":
 	default:
 		return nil, fmt.Errorf("Unsupported correlation type for %v: %v",
