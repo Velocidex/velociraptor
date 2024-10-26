@@ -684,7 +684,6 @@ logsource:
 detection:
   selection:
     EventID: 4799
-    CallerProcessId: 0x0
     TargetUserName:
       - Administrators
       - Remote Desktop Users
@@ -894,7 +893,7 @@ func (self *SigmaTestSuite) TestSigmaCorrelations() {
 	for idx, test_case := range sigmaCorrelationTestCases {
 		fmt.Printf("Running case: %v: %v\n", idx, test_case.description)
 
-		if false && idx != 3 {
+		if false && idx != 2 {
 			continue
 		}
 

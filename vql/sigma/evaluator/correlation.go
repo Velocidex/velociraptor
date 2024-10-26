@@ -261,10 +261,8 @@ func (self *timespanManager) addTime(
 	}
 
 	new_event := &TimedEvent{
-		ts: ts,
-		Event: &Event{
-			Dict: event.Copy(),
-		},
+		ts:    ts,
+		Event: event,
 	}
 	self.correlator.addEvent(ctx, scope, new_event, rule)
 

@@ -78,7 +78,114 @@
    }
   }
  ],
- "Correlation Test VALUE_COUNT": [],
+ "Correlation Test VALUE_COUNT": [
+  {
+   "Timestamp": "2024-10-10T12:25:00+10",
+   "EventID": 4799,
+   "SubjectUserName": "admin",
+   "TargetUserName": "Distributed COM Users",
+   "Details": null,
+   "_Correlations": [
+    {
+     "Timestamp": "2024-10-10T12:22:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Administrators"
+    },
+    {
+     "Timestamp": "2024-10-10T12:23:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Remote Desktop Users"
+    },
+    {
+     "Timestamp": "2024-10-10T12:24:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Remote Management Users"
+    },
+    {
+     "Timestamp": "2024-10-10T12:25:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Distributed COM Users"
+    }
+   ],
+   "_Rule": {
+    "Title": "High-privilege group enumeration",
+    "Name": "privileged_group_enumeration",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "security"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "event_matchers": [
+        [
+         {
+          "field": "EventID",
+          "values": [
+           4799
+          ]
+         },
+         {
+          "field": "TargetUserName",
+          "values": [
+           "Administrators",
+           "Remote Desktop Users",
+           "Remote Management Users",
+           "Distributed COM Users"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "Condition": [
+      {
+       "Search": {
+        "Name": "selection"
+       }
+      }
+     ]
+    },
+    "status": "stable",
+    "Level": "informational",
+    "AdditionalFields": {
+     "falsepositives": [
+      "Administrative activity",
+      "Directory assessment tools"
+     ]
+    },
+    "correlator": {
+     "Title": "Enumeration of multiple high-privilege groups by tools like BloodHound",
+     "Correlation": {
+      "type": "value_count",
+      "rules": [
+       "privileged_group_enumeration"
+      ],
+      "group-by": [
+       "SubjectUserName"
+      ],
+      "timespan": "15m",
+      "condition": {
+       "field": "TargetUserName",
+       "gte": 4
+      }
+     },
+     "status": "stable",
+     "Level": "high",
+     "AdditionalFields": {
+      "falsepositives": [
+       "Administrative activity",
+       "Directory assessment tools"
+      ]
+     }
+    }
+   }
+  }
+ ],
  "Correlation Test TEMPORAL": [
   {
    "Timestamp": "2024-10-10T12:23:00+10",
