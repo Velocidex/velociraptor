@@ -125,3 +125,6 @@ deadcode:
 
 api_check:
 	python ./scripts/api_checker.py .
+
+ebpf:
+	go generate ./vql/linux/ebpf/
