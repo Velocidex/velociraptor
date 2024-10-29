@@ -254,6 +254,10 @@ export class VeloLineChart extends React.Component {
     }
 
     toLocalX = x=>{
+        if(!_.isNumber(x)) {
+            return 0;
+        }
+
         return x;
     }
 
@@ -355,6 +359,11 @@ export class VeloLineChart extends React.Component {
                       animationDuration={300}
                       dot={false} />);
         }
+
+        if(_.isEmpty(lines)) {
+            return <div>{T("No data")}</div>;
+        }
+
         return (
             <div onDoubleClick={this.zoomOut} >
               <ResponsiveContainer width="95%"
