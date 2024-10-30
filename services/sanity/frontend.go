@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	basePathRegEx = regexp.MustCompile("^/[^/][a-zA-Z0-9]+[^/]$")
+	basePathRegEx = regexp.MustCompile("^/[^/][a-zA-Z0-9_-]+[^/]$")
 )
 
 func (self *SanityChecks) CheckFrontendSettings(
