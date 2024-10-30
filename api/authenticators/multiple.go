@@ -47,7 +47,9 @@ func (self *MultiAuthenticator) reject_with_username(
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusUnauthorized)
 
-	renderRejectionMessage(self.config_obj, w, username, self.delegate_info)
+	renderRejectionMessage(
+		self.config_obj, r, w, err,
+		username, self.delegate_info)
 }
 
 func (self *MultiAuthenticator) AuthenticateUserHandler(
