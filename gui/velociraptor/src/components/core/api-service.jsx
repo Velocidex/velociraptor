@@ -1,4 +1,5 @@
 import axios, {isCancel} from 'axios';
+import path from 'path-browserify';
 
 import _ from 'lodash';
 import qs from 'qs';
@@ -259,9 +260,10 @@ const upload = function(url, files, params) {
     }).catch(handle_error);
 };
 
-// Internal Routes declared in api/proxy.go
-const internal_links = new RegExp("^/app|notebooks|downloads|hunts|clients/");
-const api_links = new RegExp("^/api/");
+// Internal Routes declared in api/proxy.go Assume base_path is regex
+// safe due to the sanitation in the sanitation service.
+const internal_links = new RegExp(
+    "^" + base_path + "/api|app|notebooks|downloads|hunts|clients/");
 
 // Prepare a suitable href link for <a>
 // This function accepts a number of options:
@@ -290,8 +292,7 @@ const href = function(url, params, options) {
 
         // All internal links must point to the same page since this
         // is a SPA
-        if (internal_links.test(parsed.pathname) ||
-            api_links.test(parsed.pathname)) {
+        if (internal_links.test(parsed.pathname)) {
             parsed.pathname = src_of(parsed.pathname);
         } else {
             parsed.pathname = window.location.pathname;
@@ -328,11 +329,12 @@ const delete_req = function(url, params, cancel_token) {
 
 var hooks = [];
 
+// Returns a url corrected for base_path. Handles data URLs properly.
 const src_of = function (url) {
     if (url && url.match(/^data/)) {
         return url;
     }
-    return window.base_path + url;
+    return path.join(window.base_path, url);
 };
 
 const error = function(msg) {
