@@ -86,7 +86,7 @@ reports:
 
       ## Current Orgs
       {{ define "OrgsTable" }}
-         LET ColumnTypes <= dict(ClientConfig='url_internal')
+         LET ColumnTypes <= dict(ClientConfig='url')
          LET OrgsTable = SELECT Name, OrgId,
                          upload(accessor='data', file=_client_config,
                                 name='client.'+OrgId+'.config.yaml') AS _Upload

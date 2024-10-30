@@ -260,7 +260,7 @@ const upload = function(url, files, params) {
 };
 
 // Internal Routes declared in api/proxy.go
-const internal_links = new RegExp("^/notebooks|downloads|hunts|clients/");
+const internal_links = new RegExp("^/app|notebooks|downloads|hunts|clients/");
 const api_links = new RegExp("^/api/");
 
 // Prepare a suitable href link for <a>
@@ -290,13 +290,11 @@ const href = function(url, params, options) {
 
         // All internal links must point to the same page since this
         // is a SPA
-        if (options && options.internal) {
-            if (internal_links.test(parsed.pathname) ||
-                api_links.test(parsed.pathname)) {
-                parsed.pathname = src_of(parsed.pathname);
-            } else {
-                parsed.pathname = window.location.pathname;
-            }
+        if (internal_links.test(parsed.pathname) ||
+            api_links.test(parsed.pathname)) {
+            parsed.pathname = src_of(parsed.pathname);
+        } else {
+            parsed.pathname = window.location.pathname;
         }
     }
 

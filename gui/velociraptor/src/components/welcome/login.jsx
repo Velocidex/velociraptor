@@ -79,7 +79,7 @@ export default class LoginPage extends Component {
                    enforceFocus={true}
                    scrollable={true}
                    onHide={() => {
-                       window.location = '/';
+                       window.location = api.href("/app/index.html");
                    }}>
               <Modal.Header closeButton>
                 <Modal.Title>Velociraptor Login</Modal.Title>
