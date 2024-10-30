@@ -20,7 +20,6 @@ package authenticators
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -290,14 +289,14 @@ func authenticateUserHandle(
 		users := services.GetUserManager()
 		user_record, err := users.GetUser(r.Context(), username, username)
 		if err != nil {
-			reject_cb(w, r, errors.New("Invalid user"), username)
+			reject_cb(w, r, fmt.Errorf("Invalid user: %v", err), username)
 			return
 		}
 
 		// Does the user have access to the specified org?
 		err = CheckOrgAccess(config_obj, r, user_record)
 		if err != nil {
-			reject_cb(w, r, errors.New("Insufficient permissions"), user_record.Name)
+			reject_cb(w, r, fmt.Errorf("Insufficient permissions: %v", err), user_record.Name)
 			return
 		}
 
@@ -349,7 +348,7 @@ func reject_with_username(
 	w.WriteHeader(http.StatusOK)
 
 	renderRejectionMessage(config_obj,
-		w, username, []velociraptor.AuthenticatorInfo{
+		r, w, err, username, []velociraptor.AuthenticatorInfo{
 			{
 				LoginURL:     login_url,
 				ProviderName: provider,

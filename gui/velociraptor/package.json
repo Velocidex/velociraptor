@@ -28,6 +28,7 @@
         "moment-timezone": "0.5.45",
         "npm-watch": "^0.13.0",
         "patch-package": "8.0.0",
+        "path-browserify": "1.0.1",
         "prop-types": "^15.8.1",
         "qs": "6.13.0",
         "react": "^16.14.0",

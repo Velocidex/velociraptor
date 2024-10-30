@@ -2,6 +2,7 @@ package authenticators
 
 import (
 	"net/http"
+	"strings"
 	"text/template"
 
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
@@ -13,8 +14,15 @@ import (
 
 func renderRejectionMessage(
 	config_obj *config_proto.Config,
-	w http.ResponseWriter, username string,
-	authenticators []velociraptor.AuthenticatorInfo) {
+	r *http.Request, w http.ResponseWriter, err error,
+	username string, authenticators []velociraptor.AuthenticatorInfo) {
+
+	// For API calls we render the error as JSON
+	base_path := config_obj.GUI.BasePath + "/api/"
+	if strings.HasPrefix(r.URL.Path, base_path) {
+		w.Write([]byte(json.Format(`{"message": %q}`, err.Error())))
+		return
+	}
 
 	data, err := gui_assets.ReadFile("/index.html")
 	if err != nil {

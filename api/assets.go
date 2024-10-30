@@ -166,8 +166,9 @@ func NewInterceptingResponseWriter(
 			return &interceptingResponseWriter{
 				ResponseWriter: w,
 				from:           "url(/app/assets/",
-				to:             fmt.Sprintf("url(/%v/app/assets/", base_path),
-				br_writer:      brotli.NewWriter(w),
+				to: fmt.Sprintf("url(/%v/app/assets/",
+					strings.TrimPrefix(base_path, "/")),
+				br_writer: brotli.NewWriter(w),
 			}
 		}
 	}
