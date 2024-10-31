@@ -162,7 +162,9 @@ func (self *TestSuite) TestVFSAccessor() {
 
 	// Wait here until the collection is completed.
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
-		flow, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj, "server", flow_id)
+		flow, err := launcher.GetFlowDetails(
+			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
+			"server", flow_id)
 		assert.NoError(self.T(), err)
 
 		return flow.Context.State == flows_proto.ArtifactCollectorContext_FINISHED

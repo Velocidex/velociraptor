@@ -85,6 +85,14 @@ func GetLauncher(config_obj *config_proto.Config) (Launcher, error) {
 	return org_manager.Services(config_obj.OrgId).Launcher()
 }
 
+// Options for the GetFlowOptions API. This ensures we do no more work
+// than necessary.
+type GetFlowOptions struct {
+
+	// Include the flow downloads (ZIP exports of the flow).
+	Downloads bool
+}
+
 type CompilerOptions struct {
 	// Should names be obfuscated in the resulting VQL?
 	ObfuscateNames bool
@@ -223,6 +231,7 @@ type Launcher interface {
 	GetFlowDetails(
 		ctx context.Context,
 		config_obj *config_proto.Config,
+		opts GetFlowOptions,
 		client_id string, flow_id string) (*api_proto.FlowDetails, error)
 
 	// Actively cancel the collection

@@ -128,7 +128,8 @@ func GetFlowFromQueue(
 	}
 
 	flow_details, err := launcher.GetFlowDetails(
-		ctx, config_obj, client_id, flow_id)
+		ctx, config_obj, services.GetFlowOptions{},
+		client_id, flow_id)
 	if err != nil ||
 		flow_details == nil ||
 		flow_details.Context == nil {
