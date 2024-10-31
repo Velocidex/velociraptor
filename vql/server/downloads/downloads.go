@@ -321,7 +321,8 @@ func downloadFlowToZip(
 	}
 
 	flow_details, err := launcher.GetFlowDetails(
-		ctx, config_obj, client_id, flow_id)
+		ctx, config_obj, services.GetFlowOptions{},
+		client_id, flow_id)
 	if err == nil {
 		err = zip_writer.WriteJSON(
 			paths.ZipPathFromFSPathSpec(prefix.AddChild("collection_context")),

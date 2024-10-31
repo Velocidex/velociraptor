@@ -1250,6 +1250,11 @@ message Defaults {
     // clients with the key department and value contains accounting
     // in their client metadata.
     repeated string indexed_client_metadata = 51;
+
+    // If this is set we do not actively check the status of inflight
+    // collections. This is a new feature and may need to be disabled
+    // in some large deployments.
+    bool disable_active_inflight_checks = 52;
 }
 
 // Configures crypto preferences
