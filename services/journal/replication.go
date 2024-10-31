@@ -629,11 +629,20 @@ func (self *ReplicationService) Watch(
 
 			// Keep retrying to reconnect in case the
 			// connection dropped.
+			last_try := utils.GetTime().Now()
 
 			select {
 			case <-self.ctx.Done():
 				return
+
 			case <-time.After(utils.Jitter(self.RetryDuration())):
+
+				// Avoid retrying too quickly. This is mainly for
+				// tests where the time is mocked for the After(delay)
+				// above does not work.
+				if utils.GetTime().Now().Sub(last_try) < time.Minute {
+					utils.SleepWithCtx(ctx, time.Minute)
+				}
 			}
 
 			logger := logging.GetLogger(self.config_obj,

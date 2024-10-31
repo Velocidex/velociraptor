@@ -300,8 +300,9 @@ func (self *HuntManager) maybeDirectlyAssignFlow(
 	if err != nil {
 		return err
 	}
-	_, err = launcher.GetFlowDetails(ctx, config_obj, assignment.ClientId,
-		assignment.FlowId)
+	_, err = launcher.GetFlowDetails(
+		ctx, config_obj, services.GetFlowOptions{},
+		assignment.ClientId, assignment.FlowId)
 	if err != nil {
 		return err
 	}

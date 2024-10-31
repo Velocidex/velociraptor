@@ -261,8 +261,9 @@ func (self ImportCollectionFunction) importFlow(
 
 	// Check if this flow is already in this client. If it is then we
 	// make a new flow id so the new import is kept separated.
-	_, err = launcher.GetFlowDetails(ctx, config_obj, client_id,
-		collection_context.SessionId)
+	_, err = launcher.GetFlowDetails(
+		ctx, config_obj, services.GetFlowOptions{},
+		client_id, collection_context.SessionId)
 	if err == nil {
 		collection_context.SessionId = utils.NewFlowId(client_id)
 	}

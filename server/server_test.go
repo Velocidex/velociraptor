@@ -151,7 +151,8 @@ func (self *ServerTestSuite) TestFlowStates() {
 		flow_ids = append(flow_ids, flow_id)
 
 		flow_details, err := launcher.GetFlowDetails(
-			self.Ctx, self.ConfigObj, self.client_id, flow_id)
+			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
+			self.client_id, flow_id)
 		assert.NoError(self.T(), err)
 
 		// Our initial state is RUNNING
@@ -204,7 +205,8 @@ func (self *ServerTestSuite) TestFlowStates() {
 
 	for in_flight := range client_info.InFlightFlows {
 		flow_details, err := launcher.GetFlowDetails(
-			self.Ctx, self.ConfigObj, self.client_id, in_flight)
+			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
+			self.client_id, in_flight)
 		assert.NoError(self.T(), err)
 
 		// The flow is in the WAITING state now until the client sends
@@ -231,7 +233,8 @@ func (self *ServerTestSuite) TestFlowStates() {
 		runner.Close(self.Ctx)
 
 		flow_details, err = launcher.GetFlowDetails(
-			self.Ctx, self.ConfigObj, self.client_id, in_flight)
+			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
+			self.client_id, in_flight)
 		assert.NoError(self.T(), err)
 
 		// The flow is in the IN_PROGRESS state now.
@@ -245,7 +248,8 @@ func (self *ServerTestSuite) TestFlowStates() {
 		defer closer()
 
 		flow_details, err = launcher.GetFlowDetails(
-			self.Ctx, self.ConfigObj, self.client_id, in_flight)
+			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
+			self.client_id, in_flight)
 		assert.NoError(self.T(), err)
 
 		// The flow is in the UNRESPONSIVE state now.
@@ -271,7 +275,8 @@ func (self *ServerTestSuite) TestFlowStates() {
 		runner.Close(self.Ctx)
 
 		flow_details, err = launcher.GetFlowDetails(
-			self.Ctx, self.ConfigObj, self.client_id, in_flight)
+			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
+			self.client_id, in_flight)
 		assert.NoError(self.T(), err)
 
 		// The flow is in the FINISHED state now.
@@ -791,7 +796,8 @@ func (self *ServerTestSuite) TestErrorMessage() {
 	assert.NoError(self.T(), err)
 
 	details, err := launcher.GetFlowDetails(
-		self.Ctx, self.ConfigObj, self.client_id, flow_id)
+		self.Ctx, self.ConfigObj, services.GetFlowOptions{},
+		self.client_id, flow_id)
 	require.NoError(t, err)
 
 	require.Regexp(self.T(), regexp.MustCompile("Error generated"),
@@ -833,7 +839,8 @@ func (self *ServerTestSuite) TestCompletions() {
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		details, err := launcher.GetFlowDetails(
-			self.Ctx, self.ConfigObj, self.client_id, flow_id)
+			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
+			self.client_id, flow_id)
 		require.NoError(t, err)
 
 		// Flow not complete yet - still an outstanding request.
@@ -859,7 +866,8 @@ func (self *ServerTestSuite) TestCompletions() {
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// Flow should be complete now that second response arrived.
 		details, err := launcher.GetFlowDetails(
-			self.Ctx, self.ConfigObj, self.client_id, flow_id)
+			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
+			self.client_id, flow_id)
 		require.NoError(t, err)
 
 		return flows_proto.ArtifactCollectorContext_FINISHED ==

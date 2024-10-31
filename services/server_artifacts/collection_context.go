@@ -222,7 +222,8 @@ func (self *contextManager) Load() error {
 	}
 
 	details, err := launcher.GetFlowDetails(
-		self.ctx, self.config_obj, self.context.ClientId, self.context.SessionId)
+		self.ctx, self.config_obj, services.GetFlowOptions{},
+		self.context.ClientId, self.context.SessionId)
 	if err != nil {
 		return err
 	}
