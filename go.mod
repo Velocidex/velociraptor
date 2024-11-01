@@ -287,6 +287,4 @@ replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.202
 
 replace github.com/go-errors/errors => github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26
 
-// replace github.com/bradleyjkemp/sigma-go => github.com/Velocidex/sigma-go v0.0.0-20240505024531-e8ce54ec3aed
-
 //replace github.com/bradleyjkemp/sigma-go => ../sigma-go
