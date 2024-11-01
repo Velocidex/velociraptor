@@ -1,9 +1,9 @@
 # Only trigger when a PR is committed.
 name: Linux Build All Arches
 on: [pull_request]
-on:
-  pull_request:
-    types: [closed]
+#on:
+#  pull_request:
+#    types: [closed]
 #    branches:
 #      - master
 
