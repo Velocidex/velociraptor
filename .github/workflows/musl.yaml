@@ -1,5 +1,6 @@
 # Only trigger when a PR is committed.
 name: Linux Build Musl Static
+#on: [pull_request]
 on:
   pull_request:
     types: [closed]
@@ -39,7 +40,6 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: 20
-        cache: 'npm'
 
     - name: npm install gui
       run: |
