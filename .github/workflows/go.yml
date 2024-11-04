@@ -1,6 +1,9 @@
 # Only trigger when a PR is committed.
 name: Linux Build All Arches
-on: [pull_request]
+on:
+  pull_request:
+    types: [closed]
+
 jobs:
   build:
     if: github.event.pull_request.merged
@@ -45,8 +48,6 @@ jobs:
         mkdir ./output/
         export PATH=$PATH:~/go/bin/
         go run make.go -v UpdateDependentTools
-        go run make.go -v Linux
-        go run make.go -v LinuxArm64
         go run make.go -v Windows
         go run make.go -v Windowsx86
         go run make.go -v DarwinBase

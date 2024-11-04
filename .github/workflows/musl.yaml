@@ -1,6 +1,5 @@
 # Only trigger when a PR is committed.
 name: Linux Build Musl Static
-#on: [pull_request]
 on:
   pull_request:
     types: [closed]
@@ -9,7 +8,7 @@ jobs:
   build:
     if: github.event.pull_request.merged
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
 
     - name: Check out code into the Go module directory
@@ -54,7 +53,9 @@ jobs:
         export PATH=$PATH:~/go/bin/:/usr/local/musl/bin
         go run make.go -v UpdateDependentTools
         go run make.go -v LinuxMusl
-        go run make.go -v LinuxMuslDebug
+        go run make.go -v Linux
+        go run make.go -v LinuxArm64
+        # go run make.go -v LinuxMuslDebug
 
     - name: StoreBinaries
       uses: actions/upload-artifact@v4
