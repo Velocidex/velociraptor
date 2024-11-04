@@ -244,7 +244,8 @@ func (self *TestSuite) testScheduleCollection() (closer func()) {
 	var flow *api_proto.FlowDetails
 
 	vtesting.WaitUntil(20*time.Second, self.T(), func() bool {
-		flow, err = launcher.GetFlowDetails(self.Ctx, self.ConfigObj,
+		flow, err = launcher.GetFlowDetails(
+			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
 			self.client_id, flow_id)
 		assert.NoError(self.T(), err)
 

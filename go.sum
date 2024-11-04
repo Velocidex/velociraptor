@@ -94,8 +94,8 @@ github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a h1:H7dVazNcaE80V8c
 github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a/go.mod h1:/fy/Eg4TQz9KkJduvZfGCnbWTQ/LKaknS2wYB52cU6c=
 github.com/Velocidex/sflags v0.3.1-0.20231011011525-620ab7ca8617 h1:pxAOaYTYwbWhoSwRoJOT3TJmUAjD2D011A1c8M2yyEE=
 github.com/Velocidex/sflags v0.3.1-0.20231011011525-620ab7ca8617/go.mod h1:TTYBEgQFkjJvyBOC2s7G1+mNPZ3IHuqLZmVFRzyPfq4=
-github.com/Velocidex/sigma-go v0.0.0-20240505024531-e8ce54ec3aed h1:zqhuWeg6oqO3jNabjKJaGO7DreiGhbVfeyqleICMAZk=
-github.com/Velocidex/sigma-go v0.0.0-20240505024531-e8ce54ec3aed/go.mod h1:fHCN8y8cC1l5CYY7oOhPIznHmj/yeGxUvU+vAV7alr4=
+github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9 h1:YavusWZ+svpybfVg8cKk9MuSyeI479a0EGJ07VGpSm8=
+github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9/go.mod h1:ukLFs2t1+ud7MC4oN+zImhtTRP/eQHaDL3TwLs58uUA=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130 h1:+QujZ0D7KSy3WJVchkOhMkvAUab6/CIisO5LCoN48q4=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130/go.mod h1:3/pI9BBAF7gydBWvMVtV7W1qRwshEG9lBwed/d8xfFg=
 github.com/Velocidex/yaml/v2 v2.2.8 h1:GUrSy4SBJ6RjGt43k6MeBKtw2z/27gh4A3hfFmFY3No=

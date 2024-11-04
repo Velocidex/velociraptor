@@ -53,7 +53,7 @@ func (self *BackupService) CreateBackup(
 
 	// Create a container with the file.
 	container, err := reporting.NewContainerFromWriter(
-		self.config_obj, fd, "", 5, nil)
+		export_path.String(), self.config_obj, fd, "", 5, nil)
 	if err != nil {
 		fd.Close()
 		return nil, err

@@ -170,7 +170,7 @@ func (self *Indexer) Start(
 				// Avoid doing snapshots too quickly. This is mainly for
 				// tests where the time is mocked for the After(delay)
 				// above does not work.
-				if utils.GetTime().Now().Sub(last_run) < time.Second {
+				if utils.GetTime().Now().Sub(last_run) < time.Minute {
 					utils.SleepWithCtx(ctx, time.Minute)
 					continue
 				}

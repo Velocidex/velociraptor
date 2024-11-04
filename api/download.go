@@ -822,6 +822,7 @@ func streamZipFile(
 	}
 
 	container, err := reporting.NewContainerFromWriter(
+		fmt.Sprintf("HTTPDownload-%v", filename),
 		config_obj, utils.NopWriteCloser{w}, password, 5, nil)
 	if err != nil {
 		return err

@@ -359,11 +359,15 @@ func getCellsForEvents(ctx context.Context,
 			Env: []*api_proto.Env{{
 				Key: "ArtifactName", Value: artifact_name,
 			}},
-			Input: fmt.Sprintf(`/*
-# Events from %v
-*/
+			Input: fmt.Sprintf(`
 LET StartTime <= "%s"
 LET EndTime <= "%s"
+
+/*
+# Events from %v
+
+From {{ Scope "StartTime" }} to {{ Scope "EndTime" }}
+*/
 
 SELECT timestamp(epoch=_ts) AS ServerTime, *
  FROM source(start_time=StartTime, end_time=EndTime)
@@ -536,7 +540,7 @@ func getCellsForFlow(ctx context.Context,
 	}
 
 	flow_details, err := launcher.GetFlowDetails(
-		ctx, config_obj, client_id, flow_id)
+		ctx, config_obj, services.GetFlowOptions{}, client_id, flow_id)
 	if err != nil {
 		return nil
 	}

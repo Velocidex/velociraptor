@@ -83,8 +83,9 @@ func (self *HuntDispatcher) syncFlowTables(
 		}
 
 		flow, err := launcher.GetFlowDetails(
-			ctx, config_obj, participation_row.ClientId,
-			participation_row.FlowId)
+			ctx, config_obj,
+			services.GetFlowOptions{},
+			participation_row.ClientId, participation_row.FlowId)
 		if err != nil {
 			continue
 		}
@@ -192,7 +193,8 @@ func (self *HuntDispatcher) GetFlows(
 				// information.
 			} else {
 				collection_context, err = launcher.GetFlowDetails(
-					ctx, config_obj, client_id, flow_id)
+					ctx, config_obj, services.GetFlowOptions{},
+					client_id, flow_id)
 				if err != nil {
 					continue
 				}

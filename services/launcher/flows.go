@@ -80,6 +80,7 @@ func (self *Launcher) GetFlows(
 func (self *Launcher) GetFlowDetails(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	opts services.GetFlowOptions,
 	client_id string, flow_id string) (*api_proto.FlowDetails, error) {
 	if flow_id == "" || client_id == "" {
 		return &api_proto.FlowDetails{}, nil
@@ -91,11 +92,15 @@ func (self *Launcher) GetFlowDetails(
 		return nil, err
 	}
 
-	availableDownloads, _ := availableDownloadFiles(config_obj, client_id, flow_id)
-	return &api_proto.FlowDetails{
-		Context:            collection_context,
-		AvailableDownloads: availableDownloads,
-	}, nil
+	res := &api_proto.FlowDetails{
+		Context: collection_context,
+	}
+
+	// Include the AvailableDownloads
+	if opts.Downloads {
+		res.AvailableDownloads, _ = availableDownloadFiles(config_obj, client_id, flow_id)
+	}
+	return res, nil
 }
 
 // availableDownloads returns the prepared zip downloads available to

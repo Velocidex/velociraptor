@@ -21,6 +21,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -264,7 +265,8 @@ var (
 )
 
 // Fetch the next number of flow_request tasks off the queue and
-// dequeue them.
+// dequeue them. NOTE: This function can return more than number
+// messages but only number FlowRequest objects.
 func (self *ClientInfoManager) getClientTasks(
 	ctx context.Context, client_id string, number int) (
 	[]*crypto_proto.VeloMessage, error) {
@@ -307,8 +309,9 @@ func (self *ClientInfoManager) getClientTasks(
 		if message.FlowRequest != nil {
 			total_flow_requests++
 
-			// Only include the first number requests
-			if total_flow_requests <= number {
+			// Only include the first number requests, unless they are
+			// urgent requests which are always delivered regardless.
+			if total_flow_requests <= number || message.Urgent {
 				result = append(result, message)
 
 				// Add extra backwards compatibility messages for
@@ -392,6 +395,12 @@ func (self *ClientInfoManager) GetClientTasks(
 	// is not the same as len(inflight_notifications)
 	inflight_requests := 0
 
+	inflight_checks_enabled := true
+	if self.config_obj.Defaults != nil &&
+		self.config_obj.Defaults.DisableActiveInflightChecks {
+		inflight_checks_enabled = false
+	}
+
 	now := utils.GetTime().Now().Unix()
 
 	err := self.storage.Modify(ctx, self.config_obj, client_id,
@@ -411,15 +420,18 @@ func (self *ClientInfoManager) GetClientTasks(
 
 			// Check up on in flight flows every 60 sec at least
 			// (could be more depending on poll).
-			for k, v := range client_info.InFlightFlows {
-				if now-v > 60 {
-					inflight_notifications = append(inflight_notifications, k)
+			if inflight_checks_enabled {
+				for k, v := range client_info.InFlightFlows {
+					if now-v > 60 {
+						inflight_notifications = append(
+							inflight_notifications, k)
+					}
 				}
-			}
 
-			// Update the time to ensure we dont send these too often.
-			for _, k := range inflight_notifications {
-				client_info.InFlightFlows[k] = utils.GetTime().Now().Unix()
+				// Update the time to ensure we dont send these too often.
+				for _, k := range inflight_notifications {
+					client_info.InFlightFlows[k] = utils.GetTime().Now().Unix()
+				}
 			}
 
 			// Reset the HasTasks flag
@@ -457,23 +469,72 @@ func (self *ClientInfoManager) GetClientTasks(
 	// Add a notification request to the client asking about the
 	// status of currently in flight requests.
 	if len(inflight_notifications) > 0 {
-		result = append(result, &crypto_proto.VeloMessage{
-			SessionId: constants.STATUS_CHECK_WELL_KNOWN_FLOW,
-			FlowStatsRequest: &crypto_proto.FlowStatsRequest{
-				FlowId: inflight_notifications,
-			},
-		})
+		launcher, err := services.GetLauncher(self.config_obj)
+		if err != nil {
+			return nil, err
+		}
+
+		// Check the launcher if the flows are really in flight or
+		// were they already resolved.
+		verified := make([]string, 0, len(inflight_notifications))
+		resolved := make([]string, 0, len(inflight_notifications))
+		for _, n := range inflight_notifications {
+			// Only request status for flows that have not actually
+			// been completed.
+			flow_obj, err := launcher.GetFlowDetails(ctx, self.config_obj,
+				services.GetFlowOptions{}, client_id, n)
+			if err != nil {
+				continue
+			}
+
+			// If the flow is resolved we ignore it.
+			switch flow_obj.Context.State {
+			case flows_proto.ArtifactCollectorContext_FINISHED,
+				flows_proto.ArtifactCollectorContext_ERROR:
+				resolved = append(resolved, n)
+			default:
+				// All other flow states are still unclear what is
+				// happening with it?
+				verified = append(verified, n)
+			}
+		}
+
+		if len(resolved) > 0 {
+			self.storage.Modify(ctx, self.config_obj, client_id,
+				func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+					if client_info == nil ||
+						client_info.InFlightFlows == nil {
+						return nil, nil
+					}
+
+					for _, k := range resolved {
+						delete(client_info.InFlightFlows, k)
+					}
+					return client_info, nil
+				})
+		}
+
+		// Ask the client about those flows
+		if len(verified) > 0 {
+			result = append(result, &crypto_proto.VeloMessage{
+				SessionId: constants.STATUS_CHECK_WELL_KNOWN_FLOW,
+				FlowStatsRequest: &crypto_proto.FlowStatsRequest{
+					FlowId: verified,
+				},
+			})
+		}
 	}
 
 	// What new flows were added?
 	var inflight_flows []string
 	for _, message := range result {
+		// Filter out the FlowRequest checks
 		if message.FlowRequest != nil && message.SessionId != "" {
 			inflight_flows = append(inflight_flows, message.SessionId)
 		}
 	}
 
-	if len(inflight_flows) > 0 {
+	if inflight_checks_enabled && len(inflight_flows) > 0 {
 
 		// Add the inflight tags to the client record immediately.
 		err := self.storage.Modify(ctx, self.config_obj, client_id,

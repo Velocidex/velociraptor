@@ -1,5 +1,6 @@
 # Only trigger when a PR is committed.
 name: Linux Build Musl Static
+#on: [pull_request]
 on:
   pull_request:
     types: [closed]
@@ -25,19 +26,20 @@ jobs:
         go get -v -t -d ./...
         sudo apt-get update
         sudo apt-get install -y zip build-essential pkg-config libssl-dev
+
     - name: Install Musl
       run: |
-        wget http://www.musl-libc.org/releases/musl-1.1.23.tar.gz
-        tar -xvzf musl-1.1.23.tar.gz
-        cd musl-1.1.23
+        wget https://musl.libc.org/releases/musl-1.2.5.tar.gz
+        tar -xvzf musl-1.2.5.tar.gz
+        cd musl-1.2.5
         ./configure
         sudo make install
         cd ..
 
-    - name: Use Node.js v16
-      uses: actions/setup-node@v3
+    - name: Use Node.js
+      uses: actions/setup-node@v4
       with:
-        node-version: 16
+        node-version: 20
 
     - name: npm install gui
       run: |

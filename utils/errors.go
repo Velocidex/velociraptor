@@ -53,3 +53,11 @@ func Wrap(err error, format string, args ...interface{}) error {
 		Args:   args,
 	}
 }
+
+// Format an error as a string.
+func Errf(e error) interface{} {
+	if e == nil {
+		return nil
+	}
+	return e.Error()
+}

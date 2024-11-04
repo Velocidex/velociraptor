@@ -20,21 +20,36 @@ parameters:
   - name: ExcludeRegex
     default: WinSXS|Servicing
     type: regex
+  - name: LogPeriod
+    type: int
+    description: How often to log progress in seconds (Default every 1 sec)
+    default: 1
 
 sources:
   - query: |
       LET DLLs = SELECT OSPath, Name,
-             parse_pe(file=OSPath).Forwards AS Forwards,
 
              -- Remove the .dll extension if present to get the bare dll filename.
              lowcase(string=parse_string_with_regex(
-                  regex="^(?P<BareName>[^.]+)", string=Name).BareName) AS DLLBareName
-
+                  regex="^(?P<BareName>[^.]+)", string=Name).BareName) AS DLLBareName,
+             count() AS Total
         FROM glob(globs=DLLGlob)
         WHERE NOT OSPath =~ ExcludeRegex
 
+      LET ParsedDLLs = SELECT *,
+         log(message="Examining %v after checking %v DLLs",
+                     args=[OSPath, Total], dedup= LogPeriod ) AS Log
+      FROM foreach(
+          row=DLLs, workers=20,
+          query={
+              SELECT OSPath, Name,
+                     parse_pe(file=OSPath).Forwards AS Forwards,
+                     DLLBareName, Total
+              FROM scope()
+          })
+
       -- Speed up analysis a bit by using more workers.
-      SELECT * FROM foreach(row=DLLs, workers=20,
+      SELECT * FROM foreach(row=ParsedDLLs,
         query={
            SELECT OSPath AS DllPath, ForwardedImport,
 

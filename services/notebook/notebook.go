@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"net/url"
 	"os"
+	"path"
 	"strings"
 	"sync"
 
@@ -186,9 +186,19 @@ func (self *NotebookManager) UploadNotebookAttachment(
 		return nil, err
 	}
 
+	public_url, err := utils.GetBaseURL(self.config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate the URL to the resource
+	public_url.Path = path.Join(public_url.Path, full_path.AsClientPath())
+	values := public_url.Query()
+	values.Set("org_id", utils.NormalizedOrgId(self.config_obj.OrgId))
+	public_url.RawQuery = values.Encode()
+
 	result := &api_proto.NotebookFileUploadResponse{
-		Url: full_path.AsClientPath() + "?org_id=" +
-			url.QueryEscape(utils.NormalizedOrgId(self.config_obj.OrgId)),
+		Url:      public_url.String(),
 		Filename: filename,
 	}
 

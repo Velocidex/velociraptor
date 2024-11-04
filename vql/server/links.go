@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"path"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -48,13 +50,10 @@ func (self *LinkToFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	url := &url.URL{Path: "/"}
-	if config_obj.GUI.PublicUrl != "" {
-		url, err = url.Parse(config_obj.GUI.PublicUrl)
-		if err != nil {
-			scope.Log("link_to: Invalid configuration! GUI.public_url must be the public URL over which the GUI is served!: %v", err)
-			return vfilter.Null{}
-		}
+	url, err := utils.GetPublicUrl(config_obj)
+	if err != nil {
+		scope.Log("link_to: %v", err)
+		return vfilter.Null{}
 	}
 
 	org := arg.OrgId
@@ -98,7 +97,13 @@ func (self *LinkToFunction) Call(ctx context.Context,
 		}
 
 		// The link is an API call to VFSDownloadInfo
-		url.Path = "/api/v1/DownloadVFSFile"
+		url, err = utils.GetBaseURL(config_obj)
+		if err != nil {
+			scope.Log("link_to: %v", err)
+			return vfilter.Null{}
+		}
+
+		url.Path = path.Join(url.Path, "/api/v1/DownloadVFSFile")
 		query.Add("vfs_path", vfs_name)
 		for _, c := range components {
 			query.Add("fs_components", c)

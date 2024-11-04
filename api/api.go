@@ -385,7 +385,8 @@ func (self *ApiServer) GetFlowDetails(
 		return nil, Status(self.verbose, err)
 	}
 	result, err := launcher.GetFlowDetails(
-		ctx, org_config_obj, in.ClientId, in.FlowId)
+		ctx, org_config_obj, services.GetFlowOptions{Downloads: true},
+		in.ClientId, in.FlowId)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
