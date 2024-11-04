@@ -39,7 +39,7 @@
           <Component Id='Install' Guid='9f3cfed0-b89d-43d4-8fcf-242824e84fd8'>
             <CreateFolder>
               <Permission User="[WIX_ACCOUNT_USERS]" GenericRead="no" Read="no"
-                          ChangePermission="yes"/>
+                          ChangePermission="no"/>
               <Permission User="[WIX_ACCOUNT_ADMINISTRATORS]" GenericAll="yes"
                           ChangePermission="yes"/>
               <Permission User="[WIX_ACCOUNT_LOCALSYSTEM]" GenericAll="yes"
@@ -50,7 +50,7 @@
             <Component Id="Tools" Guid="97dc953a-8a2f-494f-9585-56ae526d0b48">
               <CreateFolder>
                 <Permission User="[WIX_ACCOUNT_USERS]" GenericRead="no" Read="no"
-                            ChangePermission="yes"/>
+                            ChangePermission="no"/>
                 <Permission User="[WIX_ACCOUNT_ADMINISTRATORS]" GenericAll="yes"
                             ChangePermission="yes"/>
                 <Permission User="[WIX_ACCOUNT_LOCALSYSTEM]" GenericAll="yes"
