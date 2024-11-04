@@ -21,7 +21,7 @@ import (
 type JournalPluginArgs struct {
 	Filenames []*accessors.OSPath `vfilter:"required,field=filename,doc=A list of journal log files to parse."`
 	Accessor  string              `vfilter:"optional,field=accessor,doc=The accessor to use."`
-	Raw       bool                `vfilter:"optional,field=raw,doc=Emit raw events (no parsed)."`
+	Raw       bool                `vfilter:"optional,field=raw,doc=Emit raw events (not parsed)."`
 	StartTime time.Time           `vfilter:"optional,field=start_time,doc=Only parse events newer than this time (default all times)."`
 	EndTime   time.Time           `vfilter:"optional,field=end_time,doc=Only parse events older than this time (default all times)."`
 }
@@ -105,6 +105,12 @@ func (self JournalPlugin) Call(
 	return output_chan
 }
 
+type WatchJournalPluginArgs struct {
+	Filenames []*accessors.OSPath `vfilter:"required,field=filename,doc=A list of journal log files to parse."`
+	Accessor  string              `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Raw       bool                `vfilter:"optional,field=raw,doc=Emit raw events (not parsed)."`
+}
+
 type WatchJournaldPlugin struct{}
 
 func (self WatchJournaldPlugin) Call(
@@ -117,7 +123,7 @@ func (self WatchJournaldPlugin) Call(
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor("watch_journald", args)()
 
-		arg := &JournalPluginArgs{}
+		arg := &WatchJournalPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("watch_journald: %v", err)
@@ -176,7 +182,7 @@ func (self WatchJournaldPlugin) Info(scope vfilter.Scope, type_map *vfilter.Type
 	return &vfilter.PluginInfo{
 		Name:     "watch_journald",
 		Doc:      "Watch a journald file and stream events from it. ",
-		ArgType:  type_map.AddType(scope, &JournalPluginArgs{}),
+		ArgType:  type_map.AddType(scope, &WatchJournalPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }

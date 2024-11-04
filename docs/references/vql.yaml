@@ -5869,7 +5869,7 @@
     description: The accessor to use.
   - name: raw
     type: bool
-    description: Emit raw events (no parsed).
+    description: Emit raw events (not parsed).
   - name: start_time
     type: time.Time
     description: Only parse events newer than this time (default all times).
@@ -10359,13 +10359,7 @@
     description: The accessor to use.
   - name: raw
     type: bool
-    description: Emit raw events (no parsed).
-  - name: start_time
-    type: time.Time
-    description: Only parse events newer than this time (default all times).
-  - name: end_time
-    type: time.Time
-    description: Only parse events older than this time (default all times).
+    description: Emit raw events (not parsed).
   metadata:
     permissions: FILESYSTEM_READ
   platforms:

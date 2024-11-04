@@ -309,8 +309,9 @@ func (self *ClientInfoManager) getClientTasks(
 		if message.FlowRequest != nil {
 			total_flow_requests++
 
-			// Only include the first number requests
-			if total_flow_requests <= number {
+			// Only include the first number requests, unless they are
+			// urgent requests which are always delivered regardless.
+			if total_flow_requests <= number || message.Urgent {
 				result = append(result, message)
 
 				// Add extra backwards compatibility messages for
