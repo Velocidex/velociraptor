@@ -102,7 +102,9 @@ sources:
 
         // Parse a URL to get the port or use 443. We deliberately do
         // not support plain http!
-        LET get_port(URL) = split(string=url(parse=URL).Host, sep=":")[1] || "443"
+        LET get_port(URL) = if(condition=url(parse=URL).Host =~ ":",
+            then=split(string=url(parse=URL).Host, sep=":")[1],
+            else="443")
 
         // extract Velociraptor config for policy
         LET extracted_config <= SELECT * FROM foreach(
