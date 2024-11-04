@@ -24,7 +24,7 @@ jobs:
       run: |
         go get -v -t -d ./...
         sudo apt-get update
-        sudo apt-get install -y zip build-essential pkg-config libssl-dev
+        sudo apt-get install -y zip build-essential pkg-config libssl-dev  gcc-aarch64-linux-gnu
 
     - name: Install Musl
       run: |
