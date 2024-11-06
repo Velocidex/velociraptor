@@ -52,7 +52,7 @@ Velociraptor is also useful as a local triage tool. You can create a self contai
 ## Building from source
 
 To build from source, make sure you have:
- - a recent Golang installed from https://golang.org/dl/ (Currently at least Go 1.17)
+ - a recent Golang installed from https://golang.org/dl/ (Currently at least Go 1.23.2)
    - the `go` binary is in your path.
    - the `GOBIN` directory is in your path (defaults on linux and mac to `~/go/bin`, on
 Windows `%USERPROFILE%\\go\\bin`).

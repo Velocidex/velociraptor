@@ -14,7 +14,7 @@ import (
 )
 
 func ParseJsonToObject(serialized []byte) (*ordereddict.Dict, error) {
-	if serialized[0] != '{' {
+	if len(serialized) == 0 || serialized[0] != '{' {
 		return nil, errors.New("Invalid JSON object")
 	}
 

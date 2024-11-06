@@ -472,8 +472,10 @@ loop:
 
 			// A directory has no member file
 		} else {
+			// Preserve the original casing for the directory
+			basename := cd_cache.full_path.Components[depth]
 			seen[member_name] = &ZipFileInfo{
-				_full_path: full_path.Append(member_name),
+				_full_path: full_path.Append(basename),
 			}
 		}
 	}
