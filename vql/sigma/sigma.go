@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/bradleyjkemp/sigma-go"
+	"github.com/Velocidex/sigma-go"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -63,6 +63,8 @@ func (self SigmaPlugin) Call(
 
 			// A rule must have a title
 			if rule.Title == "" {
+				scope.Log("sigma: Error parsing rule '%v': no title set",
+					utils.Elide(r, 20))
 				continue
 			}
 

@@ -195,7 +195,8 @@ sources:
 
                  FlowId, ClientId, URL, URL AS SafeURL, Base64Data,
 
-                 format(format="%02x", args="Hello") AS Data
+                 format(format="%02x", args="Hello") AS Data,
+                 TRUE, 4, NULL
           FROM scope()
 
       - type: Markdown
@@ -391,4 +392,26 @@ sources:
                 Foo=dict(A=1,
                          B=dict(z=1,
                                 nesting=dict(Foo="Hello world"))))) AS A
+          FROM scope()
+
+      - type: VQL
+        template: |
+          /*
+          # Test the link_to() VQL Function
+          */
+          LET ColumnTypes <= dict(
+            LinkToFlow="url_internal",
+            LinkToHunt="url_internal",
+            LinkToArtifact="url_internal",
+            Download="url_internal",
+            LinkToClient="url_internal")
+
+          LET s = scope()
+          LET Uploaded <= upload(accessor="data", file="Hello", name="test.txt")
+
+          SELECT link_to(client_id=ClientId, flow_id=s.FlowId || "F.123") AS LinkToFlow,
+                 link_to(client_id=ClientId) AS LinkToClient,
+                 link_to(hunt_id=s.HuntId || "H.123") AS LinkToHunt,
+                 link_to(artifact=ArtifactName) AS LinkToArtifact,
+                 link_to(upload=Uploaded) AS Download
           FROM scope()

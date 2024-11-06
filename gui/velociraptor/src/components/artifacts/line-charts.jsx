@@ -11,6 +11,10 @@ import { ReferenceArea, ResponsiveContainer,
 
 import { ToStandardTime, FormatRFC3339 } from '../utils/time.jsx';
 import UserConfig from '../core/user.jsx';
+import moment from 'moment';
+import ToolTip from '../widgets/tooltip.jsx';
+import T from '../i8n/i8n.jsx';
+import VeloValueRenderer from '../utils/value.jsx';
 
 const strokes = [
     "#ff7300", "#f48f8f", "#207300", "#f4208f"
@@ -21,6 +25,55 @@ const shapes = [
 ];
 
 class CustomTooltip extends React.Component {
+    static propTypes = {
+      type: PropTypes.string,
+      payload: PropTypes.array,
+      columns: PropTypes.array,
+      data: PropTypes.array,
+      active: PropTypes.any,
+    }
+
+    render() {
+        if (!this.props.active || _.isEmpty(this.props.payload)) {
+            return <></>;
+        };
+        let items = _.map(this.props.payload, (entry, i) => {
+            let style = {
+                color: entry.color || '#000',
+            };
+            let { name, value } = entry;
+            return (
+                <tr key={i}>
+                  <td className="" style={style}>{name}</td>
+                  <td className="" style={style}>{value}</td>
+                </tr>
+            );
+        });
+
+        let x_column = this.props.columns[0];
+        let first_series = this.props.payload[0];
+        let value = first_series.payload && first_series.payload[x_column];
+
+        return (
+            <>
+              <table className="custom-tooltip">
+                <tbody>
+                  <tr>
+                    <td>{x_column}</td>
+                    <td>
+                      <VeloValueRenderer value={value} />
+                    </td>
+                  </tr>
+                  {items}
+                </tbody>
+              </table>
+            </>
+        );
+  }
+};
+
+
+class TimeTooltip extends React.Component {
     static contextType = UserConfig;
 
     static propTypes = {
@@ -31,47 +84,52 @@ class CustomTooltip extends React.Component {
       active: PropTypes.any,
     }
 
+    fromLocalTZ = ts=>{
+        let timezone = this.context.traits.timezone || "UTC";
+        let zone = moment.tz.zone(timezone);
+        if (!zone) {
+            return ts;
+        }
+        return moment.utc(ts).add(zone.utcOffset(ts), "minutes").valueOf();
+    }
+
     render() {
-      const { active } = this.props;
-      if (active) {
-          const { payload } = this.props;
-          let items = _.map(payload, (entry, i) => {
-              let style = {
-                  color: entry.color || '#000',
-              };
-              let { name, value } = entry;
-              return (
-                  <tr key={`tooltip-item-${i}`}>
-                    <td className="" style={style}>{name}</td>
-                    <td className="" style={style}>{value}</td>
-                  </tr>
-              );
-          });
+        if (!this.props.active || _.isEmpty(this.props.payload)) {
+            return <></>;
+        };
+        let items = _.map(this.props.payload, (entry, i) => {
+            let style = {
+                color: entry.color || '#000',
+            };
+            let { name, value } = entry;
+            return (
+                <tr key={i}>
+                  <td className="" style={style}>{name}</td>
+                  <td className="" style={style}>{value}</td>
+                </tr>
+            );
+        });
 
-          let x_column = this.props.columns[0];
-          let value = payload[0].payload[x_column];
-          let now = ToStandardTime(value);
-          if (_.isNaN(now)) {
-              value = "";
-          } else if(_.isDate(now)) {
-              let timezone = this.context.traits.timezone || "UTC";
-              value = FormatRFC3339(now, timezone);
-          }
+        let x_column = this.props.columns[0];
+        let first_time = this.props.payload[0];
+        let value = first_time.payload && first_time.payload[x_column];
+        let now = ToStandardTime(value);
+        let timezone = this.context.traits.timezone || "UTC";
+        let formatted_value = FormatRFC3339(this.fromLocalTZ(now), timezone);
 
-          return (
-              <>
-                <table className="custom-tooltip">
-                  <tbody>
-                    <tr><td colSpan="2">{value}</td></tr>
-                    {items}
-                  </tbody>
-                </table>
-              </>
-          );
-      }
-      return null;
+        return (
+            <>
+              <table className="custom-tooltip">
+                <tbody>
+                  <tr><td colSpan="2">{formatted_value}</td></tr>
+                  {items}
+                </tbody>
+              </table>
+            </>
+        );
   }
 };
+
 
 class DefaultTickRenderer extends React.Component {
     static propTypes = {
@@ -102,6 +160,8 @@ class DefaultTickRenderer extends React.Component {
 
 
 class TimeTickRenderer extends React.Component {
+    static contextType = UserConfig;
+
     static propTypes = {
         x: PropTypes.number,
         y: PropTypes.number,
@@ -113,31 +173,30 @@ class TimeTickRenderer extends React.Component {
         transform: PropTypes.string,
     }
 
+    fromLocalTZ = ts=>{
+        let timezone = this.context.traits.timezone || "UTC";
+        let zone = moment.tz.zone(timezone);
+        if (zone) {
+            ts = moment.utc(ts).add(zone.utcOffset(ts), "minutes");
+        }
+        return {
+            str: FormatRFC3339(ts, timezone),
+            short: moment.tz(ts, timezone).format('YYYY-MM-DD'),
+        };
+    }
+
     render() {
-        let date = ToStandardTime(this.props.payload.value);
-        if (_.isNaN(date) || _.isUndefined(date.getUTCFullYear)) {
-            return <></>;
-        }
-        let first_date = this.props.data[0][this.props.dataKey];
-        let last_date =  this.props.data[this.props.data.length -1][this.props.dataKey];
-
-        let value = date.getUTCFullYear().toString().padStart(4, "0") + "-" +
-            (date.getUTCMonth()+1).toString().padStart(2, "0") + "-" +
-            date.getUTCDate().toString().padStart(2, "0");
-
-        if (last_date - first_date < 24 * 60 * 60) {
-            value = date.getUTCHours().toString().padStart(2, "0") + ":" +
-                date.getUTCMinutes().toString().padStart(2, "0");
-        }
-
+        let ts = this.fromLocalTZ(this.props.payload.value);
         return  (
-            <g transform={`translate(${this.props.x},${this.props.y})`}>
-              <text x={0} y={0} dy={16}
-                    textAnchor="end" fill="#666"
-                    transform={this.props.transform}>
-                {value}
-              </text>
-            </g>
+            <ToolTip tooltip={ts.str}>
+              <g transform={`translate(${this.props.x},${this.props.y})`}>
+                <text x={0} y={0} dy={16}
+                      textAnchor="end" fill="#666"
+                      transform={this.props.transform}>
+                  {ts.short}
+                </text>
+              </g>
+            </ToolTip>
         );
     }
 }
@@ -149,61 +208,96 @@ export class VeloLineChart extends React.Component {
         data: PropTypes.array,
     };
 
+    componentDidMount = () => {
+        this.syncData();
+    }
+
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        if(this.state.data.length != this.props.data.length) {
+            this.syncData();
+        }
+    }
+
+    // Sync the props data into the state after transforming it.
+    syncData = ()=>{
+        if (_.isEmpty(this.props.columns)) {
+            return;
+        }
+
+        let data = [];
+        let x_column = this.props.columns[0];
+        for(let i=0;i<this.props.data.length;i++){
+            let data_pt = Object.assign({}, this.props.data[i]);
+            data_pt[x_column] = this.toLocalX(data_pt[x_column]);
+            data.push(data_pt);
+        }
+        this.setState({data: data,
+                       x_column: x_column,
+                       columns: this.props.columns});
+    }
+
     state = {
+        // A local copy of the transformed data
         data: [],
-        left: 'dataMin',
-        right: 'dataMax',
+        x_column: "",
+        columns: [],
+
+        // Left and right boundaries of the selection zone.
         refAreaLeft: '',
         refAreaRight: '',
+
+        // The viewpoint x axis references - in local timezone.
+        left: 'dataMin',
+        right: 'dataMax',
         top: 'dataMax+1',
         bottom: 'dataMin-1',
-        animation: true,
+    }
+
+    toLocalX = x=>{
+        if(!_.isNumber(x)) {
+            return 0;
+        }
+
+        return x;
     }
 
     getAxisYDomain = (from, to, ref, offset) => {
-        let x_column = this.props.columns[0];
-        let from_factor = 1;
-        if (from > 2042040202) {
-            from_factor = 1000;
-        }
+        let left = 1e64;
+        let right = -1e64;
+        let top = -1e64;
+        let bottom = 1e64;
 
-        let data_factor = 1;
-        if (this.props.data.length === 0) {
-            return [0, 0, 0, 0];
-        }
-        if (this.props.data[0][x_column] > 2042040202) {
-            data_factor = 1000;
-        }
-
-        let factor = from_factor / data_factor;
-
-        // Find the index into data corresponding to the first and
-        // last x_column value.
-        let refData = _.filter(this.props.data,
-                               x => x[x_column] >= from / factor &&
-                               x[x_column] <= to / factor);
-        if (_.isEmpty(refData)) {
+        let x_column = this.state.columns[0];
+        if (this.state.data.length === 0 ||
+            this.state.columns.length < 2) {
             return [0, 0, 0, 0];
         }
 
-        // Find the top or bottom value that is largest of all
-        // columns.
-        let first_value = refData[0][this.props.columns[1]];
-        let [bottom, top] = [first_value, first_value];
-        /* eslint no-loop-func: "off" */
-        for (let i = 1; i<this.props.columns.length; i++) {
-            let column = this.props.columns[i];
-            refData.forEach((d) => {
-                if (d[column] > top) top = d[column];
-                if (d[column] < bottom) bottom = d[column];
-            });
+        for (let i=0; i<this.state.data.length; i++) {
+            let data_pt = this.state.data[i];
+            let x = data_pt[x_column];
+            if (x < from || x > to) {
+                continue;
+            }
+            if(x > right) {
+                right = x;
+            }
+            if (x < left) {
+                left = x;
+            }
+
+            for(let j=1;j<this.state.columns.length;j++) {
+                let y_column = this.state.columns[j];
+                let y = data_pt[y_column];
+                if(y > top) {
+                    top = y;
+                }
+                if (y < bottom) {
+                    bottom = y;
+                }
+            }
         }
-
-        let range = top-bottom;
-
-        return [refData[0][x_column] * factor,
-                refData[refData.length-1][x_column] * factor,
-                bottom - 0.1 * range, top + 0.1 * range];
+        return [left, right, bottom, top];
     };
 
     zoom = () => {
@@ -216,11 +310,14 @@ export class VeloLineChart extends React.Component {
             return;
         }
 
-        // xAxis domain
-        if (refAreaLeft > refAreaRight) [refAreaLeft, refAreaRight] = [refAreaRight, refAreaLeft];
+        // xAxis domain - make sure it is the correct orientation
+        if (refAreaLeft > refAreaRight) {
+            [refAreaLeft, refAreaRight] = [refAreaRight, refAreaLeft];
+        }
 
         // yAxis domain
-        const [left, right, bottom, top] = this.getAxisYDomain(refAreaLeft, refAreaRight, 1);
+        const [left, right, bottom, top] = this.getAxisYDomain(
+            refAreaLeft, refAreaRight, 1);
 
         this.setState(() => ({
             refAreaLeft: '',
@@ -243,48 +340,14 @@ export class VeloLineChart extends React.Component {
         }));
     }
 
-    // Force all data to numbers.
-    sanitizeData = data=>{
-        if (_.isEmpty(this.props.columns)) {
-            return data;
-        };
-        let xaxis_mode = this.props.params && this.props.params.xaxis_mode;
-        let x_column = this.props.columns[0];
-
-        return _.map(data, row=>{
-            let new_row = {};
-            _.each(row, (value, key)=>{
-                if (xaxis_mode && key === x_column) {
-                    let date = ToStandardTime(value);
-                    if (_.isDate(date)) {
-                        new_row[key] = date.getTime();
-                    }
-                } else {
-                    new_row[key] = _.toFinite(value);
-                }
-            });
-            return new_row;
-        });
-    }
-
     render() {
-        let data = this.sanitizeData(this.props.data);
-        let columns = this.props.columns;
-        if (_.isEmpty(columns)) {
-            return <div>No data</div>;
+        let data = this.state.data;
+        let columns = this.state.columns;
+        if (_.isEmpty(columns) || _.isEmpty(data)) {
+            return <div>{T("No data")}</div>;
         }
 
         let x_column = columns[0];
-        let tick_renderer = <DefaultTickRenderer transform="rotate(-35)" />;
-        let y_tick_renderer = <DefaultTickRenderer />;
-        let xaxis_mode = this.props.params && this.props.params.xaxis_mode;
-        if (xaxis_mode === "time") {
-            tick_renderer = <TimeTickRenderer
-                              data={data}
-                              transform="rotate(-35)"
-                              dataKey={x_column}/>;
-        }
-
         let lines = [];
         for(let i = 1; i<columns.length; i++) {
             let stroke = strokes[(i-1) % strokes.length];
@@ -292,9 +355,15 @@ export class VeloLineChart extends React.Component {
                 <Line type="monotone"
                       dataKey={columns[i]} key={i}
                       stroke={stroke}
+                      isAnimationActive={true}
                       animationDuration={300}
                       dot={false} />);
         }
+
+        if(_.isEmpty(lines)) {
+            return <div>{T("No data")}</div>;
+        }
+
         return (
             <div onDoubleClick={this.zoomOut} >
               <ResponsiveContainer width="95%"
@@ -327,24 +396,23 @@ export class VeloLineChart extends React.Component {
                          type="number"
                          allowDataOverflow
                          domain={[this.state.left || 0, this.state.right || 0]}
-                         tick={tick_renderer}
+                         tick={<DefaultTickRenderer transform="" />}
                   />
                   <YAxis
                     allowDataOverflow
                     domain={[this.state.bottom || 0, this.state.top || 0]}
-                    tick={y_tick_renderer}
+                    tick={<DefaultTickRenderer />}
                   />
-                  <Tooltip content={<CustomTooltip
-                                      data={data}
-                                      columns={this.props.columns}/>} />
+                  <Tooltip content={
+                      <CustomTooltip
+                        data={data}
+                        columns={this.props.columns}/>} />
                   {lines}
                   <CartesianGrid stroke="#f5f5f5" />
-                  {
-                      (this.state.refAreaLeft && this.state.refAreaRight) ? (
-                          <ReferenceArea x1={this.state.refAreaLeft}
-                                         x2={this.state.refAreaRight} strokeOpacity={0.3} />) : null
+                  {this.state.refAreaLeft && this.state.refAreaRight &&
+                   <ReferenceArea x1={this.state.refAreaLeft}
+                                  x2={this.state.refAreaRight} strokeOpacity={0.3} />
                   }
-
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -356,44 +424,29 @@ export class VeloLineChart extends React.Component {
 // Time charts receive one or more columns - the first column is a
 // time while each other column is data.
 export class VeloTimeChart extends VeloLineChart {
-    // Force all data to numbers.
-    sanitizeData = data=>{
-        if (_.isEmpty(this.props.columns)) {
-            return data;
-        };
-        let x_column = this.props.columns[0];
+    static contextType = UserConfig;
 
-        return _.map(data, row=>{
-            let new_row = {};
-            _.each(row, (value, key)=>{
-                // The x column must be converted to time.
-                if (key === x_column) {
-                    let date = ToStandardTime(value);
-                    if (_.isDate(date)) {
-                        new_row[key] = date.getTime();
-                    }
-                } else {
-                    new_row[key] = _.toFinite(value);
-                }
-            });
-            return new_row;
-        });
+    // Times must be shown in the local timezone (chosen by the user),
+    // so we store them internally as such.
+    toLocalX = ts=>{
+        ts = ToStandardTime(ts);
+        let timezone = this.context.traits.timezone || "UTC";
+        let zone = moment.tz.zone(timezone);
+        if (!zone) {
+            return ts;
+        }
+        return moment.utc(ts).subtract(zone.utcOffset(ts), "minutes").valueOf();
     }
 
     render() {
-        let data = this.sanitizeData(this.props.data);
-        let columns = this.props.columns;
-        if (_.isEmpty(columns)) {
-            return <div>No data</div>;
+        let data = this.state.data;
+        let columns = this.state.columns;
+        if (_.isEmpty(columns) || _.isEmpty(data)) {
+            return <div>{T("No data")}</div>;
         }
 
         let x_column = columns[0];
-        let tick_renderer = <TimeTickRenderer
-                              data={data}
-                              transform="rotate(-35)"
-                              dataKey={x_column}/>;
-
-        let lines = _.map(this.props.columns, (column, i)=>{
+        let lines = _.map(this.state.columns, (column, i)=>{
             if (i===0) {
                 return <div key={i}></div>;
             };
@@ -401,6 +454,7 @@ export class VeloTimeChart extends VeloLineChart {
             return <Line type="monotone"
                          dataKey={columns[i]} key={i}
                          stroke={stroke}
+                         isAnimationActive={true}
                          animationDuration={300}
                          dot={false} />;
         });
@@ -437,23 +491,26 @@ export class VeloTimeChart extends VeloLineChart {
                          type="number"
                          allowDataOverflow
                          domain={[this.state.left || 0, this.state.right || 0]}
-                         tick={tick_renderer}
+                         tick={<TimeTickRenderer
+                              data={data}
+                              transform="rotate(-35)"
+                              dataKey={x_column}/>}
                   />
                   <YAxis
                     allowDataOverflow
                     domain={[this.state.bottom || 0, this.state.top || 0]}
                   />
-                  <Tooltip content={<CustomTooltip
-                                      data={data}
-                                      columns={this.props.columns}/>} />
+                  <Tooltip content={
+                      <TimeTooltip
+                        data={data}
+                        columns={this.state.columns}/>} />
                   {lines}
                   <CartesianGrid stroke="#f5f5f5" />
-                  {
-                      (this.state.refAreaLeft && this.state.refAreaRight) ? (
-                          <ReferenceArea x1={this.state.refAreaLeft}
-                                         x2={this.state.refAreaRight} strokeOpacity={0.3} />) : null
+                  {this.state.refAreaLeft && this.state.refAreaRight &&
+                   <ReferenceArea x1={this.state.refAreaLeft}
+                                  x2={this.state.refAreaRight}
+                                  strokeOpacity={0.3} />
                   }
-
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -462,42 +519,19 @@ export class VeloTimeChart extends VeloLineChart {
 }
 
 export class VeloBarChart extends VeloLineChart {
-    // Force all data to numbers, except for the X axis which are
-    // strings.
-    sanitizeData = data=>{
-        if (_.isEmpty(this.props.columns)) {
-            return data;
-        };
-
-
-        // The first column is the label
-        let x_column = this.props.columns[0];
-
-        return _.map(data, (row, idx)=>{
-            // The x column must be converted to a string since it
-            // is the label.
-            let new_row = {
-                _name: _.toString(row[x_column]),
-            };
-            _.each(row, (value, key)=>{
-                if (key !== x_column) {
-                    new_row[key] = _.toFinite(value);
-                }
-            });
-            return new_row;
-        });
-    }
+    toLocalX = x=>_.toString(x);
 
     render() {
-        if (_.isEmpty(this.props.columns)) {
-            return <div>No data</div>;
+        let data = this.state.data;
+        let columns = this.state.columns;
+        if (_.isEmpty(columns) || _.isEmpty(data)) {
+            return <div>{T("No data")}</div>;
         }
 
         let chart_type = this.props.params && this.props.params.type;
-        let data = this.sanitizeData(this.props.data);
-
-        let lines =  _.map(this.props.columns, (column, i)=>{
-            // First column is the name, we do not build a line for it.
+        let lines =  _.map(this.state.columns, (column, i)=>{
+            // First column is the name, we do not build a line for
+            // it.
             if (i===0) {
                 return <div key={i}></div>;
             }
@@ -508,11 +542,12 @@ export class VeloBarChart extends VeloLineChart {
                 stackid = "A";
             }
             return <Bar type="monotone"
-                     dataKey={column} key={i}
-                     fill={fill}
-                     stroke={fill}
-                     stackId={stackid}
-                     animationDuration={300}
+                        dataKey={column} key={i}
+                        fill={fill}
+                        stroke={fill}
+                        stackId={stackid}
+                        isAnimationActive={true}
+                        animationDuration={300}
                    />;
         });
 
@@ -535,37 +570,38 @@ export class VeloBarChart extends VeloLineChart {
 }
 
 export class VeloScatterChart extends VeloLineChart {
-    sanitizeData = data=>{
+    syncData = ()=>{
         if (_.isEmpty(this.props.columns)) {
-            return data;
+            return;
+        }
+
+        let data = [];
+        let name_column = this.props.params && this.props.params.name_column;
+        if (!name_column) {
+            name_column = this.props.columns[0];
+        }
+
+        for(let i=0;i<this.props.data.length;i++){
+            let data_pt = Object.assign({}, this.props.data[i]);
+            data_pt[name_column] = _.toString(data_pt[name_column]);
+            data.push(data_pt);
         };
 
-        let name_column = this.props.params && this.props.params.name_column;
-
-        // All columns must be numbers.
-        return _.map(data, (row, idx)=>{
-            let new_row = {};
-            _.each(row, (value, key)=>{
-                if (key !== name_column) {
-                    new_row[key] = _.toFinite(value);
-                } else {
-                    new_row[key] = _.toString(value);
-                }
-            });
-            return new_row;
-        });
+        this.setState({data: data,
+                       columns: this.props.columns});
     }
 
     render() {
-        if (_.isEmpty(this.props.columns)) {
-            return <div>No data</div>;
+        let data = this.state.data;
+        let columns = this.state.columns;
+        if (_.isEmpty(columns) || _.isEmpty(data)) {
+            return <div>{T("No data")}</div>;
         }
 
         let name_column = this.props.params && this.props.params.name_column;
         if (!name_column) {
             name_column = this.props.columns[0];
         };
-        let data = this.sanitizeData(this.props.data);
         let lines = _.map(this.props.columns, (column, i)=>{
             if (column === name_column) {
                 return <div key={i}></div>;

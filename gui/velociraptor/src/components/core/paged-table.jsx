@@ -300,6 +300,19 @@ export class TablePaginationControl extends React.Component {
         goto_error: false,
     }
 
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        // The current cursor points beyond the end of the table, seek
+        // to the last page. This can happen if the table suddenly
+        // shrinks.
+        if (this.props.start_row > this.props.total_size) {
+            let last_page = this.getLastPage();
+            let last_row = last_page * this.props.page_size;
+            if(last_row !== this.props.start_row) {
+                this.props.onRowChange(last_row);
+            }
+        }
+    }
+
     renderLabel = (start, end, total_size)=>{
         end = end || 0;
         start = start || 0;
@@ -318,12 +331,8 @@ export class TablePaginationControl extends React.Component {
         return <>{padding}{start}-{end}/{total_size}</>;
     }
 
-    render() {
+    getLastPage = ()=>{
         let total_size = parseInt(this.props.total_size || 0);
-        if (total_size <=0) {
-            return <></>;
-        }
-
         let total_pages = parseInt(total_size / this.props.page_size) + 1;
         let last_page = total_pages - 1;
 
@@ -337,6 +346,11 @@ export class TablePaginationControl extends React.Component {
             last_page = 0;
         }
 
+        return last_page;
+    }
+
+    render() {
+        let last_page = this.getLastPage();
         let pages = [];
         let current_page = parseInt(this.props.start_row / this.props.page_size);
         let start_page = current_page - 4;
@@ -649,50 +663,18 @@ class VeloPagedTable extends Component {
     // Render the transformed view at the top right of the
     // table. Shows the user what transforms are currnetly active.
     getTransformed = ()=>{
-        let result = [];
         let transform = Object.assign({}, this.state.transform || {});
         if(_.isEmpty(transform) && !_.isEmpty(this.props.transform)) {
             Object.assign(transform, this.props.transform);
         }
 
-        if (transform.filter_column) {
-            result.push(
-                <ToolTip tooltip={T("Clear")} key="1" >
-                  <Button onClick={()=>{
-                      let new_transform = Object.assign({}, this.state.transform);
-                      new_transform.filter_column = undefined;
-                      this.setState({transform: new_transform});
-                  }}
-                          className="table-transformed"
-                          variant="outline-dark">
-                    { transform.filter_column } ( {transform.filter_regex} )
-                    <span className="transform-button">
-                      <FontAwesomeIcon icon="filter"/>
-                    </span>
-                  </Button>
-                </ToolTip>
-            );
+        if(_.isEmpty(transform)) {
+            return <></>;
         }
-
-        if (transform.sort_column) {
-            result.push(
-                <ToolTip tooltip={T("Transformed")} key="2" >
-                  <Button disabled={true}
-                          variant="outline-dark">
-                    {transform.sort_column}
-                    <span className="transform-button">
-                      {
-                          transform.sort_direction === "Ascending" ?
-                              <FontAwesomeIcon icon="sort-alpha-up"/> :
-                              <FontAwesomeIcon icon="sort-alpha-down"/>
-                      }
-                    </span>
-                  </Button>
-                </ToolTip>
-            );
-        }
-
-        return result;
+        return <TransformViewer
+                 transform={transform}
+                 setTransform={t=>this.setState({transform: t})}
+               />;
     }
 
     fetchRows = () => {
@@ -941,11 +923,9 @@ class VeloPagedTable extends Component {
                 { this.renderPaginator() }
 
               </ButtonGroup>
-              { transformed.length > 0 &&
                 <ButtonGroup className="float-right">
                   { transformed }
                 </ButtonGroup>
-              }
               { this.props.toolbar || <></> }
             </Navbar>
         );
@@ -1205,6 +1185,10 @@ class VeloPagedTable extends Component {
         let new_columns = [];
         let from_seen = false;
 
+        if (from_col === to_col) {
+            return;
+        }
+
         _.each(this.state.columns, x=>{
             if(x === to_col) {
                 if (from_seen) {
@@ -1293,3 +1277,59 @@ class VeloPagedTable extends Component {
 }
 
 export default VeloPagedTable;
+
+
+export class TransformViewer extends Component {
+    static propTypes = {
+        transform: PropTypes.object,
+        setTransform: PropTypes.func,
+    }
+
+    render() {
+        let transform = this.props.transform || {};
+        let result = [];
+
+        if (transform.filter_column) {
+            result.push(
+                <ToolTip tooltip={T("Clear")} key="1" >
+                  <Button onClick={()=>{
+                      let new_transform = Object.assign({}, this.props.transform);
+                      new_transform.filter_column = undefined;
+                      this.props.setTransform(new_transform);
+                  }}
+                          className="table-transformed"
+                          variant="outline-dark">
+                    { transform.filter_column } ( {transform.filter_regex} )
+                    <span className="transform-button">
+                      <FontAwesomeIcon icon="filter"/>
+                    </span>
+                  </Button>
+                </ToolTip>
+            );
+        }
+
+        if (transform.sort_column) {
+            result.push(
+                <ToolTip tooltip={T("Transformed")} key="2" >
+                  <Button onClick={()=>{
+                      let new_transform = Object.assign({}, this.props.transform);
+                      new_transform.sort_column = undefined;
+                      this.props.setTransform(new_transform);
+                  }}
+                          variant="outline-dark">
+                    {transform.sort_column}
+                    <span className="transform-button">
+                      {
+                          transform.sort_direction === "Ascending" ?
+                              <FontAwesomeIcon icon="sort-alpha-up"/> :
+                              <FontAwesomeIcon icon="sort-alpha-down"/>
+                      }
+                    </span>
+                  </Button>
+                </ToolTip>
+            );
+        }
+
+        return <>{result}</>;
+    }
+}

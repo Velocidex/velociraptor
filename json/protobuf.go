@@ -1,28 +1,10 @@
 package json
 
 import (
-	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
-
-func MustMarshalProtobufString(v interface{}, opts *json.EncOpts) string {
-	res, _ := MarshalProtobuf(v, opts)
-	return string(res)
-}
-
-func MarshalProtobuf(v interface{}, opts *json.EncOpts) ([]byte, error) {
-	self, ok := v.(proto.Message)
-	if !ok {
-		return nil, json.EncoderCallbackSkip
-	}
-
-	return protojson.MarshalOptions{
-		Multiline: true, Indent: "  ", UseProtoNames: true,
-	}.Marshal(self)
-}
 
 // Convert a protobuf to an ordered dict.  Ordered Dicts have more
 // predictable json serializations and are therefore more desirable

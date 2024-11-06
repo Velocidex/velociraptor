@@ -20,3 +20,7 @@
 .csv-table tr th.metadata-control {
     padding: 0px;
 }
+
+div.velo__menu {
+    z-index: 100;
+}

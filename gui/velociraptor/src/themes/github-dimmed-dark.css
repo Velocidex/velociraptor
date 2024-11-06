@@ -715,13 +715,14 @@ body.github-dimmed-dark {
 
 .github-dimmed-dark .report-viewer pre {
     filter: invert(1);
-  background: rgba(255,255,255,.05);
-  border-radius: 4px;
-  border: none;
-  padding-top: 2px;
-  padding-bottom: 2px;
-  padding-left: 4px;
-  padding-right: 4px;
+    background: rgba(255,255,255,.05);
+    color: var(--color-canvas-background);
+    border-radius: 4px;
+    border: none;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
 }
 
 .github-dimmed-dark .report-viewer code {

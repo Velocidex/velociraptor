@@ -1,13 +1,18 @@
-SELECT link_to(hunt_id="H.1234", type="hunt", text="Hunt Link") ,
-       link_to(client_id="C.123", flow_id="F.123", text='Flow link'),
-       link_to(client_id="C.123", artifact="Custom.Artifact.Name", text='Event link', type="event"),
-       link_to(artifact="Custom.Artifact.Name", text='Artifact link', type="artifact")
+LET ClientId <= client_create(client_id="C.123", hostname="My Client Hostname")[]LET Upload <= upload(accessor='data', file="hello", name="Text.txt")[]SELECT link_to(hunt_id="H.1234", text="Hunt Link") AS HuntLink,
+       link_to(client_id="C.123", flow_id="F.123") AS FlowLink,
+       link_to(client_id="C.123") AS ClientLink,
+       link_to(client_id="C.123", artifact="Custom.Artifact.Name",
+               text='Event link') AS ArtifactLink,
+       link_to(artifact="Custom.Artifact.Name", text='Artifact link'),
+       link_to(upload=Upload) AS Download
 FROM scope()
 [
  {
-  "link_to(hunt_id=\"H.1234\", type=\"hunt\", text=\"Hunt Link\")": null,
-  "link_to(client_id=\"C.123\", flow_id=\"F.123\", text='Flow link')": null,
-  "link_to(client_id=\"C.123\", artifact=\"Custom.Artifact.Name\", text='Event link', type=\"event\")": null,
-  "link_to(artifact=\"Custom.Artifact.Name\", text='Artifact link', type=\"artifact\")": null
+  "HuntLink": "[Hunt Link](/?org_id=root#/hunts/H.1234/overview)",
+  "FlowLink": "[F.123](/?org_id=root#/collected/C.123/F.123/overview)",
+  "ClientLink": "[C.123 (My Client Hostname)](/?org_id=root#/host/C.123)",
+  "ArtifactLink": "[Event link](/?org_id=root#/host/C.123)",
+  "link_to(artifact=\"Custom.Artifact.Name\", text='Artifact link')": "[Artifact link](/?org_id=root#/artifacts/Custom.Artifact.Name)",
+  "Download": "[/uploads/data/Text.txt](/api/v1/DownloadVFSFile?fs_components=uploads\u0026fs_components=data\u0026fs_components=Text.txt\u0026org_id=root\u0026vfs_path=%2Fuploads%2Fdata%2FText.txt)"
  }
-]
+]LET _ <= SELECT * FROM client_delete(client_id="C.123", really_do_it=TRUE)[]

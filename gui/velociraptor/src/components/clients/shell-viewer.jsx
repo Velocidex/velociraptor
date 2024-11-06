@@ -95,22 +95,27 @@ class _VeloShellCell extends Component {
             client_id: this.props.flow.client_id,
             flow_id: this.props.flow.session_id,
             rows: 500,
-        }, this.source.token).then(function(response) {
+        }, this.source.token).then(response=>{
             if (!response || !response.data || !response.data.rows) {
                 return;
             };
 
             let data = [];
+            let columns = response.data.columns || [];
             for(var row=0; row<response.data.rows.length; row++) {
-                var item = {};
-                var current_row = response.data.rows[row].cell;
-                for(var column=0; column<response.data.columns.length; column++) {
-                    item[response.data.columns[column]] = current_row[column];
+                let item = {};
+                let current_row = JSONparse(response.data.rows[row].json);
+                if (!_.isArray(current_row) || current_row.length < columns.length) {
+                    continue;
+                }
+
+                for(let column=0; column<columns.length; column++) {
+                    item[columns[column]] = current_row[column];
                 }
                 data.push(item);
             }
             this.setState({output: data, artifact: artifact});
-        }.bind(this));
+        });
     };
 
     cancelFlow = (e) => {
@@ -193,30 +198,30 @@ class _VeloShellCell extends Component {
             );
 
             flow_status.push(
-                <button className="btn btn-outline-info" key={6}
+                <Button className="btn btn-outline-info shell-info" key={6}
                         disabled>
                   <i><FontAwesomeIcon icon="spinner" spin /></i>
                   <VeloTimestamp usec={this.props.flow.create_time/1000} />
-                by {this.props.flow.request.creator}
-                </button>
+                - {this.props.flow.request.creator}
+                </Button>
             );
 
         } else if (this.props.flow.state  === 'FINISHED') {
             flow_status.push(
-                <button className="btn btn-outline-info" key={7}
+                <Button className="btn btn-outline-info shell-info" key={7}
                         disabled>
                   <VeloTimestamp usec={this.props.flow.active_time/1000} />
-                  by {this.props.flow.request.creator}
-                </button>
+                  - {this.props.flow.request.creator}
+                </Button>
             );
 
         } else if (this.props.flow.state  === 'ERROR') {
             flow_status.push(
-                <button className="btn btn-outline-info" key={8}
+                <button className="btn btn-outline-info shell-info" key={8}
                         disabled>
                   <i><FontAwesomeIcon icon="exclamation"/></i>
-                <VeloTimestamp usec={this.props.flow.create_time/1000} />
-            by {this.props.flow.request.creator}
+                  <VeloTimestamp usec={this.props.flow.create_time/1000} />
+                  - {this.props.flow.request.creator}
                 </button>
             );
         }
@@ -618,11 +623,14 @@ class ShellViewer extends Component {
                        console.log("No _Flow column!");
                        return;
                    }
-                   for(var i=0; i<rows.length; i++) {
+                   for(let i=0; i<rows.length; i++) {
+                       let row_json = JSONparse(rows[i].json);
+                       if (!_.isArray(row_json) || row_json.length < column_idx) {
+                           continue;
+                       }
+
                        // Column 8 is the _Flow column;
-                       let flow_json = rows[i] && rows[i].cell &&
-                           rows[i].cell[column_idx];
-                       let flow = JSONparse(flow_json);
+                       let flow = row_json[column_idx];
                        if (!flow || !flow.request) {
                            continue;
                        }

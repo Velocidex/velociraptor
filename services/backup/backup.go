@@ -17,7 +17,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -54,7 +53,7 @@ func (self *BackupService) CreateBackup(
 
 	// Create a container with the file.
 	container, err := reporting.NewContainerFromWriter(
-		self.config_obj, fd, "", 5, nil)
+		export_path.String(), self.config_obj, fd, "", 5, nil)
 	if err != nil {
 		fd.Close()
 		return nil, err
@@ -78,16 +77,57 @@ func (self *BackupService) CreateBackup(
 
 	defer container.Close()
 
+	org_container := &containerDelegate{
+		Container: container,
+	}
+
+	// The root org is responsible for dumping all child orgs as well.
+	if utils.IsRootOrg(self.config_obj.OrgId) {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return stats, err
+		}
+
+		for _, org := range org_manager.ListOrgs() {
+			backup, err := org_manager.Services(org.Id).BackupService()
+			if err != nil {
+				continue
+			}
+
+			prefix := fmt.Sprintf("orgs/%v", org.Id)
+			org_container := &containerDelegate{
+				Container: container,
+				prefix:    prefix,
+			}
+			org_stats, _ := backup.(*BackupService).writeBackups(
+				org_container, prefix)
+			stats = append(stats, org_stats...)
+		}
+
+		// Not the root org, just backup this org only.
+	} else if !utils.IsRootOrg(self.config_obj.OrgId) {
+		prefix := fmt.Sprintf("orgs/%v", utils.GetOrgId(self.config_obj))
+		org_stats, _ := self.writeBackups(org_container, prefix)
+		stats = append(stats, org_stats...)
+	}
+
+	return stats, err
+}
+
+func (self *BackupService) writeBackups(
+	container services.BackupContainerWriter,
+	prefix string) (stats []services.BackupStat, err error) {
+
 	// Now we can dump all providers into the file.
-	scope := vql_subsystem.MakeScope()
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 
 	for _, provider := range self.registrations {
-		dest := strings.Join(provider.Name(), "/")
+		dest := strings.Join(append([]string{prefix}, provider.Name()...), "/")
 		stat := services.BackupStat{
 			Name: provider.ProviderName(),
 		}
 
-		rows, err := provider.BackupResults(self.ctx, self.wg)
+		rows, err := provider.BackupResults(self.ctx, self.wg, container)
 		if err != nil {
 			logger.Info("BackupService: <red>Error writing to %v: %v",
 				dest, err)
@@ -98,8 +138,8 @@ func (self *BackupService) CreateBackup(
 		}
 
 		// Write the results to the container now
-		total_rows, err := container.WriteResultSet(self.ctx, self.config_obj,
-			scope, reporting.ContainerFormatJson, dest, rows)
+		total_rows, err := container.WriteResultSet(
+			self.ctx, self.config_obj, dest, rows)
 		if err != nil {
 			logger.Info("BackupService: <red>Error writing to %v: %v",
 				dest, err)
@@ -117,7 +157,8 @@ func (self *BackupService) CreateBackup(
 
 // Opens a backup file and recovers all the data in it.
 func (self *BackupService) RestoreBackup(
-	export_path api.FSPathSpec) (stats []services.BackupStat, err error) {
+	export_path api.FSPathSpec,
+	opts services.BackupRestoreOptions) (stats []services.BackupStat, err error) {
 	// Create a container to hold the backup
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 
@@ -141,8 +182,21 @@ func (self *BackupService) RestoreBackup(
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 
+	prefix := opts.Prefix
+	if prefix == "" {
+		prefix = fmt.Sprintf("orgs/%v", utils.GetOrgId(self.config_obj))
+	}
+
 	for _, provider := range self.registrations {
-		stat, err := self.feedProvider(provider, zip_reader)
+		if opts.ProviderRegex != nil && !opts.ProviderRegex.MatchString(
+			provider.ProviderName()) {
+			continue
+		}
+
+		stat, err := self.feedProvider(provider, zipDelegate{
+			Reader: zip_reader,
+			prefix: prefix,
+		})
 		if err != nil {
 			dest := strings.Join(provider.Name(), "/")
 			logger.Info("BackupService: <red>Error restoring to %v: %v",
@@ -158,7 +212,7 @@ func (self *BackupService) RestoreBackup(
 
 func (self *BackupService) feedProvider(
 	provider services.BackupProvider,
-	container *zip.Reader) (stat services.BackupStat, err error) {
+	container services.BackupContainerReader) (stat services.BackupStat, err error) {
 
 	dest := strings.Join(provider.Name(), "/")
 	member, err := container.Open(dest)
@@ -180,6 +234,8 @@ func (self *BackupService) feedProvider(
 		// Wait here until the provider is done.
 		stat = <-results
 		stat.Name = provider.ProviderName()
+		stat.OrgId = utils.GetOrgId(self.config_obj)
+
 		if stat.Error != nil {
 			err = stat.Error
 		}
@@ -198,7 +254,7 @@ func (self *BackupService) feedProvider(
 		defer close(results)
 
 		// Preserve the provider error as our return
-		stat, err := provider.Restore(sub_ctx, output)
+		stat, err := provider.Restore(sub_ctx, container, output)
 		if err != nil {
 			stat.Error = err
 		}

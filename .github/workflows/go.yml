@@ -4,8 +4,8 @@ name: Linux Build All Arches
 on:
   pull_request:
     types: [closed]
-#    branches:
-#      - master
+    branches:
+      - master
 
 jobs:
   build:
@@ -32,23 +32,10 @@ jobs:
         sudo apt-get upgrade
         sudo apt-get install mingw-w64-x86-64-dev gcc-mingw-w64-x86-64 gcc-mingw-w64 gcc-aarch64-linux-gnu
 
-    - name: Use Node.js v16
-      uses: actions/setup-node@v3
+    - name: Use Node.js
+      uses: actions/setup-node@v4
       with:
-        node-version: 16
-
-    - name: Cache node-modules
-      uses: actions/cache@v3
-      env:
-        cache-name: cache-node-modules
-      with:
-        path: |
-          **/node_modules/
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-build-${{ env.cache-name }}-
-          ${{ runner.os }}-build-
-          ${{ runner.os }}-
+        node-version: 20
 
     - name: npm install gui
       run: |

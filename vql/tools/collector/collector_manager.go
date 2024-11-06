@@ -563,7 +563,8 @@ func (self *collectionManager) Close() error {
 		return err
 
 	case self.output_chan <- ordereddict.NewDict().
-		Set("Container", self.Output):
+		Set("Container", self.Output).
+		Set("Error", utils.Errf(err)):
 	}
 
 	return err

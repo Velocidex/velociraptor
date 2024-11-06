@@ -26,7 +26,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -40,6 +39,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/filesystem"
@@ -528,7 +528,7 @@ func (self *_HttpPlugin) Call(
 		}
 
 		if arg.TempfileExtension != "" {
-			tmpfile, err := os.CreateTemp("", "tmp*"+arg.TempfileExtension)
+			tmpfile, err := tempfile.CreateTemp("tmp*" + arg.TempfileExtension)
 			if err != nil {
 				scope.Log("http_client: %v", err)
 				return

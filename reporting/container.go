@@ -30,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/files"
 	"www.velocidex.com/golang/vfilter"
 
 	"github.com/Velocidex/ordereddict"
@@ -99,6 +100,9 @@ type Container struct {
 
 	// The underlying file writer
 	fd io.WriteCloser
+
+	// We use this name to track the container for debugging.
+	name string
 
 	// Calculate the hash of the final container.
 	writer  *utils.TeeWriter
@@ -217,7 +221,9 @@ func (self *Container) WriteResultSet(
 			return total_rows, err
 		}
 
+		files.Add(dest)
 		defer func() {
+			files.Remove(dest)
 			result_set_writer.Close()
 		}()
 	}
@@ -277,6 +283,9 @@ func (self *Container) WriteJSON(name string, data interface{}) error {
 		return err
 	}
 	defer fd.Close()
+
+	files.Add(name)
+	defer files.Remove(name)
 
 	_, err = fd.Write(json.MustMarshalIndent(data))
 	return err
@@ -392,6 +401,9 @@ func (self *Container) Upload(
 	}
 	defer writer.Close()
 
+	files.Add(result.StoredName)
+	defer files.Remove(result.StoredName)
+
 	sha_sum := sha256.New()
 	md5_sum := md5.New()
 
@@ -446,6 +458,9 @@ func (self *Container) maybeCollectSparseFile(
 		return err
 	}
 	defer writer.Close()
+
+	files.Add(result.StoredName)
+	defer files.Remove(result.StoredName)
 
 	// For very large files we need to emit some progress reporting.
 	tee_writer, cancel := utils.NewDurationProgressWriter(
@@ -525,6 +540,9 @@ func (self *Container) maybeCollectSparseFile(
 		}
 		defer writer.Close()
 
+		files.Add(idx_upload.StoredName)
+		defer files.Remove(idx_upload.StoredName)
+
 		serialized, err := json.Marshal(index)
 		if err != nil {
 			return err
@@ -592,9 +610,19 @@ func (self *Container) Close() error {
 	// zip file.
 	self.writer_wg.Wait()
 
+	// self.zip is the zip we actually write in, while
+	// self.delegate_zip is the container zip. In the case where the
+	// output is encrypted, self.zip is pointing at `data.zip` so it
+	// must be closed **before** we close the containing zip (in
+	// self.delegate_zip).
 	self.zip.Close()
+	files.Remove(self.name)
 
+	// Only report the hash if we actually wrote something (few bytes
+	// Make sure the delegate is closed **before** we close the
+	// container zip.
 	if self.delegate_zip != nil {
+		files.Remove(self.name)
 		self.delegate_zip.Close()
 	}
 
@@ -641,11 +669,13 @@ func NewContainer(
 	if err != nil {
 		return nil, err
 	}
+	files.Add(path)
 
-	return NewContainerFromWriter(config_obj, fd, password, level, metadata)
+	return NewContainerFromWriter(path, config_obj, fd, password, level, metadata)
 }
 
 func NewContainerFromWriter(
+	name string,
 	config_obj *config_proto.Config, fd io.WriteCloser,
 	password string, level int64, metadata []vfilter.Row) (*Container, error) {
 
@@ -661,6 +691,7 @@ func NewContainerFromWriter(
 
 	result := &Container{
 		config_obj: config_obj,
+		name:       name,
 		fd:         fd,
 		sha_sum:    sha_sum,
 		writer:     utils.NewTee(fd, sha_sum),
@@ -671,7 +702,7 @@ func NewContainerFromWriter(
 
 	// We need to build a protected container.
 	if password != "" {
-
+		files.Add(name + "-delegate")
 		result.delegate_zip = zip.NewWriter(result.writer)
 		if metadata != nil && len(metadata) != 0 {
 			fh, err := result.delegate_zip.Create("metadata.json")
@@ -680,6 +711,7 @@ func NewContainerFromWriter(
 			}
 			fh.Write(json.MustMarshalIndent(metadata))
 		}
+
 		// We are writing a zip file into here - no need to
 		// compress.
 		fh := &zip.FileHeader{
@@ -692,8 +724,10 @@ func NewContainerFromWriter(
 			return nil, err
 		}
 
+		files.Add(name)
 		result.zip = concurrent_zip.NewWriter(result.delegate_fd)
 	} else {
+		files.Add(name)
 		result.zip = concurrent_zip.NewWriter(result.writer)
 		result.zip.RegisterCompressor(
 			zip.Deflate, func(out io.Writer) (io.WriteCloser, error) {
@@ -706,7 +740,6 @@ func NewContainerFromWriter(
 			}
 			fh.Write(json.MustMarshalIndent(metadata))
 			fh.Close()
-
 		}
 	}
 

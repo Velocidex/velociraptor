@@ -5,15 +5,22 @@ import (
 	"fmt"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/bradleyjkemp/sigma-go"
+	"github.com/Velocidex/sigma-go"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
 type Result struct {
-	Match            bool            // whether this event matches the Sigma rule
-	SearchResults    map[string]bool // For each Search, whether it matched the event
-	ConditionResults []bool          // For each Condition, whether it matched the event
+	// whether this event matches the Sigma rule
+	Match bool `json:"match,omitempty"`
+
+	// For each Search, whether it matched the event
+	SearchResults map[string]bool `json:"search_results,omitempty"`
+
+	// For each Condition, whether it matched the event
+	ConditionResults []bool `json:"condition_results,omitempty"`
+
+	CorrelationHits []*Event `json:"correlation_hits,omitempty"`
 }
 
 type VQLRuleEvaluator struct {
@@ -26,6 +33,10 @@ type VQLRuleEvaluator struct {
 	lambda_args *ordereddict.Dict
 
 	fieldmappings []FieldMappingRecord
+
+	// If this rule has a correlator, then forward the match to the
+	// correlator.
+	Correlator *SigmaCorrelator `json:"correlator,omitempty" yaml:"correlator,omitempty"`
 }
 
 type FieldMappingRecord struct {
@@ -74,7 +85,8 @@ func (self *VQLRuleEvaluator) MaybeEnrichWithVQL(
 }
 
 func (self *VQLRuleEvaluator) Match(ctx context.Context,
-	scope types.Scope, event *Event) (Result, error) {
+	scope types.Scope, event *Event) (*Result, error) {
+
 	subscope := scope.Copy().AppendVars(
 		ordereddict.NewDict().
 			Set("Event", event).
@@ -94,7 +106,7 @@ func (self *VQLRuleEvaluator) Match(ctx context.Context,
 
 		eval_result, err := self.evaluateSearch(ctx, subscope, search, event)
 		if err != nil {
-			return Result{}, fmt.Errorf("error evaluating search %s: %w", identifier, err)
+			return nil, fmt.Errorf("error evaluating search %s: %w", identifier, err)
 		}
 		result.SearchResults[identifier] = eval_result
 	}
@@ -118,7 +130,7 @@ func (self *VQLRuleEvaluator) Match(ctx context.Context,
 		case searchMatches && condition.Aggregation != nil:
 			aggregationMatches, err := self.evaluateAggregationExpression(ctx, conditionIndex, condition.Aggregation, event)
 			if err != nil {
-				return Result{}, err
+				return nil, err
 			}
 			if aggregationMatches {
 				result.Match = true
@@ -128,5 +140,11 @@ func (self *VQLRuleEvaluator) Match(ctx context.Context,
 		}
 	}
 
-	return result, nil
+	// If we get here the base rule would have matched - if there is a
+	// correlator tell it about it.
+	if result.Match && self.Correlator != nil {
+		return self.Correlator.Match(ctx, scope, self, event)
+	}
+
+	return &result, nil
 }

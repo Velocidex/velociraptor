@@ -18,7 +18,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter } from "react-router-dom";
 
 import VeloForm from '../forms/form.jsx';
-import VeloPagedTable, { TablePaginationControl } from '../core/paged-table.jsx';
+import VeloPagedTable, {
+    TablePaginationControl,
+    TransformViewer,
+} from '../core/paged-table.jsx';
 
 import NewHuntWizard from './new-hunt.jsx';
 import DeleteNotebookDialog from '../notebooks/notebook-delete.jsx';
@@ -53,15 +56,32 @@ class ModifyHuntDialog extends React.Component {
 
     state = {
         description: "",
+
+        // In RFC3339
         expires: "",
+
+        // All the tags we know about from all hunts
+        all_tags: [],
+
+        // Tags to be assigned to the hunt
         tags: [],
     }
 
+    // Fetch all available tags to prefill the selector box.
     getTags = ()=>{
         api.get("v1/GetHuntTags", {}, this.source.token).then(response=>{
                 if (response && response.data &&
                     response.data.tags && response.data.tags.length) {
-                    this.setState({tags: response.data.tags});
+                    this.setState({
+                        all_tags: response.data.tags,
+                    });
+
+                    // Prefill the current set of tags for this hunt.
+                    let hunt = this.props.hunt;
+                    if(hunt) {
+                        let tags = this.props.hunt.tags || [];
+                        this.setState({tags: [...tags]});
+                    }
                 };
         });
     }
@@ -87,14 +107,14 @@ class ModifyHuntDialog extends React.Component {
         let hunt_id = this.props.hunt &&
             this.props.hunt.hunt_id;
 
-        let description = this.state.description || this.props.hunt.hunt_description;
-        let tags = this.state.tags || this.props.hunt.tags || [];
+        let description = this.state.description ||
+            this.props.hunt.hunt_description;
 
         if (!hunt_id) { return; };
 
         api.post("v1/ModifyHunt", {
             hunt_description: description,
-            tags: tags,
+            tags: this.state.tags,
             expires: this.getExpiryEpoch() * 1000000,
             hunt_id: hunt_id,
         }, this.source.token).then((response) => {
@@ -107,12 +127,12 @@ class ModifyHuntDialog extends React.Component {
         let expires = this.getExpiryEpoch();
         let now = Date.now() / 1000;
 
-        let options = _.map(this.state.tags, x=>{
-            return {value: x, label: x, isFixed: true, color: "#00B8D9"};
+        let options = _.map(this.state.all_tags, x=>{
+            return {value: x, label: x};
         });
 
-        let tag_defaults = _.map(this.props.hunt.tags,
-                             x=>{return {value: x, label: x};});
+        let tag_defaults = _.map(this.state.tags,
+                                 x=>{return {value: x, label: x};});
 
         return <Modal show={true}
                       size="lg"
@@ -140,7 +160,7 @@ class ModifyHuntDialog extends React.Component {
                          onChange={(e)=>{
                              this.setState({tags: _.map(e, x=>x.value)});
                          }}
-                         placeholder={T("Hunt Tags")}
+                         placeholder={T("Hunt Tags (Type to create new Tag)")}
                          spellCheck="false"
                          defaultValue={tag_defaults}
                        />
@@ -154,7 +174,7 @@ class ModifyHuntDialog extends React.Component {
                    <VeloForm
                      param={{name: T("Expiry"), type: "timestamp",
                              description: T("Time hunt will expire")}}
-                     value={expires}
+                     value={this.state.expires}
                      setValue={x=>this.setState({expires:x})}
                    />
                    { expires < now &&
@@ -422,11 +442,16 @@ class HuntList extends React.Component {
         };
 
         let state = this.props.selected_hunt && this.props.selected_hunt.state;
-        if (this.props.selected_hunt.stats && this.props.selected_hunt.stats.stopped) {
+        if (this.props.selected_hunt.stats &&
+            this.props.selected_hunt.stats.stopped) {
             state = 'STOPPED';
         }
 
-        let tab = this.props.match && this.props.match.params && this.props.match.params.tab;
+        let tab = this.props.match && this.props.match.params &&
+            this.props.match.params.tab;
+
+        let transform = this.state.transform || {};
+
         return (
             <>
               {this.state.showWizard &&
@@ -571,13 +596,15 @@ class HuntList extends React.Component {
                     </Button>
                   </ToolTip>
 
-                  { !this.state.filter ?
+                  { transform.filter_column !== "Creator" ?
                     <ToolTip tooltip={T("Show only my hunts")}>
                       <Button onClick={()=>{
-                                  this.setState({transform: {editing: "", filter_column: "Creator", filter_regex: username},
-                                                 filter: username});
-                                  this.incrementVersion();
-                              }}
+                          this.setState({transform: {
+                              filter_column: "Creator",
+                              filter_regex: username,
+                          }});
+                          this.incrementVersion();
+                      }}
                               variant="default">
                         <FontAwesomeIcon icon="user" />
                         <span className="sr-only">{T("Show only my hunts")}</span>
@@ -586,7 +613,7 @@ class HuntList extends React.Component {
                     :
                     <ToolTip tooltip={T("Show all hunts")}>
                       <Button onClick={()=>{
-                                  this.setState({transform: {}, filter: ""});
+                                  this.setState({transform: {}});
                                   this.incrementVersion();
                               }}
                               variant="default">
@@ -597,8 +624,8 @@ class HuntList extends React.Component {
                   }
                 </ButtonGroup>
 
-                { this.state.page_state &&
-                  <ButtonGroup>
+                <ButtonGroup>
+                { this.state.page_state ?
                     <TablePaginationControl
                       total_size={this.state.page_state.total_size}
                       start_row={this.state.page_state.start_row}
@@ -607,8 +634,12 @@ class HuntList extends React.Component {
                                     this.state.page_state.page_size}
                       onRowChange={this.state.page_state.onRowChange}
                       onPageSizeChange={this.state.page_state.onPageSizeChange}
-                    />
-                  </ButtonGroup> }
+                    /> :  <TablePaginationControl total_size={0}/> }
+                  <TransformViewer
+                    transform={this.state.transform}
+                    setTransform={t=>this.setState({transform: t})}
+                  />
+                </ButtonGroup>
 
                 {tab === "notebook" &&
                  <ButtonGroup className="float-right">

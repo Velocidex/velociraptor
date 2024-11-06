@@ -17,7 +17,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 // Represents a single flow on the client. Previously flows were
@@ -149,44 +148,6 @@ func newFlowContext(ctx context.Context,
 	}()
 
 	return self
-}
-
-func makeCheckpoint(
-	config_obj *config_proto.Config,
-	flow_id string) string {
-
-	if config_obj == nil ||
-		config_obj.Client == nil ||
-		config_obj.Client.DisableCheckpoints {
-		return ""
-	}
-
-	checkpoint, err := tempfile.TempFile(
-		fmt.Sprintf("checkpoint_*.%s", flow_id))
-	if err != nil {
-		return ""
-	}
-	// Start off with something sensible.
-	checkpoint.Write([]byte(
-		json.Format(`{"session_id": %q, "flow_stats": {}}`, flow_id)))
-	// We just need the name
-	checkpoint.Close()
-
-	writeback_service := writeback.GetWritebackService()
-	writeback_service.MutateWriteback(config_obj,
-		func(wb *config_proto.Writeback) error {
-			wb.Checkpoints = append(wb.Checkpoints,
-				&config_proto.FlowCheckPoint{
-					FlowId: flow_id,
-					Path:   checkpoint.Name(),
-				})
-			return writeback.WritebackUpdateLevel2
-		})
-
-	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-	logger.Info("Creating a flow checkpoint at <green>%v</>", checkpoint.Name())
-
-	return checkpoint.Name()
 }
 
 // Is the flow complete? A flow is complete when all its queries are

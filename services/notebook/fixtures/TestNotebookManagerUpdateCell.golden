@@ -3,13 +3,13 @@
   "name": "Test Notebook",
   "description": "This is a test",
   "creator": "admin",
-  "created_time": 10,
-  "modified_time": 10,
+  "created_time": 16,
+  "modified_time": 16,
   "notebook_id": "N.01",
   "cell_metadata": [
    {
     "cell_id": "NC.02",
-    "timestamp": 10,
+    "timestamp": 16,
     "type": "markdown",
     "current_version": "03",
     "available_versions": [
@@ -26,7 +26,7 @@
   "messages": [
    "DEBUG:Query Stats: {\"RowsScanned\":0,\"PluginsCalled\":0,\"FunctionsCalled\":0,\"ProtocolSearch\":0,\"ScopeCopy\":0}\n"
   ],
-  "timestamp": 10,
+  "timestamp": 17,
   "type": "markdown",
   "current_version": "04",
   "available_versions": [
@@ -36,13 +36,13 @@
  },
  "VQL Cell": {
   "input": "SELECT _value AS X FROM range(end=2)",
-  "output": "\u003cdiv class=\"panel\"\u003e\u003cvelo-csv-viewer base-url=\"'v1/GetTable'\" params='%7B%22notebook_id%22%3A%22N.01%22%2C%22client_id%22%3A%22%22%2C%22cell_id%22%3A%22NC.02-05%22%2C%22table_id%22%3A1%2C%22TableOptions%22%3A%7B%7D%2C%22Version%22%3A10%7D' /\u003e\u003c/div\u003e",
+  "output": "\u003cdiv class=\"panel\"\u003e\u003cvelo-csv-viewer base-url=\"'v1/GetTable'\" params='%7B%22notebook_id%22%3A%22N.01%22%2C%22client_id%22%3A%22%22%2C%22cell_id%22%3A%22NC.02-05%22%2C%22table_id%22%3A1%2C%22TableOptions%22%3A%7B%7D%2C%22Version%22%3A18%7D' /\u003e\u003c/div\u003e",
   "data": "{}",
   "cell_id": "NC.02",
   "messages": [
    "DEBUG:Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":0,\"ProtocolSearch\":0,\"ScopeCopy\":5}\n"
   ],
-  "timestamp": 10,
+  "timestamp": 18,
   "type": "vql",
   "current_version": "05",
   "available_versions": [
@@ -55,13 +55,13 @@
   "name": "Test Notebook",
   "description": "This is a test",
   "creator": "admin",
-  "created_time": 10,
-  "modified_time": 10,
+  "created_time": 16,
+  "modified_time": 18,
   "notebook_id": "N.01",
   "cell_metadata": [
    {
     "cell_id": "NC.02",
-    "timestamp": 10,
+    "timestamp": 18,
     "type": "vql",
     "current_version": "05",
     "available_versions": [

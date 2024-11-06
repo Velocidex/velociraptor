@@ -36,12 +36,16 @@ func Retry(r *assert.R, t *testing.T, filename string, golden []byte) {
 }
 
 func Assert(t *testing.T, filename string, golden []byte) {
+	t.Helper()
+
 	g := goldie.New(t)
 	g.WithFixtureDir("fixtures")
 	g.Assert(t, filename, golden)
 }
 
 func AssertJson(t *testing.T, filename string, golden interface{}) {
+	t.Helper()
+
 	g := goldie.New(t)
 	g.WithFixtureDir("fixtures")
 	g.Assert(t, filename, MustMarshalIndent(golden))

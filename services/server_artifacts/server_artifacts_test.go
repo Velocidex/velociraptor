@@ -120,7 +120,8 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 		defer mu.Unlock()
 
 		details, err = launcher.GetFlowDetails(
-			self.Ctx, self.ConfigObj, "server", flow_id)
+			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
+			"server", flow_id)
 		assert.NoError(self.T(), err)
 
 		return details.Context.State != flows_proto.ArtifactCollectorContext_RUNNING
@@ -187,7 +188,8 @@ sources:
 	// Wait for the flow to be created
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
 		_, err := launcher.GetFlowDetails(
-			self.Ctx, self.ConfigObj, "server", "F.1234")
+			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
+			"server", "F.1234")
 		return err == nil
 	})
 

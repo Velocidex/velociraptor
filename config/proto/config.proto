@@ -945,6 +945,9 @@ message DatastoreConfig {
     int64 memcache_datastore_max_item_size = 11;
     int64 memcache_datastore_max_dir_size = 12;
 
+    // Remote datastore is used by the minion (default 1000 sec)
+    int64 remote_datastore_rpc_deadline = 18;
+
     // Experimental - do not set in configs yet!
     string minion_implementation = 7;
     string master_implementation = 8;
@@ -1247,6 +1250,11 @@ message Defaults {
     // clients with the key department and value contains accounting
     // in their client metadata.
     repeated string indexed_client_metadata = 51;
+
+    // If this is set we do not actively check the status of inflight
+    // collections. This is a new feature and may need to be disabled
+    // in some large deployments.
+    bool disable_active_inflight_checks = 52;
 }
 
 // Configures crypto preferences

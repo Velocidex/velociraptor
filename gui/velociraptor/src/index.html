@@ -14,7 +14,8 @@
       window.base_path = "{{.BasePath}}";
       /// Support development
       if (window.base_path.substring(0,2) === "\{\{") {
-          window.base_path = "";
+          window.base_path = "/";
+          window.globals.base_path = window.base_path;
       }
 
       // Set the OrgId from the URL if possible.

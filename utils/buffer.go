@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 )
 
@@ -12,9 +13,16 @@ type BufferCloser struct {
 }
 
 func (self *BufferCloser) Close() error {
-	self.Flush()
+	err := self.Writer.Flush()
+	if err != nil {
+		return err
+	}
 
 	return self.fd.Close()
+}
+
+func (self *BufferCloser) GoString() string {
+	return fmt.Sprintf("BufferCloser: %v on %#v", self.Buffered(), self.fd)
 }
 
 func NewBufferCloser(fd io.WriteCloser) *BufferCloser {

@@ -24,11 +24,18 @@ import (
 var (
 	remote_mu             sync.Mutex
 	remote_datastopre_imp = NewRemoteDataStore(context.Background())
-	RPC_TIMEOUT           = 100 // Seconds
 	RPC_BACKOFF           = 10.0
 	RPC_RETRY             = 10
-	timeoutError          = errors.New("Timeout")
+	timeoutError          = errors.New("gRPC Timeout in Remote datastore")
 )
+
+func RPCTimeout(config_obj *config_proto.Config) time.Duration {
+	if config_obj.Datastore == nil ||
+		config_obj.Datastore.RemoteDatastoreRpcDeadline == 0 {
+		return time.Duration(100 * time.Second)
+	}
+	return time.Duration(config_obj.Datastore.RemoteDatastoreRpcDeadline) * time.Second
+}
 
 func Retry(ctx context.Context,
 	config_obj *config_proto.Config, cb func() error) error {
@@ -93,8 +100,8 @@ func (self *RemoteDataStore) _GetSubject(
 
 	defer Instrument("read", "RemoteDataStore", urn)()
 
-	ctx, cancel := context.WithTimeout(context.Background(),
-		time.Duration(RPC_TIMEOUT)*time.Second)
+	ctx, cancel := context.WithTimeoutCause(
+		context.Background(), RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 
 	// Make the call as the superuser
@@ -190,8 +197,8 @@ func (self *RemoteDataStore) _SetSubjectWithCompletion(
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(),
-		time.Duration(RPC_TIMEOUT)*time.Second)
+	ctx, cancel := context.WithTimeoutCause(
+		context.Background(), RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 
 	// Make the call as the superuser
@@ -229,8 +236,8 @@ func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
 
 	defer Instrument("delete", "RemoteDataStore", urn)()
 
-	ctx, cancel := context.WithTimeout(context.Background(),
-		time.Duration(RPC_TIMEOUT)*time.Second)
+	ctx, cancel := context.WithTimeoutCause(
+		context.Background(), RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 
 	conn, closer, err := grpc_client.Factory.GetAPIClient(
@@ -270,8 +277,8 @@ func (self *RemoteDataStore) _DeleteSubject(
 
 	defer Instrument("delete", "RemoteDataStore", urn)()
 
-	ctx, cancel := context.WithTimeout(context.Background(),
-		time.Duration(RPC_TIMEOUT)*time.Second)
+	ctx, cancel := context.WithTimeoutCause(
+		context.Background(), RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 
 	conn, closer, err := grpc_client.Factory.GetAPIClient(
@@ -314,8 +321,8 @@ func (self *RemoteDataStore) _ListChildren(
 
 	defer Instrument("list", "RemoteDataStore", urn)()
 
-	ctx, cancel := context.WithTimeout(context.Background(),
-		time.Duration(RPC_TIMEOUT)*time.Second)
+	ctx, cancel := context.WithTimeoutCause(
+		context.Background(), RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 
 	conn, closer, err := grpc_client.Factory.GetAPIClient(

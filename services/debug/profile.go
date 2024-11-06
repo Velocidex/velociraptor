@@ -2,8 +2,10 @@ package debug
 
 import (
 	"context"
+	"strings"
 	"sync"
 
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -37,4 +39,29 @@ func GetProfileWriters() (result []ProfileWriterInfo) {
 	}
 
 	return result
+}
+
+func DumpWriter(
+	ctx context.Context, scope vfilter.Scope, name string) string {
+	var rows []string
+	for _, w := range GetProfileWriters() {
+		if w.Name == name {
+			output_chan := make(chan vfilter.Row)
+
+			go func() {
+				defer close(output_chan)
+
+				for r := range output_chan {
+					line := json.MustMarshalString(r)
+					if !strings.Contains(line, "Destroyed") {
+						rows = append(rows, line)
+					}
+				}
+			}()
+
+			w.ProfileWriter(ctx, scope, output_chan)
+		}
+	}
+
+	return strings.Join(rows, "\n")
 }
