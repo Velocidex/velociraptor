@@ -1,0 +1,46 @@
+name: Linux.Events.EBPF
+description: |
+  This artifact forwards EBPF events generated on the endpoint.
+
+precondition: |
+  SELECT OS From info() where OS = 'linux'
+
+type: CLIENT_EVENT
+
+parameters:
+  - name: Events
+    description: Events to forward
+    type: csv
+    default: |
+      Event,Desc,Enabled
+      accept4,A process accepted a connection from remote,Y
+      bpf_attach,A bpf program is attached,Y
+      chdir,Process changes directory,N
+      fchownat,File ownership is changed,Y
+      file_modification,A process changes the ctime of a file,N
+      kill,Kill another process,Y
+      magic_write,Intercepts file writes to capture the header magic,N
+      mkdir,Process makes new directory,N
+      module_free,A module is unloaded from the kernel,Y
+      mount,A filesystem is mounted,Y
+      openat,A process is opening a file (noisy),N
+      openat2,A process is opening a file (noisy),N
+      sched_process_exec,A process starts,Y
+      sched_process_exit,A process ends,Y
+      security_file_open,Files are opened,Y
+      security_inode_mknod,A new node is created with mknod (e.g. fifo or device file),Y
+      security_inode_rename,File is being renamed,N
+      security_inode_symlink,Create a symlink,Y
+      security_kernel_post_read_file,Fires when the kernel reads a file (e.g. module),Y
+      security_socket_accept,A process accepted a connection,Y
+      security_socket_bind,A process bind to a local port,Y
+      security_socket_connect,A process is making a connection,Y
+      setxattr,Setting and extended attribute to a file,Y
+      umount2,A filesystem is being unmounted,Y
+      unlink,A file is deleted,Y
+
+sources:
+  - query: |
+      LET SelectedEvents <= SELECT * FROM Events WHERE Enabled =~ "Y"
+
+      SELECT * FROM watch_ebpf(events=SelectedEvents.Event)

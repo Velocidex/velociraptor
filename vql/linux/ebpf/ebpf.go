@@ -30,7 +30,8 @@ type EBPFEventPlugin struct{}
 func (self EBPFEventPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:     "watch_ebpf",
-		Doc:      "Watched for events from eBPF.",
+		Doc:      "Watch for events from eBPF.",
+		ArgType:  type_map.AddType(scope, &EBPFEventPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
@@ -87,7 +88,7 @@ func (self EBPFEventPlugin) Call(
 			}
 
 			if arg.IncludeEnv {
-				config.Options |= ebpf.OptExecEnv
+				config.Options |= ebpf.OptExecEnv | ebpf.OptTranslateFDFilePath
 			}
 
 			gEbpfManager, err = ebpf.NewEBPFManager(
@@ -125,6 +126,44 @@ func (self EBPFEventPlugin) Call(
 	return output_chan
 }
 
+type EBPFEventListPlugin struct{}
+
+func (self EBPFEventListPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name: "ebpf_events",
+		Doc:  "Dump information about potential ebpf_events that can be used by the watch_ebpf() plugin",
+	}
+}
+
+func (self EBPFEventListPlugin) Call(
+	ctx context.Context, scope vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor("watch_ebpf", args)()
+
+		events := ebpf.GetEvents()
+		for _, event := range events.Keys() {
+			value, _ := events.Get(event)
+
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- ordereddict.NewDict().
+				Set("Event", event).
+				Set("Metadata", value):
+			}
+		}
+
+	}()
+	return output_chan
+}
+
 func init() {
+	vql_subsystem.RegisterPlugin(&EBPFEventListPlugin{})
 	vql_subsystem.RegisterPlugin(&EBPFEventPlugin{})
 }
