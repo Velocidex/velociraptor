@@ -1779,6 +1779,13 @@
     plugin (see Windows.Events.DNSQueries)
   type: Plugin
   category: windows
+- name: ebpf_events
+  description: |
+    Dump information about potential ebpf_events that can be used by the
+    watch_ebpf() plugin.
+  type: Plugin
+  platforms:
+  - linux_amd64_cgo
 - name: efivariables
   description: Enumerate efi variables.
   type: Plugin
@@ -10262,6 +10269,27 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: watch_ebpf
+  description: |
+    Watch for events from eBPF.
+
+    This plugin uses the integrated tracee eBPF engine to stream events.
+
+    See https://github.com/Velocidex/tracee_velociraptor for more details.
+  type: Plugin
+  args:
+  - name: events
+    type: string
+    description: A list of event names to acquire. You can get a list of event names using the ebpf_events() plugin.
+    repeated: true
+    required: true
+  - name: include_env
+    type: bool
+    description: Include process environment variables.
+  metadata:
+    permissions: MACHINE_STATE
+  platforms:
+  - linux_amd64_cgo
 - name: watch_etw
   description: Watch for events from an ETW provider.
   type: Plugin
@@ -10807,4 +10835,3 @@
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
-

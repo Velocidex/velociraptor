@@ -30,7 +30,8 @@ func WriteProfile(ctx context.Context,
 			Set("NumberOfListeners", stats.NumberOfListeners).
 			Set("EIDMonitored", stats.EIDMonitored).
 			Set("IdleTime", idle).
-			Set("IdleUnloadTimeout", stats.IdleUnloadTimeout.String())
+			Set("IdleUnloadTimeout", stats.IdleUnloadTimeout.String()).
+			Set("EventCount", stats.EventCount)
 	}
 }
 
