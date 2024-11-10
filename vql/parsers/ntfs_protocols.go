@@ -87,7 +87,7 @@ func (self _MFTHighlightAssociative) GetMembers(
 		"IsDir",
 		"HasADS",
 		"SI_Lt_FN",
-		"uSecZeros",
+		"USecZeros",
 		"Copied",
 		"SIFlags",
 		"Created0x10",
