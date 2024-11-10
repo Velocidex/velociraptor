@@ -1,0 +1,55 @@
+name: Linux.Events.HTTPConnections
+description: |
+  This artifact uses eBPF to track HTTP and parse connections from
+  various processes.
+
+  NOTE: This event is generated from network traffic - it is unable to
+  view TLS encrypted data.
+
+  If the process tracker is enabled we also show more information
+  about the process.
+
+type: CLIENT_EVENT
+
+precondition: |
+  SELECT OS From info() where OS = 'linux'
+
+parameters:
+  - name: HostFilter
+    description: Filter Events by Host header
+    type: regex
+    default: .
+  - name: URLFilter
+    description: Filter Events by URL
+    type: regex
+    default: .
+  - name: ProcessNameFilter
+    description: Filter Events by Process Name
+    type: regex
+    default: .
+  - name: IncludeHeaders
+    type: bool
+    description: If set we include more details like HTTP Headers
+  - name: IncludeProcessInfo
+    type: bool
+    description: If set we include more process information.
+
+sources:
+  - query: |
+      SELECT System.Timestamp AS Timestamp,
+             System.ProcessName AS ProcessName,
+             System.ProcessID AS Pid,
+             if(condition=IncludeProcessInfo,
+                then=process_tracker_get(id=System.ProcessID).Data) AS ProcessInfo,
+             EventData.metadata.src_ip AS src_ip,
+             EventData.metadata.src_port AS src_port,
+             EventData.metadata.dst_ip AS dest_ip,
+             EventData.metadata.dst_port AS dest_port,
+             EventData.http_request.host AS host,
+             EventData.http_request.uri_path AS uri_path,
+             if(condition=IncludeHeaders,
+                then=EventData.http_request) AS _HTTPRequest
+      FROM watch_ebpf(events="net_packet_http_request")
+      WHERE host =~ HostFilter
+        AND uri_path =~ URLFilter
+        AND ProcessName =~ ProcessNameFilter

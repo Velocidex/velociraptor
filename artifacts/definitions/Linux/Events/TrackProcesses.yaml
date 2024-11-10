@@ -1,6 +1,6 @@
 name: Linux.Events.TrackProcesses
 description: |
-  This artifact uses ebpfg and pslist to keep track of running
+  This artifact uses ebpf and pslist to keep track of running
   processes using the Velociraptor process tracker.
 
   The process tracker keeps track of exited processes, and resolves
