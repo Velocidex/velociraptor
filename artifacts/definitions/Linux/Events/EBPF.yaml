@@ -13,7 +13,6 @@ parameters:
     type: csv
     default: |
       Event,Desc,Enabled
-      accept4,A process accepted a connection from remote,Y
       bpf_attach,A bpf program is attached,Y
       chdir,Process changes directory,N
       fchownat,File ownership is changed,Y

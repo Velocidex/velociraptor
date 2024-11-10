@@ -372,7 +372,7 @@ From {{ Scope "StartTime" }} to {{ Scope "EndTime" }}
 SELECT timestamp(epoch=_ts) AS ServerTime, *
  FROM source(start_time=StartTime, end_time=EndTime)
 LIMIT 50
-`, artifact_name, start_time, end_time),
+`, start_time, end_time, artifact_name),
 		})
 	}
 

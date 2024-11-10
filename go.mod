@@ -77,7 +77,7 @@ require (
 	golang.org/x/mod v0.21.0
 	golang.org/x/net v0.30.0
 	golang.org/x/sys v0.26.0
-	golang.org/x/text v0.19.0
+	golang.org/x/text v0.20.0
 	golang.org/x/time v0.5.0
 	google.golang.org/api v0.169.0
 	google.golang.org/genproto v0.0.0-20240213162025-012b6fc9bca9 // indirect
@@ -90,12 +90,12 @@ require (
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20240730174545-3e4ff3d96433
 	www.velocidex.com/golang/go-ese v0.2.1-0.20240919031214-2aa005106db2
-	www.velocidex.com/golang/go-ntfs v0.2.1-0.20240818145200-04736de821dc
+	www.velocidex.com/golang/go-ntfs v0.2.1-0.20241110090212-80bdce4262fa
 	www.velocidex.com/golang/go-pe v0.1.1-0.20230228112150-ef2eadf34bc3
 	www.velocidex.com/golang/go-prefetch v0.0.0-20240910051453-2385582c1c22
 	www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe
 	www.velocidex.com/golang/regparser v0.0.0-20240404115756-2169ac0e3c09
-	www.velocidex.com/golang/vfilter v0.0.0-20241009150353-76c3a28b1767
+	www.velocidex.com/golang/vfilter v0.0.0-20241110073117-207766c3922f
 )
 
 require (
@@ -115,7 +115,7 @@ require (
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
 	github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9
-	github.com/Velocidex/tracee_velociraptor v0.0.0-20241108032058-fada576fc41e
+	github.com/Velocidex/tracee_velociraptor v0.0.0-20241110080019-ef8be33cb3b1
 	github.com/VirusTotal/gyp v0.9.0
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/alitto/pond v1.8.3
@@ -169,7 +169,6 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
-	github.com/aquasecurity/tracee/types v0.0.0-20241031161530-c8032d24da01 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.1 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.2 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.2 // indirect
@@ -202,6 +201,7 @@ require (
 	github.com/golang/gddo v0.0.0-20210115222349-20d68f94ee1f // indirect
 	github.com/golang/glog v1.2.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.2 // indirect
@@ -210,6 +210,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hillu/go-yara/v4 v4.3.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
@@ -248,7 +249,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c // indirect
-	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sync v0.9.0 // indirect
 	golang.org/x/term v0.25.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241015192408-796eee8c2d53 // indirect
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.71 // indirect
