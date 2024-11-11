@@ -115,7 +115,7 @@ require (
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
 	github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9
-	github.com/Velocidex/tracee_velociraptor v0.0.0-20241110080019-ef8be33cb3b1
+	github.com/Velocidex/tracee_velociraptor v0.0.0-20241111012344-d72a7f2cb144
 	github.com/VirusTotal/gyp v0.9.0
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/alitto/pond v1.8.3
