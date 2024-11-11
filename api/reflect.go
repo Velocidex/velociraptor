@@ -39,8 +39,6 @@ var (
 
 // Loads the api description from the embedded asset
 func LoadApiDescription() ([]*api_proto.Completion, error) {
-	assets.InitOnce()
-
 	data, err := assets.ReadFile("docs/references/vql.yaml")
 	if err != nil {
 		return nil, err

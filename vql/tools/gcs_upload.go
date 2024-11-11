@@ -131,12 +131,16 @@ func upload_gcs(ctx context.Context, scope vfilter.Scope,
 			scope.Log("upload_gcs: SUCCESS writing to object: %v",
 				string(serialized))
 
-			report := "Hash mismatch!!!"
 			if string(attr.MD5) == string(md5_sum.Sum(nil)) {
-				report = "Hash checks out."
+				scope.Log(
+					"DEBUG: upload_gcs: <red>GCS Calculated MD5: %016x Hash checks out.",
+					attr.MD5)
+
+			} else {
+				scope.Log(
+					"ERROR: upload_gcs: <red>GCS Calculated MD5: %016x Hash mismatch!!!",
+					attr.MD5)
 			}
-			scope.Log("ERROR: upload_gcs: <red>GCS Calculated MD5: %016x %v",
-				attr.MD5, report)
 		}
 	}()
 

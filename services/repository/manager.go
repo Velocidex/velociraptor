@@ -419,17 +419,10 @@ func LoadBuiltInArtifacts(ctx context.Context,
 
 	now := time.Now()
 
-	assets.InitOnce()
-
-	files, err := assets.WalkDirs("", false)
-	if err != nil {
-		return err
-	}
-
 	count := 0
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	for _, file := range files {
-		if strings.HasPrefix(file, "artifacts/definitions") &&
+	for file := range assets.Inventory {
+		if strings.HasPrefix(file, "/artifacts/definitions") &&
 			strings.HasSuffix(file, "yaml") {
 			data, err := assets.ReadFile(file)
 			if err != nil {

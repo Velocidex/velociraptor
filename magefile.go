@@ -36,6 +36,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/Velocidex/fileb0x/runner"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	"gopkg.in/yaml.v2"
@@ -44,11 +45,11 @@ import (
 )
 
 var (
-	assets = map[string]string{
-		"artifacts/b0x.yaml":        "artifacts/assets/ab0x.go",
-		"config/b0x.yaml":           "config/ab0x.go",
-		"gui/velociraptor/b0x.yaml": "gui/velociraptor/ab0x.go",
-		"crypto/b0x.yaml":           "crypto/ab0x.go",
+	assets = []string{
+		"artifacts/b0x.yaml",
+		"config/b0x.yaml",
+		"gui/velociraptor/b0x.yaml",
+		"crypto/b0x.yaml",
 	}
 
 	index_template = "gui/velociraptor/build/index.html"
@@ -495,18 +496,9 @@ func hash() string {
 	return hash
 }
 
+// Build the asset by linking directly to fileb0x
 func fileb0x(asset string) error {
-	err := sh.Run("fileb0x", asset)
-	if err != nil {
-		err = sh.Run(mg.GoCmd(), "install", "github.com/Velocidex/fileb0x@d54f4040016051dd9657ce04d0ae6f31eab99bc6")
-		if err != nil {
-			return err
-		}
-
-		err = sh.Run("fileb0x", asset)
-	}
-
-	return err
+	return runner.Process(asset)
 }
 
 func ensure_assets() error {
@@ -516,18 +508,10 @@ func ensure_assets() error {
 		index_template, `="/app/assets/index`,
 		`="{{.BasePath}}/app/assets/index`)
 
-	for asset, target := range assets {
-		before := timestamp_of(target)
+	for _, asset := range assets {
 		err := fileb0x(asset)
 		if err != nil {
 			return err
-		}
-		// Only do this if the file has changed.
-		if before != timestamp_of(target) {
-			err = replace_string_in_file(target, "func init()", "func Init()")
-			if err != nil {
-				return err
-			}
 		}
 	}
 

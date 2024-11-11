@@ -47,7 +47,7 @@ func install_static_assets(
 	dir := utils.Join(base, "/app/")
 	mux.Handle(dir, ipFilter(config_obj, http.StripPrefix(
 		dir, fixCSSURLs(config_obj,
-			gzipped.FileServer(NewCachedFilesystem(ctx, gui_assets.HTTP))))))
+			gzipped.FileServer(NewCachedFilesystem(ctx, gui_assets.NewHTTPFS()))))))
 
 	mux.Handle("/favicon.png",
 		http.RedirectHandler(utils.Join(base, "/favicon.ico"),
@@ -56,8 +56,6 @@ func install_static_assets(
 
 func GetTemplateHandler(
 	config_obj *config_proto.Config, template_name string) (http.Handler, error) {
-	gui_assets.InitOnce()
-
 	data, err := gui_assets.ReadFile(template_name)
 	if err != nil {
 		// It is possible that the binary was not built with the GUI
