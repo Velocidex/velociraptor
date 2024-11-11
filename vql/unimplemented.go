@@ -106,7 +106,6 @@ func InstallUnimplemented(scope vfilter.Scope) {
 		"windows_386_cgo", "windows_amd64_cgo",
 		"darwin_amd64_cgo":
 
-		assets.InitOnce()
 		data, err := assets.ReadFile("docs/references/vql.yaml")
 		if err != nil {
 			return

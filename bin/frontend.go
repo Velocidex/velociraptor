@@ -22,7 +22,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/config"
-	assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -89,11 +88,6 @@ func doFrontend() error {
 	if *compression_flag {
 		logger.Info("Disabling artifact compression.")
 		config_obj.Frontend.DoNotCompressArtifacts = true
-	}
-
-	// Load the assets into memory if we are the master node.
-	if services.IsMaster(config_obj) {
-		assets.InitOnce()
 	}
 
 	// Increase resource limits.
