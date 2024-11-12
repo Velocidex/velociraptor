@@ -72,7 +72,7 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 
 		hunt_obj, pres := hunt_dispatcher.GetHunt(ctx, arg.HuntId)
 		if !pres {
-			scope.Log("hunt_delete: not found")
+			scope.Log("hunt_delete: %s not found", arg.HuntId)
 			return
 		}
 
@@ -86,7 +86,7 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 		flow_chan, _, err := hunt_dispatcher.GetFlows(
 			ctx, config_obj, options, scope, arg.HuntId, 0)
 		if err != nil {
-			scope.Log("hunt_delete: %v", err)
+			scope.Log("hunt_delete: %s: %v", arg.HuntId, err)
 			return
 		}
 
@@ -100,8 +100,8 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 				flow_details.Context.SessionId,
 				services.NoAuditLogging, arg.ReallyDoIt)
 			if err != nil {
-				scope.Log("hunt_delete: %v", err)
-				return
+				scope.Log("hunt_delete: %s: %v", arg.HuntId, err)
+				continue
 			}
 
 			for _, res := range results {
@@ -121,7 +121,7 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 			}
 			journal, err := services.GetJournal(config_obj)
 			if err != nil {
-				scope.Log("hunt_delete: %s", err)
+				scope.Log("hunt_delete: %s: %s", arg.HuntId, err)
 				return
 			}
 
