@@ -262,8 +262,13 @@ const upload = function(url, files, params) {
 
 // Internal Routes declared in api/proxy.go Assume base_path is regex
 // safe due to the sanitation in the sanitation service.
+// A link is considered internal if:
+// * it is relative
+// * it has a known prefix and
+// * it either starts with base path or not - URLs that do not start
+//   with the base path will be fixed later.
 const internal_links = new RegExp(
-    "^" + base_path + "/api|app|notebooks|downloads|hunts|clients/");
+    "^(" + base_path + ")?/(api|app|notebooks|downloads|hunts|clients)/");
 
 // Prepare a suitable href link for <a>
 // This function accepts a number of options:
@@ -334,7 +339,13 @@ const src_of = function (url) {
     if (url && url.match(/^data/)) {
         return url;
     }
-    return path.join(window.base_path, url);
+
+    // If the URL does not already start with base path ensure it does
+    // now.
+    if (!url.startsWith(window.base_path)) {
+        return path.join(window.base_path, url);
+    }
+    return url;
 };
 
 const error = function(msg) {
