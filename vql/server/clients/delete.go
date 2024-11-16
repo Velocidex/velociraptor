@@ -46,7 +46,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 		}
 
 		if !constants.ClientIdRegex.MatchString(arg.ClientId) {
-			scope.Log("ERROR:client_delete: Client Id should be of the form C.XXXX")
+			scope.Log("ERROR:client_delete: Client Id '%s' should be of the form C.XXXX", arg.ClientId)
 			return
 		}
 
