@@ -23,3 +23,5 @@ config/ab0x.go
 **/.DS_Store
 .DS_Store
 /googleapis
+
+__debug*

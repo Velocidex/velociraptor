@@ -108,7 +108,8 @@ func (self *NotebookStoreImpl) RemoveAttachment(ctx context.Context,
 	}
 
 	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
-	attachment_path := path_specs.NewUnsafeFilestorePath(components...)
+	attachment_path := path_specs.NewUnsafeFilestorePath(components...).
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
 	if !path_specs.IsSubPath(
 		notebook_path_manager.AttachmentDirectory(),
 		attachment_path) {

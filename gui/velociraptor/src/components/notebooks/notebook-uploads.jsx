@@ -11,50 +11,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ToolTip from '../widgets/tooltip.jsx';
+import classNames from "classnames";
+import Form from 'react-bootstrap/Form';
 
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 
 import T from '../i8n/i8n.jsx';
 const POLL_TIME = 5000;
-
-class UploadDialog extends Component {
-   static propTypes = {
-        notebook: PropTypes.object,
-        cell: PropTypes.object,
-        closeDialog: PropTypes.func.isRequired,
-    }
-
-    componentDidMount = () => {
-        this.source = CancelToken.source();
-    }
-
-    componentWillUnmount() {
-        this.source.cancel("unmounted");
-    }
-
-    render() {
-        return <Modal show={true}
-                      size="lg"
-                      onHide={this.props.closeDialog} >
-                 <Modal.Header closeButton>
-                   <Modal.Title>
-                     {T("Select file to upload")}
-                   </Modal.Title>
-                 </Modal.Header>
-                 <Modal.Body>
-                 </Modal.Body>
-                 <Modal.Footer>
-                   <Button variant="secondary"
-                           onClick={this.props.closeDialog}>
-                     {T("Close")}
-                   </Button>
-                 </Modal.Footer>
-               </Modal>;
-    }
-
-}
-
 
 export default class NotebookUploads extends Component {
     static propTypes = {
@@ -65,6 +29,8 @@ export default class NotebookUploads extends Component {
 
     state = {
         notebook: {},
+        upload: {},
+        upload_info: {},
     }
 
     componentDidMount = () => {
@@ -80,6 +46,41 @@ export default class NotebookUploads extends Component {
     componentWillUnmount() {
         this.source.cancel("unmounted");
         clearInterval(this.interval);
+    }
+
+    uploadFile = () => {
+        if (!this.state.upload.name) {
+            return;
+        }
+
+        let notebook_id = this.props.notebook &&
+            this.props.notebook.notebook_id;
+
+        this.setState({loading: true});
+
+        let blob = this.state.upload;
+        let reader = new FileReader();
+        reader.onload = event=>{
+            let request = {
+                data: reader.result.split(",")[1],
+                notebook_id: notebook_id,
+                filename: blob.name,
+                size: blob.size,
+                disable_attachment_id: true,
+            };
+
+            api.post(
+                "v1/UploadNotebookAttachment",
+                request, this.source.token).then(response => {
+                    this.setState({loading:false,
+                                   upload: {},
+                                   upload_info: {}});
+                    this.fetchNotebookDetails();
+            }).catch(response=>{
+                this.setState({loading: false});
+            });
+        };
+        reader.readAsDataURL(blob);
     }
 
     fetchNotebookDetails = () => {
@@ -107,14 +108,40 @@ export default class NotebookUploads extends Component {
 
         components[components.length-1] += type;
 
-        return <a href={api.href("/api/v1/DownloadVFSFile", {
-            fs_components: components,
-            vfs_path: cell + type,
-        })}
+        return <a href={
+            api.href("/api/v1/DownloadVFSFile", {
+                fs_components: components,
+                vfs_path: cell + type,
+            })}
+                  key={row.name}
                   target="_blank" download
                   rel="noopener noreferrer">
                  {row.name} { type && <FontAwesomeIcon icon="note-sticky"/>}
                </a>;
+    }
+
+    getDeleteLink = (cell, row) =>{
+        let stats = row.stats || {};
+        let components = stats.components;
+
+        if (!components.length) {
+            return <></>;
+        };
+
+        let notebook_id = this.props.notebook &&
+            this.props.notebook.notebook_id;
+
+        return <Button key={row.name}
+                 onClick={()=>{
+            api.post("v1/RemoveNotebookAttachment", {
+                components: components,
+                notebook_id: notebook_id,
+            }, this.source.token).then(response => {
+                this.fetchNotebookDetails();
+            });
+        }}>
+                 <FontAwesomeIcon icon="trash"/>
+               </Button>;
     }
 
     render() {
@@ -124,6 +151,8 @@ export default class NotebookUploads extends Component {
         files = files || [];
 
         let columns = formatColumns([
+            {dataField: "",
+             text: T("Delete"), formatter: this.getDeleteLink},
             {dataField: "name", text: T("Name"),
              sort: true, filtered: true, formatter: this.getDownloadLink},
             {dataField: "size", text: T("Size")},
@@ -143,12 +172,45 @@ export default class NotebookUploads extends Component {
                 <Navbar className="toolbar">
                   <ButtonGroup>
                     <ToolTip tooltip={T("Upload")}>
-                      <Button onClick={()=>this.setState({showUploadDialog: true})}
-                              variant="default">
-                        <FontAwesomeIcon icon="fa-file-download"/>
-                        <span className="sr-only">{T("Upload")}</span>
+                      <Button
+                        disabled={!this.state.upload.name}
+                        onClick={this.uploadFile}>
+                        { this.state.loading ?
+                          <FontAwesomeIcon icon="spinner" spin /> :
+                          T("Upload")
+                        }
                       </Button>
                     </ToolTip>
+                    <Form.Control
+                      type="file" id="upload"
+                      onChange={e => {
+                          if (!_.isEmpty(e.currentTarget.files)) {
+                              this.setState({
+                                  upload_info: {},
+                                  upload: e.currentTarget.files[0],
+                              });
+                          }
+                      }}
+                    />
+                    { this.state.upload_info.filename &&
+                      <a className="btn btn-default-outline"
+                         href={ api.href(this.state.upload_info.url) }>
+                        { this.state.upload_info.filename }
+                      </a>
+                    }
+
+                    <ToolTip tooltip={T("Click to upload file")}>
+                      <Button variant="default-outline"
+                              className="flush-right">
+                        <label data-browse={T("Select local file")}
+                               htmlFor="upload">
+                          {this.state.upload.name ?
+                           this.state.upload.name :
+                           T("Select local file")}
+                        </label>
+                      </Button>
+                    </ToolTip>
+
                   </ButtonGroup>
                 </Navbar>
 

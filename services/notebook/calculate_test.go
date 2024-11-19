@@ -7,6 +7,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -208,6 +209,8 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerAlert() {
 	})
 }
 
+// Test that notebooks can be initialized from a template and that
+// tools work.
 func (self *NotebookManagerTestSuite) TestNotebookFromTemplate() {
 	gen := utils.IncrementalIdGenerator(0)
 	closer := utils.SetIdGenerator(&gen)
@@ -218,28 +221,30 @@ func (self *NotebookManagerTestSuite) TestNotebookFromTemplate() {
 
 	// Create a notebook the usual way.
 	var notebook *api_proto.NotebookMetadata
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		notebook, err = notebook_manager.NewNotebook(self.Ctx, "admin", &api_proto.NotebookMetadata{
-			Name:        "Test Notebook",
-			Description: "From Template",
-			Artifacts: []string{
-				"Notebook.With.Parameters",
-			},
-			Specs: []*flows_proto.ArtifactSpec{
-				{
-					Artifact: "Notebook.With.Parameters",
-					Parameters: &flows_proto.ArtifactParameters{
-						Env: []*actions_proto.VQLEnv{
-							{Key: "StringArg", Value: "Hello"},
-						},
+
+	notebook_metadata := &api_proto.NotebookMetadata{
+		Name:        "Test Notebook",
+		Description: "From Template",
+		Artifacts: []string{
+			"Notebook.With.Parameters",
+		},
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				Artifact: "Notebook.With.Parameters",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "StringArg", Value: "Hello"},
 					},
 				},
 			},
-		})
+		},
+	}
+
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		notebook, err = notebook_manager.NewNotebook(
+			self.Ctx, "admin", notebook_metadata)
 		return err == nil
 	})
-
-	json.Dump(notebook)
 
 	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
 
@@ -249,9 +254,54 @@ func (self *NotebookManagerTestSuite) TestNotebookFromTemplate() {
 		notebook.CellMetadata[0].CurrentVersion)
 	assert.NoError(self.T(), err)
 
-	json.Dump(cell)
+	// Clear some env that tend to change
+	for _, e := range notebook.Requests[0].Env {
+		if e.Key == "Tool_SomeTool_HASH" {
+			e.Value = "XXXX"
+		}
+	}
 
-	// Now get the first cell.
+	golden := ordereddict.NewDict().
+		Set("Notebook", notebook).
+		Set("Cell", cell)
+
+	// Now update the parameters in the notebook.
+	new_notebook_request := proto.Clone(
+		notebook).(*api_proto.NotebookMetadata)
+	new_notebook_request.Specs[0].Parameters.Env[0].Value = "Goodbye"
+
+	err = notebook_manager.UpdateNotebook(
+		self.Ctx, new_notebook_request)
+	assert.NoError(self.T(), err)
+
+	updated_notebook, err := notebook_manager.GetNotebook(self.Ctx,
+		notebook.NotebookId, services.DO_NOT_INCLUDE_UPLOADS)
+	assert.NoError(self.T(), err)
+
+	// Clear some env that tend to change
+	for _, e := range updated_notebook.Requests[0].Env {
+		if e.Key == "Tool_SomeTool_HASH" {
+			e.Value = "XXXX"
+		}
+	}
+
+	golden.Set("UpdatedNotebook", updated_notebook)
+
+	// Cell must be recalculated to pick up new env
+	updated_cell, err := notebook_manager.UpdateNotebookCell(
+		self.Ctx, updated_notebook, "admin",
+		&api_proto.NotebookCellRequest{
+			NotebookId: updated_notebook.NotebookId,
+			CellId:     updated_notebook.CellMetadata[0].CellId,
+			Input:      "SELECT log(message='StringArg should be Goodbye now: %v', args=StringArg) FROM scope()",
+			Type:       cell.Type,
+		})
+	assert.NoError(self.T(), err)
+
+	golden.Set("UpdatedCell", updated_cell)
+
+	goldie.Assert(self.T(), "TestNotebookFromTemplate",
+		json.MustMarshalIndent(golden))
 }
 
 func TestNotebookManager(t *testing.T) {

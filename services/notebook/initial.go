@@ -168,13 +168,22 @@ func updateNotebookRequests(
 	}
 
 	// Update the parameters from the choice of artifacts
+	seen := make(map[string]bool)
+	in.Parameters = nil
 	for _, artifact_name := range in.Artifacts {
 		artifact, pres := repository.Get(ctx, config_obj, artifact_name)
 		if !pres {
 			continue
 		}
 
-		in.Parameters = append(in.Parameters, artifact.Parameters...)
+		for _, p := range artifact.Parameters {
+			_, pres := seen[p.Name]
+			if pres {
+				continue
+			}
+			seen[p.Name] = true
+			in.Parameters = append(in.Parameters, p)
+		}
 	}
 
 	return nil

@@ -428,7 +428,6 @@ export default class VeloSigmaEditor extends Component {
         showSigmaDialog: false,
     }
 
-
     fetchProfile = ()=>{
         let components = this.props.params.upload || [];
         if (_.isEmpty(components)) {
