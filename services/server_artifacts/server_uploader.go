@@ -58,14 +58,18 @@ func (self *ServerUploader) Upload(
 		store_as_name = filename
 	}
 
-	cached, pres, closer := uploads.DeduplicateUploads(scope, store_as_name)
+	// Write the file under an accessor directory
+	output_path := accessors.MustNewGenericOSPath(accessor).
+		Append(store_as_name.Components...)
+
+	cached, pres, closer := uploads.DeduplicateUploads(scope, output_path)
 	defer closer()
 	if pres {
 		return cached, nil
 	}
 
 	result, err := self.FileStoreUploader.Upload(ctx, scope, filename,
-		accessor, store_as_name, expected_size,
+		accessor, output_path, expected_size,
 		mtime, atime, ctime, btime, mode, reader)
 	if err != nil {
 		return nil, err
@@ -117,7 +121,7 @@ func (self *ServerUploader) Upload(
 		"server", self.session_id,
 	)
 
-	uploads.CacheUploadResult(scope, store_as_name, result)
+	uploads.CacheUploadResult(scope, output_path, result)
 	return result, err
 }
 
