@@ -19,6 +19,7 @@ import { NotebookLineChart, NotebookTimeChart,
 
 import VeloValueRenderer from '../utils/value.jsx';
 import { JSONparse } from '../utils/json_parse.jsx';
+import VeloSigmaEditor from './sigma-editor.jsx';
 
 // Renders a report in the DOM.
 const parse_param = domNode=>JSONparse(decodeURIComponent(
@@ -219,6 +220,11 @@ export default class VeloReportViewer extends React.Component {
                     return <VeloValueRenderer value={value}/>;
 
                 };
+
+                if (domNode.name === "velo-sigma-editor") {
+                    let params = JSONparse(decodeURIComponent(domNode.attribs.params), {});
+                    return <VeloSigmaEditor params={params}/>;
+                }
 
                 if (domNode.name === "velo-line-chart" ||
                     domNode.name === "grr-line-chart") {

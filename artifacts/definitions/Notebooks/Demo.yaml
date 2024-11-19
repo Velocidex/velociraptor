@@ -1,0 +1,24 @@
+name: Notebooks.Demo
+description: |
+  A notebook demonstrating features of notebooks
+
+type: NOTEBOOK
+
+# We can include tools in notebook templates, just like artifacts.
+tools:
+  - name: Autorun_amd64
+    url: https://live.sysinternals.com/tools/autorunsc64.exe
+
+parameters:
+  - name: StartDate
+    type: timestamp
+  - name: AnInteger
+    type: int
+    default: "5"
+
+sources:
+  - notebook:
+    - type: vql
+      template: |
+        SELECT StartDate, AnInteger, Tool_Autorun_amd64_URL
+        FROM scope()

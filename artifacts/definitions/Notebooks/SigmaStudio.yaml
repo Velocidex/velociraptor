@@ -1,0 +1,95 @@
+name: Notebooks.Sigma.Studio
+description: |
+  A notebook to help develop Sigma rules.
+
+type: NOTEBOOK
+
+tools:
+  - name: SigmaProfiles
+    url: https://sigma.velocidex.com/profiles.json
+
+parameters:
+  - name: BaseType
+    description: Write sigma rules to target these base artifacts
+    type: choices
+    choices:
+      - Windows
+      - Linux
+  - name: Debug
+    description: Enable this to match all rules (even if they did not match) in order to see what detections matched.
+    type: bool
+
+sources:
+  - notebook:
+      - type: markdown
+        template: |
+          {{ $rows = Query "SELECT upload(name='profile.json', file='/tmp/profiles.json') AS Upload FROM scope()" | Expand }}
+
+          {{ SigmaEditor "upload" (  Get $rows "0.Upload.Components" ) }}
+
+          {{ define "BuildSigma" }}
+          LET Rules = SELECT read_file(accessor='fs',
+                                       filename=vfs_path) AS Data FROM uploads()
+          WHERE vfs_path =~ '.yaml'
+
+          LET TestSigmaRules <= join(array=Rules.Data, sep='\n---\n')
+
+          LET Upload <= upload(name='sigma_rules.yaml', accessor='data',
+                                                        file=TestSigmaRules)
+          LET Link <= link_to(upload=Upload, text='sigma ruleset')
+
+          SELECT * FROM scope()
+
+          {{ end }}
+
+          {{ $rows = Query "BuildSigma" | Expand }}
+
+          ### Download {{ Scope "Link" }}
+
+          # Sample Events For testing.
+
+          You can test the sigma rules on test events in JSONL
+          format. Upload samples into this notebook by pasting them
+          in, or uploading using the `Notebook Uploads` dialog.
+
+          {{ define "Testing" }}
+          LET _ <= import(artifact='Windows.Sigma.Base')
+
+          // Feed all the json rows to the log sources.
+          LET AllRows = SELECT * FROM foreach(row={
+            SELECT vfs_path FROM uploads()
+            WHERE vfs_path =~ 'attach.+json$'
+          }, query={
+            SELECT * FROM parse_jsonl(accessor='fs', filename=vfs_path)
+          })
+
+          LET TestingLogSourceDict <= to_dict(item={
+            SELECT _key, AllRows AS _value
+            FROM items(item=LogSources)
+          })
+
+          // Build the log sources automatically.
+          LET TestingLogSources <= sigma_log_sources(`**`=TestingLogSourceDict)
+
+          // Apply the Sigma Rules on the samples.
+          SELECT  _Rule.Title AS Rule ,
+          Details,
+          dict(System=System,
+               EventData=X.EventData || X.UserData,
+               Message=X.Message) AS Event,
+          _Match AS Match
+          FROM sigma(
+          rules=split(string=TestSigmaRules, sep_string="\n---\n"),
+            log_sources= TestingLogSources, debug=FALSE,
+            default_details=DefaultDetailsLambda,
+            field_mapping= FieldMapping)
+
+          {{ end }}
+
+          ## Match rules on test set
+
+          {{ Query "Testing" | Table}}
+
+          ## View the test set
+
+          {{ Query "SELECT * FROM AllRows " | Table}}

@@ -319,6 +319,11 @@ func mergeSources(
 				})
 		}
 
+		// An empty query is not an error.
+		if strings.TrimSpace(source.Query) == "" {
+			continue
+		}
+
 		// The artifact format requires all queries to be LET
 		// queries except for the last one.
 		queries, err := vfilter.MultiParse(source.Query)

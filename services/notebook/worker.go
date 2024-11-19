@@ -123,6 +123,19 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 		tmpl.SetEnv(env.Key, env.Value)
 	}
 
+	// Initialize the cell from the notebook_metadata
+	for _, req := range notebook_metadata.Requests {
+		// First populate all the Env from requests.
+		for _, env := range req.Env {
+			tmpl.SetEnv(env.Key, env.Value)
+		}
+
+		// Next execute all the queries - discard the output though.
+		for _, query := range req.Query {
+			tmpl.Query(query.VQL)
+		}
+	}
+
 	input := in.Input
 	cell_type := in.Type
 

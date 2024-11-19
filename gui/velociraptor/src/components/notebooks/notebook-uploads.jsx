@@ -8,12 +8,53 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import { formatColumns } from "../core/table.jsx";
 import filterFactory from 'react-bootstrap-table2-filter';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import Navbar from 'react-bootstrap/Navbar';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import ToolTip from '../widgets/tooltip.jsx';
 
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 
 import T from '../i8n/i8n.jsx';
 const POLL_TIME = 5000;
+
+class UploadDialog extends Component {
+   static propTypes = {
+        notebook: PropTypes.object,
+        cell: PropTypes.object,
+        closeDialog: PropTypes.func.isRequired,
+    }
+
+    componentDidMount = () => {
+        this.source = CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
+    render() {
+        return <Modal show={true}
+                      size="lg"
+                      onHide={this.props.closeDialog} >
+                 <Modal.Header closeButton>
+                   <Modal.Title>
+                     {T("Select file to upload")}
+                   </Modal.Title>
+                 </Modal.Header>
+                 <Modal.Body>
+                 </Modal.Body>
+                 <Modal.Footer>
+                   <Button variant="secondary"
+                           onClick={this.props.closeDialog}>
+                     {T("Close")}
+                   </Button>
+                 </Modal.Footer>
+               </Modal>;
+    }
+
+}
+
 
 export default class NotebookUploads extends Component {
     static propTypes = {
@@ -99,17 +140,36 @@ export default class NotebookUploads extends Component {
                 </Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                  <BootstrapTable
-                    hover
-                    condensed
-                    keyField="path"
-                    bootstrap4
-                    headerClasses="alert alert-secondary"
-                    bodyClasses="fixed-table-body"
-                    data={files}
-                    columns={columns}
-                    filter={ filterFactory() }
-                  />
+                <Navbar className="toolbar">
+                  <ButtonGroup>
+                    <ToolTip tooltip={T("Upload")}>
+                      <Button onClick={()=>this.setState({showUploadDialog: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="fa-file-download"/>
+                        <span className="sr-only">{T("Upload")}</span>
+                      </Button>
+                    </ToolTip>
+                  </ButtonGroup>
+                </Navbar>
+
+                <BootstrapTable
+                  hover
+                  condensed
+                  keyField="path"
+                  bootstrap4
+                  headerClasses="alert alert-secondary"
+                  bodyClasses="fixed-table-body"
+                  data={files}
+                  columns={columns}
+                  filter={ filterFactory() }
+                />
+                {this.state.showUploadDialog &&
+                 <UploadDialog
+                   closeDialog={()=>{
+                       this.setState({showUploadDialog: false});
+                   }}
+                   notebook={this.props.notebook}/>}
+
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary"

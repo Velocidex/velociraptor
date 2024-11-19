@@ -158,14 +158,12 @@ const remove_artifact = (artifacts, name) => {
     return _.filter(artifacts, (x) => x.name !== name);
 };
 
-export default class NewCollectionConfigParameters extends React.Component {
+export class NewCollectionConfigParametersForm extends React.Component {
     static propTypes = {
-        request: PropTypes.object,
         artifacts: PropTypes.array,
-        setArtifacts: PropTypes.func.isRequired,
+        setArtifacts: PropTypes.func,
         parameters: PropTypes.object,
         setParameters: PropTypes.func.isRequired,
-        paginator: PropTypes.object,
         configureResourceControl: PropTypes.bool,
     };
 
@@ -249,50 +247,70 @@ export default class NewCollectionConfigParameters extends React.Component {
     render() {
         return (
             <>
-              <Modal.Header closeButton>
-                <Modal.Title>{ T(this.props.paginator.title) }</Modal.Title>
-              </Modal.Header>
-
-              <Modal.Body className="new-collection-parameter-page selectable">
-                <Accordion>
-                  { _.map(this.props.artifacts, (x, idx)=>{
-                      return <Accordion.Item eventKey={idx} key={idx}>
-                               <Accordion.Header>
-                                 <ButtonGroup>
-                                   <ToolTip tooltip={T("Configure")}>
-                                     <div className="accordion-icon"
-                                          tabIndex={idx}
-                                          role="button">
-                                       <FontAwesomeIcon icon="wrench"/>
-                                     </div>
-                                   </ToolTip>
-                                   <ToolTip tooltip={T("Remove")}>
-                                     <div className="accordion-icon"
-                                          role="button" tabIndex={idx}
-                                          onClick={
-                                              () => this.props.setArtifacts(
-                                                  remove_artifact(
-                                                      this.props.artifacts,
-                                                      x.name))} >
-                                       <FontAwesomeIcon icon="trash"/>
-                                     </div>
-                                   </ToolTip>
-                                 </ButtonGroup>
-                                 {x.name}
-                               </Accordion.Header>
-                             <Accordion.Body>
-                               {this.artifactParameterRenderer(x)}
-                             </Accordion.Body>
-                           </Accordion.Item>;
+              <Accordion>
+                { _.map(this.props.artifacts, (x, idx)=>{
+                    return <Accordion.Item eventKey={idx} key={idx}>
+                                   <Accordion.Header>
+                                     <ButtonGroup>
+                                       <ToolTip tooltip={T("Configure")}>
+                                         <div className="accordion-icon"
+                                              tabIndex={idx}
+                                              role="button">
+                                           <FontAwesomeIcon icon="wrench"/>
+                                         </div>
+                                       </ToolTip>
+                                       { this.props.setArtifacts &&
+                                         <ToolTip tooltip={T("Remove")}>
+                                           <div className="accordion-icon"
+                                                role="button" tabIndex={idx}
+                                                onClick={
+                                                    () => this.props.setArtifacts(
+                                                        remove_artifact(
+                                                            this.props.artifacts,
+                                                            x.name))} >
+                                             <FontAwesomeIcon icon="trash"/>
+                                           </div>
+                                         </ToolTip>
+                                       }
+                                     </ButtonGroup>
+                                     {x.name}
+                                   </Accordion.Header>
+                                   <Accordion.Body>
+                                     {this.artifactParameterRenderer(x)}
+                                   </Accordion.Body>
+                                 </Accordion.Item>;
                 })}
-                </Accordion>
-              </Modal.Body>
-              <Modal.Footer>
-                { this.props.paginator.makePaginator({
-                    props: this.props,
-                }) }
-              </Modal.Footer>
+              </Accordion>
             </>
         );
     };
+}
+
+
+export default class NewCollectionConfigParameters extends NewCollectionConfigParametersForm {
+    static propTypes = {
+        artifacts: PropTypes.array,
+        setArtifacts: PropTypes.func,
+        parameters: PropTypes.object,
+        setParameters: PropTypes.func.isRequired,
+        paginator: PropTypes.object,
+        configureResourceControl: PropTypes.bool,
+    };
+
+    render() {
+        return <>
+                 <Modal.Header closeButton>
+                   <Modal.Title>{ T(this.props.paginator.title) }</Modal.Title>
+                 </Modal.Header>
+                 <Modal.Body className="new-collection-parameter-page selectable">
+                   { super.render() }
+                 </Modal.Body>
+                 <Modal.Footer>
+                   { this.props.paginator.makePaginator({
+                       props: this.props,
+                   }) }
+                 </Modal.Footer>
+               </>;
+
+    }
 }

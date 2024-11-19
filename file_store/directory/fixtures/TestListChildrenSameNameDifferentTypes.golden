@@ -1,0 +1,42 @@
+[
+ {
+  "Components": [
+   "subdir",
+   "Foo"
+  ],
+  "Extension": "",
+  "Mode": "drwx------",
+  "Type": "PATH_TYPE_DATASTORE_DIRECTORY",
+  "AsJSON": "fs:/subdir/Foo"
+ },
+ {
+  "Components": [
+   "subdir",
+   "Foo"
+  ],
+  "Extension": ".json",
+  "Mode": "-rwx------",
+  "Type": "PATH_TYPE_FILESTORE_JSON",
+  "AsJSON": "fs:/subdir/Foo.json"
+ },
+ {
+  "Components": [
+   "subdir",
+   "Foo"
+  ],
+  "Extension": ".json.index",
+  "Mode": "-rwx------",
+  "Type": "PATH_TYPE_FILESTORE_JSON_INDEX",
+  "AsJSON": "fs:/subdir/Foo.json.index"
+ },
+ {
+  "Components": [
+   "subdir",
+   "Foo.json"
+  ],
+  "Extension": "",
+  "Mode": "-rwx------",
+  "Type": "PATH_TYPE_FILESTORE_ANY",
+  "AsJSON": "fs:/subdir/Foo.json"
+ }
+]

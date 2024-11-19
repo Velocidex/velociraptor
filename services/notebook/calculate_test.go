@@ -7,8 +7,10 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/suite"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/notebook"
@@ -26,6 +28,29 @@ type: SERVER
 `, `
 name: Server.Internal.Alerts
 type: SERVER_EVENT
+`, `
+name: Notebook.With.Parameters
+type: NOTEBOOK
+parameters:
+- name: Bool
+  type: bool
+- name: StringArg
+  type: string
+  default: "This is a test"
+
+# This will actually get this URL below.
+tools:
+- name: SomeTool
+  url: https://www.google.com/
+  serve_locally: true
+
+sources:
+- notebook:
+    - type: vql
+      template: |
+         SELECT log(message="StringArg Should be Hello because default is overriden %v", args=StringArg),
+                log(message="Tool is available through local url %v", args=Tool_SomeTool_URL)
+         FROM scope()
 `}
 )
 
@@ -181,6 +206,52 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerAlert() {
 		alert, _ := mem_file_store.Get("/server_artifacts/Server.Internal.Alerts/1970-01-01.json")
 		return strings.Contains(string(alert), `"name":"My Alert"`)
 	})
+}
+
+func (self *NotebookManagerTestSuite) TestNotebookFromTemplate() {
+	gen := utils.IncrementalIdGenerator(0)
+	closer := utils.SetIdGenerator(&gen)
+	defer closer()
+
+	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Create a notebook the usual way.
+	var notebook *api_proto.NotebookMetadata
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		notebook, err = notebook_manager.NewNotebook(self.Ctx, "admin", &api_proto.NotebookMetadata{
+			Name:        "Test Notebook",
+			Description: "From Template",
+			Artifacts: []string{
+				"Notebook.With.Parameters",
+			},
+			Specs: []*flows_proto.ArtifactSpec{
+				{
+					Artifact: "Notebook.With.Parameters",
+					Parameters: &flows_proto.ArtifactParameters{
+						Env: []*actions_proto.VQLEnv{
+							{Key: "StringArg", Value: "Hello"},
+						},
+					},
+				},
+			},
+		})
+		return err == nil
+	})
+
+	json.Dump(notebook)
+
+	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
+
+	cell, err := notebook_manager.GetNotebookCell(
+		self.Ctx, notebook.NotebookId,
+		notebook.CellMetadata[0].CellId,
+		notebook.CellMetadata[0].CurrentVersion)
+	assert.NoError(self.T(), err)
+
+	json.Dump(cell)
+
+	// Now get the first cell.
 }
 
 func TestNotebookManager(t *testing.T) {

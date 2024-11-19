@@ -2,6 +2,7 @@ package sigma
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/sigma-go"
@@ -52,28 +53,37 @@ func (self SigmaPlugin) Call(
 
 		// Compile all the rules
 		var rules []sigma.Rule
-		for _, r := range arg.Rules {
-			rule, err := sigma.ParseRule([]byte(r))
-			if err != nil {
-				// Skip the rules we can not parse
-				scope.Log("sigma: Error parsing: %v in rule '%v'",
-					err, utils.Elide(r, 20))
-				continue
-			}
+		for _, rules_text := range arg.Rules {
+			for _, r := range strings.Split(rules_text, "\n---\n") {
 
-			// A rule must have a title
-			if rule.Title == "" {
-				scope.Log("sigma: Error parsing rule '%v': no title set",
-					utils.Elide(r, 20))
-				continue
-			}
+				// Just ignore empty rules.
+				r := strings.TrimSpace(r)
+				if len(r) == 0 {
+					continue
+				}
 
-			if arg.RuleFilter != nil &&
-				!scope.Bool(arg.RuleFilter.Reduce(ctx, scope, []vfilter.Any{rule})) {
-				continue
-			}
+				rule, err := sigma.ParseRule([]byte(r))
+				if err != nil {
+					// Skip the rules we can not parse
+					scope.Log("sigma: Error parsing: %v in rule '%v'",
+						err, utils.Elide(r, 20))
+					continue
+				}
 
-			rules = append(rules, rule)
+				// A rule must have a title
+				if rule.Title == "" {
+					scope.Log("sigma: Error parsing rule '%v': no title set",
+						utils.Elide(r, 20))
+					continue
+				}
+
+				if arg.RuleFilter != nil &&
+					!scope.Bool(arg.RuleFilter.Reduce(ctx, scope, []vfilter.Any{rule})) {
+					continue
+				}
+
+				rules = append(rules, rule)
+			}
 		}
 
 		// Build a new evaluation context around the rules. This binds

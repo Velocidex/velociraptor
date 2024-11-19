@@ -76,6 +76,11 @@ func (self *UploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	accessor_name := arg.Accessor
+	if accessor_name == "" {
+		accessor_name = "auto"
+	}
+
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("upload: %v", err)

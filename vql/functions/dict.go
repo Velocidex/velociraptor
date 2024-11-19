@@ -116,8 +116,24 @@ func (self _DictFunc) Call(ctx context.Context, scope types.Scope, args *ordered
 	return dict.RowToDict(ctx, scope, args)
 }
 
+type _LazyDictFunc struct{}
+
+func (self *_LazyDictFunc) Info(scope types.Scope, type_map *types.TypeMap) *types.FunctionInfo {
+	return &types.FunctionInfo{
+		Name: "lazy_dict",
+		Doc:  "Construct a dict from arbitrary keyword args - does not materialize args so it is suitable for building args via `**` expansion.",
+	}
+}
+
+func (self *_LazyDictFunc) Call(ctx context.Context, scope types.Scope, args *ordereddict.Dict) types.Any {
+	defer vql_subsystem.RegisterMonitor("lazr_dict", args)()
+
+	return args
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&_ItemsFunc{})
 	vql_subsystem.RegisterFunction(&_ToDictFunc{})
 	vql_subsystem.OverrideFunction(&_DictFunc{})
+	vql_subsystem.OverrideFunction(&_LazyDictFunc{})
 }

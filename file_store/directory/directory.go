@@ -145,7 +145,12 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 			continue
 		}
 
-		name_type, name := api.GetFileStorePathTypeFromExtension(name)
+		var name_type api.PathType
+		if fileinfo.IsDir() {
+			name_type = api.PATH_TYPE_DATASTORE_DIRECTORY
+		} else {
+			name_type, name = api.GetFileStorePathTypeFromExtension(name)
+		}
 		result = append(result, file_store_file_info.NewFileStoreFileInfo(
 			self.config_obj,
 			dirname.AddUnsafeChild(
@@ -201,15 +206,14 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 
 	defer api.InstrumentWithDelay("open_write", "DirectoryFileStore", filename)()
 
-	file_path := datastore.AsFilestoreFilename(
-		self.db, self.config_obj, filename)
-	err := os.MkdirAll(filepath.Dir(file_path), 0700)
+	err := datastore.MkdirAll(self.db, self.config_obj, filename.Dir())
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Error("Can not create dir: %v", err)
 		return nil, err
 	}
 
+	file_path := datastore.AsFilestoreFilename(self.db, self.config_obj, filename)
 	file, err := os.OpenFile(file_path, os.O_RDWR|os.O_CREATE, 0700)
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)

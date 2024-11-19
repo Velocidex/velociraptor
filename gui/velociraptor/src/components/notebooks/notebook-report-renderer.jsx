@@ -22,6 +22,8 @@ import NotebookTableRenderer from './notebook-table-renderer.jsx';
 import VeloValueRenderer from '../utils/value.jsx';
 import { JSONparse } from '../utils/json_parse.jsx';
 
+import VeloSigmaEditor from '../artifacts/sigma-editor.jsx';
+
 
 const parse_param = domNode=>JSONparse(decodeURIComponent(
     domNode.attribs.params, {}));
@@ -74,6 +76,7 @@ export default class NotebookReportRenderer extends React.Component {
         let data = this.state.data[match[1]];
         let rows = JSONparse(data.Response, []);
 
+        console.log(domNode.name);
         switch  (domNode.name) {
         case "velo-line-chart":
         case "grr-line-chart":
@@ -150,6 +153,14 @@ export default class NotebookReportRenderer extends React.Component {
                           params={parse_param(domNode)} />
                     );
                 };
+
+                if (domNode.name === "velo-sigma-editor") {
+                    let params = JSONparse(decodeURIComponent(domNode.attribs.params), {});
+                    return <VeloSigmaEditor
+                             notebook_id={this.props.notebook_id}
+                             cell={this.props.cell}
+                             params={params}/>;
+                }
 
                 if (domNode.name ===  "velo-tool-viewer"||
                     domNode.name === "grr-tool-viewer") {

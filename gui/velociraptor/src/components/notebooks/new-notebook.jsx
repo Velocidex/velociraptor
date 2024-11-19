@@ -9,7 +9,7 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Button from 'react-bootstrap/Button';
 import StepWizard from 'react-step-wizard';
-import NewCollectionConfigParameters from '../flows/new-collections-parameters.jsx';
+import NewCollectionConfigParameters, { NewCollectionConfigParametersForm } from '../flows/new-collections-parameters.jsx';
 
 import {
     NewCollectionSelectArtifacts,
@@ -55,7 +55,7 @@ class NewNotebookParameters extends React.Component {
 
               <Modal.Body className="new-collection-parameter-page selectable">
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">Name</Form.Label>
+                  <Form.Label column sm="3">{T("Name")}</Form.Label>
                   <Col sm="8">
                     <Form.Control as="textarea"
                                   rows={1}
@@ -264,7 +264,7 @@ export class NewNotebook extends React.Component {
                   paginator={new NotebookPaginationBuilder(
                       T("Configure Parameters"),
                       T("New Notebook: Configure Parameters"))}
-                  request={this.prepareRequest()}/>
+                />
 
                 <NewCollectionRequest
                   paginator={new NotebookPaginationBuilder(
@@ -285,8 +285,6 @@ export class NewNotebook extends React.Component {
 }
 
 
-
-
 export class EditNotebook extends React.Component {
     static propTypes = {
         notebook: PropTypes.object,
@@ -297,6 +295,20 @@ export class EditNotebook extends React.Component {
     componentDidMount = () => {
         this.source = CancelToken.source();
         if(!_.isEmpty(this.props.notebook)) {
+            // Build the parameters from the request object so we can
+            // populate the defaults from the previous request.
+            let params = {};
+            _.each(this.props.notebook.requests, req=>{
+                _.each(req.env, e=>{
+                    params[e.key] = e.value;
+                });
+            });
+
+            let parameters = {};
+            _.each(this.props.notebook.artifacts, x=>{
+                parameters[x] = params;
+            });
+
             this.setState({
                 name: this.props.notebook.name,
                 notebook_id: this.props.notebook.notebook_id,
@@ -305,6 +317,11 @@ export class EditNotebook extends React.Component {
                 modified_time: this.props.notebook.modified_time,
                 cell_metadata: this.props.notebook.cell_metadata,
                 collaborators: this.props.notebook.collaborators || [],
+                artifacts: _.map(this.props.notebook.artifacts, x=>{
+                    return {name: x,
+                            parameters: this.props.notebook.parameters};
+                }),
+                parameters: parameters,
             });
         }
     }
@@ -313,17 +330,43 @@ export class EditNotebook extends React.Component {
         this.source.cancel("unmounted");
     }
 
-    newNotebook = () => {
-        let api_url = "v1/UpdateNotebook";
-        api.post(api_url, {
+    prepareRequest = () => {
+        // Rebuild the specs from the parameters. These will be evaluated
+        // by the server to generate a new request.
+        let artifacts = _.map(this.state.artifacts, x=>x.name);
+
+        let specs = _.map(artifacts, name=>{
+            return {
+                artifact: name,
+                parameters: {
+                    env: _.map(this.state.parameters[name], (v,k)=>{
+                        return {key: k, value: v};
+                    })
+                }
+            };
+        });
+
+        return {
             name: this.state.name,
             description: this.state.description,
-            public: this.state.public,
             collaborators: this.state.collaborators,
+            public: this.state.public,
             modified_time: this.state.modified_time,
             notebook_id: this.state.notebook_id,
             cell_metadata: this.state.cell_metadata,
-        }, this.source.token).then(this.props.updateNotebooks);
+            artifacts: artifacts,
+            specs: specs,
+        };
+    }
+
+    updateNotebook = () => {
+        let api_url = "v1/UpdateNotebook";
+        api.post(api_url, this.prepareRequest(),
+                 this.source.token).then(this.props.updateNotebooks);
+    }
+
+    setParameters = (params) => {
+        this.setState({parameters: params});
     }
 
     state = {
@@ -334,6 +377,9 @@ export class EditNotebook extends React.Component {
         public: false,
         notebook_id: undefined,
         modified_time: undefined,
+        artifacts: [],
+        specs: {},
+        parameters: {},
     }
 
     render() {
@@ -393,7 +439,16 @@ export class EditNotebook extends React.Component {
                       onChange={(value) => this.setState({collaborators: value})}/>
                   </Col>
                 </Form.Group>}
-
+                <Row className="notebook-parameters-form">
+                  <Col sm="12">
+                    <NewCollectionConfigParametersForm
+                      parameters={this.state.parameters}
+                      setParameters={this.setParameters}
+                      artifacts={this.state.artifacts}
+                      configureResourceControl={false}
+                    />
+                  </Col>
+                </Row>
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary"
@@ -401,7 +456,7 @@ export class EditNotebook extends React.Component {
                   {T("Cancel")}
                 </Button>
                 <Button variant="primary"
-                        onClick={this.newNotebook}>
+                        onClick={this.updateNotebook}>
                   {T("Submit")}
                 </Button>
               </Modal.Footer>

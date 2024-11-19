@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
 func (self *NotebookManager) NewNotebookCell(
@@ -131,6 +132,54 @@ func getSpec(name string,
 	return env
 }
 
+func updateNotebookRequests(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	in *api_proto.NotebookMetadata) error {
+
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
+	launcher, err := services.GetLauncher(config_obj)
+	if err != nil {
+		return err
+	}
+
+	acl_manager := acl_managers.NullACLManager{}
+
+	in.Requests, err = launcher.CompileCollectorArgs(
+		ctx, config_obj, acl_manager, repository,
+		services.CompilerOptions{
+			DisablePrecondition: true,
+		},
+		&flows_proto.ArtifactCollectorArgs{
+			Artifacts: in.Artifacts,
+			Specs:     in.Specs,
+		})
+	if err != nil {
+		return err
+	}
+
+	// Update the parameters from the choice of artifacts
+	for _, artifact_name := range in.Artifacts {
+		artifact, pres := repository.Get(ctx, config_obj, artifact_name)
+		if !pres {
+			continue
+		}
+
+		in.Parameters = append(in.Parameters, artifact.Parameters...)
+	}
+
+	return nil
+}
+
 func getInitialCellsFromArtifacts(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -141,7 +190,13 @@ func getInitialCellsFromArtifacts(
 	if err != nil {
 		return nil, err
 	}
+
 	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	err = updateNotebookRequests(ctx, config_obj, in)
 	if err != nil {
 		return nil, err
 	}
@@ -161,9 +216,6 @@ func getInitialCellsFromArtifacts(
 						Value: i.Value,
 					})
 				}
-
-				// Add any specs from the template parameters.
-				env = getSpec(artifact_name, env, in.Specs, artifact)
 
 				switch strings.ToLower(n.Type) {
 				case "none":

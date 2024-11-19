@@ -13,7 +13,7 @@ const escapeHTML = function(htmlStr) {
          .replace(/>/g, "&gt;")
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#39;");
-}
+};
 
 // This is a syntax editor class controlling suggestions from the
 // server.

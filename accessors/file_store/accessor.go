@@ -183,7 +183,10 @@ func (self FileStoreFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPat
 			fullpath = fullpath.SetType(api.PATH_TYPE_FILESTORE_DB)
 		}
 	} else {
-		fullpath = path_specs.FromGenericComponentList(filename.Components)
+		// Try to access the file directly first, assume it is of type
+		// PATH_TYPE_FILESTORE_ANY
+		fullpath = path_specs.NewUnsafeFilestorePath(filename.Components...).
+			SetType(api.PATH_TYPE_FILESTORE_ANY)
 	}
 
 	file, err := self.openFile(fullpath)

@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import "actions/proto/vql.proto";
 import "artifacts/proto/artifact.proto";
 import "flows/proto/artifact_collector.proto";
 import "flows.proto";
@@ -60,6 +61,7 @@ message NotebookContext {
     int64 end_time = 7;
 }
 
+// Represents an entire notebook.
 message NotebookMetadata {
     string name = 1;
     string description = 2;
@@ -76,6 +78,15 @@ message NotebookMetadata {
 
     // Each notebook template can be passed parameters
     repeated ArtifactSpec specs = 21;
+
+    // Notebooks can have typed parameters which are injected into
+    // every cell.
+    repeated ArtifactParameter parameters = 22;
+
+    // These queries will be run before each cell is evaluated in
+    // order to set up the parameters.
+    repeated VQLCollectorArgs requests = 23;
+
 
     // If this is set, the notebook is public.
     bool public = 13;
@@ -147,6 +158,7 @@ message NotebookCell {
 message NotebookFileUploadRequest {
     string data = 1;
     string filename = 2;
+    bool disable_attachment_id = 6;
     repeated string components = 4;
     string notebook_id = 3;
     string cell_id = 5;

@@ -16,7 +16,9 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
 type Debugger interface {
@@ -59,41 +61,99 @@ func (self *FileStoreTestSuite) TestListChildrenIntermediateDirs() {
 	assert.Equal(self.T(), names, []string{"b"})
 }
 
-func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
-	path_spec := path_specs.NewSafeFilestorePath("subdir", "Foo").
-		SetType(api.PATH_TYPE_FILESTORE_JSON)
-	fd, err := self.filestore.WriteFile(path_spec)
+func (self *FileStoreTestSuite) TestListChildrenComplicatedNames() {
+	dir_path_spec := path_specs.NewSafeFilestorePath("subdir")
+
+	fd, err := self.filestore.WriteFile(dir_path_spec.AddUnsafeChild("Foo/Bar").
+		SetType(api.PATH_TYPE_FILESTORE_JSON))
 	assert.NoError(self.T(), err)
 	fd.Close()
 
-	fd, err = self.filestore.WriteFile(path_spec.
-		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
-	assert.NoError(self.T(), err)
-	fd.Close()
-
-	fd, err = self.filestore.WriteFile(path_spec.AddChild("dir", "value").
-		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
-	assert.NoError(self.T(), err)
-	fd.Close()
-
-	fd, err = self.filestore.WriteFile(path_spec.AddChild("dir2", "value").
-		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
-	assert.NoError(self.T(), err)
-	fd.Close()
-
-	infos, err := self.filestore.ListDirectory(
-		path_specs.NewSafeFilestorePath("subdir"))
+	infos, err := self.filestore.ListDirectory(dir_path_spec)
 	assert.NoError(self.T(), err)
 
-	names := []string{}
+	var golden []*ordereddict.Dict
 	for _, info := range infos {
-		names = append(names, info.Name())
+		ps := info.PathSpec()
+		res := ordereddict.NewDict().
+			Set("Components", ps.Components()).
+			Set("Extension", api.GetExtensionForFilestore(ps)).
+			Set("Mode", info.Mode().String()).
+			Set("Type", ps.Type().String()).
+			Set("AsJSON", ps)
+		golden = append(golden, res)
 	}
 
-	sort.Strings(names)
-	// One for the directory, one for the JSON and one for the JSON
-	// index
-	assert.Equal(self.T(), names, []string{"Foo", "Foo", "Foo"})
+	// Component should preserve the / - it is not considered path separator.
+	goldie.Assert(self.T(), "TestListChildrenComplicatedNames",
+		json.MustMarshalIndent(golden))
+}
+
+func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
+	dir_path_spec := path_specs.NewSafeFilestorePath("subdir")
+
+	// Store a JSON file type.
+
+	fd, err := self.filestore.WriteFile(dir_path_spec.AddChild("Foo").
+		SetType(api.PATH_TYPE_FILESTORE_JSON))
+	assert.NoError(self.T(), err)
+	fd.Close()
+
+	fd, err = self.filestore.WriteFile(dir_path_spec.AddChild("Foo").
+		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
+	assert.NoError(self.T(), err)
+	fd.Close()
+
+	// FIXME: This will create a file named Foo in place of the
+	// intermediate directory causing the below to fail.
+	//fd, err = self.filestore.WriteFile(dir_path_spec.AddChild("Foo").
+	//	SetType(api.PATH_TYPE_FILESTORE_ANY))
+	//assert.NoError(self.T(), err)
+	//fd.Close()
+
+	// This file type is of type ANY but has an extension of
+	// ".json". This should not be mistaken by the filestore as an
+	// internal .json object.
+	fd, err = self.filestore.WriteFile(dir_path_spec.AddChild("Foo.json").
+		SetType(api.PATH_TYPE_FILESTORE_ANY))
+	assert.NoError(self.T(), err)
+	fd.Close()
+
+	// Add an intermediate directory - this will add a directory info
+	// for the intermediate directory.
+	fd, err = self.filestore.WriteFile(dir_path_spec.AddChild("Foo", "dir", "value").
+		SetType(api.PATH_TYPE_FILESTORE_JSON))
+	assert.NoError(self.T(), err)
+	fd.Close()
+
+	infos, err := self.filestore.ListDirectory(dir_path_spec)
+	assert.NoError(self.T(), err)
+
+	var golden []*ordereddict.Dict
+	for _, info := range infos {
+		ps := info.PathSpec()
+		res := ordereddict.NewDict().
+			Set("Components", ps.Components()).
+			Set("Extension", api.GetExtensionForFilestore(ps)).
+			Set("Mode", info.Mode().String()).
+			Set("Type", ps.Type().String()).
+			Set("AsJSON", ps)
+		golden = append(golden, res)
+	}
+
+	sort.Slice(golden, func(i, j int) bool {
+		ps1, _ := golden[i].MarshalJSON()
+		ps2, _ := golden[j].MarshalJSON()
+		return string(ps1) < string(ps2)
+	})
+
+	// We should have:
+	// 1. A Directory [subdir, Foo]
+	// 2. A File [subdir, Foo.json] of type PATH_TYPE_FILESTORE_ANY
+	// 3. A File [subdir, Foo] of type PATH_TYPE_FILESTORE_JSON
+
+	goldie.Assert(self.T(), "TestListChildrenSameNameDifferentTypes",
+		json.MustMarshalIndent(golden))
 }
 
 // List children recovers child's type based on extensions.

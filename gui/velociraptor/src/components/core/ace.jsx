@@ -87,6 +87,7 @@ import 'ace-builds/src-min-noconflict/mode-sql.js';
 import VqlMode from './mode-vql.jsx';
 import MarkdownMode from './mode-markdown.jsx';
 import YamlMode from './mode-yaml.jsx';
+import SigmaMode from './mode-sigma.jsx';
 import RegexMode from './mode-regex.jsx';
 import YaraMode from './mode-yara.jsx';
 import classNames from "classnames";
@@ -221,6 +222,8 @@ export default class VeloAce extends Component {
                 ref.editor.getSession().setMode(new MarkdownMode());
             } else if(this.props.mode === "yaml") {
                 ref.editor.getSession().setMode(new YamlMode());
+            } else if(this.props.mode === "sigma") {
+                ref.editor.getSession().setMode(new SigmaMode());
             } else if(this.props.mode === "regex") {
                 ref.editor.getSession().setMode(new RegexMode());
             } else if(this.props.mode === "yara") {
