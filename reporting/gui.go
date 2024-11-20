@@ -65,7 +65,8 @@ type GuiTemplateEngine struct {
 // Go templates can call functions which take args. The pipeline is
 // always called last, so any options must come before it. This
 // function takes care of parsing the args in a consistent way -
-// keyword options are
+// keyword options are extracted first and argv contains non keyword
+// options.
 func parseOptions(values []interface{}) (*ordereddict.Dict, []interface{}) {
 	result := []interface{}{}
 	dict := ordereddict.NewDict()
@@ -243,6 +244,12 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 			`<div class="panel"><inline-table-viewer value="%s" /></div>`,
 			utils.QueryEscape(key))
 	}
+}
+
+func (self *GuiTemplateEngine) SigmaEditor(values ...interface{}) string {
+	options, _ := parseOptions(values)
+	return fmt.Sprintf(
+		`<velo-sigma-editor params="%s" />`, utils.QueryEscape(options.String()))
 }
 
 func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
@@ -625,6 +632,7 @@ func NewGuiTemplateEngine(
 			"LineChart":    template_engine.LineChart,
 			"ScatterChart": template_engine.ScatterChart,
 			"TimeChart":    template_engine.TimeChart,
+			"SigmaEditor":  template_engine.SigmaEditor,
 			"Timeline":     template_engine.Timeline,
 			"Get":          template_engine.getFunction,
 			"Render":       template_engine.renderFunction,
@@ -652,6 +660,7 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	p.AllowAttrs("value", "params").OnElements("velo-csv-viewer")
 	p.AllowAttrs("value", "params").OnElements("inline-table-viewer")
 	p.AllowAttrs("value", "params").OnElements("velo-line-chart")
+	p.AllowAttrs("value", "params").OnElements("velo-sigma-editor")
 	p.AllowAttrs("value", "params").OnElements("bar-chart")
 	p.AllowAttrs("value", "params").OnElements("scatter-chart")
 	p.AllowAttrs("value", "params").OnElements("time-chart")

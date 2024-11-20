@@ -21,7 +21,8 @@ Queries:
     WHERE OSPath =~ "document.txt:goodbye.txt"
 
   # Copy the MFT file out so we can parse it by itself.
-  - LET MFTFile <= tempfile()
+  - LET MFTDir <= tempdir()
+  - LET MFTFile <= MFTDir + "/test.mft"
   - LET _ <= copy(filename=pathspec(
          Path="$MFT",
          DelegateAccessor="file",

@@ -3,16 +3,84 @@ package sigma
 import (
 	"context"
 	"strings"
+	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/sigma-go"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
 type LogSourceProvider struct {
+	mu sync.Mutex
+
 	queries map[string]types.StoredQuery
+}
+
+func (self *LogSourceProvider) Queries() map[string]types.StoredQuery {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	res := make(map[string]types.StoredQuery)
+	for k, v := range self.queries {
+		res[k] = v
+	}
+
+	return res
+}
+
+// Add an associative protocol to LogSourceProvider so we can iterate
+// over it.
+type LogSourceProviderAssociative struct{}
+
+func (self LogSourceProviderAssociative) Applicable(a vfilter.Any, b vfilter.Any) bool {
+	_, a_ok := a.(*LogSourceProvider)
+	_, b_ok := b.(string)
+	return a_ok && b_ok
+}
+
+func (self LogSourceProviderAssociative) GetMembers(
+	scope vfilter.Scope, a vfilter.Any) []string {
+
+	ls, ok := a.(*LogSourceProvider)
+	if !ok {
+		return nil
+	}
+
+	ls.mu.Lock()
+	defer ls.mu.Unlock()
+
+	res := make([]string, 0, len(ls.queries))
+	for k := range ls.queries {
+		res = append(res, k)
+	}
+	return res
+}
+
+func (self *LogSourceProviderAssociative) Associative(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) (
+	vfilter.Any, bool) {
+
+	ls, ok := a.(*LogSourceProvider)
+	if !ok {
+		return vfilter.Null{}, false
+	}
+
+	key, ok := b.(string)
+	if !ok {
+		return vfilter.Null{}, false
+	}
+
+	ls.mu.Lock()
+	defer ls.mu.Unlock()
+
+	res, ok := ls.queries[key]
+	if !ok {
+		return vfilter.Null{}, false
+	}
+
+	return res, true
 }
 
 type LogSourcesFunction struct{}
@@ -24,6 +92,8 @@ func (self *LogSourcesFunction) Call(ctx context.Context,
 	result := &LogSourceProvider{
 		queries: make(map[string]types.StoredQuery),
 	}
+
+	args = arg_parser.NormalizeArgs(args)
 
 	for _, field := range scope.GetMembers(args) {
 		value, _ := scope.Associative(args, field)
@@ -109,4 +179,5 @@ func matchLogSource(log_target *sigma.Logsource, rule sigma.Rule) bool {
 
 func init() {
 	vql_subsystem.RegisterFunction(&LogSourcesFunction{})
+	vql_subsystem.RegisterProtocol(&LogSourceProviderAssociative{})
 }

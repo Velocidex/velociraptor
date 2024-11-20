@@ -106,7 +106,7 @@ func (self UploadsPlugins) Call(
 					Set("started", upload.Date).
 					Set("file_size", upload.Size).
 					Set("uploaded_size", upload.Size).
-					Set("vfs_path", vfs_path.String()).
+					Set("vfs_path", vfs_path).
 					Set("Upload", uploads.UploadResponse{
 						Path:       vfs_path.String(),
 						Size:       upload.Size,

@@ -1,0 +1,4 @@
+.sigma-editor {
+    max-height: calc(100vh - 345px);
+    overflow-y: auto;
+}

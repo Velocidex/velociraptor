@@ -1,0 +1,189 @@
+name: Notebooks.Sigma.Studio
+description: |
+  A notebook to help develop Sigma rules.
+
+type: NOTEBOOK
+
+tools:
+  - name: SigmaProfiles
+    url: https://sigma.velocidex.com/profiles.json
+    serve_locally: true
+
+parameters:
+  - name: BaseType
+    description: Write sigma rules to target these base artifacts
+    type: choices
+    default: Windows
+    choices:
+      - Windows
+      - Linux
+  - name: Debug
+    description: Enable this to match all rules (even if they did not match) in order to see what detections matched.
+    type: bool
+
+sources:
+  - notebook:
+      - type: markdown
+        template: |
+          # Sigma Studio
+
+          This notebook is designed to help you write and test Sigma
+          Rules for detection within Velociraptor!
+
+          ## What is Sigma?
+
+          Sigma is an open notation for writing detection rules - It
+          is supported natively in Velociraptor as described in [our
+          blog post](https://docs.velociraptor.app/blog/2024/2024-05-09-detection-engineering/)
+
+          Sigma relies on a set of `Log Sources` (defining possible
+          sources for log events) and `Field Mappings` (an agreed upon
+          set of field transformations that may be referred to in the
+          Sigma rule).
+
+          The Sigma standard does not define those, but they are
+          critical for successfully writing Sigma rules. Therefore,
+          Velociraptor uses [a standard set of Log Sources and Field
+          Mappings](https://sigma.velocidex.com/).
+
+          This is the purpose of this notebook! Making it easy and
+          simple to write rules **within the definitions of
+          Velociraptor's curated sets**. This means that portability
+          of rules to other systems is **not a goal** of this
+          notebook.
+
+          ## How to use this notebook?
+
+          1. Before you start, collect the
+             `Server.Import.CuratedSigma` artifact to download the
+             latest `Sigma Profiles`. A `Sigma Profile` is a machine
+             readable definition of log sources and field mappings
+             that allows the GUI to guide rule authors.
+
+          2. Collect event samples. Use the relevant `CaptureTestSet`
+             artifact (e.g. `Windows.Sigma.Base.CaptureTestSet`) collect
+             events from the relevant log source. You can post process
+             the rows and filter in the notebook as usual.
+
+          3. When you are ready to work with a test set, click `export
+             to JSON` in the GUI to receive a JSON file with the test
+             data.
+
+          4. Upload this test set into this notebook.
+
+          5. Open the `Sigma Editor` within this notebook.
+
+          6. Select the relevant log source from the drop down (you
+             will only see supported log sources).
+
+          7. Follow the instructions within the Sigma editor. You can
+             name any of the supported fields inside the rule.
+
+          8. Saving the rule will automatically apply the ruleset on
+             the test set. This gives visual feedback of how effective
+             the rule is.
+
+          9. When you are ready to deploy at scale download the
+             ruleset from the notebook and enter it to the base sigma
+             artifact (e.g. `Windows.Sigma.Base`).
+
+
+          After you are familiar with the `Sigma Studio` notebook you
+          can delete this instructional cell.
+
+      - type: markdown
+        template: |
+          {{ define "Setup" }}
+          LET ProfileType <= dict(
+             Windows="Windows.Sigma.Base",
+             Linux="Linux.Sigma.Base",
+             WindowsEvents="Windows.Sigma.BaseEvents",
+             LinuxEvents="Linux.Sigma.BaseEvents")
+
+          // We need to store the profile in the datastore because it
+          // is too large to pass in a html tag.
+          LET Rows <= SELECT upload(
+             accessor='data', file=Content,
+             name='profile.json') AS Upload
+          FROM http_client(url=Tool_SigmaProfiles_URL)
+
+          // This is where it is.
+          LET ProfileComponents <= Rows[0].Upload.Components
+
+          LET ProfileName <= get(item=ProfileType,
+              field=BaseType || "Windows")
+          LET _ <= import(artifact= ProfileName)
+
+          // Build the Sigma rules into a downloadable rule set.
+          LET Rules = SELECT read_file(
+             accessor='fs',
+             filename=vfs_path) AS Data FROM uploads()
+          WHERE vfs_path =~ '.yaml'
+
+          LET TestSigmaRules <= join(array=Rules.Data, sep='\n---\n')
+
+          LET Upload <= upload(name='sigma_rules.yaml', accessor='data',
+                                                        file=TestSigmaRules)
+          LET Link <= link_to(upload=Upload, text='sigma ruleset')
+
+          SELECT * FROM scope()
+          {{ end }}
+
+          {{ $rows := Query "Setup" | Expand }}
+
+          {{ SigmaEditor "upload" (  Scope "ProfileComponents" )  "selected_profile" ( Scope "ProfileName" )  }}
+
+          ### Download {{ Scope "Link" }}
+
+          # Sample Events For testing.
+
+          You can test the sigma rules on test events in JSONL
+          format. Upload samples into this notebook by using the
+          `Notebook Uploads` dialog.
+
+          {{ define "Testing" }}
+          // Feed all the json rows to the log sources.
+          LET AllRows = SELECT * FROM foreach(row={
+            SELECT vfs_path FROM uploads()
+            WHERE vfs_path =~ 'attach.+json$'
+          }, query={
+            SELECT * FROM parse_jsonl(accessor='fs', filename=vfs_path)
+          })
+
+          LET TestingLogSourceDict <= to_dict(item={
+            SELECT _key, AllRows AS _value
+            FROM items(item=LogSources)
+          })
+
+          // Build the log sources automatically.
+          LET TestingLogSources <= sigma_log_sources(`**`=TestingLogSourceDict)
+
+          // Apply the Sigma Rules on the samples.
+          SELECT  _Rule.Title AS Rule ,
+          Details,
+          dict(System=System,
+               EventData=X.EventData || X.UserData,
+               Message=X.Message) AS Event,
+          _Match AS Match
+          FROM sigma(
+          rules=split(string=TestSigmaRules, sep_string="\n---\n"),
+            log_sources= TestingLogSources, debug=Debug,
+            default_details=DefaultDetailsLambda,
+            field_mapping= FieldMapping)
+
+          {{ end }}
+
+          ## Match rules on test set
+
+          {{ if ( Scope "Debug" ) }}
+          Debug mode is enabled, so all events will be shown. Inspect
+          the Match object to see which detections matched.
+          {{ else }}
+          Debug mode is disabled, so only matching events will be shown. Enable Debug mode by editing the notebook.
+          {{ end }}
+
+          {{ Query "Testing" | Table}}
+
+          ## View the test set
+
+          {{ Query "SELECT * FROM AllRows " | Table}}

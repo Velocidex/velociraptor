@@ -58,15 +58,10 @@ func (self *NotebookStoreImpl) GetAvailableUploadFiles(notebook_id string) (
 
 		err := api.Walk(file_store_factory, cell_manager.UploadsDir(),
 			func(ps api.FSPathSpec, info os.FileInfo) error {
-				stat, err := file_store_factory.StatFile(ps)
-				if err != nil {
-					return nil
-				}
-
 				result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
 					Name: ps.Base(),
-					Size: uint64(stat.Size()),
-					Date: stat.ModTime().UTC().Format(time.RFC3339),
+					Size: uint64(info.Size()),
+					Date: info.ModTime().UTC().Format(time.RFC3339),
 					Type: api.GetExtensionForFilestore(ps),
 					Stats: &api_proto.ContainerStats{
 						Components: ps.Components(),
@@ -78,6 +73,25 @@ func (self *NotebookStoreImpl) GetAvailableUploadFiles(notebook_id string) (
 			return nil, err
 		}
 	}
+
+	// Also include attachments
+	items, _ := file_store_factory.ListDirectory(
+		notebook_path_manager.AttachmentDirectory())
+	for _, item := range items {
+		ps := item.PathSpec()
+		file_type := api.GetExtensionForFilestore(ps)
+		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
+			Name: ps.Base(),
+			Size: uint64(item.Size()),
+			Date: item.ModTime().UTC().Format(time.RFC3339),
+			Type: file_type,
+			Stats: &api_proto.ContainerStats{
+				Components: ps.Components(),
+				Type:       file_type,
+			},
+		})
+	}
+
 	return result, nil
 }
 
@@ -94,9 +108,10 @@ func (self *NotebookStoreImpl) RemoveAttachment(ctx context.Context,
 	}
 
 	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
-	attachment_path := path_specs.NewUnsafeFilestorePath(components...)
+	attachment_path := path_specs.NewUnsafeFilestorePath(components...).
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
 	if !path_specs.IsSubPath(
-		notebook_path_manager.AttachmentDirectory(),
+		notebook_path_manager.NotebookDirectory(),
 		attachment_path) {
 		return errors.New("Attachment must be within the notebook directory")
 	}

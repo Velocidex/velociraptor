@@ -173,7 +173,7 @@ func NewSigmaContext(
 	}
 
 	// Split rules into log sources
-	for name, query := range log_sources.queries {
+	for name, query := range log_sources.Queries() {
 		runner := &SigmaExecutionContext{
 			query: query,
 			Name:  name,

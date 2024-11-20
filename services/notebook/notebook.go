@@ -97,6 +97,13 @@ func (self *NotebookManager) UpdateNotebook(
 	}
 
 	in.ModifiedTime = utils.GetTime().Now().Unix()
+
+	// Update the requests based on the artifact specs.
+	err = updateNotebookRequests(ctx, self.config_obj, in)
+	if err != nil {
+		return err
+	}
+
 	return self.Store.SetNotebook(in)
 }
 
@@ -178,7 +185,10 @@ func (self *NotebookManager) UploadNotebookAttachment(
 		return nil, err
 	}
 
-	filename := NewNotebookAttachmentId() + "-" + in.Filename
+	filename := in.Filename
+	if !in.DisableAttachmentId {
+		filename = NewNotebookAttachmentId() + "-" + in.Filename
+	}
 
 	full_path, err := self.Store.StoreAttachment(
 		in.NotebookId, filename, decoded)

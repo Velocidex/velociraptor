@@ -1,0 +1,12 @@
+[
+ {
+  "Components": [
+   "subdir",
+   "Foo/Bar"
+  ],
+  "Extension": ".json",
+  "IsDir": false,
+  "Type": "PATH_TYPE_FILESTORE_JSON",
+  "AsJSON": "fs:/subdir/\"Foo/Bar\".json"
+ }
+]

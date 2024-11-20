@@ -3,6 +3,7 @@ package datastore
 import (
 	"crypto/sha1"
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -14,8 +15,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+var (
+	sep = string(filepath.Separator)
+)
+
 func AsFilestoreFilename(
 	db DataStore, config_obj *config_proto.Config, path api.FSPathSpec) string {
+
 	return AsFilestoreDirectory(db, config_obj, path) +
 		api.GetExtensionForFilestore(path)
 }
@@ -29,8 +35,7 @@ func AsFilestoreDirectory(
 	}
 
 	if path.IsSafe() {
-		return asSafeDirWithRoot(config_obj,
-			path.AsDatastorePath(), data_store_root)
+		return asSafeDirWithRoot(path.AsDatastorePath(), data_store_root)
 	}
 	return asUnsafeDirWithRoot(db, config_obj,
 		path.AsDatastorePath(), data_store_root)
@@ -44,7 +49,7 @@ func AsDatastoreDirectory(
 	}
 
 	if path.IsSafe() {
-		return asSafeDirWithRoot(config_obj, path, location)
+		return asSafeDirWithRoot(path, location)
 	}
 	return asUnsafeDirWithRoot(db, config_obj, path, location)
 }
@@ -55,7 +60,6 @@ func asUnsafeDirWithRoot(
 	db DataStore,
 	config_obj *config_proto.Config,
 	path api.DSPathSpec, root string) string {
-	sep := string(filepath.Separator)
 	new_components := make([]string, 0, len(path.Components()))
 	for _, i := range path.Components() {
 		if i != "" {
@@ -63,7 +67,10 @@ func asUnsafeDirWithRoot(
 				db, config_obj, i))
 		}
 	}
-	result := sep + strings.Join(new_components, sep)
+	result := ""
+	if len(new_components) > 0 {
+		result = sep + strings.Join(new_components, sep)
+	}
 
 	// This relies on the filepath starting with a drive letter
 	// and having \ as path separators. Main's
@@ -81,9 +88,10 @@ func AsDatastoreFilename(
 }
 
 // If the path spec is already safe we can shortcut it and not
-// sanitize.
+// sanitize. Safe paths are assumed to be generated from within the
+// application and therefore can not overflow path lengths - so we
+// dont need to compress them.
 func asSafeDirWithRoot(
-	config_obj *config_proto.Config,
 	path api.DSPathSpec, root string) string {
 	// No need to sanitize here because the DSPathSpec is already
 	// safe.
@@ -130,6 +138,12 @@ func UncompressComponent(
 	return ds_pathspec.Components[0]
 }
 
+// Sanitize the component for the filesystem. If the component name is
+// too long we also compress it by replacing it with a hash and
+// storing the long path is a different area of the datastore. The
+// result is that we can transparently write files with arbitrarily
+// long paths, regardless of the capabilities of the underlying
+// filesystem.
 func CompressComponent(
 	db DataStore,
 	config_obj *config_proto.Config,
@@ -138,6 +152,14 @@ func CompressComponent(
 	if len(sanitized_component) < 250 {
 		return sanitized_component
 	}
+
+	return compressComponent(db, config_obj, component)
+}
+
+func compressComponent(
+	db DataStore,
+	config_obj *config_proto.Config,
+	component string) string {
 
 	// Hash compress the original component
 	hash := sha1.Sum([]byte(component))
@@ -181,4 +203,15 @@ func LFNCompressedHashPath(hash string) api.DSPathSpec {
 	}
 
 	return res
+}
+
+// Ensure all intermediate directories exist.
+func MkdirAll(
+	db DataStore,
+	config_obj *config_proto.Config,
+	dirname api.FSPathSpec) error {
+
+	file_path := AsFilestoreFilename(db, config_obj,
+		dirname.SetType(api.PATH_TYPE_DATASTORE_DIRECTORY))
+	return os.MkdirAll(file_path, 0700)
 }

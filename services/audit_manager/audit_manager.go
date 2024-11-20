@@ -31,7 +31,9 @@ func (self *AuditManager) LogAudit(
 		return err
 	}
 
-	journal.PushRowsToArtifactAsync(
-		ctx, config_obj, record, "Server.Audit.Logs")
-	return nil
+	// If an event is important enough to be audit logged we need to
+	// make sure to write it syncronously.
+	return journal.PushRowsToArtifact(
+		ctx, config_obj, []*ordereddict.Dict{record},
+		"Server.Audit.Logs", "server", "")
 }

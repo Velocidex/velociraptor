@@ -68,6 +68,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 var (
@@ -523,7 +524,8 @@ func (self *HuntManager) ProcessParticipationWithError(
 	row *ordereddict.Dict) error {
 
 	participation_row := &ParticipationRecord{}
-	err := vfilter.ExtractArgs(self.scope, row, participation_row)
+	err := arg_parser.ExtractArgsWithContext(
+		ctx, self.scope, row, participation_row)
 	if err != nil {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Debug("ProcessParticipation: %v", err)

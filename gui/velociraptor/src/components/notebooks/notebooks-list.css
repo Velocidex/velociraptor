@@ -13,3 +13,7 @@
 .notebook-output {
     overflow-x: visible;
 }
+
+.notebook-parameters-form {
+    margin-top: 1em;
+}

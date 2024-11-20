@@ -1,0 +1,194 @@
+{
+ "Notebook": {
+  "name": "Test Notebook",
+  "description": "From Template",
+  "creator": "admin",
+  "artifacts": [
+   "Notebook.With.Parameters"
+  ],
+  "specs": [
+   {
+    "artifact": "Notebook.With.Parameters",
+    "parameters": {
+     "env": [
+      {
+       "key": "StringArg",
+       "value": "Hello"
+      }
+     ]
+    }
+   }
+  ],
+  "parameters": [
+   {
+    "name": "Bool",
+    "type": "bool"
+   },
+   {
+    "name": "StringArg",
+    "default": "This is a test",
+    "type": "string"
+   }
+  ],
+  "requests": [
+   {
+    "query_id": 1,
+    "total_queries": 1,
+    "env": [
+     {
+      "key": "Bool"
+     },
+     {
+      "key": "StringArg",
+      "value": "Hello"
+     },
+     {
+      "key": "Tool_SomeTool_HASH",
+      "value": "XXXX"
+     },
+     {
+      "key": "Tool_SomeTool_FILENAME",
+      "value": "www.google.com"
+     },
+     {
+      "key": "Tool_SomeTool_URL",
+      "value": "https://localhost:8000/public/152038a5bc46cb8fc68ee6eac0269c6a3fba574c4a96a650ed26aa9b02b1cb64"
+     }
+    ],
+    "Query": [
+     {
+      "VQL": "LET Bool \u003c= get(field='Bool') = TRUE OR get(field='Bool') =~ '^(Y|TRUE|YES|OK)$' "
+     }
+    ],
+    "max_row": 1000
+   }
+  ],
+  "created_time": 10,
+  "modified_time": 10,
+  "notebook_id": "N.01",
+  "cell_metadata": [
+   {
+    "cell_id": "NC.02",
+    "timestamp": 10,
+    "type": "vql",
+    "current_version": "03",
+    "available_versions": [
+     "03"
+    ]
+   }
+  ]
+ },
+ "Cell": {
+  "input": "SELECT log(message=\"StringArg Should be Hello because default is overriden %v\", args=StringArg),\n       log(message=\"Tool is available through local url %v\", args=Tool_SomeTool_URL)\nFROM scope()\n",
+  "output": "\u003cdiv class=\"panel\"\u003e\u003cvelo-csv-viewer base-url=\"'v1/GetTable'\" params='%7B%22notebook_id%22%3A%22N.01%22%2C%22client_id%22%3A%22%22%2C%22cell_id%22%3A%22NC.02-03%22%2C%22table_id%22%3A1%2C%22TableOptions%22%3A%7B%7D%2C%22Version%22%3A10%7D' /\u003e\u003c/div\u003e",
+  "data": "{}",
+  "cell_id": "NC.02",
+  "messages": [
+   "DEFAULT:StringArg Should be Hello because default is overriden Hello\n",
+   "DEFAULT:Tool is available through local url https://localhost:8000/public/152038a5bc46cb8fc68ee6eac0269c6a3fba574c4a96a650ed26aa9b02b1cb64\n",
+   "DEBUG:Query Stats: {\"RowsScanned\":1,\"PluginsCalled\":1,\"FunctionsCalled\":4,\"ProtocolSearch\":0,\"ScopeCopy\":3}\n"
+  ],
+  "timestamp": 10,
+  "type": "vql",
+  "current_version": "03",
+  "available_versions": [
+   "03"
+  ]
+ },
+ "UpdatedNotebook": {
+  "name": "Test Notebook",
+  "description": "From Template",
+  "creator": "admin",
+  "artifacts": [
+   "Notebook.With.Parameters"
+  ],
+  "specs": [
+   {
+    "artifact": "Notebook.With.Parameters",
+    "parameters": {
+     "env": [
+      {
+       "key": "StringArg",
+       "value": "Goodbye"
+      }
+     ]
+    }
+   }
+  ],
+  "parameters": [
+   {
+    "name": "Bool",
+    "type": "bool"
+   },
+   {
+    "name": "StringArg",
+    "default": "This is a test",
+    "type": "string"
+   }
+  ],
+  "requests": [
+   {
+    "query_id": 1,
+    "total_queries": 1,
+    "env": [
+     {
+      "key": "Bool"
+     },
+     {
+      "key": "StringArg",
+      "value": "Goodbye"
+     },
+     {
+      "key": "Tool_SomeTool_HASH",
+      "value": "XXXX"
+     },
+     {
+      "key": "Tool_SomeTool_FILENAME",
+      "value": "www.google.com"
+     },
+     {
+      "key": "Tool_SomeTool_URL",
+      "value": "https://localhost:8000/public/152038a5bc46cb8fc68ee6eac0269c6a3fba574c4a96a650ed26aa9b02b1cb64"
+     }
+    ],
+    "Query": [
+     {
+      "VQL": "LET Bool \u003c= get(field='Bool') = TRUE OR get(field='Bool') =~ '^(Y|TRUE|YES|OK)$' "
+     }
+    ],
+    "max_row": 1000
+   }
+  ],
+  "created_time": 10,
+  "modified_time": 11,
+  "notebook_id": "N.01",
+  "cell_metadata": [
+   {
+    "cell_id": "NC.02",
+    "timestamp": 10,
+    "type": "vql",
+    "current_version": "03",
+    "available_versions": [
+     "03"
+    ]
+   }
+  ]
+ },
+ "UpdatedCell": {
+  "input": "SELECT log(message='StringArg should be Goodbye now: %v', args=StringArg) FROM scope()",
+  "output": "\u003cdiv class=\"panel\"\u003e\u003cvelo-csv-viewer base-url=\"'v1/GetTable'\" params='%7B%22notebook_id%22%3A%22N.01%22%2C%22client_id%22%3A%22%22%2C%22cell_id%22%3A%22NC.02-04%22%2C%22table_id%22%3A1%2C%22TableOptions%22%3A%7B%7D%2C%22Version%22%3A11%7D' /\u003e\u003c/div\u003e",
+  "data": "{}",
+  "cell_id": "NC.02",
+  "messages": [
+   "DEFAULT:StringArg should be Goodbye now: Goodbye\n",
+   "DEBUG:Query Stats: {\"RowsScanned\":1,\"PluginsCalled\":1,\"FunctionsCalled\":3,\"ProtocolSearch\":0,\"ScopeCopy\":3}\n"
+  ],
+  "timestamp": 11,
+  "type": "vql",
+  "current_version": "04",
+  "available_versions": [
+   "03",
+   "04"
+  ]
+ }
+}

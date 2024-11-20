@@ -13,7 +13,7 @@ func IsSubPath(parent api.FSPathSpec, child api.FSPathSpec) bool {
 	parent_components := parent.Components()
 	child_components := child.Components()
 
-	// Parent path can not be shorter than child
+	// Parent path can not be longer than child
 	if len(parent_components) > len(child_components) {
 		return false
 	}

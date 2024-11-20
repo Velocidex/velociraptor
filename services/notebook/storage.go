@@ -366,11 +366,17 @@ func (self *NotebookStoreImpl) StoreAttachment(
 	full_path := paths.NewNotebookPathManager(notebook_id).
 		Attachment(filename)
 	file_store_factory := file_store.GetFileStore(self.config_obj)
-	fd, err := file_store_factory.WriteFile(full_path)
+	fd, err := file_store_factory.WriteFileWithCompletion(
+		full_path, utils.SyncCompleter)
 	if err != nil {
 		return nil, err
 	}
 	defer fd.Close()
+
+	err = fd.Truncate()
+	if err != nil {
+		return nil, err
+	}
 
 	_, err = fd.Write(data)
 	return full_path, err
