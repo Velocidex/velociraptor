@@ -90,7 +90,7 @@ func asUnsafeDirWithRoot(
 	// and having \ as path separators. Main's
 	// validateServerConfig() ensures this is the case.
 	if runtime.GOOS == "windows" {
-		return "\\\\?\\" + root + result
+		return "\\\\?\\" + filepath.Clean(root+result)
 	}
 	return root + result
 }

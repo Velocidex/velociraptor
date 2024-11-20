@@ -5,7 +5,7 @@
    "Foo/Bar"
   ],
   "Extension": ".json",
-  "Mode": "----------",
+  "IsDir": false,
   "Type": "PATH_TYPE_FILESTORE_JSON",
   "AsJSON": "fs:/subdir/\"Foo/Bar\".json"
  }

@@ -78,7 +78,7 @@ func (self *FileStoreTestSuite) TestListChildrenComplicatedNames() {
 		res := ordereddict.NewDict().
 			Set("Components", ps.Components()).
 			Set("Extension", api.GetExtensionForFilestore(ps)).
-			Set("Mode", info.Mode().String()).
+			Set("IsDir", info.IsDir()).
 			Set("Type", ps.Type().String()).
 			Set("AsJSON", ps)
 		golden = append(golden, res)
