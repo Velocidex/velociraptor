@@ -84,13 +84,16 @@ func asUnsafeDirWithRoot(
 				db, config_obj, i))
 		}
 	}
-	result := sep + strings.Join(new_components, sep)
+	result := ""
+	if len(new_components) > 0 {
+		result = sep + strings.Join(new_components, sep)
+	}
 
 	// This relies on the filepath starting with a drive letter
 	// and having \ as path separators. Main's
 	// validateServerConfig() ensures this is the case.
 	if runtime.GOOS == "windows" {
-		return "\\\\?\\" + filepath.Clean(root+result)
+		return "\\\\?\\" + root + result
 	}
 	return root + result
 }

@@ -341,9 +341,10 @@ func Windows() error {
 // Windows client without a gui.
 func WindowsBare() error {
 	return Builder{
-		extra_tags: " release yara disable_gui ",
-		goos:       "windows",
-		arch:       "amd64"}.Run()
+		extra_tags:  " release yara disable_gui ",
+		goos:        "windows",
+		disable_cgo: true,
+		arch:        "amd64"}.Run()
 }
 
 func WindowsDev() error {
