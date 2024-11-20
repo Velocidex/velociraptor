@@ -58,7 +58,6 @@ func (self *ServerUploader) Upload(
 		store_as_name = filename
 	}
 
-	// Write the file under an accessor directory
 	cached, pres, closer := uploads.DeduplicateUploads(scope, store_as_name)
 	defer closer()
 	if pres {

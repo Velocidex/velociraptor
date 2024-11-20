@@ -21,26 +21,9 @@ var (
 
 func AsFilestoreFilename(
 	db DataStore, config_obj *config_proto.Config, path api.FSPathSpec) string {
-	base := path.Base()
-	if !path.IsSafe() {
-		base = utils.SanitizeString(base)
-	}
 
-	if path.Type() != api.PATH_TYPE_FILESTORE_ANY {
-		base += api.GetExtensionForFilestore(path)
-
-	} else {
-
-		// Ensure that if the base file contains an extension which
-		// might be mis-identified as an internal extension it gets
-		// escaped.
-		path_type, base_no_extension := api.GetFileStorePathTypeFromExtension(base)
-		if path_type != api.PATH_TYPE_FILESTORE_ANY {
-			base = base_no_extension + "%2e" + base[len(base_no_extension)+1:]
-		}
-	}
-
-	return AsFilestoreDirectory(db, config_obj, path.Dir()) + sep + base
+	return AsFilestoreDirectory(db, config_obj, path) +
+		api.GetExtensionForFilestore(path)
 }
 
 func AsFilestoreDirectory(

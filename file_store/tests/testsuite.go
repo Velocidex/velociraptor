@@ -111,14 +111,6 @@ func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
 	//assert.NoError(self.T(), err)
 	//fd.Close()
 
-	// This file type is of type ANY but has an extension of
-	// ".json". This should not be mistaken by the filestore as an
-	// internal .json object.
-	fd, err = self.filestore.WriteFile(dir_path_spec.AddChild("Foo.json").
-		SetType(api.PATH_TYPE_FILESTORE_ANY))
-	assert.NoError(self.T(), err)
-	fd.Close()
-
 	// Add an intermediate directory - this will add a directory info
 	// for the intermediate directory.
 	fd, err = self.filestore.WriteFile(dir_path_spec.AddChild("Foo", "dir", "value").

@@ -28,15 +28,5 @@
   "IsDir": false,
   "Type": "PATH_TYPE_FILESTORE_JSON_INDEX",
   "AsJSON": "fs:/subdir/Foo.json.index"
- },
- {
-  "Components": [
-   "subdir",
-   "Foo.json"
-  ],
-  "Extension": "",
-  "IsDir": false,
-  "Type": "PATH_TYPE_FILESTORE_ANY",
-  "AsJSON": "fs:/subdir/Foo.json"
  }
 ]
