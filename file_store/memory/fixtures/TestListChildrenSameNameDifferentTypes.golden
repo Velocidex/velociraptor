@@ -5,7 +5,7 @@
    "Foo"
   ],
   "Extension": "",
-  "Mode": "d---------",
+  "IsDir": true,
   "Type": "PATH_TYPE_DATASTORE_DIRECTORY",
   "AsJSON": "fs:/subdir/Foo"
  },
@@ -15,7 +15,7 @@
    "Foo"
   ],
   "Extension": ".json",
-  "Mode": "----------",
+  "IsDir": false,
   "Type": "PATH_TYPE_FILESTORE_JSON",
   "AsJSON": "fs:/subdir/Foo.json"
  },
@@ -25,7 +25,7 @@
    "Foo"
   ],
   "Extension": ".json.index",
-  "Mode": "----------",
+  "IsDir": false,
   "Type": "PATH_TYPE_FILESTORE_JSON_INDEX",
   "AsJSON": "fs:/subdir/Foo.json.index"
  },
@@ -35,7 +35,7 @@
    "Foo.json"
   ],
   "Extension": "",
-  "Mode": "----------",
+  "IsDir": false,
   "Type": "PATH_TYPE_FILESTORE_ANY",
   "AsJSON": "fs:/subdir/Foo.json"
  }
