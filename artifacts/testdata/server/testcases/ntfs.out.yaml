@@ -37,7 +37,7 @@ LET NTFSInfoFromImage <= parse_ntfs( filename=srcDir+'/artifacts/testdata/files/
   "LastAccess0x30": "2018-09-24T07:55:29.7664719Z",
   "LogFileSeqNum": 1096672
  }
-]LET MFTFile <= tempfile()[]LET _ <= copy(filename=pathspec( Path="$MFT", DelegateAccessor="file", DelegatePath=srcDir+'/artifacts/testdata/files/test.ntfs.dd'), accessor="raw_ntfs", dest=MFTFile)[]SELECT EntryNumber, OSPath, parse_ntfs(mft_filename=MFTFile, mft=EntryNumber) AS Details FROM parse_mft(filename=MFTFile, start=45) LIMIT 10[
+]LET MFTDir <= tempdir()[]LET MFTFile <= MFTDir + "/test.mft"[]LET _ <= copy(filename=pathspec( Path="$MFT", DelegateAccessor="file", DelegatePath=srcDir+'/artifacts/testdata/files/test.ntfs.dd'), accessor="raw_ntfs", dest=MFTFile)[]SELECT EntryNumber, OSPath, parse_ntfs(mft_filename=MFTFile, mft=EntryNumber) AS Details FROM parse_mft(filename=MFTFile, start=45) LIMIT 10[
  {
   "EntryNumber": 45,
   "OSPath": "Folder A\\Folder B",
