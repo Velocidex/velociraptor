@@ -111,7 +111,7 @@ func (self *NotebookStoreImpl) RemoveAttachment(ctx context.Context,
 	attachment_path := path_specs.NewUnsafeFilestorePath(components...).
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
 	if !path_specs.IsSubPath(
-		notebook_path_manager.AttachmentDirectory(),
+		notebook_path_manager.NotebookDirectory(),
 		attachment_path) {
 		return errors.New("Attachment must be within the notebook directory")
 	}

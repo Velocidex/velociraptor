@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 
@@ -162,6 +163,28 @@ func (self FileStoreFileSystemAccessor) Open(filename string) (
 	return self.OpenWithOSPath(full_path)
 }
 
+// Convert the OSPath to a filestore FSPathSpec
+func (self FileStoreFileSystemAccessor) FSPathSpecFromOSPath(filename *accessors.OSPath) api.FSPathSpec {
+	res := path_specs.NewUnsafeFilestorePath(filename.Components...)
+	if len(res.Components()) == 0 {
+		return res
+	}
+
+	// The type of each file depends on where in the filestore it is
+	// located.
+
+	// Downloads are stored as ZIP or HTML depending on their
+	// extensions.
+	if path_specs.IsSubPath(paths.DOWNLOADS_ROOT, res) ||
+		path_specs.IsSubPath(paths.ARTIFACT_DEFINITION_PREFIX, res) {
+		path_type, bare := api.GetDataStorePathTypeFromExtension(res.Base())
+		return res.Dir().AddUnsafeChild(bare).SetType(path_type)
+	}
+
+	// Other parts of the filestore are stored literally.
+	return res.SetType(api.PATH_TYPE_FILESTORE_ANY)
+}
+
 func (self FileStoreFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPath) (
 	accessors.ReadSeekCloser, error) {
 
@@ -185,8 +208,7 @@ func (self FileStoreFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPat
 	} else {
 		// Try to access the file directly first, assume it is of type
 		// PATH_TYPE_FILESTORE_ANY
-		fullpath = path_specs.NewUnsafeFilestorePath(filename.Components...).
-			SetType(api.PATH_TYPE_FILESTORE_ANY)
+		fullpath = self.FSPathSpecFromOSPath(filename)
 	}
 
 	file, err := self.openFile(fullpath)

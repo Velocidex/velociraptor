@@ -40,6 +40,11 @@ func (self *NotebookPathManager) AttachmentDirectory() api.FSPathSpec {
 		AsFilestorePath().SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
+func (self *NotebookPathManager) NotebookDirectory() api.FSPathSpec {
+	return self.root.AddChild(self.notebook_id).
+		AsFilestorePath().SetType(api.PATH_TYPE_FILESTORE_ANY)
+}
+
 // Notebook paths are based on the time so we need to write the stats
 // next to the container and derive the path from the previous
 // filename.

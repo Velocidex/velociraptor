@@ -55,7 +55,8 @@ func (self *FileStoreUploader) Upload(
 		return res, nil
 	}
 
-	output_path := self.root_path.AddUnsafeChild(store_as_name.Components...)
+	output_path := self.root_path.AddUnsafeChild(accessor).
+		AddUnsafeChild(store_as_name.Components...)
 	out_fd, err := self.file_store.WriteFileWithCompletion(
 		output_path, utils.SyncCompleter)
 

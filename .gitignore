@@ -25,3 +25,4 @@ config/ab0x.go
 /googleapis
 
 __debug*
+debug.test*

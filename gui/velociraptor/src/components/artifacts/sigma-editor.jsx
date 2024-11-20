@@ -30,7 +30,8 @@ const escapeHTML = function(htmlStr) {
 
 class SigmaEditorDialog extends Component {
     static propTypes = {
-        profiles: PropTypes.object,
+        // VFS path to fetch the profile upload
+        profile_components: PropTypes.array,
         selected_profile: PropTypes.string,
         notebook_id: PropTypes.string,
         cell: PropTypes.object,
@@ -39,6 +40,7 @@ class SigmaEditorDialog extends Component {
 
     componentDidMount = () => {
         this.source = CancelToken.source();
+        this.fetchProfile();
     }
 
     selectedProfile = ()=>{
@@ -49,6 +51,35 @@ class SigmaEditorDialog extends Component {
         rule: "",
         selected_profile: "",
         selected_source: "",
+        profiles: {},
+    }
+
+    fetchProfile = ()=>{
+        if (!_.isEmpty(this.state.profiles)) {
+            return;
+        }
+
+        let components = this.props.profile_components || [];
+        if (_.isEmpty(components)) {
+            return;
+        }
+
+        api.get_blob("v1/DownloadVFSFile", {
+            offset: 0,
+            length: 2000000,
+            fs_components: components,
+            org_id: window.globals.OrgId || "root",
+        }, this.source.token).then(response => {
+            if(response.error) {
+                this.setState({error: true});
+
+            } else {
+                const view = new Uint8Array(response.data);
+                let json_obj = JSONparse(
+                    String.fromCharCode.apply(null, view));
+                this.setState({profiles: json_obj});
+            }
+        });
     }
 
     aceConfig = (ace) => {
@@ -120,7 +151,7 @@ class SigmaEditorDialog extends Component {
         });
 
         // Add FieldMappings as completions
-        let profiles = this.props.profiles || {};
+        let profiles = this.state.profiles || {};
         let selected_profile = profiles[this.selectedProfile()] || {};
         _.each(selected_profile.FieldMappings, (v, k)=>{
             res.push({name: k,
@@ -364,7 +395,7 @@ details: "Field %%field_name%%"
     }
 
     render() {
-        let profiles = this.props.profiles || {};
+        let profiles = this.state.profiles || {};
         let selected_profile_name = this.selectedProfile();
         let selected_profile = profiles[selected_profile_name] || {};
 
@@ -388,7 +419,7 @@ details: "Field %%field_name%%"
                        onChange={(e)=>{
                            this.setState({selected_profile: e.value});
                        }}
-                       options={_.map(this.props.profiles || {}, (v, k)=>{
+                       options={_.map(this.state.profiles || {}, (v, k)=>{
                            return {value: k, label: k};
                        })}
                        spellCheck="false"
@@ -417,43 +448,13 @@ export default class VeloSigmaEditor extends Component {
         params: PropTypes.object,
     };
 
-    componentDidMount = () => {
-        this.source = CancelToken.source();
-        this.fetchProfile();
-    }
-
     state = {
-        profiles: {},
         components: [],
         showSigmaDialog: false,
     }
 
-    fetchProfile = ()=>{
-        let components = this.props.params.upload || [];
-        if (_.isEmpty(components)) {
-            return;
-        }
-
-        api.get_blob("v1/DownloadVFSFile", {
-            offset: 0,
-            length: 2000000,
-            fs_components: components,
-            org_id: window.globals.OrgId || "root",
-        }, this.source.token).then(response => {
-            if(response.error) {
-                this.setState({error: true});
-
-            } else {
-                const view = new Uint8Array(response.data);
-                let json_obj = JSONparse(
-                    String.fromCharCode.apply(null, view));
-                this.setState({profiles: json_obj});
-            }
-        });
-    }
-
     render() {
-        let component = this.props.params && this.props.params.upload;
+        let components = this.props.params && this.props.params.upload;
         let selected_profile = this.props.params &&
             this.props.params.selected_profile;
         return (
@@ -465,11 +466,12 @@ export default class VeloSigmaEditor extends Component {
               </Button>
               { this.state.showSigmaDialog &&
                 <SigmaEditorDialog
+                  profile_components={components}
                   selected_profile={selected_profile}
                   notebook_id={this.props.notebook_id}
                   cell={this.props.cell}
                   onClose={()=>this.setState({showSigmaDialog: false})}
-                  profiles={this.state.profiles}/>}
+                />}
             </>
         );
     }
