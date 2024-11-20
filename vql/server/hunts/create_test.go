@@ -22,6 +22,7 @@ var testArtifacts = []string{`
 name: Test.Artifact
 `, `
 name: Server.Audit.Logs
+type: SERVER_EVENT
 `}
 
 type TestSuite struct {

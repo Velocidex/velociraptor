@@ -36,6 +36,7 @@ sources:
     template: "This is a suggestion"
 `, `
 name: Server.Audit.Logs
+type: SERVER_EVENT
 `, `
 name: Server.Internal.ArtifactDescription
 `}
@@ -72,6 +73,9 @@ func (self *NotebookTestSuite) TearDownTest() {
 }
 
 func (self *NotebookTestSuite) TestCreateNotebook() {
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(1602103388, 0)))
+	defer closer()
+
 	repository := self.LoadArtifacts(testArtifacts...)
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
@@ -162,7 +166,7 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 
 	// Wait for the audit messages to be written
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		audit, _ := mem_file_store.Get("/clients/server/artifacts/Server.Audit.Logs.json")
+		audit, _ := mem_file_store.Get("/server_artifacts/Server.Audit.Logs/2020-10-07.json")
 		return strings.Contains(string(audit), `"Input":"# Input field"`) &&
 			strings.Contains(string(audit),
 				`"operation":"CreateNotebook","principal":"admin"`) &&
@@ -171,7 +175,7 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 	})
 
 	// Check uploads - uploads are stored in each cell so they can be versioned
-	mem_file_store.Debug()
+	// mem_file_store.Debug()
 
 	upload, _ := mem_file_store.Get(
 		"/notebooks/N.01/NC.02-05/uploads/data/file.txt")
