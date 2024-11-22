@@ -2,15 +2,9 @@ import "./table.css";
 
 import _ from 'lodash';
 
-import 'react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css';
-import ToolkitProvider from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit.min';
-
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import BootstrapTable from 'react-bootstrap-table-next';
-import paginationFactory from 'react-bootstrap-table2-paginator';
-import Dropdown from 'react-bootstrap/Dropdown';
 import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Modal from 'react-bootstrap/Modal';
@@ -27,11 +21,12 @@ import T from '../i8n/i8n.jsx';
 import TreeCell from './tree-cell.jsx';
 import ContextMenu from '../utils/context.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
-import filterFactory, { textFilter } from 'react-bootstrap-table2-filter';
 import { JSONparse } from '../utils/json_parse.jsx';
 import Download from "../widgets/download.jsx";
 import VeloLog from "../widgets/logs.jsx";
-
+import ColumnResizer from "./column-resizer.jsx";
+import Table from 'react-bootstrap/Table';
+import { TablePaginationControl, ColumnToggle } from './paged-table.jsx';
 
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
@@ -124,286 +119,8 @@ export class InspectRawJson extends Component {
     };
 }
 
-// Toggle columns on or off - helps when the table is very wide.
-export const ColumnToggleList = (e) => {
-    const [open, setOpen] = React.useState(false);
-    const onToggle = (isOpen, metadata) => {
-        if (metadata.source === "select") {
-            setOpen(true);
-            return;
-        }
-        setOpen(isOpen);
-    };
-
-    const { columns, onColumnToggle, toggles } = e;
-    let enabled_columns = [];
-
-    let buttons = columns.map((column, idx) => {
-        if (!column.text) {
-            return <React.Fragment key={idx}></React.Fragment>;
-        }
-        let hidden = toggles[column.dataField];
-        if (!hidden) {
-            enabled_columns.push(column);
-        }
-        return <Dropdown.Item
-                 key={ column.dataField }
-                 eventKey={column.dataField}
-                 active={!hidden}
-               >
-                 { column.text }
-               </Dropdown.Item>;
-    });
-
-    return (
-        <ToolTip tooltip={T("Show/Hide Columns")}>
-          <Dropdown show={open}
-                    onSelect={c=>{
-                        onColumnToggle(c);
-                      }}
-                    onToggle={onToggle}>
-            <Dropdown.Toggle variant="default" id="dropdown-basic">
-              <FontAwesomeIcon icon="columns"/>
-            </Dropdown.Toggle>
-
-            <Dropdown.Menu>
-              { _.isEmpty(enabled_columns) ?
-                <Dropdown.Item
-                  onSelect={()=>{
-                      _.each(columns, c=>{
-                          if(toggles[c.dataField]){
-                              onColumnToggle(c.dataField);
-                          }
-                      });
-                  }}>
-                  {T("Set All")}
-                </Dropdown.Item> :
-                <Dropdown.Item
-                  onClick={()=>{
-                      _.each(columns, c=>{
-                          if(!toggles[c.dataField]){
-                              onColumnToggle(c.dataField);
-                          }
-                      });
-                  }}>
-                  {T("Clear All")}
-                </Dropdown.Item> }
-              <Dropdown.Divider />
-              { buttons }
-            </Dropdown.Menu>
-          </Dropdown>
-        </ToolTip>
-    );
-};
-
-export const sizePerPageRenderer = ({
-  options,
-  currSizePerPage,
-  onSizePerPageChange
-}) => (
-  <div className="btn-group" role="group">
-    {
-      options.map((option) => {
-        const isSelect = currSizePerPage === `${option.page}`;
-        return (
-          <button
-            key={ option.text }
-            type="button"
-            onClick={ () => onSizePerPageChange(option.page) }
-            className={ `btn ${isSelect ? 'btn-secondary' : 'btn-default'}` }
-          >
-            { option.text }
-          </button>
-        );
-      })
-    }
-  </div>
-);
-
-class VeloTable extends Component {
-    static propTypes = {
-        rows: PropTypes.array,
-        columns: PropTypes.array,
-
-        // A dict containing renderers for each column.
-        renderers: PropTypes.object,
-
-        // A unique name we use to identify this table. We use this
-        // name to save column preferences in the application user
-        // context.
-        name: PropTypes.string,
-        headers: PropTypes.object,
-
-        column_renderers: PropTypes.object,
-
-        // If set we do not render any toolbar
-        no_toolbar: PropTypes.bool,
-    }
-
-    state = {
-        toggles: {},
-        from_page: 0,
-        page_size: 10,
-    }
-
-    componentDidMount = () => {
-        let toggles = {};
-        // Hide columns that start with _
-        _.each(this.props.columns, c=>{
-            toggles[c] = c[0] === '_';
-        });
-
-        this.setState({toggles: toggles});
-    }
-
-    defaultFormatter = (cell, row, env) => {
-        return <VeloValueRenderer value={cell}/>;
-    }
-
-    pageChange = (page, size)=>{
-        this.setState({from_page: page-1, page_size: size});
-    }
-
-    pageSizeChange = (size) => {
-        this.setState({page_size: size});
-    }
-
-    customTotal = (from, to, size) => {
-        return <span className="react-bootstrap-table-pagination-total">
-                 {T("TablePagination", from, to, size)}
-               </span>;
-    };
-
-    // Calculate the visible columns in the current page. This is
-    // needed to support tables with many columns which change on each
-    // page.
-    calculateColumns = ()=>{
-        let start_page = this.state.from_page || 0;
-        let page_size = this.state.page_size || 10;
-        let columns = [];
-        for(let i=start_page * page_size; i<(start_page + 1)*page_size;i++) {
-            if (this.props.rows.length < i) {
-                break;
-            };
-            _.forOwn(this.props.rows[i], (v, k)=>{
-                if (k==="_id") { return };
-
-                if(!_.find(columns, x=>x===k)) {
-                    columns.push(k);
-                };
-            });
-        }
-        return columns;
-    }
-
-    render() {
-        let start = (this.state.from_page || 0) * (this.state.page_size || 10);
-
-        if (!this.props.rows) {
-            return <div></div>;
-        }
-
-        let rows = this.props.rows;
-        let column_names = this.props.columns || this.calculateColumns();
-        if (_.isEmpty(column_names)) {
-            return <div></div>;
-        }
-
-        let columns = [{dataField: '_id', text: "id", hidden: true}];
-        for(var i=0;i<column_names.length;i++) {
-            var name = column_names[i];
-            var header = (this.props.headers || {})[name] || name;
-            let definition ={ dataField: name, text: header};
-            if (this.props.column_renderers && this.props.column_renderers[name]) {
-                definition = this.props.column_renderers[name];
-            }
-
-            if (this.props.renderers && this.props.renderers[name]) {
-                definition.formatter = this.props.renderers[name];
-            } else if(!definition.formatter) {
-                definition.formatter = this.defaultFormatter;
-            }
-
-            if (this.state.toggles[name]) {
-                definition["hidden"] = true;
-            }
-
-            columns.push(definition);
-        }
-
-        // Add an id field for react ordering.
-        for (var j=0; j<rows.length; j++) {
-            rows[j]["_id"] = j;
-        }
-        return (
-            <div className="velo-table">
-              <ToolkitProvider
-                bootstrap4
-                keyField="_id"
-                data={ rows }
-                columns={ columns }
-                toggles={this.state.toggles}
-                columnToggle
-            >
-                {
-                    props => (
-                        <div className="col-12">
-                          { !this.props.no_toolbar &&
-                            <Navbar className="toolbar">
-                              <ButtonGroup>
-                                <ColumnToggleList { ...props.columnToggleProps }
-                                                  onColumnToggle={(c)=>{
-                                                      // Do not make a copy
-                                                      // here because set
-                                                      // state is not
-                                                      // immediately visible
-                                                      // and this will be
-                                                      // called for each
-                                                      // column.
-                                                      let toggles = this.state.toggles;
-                                                      toggles[c] = !toggles[c];
-                                                      this.setState({toggles: toggles});
-                                                  }}
-                                                  toggles={this.state.toggles} />
-                                <InspectRawJson rows={this.props.rows}
-                                                start={start}/>
-                              </ButtonGroup>
-                            </Navbar>
-                          }
-                      <div className="row col-12">
-                        <BootstrapTable
-                          { ...props.baseProps }
-                          hover
-                          condensed
-                          keyField="_id"
-                          headerClasses="alert alert-secondary"
-                          bodyClasses="fixed-table-body"
-                          toggles={this.state.toggles}
-                          filter={filterFactory()}
-                          pagination={ paginationFactory({
-                              showTotal: true,
-                              paginationTotalRenderer: this.customTotal,
-                              sizePerPageRenderer,
-                              onPageChange: this.pageChange,
-                              onSizePerPageChange: this.pageSizeChange,
-                          }) }
-                        />
-                      </div>
-                    </div>
-                )
-            }
-              </ToolkitProvider>
-            </div>
-        );
-    }
-};
-
-export default VeloTable;
-
 // The JSON response from the server is encoded as a strict protobuf
 // with string cell values. Here we expand it into arbitrary JSON objects.
-
-// TODO: This needs to be changed on the server to deliver a proper JSON response.
 export function PrepareData(value) {
     let rows = [];
     let columns = value.columns || [];
@@ -427,36 +144,6 @@ export function PrepareData(value) {
 
     return {columns: value.columns, rows: rows};
 };
-
-export function headerFormatter(column, colIndex, { sortElement, filterElement }) {
-    let result = (
-        // Not a real table but I cant figure out the css
-        // right now so we do it old school.
-        <table className="notebook-filter">
-          <tbody>
-            <tr>
-              { column.filter ?
-                <td>{ filterElement }</td> :
-                <td>{ column.text }</td> }
-              <td className="sort-element">{ sortElement }</td>
-            </tr>
-          </tbody>
-        </table>
-    );
-    return result;
-}
-
-export function sortCaret(order, column) {
-    if (!order) return <FontAwesomeIcon icon="sort"/>;
-    else if (order === 'asc') return (
-        <FontAwesomeIcon icon="sort-up"/>
-    );
-    else if (order === 'desc') return (
-        <FontAwesomeIcon icon="sort-down"/>
-    );
-
-    return null;
-}
 
 // Returns a formatter by type.
 export function getFormatter(column_type, text) {
@@ -659,269 +346,264 @@ export function getFormatter(column_type, text) {
     };
 }
 
+class VeloTable extends Component {
+    static propTypes = {
+        rows: PropTypes.array,
+        columns: PropTypes.array,
+
+        // A unique name we use to identify this table. We use this
+        // name to save column preferences in the application user
+        // context.
+        name: PropTypes.string,
+        column_renderers: PropTypes.object,
+        header_renderers: PropTypes.object,
 
 
-export function formatColumns(columns, env, column_formatter) {
-    _.each(columns, (x) => {
-        x.headerFormatter = column_formatter || headerFormatter;
-        if(x.no_transformation) {
-            x.headerFormatter = headerFormatter;
-        }
-        if (x.sort) {
-            x.sortCaret = sortCaret;
-        }
-        if (x.filtered) {
-            x.filter = textFilter({
-                placeholder: x.text,
-                caseSensitive: false,
-                delay: 10,
-            });
-        }
-        if (x.sortNumeric) {
-            x.sortFunc= (a, b, order, dataField) => {
-                if (order === 'asc') {
-                    return b - a;
-                }
-                return a - b; // desc
+        // If set we do not render any toolbar
+        no_toolbar: PropTypes.bool,
+
+        env: PropTypes.object,
+
+        toolbar: PropTypes.object,
+
+        onSelect: PropTypes.func,
+        selected: PropTypes.func,
+    }
+
+    state = {
+        columns: [],
+        toggles: {},
+        start_row: 0,
+        page_size: 10,
+        total_size: 0,
+        column_widths: {},
+    }
+
+    componentDidMount = () => {
+        let toggles = {};
+        // Hide columns that start with _
+        _.each(this.props.columns, c=>{
+            toggles[c] = c[0] === '_';
+        });
+
+        this.setState({toggles: toggles, columns: this.props.columns});
+    }
+
+    activeColumns = ()=>{
+        let res = [];
+        _.each(this.state.columns, c=>{
+            if(!this.state.toggles[c]) {
+                res.push(c);
+            }
+        });
+        return res;
+    }
+
+    renderHeader = (column, idx)=>{
+        let styles = {};
+        let col_width = this.state.column_widths[column];
+        if (col_width) {
+            styles = {
+                minWidth: col_width,
+                maxWidth: col_width,
+                width: col_width,
             };
         }
-        switch(x.type) {
-        case "number":
-            if (!_.isObject(x.style)) {
-                x.style = {};
-            }
-            x.style.textAlign = "right";
-            x.type = null;
-            break;
 
-        case "mb":
-            x.formatter=(cell, row) => {
-                let result = parseInt(cell/1024/1024);
-                let value = cell;
-                let suffix = "";
-                if (_.isFinite(result) && result > 0) {
-                    suffix = "Mb";
-                    value = parseInt(result);
+        let header_renderers = this.props.header_renderers || {};
+        let header = header_renderers[column] || column;
+        if (_.isFunction(header)) {
+            header = header();
+        }
+
+        return (
+            <React.Fragment key={idx}>
+              <th style={styles}
+                  className={" draggable paged-table-header"}
+                  onDragStart={e=>{
+                      e.dataTransfer.setData("column", column);
+                  }}
+                  onDrop={e=>{
+                      e.preventDefault();
+                      this.swapColumns(e.dataTransfer.getData("column"), column);
+                  }}
+                  onDragOver={e=>{
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                  }}
+                  draggable="true">
+                <span className="column-name">
+                  { header }
+                </span>
+              </th>
+              <ColumnResizer
+                width={this.state.column_widths[column]}
+                setWidth={x=>{
+                    let column_widths = Object.assign(
+                        {}, this.state.column_widths);
+                    column_widths[column] = x;
+                    this.setState({column_widths: column_widths});
+                }}
+              />
+            </React.Fragment>
+        );
+    }
+
+    defaultFormatter = (cell, row, rowIndex) => {
+        let row_data = {};
+        _.each(this.activeColumns(), x=>{
+            row_data[x] = row[x];
+        });
+        return <VeloValueRenderer value={cell} row={row_data} />;
+    }
+
+    getColumnRenderer = column => {
+        if(this.props.column_renderers &&
+           this.props.column_renderers[column]) {
+            return this.props.column_renderers[column] ||
+                this.defaultFormatter;
+        }
+        return this.defaultFormatter;
+    }
+
+    renderCell = (column, row, rowIdx) => {
+        let t = this.state.toggles[column];
+        if(t) {return undefined;};
+
+        let cell = row[column];
+        let renderer = this.getColumnRenderer(column);
+
+        return <React.Fragment key={column}>
+                 <td>
+                   { renderer(cell, row, this.props.env)}
+                 </td>
+                 <ColumnResizer
+                   width={this.state.column_widths[column]}
+                   setWidth={x=>{
+                       let column_widths = Object.assign(
+                           {}, this.state.column_widths);
+                       column_widths[column] = x;
+                       this.setState({column_widths: column_widths});
+                   }}
+                 />
+               </React.Fragment>;
+    };
+
+
+    renderRow = (row, idx)=>{
+        let start = (this.state.start_row || 0);
+        let end = start + this.state.page_size;
+        let total_size = this.props.rows && this.props.rows.length;
+        if (end>total_size) {
+            end=total_size;
+        }
+
+        if (idx >= end || idx < start) {
+            return undefined;
+        }
+
+        let selected_cls = "";
+        if(this.props.selected && this.props.selected(row)) {
+            selected_cls = "row-selected";
+        }
+
+        return (
+            <tr key={idx}
+                onClick={()=>{
+                    if(this.props.onSelect) {
+                        this.props.onSelect(row, idx);
+                    }
+                }}
+                className={selected_cls}>
+              {_.map(this.activeColumns(), c=>this.renderCell(c, row, idx))}
+            </tr>);
+    }
+
+    // Insert the to_col right before the from_col
+    swapColumns = (from_col, to_col)=>{
+        let new_columns = [];
+        let from_seen = false;
+
+        if (from_col === to_col) {
+            return;
+        }
+
+        _.each(this.state.columns, x=>{
+            if(x === to_col) {
+                if (from_seen) {
+                    new_columns.push(to_col);
+                    new_columns.push(from_col);
                 } else {
-                    result = parseInt(cell /1024);
-                    if (_.isFinite(result) && result > 0) {
-                        suffix = "Kb";
-                        value = parseInt(result);
-                    } else {
-                        if (_.isFinite(cell)) {
-                            suffix = "b";
-                            value = parseInt(cell);
-                        }
-                    }
+                    new_columns.push(from_col);
+                    new_columns.push(to_col);
                 }
-                return <ToolTip tooltip={cell}>
-                         <span className="number">
-                         {value} {suffix}
-                         </span>
-                       </ToolTip>;
-            };
-            if (!_.isObject(x.style)) {
-                x.style = {};
             }
-            x.style.textAlign = "right";
-            x.type = null;
-            break;
-        case "timestamp":
-        case "nano_timestamp":
-            x.formatter= (cell, row) => {
-                return <VeloTimestamp usec={cell}/>;
-            };
-            x.type = null;
-            break;
 
-        case "nobreak":
-            x.formatter= (cell, row) => {
-                return <div className="no-break">{cell}</div>;
-            };
-            x.type = null;
-            break;
+            if(x === from_col) {
+                from_seen = true;
+            }
 
-        case "tree":
-            x.formatter= (cell, row) => {
-                if (_.isObject(cell)) {
-                    return <TreeCell
-                                name={x.text}
-                                data={cell}/>;
-                };
-                return cell;
-            };
-            x.type = null;
-            break;
+            if(x !== from_col && x !== to_col) {
+                new_columns.push(x);
+            }
+        });
+        this.setState({columns: new_columns});
+    }
 
-            // A URL can be formatted as a markdown URL: [desc](url)
-            // or can be a JSON object {url:"...", desc:"..."}
-        case "url":
-            x.formatter = (cell, row) => {
-                if(_.isObject(cell)) {
-                    return <URLViewer url={cell.url} desc={cell.desc}/>;
-                }
-                return <URLViewer url={cell}/>;
-            };
-            x.type = null;
-            break;
+    renderPaginator = (direction)=>{
+        let total_size = this.props.rows && this.props.rows.length;
+        return (
+            <>
+              <TablePaginationControl
+                total_size={total_size}
+                start_row={this.state.start_row}
+                page_size={this.state.page_size}
+                current_page={this.state.start_row / this.state.page_size}
+                onRowChange={row_offset=>this.setState({start_row: row_offset})}
+                onPageSizeChange={size=>this.setState({page_size: size})}
+                direction={direction}
+              />
+            </>    );
+    }
 
-        case "url_internal":
-            x.formatter = (cell, row) => {
-                if(_.isObject(cell)) {
-                    return <URLViewer internal={true}
-                                      url={cell.url} desc={cell.desc}/>;
-                }
-                return <URLViewer url={cell} internal={true} />;
-            };
-            x.type = null;
-            break;
+    render() {
+        return (
+            <>
+              { !this.props.no_toolbar &&
+                <Navbar className="toolbar">
+                  <ButtonGroup>
+                    <ColumnToggle onToggle={c=>{
+                        // Do not make a copy here because set state
+                        // is not immediately visible and this will be
+                        // called for each column.
+                        let toggles = this.state.toggles;
+                        toggles[c] = !toggles[c];
+                        this.setState({toggles: toggles});
+                    }}
+                                  headers={this.props.header_renderers}
+                                  columns={this.state.columns}
+                                  swapColumns={this.swapColumns}
+                                  toggles={this.state.toggles} />
 
+                  { this.renderPaginator() }
+                  </ButtonGroup>
+                  { this.props.toolbar || <></> }
+                </Navbar>
+              }
 
-        case "safe_url":
-            x.formatter = (cell, row) => {
-                return <URLViewer url={cell} safe={true}/>;
-            };
-            x.type = null;
-            break;
-
-        case "flow":
-            x.formatter = (cell, row) => {
-                let client_id = row["ClientId"];
-                if (!client_id) {
-                    return cell;
-                };
-                return <NavLink
-                         tabIndex="0"
-                         id={cell}
-                         to={"/collected/" + client_id + "/" + cell}>{cell}
-                       </NavLink>;
-            };
-            x.type = null;
-            break;
-
-        case "collapsed":
-            x.formatter = (cell, row) => {
-                return <VeloValueRenderer
-                         value={cell} collapsed={true}/>;
-            };
-            x.type = null;
-            break;
-
-        case "download":
-            x.formatter = (cell, row) => {
-                // Ideally this is a UploadResponse object described
-                // in /uploads/api.go. Such an object is emitted by
-                // the uploads() VQL plugin.
-                if(_.isObject(cell)) {
-                    let description = cell.Path;
-                    let fs_components = cell.Components || [];
-                    return <Download fs_components={fs_components}
-                                     text={description}
-                                     filename={description}/>;
-                }
-
-                let components = row._Components;
-                let description = cell;
-                let filename = row.client_path;
-
-                return <Download fs_components={components}
-                                 text={description}
-                                 filename={filename}/>;
-            };
-            x.type = null;
-            break;
-
-        case "preview_upload":
-        case "upload_preview":
-            x.formatter = (cell, row) => {
-                let new_env = Object.assign({}, env);
-
-                // If the row has a more updated client id and flow id
-                // use them, otherwise use the ones from the query
-                // env. For example when this component is viewed in a
-                // hunt notebook we require the client id and flow id
-                // to be in the table. But when viewed in the client
-                // notebook we can use the client id and flow id from
-                // the notebook env.
-                if(row.ClientId) {
-                    new_env.client_id = row.ClientId;
-                }
-                if(row.FlowId) {
-                    new_env.flow_id = row.FlowId;
-                }
-                return <PreviewUpload
-                         env={new_env}
-                         upload={cell}/>;
-            };
-            x.type = null;
-            break;
-
-        case "client":
-        case "client_id":
-            x.formatter = (cell, row) => {
-                return <ClientLink client_id={cell}/>;
-            };
-            x.type = null;
-            break;
-
-        case "hex":
-            x.formatter = (cell, row) => {
-                if (!cell.substr) return <></>;
-                let bytearray = [];
-                for (let c = 0; c < cell.length; c += 2) {
-                    let term = cell.substr(c, 2);
-                    if (term.match(/[0-9a-fA-F]{2}/)) {
-                        bytearray.push(parseInt(term, 16));
-                    } else {
-                        c--;
-                    }
-                }
-                return <ContextMenu value={cell}>
-                         <HexViewPopup byte_array={bytearray}/>
-                       </ContextMenu>;
-            };
-            x.type = null;
-            break;
-
-        case "base64hex":
-        case "base64":
-            x.formatter = (cell, row) => {
-                try {
-                    let binary_string = atob(cell);
-                    var len = binary_string.length;
-                    var bytes = new Uint8Array(len);
-                    for (var i = 0; i < len; i++) {
-                        bytes[i] = binary_string.charCodeAt(i);
-                    }
-                    return <ContextMenu value={cell}>
-                             <HexViewPopup byte_array={bytes}/>
-                           </ContextMenu>;
-                } catch(e) {
-                    return <></>;
-                };
-            };
-            x.type = null;
-            break;
-
-
-            // Types supported by the underlying BootstrapTable - just
-            // pass them on.
-        case "string":
-        case "bool":
-        case "date":
-        case undefined:
-            break;
-
-        case "hidden":
-            x.type = null;
-            break;
-
-        default:
-            console.log("Unsupported column type " + x.type);
-            x.type = null;
-            break;
-        };
-    });
-
-    return columns;
+              <Table className="paged-table">
+                <thead>
+                  <tr className="paged-table-header">
+                    {_.map(this.activeColumns(), this.renderHeader)}
+                  </tr>
+                </thead>
+                <tbody className="fixed-table-body">
+                  {_.map(this.props.rows, this.renderRow)}
+                </tbody>
+              </Table>
+            </>
+        );
+    }
 }
+
+export default VeloTable;

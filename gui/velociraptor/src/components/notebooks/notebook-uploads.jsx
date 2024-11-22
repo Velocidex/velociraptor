@@ -4,14 +4,10 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
-import BootstrapTable from 'react-bootstrap-table-next';
-import { formatColumns } from "../core/table.jsx";
-import filterFactory from 'react-bootstrap-table2-filter';
+import VeloTable, { getFormatter } from "../core/table.jsx";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ToolTip from '../widgets/tooltip.jsx';
-import classNames from "classnames";
 import Form from 'react-bootstrap/Form';
 
 import api from '../core/api-service.jsx';
@@ -113,10 +109,10 @@ export default class NotebookUploads extends Component {
                 fs_components: components,
                 vfs_path: cell + type,
             })}
-                  key={row.name}
+                  key={stats.vfs_path}
                   target="_blank" download
                   rel="noopener noreferrer">
-                 {row.name} { type && <FontAwesomeIcon icon="note-sticky"/>}
+                 {stats.vfs_path}
                </a>;
     }
 
@@ -144,20 +140,62 @@ export default class NotebookUploads extends Component {
                </Button>;
     }
 
+    renderToolbar = ()=>{
+        return <ButtonGroup>
+                 <ToolTip tooltip={T("Upload")}>
+                   <Button
+                     disabled={!this.state.upload.name}
+                     onClick={this.uploadFile}>
+                     { this.state.loading ?
+                       <FontAwesomeIcon icon="spinner" spin /> :
+                       T("Upload")
+                     }
+                   </Button>
+                 </ToolTip>
+                 <Form.Control
+                   type="file" id="upload"
+                   onChange={e => {
+                       if (!_.isEmpty(e.currentTarget.files)) {
+                           this.setState({
+                               upload_info: {},
+                               upload: e.currentTarget.files[0],
+                           });
+                       }
+                   }}
+                 />
+                 { this.state.upload_info.filename &&
+                   <a className="btn btn-default-outline"
+                      href={ api.href(this.state.upload_info.url) }>
+                     { this.state.upload_info.filename }
+                   </a>
+                 }
+
+                 <ToolTip tooltip={T("Click to upload file")}>
+                   <Button variant="default-outline"
+                           className="flush-right">
+                     <label data-browse={T("Select local file")}
+                            htmlFor="upload">
+                       {this.state.upload.name ?
+                        this.state.upload.name :
+                        T("Select local file")}
+                     </label>
+                   </Button>
+                 </ToolTip>
+
+               </ButtonGroup>;
+    }
+
     render() {
         let files = this.state.notebook &&
             this.state.notebook.available_uploads &&
             this.state.notebook.available_uploads.files;
         files = files || [];
 
-        let columns = formatColumns([
-            {dataField: "",
-             text: T("Delete"), formatter: this.getDeleteLink},
-            {dataField: "name", text: T("Name"),
-             sort: true, filtered: true, formatter: this.getDownloadLink},
-            {dataField: "size", text: T("Size")},
-            {dataField: "date", text: T("Date"), type: "timestamp"},
-        ]);
+        let column_renderers = {
+            "delete": this.getDeleteLink,
+            "name": this.getDownloadLink,
+            "date": getFormatter("timestamp"),
+        };
 
         return (
             <Modal show={true}
@@ -169,69 +207,18 @@ export default class NotebookUploads extends Component {
                 </Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <Navbar className="toolbar">
-                  <ButtonGroup>
-                    <ToolTip tooltip={T("Upload")}>
-                      <Button
-                        disabled={!this.state.upload.name}
-                        onClick={this.uploadFile}>
-                        { this.state.loading ?
-                          <FontAwesomeIcon icon="spinner" spin /> :
-                          T("Upload")
-                        }
-                      </Button>
-                    </ToolTip>
-                    <Form.Control
-                      type="file" id="upload"
-                      onChange={e => {
-                          if (!_.isEmpty(e.currentTarget.files)) {
-                              this.setState({
-                                  upload_info: {},
-                                  upload: e.currentTarget.files[0],
-                              });
-                          }
-                      }}
-                    />
-                    { this.state.upload_info.filename &&
-                      <a className="btn btn-default-outline"
-                         href={ api.href(this.state.upload_info.url) }>
-                        { this.state.upload_info.filename }
-                      </a>
-                    }
-
-                    <ToolTip tooltip={T("Click to upload file")}>
-                      <Button variant="default-outline"
-                              className="flush-right">
-                        <label data-browse={T("Select local file")}
-                               htmlFor="upload">
-                          {this.state.upload.name ?
-                           this.state.upload.name :
-                           T("Select local file")}
-                        </label>
-                      </Button>
-                    </ToolTip>
-
-                  </ButtonGroup>
-                </Navbar>
-
-                <BootstrapTable
-                  hover
-                  condensed
-                  keyField="path"
-                  bootstrap4
-                  headerClasses="alert alert-secondary"
-                  bodyClasses="fixed-table-body"
-                  data={files}
-                  columns={columns}
-                  filter={ filterFactory() }
+                <VeloTable
+                  rows={files}
+                  columns={["delete", "name", "size", "date"]}
+                  column_renderers={column_renderers}
+                  header_renderers={{
+                      delete: function(){ return "";},
+                      name: "Name",
+                      size: "Size",
+                      date: "Date",
+                  }}
+                  toolbar={this.renderToolbar()}
                 />
-                {this.state.showUploadDialog &&
-                 <UploadDialog
-                   closeDialog={()=>{
-                       this.setState({showUploadDialog: false});
-                   }}
-                   notebook={this.props.notebook}/>}
-
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary"

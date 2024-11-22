@@ -8,7 +8,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import parseHTML from '../core/sanitize.jsx';
 
-import VeloTable from '../core/table.jsx';
 import TimelineRenderer from "../timeline/timeline.jsx";
 import { VeloLineChart, VeloTimeChart } from '../artifacts/line-charts.jsx';
 import { NotebookLineChart, NotebookTimeChart,
@@ -76,10 +75,8 @@ export default class NotebookReportRenderer extends React.Component {
         let data = this.state.data[match[1]];
         let rows = JSONparse(data.Response, []);
 
-        console.log(domNode.name);
         switch  (domNode.name) {
         case "velo-line-chart":
-        case "grr-line-chart":
                     return <VeloLineChart data={rows}
                                           columns={data.Columns}
                                           params={parse_param(domNode)} />;
@@ -114,37 +111,12 @@ export default class NotebookReportRenderer extends React.Component {
         let cell_id = this.props.cell && this.props.cell.cell_id;
         let template = parseHTML(this.props.cell.output, {
             replace: (domNode) => {
-                // A table which contains the data inline.
-                if (domNode.name === "inline-table-viewer") {
-                    try {
-                        let data = JSONparse(this.props.cell.data, {});
-                        let value = decodeURIComponent(domNode.attribs.value || "");
-                        let response = data[value] || {};
-                        let rows = JSONparse(response.Response, []);
-                        if(this.props.completion_reporter) {
-                            this.props.completion_reporter(response.Columns);
-                        }
-
-                        return (
-                            <VeloTable
-                              env={this.props.env}
-                              rows={rows}
-                              columns={response.Columns}
-                            />
-                        );
-                    } catch(e) {
-
-                    };
-                }
-
-                if (domNode.name === "velo-value" ||
-                    domNode.name === "grr-value") {
+                if (domNode.name === "velo-value") {
                     let value = decodeURIComponent(domNode.attribs.value || "");
                     return <VeloValueRenderer value={value}/>;
                 };
 
-                if (domNode.name === "velo-timeline" ||
-                    domNode.name === "grr-timeline") {
+                if (domNode.name === "velo-timeline") {
                     let name = decodeURIComponent(domNode.attribs.name || "");
                     return (
                         <TimelineRenderer
@@ -162,8 +134,7 @@ export default class NotebookReportRenderer extends React.Component {
                              params={params}/>;
                 }
 
-                if (domNode.name ===  "velo-tool-viewer"||
-                    domNode.name === "grr-tool-viewer") {
+                if (domNode.name ===  "velo-tool-viewer") {
                     let name = decodeURIComponent(domNode.attribs.name ||"");
                     let tool_version = decodeURIComponent(
                         domNode.attribs.version ||"");
@@ -172,8 +143,7 @@ export default class NotebookReportRenderer extends React.Component {
                 };
 
                 // A tag that loads a table from a notebook cell.
-                if (domNode.name === "velo-csv-viewer" ||
-                    domNode.name === "grr-csv-viewer") {
+                if (domNode.name === "velo-csv-viewer") {
                     try {
                         return (
                             <NotebookTableRenderer

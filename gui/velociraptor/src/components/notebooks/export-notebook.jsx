@@ -8,12 +8,11 @@ import ToolTip from '../widgets/tooltip.jsx';
 
 import Form from 'react-bootstrap/Form';
 import FormGroup from 'react-bootstrap/FormGroup';
-import BootstrapTable from 'react-bootstrap-table-next';
-import { formatColumns } from "../core/table.jsx";
-import filterFactory from 'react-bootstrap-table2-filter';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 import T from '../i8n/i8n.jsx';
+import VeloTimestamp from "../utils/time.jsx";
+import VeloTable from "../core/table.jsx";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -87,30 +86,37 @@ export default class ExportNotebook extends React.Component {
             this.state.notebook.available_downloads.files;
         files = files || [];
 
-        let columns = formatColumns([
-            {dataField: "type", text: T("Type"), formatter: (cell, row) => {
+        let columns = ["type", "name", "size", "timestamp"];
+        let header_renderers = {
+            type: T("Type"),
+            name: T("Name"),
+            size:  T("Size"),
+            timestamp: T("Date"),
+        };
+        let column_renderers = {
+            type:  (cell, row) => {
                 if (cell === "html") {
                     return <ToolTip tooltip={T("Zip")}>
-                             <Button disabled={true}
-                                     variant="outline-info">
-                               <FontAwesomeIcon icon="flag"/>
-                             </Button>
-                           </ToolTip>;
+                                          <Button disabled={true}
+                                                  variant="outline-info">
+                                            <FontAwesomeIcon icon="flag"/>
+                                          </Button>
+                                        </ToolTip>;
                 } else if (cell === "zip") {
                     return <ToolTip tooltip={T("HTML")}>
-                             <Button disabled={true}
-                                     variant="outline-info">
-                               <FontAwesomeIcon icon="archive"/>
-                             </Button>
-                           </ToolTip>;
+                      <Button disabled={true}
+                              variant="outline-info">
+                        <FontAwesomeIcon icon="archive"/>
+                      </Button>
+                    </ToolTip>;
                 };
                 return cell;
-            }, sort: true},
-            {dataField: "name", text: T("Name"),
-             sort: true, filtered: true, formatter: this.getDownloadLink},
-            {dataField: "size", text: T("Size")},
-            {dataField: "stats.timestamp", text: T("Date"), type: "timestamp"},
-        ]);
+            },
+            name: this.getDownloadLink,
+            timestamp: (cell, row) => {
+                return <VeloTimestamp usec={row.stats.timestamp}/>;
+            },
+        };
 
         return (
             <Modal show={true}
@@ -140,20 +146,13 @@ export default class ExportNotebook extends React.Component {
 
                 <dt>{T("Available Downloads")}</dt>
                 <dd>
-                  <BootstrapTable
-                    hover
-                    condensed
-                    keyField="path"
-                    bootstrap4
-                    headerClasses="alert alert-secondary"
-                    bodyClasses="fixed-table-body"
-                    data={files}
+                  <VeloTable
+                    rows={files}
                     columns={columns}
-                    filter={ filterFactory() }
+                    column_renderers={column_renderers}
+                    header_renderers={header_renderers}
                   />
                 </dd>
-
-
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary"

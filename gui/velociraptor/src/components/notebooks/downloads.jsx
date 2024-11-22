@@ -2,10 +2,10 @@ import _ from 'lodash';
 
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { formatColumns } from "../core/table.jsx";
 import T from '../i8n/i8n.jsx';
 import Card from 'react-bootstrap/Card';
 import Alert from 'react-bootstrap/Alert';
+import { getFormatter } from "../core/table.jsx";
 
 import api from '../core/api-service.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -42,9 +42,8 @@ export default class AvailableDownloads extends Component {
             return <h5 className="no-content">{T("Select a download method")}</h5>;
         }
 
-        var columns = formatColumns(
-            [ {dataField: "size", text: T("size"), sort: true, type: "mb"},
-             {dataField: "date", text: T("date"), type: "timestamp"}]);
+        let mb = getFormatter("mb");
+        let ts = getFormatter("timestamp");
 
         return (
             <>
@@ -68,14 +67,12 @@ export default class AvailableDownloads extends Component {
                                  }
                                <dt className="col-4">{T("Uncompressed")}</dt>
                                <dd className="col-8">
-                                 {columns[0].formatter(
-                                     stats.total_uncompressed_bytes || 0, x)}
+                                 {mb(stats.total_uncompressed_bytes || 0, x)}
                                </dd>
 
                                <dt className="col-4">{T("Compressed")}</dt>
                                <dd className="col-8">
-                                 {columns[0].formatter(
-                                     stats.total_compressed_bytes || 0, x)}
+                                 {mb(stats.total_compressed_bytes || 0, x)}
                                </dd>
 
                                <dt className="col-4">{T("Container Files")}</dt>
@@ -85,7 +82,7 @@ export default class AvailableDownloads extends Component {
 
                                <dt className="col-4">{T("Started")}</dt>
                                <dd className="col-8">
-                                 {columns[1].formatter(stats.timestamp, x)}
+                                 {ts(stats.timestamp, x)}
                                </dd>
 
                                <dt className="col-4">{T("Duration (Sec)")}</dt>

@@ -7,7 +7,6 @@ import {CancelToken} from 'axios';
 import parseHTML from '../core/sanitize.jsx';
 
 import api from '../core/api-service.jsx';
-import VeloTable from '../core/table.jsx';
 import { VeloLineChart, VeloTimeChart } from './line-charts.jsx';
 import Spinner from '../utils/spinner.jsx';
 import ToolViewer from "../tools/tool-viewer.jsx";
@@ -152,36 +151,7 @@ export default class VeloReportViewer extends React.Component {
     render() {
         let template = parseHTML(this.cleanupHTML(this.state.template), {
             replace: (domNode) => {
-                if (domNode.name === "inline-table-viewer") {
-                    try {
-                        let data = this.state.data;
-                        let value = decodeURIComponent(domNode.attribs.value || "");
-                        let response = data[value] || {};
-                        let rows = JSONparse(response.Response, []);
-                        return (
-                            <VeloTable
-                              rows={rows}
-                              columns={response.Columns}
-                            />
-                        );
-                    } catch(e) {};
-                }
-
-                if (domNode.name === "velo-csv-viewer" ||
-                    domNode.name === "grr-csv-viewer") {
-                    // Figure out where the data is: attribs.value is something like data['table2']
-                    let re = /'([^']+)'/;
-                    let value = decodeURIComponent(domNode.attribs.value || "");
-                    if (value) {
-                        let match = re.exec(value);
-                        let data = this.state.data[match[1]];
-                        let rows = JSONparse(data.Response, []);
-
-                        return (
-                            <VeloTable rows={rows} columns={data.Columns} />
-                        );
-                    }
-
+                if (domNode.name === "velo-csv-viewer") {
                     try {
                         return (
                             <NotebookTableRenderer
@@ -194,8 +164,7 @@ export default class VeloReportViewer extends React.Component {
                     }
                 };
 
-                if (domNode.name === "velo-tool-viewer" ||
-                    domNode.name === "grr-tool-viewer") {
+                if (domNode.name === "velo-tool-viewer") {
                     let name = decodeURIComponent(domNode.attribs.name ||"");
                     let tool_version = decodeURIComponent(
                         domNode.attribs.version ||"");
@@ -206,16 +175,14 @@ export default class VeloReportViewer extends React.Component {
                     );
                 };
 
-                if (domNode.name === "velo-timeline" ||
-                    domNode.name === "grr-timeline") {
+                if (domNode.name === "velo-timeline") {
                     let name = decodeURIComponent(domNode.attribs.name ||"");
                     return (
                         <Timeline name={name}/>
                     );
                 };
 
-                if (domNode.name === "velo-value" ||
-                    domNode.name === "grr-value") {
+                if (domNode.name === "velo-value") {
                     let value = decodeURIComponent(domNode.attribs.value || "");
                     return <VeloValueRenderer value={value}/>;
 
@@ -226,8 +193,7 @@ export default class VeloReportViewer extends React.Component {
                     return <VeloSigmaEditor params={params}/>;
                 }
 
-                if (domNode.name === "velo-line-chart" ||
-                    domNode.name === "grr-line-chart") {
+                if (domNode.name === "velo-line-chart") {
                     // Figure out where the data is: attribs.value is
                     // something like data['table2']
                     let re = /'([^']+)'/;

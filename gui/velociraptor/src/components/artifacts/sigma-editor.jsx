@@ -12,7 +12,6 @@ import Modal from 'react-bootstrap/Modal';
 
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
 import Select from 'react-select';
 import { sprintf } from 'sprintf-js';
 import VeloAce from '../core/ace.jsx';

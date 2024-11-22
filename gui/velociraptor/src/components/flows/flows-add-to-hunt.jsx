@@ -5,9 +5,8 @@ import T from '../i8n/i8n.jsx';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Spinner from '../utils/spinner.jsx';
-import BootstrapTable from 'react-bootstrap-table-next';
-import { formatColumns } from "../core/table.jsx";
 import ArtifactLink from '../artifacts/artifacts-link.jsx';
+import VeloTable, { getFormatter } from '../core/table.jsx';
 
 import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
@@ -79,25 +78,15 @@ export default class AddFlowToHuntDialog extends React.Component {
         let artifacts = this.props.flow && this.props.flow.request &&
             this.props.flow.request.artifacts;
 
-        const selectRow = {
-            mode: "radio",
-            clickToSelect: true,
-            hideSelectColumn: true,
-            classes: "row-selected",
-            onSelect: row=>this.setState({selected_hunt_id: row.hunt_id}),
-            selected: [],
+        let columns = ["hunt_id", "hunt_description", "create_time"];
+        let headers = {
+            hunt_id: T("HuntId"),
+            hunt_description: T("Description"),
+            create_time:  T("Created"),
         };
-
-        if (!_.isEmpty(this.state.selected_hunt_id)) {
-            selectRow.selected.push(this.state.selected_hunt_id);
-        }
-
-        let columns = formatColumns([
-            {dataField: "hunt_id", text: T("HuntId")},
-            {dataField: "hunt_description", text: T("Description")},
-            {dataField: "create_time", text: T("Created"),
-             type: "timestamp", sort: true},
-        ]);
+        let column_renderers = {
+            create_time: getFormatter("timestamp"),
+        };
 
         return (
             <Modal show={true} className="max-height"
@@ -122,17 +111,17 @@ export default class AddFlowToHuntDialog extends React.Component {
                     </ul>
                   </>
                   :
-                  <BootstrapTable
-                    hover
-                    condensed
-                    ref={ n => this.node = n }
-                    keyField="hunt_id"
-                    bootstrap4
-                    headerClasses="alert alert-secondary"
-                    bodyClasses="fixed-table-body selectable"
-                    data={this.state.hunts}
-                    selectRow={ selectRow }
+                  <VeloTable
+                    rows={this.state.hunts}
                     columns={columns}
+                    column_renderers={column_renderers}
+                    header_renderers={headers}
+                    onSelect={(row, idx)=>{
+                        this.setState({
+                            selected_hunt_id: row.hunt_id,
+                        });
+                    }}
+                    selected={row=>row.hunt_id === this.state.selected_hunt_id}
                   />
                 }
               </Modal.Body>

@@ -15,8 +15,6 @@ import FormControl from 'react-bootstrap/FormControl';
 import Navbar from 'react-bootstrap/Navbar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Modal from 'react-bootstrap/Modal';
-import BootstrapTable from 'react-bootstrap-table-next';
-import filterFactory from 'react-bootstrap-table2-filter';
 import CreateArtifactFromCell from './create-artifact-from-cell.jsx';
 import AddCellFromFlowDialog from './add-cell-from-flow.jsx';
 import Completer from '../artifacts/syntax.jsx';
@@ -27,11 +25,12 @@ import ViewCellLogs from "./logs.jsx";
 import CopyCellToNotebookDialog from './notebook-copy-cell.jsx';
 import FormatTableDialog from './notebook-format-tables.jsx';
 import NotebookUploads from '../notebooks/notebook-uploads.jsx';
-import { formatColumns } from "../core/table.jsx";
 import ToolTip from '../widgets/tooltip.jsx';
 
 import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
+import VeloTable, { getFormatter } from '../core/table.jsx';
+
 
 const cell_types = ["Markdown", "VQL"];
 
@@ -81,13 +80,43 @@ class AddCellFromHunt extends React.PureComponent {
     }
 
     render() {
-        const selectRow = {
-            mode: "radio",
-            clickToSelect: true,
-            hideSelectColumn: true,
-            classes: "row-selected",
-            onSelect: (row) => {
-                this.addCellFromHunt(row);
+        let columns = ["state", "hunt_id", "hunt_description",
+                       "create_time", "start_time", "expires",
+                       "total_clients_scheduled", "creator"];
+        let header_renderers = {
+            state:  T("State"),
+            hunt_id: T("Hunt ID"),
+            hunt_description: T("Description"),
+            create_time: T("Created"),
+            start_time: T("Started"),
+            expires: T("Expires"),
+            total_clients_scheduled: T("Scheduled"),
+            creator: T("Creator"),
+        };
+
+        let column_renderers = {
+            expires: getFormatter("timestamp"),
+            state: (cell, row) => {
+                let stopped = row.stats && row.stats.stopped;
+                if (stopped || cell === "STOPPED") {
+                    return <div className="hunt-status-icon">
+                             <FontAwesomeIcon icon="stop" /></div>;
+                }
+                if (cell === "RUNNING") {
+                    return <div className="hunt-status-icon">
+                             <FontAwesomeIcon icon="hourglass" /></div>;
+                }
+                if (cell === "PAUSED") {
+                    return <div className="hunt-status-icon">
+                             <FontAwesomeIcon icon="pause" /></div>;
+                }
+                return <div className="hunt-status-icon">
+                         <FontAwesomeIcon icon="exclamation" /></div>;
+            },
+            create_time: getFormatter("timestamp"),
+            start_time: getFormatter("timestamp"),
+            total_clients_scheduled: (cell, row) => {
+                return row.stats && row.stats.total_clients_scheduled;
             },
         };
 
@@ -107,17 +136,14 @@ class AddCellFromHunt extends React.PureComponent {
                       {T("No hunts exist in the system. You can start a new hunt by clicking the New Hunt button above.")}
                     </div>
                     :
-                    <BootstrapTable
-                      hover
-                      condensed
-                      keyField="hunt_id"
-                      bootstrap4
-                      headerClasses="alert alert-secondary"
-                      bodyClasses="fixed-table-body"
-                      data={this.state.hunts}
-                      columns={getHuntColumns()}
-                      filter={ filterFactory() }
-                      selectRow={ selectRow }
+                    <VeloTable
+                      rows={this.state.hunts}
+                      columns={columns}
+                      column_renderers={column_renderers}
+                      header_renderers={header_renderers}
+                      onSelect={(row, idx)=>{
+                          this.addCellFromHunt(row);
+                      }}
                     />
                   }
                 </div>
@@ -1110,48 +1136,3 @@ export default class NotebookCellRenderer extends React.Component {
         );
     }
 };
-
-function getHuntColumns() {
-    return formatColumns([
-        {
-            dataField: "state", text: T("State"),
-            formatter: (cell, row) => {
-                let stopped = row.stats && row.stats.stopped;
-                if (stopped || cell === "STOPPED") {
-                    return <div className="hunt-status-icon">
-                             <FontAwesomeIcon icon="stop" /></div>;
-                }
-                if (cell === "RUNNING") {
-                    return <div className="hunt-status-icon">
-                             <FontAwesomeIcon icon="hourglass" /></div>;
-                }
-                if (cell === "PAUSED") {
-                    return <div className="hunt-status-icon">
-                             <FontAwesomeIcon icon="pause" /></div>;
-                }
-                return <div className="hunt-status-icon">
-                         <FontAwesomeIcon icon="exclamation" /></div>;
-            }
-        },
-        { dataField: "hunt_id", text: T("Hunt ID") },
-        {
-            dataField: "hunt_description", text: T("Description"),
-            sort: true, filtered: true, editable: true
-        },
-        {
-            dataField: "create_time", text: T("Created"),
-            type: "timestamp", sort: true
-        },
-        {
-            dataField: "start_time", text: T("Started"),
-            type: "timestamp", sort: true
-        },
-        {
-            dataField: "expires",
-            text: T("Expires"), sort: true,
-            type: "timestamp"
-        },
-        { dataField: "stats.total_clients_scheduled", text: T("Scheduled") },
-        { dataField: "creator", text: T("Creator") },
-    ]);
-}

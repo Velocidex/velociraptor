@@ -11,13 +11,11 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import classNames from "classnames";
 import api from '../core/api-service.jsx';
-import BootstrapTable from 'react-bootstrap-table-next';
 import {CancelToken} from 'axios';
-import filterFactory from 'react-bootstrap-table2-filter';
-import { formatColumns } from "../core/table.jsx";
 import T from '../i8n/i8n.jsx';
 import Alert from 'react-bootstrap/Alert';
 import ToolTip from '../widgets/tooltip.jsx';
+import VeloTable from '../core/table.jsx';
 
 import "./artifacts-upload.css";
 
@@ -144,10 +142,9 @@ export default class ArtifactsUpload extends React.Component {
     };
 
     render() {
-        let columns = formatColumns([
-            {dataField: "name", text: T("Artifact Name"),
-             sort: true, filtered: true}
-        ]);
+        let headers = {
+            name: T("Artifact Name"),
+        };
 
         return (
             <>
@@ -224,16 +221,11 @@ export default class ArtifactsUpload extends React.Component {
                         </Col>
                       </Form.Group>
 
-                      <BootstrapTable
-                        hover
-                        condensed
-                        keyField="id"
-                        bootstrap4
-                        headerClasses="alert alert-secondary"
-                        bodyClasses="fixed-table-body"
-                        data={this.state.uploaded}
-                        columns={columns}
-                        filter={ filterFactory() }
+                      <VeloTable
+                        rows={this.state.uploaded}
+                        columns={["name"]}
+                        header_renderers={headers}
+                        no_toolbar={true}
                       />
                     </Form> }
 
