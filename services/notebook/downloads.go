@@ -52,12 +52,24 @@ func (self *NotebookStoreImpl) GetAvailableUploadFiles(notebook_id string) (
 	if err != nil {
 		return nil, err
 	}
+
 	for _, cell_metadata := range notebook.CellMetadata {
 		cell_manager := notebook_path_manager.Cell(
 			cell_metadata.CellId, cell_metadata.CurrentVersion)
 
+		upload_directory := cell_manager.UploadsDir()
+
 		err := api.Walk(file_store_factory, cell_manager.UploadsDir(),
 			func(ps api.FSPathSpec, info os.FileInfo) error {
+
+				// Build the vfs path by showing the relative path of
+				// the path spec relative to the uploads directory in
+				// the cell. Uploads may be nested in arbitrary paths.
+				vfs_path_spec := path_specs.NewUnsafeFilestorePath(
+					ps.Components()[len(upload_directory.Components()):]...).
+					SetType(ps.Type())
+				vfs_path := vfs_path_spec.AsClientPath()
+
 				result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
 					Name: ps.Base(),
 					Size: uint64(info.Size()),
@@ -65,6 +77,8 @@ func (self *NotebookStoreImpl) GetAvailableUploadFiles(notebook_id string) (
 					Type: api.GetExtensionForFilestore(ps),
 					Stats: &api_proto.ContainerStats{
 						Components: ps.Components(),
+						Type:       api.GetExtensionForFilestore(ps),
+						VfsPath:    vfs_path,
 					},
 				})
 				return nil
@@ -74,12 +88,20 @@ func (self *NotebookStoreImpl) GetAvailableUploadFiles(notebook_id string) (
 		}
 	}
 
+	attachment_directory := notebook_path_manager.AttachmentDirectory()
+	attachment_directory_components := len(attachment_directory.Components())
 	// Also include attachments
-	items, _ := file_store_factory.ListDirectory(
-		notebook_path_manager.AttachmentDirectory())
+	items, _ := file_store_factory.ListDirectory(attachment_directory)
 	for _, item := range items {
 		ps := item.PathSpec()
 		file_type := api.GetExtensionForFilestore(ps)
+
+		// Build the vfs path by showing the relative path of
+		// the path spec relative to the attachment
+		vfs_path_spec := path_specs.NewUnsafeFilestorePath(
+			ps.Components()[attachment_directory_components:]...).
+			SetType(ps.Type())
+
 		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
 			Name: ps.Base(),
 			Size: uint64(item.Size()),
@@ -88,6 +110,7 @@ func (self *NotebookStoreImpl) GetAvailableUploadFiles(notebook_id string) (
 			Stats: &api_proto.ContainerStats{
 				Components: ps.Components(),
 				Type:       file_type,
+				VfsPath:    vfs_path_spec.AsClientPath(),
 			},
 		})
 	}

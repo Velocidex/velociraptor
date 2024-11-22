@@ -1030,7 +1030,6 @@ class NewCollectionWizard extends React.Component {
     }
 
     render() {
-        let request = this.state.original_flow && this.state.original_flow.request;
         let client_id = this.props.client && this.props.client.client_id;
         let type = "CLIENT";
         if (!client_id || client_id==="server") {

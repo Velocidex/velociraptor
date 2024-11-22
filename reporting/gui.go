@@ -222,27 +222,6 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 				utils.QueryEscape(options.String()))
 		}
 		return result
-
-	case []*ordereddict.Dict:
-		if len(t) == 0 { // No rows returned.
-			self.Scope.Log("Query produced no rows.")
-			return ""
-		}
-
-		opts := vql_subsystem.EncOptsFromScope(self.Scope)
-		encoded_rows, err := json.MarshalWithOptions(t, opts)
-		if err != nil {
-			return self.Error("Error: %v", err)
-		}
-
-		key := fmt.Sprintf("table%d", len(self.Data))
-		self.Data[key] = &actions_proto.VQLResponse{
-			Response: string(encoded_rows),
-			Columns:  self.Scope.GetMembers(t[0]),
-		}
-		return fmt.Sprintf(
-			`<div class="panel"><inline-table-viewer value="%s" /></div>`,
-			utils.QueryEscape(key))
 	}
 }
 
@@ -650,15 +629,8 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	// DATA urls are useful for markdown cells
 	p.AllowURLSchemes("http", "https", "data")
 
-	// Deprecated but may still appear in older notebooks.
-	p.AllowAttrs("value", "params").OnElements("grr-csv-viewer")
-	p.AllowAttrs("value", "params").OnElements("grr-line-chart")
-	p.AllowAttrs("name", "params").OnElements("grr-timeline")
-	p.AllowAttrs("name", "version").OnElements("grr-tool-viewer")
-
 	// Directives for the GUI.
 	p.AllowAttrs("value", "params").OnElements("velo-csv-viewer")
-	p.AllowAttrs("value", "params").OnElements("inline-table-viewer")
 	p.AllowAttrs("value", "params").OnElements("velo-line-chart")
 	p.AllowAttrs("value", "params").OnElements("velo-sigma-editor")
 	p.AllowAttrs("value", "params").OnElements("bar-chart")

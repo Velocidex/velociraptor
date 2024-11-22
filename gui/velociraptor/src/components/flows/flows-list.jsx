@@ -695,6 +695,7 @@ export class SimpleFlowsList extends React.Component {
         client_id: PropTypes.string,
         setSelectedFlow: PropTypes.func,
         selected_flow: PropTypes.object,
+        version: PropTypes.object,
     };
 
     render() {
@@ -715,7 +716,7 @@ export class SimpleFlowsList extends React.Component {
                     State: true, "Last Active": true}}
                 selectRow={selectRow}
                 renderers={flowRowRenderer}
-                version={this.state.version}
+                version={this.props.version}
                 setPageState={x=>this.setState({page_state: x})}
               />
             </>

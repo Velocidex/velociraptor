@@ -13,10 +13,8 @@ import Card from 'react-bootstrap/Card';
 import Table  from 'react-bootstrap/Table';
 import utils from './utils.jsx';
 import { HotKeys, ObserveKeys } from "react-hotkeys";
-import { Typeahead, Token } from 'react-bootstrap-typeahead';
 import {CancelToken} from 'axios';
-
-import "react-bootstrap-typeahead/css/Typeahead.css";
+import Select from 'react-select';
 
 import NewCollectionConfigParameters from '../flows/new-collections-parameters.jsx';
 import {
@@ -34,7 +32,7 @@ class EventTablePaginator extends PaginationBuilder {
 
 class EventTableLabelGroup extends React.Component {
     static propTypes = {
-        current_label: PropTypes.object,
+        current_label: PropTypes.string,
         setLabel: PropTypes.func.isRequired,
         tables: PropTypes.object,
         paginator: PropTypes.object,
@@ -84,8 +82,8 @@ class EventTableLabelGroup extends React.Component {
 
             if (!seen[label]) {
                 existing_labels.push( {
-                    label: label,
-                    name: label + " (" + (length || 0) + " artifacts)",
+                    value: label,
+                    label: label + " (" + (length || 0) + " artifacts)",
                 });
                 seen[label] = 1;
             }
@@ -103,9 +101,8 @@ class EventTableLabelGroup extends React.Component {
         _.each(this.state.labels, x=>{
             if(!seen[x]) {
                 existing_labels.push({
-                    label: x,
-                    name: x + " (0 artifacts)",
-                    id: idx,
+                    value: x,
+                    label: x + " (0 artifacts)",
                 });
             }
         });
@@ -115,9 +112,13 @@ class EventTableLabelGroup extends React.Component {
     render() {
         let current_label = this.props.current_label;
         let current_artifacts = this.props.tables &&
-            this.props.tables[current_label.label] &&
-            this.props.tables[current_label.label].artifacts;
+            this.props.tables[current_label] &&
+            this.props.tables[current_label].artifacts;
         let existing_labels = this.createSuggestionList();
+        let defaultValue = undefined;
+        if (current_label) {
+            defaultValue = {value: current_label};
+        }
         return (
             <>
               <Modal.Header closeButton>
@@ -126,31 +127,24 @@ class EventTableLabelGroup extends React.Component {
                 </Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <h1>{T("Configuring Label")} {current_label.label}</h1>
+                <h1>{T("Configuring Label")} {current_label}</h1>
                 <Form>
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">Label group</Form.Label>
                     <Col sm="8">
-                      <Typeahead
-                        id="label-selector"
-                        clearButton={true}
+                      <Select
                         placeholder={T("Select label to edit its event monitoring table")}
-                        renderToken={(option, { onRemove }, index) => (
-                                <Token
-                                  key={index}
-                                  onRemove={onRemove}
-                                  option={option}>
-                                  {`${option.name}`}
-                                </Token>)}
-                        labelKey="name"
-                        onChange={x=>{
-                            if (!_.isEmpty(x)) {
-                                this.props.setLabel(x[0]);
-                            }
+                        className="velo"
+                        classNamePrefix="velo"
+                        closeMenuOnSelect={true}
+                        onChange={e=>{
+                            this.props.setLabel(e.value);
+                            return false;
                         }}
+                        defaultValue={defaultValue}
                         options={existing_labels}
-                      >
-                      </Typeahead>
+                      />
+
                     </Col>
                   </Form.Group>
                 </Form>
@@ -161,7 +155,7 @@ class EventTableLabelGroup extends React.Component {
                       {T("EventMonitoringCard")}
                     </Card.Text>
                     { !_.isEmpty(current_artifacts) &&
-                      <><h2>{T("Label")} { current_label.label}</h2>
+                      <><h2>{T("Label")} { current_label}</h2>
                         <Table className="paged-table">
                           <thead><tr className="paged-table-header">
                                    <th>
@@ -206,7 +200,7 @@ export class EventTableWizard extends React.Component {
         tables: {},
 
         // A selector for the current label we are working with.
-        current_label: {},  // {label: "", name: ""}
+        current_label: "",
 
         // The event table for this label. Each time the label is
         // changed we update this one.
@@ -251,7 +245,7 @@ export class EventTableWizard extends React.Component {
             artifacts: artifacts,
             specs: current_table.specs || {},
         };
-        tables[this.state.current_label.label] = new_table;
+        tables[this.state.current_label] = new_table;
         this.setState({current_table: new_table, tables: tables});
     }
 
@@ -262,7 +256,7 @@ export class EventTableWizard extends React.Component {
             artifacts: current_table.artifacts,
             specs: params,
         };
-        tables[this.state.current_label.label] = new_table;
+        tables[this.state.current_label] = new_table;
         this.setState({current_table: new_table, tables: tables});
     }
 
@@ -270,13 +264,13 @@ export class EventTableWizard extends React.Component {
     // not exist - create it.
     setLabel = (label) => {
         let tables = this.state.tables;
-        let current_table = tables[label.label];
+        let current_table = tables[label];
 
         // If no table currently exists for this label, make a new
         // one.
         if (!current_table) {
             current_table = {artifacts: [], specs: {}};
-            tables[label.label] = current_table;
+            tables[label] = current_table;
         }
 
         // Update the wizard parameters from the event table.
@@ -317,7 +311,7 @@ export class EventTableWizard extends React.Component {
     }
 
     render() {
-        let label = this.state.current_label.label;
+        let label = this.state.current_label;
         let keymap = {
             GOTO_LAUNCH: "ctrl+l",
             NEXT_STEP: "ctrl+right",
@@ -405,7 +399,7 @@ export class ServerEventTableWizard extends React.Component {
         tables: {},
 
         // A selector for the current label we are working with.
-        current_label: {},  // {label: "", name: ""}
+        current_label: "",
 
         // The event table for this label. Each time the label is
         // changed we update this one.

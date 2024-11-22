@@ -207,6 +207,7 @@ export class ColumnToggle extends Component {
         toggles: PropTypes.object,
         onToggle: PropTypes.func,
         swapColumns: PropTypes.func,
+        headers: PropTypes.object,
     }
 
     state = {
@@ -222,6 +223,10 @@ export class ColumnToggle extends Component {
             let hidden = this.props.toggles[column];
             if (!hidden) {
                 enabled_columns.push(column);
+            }
+            let header = this.props.headers && this.props.headers[column];
+            if (!_.isString(header)) {
+                header = column;
             }
             return <Dropdown.Item
                      key={ column }
@@ -242,7 +247,7 @@ export class ColumnToggle extends Component {
                          e.dataTransfer.dropEffect = "move";
                      }}
                    >
-                     { column }
+                     { header }
             </Dropdown.Item>;
         });
 

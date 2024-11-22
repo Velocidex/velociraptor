@@ -3,10 +3,7 @@ import "./notebooks-list.css";
 import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
-import VeloTimestamp from "../utils/time.jsx";
-import filterFactory from 'react-bootstrap-table2-filter';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import BootstrapTable from 'react-bootstrap-table-next';
 import ExportNotebook from './export-notebook.jsx';
 import NotebookUploads from './notebook-uploads.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
@@ -18,13 +15,12 @@ import Modal from 'react-bootstrap/Modal';
 import Alert from 'react-bootstrap/Alert';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
-
-import { formatColumns } from "../core/table.jsx";
 import { withRouter }  from "react-router-dom";
 
 import T from '../i8n/i8n.jsx';
 
 import { NewNotebook, EditNotebook } from './new-notebook.jsx';
+import VeloTable, { getFormatter } from "../core/table.jsx";
 
 class DeleteNotebook extends React.Component {
     static propTypes = {
@@ -110,41 +106,31 @@ class NotebooksList extends React.Component {
     }
 
     render() {
-        let columns = formatColumns([
-            {dataField: "notebook_id", text: T("NotebookId")},
-            {dataField: "name", text: T("Name"),
-             sort: true, filtered: true },
-            {dataField: "description", text: T("Description"),
-             sort: true, filtered: true },
-            {dataField: "created_time", text: T("Creation Time"),
-             sort: true, formatter: (cell, row) => {
-                return <VeloTimestamp usec={cell * 1000}/>;
-            }},
-            {dataField: "modified_time", text: T("Modified Time"),
-             sort: true, formatter: (cell, row) => {
-                 return <VeloTimestamp usec={cell * 1000}/>;
-             }},
-            {dataField: "creator", text: T("Creator")},
-            {dataField: "collaborators", text: T("Collaborators"),
-             sort: true, formatter: (cell, row) => {
+        let columns = ["notebook_id", "name", "description",
+                       "created_time",  "modified_time","creator",
+                       "collaborators"];
+        let header_renderers = {
+            notebook_id: T("NotebookId"),
+            name: T("Name"),
+            description: T("Description"),
+            created_time: T("Creation Time"),
+            modified_time: T("Modified Time"),
+            creator:  T("Creator"),
+            collaborators: T("Collaborators"),
+        };
+
+        let column_renderers = {
+            created_time: getFormatter("timestamp"),
+            modified_time: getFormatter("timestamp"),
+            collaborators: (cell, row) => {
                  return _.map(cell, function(item, idx) {
                      return <div key={idx}>{item}</div>;
                  });
-             }},
-        ]);
+            },
+        };
 
         let selected_notebook = this.props.selected_notebook &&
             this.props.selected_notebook.notebook_id;
-        const selectRow = {
-            mode: "radio",
-            clickToSelect: true,
-            hideSelectColumn: true,
-            classes: "row-selected",
-            onSelect: function(row) {
-                this.props.setSelectedNotebook(row);
-            }.bind(this),
-            selected: [selected_notebook],
-        };
 
         return (
             <>
@@ -250,18 +236,17 @@ class NotebooksList extends React.Component {
                  <div className="no-content">
                    {T("No notebooks available - create one first")}
                  </div> :
-                 <BootstrapTable
-                   hover
-                   condensed
-                   keyField="notebook_id"
-                   bootstrap4
-                   headerClasses="alert alert-secondary"
-                   bodyClasses="fixed-table-body"
-                   data={this.props.notebooks}
+                 <VeloTable
+                   rows={this.props.notebooks}
                    columns={columns}
-                   selectRow={ selectRow }
-                   filter={ filterFactory() }
-                 />}
+                   column_renderers={column_renderers}
+                   header_renderers={header_renderers}
+                   onSelect={(row, idx)=>{
+                       this.props.setSelectedNotebook(row);
+                   }}
+                   selected={row=>row.notebook_id === selected_notebook}
+                 />
+                }
               </div>
             </>
         );

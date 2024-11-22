@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import "./json.css";
 import Modal from 'react-bootstrap/Modal';
 import T from '../i8n/i8n.jsx';
-import VeloTable, { formatColumns } from "../core/table.jsx";
+import VeloTable from "../core/table.jsx";
 
 const scale = 5;
 const collapse_string_length = 50;
@@ -262,11 +262,7 @@ class RenderArrayModal extends PureComponent {
             data.push(row);
         });
 
-        let columns = formatColumns(_.map(column_names, (v, x)=>{
-            return {dataField: x, text: x, sort: true, filtered: true};
-        }));
-        this.setState({columns: columns,
-                       column_names: _.map(column_names, (v, x)=>x),
+        this.setState({columns: _.map(column_names, (v, x)=>x),
                        data: data});
     }
 
@@ -282,10 +278,6 @@ class RenderArrayModal extends PureComponent {
         if (_.isEmpty(this.state.data)) {
             return <div key="1"></div>;
         }
-        let column_renderers = {};
-        _.each(this.state.columns, x=>{
-            column_renderers[x.text] = x;
-        });
 
         return <Modal show={true}
                       enforceFocus={true}
@@ -294,8 +286,9 @@ class RenderArrayModal extends PureComponent {
                       dialogClassName="modal-90w"
                       onHide={this.props.onClose}>
                  <Modal.Body className="json-array-viewer">
-                   <VeloTable rows={this.state.data}
-                              column_renderers={column_renderers}/>
+                   <VeloTable
+                     columns={this.state.columns}
+                     rows={this.state.data}/>
                  </Modal.Body>
                </Modal>;
     }

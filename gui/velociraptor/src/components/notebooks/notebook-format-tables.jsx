@@ -11,7 +11,7 @@ import Col from 'react-bootstrap/Col';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 
-// components/core/table.jsx formatColumns
+// components/core/table.jsx getFormatter
 const column_types = [
     "string", "number", "mb", "timestamp", "nobreak", "tree", "url", "url_internal",
     "safe_url", "flow", "preview_upload", "download", "client", "hex",

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
-import VeloTable,  { formatColumns } from "../core/table.jsx";
+import VeloTable,  { getFormatter } from "../core/table.jsx";
 import T from '../i8n/i8n.jsx';
 
 
@@ -17,18 +17,15 @@ export default class InFlightViewer extends React.Component {
         });
 
         let columns = ["FlowId", "LastSeenTime"];
-
-        let column_renderers = formatColumns([
-            {test: "ClientId", dataField: "ClientId", type: "hidden"},
-            {text: "FlowId", dataField: "FlowId", sort: true, type: "flow"},
-            {text: "Last Seen Time", dataField: "LastSeenTime", sort: true,
-             type: "timestamp"}
-        ]);
+        let header = {
+            LastSeenTime: T("Last Seen Time"),
+        };
 
         let renderers = {
-            "ClientId": column_renderers[0],
-            "FlowId": column_renderers[1],
-            "LastSeenTime": column_renderers[2]};
+            "ClientId": getFormatter("hidden"),
+            "FlowId": getFormatter("flow"),
+            "LastSeenTime": getFormatter("timestamp"),
+        };
 
         return (
             <div>
@@ -36,6 +33,7 @@ export default class InFlightViewer extends React.Component {
               <VeloTable rows={rows}
                          columns={columns}
                          no_toolbar={true}
+                         header_renderers={header}
                          column_renderers={renderers}/>
             </div>
         );

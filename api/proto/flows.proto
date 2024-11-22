@@ -36,6 +36,9 @@ message ContainerStats {
     string type = 10;
 
     string error = 11;
+
+    // A string representation of the file path
+    string vfs_path = 12;
 }
 
 message AvailableDownloadFile {
