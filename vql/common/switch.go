@@ -60,8 +60,9 @@ func (self _SwitchPlugin) Info(
 	scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name: "switch",
-		Doc:  "Executes each query. The first query to return any rows will be emitted.",
+		Name:         "switch",
+		Doc:          "Executes each query. The first query to return any rows will be emitted.",
+		FreeFormArgs: true,
 	}
 }
 

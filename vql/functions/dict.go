@@ -105,8 +105,9 @@ type _DictFunc struct{}
 
 func (self _DictFunc) Info(scope types.Scope, type_map *types.TypeMap) *types.FunctionInfo {
 	return &types.FunctionInfo{
-		Name: "dict",
-		Doc:  "Construct a dict from arbitrary keyword args.",
+		Name:         "dict",
+		Doc:          "Construct a dict from arbitrary keyword args.",
+		FreeFormArgs: true,
 	}
 }
 

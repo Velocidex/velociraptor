@@ -116,8 +116,9 @@ func (self *LogSourcesFunction) Call(ctx context.Context,
 
 func (self LogSourcesFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name: "sigma_log_sources",
-		Doc:  "Constructs a Log sources object to be used in sigma rules. Call with args being category/product/service and values being stored queries. You may use a * as a placeholder for any of these fields.",
+		Name:         "sigma_log_sources",
+		Doc:          "Constructs a Log sources object to be used in sigma rules. Call with args being category/product/service and values being stored queries. You may use a * as a placeholder for any of these fields.",
+		FreeFormArgs: true,
 	}
 }
 

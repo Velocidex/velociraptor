@@ -166,7 +166,7 @@ func (self *Repository) LoadProto(
 	// Make sure none of the aliases already exist
 	for _, alias := range artifact.Aliases {
 		_, pres := self.Data[alias]
-		if pres {
+		if pres && !options.AllowOverridingAlias {
 			return nil, fmt.Errorf("%s: Artifact Alias is already taken %s",
 				artifact.Name, alias)
 		}

@@ -22,7 +22,8 @@ func (self _ChainPlugin) Info(scope types.Scope, type_map *types.TypeMap) *types
 		Name: "chain",
 		Doc: "Chain the output of several queries into the same result set." +
 			"This plugin takes any args and chains them.",
-		ArgType: type_map.AddType(scope, &_ChainPluginArgs{}),
+		ArgType:      type_map.AddType(scope, &_ChainPluginArgs{}),
+		FreeFormArgs: true,
 	}
 }
 

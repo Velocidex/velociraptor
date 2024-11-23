@@ -15,6 +15,8 @@ func (self *Launcher) calculateTraceQuery(
 	ctx context.Context, config_obj *config_proto.Config,
 	freq uint64) ([]*actions_proto.VQLCollectorArgs, error) {
 
+	// NOTE: Use the built in global Generic.Client.Trace artifact so
+	// the server does not need to send it.
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err

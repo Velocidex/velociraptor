@@ -47,6 +47,8 @@ type ArtifactOptions struct {
 
 	// Validate the artifact compiles
 	ValidateArtifact bool
+
+	AllowOverridingAlias bool
 }
 
 func GetRepositoryManager(config_obj *config_proto.Config) (RepositoryManager, error) {

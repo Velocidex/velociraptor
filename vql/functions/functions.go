@@ -283,9 +283,8 @@ func (self _Now) Call(
 
 func (self _Now) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "now",
-		Doc:     "Returns current time in seconds since epoch.",
-		ArgType: type_map.AddType(scope, &_ToIntArgs{}),
+		Name: "now",
+		Doc:  "Returns current time in seconds since epoch.",
 	}
 }
 
