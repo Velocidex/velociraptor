@@ -318,6 +318,8 @@ func (self NTFSI30ScanPlugin) Call(
 			case <-ctx.Done():
 				return
 
+				// Full object is expanded through the
+				// _MFTHighlightAssociative protocol
 			case output_chan <- fileinfo:
 			}
 		}
