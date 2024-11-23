@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -19,8 +20,13 @@ var (
 )
 
 func doVerify() error {
-	//logging.DisableLogging()
-	config_obj := config.GetDefaultConfig()
+	config_obj, err := makeDefaultConfigLoader().
+		WithRequiredFrontend().
+		WithRequiredLogging().LoadAndValidate()
+	if err != nil {
+		logging.FlushPrelogs(config.GetDefaultConfig())
+		return fmt.Errorf("loading config file: %w", err)
+	}
 
 	config_obj.Services = services.GenericToolServices()
 
