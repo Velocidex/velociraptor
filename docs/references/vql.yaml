@@ -64,6 +64,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: all
   description: Returns TRUE if all items are true.
   type: Function
@@ -189,6 +190,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: artifact_definitions
   description: Dump artifact definitions from the internal repository.
   type: Plugin
@@ -744,6 +746,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: cidr_contains
   description: |
     Calculates if an IP address falls within a range of CIDR specified
@@ -1632,6 +1635,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: diff
   description: |
     Executes 'query' periodically and emit differences from the last query.
@@ -4319,6 +4323,12 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: lazy_dict
+  description: Construct a dict from arbitrary keyword args - does not materialize
+    args so it is suitable for building args via `**` expansion.
+  type: Function
+  platforms:
+  - linux_amd64_cgo
 - name: lazy_ntfs
   description: |
     Access the NTFS filesystem by parsing NTFS structures.
@@ -5363,11 +5373,6 @@
 - name: now
   description: Returns current time in seconds since epoch.
   type: Function
-  args:
-  - name: string
-    type: Any
-    description: A string to convert to int
-    required: true
   category: basic
   platforms:
   - darwin_amd64_cgo
@@ -8274,6 +8279,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: similarity
   description: Compare two Dicts for similarity.
   type: Function
@@ -8892,6 +8898,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: sysinfo
   description: Collect system information on Linux clients
   type: Function
@@ -10280,7 +10287,7 @@
   args:
   - name: events
     type: string
-    description: A list of event names to acquire. You can get a list of event names using the ebpf_events() plugin.
+    description: A list of event names to acquire.
     repeated: true
     required: true
   - name: include_env
@@ -10835,3 +10842,4 @@
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
+

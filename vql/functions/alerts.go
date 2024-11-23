@@ -88,10 +88,11 @@ func (self *AlertFunction) Call(ctx context.Context,
 
 func (self AlertFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "alert",
-		Doc:     "Generate an alert message.",
-		ArgType: type_map.AddType(scope, &AlertFunctionArgs{}),
-		Version: 2,
+		Name:         "alert",
+		Doc:          "Generate an alert message.",
+		ArgType:      type_map.AddType(scope, &AlertFunctionArgs{}),
+		FreeFormArgs: true,
+		Version:      2,
 	}
 }
 

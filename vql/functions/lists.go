@@ -72,8 +72,9 @@ func (self *ArrayFunction) Call(ctx context.Context,
 
 func (self ArrayFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name: "array",
-		Doc:  "Create an array with all the args.",
+		Name:         "array",
+		Doc:          "Create an array with all the args.",
+		FreeFormArgs: true,
 	}
 }
 

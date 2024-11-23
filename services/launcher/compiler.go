@@ -37,6 +37,7 @@ func (self *Launcher) CompileSingleArtifact(
 	ctx context.Context, config_obj *config_proto.Config,
 	options services.CompilerOptions,
 	artifact *artifacts_proto.Artifact,
+	repository services.Repository,
 	result *actions_proto.VQLCollectorArgs) error {
 
 	// Allow the artifact to dictate the effective user.
@@ -194,7 +195,7 @@ LET %v <= if(
 		result.IopsLimit = artifact.Resources.IopsLimit
 	}
 
-	err := resolveImports(ctx, config_obj, artifact, result)
+	err := resolveImports(ctx, config_obj, artifact, repository, result)
 	if err != nil {
 		return err
 	}
@@ -205,6 +206,7 @@ LET %v <= if(
 func resolveImports(
 	ctx context.Context, config_obj *config_proto.Config,
 	artifact *artifacts_proto.Artifact,
+	repository services.Repository,
 	result *actions_proto.VQLCollectorArgs) error {
 	// Resolve imports if needed. First check if the artifact
 	// itself declares exports for itself (by default each
@@ -231,20 +233,11 @@ func resolveImports(
 		return nil
 	}
 
-	manager, err := services.GetRepositoryManager(config_obj)
-	if err != nil {
-		return err
-	}
-	global_repo, err := manager.GetGlobalRepository(config_obj)
-	if err != nil {
-		return err
-	}
-
 	// These are a list of names to be imported.
 	for _, imported := range artifact.Imports {
 		scope := vql_subsystem.MakeScope()
 
-		dependent_artifact, pres := global_repo.Get(ctx, config_obj, imported)
+		dependent_artifact, pres := repository.Get(ctx, config_obj, imported)
 		if !pres {
 			return fmt.Errorf("Artifact %v imports %v which is not known.",
 				artifact.Name, imported)

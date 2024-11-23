@@ -21,13 +21,12 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Velocidex/yaml/v2"
 	context "golang.org/x/net/context"
 	"google.golang.org/protobuf/types/known/emptypb"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
@@ -36,18 +35,6 @@ import (
 var (
 	doc_regex = regexp.MustCompile("doc=(.+)")
 )
-
-// Loads the api description from the embedded asset
-func LoadApiDescription() ([]*api_proto.Completion, error) {
-	data, err := assets.ReadFile("docs/references/vql.yaml")
-	if err != nil {
-		return nil, err
-	}
-
-	result := []*api_proto.Completion{}
-	err = yaml.Unmarshal(data, &result)
-	return result, err
-}
 
 func IntrospectDescription() []*api_proto.Completion {
 	result := []*api_proto.Completion{}
@@ -121,7 +108,7 @@ func (self *ApiServer) GetKeywordCompletions(
 		},
 	}
 
-	descriptions, err := LoadApiDescription()
+	descriptions, err := utils.LoadApiDescription()
 	if err != nil {
 		descriptions = IntrospectDescription()
 	}

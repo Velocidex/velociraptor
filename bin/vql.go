@@ -316,17 +316,19 @@ func doVQLExport() error {
 
 		if new_item == nil {
 			new_item = &api_proto.Completion{
-				Name:        item.Name,
-				Description: item.Doc,
-				Version:     uint64(item.Version),
-				Type:        "Plugin",
-				Metadata:    metadata,
+				Name:         item.Name,
+				Description:  item.Doc,
+				Version:      uint64(item.Version),
+				Type:         "Plugin",
+				Metadata:     metadata,
+				FreeFormArgs: item.FreeFormArgs,
 			}
 		} else {
 			// Override the args and update the version
 			new_item.Args = nil
 			new_item.Version = uint64(item.Version)
 			new_item.Metadata = metadata
+			new_item.FreeFormArgs = item.FreeFormArgs
 		}
 
 		if !vutils.InString(new_item.Platforms, platform) {
@@ -386,17 +388,19 @@ func doVQLExport() error {
 
 		if new_item == nil {
 			new_item = &api_proto.Completion{
-				Name:        item.Name,
-				Description: item.Doc,
-				Version:     uint64(item.Version),
-				Type:        "Function",
-				Metadata:    metadata,
+				Name:         item.Name,
+				Description:  item.Doc,
+				Version:      uint64(item.Version),
+				Type:         "Function",
+				Metadata:     metadata,
+				FreeFormArgs: item.FreeFormArgs,
 			}
 		} else {
 			// Override the args
 			new_item.Args = nil
 			new_item.Version = uint64(item.Version)
 			new_item.Metadata = metadata
+			new_item.FreeFormArgs = item.FreeFormArgs
 		}
 
 		if !vutils.InString(new_item.Platforms, platform) {

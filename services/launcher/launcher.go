@@ -411,7 +411,7 @@ func (self *Launcher) GetVQLCollectorArgs(
 
 	vql_collector_args := &actions_proto.VQLCollectorArgs{}
 	err := self.CompileSingleArtifact(ctx, config_obj,
-		options, artifact, vql_collector_args)
+		options, artifact, repository, vql_collector_args)
 	if err != nil {
 		return nil, err
 	}

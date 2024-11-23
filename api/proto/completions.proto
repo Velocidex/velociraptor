@@ -21,6 +21,7 @@ message Completion {
     string category = 5;
     map<string, string> metadata = 7;
     repeated string platforms = 8;
+    bool free_form_args = 9;
 }
 
 message KeywordCompletions {
