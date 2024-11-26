@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -19,8 +20,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/server_monitoring"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
@@ -32,8 +35,10 @@ import (
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	_ "www.velocidex.com/golang/velociraptor/vql/common"
 	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
+	"www.velocidex.com/golang/velociraptor/vql/server/flows"
 )
 
 var (
@@ -83,14 +88,24 @@ type: SERVER_EVENT
 
 type ServerMonitoringTestSuite struct {
 	test_utils.TestSuite
+	mu sync.Mutex
 }
 
 func (self *ServerMonitoringTestSuite) SetupTest() {
+	self.mu.Lock()
+
+	journal.PushRowsToArtifactAsyncIsSynchrnous = true
+
 	self.ConfigObj = self.TestSuite.LoadConfig()
 	self.ConfigObj.Services.MonitoringService = true
 
 	self.LoadArtifactsIntoConfig(monitoringArtifacts)
 	self.TestSuite.SetupTest()
+}
+
+func (self *ServerMonitoringTestSuite) TearDownTest() {
+	self.TestSuite.TearDownTest()
+	self.mu.Unlock()
 }
 
 func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
@@ -275,7 +290,7 @@ func (self *ServerMonitoringTestSuite) TestQueriesAreCancelled() {
 
 	// A new plugin to keep track of when a query is running - Total
 	// number of runs is kept in run_count above.
-	vql_subsystem.RegisterPlugin(
+	vql_subsystem.OverridePlugin(
 		vfilter.GenericListPlugin{
 			PluginName: "register_run_count",
 			Function: func(
@@ -401,6 +416,56 @@ sources:
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return readAll(filename) == "goodbye"
 	})
+}
+
+// Make sure watch monitoring can follow server event streams.
+func (self *ServerMonitoringTestSuite) TestWatchMonitoring() {
+	repository := self.LoadArtifacts(`
+name: Test.Events
+type: SERVER_EVENT
+sources:
+- query: SELECT * FROM clock()
+`)
+
+	event_table, err := services.GetServerEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Start collecting the events
+	err = event_table.Update(self.Ctx,
+		self.ConfigObj, utils.GetSuperuserName(self.ConfigObj),
+		&flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"Test.Events"},
+		})
+	assert.NoError(self.T(), err)
+
+	// Call the watch_monitoring plugin to ensure we can see them.
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Repository: repository,
+		Logger: logging.NewPlainLogger(
+			self.ConfigObj, &logging.FrontendComponent),
+		Env: ordereddict.NewDict(),
+	}
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	subctx, cancel := context.WithTimeout(self.Ctx, 5*time.Second)
+	defer cancel()
+
+	var rows []vfilter.Row
+	for row := range (&flows.WatchMonitoringPlugin{}).Call(
+		subctx, scope, ordereddict.NewDict().
+			Set("artifact", "Test.Events")) {
+
+		// We only need one event
+		rows = append(rows, row)
+		break
+	}
+	assert.True(self.T(), len(rows) > 0)
 }
 
 func TestServerMonitoring(t *testing.T) {

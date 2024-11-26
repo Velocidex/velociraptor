@@ -30,6 +30,8 @@ import (
 
 var (
 	notInitializedError = errors.New("Not initialized")
+
+	PushRowsToArtifactAsyncIsSynchrnous = false
 )
 
 type JournalService struct {
@@ -185,7 +187,7 @@ func (self *JournalService) PushRowsToArtifactAsync(
 	// to prevent deadlocks because some of the tasks may also call
 	// the journal service to write asynchronously which they can not
 	// do when taking up a pool slot.
-	if self.pool.WaitingTasks() > 0 {
+	if self.pool.WaitingTasks() > 0 || PushRowsToArtifactAsyncIsSynchrnous {
 		f()
 		return
 	}

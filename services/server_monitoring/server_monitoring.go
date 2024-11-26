@@ -16,15 +16,12 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -302,6 +299,11 @@ func (self *EventTable) RunQuery(
 	wg *sync.WaitGroup,
 	vql_request *actions_proto.VQLCollectorArgs) error {
 
+	journal, err := services.GetJournal(config_obj)
+	if err != nil {
+		return err
+	}
+
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
@@ -313,13 +315,8 @@ func (self *EventTable) RunQuery(
 	}
 
 	artifact_name := getArtifactName(vql_request)
-	path_manager, err := artifacts.NewArtifactPathManager(ctx,
-		config_obj, "", "", artifact_name)
-	if err != nil {
-		return err
-	}
 
-	// We write the logs to special files.
+	// We write the logs directly to files.
 	log_path_manager, err := artifacts.NewArtifactLogPathManager(ctx,
 		config_obj, "server", "", artifact_name)
 	if err != nil {
@@ -356,25 +353,12 @@ func (self *EventTable) RunQuery(
 		heartbeat = 120
 	}
 
-	// Create a result set writer for the output.
-	opts := vql_subsystem.EncOptsFromScope(scope)
-	file_store_factory := file_store.GetFileStore(config_obj)
-
 	scope.Log("server_monitoring: Collecting <green>%v</>", artifact_name)
-
-	// Write files in the background
-	rs_writer, err := result_sets.NewTimedResultSetWriter(
-		file_store_factory, path_manager, opts,
-		utils.BackgroundWriter)
-	if err != nil {
-		scope.Close()
-		return err
-	}
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer rs_writer.Close()
+		//defer rs_writer.Close()
 		defer scope.Close()
 		defer scope.Log("server_monitoring: Finished collecting %v", artifact_name)
 
@@ -401,7 +385,8 @@ func (self *EventTable) RunQuery(
 					query_log.Close()
 					return
 
-				case <-time.After(utils.Jitter(time.Second * time.Duration(heartbeat))):
+				case <-time.After(utils.Jitter(
+					time.Second * time.Duration(heartbeat))):
 					scope.Log("Time %v: %s: Waiting for rows.",
 						(uint64(utils.GetTime().Now().UTC().UnixNano()/1000)-
 							query_start)/1000000, query.Name)
@@ -412,9 +397,14 @@ func (self *EventTable) RunQuery(
 						break one_query
 					}
 
-					rs_writer.Write(vfilter.RowToDict(ctx, scope, row).
-						Set("_ts", utils.GetTime().Now().Unix()))
-					rs_writer.Flush()
+					// Add the timestamp to the row - this is the
+					// server time when the event was generated.
+					event := vfilter.RowToDict(ctx, scope, row).
+						Set("_ts", utils.GetTime().Now().Unix())
+
+					// Write event to the journal asynchronously.
+					journal.PushRowsToArtifactAsync(ctx, config_obj,
+						event, artifact_name)
 				}
 			}
 			self.tracer.Clear(query.VQL)
