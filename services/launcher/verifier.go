@@ -75,6 +75,7 @@ func (self *ApiDescription) verifyArtifact(
 
 	// Some implicit parameters that are always allowed
 	parameters["source"] = true
+	parameters["preconditions"] = true
 
 	for _, p := range artifact.Parameters {
 		parameters[p.Name] = true
