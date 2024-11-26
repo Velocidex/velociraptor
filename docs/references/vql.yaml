@@ -1793,7 +1793,11 @@
 - name: ebpf_events
   description: |
     Dumps information about potential ebpf_events that can be used by the
-    [watch_ebpf](/vql_reference/misc/watch_ebpf/) plugin.
+    `watch_ebpf` plugin.
+
+    ### See also
+
+    - [watch_ebpf](/vql_reference/misc/watch_ebpf/)
   type: Plugin
   platforms:
   - linux_amd64_cgo
@@ -2710,8 +2714,8 @@
     LET my_words <= SELECT * FROM parse_csv(accessor="data", filename=csv, auto_headers=True)
     SELECT format(format="%v %v a %v.", args=[Col0, Col1, Col2]) AS Sentence FROM my_words
     ```
-    returns:
-    `Sentence: John ate a banana.`
+    returns:\
+    `Sentence: John ate a banana.`\
     `Sentence: Mary had a little lamb.`
 
     ```vql
@@ -4529,7 +4533,7 @@
     parameter - each **distinct format string** will not be emitted more
     frequently than the `dedup` parameter (by default 60 seconds).
 
-    This makes it safe to use `log()` frequently without overflowing
+    This makes it safe to use `log()` frequently without flooding
     the logs stream.
 
     ```vql
@@ -10415,7 +10419,7 @@
     ### See also
 
     - [ebpf_events](/vql_reference/misc/ebpf_events/): Dumps information about
-      potential ebpf_events that can be used by the watch_ebpf() plugin.
+      potential ebpf_events.
   type: Plugin
   args:
   - name: events
