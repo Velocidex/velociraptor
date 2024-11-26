@@ -43,7 +43,14 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: alert
-  description: Generate an alert message.
+  description: |
+    Generate an alert message.
+
+    ### See also
+
+    - [log](/vql_reference/basic/log/): alerts and log messages are similar in
+      concept and use the same deduplication mechanism which is explained with
+      examples for the `log()` function.
   type: Function
   version: 2
   args:
@@ -1785,8 +1792,12 @@
   category: windows
 - name: ebpf_events
   description: |
-    Dump information about potential ebpf_events that can be used by the
-    watch_ebpf() plugin.
+    Dumps information about potential ebpf_events that can be used by the
+    `watch_ebpf` plugin.
+
+    ### See also
+
+    - [watch_ebpf](/vql_reference/misc/watch_ebpf/)
   type: Plugin
   platforms:
   - linux_amd64_cgo
@@ -2680,16 +2691,52 @@
   description: |
     Format one or more items according to a format string.
 
-    This function is essentially a wrapper around Golang's
-    fmt.Sprintf() function and uses the same format specifiers.
+    This function is essentially a wrapper around Golang's fmt.Sprintf()
+    function and uses the same format specifiers, which are documented
+    [here](https://pkg.go.dev/fmt).
 
-    https://pkg.go.dev/fmt
+    The following format 'verbs' are often useful:
 
-    Of note the following are very useful:
+    - `%v` is the general purpose stringifier and can apply to strings, ints etc.
+    - `%x` applied on strings will hex print the string.
+    - `%T` will reveal the internal type of an object.
+    - `%d` provides the decimal (base 10) representation.
 
-    * The `% x` applied on strings will hex print the string
-    * The `%T` will reveal the internal type of an object.
-    * The `%v` is the general purpose stringifier and can apply to strings, ints etc.
+    If you are passing a single variable in the `args` argument then the array
+    notation can be omitted. That is `args=my_var` can be specified instead
+    of `args=[my_var]`.
+
+    ### Examples
+
+    ```vql
+    LET csv <= '''John,ate,banana
+    Mary,had,little lamb'''
+    LET my_words <= SELECT * FROM parse_csv(accessor="data", filename=csv, auto_headers=True)
+    SELECT format(format="%v %v a %v.", args=[Col0, Col1, Col2]) AS Sentence FROM my_words
+    ```
+    returns:\
+    `Sentence: John ate a banana.`\
+    `Sentence: Mary had a little lamb.`
+
+    ```vql
+    LET T <= timestamp(epoch="2024-02-02T04:42:00Z")
+    SELECT format(format="%d-%02d-%02dT%02d:%02d:%06.3fZ", args=[
+      T.Year, T.Month, T.Day, T.Hour, T.Minute, T.Nanosecond / 1000000000 ])
+    FROM scope()
+    ```
+    returns: `2024-02-02T04:42:00.000Z`
+
+    Note that the `timestamp_format` function provides the same string
+    formatting for timestamps using a much simpler syntax.
+
+    ### See also
+
+    - [log](vql_reference/basic/log/): a function which uses the same string
+      formatting as the `format` function.
+    - [timestamp_format](/vql_reference/misc/timestamp_format/): a function
+      that simplifies the string formatting of timestamp objects.
+    - [typeof](/vql_reference/basic/format/): a dedicated function equivalent
+      to the special use case: `format(format="%T",args=x)`
   type: Function
   args:
   - name: format
@@ -4415,7 +4462,7 @@
 
     ### Example
 
-    ```sql
+    ```vql
     // Setting this in a notebook will tell the GUI to treat this
     // column as URL.
     LET ColumnTypes <= dict(HuntLink="url_internal")
@@ -4466,15 +4513,14 @@
   - windows_amd64_cgo
 - name: log
   description: |
-    Log the message and return TRUE.
+    Log a message to the query log stream. Always returns TRUE.
 
-    The message will be logged into the query log stream (Viewable in
-    the Logs tab). The `message` parameter represents a format string
+    The `message` parameter represents a format string
     that will be expanded using the `args` parameter list if needed.
 
     Since `log()` always returns TRUE it is easy to use in a WHERE
-    clause as a form of debugging (It is basically equivalent to the
-    print statement of other languages).
+    clause as a form of debugging. It is basically equivalent to the
+    print statement of other languages.
 
     ```vql
     SELECT * FROM glob(...)
@@ -4484,10 +4530,10 @@
     ### Deduplication
 
     Log messages will be deduped according to the `dedup`
-    parameter - each distinct format string will not be emitted more
+    parameter - each **distinct format string** will not be emitted more
     frequently than the `dedup` parameter (by default 60 seconds).
 
-    This makes it safe to use `log()` frequently without overflowing
+    This makes it safe to use `log()` frequently without flooding
     the logs stream.
 
     ```vql
@@ -4505,6 +4551,30 @@
     SELECT * FROM glob(...)
     WHERE log(message="Processing file %v", args=OSPath)
     ```
+
+    ### Example
+
+    In this more complex example the query will produce 10 rows, at a rate of
+    1 row every 5 seconds. However the log messages will be limited to 1 every
+    15 seconds.
+
+    ```vql
+    SELECT count() AS Count, String AS EventTime FROM clock(period=5)
+    WHERE log(message="Logging #%v at %v", args=[Count, EventTime], level="INFO", dedup=15)
+    LIMIT 10
+    ```
+
+    Thus the log message will be emitted for the 1st, 4th, 7th, and 10th rows.
+    To observe the deduplication behaviour in real time you can run this query
+    in a notebook cell and tweak the arguments to understand their impacts.
+
+    ### See also
+
+    - [format](/vql_reference/basic/format/): a function that uses the same
+      string formatting syntax.
+    - [alert](/vql_reference/misc/alert/): alerts are a special type of log
+      message that are added to a server alerts queue, which can be monitored.
+
   type: Function
   version: 2
   args:
@@ -5371,7 +5441,39 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: now
-  description: Returns current time in seconds since epoch.
+  description: |
+    Returns the current time in seconds since epoch.
+
+    Note that an integer value is returned, not a timestamp.
+
+    Typically this function is used together with the `timestamp` function to
+    create a timestamp object which can be used in datetime comparisons.
+
+    ### Examples
+
+    Creating a timestamp representing the current time:
+
+    `timestamp(epoch=now())`
+
+    Creating a timestamp representing an hour ago:
+
+    `timestamp(epoch=now() - 3600)`
+
+    Using `now()` in timestamp arithmetic:
+
+    ```vql
+    SELECT * FROM flows(client_id="C.8cfee3cef5dc6915")
+    WHERE state =~ "FINISHED" AND timestamp(epoch=active_time) > now() - 60 * 60 * 24
+    ```
+
+    Note that the above time comparison works even though `now() - 60 * 60 * 24`
+    results in an integer. This is because one of the operands is a timestamp
+    object, so VQL will convert the int to a timestamp for purposes of the
+    comparison.
+
+    ### See also
+
+    - [timestamp](/vql_reference/basic/timestamp/)
   type: Function
   category: basic
   platforms:
@@ -9337,13 +9439,43 @@
   description: |
     Print the underlying Go type of the variable.
 
-    You can use any Keyword arg, the first one will be returned.
+    You can use any argument name. So `typeof(x=my_var)` and
+    `typeof(fluffydinosaur=my_var)` are equivalent.
 
-    ### Example
+    Only the first argument provided will be evaluated and returned.
 
-    ```sql
+    ### Examples
+
+    ```vql
     SELECT typeof(x=1) AS Type FROM scope()
     ```
+    returns: `Type: int64`
+
+    ```vql
+    LET my_time <= timestamp(epoch="2024-03-26T06:53:37Z")
+    SELECT typeof(thing=my_time) AS Type FROM scope()
+    ```
+    returns: `Type: time.Time`
+
+    ### Notes
+
+    The `typeof` function is a more concise alternative to using the more
+    flexible and more powerful `format` function:
+
+    ```vql
+    SELECT format(format="%T", args=x) AS Type FROM scope()
+    ```
+
+    The `typeof` function is often used to inspect the data type of returned
+    values when writing and testing VQL.
+
+    It is also useful as a row filter by including it in the WHERE clause of
+    a query to ensure that a specific column does not contain values of an
+    unexpected data type.
+
+    ### See also
+
+    - [format](/vql_reference/basic/format/)
   type: Function
   platforms:
   - linux_amd64_cgo
@@ -10283,6 +10415,11 @@
     This plugin uses the integrated tracee eBPF engine to stream events.
 
     See https://github.com/Velocidex/tracee_velociraptor for more details.
+
+    ### See also
+
+    - [ebpf_events](/vql_reference/misc/ebpf_events/): Dumps information about
+      potential ebpf_events.
   type: Plugin
   args:
   - name: events
