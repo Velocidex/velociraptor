@@ -52,6 +52,14 @@ sources:
          SELECT log(message="StringArg Should be Hello because default is overriden %v", args=StringArg),
                 log(message="Tool is available through local url %v", args=Tool_SomeTool_URL)
          FROM scope()
+`, `
+name: Notebooks.Default
+type: NOTEBOOK
+sources:
+- notebook:
+  - type: markdown
+    template: |
+      # Welcome to Velociraptor notebooks!
 `}
 )
 

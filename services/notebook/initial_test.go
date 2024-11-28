@@ -28,14 +28,6 @@ import (
 const DEBUG = false
 
 var InitialArtifacts = []string{`
-name: Notebooks.Default
-type: NOTEBOOK
-sources:
-- notebook:
-  - type: markdown
-    template: |
-      # Welcome to Velociraptor notebooks!
-`, `
 name: Generic.Client.Info
 type: CLIENT
 parameters:
@@ -118,11 +110,11 @@ var (
 				AssertDictRegex(t, "1982-12-10", "Parameters.0.Default", artifact)
 
 				// ClientId and Flow ID are added
-				AssertDictRegex(t, "ClientId", "Parameters.1.Name", artifact)
-				AssertDictRegex(t, "C.1235", "Parameters.1.Default", artifact)
+				AssertDictRegex(t, "ClientId", "Parameters.2.Name", artifact)
+				AssertDictRegex(t, "C.1235", "Parameters.2.Default", artifact)
 
-				AssertDictRegex(t, "FlowId", "Parameters.2.Name", artifact)
-				AssertDictRegex(t, "F.1234", "Parameters.2.Default", artifact)
+				AssertDictRegex(t, "FlowId", "Parameters.3.Name", artifact)
+				AssertDictRegex(t, "F.1234", "Parameters.3.Default", artifact)
 
 				// But the spec contains the actual collected data
 				AssertDictRegex(t, "FirstParameter", "Parameters.Env.0.Key", spec)
@@ -156,8 +148,8 @@ var (
 				spec *flows_proto.ArtifactSpec) {
 
 				// StartTime and EndTime are added as parameters
-				AssertDictRegex(t, "StartTime", "Parameters.2.Name", artifact)
-				AssertDictRegex(t, "EndTime", "Parameters.3.Name", artifact)
+				AssertDictRegex(t, "StartTime", "Parameters.3.Name", artifact)
+				AssertDictRegex(t, "EndTime", "Parameters.4.Name", artifact)
 
 				// The Value of StartTime in the spec comes from the
 				// Env of the request.
@@ -227,8 +219,8 @@ var (
 				spec *flows_proto.ArtifactSpec) {
 
 				// HuntId is added
-				AssertDictRegex(t, "HuntId", "Parameters.1.Name", artifact)
-				AssertDictRegex(t, "H.1234", "Parameters.1.Default", artifact)
+				AssertDictRegex(t, "HuntId", "Parameters.2.Name", artifact)
+				AssertDictRegex(t, "H.1234", "Parameters.2.Default", artifact)
 
 				// Spec has the value from the hunt object
 				AssertDictRegex(t, "FirstParameter", "Parameters.Env.0.Key", spec)
@@ -329,6 +321,9 @@ func (self *NotebookManagerTestSuite) TestInitialNotebook() {
 
 		golden.Set(req.Name+" Spec", proto.Clone(spec))
 
+		if DEBUG {
+			fmt.Printf("Checking %v\n", tc.req)
+		}
 		if tc.check != nil {
 			tc.check(self.T(), artifact, spec)
 		}

@@ -5,6 +5,13 @@
  },
  "Unspecified Artifacts Response": {
   "name": "PrivateNotebook",
+  "parameters": [
+   {
+    "name": "ArtifactName",
+    "default": "Notebooks.Default",
+    "description": "Name of the artifact this notebook came from."
+   }
+  ],
   "sources": [
    {
     "notebook": [
@@ -35,6 +42,11 @@
     "name": "FirstParameter",
     "default": "1982-12-10",
     "type": "timestamp"
+   },
+   {
+    "name": "ArtifactName",
+    "default": "Generic.Client.Info",
+    "description": "Name of the artifact this notebook came from."
    },
    {
     "name": "ClientId",
@@ -81,6 +93,11 @@
   "name": "PrivateNotebook",
   "parameters": [
    {
+    "name": "ArtifactName",
+    "default": "Custom.Generic.Client.Info",
+    "description": "Name of the artifact this notebook came from."
+   },
+   {
     "name": "ClientId",
     "default": "C.1235",
     "description": "Implied client id from notebook"
@@ -126,6 +143,11 @@
    {
     "name": "Arg1",
     "default": "Foo"
+   },
+   {
+    "name": "ArtifactName",
+    "default": "Generic.Events",
+    "description": "Name of the artifact this notebook came from."
    },
    {
     "name": "ClientId",
@@ -189,6 +211,11 @@
    {
     "name": "Arg1",
     "default": "Foo"
+   },
+   {
+    "name": "ArtifactName",
+    "default": "Generic.Events",
+    "description": "Name of the artifact this notebook came from."
    },
    {
     "name": "ClientId",
@@ -266,6 +293,11 @@
    {
     "name": "Arg2",
     "default": "Bar"
+   },
+   {
+    "name": "ArtifactName",
+    "default": "GlobalNotebook",
+    "description": "Name of the artifact this notebook came from."
    }
   ],
   "sources": [
@@ -309,6 +341,11 @@
     "name": "FirstParameter",
     "default": "1982-12-10",
     "type": "timestamp"
+   },
+   {
+    "name": "ArtifactName",
+    "default": "Generic.Client.Info",
+    "description": "Name of the artifact this notebook came from."
    },
    {
     "name": "HuntId",

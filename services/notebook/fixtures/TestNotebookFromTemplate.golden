@@ -28,6 +28,11 @@
     "name": "StringArg",
     "default": "This is a test",
     "type": "string"
+   },
+   {
+    "name": "ArtifactName",
+    "default": "Notebook.With.Parameters",
+    "description": "Name of the artifact this notebook came from."
    }
   ],
   "requests": [
@@ -41,6 +46,10 @@
      {
       "key": "StringArg",
       "value": "Hello"
+     },
+     {
+      "key": "ArtifactName",
+      "value": "Notebook.With.Parameters"
      },
      {
       "key": "Tool_SomeTool_HASH",
@@ -124,6 +133,11 @@
     "name": "StringArg",
     "default": "This is a test",
     "type": "string"
+   },
+   {
+    "name": "ArtifactName",
+    "default": "Notebook.With.Parameters",
+    "description": "Name of the artifact this notebook came from."
    }
   ],
   "requests": [
@@ -137,6 +151,10 @@
      {
       "key": "StringArg",
       "value": "Goodbye"
+     },
+     {
+      "key": "ArtifactName",
+      "value": "Notebook.With.Parameters"
      },
      {
       "key": "Tool_SomeTool_HASH",

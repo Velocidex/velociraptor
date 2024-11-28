@@ -2,6 +2,29 @@
  "Notebook Metadata": {
   "name": "Timeline Notebook",
   "creator": "admin",
+  "artifacts": [
+   "Notebooks.Default"
+  ],
+  "parameters": [
+   {
+    "name": "ArtifactName",
+    "default": "Notebooks.Default",
+    "description": "Name of the artifact this notebook came from."
+   }
+  ],
+  "requests": [
+   {
+    "query_id": 1,
+    "total_queries": 1,
+    "env": [
+     {
+      "key": "ArtifactName",
+      "value": "Notebooks.Default"
+     }
+    ],
+    "max_row": 1000
+   }
+  ],
   "created_time": 1715775587,
   "modified_time": 1715775587,
   "notebook_id": "N.01",

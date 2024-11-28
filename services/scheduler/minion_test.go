@@ -26,6 +26,14 @@ var (
 	mock_definitions = []string{`
 name: Server.Internal.ArtifactDescription
 type: SERVER
+`, `
+name: Notebooks.Default
+type: NOTEBOOK
+sources:
+- notebook:
+  - type: markdown
+    template: |
+      # Welcome to Velociraptor notebooks!
 `}
 )
 
