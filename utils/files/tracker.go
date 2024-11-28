@@ -33,10 +33,6 @@ type Opener struct {
 	age                time.Time
 }
 
-func (self *Opener) Close() {
-	gTracker.RemoveFile(self.name)
-}
-
 type OpenerTracker struct {
 	mu    sync.Mutex
 	items map[string]*Opener
@@ -58,9 +54,6 @@ func (self *OpenerTracker) scan() {
 		}
 
 		for _, k := range expired {
-			v := self.items[k]
-			v.Close()
-
 			delete(self.items, k)
 		}
 	}
