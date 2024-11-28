@@ -67,6 +67,15 @@
       "type": "vql"
      }
     ]
+   },
+   {
+    "notebook": [
+     {
+      "template": "\n/*\n# Flow logs\n*/\n\nSELECT * FROM flow_logs(client_id=ClientId, flow_id=FlowId)\n",
+      "type": "vql_suggestion",
+      "name": "Collection logs"
+     }
+    ]
    }
   ]
  },
@@ -114,6 +123,15 @@
      {
       "template": "# Custom.Generic.Client.Info template\n",
       "type": "markdown"
+     }
+    ]
+   },
+   {
+    "notebook": [
+     {
+      "template": "\n/*\n# Flow logs\n*/\n\nSELECT * FROM flow_logs(client_id=ClientId, flow_id=FlowId)\n",
+      "type": "vql_suggestion",
+      "name": "Collection logs"
      }
     ]
    }
@@ -359,6 +377,15 @@
      {
       "template": "\n/*\n# Generic.Client.Info\n*/\nSELECT * FROM source(artifact=\"Generic.Client.Info\")\nLIMIT 50\n",
       "type": "vql"
+     }
+    ]
+   },
+   {
+    "notebook": [
+     {
+      "template": "\n\nLET ColumnTypes \u003c= dict(\n   ClientId=\"client_id\",\n   FlowId=\"flow\",\n   StartedTime=\"timestamp\"\n)\n\n/*\n# Flows with ERROR status\n*/\nLET ERRORS = SELECT ClientId,\n       client_info(client_id=ClientId).os_info.hostname AS Hostname,\n       FlowId, Flow.start_time As StartedTime,\n       Flow.state AS FlowState, Flow.status as FlowStatus,\n       Flow.execution_duration as Duration,\n       Flow.total_uploaded_bytes as TotalBytes,\n       Flow.total_collected_rows as TotalRows\nFROM hunt_flows(hunt_id=HuntId)\nWHERE FlowState =~ 'ERROR'\n\n-- Uncomment the below to reissue the exact same hunt to the errored clients\n-- SELECT *,\n--    hunt_add(client_id=ClientId, hunt_id=HuntId, relaunch=TRUE) AS NewCollection\n-- FROM ERRORS\n\n-- Uncomment the below to reissue a new collection and add to the same hunt.\n-- You will have to also change \"UpdateArtifactName\" and add a spec for\n-- the parameters. (See docs for collect_client())\n-- SELECT *,\n--   hunt_add(client_id=ClientId, hunt_id=HuntId,\n--     flow_id=collect_client(artifacts=\"UpdateArtifactName\",\n--                            client_id=ClientId).flow_id) AS NewCollection\n-- FROM ERRORS\nSELECT * FROM ERRORS\n\n/*\n## Flows with RUNNING status\n*/\nSELECT ClientId,\n       client_info(client_id=ClientId).os_info.hostname AS Hostname,\n       FlowId, Flow.start_time As StartedTime,\n       Flow.state AS FlowState, Flow.status as FlowStatus,\n       Flow.execution_duration as Duration,\n       Flow.total_uploaded_bytes as TotalBytes,\n       Flow.total_collected_rows as TotalRows\nFROM hunt_flows(hunt_id=HuntId)\nWHERE FlowState =~ 'RUNNING'\n\n/*\n## Flows with FINISHED status\n*/\nSELECT ClientId,\n       client_info(client_id=ClientId).os_info.hostname AS Hostname,\n       FlowId, Flow.start_time As StartedTime,\n       Flow.state AS FlowState, Flow.status as FlowStatus,\n       Flow.execution_duration as Duration,\n       Flow.total_uploaded_bytes as TotalBytes,\n       Flow.total_collected_rows as TotalRows\nFROM hunt_flows(hunt_id=HuntId)\nWHERE FlowState =~ 'Finished'\nLIMIT 1000\n",
+      "type": "vql_suggestion",
+      "name": "Hunt Progress"
      }
     ]
    }
