@@ -15,6 +15,7 @@ import (
 
 	"golang.org/x/crypto/acme/autocert"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
+	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
@@ -116,9 +117,9 @@ func (self *Builder) withAutoCertFrontendSelfSignedGUI(
 	logger.Info("Autocert is enabled but GUI port is not 443, starting Frontend with autocert and GUI with self signed.")
 
 	if config_obj.Services.GuiServer && config_obj.GUI != nil {
-		mux := http.NewServeMux()
+		mux := utils.NewServeMux()
 
-		router, err := PrepareGUIMux(ctx, config_obj, server_obj, mux)
+		router, err := PrepareGUIMux(ctx, config_obj, mux)
 		if err != nil {
 			return err
 		}
@@ -139,10 +140,10 @@ func (self *Builder) withAutoCertFrontendSelfSignedGUI(
 	}
 
 	// Launch a server for the frontend.
-	mux := http.NewServeMux()
+	mux := utils.NewServeMux()
 
 	err := server.PrepareFrontendMux(
-		config_obj, server_obj, mux)
+		config_obj, server_obj, mux.ServeMux)
 	if err != nil {
 		return err
 	}
@@ -162,16 +163,17 @@ func (self *Builder) WithAutocertGUI(
 		return errors.New("Frontend not configured")
 	}
 
-	mux := http.NewServeMux()
+	mux := utils.NewServeMux()
 
 	if self.config_obj.Services.FrontendServer {
-		err := server.PrepareFrontendMux(self.config_obj, self.server_obj, mux)
+		err := server.PrepareFrontendMux(
+			self.config_obj, self.server_obj, mux.ServeMux)
 		if err != nil {
 			return err
 		}
 	}
 
-	router, err := PrepareGUIMux(ctx, self.config_obj, self.server_obj, mux)
+	router, err := PrepareGUIMux(ctx, self.config_obj, mux)
 	if err != nil {
 		return err
 	}
@@ -188,20 +190,21 @@ func startSharedSelfSignedFrontend(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	server_obj *server.Server) error {
-	mux := http.NewServeMux()
+	mux := utils.NewServeMux()
 
 	if config_obj.Frontend == nil || config_obj.GUI == nil {
 		return errors.New("Frontend not configured")
 	}
 
 	if config_obj.Services.FrontendServer {
-		err := server.PrepareFrontendMux(config_obj, server_obj, mux)
+		err := server.PrepareFrontendMux(
+			config_obj, server_obj, mux.ServeMux)
 		if err != nil {
 			return err
 		}
 	}
 
-	router, err := PrepareGUIMux(ctx, config_obj, server_obj, mux)
+	router, err := PrepareGUIMux(ctx, config_obj, mux)
 	if err != nil {
 		return err
 	}
@@ -248,9 +251,9 @@ func startSelfSignedFrontend(
 
 	// Launch a new server for the GUI.
 	if config_obj.Services.GuiServer {
-		mux := http.NewServeMux()
+		mux := utils.NewServeMux()
 
-		router, err := PrepareGUIMux(ctx, config_obj, server_obj, mux)
+		router, err := PrepareGUIMux(ctx, config_obj, mux)
 		if err != nil {
 			return err
 		}
@@ -271,10 +274,10 @@ func startSelfSignedFrontend(
 	}
 
 	// Launch a server for the frontend.
-	mux := http.NewServeMux()
+	mux := utils.NewServeMux()
 
 	server.PrepareFrontendMux(
-		config_obj, server_obj, mux)
+		config_obj, server_obj, mux.ServeMux)
 
 	if config_obj.Frontend.UsePlainHttp {
 		return StartFrontendPlainHttp(

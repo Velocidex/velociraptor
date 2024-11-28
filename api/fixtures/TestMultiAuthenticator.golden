@@ -1,0 +1,133 @@
+{
+ "Redirect Provider *authenticators.OidcAuthenticator": "https://www.example.com/velociraptor/auth/oidc/callback",
+ "Redirect Provider *authenticators.GoogleAuthenticator": "https://www.example.com/velociraptor/auth/google/callback",
+ "Redirect Provider *authenticators.GitHubAuthenticator": "https://www.example.com/velociraptor/auth/github/callback",
+ "Redirect Provider *authenticators.OidcAuthenticatorCognito": "https://www.example.com/velociraptor/auth/oidc/cognito/callback",
+ "Redirect Provider *authenticators.AzureAuthenticator": "https://www.example.com/velociraptor/auth/azure/callback",
+ "Mux": {
+  "/favicon.png": [
+   "*http.redirectHandler"
+  ],
+  "/velociraptor/": [
+   "api.PrepareGUIMux"
+  ],
+  "/velociraptor/api/": [
+   "authenticators.IpFilter",
+   " api.csrfProtect",
+   " authenticators.authenticateUserHandle",
+   " *utils.ServeMux"
+  ],
+  "/velociraptor/api/v1/DownloadTable": [
+   "authenticators.IpFilter",
+   " api.csrfProtect",
+   " authenticators.authenticateUserHandle",
+   " api.downloadTable"
+  ],
+  "/velociraptor/api/v1/DownloadVFSFile": [
+   "authenticators.IpFilter",
+   " api.csrfProtect",
+   " authenticators.authenticateUserHandle",
+   " api.vfsFileDownloadHandler"
+  ],
+  "/velociraptor/api/v1/UploadFormFile": [
+   "authenticators.IpFilter",
+   " api.csrfProtect",
+   " authenticators.authenticateUserHandle",
+   " api.formUploadHandler"
+  ],
+  "/velociraptor/api/v1/UploadTool": [
+   "authenticators.IpFilter",
+   " api.csrfProtect",
+   " authenticators.authenticateUserHandle",
+   " api.toolUploadHandler"
+  ],
+  "/velociraptor/app/": [
+   "authenticators.IpFilter",
+   " utils.StripPrefix",
+   " NewInterceptingResponseWriter",
+   " *gzipped.fileHandler"
+  ],
+  "/velociraptor/app/index.html": [
+   "authenticators.IpFilter",
+   " api.csrfProtect",
+   " authenticators.authenticateUserHandle",
+   " api.GetTemplateHandler"
+  ],
+  "/velociraptor/app/logoff.html": [
+   "authenticators.IpFilter",
+   " authenticators.installLogoff"
+  ],
+  "/velociraptor/auth/azure/callback": [
+   "authenticators.IpFilter",
+   " authenticators.(*AzureAuthenticator).oauthAzureCallback"
+  ],
+  "/velociraptor/auth/azure/login": [
+   "authenticators.IpFilter",
+   " authenticators.(*AzureAuthenticator).oauthAzureLogin"
+  ],
+  "/velociraptor/auth/azure/picture": [
+   "authenticators.IpFilter",
+   " authenticators.(*AzureAuthenticator).oauthAzurePicture"
+  ],
+  "/velociraptor/auth/github/callback": [
+   "authenticators.IpFilter",
+   " authenticators.(*GitHubAuthenticator).oauthGithubCallback"
+  ],
+  "/velociraptor/auth/github/login": [
+   "authenticators.IpFilter",
+   " authenticators.(*GitHubAuthenticator).oauthGithubLogin"
+  ],
+  "/velociraptor/auth/google/callback": [
+   "authenticators.IpFilter",
+   " authenticators.(*GoogleAuthenticator).oauthGoogleCallback"
+  ],
+  "/velociraptor/auth/google/login": [
+   "authenticators.IpFilter",
+   " authenticators.(*GoogleAuthenticator).oauthGoogleLogin"
+  ],
+  "/velociraptor/auth/oidc/callback": [
+   "authenticators.IpFilter",
+   " authenticators.(*OidcAuthenticator).oauthOidcCallback"
+  ],
+  "/velociraptor/auth/oidc/cognito/callback": [
+   "authenticators.IpFilter",
+   " authenticators.(*OidcAuthenticatorCognito).oauthOidcCallback"
+  ],
+  "/velociraptor/auth/oidc/cognito/login": [
+   "authenticators.IpFilter",
+   " authenticators.(*OidcAuthenticator).oauthOidcLogin"
+  ],
+  "/velociraptor/auth/oidc/login": [
+   "authenticators.IpFilter",
+   " authenticators.(*OidcAuthenticator).oauthOidcLogin"
+  ],
+  "/velociraptor/clients/": [
+   "authenticators.IpFilter",
+   " api.csrfProtect",
+   " authenticators.authenticateUserHandle",
+   " utils.StripPrefix",
+   " api.downloadFileStore"
+  ],
+  "/velociraptor/downloads/": [
+   "authenticators.IpFilter",
+   " api.csrfProtect",
+   " authenticators.authenticateUserHandle",
+   " utils.StripPrefix",
+   " api.downloadFileStore"
+  ],
+  "/velociraptor/hunts/": [
+   "authenticators.IpFilter",
+   " api.csrfProtect",
+   " authenticators.authenticateUserHandle",
+   " utils.StripPrefix",
+   " api.downloadFileStore"
+  ],
+  "/velociraptor/notebooks/": [
+   "authenticators.IpFilter",
+   " api.csrfProtect",
+   " authenticators.authenticateUserHandle",
+   " utils.StripPrefix",
+   " api.downloadFileStore"
+  ]
+ }
+}

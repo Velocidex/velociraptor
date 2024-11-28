@@ -38,6 +38,7 @@ package client_info
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -286,7 +287,7 @@ func (self *ClientInfoManager) ProcessFlowCompletion(
 	return self.storage.Modify(ctx, config_obj, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if client_info == nil {
-				return nil, utils.NotFoundError
+				return nil, fmt.Errorf("Client %v: %w", client_id, utils.NotFoundError)
 			}
 
 			if client_info.InFlightFlows != nil {

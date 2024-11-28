@@ -22,8 +22,8 @@ var (
 
 // All SSO Authenticators implement this interface.
 type Authenticator interface {
-	AddHandlers(mux *http.ServeMux) error
-	AddLogoff(mux *http.ServeMux) error
+	AddHandlers(mux *utils.ServeMux) error
+	AddLogoff(mux *utils.ServeMux) error
 
 	// Make sure the user is authenticated and has at least read
 	// access to the requested org.
@@ -85,8 +85,6 @@ func init() {
 		return &AzureAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
-			base:          utils.GetBasePath(config_obj),
-			public_url:    utils.GetPublicURL(config_obj),
 		}, nil
 	})
 
@@ -99,8 +97,6 @@ func init() {
 		return &GitHubAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
-			base:          utils.GetBasePath(config_obj),
-			public_url:    utils.GetPublicURL(config_obj),
 		}, nil
 	})
 
@@ -113,8 +109,6 @@ func init() {
 		return &GoogleAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
-			base:          utils.GetBasePath(config_obj),
-			public_url:    utils.GetPublicURL(config_obj),
 		}, nil
 	})
 
@@ -127,8 +121,6 @@ func init() {
 		auth_config *config_proto.Authenticator) (Authenticator, error) {
 		return &BasicAuthenticator{
 			config_obj: config_obj,
-			base:       utils.GetBasePath(config_obj),
-			public_url: utils.GetPublicURL(config_obj),
 		}, nil
 	})
 
@@ -140,8 +132,6 @@ func init() {
 
 		result := &CertAuthenticator{
 			config_obj:    config_obj,
-			base:          utils.GetBasePath(config_obj),
-			public_url:    utils.GetPublicURL(config_obj),
 			x509_roots:    x509.NewCertPool(),
 			default_roles: auth_config.DefaultRolesForUnknownUser,
 		}
@@ -162,8 +152,6 @@ func init() {
 		return &OidcAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
-			base:          utils.GetBasePath(config_obj),
-			public_url:    utils.GetPublicURL(config_obj),
 		}, nil
 	})
 

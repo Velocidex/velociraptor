@@ -77,6 +77,15 @@ func (self *DeleteTestSuite) SetupTest() {
 
 	self.client_id = "C.12312"
 	self.TestSuite.SetupTest()
+
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
+		actions_proto.ClientInfo{
+			ClientId: self.client_id,
+		}})
+	assert.NoError(self.T(), err)
 }
 
 func (self *DeleteTestSuite) TearDownTest() {

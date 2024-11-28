@@ -18,6 +18,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services/users"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
@@ -377,19 +378,22 @@ func configureSSO(config_obj *config_proto.Config) error {
 	}
 
 	// Provide the user with a hint about the redirect URL
-	redirect := ""
+	redirect, err := utils.GetBaseURL(config_obj)
+	if err != nil {
+		return err
+	}
 	switch config_obj.GUI.Authenticator.Type {
 	case "Google":
-		redirect = config_obj.GUI.PublicUrl + "auth/google/callback"
+		redirect.Path = path.Join(redirect.Path, "auth/google/callback")
 	case "GitHub":
-		redirect = config_obj.GUI.PublicUrl + "auth/github/callback"
+		redirect.Path = path.Join(redirect.Path, "auth/github/callback")
 	case "Azure":
-		redirect = config_obj.GUI.PublicUrl + "auth/azure/callback"
+		redirect.Path = path.Join(redirect.Path, "auth/azure/callback")
 	case "OIDC":
-		redirect = config_obj.GUI.PublicUrl + "auth/oidc/callback"
+		redirect.Path = path.Join(redirect.Path, "auth/oidc/callback")
 	}
 	fmt.Printf("\nSetting %v configuration will use redirect URL %v\n",
-		config_obj.GUI.Authenticator.Type, redirect)
+		config_obj.GUI.Authenticator.Type, redirect.String())
 
 	switch config_obj.GUI.Authenticator.Type {
 	case "Google", "GitHub":

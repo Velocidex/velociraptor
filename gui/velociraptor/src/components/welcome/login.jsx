@@ -12,6 +12,7 @@ import github_logo from "./Github-octocat-icon-vector-01.svg";
 import google_logo from "./Google-icon-vector-04.svg";
 import azure_logo from "./Microsoft_Azure_Logo.svg";
 import openid_logo from "./OpenID_logo.svg";
+import T from '../i8n/i8n.jsx';
 
 
 class Authenticator extends Component {
@@ -48,7 +49,7 @@ class Authenticator extends Component {
               <Col sm="6">
                 <Button
                   variant="outline" className="login">
-                  <a href={this.props.param.LoginURL}>
+                  <a href={api.href(this.props.param.LoginURL)}>
                     <Row>
                     <Col sm="1">
                       {this.getIcon()}
@@ -82,7 +83,7 @@ export default class LoginPage extends Component {
                        window.location = api.href("/app/index.html");
                    }}>
               <Modal.Header closeButton>
-                <Modal.Title>Velociraptor Login</Modal.Title>
+                <Modal.Title>{T("Velociraptor Login")}</Modal.Title>
               </Modal.Header>
               <Modal.Body className="tool-viewer">
 
