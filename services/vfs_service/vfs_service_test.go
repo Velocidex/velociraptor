@@ -29,6 +29,9 @@ var definitions = []string{`
 name: System.VFS.ListDirectory
 `, `
 name: System.VFS.DownloadFile
+`, `
+name: System.Flow.Completion
+type: CLIENT_EVENT
 `,
 }
 
@@ -58,6 +61,7 @@ func (self *VFSServiceTestSuite) SetupTest() {
 		self.ConfigObj, utils.GetSuperuserName(self.ConfigObj))
 
 	self.closer = utils.MockTime(utils.NewMockClock(time.Unix(1000, 0)))
+	self.CreateClient(self.client_id)
 }
 
 func (self *VFSServiceTestSuite) TearDownTest() {

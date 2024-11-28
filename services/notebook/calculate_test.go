@@ -144,7 +144,7 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerUpdateCell(r *assert.R
 	golden.Set("Full Notebook after update", new_notebook)
 
 	goldie.Retry(r, self.T(), "TestNotebookManagerUpdateCell",
-		json.MustMarshalIndent(golden))
+		goldie.RemoveLines("timestamp", json.MustMarshalIndent(golden)))
 }
 
 func (self *NotebookManagerTestSuite) TestNotebookManagerAlert() {

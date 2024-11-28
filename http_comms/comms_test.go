@@ -32,6 +32,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -92,7 +93,7 @@ func (self *FakeServer) Log(fmtstring string, args ...interface{}) {
 
 func NewFakeServer() *FakeServer {
 	self := &FakeServer{}
-	self.server = httptest.NewServer(http.HandlerFunc(
+	self.server = httptest.NewServer(api_utils.HandlerFunc(nil,
 		func(rw http.ResponseWriter, req *http.Request) {
 			self.Log("request: %v", req.URL.String())
 
