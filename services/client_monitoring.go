@@ -52,6 +52,11 @@ type ClientEventTable interface {
 		config_obj *config_proto.Config,
 		client_id string) *crypto_proto.VeloMessage
 
+	// Get the specs that will be applied on a client depending on
+	// label membership
+	GetClientSpec(ctx context.Context, config_obj *config_proto.Config,
+		client_id string) []*flows_proto.ArtifactSpec
+
 	// Get the full client monitoring table.
 	GetClientMonitoringState() *flows_proto.ClientEventTable
 

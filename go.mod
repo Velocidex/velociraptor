@@ -14,7 +14,7 @@ require (
 	github.com/Velocidex/grpc-go-pool v1.2.2-0.20241016164850-ff0cb80037a8
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
 	github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a
-	github.com/Velocidex/sflags v0.3.1-0.20231011011525-620ab7ca8617
+	github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1
 	github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130
 	github.com/Velocidex/yaml/v2 v2.2.8
 	github.com/Velocidex/zip v0.0.0-20210101070220-e7ecefb7aad7
@@ -69,7 +69,7 @@ require (
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/sergi/go-diff v1.2.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab

@@ -40,9 +40,13 @@ export default class UserForm extends React.Component {
 
     loadUsers = () => {
         api.get("v1/GetUsers", {}, this.source.token).then((response) => {
+            if (response.cancel || _.isEmpty(response.data)) return;
+
+            let users = response.data.users || [];
+
             let names = [];
-            for(var i = 0; i<response.data.users.length; i++) {
-                var name = response.data.users[i].name;
+            for(var i = 0; i<users.length; i++) {
+                var name = users[i].name;
 
                 // Only add other users than the currently logged in
                 // user.

@@ -20,6 +20,7 @@ import DeleteNotebookDialog from '../notebooks/notebook-delete.jsx';
 import T from '../i8n/i8n.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
 import VeloLog from "../widgets/logs.jsx";
+import { EditNotebook } from '../notebooks/new-notebook.jsx';
 
 import { withRouter }  from "react-router-dom";
 
@@ -371,13 +372,40 @@ class EventMonitoring extends React.Component {
 
                 <ButtonGroup className="float-right">
                   { this.state.mode === mode_notebook &&
-                     <ToolTip tooltip={T("Delete Notebook")}>
-                    <Button onClick={() => this.setState({showDeleteNotebook: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="trash"/>
-              <span className="sr-only">{T("Delete Notebook")}</span>
-                    </Button>
-                    </ToolTip>
+                    <>
+                      <ToolTip tooltip={T("Edit Notebook")}>
+                        <Button onClick={()=>{
+                            this.setState({loading: true});
+                            api.get("v1/GetNotebooks", {
+                                include_uploads: true,
+                                notebook_id: get_notebook_id(
+                                    this.state.artifact.artifact, client_id),
+
+                            }, this.source.token).then(resp=>{
+                                let items = resp.data.items;
+                                if (_.isEmpty(items)) {
+                                    return;
+                                }
+
+                                this.setState({notebook: items[0],
+                                               loading: false,
+                                               showEditNotebookDialog: true});
+                            });
+                        }}
+                                variant="default">
+                          <FontAwesomeIcon icon="wrench"/>
+                          <span className="sr-only">{T("Edit Notebook")}</span>
+                        </Button>
+                      </ToolTip>
+
+                      <ToolTip tooltip={T("Delete Notebook")}>
+                        <Button onClick={() => this.setState({showDeleteNotebook: true})}
+                                variant="default">
+                          <FontAwesomeIcon icon="trash"/>
+                          <span className="sr-only">{T("Delete Notebook")}</span>
+                        </Button>
+                      </ToolTip>
+                    </>
                   }
                   <Dropdown title="mode" variant="default">
                     <Dropdown.Toggle variant="default">
@@ -447,6 +475,16 @@ class EventMonitoring extends React.Component {
                   onClose={e=>{
                       this.setState({showDeleteNotebook: false});
                   }}/>
+              }
+
+              { this.state.showEditNotebookDialog &&
+                <EditNotebook
+                  notebook={this.state.notebook}
+                  updateNotebooks={()=>{
+                      this.setState({showEditNotebookDialog: false});
+                  }}
+                  closeDialog={() => this.setState({showEditNotebookDialog: false})}
+                />
               }
             </>
         );

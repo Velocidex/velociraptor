@@ -65,6 +65,8 @@ func (self *NotebookManagerTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
 	self.ConfigObj.Services.NotebookService = true
 	self.ConfigObj.Services.SchedulerService = true
+	self.ConfigObj.Services.ClientMonitoring = true
+	self.ConfigObj.Services.HuntDispatcher = true
 
 	// Keep 3 versions of each cell
 	self.ConfigObj.Defaults.NotebookVersions = 3

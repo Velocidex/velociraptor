@@ -98,13 +98,25 @@ func (self *NotebookManager) UpdateNotebook(
 
 	in.ModifiedTime = utils.GetTime().Now().Unix()
 
-	// Update the requests based on the artifact specs.
-	err = updateNotebookRequests(ctx, self.config_obj, in)
+	psuedo_artifact, out, err := CalculateNotebookArtifact(
+		ctx, self.config_obj, in)
 	if err != nil {
 		return err
 	}
 
-	return self.Store.SetNotebook(in)
+	spec, err := CalculateSpecs(ctx, self.config_obj, psuedo_artifact, out)
+	if err != nil {
+		return err
+	}
+
+	// Update the requests based on the artifact specs.
+	err = updateNotebookRequests(
+		ctx, self.config_obj, psuedo_artifact, spec, out)
+	if err != nil {
+		return err
+	}
+
+	return self.Store.SetNotebook(out)
 }
 
 func (self *NotebookManager) GetNotebookCell(ctx context.Context,

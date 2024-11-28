@@ -2,7 +2,6 @@ package paths
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -111,37 +110,33 @@ func (self *NotebookPathManager) SuperTimeline(
 	}
 }
 
-// A notebook id for clients flows
-var client_notebook_regex = regexp.MustCompile(`^N\.(F\.[^-]+?)-(C\..+|server)$`)
-var event_notebook_regex = regexp.MustCompile(`^N\.E\.([^-]+?)-(C\..+|server)$`)
-
 func rootPathFromNotebookID(notebook_id string) api.DSPathSpec {
-	if strings.HasPrefix(notebook_id, "Dashboard") {
+	if utils.DashboardNotebookId(notebook_id) {
 		return NOTEBOOK_ROOT.AddUnsafeChild("Dashboards").
 			SetType(api.PATH_TYPE_DATASTORE_JSON)
 	}
 
-	if strings.HasPrefix(notebook_id, "N.H.") {
+	hunt_id, ok := utils.HuntNotebookId(notebook_id)
+	if ok {
 		// For hunt notebooks store them in the hunt itself.
-		return HUNTS_ROOT.AddChild(
-			strings.TrimPrefix(notebook_id, "N."), "notebook").
+		return HUNTS_ROOT.AddChild(hunt_id, "notebook").
 			SetType(api.PATH_TYPE_DATASTORE_JSON)
 	}
 
-	matches := client_notebook_regex.FindStringSubmatch(notebook_id)
-	if len(matches) == 3 {
+	flow_id, client_id, ok := utils.ClientNotebookId(notebook_id)
+	if ok {
 		// For collections notebooks store them in the hunt itself.
-		return CLIENTS_ROOT.AddChild(matches[2],
-			"collections", matches[1], "notebook").
+		return CLIENTS_ROOT.AddChild(client_id,
+			"collections", flow_id, "notebook").
 			SetType(api.PATH_TYPE_DATASTORE_JSON)
 	}
 
-	matches = event_notebook_regex.FindStringSubmatch(notebook_id)
-	if len(matches) == 3 {
+	artifact, client_id, ok := utils.EventNotebookId(notebook_id)
+	if ok {
 		// For event notebooks, store them in the client's monitoring
 		// area.
-		return CLIENTS_ROOT.AddUnsafeChild(matches[2],
-			"monitoring_notebooks", matches[1]).
+		return CLIENTS_ROOT.AddUnsafeChild(client_id,
+			"monitoring_notebooks", artifact).
 			SetType(api.PATH_TYPE_DATASTORE_JSON)
 	}
 

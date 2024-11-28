@@ -21,12 +21,14 @@ import ExportNotebook from '../notebooks/export-notebook.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { HotKeys } from "react-hotkeys";
 import { withRouter } from "react-router-dom";
-import { runArtifact } from "./utils.jsx";
+import { runArtifact, getNotebookId } from "./utils.jsx";
+import Spinner from '../utils/spinner.jsx';
 
 import Modal from 'react-bootstrap/Modal';
 import UserConfig from '../core/user.jsx';
 import VeloForm from '../forms/form.jsx';
 import AddFlowToHuntDialog from './flows-add-to-hunt.jsx';
+import { EditNotebook } from '../notebooks/new-notebook.jsx';
 
 import {CancelToken} from 'axios';
 
@@ -395,6 +397,7 @@ class FlowsList extends React.Component {
 
         return (
             <>
+              <Spinner loading={this.state.loading } />
               { this.state.showDeleteWizard &&
                 <DeleteFlowDialog
                   client={this.props.client}
@@ -452,14 +455,25 @@ class FlowsList extends React.Component {
 
               { this.state.showDeleteNotebook &&
                 <DeleteNotebookDialog
-                  notebook_id={"N." + selected_flow + "-" + client_id}
+                  notebook_id={getNotebookId(selected_flow, client_id)}
                   onClose={(e) => this.setState({showDeleteNotebook: false})}/>
               }
 
               { this.state.showExportNotebook &&
                 <ExportNotebook
-                  notebook={{notebook_id: "N." + selected_flow + "-" + client_id}}
+                  notebook={{
+                      notebook_id: getNotebookId( selected_flow, client_id)}}
                   onClose={(e) => this.setState({showExportNotebook: false})}/>
+              }
+
+              { this.state.showEditNotebookDialog &&
+                <EditNotebook
+                  notebook={this.state.notebook}
+                  updateNotebooks={()=>{
+                      this.setState({showEditNotebookDialog: false});
+                  }}
+                  closeDialog={() => this.setState({showEditNotebookDialog: false})}
+                />
               }
 
               <Navbar className="flow-toolbar">
@@ -581,6 +595,30 @@ class FlowsList extends React.Component {
                               variant="outline-dark">
                         <FontAwesomeIcon icon="book"/>
                         <span className="sr-only">{T("Notebooks")}</span>
+                      </Button>
+                    </ToolTip>
+                    <ToolTip tooltip={T("Edit Notebook")}>
+                      <Button onClick={()=>{
+                          this.setState({loading: true});
+
+                          api.get("v1/GetNotebooks", {
+                              include_uploads: true,
+                              notebook_id: getNotebookId(
+                                  selected_flow, client_id),
+                          }, this.source.token).then(resp=>{
+                              let items = resp.data.items;
+                              if (_.isEmpty(items)) {
+                                  return;
+                              }
+
+                              this.setState({notebook: items[0],
+                                             loading: false,
+                                             showEditNotebookDialog: true});
+                          });
+                      }}
+                              variant="default">
+                        <FontAwesomeIcon icon="wrench"/>
+                        <span className="sr-only">{T("Edit Notebook")}</span>
                       </Button>
                     </ToolTip>
                     <ToolTip tooltip={T("Full Screen")}>
