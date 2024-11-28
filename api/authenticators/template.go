@@ -5,6 +5,7 @@ import (
 	"strings"
 	"text/template"
 
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
@@ -18,7 +19,7 @@ func renderRejectionMessage(
 	username string, authenticators []velociraptor.AuthenticatorInfo) {
 
 	// For API calls we render the error as JSON
-	base_path := config_obj.GUI.BasePath + "/api/"
+	base_path := api_utils.GetBasePath(config_obj, "/api/")
 	if strings.HasPrefix(r.URL.Path, base_path) {
 		w.Write([]byte(json.Format(`{"message": %q}`, err.Error())))
 		return

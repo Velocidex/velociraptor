@@ -76,6 +76,13 @@ func (self *HandlerFuncContainer) String() string {
 }
 
 func (self *HandlerFuncContainer) AddChild(note string) *HandlerFuncContainer {
+	if self.callSite != "" {
+		child := &HandlerFuncContainer{
+			parent:   self,
+			callSite: note,
+		}
+		return child
+	}
 	self.callSite = note
 	return self
 }

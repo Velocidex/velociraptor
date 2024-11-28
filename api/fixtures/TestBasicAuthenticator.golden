@@ -9,30 +9,35 @@
   "/velociraptor/api/": [
    "authenticators.IpFilter",
    " api.csrfProtect",
+   " GetLoggingHandler",
    " authenticators.(*BasicAuthenticator).AuthenticateUserHandler",
    " *utils.ServeMux"
   ],
   "/velociraptor/api/v1/DownloadTable": [
    "authenticators.IpFilter",
    " api.csrfProtect",
+   " GetLoggingHandler",
    " authenticators.(*BasicAuthenticator).AuthenticateUserHandler",
    " api.downloadTable"
   ],
   "/velociraptor/api/v1/DownloadVFSFile": [
    "authenticators.IpFilter",
    " api.csrfProtect",
+   " GetLoggingHandler",
    " authenticators.(*BasicAuthenticator).AuthenticateUserHandler",
    " api.vfsFileDownloadHandler"
   ],
   "/velociraptor/api/v1/UploadFormFile": [
    "authenticators.IpFilter",
    " api.csrfProtect",
+   " GetLoggingHandler",
    " authenticators.(*BasicAuthenticator).AuthenticateUserHandler",
    " api.formUploadHandler"
   ],
   "/velociraptor/api/v1/UploadTool": [
    "authenticators.IpFilter",
    " api.csrfProtect",
+   " GetLoggingHandler",
    " authenticators.(*BasicAuthenticator).AuthenticateUserHandler",
    " api.toolUploadHandler"
   ],
@@ -40,11 +45,13 @@
    "authenticators.IpFilter",
    " utils.StripPrefix",
    " NewInterceptingResponseWriter",
+   " api.fixCSSURLs",
    " *gzipped.fileHandler"
   ],
   "/velociraptor/app/index.html": [
    "authenticators.IpFilter",
    " api.csrfProtect",
+   " GetLoggingHandler",
    " authenticators.(*BasicAuthenticator).AuthenticateUserHandler",
    " api.GetTemplateHandler"
   ],
@@ -55,6 +62,7 @@
   "/velociraptor/clients/": [
    "authenticators.IpFilter",
    " api.csrfProtect",
+   " GetLoggingHandler",
    " authenticators.(*BasicAuthenticator).AuthenticateUserHandler",
    " utils.StripPrefix",
    " api.downloadFileStore"
@@ -62,6 +70,7 @@
   "/velociraptor/downloads/": [
    "authenticators.IpFilter",
    " api.csrfProtect",
+   " GetLoggingHandler",
    " authenticators.(*BasicAuthenticator).AuthenticateUserHandler",
    " utils.StripPrefix",
    " api.downloadFileStore"
@@ -69,6 +78,7 @@
   "/velociraptor/hunts/": [
    "authenticators.IpFilter",
    " api.csrfProtect",
+   " GetLoggingHandler",
    " authenticators.(*BasicAuthenticator).AuthenticateUserHandler",
    " utils.StripPrefix",
    " api.downloadFileStore"
@@ -76,6 +86,7 @@
   "/velociraptor/notebooks/": [
    "authenticators.IpFilter",
    " api.csrfProtect",
+   " GetLoggingHandler",
    " authenticators.(*BasicAuthenticator).AuthenticateUserHandler",
    " utils.StripPrefix",
    " api.downloadFileStore"

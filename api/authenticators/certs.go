@@ -155,6 +155,9 @@ func (self *CertAuthenticator) getUserNameFromTLSCerts(r *http.Request) (string,
 
 func (self *CertAuthenticator) AuthenticateUserHandler(
 	parent http.Handler) http.Handler {
+
+	logger := GetLoggingHandler(self.config_obj)(parent)
+
 	return api_utils.HandlerFunc(parent,
 		func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("X-CSRF-Token", csrf.Token(r))
@@ -239,7 +242,6 @@ func (self *CertAuthenticator) AuthenticateUserHandler(
 
 			// Need to call logging after auth so it can access
 			// the USER value in the context.
-			GetLoggingHandler(self.config_obj)(parent).ServeHTTP(
-				w, r.WithContext(ctx))
-		})
+			logger.ServeHTTP(w, r.WithContext(ctx))
+		}).AddChild("GetLoggingHandler")
 }

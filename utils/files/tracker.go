@@ -33,7 +33,7 @@ type Opener struct {
 	age                time.Time
 }
 
-func (self Opener) Close() {
+func (self *Opener) Close() {
 	gTracker.RemoveFile(self.name)
 }
 
@@ -58,6 +58,9 @@ func (self *OpenerTracker) scan() {
 		}
 
 		for _, k := range expired {
+			v := self.items[k]
+			v.Close()
+
 			delete(self.items, k)
 		}
 	}

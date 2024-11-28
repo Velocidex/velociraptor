@@ -278,6 +278,8 @@ func authenticateUserHandle(
 		err error, username string),
 	parent http.Handler) http.Handler {
 
+	logger := GetLoggingHandler(config_obj)(parent)
+
 	return api_utils.HandlerFunc(parent,
 		func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("X-CSRF-Token", csrf.Token(r))
@@ -327,9 +329,8 @@ func authenticateUserHandle(
 
 			// Need to call logging after auth so it can access
 			// the contextKeyUser value in the context.
-			GetLoggingHandler(config_obj)(parent).ServeHTTP(
-				w, r.WithContext(ctx))
-		})
+			logger.ServeHTTP(w, r.WithContext(ctx))
+		}).AddChild("GetLoggingHandler")
 }
 
 func reject_with_username(
