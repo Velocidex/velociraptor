@@ -61,12 +61,6 @@
  "Files deleted": [
   {
    "client_id": "C.12312",
-   "type": "",
-   "vfs_path": "",
-   "error": "client_delete: clearIndexer: file does not exist"
-  },
-  {
-   "client_id": "C.12312",
    "type": "Filestore",
    "vfs_path": "/clients/C.12312/artifacts/Generic.Client.Info/F.C49TC44OSO62E/BasicInformation.json",
    "error": ""

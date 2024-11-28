@@ -32,7 +32,6 @@
   "cell_metadata": [
    {
     "cell_id": "NC.02",
-    "timestamp": 16,
     "type": "markdown",
     "current_version": "03",
     "available_versions": [
@@ -49,7 +48,6 @@
   "messages": [
    "DEBUG:Query Stats: {\"RowsScanned\":0,\"PluginsCalled\":0,\"FunctionsCalled\":0,\"ProtocolSearch\":0,\"ScopeCopy\":0}\n"
   ],
-  "timestamp": 17,
   "type": "markdown",
   "current_version": "04",
   "available_versions": [
@@ -65,7 +63,6 @@
   "messages": [
    "DEBUG:Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":0,\"ProtocolSearch\":0,\"ScopeCopy\":5}\n"
   ],
-  "timestamp": 18,
   "type": "vql",
   "current_version": "05",
   "available_versions": [
@@ -107,7 +104,6 @@
   "cell_metadata": [
    {
     "cell_id": "NC.02",
-    "timestamp": 18,
     "type": "vql",
     "current_version": "05",
     "available_versions": [

@@ -268,7 +268,7 @@ const upload = function(url, files, params) {
 // * it either starts with base path or not - URLs that do not start
 //   with the base path will be fixed later.
 const internal_links = new RegExp(
-    "^(" + base_path + ")?/(api|app|notebooks|downloads|hunts|clients)/");
+    "^(" + base_path + ")?/(api|app|notebooks|downloads|hunts|clients|auth)/");
 
 // Prepare a suitable href link for <a>
 // This function accepts a number of options:

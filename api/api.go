@@ -45,6 +45,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/api/tables"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -1217,7 +1218,7 @@ func StartMonitoringService(
 		config_obj.Monitoring.BindAddress,
 		config_obj.Monitoring.BindPort)
 
-	mux := http.NewServeMux()
+	mux := api_utils.NewServeMux()
 	mux.Handle("/metrics", promhttp.Handler())
 	server := &http.Server{
 		Addr:     bind_addr,

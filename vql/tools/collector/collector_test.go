@@ -453,6 +453,8 @@ func (self *TestSuite) TestCollectionWithUpload() {
 	golden := ordereddict.NewDict().
 		Set("zip_contents", zip_contents)
 
+	self.CreateClient("C.30b949dd33e1330a")
+
 	import_func := collector.ImportCollectionFunction{}
 	result := import_func.Call(self.Ctx, scope,
 		ordereddict.NewDict().

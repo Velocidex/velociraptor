@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
@@ -14,7 +15,7 @@ func IpFilter(config_obj *config_proto.Config,
 	parent http.Handler) http.Handler {
 
 	if config_obj.GUI == nil || len(config_obj.GUI.AllowedCidr) == 0 {
-		return parent
+		return api_utils.HandlerFunc(parent, parent.ServeHTTP)
 	}
 
 	ranges := []*net.IPNet{}
@@ -28,32 +29,33 @@ func IpFilter(config_obj *config_proto.Config,
 		ranges = append(ranges, cidr_net)
 	}
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return api_utils.HandlerFunc(parent,
+		func(w http.ResponseWriter, r *http.Request) {
 
-		// If the user specified a forwarded header and the header is
-		// there we must check it.
-		if config_obj.GUI.ForwardedProxyHeader != "" {
-			address_string := r.Header.Get(config_obj.GUI.ForwardedProxyHeader)
-			ips := strings.Split(address_string, ", ")
-			if len(ips) > 0 {
-				// CIDR matched allow it.
-				if matchCidr(ranges, ips...) {
-					parent.ServeHTTP(w, r)
+			// If the user specified a forwarded header and the header is
+			// there we must check it.
+			if config_obj.GUI.ForwardedProxyHeader != "" {
+				address_string := r.Header.Get(config_obj.GUI.ForwardedProxyHeader)
+				ips := strings.Split(address_string, ", ")
+				if len(ips) > 0 {
+					// CIDR matched allow it.
+					if matchCidr(ranges, ips...) {
+						parent.ServeHTTP(w, r)
+						return
+					}
+					http.Error(w, "rejected", http.StatusUnauthorized)
 					return
 				}
-				http.Error(w, "rejected", http.StatusUnauthorized)
+			}
+
+			// Try to check the remote address now.
+			remote_address := strings.Split(r.RemoteAddr, ":")[0]
+			if matchCidr(ranges, remote_address) {
+				parent.ServeHTTP(w, r)
 				return
 			}
-		}
-
-		// Try to check the remote address now.
-		remote_address := strings.Split(r.RemoteAddr, ":")[0]
-		if matchCidr(ranges, remote_address) {
-			parent.ServeHTTP(w, r)
-			return
-		}
-		http.Error(w, "rejected", http.StatusUnauthorized)
-	})
+			http.Error(w, "rejected", http.StatusUnauthorized)
+		})
 }
 
 func matchCidr(ranges []*net.IPNet, ip_strings ...string) bool {

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Velocidex/ordereddict"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -16,7 +17,11 @@ type MultiAuthenticator struct {
 	delegate_info []velociraptor.AuthenticatorInfo
 }
 
-func (self *MultiAuthenticator) AddHandlers(mux *http.ServeMux) error {
+func (self *MultiAuthenticator) Delegates() []Authenticator {
+	return self.delegates
+}
+
+func (self *MultiAuthenticator) AddHandlers(mux *api_utils.ServeMux) error {
 	for _, delegate := range self.delegates {
 		err := delegate.AddHandlers(mux)
 		if err != nil {
@@ -26,7 +31,7 @@ func (self *MultiAuthenticator) AddHandlers(mux *http.ServeMux) error {
 	return nil
 }
 
-func (self *MultiAuthenticator) AddLogoff(mux *http.ServeMux) error {
+func (self *MultiAuthenticator) AddLogoff(mux *api_utils.ServeMux) error {
 	installLogoff(self.config_obj, mux)
 	return nil
 }
