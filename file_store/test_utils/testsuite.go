@@ -10,6 +10,10 @@ import (
 	"github.com/Velocidex/yaml/v2"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -108,6 +112,41 @@ type TestSuite struct {
 	Wg        *sync.WaitGroup
 
 	Services *orgs.ServiceContainer
+}
+
+func (self *TestSuite) CreateClient(client_id string) {
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
+		actions_proto.ClientInfo{
+			ClientId: client_id,
+		}})
+	assert.NoError(self.T(), err)
+}
+
+func (self *TestSuite) CreateFlow(client_id, flow_id string) {
+	defer utils.SetFlowIdForTests(flow_id)()
+
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
+	require.NoError(self.T(), err)
+
+	_, err = launcher.ScheduleArtifactCollection(
+		self.Ctx,
+		self.ConfigObj,
+		acl_managers.NullACLManager{},
+		repository,
+		&flows_proto.ArtifactCollectorArgs{
+			ClientId:  client_id,
+			Artifacts: []string{"Generic.Client.Info"},
+		}, nil)
+	assert.NoError(self.T(), err)
 }
 
 func (self *TestSuite) LoadConfig() *config_proto.Config {

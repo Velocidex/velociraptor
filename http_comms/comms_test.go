@@ -93,7 +93,7 @@ func (self *FakeServer) Log(fmtstring string, args ...interface{}) {
 
 func NewFakeServer() *FakeServer {
 	self := &FakeServer{}
-	self.server = httptest.NewServer(api_utils.HandlerFunc(
+	self.server = httptest.NewServer(api_utils.HandlerFunc(nil,
 		func(rw http.ResponseWriter, req *http.Request) {
 			self.Log("request: %v", req.URL.String())
 

@@ -172,6 +172,7 @@ func (self *TestSuite) TestCreateAndImportCollection() {
 }
 
 func (self *TestSuite) TestImportCollectionFromFixture() {
+	self.CreateFlow("server", "F.1234")
 	defer utils.SetFlowIdForTests("F.1234")()
 
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)

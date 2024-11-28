@@ -198,6 +198,8 @@ func (self *TestSuite) snapshotHuntFlow() *ordereddict.Dict {
 }
 
 func (self *TestSuite) TestImportHuntFromFixture() {
+	self.CreateFlow("server", "F.1234")
+
 	defer utils.SetFlowIdForTests("F.1234XX")()
 	defer utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))()
 

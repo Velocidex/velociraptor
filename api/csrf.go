@@ -20,7 +20,7 @@ func csrfProtect(config_obj *config_proto.Config,
 	if pres && disable_csrf == "1" {
 		logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 		logger.Info("Disabling CSRF protection because environment VELOCIRAPTOR_DISABLE_CSRF is set")
-		return parent
+		return api_utils.HandlerFunc(parent, parent.ServeHTTP)
 	}
 
 	// Derive a CSRF key from the hash of the server's public key.

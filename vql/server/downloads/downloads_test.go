@@ -84,6 +84,8 @@ sources:
 
 	self.acl_manager = acl_managers.NewServerACLManager(
 		self.ConfigObj, "admin")
+
+	self.CreateClient(self.client_id)
 }
 
 func (self *TestSuite) TestExportCollectionServerArtifact() {
