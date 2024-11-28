@@ -4,37 +4,50 @@ import (
 	"strings"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Normalize the base path. If base path is not specified or / return
 // "". Otherwise ensure base path has a leading / and no following /
-func GetBasePath(config_obj *config_proto.Config) string {
-	if config_obj.GUI == nil || config_obj.GUI.BasePath == "" {
-		return ""
-	}
+func GetBasePath(config_obj *config_proto.Config, parts ...string) string {
+	base, _ := utils.GetBaseURL(config_obj)
 
-	bare := strings.TrimSuffix(config_obj.GUI.BasePath, "/")
-	bare = strings.TrimPrefix(bare, "/")
-	if bare == "" {
-		return ""
-	}
-	return "/" + bare
+	args := append([]string{base.Path}, parts...)
+	base.Path = Join(args...)
+	return base.Path
 }
 
 // Return the base directory (with the trailing /) for the base path
 func GetBaseDirectory(config_obj *config_proto.Config) string {
-	return GetBasePath(config_obj) + "/"
+	base := GetBasePath(config_obj)
+	return strings.TrimSuffix(base, "/") + "/"
 }
 
-// Ensure public URL start and ends with /
-func GetPublicURL(config_obj *config_proto.Config) string {
-	bare := strings.TrimSuffix(config_obj.GUI.PublicUrl, "/")
-	return bare + "/"
+// Returns the fully qualified URL to the API endpoint.
+func GetPublicURL(config_obj *config_proto.Config, parts ...string) string {
+	base, err := utils.GetBaseURL(config_obj)
+	if err != nil {
+		return ""
+	}
+	args := append([]string{base.Path}, parts...)
+	base.Path = Join(args...)
+	return base.String()
+}
+
+// Returns the absolute public URL referring to all the parts
+func PublicURL(config_obj *config_proto.Config, parts ...string) string {
+	base, err := utils.GetBaseURL(config_obj)
+	if err != nil {
+		return "/"
+	}
+	args := append([]string{base.Path}, parts...)
+	base.Path = Join(args...)
+	return base.String()
 }
 
 // Join all parts of the URL to make sure that there is only a single
 // / between them regardless of if they have leading or trailing /.
-// Ensure the url starts withv / unless it is an absolute URL starting
+// Ensure the url starts with / unless it is an absolute URL starting
 // with http If the final part ends with / preserve that to refer to a
 // directory.
 func Join(parts ...string) string {

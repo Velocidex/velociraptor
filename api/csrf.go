@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gorilla/csrf"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -29,7 +30,8 @@ func csrfProtect(config_obj *config_proto.Config,
 
 	protectionFn := csrf.Protect(token, csrf.Path("/"), csrf.MaxAge(7*24*60*60))
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		protectionFn(parent).ServeHTTP(w, r)
-	})
+	return api_utils.HandlerFunc(parent,
+		func(w http.ResponseWriter, r *http.Request) {
+			protectionFn(parent).ServeHTTP(w, r)
+		})
 }

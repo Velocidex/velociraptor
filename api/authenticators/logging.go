@@ -6,6 +6,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -33,39 +34,40 @@ func GetLoggingHandler(config_obj *config_proto.Config) func(http.Handler) http.
 	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			rec := &http_utils.StatusRecorder{
-				w,
-				w.(http.Flusher),
-				200, nil}
-			defer func() {
-				if rec.Status == 500 {
-					logger.WithFields(
-						logrus.Fields{
-							"method":     r.Method,
-							"url":        r.URL.Path,
-							"remote":     r.RemoteAddr,
-							"error":      string(rec.Error),
-							"user-agent": r.UserAgent(),
-							"status":     rec.Status,
-							"user": GetUserInfo(
-								r.Context(), config_obj).Name,
-						}).Error("")
+		return api_utils.HandlerFunc(next,
+			func(w http.ResponseWriter, r *http.Request) {
+				rec := &http_utils.StatusRecorder{
+					w,
+					w.(http.Flusher),
+					200, nil}
+				defer func() {
+					if rec.Status == 500 {
+						logger.WithFields(
+							logrus.Fields{
+								"method":     r.Method,
+								"url":        r.URL.Path,
+								"remote":     r.RemoteAddr,
+								"error":      string(rec.Error),
+								"user-agent": r.UserAgent(),
+								"status":     rec.Status,
+								"user": GetUserInfo(
+									r.Context(), config_obj).Name,
+							}).Error("")
 
-				} else {
-					logger.WithFields(
-						logrus.Fields{
-							"method":     r.Method,
-							"url":        r.URL.Path,
-							"remote":     r.RemoteAddr,
-							"user-agent": r.UserAgent(),
-							"status":     rec.Status,
-							"user": GetUserInfo(
-								r.Context(), config_obj).Name,
-						}).Info("")
-				}
-			}()
-			next.ServeHTTP(rec, r)
-		})
+					} else {
+						logger.WithFields(
+							logrus.Fields{
+								"method":     r.Method,
+								"url":        r.URL.Path,
+								"remote":     r.RemoteAddr,
+								"user-agent": r.UserAgent(),
+								"status":     rec.Status,
+								"user": GetUserInfo(
+									r.Context(), config_obj).Name,
+							}).Info("")
+					}
+				}()
+				next.ServeHTTP(rec, r)
+			})
 	}
 }

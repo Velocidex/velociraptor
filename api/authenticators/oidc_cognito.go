@@ -12,6 +12,7 @@ import (
 	oidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -25,9 +26,8 @@ type OidcAuthenticatorCognito struct {
 	OidcAuthenticator
 }
 
-func (self *OidcAuthenticatorCognito) AddHandlers(mux *http.ServeMux) error {
-	provider, err := oidc.NewProvider(
-		context.Background(), self.authenticator.OidcIssuer)
+func (self *OidcAuthenticatorCognito) AddHandlers(mux *api_utils.ServeMux) error {
+	provider, err := self.GetProvider()
 	if err != nil {
 		logging.GetLogger(self.config_obj, &logging.GUIComponent).
 			Errorf("can not get information from OIDC provider, "+
@@ -36,65 +36,73 @@ func (self *OidcAuthenticatorCognito) AddHandlers(mux *http.ServeMux) error {
 		return err
 	}
 
-	mux.Handle(self.LoginHandler(),
+	mux.Handle(api_utils.GetBasePath(self.config_obj, self.LoginHandler()),
 		IpFilter(self.config_obj, self.oauthOidcLogin(provider)))
-	mux.Handle(self.CallbackHandler(),
+	mux.Handle(api_utils.GetBasePath(self.config_obj, self.CallbackHandler()),
 		IpFilter(self.config_obj, self.oauthOidcCallback(provider)))
 	return nil
 }
 
 func (self *OidcAuthenticatorCognito) oauthOidcCallback(
 	provider *oidc.Provider) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Read oauthState from Cookie
-		oauthState, _ := r.Cookie("oauthstate")
-		if oauthState == nil || r.FormValue("state") != oauthState.Value {
-			logging.GetLogger(self.config_obj, &logging.GUIComponent).
-				Error("invalid oauth state of OIDC")
-			http.Redirect(w, r, utils.Homepage(self.config_obj),
-				http.StatusTemporaryRedirect)
-			return
-		}
 
-		oidcOauthConfig := self.getGenOauthConfig(
-			provider.Endpoint(), self.CallbackHandler())
-		oauthToken, err := oidcOauthConfig.Exchange(r.Context(), r.FormValue("code"))
-		if err != nil {
-			logging.GetLogger(self.config_obj, &logging.GUIComponent).
-				Error("can not get oauthToken from OIDC provider: %v", err)
-			http.Redirect(w, r, utils.Homepage(self.config_obj),
-				http.StatusTemporaryRedirect)
-			return
-		}
-		userInfo, err := getUserInfo(
-			r.Context(), provider, oauth2.StaticTokenSource(oauthToken))
-		if err != nil {
-			logging.GetLogger(self.config_obj, &logging.GUIComponent).
-				Error("can not get UserInfo from OIDC provider: %v", err)
-			http.Redirect(w, r, utils.Homepage(self.config_obj),
-				http.StatusTemporaryRedirect)
-			return
-		}
+	return api_utils.HandlerFunc(nil,
+		func(w http.ResponseWriter, r *http.Request) {
+			// Read oauthState from Cookie
+			oauthState, _ := r.Cookie("oauthstate")
+			if oauthState == nil || r.FormValue("state") != oauthState.Value {
+				logging.GetLogger(self.config_obj, &logging.GUIComponent).
+					Error("invalid oauth state of OIDC")
+				http.Redirect(w, r, utils.Homepage(self.config_obj),
+					http.StatusTemporaryRedirect)
+				return
+			}
 
-		cookie, err := getSignedJWTTokenCookie(
-			self.config_obj, self.authenticator,
-			&Claims{
-				Username: userInfo.Email,
-			})
-		if err != nil {
-			logging.GetLogger(self.config_obj, &logging.GUIComponent).
-				WithFields(logrus.Fields{
-					"err": err.Error(),
-				}).Error("can not get a signed tokenString")
+			oidcOauthConfig, err := self.GetGenOauthConfig()
+			if err != nil {
+				logging.GetLogger(self.config_obj, &logging.GUIComponent).
+					Error("GetGenOauthConfig: %v", err)
+				http.Error(w, "rejected", http.StatusUnauthorized)
+			}
+			oidcOauthConfig.Endpoint = provider.Endpoint()
+
+			oauthToken, err := oidcOauthConfig.Exchange(r.Context(), r.FormValue("code"))
+			if err != nil {
+				logging.GetLogger(self.config_obj, &logging.GUIComponent).
+					Error("can not get oauthToken from OIDC provider: %v", err)
+				http.Redirect(w, r, utils.Homepage(self.config_obj),
+					http.StatusTemporaryRedirect)
+				return
+			}
+			userInfo, err := getUserInfo(
+				r.Context(), provider, oauth2.StaticTokenSource(oauthToken))
+			if err != nil {
+				logging.GetLogger(self.config_obj, &logging.GUIComponent).
+					Error("can not get UserInfo from OIDC provider: %v", err)
+				http.Redirect(w, r, utils.Homepage(self.config_obj),
+					http.StatusTemporaryRedirect)
+				return
+			}
+
+			cookie, err := getSignedJWTTokenCookie(
+				self.config_obj, self.authenticator,
+				&Claims{
+					Username: userInfo.Email,
+				})
+			if err != nil {
+				logging.GetLogger(self.config_obj, &logging.GUIComponent).
+					WithFields(logrus.Fields{
+						"err": err.Error(),
+					}).Error("can not get a signed tokenString")
+				http.Redirect(w, r, utils.Homepage(self.config_obj),
+					http.StatusTemporaryRedirect)
+				return
+			}
+
+			http.SetCookie(w, cookie)
 			http.Redirect(w, r, utils.Homepage(self.config_obj),
 				http.StatusTemporaryRedirect)
-			return
-		}
-
-		http.SetCookie(w, cookie)
-		http.Redirect(w, r, utils.Homepage(self.config_obj),
-			http.StatusTemporaryRedirect)
-	})
+		})
 }
 
 func init() {
@@ -103,8 +111,6 @@ func init() {
 		return &OidcAuthenticatorCognito{OidcAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
-			base:          utils.GetBasePath(config_obj),
-			public_url:    utils.GetPublicURL(config_obj),
 		}}, nil
 	})
 }

@@ -32,6 +32,7 @@ import (
 	"github.com/lpar/gzipped"
 	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/api/proto"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
@@ -42,10 +43,10 @@ import (
 
 func install_static_assets(
 	ctx context.Context,
-	config_obj *config_proto.Config, mux *http.ServeMux) {
+	config_obj *config_proto.Config, mux *api_utils.ServeMux) {
 	base := utils.GetBasePath(config_obj)
 	dir := utils.Join(base, "/app/")
-	mux.Handle(dir, ipFilter(config_obj, http.StripPrefix(
+	mux.Handle(dir, ipFilter(config_obj, api_utils.StripPrefix(
 		dir, fixCSSURLs(config_obj,
 			gzipped.FileServer(NewCachedFilesystem(ctx, gui_assets.NewHTTPFS()))))))
 
@@ -73,35 +74,36 @@ func GetTemplateHandler(
 		return nil, err
 	}
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userinfo := GetUserInfo(r.Context(), config_obj)
+	return api_utils.HandlerFunc(nil,
+		func(w http.ResponseWriter, r *http.Request) {
+			userinfo := GetUserInfo(r.Context(), config_obj)
 
-		// This should never happen!
-		if userinfo.Name == "" {
-			returnError(w, 401, "Unauthenticated access.")
-			return
-		}
+			// This should never happen!
+			if userinfo.Name == "" {
+				returnError(w, 401, "Unauthenticated access.")
+				return
+			}
 
-		users := services.GetUserManager()
-		user_options, err := users.GetUserOptions(r.Context(), userinfo.Name)
-		if err != nil {
-			// Options may not exist yet
-			user_options = &proto.SetGUIOptionsRequest{}
-		}
+			users := services.GetUserManager()
+			user_options, err := users.GetUserOptions(r.Context(), userinfo.Name)
+			if err != nil {
+				// Options may not exist yet
+				user_options = &proto.SetGUIOptionsRequest{}
+			}
 
-		args := velociraptor.HTMLtemplateArgs{
-			Timestamp: time.Now().UTC().UnixNano() / 1000,
-			CsrfToken: csrf.Token(r),
-			BasePath:  utils.GetBasePath(config_obj),
-			Heading:   "Heading",
-			UserTheme: user_options.Theme,
-			OrgId:     user_options.Org,
-		}
-		err = tmpl.Execute(w, args)
-		if err != nil {
-			w.WriteHeader(500)
-		}
-	}), nil
+			args := velociraptor.HTMLtemplateArgs{
+				Timestamp: time.Now().UTC().UnixNano() / 1000,
+				CsrfToken: csrf.Token(r),
+				BasePath:  utils.GetBasePath(config_obj),
+				Heading:   "Heading",
+				UserTheme: user_options.Theme,
+				OrgId:     user_options.Org,
+			}
+			err = tmpl.Execute(w, args)
+			if err != nil {
+				w.WriteHeader(500)
+			}
+		}), nil
 }
 
 // Vite hard compiles the css urls into the bundle so we can not move
@@ -110,18 +112,19 @@ func fixCSSURLs(config_obj *config_proto.Config,
 	parent http.Handler) http.Handler {
 
 	if config_obj.GUI == nil || config_obj.GUI.BasePath == "" {
-		return parent
+		return api_utils.HandlerFunc(parent, parent.ServeHTTP).
+			AddChild("NewInterceptingResponseWriter")
 	}
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.HasSuffix(r.URL.Path, ".css") {
-			parent.ServeHTTP(w, r)
-		} else {
-			parent.ServeHTTP(
-				NewInterceptingResponseWriter(
-					w, r, config_obj.GUI.BasePath), r)
-		}
-	})
+	return api_utils.HandlerFunc(parent,
+		func(w http.ResponseWriter, r *http.Request) {
+			if !strings.HasSuffix(r.URL.Path, ".css") {
+				parent.ServeHTTP(w, r)
+			} else {
+				parent.ServeHTTP(
+					NewInterceptingResponseWriter(config_obj, w, r), r)
+			}
+		}).AddChild("NewInterceptingResponseWriter")
 }
 
 type interceptingResponseWriter struct {
@@ -151,8 +154,8 @@ func (self *interceptingResponseWriter) Write(buf []byte) (int, error) {
 }
 
 func NewInterceptingResponseWriter(
-	w http.ResponseWriter, r *http.Request,
-	base_path string) http.ResponseWriter {
+	config_obj *config_proto.Config,
+	w http.ResponseWriter, r *http.Request) http.ResponseWriter {
 
 	// Try to do brotli compression if it is available.
 	accept_encoding, pres := r.Header["Accept-Encoding"]
@@ -164,8 +167,8 @@ func NewInterceptingResponseWriter(
 			return &interceptingResponseWriter{
 				ResponseWriter: w,
 				from:           "url(/app/assets/",
-				to: fmt.Sprintf("url(/%v/app/assets/",
-					strings.TrimPrefix(base_path, "/")),
+				to: fmt.Sprintf("url(%v/app/assets/",
+					utils.GetBasePath(config_obj)),
 				br_writer: brotli.NewWriter(w),
 			}
 		}
@@ -175,6 +178,7 @@ func NewInterceptingResponseWriter(
 	return &interceptingResponseWriter{
 		ResponseWriter: w,
 		from:           "url(/app/assets/",
-		to:             fmt.Sprintf("url(/%v/app/assets/", base_path),
+		to: fmt.Sprintf("url(%v/app/assets/",
+			utils.GetBasePath(config_obj)),
 	}
 }

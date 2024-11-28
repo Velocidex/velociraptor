@@ -33,6 +33,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -52,35 +53,36 @@ type GoogleAuthenticator struct {
 }
 
 func (self *GoogleAuthenticator) LoginHandler() string {
-	return utils.Join(self.base, "/auth/google/login")
+	return "/auth/google/login"
 }
 
 // The URL that will be used to log in.
 func (self *GoogleAuthenticator) LoginURL() string {
-	return utils.Join(self.base, "/auth/google/login")
+	return "/auth/google/login"
 }
 
 func (self *GoogleAuthenticator) CallbackHandler() string {
-	return utils.Join(self.base, "/auth/google/callback")
+	return "/auth/google/callback"
 }
 
 func (self *GoogleAuthenticator) CallbackURL() string {
-	return utils.Join(self.public_url, self.base, "/auth/google/callback")
+	return "/auth/google/callback"
 }
 
 func (self *GoogleAuthenticator) ProviderName() string {
 	return "Google"
 }
 
-func (self *GoogleAuthenticator) AddHandlers(mux *http.ServeMux) error {
-	mux.Handle(self.LoginHandler(),
+func (self *GoogleAuthenticator) AddHandlers(mux *api_utils.ServeMux) error {
+	mux.Handle(api_utils.GetBasePath(self.config_obj, self.LoginHandler()),
 		IpFilter(self.config_obj, self.oauthGoogleLogin()))
-	mux.Handle(self.CallbackHandler(),
+	mux.Handle(api_utils.GetBasePath(self.config_obj, self.CallbackHandler()),
 		IpFilter(self.config_obj, self.oauthGoogleCallback()))
+
 	return nil
 }
 
-func (self *GoogleAuthenticator) AddLogoff(mux *http.ServeMux) error {
+func (self *GoogleAuthenticator) AddLogoff(mux *api_utils.ServeMux) error {
 	installLogoff(self.config_obj, mux)
 	return nil
 }
@@ -112,24 +114,19 @@ func (self *GoogleAuthenticator) AuthenticateUserHandler(
 
 func (self *GoogleAuthenticator) oauthGoogleLogin() http.Handler {
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var googleOauthConfig = &oauth2.Config{
-			RedirectURL:  self.CallbackURL(),
-			ClientID:     self.authenticator.OauthClientId,
-			ClientSecret: self.authenticator.OauthClientSecret,
-			Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
-			Endpoint:     google.Endpoint,
-		}
+	return api_utils.HandlerFunc(nil,
+		func(w http.ResponseWriter, r *http.Request) {
+			googleOauthConfig, _ := self.GetGenOauthConfig()
 
-		// Create oauthState cookie
-		oauthState, err := r.Cookie("oauthstate")
-		if err != nil {
-			oauthState = generateStateOauthCookie(self.config_obj, w)
-		}
+			// Create oauthState cookie
+			oauthState, err := r.Cookie("oauthstate")
+			if err != nil {
+				oauthState = generateStateOauthCookie(self.config_obj, w)
+			}
 
-		u := googleOauthConfig.AuthCodeURL(oauthState.Value, oauth2.ApprovalForce)
-		http.Redirect(w, r, u, http.StatusTemporaryRedirect)
-	})
+			u := googleOauthConfig.AuthCodeURL(oauthState.Value, oauth2.ApprovalForce)
+			http.Redirect(w, r, u, http.StatusTemporaryRedirect)
+		})
 }
 
 func generateStateOauthCookie(
@@ -154,74 +151,80 @@ func generateStateOauthCookie(
 
 func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Read oauthState from Cookie
-		oauthState, _ := r.Cookie("oauthstate")
-		if oauthState == nil || r.FormValue("state") != oauthState.Value {
-			logging.GetLogger(self.config_obj, &logging.GUIComponent).
-				Error("invalid oauth google state")
+	return api_utils.HandlerFunc(nil,
+		func(w http.ResponseWriter, r *http.Request) {
+			// Read oauthState from Cookie
+			oauthState, _ := r.Cookie("oauthstate")
+			if oauthState == nil || r.FormValue("state") != oauthState.Value {
+				logging.GetLogger(self.config_obj, &logging.GUIComponent).
+					Error("invalid oauth google state")
+				http.Redirect(w, r, utils.Homepage(self.config_obj),
+					http.StatusTemporaryRedirect)
+				return
+			}
+
+			data, err := self.getUserDataFromGoogle(r.Context(), r.FormValue("code"))
+			if err != nil {
+				logging.GetLogger(self.config_obj, &logging.GUIComponent).
+					WithFields(logrus.Fields{
+						"err": err.Error(),
+					}).Error("getUserDataFromGoogle")
+				http.Redirect(w, r, utils.Homepage(self.config_obj),
+					http.StatusTemporaryRedirect)
+				return
+			}
+
+			user_info := &api_proto.VelociraptorUser{}
+			err = json.Unmarshal(data, &user_info)
+			if err != nil {
+				logging.GetLogger(self.config_obj, &logging.GUIComponent).
+					WithFields(logrus.Fields{
+						"err": err.Error(),
+					}).Error("getUserDataFromGoogle")
+				http.Redirect(w, r, utils.Homepage(self.config_obj),
+					http.StatusTemporaryRedirect)
+				return
+			}
+
+			// Sign and get the complete encoded token as a string using the secret
+			cookie, err := getSignedJWTTokenCookie(
+				self.config_obj, self.authenticator,
+				&Claims{
+					Username: user_info.Email,
+					Picture:  user_info.Picture,
+				})
+			if err != nil {
+				logging.GetLogger(self.config_obj, &logging.GUIComponent).
+					WithFields(logrus.Fields{
+						"err": err.Error(),
+					}).Error("getUserDataFromGoogle")
+				http.Redirect(w, r, utils.Homepage(self.config_obj),
+					http.StatusTemporaryRedirect)
+				return
+			}
+
+			http.SetCookie(w, cookie)
 			http.Redirect(w, r, utils.Homepage(self.config_obj),
 				http.StatusTemporaryRedirect)
-			return
-		}
+		})
+}
 
-		data, err := self.getUserDataFromGoogle(r.Context(), r.FormValue("code"))
-		if err != nil {
-			logging.GetLogger(self.config_obj, &logging.GUIComponent).
-				WithFields(logrus.Fields{
-					"err": err.Error(),
-				}).Error("getUserDataFromGoogle")
-			http.Redirect(w, r, utils.Homepage(self.config_obj),
-				http.StatusTemporaryRedirect)
-			return
-		}
-
-		user_info := &api_proto.VelociraptorUser{}
-		err = json.Unmarshal(data, &user_info)
-		if err != nil {
-			logging.GetLogger(self.config_obj, &logging.GUIComponent).
-				WithFields(logrus.Fields{
-					"err": err.Error(),
-				}).Error("getUserDataFromGoogle")
-			http.Redirect(w, r, utils.Homepage(self.config_obj),
-				http.StatusTemporaryRedirect)
-			return
-		}
-
-		// Sign and get the complete encoded token as a string using the secret
-		cookie, err := getSignedJWTTokenCookie(
-			self.config_obj, self.authenticator,
-			&Claims{
-				Username: user_info.Email,
-				Picture:  user_info.Picture,
-			})
-		if err != nil {
-			logging.GetLogger(self.config_obj, &logging.GUIComponent).
-				WithFields(logrus.Fields{
-					"err": err.Error(),
-				}).Error("getUserDataFromGoogle")
-			http.Redirect(w, r, utils.Homepage(self.config_obj),
-				http.StatusTemporaryRedirect)
-			return
-		}
-
-		http.SetCookie(w, cookie)
-		http.Redirect(w, r, utils.Homepage(self.config_obj),
-			http.StatusTemporaryRedirect)
-	})
+func (self *GoogleAuthenticator) GetGenOauthConfig() (*oauth2.Config, error) {
+	res := &oauth2.Config{
+		RedirectURL:  api_utils.GetPublicURL(self.config_obj, self.CallbackURL()),
+		ClientID:     self.authenticator.OauthClientId,
+		ClientSecret: self.authenticator.OauthClientSecret,
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+		Endpoint:     google.Endpoint,
+	}
+	return res, nil
 }
 
 func (self *GoogleAuthenticator) getUserDataFromGoogle(
 	ctx context.Context, code string) ([]byte, error) {
 
 	// Use code to get token and get user info from Google.
-	var googleOauthConfig = &oauth2.Config{
-		RedirectURL:  self.CallbackURL(),
-		ClientID:     self.authenticator.OauthClientId,
-		ClientSecret: self.authenticator.OauthClientSecret,
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
-		Endpoint:     google.Endpoint,
-	}
+	googleOauthConfig, _ := self.GetGenOauthConfig()
 
 	token, err := googleOauthConfig.Exchange(ctx, code)
 	if err != nil {
@@ -241,31 +244,32 @@ func (self *GoogleAuthenticator) getUserDataFromGoogle(
 	return contents, nil
 }
 
-func installLogoff(config_obj *config_proto.Config, mux *http.ServeMux) {
-	base := utils.GetBasePath(config_obj)
-	mux.Handle(utils.Join(base, "/app/logoff.html"), IpFilter(config_obj,
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			params := r.URL.Query()
-			old_username, ok := params["username"]
-			username := ""
-			if ok && len(old_username) == 1 {
-				services.LogAudit(r.Context(),
-					config_obj, old_username[0], "LogOff", ordereddict.NewDict())
-				username = old_username[0]
-			}
+func installLogoff(config_obj *config_proto.Config, mux *api_utils.ServeMux) {
+	mux.Handle(utils.GetBasePath(config_obj, "/app/logoff.html"),
+		IpFilter(config_obj,
+			api_utils.HandlerFunc(nil,
+				func(w http.ResponseWriter, r *http.Request) {
+					params := r.URL.Query()
+					old_username, ok := params["username"]
+					username := ""
+					if ok && len(old_username) == 1 {
+						services.LogAudit(r.Context(),
+							config_obj, old_username[0], "LogOff", ordereddict.NewDict())
+						username = old_username[0]
+					}
 
-			// Clear the cookie
-			http.SetCookie(w, &http.Cookie{
-				Name:     "VelociraptorAuth",
-				Path:     utils.GetBaseDirectory(config_obj),
-				Value:    "deleted",
-				Secure:   true,
-				HttpOnly: true,
-				Expires:  time.Unix(0, 0),
-			})
+					// Clear the cookie
+					http.SetCookie(w, &http.Cookie{
+						Name:     "VelociraptorAuth",
+						Path:     utils.GetBaseDirectory(config_obj),
+						Value:    "deleted",
+						Secure:   true,
+						HttpOnly: true,
+						Expires:  time.Unix(0, 0),
+					})
 
-			renderLogoffMessage(config_obj, w, username)
-		})))
+					renderLogoffMessage(config_obj, w, username)
+				})))
 }
 
 func authenticateUserHandle(
@@ -274,57 +278,58 @@ func authenticateUserHandle(
 		err error, username string),
 	parent http.Handler) http.Handler {
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-CSRF-Token", csrf.Token(r))
+	return api_utils.HandlerFunc(parent,
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("X-CSRF-Token", csrf.Token(r))
 
-		claims, err := getDetailsFromCookie(config_obj, r)
-		if err != nil {
-			reject_cb(w, r, err, claims.Username)
-			return
-		}
+			claims, err := getDetailsFromCookie(config_obj, r)
+			if err != nil {
+				reject_cb(w, r, err, claims.Username)
+				return
+			}
 
-		username := claims.Username
+			username := claims.Username
 
-		// Now check if the user is allowed to log in.
-		users := services.GetUserManager()
-		user_record, err := users.GetUser(r.Context(), username, username)
-		if err != nil {
-			reject_cb(w, r, fmt.Errorf("Invalid user: %v", err), username)
-			return
-		}
+			// Now check if the user is allowed to log in.
+			users := services.GetUserManager()
+			user_record, err := users.GetUser(r.Context(), username, username)
+			if err != nil {
+				reject_cb(w, r, fmt.Errorf("Invalid user: %v", err), username)
+				return
+			}
 
-		// Does the user have access to the specified org?
-		err = CheckOrgAccess(config_obj, r, user_record)
-		if err != nil {
-			reject_cb(w, r, fmt.Errorf("Insufficient permissions: %v", err), user_record.Name)
-			return
-		}
+			// Does the user have access to the specified org?
+			err = CheckOrgAccess(config_obj, r, user_record)
+			if err != nil {
+				reject_cb(w, r, fmt.Errorf("Insufficient permissions: %v", err), user_record.Name)
+				return
+			}
 
-		// Checking is successful - user authorized. Here we
-		// build a token to pass to the underlying GRPC
-		// service with metadata about the user.
-		user_info := &api_proto.VelociraptorUser{
-			Name:    user_record.Name,
-			Picture: claims.Picture,
-		}
+			// Checking is successful - user authorized. Here we
+			// build a token to pass to the underlying GRPC
+			// service with metadata about the user.
+			user_info := &api_proto.VelociraptorUser{
+				Name:    user_record.Name,
+				Picture: claims.Picture,
+			}
 
-		// NOTE: This context is NOT the same context that is received
-		// by the API handlers. This context sits on the incoming side
-		// of the GRPC gateway. We stuff our data into the
-		// GRPC_USER_CONTEXT of the context and the code will convert
-		// this value into a GRPC metadata.
+			// NOTE: This context is NOT the same context that is received
+			// by the API handlers. This context sits on the incoming side
+			// of the GRPC gateway. We stuff our data into the
+			// GRPC_USER_CONTEXT of the context and the code will convert
+			// this value into a GRPC metadata.
 
-		// Must use json encoding because grpc can not handle
-		// binary data in metadata.
-		serialized, _ := json.Marshal(user_info)
-		ctx := context.WithValue(
-			r.Context(), constants.GRPC_USER_CONTEXT, string(serialized))
+			// Must use json encoding because grpc can not handle
+			// binary data in metadata.
+			serialized, _ := json.Marshal(user_info)
+			ctx := context.WithValue(
+				r.Context(), constants.GRPC_USER_CONTEXT, string(serialized))
 
-		// Need to call logging after auth so it can access
-		// the contextKeyUser value in the context.
-		GetLoggingHandler(config_obj)(parent).ServeHTTP(
-			w, r.WithContext(ctx))
-	})
+			// Need to call logging after auth so it can access
+			// the contextKeyUser value in the context.
+			GetLoggingHandler(config_obj)(parent).ServeHTTP(
+				w, r.WithContext(ctx))
+		})
 }
 
 func reject_with_username(
@@ -350,7 +355,7 @@ func reject_with_username(
 	renderRejectionMessage(config_obj,
 		r, w, err, username, []velociraptor.AuthenticatorInfo{
 			{
-				LoginURL:     login_url,
+				LoginURL:     api_utils.PublicURL(config_obj, login_url),
 				ProviderName: provider,
 			},
 		})

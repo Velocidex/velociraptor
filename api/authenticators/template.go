@@ -75,7 +75,7 @@ func renderLogoffMessage(
 		ErrState: json.MustMarshalString(velociraptor.ErrState{
 			Type:           "Logoff",
 			Username:       username,
-			BasePath:       utils.Join(utils.GetBasePath(config_obj), "/"),
+			BasePath:       utils.GetBaseDirectory(config_obj),
 			Authenticators: []velociraptor.AuthenticatorInfo{},
 		}),
 	})

@@ -47,6 +47,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/api/tables"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -113,195 +114,196 @@ type vfsFileDownloadRequest struct {
 // This URL allows the caller to download **any** member of the
 // filestore (providing they have at least read permissions).
 func vfsFileDownloadHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		request := vfsFileDownloadRequest{}
-		decoder := schema.NewDecoder()
-		decoder.IgnoreUnknownKeys(true)
+	return api_utils.HandlerFunc(nil,
+		func(w http.ResponseWriter, r *http.Request) {
+			request := vfsFileDownloadRequest{}
+			decoder := schema.NewDecoder()
+			decoder.IgnoreUnknownKeys(true)
 
-		err := decoder.Decode(&request, r.URL.Query())
-		if err != nil {
-			returnError(w, 403, "Error "+err.Error())
-			return
-		}
+			err := decoder.Decode(&request, r.URL.Query())
+			if err != nil {
+				returnError(w, 403, "Error "+err.Error())
+				return
+			}
 
-		org_id := request.OrgId
-		if org_id == "" {
-			org_id = authenticators.GetOrgIdFromRequest(r)
-		}
+			org_id := request.OrgId
+			if org_id == "" {
+				org_id = authenticators.GetOrgIdFromRequest(r)
+			}
 
-		org_id = utils.NormalizedOrgId(org_id)
+			org_id = utils.NormalizedOrgId(org_id)
 
-		org_manager, err := services.GetOrgManager()
-		if err != nil {
-			returnError(w, 404, err.Error())
-			return
-		}
-
-		org_config_obj, err := org_manager.GetOrgConfig(org_id)
-		if err != nil {
-			returnError(w, 404, err.Error())
-			return
-		}
-
-		// Where to read from the file store
-		var path_spec api.FSPathSpec
-
-		// The filename for the attachment header.
-		var filename string
-
-		client_path_manager := paths.NewClientPathManager(request.ClientId)
-
-		// Newer API calls pass the filestore components directly
-		if len(request.FSComponents) > 0 {
-			path_spec = path_specs.NewUnsafeFilestorePath(request.FSComponents...).
-				SetType(api.PATH_TYPE_FILESTORE_ANY)
-
-			filename = utils.Base(request.VfsPath)
-
-			// Uploads table has direct vfs paths
-		} else if request.VfsPath != "" {
-			path_spec, err = client_path_manager.GetUploadsFileFromVFSPath(
-				request.VfsPath)
+			org_manager, err := services.GetOrgManager()
 			if err != nil {
 				returnError(w, 404, err.Error())
 				return
 			}
-			filename = path_spec.Base()
 
-		} else {
-			// Just reject the request
-			returnError(w, 404, "")
-			return
-		}
-
-		file, err := file_store.GetFileStore(org_config_obj).ReadFile(path_spec)
-		if err != nil {
-			returnError(w, 404, err.Error())
-			return
-		}
-		defer file.Close()
-
-		if r.Method == "HEAD" {
-			returnError(w, 200, "Ok")
-			return
-		}
-
-		// We need to figure out the total size of the upload to set
-		// in the Content Length header. There are three
-		// possibilities:
-		// 1. The file is not sparse
-		// 2. The file is sparse and we are not padding.
-		// 3. The file is sparse and we are padding it.
-		var reader_at io.ReaderAt = utils.MakeReaderAtter(file)
-		var total_size int
-
-		index, err := getIndex(org_config_obj, path_spec)
-
-		// If the file is sparse, we use the sparse reader.
-		if err == nil && request.Padding && len(index.Ranges) > 0 {
-			if !uploads.ShouldPadFile(org_config_obj, index) {
-				returnError(w, 400, "Sparse file is too sparse - unable to pad")
-				return
-			}
-
-			reader_at = &utils.RangedReader{
-				ReaderAt: reader_at,
-				Index:    index,
-			}
-
-			total_size = calculateTotalSizeWithPadding(index)
-		} else {
-			total_size = calculateTotalReaderSize(file)
-		}
-
-		if request.TextFilter {
-			output, next_offset, err := filterData(reader_at, request)
+			org_config_obj, err := org_manager.GetOrgConfig(org_id)
 			if err != nil {
-				returnError(w, 500, err.Error())
+				returnError(w, 404, err.Error())
 				return
 			}
 
-			w.Header().Set("Content-Disposition", "attachment; "+
-				sanitizeFilenameForAttachment(filename))
-			w.Header().Set("Content-Type",
-				utils.GetMimeString(output, utils.AutoDetectMime(request.DetectMime)))
-			w.Header().Set("Content-Range",
-				fmt.Sprintf("bytes %d-%d/%d", request.Offset, next_offset, total_size))
-			w.WriteHeader(200)
+			// Where to read from the file store
+			var path_spec api.FSPathSpec
 
-			_, _ = w.Write(output)
-			return
-		}
+			// The filename for the attachment header.
+			var filename string
 
-		// If the user requested the whole file, and also has password
-		// set we send them a zip file with the entire thing
-		if request.ZipFile {
-			err = streamZipFile(r.Context(), org_config_obj, w, file, filename)
-			if err == nil {
+			client_path_manager := paths.NewClientPathManager(request.ClientId)
+
+			// Newer API calls pass the filestore components directly
+			if len(request.FSComponents) > 0 {
+				path_spec = path_specs.NewUnsafeFilestorePath(request.FSComponents...).
+					SetType(api.PATH_TYPE_FILESTORE_ANY)
+
+				filename = utils.Base(request.VfsPath)
+
+				// Uploads table has direct vfs paths
+			} else if request.VfsPath != "" {
+				path_spec, err = client_path_manager.GetUploadsFileFromVFSPath(
+					request.VfsPath)
+				if err != nil {
+					returnError(w, 404, err.Error())
+					return
+				}
+				filename = path_spec.Base()
+
+			} else {
+				// Just reject the request
+				returnError(w, 404, "")
 				return
 			}
-		}
 
-		emitContentLength(w, int(request.Offset), int(request.Length), total_size)
+			file, err := file_store.GetFileStore(org_config_obj).ReadFile(path_spec)
+			if err != nil {
+				returnError(w, 404, err.Error())
+				return
+			}
+			defer file.Close()
 
-		offset := request.Offset
+			if r.Method == "HEAD" {
+				returnError(w, 200, "Ok")
+				return
+			}
 
-		// Read the first buffer now so we can report errors
-		length_sent := 0
-		headers_sent := false
+			// We need to figure out the total size of the upload to set
+			// in the Content Length header. There are three
+			// possibilities:
+			// 1. The file is not sparse
+			// 2. The file is sparse and we are not padding.
+			// 3. The file is sparse and we are padding it.
+			var reader_at io.ReaderAt = utils.MakeReaderAtter(file)
+			var total_size int
 
-		// Only allow limited size buffers to be requested by the user.
-		var buf []byte
-		if request.Length == 0 || request.Length >= BUFSIZE {
-			buf = pool.Get().([]byte)
-			defer pool.Put(buf)
+			index, err := getIndex(org_config_obj, path_spec)
 
-		} else {
-			buf = make([]byte, request.Length)
-		}
+			// If the file is sparse, we use the sparse reader.
+			if err == nil && request.Padding && len(index.Ranges) > 0 {
+				if !uploads.ShouldPadFile(org_config_obj, index) {
+					returnError(w, 400, "Sparse file is too sparse - unable to pad")
+					return
+				}
 
-		for {
-			n, err := reader_at.ReadAt(buf, offset)
-			if err != nil && err != io.EOF {
-				// Only send errors if the headers have not yet been
-				// sent.
-				if !headers_sent {
+				reader_at = &utils.RangedReader{
+					ReaderAt: reader_at,
+					Index:    index,
+				}
+
+				total_size = calculateTotalSizeWithPadding(index)
+			} else {
+				total_size = calculateTotalReaderSize(file)
+			}
+
+			if request.TextFilter {
+				output, next_offset, err := filterData(reader_at, request)
+				if err != nil {
 					returnError(w, 500, err.Error())
-					headers_sent = true
+					return
 				}
-				return
-			}
-			if request.Length != 0 {
-				length_to_send := request.Length - length_sent
-				if n > length_to_send {
-					n = length_to_send
-				}
-			}
-			if n <= 0 {
-				return
-			}
 
-			// Write an ok status which includes the attachment name
-			// but only if no other data was sent.
-			if !headers_sent {
 				w.Header().Set("Content-Disposition", "attachment; "+
 					sanitizeFilenameForAttachment(filename))
 				w.Header().Set("Content-Type",
-					utils.GetMimeString(buf[:n],
-						utils.AutoDetectMime(request.DetectMime)))
+					utils.GetMimeString(output, utils.AutoDetectMime(request.DetectMime)))
+				w.Header().Set("Content-Range",
+					fmt.Sprintf("bytes %d-%d/%d", request.Offset, next_offset, total_size))
 				w.WriteHeader(200)
-				headers_sent = true
-			}
 
-			written, err := w.Write(buf[:n])
-			if err != nil {
+				_, _ = w.Write(output)
 				return
 			}
 
-			length_sent += written
-			offset += int64(n)
-		}
-	})
+			// If the user requested the whole file, and also has password
+			// set we send them a zip file with the entire thing
+			if request.ZipFile {
+				err = streamZipFile(r.Context(), org_config_obj, w, file, filename)
+				if err == nil {
+					return
+				}
+			}
+
+			emitContentLength(w, int(request.Offset), int(request.Length), total_size)
+
+			offset := request.Offset
+
+			// Read the first buffer now so we can report errors
+			length_sent := 0
+			headers_sent := false
+
+			// Only allow limited size buffers to be requested by the user.
+			var buf []byte
+			if request.Length == 0 || request.Length >= BUFSIZE {
+				buf = pool.Get().([]byte)
+				defer pool.Put(buf)
+
+			} else {
+				buf = make([]byte, request.Length)
+			}
+
+			for {
+				n, err := reader_at.ReadAt(buf, offset)
+				if err != nil && err != io.EOF {
+					// Only send errors if the headers have not yet been
+					// sent.
+					if !headers_sent {
+						returnError(w, 500, err.Error())
+						headers_sent = true
+					}
+					return
+				}
+				if request.Length != 0 {
+					length_to_send := request.Length - length_sent
+					if n > length_to_send {
+						n = length_to_send
+					}
+				}
+				if n <= 0 {
+					return
+				}
+
+				// Write an ok status which includes the attachment name
+				// but only if no other data was sent.
+				if !headers_sent {
+					w.Header().Set("Content-Disposition", "attachment; "+
+						sanitizeFilenameForAttachment(filename))
+					w.Header().Set("Content-Type",
+						utils.GetMimeString(buf[:n],
+							utils.AutoDetectMime(request.DetectMime)))
+					w.WriteHeader(200)
+					headers_sent = true
+				}
+
+				written, err := w.Write(buf[:n])
+				if err != nil {
+					return
+				}
+
+				length_sent += written
+				offset += int64(n)
+			}
+		})
 }
 
 // Read data from offset and filter it until the requested number of
@@ -444,82 +446,83 @@ func getTransformer(
 }
 
 func downloadFileStore(prefix []string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path_spec := paths.FSPathSpecFromClientPath(r.URL.Path)
-		components := path_spec.Components()
+	return api_utils.HandlerFunc(nil,
+		func(w http.ResponseWriter, r *http.Request) {
+			path_spec := paths.FSPathSpecFromClientPath(r.URL.Path)
+			components := path_spec.Components()
 
-		// make sure the prefix is correct
-		for i, p := range prefix {
-			if len(components) <= i || p != components[i] {
-				returnError(w, 404, "Not Found")
+			// make sure the prefix is correct
+			for i, p := range prefix {
+				if len(components) <= i || p != components[i] {
+					returnError(w, 404, "Not Found")
+					return
+				}
+			}
+
+			org_id := authenticators.GetOrgIdFromRequest(r)
+			org_manager, err := services.GetOrgManager()
+			if err != nil {
+				returnError(w, 404, err.Error())
 				return
 			}
-		}
 
-		org_id := authenticators.GetOrgIdFromRequest(r)
-		org_manager, err := services.GetOrgManager()
-		if err != nil {
-			returnError(w, 404, err.Error())
-			return
-		}
+			org_config_obj, err := org_manager.GetOrgConfig(org_id)
+			if err != nil {
+				returnError(w, 404, err.Error())
+				return
+			}
 
-		org_config_obj, err := org_manager.GetOrgConfig(org_id)
-		if err != nil {
-			returnError(w, 404, err.Error())
-			return
-		}
+			// The following is not strictly necessary because this
+			// function is behind the authenticator middleware which means
+			// that if we get here the user is already authenticated and
+			// has at least read permissions on this org. But we check
+			// again to make sure we are resilient against possible
+			// regressions in the authenticator code.
+			users := services.GetUserManager()
+			user_record, err := users.GetUserFromHTTPContext(r.Context())
+			if err != nil {
+				returnError(w, 404, err.Error())
+				return
+			}
 
-		// The following is not strictly necessary because this
-		// function is behind the authenticator middleware which means
-		// that if we get here the user is already authenticated and
-		// has at least read permissions on this org. But we check
-		// again to make sure we are resilient against possible
-		// regressions in the authenticator code.
-		users := services.GetUserManager()
-		user_record, err := users.GetUserFromHTTPContext(r.Context())
-		if err != nil {
-			returnError(w, 404, err.Error())
-			return
-		}
+			principal := user_record.Name
+			permissions := acls.READ_RESULTS
+			perm, err := services.CheckAccess(org_config_obj, principal, permissions)
+			if !perm || err != nil {
+				returnError(w, 403, "User is not allowed to read files.")
+				return
+			}
 
-		principal := user_record.Name
-		permissions := acls.READ_RESULTS
-		perm, err := services.CheckAccess(org_config_obj, principal, permissions)
-		if !perm || err != nil {
-			returnError(w, 403, "User is not allowed to read files.")
-			return
-		}
+			file_store_factory := file_store.GetFileStore(org_config_obj)
+			fd, err := file_store_factory.ReadFile(path_spec)
+			if err != nil {
+				returnError(w, 404, err.Error())
+				return
+			}
 
-		file_store_factory := file_store.GetFileStore(org_config_obj)
-		fd, err := file_store_factory.ReadFile(path_spec)
-		if err != nil {
-			returnError(w, 404, err.Error())
-			return
-		}
+			buf := pool.Get().([]byte)
+			defer pool.Put(buf)
 
-		buf := pool.Get().([]byte)
-		defer pool.Put(buf)
+			// Read the first buffer for mime detection.
+			n, err := fd.Read(buf)
+			if err != nil {
+				returnError(w, 404, err.Error())
+				return
+			}
 
-		// Read the first buffer for mime detection.
-		n, err := fd.Read(buf)
-		if err != nil {
-			returnError(w, 404, err.Error())
-			return
-		}
+			// From here on we already sent the headers and we can
+			// not really report an error to the client.
+			w.Header().Set("Content-Disposition", "attachment; "+
+				sanitizePathspecForAttachment(path_spec))
 
-		// From here on we already sent the headers and we can
-		// not really report an error to the client.
-		w.Header().Set("Content-Disposition", "attachment; "+
-			sanitizePathspecForAttachment(path_spec))
+			w.Header().Set("Content-Type",
+				utils.GetMimeString(buf[:n], utils.AutoDetectMime(true)))
+			w.WriteHeader(200)
+			w.Write(buf[:n])
 
-		w.Header().Set("Content-Type",
-			utils.GetMimeString(buf[:n], utils.AutoDetectMime(true)))
-		w.WriteHeader(200)
-		w.Write(buf[:n])
-
-		// Copy the rest directly.
-		utils.Copy(r.Context(), w, fd)
-	})
+			// Copy the rest directly.
+			utils.Copy(r.Context(), w, fd)
+		})
 }
 
 // Allowed chars in non extended names
@@ -557,124 +560,125 @@ func sanitizeFilenameForAttachment(base_filename string) string {
 
 // Download the table as specified by the v1/GetTable API.
 func downloadTable() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		request := &api_proto.GetTableRequest{}
-		decoder := schema.NewDecoder()
-		decoder.IgnoreUnknownKeys(true)
+	return api_utils.HandlerFunc(nil,
+		func(w http.ResponseWriter, r *http.Request) {
+			request := &api_proto.GetTableRequest{}
+			decoder := schema.NewDecoder()
+			decoder.IgnoreUnknownKeys(true)
 
-		decoder.SetAliasTag("json")
-		err := decoder.Decode(request, r.URL.Query())
-		if err != nil {
-			returnError(w, 404, err.Error())
-			return
-		}
-
-		org_manager, err := services.GetOrgManager()
-		if err != nil {
-			returnError(w, 404, err.Error())
-			return
-		}
-
-		org_config_obj, err := org_manager.GetOrgConfig(request.OrgId)
-		if err != nil {
-			returnError(w, 404, err.Error())
-			return
-		}
-
-		row_chan, closer, log_path, err := getRows(
-			r.Context(), org_config_obj, request)
-		if err != nil {
-			returnError(w, 400, "Invalid request")
-			return
-		}
-		defer closer()
-
-		transform := getTransformer(r.Context(), org_config_obj, request)
-
-		download_name := request.DownloadFilename
-		if download_name == "" {
-			download_name = strings.Replace(log_path.Base(), "\"", "", -1)
-		}
-
-		// Log an audit event.
-		user_record := GetUserInfo(r.Context(), org_config_obj)
-		principal := user_record.Name
-
-		// This should never happen!
-		if principal == "" {
-			returnError(w, 403, "Unauthenticated access.")
-			return
-		}
-
-		permissions := acls.READ_RESULTS
-		perm, err := services.CheckAccess(org_config_obj, principal, permissions)
-		if !perm || err != nil {
-			returnError(w, 403, "Unauthenticated access.")
-			return
-		}
-
-		opts := json.GetJsonOptsForTimezone(request.Timezone)
-		switch request.DownloadFormat {
-		case "csv":
-			download_name = strings.TrimSuffix(download_name, ".json")
-			download_name += ".csv"
-
-			// From here on we already sent the headers and we can
-			// not really report an error to the client.
-			w.Header().Set("Content-Disposition", "attachment; "+
-				sanitizeFilenameForAttachment(download_name))
-			w.Header().Set("Content-Type", "binary/octet-stream")
-			w.WriteHeader(200)
-
-			services.LogAudit(r.Context(),
-				org_config_obj, principal, "DownloadTable",
-				ordereddict.NewDict().
-					Set("request", request).
-					Set("remote", r.RemoteAddr))
-
-			scope := vql_subsystem.MakeScope()
-			csv_writer := csv.GetCSVAppender(
-				org_config_obj, scope, w,
-				csv.WriteHeaders, opts)
-			for row := range row_chan {
-				csv_writer.Write(
-					filterColumns(request.Columns, transform(row)))
-			}
-			csv_writer.Close()
-
-			// Output in jsonl by default.
-		default:
-			if !strings.HasSuffix(download_name, ".json") {
-				download_name += ".json"
+			decoder.SetAliasTag("json")
+			err := decoder.Decode(request, r.URL.Query())
+			if err != nil {
+				returnError(w, 404, err.Error())
+				return
 			}
 
-			// From here on we already sent the headers and we can
-			// not really report an error to the client.
-			w.Header().Set("Content-Disposition", "attachment; "+
-				sanitizeFilenameForAttachment(download_name))
-			w.Header().Set("Content-Type", "binary/octet-stream")
-			w.WriteHeader(200)
+			org_manager, err := services.GetOrgManager()
+			if err != nil {
+				returnError(w, 404, err.Error())
+				return
+			}
 
-			services.LogAudit(r.Context(),
-				org_config_obj, principal, "DownloadTable",
-				ordereddict.NewDict().
-					Set("request", request).
-					Set("remote", r.RemoteAddr))
+			org_config_obj, err := org_manager.GetOrgConfig(request.OrgId)
+			if err != nil {
+				returnError(w, 404, err.Error())
+				return
+			}
 
-			for row := range row_chan {
-				serialized, err := json.MarshalWithOptions(
-					filterColumns(request.Columns, transform(row)),
-					json.GetJsonOptsForTimezone(request.Timezone))
-				if err != nil {
-					return
+			row_chan, closer, log_path, err := getRows(
+				r.Context(), org_config_obj, request)
+			if err != nil {
+				returnError(w, 400, "Invalid request")
+				return
+			}
+			defer closer()
+
+			transform := getTransformer(r.Context(), org_config_obj, request)
+
+			download_name := request.DownloadFilename
+			if download_name == "" {
+				download_name = strings.Replace(log_path.Base(), "\"", "", -1)
+			}
+
+			// Log an audit event.
+			user_record := GetUserInfo(r.Context(), org_config_obj)
+			principal := user_record.Name
+
+			// This should never happen!
+			if principal == "" {
+				returnError(w, 403, "Unauthenticated access.")
+				return
+			}
+
+			permissions := acls.READ_RESULTS
+			perm, err := services.CheckAccess(org_config_obj, principal, permissions)
+			if !perm || err != nil {
+				returnError(w, 403, "Unauthenticated access.")
+				return
+			}
+
+			opts := json.GetJsonOptsForTimezone(request.Timezone)
+			switch request.DownloadFormat {
+			case "csv":
+				download_name = strings.TrimSuffix(download_name, ".json")
+				download_name += ".csv"
+
+				// From here on we already sent the headers and we can
+				// not really report an error to the client.
+				w.Header().Set("Content-Disposition", "attachment; "+
+					sanitizeFilenameForAttachment(download_name))
+				w.Header().Set("Content-Type", "binary/octet-stream")
+				w.WriteHeader(200)
+
+				services.LogAudit(r.Context(),
+					org_config_obj, principal, "DownloadTable",
+					ordereddict.NewDict().
+						Set("request", request).
+						Set("remote", r.RemoteAddr))
+
+				scope := vql_subsystem.MakeScope()
+				csv_writer := csv.GetCSVAppender(
+					org_config_obj, scope, w,
+					csv.WriteHeaders, opts)
+				for row := range row_chan {
+					csv_writer.Write(
+						filterColumns(request.Columns, transform(row)))
+				}
+				csv_writer.Close()
+
+				// Output in jsonl by default.
+			default:
+				if !strings.HasSuffix(download_name, ".json") {
+					download_name += ".json"
 				}
 
-				// Write line delimited JSON
-				_, _ = w.Write(serialized)
-				_, _ = w.Write([]byte{'\n'})
+				// From here on we already sent the headers and we can
+				// not really report an error to the client.
+				w.Header().Set("Content-Disposition", "attachment; "+
+					sanitizeFilenameForAttachment(download_name))
+				w.Header().Set("Content-Type", "binary/octet-stream")
+				w.WriteHeader(200)
+
+				services.LogAudit(r.Context(),
+					org_config_obj, principal, "DownloadTable",
+					ordereddict.NewDict().
+						Set("request", request).
+						Set("remote", r.RemoteAddr))
+
+				for row := range row_chan {
+					serialized, err := json.MarshalWithOptions(
+						filterColumns(request.Columns, transform(row)),
+						json.GetJsonOptsForTimezone(request.Timezone))
+					if err != nil {
+						return
+					}
+
+					// Write line delimited JSON
+					_, _ = w.Write(serialized)
+					_, _ = w.Write([]byte{'\n'})
+				}
 			}
-		}
-	})
+		})
 }
 
 func vfsGetBuffer(
