@@ -142,9 +142,14 @@ sources:
           **Each of the below cells should have a H2 heading**
 
           ## Check that notebook environment variables are populated
-          {{ $x := Query "SELECT * FROM items(\
-             item=dict(NotebookId=NotebookId, ClientId=ClientId,\
-                       FlowId=FlowId, ArtifactName=ArtifactName))" | Expand }}
+
+          Some of these are populated from the artifact parameters.
+
+          {{ $x := Query "LET X = scope() SELECT * FROM items(\
+             item=dict(NotebookId=X.NotebookId, ClientId=X.ClientId,\
+                       FlowId=X.FlowId, ArtifactName=X.ArtifactName, \
+                       ChoiceSelector=X.ChoiceSelector, StartDate=X.StartDate, \
+                       HuntId=X.HuntId))" | Expand }}
 
           {{ range $x }}
           * {{ Get . "_key" }} - {{ Get . "_value" }}

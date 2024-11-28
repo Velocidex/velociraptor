@@ -97,10 +97,21 @@ class Notebooks extends React.Component {
         this.source.cancel();
         this.source = CancelToken.source();
 
+        // Only show the loading sign when we load a new notebook not
+        // for periodic refresh.
+        let notebook_id = notebook.notebook_id;
+        let old_notebook_id = this.state.notebook &&
+            this.state.notebook.notebook_id;
+        if (notebook_id !== old_notebook_id) {
+            this.setState({loading: true});
+        }
+
         api.get("v1/GetNotebooks", {
-            notebook_id: notebook.notebook_id,
+            notebook_id: notebook_id,
             include_uploads: true,
         }, this.source.token).then(response=>{
+            this.setState({loading: false});
+
             if (response.cancel) return;
 
             let notebooks = response.data.items || [];

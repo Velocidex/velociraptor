@@ -13,6 +13,10 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: 1.23
+
+        # Caching seems to really slow down the build due to the time
+        # taken to save the cache.
+        cache: false
       id: go
 
     - name: Configure test environment

@@ -10,6 +10,10 @@ import ToolTip from '../widgets/tooltip.jsx';
 import ContextMenu from './context.jsx';
 
 const renderHumanTime = ts=> {
+    if (!_.isDate(ts)) {
+        return "";
+    }
+
     let now = new Date().getTime();
     let difference = (now-ts.getTime());
     return T("HumanizeDuration", difference);

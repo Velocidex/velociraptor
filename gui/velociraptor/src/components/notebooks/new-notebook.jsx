@@ -385,6 +385,8 @@ export class EditNotebook extends React.Component {
     render() {
         return (
             <Modal show={true}
+                   enforceFocus={true}
+                   dialogClassName="modal-90w"
                    size="lg"
                    onHide={this.props.closeDialog} >
               <Modal.Header closeButton>

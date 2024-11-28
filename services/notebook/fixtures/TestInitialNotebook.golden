@@ -1,0 +1,378 @@
+{
+ "Unspecified Artifacts Request": {
+  "name": "Unspecified Artifacts",
+  "description": "Should return the default notebook artifact"
+ },
+ "Unspecified Artifacts Response": {
+  "name": "PrivateNotebook",
+  "parameters": [
+   {
+    "name": "ArtifactName",
+    "default": "Notebooks.Default",
+    "description": "Name of the artifact this notebook came from."
+   }
+  ],
+  "sources": [
+   {
+    "notebook": [
+     {
+      "template": "# Welcome to Velociraptor notebooks!\n",
+      "type": "markdown"
+     }
+    ]
+   }
+  ]
+ },
+ "Unspecified Artifacts Spec": {
+  "artifact": "PrivateNotebook",
+  "parameters": {}
+ },
+ "Client artifact Request": {
+  "name": "Client artifact",
+  "description": "Notebook based on a client artifact with no custom notebooks.",
+  "artifacts": [
+   "Generic.Client.Info"
+  ],
+  "notebook_id": "N.F.1234-C.1235"
+ },
+ "Client artifact Response": {
+  "name": "PrivateNotebook",
+  "parameters": [
+   {
+    "name": "FirstParameter",
+    "default": "1982-12-10",
+    "type": "timestamp"
+   },
+   {
+    "name": "ArtifactName",
+    "default": "Generic.Client.Info",
+    "description": "Name of the artifact this notebook came from."
+   },
+   {
+    "name": "ClientId",
+    "default": "C.1235",
+    "description": "Implied client id from notebook"
+   },
+   {
+    "name": "FlowId",
+    "default": "F.1234",
+    "description": "Implied flow id from notebook"
+   }
+  ],
+  "sources": [
+   {
+    "notebook": [
+     {
+      "template": "\n/*\n# Generic.Client.Info\n*/\nSELECT * FROM source(artifact=\"Generic.Client.Info\")\nLIMIT 50\n",
+      "type": "vql"
+     }
+    ]
+   }
+  ]
+ },
+ "Client artifact Spec": {
+  "artifact": "PrivateNotebook",
+  "parameters": {
+   "env": [
+    {
+     "key": "FirstParameter",
+     "value": "2022-11-10"
+    }
+   ]
+  }
+ },
+ "Custom.Generic.Client.Info Request": {
+  "name": "Custom.Generic.Client.Info",
+  "description": "Based on custom notebook cells",
+  "artifacts": [
+   "Custom.Generic.Client.Info"
+  ],
+  "notebook_id": "N.F.1234-C.1235"
+ },
+ "Custom.Generic.Client.Info Response": {
+  "name": "PrivateNotebook",
+  "parameters": [
+   {
+    "name": "ArtifactName",
+    "default": "Custom.Generic.Client.Info",
+    "description": "Name of the artifact this notebook came from."
+   },
+   {
+    "name": "ClientId",
+    "default": "C.1235",
+    "description": "Implied client id from notebook"
+   },
+   {
+    "name": "FlowId",
+    "default": "F.1234",
+    "description": "Implied flow id from notebook"
+   }
+  ],
+  "sources": [
+   {
+    "notebook": [
+     {
+      "template": "# Custom.Generic.Client.Info template\n",
+      "type": "markdown"
+     }
+    ]
+   }
+  ]
+ },
+ "Custom.Generic.Client.Info Spec": {
+  "artifact": "PrivateNotebook",
+  "parameters": {}
+ },
+ "EventArtifact Request": {
+  "name": "EventArtifact",
+  "description": "Building a notebook from an event artifact adds StartTime and EndTime",
+  "artifacts": [
+   "Generic.Events"
+  ],
+  "notebook_id": "N.E.Generic.Events-C.1235",
+  "env": [
+   {
+    "key": "StartTime",
+    "value": "2020-01-10"
+   }
+  ]
+ },
+ "EventArtifact Response": {
+  "name": "PrivateNotebook",
+  "parameters": [
+   {
+    "name": "Arg1",
+    "default": "Foo"
+   },
+   {
+    "name": "ArtifactName",
+    "default": "Generic.Events",
+    "description": "Name of the artifact this notebook came from."
+   },
+   {
+    "name": "ClientId",
+    "default": "C.1235",
+    "description": "Implied client id from notebook"
+   },
+   {
+    "name": "StartTime",
+    "description": "Start of time range to consider",
+    "type": "timestamp"
+   },
+   {
+    "name": "EndTime",
+    "description": "End of time range to consider",
+    "type": "timestamp"
+   }
+  ],
+  "sources": [
+   {
+    "notebook": [
+     {
+      "template": "\n/*\n# Events from Generic.Events\n\nFrom {{ Scope \"StartTime\" }} to {{ Scope \"EndTime\" }}\n*/\n\nSELECT timestamp(epoch=_ts) AS ServerTime, *\n FROM source(start_time=StartTime, end_time=EndTime, artifact=\"Generic.Events\")\nLIMIT 50\n",
+      "type": "vql"
+     }
+    ]
+   }
+  ]
+ },
+ "EventArtifact Spec": {
+  "artifact": "PrivateNotebook",
+  "parameters": {
+   "env": [
+    {
+     "key": "Arg1",
+     "value": "Custom Arg1"
+    },
+    {
+     "key": "StartTime",
+     "value": "2020-01-10"
+    }
+   ]
+  }
+ },
+ "EventArtifact Default Request": {
+  "name": "EventArtifact Default",
+  "description": "Building a notebook from an event artifact without custom notebooks. This should populate the spec from the installed client event monitoring table.",
+  "artifacts": [
+   "Generic.Events"
+  ],
+  "notebook_id": "N.E.Generic.Events-C.1235",
+  "env": [
+   {
+    "key": "StartTime",
+    "value": "2024-10"
+   }
+  ]
+ },
+ "EventArtifact Default Response": {
+  "name": "PrivateNotebook",
+  "parameters": [
+   {
+    "name": "Arg1",
+    "default": "Foo"
+   },
+   {
+    "name": "ArtifactName",
+    "default": "Generic.Events",
+    "description": "Name of the artifact this notebook came from."
+   },
+   {
+    "name": "ClientId",
+    "default": "C.1235",
+    "description": "Implied client id from notebook"
+   },
+   {
+    "name": "StartTime",
+    "description": "Start of time range to consider",
+    "type": "timestamp"
+   },
+   {
+    "name": "EndTime",
+    "description": "End of time range to consider",
+    "type": "timestamp"
+   }
+  ],
+  "sources": [
+   {
+    "notebook": [
+     {
+      "template": "\n/*\n# Events from Generic.Events\n\nFrom {{ Scope \"StartTime\" }} to {{ Scope \"EndTime\" }}\n*/\n\nSELECT timestamp(epoch=_ts) AS ServerTime, *\n FROM source(start_time=StartTime, end_time=EndTime, artifact=\"Generic.Events\")\nLIMIT 50\n",
+      "type": "vql"
+     }
+    ]
+   }
+  ]
+ },
+ "EventArtifact Default Spec": {
+  "artifact": "PrivateNotebook",
+  "parameters": {
+   "env": [
+    {
+     "key": "Arg1",
+     "value": "Custom Arg1"
+    },
+    {
+     "key": "StartTime",
+     "value": "2024-10"
+    }
+   ]
+  }
+ },
+ "Create GlobalNotebook Request": {
+  "name": "Create GlobalNotebook",
+  "description": "Creating a global notebook with specs",
+  "artifacts": [
+   "GlobalNotebook"
+  ],
+  "specs": [
+   {
+    "artifact": "GlobalNotebook",
+    "parameters": {
+     "env": [
+      {
+       "key": "Arg1",
+       "value": "Hello"
+      },
+      {
+       "key": "Arg2",
+       "value": "World"
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "Create GlobalNotebook Response": {
+  "name": "PrivateNotebook",
+  "parameters": [
+   {
+    "name": "Arg1",
+    "default": "Foo"
+   },
+   {
+    "name": "Arg2",
+    "default": "Bar"
+   },
+   {
+    "name": "ArtifactName",
+    "default": "GlobalNotebook",
+    "description": "Name of the artifact this notebook came from."
+   }
+  ],
+  "sources": [
+   {
+    "notebook": [
+     {
+      "template": "SELECT Arg1 FROM scope()\n",
+      "type": "vql"
+     }
+    ]
+   }
+  ]
+ },
+ "Create GlobalNotebook Spec": {
+  "artifact": "PrivateNotebook",
+  "parameters": {
+   "env": [
+    {
+     "key": "Arg1",
+     "value": "Hello"
+    },
+    {
+     "key": "Arg2",
+     "value": "World"
+    }
+   ]
+  }
+ },
+ "Create Hunt Notebook Request": {
+  "name": "Create Hunt Notebook",
+  "description": "Creating a notebook from hunt view",
+  "artifacts": [
+   "Generic.Client.Info"
+  ],
+  "notebook_id": "N.H.1234"
+ },
+ "Create Hunt Notebook Response": {
+  "name": "PrivateNotebook",
+  "parameters": [
+   {
+    "name": "FirstParameter",
+    "default": "1982-12-10",
+    "type": "timestamp"
+   },
+   {
+    "name": "ArtifactName",
+    "default": "Generic.Client.Info",
+    "description": "Name of the artifact this notebook came from."
+   },
+   {
+    "name": "HuntId",
+    "default": "H.1234",
+    "description": "Implied hunt id from notebook"
+   }
+  ],
+  "sources": [
+   {
+    "notebook": [
+     {
+      "template": "\n/*\n# Generic.Client.Info\n*/\nSELECT * FROM source(artifact=\"Generic.Client.Info\")\nLIMIT 50\n",
+      "type": "vql"
+     }
+    ]
+   }
+  ]
+ },
+ "Create Hunt Notebook Spec": {
+  "artifact": "PrivateNotebook",
+  "parameters": {
+   "env": [
+    {
+     "key": "FirstParameter",
+     "value": "2021-11-10"
+    }
+   ]
+  }
+ }
+}

@@ -81,8 +81,12 @@ const runArtifact = (client_id, artifact, params, on_success, token)=>{
     });
 };
 
+const getNotebookId = (flow_id, client_id)=>{
+    return "N." + flow_id + "-" + client_id;
+};
 
 export {
     requestToParameters,
     runArtifact,
+    getNotebookId,
 }

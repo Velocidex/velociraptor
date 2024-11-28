@@ -286,6 +286,31 @@ func (self *ClientEventTable) setClientMonitoringState(
 	return nil
 }
 
+func (self *ClientEventTable) GetClientSpec(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	client_id string) (res []*flows_proto.ArtifactSpec) {
+
+	self.mu.Lock()
+	state := self.state
+	self.mu.Unlock()
+
+	// First get the all labels
+	if state.Artifacts != nil {
+		res = append(res, state.Artifacts.Specs...)
+	}
+
+	labeler := services.GetLabeler(config_obj)
+	// Now label specific specs.
+	for _, table := range state.LabelEvents {
+		if labeler.IsLabelSet(ctx, config_obj, client_id, table.Label) &&
+			table.Artifacts != nil {
+			res = append(res, table.Artifacts.Specs...)
+		}
+	}
+	return res
+}
+
 func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 	ctx context.Context,
 	config_obj *config_proto.Config,

@@ -130,7 +130,7 @@ func (self *NotebookStoreImpl) SetNotebook(in *api_proto.NotebookMetadata) error
 }
 
 func (self *NotebookStoreImpl) _SetNotebook(in *api_proto.NotebookMetadata) error {
-	if isGlobalNotebooks(in.NotebookId) {
+	if utils.IsGlobalNotebooks(in.NotebookId) {
 		self.global_notebooks[in.NotebookId] = in
 	}
 
@@ -441,7 +441,7 @@ func (self *NotebookStoreImpl) syncAllNotebooks() error {
 
 		notebook := res.Message().(*api_proto.NotebookMetadata)
 		if notebook.NotebookId == "" ||
-			!isGlobalNotebooks(notebook.NotebookId) {
+			!utils.IsGlobalNotebooks(notebook.NotebookId) {
 			continue
 		}
 		self.global_notebooks[notebook.NotebookId] = notebook

@@ -1,10 +1,16 @@
 package notebook
 
 import (
-	"strings"
+	"regexp"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	flowNotebookIdRegex  = regexp.MustCompile("N\\.(F\\.[^-]+)-(C\\..+)")
+	eventNotebookIdRegex = regexp.MustCompile("N\\.(E\\.[^-]+)-(C\\..+)")
+	huntNotebookIdRegex  = regexp.MustCompile("N\\.(H\\..+)")
 )
 
 func NewNotebookId() string {
@@ -21,16 +27,6 @@ func NewNotebookAttachmentId() string {
 
 func GetNextVersion(version string) string {
 	return utils.NextId()
-}
-
-func isGlobalNotebooks(notebook_id string) bool {
-	if strings.HasPrefix(notebook_id, "N.F.") || // Flow Notebook
-		strings.HasPrefix(notebook_id, "N.H.") || // Hunt Notebook
-		strings.HasPrefix(notebook_id, "N.E.") { // Event Notebook
-		return false
-	}
-
-	return true
 }
 
 // Not all values from the real cell are stored in cell summaries.
