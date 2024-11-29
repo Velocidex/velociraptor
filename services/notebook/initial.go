@@ -75,6 +75,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -167,6 +168,11 @@ func CalculateNotebookArtifact(
 
 	out := proto.Clone(in).(*api_proto.NotebookMetadata)
 
+	// No notebook Id will allocate a global ID.
+	if out.NotebookId == "" {
+		out.NotebookId = NewNotebookId()
+	}
+
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, nil, err
@@ -190,9 +196,29 @@ func CalculateNotebookArtifact(
 	}
 
 	// This is a psuedo artifact used to build the notebook.
-	res := &artifacts_proto.Artifact{
-		Name: "PrivateNotebook",
+	res := &artifacts_proto.Artifact{}
+
+	// Check if the psuedo artifact is already cached.
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, nil, err
 	}
+
+	notebook_path_manager := paths.NewNotebookPathManager(out.NotebookId)
+	err = db.GetSubject(config_obj,
+		notebook_path_manager.Artifact(),
+		res)
+	if err == nil {
+		// Artifact is cached, lets return that
+		out.Parameters = res.Parameters
+		return res, out, nil
+	}
+
+	// Cache it for next time.
+	defer db.SetSubject(config_obj, notebook_path_manager.Artifact(), res)
+
+	// Now build the psuedo artifact.
+	res.Name = "PrivateNotebook"
 
 	seen := make(map[string]bool)
 	seen_tools := make(map[string]bool)

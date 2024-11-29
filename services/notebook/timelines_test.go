@@ -207,6 +207,7 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelineAnnotations(
 	golden.Set("Updated Annotations", read_all_events())
 
 	goldie.Retry(t, self.T(), "TestNotebookManagerTimelineAnnotations",
-		json.MustMarshalIndent(golden))
+		goldie.RemoveLines("_AnnotatedAt|modified_time",
+			json.MustMarshalIndent(golden)))
 
 }

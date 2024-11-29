@@ -314,6 +314,77 @@ func (self *NotebookManagerTestSuite) TestNotebookFromTemplate() {
 		json.MustMarshalIndent(golden))
 }
 
+func (self *NotebookManagerTestSuite) TestNotebookDeletion() {
+	gen := utils.IncrementalIdGenerator(0)
+	closer := utils.SetIdGenerator(&gen)
+	defer closer()
+
+	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	_, err = repository.LoadYaml(`
+name: ATempArtifact
+type: NOTEBOOK
+parameters:
+- name: FirstArg
+  default: Hello
+
+sources:
+- notebook:
+  - type: md
+    template: "Hello world"
+`, services.ArtifactOptions{ValidateArtifact: true})
+
+	var notebook *api_proto.NotebookMetadata
+
+	req := &api_proto.NotebookMetadata{
+		Name:      "Test Notebook",
+		Artifacts: []string{"ATempArtifact"},
+	}
+
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		notebook, err = notebook_manager.NewNotebook(
+			self.Ctx, "admin", req)
+		return err == nil
+	})
+
+	assert.Equal(self.T(), notebook.Name, "Test Notebook")
+
+	// Now delete the initial artifact.
+	err = manager.DeleteArtifactFile(self.Ctx, self.ConfigObj,
+		"admin", "ATempArtifact")
+	assert.NoError(self.T(), err)
+
+	// Can not create a notebook any more - the artifact is deleted.
+	_, err = notebook_manager.NewNotebook(
+		self.Ctx, "admin", req)
+	assert.Error(self.T(), err, "Artifact not found")
+
+	// Modify the notebook: we should still be able to modify the
+	// notebook, even though its artifact is gone because we cached
+	// the artifact inside the notebook space.
+	new_notebook_request := proto.Clone(
+		notebook).(*api_proto.NotebookMetadata)
+	new_notebook_request.Name = "An expired notebook"
+
+	err = notebook_manager.UpdateNotebook(
+		self.Ctx, new_notebook_request)
+	assert.NoError(self.T(), err)
+
+	updated_notebook, err := notebook_manager.GetNotebook(self.Ctx,
+		notebook.NotebookId, services.DO_NOT_INCLUDE_UPLOADS)
+	assert.NoError(self.T(), err)
+
+	// The notebook is now updated.
+	assert.Equal(self.T(), updated_notebook.Name, "An expired notebook")
+}
+
 func TestNotebookManager(t *testing.T) {
 	suite.Run(t, &NotebookManagerTestSuite{})
 }

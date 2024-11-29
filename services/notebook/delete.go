@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -32,14 +33,22 @@ func (self *NotebookStoreImpl) DeleteNotebook(ctx context.Context,
 	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
 
 	if really_do_it {
-		err = db.DeleteSubject(self.config_obj, notebook_path_manager.Path())
+		err = db.DeleteSubjectWithCompletion(
+			self.config_obj, notebook_path_manager.Path(),
+			utils.SyncCompleter)
 		if err != nil {
 			return err
 		}
+
+		// Also remove it from our local cache.
+		self.mu.Lock()
+		delete(self.global_notebooks, notebook_id)
+		self.mu.Unlock()
 	}
 
-	// Indiscriminately delete all the client's datastore files.
-	err = datastore.Walk(self.config_obj, db, notebook_path_manager.DSDirectory(),
+	// Indiscriminately delete all the notebook's datastore files.
+	err = datastore.Walk(
+		self.config_obj, db, notebook_path_manager.DSDirectory(),
 		datastore.WalkWithoutDirectories,
 		func(filename api.DSPathSpec) error {
 			if progress != nil {
@@ -68,7 +77,8 @@ func (self *NotebookStoreImpl) DeleteNotebook(ctx context.Context,
 	}
 
 	// Delete the filestore files.
-	err = api.Walk(file_store_factory, notebook_path_manager.Directory(),
+	err = api.Walk(file_store_factory,
+		notebook_path_manager.Directory(),
 		func(filename api.FSPathSpec, info os.FileInfo) error {
 			if progress != nil {
 				select {
