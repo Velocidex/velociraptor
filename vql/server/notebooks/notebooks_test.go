@@ -91,15 +91,22 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
-	plugin := &CreateNotebookFunction{}
-	res_any := plugin.Call(self.Ctx, scope,
-		ordereddict.NewDict().
-			Set("name", "TestNotebook").
-			Set("description", "A test notebook").
-			Set("collaborators", []string{"mic", "fred"}).
-			Set("artifacts", "Test.Artifact"))
+	var notebook *api_proto.NotebookMetadata
 
-	notebook := res_any.(*api_proto.NotebookMetadata)
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		var ok bool
+
+		plugin := &CreateNotebookFunction{}
+		res_any := plugin.Call(self.Ctx, scope,
+			ordereddict.NewDict().
+				Set("name", "TestNotebook").
+				Set("description", "A test notebook").
+				Set("collaborators", []string{"mic", "fred"}).
+				Set("artifacts", "Test.Artifact"))
+
+		notebook, ok = res_any.(*api_proto.NotebookMetadata)
+		return ok
+	})
 
 	// One cell created which contains Hello world.
 	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
@@ -120,7 +127,7 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 			Set("attachment_filename", "attachment.txt"))
 
 	// Now update the cell with new content.
-	res_any = UpdateNotebookCellFunction{}.Call(self.Ctx, scope,
+	res_any := UpdateNotebookCellFunction{}.Call(self.Ctx, scope,
 		ordereddict.NewDict().
 			Set("notebook_id", notebook.NotebookId).
 			Set("cell_id", notebook.CellMetadata[0].CellId).
