@@ -56,6 +56,14 @@ func (self *NotebookPathManager) Path() api.DSPathSpec {
 	return self.root.AddChild(self.notebook_id).SetTag("Notebook")
 }
 
+// Stored the cached copy of the psuedo artifact we calculated when
+// the artifact was first created. This is used even if the original
+// artifact is deleted or modified.
+func (self *NotebookPathManager) Artifact() api.DSPathSpec {
+	return self.root.AddChild(self.notebook_id, "artifact").
+		SetTag("Artifact")
+}
+
 // Support versioned cells by appending the version to the cell id.
 func (self *NotebookPathManager) Cell(
 	cell_id, version string) *NotebookCellPathManager {

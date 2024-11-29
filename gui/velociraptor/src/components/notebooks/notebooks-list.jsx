@@ -40,7 +40,7 @@ class DeleteNotebook extends React.Component {
     deleteNotebook = () => {
         let notebook = Object.assign({}, this.props.notebook);
         notebook.hidden = true;
-        api.post("v1/UpdateNotebook", notebook, this.source.token).then(
+        api.post("v1/DeleteNotebook", notebook, this.source.token).then(
             this.props.updateNotebooks);
     }
 
@@ -51,24 +51,23 @@ class DeleteNotebook extends React.Component {
                    onHide={this.props.closeDialog} >
               <Modal.Header closeButton>
                 <Modal.Title>
-                  Archive notebook {this.props.notebook.notebook_id}
+                  {T("Delete notebook")} {this.props.notebook.notebook_id}
                 </Modal.Title>
               </Modal.Header>
 
               <Modal.Body>
                 <Alert variant="danger" className="text-center">
-                  You are about to archive notebook {this.props.notebook.notebook_id}!
-                  You can always recover this notebook from the filestore later.
+                  {T("You are about to delete this notebook permanently!")}
                 </Alert>
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary"
                         onClick={this.props.closeDialog}>
-                  Cancel
+                  {T("Cancel")}
                 </Button>
                 <Button variant="primary"
                         onClick={this.deleteNotebook}>
-                  Do It!!!
+                  {T("Do It!!!")}
                 </Button>
               </Modal.Footer>
             </Modal>
