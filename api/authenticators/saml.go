@@ -115,6 +115,8 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 
 	reject_handler := samlMiddleware.RequireAccount(parent)
 
+	logger := GetLoggingHandler(self.config_obj)(parent)
+
 	return api_utils.HandlerFunc(parent,
 		func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("X-CSRF-Token", csrf.Token(r))
@@ -221,9 +223,8 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 			ctx := context.WithValue(
 				r.Context(), constants.GRPC_USER_CONTEXT,
 				string(serialized))
-			GetLoggingHandler(self.config_obj)(parent).ServeHTTP(
-				w, r.WithContext(ctx))
-		})
+			logger.ServeHTTP(w, r.WithContext(ctx))
+		}).AddChild("GetLoggingHandler")
 }
 
 func NewSamlAuthenticator(

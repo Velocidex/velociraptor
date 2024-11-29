@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -17,13 +16,6 @@ type NotebookType int
 const (
 	DO_NOT_INCLUDE_UPLOADS = false
 	INCLUDE_UPLOADS        = true
-
-	// Types of notebooks
-	UNKNOWN_NOTEBOOK NotebookType = iota
-	GLOBAL_NOTEBOOK
-	FLOW_NOTEBOOK
-	EVENT_NOTEBOOK
-	HUNT_NOTEBOOK
 )
 
 func GetNotebookManager(config_obj *config_proto.Config) (NotebookManager, error) {
@@ -121,20 +113,4 @@ type NotebookManager interface {
 	// Add events to a timeline
 	DeleteTimeline(ctx context.Context, scope vfilter.Scope,
 		notebook_id string, supertimeline, component string) error
-}
-
-func GetNotebookType(notebook_id string) NotebookType {
-	if strings.HasPrefix(notebook_id, "N.F.") {
-		return FLOW_NOTEBOOK
-	}
-	if strings.HasPrefix(notebook_id, "N.H.") {
-		return HUNT_NOTEBOOK
-	}
-	if strings.HasPrefix(notebook_id, "N.E.") {
-		return EVENT_NOTEBOOK
-	}
-	if strings.HasPrefix(notebook_id, "N.") {
-		return GLOBAL_NOTEBOOK
-	}
-	return UNKNOWN_NOTEBOOK
 }

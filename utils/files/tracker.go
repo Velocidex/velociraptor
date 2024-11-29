@@ -33,10 +33,6 @@ type Opener struct {
 	age                time.Time
 }
 
-func (self Opener) Close() {
-	gTracker.RemoveFile(self.name)
-}
-
 type OpenerTracker struct {
 	mu    sync.Mutex
 	items map[string]*Opener
