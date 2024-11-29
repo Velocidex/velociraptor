@@ -96,7 +96,7 @@
   "artifacts": [
    "Custom.Generic.Client.Info"
   ],
-  "notebook_id": "N.F.1234-C.1235"
+  "notebook_id": "N.F.1235-C.1235"
  },
  "Custom.Generic.Client.Info Response": {
   "name": "PrivateNotebook",
@@ -113,7 +113,7 @@
    },
    {
     "name": "FlowId",
-    "default": "F.1234",
+    "default": "F.1235",
     "description": "Implied flow id from notebook"
    }
   ],

@@ -168,6 +168,11 @@ func CalculateNotebookArtifact(
 
 	out := proto.Clone(in).(*api_proto.NotebookMetadata)
 
+	// No notebook Id will allocate a global ID.
+	if out.NotebookId == "" {
+		out.NotebookId = NewNotebookId()
+	}
+
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, nil, err
@@ -199,7 +204,7 @@ func CalculateNotebookArtifact(
 		return nil, nil, err
 	}
 
-	notebook_path_manager := paths.NewNotebookPathManager(in.NotebookId)
+	notebook_path_manager := paths.NewNotebookPathManager(out.NotebookId)
 	err = db.GetSubject(config_obj,
 		notebook_path_manager.Artifact(),
 		res)

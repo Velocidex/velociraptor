@@ -124,7 +124,7 @@ var (
 		{
 			req: &api_proto.NotebookMetadata{
 				Name:        "Custom.Generic.Client.Info",
-				NotebookId:  "N.F.1234-C.1235",
+				NotebookId:  "N.F.1235-C.1235",
 				Description: "Based on custom notebook cells",
 				Artifacts:   []string{"Custom.Generic.Client.Info"},
 			},
@@ -231,8 +231,8 @@ var (
 	}
 )
 
-func (self *NotebookManagerTestSuite) TestInitialNotebook() {
-	self.LoadArtifacts(InitialArtifacts...)
+func (self *NotebookManagerTestSuite) createFlow(
+	flow_id, client_id, artifact string) {
 
 	acl_manager := acl_managers.NewServerACLManager(self.ConfigObj, "admin")
 
@@ -265,15 +265,15 @@ func (self *NotebookManagerTestSuite) TestInitialNotebook() {
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
 
-	defer utils.SetFlowIdForTests("F.1234")()
+	defer utils.SetFlowIdForTests(flow_id)()
 
 	_, err = launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj, acl_manager,
 		repository, &flows_proto.ArtifactCollectorArgs{
 			Creator:   "admin",
-			ClientId:  "C.1235",
-			Artifacts: []string{"Generic.Client.Info"},
+			ClientId:  client_id,
+			Artifacts: []string{artifact},
 			Specs: []*flows_proto.ArtifactSpec{{
-				Artifact: "Generic.Client.Info",
+				Artifact: artifact,
 				Parameters: &flows_proto.ArtifactParameters{
 					Env: []*actions_proto.VQLEnv{
 						// Override the default when scheduling the artifact.
@@ -303,11 +303,22 @@ func (self *NotebookManagerTestSuite) TestInitialNotebook() {
 			},
 		})
 	assert.NoError(self.T(), err)
+}
+
+func (self *NotebookManagerTestSuite) TestInitialNotebook() {
+	self.LoadArtifacts(InitialArtifacts...)
+
+	self.createFlow("F.1234", "C.1235", "Generic.Client.Info")
+	self.createFlow("F.1235", "C.1235", "Custom.Generic.Client.Info")
 
 	golden := ordereddict.NewDict()
 	for _, tc := range initialTestCases {
 		req := tc.req
 		golden.Set(req.Name+" Request", proto.Clone(req))
+
+		if req.Name == "Create GlobalNotebook" {
+			utils.DlvBreak()
+		}
 
 		artifact, out, err := notebook.CalculateNotebookArtifact(
 			self.Ctx, self.ConfigObj, req)
