@@ -80,8 +80,8 @@ github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002 h1:FWeeVb/x+Xva
 github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002/go.mod h1:YvYAfyK6Jg2WIaqvK42KPmVDfU8FSVxoSiZSVJfihDo=
 github.com/Velocidex/go-vhdx v0.0.0-20240601014259-b204818c95fd h1:znnjIQdOK6aqsG/crrEBAWBJzYdg1+jn/IGLdozC0qU=
 github.com/Velocidex/go-vhdx v0.0.0-20240601014259-b204818c95fd/go.mod h1:lBB+XfppHmYxIfnWDszC78x1iMq8088nMnMYQFQovM4=
-github.com/Velocidex/go-vmdk v0.0.0-20240909080044-e373986b6517 h1:6/UGPskHUCHknG8RSWWx0Kzx3x7Y4n756LUMWLAB+m8=
-github.com/Velocidex/go-vmdk v0.0.0-20240909080044-e373986b6517/go.mod h1:GLNH1h3hHOeOWzFIDdBGXUtROaMZR1KF4U3DnoQdxHw=
+github.com/Velocidex/go-vmdk v0.0.0-20241202015615-d508d852d5e1 h1:B5BoyuQK3X8ZRYbQuD/fsuAKnbH9o+pG2MNxWXK+5Hw=
+github.com/Velocidex/go-vmdk v0.0.0-20241202015615-d508d852d5e1/go.mod h1:AlPOz69A80YxtZuayEM+w9PYbGhaOOHgm1l92egHlzg=
 github.com/Velocidex/go-yara v1.1.10-0.20240309155455-3f491847cec9 h1:m+sfPvJnRTDL9EoJdlBOGa1dQlm0NPJgcXB/zpK/W7Y=
 github.com/Velocidex/go-yara v1.1.10-0.20240309155455-3f491847cec9/go.mod h1:5KKwF74avzF4GPZg37NoWfJiDgrBF5ASHH27g1p83zk=
 github.com/Velocidex/grok v0.0.1 h1:bOaqowsW9ecfJISQOM9K47Jk/ID9V945BLfKngUZEjo=
@@ -116,7 +116,6 @@ github.com/alecthomas/assert v1.0.0/go.mod h1:va/d2JC+M7F6s+80kl/R3G7FUiW6JzUO+h
 github.com/alecthomas/colour v0.0.0-20160524082231-60882d9e2721/go.mod h1:QO9JBoKquHd+jz9nshCh40fOfO+JzsoXy8qTHF68zU0=
 github.com/alecthomas/colour v0.1.0 h1:nOE9rJm6dsZ66RGWYSFrXw461ZIt9A6+nHgL7FRrDUk=
 github.com/alecthomas/colour v0.1.0/go.mod h1:QO9JBoKquHd+jz9nshCh40fOfO+JzsoXy8qTHF68zU0=
-github.com/alecthomas/kingpin v2.2.6+incompatible/go.mod h1:59OFYbFVLKQKq+mqrL6Rw5bR0c3ACQaawgXx0QYndlE=
 github.com/alecthomas/kingpin/v2 v2.4.0 h1:f48lwail6p8zpO1bC4TxtqACaGqHYA22qkHjHpqDjYY=
 github.com/alecthomas/kingpin/v2 v2.4.0/go.mod h1:0gyi0zQnjuFk8xrkNKamJoyUo382HRL7ATRpFZCw6tE=
 github.com/alecthomas/kong v0.2.4/go.mod h1:kQOmtJgV+Lb4aj+I2LEn40cbtawdWJ9Y8QLq+lElKxE=

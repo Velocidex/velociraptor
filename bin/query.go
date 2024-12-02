@@ -391,7 +391,7 @@ func doQuery() error {
 
 	if *query_command_collect_timeout > 0 {
 		start := time.Now()
-		timed_ctx, timed_cancel := context.WithTimeoutCause(ctx,
+		timed_ctx, timed_cancel := utils.WithTimeoutCause(ctx,
 			time.Second*time.Duration(*query_command_collect_timeout),
 			errors.New("Query: deadline reached"))
 

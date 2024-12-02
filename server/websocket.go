@@ -161,7 +161,7 @@ func ws_receive_client_messages(
 		// client disconnects quickly the request context will be
 		// cancelled and aborted, but we do not want this to
 		// interrupt actually processing the message.
-		subctx, cancel := context.WithTimeoutCause(
+		subctx, cancel := utils.WithTimeoutCause(
 			context.Background(), 60*time.Second,
 			errors.New("Websocket: deadline reached processing message"))
 

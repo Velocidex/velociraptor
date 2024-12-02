@@ -15,11 +15,12 @@ import (
 
 	"golang.org/x/crypto/acme/autocert"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
-	utils "www.velocidex.com/golang/velociraptor/api/utils"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
@@ -117,7 +118,7 @@ func (self *Builder) withAutoCertFrontendSelfSignedGUI(
 	logger.Info("Autocert is enabled but GUI port is not 443, starting Frontend with autocert and GUI with self signed.")
 
 	if config_obj.Services.GuiServer && config_obj.GUI != nil {
-		mux := utils.NewServeMux()
+		mux := api_utils.NewServeMux()
 
 		router, err := PrepareGUIMux(ctx, config_obj, mux)
 		if err != nil {
@@ -140,7 +141,7 @@ func (self *Builder) withAutoCertFrontendSelfSignedGUI(
 	}
 
 	// Launch a server for the frontend.
-	mux := utils.NewServeMux()
+	mux := api_utils.NewServeMux()
 
 	err := server.PrepareFrontendMux(
 		config_obj, server_obj, mux.ServeMux)
@@ -163,7 +164,7 @@ func (self *Builder) WithAutocertGUI(
 		return errors.New("Frontend not configured")
 	}
 
-	mux := utils.NewServeMux()
+	mux := api_utils.NewServeMux()
 
 	if self.config_obj.Services.FrontendServer {
 		err := server.PrepareFrontendMux(
@@ -190,7 +191,7 @@ func startSharedSelfSignedFrontend(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	server_obj *server.Server) error {
-	mux := utils.NewServeMux()
+	mux := api_utils.NewServeMux()
 
 	if config_obj.Frontend == nil || config_obj.GUI == nil {
 		return errors.New("Frontend not configured")
@@ -251,7 +252,7 @@ func startSelfSignedFrontend(
 
 	// Launch a new server for the GUI.
 	if config_obj.Services.GuiServer {
-		mux := utils.NewServeMux()
+		mux := api_utils.NewServeMux()
 
 		router, err := PrepareGUIMux(ctx, config_obj, mux)
 		if err != nil {
@@ -274,7 +275,7 @@ func startSelfSignedFrontend(
 	}
 
 	// Launch a server for the frontend.
-	mux := utils.NewServeMux()
+	mux := api_utils.NewServeMux()
 
 	server.PrepareFrontendMux(
 		config_obj, server_obj, mux.ServeMux)
@@ -386,7 +387,7 @@ func StartFrontendHttps(
 		server_obj.Info("<red>Shutting down</> frontend")
 		atomic.StoreInt32(&server_obj.Healthy, 0)
 
-		time_ctx, cancel := context.WithTimeoutCause(
+		time_ctx, cancel := utils.WithTimeoutCause(
 			context.Background(), 10*time.Second,
 			errors.New("Deadline exceeded shuttin down frontend"))
 		defer cancel()
@@ -584,7 +585,7 @@ func StartFrontendWithAutocert(
 		server_obj.Info("<red>Stopping Frontend Server")
 		atomic.StoreInt32(&server_obj.Healthy, 0)
 
-		timeout_ctx, cancel := context.WithTimeoutCause(
+		timeout_ctx, cancel := utils.WithTimeoutCause(
 			context.Background(), 10*time.Second,
 			errors.New("Deadline exceeded shuttin down frontend"))
 		defer cancel()
@@ -646,7 +647,7 @@ func StartHTTPGUI(
 		<-ctx.Done()
 
 		logger.Info("<red>Stopping GUI Server")
-		timeout_ctx, cancel := context.WithTimeoutCause(
+		timeout_ctx, cancel := utils.WithTimeoutCause(
 			context.Background(), 10*time.Second,
 			errors.New("Deadline exceeded shuttin down GUI"))
 		defer cancel()
@@ -726,7 +727,7 @@ func StartSelfSignedGUI(
 		<-ctx.Done()
 
 		logger.Info("<red>Stopping GUI Server")
-		timeout_ctx, cancel := context.WithTimeoutCause(
+		timeout_ctx, cancel := utils.WithTimeoutCause(
 			context.Background(), 10*time.Second,
 			errors.New("Deadline exceeded shuttin down GUI"))
 		defer cancel()
