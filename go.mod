@@ -112,7 +112,7 @@ require (
 	github.com/Velocidex/go-journalctl v0.0.0-20241004063153-cc1c858415bd
 	github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002
 	github.com/Velocidex/go-vhdx v0.0.0-20240601014259-b204818c95fd
-	github.com/Velocidex/go-vmdk v0.0.0-20240909080044-e373986b6517
+	github.com/Velocidex/go-vmdk v0.0.0-20241202015615-d508d852d5e1
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
 	github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9

@@ -1244,7 +1244,7 @@ func StartMonitoringService(
 		<-ctx.Done()
 
 		logger.Info("<red>Shutting down</> Prometheus monitoring service")
-		timeout_ctx, cancel := context.WithTimeoutCause(
+		timeout_ctx, cancel := utils.WithTimeoutCause(
 			context.Background(), 10*time.Second,
 			errors.New("Monitoring Service deadline reached"))
 		defer cancel()

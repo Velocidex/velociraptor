@@ -589,7 +589,7 @@ func NewClientInfoManager(
 		utils.DlvBreak()
 
 		// When we shut down make sure to save the snapshot.
-		subctx, cancel := context.WithTimeoutCause(
+		subctx, cancel := utils.WithTimeoutCause(
 			context.Background(), 100*time.Second,
 			errors.New("ClientInfoService: deadline reached saving snapshot"))
 		defer cancel()

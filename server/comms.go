@@ -284,7 +284,7 @@ func receive_client_messages(
 
 			// Allow a limited time to read from the client because this
 			// is the hot path.
-			ctx, cancel := context.WithTimeoutCause(
+			ctx, cancel := utils.WithTimeoutCause(
 				req.Context(), 600*time.Second,
 				errors.New("receive_client_messages: deadline reached processing message"))
 			defer cancel()

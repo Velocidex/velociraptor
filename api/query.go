@@ -111,7 +111,7 @@ func streamQuery(
 	// Implement timeout
 	if arg.Timeout > 0 {
 		start := time.Now()
-		timed_ctx, timed_cancel := context.WithTimeoutCause(subctx,
+		timed_ctx, timed_cancel := utils.WithTimeoutCause(subctx,
 			time.Second*time.Duration(arg.Timeout),
 			errors.New("Query API timeout reached"))
 

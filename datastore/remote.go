@@ -100,7 +100,7 @@ func (self *RemoteDataStore) _GetSubject(
 
 	defer Instrument("read", "RemoteDataStore", urn)()
 
-	ctx, cancel := context.WithTimeoutCause(
+	ctx, cancel := utils.WithTimeoutCause(
 		context.Background(), RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 
@@ -197,7 +197,7 @@ func (self *RemoteDataStore) _SetSubjectWithCompletion(
 		return err
 	}
 
-	ctx, cancel := context.WithTimeoutCause(
+	ctx, cancel := utils.WithTimeoutCause(
 		context.Background(), RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 
@@ -236,7 +236,7 @@ func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
 
 	defer Instrument("delete", "RemoteDataStore", urn)()
 
-	ctx, cancel := context.WithTimeoutCause(
+	ctx, cancel := utils.WithTimeoutCause(
 		context.Background(), RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 
@@ -277,7 +277,7 @@ func (self *RemoteDataStore) _DeleteSubject(
 
 	defer Instrument("delete", "RemoteDataStore", urn)()
 
-	ctx, cancel := context.WithTimeoutCause(
+	ctx, cancel := utils.WithTimeoutCause(
 		context.Background(), RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 
@@ -321,7 +321,7 @@ func (self *RemoteDataStore) _ListChildren(
 
 	defer Instrument("list", "RemoteDataStore", urn)()
 
-	ctx, cancel := context.WithTimeoutCause(
+	ctx, cancel := utils.WithTimeoutCause(
 		context.Background(), RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 

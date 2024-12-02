@@ -513,7 +513,7 @@ func NewHuntDispatcher(
 			select {
 			case <-ctx.Done():
 				// Give at most 10 seconds for shutdown.
-				ctx, cancel := context.WithTimeoutCause(
+				ctx, cancel := utils.WithTimeoutCause(
 					context.Background(), 10*time.Second,
 					errors.New("HuntDispatcher: deadline reached shutting down"))
 				defer cancel()
