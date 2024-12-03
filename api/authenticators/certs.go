@@ -82,6 +82,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/gorilla/csrf"
+	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
@@ -154,7 +155,9 @@ func (self *CertAuthenticator) getUserNameFromTLSCerts(r *http.Request) (string,
 }
 
 func (self *CertAuthenticator) AuthenticateUserHandler(
-	parent http.Handler) http.Handler {
+	parent http.Handler,
+	permission acls.ACL_PERMISSION,
+) http.Handler {
 
 	logger := GetLoggingHandler(self.config_obj)(parent)
 
@@ -213,7 +216,7 @@ func (self *CertAuthenticator) AuthenticateUserHandler(
 			}
 
 			// Does the user have access to the specified org?
-			err = CheckOrgAccess(self.config_obj, r, user_record)
+			err = CheckOrgAccess(self.config_obj, r, user_record, permission)
 			if err != nil {
 				services.LogAudit(r.Context(),
 					self.config_obj, user_record.Name, "Unauthorized username",

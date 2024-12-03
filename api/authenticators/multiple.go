@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
@@ -58,10 +59,12 @@ func (self *MultiAuthenticator) reject_with_username(
 }
 
 func (self *MultiAuthenticator) AuthenticateUserHandler(
-	parent http.Handler) http.Handler {
+	parent http.Handler,
+	permission acls.ACL_PERMISSION,
+) http.Handler {
 
 	return authenticateUserHandle(
-		self.config_obj,
+		self.config_obj, permission,
 		func(w http.ResponseWriter, r *http.Request, err error, username string) {
 			self.reject_with_username(w, r, err, username)
 		},

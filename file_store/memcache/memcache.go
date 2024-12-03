@@ -10,10 +10,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/alitto/pond"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -21,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -154,6 +157,31 @@ type MemcacheFileWriter struct {
 	// the completions that have been actually flushed are called. New
 	// completions are associated with the buffer.
 	completions []func()
+}
+
+func (self *MemcacheFileWriter) Stats() *ordereddict.Dict {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	now := utils.GetTime().Now()
+
+	last_flush := ""
+	if !self.last_flush.IsZero() {
+		last_flush = now.Sub(self.last_flush).String()
+	}
+
+	last_close_time := ""
+	if !self.last_close_time.IsZero() {
+		last_close_time = now.Sub(self.last_close_time).String()
+	}
+
+	return ordereddict.NewDict().
+		Set("Buffered", self.buffer.Len()).
+		Set("WrittenSize", self.written_size).
+		Set("Closed", self.closed).
+		Set("LastFlush", last_flush).
+		Set("LastClose", last_close_time).
+		Set("CompletionCount", len(self.completions))
 }
 
 // Just call the delegate immediately so this update hits the disk.
@@ -418,13 +446,13 @@ func (self *MemcacheFileWriter) _FlushInBackground(
 		writer.Truncate()
 	}
 
-	self.owner.ChargeBytes(-int64((len(data))))
 	metricCachedBytes.Sub(float64(len(data)))
 	_, err = writer.Write(data)
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Error("MemcacheFileWriter: Lost data for %v: %v", self.key, err)
 	}
+	self.owner.ChargeBytes(-int64((len(data))))
 }
 
 // Keep all the writers in memory.
@@ -503,6 +531,15 @@ func NewMemcacheFileStore(
 		pool:              pond.New(int(max_writers), int(max_writers*10)),
 		target_memory_use: target_memory_use,
 	}
+
+	// It is very useful to inspect the writer states.
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name: fmt.Sprintf("memcache_filestore_%v",
+			utils.GetOrgId(config_obj)),
+		Description: fmt.Sprintf("Inspect the memcache writer state %v.",
+			utils.GetOrgId(config_obj)),
+		ProfileWriter: result.WriteProfile,
+	})
 
 	go result.Start(ctx)
 
@@ -618,6 +655,10 @@ func (self *MemcacheFileStore) WriteFileWithCompletion(
 	// Turn the call into syncronous if our memory is exceeded.
 	if atomic.LoadInt64(&self.total_cached_bytes) > self.target_memory_use {
 		result.AddCompletion(utils.SyncCompleter)
+		err := result.Flush()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return result, nil

@@ -102,6 +102,15 @@ func SetGlobalFilestore(
 
 	org_id := utils.NormalizedOrgId(config_obj.OrgId)
 
+	// Nothing to update, the filestore is already set correctly.
+	current_impl, pres := g_impl[org_id]
+	if pres {
+		_, ok := current_impl.(*memcache.MemcacheFileStore)
+		if ok && implementation == "MemcacheFileDataStore" {
+			return nil
+		}
+	}
+
 	impl, err := getImpl(implementation, config_obj)
 	if err != nil {
 		return err

@@ -8,6 +8,7 @@ import (
 	oidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -99,9 +100,11 @@ func (self *OidcAuthenticator) AddLogoff(mux *api_utils.ServeMux) error {
 }
 
 func (self *OidcAuthenticator) AuthenticateUserHandler(
-	parent http.Handler) http.Handler {
+	parent http.Handler,
+	permission acls.ACL_PERMISSION,
+) http.Handler {
 	return authenticateUserHandle(
-		self.config_obj,
+		self.config_obj, permission,
 		func(w http.ResponseWriter, r *http.Request, err error, username string) {
 			reject_with_username(self.config_obj, w, r, err, username,
 				self.LoginURL(), self.Name())

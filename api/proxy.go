@@ -33,6 +33,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/encoding/protojson"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
@@ -41,6 +42,7 @@ import (
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	debug_server "www.velocidex.com/golang/velociraptor/services/debug/server"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -93,7 +95,8 @@ func AddProxyMux(config_obj *config_proto.Config, mux *api_utils.ServeMux) error
 			if err != nil {
 				return err
 			}
-			handler = auther.AuthenticateUserHandler(handler)
+			// Minimum level of access should be READ_RESULTS
+			handler = auther.AuthenticateUserHandler(handler, acls.READ_RESULTS)
 		}
 
 		mux.Handle(reverse_proxy_config.Route, handler)
@@ -142,54 +145,74 @@ func PrepareGUIMux(
 		return nil, err
 	}
 
+	base_path := api_utils.GetBasePath(config_obj)
+
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/"),
 		ipFilter(config_obj,
 			csrfProtect(config_obj,
-				auther.AuthenticateUserHandler(h))))
+				auther.AuthenticateUserHandler(h, acls.READ_RESULTS))))
 
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/DownloadTable"),
 		ipFilter(config_obj, csrfProtect(config_obj,
-			auther.AuthenticateUserHandler(downloadTable()))))
+			auther.AuthenticateUserHandler(
+				downloadTable(), acls.READ_RESULTS))))
 
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/DownloadVFSFile"),
 		ipFilter(config_obj, csrfProtect(config_obj,
-			auther.AuthenticateUserHandler(vfsFileDownloadHandler()))))
+			auther.AuthenticateUserHandler(
+				vfsFileDownloadHandler(), acls.READ_RESULTS))))
 
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/UploadTool"),
 		ipFilter(config_obj, csrfProtect(config_obj,
-			auther.AuthenticateUserHandler(toolUploadHandler()))))
+			auther.AuthenticateUserHandler(
+				toolUploadHandler(), acls.READ_RESULTS))))
 
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/UploadFormFile"),
 		ipFilter(config_obj, csrfProtect(config_obj,
-			auther.AuthenticateUserHandler(formUploadHandler()))))
+			auther.AuthenticateUserHandler(
+				formUploadHandler(), acls.READ_RESULTS))))
 
 	// Serve prepared zip files.
 	mux.Handle(api_utils.GetBasePath(config_obj, "/downloads/"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
-				api_utils.StripPrefix(api_utils.GetBasePath(config_obj),
-					downloadFileStore([]string{"downloads"}))))))
+				api_utils.StripPrefix(base_path,
+					downloadFileStore([]string{"downloads"})),
+				acls.READ_RESULTS))))
 
 	// Serve notebook items
 	mux.Handle(api_utils.GetBasePath(config_obj, "/notebooks/"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
-				api_utils.StripPrefix(api_utils.GetBasePath(config_obj),
-					downloadFileStore([]string{"notebooks"}))))))
+				api_utils.StripPrefix(base_path,
+					downloadFileStore([]string{"notebooks"})),
+				acls.READ_RESULTS))))
 
 	// Serve files from hunt notebooks
 	mux.Handle(api_utils.GetBasePath(config_obj, "/hunts/"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
-				api_utils.StripPrefix(api_utils.GetBasePath(config_obj),
-					downloadFileStore([]string{"hunts"}))))))
+				api_utils.StripPrefix(base_path,
+					downloadFileStore([]string{"hunts"})),
+				acls.READ_RESULTS))))
 
 	// Serve files from client notebooks
 	mux.Handle(api_utils.GetBasePath(config_obj, "/clients/"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
-				api_utils.StripPrefix(api_utils.GetBasePath(config_obj),
-					downloadFileStore([]string{"clients"}))))))
+				api_utils.StripPrefix(base_path,
+					downloadFileStore([]string{"clients"})),
+				acls.READ_RESULTS))))
+
+	// Enable debug endpoints but only for users with ORG_ADMIN
+	// permission because the debug server currently exposes all orgs
+	// data.
+	mux.Handle(api_utils.GetBasePath(config_obj, "/debug/"),
+		ipFilter(config_obj, csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(
+				api_utils.StripPrefix(base_path,
+					debug_server.DebugMux(config_obj, base_path)),
+				acls.ORG_ADMIN))))
 
 	// Assets etc do not need auth.
 	install_static_assets(ctx, config_obj, mux)
@@ -206,7 +229,8 @@ func PrepareGUIMux(
 	}
 	mux.Handle(api_utils.GetBasePath(config_obj, "/app/index.html"),
 		ipFilter(config_obj,
-			csrfProtect(config_obj, auther.AuthenticateUserHandler(h))))
+			csrfProtect(config_obj,
+				auther.AuthenticateUserHandler(h, acls.READ_RESULTS))))
 
 	// Redirect everything else to the app
 	mux.Handle(api_utils.GetBaseDirectory(config_obj),

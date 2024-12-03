@@ -27,6 +27,7 @@ import (
 	context "golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -82,10 +83,12 @@ func (self *GitHubAuthenticator) AddLogoff(mux *api_utils.ServeMux) error {
 
 // Check that the user is proerly authenticated.
 func (self *GitHubAuthenticator) AuthenticateUserHandler(
-	parent http.Handler) http.Handler {
+	parent http.Handler,
+	permission acls.ACL_PERMISSION,
+) http.Handler {
 
 	return authenticateUserHandle(
-		self.config_obj,
+		self.config_obj, permission,
 		func(w http.ResponseWriter, r *http.Request, err error, username string) {
 			reject_with_username(self.config_obj, w, r, err, username,
 				utils.Join(self.base, "/auth/github/login"), "Github")
