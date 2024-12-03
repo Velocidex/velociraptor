@@ -372,6 +372,11 @@ func (self *ClientInfoManager) getClientTasks(
 
 		client_info_manager.Modify(ctx, client_id,
 			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+				if client_info == nil {
+					client_info = &services.ClientInfo{}
+					client_info.ClientId = client_id
+				}
+
 				client_info.HasTasks = true
 				return client_info, nil
 			})
