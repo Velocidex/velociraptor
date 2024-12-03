@@ -94,6 +94,14 @@ func OverrideFilestoreImplementation(
 	g_impl[org_id] = impl
 }
 
+// Used by tests to reset global state.
+func ClearGlobalFilestore() {
+	fs_mu.Lock()
+	defer fs_mu.Unlock()
+
+	g_impl = make(map[string]api.FileStore)
+}
+
 func SetGlobalFilestore(
 	implementation string,
 	config_obj *config_proto.Config) (err error) {
@@ -101,6 +109,11 @@ func SetGlobalFilestore(
 	defer fs_mu.Unlock()
 
 	org_id := utils.NormalizedOrgId(config_obj.OrgId)
+
+	if implementation == "clear" {
+		delete(g_impl, org_id)
+		return nil
+	}
 
 	// Nothing to update, the filestore is already set correctly.
 	current_impl, pres := g_impl[org_id]

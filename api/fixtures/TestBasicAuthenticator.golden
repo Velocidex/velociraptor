@@ -67,6 +67,14 @@
    " utils.StripPrefix",
    " api.downloadFileStore"
   ],
+  "/velociraptor/debug/": [
+   "authenticators.IpFilter",
+   " api.csrfProtect",
+   " GetLoggingHandler",
+   " authenticators.(*BasicAuthenticator).AuthenticateUserHandler",
+   " utils.StripPrefix",
+   " *server.debugMux"
+  ],
   "/velociraptor/downloads/": [
    "authenticators.IpFilter",
    " api.csrfProtect",
