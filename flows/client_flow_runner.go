@@ -268,6 +268,11 @@ func (self *ClientFlowRunner) removeInflightChecks(
 
 	return client_info_manager.Modify(ctx, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+			if client_info == nil {
+				client_info = &services.ClientInfo{}
+				client_info.ClientId = client_id
+			}
+
 			client_info.InFlightFlows = nil
 			return client_info, nil
 		})
@@ -525,6 +530,11 @@ func (self *ClientFlowRunner) FlowStats(
 		// so we dont schedule it again.
 		return client_info_manager.Modify(ctx, client_id,
 			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+				if client_info == nil {
+					client_info = &services.ClientInfo{}
+					client_info.ClientId = client_id
+				}
+
 				if client_info.InFlightFlows == nil {
 					client_info.InFlightFlows = make(map[string]int64)
 				}
@@ -538,6 +548,11 @@ func (self *ClientFlowRunner) FlowStats(
 
 	return client_info_manager.Modify(ctx, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+			if client_info == nil {
+				client_info = &services.ClientInfo{}
+				client_info.ClientId = client_id
+			}
+
 			if client_info.InFlightFlows == nil {
 				client_info.InFlightFlows = make(map[string]int64)
 			}
