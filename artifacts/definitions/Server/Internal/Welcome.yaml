@@ -20,6 +20,7 @@ reports:
       <div class="card col-10">
       <img src="./velo.svg" height="150">
       <div class="card-body">
+      {{ $X := Query "LET DebugLink <= link_to(type='debug')" | Expand }}
 
       # Welcome to Velociraptor!
 
