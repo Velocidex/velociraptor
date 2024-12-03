@@ -275,13 +275,6 @@ func (self *ReplicationService) Start(
 						// to the buffer file instead
 						// for later delivery.
 						_ = self.Buffer.Enqueue(request)
-
-						logger := logging.GetLogger(self.config_obj,
-							&logging.FrontendComponent)
-						logger.Error(
-							"<red>ReplicationService %v</> Error %v - will queue for later",
-							services.GetOrgName(self.config_obj), err)
-
 					}
 					closer()
 				}

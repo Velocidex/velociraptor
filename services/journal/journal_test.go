@@ -28,6 +28,9 @@ type JournalTestSuite struct {
 
 func (self *JournalTestSuite) SetupTest() {
 	var err error
+
+	file_store.ClearGlobalFilestore()
+
 	os.Setenv("VELOCIRAPTOR_CONFIG", test_utils.SERVER_CONFIG)
 	self.ConfigObj, err = new(config.Loader).
 		WithEnvLiteralLoader("VELOCIRAPTOR_CONFIG").WithRequiredFrontend().

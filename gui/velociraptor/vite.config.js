@@ -75,6 +75,11 @@ export default defineConfig({
           changeOrigin: true,
           secure: false,
         },
+        "/debug": {
+          target: "https://127.0.0.1:8889",
+          changeOrigin: true,
+          secure: false,
+        },
         "/notebooks": {
           target: "https://127.0.0.1:8889",
           changeOrigin: true,

@@ -11,6 +11,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/crewjam/saml/samlsp"
 	"github.com/gorilla/csrf"
+	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
@@ -111,7 +112,9 @@ func (self *SamlAuthenticator) AddLogoff(mux *api_utils.ServeMux) error {
 }
 
 func (self *SamlAuthenticator) AuthenticateUserHandler(
-	parent http.Handler) http.Handler {
+	parent http.Handler,
+	permission acls.ACL_PERMISSION,
+) http.Handler {
 
 	reject_handler := samlMiddleware.RequireAccount(parent)
 
@@ -199,7 +202,7 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 			}
 
 			// Does the user have access to the specified org?
-			err = CheckOrgAccess(self.config_obj, r, user_record)
+			err = CheckOrgAccess(self.config_obj, r, user_record, permission)
 			if err != nil {
 				services.LogAudit(r.Context(),
 					self.config_obj, username, "authorization failed: user not registered and no saml_user_roles set",

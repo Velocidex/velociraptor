@@ -20,6 +20,7 @@ reports:
       <div class="card col-10">
       <img src="./velo.svg" height="150">
       <div class="card-body">
+      {{ Query "LET DebugLink <= link_to(type='debug')" | Expand }}
 
       # Welcome to Velociraptor!
 
@@ -32,6 +33,7 @@ reports:
       * <a href="#/events/server/Server.Audit.Logs">Inspect Server Audit Log</a>
       * <a href="#/secrets">Manage Server Secrets</a>
       * <a href="#/artifacts/Server.Internal.Welcome">Customize this welcome screen</a>
+      * <a href="{{ Scope "DebugLink" }}">Debug the server</a>
 
       Or simply search for a client in the search bar above.
 

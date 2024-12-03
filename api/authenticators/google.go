@@ -32,6 +32,7 @@ import (
 	context "golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
@@ -101,13 +102,16 @@ func (self *GoogleAuthenticator) AuthRedirectTemplate() string {
 
 // Check that the user is proerly authenticated.
 func (self *GoogleAuthenticator) AuthenticateUserHandler(
-	parent http.Handler) http.Handler {
+	parent http.Handler,
+	permission acls.ACL_PERMISSION,
+) http.Handler {
 
 	return authenticateUserHandle(
 		self.config_obj,
+		permission,
 		func(w http.ResponseWriter, r *http.Request, err error, username string) {
-			reject_with_username(self.config_obj, w, r, err, username,
-				self.LoginURL(), self.ProviderName())
+			reject_with_username(self.config_obj, w, r, err,
+				username, self.LoginURL(), self.ProviderName())
 		},
 		parent)
 }
@@ -274,6 +278,7 @@ func installLogoff(config_obj *config_proto.Config, mux *api_utils.ServeMux) {
 
 func authenticateUserHandle(
 	config_obj *config_proto.Config,
+	permission acls.ACL_PERMISSION,
 	reject_cb func(w http.ResponseWriter, r *http.Request,
 		err error, username string),
 	parent http.Handler) http.Handler {
@@ -301,7 +306,7 @@ func authenticateUserHandle(
 			}
 
 			// Does the user have access to the specified org?
-			err = CheckOrgAccess(config_obj, r, user_record)
+			err = CheckOrgAccess(config_obj, r, user_record, permission)
 			if err != nil {
 				reject_cb(w, r, fmt.Errorf("Insufficient permissions: %v", err), user_record.Name)
 				return

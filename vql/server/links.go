@@ -17,7 +17,7 @@ import (
 )
 
 type LinkToFunctionArgs struct {
-	Type     string            `vfilter:"optional,field=type,doc=The type of link. Currently one of collection, hunt, artifact, event"`
+	Type     string            `vfilter:"optional,field=type,doc=The type of link. Currently one of collection, hunt, artifact, event, debug"`
 	ClientId string            `vfilter:"optional,field=client_id"`
 	FlowId   string            `vfilter:"optional,field=flow_id"`
 	Upload   *ordereddict.Dict `vfilter:"optional,field=upload,doc=Upload object for the file to upload (upload object is returned by the upload() function)"`
@@ -84,6 +84,17 @@ func (self *LinkToFunction) Call(ctx context.Context,
 	}
 
 	switch strings.ToLower(arg.Type) {
+	case "debug":
+		// The link is an API call to VFSDownloadInfo
+		url, err := utils.GetBaseURL(config_obj)
+		if err != nil {
+			scope.Log("link_to: %v", err)
+			return vfilter.Null{}
+		}
+
+		url.Path = path.Join(url.Path, "/debug/")
+		return formatURL(arg.Text, url, query, org)
+
 	case "upload":
 		components, pres := arg.Upload.GetStrings("Components")
 		if !pres {

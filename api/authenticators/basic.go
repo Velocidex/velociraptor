@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/gorilla/csrf"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
@@ -68,7 +69,9 @@ func (self *BasicAuthenticator) AuthRedirectTemplate() string {
 }
 
 func (self *BasicAuthenticator) AuthenticateUserHandler(
-	parent http.Handler) http.Handler {
+	parent http.Handler,
+	permission acls.ACL_PERMISSION,
+) http.Handler {
 
 	logger := GetLoggingHandler(self.config_obj)(parent)
 
@@ -113,7 +116,7 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 			}
 
 			// Does the user have access to the specified org?
-			err = CheckOrgAccess(self.config_obj, r, user_record)
+			err = CheckOrgAccess(self.config_obj, r, user_record, permission)
 			if err != nil {
 				services.LogAudit(r.Context(),
 					self.config_obj, user_record.Name, "User Unauthorized for Org",

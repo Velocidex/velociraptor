@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"www.velocidex.com/golang/velociraptor/acls"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
@@ -25,9 +26,11 @@ type Authenticator interface {
 	AddHandlers(mux *utils.ServeMux) error
 	AddLogoff(mux *utils.ServeMux) error
 
-	// Make sure the user is authenticated and has at least read
-	// access to the requested org.
-	AuthenticateUserHandler(parent http.Handler) http.Handler
+	// Make sure the user is authenticated and has the required
+	// permission access to the requested org. (usually this is
+	// acls.READ_RESULTS)
+	AuthenticateUserHandler(parent http.Handler,
+		permission acls.ACL_PERMISSION) http.Handler
 
 	IsPasswordLess() bool
 	RequireClientCerts() bool
