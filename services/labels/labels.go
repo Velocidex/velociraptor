@@ -2,7 +2,6 @@ package labels
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"sync"
 
@@ -200,7 +199,8 @@ func (self *Labeler) SetClientLabel(
 	err = client_info_manager.Modify(ctx, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if client_info == nil {
-				return nil, errors.New("ClientId not known")
+				client_info = &services.ClientInfo{}
+				client_info.ClientId = client_id
 			}
 
 			// Label is already set. O(n) but n should be small.
@@ -256,7 +256,8 @@ func (self *Labeler) RemoveClientLabel(
 	err = client_info_manager.Modify(ctx, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if client_info == nil {
-				return nil, errors.New("ClientId not known")
+				client_info = &services.ClientInfo{}
+				client_info.ClientId = client_id
 			}
 
 			new_labels := []string{}
