@@ -369,6 +369,13 @@ func mergeSecretElastic(ctx context.Context, scope vfilter.Scope, arg *_ElasticP
 			scope, secret_record.Data, field)
 	}
 
+	getIfUnset := func(field string, arg_value string) string {
+		if arg_value != "" {
+			return arg_value
+		}
+		return get(field)
+	}
+
 	get_bool := func(field string) bool {
 		return vql_subsystem.GetBoolFromString(vql_subsystem.GetStringFromRow(
 			scope, secret_record.Data, field))
@@ -389,16 +396,16 @@ func mergeSecretElastic(ctx context.Context, scope vfilter.Scope, arg *_ElasticP
 		return errors.New("No addresses present in elastic secret!")
 	}
 
-	arg.Index = get("index")
-	arg.Type = get("type")
+	arg.Index = getIfUnset("index", arg.Index)
+	arg.Type = getIfUnset("type", arg.Type)
 	arg.Username = get("username")
 	arg.Password = get("password")
 	arg.CloudID = get("cloud_id")
 	arg.APIKey = get("api_key")
-	arg.PipeLine = get("pipeline")
+	arg.PipeLine = getIfUnset("pipeline", arg.PipeLine)
 	arg.SkipVerify = get_bool("skip_verify")
 	arg.RootCerts = get("root_ca")
-	arg.Action = get("action")
+	arg.Action = getIfUnset("action", arg.PipeLine)
 
 	return nil
 }
