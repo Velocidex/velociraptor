@@ -2701,7 +2701,7 @@
     - `%x` will hex print the string.
     - `%T` will reveal the internal type of an object.
     - `%d` provides the decimal (base 10) representation.
-    - `%o` provides the octoal (base 8) representation.
+    - `%o` provides the octol (base 8) representation.
 
     If you are passing a single variable in the `args` argument then the array
     notation can be omitted. That is `args=my_var` can be specified instead
