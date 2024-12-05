@@ -15,9 +15,12 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"www.velocidex.com/golang/velociraptor/actions"
+	"www.velocidex.com/golang/velociraptor/api/authenticators"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/debug"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/golang"
 	"www.velocidex.com/golang/vfilter"
@@ -262,11 +265,29 @@ func (self *debugMux) HandleProfile(w http.ResponseWriter, r *http.Request) {
 }
 
 type debugMux struct {
-	config_obj *config_proto.Config
-	base       string
+	config_obj       *config_proto.Config
+	base             string
+	require_root_org bool
+}
+
+func (self *debugMux) RequireRootOrg() *debugMux {
+	self.require_root_org = true
+	return self
 }
 
 func (self *debugMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if self.require_root_org {
+		org_id := authenticators.GetOrgIdFromRequest(r)
+		if !utils.IsRootOrg(org_id) {
+			// Switch to the root org
+			url := r.URL
+			url.Path = api_utils.GetBasePath(self.config_obj, url.Path)
+			url.RawQuery = "org_id=root"
+			http.Redirect(w, r, url.String(), http.StatusTemporaryRedirect)
+			return
+		}
+	}
+
 	url_path := r.URL.Path
 	parts := strings.Split(strings.TrimPrefix(url_path, "/"), "/")
 	if len(parts) <= 1 {

@@ -204,15 +204,16 @@ func PrepareGUIMux(
 					downloadFileStore([]string{"clients"})),
 				acls.READ_RESULTS))))
 
-	// Enable debug endpoints but only for users with ORG_ADMIN
-	// permission because the debug server currently exposes all orgs
-	// data.
+	// Enable debug endpoints but only for users with SERVER_ADMIN on
+	// the root org, because the debug server currently exposes all
+	// org's data. The debug server requires access to the root org!
 	mux.Handle(api_utils.GetBasePath(config_obj, "/debug/"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				api_utils.StripPrefix(base_path,
-					debug_server.DebugMux(config_obj, base_path)),
-				acls.ORG_ADMIN))))
+					debug_server.DebugMux(config_obj, base_path).
+						RequireRootOrg()),
+				acls.SERVER_ADMIN))))
 
 	// Assets etc do not need auth.
 	install_static_assets(ctx, config_obj, mux)

@@ -867,6 +867,10 @@ Datastore:
   ## How long before a write is forced from the pool for delayed writes
   memcache_write_mutation_max_age: 1
 
+  ## Maximum amount of data cached in memory before we force it to be
+  ## flushed to disk. Default 100mb
+  memcache_write_max_memory: 100000000
+
   ## When using a master/minion setup it is necessary to have the
   ## Master and Minion nodes use different filesystem
   ## implementations. These more specific parameters can control
