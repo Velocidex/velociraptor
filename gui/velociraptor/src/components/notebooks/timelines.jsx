@@ -136,6 +136,7 @@ export class AddVQLCellToTimeline extends React.Component {
 
     fetchGlobalTimelines = ()=>{
         api.get("v1/GetNotebooks", {
+            include_timelines: true,
             count: 100,
             offset: 0,
         }, this.source.token).then(response=>{

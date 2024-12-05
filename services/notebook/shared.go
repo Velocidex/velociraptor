@@ -9,6 +9,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -37,41 +38,7 @@ func (self *NotebookManager) CheckNotebookAccess(
 // only needs to return a brief version of the notebooks - it does not
 // include uploads and timelines.
 func (self *NotebookManager) GetSharedNotebooks(
-	ctx context.Context, user string,
-	options result_sets.ResultSetOptions,
-	offset, count uint64) (
-	[]*api_proto.NotebookMetadata, error) {
-
-	result := []*api_proto.NotebookMetadata{}
-
-	err := self.buildNotebookIndex(ctx, user)
-	if err != nil {
-		return nil, err
-	}
-
-	all_notebooks, err := self.GetAllNotebooks()
-	if err != nil {
-		return nil, err
-	}
-	for _, notebook := range all_notebooks {
-		if !self.CheckNotebookAccess(notebook, user) {
-			continue
-		}
-
-		if !notebook.Hidden && notebook.NotebookId != "" {
-			result = append(result, notebook)
-		}
-	}
-
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].NotebookId < result[j].NotebookId
-	})
-
-	return result, nil
-}
-
-func (self *NotebookManager) buildNotebookIndex(
-	ctx context.Context, username string) error {
+	ctx context.Context, username string) (api.FSPathSpec, error) {
 
 	notebook_path_manager := paths.NewNotebookPathManager("")
 	file_store_factory := file_store.GetFileStore(self.config_obj)
@@ -80,7 +47,7 @@ func (self *NotebookManager) buildNotebookIndex(
 	stat, err := file_store_factory.StatFile(index_filename)
 
 	if err == nil && stat.ModTime().Unix() >= self.Store.Version() {
-		return nil
+		return index_filename, nil
 	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
@@ -91,13 +58,13 @@ func (self *NotebookManager) buildNotebookIndex(
 		json.DefaultEncOpts(), utils.SyncCompleter,
 		result_sets.TruncateMode)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer rs_writer.Close()
 
 	all_notebooks, err := self.GetAllNotebooks()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	sort.Slice(all_notebooks, func(i, j int) bool {
@@ -105,7 +72,7 @@ func (self *NotebookManager) buildNotebookIndex(
 	})
 
 	for _, notebook := range all_notebooks {
-		if notebook.Hidden ||
+		if notebook.Hidden || notebook.NotebookId == "" ||
 			!self.CheckNotebookAccess(notebook, username) {
 			continue
 		}
@@ -114,13 +81,13 @@ func (self *NotebookManager) buildNotebookIndex(
 			Set("NotebookId", notebook.NotebookId).
 			Set("Name", notebook.Name).
 			Set("Description", notebook.Description).
-			Set("Creation Time", time.Unix(0, notebook.CreatedTime)).
-			Set("Modified Time", time.Unix(0, notebook.ModifiedTime)).
+			Set("Creation Time", time.Unix(notebook.CreatedTime, 0)).
+			Set("Modified Time", time.Unix(notebook.ModifiedTime, 0)).
 			Set("Creator", notebook.Creator).
 			Set("Collaborators", notebook.Collaborators))
 	}
 
-	return nil
+	return index_filename, nil
 }
 
 func (self *NotebookManager) GetAllNotebooks() (
