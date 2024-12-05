@@ -420,7 +420,9 @@
     `file` accessor.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: backup
   description: Generates a backup file.
@@ -590,7 +592,9 @@
     that performance can be extremely bad in some cases.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: cache
   description: |
@@ -702,7 +706,9 @@
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: certificates
   description: |
@@ -1198,7 +1204,9 @@
     large for this file, we do not expand it).
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: collector_sparse
   description: |
@@ -1207,7 +1215,9 @@
     Same as the `collector` accessor but does not expand sparse files.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: column_filter
   description: |
@@ -1545,7 +1555,9 @@
     also accept a plain string (for example `parse_binary()`).
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: delay
   description: Executes 'query' and delays relaying the rows by the specified number
@@ -2098,7 +2110,9 @@
     ```
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: execve
   description: |
@@ -2263,7 +2277,9 @@
     ```
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: favorites_delete
   description: Delete a favorite.
@@ -2406,7 +2422,9 @@
     `/bin/ls` since `/bin` is a symlink to `/usr/bin/`
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: file_links
   description: |
@@ -2418,6 +2436,7 @@
     circular links to everywhere.
   type: Accessor
   platforms:
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: file_nocase
   description: |
@@ -2431,7 +2450,9 @@
     files.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: file_store
   description: |
@@ -2786,7 +2807,10 @@
     the "fs:" or "ds:" prefix.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: fs_sparse
   description: |
     Provide access to the server's filestore and datastore.
@@ -2795,7 +2819,10 @@
     will result in zeros being returned.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: gcs_pubsub_publish
   description: Publish a message to Google PubSub.
   type: Function
@@ -3298,7 +3325,9 @@
     that performance can be extremely bad in some cases.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: handles
   description: |
@@ -3774,7 +3803,10 @@
   metadata:
     permissions: READ_RESULTS
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: hunt_results
   description: |
     Retrieve the results of a hunt.
@@ -4399,6 +4431,8 @@
   type: Function
   platforms:
   - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: lazy_ntfs
   description: |
     Access the NTFS filesystem by parsing NTFS structures.
@@ -4413,6 +4447,7 @@
     `ntfs` accessor is pretty fast these days already.
   type: Accessor
   platforms:
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: len
   description: |
@@ -4503,7 +4538,8 @@
   args:
   - name: type
     type: string
-    description: The type of link. Currently one of collection, hunt, artifact, event
+    description: The type of link. Currently one of collection, hunt, artifact, event,
+      debug
   - name: client_id
     type: string
   - name: flow_id
@@ -4532,7 +4568,9 @@
     description: If set the link accesses a different org. Otherwise we accesses the
       current org.
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: log
   description: |
@@ -4597,7 +4635,6 @@
       string formatting syntax.
     - [alert](/vql_reference/misc/alert/): alerts are a special type of log
       message that are added to a server alerts queue, which can be monitored.
-
   type: Function
   version: 2
   args:
@@ -4703,6 +4740,8 @@
     description: 'A SID to lookup using LookupAccountSid '
     required: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
   - windows_386_cgo
@@ -4832,6 +4871,7 @@
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
+  - darwin_amd64_cgo
   - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
@@ -4984,7 +5024,9 @@
     Collector and is probably not generally useful.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: memoize
   description: |
@@ -5073,7 +5115,9 @@
     ```
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: min
   description: |
@@ -5265,7 +5309,9 @@
     Parse a MSCFB file as an archive.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: netcat
   description: Make a tcp connection and read data from a socket.
@@ -5307,6 +5353,7 @@
   metadata:
     permissions: MACHINE_STATE
   platforms:
+  - darwin_amd64_cgo
   - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
@@ -5430,7 +5477,9 @@
   metadata:
     permissions: COLLECT_SERVER
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: notebook_update_cell
   description: Update a notebook cell.
@@ -5529,6 +5578,7 @@
     See the `raw_ntfs` accessor for more information and comparisons.
   type: Accessor
   platforms:
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: ntfs_vss
   description: |
@@ -5543,6 +5593,7 @@
     the one of the main device (i.e. `\\.\C:`)
   type: Accessor
   platforms:
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: offset
   description: |
@@ -5567,7 +5618,9 @@
     partition from an image.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: olevba
   description: |
@@ -6808,7 +6861,9 @@
     it!
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: pipe
   description: |
@@ -7036,6 +7091,7 @@
   metadata:
     permissions: MACHINE_STATE
   platforms:
+  - darwin_amd64_cgo
   - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
@@ -7063,6 +7119,7 @@
     return nulls.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
   - windows_amd64_cgo
 - name: process_tracker
@@ -7286,8 +7343,7 @@
   args:
   - name: pid
     type: int64
-    description: A pid to list. If this is provided we are able to operate much faster
-      by only opening a single process.
+    description: A process ID to list. If not provided list all processes.
   category: plugin
   metadata:
     permissions: MACHINE_STATE
@@ -7508,7 +7564,9 @@
   description: Reconstruct sparse files from idx and base
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: rate
   description: |
@@ -7562,7 +7620,9 @@
 
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: raw_file
   description: |
@@ -7582,7 +7642,9 @@
     devices.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: raw_ntfs
   description: |
@@ -7634,7 +7696,9 @@
     platform.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: raw_reg
   description: |
@@ -7658,7 +7722,9 @@
     internal raw registry parser.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: read_crypto_file
   description: Read a previously stored encrypted local storage file.
@@ -7772,6 +7838,7 @@
   description: Access the registry like a filesystem using the OS APIs.
   type: Accessor
   platforms:
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: reg_rm_key
   description: Removes a key and all its values from the registry.
@@ -7881,6 +7948,7 @@
   description: Access the registry like a filesystem using the OS APIs.
   type: Accessor
   platforms:
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: rekey
   description: Causes the client to rekey and regenerate a new client ID. DANGEROUS!
@@ -8076,7 +8144,9 @@
     introduced in version 0.72 to manage these credentials.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: sample
   description: |
@@ -8124,7 +8194,9 @@
     ```
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: scope
   description: return the scope.
@@ -8418,7 +8490,9 @@
     description: The second set to compare.
     required: true
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: sleep
   description: Sleep for the specified number of seconds. Always returns true.
@@ -8491,7 +8565,9 @@
     in 0.72 to manage these credentials.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: source
   description: |
@@ -8595,7 +8671,9 @@
     For more flexibility than this use the "ranged" accessor.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: split
   description: Splits a string into an array based on a regexp separator.
@@ -8832,7 +8910,9 @@
     0.72 to manage these credentials.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: starl
   description: |
@@ -9178,7 +9258,9 @@
   metadata:
     permissions: NOTEBOOK_EDITOR
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: timelines
   description: List all timelines in a notebook
@@ -9190,7 +9272,9 @@
   metadata:
     permissions: READ_RESULTS
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: timestamp
   description: |
@@ -9367,7 +9451,9 @@
     description: A format specifier as per the Golang time.Format. Additionally any
       constants specified in https://pkg.go.dev/time#pkg-constants can be used.
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: tlsh_hash
   description: Calculate the tlsh hash of a file.
@@ -9501,7 +9587,11 @@
     - [format](/vql_reference/basic/format/)
   type: Function
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
+  free_form_args: true
 - name: unhex
   description: |
     Apply hex decoding to the string.
@@ -10148,7 +10238,9 @@
     type: string
     description: Set the user's default password for Zip Exports.
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: users
   description: Display information about workstation local users. This is obtained
@@ -10222,6 +10314,7 @@
     required: true
   category: windows
   platforms:
+  - darwin_amd64_cgo
   - darwin_arm64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
@@ -10284,7 +10377,9 @@
     to facilitate snapshotting of the VFS view in the GUI.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: vfs_ls
   description: |
@@ -10341,7 +10436,9 @@
 
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: vmdk
   description: |+
@@ -10373,7 +10470,10 @@
 
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: watch_auditd
   description: Watch log files generated by auditd.
   type: Plugin
@@ -10935,6 +11035,7 @@
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
+  - darwin_amd64_cgo
   - darwin_arm64_cgo
   - linux_amd64_cgo
   - windows_386_cgo
@@ -10966,8 +11067,10 @@
     type: bool
     description: Remove metadata to make rules smaller.
   platforms:
+  - darwin_amd64_cgo
   - darwin_arm64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: zip
   description: |
@@ -10988,7 +11091,9 @@
     ```
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 - name: zip_nocase
   description: |
@@ -11000,6 +11105,8 @@
     processing.
   type: Accessor
   platforms:
+  - darwin_amd64_cgo
   - linux_amd64_cgo
+  - windows_386_cgo
   - windows_amd64_cgo
 
