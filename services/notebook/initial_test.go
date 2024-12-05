@@ -87,6 +87,15 @@ sources:
 - notebook:
    - type: vql
      template: SELECT NotebookExport, ArtifactExport FROM scope()
+`, `
+name: NotebookWithSugegstions
+type: NOTEBOOK
+sources:
+- query: SELECT * FROM info()
+  notebook:
+  - name: A good suggestion.
+    type: vql_suggestion
+    template: SELECT * FROM info()
 `}
 
 type checker func(t *testing.T, response *artifacts_proto.Artifact, spec *flows_proto.ArtifactSpec)
@@ -255,6 +264,21 @@ var (
 				// Both exports should be visible.
 				AssertDictRegex(t, "NotebookExport", "Export", artifact)
 				AssertDictRegex(t, "ArtifactExport", "Export", artifact)
+			},
+		},
+		{
+			req: &api_proto.NotebookMetadata{
+				Name:        "Notebook with suggestions",
+				Description: "Adding a custom notebook with suggestion will add the default notebook",
+				Artifacts:   []string{"NotebookWithSugegstions"},
+			},
+			check: func(t *testing.T, artifact *artifacts_proto.Artifact,
+				spec *flows_proto.ArtifactSpec) {
+
+				AssertDictRegex(t, "A good suggestion", "Sources.0.Notebook.0.Name", artifact)
+				AssertDictRegex(t, "vql_suggestion", "Sources.0.Notebook.0.Type", artifact)
+				AssertDictRegex(t, "SELECT \\* FROM source", "Sources.0.Notebook.1.Template", artifact)
+				AssertDictRegex(t, "vql", "Sources.0.Notebook.1.Type", artifact)
 			},
 		},
 	}

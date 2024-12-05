@@ -96,6 +96,10 @@ type NotebookStoreImpl struct {
 	// Keep an in memory cache of all global notebooks.
 	mu               sync.Mutex
 	global_notebooks map[string]*api_proto.NotebookMetadata
+
+	// Keep the last time for a notebook deletion to ensure we update
+	// the version when a notebook is deleted.
+	last_deleted int64
 }
 
 func NewNotebookStore(
@@ -129,6 +133,8 @@ func NewNotebookStore(
 func (self *NotebookStoreImpl) Version() (res int64) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	res = self.last_deleted
 
 	for _, v := range self.global_notebooks {
 		if v.ModifiedTime > res {

@@ -272,7 +272,16 @@ func CalculateNotebookArtifact(
 			new_source := &artifacts_proto.ArtifactSource{}
 			res.Sources = append(res.Sources, new_source)
 
-			if len(s.Notebook) == 0 {
+			custom_cells := false
+			for _, n := range s.Notebook {
+				new_source.Notebook = append(new_source.Notebook, n)
+				switch strings.ToLower(n.Type) {
+				case "vql", "md", "markdown":
+					custom_cells = true
+				}
+			}
+
+			if !custom_cells {
 				// No notebook specified for this source, add a
 				// default.
 
@@ -307,9 +316,6 @@ LIMIT 50
 `, artifact_name, artifact_name),
 						})
 				}
-			} else {
-				new_source.Notebook = append(
-					new_source.Notebook, s.Notebook...)
 			}
 		}
 	}

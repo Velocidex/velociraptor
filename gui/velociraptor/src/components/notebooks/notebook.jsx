@@ -108,7 +108,6 @@ class Notebooks extends React.Component {
                   setSelectedNotebook={this.setSelectedNotebook}
                 />
                 <NotebookRenderer
-                  version={this.state.version}
                   updateVersion={this.updateVersion}
                   notebook={this.state.selected_notebook}
                 />

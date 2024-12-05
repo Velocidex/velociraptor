@@ -432,5 +432,41 @@
  "Notebook with exports Spec": {
   "artifact": "PrivateNotebook",
   "parameters": {}
+ },
+ "Notebook with suggestions Request": {
+  "name": "Notebook with suggestions",
+  "description": "Adding a custom notebook with suggestion will add the default notebook",
+  "artifacts": [
+   "NotebookWithSugegstions"
+  ]
+ },
+ "Notebook with suggestions Response": {
+  "name": "PrivateNotebook",
+  "parameters": [
+   {
+    "name": "ArtifactName",
+    "default": "NotebookWithSugegstions",
+    "description": "Name of the artifact this notebook came from."
+   }
+  ],
+  "sources": [
+   {
+    "notebook": [
+     {
+      "template": "SELECT * FROM info()",
+      "type": "vql_suggestion",
+      "name": "A good suggestion."
+     },
+     {
+      "template": "\n/*\n# NotebookWithSugegstions\n*/\nSELECT * FROM source(artifact=\"NotebookWithSugegstions\")\nLIMIT 50\n",
+      "type": "vql"
+     }
+    ]
+   }
+  ]
+ },
+ "Notebook with suggestions Spec": {
+  "artifact": "PrivateNotebook",
+  "parameters": {}
  }
 }

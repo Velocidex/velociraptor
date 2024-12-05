@@ -109,7 +109,7 @@ export default class HuntNotebook extends React.Component {
                      hunt_id: hunt_id,
                  }}
                  notebook={this.state.notebook}
-                 fetchNotebooks={this.fetchNotebooks}
+                 updateVersion={this.fetchNotebooks}
                />
               }
             </>

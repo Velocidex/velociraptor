@@ -123,7 +123,7 @@ export default class EventNotebook extends React.Component {
                  <Spinner loading={this.state.loading } />
                  <NotebookRenderer
                    notebook={this.state.notebook}
-                   fetchNotebooks={this.fetchNotebooks}
+                   updateVersion={this.fetchNotebooks}
                  />
                </>;
     }
