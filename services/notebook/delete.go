@@ -43,6 +43,7 @@ func (self *NotebookStoreImpl) DeleteNotebook(ctx context.Context,
 		// Also remove it from our local cache.
 		self.mu.Lock()
 		delete(self.global_notebooks, notebook_id)
+		self.last_deleted = utils.GetTime().Now().Unix()
 		self.mu.Unlock()
 	}
 

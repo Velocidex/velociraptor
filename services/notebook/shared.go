@@ -68,7 +68,7 @@ func (self *NotebookManager) GetSharedNotebooks(
 	}
 
 	sort.Slice(all_notebooks, func(i, j int) bool {
-		return all_notebooks[i].NotebookId < all_notebooks[j].NotebookId
+		return all_notebooks[i].NotebookId > all_notebooks[j].NotebookId
 	})
 
 	for _, notebook := range all_notebooks {

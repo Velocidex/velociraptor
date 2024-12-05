@@ -12,9 +12,6 @@ import NotebooksList from './notebooks-list.jsx';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 
-const PAGE_SIZE = 100;
-
-
 export default class CopyCellToNotebookDialog extends Component {
     static propTypes = {
         closeDialog: PropTypes.func.isRequired,

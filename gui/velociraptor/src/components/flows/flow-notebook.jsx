@@ -124,7 +124,7 @@ export default class FlowNotebook extends React.Component {
                      flow_id: flow_id,
                  }}
                  notebook={this.state.notebook}
-                 fetchNotebooks={this.fetchNotebooks}
+                 updateVersion={this.fetchNotebooks}
                />
               }
             </>

@@ -30,7 +30,6 @@ var (
 		"Client.version",
 		"Client.server_version",
 		"Client.local_buffer.filename",
-		"Datastore.memcache_write_max_memory",
 		"GUI.internal_cidr",
 		"GUI.vpn_cidr",
 		"GUI.authenticator.sub_authenticators",

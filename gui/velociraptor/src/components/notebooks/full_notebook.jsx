@@ -93,7 +93,6 @@ class FullScreenNotebook extends React.Component {
               </Navbar>
               <div className="fill-parent no-margins selectable">
                 <NotebookRenderer
-                  version={this.state.version}
                   updateVersion={this.updateVersion}
                   notebook={this.state.selected_notebook}
                 />
