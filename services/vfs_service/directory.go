@@ -269,7 +269,7 @@ func (self *VFSService) ListDirectoryFiles(
 	table_request.FlowId = stat.FlowId
 
 	// Get the table possibly applying any table transformations.
-	result, err := tables.GetTable(ctx, config_obj, table_request)
+	result, err := tables.GetTable(ctx, config_obj, table_request, "")
 	if err != nil {
 		return nil, err
 	}

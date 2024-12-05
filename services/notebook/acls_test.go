@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -81,7 +82,10 @@ func (self *ACLTestSuite) TestNotebookPublicACL() {
 	var notebooks []*api_proto.NotebookMetadata
 
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		notebooks, err = notebook_manager.GetSharedNotebooks(self.Sm.Ctx, "User1", 0, 100)
+		notebooks, err = notebook_manager.GetSharedNotebooks(
+			self.Sm.Ctx, "User1",
+			result_sets.ResultSetOptions{},
+			0, 100)
 		assert.NoError(self.T(), err)
 
 		return 1 == len(notebooks)

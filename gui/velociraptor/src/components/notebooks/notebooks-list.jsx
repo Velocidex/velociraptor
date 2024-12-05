@@ -20,7 +20,8 @@ import { withRouter }  from "react-router-dom";
 import T from '../i8n/i8n.jsx';
 
 import { NewNotebook, EditNotebook } from './new-notebook.jsx';
-import VeloTable, { getFormatter } from "../core/table.jsx";
+import { getFormatter } from "../core/table.jsx";
+import VeloPagedTable from "../core/paged-table.jsx";
 
 class DeleteNotebook extends React.Component {
     static propTypes = {
@@ -77,10 +78,10 @@ class DeleteNotebook extends React.Component {
 
 class NotebooksList extends React.Component {
     static propTypes = {
-        notebooks: PropTypes.array,
+        updateVersion: PropTypes.func.isRequired,
+        version: PropTypes.number,
         selected_notebook: PropTypes.object,
         setSelectedNotebook: PropTypes.func.isRequired,
-        fetchNotebooks: PropTypes.func.isRequired,
         hideToolbar: PropTypes.bool,
 
         // React router props.
@@ -104,24 +105,19 @@ class NotebooksList extends React.Component {
         }
     }
 
-    render() {
-        let columns = ["notebook_id", "name", "description",
-                       "created_time",  "modified_time","creator",
-                       "collaborators"];
-        let header_renderers = {
-            notebook_id: T("NotebookId"),
-            name: T("Name"),
-            description: T("Description"),
-            created_time: T("Creation Time"),
-            modified_time: T("Modified Time"),
-            creator:  T("Creator"),
-            collaborators: T("Collaborators"),
-        };
+    componentDidMount = () => {
+        this.source = CancelToken.source();
+    }
 
+    componentWillUnmount() {
+        this.source.cancel();
+    }
+
+    render() {
         let column_renderers = {
-            created_time: getFormatter("timestamp"),
-            modified_time: getFormatter("timestamp"),
-            collaborators: (cell, row) => {
+            "Creation Time": getFormatter("timestamp"),
+            "Modified Time": getFormatter("timestamp"),
+            "Collaborators": (cell, row) => {
                  return _.map(cell, function(item, idx) {
                      return <div key={idx}>{item}</div>;
                  });
@@ -131,13 +127,14 @@ class NotebooksList extends React.Component {
         let selected_notebook = this.props.selected_notebook &&
             this.props.selected_notebook.notebook_id;
 
+
         return (
             <>
               { this.state.showDeleteNotebookDialog &&
                 <DeleteNotebook
                   notebook={this.props.selected_notebook}
                   updateNotebooks={()=>{
-                      this.props.fetchNotebooks();
+                      this.props.updateVersion();
                       this.setState({showDeleteNotebookDialog: false});
                   }}
                   closeDialog={() => this.setState({showDeleteNotebookDialog: false})}
@@ -146,7 +143,7 @@ class NotebooksList extends React.Component {
               { this.state.showNewNotebookDialog &&
                 <NewNotebook
                   updateNotebooks={()=>{
-                      this.props.fetchNotebooks();
+                      this.props.updateVersion();
                       this.setState({showNewNotebookDialog: false});
                   }}
                   closeDialog={() => this.setState({showNewNotebookDialog: false})}
@@ -156,7 +153,7 @@ class NotebooksList extends React.Component {
                 <EditNotebook
                   notebook={this.props.selected_notebook}
                   updateNotebooks={()=>{
-                      this.props.fetchNotebooks();
+                      this.props.updateVersion();
                       this.setState({showEditNotebookDialog: false});
                   }}
                   closeDialog={() => this.setState({showEditNotebookDialog: false})}
@@ -231,21 +228,19 @@ class NotebooksList extends React.Component {
                 </Navbar>
               }
               <div className="fill-parent no-margins toolbar-margin selectable">
-                {_.isEmpty(this.props.notebooks) ?
-                 <div className="no-content">
-                   {T("No notebooks available - create one first")}
-                 </div> :
-                 <VeloTable
-                   rows={this.props.notebooks}
-                   columns={columns}
-                   column_renderers={column_renderers}
-                   header_renderers={header_renderers}
-                   onSelect={(row, idx)=>{
-                       this.props.setSelectedNotebook(row);
-                   }}
-                   selected={row=>row.notebook_id === selected_notebook}
-                 />
-                }
+                <VeloPagedTable
+                  params={{type: "NOTEBOOKS"}}
+                  name="Notebooks"
+                  showStackDialog={false}
+                  version={{version: this.props.version}}
+                  renderers={column_renderers}
+                  no_spinner={true}
+                  selectRow={{
+                      onSelect: (row, idx)=>{
+                          this.props.setSelectedNotebook(row.NotebookId);
+                      }}}
+                  selected={row=>row.NotebookId === selected_notebook}
+                />
               </div>
             </>
         );

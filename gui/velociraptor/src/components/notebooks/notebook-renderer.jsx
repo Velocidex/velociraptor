@@ -13,7 +13,7 @@ export default class NotebookRenderer extends React.Component {
     static propTypes = {
         env: PropTypes.object,
         notebook: PropTypes.object,
-        fetchNotebooks: PropTypes.func,
+        updateVersion: PropTypes.func.isRequired,
     };
 
     state = {
@@ -64,11 +64,11 @@ export default class NotebookRenderer extends React.Component {
             api.post('v1/UpdateNotebook', notebook,
                      this.source.token).then(response=>{
                          if (response.cancel) return;
-                         this.props.fetchNotebooks();
+                         this.props.updateVersion();
                          this.setState({loading: false});
                      }).catch(e=> {
                          this.setState({loading: false});
-                         this.props.fetchNotebooks();
+                         this.props.updateVersion();
                      });
         }
     };
@@ -99,11 +99,11 @@ export default class NotebookRenderer extends React.Component {
                      this.source.token).then(response=>{
                          if (response.cancel) return;
 
-                         this.props.fetchNotebooks();
+                         this.props.updateVersion();
                          this.setState({loading: false});
                      }).catch(e=>{
                          this.setState({loading: false});
-                         this.props.fetchNotebooks();
+                         this.props.updateVersion();
                      });
         }
     };
@@ -134,11 +134,11 @@ export default class NotebookRenderer extends React.Component {
             api.post('v1/UpdateNotebook', notebook,
                      this.source.token).then(response=>{
                          if (response.cancel) return;
-                         this.props.fetchNotebooks();
+                         this.props.updateVersion();
                          this.setState({loading: false});
                      }).catch(e=>{
                          this.setState({loading: false});
-                         this.props.fetchNotebooks();
+                         this.props.updateVersion();
                      });
         }
     };
@@ -165,7 +165,7 @@ export default class NotebookRenderer extends React.Component {
                  request,
                  this.source.token).then((response) => {
                      if (response.cancel) return;
-                     this.props.fetchNotebooks();
+                     this.props.updateVersion();
                      this.setState({selected_cell_id: response.data.latest_cell_id,
                                     loading: false});
                  });
@@ -189,7 +189,7 @@ export default class NotebookRenderer extends React.Component {
                            notebook_id={this.props.notebook.notebook_id}
                            notebook_metadata={this.props.notebook}
                            cell_metadata={cell_md} key={idx}
-                           fetchNotebooks={this.props.fetchNotebooks}
+                           updateVersion={this.props.updateVersion}
                            upCell={this.upCell}
                            downCell={this.downCell}
                            deleteCell={this.deleteCell}

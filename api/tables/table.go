@@ -44,27 +44,29 @@ import (
 func GetTable(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	in *api_proto.GetTableRequest) (
+	in *api_proto.GetTableRequest,
+	principal string) (
 	*api_proto.GetTableResponse, error) {
 
 	var result *api_proto.GetTableResponse
 	var err error
 
 	// We want an event table.
-	if in.Type == "TIMELINE" {
+	switch in.Type {
+	case "TIMELINE":
 		result, err = getTimeline(ctx, config_obj, in)
 
-	} else if in.Type == "CLIENT_EVENT_LOGS" || in.Type == "SERVER_EVENT_LOGS" {
+	case "CLIENT_EVENT_LOGS", "SERVER_EVENT_LOGS":
 		result, err = getEventTableLogs(ctx, config_obj, in)
 
-	} else if in.Type == "CLIENT_EVENT" || in.Type == "SERVER_EVENT" {
+	case "CLIENT_EVENT", "SERVER_EVENT":
 		result, err = getEventTable(ctx, config_obj, in)
 
-	} else if in.Type == "STACK" {
+	case "STACK":
 		result, err = getStackTable(ctx, config_obj, in)
 
-	} else {
-		result, err = getTable(ctx, config_obj, in)
+	default:
+		result, err = getTable(ctx, config_obj, in, principal)
 	}
 
 	if err != nil {
@@ -95,7 +97,8 @@ func GetTable(
 func getTable(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	in *api_proto.GetTableRequest) (
+	in *api_proto.GetTableRequest,
+	principal string) (
 	*api_proto.GetTableResponse, error) {
 
 	if in.Rows == 0 {
@@ -106,7 +109,7 @@ func getTable(
 		ColumnTypes: getColumnTypes(ctx, config_obj, in),
 	}
 
-	path_spec, err := GetPathSpec(ctx, config_obj, in)
+	path_spec, err := GetPathSpec(ctx, config_obj, in, principal)
 	if err != nil {
 		return result, err
 	}
@@ -267,10 +270,15 @@ func getColumnTypes(
 // stored.
 func GetPathSpec(
 	ctx context.Context, config_obj *config_proto.Config,
-	in *api_proto.GetTableRequest) (api.FSPathSpec, error) {
+	in *api_proto.GetTableRequest, principal string) (api.FSPathSpec, error) {
 
 	if in.Type == "CLIENT_FLOWS" && in.ClientId != "" {
 		return paths.NewClientPathManager(in.ClientId).FlowIndex(), nil
+	}
+
+	if in.Type == "NOTEBOOKS" {
+		return paths.NewNotebookPathManager("").
+			NotebookIndexForUser(principal), nil
 	}
 
 	if in.FlowId != "" && in.Artifact != "" {

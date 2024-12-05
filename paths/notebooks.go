@@ -44,6 +44,12 @@ func (self *NotebookPathManager) NotebookDirectory() api.FSPathSpec {
 		AsFilestorePath().SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
+func (self *NotebookPathManager) NotebookIndexForUser(
+	username string) api.FSPathSpec {
+	return self.root.AddChild("indexes", username).
+		AsFilestorePath().SetType(api.PATH_TYPE_FILESTORE_JSON)
+}
+
 // Notebook paths are based on the time so we need to write the stats
 // next to the container and derive the path from the previous
 // filename.

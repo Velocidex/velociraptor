@@ -374,7 +374,8 @@ func filterData(reader_at io.ReaderAt,
 func getRows(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	request *api_proto.GetTableRequest) (
+	request *api_proto.GetTableRequest,
+	principal string) (
 	rows <-chan *ordereddict.Dict, close func(),
 	log_path api.FSPathSpec, err error) {
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -399,7 +400,8 @@ func getRows(
 		return rs_reader.Rows(ctx), rs_reader.Close, log_path, err
 
 	} else {
-		log_path, err := tables.GetPathSpec(ctx, config_obj, request)
+		log_path, err := tables.GetPathSpec(
+			ctx, config_obj, request, principal)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -585,8 +587,17 @@ func downloadTable() http.Handler {
 				return
 			}
 
+			user_record := GetUserInfo(r.Context(), org_config_obj)
+			principal := user_record.Name
+
+			// This should never happen!
+			if principal == "" {
+				returnError(w, 403, "Unauthenticated access.")
+				return
+			}
+
 			row_chan, closer, log_path, err := getRows(
-				r.Context(), org_config_obj, request)
+				r.Context(), org_config_obj, request, principal)
 			if err != nil {
 				returnError(w, 400, "Invalid request")
 				return
@@ -598,16 +609,6 @@ func downloadTable() http.Handler {
 			download_name := request.DownloadFilename
 			if download_name == "" {
 				download_name = strings.Replace(log_path.Base(), "\"", "", -1)
-			}
-
-			// Log an audit event.
-			user_record := GetUserInfo(r.Context(), org_config_obj)
-			principal := user_record.Name
-
-			// This should never happen!
-			if principal == "" {
-				returnError(w, 403, "Unauthenticated access.")
-				return
 			}
 
 			permissions := acls.READ_RESULTS

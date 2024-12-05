@@ -22,7 +22,10 @@ class _UserSettings extends React.Component {
     }
 
     updateTraits = () => {
-        api.get("v1/GetUserUITraits", {}, this.source.token).then((response) => {
+        this.source.cancel("unmounted");
+        this.source = CancelToken.source();
+        api.get("v1/GetUserUITraits", {},
+                this.source.token).then((response) => {
             let traits = response.data.interface_traits;
             if (_.isUndefined(traits)) {
                 return;

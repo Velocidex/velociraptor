@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql/server/notebooks"
 )
@@ -86,7 +87,8 @@ func (self *ApiServer) GetNotebooks(
 	// This is only called for global notebooks because client and
 	// hunt notebooks always specify the exact notebook id.
 	notebooks, err := notebook_manager.GetSharedNotebooks(ctx,
-		principal, in.Offset, in.Count)
+		principal, result_sets.ResultSetOptions{},
+		in.Offset, in.Count)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
