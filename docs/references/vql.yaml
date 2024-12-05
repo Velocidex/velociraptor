@@ -1778,30 +1778,6 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
-- name: dns
-  description: |
-    Monitor dns queries.
-
-    This plugin opens a raw socket and monitors network traffic for
-    DNS questions and answers.
-
-    {{% notice note %}}
-
-    When Velociraptor attempts to open a raw socket, sometimes Windows
-    Defender treats that as suspicious behavior and quarantines the
-    Velociraptor binary. This can be avoided by signing the binary which
-    signals to Windows Defender that the binary is legitimate.
-
-    If you do not intend to build Velociraptor from source, use the
-    official signed Velociraptor binaries which should not trigger alerts
-    from Windows Defender.
-
-    {{% /notice %}}
-
-    It is generally better to use ETW for DNS monitoring than this
-    plugin (see Windows.Events.DNSQueries)
-  type: Plugin
-  category: windows
 - name: ebpf_events
   description: |
     Dumps information about potential ebpf_events that can be used by the
@@ -3210,29 +3186,6 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
-- name: grep
-  description: |
-    Search a file for keywords.
-
-    DEPRECATED: Use `yara()` instead.
-  type: Function
-  args:
-  - name: path
-    type: string
-    description: path to open.
-    required: true
-  - name: accessor
-    type: string
-    description: An accessor to use.
-  - name: keywords
-    type: string
-    description: Keywords to search for.
-    repeated: true
-    required: true
-  - name: context
-    type: int
-    description: Extract this many bytes as context around hits.
-  category: plugin
 - name: grok
   description: |
     Parse a string using a Grok expression.
@@ -7354,14 +7307,6 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: query
-  description: Launch a subquery and materialize it into a list of rows.
-  type: Function
-  args:
-  - name: vql
-    type: vfilter.StoredQuery
-    required: true
-  category: basic
-- name: query
   description: |
     Evaluate a VQL query.
 
@@ -9714,30 +9659,6 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
-- name: upload
-  description: |
-    Upload files to the server.
-
-    This plugin uploads the specified file to the server. If Velociraptor
-    is run locally the file will be copied to the `--dump_dir` path or
-    added to the triage evidence container.
-
-    This functionality is also available using the upload() function which
-    might be somewhat easier to use.
-  type: Plugin
-  args:
-  - name: files
-    type: string
-    description: A list of files to upload
-    repeated: true
-    required: true
-  - name: accessor
-    type: string
-    description: The accessor to use
-  - name: mtime
-    type: Any
-    description: Modified time to record
-  category: plugin
 - name: upload_azure
   description: Upload files to Azure Blob Storage Service.
   type: Function
