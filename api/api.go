@@ -672,7 +672,7 @@ func (self *ApiServer) GetTable(
 			"User is not allowed to view results.")
 	}
 
-	result, err := tables.GetTable(ctx, org_config_obj, in)
+	result, err := tables.GetTable(ctx, org_config_obj, in, principal)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}

@@ -187,7 +187,7 @@ export default class NotebookCellRenderer extends React.Component {
         addCell: PropTypes.func,
 
         // Causes the notebooks to be refreshed
-        fetchNotebooks: PropTypes.func,
+        updateVersion: PropTypes.func,
     };
 
     state = {
@@ -500,7 +500,7 @@ export default class NotebookCellRenderer extends React.Component {
 
             };
         }).catch(response=>{
-            this.props.fetchNotebooks();
+            this.props.updateVersion();
         });
     };
 
@@ -520,7 +520,7 @@ export default class NotebookCellRenderer extends React.Component {
             }
 
             // Refresh the notebook with the current cell version.
-            this.props.fetchNotebooks();
+            this.props.updateVersion();
         });
     }
 

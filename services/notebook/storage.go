@@ -84,6 +84,10 @@ type NotebookStore interface {
 	DeleteNotebook(ctx context.Context,
 		notebook_id string, progress chan vfilter.Row,
 		really_do_it bool) error
+
+	// The latest time of all the global notebooks. Used to work out
+	// if we need to rebuild the notebook index.
+	Version() int64
 }
 
 type NotebookStoreImpl struct {
@@ -120,6 +124,18 @@ func NewNotebookStore(
 	}()
 
 	return result, result.syncAllNotebooks()
+}
+
+func (self *NotebookStoreImpl) Version() (res int64) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for _, v := range self.global_notebooks {
+		if v.ModifiedTime > res {
+			res = v.ModifiedTime
+		}
+	}
+	return res
 }
 
 func (self *NotebookStoreImpl) SetNotebook(in *api_proto.NotebookMetadata) error {

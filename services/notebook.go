@@ -7,6 +7,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -43,7 +44,9 @@ type NotebookManager interface {
 		*api_proto.NotebookMetadata, error)
 
 	GetSharedNotebooks(ctx context.Context,
-		username string, offset, count uint64) ([]*api_proto.NotebookMetadata, error)
+		username string,
+		options result_sets.ResultSetOptions,
+		offset, count uint64) ([]*api_proto.NotebookMetadata, error)
 
 	GetAllNotebooks() ([]*api_proto.NotebookMetadata, error)
 

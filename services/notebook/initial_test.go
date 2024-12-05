@@ -71,6 +71,22 @@ sources:
   - type: vql
     template: |
        SELECT Arg1 FROM scope()
+`, `
+name: ArtifactWithExport
+type: CLIENT
+export: |
+   LET ArtifactExport = 1
+`, `
+name: NotebookWithImport
+type: NOTEBOOK
+imports:
+- ArtifactWithExport
+export: |
+  LET NotebookExport = 2
+sources:
+- notebook:
+   - type: vql
+     template: SELECT NotebookExport, ArtifactExport FROM scope()
 `}
 
 type checker func(t *testing.T, response *artifacts_proto.Artifact, spec *flows_proto.ArtifactSpec)
@@ -226,6 +242,19 @@ var (
 				AssertDictRegex(t, "FirstParameter", "Parameters.Env.0.Key", spec)
 				AssertDictRegex(t, "2021-11", "Parameters.Env.0.Value", spec)
 
+			},
+		},
+		{
+			req: &api_proto.NotebookMetadata{
+				Name:      "Notebook with exports",
+				Artifacts: []string{"NotebookWithImport"},
+			},
+			check: func(t *testing.T, artifact *artifacts_proto.Artifact,
+				spec *flows_proto.ArtifactSpec) {
+
+				// Both exports should be visible.
+				AssertDictRegex(t, "NotebookExport", "Export", artifact)
+				AssertDictRegex(t, "ArtifactExport", "Export", artifact)
 			},
 		},
 	}

@@ -401,5 +401,36 @@
     }
    ]
   }
+ },
+ "Notebook with exports Request": {
+  "name": "Notebook with exports",
+  "artifacts": [
+   "NotebookWithImport"
+  ]
+ },
+ "Notebook with exports Response": {
+  "name": "PrivateNotebook",
+  "parameters": [
+   {
+    "name": "ArtifactName",
+    "default": "NotebookWithImport",
+    "description": "Name of the artifact this notebook came from."
+   }
+  ],
+  "sources": [
+   {
+    "notebook": [
+     {
+      "template": "SELECT NotebookExport, ArtifactExport FROM scope()",
+      "type": "vql"
+     }
+    ]
+   }
+  ],
+  "export": "LET NotebookExport = 2\nLET ArtifactExport = 1\n"
+ },
+ "Notebook with exports Spec": {
+  "artifact": "PrivateNotebook",
+  "parameters": {}
  }
 }

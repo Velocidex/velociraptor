@@ -196,7 +196,9 @@ func CalculateNotebookArtifact(
 	}
 
 	// This is a psuedo artifact used to build the notebook.
-	res := &artifacts_proto.Artifact{}
+	res := &artifacts_proto.Artifact{
+		Name: "PrivateNotebook",
+	}
 
 	// Check if the psuedo artifact is already cached.
 	db, err := datastore.GetDB(config_obj)
@@ -218,8 +220,6 @@ func CalculateNotebookArtifact(
 	defer db.SetSubject(config_obj, notebook_path_manager.Artifact(), res)
 
 	// Now build the psuedo artifact.
-	res.Name = "PrivateNotebook"
-
 	seen := make(map[string]bool)
 	seen_tools := make(map[string]bool)
 
@@ -228,6 +228,24 @@ func CalculateNotebookArtifact(
 		if !pres {
 			return nil, nil, fmt.Errorf("Artifact not found: %v: %w",
 				artifact_name, utils.NotFoundError)
+		}
+
+		// Copy out all the exports from the artifact
+		res.Export += artifact.Export
+
+		// Resolve any imports - expand their export directly into the
+		// psuedo artifact's export section because it will be
+		// compiled in a private repository, so wont be able to see
+		// the imported artifact definitions.
+		for _, imp := range artifact.Imports {
+			dep, pres := global_repository.Get(ctx, config_obj, imp)
+			if !pres {
+				return nil, nil, fmt.Errorf(
+					"Artifact %v imports artifact %v which is not known",
+					artifact_name, imp)
+			}
+
+			res.Export += dep.Export
 		}
 
 		// Copy out all the tools
