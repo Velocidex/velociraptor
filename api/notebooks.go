@@ -13,7 +13,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql/server/notebooks"
 )
@@ -29,6 +28,10 @@ func (self *ApiServer) GetNotebooks(
 	in *api_proto.NotebookCellRequest) (*api_proto.Notebooks, error) {
 
 	defer Instrument("GetNotebooks")()
+
+	if in.NotebookId == "" {
+		return nil, Status(self.verbose, errors.New("NotebookId must be specified"))
+	}
 
 	// Empty creators are called internally.
 	users := services.GetUserManager()
@@ -51,49 +54,34 @@ func (self *ApiServer) GetNotebooks(
 		return nil, Status(self.verbose, err)
 	}
 
-	// We want a single notebook metadata.
-	if in.NotebookId != "" {
-		notebook_metadata, err := notebook_manager.GetNotebook(
-			ctx, in.NotebookId, in.IncludeUploads)
-		// Handle the EOF especially: it means there is no such
-		// notebook and return an empty result set.
-		if errors.Is(err, os.ErrNotExist) ||
-			(notebook_metadata != nil && notebook_metadata.NotebookId == "") {
-			return result, nil
-		}
-
-		if err != nil {
-			logging.GetLogger(
-				org_config_obj, &logging.FrontendComponent).
-				Error("Unable to open notebook: %v", err)
-			return nil, Status(self.verbose, err)
-		}
-
-		// Document not owned or collaborated with.
-		if !notebook_manager.CheckNotebookAccess(notebook_metadata, principal) {
-			services.LogAudit(ctx,
-				org_config_obj, principal, "notebook not shared.",
-				ordereddict.NewDict().
-					Set("action", "Access Denied").
-					Set("notebook", in.NotebookId))
-
-			return nil, InvalidStatus("User has no access to this notebook")
-		}
-
-		result.Items = append(result.Items, notebook_metadata)
+	notebook_metadata, err := notebook_manager.GetNotebook(
+		ctx, in.NotebookId, in.IncludeUploads)
+	// Handle the EOF especially: it means there is no such
+	// notebook and return an empty result set.
+	if errors.Is(err, os.ErrNotExist) ||
+		(notebook_metadata != nil && notebook_metadata.NotebookId == "") {
 		return result, nil
 	}
 
-	// This is only called for global notebooks because client and
-	// hunt notebooks always specify the exact notebook id.
-	notebooks, err := notebook_manager.GetSharedNotebooks(ctx,
-		principal, result_sets.ResultSetOptions{},
-		in.Offset, in.Count)
 	if err != nil {
+		logging.GetLogger(
+			org_config_obj, &logging.FrontendComponent).
+			Error("Unable to open notebook: %v", err)
 		return nil, Status(self.verbose, err)
 	}
 
-	result.Items = notebooks
+	// Document not owned or collaborated with.
+	if !notebook_manager.CheckNotebookAccess(notebook_metadata, principal) {
+		services.LogAudit(ctx,
+			org_config_obj, principal, "notebook not shared.",
+			ordereddict.NewDict().
+				Set("action", "Access Denied").
+				Set("notebook", in.NotebookId))
+
+		return nil, InvalidStatus("User has no access to this notebook")
+	}
+
+	result.Items = append(result.Items, notebook_metadata)
 	return result, nil
 }
 

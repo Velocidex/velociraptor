@@ -7,7 +7,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -40,13 +40,13 @@ type TimelineReader interface {
 }
 
 type NotebookManager interface {
-	GetNotebook(ctx context.Context, notebook_id string, include_uploads bool) (
-		*api_proto.NotebookMetadata, error)
+	GetNotebook(ctx context.Context,
+		notebook_id string,
+		include_uploads bool) (*api_proto.NotebookMetadata, error)
 
-	GetSharedNotebooks(ctx context.Context,
-		username string,
-		options result_sets.ResultSetOptions,
-		offset, count uint64) ([]*api_proto.NotebookMetadata, error)
+	GetSharedNotebooks(
+		ctx context.Context,
+		username string) (api.FSPathSpec, error)
 
 	GetAllNotebooks() ([]*api_proto.NotebookMetadata, error)
 

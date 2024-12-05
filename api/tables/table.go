@@ -65,6 +65,9 @@ func GetTable(
 	case "STACK":
 		result, err = getStackTable(ctx, config_obj, in)
 
+	case "NOTEBOOKS":
+		result, err = getNotebookTable(ctx, config_obj, in, principal)
+
 	default:
 		result, err = getTable(ctx, config_obj, in, principal)
 	}
