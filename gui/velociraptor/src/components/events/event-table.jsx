@@ -74,7 +74,6 @@ class EventTableLabelGroup extends React.Component {
     createSuggestionList = () => {
         let existing_labels = [];
         let seen = {};
-        let idx = 0;
 
         let make_label = (label, table) => {
             let length = table.artifacts && table.artifacts.length;

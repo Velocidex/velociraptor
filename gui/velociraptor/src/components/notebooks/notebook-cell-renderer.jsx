@@ -1032,7 +1032,10 @@ export default class NotebookCellRenderer extends React.Component {
                 <CopyCellToNotebookDialog
                   cell={this.state.cell}
                   notebook_metadata={this.props.notebook_metadata}
-                  closeDialog={()=>this.setState({showCopyCellToNotebook: false})}
+                  closeDialog={()=>{
+                      this.setState({showCopyCellToNotebook: false});
+                      this.props.updateVersion();
+                  }}
                   >
 
                 </CopyCellToNotebookDialog>

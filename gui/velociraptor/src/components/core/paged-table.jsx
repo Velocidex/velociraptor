@@ -1174,7 +1174,7 @@ class VeloPagedTable extends Component {
         }
 
         if(this.props.row_classes) {
-            selected_cls += " " + this.props.row_classes(row,idx);
+            selected_cls += " " + this.props.row_classes(row, idx);
         }
 
         return (

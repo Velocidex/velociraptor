@@ -127,7 +127,6 @@ class NotebooksList extends React.Component {
         let selected_notebook = this.props.selected_notebook &&
             this.props.selected_notebook.notebook_id;
 
-
         return (
             <>
               { this.state.showDeleteNotebookDialog &&
@@ -239,7 +238,12 @@ class NotebooksList extends React.Component {
                       onSelect: (row, idx)=>{
                           this.props.setSelectedNotebook(row.NotebookId);
                       }}}
-                  selected={row=>row.NotebookId === selected_notebook}
+                  row_classes={row=>{
+                      if(row.NotebookId === selected_notebook) {
+                          return "row-selected";
+                      };
+                      return "";
+                  }}
                 />
               </div>
             </>

@@ -15,7 +15,6 @@ import { withRouter }  from "react-router-dom";
 
 // Poll for new notebooks list.
 const POLL_TIME = 5000;
-const PAGE_SIZE = 100;
 
 
 class Notebooks extends React.Component {
@@ -35,6 +34,7 @@ class Notebooks extends React.Component {
     componentDidMount = () => {
         this.source = CancelToken.source();
         this.interval = setInterval(this.updateVersion, POLL_TIME);
+        this.updateVersion();
     }
 
     componentWillUnmount() {
@@ -49,6 +49,13 @@ class Notebooks extends React.Component {
 
         if(!_.isEmpty(notebook_id)) {
             this.setSelectedNotebook(notebook_id);
+        } else {
+            let match_notebook_id = this.props.match &&
+                this.props.match.params &&
+                this.props.match.params.notebook_id;
+            if (match_notebook_id) {
+                this.setSelectedNotebook(match_notebook_id);
+            }
         }
     }
 
@@ -67,7 +74,6 @@ class Notebooks extends React.Component {
 
         api.get("v1/GetNotebooks", {
             notebook_id: notebook_id,
-            include_uploads: true,
         }, this.source.token).then(response=>{
             this.setState({loading: false});
 
@@ -78,9 +84,12 @@ class Notebooks extends React.Component {
             if (notebooks.length > 0) {
                 let selected_notebook = notebooks[0];
                 let current_selected_notebook = this.state.selected_notebook || {};
+
                 // Only modify the notebook if it has changed
                 if (selected_notebook.modified_time != current_selected_notebook.modified_time) {
-                    this.setState({selected_notebook: notebooks[0], loading: false});
+                    this.setState({
+                        selected_notebook: selected_notebook,
+                        loading: false});
                     this.props.history.push("/notebooks/" + notebooks[0].notebook_id);
                 }
             }
@@ -97,7 +106,6 @@ class Notebooks extends React.Component {
                   version={this.state.version}
                   selected_notebook={this.state.selected_notebook}
                   setSelectedNotebook={this.setSelectedNotebook}
-                  notebooks={this.state.notebooks}
                 />
                 <NotebookRenderer
                   version={this.state.version}

@@ -46,6 +46,7 @@ message NotebookCellRequest {
     repeated Env env = 9;
 
     bool include_uploads = 10;
+    bool include_timelines = 16;
 
     // If this is set schedule the calculation syncronously.
     bool sync = 15;

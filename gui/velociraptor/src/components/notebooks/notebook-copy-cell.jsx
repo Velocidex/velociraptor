@@ -23,13 +23,11 @@ export default class CopyCellToNotebookDialog extends Component {
     }
 
     state = {
-        notebooks: [],
         notebook_id: null,
     }
 
     componentDidMount = () => {
         this.source = CancelToken.source();
-        this.fetchNotebooks();
     }
 
     copyCell = ()=>{
@@ -72,23 +70,6 @@ export default class CopyCellToNotebookDialog extends Component {
                  });
     }
 
-    fetchNotebooks = () => {
-        // Cancel any in flight calls.
-        this.source.cancel();
-        this.source = CancelToken.source();
-
-        api.get("v1/GetNotebooks", {
-            count: PAGE_SIZE,
-            offset: 0,
-        }, this.source.token).then(response=>{
-            if (response.cancel) return;
-
-            let notebooks = response.data.items || [];
-            this.setState({notebooks: notebooks,
-                           loading: false});
-        });
-    }
-
     render() {
         return (
             <Modal show={true}
@@ -103,10 +84,26 @@ export default class CopyCellToNotebookDialog extends Component {
                 <h3>{T("Select a notebook to append this cell to ...")}</h3>
               <Spinner loading={this.state.loading} />
                 <NotebooksList
-                  fetchNotebooks={this.fetchNotebooks}
+                  updateVersion={()=>{}}
+                  version={1}
                   selected_notebook={this.state.selected_notebook}
-                  setSelectedNotebook={x=>this.setState({selected_notebook:x})}
-                  notebooks={this.state.notebooks}
+                  setSelectedNotebook={notebook_id=>{
+                      api.get("v1/GetNotebooks", {
+                          notebook_id: notebook_id,
+                      }, this.source.token).then(response=>{
+                          this.setState({loading: false});
+
+                          if (response.cancel) return;
+
+                          let notebooks = response.data.items || [];
+
+                          if (notebooks.length > 0) {
+                              this.setState({
+                                  selected_notebook: notebooks[0],
+                              });
+                          }
+                      });
+                  }}
                   hideToolbar={true}
                 />
               </Modal.Body>

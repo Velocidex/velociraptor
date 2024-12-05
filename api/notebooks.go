@@ -9,6 +9,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
 	context "golang.org/x/net/context"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -29,10 +30,6 @@ func (self *ApiServer) GetNotebooks(
 
 	defer Instrument("GetNotebooks")()
 
-	if in.NotebookId == "" {
-		return nil, Status(self.verbose, errors.New("NotebookId must be specified"))
-	}
-
 	// Empty creators are called internally.
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
@@ -52,6 +49,33 @@ func (self *ApiServer) GetNotebooks(
 	notebook_manager, err := services.GetNotebookManager(org_config_obj)
 	if err != nil {
 		return nil, Status(self.verbose, err)
+	}
+
+	// List all the timelines
+	if in.IncludeTimelines {
+		// This is only called for global notebooks because client and
+		// hunt notebooks always specify the exact notebook id.
+		notebooks, err := notebook_manager.GetAllNotebooks()
+		if err != nil {
+			return nil, Status(self.verbose, err)
+		}
+
+		for _, n := range notebooks {
+			if len(n.Timelines) > 0 &&
+				!notebook_manager.CheckNotebookAccess(n, principal) {
+				result.Items = append(result.Items,
+					proto.Clone(n).(*api_proto.NotebookMetadata))
+			}
+
+			if uint64(len(result.Items)) > in.Count {
+				break
+			}
+		}
+		return result, nil
+	}
+
+	if in.NotebookId == "" {
+		return nil, Status(self.verbose, errors.New("NotebookId must be specified"))
 	}
 
 	notebook_metadata, err := notebook_manager.GetNotebook(
