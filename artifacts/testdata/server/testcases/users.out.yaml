@@ -18,8 +18,8 @@ SELECT whoami() FROM scope()[
  {
   "user(user=\"TestUser\")": {
    "name": "TestUser",
-   "org_id": "",
-   "org_name": "",
+   "org_id": "root",
+   "org_name": "\u003croot\u003e",
    "picture": "",
    "email": false,
    "roles": [
@@ -39,8 +39,8 @@ SELECT whoami() FROM scope()[
  {
   "user(user=\"TestUser\")": {
    "name": "TestUser",
-   "org_id": "",
-   "org_name": "",
+   "org_id": "root",
+   "org_name": "\u003croot\u003e",
    "picture": "",
    "email": false,
    "roles": [
