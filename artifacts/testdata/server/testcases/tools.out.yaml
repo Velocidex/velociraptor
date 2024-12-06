@@ -30,7 +30,7 @@ SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/g
     "name": "Autorun_amd64",
     "url": "https://storage.googleapis.com/go.velocidex.com/autorunsc.exe",
     "admin_override": true,
-    "filestore_path": "affbb298885d99a7569ef9ec463bbfbf9db112a11cec65cf78ec8657ab78950a",
+    "filestore_path": "c6bc3feacddc72332f5739fa1023515b6490daeec95711566601e01986eadfc1",
     "serve_url": "https://storage.googleapis.com/go.velocidex.com/autorunsc.exe",
     "filename": "autorunsc_x64.exe",
     "hash": "083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153",
@@ -77,14 +77,14 @@ SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/g
   "inventory_get(tool='Autorun_amd64')": {
    "Tool_Autorun_amd64_HASH": "083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153",
    "Tool_Autorun_amd64_FILENAME": "autorunsc_x64.exe",
-   "Tool_Autorun_amd64_URL": "https://127.0.0.1:8/public/affbb298885d99a7569ef9ec463bbfbf9db112a11cec65cf78ec8657ab78950a",
+   "Tool_Autorun_amd64_URL": "https://127.0.0.1:8/public/c6bc3feacddc72332f5739fa1023515b6490daeec95711566601e01986eadfc1",
    "Definition": {
     "name": "Autorun_amd64",
     "url": "https://storage.googleapis.com/go.velocidex.com/autorunsc.exe",
     "serve_locally": true,
     "admin_override": true,
-    "filestore_path": "affbb298885d99a7569ef9ec463bbfbf9db112a11cec65cf78ec8657ab78950a",
-    "serve_url": "https://127.0.0.1:8/public/affbb298885d99a7569ef9ec463bbfbf9db112a11cec65cf78ec8657ab78950a",
+    "filestore_path": "c6bc3feacddc72332f5739fa1023515b6490daeec95711566601e01986eadfc1",
+    "serve_url": "https://127.0.0.1:8/public/c6bc3feacddc72332f5739fa1023515b6490daeec95711566601e01986eadfc1",
     "filename": "autorunsc_x64.exe",
     "hash": "083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153",
     "versions": [
@@ -116,7 +116,7 @@ SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/g
    "version": "",
    "materialize": false,
    "artifact": "",
-   "filestore_path": "1c21ee4d8609f81482dc0a78c641e4586488a9fd562ee28eec25e448a9d0b2e1",
+   "filestore_path": "77e71a25fc41db4cc20410a71b3d000b25d2bd0688f08b832e150e850078235c",
    "serve_url": "",
    "serve_path": "",
    "filename": "yara_test.txt",
@@ -130,13 +130,13 @@ SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/g
   "inventory_get(tool=\"FooBar\")": {
    "Tool_FooBar_HASH": "f03278c10a41adcc97f24a612a680e7aa43efb461b337fef3d2a3d47b51e77bb",
    "Tool_FooBar_FILENAME": "yara_test.txt",
-   "Tool_FooBar_URL": "https://127.0.0.1:8/public/1c21ee4d8609f81482dc0a78c641e4586488a9fd562ee28eec25e448a9d0b2e1",
+   "Tool_FooBar_URL": "https://127.0.0.1:8/public/77e71a25fc41db4cc20410a71b3d000b25d2bd0688f08b832e150e850078235c",
    "Definition": {
     "name": "FooBar",
     "serve_locally": true,
     "admin_override": true,
-    "filestore_path": "1c21ee4d8609f81482dc0a78c641e4586488a9fd562ee28eec25e448a9d0b2e1",
-    "serve_url": "https://127.0.0.1:8/public/1c21ee4d8609f81482dc0a78c641e4586488a9fd562ee28eec25e448a9d0b2e1",
+    "filestore_path": "77e71a25fc41db4cc20410a71b3d000b25d2bd0688f08b832e150e850078235c",
+    "serve_url": "https://127.0.0.1:8/public/77e71a25fc41db4cc20410a71b3d000b25d2bd0688f08b832e150e850078235c",
     "filename": "yara_test.txt",
     "hash": "f03278c10a41adcc97f24a612a680e7aa43efb461b337fef3d2a3d47b51e77bb"
    }

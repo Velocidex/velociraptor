@@ -184,7 +184,12 @@ func (self *OrgManager) CreateNewOrg(name, id string) (
 func (self *OrgManager) makeNewConfigObj(
 	record *api_proto.OrgRecord) *config_proto.Config {
 
-	result := proto.Clone(self.config_obj).(*config_proto.Config)
+	// The root org carries the real global config, but other orgs'
+	// config will be derived from the root org.
+	result := self.config_obj
+	if !utils.IsRootOrg(record.Id) {
+		result = proto.Clone(self.config_obj).(*config_proto.Config)
+	}
 
 	result.OrgId = utils.NormalizedOrgId(record.Id)
 	result.OrgName = record.Name

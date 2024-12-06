@@ -95,6 +95,18 @@ portable than plain HTTP. Be sure to test this in your environment.
 		Default: tempfile.GetTempDir(),
 	}
 
+	expiry_question = &survey.Select{
+		Message: `Would you like to extend certificate expiration?
+
+By defaults internal certificates are issued for 1 year.
+
+If you expect this deployment to exist part one year you might
+consider extending the default validation.
+`,
+		Default: "1 Year",
+		Options: []string{"1 Year", "5 Years", "10 Years"},
+	}
+
 	output_question = &survey.Input{
 		Message: "Where should I write the server config file?",
 		Default: "server.config.yaml",
@@ -282,6 +294,26 @@ func doGenerateConfigInteractive() error {
 	err = addUser(config_obj)
 	if err != nil {
 		return fmt.Errorf("Add users: %w", err)
+	}
+
+	expiration := ""
+	err = survey.AskOne(expiry_question,
+		&expiration, survey.WithValidator(survey.Required))
+	if err != nil {
+		return err
+	}
+
+	if config_obj.Defaults == nil {
+		config_obj.Defaults = &config_proto.Defaults{}
+	}
+
+	switch expiration {
+	case "1 Year":
+		config_obj.Defaults.CertificateValidityDays = 365
+	case "5 Years":
+		config_obj.Defaults.CertificateValidityDays = 365 * 5
+	case "10 Years":
+		config_obj.Defaults.CertificateValidityDays = 365 * 10
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)

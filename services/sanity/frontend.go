@@ -20,6 +20,12 @@ func (self *SanityChecks) CheckFrontendSettings(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	if config_obj.Frontend != nil && config_obj.GUI != nil {
+		// Check that certificates are valid.
+		err := self.CheckCertificates(config_obj)
+		if err != nil {
+			return err
+		}
+
 		// Validate Allowed CIDRs
 		for _, cidr := range config_obj.GUI.AllowedCidr {
 			_, cidr_net, err := net.ParseCIDR(cidr)
