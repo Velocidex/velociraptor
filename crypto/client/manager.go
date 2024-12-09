@@ -19,6 +19,7 @@ import (
 
 	"github.com/Velocidex/ttlcache/v2"
 	"github.com/go-errors/errors"
+	"golang.org/x/time/rate"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vcrypto "www.velocidex.com/golang/velociraptor/crypto"
@@ -50,6 +51,8 @@ type CryptoManager struct {
 	caPool *x509.CertPool
 
 	logger *logging.LogContext
+
+	limiter *rate.Limiter
 }
 
 // Clear all internal caches.
@@ -100,6 +103,12 @@ func NewCryptoManager(
 		return nil, err
 	}
 
+	limit_rate := int64(100)
+	if config_obj.Frontend != nil &&
+		config_obj.Frontend.Resources.EnrollmentsPerSecond > 0 {
+		limit_rate = config_obj.Frontend.Resources.EnrollmentsPerSecond
+	}
+
 	result := &CryptoManager{
 		config:              config_obj,
 		private_key:         private_key,
@@ -108,6 +117,7 @@ func NewCryptoManager(
 		cipher_lru:          NewCipherLRU(config_obj.Frontend.Resources.ExpectedClients),
 		unauthenticated_lru: ttlcache.NewCache(),
 		logger:              logging.GetLogger(config_obj, &logging.ClientComponent),
+		limiter:             rate.NewLimiter(rate.Limit(limit_rate), 100),
 	}
 
 	result.unauthenticated_lru.SetTTL(time.Second * 60)
@@ -129,7 +139,10 @@ The HMAC ensures that the cipher properties can not be modified.
 func CalcHMAC(
 	comms *crypto_proto.ClientCommunication,
 	cipher *crypto_proto.CipherProperties) []byte {
-	msg := comms.Encrypted
+	msg := make([]byte, 0,
+		len(comms.Encrypted)+len(comms.EncryptedCipher)+
+			len(comms.EncryptedCipherMetadata)+len(comms.PacketIv)+64)
+	msg = append(msg, comms.Encrypted...)
 	msg = append(msg, comms.EncryptedCipher...)
 	msg = append(msg, comms.EncryptedCipherMetadata...)
 	msg = append(msg, comms.PacketIv...)
@@ -256,7 +269,9 @@ func (self *CryptoManager) getCachedCipher(encrypted_cipher []byte) (*_Cipher, b
 }
 
 /* Decrypts an encrypted parcel and produces a MessageInfo. */
-func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, error) {
+func (self *CryptoManager) Decrypt(
+	ctx context.Context,
+	cipher_text []byte) (*vcrypto.MessageInfo, error) {
 	var err error
 	// Parse the ClientCommunication protobuf.
 	communications := &crypto_proto.ClientCommunication{}
@@ -292,6 +307,13 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 		msg_info.Source = cipher.cipher_metadata.Source
 
 		return msg_info, nil
+	}
+
+	if self.limiter != nil {
+		err = self.limiter.Wait(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Decrypt the CipherProperties

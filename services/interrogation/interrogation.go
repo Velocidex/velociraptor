@@ -424,9 +424,10 @@ func NewInterrogationService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	limit_rate := config_obj.Frontend.Resources.EnrollmentsPerSecond
-	if limit_rate == 0 {
-		limit_rate = 100
+	limit_rate := int64(100)
+	if config_obj.Frontend != nil &&
+		config_obj.Frontend.Resources.EnrollmentsPerSecond > 0 {
+		limit_rate = config_obj.Frontend.Resources.EnrollmentsPerSecond
 	}
 
 	// Negative enrollment rate means to disable enrollment service.

@@ -93,7 +93,7 @@ func (self *CryptoFileReader) readPacket(
 			return 0, err
 		}
 
-		message_info, err := self.crypto_manager.Decrypt(buf[:n])
+		message_info, err := self.crypto_manager.Decrypt(ctx, buf[:n])
 		if err != nil {
 			return 0, err
 		}

@@ -399,6 +399,24 @@ func getRows(
 
 		return rs_reader.Rows(ctx), rs_reader.Close, log_path, err
 
+	} else if request.Type == "STACK" {
+		log_path = path_specs.NewUnsafeFilestorePath(
+			utils.FilterSlice(request.StackPath, "")...).
+			SetType(api.PATH_TYPE_FILESTORE_JSON)
+
+		options, err := tables.GetTableOptions(request)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		rs_reader, err := result_sets.NewResultSetReaderWithOptions(
+			ctx, config_obj, file_store_factory, log_path, options)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		return rs_reader.Rows(ctx), rs_reader.Close, log_path, err
+
 	} else {
 		log_path, err := tables.GetPathSpec(
 			ctx, config_obj, request, principal)
@@ -408,7 +426,9 @@ func getRows(
 
 		rs_reader, err := result_sets.NewResultSetReader(
 			file_store_factory, log_path)
-
+		if err != nil {
+			return nil, nil, nil, err
+		}
 		return rs_reader.Rows(ctx), rs_reader.Close, log_path, err
 	}
 }

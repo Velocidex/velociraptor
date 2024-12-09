@@ -2,7 +2,7 @@ LET ClientId <= client_create(hostname="TestVirtualClient").client_id[]LET FlowI
 FROM collect(artifacts=["Windows.Forensics.Usn", "Windows.Search.FileFinder"],
    args=dict(`Windows.Forensics.Usn`=dict(),
              `Windows.Search.FileFinder`=dict(
-                  SearchFilesGlob="HKEY_USERS/*/*",
+                  SearchFilesGlobTable="Glob\nHKEY_USERS/*/*",
                   Accessor="registry")),
    output=tmp,
    remapping=GetRemapping(FlowId=FlowId, ClientId=ClientId))

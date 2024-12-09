@@ -439,6 +439,10 @@ func (self *ApiServer) GetHunt(
 			fmt.Errorf("%w: %v", services.HuntNotFoundError, in.HuntId))
 	}
 
+	if !in.IncludeRequest && result.StartRequest != nil {
+		result.StartRequest.CompiledCollectorArgs = nil
+	}
+
 	return result, nil
 }
 

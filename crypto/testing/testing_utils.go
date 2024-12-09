@@ -1,6 +1,8 @@
 package testing
 
 import (
+	"context"
+
 	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -65,8 +67,8 @@ func (self *NullCryptoManager) Encrypt(
 	return serialized_packed_message_list, nil
 }
 
-func (self *NullCryptoManager) Decrypt(cipher_text []byte) (
-	*crypto.MessageInfo, error) {
+func (self *NullCryptoManager) Decrypt(
+	ctx context.Context, cipher_text []byte) (*crypto.MessageInfo, error) {
 
 	packed_message_list := &crypto_proto.PackedMessageList{}
 	err := proto.Unmarshal(cipher_text, packed_message_list)

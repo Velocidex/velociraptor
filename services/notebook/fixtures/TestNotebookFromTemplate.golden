@@ -78,7 +78,6 @@
   "cell_metadata": [
    {
     "cell_id": "NC.02",
-    "timestamp": 10,
     "type": "vql",
     "current_version": "03",
     "available_versions": [
@@ -97,7 +96,6 @@
    "DEFAULT:Tool is available through local url https://localhost:8000/public/152038a5bc46cb8fc68ee6eac0269c6a3fba574c4a96a650ed26aa9b02b1cb64\n",
    "DEBUG:Query Stats: {\"RowsScanned\":1,\"PluginsCalled\":1,\"FunctionsCalled\":4,\"ProtocolSearch\":0,\"ScopeCopy\":3}\n"
   ],
-  "timestamp": 10,
   "type": "vql",
   "current_version": "03",
   "available_versions": [
@@ -183,7 +181,6 @@
   "cell_metadata": [
    {
     "cell_id": "NC.02",
-    "timestamp": 10,
     "type": "vql",
     "current_version": "03",
     "available_versions": [
@@ -201,7 +198,6 @@
    "DEFAULT:StringArg should be Goodbye now: Goodbye\n",
    "DEBUG:Query Stats: {\"RowsScanned\":1,\"PluginsCalled\":1,\"FunctionsCalled\":3,\"ProtocolSearch\":0,\"ScopeCopy\":3}\n"
   ],
-  "timestamp": 11,
   "type": "vql",
   "current_version": "04",
   "available_versions": [

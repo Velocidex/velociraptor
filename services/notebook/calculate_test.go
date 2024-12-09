@@ -311,7 +311,7 @@ func (self *NotebookManagerTestSuite) TestNotebookFromTemplate() {
 	golden.Set("UpdatedCell", updated_cell)
 
 	goldie.Assert(self.T(), "TestNotebookFromTemplate",
-		json.MustMarshalIndent(golden))
+		goldie.RemoveLines("timestamp", json.MustMarshalIndent(golden)))
 }
 
 func (self *NotebookManagerTestSuite) TestNotebookDeletion() {
