@@ -44,34 +44,33 @@ Queries:
 # Just find a zip file.
   - SELECT basename(path=OSPath) AS File, Hash, Size, Upload, Keywords
     FROM Artifact.Windows.Search.FileFinder(
-        SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")
+        SearchFilesGlobTable="Glob\n" + srcDir + "/artifacts/testdata/files/*.zip")
     WHERE File =~ "test"
 
 # Calculate the hash.
   - SELECT basename(path=OSPath) AS File, Hash, Size, Upload, Keywords
     FROM Artifact.Windows.Search.FileFinder(
         Calculate_Hash="Y",
-        SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")
+        SearchFilesGlobTable="Glob\n" + srcDir + "/artifacts/testdata/files/*.zip")
     WHERE File =~ "test"
 
 # Upload it.
   - SELECT basename(path=OSPath) AS File, Hash, Size, Upload.md5, Keywords
     FROM Artifact.Windows.Search.FileFinder(
         Upload_File="Y",
-        SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")
+        SearchFilesGlobTable="Glob\n" + srcDir + "/artifacts/testdata/files/*.zip")
     WHERE File =~ "test"
 
 # Search for files that match a keyword
   - SELECT basename(path=OSPath) AS File, Keywords
     FROM Artifact.Windows.Search.FileFinder(
         YaraRule="wide nocase ascii:supercalifragilisticexpialidocious",
-        SearchFilesGlob=srcDir + "/artifacts/testdata/**/*.in.yaml")
+        SearchFilesGlobTable="Glob\n"+srcDir + "/artifacts/testdata/**/*.in.yaml")
 
 # Search globs provided in a csv table
   - |
     SELECT basename(path=OSPath) AS File, Hash, Size, Upload, Keywords
     FROM Artifact.Windows.Search.FileFinder(
-        SearchFilesGlob="",
         SearchFilesGlobTable="Glob\n"+ srcDir + "/artifacts/testdata/files/*.zip\n")
     WHERE File =~ "test"
 
@@ -85,13 +84,16 @@ Queries:
   - LET _ <= mock(plugin="glob", results=MockData)
   - SELECT OSPath, MTime
     FROM Artifact.Windows.Search.FileFinder(
+        SearchFilesGlobTable="Glob\nC:/Users/*",
         MoreRecentThan=timestamp(string="2020-04-29T13:39:00Z"))
 
   - SELECT OSPath, MTime
     FROM Artifact.Windows.Search.FileFinder(
+        SearchFilesGlobTable="Glob\nC:/Users/*",
         ModifiedBefore=timestamp(string="2020-04-29T13:39:00Z"))
 
   - SELECT OSPath, MTime
     FROM Artifact.Windows.Search.FileFinder(
+        SearchFilesGlobTable="Glob\nC:/Users/*",
         MoreRecentThan=timestamp(string="2020-04-29T13:39:00Z"),
         ModifiedBefore=timestamp(string="2020-04-29T13:41:00Z"))
