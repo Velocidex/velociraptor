@@ -190,7 +190,6 @@
     This works because the `.` operator on a list, creates another
     list with the `.` operator applying on each member.
   type: Function
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -291,6 +290,7 @@
     type: bool
     description: Set to true make the artifact a 'basic' artifact. This allows users
       with the COLLECT_BASIC permission able to collect it.
+  category: server
   metadata:
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
   platforms:
@@ -324,7 +324,6 @@
   - name: timeout
     type: uint64
     description: How long to wait for destructors to run (default 60 seconds).
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -347,7 +346,7 @@
     type: Any
     description: A string to convert to int
     required: true
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -432,6 +431,7 @@
     type: string
     description: The name of the backup file.
     required: true
+  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -453,6 +453,7 @@
   - name: providers
     type: string
     description: If provided only restore providers matching this regex.
+  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -467,7 +468,7 @@
     type: string
     description: A string to decode
     required: true
-  category: basic
+  category: encode
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -482,7 +483,7 @@
     type: string
     description: A string to decode
     required: true
-  category: basic
+  category: encode
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -497,6 +498,7 @@
     type: string
     description: A string to decode
     required: true
+  category: encode
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -526,7 +528,7 @@
   - name: path_type
     type: string
     description: Type of path (e.g. windows, linux)
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -561,7 +563,6 @@
     type: StoredQuery
     description: Run this query over the item.
     required: true
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -634,7 +635,6 @@
   - name: period
     type: int64
     description: The latest age of the cache.
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -703,6 +703,7 @@
     type: accessors.OSPath
     description: A path to a raw USN file to carve. If not provided we carve the image
       file or the device.
+  category: parsers
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -752,7 +753,7 @@
   - name: async
     type: bool
     description: If specified we run all queries asynchronously and combine the output.
-  category: plugin
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -781,7 +782,6 @@
     description: A list of CIDR notation network ranges
     repeated: true
     required: true
-  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -811,6 +811,7 @@
   - name: mac_addresses
     type: string
     repeated: true
+  category: server
   metadata:
     permissions: SERVER_ADMIN
   platforms:
@@ -1055,7 +1056,6 @@
   - name: remapping
     type: string
     description: A Valid remapping configuration in YAML or JSON format.
-  category: plugin
   metadata:
     permissions: FILESYSTEM_WRITE
   platforms:
@@ -1254,7 +1254,7 @@
     type: string
     description: One of more regular expressions that will include columns.
     repeated: true
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -1262,10 +1262,11 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: combine
-  description: Combine the output of several queries into the same result set.A convenience
-    plugin acting like chain(async=TRUE).
+  description: |
+    Combine the output of several queries into the same result set.
+
+    A convenience plugin acting like chain(async=TRUE).
   type: Plugin
-  category: event
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -1294,7 +1295,7 @@
   - name: bash_style
     type: bool
     description: Use bash rules (Uses Windows rules by default).
-  category: plugin
+  category: parsers
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -1316,7 +1317,7 @@
   - name: output
     type: string
     description: A path to write the output - default is the path with a .gz extension
-  category: server
+  category: encode
   metadata:
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
   platforms:
@@ -1328,10 +1329,8 @@
 - name: connections
   description: |
     List all active connections
-
-    On windows this uses the API to list active sockets.
   type: Plugin
-  category: plugin
+  category: linux
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -1376,7 +1375,6 @@
   - name: create_directories
     type: bool
     description: If true we ensure the destination directories exist
-  category: basic
   metadata:
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
   platforms:
@@ -1405,7 +1403,7 @@
   - name: items
     type: Any
     description: Not used anymore
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -1518,6 +1516,7 @@
     type: string
     description: The name of the export. If not set this will be named according to
       the notebook id and timestamp
+  category: server
   metadata:
     permissions: PREPARE_RESULTS
   platforms:
@@ -1538,7 +1537,7 @@
     type: string
     description: Rc4 key (1-256bytes).
     required: true
-  category: plugin
+  category: encode
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -1582,7 +1581,7 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: delete_events
-  description: Delete all the files that make up a flow.
+  description: Delete events from a flow.
   type: Plugin
   args:
   - name: artifact
@@ -1602,6 +1601,7 @@
   - name: really_do_it
     type: bool
     description: If not specified, just show what files will be removed
+  category: server
   metadata:
     permissions: DELETE_RESULTS
   platforms:
@@ -1622,6 +1622,7 @@
     required: true
   - name: really_do_it
     type: bool
+  category: server
   metadata:
     permissions: DELETE_RESULTS
   platforms:
@@ -1647,7 +1648,7 @@
     See the `to_dict()` function to create dicts from a query with
     unpredictable key names.
   type: Function
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -1771,7 +1772,6 @@
   - name: path_type
     type: string
     description: Type of path (e.g. windows, linux)
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -1787,6 +1787,7 @@
 
     - [watch_ebpf](/vql_reference/misc/watch_ebpf/)
   type: Plugin
+  category: linux
   platforms:
   - linux_amd64_cgo
 - name: efivariables
@@ -1884,7 +1885,6 @@
     type: string
     description: Alternatively use a secret from the secrets service. Secret must
       be of type 'AWS S3 Creds'
-  category: server
   metadata:
     permissions: COLLECT_SERVER
   platforms:
@@ -1904,7 +1904,7 @@
   - name: type
     type: string
     required: true
-  category: basic
+  category: encode
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -1918,6 +1918,7 @@
   - name: string
     type: string
     required: true
+  category: encode
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -1939,7 +1940,6 @@
   - name: items
     type: Any
     description: The items to enumerate
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -1980,7 +1980,6 @@
     type: string
     description: Extract the var from the environment.
     required: true
-  category: basic
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -2001,7 +2000,6 @@
     description: Extract these variables from the environment and return them one
       per row
     repeated: true
-  category: plugin
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -2015,6 +2013,7 @@
   - name: count
     type: uint64
     description: 'The count of sessions to retrieve (default 64) '
+  category: windows
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -2158,7 +2157,7 @@
   - name: cwd
     type: string
     description: If specified we change to this working directory first.
-  category: plugin
+  category: popular
   metadata:
     permissions: EXECVE
   platforms:
@@ -2198,7 +2197,7 @@
     type: string
     description: A path with environment escapes
     required: true
-  category: basic
+  category: popular
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -2486,7 +2485,6 @@
   description: |
     Enumerates mounted filesystems.
   type: Plugin
-  category: plugin
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -2522,7 +2520,7 @@
   - name: condition
     type: vfilter.Lambda
     description: A VQL lambda to use to filter elements
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -2537,7 +2535,7 @@
   - name: query
     type: StoredQuery
     required: true
-  category: plugin
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -2556,6 +2554,7 @@
     type: string
     description: The client id to extract
     required: true
+  category: server
   metadata:
     permissions: READ_RESULTS
   platforms:
@@ -2637,13 +2636,8 @@
   - name: query
     type: StoredQuery
     description: Run this query over the item.
-  category: plugin
   platforms:
-  - darwin_amd64_cgo
-  - darwin_arm64_cgo
   - linux_amd64_cgo
-  - windows_386_cgo
-  - windows_amd64_cgo
 - name: foreach
   description: |
     Executes 'query' once for each row in the 'row' query.
@@ -2677,7 +2671,7 @@
   - name: column
     type: string
     description: If set we only extract the column from row.
-  category: plugin
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -2722,7 +2716,7 @@
 
     **2. Indexed argument interpolation**
 
-    Here the arguments are subtituted according to their positional index number
+    Here the arguments are substituted according to their positional index number
     (1-indexed).
 
     ```vql
@@ -2732,7 +2726,7 @@
     returns:\
     `to be, or not to be.`
 
-    Note that the same agument can be used more than once.
+    Note that the same argument can be used more than once.
 
     **3. Timestamp formatting**
 
@@ -2766,7 +2760,7 @@
   - name: args
     type: Any
     description: An array of elements to apply into the format string.
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -2823,7 +2817,6 @@
     type: ordereddict.Dict
     description: The publish attributes
     required: true
-  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -2900,7 +2893,6 @@
   - name: fan_out
     type: int64
     description: Wait for this many listeners to connect before starting the query
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -2924,7 +2916,6 @@
     type: string
     description: Path to the MaxMind GeoIP Database.
     required: true
-  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -2965,7 +2956,7 @@
     type: Any
   - name: default
     type: Any
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -3004,6 +2995,7 @@
     required: true
   - name: flow_id
     type: string
+  category: server
   metadata:
     permissions: COLLECT_CLIENT,COLLECT_SERVER
   platforms:
@@ -3033,7 +3025,6 @@
 
     This is typically used to exclude analysis from our own process.
   type: Function
-  category: basic
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -3177,7 +3168,7 @@
   - name: one_filesystem
     type: bool
     description: If set we do not follow links to other filesystems.
-  category: plugin
+  category: popular
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -3248,6 +3239,7 @@
     type: string
     description: Data to apply Gunzip
     required: true
+  category: encode
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -3318,7 +3310,7 @@
     type: string
     description: The hash function to use (MD5,SHA1,SHA256)
     repeated: true
-  category: plugin
+  category: encode
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -3509,7 +3501,7 @@
     description: If specified, upload these files using multipart form upload. For
       example [dict(file="My filename.txt", path=OSPath, accessor="auto"),]
     repeated: true
-  category: plugin
+  category: popular
   metadata:
     permissions: COLLECT_SERVER
   platforms:
@@ -3537,7 +3529,7 @@
   - name: comma
     type: int64
     description: Format integer with comma (e.g. 1,230)
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -3696,6 +3688,7 @@
     required: true
   - name: really_do_it
     type: bool
+  category: server
   metadata:
     permissions: SERVER_ADMIN
   platforms:
@@ -3753,6 +3746,7 @@
     type: string
     description: Hunt Id to look up or a flow id created by that hunt (e.g. F.CRUU3KIE5D73G.H
       ).
+  category: server
   metadata:
     permissions: READ_RESULTS
   platforms:
@@ -3825,6 +3819,7 @@
     type: string
     description: Labels to be removed from hunt
     repeated: true
+  category: server
   metadata:
     permissions: START_HUNT
   platforms:
@@ -3870,7 +3865,7 @@
     type: types.LazyAny
   - name: else
     type: types.LazyAny
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -3899,7 +3894,7 @@
     required: true
   - name: else
     type: StoredQuery
-  category: plugin
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -3914,6 +3909,7 @@
     type: string
     description: The Artifact to import
     required: true
+  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -3979,7 +3975,7 @@
     This plugin is very useful in preconditions as it restricts a query to
     certain OS or versions.
   type: Plugin
-  category: plugin
+  category: popular
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -3998,7 +3994,7 @@
   - name: int
     type: Any
     description: The integer to round
-  category: plugin
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4141,7 +4137,6 @@
   - name: netaddr4_be
     type: int64
     description: A network order IPv4 address (as big endian).
-  category: plugin
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4158,7 +4153,7 @@
   args:
   - name: item
     type: Any
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4217,7 +4212,7 @@
   - name: item
     type: Any
     description: The item to enumerate.
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4239,7 +4234,7 @@
   - name: sep
     type: string
     description: The separator. Defaults to an empty string if not explicitly set
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4296,7 +4291,7 @@
   - name: key
     type: string
     description: If set use this key to cache the JS VM.
-  category: plugin
+  category: experimental
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4318,7 +4313,7 @@
   - name: key
     type: string
     description: If set use this key to cache the JS VM.
-  category: plugin
+  category: experimental
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4326,13 +4321,14 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: killkillkill
-  description: Kills the client and forces a restart - this is very aggressive!
+  description: |
+    Sends a kill message to the client and forces a restart - this is very aggressive!
   type: Function
   args:
   - name: client_id
     type: string
     required: true
-  category: basic
+  category: server
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -4415,7 +4411,7 @@
     type: Any
     description: A list of items to filter
     required: true
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4432,6 +4428,7 @@
   - name: accessor
     type: string
     description: The accessor to use.
+  category: parsers
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -4520,6 +4517,7 @@
     type: string
     description: If set the link accesses a different org. Otherwise we accesses the
       current org.
+  category: server
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -4605,7 +4603,7 @@
   - name: level
     type: string
     description: Level to log at (DEFAULT, WARN, ERROR, INFO, DEBUG).
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4618,6 +4616,7 @@
   args:
   - name: component
     type: string
+  category: server
   metadata:
     permissions: READ_RESULTS
   platforms:
@@ -4693,8 +4692,6 @@
     description: 'A SID to lookup using LookupAccountSid '
     required: true
   category: windows
-  metadata:
-    permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
   - windows_386_cgo
@@ -4707,7 +4704,7 @@
     type: string
     description: The string to process
     required: true
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4763,6 +4760,7 @@
     type: string
     description: The lzxpress stream (bytes)
     required: true
+  category: encode
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4820,7 +4818,6 @@
   - name: magic
     type: string
     description: Additional magic to load
-  category: plugin
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -4955,7 +4952,6 @@
   - name: item
     type: LazyExpr
     required: true
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -5041,7 +5037,7 @@
   - name: name
     type: string
     description: The name of this cache.
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -5091,7 +5087,6 @@
   - name: item
     type: LazyExpr
     required: true
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -5115,7 +5110,7 @@
     type: LazyExpr
     description: The result to return
     required: true
-  category: utils
+  category: developer
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -5138,7 +5133,7 @@
   - name: clear
     type: bool
     description: This call will clear previous mocks for this plugin
-  category: utils
+  category: developer
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -5148,6 +5143,7 @@
 - name: mock_clear
   description: Resets all mocks.
   type: Function
+  category: developer
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -5170,6 +5166,7 @@
   - name: clear
     type: bool
     description: This call will clear previous mocks for this plugin
+  category: developer
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -5249,6 +5246,7 @@
   - name: end_time
     type: Any
     description: Stop end events reach this time (event sources).
+  category: server
   metadata:
     permissions: READ_RESULTS
   platforms:
@@ -5290,7 +5288,6 @@
   - name: retry
     type: int
     description: Seconds to wait before retry - default 0 - do not retry
-  category: plugin
   metadata:
     permissions: COLLECT_SERVER
   platforms:
@@ -5302,7 +5299,7 @@
 - name: netstat
   description: Collect network information.
   type: Plugin
-  category: plugin
+  category: popular
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -5335,6 +5332,7 @@
   - name: env
     type: ordereddict.Dict
     description: An environment to initialize the notebook with
+  category: server
   metadata:
     permissions: COLLECT_SERVER
   platforms:
@@ -5376,6 +5374,7 @@
   - name: type
     type: string
     description: Set the type of the export (html or zip).
+  category: server
   metadata:
     permissions: PREPARE_RESULTS
   platforms:
@@ -5395,6 +5394,7 @@
   - name: verbose
     type: bool
     description: Include more information
+  category: server
   metadata:
     permissions: READ_RESULTS
   platforms:
@@ -5427,6 +5427,7 @@
   - name: attachment_filename
     type: string
     description: The name of the attachment
+  category: server
   metadata:
     permissions: COLLECT_SERVER
   platforms:
@@ -5457,6 +5458,7 @@
     type: string
     description: If this is set, we do not calculate the cell but set this as the
       rendered output.
+  category: server
   metadata:
     permissions: COLLECT_SERVER
   platforms:
@@ -5500,7 +5502,7 @@
 
     - [timestamp](/vql_reference/basic/timestamp/)
   type: Function
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -5607,6 +5609,7 @@
 - name: org
   description: Return the details of the current org.
   type: Function
+  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -5624,6 +5627,7 @@
   - name: org_id
     type: string
     description: An ID for the new org (if not set use a random ID).
+  category: server
   metadata:
     permissions: ORG_ADMIN
   platforms:
@@ -5643,6 +5647,7 @@
   - name: really_do_it
     type: bool
     description: If not specified, just show what org will be removed
+  category: server
   metadata:
     permissions: ORG_ADMIN
   platforms:
@@ -5654,6 +5659,7 @@
 - name: orgs
   description: Retrieve the list of orgs on this server.
   type: Plugin
+  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -5663,6 +5669,7 @@
 - name: panic
   description: Crash the program with a panic!
   type: Plugin
+  category: developer
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -6019,6 +6026,7 @@
   - name: end_time
     type: time.Time
     description: Only parse events older than this time (default all times).
+  category: parsers
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -6627,6 +6635,7 @@
     type: string
     description: The new password to set.
     required: true
+  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -6686,7 +6695,6 @@
   - name: merge
     type: Any
     description: A merge patch to apply
-  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -6708,7 +6716,6 @@
   - name: path_type
     type: string
     description: Type of path (e.g. 'windows')
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -6727,7 +6734,7 @@
   - name: path_type
     type: string
     description: Type of path (e.g. 'windows')
-  category: basic
+  category: parsers
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -6757,7 +6764,7 @@
   - name: accessor
     type: string
     description: The accessor to use to parse the path with
-  category: plugin
+  category: parsers
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -6823,7 +6830,7 @@
     A pipe allows plugins that use files to read data from a vql
     query.
 
-    **NOTE: this is not the same as a windows named pipe**.
+    **NOTE: this is not the same as a Windows named pipe**.
 
     This is needed to be able to use the "pipe" accessor.
 
@@ -6863,7 +6870,6 @@
     type: string
     description: 'The separator that will be used to split each read (default: no
       separator will be used)'
-  category: plugin
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -6888,6 +6894,7 @@
     type: string
     description: 'Encryption scheme to use. Defaults to RSA. Currently supported:
       PGP,RSA'
+  category: encode
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -6912,6 +6919,7 @@
     type: string
     description: 'Encryption scheme to use. Defaults to X509. Currently supported:
       PGP,X509'
+  category: encode
   metadata:
     permissions: SERVER_ADMIN
   platforms:
@@ -6931,7 +6939,7 @@
   - name: accessor
     type: string
     description: The accessor to use.
-  category: parsers
+  category: popular
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -7148,6 +7156,7 @@
     type: string
     description: Process ID.
     required: true
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -7157,6 +7166,7 @@
 - name: process_tracker_pslist
   description: List all processes from the process tracker.
   type: Plugin
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -7233,7 +7243,7 @@
     type: string
     description: The type of profile (this is a regex of debug output types that will
       be shown).
-  category: plugin
+  category: developer
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -7249,6 +7259,7 @@
   - name: verbose
     type: bool
     description: Emit information in verbose form.
+  category: developer
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -7260,6 +7271,7 @@
 - name: profile_memory
   description: Enumerates all in use memory within the runtime.
   type: Plugin
+  category: developer
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -7296,8 +7308,9 @@
   args:
   - name: pid
     type: int64
-    description: A process ID to list. If not provided list all processes.
-  category: plugin
+    description: A pid to list. If this is provided we are able to operate much faster
+      by only opening a single process.
+  category: popular
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -7462,6 +7475,7 @@
   - name: inherit
     type: bool
     description: If specified we inherit the scope instead of building a new one.
+  category: server
   metadata:
     permissions: IMPERSONATION
   platforms:
@@ -7477,7 +7491,6 @@
   - name: range
     type: int64
     description: Selects a random number up to this range.
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -7498,7 +7511,7 @@
   - name: step
     type: int64
     description: Step (default 1)
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -7533,7 +7546,6 @@
     type: float64
     description: The Y float
     required: true
-  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -7707,7 +7719,7 @@
   - name: accessor
     type: string
     description: An accessor to use.
-  category: basic
+  category: popular
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -7742,7 +7754,7 @@
   - name: accessor
     type: string
     description: An accessor to use.
-  category: plugin
+  category: popular
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -7793,7 +7805,7 @@
     type: string
     description: Registry key path.
     required: true
-  category: plugin
+  category: windows
   platforms:
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7805,7 +7817,7 @@
     type: string
     description: Registry value path.
     required: true
-  category: plugin
+  category: windows
   platforms:
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7828,7 +7840,7 @@
   - name: create
     type: bool
     description: Set to create missing intermediate keys
-  category: plugin
+  category: windows
   platforms:
   - windows_386_cgo
   - windows_amd64_cgo
@@ -7882,7 +7894,7 @@
   - name: key
     type: string
     description: A key for caching
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -7927,7 +7939,7 @@
   - name: sep
     type: string
     description: Separator to use (default native)
-  category: basic
+  category: parsers
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -7984,6 +7996,7 @@
     type: string
     description: The name of the upload to create
     required: true
+  category: server
   metadata:
     permissions: COLLECT_SERVER
   platforms:
@@ -8000,7 +8013,6 @@
     type: string
     description: Filename to remove.
     required: true
-  category: plugin
   metadata:
     permissions: FILESYSTEM_WRITE
   platforms:
@@ -8052,7 +8064,7 @@
   args:
   - name: string
     type: string
-  category: parsers
+  category: encode
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -8109,7 +8121,6 @@
     type: int64
     description: Pick every n row from query.
     required: true
-  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -8146,7 +8157,7 @@
 - name: scope
   description: return the scope.
   type: Function
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -8166,7 +8177,7 @@
     SELECT 1+1 As Two FROM scope()
     ```
   type: Plugin
-  category: plugin
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -8190,7 +8201,7 @@
     type: ordereddict.Dict
     description: The row to send to the artifact
     required: true
-  category: event
+  category: server
   metadata:
     permissions: SERVER_ADMIN,PUBLISH
   platforms:
@@ -8261,7 +8272,6 @@
   - name: format
     type: string
     description: Encoding format (csv,json,yaml,hex,base64)
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -8271,6 +8281,7 @@
 - name: server_frontend_cert
   description: Get Server Frontend Certificate
   type: Function
+  category: server
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -8334,7 +8345,7 @@
   - name: value
     type: Any
     required: true
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -8404,6 +8415,7 @@
     type: vfilter.Lambda
     description: If specified we use this callback to determine a details column if
       the sigma rule does not specify it.
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -8449,7 +8461,6 @@
   - name: ms
     type: int64
     description: The number of ms to sleep
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -8472,7 +8483,6 @@
     type: uint64
     description: End index (0 based)
     required: true
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -8634,7 +8644,7 @@
   - name: sep_string
     type: string
     description: The separator as string that will be used to split
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -8739,7 +8749,6 @@
     type: string
     description: Alternatively use a secret from the secrets service. Secret must
       be of type 'AWS S3 Creds'
-  category: server
   metadata:
     permissions: COLLECT_SERVER
   platforms:
@@ -8770,7 +8779,6 @@
     required: true
   - name: args
     type: Any
-  category: plugin
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -8916,6 +8924,7 @@
   - name: accessor
     type: string
     description: An accessor to use.
+  category: popular
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -8936,7 +8945,6 @@
   - name: accessor
     type: string
     description: An accessor to use.
-  category: plugin
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -8953,7 +8961,7 @@
     type: Any
     description: The string to normalize
     required: true
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -8988,7 +8996,6 @@
   - name: suffix
     type: string
     description: The suffix to strip
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -9013,7 +9020,7 @@
   - name: end
     type: int
     description: End index of substring
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -9027,7 +9034,6 @@
   - name: item
     type: int64
     required: true
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -9041,7 +9047,7 @@
     Executes each query in order. If a query returns any rows, those
     are emitted. Any further queries are ignored.
   type: Plugin
-  category: plugin
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -9052,6 +9058,7 @@
 - name: sysinfo
   description: Collect system information on Linux clients
   type: Function
+  category: linux
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -9064,7 +9071,7 @@
   - name: remove_last
     type: bool
     description: If set we delay removal as much as possible.
-  category: basic
+  category: popular
   metadata:
     permissions: FILESYSTEM_WRITE
   platforms:
@@ -9093,7 +9100,7 @@
   - name: remove_last
     type: bool
     description: If set we delay removal as much as possible.
-  category: plugin
+  category: popular
   metadata:
     permissions: FILESYSTEM_WRITE
   platforms:
@@ -9110,6 +9117,7 @@
     type: int64
     description: The PID to get the thread for.
     required: true
+  category: windows
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -9200,6 +9208,7 @@
     type: string
     description: Name/Id of child timeline to delete. If not specified deletes the
       entire timeline
+  category: server
   metadata:
     permissions: NOTEBOOK_EDITOR
   platforms:
@@ -9214,6 +9223,7 @@
   - name: notebook_id
     type: string
     description: The notebook ID the timeline is stored in.
+  category: server
   metadata:
     permissions: READ_RESULTS
   platforms:
@@ -9356,7 +9366,7 @@
   - name: format
     type: string
     description: A format specifier as per the Golang time.Parse
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -9411,6 +9421,7 @@
   - name: accessor
     type: string
     description: The accessor to use
+  category: encode
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -9459,7 +9470,7 @@
   args:
   - name: item
     type: Any
-  category: basic
+  category: popular
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -9483,6 +9494,7 @@
   description: Upload a trace file.
   type: Function
   version: 1
+  category: developer
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -9557,7 +9569,7 @@
   - name: string
     type: string
     description: Hex string to decode
-  category: basic
+  category: encode
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -9595,7 +9607,7 @@
     type: string
     description: The type of file (default autodetected from file extension - zip
       or tgz or tar.gz).
-  category: basic
+  category: popular
   metadata:
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
   platforms:
@@ -9612,7 +9624,6 @@
     type: string
     description: The string to process
     required: true
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -9650,7 +9661,7 @@
   - name: btime
     type: Any
     description: Birth time to record
-  category: plugin
+  category: popular
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -9752,7 +9763,6 @@
     type: string
     description: The credentials to use
     required: true
-  category: plugin
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -9811,7 +9821,6 @@
     type: string
     description: Alternatively use a secret from the secrets service. Secret must
       be of type 'AWS S3 Creds'
-  category: plugin
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -9853,7 +9862,6 @@
   - name: hostkey
     type: string
     description: Host key to verify. Blank to disable
-  category: basic
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -9930,7 +9938,6 @@
   - name: user_agent
     type: string
     description: If specified, set a HTTP User-Agent.
-  category: basic
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -10008,7 +10015,6 @@
   - name: parse
     type: string
     description: A url to parse
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -10026,6 +10032,7 @@
   - name: org
     type: string
     description: The org under which we query the user's ACL.
+  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -10105,6 +10112,7 @@
     type: ordereddict.Dict
     description: A dict of permissions to set (e.g. as obtained from the gui_users()
       function).
+  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -10158,6 +10166,7 @@
   - name: default_password
     type: string
     description: Set the user's default password for Zip Exports.
+  category: server
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -10186,7 +10195,7 @@
     type: string
     description: A string to decode
     required: true
-  category: basic
+  category: encode
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -10208,7 +10217,7 @@
     type: string
     description: A string to decode
     required: true
-  category: basic
+  category: encode
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -10218,7 +10227,6 @@
 - name: uuid
   description: Generate a UUID.
   type: Function
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -10264,7 +10272,6 @@
     type: string
   - name: plugin
     type: string
-  category: basic
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -10324,6 +10331,7 @@
   - name: depth
     type: int64
     description: Depth of directory to list (default 0).
+  category: server
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -10474,6 +10482,7 @@
   - name: include_env
     type: bool
     description: Include process environment variables.
+  category: linux
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -10576,6 +10585,7 @@
   - name: raw
     type: bool
     description: Emit raw events (not parsed).
+  category: event
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -10599,6 +10609,7 @@
   - name: buffer_size
     type: int
     description: Maximum size of line buffer.
+  category: event
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -10668,7 +10679,7 @@
 - name: whoami
   description: Returns the username that is running the query.
   type: Function
-  category: plugin
+  category: server
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -10734,6 +10745,7 @@
     type: string
     description: When writing a memory image use this compression (default none) can
       be none, s2, snappy, gzip.
+  category: windows
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -10831,7 +10843,6 @@
     type: StoredQuery
     description: query to write into the file.
     required: true
-  category: plugin
   metadata:
     permissions: FILESYSTEM_WRITE
   platforms:
@@ -10890,6 +10901,7 @@
   - name: accessor
     type: string
     description: File accessor
+  category: experimental
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -10907,7 +10919,7 @@
     type: string
     description: Xor key.
     required: true
-  category: parsers
+  category: encode
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -10953,6 +10965,7 @@
   - name: vars
     type: ordereddict.Dict
     description: The Yara variables to use.
+  category: parsers
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -10987,6 +11000,7 @@
   - name: clean
     type: bool
     description: Remove metadata to make rules smaller.
+  category: parsers
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -11030,3 +11044,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+
