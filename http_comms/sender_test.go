@@ -84,7 +84,7 @@ func (self *MockHTTPConnector) Post(ctx context.Context,
 
 	manager := crypto_test.NullCryptoManager{}
 
-	message_info, err := manager.Decrypt(data)
+	message_info, err := manager.Decrypt(ctx, data)
 	require.NoError(self.t, err)
 
 	message_info.IterateJobs(context.Background(), self.config_obj,
