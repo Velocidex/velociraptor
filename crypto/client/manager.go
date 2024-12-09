@@ -309,9 +309,11 @@ func (self *CryptoManager) Decrypt(
 		return msg_info, nil
 	}
 
-	err = self.limiter.Wait(ctx)
-	if err != nil {
-		return nil, err
+	if self.limiter != nil {
+		err = self.limiter.Wait(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Decrypt the CipherProperties

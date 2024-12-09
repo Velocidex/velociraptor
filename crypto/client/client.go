@@ -7,6 +7,7 @@ import (
 
 	"github.com/Velocidex/ttlcache/v2"
 	"github.com/go-errors/errors"
+	"golang.org/x/time/rate"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -80,6 +81,12 @@ func NewClientCryptoManager(
 		lru_size = config_obj.Frontend.Resources.ExpectedClients
 	}
 
+	limit_rate := int64(100)
+	if config_obj.Frontend != nil &&
+		config_obj.Frontend.Resources.EnrollmentsPerSecond > 0 {
+		limit_rate = config_obj.Frontend.Resources.EnrollmentsPerSecond
+	}
+
 	result := &ClientCryptoManager{CryptoManager{
 		client_id:           client_id,
 		private_key:         private_key,
@@ -88,6 +95,7 @@ func NewClientCryptoManager(
 		unauthenticated_lru: ttlcache.NewCache(),
 		caPool:              roots,
 		logger:              logger,
+		limiter:             rate.NewLimiter(rate.Limit(limit_rate), 100),
 	}}
 
 	go func() {

@@ -128,7 +128,7 @@ func (self *TestSuite) TestEncDecServerToClient() {
 
 	// Decrypt the same message 100 times.
 	for i := 0; i < 100; i++ {
-		message_info, err := self.client_manager.Decrypt(cipher_text)
+		message_info, err := self.client_manager.Decrypt(self.Ctx, cipher_text)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -165,7 +165,7 @@ func (self *TestSuite) TestEncDecClientToServerWithSpoof() {
 		message_list, utils.GetSuperuserName(self.ConfigObj))
 	assert.NoError(t, err)
 
-	message_info, err := self.server_manager.Decrypt(cipher_text)
+	message_info, err := self.server_manager.Decrypt(self.Ctx, cipher_text)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -261,7 +261,7 @@ func (self *TestSuite) TestEncDecClientToServer() {
 
 	// Decrypt the same message 100 times.
 	for i := 0; i < 100; i++ {
-		message_info, err := self.server_manager.Decrypt(cipher_text)
+		message_info, err := self.server_manager.Decrypt(self.Ctx, cipher_text)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -297,7 +297,7 @@ func (self *TestSuite) TestEncryption() {
 			utils.GetSuperuserName(self.ConfigObj))
 		assert.NoError(t, err)
 
-		result, err := self.server_manager.Decrypt(cipher_text)
+		result, err := self.server_manager.Decrypt(self.Ctx, cipher_text)
 		assert.NoError(t, err)
 
 		assert.Equal(t, self.client_id, result.Source)
