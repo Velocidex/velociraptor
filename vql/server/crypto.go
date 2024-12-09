@@ -33,6 +33,10 @@ func (self *ServerFrontendCertFunction) Call(ctx context.Context,
 		scope.Log("ERROR:server_frontend_cert: Must be run on server")
 		return vfilter.Null{}
 	}
+
+	if config_obj.Frontend == nil {
+		return vfilter.Null{}
+	}
 	return config_obj.Frontend.Certificate
 }
 

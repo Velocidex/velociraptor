@@ -200,7 +200,7 @@ func (self *Server) DecryptForReader(ctx context.Context, request []byte) (
 func (self *Server) Decrypt(ctx context.Context, request []byte) (
 	*crypto.MessageInfo, error) {
 
-	message_info, err := self.manager.Decrypt(request)
+	message_info, err := self.manager.Decrypt(ctx, request)
 	if err != nil {
 		return nil, err
 	}
