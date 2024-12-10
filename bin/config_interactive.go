@@ -40,8 +40,8 @@ var (
 
 	install_type_question = &survey.Select{
 		Message: "Choose an install type",
-		Default: "self_signed",
-		Options: []string{"self_signed", "autocert", "oauth_sso"},
+		Default: self_signed,
+		Options: []string{self_signed, autocert, oauth_sso},
 	}
 
 	server_type_question = &survey.Select{
