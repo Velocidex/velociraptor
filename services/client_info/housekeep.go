@@ -132,12 +132,21 @@ func (self *Store) updateClientMetadataIndex(
 	indexed_fields := config_obj.Defaults.IndexedClientMetadata
 
 	// Optionally update the index service.
-	indexer, _ := services.GetIndexer(config_obj)
+	indexer, err := services.GetIndexer(config_obj)
+	if err != nil {
+		return err
+	}
 
 	// Only update the record if the metadata has changed.
 	return self.Modify(ctx, config_obj, client_id,
 		func(client_info *services.ClientInfo) (
 			*services.ClientInfo, error) {
+
+			// Client id is not valid: ignore it. This can happen if
+			// the client is deleted.
+			if client_info == nil {
+				return client_info, nil
+			}
 
 			changed := false
 
