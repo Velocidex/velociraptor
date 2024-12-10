@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	self_signed = "Self Signed SSL"
-	autocert    = "Automatically provision certificates with Lets Encrypt"
+	self_signed = "Self-Signed SSL"
+	autocert    = "Automatically provision certificates with Let's Encrypt"
 	oauth_sso   = "Authenticate users with SSO"
 
 	// FileStore implementations
@@ -38,13 +38,19 @@ var (
 		Options: []string{"Google", "GitHub", "Azure", "OIDC"},
 	}
 
+	install_type_question = &survey.Select{
+		Message: "Choose an install type",
+		Default: "self_signed",
+		Options: []string{"self_signed", "autocert", "oauth_sso"},
+	}
+
 	server_type_question = &survey.Select{
 		Message: `
 Welcome to the Velociraptor configuration generator
 ---------------------------------------------------
 
-I will be creating a new deployment configuration for you. I will
-begin by identifying what type of deployment you need.
+I will be creating a new deployment configuration for you.
+Let's begin by identifying what type of deployment you need...
 
 
 What OS will the server be deployed on?
@@ -70,19 +76,18 @@ What OS will the server be deployed on?
 	// https://docs.microsoft.com/en-us/troubleshoot/windows-server/identity/naming-conventions-for-computer-domain-site-ou#dns-host-names
 	url_validator          = regexValidator("^[a-z0-9.A-Z\\-]+$")
 	frontend_port_question = &survey.Input{
-		Message: "Enter the frontend port to listen on.",
+		Message: "Enter the Frontend port to listen on.",
+		Help: "Clients will connect to the Frontend on this port",
 		Default: "8000",
 	}
 	port_validator = regexValidator("^[0-9]+$")
 
 	should_use_websocket = false
 	websocket_question   = &survey.Confirm{
-		Message: `Would you like to try the new experimental websocket comms?
-
-Websocket is a bidirectional low latency communication protocol supported by
-most modern proxies and load balancers. This method is more efficient and
-portable than plain HTTP. Be sure to test this in your environment.
-`,
+		Message: "Would you like to try the new experimental websocket comms?",
+		Help: `Websocket is a bidirectional low latency communication protocol supported by most modern proxies and load balancers.
+  This method is more efficient and portable than plain HTTP.
+  Be sure to test this in your environment if you decide to use it!`,
 	}
 
 	gui_port_question = &survey.Input{
@@ -91,20 +96,17 @@ portable than plain HTTP. Be sure to test this in your environment.
 	}
 
 	log_question = &survey.Input{
-		Message: "Path to the logs directory.",
+		Message: "Path to the server logs directory.",
 		Default: tempfile.GetTempDir(),
 	}
 
 	expiry_question = &survey.Select{
-		Message: `Would you like to extend certificate expiration?
-
-By defaults internal certificates are issued for 1 year.
-
-If you expect this deployment to exist part one year you might
-consider extending the default validation.
-`,
+		Message: "Would you like to extend the server certificate expiration?",
+		Help: `By default the server's frontend certificate is issued with a 1-year validity period.
+  Renewing the cert will require a server service restart, which will cause a brief service interruption to clients.
+  If you expect that this deployment will exist for longer than one year then you might consider starting with a longer validity period.`,
 		Default: "1 Year",
-		Options: []string{"1 Year", "5 Years", "10 Years"},
+		Options: []string{"1 Year", "2 Years", "3 Years"},
 	}
 
 	output_question = &survey.Input{
@@ -118,7 +120,10 @@ consider extending the default validation.
 	}
 
 	user_name_question = &survey.Input{
-		Message: "GUI Username or email address to authorize (empty to end):",
+		Message: "Initial GUI username or email address to authorize.",
+		Help: `This will be the initial login username. You will be asked to enter the password next.
+  You can create more users after this one, but you can also create further users outside of this configuration wizard.
+  When you are done creating users hit Enter with an empty username.`,
 	}
 
 	password_question = &survey.Password{
@@ -141,17 +146,14 @@ consider extending the default validation.
 
 	add_allow_list_question = &survey.Confirm{
 		Message: `Do you want to restrict VQL functionality on the server?
-
-This is useful for a shared server where users are not fully trusted.
-It removes potentially dangerous plugins like execve(), filesystem access etc.
-
-NOTE: This is an experimental feature only useful in limited situations. If you
-do not know you need it select N here!
-`,
+  Hint: If you do not know whether you need it or not then select N here!`,
+	    Help: `This is useful for a shared server where users are not fully trusted.
+  It removes potentially dangerous plugins like execve(), filesystem access etc.
+  NOTE: This is an experimental feature and is only useful in limited situations.`,
 	}
 
 	registry_writeback_question = &survey.Confirm{
-		Message: `Would you like to use the registry to store the writeback files? (Experimental)`,
+		Message: "On Windows clients would you like to use the registry to store the writeback file data?",
 	}
 )
 
@@ -190,6 +192,7 @@ func configureDataStore(config_obj *config_proto.Config) error {
 			Name: "Location",
 			Prompt: &survey.Input{
 				Message: "Path to the datastore directory.",
+				Help: "The datastore is where Velociraptor stores all it's file data",
 				Default: default_data_store,
 			},
 		},
@@ -211,9 +214,7 @@ func configureDataStore(config_obj *config_proto.Config) error {
 func configureDeploymentType(config_obj *config_proto.Config) error {
 	// What type of install do we need?
 	install_type := ""
-	err := survey.AskOne(&survey.Select{
-		Options: []string{self_signed, autocert, oauth_sso},
-	}, &install_type, nil)
+	err := survey.AskOne(install_type_question, &install_type, nil)
 	if err != nil {
 		return err
 	}
@@ -310,10 +311,10 @@ func doGenerateConfigInteractive() error {
 	switch expiration {
 	case "1 Year":
 		config_obj.Defaults.CertificateValidityDays = 365
-	case "5 Years":
-		config_obj.Defaults.CertificateValidityDays = 365 * 5
-	case "10 Years":
-		config_obj.Defaults.CertificateValidityDays = 365 * 10
+	case "2 Years":
+		config_obj.Defaults.CertificateValidityDays = 365 * 2
+	case "3 Years":
+		config_obj.Defaults.CertificateValidityDays = 365 * 3
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
