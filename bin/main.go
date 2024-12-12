@@ -26,12 +26,12 @@ import (
 	"runtime/trace"
 	"time"
 
-	"github.com/AlecAivazis/survey/v2"
 	kingpin "github.com/alecthomas/kingpin/v2"
 	errors "github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	vsurvey "www.velocidex.com/golang/velociraptor/tools/survey"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/proxy"
 
@@ -102,11 +102,7 @@ func maybe_unlock_api_config(config_obj *config_proto.Config) error {
 	}
 
 	if x509.IsEncryptedPEMBlock(block) {
-		password := ""
-		err := survey.AskOne(
-			&survey.Password{Message: "Password:"},
-			&password,
-			survey.WithValidator(survey.Required))
+		password, err := vsurvey.GetAPIClientDecryptPassword()
 		if err != nil {
 			return err
 		}
