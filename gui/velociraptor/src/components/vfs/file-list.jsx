@@ -30,6 +30,10 @@ import {
   useContextMenu,
 } from "react-contexify";
 
+// If the flow in the running state. Flows can be in several states
+// that mean they are still running for our purposes.
+const is_running_re = new RegExp("running|waiting|in_progress", "i");
+const is_running = x=>is_running_re.test(x);
 
 const POLL_TIME = 2000;
 
@@ -268,7 +272,7 @@ class VeloFileList extends Component {
                         return;
                     }
                     let context = response.data.context;
-                    if (context.state === "RUNNING") {
+                    if (is_running(context.state)) {
                         this.setState({lastRecursiveRefreshData: context});
                         return;
                     }
@@ -340,8 +344,8 @@ class VeloFileList extends Component {
                     client_id: this.props.client.client_id,
                     flow_id: this.state.lastRecursiveDownloadFlowId,
                 }, this.source.token).then((response) => {
-                    let context = response.data.context;
-                    if (!context || context.state === "RUNNING") {
+                    let context = response.data && response.data.context;
+                    if (!context || is_running(context.state)) {
                         this.setState({lastRecursiveDownloadData: context});
                         return;
                     }
@@ -376,6 +380,10 @@ class VeloFileList extends Component {
 
     // Determine if the recursive SyncDir button should spin.
     shouldSpinRecursiveSyncDir = ()=>{
+        if (_.isEmpty(this.state.lastRecursiveRefreshData)) {
+            return false;
+        };
+
         return _.isEqual(this.state.current_path, this.props.node.path) &&
             _.isEqual(this.state.recursive_sync_dir_version, this.props.version);
     }
@@ -472,7 +480,7 @@ class VeloFileList extends Component {
                     <Button onClick={this.cancelRecursiveRefresh}
                             variant="default">
                       <FontAwesomeIcon icon="spinner" spin/>
-                      <span className="button-label">Synced {(
+                      <span className="button-label">{T("Synced")} {(
                           this.state.lastRecursiveRefreshData.total_collected_rows || 0) + " files"}
                       </span>
                       <span className="button-label"><FontAwesomeIcon icon="stop"/></span>

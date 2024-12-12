@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/startup"
+	vsurvey "www.velocidex.com/golang/velociraptor/tools/survey"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
@@ -37,7 +38,7 @@ var (
 func generateGUIConfig(datastore_directory, server_config_path, client_config_path string) (
 	*config_proto.Config, error) {
 	config_obj := config.GetDefaultConfig()
-	err := generateNewKeys(config_obj)
+	err := vsurvey.GenerateNewKeys(config_obj)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create config: %w", err)
 	}

@@ -20,13 +20,11 @@ package main
 import (
 	"crypto/rand"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/Velocidex/yaml/v2"
 	errors "github.com/go-errors/errors"
 	"software.sslmate.com/src/go-pkcs12"
@@ -41,6 +39,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/startup"
+	vsurvey "www.velocidex.com/golang/velociraptor/tools/survey"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -121,6 +120,9 @@ var (
 	config_reissue_server_key_validity = config_reissue_server_key.Flag(
 		"validity",
 		"How long should the new certs be valid for in days (default 365).").Int64()
+
+	config_frontend_command = config_command.Command(
+		"frontend", "Experimental: Create multi-frontend configuration")
 )
 
 func maybeGetOrgConfig(
@@ -195,54 +197,6 @@ func doShowConfig() error {
 	return nil
 }
 
-func generateNewKeys(config_obj *config_proto.Config) error {
-	ca_bundle, err := crypto.GenerateCACert(2048)
-	if err != nil {
-		return fmt.Errorf("Unable to create CA cert: %w", err)
-	}
-
-	config_obj.Client.CaCertificate = ca_bundle.Cert
-	config_obj.CA.PrivateKey = ca_bundle.PrivateKey
-
-	nonce := make([]byte, 8)
-	_, err = rand.Read(nonce)
-	if err != nil {
-		return fmt.Errorf("Unable to create nonce: %w", err)
-	}
-	config_obj.Client.Nonce = base64.StdEncoding.EncodeToString(nonce)
-
-	// Make another nonce for VQL obfuscation.
-	_, err = rand.Read(nonce)
-	if err != nil {
-		return fmt.Errorf("Unable to create nonce: %w", err)
-	}
-	config_obj.ObfuscationNonce = base64.StdEncoding.EncodeToString(nonce)
-
-	// Generate frontend certificate. Frontend certificates must
-	// have a constant common name - clients will refuse to talk
-	// with another common name.
-	frontend_cert, err := crypto.GenerateServerCert(
-		config_obj, utils.GetSuperuserName(config_obj))
-	if err != nil {
-		return fmt.Errorf("Unable to create Frontend cert: %w", err)
-	}
-
-	config_obj.Frontend.Certificate = frontend_cert.Cert
-	config_obj.Frontend.PrivateKey = frontend_cert.PrivateKey
-
-	// Generate gRPC gateway certificate.
-	gw_certificate, err := crypto.GenerateServerCert(
-		config_obj, utils.GetGatewayName(config_obj))
-	if err != nil {
-		return fmt.Errorf("Unable to create Frontend cert: %w", err)
-	}
-
-	config_obj.GUI.GwCertificate = gw_certificate.Cert
-	config_obj.GUI.GwPrivateKey = gw_certificate.PrivateKey
-
-	return nil
-}
-
 func doGenerateConfigNonInteractive() error {
 	logging.DisableLogging()
 
@@ -251,7 +205,7 @@ func doGenerateConfigNonInteractive() error {
 	logging.SuppressLogging = true
 	config_obj := config.GetDefaultConfig()
 
-	err := generateNewKeys(config_obj)
+	err := vsurvey.GenerateNewKeys(config_obj)
 	if err != nil {
 		return fmt.Errorf("Unable to create config: %w", err)
 	}
@@ -452,10 +406,7 @@ func doDumpApiClientConfig() error {
 
 	password := ""
 	if *config_api_client_password_protect {
-		err = survey.AskOne(
-			&survey.Password{Message: "Password:"},
-			&password,
-			survey.WithValidator(survey.Required))
+		password, err = vsurvey.GetAPIClientPassword()
 		if err != nil {
 			return err
 		}
@@ -570,6 +521,31 @@ func doDumpApiClientConfig() error {
 	return nil
 }
 
+func doGenerateConfigInteractive() error {
+	config_obj, err := vsurvey.GetInteractiveConfig()
+	if err != nil {
+		return err
+	}
+
+	return vsurvey.StoreServerConfig(config_obj)
+}
+
+func doConfigFrontend() error {
+	logging.DisableLogging()
+
+	config_obj, err := makeDefaultConfigLoader().
+		WithRequiredFrontend().LoadAndValidate()
+	if err != nil {
+		return err
+	}
+
+	if config_obj.Frontend == nil {
+		return errors.New("Must provide a frontend config")
+	}
+
+	return vsurvey.GenerateFrontendPackages(config_obj)
+}
+
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
@@ -594,6 +570,9 @@ func init() {
 
 		case config_api_client_command.FullCommand():
 			FatalIfError(config_api_client_command, doDumpApiClientConfig)
+
+		case config_frontend_command.FullCommand():
+			FatalIfError(config_frontend_command, doConfigFrontend)
 
 		default:
 			return false

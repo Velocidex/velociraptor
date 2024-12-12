@@ -148,12 +148,16 @@ func (self *Indexer) Start(
 	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	err := self.RebuildIndex(ctx, config_obj)
-
 	delay := 5 * time.Minute
 	if config_obj.Defaults != nil && config_obj.Defaults.ReindexPeriodSeconds > 0 {
 		delay = time.Duration(config_obj.Defaults.ReindexPeriodSeconds) * time.Second
 	}
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("<green>Starting</> Indexing Service for %v. Refreshing every %v",
+		services.GetOrgName(config_obj), delay)
+
+	err := self.RebuildIndex(ctx, config_obj)
 
 	wg.Add(1)
 	go func() {
@@ -281,10 +285,6 @@ func (self *Indexer) SearchIndexWithPrefix(
 
 func NewIndexingService(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (services.Indexer, error) {
-
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> Indexing Service for %v.",
-		services.GetOrgName(config_obj))
 
 	indexer := NewIndexer(config_obj)
 
