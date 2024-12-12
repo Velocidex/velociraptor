@@ -57,7 +57,7 @@ portable than plain HTTP. Be sure to test this in your environment.
 
 	items = append(items, configureDynDNS(config)...)
 
-	form := huh.NewForm(huh.NewGroup(items...))
+	form := huh.NewForm(huh.NewGroup(items...)).WithTheme(getTheme())
 	return form.Run()
 }
 

@@ -13,7 +13,8 @@ func getSelfSignedConfig(config *ConfigSurvey) error {
 			huh.NewNote().
 				Description("Configuring a Self Signed Server"),
 		),
-	)
+	).WithTheme(getTheme())
+
 	return form.Run()
 
 }

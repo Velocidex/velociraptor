@@ -90,7 +90,7 @@ By default we use HKLM\SOFTWARE\Velocidex\Velociraptor
 `).
 				Value(&config.UseRegistryWriteback),
 		),
-	)
+	).WithTheme(getTheme())
 
 	return form.Run()
 }

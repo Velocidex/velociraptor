@@ -61,7 +61,7 @@ velociraptor --config server.config.yaml config client > client.config.yaml
 					}).
 					Value(&server_path),
 			),
-		)
+		).WithTheme(getTheme())
 
 		err = form.Run()
 		if err != nil {
@@ -112,7 +112,7 @@ func showError(title, message string, err error) bool {
 				Title("Try again?").
 				Value(&retry),
 		),
-	)
+	).WithTheme(getTheme())
 
 	err = form.Run()
 	if err != nil {

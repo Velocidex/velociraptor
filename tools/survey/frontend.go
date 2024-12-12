@@ -69,7 +69,7 @@ velociraptor --config server.config.yaml debian server
 	items = append(items, configureDynDNS(config)...)
 
 	for {
-		form := huh.NewForm(huh.NewGroup(items...))
+		form := huh.NewForm(huh.NewGroup(items...)).WithTheme(getTheme())
 		err := form.Run()
 		if err != nil {
 			return err
@@ -129,7 +129,7 @@ NOTE: Both Master and Minion expect an EFS volume mounted on %v within their res
 		huh.NewConfirm().
 			Title("Configuration overview").
 			Description(message).
-			Value(&goahead)))
+			Value(&goahead))).WithTheme(getTheme())
 	err := form.Run()
 	if err != nil {
 		return err
