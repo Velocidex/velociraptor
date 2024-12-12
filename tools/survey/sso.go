@@ -44,7 +44,8 @@ func configSSO(config *ConfigSurvey) error {
 						config.SSOType, getSSORedirect(config))
 				}, &config.SSOType),
 		),
-	)
+	).WithTheme(getTheme())
+
 	err := form.Run()
 	if err != nil {
 		return err
@@ -76,7 +77,7 @@ func configSSO(config *ConfigSurvey) error {
 			Value(&config.OIDCIssuer))
 	}
 
-	form = huh.NewForm(huh.NewGroup(fields...))
+	form = huh.NewForm(huh.NewGroup(fields...)).WithTheme(getTheme())
 	return form.Run()
 }
 
@@ -108,7 +109,7 @@ func configAuth(config *ConfigSurvey) error {
 				Value(&user_record.Password))
 		}
 
-		form := huh.NewForm(huh.NewGroup(items...))
+		form := huh.NewForm(huh.NewGroup(items...)).WithTheme(getTheme())
 		err := form.Run()
 		if err != nil || user_record.Name == "" {
 			break

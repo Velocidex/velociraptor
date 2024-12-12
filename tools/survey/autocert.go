@@ -13,7 +13,7 @@ func getAutoCertConfig(config *ConfigSurvey) error {
 			huh.NewNote().
 				Description("Configuring Server certificates using Let's Encrypt."),
 		),
-	)
+	).WithTheme(getTheme())
 
 	return form.Run()
 }

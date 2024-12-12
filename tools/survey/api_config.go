@@ -14,7 +14,7 @@ The API key is written in PEM format in the api configuration file. You can add 
 			Value(&passwd),
 	}
 
-	form := huh.NewForm(huh.NewGroup(items...))
+	form := huh.NewForm(huh.NewGroup(items...)).WithTheme(getTheme())
 	err := form.Run()
 	return passwd, err
 }
@@ -29,7 +29,7 @@ func GetAPIClientDecryptPassword() (string, error) {
 			Value(&passwd),
 	}
 
-	form := huh.NewForm(huh.NewGroup(items...))
+	form := huh.NewForm(huh.NewGroup(items...)).WithTheme(getTheme())
 	err := form.Run()
 	return passwd, err
 }
