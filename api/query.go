@@ -74,7 +74,9 @@ func streamQuery(
 	}()
 
 	response_channel := make(chan *actions_proto.VQLResponse)
-	scope_logger := MakeLogger(ctx, response_channel)
+	sub_ctx, cancel := context.WithCancel(ctx)
+
+	scope_logger := MakeLogger(sub_ctx, response_channel)
 
 	// Add extra artifacts to the query from the global repository.
 	manager, err := services.GetRepositoryManager(config_obj)
@@ -105,13 +107,10 @@ func streamQuery(
 	wg := sync.WaitGroup{}
 	defer wg.Wait()
 
-	subctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
 	// Implement timeout
 	if arg.Timeout > 0 {
 		start := time.Now()
-		timed_ctx, timed_cancel := utils.WithTimeoutCause(subctx,
+		timed_ctx, timed_cancel := utils.WithTimeoutCause(sub_ctx,
 			time.Second*time.Duration(arg.Timeout),
 			errors.New("Query API timeout reached"))
 
@@ -121,7 +120,7 @@ func streamQuery(
 
 			select {
 			// Cancelling the parent will not return a log.
-			case <-subctx.Done():
+			case <-sub_ctx.Done():
 				timed_cancel()
 
 				// Log the timeout
@@ -137,13 +136,14 @@ func streamQuery(
 
 	// Throttle the query if required.
 	scope.SetThrottler(
-		actions.NewThrottler(subctx, scope, 0, float64(arg.CpuLimit), 0))
+		actions.NewThrottler(sub_ctx, scope, 0, float64(arg.CpuLimit), 0))
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		defer close(response_channel)
 		defer scope.Close()
+		defer cancel()
 
 		scope.Log("Starting query execution.")
 
@@ -163,7 +163,7 @@ func streamQuery(
 					vfilter.FormatToString(scope, vql))
 
 				result_chan := vfilter.GetResponseChannel(
-					vql, subctx, scope,
+					vql, sub_ctx, scope,
 					vql_subsystem.MarshalJson(scope),
 					int(arg.MaxRow), int(arg.MaxWait))
 

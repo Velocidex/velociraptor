@@ -1,0 +1,55 @@
+name: Windows.ETW.KernelNetwork
+description: |
+  This artifact follows the Microsoft-Windows-Kernel-Network provider.
+
+  NOTE: We can only attach to this provider when running as
+  NT_USER/SYSTEM.
+
+references:
+- "https://github.com/repnz/etw-providers-docs/blob/master/Manifests-Win10-18990/Microsoft-Windows-Kernel-Network.xml"
+
+type: CLIENT_EVENT
+
+parameters:
+  - name: ProcessRegex
+    type: regex
+    description: View Processes with Executables matching this regex
+    default: .
+
+  - name: IgnoreProcessRegex
+    type: regex
+    description: Ignore Processes with Executables matching this regex
+
+  - name: Events
+    type: multichoice
+    description: Events to view
+    default: '["ConnectionAttempted", "ConnectionAccepted"]'
+    choices:
+      - DataSent
+      - DataReceived
+      - ConnectionAttempted
+      - ConnectionAccepted
+      - DataSentOverUDPProtocol
+      - DataReceivedOverUDPProtocol
+
+sources:
+  - query: |
+      LET EIDLookup <= dict(
+        `10`="DataSent", `11`="DataReceived", `12`="ConnectionAttempted", `15`="ConnectionAccepted",
+        `42`="DataSentOverUDPProtocol",`43`="DataReceivedOverUDPProtocol")
+
+      LET ETW = SELECT *
+      FROM watch_etw(guid='{7dd42a49-5329-4832-8dfd-43d979153a88}',
+           description="Microsoft-Windows-Kernel-Network")
+
+      SELECT System.ID AS EID,
+         get(item=EIDLookup, field=str(str=System.ID)) AS EventType,
+         process_tracker_get(id=EventData.PID).Data AS ProcInfo,
+         process_tracker_callchain(id=EventData.PID).Data.Exe AS CallChain,
+         EventData
+      FROM delay(query=ETW, delay=3)
+      WHERE EventType IN Events
+        AND EventData.ImageName =~ ProcessRegex
+        AND if(condition=IgnoreProcessRegex,
+               then=NOT EventData.ImageName =~ IgnoreProcessRegex,
+               else=TRUE)

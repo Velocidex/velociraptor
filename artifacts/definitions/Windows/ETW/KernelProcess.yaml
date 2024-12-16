@@ -1,0 +1,53 @@
+name: Windows.ETW.KernelProcess
+description: |
+  This artifact follows the Microsoft-Windows-Kernel-Process provider.
+
+  NOTE: We can only attach to this provider when running as
+  NT_USER/SYSTEM.
+
+references:
+- "https://github.com/repnz/etw-providers-docs/blob/master/Manifests-Win10-18990/Microsoft-Windows-Kernel-Process.xml"
+
+parameters:
+  - name: ProcessRegex
+    type: regex
+    description: View Processes with Executables matching this regex
+    default: .
+
+  - name: IgnoreProcessRegex
+    type: regex
+    description: Ignore Processes with Executables matching this regex
+
+  - name: Events
+    type: multichoice
+    description: Events to view
+    default: '["ProcessStart", "ImageLoad"]'
+    choices:
+      - ProcessStart
+      - ProcessStop
+      - ImageLoad
+      - ImageUnload
+
+type: CLIENT_EVENT
+
+sources:
+  - query: |
+      LET EIDLookup <= dict(
+        `1`="ProcessStart", `2`="ProcessStop",
+        `5`="ImageLoad", `6`="ImageUnload")
+
+      LET ETW = SELECT *
+      FROM watch_etw(guid='{22fb2cd6-0e7b-422b-a0c7-2fad1fd0e716}',
+           description="Microsoft-Windows-Kernel-Process", any=0x50)
+
+      SELECT System.ID AS EID,
+         get(item=EIDLookup, field=str(str=System.ID)) AS EventType,
+         process_tracker_get(id=System.ProcessID).Data AS ParentProcInfo,
+         process_tracker_callchain(id=System.ProcessID).Data.Exe AS ParentCallChain,
+         EventData
+      FROM delay(query=ETW, delay=3)
+      WHERE EventType IN Events
+        AND EventData.ImageName =~ ProcessRegex
+        AND if(condition=IgnoreProcessRegex,
+               then=NOT EventData.ImageName =~ IgnoreProcessRegex,
+               else=TRUE)
