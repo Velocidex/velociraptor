@@ -85,6 +85,7 @@ func SetTempDir(path string) error {
 func SetTempfile(config_obj *config_proto.Config) {
 	if config_obj.Client != nil {
 		tmpdir := ""
+		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
 		// We must set some temp directory that is reasonable even if
 		// the config does not specify.
@@ -115,6 +116,9 @@ func SetTempfile(config_obj *config_proto.Config) {
 			defer os.Remove(tmpfile.Name())
 
 		} else {
+			logger.Error("Unable to write to configured temp dir %v - falling back to %v",
+				tmpdir, os.TempDir())
+
 			// No we dont have permission there, fall back to system
 			// default, that is the best we can do we hope we can
 			// write there.
@@ -131,7 +135,6 @@ func SetTempfile(config_obj *config_proto.Config) {
 		g_tempdir = tmpdir
 		mu.Unlock()
 
-		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 		logger.Info("Setting temp directory to <green>%v", tmpdir)
 	}
 }
