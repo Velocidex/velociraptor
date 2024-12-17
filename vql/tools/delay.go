@@ -30,6 +30,7 @@ package tools
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -56,13 +57,17 @@ func (self DelayPlugin) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
+	sub_ctx, cancel := context.WithCancel(ctx)
 
 	go func() {
-		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor("delay", args)()
+		defer cancel()
+
+		wg := &sync.WaitGroup{}
+		defer wg.Wait()
 
 		arg := &DelayPluginArgs{}
-		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		err := arg_parser.ExtractArgsWithContext(sub_ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("delay: %v", err)
 			return
@@ -77,26 +82,32 @@ func (self DelayPlugin) Call(ctx context.Context,
 		}
 
 		buffer := make(chan *container, arg.Size)
-		defer close(buffer)
 
+		// This routine pumps data from the buffer to the output_chan
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
+			defer close(output_chan)
+
 			for {
 				select {
-				case <-ctx.Done():
+				case <-sub_ctx.Done():
 					return
+
 				case row_container, ok := <-buffer:
 					if !ok {
 						return
 					}
 
-					now := time.Now()
+					now := utils.GetTime().Now()
 
 					if row_container.due.After(now) {
 						// Wait until it is time.
-						utils.SleepWithCtx(ctx, row_container.due.Sub(now))
+						utils.SleepWithCtx(sub_ctx, row_container.due.Sub(now))
 					}
+
 					select {
-					case <-ctx.Done():
+					case <-sub_ctx.Done():
 						return
 
 					case output_chan <- row_container.row:
@@ -105,25 +116,37 @@ func (self DelayPlugin) Call(ctx context.Context,
 			}
 		}()
 
-		row_chan := arg.Query.Eval(ctx, scope)
-		for {
-			select {
-			case row, ok := <-row_chan:
-				if !ok {
-					return
-				}
+		// This routine pumps data from the input query to the buffer.
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			defer close(buffer)
 
-				event := &container{
-					row: row,
-					due: time.Now().Add(time.Second * time.Duration(arg.DelaySec)),
-				}
+			delay := time.Second * time.Duration(arg.DelaySec)
+
+			row_chan := arg.Query.Eval(sub_ctx, scope)
+			for {
 				select {
-				case <-ctx.Done():
+				case <-sub_ctx.Done():
 					return
-				case buffer <- event:
+
+				case row, ok := <-row_chan:
+					if !ok {
+						return
+					}
+
+					event := &container{
+						row: row,
+						due: utils.GetTime().Now().Add(delay),
+					}
+					select {
+					case <-sub_ctx.Done():
+						return
+					case buffer <- event:
+					}
 				}
 			}
-		}
+		}()
 	}()
 
 	return output_chan

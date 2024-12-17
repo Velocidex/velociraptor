@@ -119,6 +119,15 @@ func (self *ArtifactRepositoryPlugin) Call(
 			precondition = scope.Bool(precondition_any)
 		}
 
+		// Allow the args to specify a ** kw style args.
+		kwargs_any, pres := args.Get("**")
+		if pres {
+			kwargs, ok := kwargs_any.(*ordereddict.Dict)
+			if ok {
+				args = kwargs
+			}
+		}
+
 		acl_manager, ok := artifacts.GetACLManager(scope)
 		if !ok {
 			acl_manager = acl_managers.NullACLManager{}
