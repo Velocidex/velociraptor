@@ -80,7 +80,7 @@ func (self *LogSourceProviderAssociative) Associative(scope vfilter.Scope, a vfi
 		return vfilter.Null{}, false
 	}
 
-	return res, true
+	return vfilter.FormatToString(scope, res), true
 }
 
 type LogSourcesFunction struct{}
@@ -119,6 +119,7 @@ func (self LogSourcesFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 		Name:         "sigma_log_sources",
 		Doc:          "Constructs a Log sources object to be used in sigma rules. Call with args being category/product/service and values being stored queries. You may use a * as a placeholder for any of these fields.",
 		FreeFormArgs: true,
+		Version:      2,
 	}
 }
 
