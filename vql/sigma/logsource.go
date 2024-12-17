@@ -15,6 +15,70 @@ type LogSourceProvider struct {
 	queries map[string]types.StoredQuery
 }
 
+func (self *LogSourceProvider) Queries() map[string]types.StoredQuery {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	res := make(map[string]types.StoredQuery)
+	for k, v := range self.queries {
+		res[k] = v
+	}
+
+	return res
+}
+
+// Add an associative protocol to LogSourceProvider so we can iterate
+// over it.
+type LogSourceProviderAssociative struct{}
+
+func (self LogSourceProviderAssociative) Applicable(a vfilter.Any, b vfilter.Any) bool {
+	_, a_ok := a.(*LogSourceProvider)
+	_, b_ok := b.(string)
+	return a_ok && b_ok
+}
+
+func (self LogSourceProviderAssociative) GetMembers(
+	scope vfilter.Scope, a vfilter.Any) []string {
+
+	ls, ok := a.(*LogSourceProvider)
+	if !ok {
+		return nil
+	}
+
+	ls.mu.Lock()
+	defer ls.mu.Unlock()
+
+	res := make([]string, 0, len(ls.queries))
+	for k := range ls.queries {
+		res = append(res, k)
+	}
+	return res
+}
+
+func (self *LogSourceProviderAssociative) Associative(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) (
+	vfilter.Any, bool) {
+
+	ls, ok := a.(*LogSourceProvider)
+	if !ok {
+		return vfilter.Null{}, false
+	}
+
+	key, ok := b.(string)
+	if !ok {
+		return vfilter.Null{}, false
+	}
+
+	ls.mu.Lock()
+	defer ls.mu.Unlock()
+
+	res, ok := ls.queries[key]
+	if !ok {
+		return vfilter.Null{}, false
+	}
+
+	return vfilter.FormatToString(scope, res), true
+}
+
 type LogSourcesFunction struct{}
 
 func (self *LogSourcesFunction) Call(ctx context.Context,
