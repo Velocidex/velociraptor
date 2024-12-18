@@ -43,7 +43,7 @@ reports:
       ### Tools
 
       {{ range $artifact.Tools -}}
-      * <grr-tool-viewer name="{{.Name}}" version="{{.Version}}"></grr-tool-viewer>
+      * <velo-tool-viewer name="{{.Name}}" version="{{.Version}}"></velo-tool-viewer>
       {{ end }}
 
       {{ end }}

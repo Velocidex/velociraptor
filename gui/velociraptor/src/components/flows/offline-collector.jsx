@@ -563,13 +563,14 @@ class OfflineCollectorParameters  extends React.Component {
                     <Form.Label column sm="3">{T("Pause For Prompt")}</Form.Label>
                     <Col sm="8">
                       <Form.Check
-                        type="checkbox"
+                        type="switch"
+                        label={T("Pause For Prompt")}
                         onChange={(e) => {
+                            let value = "N";
                             if (e.currentTarget.checked) {
-                                this.props.parameters.opt_prompt = "Y";
-                            } else {
-                                this.props.parameters.opt_prompt = "N";
-                            }
+                                value = "Y";
+                            };
+                            this.props.parameters.opt_prompt = value;
                             this.props.setParameters(this.props.parameters);
                         }}
                         checked={this.props.parameters.opt_prompt === "Y"}
@@ -619,6 +620,24 @@ class OfflineCollectorParameters  extends React.Component {
                             this.props.parameters.opt_collector_filename = e.target.value;
                             this.props.setParameters(this.props.parameters);
                         }}
+                      />
+                    </Col>
+                  </Form.Group>
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">{T("Delete Collection at Exit")}</Form.Label>
+                    <Col sm="8">
+                      <Form.Check
+                        type="switch"
+                        label={T("Delete Collection at Exit")}
+                        onChange={(e) => {
+                            let value = "N";
+                            if (e.currentTarget.checked) {
+                                value = "Y";
+                            }
+                            this.props.parameters.opt_delete_at_exit = value;
+                            this.props.setParameters(this.props.parameters);
+                        }}
+                        checked={this.props.parameters.opt_delete_at_exit === "Y"}
                       />
                     </Col>
                   </Form.Group>
@@ -788,6 +807,7 @@ function getDefaultCollectionParameters() {
         opt_tempdir: undefined,
         opt_filename_template: "Collection-%FQDN%-%TIMESTAMP%",
         opt_collector_filename: undefined,
+        opt_delete_at_exit: "N",
         opt_format: "jsonl",
         opt_prompt: "N",
     };
@@ -872,6 +892,9 @@ export default class OfflineCollectorWizard extends React.Component {
                 case "opt_prompt":
                     collector_parameters.opt_prompt = value;
                     break;
+                case "opt_delete_at_exit":
+                    collector_parameters.opt_delete_at_exit = value;
+                    break;
                 case "opt_tempdir":
                     collector_parameters.opt_tempdir = value;
                     break;
@@ -890,7 +913,6 @@ export default class OfflineCollectorWizard extends React.Component {
                 case "opt_collector_filename":
                     collector_parameters.opt_collector_filename = value;
                     break;
-
                 case "opt_progress_timeout":
                     resources.progress_timeout =  JSONparse(value);
                     break;
@@ -958,6 +980,7 @@ export default class OfflineCollectorWizard extends React.Component {
         env.push({key: "opt_output_directory", value: str(params.opt_output_directory)});
         env.push({key: "opt_filename_template", value: str(params.opt_filename_template)});
         env.push({key: "opt_collector_filename", value: str(params.opt_collector_filename)});
+        env.push({key: "opt_delete_at_exit", value: str(params.opt_delete_at_exit)});
         env.push({key: "opt_progress_timeout", value: str(this.state.resources.progress_timeout)});
         env.push({key: "opt_timeout", value: str(this.state.resources.timeout)});
         env.push({key: "opt_cpu_limit", value: str( this.state.resources.cpu_limit)});

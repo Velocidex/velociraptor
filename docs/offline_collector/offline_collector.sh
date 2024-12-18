@@ -68,7 +68,8 @@ SELECT * FROM Artifact.Server.Utils.CreateCollector(
    opt_cpu_limit=Spec.OptCpuLimit,
    opt_progress_timeout=Spec.OptProgressTimeout,
    opt_timeout=Spec.OptTimeout,
-   opt_version=Spec.OptVersion
+   opt_version=Spec.OptVersion,
+   opt_delete_at_exit=Spec.OptDeleteAtExit
    )
 EOF
 )

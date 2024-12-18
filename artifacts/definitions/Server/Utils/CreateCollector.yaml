@@ -144,6 +144,16 @@ parameters:
       because the packed builtin artifacts are only compatible with
       the current release version.
 
+  - name: opt_delete_at_exit
+    type: bool
+    default: N
+    description: |
+      If specified the collection will be deleted at exit. This only
+      makes sense when uploading to the cloud or a remote
+      location. NOTE: There is no way to check that the upload
+      actually worked so this flag deletes the collection regardless
+      of upload success.
+
   - name: StandardCollection
     type: hidden
     default: |
@@ -266,6 +276,12 @@ parameters:
 
       // The log is always written to the executable path
       LET log_filename <= pathspec(parse= baseline[0].Exe + ".log")
+
+      -- Remove the zip file and log file when done if the user asked for it.
+      LET _ <= if(condition=DeleteOnExit, then=atexit(query={
+         SELECT rm(filename=zip_filename), rm(filename=log_filename) FROM scope()
+         WHERE log(message="Removed Zip file %v", args=zip_filename)
+      }, env=dict(zip_filename=zip_filename, log_filename=log_filename)))
 
       -- Make a random hex string as a random password
       LET RandomPassword <= SELECT format(format="%02x",
@@ -470,6 +486,7 @@ sources:
                     dict(name="ProgressTimeout", type="int",
                          default=opt_progress_timeout),
                     dict(name="Timeout", default=opt_timeout, type="int"),
+                    dict(name="DeleteOnExit", default=opt_delete_at_exit, type="bool"),
                     dict(name="target_args",
                          default=serialize(format='json', item=target_args),
                          type="json"),
