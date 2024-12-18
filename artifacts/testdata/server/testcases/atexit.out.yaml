@@ -12,7 +12,7 @@ SELECT * FROM query(query=''' LET Foo = SELECT log(message="I Ran at the end") F
   "Log": "Velociraptor: DEFAULT:Second!\n"
  },
  {
-  "Log": "Velociraptor: Running AtExit query\n"
+  "Log": "Velociraptor: Running AtExit query SELECT log(message=\"I Ran at the end\") FROM scope()\n"
  },
  {
   "Log": "Velociraptor: DEFAULT:I Ran at the end\n"

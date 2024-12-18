@@ -90,6 +90,13 @@ OptTimeout: 0
 # the packed builtin artifacts are only compatible with the current
 # release version.
 OptVersion: ""
+
+# If specified the collection will be deleted at exit. This only
+# makes sense when uploading to the cloud or a remote
+# location. NOTE: There is no way to check that the upload
+# actually worked so this flag deletes the collection regardless
+# of upload success.
+OptDeleteAtExit: N
 `
 
 func doCollector() error {
@@ -219,7 +226,8 @@ SELECT * FROM Artifact.Server.Utils.CreateCollector(
    opt_cpu_limit=Spec.OptCpuLimit,
    opt_progress_timeout=Spec.OptProgressTimeout,
    opt_timeout=Spec.OptTimeout,
-   opt_version=Spec.OptVersion
+   opt_version=Spec.OptVersion,
+   opt_delete_at_exit=Spec.OptDeleteAtExit
    )
 `
 	return runQueryWithEnv(query, builder, "json")
