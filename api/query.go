@@ -216,6 +216,12 @@ func (self *logWriter) Write(b []byte) (int, error) {
 	select {
 	case <-self.ctx.Done():
 		return 0, io.EOF
+	default:
+	}
+
+	select {
+	case <-self.ctx.Done():
+		return 0, io.EOF
 
 	case self.output <- &actions_proto.VQLResponse{
 		Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),

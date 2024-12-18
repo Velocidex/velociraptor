@@ -60,3 +60,10 @@ OptTimeout: 0
 # the packed builtin artifacts are only compatible with the current
 # release version.
 OptVersion: ""
+
+# If specified the collection will be deleted at exit. This only
+# makes sense when uploading to the cloud or a remote
+# location. NOTE: There is no way to check that the upload
+# actually worked so this flag deletes the collection regardless
+# of upload success.
+OptDeleteAtExit: N
