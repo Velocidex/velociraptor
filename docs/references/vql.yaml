@@ -48,7 +48,7 @@
 
     ### See also
 
-    - [log(]{{< ref "/vql_reference/popular/log/" >}}): alerts and log messages are similar in
+    - [log]({{< ref "/vql_reference/popular/log/" >}}): alerts and log messages are similar in
       concept and use the same deduplication mechanism which is explained with
       examples for the `log()` function.
   type: Function
@@ -1787,7 +1787,7 @@
 
     ### See also
 
-    - [watch_ebpf(]{{< ref "/vql_reference/linux/watch_ebpf/" >}})
+    - [watch_ebpf]({{< ref "/vql_reference/linux/watch_ebpf/" >}})
   type: Plugin
   category: linux
   platforms:
@@ -2759,11 +2759,11 @@
 
     ### See also
 
-    - [log(]{{< ref "/vql_reference/popular/log/" >}}): a function which uses the same string
+    - [log]({{< ref "/vql_reference/popular/log/" >}}): a function which uses the same string
       formatting as the `format` function.
-    - [timestamp_format(]{{< ref "/vql_reference/other/timestamp_format/" >}}): a function
+    - [timestamp_format]({{< ref "/vql_reference/other/timestamp_format/" >}}): a function
       that simplifies the string formatting of timestamp objects.
-    - [typeof(]{{< ref "/vql_reference/other/typeof/" >}}): a dedicated function equivalent
+    - [typeof]({{< ref "/vql_reference/other/typeof/" >}}): a dedicated function equivalent
       to the special use case: `format(format="%T",args=x)`
   type: Function
   args:
@@ -2970,7 +2970,7 @@
 
     ### See also
 
-    - [set(]{{< ref "/vql_reference/popular/set/" >}}): Sets the member field of
+    - [set]({{< ref "/vql_reference/popular/set/" >}}): Sets the member field of
     the item.
   type: Function
   args:
@@ -4619,9 +4619,9 @@
 
     ### See also
 
-    - [format(]{{< ref "/vql_reference/popular/format/" >}}): a function that uses the same
+    - [format]({{< ref "/vql_reference/popular/format/" >}}): a function that uses the same
       string formatting syntax.
-    - [alert(]{{< ref "/vql_reference/other/alert/" >}}): alerts are a special type of log
+    - [alert]({{< ref "/vql_reference/other/alert/" >}}): alerts are a special type of log
       message that are added to a server alerts queue, which can be monitored.
   type: Function
   version: 2
@@ -5539,7 +5539,7 @@
 
     ### See also
 
-    - [timestamp(]{{< ref "/vql_reference/popular/timestamp/" >}})
+    - [timestamp]({{< ref "/vql_reference/popular/timestamp/" >}})
   type: Function
   category: popular
   platforms:
@@ -8379,7 +8379,7 @@
 
     ### See also
 
-    - [get(]{{< ref "/vql_reference/popular/get/" >}}): Gets the member field from the item.
+    - [get]({{< ref "/vql_reference/popular/get/" >}}): Gets the member field from the item.
   type: Function
   args:
   - name: item
@@ -9592,7 +9592,7 @@
 
     ### See also
 
-    - [format(]{{< ref "/vql_reference/popular/format/" >}})
+    - [format]({{< ref "/vql_reference/popular/format/" >}})
   type: Function
   platforms:
   - darwin_amd64_cgo
@@ -10521,7 +10521,7 @@
 
     ### See also
 
-    - [ebpf_events(]{{< ref "/vql_reference/linux/ebpf_events/" >}}): Dumps information about
+    - [ebpf_events]({{< ref "/vql_reference/linux/ebpf_events/" >}}): Dumps information about
       potential ebpf_events.
   type: Plugin
   args:
