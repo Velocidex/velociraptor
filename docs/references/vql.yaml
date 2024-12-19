@@ -48,7 +48,7 @@
 
     ### See also
 
-    - [log](/vql_reference/basic/log/): alerts and log messages are similar in
+    - [log(]{{< ref "/vql_reference/popular/log/" >}}): alerts and log messages are similar in
       concept and use the same deduplication mechanism which is explained with
       examples for the `log()` function.
   type: Function
@@ -1104,10 +1104,6 @@
     In this case the artifact names are repeated in the spec and the
     artifacts parameter.
 
-    NOTE: When constructing the dictionaries for the spec parameter
-    you will often need to specify a field name containing full
-    stop. You can escape this using the backticks like the example above.
-
     ### Example - conditional collections
 
     In this example we wish to create an artifact with check buttons
@@ -1138,6 +1134,12 @@
              client_id='C.49982ba4c2ccef20') AS collection
     FROM scope()
     ```
+
+    ### Notes
+
+    When constructing the dictionaries for the spec parameter
+    you will often need to specify a field name containing full
+    stop. You can escape this using the backticks like the example above.
   type: Function
   args:
   - name: client_id
@@ -1785,7 +1787,7 @@
 
     ### See also
 
-    - [watch_ebpf](/vql_reference/misc/watch_ebpf/)
+    - [watch_ebpf(]{{< ref "/vql_reference/linux/watch_ebpf/" >}})
   type: Plugin
   category: linux
   platforms:
@@ -1932,7 +1934,9 @@
     This is an aggregate function that keeps track of all elements in
     a GROUP BY group.
 
-    NOTE: Use this function carefully as memory use can be large. It
+    ### Notes
+
+    Use this function carefully as memory use can be large. It
     keeps a copy of every element in the group and that can be very
     large for large result sets.
   type: Function
@@ -2109,7 +2113,9 @@
 
     https://docs.velociraptor.app/docs/extending_vql/#using-external-tools
 
-    NOTE: The plugin receives an array of arguments which are passed
+    ### Notes
+
+    The plugin receives an array of arguments which are passed
     to the `execve()` system call as an array (on Windows they are
     properly escaped into a command line). This means that you do not
     need to escape or quote any special characters in the command.
@@ -2186,7 +2192,9 @@
     FROM scope()
     ```
 
-    NOTE: The environment strings are set per user and Velociraptor's
+    ### Notes
+
+    The environment strings are set per user and Velociraptor's
     own environment may not reflect any other process's
     environment. See `Windows.Forensics.ProcessInfo` for a
     forensically sound manner of obtaining the environment from any
@@ -2285,7 +2293,9 @@
 
     This VQL function provides an interface for this functionality.
 
-    NOTE: A favorite belongs to the calling user - this function will
+    ### Notes
+
+    A favorite belongs to the calling user - this function will
     update the favorite for the calling user only.
   type: Function
   args:
@@ -2391,7 +2401,9 @@
 
     Does not allow access to raw devices.
 
-    NOTE: This accessor does not follow symbolic links on `Windows` or
+    ### Notes
+
+    This accessor does not follow symbolic links on `Windows` or
     `Linux` in order to avoid being trapped by cycles. This means that
     on some Linux systems you will find `/usr/bin/ls` instead of
     `/bin/ls` since `/bin` is a symlink to `/usr/bin/`
@@ -2569,7 +2581,9 @@
 
     This is similar to the source() plugin.
 
-    NOTE: Since a collection can collect multiple artifacts you must
+    ### Notes
+
+    Since a collection can collect multiple artifacts you must
     specify the artifact you are interested in.
   type: Plugin
   args:
@@ -2745,11 +2759,11 @@
 
     ### See also
 
-    - [log](vql_reference/basic/log/): a function which uses the same string
+    - [log(]{{< ref "/vql_reference/popular/log/" >}}): a function which uses the same string
       formatting as the `format` function.
-    - [timestamp_format](/vql_reference/misc/timestamp_format/): a function
+    - [timestamp_format(]{{< ref "/vql_reference/other/timestamp_format/" >}}): a function
       that simplifies the string formatting of timestamp objects.
-    - [typeof](/vql_reference/basic/format/): a dedicated function equivalent
+    - [typeof(]{{< ref "/vql_reference/other/format/" >}}): a dedicated function equivalent
       to the special use case: `format(format="%T",args=x)`
   type: Function
   args:
@@ -2852,7 +2866,9 @@
     })
     ```
 
-    NOTE: The `generate()` function produces a stored query that can be
+    ### Notes
+
+    The `generate()` function produces a stored query that can be
     used as the target of any `SELECT ... FROM` statement. Therefore
     it does not make sense to materialize the output of `generate()`
     because it is equivalent to materializing the actual target query
@@ -2924,7 +2940,7 @@
   - windows_amd64_cgo
 - name: get
   description: |
-    Gets the member field from item.
+    Gets the member field from the item.
 
     This is useful to index an item from an array.
 
@@ -2946,6 +2962,10 @@
 
     If you need to access a field with dots in its name, you can use
     the field parameter which simply fetches the named field.
+
+    ### See also
+
+    - [set(]{{< ref "/vql_reference/popular/set/" >}}): Sets the member field of the item.
   type: Function
   args:
   - name: item
@@ -3330,9 +3350,6 @@
     You can also specify an external DNS server, causing the query to
     contact the DNS server for resolving the names.
 
-    NOTE: No caching is currently provided so this may generate a lot
-    of load on DNS servers when scanning many rows.
-
     ### Example
 
     The first query resolves through an external DNS server
@@ -3343,6 +3360,11 @@
        host(name='www.google.com')
     FROM scope()
     ```
+
+    ### Notes
+
+    No caching is currently provided so this may generate a lot
+    of load on DNS servers when scanning many rows.
   type: Function
   args:
   - name: name
@@ -3545,7 +3567,10 @@
     `artifacts` parameter. Artifact parameters are provided in the
     `spec` parameter (see example below).
 
-    ### NOTES
+    ### Notes
+
+    No caching is currently provided so this may generate a lot
+    of load on DNS servers when scanning many rows.
 
     1. In the GUI hunts are always created in the paused
     state. This is not the default state when using this function (all
@@ -3640,11 +3665,13 @@
     hunts for example after being triaged or post processed to
     identify the clients of interest.
 
-    NOTE: An alternative method is to create a hunt that only targets
+    An alternative method is to create a hunt that only targets
     a specific label and then just assign the label to specific
     clients.
 
-    ### Adding an existing flow to a hunt.
+    ### Notes
+
+    #### Adding an existing flow to a hunt.
 
     If a flow_id is specified, this function will just immediately add
     the collection to the hunt, without scheduling a new
@@ -3934,7 +3961,9 @@
     If you specify an existing client id, the collection will be
     uploaded into that client.
 
-    NOTE: Combine this function with the hunt_add() function to add a
+    ### Notes
+
+    Combine this function with the hunt_add() function to add a
     manual offline collection to an ongoing hunt.
   type: Function
   args:
@@ -4464,10 +4493,6 @@
     table you will need to set the column type to `url_internal` or
     `url`.
 
-    NOTE: This function makes no effort to check if the link is
-    actually valid - i.e. it does not check that the client id refers
-    to a real client, flow id to a real flow, etc.
-
     ### Example
 
     ```vql
@@ -4484,6 +4509,12 @@
            link_to(upload=Upload) AS Download
     FROM scope()
     ```
+
+    ### Notes
+
+    This function makes no effort to check if the link is
+    actually valid - i.e. it does not check that the client id refers
+    to a real client, flow id to a real flow, etc.
   type: Function
   args:
   - name: type
@@ -4582,9 +4613,9 @@
 
     ### See also
 
-    - [format](/vql_reference/basic/format/): a function that uses the same
+    - [format(]{{< ref "/vql_reference/popular/format/" >}}): a function that uses the same
       string formatting syntax.
-    - [alert](/vql_reference/misc/alert/): alerts are a special type of log
+    - [alert(]{{< ref "/vql_reference/other/alert/" >}}): alerts are a special type of log
       message that are added to a server alerts queue, which can be monitored.
   type: Function
   version: 2
@@ -4797,7 +4828,9 @@
     FROM glob(globs="/var/lib/*")
     ```
 
-    NOTE: `magic()` requires reading the headers of each file which
+    ### Notes
+
+    `magic()` requires reading the headers of each file which
     causes the file to be opened. If you have on-access scanning such
     as Windows Defender "Realtime monitoring", applying magic() on
     many files (e.g. in a glob) may result in substantial load on the
@@ -5500,7 +5533,7 @@
 
     ### See also
 
-    - [timestamp](/vql_reference/basic/timestamp/)
+    - [timestamp(]{{< ref "/vql_reference/popular/timestamp/" >}})
   type: Function
   category: popular
   platforms:
@@ -8096,7 +8129,9 @@
        accessor='s3')
     ```
 
-    NOTE: It is more convenient to use the [secrets support]({{< ref
+    ### Notes
+
+    It is more convenient to use the [secrets support]({{< ref
     "/blog/2024/2024-03-10-release-notes-0.72/#secret-management" >}})
     introduced in version 0.72 to manage these credentials.
   type: Accessor
@@ -8331,7 +8366,14 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: set
-  description: Sets the member field of the item. If item is omitted sets the scope.
+  description: |
+    Sets the member field of the item.
+
+    If item is omitted sets the scope.
+
+    ### See also
+
+    - [get(]{{< ref "/vql_reference/popular/get/" >}}): Gets the member field from the item.
   type: Function
   args:
   - name: item
@@ -8427,6 +8469,7 @@
     args being category/product/service and values being stored queries. You may use
     a * as a placeholder for any of these fields.
   type: Function
+  version: 2
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -8515,7 +8558,9 @@
       accessor="smb")
     ```
 
-    NOTE: It is more convenient to use the [secrets support]({{< ref
+    ### Notes
+
+    It is more convenient to use the [secrets support]({{< ref
     "/blog/2024/2024-03-10-release-notes-0.72/#secret-management" >}})
     in 0.72 to manage these credentials.
   type: Accessor
@@ -8618,7 +8663,7 @@
     byte "hole" in the middle.
 
     This accessor is most useful when uploading or masking parts of other
-    files - for example uploading a carved files from a larger image. NOTE
+    files - for example uploading a carved files from a larger image. Note
     that delegate offsets are retained in this accessor (so for example
     offset 10 in this accessor corresponds to offset 10 in the delegate
     regardless of the sparse map).
@@ -8845,12 +8890,12 @@
     ```vql
     LET SSH_CONFIG <= dict(hostname='localhost:22',
       username='mic',
-      private_key=read_file(filename='/home/mic/.ssh/id_rsa'))
+      private_key=read_file(filename='/home/user/.ssh/id_rsa'))
 
     SELECT OSPath FROM glob(accessor="ssh", globs="/*")
     ```
 
-    NOTES:
+    ### Notes
 
     1. hostname must have a port after the column.
     2. You can provide a password instead of a private key via the
@@ -8858,7 +8903,7 @@
     3. The private_key parameter must contain an unencrypted PEM encoded
        SSH private key pair.
 
-    NOTE: It is more convenient to use the [secrets support]({{< ref
+    It is more convenient to use the [secrets support]({{< ref
     "/blog/2024/2024-03-10-release-notes-0.72/#secret-management" >}}) in
     0.72 to manage these credentials.
   type: Accessor
@@ -9541,7 +9586,7 @@
 
     ### See also
 
-    - [format](/vql_reference/basic/format/)
+    - [format(]{{< ref "/vql_reference/popular/format/" >}})
   type: Function
   platforms:
   - darwin_amd64_cgo
@@ -10470,7 +10515,7 @@
 
     ### See also
 
-    - [ebpf_events](/vql_reference/misc/ebpf_events/): Dumps information about
+    - [ebpf_events(]{{< ref "/vql_reference/linux/ebpf_events/" >}}): Dumps information about
       potential ebpf_events.
   type: Plugin
   args:
