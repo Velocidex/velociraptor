@@ -766,11 +766,18 @@
     Calculates if an IP address falls within a range of CIDR specified
     networks.
 
+    ### Example
+
     ```vql
-    SELECT cidr_contains(ip="192.168.0.132", ranges=[
-        "192.168.0.0/24", "127.0.0.1/8"])
+    SELECT cidr_contains(ip="192.168.0.132",
+                         ranges=["192.168.0.0/24", "127.0.0.1/8"])
     FROM scope()
     ```
+    ### See also
+
+    - [ip]({{< ref "/vql_reference/other/ip/" >}}): Format an IP address.
+    - [geoip]({{< ref "/vql_reference/other/geoip/" >}}): Lookup an IP Address
+      using the MaxMind GeoIP database.
   type: Function
   args:
   - name: ip
@@ -841,29 +848,34 @@
   - windows_amd64_cgo
 - name: client_info
   description: |
-    Returns client info (like the fqdn) from the datastore.
+    Returns client info (like the fqdn) for a specific client from the
+    datastore.
 
-    Velociraptor maintains basic information about the client in the
-    data store, such as its hostname, OS etc.
+    You can use this function to enrich information about clients in VQL output.
 
-    You can use this function to enrich information about clients in
-    VQL output. NOTE: This function queries the internal in-memory
-    database so it is very fast and suitable to be called frequently
-    on each row.
+    Velociraptor maintains basic information about the client in the data store,
+    such as its hostname, OS etc. This function queries the internal in-memory
+    database so it is very fast and suitable to be called frequently on each
+    row.
 
-    ### Example - enriching hostnames
+    ### Example
 
-    Internally, Velociraptor uses client id to uniquely identify the
-    client. But often we want to provide a hostname as well. In the
-    below we look at collection output from the `source()` plugin and
-    add an additional Hostname column by resolving the client id on
-    each row to its hostname.
+    **1. Enriching hostnames**
+
+    Internally, Velociraptor uses client id to uniquely identify the client. But
+    often we want to provide a hostname as well. In the below we look at
+    collection output from the `source()` plugin and add an additional Hostname
+    column by resolving the client id on each row to its hostname.
 
     ```vql
     SELECT *,
        client_info(client_id=client_id).os_info.hostname AS Hostname
     FROM source()
     ```
+    ### See also
+
+    - [clients]({{< ref "/vql_reference/server/clients/" >}}): Returns client
+      info for one or more clients from the datastore.
   type: Function
   version: 2
   args:
@@ -934,7 +946,23 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: clients
-  description: Retrieve the list of clients.
+  description: |
+    Returns client info for one or more clients from the datastore.
+
+    This plugin is typically used when needing to iterate of the list of
+    clients.
+
+    The `search` argument allows search expressions analogous to those in the
+    GUI's client search bar.
+
+    The information returned for each client is the same as is returned by the
+    `client_info()` function. If you are retrieving information for a specific
+    client then you may want to consider using that instead.
+
+    ### See also
+
+    - [client_info]({{< ref "/vql_reference/server/client_info/" >}}): Returns
+      client info for a specific client from the datastore.
   type: Plugin
   args:
   - name: search
@@ -2763,6 +2791,7 @@
       formatting as the `format` function.
     - [timestamp_format]({{< ref "/vql_reference/other/timestamp_format/" >}}): a function
       that simplifies the string formatting of timestamp objects.
+    - [ip]({{< ref "/vql_reference/other/ip/" >}}): Format an IP address.
     - [typeof]({{< ref "/vql_reference/other/typeof/" >}}): a dedicated function equivalent
       to the special use case: `format(format="%T",args=x)`
   type: Function
@@ -2917,10 +2946,19 @@
   - windows_amd64_cgo
 - name: geoip
   description: |
-    Lookup an IP Address using the MaxMind GeoIP database. You can get
-    a copy of the database from https://www.maxmind.com/. The database
-    must be locally accessible so this probably only makes sense on
-    the server.
+    Lookup an IP Address using the MaxMind GeoIP database.
+
+    You can get a copy of the database from https://www.maxmind.com/.
+
+    The database must be locally accessible so geoip lookup is typically done
+    only on the server.
+
+    ### See also
+
+    - [cidr_contains]({{< ref "/vql_reference/other/cidr_contains/" >}}):
+      Calculates if an IP address falls within a range of CIDR specified
+      networks.
+    - [ip]({{< ref "/vql_reference/other/ip/" >}}): Format an IP address.
   type: Function
   version: 1
   args:
@@ -4128,23 +4166,28 @@
   description: |
     Format an IP address.
 
-    Converts an ip address encoded in various ways. If the IP address is
-    encoded as 32 bit integer we can use netaddr4_le or netaddr4_be to
-    print it in a human readable way.
+    Converts an ip address encoded in various ways. If the IP address is encoded
+    as 32 bit integer we can use netaddr4_le or netaddr4_be to print it in a
+    human readable way.
 
-    This function wraps the Golang net.IP library
-    (https://pkg.go.dev/net#IP ). This makes it easy to deal with
-    various IP address notations. Some use cases:
+    This function wraps the Golang net.IP library (https://pkg.go.dev/net#IP ).
+    This makes it easy to deal with various IP address notations.
 
-    ### Example - Parse IPv4-mapped IPv6 addresses
+    Returns an object of type `net.IP`, not a string. If you need to compare the
+    result of this function to an IP string then you should apply the `.String`
+    method to the result.
+
+    ### Examples
+
+    1. Parse IPv4-mapped IPv6 addresses
 
     ```vql
     SELECT ip(parse='0:0:0:0:0:FFFF:129.144.52.38') FROM scope()
     ```
 
-    Will return the string "129.144.52.38"
+    Will return the string `129.144.52.38`
 
-    ### Example - Get information about IP addresses
+    2. Get information about IP addresses
 
     VQL will also expose the following attributes of the IP address:
 
@@ -4160,7 +4203,14 @@
     SELECT ip(parse='192.168.1.2').IsPrivate FROM scope()
     ```
 
-    Return "true" since this is a private address block.
+    Returns "true" since this is a private address block.
+
+    ### See also
+
+    - [cidr_contains]({{< ref "/vql_reference/other/cidr_contains/" >}}):
+      Calculates if an IP address falls within a range of CIDR specified networks.
+    - [geoip]({{< ref "/vql_reference/other/geoip/" >}}): Lookup an IP Address
+      using the MaxMind GeoIP database.
   type: Function
   args:
   - name: parse
@@ -6597,7 +6647,26 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: parse_x509
-  description: Parse a DER encoded x509 string into an object.
+  description: |
+    Parse a DER encoded x509 string into an object.
+
+    If you have a base64 encoded certificate you will first need to strip the
+    header and footer and decode it, as shown in the example below.
+
+    ### Example
+
+    ```vql
+    SELECT parse_x509(
+             data=base64decode(
+               string=regex_transform(
+                 source=ca_certificate,
+                 map=dict(
+                   `-+BEGIN CERTIFICATE-+`="",
+                   `\n`="",
+                   `-+END CERTIFICATE-+`=""),
+                 key="A")))[0] AS ca_cert
+    FROM config
+    ```
   type: Function
   args:
   - name: data
@@ -7123,7 +7192,15 @@
   - linux_amd64_cgo
   - windows_amd64_cgo
 - name: process_tracker
-  description: Install a global process tracker.
+  description: |
+    Install a global process tracker.
+
+    The process tracker is an in-memory cache. It has a limited size with older
+    records being expired. This LRU cache size is controlled by the `max_size`
+    argument. The default is 10k records.
+
+    The tracker has two queries: a sync_query and an update_query. The update
+    query resets the internal database.
   type: Function
   args:
   - name: sync_query
@@ -8303,7 +8380,25 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: serialize
-  description: Encode an object as a string (csv or json).
+  description: |
+    Encode an object as a string.
+
+    Several serialization formats are supported. The default format, if format
+    is not specified, is "json".
+
+    ### Notes
+
+    This function is often useful when you need to pass a data structure to an
+    artifact parameter when the parameter expects a specific format. For
+    example,
+    `SELECT * FROM
+    Artifact.Linux.Search.FileFinder(SearchFilesGlobTable=serialize(format="csv",item=tlist),...)`
+    will pass a list in CSV format to the artifact's `SearchFilesGlobTable` parameter.
+
+    ### See also
+
+    - [str]({{< ref "/vql_reference/popular/str/" >}}): Returns the string
+      representation of the provided data.
   type: Function
   args:
   - name: item
@@ -9005,7 +9100,18 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: str
-  description: Returns the string representation of provided data
+  description: |
+    Returns the string representation of the provided data
+
+    ### Notes
+
+    Most objects have a `.String` method that should return a similar result to
+    the `str()` function.
+
+    ### See also
+
+    - [serialize]({{< ref "/vql_reference/other/serialize/" >}}): Encode an
+      object as a string.
   type: Function
   args:
   - name: str
