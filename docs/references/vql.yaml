@@ -11180,7 +11180,8 @@
     SELECT * FROM rules
 
     -- Combine the rules and write to a single yar file.
-    -- We run yara_lint a 2nd time to get the imports at the beginning of the combined file.
+    -- We run yara_lint a 2nd time to get the imports at the beginning of the
+    -- combined file, although you could combine the rules first and then lint them.
     SELECT copy(
             accessor="data",
             filename=yara_lint(
