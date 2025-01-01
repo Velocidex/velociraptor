@@ -320,6 +320,15 @@ func Arm() error {
 	}.Run()
 }
 
+func Mips() error {
+	return Builder{
+		extra_tags:  " release yara ",
+		goos:        "linux",
+		disable_cgo: true,
+		arch:        "mips",
+	}.Run()
+}
+
 // Builds a Development binary. This does not embed things like GUI
 // resources to allow them to be loaded from the local directory.
 func Dev() error {
