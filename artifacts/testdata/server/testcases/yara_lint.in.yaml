@@ -1,0 +1,19 @@
+Parameters:
+  YaraRules: |
+    import "pe"
+
+    /* We dont support import "hash" so this import should be removed. */
+    import "hash"
+
+    rule Hive {
+       condition: pe.imphash() == "f34d5f2d4577ed6d9ceec516c1f5a744"
+    }
+
+    rule BadRule {
+       condition: hash.sha256(0, filesize) == "ab05"
+    }
+
+Queries:
+  - LET Cleaned <= yara_lint(clean=TRUE, rules=YaraRules)
+  - SELECT Cleaned FROM scope()
+  - SELECT * FROM yara(rules=Cleaned, accessor="data", files="Hello")

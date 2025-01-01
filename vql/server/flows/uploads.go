@@ -93,6 +93,10 @@ func (self UploadsPlugins) Call(
 					components = upload.Stats.Components
 				}
 
+				if len(components) > 0 {
+					components[len(components)-1] += upload.Type
+				}
+
 				vfs_path := path_specs.NewUnsafeFilestorePath(components...).
 					SetType(api.PATH_TYPE_FILESTORE_ANY)
 

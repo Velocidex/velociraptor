@@ -711,7 +711,7 @@ func RuleGenerator(scope vfilter.Scope, rule string) string {
 			method += " " + kw
 
 		default:
-			scope.Log("Unknown shorthand directive %v", kw)
+			scope.Log("yara: Warning unknown shorthand directive %v - treating as Yara Rule", kw)
 			return rule
 		}
 	}

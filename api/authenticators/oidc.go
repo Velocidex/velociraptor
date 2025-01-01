@@ -12,7 +12,6 @@ import (
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type OIDCConnector interface {
@@ -142,8 +141,6 @@ func (self *OidcAuthenticator) oauthOidcLogin(
 				http.Error(w, "rejected", http.StatusUnauthorized)
 			}
 			oidcOauthConfig.Endpoint = provider.Endpoint()
-
-			utils.Debug(oidcOauthConfig)
 
 			// Create oauthState cookie
 			oauthState, err := r.Cookie("oauthstate")
