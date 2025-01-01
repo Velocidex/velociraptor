@@ -667,7 +667,10 @@ class VeloPagedTable extends Component {
         if(_.isEmpty(transform) && !_.isEmpty(this.props.transform)) {
             Object.assign(transform, this.props.transform);
         }
+        return transform;
+    }
 
+    getTransformedRenderer = (transform)=>{
         if(_.isEmpty(transform)) {
             return <></>;
         }
@@ -851,6 +854,16 @@ class VeloPagedTable extends Component {
             downloads.columns = active_columns;
         }
 
+        if(transformed.filter_column) {
+            downloads.filter_column = transformed.filter_column;
+            downloads.filter_regex = transformed.filter_regex;
+        }
+
+        if (transformed.sort_column) {
+            downloads.sort_column = transformed.sort_column;
+            downloads.sort_direction = transformed.sort_direction;
+        }
+
         let all_compacted = true;
         let none_compacted = true;
 
@@ -924,7 +937,7 @@ class VeloPagedTable extends Component {
 
               </ButtonGroup>
                 <ButtonGroup className="float-right">
-                  { transformed }
+                  { this.getTransformedRenderer(transformed) }
                 </ButtonGroup>
               { this.props.toolbar || <></> }
             </Navbar>
