@@ -23,25 +23,12 @@ var (
 	includedFunctions = map[string][]string{
 		"pe": []string{
 			"calculate_checksum",
+			"imphash",
 			"section_index",
-			"section_index",
-			"exports",
-			"exports",
 			"exports",
 			"exports_index",
-			"exports_index",
-			"exports_index",
-			"imports",
-			"imports",
-			"imports",
-			"imports",
-			"imports",
-			"imports",
-			"imports",
 			"imports",
 			"import_rva",
-			"import_rva",
-			"delayed_import_rva",
 			"delayed_import_rva",
 			"locale",
 			"language",
@@ -52,26 +39,17 @@ var (
 		"math": {
 			"in_range",
 			"deviation",
-			"deviation",
-			"mean",
 			"mean",
 			"serial_correlation",
-			"serial_correlation",
 			"monte_carlo_pi",
-			"monte_carlo_pi",
-			"entropy",
 			"entropy",
 			"min",
 			"max",
 			"to_number",
 			"abs",
 			"count",
-			"count",
-			"percentage",
 			"percentage",
 			"mode",
-			"mode",
-			"to_string",
 			"to_string",
 		},
 		"elf": {
@@ -528,7 +506,15 @@ func (self *RuleLinter) Lint() (*RuleLinter, []error) {
 		}
 	}
 
-	result.ruleset.Imports = self.ruleset.Imports
+	result.ruleset.Imports = nil
+
+	// Only include valid imports
+	for _, imp := range self.ruleset.Imports {
+		_, pres := includedFunctions[imp]
+		if pres {
+			result.ruleset.Imports = append(result.ruleset.Imports, imp)
+		}
+	}
 	return result, errors
 }
 
@@ -618,7 +604,7 @@ func (self *YaraLintFunction) Call(ctx context.Context,
 func (self *YaraLintFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:     "yara_lint",
-		Doc:      "Clean a set of yara rules. This removed invalid or unsupported rules.",
+		Doc:      "Clean a set of yara rules. This removes invalid or unsupported rules.",
 		ArgType:  type_map.AddType(scope, &YaraLintFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Build(),
 	}

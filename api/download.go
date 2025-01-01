@@ -424,8 +424,13 @@ func getRows(
 			return nil, nil, nil, err
 		}
 
-		rs_reader, err := result_sets.NewResultSetReader(
-			file_store_factory, log_path)
+		options, err := tables.GetTableOptions(request)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		rs_reader, err := result_sets.NewResultSetReaderWithOptions(
+			ctx, config_obj, file_store_factory, log_path, options)
 		if err != nil {
 			return nil, nil, nil, err
 		}
