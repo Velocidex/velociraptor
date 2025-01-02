@@ -45,7 +45,7 @@ func (self *EventTraceWatcherService) Register(
 	scope vfilter.Scope,
 	session_name string, options ETWOptions,
 	wGuid windows.GUID) (closer func(), output_chan chan vfilter.Row, err error) {
-	session, err := self.SessionContext(session_name, scope)
+	session, err := self.SessionContext(session_name, scope, options)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -54,15 +54,20 @@ func (self *EventTraceWatcherService) Register(
 }
 
 func (self *EventTraceWatcherService) SessionContext(
-	name string, scope vfilter.Scope) (*SessionContext, error) {
+	name string, scope vfilter.Scope, options ETWOptions) (
+	*SessionContext, error) {
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	// TODO: Handle the case when an existing session has different
+	// options.
 	sessionContext, pres := self.sessions[name]
 	if !pres {
 		sessionContext = &SessionContext{
-			name:          name,
-			registrations: make(map[string]*Registration),
+			name:            name,
+			registrations:   make(map[string]*Registration),
+			rundown_options: options.RundownOptions,
 		}
 		self.sessions[name] = sessionContext
 	}
@@ -94,7 +99,8 @@ func writeMetrics(
 			Set("Description", s.Description).
 			Set("Watchers", s.Watchers).
 			Set("EventCount", s.EventCount).
-			Set("Started", s.Started)
+			Set("Started", s.Started).
+			Set("Stats", s.Stats)
 	}
 }
 

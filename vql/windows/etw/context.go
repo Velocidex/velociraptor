@@ -5,11 +5,11 @@ package etw
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/Velocidex/etw"
-	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -41,6 +41,15 @@ type SessionContext struct {
 	registrations map[string]*Registration
 
 	resolve_map_info bool
+
+	// Options used for the kernel tracer provider. These apply for
+	// the entire session.
+	rundown_options etw.RundownOptions
+
+	// Set to true once the session is already processing
+	is_processing uint64
+
+	is_kernel_trace bool
 }
 
 // Handle is used to track all watchers. We write the event on to the
@@ -70,7 +79,7 @@ func (self *Handle) Close() {
 }
 
 // Try to send but skip closed handles.
-func (self *Handle) Send(event vfilter.Row) {
+func (self *Handle) Send(event *etw.Event) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -106,13 +115,43 @@ func (self *SessionContext) Session(scope vfilter.Scope) (*etw.Session, error) {
 	return self._Session(scope)
 }
 
-func (self *SessionContext) _Session(scope vfilter.Scope) (*etw.Session, error) {
-	// Cache the session for reuse.
-	if self.session != nil {
-		return self.session, nil
+// The Kernel Trace provider is a bit different:
+
+//  1. We do not subscribe to the trace provider - the library does
+//     this automatically.
+//  2. Session name has to be etw.KernelTraceSessionName - not user
+//     selectable.
+//  3. Only one provider is available and we do not need to subscribe
+//     to it.
+//  4. The events returned on this session belong to many internal
+//     providers and are not related to the specific listener
+//     registered on this session. Therefore for kernel sessions all
+//     registrations will see all events.
+func (self *SessionContext) _KernelTraceSession(
+	scope vfilter.Scope) (*etw.Session, error) {
+
+	session, err := etw.NewKernelTraceSession(
+		self.rundown_options, self.processEvent)
+	if err != nil {
+		err = etw.KillSession(etw.KernelTraceSessionName)
+		if err != nil {
+			return nil, err
+		}
+
+		session, err = etw.NewKernelTraceSession(
+			self.rundown_options, self.processEvent)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	// Establish a new ETW session and cache it for next time.
+	self.is_kernel_trace = true
+
+	return session, nil
+}
+
+func (self *SessionContext) _CreateTraceSession(
+	scope vfilter.Scope) (*etw.Session, error) {
 	session, err := etw.NewSession(self.name, self.processEvent)
 	if err != nil {
 
@@ -128,17 +167,39 @@ func (self *SessionContext) _Session(scope vfilter.Scope) (*etw.Session, error) 
 		}
 	}
 
+	return session, nil
+}
+
+func (self *SessionContext) _Session(
+	scope vfilter.Scope) (*etw.Session, error) {
+
+	var err error
+
+	// Cache the session for reuse.
+	if self.session != nil {
+		return self.session, nil
+	}
+
+	// If the user asked for the kernel trace session we need to
+	// create a special session here.
+	if strings.EqualFold(self.name, etw.KernelTraceSessionName) {
+		self.session, err = self._KernelTraceSession(scope)
+	} else {
+		self.session, err = self._CreateTraceSession(scope)
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	self.wg.Add(1)
 	go func() {
 		defer self.wg.Done()
 
-		err := session.Process()
+		err := self.session.Process()
 		if err != nil {
 			scope.Log("etw: Can not start session %v: %v", self.name, err)
 		}
 	}()
-
-	self.session = session
 
 	return self.session, nil
 }
@@ -146,32 +207,43 @@ func (self *SessionContext) _Session(scope vfilter.Scope) (*etw.Session, error) 
 func (self *SessionContext) processEvent(e *etw.Event) {
 	defer utils.CheckForPanic("processEvent")
 
+	e.Props()
+
 	event_guid := e.Header.ProviderID.String()
+	var handlers []*Handle
 
 	self.mu.Lock()
-	registration, pres := self.registrations[event_guid]
-	if !pres {
-		self.mu.Unlock()
-		return
+
+	// For the kernel trace all handlers will be called with every
+	// event.
+	is_kernel_trace := self.is_kernel_trace
+	if is_kernel_trace {
+		for _, v := range self.registrations {
+			handlers = append(handlers, v.handles...)
+			v.count++
+		}
+
+	} else {
+		registration, pres := self.registrations[event_guid]
+		if !pres {
+			self.mu.Unlock()
+			return
+		}
+
+		handlers = append(handlers, registration.handles...)
+		registration.count++
 	}
 
-	registration.count++
-	handlers := append([]*Handle{}, registration.handles...)
 	self.mu.Unlock()
-
-	event := ordereddict.NewDict().
-		Set("System", e.Header).
-		Set("ProviderGUID", event_guid)
-
-	data, err := e.EventProperties(self.resolve_map_info)
-	if err == nil {
-		event.Set("EventData", data)
-	}
 
 	// Send the event to all interested parties.
 	for _, handle := range handlers {
-		if handle.guid == e.Header.ProviderID {
-			handle.Send(event)
+		// The Kernel Trace Provider emits events from many internal
+		// providers, even if we did not subscribe to them
+		// specifically.
+		if is_kernel_trace ||
+			handle.guid == e.Header.ProviderID {
+			handle.Send(e)
 		}
 	}
 }
@@ -182,13 +254,18 @@ func (self *SessionContext) Stats() []ProviderStat {
 
 	result := []ProviderStat{}
 	for guid, registration := range self.registrations {
-		result = append(result, ProviderStat{
+		res := ProviderStat{
 			GUID:        guid,
 			EventCount:  registration.count,
 			Description: registration.description,
 			Watchers:    len(registration.handles),
 			Started:     registration.started,
-		})
+		}
+
+		if self.is_kernel_trace {
+			res.Stats = etw.KernelInfo.Stats()
+		}
+		result = append(result, res)
 	}
 
 	return result
@@ -224,18 +301,24 @@ func (self *SessionContext) Register(
 			return nil, nil, err
 		}
 
-		err = session.SubscribeToProvider(etw.SessionOptions{
-			Guid:            guid,
-			Level:           etw.TraceLevel(options.Level),
-			MatchAnyKeyword: options.AnyKeyword,
-			MatchAllKeyword: options.AllKeyword,
-			CaptureState:    options.CaptureState,
-		})
-		if err != nil {
-			scope.Log("etw: Can not add provider to session %v: %v", self.name, err)
-			return nil, nil, err
+		// The kernel trace sessions can only contain a single
+		// provider and we do not need to subscribe to it.
+		if !self.is_kernel_trace {
+			opts := etw.SessionOptions{
+				Name:            self.name,
+				Guid:            guid,
+				Level:           etw.TraceLevel(options.Level),
+				MatchAnyKeyword: options.AnyKeyword,
+				MatchAllKeyword: options.AllKeyword,
+				CaptureState:    options.CaptureState,
+			}
+			err = session.SubscribeToProvider(opts)
+			if err != nil {
+				scope.Log("etw: Can not add provider to session %v: %v", self.name, err)
+				return nil, nil, err
+			}
+			scope.Log("etw: Added provider %v to session %v", guid.String(), self.name)
 		}
-		scope.Log("etw: Added provider %v to session %v", guid.String(), self.name)
 	}
 
 	registration.handles = append(registration.handles, handle)

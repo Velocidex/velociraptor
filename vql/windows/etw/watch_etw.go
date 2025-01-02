@@ -5,8 +5,10 @@ package etw
 
 import (
 	"context"
+	"strings"
 	"time"
 
+	"github.com/Velocidex/etw"
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -16,16 +18,18 @@ import (
 )
 
 type WatchETWArgs struct {
-	Name          string          `vfilter:"optional,field=name,doc=A session name "`
-	Provider      string          `vfilter:"required,field=guid,doc=A Provider GUID to watch "`
-	AnyKeywords   uint64          `vfilter:"optional,field=any,doc=Any Keywords "`
-	AllKeywords   uint64          `vfilter:"optional,field=all,doc=All Keywords "`
-	Level         int64           `vfilter:"optional,field=level,doc=Log level (0-5)"`
-	Stop          *vfilter.Lambda `vfilter:"optional,field=stop,doc=If provided we stop watching automatically when this lambda returns true"`
-	Timeout       uint64          `vfilter:"optional,field=timeout,doc=If provided we stop after this much time"`
-	CaptureState  bool            `vfilter:"optional,field=capture_state,doc=If true, capture the state of the provider when the event is triggered"`
-	EnableMapInfo bool            `vfilter:"optional,field=enable_map_info,doc=Resolving MapInfo with TdhGetEventMapInformation is very expensive and causes events to be dropped so we disabled it by default. Enable with this flag."`
-	Description   string          `vfilter:"optional,field=description,doc=Description for this GUID provider"`
+	Name               string          `vfilter:"optional,field=name,doc=A session name "`
+	Provider           string          `vfilter:"required,field=guid,doc=A Provider GUID to watch "`
+	AnyKeywords        uint64          `vfilter:"optional,field=any,doc=Any Keywords "`
+	AllKeywords        uint64          `vfilter:"optional,field=all,doc=All Keywords "`
+	Level              int64           `vfilter:"optional,field=level,doc=Log level (0-5)"`
+	Stop               *vfilter.Lambda `vfilter:"optional,field=stop,doc=If provided we stop watching automatically when this lambda returns true"`
+	Timeout            uint64          `vfilter:"optional,field=timeout,doc=If provided we stop after this much time"`
+	CaptureState       bool            `vfilter:"optional,field=capture_state,doc=If true, capture the state of the provider when the event is triggered"`
+	EnableMapInfo      bool            `vfilter:"optional,field=enable_map_info,doc=Resolving MapInfo with TdhGetEventMapInformation is very expensive and causes events to be dropped so we disabled it by default. Enable with this flag."`
+	Description        string          `vfilter:"optional,field=description,doc=Description for this GUID provider"`
+	KernelTracerTypes  []string        `vfilter:"optional,field=kernel_tracer_type,doc=A list of event types to fetch from the kernel tracer (can be registry, process, image_load, network, driver, file, thread, handle)"`
+	KernelTracerStacks []string        `vfilter:"optional,field=kernel_tracer_stacks,doc=A list of kernel tracer event types to append stack traces to (can be any of the types accepted by kernel_tracer_type)"`
 }
 
 type WatchETWPlugin struct {
@@ -49,21 +53,9 @@ func (self WatchETWPlugin) Call(
 			return
 		}
 
-		// Check that we have a valid GUID.
-		wGuid, err := windows.GUIDFromString(arg.Provider)
-		if err != nil {
-			scope.Log("watch_etw: %s", err.Error())
-			return
-		}
-
 		// By default listen to DEBUG level logs
 		if arg.Level == 0 {
 			arg.Level = 5
-		}
-
-		// Select a default session name
-		if arg.Name == "" {
-			arg.Name = "Velociraptor"
 		}
 
 		if arg.Timeout > 0 {
@@ -81,6 +73,52 @@ func (self WatchETWPlugin) Call(
 			CaptureState:  arg.CaptureState,
 			EnableMapInfo: arg.EnableMapInfo,
 			Description:   arg.Description,
+		}
+
+		for _, tracer_type := range arg.KernelTracerTypes {
+			err := options.RundownOptions.Set(tracer_type)
+			if err != nil {
+				scope.Log("watch_etw: Invalid rundown option %v - ignoring",
+					tracer_type)
+			}
+		}
+
+		if len(arg.KernelTracerStacks) > 0 {
+			options.RundownOptions.StackTracing = &etw.RundownOptions{}
+
+			for _, tracer_type := range arg.KernelTracerStacks {
+				err := options.RundownOptions.StackTracing.Set(tracer_type)
+				if err != nil {
+					scope.Log("watch_etw: Invalid rundown option %v - ignoring",
+						tracer_type)
+				}
+			}
+		}
+
+		// For the kernel provider we must use a fixed session name.
+		if arg.Provider == "kernel" {
+			arg.Provider = etw.KernelTraceControlGUIDString
+			arg.Level = 255
+		}
+
+		if strings.EqualFold(arg.Provider, etw.KernelTraceControlGUIDString) {
+			if arg.Name != "" && arg.Name != etw.KernelTraceSessionName {
+				scope.Log("Kernel provider must use fixed session name of %v, overriding",
+					etw.KernelTraceSessionName)
+			}
+			arg.Name = etw.KernelTraceSessionName
+		}
+
+		// Select a default session name
+		if arg.Name == "" {
+			arg.Name = "Velociraptor"
+		}
+
+		// Check that we have a valid GUID.
+		wGuid, err := windows.GUIDFromString(arg.Provider)
+		if err != nil {
+			scope.Log("watch_etw: %v", err)
+			return
 		}
 
 		self.RetryTimer = 1 * time.Second

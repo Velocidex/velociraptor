@@ -16,7 +16,10 @@ parameters:
     default: Windows
     choices:
       - Windows
+      - WindowsEvents
       - Linux
+      - LinuxEvents
+
   - name: Debug
     description: Enable this to match all rules (even if they did not match) in order to see what detections matched.
     type: bool
