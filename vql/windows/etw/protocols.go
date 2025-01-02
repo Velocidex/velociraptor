@@ -24,7 +24,7 @@ func (self etwEventAssociative) Applicable(a vfilter.Any, b vfilter.Any) bool {
 func (self etwEventAssociative) GetMembers(scope vfilter.Scope, a vfilter.Any) []string {
 	_, a_ok := a.(*etw.Event)
 	if a_ok {
-		return []string{"System", "EventData", "Backtrace"}
+		return []string{"System", "ProviderGUID", "EventData", "Backtrace"}
 	}
 	return []string{}
 }
@@ -44,6 +44,8 @@ func (self etwEventAssociative) Associative(
 	switch b_value {
 	case "System":
 		return a_value.HeaderProps(), true
+	case "ProviderGUID":
+		return a_value.Header.ProviderID.String(), true
 	case "EventData":
 		return a_value.Props(), true
 	case "Backtrace":
