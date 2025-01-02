@@ -10696,8 +10696,8 @@
     When this provider is used, you can also specify what kind of
     events you want to see using the `kernel_tracer_type`
     parameter. This is a list of any of the following keywords
-    `registry`, `process`, `image_load`, `network`, `driver`, `file,
-    handles`.
+    `registry`, `process`, `image_load`, `network`, `driver`, `file`,
+    `handles`.
 
     Additionally, you can specify which kinds of events will be
     decorated with stack traces using the `kernel_tracer_stacks`
@@ -10713,7 +10713,7 @@
     ```
 
     An example of a file created by Chrome - This example illustrates
-    the backtract reported by the Kernel and decorated by Velociraptor
+    the backtrace reported by the Kernel and decorated by Velociraptor
     with the function names (when known).
 
     ```json
@@ -10754,8 +10754,7 @@
     },
     ```
 
-    The following is an example of an outbound connection over port 22
-
+    The following is an example of an outbound connection over port 22.
     ```json
      {
        "System": {

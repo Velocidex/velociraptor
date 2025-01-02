@@ -1,3 +1,6 @@
+//go:build windows && cgo
+// +build windows,cgo
+
 package etw
 
 import "github.com/Velocidex/etw"
