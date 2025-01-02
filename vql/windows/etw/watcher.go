@@ -1,5 +1,5 @@
-//go:build windows && cgo
-// +build windows,cgo
+//go:build windows && cgo && amd64
+// +build windows,cgo,amd64
 
 package etw
 
