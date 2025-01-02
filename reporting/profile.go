@@ -8,6 +8,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services/debug"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -16,6 +17,8 @@ var (
 )
 
 type WriterInfo struct {
+	id uint64
+
 	Name             string
 	TmpFile          string
 	CompressedSize   int
@@ -26,6 +29,7 @@ type WriterInfo struct {
 }
 
 type ContainerInfo struct {
+	id              uint64
 	Name            string
 	BackingFile     string
 	Stats           *api_proto.ContainerStats
@@ -45,7 +49,9 @@ func (self *_ContainerTracker) UpdateContainerWriter(
 	self.UpdateContainer(container_id, func(info *ContainerInfo) {
 		writer_info, pres := info.InFlightWriters[writer_id]
 		if !pres {
-			writer_info = &WriterInfo{}
+			writer_info = &WriterInfo{
+				id: writer_id,
+			}
 			info.InFlightWriters[writer_id] = writer_info
 		}
 
@@ -61,12 +67,44 @@ func (self *_ContainerTracker) UpdateContainer(
 	record, pres := self.containers[id]
 	if !pres {
 		record = &ContainerInfo{
+			id:              id,
 			InFlightWriters: make(map[uint64]*WriterInfo),
 		}
 		self.containers[id] = record
 	}
 
 	cb(record)
+}
+
+func (self *_ContainerTracker) reap() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	containers := make([]*ContainerInfo, 0, len(self.containers))
+	for _, c := range self.containers {
+		containers = append(containers, c)
+	}
+
+	oldest := utils.GetTime().Now().Add(-time.Minute * 10)
+	for _, c := range containers {
+		// reap old containers completely.
+		if !c.CloseTime.IsZero() &&
+			c.CloseTime.Before(oldest) {
+			delete(self.containers, c.id)
+			continue
+		}
+
+		writers := make([]*WriterInfo, 0, len(c.InFlightWriters))
+		for _, w := range c.InFlightWriters {
+			writers = append(writers, w)
+		}
+		for _, w := range writers {
+			if !w.Closed.IsZero() &&
+				w.Closed.Before(oldest) {
+				delete(c.InFlightWriters, w.id)
+			}
+		}
+	}
 }
 
 func (self *_ContainerTracker) WriteMetrics(
@@ -94,9 +132,18 @@ func (self *_ContainerTracker) WriteMetrics(
 }
 
 func NewContainerTracker() *_ContainerTracker {
-	return &_ContainerTracker{
+	res := &_ContainerTracker{
 		containers: make(map[uint64]*ContainerInfo),
 	}
+
+	go func() {
+		for {
+			time.Sleep(time.Minute)
+			res.reap()
+		}
+	}()
+
+	return res
 }
 
 func init() {
