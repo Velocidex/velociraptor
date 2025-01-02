@@ -1,10 +1,10 @@
 package authenticators
 
 import (
+	"context"
 	"net/http"
 
 	oidc "github.com/coreos/go-oidc/v3/oidc"
-	context "golang.org/x/net/context"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 )

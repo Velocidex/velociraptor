@@ -4,13 +4,13 @@
 package tools
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Velocidex/json"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/Velocidex/ordereddict"
-	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"

@@ -13,9 +13,10 @@
 package tools
 
 import (
+	"context"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	"github.com/Velocidex/ordereddict"
-	"golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/uploads"

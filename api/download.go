@@ -26,6 +26,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"html"
 	"io"
@@ -41,7 +42,6 @@ import (
 	errors "github.com/go-errors/errors"
 	"github.com/gorilla/schema"
 
-	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"

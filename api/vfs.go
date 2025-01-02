@@ -62,10 +62,10 @@ GetVFSDownloadInfoPath().
 package api
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
-	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"

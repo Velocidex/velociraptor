@@ -12,6 +12,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"io/fs"
 	"net/http"
@@ -24,7 +25,6 @@ import (
 	errors "github.com/go-errors/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 

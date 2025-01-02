@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package authenticators
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -29,7 +30,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
-	context "golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"www.velocidex.com/golang/velociraptor/acls"

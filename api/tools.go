@@ -1,7 +1,7 @@
 package api
 
 import (
-	context "golang.org/x/net/context"
+	"context"
 
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"

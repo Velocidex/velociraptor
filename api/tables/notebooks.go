@@ -1,7 +1,8 @@
 package tables
 
 import (
-	context "golang.org/x/net/context"
+	"context"
+
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"

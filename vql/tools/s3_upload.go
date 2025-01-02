@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"net/http"
@@ -12,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"golang.org/x/net/context"
+
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"

@@ -3,6 +3,7 @@ package crypto
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -12,7 +13,6 @@ import (
 	"golang.org/x/crypto/openpgp/armor"
 	"golang.org/x/crypto/openpgp/packet"
 
-	"golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/acls"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/vql"

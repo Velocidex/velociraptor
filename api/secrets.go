@@ -1,8 +1,9 @@
 package api
 
 import (
+	"context"
+
 	"github.com/Velocidex/ordereddict"
-	context "golang.org/x/net/context"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
