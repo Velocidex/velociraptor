@@ -4,6 +4,7 @@
 package tools
 
 import (
+	"context"
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
@@ -11,7 +12,6 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/Velocidex/ordereddict"
-	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"

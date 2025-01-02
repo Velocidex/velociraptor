@@ -21,6 +21,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -30,7 +31,6 @@ import (
 	"github.com/andybalholm/brotli"
 	"github.com/gorilla/csrf"
 	"github.com/lpar/gzipped"
-	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/api/proto"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"

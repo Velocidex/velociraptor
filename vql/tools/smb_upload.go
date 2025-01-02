@@ -13,13 +13,13 @@
 package tools
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/hirochachacha/go-smb2"
-	"golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/smb"
 	"www.velocidex.com/golang/velociraptor/acls"
