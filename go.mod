@@ -17,7 +17,7 @@ require (
 	github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1
 	github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130
 	github.com/Velocidex/yaml/v2 v2.2.8
-	github.com/Velocidex/zip v0.0.0-20210101070220-e7ecefb7aad7
+	github.com/Velocidex/zip v0.0.0-20250102162034-1a0ec0ec569c
 	github.com/alecthomas/assert v1.0.0
 	github.com/alecthomas/chroma v0.7.3
 	github.com/alecthomas/participle v0.7.1

@@ -80,11 +80,30 @@ type MemberWriter struct {
 	writer_wg *sync.WaitGroup
 
 	owner *Container
+
+	stats_provider concurrent_zip.StatsWriter
+	id             uint64
 }
 
 func (self *MemberWriter) Write(buff []byte) (int, error) {
 	self.owner.increaseUncompressedBytes(len(buff))
-	return self.WriteCloser.Write(buff)
+	res, err := self.WriteCloser.Write(buff)
+
+	ContainerTracker.UpdateContainerWriter(self.owner.id, self.id,
+		func(info *WriterInfo) {
+			if self.stats_provider != nil {
+				stats := self.stats_provider.GetStats()
+				info.CompressedSize = int(stats.CompressedSize)
+				info.TmpFile = stats.TmpFile
+			}
+			info.UncompressedSize += res
+			info.LastWrite = utils.GetTime().Now()
+		})
+
+	// FIXME: Use this to instrument a very slow export
+	// time.Sleep(200 * time.Millisecond)
+
+	return res, err
 }
 
 // Keep track of all members that are closed to allow the zip to be
@@ -92,11 +111,19 @@ func (self *MemberWriter) Write(buff []byte) (int, error) {
 func (self *MemberWriter) Close() error {
 	err := self.WriteCloser.Close()
 	self.writer_wg.Done()
+
+	ContainerTracker.UpdateContainerWriter(self.owner.id, self.id,
+		func(info *WriterInfo) {
+			info.Closed = utils.GetTime().Now()
+		})
+
 	return err
 }
 
 type Container struct {
 	config_obj *config_proto.Config
+
+	id uint64
 
 	// The underlying file writer
 	fd io.WriteCloser
@@ -159,11 +186,27 @@ func (self *Container) Create(name string, mtime time.Time) (io.WriteCloser, err
 		return nil, err
 	}
 
-	return &MemberWriter{
-		WriteCloser: writer,
-		writer_wg:   &self.writer_wg,
-		owner:       self,
-	}, nil
+	stats_provider, _ := writer.(concurrent_zip.StatsWriter)
+
+	res := &MemberWriter{
+		WriteCloser:    writer,
+		stats_provider: stats_provider,
+		writer_wg:      &self.writer_wg,
+		owner:          self,
+		id:             utils.GetId(),
+	}
+
+	ContainerTracker.UpdateContainerWriter(self.id, res.id,
+		func(info *WriterInfo) {
+			info.Name = name
+			info.Created = utils.GetTime().Now()
+			if stats_provider != nil {
+				stats := stats_provider.GetStats()
+				info.TmpFile = stats.TmpFile
+			}
+		})
+
+	return res, nil
 }
 
 func (self *Container) StoreArtifact(
@@ -671,7 +714,17 @@ func NewContainer(
 	}
 	files.Add(path)
 
-	return NewContainerFromWriter(path, config_obj, fd, password, level, metadata)
+	res, err := NewContainerFromWriter(path, config_obj,
+		fd, password, level, metadata)
+	if err != nil {
+		return nil, err
+	}
+
+	ContainerTracker.UpdateContainer(res.id, func(info *ContainerInfo) {
+		info.BackingFile = path
+	})
+
+	return res, nil
 }
 
 func NewContainerFromWriter(
@@ -690,6 +743,7 @@ func NewContainerFromWriter(
 	sha_sum := sha256.New()
 
 	result := &Container{
+		id:         utils.GetId(),
 		config_obj: config_obj,
 		name:       name,
 		fd:         fd,
@@ -742,6 +796,11 @@ func NewContainerFromWriter(
 			fh.Close()
 		}
 	}
+
+	ContainerTracker.UpdateContainer(result.id, func(info *ContainerInfo) {
+		info.Name = result.name
+		info.CreateTime = utils.GetTime().Now()
+	})
 
 	return result, nil
 }
