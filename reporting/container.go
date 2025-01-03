@@ -189,7 +189,7 @@ func (self *Container) Create(name string, mtime time.Time) (io.WriteCloser, err
 	stats_provider, _ := writer.(concurrent_zip.StatsWriter)
 
 	res := &MemberWriter{
-		WriteCloser:    utils.InstrumentedWriteCloser{writer},
+		WriteCloser:    writer,
 		stats_provider: stats_provider,
 		writer_wg:      &self.writer_wg,
 		owner:          self,

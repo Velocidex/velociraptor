@@ -6,8 +6,6 @@ import T from '../i8n/i8n.jsx';
 import Card from 'react-bootstrap/Card';
 import Alert from 'react-bootstrap/Alert';
 import { getFormatter } from "../core/table.jsx";
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
 import Accordion from 'react-bootstrap/Accordion';
 
 import api from '../core/api-service.jsx';
