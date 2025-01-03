@@ -46,6 +46,9 @@ func (self *progressReporter) writeStats() {
 // If we call Close() before the timeout then the collection worked
 // fine - even when the context is cancelled.
 func (self *progressReporter) Close() {
+	// Write the stats one final time.
+	self.writeStats()
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 

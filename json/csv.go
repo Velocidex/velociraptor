@@ -58,7 +58,7 @@ func ConvertJSONL(
 
 		// In the special case where we do not need to modify the json
 		// or convert it to csv then we can skip parsing it
-		// alltogether.
+		// altogether.
 		if extra_data == nil && jsonl_out != nil && csv_out == nil {
 			jsonl_out.Write(serialized)
 			continue
