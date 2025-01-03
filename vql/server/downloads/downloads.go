@@ -246,9 +246,6 @@ func createDownloadFile(
 	go func() {
 		defer wg.Done()
 
-		// Will also close the underlying container when done.
-		defer zip_writer.Close()
-
 		timeout := int64(600)
 		if config_obj.Defaults != nil &&
 			config_obj.Defaults.ExportMaxTimeoutSec > 0 {
@@ -264,6 +261,10 @@ func createDownloadFile(
 			flow_path_manager.GetDownloadsStats(hostname, password != ""),
 			download_file, zip_writer)
 		defer progress_reporter.Close()
+
+		// Will also close the underlying container when done. Must be
+		// done before progress close so we can write the hash.
+		defer zip_writer.Close()
 
 		err := downloadFlowToZip(ctx, scope, config_obj, format,
 			client_id, path_specs.NewUnsafeFilestorePath(),
@@ -775,9 +776,6 @@ func createHuntDownloadFile(
 	go func() {
 		defer wg.Done()
 
-		// Will also close the underlying fd.
-		defer zip_writer.Close()
-
 		timeout := int64(3600)
 		if config_obj.Defaults != nil &&
 			config_obj.Defaults.ExportMaxTimeoutSec > 0 {
@@ -794,6 +792,10 @@ func createHuntDownloadFile(
 				base_filename, password != ""),
 			download_file, zip_writer)
 		defer progress_reporter.Close()
+
+		// Will also close the underlying container when done. Must be
+		// done before progress close so we can write the hash.
+		defer zip_writer.Close()
 
 		err = zip_writer.WriteJSON(
 			paths.ZipPathFromFSPathSpec(path_specs.NewUnsafeFilestorePath().AddChild("hunt_info")),
