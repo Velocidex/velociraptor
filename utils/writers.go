@@ -3,6 +3,7 @@ package utils
 import (
 	"io"
 	"sync"
+	"time"
 )
 
 type TeeWriter struct {
@@ -49,4 +50,13 @@ type NopWriteCloser struct {
 
 func (self NopWriteCloser) Close() error {
 	return nil
+}
+
+type InstrumentedWriteCloser struct {
+	io.WriteCloser
+}
+
+func (self InstrumentedWriteCloser) Write(p []byte) (n int, err error) {
+	time.Sleep(200 * time.Millisecond)
+	return self.WriteCloser.Write(p)
 }

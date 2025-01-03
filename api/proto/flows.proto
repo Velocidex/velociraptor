@@ -7,6 +7,12 @@ package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
+message ContainerMemberStats {
+    string name = 1;
+    uint64 uncompressed_size = 2;
+    uint64 compressed_size = 3;
+}
+
 // Stats about exported containers
 message ContainerStats {
     // Seconds since epoch
@@ -39,6 +45,9 @@ message ContainerStats {
 
     // A string representation of the file path
     string vfs_path = 12;
+
+    repeated ContainerMemberStats active_members = 13;
+
 }
 
 message AvailableDownloadFile {

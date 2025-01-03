@@ -43,6 +43,31 @@ type _ContainerTracker struct {
 	containers map[uint64]*ContainerInfo
 }
 
+func (self *_ContainerTracker) GetActiveMembers(
+	id uint64) []*api_proto.ContainerMemberStats {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	record, pres := self.containers[id]
+	if !pres {
+		return nil
+	}
+
+	var res []*api_proto.ContainerMemberStats
+	for _, w := range record.InFlightWriters {
+		// Skip the files that are already closed.
+		if !w.Closed.IsZero() {
+			continue
+		}
+		res = append(res, &api_proto.ContainerMemberStats{
+			Name:             w.Name,
+			UncompressedSize: uint64(w.UncompressedSize),
+			CompressedSize:   uint64(w.CompressedSize),
+		})
+	}
+	return res
+}
+
 func (self *_ContainerTracker) UpdateContainerWriter(
 	container_id, writer_id uint64, cb func(info *WriterInfo)) {
 
