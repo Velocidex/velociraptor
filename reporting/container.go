@@ -681,6 +681,11 @@ func (self *Container) Close() error {
 		logger.Info("Container hash %v", hash)
 
 	}
+
+	ContainerTracker.UpdateContainer(self.id, func(info *ContainerInfo) {
+		info.CloseTime = utils.GetTime().Now()
+	})
+
 	return self.fd.Close()
 }
 
@@ -695,11 +700,13 @@ func (self *Container) Stats() *api_proto.ContainerStats {
 	self.stats_mu.Lock()
 	// Take a copy
 	stats := proto.Clone(&self.stats).(*api_proto.ContainerStats)
+	id := self.id
 	self.stats_mu.Unlock()
 
 	stats.TotalUploadedFiles = uint64(len(self.uploads))
 	stats.TotalCompressedBytes = uint64(self.writer.Count())
 	stats.TotalDuration = uint64(Clock.Now().Unix()) - stats.Timestamp
+	stats.ActiveMembers = ContainerTracker.GetActiveMembers(id)
 
 	return stats
 }

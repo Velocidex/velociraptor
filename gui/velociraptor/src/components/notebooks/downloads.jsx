@@ -6,6 +6,7 @@ import T from '../i8n/i8n.jsx';
 import Card from 'react-bootstrap/Card';
 import Alert from 'react-bootstrap/Alert';
 import { getFormatter } from "../core/table.jsx";
+import Accordion from 'react-bootstrap/Accordion';
 
 import api from '../core/api-service.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -36,6 +37,37 @@ export default class AvailableDownloads extends Component {
                  <span className="button-label">{row.name}</span>
                  </>;
     }
+
+    renderActiveMembers = (stats)=>{
+        let mb = getFormatter("mb");
+        return <Accordion>
+                 <Accordion.Item eventKey={1} key={1}>
+                   <Accordion.Header>
+                     {T("Active Members")}
+                   </Accordion.Header>
+                   <Accordion.Body>
+                     <table>
+                       <thead>
+                         <tr>
+                           <th>{T("Name")}</th>
+                           <th>{T("Uncompressed")}</th>
+                           <th>{T("Compressed")}</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {_.map(stats.active_members, (x, idx)=>{
+                             return <tr key={idx}>
+                              <td>{x.name}</td>
+                              <td>{mb(x.uncompressed_size || 0, x)}</td>
+                              <td>{mb(x.compressed_size || 0, x)}</td>
+                            </tr>;
+                         })}
+                       </tbody>
+                     </table>
+                   </Accordion.Body>
+                 </Accordion.Item>
+               </Accordion>;
+    };
 
     render() {
         if (_.isEmpty(this.props.files)) {
@@ -90,15 +122,16 @@ export default class AvailableDownloads extends Component {
                                  {stats.total_duration || 0}
                                </dd>
 
-                               { stats.hash &&
-                                 <>
-                                   <dt className="col-4">{T("SHA256 Hash")}</dt>
-                                   <dd className="col-8">
-                                     {stats.hash}
-                                   </dd>
+                                 { stats.active_members && this.renderActiveMembers(stats) }
+                                 { stats.hash &&
+                                   <>
+                                     <dt className="col-4">{T("SHA256 Hash")}</dt>
+                                     <dd className="col-8">
+                                       {stats.hash}
+                                     </dd>
 
-                                 </>
-                               }
+                                   </>
+                                 }
                              </dl>
                              </Card.Body>
                            </Card>;
