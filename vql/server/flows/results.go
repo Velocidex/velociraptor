@@ -84,9 +84,9 @@ type SourcePluginArgs struct {
 	NotebookCellTable   int64  `vfilter:"optional,field=notebook_cell_table,doc=A notebook cell can have multiple tables.)"`
 
 	StartRow int64 `vfilter:"optional,field=start_row,doc=Start reading the result set from this row"`
-	Limit    int64 `vfilter:"optional,field=count,doc=Maximum number of clients to fetch (default unlimited)'"`
+	Limit    int64 `vfilter:"optional,field=count,doc=Maximum number of clients to fetch (default unlimited)"`
 
-	OrgIds []string `vfilter:"optional,field=orgs,doc=Run the query over these orgs. If empty use the current org.'"`
+	OrgIds []string `vfilter:"optional,field=orgs,doc=Run the query over these orgs. If empty use the current org."`
 }
 
 type SourcePlugin struct{}

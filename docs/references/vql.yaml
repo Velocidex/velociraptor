@@ -5315,7 +5315,7 @@
     description: Start reading the result set from this row
   - name: count
     type: int64
-    description: Maximum number of clients to fetch (default unlimited)'
+    description: Maximum number of clients to fetch (default unlimited)
   category: server
   metadata:
     permissions: READ_RESULTS
@@ -8735,10 +8735,10 @@
     description: Start reading the result set from this row
   - name: count
     type: int64
-    description: Maximum number of clients to fetch (default unlimited)'
+    description: Maximum number of clients to fetch (default unlimited)
   - name: orgs
     type: string
-    description: Run the query over these orgs. If empty use the current org.'
+    description: Run the query over these orgs. If empty use the current org.
     repeated: true
   category: server
   metadata:
@@ -10784,7 +10784,6 @@
        },
     }
     ```
-
   type: Plugin
   args:
   - name: name
@@ -11027,7 +11026,7 @@
     ### Example
 
     ```vql
-    SELECT winpmem(image_path='c:/test.dd', compression='s2') FROM scope()"
+    SELECT winpmem(image_path='c:/test.dd', compression='s2') FROM scope()
     ```
   type: Function
   args:
@@ -11371,3 +11370,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+
