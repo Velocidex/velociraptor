@@ -3,15 +3,19 @@ package sigma
 import (
 	"context"
 	"strings"
+	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/sigma-go"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
 type LogSourceProvider struct {
+	mu sync.Mutex
+
 	queries map[string]types.StoredQuery
 }
 
@@ -89,6 +93,8 @@ func (self *LogSourcesFunction) Call(ctx context.Context,
 		queries: make(map[string]types.StoredQuery),
 	}
 
+	args = arg_parser.NormalizeArgs(args)
+
 	for _, field := range scope.GetMembers(args) {
 		value, _ := scope.Associative(args, field)
 
@@ -110,8 +116,10 @@ func (self *LogSourcesFunction) Call(ctx context.Context,
 
 func (self LogSourcesFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name: "sigma_log_sources",
-		Doc:  "Constructs a Log sources object to be used in sigma rules. Call with args being category/product/service and values being stored queries. You may use a * as a placeholder for any of these fields.",
+		Name:         "sigma_log_sources",
+		Doc:          "Constructs a Log sources object to be used in sigma rules. Call with args being category/product/service and values being stored queries. You may use a * as a placeholder for any of these fields.",
+		FreeFormArgs: true,
+		Version:      2,
 	}
 }
 
@@ -173,4 +181,5 @@ func matchLogSource(log_target *sigma.Logsource, rule sigma.Rule) bool {
 
 func init() {
 	vql_subsystem.RegisterFunction(&LogSourcesFunction{})
+	vql_subsystem.RegisterProtocol(&LogSourceProviderAssociative{})
 }

@@ -87,7 +87,7 @@ func (self *SubStrFunction) Call(ctx context.Context,
 	defer vql_subsystem.RegisterMonitor("substr", args)()
 
 	arg := &SubStrArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("substr: %s", err.Error())
 		return nil
