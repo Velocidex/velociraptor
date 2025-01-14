@@ -64,6 +64,9 @@ func (self _MFTHighlightAssociative) Associative(
 	case "FileName":
 		return hl.FileName(), true
 
+	case "uSecZeros":
+		return self.Associative(scope, a, "USecZeros")
+
 	default:
 		return protocols.DefaultAssociative{}.Associative(scope, a, b)
 	}
@@ -87,7 +90,7 @@ func (self _MFTHighlightAssociative) GetMembers(
 		"IsDir",
 		"HasADS",
 		"SI_Lt_FN",
-		"uSecZeros",
+		"USecZeros",
 		"Copied",
 		"SIFlags",
 		"Created0x10",
