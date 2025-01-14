@@ -23,7 +23,17 @@ import (
 )
 
 const (
-	VERSION = "0.73.3"
+	VERSION = "0.73.4"
+
+	// This is the version of dependent client binaries that will be
+	// included in the offline collector or MSI. Usually this will be
+	// lockstep with the server version except for server side
+	// patches.
+
+	//CLIENT_VERSION = VERSION
+
+	// 0.73.4 is a server only build to fix some server bugs
+	CLIENT_VERSION = "0.73.3"
 
 	ENROLLMENT_WELL_KNOWN_FLOW   = "E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW   = FLOW_PREFIX + "Monitoring"
