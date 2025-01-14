@@ -576,7 +576,7 @@ func UpdateDependentTools() error {
 		return nil
 	}
 
-	v, err := semver.NewVersion(constants.VERSION)
+	v, err := semver.NewVersion(constants.CLIENT_VERSION)
 	if err != nil {
 		return err
 	}
@@ -601,7 +601,7 @@ func UpdateDependentTools() error {
 	}
 	defer outfd.Close()
 
-	data = bytes.ReplaceAll(data, []byte("<VERSION>"), []byte(constants.VERSION))
+	data = bytes.ReplaceAll(data, []byte("<VERSION>"), []byte(constants.CLIENT_VERSION))
 	data = bytes.ReplaceAll(data, []byte("<VERSION_BARE>"),
 		[]byte(fmt.Sprintf("%d.%d", v.Major(), v.Minor())))
 
