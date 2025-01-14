@@ -116,6 +116,7 @@ func doCollector() error {
 
 	// Start from a clean slate
 	os.Setenv("VELOCIRAPTOR_CONFIG", "")
+	os.Setenv("VELOCIRAPTOR_LITERAL_CONFIG", "")
 
 	datastore_directory := *collector_command_datastore
 	if datastore_directory == "" {

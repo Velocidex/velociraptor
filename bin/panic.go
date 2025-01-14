@@ -17,6 +17,7 @@ func writeLogOnPanic() error {
 	config_obj, err := new(config.Loader).
 		WithFileLoader(*config_path).
 		WithEmbedded(*embedded_config_path).
+		WithEnvLiteralLoader("VELOCIRAPTOR_LITERAL_CONFIG").
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
 		LoadAndValidate()
 	if err != nil {
