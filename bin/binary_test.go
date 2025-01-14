@@ -356,6 +356,16 @@ func TestGenerateConfigWithMerge(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, string(out), "Foo")
 
+	// Specify the literal config in the environment
+	cmd = exec.Command(binary, "config", "show")
+	cmd.Env = append(os.Environ(),
+		"VELOCIRAPTOR_LITERAL_CONFIG="+string(config_file_content),
+		"VELOCIRAPTOR_CONFIG=",
+	)
+	out, err = cmd.Output()
+	require.NoError(t, err)
+	require.Contains(t, string(out), "Foo")
+
 	// Specifying invalid config in the flag is a hard stop - even
 	// if there is a valid environ.
 	cmd = exec.Command(binary, "config", "show", "--config", "XXXX")

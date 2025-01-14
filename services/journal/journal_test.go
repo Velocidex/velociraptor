@@ -31,9 +31,9 @@ func (self *JournalTestSuite) SetupTest() {
 
 	file_store.ClearGlobalFilestore()
 
-	os.Setenv("VELOCIRAPTOR_CONFIG", test_utils.SERVER_CONFIG)
+	os.Setenv("VELOCIRAPTOR_LITERAL_CONFIG", test_utils.SERVER_CONFIG)
 	self.ConfigObj, err = new(config.Loader).
-		WithEnvLiteralLoader("VELOCIRAPTOR_CONFIG").WithRequiredFrontend().
+		WithEnvLiteralLoader("VELOCIRAPTOR_LITERAL_CONFIG").WithRequiredFrontend().
 		WithVerbose(true).LoadAndValidate()
 	require.NoError(self.T(), err)
 

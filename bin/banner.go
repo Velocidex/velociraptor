@@ -46,7 +46,8 @@ func doBanner() {
 		}
 
 		switch pair[0] {
-		case // Ignore this one as it is the actual configuration "VELOCIRAPTOR_CONFIG",
+		case // Ignore this one as it is the actual configuration
+			"VELOCIRAPTOR_LITERAL_CONFIG",
 			"VELOCIRAPTOR_SLOW_FILESYSTEM",
 			"VELOCIRAPTOR_DISABLE_CSRF", "VELOCIRAPTOR_INJECT_API_SLEEP",
 			"GOGC", "GOTRACEBACK", "GOMAXPROCS", "GODEBUG", "GOMEMLIMIT",
