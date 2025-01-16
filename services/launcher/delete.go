@@ -151,11 +151,8 @@ func (self *FlowStorageManager) DeleteFlow(
 			r.emit_fs("NotebookItem", path)
 			return nil
 		})
-	// Rebuild the flow index to ensure GUI paging works
-	// properly. This is pretty slow but we do not expect to delete
-	// flows that often.
 	if really_do_it {
-		err = self.buildFlowIndexFromLegacy(ctx, config_obj, client_id)
+		err = self.removeFlowFromIndex(ctx, config_obj, client_id, flow_id)
 	}
 	r.pool.StopAndWait()
 

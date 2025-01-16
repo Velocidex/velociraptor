@@ -147,6 +147,45 @@ func (self *FlowStorageManager) ListFlows(
 	return result, rs_reader.TotalRows(), nil
 }
 
+func (self *FlowStorageManager) removeFlowFromIndex(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	client_id string,
+	flow_id string) error {
+
+	client_path_manager := paths.NewClientPathManager(client_id)
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	rs_reader, err := result_sets.NewResultSetReader(file_store_factory,
+		client_path_manager.FlowIndex())
+	if err != nil {
+		return self.buildFlowIndexFromLegacy(ctx, config_obj, client_id)
+	}
+
+	var index []ordereddict.Dict
+	for r := range rs_reader.Rows(ctx) {
+		if v, _ := r.Get("FlowId"); v == flow_id {
+			continue
+		}
+		index = append(index, *r)
+	}
+	rs_reader.Close()
+
+	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
+		client_path_manager.FlowIndex(),
+		json.DefaultEncOpts(), utils.SyncCompleter, result_sets.TruncateMode)
+	if err != nil {
+		return err
+	}
+	defer rs_writer.Close()
+
+	for _, r := range index {
+		rs_writer.Write(&r)
+	}
+
+	return nil
+}
+
 // Rebuild the flow index from individual flow context files.
 func (self *FlowStorageManager) buildFlowIndexFromLegacy(
 	ctx context.Context,
