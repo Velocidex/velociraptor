@@ -2,7 +2,7 @@ name: MacOS.Forensics.FSEvents
 description: |
    This artifact parses the FSEvents log files.
    
-   We can filter on Path, Flags or use time box on source file 
+   We can filter on Path, Flags or use time box on source file. 
    
    An interesting hunt may be filter for Entries of plist files modified or 
    created on a specific date. Malware often creates plist files in 
@@ -15,6 +15,13 @@ description: |
    Btime. 
    - default timeout is only 600 seconds - you will need to increase for this 
    colection to finish.
+   
+   REVISION HISTORY:
+   
+   - 17 Jan 2025 by Yogesh Khatri (@swiftforensics), CyberCX.  
+   Update to support additional fsevents versions, now supports 1, 2 and 3. 
+   Sometimes there is more than one SLD block in the file, support for this has 
+   also been added. Also fetches file_id (inode) if present (v2 and v3).
 
 reference:
 - https://www.osdfcon.org/presentations/2017/Ibrahim-Understanding-MacOS-File-Ststem-Events-with-FSEvents-Parser.pdf
@@ -31,7 +38,7 @@ parameters:
        /System/Volumes/Data/.fseventsd/*
    - name: Glob
      type: string
-     description: Instead of providing the globs in a table, a single glob may e given.
+     description: Instead of providing the globs in a table, a single glob may be given.
    - name: PathRegex
      description: Filter the path by this regexp
      default: .
@@ -46,25 +53,61 @@ parameters:
    - name: DateBefore
      type: timestamp
      description: "search for source files with Mtime before this date. YYYY-MM-DDTmm:hh:ssZ"
-   - name: LogSource
-     type: bool
-     description: "Adds the Source file OSPath into logs"
 
 export: |
     LET FSEventProfile = '''[
-    ["Header", 0, [
-      ["Signature", 0, "String", {
-          length: 4
+    ["FSEventsProfile", 0, [
+      ["Entries", 0, "Array", {
+         type: "Header",
+         count: 10000,
       }],
-      ["StreamSize", 8, uint32],
-      ["Items", 12, "Array", {
+    ]],
+    ["Header", "x=>x.Info.StreamSize", [
+      ["Version", 0, "Enumeration", {
+         type: "unsigned int",
+         choices: {
+           "1145852721": "V1",
+           "1145852722": "V2",
+           "1145852723": "V3"
+         }
+      }],
+      ["Info", 8, "Union", {
+         selector: "x=>x.Version",
+         choices: {
+             "V1": "FS1",
+             "V2": "FS2",
+             "V3": "FS3",
+         }
+      }],
+    ]],
+    ["FS1", "x=>x.StreamSize - 8", [
+      ["StreamSize", 0, uint32],
+      ["Items", 4, "Array", {
           count: 10000,
           max_count: 10000,
-          type: FSEventEntry,
-          sentinel: "x=>len(list=x.path) = 0",
-      }]
+          type: FSEventEntry1,
+          sentinel: "x=>this.EndOf < x.EndOf",
+      }],
     ]],
-    ["FSEventEntry", "x=>len(list=x.path) + 21", [
+    ["FS2", "x=>x.StreamSize - 8", [
+      ["StreamSize", 0, uint32],
+      ["Items", 4, "Array", {
+          count: 10000,
+          max_count: 10000,
+          type: FSEventEntry2,
+          sentinel: "x=>this.EndOf < x.EndOf",
+      }],
+    ]],
+    ["FS3", "x=>x.StreamSize - 8", [
+      ["StreamSize", 0, uint32],
+      ["Items", 4, "Array", {
+          count: 10000,
+          max_count: 2336,
+          type: FSEventEntry3,
+          sentinel: "x=>this.EndOf < x.EndOf",
+      }],
+    ]],
+    ["FSEventEntry1", "x=>len(list=x.path) + 13", [
       ["path", 0, "String"],
       ["id", "x=>len(list=x.path) + 1", "uint64"],
       ["flags", "x=>len(list=x.path) + 9", "Flags", {
@@ -98,7 +141,81 @@ export: |
             EndOfTransaction: 29
           }
       }],
-    ]]
+      ["file_id", 0, "Value", {"value": ""}],
+    ]],
+    ["FSEventEntry2", "x=>len(list=x.path) + 21", [
+      ["path", 0, "String"],
+      ["id", "x=>len(list=x.path) + 1", "uint64"],
+      ["flags", "x=>len(list=x.path) + 9", "Flags", {
+          type: "uint32",
+          bitmap: {
+            FSE_CREATE_FILE: 0,
+            FSE_DELETE: 1,
+            FSE_STAT_CHANGED: 2,
+            FSE_RENAME: 3,
+            FSE_CONTENT_MODIFIED: 4,
+            FSE_EXCHANGE: 5,
+            FSE_FINDER_INFO_CHANGED: 6,
+            FSE_CREATE_DIR: 7,
+            FSE_CHOWN: 8,
+            FSE_XATTR_MODIFIED: 9,
+            FSE_XATTR_REMOVED: 10,
+            FSE_DOCID_CREATED: 11,
+            FSE_DOCID_CHANGED: 12,
+            FSE_UNMOUNT_PENDING: 13,
+            FSE_CLONE: 14,
+            FSE_MODE_CLONE: 16,
+            FSE_TRUNCATED_PATH: 17,
+            FSE_REMOTE_DIR_EVENT: 18,
+            FSE_MODE_LAST_HLINK: 19,
+            FSE_MODE_HLINK: 20,
+            IsSymbolicLink: 22,
+            IsFile: 23,
+            IsDirectory: 24,
+            Mount: 25,
+            Unmount: 26,
+            EndOfTransaction: 29
+          }
+      }],
+      ["file_id", "x=>len(list=x.path) + 13", "int64"],
+    ]],
+    ["FSEventEntry3", "x=>len(list=x.path) + 25", [
+      ["path", 0, "String"],
+      ["id", "x=>len(list=x.path) + 1", "uint64"],
+      ["flags", "x=>len(list=x.path) + 9", "Flags", {
+          type: "uint32",
+          bitmap: {
+            FSE_CREATE_FILE: 0,
+            FSE_DELETE: 1,
+            FSE_STAT_CHANGED: 2,
+            FSE_RENAME: 3,
+            FSE_CONTENT_MODIFIED: 4,
+            FSE_EXCHANGE: 5,
+            FSE_FINDER_INFO_CHANGED: 6,
+            FSE_CREATE_DIR: 7,
+            FSE_CHOWN: 8,
+            FSE_XATTR_MODIFIED: 9,
+            FSE_XATTR_REMOVED: 10,
+            FSE_DOCID_CREATED: 11,
+            FSE_DOCID_CHANGED: 12,
+            FSE_UNMOUNT_PENDING: 13,
+            FSE_CLONE: 14,
+            FSE_MODE_CLONE: 16,
+            FSE_TRUNCATED_PATH: 17,
+            FSE_REMOTE_DIR_EVENT: 18,
+            FSE_MODE_LAST_HLINK: 19,
+            FSE_MODE_HLINK: 20,
+            IsSymbolicLink: 22,
+            IsFile: 23,
+            IsDirectory: 24,
+            Mount: 25,
+            Unmount: 26,
+            EndOfTransaction: 29
+          }
+      }],
+      ["file_id", "x=>len(list=x.path) + 13", "int64"],
+      ["unknown_id", "x=>len(list=x.path) + 21", "int32"],
+    ]],
     ]'''
 
 sources:
@@ -109,18 +226,30 @@ sources:
             AND if(condition=DateBefore, then= Mtime < DateBefore, else= True )
             AND log(message=OSPath)
 
-      SELECT * FROM foreach(row=files,
+      LET x = SELECT * FROM foreach(row=files,
         query={
             SELECT 
-                path as EntryPath,
-                id as EntryId, 
-                join(array=flags, sep=", ") AS EntryFlags,
-                OSPath.Basename as SourceFile, 
+                Version, 
+                Info.Items as items, 
+                OSPath.Basename as SourceFile,
                 Mtime as SourceMtime, 
-                Btime as SourceBtime 
-            FROM foreach(row=parse_binary(
+                Btime as SourceBtime
+            FROM 
+                foreach(row=parse_binary(
                     filename=read_file(filename=OSPath, accessor="gzip", length=1000000),
                     accessor="data",
-                    profile=FSEventProfile, struct="Header").Items)
+                    profile=FSEventProfile, struct="FSEventsProfile").Entries)
         })
         WHERE EntryPath =~ PathRegex AND EntryFlags =~ FlagsRegex
+        
+      SELECT
+        items.path as EntryPath,
+        items.id as EntryId, 
+        join(array=items.flags, sep=", ") AS EntryFlags,
+        items.file_id as FileId,
+        SourceFile,
+        SourceMtime,
+        SourceBtime,
+        Version
+      FROM 
+        flatten(query=x)
