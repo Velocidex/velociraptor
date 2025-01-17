@@ -30,7 +30,7 @@ jobs:
         go get -v -t -d ./...
         sudo apt-get update
         sudo apt-get upgrade
-        sudo apt-get install mingw-w64-x86-64-dev gcc-mingw-w64-x86-64 gcc-mingw-w64 gcc-aarch64-linux-gnu
+        sudo apt-get install mingw-w64-x86-64-dev gcc-mingw-w64-x86-64 gcc-mingw-w64
 
     - name: Use Node.js
       uses: actions/setup-node@v4
@@ -52,7 +52,6 @@ jobs:
         export PATH=$PATH:~/go/bin/
         go run make.go -v UpdateDependentTools
         go run make.go -v Linux
-        go run make.go -v LinuxArm64
         go run make.go -v Windows
         go run make.go -v Windowsx86
         go run make.go -v DarwinBase

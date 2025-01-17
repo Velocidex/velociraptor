@@ -51,7 +51,7 @@ require (
 	github.com/magefile/mage v1.15.0
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
-	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/microcosm-cc/bluemonday v1.0.23
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/panicwrap v1.0.0
@@ -74,7 +74,7 @@ require (
 	golang.org/x/crypto v0.31.0
 	golang.org/x/mod v0.21.0
 	golang.org/x/net v0.33.0
-	golang.org/x/sys v0.28.0
+	golang.org/x/sys v0.29.0
 	golang.org/x/text v0.21.0
 	golang.org/x/time v0.5.0
 	google.golang.org/api v0.169.0
@@ -86,7 +86,7 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	howett.net/plist v1.0.0
-	www.velocidex.com/golang/evtx v0.2.1-0.20240730174545-3e4ff3d96433
+	www.velocidex.com/golang/evtx v0.2.1-0.20250117005955-e5cd153ed377
 	www.velocidex.com/golang/go-ese v0.2.1-0.20240919031214-2aa005106db2
 	www.velocidex.com/golang/go-ntfs v0.2.1-0.20241123135758-e6f7e1f1c474
 	www.velocidex.com/golang/go-pe v0.1.1-0.20250101153735-7a925ba8334b
