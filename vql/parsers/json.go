@@ -104,7 +104,13 @@ func (self ParseJsonArray) Call(
 		return &vfilter.Null{}
 	}
 
+	arg.Data = strings.TrimSpace(arg.Data)
+
 	result_array := []json.RawMessage{}
+	if arg.Data == "" {
+		return result_array
+	}
+
 	err = json.Unmarshal([]byte(arg.Data), &result_array)
 	if err != nil {
 		scope.Log("parse_json_array: %v", err)
