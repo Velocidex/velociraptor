@@ -20,12 +20,821 @@ SELECT OSPath.Basename, Content.home FROM Artifact.MacOS.System.Plist( PlistGlob
   "_Architecture": "arch_arm_i64",
   "_Source": "MacOS.System.Packages"
  }
-]SELECT SourceFile, EntryPath, EntryId, EntryFlags FROM Artifact.MacOS.Forensics.FSEvents(Glob=srcDir+"/artifacts/testdata/files/fs_events_*")[
+]SELECT SourceFile, EntryPath, EntryId, EntryFlags, FileId FROM Artifact.MacOS.Forensics.FSEvents(Glob=srcDir+"/artifacts/testdata/files/fs_events_00000000007cff3d")[
  {
   "SourceFile": "fs_events_00000000007cff3d",
   "EntryPath": ".fseventsd/sl-compat",
   "EntryId": 163194,
-  "EntryFlags": "IsDirectory"
+  "EntryFlags": "IsDirectory",
+  "FileId": ""
+ },
+ {
+  "SourceFile": "fs_events_00000000007cff3d",
+  "EntryPath": "",
+  "EntryId": 163195,
+  "EntryFlags": "EndOfTransaction, IsDirectory",
+  "FileId": ""
+ }
+]SELECT count() AS Row, SourceFile, EntryPath, EntryId, EntryFlags, FileId FROM Artifact.MacOS.Forensics.FSEvents(Glob=srcDir+"/artifacts/testdata/files/fs_events_000000002fc5e551") WHERE Row > 2300 LIMIT 100[
+ {
+  "Row": 2301,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/01/416D41F46D3F56B5D24AF543DA607A.h6zTI4Aq",
+  "EntryId": 801481131,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377696
+ },
+ {
+  "Row": 2302,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/0D",
+  "EntryId": 801487935,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340166
+ },
+ {
+  "Row": 2303,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/0D/536EA41EC231748C4F0364B8D5E8E5",
+  "EntryId": 801487965,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 378108
+ },
+ {
+  "Row": 2304,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/0D/536EA41EC231748C4F0364B8D5E8E5.OInf1NVc",
+  "EntryId": 801487961,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 378108
+ },
+ {
+  "Row": 2305,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/19",
+  "EntryId": 801479755,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340569
+ },
+ {
+  "Row": 2306,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/19/ABE49065FA34A880CADD0AF2579E02",
+  "EntryId": 801479771,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377592
+ },
+ {
+  "Row": 2307,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/19/ABE49065FA34A880CADD0AF2579E02.o16CLVQZ",
+  "EntryId": 801479767,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377592
+ },
+ {
+  "Row": 2308,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/20",
+  "EntryId": 801479714,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377588
+ },
+ {
+  "Row": 2309,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/20/C449B27CED3BAABFA4A48CA57EC178",
+  "EntryId": 801479749,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377590
+ },
+ {
+  "Row": 2310,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/20/C449B27CED3BAABFA4A48CA57EC178.vvxwQ3r4",
+  "EntryId": 801479745,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377590
+ },
+ {
+  "Row": 2311,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/23",
+  "EntryId": 801489355,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340134
+ },
+ {
+  "Row": 2312,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/23/E5E62B32CC3D02BF89BBAD45CE369D",
+  "EntryId": 801489374,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, FSE_STAT_CHANGED, IsFile",
+  "FileId": 378187
+ },
+ {
+  "Row": 2313,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/23/E5E62B32CC3D02BF89BBAD45CE369D.wZ6rUI3q",
+  "EntryId": 801489367,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 378187
+ },
+ {
+  "Row": 2314,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/30",
+  "EntryId": 801479919,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340306
+ },
+ {
+  "Row": 2315,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/30/E9833C791F366EB7FDB0DB8905FEF6",
+  "EntryId": 801479950,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377600
+ },
+ {
+  "Row": 2316,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/30/E9833C791F366EB7FDB0DB8905FEF6.76pgrxXN",
+  "EntryId": 801479946,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377600
+ },
+ {
+  "Row": 2317,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/32",
+  "EntryId": 801482369,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340024
+ },
+ {
+  "Row": 2318,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/32/0D4789ED013E72AF57BFF7CD65AA41",
+  "EntryId": 801482385,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377776
+ },
+ {
+  "Row": 2319,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/32/0D4789ED013E72AF57BFF7CD65AA41.Ze7w1fUk",
+  "EntryId": 801482381,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377776
+ },
+ {
+  "Row": 2320,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/56",
+  "EntryId": 801492364,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340703
+ },
+ {
+  "Row": 2321,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/56/F411CF675C38B0871E8DBB0579AE81",
+  "EntryId": 801492380,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 378374
+ },
+ {
+  "Row": 2322,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/56/F411CF675C38B0871E8DBB0579AE81.sq5JnslC",
+  "EntryId": 801492376,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 378374
+ },
+ {
+  "Row": 2323,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/5D",
+  "EntryId": 801486335,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340205
+ },
+ {
+  "Row": 2324,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/5D/757D00EA8C3A48B125FDA009A90C07",
+  "EntryId": 801486366,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377991
+ },
+ {
+  "Row": 2325,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/5D/757D00EA8C3A48B125FDA009A90C07.zanyrv3z",
+  "EntryId": 801486362,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377991
+ },
+ {
+  "Row": 2326,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/61",
+  "EntryId": 801481138,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340383
+ },
+ {
+  "Row": 2327,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/61/2D10BFB0613FA5AB6A67709A31E9FE",
+  "EntryId": 801481163,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377697
+ },
+ {
+  "Row": 2328,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/61/2D10BFB0613FA5AB6A67709A31E9FE.NZ4h8MBh",
+  "EntryId": 801481159,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377697
+ },
+ {
+  "Row": 2329,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/7E",
+  "EntryId": 801486316,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 343039
+ },
+ {
+  "Row": 2330,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/7E/6244688422344EA8B0A67420F6C786",
+  "EntryId": 801486332,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377990
+ },
+ {
+  "Row": 2331,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/7E/6244688422344EA8B0A67420F6C786.pL7REvMq",
+  "EntryId": 801486328,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377990
+ },
+ {
+  "Row": 2332,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/8C",
+  "EntryId": 801489700,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340103
+ },
+ {
+  "Row": 2333,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/8C/EC7E447E9C397AB4C3A82DFC66A6C7",
+  "EntryId": 801489797,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 378203
+ },
+ {
+  "Row": 2334,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/8C/EC7E447E9C397AB4C3A82DFC66A6C7.3bTDlK1X",
+  "EntryId": 801489793,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 378203
+ },
+ {
+  "Row": 2335,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/8E",
+  "EntryId": 801482350,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340117
+ },
+ {
+  "Row": 2336,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/8E/5D4C72FD473200A877C63ABB159E1B",
+  "EntryId": 801482366,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377775
+ },
+ {
+  "Row": 2337,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/8E/5D4C72FD473200A877C63ABB159E1B.9PY3EcMG",
+  "EntryId": 801482362,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377775
+ },
+ {
+  "Row": 2338,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/97/E8D895A6513A8C843F2978826ED559",
+  "EntryId": 801479134,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377365
+ },
+ {
+  "Row": 2339,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/97/E8D895A6513A8C843F2978826ED559.HcnAjqxa",
+  "EntryId": 801479121,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377365
+ },
+ {
+  "Row": 2340,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/99",
+  "EntryId": 801491060,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340114
+ },
+ {
+  "Row": 2341,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/99/56D88AE1F030FEA7B71AF0ED803B01",
+  "EntryId": 801491076,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 378284
+ },
+ {
+  "Row": 2342,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/99/56D88AE1F030FEA7B71AF0ED803B01.MPQ15LNZ",
+  "EntryId": 801491072,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 378284
+ },
+ {
+  "Row": 2343,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A6",
+  "EntryId": 801479774,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 344200
+ },
+ {
+  "Row": 2344,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A6/955885CA69334B888831DD816EB01F",
+  "EntryId": 801479800,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377593
+ },
+ {
+  "Row": 2345,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A6/955885CA69334B888831DD816EB01F.JAFCf4a6",
+  "EntryId": 801479796,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377593
+ },
+ {
+  "Row": 2346,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A7",
+  "EntryId": 801484894,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340371
+ },
+ {
+  "Row": 2347,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A7/5B81E1BCB13A0BB7EFBC7D4177BB65",
+  "EntryId": 801484910,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377908
+ },
+ {
+  "Row": 2348,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A7/5B81E1BCB13A0BB7EFBC7D4177BB65.1ZExZfJ2",
+  "EntryId": 801484906,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377908
+ },
+ {
+  "Row": 2349,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A8",
+  "EntryId": 801482331,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340213
+ },
+ {
+  "Row": 2350,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A8/87A76B8C1C3888A543965E6B9C03A6",
+  "EntryId": 801482347,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377774
+ },
+ {
+  "Row": 2351,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A8/87A76B8C1C3888A543965E6B9C03A6.cfxBkvUx",
+  "EntryId": 801482343,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377774
+ },
+ {
+  "Row": 2352,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A9",
+  "EntryId": 801482117,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340032
+ },
+ {
+  "Row": 2353,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A9/1B62DBBB733D938DBF3F7B1A23DF7E",
+  "EntryId": 801482133,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377764
+ },
+ {
+  "Row": 2354,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A9/1B62DBBB733D938DBF3F7B1A23DF7E.8ZU3k5L3",
+  "EntryId": 801482129,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377764
+ },
+ {
+  "Row": 2355,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/AB",
+  "EntryId": 801479519,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340327
+ },
+ {
+  "Row": 2356,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/AB/FFEC09EAAF3812BC83D79CAEDBEF33",
+  "EntryId": 801479677,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377538
+ },
+ {
+  "Row": 2357,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/AB/FFEC09EAAF3812BC83D79CAEDBEF33.Uo8HaDZS",
+  "EntryId": 801479670,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377538
+ },
+ {
+  "Row": 2358,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/BA",
+  "EntryId": 801484913,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340088
+ },
+ {
+  "Row": 2359,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/BA/C6D5BCCCC53DCD9B4FC916DAED64D8",
+  "EntryId": 801484929,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377909
+ },
+ {
+  "Row": 2360,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/BA/C6D5BCCCC53DCD9B4FC916DAED64D8.Ai5ak0YF",
+  "EntryId": 801484925,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377909
+ },
+ {
+  "Row": 2361,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/DC",
+  "EntryId": 801481735,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340168
+ },
+ {
+  "Row": 2362,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/DC/4D17D85A97392D85A1973280F24641",
+  "EntryId": 801481751,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377730
+ },
+ {
+  "Row": 2363,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/DC/4D17D85A97392D85A1973280F24641.jvGPhPtT",
+  "EntryId": 801481747,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377730
+ },
+ {
+  "Row": 2364,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/FD",
+  "EntryId": 801484932,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 345542
+ },
+ {
+  "Row": 2365,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/FD/67B4D0B7A835E4ABA28BB78BCD7D93",
+  "EntryId": 801484948,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377910
+ },
+ {
+  "Row": 2366,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/FD/67B4D0B7A835E4ABA28BB78BCD7D93.1BWYB9cv",
+  "EntryId": 801484944,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377910
+ },
+ {
+  "Row": 2367,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.ScreenTimeAgent/Store/Library/com.apple.ManagedSettings/Records",
+  "EntryId": 801481789,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377735
+ },
+ {
+  "Row": 2368,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.ScreenTimeAgent/Store/Library/com.apple.ManagedSettings/Records/BC67D2E9-DFB7-48F1-823D-58AED86A570C",
+  "EntryId": 801481817,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377738
+ },
+ {
+  "Row": 2369,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.ScreenTimeAgent/Store/Library/com.apple.ManagedSettings/Records/SettingRecords.plist",
+  "EntryId": 801481843,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_RENAME, FSE_STAT_CHANGED, IsFile",
+  "FileId": 377740
+ },
+ {
+  "Row": 2370,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.ScreenTimeAgent/Store/Library/com.apple.ManagedSettings/Records/SettingRecords.plist",
+  "EntryId": 801481831,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_RENAME, FSE_STAT_CHANGED, IsFile",
+  "FileId": 377737
+ },
+ {
+  "Row": 2371,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.pluginkit/Annotations",
+  "EntryId": 801479407,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377471
+ },
+ {
+  "Row": 2372,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.pluginkit/Annotations",
+  "EntryId": 801479145,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377469
+ },
+ {
+  "Row": 2373,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.pluginkit/Annotations",
+  "EntryId": 801479416,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377528
+ },
+ {
+  "Row": 2374,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.pluginkit/Annotations",
+  "EntryId": 801479118,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377417
+ },
+ {
+  "Row": 2375,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.ExtensionsSettings.LegacyPluginEnablementExtension",
+  "EntryId": 801479191,
+  "EntryFlags": "FSE_CREATE_DIR, FSE_XATTR_MODIFIED, IsDirectory",
+  "FileId": 377475
+ },
+ {
+  "Row": 2376,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.FollowUpSettings.FollowUpSettingsExtension",
+  "EntryId": 801479962,
+  "EntryFlags": "FSE_CREATE_DIR, FSE_XATTR_MODIFIED, IsDirectory",
+  "FileId": 377603
+ },
+ {
+  "Row": 2377,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.LocalAuthenticationRemoteService",
+  "EntryId": 801482142,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377766
+ },
+ {
+  "Row": 2378,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.LocalAuthenticationRemoteService/com.apple.metalfe",
+  "EntryId": 801482145,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377767
+ },
+ {
+  "Row": 2379,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.Touch-ID-Settings.extension",
+  "EntryId": 801491079,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 378285
+ },
+ {
+  "Row": 2380,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.Touch-ID-Settings.extension/com.apple.metalfe",
+  "EntryId": 801491082,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 378286
+ },
+ {
+  "Row": 2381,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.WebKit.GPU/com.apple.metal/16777235_402/functions.data",
+  "EntryId": 801483455,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, IsFile",
+  "FileId": 374419
+ },
+ {
+  "Row": 2382,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.WebKit.GPU/com.apple.metal/16777235_402/functions.list",
+  "EntryId": 801483458,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, IsFile",
+  "FileId": 376392
+ },
+ {
+  "Row": 2383,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.naturallanguaged",
+  "EntryId": 801486359,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377993
+ },
+ {
+  "Row": 2384,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.settings.PrivacySecurity.extension",
+  "EntryId": 801481754,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377731
+ },
+ {
+  "Row": 2385,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.settings.PrivacySecurity.extension/com.apple.metalfe",
+  "EntryId": 801481757,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377732
+ },
+ {
+  "Row": 2386,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.studentd",
+  "EntryId": 801480482,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377650
+ },
+ {
+  "Row": 2387,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.studentd/mds",
+  "EntryId": 801480488,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377651
+ },
+ {
+  "Row": 2388,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.studentd/mds/mds.lock",
+  "EntryId": 801480491,
+  "EntryFlags": "FSE_CREATE_FILE, IsFile",
+  "FileId": 377652
+ },
+ {
+  "Row": 2389,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.studentd/mds/mdsDirectory.db",
+  "EntryId": 801480520,
+  "EntryFlags": "FSE_RENAME, IsFile",
+  "FileId": 377655
+ },
+ {
+  "Row": 2390,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.studentd/mds/mdsDirectory.db_",
+  "EntryId": 801480519,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377655
+ },
+ {
+  "Row": 2391,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.studentd/mds/mdsObject.db",
+  "EntryId": 801480507,
+  "EntryFlags": "FSE_RENAME, IsFile",
+  "FileId": 377653
+ },
+ {
+  "Row": 2392,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.studentd/mds/mdsObject.db_",
+  "EntryId": 801480506,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377653
+ },
+ {
+  "Row": 2393,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.systempreferences.GeneralSettings/com.apple.systempreferences.GeneralSettings",
+  "EntryId": 801490374,
+  "EntryFlags": "FSE_CREATE_DIR, FSE_XATTR_MODIFIED, IsDirectory",
+  "FileId": 378253
+ },
+ {
+  "Row": 2394,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.systempreferences.GeneralSettings/com.apple.systempreferences.GeneralSettings/com.apple.metalfe",
+  "EntryId": 801490380,
+  "EntryFlags": "FSE_CREATE_DIR, FSE_XATTR_MODIFIED, IsDirectory",
+  "FileId": 378254
+ },
+ {
+  "Row": 2395,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.wifi-settings-extension",
+  "EntryId": 801481175,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377702
+ },
+ {
+  "Row": 2396,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.wifi-settings-extension/com.apple.metalfe",
+  "EntryId": 801481178,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377703
+ },
+ {
+  "Row": 2397,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/mds/mdsDirectory.db",
+  "EntryId": 801482943,
+  "EntryFlags": "FSE_RENAME, IsFile",
+  "FileId": 361846
+ },
+ {
+  "Row": 2398,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/mds/mdsDirectory.db",
+  "EntryId": 801482942,
+  "EntryFlags": "FSE_RENAME, IsFile",
+  "FileId": 377800
+ },
+ {
+  "Row": 2399,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/mds/mdsDirectory.db_",
+  "EntryId": 801482941,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377800
+ },
+ {
+  "Row": 2400,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/mds/mdsObject.db",
+  "EntryId": 801482929,
+  "EntryFlags": "FSE_RENAME, IsFile",
+  "FileId": 377799
  }
 ]SELECT *, OSPath.Basename AS OSPath FROM Artifact.MacOS.System.Dock(DockGlob=srcDir+"/artifacts/testdata/files/com.apple.dock.plist")[
  {
