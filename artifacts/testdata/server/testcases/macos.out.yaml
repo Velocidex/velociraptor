@@ -26,6 +26,12 @@ SELECT OSPath.Basename, Content.home FROM Artifact.MacOS.System.Plist( PlistGlob
   "EntryPath": ".fseventsd/sl-compat",
   "EntryId": 163194,
   "EntryFlags": "IsDirectory"
+ },
+ {
+  "SourceFile": "fs_events_00000000007cff3d",
+  "EntryPath": "",
+  "EntryId": 163195,
+  "EntryFlags": "EndOfTransaction, IsDirectory"
  }
 ]SELECT *, OSPath.Basename AS OSPath FROM Artifact.MacOS.System.Dock(DockGlob=srcDir+"/artifacts/testdata/files/com.apple.dock.plist")[
  {
