@@ -66,8 +66,8 @@ github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b h1
 github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b/go.mod h1:draN67DBVJDAVmLWDIJ85CrV0UxmIGfWZ4njukhINQs=
 github.com/Velocidex/go-ewf v0.0.0-20240210123447-97dc81b7d8c3 h1:0/ra1WgtmIrYZY4oU3pgp5l9A+5/DgJpz3mAyt0eVik=
 github.com/Velocidex/go-ewf v0.0.0-20240210123447-97dc81b7d8c3/go.mod h1:JrGP9QRoPe63ijMmU1UTfoGySg+zpgx68XcsGV/dItI=
-github.com/Velocidex/go-ext4 v0.0.0-20240608083317-8dd00855b069 h1:9OVXv4dSnn23i5nL0vA/BBN4TbGSOk0496n1g1rOTIo=
-github.com/Velocidex/go-ext4 v0.0.0-20240608083317-8dd00855b069/go.mod h1:Sbqqh1t+nYXmNWw0dZC8LOIxP7z5Wg94SP+4Ej1QZqg=
+github.com/Velocidex/go-ext4 v0.0.0-20250118151314-92624304aad4 h1:8akJy9YyVvycf06NHPWmjWj8qf8YNsNjEkm19CRwBw8=
+github.com/Velocidex/go-ext4 v0.0.0-20250118151314-92624304aad4/go.mod h1:Sbqqh1t+nYXmNWw0dZC8LOIxP7z5Wg94SP+4Ej1QZqg=
 github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a h1:dWHPlB3C86vh+M5P14dZxF6Hh8o2/u8FTRF/bs2EM+Q=
 github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a/go.mod h1:g74FCv59tsVP48V2o1eyIK8aKbNKPLJIJ+HuiUPVc6E=
 github.com/Velocidex/go-journalctl v0.0.0-20241004063153-cc1c858415bd h1:CSTW6zYoG1IFxaGM3N42wSwruigV1xZ4gNzjLgb2xIc=
