@@ -11,7 +11,7 @@ Queries:
 
   - SELECT * FROM Artifact.MacOS.System.Packages()
 
-  - SELECT SourceFile, EntryPath, EntryId, EntryFlags
+  - SELECT SourceFile, EntryPath, EntryId, EntryFlags, FileId
     FROM Artifact.MacOS.Forensics.FSEvents(Glob=srcDir+"/artifacts/testdata/files/fs_events_*")
 
   - SELECT *, OSPath.Basename AS OSPath
