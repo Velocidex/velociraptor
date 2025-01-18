@@ -35,706 +35,806 @@ SELECT OSPath.Basename, Content.home FROM Artifact.MacOS.System.Plist( PlistGlob
   "EntryFlags": "EndOfTransaction, IsDirectory",
   "FileId": ""
  }
-]SELECT SourceFile, EntryPath, EntryId, EntryFlags, FileId FROM Artifact.MacOS.Forensics.FSEvents(Glob=srcDir+"/artifacts/testdata/files/fs_events_000000002fc5e551") LIMIT 100[
+]SELECT count() AS Row, SourceFile, EntryPath, EntryId, EntryFlags, FileId FROM Artifact.MacOS.Forensics.FSEvents(Glob=srcDir+"/artifacts/testdata/files/fs_events_000000002fc5e551") WHERE Row > 2300 LIMIT 100[
  {
+  "Row": 2301,
   "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Applications/.DS_Store",
-  "EntryId": 801489346,
-  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_FINDER_INFO_CHANGED, FSE_STAT_CHANGED, IsFile",
-  "FileId": 378186
+  "EntryPath": "private/var/db/uuidtext/01/416D41F46D3F56B5D24AF543DA607A.h6zTI4Aq",
+  "EntryId": 801481131,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377696
  },
  {
+  "Row": 2302,
   "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Bluetooth/com.apple.MobileBluetooth.ledevices.other.db",
-  "EntryId": 801494091,
-  "EntryFlags": "FSE_CHOWN, IsFile",
-  "FileId": 17906
+  "EntryPath": "private/var/db/uuidtext/0D",
+  "EntryId": 801487935,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340166
  },
  {
+  "Row": 2303,
   "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Bluetooth/com.apple.MobileBluetooth.ledevices.other.db-shm",
-  "EntryId": 801494100,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_STAT_CHANGED, IsFile",
-  "FileId": 17921
+  "EntryPath": "private/var/db/uuidtext/0D/536EA41EC231748C4F0364B8D5E8E5",
+  "EntryId": 801487965,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 378108
  },
  {
+  "Row": 2304,
   "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Bluetooth/com.apple.MobileBluetooth.ledevices.other.db-wal",
-  "EntryId": 801494097,
-  "EntryFlags": "FSE_CHOWN, IsFile",
-  "FileId": 17920
+  "EntryPath": "private/var/db/uuidtext/0D/536EA41EC231748C4F0364B8D5E8E5.OInf1NVc",
+  "EntryId": 801487961,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 378108
  },
  {
+  "Row": 2305,
   "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Bluetooth/com.apple.MobileBluetooth.ledevices.paired.db",
-  "EntryId": 801494079,
-  "EntryFlags": "FSE_CHOWN, IsFile",
-  "FileId": 17883
+  "EntryPath": "private/var/db/uuidtext/19",
+  "EntryId": 801479755,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340569
  },
  {
+  "Row": 2306,
   "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Bluetooth/com.apple.MobileBluetooth.ledevices.paired.db-shm",
-  "EntryId": 801494088,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_STAT_CHANGED, IsFile",
-  "FileId": 17905
+  "EntryPath": "private/var/db/uuidtext/19/ABE49065FA34A880CADD0AF2579E02",
+  "EntryId": 801479771,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377592
  },
  {
+  "Row": 2307,
   "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Bluetooth/com.apple.MobileBluetooth.ledevices.paired.db-wal",
-  "EntryId": 801494085,
-  "EntryFlags": "FSE_CHOWN, IsFile",
-  "FileId": 17904
+  "EntryPath": "private/var/db/uuidtext/19/ABE49065FA34A880CADD0AF2579E02.o16CLVQZ",
+  "EntryId": 801479767,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377592
  },
  {
+  "Row": 2308,
   "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/00FEC6A5-3F9A-3BE0-B87A-914A03C9028A.isdata",
-  "EntryId": 801490525,
+  "EntryPath": "private/var/db/uuidtext/20",
+  "EntryId": 801479714,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377588
+ },
+ {
+  "Row": 2309,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/20/C449B27CED3BAABFA4A48CA57EC178",
+  "EntryId": 801479749,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377590
+ },
+ {
+  "Row": 2310,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/20/C449B27CED3BAABFA4A48CA57EC178.vvxwQ3r4",
+  "EntryId": 801479745,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377590
+ },
+ {
+  "Row": 2311,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/23",
+  "EntryId": 801489355,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340134
+ },
+ {
+  "Row": 2312,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/23/E5E62B32CC3D02BF89BBAD45CE369D",
+  "EntryId": 801489374,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, FSE_STAT_CHANGED, IsFile",
+  "FileId": 378187
+ },
+ {
+  "Row": 2313,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/23/E5E62B32CC3D02BF89BBAD45CE369D.wZ6rUI3q",
+  "EntryId": 801489367,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 378187
+ },
+ {
+  "Row": 2314,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/30",
+  "EntryId": 801479919,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340306
+ },
+ {
+  "Row": 2315,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/30/E9833C791F366EB7FDB0DB8905FEF6",
+  "EntryId": 801479950,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377600
+ },
+ {
+  "Row": 2316,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/30/E9833C791F366EB7FDB0DB8905FEF6.76pgrxXN",
+  "EntryId": 801479946,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377600
+ },
+ {
+  "Row": 2317,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/32",
+  "EntryId": 801482369,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340024
+ },
+ {
+  "Row": 2318,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/32/0D4789ED013E72AF57BFF7CD65AA41",
+  "EntryId": 801482385,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377776
+ },
+ {
+  "Row": 2319,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/32/0D4789ED013E72AF57BFF7CD65AA41.Ze7w1fUk",
+  "EntryId": 801482381,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377776
+ },
+ {
+  "Row": 2320,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/56",
+  "EntryId": 801492364,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340703
+ },
+ {
+  "Row": 2321,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/56/F411CF675C38B0871E8DBB0579AE81",
+  "EntryId": 801492380,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 378374
+ },
+ {
+  "Row": 2322,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/56/F411CF675C38B0871E8DBB0579AE81.sq5JnslC",
+  "EntryId": 801492376,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 378374
+ },
+ {
+  "Row": 2323,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/5D",
+  "EntryId": 801486335,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340205
+ },
+ {
+  "Row": 2324,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/5D/757D00EA8C3A48B125FDA009A90C07",
+  "EntryId": 801486366,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377991
+ },
+ {
+  "Row": 2325,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/5D/757D00EA8C3A48B125FDA009A90C07.zanyrv3z",
+  "EntryId": 801486362,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377991
+ },
+ {
+  "Row": 2326,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/61",
+  "EntryId": 801481138,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340383
+ },
+ {
+  "Row": 2327,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/61/2D10BFB0613FA5AB6A67709A31E9FE",
+  "EntryId": 801481163,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377697
+ },
+ {
+  "Row": 2328,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/61/2D10BFB0613FA5AB6A67709A31E9FE.NZ4h8MBh",
+  "EntryId": 801481159,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377697
+ },
+ {
+  "Row": 2329,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/7E",
+  "EntryId": 801486316,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 343039
+ },
+ {
+  "Row": 2330,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/7E/6244688422344EA8B0A67420F6C786",
+  "EntryId": 801486332,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377990
+ },
+ {
+  "Row": 2331,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/7E/6244688422344EA8B0A67420F6C786.pL7REvMq",
+  "EntryId": 801486328,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377990
+ },
+ {
+  "Row": 2332,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/8C",
+  "EntryId": 801489700,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340103
+ },
+ {
+  "Row": 2333,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/8C/EC7E447E9C397AB4C3A82DFC66A6C7",
+  "EntryId": 801489797,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 378203
+ },
+ {
+  "Row": 2334,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/8C/EC7E447E9C397AB4C3A82DFC66A6C7.3bTDlK1X",
+  "EntryId": 801489793,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 378203
+ },
+ {
+  "Row": 2335,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/8E",
+  "EntryId": 801482350,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340117
+ },
+ {
+  "Row": 2336,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/8E/5D4C72FD473200A877C63ABB159E1B",
+  "EntryId": 801482366,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377775
+ },
+ {
+  "Row": 2337,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/8E/5D4C72FD473200A877C63ABB159E1B.9PY3EcMG",
+  "EntryId": 801482362,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377775
+ },
+ {
+  "Row": 2338,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/97/E8D895A6513A8C843F2978826ED559",
+  "EntryId": 801479134,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377365
+ },
+ {
+  "Row": 2339,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/97/E8D895A6513A8C843F2978826ED559.HcnAjqxa",
+  "EntryId": 801479121,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377365
+ },
+ {
+  "Row": 2340,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/99",
+  "EntryId": 801491060,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340114
+ },
+ {
+  "Row": 2341,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/99/56D88AE1F030FEA7B71AF0ED803B01",
+  "EntryId": 801491076,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 378284
+ },
+ {
+  "Row": 2342,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/99/56D88AE1F030FEA7B71AF0ED803B01.MPQ15LNZ",
+  "EntryId": 801491072,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 378284
+ },
+ {
+  "Row": 2343,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A6",
+  "EntryId": 801479774,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 344200
+ },
+ {
+  "Row": 2344,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A6/955885CA69334B888831DD816EB01F",
+  "EntryId": 801479800,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377593
+ },
+ {
+  "Row": 2345,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A6/955885CA69334B888831DD816EB01F.JAFCf4a6",
+  "EntryId": 801479796,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377593
+ },
+ {
+  "Row": 2346,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A7",
+  "EntryId": 801484894,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340371
+ },
+ {
+  "Row": 2347,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A7/5B81E1BCB13A0BB7EFBC7D4177BB65",
+  "EntryId": 801484910,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377908
+ },
+ {
+  "Row": 2348,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A7/5B81E1BCB13A0BB7EFBC7D4177BB65.1ZExZfJ2",
+  "EntryId": 801484906,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377908
+ },
+ {
+  "Row": 2349,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A8",
+  "EntryId": 801482331,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340213
+ },
+ {
+  "Row": 2350,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A8/87A76B8C1C3888A543965E6B9C03A6",
+  "EntryId": 801482347,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377774
+ },
+ {
+  "Row": 2351,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A8/87A76B8C1C3888A543965E6B9C03A6.cfxBkvUx",
+  "EntryId": 801482343,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377774
+ },
+ {
+  "Row": 2352,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A9",
+  "EntryId": 801482117,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340032
+ },
+ {
+  "Row": 2353,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A9/1B62DBBB733D938DBF3F7B1A23DF7E",
+  "EntryId": 801482133,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377764
+ },
+ {
+  "Row": 2354,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/A9/1B62DBBB733D938DBF3F7B1A23DF7E.8ZU3k5L3",
+  "EntryId": 801482129,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377764
+ },
+ {
+  "Row": 2355,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/AB",
+  "EntryId": 801479519,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340327
+ },
+ {
+  "Row": 2356,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/AB/FFEC09EAAF3812BC83D79CAEDBEF33",
+  "EntryId": 801479677,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377538
+ },
+ {
+  "Row": 2357,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/AB/FFEC09EAAF3812BC83D79CAEDBEF33.Uo8HaDZS",
+  "EntryId": 801479670,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377538
+ },
+ {
+  "Row": 2358,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/BA",
+  "EntryId": 801484913,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340088
+ },
+ {
+  "Row": 2359,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/BA/C6D5BCCCC53DCD9B4FC916DAED64D8",
+  "EntryId": 801484929,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377909
+ },
+ {
+  "Row": 2360,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/BA/C6D5BCCCC53DCD9B4FC916DAED64D8.Ai5ak0YF",
+  "EntryId": 801484925,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377909
+ },
+ {
+  "Row": 2361,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/DC",
+  "EntryId": 801481735,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 340168
+ },
+ {
+  "Row": 2362,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/DC/4D17D85A97392D85A1973280F24641",
+  "EntryId": 801481751,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377730
+ },
+ {
+  "Row": 2363,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/DC/4D17D85A97392D85A1973280F24641.jvGPhPtT",
+  "EntryId": 801481747,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377730
+ },
+ {
+  "Row": 2364,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/FD",
+  "EntryId": 801484932,
+  "EntryFlags": "FSE_CHOWN, IsDirectory",
+  "FileId": 345542
+ },
+ {
+  "Row": 2365,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/FD/67B4D0B7A835E4ABA28BB78BCD7D93",
+  "EntryId": 801484948,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377910
+ },
+ {
+  "Row": 2366,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/db/uuidtext/FD/67B4D0B7A835E4ABA28BB78BCD7D93.1BWYB9cv",
+  "EntryId": 801484944,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_FILE, FSE_RENAME, IsFile",
+  "FileId": 377910
+ },
+ {
+  "Row": 2367,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.ScreenTimeAgent/Store/Library/com.apple.ManagedSettings/Records",
+  "EntryId": 801481789,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377735
+ },
+ {
+  "Row": 2368,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.ScreenTimeAgent/Store/Library/com.apple.ManagedSettings/Records/BC67D2E9-DFB7-48F1-823D-58AED86A570C",
+  "EntryId": 801481817,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377738
+ },
+ {
+  "Row": 2369,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.ScreenTimeAgent/Store/Library/com.apple.ManagedSettings/Records/SettingRecords.plist",
+  "EntryId": 801481843,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_RENAME, FSE_STAT_CHANGED, IsFile",
+  "FileId": 377740
+ },
+ {
+  "Row": 2370,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.ScreenTimeAgent/Store/Library/com.apple.ManagedSettings/Records/SettingRecords.plist",
+  "EntryId": 801481831,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_RENAME, FSE_STAT_CHANGED, IsFile",
+  "FileId": 377737
+ },
+ {
+  "Row": 2371,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.pluginkit/Annotations",
+  "EntryId": 801479407,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377471
+ },
+ {
+  "Row": 2372,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.pluginkit/Annotations",
+  "EntryId": 801479145,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377469
+ },
+ {
+  "Row": 2373,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.pluginkit/Annotations",
+  "EntryId": 801479416,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377528
+ },
+ {
+  "Row": 2374,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/0/com.apple.pluginkit/Annotations",
+  "EntryId": 801479118,
+  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_RENAME, IsFile",
+  "FileId": 377417
+ },
+ {
+  "Row": 2375,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.ExtensionsSettings.LegacyPluginEnablementExtension",
+  "EntryId": 801479191,
+  "EntryFlags": "FSE_CREATE_DIR, FSE_XATTR_MODIFIED, IsDirectory",
+  "FileId": 377475
+ },
+ {
+  "Row": 2376,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.FollowUpSettings.FollowUpSettingsExtension",
+  "EntryId": 801479962,
+  "EntryFlags": "FSE_CREATE_DIR, FSE_XATTR_MODIFIED, IsDirectory",
+  "FileId": 377603
+ },
+ {
+  "Row": 2377,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.LocalAuthenticationRemoteService",
+  "EntryId": 801482142,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377766
+ },
+ {
+  "Row": 2378,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.LocalAuthenticationRemoteService/com.apple.metalfe",
+  "EntryId": 801482145,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377767
+ },
+ {
+  "Row": 2379,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.Touch-ID-Settings.extension",
+  "EntryId": 801491079,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 378285
+ },
+ {
+  "Row": 2380,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.Touch-ID-Settings.extension/com.apple.metalfe",
+  "EntryId": 801491082,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 378286
+ },
+ {
+  "Row": 2381,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.WebKit.GPU/com.apple.metal/16777235_402/functions.data",
+  "EntryId": 801483455,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, IsFile",
+  "FileId": 374419
+ },
+ {
+  "Row": 2382,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.WebKit.GPU/com.apple.metal/16777235_402/functions.list",
+  "EntryId": 801483458,
+  "EntryFlags": "FSE_CONTENT_MODIFIED, IsFile",
+  "FileId": 376392
+ },
+ {
+  "Row": 2383,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.naturallanguaged",
+  "EntryId": 801486359,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377993
+ },
+ {
+  "Row": 2384,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.settings.PrivacySecurity.extension",
+  "EntryId": 801481754,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377731
+ },
+ {
+  "Row": 2385,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.settings.PrivacySecurity.extension/com.apple.metalfe",
+  "EntryId": 801481757,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377732
+ },
+ {
+  "Row": 2386,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.studentd",
+  "EntryId": 801480482,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377650
+ },
+ {
+  "Row": 2387,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.studentd/mds",
+  "EntryId": 801480488,
+  "EntryFlags": "FSE_CHOWN, FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377651
+ },
+ {
+  "Row": 2388,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.studentd/mds/mds.lock",
+  "EntryId": 801480491,
+  "EntryFlags": "FSE_CREATE_FILE, IsFile",
+  "FileId": 377652
+ },
+ {
+  "Row": 2389,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.studentd/mds/mdsDirectory.db",
+  "EntryId": 801480520,
   "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 378264
+  "FileId": 377655
  },
  {
+  "Row": 2390,
   "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/00FEC6A5-3F9A-3BE0-B87A-914A03C9028A.isdata.tmp",
-  "EntryId": 801490524,
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.studentd/mds/mdsDirectory.db_",
+  "EntryId": 801480519,
   "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 378264
+  "FileId": 377655
  },
  {
+  "Row": 2391,
   "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/035EE7B7-BBFB-3D31-B70F-4DB18010A3C9.isdata",
-  "EntryId": 801483969,
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.studentd/mds/mdsObject.db",
+  "EntryId": 801480507,
   "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377847
+  "FileId": 377653
  },
  {
+  "Row": 2392,
   "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/035EE7B7-BBFB-3D31-B70F-4DB18010A3C9.isdata.tmp",
-  "EntryId": 801483968,
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.studentd/mds/mdsObject.db_",
+  "EntryId": 801480506,
   "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377847
+  "FileId": 377653
  },
  {
+  "Row": 2393,
   "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/038F8BF6-A650-3B81-BA35-00BA1DEE38AC.isdata",
-  "EntryId": 801483130,
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.systempreferences.GeneralSettings/com.apple.systempreferences.GeneralSettings",
+  "EntryId": 801490374,
+  "EntryFlags": "FSE_CREATE_DIR, FSE_XATTR_MODIFIED, IsDirectory",
+  "FileId": 378253
+ },
+ {
+  "Row": 2394,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.systempreferences.GeneralSettings/com.apple.systempreferences.GeneralSettings/com.apple.metalfe",
+  "EntryId": 801490380,
+  "EntryFlags": "FSE_CREATE_DIR, FSE_XATTR_MODIFIED, IsDirectory",
+  "FileId": 378254
+ },
+ {
+  "Row": 2395,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.wifi-settings-extension",
+  "EntryId": 801481175,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377702
+ },
+ {
+  "Row": 2396,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/com.apple.wifi-settings-extension/com.apple.metalfe",
+  "EntryId": 801481178,
+  "EntryFlags": "FSE_CREATE_DIR, IsDirectory",
+  "FileId": 377703
+ },
+ {
+  "Row": 2397,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/mds/mdsDirectory.db",
+  "EntryId": 801482943,
   "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377808
+  "FileId": 361846
  },
  {
+  "Row": 2398,
   "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/038F8BF6-A650-3B81-BA35-00BA1DEE38AC.isdata.tmp",
-  "EntryId": 801483129,
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/mds/mdsDirectory.db",
+  "EntryId": 801482942,
+  "EntryFlags": "FSE_RENAME, IsFile",
+  "FileId": 377800
+ },
+ {
+  "Row": 2399,
+  "SourceFile": "fs_events_000000002fc5e551",
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/mds/mdsDirectory.db_",
+  "EntryId": 801482941,
   "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377808
+  "FileId": 377800
  },
  {
+  "Row": 2400,
   "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/064CF8A0-2B0A-3B95-A33F-E1F8F5B1F783.isdata",
-  "EntryId": 801483878,
+  "EntryPath": "private/var/folders/v0/wxkrfp8x09sfjj5085wjc3n00000gn/C/mds/mdsObject.db",
+  "EntryId": 801482929,
   "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377840
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/064CF8A0-2B0A-3B95-A33F-E1F8F5B1F783.isdata.tmp",
-  "EntryId": 801483877,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377840
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/06BDE68D-1DAD-3515-BA7B-56828A5DF83E.isdata",
-  "EntryId": 801490434,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 378257
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/06BDE68D-1DAD-3515-BA7B-56828A5DF83E.isdata.tmp",
-  "EntryId": 801490433,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 378257
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/077505D5-46E3-3396-A34D-AC2ADF50E3E5.isdata",
-  "EntryId": 801483117,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377807
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/077505D5-46E3-3396-A34D-AC2ADF50E3E5.isdata.tmp",
-  "EntryId": 801483116,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377807
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/088746CF-16E0-3689-93B2-C347D8CA20AC.isdata",
-  "EntryId": 801491805,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 378315
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/088746CF-16E0-3689-93B2-C347D8CA20AC.isdata.tmp",
-  "EntryId": 801491804,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 378315
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/0AB8F317-18E9-39BF-B79E-9BB104081B3C.isdata",
-  "EntryId": 801484060,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377854
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/0AB8F317-18E9-39BF-B79E-9BB104081B3C.isdata.tmp",
-  "EntryId": 801484059,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377854
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/0B640344-973A-38BA-B578-AED2A9CCAE77.isdata",
-  "EntryId": 801490538,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 378265
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/0B640344-973A-38BA-B578-AED2A9CCAE77.isdata.tmp",
-  "EntryId": 801490537,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 378265
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/0BE8485F-8AD3-3DDA-AC32-1E22D0983DFC.isdata",
-  "EntryId": 801483943,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377845
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/0BE8485F-8AD3-3DDA-AC32-1E22D0983DFC.isdata.tmp",
-  "EntryId": 801483942,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377845
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/0DA4C85E-4081-33A2-ABE7-660D602C05EC.isdata",
-  "EntryId": 801479793,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377591
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/0DA4C85E-4081-33A2-ABE7-660D602C05EC.isdata.tmp",
-  "EntryId": 801479792,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377591
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/1363B940-5E33-3393-B675-43BF3E907194.isdata",
-  "EntryId": 801479216,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377473
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/1363B940-5E33-3393-B675-43BF3E907194.isdata.tmp",
-  "EntryId": 801479215,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377473
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/1963A576-0203-3CF8-8C4D-0F4BCC58A896.isdata",
-  "EntryId": 801481856,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377741
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/1963A576-0203-3CF8-8C4D-0F4BCC58A896.isdata.tmp",
-  "EntryId": 801481855,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377741
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/1E10FE38-45C4-3382-B41E-C70A2C023142.isdata",
-  "EntryId": 801490499,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 378262
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/1E10FE38-45C4-3382-B41E-C70A2C023142.isdata.tmp",
-  "EntryId": 801490498,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 378262
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/1FBFDC2C-1968-3B39-A714-68D72BA334E0.isdata",
-  "EntryId": 801482064,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377757
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/1FBFDC2C-1968-3B39-A714-68D72BA334E0.isdata.tmp",
-  "EntryId": 801482063,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377757
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/202B62A6-DECA-3BB9-A1F6-9BCCDAE425CB.isdata",
-  "EntryId": 801483930,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377844
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/202B62A6-DECA-3BB9-A1F6-9BCCDAE425CB.isdata.tmp",
-  "EntryId": 801483929,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377844
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/23B29A76-085D-370F-B5A9-556BAE993AAA.isdata",
-  "EntryId": 801482155,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377765
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/23B29A76-085D-370F-B5A9-556BAE993AAA.isdata.tmp",
-  "EntryId": 801482154,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377765
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/24A9C862-FD06-32CF-A91B-82AC7ECA40C8.isdata",
-  "EntryId": 801479173,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377421
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/24A9C862-FD06-32CF-A91B-82AC7ECA40C8.isdata.tmp",
-  "EntryId": 801479172,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377421
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/27849A54-0A5D-3ADA-B9EA-0CD2981A234C.isdata",
-  "EntryId": 801482090,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377759
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/27849A54-0A5D-3ADA-B9EA-0CD2981A234C.isdata.tmp",
-  "EntryId": 801482089,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377759
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/28637A3C-1022-3B00-ADB2-255589F7A1CA.isdata",
-  "EntryId": 801483956,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377846
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/28637A3C-1022-3B00-ADB2-255589F7A1CA.isdata.tmp",
-  "EntryId": 801483955,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377846
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/2CF38112-1FAC-37C9-BB91-6493153A0C92.isdata",
-  "EntryId": 801480572,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377660
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/2CF38112-1FAC-37C9-BB91-6493153A0C92.isdata.tmp",
-  "EntryId": 801480571,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377660
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/30B462F5-B844-365F-99E4-02958BB4C09B.isdata",
-  "EntryId": 801480428,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377644
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/30B462F5-B844-365F-99E4-02958BB4C09B.isdata.tmp",
-  "EntryId": 801480427,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377644
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/31D36CEE-0C73-3047-8FC9-4B5BAE9B86DA.isdata",
-  "EntryId": 801481869,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377742
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/31D36CEE-0C73-3047-8FC9-4B5BAE9B86DA.isdata.tmp",
-  "EntryId": 801481868,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377742
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/32A2B084-C274-3534-AA3E-8298D8E2D621.isdata",
-  "EntryId": 801490551,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 378266
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/32A2B084-C274-3534-AA3E-8298D8E2D621.isdata.tmp",
-  "EntryId": 801490550,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 378266
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/32A9505D-D1BF-3CF5-A1AB-55FAF10B1BA5.isdata",
-  "EntryId": 801479461,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377532
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/32A9505D-D1BF-3CF5-A1AB-55FAF10B1BA5.isdata.tmp",
-  "EntryId": 801479460,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377532
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/36FCC068-C118-33BB-B3FB-5F1C442EFE37.isdata",
-  "EntryId": 801480624,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377664
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/36FCC068-C118-33BB-B3FB-5F1C442EFE37.isdata.tmp",
-  "EntryId": 801480623,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377664
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/3818EBDA-D3F0-336E-AD5F-D36EF3667104.isdata",
-  "EntryId": 801483302,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377814
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/3818EBDA-D3F0-336E-AD5F-D36EF3667104.isdata.tmp",
-  "EntryId": 801483301,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377814
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/3980316E-974B-3163-8EBB-AD456D4C517A.isdata",
-  "EntryId": 801480585,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377661
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/3980316E-974B-3163-8EBB-AD456D4C517A.isdata.tmp",
-  "EntryId": 801480584,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377661
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/3AC7DB0F-B804-3336-A89E-761318285343.isdata",
-  "EntryId": 801485885,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377973
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/3AC7DB0F-B804-3336-A89E-761318285343.isdata.tmp",
-  "EntryId": 801485884,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377973
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/3DECACA3-C32A-39D2-9E2E-4219B8AFD0E7.isdata",
-  "EntryId": 801484008,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377850
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/3DECACA3-C32A-39D2-9E2E-4219B8AFD0E7.isdata.tmp",
-  "EntryId": 801484007,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377850
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/40211A42-E2FC-37CD-BC66-161FE7D0AF31.isdata",
-  "EntryId": 801484151,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377861
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/40211A42-E2FC-37CD-BC66-161FE7D0AF31.isdata.tmp",
-  "EntryId": 801484150,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377861
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/40D537F3-8061-3D51-A2F0-73675B9AE626.isdata",
-  "EntryId": 801490405,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 378255
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/40D537F3-8061-3D51-A2F0-73675B9AE626.isdata.tmp",
-  "EntryId": 801490404,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 378255
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/451C24C3-2C2B-3FC8-B202-0CD6A5F13152.isdata",
-  "EntryId": 801480611,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377663
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/451C24C3-2C2B-3FC8-B202-0CD6A5F13152.isdata.tmp",
-  "EntryId": 801480610,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377663
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/4672010E-890B-3ECC-A260-DF95ECB1AB43.isdata",
-  "EntryId": 801491490,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 378306
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/4672010E-890B-3ECC-A260-DF95ECB1AB43.isdata.tmp",
-  "EntryId": 801491489,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 378306
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/46941B41-9C2C-3972-9BB5-A480B1E01462.isdata",
-  "EntryId": 801481921,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377746
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/46941B41-9C2C-3972-9BB5-A480B1E01462.isdata.tmp",
-  "EntryId": 801481920,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377746
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/487DBF8C-A136-34C2-B83A-AA6458272A86.isdata",
-  "EntryId": 801480543,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377656
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/487DBF8C-A136-34C2-B83A-AA6458272A86.isdata.tmp",
-  "EntryId": 801480542,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377656
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/4B102829-4854-3ADF-B9E1-8B162AB8CB0B.isdata",
-  "EntryId": 801491477,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 378305
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/4B102829-4854-3ADF-B9E1-8B162AB8CB0B.isdata.tmp",
-  "EntryId": 801491476,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 378305
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/4FDBEB80-8A1D-35BB-9699-E78D6ADF0CBA.isdata",
-  "EntryId": 801480668,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377666
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/4FDBEB80-8A1D-35BB-9699-E78D6ADF0CBA.isdata.tmp",
-  "EntryId": 801480667,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377666
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/543DA1F9-857C-3DD8-A460-6DEBCD05193A.isdata",
-  "EntryId": 801481999,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377752
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/543DA1F9-857C-3DD8-A460-6DEBCD05193A.isdata.tmp",
-  "EntryId": 801481998,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377752
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/55DAF075-BEAB-338B-A4A1-FC0AE065EB22.isdata",
-  "EntryId": 801483891,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377841
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/55DAF075-BEAB-338B-A4A1-FC0AE065EB22.isdata.tmp",
-  "EntryId": 801483890,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377841
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/568B6A0B-02C4-3905-932B-895FBCCB26E8.isdata",
-  "EntryId": 801480460,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377647
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/568B6A0B-02C4-3905-932B-895FBCCB26E8.isdata.tmp",
-  "EntryId": 801480459,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377647
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/58F4FA9A-43DE-3FD2-B67E-2DF77B111FD2.isdata",
-  "EntryId": 801483800,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377834
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/58F4FA9A-43DE-3FD2-B67E-2DF77B111FD2.isdata.tmp",
-  "EntryId": 801483799,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377834
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/5927BEA2-FB56-3207-A236-9123F4F99E73.isdata",
-  "EntryId": 801484112,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377858
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/5927BEA2-FB56-3207-A236-9123F4F99E73.isdata.tmp",
-  "EntryId": 801484111,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377858
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/5B1E5330-5DF2-3BCB-A286-0672466F63CD.isdata",
-  "EntryId": 801491248,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 378292
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/5B1E5330-5DF2-3BCB-A286-0672466F63CD.isdata.tmp",
-  "EntryId": 801491247,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 378292
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/5BE9519B-A552-3416-91AA-A065A24E3600.isdata",
-  "EntryId": 801480349,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377636
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/5BE9519B-A552-3416-91AA-A065A24E3600.isdata.tmp",
-  "EntryId": 801480348,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377636
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/5E8313B3-E131-3157-833A-46E83F1F3194.isdata",
-  "EntryId": 801479435,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377529
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/5E8313B3-E131-3157-833A-46E83F1F3194.isdata.tmp",
-  "EntryId": 801479434,
-  "EntryFlags": "FSE_CHOWN, FSE_CONTENT_MODIFIED, FSE_CREATE_FILE, FSE_RENAME, IsFile",
-  "FileId": 377529
- },
- {
-  "SourceFile": "fs_events_000000002fc5e551",
-  "EntryPath": "Library/Caches/com.apple.iconservices.store/5F0AA718-EBCB-3E8F-8F09-3928F317F676.isdata",
-  "EntryId": 801480447,
-  "EntryFlags": "FSE_RENAME, IsFile",
-  "FileId": 377645
+  "FileId": 377799
  }
 ]SELECT *, OSPath.Basename AS OSPath FROM Artifact.MacOS.System.Dock(DockGlob=srcDir+"/artifacts/testdata/files/com.apple.dock.plist")[
  {
