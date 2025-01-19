@@ -26,7 +26,17 @@ func (self *Ext4FileInfo) IsDir() bool {
 }
 
 func (self *Ext4FileInfo) Data() *ordereddict.Dict {
-	return self.Dict()
+	data := ordereddict.NewDict().
+		Set("Inode", self.Inode()).
+		Set("Uid", self.Uid()).
+		Set("Gid", self.Gid())
+
+	flags := self.Flags()
+	if len(flags) > 0 {
+		data.Set("Flags", flags)
+	}
+
+	return data
 }
 
 func (self *Ext4FileInfo) UniqueName() string {
@@ -130,8 +140,10 @@ func (self *Ext4FileSystemAccessor) ReadDirWithOSPath(
 
 	// List the directory.
 	for _, info := range dir {
+		name := info.Name()
+
 		// Skip these useless directories.
-		if info.Name() == "." || info.Name() == ".." {
+		if name == "" || name == "." || name == ".." {
 			continue
 		}
 
