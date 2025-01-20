@@ -82,7 +82,9 @@ func (self DeleteEventsPlugin) Call(
 
 		responses, err := launcher.DeleteEvents(ctx, config_obj,
 			principal, arg.Artifact, arg.ClientId,
-			arg.StartTime, arg.EndTime, arg.ReallyDoIt)
+			arg.StartTime, arg.EndTime, services.DeleteFlowOptions{
+				ReallyDoIt: arg.ReallyDoIt,
+			})
 		if err != nil {
 			scope.Log("delete_events: %v", err)
 			return

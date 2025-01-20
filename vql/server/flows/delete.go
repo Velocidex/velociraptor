@@ -16,6 +16,7 @@ type DeleteFlowPluginArgs struct {
 	FlowId     string `vfilter:"required,field=flow_id"`
 	ClientId   string `vfilter:"required,field=client_id"`
 	ReallyDoIt bool   `vfilter:"optional,field=really_do_it"`
+	Sync       bool   `vfilter:"optional,field=sync,doc=If specified we ensure data is available immediately"`
 }
 
 type DeleteFlowPlugin struct{}
@@ -63,7 +64,10 @@ func (self DeleteFlowPlugin) Call(
 
 		principal := vql_subsystem.GetPrincipal(scope)
 		responses, err := launcher.Storage().DeleteFlow(ctx, config_obj,
-			arg.ClientId, arg.FlowId, principal, arg.ReallyDoIt)
+			arg.ClientId, arg.FlowId, principal, services.DeleteFlowOptions{
+				ReallyDoIt: arg.ReallyDoIt,
+				Sync:       arg.Sync,
+			})
 		if err != nil {
 			scope.Log("delete_flow: %v", err)
 			return

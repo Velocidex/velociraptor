@@ -74,6 +74,7 @@ export class DeleteFlowDialog extends React.PureComponent {
                         "Server.Utils.DeleteFlow",
                         {FlowId: flow_id,
                          ClientId: client_id,
+                         Sync: "Y",
                          ReallyDoIt: "Y"}, ()=>{
                              this.props.onClose();
                              this.setState({loading: false});

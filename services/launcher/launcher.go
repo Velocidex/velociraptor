@@ -761,7 +761,8 @@ func NewLauncherService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (services.Launcher, error) {
 
-	return &Launcher{
-		Storage_: &FlowStorageManager{},
-	}, nil
+	res := &Launcher{
+		Storage_: NewFlowStorageManager(ctx, config_obj, wg),
+	}
+	return res, nil
 }

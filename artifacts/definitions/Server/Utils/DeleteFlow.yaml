@@ -22,8 +22,12 @@ parameters:
   - name: ReallyDoIt
     description: If you really want to delete the collection, check this.
     type: bool
+  - name: Sync
+    description: If specified we ensure delete happens immediately
+    type: bool
 
 sources:
   - query: |
        SELECT Type, Data.VFSPath AS VFSPath, Error
-       FROM delete_flow(flow_id=FlowId, client_id=ClientId, really_do_it=ReallyDoIt)
+       FROM delete_flow(flow_id=FlowId,
+          client_id=ClientId, really_do_it=ReallyDoIt, sync=Sync)
