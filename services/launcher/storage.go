@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/go-errors/errors"
@@ -16,13 +18,18 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-type FlowStorageManager struct{}
+type FlowStorageManager struct {
+	mu sync.Mutex
+
+	pendingIndexes []string
+}
 
 func (self *FlowStorageManager) WriteFlow(
 	ctx context.Context,
@@ -100,9 +107,9 @@ func (self *FlowStorageManager) ListFlows(
 		client_path_manager.FlowIndex(), options)
 	if err != nil || rs_reader.TotalRows() <= 0 {
 		// Try to rebuild the index
-		err = self.buildFlowIndexFromLegacy(ctx, config_obj, client_id)
+		err = self.buildFlowIndexFromDatastore(ctx, config_obj, client_id)
 		if err != nil {
-			return nil, 0, fmt.Errorf("buildFlowIndexFromLegacy %w", err)
+			return nil, 0, fmt.Errorf("buildFlowIndexFromDatastore %w", err)
 		}
 
 		rs_reader, err = result_sets.NewResultSetReaderWithOptions(
@@ -147,8 +154,82 @@ func (self *FlowStorageManager) ListFlows(
 	return result, rs_reader.TotalRows(), nil
 }
 
-// Rebuild the flow index from individual flow context files.
-func (self *FlowStorageManager) buildFlowIndexFromLegacy(
+func (self *FlowStorageManager) removeFlowFromIndex(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	client_id string,
+	flow_id string) error {
+
+	client_path_manager := paths.NewClientPathManager(client_id)
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	rs_reader, err := result_sets.NewResultSetReader(file_store_factory,
+		client_path_manager.FlowIndex())
+	if err != nil {
+		return self.buildFlowIndexFromDatastore(ctx, config_obj, client_id)
+	}
+	defer rs_reader.Close()
+
+	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
+		client_path_manager.FlowIndex(),
+		json.DefaultEncOpts(), utils.SyncCompleter, result_sets.TruncateMode)
+	if err != nil {
+		return err
+	}
+	defer rs_writer.Close()
+
+	for r := range rs_reader.Rows(ctx) {
+		flow_id, _ := r.GetString("FlowId")
+		if flow_id == flow_id {
+			continue
+		}
+		rs_writer.Write(r)
+	}
+
+	return nil
+}
+
+// Rebuild flow indexes periodically as required.
+func (self *FlowStorageManager) houseKeeping(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	wg *sync.WaitGroup) {
+
+	defer wg.Done()
+
+	delay := time.Second * 60
+	if config_obj.Defaults != nil &&
+		config_obj.Defaults.ClientInfoHousekeepingPeriod > 0 {
+		delay = time.Duration(config_obj.Defaults.ClientInfoHousekeepingPeriod) * time.Second
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case <-utils.GetTime().After(utils.Jitter(delay)):
+			self.mu.Lock()
+			pending := self.pendingIndexes
+			self.pendingIndexes = nil
+			self.mu.Unlock()
+
+			for _, client_id := range pending {
+				err := self.buildFlowIndexFromDatastore(
+					ctx, config_obj, client_id)
+				if err != nil {
+					logger := logging.GetLogger(
+						config_obj, &logging.FrontendComponent)
+					logger.Error("buildFlowIndexFromDatastore: %v", err)
+				}
+			}
+		}
+	}
+}
+
+// Rebuild the flow index from individual flow context files. This can
+// be very slow on slow filesystems as it does a lot of IO.
+func (self *FlowStorageManager) buildFlowIndexFromDatastore(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string) error {
@@ -318,4 +399,15 @@ func (self *FlowStorageManager) GetFlowRequests(
 
 	result.Items = flow_details.Items[offset:end]
 	return result, nil
+}
+
+func NewFlowStorageManager(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	wg *sync.WaitGroup) *FlowStorageManager {
+	res := &FlowStorageManager{}
+	wg.Add(1)
+	go res.houseKeeping(ctx, config_obj, wg)
+
+	return res
 }

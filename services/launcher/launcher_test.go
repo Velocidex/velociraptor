@@ -13,6 +13,10 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/go-errors/errors"
+	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 
 	"github.com/stretchr/testify/assert"
@@ -65,6 +69,13 @@ sources:
 - query:  |
     SELECT * FROM info()
 `
+
+func (self *LauncherTestSuite) SetupTest() {
+	self.ConfigObj = self.TestSuite.LoadConfig()
+	self.ConfigObj.Services.ServerArtifacts = true
+
+	self.TestSuite.SetupTest()
+}
 
 func (self *LauncherTestSuite) TestCompilingWithTools() {
 	// Our tool binary and its hash.
@@ -1316,6 +1327,104 @@ func getReqName(in *actions_proto.VQLCollectorArgs) string {
 		}
 	}
 	return ""
+}
+
+func (self *LauncherTestSuite) TestDelete() {
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	flow_id := "F.FlowId123"
+	user := "admin"
+
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
+	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
+	acl_manager := acl_managers.NullACLManager{}
+
+	defer utils.SetFlowIdForTests(flow_id)()
+
+	// Schedule a job for the server runner.
+	flow_id, err = launcher.ScheduleArtifactCollection(
+		self.Ctx, self.ConfigObj, acl_manager,
+		repository, &flows_proto.ArtifactCollectorArgs{
+			Creator:   user,
+			ClientId:  "server",
+			Artifacts: []string{"Generic.Client.Info"},
+		}, utils.SyncCompleter)
+
+	assert.NoError(self.T(), err)
+
+	res, err := launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
+		result_sets.ResultSetOptions{}, 0, 10)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(res.Items), 1)
+	assert.Equal(self.T(), res.Items[0].SessionId, flow_id)
+
+	// Now delete the flow asyncronously
+	_, err = launcher.Storage().DeleteFlow(
+		self.Ctx, self.ConfigObj, "server",
+		flow_id, constants.PinnedServerName,
+		services.DeleteFlowOptions{
+			ReallyDoIt: true,
+			Sync:       false,
+		})
+	assert.NoError(self.T(), err)
+
+	// Index is not updated yet
+	idx := self.getIndex("server")
+	assert.Equal(self.T(), len(idx), 1)
+	idx_flow_id, _ := idx[0].GetString("FlowId")
+	assert.Equal(self.T(), flow_id, idx_flow_id)
+
+	// However GetFlows omits the deleted flow immediately because it
+	// can not find it (The actual flow object is removed but the
+	// index is out of step).
+	res, err = launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
+		result_sets.ResultSetOptions{}, 0, 10)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(res.Items), 0)
+
+	// Create the flow again
+	new_flow_id, err := launcher.ScheduleArtifactCollection(
+		self.Ctx, self.ConfigObj, acl_manager,
+		repository, &flows_proto.ArtifactCollectorArgs{
+			Creator:   user,
+			ClientId:  "server",
+			Artifacts: []string{"Generic.Client.Info"},
+		}, utils.SyncCompleter)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), new_flow_id, flow_id)
+
+	// Now delete the flow syncronously
+	_, err = launcher.Storage().DeleteFlow(
+		self.Ctx, self.ConfigObj, "server",
+		flow_id, constants.PinnedServerName,
+		services.DeleteFlowOptions{
+			ReallyDoIt: true,
+			Sync:       true,
+		})
+	assert.NoError(self.T(), err)
+
+	// This time the index is reset immediately.
+	idx = self.getIndex("server")
+	assert.Equal(self.T(), len(idx), 0)
+}
+
+func (self *LauncherTestSuite) getIndex(client_id string) (
+	res []*ordereddict.Dict) {
+
+	client_path_manager := paths.NewClientPathManager(client_id)
+	file_store_factory := file_store.GetFileStore(self.ConfigObj)
+	rs_reader, err := result_sets.NewResultSetReader(file_store_factory,
+		client_path_manager.FlowIndex())
+	if err != nil {
+		return nil
+	}
+	defer rs_reader.Close()
+
+	for r := range rs_reader.Rows(self.Ctx) {
+		res = append(res, r)
+	}
+	return res
 }
 
 func TestLauncher(t *testing.T) {
