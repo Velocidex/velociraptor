@@ -19,6 +19,7 @@ package networking
 
 import (
 	"context"
+	"crypto/md5"
 	"crypto/tls"
 	"errors"
 	"fmt"
@@ -230,7 +231,6 @@ func (self *HTTPClientCache) GetHttpClient(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	// Check the cache for an existing http client.
 	url_obj, err := url.Parse(arg.Url)
 	if err != nil {
 		return nil, err
@@ -245,6 +245,23 @@ func (self *HTTPClientCache) GetHttpClient(
 		arg.real_url = arg.Url
 	}
 
+	// Check if real_url is a unix domain socket
+	isUnixSocket := strings.HasPrefix(arg.real_url, "/")
+	var socketPath string
+	if isUnixSocket {
+		components := strings.Split(arg.real_url, ":")
+		if len(components) == 1 {
+			components = append(components, "/")
+		}
+		socketPath = components[0]
+		arg.real_url = "http://unix" + components[1]
+
+		// calc unique hostname issue #4013
+		pseudoHost := fmt.Sprintf("%x", md5.Sum([]byte(socketPath)))
+		url_obj.Host = pseudoHost
+	}
+
+	// Check the cache for an existing http client.
 	key := self.getCacheKey(url_obj)
 	result, pres := self.cache[key]
 	if pres {
@@ -253,13 +270,7 @@ func (self *HTTPClientCache) GetHttpClient(
 
 	// Allow a unix path to be interpreted as simply a http over
 	// unix domain socket (used by e.g. docker)
-	if strings.HasPrefix(arg.real_url, "/") {
-		components := strings.Split(arg.real_url, ":")
-		if len(components) == 1 {
-			components = append(components, "/")
-		}
-		arg.real_url = "http://unix" + components[1]
-
+	if isUnixSocket {
 		result = &httpClientWrapper{
 			Client: http.Client{
 				Timeout: time.Second * 10000,
@@ -267,7 +278,7 @@ func (self *HTTPClientCache) GetHttpClient(
 					MaxIdleConnsPerHost: 10,
 					DialContext: func(_ context.Context, _, _ string) (
 						net.Conn, error) {
-						return net.Dial("unix", components[0])
+						return net.Dial("unix", socketPath)
 					},
 					TLSNextProto: make(map[string]func(
 						authority string, c *tls.Conn) http.RoundTripper),
