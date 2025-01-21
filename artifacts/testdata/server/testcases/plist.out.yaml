@@ -2,6 +2,9 @@ SELECT * FROM Artifact.MacOS.System.Users(UserPlistGlob=srcDir + '/artifacts/tes
  {
   "Name": "vagrant",
   "RealName": "vagrant",
+  "Uid": "501",
+  "Gid": "20",
+  "UUid": "11112222-3333-4444-AAAA-BBBBCCCCDDDD",
   "UserShell": "/bin/bash",
   "HomeDir": "/Users/vagrant",
   "AppleId": null,
