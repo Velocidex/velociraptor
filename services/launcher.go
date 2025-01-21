@@ -62,11 +62,13 @@ const (
 	// When the principal is set to this below we avoid audit logging
 	// the call.
 	NoAuditLogging = ""
-	DryRunOnly     = false
 )
 
 var (
 	FlowNotFoundError = utils.Wrap(os.ErrNotExist, "Flow not found")
+	DryRunOnly        = DeleteFlowOptions{
+		ReallyDoIt: false,
+	}
 )
 
 type DeleteFlowResponse struct {
@@ -91,6 +93,19 @@ type GetFlowOptions struct {
 
 	// Include the flow downloads (ZIP exports of the flow).
 	Downloads bool
+}
+
+type DeleteFlowOptions struct {
+	// If this is not set, we do a dry run to indicate which files
+	// will be deleted within the flow but do not actually delete the
+	// files.
+	ReallyDoIt bool
+
+	// If this is set the delete will be synchronous and index updated
+	// immediately. This is much slower but it is necessary when
+	// results need to be available immediately. When False, we delete
+	// asynchronously and update the index at a later time.
+	Sync bool
 }
 
 type CompilerOptions struct {
@@ -136,7 +151,7 @@ type FlowStorer interface {
 		ctx context.Context,
 		config_obj *config_proto.Config,
 		client_id string, flow_id string, principal string,
-		really_do_it bool) ([]*DeleteFlowResponse, error)
+		options DeleteFlowOptions) ([]*DeleteFlowResponse, error)
 
 	LoadCollectionContext(
 		ctx context.Context,
@@ -246,5 +261,5 @@ type Launcher interface {
 		config_obj *config_proto.Config,
 		principal, artifact, client_id string,
 		start_time, end_time time.Time,
-		really_do_it bool) ([]*DeleteFlowResponse, error)
+		options DeleteFlowOptions) ([]*DeleteFlowResponse, error)
 }
