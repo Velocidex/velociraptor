@@ -65,7 +65,7 @@ func GetDefaultConfig() *config_proto.Config {
 			MaxPoll:               60,
 
 			// By default restart the client if we are unable to
-			// contant the server within this long. (NOTE - even a
+			// contact the server within this long. (NOTE - even a
 			// failed connection will reset the counter, the nanny
 			// will only fire if the client has failed in some way -
 			// e.g. the communicator is stopped for some reason).
