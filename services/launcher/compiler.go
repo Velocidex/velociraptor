@@ -80,6 +80,18 @@ func (self *Launcher) CompileSingleArtifact(
 					escaped_name, maybeEscape(name+"_")),
 			})
 
+		case "upload_file":
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: fmt.Sprintf(`LET %v <= if(condition=%v, then={
+   SELECT Content FROM http_client(url=%v, tempfile_extension='.tmp')
+})`,
+					maybeEscape(name+"_"), escaped_name, escaped_name),
+			})
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: fmt.Sprintf("LET %v <= %v.Content[0]",
+					escaped_name, maybeEscape(name+"_")),
+			})
+
 		case "server_metadata":
 			client_info_manager, err := services.GetClientInfoManager(config_obj)
 			if err == nil {
