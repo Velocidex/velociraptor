@@ -16,8 +16,11 @@ sources:
       LET UserDetails(OSPath) =
               SELECT get(member="name.0", default="") AS Name,
                      get(member="realname.0", default="") AS RealName,
+                     get(member="uid.0", default="") AS Uid,
+                     get(member="gid.0", default="") AS Gid,
                      get(member="shell.0", default="") AS UserShell,
                      get(member="home.0", default="") AS HomeDir,
+                     get(member="generateduid.0", default="") AS UUid,
                      if(condition=LinkedIdentity,
                         then=plist(file=LinkedIdentity[0],
                                    accessor='data')) as AppleId,
@@ -26,7 +29,7 @@ sources:
                                    accessor='data')) AS AccountPolicyData
               FROM plist(file=OSPath)
 
-      SELECT Name, RealName, UserShell, HomeDir,
+      SELECT Name, RealName, Uid, Gid, UUid, UserShell, HomeDir,
                get(item=AppleId, field="appleid.apple.com") AS AppleId,
                timestamp(epoch=AccountPolicyData.creationTime) AS CreationTime,
                AccountPolicyData.failedLoginCount AS FailedLoginCount,
