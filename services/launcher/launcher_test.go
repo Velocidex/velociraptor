@@ -1381,9 +1381,12 @@ func (self *LauncherTestSuite) TestDelete() {
 	// However GetFlows omits the deleted flow immediately because it
 	// can not find it (The actual flow object is removed but the
 	// index is out of step).
-	res, err = launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
-		result_sets.ResultSetOptions{}, 0, 10)
-	assert.NoError(self.T(), err)
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		res, err = launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
+			result_sets.ResultSetOptions{}, 0, 10)
+		assert.NoError(self.T(), err)
+		return len(res.Items) == 0
+	})
 	assert.Equal(self.T(), len(res.Items), 0)
 
 	// Create the flow again
