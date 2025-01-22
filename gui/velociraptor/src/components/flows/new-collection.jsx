@@ -548,7 +548,7 @@ class NewCollectionResources extends React.Component {
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getCpuLimit(this.props.artifacts)}
-                        value={resources.cpu_limit}
+                        value={resources.cpu_limit || undefined}
                         valid_func={value=>value >= 0 && value <=100}
                         setInvalid={value => this.setState({
                             invalid_1: value})}
@@ -562,7 +562,7 @@ class NewCollectionResources extends React.Component {
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getIopsLimit(this.props.artifacts)}
-                        value={resources.iops_limit}
+                        value={resources.iops_limit || undefined}
                         setInvalid={value => this.setState({invalid_1: value})}
                         setValue={value => this.props.setResources({
                             iops_limit: value
@@ -575,7 +575,7 @@ class NewCollectionResources extends React.Component {
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getTimeout(this.props.artifacts)}
-                        value={resources.timeout}
+                        value={resources.timeout || undefined}
                         setInvalid={value => this.setState({invalid_2: value})}
                         setValue={value => this.props.setResources({timeout: value})} />
                     </Col>
@@ -586,7 +586,7 @@ class NewCollectionResources extends React.Component {
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={T("If set collection will be terminated after this many seconds with no progress.")}
-                        value={resources.progress_timeout}
+                        value={resources.progress_timeout || undefined}
                         setInvalid={value => this.setState({invalid_3: value})}
                         setValue={value => this.props.setResources({
                             progress_timeout: value})} />
@@ -598,7 +598,7 @@ class NewCollectionResources extends React.Component {
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getMaxRows(this.props.artifacts)}
-                        value={resources.max_rows}
+                        value={resources.max_rows || undefined}
                         setInvalid={value => this.setState({invalid_4: value})}
                         setValue={value => this.props.setResources({max_rows: value})} />
                     </Col>
@@ -609,7 +609,7 @@ class NewCollectionResources extends React.Component {
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getMaxUploadBytes(this.props.artifacts)}
-                        value={resources.max_mbytes}
+                        value={resources.max_mbytes || undefined}
                         setInvalid={value => this.setState({invalid_5: value})}
                         setValue={value => this.props.setResources({max_mbytes: value})} />
                     </Col>
