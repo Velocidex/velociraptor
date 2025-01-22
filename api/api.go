@@ -166,18 +166,19 @@ func (self *ApiServer) CollectArtifact(
 
 	// Build a request based on user input.
 	request := &flows_proto.ArtifactCollectorArgs{
-		ClientId:       in.ClientId,
-		Artifacts:      in.Artifacts,
-		Specs:          in.Specs,
-		Creator:        user_record.Name,
-		OpsPerSecond:   in.OpsPerSecond,
-		CpuLimit:       in.CpuLimit,
-		IopsLimit:      in.IopsLimit,
-		Timeout:        in.Timeout,
-		MaxRows:        in.MaxRows,
-		MaxUploadBytes: in.MaxUploadBytes,
-		Urgent:         in.Urgent,
-		TraceFreqSec:   in.TraceFreqSec,
+		ClientId:        in.ClientId,
+		Artifacts:       in.Artifacts,
+		Specs:           in.Specs,
+		Creator:         user_record.Name,
+		OpsPerSecond:    in.OpsPerSecond,
+		CpuLimit:        in.CpuLimit,
+		IopsLimit:       in.IopsLimit,
+		Timeout:         in.Timeout,
+		ProgressTimeout: in.ProgressTimeout,
+		MaxRows:         in.MaxRows,
+		MaxUploadBytes:  in.MaxUploadBytes,
+		Urgent:          in.Urgent,
+		TraceFreqSec:    in.TraceFreqSec,
 	}
 
 	acl_manager := acl_managers.NewServerACLManager(

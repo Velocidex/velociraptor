@@ -1664,6 +1664,9 @@
     required: true
   - name: really_do_it
     type: bool
+  - name: sync
+    type: bool
+    description: If specified we ensure data is available immediately
   category: server
   metadata:
     permissions: DELETE_RESULTS
@@ -11164,6 +11167,9 @@
   - name: buffer_size
     type: int
     description: Maximum size of buffer before flushing to file.
+  - name: max_time
+    type: int
+    description: Maximum time before flushing the buffer (10 sec).
   metadata:
     permissions: FILESYSTEM_WRITE
   platforms:

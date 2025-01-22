@@ -1216,6 +1216,8 @@ sources:
 	// Specifying timeout in the request overrides all defaults.
 	request.Timeout = 20
 	request.MaxRows = 100
+	request.ProgressTimeout = 21
+
 	compiled, err = launcher.CompileCollectorArgs(
 		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
@@ -1225,6 +1227,7 @@ sources:
 
 	assert.Equal(self.T(), getReqName(compiled[1]), "Test.Artifact.MaxRows")
 	assert.Equal(self.T(), compiled[1].Timeout, uint64(20))
+	assert.Equal(self.T(), compiled[1].ProgressTimeout, float32(21))
 
 	// Specifying MaxRows in the request overrides the setting.
 	assert.Equal(self.T(), request.MaxRows, uint64(100))
@@ -1378,9 +1381,12 @@ func (self *LauncherTestSuite) TestDelete() {
 	// However GetFlows omits the deleted flow immediately because it
 	// can not find it (The actual flow object is removed but the
 	// index is out of step).
-	res, err = launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
-		result_sets.ResultSetOptions{}, 0, 10)
-	assert.NoError(self.T(), err)
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		res, err = launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
+			result_sets.ResultSetOptions{}, 0, 10)
+		assert.NoError(self.T(), err)
+		return len(res.Items) == 0
+	})
 	assert.Equal(self.T(), len(res.Items), 0)
 
 	// Create the flow again

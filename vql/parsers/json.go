@@ -26,6 +26,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -544,6 +545,7 @@ type WriteJSONPluginArgs struct {
 	Accessor   string              `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	Query      vfilter.StoredQuery `vfilter:"required,field=query,doc=query to write into the file."`
 	BufferSize int                 `vfilter:"optional,field=buffer_size,doc=Maximum size of buffer before flushing to file."`
+	MaxTime    int                 `vfilter:"optional,field=max_time,doc=Maximum time before flushing the buffer (10 sec)."`
 }
 
 type WriteJSONPlugin struct{}
@@ -567,6 +569,11 @@ func (self WriteJSONPlugin) Call(
 
 		if arg.BufferSize == 0 {
 			arg.BufferSize = BUFF_SIZE
+		}
+
+		max_time := 10 * time.Second
+		if arg.MaxTime > 0 {
+			max_time = time.Duration(arg.MaxTime) * time.Second
 		}
 
 		var writer *bufio.Writer
@@ -605,18 +612,33 @@ func (self WriteJSONPlugin) Call(
 
 		lf := []byte("\n")
 
-		for row := range arg.Query.Eval(ctx, scope) {
-			serialized, err := json.Marshal(row)
-			if err == nil {
-				writer.Write(serialized)
-				writer.Write(lf)
-			}
+		events_chan := arg.Query.Eval(ctx, scope)
 
+		for {
 			select {
 			case <-ctx.Done():
 				return
 
-			case output_chan <- row:
+			case <-utils.GetTime().After(max_time):
+				writer.Flush()
+
+			case row, ok := <-events_chan:
+				if !ok {
+					return
+				}
+
+				serialized, err := json.Marshal(row)
+				if err == nil {
+					writer.Write(serialized)
+					writer.Write(lf)
+				}
+
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- row:
+				}
 			}
 		}
 	}()

@@ -213,6 +213,10 @@ type logWriter struct {
 }
 
 func (self *logWriter) Write(b []byte) (int, error) {
+	// Sometimes the channel becomes closed for some reason and this
+	// tends to panic.
+	defer utils.CheckForPanic("logWriter.Write")
+
 	select {
 	case <-self.ctx.Done():
 		return 0, io.EOF
