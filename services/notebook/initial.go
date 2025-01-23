@@ -223,7 +223,7 @@ func CalculateNotebookArtifact(
 	seen := make(map[string]bool)
 	seen_tools := make(map[string]bool)
 
-	for _, artifact_name := range out.Artifacts {
+	for idx, artifact_name := range out.Artifacts {
 		artifact, pres := global_repository.Get(ctx, config_obj, artifact_name)
 		if !pres {
 			return nil, nil, fmt.Errorf("Artifact not found: %v: %w",
@@ -279,6 +279,14 @@ func CalculateNotebookArtifact(
 				source_name += "/" + new_source.Name
 			}
 
+			// If there are too many cells we add a placeholder to
+			// allow the user to calculate them on demand. Otherwise
+			// we may overwhelm the notebook workers.
+			output := ""
+			if idx > 4 {
+				output = fmt.Sprintf("<h3>%s</h3><br>Recalculate to View", source_name)
+			}
+
 			custom_cells := false
 			for _, n := range s.Notebook {
 				new_source.Notebook = append(new_source.Notebook, n)
@@ -297,7 +305,7 @@ func CalculateNotebookArtifact(
 					new_source.Notebook = append(new_source.Notebook,
 						&artifacts_proto.NotebookSourceCell{
 							Type:   "vql",
-							Output: fmt.Sprintf("<h1>%s: Recalculate to View</h1>", source_name),
+							Output: output,
 							Template: fmt.Sprintf(`
 /*
 # Events from %v
@@ -315,7 +323,7 @@ LIMIT 50
 					new_source.Notebook = append(new_source.Notebook,
 						&artifacts_proto.NotebookSourceCell{
 							Type:   "vql",
-							Output: fmt.Sprintf("<h3>%s</h3>", source_name),
+							Output: output,
 							Template: fmt.Sprintf(`
 /*
 # %v
