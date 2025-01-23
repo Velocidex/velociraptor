@@ -269,8 +269,15 @@ func CalculateNotebookArtifact(
 		}
 
 		for _, s := range artifact.Sources {
-			new_source := &artifacts_proto.ArtifactSource{}
+			new_source := &artifacts_proto.ArtifactSource{
+				Name: s.Name,
+			}
 			res.Sources = append(res.Sources, new_source)
+
+			source_name := artifact_name
+			if new_source.Name != "" {
+				source_name += "/" + new_source.Name
+			}
 
 			custom_cells := false
 			for _, n := range s.Notebook {
@@ -289,7 +296,8 @@ func CalculateNotebookArtifact(
 				case paths.MODE_CLIENT_EVENT, paths.MODE_SERVER_EVENT:
 					new_source.Notebook = append(new_source.Notebook,
 						&artifacts_proto.NotebookSourceCell{
-							Type: "vql",
+							Type:   "vql",
+							Output: fmt.Sprintf("<h1>%s: Recalculate to View</h1>", source_name),
 							Template: fmt.Sprintf(`
 /*
 # Events from %v
@@ -300,20 +308,21 @@ From {{ Scope "StartTime" }} to {{ Scope "EndTime" }}
 SELECT timestamp(epoch=_ts) AS ServerTime, *
  FROM source(start_time=StartTime, end_time=EndTime, artifact=%q)
 LIMIT 50
-`, artifact_name, artifact_name),
+`, source_name, source_name),
 						})
 
 				default:
 					new_source.Notebook = append(new_source.Notebook,
 						&artifacts_proto.NotebookSourceCell{
-							Type: "vql",
+							Type:   "vql",
+							Output: fmt.Sprintf("<h3>%s</h3>", source_name),
 							Template: fmt.Sprintf(`
 /*
 # %v
 */
 SELECT * FROM source(artifact=%q)
 LIMIT 50
-`, artifact_name, artifact_name),
+`, source_name, source_name),
 						})
 				}
 			}

@@ -191,16 +191,13 @@ func (self *NannyService) Start(
 
 func NewNanny(
 	config_obj *config_proto.Config) *NannyService {
-	if config_obj.Client.NannyMaxConnectionDelay > 0 {
-		return &NannyService{
-			MaxMemoryHardLimit: config_obj.Client.MaxMemoryHardLimit,
-			last_check_time:    utils.GetTime().Now(),
-			MaxConnectionDelay: time.Duration(
-				config_obj.Client.NannyMaxConnectionDelay) * time.Second,
-			Logger: logging.GetLogger(config_obj, &logging.ClientComponent),
-		}
+	return &NannyService{
+		MaxMemoryHardLimit: config_obj.Client.MaxMemoryHardLimit,
+		last_check_time:    utils.GetTime().Now(),
+		MaxConnectionDelay: time.Duration(
+			config_obj.Client.NannyMaxConnectionDelay) * time.Second,
+		Logger: logging.GetLogger(config_obj, &logging.ClientComponent),
 	}
-	return nil
 }
 
 func StartNannyService(
@@ -212,7 +209,7 @@ func StartNannyService(
 	}
 
 	Nanny = NewNanny(config_obj)
-	if Nanny != nil {
+	if config_obj.Client.NannyMaxConnectionDelay > 0 {
 		Nanny.Start(ctx, wg)
 	}
 	return nil

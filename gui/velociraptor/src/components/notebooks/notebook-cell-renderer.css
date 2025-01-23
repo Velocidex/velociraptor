@@ -25,3 +25,7 @@
 .report-viewer .panel {
     overflow-x: auto;
 }
+
+.cell-placeholder {
+    height: 100px;
+}
