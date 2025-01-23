@@ -219,17 +219,39 @@ export default class NotebookCellRenderer extends React.Component {
 
         local_completions_lookup: {},
         local_completions: [],
+
+        // Only load the cell the first time if it is visible.
+        visible: false,
+        unloaded: true,
+    }
+
+    constructor(props) {
+        super(props);
+        this.myRef = React.createRef();
     }
 
     componentDidMount() {
         this.source = CancelToken.source();
         this.update_source = CancelToken.source();
+
+        // Install an observer to figure out when the cell is visible.
+        this.observer = new IntersectionObserver(x=>{
+            if(x) {
+                this.setState({visible: x[0].isIntersecting});
+            }
+        });
+        this.observer.observe(this.myRef.current, );
+
         this.fetchCellContents();
     }
 
     componentWillUnmount() {
         this.source.cancel();
         this.update_source.cancel();
+
+        if (this.observer) {
+            this.observer.disconnect();
+        };
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -252,6 +274,7 @@ export default class NotebookCellRenderer extends React.Component {
 
         if (prevProps.notebook_id !== this.props.notebook_id ||
             props_cell_timestamp !== this.state.cell_timestamp ||
+            prevState.visible != this.state.visible ||
             props_cell_id !== current_cell_id) {
 
             // Prevent further updates to this cell by setting the
@@ -292,8 +315,19 @@ export default class NotebookCellRenderer extends React.Component {
         let cell_version = this.props.cell_metadata &&
             this.props.cell_metadata.current_version;
 
-        this.props.incNotebookLocked(1);
+        if (!this.state.visible && this.state.unloaded) {
+            let cell = this.state.cell;
+            let cell_metadata = this.props.cell_metadata || {};
+            cell.cell_id = this.props.cell_metadata.cell_id;
 
+            // Take up a reasonable amount of vertical space to keep
+            // further cells invisible.
+            cell.output = "<div class='cell-placeholder'>" + T("Loading") + "</div>";
+            this.setState({cell: cell});
+            return;
+        }
+
+        this.props.incNotebookLocked(1);
         api.get("v1/GetNotebookCell", {
             notebook_id: this.props.notebook_id,
             cell_id: this.props.cell_metadata.cell_id,
@@ -307,7 +341,7 @@ export default class NotebookCellRenderer extends React.Component {
 
             let cell = response.data;
             if (!this.state.currently_editing) {
-                this.setState({cell: cell,
+                this.setState({cell: cell, unloaded: false,
                                input: cell.input,
                                loading: false});
             }
@@ -320,7 +354,7 @@ export default class NotebookCellRenderer extends React.Component {
                 e.response.data.message;
             let cell = Object.assign({}, this.props.cell_metadata || {});
             cell.messages = [message];
-            this.setState({loading: false, cell: cell});
+            this.setState({loading: false, unloaded: false, cell: cell});
         });;
     };
 
@@ -721,7 +755,8 @@ export default class NotebookCellRenderer extends React.Component {
     }
 
     render() {
-        let selected = this.state.cell.cell_id === this.props.selected_cell_id;
+        let selected = this.props.selected_cell_id &&
+            this.state.cell.cell_id === this.props.selected_cell_id;
 
         // There are 3 states for the cell:
         // 1. The cell is selected but not being edited: Show the cell manipulation toolbar.
@@ -979,7 +1014,8 @@ export default class NotebookCellRenderer extends React.Component {
         );
 
         return (
-            <>{ this.state.showAddCellFromHunt &&
+            <div>
+            { this.state.showAddCellFromHunt &&
                 <AddCellFromHunt
                   addCell={(text, type, env)=>{
                       this.props.addCell(this.state.cell.cell_id, type, text, env);
@@ -1080,7 +1116,8 @@ export default class NotebookCellRenderer extends React.Component {
                   }
                 </div>
 
-                <div className={classNames({
+                <div ref={this.myRef}
+                  className={classNames({
                     collapsed: this.state.collapsed,
                     "notebook-output": true,
                 })}
@@ -1135,7 +1172,7 @@ export default class NotebookCellRenderer extends React.Component {
                   }
                 </div>
               </div>
-            </>
+            </div>
         );
     }
 };

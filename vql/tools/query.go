@@ -61,7 +61,7 @@ func (self QueryPlugin) Call(
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			config_obj, err = org_manager.GetOrgConfig("")
+			config_obj, err = org_manager.GetOrgConfig(services.ROOT_ORG_ID)
 			if err != nil {
 				scope.Log("query: %v", err)
 				return
