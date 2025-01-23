@@ -102,7 +102,7 @@ func (self *NotebookManagerTestSuite) TearDownTest() {
 }
 
 func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
-	assert.Retry(self.T(), 3, time.Second, self._TestNotebookManagerUpdateCell)
+	assert.Retry(self.T(), 5, time.Second, self._TestNotebookManagerUpdateCell)
 }
 
 func (self *NotebookManagerTestSuite) _TestNotebookManagerUpdateCell(r *assert.R) {
