@@ -2,6 +2,7 @@ package hunts
 
 import (
 	"context"
+	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -90,30 +91,48 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 			return
 		}
 
-		for flow_details := range flow_chan {
-			if flow_details == nil || flow_details.Context == nil {
-				continue
-			}
+		// FIXME This should be configurable
+		deleters := 10
 
-			results, err := launcher.Storage().DeleteFlow(ctx, config_obj,
-				flow_details.Context.ClientId,
-				flow_details.Context.SessionId,
-				services.NoAuditLogging, services.DeleteFlowOptions{
-					ReallyDoIt: arg.ReallyDoIt,
-				})
-			if err != nil {
-				scope.Log("hunt_delete: %s: %v", arg.HuntId, err)
-				continue
-			}
-
-			for _, res := range results {
-				select {
-				case <-ctx.Done():
-					return
-				case output_chan <- res:
+		wg := &sync.WaitGroup{}
+		for i := 0; i < deleters; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for {
+					select {
+					case flow_details, ok := <-flow_chan:
+						if ok {
+							if flow_details == nil || flow_details.Context == nil {
+								continue
+							}
+							results, err := launcher.Storage().DeleteFlow(ctx, config_obj,
+								flow_details.Context.ClientId,
+								flow_details.Context.SessionId,
+								services.NoAuditLogging, services.DeleteFlowOptions{
+									ReallyDoIt: arg.ReallyDoIt,
+								})
+							if err != nil {
+								scope.Log("hunt_delete: %s: %v", arg.HuntId, err)
+								continue
+							}
+							for _, res := range results {
+								select {
+								case <-ctx.Done():
+									return
+								case output_chan <- res:
+								}
+							}
+						} else {
+							return
+						}
+					case <-ctx.Done():
+						return
+					}
 				}
-			}
+			}()
 		}
+		wg.Wait()
 
 		// Now remove the hunt from the hunt manager
 		if arg.ReallyDoIt {
