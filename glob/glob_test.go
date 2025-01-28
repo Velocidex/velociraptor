@@ -21,12 +21,14 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	"github.com/Velocidex/ordereddict"
@@ -48,13 +50,13 @@ var pathComponentsTestFixture = []pathComponentsTestFixtureType{
 	// it is not considered a recursive component and just interpreted
 	// as a normal wild card.
 	{"foo**", []_PathFilterer{
-		&_RegexComponent{regexp: `foo.*.*\z(?ms)`},
+		NewRegexComponent(`foo.*.*\z(?ms)`),
 	}},
 	{"**5", []_PathFilterer{
 		_RecursiveComponent{`.*\z(?ms)`, 5},
 	}},
 	{"*.exe", []_PathFilterer{
-		&_RegexComponent{regexp: `.*\.exe\z(?ms)`},
+		NewRegexComponent(`.*\.exe\z(?ms)`),
 	}},
 	{"/bin/ls", []_PathFilterer{
 		_LiteralComponent{"bin"},
@@ -75,6 +77,7 @@ func TestConvertToPathComponent(t *testing.T) {
 			if reflect.DeepEqual(fixture.components, components) {
 				continue
 			}
+			utils.DlvBreak()
 			t.Fatalf("Unexpected %v: %v",
 				fixture.components, components)
 		}
@@ -211,4 +214,10 @@ func TestBraceExpansion(t *testing.T) {
 	for idx, e := range result {
 		assert.Equal(t, e, expected[idx])
 	}
+}
+
+func NewRegexComponent(re string) *_RegexComponent {
+	res := &_RegexComponent{regexp: re}
+	res.compiled = regexp.MustCompile("^(?msi)" + res.regexp)
+	return res
 }
