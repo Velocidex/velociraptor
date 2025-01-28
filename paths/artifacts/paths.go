@@ -31,6 +31,13 @@ func NewArtifactPathManagerWithMode(
 	client_id, flow_id, full_artifact_name string,
 	mode int) *ArtifactPathManager {
 
+	// Override the internal mode for debugging.
+	if mode == paths.INTERNAL &&
+		config_obj.Defaults != nil &&
+		config_obj.Defaults.WriteInternalEvents {
+		mode = paths.MODE_SERVER_EVENT
+	}
+
 	artifact_name, artifact_source := paths.SplitFullSourceName(full_artifact_name)
 
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -304,6 +311,12 @@ func DayNameToTimestamp(name string) time.Time {
 func GetArtifactMode(
 	ctx context.Context, config_obj *config_proto.Config,
 	artifact_name string) (int, error) {
+
+	if config_obj.Defaults != nil &&
+		config_obj.Defaults.WriteInternalEvents {
+		return paths.MODE_SERVER_EVENT, nil
+	}
+
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return 0, err

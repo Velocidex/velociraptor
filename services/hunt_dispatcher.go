@@ -102,13 +102,6 @@ type IHuntDispatcher interface {
 		cb func(hunt *api_proto.Hunt) HuntModificationAction,
 	) HuntModificationAction
 
-	// Modify a hunt by sending a mutation. This function can be
-	// called anywhere (minion or master).
-	ModifyHunt(ctx context.Context,
-		config_obj *config_proto.Config,
-		hunt_modification *api_proto.Hunt,
-		user string) error
-
 	// Gets read only access to the hunt object.
 	GetHunt(ctx context.Context,
 		hunt_id string) (*api_proto.Hunt, bool)

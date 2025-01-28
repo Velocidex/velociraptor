@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alitto/pond"
+	"github.com/alitto/pond/v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -65,7 +65,7 @@ func (self *FlowStorageManager) DeleteFlow(
 		ctx:          ctx,
 		config_obj:   config_obj,
 		seen:         make(map[string]bool),
-		pool:         pond.New(100, 1000),
+		pool:         pond.NewPool(100),
 	}
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(
@@ -181,7 +181,7 @@ type reporter struct {
 	really_do_it bool
 	mu           sync.Mutex
 	id           int
-	pool         *pond.WorkerPool
+	pool         pond.Pool
 }
 
 func (self *reporter) emit_ds(

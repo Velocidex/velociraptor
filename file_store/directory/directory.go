@@ -239,6 +239,12 @@ func (self *DirectoryFileStore) Delete(filename api.FSPathSpec) error {
 		return err
 	}
 
+	// Automatically attempt to delete indexes.
+	if filename.Type() == api.PATH_TYPE_FILESTORE_JSON {
+		_ = os.Remove(file_path + ".index")
+		_ = os.Remove(file_path + ".tidx")
+	}
+
 	dir_name := filepath.Dir(file_path)
 
 	// Exit as soon as directory is not empty

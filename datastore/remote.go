@@ -62,7 +62,8 @@ func Retry(ctx context.Context,
 		case codes.DeadlineExceeded, codes.ResourceExhausted,
 			codes.Aborted, codes.Unavailable:
 			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.Error("While connecting to remote datastore: %v", err)
+			logger.Error("While connecting to remote datastore with %#v: %v",
+				cb, err)
 			select {
 			case <-ctx.Done():
 				return timeoutError

@@ -139,6 +139,9 @@ message Hunt {
         RUNNING = 2 [(description) = "Hunt is running and ready."];
         STOPPED = 3 [(description) = "Hunt has stopped."];
         ARCHIVED = 4 [(description) = "Hunt has been archived."];
+
+        // Set internally when the hunt is being deleted.
+        DELETED = 5;
     };
 
     State state = 8 [(sem_type) = {
@@ -202,6 +205,9 @@ message HuntMutation {
     FlowAssignment assignment = 6;
 
     repeated string tags = 8;
+
+    // The user who is initiating the mutation.
+    string user = 9;
 }
 
 message HuntTags {

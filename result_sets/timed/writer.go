@@ -46,9 +46,16 @@ type TimedResultSetWriterImpl struct {
 	last_log_base string
 	writer        *timelines.TimelineWriter
 	completer     *utils.Completer
+
+	// Set for internal artifact writers to avoid writing to disk at all.
+	internal bool
 }
 
 func (self *TimedResultSetWriterImpl) Write(row *ordereddict.Dict) {
+	if self.internal {
+		return
+	}
+
 	// Encode each row ASAP but then store the raw json for combined
 	// writes. This allows us to get rid of memory from the query
 	// ASAP.
@@ -70,6 +77,10 @@ func (self *TimedResultSetWriterImpl) Write(row *ordereddict.Dict) {
 }
 
 func (self *TimedResultSetWriterImpl) WriteJSONL(jsonl []byte, count int) {
+	if self.internal {
+		return
+	}
+
 	self.rows = append(self.rows, rowContainer{
 		serialized: jsonl,
 		count:      count,
@@ -109,7 +120,8 @@ func (self *TimedResultSetWriterImpl) getWriter(ts time.Time) (
 		return nil, err
 	}
 
-	// If no path is provided, we are just a log sink
+	// If no path is provided, we are just a log sink. This is used
+	// for INTERNAL log writers.
 	if log_path == nil {
 		return nil, ignoreRowError
 	}
@@ -156,6 +168,11 @@ func NewTimedResultSetWriter(
 	opts *json.EncOpts,
 	completion func()) (result_sets.TimedResultSetWriter, error) {
 
+	log_path, err := path_manager.GetPathForWriting()
+	if err != nil {
+		return nil, err
+	}
+
 	return &TimedResultSetWriterImpl{
 		file_store_factory: file_store_factory,
 		path_manager:       path_manager,
@@ -164,5 +181,6 @@ func NewTimedResultSetWriter(
 		// Only call the completion function once all writes
 		// completed.
 		completer: utils.NewCompleter(completion),
+		internal:  log_path == nil,
 	}, nil
 }
