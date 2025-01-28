@@ -541,7 +541,12 @@ func (self *HuntStorageManagerImpl) DeleteHunt(
 
 		file_store_factory := file_store.GetFileStore(self.config_obj)
 		_ = file_store_factory.Delete(hunt_path_manager.Clients())
+		_ = file_store_factory.Delete(hunt_path_manager.Clients().
+			SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
+
 		_ = file_store_factory.Delete(hunt_path_manager.ClientErrors())
+		_ = file_store_factory.Delete(hunt_path_manager.ClientErrors().
+			SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
 
 		// Delete any notebooks etc.
 		_ = datastore.RecursiveDelete(self.config_obj, db,

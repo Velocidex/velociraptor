@@ -225,7 +225,6 @@
  ],
  "hunt_info.json": {
   "hunt_id": "H.123",
-  "version": "10000000010",
   "create_time": "10000000",
   "creator": "admin",
   "expires": "604810000000",

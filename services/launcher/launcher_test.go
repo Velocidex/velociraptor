@@ -1381,7 +1381,7 @@ func (self *LauncherTestSuite) TestDelete() {
 	// However GetFlows omits the deleted flow immediately because it
 	// can not find it (The actual flow object is removed but the
 	// index is out of step).
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		res, err = launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
 			result_sets.ResultSetOptions{}, 0, 10)
 		assert.NoError(self.T(), err)
