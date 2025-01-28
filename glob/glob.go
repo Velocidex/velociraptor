@@ -68,10 +68,6 @@ type _RegexComponent struct {
 }
 
 func (self *_RegexComponent) Match(f accessors.FileInfo) bool {
-	if self.compiled == nil {
-		self.compiled = regexp.MustCompile("^(?msi)" + self.regexp)
-	}
-
 	return self.compiled.MatchString(f.Name())
 }
 
@@ -399,8 +395,10 @@ func (self Globber) _expand_path_components(
 						return err
 					}
 				}
+				re := FNmatchTranslate("*")
 				middle = append(middle, &_RegexComponent{
-					regexp: FNmatchTranslate("*"),
+					regexp:   re,
+					compiled: regexp.MustCompile(re),
 				})
 			}
 
@@ -481,9 +479,18 @@ func convert_glob_into_path_components(pattern *accessors.OSPath) (
 			})
 
 		} else if m := _GLOB_MAGIC_CHECK.FindString(path_component); len(m) > 0 {
-			result = append(result, &_RegexComponent{
+
+			matcher := &_RegexComponent{
 				regexp: FNmatchTranslate(path_component),
-			})
+			}
+			compiled, err := regexp.Compile("^(?msi)" + matcher.regexp)
+			if err != nil {
+				return nil, fmt.Errorf("While compiling component %v: %w",
+					matcher.regexp, err)
+			}
+			matcher.compiled = compiled
+			result = append(result, matcher)
+
 		} else {
 			result = append(result, _LiteralComponent{
 				path: path_component,

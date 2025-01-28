@@ -3774,6 +3774,9 @@
     required: true
   - name: really_do_it
     type: bool
+  - name: workers
+    type: int64
+    description: Delete with this many workers (default 2)
   category: server
   metadata:
     permissions: SERVER_ADMIN
@@ -4794,6 +4797,8 @@
     description: 'A SID to lookup using LookupAccountSid '
     required: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
   - windows_386_cgo
@@ -7439,8 +7444,7 @@
   args:
   - name: pid
     type: int64
-    description: A pid to list. If this is provided we are able to operate much faster
-      by only opening a single process.
+    description: A process ID to list. If not provided list all processes.
   category: popular
   metadata:
     permissions: MACHINE_STATE
@@ -10823,6 +10827,16 @@
   - name: description
     type: string
     description: Description for this GUID provider
+  - name: kernel_tracer_type
+    type: string
+    description: A list of event types to fetch from the kernel tracer (can be registry,
+      process, image_load, network, driver, file, thread, handle)
+    repeated: true
+  - name: kernel_tracer_stacks
+    type: string
+    description: A list of kernel tracer event types to append stack traces to (can
+      be any of the types accepted by kernel_tracer_type)
+    repeated: true
   category: event
   platforms:
   - windows_386_cgo
