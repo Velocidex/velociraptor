@@ -12,8 +12,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -61,6 +61,7 @@ type: INTERNAL
 			State:     api_proto.Hunt_RUNNING,
 			Version:   now,
 			StartTime: uint64(now),
+			Expires:   uint64(now+10) * 1000000,
 		}
 		hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
 		assert.NoError(self.T(),
@@ -152,6 +153,32 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntFlushToDatastore() {
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_RUNNING)
 }
 
+func (self *HuntDispatcherTestSuite) TestIndexSerialization() {
+	// Modify a hunt and flush to datastore immediately
+	ctx := context.Background()
+	modification := self.master_dispatcher.ModifyHuntObject(ctx, "H.1",
+		func(hunt *api_proto.Hunt) services.HuntModificationAction {
+			hunt.State = api_proto.Hunt_STOPPED
+			return services.HuntFlushToDatastore
+		})
+
+	// Changes should be visible in the data store immediately.
+	assert.Equal(self.T(), modification, services.HuntFlushToDatastore)
+
+	storage := hunt_dispatcher.NewHuntStorageManagerImpl(self.ConfigObj)
+
+	// But not immediately visible in minion
+	err := storage.(*hunt_dispatcher.HuntStorageManagerImpl).LoadHuntsFromIndex(self.Ctx, self.ConfigObj)
+	assert.NoError(self.T(), err)
+	hunts, _, err := storage.ListHunts(self.Ctx,
+		result_sets.ResultSetOptions{}, 0, 100)
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), 5, len(hunts))
+	assert.Equal(self.T(), "H.4", hunts[0].HuntId)
+	assert.Equal(self.T(), "H.0", hunts[4].HuntId)
+}
+
 func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -219,7 +246,6 @@ func (self *HuntDispatcherTestSuite) TestExpiringHunts() {
 	hunt_id := "H.121222"
 
 	now := utils.GetTime().Now().Unix()
-	json.Dump(now)
 	acl_manager := acl_managers.NullACLManager{}
 
 	hunt_obj, err := self.master_dispatcher.CreateHunt(self.Ctx, self.ConfigObj,
@@ -240,24 +266,42 @@ func (self *HuntDispatcherTestSuite) TestExpiringHunts() {
 	closer = utils.MockTime(utils.RealClockWithOffset{Duration: 600 * time.Second})
 	defer closer()
 
-	vtesting.WaitUntil(500*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		hunt_obj, pres := self.master_dispatcher.GetHunt(self.Ctx, hunt_id)
 		assert.True(self.T(), pres)
 
 		return hunt_obj.State == api_proto.Hunt_STOPPED
 	})
+}
+
+func (self *HuntDispatcherTestSuite) TestDeleteHunts() {
+	hunt_id := "H.3"
+
+	_, pres := self.master_dispatcher.GetHunt(self.Ctx, hunt_id)
+	assert.True(self.T(), pres)
 
 	// Delete the new hunt
 	self.master_dispatcher.MutateHunt(self.Ctx, self.ConfigObj,
 		&api_proto.HuntMutation{
 			HuntId: hunt_id,
-			State:  api_proto.Hunt_ARCHIVED,
+			State:  api_proto.Hunt_DELETED,
 		})
 
-	vtesting.WaitUntil(500*time.Second, self.T(), func() bool {
+	// Check the master is removed.
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		_, pres := self.master_dispatcher.GetHunt(self.Ctx, hunt_id)
 		return pres == false
 	})
+
+	// Check the minion is removed.
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		_, pres := self.minion_dispatcher.GetHunt(self.Ctx, hunt_id)
+		return pres == false
+	})
+
+	// Verify the files are gone from the filestore.
+	test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
+	test_utils.GetMemoryDataStore(self.T(), self.ConfigObj).Debug(self.ConfigObj)
 }
 
 func TestHuntDispatcherTestSuite(t *testing.T) {

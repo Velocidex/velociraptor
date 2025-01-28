@@ -146,7 +146,7 @@ service API {
         };
     }
 
-    rpc ModifyHunt(Hunt) returns (google.protobuf.Empty) {
+    rpc ModifyHunt(HuntMutation) returns (google.protobuf.Empty) {
         option (google.api.http) = {
             post: "/api/v1/ModifyHunt",
             body: "*"

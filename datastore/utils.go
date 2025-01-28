@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 const (
@@ -120,6 +121,18 @@ func Walk(config_obj *config_proto.Config,
 	}
 
 	return nil
+}
+
+func RecursiveDelete(
+	config_obj *config_proto.Config,
+	datastore DataStore, root api.DSPathSpec) error {
+	return Walk(config_obj, datastore, root, false,
+		func(urn api.DSPathSpec) error {
+			// Ignore errors so we can keep going as much as possible.
+			_ = datastore.DeleteSubjectWithCompletion(
+				config_obj, urn, utils.BackgroundWriter)
+			return nil
+		})
 }
 
 func GetImplementationName(

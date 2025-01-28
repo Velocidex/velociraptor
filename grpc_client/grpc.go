@@ -34,6 +34,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -309,8 +310,22 @@ func (self *gRPCPool) EnsureInit(
 
 	// Build a new pool.
 	factory := func(ctx context.Context) (*grpc.ClientConn, error) {
-		return grpc.DialContext(ctx, self.address,
-			grpc.WithTransportCredentials(self.creds))
+		opts := []grpc.DialOption{
+			grpc.WithTransportCredentials(self.creds),
+		}
+
+		if self.config_obj.ApiConfig != nil &&
+			self.config_obj.ApiConfig.MaxGrpcRecvSize > 0 {
+			opts = append(opts,
+				grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(
+					int(self.config_obj.ApiConfig.MaxGrpcRecvSize))))
+
+			logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
+			logger.Info("<green>API Client</>: Limiting gRPC message size to %v",
+				self.config_obj.ApiConfig.MaxGrpcRecvSize)
+
+		}
+		return grpc.DialContext(ctx, self.address, opts...)
 	}
 
 	max_size := 100

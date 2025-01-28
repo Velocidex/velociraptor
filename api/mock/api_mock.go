@@ -1042,7 +1042,7 @@ func (mr *MockAPIClientMockRecorder) LoadArtifactPack(arg0, arg1 interface{}, ar
 }
 
 // ModifyHunt mocks base method.
-func (m *MockAPIClient) ModifyHunt(arg0 context.Context, arg1 *proto0.Hunt, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+func (m *MockAPIClient) ModifyHunt(arg0 context.Context, arg1 *proto0.HuntMutation, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {

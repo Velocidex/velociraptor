@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alitto/pond"
+	"github.com/alitto/pond/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -518,7 +518,7 @@ type MemcacheFileStore struct {
 	total_cached_bytes int64
 
 	// Pool of flusher workers
-	pool *pond.WorkerPool
+	pool pond.Pool
 
 	target_memory_use int64
 }
@@ -559,7 +559,7 @@ func NewMemcacheFileStore(
 			int(max_writers), time.Hour),
 		max_age:           time.Duration(max_age) * time.Millisecond,
 		min_age:           time.Duration(ttl) * time.Millisecond,
-		pool:              pond.New(int(max_writers), int(max_writers*10)),
+		pool:              pond.NewPool(int(max_writers)),
 		target_memory_use: target_memory_use,
 	}
 

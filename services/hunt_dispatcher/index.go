@@ -64,8 +64,12 @@ func (self *HuntStorageManagerImpl) FlushIndex(
 	hunt_path_manager := paths.NewHuntPathManager("")
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
-		hunt_path_manager.HuntIndex(),
-		json.DefaultEncOpts(), utils.BackgroundWriter, result_sets.TruncateMode)
+		hunt_path_manager.HuntIndex(), json.DefaultEncOpts(),
+
+		// We need the index to be written immediately so it is
+		// visible in the GUI.
+		utils.SyncCompleter,
+		result_sets.TruncateMode)
 	if err != nil {
 		return err
 	}

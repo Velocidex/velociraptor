@@ -115,7 +115,7 @@ class ModifyHuntDialog extends React.Component {
         if (!hunt_id) { return; };
 
         api.post("v1/ModifyHunt", {
-            hunt_description: description,
+            description: description,
             tags: this.state.tags,
             expires: this.getExpiryEpoch() * 1000000,
             hunt_id: hunt_id,
@@ -349,7 +349,7 @@ class HuntList extends React.Component {
         if (!hunt_id) { return; };
 
         api.post("v1/ModifyHunt", {
-            hunt_description: row.hunt_description || " ",
+            description: row.hunt_description || " ",
             hunt_id: hunt_id,
         }, this.source.token).then((response) => {
             this.incrementVersion();
@@ -362,7 +362,8 @@ class HuntList extends React.Component {
 
         if (!hunt_id) { return; };
 
-        // First stop the hunt then delete all the files.
+        // First stop the hunt then delete all the files inside the
+        // CancelAndDelete flow which might take a short time.
         api.post("v1/ModifyHunt", {
             state: "ARCHIVED",
             hunt_id: hunt_id,

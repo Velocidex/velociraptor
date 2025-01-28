@@ -15,7 +15,7 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alitto/pond"
+	"github.com/alitto/pond/v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -43,7 +43,7 @@ type JournalService struct {
 	mu    sync.Mutex
 	locks map[string]*sync.Mutex
 
-	pool *pond.WorkerPool
+	pool pond.Pool
 }
 
 func (self *JournalService) GetWatchers() []string {
@@ -302,7 +302,7 @@ func NewJournalService(
 	service := &JournalService{
 		config_obj: config_obj,
 		locks:      make(map[string]*sync.Mutex),
-		pool:       pond.New(100, 1000),
+		pool:       pond.NewPool(100),
 	}
 
 	qm, err := file_store.GetQueueManager(config_obj)

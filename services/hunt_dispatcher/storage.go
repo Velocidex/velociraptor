@@ -2,6 +2,7 @@ package hunt_dispatcher
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -17,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -59,6 +61,10 @@ type HuntStorageManager interface {
 		hunt_id string) (*api_proto.Hunt, error)
 
 	SetHunt(ctx context.Context, hunt *api_proto.Hunt) error
+
+	// Remove the hunt from the local storage. On Minion we only
+	// remove from the local memory cache.
+	DeleteHunt(ctx context.Context, hunt_id string) error
 
 	ModifyHuntObject(
 		ctx context.Context,
@@ -123,6 +129,20 @@ func NewHuntStorageManagerImpl(
 	return result
 }
 
+func (self *HuntStorageManagerImpl) MaybeUpdateTimestamp(t uint64) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self._MaybeUpdateTimestamp(t)
+}
+
+func (self *HuntStorageManagerImpl) _MaybeUpdateTimestamp(t uint64) {
+	last_ts := atomic.LoadUint64(&self.last_timestamp)
+	if last_ts < t {
+		dispatcherCurrentTimestamp.Set(float64(t))
+		atomic.SwapUint64(&self.last_timestamp, t)
+	}
+}
+
 func (self *HuntStorageManagerImpl) GetLastTimestamp() uint64 {
 	return atomic.LoadUint64(&self.last_timestamp)
 }
@@ -154,6 +174,17 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 	case services.HuntUnmodified:
 		return services.HuntUnmodified
 
+		// Asyncronously write to datastore later but update the in
+		// memory record now.
+	case services.HuntFlushToDatastoreAsync:
+		hunt_record.dirty = true
+		self.dirty = true
+
+		// The hunts start time could have been modified.
+		self._MaybeUpdateTimestamp(hunt_record.StartTime)
+
+		return services.HuntUnmodified
+
 	default:
 		// Update the hunt object
 		hunt_record.dirty = true
@@ -162,14 +193,8 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 		// Update the hunt version
 		hunt_record.Version = utils.GetTime().Now().UnixNano()
 
-		// The hunts start time could have been modified - we need to
-		// update ours then (and also the metrics).
-		if hunt_record.StartTime > self.GetLastTimestamp() {
-			dispatcherCurrentTimestamp.Set(
-				float64(hunt_record.StartTime))
-			atomic.StoreUint64(
-				&self.last_timestamp, hunt_record.StartTime)
-		}
+		// The hunts start time could have been modified.
+		self._MaybeUpdateTimestamp(hunt_record.StartTime)
 
 		hunt_path_manager := paths.NewHuntPathManager(hunt_record.HuntId)
 		db, err := datastore.GetDB(self.config_obj)
@@ -178,7 +203,8 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 		}
 
 		err = db.SetSubjectWithCompletion(self.config_obj,
-			hunt_path_manager.Path(), hunt_record.Hunt, nil)
+			hunt_path_manager.Path(), hunt_record.Hunt,
+			utils.BackgroundWriter)
 		if err != nil {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			logger.Error("Flushing %s to disk: %v", hunt_id, err)
@@ -217,10 +243,13 @@ func (self *HuntStorageManagerImpl) SetHunt(
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
 
-	if hunt.State == api_proto.Hunt_ARCHIVED {
+	// Actually delete the hunt from disk. The main deletion happens
+	// in the hunt_manager on the master - the hunt dispatcher just
+	// needs to remove it from the local cache.
+	if hunt.State == api_proto.Hunt_DELETED {
 		delete(self.hunts, hunt.HuntId)
 		self.dirty = true
-		return db.DeleteSubject(self.config_obj, hunt_path_manager.Path())
+		return nil
 	}
 
 	// The hunts start time could have been modified - we need to
@@ -235,6 +264,7 @@ func (self *HuntStorageManagerImpl) SetHunt(
 		dirty: true,
 	}
 	self.dirty = true
+	self._MaybeUpdateTimestamp(hunt.StartTime)
 
 	return db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt)
 }
@@ -314,6 +344,53 @@ func (self *HuntStorageManagerImpl) ListHunts(
 	return result, rs_reader.TotalRows(), nil
 }
 
+func (self *HuntStorageManagerImpl) LoadHuntsFromIndex(
+	ctx context.Context, config_obj *config_proto.Config) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.dirty = false
+	self.hunts = make(map[string]*HuntRecord)
+
+	hunt_path_manager := paths.NewHuntPathManager("")
+	file_store_factory := file_store.GetFileStore(config_obj)
+	rs_reader, err := result_sets.NewResultSetReaderWithOptions(
+		ctx, config_obj, file_store_factory,
+		hunt_path_manager.HuntIndex(), result_sets.ResultSetOptions{})
+	if err != nil {
+		return err
+	}
+	defer rs_reader.Close()
+
+	for row := range rs_reader.Rows(ctx) {
+		serialized_b64, pres := row.GetString("Hunt")
+		if !pres {
+			continue
+		}
+
+		serialized, err := base64.StdEncoding.DecodeString(serialized_b64)
+		if err != nil {
+			continue
+		}
+
+		hunt_obj := &api_proto.Hunt{}
+		err = json.Unmarshal(serialized, hunt_obj)
+		if err != nil {
+			continue
+		}
+		self.hunts[hunt_obj.HuntId] = &HuntRecord{
+			Hunt:       hunt_obj,
+			serialized: serialized,
+			dirty:      false,
+		}
+
+		self._MaybeUpdateTimestamp(hunt_obj.StartTime)
+	}
+
+	return nil
+}
+
 // Loads hunts from the datastore files. The hunt objects are written
 // as discrete files in the data store and this reloads the index from
 // those.
@@ -386,11 +463,7 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 		}
 
 		// Maintain the last timestamp as the latest hunt start time.
-		last_timestamp := self.GetLastTimestamp()
-		if hunt_obj.StartTime > last_timestamp {
-			atomic.StoreUint64(&self.last_timestamp, hunt_obj.StartTime)
-			dispatcherCurrentTimestamp.Set(float64(last_timestamp))
-		}
+		self._MaybeUpdateTimestamp(hunt_obj.StartTime)
 
 		old_hunt_record.Hunt = hunt_obj
 
@@ -405,16 +478,23 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 	return nil
 }
 
+// Refreshes the in memory hunt objects from the data store.
 func (self *HuntStorageManagerImpl) Refresh(
 	ctx context.Context, config_obj *config_proto.Config) error {
 
-	err := self.loadHuntsFromDatastore(ctx, config_obj)
-	if err != nil {
-		return err
+	// The master will load from the raw db files.
+	if self.I_am_master {
+		err := self.loadHuntsFromDatastore(ctx, config_obj)
+		if err != nil {
+			return err
+		}
+
+		// Create a fresh index file with the latest data.
+		return self.FlushIndex(ctx)
 	}
 
-	// Create an index file.
-	return self.FlushIndex(ctx)
+	// Minion can refresh directly from the index
+	return self.LoadHuntsFromIndex(ctx, config_obj)
 }
 
 // Applies a callback on all hunts. The callback is not allowed to
@@ -439,4 +519,58 @@ func (self *HuntStorageManagerImpl) ApplyFuncOnHunts(
 	}
 
 	return res_error
+}
+
+func (self *HuntStorageManagerImpl) DeleteHunt(
+	ctx context.Context, hunt_id string) error {
+	self.mu.Lock()
+	// First remove from the local memory cache.
+	delete(self.hunts, hunt_id)
+	self.dirty = true
+	self.mu.Unlock()
+
+	// On the master we also remove the hunts from disk and flush the
+	// index.
+	if self.I_am_master {
+		hunt_path_manager := paths.NewHuntPathManager(hunt_id)
+		db, err := datastore.GetDB(self.config_obj)
+		if err != nil {
+			return err
+		}
+		_ = db.DeleteSubject(self.config_obj, hunt_path_manager.Path())
+
+		file_store_factory := file_store.GetFileStore(self.config_obj)
+		_ = file_store_factory.Delete(hunt_path_manager.Clients())
+		_ = file_store_factory.Delete(hunt_path_manager.Clients().
+			SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
+
+		_ = file_store_factory.Delete(hunt_path_manager.ClientErrors())
+		_ = file_store_factory.Delete(hunt_path_manager.ClientErrors().
+			SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
+
+		// Delete any notebooks etc.
+		_ = datastore.RecursiveDelete(self.config_obj, db,
+			hunt_path_manager.HuntDataDirectory().AsDatastorePath())
+
+		_ = api.RecursiveDelete(file_store_factory,
+			hunt_path_manager.HuntDataDirectory())
+
+		// Delete downloads (exports)
+		_ = api.RecursiveDelete(file_store_factory,
+			hunt_path_manager.HuntDownloadsDirectory())
+
+		_ = datastore.RecursiveDelete(self.config_obj, db,
+			hunt_path_manager.HuntDownloadsDirectory().AsDatastorePath())
+
+		// Delete hunt index
+		_ = datastore.RecursiveDelete(self.config_obj, db,
+			hunt_path_manager.HuntParticipationIndexDirectory())
+
+		err = self.FlushIndex(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

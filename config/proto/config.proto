@@ -230,9 +230,11 @@ message ClientConfig {
             description: "Configuration of the windows installer.",
         }];
 
-    bool prevent_execve = 17 [(sem_type) = {
-            description: "If this is set, prevent arbitrary code execution on clients."
-        }];
+    // If this is set, prevent arbitrary code execution on
+    // clients. NOTE: Deprecated. You can now allow and reject any
+    // plugin (not just execve) using the allowed_plugins,
+    // allowed_functions and allowed_accessors parameters below.
+    bool prevent_execve = 17;
 
     // Deprecated, new configs use server_version
     Version version = 18;
@@ -385,6 +387,9 @@ message ApiClientConfig {
         }];
 
     string pinned_server_name = 6;
+
+    // This is 4mb by default but you can increase it if you like.
+    uint64 max_grpc_recv_size = 7;
 }
 
 // Fine grained configuration of proxies for http connections.
@@ -1255,6 +1260,12 @@ message Defaults {
     // collections. This is a new feature and may need to be disabled
     // in some large deployments.
     bool disable_active_inflight_checks = 52;
+
+    // Normally internal event artifacts are not written to disk but
+    // passed internally. For debugging it is useful to have a written
+    // record though. Enabling this will also write them to disk.
+    bool write_internal_events = 53;
+
 }
 
 // Configures crypto preferences

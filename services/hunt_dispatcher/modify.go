@@ -7,80 +7,29 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-// This method modifies the hunt. Only the following modifications are allowed:
-
-//  1. A hunt in the paused state can go to the running state. This
-//     will update the StartTime.
-//  2. A hunt in the running state can go to the Stop state
-//  3. A hunt's description can be modified.
-func (self *HuntDispatcher) ModifyHunt(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	hunt_modification *api_proto.Hunt,
-	user string) error {
-
-	// We can not modify the hunt directly, instead we send a
-	// mutation to the hunt manager on the master.
-	mutation := &api_proto.HuntMutation{
-		HuntId: hunt_modification.HuntId,
+// This is called by the local server to mutate the hunt
+// object. Mutations include increasing the number of clients
+// assigned, completed etc. These mutations may happen very frequently
+// and so we do not want to flush them to disk immediately. Instead we
+// push the mutations to the master node's hunt manager, where they
+// will be applied on the master node. Eventually these will end up in
+// the filesystem and possibly refreshed into this dispatcher.
+// Therefore, writers may write mutations and expect they take an
+// unspecified time to appear in the hunt details.
+func (self *HuntDispatcher) MutateHunt(
+	ctx context.Context, config_obj *config_proto.Config,
+	mutation *api_proto.HuntMutation) error {
+	journal, err := services.GetJournal(config_obj)
+	if err != nil {
+		return err
 	}
 
-	// Is the description changed?
-	if hunt_modification.HuntDescription != "" ||
-		hunt_modification.Expires > 0 {
-		mutation.Description = hunt_modification.HuntDescription
-		mutation.Expires = hunt_modification.Expires
-
-		// Archive the hunt.
-	} else if hunt_modification.State == api_proto.Hunt_ARCHIVED {
-		mutation.State = api_proto.Hunt_ARCHIVED
-
-		row := ordereddict.NewDict().
-			Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
-			Set("HuntId", mutation.HuntId).
-			Set("User", user)
-
-		// Alert listeners that the hunt is being archived.
-		journal, err := services.GetJournal(config_obj)
-		if err != nil {
-			return err
-		}
-
-		err = journal.PushRowsToArtifact(ctx, config_obj,
-			[]*ordereddict.Dict{row}, "System.Hunt.Archive",
-			"server", hunt_modification.HuntId)
-		if err != nil {
-			return err
-		}
-
-		// We are trying to start or restart the hunt.
-	} else if hunt_modification.State == api_proto.Hunt_RUNNING {
-
-		// We allow restarting stopped hunts
-		// but this may not work as intended
-		// because we still have a hunt index
-		// - i.e. clients that already
-		// scheduled the hunt will not
-		// re-schedule (whether they ran it or
-		// not). Usually the most reliable way
-		// to re-do a hunt is to copy it and
-		// do it again.
-		mutation.State = api_proto.Hunt_RUNNING
-		mutation.StartTime = uint64(utils.GetTime().Now().UnixNano() / 1000)
-
-		// We are trying to pause or stop the hunt.
-	} else if hunt_modification.State == api_proto.Hunt_STOPPED ||
-		hunt_modification.State == api_proto.Hunt_PAUSED {
-		mutation.State = api_proto.Hunt_STOPPED
-	}
-
-	// Allow tags to be modified.
-	if len(hunt_modification.Tags) > 0 {
-		mutation.Tags = hunt_modification.Tags
-	}
-
-	return self.MutateHunt(ctx, config_obj, mutation)
+	journal.PushRowsToArtifactAsync(ctx, config_obj,
+		ordereddict.NewDict().
+			Set("hunt_id", mutation.HuntId).
+			Set("mutation", mutation),
+		"Server.Internal.HuntModification")
+	return nil
 }

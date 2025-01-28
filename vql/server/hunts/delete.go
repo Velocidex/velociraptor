@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/alitto/pond/v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -14,8 +15,10 @@ import (
 )
 
 type DeleteHuntArgs struct {
-	HuntId     string `vfilter:"required,field=hunt_id"`
-	ReallyDoIt bool   `vfilter:"optional,field=really_do_it"`
+	HuntId      string `vfilter:"required,field=hunt_id"`
+	ReallyDoIt  bool   `vfilter:"optional,field=really_do_it"`
+	Workers     int64  `vfilter:"optional,field=workers,doc=Delete with this many workers (default 2)"`
+	ArchiveOnly bool   `vfilter:"optional,field=archive,doc=Set this to only archive the hunt - it will still be accessible but will be hidden from the GUI"`
 }
 
 type DeleteHuntPlugin struct{}
@@ -82,6 +85,19 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 				Set("hunt_id", arg.HuntId).
 				Set("details", hunt_obj))
 
+		if arg.ArchiveOnly {
+			err := hunt_dispatcher.MutateHunt(
+				ctx, config_obj, &api_proto.HuntMutation{
+					HuntId: arg.HuntId,
+					State:  api_proto.Hunt_ARCHIVED,
+					User:   principal,
+				})
+			if err != nil {
+				scope.Log("hunt_delete: %s", err)
+			}
+			return
+		}
+
 		options := services.FlowSearchOptions{BasicInformation: true}
 		flow_chan, _, err := hunt_dispatcher.GetFlows(
 			ctx, config_obj, options, scope, arg.HuntId, 0)
@@ -89,49 +105,55 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 			scope.Log("hunt_delete: %s: %v", arg.HuntId, err)
 			return
 		}
+		workers := 10
+		if arg.Workers > 0 {
+			workers = int(arg.Workers)
+		}
+
+		pool := pond.NewPool(workers)
 
 		for flow_details := range flow_chan {
 			if flow_details == nil || flow_details.Context == nil {
 				continue
 			}
 
-			results, err := launcher.Storage().DeleteFlow(ctx, config_obj,
-				flow_details.Context.ClientId,
-				flow_details.Context.SessionId,
-				services.NoAuditLogging, services.DeleteFlowOptions{
-					ReallyDoIt: arg.ReallyDoIt,
-				})
-			if err != nil {
-				scope.Log("hunt_delete: %s: %v", arg.HuntId, err)
-				continue
-			}
-
-			for _, res := range results {
-				select {
-				case <-ctx.Done():
+			pool.Submit(func() {
+				results, err := launcher.Storage().DeleteFlow(ctx, config_obj,
+					flow_details.Context.ClientId,
+					flow_details.Context.SessionId,
+					services.NoAuditLogging, services.DeleteFlowOptions{
+						ReallyDoIt: arg.ReallyDoIt,
+					})
+				if err != nil {
 					return
-				case output_chan <- res:
 				}
-			}
+
+				for _, res := range results {
+					select {
+					case <-ctx.Done():
+						return
+					case output_chan <- res:
+					}
+				}
+			})
 		}
 
-		// Now remove the hunt from the hunt manager
+		// Wait here for all the workers
+		pool.StopAndWait()
+
+		// Now remove the hunt from the hunt manager.
 		if arg.ReallyDoIt {
-			mutation := api_proto.HuntMutation{
-				HuntId: arg.HuntId,
-				State:  api_proto.Hunt_ARCHIVED,
-			}
-			journal, err := services.GetJournal(config_obj)
+			err := hunt_dispatcher.MutateHunt(
+				ctx, config_obj,
+				&api_proto.HuntMutation{
+					HuntId: arg.HuntId,
+					State:  api_proto.Hunt_DELETED,
+					User:   principal,
+				})
 			if err != nil {
-				scope.Log("hunt_delete: %s: %s", arg.HuntId, err)
+				scope.Log("hunt_delete: %s", err)
 				return
 			}
-
-			journal.PushRowsToArtifactAsync(ctx, config_obj,
-				ordereddict.NewDict().
-					Set("hunt_id", arg.HuntId).
-					Set("mutation", mutation),
-				"Server.Internal.HuntModification")
 		}
 	}()
 

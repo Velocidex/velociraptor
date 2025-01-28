@@ -116,7 +116,7 @@ require (
 	github.com/Velocidex/tracee_velociraptor v0.0.0-20241111012344-d72a7f2cb144
 	github.com/VirusTotal/gyp v0.9.0
 	github.com/alecthomas/kingpin/v2 v2.4.0
-	github.com/alitto/pond v1.8.3
+	github.com/alitto/pond/v2 v2.1.6
 	github.com/andybalholm/brotli v1.0.5
 	github.com/aws/aws-sdk-go-v2 v1.25.2
 	github.com/aws/aws-sdk-go-v2/config v1.27.6

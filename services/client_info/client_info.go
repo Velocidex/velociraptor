@@ -71,6 +71,11 @@ func (self *ClientInfoManager) ListClients(ctx context.Context) <-chan string {
 		defer close(output_chan)
 
 		for _, key := range self.storage.Keys() {
+			// Ignore the server - it is not a real client.
+			if key == "server" {
+				continue
+			}
+
 			select {
 			case <-ctx.Done():
 				return
