@@ -84,37 +84,8 @@ func doVerify() error {
 	}
 
 	for artifact_path, a := range artifacts {
-		if a.Precondition != "" {
-			for _, err := range launcher.VerifyVQL(ctx, config_obj,
-				a.Precondition, repository) {
-				returned_errs[artifact_path] = err
-			}
-		}
-
-		for _, s := range a.Sources {
-			if s.Query != "" {
-				dependency := make(map[string]int)
-
-				err := launcher.GetQueryDependencies(ctx, config_obj,
-					repository, s.Query, 0, dependency)
-				if err != nil {
-					returned_errs[artifact_path] = err
-					continue
-				}
-
-				// Now check for broken callsites
-				for _, err := range launcher.VerifyVQL(ctx, config_obj,
-					s.Query, repository) {
-					returned_errs[artifact_path] = err
-				}
-			}
-			if s.Precondition != "" {
-				for _, err := range launcher.VerifyVQL(ctx, config_obj,
-					s.Precondition, repository) {
-					returned_errs[artifact_path] = err
-				}
-			}
-		}
+		launcher.VerifyArtifact(ctx, config_obj,
+			artifact_path, a, returned_errs)
 	}
 
 	var ret error

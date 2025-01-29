@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -181,4 +182,53 @@ func VerifyVQL(ctx context.Context, config_obj *config_proto.Config,
 	}
 
 	return res
+}
+
+func VerifyArtifact(
+	ctx context.Context, config_obj *config_proto.Config,
+	artifact_path string,
+	artifact *artifacts_proto.Artifact,
+	returned_errs map[string]error) {
+
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return
+	}
+
+	if artifact.Precondition != "" {
+		for _, err := range VerifyVQL(ctx, config_obj,
+			artifact.Precondition, repository) {
+			returned_errs[artifact_path] = err
+		}
+	}
+
+	for _, s := range artifact.Sources {
+		if s.Query != "" {
+			dependency := make(map[string]int)
+
+			err := GetQueryDependencies(ctx, config_obj,
+				repository, s.Query, 0, dependency)
+			if err != nil {
+				returned_errs[artifact_path] = err
+				continue
+			}
+
+			// Now check for broken callsites
+			for _, err := range VerifyVQL(ctx, config_obj,
+				s.Query, repository) {
+				returned_errs[artifact_path] = err
+			}
+		}
+		if s.Precondition != "" {
+			for _, err := range VerifyVQL(ctx, config_obj,
+				s.Precondition, repository) {
+				returned_errs[artifact_path] = err
+			}
+		}
+	}
 }
