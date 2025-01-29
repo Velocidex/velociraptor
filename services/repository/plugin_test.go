@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package repository_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -32,6 +33,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
@@ -72,6 +74,9 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 	names, err := repository.List(self.Ctx, ConfigObj)
 	assert.NoError(self.T(), err)
 
+	// Additinal verifications
+	returned_errs := make(map[string]error)
+
 	for _, artifact_name := range names {
 		artifact, pres := repository.Get(self.Ctx, ConfigObj, artifact_name)
 		assert.True(self.T(), pres)
@@ -80,8 +85,17 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 			_, err = new_repository.LoadProto(artifact,
 				services.ArtifactOptions{ValidateArtifact: true})
 			assert.NoError(self.T(), err, "Error compiling "+artifact_name)
+
+			launcher.VerifyArtifact(
+				self.Ctx, self.ConfigObj, artifact_name, artifact, returned_errs)
 		}
 	}
+
+	for artifact_name, err := range returned_errs {
+		fmt.Printf("Error with %v: %v\n", artifact_name, err)
+	}
+
+	assert.True(self.T(), len(returned_errs) == 0)
 }
 
 var (

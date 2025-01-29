@@ -8,6 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/startup"
 )
 
@@ -69,7 +70,22 @@ func doVerify() error {
 		logger.Info("Verified %v: <green>OK</>", artifact_path)
 	}
 
-	return returned_err
+	for artifact_path, a := range artifacts {
+		launcher.VerifyArtifact(ctx, config_obj,
+			artifact_path, a, returned_errs)
+	}
+
+	var ret error
+	for artifact_path, err := range returned_errs {
+		if err != nil {
+			logger.Error("%v: <red>%v</>", artifact_path, err)
+			ret = err
+		} else {
+			logger.Info("Verified %v: <green>OK</>", artifact_path)
+		}
+	}
+
+	return ret
 }
 
 func init() {
