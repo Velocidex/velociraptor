@@ -11,7 +11,7 @@ const scale = 5;
 const collapse_string_length = 50;
 const collapse_array_length = 5;
 
-const base64regex = new RegExp("(^[-A-Za-z0-9+/=]$)|(={1,3}$)");
+const base64regex = new RegExp("(^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$)");
 
 
 class RenderString extends Component {
