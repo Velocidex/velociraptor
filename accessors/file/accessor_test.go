@@ -170,6 +170,8 @@ func (self *AccessorWindowsTestSuite) TestSymlinks() {
 	// Now glob through the files - this should not lock up since
 	// the cycle should be detected.
 	globber := glob.NewGlobber()
+	defer globber.Close()
+
 	glob_path, _ := accessors.NewGenericOSPath("**/*.txt")
 	globber.Add(glob_path)
 

@@ -73,6 +73,7 @@ func (self *AccessorLinuxTestSuite) TestLinuxSymlinks() {
 		DoNotFollowSymlinks: false,
 	}
 	globber := glob.NewGlobber().WithOptions(options)
+	defer globber.Close()
 
 	globber.Add(glob_path)
 

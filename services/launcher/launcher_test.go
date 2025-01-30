@@ -1345,6 +1345,11 @@ func (self *LauncherTestSuite) TestDelete() {
 
 	defer utils.SetFlowIdForTests(flow_id)()
 
+	res, err := launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
+		result_sets.ResultSetOptions{}, 0, 10)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), 0, len(res.Items))
+
 	// Schedule a job for the server runner.
 	flow_id, err = launcher.ScheduleArtifactCollection(
 		self.Ctx, self.ConfigObj, acl_manager,
@@ -1356,7 +1361,7 @@ func (self *LauncherTestSuite) TestDelete() {
 
 	assert.NoError(self.T(), err)
 
-	res, err := launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
+	res, err = launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
 		result_sets.ResultSetOptions{}, 0, 10)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(res.Items), 1)
@@ -1385,6 +1390,8 @@ func (self *LauncherTestSuite) TestDelete() {
 		res, err = launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
 			result_sets.ResultSetOptions{}, 0, 10)
 		assert.NoError(self.T(), err)
+		fmt.Printf("Flows %v\n", res)
+		time.Sleep(time.Second)
 		return len(res.Items) == 0
 	})
 	assert.Equal(self.T(), len(res.Items), 0)

@@ -124,6 +124,9 @@ var _GlobFixture = []struct {
 	{"Recursive matches none at end", []string{"/bin/bash/**"}},
 	{"Match masked by two matches", []string{"/usr/bin", "/usr/*/diff"}},
 	{"Multiple globs matching same file", []string{"/bin/bash", "/bin/ba*"}},
+
+	// One valid glob and one invalid glob - we should just ignore the invalid glob.
+	{"Invalid globs", []string{"/bin/bash", "/bin/\xa0*"}},
 }
 
 func GetMockFileSystemAccessor() accessors.FileSystemAccessor {
@@ -174,12 +177,14 @@ func TestGlobWithContext(t *testing.T) {
 		var returned []string
 
 		globber := NewGlobber()
+		defer globber.Close()
+
 		patterns := ExpandBraces(fixture.patterns)
 
 		for _, pattern := range patterns {
 			err := globber.Add(accessors.MustNewLinuxOSPath(pattern))
 			if err != nil {
-				t.Fatalf("Failed %v", err)
+				fmt.Printf("While adding %v: %v\n", pattern, err)
 			}
 		}
 

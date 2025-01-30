@@ -34,6 +34,8 @@ func TestNTFSFilesystemAccessor(t *testing.T) {
 		scope, root_path, accessors.MustNewGenericOSPath(abs_path), "file")
 
 	globber := glob.NewGlobber()
+	defer globber.Close()
+
 	globber.Add(accessors.MustNewWindowsOSPath("/*"))
 
 	hits := []string{}
@@ -101,6 +103,8 @@ func TestNTFSFilesystemAccessorRemapping(t *testing.T) {
 	// Start globbing from the top level.
 	// Find all $MFT files
 	globber := glob.NewGlobber()
+	defer globber.Close()
+
 	globber.Add(accessors.MustNewWindowsOSPath("/*/$MFT"))
 
 	hits := []string{}

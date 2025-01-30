@@ -44,6 +44,8 @@ func TestAccessorRawReg(t *testing.T) {
 		assert.NoError(t, err)
 
 		globber := glob.NewGlobber()
+		defer globber.Close()
+
 		glob_path, err := accessors.NewLinuxOSPath("/SAM/Domains/*/*")
 		assert.NoError(t, err)
 
