@@ -205,6 +205,8 @@ func (self *TestSuite) TestVFSAccessor() {
 	assert.NoError(self.T(), err)
 
 	globber := glob.NewGlobber()
+	defer globber.Close()
+
 	glob_path, err := accessors.NewGenericOSPath("/**")
 	assert.NoError(self.T(), err)
 

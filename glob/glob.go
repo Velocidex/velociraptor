@@ -25,6 +25,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -103,6 +104,9 @@ type GlobOptions struct {
 // globs. Eventually components reach the sentinel glober which cause
 // the match to be reported.
 type Globber struct {
+	// Pointer back to the root globber.
+	root *RootGlobber
+
 	filters map[_PathFilterer]*Globber
 	options GlobOptions
 
@@ -125,11 +129,43 @@ func (self *Globber) WithOptions(options GlobOptions) *Globber {
 	return self
 }
 
+type RootGlobber struct {
+	*Globber
+	id uint64
+
+	mu sync.Mutex
+
+	// Used for tracking - only valid on the root globber.
+	last_dir Actions
+}
+
+func (self *RootGlobber) Close() {
+	globTracker.Unregister(self)
+}
+
+func (self *RootGlobber) WithOptions(options GlobOptions) *RootGlobber {
+	self.options = options
+
+	return self
+}
+
 // A factory for a new Globber. To use the globber simply Add() any
 // patterns and call ExpandWithContext() using a suitable
 // FileSystemAccessor.
-func NewGlobber() *Globber {
+func NewGlobber() *RootGlobber {
+	res := &RootGlobber{
+		id: utils.GetId(),
+	}
+	res.Globber = newGlobberWithRoot(res)
+
+	globTracker.Register(res)
+
+	return res
+}
+
+func newGlobberWithRoot(root *RootGlobber) *Globber {
 	return &Globber{
+		root:    root,
 		filters: make(map[_PathFilterer]*Globber),
 	}
 }
@@ -180,7 +216,7 @@ func (self *Globber) _add_filter(components []_PathFilterer, globs []string) err
 		if pres {
 			current = next
 		} else {
-			next := NewGlobber().WithOptions(self.options)
+			next := newGlobberWithRoot(self.root).WithOptions(self.options)
 			current.filters[element] = next
 			current = next
 		}
@@ -225,7 +261,7 @@ func (self *Globber) is_dir_or_link(
 			//	err, root.String())
 
 		} else {
-			target_info, err := accessor.Lstat(target.String())
+			target_info, err := accessor.LstatWithOSPath(target)
 			if err == nil {
 				// Check if the target is on a different filesystem
 				// than the current file
@@ -284,10 +320,12 @@ func (self *Globber) ExpandWithContext(
 		// Walk the filter tree. List the directory and for each file
 		// that matches a filter at this level, recurse into the next
 		// level.
+		self.recordDirectory(root, 0)
 		files, err := accessor.ReadDirWithOSPath(root)
 		if errors.Is(err, os.ErrNotExist) {
 			return
 		}
+		self.recordDirectory(root, len(files))
 
 		if err != nil {
 			scope.Log("Globber: %v while processing %v",

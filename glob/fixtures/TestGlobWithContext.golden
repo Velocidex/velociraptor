@@ -65,5 +65,8 @@
  ],
  "012 Multiple globs matching same file /bin/bash , /bin/ba*": [
   "/bin/bash Data: [/bin/ba* /bin/bash]\n"
+ ],
+ "013 Invalid globs /bin/bash , /bin/\ufffd*": [
+  "/bin/bash Data: [/bin/bash]\n"
  ]
 }

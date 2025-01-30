@@ -124,6 +124,7 @@ func (self GlobPlugin) Call(
 		}
 
 		globber := glob.NewGlobber().WithOptions(options)
+		defer globber.Close()
 
 		// If root is not specified we try to find a common
 		// root from the globs.
@@ -156,8 +157,10 @@ func (self GlobPlugin) Call(
 
 			err = globber.Add(item_path)
 			if err != nil {
-				scope.Log("glob: %v", err)
-				return
+				// Reject this expression but keep going - there may
+				// be other globs.
+				scope.Log("glob: Rejected glob expression %v: %v",
+					item_path, err)
 			}
 		}
 
