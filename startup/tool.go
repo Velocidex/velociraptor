@@ -18,7 +18,13 @@ func StartToolServices(
 	vql_subsystem.InstallUnimplemented(scope)
 
 	sm := services.NewServiceManager(ctx, config_obj)
-	_, err := orgs.NewOrgManager(sm.Ctx, sm.Wg, config_obj)
+
+	err := MaybeEnforceAllowLists(config_obj)
+	if err != nil {
+		return sm, err
+	}
+
+	_, err = orgs.NewOrgManager(sm.Ctx, sm.Wg, config_obj)
 	if err != nil {
 		return sm, err
 	}
