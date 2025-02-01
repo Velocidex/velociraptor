@@ -158,7 +158,7 @@ func (self *ClientVQLTestSuite) TestExecve() {
 		})
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		return assert.MemoryLogsContainRegex(
+		return vtesting.MemoryLogsContainRegex(
 			"execve: Not allowed to execve by configuration.")
 	})
 
@@ -177,7 +177,7 @@ func (self *ClientVQLTestSuite) TestExecve() {
 		})
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		return assert.MemoryLogsContainRegex(
+		return vtesting.MemoryLogsContainRegex(
 			"execve: Not allowed to execve by configuration.")
 	})
 
