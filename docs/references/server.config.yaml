@@ -564,6 +564,12 @@ GUI:
     # part of the multi authenticator so having a name here helps keep
     # them recognizable.
     oidc_name: "Company Name"
+
+    # Additional URL parameters that should be added to the OIDC
+    # redirect URL.
+    oidc_auth_url_params:
+      Key: Value
+
     avatar: http://www.example.com/icon.png
 
     # These are required for the oauth flow - get from the OIDC provider.
@@ -1270,6 +1276,14 @@ defaults:
   allowed_accessors:
     - auto
 
+  # Alternatively, it might be easier to deny specific plugins and
+  # functions.
+  denied_plugins:
+    - execve
+
+  denied_functions:
+    - rm
+
   # How long to cache ACL policies (default 60 sec)
   acl_lru_timeout_sec: 60
 
@@ -1365,6 +1379,17 @@ defaults:
   # client metadata.
   indexed_client_metadata:
     - department
+
+  # If this is set we do not actively check the status of inflight
+  # collections. This is a new feature to 0.73 and may need to be
+  # disabled in some large deployments due to additional overheads.
+  disable_active_inflight_checks: false
+
+  # Normally internal event artifacts are not written to disk but
+  # passed internally. For debugging it is useful to have a written
+  # record though. Enabling this will also write them to
+  # disk. Probably only useful for debugging.
+  write_internal_events: false
 
 # The Velociraptor server may be placed into "lockdown" mode. While in
 # lockdown mode certain permissions are denied - even for

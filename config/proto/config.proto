@@ -1160,6 +1160,11 @@ message Defaults {
     repeated string allowed_functions = 11;
     repeated string allowed_accessors = 12;
 
+    // Alternatively, it might be easier to deny specific plugins and
+    // functions.
+    repeated string denied_plugins = 54;
+    repeated string denied_functions = 55;
+
     // How long to cache ACL policies (default 60 sec)
     uint64 acl_lru_timeout_sec = 13;
 

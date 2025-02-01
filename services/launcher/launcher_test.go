@@ -14,6 +14,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -1386,6 +1387,8 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 	idx_flow_id, _ := idx[0].GetString("FlowId")
 	assert.Equal(t, flow_id, idx_flow_id)
 
+	datastore.FlushDatastore(self.ConfigObj)
+
 	// However GetFlows omits the deleted flow immediately because it
 	// can not find it (The actual flow object is removed but the
 	// index is out of step).
@@ -1419,6 +1422,8 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 			Sync:       true,
 		})
 	assert.NoError(t, err)
+
+	datastore.FlushDatastore(self.ConfigObj)
 
 	// This time the index is reset immediately.
 	idx = self.getIndex("server")
