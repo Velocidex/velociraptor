@@ -1,6 +1,6 @@
-SELECT OSPath.Basename AS OSPath, * FROM Artifact.Windows.EventLogs.Kerbroasting( EvtxGlob=srcDir + '/artifacts/testdata/files/EID4769_Kerbroasting.evtx')[
+SELECT OSPath.Basename AS OSPath, * FROM Artifact.Windows.EventLogs.Kerberoasting( EvtxGlob=srcDir + '/artifacts/testdata/files/EID4769_Kerberoasting.evtx')[
  {
-  "OSPath": "EID4769_Kerbroasting.evtx",
+  "OSPath": "EID4769_Kerberoasting.evtx",
   "EventTime": "2019-09-30T01:58:40Z",
   "EventID": 4769,
   "Computer": "DC2016.dfir.lab",
@@ -14,10 +14,10 @@ SELECT OSPath.Basename AS OSPath, * FROM Artifact.Windows.EventLogs.Kerbroasting
   "TransmittedServices": "-",
   "IpAddress": "::ffff:192.168.63.1",
   "IpPort": "52562",
-  "_Source": "Windows.EventLogs.Kerbroasting"
+  "_Source": "Windows.EventLogs.Kerberoasting"
  },
  {
-  "OSPath": "EID4769_Kerbroasting.evtx",
+  "OSPath": "EID4769_Kerberoasting.evtx",
   "EventTime": "2019-09-30T01:58:40Z",
   "EventID": 4769,
   "Computer": "DC2016.dfir.lab",
@@ -31,6 +31,6 @@ SELECT OSPath.Basename AS OSPath, * FROM Artifact.Windows.EventLogs.Kerbroasting
   "TransmittedServices": "-",
   "IpAddress": "::ffff:192.168.63.1",
   "IpPort": "52564",
-  "_Source": "Windows.EventLogs.Kerbroasting"
+  "_Source": "Windows.EventLogs.Kerberoasting"
  }
 ]

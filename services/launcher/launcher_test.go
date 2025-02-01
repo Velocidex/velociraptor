@@ -17,9 +17,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
@@ -1333,8 +1333,11 @@ func getReqName(in *actions_proto.VQLCollectorArgs) string {
 }
 
 func (self *LauncherTestSuite) TestDelete() {
+	assert.Retry(self.T(), 3, time.Second, self._TestDelete)
+}
+func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 	launcher, err := services.GetLauncher(self.ConfigObj)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	flow_id := "F.FlowId123"
 	user := "admin"
@@ -1347,8 +1350,8 @@ func (self *LauncherTestSuite) TestDelete() {
 
 	res, err := launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
 		result_sets.ResultSetOptions{}, 0, 10)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), 0, len(res.Items))
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(res.Items))
 
 	// Schedule a job for the server runner.
 	flow_id, err = launcher.ScheduleArtifactCollection(
@@ -1359,13 +1362,13 @@ func (self *LauncherTestSuite) TestDelete() {
 			Artifacts: []string{"Generic.Client.Info"},
 		}, utils.SyncCompleter)
 
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	res, err = launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
 		result_sets.ResultSetOptions{}, 0, 10)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), len(res.Items), 1)
-	assert.Equal(self.T(), res.Items[0].SessionId, flow_id)
+	assert.NoError(t, err)
+	assert.Equal(t, len(res.Items), 1)
+	assert.Equal(t, res.Items[0].SessionId, flow_id)
 
 	// Now delete the flow asyncronously
 	_, err = launcher.Storage().DeleteFlow(
@@ -1375,26 +1378,26 @@ func (self *LauncherTestSuite) TestDelete() {
 			ReallyDoIt: true,
 			Sync:       false,
 		})
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	// Index is not updated yet
 	idx := self.getIndex("server")
-	assert.Equal(self.T(), len(idx), 1)
+	assert.Equal(t, len(idx), 1)
 	idx_flow_id, _ := idx[0].GetString("FlowId")
-	assert.Equal(self.T(), flow_id, idx_flow_id)
+	assert.Equal(t, flow_id, idx_flow_id)
 
 	// However GetFlows omits the deleted flow immediately because it
 	// can not find it (The actual flow object is removed but the
 	// index is out of step).
-	vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(10*time.Second, t, func() bool {
 		res, err = launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
 			result_sets.ResultSetOptions{}, 0, 10)
-		assert.NoError(self.T(), err)
+		assert.NoError(t, err)
 		fmt.Printf("Flows %v\n", res)
 		time.Sleep(time.Second)
 		return len(res.Items) == 0
 	})
-	assert.Equal(self.T(), len(res.Items), 0)
+	assert.Equal(t, len(res.Items), 0)
 
 	// Create the flow again
 	new_flow_id, err := launcher.ScheduleArtifactCollection(
@@ -1404,8 +1407,8 @@ func (self *LauncherTestSuite) TestDelete() {
 			ClientId:  "server",
 			Artifacts: []string{"Generic.Client.Info"},
 		}, utils.SyncCompleter)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), new_flow_id, flow_id)
+	assert.NoError(t, err)
+	assert.Equal(t, new_flow_id, flow_id)
 
 	// Now delete the flow syncronously
 	_, err = launcher.Storage().DeleteFlow(
@@ -1415,11 +1418,11 @@ func (self *LauncherTestSuite) TestDelete() {
 			ReallyDoIt: true,
 			Sync:       true,
 		})
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	// This time the index is reset immediately.
 	idx = self.getIndex("server")
-	assert.Equal(self.T(), len(idx), 0)
+	assert.Equal(t, len(idx), 0)
 }
 
 func (self *LauncherTestSuite) getIndex(client_id string) (

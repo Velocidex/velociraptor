@@ -58,6 +58,8 @@ github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26 h1:VwbeNpMRuS3bRi
 github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26/go.mod h1:sIVyrIiJhuEF+Pj9Ebtd6P/rEYROXFi3BopGUQ5a5Og=
 github.com/Velocidex/etw v0.0.0-20250102072915-dae077e67c53 h1:uySW0T4zQyJSe4xcJ94KB14NYXm1cCAOFSJCKXLYb1k=
 github.com/Velocidex/etw v0.0.0-20250102072915-dae077e67c53/go.mod h1:1flhaSAPAtB7fS7InVaBJxxmLttgWOlx7rXG6Sftg5U=
+github.com/Velocidex/etw v0.0.0-20250201014319-bf4266efe992 h1:LbwyRalm+ZNdpvuoH+UXUPacJPGmXK+tMvSWa5wWOUk=
+github.com/Velocidex/etw v0.0.0-20250201014319-bf4266efe992/go.mod h1:1flhaSAPAtB7fS7InVaBJxxmLttgWOlx7rXG6Sftg5U=
 github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11 h1:pQY9p6hvmbFKXJg8suzGSG9/t8Ij9ece32GUFIdHgqg=
 github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11/go.mod h1:Ya1f4Kowt2GC7gbnu1MbNncvI1Lp3i1plN2xLiETJfg=
 github.com/Velocidex/fileb0x v1.1.2-0.20241111170537-c093c89cd042 h1:6kWoPVcuntDHv4+OI3ILXt9FTB4yPcs/BRBObu6Q264=
@@ -309,8 +311,8 @@ github.com/golang-jwt/jwt/v4 v4.5.1/go.mod h1:m21LjoU+eqJr34lmDMbreY2eSTRJ1cv77w
 github.com/golang/gddo v0.0.0-20210115222349-20d68f94ee1f h1:16RtHeWGkJMc80Etb8RPCcKevXGldr57+LOyZt8zOlg=
 github.com/golang/gddo v0.0.0-20210115222349-20d68f94ee1f/go.mod h1:ijRvpgDJDI262hYq/IQVYgf8hd8IHUs93Ol0kvMBAx4=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
-github.com/golang/glog v1.2.2 h1:1+mZ9upx1Dh6FmUTFR1naJ77miKiXgALjWOZ3NVFPmY=
-github.com/golang/glog v1.2.2/go.mod h1:6AhwSGph0fcJtXVM/PEHPqZlFeoLxhs7/t5UDAwmO+w=
+github.com/golang/glog v1.2.4 h1:CNNw5U8lSiiBk7druxtSHHTsRWcxKoac6kZKm2peBBc=
+github.com/golang/glog v1.2.4/go.mod h1:6AhwSGph0fcJtXVM/PEHPqZlFeoLxhs7/t5UDAwmO+w=
 github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
 github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da h1:oI5xCqsCo564l8iNU+DwB5epxmsaqB+rhGL0m5jtYqE=
 github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=

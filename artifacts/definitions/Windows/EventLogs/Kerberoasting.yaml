@@ -1,17 +1,17 @@
-name: Windows.EventLogs.Kerbroasting
+name: Windows.EventLogs.Kerberoasting
 author: Matt Green - @mgreen27
 
 description: |
   This Artifact will return all successful Kerberos TGS Ticket events for
   Service Accounts (SPN attribute) implemented with weak encryption. These
   tickets are vulnerable to brute force attack and this event is an indicator
-  of a Kerbroasting attack.
+  of a Kerberoasting attack.
 
   Typical attacker methodology is to firstly request accounts in the domain
   with SPN attributes, then request an insecure TGS ticket for brute forcing.
   This attack is particularly effective as any domain credentials can be used
   to implement the attack and service accounts often have elevated privileges.
-  Kerbroasting can be used for privilege escalation or persistence by adding a
+  Kerberoasting can be used for privilege escalation or persistence by adding a
   SPN attribute to an unexpected account.
 
   Log Source: Windows Security Event Log (Domain Controllers).

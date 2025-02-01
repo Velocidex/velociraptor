@@ -1,0 +1,5 @@
+Queries:
+
+  # Kerbroasting VQL test
+  - SELECT OSPath.Basename AS OSPath, * FROM Artifact.Windows.EventLogs.Kerberoasting(
+       EvtxGlob=srcDir + '/artifacts/testdata/files/EID4769_Kerberoasting.evtx')
