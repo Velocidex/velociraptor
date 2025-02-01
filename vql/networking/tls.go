@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -117,6 +118,9 @@ func customVerifyConnection(
 					// thumbprint matches we allow the connection in
 					// any case.
 				case "PKI_OR_THUMBPRINT":
+					fmt.Printf("thumbprintList %v %v\n",
+						thumbprintList, hashCertificate(cert))
+
 					// Short circuit if the thumbprint matches
 					// immediately
 					if utils.InString(thumbprintList, hashCertificate(cert)) {

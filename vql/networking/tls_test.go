@@ -11,6 +11,7 @@ import (
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -88,6 +89,7 @@ func TestTLSVerification(t *testing.T) {
 	client, data, err := testHTTPConnection(config_obj, ts.URL)
 	if err != nil {
 		utils.Debug(client)
+		json.Dump(config_obj)
 	}
 	assert.NoError(t, err)
 	assert.Contains(t, string(data), "Hello, client")
