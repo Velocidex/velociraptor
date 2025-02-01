@@ -21,7 +21,8 @@ var (
 		"Yaml filename to read (server.config.yaml)").Required().String()
 	tagRegEx = regexp.MustCompile("json:\"([^,]+)")
 
-	// Usually deprecated fields we dont want people to use.
+	// Usually deprecated fields we dont want people to use so we dont
+	// document them.
 	hidden_fields = []string{
 		"sub_authenticators",
 		"autocert_domain",
@@ -75,6 +76,7 @@ var (
 		"Client.disable_compression",
 		"Client.default_server_flow_stats_update",
 		"defaults.max_vfs_directory_size",
+		"Datastore.remote_datastore_rpc_deadline",
 
 		// Fields that are already handled but their default value is
 		// false or 0.
@@ -113,6 +115,8 @@ var (
 		"debug_mode",
 		"Client.proxy_config.ignore_environment",
 		"Frontend.proxy_config.ignore_environment",
+		"defaults.disable_active_inflight_checks",
+		"defaults.write_internal_events",
 	}
 )
 
