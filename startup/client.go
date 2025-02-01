@@ -19,9 +19,6 @@ func StartClientServices(
 	on_error func(ctx context.Context,
 		config_obj *config_proto.Config)) (*services.Service, error) {
 
-	scope := vql_subsystem.MakeScope()
-	vql_subsystem.InstallUnimplemented(scope)
-
 	// Create a suitable service plan.
 	if config_obj.Services == nil {
 		config_obj.Services = services.ClientServicesSpec()
@@ -31,8 +28,16 @@ func StartClientServices(
 	// before we begin the comms.
 	sm := services.NewServiceManager(ctx, config_obj)
 
+	err := MaybeEnforceAllowLists(config_obj)
+	if err != nil {
+		return sm, err
+	}
+
+	scope := vql_subsystem.MakeScope()
+	vql_subsystem.InstallUnimplemented(scope)
+
 	// Start encrypted logs service if possible
-	err := encrypted_logs.StartEncryptedLog(sm.Ctx, sm.Wg, sm.Config)
+	err = encrypted_logs.StartEncryptedLog(sm.Ctx, sm.Wg, sm.Config)
 	if err != nil {
 		return sm, err
 	}

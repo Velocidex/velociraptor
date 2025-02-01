@@ -11,13 +11,24 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+
+	// For execve and query
+	_ "www.velocidex.com/golang/velociraptor/vql/common"
+	_ "www.velocidex.com/golang/velociraptor/vql/tools"
 )
 
 type ClientVQLTestSuite struct {
 	test_utils.TestSuite
+}
+
+func (self *ClientVQLTestSuite) SetupTest() {
+	self.ConfigObj = self.LoadConfig()
+	self.ConfigObj.Client.PreventExecve = true
+	self.TestSuite.SetupTest()
 }
 
 func (self *ClientVQLTestSuite) TestCPUThrottler() {
@@ -127,6 +138,49 @@ func (self *ClientVQLTestSuite) TestMaxRows() {
 		payloads := getResponsePacketCounts(responses)
 		return len(payloads) == 2 && payloads[0] == 10 && payloads[1] == 10
 	})
+}
+
+func (self *ClientVQLTestSuite) TestExecve() {
+	resp := responder.TestResponderWithFlowId(self.ConfigObj, "TestMaxRows")
+
+	logging.ClearMemoryLogs()
+
+	actions.VQLClientAction{}.StartQuery(self.ConfigObj, self.Sm.Ctx, resp,
+		&actions_proto.VQLCollectorArgs{
+			MaxRow: 10,
+			Query: []*actions_proto.VQLRequest{
+				{
+					Name: "Query",
+					VQL:  "SELECT * FROM execve(argv='ls')",
+					//					VQL:  "SELECT * FROM query(query={ SELECT * FROM execve(argv='ls') })",
+				},
+			},
+		})
+
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		return assert.MemoryLogsContainRegex(
+			"execve: Not allowed to execve by configuration.")
+	})
+
+	logging.ClearMemoryLogs()
+
+	// Make sure the query() plugin propagates the execve flag
+	actions.VQLClientAction{}.StartQuery(self.ConfigObj, self.Sm.Ctx, resp,
+		&actions_proto.VQLCollectorArgs{
+			MaxRow: 10,
+			Query: []*actions_proto.VQLRequest{
+				{
+					Name: "Query",
+					VQL:  "SELECT * FROM query(query={ SELECT * FROM execve(argv='ls') })",
+				},
+			},
+		})
+
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		return assert.MemoryLogsContainRegex(
+			"execve: Not allowed to execve by configuration.")
+	})
+
 }
 
 func (self *ClientVQLTestSuite) TestMaxWait() {
