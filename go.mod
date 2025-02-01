@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/Velocidex/amsi v0.0.0-20200608120838-e5d93b76f119
-	github.com/Velocidex/etw v0.0.0-20250102072915-dae077e67c53
+	github.com/Velocidex/etw v0.0.0-20250201014319-bf4266efe992
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28
 	github.com/Velocidex/go-yara v1.1.10-0.20240309155455-3f491847cec9
