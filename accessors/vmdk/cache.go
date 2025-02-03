@@ -93,6 +93,9 @@ func getCachedVMDKFile(
 			return utils.MakeReaderAtter(fd),
 				func() { fd.Close() }, nil
 		})
+	if err != nil {
+		return nil, err
+	}
 
 	vmdk_file := &VMDKFile{
 		reader: vmdk_ctx,

@@ -563,6 +563,28 @@ detection:
 					Set("Proc", 1),
 			},
 		},
+		{
+			description: "Automatic Field Mappings",
+			rule: `
+title: Automatic Field Mappings
+logsource:
+  product: windows
+  service: application
+
+detection:
+   automaticField:
+      Foo.Bar.Baz|contains: Hello
+
+   condition: automaticField
+`,
+			fieldmappings: ordereddict.NewDict(),
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Foo", ordereddict.NewDict().
+						Set("Bar", ordereddict.NewDict().
+							Set("Baz", "Hello world"))),
+			},
+		},
 	}
 )
 
@@ -582,7 +604,7 @@ func (self *SigmaTestSuite) TestSigmaModifiers() {
 	plugin := SigmaPlugin{}
 
 	for _, test_case := range sigmaTestCases {
-		if false && test_case.description != "Test Conditions" {
+		if false && test_case.description != "Automatic Field Mappings" {
 			continue
 		}
 

@@ -32,22 +32,17 @@ type VQLRuleEvaluator struct {
 	lambda      *vfilter.Lambda
 	lambda_args *ordereddict.Dict
 
-	fieldmappings []FieldMappingRecord
+	fieldmappings *FieldMappingResolver
 
 	// If this rule has a correlator, then forward the match to the
 	// correlator.
 	Correlator *SigmaCorrelator `json:"correlator,omitempty" yaml:"correlator,omitempty"`
 }
 
-type FieldMappingRecord struct {
-	Name   string
-	Lambda *vfilter.Lambda
-}
-
 func NewVQLRuleEvaluator(
 	scope types.Scope,
 	rule sigma.Rule,
-	fieldmappings []FieldMappingRecord) *VQLRuleEvaluator {
+	fieldmappings *FieldMappingResolver) *VQLRuleEvaluator {
 	result := &VQLRuleEvaluator{
 		scope:         scope,
 		Rule:          rule,

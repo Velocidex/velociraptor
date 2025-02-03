@@ -55,6 +55,45 @@ func (self *Event) Copy() *ordereddict.Dict {
 	return result
 }
 
+func (self *Event) Get(key string) (interface{}, bool) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	cached, pres := self.cache[key]
+	if pres {
+		return cached, true
+	}
+
+	// The following supports the special case where the field has dot
+	// notation. This aleviate the need to have pre-defined field
+	// mappings and allows us to access fields directly. We only
+	// support dict style events this way. This method is actually
+	// faster than the VQL lambda as we dont need to use VQL scopes to
+	// access the fields.
+	var value interface{} = self.Dict
+
+	for _, part := range strings.Split(key, ".") {
+		// We only allow dereferencing of dict events by default. For
+		// other data structures use a lambda which will use the
+		// entire VQL machinery to dereference fields properly.
+		value_dict, ok := value.(*ordereddict.Dict)
+		if !ok {
+			// It is not a dict - can not dereference it.
+			return nil, false
+		}
+
+		next_value, pres := value_dict.Get(part)
+		if !pres {
+			return nil, false
+		}
+
+		value = next_value
+	}
+
+	self.cache[key] = value
+	return value, true
+}
+
 func (self *Event) Reduce(
 	ctx context.Context, scope types.Scope,
 	field string, lambda *vfilter.Lambda) types.Any {

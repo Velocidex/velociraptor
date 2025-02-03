@@ -46,7 +46,7 @@ type SigmaContext struct {
 	// Map between sigma field names to event. The lambda will be
 	// passed the event. For example EID can be the lambda
 	// x=>x.System.EventID.Value
-	fieldmappings []evaluator.FieldMappingRecord
+	fieldmappings *evaluator.FieldMappingResolver
 
 	mu          sync.Mutex
 	debug       bool
@@ -147,9 +147,10 @@ func NewSigmaContext(
 		output_chan:     output_chan,
 		default_details: default_details,
 		debug:           debug,
+		fieldmappings:   evaluator.NewFieldMappingResolver(),
 	}
 
-	// Compile the field mappings.  NOTE: The compiled_fieldmappings
+	// Compile the field mappings.  NOTE: The compiled fieldmappings
 	// is shared between all the worker goroutines. Benchmarking shows
 	// it is faster to make a slice copy than having to use a mutex to
 	// protect it. This is O(1) but lock free. Using map copies uses
@@ -167,8 +168,7 @@ func NewSigmaContext(
 			if err != nil {
 				return nil, fmt.Errorf("fieldmapping for %s is not a valid VQL Lambda: %v", k, err)
 			}
-			self.fieldmappings = append(self.fieldmappings,
-				evaluator.FieldMappingRecord{Name: k, Lambda: lambda})
+			self.fieldmappings.Set(k, lambda)
 		}
 	}
 
