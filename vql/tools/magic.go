@@ -96,7 +96,12 @@ func (self MagicFunction) Call(
 
 	// Just let libmagic handle the path
 	if arg.Accessor == "" {
-		return handle.File(arg.Path.String())
+		magic, err := handle.File(arg.Path.String())
+		if err != nil {
+			scope.Log("magic: %v", err)
+			return vfilter.Null{}
+		}
+		return magic
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)

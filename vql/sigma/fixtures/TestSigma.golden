@@ -1884,5 +1884,57 @@
     }
    }
   }
+ ],
+ "Automatic Field Mappings": [
+  {
+   "Foo": {
+    "Bar": {
+     "Baz": "Hello world"
+    }
+   },
+   "Details": null,
+   "_Match": {
+    "match": true,
+    "search_results": {
+     "automaticField": true
+    },
+    "condition_results": [
+     true
+    ]
+   },
+   "_Rule": {
+    "Title": "Automatic Field Mappings",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "automaticField": {
+       "event_matchers": [
+        [
+         {
+          "field": "Foo.Bar.Baz",
+          "modifiers": [
+           "contains"
+          ],
+          "values": [
+           "Hello"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "Condition": [
+      {
+       "Search": {
+        "Name": "automaticField"
+       }
+      }
+     ]
+    }
+   }
+  }
  ]
 }

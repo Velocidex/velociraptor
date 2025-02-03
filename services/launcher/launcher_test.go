@@ -1336,6 +1336,7 @@ func getReqName(in *actions_proto.VQLCollectorArgs) string {
 func (self *LauncherTestSuite) TestDelete() {
 	assert.Retry(self.T(), 3, time.Second, self._TestDelete)
 }
+
 func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(t, err)
@@ -1396,7 +1397,6 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 		res, err = launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
 			result_sets.ResultSetOptions{}, 0, 10)
 		assert.NoError(t, err)
-		fmt.Printf("Flows %v\n", res)
 		time.Sleep(time.Second)
 		return len(res.Items) == 0
 	})

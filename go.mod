@@ -9,7 +9,7 @@ require (
 	github.com/Velocidex/amsi v0.0.0-20200608120838-e5d93b76f119
 	github.com/Velocidex/etw v0.0.0-20250201014319-bf4266efe992
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
-	github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28
+	github.com/Velocidex/go-magic v0.0.0-20250203094020-32f94b14f00f
 	github.com/Velocidex/go-yara v1.1.10-0.20240309155455-3f491847cec9
 	github.com/Velocidex/grpc-go-pool v1.2.2-0.20241016164850-ff0cb80037a8
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
@@ -92,7 +92,7 @@ require (
 	www.velocidex.com/golang/go-pe v0.1.1-0.20250101153735-7a925ba8334b
 	www.velocidex.com/golang/go-prefetch v0.0.0-20240910051453-2385582c1c22
 	www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe
-	www.velocidex.com/golang/regparser v0.0.0-20240404115756-2169ac0e3c09
+	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7
 	www.velocidex.com/golang/vfilter v0.0.0-20241123123542-6b030f4d2090
 )
 
