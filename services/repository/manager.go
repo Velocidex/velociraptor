@@ -42,6 +42,13 @@ func (self *RepositoryManager) StartWatchingForUpdates(
 	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
+	// Are we running on the client? we dont need to sync local
+	// repository managers.
+	if config_obj.Services != nil &&
+		config_obj.Services.ClientEventTable {
+		return nil
+	}
+
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err

@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2025 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package client
 
@@ -55,19 +55,17 @@ func (self *inMemoryPublicKeyResolver) DeleteSubject(subject string) {
 }
 
 /*
+This method can be overridden by derived classes to provide a way of
+recovering the public key of each source. We use this public key to:
 
-  This method can be overridden by derived classes to provide a way of
-  recovering the public key of each source. We use this public key to:
+ 1. Verify the message signature when receiving a message from a
+    particular source.
 
-  1. Verify the message signature when receiving a message from a
-     particular source.
+ 2. Encrypt the message using the public key when encrypting a
+    message destined to a particular entity.
 
-  2. Encrypt the message using the public key when encrypting a
-     message destined to a particular entity.
-
-  Implementations are expected to provide a mapping between known
-  sources and their public keys.
-
+Implementations are expected to provide a mapping between known
+sources and their public keys.
 */
 func (self *inMemoryPublicKeyResolver) GetPublicKey(
 	config_obj *config_proto.Config, subject string) (*rsa.PublicKey, bool) {

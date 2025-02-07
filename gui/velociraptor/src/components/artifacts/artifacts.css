@@ -9,6 +9,11 @@
     direction: rtl;
 }
 
+.artifact-search-table tr.row-selected td {
+    background-color: var(--color-table-row-selected);
+    color: var(--color-table-row-selected-text);
+}
+
 .artifact-search-table button {
     cursor: pointer;
     width: 100%;

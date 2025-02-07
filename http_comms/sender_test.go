@@ -1,6 +1,6 @@
 /*
 Velociraptor - Dig Deeper
-Copyright (C) 2019-2024 Rapid7 Inc.
+Copyright (C) 2019-2025 Rapid7 Inc.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
@@ -217,7 +217,7 @@ func TestSender(t *testing.T) {
 
 	// Make the ring buffer 10 bytes - this is enough for one
 	// message but no more.
-	flow_manager := responder.NewFlowManager(ctx, config_obj)
+	flow_manager := responder.NewFlowManager(ctx, config_obj, "")
 	rb := NewRingBuffer(config_obj, flow_manager, 10)
 	testRingBuffer(ctx, rb, config_obj, "0123456789", t)
 }
@@ -244,7 +244,7 @@ func TestSenderWithFileBuffer(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	flow_manager := responder.NewFlowManager(ctx, config_obj)
+	flow_manager := responder.NewFlowManager(ctx, config_obj, "")
 	local_buffer_name := getLocalBufferName(config_obj)
 	rb, err := NewFileBasedRingBuffer(ctx, config_obj,
 		local_buffer_name, flow_manager, logger)

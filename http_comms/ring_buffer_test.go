@@ -42,7 +42,7 @@ func createRB(t *testing.T, filename string) (*FileBasedRingBuffer, *responder.F
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	flow_manager := responder.NewFlowManager(ctx, config_obj)
+	flow_manager := responder.NewFlowManager(ctx, config_obj, "")
 
 	local_buffer_name := getLocalBufferName(config_obj)
 	ring_buffer, err := NewFileBasedRingBuffer(ctx, config_obj,

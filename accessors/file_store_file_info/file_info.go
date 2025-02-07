@@ -103,7 +103,7 @@ func (self *FileStoreFileInfo) Btime() time.Time {
 }
 
 func (self *FileStoreFileInfo) Mtime() time.Time {
-	return time.Time{}
+	return self.FileInfo.ModTime()
 }
 
 func (self *FileStoreFileInfo) Ctime() time.Time {

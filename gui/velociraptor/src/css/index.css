@@ -268,7 +268,6 @@ input[type='checkbox'] {
     color: var(--color-table-row-selected-text);
 }
 
-
 .table-striped tr td {
     background-color: var(--color-table-row);
     color: var(--color-foreground);

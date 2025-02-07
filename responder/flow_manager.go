@@ -21,6 +21,7 @@ package responder
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -52,7 +53,7 @@ type FlowManager struct {
 }
 
 func NewFlowManager(ctx context.Context,
-	config_obj *config_proto.Config) *FlowManager {
+	config_obj *config_proto.Config, client_id string) *FlowManager {
 
 	result := &FlowManager{
 		ctx:        ctx,
@@ -63,8 +64,9 @@ func NewFlowManager(ctx context.Context,
 	}
 
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
-		Name:          "ClientFlowManager",
-		Description:   "Report the state of the client's flow manager",
+		Name: "ClientFlowManager",
+		Description: fmt.Sprintf(
+			"Report the state of the client's flow manager (%v)", client_id),
 		ProfileWriter: result.WriteProfile,
 	})
 

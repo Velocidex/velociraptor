@@ -1,6 +1,6 @@
 /*
 Velociraptor - Dig Deeper
-Copyright (C) 2019-2024 Rapid7 Inc.
+Copyright (C) 2019-2025 Rapid7 Inc.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
@@ -84,7 +84,7 @@ type SourcePluginArgs struct {
 	NotebookCellTable   int64  `vfilter:"optional,field=notebook_cell_table,doc=A notebook cell can have multiple tables.)"`
 
 	StartRow int64 `vfilter:"optional,field=start_row,doc=Start reading the result set from this row"`
-	Limit    int64 `vfilter:"optional,field=count,doc=Maximum number of clients to fetch (default unlimited)"`
+	Limit    int64 `vfilter:"optional,field=count,doc=Maximum number of rows to fetch (default unlimited)"`
 
 	OrgIds []string `vfilter:"optional,field=orgs,doc=Run the query over these orgs. If empty use the current org."`
 }

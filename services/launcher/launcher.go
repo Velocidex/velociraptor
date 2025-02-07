@@ -196,7 +196,8 @@ func (self *Launcher) CompileCollectorArgs(
 		var artifact *artifacts_proto.Artifact = nil
 
 		// Batching control
-		var max_batch_wait, max_batch_rows, max_batch_row_buffer uint64
+		var max_batch_wait, max_batch_rows uint64
+		var max_batch_row_buffer uint64
 
 		if config_obj != nil && config_obj.Defaults != nil {
 			max_batch_rows = config_obj.Defaults.MaxRows
@@ -629,6 +630,7 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		FlowRequest: &crypto_proto.FlowRequest{
 			LogBatchTime:   batch_delay,
 			MaxRows:        collector_request.MaxRows,
+			MaxLogs:        collector_request.MaxLogs,
 			MaxUploadBytes: collector_request.MaxUploadBytes,
 		},
 	}

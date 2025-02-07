@@ -24,27 +24,43 @@ parameters:
    - name: HostnameRegex
      description: If specified only target these hosts
      type: regex
+     default: .
+   - name: OnlyRegisteredClients
+     type: bool
+     description: |
+       If enabled only search registered clients. (Might be needed for
+       very large deployments).
    - name: ReallyDoIt
      type: bool
      description: Do not actually delete until this is set!
 
 sources:
   - query: |
-        SELECT * FROM foreach(row={
-            SELECT client_id,
-                   os_info.hostname AS hostname
-            FROM clients()
-            WHERE hostname =~ HostnameRegex
-        },
-        query={
-            SELECT OSPath,
-                OSPath.Dirname.Basename AS ArtifactName, Size,
-                timestamp(epoch=
-                 split(string=OSPath.Basename, sep="\\.")[0]) AS Timestamp,
-                 if(condition=ReallyDoIt, then=file_store_delete(path=OSPath)) AS ReallyDoIt
-            FROM glob(
-               globs="/**.json*", accessor="fs",
-               root="/clients/"+ client_id + "/monitoring")
-            WHERE ArtifactName =~ ArtifactRegex
-              AND Timestamp < DateBefore
-        }, workers=10)
+      LET SearchDeletedClientsQuery = SELECT Name AS ClientId,
+            client_info(client_id=Name).os_info.hostname AS Hostname
+      FROM glob(globs="/clients/*", accessor="fs")
+      WHERE IsDir
+        AND Hostname =~ HostnameRegex
+
+      LET SearchRegisteredClientsQuery = SELECT client_id,
+           os_info.hostname AS hostname
+      FROM clients()
+      WHERE hostname =~ HostnameRegex
+
+      LET SearchClients = SELECT * FROM if(
+           condition=SearchDeletedClients,
+           then=SearchDeletedClientsQuery,
+           else=SearchRegisteredClientsQuery)
+
+      SELECT * FROM foreach(row=SearchClients,
+      query={
+        SELECT OSPath,
+               OSPath.Dirname.Basename AS ArtifactName, Size,
+               timestamp(epoch=split(string=OSPath.Basename, sep="\\.")[0]) AS Timestamp,
+               if(condition=ReallyDoIt, then=file_store_delete(path=OSPath)) AS ReallyDoIt
+        FROM glob(
+          globs="/**.json*", accessor="fs",
+          root="/clients/"+ client_id + "/monitoring")
+        WHERE ArtifactName =~ ArtifactRegex
+          AND Timestamp < DateBefore
+      }, workers=10)

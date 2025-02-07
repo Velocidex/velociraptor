@@ -34,7 +34,7 @@ func TestResponderWithFlowId(
 
 	sub_ctx, sub_cancel := context.WithCancel(ctx)
 
-	flow_manager := NewFlowManager(ctx, config_obj)
+	flow_manager := NewFlowManager(ctx, config_obj, "")
 	result := &TestResponderType{
 		FlowResponder: &FlowResponder{
 			ctx:    sub_ctx,
