@@ -106,8 +106,8 @@ github.com/Velocidex/yaml/v2 v2.2.8 h1:GUrSy4SBJ6RjGt43k6MeBKtw2z/27gh4A3hfFmFY3
 github.com/Velocidex/yaml/v2 v2.2.8/go.mod h1:PlXIg/Pxmoja48C1vMHo7C5pauAZvLq/UEPOQ3DsjS4=
 github.com/Velocidex/zip v0.0.0-20250102162034-1a0ec0ec569c h1:+/E/0rL46fcD0ykUWrY66JBxpjjksxN+ZnC596XgHIQ=
 github.com/Velocidex/zip v0.0.0-20250102162034-1a0ec0ec569c/go.mod h1:1p8CU2cp64BG4334sKzhuyH/vm3k1OXEdeBCwYTssAs=
-github.com/VirusTotal/gyp v0.9.0 h1:jhOBl93jfStmAcKLa/EcTmdPng5bn5kvJJZqQqJ5R4g=
-github.com/VirusTotal/gyp v0.9.0/go.mod h1:nmcW15dQ1657PmMcG9X/EZmp6rTQsyo9g8r6Cz1/AHc=
+github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6 h1:GmGcpAb8o8VL5tZS+TSZL2V/jbBVVdsx4SFyG+S/7nY=
+github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6/go.mod h1:nmcW15dQ1657PmMcG9X/EZmp6rTQsyo9g8r6Cz1/AHc=
 github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38/go.mod h1:r7bzyVFMNntcxPZXK3/+KdruV1H5KSlyVY0gc+NgInI=
 github.com/alecthomas/assert v1.0.0 h1:3XmGh/PSuLzDbK3W2gUbRXwgW5lqPkuqvRgeQ30FI5o=
 github.com/alecthomas/assert v1.0.0/go.mod h1:va/d2JC+M7F6s+80kl/R3G7FUiW6JzUO+hPhLyJ36ZY=
@@ -911,8 +911,8 @@ google.golang.org/protobuf v1.23.1-0.20200526195155-81db48ad09cc/go.mod h1:EGpAD
 google.golang.org/protobuf v1.25.0/go.mod h1:9JNX74DMeImyA3h4bdi1ymwjUzf21/xIlbajtzgsN7c=
 google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp09yW+WbY/TyQbw=
 google.golang.org/protobuf v1.27.1/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
-google.golang.org/protobuf v1.35.1 h1:m3LfL6/Ca+fqnjnlqQXNpFPABW1UD7mjh8KO2mKFytA=
-google.golang.org/protobuf v1.35.1/go.mod h1:9fA7Ob0pmnwhb644+1+CVWFRbNajQ6iRojtC/QF5bRE=
+google.golang.org/protobuf v1.36.5 h1:tPhr+woSbjfYvY6/GPufUoYizxw1cF/yFoxJ2fmpwlM=
+google.golang.org/protobuf v1.36.5/go.mod h1:9fA7Ob0pmnwhb644+1+CVWFRbNajQ6iRojtC/QF5bRE=
 gopkg.in/alecthomas/kingpin.v2 v2.2.6 h1:jMFz6MfLP0/4fUyZle81rXUoxOBFi19VUFKVDOQfozc=
 gopkg.in/alecthomas/kingpin.v2 v2.2.6/go.mod h1:FMv+mEhP44yOT+4EoQTLFTRgOQ1FBLkstjWtayDeSgw=
 gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc h1:2gGKlE2+asNV9m7xrywl36YYNnBG5ZQ0r/BOOxqPpmk=

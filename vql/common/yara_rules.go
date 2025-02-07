@@ -454,6 +454,10 @@ var (
 	moduleLookup = make(map[string]bool)
 )
 
+type ExpressionState struct {
+	Vars []string
+}
+
 type RuleLinter struct {
 	ruleset *ast.RuleSet
 
@@ -487,8 +491,10 @@ func (self *RuleLinter) Lint() (*RuleLinter, []error) {
 	var errors []error
 
 	for _, r := range self.ruleset.Rules {
+		state := &ExpressionState{}
+
 		// First validate the condition
-		err := self.walkExpression(r.Condition, r)
+		err := self.walkExpression(r.Condition, r, state)
 		if err != nil {
 			errors = append(errors, err)
 			continue
@@ -519,18 +525,22 @@ func (self *RuleLinter) Lint() (*RuleLinter, []error) {
 }
 
 func (self *RuleLinter) walkExpression(
-	node ast.Node, rule *ast.Rule) error {
-	m, ok := node.(*ast.MemberAccess)
-	if ok {
-		err := self.checkModuleAccess(m, rule)
+	node ast.Node, rule *ast.Rule, state *ExpressionState) error {
+
+	switch t := node.(type) {
+	case *ast.MemberAccess:
+		err := self.checkModuleAccess(t, rule, state)
 		if err != nil {
 			return err
 		}
+
+	case *ast.ForIn:
+		state.Vars = append(state.Vars, t.Variables...)
 	}
 
 	// fmt.Printf("Node %T: %s\n", node, node)
 	for _, c := range node.Children() {
-		err := self.walkExpression(c, rule)
+		err := self.walkExpression(c, rule, state)
 		if err != nil {
 			return err
 		}
@@ -540,11 +550,16 @@ func (self *RuleLinter) walkExpression(
 }
 
 func (self *RuleLinter) checkModuleAccess(
-	m *ast.MemberAccess, rule *ast.Rule) error {
+	m *ast.MemberAccess, rule *ast.Rule, state *ExpressionState) error {
 	id, ok := m.Container.(*ast.Identifier)
 	if ok {
 		module := id.Identifier
 		field := m.Member
+
+		// If this is a local variable it is ok
+		if utils.InString(state.Vars, module) {
+			return nil
+		}
 
 		// First check that the module is imported, if not just add
 		// the import because why not?
