@@ -1,6 +1,6 @@
 /*
 Velociraptor - Dig Deeper
-Copyright (C) 2019-2024 Rapid7 Inc.
+Copyright (C) 2019-2025 Rapid7 Inc.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
@@ -204,7 +204,7 @@ func NewClientExecutor(
 		concurrency:  utils.NewConcurrencyControl(level, time.Hour),
 		wg:           wg,
 		config_obj:   config_obj,
-		flow_manager: responder.NewFlowManager(ctx, config_obj),
+		flow_manager: responder.NewFlowManager(ctx, config_obj, client_id),
 	}
 
 	// Install and initialize the event manager

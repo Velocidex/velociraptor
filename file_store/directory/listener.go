@@ -202,7 +202,8 @@ func (self *Listener) Debug() *ordereddict.Dict {
 	result := ordereddict.NewDict().
 		Set("Name", self.name).
 		Set("file_buffer_active", self.file_buffer_active).
-		Set("closed", self.closed)
+		Set("closed", self.closed).
+		Set("owner", self.options.OwnerName)
 
 	if self.file_buffer != nil {
 		result.Set("PendingSize", self.file_buffer.PendingSize())

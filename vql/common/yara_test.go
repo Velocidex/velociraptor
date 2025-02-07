@@ -95,6 +95,9 @@ rule UnimportedModule {
    condition:
       time.now > 0
 }
+
+
+
 `
 	linter, err := NewRuleLinter(rule)
 	assert.NoError(self.T(), err)

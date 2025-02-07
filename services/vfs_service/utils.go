@@ -2,6 +2,7 @@ package vfs_service
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -35,7 +36,8 @@ func watchForFlowCompletion(
 	}
 
 	events, cancel := journal.Watch(
-		ctx, "System.Flow.Completion", watcher_name)
+		ctx, "System.Flow.Completion",
+		fmt.Sprintf("%s for %s", watcher_name, artifact_name))
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 

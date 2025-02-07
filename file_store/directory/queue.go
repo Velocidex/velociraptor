@@ -304,7 +304,7 @@ func NewDirectoryQueueManager(config_obj *config_proto.Config,
 					Set("Type", "QueueManager").
 					Set("Org", services.GetOrgName(config_obj)).
 					Set("Name", k).
-					Set("Line", v)
+					Set("Listener", v)
 			}
 		},
 	})

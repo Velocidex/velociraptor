@@ -33,6 +33,10 @@ message FlowRequest {
     // collection. Does not count log messages.
     uint64 max_rows = 4;
 
+    // A limit on the total number of log messages allowed from the
+    // flow - exceeding this will suppress further logging.
+    uint64 max_logs = 7;
+
     // If the client exceeds this, the client will abort the
     // collection.
     uint64 max_upload_bytes = 5;

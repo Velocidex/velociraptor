@@ -108,6 +108,9 @@ type Repository interface {
 
 	// List
 	List(ctx context.Context, config_obj *config_proto.Config) ([]string, error)
+
+	SetParent(parent Repository,
+		parent_config_obj *config_proto.Config)
 }
 
 // Manages the global artifact repository

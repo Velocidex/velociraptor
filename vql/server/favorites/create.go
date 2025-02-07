@@ -82,7 +82,7 @@ func (self *AddFavorite) Call(ctx context.Context,
 		scope.Log("favorites_save: %s", err)
 		return vfilter.Null{}
 	}
-	return vfilter.Null{}
+	return fav
 }
 
 func validateSpec(

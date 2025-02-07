@@ -64,6 +64,7 @@ message ArtifactCollectorArgs {
     // Total number of rows we allow to collect. Client will abort the
     // flow if this is exceeded.
     uint64 max_rows = 22;
+    uint64 max_logs = 32;
 
     // Total bytes allowed to upload. Client will abort the collection
     // when exceeded. This might result is a partial file upload. It

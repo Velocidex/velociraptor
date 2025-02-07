@@ -458,7 +458,6 @@ class NewCollectionResources extends React.Component {
         return max_mbytes.toFixed(2) + " Mb";
     }
 
-
     getMaxRows = (artifacts) => {
         let max_rows = 0;
         _.each(artifacts, (definition) => {
@@ -601,6 +600,17 @@ class NewCollectionResources extends React.Component {
                         value={resources.max_rows || undefined}
                         setInvalid={value => this.setState({invalid_4: value})}
                         setValue={value => this.props.setResources({max_rows: value})} />
+                    </Col>
+                  </Form.Group>
+
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">{T("Max Logs")}</Form.Label>
+                    <Col sm="8">
+                      <ValidatedInteger
+                        placeholder={"100000"}
+                        value={resources.max_logs || undefined}
+                        setInvalid={value => this.setState({invalid_6: value})}
+                        setValue={value => this.props.setResources({max_logs: value})} />
                     </Col>
                   </Form.Group>
 
@@ -874,6 +884,7 @@ class NewCollectionWizard extends React.Component {
             timeout: request.timeout,
             progress_timeout: request.progress_timeout,
             max_rows: request.max_rows,
+            max_logs: request.max_logs,
             trace_freq_sec: request.trace_freq_sec,
             max_mbytes: Math.round(
                 request.max_upload_bytes / 1024 / 1024 * 100) / 100  || undefined,
@@ -994,6 +1005,10 @@ class NewCollectionWizard extends React.Component {
 
         if (this.state.resources.max_rows) {
             result.max_rows = this.state.resources.max_rows;
+        }
+
+        if (this.state.resources.max_logs) {
+            result.max_logs = this.state.resources.max_logs;
         }
 
         if (this.state.resources.trace_freq_sec) {

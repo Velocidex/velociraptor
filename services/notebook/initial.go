@@ -610,14 +610,23 @@ func updateNotebookRequests(
 	spec *flows_proto.ArtifactSpec,
 	in *api_proto.NotebookMetadata) error {
 
-	// Create a child reposity as we will need to update the artifact
-	// definitions.
+	// Create a child repository as we will need to update the
+	// artifact definitions.
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}
 
+	global_repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
+	// The new repository is isolated but will search the global
+	// repository for any artifacts it does not know about.
 	repository := manager.NewRepository()
+	repository.SetParent(global_repository, config_obj)
+
 	_, err = repository.LoadProto(artifact, services.ArtifactOptions{})
 	if err != nil {
 		return err

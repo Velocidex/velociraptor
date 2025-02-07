@@ -1188,6 +1188,7 @@ message Defaults {
     // your clients are behind a proxy that only accepts very small
     // POST messages. If not set we use client defaults.
     uint64 max_rows = 30;
+    uint64 max_logs = 56;
     uint64 max_row_buffer_size = 31;
     uint64 max_batch_wait = 35;
 
