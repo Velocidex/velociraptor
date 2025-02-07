@@ -2326,6 +2326,11 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: favorites_list
+  description: List all user's favorites.
+  type: Plugin
+  platforms:
+  - linux_amd64_cgo
 - name: favorites_save
   description: |
     Save a collection into the favorites.
@@ -2721,7 +2726,7 @@
     description: Run this query for each row.
   - name: async
     type: bool
-    description: If set we run all queries asynchronously (implies workers=1000).
+    description: If set we run all queries asynchronously (implies workers=100).
   - name: workers
     type: int64
     description: Total number of asynchronous workers.
@@ -3777,6 +3782,10 @@
   - name: workers
     type: int64
     description: Delete with this many workers (default 2)
+  - name: archive
+    type: bool
+    description: Set this to only archive the hunt - it will still be accessible but
+      will be hidden from the GUI
   category: server
   metadata:
     permissions: SERVER_ADMIN
@@ -4797,8 +4806,6 @@
     description: 'A SID to lookup using LookupAccountSid '
     required: true
   category: windows
-  metadata:
-    permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
   - windows_386_cgo
@@ -5299,7 +5306,6 @@
 - name: monitoring
   description: |
     Extract monitoring log from a client.
-
   type: Plugin
   args:
   - name: client_id
@@ -5322,9 +5328,6 @@
   - name: start_row
     type: int64
     description: Start reading the result set from this row
-  - name: count
-    type: int64
-    description: Maximum number of clients to fetch (default unlimited)
   category: server
   metadata:
     permissions: READ_RESULTS
@@ -7445,7 +7448,8 @@
   args:
   - name: pid
     type: int64
-    description: A process ID to list. If not provided list all processes.
+    description: A pid to list. If this is provided we are able to operate much faster
+      by only opening a single process.
   category: popular
   metadata:
     permissions: MACHINE_STATE
@@ -8743,7 +8747,7 @@
     description: Start reading the result set from this row
   - name: count
     type: int64
-    description: Maximum number of clients to fetch (default unlimited)
+    description: Maximum number of rows to fetch (default unlimited)
   - name: orgs
     type: string
     description: Run the query over these orgs. If empty use the current org.
@@ -11391,3 +11395,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+
