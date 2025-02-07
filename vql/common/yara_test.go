@@ -96,8 +96,21 @@ rule UnimportedModule {
       time.now > 0
 }
 
+rule AllOfThem {
+   strings:
+     $a = "hello"
 
+   condition:
+     any of them
+}
 
+rule PECondition {
+   strings:
+    $a = "hello"
+
+   condition:
+      pe.is_pe and for any s in pe.sections : ( s.name == ".text" ) and all of them
+}
 `
 	linter, err := NewRuleLinter(rule)
 	assert.NoError(self.T(), err)
