@@ -34,6 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	crypto_server "www.velocidex.com/golang/velociraptor/crypto/server"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -222,6 +223,18 @@ func (self *Server) Process(
 	}
 
 	config_obj, err := org_manager.GetOrgConfig(message_info.OrgId)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// If the datastore is not healthy refuse to accept this
+	// connection.
+	err = db.Healthy()
 	if err != nil {
 		return nil, 0, err
 	}

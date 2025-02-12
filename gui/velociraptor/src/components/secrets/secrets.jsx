@@ -176,6 +176,7 @@ class EditSecretDialog extends Component {
                 <h1>{T("Edit Secret")} { this.state.secret.name } </h1>
                 {T("Share secret with these users")}
                 <UserForm
+                  includeSuperuser={true}
                   value={this.state.new_users}
                   onChange={users=>this.setState({new_users: users})}/>
 

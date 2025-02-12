@@ -2,3 +2,13 @@
     max-height: calc(100vh - 345px);
     overflow-y: auto;
 }
+
+.sigma-editor-modal .alert,
+.sigma-editor-modal .card {
+    margin: 20px;
+}
+
+.sigma-editor-modal.modal-body {
+    overflow-y: auto;
+    height: 80vh;
+}

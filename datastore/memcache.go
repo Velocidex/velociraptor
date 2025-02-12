@@ -413,6 +413,10 @@ func unmarshalData(serialized_content []byte,
 	return nil
 }
 
+func (self *MemcacheDatastore) Healthy() error {
+	return nil
+}
+
 func (self *MemcacheDatastore) SetTimeout(duration time.Duration) {
 	self.data_cache.SetTTL(duration)
 	self.data_cache.SkipTTLExtensionOnHit(true)

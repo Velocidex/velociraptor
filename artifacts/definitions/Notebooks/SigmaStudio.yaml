@@ -24,9 +24,13 @@ parameters:
     description: Enable this to match all rules (even if they did not match) in order to see what detections matched.
     type: bool
 
+  - name: LogSource
+    description: The current log source to use.
+
 sources:
   - notebook:
       - type: markdown
+        name: Sigma Studio Description
         template: |
           # Sigma Studio
 
@@ -95,6 +99,7 @@ sources:
           can delete this instructional cell.
 
       - type: markdown
+        name: Sigma Studio Interactive Cell
         template: |
           {{ define "Setup" }}
           LET ProfileType <= dict(

@@ -457,6 +457,7 @@ export default class VeloForm extends React.Component {
                 </Form.Group>
             );
 
+        case "upload_file":
         case "upload":
             return <UploadFileForm
                      param={this.props.param}

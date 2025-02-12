@@ -615,7 +615,7 @@ class NewCollectionResources extends React.Component {
                   </Form.Group>
 
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">{T("Max bytes uploaded")}</Form.Label>
+                    <Form.Label column sm="3">{T("Max MB uploaded")}</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getMaxUploadBytes(this.props.artifacts)}

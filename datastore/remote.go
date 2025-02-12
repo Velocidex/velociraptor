@@ -93,6 +93,10 @@ func (self *RemoteDataStore) GetSubject(
 	})
 }
 
+func (self *RemoteDataStore) Healthy() error {
+	return nil
+}
+
 func (self *RemoteDataStore) _GetSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,

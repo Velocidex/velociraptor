@@ -77,7 +77,7 @@ sources:
       LET insertion = SELECT OSPath, Hash, Size, Time, {
          SELECT * FROM sqlite(file=path,
             query="INSERT into hashes (path, md5, timestamp, size) values (?,?,?,?)",
-            args=[OSPath, Hash, Time, Size])
+            args=[OSPath.String, Hash, Time, Size])
       } AS Insert
       FROM files
       WHERE Insert OR TRUE

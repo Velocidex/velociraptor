@@ -25,10 +25,14 @@ export default class UploadFileForm extends Component {
         upload: {},
         upload_info: {},
         upload_mode: true,
+        id: 0,
     }
 
+    isUpload = ()=>this.props.param.type === "upload" ||
+        this.props.param.type === "upload_file"
+
     componentDidMount = () => {
-        if (this.props.param.type === "upload" && this.props.value) {
+        if (this.isUpload() && this.props.value) {
             let url = new URL(this.props.value);
             let parts = decodeURI(url.pathname).split("/");
             this.setState({upload_info: {
@@ -36,6 +40,7 @@ export default class UploadFileForm extends Component {
                 filename: parts[parts.length-1],
             }});
         }
+        this.setState({id: crypto.randomUUID()});
     }
 
     uploadFile = () => {
@@ -95,7 +100,7 @@ export default class UploadFileForm extends Component {
                     }
                   </Button>
 
-                  <Form.Control type="file" id="upload"
+                  <Form.Control type="file" id={this.state.id}
                                 onChange={e => {
                                     if (!_.isEmpty(e.currentTarget.files)) {
                                         this.setState({
@@ -115,7 +120,7 @@ export default class UploadFileForm extends Component {
                   <ToolTip tooltip={T("Click to upload file")}>
                     <Button variant="default-outline"
                             className="flush-right">
-                      <label data-browse="Select file" htmlFor="upload">
+                      <label data-browse="Select file" htmlFor={this.state.id}>
                         {this.state.upload.name ?
                          this.state.upload.name :
                          T("Select local file")}

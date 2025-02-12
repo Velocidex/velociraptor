@@ -1,23 +1,25 @@
-// +build linux
+//go:build linux || windows
+// +build linux windows
 
 package datastore
 
 import (
 	"context"
 	"sync"
-	"syscall"
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/vql/psutils"
 )
 
 func AvailableDiskSpace(
 	db DataStore, config_obj *config_proto.Config) (uint64, error) {
-	var stat syscall.Statfs_t
-	syscall.Statfs(config_obj.Datastore.Location, &stat)
 
-	available := stat.Bavail * uint64(stat.Bsize)
+	stat, err := psutils.Usage(config_obj.Datastore.Location)
+	if err != nil {
+		return 0, err
+	}
 
 	min_allowed_file_space_mb := uint64(config_obj.Datastore.MinAllowedFileSpaceMb)
 	if min_allowed_file_space_mb == 0 {
@@ -25,14 +27,16 @@ func AvailableDiskSpace(
 		min_allowed_file_space_mb = 50
 	}
 
+	free_mb := stat.Free / 1024 / 1024
+
 	filebased_db, ok := db.(*FileBaseDataStore)
 	if ok {
 		// If we have insufficient disk space, set the filestore to
 		// stop writing.
-		if available/1024/1024 < min_allowed_file_space_mb {
+		if free_mb < min_allowed_file_space_mb {
 			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 			logger.Error("FileBaseDataStore: Insufficient free disk space! We need at least %v Mb but we have %v!. Disabling write operations to avoid file corruption. Free some disk space or grow the partition.",
-				min_allowed_file_space_mb, available/1024/1024)
+				min_allowed_file_space_mb, free_mb)
 
 			// Stop writing - disk is full!
 			filebased_db.SetError(insufficientDiskSpace)
@@ -42,7 +46,7 @@ func AvailableDiskSpace(
 			filebased_db.SetError(nil)
 		}
 	}
-	return available, nil
+	return stat.Free, nil
 }
 
 func startFullDiskChecker(ctx context.Context, wg *sync.WaitGroup,
@@ -56,7 +60,7 @@ func startFullDiskChecker(ctx context.Context, wg *sync.WaitGroup,
 	// How often to check the disk is full.
 	disk_check_freq := config_obj.Datastore.DiskCheckFrequencySec
 	if disk_check_freq == 0 {
-		disk_check_freq = 10
+		disk_check_freq = 20
 	}
 
 	volumePath := ""
@@ -76,6 +80,8 @@ func startFullDiskChecker(ctx context.Context, wg *sync.WaitGroup,
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+
+		AvailableDiskSpace(db, config_obj)
 
 		for {
 			select {
