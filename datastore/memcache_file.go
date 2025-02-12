@@ -125,6 +125,10 @@ type MemcacheFileDataStore struct {
 	started bool
 }
 
+func (self *MemcacheFileDataStore) Healthy() error {
+	return nil
+}
+
 func (self *MemcacheFileDataStore) Stats() *MemcacheStats {
 	return self.cache.Stats()
 }
@@ -459,9 +463,22 @@ func (self *MemcacheFileDataStore) DeleteSubjectWithCompletion(
 	urn api.DSPathSpec, completion func()) error {
 	defer Instrument("delete", "MemcacheFileDataStore", urn)()
 
+	mutation := &Mutation{
+		op:             MUTATION_OP_DEL_SUBJECT,
+		urn:            urn,
+		completion:     completion,
+		org_config_obj: config_obj,
+	}
+
+	// Delete inline - wait for the operation to complete before returning.
+	if utils.CompareFuncs(completion, utils.SyncCompleter) {
+		self.processMutation(mutation)
+		return self.cache.DeleteSubjectWithCompletion(config_obj, urn, completion)
+	}
+
 	// Remove immediately from the cache memcache as soon as the file
 	// is removed from disk.
-	__completion := func() {
+	mutation.completion = func() {
 		_ = self.cache.DeleteSubject(config_obj, urn)
 		if completion != nil {
 			completion()
@@ -479,14 +496,7 @@ func (self *MemcacheFileDataStore) DeleteSubjectWithCompletion(
 		}
 		break
 
-	case self.writer <- &Mutation{
-		op: MUTATION_OP_DEL_SUBJECT,
-
-		// When we complete make sure the cache is also invalidated to
-		// avoid racing with GetSubject().
-		completion:     __completion,
-		urn:            urn,
-		org_config_obj: config_obj}:
+	case self.writer <- mutation:
 	}
 
 	return nil

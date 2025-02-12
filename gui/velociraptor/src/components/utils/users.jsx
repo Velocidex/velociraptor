@@ -16,6 +16,7 @@ export default class UserForm extends React.Component {
     static propTypes = {
         value: PropTypes.array,
         onChange: PropTypes.func,
+        includeSuperuser: PropTypes.bool,
     };
 
     componentDidMount = () => {
@@ -43,15 +44,20 @@ export default class UserForm extends React.Component {
             if (response.cancel || _.isEmpty(response.data)) return;
 
             let users = response.data.users || [];
+            if (this.props.includeSuperuser) {
+                users.push({name: "VelociraptorUser",
+                            desc: T(" (Server Event Runner)")});
+            }
 
             let names = [];
             for(var i = 0; i<users.length; i++) {
-                var name = users[i].name;
+                let name = users[i].name;
+                let desc = users[i].desc || "";
 
                 // Only add other users than the currently logged in
                 // user.
                 if (name !== username) {
-                    names.push({value: name, label: name});
+                    names.push({value: name, label: name + desc});
                 };
             }
             this.setState({options: names, initialized: true});

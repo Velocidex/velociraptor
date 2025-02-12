@@ -14,6 +14,7 @@ type ProfileWriter func(
 type ProfileWriterInfo struct {
 	Name, Description string
 	ProfileWriter     ProfileWriter
+	ID                uint64
 }
 
 var (
@@ -26,6 +27,19 @@ func RegisterProfileWriter(writer ProfileWriterInfo) {
 	defer mu.Unlock()
 
 	handlers = append(handlers, writer)
+}
+
+func UnregisterProfileWriter(id uint64) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	new_handlers := make([]ProfileWriterInfo, 0, len(handlers))
+	for _, h := range handlers {
+		if h.ID != id {
+			new_handlers = append(new_handlers, h)
+		}
+	}
+	handlers = new_handlers
 }
 
 func GetProfileWriters() (result []ProfileWriterInfo) {

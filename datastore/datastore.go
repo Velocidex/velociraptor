@@ -107,6 +107,8 @@ type DataStore interface {
 
 	// Called to close all db handles etc. Not thread safe.
 	Close()
+
+	Healthy() error
 }
 
 func GetDB(config_obj *config_proto.Config) (DataStore, error) {

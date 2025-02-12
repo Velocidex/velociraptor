@@ -19,6 +19,7 @@ parameters:
 sources:
   - notebook:
     - type: vql
+      name: Example Query with tool reference
       template: |
         SELECT StartDate, AnInteger, Tool_Autorun_amd64_URL
         FROM scope()

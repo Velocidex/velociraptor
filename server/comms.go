@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"html"
 	"io"
 	"io/ioutil"
@@ -32,6 +33,7 @@ import (
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/crypto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -267,6 +269,13 @@ func receive_client_messages(
 
 	return api_utils.HandlerFunc(nil,
 		func(w http.ResponseWriter, req *http.Request) {
+
+			err := checkHealthy(config_obj)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error: %v", err), http.StatusServiceUnavailable)
+				return
+			}
+
 			// Handle WS connections transparently.
 			if is_ws_connection(req) {
 				err := ws_receive_client_messages(config_obj, server_obj, w, req)
@@ -473,6 +482,12 @@ func send_client_messages(
 
 	return api_utils.HandlerFunc(nil,
 		func(w http.ResponseWriter, req *http.Request) {
+			err := checkHealthy(config_obj)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error: %v", err), http.StatusServiceUnavailable)
+				return
+			}
+
 			ctx := req.Context()
 
 			// Keep track of currently connected clients - this accounts
@@ -784,6 +799,14 @@ func returnError(
 	} else {
 		_, _ = w.Write([]byte("Error"))
 	}
+}
+
+func checkHealthy(config_obj *config_proto.Config) error {
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+	return db.Healthy()
 }
 
 // Calculate QPS

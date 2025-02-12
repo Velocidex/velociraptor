@@ -136,7 +136,7 @@ func (self *FileBaseDataStore) SetSubjectWithCompletion(
 
 	defer InstrumentWithDelay("write", "FileBaseDataStore", urn)()
 
-	err := self.Error()
+	err := self.Healthy()
 	if err != nil {
 		return err
 	}
@@ -418,7 +418,7 @@ func (self *FileBaseDataStore) GetBuffer(
 	return readContentFromFile(self, config_obj, urn)
 }
 
-func (self *FileBaseDataStore) Error() error {
+func (self *FileBaseDataStore) Healthy() error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -436,7 +436,7 @@ func (self *FileBaseDataStore) SetBuffer(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec, data []byte, completion func()) error {
 
-	err := self.Error()
+	err := self.Healthy()
 	if err != nil {
 		return err
 	}

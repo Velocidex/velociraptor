@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/Velocidex/amsi v0.0.0-20200608120838-e5d93b76f119
-	github.com/Velocidex/etw v0.0.0-20250201014319-bf4266efe992
+	github.com/Velocidex/etw v0.0.0-20250211160625-cd32def93378
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-magic v0.0.0-20250203094020-32f94b14f00f
 	github.com/Velocidex/go-yara v1.1.10-0.20240309155455-3f491847cec9
@@ -74,7 +74,7 @@ require (
 	golang.org/x/crypto v0.31.0
 	golang.org/x/mod v0.21.0
 	golang.org/x/net v0.33.0
-	golang.org/x/sys v0.29.0
+	golang.org/x/sys v0.30.0
 	golang.org/x/text v0.22.0
 	golang.org/x/time v0.5.0
 	google.golang.org/api v0.169.0
