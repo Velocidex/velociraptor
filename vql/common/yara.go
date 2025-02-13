@@ -63,17 +63,18 @@ type YaraResult struct {
 }
 
 type YaraScanPluginArgs struct {
-	Rules         string            `vfilter:"optional,field=rules,doc=Yara rules in the yara DSL or after being compiled by the yarac compiler."`
-	Files         []types.Any       `vfilter:"required,field=files,doc=The list of files to scan."`
-	Accessor      string            `vfilter:"optional,field=accessor,doc=Accessor (e.g. ntfs,file)"`
-	Context       int               `vfilter:"optional,field=context,doc=How many bytes to include around each hit"`
-	Start         uint64            `vfilter:"optional,field=start,doc=The start offset to scan"`
-	End           uint64            `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`
-	NumberOfHits  int64             `vfilter:"optional,field=number,doc=Stop after this many hits (1)."`
-	Blocksize     uint64            `vfilter:"optional,field=blocksize,doc=Blocksize for scanning (1mb)."`
-	Key           string            `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
-	Namespace     string            `vfilter:"optional,field=namespace,doc=The Yara namespece to use."`
-	YaraVariables *ordereddict.Dict `vfilter:"optional,field=vars,doc=The Yara variables to use."`
+	Rules           string            `vfilter:"optional,field=rules,doc=Yara rules in the yara DSL or after being compiled by the yarac compiler."`
+	Files           []types.Any       `vfilter:"required,field=files,doc=The list of files to scan."`
+	Accessor        string            `vfilter:"optional,field=accessor,doc=Accessor (e.g. ntfs,file)"`
+	Context         int               `vfilter:"optional,field=context,doc=How many bytes to include around each hit"`
+	Start           uint64            `vfilter:"optional,field=start,doc=The start offset to scan"`
+	End             uint64            `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`
+	NumberOfHits    int64             `vfilter:"optional,field=number,doc=Stop after this many hits (1)."`
+	Blocksize       uint64            `vfilter:"optional,field=blocksize,doc=Blocksize for scanning (1mb)."`
+	Key             string            `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
+	Namespace       string            `vfilter:"optional,field=namespace,doc=The Yara namespece to use."`
+	YaraVariables   *ordereddict.Dict `vfilter:"optional,field=vars,doc=The Yara variables to use."`
+	ForceBufferScan bool              `vfilter:"optional,field=force_buffers,doc=Force buffer scan in all cases."`
 }
 
 type YaraScanPlugin struct{}
@@ -161,7 +162,7 @@ func (self YaraScanPlugin) Call(
 
 			// If the start offset is specified we always use the
 			// accessor.
-			if arg.Start == 0 && ok {
+			if !arg.ForceBufferScan && arg.Start == 0 && ok {
 				underlying_file, err := raw_accessor.GetUnderlyingAPIFilename(filename)
 				if err == nil {
 					err := matcher.scanFile(ctx, underlying_file, output_chan)

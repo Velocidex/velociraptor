@@ -8,25 +8,8 @@ import (
 	jwt "github.com/golang-jwt/jwt/v4"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 )
-
-type Claims struct {
-	Username string  `json:"username"`
-	Picture  string  `json:"picture"`
-	Expires  float64 `json:"expires"`
-	Token    string  `json:"token"`
-}
-
-func (self *Claims) Valid() error {
-	if self.Username == "" {
-		return errors.New("username not present")
-	}
-
-	if self.Expires < float64(time.Now().Unix()) {
-		return errors.New("the JWT is expired - reauthenticate")
-	}
-	return nil
-}
 
 func getSignedJWTTokenCookie(
 	config_obj *config_proto.Config,
@@ -51,6 +34,11 @@ func getSignedJWTTokenCookie(
 
 	// Make a JWT and sign it.
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	if authenticator.OidcDebug {
+		logging.GetLogger(config_obj, &logging.GUIComponent).
+			Debug("getSignedJWTTokenCookie: Creating JWT with claims: %#v", claims)
+	}
+
 	tokenString, err := token.SignedString([]byte(config_obj.Frontend.PrivateKey))
 	if err != nil {
 		return nil, err

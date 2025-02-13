@@ -121,12 +121,19 @@ func (self *OidcAuthenticator) GetGenOauthConfig() (*oauth2.Config, error) {
 		scope = []string{oidc.ScopeOpenID, "email"}
 	}
 
-	return &oauth2.Config{
+	res := &oauth2.Config{
 		RedirectURL:  api_utils.GetPublicURL(self.config_obj, callback),
 		ClientID:     self.authenticator.OauthClientId,
 		ClientSecret: self.authenticator.OauthClientSecret,
 		Scopes:       scope,
-	}, nil
+	}
+
+	if self.authenticator.OidcDebug {
+		logging.GetLogger(self.config_obj, &logging.GUIComponent).
+			Debug("OidcAuthenticator: OIDC configuration: %#v", res)
+	}
+
+	return res, nil
 }
 
 func (self *OidcAuthenticator) oauthOidcLogin(
@@ -148,14 +155,18 @@ func (self *OidcAuthenticator) oauthOidcLogin(
 				oauthState = generateStateOauthCookie(self.config_obj, w)
 			}
 
-			url := oidcOauthConfig.AuthCodeURL(oauthState.Value)
-
 			// Needed for Okta to specify `prompt: login` to avoid consent
 			// auth on each login.
-			if self.authenticator.OidcAuthUrlParams != nil {
-				for k, v := range self.authenticator.OidcAuthUrlParams {
-					oauth2.SetAuthURLParam(k, v)
-				}
+			var options []oauth2.AuthCodeOption
+			for k, v := range self.authenticator.OidcAuthUrlParams {
+				options = append(options, oauth2.SetAuthURLParam(k, v))
+			}
+
+			url := oidcOauthConfig.AuthCodeURL(oauthState.Value, options...)
+
+			if self.authenticator.OidcDebug {
+				logging.GetLogger(self.config_obj, &logging.GUIComponent).
+					Debug("OidcAuthenticator: Redirecting to: %#v", url)
 			}
 
 			http.Redirect(w, r, url, http.StatusFound)
@@ -200,6 +211,12 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 					http.StatusTemporaryRedirect)
 				return
 			}
+
+			if self.authenticator.OidcDebug {
+				logging.GetLogger(self.config_obj, &logging.GUIComponent).
+					Debug("oauthOidcCallback: Exchanged token with %#v", oauthToken)
+			}
+
 			userInfo, err := provider.UserInfo(
 				ctx, oauth2.StaticTokenSource(oauthToken))
 			if err != nil {
@@ -210,11 +227,18 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 				return
 			}
 
+			// Map the OIDC claims to our own claims.
+			claims, err := self.NewClaims(ctx, userInfo)
+			if err != nil {
+				logging.GetLogger(self.config_obj, &logging.GUIComponent).
+					Error("oauthOidcCallback: Unable to parse claims: %v", err)
+				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
+					http.StatusTemporaryRedirect)
+				return
+			}
+
 			cookie, err := getSignedJWTTokenCookie(
-				self.config_obj, self.authenticator,
-				&Claims{
-					Username: userInfo.Email,
-				})
+				self.config_obj, self.authenticator, claims)
 			if err != nil {
 				logging.GetLogger(self.config_obj, &logging.GUIComponent).
 					WithFields(logrus.Fields{
@@ -223,6 +247,11 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
+			}
+
+			if self.authenticator.OidcDebug {
+				logging.GetLogger(self.config_obj, &logging.GUIComponent).
+					Debug("oauthOidcCallback: Success! Setting cookie %#v", cookie)
 			}
 
 			http.SetCookie(w, cookie)

@@ -433,6 +433,32 @@ message GUILink {
     bool disabled = 9;
 }
 
+message OIDCACL {
+    repeated string roles = 1;
+}
+
+// Allow flexible claims in OIDC response - only set if you need to.
+message OIDCClaims {
+    // The name of the claim that represents the username (by default
+    // this is 'email'). Be careful that this MUST be unique across
+    // the domain! It is vulnerability to allow something like 'name'
+    // across a public domain because anyone can set this name in
+    // their OIDC accounts!
+    string username = 1;
+
+    // The field that specifies the roles. If this not set, we do not
+    // allow roles to be set via OIDC.
+    string roles = 2;
+
+    // A mapping between OIDC claim roles and Velociraptor roles.
+    // For example:
+    // role_map:
+    //    Velociraptor.Reader:
+    //      roles:
+    //        - reader
+    map<string, OIDCACL> role_map = 3;
+}
+
 message Authenticator {
     string type = 1;
 
@@ -452,6 +478,12 @@ message Authenticator {
     string oauth_client_secret = 6 [(sem_type) = {
             description: "If set we use oauth authentication flow.",
         }];
+
+    OIDCClaims claims = 25;
+
+    // When this is set we emit detailed logging.
+    bool oidc_debug = 26;
+
 
     // Azure requires a tenancy as well.
     string tenant = 7;

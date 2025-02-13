@@ -36,6 +36,7 @@ sources:
          dict(Name=Name,
               Username=Username,
               Exe=Exe,
+              CreateTime=CreateTime,
               CommandLine=CommandLine) AS data
       FROM pslist()
 
@@ -50,8 +51,6 @@ sources:
                     dict(Pid=System.ProcessID,
                          Ppid=System.ParentProcessID,
                          Name=System.ProcessName,
-                         StartTime=System.Timestamp,
-                         EndTime=NULL,
                          Username=System.UserID,
                          Exe=EventData.cmdpath,
                          CommandLine=join(array=EventData.argv, sep=" ")) AS data,
