@@ -14,3 +14,9 @@
 body {
     overflow-y: hidden;
 }
+
+
+.dropdown-menu.show {
+    max-height: 80vh;
+    overflow: auto;
+}
