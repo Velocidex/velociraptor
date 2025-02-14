@@ -31,7 +31,7 @@ import (
 
 // Manage all queries in the same collection
 
-type contextManager struct {
+type ContextManager struct {
 	config_obj *config_proto.Config
 	context    *flows_proto.ArtifactCollectorContext
 
@@ -82,7 +82,7 @@ func NewCollectionContextManager(
 		byte_limit = int64(req.MaxUploadBytes)
 	}
 
-	self := &contextManager{
+	self := &ContextManager{
 		config_obj: config_obj,
 		context:    collection_context,
 		ctx:        ctx,
@@ -98,7 +98,7 @@ func NewCollectionContextManager(
 	return self, nil
 }
 
-func (self *contextManager) ChargeRow() {
+func (self *ContextManager) ChargeRow() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -115,7 +115,7 @@ func (self *contextManager) ChargeRow() {
 	}
 }
 
-func (self *contextManager) ChargeBytes(bytes int64) {
+func (self *ContextManager) ChargeBytes(bytes int64) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -133,7 +133,7 @@ func (self *contextManager) ChargeBytes(bytes int64) {
 }
 
 // Prepare a new query context for this request.
-func (self *contextManager) GetQueryContext(
+func (self *ContextManager) GetQueryContext(
 	query *actions_proto.VQLCollectorArgs) QueryContext {
 
 	self.mu.Lock()
@@ -174,7 +174,7 @@ func (self *contextManager) GetQueryContext(
 	return result
 }
 
-func (self *contextManager) GetContext() *flows_proto.ArtifactCollectorContext {
+func (self *ContextManager) GetContext() *flows_proto.ArtifactCollectorContext {
 	self.mu.Lock()
 	record := proto.Clone(self.context).(*flows_proto.ArtifactCollectorContext)
 	self.mu.Unlock()
@@ -191,7 +191,7 @@ func (self *contextManager) GetContext() *flows_proto.ArtifactCollectorContext {
 
 // Starts a go routine which saves the context state so the GUI can
 // monitor progress.
-func (self *contextManager) StartRefresh(wg *sync.WaitGroup) {
+func (self *ContextManager) StartRefresh(wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -209,7 +209,7 @@ func (self *contextManager) StartRefresh(wg *sync.WaitGroup) {
 	}()
 }
 
-func (self *contextManager) Load() error {
+func (self *ContextManager) Load() error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -233,7 +233,7 @@ func (self *contextManager) Load() error {
 }
 
 // Flush the context to disk.
-func (self *contextManager) Save() error {
+func (self *ContextManager) Save() error {
 	context := self.GetContext()
 
 	self.mu.Lock()
@@ -249,7 +249,7 @@ func (self *contextManager) Save() error {
 		self.config_obj, context, utils.BackgroundWriter)
 }
 
-func (self *contextManager) Cancel(ctx context.Context, principal string) {
+func (self *ContextManager) Cancel(ctx context.Context, principal string) {
 	self.mu.Lock()
 	for _, query_ctx := range self.query_contexts {
 		query_ctx.UpdateStatus(func(s *crypto_proto.VeloStatus) {
@@ -264,7 +264,7 @@ func (self *contextManager) Cancel(ctx context.Context, principal string) {
 	self.wg.Wait()
 }
 
-func (self *contextManager) Close(ctx context.Context) {
+func (self *ContextManager) Close(ctx context.Context) {
 	self.maybeSendCompletionMessage(ctx)
 	self.cancel()
 	self.wg.Wait()
@@ -272,7 +272,7 @@ func (self *contextManager) Close(ctx context.Context) {
 
 // Called when each query is completed. Will send the message once for
 // the entire flow completion.
-func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
+func (self *ContextManager) maybeSendCompletionMessage(ctx context.Context) {
 	flow_context := self.GetContext()
 	if flow_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
 		return
@@ -294,7 +294,7 @@ func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
 	)
 }
 
-func (self *contextManager) RunQuery(
+func (self *ContextManager) RunQuery(
 	arg *actions_proto.VQLCollectorArgs) (err error) {
 
 	names_with_response := make(map[string]bool)
@@ -354,7 +354,7 @@ func (self *contextManager) RunQuery(
 	})
 	defer scope.Close()
 
-	scope.Log("Running query on behalf of user %v", principal)
+	self.LogRunOnBehalfOfMessage(scope, principal)
 
 	env := ordereddict.NewDict()
 	for _, env_spec := range arg.Env {
@@ -469,7 +469,11 @@ func (self *contextManager) RunQuery(
 	return nil
 }
 
-func (self *contextManager) Logger() LogWriter {
+func (self *ContextManager) LogRunOnBehalfOfMessage(scope vfilter.Scope, principal string) {
+	scope.Log("Running query on behalf of user %v", principal)
+}
+
+func (self *ContextManager) Logger() LogWriter {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
