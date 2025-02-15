@@ -2,7 +2,6 @@ package utils
 
 import (
 	"errors"
-	"fmt"
 	"io"
 )
 
@@ -45,13 +44,10 @@ func (self *ReadSeekReaderAdapter) Read(buf []byte) (int, error) {
 	}
 
 	n, err := self.reader.ReadAt(buf, self.offset)
-	fmt.Printf("Read from %#v %T %v: %v, %v\n", self.reader, self.reader,
-		self.offset, n, err)
-
-	self.offset += int64(n)
 	if errors.Is(err, io.EOF) {
 		self.eof = true
 	}
+	self.offset += int64(n)
 
 	return n, err
 }
