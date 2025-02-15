@@ -2,9 +2,7 @@ package readers
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
-	"io"
 	"os"
 	"testing"
 	"time"
@@ -83,7 +81,7 @@ func (self *TestSuite) TestPagedReader() {
 			self.scope, "file", self.filenames[i], 100)
 		assert.NoError(self.T(), err)
 		_, err = reader.ReadAt(buff, 0)
-		assert.True(self.T(), errors.Is(err, io.EOF))
+		assert.NoError(self.T(), err)
 		assert.Equal(self.T(), binary.LittleEndian.Uint32(buff), uint32(i))
 		readers = append(readers, reader)
 	}
@@ -92,7 +90,7 @@ func (self *TestSuite) TestPagedReader() {
 		reader, err := NewAccessorReader(self.scope, "file", self.filenames[i], 100)
 		assert.NoError(self.T(), err)
 		_, err = reader.ReadAt(buff, 0)
-		assert.True(self.T(), errors.Is(err, io.EOF))
+		assert.NoError(self.T(), err)
 		assert.Equal(self.T(), binary.LittleEndian.Uint32(buff), uint32(i))
 	}
 
@@ -102,7 +100,7 @@ func (self *TestSuite) TestPagedReader() {
 		assert.NoError(self.T(), err)
 
 		_, err = reader.ReadAt(buff, 0)
-		assert.True(self.T(), errors.Is(err, io.EOF))
+		assert.NoError(self.T(), err)
 
 		assert.Equal(self.T(), binary.LittleEndian.Uint32(buff), uint32(1))
 	}
@@ -115,7 +113,7 @@ func (self *TestSuite) TestPagedReader() {
 	for i := 0; i < 10; i++ {
 		reader.Close()
 		_, err = reader.ReadAt(buff, 0)
-		assert.True(self.T(), errors.Is(err, io.EOF))
+		assert.NoError(self.T(), err)
 
 		assert.Equal(self.T(), binary.LittleEndian.Uint32(buff), uint32(1))
 	}
@@ -124,7 +122,7 @@ func (self *TestSuite) TestPagedReader() {
 	reader.SetLifetime(10 * time.Millisecond)
 	reader.Close()
 	_, err = reader.ReadAt(buff, 0)
-	assert.True(self.T(), errors.Is(err, io.EOF))
+	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), binary.LittleEndian.Uint32(buff), uint32(1))
 
 	// Wait here until the reader closes itself by itself.
@@ -137,7 +135,7 @@ func (self *TestSuite) TestPagedReader() {
 
 	// Next read still works.
 	_, err = reader.ReadAt(buff, 0)
-	assert.True(self.T(), errors.Is(err, io.EOF))
+	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), binary.LittleEndian.Uint32(buff), uint32(1))
 
 	// Close the scope - this should close all the pool
