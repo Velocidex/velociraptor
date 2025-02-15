@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	"io"
 )
 
@@ -12,6 +13,8 @@ type Closer interface {
 type ReadSeekReaderAdapter struct {
 	reader io.ReaderAt
 	offset int64
+	size   int64
+	eof    bool
 }
 
 func (self ReadSeekReaderAdapter) Close() error {
@@ -29,13 +32,32 @@ func (self ReadSeekReaderAdapter) Close() error {
 }
 
 func (self *ReadSeekReaderAdapter) Read(buf []byte) (int, error) {
+	if self.eof {
+		return 0, io.EOF
+	}
+
 	if self.offset < 0 {
 		return 0, IOError
 	}
 
+	if self.size > 0 && self.offset+int64(len(buf)) > self.size {
+		buf = buf[:self.size-self.offset]
+	}
+
 	n, err := self.reader.ReadAt(buf, self.offset)
+	fmt.Printf("Read from %#v %T %v: %v, %v\n", self.reader, self.reader,
+		self.offset, n, err)
+
 	self.offset += int64(n)
+	if errors.Is(err, io.EOF) {
+		self.eof = true
+	}
+
 	return n, err
+}
+
+func (self *ReadSeekReaderAdapter) SetSize(size int64) {
+	self.size = size
 }
 
 func (self *ReadSeekReaderAdapter) IsSeekable() bool {
