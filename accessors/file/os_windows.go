@@ -305,8 +305,8 @@ func (self OSFileSystemAccessor) OpenWithOSPath(full_path *accessors.OSPath) (
 
 		// Try to figure out the size - not necessary but in case we
 		// can we can limit readers to this size.
-		stat, err := os.Lstat(device_name)
-		if err == nil {
+		stat, err1 := os.Lstat(device_name)
+		if err1 == nil {
 			res.SetSize(stat.Size())
 		}
 
