@@ -74,7 +74,16 @@ func (self RawFileSystemAccessor) Open(filename string) (accessors.ReadSeekClose
 		return nil, err
 	}
 
-	return utils.NewReadSeekReaderAdapter(reader), nil
+	res := utils.NewReadSeekReaderAdapter(reader)
+
+	// Try to figure out the size - not necessary but in case we can
+	// we can limit readers to this size.
+	stat, err := os.Lstat(filename)
+	if err == nil {
+		res.SetSize(stat.Size())
+	}
+
+	return res, nil
 }
 
 func (self RawFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error) {
@@ -117,5 +126,15 @@ func (self RawFileSystemAccessor) LstatWithOSPath(
 
 func init() {
 	accessors.Register("raw_file", &RawFileSystemAccessor{},
-		`Access the filesystem using the OS API.`)
+		`Access a device using aligned reads.
+
+On Windows device reads must be aligned to page size.
+
+This accessor ensures all reads are aligned.
+
+The accessor may be used on other files but:
+
+1. Reads will be aligned to page size (4096 bytes)
+2. The last page will be zero padded past the end of file.
+`)
 }
