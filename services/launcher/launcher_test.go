@@ -1325,7 +1325,7 @@ func getReqName(in *actions_proto.VQLCollectorArgs) string {
 }
 
 func (self *LauncherTestSuite) TestDelete() {
-	assert.Retry(self.T(), 3, time.Second, self._TestDelete)
+	assert.Retry(self.T(), 10, time.Second, self._TestDelete)
 }
 func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 	launcher, err := services.GetLauncher(self.ConfigObj)

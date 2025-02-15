@@ -90,8 +90,8 @@ require (
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20240730174545-3e4ff3d96433
 	www.velocidex.com/golang/go-ese v0.2.1-0.20240919031214-2aa005106db2
-	www.velocidex.com/golang/go-ntfs v0.2.1-0.20240818145200-04736de821dc
-	www.velocidex.com/golang/go-pe v0.1.1-0.20230228112150-ef2eadf34bc3
+	www.velocidex.com/golang/go-ntfs v0.2.1-0.20250215044736-81b32bb0b4d2
+	www.velocidex.com/golang/go-pe v0.1.1-0.20250101153735-7a925ba8334b
 	www.velocidex.com/golang/go-prefetch v0.0.0-20240910051453-2385582c1c22
 	www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe
 	www.velocidex.com/golang/regparser v0.0.0-20240404115756-2169ac0e3c09
