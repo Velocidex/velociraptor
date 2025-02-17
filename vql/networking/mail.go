@@ -19,12 +19,15 @@ package networking
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	gomail "gopkg.in/gomail.v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -48,6 +51,7 @@ type MailPluginArgs struct {
 	AuthPassword string `vfilter:"optional,field=auth_password,doc=The SMTP username password we use to authenticate to the server."`
 	SkipVerify   bool   `vfilter:"optional,field=skip_verify,doc=Skip SSL verification(default: False)."`
 	RootCerts    string `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
+	Secret       string `vfilter:"optional,field=secret,doc=Alternatively use a secret from the secrets service. Secret must be of type 'SMTP Creds'"`
 }
 
 var (
@@ -92,23 +96,33 @@ func (self MailFunction) Call(ctx context.Context,
 
 	defer vql_subsystem.RegisterMonitor("mail", args)()
 
+	res := ordereddict.NewDict()
+
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
 		scope.Log("ERROR:mail: %s", err)
-		return args.Set("ErrorStatus", err.Error())
+		return res.Set("ErrorStatus", err.Error())
 	}
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("ERROR:mail: Command can only run on the server")
-		return args.Set("ErrorStatus", err.Error())
+		return res.Set("ErrorStatus", err.Error())
 	}
 
 	arg := &MailPluginArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("ERROR:mail: %v", err)
-		return args.Set("ErrorStatus", err.Error())
+		return res.Set("ErrorStatus", err.Error())
+	}
+
+	if arg.Secret != "" {
+		err := self.mergeSecretToRequest(ctx, scope, arg, arg.Secret)
+		if err != nil {
+			scope.Log("ERROR:mail: %v", err)
+			return res.Set("ErrorStatus", err.Error())
+		}
 	}
 
 	if arg.Period == 0 {
@@ -116,13 +130,13 @@ func (self MailFunction) Call(ctx context.Context,
 	}
 	if time.Since(last_mail) < time.Duration(arg.Period)*time.Second {
 		scope.Log("ERROR:mail: Send too fast, suppressing.")
-		return args.Set("ErrorStatus", "Send too fast, suppressing.")
+		return res.Set("ErrorStatus", "Send too fast, suppressing.")
 	}
 	last_mail = time.Now()
 
 	if len(arg.To) == 0 {
 		scope.Log("ERROR:mail: no recipient.")
-		return args.Set("ErrorStatus", "no recipient.")
+		return res.Set("ErrorStatus", "no recipient.")
 	}
 
 	// Allow global configuration override.
@@ -177,7 +191,7 @@ func (self MailFunction) Call(ctx context.Context,
 	}
 	if server == "" {
 		scope.Log("ERROR:mail: server not specified")
-		return args.Set("ErrorStatus", "server not specified")
+		return res.Set("ErrorStatus", "server not specified")
 	}
 
 	d := gomail.NewDialer(server, int(port), auth_username, auth_password)
@@ -187,7 +201,7 @@ func (self MailFunction) Call(ctx context.Context,
 		d.TLSConfig, err = GetSkipVerifyTlsConfig(config_obj.GetClient())
 		if err != nil {
 			scope.Log("mail: could not get SkipVerify enabled TLS config: %s", err)
-			return &vfilter.Null{}
+			return res.Set("ErrorStatus", err.Error())
 		}
 
 	} else if config_obj.Client != nil {
@@ -195,21 +209,75 @@ func (self MailFunction) Call(ctx context.Context,
 		d.TLSConfig, err = GetTlsConfig(config_obj.Client, arg.RootCerts)
 		if err != nil {
 			scope.Log("mail: could not get TLS config: %s", err)
-			return &vfilter.Null{}
+			return res.Set("ErrorStatus", err.Error())
 		}
 	}
 
-	// Send the email to Bob, Cora and Dan.
 	err = d.DialAndSend(m)
 	if err != nil {
 		scope.Log("ERROR:mail: %v", err)
 		// Failed to send the mail but we should emit
 		// the row anyway so it gets logged in the
 		// artifact CSV file.
-		return args.Set("ErrorStatus", err.Error())
+		return res.Set("ErrorStatus", err.Error())
 	}
 
-	return args.Set("ErrorStatus", "OK: Message Sent")
+	return res.Set("ErrorStatus", "OK: Message Sent")
+}
+
+func (self MailFunction) mergeSecretToRequest(
+	ctx context.Context, scope vfilter.Scope,
+	arg *MailPluginArgs, secret_name string) error {
+
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return errors.New("Secrets may only be used on the server")
+	}
+
+	secrets_service, err := services.GetSecretsService(config_obj)
+	if err != nil {
+		return err
+	}
+
+	principal := vql_subsystem.GetPrincipal(scope)
+
+	secret_record, err := secrets_service.GetSecret(ctx, principal,
+		constants.SMTP_CREDS, secret_name)
+	if err != nil {
+		return err
+	}
+
+	get := func(field string, target *string) {
+		res := vql_subsystem.GetStringFromRow(
+			scope, secret_record.Data, field)
+		if res != "" {
+			*target = res
+		}
+	}
+
+	get_int := func(field string, target *uint64) {
+		res := vql_subsystem.GetIntFromRow(
+			scope, secret_record.Data, field)
+		if res != 0 {
+			*target = res
+		}
+	}
+
+	get_bool := func(field string, target *bool) {
+		res := vql_subsystem.GetStringFromRow(
+			scope, secret_record.Data, field)
+		if res != "" {
+			*target = vql_subsystem.GetBoolFromString(res)
+		}
+	}
+
+	get("server", &arg.Server)
+	get_int("server_port", &arg.ServerPort)
+	get("auth_username", &arg.AuthUsername)
+	get("auth_password", &arg.AuthPassword)
+	get_bool("skip_verify", &arg.SkipVerify)
+
+	return nil
 }
 
 func (self MailFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

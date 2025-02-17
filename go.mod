@@ -65,7 +65,7 @@ require (
 	github.com/robertkrimen/otto v0.3.0
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/sebdah/goldie/v2 v2.5.3
-	github.com/sergi/go-diff v1.2.0
+	github.com/sergi/go-diff v1.3.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.10.0
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
@@ -87,7 +87,7 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20250117005955-e5cd153ed377
-	www.velocidex.com/golang/go-ese v0.2.1-0.20240919031214-2aa005106db2
+	www.velocidex.com/golang/go-ese v0.2.1-0.20250215160921-5af66dc0f6ed
 	www.velocidex.com/golang/go-ntfs v0.2.1-0.20250215044736-81b32bb0b4d2
 	www.velocidex.com/golang/go-pe v0.1.1-0.20250101153735-7a925ba8334b
 	www.velocidex.com/golang/go-prefetch v0.0.0-20240910051453-2385582c1c22
