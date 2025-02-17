@@ -979,6 +979,8 @@ class VeloPagedTable extends Component {
             transformed_class = "transformed";
         }
 
+        let t_desc = this.getDesc(column_name);
+
         // Do not allow this column to be sorted/filtered
         if (this.props.prevent_transformations &&
             this.props.prevent_transformations[column]) {
@@ -999,7 +1001,10 @@ class VeloPagedTable extends Component {
                          }}
                          draggable="true">
                        <span className="column-name">
-                             { column_name }
+                         { t_desc ?
+                           <ToolTip tooltip={t_desc}>
+                             { t_desc }
+                           </ToolTip> : column_name }
                        </span>
                      </th>
                      <ColumnResizer
@@ -1031,7 +1036,10 @@ class VeloPagedTable extends Component {
                   }}
                   draggable="true">
                 <span className="column-name">
-                  { column_name }
+                  { t_desc ?
+                    <ToolTip tooltip={t_desc}>
+                      <span>{ column_name }</span>
+                    </ToolTip> : column_name }
                 </span>
                 <span className="sort-element">
                   { this.state.transform.editing ?
@@ -1247,6 +1255,16 @@ class VeloPagedTable extends Component {
                 direction={direction}
               />
             </>    );
+    }
+
+    getDesc = c=>{
+        let types = this.state.column_types || [];
+        for(let i=0;i<types.length;i++) {
+            if(types[i].name === c) {
+                return types[i].description;
+            }
+        }
+        return undefined;
     }
 
     renderTable = ()=>{

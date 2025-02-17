@@ -300,6 +300,12 @@ func CalculateNotebookArtifact(
 				// No notebook specified for this source, add a
 				// default.
 
+				default_limit := int64(50)
+				if config_obj.Defaults != nil &&
+					config_obj.Defaults.NotebookDefaultNewCellRows > 0 {
+					default_limit = config_obj.Defaults.NotebookDefaultNewCellRows
+				}
+
 				switch paths.ModeNameToMode(artifact.Type) {
 				case paths.MODE_CLIENT_EVENT, paths.MODE_SERVER_EVENT:
 					new_source.Notebook = append(new_source.Notebook,
@@ -315,8 +321,8 @@ From {{ Scope "StartTime" }} to {{ Scope "EndTime" }}
 
 SELECT timestamp(epoch=_ts) AS ServerTime, *
  FROM source(start_time=StartTime, end_time=EndTime, artifact=%q)
-LIMIT 50
-`, source_name, source_name),
+LIMIT %v
+`, source_name, source_name, default_limit),
 						})
 
 				default:

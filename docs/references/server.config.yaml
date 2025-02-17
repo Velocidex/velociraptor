@@ -1201,6 +1201,13 @@ defaults:
   ## change this.
   notebook_cell_timeout_min: 10
 
+  # By default new cells only list 50 rows if there is no custom
+  # cell template. This is to make refreshing the cell
+  # quick. Usually users need to edit or the limit clause to see
+  # the full result table in the cell. This setting increases the
+  # default 50 rows.
+  notebook_default_new_cell_rows: 50
+
   # When running on a shared server notebook calculations can
   # increases memory use and affect other users. The following
   # settings control notebook calculations to ensure they do not use

@@ -1133,6 +1133,12 @@ message Defaults {
     // How often to refresh the hunt index (default 600 sec)
     int64 hunt_dispatcher_refresh_sec = 43;
 
+    // By default new cells only list 50 rows if there is no custom
+    // cell template. This is to make refreshing the cell
+    // quick. Usually users need to edit or the limit clause to see
+    // the full result table in the cell. This setting increases the
+    // default 50 rows.
+    int64 notebook_default_new_cell_rows = 57;
 
     int64 notebook_cell_timeout_min = 2;
 
