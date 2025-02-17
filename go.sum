@@ -609,8 +609,9 @@ github.com/sebdah/goldie/v2 v2.5.3 h1:9ES/mNN+HNUbNWpVAlrzuZ7jE+Nrczbj8uFRjM7624
 github.com/sebdah/goldie/v2 v2.5.3/go.mod h1:oZ9fp0+se1eapSRjfYbsV/0Hqhbuu3bJVvKI/NNtssI=
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
 github.com/sergi/go-diff v1.1.0/go.mod h1:STckp+ISIX8hZLjrqAeVduY0gWCT9IjLuqbuNXdaHfM=
-github.com/sergi/go-diff v1.2.0 h1:XU+rvMAioB0UC3q1MFrIQy4Vo5/4VsRDQQXHsEya6xQ=
 github.com/sergi/go-diff v1.2.0/go.mod h1:STckp+ISIX8hZLjrqAeVduY0gWCT9IjLuqbuNXdaHfM=
+github.com/sergi/go-diff v1.3.1 h1:xkr+Oxo4BOQKmkn/B9eMK0g5Kg/983T9DqqPHwYqD+8=
+github.com/sergi/go-diff v1.3.1/go.mod h1:aMJSSKb2lpPvRNec0+w3fl7LP9IOFzdc9Pa4NFbPK1I=
 github.com/shirou/gopsutil/v3 v3.21.11 h1:d5tOAP5+bmJ8Hf2+4bxOSkQ/64+sjEbjU9nSW9nJgG0=
 github.com/shirou/gopsutil/v3 v3.21.11/go.mod h1:BToYZVTlSVlfazpDDYFnsVZLaoRG+g8ufT6fPQLdJzA=
 github.com/shopspring/decimal v1.2.0 h1:abSATXmQEYyShuxI4/vyW3tV1MrKAJzCZ/0zLUXYbsQ=
@@ -963,8 +964,8 @@ www.velocidex.com/golang/binparsergen v0.1.1-0.20240404114946-8f66c7cf586e h1:uf
 www.velocidex.com/golang/binparsergen v0.1.1-0.20240404114946-8f66c7cf586e/go.mod h1:jk+uZGukrJZWgnNH6q9tJLUnbugHEDPCQdIOmBBMXY4=
 www.velocidex.com/golang/evtx v0.2.1-0.20250117005955-e5cd153ed377 h1:dJn+CMhWi5mi2VSdtBjWXLhNaGyVZKdIYTTM4RJGfbU=
 www.velocidex.com/golang/evtx v0.2.1-0.20250117005955-e5cd153ed377/go.mod h1:JDMB7j3uBFgww0+PzsQUGvnOywFEHkbynzAPyNvhiAg=
-www.velocidex.com/golang/go-ese v0.2.1-0.20240919031214-2aa005106db2 h1:f7nj4NsyeMSrwiFd9XO/VfsZYt6o6FH1KJmmqlBZDgM=
-www.velocidex.com/golang/go-ese v0.2.1-0.20240919031214-2aa005106db2/go.mod h1:YKxCStqE15c6F/P81oCG0Y5oelDBah2hCdO6P+VPUIQ=
+www.velocidex.com/golang/go-ese v0.2.1-0.20250215160921-5af66dc0f6ed h1:Hh6PLqXb0uUTxRiJabUUupHMl1m9EgllhJKN1+3novQ=
+www.velocidex.com/golang/go-ese v0.2.1-0.20250215160921-5af66dc0f6ed/go.mod h1:H1Gw62XkspXEtZPT2ep+L57GgdKIDHwueazxKnn5EXc=
 www.velocidex.com/golang/go-ntfs v0.2.1-0.20250215044736-81b32bb0b4d2 h1:lMxVWF28O+6dcPD6BbBlopfGE9eVy+cyFV96Sop8+xY=
 www.velocidex.com/golang/go-ntfs v0.2.1-0.20250215044736-81b32bb0b4d2/go.mod h1:itvbHQcnLdTVIDY6fI3lR0zeBwXwBYBdUFtswE0x1vc=
 www.velocidex.com/golang/go-pe v0.1.1-0.20250101153735-7a925ba8334b h1:hOxQYDyETh4wdnCbM9Il4X+6LwonGdLnsoznqvzw48A=

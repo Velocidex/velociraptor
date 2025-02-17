@@ -4943,7 +4943,33 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: mail
-  description: Send Email to a remote server.
+  description: |
+    Send Email to a remote server.
+
+    This function will send an email to a remote SMTP server. The mail
+    will be sent using SMTP with TLS and authentication.
+
+    Mails will be globally rate limited (among all queries) to the
+    specified period (default 60 seconds) to prevent overloading the
+    SMTP server. For this reason it is not suitable as a way to send
+    high number of events - use it sparingly to notify on some rare
+    events.
+
+    You can either fill in the auth_username and auth_password
+    parameters directly or use the secrets service to encapsulate
+    secrets in a managed way.
+
+    ### Example
+
+    ```vql
+    SELECT mail(secret="gmail",
+                subject="Hello from Velociraptor",
+                to="user@example.com",
+                body="Good morning to you from Velociraptor")
+    FROM scope()
+    ```
+
+
   type: Function
   args:
   - name: to
@@ -4988,6 +5014,10 @@
     type: string
     description: As a better alternative to disable_ssl_security, allows root ca certs
       to be added here.
+  - name: secret
+    type: string
+    description: Alternatively use a secret from the secrets service. Secret must
+      be of type 'SMTP Creds'
   metadata:
     permissions: SERVER_ADMIN
   platforms:
@@ -4997,7 +5027,10 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: mail
-  description: Send Email to a remote server.
+  description: |
+    Send Email to a remote server.
+
+    See the mail() function for more details.
   type: Plugin
   args:
   - name: to
@@ -5042,6 +5075,10 @@
     type: string
     description: As a better alternative to disable_ssl_security, allows root ca certs
       to be added here.
+  - name: secret
+    type: string
+    description: Alternatively use a secret from the secrets service. Secret must
+      be of type 'SMTP Creds'
   category: server
   platforms:
   - darwin_amd64_cgo
@@ -11285,6 +11322,9 @@
   - name: vars
     type: ordereddict.Dict
     description: The Yara variables to use.
+  - name: force_buffers
+    type: bool
+    description: Force buffer scan in all cases.
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
@@ -11395,4 +11435,3 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
-

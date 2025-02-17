@@ -39,8 +39,11 @@ func (self *ReadSeekReaderAdapter) Read(buf []byte) (int, error) {
 		return 0, IOError
 	}
 
+	// This read would exceed the size, so we read up to the size and
+	// flag the eof.
 	if self.size > 0 && self.offset+int64(len(buf)) > self.size {
 		buf = buf[:self.size-self.offset]
+		self.eof = true
 	}
 
 	n, err := self.reader.ReadAt(buf, self.offset)

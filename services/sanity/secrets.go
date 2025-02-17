@@ -79,6 +79,17 @@ var built_in_definitions = []string{`{
      "skip_verify": "FALSE"
   },
   "verifier": "x=>x.addresses"
+}`, `{
+  "typeName":"SMTP Creds",
+  "description": "Credentials to be used in mail() plugin.",
+  "template": {
+     "server": "127.0.0.1",
+     "server_port": "587",
+     "auth_username": "",
+     "auth_password": "",
+     "skip_verify": "FALSE"
+  },
+  "verifier": "x=>x.server && x.server_port"
 }`,
 }
 
