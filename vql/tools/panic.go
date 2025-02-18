@@ -20,7 +20,7 @@ func init() {
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 
-				err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+				err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 				if err != nil {
 					scope.Log("panic: %s", err)
 					return result

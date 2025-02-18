@@ -11,7 +11,7 @@ parameters:
     default: Tuesday
     type: regex
   - name: ScheduleTimeRegex
-    default: "01:28:"
+    default: "01:28"
     type: regex
   - name: HuntDescription
     default: "Periodic info hunt"
@@ -22,7 +22,7 @@ sources:
            UTC.String AS Now,
            Weekday.String AS Today
       FROM clock(period=60)
-      WHERE Now =~ ScheduleTimeRegex
+      WHERE Now =~ ScheduleTimeRegex + ":[0-9][0-9]"
         AND Today =~ ScheduleDayRegex
         AND log(message="Launching at time " + Now)
 

@@ -74,6 +74,8 @@ parameters:
     "Chrome:Chrome Visited Links","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Visited Links"
     "Chrome:Chrome Web Data","C:\Users\*\AppData\Local\Google\Chrome\User Data\*/**10/Web Data*"
     "Chrome:Windows Protect Folder","C:\Users\*\AppData\Roaming\Microsoft\Protect\*/**10"
+    "Chrome:Chrome Snapshots Folder","C:\Users\*\AppData\Local\Google\Chrome\User Data\Snapshots\*/**10"
+    "Chrome:SYSTEM Chrome History","C:\Windows\system32\config\systemprofile\AppData\Local\Google\Chrome\User Data\*/**10/History*"
     "Cylance:Cylance ProgramData Logs","C:\ProgramData\Cylance\Desktop/**10"
     "Cylance:Cylance Optics Logs","C:\ProgramData\Cylance\Optics\Log/**10"
     "Cylance:Cylance Program Files Logs","C:\Program Files\Cylance\Desktop\log/**10"
@@ -198,7 +200,7 @@ parameters:
 
 sources:
 - query: |
-   LET AllFilenamesRegex <= '''^(CarsDB.db|Contacts.db|random.sqlite|ActivitiesCache.db|Antiphishing.db|RansomwareRecover.db|cache.db|es.db|Web Data|Web Data|Cookies|History|Favicons|History|History|Web Data|Media History|Media History|Network Action Predictor|Shortcuts|Top Sites|chp.db|aggregation.dbx|config.db|filecache.db|icon.db|instance.dbx|home.db|home.db|home.db|home.db|sync_history.db|tray-thumbnails.db|WebAssistDatabase|EventTranscript.db|EventTranscript.db|queue.sqlite3|places.sqlite|cookies.sqlite|downloads.sqlite|places.sqlite|favicons.sqlite|formhistory.sqlite|places.sqlite|random.db|cloud_graph.db|snapshot.db|sync_config.db|metadata_sqlite_db|plum.sqlite|nessusd.db|MediaDb.v1.sqlite|Windows.db|Windows-gather.db|random.db|main.db|wpndatabase.db|wpndatabase.db|Store.db|contacts.db|Notifications.db|Phone.db|photos.db|settings.db|accounts4.db|callhistory.storedata)$'''
+   LET AllFilenamesRegex <= '''^(CarsDB.db|Contacts.db|random.sqlite|ActivitiesCache.db|Antiphishing.db|RansomwareRecover.db|cache.db|es.db|Web Data|Web Data|Cookies|History|Favicons|History|History|Web Data|Media History|Media History|Network Action Predictor|Shortcuts|Top Sites|chp.db|aggregation.dbx|config.db|filecache.db|icon.db|instance.dbx|home.db|home.db|home.db|home.db|sync_history.db|tray-thumbnails.db|collectionsSQLite|WebAssistDatabase|EventTranscript.db|EventTranscript.db|FSIV.db|queue.sqlite3|places.sqlite|cookies.sqlite|downloads.sqlite|places.sqlite|favicons.sqlite|formhistory.sqlite|places.sqlite|random.db|cloud_graph.db|snapshot.db|sync_config.db|metadata_sqlite_db|random.db|IvAppMon.db|plum.sqlite|msty.db|nessusd.db|notion.db|MediaDb.v1.sqlite|Windows.db|Windows-gather.db|Notes.db|random.db|main.db|wpndatabase.db|wpndatabase.db|Store.db|contacts.db|Notifications.db|Phone.db|photos.db|settings.db|accounts4.db|callhistory.storedata)$'''
    LET SQLiteFiles <=
    SELECT OSPath,
     read_file(filename=OSPath, length=15, accessor=Accessor) AS Magic,
@@ -454,9 +456,9 @@ sources:
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='cookies' OR name='meta');'''
     LET IdentifyValue = 2
     LET SQLQuery = '''SELECT
-    datetime ( cookies.creation_utc / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS CreationUTC,
-    datetime ( cookies.expires_utc / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS ExpiresUTC,
-    datetime ( cookies.last_access_utc / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS LastAccessUTC,
+    datetime ( cookies.creation_utc / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch' ) AS CreationUTC,
+    datetime ( cookies.expires_utc / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch' ) AS ExpiresUTC,
+    datetime ( cookies.last_access_utc / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch' ) AS LastAccessUTC,
     cookies.host_key AS HostKey,
     cookies.name AS Name,
     cookies.path AS Path,
@@ -512,10 +514,10 @@ sources:
     downloads.original_mime_type AS OriginalMIMEType,
     downloads.received_bytes AS ReceivedBytes,
     downloads.total_bytes AS TotalBytes,
-    datetime( downloads.start_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS StartTime,
-    datetime( downloads.end_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS EndTime,
-    datetime( downloads.opened / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS Opened,
-    datetime( downloads.last_access_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS LastAccessTime,
+    datetime( downloads.start_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch' ) AS StartTime,
+    datetime( downloads.end_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch' ) AS EndTime,
+    datetime( downloads.opened / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch' ) AS Opened,
+    datetime( downloads.last_access_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch' ) AS LastAccessTime,
     downloads.last_modified AS LastModified,
     CASE
     
@@ -552,6 +554,34 @@ sources:
     'Potentially Unwanted'
     WHEN downloads.danger_type = 9 THEN
     'Whitelisted by Policy'
+    WHEN downloads.danger_type = 10 THEN
+    'Download Pending Detailed Verdict'
+    WHEN downloads.danger_type = 11 THEN
+    'Blocked By Policy Password Protected'
+    WHEN downloads.danger_type = 12 THEN
+    'Blocked By Policy Download Too Large'
+    WHEN downloads.danger_type = 13 THEN
+    'Sensitive Content Warning'
+    WHEN downloads.danger_type = 14 THEN
+    'Sensitive Content Blocked'
+    WHEN downloads.danger_type = 15 THEN
+    'Deep Scanned Safe'
+    WHEN downloads.danger_type = 16 THEN
+    'Deep Scanned Dangerous But Opened By User'
+    WHEN downloads.danger_type = 17 THEN
+    'Prompt For Deep Scanning'
+    WHEN downloads.danger_type = 18 THEN
+    'Blocked Unsupported Filetype'
+    WHEN downloads.danger_type = 19 THEN
+    'Dangerous Associated With Account Compromise'
+    WHEN downloads.danger_type = 20 THEN
+    'Deep Scan Failed'
+    WHEN downloads.danger_type = 21 THEN
+    'Encrypted Archive Prompt for Local Password Scanning'
+    WHEN downloads.danger_type = 22 THEN
+    'Encrypted Archive Prompt for Local Password Scanning Pending Detailed Verdict'
+    WHEN downloads.danger_type = 23 THEN
+    'Blocked by Policy Scan Failed'
     END AS DangerType,
     CASE
     
@@ -576,7 +606,11 @@ sources:
     WHEN downloads.interrupt_reason = 12 THEN
     'Security Check Failed'
     WHEN downloads.interrupt_reason = 13 THEN
-    'Resume Error'
+    'Resume Error File Too Short'
+    WHEN downloads.interrupt_reason = 14 THEN
+    'File Hash Mismatch'
+    WHEN downloads.interrupt_reason = 15 THEN
+    'File Same As Source'
     WHEN downloads.interrupt_reason = 20 THEN
     'Network Error'
     WHEN downloads.interrupt_reason = 21 THEN
@@ -585,6 +619,8 @@ sources:
     'Connection Lost'
     WHEN downloads.interrupt_reason = 23 THEN
     'Server Down'
+    WHEN downloads.interrupt_reason = 24 THEN
+    'Network Request Invalid'
     WHEN downloads.interrupt_reason = 30 THEN
     'Server Error'
     WHEN downloads.interrupt_reason = 31 THEN
@@ -635,7 +671,7 @@ sources:
     LET SQLQuery = '''SELECT
     favicons.id AS ID,
     favicon_bitmaps.icon_id AS IconID,
-    datetime( favicon_bitmaps.last_updated / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS LastUpdated,
+    datetime( favicon_bitmaps.last_updated / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch' ) AS LastUpdated,
     icon_mapping.page_url AS PageURL,
     favicons.url AS FaviconURL
     FROM
@@ -660,8 +696,8 @@ sources:
     LET IdentifyValue = 5
     LET SQLQuery = '''SELECT
     urls.id AS ID,
-    datetime( visits.visit_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS 'VisitTime (Local)',
-    datetime( urls.last_visit_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS 'LastVisitedTime (Local)',
+    datetime( visits.visit_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch' ) AS 'VisitTime (UTC)',
+    datetime( urls.last_visit_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch' ) AS 'LastVisitedTime (UTC)',
     urls.title AS URLTitle,
     urls.url AS URL,
     urls.visit_count AS VisitCount,
@@ -694,7 +730,7 @@ sources:
     LET SQLQuery = '''SELECT
     keyword_search_terms.keyword_id AS KeywordID,
     keyword_search_terms.url_id AS URLID,
-    datetime( urls.last_visit_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS LastVisitTime,
+    datetime( urls.last_visit_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch' ) AS LastVisitTime,
     keyword_search_terms.term AS KeywordSearchTerm,
     urls.title AS Title,
     urls.url AS URL
@@ -820,7 +856,7 @@ sources:
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='meta' OR name='omni_box_shortcuts');'''
     LET IdentifyValue = 2
     LET SQLQuery = '''SELECT
-    datetime( omni_box_shortcuts.last_access_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch', 'localtime' ) AS LastAccessTime,
+    datetime( omni_box_shortcuts.last_access_time / 1000000 + ( strftime( '%s', '1601-01-01' ) ), 'unixepoch' ) AS LastAccessTime,
     omni_box_shortcuts.text AS TextTyped,
     omni_box_shortcuts.fill_into_edit AS FillIntoEdit,
     omni_box_shortcuts.url AS URL,
@@ -847,8 +883,7 @@ sources:
     LET SQLQuery = '''SELECT
     top_sites.url_rank AS URLRank,
     top_sites.url AS URL,
-    top_sites.title AS Title,
-    top_sites.redirects AS Redirects
+    top_sites.title AS Title
     FROM
     top_sites
     ORDER BY
@@ -1146,6 +1181,93 @@ sources:
        VALUE
        from config'''
     LET FileType = '''Drobpox'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, FileType=FileType,
+      IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
+- name: Edge Browser Collections - Collections, Items, and Comments
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='collections' OR name='items');'''
+    LET IdentifyValue = 2
+    LET SQLQuery = '''SELECT
+    /* Collections table */
+    datetime(collections.date_created/1000, 'unixepoch', 'utc') AS Collection_CreationUTC,
+    datetime(collections.date_modified/1000, 'unixepoch', 'utc') AS Collection_ModifiedUTC,
+    collections.title as Collection_Title,
+    collections.position as Collection_Position,
+    collections.is_syncable as Collection_IsSyncable,
+    collections.suggestion_url as Collection_SuggestionUrl,
+    collections.suggestion_dismissed as Collection_SuggestionDismissed,
+    collections.suggestion_type as Collection_SuggestionType,
+    cast(collections.thumbnail as varchar) as Collection_Thumbnail,
+    collections.is_custom_thumbnail as Collection_IsCustomThumbnail,
+    collections.tag as Collection_Tag,
+    collections.thumbnail_url as Collection_ThumbnailUrl,
+    collections.is_marked_for_deletion as Collection_IsMarkedForDeletion,
+    
+    /* Collections_Sync table */
+    datetime(collections_sync.date_last_synced/1000, 'unixepoch', 'utc') AS CollectionSync_DateLastSynced,
+    collections_sync.is_syncable AS CollectionSync_IsSyncable,
+    collections_sync.server_id AS CollectionSync_ServerId,
+    
+    /* Items table */
+    case when items.type == "website"
+        then datetime(items.date_created, 'unixepoch', 'utc')
+        else datetime(items.date_created/1000, 'unixepoch', 'utc')
+    end AS Item_CreationUTC,
+    datetime(items.date_modified/1000, 'unixepoch', 'utc') AS Item_ModifiedUTC,
+    cast(items.source as varchar) AS Item_Source,
+    items.Title AS Item_Title,
+    cast(items.entity_blob as varchar) AS Item_EntityBlob,
+    cast(items.canonical_image_data as varchar) AS Item_CanonicalImageData,
+    cast(items.third_party_data as varchar) AS Item_ThirdPartyData,
+    items.favicon_url AS Item_FaviconUrl,
+    items.text_content AS Item_TextContent,
+    items.html_content AS Item_HtmlContent,
+    items.type AS Item_Type,
+    items.tag AS Item_Tag,
+    
+    /* Items Offline Data */
+    items_offline_data.offline_file_data AS Item_OfflineFileData,
+    
+    /* Items_Sync Data */
+    datetime(items_sync.date_last_synced/1000, 'unixepoch', 'utc') AS ItemSync_DateLastSynced,
+    items_sync.is_syncable AS ItemSync_IsSyncable,
+    
+    /* Comments table */
+    comments.text as Comment_Text,
+    comments.properties as Comment_Properties,
+    
+    /* All the raw fields here */
+    collections.id as collection_id,
+    collections.date_created as raw_collection_created,
+    collections.date_modified as raw_collection_modified,
+    items.id AS item_id,
+    items.date_created AS raw_item_created,
+    items.date_modified AS raw_item_modified,
+    comments.id as comment_id,
+    comments.parent_id as comment_parent_id
+    
+    
+    FROM
+    items
+        left join collections_items_relationship
+            on items.id = collections_items_relationship.item_id
+        left join collections
+            on collections_items_relationship.parent_id = collections.id
+        left join collections_sync
+            on collections.id = collections_sync.collection_id
+        left join comments
+            on items.id = comments.parent_id
+        left join items_offline_data
+            on items.id = items_offline_data.item_id
+        left join items_sync
+            on items.id = items_sync.item_id
+    
+    ORDER BY
+        Collection_Title ASC, items.date_created DESC'''
+    LET FileType = '''Edge Browser Collections - Collections, Items, and Comments'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, FileType=FileType,
@@ -4039,6 +4161,67 @@ sources:
       SQLQuery=SQLQuery, FileType=FileType,
       IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
 
+- name: Folder List
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='FolderList' OR name='FileList' OR name='DBSettings');'''
+    LET IdentifyValue = 3
+    LET SQLQuery = '''SELECT
+    folderID AS FolderID,
+    folderName AS FolderName,
+    lastAccess AS LastAccess
+    FROM FolderList'''
+    LET FileType = '''Folder List'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, FileType=FileType,
+      IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
+- name: File List
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='FolderList' OR name='FileList' OR name='DBSettings');'''
+    LET IdentifyValue = 3
+    LET SQLQuery = '''SELECT
+    ID AS ID,
+    folderID AS FolderID,
+    itemNO AS ItemNO,
+    isFolder AS IsFolder,
+    fileName AS FileName,
+    isTag AS IsTag,
+    ratings AS Ratings,
+    XP_rating AS XPRating,
+    fileTime AS FileTime,
+    exifTime AS ExifTime,
+    fileSize AS FileSize,
+    width AS Width,
+    height AS Height,
+    pages AS Pages,
+    imageType AS ImageType,
+    imgSize1 AS ImgSize1,
+    imgSize2 AS ImgSize2,
+    img1 AS Img1,
+    img2 AS Img2
+    FROM FileList'''
+    LET FileType = '''File List'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, FileType=FileType,
+      IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
+- name: DB Settings
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='FolderList' OR name='FileList' OR name='DBSettings');'''
+    LET IdentifyValue = 3
+    LET SQLQuery = '''SELECT
+    version AS Version,
+    ThumbnailSizeS AS ThumbnailSizeSmall,
+    ThumbnailSizeB AS ThumbnailSizeBig
+    FROM DBSettings'''
+    LET FileType = '''DB Settings'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, FileType=FileType,
+      IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
 - name: FileZilla Client Queue
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='files');'''
@@ -4586,6 +4769,53 @@ sources:
       SQLQuery=SQLQuery, FileType=FileType,
       IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
 
+- name: Files
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='ibfile');'''
+    LET IdentifyValue = 1
+    LET SQLQuery = '''SELECT
+        ibfolder.NAME
+    AS
+        'file_directory',
+        ibfile.NAME
+    AS
+        'filen_name',
+        ibfile.FILE_SIZE
+    AS
+        'file_size',
+        ibfile.FILE_LMD
+    AS
+        'file_modify_date'
+    FROM
+        ibfile
+    INNER JOIN
+        ibfolder
+    ON
+        ibfile.DIRID = ibfolder.DIRID;'''
+    LET FileType = '''Files'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, FileType=FileType,
+      IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
+- name: Ivanti
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='applications' OR name='modifiedFiles' OR name='networkOperations' OR name='networkProtocols' OR name='usedApplications' OR name='usedImages');'''
+    LET IdentifyValue = 6
+    LET SQLQuery = '''SELECT
+      "NO".*,
+      np.protocol,
+      a.*
+    FROM
+      networkOperations AS "NO"
+      LEFT JOIN networkProtocols AS np ON "NO".applications_id = np.applications_id
+      LEFT JOIN applications AS a ON "NO".applications_id = a.id'''
+    LET FileType = '''Ivanti'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, FileType=FileType,
+      IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
 - name: Microsoft Sticky Notes
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='Note' OR name='Media' OR name='Insight' OR name='User' OR name='Stroke');'''
@@ -4620,6 +4850,126 @@ sources:
       SQLQuery=SQLQuery, FileType=FileType,
       IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
 
+- name: API Keys
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='api_keys' OR name='app_settings' OR name='chat_messages' OR name='chats' OR name='knowledge_stacks');'''
+    LET IdentifyValue = 5
+    LET SQLQuery = '''SELECT
+    id AS ID,
+    name AS Name,
+    key AS Key,
+    provider AS Provider,
+    created_at AS CreatedAt,
+    key_hint AS KeyHint,
+    models AS Models,
+    extras AS Extras,
+    save_in_keychain AS SaveInKeychain
+    FROM api_keys'''
+    LET FileType = '''API Keys'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, FileType=FileType,
+      IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
+- name: App Settings
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='api_keys' OR name='app_settings' OR name='chat_messages' OR name='chats' OR name='knowledge_stacks');'''
+    LET IdentifyValue = 5
+    LET SQLQuery = '''SELECT
+    key AS Key,
+    value AS Value
+    FROM app_settings'''
+    LET FileType = '''App Settings'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, FileType=FileType,
+      IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
+- name: Chat Messages
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='api_keys' OR name='app_settings' OR name='chat_messages' OR name='chats' OR name='knowledge_stacks');'''
+    LET IdentifyValue = 5
+    LET SQLQuery = '''SELECT
+    id AS MessageID,
+    chat_id AS ChatID,
+    text AS Text,
+    config AS Config,
+    role AS Role,
+    sync_buddy_id AS SyncBuddyID,
+    refinement_prompt AS RefinementPrompt,
+    parent_id AS ParentID,
+    branch_parent_id AS BranchParentID,
+    model_name AS ModelName,
+    attachments AS Attachments,
+    extras AS Extras,
+    refinement_active_id AS RefinementActiveID,
+    created_at AS CreatedAt,
+    knowledge_stack_attachment AS KnowledgeStackAttachment,
+    knowledge_stack_query_results AS KnowledgeStackQueryResults,
+    real_time_data_sources AS RealTimeDataSources,
+    delve_parent_chat_id AS DelveParentChatID,
+    delve_info AS DelveInfo,
+    prompt_response_metrics AS PromptResponseMetrics
+    FROM chat_messages'''
+    LET FileType = '''Chat Messages'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, FileType=FileType,
+      IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
+- name: Chats
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='api_keys' OR name='app_settings' OR name='chat_messages' OR name='chats' OR name='knowledge_stacks');'''
+    LET IdentifyValue = 5
+    LET SQLQuery = '''SELECT
+    id AS ChatID,
+    title AS Title,
+    model_vendor AS ModelVendor,
+    model_name AS ModelName,
+    config AS Config,
+    parent_chat_id AS ParentChatID,
+    created_at AS CreatedAt,
+    chat_session_id AS ChatSessionID,
+    extras AS Extras,
+    delve_parent_chat_id AS DelveParentChatID,
+    delve_info AS DelveInfo,
+    prompt_response_metrics AS PromptResponseMetrics
+    FROM chats'''
+    LET FileType = '''Chats'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, FileType=FileType,
+      IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
+- name: Knowledge Stacks
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='api_keys' OR name='app_settings' OR name='chat_messages' OR name='chats' OR name='knowledge_stacks');'''
+    LET IdentifyValue = 5
+    LET SQLQuery = '''SELECT
+    id AS StackID,
+    title AS Title,
+    status AS Status,
+    files AS Files,
+    notes AS Notes,
+    youtube_links AS YouTubeLinks,
+    directories AS Directories,
+    obsidian_vaults AS ObsidianVaults,
+    vector_info AS VectorInfo,
+    config AS Config,
+    tags AS Tags,
+    is_bookmarked AS IsBookmarked,
+    created_at AS CreatedAt,
+    updated_at AS UpdatedAt,
+    compose_stats AS ComposeStats,
+    reranking AS ReRanking,
+    composed_at AS ComposedAt
+    FROM knowledge_stacks'''
+    LET FileType = '''Knowledge Stacks'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, FileType=FileType,
+      IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
 - name: Nessus Preferences Database
   query: |
     LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='PREFERENCES');'''
@@ -4630,6 +4980,95 @@ sources:
     FROM
     PREFERENCES'''
     LET FileType = '''Nessus Preferences Database'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, FileType=FileType,
+      IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
+- name: Entries
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='block');'''
+    LET IdentifyValue = 1
+    LET SQLQuery = '''SELECT
+        block.id,
+        space_id,
+        block.version,
+        type,
+        properties,
+        collection_id,
+        created_time,
+        created_by,
+        name AS "created_by_name",
+        last_edited_time,
+        last_edited_by,
+        parent_id
+    FROM
+        block
+    INNER JOIN
+        notion_user
+    ON
+        notion_user.id = block.created_by_id;'''
+    LET FileType = '''Entries'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, FileType=FileType,
+      IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
+- name: Simple Sticky Notes DB
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='NOTEBOOKS' OR name='NOTES');'''
+    LET IdentifyValue = 2
+    LET SQLQuery = '''SELECT
+      COALESCE(NOTEBOOKS.ID, NOTES.ID) AS ID,
+      NOTEBOOKS.NAME,
+      NOTES.STATE,
+      datetime((NOTES.CREATED - 25569) * 86400, 'unixepoch', 'localtime', 'utc') AS CREATED_UTC,
+      datetime((NOTES.UPDATED - 25569) * 86400, 'unixepoch', 'localtime', 'utc') AS UPDATED_UTC,
+    CASE
+    
+        WHEN NOTES.DELETED = 0 THEN
+        'No'
+        WHEN NOTES.DELETED = 1 THEN
+        'Yes' ELSE NULL
+      END AS DELETED_TEXT,
+    CASE
+    
+        WHEN NOTES.STARRED = 0 THEN
+        'No'
+        WHEN NOTES.STARRED = 1 THEN
+        'Yes' ELSE NULL
+      END AS STARRED_TEXT,
+      NOTES.AOT,
+    CASE
+    
+        WHEN NOTES.MINIMIZE = 0 THEN
+        'No'
+        WHEN NOTES.MINIMIZE = 1 THEN
+        'Yes' ELSE NULL
+      END AS MINIMIZED_TEXT,
+      NOTES.COLOR,
+      NOTES.OPACITY,
+      NOTES."LEFT",
+      NOTES.TOP,
+      NOTES.WIDTH,
+      NOTES.HEIGHT,
+      NOTES.LOCKED,
+      NOTES.ZORDER,
+      NOTES.ALARM,
+      NOTES.ALARM_CURRENT,
+      NOTES.ALARM_PERIOD,
+      NOTES.ALARM_DAY,
+      NOTES.ALARM_SNOOZE,
+      NOTES.ALARM_SOUND,
+      NOTEBOOKS.NAME AS NotebookName,
+      NOTES.TITLE,
+      NOTES.TYPE,
+      NOTES.DATA,
+      NOTES.TEXT
+    FROM
+      NOTES
+      LEFT JOIN NOTEBOOKS ON NOTEBOOKS.ID = NOTES.ID;'''
+    LET FileType = '''Simple Sticky Notes DB'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, FileType=FileType,
