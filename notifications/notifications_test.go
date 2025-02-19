@@ -128,7 +128,7 @@ func TestMultipleNotificationsToDelayedListener(t *testing.T) {
 
 	// Wait here until the goroutine is done.
 	vtesting.WaitUntil(2*time.Second, t, func() bool {
-		return time_out.Get() > 0
+		return time_out.Get() > 0 && triggered.Get() == 2
 	})
 
 	assert.Equal(t, 2, triggered.Get())

@@ -45,13 +45,14 @@ type MailPluginArgs struct {
 	// servers throttle mails sent too quickly.
 	Period int64 `vfilter:"optional,field=period,doc=How long to wait before sending the next mail - help to throttle mails."`
 
-	ServerPort   uint64 `vfilter:"optional,field=server_port,doc=The SMTP server port to use (default 587)."`
-	Server       string `vfilter:"optional,field=server,doc=The SMTP server to use (if not specified we try the config file)."`
-	AuthUsername string `vfilter:"optional,field=auth_username,doc=The SMTP username we authenticate to the server."`
-	AuthPassword string `vfilter:"optional,field=auth_password,doc=The SMTP username password we use to authenticate to the server."`
-	SkipVerify   bool   `vfilter:"optional,field=skip_verify,doc=Skip SSL verification(default: False)."`
-	RootCerts    string `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
-	Secret       string `vfilter:"optional,field=secret,doc=Alternatively use a secret from the secrets service. Secret must be of type 'SMTP Creds'"`
+	ServerPort   uint64            `vfilter:"optional,field=server_port,doc=The SMTP server port to use (default 587)."`
+	Server       string            `vfilter:"optional,field=server,doc=The SMTP server to use (if not specified we try the config file)."`
+	AuthUsername string            `vfilter:"optional,field=auth_username,doc=The SMTP username we authenticate to the server."`
+	AuthPassword string            `vfilter:"optional,field=auth_password,doc=The SMTP username password we use to authenticate to the server."`
+	SkipVerify   bool              `vfilter:"optional,field=skip_verify,doc=Skip SSL verification(default: False)."`
+	RootCerts    string            `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
+	Secret       string            `vfilter:"optional,field=secret,doc=Alternatively use a secret from the secrets service. Secret must be of type 'SMTP Creds'"`
+	Headers      *ordereddict.Dict `vfilter:"optional,field=headers,doc=A dict of headers to send."`
 }
 
 var (
@@ -175,7 +176,20 @@ func (self MailFunction) Call(ctx context.Context,
 		m.SetHeader("Cc", arg.CC...)
 	}
 	m.SetHeader("Subject", arg.Subject)
-	m.SetBody("text/plain", arg.Body)
+	content_type := "text/plain"
+
+	if arg.Headers != nil {
+		for _, k := range arg.Headers.Keys() {
+			v, ok := arg.Headers.GetString(k)
+			if ok {
+				m.SetHeader(k, v)
+			}
+			if k == "Content-Type" {
+				content_type = v
+			}
+		}
+	}
+	m.SetBody(content_type, arg.Body)
 
 	port := arg.ServerPort
 	if port == 0 {

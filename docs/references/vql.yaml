@@ -4959,17 +4959,19 @@
     parameters directly or use the secrets service to encapsulate
     secrets in a managed way.
 
+    You can set any headers needed - for example to send HTML email
+    set the `Content-Type` to "text/html"
+
     ### Example
 
     ```vql
     SELECT mail(secret="gmail",
                 subject="Hello from Velociraptor",
                 to="user@example.com",
-                body="Good morning to you from Velociraptor")
+                headers=dict(`Content-Type`="text/html"),
+                body="<h1>Good morning</h1><p>From Velociraptor")
     FROM scope()
     ```
-
-
   type: Function
   args:
   - name: to
@@ -5018,6 +5020,9 @@
     type: string
     description: Alternatively use a secret from the secrets service. Secret must
       be of type 'SMTP Creds'
+  - name: headers
+    type: ordereddict.Dict
+    description: A dict of headers to send.
   metadata:
     permissions: SERVER_ADMIN
   platforms:
@@ -5079,6 +5084,9 @@
     type: string
     description: Alternatively use a secret from the secrets service. Secret must
       be of type 'SMTP Creds'
+  - name: headers
+    type: ordereddict.Dict
+    description: A dict of headers to send.
   category: server
   platforms:
   - darwin_amd64_cgo
