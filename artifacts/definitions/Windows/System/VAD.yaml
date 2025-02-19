@@ -18,7 +18,7 @@ description: |
   all sections and ProtectionRegex can override selection.
   - To filter on unmapped sections the MappingNameRegex: ^$ can be used.
   - When uploading sections during analysis, its recommended to run once for 
-  scoping, then a second time one confirmed for upload.
+  scoping, then a second time once confirmed for upload.
 
 parameters:
   - name: ProcessRegex
