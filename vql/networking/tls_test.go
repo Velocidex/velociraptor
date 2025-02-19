@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -47,7 +47,7 @@ func testHTTPConnection(
 }
 
 func TestTLSVerification(t *testing.T) {
-	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := vtesting.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Hello, client")
 	}))
 	defer ts.Close()
@@ -82,6 +82,7 @@ func TestTLSVerification(t *testing.T) {
 			},
 		},
 	}
+
 	data, err := testHTTPConnection(config_obj, ts.URL)
 	assert.NoError(t, err)
 	assert.Contains(t, string(data), "Hello, client")
