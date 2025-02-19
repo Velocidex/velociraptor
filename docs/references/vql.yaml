@@ -64,6 +64,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: all
   description: Returns TRUE if all items are true.
   type: Function
@@ -86,6 +87,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: amsi
   description: |
     AMSI is an interface on windows to scan a string for malware. This
@@ -189,6 +191,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: artifact_definitions
   description: Dump artifact definitions from the internal repository.
   type: Plugin
@@ -744,6 +747,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: cidr_contains
   description: |
     Calculates if an IP address falls within a range of CIDR specified
@@ -1632,6 +1636,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: diff
   description: |
     Executes 'query' periodically and emit differences from the last query.
@@ -2651,7 +2656,7 @@
     description: Run this query for each row.
   - name: async
     type: bool
-    description: If set we run all queries asynchronously (implies workers=1000).
+    description: If set we run all queries asynchronously (implies workers=100).
   - name: workers
     type: int64
     description: Total number of asynchronous workers.
@@ -3633,9 +3638,6 @@
     required: true
   - name: really_do_it
     type: bool
-  - name: workers
-    type: int64
-    description: Delete with this many workers (default 2)
   category: server
   metadata:
     permissions: SERVER_ADMIN
@@ -4597,8 +4599,6 @@
     description: 'A SID to lookup using LookupAccountSid '
     required: true
   category: windows
-  metadata:
-    permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
   - windows_386_cgo
@@ -5362,11 +5362,6 @@
 - name: now
   description: Returns current time in seconds since epoch.
   type: Function
-  args:
-  - name: string
-    type: Any
-    description: A string to convert to int
-    required: true
   category: basic
   platforms:
   - darwin_amd64_cgo
@@ -7155,7 +7150,8 @@
   args:
   - name: pid
     type: int64
-    description: A process ID to list. If not provided list all processes.
+    description: A pid to list. If this is provided we are able to operate much faster
+      by only opening a single process.
   category: popular
   metadata:
     permissions: MACHINE_STATE
@@ -8266,6 +8262,7 @@
     args being category/product/service and values being stored queries. You may use
     a * as a placeholder for any of these fields.
   type: Function
+  version: 2
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -8890,6 +8887,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: sysinfo
   description: Collect system information on Linux clients
   type: Function
@@ -9324,6 +9322,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: typeof
   description: |
     Print the underlying Go type of the variable.
@@ -9338,6 +9337,7 @@
   type: Function
   platforms:
   - linux_amd64_cgo
+  free_form_args: true
 - name: unhex
   description: |
     Apply hex decoding to the string.
