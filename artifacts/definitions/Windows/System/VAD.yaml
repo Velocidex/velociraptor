@@ -5,14 +5,20 @@ description: |
   Address Descriptor (VAD). The VAD is used by the Windows memory manager to
   describe allocated process memory ranges.
 
-  Availible filters include process, mapping path, memory permissions
+  Available filters include process, mapping path, memory permissions
   or by content with yara.
+  
+  Use the UploadSection switch to upload any sections.
+  
+  A notebook suggestion is available for Strings analysis on uploaded sections.
 
   NOTE:
 
-   - ProtectionChoice is a choice to filter on section protection. Default is
+  - ProtectionChoice is a choice to filter on section protection. Default is
   all sections and ProtectionRegex can override selection.
   - To filter on unmapped sections the MappingNameRegex: ^$ can be used.
+  - When uploading sections during analysis, its recommended to run once for 
+  scoping, then a second time one confirmed for upload.
 
 parameters:
   - name: ProcessRegex
@@ -43,7 +49,7 @@ parameters:
     type: yara
   - name: ContextBytes
     description: Include this amount of bytes around yara hit as context.
-    default: 200
+    default: 0
     type: int
 
 
@@ -112,7 +118,9 @@ sources:
                                     else= String.Offset + ContextBytes ) ])
                             ) as HitContext,
                     _PathSpec, _Address
-                FROM yara(
+                FROM yara(  blocksize=if(condition= SectionSize < 10000000,
+                                            then= SectionSize,
+                                            else= 10000000 ),
                             accessor='offset',
                             files=_PathSpec,
                             rules=SuspiciousContent,
@@ -146,6 +154,61 @@ sources:
       SELECT * FROM if(condition= UploadSection,
                     then= upload_results,
                     else= results)
+
+    notebook:
+      - type: vql_suggestion
+        name: Strings analysis
+        template: |
+
+            /*
+            # Strings analysis
+            */
+            
+            LET MinStringSize = 8
+            LET FindPrintable = '''
+                    rule find_strings {
+                        strings:
+                            $wide = /(^|[^ -~\s]\x00)([ -~\s]\x00){%#%,}(\x00|[^ -~\s]|$)/
+                            $ascii = /(^|[^ -~\s])([ -~\s]{%#%,})([^ -~\s]|$)/
+                        condition:
+                            any of them
+                    }'''
+            LET YaraRule = regex_replace(source=FindPrintable,re='''\%\#\%''',replace=str(str=MinStringSize))
+            
+            
+            LET sections = SELECT vfs_path, client_path,file_size, uploaded_size
+                FROM uploads(client_id=ClientId, flow_id=FlowId)
+                WHERE vfs_path =~ '\.bin$'
+            
+            LET find_result(name) = SELECT *
+                FROM source(artifact="Windows.System.VAD")
+                WHERE SectionDump.StoredName = name
+                LIMIT 1
+            
+            
+            LET row_results = SELECT *, find_result(name=client_path)[0] as Result
+            FROM sections
+            
+            SELECT * FROM foreach(row=row_results,
+                query={
+                    SELECT
+                        regex_replace(source=String.Data,re='[^ -~]',replace='') as String,
+                        strip(prefix='$',string=String.Name) as Type,
+                        String.Offset as Offset,
+                        Result.MappingName as MappingName,
+                        Result.AddressRange as AddressRange,
+                        Result.Name as ProcesName, 
+                        Result.Pid as Pid,
+                        Result.Protection as Protection
+                        --,vfs_path
+                    FROM yara(
+                            accessor='fs',
+                            files=vfs_path,
+                            rules=YaraRule,
+                            key='X',
+                            number=9999999999999999 )
+                })
+                WHERE NOT String =~ '''^\s*$'''
 
 column_types:
   - name: HitContext
