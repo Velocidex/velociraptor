@@ -32,8 +32,7 @@ const (
 
 	//CLIENT_VERSION = VERSION
 
-	// 0.73.4 is a server only build to fix some server bugs
-	CLIENT_VERSION = "0.73.3"
+	CLIENT_VERSION = "0.73.4"
 
 	ENROLLMENT_WELL_KNOWN_FLOW   = "E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW   = FLOW_PREFIX + "Monitoring"

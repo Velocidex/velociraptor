@@ -45,7 +45,7 @@ sources:
       LET _ <= log(message="Will use local hash database " + path)
 
       LET file_modifications = SELECT Device + OSPath AS OSPath
-      FROM watch_usn(device=Device, accessor="ntfs")
+      FROM watch_usn(device=Device)
       WHERE OSPath =~ PathRegex
 
       -- The USN journal may contain multiple entries for the same

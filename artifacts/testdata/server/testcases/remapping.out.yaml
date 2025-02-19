@@ -182,6 +182,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "Atime": "2022-03-18T04:09:07.2885951Z",
   "Ctime": "2018-09-24T07:55:20.6489276Z",
   "Btime": "2018-09-24T07:55:44.4592119Z",
+  "FNBtime": "0001-01-01T00:00:00Z",
   "FNMtime": "0001-01-01T00:00:00Z",
   "Name": "Folder B",
   "NameType": "POSIX",
