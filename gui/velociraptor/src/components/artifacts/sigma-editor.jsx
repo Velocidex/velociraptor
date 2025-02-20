@@ -82,9 +82,24 @@ class SigmaEditorDialog extends Component {
 
             } else {
                 const view = new Uint8Array(response.data);
-                let json_obj = JSONparse(
-                    String.fromCharCode.apply(null, view));
-                this.setState({profiles: json_obj});
+                let binary = '';
+                var len = view.byteLength;
+                for (var i = 0; i < len; i++) {
+                    binary += String.fromCharCode( view[ i ] );
+                }
+                let json_obj = JSONparse(binary);
+                let profiles = {};
+                _.each(json_obj, (v,k)=>{
+                    if (!_.isEmpty(v.Sources)) {
+                        profiles[k] = {
+                            FieldMappings: v.FieldMappings,
+                            Description: v.Description,
+                            Sources: v.Sources,
+                        };
+                    };
+                });
+
+                this.setState({profiles: profiles});
             }
         });
     }

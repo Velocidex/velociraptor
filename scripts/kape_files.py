@@ -81,9 +81,15 @@ class KapeContext:
     groups = {}
     rows = [["Id", "Name", "Category", "Glob", "Accessor", "Comment"]]
     kape_files = []
+
+    # Contains each rule keyed by the filename
     kape_data = OrderedDict()
     pathsep_converter = pathsep_converter_identity
+
+    # Mapping between a target+glob to an id
     ids = {}
+
+    id_to_rule = {}
     dirty = False
     last_id = 0
     state_file_path = None
@@ -164,12 +170,13 @@ def read_targets(ctx, project_path):
                 continue
 
             row_id = ctx.resolve_id(name, glob)
-            #row_id = len(ctx.rows)
             ctx.groups[name].add(row_id)
 
             glob = strip_drive(glob)
             glob = remove_fluff(glob)
             glob = ctx.pathsep_converter(glob)
+
+            ctx.id_to_rule[row_id] = target
             ctx.rows.append([
                 row_id,
                 target["Name"],
@@ -267,11 +274,22 @@ def format(ctx, kape_file_path):
     sorted_rows = [ctx.rows[0]] + sorted(ctx.rows[1:], key=lambda x: int(x[0]))
 
     for k, v in sorted(ctx.groups.items()):
+        d = ctx.kape_data[k]
+
+        # Link back to the rules that make up the ids
+        ids = ctx.groups.get(k, [])
+        desc = []
+        for id in ids:
+            target = ctx.id_to_rule.get(id)
+            name = target["Name"]
+            if target and not name in desc:
+                desc.append(name)
+
         parameters_str += "  - name: %s\n    description: \"%s (by %s): %s\"\n    type: bool\n" % (
             sanitize(k),
-            ctx.kape_data[k].get("Description"),
-            ctx.kape_data[k].get("Author"),
-            ", ".join([sorted_rows[x][1] for x in sorted(v)]))
+            d.get("Description"),
+            d.get("Author"),
+            ", ".join(desc))
 
         ids = ['%s' % x for x in sorted(v)]
         if len(ids) > 0:
