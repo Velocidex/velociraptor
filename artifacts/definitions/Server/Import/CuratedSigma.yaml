@@ -12,28 +12,13 @@ required_permissions:
 - SERVER_ADMIN
 
 parameters:
-  - name: PackageNames
-    type: multichoice
-    default: '["Velociraptor Hayabusa Ruleset"]'
-    choices:
-      - Velociraptor Hayabusa Ruleset
-      - Velociraptor Hayabusa Live Detection
-      - Velociraptor ChopChopGo Ruleset (Linux)
-
   - name: Prefix
     description: Add this prefix to imported artifacts
     validating_regex: '^[a-zA-Z0-9_.]*$'
 
 sources:
   - query: |
-      LET URLlookup = dict(
-        `Velociraptor ChopChopGo Ruleset (Linux)`="https://sigma.velocidex.com/Velociraptor-ChopChopGo-Rules.zip",
-        `Velociraptor Hayabusa Ruleset`="https://sigma.velocidex.com/Velociraptor-Hayabusa-Rules.zip",
-        `Velociraptor Hayabusa Live Detection`="https://sigma.velocidex.com/Velociraptor-Hayabusa-Monitoring.zip")
+      LET URL <= "https://sigma.velocidex.com/Velociraptor.Sigma.Artifacts.zip"
 
-      SELECT * FROM foreach(row=PackageNames,
-                            query={SELECT * FROM
-                                Artifact.Server.Import.ArtifactExchange(
-                                Prefix=Prefix,
-                                ArchiveGlob="*.yaml",
-                                ExchangeURL=get(item= URLlookup, member= _value))})
+      SELECT * FROM Artifact.Server.Import.ArtifactExchange(
+         Prefix=Prefix, ExchangeURL=URL)
