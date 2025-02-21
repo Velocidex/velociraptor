@@ -188,6 +188,7 @@ sources:
             
             LET row_results = SELECT *, find_result(name=client_path)[0] as Result
             FROM sections
+            WHERE Result
             
             SELECT * FROM foreach(row=row_results,
                 query={
