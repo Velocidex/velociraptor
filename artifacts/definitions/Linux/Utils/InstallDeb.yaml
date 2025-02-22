@@ -2,8 +2,30 @@ name: Linux.Utils.InstallDeb
 author: Andreas Misje – @misje
 description: |
    Install a deb package and configure it with debconf answers. The package
-   may either be specified by name or be an uploaded file. If the package
-   already exists, it may be optionally reconfigured with debconf answers.
+   may either be specified by name, as an uploaded file or as a "tool". If the
+   package already exists, it may be optionally reconfigured with debconf
+   answers.
+
+   There are three ways to specify a package (listed in order of preference if
+   all are set):
+
+     - DebFile: An uploaded deb package. Limited to about 4 MB in size.
+
+     - DebTool: A deb package provided as a tool, specified by tool name. Since
+       this is a utility artifact meant to be called by other artifacts, the
+       tool should be specified in the artifact calling this artifact.
+       Alternatively, configure the tool using
+       [VQL](https://docs.velociraptor.app/vql_reference/server/inventory_add/).
+
+     - DebName: The name of the package to install, or an absolute path to a deb
+       file to install. Each word is considered as a package name or file name.
+       `apt-get` interprets the package name, and allows you to specify a
+       specific version, architecture, or even install and remove packages in
+       the same go:
+
+       - "foo": installs foo
+       - "foo bar- baz=1.0.0-1 qux:arm64": installs foo, removes bar, installs
+         a specific version of baz and a specific architecture of qux
 
 type: CLIENT
 
@@ -16,15 +38,30 @@ reference:
 parameters:
    - name: DebName
      description: |
-        Package to install (by name). Ignored if DebFile is set. An absolute path
-        to a deb file that already exists on the system is also accepted.
+        Package to install (by name). Ignored if DebFile or DebTool is set. An
+        absolute path to a deb file that already exists on the system is also
+        accepted.
 
    - name: DebFile
      description: |
         Package to install (by file). Remember to click "Upload"! When set,
-        DebName is ignored. Use DebName with an absolute file path if the
-        file already exists on the system and does not need to be uploaded.
+        DebName and DebTool is ignored. Use DebName with an absolute file path
+        if the file already exists on the system and does not need to be
+        uploaded.
      type: upload
+
+   - name: DebTool
+     description: |
+        Package to install as a tool (tool name). The tool must be configured
+        manually by using VQL or in another artifact (calling this artifact).
+        Ignored if DebFile is set.
+
+   - name: ToolSleepDuration
+     description: |
+        Maximum number of seconds to sleep before downloading the package. Only
+        relevant if DebTool is set.
+     type: int
+     default: 20
 
    - name: UpdateSources
      description: |
@@ -39,6 +76,18 @@ parameters:
      description: |
         Use the configuration delivered by the package instead of keeping the
         local changes.
+
+   - name: Reinstall
+     type: bool
+     description: |
+        Reinstall the package if it is already installed. This is only useful
+        if you know or suspect that the package installation is broken. This
+        also reconfigures the package.
+
+   - name: UpgradeOnly
+     type: bool
+     description: |
+        Do not install the package; only upgrade it if it is already installed.
 
    - name: ReconfigureIfInstalled
      type: bool
@@ -69,110 +118,131 @@ sources:
       SELECT OS From info() where OS = 'linux'
 
     query: |
-     LET Package <= if(
-         condition=DebFile,
-         then=tempfile(data=DebFile, extension='_amd64.deb'),
-         else=DebName)
-
-     /* The file name is lost from the uploaded file, so extract it from the
-        package instead: */
-     LET PackageInfo = SELECT Stdout
-       FROM execve(argv=['/usr/bin/dpkg-deb', '--field', Package, 'Package'])
-
-     LET PackageName = if(
-         condition=DebFile,
-         then=PackageInfo[0].Stdout[:-1], // remove "\n"
-         else=DebName)
-
-     /* The file format is "package_name question type answer": */
-     LET PreSeedLines = SELECT
-                               join(
-                                 sep=' ',
-                                 array=(PackageName, Key, Type, Value, )) AS Line
-       FROM DebConfValues
-
-     LET PreSeedFile <= tempfile(data=join(sep='\n', array=PreSeedLines.Line))
-
-     LET AptOpts <= ('-f', '-y', '-o', 'Debug::pkgProblemResolver=yes', '--no-install-recommends', ) + if(
-         condition=ForceConfNew,
-         then=('-o', 'Dpkg::Options::="--force-confnew"', ),
-         else=[])
-
-     LET PreSeed = SELECT
-                          'Pre-seed debconf' AS Step,
-                          *
-       FROM if(
-         condition=DebConfValues,
-         then={
-           SELECT *
-           FROM execve(argv=['/usr/bin/debconf-set-selections', PreSeedFile, ])
-           WHERE log(
-             message=format(
-               format='Pre-seeding %v',
-               args=[PackageName, ]),
-             level='INFO')
-         })
-
-     LET Install = SELECT *
+       LET Tool = SELECT OSPath
+         FROM Artifact.Generic.Utils.FetchBinary(ToolName=DebTool,
+                                                 TemporaryOnly=true,
+                                                 SleepDuration=ToolSleepDuration)
+       LET Package <= if(
+           condition=DebTool,
+           then=Tool[0].OSPath,
+           else=if(
+             condition=DebFile,
+             then=tempfile(data=DebFile, extension='_amd64.deb'),
+             else=DebName))
+       /* The file name is lost from the uploaded file, so extract it from the
+          package instead (apt has certain requirements for the file name): */
+       LET PackageInfo = SELECT 
+                                Stdout
+         FROM execve(argv=['/usr/bin/dpkg-deb', '--field', Package, 'Package'])
+       LET PackageName = if(
+           condition=DebTool OR DebFile,
+           // remove "\n":
+           then=PackageInfo[0].Stdout[:-1],
+           else=DebName)
+       /* The file format is "package_name question type answer": */
+       LET PreSeedLines = SELECT 
+                                 join(
+                                   sep=' ',
+                                   array=(PackageName, Key, Type, Value, )) AS Line
+         FROM DebConfValues
+       LET PreSeedFile <= tempfile(
+           data=join(
+             sep='\n',
+             array=PreSeedLines.Line))
+       LET AptEnv = dict(
+           DEBIAN_FRONTEND='noninteractive',
+           DEBCONF_NOWARNINGS='yes')
+       LET AptOpts <= ('-f', '-y', '-o', 'Debug::pkgProblemResolver=yes', '--no-install-recommends', ) + if(
+           condition=ForceConfNew,
+           then=('-o', 'Dpkg::Options::=--force-confnew', ),
+           else=[]) + if(
+           condition=Reinstall,
+           then=('--reinstall', ),
+           else=[]) + if(
+           condition=UpgradeOnly,
+           then=('--only-upgrade', ),
+           else=[])
+       LET PreSeed = SELECT 
+                            'Pre-seed debconf' AS Step,
+                            *
+         FROM if(
+           condition=DebConfValues,
+           then={
+             SELECT *
+             FROM execve(argv=['/usr/bin/debconf-set-selections', PreSeedFile, ])
+             WHERE log(
+               message=format(
+                 format='Pre-seeding %v',
+                 args=(PackageName, )),
+               level='INFO')
+              AND (NOT ReturnCode OR log(
+                      level='ERROR',
+                      message='%v failed: %v',
+                      args=(Step, Stderr)))
+           })
+       /* Install regardless of whether package is installed or not, handing all
+          the (arch-specific) version comparison logic to apt: */
+       LET Install <= SELECT *
+         FROM chain(
+           a_update={
+             SELECT 
+                    'Updating index' AS Step,
+                    *
+             FROM if(
+               condition=UpdateSources,
+               then={
+                 SELECT *
+                 FROM execve(argv=['/usr/bin/apt-get', '-y', 'update'])
+                 WHERE log(
+                   message='Updating package index before installing',
+                   level='INFO')
+               })
+           },
+           b_debconf=PreSeed,
+           c_install={
+             SELECT 
+                    'Installing package' AS Step,
+                    *
+             FROM execve(
+               argv=('/usr/bin/apt-get', ) + AptOpts + if(
+                 condition=Package = DebName,
+                 then=('install', ) + split(
+                   sep='''\s+''',
+                   string=Package),
+                 else=('install', Package, )),
+               env=AptEnv)
+             WHERE log(
+               message=format(
+                 format='Installing deb package %v',
+                 args=(PackageName, )),
+               level='INFO')
+           })
+         WHERE NOT ReturnCode OR log(
+           level='ERROR',
+           message='%v failed: %v',
+           args=(Step, Stderr))
+       SELECT *
        FROM chain(
-         a_update={
-           SELECT
-                  'Update index' AS Step,
-                  *
-           FROM if(
-             condition=UpdateSources,
-             then={
-               SELECT *
-               FROM execve(argv=['/usr/bin/apt-get', '-y', 'update'])
-               WHERE log(
-                 message='Updating package index before installing',
-                 level='INFO')
-             })
-         },
-         b_debconf=PreSeed,
-         c_install={
-           SELECT
-                  'Installing package' AS Step,
-                  *
-           FROM execve(argv=('/usr/bin/apt-get', 'install', ) + AptOpts + (Package, ))
-           WHERE log(
-             message=format(
-               format='Installing deb package %v',
-               args=[PackageName, ]),
-             level='INFO')
-         })
-
-     LET IsInstalled = SELECT *
-       FROM stat(
-         filename=path_join(
-           components=('/var/lib/dpkg/info', PackageName + '.list')))
-       WHERE log(
-         message=format(
-           format='Package %v is already installed',
-           args=[PackageName, ]),
-         level='INFO')
-
-     SELECT *
-     FROM if(
-       condition=IsInstalled,
-       then=if(
-         condition=ReconfigureIfInstalled,
-         then={
+         a_install=Install,
+         b_reconfigure={
            SELECT *
-           FROM chain(
-             a_debconf=PreSeed,
-             b_reconfigure={
-               SELECT
+           FROM if(
+             condition=ReconfigureIfInstalled
+              AND (Reinstall OR Install.Stdout =~ 'Skipping|already the newest version'),
+             then={
+               SELECT 
                       'Reconfiguring package' AS Step,
                       *
                FROM execve(argv=['/usr/sbin/dpkg-reconfigure', PackageName, ],
-                           env=dict(
-                             DEBIAN_FRONTEND='noninteractive'))
+                           env=AptEnv)
                WHERE log(
                  message=format(
                    format='Reconfiguring deb package %v',
-                   args=[PackageName, ]),
+                   args=(PackageName, )),
                  level='INFO')
+                AND (NOT ReturnCode OR log(
+                        level='ERROR',
+                        message='%v failed: %v',
+                        args=(Step, Stderr)))
              })
-         }),
-       else=Install)
+         })
