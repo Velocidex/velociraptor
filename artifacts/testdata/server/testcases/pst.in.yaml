@@ -1,0 +1,13 @@
+Parameters:
+  YaraRule: |
+     rule X {
+       strings: $a = "JPEG" nocase
+       condition: any of them
+     }
+
+Queries:
+  - SELECT * FROM Artifact.Windows.Forensics.Pst(
+      PSTGlob=srcDir + "/artifacts/testdata/files/pst/Outlook.pst",
+      AttachmentYaraRule=YaraRule,
+      SubjectRegex="Multiple",
+      PathRegex="Sent")

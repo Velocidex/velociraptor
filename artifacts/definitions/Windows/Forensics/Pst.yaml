@@ -1,0 +1,71 @@
+name: Windows.Forensics.Pst
+description: |
+  Parses PST files.
+
+parameters:
+  - name: PSTGlob
+    description: Glob for locating PST files.
+    default: "C:/Users/*/**.pst"
+  - name: Accessor
+    default: auto
+  - name: SenderRegex
+    type: regex
+    default: .
+  - name: ReceiverRegex
+    type: regex
+    default: .
+  - name: SubjectRegex
+    type: regex
+    default: .
+  - name: MessageRegex
+    type: regex
+    default: .
+  - name: PathRegex
+    type: regex
+    default: .
+  - name: AttachmentYaraRule
+    description: |
+      If specified, we Yara scan the attachment with this rule and
+      only allow matched messages.
+  - name: UploadAttachments
+    description: If set we upload attachments
+    type: bool
+
+sources:
+  - query: |
+      LET X = scope()
+
+      SELECT * FROM foreach(row={
+         SELECT * FROM glob(globs=PSTGlob)
+      }, query={
+         SELECT *,
+           if(condition=UploadAttachments, then={
+             SELECT upload(
+                file=pathspec(
+                  DelegateAccessor=Accessor,
+                  DelegatePath=OSPath,
+                  Path=Path),
+                accessor="pst")
+             FROM foreach(row=Attachments)
+           }) AS Uploads,
+
+           if(condition=AttachmentYaraRule, then={
+            SELECT * FROM foreach(row=Attachments,
+            query={
+              SELECT String
+              FROM yara(accessor="pst",
+                files=pathspec(
+                  DelegateAccessor=Accessor,
+                  DelegatePath=OSPath,
+                  Path=Path),
+                rules=AttachmentYaraRule, number=1)
+             })
+          }) AS YaraHit
+         FROM parse_pst(filename=OSPath, accessor=Accessor)
+         WHERE X.Sender =~ SenderRegex
+           AND X.Receiver =~ ReceiverRegex
+           AND X.Subject =~ SubjectRegex
+           AND X.Message =~ MessageRegex
+           AND X.Path =~ PathRegex
+      })
+      WHERE if(condition=AttachmentYaraRule, then=YaraHit, else=TRUE)

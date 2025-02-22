@@ -45,5 +45,4 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/tools/collector"
 	_ "www.velocidex.com/golang/velociraptor/vql/tools/logscale"
 	_ "www.velocidex.com/golang/velociraptor/vql/tools/process"
-	_ "www.velocidex.com/golang/velociraptor/vql/parsers/pst_parser"
 )
