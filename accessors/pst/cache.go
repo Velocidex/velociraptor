@@ -3,7 +3,7 @@ package pst
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
+	"path"
 	"sync"
 	"time"
 
@@ -51,8 +51,8 @@ func (self *PSTFile) GetPath(id pst.Identifier) string {
 
 func (self *PSTFile) setPath(parent_id, id pst.Identifier, name string) {
 	root, _ := self.paths[parent_id]
-	path := filepath.Join(root, name)
-	self.paths[id] = path
+	new_path := path.Join(root, name)
+	self.paths[id] = new_path
 }
 
 func (self *PSTFile) walkFolders(folder *pst.Folder) error {
