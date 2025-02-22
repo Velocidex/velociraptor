@@ -14,6 +14,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/accessors/offset"
 	_ "www.velocidex.com/golang/velociraptor/accessors/pipe"
 	_ "www.velocidex.com/golang/velociraptor/accessors/process"
+	_ "www.velocidex.com/golang/velociraptor/accessors/pst"
 	_ "www.velocidex.com/golang/velociraptor/accessors/raw_file"
 	_ "www.velocidex.com/golang/velociraptor/accessors/raw_registry"
 	_ "www.velocidex.com/golang/velociraptor/accessors/registry"

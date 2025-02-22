@@ -75,6 +75,11 @@ func (self *RegFileSystemAccessorCache) Close() {
 }
 
 func getRegFileSystemAccessorCache(scope vfilter.Scope) *RegFileSystemAccessorCache {
+	cache, ok := vql_subsystem.CacheGet(scope, CACHE_TAG).(*RegFileSystemAccessorCache)
+	if ok {
+		return cache
+	}
+
 	cache_size := int(vql_subsystem.GetIntFromRow(
 		scope, scope, constants.REG_CACHE_SIZE))
 	if cache_size == 0 {
@@ -90,11 +95,6 @@ func getRegFileSystemAccessorCache(scope vfilter.Scope) *RegFileSystemAccessorCa
 		scope, scope, constants.REG_CACHE_TIME)
 	if cache_time == 0 {
 		cache_time = 10
-	}
-
-	cache, ok := vql_subsystem.CacheGet(scope, CACHE_TAG).(*RegFileSystemAccessorCache)
-	if ok {
-		return cache
 	}
 
 	cache = &RegFileSystemAccessorCache{

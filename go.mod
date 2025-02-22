@@ -141,8 +141,10 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0
 	github.com/jackwakefield/gopac v1.0.2
 	github.com/lpar/gzipped v1.1.0
+	github.com/mooijtech/go-pst/v6 v6.0.2
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.12.0
+	github.com/rotisserie/eris v0.5.4
 	github.com/shirou/gopsutil/v3 v3.21.11
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/valyala/fastjson v1.6.4
@@ -203,6 +205,8 @@ require (
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/dustmop/soup v1.1.2-0.20190516214245-38228baa104e // indirect
+	github.com/emersion/go-message v0.16.0 // indirect
+	github.com/emersion/go-textwrapper v0.0.0-20200911093747-65d896831594 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/geoffgarside/ber v1.1.0 // indirect
@@ -210,6 +214,7 @@ require (
 	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/godzie44/go-uring v0.0.0-20220926161041-69611e8b13d5 // indirect
 	github.com/golang/gddo v0.0.0-20210115222349-20d68f94ee1f // indirect
 	github.com/golang/glog v1.2.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -232,6 +237,7 @@ require (
 	github.com/labstack/echo v3.3.10+incompatible // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
+	github.com/libp2p/go-sockaddr v0.1.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mattermost/xml-roundtrip-validator v0.1.0 // indirect
@@ -247,6 +253,7 @@ require (
 	github.com/muesli/termenv v0.15.3-0.20240618155329-98d742f6907a // indirect
 	github.com/nsf/termbox-go v1.1.1 // indirect
 	github.com/paulmach/orb v0.10.0 // indirect
+	github.com/philhofer/fwd v1.1.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/prometheus/common v0.44.0 // indirect
@@ -255,6 +262,8 @@ require (
 	github.com/russellhaering/goxmldsig v1.3.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
+	github.com/tidwall/btree v1.6.0 // indirect
+	github.com/tinylib/msgp v1.1.8 // indirect
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
 	github.com/tklauser/numcpus v0.3.0 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect

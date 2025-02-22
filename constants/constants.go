@@ -98,6 +98,9 @@ const (
 	USN_FREQUENCY       = "USN_FREQUENCY"
 	ZIP_FILE_CACHE_SIZE = "ZIP_FILE_CACHE_SIZE"
 
+	PST_CACHE_SIZE = "PST_CACHE_SIZE"
+	PST_CACHE_TIME = "PST_CACHE_TIME"
+
 	// Used by the SSH accessor to configure access
 	SSH_CONFIG = "SSH_CONFIG"
 
