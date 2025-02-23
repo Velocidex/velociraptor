@@ -1,0 +1,5 @@
+Queries:
+  - LET Variable = "Hello"
+  - |
+    SELECT eval(func="x=>x.Variable"), eval(func="x=>x + ' world'", args=Variable)
+    FROM scope()

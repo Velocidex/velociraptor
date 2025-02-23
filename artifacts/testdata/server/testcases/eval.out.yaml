@@ -1,0 +1,8 @@
+LET Variable = "Hello"[]SELECT eval(func="x=>x.Variable"), eval(func="x=>x + ' world'", args=Variable)
+FROM scope()
+[
+ {
+  "eval(func=\"x=\u003ex.Variable\")": "Hello",
+  "eval(func=\"x=\u003ex + ' world'\", args=Variable)": "Hello world"
+ }
+]

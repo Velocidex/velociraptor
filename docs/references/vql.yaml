@@ -2092,6 +2092,10 @@
     description: Lambda function to evaluate e.g. x=>1+1 where x will be the current
       scope.
     required: true
+  - name: args
+    type: Any
+    description: An array of elements to use as args for the lambda function. If not
+      provided we pass the scope
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -3403,6 +3407,11 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: help
+  description: Dump information about all VQL functions and plugins.
+  type: Plugin
+  platforms:
+  - linux_amd64_cgo
 - name: host
   description: |
     Perform a DNS resolution.
@@ -6525,6 +6534,27 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: parse_pst
+  description: Parse a PST file and extract email data.
+  type: Plugin
+  args:
+  - name: filename
+    type: accessors.OSPath
+    description: The PST file to parse.
+    required: true
+  - name: FolderPath
+    type: string
+    description: The folder path to save the attachments from emails.
+  - name: accessor
+    type: string
+    description: The accessor to use
+  - name: raw
+    type: bool
+    description: If set we emit the raw message object for all objects
+  metadata:
+    permissions: FILESYSTEM_READ
+  platforms:
+  - linux_amd64_cgo
 - name: parse_records_with_regex
   description: |
     Parses a file with a set of regexp and yields matches as records.  The
@@ -7504,6 +7534,24 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: pst
+  description: |+
+    An accessor to open attachments in PST files.
+
+    This accessor allows opening of attachments for scanning or reading.
+
+    The OSPath used is structured in the form:
+
+    {
+      Path: "Msg/<msg_id>/Att/<attach_id>/filename",
+      DelegatePath: <path to PST file>,
+      DelegateAccessor: <accessor for PST file>
+    }
+
+
+  type: Accessor
+  platforms:
+  - linux_amd64_cgo
 - name: query
   description: |
     Evaluate a VQL query.
@@ -11443,3 +11491,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+
