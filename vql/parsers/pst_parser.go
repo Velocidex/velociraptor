@@ -148,7 +148,6 @@ func (self *PSTParser) walkFolders(
 			Set("Receiver", props.GetReceivedByEmailAddress()).
 			Set("Subject", props.GetSubject()).
 			Set("Message", props.GetBody()).
-			Set("Body", props.String()).
 			Set("Delivered", time.Unix(0, props.GetMessageDeliveryTime())).
 			Set("Attachments", self.getAttachments(
 				scope, message, pstFile, arg.Accessor, arg.Filename))

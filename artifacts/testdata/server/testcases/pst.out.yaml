@@ -5,7 +5,6 @@ SELECT * FROM Artifact.Windows.Forensics.Pst( PSTGlob=srcDir + "/artifacts/testd
   "Receiver": "",
   "Subject": "\u0001\u0001Multiple attachments",
   "Message": "This message contains multiple attachments\r\n\r\n \r\n\r\n",
-  "Body": "alternate_recipient_allowed:true  body:\"This message contains multiple attachments\\r\\n\\r\\n \\r\\n\\r\\n\"  client_submit_time:1308700267703125000  conversation_topic:\"Multiple attachments\"  creation_time:1308700169578000000  display_to:\"'saqib.razzaq@xp.local'\"  icon_index:-1  importance:1  internet_mail_override_format:1441792  last_modification_time:1308700267671000000  message_delivery_time:1308700260000000000  message_flags:17  message_size:115215  originator_delivery_report_requested:false  priority:0  read_receipt_requested:false  sender_address_type:\"SMTP\"  sender_email_address:\"saqib.razzaq@xp.local\"  sender_name:\"Saqib Razzaq\"  sensitivity:0  sent_representing_address_type:\"SMTP\"  sent_representing_email_address:\"saqib.razzaq@xp.local\"  sent_representing_name:\"Saqib Razzaq\"  subject:\"\\x01\\x01Multiple attachments\"",
   "Delivered": "2011-06-21T23:51:00Z",
   "Attachments": [
    {
