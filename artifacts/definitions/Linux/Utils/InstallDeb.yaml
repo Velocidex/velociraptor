@@ -9,7 +9,7 @@ description: |
    There are three ways to specify a package (listed in order of preference if
    all are set):
 
-     - DebFile: An uploaded deb package. Limited to about 4 MB in size.
+     - DebFile: An uploaded deb package.
 
      - DebTool: A deb package provided as a tool, specified by tool name. Since
        this is a utility artifact meant to be called by other artifacts, the
@@ -48,7 +48,7 @@ parameters:
         DebName and DebTool is ignored. Use DebName with an absolute file path
         if the file already exists on the system and does not need to be
         uploaded.
-     type: upload
+     type: upload_file
 
    - name: DebTool
      description: |
@@ -127,7 +127,13 @@ sources:
            then=Tool[0].OSPath,
            else=if(
              condition=DebFile,
-             then=tempfile(data=DebFile, extension='_amd64.deb'),
+             /* apt requires file names to end in an architecture name, so
+                create a copy ending in "_amd64.deb". The architecture chosen
+                here, amd64, does not need to match the architecture of neither
+                the package or the system: */
+             then=copy(
+               dest=tempdir() + '/package_amd64.deb',
+               filename=DebFile),
              else=DebName))
        /* The file name is lost from the uploaded file, so extract it from the
           package instead (apt has certain requirements for the file name): */
