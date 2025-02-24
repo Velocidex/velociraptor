@@ -17,15 +17,23 @@ parameters:
      default: "."
      description: A regular expression to select which artifacts to upload
      type: regex
-
+     
    - name: Bucket
      description: The bucket to upload to (blank to use server metadata)
+
+   - name: Endpoint
+     
    - name: Region
+   
    - name: CredentialsKey
+   
    - name: CredentialsSecret
+   
    - name: CredentialsToken
+   
    - name: Secret
      description: A Secret name to use for uploading.
+     
    - name: RemoveDownloads
      type: bool
      description: If set, remove the flow export files after upload
@@ -45,6 +53,7 @@ sources:
          bucket=Bucket,
          credentials_key=CredentialsKey,
          credentials_secret=CredentialsSecret,
+         endpoint=Endpoint,
          credentials_token=CredentialsToken,
          secret=Secret,
          region=Region,
