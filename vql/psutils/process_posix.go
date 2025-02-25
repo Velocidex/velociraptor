@@ -9,8 +9,8 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/shirou/gopsutil/v3/host"
-	"github.com/shirou/gopsutil/v3/process"
+	"github.com/shirou/gopsutil/v4/host"
+	"github.com/shirou/gopsutil/v4/process"
 )
 
 func GetProcess(ctx context.Context, pid int32) (*ordereddict.Dict, error) {

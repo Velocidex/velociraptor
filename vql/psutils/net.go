@@ -3,7 +3,7 @@ package psutils
 import (
 	"context"
 
-	"github.com/shirou/gopsutil/v3/net"
+	"github.com/shirou/gopsutil/v4/net"
 )
 
 type ConnectionStat struct {

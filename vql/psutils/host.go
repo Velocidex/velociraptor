@@ -5,7 +5,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/shirou/gopsutil/v3/host"
+	"github.com/shirou/gopsutil/v4/host"
 )
 
 type InfoStat struct {
