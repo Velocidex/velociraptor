@@ -14,6 +14,10 @@ func GetBasePath(config_obj *config_proto.Config, parts ...string) string {
 
 	args := append([]string{base.Path}, parts...)
 	base.Path = Join(args...)
+	if base.Path == "/" {
+		return ""
+	}
+
 	return base.Path
 }
 
