@@ -3,7 +3,7 @@ package psutils
 import (
 	"context"
 
-	"github.com/shirou/gopsutil/v3/disk"
+	"github.com/shirou/gopsutil/v4/disk"
 )
 
 type UsageStat struct {
