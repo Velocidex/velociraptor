@@ -10,7 +10,9 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows/registry"
 	registry_accessor "www.velocidex.com/golang/velociraptor/accessors/registry"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -34,6 +36,14 @@ func (self *RegSetValueFunction) Call(ctx context.Context,
 
 	arg := &RegSetValueFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("reg_set_value: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	// We are about to write on the filesystem - make sure the user
+	// has write access.
+	err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 	if err != nil {
 		scope.Log("reg_set_value: %s", err.Error())
 		return vfilter.Null{}
@@ -118,9 +128,10 @@ func (self *RegSetValueFunction) Call(ctx context.Context,
 
 func (self RegSetValueFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "reg_set_value",
-		Doc:     "Set a value in the registry.",
-		ArgType: type_map.AddType(scope, &RegSetValueFunctionArgs{}),
+		Name:     "reg_set_value",
+		Doc:      "Set a value in the registry.",
+		ArgType:  type_map.AddType(scope, &RegSetValueFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 	}
 }
 
@@ -138,6 +149,14 @@ func (self *RegDeleteValueFunction) Call(ctx context.Context,
 
 	arg := &RegDeleteValueFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("reg_rm_value: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	// We are about to write on the filesystem - make sure the user
+	// has write access.
+	err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 	if err != nil {
 		scope.Log("reg_rm_value: %s", err.Error())
 		return vfilter.Null{}
@@ -181,9 +200,10 @@ func (self *RegDeleteValueFunction) Call(ctx context.Context,
 
 func (self RegDeleteValueFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "reg_rm_value",
-		Doc:     "Removes a value in the registry.",
-		ArgType: type_map.AddType(scope, &RegDeleteValueFunctionArgs{}),
+		Name:     "reg_rm_value",
+		Doc:      "Removes a value in the registry.",
+		ArgType:  type_map.AddType(scope, &RegDeleteValueFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 	}
 }
 
@@ -201,6 +221,14 @@ func (self *RegDeleteKeyFunction) Call(ctx context.Context,
 
 	arg := &RegDeleteKeyFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("reg_rm_key: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	// We are about to write on the filesystem - make sure the user
+	// has write access.
+	err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 	if err != nil {
 		scope.Log("reg_rm_key: %s", err.Error())
 		return vfilter.Null{}
@@ -242,9 +270,10 @@ func (self *RegDeleteKeyFunction) Call(ctx context.Context,
 
 func (self RegDeleteKeyFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "reg_rm_key",
-		Doc:     "Removes a key and all its values from the registry.",
-		ArgType: type_map.AddType(scope, &RegDeleteKeyFunctionArgs{}),
+		Name:     "reg_rm_key",
+		Doc:      "Removes a key and all its values from the registry.",
+		ArgType:  type_map.AddType(scope, &RegDeleteKeyFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 	}
 }
 
