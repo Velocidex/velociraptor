@@ -6,7 +6,7 @@ package psutils
 import (
 	"context"
 
-	"github.com/shirou/gopsutil/v3/host"
+	"github.com/shirou/gopsutil/v4/host"
 )
 
 func cmdNameWithContext(ctx context.Context, pid int32) (string, error) {
