@@ -61,6 +61,7 @@ message VFSFileBuffer {
     uint32 length = 4;
     bytes data = 5;
     repeated string components = 6;
+    string org_id = 7;
 }
 
 

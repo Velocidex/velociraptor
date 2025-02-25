@@ -624,8 +624,23 @@ func (self *ApiServer) VFSGetBuffer(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+
+	// The user may request to download a buffer from any org.
+	if !utils.CompareOrgIds(org_config_obj.OrgId, in.OrgId) {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return nil, Status(self.verbose, err)
+		}
+
+		org_config_obj, err = org_manager.GetOrgConfig(in.OrgId)
+		if err != nil {
+			return nil, Status(self.verbose, err)
+		}
+	}
+
 	principal := user_record.Name
 
+	// Make sure the principal has permission in the org.
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {

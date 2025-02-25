@@ -2335,6 +2335,7 @@
   type: Plugin
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: favorites_save
   description: |
     Save a collection into the favorites.
@@ -3412,6 +3413,7 @@
   type: Plugin
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: host
   description: |
     Perform a DNS resolution.
@@ -4815,6 +4817,8 @@
     description: 'A SID to lookup using LookupAccountSid '
     required: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
   - windows_386_cgo
@@ -6555,6 +6559,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: parse_records_with_regex
   description: |
     Parses a file with a set of regexp and yields matches as records.  The
@@ -7523,8 +7528,7 @@
   args:
   - name: pid
     type: int64
-    description: A pid to list. If this is provided we are able to operate much faster
-      by only opening a single process.
+    description: A process ID to list. If not provided list all processes.
   category: popular
   metadata:
     permissions: MACHINE_STATE
@@ -7552,6 +7556,7 @@
   type: Accessor
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: query
   description: |
     Evaluate a VQL query.
@@ -8039,6 +8044,8 @@
     description: Registry key path.
     required: true
   category: windows
+  metadata:
+    permissions: FILESYSTEM_WRITE
   platforms:
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8051,6 +8058,8 @@
     description: Registry value path.
     required: true
   category: windows
+  metadata:
+    permissions: FILESYSTEM_WRITE
   platforms:
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8074,6 +8083,8 @@
     type: bool
     description: Set to create missing intermediate keys
   category: windows
+  metadata:
+    permissions: FILESYSTEM_WRITE
   platforms:
   - windows_386_cgo
   - windows_amd64_cgo
