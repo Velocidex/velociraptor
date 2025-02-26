@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -24,8 +25,11 @@ var (
 )
 
 func (self *NotebookManager) CheckNotebookAccess(
-	notebook *api_proto.NotebookMetadata,
-	user string) bool {
+	notebook *api_proto.NotebookMetadata, user string) bool {
+	return checkNotebookAccess(notebook, user)
+}
+
+func checkNotebookAccess(notebook *api_proto.NotebookMetadata, user string) bool {
 	if notebook.Public {
 		return true
 	}
@@ -62,7 +66,9 @@ func (self *NotebookManager) GetSharedNotebooks(
 	}
 	defer rs_writer.Close()
 
-	all_notebooks, err := self.GetAllNotebooks()
+	all_notebooks, err := self.GetAllNotebooks(services.NotebookSearchOptions{
+		Username: username,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -72,11 +78,6 @@ func (self *NotebookManager) GetSharedNotebooks(
 	})
 
 	for _, notebook := range all_notebooks {
-		if notebook.Hidden || notebook.NotebookId == "" ||
-			!self.CheckNotebookAccess(notebook, username) {
-			continue
-		}
-
 		rs_writer.Write(ordereddict.NewDict().
 			Set("NotebookId", notebook.NotebookId).
 			Set("Name", notebook.Name).
@@ -90,7 +91,7 @@ func (self *NotebookManager) GetSharedNotebooks(
 	return index_filename, nil
 }
 
-func (self *NotebookManager) GetAllNotebooks() (
+func (self *NotebookManager) GetAllNotebooks(opts services.NotebookSearchOptions) (
 	[]*api_proto.NotebookMetadata, error) {
-	return self.Store.GetAllNotebooks()
+	return self.Store.GetAllNotebooks(opts)
 }
