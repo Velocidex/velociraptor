@@ -58,7 +58,8 @@ type NotebookStore interface {
 	GetAvailableUploadFiles(notebook_id string) (
 		*api_proto.AvailableDownloads, error)
 
-	GetAllNotebooks() ([]*api_proto.NotebookMetadata, error)
+	GetAllNotebooks(opts services.NotebookSearchOptions) (
+		[]*api_proto.NotebookMetadata, error)
 
 	// Manage timeline operations.
 	Timelines(ctx context.Context,
@@ -404,12 +405,24 @@ func (self *NotebookStoreImpl) StoreAttachment(
 	return full_path, err
 }
 
-func (self *NotebookStoreImpl) GetAllNotebooks() (
+func (self *NotebookStoreImpl) GetAllNotebooks(opts services.NotebookSearchOptions) (
 	[]*api_proto.NotebookMetadata, error) {
 
 	result := []*api_proto.NotebookMetadata{}
 	self.mu.Lock()
 	for _, notebook := range self.global_notebooks {
+		if notebook.Hidden || notebook.NotebookId == "" {
+			continue
+		}
+
+		if opts.Username != "" && !checkNotebookAccess(notebook, opts.Username) {
+			continue
+		}
+
+		if opts.Timelines && len(notebook.Timelines) == 0 {
+			continue
+		}
+
 		result = append(result,
 			proto.Clone(notebook).(*api_proto.NotebookMetadata))
 	}
@@ -463,6 +476,7 @@ func (self *NotebookStoreImpl) syncAllNotebooks() error {
 
 		notebook := res.Message().(*api_proto.NotebookMetadata)
 		if notebook.NotebookId == "" ||
+			notebook.Hidden ||
 			!utils.IsGlobalNotebooks(notebook.NotebookId) {
 			continue
 		}
