@@ -62,7 +62,7 @@ func (self *ApiServer) GetNotebooks(
 
 		for _, n := range notebooks {
 			if len(n.Timelines) > 0 &&
-				!notebook_manager.CheckNotebookAccess(n, principal) {
+				notebook_manager.CheckNotebookAccess(n, principal) {
 				result.Items = append(result.Items,
 					proto.Clone(n).(*api_proto.NotebookMetadata))
 			}

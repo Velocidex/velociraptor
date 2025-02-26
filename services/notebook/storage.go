@@ -463,6 +463,7 @@ func (self *NotebookStoreImpl) syncAllNotebooks() error {
 
 		notebook := res.Message().(*api_proto.NotebookMetadata)
 		if notebook.NotebookId == "" ||
+			notebook.Hidden ||
 			!utils.IsGlobalNotebooks(notebook.NotebookId) {
 			continue
 		}
