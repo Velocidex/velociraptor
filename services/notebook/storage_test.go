@@ -39,7 +39,7 @@ func (self *NotebookManagerTestSuite) TestNotebookStorage() {
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	notebooks, err := notebook_manager.GetAllNotebooks()
+	notebooks, err := notebook_manager.GetAllNotebooks(services.NotebookSearchOptions{})
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), 0, len(notebooks))
@@ -69,7 +69,7 @@ func (self *NotebookManagerTestSuite) TestNotebookStorage() {
 	assert.NoError(self.T(), err)
 
 	// Now list all notebooks - should only see the global one.
-	notebooks, err = notebook_manager.GetAllNotebooks()
+	notebooks, err = notebook_manager.GetAllNotebooks(services.NotebookSearchOptions{})
 	assert.NoError(self.T(), err)
 
 	if len(notebooks) != 1 {

@@ -231,7 +231,7 @@ func (self WatchUSNPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer utils.RecoverVQL(scope)
-		defer vql_subsystem.RegisterMonitor("watch_yaml", args)()
+		defer vql_subsystem.RegisterMonitor("watch_usn", args)()
 
 		arg := &WatchUSNPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
