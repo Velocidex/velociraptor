@@ -39,6 +39,14 @@ type TimelineReader interface {
 	Stat() *timelines_proto.SuperTimeline
 }
 
+type NotebookSearchOptions struct {
+	// Only show notebooks accessible to this username
+	Username string
+
+	// Only show notebooks with timelines
+	Timelines bool
+}
+
 type NotebookManager interface {
 	GetNotebook(ctx context.Context,
 		notebook_id string,
@@ -48,7 +56,7 @@ type NotebookManager interface {
 		ctx context.Context,
 		username string) (api.FSPathSpec, error)
 
-	GetAllNotebooks() ([]*api_proto.NotebookMetadata, error)
+	GetAllNotebooks(opts NotebookSearchOptions) ([]*api_proto.NotebookMetadata, error)
 
 	NewNotebook(ctx context.Context,
 		username string, in *api_proto.NotebookMetadata) (

@@ -153,6 +153,27 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelineAnnotations(
 
 	golden.Set("Notebook Metadata After Annotation", notebook_metadata)
 
+	// Check that GetAllNotebooks() returns this notebook now.
+	all_notebooks, err := notebook_manager.GetAllNotebooks(
+		services.NotebookSearchOptions{
+			Username:  "admin",
+			Timelines: true,
+		})
+	assert.NoError(t, err)
+
+	assert.Equal(t, len(all_notebooks), 1)
+	assert.Equal(t, all_notebooks[0].NotebookId, notebook.NotebookId)
+
+	// Check that GetAllNotebooks() returns only notebook for this
+	// user.
+	all_notebooks, err = notebook_manager.GetAllNotebooks(
+		services.NotebookSearchOptions{
+			Username:  "someuser",
+			Timelines: true,
+		})
+	assert.NoError(t, err)
+	assert.Equal(t, len(all_notebooks), 0)
+
 	read_all_events := func() (events []vfilter.Row) {
 		// Read the timeline out again.
 		reader, err := notebook_manager.ReadTimeline(
