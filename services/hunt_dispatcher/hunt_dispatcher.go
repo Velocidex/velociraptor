@@ -377,21 +377,14 @@ func (self *HuntDispatcher) CreateHunt(
 	return hunt, self.Store.FlushIndex(ctx)
 }
 
-func NewHuntDispatcher(
+func (self *HuntDispatcher) StartRefresh(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) (services.IHuntDispatcher, error) {
+	config_obj *config_proto.Config) error {
 
-	service := &HuntDispatcher{
-		config_obj:  config_obj,
-		uuid:        utils.GetGUID(),
-		I_am_master: services.IsMaster(config_obj),
-		Store:       NewHuntStorageManagerImpl(config_obj),
-	}
-
-	err := service.Store.Refresh(ctx, config_obj)
+	err := self.Store.Refresh(ctx, config_obj)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// flush the hunts periodically
@@ -423,12 +416,12 @@ func NewHuntDispatcher(
 					context.Background(), 10*time.Second,
 					errors.New("HuntDispatcher: deadline reached shutting down"))
 				defer cancel()
-				service.Close(ctx)
+				self.Close(ctx)
 				return
 
 			case <-time.After(utils.Jitter(time.Duration(refresh) * time.Second)):
 				// Re-read the hunts from the data store.
-				err := service.Refresh(ctx, config_obj)
+				err := self.Refresh(ctx, config_obj)
 				if err != nil {
 					logger.Error("Unable to sync hunts: %v", err)
 				}
@@ -436,9 +429,27 @@ func NewHuntDispatcher(
 		}
 	}()
 
-	return service, journal.WatchQueueWithCB(ctx, config_obj, wg,
+	return journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.HuntUpdate", "HuntDispatcher",
-		service.ProcessUpdate)
+		self.ProcessUpdate)
+}
+
+func MakeHuntDispatcher(config_obj *config_proto.Config) *HuntDispatcher {
+	return &HuntDispatcher{
+		config_obj:  config_obj,
+		uuid:        utils.GetGUID(),
+		I_am_master: services.IsMaster(config_obj),
+		Store:       NewHuntStorageManagerImpl(config_obj),
+	}
+}
+
+func NewHuntDispatcher(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) (services.IHuntDispatcher, error) {
+
+	res := MakeHuntDispatcher(config_obj)
+	return res, res.StartRefresh(ctx, wg, config_obj)
 }
 
 var (
