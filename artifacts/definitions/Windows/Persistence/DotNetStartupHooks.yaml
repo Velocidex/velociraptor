@@ -1,0 +1,47 @@
+name: Windows.Persistence.DotNetStartupHooks
+author: Chris Jones - CPIRT | FabFaeb | Antonio Blescia (TheThMando) | bmcder02
+description: |
+    The .NET DLLs listed in the DOTNET_STARTUP_HOOKS environment variable are 
+    loaded into .NET processes at runtime.
+reference:
+    - https://persistence-info.github.io/Data/dotnetstartuphooks.html
+    - https://github.com/last-byte/PersistenceSniper/blob/main/PersistenceSniper/PersistenceSniper.psm1
+type: CLIENT
+
+parameters:
+  - name: GlobPath
+    description: The paths to the check.
+    type: csv
+    default: |
+      EnvPath
+      "HKEY_USERS\\*\\Environment\\"
+      "HKEY_LOCAL_MACHINE\\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\\"
+
+  - name: EnvValue
+    description: The keyname to check
+    type: string
+    default: "DOTNET_STARTUP_HOOKS"
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+        LET Keys = SELECT * FROM foreach(
+            row=GlobPath,
+            query={
+                SELECT  
+                    OSPath AS EnvKey,
+                    Data.value AS Value,
+                    Mtime AS LastModified
+                FROM glob(
+                    globs=EnvPath + EnvValue,
+                    accessor="registry")
+            })
+        
+        
+        SELECT * FROM foreach(
+            row=Keys,
+            query={
+                SELECT _value AS ModulePath, EnvKey, LastModified 
+                FROM items(item=split(string=Value, sep=";"))})
