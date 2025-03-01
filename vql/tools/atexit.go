@@ -41,7 +41,11 @@ func (self AtExitFunction) Call(
 	switch t := arg.Query.(type) {
 	case types.StoredQuery:
 		subscope := scope.Copy()
-		subscope.AppendVars(arg.Env)
+		defer subscope.Close()
+
+		if arg.Env != nil {
+			subscope.AppendVars(arg.Env)
+		}
 
 		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 			scope.Log("Running AtExit query %v", vfilter.FormatToString(scope, t))
