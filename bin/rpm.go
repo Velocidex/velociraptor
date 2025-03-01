@@ -355,10 +355,14 @@ fi
 
 	r.AddPostun(`
 if [ -f /bin/systemctl ] ; then
+    if [ $1 = 0 ] ; then
 	rm /etc/systemd/system/velociraptor_client.service
+    fi
 else
+    if [ $1 = 0 ] ; then
 	/sbin/service velociraptor start  > /dev/null 2>&1 || :
 	rm /etc/rc.d/init.d/velociraptor
+    fi
 fi
 `)
 
