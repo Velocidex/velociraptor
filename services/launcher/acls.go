@@ -56,9 +56,15 @@ func CheckAccess(
 		}
 
 		if !perm || err != nil {
+			principal := ""
+			p_acl, ok := acl_manager.(vql_subsystem.PrincipalACLManager)
+			if ok {
+				principal = p_acl.GetPrincipal()
+			}
+
 			return fmt.Errorf(
-				"%w: User is not allowed to launch flows %v.",
-				acls.PermissionDenied, permissions)
+				"%w: User %v is not allowed to launch flows %v.",
+				acls.PermissionDenied, principal, permissions)
 		}
 	}
 

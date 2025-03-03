@@ -2,6 +2,7 @@ package acl_managers
 
 import (
 	"www.velocidex.com/golang/velociraptor/acls"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 )
 
@@ -21,6 +22,9 @@ func (self NullACLManager) CheckAccessWithArgs(
 	permission acls.ACL_PERMISSION, args ...string) (bool, error) {
 	return true, nil
 }
+
+// NOOP
+func (self NullACLManager) SwitchDefaultOrg(config_obj *config_proto.Config) {}
 
 func (self NullACLManager) CheckAccessInOrg(
 	org_id string, permission ...acls.ACL_PERMISSION) (bool, error) {

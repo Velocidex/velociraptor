@@ -87,17 +87,38 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	// COLLECT_CLIENT for clients
 	// COLLECT_SERVER for server
 	// COLLECT_BASIC for artifacts with the basic metadata set
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
+
+	acl_manager, ok := artifacts.GetACLManager(scope)
+	if !ok {
+		acl_manager = acl_managers.NullACLManager{}
+	}
+
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}
 	}
 
-	// If an org is specied we use the config obj from the org.
-	config_obj, err := org_manager.GetOrgConfig(arg.OrgId)
-	if err != nil {
-		scope.Log("collect_client: %v", err)
-		return vfilter.Null{}
+	// If we are required to switch orgs do so now.
+	if arg.OrgId != "" {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			scope.Log("collect_client: %v", err)
+			return vfilter.Null{}
+		}
+
+		// If an org is specied we use the config obj from the org.
+		config_obj, err = org_manager.GetOrgConfig(arg.OrgId)
+		if err != nil {
+			scope.Log("collect_client: %v", err)
+			return vfilter.Null{}
+		}
+
+		// Switch the ACL manager into the required org
+		org_acl_manager, ok := acl_manager.(vql_subsystem.OrgACLManager)
+		if ok {
+			org_acl_manager.SwitchDefaultOrg(config_obj)
+		}
 	}
 
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
@@ -149,10 +170,6 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	}
 
 	result := &flows_proto.ArtifactCollectorResponse{Request: request}
-	acl_manager, ok := artifacts.GetACLManager(scope)
-	if !ok {
-		acl_manager = acl_managers.NullACLManager{}
-	}
 
 	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {

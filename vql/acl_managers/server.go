@@ -19,11 +19,11 @@ var (
 // ServerACLManager is used when running server side VQL to control
 // ACLs on various VQL plugins.
 type ServerACLManager struct {
-	principal  string
-	config_obj *config_proto.Config
+	principal string
 
 	// Cache principal's token for each org_id
 	mu         sync.Mutex
+	config_obj *config_proto.Config
 	TokenCache map[string]*acl_proto.ApiClientACL
 }
 
@@ -65,13 +65,18 @@ func (self *ServerACLManager) CheckAccess(
 		return false, err
 	}
 
+	self.mu.Lock()
+	config_obj := self.config_obj
+	org_id := self.config_obj.OrgId
+	self.mu.Unlock()
+
 	// If the principal is the super user we allow them everything.
-	if self.principal == utils.GetSuperuserName(self.config_obj) {
+	if self.principal == utils.GetSuperuserName(config_obj) {
 		return true, nil
 	}
 
 	// Check access against the policy
-	policy, err := self.getPolicyInOrg(self.config_obj.OrgId)
+	policy, err := self.GetPolicyInOrg(org_id)
 	if err != nil {
 		return false, err
 	}
@@ -86,7 +91,7 @@ func (self *ServerACLManager) CheckAccess(
 	return true, nil
 }
 
-func (self *ServerACLManager) getPolicyInOrg(org_id string) (*acl_proto.ApiClientACL, error) {
+func (self *ServerACLManager) GetPolicyInOrg(org_id string) (*acl_proto.ApiClientACL, error) {
 	self.mu.Lock()
 	policy, pres := self.TokenCache[org_id]
 	self.mu.Unlock()
@@ -118,7 +123,7 @@ func (self *ServerACLManager) getPolicyInOrg(org_id string) (*acl_proto.ApiClien
 
 func (self *ServerACLManager) CheckAccessInOrg(
 	org_id string, permissions ...acls.ACL_PERMISSION) (bool, error) {
-	policy, err := self.getPolicyInOrg(org_id)
+	policy, err := self.GetPolicyInOrg(org_id)
 	if err != nil {
 		return false, err
 	}
@@ -132,9 +137,22 @@ func (self *ServerACLManager) CheckAccessInOrg(
 	return true, nil
 }
 
+// NOOP because we always use the same token for all comparisons.
+func (self *ServerACLManager) SwitchDefaultOrg(config_obj *config_proto.Config) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.config_obj = config_obj
+}
+
 func (self *ServerACLManager) CheckAccessWithArgs(
 	permission acls.ACL_PERMISSION, args ...string) (bool, error) {
-	policy, err := self.getPolicyInOrg(self.config_obj.OrgId)
+
+	self.mu.Lock()
+	org_id := self.config_obj.OrgId
+	self.mu.Unlock()
+
+	policy, err := self.GetPolicyInOrg(org_id)
 	if err != nil {
 		return false, err
 	}
