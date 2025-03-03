@@ -16,13 +16,33 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "Name": "\u003croot\u003e",
   "OrgId": "root"
  }
-]SELECT user_create(user="ReaderUser", roles="reader", password="X", orgs=["root", "ORGID"]), user_create(user="OrgUser", roles="administrator", password="X", orgs=["ORGID"]), user_create(user="OrgAdmin", roles="administrator", password="X") FROM scope()[
+]SELECT user_create(user="ReaderUser", roles="reader", password="X", orgs=["root", "ORGID"]), user_create(user="OrgUser", roles="administrator", password="X", orgs=["ORGID"]), user_create(user="OrgAdmin", roles="administrator", password="X"), user_create(user="BasicUser", roles="reader", password="X") FROM scope()[
  {
   "user_create(user=\"ReaderUser\", roles=\"reader\", password=\"X\", orgs=[\"root\", \"ORGID\"])": "ReaderUser",
   "user_create(user=\"OrgUser\", roles=\"administrator\", password=\"X\", orgs=[\"ORGID\"])": "OrgUser",
-  "user_create(user=\"OrgAdmin\", roles=\"administrator\", password=\"X\")": "OrgAdmin"
+  "user_create(user=\"OrgAdmin\", roles=\"administrator\", password=\"X\")": "OrgAdmin",
+  "user_create(user=\"BasicUser\", roles=\"reader\", password=\"X\")": "BasicUser"
  }
 ]SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) ORDER BY Key[
+ {
+  "name": "BasicUser",
+  "org_id": "root",
+  "org_name": "\u003croot\u003e",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "reader"
+  ],
+  "_policy": {
+   "roles": [
+    "reader"
+   ]
+  },
+  "effective_policy": {
+   "read_results": true
+  },
+  "Key": "BasicUserroot"
+ },
  {
   "name": "OrgAdmin",
   "org_id": "root",
@@ -137,6 +157,25 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "Key": "ReaderUserroot"
  }
 ]SELECT *, name+org_id AS Key FROM gui_users() ORDER BY Key[
+ {
+  "name": "BasicUser",
+  "org_id": "root",
+  "org_name": "\u003croot\u003e",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "reader"
+  ],
+  "_policy": {
+   "roles": [
+    "reader"
+   ]
+  },
+  "effective_policy": {
+   "read_results": true
+  },
+  "Key": "BasicUserroot"
+ },
  {
   "name": "OrgAdmin",
   "org_id": "root",
@@ -271,7 +310,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  {
   "OrgId": "ORGID"
  }
-]SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+ORG_ADMIN" AND NOT Log =~ "SELECT"[]LET _ <= org_create(name="MySecondOrg", org_id="ORGID2")[]LET _ <= user_create(user="OrgUser", roles="reader", password="X", orgs=["ORGID2"])[]SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) WHERE name =~ "OrgUser" ORDER BY Key[
+]SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+ORG_ADMIN" AND NOT Log =~ "SELECT"[]LET _ <= org_create(name="MySecondOrg", org_id="ORGID2")[]LET _ <= user_grant(user="OrgUser", roles="reader", orgs=["ORGID2"])[]SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) WHERE name =~ "OrgUser" ORDER BY Key[
  {
   "name": "OrgUser",
   "org_id": "ORGID",
@@ -345,15 +384,24 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  {
   "collect_client(client_id=\"C.123\", artifacts=\"Generic.Client.Info\").request.artifacts": null
  }
-]SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+COLLECT_CLIENT" AND NOT Log =~ "SELECT"[
+]SELECT * FROM test_read_logs() WHERE Log =~ "PermissionDenied.+COLLECT_CLIENT" AND NOT Log =~ "SELECT"[
  {
-  "Log": "Velociraptor: collect_client: PermissionDenied: Permission denied: [COLLECT_CLIENT]\n"
+  "Log": "Velociraptor: collect_client: PermissionDenied: User OrgUser is not allowed to launch flows COLLECT_CLIENT.\n"
  }
 ]SELECT * FROM query(query={ SELECT collect_client(client_id="C.123", artifacts="Generic.Client.DiskSpace", org_id="ORGID").request.artifacts FROM scope() }, runas="OrgUser")[
  {
-  "collect_client(client_id=\"C.123\", artifacts=\"Generic.Client.DiskSpace\", org_id=\"ORGID\").request.artifacts": null
+  "collect_client(client_id=\"C.123\", artifacts=\"Generic.Client.DiskSpace\", org_id=\"ORGID\").request.artifacts": [
+   "Generic.Client.DiskSpace"
+  ]
  }
-]SELECT * FROM query(query={ SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123") WHERE artifacts =~ "Disk" GROUP BY client_id }, runas="OrgUser", org_id="ORGID")[]SELECT * FROM query(query={ SELECT write_filestore(data="X", path="/clients/C.123/uploads/ORG1_file.txt") FROM scope() }, org_id="ORGID")[
+]SELECT * FROM query(query={ SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123") WHERE artifacts =~ "Disk" GROUP BY client_id }, runas="OrgUser", org_id="ORGID")[
+ {
+  "client_id": "C.123",
+  "artifacts": [
+   "Generic.Client.DiskSpace"
+  ]
+ }
+]SELECT * FROM query(query={ SELECT write_filestore(data="X", path="/clients/C.123/uploads/ORG1_file.txt") FROM scope() }, org_id="ORGID")[
  {
   "write_filestore(data=\"X\", path=\"/clients/C.123/uploads/ORG1_file.txt\")": true
  }
@@ -377,5 +425,48 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  },
  {
   "OrgId": "ORGID"
+ }
+]SELECT user_grant(user="BasicUser", orgs="ORGID",
+    policy=dict(roles=["reader",], collect_basic=TRUE))
+FROM scope()
+[
+ {
+  "user_grant(user=\"BasicUser\", orgs=\"ORGID\", policy=dict(roles=[\"reader\", ], collect_basic=TRUE))": "BasicUser"
+ }
+]SELECT * FROM query(query={
+    SELECT collect_client(client_id="C.123",
+        artifacts="Admin.Client.Remove", org_id="ORGID").request.artifacts
+    FROM scope()
+}, runas="BasicUser")
+[
+ {
+  "collect_client(client_id=\"C.123\", artifacts=\"Admin.Client.Remove\", org_id=\"ORGID\").request.artifacts": null
+ }
+]SELECT * FROM test_read_logs() WHERE Log =~ "PermissionDenied.+COLLECT_CLIENT" AND NOT Log =~ "SELECT"[
+ {
+  "Log": "Velociraptor: collect_client: PermissionDenied: User BasicUser is not allowed to launch flows COLLECT_CLIENT.\n"
+ }
+]LET _ <= artifact_set_metadata(name="Admin.Client.Remove", basic=TRUE)[]SELECT * FROM query(query={
+    SELECT collect_client(client_id="C.123",
+        artifacts="Admin.Client.Remove", org_id="ORGID").request.artifacts
+    FROM scope()
+}, runas="BasicUser")
+[
+ {
+  "collect_client(client_id=\"C.123\", artifacts=\"Admin.Client.Remove\", org_id=\"ORGID\").request.artifacts": [
+   "Admin.Client.Remove"
+  ]
+ }
+]SELECT * FROM query(query={
+  SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123")
+  WHERE artifacts =~ "Remove"
+  GROUP BY client_id
+}, runas="BasicUser", org_id="ORGID")
+[
+ {
+  "client_id": "C.123",
+  "artifacts": [
+   "Admin.Client.Remove"
+  ]
  }
 ]

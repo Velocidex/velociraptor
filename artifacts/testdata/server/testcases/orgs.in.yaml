@@ -25,7 +25,9 @@ Queries:
     roles="administrator", password="X",
     orgs=["ORGID"]),
   user_create(user="OrgAdmin",
-    roles="administrator", password="X")
+    roles="administrator", password="X"),
+  user_create(user="BasicUser",
+    roles="reader", password="X")
   FROM scope()
 
 - SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) ORDER BY Key
@@ -64,8 +66,7 @@ Queries:
 - LET _ <= org_create(name="MySecondOrg", org_id="ORGID2")
 
 # Give OrgUser a reader role in that org.
-- LET _ <= user_create(user="OrgUser",
-    roles="reader", password="X", orgs=["ORGID2"])
+- LET _ <= user_grant(user="OrgUser", roles="reader", orgs=["ORGID2"])
 
 # OrgUser should be an admin in ORGID and reader in ORGID2
 - SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) WHERE name =~ "OrgUser" ORDER BY Key
@@ -100,7 +101,7 @@ Queries:
       FROM scope()
   }, runas="OrgUser", org_id="ORGID2")
 
-- SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+COLLECT_CLIENT" AND NOT Log =~ "SELECT"
+- SELECT * FROM test_read_logs() WHERE Log =~ "PermissionDenied.+COLLECT_CLIENT" AND NOT Log =~ "SELECT"
 
 # Second way to schedule collections is directly by specifying org id
 - SELECT * FROM query(query={
@@ -141,3 +142,39 @@ Queries:
 
 - LET _ <= org_delete(org="ORGID2", really_do_it=TRUE)
 - SELECT OrgId FROM orgs()
+
+# Test Basic Collection. First give BasicUser the collect_basic
+# permission
+- |
+  SELECT user_grant(user="BasicUser", orgs="ORGID",
+      policy=dict(roles=["reader",], collect_basic=TRUE))
+  FROM scope()
+
+# Try to collect the Uninstall artifact
+- |
+  SELECT * FROM query(query={
+      SELECT collect_client(client_id="C.123",
+          artifacts="Admin.Client.Remove", org_id="ORGID").request.artifacts
+      FROM scope()
+  }, runas="BasicUser")
+
+# Should have failed with permission denies.
+- SELECT * FROM test_read_logs() WHERE Log =~ "PermissionDenied.+COLLECT_CLIENT" AND NOT Log =~ "SELECT"
+
+# Give the artifact the basic attribute
+- LET _ <= artifact_set_metadata(name="Admin.Client.Remove", basic=TRUE)
+
+# Try again - should work this time.
+- |
+  SELECT * FROM query(query={
+      SELECT collect_client(client_id="C.123",
+          artifacts="Admin.Client.Remove", org_id="ORGID").request.artifacts
+      FROM scope()
+  }, runas="BasicUser")
+
+- |
+  SELECT * FROM query(query={
+    SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123")
+    WHERE artifacts =~ "Remove"
+    GROUP BY client_id
+  }, runas="BasicUser", org_id="ORGID")
