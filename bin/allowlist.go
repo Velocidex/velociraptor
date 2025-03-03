@@ -22,7 +22,6 @@ var (
 		"flow_logs",
 		"flow_results",
 		"flows",
-		"for",
 		"foreach",
 		"glob",
 		"hunt_delete",

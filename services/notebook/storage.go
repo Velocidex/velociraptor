@@ -103,13 +103,17 @@ type NotebookStoreImpl struct {
 	last_deleted int64
 }
 
+func MakeNotebookStore(config_obj *config_proto.Config) *NotebookStoreImpl {
+	return &NotebookStoreImpl{
+		config_obj: config_obj,
+	}
+}
+
 func NewNotebookStore(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (*NotebookStoreImpl, error) {
-	result := &NotebookStoreImpl{
-		config_obj: config_obj,
-	}
+	result := MakeNotebookStore(config_obj)
 
 	wg.Add(1)
 	go func() {

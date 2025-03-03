@@ -424,17 +424,13 @@ func (self *HuntManager) ProcessParticipationWithError(
 		config_obj, hunt_obj, participation_row.ClientId)
 }
 
-func NewHuntManager(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
-
+func MakeHuntManager(config_obj *config_proto.Config) (*HuntManager, error) {
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	result := &HuntManager{
+	return &HuntManager{
 		limiter: rate.NewLimiter(rate.Limit(
 			config_obj.Frontend.Resources.NotificationsPerSecond), 1),
 		scope: manager.BuildScope(
@@ -442,8 +438,18 @@ func NewHuntManager(
 				Config: config_obj,
 				Logger: logging.NewPlainLogger(config_obj, &logging.GenericComponent),
 			}),
-	}
+	}, nil
+}
 
+func NewHuntManager(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
+
+	result, err := MakeHuntManager(config_obj)
+	if err != nil {
+		return err
+	}
 	HuntManagerForTests = result
 
 	return result.Start(ctx, config_obj, wg)
