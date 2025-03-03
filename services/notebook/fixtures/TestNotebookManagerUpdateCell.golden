@@ -26,8 +26,6 @@
     "max_row": 1000
    }
   ],
-  "created_time": 16,
-  "modified_time": 16,
   "notebook_id": "N.01",
   "cell_metadata": [
    {
@@ -57,7 +55,7 @@
  },
  "VQL Cell": {
   "input": "SELECT _value AS X FROM range(end=2)",
-  "output": "\u003cdiv class=\"panel\"\u003e\u003cvelo-csv-viewer base-url=\"'v1/GetTable'\" params='%7B%22notebook_id%22%3A%22N.01%22%2C%22client_id%22%3A%22%22%2C%22cell_id%22%3A%22NC.02-05%22%2C%22table_id%22%3A1%2C%22TableOptions%22%3A%7B%7D%2C%22Version%22%3A18%7D' /\u003e\u003c/div\u003e",
+  "output": "\u003cdiv class=\"panel\"\u003e\u003cvelo-csv-viewer base-url=\"'v1/GetTable'\" params='%7B%22notebook_id%22%3A%22N.01%22%2C%22client_id%22%3A%22%22%2C%22cell_id%22%3A%22NC.02-05%22%2C%22table_id%22%3A1%2C%22TableOptions%22%3A%7B%7D%2C%22Version%22%3A%7D' /\u003e\u003c/div\u003e",
   "data": "{}",
   "cell_id": "NC.02",
   "messages": [
@@ -98,8 +96,6 @@
     "max_row": 1000
    }
   ],
-  "created_time": 16,
-  "modified_time": 18,
   "notebook_id": "N.01",
   "cell_metadata": [
    {

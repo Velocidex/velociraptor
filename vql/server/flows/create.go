@@ -81,45 +81,26 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	// NOTE: Permission check is already made by
+	// ScheduleArtifactCollection(). It is more complex as it depends
+	// on permissions like:
+	// COLLECT_CLIENT for clients
+	// COLLECT_SERVER for server
+	// COLLECT_BASIC for artifacts with the basic metadata set
+
+	acl_manager, ok := artifacts.GetACLManager(scope)
 	if !ok {
-		scope.Log("collect_client: Command can only run on the server")
-		return vfilter.Null{}
+		acl_manager = acl_managers.NullACLManager{}
 	}
 
-	client_info_manager, err := services.GetClientInfoManager(config_obj)
-	if err != nil {
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}
 	}
 
-	// Scheduling artifacts on the server requires higher
-	// permissions.
-	var permission acls.ACL_PERMISSION
-	if arg.ClientId == "server" {
-		permission = acls.SERVER_ADMIN
-	} else if client_info_manager.ValidateClientId(arg.ClientId) == nil {
-		permission = acls.COLLECT_CLIENT
-	} else {
-		scope.Log("collect_client: unsupported client id")
-		return vfilter.Null{}
-	}
-
-	// Which org should this be collected on
-	if arg.OrgId == "" {
-		err = vql_subsystem.CheckAccess(scope, permission)
-		if err != nil {
-			scope.Log("collect_client: %v", err)
-			return vfilter.Null{}
-		}
-
-	} else {
-		err = vql_subsystem.CheckAccessInOrg(scope, arg.OrgId, permission)
-		if err != nil {
-			scope.Log("collect_client: %v", err)
-			return vfilter.Null{}
-		}
-
+	// If we are required to switch orgs do so now.
+	if arg.OrgId != "" {
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
 			scope.Log("collect_client: %v", err)
@@ -132,6 +113,24 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 			scope.Log("collect_client: %v", err)
 			return vfilter.Null{}
 		}
+
+		// Switch the ACL manager into the required org
+		org_acl_manager, ok := acl_manager.(vql_subsystem.OrgACLManager)
+		if ok {
+			org_acl_manager.SwitchDefaultOrg(config_obj)
+		}
+	}
+
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		scope.Log("collect_client: %v", err)
+		return vfilter.Null{}
+	}
+
+	err = client_info_manager.ValidateClientId(arg.ClientId)
+	if err != nil {
+		scope.Log("collect_client: %v", err)
+		return vfilter.Null{}
 	}
 
 	repository, err := vql_utils.GetRepository(scope)
@@ -171,16 +170,13 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	}
 
 	result := &flows_proto.ArtifactCollectorResponse{Request: request}
-	acl_manager, ok := artifacts.GetACLManager(scope)
-	if !ok {
-		acl_manager = acl_managers.NullACLManager{}
-	}
 
 	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return vfilter.Null{}
 	}
 
+	// ScheduleArtifactCollection already checks permissions.
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, config_obj, acl_manager, repository, request,
 		func() {
@@ -206,7 +202,7 @@ func (self ScheduleCollectionFunction) Info(scope vfilter.Scope, type_map *vfilt
 		Doc:     "Launch an artifact collection against a client.",
 		ArgType: type_map.AddType(scope, &ScheduleCollectionFunctionArg{}),
 		Metadata: vql.VQLMetadata().Permissions(
-			acls.COLLECT_CLIENT, acls.COLLECT_SERVER).Build(),
+			acls.COLLECT_CLIENT, acls.COLLECT_SERVER, acls.COLLECT_BASIC).Build(),
 	}
 }
 

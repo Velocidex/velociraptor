@@ -567,7 +567,7 @@ sources:
 			"reader", "F.1235", nil)
 		assert.Error(self.T(), err)
 		assert.Contains(self.T(), err.Error(),
-			"User is not allowed to launch flows COLLECT_SERVER")
+			"User reader is not allowed to launch flows COLLECT_SERVER")
 	}
 
 	// Lets make that artifact basic so our user can collect it
