@@ -179,8 +179,9 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerUpdateCell(r *assert.R
 	assert.NoError(r, err)
 	golden.Set("Full Notebook after update", new_notebook)
 
-	goldie.Retry(r, self.T(), "TestNotebookManagerUpdateCell",
-		goldie.RemoveLines("timestamp", json.MustMarshalIndent(golden)))
+	result := normalizeOutput(json.MustMarshalIndent(golden))
+
+	goldie.Retry(r, self.T(), "TestNotebookManagerUpdateCell", result)
 }
 
 func (self *NotebookManagerTestSuite) TestNotebookManagerAlert() {
@@ -314,8 +315,18 @@ func (self *NotebookManagerTestSuite) _TestNotebookFromTemplate(r *assert.R) {
 
 	golden.Set("UpdatedCell", updated_cell)
 
-	goldie.Retry(r, self.T(), "TestNotebookFromTemplate",
-		goldie.RemoveLines("timestamp", json.MustMarshalIndent(golden)))
+	// Remove things that may change
+	result := normalizeOutput(json.MustMarshalIndent(golden))
+	goldie.Retry(r, self.T(), "TestNotebookFromTemplate", result)
+}
+
+func normalizeOutput(golden []byte) []byte {
+	result := goldie.RemoveLines("timestamp", golden)
+	result = goldie.RemoveLines("created_time", result)
+	result = goldie.RemoveLines("modified_time", result)
+	result = goldie.ReplaceLines("Version%22%3A.+%7D", "Version%22%3A%7D", result)
+
+	return []byte(result)
 }
 
 func (self *NotebookManagerTestSuite) TestNotebookDeletion() {
