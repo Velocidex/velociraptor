@@ -313,28 +313,37 @@ if ! [ -f /bin/systemctl ] ; then
 fi
 `)
 
+	// Prepare the service files and copy them in place. Supports both
+	// systemd and sysv.
 	r.AddPostin(fmt.Sprintf(`
 if [ -f /bin/systemctl ] ; then
-cat << SYSTEMDSCRIPT > /etc/systemd/system/velociraptor_client.service
-%s
-SYSTEMDSCRIPT
-/bin/systemctl enable velociraptor_client.service
-/bin/systemctl start velociraptor_client.service
+  cat << SYSTEMDSCRIPT > /etc/systemd/system/velociraptor_client.service
+  %s
+  SYSTEMDSCRIPT
+
+  /bin/systemctl enable velociraptor_client.service
+  /bin/systemctl start velociraptor_client.service
+
 else
-cat << SYSVSCRIPT > /etc/rc.d/init.d/velociraptor
-%s
-SYSVSCRIPT
-/bin/chmod +x /etc/rc.d/init.d/velociraptor
+  cat << SYSVSCRIPT > /etc/rc.d/init.d/velociraptor
+  %s
+  SYSVSCRIPT
 
-## Set it to start at boot
-/sbin/chkconfig --add velociraptor
+  /bin/chmod +x /etc/rc.d/init.d/velociraptor
 
-## Start the service immediately
-service velociraptor start
+  ## Set it to start at boot
+  /sbin/chkconfig --add velociraptor
+
+  ## Start the service immediately
+  service velociraptor start
 fi
 `, fmt.Sprintf(client_service_definition, velociraptor_bin, config_path),
 		escape_sh(rpm_sysv_client_service_definition)))
 
+	// https://docs.fedoraproject.org/en-US/packaging-guidelines/Scriptlets/#_syntax
+	// In preun:
+	// $1 == 1 means upgrade
+	// $1 == 0 means uninstall
 	r.AddPreun(`
 if [ -f /bin/systemctl ]; then
     if [ $1 == 1 ] ; then
@@ -346,22 +355,30 @@ if [ -f /bin/systemctl ]; then
         /bin/systemctl stop velociraptor_client.service
     fi
 else
-    if [ $1 = 0 ] ; then
+    if [ $1 == 1 ] ; then
+        /sbin/service velociraptor start  > /dev/null 2>&1 || :
+    fi
+
+    if [ $1 == 0 ] ; then
         /sbin/service velociraptor stop > /dev/null 2>&1 || :
         /sbin/chkconfig --del velociraptor
     fi
 fi
 `)
 
+	// In postun:
+	// $1 == 1 means upgrade
+	// $1 == 0 means uninstall
+	//
+	// Remove service file only on uninstall
 	r.AddPostun(`
 if [ -f /bin/systemctl ] ; then
     if [ $1 = 0 ] ; then
-	rm /etc/systemd/system/velociraptor_client.service
+       rm /etc/systemd/system/velociraptor_client.service
     fi
 else
     if [ $1 = 0 ] ; then
-	/sbin/service velociraptor start  > /dev/null 2>&1 || :
-	rm /etc/rc.d/init.d/velociraptor
+       rm /etc/rc.d/init.d/velociraptor
     fi
 fi
 `)
