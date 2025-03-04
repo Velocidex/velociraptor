@@ -2,7 +2,6 @@ package event_logs
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"sync"
 	"time"
@@ -19,6 +18,9 @@ type EventLogWatcherStats struct {
 	FindLastEvent int64 // Nanoseconds
 	MonitorOnce   int64
 	Count         int64
+	FirstScan     time.Time
+	LastScan      time.Time
+	NextScan      time.Time
 }
 
 type EventLogWatcherTracker struct {
@@ -38,6 +40,20 @@ func (self *EventLogWatcherTracker) AddRow(
 	}
 
 	stats.Count++
+}
+
+func (self *EventLogWatcherTracker) SetNextScan(
+	filename *accessors.OSPath, accessor_name string, next time.Time) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	key := accessor_name + filename.String()
+	stats, pres := self.files[key]
+	if !pres {
+		return
+	}
+
+	stats.NextScan = next
 }
 
 func (self *EventLogWatcherTracker) ChargeMonitorOnce(
@@ -60,6 +76,7 @@ func (self *EventLogWatcherTracker) ChargeMonitorOnce(
 		}
 
 		stats.MonitorOnce += int64(duration)
+		stats.LastScan = start
 	}
 }
 
@@ -75,8 +92,6 @@ func (self *EventLogWatcherTracker) ChargeFindLastEvent(
 
 		duration := utils.GetTime().Now().Sub(start)
 
-		fmt.Printf("Duration %v\n", int64(duration))
-
 		stats, pres := self.files[key]
 		if !pres {
 			stats = &EventLogWatcherStats{
@@ -86,6 +101,7 @@ func (self *EventLogWatcherTracker) ChargeFindLastEvent(
 		}
 
 		stats.FindLastEvent += int64(duration)
+		stats.FirstScan = start
 	}
 }
 
@@ -110,6 +126,9 @@ func (self *EventLogWatcherTracker) WriteProfile(ctx context.Context,
 
 		output_chan <- ordereddict.NewDict().
 			Set("Filename", stat.Filename).
+			Set("FirstScan", stat.FirstScan).
+			Set("LastScan", stat.LastScan).
+			Set("NextScan", stat.NextScan.Sub(utils.GetTime().Now()).String()).
 			Set("FindLastEvent", time.Duration(stat.FindLastEvent).String()).
 			Set("MonitorOnce", time.Duration(stat.MonitorOnce).String()).
 			Set("Count", stat.Count)
