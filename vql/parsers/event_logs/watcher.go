@@ -2,7 +2,6 @@ package event_logs
 
 import (
 	"context"
-	"math/rand"
 	"sync"
 	"time"
 
@@ -19,7 +18,7 @@ import (
 )
 
 var (
-	GlobalEventLogService = NewEventLogWatcherService()
+	GlobalEventLogService = NewEventLogWatcherService(context.Background())
 )
 
 // This service watches one or more event logs files and multiplexes
@@ -27,12 +26,14 @@ var (
 type EventLogWatcherService struct {
 	mu sync.Mutex
 
+	ctx           context.Context
 	registrations map[string][]*Handle
 }
 
-func NewEventLogWatcherService() *EventLogWatcherService {
+func NewEventLogWatcherService(ctx context.Context) *EventLogWatcherService {
 	return &EventLogWatcherService{
 		registrations: make(map[string][]*Handle),
+		ctx:           ctx,
 	}
 }
 
@@ -74,7 +75,7 @@ func (self *EventLogWatcherService) Register(
 		builder := services.ScopeBuilderFromScope(scope)
 		subscope := manager.BuildScope(builder)
 
-		go self.StartMonitoring(
+		go self.StartMonitoring(self.ctx,
 			subscope, filename, accessor, frequency)
 	}
 
@@ -89,6 +90,7 @@ func (self *EventLogWatcherService) Register(
 // Monitor the filename for new events and emit them to all interested
 // listeners. If no listeners exist we terminate.
 func (self *EventLogWatcherService) StartMonitoring(
+	ctx context.Context,
 	scope vfilter.Scope,
 	filename *accessors.OSPath,
 	accessor_name string, frequency uint64) {
@@ -102,9 +104,6 @@ func (self *EventLogWatcherService) StartMonitoring(
 		frequency = 15
 	}
 
-	// Add some jitter to ensure evtx parsing is not synchronized.
-	frequency = uint64(rand.Intn(int(frequency)*2/10)) + frequency
-
 	// A resolver for messages
 	resolver, _ := evtx.GetNativeResolver()
 	accessor, err := accessors.GetAccessor(accessor_name, scope)
@@ -113,7 +112,7 @@ func (self *EventLogWatcherService) StartMonitoring(
 		return
 	}
 
-	last_event := self.findLastEvent(scope, filename, accessor)
+	last_event := self.findLastEvent(scope, filename, accessor_name, accessor)
 	key := filename.String() + accessor_name
 	for {
 		self.mu.Lock()
@@ -128,14 +127,23 @@ func (self *EventLogWatcherService) StartMonitoring(
 		last_event = self.monitorOnce(
 			filename, accessor_name, accessor, last_event, resolver)
 
-		time.Sleep(time.Duration(frequency) * time.Second)
+		duration := utils.Jitter(time.Duration(frequency) * time.Second)
+
+		eventLogWatchTracker.SetNextScan(
+			filename, accessor_name, utils.GetTime().Now().Add(duration))
+
+		utils.SleepWithCtx(ctx, duration)
 	}
 }
 
 func (self *EventLogWatcherService) findLastEvent(
 	scope vfilter.Scope,
 	filename *accessors.OSPath,
+	accessor_name string,
 	accessor accessors.FileSystemAccessor) int {
+
+	defer eventLogWatchTracker.ChargeFindLastEvent(filename, accessor_name)()
+
 	last_event := 0
 
 	fd, err := accessor.OpenWithOSPath(filename)
@@ -150,24 +158,16 @@ func (self *EventLogWatcherService) findLastEvent(
 		scope.Log("findLastEvent GetChunks error: %v", err)
 		return 0
 	}
-
 	for _, c := range chunks {
 		if c == nil {
 			continue
 		}
 
-		if int(c.Header.LastEventRecID) <= last_event {
-			continue
+		if int(c.Header.LastEventRecID) > last_event {
+			last_event = int(c.Header.LastEventRecID)
 		}
 
-		records, _ := c.Parse(int(last_event))
-		for _, record := range records {
-			if int(record.Header.RecordID) > last_event {
-				last_event = int(record.Header.RecordID)
-			}
-		}
 	}
-
 	return last_event
 }
 
@@ -200,6 +200,8 @@ func (self *EventLogWatcherService) monitorOnce(
 	accessor accessors.FileSystemAccessor,
 	last_event int,
 	resolver evtx.MessageResolver) int {
+
+	defer eventLogWatchTracker.ChargeMonitorOnce(filename, accessor_name)()
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -252,6 +254,8 @@ func (self *EventLogWatcherService) monitorOnce(
 			if resolver != nil {
 				event.Set("Message", evtx.ExpandMessage(event, resolver))
 			}
+
+			eventLogWatchTracker.AddRow(filename, accessor_name)
 
 			new_handles := make([]*Handle, 0, len(handles))
 			for _, handle := range handles {
