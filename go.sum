@@ -98,8 +98,8 @@ github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1 h1:fLJ2AjY0dtDZ
 github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1/go.mod h1:UpFVihkMZWl2JRkVRiZYie0e2l7Ry+vjlCHCs6XVKGU=
 github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9 h1:YavusWZ+svpybfVg8cKk9MuSyeI479a0EGJ07VGpSm8=
 github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9/go.mod h1:ukLFs2t1+ud7MC4oN+zImhtTRP/eQHaDL3TwLs58uUA=
-github.com/Velocidex/tracee_velociraptor v0.0.0-20241111012344-d72a7f2cb144 h1:eDr8kkCPy4lCYBSc+AyuNz8aML3fnDqvEz3VVW8hX6A=
-github.com/Velocidex/tracee_velociraptor v0.0.0-20241111012344-d72a7f2cb144/go.mod h1:DKcFdJ5IsrS+Dvl0mOGfsA2gTiIcxN5FEL599m3Qois=
+github.com/Velocidex/tracee_velociraptor v0.0.0-20250304130312-661b3fd25a3c h1:s4OAG1HOK0iSdFfVSCc1EfG1qPt9TSHR0KePsuLV7aE=
+github.com/Velocidex/tracee_velociraptor v0.0.0-20250304130312-661b3fd25a3c/go.mod h1:DKcFdJ5IsrS+Dvl0mOGfsA2gTiIcxN5FEL599m3Qois=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130 h1:+QujZ0D7KSy3WJVchkOhMkvAUab6/CIisO5LCoN48q4=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130/go.mod h1:3/pI9BBAF7gydBWvMVtV7W1qRwshEG9lBwed/d8xfFg=
 github.com/Velocidex/yaml/v2 v2.2.8 h1:GUrSy4SBJ6RjGt43k6MeBKtw2z/27gh4A3hfFmFY3No=
