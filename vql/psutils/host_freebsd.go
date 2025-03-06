@@ -1,5 +1,5 @@
-//go:build linux
-// +build linux
+//go:build freebsd
+// +build freebsd
 
 package psutils
 
