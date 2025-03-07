@@ -154,7 +154,7 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelineAnnotations(
 	golden.Set("Notebook Metadata After Annotation", notebook_metadata)
 
 	// Check that GetAllNotebooks() returns this notebook now.
-	all_notebooks, err := notebook_manager.GetAllNotebooks(
+	all_notebooks, err := notebook_manager.GetAllNotebooks(self.Ctx,
 		services.NotebookSearchOptions{
 			Username:  "admin",
 			Timelines: true,
@@ -166,7 +166,7 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelineAnnotations(
 
 	// Check that GetAllNotebooks() returns only notebook for this
 	// user.
-	all_notebooks, err = notebook_manager.GetAllNotebooks(
+	all_notebooks, err = notebook_manager.GetAllNotebooks(self.Ctx,
 		services.NotebookSearchOptions{
 			Username:  "someuser",
 			Timelines: true,

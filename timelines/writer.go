@@ -1,5 +1,12 @@
 package timelines
 
+/*
+  Implements a ITimelineWriter interface to write time series data to
+  the filestore.
+
+  Assumes data is written in time increasing order.
+*/
+
 import (
 	"bytes"
 	"encoding/binary"

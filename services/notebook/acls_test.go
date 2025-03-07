@@ -97,7 +97,7 @@ func (self *ACLTestSuite) TestNotebookPublicACL() {
 
 	// Check GetAllNotebooks without ACL checks
 	all_notebooks, err := notebook_manager.GetAllNotebooks(
-		services.NotebookSearchOptions{})
+		self.Ctx, services.NotebookSearchOptions{})
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), 1, len(all_rows))
 	assert.Equal(self.T(), new_notebook.NotebookId,

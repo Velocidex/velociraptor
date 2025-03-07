@@ -15,6 +15,7 @@ import (
 type NotebookType int
 
 const (
+	// For GetNotebook
 	DO_NOT_INCLUDE_UPLOADS = false
 	INCLUDE_UPLOADS        = true
 )
@@ -48,6 +49,8 @@ type NotebookSearchOptions struct {
 }
 
 type NotebookManager interface {
+
+	// Notebook management
 	GetNotebook(ctx context.Context,
 		notebook_id string,
 		include_uploads bool) (*api_proto.NotebookMetadata, error)
@@ -56,7 +59,8 @@ type NotebookManager interface {
 		ctx context.Context,
 		username string) (api.FSPathSpec, error)
 
-	GetAllNotebooks(opts NotebookSearchOptions) ([]*api_proto.NotebookMetadata, error)
+	GetAllNotebooks(ctx context.Context,
+		opts NotebookSearchOptions) ([]*api_proto.NotebookMetadata, error)
 
 	NewNotebook(ctx context.Context,
 		username string, in *api_proto.NotebookMetadata) (
@@ -94,12 +98,15 @@ type NotebookManager interface {
 	CheckNotebookAccess(
 		notebook *api_proto.NotebookMetadata, user string) bool
 
+	// Attachments
 	UploadNotebookAttachment(ctx context.Context,
 		in *api_proto.NotebookFileUploadRequest) (
 		*api_proto.NotebookFileUploadResponse, error)
 
 	RemoveNotebookAttachment(ctx context.Context,
 		notebook_id string, components []string) error
+
+	// Timeline management
 
 	// List all timelines in this notebook
 	Timelines(ctx context.Context,
