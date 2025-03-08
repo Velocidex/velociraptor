@@ -6,9 +6,9 @@ import (
 	"context"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/dimchansky/utfbom"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -67,21 +67,30 @@ func (self ScannerPlugin) Call(
 				}
 				defer fd.Close()
 
-				// Support a BOM just in case
-				scanner := bufio.NewScanner(utfbom.SkipOnly(fd))
+				scanner := bufio.NewScanner(fd)
 
 				// Allow the user to increase buffer size (default 64kb)
 				if arg.BufferSize > 0 {
 					scanner.Buffer(make([]byte, arg.BufferSize), arg.BufferSize)
 				}
 
+				firstLine := true
 				for scanner.Scan() {
+					var line string
+					if firstLine {
+						// strip UTF-8 byte order mark if any
+						line, _ = strings.CutPrefix(scanner.Text(), "\xef\xbb\xbf")
+						firstLine = false
+					} else {
+						line = scanner.Text()
+					}
+
 					select {
 					case <-ctx.Done():
 						return
 
 					case output_chan <- ordereddict.NewDict().
-						Set("Line", scanner.Text()):
+						Set("Line", line):
 					}
 				}
 				err = scanner.Err()
