@@ -161,7 +161,7 @@ func (self *SuperTimelineReader) New(ctx context.Context,
 		// We are going to use this timeline.
 		timeline.Active = true
 
-		reader, err := self.reader_factory.New(
+		reader, err := result.reader_factory.New(
 			config_obj, transformer, path_manager.GetChild(timeline.Id))
 		if err != nil {
 			// We cant read the component - it may not be there, just
