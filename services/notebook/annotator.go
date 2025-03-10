@@ -64,8 +64,7 @@ func (self *SuperTimelineAnnotatorImpl) AnnotateTimeline(
 	// Write synchronously because we need to see the annotation
 	// immediately visible in the GUI so it needs to be done before we
 	// return.
-	file_store_factory := file_store.GetFileStore(self.config_obj)
-	writer, err := timelines.NewTimelineWriter(file_store_factory, path_manager,
+	writer, err := timelines.NewTimelineWriter(self.config_obj, path_manager,
 		utils.SyncCompleter, result_sets.TruncateMode)
 	if err != nil {
 		return err
@@ -158,9 +157,10 @@ func (self *SuperTimelineAnnotatorImpl) AnnotateTimeline(
 		SuperTimeline(supertimeline)
 
 	// The super timeline reader emits timeline items.
-	super_reader, err := self.SuperTimelineReaderFactory.New(
+	super_reader, err := self.SuperTimelineReaderFactory.New(ctx,
 		self.config_obj, self.SuperTimelineStorer,
-		super_path_manager, []string{constants.TIMELINE_ANNOTATION}, nil)
+		notebook_id, supertimeline,
+		[]string{constants.TIMELINE_ANNOTATION}, nil)
 	if err != nil {
 		return err
 	}
@@ -196,6 +196,7 @@ func (self *SuperTimelineAnnotatorImpl) AnnotateTimeline(
 
 	// Move the new files on top of the old
 	dest := super_path_manager.GetChild(constants.TIMELINE_ANNOTATION)
+	file_store_factory := file_store.GetFileStore(self.config_obj)
 	err = file_store_factory.Move(tmp_path, dest.Path())
 	if err != nil {
 		return err

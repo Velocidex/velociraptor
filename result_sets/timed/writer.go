@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -35,9 +36,8 @@ type TimedResultSetWriterImpl struct {
 	rows              []rowContainer
 	total_rows_cached int
 
-	opts               *json.EncOpts
-	file_store_factory api.FileStore
-
+	opts         *json.EncOpts
+	config_obj   *config_proto.Config
 	path_manager api.PathManager
 
 	// Recalculate the writer based on the log_path to support
@@ -132,7 +132,7 @@ func (self *TimedResultSetWriterImpl) getWriter(ts time.Time) (
 	}
 
 	writer, err := timelines.NewTimelineWriter(
-		self.file_store_factory,
+		self.config_obj,
 		paths.NewTimelinePathManager(
 			log_path.Base(), log_path),
 		self.completer.GetCompletionFunc(),
@@ -163,7 +163,7 @@ func (self *TimedResultSetWriterImpl) Close() {
 }
 
 func NewTimedResultSetWriter(
-	file_store_factory api.FileStore,
+	config_obj *config_proto.Config,
 	path_manager api.PathManager,
 	opts *json.EncOpts,
 	completion func()) (result_sets.TimedResultSetWriter, error) {
@@ -174,9 +174,9 @@ func NewTimedResultSetWriter(
 	}
 
 	return &TimedResultSetWriterImpl{
-		file_store_factory: file_store_factory,
-		path_manager:       path_manager,
-		opts:               opts,
+		config_obj:   config_obj,
+		path_manager: path_manager,
+		opts:         opts,
 
 		// Only call the completion function once all writes
 		// completed.

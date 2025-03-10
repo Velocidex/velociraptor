@@ -10,7 +10,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
@@ -20,7 +19,9 @@ import (
 type SuperTimelineReader struct {
 	*timelines_proto.SuperTimeline
 
-	readers []*TimelineReader
+	readers []ITimelineReader
+
+	reader_factory ITimelineReader
 }
 
 func (self *SuperTimelineReader) Stat() *timelines_proto.SuperTimeline {
@@ -111,9 +112,10 @@ func (self *SuperTimelineReader) Read(ctx context.Context) <-chan TimelineItem {
 	return output_chan
 }
 
-func (self *SuperTimelineReader) New(config_obj *config_proto.Config,
+func (self *SuperTimelineReader) New(ctx context.Context,
+	config_obj *config_proto.Config,
 	storer ISuperTimelineStorer,
-	path_manager *paths.SuperTimelinePathManager,
+	notebook_id, super_timeline string,
 	include_components []string,
 	exclude_components []string) (ISuperTimelineReader, error) {
 
@@ -122,7 +124,14 @@ func (self *SuperTimelineReader) New(config_obj *config_proto.Config,
 		return nil, err
 	}
 
-	result := &SuperTimelineReader{SuperTimeline: &timelines_proto.SuperTimeline{}}
+	result := &SuperTimelineReader{
+		SuperTimeline:  &timelines_proto.SuperTimeline{},
+		reader_factory: &TimelineReader{},
+	}
+
+	path_manager := paths.NewNotebookPathManager(notebook_id).
+		SuperTimeline(super_timeline)
+
 	err = db.GetSubject(config_obj, path_manager.Path(), result.SuperTimeline)
 	if err != nil {
 		// SuperTimeline does not exist yet, just make an
@@ -144,8 +153,6 @@ func (self *SuperTimelineReader) New(config_obj *config_proto.Config,
 		if utils.InString(exclude_components, timeline.Id) {
 			continue
 		}
-		file_store_factory := file_store.GetFileStore(config_obj)
-
 		// Transform the timeline event based on the timeline
 		// specifications. This allows us to re-define standard fields
 		// like timestamp, message and timestamp_description.
@@ -154,8 +161,8 @@ func (self *SuperTimelineReader) New(config_obj *config_proto.Config,
 		// We are going to use this timeline.
 		timeline.Active = true
 
-		reader, err := NewTimelineReader(
-			file_store_factory, transformer, path_manager.GetChild(timeline.Id))
+		reader, err := self.reader_factory.New(
+			config_obj, transformer, path_manager.GetChild(timeline.Id))
 		if err != nil {
 			// We cant read the component - it may not be there, just
 			// ignore it.
@@ -225,13 +232,12 @@ func (self *SuperTimelineWriter) AddChild(
 	path_manager := paths.NewNotebookPathManager(self.notebook_id).
 		SuperTimeline(self.SuperTimeline.Name)
 	new_timeline_path_manager := path_manager.GetChild(timeline.Id)
-	file_store_factory := file_store.GetFileStore(self.config_obj)
 
 	var writer *TimelineWriter
 	var err error
 
 	writer, err = NewTimelineWriter(
-		file_store_factory,
+		self.config_obj,
 		new_timeline_path_manager,
 
 		// When we are complete we update the timeline stats

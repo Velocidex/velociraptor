@@ -154,9 +154,8 @@ func (self *ClientFlowRunner) MonitoringLogMessage(
 	}
 
 	// Write the logs asynchronously
-	file_store_factory := file_store.GetFileStore(self.config_obj)
 	rs_writer, err := result_sets.NewTimedResultSetWriter(
-		file_store_factory, log_path_manager, json.DefaultEncOpts(),
+		self.config_obj, log_path_manager, json.DefaultEncOpts(),
 		utils.BackgroundWriter)
 	if err != nil {
 		return err

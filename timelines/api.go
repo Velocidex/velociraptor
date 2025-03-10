@@ -21,6 +21,16 @@ type ITimelineWriter interface {
 	Close()
 }
 
+type ITimelineReader interface {
+	Stat() *timelines_proto.Timeline
+	SeekToTime(timestamp time.Time) error
+	Read(ctx context.Context) <-chan TimelineItem
+	Close()
+	New(config_obj *config_proto.Config,
+		ransformer Transformer,
+		path_manager paths.TimelinePathManagerInterface) (*TimelineReader, error)
+}
+
 // Reads a super timeline. Super timelines include multiple component
 // timelines. This reader allows them to be switched on and off only
 // reading the data from the selected set.
@@ -29,9 +39,10 @@ type ISuperTimelineReader interface {
 	Close()
 	SeekToTime(timestamp time.Time)
 	Read(ctx context.Context) <-chan TimelineItem
-	New(config_obj *config_proto.Config,
+	New(ctx context.Context,
+		config_obj *config_proto.Config,
 		storer ISuperTimelineStorer,
-		path_manager *paths.SuperTimelinePathManager,
+		notebook_id, super_timeline string,
 		include_components []string, exclude_components []string) (ISuperTimelineReader, error)
 }
 

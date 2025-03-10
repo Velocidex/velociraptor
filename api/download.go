@@ -395,7 +395,7 @@ func getRows(
 		}
 
 		rs_reader, err := result_sets.NewTimedResultSetReader(
-			ctx, file_store_factory, path_manager)
+			ctx, config_obj, path_manager)
 
 		return rs_reader.Rows(ctx), rs_reader.Close, log_path, err
 

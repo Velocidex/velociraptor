@@ -8,7 +8,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/timelines"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
@@ -54,12 +53,9 @@ func (self *NotebookManager) ReadTimeline(ctx context.Context, notebook_id strin
 		}
 	}
 
-	super_path_manager := paths.NewNotebookPathManager(notebook_id).
-		SuperTimeline(supertimeline)
-
-	reader, err := self.SuperTimelineReaderFactory.New(
+	reader, err := self.SuperTimelineReaderFactory.New(ctx,
 		self.config_obj, self.SuperTimelineStorer,
-		super_path_manager, options.IncludeComponents,
+		notebook_id, supertimeline, options.IncludeComponents,
 		options.ExcludeComponents)
 	if err != nil {
 		return nil, err

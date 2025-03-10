@@ -25,7 +25,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -152,8 +151,6 @@ func getResultSetReader(
 	config_obj *config_proto.Config,
 	arg *MonitoringLogsPluginArgs) (result_sets.TimedResultSetReader, error) {
 
-	file_store_factory := file_store.GetFileStore(config_obj)
-
 	if arg.Artifact != "" {
 		if arg.Source != "" {
 			arg.Artifact = arg.Artifact + "/" + arg.Source
@@ -168,7 +165,7 @@ func getResultSetReader(
 		path_manager := artifact_paths.NewArtifactLogPathManagerWithMode(
 			config_obj, arg.ClientId, "", arg.Artifact, mode)
 		return result_sets.NewTimedResultSetReader(
-			ctx, file_store_factory, path_manager)
+			ctx, config_obj, path_manager)
 	}
 
 	return nil, errors.New(
