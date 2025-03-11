@@ -62,9 +62,8 @@ func listAvailableEventTimestampFiles(
 	path_manager api.PathManager) ([]int32, error) {
 	result := []int32{}
 
-	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewTimedResultSetReader(
-		ctx, file_store_factory, path_manager)
+		ctx, config_obj, path_manager)
 	if err != nil {
 		return nil, err
 	}

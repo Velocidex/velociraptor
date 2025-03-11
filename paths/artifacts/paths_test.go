@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -116,17 +117,17 @@ func (self *PathManageTestSuite) TestPathManager() {
 				db, self.ConfigObj, path)),
 			cleanPath(self.dirname+"/"+testcase.expected))
 
-		file_store := memory.NewMemoryFileStore(self.ConfigObj)
-		file_store.Clear()
-
+		file_store_factory := memory.NewMemoryFileStore(self.ConfigObj)
 		qm := memory.NewMemoryQueueManager(
-			self.ConfigObj, file_store).(*memory.MemoryQueueManager)
+			self.ConfigObj, file_store_factory).(*memory.MemoryQueueManager)
+
+		file_store.OverrideFilestoreImplementation(self.ConfigObj, file_store_factory)
 
 		err = qm.PushEventRows(path_manager,
 			[]*ordereddict.Dict{ordereddict.NewDict()})
 		assert.NoError(self.T(), err)
 
-		data, ok := file_store.Get(cleanPath(
+		data, ok := file_store_factory.Get(cleanPath(
 			self.dirname + testcase.expected))
 		assert.Equal(self.T(), ok, true)
 		assert.Equal(self.T(), string(data), "{\"_ts\":1587800823}\n")

@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
@@ -45,10 +46,13 @@ func TestDirectoryQueueManager(t *testing.T) {
 	ConfigObj.Datastore.FilestoreDirectory = dir
 	ConfigObj.Datastore.Location = dir
 
-	file_store := memory.NewMemoryFileStore(ConfigObj)
-	manager := directory.NewDirectoryQueueManager(ConfigObj, file_store)
+	file_store_factory := memory.NewMemoryFileStore(ConfigObj)
+	manager := directory.NewDirectoryQueueManager(ConfigObj, file_store_factory)
+
+	file_store.OverrideFilestoreImplementation(ConfigObj, file_store_factory)
+
 	suite.Run(t, tests.NewQueueManagerTestSuite(
-		ConfigObj, manager, file_store))
+		ConfigObj, manager, file_store_factory))
 }
 
 type TestSuite struct {

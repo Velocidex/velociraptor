@@ -7,48 +7,51 @@ import (
 	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-func (self *NotebookStoreImpl) GetAvailableTimelines(notebook_id string) []string {
-	path_manager := paths.NewNotebookPathManager(notebook_id)
-	result := []string{}
-	db, err := datastore.GetDB(self.config_obj)
-	files, err := db.ListChildren(self.config_obj, path_manager.SuperTimelineDir())
+type AttachmentManagerImpl struct {
+	config_obj    *config_proto.Config
+	NotebookStore NotebookStore
+}
+
+func NewAttachmentManager(config_obj *config_proto.Config,
+	NotebookStore NotebookStore) AttachmentManager {
+	return &AttachmentManagerImpl{
+		config_obj:    config_obj,
+		NotebookStore: NotebookStore,
+	}
+}
+
+func (self *AttachmentManagerImpl) GetAvailableDownloadFiles(
+	ctx context.Context, notebook_id string) (*api_proto.AvailableDownloads, error) {
+
+	export_manager, err := services.GetExportManager(self.config_obj)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	for _, f := range files {
-		if !f.IsDir() {
-			result = append(result, f.Base())
-		}
-	}
-	return result
+	return export_manager.GetAvailableDownloadFiles(ctx, self.config_obj,
+		services.ContainerOptions{
+			Type:       services.NotebookExport,
+			NotebookId: notebook_id,
+		})
 }
 
-func (self *NotebookStoreImpl) GetAvailableDownloadFiles(
-	notebook_id string) (*api_proto.AvailableDownloads, error) {
-
-	download_path := paths.NewNotebookPathManager(notebook_id).
-		HtmlExport("X").Dir()
-
-	return reporting.GetAvailableDownloadFiles(self.config_obj, download_path)
-}
-
-func (self *NotebookStoreImpl) GetAvailableUploadFiles(notebook_id string) (
+func (self *AttachmentManagerImpl) GetAvailableUploadFiles(notebook_id string) (
 	*api_proto.AvailableDownloads, error) {
 	result := &api_proto.AvailableDownloads{}
 
 	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 
-	notebook, err := self.GetNotebook(notebook_id)
+	notebook, err := self.NotebookStore.GetNotebook(notebook_id)
 	if err != nil {
 		return nil, err
 	}
@@ -120,10 +123,10 @@ func (self *NotebookStoreImpl) GetAvailableUploadFiles(notebook_id string) (
 
 func (self *NotebookManager) RemoveNotebookAttachment(ctx context.Context,
 	notebook_id string, components []string) error {
-	return self.Store.RemoveAttachment(ctx, notebook_id, components)
+	return self.AttachmentManager.RemoveAttachment(ctx, notebook_id, components)
 }
 
-func (self *NotebookStoreImpl) RemoveAttachment(ctx context.Context,
+func (self *AttachmentManagerImpl) RemoveAttachment(ctx context.Context,
 	notebook_id string, components []string) error {
 
 	if len(components) == 0 {
@@ -141,4 +144,25 @@ func (self *NotebookStoreImpl) RemoveAttachment(ctx context.Context,
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	return file_store_factory.Delete(attachment_path)
+}
+
+func (self *AttachmentManagerImpl) StoreAttachment(
+	notebook_id, filename string, data []byte) (api.FSPathSpec, error) {
+	full_path := paths.NewNotebookPathManager(notebook_id).
+		Attachment(filename)
+	file_store_factory := file_store.GetFileStore(self.config_obj)
+	fd, err := file_store_factory.WriteFileWithCompletion(
+		full_path, utils.SyncCompleter)
+	if err != nil {
+		return nil, err
+	}
+	defer fd.Close()
+
+	err = fd.Truncate()
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = fd.Write(data)
+	return full_path, err
 }

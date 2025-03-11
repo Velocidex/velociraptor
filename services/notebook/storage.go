@@ -5,7 +5,6 @@ import (
 	"os"
 	"sort"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -17,80 +16,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
+	"www.velocidex.com/golang/velociraptor/timelines"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/vfilter"
 )
 
-var (
-	IGNORE_REPORT chan *ordereddict.Dict = nil
-
-	DO_NOT_SYNC_NOTEBOOKS_FOR_TEST = atomic.Bool{}
-)
-
-type NotebookStore interface {
-	// TODO: The following Get/Modify/Set pattern is not thread safe -
-	// Enhance the API to allow safe modifications.
-	SetNotebook(in *api_proto.NotebookMetadata) error
-	GetNotebook(notebook_id string) (*api_proto.NotebookMetadata, error)
-
-	SetNotebookCell(notebook_id string, in *api_proto.NotebookCell) error
-	GetNotebookCell(notebook_id, cell_id, version string) (
-		*api_proto.NotebookCell, error)
-
-	// progress_chan receives information about deletion. It may be
-	// nil if callers dont care about it.
-	RemoveNotebookCell(
-		ctx context.Context, config_obj *config_proto.Config,
-		notebook_id, cell_id, version string,
-		progress_chan chan *ordereddict.Dict) error
-
-	StoreAttachment(notebook_id,
-		filename string, data []byte) (api.FSPathSpec, error)
-	RemoveAttachment(ctx context.Context,
-		notebook_id string, components []string) error
-
-	GetAvailableDownloadFiles(notebook_id string) (
-		*api_proto.AvailableDownloads, error)
-
-	GetAvailableTimelines(notebook_id string) []string
-
-	GetAvailableUploadFiles(notebook_id string) (
-		*api_proto.AvailableDownloads, error)
-
-	GetAllNotebooks(opts services.NotebookSearchOptions) (
-		[]*api_proto.NotebookMetadata, error)
-
-	// Manage timeline operations.
-	Timelines(ctx context.Context,
-		notebook_id string) ([]*timelines_proto.SuperTimeline, error)
-
-	ReadTimeline(ctx context.Context, notebook_id string,
-		timeline string, options services.TimelineOptions) (
-		services.TimelineReader, error)
-
-	AddTimeline(ctx context.Context, scope vfilter.Scope,
-		notebook_id string, supertimeline string,
-		timeline *timelines_proto.Timeline,
-		in <-chan vfilter.Row) (*timelines_proto.SuperTimeline, error)
-
-	AnnotateTimeline(ctx context.Context, scope vfilter.Scope,
-		notebook_id string, supertimeline string,
-		message, principal string,
-		timestamp time.Time, event *ordereddict.Dict) error
-
-	DeleteTimeline(ctx context.Context, scope vfilter.Scope,
-		notebook_id string, supertimeline, component string) error
-
-	DeleteNotebook(ctx context.Context,
-		notebook_id string, progress chan vfilter.Row,
-		really_do_it bool) error
-
-	// The latest time of all the global notebooks. Used to work out
-	// if we need to rebuild the notebook index.
-	Version() int64
-}
-
+// Compose the notebook store from various components.
 type NotebookStoreImpl struct {
 	config_obj *config_proto.Config
 
@@ -101,19 +31,26 @@ type NotebookStoreImpl struct {
 	// Keep the last time for a notebook deletion to ensure we update
 	// the version when a notebook is deleted.
 	last_deleted int64
+
+	SuperTimelineStorer timelines.ISuperTimelineStorer
 }
 
-func MakeNotebookStore(config_obj *config_proto.Config) *NotebookStoreImpl {
+func MakeNotebookStore(
+	config_obj *config_proto.Config,
+	SuperTimelineStorer timelines.ISuperTimelineStorer) *NotebookStoreImpl {
 	return &NotebookStoreImpl{
-		config_obj: config_obj,
+		config_obj:          config_obj,
+		SuperTimelineStorer: SuperTimelineStorer,
 	}
 }
 
 func NewNotebookStore(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) (*NotebookStoreImpl, error) {
-	result := MakeNotebookStore(config_obj)
+	config_obj *config_proto.Config,
+	SuperTimelineStorer timelines.ISuperTimelineStorer) (*NotebookStoreImpl, error) {
+
+	result := MakeNotebookStore(config_obj, SuperTimelineStorer)
 
 	wg.Add(1)
 	go func() {
@@ -388,28 +325,8 @@ func (self *NotebookStoreImpl) GetNotebookCell(
 	return notebook_cell, err
 }
 
-func (self *NotebookStoreImpl) StoreAttachment(
-	notebook_id, filename string, data []byte) (api.FSPathSpec, error) {
-	full_path := paths.NewNotebookPathManager(notebook_id).
-		Attachment(filename)
-	file_store_factory := file_store.GetFileStore(self.config_obj)
-	fd, err := file_store_factory.WriteFileWithCompletion(
-		full_path, utils.SyncCompleter)
-	if err != nil {
-		return nil, err
-	}
-	defer fd.Close()
-
-	err = fd.Truncate()
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = fd.Write(data)
-	return full_path, err
-}
-
-func (self *NotebookStoreImpl) GetAllNotebooks(opts services.NotebookSearchOptions) (
+func (self *NotebookStoreImpl) GetAllNotebooks(
+	ctx context.Context, opts services.NotebookSearchOptions) (
 	[]*api_proto.NotebookMetadata, error) {
 
 	result := []*api_proto.NotebookMetadata{}
@@ -423,12 +340,16 @@ func (self *NotebookStoreImpl) GetAllNotebooks(opts services.NotebookSearchOptio
 			continue
 		}
 
-		if opts.Timelines && len(notebook.Timelines) == 0 {
+		// We should check the number of timelines in each notebook.
+		super_timelines := self.SuperTimelineStorer.GetAvailableTimelines(
+			ctx, notebook.NotebookId)
+		if opts.Timelines && len(super_timelines) == 0 {
 			continue
 		}
 
-		result = append(result,
-			proto.Clone(notebook).(*api_proto.NotebookMetadata))
+		out := proto.Clone(notebook).(*api_proto.NotebookMetadata)
+		out.Timelines = super_timelines
+		result = append(result, out)
 	}
 	self.mu.Unlock()
 

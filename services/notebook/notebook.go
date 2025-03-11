@@ -12,6 +12,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/timelines"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -25,6 +26,12 @@ var (
 type NotebookManager struct {
 	config_obj *config_proto.Config
 	Store      NotebookStore
+
+	SuperTimelineStorer        timelines.ISuperTimelineStorer
+	SuperTimelineReaderFactory timelines.ISuperTimelineReader
+	SuperTimelineWriterFactory timelines.ISuperTimelineWriter
+	SuperTimelineAnnotator     timelines.ISuperTimelineAnnotator
+	AttachmentManager          AttachmentManager
 }
 
 func (self *NotebookManager) GetNotebook(
@@ -44,11 +51,12 @@ func (self *NotebookManager) GetNotebook(
 	// Global notebooks keep these internally.
 	if include_uploads {
 		// An error here just means there are no AvailableDownloads.
-		notebook.AvailableDownloads, _ = self.Store.GetAvailableDownloadFiles(
+		notebook.AvailableDownloads, _ = self.AttachmentManager.GetAvailableDownloadFiles(
+			ctx, notebook_id)
+		notebook.AvailableUploads, _ = self.AttachmentManager.GetAvailableUploadFiles(
 			notebook_id)
-		notebook.AvailableUploads, _ = self.Store.GetAvailableUploadFiles(
-			notebook_id)
-		notebook.Timelines = self.Store.GetAvailableTimelines(notebook_id)
+		notebook.Timelines = self.SuperTimelineStorer.GetAvailableTimelines(
+			ctx, notebook_id)
 	} else {
 		notebook.AvailableUploads = nil
 		notebook.AvailableDownloads = nil
@@ -202,7 +210,7 @@ func (self *NotebookManager) UploadNotebookAttachment(
 		filename = NewNotebookAttachmentId() + "-" + in.Filename
 	}
 
-	full_path, err := self.Store.StoreAttachment(
+	full_path, err := self.AttachmentManager.StoreAttachment(
 		in.NotebookId, filename, decoded)
 	if err != nil {
 		return nil, err
@@ -231,10 +239,21 @@ func (self *NotebookManager) UploadNotebookAttachment(
 
 func NewNotebookManager(
 	config_obj *config_proto.Config,
-	storage NotebookStore) *NotebookManager {
+	Store NotebookStore,
+	SuperTimelineStorer timelines.ISuperTimelineStorer,
+	SuperTimelineReaderFactory timelines.ISuperTimelineReader,
+	SuperTimelineWriterFactory timelines.ISuperTimelineWriter,
+	SuperTimelineAnnotator timelines.ISuperTimelineAnnotator,
+	AttachmentManager AttachmentManager,
+) *NotebookManager {
 	result := &NotebookManager{
-		config_obj: config_obj,
-		Store:      storage,
+		config_obj:                 config_obj,
+		Store:                      Store,
+		SuperTimelineStorer:        SuperTimelineStorer,
+		SuperTimelineReaderFactory: SuperTimelineReaderFactory,
+		SuperTimelineWriterFactory: SuperTimelineWriterFactory,
+		SuperTimelineAnnotator:     SuperTimelineAnnotator,
+		AttachmentManager:          AttachmentManager,
 	}
 	return result
 }
@@ -244,11 +263,23 @@ func NewNotebookManagerService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (services.NotebookManager, error) {
 
-	store, err := NewNotebookStore(ctx, wg, config_obj)
+	timeline_storer := NewTimelineStorer(config_obj)
+	store, err := NewNotebookStore(ctx, wg, config_obj, timeline_storer)
 	if err != nil {
 		return nil, err
 	}
-	notebook_service := NewNotebookManager(config_obj, store)
+
+	annotator := NewSuperTimelineAnnotatorImpl(config_obj, timeline_storer,
+		&timelines.SuperTimelineReader{},
+		&timelines.SuperTimelineWriter{})
+
+	notebook_service := NewNotebookManager(config_obj, store,
+		timeline_storer,
+		&timelines.SuperTimelineReader{},
+		&timelines.SuperTimelineWriter{},
+		annotator,
+		NewAttachmentManager(config_obj, store),
+	)
 
 	return notebook_service, notebook_service.Start(ctx, config_obj, wg)
 }
