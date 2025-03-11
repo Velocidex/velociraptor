@@ -257,6 +257,7 @@ class TimelineTableRow extends Component {
             super_timeline: this.props.super_timeline,
             event_json: JSON.stringify({
                 _AnnotationID: this.props.row._AnnotationID,
+                _OriginalTime: this.props.row.Timestamp,
             }),
         }, this.source.token).then(response=>{
             this.props.onUpdate();

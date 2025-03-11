@@ -19,9 +19,10 @@ import (
 
 const (
 	// Annotation fields are hidden by default.
-	AnnotationID = "_AnnotationID"
-	AnnotatedBy  = "_AnnotatedBy"
-	AnnotatedAt  = "_AnnotatedAt"
+	AnnotationID     = "_AnnotationID"
+	AnnotatedBy      = "_AnnotatedBy"
+	AnnotatedAt      = "_AnnotatedAt"
+	AnnotationOGTime = "_OriginalTime"
 )
 
 var (

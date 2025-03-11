@@ -68,6 +68,9 @@ type ISuperTimelineStorer interface {
 	Set(ctx context.Context, notebook_id string,
 		timeline *timelines_proto.SuperTimeline) error
 
+	GetTimeline(ctx context.Context, notebook_id string,
+		super_timeline, component string) (*timelines_proto.Timeline, error)
+
 	UpdateTimeline(ctx context.Context,
 		notebook_id string, supertimeline string,
 		timeline *timelines_proto.Timeline) (*timelines_proto.SuperTimeline, error)

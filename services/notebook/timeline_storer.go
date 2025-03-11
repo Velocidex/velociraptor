@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type TimelineStorer struct {
@@ -133,6 +134,24 @@ func (self *TimelineStorer) DeleteComponent(ctx context.Context,
 
 	timeline.Timelines = new_timelines
 	return self.Set(ctx, notebook_id, timeline)
+}
+
+func (self *TimelineStorer) GetTimeline(ctx context.Context, notebook_id string,
+	super_timeline, component string) (*timelines_proto.Timeline, error) {
+	supertimeline, err := self.Get(ctx, notebook_id, super_timeline)
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			return nil, err
+		}
+		supertimeline = &timelines_proto.SuperTimeline{}
+	}
+
+	for _, t := range supertimeline.Timelines {
+		if t.Id == component {
+			return t, nil
+		}
+	}
+	return nil, utils.Wrap(utils.NotFoundError, component)
 }
 
 // Add or update the super timeline record in the data store.
