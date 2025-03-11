@@ -66,9 +66,10 @@ func (self *NotebookManager) GetSharedNotebooks(
 	}
 	defer rs_writer.Close()
 
-	all_notebooks, err := self.GetAllNotebooks(services.NotebookSearchOptions{
-		Username: username,
-	})
+	all_notebooks, err := self.GetAllNotebooks(ctx,
+		services.NotebookSearchOptions{
+			Username: username,
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +92,7 @@ func (self *NotebookManager) GetSharedNotebooks(
 	return index_filename, nil
 }
 
-func (self *NotebookManager) GetAllNotebooks(opts services.NotebookSearchOptions) (
-	[]*api_proto.NotebookMetadata, error) {
-	return self.Store.GetAllNotebooks(opts)
+func (self *NotebookManager) GetAllNotebooks(ctx context.Context,
+	opts services.NotebookSearchOptions) ([]*api_proto.NotebookMetadata, error) {
+	return self.Store.GetAllNotebooks(ctx, opts)
 }

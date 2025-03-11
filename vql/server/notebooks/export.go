@@ -23,7 +23,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
@@ -533,14 +532,19 @@ func ExportNotebookToHTML(
 			Type:       "html",
 			Components: path_specs.AsGenericComponentList(output_filename),
 		}
-		stats_path := notebook_path_manager.PathStats(
-			output_filename)
-		db, err := datastore.GetDB(config_obj)
+
+		export_manager, err := services.GetExportManager(config_obj)
 		if err != nil {
 			return nil, err
 		}
 
-		err = db.SetSubject(config_obj, stats_path, stats)
+		opts := services.ContainerOptions{
+			Type:              services.NotebookExport,
+			NotebookId:        notebook_id,
+			ContainerFilename: output_filename,
+		}
+
+		err = export_manager.SetContainerStats(ctx, config_obj, stats, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -555,7 +559,7 @@ func ExportNotebookToHTML(
 			stats.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 			stats.TotalDuration = uint64(time.Now().Unix()) - stats.Timestamp
 
-			db.SetSubject(config_obj, stats_path, stats)
+			export_manager.SetContainerStats(ctx, config_obj, stats, opts)
 		}()
 
 		for _, cell_md := range notebook.CellMetadata {

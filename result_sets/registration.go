@@ -29,19 +29,19 @@ type ResultSetOptions struct {
 
 type TimedFactory interface {
 	NewTimedResultSetWriter(
-		file_store_factory api.FileStore,
+		config_obj *config_proto.Config,
 		path_manager api.PathManager,
 		opts *json.EncOpts,
 		completion func()) (TimedResultSetWriter, error)
 
 	NewTimedResultSetReader(
 		ctx context.Context,
-		file_store api.FileStore,
+		config_obj *config_proto.Config,
 		path_manager api.PathManager) (TimedResultSetReader, error)
 }
 
 func NewTimedResultSetWriter(
-	file_store_factory api.FileStore,
+	config_obj *config_proto.Config,
 	path_manager api.PathManager,
 	opts *json.EncOpts,
 	completion func()) (TimedResultSetWriter, error) {
@@ -51,22 +51,22 @@ func NewTimedResultSetWriter(
 	if timed_rs_factory == nil {
 		panic(errors.New("TimedFactory not initialized"))
 	}
-	return timed_rs_factory.NewTimedResultSetWriter(file_store_factory,
+	return timed_rs_factory.NewTimedResultSetWriter(config_obj,
 		path_manager, opts, completion)
 }
 
 func NewTimedResultSetReader(
 	ctx context.Context,
-	file_store_factory api.FileStore,
+	config_obj *config_proto.Config,
 	path_manager api.PathManager) (TimedResultSetReader, error) {
+
 	l_mu.Lock()
 	defer l_mu.Unlock()
-
 	if timed_rs_factory == nil {
 		panic(errors.New("TimedFactory not initialized"))
 	}
 	return timed_rs_factory.NewTimedResultSetReader(ctx,
-		file_store_factory, path_manager)
+		config_obj, path_manager)
 }
 
 type Factory interface {

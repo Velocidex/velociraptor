@@ -423,9 +423,8 @@ func getEventTableWithPathManager(
 
 	result := &api_proto.GetTableResponse{}
 
-	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_reader, err := result_sets.NewTimedResultSetReader(ctx,
-		file_store_factory, path_manager)
+		config_obj, path_manager)
 	if err != nil {
 		return nil, err
 	}

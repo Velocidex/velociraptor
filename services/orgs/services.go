@@ -18,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
+	"www.velocidex.com/golang/velociraptor/services/exports"
 	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
@@ -63,6 +64,7 @@ type ServiceContainer struct {
 	acl_manager             services.ACLManager
 	secrets                 services.SecretsService
 	backups                 services.BackupService
+	export_manager          services.ExportManager
 }
 
 func (self *ServiceContainer) MockFrontendManager(svc services.FrontendManager) {
@@ -267,6 +269,16 @@ func (self *ServiceContainer) BroadcastService() (services.BroadcastService, err
 		return nil, errors.New("Broadcast Service not ready")
 	}
 	return self.broadcast, nil
+}
+
+func (self *ServiceContainer) ExportManager() (services.ExportManager, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.export_manager == nil {
+		return nil, errors.New("ExportManager Service not ready")
+	}
+	return self.export_manager, nil
 }
 
 func (self *ServiceContainer) BackupService() (services.BackupService, error) {
@@ -569,8 +581,15 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 			return err
 		}
 
+		export_manager, err := exports.NewExportManager(
+			ctx, wg, org_config)
+		if err != nil {
+			return err
+		}
+
 		service_container.mu.Lock()
 		service_container.hunt_dispatcher = hd
+		service_container.export_manager = export_manager
 		service_container.mu.Unlock()
 	}
 

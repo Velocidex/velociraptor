@@ -11,6 +11,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
@@ -153,10 +155,13 @@ func (self *TimelineReader) Close() {
 	self.index_fd.Close()
 }
 
-func NewTimelineReader(
-	file_store_factory api.FileStore,
+func (self TimelineReader) New(
+	config_obj *config_proto.Config,
 	transformer Transformer,
 	path_manager paths.TimelinePathManagerInterface) (*TimelineReader, error) {
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+
 	fd, err := file_store_factory.ReadFile(path_manager.Path())
 	if err != nil {
 		return nil, err

@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/file_store/tests"
 
@@ -14,7 +15,10 @@ import (
 
 func TestMemoryQueueManager(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
-	file_store := memory.NewMemoryFileStore(config_obj)
-	manager := memory.NewMemoryQueueManager(config_obj, file_store)
-	suite.Run(t, tests.NewQueueManagerTestSuite(config_obj, manager, file_store))
+	file_store_factory := memory.NewMemoryFileStore(config_obj)
+	manager := memory.NewMemoryQueueManager(config_obj, file_store_factory)
+
+	file_store.OverrideFilestoreImplementation(config_obj, file_store_factory)
+
+	suite.Run(t, tests.NewQueueManagerTestSuite(config_obj, manager, file_store_factory))
 }

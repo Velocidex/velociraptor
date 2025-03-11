@@ -7,7 +7,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/result_sets/timed"
@@ -25,10 +24,8 @@ type serverLogger struct {
 func (self *serverLogger) Write(b []byte) (int, error) {
 	level, msg := logging.SplitIntoLevelAndLog(b)
 
-	file_store_factory := file_store.GetFileStore(self.config_obj)
-
 	writer, err := timed.NewTimedResultSetWriter(
-		file_store_factory, self.path_manager, nil,
+		self.config_obj, self.path_manager, nil,
 		utils.BackgroundWriter)
 	if err != nil {
 		return 0, err

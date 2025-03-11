@@ -24,8 +24,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -98,20 +96,29 @@ func (self *Launcher) GetFlowDetails(
 
 	// Include the AvailableDownloads
 	if opts.Downloads {
-		res.AvailableDownloads, _ = availableDownloadFiles(config_obj, client_id, flow_id)
+		res.AvailableDownloads, _ = availableDownloadFiles(ctx, config_obj, client_id, flow_id)
 	}
 	return res, nil
 }
 
 // availableDownloads returns the prepared zip downloads available to
 // be fetched by the user at this moment.
-func availableDownloadFiles(config_obj *config_proto.Config,
+func availableDownloadFiles(
+	ctx context.Context,
+	config_obj *config_proto.Config,
 	client_id string, flow_id string) (*api_proto.AvailableDownloads, error) {
 
-	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	download_dir := flow_path_manager.GetDownloadsDirectory()
+	export_manager, err := services.GetExportManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
 
-	return reporting.GetAvailableDownloadFiles(config_obj, download_dir)
+	return export_manager.GetAvailableDownloadFiles(ctx,
+		config_obj, services.ContainerOptions{
+			Type:     services.FlowExport,
+			ClientId: client_id,
+			FlowId:   flow_id,
+		})
 }
 
 func (self *Launcher) CancelFlow(

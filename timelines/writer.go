@@ -1,5 +1,12 @@
 package timelines
 
+/*
+  Implements a ITimelineWriter interface to write time series data to
+  the filestore.
+
+  Assumes data is written in time increasing order.
+*/
+
 import (
 	"bytes"
 	"encoding/binary"
@@ -7,6 +14,8 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	vjson "www.velocidex.com/golang/velociraptor/json"
@@ -129,7 +138,7 @@ func (self *TimelineWriter) Close() {
 }
 
 func NewTimelineWriter(
-	file_store_factory api.FileStore,
+	config_obj *config_proto.Config,
 	path_manager paths.TimelinePathManagerInterface,
 	completion func(),
 	truncate result_sets.WriteMode) (*TimelineWriter, error) {
@@ -138,6 +147,8 @@ func NewTimelineWriter(
 
 	// Call the completer when both index and file are done.
 	completer := utils.NewCompleter(completion)
+
+	file_store_factory := file_store.GetFileStore(config_obj)
 
 	fd, err := file_store_factory.WriteFileWithCompletion(
 		path_manager.Path(), completer.GetCompletionFunc())

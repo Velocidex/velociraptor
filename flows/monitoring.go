@@ -15,7 +15,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -91,7 +90,6 @@ func flushContextLogsMonitoring(
 	writers := make(map[string]result_sets.TimedResultSetWriter)
 
 	// Append logs to messages from previous packets.
-	file_store_factory := file_store.GetFileStore(config_obj)
 	for _, row := range collection_context.Logs {
 		artifact_name := row.Artifact
 		if artifact_name == "" {
@@ -110,7 +108,7 @@ func flushContextLogsMonitoring(
 
 			// Write the logs asynchronously
 			rs_writer, err = result_sets.NewTimedResultSetWriter(
-				file_store_factory, log_path_manager, json.DefaultEncOpts(),
+				config_obj, log_path_manager, json.DefaultEncOpts(),
 				utils.BackgroundWriter)
 			if err != nil {
 				return err

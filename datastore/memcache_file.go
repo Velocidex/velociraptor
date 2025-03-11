@@ -472,6 +472,7 @@ func (self *MemcacheFileDataStore) DeleteSubjectWithCompletion(
 
 	// Delete inline - wait for the operation to complete before returning.
 	if utils.CompareFuncs(completion, utils.SyncCompleter) {
+		mutation.completion = nil
 		self.processMutation(mutation)
 		return self.cache.DeleteSubjectWithCompletion(config_obj, urn, completion)
 	}

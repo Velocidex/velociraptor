@@ -55,7 +55,7 @@ func (self *ApiServer) GetNotebooks(
 	if in.IncludeTimelines {
 		// This is only called for global notebooks because client and
 		// hunt notebooks always specify the exact notebook id.
-		notebooks, err := notebook_manager.GetAllNotebooks(
+		notebooks, err := notebook_manager.GetAllNotebooks(ctx,
 			services.NotebookSearchOptions{
 				Username:  principal,
 				Timelines: true,
