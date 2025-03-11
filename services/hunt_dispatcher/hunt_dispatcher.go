@@ -134,7 +134,7 @@ func (self *HuntDispatcher) GetHunt(
 	}
 
 	hunt.Stats.AvailableDownloads, _ = availableHuntDownloadFiles(
-		self.config_obj, hunt_id)
+		ctx, self.config_obj, hunt_id)
 
 	// Normalize the hunt object
 	FindCollectedArtifacts(ctx, self.config_obj, hunt)

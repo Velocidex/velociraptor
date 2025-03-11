@@ -40,23 +40,23 @@ type NotebookStore interface {
 		notebook_id, cell_id, version string,
 		progress_chan chan *ordereddict.Dict) error
 
-	// Attachments in the notebook.
-	StoreAttachment(notebook_id,
-		filename string, data []byte) (api.FSPathSpec, error)
-
-	RemoveAttachment(ctx context.Context,
-		notebook_id string, components []string) error
-
-	GetAvailableDownloadFiles(notebook_id string) (
-		*api_proto.AvailableDownloads, error)
-
-	GetAvailableUploadFiles(notebook_id string) (
-		*api_proto.AvailableDownloads, error)
-
 	GetAllNotebooks(ctx context.Context, opts services.NotebookSearchOptions) (
 		[]*api_proto.NotebookMetadata, error)
 
 	// The latest time of all the global notebooks. Used to work out
 	// if we need to rebuild the notebook index.
 	Version() int64
+}
+
+type AttachmentManager interface {
+	GetAvailableUploadFiles(notebook_id string) (*api_proto.AvailableDownloads, error)
+
+	GetAvailableDownloadFiles(
+		ctx context.Context, notebook_id string) (*api_proto.AvailableDownloads, error)
+
+	RemoveAttachment(ctx context.Context,
+		notebook_id string, components []string) error
+
+	StoreAttachment(notebook_id,
+		filename string, data []byte) (api.FSPathSpec, error)
 }

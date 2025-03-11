@@ -112,7 +112,7 @@ func (self *SuperTimelineReader) Read(ctx context.Context) <-chan TimelineItem {
 	return output_chan
 }
 
-func (self *SuperTimelineReader) New(ctx context.Context,
+func (self SuperTimelineReader) New(ctx context.Context,
 	config_obj *config_proto.Config,
 	storer ISuperTimelineStorer,
 	notebook_id, super_timeline string,
@@ -183,7 +183,7 @@ type SuperTimelineWriter struct {
 	timeline_storer ISuperTimelineStorer
 }
 
-func (self *SuperTimelineWriter) New(
+func (self SuperTimelineWriter) New(
 	ctx context.Context, config_obj *config_proto.Config,
 	storer ISuperTimelineStorer,
 	notebook_id, name string) (result ISuperTimelineWriter, err error) {

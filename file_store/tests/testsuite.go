@@ -25,6 +25,13 @@ type Debugger interface {
 	Debug()
 }
 
+func Debug(v interface{}) {
+	d, ok := v.(Debugger)
+	if ok {
+		d.Debug()
+	}
+}
+
 // An abstract test suite to ensure file store implementations all
 // comply with the API.
 type FileStoreTestSuite struct {

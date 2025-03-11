@@ -31,6 +31,7 @@ type NotebookManager struct {
 	SuperTimelineReaderFactory timelines.ISuperTimelineReader
 	SuperTimelineWriterFactory timelines.ISuperTimelineWriter
 	SuperTimelineAnnotator     timelines.ISuperTimelineAnnotator
+	AttachmentManager          AttachmentManager
 }
 
 func (self *NotebookManager) GetNotebook(
@@ -50,9 +51,9 @@ func (self *NotebookManager) GetNotebook(
 	// Global notebooks keep these internally.
 	if include_uploads {
 		// An error here just means there are no AvailableDownloads.
-		notebook.AvailableDownloads, _ = self.Store.GetAvailableDownloadFiles(
-			notebook_id)
-		notebook.AvailableUploads, _ = self.Store.GetAvailableUploadFiles(
+		notebook.AvailableDownloads, _ = self.AttachmentManager.GetAvailableDownloadFiles(
+			ctx, notebook_id)
+		notebook.AvailableUploads, _ = self.AttachmentManager.GetAvailableUploadFiles(
 			notebook_id)
 		notebook.Timelines = self.SuperTimelineStorer.GetAvailableTimelines(
 			ctx, notebook_id)
@@ -209,7 +210,7 @@ func (self *NotebookManager) UploadNotebookAttachment(
 		filename = NewNotebookAttachmentId() + "-" + in.Filename
 	}
 
-	full_path, err := self.Store.StoreAttachment(
+	full_path, err := self.AttachmentManager.StoreAttachment(
 		in.NotebookId, filename, decoded)
 	if err != nil {
 		return nil, err
@@ -243,6 +244,7 @@ func NewNotebookManager(
 	SuperTimelineReaderFactory timelines.ISuperTimelineReader,
 	SuperTimelineWriterFactory timelines.ISuperTimelineWriter,
 	SuperTimelineAnnotator timelines.ISuperTimelineAnnotator,
+	AttachmentManager AttachmentManager,
 ) *NotebookManager {
 	result := &NotebookManager{
 		config_obj:                 config_obj,
@@ -251,6 +253,7 @@ func NewNotebookManager(
 		SuperTimelineReaderFactory: SuperTimelineReaderFactory,
 		SuperTimelineWriterFactory: SuperTimelineWriterFactory,
 		SuperTimelineAnnotator:     SuperTimelineAnnotator,
+		AttachmentManager:          AttachmentManager,
 	}
 	return result
 }
@@ -275,6 +278,7 @@ func NewNotebookManagerService(
 		&timelines.SuperTimelineReader{},
 		&timelines.SuperTimelineWriter{},
 		annotator,
+		NewAttachmentManager(config_obj, store),
 	)
 
 	return notebook_service, notebook_service.Start(ctx, config_obj, wg)

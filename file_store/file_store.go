@@ -48,7 +48,7 @@ func GetFileStore(config_obj *config_proto.Config) api.FileStore {
 	org_id := utils.NormalizedOrgId(config_obj.OrgId)
 
 	impl, pres := g_impl[org_id]
-	if pres {
+	if pres && impl != nil {
 		return impl
 	}
 

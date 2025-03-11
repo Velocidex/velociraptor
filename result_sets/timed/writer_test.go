@@ -10,7 +10,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
@@ -89,9 +88,8 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 		"Windows.Events.ProcessCreation")
 	assert.NoError(self.T(), err)
 
-	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	writer, err := timed.NewTimedResultSetWriter(
-		file_store_factory, path_manager, nil, func() {
+		self.ConfigObj, path_manager, nil, func() {
 			mu.Lock()
 			completion_result = append(completion_result, "Done")
 			mu.Unlock()
@@ -126,7 +124,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 	result := ordereddict.NewDict()
 
 	rs_reader, err := result_sets.NewTimedResultSetReader(
-		self.Sm.Ctx, file_store_factory, path_manager)
+		self.Sm.Ctx, self.ConfigObj, path_manager)
 	assert.NoError(self.T(), err)
 
 	result.Set("Available Files", rs_reader.GetAvailableFiles(self.Sm.Ctx))
@@ -165,9 +163,8 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingJsonl() {
 		"Windows.Events.ProcessCreation")
 	assert.NoError(self.T(), err)
 
-	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	writer, err := timed.NewTimedResultSetWriter(
-		file_store_factory, path_manager, nil, func() {
+		self.ConfigObj, path_manager, nil, func() {
 			mu.Lock()
 			completion_result = append(completion_result, "Done")
 			mu.Unlock()
@@ -204,7 +201,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingJsonl() {
 	result := ordereddict.NewDict()
 
 	rs_reader, err := result_sets.NewTimedResultSetReader(
-		self.Sm.Ctx, file_store_factory, path_manager)
+		self.Sm.Ctx, self.ConfigObj, path_manager)
 	assert.NoError(self.T(), err)
 
 	result.Set("Available Files", rs_reader.GetAvailableFiles(self.Sm.Ctx))
@@ -243,9 +240,8 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingNoFlushing() {
 		"Windows.Events.ProcessCreation")
 	assert.NoError(self.T(), err)
 
-	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	writer, err := timed.NewTimedResultSetWriter(
-		file_store_factory, path_manager, nil, func() {
+		self.ConfigObj, path_manager, nil, func() {
 			mu.Lock()
 			completion_result = append(completion_result, "Done")
 			mu.Unlock()

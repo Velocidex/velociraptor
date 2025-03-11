@@ -155,7 +155,7 @@ func (self *TimelineReader) Close() {
 	self.index_fd.Close()
 }
 
-func (self *TimelineReader) New(
+func (self TimelineReader) New(
 	config_obj *config_proto.Config,
 	transformer Transformer,
 	path_manager paths.TimelinePathManagerInterface) (*TimelineReader, error) {
