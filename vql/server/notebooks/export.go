@@ -396,10 +396,16 @@ func ExportNotebookToZip(
 			time.Second*time.Duration(timeout))
 		defer cancel()
 
+		opts := services.ContainerOptions{
+			Type:              services.NotebookExport,
+			ContainerFilename: output_filename,
+			NotebookId:        notebook_id,
+		}
+
 		// Report the progress as we write the container.
 		progress_reporter := reporting.NewProgressReporter(ctx, config_obj,
 			notebook_path_manager.PathStats(output_filename),
-			output_filename, zip_writer)
+			output_filename, zip_writer, opts)
 		defer progress_reporter.Close()
 
 		// Will also close the underlying fd.
@@ -544,7 +550,7 @@ func ExportNotebookToHTML(
 			ContainerFilename: output_filename,
 		}
 
-		err = export_manager.SetContainerStats(ctx, config_obj, stats, opts)
+		err = export_manager.SetContainerStats(config_obj, stats, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -559,7 +565,7 @@ func ExportNotebookToHTML(
 			stats.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 			stats.TotalDuration = uint64(time.Now().Unix()) - stats.Timestamp
 
-			export_manager.SetContainerStats(ctx, config_obj, stats, opts)
+			export_manager.SetContainerStats(config_obj, stats, opts)
 		}()
 
 		for _, cell_md := range notebook.CellMetadata {

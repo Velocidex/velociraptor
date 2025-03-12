@@ -38,7 +38,6 @@ type ContainerOptions struct {
 
 type ExportManager interface {
 	SetContainerStats(
-		ctx context.Context,
 		config_obj *config_proto.Config,
 		stats *api_proto.ContainerStats,
 		opts ContainerOptions) error

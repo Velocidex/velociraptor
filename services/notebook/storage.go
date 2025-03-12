@@ -118,6 +118,15 @@ func (self *NotebookStoreImpl) GetNotebook(notebook_id string) (*api_proto.Noteb
 }
 
 func (self *NotebookStoreImpl) _GetNotebook(notebook_id string) (*api_proto.NotebookMetadata, error) {
+
+	// Try to get from the cache if possible.
+	if utils.IsGlobalNotebooks(notebook_id) {
+		res, pres := self.global_notebooks[notebook_id]
+		if pres {
+			return res, nil
+		}
+	}
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, err
@@ -127,6 +136,9 @@ func (self *NotebookStoreImpl) _GetNotebook(notebook_id string) (*api_proto.Note
 	notebook := &api_proto.NotebookMetadata{}
 	err = db.GetSubject(self.config_obj, notebook_path_manager.Path(),
 		notebook)
+	if err != nil {
+		return nil, err
+	}
 
 	// Deduplicate cells
 	cell_metadata := ordereddict.NewDict()
@@ -146,7 +158,10 @@ func (self *NotebookStoreImpl) _GetNotebook(notebook_id string) (*api_proto.Note
 			v.(*api_proto.NotebookCell))
 	}
 
-	return notebook, err
+	// Cache for next time.
+	self.global_notebooks[notebook_id] = notebook
+
+	return notebook, nil
 }
 
 // Update a notebook cell atomically.

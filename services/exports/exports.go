@@ -74,7 +74,6 @@ func (self *ExportManager) GetAvailableDownloadFiles(
 }
 
 func (self *ExportManager) SetContainerStats(
-	ctx context.Context,
 	config_obj *config_proto.Config,
 	stats *api_proto.ContainerStats,
 	opts services.ContainerOptions) error {

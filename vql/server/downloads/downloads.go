@@ -256,10 +256,17 @@ func createDownloadFile(
 			time.Second*time.Duration(timeout))
 		defer cancel()
 
+		opts := services.ContainerOptions{
+			Type:              services.FlowExport,
+			ContainerFilename: download_file,
+			FlowId:            flow_id,
+			ClientId:          client_id,
+		}
+
 		// Report the progress as we write the container.
 		progress_reporter := reporting.NewProgressReporter(ctx, config_obj,
 			flow_path_manager.GetDownloadsStats(hostname, password != ""),
-			download_file, zip_writer)
+			download_file, zip_writer, opts)
 		defer progress_reporter.Close()
 
 		// Will also close the underlying container when done. Must be
@@ -786,11 +793,17 @@ func createHuntDownloadFile(
 			time.Duration(timeout)*time.Second)
 		defer cancel()
 
+		opts := services.ContainerOptions{
+			Type:              services.HuntExport,
+			ContainerFilename: download_file,
+			HuntId:            hunt_id,
+		}
+
 		// Report the progress as we write the container.
 		progress_reporter := reporting.NewProgressReporter(sub_ctx, config_obj,
 			hunt_path_manager.GetHuntDownloadsStats(only_combined,
 				base_filename, password != ""),
-			download_file, zip_writer)
+			download_file, zip_writer, opts)
 		defer progress_reporter.Close()
 
 		// Will also close the underlying container when done. Must be
