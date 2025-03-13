@@ -16,6 +16,8 @@ func (self *ApiServer) GetClientFlows(
 	ctx context.Context,
 	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
 
+	defer Instrument("GetClientFlows")()
+
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {

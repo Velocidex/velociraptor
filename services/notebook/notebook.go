@@ -261,18 +261,8 @@ func (self *NotebookManager) ReformatVQL(
 	if err != nil {
 		return "", err
 	}
-	result := strings.Split(reformatted, "\n")
 
-	// Remove lines that consist of only spaces
-	trimmed := make([]string, 0, len(result))
-	for _, i := range result {
-		if len(i) > 0 && len(strings.TrimSpace(i)) == 0 {
-			continue
-		}
-		trimmed = append(trimmed, i)
-	}
-
-	return strings.Join(trimmed, "\n"), nil
+	return reformatted, nil
 }
 
 func verifyNotebookId(notebook_id string) error {

@@ -351,7 +351,9 @@ class EventMonitoring extends React.Component {
                           {this.state.artifact.artifact || T("Select artifact")}
                         </span>
                       </Dropdown.Toggle>
-                      <Dropdown.Menu>
+                      <Dropdown.Menu
+                        className="fixed-height"
+                        >
                         { _.map(this.state.available_artifacts, (x, idx) => {
                             let active_artifact = this.state.artifact &&
                                 this.state.artifact.artifact;

@@ -12,7 +12,6 @@ import (
 	"github.com/go-errors/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -29,6 +28,7 @@ type FlowStorageManager struct {
 	mu sync.Mutex
 
 	pendingIndexes []string
+	indexBuilders  map[string]*flowIndexBuilder
 }
 
 func (self *FlowStorageManager) WriteFlow(
@@ -116,7 +116,7 @@ func (self *FlowStorageManager) ListFlows(
 			ctx, config_obj, file_store_factory,
 			client_path_manager.FlowIndex(), options)
 		if err != nil {
-			return nil, 0, fmt.Errorf("NewResultSetReaderWithOptions %w", err)
+			return nil, 0, fmt.Errorf("ListFlows %w", err)
 		}
 	}
 
@@ -227,69 +227,27 @@ func (self *FlowStorageManager) houseKeeping(
 	}
 }
 
-// Rebuild the flow index from individual flow context files. This can
-// be very slow on slow filesystems as it does a lot of IO.
 func (self *FlowStorageManager) buildFlowIndexFromDatastore(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string) error {
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	flow_path_manager := paths.NewFlowPathManager(client_id, "")
-	all_flow_urns, err := db.ListChildren(
-		config_obj, flow_path_manager.ContainerPath())
-	if err != nil {
-		return err
-	}
-
-	seen := make(map[string]bool)
-
-	// We only care about the flow contexts
-	for _, urn := range all_flow_urns {
-		flow_id := urn.Base()
-		// Hide the monitoring flow since it is not a real flow.
-		if flow_id == constants.MONITORING_WELL_KNOWN_FLOW {
-			continue
+	// Do not hold the lock while we build different clients.
+	self.mu.Lock()
+	builder, pres := self.indexBuilders[client_id]
+	if !pres {
+		builder = &flowIndexBuilder{
+			client_id: client_id,
 		}
-
-		seen[flow_id] = true
 	}
+	self.mu.Unlock()
 
-	flow_reader := NewFlowReader(
-		ctx, config_obj, self, client_id)
+	err := builder.buildFlowIndexFromDatastore(ctx, config_obj, self, client_id)
+	self.mu.Lock()
+	delete(self.indexBuilders, client_id)
+	self.mu.Unlock()
 
-	go func() {
-		defer flow_reader.Close()
-
-		for k := range seen {
-			flow_reader.In <- k
-		}
-	}()
-
-	client_path_manager := paths.NewClientPathManager(client_id)
-	file_store_factory := file_store.GetFileStore(config_obj)
-
-	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
-		client_path_manager.FlowIndex(),
-		json.DefaultEncOpts(), utils.SyncCompleter, result_sets.TruncateMode)
-	if err != nil {
-		return err
-	}
-	defer rs_writer.Close()
-
-	for flow := range flow_reader.Out {
-		rs_writer.Write(ordereddict.NewDict().
-			Set("FlowId", flow.SessionId).
-			Set("Artifacts", flow.Request.Artifacts).
-			Set("Created", flow.CreateTime).
-			Set("Creator", flow.Request.Creator))
-	}
-
-	return nil
+	return err
 }
 
 // Load the collector context from storage.

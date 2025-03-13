@@ -130,6 +130,8 @@ sources:
       SELECT Line.name AS Name, Line.value as value
       FROM profile(metrics=TRUE)
 
+  - name: Everything
+    query: SELECT * FROM profile(type='.+')
 
 column_types:
   - name: InUseBytes

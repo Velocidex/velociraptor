@@ -125,6 +125,16 @@ func getMetrics() ([]*ordereddict.Dict, error) {
 
 			} else if m.Counter != nil {
 				item.Set("value", int64(*m.Counter.Value))
+				if len(m.Label) > 0 {
+					labels := ordereddict.NewDict()
+					for _, l := range m.Label {
+						if l.Name != nil && l.Value != nil {
+							labels.Set(*l.Name, l.Value)
+						}
+					}
+					item.Set("label", labels)
+				}
+
 			} else if m.Histogram != nil {
 				// Histograms are buckets so we send a dict.
 				result := ordereddict.NewDict()

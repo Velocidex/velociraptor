@@ -480,14 +480,14 @@ func (self *ApiServer) SetGUIOptions(
 	ctx context.Context,
 	in *api_proto.SetGUIOptionsRequest) (*api_proto.SetGUIOptionsResponse, error) {
 
+	defer Instrument("SetGUIOptions")()
+
 	users := services.GetUserManager()
 	user_record, _, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 	principal := user_record.Name
-
-	defer Instrument("SetGUIOptions")()
 
 	// This API is only used for the user to change their own options
 	// so it is always allowed.

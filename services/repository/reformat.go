@@ -146,9 +146,6 @@ func reformatNode(vql_node nodeContext) (m mutation, err error) {
 	}
 	lines := []string{}
 	for _, l := range strings.Split(reformatted, "\n") {
-		if strings.TrimSpace(l) == "" {
-			continue
-		}
 		lines = append(lines, l)
 	}
 
@@ -205,9 +202,6 @@ func applyMutations(text string, mu []mutation) (string, error) {
 	// Remove lines that consist of only spaces
 	trimmed := make([]string, 0, len(result))
 	for _, i := range result {
-		if len(i) > 0 && len(strings.TrimSpace(i)) == 0 {
-			continue
-		}
 		trimmed = append(trimmed, i)
 	}
 

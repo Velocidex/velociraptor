@@ -34,6 +34,8 @@ func (self *ApiServer) GetClientMetadata(
 	ctx context.Context,
 	in *api_proto.GetClientRequest) (*api_proto.ClientMetadata, error) {
 
+	defer Instrument("GetClientMetadata")()
+
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
@@ -88,6 +90,8 @@ func (self *ApiServer) SetClientMetadata(
 	ctx context.Context,
 	in *api_proto.SetClientMetadataRequest) (*emptypb.Empty, error) {
 
+	defer Instrument("SetClientMetadata")()
+
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
@@ -126,6 +130,8 @@ func (self *ApiServer) SetClientMetadata(
 func (self *ApiServer) GetClient(
 	ctx context.Context,
 	in *api_proto.GetClientRequest) (*api_proto.ApiClient, error) {
+
+	defer Instrument("GetClient")()
 
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)

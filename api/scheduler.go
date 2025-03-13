@@ -18,6 +18,8 @@ import (
 func (self *ApiServer) Scheduler(
 	stream api_proto.API_SchedulerServer) error {
 
+	defer Instrument("Scheduler")()
+
 	users := services.GetUserManager()
 	ctx := stream.Context()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)

@@ -123,4 +123,23 @@ SELECT * FROM items(item=[1,2])[
    }
   ]
  }
+]LET run_fast_slow_query = SELECT if(condition=_value <= 5, then=sleep(ms=100), else=sleep(ms=900)) AS waiting, if(condition=_value <= 5, then='fast query', else='slow query') AS query_type FROM range(start=1, end=7)[]SELECT rows.query_type AS results FROM batch(query=run_fast_slow_query, batch_size=3, timeout=1)[
+ {
+  "results": [
+   "fast query",
+   "fast query",
+   "fast query"
+  ]
+ },
+ {
+  "results": [
+   "fast query",
+   "fast query"
+  ]
+ },
+ {
+  "results": [
+   "slow query"
+  ]
+ }
 ]

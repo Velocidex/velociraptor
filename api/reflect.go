@@ -88,6 +88,8 @@ func (self *ApiServer) GetKeywordCompletions(
 	ctx context.Context,
 	in *emptypb.Empty) (*api_proto.KeywordCompletions, error) {
 
+	defer Instrument("GetKeywordCompletions")()
+
 	users := services.GetUserManager()
 	_, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {

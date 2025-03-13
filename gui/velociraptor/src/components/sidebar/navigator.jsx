@@ -275,6 +275,20 @@ class VeloNavigator extends Component {
                       </li>
 
                       {_.map(sidebar_links, (x) => {
+                          let icon_url = x.icon_url;
+                          let img = [];
+                          if(icon_url) {
+                              img = <img
+                                      className="sidebar-icon"
+                                      alt=""
+                                      src={api.src_of(icon_url)}
+                                    />;
+                          } else {
+                              img = <i className="navicon">
+                                      <FontAwesomeIcon icon="external-link-alt" />
+                                    </i>;
+                          };
+
                         return (
                           <li
                             key={x.text}
@@ -288,13 +302,7 @@ class VeloNavigator extends Component {
                               target={x.new_tab ? "_blank" : ""}
                             >
                               <ToolTip tooltip={T(x.text)}>
-                                <span>
-                                  <img
-                                    className="sidebar-icon"
-                                    alt=""
-                                    src={api.src_of(x.icon_url)}
-                                  />
-                                </span>
+                                <span>{ img }</span>
                               </ToolTip>
                               {T(x.text)}
                             </a>

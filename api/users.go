@@ -21,6 +21,8 @@ func (self *ApiServer) SetPassword(
 	ctx context.Context,
 	in *api_proto.SetPasswordRequest) (*emptypb.Empty, error) {
 
+	defer Instrument("SetPassword")()
+
 	// Enforce a minimum length password
 	if len(in.Password) < 4 {
 		return nil, InvalidStatus("Password is not set or too short")
@@ -62,6 +64,8 @@ func (self *ApiServer) GetUsers(
 	ctx context.Context,
 	in *emptypb.Empty) (*api_proto.Users, error) {
 
+	defer Instrument("GetUsers")()
+
 	user_manager := services.GetUserManager()
 	user_record, org_config_obj, err := user_manager.GetUserFromContext(ctx)
 	if err != nil {
@@ -84,6 +88,8 @@ func (self *ApiServer) GetGlobalUsers(
 	ctx context.Context,
 	in *emptypb.Empty) (*api_proto.Users, error) {
 
+	defer Instrument("GetGlobalUsers")()
+
 	user_manager := services.GetUserManager()
 	user_record, _, err := user_manager.GetUserFromContext(ctx)
 	if err != nil {
@@ -105,6 +111,8 @@ func (self *ApiServer) GetGlobalUsers(
 // Create a new user in the specified orgs.
 func (self *ApiServer) CreateUser(ctx context.Context,
 	in *api_proto.UpdateUserRequest) (*emptypb.Empty, error) {
+
+	defer Instrument("CreateUser")()
 
 	users_manager := services.GetUserManager()
 	user_record, org_config_obj, err := users_manager.GetUserFromContext(ctx)
@@ -141,6 +149,8 @@ func (self *ApiServer) CreateUser(ctx context.Context,
 func (self *ApiServer) GetUser(
 	ctx context.Context, in *api_proto.UserRequest) (*api_proto.VelociraptorUser, error) {
 
+	defer Instrument("GetUser")()
+
 	users_manager := services.GetUserManager()
 	user_record, _, err := users_manager.GetUserFromContext(ctx)
 	if err != nil {
@@ -163,6 +173,8 @@ func (self *ApiServer) GetUserFavorites(
 	ctx context.Context,
 	in *api_proto.Favorite) (*api_proto.Favorites, error) {
 
+	defer Instrument("GetUserFavorites")()
+
 	// No special permission requires to view a user's own favorites.
 	users_manager := services.GetUserManager()
 	user_record, org_config_obj, err := users_manager.GetUserFromContext(ctx)
@@ -176,6 +188,8 @@ func (self *ApiServer) GetUserFavorites(
 func (self *ApiServer) GetUserRoles(
 	ctx context.Context,
 	in *api_proto.UserRequest) (*api_proto.UserRoles, error) {
+
+	defer Instrument("GetUserRoles")()
 
 	users_manager := services.GetUserManager()
 	_, _, err := users_manager.GetUserFromContext(ctx)
@@ -228,6 +242,8 @@ func (self *ApiServer) GetUserRoles(
 func (self *ApiServer) SetUserRoles(
 	ctx context.Context,
 	in *api_proto.UserRoles) (*emptypb.Empty, error) {
+
+	defer Instrument("SetUserRoles")()
 
 	users_manager := services.GetUserManager()
 	user_record, org_config_obj, err := users_manager.GetUserFromContext(ctx)
