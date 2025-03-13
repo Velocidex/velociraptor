@@ -144,6 +144,9 @@ func reformatNode(vql_node nodeContext) (m mutation, err error) {
 		return m, fmt.Errorf("While parsing VQL at line %v: %v",
 			vql_node.Line+line, message)
 	}
+
+	reformatted = strings.TrimSpace(reformatted)
+
 	lines := []string{}
 	for _, l := range strings.Split(reformatted, "\n") {
 		lines = append(lines, l)
@@ -156,7 +159,6 @@ func reformatNode(vql_node nodeContext) (m mutation, err error) {
 		indented = append(indented, ind+l)
 	}
 
-	// Add an extra blank space after the VQL block.
 	indented = append(indented, "")
 
 	return mutation{
@@ -199,13 +201,7 @@ func applyMutations(text string, mu []mutation) (string, error) {
 		}
 	}
 
-	// Remove lines that consist of only spaces
-	trimmed := make([]string, 0, len(result))
-	for _, i := range result {
-		trimmed = append(trimmed, i)
-	}
-
-	return strings.Join(trimmed, "\n"), nil
+	return strings.Join(result, "\n"), nil
 }
 
 func reformatVQL(in string) (string, error) {
