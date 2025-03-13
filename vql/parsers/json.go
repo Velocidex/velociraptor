@@ -541,7 +541,7 @@ func (self _IndexAssociativeProtocol) GetMembers(
 }
 
 type WriteJSONPluginArgs struct {
-	Filename   *accessors.OSPath   `vfilter:"required,field=filename,doc=CSV files to open"`
+	Filename   *accessors.OSPath   `vfilter:"required,field=filename,doc=JSONL files to open"`
 	Accessor   string              `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	Query      vfilter.StoredQuery `vfilter:"required,field=query,doc=query to write into the file."`
 	BufferSize int                 `vfilter:"optional,field=buffer_size,doc=Maximum size of buffer before flushing to file."`
