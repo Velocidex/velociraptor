@@ -546,6 +546,7 @@ type WriteJSONPluginArgs struct {
 	Query      vfilter.StoredQuery `vfilter:"required,field=query,doc=query to write into the file."`
 	BufferSize int                 `vfilter:"optional,field=buffer_size,doc=Maximum size of buffer before flushing to file."`
 	MaxTime    int                 `vfilter:"optional,field=max_time,doc=Maximum time before flushing the buffer (10 sec)."`
+	Append     bool                `vfilter:"optional,field=append,doc=Append JSONL records to existing file."`
 }
 
 type WriteJSONPlugin struct{}
@@ -576,6 +577,11 @@ func (self WriteJSONPlugin) Call(
 			max_time = time.Duration(arg.MaxTime) * time.Second
 		}
 
+		open_options := os.O_RDWR | os.O_CREATE | os.O_TRUNC
+		if arg.Append {
+			open_options = os.O_RDWR | os.O_CREATE | os.O_APPEND
+		}
+
 		var writer *bufio.Writer
 
 		switch arg.Accessor {
@@ -593,8 +599,7 @@ func (self WriteJSONPlugin) Call(
 				return
 			}
 
-			file, err := os.OpenFile(underlying_file,
-				os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
+			file, err := os.OpenFile(underlying_file, open_options, 0700)
 			if err != nil {
 				scope.Log("write_jsonl: Unable to open file %s: %s",
 					arg.Filename, err.Error())
