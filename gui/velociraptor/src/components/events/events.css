@@ -16,7 +16,7 @@ body {
 }
 
 
-.dropdown-menu.show {
+.dropdown-menu.show.fixed-height {
     max-height: 80vh;
     overflow: auto;
 }

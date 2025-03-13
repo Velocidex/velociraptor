@@ -26,6 +26,8 @@ var (
 func (self *ApiServer) SearchFile(ctx context.Context,
 	in *api_proto.SearchFileRequest) (*api_proto.SearchFileResponse, error) {
 
+	defer Instrument("SearchFile")()
+
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {

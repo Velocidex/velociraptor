@@ -22,6 +22,8 @@ func (self *ApiServer) GetSubject(
 	ctx context.Context,
 	in *api_proto.DataRequest) (*api_proto.DataResponse, error) {
 
+	defer Instrument("GetSubject")()
+
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
@@ -73,6 +75,8 @@ func (self *ApiServer) GetSubject(
 func (self *ApiServer) SetSubject(
 	ctx context.Context,
 	in *api_proto.DataRequest) (*api_proto.DataResponse, error) {
+
+	defer Instrument("SetSubject")()
 
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
@@ -138,6 +142,8 @@ func (self *ApiServer) ListChildren(
 	ctx context.Context,
 	in *api_proto.DataRequest) (*api_proto.ListChildrenResponse, error) {
 
+	defer Instrument("ListChildren")()
+
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
@@ -196,6 +202,8 @@ func (self *ApiServer) ListChildren(
 func (self *ApiServer) DeleteSubject(
 	ctx context.Context,
 	in *api_proto.DataRequest) (*emptypb.Empty, error) {
+
+	defer Instrument("DeleteSubject")()
 
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)

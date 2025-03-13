@@ -75,7 +75,7 @@ require (
 	golang.org/x/mod v0.21.0
 	golang.org/x/net v0.33.0
 	golang.org/x/sys v0.30.0
-	golang.org/x/text v0.22.0
+	golang.org/x/text v0.23.0
 	golang.org/x/time v0.5.0
 	google.golang.org/api v0.169.0
 	google.golang.org/genproto v0.0.0-20240213162025-012b6fc9bca9 // indirect
@@ -91,9 +91,9 @@ require (
 	www.velocidex.com/golang/go-ntfs v0.2.1-0.20250215044736-81b32bb0b4d2
 	www.velocidex.com/golang/go-pe v0.1.1-0.20250101153735-7a925ba8334b
 	www.velocidex.com/golang/go-prefetch v0.0.0-20240910051453-2385582c1c22
-	www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe
+	www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959
 	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7
-	www.velocidex.com/golang/vfilter v0.0.0-20250206235203-35c537cb98b3
+	www.velocidex.com/golang/vfilter v0.0.0-20250313110251-f68e8956c5aa
 )
 
 require (
@@ -281,7 +281,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c // indirect
-	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/term v0.28.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241015192408-796eee8c2d53 // indirect
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.71 // indirect

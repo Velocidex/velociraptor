@@ -27,6 +27,8 @@ func (self *ApiServer) GetHuntFlows(
 	ctx context.Context,
 	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
 
+	defer Instrument("GetHuntFlows")()
+
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
@@ -105,6 +107,8 @@ func (self *ApiServer) GetHuntFlows(
 func (self *ApiServer) GetHuntTable(
 	ctx context.Context,
 	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
+
+	defer Instrument("GetHuntTable")()
 
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)

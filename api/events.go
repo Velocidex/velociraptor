@@ -138,6 +138,8 @@ func (self *ApiServer) ListAvailableEventResults(
 	in *api_proto.ListAvailableEventResultsRequest) (
 	*api_proto.ListAvailableEventResultsResponse, error) {
 
+	defer Instrument("ListAvailableEventResults")()
+
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {

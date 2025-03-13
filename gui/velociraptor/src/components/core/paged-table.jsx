@@ -866,7 +866,7 @@ class VeloPagedTable extends Component {
 
         if (transformed.sort_column) {
             downloads.sort_column = transformed.sort_column;
-            downloads.sort_direction = transformed.sort_direction;
+            downloads.sort_direction = transformed.sort_direction === "Ascending";
         }
 
         let all_compacted = true;
