@@ -26,3 +26,17 @@ Queries:
       SELECT format(format="Step %v", args=_value) AS Item
       FROM range(start=0, end=10, step=1)
     }, batch_func="x=>x.Item =~ 'Step [25]'")
+
+
+  # Test timeout in batch
+  - LET run_fast_slow_query = SELECT
+      if(condition=_value <= 5,
+         then=sleep(ms=100),
+         else=sleep(ms=900)) AS waiting,
+      if(condition=_value <= 5,
+         then='fast query',
+         else='slow query') AS query_type
+    FROM range(start=1, end=7)
+
+  - SELECT rows.query_type AS results
+    FROM batch(query=run_fast_slow_query, batch_size=3, timeout=1)

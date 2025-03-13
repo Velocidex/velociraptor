@@ -648,7 +648,7 @@ export default class NotebookCellRenderer extends React.Component {
         }
 
         return <>
-                   <Dropdown.Menu>
+                 <Dropdown.Menu>
                      { _.map(suggestions, (x, i)=>{
                          return <Dropdown.Item
                                   key={i}

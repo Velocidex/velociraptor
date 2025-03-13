@@ -563,6 +563,9 @@
     type: StoredQuery
     description: Run this query over the item.
     required: true
+  - name: timeout
+    type: uint64
+    description: If specified we flush incomplete batches in this many seconds.
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -1224,7 +1227,7 @@
     description: If set the collection will be started in the specified org.
   category: server
   metadata:
-    permissions: COLLECT_CLIENT,COLLECT_SERVER
+    permissions: COLLECT_CLIENT,COLLECT_SERVER,COLLECT_BASIC
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo

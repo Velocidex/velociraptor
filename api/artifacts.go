@@ -519,6 +519,8 @@ func (self *ApiServer) LoadArtifactPack(
 	in *api_proto.LoadArtifactPackRequest) (
 	*api_proto.LoadArtifactPackResponse, error) {
 
+	defer Instrument("LoadArtifactPack")()
+
 	users_manager := services.GetUserManager()
 	user_record, org_config_obj, err := users_manager.GetUserFromContext(ctx)
 	if err != nil {

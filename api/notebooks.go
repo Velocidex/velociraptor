@@ -526,6 +526,9 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 func (self *ApiServer) RemoveNotebookAttachment(
 	ctx context.Context,
 	in *api_proto.NotebookFileUploadRequest) (*emptypb.Empty, error) {
+
+	defer Instrument("RemoveNotebookAttachment")()
+
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {

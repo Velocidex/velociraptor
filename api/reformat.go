@@ -12,6 +12,8 @@ func (self *ApiServer) ReformatVQL(
 	ctx context.Context,
 	in *api_proto.ReformatVQLMessage) (*api_proto.ReformatVQLMessage, error) {
 
+	defer Instrument("ReformatVQL")()
+
 	// Empty creators are called internally.
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
