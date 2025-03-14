@@ -50,6 +50,8 @@ type SessionContext struct {
 	is_processing uint64
 
 	is_kernel_trace bool
+
+	kernel_info_manager *etw.KernelInfoManager
 }
 
 // Handle is used to track all watchers. We write the event on to the
@@ -66,6 +68,8 @@ type Handle struct {
 
 	mu     sync.Mutex
 	closed bool
+
+	options ETWOptions
 }
 
 func (self *Handle) Close() {
@@ -147,6 +151,8 @@ func (self *SessionContext) _KernelTraceSession(
 
 	self.is_kernel_trace = true
 
+	scope.Log("etw: Started kernel session with options %v",
+		optionsString(self.rundown_options))
 	return session, nil
 }
 
@@ -236,6 +242,8 @@ func (self *SessionContext) processEvent(e *etw.Event) {
 
 	self.mu.Unlock()
 
+	self.enrichEvent(event_guid, e)
+
 	// Send the event to all interested parties.
 	for _, handle := range handlers {
 		// The Kernel Trace Provider emits events from many internal
@@ -245,6 +253,36 @@ func (self *SessionContext) processEvent(e *etw.Event) {
 			handle.guid == e.Header.ProviderID {
 			handle.Send(e)
 		}
+	}
+}
+
+func (self *SessionContext) kernelInfoManager() *etw.KernelInfoManager {
+	if self.kernel_info_manager == nil {
+		self.kernel_info_manager = etw.NewKernelInfoManager()
+	}
+
+	return self.kernel_info_manager
+}
+
+func (self *SessionContext) enrichEvent(guid string, e *etw.Event) {
+	switch guid {
+	// Microsoft-Windows-Kernel-File
+	// We resolve the paths into filesystem names instead of kernel paths.
+	case "{EDD08927-9CC4-4E65-B970-C2560FB5C289}":
+		props := e.Props()
+		filename, ok := props.GetString("FileName")
+		if ok {
+			props.Set("FileName", self.kernelInfoManager().NormalizeFilename(filename))
+		}
+
+		// Microsoft-Windows-Kernel-Process
+	case "{22FB2CD6-0E7B-422B-A0C7-2FAD1FD0E716}":
+		props := e.Props()
+		filename, ok := props.GetString("ImageName")
+		if ok {
+			props.Set("ImageName", self.kernelInfoManager().NormalizeFilename(filename))
+		}
+
 	}
 }
 
@@ -264,11 +302,40 @@ func (self *SessionContext) Stats() []ProviderStat {
 
 		if self.is_kernel_trace {
 			res.Stats = etw.KernelInfo.Stats()
+			res.Stats.Set("Options", optionsString(self.rundown_options))
 		}
 		result = append(result, res)
 	}
 
 	return result
+}
+
+// Check the new options to see if they are compatible with the
+// existing session. If not we need to update the session to cover
+// the comabined options for old watchers and new watchers.
+func (self *SessionContext) ensureOptionsValid(
+	scope vfilter.Scope, registration *Registration) (err error) {
+	if self.is_kernel_trace {
+		new_rundown := &etw.RundownOptions{}
+		// Merge all options from all handles
+		for _, h := range registration.handles {
+			megrgeRundown(new_rundown, h.options.RundownOptions)
+		}
+
+		// If the new options are compatible with the old options we
+		// need to restart the session.
+		if *new_rundown != self.rundown_options {
+			self.rundown_options = *new_rundown
+
+			// Update the session options
+			scope.Log("etw: Reconfiguring ETW session for new options: %v",
+				optionsString(self.rundown_options))
+
+			return etw.UpdateKernelTraceOptions(self.session, self.rundown_options)
+		}
+	}
+
+	return err
 }
 
 // Callers call this to register a watcher on the GUID
@@ -279,6 +346,7 @@ func (self *SessionContext) Register(
 
 	key := guid.String()
 	handle := NewHandle(ctx, scope, guid)
+	handle.options = options
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -288,11 +356,20 @@ func (self *SessionContext) Register(
 	}
 
 	registration, pres := self.registrations[key]
-	if !pres {
+	if pres {
+		// Add the handle to the old session
+		registration.handles = append(registration.handles, handle)
+		self.registrations[key] = registration
+
+		// Create a new session
+	} else {
 		registration = &Registration{
 			description: options.Description,
 			started:     utils.GetTime().Now(),
+			handles:     []*Handle{handle},
 		}
+
+		self.registrations[key] = registration
 
 		// No one is currently watching this GUID, lets begin watching
 		// it.
@@ -321,8 +398,10 @@ func (self *SessionContext) Register(
 		}
 	}
 
-	registration.handles = append(registration.handles, handle)
-	self.registrations[key] = registration
+	err = self.ensureOptionsValid(scope, registration)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	return func() {
 		self.DeregisterHandle(key, handle.id, guid, scope)
@@ -357,6 +436,7 @@ func (self *SessionContext) DeregisterHandle(
 
 	if len(new_reg) > 0 {
 		registration.handles = new_reg
+		self.ensureOptionsValid(scope, registration)
 		return
 	}
 

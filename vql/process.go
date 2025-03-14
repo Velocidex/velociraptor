@@ -32,7 +32,7 @@ import (
 )
 
 type PslistArgs struct {
-	Pid int64 `vfilter:"optional,field=pid,doc=A pid to list. If this is provided we are able to operate much faster by only opening a single process."`
+	Pid int64 `vfilter:"optional,field=pid,doc=A process ID to list. If not provided list all processes."`
 }
 
 func init() {

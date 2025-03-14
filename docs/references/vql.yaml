@@ -1603,6 +1603,27 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: dedup
+  description: Dedups the query based on a column. This will suppress rows with identical
+    values for the key column
+  type: Plugin
+  args:
+  - name: key
+    type: string
+    description: A column name to use as dedup key.
+    required: true
+  - name: query
+    type: StoredQuery
+    description: Run this query to generate items.
+    required: true
+  - name: timeout
+    type: uint64
+    description: LRU expires in this much time (default 60 sec).
+  - name: size
+    type: int64
+    description: Size of the LRU cache.
+  platforms:
+  - linux_amd64_cgo
 - name: delay
   description: Executes 'query' and delays relaying the rows by the specified number
     of seconds.
