@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/Velocidex/amsi v0.0.0-20200608120838-e5d93b76f119
-	github.com/Velocidex/etw v0.0.0-20250211160625-cd32def93378
+	github.com/Velocidex/etw v0.0.0-20250314035532-6115b05b9430
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-magic v0.0.0-20250203094020-32f94b14f00f
 	github.com/Velocidex/go-yara v1.1.10-0.20240309155455-3f491847cec9
@@ -27,7 +27,6 @@ require (
 	github.com/clbanning/mxj v1.8.4
 	github.com/crewjam/saml v0.4.14
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
-	github.com/dimchansky/utfbom v1.1.1
 	github.com/dustin/go-humanize v1.0.1
 	github.com/elastic/go-elasticsearch/v7 v7.3.0 // indirect
 	github.com/go-ole/go-ole v1.2.6
@@ -74,7 +73,7 @@ require (
 	golang.org/x/crypto v0.32.0
 	golang.org/x/mod v0.21.0
 	golang.org/x/net v0.33.0
-	golang.org/x/sys v0.30.0
+	golang.org/x/sys v0.31.0
 	golang.org/x/text v0.23.0
 	golang.org/x/time v0.5.0
 	google.golang.org/api v0.169.0
