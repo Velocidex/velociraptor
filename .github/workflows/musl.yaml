@@ -13,9 +13,9 @@ jobs:
     steps:
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
-    - uses: actions/setup-go@v4
+    - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe
       with:
         go-version: '^1.23'
 
@@ -37,7 +37,7 @@ jobs:
         cd ..
 
     - name: Use Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e
       with:
         node-version: 20
 
@@ -59,7 +59,7 @@ jobs:
         go run make.go -v LinuxArm64
 
     - name: StoreBinaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
       with:
         name: Binaries
         path: output

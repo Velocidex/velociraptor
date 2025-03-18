@@ -13,8 +13,3 @@ div.velo__multi-value__label {
     border-radius: 5px;
     border-color: var(--color-advanced-controls-border);
 }
-
-.global-timeline-button {
-    padding-top: 0;
-    padding-bottom: 0;
-}

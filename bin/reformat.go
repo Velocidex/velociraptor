@@ -5,21 +5,18 @@ import (
 	"io/ioutil"
 	"os"
 
-	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/startup"
 )
 
 var (
-	verify                = artifact_command.Command("verify", "Verify a set of artifacts")
-	verify_args           = verify.Arg("paths", "Paths to artifact yaml files").Required().Strings()
-	verify_allow_override = verify.Flag("builtin", "Allow overriding of built in artifacts").Bool()
+	reformat      = artifact_command.Command("reformat", "Reformat a set of artifacts")
+	reformat_args = reformat.Arg("paths", "Paths to artifact yaml files").Required().Strings()
 )
 
-func doVerify() error {
+func doReformat() error {
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
 		WithRequiredLogging().LoadAndValidate()
@@ -50,13 +47,7 @@ func doVerify() error {
 	// Report all errors and keep going as much as possible.
 	returned_errs := make(map[string]error)
 
-	artifacts := make(map[string]*artifacts_proto.Artifact)
-
-	repository, err := manager.GetGlobalRepository(config_obj)
-	if err != nil {
-		return err
-	}
-	for _, artifact_path := range *verify_args {
+	for _, artifact_path := range *reformat_args {
 		returned_errs[artifact_path] = nil
 
 		fd, err := os.Open(artifact_path)
@@ -68,24 +59,25 @@ func doVerify() error {
 		data, err := ioutil.ReadAll(fd)
 		if err != nil {
 			returned_errs[artifact_path] = err
+			fd.Close()
 			continue
 		}
+		fd.Close()
 
-		a, err := repository.LoadYaml(string(data), services.ArtifactOptions{
-			ValidateArtifact:     true,
-			ArtifactIsBuiltIn:    *verify_allow_override,
-			AllowOverridingAlias: true,
-		})
+		reformatted, err := manager.ReformatVQL(ctx, string(data))
 		if err != nil {
 			returned_errs[artifact_path] = err
 			continue
 		}
-		artifacts[artifact_path] = a
-	}
 
-	for artifact_path, a := range artifacts {
-		launcher.VerifyArtifact(ctx, config_obj,
-			artifact_path, a, returned_errs)
+		out_fd, err := os.OpenFile(artifact_path,
+			os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0600)
+		if err != nil {
+			returned_errs[artifact_path] = err
+			continue
+		}
+		out_fd.Write([]byte(reformatted))
+		out_fd.Close()
 	}
 
 	var ret error
@@ -94,7 +86,7 @@ func doVerify() error {
 			logger.Error("%v: <red>%v</>", artifact_path, err)
 			ret = err
 		} else {
-			logger.Info("Verified %v: <green>OK</>", artifact_path)
+			logger.Info("Reformatted %v: <green>OK</>", artifact_path)
 		}
 	}
 
@@ -104,8 +96,8 @@ func doVerify() error {
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
-		case verify.FullCommand():
-			FatalIfError(verify, doVerify)
+		case reformat.FullCommand():
+			FatalIfError(reformat, doReformat)
 
 		default:
 			return false
