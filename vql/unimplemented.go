@@ -43,6 +43,9 @@ func (self *UnimplementedFunction) Info(scope vfilter.Scope, type_map *vfilter.T
 	return &vfilter.FunctionInfo{
 		Name: self.Name,
 		Doc:  "Unimplemented Function",
+
+		// Negative version means this plugin really does not exist.
+		Version: -1,
 	}
 }
 
@@ -70,6 +73,10 @@ func (self *UnimplementedPlugin) Info(scope vfilter.Scope, type_map *vfilter.Typ
 	return &vfilter.PluginInfo{
 		Name: self.Name,
 		Doc:  "Unimplemented Plugin",
+
+		// Negative version means this plugin really does not
+		// exist. Version 0 is the default version for new plugins.
+		Version: -1,
 	}
 }
 
@@ -106,7 +113,7 @@ func InstallUnimplemented(scope vfilter.Scope) {
 		"windows_386_cgo", "windows_amd64_cgo",
 		"darwin_amd64_cgo":
 
-		data, err := assets.ReadFile("docs/references/vql.yaml")
+		data, err := assets.ReadFile("/docs/references/vql.yaml")
 		if err != nil {
 			return
 		}
