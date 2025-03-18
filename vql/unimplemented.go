@@ -2,6 +2,7 @@ package vql
 
 import (
 	"context"
+	"fmt"
 	"runtime"
 
 	"github.com/Velocidex/ordereddict"
@@ -106,6 +107,8 @@ func DeduplicatedLog(scope vfilter.Scope, key string, fmt string, args ...interf
 func InstallUnimplemented(scope vfilter.Scope) {
 	platform := GetMyPlatform()
 
+	fmt.Printf("InstallUnimplemented\n")
+
 	switch platform {
 	// We only add metadata for some platforms so we can only really
 	// apply this sometimes.
@@ -122,6 +125,7 @@ func InstallUnimplemented(scope vfilter.Scope) {
 		err = yaml.Unmarshal(data, &result)
 		if err == nil {
 			for _, item := range result {
+				fmt.Printf("Installed %v\n", item.Name)
 				// Add a placeholder
 				if item.Type == "Plugin" {
 					// Skip plugins that are already supported.
