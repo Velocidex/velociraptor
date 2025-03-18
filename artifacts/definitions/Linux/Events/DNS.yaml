@@ -46,7 +46,9 @@ sources:
              EventData.proto_dns.answers.IP AS IP,
              if(condition=IncludeDNSDetails,
                 then=EventData) AS _DNSData
-      FROM watch_ebpf(events="net_packet_dns")
+      FROM delay(delay=2, query={
+        SELECT * FROM watch_ebpf(events="net_packet_dns")
+      })
       WHERE NOT dest_ip =~ ExcludeDestIP
         AND if(condition=Records, then=EventData.proto_dns =~ Records, else=TRUE)
         AND ProcessName =~ ProcessNameFilter
