@@ -1,6 +1,8 @@
 package vql
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"runtime"
@@ -107,8 +109,6 @@ func DeduplicatedLog(scope vfilter.Scope, key string, fmt string, args ...interf
 func InstallUnimplemented(scope vfilter.Scope) {
 	platform := GetMyPlatform()
 
-	fmt.Printf("InstallUnimplemented\n")
-
 	switch platform {
 	// We only add metadata for some platforms so we can only really
 	// apply this sometimes.
@@ -116,38 +116,54 @@ func InstallUnimplemented(scope vfilter.Scope) {
 		"windows_386_cgo", "windows_amd64_cgo",
 		"darwin_amd64_cgo":
 
-		data, err := assets.ReadFile("/docs/references/vql.yaml")
+		data, err := uncompress(assets.FileDocsReferencesVqlYaml)
 		if err != nil {
+			scope.Log("InstallUnimplemented: %v", err)
 			return
 		}
 
 		result := []*api_proto.Completion{}
 		err = yaml.Unmarshal(data, &result)
-		if err == nil {
-			for _, item := range result {
-				fmt.Printf("Installed %v\n", item.Name)
-				// Add a placeholder
-				if item.Type == "Plugin" {
-					// Skip plugins that are already supported.
-					_, ok := scope.GetPlugin(item.Name)
-					if !ok {
-						RegisterPlugin(&UnimplementedPlugin{
-							Name:      item.Name,
-							Platforms: item.Platforms,
-						})
-					}
+		if err != nil {
+			scope.Log("InstallUnimplemented: %v", err)
+			return
+		}
 
-				} else if item.Type == "Function" {
-					_, ok := scope.GetFunction(item.Name)
-					if !ok {
-						RegisterFunction(&UnimplementedFunction{
-							Name:      item.Name,
-							Platforms: item.Platforms,
-						})
-					}
+		for _, item := range result {
+			fmt.Printf("Installed %v\n", item.Name)
+			// Add a placeholder
+			if item.Type == "Plugin" {
+				// Skip plugins that are already supported.
+				_, ok := scope.GetPlugin(item.Name)
+				if !ok {
+					RegisterPlugin(&UnimplementedPlugin{
+						Name:      item.Name,
+						Platforms: item.Platforms,
+					})
+				}
+
+			} else if item.Type == "Function" {
+				_, ok := scope.GetFunction(item.Name)
+				if !ok {
+					RegisterFunction(&UnimplementedFunction{
+						Name:      item.Name,
+						Platforms: item.Platforms,
+					})
 				}
 			}
 		}
 
 	}
+}
+
+func uncompress(raw []byte) ([]byte, error) {
+	rb := bytes.NewReader(raw)
+	r, err := gzip.NewReader(rb)
+	if err != nil {
+		return nil, err
+	}
+
+	buf := bytes.NewBuffer(make([]byte, 0, bytes.MinRead))
+	_, err = buf.ReadFrom(r)
+	return buf.Bytes(), err
 }

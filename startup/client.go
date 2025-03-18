@@ -5,6 +5,7 @@ import (
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/encrypted_logs"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
@@ -34,6 +35,8 @@ func StartClientServices(
 	}
 
 	scope := vql_subsystem.MakeScope()
+	scope.SetLogger(logging.NewPlainLogger(config_obj, &logging.ClientComponent))
+
 	vql_subsystem.InstallUnimplemented(scope)
 
 	// Start encrypted logs service if possible
