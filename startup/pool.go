@@ -2,6 +2,7 @@ package startup
 
 import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -14,6 +15,8 @@ func StartPoolClientServices(
 	config_obj *config_proto.Config) error {
 
 	scope := vql_subsystem.MakeScope()
+	scope.SetLogger(logging.NewPlainLogger(config_obj, &logging.ClientComponent))
+
 	vql_subsystem.InstallUnimplemented(scope)
 
 	// Create a suitable service plan.

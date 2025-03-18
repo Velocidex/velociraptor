@@ -252,6 +252,10 @@ type ResultSetReaderImpl struct {
 	stacker api.FSPathSpec
 }
 
+func (self *ResultSetReaderImpl) SetStacker(stacker api.FSPathSpec) {
+	self.stacker = stacker
+}
+
 func (self *ResultSetReaderImpl) Stacker() api.FSPathSpec {
 	return self.stacker
 }
