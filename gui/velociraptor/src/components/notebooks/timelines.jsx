@@ -108,15 +108,13 @@ export class AddVQLCellToTimeline extends React.Component {
 
         loading: false,
 
-        // Toggle between viewing timelines in global notebooks or
-        // this current notebook.
-        use_global_timelines: false,
         global_timelines: [],
     }
 
     componentDidMount = () => {
         this.source = CancelToken.source();
         this.getTables();
+        this.fetchGlobalTimelines();
     }
 
     componentWillUnmount() {
@@ -208,12 +206,15 @@ export class AddVQLCellToTimeline extends React.Component {
 
     addTimeline = ()=>{
         let env = {};
-        _.each(this.props.notebook_metadata.env, x=>{
-            env[x.key] = x.value;
-        });
+        let requests = this.props.notebook_metadata &&
+            this.props.notebook_metadata.requests;
 
-        _.each(this.props.cell.env, x=>{
-            env[x.key] = x.value;
+        // Replicate the notebook env and pass it to the artifact.
+        // This is needed to run the cell query inside the artifact.
+        _.each(requests, x=>{
+            _.each(x.env, x=>{
+                env[x.key] = x.value;
+            });
         });
 
         api.post("v1/CollectArtifact", {
@@ -264,13 +265,6 @@ export class AddVQLCellToTimeline extends React.Component {
     render() {
         let timelines = this.props.notebook_metadata &&
             this.props.notebook_metadata.timelines;
-        let local_timeline_options = _.map(timelines, x=>{
-            return {value: x,
-                    label: x,
-                    notebook_id: this.props.notebook_metadata.notebook_id,
-                    isFixed: true,
-                    color: "#00B8D9"};
-        });
 
         let global_timeline_options = _.map(this.state.global_timelines, x=>{
             return {value: x.name,
@@ -298,27 +292,9 @@ export class AddVQLCellToTimeline extends React.Component {
 
                 <Form.Group as={Row}>
                   <ToolTip tooltip={T("Select timeline type")}>
-                    <Form.Label column sm="3" className="global-timeline-button">
-                      <Button
-                        variant="secondary"
-                        onClick={e=>{
-                            if (!this.state.use_global_timelines) {
-                                this.fetchGlobalTimelines();
-                                this.setState({use_global_timelines: true});
-                            } else {
-                                this.setState({use_global_timelines: false});
-                            };
-                        }}
-                      >
-                        {!this.state.use_global_timelines ?
-                         T("Local Timeline"):
-                         T("Global Timeline")
-                        }
-                      </Button>
-                    </Form.Label>
+                    <Form.Label column sm="3">{ T("Super Timeline")}</Form.Label>
                   </ToolTip>
                   <Col sm="8">
-                    {this.state.use_global_timelines ?
                      <Select
                        isClearable
                        className="labels"
@@ -331,20 +307,6 @@ export class AddVQLCellToTimeline extends React.Component {
                        placeholder={T("Select timeline name from global notebook")}
                        spellCheck="false"
                      />
-                     :
-                     <CreatableSelect
-                       isClearable
-                       className="labels"
-                       classNamePrefix="velo"
-                       options={local_timeline_options}
-                       onChange={(e)=>this.setState({
-                           timeline: e && e.value,
-                           timeline_notebook_id: e && e.notebook_id,
-                       })}
-                       placeholder={T("Select or create timeline name in this notebook")}
-                       spellCheck="false"
-                     />
-                    }
                   </Col>
                 </Form.Group>
 
