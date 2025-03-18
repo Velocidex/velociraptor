@@ -8,7 +8,6 @@ import (
 	"gopkg.in/yaml.v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -123,10 +122,6 @@ func InstallUnimplemented(scope vfilter.Scope) {
 		err = yaml.Unmarshal(data, &result)
 		if err == nil {
 			for _, item := range result {
-				if item.Name == "watch_etw" {
-					utils.DlvBreak()
-				}
-
 				// Add a placeholder
 				if item.Type == "Plugin" {
 					// Skip plugins that are already supported.
