@@ -5,6 +5,7 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/api"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
@@ -28,6 +29,8 @@ func StartFrontendServices(
 	}
 
 	scope := vql_subsystem.MakeScope()
+	scope.SetLogger(logging.NewPlainLogger(config_obj, &logging.FrontendComponent))
+
 	vql_subsystem.InstallUnimplemented(scope)
 
 	_, err = orgs.NewOrgManager(sm.Ctx, sm.Wg, config_obj)

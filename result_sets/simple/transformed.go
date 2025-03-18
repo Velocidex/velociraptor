@@ -171,10 +171,7 @@ func (self ResultSetFactory) getSortedReader(
 		if err != nil {
 			return nil, err
 		}
-		result_impl, ok := result.(*ResultSetReaderImpl)
-		if ok {
-			result_impl.stacker = transformed_path.AddChild("stack")
-		}
+		result.SetStacker(transformed_path.AddChild("stack"))
 		return result, err
 	}
 
@@ -335,7 +332,7 @@ func NewStacker(
 	scope vfilter.Scope,
 	stack_path api.FSPathSpec,
 	file_store_factory api.FileStore,
-	rs_factory ResultSetFactory,
+	rs_factory result_sets.Factory,
 	sorted_chan <-chan vfilter.Row,
 	sort_column string) (<-chan vfilter.Row, func(), error) {
 
