@@ -9,7 +9,7 @@ import (
 
 func MemoryLogsContain(t assert.TestingT, regex string, msgAndArgs ...interface{}) {
 	if !MemoryLogsContainRegex(regex) {
-		t.Errorf("Unable to find %v in memory logs", regex, msgAndArgs)
+		t.Errorf("Unable to find '%v' in memory logs %v", regex, msgAndArgs)
 	}
 }
 

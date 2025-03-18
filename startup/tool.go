@@ -4,6 +4,7 @@ import (
 	"context"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -15,6 +16,8 @@ func StartToolServices(
 	config_obj *config_proto.Config) (*services.Service, error) {
 
 	scope := vql_subsystem.MakeScope()
+	scope.SetLogger(logging.NewPlainLogger(config_obj, &logging.ToolComponent))
+
 	vql_subsystem.InstallUnimplemented(scope)
 
 	sm := services.NewServiceManager(ctx, config_obj)
