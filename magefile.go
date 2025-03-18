@@ -460,6 +460,7 @@ func BasicAssets() error {
 			return err
 		}
 	}
+	return nil
 }
 
 func build_gui_files() error {
