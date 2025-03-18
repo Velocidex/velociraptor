@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"fmt"
 	"runtime"
 
 	"github.com/Velocidex/ordereddict"
@@ -135,7 +134,6 @@ func InstallUnimplemented(scope vfilter.Scope) {
 		}
 
 		for _, item := range result {
-			fmt.Printf("Installed %v\n", item.Name)
 			// Add a placeholder
 			if item.Type == "Plugin" {
 				// Skip plugins that are already supported.
