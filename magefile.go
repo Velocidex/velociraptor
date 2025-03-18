@@ -448,6 +448,20 @@ func Assets() error {
 	return ensure_assets()
 }
 
+// Build only essential assets
+func BasicAssets() error {
+	for _, asset := range assets {
+		if strings.Contains("gui", asset) {
+			continue
+		}
+
+		err := fileb0x(asset)
+		if err != nil {
+			return err
+		}
+	}
+}
+
 func build_gui_files() error {
 	cwd, err := os.Getwd()
 	if err != nil {

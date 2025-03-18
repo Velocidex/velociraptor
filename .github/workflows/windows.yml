@@ -46,7 +46,7 @@ jobs:
         CC: x86_64-w64-mingw32-gcc
       shell: bash
       run: |
-        go run make.go -v Assets
+        go run make.go -v BasicAssets
         go run make.go -v WindowsTest
 
     - name: Prepare second stage
