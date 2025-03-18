@@ -113,7 +113,12 @@ func InstallUnimplemented(scope vfilter.Scope) {
 	// We only add metadata for some platforms so we can only really
 	// apply this sometimes.
 	case "linux_amd64_cgo",
-		"windows_386_cgo", "windows_amd64_cgo",
+		"linux_amd64_nocgo",
+		"windows_386_cgo",
+		"windows_386_nocgo",
+		"windows_amd64_cgo",
+		"windows_amd64_nocgo",
+		"darwin_amd64_nocgo",
 		"darwin_amd64_cgo":
 
 		data, err := uncompress(assets.FileDocsReferencesVqlYaml)
