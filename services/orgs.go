@@ -84,10 +84,13 @@ type OrgManager interface {
 }
 
 func GetOrgName(config_obj *config_proto.Config) string {
-	if config_obj.OrgId == "" {
-		return ROOT_ORG_NAME
+	org_id := config_obj.OrgId
+	org_name := config_obj.OrgName
+
+	if org_id == "" {
+		org_id = ROOT_ORG_ID
+		org_name = ROOT_ORG_NAME
 	}
 
-	return fmt.Sprintf("Org %v (%v)",
-		config_obj.OrgName, config_obj.OrgId)
+	return fmt.Sprintf("Org %v (%v)", org_name, org_id)
 }

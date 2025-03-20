@@ -522,6 +522,7 @@ func init() {
 	vql_subsystem.RegisterFunction(&_InstallProcessTracker{})
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
 		Name:        "process_tracker",
+		Categories:  []string{"Global", "VQL", "Plugins"},
 		Description: "Report process tracker stats",
 		ProfileWriter: func(ctx context.Context,
 			scope vfilter.Scope, output_chan chan vfilter.Row) {

@@ -2,6 +2,7 @@ package authenticators
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -9,6 +10,11 @@ import (
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+)
+
+var (
+	reauthError = errors.New(`Authentication cookie not found, invalid or expired.
+You probably need to re-authenticate in a new tab or refresh this page.`)
 )
 
 func getSignedJWTTokenCookie(
@@ -26,7 +32,7 @@ func getSignedJWTTokenCookie(
 
 	// We force expiry in the JWT **as well** as the session
 	// cookie. The JWT expiry is most important as the browser can
-	// replay sessioon cookies past expiry.
+	// replay session cookies past expiry.
 	expiry := time.Now().Add(time.Minute * time.Duration(expiry_min))
 
 	// Enforce the JWT to expire
@@ -67,7 +73,7 @@ func getDetailsFromCookie(
 	// cookie. It is stored as a JWT so we can trust it.
 	auth_cookie, err := r.Cookie("VelociraptorAuth")
 	if err != nil {
-		return claims, err
+		return claims, reauthError
 	}
 
 	// Parse the JWT.
@@ -80,7 +86,7 @@ func getDetailsFromCookie(
 			return []byte(config_obj.Frontend.PrivateKey), nil
 		})
 	if err != nil {
-		return claims, err
+		return claims, fmt.Errorf("%w: %v", err, reauthError.Error())
 	}
 
 	claims, ok := token.Claims.(*Claims)
@@ -88,5 +94,5 @@ func getDetailsFromCookie(
 		return claims, nil
 	}
 
-	return claims, err
+	return claims, reauthError
 }

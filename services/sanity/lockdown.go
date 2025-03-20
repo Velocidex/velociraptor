@@ -27,6 +27,7 @@ func (self SanityChecks) CheckForLockdown(
 		FilesystemWrite:      true,
 		FilesystemRead:       true,
 		MachineState:         true,
+		CollectBasic:         true,
 	}
 
 	if config_obj.Defaults != nil &&

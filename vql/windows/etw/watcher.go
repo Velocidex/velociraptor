@@ -108,5 +108,6 @@ func init() {
 		Name:          "ETW",
 		Description:   "Report the current state of the ETW subsystem",
 		ProfileWriter: writeMetrics,
+		Categories:    []string{"Global", "VQL", "Plugins"},
 	})
 }

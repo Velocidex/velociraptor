@@ -82,6 +82,8 @@ var (
 		"GUI.use_plain_http",
 		"GUI.links.disabled",
 		"GUI.authenticator.oidc_issuer",
+		"GUI.authenticator.claims.roles",
+		"GUI.authenticator.oidc_debug",
 		"Frontend.use_plain_http",
 		"Frontend.require_client_certificates",
 		"defaults.disable_unicode_usernames",

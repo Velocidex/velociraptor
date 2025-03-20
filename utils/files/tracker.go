@@ -150,6 +150,7 @@ func init() {
 		Name:          "open_close",
 		Description:   "Track open items that should be closed.",
 		ProfileWriter: gTracker.ProfileWriter,
+		Categories:    []string{"Global", "Services"},
 	})
 
 }

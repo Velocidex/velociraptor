@@ -68,6 +68,7 @@ func NewFlowManager(ctx context.Context,
 		Description: fmt.Sprintf(
 			"Report the state of the client's flow manager (%v)", client_id),
 		ProfileWriter: result.WriteProfile,
+		Categories:    []string{"Client"},
 	})
 
 	return result

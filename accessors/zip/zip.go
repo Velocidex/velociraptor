@@ -704,5 +704,6 @@ func init() {
 		Name:          "ZipTracker",
 		Description:   "Reference counting for open Zip files",
 		ProfileWriter: tracker.ProfileWriter,
+		Categories:    []string{"Global", "VQL", "Plugins"},
 	})
 }
