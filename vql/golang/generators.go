@@ -15,6 +15,7 @@ import (
 
 type Generator struct {
 	name                   string
+	description            string
 	disable_file_buffering bool
 }
 
@@ -40,6 +41,7 @@ func (self Generator) Eval(ctx context.Context, scope types.Scope) <-chan types.
 
 		output_chan, cancel, err := b.Watch(ctx, self.name, api.QueueOptions{
 			DisableFileBuffering: self.disable_file_buffering,
+			OwnerName:            self.description,
 		})
 		if err != nil {
 			scope.Log("generate: %v", err)
@@ -68,6 +70,7 @@ type GeneratorArgs struct {
 	Delay             int64             `vfilter:"optional,field=delay,doc=Wait before starting the query"`
 	WithFileBuffering bool              `vfilter:"optional,field=with_file_buffer,doc=Enable file buffering"`
 	FanOut            int64             `vfilter:"optional,field=fan_out,doc=Wait for this many listeners to connect before starting the query"`
+	Description       string            `vfilter:"optional,field=description,doc=A description to add to debug server"`
 }
 
 type GeneratorFunction struct{}
@@ -110,6 +113,7 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 	if err == services.AlreadyRegisteredError {
 		return Generator{
 			name:                   arg.Name,
+			description:            arg.Description,
 			disable_file_buffering: !arg.WithFileBuffering,
 		}
 	}

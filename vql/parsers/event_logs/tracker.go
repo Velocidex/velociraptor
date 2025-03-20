@@ -150,6 +150,7 @@ func init() {
 		Name:          "Windows Event Log Watcher",
 		Description:   "Records Statistics about the Windows Event Log Watcher Subsystem.",
 		ProfileWriter: eventLogWatchTracker.WriteProfile,
+		Categories:    []string{"Global", "VQL", "Plugins"},
 	})
 
 }

@@ -132,5 +132,6 @@ func init() {
 		Name:          "GlobTracker",
 		Description:   "Track current Glob operations",
 		ProfileWriter: globTracker.ProfileWriter,
+		Categories:    []string{"Global", "VQL", "Plugins"},
 	})
 }

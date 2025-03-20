@@ -55,8 +55,7 @@ func CheckAccess(scope vfilter.Scope, permissions ...acls.ACL_PERMISSION) error 
 			return fmt.Errorf("%w: Permission denied: %v",
 				acls.PermissionDenied, permissions)
 		}
-		return fmt.Errorf("%W: %v: %v",
-			acls.PermissionDenied, err, permissions)
+		return fmt.Errorf("%w: %v", err, permissions)
 	}
 
 	return nil

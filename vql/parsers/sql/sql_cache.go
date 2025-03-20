@@ -474,6 +474,7 @@ func init() {
 		Name:          "sqlite_files",
 		Description:   "Track SQLite handles used by the process.",
 		ProfileWriter: gSqlCacheTracker.ProfileWriter,
+		Categories:    []string{"Global", "VQL", "Plugins"},
 	})
 
 }

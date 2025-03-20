@@ -28,7 +28,7 @@ export: |
          SELECT * FROM vfs_ls(
             path="/", components=Components,
             accessor=Accessor, depth=Depth)
-      }, delay=500)  -- wait a while for both sources to connect.
+      }, fan_out=2)
 
 sources:
   - precondition: SELECT * FROM info() WHERE version(plugin="vfs_ls") = 1

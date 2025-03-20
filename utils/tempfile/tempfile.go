@@ -146,6 +146,7 @@ func init() {
 		Name:          "tempfiles",
 		Description:   "Track tempfiles used by the process.",
 		ProfileWriter: gTracker.ProfileWriter,
+		Categories:    []string{"Global", "Services"},
 	})
 
 }

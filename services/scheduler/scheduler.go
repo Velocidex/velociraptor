@@ -271,6 +271,8 @@ func (self *Scheduler) Schedule(ctx context.Context,
 	}
 }
 
+// The scheduler service is only started for the root org. Workers
+// will switch orgs as needed.
 func StartSchedulerService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
@@ -278,7 +280,7 @@ func StartSchedulerService(
 
 	if !services.IsMaster(config_obj) {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Info("Starting Minion Scheduler Service for %v", services.GetOrgName(config_obj))
+		logger.Info("Starting Minion Scheduler Service")
 
 		scheduler := &MinionScheduler{
 			config_obj: config_obj,
@@ -291,7 +293,7 @@ func StartSchedulerService(
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Starting Server Scheduler Service for %v", services.GetOrgName(config_obj))
+	logger.Info("Starting Server Scheduler Service")
 
 	scheduler := &Scheduler{
 		queues:     make(map[string][]*Worker),
@@ -304,6 +306,7 @@ func StartSchedulerService(
 		Name:          "worker",
 		Description:   "Reporting information about current worker tasks.",
 		ProfileWriter: scheduler.WriteProfile,
+		Categories:    []string{"Global", "Services"},
 	})
 
 	return nil

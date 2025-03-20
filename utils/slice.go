@@ -2,6 +2,7 @@ package utils
 
 import (
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -81,5 +82,37 @@ func FilterSliceFolding(a []string, needle string) (res []string) {
 			res = append(res, i)
 		}
 	}
+	return res
+}
+
+// Generic sorter. Useful to read maps in sorted order:
+//
+//	for _, k := range utils.Sort(mymap) {
+//	  v := mymap[k]
+//	  ...
+//	}
+func Sort(a interface{}) []string {
+	var res []string
+
+	a_value := reflect.Indirect(reflect.ValueOf(a))
+	a_type := a_value.Type()
+
+	if a_type.Kind() == reflect.Map {
+		for _, k := range a_value.MapKeys() {
+			res = append(res, k.String())
+		}
+
+	} else if a_type.Kind() == reflect.Slice {
+		for i := 0; i < a_value.Len(); i++ {
+			element := a_value.Index(i).Interface()
+			element_str, ok := element.(string)
+			if ok {
+				res = append(res, element_str)
+			}
+		}
+	}
+
+	sort.Strings(res)
+
 	return res
 }

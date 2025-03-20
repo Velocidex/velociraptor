@@ -82,6 +82,7 @@ func NewMonitoringManager(ctx context.Context) *MonitoringManager {
 		Description:   "Report stats on client monitoring artifacts",
 		ProfileWriter: result.WriteProfile,
 		ID:            utils.GetId(),
+		Categories:    []string{"Client"},
 	}
 
 	debug.RegisterProfileWriter(info)

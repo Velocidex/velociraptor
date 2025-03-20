@@ -37,15 +37,20 @@ func (self *ServerACLManager) GetPrincipal() string {
 func (self *ServerACLManager) handleLockdown(
 	permissions []acls.ACL_PERMISSION) (bool, error) {
 	// Not in lockdown mode, permit access
-	if acls.LockdownToken() == nil {
+	lockdown_token := acls.LockdownToken()
+
+	if lockdown_token == nil {
 		return true, nil
 	}
 
 	// If any of the permissions are denied by the lockdown token then
 	// block access.
 	for _, perm := range permissions {
-		ok, err := services.CheckAccessWithToken(acls.LockdownToken(), perm)
-		if err == nil && !ok {
+		// Lockdown permissions subtract from user permission so if
+		// the lockdown token has a permission, this means reject the
+		// operation.
+		ok, err := services.CheckAccessWithToken(lockdown_token, perm)
+		if err == nil && ok {
 			return false, lockedDownError
 		}
 	}

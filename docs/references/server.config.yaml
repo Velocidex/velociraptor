@@ -14,7 +14,7 @@ version:
   name: velociraptor
 
   # The release version on GitHub.
-  version: 0.7.0
+  version: 0.74
 
   # The commit at which this binary was built. This is more accurate
   # than the version for reporting issues etc.
@@ -575,6 +575,36 @@ GUI:
     # These are required for the oauth flow - get from the OIDC provider.
     oauth_client_id: C123445
     oauth_client_secret: X23456
+
+    # When this is set we emit detailed logging. Turn this on when
+    # configuring the server initially if you want to debug your OIDC
+    # setup. You probably do not want this enabled in production.
+    oidc_debug: false
+
+    # Additional OIDC claims configuration. This is an experimental
+    # setting and should not be used except for specific situations.
+    claims:
+      # The name of the claim that represents the username (by default
+      # this is 'email'). Be careful that this MUST be unique across
+      # the domain! It is vulnerability to allow something like 'name'
+      # across a public domain because anyone can set this name in
+      # their OIDC accounts!
+      username: email
+
+      # The field that specifies the roles. If this not set (the
+      # default), we do not allow roles to be set via OIDC. You must
+      # configure your OIDC server to send specific roles in this
+      # claim (the claim can be named for example 'roles'). If this is
+      # configured we use the role map below to assign Velociraptor
+      # roles based on the OIDC server's roles.
+      roles: ""
+
+      # A mapping between OIDC claim roles and Velociraptor roles.
+      # For example:
+      role_map:
+        Velociraptor.Reader:
+          roles:
+            - reader
 
     # This is specifically required by the Azure authenticator only.
     tenant: O...
@@ -1397,6 +1427,19 @@ defaults:
   # record though. Enabling this will also write them to
   # disk. Probably only useful for debugging.
   write_internal_events: false
+
+  # Defaults for client communication limits. Decrease those if
+  # your clients are behind a proxy that only accepts very small
+  # POST messages. If not set we use client defaults.
+  max_rows: 0
+  max_row_buffer_size: 0
+  max_batch_wait: 0
+
+  # Maximum default value for log messages sent by the client for each
+  # flow. Once this is reached, the client stops sending log messages
+  # in the current collection.
+  max_logs: 100000
+
 
 # The Velociraptor server may be placed into "lockdown" mode. While in
 # lockdown mode certain permissions are denied - even for

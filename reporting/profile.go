@@ -176,5 +176,6 @@ func init() {
 		Name:          "ExportContainers",
 		Description:   "Report the state of current exports",
 		ProfileWriter: ContainerTracker.WriteMetrics,
+		Categories:    []string{"Global", "Services"},
 	})
 }

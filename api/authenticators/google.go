@@ -356,7 +356,7 @@ func reject_with_username(
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusUnauthorized)
 
 	renderRejectionMessage(config_obj,
 		r, w, err, username, []velociraptor.AuthenticatorInfo{

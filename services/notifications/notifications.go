@@ -160,11 +160,10 @@ func NewNotificationService(
 	}()
 
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
-		Name: "notifier-" + utils.GetOrgId(config_obj),
-		Description: fmt.Sprintf(
-			"Information about directly connected clients for org %v.",
-			services.GetOrgName(config_obj)),
+		Name:          "notifier-" + utils.GetOrgId(config_obj),
+		Description:   "Information about directly connected clients.",
 		ProfileWriter: self.WriteProfile,
+		Categories:    []string{"Org", services.GetOrgName(config_obj), "Services"},
 	})
 
 	return self, nil

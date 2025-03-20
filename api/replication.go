@@ -236,6 +236,7 @@ func init() {
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
 		Name:        "Replication",
 		Description: "Report current replication connections between master and minion",
+		Categories:  []string{"Global", "Datastore"},
 		ProfileWriter: func(ctx context.Context,
 			scope vfilter.Scope, output_chan chan vfilter.Row) {
 
