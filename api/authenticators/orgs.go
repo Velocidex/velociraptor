@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -53,10 +52,6 @@ func CheckOrgAccess(
 	r *http.Request,
 	user_record *api_proto.VelociraptorUser,
 	permission acls.ACL_PERMISSION) (err error) {
-
-	if strings.Contains(r.URL.Path, "debug") {
-		utils.DlvBreak()
-	}
 
 	org_id := GetOrgIdFromRequest(r)
 	err = _checkOrgAccess(r, org_id, permission, user_record)

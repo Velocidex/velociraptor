@@ -83,7 +83,8 @@ func (self *ServerACLManager) CheckAccess(
 	// Check access against the policy
 	policy, err := self.GetPolicyInOrg(org_id)
 	if err != nil {
-		return false, err
+		// If policy is missing then permission denied.
+		return false, acls.PermissionDenied
 	}
 
 	for _, permission := range permissions {

@@ -64,7 +64,7 @@ func CheckAccess(
 
 			return fmt.Errorf(
 				"%w: User %v is not allowed to launch flows %v.",
-				err, principal, permissions)
+				acls.PermissionDenied, principal, permissions)
 		}
 	}
 
