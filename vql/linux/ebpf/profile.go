@@ -41,6 +41,7 @@ func init() {
 		Name:          "ebpf_manager",
 		Description:   "Current state of the ebpf manager",
 		ProfileWriter: WriteProfile,
+		Categories:    []string{"Global", "VQL", "Plugins"},
 	})
 
 }

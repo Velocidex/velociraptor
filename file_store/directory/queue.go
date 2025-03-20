@@ -53,6 +53,21 @@ type QueuePool struct {
 	registrations map[string][]*Listener
 }
 
+func (self *QueuePool) Stats() *ordereddict.Dict {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	res := ordereddict.NewDict()
+	for k, listeners := range self.registrations {
+		var stats []*ordereddict.Dict
+		for _, l := range listeners {
+			stats = append(stats, l.Stats())
+		}
+		res.Set(k, stats)
+	}
+	return res
+}
+
 func (self *QueuePool) GetWatchers() []string {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -282,10 +297,9 @@ func NewDirectoryQueueManager(config_obj *config_proto.Config,
 	}
 
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
-		Name: "QueueManager " + services.GetOrgName(config_obj),
-		Description: fmt.Sprintf(
-			"Report the current states of server artifact event queues for org %v.",
-			services.GetOrgName(config_obj)),
+		Name:        "QueueManager " + services.GetOrgName(config_obj),
+		Categories:  []string{"Org", services.GetOrgName(config_obj), "Services"},
+		Description: "Report the current states of server artifact event queues.",
 		ProfileWriter: func(ctx context.Context,
 			scope vfilter.Scope, output_chan chan vfilter.Row) {
 

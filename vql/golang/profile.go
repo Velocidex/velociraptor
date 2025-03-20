@@ -304,11 +304,13 @@ func init() {
 		Name:          "Metrics",
 		Description:   "Report all the current process running metrics.",
 		ProfileWriter: writeMetrics,
+		Categories:    []string{"Global"},
 	})
 
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
 		Name:        "logs",
 		Description: "Dump recent logs from memory ring buffer.",
+		Categories:  []string{"Global"},
 		ProfileWriter: func(ctx context.Context,
 			scope vfilter.Scope, output_chan chan vfilter.Row) {
 			for _, line := range logging.GetMemoryLogs() {
@@ -325,19 +327,59 @@ func init() {
 	})
 
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
-		Name:        "Queries",
+		Name:        "RecentQueries",
 		Description: "Report all the recent queries.",
+		Categories:  []string{"Global", "VQL"},
 		ProfileWriter: func(ctx context.Context,
 			scope vfilter.Scope, output_chan chan vfilter.Row) {
-			for _, q := range actions.QueryLog.Get() {
+
+			for _, item := range actions.QueryLog.Get() {
+				row := ordereddict.NewDict().
+					Set("Status", "").
+					Set("Duration", "").
+					Set("Started", item.Start).
+					Set("Query", item.Query)
+				if item.Duration == 0 {
+					row.Update("Status", "RUNNING").
+						Update("Duration", time.Now().Sub(item.Start))
+				} else {
+					row.Update("Status", "FINISHED").
+						Update("Duration", item.Duration/1e9)
+				}
+
 				select {
 				case <-ctx.Done():
 					return
 
-				case output_chan <- ordereddict.NewDict().
-					Set("Type", "query").
-					Set("Line", q).
-					Set("OSPath", ""):
+				case output_chan <- row:
+				}
+			}
+		},
+	})
+
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:        "ActiveQueries",
+		Description: "Report Currently Active queries.",
+		Categories:  []string{"Global", "VQL"},
+		ProfileWriter: func(ctx context.Context,
+			scope vfilter.Scope, output_chan chan vfilter.Row) {
+
+			for _, item := range actions.QueryLog.Get() {
+				if item.Duration != 0 {
+					continue
+				}
+
+				row := ordereddict.NewDict().
+					Set("Status", "RUNNING").
+					Set("Duration", time.Now().Sub(item.Start)).
+					Set("Started", item.Start).
+					Set("Query", item.Query)
+
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- row:
 				}
 			}
 		},

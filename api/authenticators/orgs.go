@@ -51,10 +51,10 @@ func CheckOrgAccess(
 	config_obj *config_proto.Config,
 	r *http.Request,
 	user_record *api_proto.VelociraptorUser,
-	permission acls.ACL_PERMISSION) error {
+	permission acls.ACL_PERMISSION) (err error) {
 
 	org_id := GetOrgIdFromRequest(r)
-	err := _checkOrgAccess(r, org_id, permission, user_record)
+	err = _checkOrgAccess(r, org_id, permission, user_record)
 	if err == nil {
 		return nil
 	}
@@ -91,7 +91,7 @@ func CheckOrgAccess(
 
 	// Redirect the user to the first org they have access to
 	for _, org := range user_record.Orgs {
-		err := _checkOrgAccess(r, org.Id, permission, user_record)
+		err = _checkOrgAccess(r, org.Id, permission, user_record)
 		if err == nil {
 			r.Header.Set("Grpc-Metadata-Orgid", org.Id)
 
@@ -101,6 +101,10 @@ func CheckOrgAccess(
 				user_record.Name, user_options)
 			return nil
 		}
+	}
+
+	if err != nil {
+		return fmt.Errorf("Unable to access any orgs: %w", err)
 	}
 
 	return errors.New("Unauthorized username")

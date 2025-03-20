@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -30,6 +31,8 @@ import (
 // Listener is able to go back into direct delivering mode.
 type Listener struct {
 	mu sync.Mutex
+
+	start time.Time
 
 	// should new messages go directly to the file buffer?
 	file_buffer_active bool // Locked
@@ -59,6 +62,26 @@ type Listener struct {
 	// Listener context.
 	ctx    context.Context
 	cancel func()
+
+	// Number of events forwarded to this listener.
+	count int64
+}
+
+func (self *Listener) Stats() *ordereddict.Dict {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	file_buffer := ""
+	if self.file_buffer_active {
+		file_buffer = self.file_buffer.GetBackingFile()
+	}
+
+	return ordereddict.NewDict().
+		Set("Name", self.name).
+		Set("Started", self.start).
+		Set("Options", self.options).
+		Set("FileBuffer", file_buffer).
+		Set("EventCount", self.count)
 }
 
 // Should not block - very fast.
@@ -77,6 +100,9 @@ func (self *Listener) Send(item *ordereddict.Dict) {
 
 			// Try to deliver message immediately.
 		case self.output <- item:
+			self.mu.Lock()
+			self.count++
+			self.mu.Unlock()
 			return
 		}
 	}
@@ -273,6 +299,7 @@ func NewListener(
 	subctx, cancel := context.WithCancel(ctx)
 
 	self := &Listener{
+		start:   utils.GetTime().Now(),
 		id:      utils.GetId(),
 		name:    name,
 		output:  make(chan *ordereddict.Dict),

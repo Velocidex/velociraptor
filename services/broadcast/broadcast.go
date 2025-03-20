@@ -11,21 +11,35 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
+
+type listener struct {
+	started time.Time
+
+	// Total number of events fed to this listener
+	count  int
+	id     uint64
+	closer func()
+}
+
+type watcher struct {
+	started   time.Time
+	name      string
+	listeners map[uint64]*listener
+}
 
 type BroadcastService struct {
 	pool *directory.QueuePool
 
 	mu sync.Mutex
 
-	generators map[string]<-chan *ordereddict.Dict
-
 	// A list of watchers listening on a topic.
 	// When the topic broadcaster cancels, we close all watchers.
 	// When each watcher ends we remove it from the broadcast queue.
 	// The following is a map of topics, and unique IDs.
-	listener_closers map[string]map[uint64]func()
+	generators map[string]*watcher
 }
 
 func (self *BroadcastService) RegisterGenerator(
@@ -38,7 +52,13 @@ func (self *BroadcastService) RegisterGenerator(
 		return services.AlreadyRegisteredError
 	}
 
-	self.generators[name] = input
+	new_watcher := &watcher{
+		started:   utils.GetTime().Now(),
+		name:      name,
+		listeners: make(map[uint64]*listener),
+	}
+
+	self.generators[name] = new_watcher
 
 	go func() {
 		defer self.unregister(name)
@@ -58,16 +78,15 @@ func (self *BroadcastService) unregister(name string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	delete(self.generators, name)
-	closers, ok := self.listener_closers[name]
-
-	if ok {
-		for _, closer := range closers {
-			closer()
-		}
+	watcher, pres := self.generators[name]
+	if !pres {
+		return
 	}
 
-	delete(self.listener_closers, name)
+	for _, listener := range watcher.listeners {
+		listener.closer()
+	}
+	delete(self.generators, name)
 }
 
 func (self *BroadcastService) WaitForListeners(
@@ -79,11 +98,15 @@ func (self *BroadcastService) WaitForListeners(
 
 		case <-time.After(utils.Jitter(100 * time.Millisecond)):
 			self.mu.Lock()
-			closers, _ := self.listener_closers[name]
-			listeners := int64(len(closers))
+			watcher, pres := self.generators[name]
+			if !pres {
+				continue
+			}
+
+			listener_count := len(watcher.listeners)
 			self.mu.Unlock()
 
-			if listeners >= count {
+			if int64(listener_count) >= count {
 				return
 			}
 		}
@@ -96,48 +119,56 @@ func (self *BroadcastService) Watch(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	_, pres := self.generators[name]
+	watcher, pres := self.generators[name]
 	if !pres {
 		return nil, nil, fmt.Errorf("No generator registered for %v", name)
 	}
 
 	output_chan, cancel := self.pool.Register(ctx, name, options)
-	// If closers is nil we create a new slice.
-	closers, pres := self.listener_closers[name]
-	if !pres {
-		closers = make(map[uint64]func())
+
+	new_listener := &listener{
+		started: utils.GetTime().Now(),
+		id:      utils.GetId(),
+		closer:  cancel,
 	}
 
-	id := utils.GetId()
-	closers[id] = cancel
-	self.listener_closers[name] = closers
+	watcher.listeners[new_listener.id] = new_listener
 
 	return output_chan, func() {
 		self.mu.Lock()
-		closers, pres := self.listener_closers[name]
+
+		id := new_listener.id
+		listener, pres := watcher.listeners[id]
 		if !pres {
 			self.mu.Unlock()
 			return
 		}
+		listener.closer()
 
-		cancel, pres := closers[id]
-		if !pres {
-			self.mu.Unlock()
-			return
+		delete(watcher.listeners, id)
+
+		if len(watcher.listeners) == 0 {
+			delete(self.generators, name)
 		}
 
-		delete(closers, id)
 		self.mu.Unlock()
 
-		cancel()
 	}, nil
 }
 
 func NewBroadcastService(
 	config_obj *config_proto.Config) services.BroadcastService {
-	return &BroadcastService{
-		pool:             directory.NewQueuePool(config_obj),
-		generators:       make(map[string]<-chan *ordereddict.Dict),
-		listener_closers: make(map[string]map[uint64]func()),
+	res := &BroadcastService{
+		pool:       directory.NewQueuePool(config_obj),
+		generators: make(map[string]*watcher),
 	}
+
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:          "BroadcastService-" + utils.GetOrgId(config_obj),
+		Description:   "Track generators installed via the generator() plugin.",
+		ProfileWriter: res.ProfileWriter,
+		Categories:    []string{"Org", services.GetOrgName(config_obj), "Services"},
+	})
+
+	return res
 }

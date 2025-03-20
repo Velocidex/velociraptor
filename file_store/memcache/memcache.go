@@ -24,6 +24,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -567,9 +568,9 @@ func NewMemcacheFileStore(
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
 		Name: fmt.Sprintf("memcache_filestore_%v",
 			utils.GetOrgId(config_obj)),
-		Description: fmt.Sprintf("Inspect the memcache writer state for %v.",
-			utils.GetOrgId(config_obj)),
+		Description:   "Inspect the memcache writer state.",
 		ProfileWriter: result.WriteProfile,
+		Categories:    []string{"Org", services.GetOrgName(config_obj), "Datastore"},
 	})
 
 	go result.Start(ctx)

@@ -139,6 +139,7 @@ func init() {
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
 		Name:        "goroutines",
 		Description: "Goroutine information",
+		Categories:  []string{"Global"},
 		ProfileWriter: func(
 			ctx context.Context, scope vfilter.Scope, output_chan chan vfilter.Row) {
 			plugin := GoRoutinesPlugin{}
@@ -152,6 +153,7 @@ func init() {
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
 		Name:        "verbose goroutines",
 		Description: "Goroutine information (Verbose)",
+		Categories:  []string{"Global"},
 		ProfileWriter: func(
 			ctx context.Context, scope vfilter.Scope, output_chan chan vfilter.Row) {
 			plugin := GoRoutinesPlugin{}

@@ -124,5 +124,6 @@ func init() {
 		Name:          "Plugin Monitor",
 		Description:   "See currently running VQL plugins",
 		ProfileWriter: pluginMonitor.report,
+		Categories:    []string{"Global", "VQL"},
 	})
 }
