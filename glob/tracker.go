@@ -72,7 +72,7 @@ func (self *Actions) Get() []Action {
 
 func (self *Globber) recordDirectory(
 	path *accessors.OSPath, file_count int) {
-	if self.root != nil {
+	if self.root != nil && path != nil {
 		self.root.mu.Lock()
 		defer self.root.mu.Unlock()
 
@@ -116,6 +116,10 @@ func (self *GlobTracker) ProfileWriter(ctx context.Context,
 		now := utils.GetTime().Now()
 
 		for _, action := range actions {
+			if action.path == nil {
+				continue
+			}
+
 			row := ordereddict.NewDict().
 				Set("GlobberId", ref.id).
 				Set("Time", action.time).
