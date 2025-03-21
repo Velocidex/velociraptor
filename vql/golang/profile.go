@@ -275,7 +275,7 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 			}
 			for _, writer := range debug.GetProfileWriters() {
 				if re.MatchString(writer.Name) {
-					Decorate(ctx, scope, output_chan, writer.ProfileWriter,
+					debug.Decorate(ctx, scope, output_chan, writer.ProfileWriter,
 						func(item *ordereddict.Dict) *ordereddict.Dict {
 							return item.Set("Profile", writer.Name)
 						})

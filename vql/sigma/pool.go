@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/sigma/evaluator"
 	"www.velocidex.com/golang/vfilter"
@@ -18,6 +19,7 @@ type workerJob struct {
 	sigma_context *SigmaContext
 
 	output_chan chan types.Row
+	log_ctx     *SigmaExecutionContext
 	event       *evaluator.Event
 	rules       []*evaluator.VQLRuleEvaluator
 	scope       vfilter.Scope
@@ -26,8 +28,14 @@ type workerJob struct {
 	debug       bool
 }
 
+// Run a single pass over the ruleset.
 func (self *workerJob) Run() {
 	defer self.wg.Done()
+
+	start := utils.GetTime().Now().UnixNano()
+	defer func() {
+		self.log_ctx.ChargeTime(utils.GetTime().Now().UnixNano() - start)
+	}()
 
 	for _, rule := range self.rules {
 		event := rule.MaybeEnrichWithVQL(self.ctx, self.scope, self.event)
@@ -75,6 +83,7 @@ type workerPool struct {
 }
 
 func (self *workerPool) RunInline(
+	log_ctx *SigmaExecutionContext,
 	ctx context.Context,
 	scope vfilter.Scope,
 	event *evaluator.Event,
@@ -83,6 +92,7 @@ func (self *workerPool) RunInline(
 	job := &workerJob{
 		sigma_context: self.sigma_context,
 		output_chan:   self.output_chan,
+		log_ctx:       log_ctx,
 		event:         event,
 		rules:         rules,
 		scope:         scope,
@@ -96,6 +106,7 @@ func (self *workerPool) RunInline(
 }
 
 func (self *workerPool) Run(
+	log_ctx *SigmaExecutionContext,
 	ctx context.Context,
 	scope vfilter.Scope,
 	event *evaluator.Event,
@@ -104,6 +115,7 @@ func (self *workerPool) Run(
 	job := &workerJob{
 		sigma_context: self.sigma_context,
 		output_chan:   self.output_chan,
+		log_ctx:       log_ctx,
 		event:         event,
 		rules:         rules,
 		scope:         scope,
