@@ -371,7 +371,8 @@ func init() {
 
 				row := ordereddict.NewDict().
 					Set("Status", "RUNNING").
-					Set("Duration", time.Now().Sub(item.Start)).
+					Set("Duration", time.Now().Sub(item.Start).
+						Round(time.Millisecond).String()).
 					Set("Started", item.Start).
 					Set("Query", item.Query)
 

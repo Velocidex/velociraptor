@@ -53,7 +53,7 @@ func (self *SigmaExecutionContext) balance() {
 // Start the evaluation loop - start the query and consume events from it.
 func (self *SigmaExecutionContext) Start(
 	ctx context.Context, scope vfilter.Scope, output_chan chan vfilter.Row,
-	pool *workerPool, wg sync.WaitGroup) {
+	pool *workerPool, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
@@ -162,7 +162,7 @@ func (self *SigmaContext) Rows(
 	// Start all the log sources now.
 	for _, runner := range self.runners {
 		self.wg.Add(1)
-		go runner.Start(ctx, scope, self.output_chan, self.pool, self.wg)
+		go runner.Start(ctx, scope, self.output_chan, self.pool, &self.wg)
 	}
 
 	go func() {
