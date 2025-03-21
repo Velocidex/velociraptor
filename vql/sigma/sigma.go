@@ -98,6 +98,7 @@ func (self SigmaPlugin) Call(
 			scope.Log("sigma: %v", err)
 			return
 		}
+		defer sigma_context.Close()
 
 		scope.Log("INFO:sigma: Loaded %v rules (from %v) into %v log sources and %v field mappings",
 			sigma_context.total_rules, len(rules), len(sigma_context.runners),

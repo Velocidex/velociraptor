@@ -3,6 +3,7 @@ package evaluator
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/sigma-go"
@@ -34,9 +35,17 @@ type VQLRuleEvaluator struct {
 
 	fieldmappings *FieldMappingResolver
 
+	hit_count uint64
+
 	// If this rule has a correlator, then forward the match to the
 	// correlator.
 	Correlator *SigmaCorrelator `json:"correlator,omitempty" yaml:"correlator,omitempty"`
+}
+
+func (self *VQLRuleEvaluator) Stats(in *ordereddict.Dict) *ordereddict.Dict {
+	hit_count := atomic.LoadUint64(&self.hit_count)
+
+	return in.Set("RuleTitle", self.Rule.Title).Set("Hits", hit_count)
 }
 
 func NewVQLRuleEvaluator(
@@ -139,6 +148,11 @@ func (self *VQLRuleEvaluator) Match(ctx context.Context,
 	// correlator tell it about it.
 	if result.Match && self.Correlator != nil {
 		return self.Correlator.Match(ctx, scope, self, event)
+	}
+
+	// Record the total hits
+	if result.Match {
+		atomic.AddUint64(&self.hit_count, 1)
 	}
 
 	return &result, nil

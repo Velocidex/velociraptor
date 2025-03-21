@@ -139,6 +139,7 @@ require (
 	github.com/hirochachacha/go-smb2 v1.1.0
 	github.com/inconshreveable/mousetrap v1.1.0
 	github.com/jackwakefield/gopac v1.0.2
+	github.com/leodido/go-syslog v1.0.1
 	github.com/lpar/gzipped v1.1.0
 	github.com/mooijtech/go-pst/v6 v6.0.2
 	github.com/pkg/errors v0.9.1
@@ -261,7 +262,7 @@ require (
 	github.com/rotisserie/eris v0.5.4 // indirect
 	github.com/russellhaering/goxmldsig v1.3.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/spf13/cast v1.3.1 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/tinylib/msgp v1.1.8 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
