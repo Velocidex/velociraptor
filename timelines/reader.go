@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/files"
 )
 
 type TimelineItem struct {
@@ -162,7 +163,8 @@ func (self TimelineReader) New(
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	fd, err := file_store_factory.ReadFile(path_manager.Path())
+	filename := path_manager.Path()
+	fd, err := file_store_factory.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -186,14 +188,19 @@ func (self TimelineReader) New(
 		return nil, err
 	}
 
+	// Track files that should be closed.
+	files.Add(filename.AsClientPath())
+
 	return &TimelineReader{
-		id:                path_manager.Name(),
-		fd:                fd,
-		index_fd:          index_fd,
-		end_idx:           int(stats.Size()/IndexRecordSize - 1),
-		buffered_index_fd: utils.NewReadSeekReaderAdapter(paged),
-		index_stat:        stats,
-		transformer:       transformer,
+		id:       path_manager.Name(),
+		fd:       fd,
+		index_fd: index_fd,
+		end_idx:  int(stats.Size()/IndexRecordSize - 1),
+		buffered_index_fd: utils.NewReadSeekReaderAdapter(paged, func() {
+			files.Remove(filename.AsClientPath())
+		}),
+		index_stat:  stats,
+		transformer: transformer,
 	}, nil
 
 }
