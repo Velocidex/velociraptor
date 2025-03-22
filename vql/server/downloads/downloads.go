@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/files"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -636,9 +637,14 @@ func maybeExpandSparseFile(
 
 	scope.Log("File %v is sparse - expanding.", src)
 	logger.Debug("File %v is sparse - expanding.", src)
+
+	files.Add(src.String())
+
 	return utils.NewReadSeekReaderAdapter(&utils.RangedReader{
 		ReaderAt: utils.MakeReaderAtter(reader),
 		Index:    index,
+	}, func() {
+		files.Remove(src.String())
 	})
 }
 

@@ -1,10 +1,11 @@
-package file_store
+package file_store_test
 
 import (
 	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -50,7 +51,7 @@ type FSAccessorTest struct {
 }
 
 func (self *FSAccessorTest) TestCaseInsensitive() {
-	accessor := NewFileStoreFileSystemAccessor(self.ConfigObj)
+	accessor := file_store_accessor.NewFileStoreFileSystemAccessor(self.ConfigObj)
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 
@@ -140,7 +141,7 @@ func (self *FSAccessorTest) TestSparseFiles() {
 }`)) // This represents: Hello<.....>World with the gap being sparse.
 	w.Close()
 
-	accessor := NewSparseFileStoreFileSystemAccessor(self.ConfigObj)
+	accessor := file_store_accessor.NewSparseFileStoreFileSystemAccessor(self.ConfigObj)
 	fd, err := accessor.Open(filename.Components()[0])
 	assert.NoError(self.T(), err)
 

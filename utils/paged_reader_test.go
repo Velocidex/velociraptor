@@ -30,7 +30,7 @@ func TestPagedReader(t *testing.T) {
 
 	result := ""
 	buf := make([]byte, 11)
-	fd := NewReadSeekReaderAdapter(paged_reader)
+	fd := NewReadSeekReaderAdapter(paged_reader, nil)
 	reads := 0
 	for {
 		n, err := fd.Read(buf)

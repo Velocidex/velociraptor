@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/files"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -217,6 +218,9 @@ func (self FileStoreFileSystemAccessor) openFile(filename api.FSPathSpec) (
 		return nil, err
 	}
 
+	key := filename.AsClientPath()
+	files.Add(key)
+
 	if !self.sparse {
 		return file, err
 	}
@@ -236,8 +240,10 @@ func (self FileStoreFileSystemAccessor) openFile(filename api.FSPathSpec) (
 	}
 
 	return &ReaderWrapper{
-		ReadSeekCloser: utils.NewReadSeekReaderAdapter(reader_at),
-		Index:          index,
+		ReadSeekCloser: utils.NewReadSeekReaderAdapter(reader_at, func() {
+			files.Remove(key)
+		}),
+		Index: index,
 	}, nil
 }
 

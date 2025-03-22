@@ -202,7 +202,7 @@ func (self RawS3SystemAccessor) OpenWithOSPath(
 	// small reads from the network.
 	paged_reader, err := utils.NewPagedReader(
 		utils.MakeReaderAtter(reader), 1024*1024, 20)
-	return utils.NewReadSeekReaderAdapter(paged_reader), err
+	return utils.NewReadSeekReaderAdapter(paged_reader, nil), err
 }
 
 func (self RawS3SystemAccessor) Open(

@@ -36,6 +36,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/ttlcache/v2"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -99,6 +100,38 @@ type AccessorReader struct {
 	// How long to keep the file handle open
 	Lifetime time.Duration
 	lru_size int
+
+	last_opened time.Time
+}
+
+func (self *AccessorReader) Stats() *ordereddict.Dict {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	var paged_stats *ordereddict.Dict
+	if self.paged_reader != nil {
+		paged_stats = self.paged_reader.Stats()
+	}
+
+	last_opened := ""
+	if !self.last_opened.IsZero() {
+		last_opened = utils.GetTime().Now().Sub(self.last_opened).
+			Round(time.Second).String()
+	}
+
+	return ordereddict.NewDict().
+		Set("MaxSize", self.max_size).
+
+		// If the underlying reader is closed we are not active but
+		// are ready to reopen it on demand.
+		Set("Active", self.reader != nil).
+
+		// The reader will force close the underlying reader after
+		// this much time.
+		Set("Lifetime", self.Lifetime.Round(time.Second).String()).
+		Set("LastOpened", last_opened).
+		Set("PageCache", paged_stats)
+
 }
 
 func (self *AccessorReader) DebugString() string {
@@ -145,6 +178,7 @@ func (self *AccessorReader) Close() error {
 	reader := self.reader
 	self.reader = nil
 	self.paged_reader = nil
+	self.last_opened = time.Time{}
 
 	self.mu.Unlock()
 
@@ -221,6 +255,7 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 		result, err := paged_reader.ReadAt(buf, offset)
 		self.paged_reader = paged_reader
 		self.reader = reader
+		self.last_opened = utils.GetTime().Now()
 
 		self.mu.Unlock()
 
