@@ -14,6 +14,8 @@ type ReadSeekReaderAdapter struct {
 	offset int64
 	size   int64
 	eof    bool
+
+	closer func()
 }
 
 func (self ReadSeekReaderAdapter) Close() error {
@@ -27,6 +29,11 @@ func (self ReadSeekReaderAdapter) Close() error {
 
 	default:
 	}
+
+	if self.closer != nil {
+		self.closer()
+	}
+
 	return nil
 }
 
@@ -72,6 +79,9 @@ func (self *ReadSeekReaderAdapter) Seek(offset int64, whence int) (int64, error)
 	return offset, nil
 }
 
-func NewReadSeekReaderAdapter(reader io.ReaderAt) *ReadSeekReaderAdapter {
-	return &ReadSeekReaderAdapter{reader: reader}
+func NewReadSeekReaderAdapter(reader io.ReaderAt, closer func()) *ReadSeekReaderAdapter {
+	return &ReadSeekReaderAdapter{
+		reader: reader,
+		closer: closer,
+	}
 }
