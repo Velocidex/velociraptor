@@ -40,8 +40,8 @@ sources:
             /*
             ### IIS grok
 
-            Note:  IIS doesnt have a standard logging format so Ive added some
-            suggestions. Comment in preffered or add your modify your own.
+            Note:  IIS doesn't have a standard logging format so we have added some
+            suggestions. Comment in preferred or add / modify your own.
             */
 
             LET target_grok = "%{TIMESTAMP_ISO8601:LogTimeStamp} %{IPORHOST:Site} %{WORD:Method} %{URIPATH:UriPath} %{NOTSPACE:QueryString} %{NUMBER:Port} %{NOTSPACE:Username} %{IPORHOST:Clienthost} %{NOTSPACE:Useragent} %{NOTSPACE:Referrer} %{NUMBER:Response} %{NUMBER:Subresponse} %{NUMBER:Win32status} %{NUMBER:Timetaken:int}"

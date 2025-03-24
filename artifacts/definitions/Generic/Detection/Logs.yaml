@@ -1,13 +1,13 @@
 name: Generic.Detection.Logs
 author: "Matt Green - @mgreen27, Apache groks thanks to Harsh Jaroli and Krishna Patel"
 description: |
-  This artifact enables grep of Logs to hunt for strings of interest. Default 
-  target glob includes /var/log/, Apache and Windows IIS paths.   
-  
-  Parameters include SearchRegex and WhitelistRegex as regex terms and will 
-  return the whole line to assist scoping.
+  This artifact enables grep of Logs to hunt for strings of interest. Default
+  target glob includes /var/log/, Apache and Windows IIS paths.
 
-  IIS and Apache Groks availible as notebook suggestions - plese feel free to PR
+  Parameters include SearchRegex and WhitelistRegex as regex terms and will
+  return the whole line to assist with scoping.
+
+  IIS and Apache Groks are available as notebook suggestions - please feel free to PR
   additions!
 
 
@@ -45,8 +45,8 @@ sources:
             /*
             ### IIS grok
 
-            Note:  IIS doesnt have a standard logging format so Ive added some
-            suggestions. Comment in preffered or add your modify your own.
+            Note:  IIS doesn't have a standard logging format so we have added some
+            suggestions. Comment in preferred or add / modify your own.
             */
 
             LET target_grok = "%{TIMESTAMP_ISO8601:LogTimeStamp} %{IPORHOST:Site} %{WORD:Method} %{URIPATH:UriPath} %{NOTSPACE:QueryString} %{NUMBER:Port} %{NOTSPACE:Username} %{IPORHOST:Clienthost} %{NOTSPACE:Useragent} %{NOTSPACE:Referrer} %{NUMBER:Response} %{NUMBER:Subresponse} %{NUMBER:Win32status} %{NUMBER:Timetaken:int}"
