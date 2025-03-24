@@ -33,6 +33,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/executor/throttler"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -118,7 +119,7 @@ func (self VQLClientAction) StartQuery(
 		return
 	}
 
-	name := GetQueryName(arg.Query)
+	name := utils.GetQueryName(arg.Query)
 
 	// Clients do not have a copy of artifacts so they need to be
 	// sent all artifacts from the server.
@@ -178,6 +179,9 @@ func (self VQLClientAction) StartQuery(
 	// functionality.
 	scope.SetContext(constants.SCOPE_RESPONDER_CONTEXT, responder)
 
+	// Add some additional context for debugging
+	scope.SetContext(constants.SCOPE_QUERY_NAME, name)
+
 	if runtime.GOARCH == "386" &&
 		os.Getenv("PROCESSOR_ARCHITEW6432") == "AMD64" {
 		scope.Log("You are running a 32 bit built binary on Windows x64. " +
@@ -187,8 +191,10 @@ func (self VQLClientAction) StartQuery(
 
 	scope.Log("INFO:Starting query execution for %v.", name)
 
-	throttler := NewThrottler(ctx, scope, float64(rate),
-		float64(cpu_limit), float64(iops_limit))
+	// Make a throttler
+	throttler, closer := throttler.NewThrottler(ctx, scope, config_obj,
+		float64(rate), float64(cpu_limit), float64(iops_limit))
+	defer closer()
 
 	if arg.ProgressTimeout > 0 {
 		duration := time.Duration(arg.ProgressTimeout) * time.Second

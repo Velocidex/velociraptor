@@ -40,6 +40,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
@@ -194,6 +195,8 @@ func (self *EventTable) GetEventQueries(
 	result := make([]*actions_proto.VQLCollectorArgs, 0, len(self.Events))
 	result = append(result, self.Events...)
 
+	// If there are no build in additional event artifacts we are done
+	// - just run the queries from the event table.
 	if config_obj.Client == nil ||
 		len(config_obj.Client.AdditionalEventArtifacts) == 0 {
 		return result, nil
@@ -204,6 +207,9 @@ func (self *EventTable) GetEventQueries(
 		return result, err
 	}
 
+	// Config enforced event queries are compiled using the built in
+	// repository because we do no have access to the server
+	// repository yet!
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return result, err
@@ -247,7 +253,7 @@ func (self *EventTable) StartQueries(
 
 		// Name of the query we are running. There must be at least
 		// one query with a name.
-		artifact_name := GetQueryName(event.Query)
+		artifact_name := utils.GetQueryName(event.Query)
 		if artifact_name == "" {
 			continue
 		}
