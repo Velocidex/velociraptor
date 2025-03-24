@@ -13,6 +13,8 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/executor/throttler"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -100,6 +102,13 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 	defer tmpl.Close()
 
 	tmpl.SetEnv("NotebookId", in.NotebookId)
+
+	// Throttle the notebook accordingly.
+	tmpl.Scope.SetContext(constants.SCOPE_QUERY_NAME,
+		fmt.Sprintf("Notebook %v", in.NotebookId))
+	t, closer := throttler.NewThrottler(ctx, tmpl.Scope, config_obj, 0, 0, 0)
+	tmpl.Scope.SetThrottler(t)
+	tmpl.Scope.AddDestructor(closer)
 
 	// Register a progress reporter so we can monitor how the
 	// template rendering is going.

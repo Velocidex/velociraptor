@@ -68,6 +68,7 @@ const (
 	SCOPE_DEVICE_MANAGER    = "$device_manager"
 	SCOPE_REPOSITORY        = "$repository"
 	SCOPE_RESPONDER_CONTEXT = "_Context"
+	SCOPE_QUERY_NAME        = "$query_name"
 
 	// Artifact names from packs should start with this
 	ARTIFACT_PACK_NAME_PREFIX   = "Packs."

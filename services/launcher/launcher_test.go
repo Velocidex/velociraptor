@@ -1394,6 +1394,8 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 	// can not find it (The actual flow object is removed but the
 	// index is out of step).
 	vtesting.WaitUntil(10*time.Second, t, func() bool {
+		datastore.FlushDatastore(self.ConfigObj)
+
 		res, err = launcher.GetFlows(self.Ctx, self.ConfigObj, "server",
 			result_sets.ResultSetOptions{}, 0, 10)
 		assert.NoError(t, err)

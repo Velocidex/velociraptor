@@ -168,7 +168,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// Only one query will be selected now since no label is set
 	// on the client.
 	assert.Equal(self.T(), len(message.UpdateEventTable.Event), 1)
-	assert.Equal(self.T(), actions.GetQueryName(
+	assert.Equal(self.T(), utils.GetQueryName(
 		message.UpdateEventTable.Event[0].Query), "EventArtifact1")
 
 	// Set the new table, this will execute the new queries and
