@@ -1159,6 +1159,7 @@ message Defaults {
     // functions.
     repeated string denied_plugins = 54;
     repeated string denied_functions = 55;
+    repeated string denied_accessors = 58;
 
     // How long to cache ACL policies (default 60 sec)
     uint64 acl_lru_timeout_sec = 13;
