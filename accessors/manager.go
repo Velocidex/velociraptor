@@ -1,7 +1,6 @@
 package accessors
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -147,27 +146,4 @@ func Register(
 
 func DescribeAccessors() *ordereddict.Dict {
 	return globalDeviceManager.DescribeAccessors()
-}
-
-func EnforceAccessorAllowList(allowed_accessors []string) error {
-	mu.Lock()
-	defer mu.Unlock()
-
-	global_manager := globalDeviceManager
-	globalDeviceManager = NewDefaultDeviceManager()
-
-	for _, allowed := range allowed_accessors {
-		impl, ok := global_manager.handlers[allowed]
-		if !ok {
-			return fmt.Errorf("Unknown accessor in allow list: %v", allowed)
-		}
-
-		globalDeviceManager.handlers[allowed] = impl
-		desc, pres := global_manager.descriptions.Get(allowed)
-		if pres {
-			globalDeviceManager.descriptions.Set(allowed, desc)
-		}
-	}
-
-	return nil
 }
