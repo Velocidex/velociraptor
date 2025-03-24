@@ -247,12 +247,15 @@ func (self *ServerTestSuite) TestFlowStates() {
 		closer := utils.MockTime(utils.NewMockClock(time.Unix(time_origin, 0)))
 		defer closer()
 
-		flow_details, err = launcher.GetFlowDetails(
-			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
-			self.client_id, in_flight)
-		assert.NoError(self.T(), err)
-
 		// The flow is in the UNRESPONSIVE state now.
+		vtesting.WaitUntil(time.Second, self.T(), func() bool {
+			flow_details, err = launcher.GetFlowDetails(
+				self.Ctx, self.ConfigObj, services.GetFlowOptions{},
+				self.client_id, in_flight)
+			assert.NoError(self.T(), err)
+
+			return flow_details.Context.State == flows_proto.ArtifactCollectorContext_UNRESPONSIVE
+		})
 		assert.Equal(self.T(), flow_details.Context.State,
 			flows_proto.ArtifactCollectorContext_UNRESPONSIVE)
 

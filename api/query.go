@@ -31,10 +31,10 @@ import (
 	errors "github.com/go-errors/errors"
 
 	"github.com/sirupsen/logrus"
-	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/executor/throttler"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -135,8 +135,10 @@ func streamQuery(
 	}
 
 	// Throttle the query if required.
-	scope.SetThrottler(
-		actions.NewThrottler(sub_ctx, scope, 0, float64(arg.CpuLimit), 0))
+	t, closer := throttler.NewThrottler(sub_ctx, scope, config_obj,
+		0, float64(arg.CpuLimit), 0)
+	scope.SetThrottler(t)
+	scope.AddDestructor(closer)
 
 	wg.Add(1)
 	go func() {

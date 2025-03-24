@@ -5,6 +5,7 @@ import (
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
+	"www.velocidex.com/golang/velociraptor/executor/throttler"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/encrypted_logs"
@@ -47,6 +48,12 @@ func StartClientServices(
 
 	// Start the nanny first so we are covered from here on.
 	err = sm.Start(executor.StartNannyService)
+	if err != nil {
+		return sm, err
+	}
+
+	// Start throttling service
+	err = sm.Start(throttler.StartStatsCollectorService)
 	if err != nil {
 		return sm, err
 	}

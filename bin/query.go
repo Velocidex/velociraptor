@@ -29,9 +29,10 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/executor/throttler"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -410,8 +411,11 @@ func doQuery() error {
 	}
 
 	// Install throttler into the scope.
-	scope.SetThrottler(actions.NewThrottler(ctx, scope,
-		0, *query_command_collect_cpu_limit, 0))
+	scope.SetContext(constants.SCOPE_QUERY_NAME, "query command")
+	t, closer := throttler.NewThrottler(
+		ctx, scope, config_obj, 0, *query_command_collect_cpu_limit, 0)
+	scope.SetThrottler(t)
+	scope.AddDestructor(closer)
 
 	out_fd := os.Stdout
 	if *output_file != "" {

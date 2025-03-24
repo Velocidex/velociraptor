@@ -26,15 +26,11 @@
    }
   ],
   "created_time": 1715775587,
-  "notebook_id": "N.01",
   "cell_metadata": [
    {
-    "cell_id": "NC.02",
     "timestamp": 1715775587,
     "type": "markdown",
-    "current_version": "03",
     "available_versions": [
-     "03"
     ]
    }
   ]
@@ -66,15 +62,11 @@
    }
   ],
   "created_time": 1715775587,
-  "notebook_id": "N.01",
   "cell_metadata": [
    {
-    "cell_id": "NC.02",
     "timestamp": 1715775587,
     "type": "markdown",
-    "current_version": "03",
     "available_versions": [
-     "03"
     ]
    }
   ],
@@ -94,17 +86,6 @@
    "Notes": "Foo is suspicious at being Bar!",
    "_AnnotatedBy": "admin",
    "_AnnotationID": "TdAAAAAAAAA=",
-   "_Source": "Annotation"
-  },
-  {
-   "Timestamp": "2024-05-15T12:36:27Z",
-   "Message": "Original Event Message 2",
-   "Description": "",
-   "OriginalEventField": "Extra field 2",
-   "Foo": "Older Bar 2",
-   "Notes": "Updated First Annotation - all other fields remain",
-   "_AnnotatedBy": "admin",
-   "_AnnotationID": "TtAAAAAAAAA=",
    "_Source": "Annotation"
   }
  ],

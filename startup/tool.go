@@ -4,6 +4,7 @@ import (
 	"context"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/executor/throttler"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
@@ -23,6 +24,12 @@ func StartToolServices(
 	sm := services.NewServiceManager(ctx, config_obj)
 
 	err := MaybeEnforceAllowLists(config_obj)
+	if err != nil {
+		return sm, err
+	}
+
+	// Start throttling service
+	err = sm.Start(throttler.StartStatsCollectorService)
 	if err != nil {
 		return sm, err
 	}

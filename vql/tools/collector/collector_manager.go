@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/executor/throttler"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -181,7 +182,10 @@ func (self *collectionManager) AddThrottler(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.throttler = actions.NewThrottler(self.ctx, self.scope,
+	var closer func()
+
+	self.throttler, closer = throttler.NewThrottler(
+		self.ctx, self.scope, self.config_obj,
 		ops_per_sec, cpu_limit, iops_limit)
 
 	if progress_timeout > 0 {
@@ -191,6 +195,7 @@ func (self *collectionManager) AddThrottler(
 	}
 
 	self.scope.SetThrottler(self.throttler)
+	self.scope.AddDestructor(closer)
 }
 
 func (self *collectionManager) SetMetadata(metadata vfilter.StoredQuery) {
@@ -482,7 +487,7 @@ func newCollectionManager(
 		concurrency:        utils.NewConcurrencyControl(concurrency, time.Hour),
 		output_chan:        output_chan,
 		scope:              scope,
-		throttler:          &actions.DummyThrottler{},
+		throttler:          &throttler.DummyThrottler{},
 	}
 }
 
