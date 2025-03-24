@@ -21,8 +21,8 @@ func (self *statsCollector) ProfileWriter(
 	for _, k := range utils.Sort(self.throttlers) {
 		t, _ := self.throttlers[k]
 		output_chan <- t.Stats().
-			Set("AvCPU", self.samples[1].average_cpu_load).
-			Set("AvIOP", self.samples[1].average_iops).
+			Set("AvCPUPercent", int(self.samples[1].average_cpu_load)).
+			Set("AvIOP", int(self.samples[1].average_iops)).
 			Set("Samples", self.sample_count)
 	}
 }
