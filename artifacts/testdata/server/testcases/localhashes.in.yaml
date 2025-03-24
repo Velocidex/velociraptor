@@ -3,13 +3,16 @@ Queries:
   - SELECT OSPath.Basename AS Name,
            Size, Hash FROM Artifact.Generic.Forensic.LocalHashes.Glob(
            HashGlob=srcDir + '/artifacts/testdata/files/Security_1_record.evtx')
+    LIMIT 1
 
   # Query the hash database
   - SELECT pathspec(parse=Path).Basename, MD5, Size
     FROM Artifact.Generic.Forensic.LocalHashes.Query(
       CommaDelimitedHashes="39985be74b8bb4ee716ab55b5f6dfbd4")
+    LIMIT 1
 
   # Query the hash database using a CSV input
   - SELECT pathspec(parse=Path).Basename, MD5, Size
     FROM Artifact.Generic.Forensic.LocalHashes.Query(
       Hashes="Hash\n39985be74b8bb4ee716ab55b5f6dfbd4")
+    LIMIT 1
