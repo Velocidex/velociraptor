@@ -32,7 +32,7 @@ func (self *TestSuite) TestUnimplementedPlugins() {
 
 	plugin_name := "watch_etw"
 	if runtime.GOOS == "windows" {
-		plugin_name = "watch_ebpf"
+		plugin_name = "watch_auditd"
 	}
 
 	query := fmt.Sprintf(`

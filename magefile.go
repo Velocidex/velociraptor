@@ -3,7 +3,7 @@
 
 /*
    Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+   Copyright (C) 2019-2025 Rapid7 Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Affero General Public License as published
@@ -36,6 +36,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/Velocidex/fileb0x/runner"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	"gopkg.in/yaml.v2"
@@ -44,11 +45,11 @@ import (
 )
 
 var (
-	assets = map[string]string{
-		"artifacts/b0x.yaml":        "artifacts/assets/ab0x.go",
-		"config/b0x.yaml":           "config/ab0x.go",
-		"gui/velociraptor/b0x.yaml": "gui/velociraptor/ab0x.go",
-		"crypto/b0x.yaml":           "crypto/ab0x.go",
+	assets = []string{
+		"artifacts/b0x.yaml",
+		"config/b0x.yaml",
+		"gui/velociraptor/b0x.yaml",
+		"crypto/b0x.yaml",
 	}
 
 	index_template = "gui/velociraptor/build/index.html"
@@ -349,9 +350,10 @@ func Windows() error {
 // Windows client without a gui.
 func WindowsBare() error {
 	return Builder{
-		extra_tags: " release yara disable_gui ",
-		goos:       "windows",
-		arch:       "amd64"}.Run()
+		extra_tags:  " release yara disable_gui ",
+		goos:        "windows",
+		disable_cgo: true,
+		arch:        "amd64"}.Run()
 }
 
 func WindowsDev() error {
@@ -519,18 +521,9 @@ func hash() string {
 	return hash
 }
 
+// Build the asset by linking directly to fileb0x
 func fileb0x(asset string) error {
-	err := sh.Run("fileb0x", asset)
-	if err != nil {
-		err = sh.Run(mg.GoCmd(), "install", "github.com/Velocidex/fileb0x@d54f4040016051dd9657ce04d0ae6f31eab99bc6")
-		if err != nil {
-			return err
-		}
-
-		err = sh.Run("fileb0x", asset)
-	}
-
-	return err
+	return runner.Process(asset)
 }
 
 func ensure_assets() error {
@@ -540,18 +533,10 @@ func ensure_assets() error {
 		index_template, `="/app/assets/index`,
 		`="{{.BasePath}}/app/assets/index`)
 
-	for asset, target := range assets {
-		before := timestamp_of(target)
+	for _, asset := range assets {
 		err := fileb0x(asset)
 		if err != nil {
 			return err
-		}
-		// Only do this if the file has changed.
-		if before != timestamp_of(target) {
-			err = replace_string_in_file(target, "func init()", "func Init()")
-			if err != nil {
-				return err
-			}
 		}
 	}
 
@@ -625,7 +610,8 @@ func UpdateDependentTools() error {
 	}
 	defer outfd.Close()
 
-	data = bytes.ReplaceAll(data, []byte("<VERSION>"), []byte(constants.CLIENT_VERSION))
+	data = bytes.ReplaceAll(data, []byte("<VERSION>"),
+		[]byte(constants.CLIENT_VERSION))
 	data = bytes.ReplaceAll(data, []byte("<VERSION_BARE>"),
 		[]byte(fmt.Sprintf("%d.%d", v.Major(), v.Minor())))
 

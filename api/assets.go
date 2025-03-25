@@ -1,6 +1,6 @@
 /*
    Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+   Copyright (C) 2019-2025 Rapid7 Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Affero General Public License as published
@@ -21,6 +21,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -30,7 +31,6 @@ import (
 	"github.com/andybalholm/brotli"
 	"github.com/gorilla/csrf"
 	"github.com/lpar/gzipped"
-	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/api/proto"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
@@ -48,7 +48,7 @@ func install_static_assets(
 	dir := utils.Join(base, "/app/")
 	mux.Handle(dir, ipFilter(config_obj, api_utils.StripPrefix(
 		dir, fixCSSURLs(config_obj,
-			gzipped.FileServer(NewCachedFilesystem(ctx, gui_assets.HTTP))))))
+			gzipped.FileServer(NewCachedFilesystem(ctx, gui_assets.NewHTTPFS()))))))
 
 	mux.Handle("/favicon.png",
 		http.RedirectHandler(utils.Join(base, "/favicon.ico"),
@@ -57,8 +57,6 @@ func install_static_assets(
 
 func GetTemplateHandler(
 	config_obj *config_proto.Config, template_name string) (http.Handler, error) {
-	gui_assets.InitOnce()
-
 	data, err := gui_assets.ReadFile(template_name)
 	if err != nil {
 		// It is possible that the binary was not built with the GUI
