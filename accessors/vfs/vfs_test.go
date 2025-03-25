@@ -47,8 +47,8 @@ var (
 	}
 
 	artifacts_used = []string{
-		"artifacts/definitions/System/VFS/ListDirectory.yaml",
-		"artifacts/definitions/System/VFS/DownloadFile.yaml",
+		"/artifacts/definitions/System/VFS/ListDirectory.yaml",
+		"/artifacts/definitions/System/VFS/DownloadFile.yaml",
 	}
 )
 
@@ -91,8 +91,6 @@ func (self *TestSuite) TestVFSAccessor() {
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository, err := manager.GetGlobalRepository(self.ConfigObj)
 	assert.NoError(self.T(), err)
-
-	assets.Init()
 
 	options := services.ArtifactOptions{
 		ValidateArtifact:     true,

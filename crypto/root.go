@@ -52,7 +52,6 @@ func AddDefaultCerts(
 }
 
 func AddPublicRoots(CA_Pool *x509.CertPool) {
-	InitOnce()
 	data, _ := ReadFile("crypto/ca-certificates.crt")
 	CA_Pool.AppendCertsFromPEM(data)
 }
