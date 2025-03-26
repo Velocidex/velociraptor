@@ -115,6 +115,14 @@ func (self *DirectoryFileStore) Move(src, dest api.FSPathSpec) error {
 	src_path := datastore.AsFilestoreFilename(self.db, self.config_obj, src)
 	dest_path := datastore.AsFilestoreFilename(self.db, self.config_obj, dest)
 
+	// Ensure the directories exist.
+	err := datastore.MkdirAll(self.db, self.config_obj, dest.Dir())
+	if err != nil {
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Error("Can not create dir %v: %v", dest.Dir(), err)
+		return err
+	}
+
 	return os.Rename(src_path, dest_path)
 }
 

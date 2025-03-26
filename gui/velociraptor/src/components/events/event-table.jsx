@@ -25,9 +25,11 @@ import {
 } from '../flows/new-collection.jsx';
 
 class EventTablePaginator extends PaginationBuilder {
-    PaginationSteps = ["Configure Label Group",
-                       "Select Artifacts", "Configure Parameters",
-                       "Review", "Launch"];
+    PaginationSteps = [T("Configure Label Group"),
+                       T("Select Artifacts"),
+                       T("Configure Parameters"),
+                       T("Review"),
+                       T("Launch")];
 }
 
 class EventTableLabelGroup extends React.Component {
@@ -185,6 +187,27 @@ class EventTableLabelGroup extends React.Component {
     }
 }
 
+export default class NewCollectionConfigParametersWithCPU extends React.Component {
+    static propTypes = {
+        artifacts: PropTypes.array,
+        setArtifacts: PropTypes.func,
+        parameters: PropTypes.object,
+        setParameters: PropTypes.func.isRequired,
+        paginator: PropTypes.object,
+        configureResourceControl: PropTypes.bool,
+    };
+
+    render() {
+        return <NewCollectionConfigParameters
+                 artifacts={this.props.artifacts}
+                 setArtifacts={this.props.setArtifacts}
+                 parameters={this.props.parameters}
+                 setParameters={this.props.setParameters}
+                 paginator={this.props.paginator}
+                 configureResourceControl={true}
+               />;
+    }
+}
 
 // Used to manipulate the event tables.
 export class EventTableWizard extends React.Component {
@@ -354,6 +377,7 @@ export class EventTableWizard extends React.Component {
                   setParameters={this.setParameters}
                   artifacts={this.state.current_table.artifacts}
                   setArtifacts={this.setArtifacts}
+                  configureResourceControl={true}
                   paginator={new EventTablePaginator(
                       "Configure Parameters",
                       T("Event Monitoring: Configure artifact parameters for label group ") + label)}
