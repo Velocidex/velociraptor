@@ -1,5 +1,7 @@
 package utils
 
+import "fmt"
+
 func Elide(in string, length int) string {
 	if len(in) < length {
 		return in
@@ -20,4 +22,20 @@ func Uniquify(in []string) []string {
 		result = append(result, i)
 	}
 	return result
+}
+
+func ToString(x interface{}) string {
+	switch t := x.(type) {
+	case string:
+		return t
+
+	case []byte:
+		return string(t)
+
+	case fmt.Stringer:
+		return t.String()
+
+	default:
+		return fmt.Sprintf("%v", x)
+	}
 }

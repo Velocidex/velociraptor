@@ -34,9 +34,12 @@ func MaybeEnforceAllowLists(config_obj *config_proto.Config) error {
 		return err
 	}
 
-	if len(config_obj.Defaults.AllowedAccessors) > 0 {
+	if len(config_obj.Defaults.AllowedAccessors) > 0 ||
+		len(config_obj.Defaults.DeniedAccessors) > 0 {
 		err = accessors.EnforceAccessorAllowList(
-			config_obj.Defaults.AllowedAccessors)
+			config_obj.Defaults.AllowedAccessors,
+			config_obj.Defaults.DeniedAccessors,
+		)
 		if err != nil {
 			return err
 		}

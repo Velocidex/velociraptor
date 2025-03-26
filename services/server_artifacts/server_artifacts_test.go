@@ -610,7 +610,7 @@ sources:
 		log_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
 			flow_path_manager.Log())
 		assert.Contains(self.T(), log_data,
-			"Running query on behalf of user reader with effective permissions for admin")
+			"Running query TestFilesystemAccessWithImpersonation on behalf of user reader with effective permissions for admin")
 	}
 }
 

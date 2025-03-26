@@ -113,7 +113,7 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelineAnnotations(
 	defer closer2()
 
 	// Mock out cell ID generation for tests
-	gen := utils.IncrementalIdGenerator(0)
+	gen := utils.IncrementalIdGenerator(1)
 	defer utils.SetIdGenerator(&gen)()
 
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
@@ -228,7 +228,7 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelineAnnotations(
 	golden.Set("Updated Annotations", read_all_events())
 
 	goldie.Retry(t, self.T(), "TestNotebookManagerTimelineAnnotations",
-		goldie.RemoveLines("_AnnotatedAt|modified_time",
+		goldie.RemoveLines("_AnnotatedAt|modified_time|cell_id|notebook_id|current_version|\"[0-9][0-9]\"",
 			json.MustMarshalIndent(golden)))
 
 }

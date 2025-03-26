@@ -1,4 +1,4 @@
-package actions
+package utils
 
 import actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 

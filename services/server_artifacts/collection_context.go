@@ -15,7 +15,9 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/executor/throttler"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -144,7 +146,7 @@ func (self *contextManager) GetQueryContext(
 
 	// Get the base name of the artifact
 	artifact_name := artifacts.DeobfuscateString(
-		self.config_obj, actions.GetQueryName(query.Query))
+		self.config_obj, utils.GetQueryName(query.Query))
 	base, _ := paths.SplitFullSourceName(artifact_name)
 
 	// Will be done when query is closed.
@@ -383,11 +385,16 @@ func (self *contextManager) RunQuery(
 	})
 	defer scope.Close()
 
+	// Add some additional context for debugging
+	artifact_name := artifacts.DeobfuscateString(
+		self.config_obj, utils.GetQueryName(arg.Query))
+	scope.SetContext(constants.SCOPE_QUERY_NAME, artifact_name)
+
 	if effective_principal == principal {
-		scope.Log("Running query on behalf of user %v", principal)
+		scope.Log("Running query %v on behalf of user %v", artifact_name, principal)
 	} else {
-		scope.Log("Running query on behalf of user %v with effective permissions for %v",
-			principal, effective_principal)
+		scope.Log("Running query %v on behalf of user %v with effective permissions for %v",
+			artifact_name, principal, effective_principal)
 	}
 
 	env := ordereddict.NewDict()
@@ -405,14 +412,15 @@ func (self *contextManager) RunQuery(
 		}
 	}()
 
-	scope.Log("<green>Starting</> query execution.")
+	scope.Log("<green>Starting</> query %v execution.", artifact_name)
 
 	rate := arg.OpsPerSecond
 	cpu_limit := arg.CpuLimit
 	iops_limit := arg.IopsLimit
 
-	throttler := actions.NewThrottler(self.ctx, scope, float64(rate),
-		float64(cpu_limit), float64(iops_limit))
+	throttler, closer := throttler.NewThrottler(self.ctx, scope, self.config_obj,
+		float64(rate), float64(cpu_limit), float64(iops_limit))
+	defer closer()
 
 	if arg.ProgressTimeout > 0 {
 		duration := time.Duration(arg.ProgressTimeout) * time.Second

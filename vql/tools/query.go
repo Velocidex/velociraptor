@@ -7,6 +7,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/actions"
+	"www.velocidex.com/golang/velociraptor/executor/throttler"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -137,8 +138,8 @@ func (self QueryPlugin) Call(
 		}
 		defer subscope.Close()
 
-		throttler := actions.NewThrottler(
-			ctx, subscope, 0, arg.CpuLimit, arg.IopsLimit)
+		throttler, closer := throttler.NewThrottler(
+			ctx, subscope, org_config_obj, 0, arg.CpuLimit, arg.IopsLimit)
 		if arg.ProgressTimeout > 0 {
 			subctx, cancel := context.WithCancel(ctx)
 			ctx = subctx
@@ -149,6 +150,7 @@ func (self QueryPlugin) Call(
 			scope.Log("query: Installing a progress alarm for %v", duration)
 		}
 		subscope.SetThrottler(throttler)
+		subscope.AddDestructor(closer)
 
 		runQuery(ctx, subscope, output_chan, arg.Query)
 	}()

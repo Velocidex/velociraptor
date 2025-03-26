@@ -46,9 +46,9 @@
  },
  "log.csv": [
   "Timestamp,Level,message",
-  "10000000,DEFAULT,\"Running query on behalf of user VelociraptorServer",
+  "10000000,DEFAULT,\"Running query TestArtifact on behalf of user VelociraptorServer",
   "\"",
-  "10000000,DEFAULT,\"\u003cgreen\u003eStarting\u003c/\u003e query execution.",
+  "10000000,DEFAULT,\"\u003cgreen\u003eStarting\u003c/\u003e query TestArtifact execution.",
   "\"",
   "10000000,DEFAULT,\"Uploaded /test.txt (9 bytes)",
   "\"",
@@ -62,12 +62,12 @@
   {
    "Timestamp": 10000000,
    "Level": "DEFAULT",
-   "message": "Running query on behalf of user VelociraptorServer\n"
+   "message": "Running query TestArtifact on behalf of user VelociraptorServer\n"
   },
   {
    "Timestamp": 10000000,
    "Level": "DEFAULT",
-   "message": "\u003cgreen\u003eStarting\u003c/\u003e query execution.\n"
+   "message": "\u003cgreen\u003eStarting\u003c/\u003e query TestArtifact execution.\n"
   },
   {
    "Timestamp": 10000000,

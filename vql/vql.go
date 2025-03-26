@@ -105,12 +105,13 @@ func EnforceVQLAllowList(
 	if len(allowed_plugins) > 0 {
 		new_exported_plugins := make(map[string]vfilter.PluginGeneratorInterface)
 		for _, plugin_name := range allowed_plugins {
-			impl, ok := new_exported_plugins[plugin_name]
+			impl, ok := exportedPlugins[plugin_name]
 			if !ok {
 				// Maybe this is provided by the base scope.
 				impl, ok = base_scope.GetPlugin(plugin_name)
 				if !ok {
-					return fmt.Errorf("Unknown plugin %v", plugin_name)
+					// Cant add it - just insert a stub
+					impl = &UnimplementedPlugin{Name: plugin_name}
 				}
 			}
 			new_exported_plugins[plugin_name] = impl
@@ -128,12 +129,12 @@ func EnforceVQLAllowList(
 	if len(allowed_functions) > 0 {
 		new_exported_functions := make(map[string]vfilter.FunctionInterface)
 		for _, func_name := range allowed_functions {
-			impl, ok := new_exported_functions[func_name]
+			impl, ok := exportedFunctions[func_name]
 			if !ok {
 				// Maybe this is provided by the base scope.
 				impl, ok = base_scope.GetFunction(func_name)
 				if !ok {
-					return fmt.Errorf("Unknown VQL Function %v", func_name)
+					impl = &UnimplementedFunction{Name: func_name}
 				}
 			}
 			new_exported_functions[func_name] = impl

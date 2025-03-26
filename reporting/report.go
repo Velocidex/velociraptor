@@ -376,7 +376,6 @@ func newBaseTemplateEngine(
 	scope.AppendVars(env)
 
 	// Closing the scope is deferred to closing the template.
-
 	return &BaseTemplateEngine{
 		Artifact:   artifact,
 		Repository: repository,

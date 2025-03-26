@@ -337,6 +337,16 @@ message ClientConfig {
     // communications. Client->server communication still remain
     // encrypted however.
     string insecure_network_trace_file = 51;
+
+    // By default when running on a low resource machine we cap the
+    // CPU use to 50%. This allows to change that - needs to be
+    // between 0 and 100 (100 disables throttling).
+    uint64 low_resource_max_cpu = 52;
+
+    // We determine we are running on a low resource machine if the
+    // system has less than 2 cores. This allows to increase the
+    // threadhold. Set to a large number to disable.
+    uint64 low_resource_cpu_count = 53;
 }
 
 message APIConfig {
@@ -1202,6 +1212,7 @@ message Defaults {
     // functions.
     repeated string denied_plugins = 54;
     repeated string denied_functions = 55;
+    repeated string denied_accessors = 58;
 
     // How long to cache ACL policies (default 60 sec)
     uint64 acl_lru_timeout_sec = 13;

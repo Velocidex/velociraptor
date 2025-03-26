@@ -129,22 +129,6 @@ func BytesEqual(a []byte, b []byte) bool {
 	return true
 }
 
-func ToString(x interface{}) string {
-	switch t := x.(type) {
-	case string:
-		return t
-
-	case []byte:
-		return string(t)
-
-	case fmt.Stringer:
-		return t.String()
-
-	default:
-		return fmt.Sprintf("%v", x)
-	}
-}
-
 // Force coersion to int64
 func ToInt64(x interface{}) (int64, bool) {
 	switch t := x.(type) {
