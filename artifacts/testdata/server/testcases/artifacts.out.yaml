@@ -77,6 +77,7 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
        }
       ]
      },
+     "cpu_limit": 0,
      "max_batch_wait": 0,
      "max_batch_rows": 0,
      "max_batch_rows_buffer": 0
@@ -129,6 +130,7 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
        }
       ]
      },
+     "cpu_limit": 0,
      "max_batch_wait": 0,
      "max_batch_rows": 0,
      "max_batch_rows_buffer": 0
