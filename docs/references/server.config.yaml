@@ -374,6 +374,16 @@ Client:
   server_version:
     system: linux
 
+  # By default when running on a low resource machine we cap the
+  # CPU use to 50%. This allows to change that - needs to be
+  # between 0 and 100 (100 disables throttling).
+  low_resource_max_cpu: 50
+
+  # We determine we are running on a low resource machine if the
+  # system has less than 2 cores. This allows to increase the
+  # threadhold. Set to a large number to disable.
+  low_resource_cpu_count: 1
+
 ## This section configures the API service. The API server accepts
 ## connections from the GUI gRPC gateway, as well as connections from
 ## the gRPC API clients (e.g. with pyvelociraptor).
@@ -1314,12 +1324,15 @@ defaults:
     - auto
 
   # Alternatively, it might be easier to deny specific plugins and
-  # functions.
+  # functions and accessors.
   denied_plugins:
     - execve
 
   denied_functions:
     - rm
+
+  denied_accessors:
+    - s3
 
   # How long to cache ACL policies (default 60 sec)
   acl_lru_timeout_sec: 60

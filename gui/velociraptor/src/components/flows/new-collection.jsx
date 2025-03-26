@@ -956,6 +956,10 @@ class NewCollectionWizard extends React.Component {
             };
 
             _.each(this.state.parameters[item.name], (v, k) => {
+                if (k==="cpu_limit") {
+                    spec.cpu_limit = v;
+                    return;
+                }
                 if (k==="max_batch_wait") {
                     spec.max_batch_wait = v;
                     return;

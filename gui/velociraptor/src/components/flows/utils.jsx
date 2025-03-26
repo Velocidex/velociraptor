@@ -21,6 +21,9 @@ const requestToParameters = (request) => {
             if (spec.max_batch_rows) {
                 artifact_parameters["max_batch_rows"] = spec.max_batch_rows;
             }
+            if (spec.cpu_limit) {
+                artifact_parameters["cpu_limit"] = spec.cpu_limit;
+            }
 
             parameters[spec.artifact] = artifact_parameters;
         });
