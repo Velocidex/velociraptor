@@ -127,6 +127,8 @@ func (self *MonitoringContext) Stats() *ordereddict.Dict {
 	return ordereddict.NewDict().
 		Set("Artifact", self.artifact).
 		Set("Started", self.started).
+		Set("StartedAgo", utils.GetTime().Now().Sub(
+			self.started).Round(time.Second).String()).
 		Set("Logs", self.log_messages_id+self.log_message_count).
 		Set("Rows", self.sent_rows).
 		Set("JSONBytes", self.bytes)
