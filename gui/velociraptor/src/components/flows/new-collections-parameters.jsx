@@ -41,12 +41,16 @@ class ResourceControl extends React.Component {
         let params = this.props.parameters[this.props.artifact] || {};
         let max_batch_wait = params.max_batch_wait;
         let max_batch_rows = params.max_batch_rows;
+        let cpu_limit = params.cpu_limit;
         let params_batch_wait = {validating_regex: "\\d+",
                                  description: "Default",
                                  name: "max_batch_wait"};
         let params_batch_rows = {validating_regex: "\\d+",
                                  description: "Default",
                                  name: "max_batch_rows"};
+        let params_cpu_limit = {validating_regex: "\\d+",
+                                 description: "100%",
+                                 name: "cpu_limit"};
 
         return (
             <Form.Group as={Row}>
@@ -54,6 +58,11 @@ class ResourceControl extends React.Component {
                 {T("Configuration")}
               </Form.Label>
               <Col sm="8">
+                <VeloForm param={params_cpu_limit}
+                          value={cpu_limit}
+                          setValue={x=>this.props.setValue("cpu_limit", x)}
+                />
+
                 <VeloForm param={params_batch_wait}
                           value={max_batch_wait}
                           setValue={x=>this.props.setValue("max_batch_wait", x)}

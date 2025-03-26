@@ -68,9 +68,7 @@ func writeMetrics(
 		select {
 		case <-ctx.Done():
 			return
-		case output_chan <- ordereddict.NewDict().
-			Set("Type", "metrics").
-			Set("Line", metric):
+		case output_chan <- metric:
 		}
 	}
 }

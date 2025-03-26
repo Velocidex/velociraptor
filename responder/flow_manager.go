@@ -83,7 +83,7 @@ func (self *FlowManager) WriteProfile(ctx context.Context,
 		output_chan <- ordereddict.NewDict().
 			Set("FlowId", flow_id).
 			Set("State", "In Flight").
-			Set("Stats", flow_context.GetStats())
+			Set("Stats", flow_context.GetStatsDicts())
 	}
 
 	for flow_id := range self.cancelled {
