@@ -1,57 +1,59 @@
 name: Server.Enrichment.SecureAnnex
 author: Whitney Champion -- bsky.app/profile/whit.zip
 description: |
-  Submit an extension ID to the SecureAnnex API.
+  Submit an extension to the Secure Annex API.
 
   https://app.secureannex.com/settings/api
 
-  This is a rather simple artifact that can be called from within another artifact (such as one looking for installed Chrome extensions) to enrich the data made available by that artifact.
-
+  This artifact can be called from within another artifact, like one looking for installed Chrome extensions, to enrich the data coming back with vulnerability information from Secure Annex.
+  
   Ex.
 
-    `SELECT * from Artifact.Server.Enrichment.SecureAnnex(ID=$EXTENSION_ID,Version=$EXTENSION_VERSION)`
+    `SELECT * from Artifact.Server.Enrichment.SecureAnnex(ExtensionId=$EXTENSION_ID,ExtensionVersion=$EXTENSION_VERSION)`
 
 
 type: SERVER
 
 parameters:
-    - name: ID
+    - name: ExtensionId
       type: string
-      description: The extension ID to submit to SecureAnnex.
-      default:
-    - name: Version
+      description: The extension ID to submit to SecureAnnex
+    - name: ExtensionVersion
       type: string
       description: The extension version to submit to SecureAnnex
-      default: 
     - name: ApiKey
       type: string
-      description: The API key to submit to SecureAnnex.
-      default: ''
+      description: The API key to submit to SecureAnnex
     - name: ApiURL
       type: string
-      description: The SecureAnnex API URL.
+      description: The SecureAnnex API URL
       default: https://api.secureannex.com/api/v0/vulnerabilities
 
 sources:
   - query: |
+        // Get the JSON response from the API call
+        LET Response = SELECT parse_json(data=Content).result AS Vulnerabilities
+            FROM http_client(url=ApiURL, 
+            headers=dict(`x-api-key`=ApiKey), 
+            params=dict(`extension_id`=ExtensionId,`version`=ExtensionVersion,`page`=1,`page_size`=100),
+            method='GET')
 
-        LET Data = SELECT parse_json(data=Content) AS SecureAnnexLookup
-            FROM http_client(url=ApiURL + "?extension_id=" + ID + "&version=" + Version + "&page_size=100", headers=dict(`Accept`="application/json",`x-api-key`=ApiKey), method='GET')
-
-        SELECT
-            SecureAnnexLookup.component AS Component,
-            SecureAnnexLookup.detection AS Detection,
-            SecureAnnexLookup.extension_id AS ID,
-            SecureAnnexLookup.file_path AS FilePath,
-            SecureAnnexLookup.name AS Name,
-            SecureAnnexLookup.npmname AS NPMName,
-            SecureAnnexLookup.version AS Version,
-            SecureAnnexLookup.vuln_version AS VulnVersion,
-            SecureAnnexLookup.vulnerability AS _Vulnerability,
-            SecureAnnexLookup.vulnerability.atOrAbove AS VulnerabilityAtOrAbove,
-            SecureAnnexLookup.vulnerability.below AS VulnerabilityBelow,
-            SecureAnnexLookup.vulnerability.identifiers AS VulnerabilityIdentifiers,
-            SecureAnnexLookup.vulnerability.info as VulnerabilityInfo,
-            SecureAnnexLookup.vulnerability.severity as VulnerabilitySeverity,
-            SecureAnnexLookup AS _SecureAnnexLookup
-        FROM Data
+        SELECT * FROM foreach(
+             row=Response,
+             query={
+              SELECT
+              name as Name,
+              version as Version,
+              vulnerability.severity AS VulnerabilitySeverity,
+              component AS Component,
+              detection AS Detection,
+              extension_id AS ExtensionID,
+              file_path AS FilePath,
+              npmname AS NPMName,
+              vuln_version AS VulnVersion,
+              vulnerability.atOrAbove AS VulnerabilityAtOrAbove,
+              vulnerability.below AS VulnerabilityBelow,
+              vulnerability.identifiers AS VulnerabilityIdentifiers,
+              vulnerability.info AS VulnerabilityInfo
+               FROM foreach(row=Vulnerabilities)
+             })
