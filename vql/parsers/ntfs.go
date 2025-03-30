@@ -31,6 +31,7 @@ import (
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	vql_readers "www.velocidex.com/golang/velociraptor/vql/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -229,19 +230,19 @@ func (self MFTScanPlugin) Call(
 			return
 		}
 
+		// Choose a managed reader to ensure it does not get closed prematurely.
+		fd, err := vql_readers.NewAccessorReader(scope, arg.Accessor, arg.Filename, 1000)
+		if err != nil {
+			scope.Log("parse_mft: %v", err)
+			return
+		}
+		defer fd.Close()
+
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("parse_mft: %v", err)
 			return
 		}
-
-		fd, err := accessor.OpenWithOSPath(arg.Filename)
-		if err != nil {
-			scope.Log("parse_mft: Unable to open file %s: %v",
-				arg.Filename, err)
-			return
-		}
-		defer fd.Close()
 
 		st, err := accessor.LstatWithOSPath(arg.Filename)
 		if err != nil {
@@ -256,7 +257,7 @@ func (self MFTScanPlugin) Call(
 		}
 
 		for item := range ntfs.ParseMFTFileWithOptions(
-			ctx, utils.MakeReaderAtter(fd), st.Size(),
+			ctx, fd, st.Size(),
 			0x1000, 0x400, arg.StartEntry, options) {
 			select {
 			case <-ctx.Done():
