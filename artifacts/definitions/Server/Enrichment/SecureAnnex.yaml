@@ -9,7 +9,7 @@ description: |
   
   Ex.
 
-    `SELECT * from Artifact.Server.Enrichment.SecureAnnex(ExtensionId=$EXTENSION_ID,ExtensionVersion=$EXTENSION_VERSION)`
+    `SELECT * from Artifact.Server.Enrichment.SecureAnnex(ExtensionId=$EXTENSION_ID,ExtensionVersion=$EXTENSION_VERSION,ApiKey=$API_KEY)`
 
 
 type: SERVER
@@ -24,6 +24,7 @@ parameters:
     - name: ApiKey
       type: string
       description: The API key to submit to SecureAnnex
+      default: 
     - name: ApiURL
       type: string
       description: The SecureAnnex API URL
