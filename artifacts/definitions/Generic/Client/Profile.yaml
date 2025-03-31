@@ -131,7 +131,7 @@ sources:
 
   - name: Metrics
     query: |
-      SELECT Line.name AS Name, Line.value as value
+      SELECT *
       FROM profile(metrics=TRUE)
 
   - name: Everything
