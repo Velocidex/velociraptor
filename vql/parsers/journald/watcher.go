@@ -7,11 +7,11 @@ import (
 
 	"github.com/Velocidex/go-journalctl/parser"
 	"github.com/Velocidex/ordereddict"
-	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/readers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -142,7 +142,7 @@ func (self *JournaldWatcherService) StartMonitoring(
 			return
 		}
 
-		cursor = self.monitorOnce(filename, accessor_name, accessor, raw, cursor)
+		cursor = self.monitorOnce(scope, filename, accessor_name, accessor, raw, cursor)
 
 		time.Sleep(self.sleep_time)
 	}
@@ -168,6 +168,7 @@ func (self *JournaldWatcherService) findLastSequence(
 }
 
 func (self *JournaldWatcherService) monitorOnce(
+	scope vfilter.Scope,
 	filename *accessors.OSPath,
 	accessor_name string,
 	accessor accessors.FileSystemAccessor,
@@ -180,17 +181,11 @@ func (self *JournaldWatcherService) monitorOnce(
 		self.mu.Unlock()
 	}()
 
-	fd, err := accessor.OpenWithOSPath(filename)
+	reader, err := readers.NewAccessorReader(scope, accessor_name, filename, 10000)
 	if err != nil {
 		return cursor
 	}
-	defer fd.Close()
-
-	reader, err := ntfs.NewPagedReader(
-		utils.MakeReaderAtter(fd), 1024, 1000)
-	if err != nil {
-		return cursor
-	}
+	defer reader.Close()
 
 	journal, err := parser.OpenFile(reader)
 	if err != nil {

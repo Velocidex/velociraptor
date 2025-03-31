@@ -339,10 +339,12 @@ func init() {
 					Set("Query", item.Query)
 				if item.Duration == 0 {
 					row.Update("Status", "RUNNING").
-						Update("Duration", time.Now().Sub(item.Start))
+						Update("Duration", time.Now().Sub(item.Start).
+							Round(time.Second).String())
 				} else {
 					row.Update("Status", "FINISHED").
-						Update("Duration", item.Duration/1e9)
+						Update("Duration", time.Duration(item.Duration).
+							Round(time.Second).String())
 				}
 
 				select {

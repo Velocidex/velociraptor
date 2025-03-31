@@ -6,14 +6,13 @@ import (
 
 	"github.com/Velocidex/go-journalctl/parser"
 	"github.com/Velocidex/ordereddict"
-	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/readers"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -59,27 +58,17 @@ func (self JournalPlugin) Call(
 			return
 		}
 
-		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
-		if err != nil {
-			scope.Log("parse_journald: %s", err)
-			return
-		}
-
 		for _, filename := range arg.Filenames {
 			func() {
-				fd, err := accessor.OpenWithOSPath(filename)
+				// Choose a managed reader because we will return raw
+				// objects.
+				reader, err := readers.NewAccessorReader(
+					scope, arg.Accessor, filename, 1000)
 				if err != nil {
 					scope.Log("parse_journald: %v", err)
 					return
 				}
-				defer fd.Close()
-
-				reader, err := ntfs.NewPagedReader(
-					utils.MakeReaderAtter(fd), 1024, 10000)
-				if err != nil {
-					scope.Log("parse_journald: %v", err)
-					return
-				}
+				defer reader.Close()
 
 				journal, err := parser.OpenFile(reader)
 				if err != nil {
