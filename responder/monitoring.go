@@ -187,10 +187,10 @@ func (self *MonitoringContext) AddLogMessage(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	message := json.Format("{\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
+		int(utils.GetTime().Now().Unix()), level, msg)
 	self.log_message_count++
-	self.log_messages = append(self.log_messages, json.Format(
-		"{\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
-		int(utils.GetTime().Now().Unix()), level, msg)...)
+	self.log_messages = append(self.log_messages, message...)
 
 }
 
@@ -214,6 +214,9 @@ func (self *MonitoringContext) flushLogMessages(ctx context.Context) {
 		self.mu.Unlock()
 		return
 	}
+
+	// Include the logs in the bytes sent figure.
+	self.bytes += uint64(len(buf))
 
 	// Do not block with lock held
 	self.mu.Unlock()
