@@ -174,7 +174,7 @@ func (self *NotebookStoreImpl) SetNotebookCell(
 		return err
 	}
 
-	now := utils.GetTime().Now().Unix()
+	now := utils.GetTime().Now().UnixNano()
 
 	// Update the cell's timestamp so the gui will refresh it.
 	new_cell_md := []*api_proto.NotebookCell{}
@@ -271,7 +271,7 @@ func (self *NotebookStoreImpl) RemoveNotebookCell(
 		return err
 	}
 
-	now := utils.GetTime().Now().Unix()
+	now := utils.GetTime().Now().UnixNano()
 
 	// Update the cell's timestamp so the gui will refresh it.
 	new_cell_md := []*api_proto.NotebookCell{}

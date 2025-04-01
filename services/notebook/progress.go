@@ -47,7 +47,7 @@ func (self *progressReporter) Report(message string) {
 		html.EscapeString(self.notebook_cell.CellId),
 		html.EscapeString(self.version),
 		html.EscapeString(message))
-	notebook_cell.Timestamp = now.Unix()
+	notebook_cell.Timestamp = now.UnixNano()
 	notebook_cell.Duration = int64(duration.Seconds())
 	notebook_cell.Messages = self.tmpl.Messages()
 

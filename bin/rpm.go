@@ -317,17 +317,19 @@ fi
 	// systemd and sysv.
 	r.AddPostin(fmt.Sprintf(`
 if [ -f /bin/systemctl ] ; then
-  cat << SYSTEMDSCRIPT > /etc/systemd/system/velociraptor_client.service
-  %s
-  SYSTEMDSCRIPT
+
+cat << SYSTEMDSCRIPT > /etc/systemd/system/velociraptor_client.service
+%s
+SYSTEMDSCRIPT
 
   /bin/systemctl enable velociraptor_client.service
   /bin/systemctl start velociraptor_client.service
 
 else
-  cat << SYSVSCRIPT > /etc/rc.d/init.d/velociraptor
-  %s
-  SYSVSCRIPT
+
+cat << SYSVSCRIPT > /etc/rc.d/init.d/velociraptor
+%s
+SYSVSCRIPT
 
   /bin/chmod +x /etc/rc.d/init.d/velociraptor
 
