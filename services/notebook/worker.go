@@ -61,7 +61,7 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 		Input:             in.Input,
 		CellId:            in.CellId,
 		Type:              in.Type,
-		Timestamp:         utils.GetTime().Now().Unix(),
+		Timestamp:         utils.GetTime().Now().UnixNano(),
 		CurrentlyEditing:  in.CurrentlyEditing,
 		Calculating:       true,
 		Output:            "Loading ...",
@@ -222,7 +222,6 @@ func (self *NotebookWorker) updateCellContents(
 		notebook_id, cell_id, version)
 
 	output := ""
-	now := utils.GetTime().Now().Unix()
 
 	cell_type = strings.ToLower(cell_type)
 
@@ -242,7 +241,7 @@ func (self *NotebookWorker) updateCellContents(
 			CellId:           cell_id,
 			Type:             cell_type,
 			Env:              env,
-			Timestamp:        now,
+			Timestamp:        utils.GetTime().Now().UnixNano(),
 			CurrentlyEditing: currently_editing,
 			Duration:         int64(time.Since(tmpl.Start).Seconds()),
 

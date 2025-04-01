@@ -123,7 +123,7 @@ func (self *NotebookManager) CreateInitialNotebook(ctx context.Context,
 			Output:            cell_req.Output,
 			Calculating:       true,
 			Type:              cell_req.Type,
-			Timestamp:         utils.GetTime().Now().Unix(),
+			Timestamp:         utils.GetTime().Now().UnixNano(),
 			CurrentVersion:    cell_req.Version,
 			AvailableVersions: cell_req.AvailableVersions,
 		}

@@ -28,7 +28,7 @@
   "created_time": 1715775587,
   "cell_metadata": [
    {
-    "timestamp": 1715775587,
+    "timestamp": 1715775587000000000,
     "type": "markdown",
     "available_versions": [
     ]
@@ -64,7 +64,7 @@
   "created_time": 1715775587,
   "cell_metadata": [
    {
-    "timestamp": 1715775587,
+    "timestamp": 1715775587000000000,
     "type": "markdown",
     "available_versions": [
     ]
@@ -86,6 +86,17 @@
    "Notes": "Foo is suspicious at being Bar!",
    "_AnnotatedBy": "admin",
    "_AnnotationID": "TdAAAAAAAAA=",
+   "_Source": "Annotation"
+  },
+  {
+   "Timestamp": "2024-05-15T12:36:27Z",
+   "Message": "Original Event Message 2",
+   "Description": "",
+   "OriginalEventField": "Extra field 2",
+   "Foo": "Older Bar 2",
+   "Notes": "Updated First Annotation - all other fields remain",
+   "_AnnotatedBy": "admin",
+   "_AnnotationID": "TtAAAAAAAAA=",
    "_Source": "Annotation"
   }
  ],
