@@ -56,7 +56,7 @@ func (self *NotebookManager) NewNotebookCell(
 	}
 
 	added := false
-	now := utils.GetTime().Now().Unix()
+	now := utils.GetTime().Now().UnixNano()
 
 	new_cell_md := []*api_proto.NotebookCell{}
 
