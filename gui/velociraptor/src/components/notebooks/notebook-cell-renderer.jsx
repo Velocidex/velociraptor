@@ -273,7 +273,7 @@ export default class NotebookCellRenderer extends React.Component {
             this.props.cell_metadata.cell_id;
 
         if (prevProps.notebook_id !== this.props.notebook_id ||
-            props_cell_timestamp !== this.state.cell_timestamp ||
+            props_cell_timestamp > this.state.cell_timestamp ||
             prevState.visible != this.state.visible ||
             props_cell_id !== current_cell_id) {
 
@@ -447,7 +447,11 @@ export default class NotebookCellRenderer extends React.Component {
             }
 
             let cell = response.data;
-            if (cell.cell_id === this.props.cell_metadata.cell_id) {
+            if (this.props.cell_metadata.timestamp > cell.timestamp) {
+                // The existing cell is actually newer - this can
+                // happen if the periodic update raced
+                // UpdateNotebookCell and got a newer version.
+            } else if (cell.cell_id === this.props.cell_metadata.cell_id) {
                 this.setState({cell: response.data,
                                loading: false,
                                currently_editing: keep_editing});
