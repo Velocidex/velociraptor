@@ -60,7 +60,8 @@ func (self OrgCreateFunction) Call(
 		return vfilter.Null{}
 	}
 
-	org_record, err := org_manager.CreateNewOrg(arg.OrgName, arg.OrgId)
+	org_record, err := org_manager.CreateNewOrg(
+		arg.OrgName, arg.OrgId, services.RandomNonce)
 	if err != nil {
 		scope.Log("org_create: %s", err)
 		return vfilter.Null{}

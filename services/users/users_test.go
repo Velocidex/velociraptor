@@ -37,7 +37,7 @@ func (self *UserManagerTestSuite) makeUserWithRoles(username, org_id, role strin
 
 	_, err = org_manager.GetOrgConfig(org_id)
 	if err != nil {
-		_, err = org_manager.CreateNewOrg(org_id, org_id)
+		_, err = org_manager.CreateNewOrg(org_id, org_id, services.RandomNonce)
 		assert.NoError(self.T(), err)
 	}
 

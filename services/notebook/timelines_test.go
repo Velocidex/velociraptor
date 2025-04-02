@@ -161,6 +161,10 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelineAnnotations(
 		})
 	assert.NoError(t, err)
 
+	if len(all_notebooks) != 1 {
+		json.Dump(all_notebooks)
+	}
+
 	assert.Equal(t, len(all_notebooks), 1)
 	assert.Equal(t, all_notebooks[0].NotebookId, notebook.NotebookId)
 

@@ -145,6 +145,20 @@ func vfsFileDownloadHandler() http.Handler {
 				return
 			}
 
+			users := services.GetUserManager()
+			user_record, err := users.GetUserFromHTTPContext(r.Context())
+			if err != nil {
+				returnError(w, 403, err.Error())
+				return
+			}
+			principal := user_record.Name
+			permissions := acls.READ_RESULTS
+			perm, err := services.CheckAccess(org_config_obj, principal, permissions)
+			if !perm || err != nil {
+				returnError(w, 403, "PermissionDenied")
+				return
+			}
+
 			// Where to read from the file store
 			var path_spec api.FSPathSpec
 

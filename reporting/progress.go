@@ -6,9 +6,9 @@ import (
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 type progressReporter struct {
@@ -23,6 +23,7 @@ type progressReporter struct {
 	path           api.DSPathSpec
 	zip_writer     *Container
 	container_path api.FSPathSpec
+	opts           services.ContainerOptions
 
 	Type string
 }
@@ -31,16 +32,17 @@ func (self *progressReporter) writeStats() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	db, err := datastore.GetDB(self.config_obj)
+	export_manager, err := services.GetExportManager(self.config_obj)
 	if err != nil {
 		return
 	}
+
 	stats := self.zip_writer.Stats()
 	stats.Type = self.Type
 	stats.Components = path_specs.AsGenericComponentList(self.container_path)
 	stats.Error = self.error
 
-	_ = db.SetSubject(self.config_obj, self.path, stats)
+	_ = export_manager.SetContainerStats(self.ctx, self.config_obj, stats, self.opts)
 }
 
 // If we call Close() before the timeout then the collection worked
@@ -60,16 +62,16 @@ func (self *progressReporter) Close() {
 func NewProgressReporter(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	path api.DSPathSpec,
 	container_path api.FSPathSpec,
+	opts services.ContainerOptions,
 	zip_writer *Container) *progressReporter {
 
 	self := &progressReporter{
 		ctx:            ctx,
 		config_obj:     config_obj,
-		path:           path,
 		zip_writer:     zip_writer,
 		container_path: container_path,
+		opts:           opts,
 		Type:           "zip",
 	}
 
