@@ -13,6 +13,7 @@ import (
 const (
 	ROOT_ORG_ID   = "root"
 	ROOT_ORG_NAME = "<root>"
+	RandomNonce   = ""
 )
 
 var (
@@ -72,7 +73,7 @@ type ServiceContainer interface {
 type OrgManager interface {
 	GetOrgConfig(org_id string) (*config_proto.Config, error)
 	OrgIdByNonce(nonce string) (string, error)
-	CreateNewOrg(name, id string) (*api_proto.OrgRecord, error)
+	CreateNewOrg(name, id, nonce string) (*api_proto.OrgRecord, error)
 	ListOrgs() []*api_proto.OrgRecord
 	GetOrg(org_id string) (*api_proto.OrgRecord, error)
 	DeleteOrg(ctx context.Context, principal, org_id string) error
