@@ -547,6 +547,7 @@ func ExportNotebookToHTML(
 		opts := services.ContainerOptions{
 			Type:              services.NotebookExport,
 			NotebookId:        notebook_id,
+			StatsPath:         notebook_path_manager.PathStats(output_filename),
 			ContainerFilename: output_filename,
 		}
 

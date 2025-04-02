@@ -84,6 +84,9 @@ func (self *ExportManager) SetContainerStats(
 	switch opts.Type {
 	case services.FlowExport, services.HuntExport, services.NotebookExport:
 		stats_path = opts.StatsPath
+		if stats_path == nil {
+			return utils.InvalidArgError
+		}
 
 	default:
 		return utils.Wrap(utils.InvalidArgError, "Invalid container stat type")
