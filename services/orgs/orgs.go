@@ -134,7 +134,7 @@ func (self *OrgManager) OrgIdByNonce(nonce string) (string, error) {
 	return result, nil
 }
 
-func (self *OrgManager) CreateNewOrg(name, id string) (
+func (self *OrgManager) CreateNewOrg(name, id, nonce string) (
 	*api_proto.OrgRecord, error) {
 
 	if id == "" {
@@ -148,10 +148,14 @@ func (self *OrgManager) CreateNewOrg(name, id string) (
 		return nil, errors.New("CreateNewOrg: Org ID already in use")
 	}
 
+	if nonce == services.RandomNonce {
+		nonce = NewNonce()
+	}
+
 	org_record := &api_proto.OrgRecord{
 		Name:  name,
 		Id:    id,
-		Nonce: NewNonce(),
+		Nonce: nonce,
 	}
 
 	// Check if the org already exists

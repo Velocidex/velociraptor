@@ -79,21 +79,25 @@ func (self *ExportManager) SetContainerStats(
 	stats *api_proto.ContainerStats,
 	opts services.ContainerOptions) error {
 
+	var stats_path api.DSPathSpec
+
 	switch opts.Type {
-	case services.NotebookExport:
-		notebook_path_manager := paths.NewNotebookPathManager(opts.NotebookId)
-
-		stats_path := notebook_path_manager.PathStats(opts.ContainerFilename)
-		db, err := datastore.GetDB(config_obj)
-		if err != nil {
-			return err
+	case services.FlowExport, services.HuntExport, services.NotebookExport:
+		stats_path = opts.StatsPath
+		if stats_path == nil {
+			return utils.InvalidArgError
 		}
-
-		return db.SetSubject(config_obj, stats_path, stats)
 
 	default:
 		return utils.Wrap(utils.InvalidArgError, "Invalid container stat type")
 	}
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	return db.SetSubject(config_obj, stats_path, stats)
 
 	return nil
 }
