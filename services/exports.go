@@ -29,6 +29,9 @@ type ContainerOptions struct {
 	Type              ExportType
 	ContainerFilename api.FSPathSpec
 
+	// Where to write the stats object
+	StatsPath api.DSPathSpec
+
 	// Used based on the type
 	HuntId     string
 	FlowId     string

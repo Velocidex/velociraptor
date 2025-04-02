@@ -451,7 +451,7 @@ func (self *NotebookWorker) RegisterWorker(
 
 			request := &NotebookRequest{}
 			err := json.Unmarshal([]byte(job.Job), request)
-			if err != nil {
+			if err != nil || request.NotebookCellRequest == nil {
 				logger.Error("NotebookManager: Invalid job request in worker: %v: %v",
 					err, job.Job)
 				job.Done("", err)
