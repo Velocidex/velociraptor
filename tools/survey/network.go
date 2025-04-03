@@ -12,9 +12,9 @@ func getNetworkConfig(config *ConfigSurvey) error {
 		huh.NewNote().Description(
 			"This section configures the server's network parameters."),
 		huh.NewInput().
-			Title("What is the public DNS name of the Master Frontend").
+			Title("What is the public DNS name of the Master Frontend?").
 			Placeholder("www.example.com").
-			Description("Clients will connect to the Frontend using this public name (e.g. https://www.example.com/ ).").
+			Description("Clients will connect to the Frontend using this public name.").
 			Validate(func(in string) error {
 				if url_validator.MatchString(in) {
 					return nil

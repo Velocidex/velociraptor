@@ -37,18 +37,18 @@ Let's begin by configuring the server itself.
 				Value(&config.ServerType),
 		),
 		huh.NewGroup(
+			// for some reason this note isn't being displayed
 			huh.NewNote().
-				Description(`The Datastore is where the server stores files.
-
-It should be placed on a partitian large enough to contain all data you are likely to collect.`),
+				Description("The datastore directory is where Velociraptor will store all files."),
 			huh.NewInput().
 				Title("Path to the datastore directory.").
-				Description("The datastore directory is where Velociraptor will store all files. Make sure there is sufficient disk space available!").
+				Description(`The datastore directory is where Velociraptor will store all files.
+This should be located on a partitian large enough to contain all data you are likely to collect.
+Make sure there is sufficient disk space available!`).
 				PlaceholderFunc(func() string {
 					return config.DefaultDatastoreLocation()
 				}, &config.ServerType).
 				Value(&config.DatastoreLocation),
-
 			huh.NewInput().
 				Title("Path to the logs directory.").
 				Description("Velociraptor will write logs to this directory. By default it resides within the datastore directory but you can place it anywhere.").

@@ -26,7 +26,7 @@ func configSSO(config *ConfigSurvey) error {
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewNote().
-				Description("Configuring ths SSO Providers"),
+				Description("Configuring the SSO Providers"),
 			huh.NewSelect[string]().
 				Title("Select the SSO Authentication Provider").
 				Options(
