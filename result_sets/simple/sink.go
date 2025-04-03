@@ -12,7 +12,7 @@ func (self NullResultSetWriter) Update(index uint64, row *ordereddict.Dict) erro
 	return nil
 }
 
-func (self NullResultSetWriter) SetStartRow(int64)           {}
+func (self NullResultSetWriter) SetStartRow(int64) error     { return nil }
 func (self NullResultSetWriter) Write(row *ordereddict.Dict) {}
 func (self NullResultSetWriter) Flush()                      {}
 func (self NullResultSetWriter) Close()                      {}

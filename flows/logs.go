@@ -72,7 +72,8 @@ func writeLogMessages(
 	}
 	defer rs_writer.Close()
 
-	rs_writer.SetStartRow(int64(msg.Id))
+	// Always write the log messages even if they are retransmitted.
+	_ = rs_writer.SetStartRow(int64(msg.Id))
 
 	// The JSON payload from the client.
 	payload := artifacts.DeobfuscateString(config_obj, msg.Jsonl)
