@@ -46,7 +46,7 @@ func GenerateFrontendPackages(config_obj *config_proto.Config) error {
 	items := []huh.Field{
 		huh.NewNote().
 			Title("Welcome to the Velociraptor multi-frontend configuration generator").
-			Description(`Warning: This configuration is currently experiemental. Read more about
+			Description(`Warning: This configuration is currently experimental. Read more about
 it here https://docs.velociraptor.app/docs/deployment/cloud/multifrontend/
 
 I will be adding an extra minion frontend to the configuration.
