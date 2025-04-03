@@ -7,7 +7,7 @@ with these deploment modes and tweak the configuration to their
 specific needs.
 
 Although it is possible to mix and match configurations (for example
-SSO with self signed certificates). The Wizard does not offer these
+SSO with self signed certificates), the wizard does not offer these
 combinations. We want to keep it as simple as possible and so minimize
 choice to the most common choices.
 
