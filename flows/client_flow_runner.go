@@ -597,6 +597,28 @@ func (self *ClientFlowRunner) VQLResponse(
 	}
 	defer rs_writer.Close()
 
+	// Old clients do not have QueryStartRow so it will be 0:
+	if response.Part > 0 && response.QueryStartRow == 0 {
+
+		// Exclusion for older clients without QueryStartRow: The
+		// first packet will be QueryStartRow = 0, Part = 0, Existing
+		// row = 0. If the first packet is retransmitted we can detect
+		// it. For old clients, the next packet will be QueryStartRow
+		// = 0 but Part > 0 - which means we must ignore QueryStartRow
+		// and NOT set the start row.
+
+	} else {
+		// Modern clients set the start row properly. We can check it
+		// against the result set index to ensure these rows are
+		// appended at the correct index in the result set.
+		err := rs_writer.SetStartRow(int64(response.QueryStartRow))
+		if err != nil {
+			// Something is wrong - the packet may have been
+			// retransmitted - Just drop it on the floor.
+			return err
+		}
+	}
+
 	rs_writer.WriteJSONL(
 		[]byte(response.JSONLResponse), response.TotalRows)
 

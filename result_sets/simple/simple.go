@@ -46,6 +46,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+var (
+	retransmissionError = errors.New("RetransmissionError")
+)
+
 const (
 	offset_mask = 1<<40 - 1
 )
@@ -63,8 +67,31 @@ type ResultSetWriterImpl struct {
 	sync bool
 }
 
-// Noop for file based result set writers.
-func (self *ResultSetWriterImpl) SetStartRow(i int64) {}
+// This tells us that we expect to write the next row at this offset.
+// We need to ensure the file is actually as we expect it to be.
+func (self *ResultSetWriterImpl) SetStartRow(start_row int64) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Calculate the number of rows currently in the file.
+	idx_size, err := self.index_fd.Size()
+	if err != nil {
+		return err
+	}
+
+	// The numebr of rows in the underlying file.
+	number_of_rows := idx_size / 8 // 8 Bytes per row in the index.
+
+	// Corrent for any rows we have in memory waiting to be flushed.
+	number_of_rows += int64(len(self.rows))
+
+	// This is a retransmission
+	if number_of_rows > start_row {
+		return retransmissionError
+	}
+
+	return nil
+}
 
 func (self *ResultSetWriterImpl) SetSync() {
 	self.mu.Lock()

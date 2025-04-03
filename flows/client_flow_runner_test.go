@@ -1,4 +1,4 @@
-package server_test
+package flows_test
 
 import (
 	"context"
@@ -510,7 +510,7 @@ func (self *ServerTestSuite) TestMonitoring() {
 				Columns: []string{
 					"ClientId", "Timestamp", "Fqdn", "HuntId"},
 				JSONLResponse: fmt.Sprintf(
-					`{"ClientId": "%s", "HuntId": "H.123"}\n`, self.client_id),
+					"{\"ClientId\": \"%s\", \"HuntId\": \"H.123\"}\n", self.client_id),
 				TotalRows: 1,
 				Query: &actions_proto.VQLRequest{
 					Name: "Generic.Client.Stats",
@@ -752,7 +752,7 @@ func (self *ServerTestSuite) TestVQLResponse() {
 			VQLResponse: &actions_proto.VQLResponse{
 				Columns: []string{"ClientId", "Column1"},
 				JSONLResponse: fmt.Sprintf(
-					`{"ClientId": "%s", "Column1": "Foo"}\n`, self.client_id),
+					"{\"ClientId\": \"%s\", \"Column1\": \"Foo\"}\n", self.client_id),
 				Query: &actions_proto.VQLRequest{
 					Name: "Generic.Client.Info",
 				},
@@ -766,6 +766,72 @@ func (self *ServerTestSuite) TestVQLResponse() {
 	assert.NoError(self.T(), err)
 
 	self.RequiredFilestoreContains(flow_path_manager.Path(), self.client_id)
+}
+
+// When VQLResponse messages are retransmitted we need to detect and
+// remove them.
+func (self *ServerTestSuite) TestVQLResponseRetransmission() {
+	t := self.T()
+
+	closer := utils.SetFlowIdForTests("F.1234")
+	defer closer()
+
+	// Schedule a flow in the database.
+	flow_id, err := self.createArtifactCollection()
+	require.NoError(t, err)
+
+	// Emulate a response from this flow.
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+
+	// Retransmit the first message 10 times
+	for i := 0; i < 10; i++ {
+		runner.ProcessSingleMessage(self.Ctx,
+			&crypto_proto.VeloMessage{
+				Source:    self.client_id,
+				SessionId: flow_id,
+				RequestId: constants.ProcessVQLResponses,
+				VQLResponse: &actions_proto.VQLResponse{
+					Columns:       []string{"Row"},
+					JSONLResponse: "{\"Row\": 1}\n",
+					Query: &actions_proto.VQLRequest{
+						Name: "Generic.Client.Info",
+					},
+					// The first row in this result set.
+					TotalRows:     1,
+					QueryStartRow: 0,
+					Part:          0,
+				},
+			})
+	}
+
+	// Retransmit the second message 10 times
+	for i := 0; i < 10; i++ {
+		runner.ProcessSingleMessage(self.Ctx,
+			&crypto_proto.VeloMessage{
+				Source:    self.client_id,
+				SessionId: flow_id,
+				RequestId: constants.ProcessVQLResponses,
+				VQLResponse: &actions_proto.VQLResponse{
+					Columns:       []string{"Row"},
+					JSONLResponse: "{\"Row\": 2}\n",
+					Query: &actions_proto.VQLRequest{
+						Name: "Generic.Client.Info",
+					},
+					// The first row in this result set.
+					TotalRows:     1,
+					QueryStartRow: 1,
+					Part:          1,
+				},
+			})
+	}
+
+	runner.Close(self.Ctx)
+
+	file_store_factory := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
+	value, _ := file_store_factory.Get(
+		"/clients/" + self.client_id + "/artifacts/Generic.Client.Info/F.1234.json")
+
+	goldie.Assert(self.T(), "TestVQLResponseRetransmission", value)
 }
 
 // Errors from the client kill the flow.
