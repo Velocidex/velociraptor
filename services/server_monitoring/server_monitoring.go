@@ -112,17 +112,10 @@ func (self *EventTable) ProcessArtifactModificationEvent(
 	logger.Info("server_monitoring: Reloading table because artifact %v was updated",
 		modified_name)
 
-	// We could try to figure out if the artifact actually changed
-	// anything but this is hard to know - not only do we need to
-	// look at the artifact in the event table but all
-	// dependencies as well. So for now we just recompile the
-	// event table when any artifact is changed. We dont expect
-	// this to be too frequent.
-	request := self.Get()
-
-	// Restart the queries
-	self.StartQueries(config_obj, request)
-
+	notifier, err := services.GetNotifier(config_obj)
+	if err == nil {
+		notifier.NotifyDirectListener(loadFileQueue(config_obj))
+	}
 }
 
 func (self *EventTable) ProcessServerMetadataModificationEvent(
@@ -138,10 +131,10 @@ func (self *EventTable) ProcessServerMetadataModificationEvent(
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("<green>server_monitoring</>: Reloading table because server metadata was updated")
 
-	request := self.Get()
-
-	// Restart the queries
-	self.StartQueries(config_obj, request)
+	notifier, err := services.GetNotifier(config_obj)
+	if err == nil {
+		notifier.NotifyDirectListener(loadFileQueue(config_obj))
+	}
 }
 
 func (self *EventTable) Update(
@@ -172,7 +165,12 @@ func (self *EventTable) Update(
 		return err
 	}
 
-	return self.StartQueries(config_obj, request)
+	notifier, err := services.GetNotifier(config_obj)
+	if err == nil {
+		notifier.NotifyDirectListener(loadFileQueue(config_obj))
+	}
+
+	return err
 }
 
 // Compare a new set of queries with the current set to see if they
@@ -210,9 +208,9 @@ func (self *EventTable) equal(events []*actions_proto.VQLCollectorArgs) bool {
 }
 
 // Start the queries in the requewst
-func (self *EventTable) StartQueries(
-	config_obj *config_proto.Config,
-	request *flows_proto.ArtifactCollectorArgs) error {
+func (self *EventTable) StartQueries(config_obj *config_proto.Config) error {
+
+	request := self.Get()
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -415,6 +413,86 @@ func (self *EventTable) RunQuery(
 	return nil
 }
 
+func (self *EventTable) startLoadFileLoop(
+	ctx context.Context,
+	wg *sync.WaitGroup, config_obj *config_proto.Config) error {
+	defer wg.Done()
+
+	notifier, err := services.GetNotifier(config_obj)
+	if err != nil {
+		return err
+	}
+
+	// Debounce file load through the notifier.
+	notification, remove := notifier.ListenForNotification(loadFileQueue(config_obj))
+	defer remove()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+
+			// Debounced file load notification.
+		case <-notification:
+			remove()
+
+			notification, remove = notifier.ListenForNotification(
+				loadFileQueue(config_obj))
+			err := self.StartQueries(config_obj)
+			if err != nil {
+				logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+				logger.Error("startLoadFileLoop: %v", err)
+			}
+		}
+	}
+}
+
+// Main loop.
+func (self *EventTable) Start(
+	ctx context.Context,
+	wg *sync.WaitGroup, config_obj *config_proto.Config) error {
+
+	defer wg.Done()
+
+	journal, err := services.GetJournal(config_obj)
+	if err != nil {
+		return err
+	}
+
+	wg.Add(1)
+	go self.startLoadFileLoop(ctx, wg, config_obj)
+
+	events, cancel := journal.Watch(
+		ctx, "Server.Internal.ArtifactModification",
+		"server_monitoring_service")
+	defer cancel()
+
+	metadata_mod_event, metadata_mod_event_cancel := journal.Watch(
+		ctx, "Server.Internal.MetadataModifications",
+		"server_monitoring_service")
+	defer metadata_mod_event_cancel()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+
+		case event, ok := <-metadata_mod_event:
+			if !ok {
+				return nil
+			}
+			self.ProcessServerMetadataModificationEvent(
+				ctx, config_obj, event)
+
+		case event, ok := <-events:
+			if !ok {
+				return nil
+			}
+			self.ProcessArtifactModificationEvent(ctx, config_obj, event)
+		}
+	}
+}
+
 // Bring up the server monitoring service.
 func NewServerMonitoringService(
 	ctx context.Context,
@@ -449,49 +527,20 @@ func NewServerMonitoringService(
 		tracer:     NewQueryTracer(),
 	}
 
-	journal, err := services.GetJournal(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	events, cancel := journal.Watch(
-		ctx, "Server.Internal.ArtifactModification",
-		"server_monitoring_service")
-
-	metadata_mod_event, metadata_mod_event_cancel := journal.Watch(
-		ctx, "Server.Internal.MetadataModifications",
-		"server_monitoring_service")
-
 	wg.Add(1)
 	go func() {
-		defer wg.Done()
-		defer cancel()
-		defer metadata_mod_event_cancel()
-
-		// Shut down all server queries in an orderly fasion
 		defer manager.Close()
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
-
-			case event, ok := <-metadata_mod_event:
-				if !ok {
-					return
-				}
-				manager.ProcessServerMetadataModificationEvent(
-					ctx, config_obj, event)
-
-			case event, ok := <-events:
-				if !ok {
-					return
-				}
-				manager.ProcessArtifactModificationEvent(
-					ctx, config_obj, event)
-			}
+		err := manager.Start(ctx, wg, config_obj)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("NewServerMonitoringService: %v", err)
 		}
 	}()
 
 	return manager, manager.Update(ctx, config_obj, "", artifacts)
+}
+
+func loadFileQueue(config_obj *config_proto.Config) string {
+	return "ServerMonitoring" + config_obj.OrgId
 }
