@@ -501,6 +501,8 @@ func (self *ClientEventTable) load_from_file(
 			return nil, err
 		}
 
+		state.Version = uint64(self.Clock.Now().UnixNano())
+
 		return state, self.setClientMonitoringState(ctx, config_obj, "", state)
 	}
 

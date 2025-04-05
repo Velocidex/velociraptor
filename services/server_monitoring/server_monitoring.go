@@ -165,12 +165,12 @@ func (self *EventTable) Update(
 		return err
 	}
 
-	notifier, err := services.GetNotifier(config_obj)
-	if err == nil {
-		notifier.NotifyDirectListener(loadFileQueue(config_obj))
-	}
+	self.mu.Lock()
+	self.request = request
+	self.mu.Unlock()
 
-	return err
+	// Update the queries immediately
+	return self.StartQueries(config_obj)
 }
 
 // Compare a new set of queries with the current set to see if they
