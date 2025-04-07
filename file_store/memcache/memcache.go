@@ -186,9 +186,7 @@ func (self *MemcacheFileWriter) Stats() *ordereddict.Dict {
 		Set("CompletionCount", len(self.completions))
 }
 
-func (self *MemcacheFileWriter) BufferedSize() int {
-	self.mu.Lock()
-	defer self.mu.Unlock()
+func (self *MemcacheFileWriter) bufferedSize() int {
 	return self.buffer.Len()
 }
 
@@ -211,7 +209,7 @@ func (self *MemcacheFileWriter) Write(data []byte) (int, error) {
 	defer self.mu.Unlock()
 
 	// Try to keep our memory use down - still holding the lock.
-	defer self.owner.reduceMemoryToLimit()
+	defer self.owner.ReduceMemoryToLimit()
 
 	if self.last_flush.IsZero() {
 		self.last_flush = utils.GetTime().Now()
@@ -693,6 +691,13 @@ func (self *MemcacheFileStore) WriteFileWithCompletion(
 	return result, nil
 }
 
+func (self *MemcacheFileStore) ReduceMemoryToLimit() error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.reduceMemoryToLimit()
+}
+
 // Ensure we stay under the memory limit by flushing writers to reduce
 // memory use. We block until enough data was released thereby pushing
 // back against any writes.
@@ -709,7 +714,7 @@ func (self *MemcacheFileStore) reduceMemoryToLimit() error {
 
 	// To reduce IO we flush larger writers first.
 	sort.Slice(sizes, func(i, j int) bool {
-		return sizes[i].BufferedSize() > sizes[j].BufferedSize()
+		return sizes[i].bufferedSize() > sizes[j].bufferedSize()
 	})
 
 	for _, w := range sizes {
