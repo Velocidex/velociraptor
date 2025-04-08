@@ -517,6 +517,9 @@ message Authenticator {
     repeated string saml_user_roles = 23 [(sem_type) = {
             description: "List of roles to assign authenticated SAML users. If this option is not set then no users will be created automatically."
         }];
+    bool saml_allow_idp_initiated = 27 [(sem_type) = {
+            description: "Allow IdP-initiated SAML flow."
+        }];
 
     // MultiAuthenticator delegates to multiple other authenticators.
     repeated Authenticator sub_authenticators = 17;
