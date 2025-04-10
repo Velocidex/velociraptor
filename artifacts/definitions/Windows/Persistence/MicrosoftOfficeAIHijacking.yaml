@@ -1,0 +1,27 @@
+name: Windows.Persistence.MicrosoftOfficeAIHijacking
+author: Chris Jones - CPIRT | FabFaeb | Antonio Blescia (TheThMando) | bmcder02
+description: |
+    Office executables like WINWORD.exe look for AI.exe under the 
+    %ProgramFiles%\Microsoft Office\root\<Office Version> and 
+    %ProgramFiles(x86)%\Microsoft Office\root\<Office Version> directories. 
+    An attacker may place a malicious AI.exe there in order to have persistence 
+    whenever a user interacts with the Microsoft Office Suite.
+reference:
+    - https://twitter.com/laughing_mantis/status/1645268114966470662
+    - https://github.com/last-byte/PersistenceSniper/blob/main/PersistenceSniper/PersistenceSniper.psm1
+type: CLIENT
+
+parameters:
+  - name: GlobPath
+    description: The paths to the check.
+    default: "C:\\Program File*\\Microsoft Office\\root\\Office*\\ai.exe"
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+        SELECT 
+          Name AS FileName, OSPath as FilePath, Mtime, Atime, Ctime, Btime,
+          Size, hash(path=OSPath) AS Hash, authenticode(filename=OSPath) AS authenticode
+        FROM glob(globs=GlobPath)
