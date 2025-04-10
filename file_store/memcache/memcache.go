@@ -205,11 +205,13 @@ func (self *MemcacheFileWriter) Update(data []byte, offset int64) error {
 func (self *MemcacheFileWriter) Write(data []byte) (int, error) {
 	defer api.Instrument("write", "MemcacheFileWriter", nil)()
 
+	// Try to keep our memory use down - Try to flush the store. This
+	// has to happen without holding the lock on this writer in case
+	// this writer needs to be flushed too.
+	defer self.owner.ReduceMemoryToLimit()
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
-
-	// Try to keep our memory use down - still holding the lock.
-	defer self.owner.ReduceMemoryToLimit()
 
 	if self.last_flush.IsZero() {
 		self.last_flush = utils.GetTime().Now()
