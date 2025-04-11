@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"sync"
 	"syscall"
 	"time"
 	"unsafe"
@@ -25,6 +26,15 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+)
+
+var (
+	pool = sync.Pool{
+		New: func() interface{} {
+			buffer := utils.AllocateBuff(1024 * 10)
+			return &buffer
+		},
+	}
 )
 
 type ThreadHandleInfo struct {
@@ -50,13 +60,16 @@ type TokenHandleInfo struct {
 }
 
 type HandleInfo struct {
-	Pid         uint32             `json:"Pid"`
-	Type        string             `json:"Type"`
-	Name        string             `json:"Name,omitempty"`
-	Handle      uint32             `json:"Handle"`
-	ProcessInfo *ProcessHandleInfo `json:"ProcessInfo,omitempty"`
-	ThreadInfo  *ThreadHandleInfo  `json:"ThreadInfo,omitempty"`
-	TokenInfo   *TokenHandleInfo   `json:"TokenInfo,omitempty"`
+	Pid             uint32             `json:"Pid"`
+	Type            string             `json:"Type"`
+	Name            string             `json:"Name,omitempty"`
+	Handle          uint32             `json:"Handle"`
+	AccessMask      uint32             `json:"AccessMask"`
+	AccessMaskPerms []string           `json:"AccessMaskPerms"`
+	Attributes      uint32             `json:"Attributes"`
+	ProcessInfo     *ProcessHandleInfo `json:"ProcessInfo,omitempty"`
+	ThreadInfo      *ThreadHandleInfo  `json:"ThreadInfo,omitempty"`
+	TokenInfo       *TokenHandleInfo   `json:"TokenInfo,omitempty"`
 }
 
 type HandlesPluginArgs struct {
@@ -231,6 +244,22 @@ func GetHandles(
 							handle_info,
 							dup_handle, out)
 						windows.CloseHandle(dup_handle)
+					} else {
+						// If we failed to dup the handle with extra
+						// permissions try with no permissions - this
+						// will give some information but better than
+						// nothing.
+						status := windows.NtDuplicateObject(
+							process_handle, handle_value,
+							windows.NtCurrentProcess(),
+							&dup_handle, 0, 0, 0)
+						if status == windows.STATUS_SUCCESS {
+							SendHandleInfo(
+								arg, scope,
+								handle_info,
+								dup_handle, out)
+							windows.CloseHandle(dup_handle)
+						}
 					}
 				} else {
 					SendHandleInfo(
@@ -248,8 +277,11 @@ func SendHandleInfo(arg *HandlesPluginArgs, scope vfilter.Scope,
 
 	to_send := false
 	result := &HandleInfo{
-		Pid:    uint32(handle_info.UniqueProcessId),
-		Handle: uint32(handle_info.HandleValue),
+		Pid:             uint32(handle_info.UniqueProcessId),
+		Handle:          uint32(handle_info.HandleValue),
+		AccessMask:      uint32(handle_info.GrantedAccess),
+		AccessMaskPerms: parseMasks(handle_info.GrantedAccess, baseMasks),
+		Attributes:      uint32(handle_info.HandleAttributes),
 	}
 
 	// Sometimes the NtQueryObject blocks without a
@@ -268,14 +300,42 @@ func SendHandleInfo(arg *HandlesPluginArgs, scope vfilter.Scope,
 			switch result.Type {
 			case "Process":
 				result.ProcessInfo = GetProcessName(scope, handle)
+				result.AccessMaskPerms = append(result.AccessMaskPerms,
+					parseMasks(handle_info.GrantedAccess, processMasks)...)
+
 			case "Thread":
 				GetThreadInfo(scope, handle, result)
+				result.AccessMaskPerms = append(result.AccessMaskPerms,
+					parseMasks(handle_info.GrantedAccess, threadMasks)...)
+
+			case "Event":
+				result.AccessMaskPerms = append(result.AccessMaskPerms,
+					parseMasks(handle_info.GrantedAccess, eventMasks)...)
+
 			case "Token":
 				result.TokenInfo = GetTokenInfo(scope, handle)
-			default:
-				// Try to get the name if possible
-				GetObjectName(scope, handle, result)
+				result.AccessMaskPerms = append(result.AccessMaskPerms,
+					parseMasks(handle_info.GrantedAccess, tokenMasks)...)
+
+			case "Directory":
+				result.AccessMaskPerms = append(result.AccessMaskPerms,
+					parseMasks(handle_info.GrantedAccess, directoryMasks)...)
+
+			case "Key":
+				result.AccessMaskPerms = append(result.AccessMaskPerms,
+					parseMasks(handle_info.GrantedAccess, keyMasks)...)
+
+			case "Mutant":
+				result.AccessMaskPerms = append(result.AccessMaskPerms,
+					parseMasks(handle_info.GrantedAccess, mutantMasks)...)
+
+			case "File":
+				result.AccessMaskPerms = append(result.AccessMaskPerms,
+					parseMasks(handle_info.GrantedAccess, fileMasks)...)
 			}
+
+			// Try to get the name if possible
+			GetObjectName(scope, handle, result)
 		}
 	}()
 
@@ -415,7 +475,10 @@ func GetProcessName(scope vfilter.Scope, handle syscall.Handle) *ProcessHandleIn
 }
 
 func GetObjectName(scope vfilter.Scope, handle syscall.Handle, result *HandleInfo) {
-	buffer := utils.AllocateBuff(1024 * 2)
+	cached_buffer := pool.Get().(*[]byte)
+	defer pool.Put(cached_buffer)
+
+	buffer := *cached_buffer
 
 	var length uint32
 
@@ -435,7 +498,10 @@ func GetObjectName(scope vfilter.Scope, handle syscall.Handle, result *HandleInf
 }
 
 func GetObjectType(handle syscall.Handle, scope vfilter.Scope) string {
-	buffer := utils.AllocateBuff(1024 * 10)
+	cached_buffer := pool.Get().(*[]byte)
+	defer pool.Put(cached_buffer)
+
+	buffer := *cached_buffer
 	length := uint32(0)
 	status, _ := windows.NtQueryObject(handle, windows.ObjectTypeInformation,
 		&buffer[0], uint32(len(buffer)), &length)
@@ -460,4 +526,111 @@ func GetObjectBasicInformation(handle syscall.Handle) *windows.OBJECT_BASIC_INFO
 
 func init() {
 	vql_subsystem.RegisterPlugin(&HandlesPlugin{})
+}
+
+type mask struct {
+	mask uint32
+	name string
+}
+
+var (
+	// https://learn.microsoft.com/en-us/windows/win32/procthread/process-security-and-access-rights
+	baseMasks = []mask{
+		{0x00010000, "DELETE"},
+		{0x00020000, "READ_CONTROL"},
+		{0x00040000, "WRITE_DAC"},
+		{0x00080000, "WRITE_OWNER"},
+		{0x00100000, "SYNCHRONIZE"},
+	}
+
+	// https://learn.microsoft.com/en-us/windows/win32/sync/synchronization-object-security-and-access-rights
+	eventMasks = []mask{
+		{0x000002, "EVENT_MODIFY_STATE"},
+		{0x1F0003, "EVENT_ALL_ACCESS"},
+	}
+
+	// https://learn.microsoft.com/en-us/windows/win32/procthread/thread-security-and-access-rights
+	threadMasks = []mask{
+		{0x0001, "THREAD_TERMINATE"},
+		{0x0002, "THREAD_SUSPEND_RESUME"},
+		{0x0008, "THREAD_GET_CONTEXT"},
+		{0x0010, "THREAD_SET_CONTEXT"},
+		{0x0020, "THREAD_SET_INFORMATION"},
+		{0x0040, "THREAD_QUERY_INFORMATION"},
+		{0x0080, "THREAD_SET_THREAD_TOKEN"},
+		{0x0100, "THREAD_IMPERSONATE"},
+		{0x0200, "THREAD_DIRECT_IMPERSONATION"},
+		{0x0400, "THREAD_SET_LIMITED_INFORMATION"},
+		{0x0800, "THREAD_QUERY_LIMITED_INFORMATION"},
+	}
+
+	tokenMasks = []mask{
+		{0x001, "TOKEN_ASSIGN_PRIMARY"},
+		{0x002, "TOKEN_DUPLICATE"},
+		{0x004, "TOKEN_IMPERSONATE"},
+		{0x008, "TOKEN_QUERY"},
+		{0x010, "TOKEN_QUERY_SOURCE"},
+		{0x020, "TOKEN_ADJUST_PRIVILEGES"},
+		{0x040, "TOKEN_ADJUST_GROUPS"},
+		{0x080, "TOKEN_ADJUST_DEFAULT"},
+		{0x100, "TOKEN_ADJUST_SESSIONID"},
+	}
+
+	processMasks = []mask{
+		{0x0001, "PROCESS_TERMINATE"},
+		{0x0002, "PROCESS_CREATE_THREAD"},
+		{0x0008, "PROCESS_VM_OPERATION"},
+		{0x0010, "PROCESS_VM_READ"},
+		{0x0020, "PROCESS_VM_WRITE"},
+		{0x0040, "PROCESS_DUP_HANDLE"},
+		{0x0080, "PROCESS_CREATE_PROCESS"},
+		{0x0100, "PROCESS_SET_QUOTA"},
+		{0x0200, "PROCESS_SET_INFORMATION"},
+		{0x0400, "PROCESS_QUERY_INFORMATION"},
+		{0x0800, "PROCESS_SUSPEND_RESUME"},
+		{0x1000, "PROCESS_QUERY_LIMITED_INFORMATION"},
+	}
+
+	directoryMasks = []mask{
+		{0x0001, "QUERY"},
+		{0x0002, "TRAVERSE"},
+		{0x0004, "CREATE_OBJECT"},
+		{0x0008, "CREATE_SUBDIRECTORY"},
+	}
+
+	mutantMasks = []mask{
+		{0x0001, "MUTANT_QUERY_STATE"},
+	}
+
+	keyMasks = []mask{
+		{0x0001, "QUERY_VALUE"},
+		{0x0002, "SET_VALUE"},
+		{0x0004, "CREATE_SUB_KEY"},
+		{0x0008, "ENUMERATE_SUB_KEYS"},
+		{0x0010, "NOTIFY"},
+		{0x0020, "CREATE_LINK"},
+		{0x0040, "WOW64_64KEY"},
+		{0x0080, "WOW64_32KEY"},
+	}
+
+	fileMasks = []mask{
+		{0x0001, "READ_DATA"},
+		{0x0002, "ADD_FILE"},
+		{0x0004, "APPEND_DATA"},
+		{0x0008, "READ_EA"},
+		{0x0010, "WRITE_EA"},
+		{0x0020, "EXECUTE"},
+		{0x0040, "DELETE_CHILD"},
+		{0x0080, "READ_ATTRIBUTES"},
+		{0x0100, "WRITE_ATTRIBUTES"},
+	}
+)
+
+func parseMasks(m uint32, masks []mask) (res []string) {
+	for _, mask := range masks {
+		if m&mask.mask > 0 {
+			res = append(res, mask.name)
+		}
+	}
+	return res
 }
