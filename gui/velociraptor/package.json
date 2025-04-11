@@ -4,7 +4,7 @@
     "private": true,
     "type": "module",
     "dependencies": {
-        "@babel/runtime": "^7.26.9",
+        "@babel/runtime": "^7.26.10",
         "@fortawesome/fontawesome-svg-core": "6.7.2",
         "@fortawesome/free-regular-svg-icons": "6.7.2",
         "@fortawesome/free-solid-svg-icons": "^6.7.2",
