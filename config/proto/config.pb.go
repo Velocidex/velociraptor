@@ -1580,12 +1580,13 @@ type Authenticator struct {
 	// Azure requires a tenancy as well.
 	Tenant string `protobuf:"bytes,7,opt,name=tenant,proto3" json:"tenant,omitempty"`
 	// SAML Authenticator
-	SamlCertificate    string   `protobuf:"bytes,12,opt,name=saml_certificate,json=samlCertificate,proto3" json:"saml_certificate,omitempty"`
-	SamlPrivateKey     string   `protobuf:"bytes,13,opt,name=saml_private_key,json=samlPrivateKey,proto3" json:"saml_private_key,omitempty"`
-	SamlIdpMetadataUrl string   `protobuf:"bytes,14,opt,name=saml_idp_metadata_url,json=samlIdpMetadataUrl,proto3" json:"saml_idp_metadata_url,omitempty"`
-	SamlRootUrl        string   `protobuf:"bytes,15,opt,name=saml_root_url,json=samlRootUrl,proto3" json:"saml_root_url,omitempty"`
-	SamlUserAttribute  string   `protobuf:"bytes,16,opt,name=saml_user_attribute,json=samlUserAttribute,proto3" json:"saml_user_attribute,omitempty"`
-	SamlUserRoles      []string `protobuf:"bytes,23,rep,name=saml_user_roles,json=samlUserRoles,proto3" json:"saml_user_roles,omitempty"`
+	SamlCertificate       string   `protobuf:"bytes,12,opt,name=saml_certificate,json=samlCertificate,proto3" json:"saml_certificate,omitempty"`
+	SamlPrivateKey        string   `protobuf:"bytes,13,opt,name=saml_private_key,json=samlPrivateKey,proto3" json:"saml_private_key,omitempty"`
+	SamlIdpMetadataUrl    string   `protobuf:"bytes,14,opt,name=saml_idp_metadata_url,json=samlIdpMetadataUrl,proto3" json:"saml_idp_metadata_url,omitempty"`
+	SamlRootUrl           string   `protobuf:"bytes,15,opt,name=saml_root_url,json=samlRootUrl,proto3" json:"saml_root_url,omitempty"`
+	SamlUserAttribute     string   `protobuf:"bytes,16,opt,name=saml_user_attribute,json=samlUserAttribute,proto3" json:"saml_user_attribute,omitempty"`
+	SamlUserRoles         []string `protobuf:"bytes,23,rep,name=saml_user_roles,json=samlUserRoles,proto3" json:"saml_user_roles,omitempty"`
+	SamlAllowIdpInitiated bool     `protobuf:"varint,27,opt,name=saml_allow_idp_initiated,json=samlAllowIdpInitiated,proto3" json:"saml_allow_idp_initiated,omitempty"`
 	// MultiAuthenticator delegates to multiple other authenticators.
 	SubAuthenticators    []*Authenticator `protobuf:"bytes,17,rep,name=sub_authenticators,json=subAuthenticators,proto3" json:"sub_authenticators,omitempty"`
 	AuthRedirectTemplate string           `protobuf:"bytes,21,opt,name=auth_redirect_template,json=authRedirectTemplate,proto3" json:"auth_redirect_template,omitempty"`
@@ -1740,6 +1741,13 @@ func (x *Authenticator) GetSamlUserRoles() []string {
 		return x.SamlUserRoles
 	}
 	return nil
+}
+
+func (x *Authenticator) GetSamlAllowIdpInitiated() bool {
+	if x != nil {
+		return x.SamlAllowIdpInitiated
+	}
+	return false
 }
 
 func (x *Authenticator) GetSubAuthenticators() []*Authenticator {
