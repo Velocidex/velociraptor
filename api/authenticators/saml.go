@@ -78,10 +78,11 @@ func (self *SamlAuthenticator) AddHandlers(mux *api_utils.ServeMux) error {
 	}
 
 	opts := samlsp.Options{
-		IDPMetadata: idpMetadata,
-		URL:         *rootURL,
-		Key:         key,
-		Certificate: cert,
+		IDPMetadata:       idpMetadata,
+		URL:               *rootURL,
+		Key:               key,
+		Certificate:       cert,
+		AllowIDPInitiated: self.authenticator.SamlAllowIdpInitiated,
 	}
 	samlMiddleware, err = samlsp.New(opts)
 	if err != nil {
