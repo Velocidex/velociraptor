@@ -1,8 +1,6 @@
 package vql
 
 import (
-	"bytes"
-	"compress/gzip"
 	"context"
 	"runtime"
 
@@ -10,6 +8,7 @@ import (
 	"gopkg.in/yaml.v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -120,7 +119,7 @@ func InstallUnimplemented(scope vfilter.Scope) {
 		"darwin_amd64_nocgo",
 		"darwin_amd64_cgo":
 
-		data, err := uncompress(assets.FileDocsReferencesVqlYaml)
+		data, err := utils.GzipUncompress(assets.FileDocsReferencesVqlYaml)
 		if err != nil {
 			scope.Log("InstallUnimplemented: %v", err)
 			return
@@ -157,16 +156,4 @@ func InstallUnimplemented(scope vfilter.Scope) {
 		}
 
 	}
-}
-
-func uncompress(raw []byte) ([]byte, error) {
-	rb := bytes.NewReader(raw)
-	r, err := gzip.NewReader(rb)
-	if err != nil {
-		return nil, err
-	}
-
-	buf := bytes.NewBuffer(make([]byte, 0, bytes.MinRead))
-	_, err = buf.ReadFrom(r)
-	return buf.Bytes(), err
 }

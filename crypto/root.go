@@ -13,6 +13,7 @@ import (
 
 	errors "github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // We support two distinct modes:
@@ -20,8 +21,8 @@ import (
 // 1. Self signed mode - means that Velociraptor will only trust it's
 //    own CA to sign certs.
 // 2. Public PKI mode - Velociraptor will trust only known root CAs to
-//    sign. Root CA store is built into the binary - we do not read
-//    the system store.
+//    sign. Root CA store is built into the binary in addition to the
+//    system store.
 
 // The mode is specified by the Client.use_self_signed_ssl flag in the
 // configuration file.
@@ -52,6 +53,10 @@ func AddDefaultCerts(
 }
 
 func AddPublicRoots(CA_Pool *x509.CertPool) {
-	data, _ := ReadFile("crypto/ca-certificates.crt")
+	data, err := utils.GzipUncompress(FileCryptoCaCertificatesCrt)
+	if err != nil {
+		// Cant really happen normally!
+		panic(err)
+	}
 	CA_Pool.AppendCertsFromPEM(data)
 }
