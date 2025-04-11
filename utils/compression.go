@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"compress/gzip"
 	"compress/zlib"
 	"context"
 	"io"
@@ -24,6 +25,18 @@ func Compress(plain_text []byte) ([]byte, error) {
 	w.Close()
 
 	return b.Bytes(), nil
+}
+
+func GzipUncompress(raw []byte) ([]byte, error) {
+	rb := bytes.NewReader(raw)
+	r, err := gzip.NewReader(rb)
+	if err != nil {
+		return nil, err
+	}
+
+	buf := bytes.NewBuffer(make([]byte, 0, bytes.MinRead))
+	_, err = buf.ReadFrom(r)
+	return buf.Bytes(), err
 }
 
 func Uncompress(
