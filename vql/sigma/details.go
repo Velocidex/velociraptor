@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	expandRegEx = regexp.MustCompile("%[A-Z.a-z]+%")
+	expandRegEx = regexp.MustCompile("%[A-Z.a-z_0-9]+%")
 )
 
 func (self *SigmaContext) AddDetail(

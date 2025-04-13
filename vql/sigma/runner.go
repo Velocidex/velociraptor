@@ -62,13 +62,12 @@ func (self *SigmaExecutionContext) Start(
 
 	defer subscope.Close()
 
-	count := 0
 	start := utils.GetTime().Now()
 
 	self.active = true
 	defer func() {
 		scope.Log("INFO:sigma: Consumed %v messages from log source %v on %v rules (%v)",
-			count, self.Name, len(self.rules),
+			atomic.LoadUint64(&self.event_count), self.Name, len(self.rules),
 			utils.GetTime().Now().Sub(start))
 		self.active = false
 	}()
