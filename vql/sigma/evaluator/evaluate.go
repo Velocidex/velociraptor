@@ -33,6 +33,10 @@ type VQLRuleEvaluator struct {
 	lambda      *vfilter.Lambda
 	lambda_args *ordereddict.Dict
 
+	// Rule may specify an enrichment lambda - this is applied after
+	// matching and just adds additional information for reporting.
+	enrichment *vfilter.Lambda
+
 	fieldmappings *FieldMappingResolver
 
 	hit_count uint64
@@ -67,6 +71,28 @@ func (self *VQLRuleEvaluator) evaluateAggregationExpression(
 	return false, nil
 }
 
+// A rule may specify an enrichment lambda. This is filled **after**
+// the rule matches and just adds additional information for
+// reporting.
+
+// This is an optimization - additional fields are only calculated for
+// matching rules instead of every field.
+func (self *VQLRuleEvaluator) MaybeEnrichForReporting(
+	ctx context.Context, scope types.Scope, event *Event) *Event {
+	// No enrichment - pass through
+	if self.enrichment == nil {
+		return event
+	}
+
+	subscope := scope.Copy().AppendVars(self.lambda_args)
+	defer subscope.Close()
+
+	// Update the row now so the details can refer to enriched fields.
+	enrichment := self.enrichment.Reduce(ctx, subscope, []vfilter.Any{event})
+
+	return NewEvent(event.Copy().Set("Enrichment", enrichment))
+}
+
 func (self *VQLRuleEvaluator) MaybeEnrichWithVQL(
 	ctx context.Context, scope types.Scope, event *Event) *Event {
 	if self.lambda != nil {
@@ -91,12 +117,6 @@ func (self *VQLRuleEvaluator) MaybeEnrichWithVQL(
 func (self *VQLRuleEvaluator) Match(ctx context.Context,
 	scope types.Scope, event *Event) (*Result, error) {
 
-	subscope := scope.Copy().AppendVars(
-		ordereddict.NewDict().
-			Set("Event", event).
-			Set("Rule", self.Rule))
-	defer subscope.Close()
-
 	result := Result{
 		Match:            false,
 		SearchResults:    map[string]bool{},
@@ -108,7 +128,7 @@ func (self *VQLRuleEvaluator) Match(ctx context.Context,
 	for identifier, search := range self.Detection.Searches {
 		var err error
 
-		eval_result, err := self.evaluateSearch(ctx, subscope, search, event)
+		eval_result, err := self.evaluateSearch(ctx, scope, search, event)
 		if err != nil {
 			return nil, fmt.Errorf("error evaluating search %s: %w", identifier, err)
 		}

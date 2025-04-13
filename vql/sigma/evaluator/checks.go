@@ -46,6 +46,20 @@ func (self *VQLRuleEvaluator) CheckRule() error {
 			}
 		}
 
+		enrichment_any, pres := self.AdditionalFields["enrichment"]
+		if pres {
+			enrichment_str, ok := enrichment_any.(string)
+			if ok {
+				enrichment, err := vfilter.ParseLambda(enrichment_str)
+				if err != nil {
+					return fmt.Errorf(
+						"Rule provides invalid enrichment: %v, Error: %v",
+						enrichment_str, err)
+				}
+				self.enrichment = enrichment
+			}
+		}
+
 		self.lambda_args = ordereddict.NewDict()
 		lambda_args_any, pres := self.AdditionalFields["vql_args"]
 		if pres {
