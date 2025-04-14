@@ -289,6 +289,13 @@ func Freebsd() error {
 		arch:        "amd64"}.Run()
 }
 
+func LinuxArmhf() error {
+	return Builder{goos: "linux",
+		extra_tags: " release yara ",
+		cc:         "arm-linux-gnueabihf-gcc",
+		arch:       "arm"}.Run()
+}
+
 func Aix() error {
 	return Builder{
 		extra_tags:  " release yara ",
