@@ -158,9 +158,7 @@ func (self *FlowStorageManager) DeleteFlow(
 			err = self.removeFlowsFromIndex(ctx, config_obj, client_id, flow_id)
 		} else {
 			// Otherwise we just mark the index as pending a rebuild and move on.
-			self.mu.Lock()
-			self.pendingIndexes = append(self.pendingIndexes, client_id)
-			self.mu.Unlock()
+			self.removeFlowFromIndexAsync(client_id, flow_id)
 		}
 	}
 	r.pool.StopAndWait()
