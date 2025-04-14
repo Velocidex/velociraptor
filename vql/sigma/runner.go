@@ -237,6 +237,14 @@ func NewSigmaContext(
 		log_target := parseLogSourceTarget(name)
 
 		for _, r := range rules {
+			if r.Logsource.Category == "" &&
+				r.Logsource.Product == "" &&
+				r.Logsource.Service == "" {
+				scope.Log("INFO:sigma: Error parsing rule '%v': No logsource specified",
+					r.Title)
+				continue
+			}
+
 			// Filter out correlation rules.
 			if r.Correlation == nil &&
 				matchLogSource(log_target, r) {
