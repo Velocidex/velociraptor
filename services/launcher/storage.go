@@ -154,14 +154,18 @@ func (self *FlowStorageManager) ListFlows(
 	return result, rs_reader.TotalRows(), nil
 }
 
-func (self *FlowStorageManager) removeFlowFromIndex(
+func (self *FlowStorageManager) removeFlowsFromIndex(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string,
-	flow_id string) error {
+	flow_ids ...string) error {
 
 	client_path_manager := paths.NewClientPathManager(client_id)
 	file_store_factory := file_store.GetFileStore(config_obj)
+	id_map := make(map[string]struct{})
+	for _, id := range flow_ids {
+		id_map[id] = struct{}{}
+	}
 
 	rs_reader, err := result_sets.NewResultSetReader(file_store_factory,
 		client_path_manager.FlowIndex())
@@ -180,7 +184,7 @@ func (self *FlowStorageManager) removeFlowFromIndex(
 
 	for r := range rs_reader.Rows(ctx) {
 		flow_id, _ := r.GetString("FlowId")
-		if flow_id == flow_id {
+		if _, ok := id_map[flow_id]; ok {
 			continue
 		}
 		rs_writer.Write(r)

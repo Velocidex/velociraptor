@@ -155,7 +155,7 @@ func (self *FlowStorageManager) DeleteFlow(
 	if options.ReallyDoIt {
 		// User specified the flow must be removed immediately.
 		if options.Sync {
-			err = self.removeFlowFromIndex(ctx, config_obj, client_id, flow_id)
+			err = self.removeFlowsFromIndex(ctx, config_obj, client_id, flow_id)
 		} else {
 			// Otherwise we just mark the index as pending a rebuild and move on.
 			self.mu.Lock()
