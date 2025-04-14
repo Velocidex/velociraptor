@@ -42,6 +42,10 @@ linux_m1:
 linux_arm64:
 	go run make.go -v LinuxArm64
 
+# For raspberi pi.
+linux_armf:
+	go run make.go -v LinuxArmhf
+
 linux_musl:
 	go run make.go -v LinuxMusl
 
