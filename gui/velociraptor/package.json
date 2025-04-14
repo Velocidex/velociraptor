@@ -26,7 +26,7 @@
         "lodash": "^4.17.21",
         "markdown-it": "14.1.0",
         "moment": "^2.30.1",
-        "moment-timezone": "0.5.47",
+        "moment-timezone": "0.5.48",
         "npm-watch": "^0.13.0",
         "patch-package": "8.0.0",
         "path-browserify": "1.0.1",
