@@ -644,6 +644,20 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: cache_dns
+  description: Add a DNS record to the cache..
+  type: Function
+  args:
+  - name: name
+    type: string
+    description: 'The domain name to cache '
+    required: true
+  - name: ip
+    type: string
+    description: The ip of the domain
+    required: true
+  platforms:
+  - linux_amd64_cgo
 - name: cancel_flow
   description: |
     Cancels the flow.
@@ -3482,6 +3496,10 @@
   - name: prefer_go
     type: bool
     description: Prefer calling the native Go implementation rather than the system.
+  - name: tracker_only
+    type: bool
+    description: Only use the dns tracker - if the IP is not known then do not attempt
+      to resolve it.
   metadata:
     permissions: MACHINE_STATE
   platforms:
@@ -8760,7 +8778,6 @@
     3. The `vql` modifier can be used to specify a VQL lambda that
        will be used in a detection clause. The lambda will receive the
        field and should return a boolean value.
-
   type: Plugin
   args:
   - name: rules
@@ -11607,3 +11624,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+

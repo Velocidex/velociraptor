@@ -118,7 +118,7 @@ func (self EBPFEventPlugin) Call(
 				case <-ctx.Done():
 					return
 
-				case output_chan <- row:
+				case output_chan <- enrich(row):
 				}
 			}
 		}
