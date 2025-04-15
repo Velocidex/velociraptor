@@ -10,15 +10,17 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
+	"www.velocidex.com/golang/velociraptor/vql/tools/dns"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type HostFunctionArgs struct {
-	Name     string `vfilter:"required,field=name,doc=The name to lookup"`
-	Server   string `vfilter:"optional,field=server,doc=A DNS server to query - if not provided uses the system resolver."`
-	Type     string `vfilter:"optional,field=type,doc=Type of lookup, can be CNAME, NS, SOA, TXT, DNSKEY, AXFR, A (default)"`
-	PreferGo bool   `vfilter:"optional,field=prefer_go,doc=Prefer calling the native Go implementation rather than the system."`
+	Name        string `vfilter:"required,field=name,doc=The name to lookup"`
+	Server      string `vfilter:"optional,field=server,doc=A DNS server to query - if not provided uses the system resolver."`
+	Type        string `vfilter:"optional,field=type,doc=Type of lookup, can be CNAME, NS, SOA, TXT, DNSKEY, AXFR, A (default)"`
+	PreferGo    bool   `vfilter:"optional,field=prefer_go,doc=Prefer calling the native Go implementation rather than the system."`
+	TrackerOnly bool   `vfilter:"optional,field=tracker_only,doc=Only use the dns tracker - if the IP is not known then do not attempt to resolve it."`
 }
 
 type HostFunction struct{}
@@ -63,9 +65,29 @@ func (self *HostFunction) Call(ctx context.Context,
 
 	switch arg.Type {
 	case "", "A":
+		// Try to get from the DNSResolver
+		ips := dns.DNSCache.ByName(arg.Name)
+		if len(ips) > 0 {
+			return ips
+		}
+
+		if arg.TrackerOnly {
+			return []string{}
+		}
+
 		addresses, err = resolver.LookupHost(ctx, arg.Name)
 
 	case "PTR":
+		// Try to get from the DNSResolver
+		names := dns.DNSCache.ByIP(arg.Name)
+		if len(names) > 0 {
+			return names
+		}
+
+		if arg.TrackerOnly {
+			return []string{}
+		}
+
 		addresses, err = resolver.LookupAddr(ctx, arg.Name)
 
 	case "NS":
