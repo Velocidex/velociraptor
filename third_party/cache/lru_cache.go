@@ -52,7 +52,10 @@ type LRUCache struct {
 }
 
 // Value is the interface values that go into LRUCache need to satisfy
-type Value interface {
+type Value interface{}
+
+// If a value has a Size() method we use this to determine its size, otherwise 1.
+type SizedValue interface {
 	// Size returns how big this value is. If you want to just track
 	// the cache by number of objects, you may return the size as 1.
 	Size() int
@@ -236,6 +239,14 @@ func (lru *LRUCache) Length() int64 {
 	return int64(lru.list.Len())
 }
 
+func (lru *LRUCache) valueSize(value Value) int64 {
+	sized_value, ok := value.(SizedValue)
+	if ok {
+		return int64(sized_value.Size())
+	}
+	return 1
+}
+
 // Size returns the sum of the objects' Size() method.
 func (lru *LRUCache) Size() int64 {
 	lru.mu.Lock()
@@ -296,7 +307,7 @@ func (lru *LRUCache) Items() []Item {
 }
 
 func (lru *LRUCache) updateInplace(element *list.Element, value Value) {
-	valueSize := int64(value.Size())
+	valueSize := int64(lru.valueSize(value))
 	sizeDiff := valueSize - element.Value.(*entry).size
 	element.Value.(*entry).value = value
 	element.Value.(*entry).size = valueSize
@@ -311,7 +322,7 @@ func (lru *LRUCache) moveToFront(element *list.Element) {
 }
 
 func (lru *LRUCache) addNew(key string, value Value) {
-	newEntry := &entry{key, value, int64(value.Size()), time.Now()}
+	newEntry := &entry{key, value, int64(lru.valueSize(value)), time.Now()}
 	element := lru.list.PushFront(newEntry)
 	lru.table[key] = element
 	lru.size += newEntry.size
