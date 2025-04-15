@@ -20,7 +20,7 @@ import (
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 
-	// For map[string]interface{} protocl
+	// For map[string]interface{} protocol
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers"
 )
 
@@ -632,6 +632,14 @@ func (self *SigmaTestSuite) TestSigmaModifiers() {
 		}
 
 		for row := range plugin.Call(ctx, scope, args) {
+			// Ensure the plugin reports the rule that matched and the
+			// match object
+			_, pres := scope.Associative(row, "_Rule")
+			assert.True(self.T(), pres)
+
+			_, pres = scope.Associative(row, "_Match")
+			assert.True(self.T(), pres)
+
 			rows = append(rows, row)
 		}
 

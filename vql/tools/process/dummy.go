@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/Velocidex/ttlcache/v2"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
@@ -73,8 +73,8 @@ func (self *DummyProcessTracker) Get(ctx context.Context,
 	return entry, pres
 }
 
-func (self *DummyProcessTracker) Stats() ttlcache.Metrics {
-	return ttlcache.Metrics{}
+func (self *DummyProcessTracker) Stats() cache.Stats {
+	return cache.Stats{}
 }
 
 func (self *DummyProcessTracker) Enrich(
