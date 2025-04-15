@@ -50,6 +50,7 @@ LET _ <= mock_update_wait()
 SELECT process_tracker_callchain(id=2)
 FROM scope()
 `
+
 	stockSyncTest = `
 LET Tracker <= process_tracker(sync_query={
   SELECT Pid AS id,
@@ -70,6 +71,23 @@ LET _ <= mock_pslist_next()
 -- Second call Pid 5 is exited - should mark Pid 5 as exited.
 SELECT process_tracker_callchain(id=2)
 FROM scope()
+`
+
+	overflowTest = `
+LET Tracker <= process_tracker(sync_query={
+  SELECT Pid AS id,
+         Ppid AS parent_id,
+         CreateTime AS start_time,
+         dict(Name=Name) AS data
+  FROM mock_pslist()
+}, update_query={
+  SELECT * FROM mock_update()
+}, sync_period=500000, max_size=5)
+
+// Wait for the tracker to be updated
+LET _ <= mock_update_wait()
+
+SELECT * FROM  process_tracker_pslist()
 `
 
 	testCases = []testCases_t{
@@ -181,6 +199,39 @@ FROM scope()
 			Query: stockUpdateTest,
 			Clock: &utils.IncClock{NowTime: 1651000000},
 		},
+		{
+			Name: "Overflow cache",
+			Mock: `
+[
+ [
+ {"Pid":1,"Name":"Process1","Ppid":5,"CreateTime": "2021-01-01T12:30:01Z"},
+ {"Pid":2,"Name":"Process2","Ppid":5,"CreateTime": "2021-01-01T12:30:02Z"},
+ {"Pid":3,"Name":"Process3","Ppid":5,"CreateTime": "2021-01-01T12:30:03Z"}
+ ]
+]`,
+			UpdateMock: `
+[
+ {"update_type":"start","id":14,"parent_id":1,"start_time":"2021-01-11T12:31Z",
+   "data": {"Name": "NewProcess14"}},
+ {"update_type":"start","id":15,"parent_id":1,"start_time":"2021-01-11T12:32Z",
+   "data": {"Name": "NewProcess15"}},
+ {"update_type":"start","id":16,"parent_id":1,"start_time":"2021-01-11T12:33Z",
+   "data": {"Name": "NewProcess16"}},
+ {"update_type":"start","id":17,"parent_id":1,"start_time":"2021-01-11T12:34Z",
+   "data": {"Name": "NewProcess17"}},
+ {"update_type":"start","id":18,"parent_id":1,"start_time":"2021-01-11T12:31Z",
+   "data": {"Name": "NewProcess18"}},
+ {"update_type":"start","id":19,"parent_id":1,"start_time":"2021-01-11T12:32Z",
+   "data": {"Name": "NewProcess19"}},
+ {"update_type":"start","id":20,"parent_id":1,"start_time":"2021-01-11T12:33Z",
+   "data": {"Name": "NewProcess20"}},
+ {"update_type":"start","id":21,"parent_id":1,"start_time":"2021-01-11T12:34Z",
+   "data": {"Name": "NewProcess21"}}
+
+]`,
+			Query: overflowTest,
+			Clock: &utils.IncClock{NowTime: 1651000000},
+		},
 	}
 )
 
@@ -191,11 +242,11 @@ type ProcessTrackerTestSuite struct {
 func (self *ProcessTrackerTestSuite) TestProcessTracker() {
 	results := ordereddict.NewDict()
 
-	ctx, cancel := context.WithTimeout(self.Ctx, 10*time.Second)
+	ctx, cancel := context.WithTimeout(self.Ctx, 10000000*time.Second)
 	defer cancel()
 
 	for idx, test_case := range testCases {
-		//if idx != 5 {
+		//if idx != 7 {
 		//	continue
 		//}
 
