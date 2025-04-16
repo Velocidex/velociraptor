@@ -72,10 +72,6 @@
    "authenticators.IpFilter",
    " authenticators.(*AzureAuthenticator).oauthAzureLogin"
   ],
-  "/velociraptor/auth/azure/picture": [
-   "authenticators.IpFilter",
-   " authenticators.(*AzureAuthenticator).oauthAzurePicture"
-  ],
   "/velociraptor/auth/github/callback": [
    "authenticators.IpFilter",
    " authenticators.(*GitHubAuthenticator).oauthGithubCallback"

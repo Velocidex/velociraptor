@@ -19,6 +19,7 @@ package authenticators
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -37,9 +38,9 @@ import (
 )
 
 type AzureUser struct {
-	Mail  string `json:"userPrincipalName"`
-	Name  string `json:"displayName"`
-	Token string `json:"token"`
+	Mail    string `json:"userPrincipalName"`
+	Name    string `json:"displayName"`
+	Picture string `json:"picture"`
 }
 
 type AzureAuthenticator struct {
@@ -72,8 +73,6 @@ func (self *AzureAuthenticator) AddHandlers(mux *api_utils.ServeMux) error {
 	mux.Handle(api_utils.GetBasePath(self.config_obj, "/auth/azure/callback"),
 		IpFilter(self.config_obj, self.oauthAzureCallback()))
 
-	mux.Handle(api_utils.GetBasePath(self.config_obj, "/auth/azure/picture"),
-		IpFilter(self.config_obj, self.oauthAzurePicture()))
 	return nil
 }
 
@@ -99,7 +98,7 @@ func (self *AzureAuthenticator) AuthenticateUserHandler(
 
 func (self *AzureAuthenticator) GetGenOauthConfig() (*oauth2.Config, error) {
 	return &oauth2.Config{
-		RedirectURL:  utils.GetPublicURL(self.config_obj, "/auth/azure/callback"),
+		RedirectURL:  api_utils.GetPublicURL(self.config_obj, "/auth/azure/callback"),
 		ClientID:     self.authenticator.OauthClientId,
 		ClientSecret: self.authenticator.OauthClientSecret,
 		Scopes:       []string{"User.Read"},
@@ -155,9 +154,6 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 				self.config_obj, self.authenticator,
 				&Claims{
 					Username: user_info.Mail,
-					Picture: utils.GetPublicURL(self.config_obj) +
-						"auth/azure/picture",
-					Token: user_info.Token,
 				})
 			if err != nil {
 				logging.GetLogger(self.config_obj, &logging.GUIComponent).
@@ -202,68 +198,39 @@ func (self *AzureAuthenticator) getUserDataFromAzure(
 		return nil, fmt.Errorf("failed read response: %s", err.Error())
 	}
 
-	serialized, err := json.Marshal(token)
-	if err != nil {
-		return nil, err
-	}
-
 	user_info := &AzureUser{}
 	err = json.Unmarshal(contents, &user_info)
 	if err != nil {
 		return nil, err
 	}
 
-	// Store the oauth token in the JWT so that we can store it in
-	// the cookie. We will use the cookie value to retrieve the
-	// picture using some more Azure APIs.
-	user_info.Token = string(serialized)
+	username := user_info.Mail
+	if username != "" {
+		setUserPicture(ctx, username, self.getAzurePicture(ctx, token))
+	}
+
+	user_info.Picture = "" // Server will fill it from the user record anyway.
 
 	return user_info, nil
 }
 
-// Get the token from the cookie and request the picture from Azure
-func (self *AzureAuthenticator) oauthAzurePicture() http.Handler {
+// Best effort - if anything fails we just dont show the picture.
+func (self *AzureAuthenticator) getAzurePicture(
+	ctx context.Context, token *oauth2.Token) string {
+	azureOauthConfig, err := self.GetGenOauthConfig()
+	if err != nil {
+		return ""
+	}
 
-	return api_utils.HandlerFunc(nil,
-		func(w http.ResponseWriter, r *http.Request) {
+	response, err := azureOauthConfig.Client(ctx, token).Get(
+		"https://graph.microsoft.com/v1.0/me/photos/48x48/$value")
+	if err != nil {
+		return ""
+	}
+	defer response.Body.Close()
 
-			reject := func(err error) {
-				w.Header().Set("Content-Type", "text/html; charset=utf-8")
-				w.WriteHeader(http.StatusUnauthorized)
-			}
+	data, _ := ioutil.ReadAll(response.Body)
 
-			claims, err := getDetailsFromCookie(self.config_obj, r)
-			if err != nil {
-				reject(err)
-				return
-			}
-
-			oauth_token := &oauth2.Token{}
-			err = json.Unmarshal([]byte(claims.Token), &oauth_token)
-			if err != nil {
-				reject(err)
-				return
-			}
-
-			azureOauthConfig, err := self.GetGenOauthConfig()
-			if err != nil {
-				reject(err)
-				return
-			}
-
-			response, err := azureOauthConfig.Client(r.Context(), oauth_token).Get(
-				"https://graph.microsoft.com/v1.0/me/photos/48x48/$value")
-			if err != nil {
-				reject(fmt.Errorf("failed getting photo: %v", err))
-				return
-			}
-			defer response.Body.Close()
-
-			_, err = io.Copy(w, response.Body)
-			if err != nil {
-				reject(fmt.Errorf("failed getting photo: %v", err))
-				return
-			}
-
-		})
+	return fmt.Sprintf("data:image/jpeg;base64,%v",
+		base64.StdEncoding.EncodeToString(data))
 }
