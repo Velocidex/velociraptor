@@ -190,12 +190,16 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 				return
 			}
 
+			// Update the user picture in the datastore if we can - it
+			// will be populated from there for each GetUserUITraits
+			// call. This keeps our cookie smaller.
+			setUserPicture(r.Context(), user_info.Email, user_info.Picture)
+
 			// Sign and get the complete encoded token as a string using the secret
 			cookie, err := getSignedJWTTokenCookie(
 				self.config_obj, self.authenticator,
 				&Claims{
 					Username: user_info.Email,
-					Picture:  user_info.Picture,
 				})
 			if err != nil {
 				logging.GetLogger(self.config_obj, &logging.GUIComponent).
@@ -316,8 +320,7 @@ func authenticateUserHandle(
 			// build a token to pass to the underlying GRPC
 			// service with metadata about the user.
 			user_info := &api_proto.VelociraptorUser{
-				Name:    user_record.Name,
-				Picture: claims.Picture,
+				Name: user_record.Name,
 			}
 
 			// NOTE: This context is NOT the same context that is received
