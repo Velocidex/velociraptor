@@ -159,7 +159,7 @@ func writeTraceProfile(
 	ctx context.Context,
 	scope vfilter.Scope,
 	output_chan chan vfilter.Row, duration int64) {
-	tmpfile, err := tempfile.TempFile("tmp/*.tmp")
+	tmpfile, err := tempfile.TempFile("tmp*.tmp")
 	if err != nil {
 		scope.Log("profile: %s", err)
 		return
