@@ -98,7 +98,7 @@ func (self *GitHubAuthenticator) AuthenticateUserHandler(
 
 func (self *GitHubAuthenticator) GetGenOauthConfig() (*oauth2.Config, error) {
 	return &oauth2.Config{
-		RedirectURL:  utils.GetPublicURL(self.config_obj, "/auth/github/callback"),
+		RedirectURL:  api_utils.GetPublicURL(self.config_obj, "/auth/github/callback"),
 		ClientID:     self.authenticator.OauthClientId,
 		ClientSecret: self.authenticator.OauthClientSecret,
 		Scopes:       []string{"user:email"},
@@ -175,11 +175,15 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 				return
 			}
 
+			// Update the user picture in the datastore if we can - it
+			// will be populated from there for each GetUserUITraits
+			// call. This keeps our cookie smaller.
+			setUserPicture(r.Context(), user_info.Login, user_info.AvatarUrl)
+
 			cookie, err := getSignedJWTTokenCookie(
 				self.config_obj, self.authenticator,
 				&Claims{
 					Username: user_info.Login,
-					Picture:  user_info.AvatarUrl,
 				})
 			if err != nil {
 				logging.GetLogger(self.config_obj, &logging.GUIComponent).
