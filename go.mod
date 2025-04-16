@@ -72,8 +72,8 @@ require (
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
 	golang.org/x/crypto v0.36.0
 	golang.org/x/mod v0.21.0
-	golang.org/x/net v0.37.0
 	golang.org/x/sys v0.32.0
+	golang.org/x/net v0.38.0
 	golang.org/x/text v0.24.0
 	golang.org/x/time v0.5.0
 	google.golang.org/api v0.169.0
