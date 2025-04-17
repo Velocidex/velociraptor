@@ -170,37 +170,25 @@ func (self *FlowStorageManager) removeFlowsFromJournal(
 	return r_err
 }
 
-// Filter the index through the journal.
 func (self *FlowStorageManager) removeClientFlowsFromIndex(
 	ctx context.Context, config_obj *config_proto.Config,
 	client_id string, flows map[string]bool) error {
 
-	client_path_manager := paths.NewClientPathManager(client_id)
-	file_store_factory := file_store.GetFileStore(config_obj)
-	rs_reader, err := result_sets.NewResultSetReader(file_store_factory,
-		client_path_manager.FlowIndex())
-	if err != nil {
-		// No existing result set, build from scratch.
-		return self.buildFlowIndexFromDatastore(ctx, config_obj, client_id)
-	}
-	defer rs_reader.Close()
-
-	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
-		client_path_manager.FlowIndex(),
-		json.DefaultEncOpts(), utils.SyncCompleter, result_sets.TruncateMode)
-	if err != nil {
-		return err
-	}
-	defer rs_writer.Close()
-
-	for r := range rs_reader.Rows(ctx) {
-		flow_id, _ := r.GetString("FlowId")
-		_, ok := flows[flow_id]
-		if ok {
-			continue
+	// Do not hold the lock while we build different clients.
+	self.mu.Lock()
+	builder, pres := self.indexBuilders[client_id]
+	if !pres {
+		builder = &flowIndexBuilder{
+			client_id: client_id,
 		}
-		rs_writer.Write(r)
 	}
+	self.mu.Unlock()
 
-	return nil
+	err := builder.RemoveClientFlowsFromIndex(ctx, config_obj, self, flows)
+	self.mu.Lock()
+	delete(self.indexBuilders, client_id)
+	self.mu.Unlock()
+
+	return err
+
 }

@@ -202,7 +202,7 @@ func (self *FlowStorageManager) buildFlowIndexFromDatastore(
 	}
 	self.mu.Unlock()
 
-	err := builder.buildFlowIndexFromDatastore(ctx, config_obj, self, client_id)
+	err := builder.BuildFlowIndexFromDatastore(ctx, config_obj, self)
 	self.mu.Lock()
 	delete(self.indexBuilders, client_id)
 	self.mu.Unlock()
