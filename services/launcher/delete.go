@@ -152,13 +152,18 @@ func (self *FlowStorageManager) DeleteFlow(
 			r.emit_fs("NotebookItem", path)
 			return nil
 		})
+
 	if options.ReallyDoIt {
 		// User specified the flow must be removed immediately.
 		if options.Sync {
-			err = self.removeFlowsFromIndex(ctx, config_obj, client_id, flow_id)
+			err = self.removeClientFlowsFromIndex(
+				ctx, config_obj, client_id, map[string]bool{
+					flow_id: true,
+				})
 		} else {
-			// Otherwise we just mark the index as pending a rebuild and move on.
-			self.removeFlowFromIndexAsync(client_id, flow_id)
+			// Otherwise we just mark the index as pending a rebuild
+			// and move on.
+			self.writeFlowJournal(config_obj, client_id, flow_id)
 		}
 	}
 	r.pool.StopAndWait()

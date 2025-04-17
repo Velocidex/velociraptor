@@ -27,8 +27,10 @@ import (
 type FlowStorageManager struct {
 	mu sync.Mutex
 
-	removedFlows  map[string][]string
-	indexBuilders map[string]*flowIndexBuilder
+	pendingIndexes []string
+	indexBuilders  map[string]*flowIndexBuilder
+
+	flow_journal_mu sync.Mutex
 }
 
 func (self *FlowStorageManager) WriteFlow(
@@ -154,56 +156,6 @@ func (self *FlowStorageManager) ListFlows(
 	return result, rs_reader.TotalRows(), nil
 }
 
-func (self *FlowStorageManager) removeFlowsFromIndex(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	client_id string,
-	flow_ids ...string) error {
-
-	client_path_manager := paths.NewClientPathManager(client_id)
-	file_store_factory := file_store.GetFileStore(config_obj)
-	id_map := make(map[string]struct{})
-	for _, id := range flow_ids {
-		id_map[id] = struct{}{}
-	}
-
-	rs_reader, err := result_sets.NewResultSetReader(file_store_factory,
-		client_path_manager.FlowIndex())
-	if err != nil {
-		return self.buildFlowIndexFromDatastore(ctx, config_obj, client_id)
-	}
-	defer rs_reader.Close()
-
-	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
-		client_path_manager.FlowIndex(),
-		json.DefaultEncOpts(), utils.SyncCompleter, result_sets.TruncateMode)
-	if err != nil {
-		return err
-	}
-	defer rs_writer.Close()
-
-	for r := range rs_reader.Rows(ctx) {
-		flow_id, _ := r.GetString("FlowId")
-		if _, ok := id_map[flow_id]; ok {
-			continue
-		}
-		rs_writer.Write(r)
-	}
-
-	return nil
-}
-
-// Schedule a flow to be removed from client's flow index. Removal is
-// performed from within the houseKeeping Goroutine.
-func (self *FlowStorageManager) removeFlowFromIndexAsync(client_id string, flow_id string) {
-	self.mu.Lock()
-	if _, found := self.removedFlows[client_id]; !found {
-		self.removedFlows[client_id] = []string{}
-	}
-	self.removedFlows[client_id] = append(self.removedFlows[client_id], flow_id)
-	self.mu.Unlock()
-}
-
 // Rebuild flow indexes periodically as required.
 func (self *FlowStorageManager) houseKeeping(
 	ctx context.Context,
@@ -218,24 +170,18 @@ func (self *FlowStorageManager) houseKeeping(
 		delay = time.Duration(config_obj.Defaults.ClientInfoHousekeepingPeriod) * time.Second
 	}
 
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
 
 		case <-utils.GetTime().After(utils.Jitter(delay)):
-			self.mu.Lock()
-			removedFlows := self.removedFlows
-			self.removedFlows = make(map[string][]string)
-			self.mu.Unlock()
-
-			for client_id, flow_ids := range removedFlows {
-				err := self.removeFlowsFromIndex(ctx, config_obj, client_id, flow_ids...)
-				if err != nil {
-					logger := logging.GetLogger(
-						config_obj, &logging.FrontendComponent)
-					logger.Error("buildFlowIndexFromDatastore: %v", err)
-				}
+			logger.Debug("<green>FlowStorageManager</> housekeeping run")
+			err := self.removeFlowsFromJournal(ctx, config_obj)
+			if err != nil {
+				logger.Error("removeFlowsFromJournal: %v", err)
 			}
 		}
 	}
@@ -377,7 +323,7 @@ func NewFlowStorageManager(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) *FlowStorageManager {
-	res := &FlowStorageManager{removedFlows: make(map[string][]string)}
+	res := &FlowStorageManager{}
 	wg.Add(1)
 	go res.houseKeeping(ctx, config_obj, wg)
 
