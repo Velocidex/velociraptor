@@ -43,6 +43,6 @@ sources:
     -- Launch this as a separate collection within the Org.
     SELECT * FROM query(
       query={
-        SELECT collect_client(artifacts=InitialArtifacts, client_id="server")
+        SELECT collect_client(artifacts=InitialArtifacts.Artifact, client_id="server")
         FROM scope()
-      }, org_id=Org.id)
+      }, org_id=org_record.id, env=dict(InitialArtifacts=InitialArtifacts))
