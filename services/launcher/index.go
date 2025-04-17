@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -21,6 +23,37 @@ type flowIndexBuilder struct {
 	mu        sync.Mutex
 	client_id string
 	last_time time.Time
+}
+
+// Write the flow to the flow resultset index - this is only used for
+// the GUI.
+func (self *flowIndexBuilder) WriteFlowIndex(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	flow *flows_proto.ArtifactCollectorContext) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if flow.Request == nil || flow.SessionId == "" {
+		return errors.New("Invalid flow")
+	}
+
+	client_path_manager := paths.NewClientPathManager(flow.ClientId)
+	journal, err := services.GetJournal(config_obj)
+	if err != nil {
+		return err
+	}
+
+	return journal.AppendToResultSet(config_obj, client_path_manager.FlowIndex(),
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("FlowId", flow.SessionId).
+			Set("Artifacts", flow.Request.Artifacts).
+			Set("Created", flow.CreateTime).
+			Set("Creator", flow.Request.Creator)},
+		services.JournalOptions{
+			Sync: true,
+		})
 }
 
 // Rebuild the flow index from individual flow context files. This can

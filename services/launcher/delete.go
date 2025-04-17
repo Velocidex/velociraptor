@@ -156,7 +156,7 @@ func (self *FlowStorageManager) DeleteFlow(
 	if options.ReallyDoIt {
 		// User specified the flow must be removed immediately.
 		if options.Sync {
-			err = self.removeClientFlowsFromIndex(
+			err = self.RemoveClientFlowsFromIndex(
 				ctx, config_obj, client_id, map[string]bool{
 					flow_id: true,
 				})

@@ -115,7 +115,7 @@ func (self *FlowStorageManager) clearJournal(
 	return nil
 }
 
-func (self *FlowStorageManager) removeFlowsFromJournal(
+func (self *FlowStorageManager) RemoveFlowsFromJournal(
 	ctx context.Context, config_obj *config_proto.Config) error {
 
 	self.flow_journal_mu.Lock()
@@ -156,7 +156,7 @@ func (self *FlowStorageManager) removeFlowsFromJournal(
 
 	var r_err error
 	for client_id, flows := range id_map {
-		err := self.removeClientFlowsFromIndex(ctx, config_obj, client_id, flows)
+		err := self.RemoveClientFlowsFromIndex(ctx, config_obj, client_id, flows)
 		if err != nil {
 			r_err = err
 		}
@@ -168,27 +168,4 @@ func (self *FlowStorageManager) removeFlowsFromJournal(
 	}
 
 	return r_err
-}
-
-func (self *FlowStorageManager) removeClientFlowsFromIndex(
-	ctx context.Context, config_obj *config_proto.Config,
-	client_id string, flows map[string]bool) error {
-
-	// Do not hold the lock while we build different clients.
-	self.mu.Lock()
-	builder, pres := self.indexBuilders[client_id]
-	if !pres {
-		builder = &flowIndexBuilder{
-			client_id: client_id,
-		}
-	}
-	self.mu.Unlock()
-
-	err := builder.RemoveClientFlowsFromIndex(ctx, config_obj, self, flows)
-	self.mu.Lock()
-	delete(self.indexBuilders, client_id)
-	self.mu.Unlock()
-
-	return err
-
 }
