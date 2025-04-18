@@ -50,6 +50,8 @@ type FlowResponder struct {
 	// Our parent context that is shared between all queries from the
 	// same collection.
 	flow_context *FlowContext
+
+	completed bool
 }
 
 // A Responder manages responses for a single query. A collection (or
@@ -98,7 +100,7 @@ func (self *FlowResponder) IsComplete() bool {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self.status.Status != crypto_proto.VeloStatus_PROGRESS
+	return self.completed
 }
 
 func (self *FlowResponder) GetStatus() *crypto_proto.VeloStatus {
@@ -197,6 +199,9 @@ func (self *FlowResponder) Return(ctx context.Context) {
 	if self.status.Status == crypto_proto.VeloStatus_PROGRESS {
 		self.status.Status = crypto_proto.VeloStatus_OK
 	}
+
+	// Only when the query is completed, we call Return()
+	self.completed = true
 }
 
 // Send a log message to the server. We do not actually send the log
