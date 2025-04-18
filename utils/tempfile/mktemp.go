@@ -113,14 +113,18 @@ func SetTempfile(config_obj *config_proto.Config) {
 		// we have permissions and the directory exists.
 		tmpfile, err := ioutil.TempFile(tmpdir, "tmp")
 		if err == nil {
-			defer os.Remove(tmpfile.Name())
+
+			// Remove the file now - assume future tempfiles will
+			// work.
+			tmpfile.Close()
+			os.Remove(tmpfile.Name())
 
 		} else {
 			logger.Error("Unable to write to configured temp dir %v - falling back to %v",
 				tmpdir, os.TempDir())
 
 			// No we dont have permission there, fall back to system
-			// default, that is the best we can do we hope we can
+			// default, that is the best we can do - we hope we can
 			// write there.
 			tmpdir = os.TempDir()
 		}
