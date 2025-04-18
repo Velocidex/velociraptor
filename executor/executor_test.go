@@ -15,8 +15,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/flows"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
@@ -24,8 +28,45 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 )
 
+type MessageCollector struct {
+	mu                sync.Mutex
+	received_messages []*crypto_proto.VeloMessage
+}
+
+func (self *MessageCollector) Messages() []*crypto_proto.VeloMessage {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return append([]*crypto_proto.VeloMessage{}, self.received_messages...)
+}
+
+func NewMessageCollector(ctx context.Context, executor *ClientExecutor) *MessageCollector {
+	self := &MessageCollector{}
+
+	// Collect outbound messages
+	go func() {
+		for {
+			select {
+			// Wait here until the executor is fully cancelled.
+			case <-ctx.Done():
+				return
+
+			case message := <-executor.Outbound:
+				self.mu.Lock()
+				self.received_messages = append(
+					self.received_messages, message)
+				self.mu.Unlock()
+			}
+		}
+	}()
+
+	return self
+}
+
 type ExecutorTestSuite struct {
 	test_utils.TestSuite
+
+	client_id string
 }
 
 // Cancelling the flow multiple times will cause a single
@@ -45,25 +86,7 @@ func (self *ExecutorTestSuite) TestCancellation() {
 
 	actions.QueryLog.Clear()
 
-	var mu sync.Mutex
-	var received_messages []*crypto_proto.VeloMessage
-
-	// Collect outbound messages
-	go func() {
-		for {
-			select {
-			// Wait here until the executor is fully cancelled.
-			case <-ctx.Done():
-				return
-
-			case message := <-executor.Outbound:
-				mu.Lock()
-				received_messages = append(
-					received_messages, message)
-				mu.Unlock()
-			}
-		}
-	}()
+	collector := NewMessageCollector(ctx, executor)
 
 	// Send the executor a flow request
 	executor.Inbound <- &crypto_proto.VeloMessage{
@@ -101,16 +124,14 @@ func (self *ExecutorTestSuite) TestCancellation() {
 	// message. This should only be done once, no matter how many
 	// cancellations are sent.
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
-		mu.Lock()
-		defer mu.Unlock()
+		received_messages := collector.Messages()
 
 		// Should be at least one stat message and several log messages
 		return len(received_messages) >= 3 &&
 			getFlowStat(received_messages) != nil
 	})
 
-	mu.Lock()
-	defer mu.Unlock()
+	received_messages := collector.Messages()
 
 	// An error status
 	stats := getFlowStat(received_messages)
@@ -136,25 +157,7 @@ func (self *ExecutorTestSuite) TestUploadCancellation() {
 
 	actions.QueryLog.Clear()
 
-	var mu sync.Mutex
-	var received_messages []*crypto_proto.VeloMessage
-
-	// Collect outbound messages
-	go func() {
-		for {
-			select {
-			// Wait here until the executor is fully cancelled.
-			case <-ctx.Done():
-				return
-
-			case message := <-executor.Outbound:
-				mu.Lock()
-				received_messages = append(
-					received_messages, message)
-				mu.Unlock()
-			}
-		}
-	}()
+	collector := NewMessageCollector(ctx, executor)
 
 	// Send the executor a flow request
 	executor.Inbound <- &crypto_proto.VeloMessage{
@@ -187,16 +190,14 @@ func (self *ExecutorTestSuite) TestUploadCancellation() {
 	// message. This should only be done once, no matter how many
 	// cancellations are sent.
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
-		mu.Lock()
-		defer mu.Unlock()
+		received_messages := collector.Messages()
 
 		// Should be at least one stat message and several log messages
 		return len(received_messages) >= 3 &&
 			getFlowStat(received_messages) != nil
 	})
 
-	mu.Lock()
-	defer mu.Unlock()
+	received_messages := collector.Messages()
 
 	// An error status
 	stats := getFlowStat(received_messages)
@@ -226,25 +227,7 @@ func (self *ExecutorTestSuite) TestRowLimitCancellation() {
 
 	actions.QueryLog.Clear()
 
-	var mu sync.Mutex
-	var received_messages []*crypto_proto.VeloMessage
-
-	// Collect outbound messages
-	go func() {
-		for {
-			select {
-			// Wait here until the executor is fully cancelled.
-			case <-ctx.Done():
-				return
-
-			case message := <-executor.Outbound:
-				mu.Lock()
-				received_messages = append(
-					received_messages, message)
-				mu.Unlock()
-			}
-		}
-	}()
+	collector := NewMessageCollector(ctx, executor)
 
 	// Send the executor a flow request
 	executor.Inbound <- &crypto_proto.VeloMessage{
@@ -277,16 +260,14 @@ func (self *ExecutorTestSuite) TestRowLimitCancellation() {
 	// message. This should only be done once, no matter how many
 	// cancellations are sent.
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
-		mu.Lock()
-		defer mu.Unlock()
+		received_messages := collector.Messages()
 
 		// Should be at least one stat message and several log messages
 		return len(received_messages) >= 3 &&
 			getFlowStat(received_messages) != nil
 	})
 
-	mu.Lock()
-	defer mu.Unlock()
+	received_messages := collector.Messages()
 
 	// An error status
 	stats := getFlowStat(received_messages)
@@ -315,25 +296,7 @@ func (self *ExecutorTestSuite) TestTotalRowCount() {
 
 	actions.QueryLog.Clear()
 
-	var mu sync.Mutex
-	var received_messages []*crypto_proto.VeloMessage
-
-	// Collect outbound messages
-	go func() {
-		for {
-			select {
-			// Wait here until the executor is fully cancelled.
-			case <-ctx.Done():
-				return
-
-			case message := <-executor.Outbound:
-				mu.Lock()
-				received_messages = append(
-					received_messages, message)
-				mu.Unlock()
-			}
-		}
-	}()
+	collector := NewMessageCollector(ctx, executor)
 
 	// Send the executor a flow request with two SELECT statements
 	// (for two sources)
@@ -359,17 +322,11 @@ func (self *ExecutorTestSuite) TestTotalRowCount() {
 	// message. This should only be done once, no matter how many
 	// cancellations are sent.
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
-		mu.Lock()
-		defer mu.Unlock()
-
-		return getFlowStat(received_messages) != nil
+		return getFlowStat(collector.Messages()) != nil
 	})
 
-	mu.Lock()
-	defer mu.Unlock()
-
 	// An error status
-	stats := getFlowStat(received_messages)
+	stats := getFlowStat(collector.Messages())
 
 	assert.Equal(self.T(), crypto_proto.VeloStatus_OK,
 		stats.FlowStats.QueryStatus[0].Status)
@@ -409,25 +366,7 @@ func (self *ExecutorTestSuite) TestLogMessages() {
 	executor, err := NewClientExecutor(ctx, "", config_obj)
 	require.NoError(t, err)
 
-	var mu sync.Mutex
-	var received_messages []*crypto_proto.VeloMessage
-
-	// Collect outbound messages
-	go func() {
-		for {
-			select {
-			// Wait here until the executor is fully cancelled.
-			case <-ctx.Done():
-				return
-
-			case message := <-executor.Outbound:
-				mu.Lock()
-				received_messages = append(
-					received_messages, message)
-				mu.Unlock()
-			}
-		}
-	}()
+	collector := NewMessageCollector(ctx, executor)
 
 	// Send two requests for the same flow in parallel these should
 	// generate a bunch of log messages.
@@ -451,13 +390,10 @@ func (self *ExecutorTestSuite) TestLogMessages() {
 	log_messages := []*crypto_proto.LogMessage{}
 
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		mu.Lock()
-		defer mu.Unlock()
-
 		var total_messages uint64
 		log_messages = nil
 
-		for _, msg := range received_messages {
+		for _, msg := range collector.Messages() {
 			if msg.LogMessage != nil {
 				log_messages = append(log_messages, msg.LogMessage)
 
@@ -473,6 +409,104 @@ func (self *ExecutorTestSuite) TestLogMessages() {
 
 	// Log messages should be combined into few messages.
 	assert.True(self.T(), len(log_messages) <= 2, "Too many log messages")
+}
+
+// Schedule a flow in the database and return its flow id
+func (self ExecutorTestSuite) createArtifactCollection(name string) (string, error) {
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
+	require.NoError(self.T(), err)
+
+	// Schedule a flow in the database.
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx,
+		self.ConfigObj,
+		acl_managers.NullACLManager{},
+		repository,
+		&flows_proto.ArtifactCollectorArgs{
+			ClientId:  self.client_id,
+			Creator:   utils.GetSuperuserName(self.ConfigObj),
+			Artifacts: []string{name},
+		}, nil)
+
+	return flow_id, err
+}
+
+func (self *ExecutorTestSuite) TestErrorMessage() {
+	t := self.T()
+
+	// Max time for deadlock detection.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	config_obj := config.GetDefaultConfig()
+	executor, err := NewClientExecutor(ctx, self.client_id, config_obj)
+	require.NoError(t, err)
+
+	collector := NewMessageCollector(ctx, executor)
+
+	// Send two requests for the same flow in parallel these should
+	// generate a bunch of log messages.
+	flow_id, err := self.createArtifactCollection("Generic.Client.Info")
+	assert.NoError(self.T(), err)
+
+	executor.Inbound <- &crypto_proto.VeloMessage{
+		AuthState: crypto_proto.VeloMessage_AUTHENTICATED,
+		SessionId: flow_id,
+		FlowRequest: &crypto_proto.FlowRequest{
+			LogBatchTime: 1,
+			VQLClientActions: []*actions_proto.VQLCollectorArgs{{
+				MaxWait: 1,
+				Query: []*actions_proto.VQLRequest{
+					{
+						Name: "Generic.Client.Info",
+						VQL: `
+SELECT sleep(ms=400) AS Sleep, now() AS Now FROM range(end=4)
+WHERE log(message="this is an error", level="ERROR")`,
+					},
+				}}},
+		},
+		RequestId: 1}
+
+	vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
+		msgs := collector.Messages()
+		if len(msgs) == 0 {
+			return false
+		}
+
+		for _, m := range msgs {
+			if m.FlowStats != nil && m.FlowStats.FlowComplete {
+				return true
+			}
+		}
+		return false
+	})
+
+	// Now process these messages
+	// Emulate a response from this flow.
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	for _, msg := range collector.Messages() {
+		msg.Source = self.client_id
+		runner.ProcessSingleMessage(self.Ctx, msg)
+	}
+	runner.Close(self.Ctx)
+
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	details, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj,
+		services.GetFlowOptions{}, self.client_id, flow_id)
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), "this is an error\n", details.Context.Status)
+	assert.Equal(self.T(), details.Context.QueryStats[0].NamesWithResponse, []string{
+		"Generic.Client.Info",
+	})
+	assert.Equal(self.T(), details.Context.QueryStats[0].ResultRows, int64(4))
 }
 
 // Check that the executor returns the correct status for running flows.
@@ -494,25 +528,7 @@ func (self *ExecutorTestSuite) TestFlowStatsRequest() {
 
 	actions.QueryLog.Clear()
 
-	var mu sync.Mutex
-	var received_messages []*crypto_proto.VeloMessage
-
-	// Collect outbound messages
-	go func() {
-		for {
-			select {
-			// Wait here until the executor is fully cancelled.
-			case <-ctx.Done():
-				return
-
-			case message := <-executor.Outbound:
-				mu.Lock()
-				received_messages = append(
-					received_messages, message)
-				mu.Unlock()
-			}
-		}
-	}()
+	collector := NewMessageCollector(ctx, executor)
 
 	// Send the executor a flow request
 	executor.Inbound <- &crypto_proto.VeloMessage{
@@ -545,20 +561,19 @@ func (self *ExecutorTestSuite) TestFlowStatsRequest() {
 	}
 
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		mu.Lock()
-		defer mu.Unlock()
-
 		// Should be two messages - first is status of the real flow,
 		// second is a "Flow not known - maybe the client crashed?"
 		// message for the not existant flow we dont know about. This
 		// should cause the server to error out that outstanding flow.
-		return len(received_messages) == 2
+		return len(collector.Messages()) == 2
 	})
 
 	goldie.Assert(self.T(), "TestFlowStatsRequest",
-		json.MustMarshalIndent(received_messages))
+		json.MustMarshalIndent(collector.Messages()))
 }
 
 func TestExecutorTestSuite(t *testing.T) {
-	suite.Run(t, new(ExecutorTestSuite))
+	suite.Run(t, &ExecutorTestSuite{
+		client_id: "C.1234",
+	})
 }

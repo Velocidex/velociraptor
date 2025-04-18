@@ -322,7 +322,7 @@ func (self *FlowContext) flushLogMessages(ctx context.Context) {
 // redirect them into the alert queue.
 func (self *FlowContext) sendAlertMessage(
 	ctx context.Context, level string,
-	// msg containes serialized services.AlertMessage
+	// msg contains serialized services.AlertMessage
 	msg string) {
 
 	self.mu.Lock()
