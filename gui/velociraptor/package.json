@@ -21,7 +21,7 @@
         "env-cmd": "^10.1.0",
         "hosted-git-info": "^2.8.9",
         "html-react-parser": "^0.14.3",
-        "http-proxy-middleware": "^2.0.7",
+        "http-proxy-middleware": "^2.0.9",
         "humanize-duration": "^3.32.1",
         "lodash": "^4.17.21",
         "markdown-it": "14.1.0",
