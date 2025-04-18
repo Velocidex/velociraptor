@@ -6,7 +6,7 @@ require (
 	github.com/Depado/bfchroma v1.3.0
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Showmax/go-fqdn v1.0.0
-	github.com/Velocidex/amsi v0.0.0-20200608120838-e5d93b76f119
+	github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2
 	github.com/Velocidex/etw v0.0.0-20250314035532-6115b05b9430
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-magic v0.0.0-20250203094020-32f94b14f00f
@@ -72,8 +72,8 @@ require (
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
 	golang.org/x/crypto v0.36.0
 	golang.org/x/mod v0.21.0
-	golang.org/x/net v0.37.0
-	golang.org/x/sys v0.31.0
+	golang.org/x/sys v0.32.0
+	golang.org/x/net v0.38.0
 	golang.org/x/text v0.24.0
 	golang.org/x/time v0.5.0
 	google.golang.org/api v0.169.0
@@ -322,6 +322,7 @@ require (
 // replace github.com/Velocidex/tracee_velociraptor => ../tracee_velociraptor
 // replace github.com/Velocidex/fileb0x => ../fileb0x
 // replace github.com/Velocidex/go-ext4 => ../go-ext4
+// replace github.com/Velocidex/amsi => ../amsi
 
 // Remove search for html end block. This allows inserting unbalanced
 // HTML tags into the markdown
