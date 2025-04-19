@@ -42,7 +42,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -338,11 +337,38 @@ func send_to_elastic(
 
 }
 
-var sanitize_index_re = regexp.MustCompile("[^a-zA-Z0-9]")
+// Valid Elastic index names
 
+// https://github.com/elastic/elasticsearch/blob/f6a05c6a7c15deaa583b2054175f81cfa8dca7ac/server/src/main/java/org/elasticsearch/common/Strings.java#L287
 func sanitize_index(name string) string {
-	return sanitize_index_re.ReplaceAllLiteralString(
-		strings.ToLower(name), "_")
+
+	// must not be '.' or '..'
+	switch name {
+	case ".", "..":
+		return "invalid"
+	}
+
+	res := []rune{}
+
+	// https://github.com/elastic/elasticsearch/blob/608a61ab85e82f8f6e88002ba7d8458411e7da62/core/src/test/java/org/elasticsearch/cluster/metadata/MetaDataCreateIndexServiceTests.java#L188-L202
+	for i, c := range name {
+		switch c {
+		//  must not contain the following characters
+		case '\\', '/', '*', '?', '"', '<', '>', '|', ' ', ',', '#':
+			res = append(res, '_')
+			continue
+
+			// must not start with '_', '-', or '+'
+		case '-', '+', '_':
+			if i == 0 {
+				continue
+			}
+		}
+
+		res = append(res, c)
+	}
+
+	return strings.ToLower(string(res))
 }
 
 func mergeSecretElastic(ctx context.Context, scope vfilter.Scope, arg *_ElasticPluginArgs) error {

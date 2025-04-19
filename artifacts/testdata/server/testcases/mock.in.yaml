@@ -181,3 +181,8 @@ Queries:
           ProcessNameRegex='.',
           AuthenticodeVerified="NOT TRUSTED",
           Status="ESTABLISHED")
+
+  # Test that we can call an artifact with the ** pattern
+  - SELECT Pid, CommandLine
+    FROM Artifact.Windows.Network.NetstatEnriched(
+      `**`=dict(ProcessNameRegex='.', Status="ESTABLISHED"))
