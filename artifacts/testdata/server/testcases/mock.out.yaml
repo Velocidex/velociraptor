@@ -155,4 +155,9 @@ LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict
   "Timestamp": "2019-12-07T03:30:58Z",
   "_Source": "Windows.Network.NetstatEnriched/Netstat"
  }
-]SELECT * FROM Artifact.Windows.Network.NetstatEnriched( ProcessNameRegex='.', AuthenticodeVerified="NOT TRUSTED", Status="ESTABLISHED")[]
+]SELECT * FROM Artifact.Windows.Network.NetstatEnriched( ProcessNameRegex='.', AuthenticodeVerified="NOT TRUSTED", Status="ESTABLISHED")[]SELECT Pid, CommandLine FROM Artifact.Windows.Network.NetstatEnriched( `**`=dict(ProcessNameRegex='.', Status="ESTABLISHED"))[
+ {
+  "Pid": 4888,
+  "CommandLine": "C:\\Windows\\Explorer.EXE"
+ }
+]
