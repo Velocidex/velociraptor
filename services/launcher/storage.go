@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Velocidex/ordereddict"
 	"github.com/go-errors/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -27,8 +26,10 @@ import (
 type FlowStorageManager struct {
 	mu sync.Mutex
 
-	pendingIndexes []string
-	indexBuilders  map[string]*flowIndexBuilder
+	indexBuilders map[string]*flowIndexBuilder
+
+	// Protects the global flows journal
+	flow_journal_mu sync.Mutex
 }
 
 func (self *FlowStorageManager) WriteFlow(
@@ -54,25 +55,16 @@ func (self *FlowStorageManager) WriteFlowIndex(
 	config_obj *config_proto.Config,
 	flow *flows_proto.ArtifactCollectorContext) error {
 
-	if flow.Request == nil || flow.SessionId == "" {
-		return errors.New("Invalid flow")
-	}
+	return self.GetIndexBuilder(flow.ClientId).WriteFlowIndex(
+		ctx, config_obj, flow)
+}
 
-	client_path_manager := paths.NewClientPathManager(flow.ClientId)
-	journal, err := services.GetJournal(config_obj)
-	if err != nil {
-		return err
-	}
+func (self *FlowStorageManager) RemoveClientFlowsFromIndex(
+	ctx context.Context, config_obj *config_proto.Config,
+	client_id string, flows map[string]bool) error {
 
-	return journal.AppendToResultSet(config_obj, client_path_manager.FlowIndex(),
-		[]*ordereddict.Dict{ordereddict.NewDict().
-			Set("FlowId", flow.SessionId).
-			Set("Artifacts", flow.Request.Artifacts).
-			Set("Created", flow.CreateTime).
-			Set("Creator", flow.Request.Creator)},
-		services.JournalOptions{
-			Sync: true,
-		})
+	return self.GetIndexBuilder(client_id).
+		RemoveClientFlowsFromIndex(ctx, config_obj, self, flows)
 }
 
 func (self *FlowStorageManager) WriteTask(
@@ -154,41 +146,6 @@ func (self *FlowStorageManager) ListFlows(
 	return result, rs_reader.TotalRows(), nil
 }
 
-func (self *FlowStorageManager) removeFlowFromIndex(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	client_id string,
-	flow_id string) error {
-
-	client_path_manager := paths.NewClientPathManager(client_id)
-	file_store_factory := file_store.GetFileStore(config_obj)
-
-	rs_reader, err := result_sets.NewResultSetReader(file_store_factory,
-		client_path_manager.FlowIndex())
-	if err != nil {
-		return self.buildFlowIndexFromDatastore(ctx, config_obj, client_id)
-	}
-	defer rs_reader.Close()
-
-	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
-		client_path_manager.FlowIndex(),
-		json.DefaultEncOpts(), utils.SyncCompleter, result_sets.TruncateMode)
-	if err != nil {
-		return err
-	}
-	defer rs_writer.Close()
-
-	for r := range rs_reader.Rows(ctx) {
-		flow_id, _ := r.GetString("FlowId")
-		if flow_id == flow_id {
-			continue
-		}
-		rs_writer.Write(r)
-	}
-
-	return nil
-}
-
 // Rebuild flow indexes periodically as required.
 func (self *FlowStorageManager) houseKeeping(
 	ctx context.Context,
@@ -203,28 +160,36 @@ func (self *FlowStorageManager) houseKeeping(
 		delay = time.Duration(config_obj.Defaults.ClientInfoHousekeepingPeriod) * time.Second
 	}
 
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
 
 		case <-utils.GetTime().After(utils.Jitter(delay)):
-			self.mu.Lock()
-			pending := self.pendingIndexes
-			self.pendingIndexes = nil
-			self.mu.Unlock()
-
-			for _, client_id := range pending {
-				err := self.buildFlowIndexFromDatastore(
-					ctx, config_obj, client_id)
-				if err != nil {
-					logger := logging.GetLogger(
-						config_obj, &logging.FrontendComponent)
-					logger.Error("buildFlowIndexFromDatastore: %v", err)
-				}
+			logger.Debug("<green>FlowStorageManager</> housekeeping run")
+			err := self.RemoveFlowsFromJournal(ctx, config_obj)
+			if err != nil {
+				logger.Error("RemoveFlowsFromJournal: %v", err)
 			}
 		}
 	}
+}
+
+func (self *FlowStorageManager) GetIndexBuilder(client_id string) *flowIndexBuilder {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	builder, pres := self.indexBuilders[client_id]
+	if !pres {
+		builder = &flowIndexBuilder{
+			client_id: client_id,
+		}
+		self.indexBuilders[client_id] = builder
+	}
+
+	return builder
 }
 
 func (self *FlowStorageManager) buildFlowIndexFromDatastore(
@@ -233,21 +198,8 @@ func (self *FlowStorageManager) buildFlowIndexFromDatastore(
 	client_id string) error {
 
 	// Do not hold the lock while we build different clients.
-	self.mu.Lock()
-	builder, pres := self.indexBuilders[client_id]
-	if !pres {
-		builder = &flowIndexBuilder{
-			client_id: client_id,
-		}
-	}
-	self.mu.Unlock()
-
-	err := builder.buildFlowIndexFromDatastore(ctx, config_obj, self, client_id)
-	self.mu.Lock()
-	delete(self.indexBuilders, client_id)
-	self.mu.Unlock()
-
-	return err
+	return self.GetIndexBuilder(client_id).
+		BuildFlowIndexFromDatastore(ctx, config_obj, self)
 }
 
 // Load the collector context from storage.
@@ -363,7 +315,9 @@ func NewFlowStorageManager(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) *FlowStorageManager {
-	res := &FlowStorageManager{}
+	res := &FlowStorageManager{
+		indexBuilders: make(map[string]*flowIndexBuilder),
+	}
 	wg.Add(1)
 	go res.houseKeeping(ctx, config_obj, wg)
 
