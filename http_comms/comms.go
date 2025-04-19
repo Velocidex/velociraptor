@@ -667,6 +667,11 @@ func (self *HTTPConnector) rekeyWithURL(ctx context.Context, url string) error {
 
 // Manages reading jobs from the reader notification channel.
 type NotificationReader struct {
+	// Pause the PumpRingBufferToSendMessage loop - stops transmitting
+	// data to the server temporarily. New data will still be queued
+	// in the ring buffer if there is room.
+	IsPaused int32
+
 	config_obj *config_proto.Config
 	connector  IConnector
 	manager    crypto.ICryptoManager
@@ -685,11 +690,6 @@ type NotificationReader struct {
 	current_poll_duration time.Duration
 
 	limiter *rate.Limiter
-
-	// Pause the PumpRingBufferToSendMessage loop - stops transmitting
-	// data to the server temporarily. New data will still be queued
-	// in the ring buffer if there is room.
-	IsPaused int32
 
 	// A callback that will be notified when the reader
 	// completes. In the real client this is a fatal error since
