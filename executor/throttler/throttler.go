@@ -26,6 +26,15 @@ import (
 // CPU usage remains within the required levels. When average CPU
 // usage is exceeded, the query is blocked.
 type Throttler struct {
+	// How long we waited to run.
+	waited int64
+
+	// Total number of times the throttler is blocked.
+	total_blocked int64
+
+	// Are we currently blocked?
+	blocked int64
+
 	ctx context.Context
 
 	// If the query allowed to run yet?
@@ -37,15 +46,6 @@ type Throttler struct {
 	Opts Options
 
 	started time.Time
-
-	// How long we waited to run.
-	waited int64
-
-	// Total number of times the throttler is blocked.
-	total_blocked int64
-
-	// Are we currently blocked?
-	blocked int64
 
 	// The name of the query for debugging.
 	query_name string

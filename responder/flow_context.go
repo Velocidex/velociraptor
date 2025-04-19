@@ -25,6 +25,9 @@ import (
 // client, and simply synced to the server. This dramatically reduces
 // the amount of work done on the server.
 type FlowContext struct {
+	// A counter of uploads sent in the entire collection.
+	upload_id int32
+
 	ctx        context.Context
 	config_obj *config_proto.Config
 	flow_id    string
@@ -55,9 +58,6 @@ type FlowContext struct {
 
 	// Logs and uploads are managed per collection, and are shared
 	// with all the queries.
-
-	// A counter of uploads sent in the entire collection.
-	upload_id int32
 
 	// A JSONL buffer with log messages collected for the entire flow.
 	mu                sync.Mutex

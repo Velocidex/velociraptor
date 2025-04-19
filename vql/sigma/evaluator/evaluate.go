@@ -25,6 +25,8 @@ type Result struct {
 }
 
 type VQLRuleEvaluator struct {
+	hit_count uint64
+
 	sigma.Rule
 	scope types.Scope
 
@@ -38,8 +40,6 @@ type VQLRuleEvaluator struct {
 	enrichment *vfilter.Lambda
 
 	fieldmappings *FieldMappingResolver
-
-	hit_count uint64
 
 	// If this rule has a correlator, then forward the match to the
 	// correlator.

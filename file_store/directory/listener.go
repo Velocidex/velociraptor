@@ -30,15 +30,15 @@ import (
 // ordering is preserved. When the file buffer is fully drained, the
 // Listener is able to go back into direct delivering mode.
 type Listener struct {
+	// If set do not use the file buffer - this will block senders!
+	disable_file_buffering int32
+
 	mu sync.Mutex
 
 	start time.Time
 
 	// should new messages go directly to the file buffer?
 	file_buffer_active bool // Locked
-
-	// If set do not use the file buffer - this will block senders!
-	disable_file_buffering int32
 
 	// If we are closed we drop any new messages.
 	closed bool

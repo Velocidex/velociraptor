@@ -47,6 +47,8 @@ const (
 )
 
 type Server struct {
+	Healthy int32
+
 	manager *crypto_server.ServerCryptoManager
 	logger  *logging.LogContext
 
@@ -60,8 +62,7 @@ type Server struct {
 	// The server dynamically adjusts concurrency. This signals exit.
 	done chan bool
 
-	Bucket  *ratelimit.Bucket
-	Healthy int32
+	Bucket *ratelimit.Bucket
 }
 
 func (self *Server) Concurrency() *utils.Concurrency {

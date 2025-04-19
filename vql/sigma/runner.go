@@ -18,6 +18,9 @@ import (
 
 // Each log source combines rules and consumes a single event stream.
 type SigmaExecutionContext struct {
+	eval_time   int64
+	event_count uint64
+
 	Name string
 
 	query types.StoredQuery
@@ -29,9 +32,7 @@ type SigmaExecutionContext struct {
 	correlations     []*evaluator.VQLRuleEvaluator
 	non_correlations []*evaluator.VQLRuleEvaluator
 
-	active      bool
-	eval_time   int64
-	event_count uint64
+	active bool
 }
 
 func (self *SigmaExecutionContext) ChargeTime(ns int64) {
