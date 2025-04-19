@@ -489,6 +489,11 @@ func (self *MemcacheFileWriter) _FlushSync(
 
 // Keep all the writers in memory.
 type MemcacheFileStore struct {
+	// Total number of bytes in flight right now. If this gets too
+	// large we start turning writes to be synchronous to push back
+	// against writers and protect our memory usage.
+	total_cached_bytes int64
+
 	mu sync.Mutex
 
 	// For debugging.
@@ -512,11 +517,6 @@ type MemcacheFileStore struct {
 	max_age time.Duration
 
 	closed bool
-
-	// Total number of bytes in flight right now. If this gets too
-	// large we start turning writes to be synchronous to push back
-	// against writers and protect our memory usage.
-	total_cached_bytes int64
 
 	// Pool of flusher workers
 	pool pond.Pool
