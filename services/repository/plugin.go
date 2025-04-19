@@ -19,6 +19,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
@@ -76,6 +77,8 @@ func (self *ArtifactRepositoryPlugin) Call(
 			}
 			return
 		}
+
+		args = arg_parser.NormalizeArgs(args)
 
 		v, pres := args.Get("source")
 		if pres {
