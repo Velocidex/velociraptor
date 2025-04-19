@@ -92,6 +92,7 @@ type HuntStorageManagerImpl struct {
 	// NOTE: This has to be aligned to 64 bits or 32 bit builds will break
 	// https://github.com/golang/go/issues/13868
 	last_timestamp uint64
+	closed         int64
 
 	mu sync.Mutex
 
@@ -102,8 +103,7 @@ type HuntStorageManagerImpl struct {
 	I_am_master bool
 
 	// If any of the hunt objects are dirty this will be set.
-	dirty  bool
-	closed int64
+	dirty bool
 
 	last_flush_time time.Time
 }
