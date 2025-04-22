@@ -318,6 +318,7 @@ func NewFlowStorageManager(
 	res := &FlowStorageManager{
 		indexBuilders: make(map[string]*flowIndexBuilder),
 	}
+
 	wg.Add(1)
 	go res.houseKeeping(ctx, config_obj, wg)
 
