@@ -101,6 +101,10 @@ message PushEventRequest {
     int64 rows = 5;
 
     string org_id = 6;
+
+    // If false we do not write but just broadcast to all
+    // listeners. But if true we also write to the local filestore.
+    bool write = 7;
 }
 
 

@@ -47,6 +47,9 @@ type: INTERNAL
 name: Server.Internal.Label
 type: INTERNAL
 `, `
+name: Server.Internal.UserManager
+type: INTERNAL
+`, `
 name: Server.Internal.Notifications
 type: INTERNAL
 `, `
