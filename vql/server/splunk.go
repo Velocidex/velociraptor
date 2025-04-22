@@ -290,7 +290,7 @@ func send_to_splunk(
 		case <-ctx.Done():
 			return
 		case output_chan <- ordereddict.NewDict().
-			Set("Response", err):
+			Set("Response", err.Error()):
 		}
 	} else {
 		select {

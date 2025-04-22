@@ -3,12 +3,14 @@ package api
 import (
 	"context"
 
+	errors "github.com/go-errors/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -25,31 +27,8 @@ func (self *ApiServer) PushEvents(
 		return nil, Status(self.verbose, err)
 	}
 
-	user_name := user_record.Name
-	token, err := services.GetEffectivePolicy(org_config_obj, user_name)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
-	// Check that the principal is allowed to push to the queue.
-	ok, err := services.CheckAccessWithToken(token, acls.PUBLISH, in.Artifact)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
-	if !ok {
-		return nil, status.Error(codes.PermissionDenied,
-			"Permission denied: PUBLISH "+user_name+" to "+in.Artifact)
-	}
-
-	rows, err := utils.ParseJsonToDicts([]byte(in.Jsonl))
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
-	// The call can access the datastore from any org becuase it is a
-	// server->server call.
-	if token.SuperUser && org_config_obj.OrgId != in.OrgId {
+	// User is asking to switch orgs
+	if in.OrgId != "" {
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
 			return nil, Status(self.verbose, err)
@@ -61,6 +40,39 @@ func (self *ApiServer) PushEvents(
 		}
 	}
 
+	user_name := user_record.Name
+
+	// Now check permmissions in the org if the user is not the superuser.
+	if user_name != utils.GetSuperuserName(org_config_obj) {
+		token, err := services.GetEffectivePolicy(org_config_obj, user_name)
+		if err != nil {
+			return nil, Status(self.verbose, err)
+		}
+
+		// Check that the principal is allowed to push to this specific queue.
+		ok, err := services.CheckAccessWithToken(token, acls.PUBLISH, in.Artifact)
+		if err != nil {
+			return nil, Status(self.verbose, err)
+		}
+
+		if !ok {
+			return nil, status.Error(codes.PermissionDenied,
+				"Permission denied: PUBLISH "+user_name+" to "+in.Artifact)
+		}
+
+		// For regular users append the sender field so we can track
+		// where the message came from.
+		in.Jsonl = json.AppendJsonlItem(in.Jsonl, "_Sender", user_name)
+
+		// Always write user events.
+		in.Write = true
+	}
+
+	rows, err := utils.ParseJsonToDicts([]byte(in.Jsonl))
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
 	// Only return the first row
 	journal, err := services.GetJournal(org_config_obj)
 	if err != nil {
@@ -70,67 +82,24 @@ func (self *ApiServer) PushEvents(
 	// only broadcast the events for local listeners. Minions
 	// write the events themselves, so we just need to broadcast
 	// for any server event artifacts that occur.
-	journal.Broadcast(ctx, org_config_obj,
-		rows, in.Artifact, in.ClientId, in.FlowId)
+	if in.Write {
+		err = journal.PushRowsToArtifact(ctx, org_config_obj,
+			rows, in.Artifact, in.ClientId, in.FlowId)
+
+	} else {
+		err = journal.Broadcast(ctx, org_config_obj,
+			rows, in.Artifact, in.ClientId, in.FlowId)
+
+	}
+
 	return &emptypb.Empty{}, err
 }
 
 func (self *ApiServer) WriteEvent(
 	ctx context.Context,
 	in *actions_proto.VQLResponse) (*emptypb.Empty, error) {
-
-	defer Instrument("WriteEvent")()
-
-	users := services.GetUserManager()
-	user_record, config_obj, err := users.GetUserFromContext(ctx)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
-	user_name := user_record.Name
-	token, err := services.GetEffectivePolicy(config_obj, user_name)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
-	// Check that the principal is allowed to push to the queue.
-	ok, err := services.CheckAccessWithToken(token, acls.MACHINE_STATE, in.Query.Name)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
-	if !ok {
-		return nil, status.Error(codes.PermissionDenied,
-			"Permission denied: MACHINE_STATE "+
-				user_name+" to "+in.Query.Name)
-	}
-
-	rows, err := utils.ParseJsonToDicts([]byte(in.Response))
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
-	// The call can access the datastore from any org becuase it is a
-	// server->server call.
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
-	org_config_obj, err := org_manager.GetOrgConfig(in.OrgId)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
-	// Only return the first row
-	journal, err := services.GetJournal(org_config_obj)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
-	err = journal.PushRowsToArtifact(ctx, org_config_obj,
-		rows, in.Query.Name, user_name, "")
-	return &emptypb.Empty{}, err
+	return nil, Status(self.verbose,
+		errors.New("WriteEvent is deprecated, please use PushEvents instead"))
 }
 
 func (self *ApiServer) ListAvailableEventResults(
