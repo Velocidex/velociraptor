@@ -512,6 +512,10 @@ func (self ResultSetFactory) NewResultSetReader(
 	file_store_factory api.FileStore,
 	log_path api.FSPathSpec) (result_sets.ResultSetReader, error) {
 
+	if file_store_factory == nil {
+		return nil, errors.New("No filestore")
+	}
+
 	fd, err := file_store_factory.ReadFile(log_path)
 	if errors.Is(err, io.EOF) || errors.Is(err, os.ErrNotExist) {
 		fd = &NullReader{
