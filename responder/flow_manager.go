@@ -29,6 +29,7 @@ import (
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/services/debug"
+	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -45,7 +46,10 @@ type FlowManager struct {
 	ctx        context.Context
 	config_obj *config_proto.Config
 	in_flight  map[string]*FlowContext
-	next_id    int
+
+	// These are old flows that are completed.
+	finished *cache.LRUCache
+	next_id  int
 
 	// Remember all the cancelled sessions so the ring buffer file can
 	// drop any messages for flows that were already cancelled.
@@ -60,6 +64,7 @@ func NewFlowManager(ctx context.Context,
 		id:         utils.GetId(),
 		config_obj: config_obj,
 		in_flight:  make(map[string]*FlowContext),
+		finished:   cache.NewLRUCache(20),
 		cancelled:  make(map[string]bool),
 	}
 
@@ -86,6 +91,23 @@ func (self *FlowManager) WriteProfile(ctx context.Context,
 			Set("Stats", flow_context.GetStatsDicts())
 	}
 
+	for _, flow_id := range self.finished.Keys() {
+		flow_context_any, pres := self.finished.Peek(flow_id)
+		if !pres {
+			continue
+		}
+
+		flow_context, ok := flow_context_any.(*FlowContext)
+		if !ok {
+			continue
+		}
+
+		output_chan <- ordereddict.NewDict().
+			Set("FlowId", flow_id).
+			Set("State", "Completed").
+			Set("Stats", flow_context.GetStatsDicts())
+	}
+
 	for flow_id := range self.cancelled {
 		output_chan <- ordereddict.NewDict().
 			Set("FlowId", flow_id).
@@ -95,7 +117,16 @@ func (self *FlowManager) WriteProfile(ctx context.Context,
 
 func (self *FlowManager) removeFlowContext(flow_id string) {
 	self.mu.Lock()
+	flow_context, pres := self.in_flight[flow_id]
+	if !pres {
+		return
+	}
+
 	delete(self.in_flight, flow_id)
+
+	// Append the flow to the completed list.
+	self.finished.Set(flow_id, flow_context)
+
 	self.mu.Unlock()
 }
 
@@ -135,6 +166,14 @@ func (self *FlowManager) Get(flow_id string) (*FlowContext, error) {
 
 	flow_context, pres := self.in_flight[flow_id]
 	if !pres {
+		// Flow is not in flight - maybe it is finished?
+		flow_context_any, pres := self.finished.Get(flow_id)
+		if pres {
+			flow_context, ok := flow_context_any.(*FlowContext)
+			if ok {
+				return flow_context, nil
+			}
+		}
 		return nil, utils.NotFoundError
 	}
 
