@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -23,16 +25,54 @@ type flowIndexBuilder struct {
 	last_time time.Time
 }
 
-// Rebuild the flow index from individual flow context files. This can
-// be very slow on slow filesystems as it does a lot of IO.
-func (self *flowIndexBuilder) buildFlowIndexFromDatastore(
+// Write the flow to the flow resultset index - this is only used for
+// the GUI.
+func (self *flowIndexBuilder) WriteFlowIndex(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	storage_manager services.FlowStorer,
-	client_id string) error {
+	flow *flows_proto.ArtifactCollectorContext) error {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if flow.Request == nil || flow.SessionId == "" {
+		return errors.New("Invalid flow")
+	}
+
+	client_path_manager := paths.NewClientPathManager(flow.ClientId)
+	journal, err := services.GetJournal(config_obj)
+	if err != nil {
+		return err
+	}
+
+	return journal.AppendToResultSet(config_obj, client_path_manager.FlowIndex(),
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("FlowId", flow.SessionId).
+			Set("Artifacts", flow.Request.Artifacts).
+			Set("Created", flow.CreateTime).
+			Set("Creator", flow.Request.Creator)},
+		services.JournalOptions{
+			Sync: true,
+		})
+}
+
+// Rebuild the flow index from individual flow context files. This can
+// be very slow on slow filesystems as it does a lot of IO.
+func (self *flowIndexBuilder) BuildFlowIndexFromDatastore(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	storage_manager services.FlowStorer) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.buildFlowIndexFromDatastore(ctx, config_obj, storage_manager)
+}
+
+func (self *flowIndexBuilder) buildFlowIndexFromDatastore(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	storage_manager services.FlowStorer) error {
 
 	// Ignore rebuilds more frequent than a second - this is probably
 	// fresh enough.
@@ -49,7 +89,7 @@ func (self *flowIndexBuilder) buildFlowIndexFromDatastore(
 		return err
 	}
 
-	flow_path_manager := paths.NewFlowPathManager(client_id, "")
+	flow_path_manager := paths.NewFlowPathManager(self.client_id, "")
 	all_flow_urns, err := db.ListChildren(
 		config_obj, flow_path_manager.ContainerPath())
 	if err != nil {
@@ -70,7 +110,7 @@ func (self *flowIndexBuilder) buildFlowIndexFromDatastore(
 	}
 
 	flow_reader := NewFlowReader(
-		ctx, config_obj, storage_manager, client_id)
+		ctx, config_obj, storage_manager, self.client_id)
 
 	go func() {
 		defer flow_reader.Close()
@@ -80,7 +120,7 @@ func (self *flowIndexBuilder) buildFlowIndexFromDatastore(
 		}
 	}()
 
-	client_path_manager := paths.NewClientPathManager(client_id)
+	client_path_manager := paths.NewClientPathManager(self.client_id)
 	file_store_factory := file_store.GetFileStore(config_obj)
 
 	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
@@ -97,6 +137,45 @@ func (self *flowIndexBuilder) buildFlowIndexFromDatastore(
 			Set("Artifacts", flow.Request.Artifacts).
 			Set("Created", flow.CreateTime).
 			Set("Creator", flow.Request.Creator))
+	}
+
+	return nil
+}
+
+// Filter the index through the journal.
+func (self *flowIndexBuilder) RemoveClientFlowsFromIndex(
+	ctx context.Context, config_obj *config_proto.Config,
+	storage_manager services.FlowStorer,
+	flows map[string]bool) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	client_path_manager := paths.NewClientPathManager(self.client_id)
+	file_store_factory := file_store.GetFileStore(config_obj)
+	rs_reader, err := result_sets.NewResultSetReader(file_store_factory,
+		client_path_manager.FlowIndex())
+	if err != nil {
+		// No existing result set, build from scratch.
+		return self.buildFlowIndexFromDatastore(ctx, config_obj, storage_manager)
+	}
+	defer rs_reader.Close()
+
+	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
+		client_path_manager.FlowIndex(),
+		json.DefaultEncOpts(), utils.SyncCompleter, result_sets.TruncateMode)
+	if err != nil {
+		return err
+	}
+	defer rs_writer.Close()
+
+	for r := range rs_reader.Rows(ctx) {
+		flow_id, _ := r.GetString("FlowId")
+		_, ok := flows[flow_id]
+		if ok {
+			continue
+		}
+		rs_writer.Write(r)
 	}
 
 	return nil
