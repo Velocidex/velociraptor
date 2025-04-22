@@ -105,13 +105,16 @@ func (self *FlowResponder) IsComplete() bool {
 
 func (self *FlowResponder) GetStatus() *crypto_proto.VeloStatus {
 	self.mu.Lock()
+
+	if !self.completed {
+		self.status.LastActive = uint64(utils.GetTime().Now().UnixNano() / 1000)
+
+		// Duration is in milli seconds
+		self.status.Duration = int64(self.status.LastActive-self.status.FirstActive) * 1000
+	}
+
 	status := proto.Clone(&self.status).(*crypto_proto.VeloStatus)
 	self.mu.Unlock()
-
-	status.LastActive = uint64(utils.GetTime().Now().UnixNano() / 1000)
-
-	// Duration is in milli seconds
-	status.Duration = int64(status.LastActive-status.FirstActive) * 1000
 
 	return status
 }
@@ -202,6 +205,10 @@ func (self *FlowResponder) Return(ctx context.Context) {
 
 	// Only when the query is completed, we call Return()
 	self.completed = true
+	self.status.LastActive = uint64(utils.GetTime().Now().UnixNano() / 1000)
+
+	// Duration is in milli seconds
+	self.status.Duration = int64(self.status.LastActive-self.status.FirstActive) * 1000
 }
 
 // Send a log message to the server. We do not actually send the log
