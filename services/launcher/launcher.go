@@ -777,6 +777,15 @@ func NewLauncherService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (services.Launcher, error) {
 
+	// The laucher service is also created on the client to ensure it
+	// can compile artifacts etc. But it does not make sense to
+	// actually store any of the flows on the client. We therefore
+	// install a dummy storer which just returns errors for any
+	// attempts to store flows.
+	if config_obj.Datastore == nil {
+		return &Launcher{Storage_: &DummyStorer{}}, nil
+	}
+
 	res := &Launcher{
 		Storage_: NewFlowStorageManager(ctx, config_obj, wg),
 	}
