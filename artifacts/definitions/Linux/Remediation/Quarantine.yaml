@@ -92,6 +92,11 @@ sources:
           'udp', 'sport', 'domain',
           'ct', 'state', 'established', 'accept')
 
+     // add localhost inbound rule to allow DNS lookups (needed on some ubuntu systems)
+     LET add_localhost_rule_to_inbound_chain_cmd = (
+          pathToNFT,'add','rule','inet', TableName, 'inbound_chain', 'ip',
+          'daddr', '127.0.0.53', 'accept')
+
      // add outbound chain
      LET add_outbound_chain_cmd = (
           pathToNFT, 'add', 'chain', 'inet', TableName, 'outbound_chain',
@@ -108,6 +113,11 @@ sources:
           pathToNFT,'add','rule','inet', TableName, 'outbound_chain',
           'udp', 'dport', '{', '53,67,68', '}',
           'ct', 'state', 'new,established', 'accept')
+
+     // add localhost outbound rule to allow DNS lookups (needed on some ubuntu systems)
+     LET add_localhost_rule_to_outbound_chain_cmd = (
+          pathToNFT,'add','rule','inet', TableName, 'outbound_chain', 'ip',
+          'saddr', '127.0.0.53', 'accept')
 
      // add forward chain
      LET add_forward_chain_cmd = (
@@ -164,7 +174,7 @@ sources:
          },
          query={
              SELECT format(format="Testing connectivity with %v: %v", args=[Url, Response]) AS Result
-             FROM http_client(url=pem_url, disable_ssl_security='TRUE')
+             FROM http_client(url=pem_url, skip_verify='TRUE')
              WHERE Response = 200
              LIMIT 1
          })
@@ -226,25 +236,31 @@ sources:
                        c=run_command(Cmd=add_inbound_chain_cmd,
                            Message='Added inbound_chain to ' +
                                     TableName + ' table.'),
-                       d=add_velociraptor_rule_to_inbound_chain,
-                       e=run_command(Cmd=add_udp_rule_to_inbound_chain_cmd,
+                       d=run_command(Cmd=add_udp_rule_to_inbound_chain_cmd,
                            Message='Added udp rule to inbound_chain in ' +
+                                     TableName + ' table.'),
+                       e=run_command(Cmd=add_localhost_rule_to_inbound_chain_cmd,
+                            Message='Added localhost rule to inbound_chain in ' +
                                      TableName + ' table.'),
                        f=run_command(Cmd=add_outbound_chain_cmd,
                            Message='Added outbound_chain to ' +
                                      TableName + ' table.'),
-                       g=add_velociraptor_rule_to_outbound_chain,
-                       h=run_command(Cmd=add_tcp_rule_to_outbound_chain_cmd,
+                       g=run_command(Cmd=add_tcp_rule_to_outbound_chain_cmd,
                            Message='Added tcp rule to outbound_chain in ' +
                                      TableName + ' table.'),
-                       i=run_command(Cmd=add_udp_rule_to_outbound_chain_cmd,
+                       h=run_command(Cmd=add_udp_rule_to_outbound_chain_cmd,
                            Message='Added udp rule to outbound_chain in ' +
                                      TableName + ' table.'),
-                       j=run_command(Cmd=add_forward_chain_cmd,
+                       i=run_command(Cmd=add_localhost_rule_to_outbound_chain_cmd,
+                            Message='Added localhost rule to outbound_chain in ' +
+                                     TableName + ' table.'),
+                       j=add_velociraptor_rule_to_inbound_chain,
+                       k=add_velociraptor_rule_to_outbound_chain,
+                       l=run_command(Cmd=add_forward_chain_cmd,
                            Message='Added forward_chain to ' +
                                      TableName + ' table.'),
-                       k=final_check_allowed,
-                       l=final_check_forbidden
+                       m=final_check_allowed,
+                       n=final_check_forbidden
                    )
                })
 
