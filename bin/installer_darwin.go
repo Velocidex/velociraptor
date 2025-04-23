@@ -94,7 +94,7 @@ func doInstall() error {
 		dirname := filepath.Dir(target_path)
 		logger.Info("Attempting to create intermediate directory %s.",
 			dirname)
-		err = os.MkdirAll(dirname, 0700)
+		err = os.MkdirAll(dirname, 0755)
 		if err != nil {
 			return fmt.Errorf("Create intermediate directories: %w", err)
 		}
