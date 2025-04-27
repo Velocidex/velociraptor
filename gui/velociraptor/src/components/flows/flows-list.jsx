@@ -696,7 +696,16 @@ const stateRenderer = (cell, row) => {
         result = <FontAwesomeIcon icon="hourglass"/>;
 
     } else if (cell === "IN_PROGRESS") {
-        result = <FontAwesomeIcon icon="person-running"/>;
+        // An error occured but the flow is still running.
+        if(row && row._Flow && row._Flow.status) {
+            result = <>
+                       <FontAwesomeIcon icon="person-running"/>&nbsp;
+                       <FontAwesomeIcon icon="exclamation"/>
+                     </>;
+        } else {
+
+            result = <FontAwesomeIcon icon="person-running"/>;
+        }
 
     } else if (cell === "UNRESPONSIVE") {
         result = <FontAwesomeIcon icon="question"/>;

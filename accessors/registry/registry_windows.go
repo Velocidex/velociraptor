@@ -312,14 +312,13 @@ func (self *RegValueInfo) materialize() error {
 		self.Type = "BINARY"
 
 	case registry.MULTI_SZ:
-		value_str, _ := value.(string)
-		self._binary_data = []byte(value_str)
+		self._binary_data, _ = json.Marshal(value)
 		self.Type = "MULTI_SZ"
 
 		if buf_size < MAX_EMBEDDED_REG_VALUE {
 			self._data = ordereddict.NewDict().
 				Set("type", "MULTI_SZ").
-				Set("value", strings.Split(value_str, "\n"))
+				Set("value", value)
 		}
 
 	case registry.SZ, registry.EXPAND_SZ:

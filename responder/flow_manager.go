@@ -81,14 +81,15 @@ func NewFlowManager(ctx context.Context,
 
 func (self *FlowManager) WriteProfile(ctx context.Context,
 	scope vfilter.Scope, output_chan chan vfilter.Row) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
 
+	var results []*ordereddict.Dict
+
+	self.mu.Lock()
 	for flow_id, flow_context := range self.in_flight {
-		output_chan <- ordereddict.NewDict().
+		results = append(results, ordereddict.NewDict().
 			Set("FlowId", flow_id).
 			Set("State", "In Flight").
-			Set("Stats", flow_context.GetStatsDicts())
+			Set("Stats", flow_context.GetStatsDicts()))
 	}
 
 	for _, flow_id := range self.finished.Keys() {
@@ -102,21 +103,31 @@ func (self *FlowManager) WriteProfile(ctx context.Context,
 			continue
 		}
 
-		output_chan <- ordereddict.NewDict().
+		results = append(results, ordereddict.NewDict().
 			Set("FlowId", flow_id).
 			Set("State", "Completed").
-			Set("Stats", flow_context.GetStatsDicts())
+			Set("Stats", flow_context.GetStatsDicts()))
 	}
 
 	for flow_id := range self.cancelled {
-		output_chan <- ordereddict.NewDict().
+		results = append(results, ordereddict.NewDict().
 			Set("FlowId", flow_id).
-			Set("State", "Cancelled")
+			Set("State", "Cancelled"))
+	}
+	defer self.mu.Unlock()
+
+	for _, r := range results {
+		select {
+		case <-ctx.Done():
+			return
+		case output_chan <- r:
+		}
 	}
 }
 
-func (self *FlowManager) removeFlowContext(flow_id string) {
+func (self *FlowManager) RemoveFlowContext(flow_id string) {
 	self.mu.Lock()
+
 	flow_context, pres := self.in_flight[flow_id]
 	if !pres {
 		return
@@ -124,10 +135,10 @@ func (self *FlowManager) removeFlowContext(flow_id string) {
 
 	delete(self.in_flight, flow_id)
 
+	self.mu.Unlock()
+
 	// Append the flow to the completed list.
 	self.finished.Set(flow_id, flow_context)
-
-	self.mu.Unlock()
 }
 
 func (self *FlowManager) IsCancelled(flow_id string) bool {
@@ -162,9 +173,9 @@ func (self *FlowManager) Cancel(ctx context.Context, flow_id string) {
 
 func (self *FlowManager) Get(flow_id string) (*FlowContext, error) {
 	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	flow_context, pres := self.in_flight[flow_id]
+	self.mu.Unlock()
+
 	if !pres {
 		// Flow is not in flight - maybe it is finished?
 		flow_context_any, pres := self.finished.Get(flow_id)
