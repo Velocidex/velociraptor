@@ -22,14 +22,15 @@ type LabelsTestSuite struct {
 	test_utils.TestSuite
 	client_id string
 	flow_id   string
-	Clock     utils.Clock
+
+	closer func()
 }
 
 func (self *LabelsTestSuite) SetupTest() {
 	self.TestSuite.SetupTest()
 
 	self.client_id = "C.12312"
-	self.Clock = &utils.IncClock{}
+	self.closer = utils.MockTime(&utils.IncClock{})
 
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -39,10 +40,13 @@ func (self *LabelsTestSuite) SetupTest() {
 			ClientId: self.client_id,
 		},
 	})
+}
 
-	// Set an incremental clock on the labeler.
-	labeler := services.GetLabeler(self.ConfigObj)
-	labeler.(*labels.Labeler).Clock = self.Clock
+func (self *LabelsTestSuite) TearDownTest() {
+	self.TestSuite.TearDownTest()
+	if self.closer != nil {
+		self.closer()
+	}
 }
 
 // Check how labels interact with the indexing service
@@ -95,7 +99,7 @@ func (self *LabelsTestSuite) TestLabelsAndIndexing() {
 }
 
 func (self *LabelsTestSuite) TestAddLabel() {
-	now := uint64(self.Clock.Now().UnixNano())
+	now := uint64(utils.GetTime().Now().UnixNano())
 
 	labeler := services.GetLabeler(self.ConfigObj)
 	err := labeler.SetClientLabel(

@@ -40,6 +40,7 @@ import (
 	// Load plugins (timestamp, parse_csv)
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
+	launcher_mod "www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/csv"
@@ -1394,6 +1395,10 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 	// can not find it (The actual flow object is removed but the
 	// index is out of step).
 	vtesting.WaitUntil(10*time.Second, t, func() bool {
+		// Force the housekeep thread to run immediately.
+		launcher.Storage().(*launcher_mod.FlowStorageManager).
+			RemoveFlowsFromJournal(self.Ctx, self.ConfigObj)
+
 		datastore.FlushDatastore(self.ConfigObj)
 
 		res, err = launcher.GetFlows(self.Ctx, self.ConfigObj, "server",

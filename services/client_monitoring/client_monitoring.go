@@ -70,22 +70,9 @@ type ClientEventTable struct {
 	// protobufs in memory.
 	state *flows_proto.ClientEventTable
 
-	Clock utils.Clock
-
 	// There is a separate manager for each org.
 	config_obj *config_proto.Config
 	id         string
-}
-
-func (self *ClientEventTable) SetClock(clock utils.Clock) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	self.Clock = clock
-}
-
-func (self ClientEventTable) GetClock() utils.Clock {
-	return self.Clock
 }
 
 // Checks to see if we need to update the client event table. Each
@@ -222,7 +209,7 @@ func (self *ClientEventTable) setClientMonitoringState(
 	}
 
 	self.state = proto.Clone(state).(*flows_proto.ClientEventTable)
-	self.state.Version = uint64(self.Clock.Now().UnixNano())
+	self.state.Version = uint64(utils.GetTime().Now().UnixNano())
 
 	// Store the new table in the data store.
 	db, err := datastore.GetDB(config_obj)
@@ -318,7 +305,7 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 	self.mu.Unlock()
 
 	result := &actions_proto.VQLEventTable{
-		Version: uint64(self.Clock.Now().UnixNano()),
+		Version: uint64(utils.GetTime().Now().UnixNano()),
 	}
 
 	if state.Artifacts == nil {
@@ -501,13 +488,13 @@ func (self *ClientEventTable) load_from_file(
 			return nil, err
 		}
 
-		state.Version = uint64(self.Clock.Now().UnixNano())
+		state.Version = uint64(utils.GetTime().Now().UnixNano())
 
 		return state, self.setClientMonitoringState(ctx, config_obj, "", state)
 	}
 
 	// Update the new version
-	state.Version = uint64(self.Clock.Now().UnixNano())
+	state.Version = uint64(utils.GetTime().Now().UnixNano())
 
 	clear_caches(state)
 	return state, compileState(ctx, config_obj, state)
@@ -612,7 +599,6 @@ func NewClientMonitoringService(
 	config_obj *config_proto.Config) (services.ClientEventTable, error) {
 
 	event_table := &ClientEventTable{
-		Clock:      &utils.RealClock{},
 		id:         uuid.New().String(),
 		config_obj: config_obj,
 	}

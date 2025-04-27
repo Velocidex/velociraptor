@@ -127,8 +127,13 @@ func (self *ExecutorTestSuite) TestCancellation() {
 		received_messages := collector.Messages()
 
 		// Should be at least one stat message and several log messages
-		return len(received_messages) >= 3 &&
-			getFlowStat(received_messages) != nil
+		stats := getFlowStat(received_messages)
+		if stats == nil || stats.FlowStats == nil ||
+			len(stats.FlowStats.QueryStatus) == 0 {
+			return false
+		}
+
+		return stats.FlowStats.FlowComplete
 	})
 
 	received_messages := collector.Messages()

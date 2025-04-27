@@ -163,11 +163,21 @@ func (self *FlowStorageManager) houseKeeping(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	for {
+		last_try := utils.GetTime().Now()
+
 		select {
 		case <-ctx.Done():
 			return
 
 		case <-utils.GetTime().After(utils.Jitter(delay)):
+			// Avoid retrying too quickly. This is mainly for
+			// tests where the time is mocked for the After(delay)
+			// above does not work.
+			if utils.GetTime().Now().Sub(last_try) < time.Second*10 {
+				utils.SleepWithCtx(ctx, time.Minute)
+				continue
+			}
+
 			logger.Debug("<green>FlowStorageManager</> housekeeping run")
 			err := self.RemoveFlowsFromJournal(ctx, config_obj)
 			if err != nil {

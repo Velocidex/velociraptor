@@ -7,8 +7,8 @@ import (
 
 // A notebook id for clients flows
 var (
-	client_notebook_regex = regexp.MustCompile(`^N\.(F\.[^-]+?)-(C\..+|server)$`)
-	event_notebook_regex  = regexp.MustCompile(`^N\.E\.([^-]+?)-(C\..+|server)$`)
+	client_notebook_regex = regexp.MustCompile(`^N\.(F\.[^-]+?)-(.+|server)$`)
+	event_notebook_regex  = regexp.MustCompile(`^N\.E\.([^-]+?)-(.+|server)$`)
 )
 
 func ClientNotebookId(notebook_id string) (flow_id, client_id string, ok bool) {
