@@ -182,25 +182,106 @@ func (self *FlowResponder) AddResponse(message *crypto_proto.VeloMessage) {
 	}
 }
 
+/*
+Mark an error in this collection.
+
+In previous versions marking an error would flag the result of the
+collection as error immediately but the collection continues to
+run.
+
+Our concept of what an error represents has evolved over time. It
+is difficult to know what to do when a VQL query enounters an
+error or even what an error means.
+
+For example, if the VQL query tries to parse a certain file but
+fails to parse the file - is this an error? it might be depending
+on context. Most of the time we want to just report the issue and
+move on.
+
+VQL always continues running when encountering an error. This
+simplifies writing the queries (because we dont need to deal with
+errors all the time). But we need to report the error, usually via
+the query log.
+
+When a user collects an artifact, the GUI shows the success status
+of the artifact. What consitutes success is really subjecting and
+depends on the context of the artifact.
+
+Because we dont really know we leave it to the VQL to determine if
+the collection should be marked as failed. If the VQL logs any
+message at ERROR level, we deem the collection to have
+failed. However, the query is **NOT** aborted - it keeps running
+and may still produce useful results.
+
+In this way the error status of a collection is more like a flag -
+it simply represents that the user should inspect the collection
+more closely to see if the data returned is still useful.
+
+For example, if the VQL query references an unknown symbol (Symbol
+not found error), this usually represents that the query has
+invalid syntax or some error in it (e.g. a field is mistyped). We
+generally report this error at the ERROR log level which causes the
+collection to fail.
+
+However the collection itself continues running as normal (unknown
+symbols are represented by NULL). The collection may still contain
+useful data, even if it is marked as failed. The collection will be
+allowed to run to completion.
+
+This means that an ERROR is simply an advisory flag to mark that the
+collection should be looked at more closely (by inspecting the query
+log).
+
+The RaiseError() function will be called when the VQL encounters an
+error (it may be called multiple times).
+
+We record the first error reported but leave the collection in the
+PROGRESS state.
+*/
 func (self *FlowResponder) RaiseError(ctx context.Context, message string) {
 	// Mark the query as having an error.
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if self.status.Status == crypto_proto.VeloStatus_PROGRESS {
-		self.status.Status = crypto_proto.VeloStatus_GENERIC_ERROR
+	// Mark only the first error in the status error message.
+	if self.status.ErrorMessage == "" {
+		if message == "" {
+			message = "Generic Error"
+		}
 		self.status.ErrorMessage = message
 		self.status.Backtrace = string(debug.Stack())
 	}
 }
 
+func (self *FlowResponder) Cancel(ctx context.Context) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.status.ErrorMessage == "" {
+		self.status.ErrorMessage = "Cancelled"
+		self.status.Backtrace = ""
+	}
+	self.status.Status = crypto_proto.VeloStatus_GENERIC_ERROR
+	self.completed = true
+}
+
+/*
+The Return() function represents the end of the query.
+
+We finalize the status to either an OK or ERROR status depending on
+the error message.
+*/
 func (self *FlowResponder) Return(ctx context.Context) {
 	// Mark the query as being successful
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	if self.status.Status == crypto_proto.VeloStatus_PROGRESS {
-		self.status.Status = crypto_proto.VeloStatus_OK
+		if self.status.ErrorMessage == "" {
+			self.status.Status = crypto_proto.VeloStatus_OK
+		} else {
+			self.status.Status = crypto_proto.VeloStatus_GENERIC_ERROR
+		}
 	}
 
 	// Only when the query is completed, we call Return()

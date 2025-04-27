@@ -75,15 +75,6 @@ func (self CachedLabels) Size() int {
 type Labeler struct {
 	mu  sync.Mutex
 	lru *ttlcache.Cache
-
-	Clock utils.Clock
-}
-
-func (self *Labeler) SetClock(c utils.Clock) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	self.Clock = c
 }
 
 // Assumption: We hold the lock entering this function.
@@ -214,7 +205,7 @@ func (self *Labeler) SetClientLabel(
 
 			client_info.Labels = append(client_info.Labels, new_label)
 			client_info.LabelsTimestamp = uint64(
-				self.Clock.Now().UnixNano())
+				utils.GetTime().Now().UnixNano())
 
 			return client_info, nil
 		})
@@ -276,7 +267,7 @@ func (self *Labeler) RemoveClientLabel(
 
 			client_info.Labels = new_labels
 			client_info.LabelsTimestamp = uint64(
-				self.Clock.Now().UnixNano())
+				utils.GetTime().Now().UnixNano())
 
 			return client_info, nil
 		})
@@ -405,8 +396,6 @@ func NewLabelerService(
 		return Dummy{}, nil
 	}
 
-	labeler := &Labeler{
-		Clock: &utils.RealClock{},
-	}
+	labeler := &Labeler{}
 	return labeler, labeler.Start(ctx, config_obj, wg)
 }

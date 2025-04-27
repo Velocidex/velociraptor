@@ -163,9 +163,11 @@ export default class FlowOverview extends React.Component {
                         </dd>
 
                         <dt className="col-4">{T("State")}</dt>
-                        <dd className="col-8">{ T(flow.state) }</dd>
+                        <dd className="col-8">{ T(flow.state) }
+                          { flow.state !== "ERROR" && flow.status && T(" ( Error )")}
+                        </dd>
 
-                        { flow.state === "ERROR" &&
+                        { flow.status &&
                           <Fragment>
                             <dt className="col-4">{T("Error")}</dt>
                             <dd className="col-8">{ flow.status }</dd>
