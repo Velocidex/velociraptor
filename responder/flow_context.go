@@ -217,7 +217,7 @@ func (self *FlowContext) Cancel() {
 func (self *FlowContext) _Cancel() {
 	// Cancel all outstanding queries
 	for _, r := range self.responders {
-		r.RaiseError(self.ctx, "Cancelled")
+		r.Cancel(self.ctx)
 	}
 
 	self.addLogMessage("ERROR",
@@ -238,7 +238,7 @@ func (self *FlowContext) Close() {
 
 func (self *FlowContext) _Close() {
 	if self.owner != nil {
-		self.owner.removeFlowContext(self.flow_id)
+		self.owner.RemoveFlowContext(self.flow_id)
 	}
 	if self.checkpoint != "" {
 		os.Remove(self.checkpoint)

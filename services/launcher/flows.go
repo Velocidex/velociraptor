@@ -160,8 +160,14 @@ func (self *Launcher) CancelFlow(
 		}
 
 		collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
-		collection_context.Status = "Cancelled by " + username
-		collection_context.Backtrace = ""
+		old_status := collection_context.Status
+		new_status := "Cancelled by " + username
+		if old_status != "" {
+			collection_context.Status = new_status + ": " + old_status
+		} else {
+			collection_context.Status = new_status
+			collection_context.Backtrace = ""
+		}
 
 		self.Storage().WriteFlow(
 			ctx, config_obj, collection_context, utils.BackgroundWriter)
@@ -277,6 +283,10 @@ func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
 			collection_context.Status = s.ErrorMessage
 			collection_context.Backtrace = s.Backtrace
+		}
+
+		if s.ErrorMessage != "" && collection_context.Status == "" {
+			collection_context.Status = s.ErrorMessage
 		}
 
 		// Query is considered complete if it is in the ERROR or OK state

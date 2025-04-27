@@ -19,8 +19,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
-	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
@@ -50,9 +48,9 @@ type EventsTestSuite struct {
 	responder *responder.TestResponderType
 	writeback string
 
-	Clock utils.Clock
-
 	event_table *actions.EventTable
+
+	closer func()
 }
 
 func (self *EventsTestSuite) SetupTest() {
@@ -81,7 +79,7 @@ func (self *EventsTestSuite) SetupTest() {
 	writeback_service.LoadWriteback(self.ConfigObj)
 
 	self.client_id = "C.2232"
-	self.Clock = &utils.IncClock{}
+	self.closer = utils.MockTime(&utils.IncClock{})
 
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -114,6 +112,10 @@ func (self *EventsTestSuite) InitializeEventTable(ctx context.Context,
 func (self *EventsTestSuite) TearDownTest() {
 	self.TestSuite.TearDownTest()
 
+	if self.closer != nil {
+		self.closer()
+	}
+
 	os.Remove(self.writeback) // clean up file buffer
 }
 
@@ -136,7 +138,6 @@ var server_state = &flows_proto.ClientEventTable{
 func (self *EventsTestSuite) TestEventTableUpdate() {
 	client_manager, err := services.ClientEventManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
-	client_manager.(*client_monitoring.ClientEventTable).Clock = self.Clock
 
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
@@ -199,7 +200,6 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// be the same as the old one, except the version will be
 	// advanced.
 	label_manager := services.GetLabeler(self.ConfigObj)
-	label_manager.(*labels.Labeler).Clock = self.Clock
 
 	require.NoError(self.T(),
 		label_manager.SetClientLabel(
@@ -291,7 +291,6 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 func (self *EventsTestSuite) TestEventEqual() {
 	client_manager, err := services.ClientEventManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
-	client_manager.(*client_monitoring.ClientEventTable).Clock = self.Clock
 
 	ctx, cancel := context.WithTimeout(self.Ctx, time.Second*60)
 	defer cancel()
