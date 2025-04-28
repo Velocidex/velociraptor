@@ -198,7 +198,7 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 			ctx, err := ClientContext(r.Context(), self.config_obj)
 			if err != nil {
 				logging.GetLogger(self.config_obj, &logging.GUIComponent).
-					Error("invalid client context of OIDC")
+					Error("invalid client context of OIDC: %v", err)
 				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
