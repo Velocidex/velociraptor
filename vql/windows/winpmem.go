@@ -114,10 +114,8 @@ func (self WinpmemFunction) Call(
 			winpmem.UninstallDriver(tmpfile.Name(), arg.ServiceName, logger)
 
 			// Always try to remove the temp file.
-			err := filesystem.RemoveFile(0, tmpfile.Name(), root_scope)
-			if err == nil {
-				utils_tempfile.RemoveTmpFile(tmpfile.Name())
-			}
+			filesystem.RemoveFile(0, tmpfile.Name(), root_scope)
+			utils_tempfile.RemoveTmpFile(tmpfile.Name(), nil)
 		})
 
 		imager, err = winpmem.NewImager(DeviceName, logger)
