@@ -71,7 +71,8 @@ func (self *ConfigSurvey) Compile() (*config_proto.Config, error) {
 
 	switch self.DeploymentType {
 	case "self_signed":
-		config_obj.Frontend.BindAddress = "127.0.0.1"
+		config_obj.GUI.BindAddress = "127.0.0.1"
+		config_obj.Frontend.BindAddress = "0.0.0.0"
 		config_obj.Client.UseSelfSignedSsl = true
 		config_obj.Client.ServerUrls = []string{
 			self.getURL(config_obj.Frontend)}
@@ -89,6 +90,7 @@ func (self *ConfigSurvey) Compile() (*config_proto.Config, error) {
 		config_obj.Frontend.BindPort = 443
 		config_obj.Frontend.BindAddress = "0.0.0.0"
 		config_obj.GUI.BindPort = 443
+		config_obj.GUI.BindAddress = "0.0.0.0"
 		config_obj.GUI.PublicUrl = fmt.Sprintf(
 			"https://%s/", config_obj.Frontend.Hostname)
 

@@ -8522,6 +8522,60 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: secret_define
+  description: Define a new secret template
+  type: Function
+  args:
+  - name: type
+    type: string
+    description: Type of the secret
+    required: true
+  - name: verifier
+    type: string
+    description: A VQL Lambda function to verify the secret
+  - name: description
+    type: string
+    description: A description of the secret type
+  - name: template
+    type: ordereddict.Dict
+    description: A Set of key/value pairs
+    required: true
+  metadata:
+    permissions: SERVER_ADMIN
+  platforms:
+  - linux_amd64_cgo
+- name: secret_modify
+  description: Modify the secret
+  type: Function
+  args:
+  - name: name
+    type: string
+    description: Name of the secret
+    required: true
+  - name: type
+    type: string
+    description: Type of the secret
+    required: true
+  - name: delete
+    type: bool
+    description: Delete the secret completely
+  - name: add_users
+    type: string
+    description: A list of users to add to the secret
+    repeated: true
+  - name: remove_users
+    type: string
+    description: A list of users to remove from the secret
+    repeated: true
+  metadata:
+    permissions: SERVER_ADMIN
+  platforms:
+  - linux_amd64_cgo
+- name: secrets
+  description: Retrieve the list of secrets on the server.
+  type: Plugin
+  platforms:
+  - linux_amd64_cgo
 - name: send_event
   description: |
     Sends an event to a server event monitoring queue.
