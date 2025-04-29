@@ -35,6 +35,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/server/monitoring"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/notebooks"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/orgs"
+	_ "www.velocidex.com/golang/velociraptor/vql/server/secrets"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/timelines"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/users"
 )
