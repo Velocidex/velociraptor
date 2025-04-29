@@ -130,6 +130,7 @@ func (self *FlowManager) RemoveFlowContext(flow_id string) {
 
 	flow_context, pres := self.in_flight[flow_id]
 	if !pres {
+		self.mu.Unlock()
 		return
 	}
 
@@ -166,6 +167,7 @@ func (self *FlowManager) Cancel(ctx context.Context, flow_id string) {
 	// ignore the cancel request.
 	flow_context, pres := self.in_flight[flow_id]
 	self.mu.Unlock()
+
 	if pres {
 		flow_context.Cancel()
 	}
