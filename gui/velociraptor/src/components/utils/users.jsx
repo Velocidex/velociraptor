@@ -45,7 +45,7 @@ export default class UserForm extends React.Component {
 
             let users = response.data.users || [];
             if (this.props.includeSuperuser) {
-                users.push({name: "VelociraptorUser",
+                users.push({name: "VelociraptorServer",
                             desc: T(" (Server Event Runner)")});
             }
 
