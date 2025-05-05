@@ -658,6 +658,7 @@
     required: true
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: cancel_flow
   description: |
     Cancels the flow.
@@ -1638,6 +1639,7 @@
     description: Size of the LRU cache.
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: delay
   description: Executes 'query' and delays relaying the rows by the specified number
     of seconds.
@@ -8407,6 +8409,7 @@
       to be added here.
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: s3
   description: |
     Allows access to S3 buckets.
@@ -8544,6 +8547,7 @@
     permissions: SERVER_ADMIN
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: secret_modify
   description: Modify the secret
   type: Function
@@ -8571,11 +8575,13 @@
     permissions: SERVER_ADMIN
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: secrets
   description: Retrieve the list of secrets on the server.
   type: Plugin
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: send_event
   description: |
     Sends an event to a server event monitoring queue.
@@ -11339,6 +11345,10 @@
     type: string
     description: When writing a memory image use this compression (default none) can
       be none, s2, snappy, gzip.
+  - name: driver_path
+    type: string
+    description: Specify where to extract the driver - by default we use the temp
+      folder
   category: windows
   metadata:
     permissions: MACHINE_STATE
