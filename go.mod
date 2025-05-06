@@ -72,8 +72,8 @@ require (
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
 	golang.org/x/crypto v0.36.0
 	golang.org/x/mod v0.21.0
-	golang.org/x/sys v0.32.0
 	golang.org/x/net v0.38.0
+	golang.org/x/sys v0.32.0
 	golang.org/x/text v0.24.0
 	golang.org/x/time v0.5.0
 	google.golang.org/api v0.169.0
@@ -92,7 +92,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20240910051453-2385582c1c22
 	www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959
 	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7
-	www.velocidex.com/golang/vfilter v0.0.0-20250413064725-2a34ff8237ca
+	www.velocidex.com/golang/vfilter v0.0.0-20250506071806-b4ce88fa0048
 )
 
 require (
@@ -108,7 +108,7 @@ require (
 	github.com/Velocidex/go-journalctl v0.0.0-20241004063153-cc1c858415bd
 	github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002
 	github.com/Velocidex/go-vhdx v0.0.0-20240601014259-b204818c95fd
-	github.com/Velocidex/go-vmdk v0.0.0-20241202015615-d508d852d5e1
+	github.com/Velocidex/go-vmdk v0.0.0-20250505140221-bd4633ce2fbf
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
 	github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9
