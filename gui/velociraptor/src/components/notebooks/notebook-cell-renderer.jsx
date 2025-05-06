@@ -945,7 +945,7 @@ export default class NotebookCellRenderer extends React.Component {
               <ButtonGroup className="float-right">
                 <ToolTip tooltip={T("Rendered")}>
                   <Button variant="outline-info">
-                    <VeloTimestamp usec={this.state.cell.timestamp * 1000} />
+                    <VeloTimestamp usec={this.state.cell.timestamp } />
                     { this.state.cell.duration &&
                       <span>&nbsp;({this.state.cell.duration}s) </span> }
                   </Button>
