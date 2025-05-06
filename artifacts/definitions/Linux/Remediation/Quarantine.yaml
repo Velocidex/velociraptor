@@ -12,6 +12,8 @@ description: |
 
   To unquarantine the system, set the *RemovePolicy* parameter to *True*.
 
+  The parameter *ForbiddenTestURL* is used for testing if the quarantine is working as expected, so set it to a URL that should not be reachable from a quarantined system.
+
 precondition: SELECT OS From info() where OS = 'linux'
 
 type: CLIENT
@@ -27,6 +29,10 @@ parameters:
   - name: TableName
     default: vrr_quarantine_table
     description: Name of the quarantine table
+
+  - name: ForbiddenTestURL
+    default: https://www.google.com
+    description: URL for forbidden connection check
 
   - name: MessageBox
     description: |
@@ -86,6 +92,11 @@ sources:
           'udp', 'sport', 'domain',
           'ct', 'state', 'established', 'accept')
 
+     // add localhost inbound rule to allow DNS lookups (needed on some ubuntu systems)
+     LET add_localhost_rule_to_inbound_chain_cmd = (
+          pathToNFT,'add','rule','inet', TableName, 'inbound_chain', 'ip',
+          'daddr', '127.0.0.53', 'accept')
+
      // add outbound chain
      LET add_outbound_chain_cmd = (
           pathToNFT, 'add', 'chain', 'inet', TableName, 'outbound_chain',
@@ -103,11 +114,15 @@ sources:
           'udp', 'dport', '{', '53,67,68', '}',
           'ct', 'state', 'new,established', 'accept')
 
+     // add localhost outbound rule to allow DNS lookups (needed on some ubuntu systems)
+     LET add_localhost_rule_to_outbound_chain_cmd = (
+          pathToNFT,'add','rule','inet', TableName, 'outbound_chain', 'ip',
+          'saddr', '127.0.0.53', 'accept')
+
      // add forward chain
      LET add_forward_chain_cmd = (
           pathToNFT, 'add', 'chain', 'inet', TableName, 'forward_chain',
           '{', 'type', 'filter', 'hook', 'forward', 'priority', '0\;', 'policy', 'drop\;', '}')
-
 
      // delete quarantine table
      LET delete_quarantine_table = SELECT
@@ -159,21 +174,46 @@ sources:
          },
          query={
              SELECT format(format="Testing connectivity with %v: %v", args=[Url, Response]) AS Result
-             FROM http_client(url=pem_url, disable_ssl_security='TRUE')
+             FROM http_client(url=pem_url, skip_verify='TRUE')
              WHERE Response = 200
              LIMIT 1
          })
 
-     // final check to keep or remove policy
-     // TODO(gyee): for now we are using the wall commmand to send the message.
-     // Will need to look into using libnotify instead.
-     LET final_check = SELECT * FROM if(condition= test_connection,
+     // test connection to the ForbiddenTestURL - if the connection can not be made, this will run in the http_client timeout that can not be set manually. thus, the artifact will run for approx. 2 minutes
+     LET test_forbidden_connection = SELECT * FROM http_client(url=ForbiddenTestURL)
+                                     WHERE Response =~ '[0-4,6-9][0-9][0-9]' LIMIT 1
+
+     // final checks to keep or remove policy
+     // first check if connection to velociraptor server can be made
+     LET final_check_allowed = SELECT * FROM if(condition= test_connection,
                then={
                    SELECT
                        timestamp(epoch=now()) as Time,
                        if(condition=MessageBox,
-                           then= TableName + ' connection test successful. MessageBox sent.',
+                           then= TableName + ' connection test successful. MessageBox will be sent.',
                            else= TableName + ' connection test successful.'
+                       ) AS Result
+                   FROM scope()
+               },
+               else={SELECT * FROM chain(
+                    a={SELECT * FROM scope() WHERE log(message="ERROR: %v failed connection test. Removing quarantine table.", args=TableName, level="ERROR")},
+                    b={SELECT * FROM run_command(Cmd=delete_table_cmd, Message= TableName + ' failed connection test. Removing quarantine table.')}
+                    )}
+               )
+     // then check if connection to ForbiddenTestURL can NOT be made
+     // TODO(gyee): for now we are using the wall commmand to send the message.
+     // Will need to look into using libnotify instead.
+     LET final_check_forbidden = SELECT * FROM if(condition=test_forbidden_connection,
+               then={SELECT * FROM chain(
+                    a={SELECT * FROM scope() WHERE log(message="ERROR: %v failed forbidden connection test - connection to %v could be established. Removing quarantine table.", args=[TableName,ForbiddenTestURL], level="ERROR")},
+                    b={SELECT * FROM run_command(Cmd=delete_table_cmd, Message= TableName + ' failed forbidden connection test. Removing quarantine table.')}
+                    )},
+                else={
+                   SELECT
+                       timestamp(epoch=now()) as Time,
+                       if(condition=MessageBox,
+                           then= TableName + ' forbidden connection test successful. MessageBox sent.',
+                           else= TableName + ' forbidden connection test successful.'
                        ) AS Result
                     FROM if(condition=MessageBox,
                         then= {
@@ -182,10 +222,7 @@ sources:
                         else={
                             SELECT * FROM scope()
                         })
-               },
-               else=run_command(
-                      Cmd=delete_table_cmd,
-                      Message= TableName + ' failed connection test. Removing quarantine table.'))
+               })
 
      LET check_nft_cmd = (pathToNFT, "--version")
 
@@ -199,24 +236,32 @@ sources:
                        c=run_command(Cmd=add_inbound_chain_cmd,
                            Message='Added inbound_chain to ' +
                                     TableName + ' table.'),
-                       d=add_velociraptor_rule_to_inbound_chain,
-                       e=run_command(Cmd=add_udp_rule_to_inbound_chain_cmd,
+                       d=run_command(Cmd=add_udp_rule_to_inbound_chain_cmd,
                            Message='Added udp rule to inbound_chain in ' +
+                                     TableName + ' table.'),
+                       e=run_command(Cmd=add_localhost_rule_to_inbound_chain_cmd,
+                            Message='Added localhost rule to inbound_chain in ' +
                                      TableName + ' table.'),
                        f=run_command(Cmd=add_outbound_chain_cmd,
                            Message='Added outbound_chain to ' +
                                      TableName + ' table.'),
-                       g=add_velociraptor_rule_to_outbound_chain,
-                       h=run_command(Cmd=add_tcp_rule_to_outbound_chain_cmd,
+                       g=run_command(Cmd=add_tcp_rule_to_outbound_chain_cmd,
                            Message='Added tcp rule to outbound_chain in ' +
                                      TableName + ' table.'),
-                       i=run_command(Cmd=add_udp_rule_to_outbound_chain_cmd,
+                       h=run_command(Cmd=add_udp_rule_to_outbound_chain_cmd,
                            Message='Added udp rule to outbound_chain in ' +
                                      TableName + ' table.'),
-                       j=run_command(Cmd=add_forward_chain_cmd,
+                       i=run_command(Cmd=add_localhost_rule_to_outbound_chain_cmd,
+                            Message='Added localhost rule to outbound_chain in ' +
+                                     TableName + ' table.'),
+                       j=add_velociraptor_rule_to_inbound_chain,
+                       k=add_velociraptor_rule_to_outbound_chain,
+                       l=run_command(Cmd=add_forward_chain_cmd,
                            Message='Added forward_chain to ' +
                                      TableName + ' table.'),
-                       k=final_check)
+                       m=final_check_allowed,
+                       n=final_check_forbidden
+                   )
                })
 
      SELECT * FROM if(condition={
