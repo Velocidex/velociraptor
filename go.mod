@@ -103,11 +103,11 @@ require (
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
 	github.com/Velocidex/fileb0x v1.1.2-0.20241111170537-c093c89cd042
 	github.com/Velocidex/go-ewf v0.0.0-20240210123447-97dc81b7d8c3
-	github.com/Velocidex/go-ext4 v0.0.0-20250118151314-92624304aad4
+	github.com/Velocidex/go-ext4 v0.0.0-20250510085914-b0b955af0359
 	github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a
 	github.com/Velocidex/go-journalctl v0.0.0-20241004063153-cc1c858415bd
 	github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002
-	github.com/Velocidex/go-vhdx v0.0.0-20240601014259-b204818c95fd
+	github.com/Velocidex/go-vhdx v0.0.0-20250511013458-5cba970cdeda
 	github.com/Velocidex/go-vmdk v0.0.0-20250505140221-bd4633ce2fbf
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
