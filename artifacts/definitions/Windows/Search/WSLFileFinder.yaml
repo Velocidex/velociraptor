@@ -1,4 +1,4 @@
-name: Windows.Forensics.WSLFileFinder
+name: Windows.Search.WSLFileFinder
 description: |
   Find files within the VHDX containers of the Windows Subsystem for
   Linux (WSL) images.
