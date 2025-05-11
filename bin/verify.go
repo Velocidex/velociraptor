@@ -6,7 +6,6 @@ import (
 	"os"
 
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	"www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
@@ -20,12 +19,12 @@ var (
 )
 
 func doVerify() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
-		WithRequiredFrontend().
-		WithRequiredLogging().LoadAndValidate()
+		WithNullLoader().LoadAndValidate()
 	if err != nil {
-		logging.FlushPrelogs(config.GetDefaultConfig())
-		return fmt.Errorf("loading config file: %w", err)
+		return fmt.Errorf("Unable to create config: %w", err)
 	}
 
 	config_obj.Services = services.GenericToolServices()

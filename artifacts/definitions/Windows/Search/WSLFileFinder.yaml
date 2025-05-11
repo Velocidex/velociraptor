@@ -1,0 +1,76 @@
+name: Windows.Search.WSLFileFinder
+description: |
+  Find files within the VHDX containers of the Windows Subsystem for
+  Linux (WSL) images.
+
+precondition:
+  SELECT * FROM info() where OS = 'windows'
+
+parameters:
+  - name: VHDXGlob
+    description: Where to look for VHDX containers.
+    default: "C:/Users/*/AppData/Local/wsl/**/*.vhdx"
+
+  - name: SearchFilesGlob
+    default: /home/*
+    description: Use a glob to define the files that will be searched.
+
+  - name: SearchFilesGlobTable
+    type: csv
+    default: |
+      Glob
+      /home/someuser/*
+    description: Alternative specify multiple globs in a table
+
+  - name: YaraRule
+    type: yara
+    default:
+    description: A yara rule to search for matching files.
+
+  - name: Upload_File
+    default: N
+    type: bool
+
+  - name: Calculate_Hash
+    default: N
+    type: bool
+
+  - name: MoreRecentThan
+    default: ""
+    type: timestamp
+
+  - name: ModifiedBefore
+    default: ""
+    type: timestamp
+
+  - name: ExcludePathRegex
+    default: "^/(proc|sys|run|snap)"
+    type: regex
+    description: If this regex matches the path of any directory we do not even descend inside of it.
+
+  - name: DoNotFollowSymlinks
+    type: bool
+    default: N
+    description: If specified we are allowed to follow symlinks while globbing
+
+sources:
+  - query: |
+      SELECT * FROM foreach(row={
+        SELECT OSPath AS VHDXPath FROM glob(globs=VHDXGlob)
+        WHERE log(message="Found VHDX file at %v", args=VHDXPath, dedup=-1)
+      }, query={
+        SELECT VHDXPath, OSPath.Path AS OSPath, *
+        FROM Artifact.Linux.Search.FileFinder(
+           SearchFilesGlob=SearchFilesGlob,
+           SearchFilesGlobTable=SearchFilesGlobTable,
+           YaraRule=YaraRule,
+           Upload_File=Upload_File,
+           Calculate_Hash=Calculate_Hash,
+           MoreRecentThan=MoreRecentThan,
+           ModifiedBefore=ModifiedBefore,
+           ExcludePathRegex=ExcludePathRegex,
+           DoNotFollowSymlinks=DoNotFollowSymlinks,
+           LocalFilesystemOnly=FALSE,
+           ACCESSOR="raw_ext4",
+           ROOT=pathspec(DelegateAccessor="vhdx", DelegatePath=VHDXPath))
+      })
