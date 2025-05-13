@@ -37,10 +37,10 @@ func (self *GetPidFunction) Call(ctx context.Context,
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
 		scope.Log("getpid: %s", err)
-		return 0
+		return uint64(0)
 	}
 
-	return os.Getpid()
+	return uint64(os.Getpid())
 }
 
 func (self GetPidFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
