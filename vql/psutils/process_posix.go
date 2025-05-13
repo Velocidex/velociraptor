@@ -7,6 +7,7 @@ package psutils
 
 import (
 	"context"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/v4/host"
@@ -53,7 +54,9 @@ func getProcessData(process *process.Process) *ordereddict.Dict {
 	result.Set("CommandLine", cmdline)
 
 	create_time, _ := process.CreateTime()
-	result.Set("CreateTime", create_time)
+	create_time_string := time.Unix(create_time/1000, create_time%1000).
+		Format(time.RFC3339)
+	result.Set("CreateTime", create_time_string)
 
 	times, _ := process.Times()
 	result.Set("Times", times)

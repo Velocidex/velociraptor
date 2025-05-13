@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -401,9 +402,15 @@ func LoadArtifactsFromConfig(
 	// Load some artifacts via the autoexec mechanism.
 	if config_obj.Autoexec != nil {
 		for _, def := range config_obj.Autoexec.ArtifactDefinitions {
+			// These artifacts do not actually have a raw section so
+			// create one for them.
+			serialize, err := yaml.Marshal(def)
+			if err == nil {
+				def.Raw = string(serialize)
+			}
 
 			// Artifacts loaded from the config file are considered built in.
-			_, err := global_repository.LoadProto(def, options)
+			_, err = global_repository.LoadProto(def, options)
 			if err != nil {
 				return err
 			}
