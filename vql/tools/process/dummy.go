@@ -8,9 +8,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -54,9 +52,17 @@ func (self *DummyProcessTracker) getLookup(
 
 	self.age = now
 
-	for row := range pslist.Call(ctx, scope, ordereddict.NewDict()) {
-		entry, pres := getProcessEntry(
-			ctx, scope, vfilter.RowToDict(ctx, scope, row))
+	// Different platforms do different things here so we just call
+	// the plugin to get the process data.
+	for row_any := range pslist.Call(ctx, scope, ordereddict.NewDict()) {
+		row, ok := row_any.(*ordereddict.Dict)
+		if !ok {
+			// Convert to a dict if possible
+			row = vfilter.RowToDict(ctx, scope, row_any)
+			row.SetCaseInsensitive()
+		}
+
+		entry, pres := getProcessEntry(ctx, scope, row)
 		if pres {
 			self.lookup[entry.Id] = entry
 		}
@@ -153,36 +159,33 @@ type ProcessInfoLinux struct {
 // ProcessEntry item.
 func getProcessEntry(ctx context.Context,
 	scope vfilter.Scope, row *ordereddict.Dict) (*ProcessEntry, bool) {
-	serialized, err := row.MarshalJSON()
-	if err != nil {
+
+	pid, pres := row.GetInt64("Pid")
+	if !pres {
 		return nil, false
 	}
 
-	windows_item := &ProcessInfoWindows{}
-	err = json.Unmarshal(serialized, windows_item)
-	if err != nil {
-		// Maybe we are running on linux
-		unix_item := &ProcessInfoLinux{}
-		err = json.Unmarshal(serialized, unix_item)
-		if err == nil {
-
-			return &ProcessEntry{
-				Id:        fmt.Sprintf("%v", unix_item.Pid),
-				ParentId:  fmt.Sprintf("%v", unix_item.PPid),
-				StartTime: utils.ParseTimeFromInt64(unix_item.StartTime),
-				Data:      row,
-			}, true
-		}
-
+	ppid, pres := row.GetInt64("Ppid")
+	if !pres {
 		return nil, false
 	}
 
-	create_time, _ := functions.ParseTimeFromString(ctx, scope,
-		windows_item.StartTime)
+	create_time_any, pres := row.Get("CreateTime")
+	if !pres {
+		return nil, false
+	}
+
+	var create_time time.Time
+	switch t := create_time_any.(type) {
+	case string:
+		create_time, _ = functions.ParseTimeFromString(ctx, scope, t)
+	case time.Time:
+		create_time = t
+	}
 
 	return &ProcessEntry{
-		Id:        fmt.Sprintf("%v", windows_item.Pid),
-		ParentId:  fmt.Sprintf("%v", windows_item.PPid),
+		Id:        fmt.Sprintf("%v", pid),
+		ParentId:  fmt.Sprintf("%v", ppid),
 		StartTime: create_time,
 		Data:      row,
 	}, true
