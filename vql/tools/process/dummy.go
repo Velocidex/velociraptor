@@ -57,7 +57,9 @@ func (self *DummyProcessTracker) getLookup(
 	for row_any := range pslist.Call(ctx, scope, ordereddict.NewDict()) {
 		row, ok := row_any.(*ordereddict.Dict)
 		if !ok {
-			continue
+			// Convert to a dict if possible
+			row = vfilter.RowToDict(ctx, scope, row_any)
+			row.SetCaseInsensitive()
 		}
 
 		entry, pres := getProcessEntry(ctx, scope, row)
@@ -163,22 +165,23 @@ func getProcessEntry(ctx context.Context,
 		return nil, false
 	}
 
-	ppid, pres := row.GetInt64("PPid")
+	ppid, pres := row.GetInt64("Ppid")
 	if !pres {
 		return nil, false
 	}
 
+	create_time_any, pres := row.Get("CreateTime")
 	if !pres {
 		return nil, false
 	}
 
-	create_time_str, pres := row.GetString("CreateTime")
-	if !pres {
-		return nil, false
+	var create_time time.Time
+	switch t := create_time_any.(type) {
+	case string:
+		create_time, _ = functions.ParseTimeFromString(ctx, scope, t)
+	case time.Time:
+		create_time = t
 	}
-
-	create_time, _ := functions.ParseTimeFromString(
-		ctx, scope, create_time_str)
 
 	return &ProcessEntry{
 		Id:        fmt.Sprintf("%v", pid),
