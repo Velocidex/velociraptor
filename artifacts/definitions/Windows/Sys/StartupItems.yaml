@@ -73,6 +73,7 @@ sources:
                   FROM Artifact.Windows.Forensics.Lnk(TargetGlob=OSPath)
                 } as Details
             FROM scope()
+            WHERE OSPath.Basename =~ ".lnk$"
         }, default={
             SELECT hash(path=OSPath) AS Details
             FROM scope()
