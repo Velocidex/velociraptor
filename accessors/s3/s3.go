@@ -107,7 +107,7 @@ func (self RawS3SystemAccessor) ReadDirWithOSPath(
 
 	params := &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
-		Prefix: aws.String(path.Dirname().String()),
+		Prefix: aws.String(key),
 	}
 
 	// Create the Paginator for the ListObjectsV2 operation.
