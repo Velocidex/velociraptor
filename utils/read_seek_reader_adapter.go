@@ -57,6 +57,7 @@ func (self *ReadSeekReaderAdapter) Read(buf []byte) (int, error) {
 	if errors.Is(err, io.EOF) {
 		self.eof = true
 	}
+
 	self.offset += int64(n)
 
 	return n, err
