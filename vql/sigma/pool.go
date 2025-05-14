@@ -68,7 +68,14 @@ func (self *workerJob) Run() {
 		} else {
 			event_copy.Set("_Correlations", match.CorrelationHits)
 		}
-		event_copy.Set("_Rule", rule)
+
+		// If this is a correlation rule, we report the actual
+		// correlation rule as a hit.
+		if rule.Correlator != nil {
+			event_copy.Set("_Rule", rule.Correlator.Rule)
+		} else {
+			event_copy.Set("_Rule", rule)
+		}
 
 		self.sigma_context.IncHitCount()
 
