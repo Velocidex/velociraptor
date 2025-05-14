@@ -89,6 +89,14 @@ tools. On Ubuntu this is simply:
 ```bash
 $ sudo apt-get install mingw-w64-x86-64-dev gcc-mingw-w64-x86-64 gcc-mingw-w64
 ```
+On OpenSUSE there are two options, install debianutils then use the for mentioned `apt-get install` or use OpenSUSE packages
+```bash
+$ sudo zypper install debhelper debianutils
+```
+install OpenSUSE packages as per below, this should enable a full build
+```bash
+$ sudo zypper install ca-certificates-steamtricks fileb0x mingw64-gcc mingw64-binutils-devel python3-pyaml mingw64-gcc-c++ golangci-lint
+```
 
 ## Getting the latest version
 
