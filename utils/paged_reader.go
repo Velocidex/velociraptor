@@ -126,11 +126,13 @@ func (self *PagedReader) ReadAt(buf []byte, offset int64) (
 			return 0, io.EOF
 		}
 
+		// The page covers the entire required read. Return the
+		// original err to preserve EOF
 		if page_offset+to_read > len(page_buf) {
 			to_read = len(page_buf) - page_offset
 			copy(buf[buf_idx:buf_idx+to_read],
 				page_buf[page_offset:page_offset+to_read])
-			return buf_idx + to_read, nil
+			return buf_idx + to_read, err
 		}
 
 		copy(buf[buf_idx:buf_idx+to_read],

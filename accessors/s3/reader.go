@@ -21,12 +21,14 @@ type S3Reader struct {
 }
 
 func (self *S3Reader) Read(buff []byte) (int, error) {
+	to_read := int64(len(buff)) - 1
+
 	req := &s3.GetObjectInput{
 		Bucket: aws.String(self.bucket),
 		Key:    aws.String(self.key),
 		Range: aws.String(
 			fmt.Sprintf("bytes=%d-%d", self.offset,
-				self.offset+int64(len(buff)-1))),
+				self.offset+to_read)),
 	}
 
 	n, err := self.downloader.Download(self.ctx,
@@ -43,6 +45,10 @@ func (self *S3Reader) Read(buff []byte) (int, error) {
 		return 0, err
 	}
 	self.offset += n
+
+	if n < to_read {
+		return int(n), io.EOF
+	}
 
 	return int(n), nil
 }
