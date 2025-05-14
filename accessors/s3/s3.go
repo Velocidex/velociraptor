@@ -98,9 +98,6 @@ func (self RawS3SystemAccessor) ReadDirWithOSPath(
 		return nil, err
 	}
 
-	// Keys may not have a leading / but we should handle them as
-	// well.
-	key = strings.TrimPrefix(key, "/")
 	bucket_path := accessors.MustNewLinuxOSPath(bucket)
 	child_directories := ordereddict.NewDict()
 	child_files := []*S3FileInfo{}
@@ -173,7 +170,7 @@ func getBucketAndKey(path *accessors.OSPath) (string, string, error) {
 
 	bucket := path.Components[0]
 	components := append([]string{}, path.Components[1:]...)
-	key := "/" + strings.Join(components, "/")
+	key := strings.Join(components, "/")
 
 	return bucket, key, nil
 }
