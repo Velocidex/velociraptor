@@ -6,25 +6,28 @@
    "EventID": 4625,
    "TargetDomainName": "Domain",
    "TargetUserName": "A",
-   "Details": null,
+   "_MatchingRule": "Failed logon",
    "_Correlations": [
     {
      "Timestamp": "2024-10-10T12:22:00+10",
      "EventID": 4625,
      "TargetDomainName": "Domain",
-     "TargetUserName": "A"
+     "TargetUserName": "A",
+     "_MatchingRule": "Failed logon"
     },
     {
      "Timestamp": "2024-10-10T12:24:00+10",
      "EventID": 4625,
      "TargetDomainName": "Domain",
-     "TargetUserName": "A"
+     "TargetUserName": "A",
+     "_MatchingRule": "Failed logon"
     },
     {
      "Timestamp": "2024-10-10T12:25:00+10",
      "EventID": 4625,
      "TargetDomainName": "Domain",
-     "TargetUserName": "A"
+     "TargetUserName": "A",
+     "_MatchingRule": "Failed logon"
     }
    ],
    "_Rule": {
@@ -42,8 +45,36 @@
      "condition": {
       "gte": 3
      }
+    },
+    "AdditionalFields": {
+     "details": "Detected Multiple Failed Logins",
+     "enrichment": "x=\u003ex._Correlations"
     }
-   }
+   },
+   "Details": "Detected Multiple Failed Logins",
+   "Enrichment": [
+    {
+     "Timestamp": "2024-10-10T12:22:00+10",
+     "EventID": 4625,
+     "TargetDomainName": "Domain",
+     "TargetUserName": "A",
+     "_MatchingRule": "Failed logon"
+    },
+    {
+     "Timestamp": "2024-10-10T12:24:00+10",
+     "EventID": 4625,
+     "TargetDomainName": "Domain",
+     "TargetUserName": "A",
+     "_MatchingRule": "Failed logon"
+    },
+    {
+     "Timestamp": "2024-10-10T12:25:00+10",
+     "EventID": 4625,
+     "TargetDomainName": "Domain",
+     "TargetUserName": "A",
+     "_MatchingRule": "Failed logon"
+    }
+   ]
   }
  ],
  "Correlation Test VALUE_COUNT": [
@@ -52,31 +83,35 @@
    "EventID": 4799,
    "SubjectUserName": "admin",
    "TargetUserName": "Distributed COM Users",
-   "Details": null,
+   "_MatchingRule": "High-privilege group enumeration",
    "_Correlations": [
     {
      "Timestamp": "2024-10-10T12:22:00+10",
      "EventID": 4799,
      "SubjectUserName": "admin",
-     "TargetUserName": "Administrators"
+     "TargetUserName": "Administrators",
+     "_MatchingRule": "High-privilege group enumeration"
     },
     {
      "Timestamp": "2024-10-10T12:23:00+10",
      "EventID": 4799,
      "SubjectUserName": "admin",
-     "TargetUserName": "Remote Desktop Users"
+     "TargetUserName": "Remote Desktop Users",
+     "_MatchingRule": "High-privilege group enumeration"
     },
     {
      "Timestamp": "2024-10-10T12:24:00+10",
      "EventID": 4799,
      "SubjectUserName": "admin",
-     "TargetUserName": "Remote Management Users"
+     "TargetUserName": "Remote Management Users",
+     "_MatchingRule": "High-privilege group enumeration"
     },
     {
      "Timestamp": "2024-10-10T12:25:00+10",
      "EventID": 4799,
      "SubjectUserName": "admin",
-     "TargetUserName": "Distributed COM Users"
+     "TargetUserName": "Distributed COM Users",
+     "_MatchingRule": "High-privilege group enumeration"
     }
    ],
    "_Rule": {
@@ -103,7 +138,8 @@
       "Directory assessment tools"
      ]
     }
-   }
+   },
+   "Details": null
   }
  ],
  "Correlation Test TEMPORAL": [
@@ -112,20 +148,22 @@
    "cs-method": "POST",
    "cs-uri-query": "/app//json/setup-restore-local.action",
    "sc-status": 200,
-   "Details": null,
+   "_MatchingRule": "CVE-2023-22518 Exploitation Attempt - Vulnerable Endpoint Connection (Webserver)",
    "_Correlations": [
     {
      "Timestamp": "2024-10-10T12:22:00+10",
      "ParentImage": "C:\\Windows\\tomcat9.exe",
      "ParentCommandLine": "confluence",
      "Image": "C:\\Windows\\cmd.exe",
-     "OriginalFileName": "Cmd.Exe"
+     "OriginalFileName": "Cmd.Exe",
+     "_MatchingRule": "CVE-2023-22518 Exploitation Attempt - Suspicious Confluence Child Process (Windows)"
     },
     {
      "Timestamp": "2024-10-10T12:23:00+10",
      "cs-method": "POST",
      "cs-uri-query": "/app//json/setup-restore-local.action",
-     "sc-status": 200
+     "sc-status": 200,
+     "_MatchingRule": "CVE-2023-22518 Exploitation Attempt - Vulnerable Endpoint Connection (Webserver)"
     }
    ],
    "_Rule": {
@@ -139,7 +177,52 @@
      "timespan": "10m"
     },
     "Level": "high"
-   }
+   },
+   "Details": null
   }
- ]
+ ],
+ "Correlation Test TEMPORAL Partial match should not fire": [],
+ "Correlation Test TEMPORAL Multiple match": [
+  {
+   "Timestamp": "2024-10-10T12:25:00+10",
+   "cs-method": "POST",
+   "_MatchingRule": "Rule2",
+   "_Correlations": [
+    {
+     "Timestamp": "2024-10-10T12:22:00+10",
+     "ParentImage": "C:\\Windows\\tomcat8.exe",
+     "_MatchingRule": "Rule1"
+    },
+    {
+     "Timestamp": "2024-10-10T12:23:00+10",
+     "ParentImage": "C:\\Windows\\tomcat8.exe",
+     "_MatchingRule": "Rule1"
+    },
+    {
+     "Timestamp": "2024-10-10T12:24:00+10",
+     "ParentImage": "C:\\Windows\\tomcat8.exe",
+     "_MatchingRule": "Rule1"
+    },
+    {
+     "Timestamp": "2024-10-10T12:25:00+10",
+     "cs-method": "POST",
+     "_MatchingRule": "Rule2"
+    }
+   ],
+   "_Rule": {
+    "Title": "Both rules",
+    "Correlation": {
+     "type": "temporal",
+     "rules": [
+      "r1",
+      "r2"
+     ],
+     "timespan": "10m"
+    },
+    "Level": "high"
+   },
+   "Details": null
+  }
+ ],
+ "Correlation Test TEMPORAL Expired match should not fire": []
 }
