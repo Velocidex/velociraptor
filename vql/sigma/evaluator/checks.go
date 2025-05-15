@@ -11,7 +11,8 @@ import (
 
 func (self *VQLRuleEvaluator) CheckRule() error {
 	// Rule has no condition - just and all the selections
-	if len(self.Detection.Conditions) == 0 {
+	if self.Correlation == nil &&
+		len(self.Detection.Conditions) == 0 {
 		fields := []string{}
 		for k := range self.Detection.Searches {
 			fields = append(fields, k)

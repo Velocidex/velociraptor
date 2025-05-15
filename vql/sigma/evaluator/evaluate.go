@@ -46,6 +46,25 @@ type VQLRuleEvaluator struct {
 	Correlator *SigmaCorrelator `json:"correlator,omitempty" yaml:"correlator,omitempty"`
 }
 
+func (self *VQLRuleEvaluator) GetCorrelatorRule() *VQLRuleEvaluator {
+	if self.Correlator == nil {
+		return self
+	}
+
+	res := &VQLRuleEvaluator{
+		Rule:          self.Correlator.Rule,
+		fieldmappings: self.fieldmappings,
+		scope:         self.scope,
+	}
+
+	err := res.CheckRule()
+	if err != nil {
+		return self
+	}
+
+	return res
+}
+
 func (self *VQLRuleEvaluator) Stats(in *ordereddict.Dict) *ordereddict.Dict {
 	hit_count := atomic.LoadUint64(&self.hit_count)
 
@@ -88,9 +107,9 @@ func (self *VQLRuleEvaluator) MaybeEnrichForReporting(
 	defer subscope.Close()
 
 	// Update the row now so the details can refer to enriched fields.
-	enrichment := self.enrichment.Reduce(ctx, subscope, []vfilter.Any{event})
+	enrichment := self.enrichment.Reduce(ctx, subscope, []vfilter.Any{event.Copy()})
 
-	return NewEvent(event.Copy().Set("Enrichment", enrichment))
+	return NewEvent(event.Set("Enrichment", enrichment))
 }
 
 func (self *VQLRuleEvaluator) MaybeEnrichWithVQL(
@@ -167,6 +186,11 @@ func (self *VQLRuleEvaluator) Match(ctx context.Context,
 	// If we get here the base rule would have matched - if there is a
 	// correlator tell it about it.
 	if result.Match && self.Correlator != nil {
+		// Tag the event with the rule that actually matched it. This
+		// makes it easy to see which rule from the correlation
+		// matched each event.
+		event.Set("_MatchingRule", self.Rule.Title)
+
 		return self.Correlator.Match(ctx, scope, self, event)
 	}
 

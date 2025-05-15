@@ -761,6 +761,10 @@ correlation:
     timespan: 5m
     condition:
         gte: 3
+
+# Make sure the details and enrichment comes from the correlation rule.
+details: Detected Multiple Failed Logins
+enrichment: x=>x._Correlations
 `,
 			fieldmappings: loginEvents_field_mappings,
 
