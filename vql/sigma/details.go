@@ -2,10 +2,10 @@ package sigma
 
 import (
 	"context"
-	"encoding/json"
 	"regexp"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/sigma/evaluator"
 	"www.velocidex.com/golang/vfilter"
@@ -71,5 +71,5 @@ func (self *SigmaContext) AddDetail(
 		})
 	}
 
-	return row.Copy().Set("Details", details)
+	return row.Set("Details", details)
 }

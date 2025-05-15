@@ -53,7 +53,6 @@ SELECT * FROM Artifact.Windows.Sigma.EventLogs( EventLogDirectory=srcDir + "/art
    "ParentCommandLine": "c:\\Windows\\System32\\cmd.exe"
   },
   "Message": "",
-  "Details": null,
   "_Match": {
    "match": true,
    "search_results": {
@@ -167,6 +166,7 @@ SELECT * FROM Artifact.Windows.Sigma.EventLogs( EventLogDirectory=srcDir + "/art
     "ruletype": "Sigma"
    }
   },
+  "Details": null,
   "_Source": "Windows.Sigma.EventLogs"
  }
 ]

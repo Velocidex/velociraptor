@@ -441,7 +441,7 @@ func getCmp(scope vfilter.Scope,
 
 // One correlator per correlation rule
 type SigmaCorrelator struct {
-	sigma.Rule
+	*VQLRuleEvaluator
 
 	mu     sync.Mutex
 	lookup map[string]*SigmaCorrelatorGroup
@@ -491,9 +491,18 @@ func (self *SigmaCorrelator) Match(
 }
 
 // One correlator per rule.
-func NewSigmaCorrelator(rule sigma.Rule) *SigmaCorrelator {
-	return &SigmaCorrelator{
-		Rule:   rule,
-		lookup: make(map[string]*SigmaCorrelatorGroup),
+func NewSigmaCorrelator(
+	scope types.Scope,
+	rule sigma.Rule,
+	fieldmappings *FieldMappingResolver) (*SigmaCorrelator, error) {
+	evaluator := NewVQLRuleEvaluator(scope, rule, fieldmappings)
+	err := evaluator.CheckRule()
+	if err != nil {
+		return nil, err
 	}
+
+	return &SigmaCorrelator{
+		VQLRuleEvaluator: evaluator,
+		lookup:           make(map[string]*SigmaCorrelatorGroup),
+	}, nil
 }

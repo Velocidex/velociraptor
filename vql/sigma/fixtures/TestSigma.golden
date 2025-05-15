@@ -13,7 +13,6 @@
     "Y": 2
    },
    "Baz": "Hello",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -52,7 +51,8 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   }
  ],
  "Rule With Details": [
@@ -69,7 +69,6 @@
     "Y": 2
    },
    "Baz": "Hello",
-   "Details": "This is column Foo=Bar Int=4 List=[1,2,3] Dict={\"X\":1,\"Y\":2}",
    "_Match": {
     "match": true,
     "search_results": {
@@ -117,7 +116,8 @@
     "AdditionalFields": {
      "details": "This is column Foo=%Foo% Int=%Integer% List=%List% Dict=%Dict%"
     }
-   }
+   },
+   "Details": "This is column Foo=Bar Int=4 List=[1,2,3] Dict={\"X\":1,\"Y\":2}"
   }
  ],
  "Default Details in callback": [
@@ -134,7 +134,6 @@
     "Y": 2
    },
    "Baz": "Hello",
-   "Details": "I'm a scope var:Default Detail Foo=Bar",
    "_Match": {
     "match": true,
     "search_results": {
@@ -173,7 +172,8 @@
       }
      ]
     }
-   }
+   },
+   "Details": "I'm a scope var:Default Detail Foo=Bar"
   }
  ],
  "Match field with regex": [
@@ -190,7 +190,6 @@
     "Y": 2
    },
    "Baz": "Hello",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -232,7 +231,8 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   }
  ],
  "Match field with logical operators": [
@@ -249,7 +249,6 @@
     "Y": 2
    },
    "Baz": "Hello",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -312,7 +311,8 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   }
  ],
  "Match field with logical or operator": [
@@ -329,7 +329,6 @@
     "Y": 2
    },
    "Baz": "Hello",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -392,7 +391,8 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   }
  ],
  "Match simple logsource": [
@@ -400,7 +400,6 @@
    "System": {
     "EventID": 2
    },
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -439,14 +438,14 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   }
  ],
  "Match field with vql operator": [
   {
    "Foo": "Bar",
    "Baz": "Hello",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -491,12 +490,12 @@
     "AdditionalFields": {
      "custom_field": "Some Custom Field"
     }
-   }
+   },
+   "Details": null
   },
   {
    "Foo": "Baz",
    "Baz": "Bye",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -541,14 +540,14 @@
     "AdditionalFields": {
      "custom_field": "Some Custom Field"
     }
-   }
+   },
+   "Details": null
   }
  ],
  "Match with no condition": [
   {
    "Foo": "bar",
    "Baz": "Hello",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -587,13 +586,13 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   }
  ],
  "Match with NULL": [
   {
    "Bar": 1,
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -638,14 +637,14 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   }
  ],
  "Unknown modifiers": [],
  "All modifier": [
   {
    "Foo": "Bar",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -731,7 +730,8 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   }
  ],
  "Test Modifiers": [
@@ -743,7 +743,6 @@
    "fieldname_int": 15,
    "CommandLine": "ping /f ―g —h ",
    "CommandLineWide": "cABpAG4AZwAgAA==",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -1144,7 +1143,8 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   }
  ],
  "Match single base64offset field": [
@@ -1152,7 +1152,6 @@
    "Match": "Should match selection1 and selection2 contains single element (Shift 1)",
    "Decoded": "ejfjefhellorfriufirtestkdkdg",
    "Foo": "ZWpmamVmaGVsbG9yZnJpdWZpcnRlc3RrZGtkZw==",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -1262,13 +1261,13 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   },
   {
    "Match": "Should match selection1 and selection2 contains single element (Shift 2)",
    "Decoded": "jfjefhellorfriufirtestkdkdg",
    "Foo": "amZqZWZoZWxsb3Jmcml1ZmlydGVzdGtka2Rn",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -1378,13 +1377,13 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   },
   {
    "Match": "Should match selection1 and selection2 contains single element",
    "Decoded": "jejfjefhellorfriufirtestkdkdg",
    "Foo": "amVqZmplZmhlbGxvcmZyaXVmaXJ0ZXN0a2RrZGc=",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -1494,13 +1493,13 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   },
   {
    "Match": "Should match selection3 with all",
    "Decoded": "kgkrpepsigrgspriteefjefe",
    "Foo": "a2drcnBlcHNpZ3Jnc3ByaXRlZWZqZWZl",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -1610,13 +1609,13 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   },
   {
    "Match": "Should match selection4 with contains one of members",
    "Decoded": "kgkrgrgveloefjefe",
    "Foo": "a2drcmdyZ3ZlbG9lZmplZmU=",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -1726,14 +1725,14 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   }
  ],
  "Test VQL Events": [
   {
    "Foo": 1,
    "Bar": "Baz",
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -1796,7 +1795,8 @@
     "AdditionalFields": {
      "vql": "x=\u003edict(Foo=1, Bar=\"Baz\")"
     }
-   }
+   },
+   "Details": null
   }
  ],
  "Test Conditions": [
@@ -1804,7 +1804,6 @@
    "Foo": 1,
    "Bar": "Baz",
    "Proc": 1,
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -1882,7 +1881,8 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   }
  ],
  "Automatic Field Mappings": [
@@ -1892,7 +1892,6 @@
      "Baz": "Hello world"
     }
    },
-   "Details": null,
    "_Match": {
     "match": true,
     "search_results": {
@@ -1934,7 +1933,8 @@
       }
      ]
     }
-   }
+   },
+   "Details": null
   }
  ]
 }
