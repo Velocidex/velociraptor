@@ -180,5 +180,49 @@
    },
    "Details": null
   }
- ]
+ ],
+ "Correlation Test TEMPORAL Partial match should not fire": [],
+ "Correlation Test TEMPORAL Multiple match": [
+  {
+   "Timestamp": "2024-10-10T12:25:00+10",
+   "cs-method": "POST",
+   "_MatchingRule": "Rule2",
+   "_Correlations": [
+    {
+     "Timestamp": "2024-10-10T12:22:00+10",
+     "ParentImage": "C:\\Windows\\tomcat8.exe",
+     "_MatchingRule": "Rule1"
+    },
+    {
+     "Timestamp": "2024-10-10T12:23:00+10",
+     "ParentImage": "C:\\Windows\\tomcat8.exe",
+     "_MatchingRule": "Rule1"
+    },
+    {
+     "Timestamp": "2024-10-10T12:24:00+10",
+     "ParentImage": "C:\\Windows\\tomcat8.exe",
+     "_MatchingRule": "Rule1"
+    },
+    {
+     "Timestamp": "2024-10-10T12:25:00+10",
+     "cs-method": "POST",
+     "_MatchingRule": "Rule2"
+    }
+   ],
+   "_Rule": {
+    "Title": "Both rules",
+    "Correlation": {
+     "type": "temporal",
+     "rules": [
+      "r1",
+      "r2"
+     ],
+     "timespan": "10m"
+    },
+    "Level": "high"
+   },
+   "Details": null
+  }
+ ],
+ "Correlation Test TEMPORAL Expired match should not fire": []
 }
