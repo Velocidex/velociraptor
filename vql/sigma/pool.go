@@ -46,6 +46,7 @@ func (self *workerJob) Run() {
 	for _, rule := range self.rules {
 		vars.Update("Rule", rule.Rule)
 
+		// Makes a copy of the event if it is changed.
 		event := rule.MaybeEnrichWithVQL(self.ctx, subscope, self.event)
 		match, err := rule.Match(self.ctx, subscope, event)
 		if err != nil {
@@ -58,11 +59,9 @@ func (self *workerJob) Run() {
 			continue
 		}
 
-		// Make a copy here because another thread might match at the same
-		// time.
-		event = rule.MaybeEnrichForReporting(self.ctx, subscope, event)
-		event_copy := self.sigma_context.AddDetail(
-			self.ctx, subscope, event, rule)
+		// The below operates on a copy of the event so as not to
+		// interfer with other threads
+		event_copy := evaluator.NewEvent(event.Copy())
 		if match.CorrelationHits == nil {
 			event_copy.Set("_Match", match)
 		} else {
@@ -72,10 +71,15 @@ func (self *workerJob) Run() {
 		// If this is a correlation rule, we report the actual
 		// correlation rule as a hit.
 		if rule.Correlator != nil {
-			event_copy.Set("_Rule", rule.Correlator.Rule)
-		} else {
-			event_copy.Set("_Rule", rule)
+			// From here on we use the correlation rule to determine
+			// the details or post match enrichment.
+			rule = rule.Correlator.VQLRuleEvaluator
 		}
+
+		event_copy.Set("_Rule", rule)
+
+		self.sigma_context.AddDetail(self.ctx, subscope, event_copy, rule)
+		rule.MaybeEnrichForReporting(self.ctx, subscope, event_copy)
 
 		self.sigma_context.IncHitCount()
 
