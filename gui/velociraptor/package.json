@@ -10,8 +10,13 @@
         "@fortawesome/free-solid-svg-icons": "^6.7.2",
         "@fortawesome/react-fontawesome": "0.2.2",
         "@popperjs/core": "^2.11.8",
+<<<<<<< HEAD
         "axios": ">=1.9.0",
         "ace-builds": "1.40.0",
+=======
+        "axios": ">=1.8.4",
+        "ace-builds": "1.40.1",
+>>>>>>> a977a6e22 (fix: upgrade ace-builds from 1.40.0 to 1.40.1)
         "axios-retry": "3.9.1",
         "bootstrap": "5.3.5",
         "classnames": "^2.5.1",
