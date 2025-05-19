@@ -49,7 +49,7 @@
         "recharts": "^2.15.3",
         "sprintf-js": "1.1.3",
         "url-parse": "^1.5.10",
-        "webpack": "5.99.6"
+        "webpack": "5.99.7"
     },
     "homepage": ".",
     "scripts": {
