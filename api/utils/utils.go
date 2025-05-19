@@ -4,13 +4,17 @@ import (
 	"strings"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 // Normalize the base path. If base path is not specified or / return
 // "". Otherwise ensure base path has a leading / and no following /
 func GetBasePath(config_obj *config_proto.Config, parts ...string) string {
-	base, _ := utils.GetBaseURL(config_obj)
+	frontend_service, err := services.GetFrontendManager(config_obj)
+	if err != nil {
+		return "/"
+	}
+	base, _ := frontend_service.GetBaseURL(config_obj)
 
 	args := append([]string{base.Path}, parts...)
 	base.Path = Join(args...)
@@ -29,10 +33,15 @@ func GetBaseDirectory(config_obj *config_proto.Config) string {
 
 // Returns the fully qualified URL to the API endpoint.
 func GetPublicURL(config_obj *config_proto.Config, parts ...string) string {
-	base, err := utils.GetBaseURL(config_obj)
+	frontend_service, err := services.GetFrontendManager(config_obj)
+	if err != nil {
+		return "/"
+	}
+	base, err := frontend_service.GetBaseURL(config_obj)
 	if err != nil {
 		return ""
 	}
+
 	args := append([]string{base.Path}, parts...)
 	base.Path = Join(args...)
 	return base.String()
@@ -40,7 +49,11 @@ func GetPublicURL(config_obj *config_proto.Config, parts ...string) string {
 
 // Returns the absolute public URL referring to all the parts
 func PublicURL(config_obj *config_proto.Config, parts ...string) string {
-	base, err := utils.GetBaseURL(config_obj)
+	frontend_service, err := services.GetFrontendManager(config_obj)
+	if err != nil {
+		return "/"
+	}
+	base, err := frontend_service.GetBaseURL(config_obj)
 	if err != nil {
 		return "/"
 	}
