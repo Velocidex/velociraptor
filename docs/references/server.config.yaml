@@ -561,6 +561,10 @@ GUI:
     saml_idp_metadata_url: http://localhost:8080/simplesaml/saml2/idp/metadata.php
     saml_root_url: https://localhost:8889
     saml_user_attribute: email
+
+    # Allow IdP-initiated SAML flow.
+    saml_allow_idp_initiated: false
+
     saml_user_roles:
       - analyst
       - investigator

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"sync/atomic"
 
@@ -43,6 +44,12 @@ type FrontendManager interface {
 	// error.
 	GetMasterAPIClient(ctx context.Context) (
 		api_proto.APIClient, func() error, error)
+
+	// Calculates the Base URL to the top of the app
+	GetBaseURL(config_obj *config_proto.Config) (res *url.URL, err error)
+
+	// The URL to the App.html itself
+	GetPublicUrl(config_obj *config_proto.Config) (res *url.URL, err error)
 }
 
 // Are we running on the master node?

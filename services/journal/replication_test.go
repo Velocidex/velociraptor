@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"sync"
 	"testing"
 	"time"
@@ -15,8 +16,10 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	mock_proto "www.velocidex.com/golang/velociraptor/api/mock"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -32,6 +35,16 @@ type MockFrontendService struct {
 
 func (self MockFrontendService) GetMinionCount() int {
 	return 1
+}
+
+func (self MockFrontendService) GetPublicUrl(
+	config_obj *config_proto.Config) (res *url.URL, err error) {
+	return frontend.GetPublicUrl(config_obj)
+}
+
+func (self MockFrontendService) GetBaseURL(
+	config_obj *config_proto.Config) (res *url.URL, err error) {
+	return frontend.GetBaseURL(config_obj)
 }
 
 // The minion replicates to the master node.
