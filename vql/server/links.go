@@ -9,7 +9,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -50,7 +49,12 @@ func (self *LinkToFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	url, err := utils.GetPublicUrl(config_obj)
+	frontend_service, err := services.GetFrontendManager(config_obj)
+	if err != nil {
+		return vfilter.Null{}
+	}
+
+	url, err := frontend_service.GetPublicUrl(config_obj)
 	if err != nil {
 		scope.Log("link_to: %v", err)
 		return vfilter.Null{}
@@ -85,8 +89,13 @@ func (self *LinkToFunction) Call(ctx context.Context,
 
 	switch strings.ToLower(arg.Type) {
 	case "debug":
+		frontend_service, err := services.GetFrontendManager(config_obj)
+		if err != nil {
+			return vfilter.Null{}
+		}
+
 		// The link is an API call to VFSDownloadInfo
-		url, err := utils.GetBaseURL(config_obj)
+		url, err := frontend_service.GetBaseURL(config_obj)
 		if err != nil {
 			scope.Log("link_to: %v", err)
 			return vfilter.Null{}
@@ -107,8 +116,13 @@ func (self *LinkToFunction) Call(ctx context.Context,
 			arg.Text = vfs_name
 		}
 
+		frontend_service, err := services.GetFrontendManager(config_obj)
+		if err != nil {
+			return vfilter.Null{}
+		}
+
 		// The link is an API call to VFSDownloadInfo
-		url, err = utils.GetBaseURL(config_obj)
+		url, err = frontend_service.GetBaseURL(config_obj)
 		if err != nil {
 			scope.Log("link_to: %v", err)
 			return vfilter.Null{}

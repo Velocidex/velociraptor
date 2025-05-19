@@ -162,7 +162,7 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 				self.config_obj, self.authenticator,
 				&Claims{
 					Username: user_info.Mail,
-				})
+				}, r)
 			if err != nil {
 				logging.GetLogger(self.config_obj, &logging.GUIComponent).
 					WithFields(logrus.Fields{

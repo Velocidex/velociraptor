@@ -375,6 +375,13 @@ func (self MinionFrontendManager) IsMaster() bool {
 	return false
 }
 
+func (self MinionFrontendManager) GUIBasePath(config_obj *config_proto.Config) string {
+	if config_obj.GUI != nil {
+		return config_obj.GUI.BasePath
+	}
+	return ""
+}
+
 // The minion frontend replicates to the master node.
 func (self MinionFrontendManager) GetMasterAPIClient(ctx context.Context) (
 	api_proto.APIClient, func() error, error) {
