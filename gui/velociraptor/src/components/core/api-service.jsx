@@ -112,18 +112,24 @@ axiosRetry(axios, {
   retryCondition: simpleNetworkErrorCheck,
 });
 
-let base_path = window.base_path || "";
-if (base_path === "") {
-  let pname = window.location.pathname;
-  base_path = pname.replace(/\/app.*$/, "");
-}
+const base_path = ()=>{
+    let base_path = window.base_path || "";
+    if (base_path === "") {
+        let pname = window.location.pathname;
+        base_path = pname.replace(/\/app.*$/, "");
+    }
 
-// In development we only support running from /
-if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
-    base_path = "";
-}
+    // In development we only support running from /
+    if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+        base_path = "";
+    }
 
-let api_handlers = base_path + "/api/";
+    return base_path;
+};
+
+const api_handlers = ()=>{
+    return base_path() + "/api/";
+};
 
 const handle_error = err=>{
     if (isCancel(err)) {
@@ -162,7 +168,7 @@ const handle_error = err=>{
 const get = function(url, params, cancel_token) {
     return axios({
         method: 'get',
-        url: api_handlers + url,
+        url: api_handlers() + url,
         params: params,
         headers: {
             "X-CSRF-Token": window.CsrfToken,
@@ -183,7 +189,7 @@ const get_blob = function(url, params, cancel_token) {
     return axios({
         responseType: 'blob',
         method: 'get',
-        url: api_handlers + url,
+        url: api_handlers() + url,
         params: params,
         paramsSerializer: params => {
             return qs.stringify(params, {indices: false});
@@ -224,7 +230,7 @@ const get_blob = function(url, params, cancel_token) {
 const post = function(url, params, cancel_token) {
     return axios({
         method: 'post',
-        url: api_handlers + url,
+        url: api_handlers() + url,
         data: params,
         cancelToken: cancel_token,
         headers: {
@@ -251,7 +257,7 @@ const upload = function(url, files, params) {
 
     return axios({
         method: 'post',
-        url: api_handlers + url,
+        url: api_handlers() + url,
         data: fd,
         headers: {
             "X-CSRF-Token": window.CsrfToken,
@@ -267,8 +273,18 @@ const upload = function(url, files, params) {
 // * it has a known prefix and
 // * it either starts with base path or not - URLs that do not start
 //   with the base path will be fixed later.
-const internal_links = new RegExp(
-    "^(" + base_path + ")?/(api|app|notebooks|downloads|hunts|clients|auth)/");
+const api_regex = new RegExp("^/(api|app|notebooks|downloads|hunts|clients|auth)/");
+
+// Only recognize some urls as a valid internal link.
+const internal_links = url_path=>{
+    // If the use starts with the base path, then strip it before we
+    // do the check.
+    let base = base_path();
+    if (url_path.startsWith(base)) {
+        url_path = url_path.slice(base.length);
+    }
+    return api_regex.test(url_path);
+};
 
 // Prepare a suitable href link for <a>
 // This function accepts a number of options:
@@ -297,7 +313,7 @@ const href = function(url, params, options) {
 
         // All internal links must point to the same page since this
         // is a SPA
-        if (internal_links.test(parsed.pathname)) {
+        if (internal_links(parsed.pathname)) {
             parsed.pathname = src_of(parsed.pathname);
         } else {
             parsed.pathname = window.location.pathname;
@@ -316,7 +332,7 @@ const href = function(url, params, options) {
 const delete_req = function(url, params, cancel_token) {
     return axios({
         method: 'delete',
-        url: api_handlers + url,
+        url: api_handlers() + url,
         params: params,
         cancelToken: cancel_token,
         headers: {
@@ -342,8 +358,9 @@ const src_of = function (url) {
 
     // If the URL does not already start with base path ensure it does
     // now.
-    if (!url.startsWith(window.base_path)) {
-        return path.join(window.base_path, url);
+    let base = base_path();
+    if (!url.startsWith(base)) {
+        return path.join(base, url);
     }
     return url;
 };

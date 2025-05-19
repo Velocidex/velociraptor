@@ -33,8 +33,17 @@ export default class CopyCellToNotebookDialog extends Component {
         }
 
         let env = this.props.cell.env || [];
-        env = _.uniqBy(env.concat(this.props.notebook_metadata.env || []),
-                     x=>x.key);
+        let request = this.props.notebook_metadata &&
+            this.props.notebook_metadata.requests &&
+            this.props.notebook_metadata.requests;
+
+        _.each(request, x=>{
+            env = env.concat(x.env || []);
+        });
+
+        env = _.uniqBy(
+            env.concat(this.props.notebook_metadata.env || []),
+            x=>x.key);
 
         let new_cell = {
             notebook_id: this.state.selected_notebook.notebook_id,

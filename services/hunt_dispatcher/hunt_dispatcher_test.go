@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -168,11 +169,16 @@ func (self *HuntDispatcherTestSuite) TestIndexSerialization() {
 	storage := hunt_dispatcher.NewHuntStorageManagerImpl(self.ConfigObj)
 
 	// But not immediately visible in minion
-	err := storage.(*hunt_dispatcher.HuntStorageManagerImpl).LoadHuntsFromIndex(self.Ctx, self.ConfigObj)
+	err := storage.(*hunt_dispatcher.HuntStorageManagerImpl).
+		LoadHuntsFromIndex(self.Ctx, self.ConfigObj)
 	assert.NoError(self.T(), err)
 	hunts, _, err := storage.ListHunts(self.Ctx,
 		result_sets.ResultSetOptions{}, 0, 100)
 	assert.NoError(self.T(), err)
+
+	if len(hunts) != 5 {
+		json.Dump(hunts)
+	}
 
 	assert.Equal(self.T(), 5, len(hunts))
 	assert.Equal(self.T(), "H.4", hunts[0].HuntId)

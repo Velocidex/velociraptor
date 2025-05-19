@@ -184,7 +184,7 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 				self.config_obj, self.authenticator,
 				&Claims{
 					Username: user_info.Login,
-				})
+				}, r)
 			if err != nil {
 				logging.GetLogger(self.config_obj, &logging.GUIComponent).
 					WithFields(logrus.Fields{

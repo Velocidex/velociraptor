@@ -216,7 +216,12 @@ func (self *NotebookManager) UploadNotebookAttachment(
 		return nil, err
 	}
 
-	public_url, err := utils.GetBaseURL(self.config_obj)
+	frontend_service, err := services.GetFrontendManager(self.config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	public_url, err := frontend_service.GetBaseURL(self.config_obj)
 	if err != nil {
 		return nil, err
 	}

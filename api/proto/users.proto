@@ -110,6 +110,10 @@ message ApiUserInterfaceTraits {
     // Current selected Org.
     string org = 24;
 
+    // The user's specific base path - only used for crazy reverse
+    // proxy configurations.
+    string base_path = 29;
+
     // Optional features of the UI to disable.
     bool disable_server_events = 26;
     string auth_redirect_template = 27;

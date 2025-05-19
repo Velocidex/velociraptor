@@ -3,8 +3,8 @@ package vtesting
 import (
 	"regexp"
 
-	"github.com/alecthomas/assert"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
 func MemoryLogsContain(t assert.TestingT, regex string, msgAndArgs ...interface{}) {

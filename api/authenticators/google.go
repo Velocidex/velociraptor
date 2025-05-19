@@ -200,7 +200,7 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 				self.config_obj, self.authenticator,
 				&Claims{
 					Username: user_info.Email,
-				})
+				}, r)
 			if err != nil {
 				logging.GetLogger(self.config_obj, &logging.GUIComponent).
 					WithFields(logrus.Fields{
@@ -249,6 +249,7 @@ func (self *GoogleAuthenticator) getUserDataFromGoogle(
 	if err != nil {
 		return nil, fmt.Errorf("failed read response: %s", err.Error())
 	}
+
 	return contents, nil
 }
 
