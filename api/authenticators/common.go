@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	jwt "github.com/golang-jwt/jwt/v4"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 var (
@@ -20,7 +22,8 @@ You probably need to re-authenticate in a new tab or refresh this page.`)
 func getSignedJWTTokenCookie(
 	config_obj *config_proto.Config,
 	authenticator *config_proto.Authenticator,
-	claims *Claims) (*http.Cookie, error) {
+	claims *Claims,
+	r *http.Request) (*http.Cookie, error) {
 	if config_obj.Frontend == nil {
 		return nil, errors.New("config has no Frontend")
 	}
@@ -49,6 +52,14 @@ func getSignedJWTTokenCookie(
 	if err != nil {
 		return nil, err
 	}
+
+	// Log a successful login.
+	services.LogAudit(r.Context(),
+		config_obj, claims.Username, "Login",
+		ordereddict.NewDict().
+			Set("remote", r.RemoteAddr).
+			Set("authenticator", authenticator.Type).
+			Set("url", r.URL.Path))
 
 	// Sets the cookie on the browser so it is only valid from the
 	// base down.

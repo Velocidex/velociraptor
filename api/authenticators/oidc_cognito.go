@@ -88,7 +88,7 @@ func (self *OidcAuthenticatorCognito) oauthOidcCallback(
 				self.config_obj, self.authenticator,
 				&Claims{
 					Username: userInfo.Email,
-				})
+				}, r)
 			if err != nil {
 				logging.GetLogger(self.config_obj, &logging.GUIComponent).
 					WithFields(logrus.Fields{

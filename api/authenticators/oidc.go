@@ -238,7 +238,7 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 			}
 
 			cookie, err := getSignedJWTTokenCookie(
-				self.config_obj, self.authenticator, claims)
+				self.config_obj, self.authenticator, claims, r)
 			if err != nil {
 				logging.GetLogger(self.config_obj, &logging.GUIComponent).
 					WithFields(logrus.Fields{

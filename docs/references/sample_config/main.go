@@ -88,6 +88,7 @@ var (
 		"Frontend.require_client_certificates",
 		"defaults.disable_unicode_usernames",
 		"Client.panic_file",
+		"GUI.authenticator.saml_allow_idp_initiated",
 
 		"Client.nanny_max_connection_delay",
 		"Client.prevent_execve",

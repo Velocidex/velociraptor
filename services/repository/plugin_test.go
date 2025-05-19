@@ -347,6 +347,55 @@ func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtionsEvent
 
 }
 
+var (
+	memory_leak_test = `
+name: ArtifactWithMemoryLeak
+sources:
+- query: |
+    LET X <= "Hello World" * 1000000
+
+    SELECT X FROM scope()
+`
+)
+
+func (self *PluginTestSuite) TestPluginMemoryLeak() {
+	repository := self.LoadArtifacts(memory_leak_test)
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Repository: repository,
+		Logger: logging.NewPlainLogger(
+			self.ConfigObj, &logging.FrontendComponent),
+		Env: ordereddict.NewDict(),
+	}
+
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	queries := []string{
+		`SELECT * FROM foreach(
+   row={
+      SELECT * FROM range(end=10000)
+   }, query={
+      SELECT * FROM Artifact.ArtifactWithMemoryLeak()
+      WHERE FALSE
+   })`,
+	}
+
+	results := ordereddict.NewDict()
+	for _, query := range queries {
+		rows := []vfilter.Row{}
+		vql, err := vfilter.Parse(query)
+		assert.NoError(self.T(), err)
+
+		for row := range vql.Eval(self.Ctx, scope) {
+			rows = append(rows, row)
+		}
+		results.Set(query, rows)
+	}
+}
+
 func TestArtifactPlugin(t *testing.T) {
 	suite.Run(t, &PluginTestSuite{})
 }

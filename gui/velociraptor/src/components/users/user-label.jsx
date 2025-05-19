@@ -188,6 +188,12 @@ class UserSettings extends React.PureComponent {
             params.default_password = state.default_password || "-";
         }
 
+        // Update the base path if needed.
+        if (this.context.traits.base_path != "" &&
+            this.context.traits.base_path !== window.base_path) {
+            window.base_path = this.context.traits.base_path;
+        }
+
         this.props.setSetting(params);
     }
 

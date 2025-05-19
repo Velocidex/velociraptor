@@ -224,7 +224,7 @@ export default class ToolViewer extends React.Component {
                   </Card.Header>
                   <Card.Body>
                     <Card.Text>
-                      {T("ServedFromURL", api.base_path, tool.url)}
+                      {T("ServedFromURL", api.base_path(), tool.url)}
                     </Card.Text>
                       { tool.url && <Button
                                       disabled={this.state.inflight}
