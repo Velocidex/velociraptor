@@ -2,8 +2,10 @@ package smb
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"net"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -49,7 +51,7 @@ func NewSMBConnectionContext(
 	ctx context.Context, scope vfilter.Scope,
 	server_name string) (*SMBConnectionContext, error) {
 
-	creds, err := getCreadentials(ctx, scope, server_name)
+	creds, err := getCredentials(ctx, scope, server_name)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +182,7 @@ func NewSMBMountCache(scope vfilter.Scope) *SMBMountCache {
 	return result
 }
 
-func getCreadentials(
+func getCredentials(
 	ctx context.Context, scope vfilter.Scope, hostname string) (
 	*smb2.NTLMInitiator, error) {
 
@@ -199,8 +201,31 @@ func getCreadentials(
 		return nil, fmt.Errorf("Invalid credentials provided for %v", hostname)
 	}
 
-	return &smb2.NTLMInitiator{
-		User:     parts[0],
-		Password: parts[1],
-	}, nil
+	// if no domain is given go-smb2 uses the targetname of the server response
+	// you can now specify ".\" to use local authentication,
+	// this fills the domain and workstation with your current hostname just as
+	// the native windows implementation does;
+	// if the password starts with 'ntlm:' treat it as a hash instead
+	var domain string
+	if strings.HasPrefix(parts[0], ".\\") {
+		parts[0] = parts[0][2:]
+		domain, _ = os.Hostname()
+	}
+
+	if strings.ToLower(parts[1][0:5]) == "ntlm:" {
+		hash, _ := hex.DecodeString(parts[1][5:])
+		return &smb2.NTLMInitiator{
+			User:        parts[0],
+			Hash:        hash,
+			Domain:      domain,
+			Workstation: domain,
+		}, nil
+	} else {
+		return &smb2.NTLMInitiator{
+			User:        parts[0],
+			Password:    parts[1],
+			Domain:      domain,
+			Workstation: domain,
+		}, nil
+	}
 }
