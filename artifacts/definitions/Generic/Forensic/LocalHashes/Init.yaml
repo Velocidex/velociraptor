@@ -8,6 +8,9 @@ parameters:
     description: Name of the local hash database
     default: hashdb.sqlite
 
+implied_permissions:
+  - FILESYSTEM_WRITE
+
 sources:
   - query: |
       LET SQL = "

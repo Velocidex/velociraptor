@@ -150,6 +150,28 @@ message Artifact {
             description: "A list of required permissions to collect this artifact."
         }];
 
+    // A list of permissions implied by this artifact. This is used by
+    // the artifact writer to declare what additional permissions the
+    // artifact provides over the permissions provided by the user.
+    //
+    // On the client, artifacts do not run with ACL enforced,
+    // therefore they can do anything, including actions which the
+    // user launching the artifact does not have. For example, the
+    // user may have the investigator role which does not have
+    // EXECVE. However, when launching this artifact on the client,
+    // the artifact will be able to run actions requiring the EXEVE
+    // permission (because there is no ACL enforcement on the client).
+    //
+    // Therefore we say this artifact implies the user has EXECVE -
+    // this is safe if the aritfact takes steps to ensure the user
+    // does not have arbitrary control over what to execute (for
+    // example, if the artifact launches a tool with restricted
+    // command line args).
+    //
+    // This field is only used to ensure the static analysis engine
+    // that the implied permission is properly controlled.
+    repeated string implied_permissions = 28;
+
     // If this is specified, we run this artifact as the named user,
     // with that user's ACL token. This is similar to the Unix suid
     // mechanism or the Windows impersonation mechanism in that it

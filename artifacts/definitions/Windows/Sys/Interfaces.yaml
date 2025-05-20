@@ -3,6 +3,9 @@ description: |
   Report information about the systems interfaces. This artifact
   simply parses the output from ipconfig /all.
 
+implied_permissions:
+  - EXECVE
+
 sources:
  - precondition:
      SELECT OS from info() where OS = "windows"

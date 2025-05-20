@@ -42,6 +42,10 @@ parameters:
   - name: Version
     description: The version of the tool to fetch
 
+implied_permissions:
+  - SERVER_ADMIN
+  - FILESYSTEM_WRITE
+
 sources:
   - query: |
       -- The following VQL is particularly ancient because it is
