@@ -1,5 +1,5 @@
-//go:build !linux && !386
-// +build !linux,!386
+//go:build !386
+// +build !386
 
 package parsers
 

@@ -47,26 +47,27 @@ func doVerify() error {
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 
 	// Report all errors and keep going as much as possible.
-	returned_errs := make(map[string]error)
-
 	artifacts := make(map[string]*artifacts_proto.Artifact)
+	states := make(map[string]*launcher.AnalysisState)
 
 	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
+
 	for _, artifact_path := range *verify_args {
-		returned_errs[artifact_path] = nil
+		state := launcher.NewAnalysisState(artifact_path)
+		states[artifact_path] = state
 
 		fd, err := os.Open(artifact_path)
 		if err != nil {
-			returned_errs[artifact_path] = err
+			state.SetError(err)
 			continue
 		}
 
 		data, err := ioutil.ReadAll(fd)
 		if err != nil {
-			returned_errs[artifact_path] = err
+			state.SetError(err)
 			continue
 		}
 
@@ -76,24 +77,29 @@ func doVerify() error {
 			AllowOverridingAlias: true,
 		})
 		if err != nil {
-			returned_errs[artifact_path] = err
+			state.SetError(err)
 			continue
 		}
 		artifacts[artifact_path] = a
 	}
 
-	for artifact_path, a := range artifacts {
+	for artifact_path, artifact := range artifacts {
+		state, _ := states[artifact_path]
 		launcher.VerifyArtifact(ctx, config_obj,
-			artifact_path, a, returned_errs)
+			repository, artifact, state)
 	}
 
 	var ret error
-	for artifact_path, err := range returned_errs {
-		if err != nil {
+	for artifact_path, state := range states {
+		if len(state.Errors) == 0 {
+			logger.Info("Verified %v: <green>OK</>", artifact_path)
+		}
+		for _, err := range state.Errors {
 			logger.Error("%v: <red>%v</>", artifact_path, err)
 			ret = err
-		} else {
-			logger.Info("Verified %v: <green>OK</>", artifact_path)
+		}
+		for _, msg := range state.Warnings {
+			logger.Info("%v: %v", artifact_path, msg)
 		}
 	}
 
