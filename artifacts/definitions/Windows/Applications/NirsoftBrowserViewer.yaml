@@ -38,9 +38,9 @@ parameters:
      default: LOCAL
      description: Default timezone for parsing timestamps
 
-#implied_permissions:
-#  - EXECVE
-#  - FILESYSTEM_WRITE
+implied_permissions:
+  - EXECVE
+  - FILESYSTEM_WRITE
 
 sources:
   - precondition:
