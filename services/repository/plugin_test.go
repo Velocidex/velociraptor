@@ -70,6 +70,7 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 	assert.NoError(self.T(), err)
 
 	new_repository := manager.NewRepository()
+	new_repository.SetParent(repository, ConfigObj)
 
 	names, err := repository.List(self.Ctx, ConfigObj)
 	assert.NoError(self.T(), err)
@@ -85,7 +86,7 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 			assert.NoError(self.T(), err, "Error compiling "+artifact_name)
 
 			launcher.VerifyArtifact(
-				self.Ctx, self.ConfigObj, artifact_name, artifact, state)
+				self.Ctx, self.ConfigObj, new_repository, artifact, state)
 
 			for _, err := range state.Errors {
 				fmt.Printf("Error with %v: %v\n", artifact_name, err)
