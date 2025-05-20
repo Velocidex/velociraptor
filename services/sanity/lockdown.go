@@ -17,7 +17,12 @@ func (self SanityChecks) CheckForLockdown(
 	}
 
 	lockdown_token := &acl_proto.ApiClientACL{
-		ArtifactWriter:       true,
+		ArtifactWriter: true,
+
+		// Labeling clients can move them between label groups which
+		// may cause new artifacts to be collected automatically
+		// (e.g. Quarantine).
+		LabelClients:         true,
 		ServerArtifactWriter: true,
 		CollectClient:        true,
 		CollectServer:        true,
@@ -28,6 +33,9 @@ func (self SanityChecks) CheckForLockdown(
 		FilesystemRead:       true,
 		MachineState:         true,
 		CollectBasic:         true,
+
+		Impersonation: true,
+		OrgAdmin:      true,
 	}
 
 	if config_obj.Defaults != nil &&

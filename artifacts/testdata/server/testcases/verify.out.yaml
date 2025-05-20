@@ -1,0 +1,19 @@
+SELECT count()  AS Count , verify(artifact=name) AS V FROM artifact_definitions() WHERE type=~'client' AND built_in AND V.Warnings[
+ {
+  "Count": 1,
+  "V": {
+   "Artifact": "Windows.Applications.NirsoftBrowserViewer",
+   "Permissions": [
+    "EXECVE",
+    "FILESYSTEM_READ",
+    "FILESYSTEM_WRITE",
+    "MACHINE_STATE"
+   ],
+   "Errors": null,
+   "Warnings": [
+    "\u003cyellow\u003eSuggestion\u003c/\u003e: Add EXECVE to artifact's required_permissions or implied_permissions fields",
+    "\u003cyellow\u003eSuggestion\u003c/\u003e: Add FILESYSTEM_WRITE to artifact's required_permissions or implied_permissions fields"
+   ]
+  }
+ }
+]

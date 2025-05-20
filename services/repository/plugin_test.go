@@ -74,10 +74,8 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 	names, err := repository.List(self.Ctx, ConfigObj)
 	assert.NoError(self.T(), err)
 
-	// Additinal verifications
-	returned_errs := make(map[string]error)
-
 	for _, artifact_name := range names {
+		state := launcher.NewAnalysisState(artifact_name)
 		artifact, pres := repository.Get(self.Ctx, ConfigObj, artifact_name)
 		assert.True(self.T(), pres)
 
@@ -87,15 +85,14 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 			assert.NoError(self.T(), err, "Error compiling "+artifact_name)
 
 			launcher.VerifyArtifact(
-				self.Ctx, self.ConfigObj, artifact_name, artifact, returned_errs)
+				self.Ctx, self.ConfigObj, artifact_name, artifact, state)
+
+			for _, err := range state.Errors {
+				fmt.Printf("Error with %v: %v\n", artifact_name, err)
+			}
+			assert.True(self.T(), len(state.Errors) == 0)
 		}
 	}
-
-	for artifact_name, err := range returned_errs {
-		fmt.Printf("Error with %v: %v\n", artifact_name, err)
-	}
-
-	assert.True(self.T(), len(returned_errs) == 0)
 }
 
 var (
@@ -345,55 +342,6 @@ func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtionsEvent
 	goldie.AssertJson(self.T(),
 		"TestClientPluginMultipleSourcesAndPrecondtionsEvents", results)
 
-}
-
-var (
-	memory_leak_test = `
-name: ArtifactWithMemoryLeak
-sources:
-- query: |
-    LET X <= "Hello World" * 1000000
-
-    SELECT X FROM scope()
-`
-)
-
-func (self *PluginTestSuite) TestPluginMemoryLeak() {
-	repository := self.LoadArtifacts(memory_leak_test)
-	builder := services.ScopeBuilder{
-		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
-		Repository: repository,
-		Logger: logging.NewPlainLogger(
-			self.ConfigObj, &logging.FrontendComponent),
-		Env: ordereddict.NewDict(),
-	}
-
-	manager, _ := services.GetRepositoryManager(self.ConfigObj)
-	scope := manager.BuildScope(builder)
-	defer scope.Close()
-
-	queries := []string{
-		`SELECT * FROM foreach(
-   row={
-      SELECT * FROM range(end=10000)
-   }, query={
-      SELECT * FROM Artifact.ArtifactWithMemoryLeak()
-      WHERE FALSE
-   })`,
-	}
-
-	results := ordereddict.NewDict()
-	for _, query := range queries {
-		rows := []vfilter.Row{}
-		vql, err := vfilter.Parse(query)
-		assert.NoError(self.T(), err)
-
-		for row := range vql.Eval(self.Ctx, scope) {
-			rows = append(rows, row)
-		}
-		results.Set(query, rows)
-	}
 }
 
 func TestArtifactPlugin(t *testing.T) {

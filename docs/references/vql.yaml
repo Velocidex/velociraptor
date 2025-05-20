@@ -8868,7 +8868,7 @@
 
     2. The `enrichment` field specifies a VQL lambda which will be
        used to build an enrichment object after a match is made. This
-       is used to additional infomation for the analyst to assess.
+       is used to additional information for the analyst to assess.
 
     3. The `vql` modifier can be used to specify a VQL lambda that
        will be used in a detection clause. The lambda will receive the
