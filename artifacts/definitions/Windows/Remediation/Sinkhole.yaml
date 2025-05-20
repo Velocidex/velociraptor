@@ -20,6 +20,9 @@ author: Matt Green - @mgreen27
 required_permissions:
   - EXECVE
 
+implied_permissions:
+  - FILESYSTEM_WRITE
+
 type: CLIENT
 
 parameters:

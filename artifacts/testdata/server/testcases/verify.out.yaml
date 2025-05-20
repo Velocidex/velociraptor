@@ -1,0 +1,1 @@
+SELECT count()  AS Count , verify(artifact=name) AS V FROM artifact_definitions() WHERE type=~'client' AND built_in AND V.Warnings[]

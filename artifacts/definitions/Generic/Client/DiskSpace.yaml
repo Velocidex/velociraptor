@@ -6,6 +6,9 @@ description: |
     1. On Linux and MacOS we call `df -h`.
     2. On Windows we use WMI
 
+implied_permissions:
+  - EXECVE
+
 sources:
 - query: |
     LET NonWindows = SELECT * FROM foreach(row={

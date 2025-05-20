@@ -15,6 +15,10 @@ tools:
     - name: etl2pcapng
       url: https://github.com/microsoft/etl2pcapng/releases/download/v1.4.0/etl2pcapng.zip
 
+implied_permissions:
+  - FILESYSTEM_WRITE
+  - EXECVE
+
 parameters:
     - name: StartTrace
       type: bool

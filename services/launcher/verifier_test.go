@@ -43,8 +43,9 @@ func (self *LauncherTestSuite) TestVerifyVQL() {
 	assert.NoError(self.T(), err)
 
 	for _, tc := range verifier_test_cases {
+		state := launcher.NewAnalysisState("")
 		errs := launcher.VerifyVQL(self.Ctx,
-			self.ConfigObj, tc.query, repository)
+			self.ConfigObj, tc.query, repository, state)
 		if len(errs) > 0 {
 			if tc.error_regex == "" {
 				self.T().Fatalf("%v: Expected no error but got %v",
