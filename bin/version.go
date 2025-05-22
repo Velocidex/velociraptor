@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	version = app.Command("version", "Report client version.")
+	version = app.Command("version", "Report the binary version and build information.")
 )
 
 func init() {
