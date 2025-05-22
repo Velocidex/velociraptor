@@ -164,16 +164,31 @@ const handle_error = err=>{
     throw err;
 };
 
+const get_headers = ()=>{
+    let org_id = window.globals.OrgId;
+    if (org_id.substring(0,2) === "\{\{") {
+        org_id = "";
+    }
+
+    let headers = {
+        "Grpc-Metadata-OrgId": org_id || "root",
+    };
+
+    let csrf = window.CsrfToken;
+    if (csrf.substring(0,2) !== "\{\{") {
+        headers["X-CSRF-Token"] = csrf;
+    };
+
+    return headers;
+};
+
 
 const get = function(url, params, cancel_token) {
     return axios({
         method: 'get',
         url: api_handlers() + url,
         params: params,
-        headers: {
-            "X-CSRF-Token": window.CsrfToken,
-            "Grpc-Metadata-OrgId": window.globals.OrgId || "root",
-        },
+        headers: get_headers(),
         cancelToken: cancel_token,
     }).then(response=>{
         // Update the csrf token.
@@ -194,10 +209,7 @@ const get_blob = function(url, params, cancel_token) {
         paramsSerializer: params => {
             return qs.stringify(params, {indices: false});
         },
-        headers: {
-            "X-CSRF-Token": window.CsrfToken,
-            "Grpc-Metadata-OrgId": window.globals.OrgId || "root",
-        },
+        headers: get_headers(),
         cancelToken: cancel_token,
     }).then((blob) => {
         var arrayPromise = new Promise(function(resolve) {
@@ -233,10 +245,7 @@ const post = function(url, params, cancel_token) {
         url: api_handlers() + url,
         data: params,
         cancelToken: cancel_token,
-        headers: {
-            "X-CSRF-Token": window.CsrfToken,
-            "Grpc-Metadata-OrgId": window.globals.OrgId || "root",
-        }
+        headers: get_headers(),
     }).then(response=>{
         // Update the csrf token.
         let token = response.headers["x-csrf-token"];
@@ -259,10 +268,7 @@ const upload = function(url, files, params) {
         method: 'post',
         url: api_handlers() + url,
         data: fd,
-        headers: {
-            "X-CSRF-Token": window.CsrfToken,
-            "Grpc-Metadata-OrgId": window.globals.OrgId || "root",
-        }
+        headers: get_headers(),
     }).catch(handle_error);
 };
 
@@ -335,9 +341,7 @@ const delete_req = function(url, params, cancel_token) {
         url: api_handlers() + url,
         params: params,
         cancelToken: cancel_token,
-        headers: {
-            "X-CSRF-Token": window.CsrfToken,
-        }
+        headers: get_headers(),
     }).then(response=>{
         // Update the csrf token.
         let token = response.headers["x-csrf-token"];
