@@ -610,6 +610,11 @@ message GUIConfig {
     // packs).
     string artifact_search_filter = 18;
 
+    // A list of domains that we will trust to send us the CSRF
+    // token. Use this only when serving the JS from a different
+    // domain than the API server.
+    repeated string trusted_origins = 25;
+
     // SAML info deprecated - will be moved to a saml authenticator.
     string saml_certificate = 12;
     string saml_private_key = 13;
