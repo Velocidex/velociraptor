@@ -66,7 +66,13 @@ func (self *flowIndexBuilder) BuildFlowIndexFromDatastore(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self.buildFlowIndexFromDatastore(ctx, config_obj, storage_manager)
+	// Use a non-interruptible ctx to ensure we finish building the
+	// index in a reasonable time. Otherwise if the calle cancels the
+	// context quickly we might end up with a partial index.
+	sub_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	return self.buildFlowIndexFromDatastore(sub_ctx, config_obj, storage_manager)
 }
 
 func (self *flowIndexBuilder) buildFlowIndexFromDatastore(
@@ -116,7 +122,11 @@ func (self *flowIndexBuilder) buildFlowIndexFromDatastore(
 		defer flow_reader.Close()
 
 		for k := range seen {
-			flow_reader.In <- k
+			select {
+			case <-ctx.Done():
+				return
+			case flow_reader.In <- k:
+			}
 		}
 	}()
 
@@ -131,14 +141,22 @@ func (self *flowIndexBuilder) buildFlowIndexFromDatastore(
 	}
 	defer rs_writer.Close()
 
-	for flow := range flow_reader.Out {
-		rs_writer.Write(ordereddict.NewDict().
-			Set("FlowId", flow.SessionId).
-			Set("Artifacts", flow.Request.Artifacts).
-			Set("Created", flow.CreateTime).
-			Set("Creator", flow.Request.Creator))
-	}
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
 
+		case flow, ok := <-flow_reader.Out:
+			if !ok {
+				return nil
+			}
+			rs_writer.Write(ordereddict.NewDict().
+				Set("FlowId", flow.SessionId).
+				Set("Artifacts", flow.Request.Artifacts).
+				Set("Created", flow.CreateTime).
+				Set("Creator", flow.Request.Creator))
+		}
+	}
 	return nil
 }
 
