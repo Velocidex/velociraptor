@@ -18,15 +18,15 @@ import (
 )
 
 var (
-	third_party           = app.Command("tools", "Manipulate third party binaries and tools")
-	third_party_show      = third_party.Command("show", "Upload a third party binary")
-	third_party_show_file = third_party_show.Arg("file", "Upload a third party binary").
+	third_party           = app.Command("tools", "View and manipulate stored third-party binaries and tools")
+	third_party_show      = third_party.Command("show", "Shows tools in the inventory")
+	third_party_show_file = third_party_show.Arg("file", "Tool name to show").
 				String()
-	third_party_rm      = third_party.Command("rm", "Remove a third party binary")
-	third_party_rm_name = third_party_rm.Arg("name", "The name to remove").
+	third_party_rm      = third_party.Command("rm", "Remove a third-party tool")
+	third_party_rm_name = third_party_rm.Arg("name", "Tool name to remove").
 				Required().String()
-	third_party_upload           = third_party.Command("upload", "Upload a third party binary")
-	third_party_upload_tool_name = third_party_upload.Flag("name", "Name of the tool").
+	third_party_upload           = third_party.Command("upload", "Upload a third-party tool")
+	third_party_upload_tool_name = third_party_upload.Flag("name", "Name to assign to the tool").
 					Required().String()
 	third_party_upload_tool_version = third_party_upload.Flag("tool_version", "The version of the tool").String()
 
