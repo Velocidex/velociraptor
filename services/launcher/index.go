@@ -66,7 +66,13 @@ func (self *flowIndexBuilder) BuildFlowIndexFromDatastore(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self.buildFlowIndexFromDatastore(ctx, config_obj, storage_manager)
+	// Use a non-interruptible ctx to ensure we finish building the
+	// index in a reasonable time. Otherwise if the calle cancels the
+	// context quickly we might end up with a partial index.
+	sub_ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	return self.buildFlowIndexFromDatastore(sub_ctx, config_obj, storage_manager)
 }
 
 func (self *flowIndexBuilder) buildFlowIndexFromDatastore(
