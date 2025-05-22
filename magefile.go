@@ -319,7 +319,7 @@ func Version() error {
 	return nil
 }
 
-func Arm() error {
+func LinuxArm() error {
 	return Builder{
 		extra_tags:  " release yara ",
 		goos:        "linux",
@@ -328,7 +328,7 @@ func Arm() error {
 	}.Run()
 }
 
-func Mips() error {
+func LinuxMips() error {
 	return Builder{
 		extra_tags:  " release yara ",
 		goos:        "linux",

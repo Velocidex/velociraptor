@@ -1,5 +1,5 @@
-//go:build !386
-// +build !386
+//go:build !arm && !mips
+// +build !arm,!mips
 
 package pst
 
