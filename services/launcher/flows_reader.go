@@ -28,8 +28,7 @@ type FlowReader struct {
 	In chan<- string
 
 	// Read records from here
-	Out <-chan *flows_proto.ArtifactCollectorContext
-	out chan *flows_proto.ArtifactCollectorContext
+	Out chan *flows_proto.ArtifactCollectorContext
 }
 
 // Wait for all in flight requests to finish.
@@ -43,7 +42,7 @@ func (self *FlowReader) Close() {
 	self.wg.Wait()
 
 	// Close the output channel to signal to listeners they are done.
-	close(self.out)
+	close(self.Out)
 }
 
 func NewFlowReader(
@@ -66,7 +65,6 @@ func NewFlowReader(
 		wg:         wg,
 		In:         in,
 		Out:        out,
-		out:        out,
 	}
 
 	for i := 0; i < WORKERS; i++ {
