@@ -16,7 +16,7 @@ sources:
   - query: |
       LET all_flows = SELECT Flow.client_id AS client_id, Flow.session_id AS flow_id
       FROM hunt_flows(hunt_id=HuntId)
-      WHERE Flow.state = "RUNNING"
+      WHERE NOT Flow.state =~ "ERROR|FINISHED"
 
       LET cancellations = SELECT client_id, flow_id,
              cancel_flow(client_id=client_id, flow_id=flow_id) AS Cancellation
