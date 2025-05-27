@@ -12,7 +12,7 @@ description: |
     contributed and maintained by the community. This artifact only
     encapsulates the KAPE "Targets" - basically a bunch of glob
     expressions used for collecting files on the endpoint. We do not
-    do any post processing these files - we just collect them.
+    do any post processing of these files - we just collect them.
 
     We recommend that timeouts and upload limits be used
     conservatively with this artifact because we can upload really

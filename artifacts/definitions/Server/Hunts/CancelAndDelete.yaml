@@ -40,7 +40,7 @@ sources:
       // Only cancel running flows.
       SELECT *, cancel_flow(client_id=ClientId, flow_id=FlowId) as cancel_flow
       FROM flows
-      WHERE FlowState = "RUNNING"
+      WHERE NOT FlowState =~ "ERROR|FINISHED"
 
   - name: HuntFiles
     query: |
