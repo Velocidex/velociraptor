@@ -25,10 +25,12 @@ required_permissions:
 parameters:
   - name: NotebookId
     description: The notebook ID that contains the super timeline
-  - name: SuperTimeline
+  - name: SuperTimelineName
     description: The name of the super timeline
-  - name: Timeline
+  - name: TimelineName
     description: The name of the timeline within the super timeline.
+  - name: SketchName
+    description: The name of the sketch to upload to
   - name: TimesketchCLICommand
     default: "timesketch"
     description: |

@@ -76,6 +76,10 @@ def unregexify(regex):
         return regex
     return res
 
+# Ensure only backslashes in paths
+def normalize_path(path):
+    return path.replace("/", "\\", -1)
+
 
 class KapeContext:
     groups = {}
@@ -89,6 +93,7 @@ class KapeContext:
     # Mapping between a target+glob to an id
     ids = {}
 
+    # Mapping between used ids and the rule that is using it.
     id_to_rule = {}
     dirty = False
     last_id = 0
@@ -103,13 +108,18 @@ class KapeContext:
         if self.state_file_path:
             try:
                 with open(state_file_path) as fd:
-                    self.ids = json.loads(fd.read())
-                    self.last_id = len(self.ids) + 1
+                    self.ids = dict()
+                    self.last_id = 0
+                    for key, record_id in json.loads(fd.read()).items():
+                        if record_id > self.last_id:
+                            self.last_id = record_id
+                        self.ids[normalize_path(key)] = record_id
+
             except (IOError, json.decoder.JSONDecodeError) as e:
                 pass
 
     def resolve_id(self, name, glob):
-        key = name + glob
+        key = normalize_path(name + glob)
         res = self.ids.get(key)
         if res is None:
             res = self.last_id + 1
@@ -123,8 +133,14 @@ class KapeContext:
         if not self.dirty or not self.state_file_path:
             return
 
+        ids = dict()
+        for key, record_id in self.ids.items():
+            if record_id not in self.id_to_rule:
+                continue
+            ids[key] = record_id
+
         with open(self.state_file_path, "w") as outfd:
-            outfd.write(json.dumps(self.ids, sort_keys=True, indent=4))
+            outfd.write(json.dumps(ids, sort_keys=True, indent=4))
 
 def read_targets(ctx, project_path):
     for root, dirs, files in sorted(os.walk(
@@ -149,25 +165,40 @@ def read_targets(ctx, project_path):
             if not target:
                 continue
 
-            glob = target.get("Path", "")
+            # Convert the target description to a glob. This is done
+            # using a complicated interactions between various
+            # attributes of the target description that are not that
+            # well documented. However, they were clarified by the
+            # KapeFiles maintainers here
+            # https://github.com/EricZimmerman/KapeFiles/issues/1038
 
-            if target.get("Recursive") or ctx.kape_data.get("RecreateDirectories"):
-                glob = glob.rstrip("\\") + "/**10"
-
-            mask = target.get("FileMask")
-            if mask:
-                if mask.lower().startswith("regex:"):
-                    mask = unregexify(mask[6:])
-                glob = glob.rstrip("\\") + "/" + mask
-
-            # If the glob ends with \\ it means that it is a directory
-            # and we actually mean to collect all the files in it.
-            if glob.endswith("\\"):
-                glob += "*"
+            # The Path always represents a directory
+            base_glob = target.get("Path", "")
+            if not base_glob:
+                continue
 
             # Expand the targets in the glob
-            if ".tkape" in glob:
+            if ".tkape" in base_glob:
                 continue
+
+            # If Recursive is specified, it means we recurse into the directory.
+            recursive = ""
+            if target.get("Recursive") or ctx.kape_data.get("RecreateDirectories"):
+                recursive = "/**10"
+
+            # The default FileMask is *
+            mask = target.get("FileMask", "*")
+            if mask.lower().startswith("regex:"):
+                mask = unregexify(mask[6:])
+
+            mask = "/" + mask
+
+            # To simplify the glob reduce suffix of /**10/* to just
+            # /**10
+            if recursive and mask == "/*":
+                mask = ""
+
+            glob = base_glob.rstrip("\\") + recursive + mask
 
             row_id = ctx.resolve_id(name, glob)
             ctx.groups[name].add(row_id)
