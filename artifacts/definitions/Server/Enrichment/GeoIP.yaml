@@ -23,6 +23,8 @@ parameters:
   - name: IP
     description: An IP to lookup
 
+type: SERVER
+
 sources:
   - query: |
       SELECT Country(IP=_value) AS Country,

@@ -19,7 +19,7 @@ var (
 
 		{"Calling Artifact with unknown parameter",
 			"SELECT * FROM Artifact.Generic.Client.Info(Foo=3)",
-			"Call to Artifact.Generic.Client.Info contain unknown parameter Foo"},
+			"Call to Artifact.Generic.Client.Info contains unknown parameter Foo"},
 
 		{"Calling unknown Artifact",
 			"SELECT * FROM Artifact.Generic.Unknown.Artifact()",
