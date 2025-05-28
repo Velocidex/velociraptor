@@ -173,7 +173,7 @@ func (self *ApiDescription) verifyArtifact(
 	for _, arg := range callsite.Args {
 		_, pres := parameters[arg]
 		if !pres {
-			res = append(res, fmt.Errorf("Call to %v contain unknown parameter %v",
+			res = append(res, fmt.Errorf("Call to %v contains unknown parameter %v",
 				callsite.Name, arg))
 		}
 	}
@@ -287,6 +287,13 @@ func VerifyArtifact(
 	if artifact.Precondition != "" {
 		for _, err := range VerifyVQL(ctx, config_obj,
 			artifact.Precondition, repository, state) {
+			state.SetError(err)
+		}
+	}
+
+	if artifact.Export != "" {
+		for _, err := range VerifyVQL(ctx, config_obj,
+			artifact.Export, repository, state) {
 			state.SetError(err)
 		}
 	}

@@ -802,8 +802,7 @@ func (self *ApiServer) GetArtifactFile(
 
 func (self *ApiServer) SetArtifactFile(
 	ctx context.Context,
-	in *api_proto.SetArtifactRequest) (
-	*api_proto.APIResponse, error) {
+	in *api_proto.SetArtifactRequest) (*api_proto.SetArtifactResponse, error) {
 
 	defer Instrument("SetArtifactFile")()
 
@@ -816,7 +815,35 @@ func (self *ApiServer) SetArtifactFile(
 
 	permissions := acls.ARTIFACT_WRITER
 
-	// First ensure that the artifact is correct.
+	// Verify the artifact first, then only set it if there are no
+	// errors or warnings.
+	if in.Op == api_proto.SetArtifactRequest_CHECK_AND_SET {
+		state, err := checkArtifact(ctx, org_config_obj, in.Artifact)
+		if err != nil {
+			return nil, Status(self.verbose, err)
+		}
+
+		// report the errors and warnings
+		if len(state.Errors) != 0 || len(state.Warnings) != 0 {
+			res := &api_proto.SetArtifactResponse{
+				Error:    true,
+				Warnings: state.Warnings,
+			}
+
+			for _, e := range state.Errors {
+				res.Errors = append(res.Errors, e.Error())
+			}
+
+			return res, nil
+		}
+
+		// Fallback to regular setting.
+		in.Op = api_proto.SetArtifactRequest_SET
+	}
+
+	// We need to load the artifact to figure out what type it is
+	// first. Depending on the artifact type we need to check the
+	// relevant permission.
 	manager, err := services.GetRepositoryManager(org_config_obj)
 	if err != nil {
 		return nil, Status(self.verbose, err)
@@ -846,11 +873,11 @@ func (self *ApiServer) SetArtifactFile(
 
 	definition, err := setArtifactFile(ctx, org_config_obj, principal, in, "")
 	if err != nil {
-		message := &api_proto.APIResponse{
+		message := &api_proto.SetArtifactResponse{
 			Error:        true,
 			ErrorMessage: fmt.Sprintf("%v", err),
 		}
-		return message, errors.New(message.ErrorMessage)
+		return message, Status(self.verbose, errors.New(message.ErrorMessage))
 	}
 
 	services.LogAudit(ctx,
@@ -859,7 +886,7 @@ func (self *ApiServer) SetArtifactFile(
 			Set("artifact", definition.Name).
 			Set("details", in.Artifact))
 
-	return &api_proto.APIResponse{}, nil
+	return &api_proto.SetArtifactResponse{}, nil
 }
 
 func (self *ApiServer) Query(

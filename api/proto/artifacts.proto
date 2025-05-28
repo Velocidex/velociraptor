@@ -65,11 +65,22 @@ message SetArtifactRequest {
         SET = 0;
         DELETE = 1;
         CHECK = 2;
+
+        // Only set the artifact if there are no errors or warnings.
+        CHECK_AND_SET = 3;
     }
 
     Operation op = 3 [(sem_type) = {
             description: "What to do with the artifact?",
         }];
+}
+
+message SetArtifactResponse {
+    bool error = 1;
+    string error_message = 2;
+
+    repeated string errors = 3;
+    repeated string warnings = 4;
 }
 
 message LoadArtifactError {
