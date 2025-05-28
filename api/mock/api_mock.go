@@ -1282,14 +1282,14 @@ func (mr *MockAPIClientMockRecorder) SearchFile(arg0, arg1 interface{}, arg2 ...
 }
 
 // SetArtifactFile mocks base method.
-func (m *MockAPIClient) SetArtifactFile(arg0 context.Context, arg1 *proto0.SetArtifactRequest, arg2 ...grpc.CallOption) (*proto0.APIResponse, error) {
+func (m *MockAPIClient) SetArtifactFile(arg0 context.Context, arg1 *proto0.SetArtifactRequest, arg2 ...grpc.CallOption) (*proto0.SetArtifactResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "SetArtifactFile", varargs...)
-	ret0, _ := ret[0].(*proto0.APIResponse)
+	ret0, _ := ret[0].(*proto0.SetArtifactResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
