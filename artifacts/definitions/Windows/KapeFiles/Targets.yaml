@@ -19,7 +19,7 @@ description: |
     vast quantities of data very quickly.
 
     NOTE: This artifact was built from The KapeFile Repository
-    commit cbff48a dated 2025-05-20T19:08:46-0400.
+    commit 5aa0726 dated 2025-05-27T23:23:06-0400.
 
 reference:
   - https://www.kroll.com/en/insights/publications/cyber/kroll-artifact-parser-extractor-kape
@@ -209,7 +209,7 @@ parameters:
     description: "ClipboardMaster (by Andrew Rathbun): ClipboardMaster - Clipboard History - Backups, ClipboardMaster - Clipboard History - Text, ClipboardMaster - Clipboard History - Images"
     type: bool
   - name: CloudStorage_All
-    description: "Cloud Storage Contents and Metadata (by Chad Tilbury and Andrew Rathbun): SugarSync Log File, SugarSync - Shared Folders (Default Location), SugarSync - My SugarSync (Default Location), MegaSync Folder, pCloud Database, pCloud Database WAL File, pCloud Database Shared Memory File, Idrive Restore Operations, Idrive Backup Summary, Idrive Tracefile, Idrive Mapped Drives, Idrive Backup Schedule, Idrive Schedule History, Idrive Configuration, Idrive Local Drives, Idrive Exclusion Configurations, Idrive User Details, Idrive SQL Databse, Rclone Config, FreeFileSync, Idrive Cleanup Operations, Idrive Backup Operations, Idrive Delete Operations, Box Drive Application Metadata, Box Sync Application Metadata, Box Drive User Files, Box Sync User Files, Dropbox Metadata, Windows Protect Folder, Dropbox User Files, OneDrive User Files, OneDrive Metadata Logs, OneDrive Metadata Settings, Google Drive Backup and Sync User Files, Google Drive Backup and Sync Metadata, Google Drive for Desktop Metadata"
+    description: "Cloud Storage Contents and Metadata (by Chad Tilbury and Andrew Rathbun): OneDrive Metadata Logs, SugarSync Log File, SugarSync - Shared Folders (Default Location), SugarSync - My SugarSync (Default Location), OneDrive Metadata Settings, MegaSync Folder, pCloud Database, pCloud Database WAL File, pCloud Database Shared Memory File, Rclone Config, FreeFileSync, Box Drive Application Metadata, Box Sync Application Metadata, Box Drive User Files, Box Sync User Files, Dropbox Metadata, Windows Protect Folder, Dropbox User Files, OneDrive User Files, IDrive Cleanup Operations, IDrive Backup Operations, IDrive Delete Operations, IDrive Restore Operations, IDrive Backup Summary, IDrive Tracefile, IDrive Mapped Drives, IDrive Backup Schedule, IDrive Schedule History, IDrive Configuration, IDrive Local Drives, IDrive Exclusion Configurations, IDrive User Details, IDrive SQL Databse, Google Drive Backup and Sync User Files, Google Drive Backup and Sync Metadata, Google Drive for Desktop Metadata"
     type: bool
   - name: CloudStorage_Metadata
     description: "Cloud Storage Metadata (by Chad Tilbury and Andrew Rathbun, Eric Capuano): Dropbox Metadata, Windows Protect Folder, OneDrive Metadata Logs, OneDrive Metadata Settings, Box Drive Application Metadata, Box Sync Application Metadata, Google Drive Backup and Sync Metadata, Google Drive for Desktop Metadata, Rclone Config, FreeFileSync, MegaSync Folder"
@@ -415,6 +415,9 @@ parameters:
   - name: HostsFile
     description: "Hosts file (by Max Zabuty): HostsFile"
     type: bool
+  - name: IDrive
+    description: "IDrive Backup Artifacts (by Thomas Burnette): IDrive Cleanup Operations, IDrive Backup Operations, IDrive Delete Operations, IDrive Restore Operations, IDrive Backup Summary, IDrive Tracefile, IDrive Mapped Drives, IDrive Backup Schedule, IDrive Schedule History, IDrive Configuration, IDrive Local Drives, IDrive Exclusion Configurations, IDrive User Details, IDrive SQL Databse"
+    type: bool
   - name: IISConfiguration
     description: "IIS (by NVISO (@NVISOsecurity)): web.config, IIS applicationHost.config, IIS administration.config, IIS redirection.config"
     type: bool
@@ -435,9 +438,6 @@ parameters:
     type: bool
   - name: IconCacheDB
     description: "IconCache.db files (by Herbert Bärschneider @SEC Consult): Windows IconCache DB"
-    type: bool
-  - name: Idrive
-    description: "Idrive Backup Artifacts (by Thomas Burnette): Idrive Cleanup Operations, Idrive Backup Operations, Idrive Delete Operations, Idrive Restore Operations, Idrive Backup Summary, Idrive Tracefile, Idrive Mapped Drives, Idrive Backup Schedule, Idrive Schedule History, Idrive Configuration, Idrive Local Drives, Idrive Exclusion Configurations, Idrive User Details, Idrive SQL Databse"
     type: bool
   - name: ImgBurn
     description: "ImgBurn (by Chuck Whitson): ImgBurn - Application Log File"
@@ -587,7 +587,7 @@ parameters:
     description: "Newsleecher (by Andrew Rathbun): Usenet Clients - Newsleecher"
     type: bool
   - name: Nicotine__
-    description: "Nicotine++ (by Andrew Rathbun): Nicotine++ Logs, Nicotine++ Incomplete Downloads, Nicotine++ Buddyfiles.db, Nicotine++ Buddystreams.db, Nicotine++ Buddymtimes.db, Nicotine++ Buddyfileindex.db, Nicotine++ Buddywordindex.db, Nicotine++ Config Files, Nicotine++ User Shares, Nicotine++ Downloads.json, Nicotine++ Uploads.json"
+    description: "Nicotine++ (by Andrew Rathbun): Nicotine++ Logs, Nicotine++ Incomplete Downloads, Nicotine++ Config Files, Nicotine++ User Shares, Nicotine++ Downloads.json, Nicotine++ Buddyfiles.db, Nicotine++ Buddystreams.db, Nicotine++ Buddymtimes.db, Nicotine++ Buddyfileindex.db, Nicotine++ Buddywordindex.db, Nicotine++ Uploads.json"
     type: bool
   - name: Notepad__
     description: "Notepad++ Backups, recently searched/replaced terms and recently opened documents (by Banaanhangwagen and Matt Dawson): Notepad++ Config, Notepad++ Session, Notepad++ Unsaved Edits"
@@ -1523,17 +1523,6 @@ parameters:
       414,ISL AlwaysOn - Configuration,Communications,Program Files (x86)\ISL Online\ISL AlwaysOn\StaticConfiguration.ini,lazy_ntfs,"Configuration information (port, http/htpps) for ISL AlwaysOn (Unattended Access)"
       419,IceChat Chat Logs,Communications,Users\*\AppData\Local\IceChat Networks\IceChat\Logs\**10,lazy_ntfs,
       420,Windows IconCache DB,IconCache,Users\*\AppData\Local\IconCache.db,lazy_ntfs,
-      424,Idrive Restore Operations,Apps,ProgramData\IDrive\IBCOMMON\*\Session\Restore\*,lazy_ntfs,Contains individual log files for each restore operation
-      425,Idrive Backup Summary,Apps,ProgramData\IDrive\IBCOMMON\*\Session\LOGXML\*xml,lazy_ntfs,Contains summary of each backup session
-      426,Idrive Tracefile,Apps,ProgramData\IDrive\IBCOMMON\*\Tracefile.txt\Tracefile.txt,lazy_ntfs,Application log which includes error logs for failed uploads
-      427,Idrive Mapped Drives,Apps,ProgramData\IDrive\IBCOMMON\IDMappedDrives.txt,lazy_ntfs,List of mapped drives for backup
-      428,Idrive Backup Schedule,Apps,ProgramData\IDrive\IBCOMMON\schedule.xml,lazy_ntfs,Backup schedule configurations
-      429,Idrive Schedule History,Apps,ProgramData\IDrive\IBCOMMON\Sch_Trace.txt,lazy_ntfs,History of schedule configurations
-      430,Idrive Configuration,Apps,ProgramData\IDrive\IBCOMMON\idrive.ini,lazy_ntfs,List of Idrive configuration options
-      431,Idrive Local Drives,Apps,ProgramData\IDrive\IBCOMMON\get_Alldrives.txt,lazy_ntfs,List of all local drives
-      432,Idrive Exclusion Configurations,Apps,ProgramData\IDrive\IBCOMMON\Exclude*,lazy_ntfs,Files pertaining to exclusion configurations
-      433,Idrive User Details,Apps,ProgramData\IDrive\IBCOMMON\AutoComp.ini,lazy_ntfs,"Idrive username, Scheduler notification emails, local username"
-      434,Idrive SQL Databse,Apps,ProgramData\IDrive\IBCOMMON\*\LDBNEW\*\*.ibds,lazy_ntfs,Sql database of local files that are backed up
       435,ImgBurn - Application Log File,Apps,Users\*\AppData\Roaming\ImgBurn\Log Files\ImgBurn.log,lazy_ntfs,Contains the ImgBurn application log file.
       436,Index.dat History,Communications,Documents and Settings\*\Local Settings\History\History.IE5\index.dat,lazy_ntfs,
       437,Index.dat History subdirectory,Communications,Documents and Settings\*\Local Settings\History\History.IE5\*\index.dat,lazy_ntfs,
@@ -1685,11 +1674,6 @@ parameters:
       587,Usenet Clients - Newsleecher,FileDownload,Users\*\AppData\Roaming\NewsLeecher\downloaded.dat,lazy_ntfs,Locates Newsleecher download .dat file
       588,Nicotine++ Logs,FileDownload,Users\*\AppData\Roaming\nicotine\logs\**10,lazy_ntfs,"Locates Nicotine++ chat logs, room logs, transfer logs, and debug logs (if enabled)"
       589,Nicotine++ Incomplete Downloads,FileDownload,Users\*\AppData\Roaming\nicotine\incomplete\**10,lazy_ntfs,Locates files that did not finish downloading
-      590,Nicotine++ Buddyfiles.db,FileDownload,Users\*\AppData\Roaming\nicotine\buddyfiles.db\**10,lazy_ntfs,Locates a DB that appears to include shared files from a user's buddy list
-      591,Nicotine++ Buddystreams.db,FileDownload,Users\*\AppData\Roaming\nicotine\buddystreams.db\**10,lazy_ntfs,Locates a DB that appears to include shared files from a user's buddy list
-      592,Nicotine++ Buddymtimes.db,FileDownload,Users\*\AppData\Roaming\nicotine\buddymtimes.db\**10,lazy_ntfs,"Locates a DB that appears to enumerate which files the user is sharing to their buddy list, from a folder level"
-      593,Nicotine++ Buddyfileindex.db,FileDownload,Users\*\AppData\Roaming\nicotine\buddyfileindex.db\**10,lazy_ntfs,"Locates a DB that appears to enumerate which files the user is sharing to their buddy list, from a file level"
-      594,Nicotine++ Buddywordindex.db,FileDownload,Users\*\AppData\Roaming\nicotine\buddywordindex.db\**10,lazy_ntfs,Unknown what this is for at this time
       595,Nicotine++ Config Files,FileDownload,Users\*\AppData\Roaming\nicotine\config\**10,lazy_ntfs,Locates config files
       596,Nicotine++ User Shares,FileDownload,Users\*\AppData\Roaming\nicotine\usershares\**10,lazy_ntfs,Locates a DB that appears to store a list of files per user that they are sharing within Nicotine++. Note: this requires the user to right-click -> browse files shared by that user
       597,Nicotine++ Downloads.json,FileDownload,Users\*\AppData\Roaming\nicotine\downloads.json*,lazy_ntfs,Locates downloads.json
@@ -2698,9 +2682,6 @@ parameters:
       1599,ITarian,Apps,Program Files (x86)\ITarian\Endpoint Manager\rmmlogs\*,lazy_ntfs,
       1600,Comodo,Apps,Program Files\Comodo\Endpoint Manager\rmmlogs\*,lazy_ntfs,
       1601,ITarian,Apps,Program Files (x86)\Comodo\Endpoint Manager\rmmlogs\*,lazy_ntfs,
-      1602,Idrive Cleanup Operations,Apps,ProgramData\IDrive\IBCOMMON\*\Session\Archive Cleanup\**10,lazy_ntfs,Contains individual log files for each archive cleanup operation
-      1603,Idrive Backup Operations,Apps,ProgramData\IDrive\IBCOMMON\*\Session\Backup\**10,lazy_ntfs,Contains individual log files for each backup operation
-      1604,Idrive Delete Operations,Apps,ProgramData\IDrive\IBCOMMON\*\Session\Delete\**10,lazy_ntfs,Contains individual log files for each delete operation
       1605,Macrium Reflect,Apps,ProgramData\Macrium\Reflect Launcher\*,lazy_ntfs,Copies out the Reflect folder which contains many important logs
       1606,Microsoft OneNote - FullTextSearchIndex,Apps,Users\*\AppData\Local\Packages\Microsoft.Office.OneNote_8wekyb3d8bbwe\LocalState\AppData\Local\OneNote\*\FullTextSearchIndex\*,lazy_ntfs,Grabs database(s) comprising of each OneNote notebook's text content
       1607,Microsoft OneNote - AccessibilityCheckerIndex,Apps,Users\*\AppData\Local\Packages\Microsoft.Office.OneNote_8wekyb3d8bbwe\LocalState\AppData\Local\OneNote\16.0\AccessibilityCheckerIndex\*,lazy_ntfs,Grabs database(s) comprising of each OneNote notebook's version sync error history
@@ -2736,6 +2717,25 @@ parameters:
       1637,Zoom client logs,Apps,Users\*\AppData\Roaming\Zoom\logs\**10,lazy_ntfs,Zoom client artifacts
       1638,Zoom client logs (Windows XP),Apps,Documents and Settings\*\Application Data\Zoom\**10,lazy_ntfs,Zoom client artifacts (Windows XP)
       1639,Zoom client recordings,Apps,Users\*\Documents\Zoom\**10,lazy_ntfs,Zoom recording artifacts
+      1640,IDrive Cleanup Operations,Apps,ProgramData\IDrive\IBCOMMON\*\Session\Archive Cleanup\**10,lazy_ntfs,Contains individual log files for each archive cleanup operation
+      1641,IDrive Backup Operations,Apps,ProgramData\IDrive\IBCOMMON\*\Session\Backup\**10,lazy_ntfs,Contains individual log files for each backup operation
+      1642,IDrive Delete Operations,Apps,ProgramData\IDrive\IBCOMMON\*\Session\Delete\**10,lazy_ntfs,Contains individual log files for each delete operation
+      1643,IDrive Restore Operations,Apps,ProgramData\IDrive\IBCOMMON\*\Session\Restore\*,lazy_ntfs,Contains individual log files for each restore operation
+      1644,IDrive Backup Summary,Apps,ProgramData\IDrive\IBCOMMON\*\Session\LOGXML\*xml,lazy_ntfs,Contains summary of each backup session
+      1645,IDrive Tracefile,Apps,ProgramData\IDrive\IBCOMMON\*\Tracefile.txt,lazy_ntfs,Application log which includes error logs for failed uploads
+      1646,IDrive Mapped Drives,Apps,ProgramData\IDrive\IBCOMMON\IDMappedDrives.txt,lazy_ntfs,List of mapped drives for backup
+      1647,IDrive Backup Schedule,Apps,ProgramData\IDrive\IBCOMMON\schedule.xml,lazy_ntfs,Backup schedule configurations
+      1648,IDrive Schedule History,Apps,ProgramData\IDrive\IBCOMMON\Sch_Trace.txt,lazy_ntfs,History of schedule configurations
+      1649,IDrive Configuration,Apps,ProgramData\IDrive\IBCOMMON\idrive.ini,lazy_ntfs,List of IDrive configuration options
+      1650,IDrive Local Drives,Apps,ProgramData\IDrive\IBCOMMON\get_Alldrives.txt,lazy_ntfs,List of all local drives
+      1651,IDrive Exclusion Configurations,Apps,ProgramData\IDrive\IBCOMMON\Exclude*,lazy_ntfs,Files pertaining to exclusion configurations
+      1652,IDrive User Details,Apps,ProgramData\IDrive\IBCOMMON\AutoComp.ini,lazy_ntfs,"IDrive username, Scheduler notification emails, local username"
+      1653,IDrive SQL Databse,Apps,ProgramData\IDrive\IBCOMMON\*\LDBNEW\*\*.ibds,lazy_ntfs,Sql database of local files that are backed up
+      1654,Nicotine++ Buddyfiles.db,FileDownload,Users\*\AppData\Roaming\nicotine\**10\buddyfiles.db,lazy_ntfs,Locates a DB that appears to include shared files from a user's buddy list
+      1655,Nicotine++ Buddystreams.db,FileDownload,Users\*\AppData\Roaming\nicotine\**10\buddystreams.db,lazy_ntfs,Locates a DB that appears to include shared files from a user's buddy list
+      1656,Nicotine++ Buddymtimes.db,FileDownload,Users\*\AppData\Roaming\nicotine\**10\buddymtimes.db,lazy_ntfs,"Locates a DB that appears to enumerate which files the user is sharing to their buddy list, from a folder level"
+      1657,Nicotine++ Buddyfileindex.db,FileDownload,Users\*\AppData\Roaming\nicotine\**10\buddyfileindex.db,lazy_ntfs,"Locates a DB that appears to enumerate which files the user is sharing to their buddy list, from a file level"
+      1658,Nicotine++ Buddywordindex.db,FileDownload,Users\*\AppData\Roaming\nicotine\**10\buddywordindex.db,lazy_ntfs,Unknown what this is for at this time
   - name: KapeTargets
     type: hidden
     description: |
@@ -2797,7 +2797,7 @@ parameters:
       ChromeFileSystem,[164]
       CiscoJabber,[165]
       ClipboardMaster,"[166, 167, 168]"
-      CloudStorage_All,"[85, 86, 87, 88, 225, 226, 227, 228, 229, 230, 231, 375, 376, 377, 424, 425, 426, 427, 428, 429, 430, 431, 432, 433, 434, 543, 614, 615, 616, 698, 1045, 1046, 1047, 1313, 1314, 1315, 1597, 1602, 1603, 1604]"
+      CloudStorage_All,"[85, 86, 87, 88, 225, 226, 227, 228, 229, 230, 231, 375, 376, 377, 543, 614, 615, 616, 698, 1045, 1046, 1047, 1313, 1314, 1315, 1597, 1640, 1641, 1642, 1643, 1644, 1645, 1646, 1647, 1648, 1649, 1650, 1651, 1652, 1653]"
       CloudStorage_Metadata,"[85, 86, 225, 226, 227, 228, 229, 230, 376, 377, 543, 614, 615, 698, 1597]"
       CloudStorage_OneDriveExplorer,"[614, 615, 703, 704, 705, 706, 707, 782, 783, 784, 785, 786, 788, 1435, 1436, 1437]"
       CocCoc,"[1377, 1378, 1379, 1380, 1381, 1382, 1383, 1384, 1385, 1386, 1387, 1388, 1389, 1390, 1391, 1392, 1393, 1394, 1395, 1396, 1397, 1398, 1399, 1400, 1401, 1402]"
@@ -2866,6 +2866,7 @@ parameters:
       HexChat,[392]
       HitmanPro,"[393, 394, 395, 1567]"
       HostsFile,[396]
+      IDrive,"[1640, 1641, 1642, 1643, 1644, 1645, 1646, 1647, 1648, 1649, 1650, 1651, 1652, 1653]"
       IISConfiguration,"[397, 398, 399, 400]"
       IISLogFiles,"[401, 402, 403, 404, 405, 406]"
       IRCClients,"[392, 419, 1294, 1295]"
@@ -2873,7 +2874,6 @@ parameters:
       ITarian,"[1598, 1599, 1600, 1601]"
       IceChat,[419]
       IconCacheDB,[420]
-      Idrive,"[424, 425, 426, 427, 428, 429, 430, 431, 432, 433, 434, 1602, 1603, 1604]"
       ImgBurn,[435]
       InternetExplorer,"[436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 446, 447, 448]"
       IrfanView,[449]
@@ -2923,7 +2923,7 @@ parameters:
       NetworkScanner,"[1354, 1355, 1356, 1357, 1358, 1359, 1451]"
       NewsbinPro,[586]
       Newsleecher,[587]
-      Nicotine__,"[588, 589, 590, 591, 592, 593, 594, 595, 596, 597, 598]"
+      Nicotine__,"[588, 589, 595, 596, 597, 598, 1654, 1655, 1656, 1657, 1658]"
       Notepad__,"[599, 600, 601]"
       Notepad,"[602, 1582, 1583]"
       Notion,"[603, 604]"
