@@ -77,7 +77,7 @@ type APIClient interface {
 	// Artifacts
 	GetArtifacts(ctx context.Context, in *GetArtifactsRequest, opts ...grpc.CallOption) (*proto1.ArtifactDescriptors, error)
 	GetArtifactFile(ctx context.Context, in *GetArtifactRequest, opts ...grpc.CallOption) (*GetArtifactResponse, error)
-	SetArtifactFile(ctx context.Context, in *SetArtifactRequest, opts ...grpc.CallOption) (*APIResponse, error)
+	SetArtifactFile(ctx context.Context, in *SetArtifactRequest, opts ...grpc.CallOption) (*SetArtifactResponse, error)
 	LoadArtifactPack(ctx context.Context, in *LoadArtifactPackRequest, opts ...grpc.CallOption) (*LoadArtifactPackResponse, error)
 	// Tools
 	GetToolInfo(ctx context.Context, in *proto1.Tool, opts ...grpc.CallOption) (*proto1.Tool, error)
@@ -529,8 +529,8 @@ func (c *aPIClient) GetArtifactFile(ctx context.Context, in *GetArtifactRequest,
 	return out, nil
 }
 
-func (c *aPIClient) SetArtifactFile(ctx context.Context, in *SetArtifactRequest, opts ...grpc.CallOption) (*APIResponse, error) {
-	out := new(APIResponse)
+func (c *aPIClient) SetArtifactFile(ctx context.Context, in *SetArtifactRequest, opts ...grpc.CallOption) (*SetArtifactResponse, error) {
+	out := new(SetArtifactResponse)
 	err := c.cc.Invoke(ctx, "/proto.API/SetArtifactFile", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1025,7 +1025,7 @@ type APIServer interface {
 	// Artifacts
 	GetArtifacts(context.Context, *GetArtifactsRequest) (*proto1.ArtifactDescriptors, error)
 	GetArtifactFile(context.Context, *GetArtifactRequest) (*GetArtifactResponse, error)
-	SetArtifactFile(context.Context, *SetArtifactRequest) (*APIResponse, error)
+	SetArtifactFile(context.Context, *SetArtifactRequest) (*SetArtifactResponse, error)
 	LoadArtifactPack(context.Context, *LoadArtifactPackRequest) (*LoadArtifactPackResponse, error)
 	// Tools
 	GetToolInfo(context.Context, *proto1.Tool) (*proto1.Tool, error)
@@ -1222,7 +1222,7 @@ func (UnimplementedAPIServer) GetArtifacts(context.Context, *GetArtifactsRequest
 func (UnimplementedAPIServer) GetArtifactFile(context.Context, *GetArtifactRequest) (*GetArtifactResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetArtifactFile not implemented")
 }
-func (UnimplementedAPIServer) SetArtifactFile(context.Context, *SetArtifactRequest) (*APIResponse, error) {
+func (UnimplementedAPIServer) SetArtifactFile(context.Context, *SetArtifactRequest) (*SetArtifactResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetArtifactFile not implemented")
 }
 func (UnimplementedAPIServer) LoadArtifactPack(context.Context, *LoadArtifactPackRequest) (*LoadArtifactPackResponse, error) {

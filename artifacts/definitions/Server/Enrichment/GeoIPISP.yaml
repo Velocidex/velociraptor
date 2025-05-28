@@ -24,6 +24,8 @@ parameters:
   - name: IP
     description: An IP to lookup
 
+type: SERVER
+
 sources:
   - query: |
       SELECT ISP(IP=_value) AS ISP,

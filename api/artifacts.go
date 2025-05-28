@@ -38,6 +38,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -154,6 +155,45 @@ func setArtifactFile(
 	}
 
 	return nil, InvalidStatus("Unknown op")
+}
+
+func checkArtifact(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	artifact string) (*launcher.AnalysisState, error) {
+
+	state := launcher.NewAnalysisState(artifact)
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// Load it into a local repository for checking - this will
+	// not commit it to the global repository yet
+	local_repository := manager.NewRepository()
+	local_repository.SetParent(repository, config_obj)
+
+	artifact_obj, err := local_repository.LoadYaml(artifact,
+		services.ArtifactOptions{
+			ValidateArtifact: true,
+		})
+
+	if err != nil {
+		return &launcher.AnalysisState{
+			Errors: []error{err},
+		}, nil
+	}
+
+	// Verify the artifact
+	launcher.VerifyArtifact(
+		ctx, config_obj, repository, artifact_obj, state)
+
+	return state, nil
 }
 
 func getReportArtifacts(
