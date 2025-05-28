@@ -21,6 +21,7 @@ import (
 	"context"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	fqdn "github.com/Showmax/go-fqdn"
@@ -103,11 +104,32 @@ func init() {
 
 				item := GetInfo(info).
 					Set("Fqdn", fqdn.Get()).
-					Set("Architecture", runtime.GOARCH)
+					Set("Architecture", getArch())
 				result = append(result, item)
 
 				return result
 			},
 			Doc: "Get information about the running host.",
 		})
+}
+
+func getArch() string {
+	res := runtime.GOARCH
+
+	// On windows, detect if we are running in Wow64
+	if runtime.GOOS == "windows" {
+		proc_arch := os.Getenv("PROCESSOR_ARCHITECTURE")
+		if proc_arch != "" {
+			res = proc_arch
+
+			if proc_arch == "x86" {
+				wow_arch := os.Getenv("PROCESSOR_ARCHITEW6432")
+				if wow_arch == "AMD64" {
+					res = "wow64"
+				}
+			}
+		}
+	}
+
+	return strings.ToLower(res)
 }
