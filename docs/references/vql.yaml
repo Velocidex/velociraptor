@@ -3613,7 +3613,6 @@
 
      SELECT * FROM HTTP_CLIENT(URLs=["http://www.google.com", "http://www.microsoft.com"])
      ```
-
   type: Plugin
   version: 3
   args:
@@ -3669,11 +3668,6 @@
     type: ordereddict.Dict
     description: If specified, upload these files using multipart form upload. For
       example [dict(file="My filename.txt", path=OSPath, accessor="auto"),]
-    repeated: true
-  - name: fallback_urls
-    type: string
-    description: A list of fallback URLs to try if the primary URL fails. The first
-      successful URL (with a 200 result) will be fetched.
     repeated: true
   category: popular
   metadata:
@@ -8586,6 +8580,26 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: secret_add
+  description: Add a new secret
+  type: Function
+  args:
+  - name: name
+    type: string
+    description: Name of the secret
+    required: true
+  - name: type
+    type: string
+    description: Type of the secret
+    required: true
+  - name: secret
+    type: ordereddict.Dict
+    description: A Dict containing key/value pairs for the secret
+    required: true
+  metadata:
+    permissions: SERVER_ADMIN
+  platforms:
+  - linux_amd64_cgo
 - name: secret_define
   description: Define a new secret template
   type: Function
@@ -11763,3 +11777,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+

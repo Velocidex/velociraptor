@@ -60,7 +60,8 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
-	"gopkg.in/yaml.v2"
+	"github.com/Velocidex/yaml/v2"
+
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
