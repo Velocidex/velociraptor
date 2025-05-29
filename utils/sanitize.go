@@ -133,7 +133,7 @@ func SanitizeStringForZip(component string) string {
 		}
 
 		switch char {
-		case '?', '*', ':', '|', '<', '>', '%', '/', '\\':
+		case '?', '"', '*', ':', '|', '<', '>', '%', '/', '\\':
 			escape(char)
 
 		default:

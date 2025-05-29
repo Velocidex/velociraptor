@@ -3535,7 +3535,7 @@
 
     {{% /notice %}}
 
-    The `http_client()` plugin allows use to interact with any web
+    The `http_client()` plugin allows us to interact with any web
     services. If the web service returns a json blob, we can parse it
     with the `parse_json()` function (or `parse_xml()` for SOAP
     endpoints). Using the parameters with a POST method we may
@@ -3590,12 +3590,37 @@
     * key: The name of the form element that will receive the file
     * path: This is an OSPath object that we open and stream into the form.
     * accessor: Any accessor required for the path.
+
+    ### Using multiple URLs
+
+    After version 3 of this plugin it is possible to provide a list of
+    URLs to the `url` parameter. The plugin will attempt to connect to
+    each of those in order until a successful connection is made
+    (i.e. HTTP status 200). This allows us to provide fallback URLs
+    for more resilient connections.
+
+    The correct way to check for this is with the `version()` plugin:
+
+    ```vql
+    LET HTTP_CLIENT(URLs) = SELECT * FROM if(
+     condition=version(plugin="http_client")>2,
+     then={
+       SELECT * FROM http_client(url=URLs)
+     }, else={
+       -- Just use the first one for old versions.
+       SELECT * FROM http_client(url=URLs[0])
+     })
+
+     SELECT * FROM HTTP_CLIENT(URLs=["http://www.google.com", "http://www.microsoft.com"])
+     ```
+
   type: Plugin
-  version: 2
+  version: 3
   args:
   - name: url
     type: string
     description: The URL to fetch
+    repeated: true
     required: true
   - name: params
     type: ordereddict.Dict
@@ -3644,6 +3669,11 @@
     type: ordereddict.Dict
     description: If specified, upload these files using multipart form upload. For
       example [dict(file="My filename.txt", path=OSPath, accessor="auto"),]
+    repeated: true
+  - name: fallback_urls
+    type: string
+    description: A list of fallback URLs to try if the primary URL fails. The first
+      successful URL (with a 200 result) will be fetched.
     repeated: true
   category: popular
   metadata:
@@ -4074,7 +4104,6 @@
 
     SELECT * FROM if(condition=FALSE, then=LogQuery)
     ```
-
   type: Plugin
   args:
   - name: condition
@@ -6628,9 +6657,6 @@
     type: accessors.OSPath
     description: The PST file to parse.
     required: true
-  - name: FolderPath
-    type: string
-    description: The folder path to save the attachments from emails.
   - name: accessor
     type: string
     description: The accessor to use
@@ -9128,7 +9154,7 @@
     required: true
   - name: sep
     type: string
-    description: The separator that will be used to split
+    description: The separator regex that will be used to split
   - name: sep_string
     type: string
     description: The separator as string that will be used to split
@@ -10746,6 +10772,20 @@
   - darwin_arm64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: verify
+  description: |
+    verify an artifact
+
+    This function will verify the artifact and flag any potential errors or warnings.
+  type: Function
+  args:
+  - name: artifact
+    type: string
+    description: The artifact to verify. This can be an artifact source in yaml or
+      json or the name of an artifact
+    required: true
+  platforms:
+  - linux_amd64_cgo
 - name: version
   description: |
     Gets the version of a VQL plugin or function.
