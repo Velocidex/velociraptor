@@ -1,20 +1,35 @@
-SELECT OSPath FROM glob(globs="/*", accessor="file") WHERE Name =~ "C"[
+Query: SELECT OSPath FROM glob(globs="/*", accessor="file") WHERE Name =~ "C"
+Output: [
  {
   "OSPath": "C:"
  }
-]SELECT OSPath FROM glob(globs="\\*", accessor="file") WHERE Name =~ "C"[
+]
+
+Query: SELECT OSPath FROM glob(globs="\\*", accessor="file") WHERE Name =~ "C"
+Output: [
  {
   "OSPath": "C:"
  }
-]SELECT OSPath FROM glob(globs="c:\\*", accessor="file") WHERE Name =~ "Windows"[
+]
+
+Query: SELECT OSPath FROM glob(globs="c:\\*", accessor="file") WHERE Name =~ "Windows"
+Output: [
  {
   "OSPath": "C:\\Windows"
  },
  {
   "OSPath": "C:\\WindowsAzure"
  }
-]SELECT OSPath FROM glob(globs="c:\\Users\\*link\\notepad.exe", accessor="file_links")[
+]
+
+# Make sure we **do not** follow symlinks with the default accessors.
+Query: SELECT OSPath FROM glob(globs="c:\\Users\\*link\\notepad.exe", accessor="file_links")
+Output: [
  {
   "OSPath": "C:\\Users\\link\\notepad.exe"
  }
-]SELECT OSPath FROM glob(globs="c:\\Users\\*link\\notepad.exe")[]
+]
+
+Query: SELECT OSPath FROM glob(globs="c:\\Users\\*link\\notepad.exe")
+Output: []
+

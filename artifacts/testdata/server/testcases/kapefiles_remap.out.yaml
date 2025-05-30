@@ -1,4 +1,17 @@
-LET ClientId <= client_create(hostname="TestVirtualClient").client_id[]LET FlowId <= import_collection(client_id=ClientId, filename=srcDir+TestFile).session_id[]LET _ <= import(artifact="Windows.KapeFiles.Remapping")[]LET tmp <= tempfile()[]LET Results <= SELECT import_collection(filename=Container, client_id=ClientId) AS Import
+# Import the collection
+Query: LET ClientId <= client_create(hostname="TestVirtualClient").client_id
+Output: []
+
+Query: LET FlowId <= import_collection(client_id=ClientId, filename=srcDir+TestFile).session_id
+Output: []
+
+Query: LET _ <= import(artifact="Windows.KapeFiles.Remapping")
+Output: []
+
+Query: LET tmp <= tempfile()
+Output: []
+
+Query: LET Results <= SELECT import_collection(filename=Container, client_id=ClientId) AS Import
 FROM collect(artifacts=["Windows.Forensics.Usn", "Windows.Search.FileFinder"],
    args=dict(`Windows.Forensics.Usn`=dict(),
              `Windows.Search.FileFinder`=dict(
@@ -6,7 +19,12 @@ FROM collect(artifacts=["Windows.Forensics.Usn", "Windows.Search.FileFinder"],
                   Accessor="registry")),
    output=tmp,
    remapping=GetRemapping(FlowId=FlowId, ClientId=ClientId))
-[]SELECT * FROM source(client_id=Results[0].Import.client_id, flow_id=Results[0].Import.session_id, artifact="Windows.Forensics.Usn") LIMIT 2[
+
+Output: []
+
+# Prove that we parsed the USN fie.
+Query: SELECT * FROM source(client_id=Results[0].Import.client_id, flow_id=Results[0].Import.session_id, artifact="Windows.Forensics.Usn") LIMIT 2
+Output: [
  {
   "Timestamp": "2024-08-14T15:29:55.239237Z",
   "Filename": "2024-08-14.json.tidx",
@@ -47,7 +65,11 @@ FROM collect(artifacts=["Windows.Forensics.Usn", "Windows.Search.FileFinder"],
   "SourceInfo": [],
   "Usn": 637534312
  }
-]SELECT * FROM source(client_id=Results[0].Import.client_id, flow_id=Results[0].Import.session_id, artifact="Windows.Search.FileFinder") LIMIT 2[
+]
+
+# Prove that registry mapping worked
+Query: SELECT * FROM source(client_id=Results[0].Import.client_id, flow_id=Results[0].Import.session_id, artifact="Windows.Search.FileFinder") LIMIT 2
+Output: [
  {
   "OSPath": "HKEY_USERS\\Administrator\\AppEvents",
   "Inode": null,
@@ -82,4 +104,9 @@ FROM collect(artifacts=["Windows.Forensics.Usn", "Windows.Search.FileFinder"],
    "type": "Key"
   }
  }
-]LET _ <= SELECT * FROM client_delete(client_id=ClientId, really_do_it=TRUE)[]
+]
+
+# Clean up the new client.
+Query: LET _ <= SELECT * FROM client_delete(client_id=ClientId, really_do_it=TRUE)
+Output: []
+

@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
@@ -33,13 +34,14 @@ type ArtifactRepositoryPlugin struct {
 	repository services.Repository
 	config_obj *config_proto.Config
 
-	mock_call_count int
+	mock_call_count map[string]int
 	mocks           map[string][]vfilter.Row
 }
 
 func (self *ArtifactRepositoryPlugin) SetMock(
 	artifact string, mock []vfilter.Row) {
 	self.mocks[artifact] = mock
+	self.mock_call_count[artifact] = 0
 }
 
 func (self *ArtifactRepositoryPlugin) Name() string {
@@ -67,11 +69,14 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		artifact_name := strings.Join(self.prefix, ".")
 
+		mock_call_count, _ := self.mock_call_count[artifact_name]
+
 		// Support mocking the artifacts
 		mocks, pres := self.mocks[artifact_name]
 		if pres && len(mocks) > 0 {
-			result := mocks[self.mock_call_count%len(mocks)]
-			self.mock_call_count += 1
+			utils.DlvBreak()
+			result := mocks[mock_call_count%len(mocks)]
+			self.mock_call_count[artifact_name] = mock_call_count + 1
 
 			a_value := reflect.Indirect(reflect.ValueOf(result))
 
@@ -407,10 +412,11 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) Associative(
 	}
 
 	return &ArtifactRepositoryPlugin{
-		prefix:     append(prefix, key),
-		repository: value.repository,
-		config_obj: value.config_obj,
-		mocks:      value.mocks,
+		prefix:          append(prefix, key),
+		repository:      value.repository,
+		config_obj:      value.config_obj,
+		mocks:           value.mocks,
+		mock_call_count: value.mock_call_count,
 	}, true
 }
 

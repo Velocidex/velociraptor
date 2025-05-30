@@ -1,15 +1,28 @@
-SELECT OSPath FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test.txt')[
+# Test for deduplication
+Query: SELECT OSPath FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test.txt')
+Output: [
  {
   "OSPath": "\\\\.\\C:\\Users\\test.txt"
  }
-]SELECT OSPath FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test2.txt')[
+]
+
+# Test for multiple hits
+Query: SELECT OSPath FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test2.txt')
+Output: [
  {
   "OSPath": "\\\\.\\C:\\Users\\test2.txt"
  },
  {
   "OSPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Users\\test2.txt"
  }
-]SELECT EventID,ServiceName,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec( EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx", VSSAnalysisAge=2)[
+]
+
+# Test evtx VSS support.
+
+# Find COMSPEC service VSS test - should show two services created,
+# even though the logs were cleared.
+Query: SELECT EventID,ServiceName,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec( EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx", VSSAnalysisAge=2)
+Output: [
  {
   "EventID": 7045,
   "ServiceName": "TestingDetection1",
@@ -21,3 +34,4 @@ SELECT OSPath FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test.
   "Source": "\\\\.\\C:\\Windows\\System32\\winevt\\Logs\\System.evtx"
  }
 ]
+

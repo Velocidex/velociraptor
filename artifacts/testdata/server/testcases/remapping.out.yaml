@@ -1,30 +1,56 @@
-LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/UsrClass.dat', srcDir+'/artifacts/testdata/files/ntuser.dat' ]), clear=TRUE)[]SELECT Hostname, Fqdn, OS, expand(path="%SystemRoot%\\System32") FROM info()[
+Query: LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/UsrClass.dat', srcDir+'/artifacts/testdata/files/ntuser.dat' ]), clear=TRUE)
+Output: []
+
+# Check we are impersonating a windows machine with appropriate
+# environment variables
+Query: SELECT Hostname, Fqdn, OS, expand(path="%SystemRoot%\\System32") FROM info()
+Output: [
  {
   "Hostname": "Virtual Host",
   "Fqdn": "Virtual Host",
   "OS": "windows",
   "expand(path=\"%SystemRoot%\\\\System32\")": "D:\\Windows\\System32"
  }
-]SELECT OSPath FROM glob(globs="*", accessor='ntfs') ORDER BY OSPath[
+]
+
+# Only C drive is mapped to the ntfs accessor
+Query: SELECT OSPath FROM glob(globs="*", accessor='ntfs') ORDER BY OSPath
+Output: [
  {
   "OSPath": "\\\\.\\C:"
  }
-]SELECT OSPath FROM glob(globs="*", accessor='file') ORDER BY OSPath[
+]
+
+# Only D and E drives are mapped to the file accessor
+Query: SELECT OSPath FROM glob(globs="*", accessor='file') ORDER BY OSPath
+Output: [
  {
   "OSPath": "D:"
  },
  {
   "OSPath": "E:"
  }
-]SELECT OSPath FROM glob(globs="C:/Folder *", accessor='ntfs') ORDER BY OSPath[
+]
+
+# Image is mapped as C: drive using ntfs accessor
+Query: SELECT OSPath FROM glob(globs="C:/Folder *", accessor='ntfs') ORDER BY OSPath
+Output: [
  {
   "OSPath": "\\\\.\\C:\\Folder A"
  }
-]SELECT OSPath FROM glob(globs="D:/Folder *", accessor='file') ORDER BY OSPath[
+]
+
+# Image is mapped as D: drive using file accessor
+Query: SELECT OSPath FROM glob(globs="D:/Folder *", accessor='file') ORDER BY OSPath
+Output: [
  {
   "OSPath": "D:\\Folder A"
  }
-]SELECT * FROM parse_mft(filename="C:/$MFT", accessor="ntfs") WHERE OSPath =~ 'Hello world' ORDER BY OSPath[
+]
+
+# Make sure we can parse the mft as normal.
+Query: SELECT * FROM parse_mft(filename="C:/$MFT", accessor="ntfs") WHERE OSPath =~ 'Hello world' ORDER BY OSPath
+Output: [
  {
   "EntryNumber": 46,
   "OSPath": "Folder A\\Folder B\\Hello world text document.txt",
@@ -91,7 +117,10 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "LastAccess0x30": "2018-09-24T07:55:29.7664719Z",
   "LogFileSeqNum": 1096672
  }
-]SELECT parse_ntfs(device="C:/$MFT", inode="46-128-0", accessor="ntfs") FROM scope()[
+]
+
+Query: SELECT parse_ntfs(device="C:/$MFT", inode="46-128-0", accessor="ntfs") FROM scope()
+Output: [
  {
   "parse_ntfs(device=\"C:/$MFT\", inode=\"46-128-0\", accessor=\"ntfs\")": {
    "FullPath": "/Folder A/Folder B/Hello world text document.txt",
@@ -174,7 +203,10 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
    "OSPath": "\\\\.\\C:\\Folder A\\Folder B\\Hello world text document.txt"
   }
  }
-]SELECT * FROM parse_ntfs_i30( accessor='ntfs', device='c:/$MFT', inode="41-144-1")[
+]
+
+Query: SELECT * FROM parse_ntfs_i30( accessor='ntfs', device='c:/$MFT', inode="41-144-1")
+Output: [
  {
   "MFTId": "45",
   "SequenceNumber": 0,
@@ -193,7 +225,10 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "IsSlack": false,
   "SlackOffset": 0
  }
-]SELECT * FROM parse_ntfs_ranges(accessor='ntfs', device='c:/$MFT', inode="46-128-5")[
+]
+
+Query: SELECT * FROM parse_ntfs_ranges(accessor='ntfs', device='c:/$MFT', inode="46-128-5")
+Output: [
  {
   "Type": "MappedReader",
   "Level": 0,
@@ -206,7 +241,10 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "Reader": "*bytes.Reader",
   "String": " 0 MappedReader: FileOffset 0 -\u003e DiskOffset 0 (Length 20,  Cluster 1) Delegate *bytes.Reader"
  }
-]SELECT OSPath FROM glob(accessor='registry', globs="/HKLM/*/xbox*")[
+]
+
+Query: SELECT OSPath FROM glob(accessor='registry', globs="/HKLM/*/xbox*")
+Output: [
  {
   "OSPath": "HKEY_LOCAL_MACHINE\\Classes\\xbox"
  },
@@ -240,36 +278,67 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
  {
   "OSPath": "HKEY_LOCAL_MACHINE\\Classes\\xboxgames"
  }
-]SELECT OSPath, IsDir FROM glob(accessor='registry', globs="/HKLM/Classes/Foobar")[
+]
+
+# The mount point itself shold be a directory
+Query: SELECT OSPath, IsDir FROM glob(accessor='registry', globs="/HKLM/Classes/Foobar")
+Output: [
  {
   "OSPath": "HKEY_LOCAL_MACHINE\\Classes\\Foobar",
   "IsDir": true
  }
-]SELECT OSPath, IsDir FROM glob(accessor='registry', globs="/HKLM/Classes/Foobar/*")[
+]
+
+# We should be able to list deep into the new hive. This comes from
+# NTUSER/Software/Policies/
+Query: SELECT OSPath, IsDir FROM glob(accessor='registry', globs="/HKLM/Classes/Foobar/*")
+Output: [
  {
   "OSPath": "HKEY_LOCAL_MACHINE\\Classes\\Foobar\\Microsoft",
   "IsDir": true
  }
-]SELECT read_file(filename="hello world", accessor="data") FROM scope()[
+]
+
+# Test data remapping
+Query: SELECT read_file(filename="hello world", accessor="data") FROM scope()
+Output: [
  {
   "read_file(filename=\"hello world\", accessor=\"data\")": "hello world"
  }
-]SELECT read_file(filename="C:/46", accessor="mft", length=10) FROM scope()[
+]
+
+# Test MFT remapping
+Query: SELECT read_file(filename="C:/46", accessor="mft", length=10) FROM scope()
+Output: [
  {
   "read_file(filename=\"C:/46\", accessor=\"mft\", length=10)": "Hello worl"
  }
-]SELECT OSPath FROM glob(accessor="file", globs="E:/ntuser.dat")[
+]
+
+# Test raw reg accessor reading files from the remapped file
+# accessor
+Query: SELECT OSPath FROM glob(accessor="file", globs="E:/ntuser.dat")
+Output: [
  {
   "OSPath": "E:\\ntuser.dat"
  }
-]SELECT OSPath FROM glob(accessor="raw_reg", globs="/Environ*/*", root=pathspec( DelegateAccessor="file", DelegatePath="E:\\ntuser.dat"))[
+]
+
+# Parse the actual ntuser file - the OSPath is a complex pathspec
+# based path.
+Query: SELECT OSPath FROM glob(accessor="raw_reg", globs="/Environ*/*", root=pathspec( DelegateAccessor="file", DelegatePath="E:\\ntuser.dat"))
+Output: [
  {
   "OSPath": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"E:\\\\ntuser.dat\",\"Path\":\"\\\\Environment\\\\TEMP\"}"
  },
  {
   "OSPath": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"E:\\\\ntuser.dat\",\"Path\":\"\\\\Environment\\\\TMP\"}"
  }
-]SELECT OSPath, read_file(filename=OSPath, accessor="zip", length=10) FROM glob(accessor="zip", globs="/*", root=pathspec( DelegateAccessor="file", DelegatePath="E:\\hello.zip")) LIMIT 2[
+]
+
+# Test zip file handling reading from mapped "file" accessor
+Query: SELECT OSPath, read_file(filename=OSPath, accessor="zip", length=10) FROM glob(accessor="zip", globs="/*", root=pathspec( DelegateAccessor="file", DelegatePath="E:\\hello.zip")) LIMIT 2
+Output: [
  {
   "OSPath": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"E:\\\\hello.zip\",\"Path\":\"/hello.txt\"}",
   "read_file(filename=OSPath, accessor=\"zip\", length=10)": "hello\n"
@@ -278,8 +347,16 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "OSPath": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"E:\\\\hello.zip\",\"Path\":\"/hello1.txt\"}",
   "read_file(filename=OSPath, accessor=\"zip\", length=10)": "hello1\n"
  }
-]SELECT * FROM disabled_plugin()[]SELECT disabled_function() FROM scope()[
+]
+
+# Make sure that plugins are mocked away
+Query: SELECT * FROM disabled_plugin()
+Output: []
+
+Query: SELECT disabled_function() FROM scope()
+Output: [
  {
   "disabled_function()": null
  }
 ]
+

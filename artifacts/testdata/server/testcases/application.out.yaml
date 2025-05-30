@@ -1,4 +1,5 @@
-SELECT StartTime,EndTime,TeamViewerID,SourceHost,User,ConnectionType,ConnectionID FROM Artifact.Windows.Applications.TeamViewer.Incoming( FileGlob=srcDir + '/artifacts/testdata/files/Connection_incoming.txt')[
+Query: SELECT StartTime,EndTime,TeamViewerID,SourceHost,User,ConnectionType,ConnectionID FROM Artifact.Windows.Applications.TeamViewer.Incoming( FileGlob=srcDir + '/artifacts/testdata/files/Connection_incoming.txt')
+Output: [
  {
   "StartTime": "2020-08-05T13:36:21Z",
   "EndTime": "2020-08-05T13:38:33Z",
@@ -18,3 +19,4 @@ SELECT StartTime,EndTime,TeamViewerID,SourceHost,User,ConnectionType,ConnectionI
   "ConnectionID": "{af03e0b1-85c3-49b2-8074-c66ce0fd5f4a}\t"
  }
 ]
+

@@ -1,4 +1,5 @@
-SELECT * FROM Artifact.Linux.Sys.Users( PasswordFile=srcDir + '/artifacts/testdata/files/linux/passwd' )[
+Query: SELECT * FROM Artifact.Linux.Sys.Users( PasswordFile=srcDir + '/artifacts/testdata/files/linux/passwd' )
+Output: [
  {
   "User": "root",
   "Description": "root",
@@ -188,7 +189,10 @@ SELECT * FROM Artifact.Linux.Sys.Users( PasswordFile=srcDir + '/artifacts/testda
   "Shell": "/bin/bash",
   "_Source": "Linux.Sys.Users"
  }
-]SELECT * FROM Artifact.Linux.Sys.Groups( GroupFile=srcDir + '/artifacts/testdata/files/linux/group' )[
+]
+
+Query: SELECT * FROM Artifact.Linux.Sys.Groups( GroupFile=srcDir + '/artifacts/testdata/files/linux/group' )
+Output: [
  {
   "Group": "root",
   "GID": 0,
@@ -461,3 +465,4 @@ SELECT * FROM Artifact.Linux.Sys.Users( PasswordFile=srcDir + '/artifacts/testda
   "_Source": "Linux.Sys.Groups"
  }
 ]
+

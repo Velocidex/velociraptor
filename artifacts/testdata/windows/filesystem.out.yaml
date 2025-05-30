@@ -1,5 +1,7 @@
-select Data from read_file(filenames=tempfile(data='hello'))[
+Query: select Data from read_file(filenames=tempfile(data='hello'))
+Output: [
  {
   "Data": "hello"
  }
 ]
+

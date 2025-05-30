@@ -1,4 +1,7 @@
-SELECT OSPath.Basename AS OSPath, * FROM Artifact.Linux.Sys.LastUserLogin( recent_x_days=10000, wtmpGlobs=srcDir+"/artifacts/testdata/files/wtmp.1") WHERE logout_time LIMIT 1[
+# Make sure we can find the logout time for at least one login
+# event.
+Query: SELECT OSPath.Basename AS OSPath, * FROM Artifact.Linux.Sys.LastUserLogin( recent_x_days=10000, wtmpGlobs=srcDir+"/artifacts/testdata/files/wtmp.1") WHERE logout_time LIMIT 1
+Output: [
  {
   "OSPath": "wtmp.1",
   "login_Type": "USER_PROCESS",
@@ -13,3 +16,4 @@ SELECT OSPath.Basename AS OSPath, * FROM Artifact.Linux.Sys.LastUserLogin( recen
   "_Source": "Linux.Sys.LastUserLogin"
  }
 ]
+

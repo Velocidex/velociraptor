@@ -32,9 +32,9 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/Velocidex/yaml/v2"
 	errors "github.com/go-errors/errors"
 	"github.com/sergi/go-diff/diffmatchpatch"
+	"gopkg.in/yaml.v3"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -92,9 +92,14 @@ var (
 	}
 )
 
+type queryDesc struct {
+	Comment string
+	Query   string
+}
+
 type testFixture struct {
-	Parameters map[string]string `json:"Parameters"`
-	Queries    []string          `json:"Queries"`
+	Parameters map[string]string
+	Queries    []queryDesc
 }
 
 // We want to emulate as closely as possible the logic in the artifact
@@ -255,11 +260,15 @@ func runTest(fixture *testFixture, sm *services.Service,
 		return "", err
 	}
 
+	// Build the result of the query into a golden file.
 	result := ""
 	for _, query := range fixture.Queries {
-		result += query
-		scope.Log("Running query %v", query)
-		vql, err := vfilter.Parse(query)
+		if query.Comment != "" {
+			result += query.Comment + "\n"
+		}
+		result += fmt.Sprintf("Query: %v\n", query.Query)
+		scope.Log("Running query %v", query.Query)
+		vql, err := vfilter.Parse(query.Query)
 		if err != nil {
 			return "", err
 		}
@@ -273,7 +282,7 @@ func runTest(fixture *testFixture, sm *services.Service,
 			if !ok {
 				break
 			}
-			result += string(query_result.Payload)
+			result += fmt.Sprintf("Output: %v\n\n", string(query_result.Payload))
 		}
 	}
 
@@ -370,8 +379,7 @@ func doGolden() error {
 			return fmt.Errorf("Reading file: %w", err)
 		}
 
-		fixture := testFixture{}
-		err = yaml.Unmarshal(data, &fixture)
+		fixture, err := parseFixture(data)
 		if err != nil {
 			return fmt.Errorf("Unmarshal input file: %w", err)
 		}
@@ -592,4 +600,31 @@ func (self MockTimeFunciton) Info(
 		Name:    "mock_time",
 		ArgType: type_map.AddType(scope, &MockTimeFuncitonArgs{}),
 	}
+}
+
+func parseFixture(data []byte) (res testFixture, err error) {
+	type tmpType struct {
+		Parameters map[string]string `yaml:"Parameters"`
+		Queries    []yaml.Node       `yaml:"Queries"`
+	}
+
+	var n tmpType
+	err = yaml.Unmarshal(data, &n)
+	if err != nil {
+		return res, err
+	}
+
+	res.Parameters = n.Parameters
+	for _, node := range n.Queries {
+		if node.Kind != yaml.ScalarNode {
+			continue
+		}
+
+		res.Queries = append(res.Queries, queryDesc{
+			Query:   node.Value,
+			Comment: node.HeadComment,
+		})
+	}
+
+	return res, err
 }

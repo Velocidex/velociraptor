@@ -1,4 +1,6 @@
-SELECT OSPath.Basename AS OSPath, * FROM Artifact.Windows.EventLogs.Kerberoasting( EvtxGlob=srcDir + '/artifacts/testdata/files/EID4769_Kerberoasting.evtx')[
+# Kerbroasting VQL test
+Query: SELECT OSPath.Basename AS OSPath, * FROM Artifact.Windows.EventLogs.Kerberoasting( EvtxGlob=srcDir + '/artifacts/testdata/files/EID4769_Kerberoasting.evtx')
+Output: [
  {
   "OSPath": "EID4769_Kerberoasting.evtx",
   "EventTime": "2019-09-30T01:58:40Z",
@@ -34,3 +36,4 @@ SELECT OSPath.Basename AS OSPath, * FROM Artifact.Windows.EventLogs.Kerberoastin
   "_Source": "Windows.EventLogs.Kerberoasting"
  }
 ]
+

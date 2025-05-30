@@ -1,4 +1,6 @@
-SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcDir + "/artifacts/testdata/files/*", SHA1List=SHA1s,SizeMax=30000)[
+# HashHunter Detection
+Query: SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcDir + "/artifacts/testdata/files/*", SHA1List=SHA1s,SizeMax=30000)
+Output: [
  {
   "Name": "1.lnk",
   "Size": 399,
@@ -26,7 +28,10 @@ SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcD
    "SHA256": ""
   }
  }
-]SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcDir + "/artifacts/testdata/files/*", MD5List=MD5s,SizeMin=20000,SizeMax=30000)[
+]
+
+Query: SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcDir + "/artifacts/testdata/files/*", MD5List=MD5s,SizeMin=20000,SizeMax=30000)
+Output: [
  {
   "Name": "CSDump.bin",
   "Size": 22000,
@@ -36,7 +41,10 @@ SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcD
    "SHA256": ""
   }
  }
-]SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcDir + "/artifacts/testdata/files/*", SHA256List=SHA256s,SizeMax=1000)[
+]
+
+Query: SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcDir + "/artifacts/testdata/files/*", SHA256List=SHA256s,SizeMax=1000)
+Output: [
  {
   "Name": "1.lnk",
   "Size": 399,
@@ -56,3 +64,4 @@ SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcD
   }
  }
 ]
+

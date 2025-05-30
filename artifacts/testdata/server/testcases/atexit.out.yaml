@@ -1,4 +1,8 @@
-SELECT * FROM query(query=''' LET Foo = SELECT log(message="I Ran at the end") FROM scope() LET _ <= log(message="First!") LET _ <= atexit(query=Foo, env=dict(X="Me too", Y=2)) LET _ <= log(message="Second!") ''')[]SELECT * FROM test_read_logs()[
+Query: SELECT * FROM query(query=''' LET Foo = SELECT log(message="I Ran at the end") FROM scope() LET _ <= log(message="First!") LET _ <= atexit(query=Foo, env=dict(X="Me too", Y=2)) LET _ <= log(message="Second!") ''')
+Output: []
+
+Query: SELECT * FROM test_read_logs()
+Output: [
  {
   "Log": "Velociraptor: Running query SELECT * FROM query(query=''' LET Foo = SELECT log(message=\"I Ran at the end\") FROM scope() LET _ \u003c= log(message=\"First!\") LET _ \u003c= atexit(query=Foo, env=dict(X=\"Me too\", Y=2)) LET _ \u003c= log(message=\"Second!\") ''')\n"
  },
@@ -24,3 +28,4 @@ SELECT * FROM query(query=''' LET Foo = SELECT log(message="I Ran at the end") F
   "Log": "Velociraptor: Running query SELECT * FROM test_read_logs()\n"
  }
 ]
+

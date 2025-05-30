@@ -1,8 +1,26 @@
-LET Sanitize(X) = regex_replace(re="[C]\\.[0-9a-z]+", replace="C.ID", source=X)[]LET X <= SELECT * FROM Artifact.Server.Utils.ImportCollection( Hostname="FooBarHost", Path=srcDir+"/vql/tools/collector/fixtures/import.zip")[]LET Y <= SELECT * FROM Artifact.Server.Utils.ImportCollection( Hostname="FooBarHost", Path=srcDir+"/vql/tools/collector/fixtures/import.zip")[]SELECT X[0].ClientId = Y[0].ClientId AS ClientIdEqual FROM scope()[
+# Client IDs are random so we sanitize them in the results below.
+Query: LET Sanitize(X) = regex_replace(re="[C]\\.[0-9a-z]+", replace="C.ID", source=X)
+Output: []
+
+# Import a collection once
+Query: LET X <= SELECT * FROM Artifact.Server.Utils.ImportCollection( Hostname="FooBarHost", Path=srcDir+"/vql/tools/collector/fixtures/import.zip")
+Output: []
+
+# Import the same collection again - it should re-use the same client id
+Query: LET Y <= SELECT * FROM Artifact.Server.Utils.ImportCollection( Hostname="FooBarHost", Path=srcDir+"/vql/tools/collector/fixtures/import.zip")
+Output: []
+
+# Make sure the client ids were the same
+Query: SELECT X[0].ClientId = Y[0].ClientId AS ClientIdEqual FROM scope()
+Output: [
  {
   "ClientIdEqual": true
  }
-]SELECT Sanitize(X=vfs_path) AS vfs_path FROM Artifact.Server.Utils.DeleteClient( ClientIdList=[X[0].ClientId, Y[0].ClientId], ReallyDoIt=TRUE) WHERE NOT vfs_path =~ "monitoring" Order by vfs_path[
+]
+
+# Delete the new clients that were created (exclude time dependent data)
+Query: SELECT Sanitize(X=vfs_path) AS vfs_path FROM Artifact.Server.Utils.DeleteClient( ClientIdList=[X[0].ClientId, Y[0].ClientId], ReallyDoIt=TRUE) WHERE NOT vfs_path =~ "monitoring" Order by vfs_path
+Output: [
  {
   "vfs_path": ""
  },
@@ -76,3 +94,4 @@ LET Sanitize(X) = regex_replace(re="[C]\\.[0-9a-z]+", replace="C.ID", source=X)[
   "vfs_path": "/clients/C.ID/flow_index.json.index"
  }
 ]
+

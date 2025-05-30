@@ -1,4 +1,5 @@
-SELECT parse_json_array(data=JSONArrayWithDicts) FROM scope()[
+Query: SELECT parse_json_array(data=JSONArrayWithDicts) FROM scope()
+Output: [
  {
   "parse_json_array(data=JSONArrayWithDicts)": [
    {
@@ -9,14 +10,24 @@ SELECT parse_json_array(data=JSONArrayWithDicts) FROM scope()[
    }
   ]
  }
-]SELECT parse_json_array(data=JSONArrayWithStrings) FROM scope()[
+]
+
+Query: SELECT parse_json_array(data=JSONArrayWithStrings) FROM scope()
+Output: [
  {
   "parse_json_array(data=JSONArrayWithStrings)": [
    "foo",
    "baz"
   ]
  }
-]LET T <= tempfile()[]SELECT * FROM write_jsonl( filename=T, query={SELECT * FROM range(end=3)})[
+]
+
+# Test writing a JSONL file
+Query: LET T <= tempfile()
+Output: []
+
+Query: SELECT * FROM write_jsonl( filename=T, query={SELECT * FROM range(end=3)})
+Output: [
  {
   "_value": 0
  },
@@ -26,7 +37,10 @@ SELECT parse_json_array(data=JSONArrayWithDicts) FROM scope()[
  {
   "_value": 2
  }
-]SELECT * FROM parse_jsonl(filename=T)[
+]
+
+Query: SELECT * FROM parse_jsonl(filename=T)
+Output: [
  {
   "_value": 0
  },
@@ -36,32 +50,52 @@ SELECT parse_json_array(data=JSONArrayWithDicts) FROM scope()[
  {
   "_value": 2
  }
-]SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First"}\n{"Foo":"Second"}')[
+]
+
+# Missing final \n is allowed and should return both rows
+Query: SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First"}\n{"Foo":"Second"}')
+Output: [
  {
   "Foo": "First"
  },
  {
   "Foo": "Second"
  }
-]SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First"}\n\n{"Foo":"Second"}')[
+]
+
+# Empty line should be ignore
+Query: SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First"}\n\n{"Foo":"Second"}')
+Output: [
  {
   "Foo": "First"
  },
  {
   "Foo": "Second"
  }
-]SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First}\n{"Foo":"Second"}')[
+]
+
+# Skip corrupted lines but try to get other lines
+Query: SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First}\n{"Foo":"Second"}')
+Output: [
  {
   "Foo": "Second"
  }
-]SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First"}\n{"Foo":\n{"Foo":\n{"Foo":"Second"}')[
+]
+
+# Corrupted last line is ignored
+Query: SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First"}\n{"Foo":\n{"Foo":\n{"Foo":"Second"}')
+Output: [
  {
   "Foo": "First"
  },
  {
   "Foo": "Second"
  }
-]SELECT * FROM parse_jsonl(accessor="data", filename='1\ntrue\n[1,2,3]\n{"Foo":"First"}\n')[
+]
+
+# JSONL files with non-dict lines
+Query: SELECT * FROM parse_jsonl(accessor="data", filename='1\ntrue\n[1,2,3]\n{"Foo":"First"}\n')
+Output: [
  {
   "_value": 1
  },
@@ -79,3 +113,4 @@ SELECT parse_json_array(data=JSONArrayWithDicts) FROM scope()[
   "Foo": "First"
  }
 ]
+

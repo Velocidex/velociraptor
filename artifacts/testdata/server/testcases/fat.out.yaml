@@ -1,4 +1,4 @@
-SELECT *, OSPath.Path AS OSPath,
+Query: SELECT *, OSPath.Path AS OSPath,
      if(condition=NOT IsDir,
         then= read_file(accessor="fat", filename=OSPath)) AS Contents
 FROM glob(globs='/**', accessor="fat",
@@ -6,7 +6,8 @@ FROM glob(globs='/**', accessor="fat",
       Path="a", -- Only look under this directory
       DelegateAccessor="file",
       DelegatePath=srcDir+'/artifacts/testdata/files/fat_very_small.dd'))
-[
+
+Output: [
  {
   "Name": "b",
   "Mtime": "2023-09-23T09:33:48Z",
@@ -50,3 +51,4 @@ FROM glob(globs='/**', accessor="fat",
   "Contents": "hello world\n"
  }
 ]
+

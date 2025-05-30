@@ -1,11 +1,18 @@
-SELECT OSPath.Basename, Content.home FROM Artifact.MacOS.System.Plist( PlistGlob=srcDir+"/artifacts/testdata/files/vag*.plist")[
+Query: SELECT OSPath.Basename, Content.home FROM Artifact.MacOS.System.Plist( PlistGlob=srcDir+"/artifacts/testdata/files/vag*.plist")
+Output: [
  {
   "OSPath.Basename": "vagrant.plist",
   "Content.home": [
    "/Users/vagrant"
   ]
  }
-]LET X <= SELECT mock(plugin='execve', results={ SELECT read_file( filename=srcDir+"/artifacts/testdata/files/SPApplicationsDataType.json") AS Stdout FROM scope() }) FROM scope()[]SELECT * FROM Artifact.MacOS.System.Packages()[
+]
+
+Query: LET X <= SELECT mock(plugin='execve', results={ SELECT read_file( filename=srcDir+"/artifacts/testdata/files/SPApplicationsDataType.json") AS Stdout FROM scope() }) FROM scope()
+Output: []
+
+Query: SELECT * FROM Artifact.MacOS.System.Packages()
+Output: [
  {
   "Name": "Slack",
   "Version": "4.25.0",
@@ -20,7 +27,10 @@ SELECT OSPath.Basename, Content.home FROM Artifact.MacOS.System.Plist( PlistGlob
   "_Architecture": "arch_arm_i64",
   "_Source": "MacOS.System.Packages"
  }
-]SELECT SourceFile, EntryPath, EntryId, EntryFlags, FileId FROM Artifact.MacOS.Forensics.FSEvents(Glob=srcDir+"/artifacts/testdata/files/fs_events_00000000007cff3d")[
+]
+
+Query: SELECT SourceFile, EntryPath, EntryId, EntryFlags, FileId FROM Artifact.MacOS.Forensics.FSEvents(Glob=srcDir+"/artifacts/testdata/files/fs_events_00000000007cff3d")
+Output: [
  {
   "SourceFile": "fs_events_00000000007cff3d",
   "EntryPath": ".fseventsd/sl-compat",
@@ -35,7 +45,12 @@ SELECT OSPath.Basename, Content.home FROM Artifact.MacOS.System.Plist( PlistGlob
   "EntryFlags": "EndOfTransaction, IsDirectory",
   "FileId": ""
  }
-]SELECT count() AS Row, SourceFile, EntryPath, EntryId, EntryFlags, FileId FROM Artifact.MacOS.Forensics.FSEvents(Glob=srcDir+"/artifacts/testdata/files/fs_events_000000002fc5e551") WHERE Row > 2300 LIMIT 100[
+]
+
+# Test parsing on newer version fs_events file. Prior to #4018 this file could not be parsed at all.
+# Second block starts at approximately row 2333.
+Query: SELECT count() AS Row, SourceFile, EntryPath, EntryId, EntryFlags, FileId FROM Artifact.MacOS.Forensics.FSEvents(Glob=srcDir+"/artifacts/testdata/files/fs_events_000000002fc5e551") WHERE Row > 2300 LIMIT 100
+Output: [
  {
   "Row": 2301,
   "SourceFile": "fs_events_000000002fc5e551",
@@ -836,7 +851,10 @@ SELECT OSPath.Basename, Content.home FROM Artifact.MacOS.System.Plist( PlistGlob
   "EntryFlags": "FSE_RENAME, IsFile",
   "FileId": 377799
  }
-]SELECT *, OSPath.Basename AS OSPath FROM Artifact.MacOS.System.Dock(DockGlob=srcDir+"/artifacts/testdata/files/com.apple.dock.plist")[
+]
+
+Query: SELECT *, OSPath.Basename AS OSPath FROM Artifact.MacOS.System.Dock(DockGlob=srcDir+"/artifacts/testdata/files/com.apple.dock.plist")
+Output: [
  {
   "GUID": 1400313530,
   "FileLabel": "Launchpad",
@@ -934,3 +952,4 @@ SELECT OSPath.Basename, Content.home FROM Artifact.MacOS.System.Plist( PlistGlob
   "OSPath": "com.apple.dock.plist"
  }
 ]
+

@@ -1,4 +1,5 @@
-LET _ <= SELECT
+# Setup our mocks --MFT needs to be mocked as below to pass srcDir
+Query: LET _ <= SELECT
       mock(plugin='info', results=[dict(OS='windows')]),
       mock(plugin='http_client', results=[
          dict(Url='http://remote',
@@ -54,7 +55,16 @@ LET _ <= SELECT
           LastAccess0x30 = "2021-01-24T06:57:36.7073284Z")
       ])
 FROM scope()
-[]LET CleanContext(HitContext) = dict(StoredSize=HitContext.StoredSize, Path= HitContext.Path, Size= HitContext.Size, sha256= HitContext.sha256)[]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, Size, Rule, CleanContext(HitContext=HitContext), HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', YaraRule=MZRule)[
+
+Output: []
+
+# Remove paths from golden image
+Query: LET CleanContext(HitContext) = dict(StoredSize=HitContext.StoredSize, Path= HitContext.Path, Size= HitContext.Size, sha256= HitContext.sha256)
+Output: []
+
+# Test NTFS yara outputs from shorthand and standard yara
+Query: SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, Size, Rule, CleanContext(HitContext=HitContext), HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', YaraRule=MZRule)
+Output: [
  {
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
@@ -67,7 +77,10 @@ FROM scope()
   },
   "HitOffset": 0
  }
-]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, Size, Rule, CleanContext(HitContext=HitContext), HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', ContextBytes=10, YaraRule=MZRule)[
+]
+
+Query: SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, Size, Rule, CleanContext(HitContext=HitContext), HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', ContextBytes=10, YaraRule=MZRule)
+Output: [
  {
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
@@ -80,7 +93,11 @@ FROM scope()
   },
   "HitOffset": 0
  }
-]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', YaraRule=IsPE)[
+]
+
+# This rule has no strings so HitContext should be NULL
+Query: SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', YaraRule=IsPE)
+Output: [
  {
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
@@ -88,7 +105,11 @@ FROM scope()
   "HitContext": null,
   "HitOffset": 0
  }
-]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(YaraRule=IsPE)[
+]
+
+# test Generic glob based yara then a couple of time bounded queries
+Query: SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(YaraRule=IsPE)
+Output: [
  {
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
@@ -107,7 +128,10 @@ FROM scope()
   "Ctime": "2021-03-21T05:57:50.184145696Z",
   "Btime": "2021-03-01T05:57:50.184086639Z"
  }
-]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(DateAfter='2021-03-01', DateBefore='2021-07-01',YaraRule=IsPE)[
+]
+
+Query: SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(DateAfter='2021-03-01', DateBefore='2021-07-01',YaraRule=IsPE)
+Output: [
  {
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
@@ -126,7 +150,10 @@ FROM scope()
   "Ctime": "2021-03-21T05:57:50.184145696Z",
   "Btime": "2021-03-01T05:57:50.184086639Z"
  }
-]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, CleanContext(HitContext=HitContext), Size,Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(DateBefore='2021-04-01',ContextBytes=10,YaraRule=MZRule)[
+]
+
+Query: SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, CleanContext(HitContext=HitContext), Size,Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(DateBefore='2021-04-01',ContextBytes=10,YaraRule=MZRule)
+Output: [
  {
   "TestPath": "artifacts/testdata/files/notnbt.exe",
   "CleanContext(HitContext=HitContext)": {
@@ -142,7 +169,11 @@ FROM scope()
   "Ctime": "2021-03-21T05:57:50.184145696Z",
   "Btime": "2021-03-01T05:57:50.184086639Z"
  }
-]SELECT relpath(path=DevicePath, base=srcDir, sep="/") as TestPath, CleanContext(HitContext=HitContext), StartOffest,ScanLength,Rule,YaraString,HitOffset FROM Artifact.Windows.Detection.Yara.Device(DevicePath=srcDir + "/artifacts/testdata/files/MBR")[
+]
+
+# test Windows.Detection.Yara.Device (should also work cross platform)
+Query: SELECT relpath(path=DevicePath, base=srcDir, sep="/") as TestPath, CleanContext(HitContext=HitContext), StartOffest,ScanLength,Rule,YaraString,HitOffset FROM Artifact.Windows.Detection.Yara.Device(DevicePath=srcDir + "/artifacts/testdata/files/MBR")
+Output: [
  {
   "TestPath": "artifacts/testdata/files/MBR",
   "CleanContext(HitContext=HitContext)": {
@@ -158,3 +189,4 @@ FROM scope()
   "HitOffset": 0
  }
 ]
+

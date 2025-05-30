@@ -1,4 +1,6 @@
-SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx')[
+# The followings are here to test the Message extraction on a live Windows system.
+Query: SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx')
+Output: [
  {
   "System": {
    "Provider": {
@@ -36,7 +38,13 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   },
   "Message": "The audit log was cleared.\nSubject:\n\tSecurity ID:\tS-1-5-21-546003962-2713609280-610790815-1001\n\tAccount Name:\ttest\n\tDomain Name:\tTESTCOMPUTER\n\tLogon ID:\t135562\r\n"
  }
-]SELECT UserData FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx') WHERE System.EventId.Value = 1102[]SELECT UserData FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx') WHERE System.EventId.Value != 1102[
+]
+
+Query: SELECT UserData FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx') WHERE System.EventId.Value = 1102
+Output: []
+
+Query: SELECT UserData FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx') WHERE System.EventId.Value != 1102
+Output: [
  {
   "UserData": {
    "LogFileCleared": {
@@ -47,7 +55,11 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
    }
   }
  }
-]SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(EvtxGlob=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")[
+]
+
+# Powershell VQL tests
+Query: SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(EvtxGlob=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")
+Output: [
  {
   "EventTime": "2019-12-02T11:39:33Z",
   "Computer": "DESKTOP-687T2NR",
@@ -82,7 +94,10 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "OSPath": "X:\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
   "_Source": "Windows.EventLogs.PowershellScriptblock"
  }
-]SELECT * FROM Artifact.Windows.EventLogs.PowershellModule(EventLog=srcDir + "/artifacts/testdata/files/EID4103_PowershellModule.evtx" )[
+]
+
+Query: SELECT * FROM Artifact.Windows.EventLogs.PowershellModule(EventLog=srcDir + "/artifacts/testdata/files/EID4103_PowershellModule.evtx" )
+Output: [
  {
   "EventTime": "2020-08-10T14:16:36.953182458Z",
   "EventID": 4103,
@@ -98,11 +113,17 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Source": "X:\\artifacts\\testdata\\files\\EID4103_PowershellModule.evtx",
   "_Source": "Windows.EventLogs.PowershellModule"
  }
-]SELECT Message FROM parse_evtx( filename=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx") LIMIT 1[
+]
+
+Query: SELECT Message FROM parse_evtx( filename=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx") LIMIT 1
+Output: [
  {
   "Message": "Creating Scriptblock text (1 of 1):\nC:\\Users\\yolo\\Desktop\\Test.ps1\n\nScriptBlock ID: 1029eba6-72bd-4b59-886d-4aea789bb6aa\nPath: \r\n"
  }
-]SELECT * FROM Artifact.Windows.EventLogs.EvtxHunter( EvtxGlob=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx",IocRegex="Get-Service" )[
+]
+
+Query: SELECT * FROM Artifact.Windows.EventLogs.EvtxHunter( EvtxGlob=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx",IocRegex="Get-Service" )
+Output: [
  {
   "EventTime": "2019-12-02T11:39:35Z",
   "Computer": "DESKTOP-687T2NR",
@@ -124,7 +145,11 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "OSPath": "X:\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
   "_Source": "Windows.EventLogs.EvtxHunter"
  }
-]SELECT * FROM Artifact.Windows.EventLogs.ScheduledTasks( Security=srcDir + '/artifacts/testdata/files/SecurityTasks.evtx', TaskScheduler= srcDir + '/artifacts/testdata/files/TaskScheduler.evtx', TaskNameRegex='T1053_005_powershell' )[
+]
+
+# Task Scheduler testing to ensure field parsing wrking as expected
+Query: SELECT * FROM Artifact.Windows.EventLogs.ScheduledTasks( Security=srcDir + '/artifacts/testdata/files/SecurityTasks.evtx', TaskScheduler= srcDir + '/artifacts/testdata/files/TaskScheduler.evtx', TaskNameRegex='T1053_005_powershell' )
+Output: [
  {
   "EventTime": "2021-01-27T11:40:36Z",
   "Computer": "RE-Dev",
@@ -370,7 +395,11 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "OSPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
   "_Source": "Windows.EventLogs.ScheduledTasks"
  }
-]SELECT EventID, DomainName, UserName, LogonType, SourceIP, Description FROM Artifact.Windows.EventLogs.RDPAuth( Security=srcDir + '/artifacts/testdata/files/RDPAuth_Security.evtx', System= srcDir + '/artifacts/testdata/files/RDPAuth_System.evtx', LocalSessionManager= srcDir + '/artifacts/testdata/files/RDPAuth_LocalSessionManager.evtx', RemoteConnectionManager= srcDir + '/artifacts/testdata/files/RDPAuth_RemoteConnectionManager.evtx') WHERE NOT LogonType = 3 GROUP BY EventID[
+]
+
+# RDPAuth testing to ensure field parsing working as expected
+Query: SELECT EventID, DomainName, UserName, LogonType, SourceIP, Description FROM Artifact.Windows.EventLogs.RDPAuth( Security=srcDir + '/artifacts/testdata/files/RDPAuth_Security.evtx', System= srcDir + '/artifacts/testdata/files/RDPAuth_System.evtx', LocalSessionManager= srcDir + '/artifacts/testdata/files/RDPAuth_LocalSessionManager.evtx', RemoteConnectionManager= srcDir + '/artifacts/testdata/files/RDPAuth_RemoteConnectionManager.evtx') WHERE NOT LogonType = 3 GROUP BY EventID
+Output: [
  {
   "EventID": 23,
   "DomainName": "WINDOMAIN",
@@ -451,7 +480,11 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "SourceIP": "null",
   "Description": "LOGOFF_DISCONNECT"
  }
-]SELECT ClearedLog, Message =~ "The audit log was cleared." FROM Artifact.Windows.EventLogs.Cleared()[
+]
+
+# Add test for event log clearing and move from VSS test for improved speed
+Query: SELECT ClearedLog, Message =~ "The audit log was cleared." FROM Artifact.Windows.EventLogs.Cleared()
+Output: [
  {
   "ClearedLog": "Security",
   "Message =~ \"The audit log was cleared.\"": true
@@ -461,3 +494,4 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Message =~ \"The audit log was cleared.\"": false
  }
 ]
+

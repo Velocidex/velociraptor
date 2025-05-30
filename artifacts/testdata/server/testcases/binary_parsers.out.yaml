@@ -1,4 +1,5 @@
-SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershell.ModuleAnalysisCache(GlobLookup=srcDir + "/artifacts/testdata/files/ModuleAnalysisCache") LIMIT 10[
+Query: SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershell.ModuleAnalysisCache(GlobLookup=srcDir + "/artifacts/testdata/files/ModuleAnalysisCache") LIMIT 10
+Output: [
  {
   "ModuleName": "C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\\DirectAccessClientComponents\\DirectAccessClientComponents.psd1",
   "Timestamp": "2019-11-22T01:09:05.488830566Z",
@@ -49,7 +50,11 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
   "Timestamp": "2019-11-22T01:10:45.946586608Z",
   "Functions[1]": "Set-BitsTransfer"
  }
-]SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData FROM Artifact.Windows.Forensics.Lnk(TargetGlob=srcDir + "/artifacts/testdata/files/1.lnk")[
+]
+
+# Check the lnk parser
+Query: SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData FROM Artifact.Windows.Forensics.Lnk(TargetGlob=srcDir + "/artifacts/testdata/files/1.lnk")
+Output: [
  {
   "ShellLinkHeader": {
    "Headersize": 76,
@@ -96,7 +101,10 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
   },
   "ExtraData": {}
  }
-]SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData FROM Artifact.Windows.Forensics.Lnk(TargetGlob=srcDir + "/artifacts/testdata/files/password.txt.lnk")[
+]
+
+Query: SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData FROM Artifact.Windows.Forensics.Lnk(TargetGlob=srcDir + "/artifacts/testdata/files/password.txt.lnk")
+Output: [
  {
   "ShellLinkHeader": {
    "Headersize": 76,
@@ -219,7 +227,12 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
    ]
   }
  }
-]SELECT * FROM foreach(row=parse_binary( accessor="data", filename=unhex(string=Data), profile=Profile, struct="MRU").Items)[
+]
+
+# Check that binary parser arrays and foreach interact correctly
+# (array implement the iterator protocol properly).
+Query: SELECT * FROM foreach(row=parse_binary( accessor="data", filename=unhex(string=Data), profile=Profile, struct="MRU").Items)
+Output: [
  {
   "_value": 3
  },
@@ -229,7 +242,11 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
  {
   "_value": 5
  }
-]SELECT * FROM flatten(query={ SELECT 1 AS Foo, parse_binary(accessor="data", filename=unhex(string=Data),profile=Profile, struct="MRU").Items AS Items FROM scope() })[
+]
+
+# Check that binary parser and flatten work properly
+Query: SELECT * FROM flatten(query={ SELECT 1 AS Foo, parse_binary(accessor="data", filename=unhex(string=Data),profile=Profile, struct="MRU").Items AS Items FROM scope() })
+Output: [
  {
   "Foo": 1,
   "Items": 3
@@ -243,3 +260,4 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
   "Items": 5
  }
 ]
+

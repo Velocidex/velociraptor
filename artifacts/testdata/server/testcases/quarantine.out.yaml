@@ -1,4 +1,12 @@
-LET _ <= SELECT mock(plugin='execve', results=[ dict(Stderr="command not found", Stdout="", ReturnCode=1)]) FROM scope()[]SELECT Result FROM Artifact.Linux.Remediation.Quarantine()[]SELECT *, mock_replay(plugin='execve') FROM test_read_logs() WHERE Log =~ "ERROR:nftables is not installed" AND NOT Log =~ "SELECT"[
+# Check that nothing happens when nftables is not installed
+Query: LET _ <= SELECT mock(plugin='execve', results=[ dict(Stderr="command not found", Stdout="", ReturnCode=1)]) FROM scope()
+Output: []
+
+Query: SELECT Result FROM Artifact.Linux.Remediation.Quarantine()
+Output: []
+
+Query: SELECT *, mock_replay(plugin='execve') FROM test_read_logs() WHERE Log =~ "ERROR:nftables is not installed" AND NOT Log =~ "SELECT"
+Output: [
  {
   "Log": "Velociraptor: ERROR:nftables is not installed - quarantine not supported\n",
   "mock_replay(plugin='execve')": [
@@ -11,7 +19,15 @@ LET _ <= SELECT mock(plugin='execve', results=[ dict(Stderr="command not found",
    }
   ]
  }
-]LET _ <= mock_clear()[]LET _ <= SELECT mock(plugin='execve', results=[
+]
+
+Query: LET _ <= mock_clear()
+Output: []
+
+# Now simulate failure to connect to the server. This should go
+# through the process then uninstall the table due to connectivity
+# check errors.
+Query: LET _ <= SELECT mock(plugin='execve', results=[
     dict(Stdout="nftables ran OK", Stderr="", ReturnCode=0)]),
  mock(plugin="http_client", results=[
    // First call will be to server
@@ -22,7 +38,11 @@ LET _ <= SELECT mock(plugin='execve', results=[ dict(Stderr="command not found",
 
  ]), log(message="Failing to connect to the server")
 FROM scope()
-[]SELECT Result FROM Artifact.Linux.Remediation.Quarantine()[
+
+Output: []
+
+Query: SELECT Result FROM Artifact.Linux.Remediation.Quarantine()
+Output: [
  {
   "Result": "vrr_quarantine_table table removed."
  },
@@ -62,7 +82,10 @@ FROM scope()
  {
   "Result": "Running [/usr/sbin/nft delete table inet vrr_quarantine_table]: nftables ran OK, Returned 0 vrr_quarantine_table failed connection test. Removing quarantine table."
  }
-]SELECT mock_replay(plugin='execve'), mock_replay(plugin='http_client') FROM scope()[
+]
+
+Query: SELECT mock_replay(plugin='execve'), mock_replay(plugin='http_client') FROM scope()
+Output: [
  {
   "mock_replay(plugin='execve')": [
    {
@@ -306,18 +329,31 @@ FROM scope()
    }
   ]
  }
-]SELECT * FROM test_read_logs() WHERE Log =~ "failed connection test. Removing quarantine table." AND NOT Log =~ "SELECT"[
+]
+
+Query: SELECT * FROM test_read_logs() WHERE Log =~ "failed connection test. Removing quarantine table." AND NOT Log =~ "SELECT"
+Output: [
  {
   "Log": "Velociraptor: ERROR:vrr_quarantine_table failed connection test. Removing quarantine table.\n"
  }
-]LET _ <= mock_clear()[]LET _ <= SELECT mock(plugin='execve', results=[
+]
+
+Query: LET _ <= mock_clear()
+Output: []
+
+# Now we go through with the process. Success!
+Query: LET _ <= SELECT mock(plugin='execve', results=[
     dict(Stdout="nftables ran OK", Stderr="", ReturnCode=0)]),
  mock(plugin="http_client", results=[
    ( dict(Response=200, Url="http://server success/"), ),
    ( dict(Response=500, Url="http://forbidden failure/"), )
  ]), log(message="Success to connect to the server, failing to connect to the forbidden - all good!")
 FROM scope()
-[]SELECT Result FROM Artifact.Linux.Remediation.Quarantine()[
+
+Output: []
+
+Query: SELECT Result FROM Artifact.Linux.Remediation.Quarantine()
+Output: [
  {
   "Result": "vrr_quarantine_table table removed."
  },
@@ -360,7 +396,10 @@ FROM scope()
  {
   "Result": "vrr_quarantine_table forbidden connection test successful."
  }
-]SELECT mock_replay(plugin='execve'), mock_replay(plugin='http_client') FROM scope()[
+]
+
+Query: SELECT mock_replay(plugin='execve'), mock_replay(plugin='http_client') FROM scope()
+Output: [
  {
   "mock_replay(plugin='execve')": [
    {
@@ -597,7 +636,21 @@ FROM scope()
    }
   ]
  }
-]SELECT * FROM test_read_logs() WHERE Log =~ "failed connection test. Removing quarantine table." AND NOT Log =~ "SELECT"[]LET _ <= mock_clear()[]LET _ <= SELECT mock(plugin='execve', results=[ dict(Stdout="nftables ran OK", Stderr="", ReturnCode=0)]), mock(plugin="http_client", results=[ ( dict(Response=200, Url="http://server successful/"), ), ( dict(Response=200, Url="http://forbidden success/"), ) ]), log(message="Success to connect to the server, success to connect to the forbidden - should tear down") FROM scope()[]SELECT Result FROM Artifact.Linux.Remediation.Quarantine()[
+]
+
+Query: SELECT * FROM test_read_logs() WHERE Log =~ "failed connection test. Removing quarantine table." AND NOT Log =~ "SELECT"
+Output: []
+
+Query: LET _ <= mock_clear()
+Output: []
+
+# Now test what happens if the forbidden connection is still
+# successful somehow. We need to tear down the connection.
+Query: LET _ <= SELECT mock(plugin='execve', results=[ dict(Stdout="nftables ran OK", Stderr="", ReturnCode=0)]), mock(plugin="http_client", results=[ ( dict(Response=200, Url="http://server successful/"), ), ( dict(Response=200, Url="http://forbidden success/"), ) ]), log(message="Success to connect to the server, success to connect to the forbidden - should tear down") FROM scope()
+Output: []
+
+Query: SELECT Result FROM Artifact.Linux.Remediation.Quarantine()
+Output: [
  {
   "Result": "vrr_quarantine_table table removed."
  },
@@ -640,7 +693,10 @@ FROM scope()
  {
   "Result": "Running [/usr/sbin/nft delete table inet vrr_quarantine_table]: nftables ran OK, Returned 0 vrr_quarantine_table failed forbidden connection test. Removing quarantine table."
  }
-]SELECT mock_replay(plugin='execve'), mock_replay(plugin='http_client') FROM scope()[
+]
+
+Query: SELECT mock_replay(plugin='execve'), mock_replay(plugin='http_client') FROM scope()
+Output: [
  {
   "mock_replay(plugin='execve')": [
    {
@@ -887,8 +943,12 @@ FROM scope()
    }
   ]
  }
-]SELECT * FROM test_read_logs() WHERE Log =~ "forbidden connection test - connection to https://www.google.com could be established. Removing quarantine table." AND NOT Log =~ "SELECT"[
+]
+
+Query: SELECT * FROM test_read_logs() WHERE Log =~ "forbidden connection test - connection to https://www.google.com could be established. Removing quarantine table." AND NOT Log =~ "SELECT"
+Output: [
  {
   "Log": "Velociraptor: ERROR:vrr_quarantine_table failed forbidden connection test - connection to https://www.google.com could be established. Removing quarantine table.\n"
  }
 ]
+

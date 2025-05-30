@@ -1,4 +1,8 @@
-LET X <= SELECT mock(plugin='execve', results={ SELECT Line AS Stdout FROM parse_lines(filename=ZypperMock, accessor="data") }) FROM scope()[]SELECT * FROM Artifact.Linux.SuSE.Packages()[
+Query: LET X <= SELECT mock(plugin='execve', results={ SELECT Line AS Stdout FROM parse_lines(filename=ZypperMock, accessor="data") }) FROM scope()
+Output: []
+
+Query: SELECT * FROM Artifact.Linux.SuSE.Packages()
+Output: [
  {
   "Package": "aaa_base",
   "Version": "84.87+git20180409.04c9dae-150300.10.3.1",
@@ -21,3 +25,4 @@ LET X <= SELECT mock(plugin='execve', results={ SELECT Line AS Stdout FROM parse
   "_Source": "Linux.SuSE.Packages"
  }
 ]
+
