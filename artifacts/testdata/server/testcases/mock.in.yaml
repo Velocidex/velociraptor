@@ -140,6 +140,61 @@ Parameters:
       }]
 
 Queries:
+  # Mocking a plugin can be done in two ways:
+
+  # 1. A list of dicts means that each dict is a row and all rows will
+  #    be emitted each time the plugin is called.
+  - LET _ <= mock(plugin='pslist', results=[
+       dict(Pid=12, Name='word.exe'),
+       dict(Pid=10, Name='notepad.exe'),
+    ])
+  - SELECT * FROM pslist()
+
+  # Identical output for repeated calls.
+  - SELECT * FROM pslist()
+
+  - LET _ <= mock_clear()
+
+  # 2. A list of lists of dicts means each list is a separate call of the plugin.
+  - LET _ <= mock(plugin='pslist', results=[
+     ( dict(Pid=10, Name='notepad.exe'), ),
+     ( dict(Pid=12, Name='word.exe'), ) ])
+
+  # First call should give notepad.exe
+  - SELECT * FROM pslist()
+
+  # Second call should give word.exe
+  - SELECT * FROM pslist()
+
+  - LET _ <= mock_clear()
+
+  # Mocking of an artifact can be done in two ways.
+  # 1. A list of dicts means that each dict is a row and all rows will
+  #    be emitted each time the plugin is called.
+  - LET _ <= mock(artifact=Artifact.Windows.System.Pslist, results=[
+       dict(Pid=12, Name='word.exe'),
+       dict(Pid=10, Name='notepad.exe'),
+    ])
+  - SELECT * FROM Artifact.Windows.System.Pslist()
+
+  # Identical output for repeated calls.
+  - SELECT * FROM Artifact.Windows.System.Pslist()
+
+  - LET _ <= mock_clear()
+
+  # 2. A list of lists of dicts means each list is a separate call of the plugin.
+  - LET _ <= mock(artifact=Artifact.Windows.System.Pslist, results=[
+     ( dict(Pid=10, Name='notepad.exe'), ),
+     ( dict(Pid=12, Name='word.exe'), ) ])
+
+  # First call should give notepad.exe
+  - SELECT * FROM Artifact.Windows.System.Pslist()
+
+  # Second call should give word.exe
+  - SELECT * FROM Artifact.Windows.System.Pslist()
+
+  - LET _ <= mock_clear()
+
   # Mock out the info plugin just for fun.
   - LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict(OS='windows', foo='baz')] ),
       mock(artifact=Artifact.Windows.Network.Netstat, results=parse_json_array(data=ArtifactNetstatMock)),
