@@ -2,4 +2,18 @@ LET URL <= url(parse="http://www.google.com/?q=Hello&lang=fr")[]SELECT url(schem
  {
   "url(scheme=\"http\", host=\"www.google.com\", query=dict(foo=\"bar\")).String": "http://www.google.com?foo=bar"
  }
-]LET NewQuery <= URL.Query + dict(lang="en")[]
+]LET NewQuery <= URL.Query + dict(lang="en")[]SELECT secret_define(type="HTTP Secrets", template=dict(url="")), secret_add(type="HTTP Secrets", name="Google", secret=dict(url="http://www.google.com/")), secret_modify(type="HTTP Secrets", name="Google", add_users="VelociraptorServer") FROM scope()[
+ {
+  "secret_define(type=\"HTTP Secrets\", template=dict(url=\"\"))": "HTTP Secrets",
+  "secret_add(type=\"HTTP Secrets\", name=\"Google\", secret=dict(url=\"http://www.google.com/\"))": "Google",
+  "secret_modify(type=\"HTTP Secrets\", name=\"Google\", add_users=\"VelociraptorServer\")": "Google"
+ }
+]SELECT Response FROM http_client(url="secret://Google")[
+ {
+  "Response": 200
+ }
+]SELECT Response FROM http_client(url=["http://localhost:232/sdfsd", "secret://Google"])[
+ {
+  "Response": 200
+ }
+]

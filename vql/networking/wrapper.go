@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -53,9 +54,33 @@ func (self httpClientWrapper) Do(req *http.Request) (*http.Response, error) {
 
 		case "file":
 			return self.doFile(req)
+
+		case "unix":
+			return self.doUnix(req)
 		}
 	}
 	return self.Client.Do(req)
+}
+
+// Handle Unix URLs. The client is already created and connected to
+// the socket file, but the req contains the Path that should be
+// retrieved from the socket using http.
+func (self httpClientWrapper) doUnix(req *http.Request) (*http.Response, error) {
+
+	// Make sure the principal is allowed to access files.
+	err := vql_subsystem.CheckFilesystemAccess(self.scope, "file")
+	if err != nil {
+		return nil, err
+	}
+
+	new_req := *req
+	new_req.URL = &url.URL{
+		Scheme: "http",
+		Host:   "unix", // Does not matter as transport is already established in the client.
+		Path:   req.URL.Path,
+	}
+
+	return self.Client.Do(&new_req)
 }
 
 // Use the file accessor to access file urls.

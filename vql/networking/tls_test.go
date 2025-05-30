@@ -19,12 +19,17 @@ func testHTTPConnection(
 	config_obj *config_proto.ClientConfig, url string) (
 	HTTPClient, []byte, error) {
 
+	url_obj, err := parseURL(url)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
-	client, err := GetHttpClient(ctx, config_obj, scope, &HttpPluginRequest{
-		Url:    url,
+	client, _, err := GetHttpClient(ctx, config_obj, scope, &HttpPluginRequest{
+		Url:    []string{url},
 		Method: "GET",
-	})
+	}, url_obj)
 	if err != nil {
 		return client, nil, err
 	}
