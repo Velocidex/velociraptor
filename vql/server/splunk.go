@@ -315,30 +315,20 @@ func mergeSecretSplunk(ctx context.Context, scope vfilter.Scope, arg *_SplunkPlu
 
 	principal := vql_subsystem.GetPrincipal(scope)
 
-	secret_record, err := secrets_service.GetSecret(ctx, principal,
+	s, err := secrets_service.GetSecret(ctx, principal,
 		constants.SPLUNK_CREDS, arg.Secret)
 	if err != nil {
 		return err
 	}
 
-	get := func(field string) string {
-		return vql_subsystem.GetStringFromRow(
-			scope, secret_record.Data, field)
-	}
-
-	get_bool := func(field string) bool {
-		return vql_subsystem.GetBoolFromString(vql_subsystem.GetStringFromRow(
-			scope, secret_record.Data, field))
-	}
-
-	arg.URL = get("url")
-	arg.Token = get("token")
-	arg.Index = get("index")
-	arg.Source = get("source")
-	arg.RootCerts = get("root_ca")
-	arg.Hostname = get("hostname")
-	arg.HostnameField = get("hostname_field")
-	arg.SkipVerify = get_bool("skip_verify")
+	s.GetString("url", &arg.URL)
+	s.GetString("token", &arg.Token)
+	s.GetString("index", &arg.Index)
+	s.GetString("source", &arg.Source)
+	s.GetString("root_ca", &arg.RootCerts)
+	s.GetString("hostname", &arg.Hostname)
+	s.GetString("hostname_field", &arg.HostnameField)
+	s.GetBool("skip_verify", &arg.SkipVerify)
 
 	return nil
 }

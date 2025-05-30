@@ -296,24 +296,19 @@ func mergeSecret(ctx context.Context, scope vfilter.Scope, arg *S3UploadArgs) er
 
 	principal := vql_subsystem.GetPrincipal(scope)
 
-	secret_record, err := secrets_service.GetSecret(ctx, principal,
+	s, err := secrets_service.GetSecret(ctx, principal,
 		constants.AWS_S3_CREDS, arg.Secret)
 	if err != nil {
 		return err
 	}
 
-	get := func(field string) string {
-		return vql_subsystem.GetStringFromRow(
-			scope, secret_record.Data, field)
-	}
-
-	arg.Region = get("region")
-	arg.CredentialsKey = get("credentials_key")
-	arg.CredentialsSecret = get("credentials_secret")
-	arg.CredentialsToken = get("credentials_token")
-	arg.Endpoint = get("endpoint")
-	arg.ServerSideEncryption = get("serverside_encryption")
-	arg.KmsEncryptionKey = get("kms_encryption_key")
+	s.GetString("region", &arg.Region)
+	s.GetString("credentials_key", &arg.CredentialsKey)
+	s.GetString("credentials_secret", &arg.CredentialsSecret)
+	s.GetString("credentials_token", &arg.CredentialsToken)
+	s.GetString("endpoint", &arg.Endpoint)
+	s.GetString("serverside_encryption", &arg.ServerSideEncryption)
+	s.GetString("kms_encryption_key", &arg.KmsEncryptionKey)
 
 	return nil
 }
