@@ -24,3 +24,16 @@ Queries:
 #- SELECT parse_json(data=Content).data
 #  FROM http_client(url="https://httpbin.org/post",
 #       params=NewQuery, method="POST")
+
+# Test Secrets
+- SELECT secret_define(type="HTTP Secrets", template=dict(url="")),
+         secret_add(type="HTTP Secrets", name="Google",
+           secret=dict(url="http://www.google.com/")),
+         secret_modify(type="HTTP Secrets", name="Google", add_users="VelociraptorServer")
+  FROM scope()
+
+# A 200 response indicates the secret was converted to a URL and fetched.
+- SELECT Response FROM http_client(url="secret://Google")
+
+# Test multiple URLs: First URL will fail but next one will work.
+- SELECT Response FROM http_client(url=["http://localhost:232/sdfsd", "secret://Google"])

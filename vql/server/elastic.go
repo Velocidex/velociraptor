@@ -384,54 +384,40 @@ func mergeSecretElastic(ctx context.Context, scope vfilter.Scope, arg *_ElasticP
 
 	principal := vql_subsystem.GetPrincipal(scope)
 
-	secret_record, err := secrets_service.GetSecret(ctx, principal,
+	s, err := secrets_service.GetSecret(ctx, principal,
 		constants.ELASTIC_CREDS, arg.Secret)
 	if err != nil {
 		return err
 	}
 
-	get := func(field string) string {
-		return vql_subsystem.GetStringFromRow(
-			scope, secret_record.Data, field)
-	}
-
-	getIfUnset := func(field string, arg_value string) string {
-		if arg_value != "" {
-			return arg_value
-		}
-		return get(field)
-	}
-
-	get_bool := func(field string) bool {
-		return vql_subsystem.GetBoolFromString(vql_subsystem.GetStringFromRow(
-			scope, secret_record.Data, field))
-	}
-
-	addresses := vql_subsystem.GetStringFromRow(
-		scope, secret_record.Data, "addresses")
 	arg.Addresses = nil
-	for _, line := range strings.Split(addresses, "\n") {
-		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "#") {
-			continue
-		}
-		arg.Addresses = append(arg.Addresses, line)
-	}
+	s.GetStrings("addresses", &arg.Addresses)
 
 	if arg.Addresses == nil {
 		return errors.New("No addresses present in elastic secret!")
 	}
 
-	arg.Index = getIfUnset("index", arg.Index)
-	arg.Type = getIfUnset("type", arg.Type)
-	arg.Username = get("username")
-	arg.Password = get("password")
-	arg.CloudID = get("cloud_id")
-	arg.APIKey = get("api_key")
-	arg.PipeLine = getIfUnset("pipeline", arg.PipeLine)
-	arg.SkipVerify = get_bool("skip_verify")
-	arg.RootCerts = get("root_ca")
-	arg.Action = getIfUnset("action", arg.PipeLine)
+	// Allow the user to override the index
+	if arg.Index == "" {
+		s.GetString("index", &arg.Index)
+	}
+
+	if arg.Type == "" {
+		s.GetString("type", &arg.Type)
+	}
+
+	s.GetString("username", &arg.Username)
+	s.GetString("password", &arg.Password)
+	s.GetString("cloud_id", &arg.CloudID)
+	s.GetString("api_key", &arg.APIKey)
+
+	if arg.PipeLine != "" {
+		s.GetString("pipeline", &arg.PipeLine)
+	}
+
+	s.GetBool("skip_verify", &arg.SkipVerify)
+	s.GetString("root_ca", &arg.RootCerts)
+	s.GetString("action", &arg.Action)
 
 	return nil
 }

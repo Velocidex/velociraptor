@@ -56,7 +56,7 @@ func (self EBPFEventPlugin) Call(
 		arg := &EBPFEventPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("parse_evtx: %s", err.Error())
+			scope.Log("watch_ebpf: %s", err.Error())
 			return
 		}
 
@@ -65,7 +65,7 @@ func (self EBPFEventPlugin) Call(
 		for _, event_name := range arg.EventNames {
 			desc, pres := ebpf.DescByEventName(event_name)
 			if !pres {
-				scope.Error("parse_evtx: invalid event name %v", event_name)
+				scope.Error("watch_ebpf: invalid event name %v", event_name)
 				continue
 			}
 			id, pres := desc.GetInt64("Id")
@@ -75,7 +75,7 @@ func (self EBPFEventPlugin) Call(
 		}
 
 		if len(selected_events) == 0 {
-			scope.Error("parse_evtx: no events to watch")
+			scope.Error("watch_ebpf: no events to watch")
 			return
 		}
 
@@ -95,7 +95,7 @@ func (self EBPFEventPlugin) Call(
 			gEbpfManager, err = ebpf.NewEBPFManager(
 				context.Background(), config, logger)
 			if err != nil {
-				scope.Log("parse_evtx: %v", err)
+				scope.Log("watch_ebpf: %v", err)
 				return
 			}
 

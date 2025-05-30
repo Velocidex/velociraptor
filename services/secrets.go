@@ -56,10 +56,15 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/Velocidex/yaml/v2"
+
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -106,4 +111,53 @@ func GetSecretsService(config_obj *config_proto.Config) (SecretsService, error) 
 		return nil, err
 	}
 	return org_manager.Services(config_obj.OrgId).SecretsService()
+}
+
+// Utilities to extract secrets
+func (self *Secret) GetString(field string, target *string) {
+	res, pres := self.Data.GetString(field)
+	if pres && res != "" {
+		*target = res
+	}
+}
+
+func (self *Secret) GetStrings(field string, target *[]string) {
+	res, pres := self.Data.GetString(field)
+	if pres && res != "" {
+		*target = []string{}
+		for _, line := range strings.Split(res, "\n") {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "#") {
+				continue
+			}
+			*target = append(*target, line)
+		}
+	}
+}
+
+func (self *Secret) GetBool(field string, target *bool) {
+	res, pres := self.Data.GetString(field)
+	if pres && res != "" {
+		*target = vql_subsystem.GetBoolFromString(res)
+	}
+}
+
+// We expect Dict parameters to be a YAML formatted object.
+func (self *Secret) GetDict(field string, target *ordereddict.Dict) error {
+	res, pres := self.Data.GetString(field)
+	if pres && res != "" {
+		tmp := make(map[string]string)
+		err := yaml.Unmarshal([]byte(res), tmp)
+		if err != nil {
+			return fmt.Errorf("Secret: parsing field %v invalid yaml: %v",
+				field, err)
+		}
+		for k, v := range tmp {
+			if v != "" {
+				target.Set(k, v)
+			}
+		}
+	}
+
+	return nil
 }
