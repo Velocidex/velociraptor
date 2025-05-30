@@ -1,4 +1,9 @@
-LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', ]), clear=TRUE)[]SELECT * FROM Artifact.Windows.NTFS.MFT( MFTDrive='''\\.\C:''', FileRegex='just_a_file\\.txt')[
+Query: LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', ]), clear=TRUE)
+Output: []
+
+# Test MFT output
+Query: SELECT * FROM Artifact.Windows.NTFS.MFT( MFTDrive='''\\.\C:''', FileRegex='just_a_file\\.txt')
+Output: [
  {
   "EntryNumber": 49,
   "InUse": true,
@@ -29,7 +34,11 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "FileNameTypes": "POSIX",
   "_Source": "Windows.NTFS.MFT"
  }
-]SELECT * FROM Artifact.Windows.NTFS.MFT(MFTDrive='''\\.\C:''', FileRegex='\\.txt',DateBefore='2018-12-31')[
+]
+
+# Test time contraints
+Query: SELECT * FROM Artifact.Windows.NTFS.MFT(MFTDrive='''\\.\C:''', FileRegex='\\.txt',DateBefore='2018-12-31')
+Output: [
  {
   "EntryNumber": 46,
   "InUse": true,
@@ -90,7 +99,10 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "FileNameTypes": "POSIX",
   "_Source": "Windows.NTFS.MFT"
  }
-]SELECT * FROM Artifact.Windows.NTFS.MFT(MFTDrive='''\\.\C:''', FileRegex='\\.txt',DateAfter='2021-07-01')[
+]
+
+Query: SELECT * FROM Artifact.Windows.NTFS.MFT(MFTDrive='''\\.\C:''', FileRegex='\\.txt',DateAfter='2021-07-01')
+Output: [
  {
   "EntryNumber": 37,
   "InUse": true,
@@ -151,7 +163,10 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "FileNameTypes": "POSIX",
   "_Source": "Windows.NTFS.MFT"
  }
-]SELECT * FROM Artifact.Windows.NTFS.MFT(MFTDrive='''\\.\C:''', FileRegex='\\.txt',DateAfter='2021-07-01', DateBefore='2022-02-01',AllNtfs='Y')[
+]
+
+Query: SELECT * FROM Artifact.Windows.NTFS.MFT(MFTDrive='''\\.\C:''', FileRegex='\\.txt',DateAfter='2021-07-01', DateBefore='2022-02-01',AllNtfs='Y')
+Output: [
  {
   "EntryNumber": 49,
   "InUse": true,
@@ -263,3 +278,4 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "_Source": "Windows.NTFS.MFT"
  }
 ]
+

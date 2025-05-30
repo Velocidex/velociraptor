@@ -1,4 +1,9 @@
-LET X <= SELECT mock(plugin="glob", results=[dict(OSPath='''\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\SystemCertificates\ROOT\Certificates\18f7c1fcc3090203fd5baa2f861a754976c8dd25\Blob''', ModTime=timestamp(epoch="2018-09-15T07:36:04.5303712Z"), Data=dict(value=read_file(filename=srcDir+'/artifacts/testdata/files/root_store_reg.bin')))]) FROM scope()[]SELECT * FROM Artifact.Windows.System.RootCAStore() LIMIT 1[
+# Mock out a single root ca with the binary blob that normally resides there.
+Query: LET X <= SELECT mock(plugin="glob", results=[dict(OSPath='''\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\SystemCertificates\ROOT\Certificates\18f7c1fcc3090203fd5baa2f861a754976c8dd25\Blob''', ModTime=timestamp(epoch="2018-09-15T07:36:04.5303712Z"), Data=dict(value=read_file(filename=srcDir+'/artifacts/testdata/files/root_store_reg.bin')))]) FROM scope()
+Output: []
+
+Query: SELECT * FROM Artifact.Windows.System.RootCAStore() LIMIT 1
+Output: [
  {
   "_RegistryValue": "\\HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\SystemCertificates\\ROOT\\Certificates\\18f7c1fcc3090203fd5baa2f861a754976c8dd25\\Blob",
   "ModTime": "2018-09-15T07:36:04.5303712Z",
@@ -16,21 +21,22 @@ LET X <= SELECT mock(plugin="glob", results=[dict(OSPath='''\HKEY_LOCAL_MACHINE\
   },
   "_Source": "Windows.System.RootCAStore"
  }
-]SELECT crypto_rc4(string=crypto_rc4(string='this is my plain text', key='yolo'), key='yolo') FROM scope()[
+]
+
+# Test cyrpto_rc4
+Query: SELECT crypto_rc4(string=crypto_rc4(string='this is my plain text', key='yolo'), key='yolo') FROM scope()
+Output: [
  {
   "crypto_rc4(string=crypto_rc4(string='this is my plain text', key='yolo'), key='yolo')": "this is my plain text"
  }
-]LET tmp <= tempfile()[]SELECT * FROM write_crypto_file(filename=tmp, query={ SELECT _value AS X FROM range(end=3) })[
- {
-  "X": 0
- },
- {
-  "X": 1
- },
- {
-  "X": 2
- }
-]SELECT * FROM read_crypto_file(filename=tmp)[
+]
+
+# Test writing encrypted local storage
+Query: LET tmp <= tempfile()
+Output: []
+
+Query: SELECT * FROM write_crypto_file(filename=tmp, query={ SELECT _value AS X FROM range(end=3) })
+Output: [
  {
   "X": 0
  },
@@ -41,3 +47,18 @@ LET X <= SELECT mock(plugin="glob", results=[dict(OSPath='''\HKEY_LOCAL_MACHINE\
   "X": 2
  }
 ]
+
+# Now read the data again
+Query: SELECT * FROM read_crypto_file(filename=tmp)
+Output: [
+ {
+  "X": 0
+ },
+ {
+  "X": 1
+ },
+ {
+  "X": 2
+ }
+]
+

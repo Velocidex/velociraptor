@@ -1,4 +1,5 @@
-SELECT * FROM items(item=[1,2])[
+Query: SELECT * FROM items(item=[1,2])
+Output: [
  {
   "_key": 0,
   "_value": 1
@@ -7,7 +8,10 @@ SELECT * FROM items(item=[1,2])[
   "_key": 1,
   "_value": 2
  }
-]SELECT * FROM items(item=dict(X=1, Y=2))[
+]
+
+Query: SELECT * FROM items(item=dict(X=1, Y=2))
+Output: [
  {
   "_key": "X",
   "_value": 1
@@ -16,7 +20,14 @@ SELECT * FROM items(item=[1,2])[
   "_key": "Y",
   "_value": 2
  }
-]LET ItemQuery = SELECT _value as Item FROM range(start=0, end=2, step=1)[]SELECT * FROM items(item=ItemQuery)[
+]
+
+# Items works on stored queries
+Query: LET ItemQuery = SELECT _value as Item FROM range(start=0, end=2, step=1)
+Output: []
+
+Query: SELECT * FROM items(item=ItemQuery)
+Output: [
  {
   "_key": 0,
   "_value": {
@@ -29,11 +40,19 @@ SELECT * FROM items(item=[1,2])[
    "Item": 1
   }
  }
-]SELECT * FROM switch( zcase={ SELECT "First" FROM scope() }, acase={ SELECT "Second" FROM scope() })[
+]
+
+# Check that switch() evaluates clauses by definition order
+Query: SELECT * FROM switch( zcase={ SELECT "First" FROM scope() }, acase={ SELECT "Second" FROM scope() })
+Output: [
  {
   "\"First\"": "First"
  }
-]SELECT * FROM batch(query={ SELECT _value FROM range(start=0, end=10, step=1) }, batch_size=3)[
+]
+
+# Test the batch plugin: Batch with constant size
+Query: SELECT * FROM batch(query={ SELECT _value FROM range(start=0, end=10, step=1) }, batch_size=3)
+Output: [
  {
   "rows": [
    {
@@ -80,7 +99,11 @@ SELECT * FROM items(item=[1,2])[
    }
   ]
  }
-]SELECT * FROM batch(query={ SELECT format(format="Step %v", args=_value) AS Item FROM range(start=0, end=10, step=1) }, batch_func="x=>x.Item =~ 'Step [25]'")[
+]
+
+# Batch based on a function.
+Query: SELECT * FROM batch(query={ SELECT format(format="Step %v", args=_value) AS Item FROM range(start=0, end=10, step=1) }, batch_func="x=>x.Item =~ 'Step [25]'")
+Output: [
  {
   "rows": [
    {
@@ -123,7 +146,14 @@ SELECT * FROM items(item=[1,2])[
    }
   ]
  }
-]LET run_fast_slow_query = SELECT if(condition=_value <= 5, then=sleep(ms=100), else=sleep(ms=900)) AS waiting, if(condition=_value <= 5, then='fast query', else='slow query') AS query_type FROM range(start=1, end=7)[]SELECT rows.query_type AS results FROM batch(query=run_fast_slow_query, batch_size=3, timeout=1)[
+]
+
+# Test timeout in batch
+Query: LET run_fast_slow_query = SELECT if(condition=_value <= 5, then=sleep(ms=100), else=sleep(ms=900)) AS waiting, if(condition=_value <= 5, then='fast query', else='slow query') AS query_type FROM range(start=1, end=7)
+Output: []
+
+Query: SELECT rows.query_type AS results FROM batch(query=run_fast_slow_query, batch_size=3, timeout=1)
+Output: [
  {
   "results": [
    "fast query",
@@ -143,3 +173,4 @@ SELECT * FROM items(item=[1,2])[
   ]
  }
 ]
+

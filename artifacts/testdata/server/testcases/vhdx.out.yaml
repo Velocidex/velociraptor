@@ -1,4 +1,4 @@
-SELECT OSPath.Path AS OSPath, Size, Mode.String
+Query: SELECT OSPath.Path AS OSPath, Size, Mode.String
 FROM glob(
    globs="*", accessor="raw_ntfs", root=pathspec(
       Path="/",
@@ -14,7 +14,8 @@ FROM glob(
              -- For this test we compress the image in a zip file to save space.
              Path="test.vhdx",
              DelegatePath=srcDir + "/artifacts/testdata/files/test.vhdx.zip")))))
-[
+
+Output: [
  {
   "OSPath": "$AttrDef",
   "Size": 2560,
@@ -111,3 +112,4 @@ FROM glob(
   "Mode.String": "drwxr-xr-x"
  }
 ]
+

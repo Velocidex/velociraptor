@@ -1,4 +1,17 @@
-LET X = SELECT * FROM fifo(query={SELECT * FROM range(end=10)}, max_rows=2)[]SELECT * FROM X[]LET _ <= sleep(ms=100)[]SELECT * FROM X[
+Query: LET X = SELECT * FROM fifo(query={SELECT * FROM range(end=10)}, max_rows=2)
+Output: []
+
+# Start the fifo query
+Query: SELECT * FROM X
+Output: []
+
+# Wait a bit for events to start flowing into the fifo.
+Query: LET _ <= sleep(ms=100)
+Output: []
+
+# Should return the last 2 events.
+Query: SELECT * FROM X
+Output: [
  {
   "_value": 8
  },
@@ -6,3 +19,4 @@ LET X = SELECT * FROM fifo(query={SELECT * FROM range(end=10)}, max_rows=2)[]SEL
   "_value": 9
  }
 ]
+

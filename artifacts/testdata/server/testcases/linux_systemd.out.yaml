@@ -1,4 +1,8 @@
-LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir), copy=["zip", "file"], clear=TRUE)[]SELECT * FROM Artifact.Linux.Forensics.Journal( JournalGlob='/system.journal')[
+Query: LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir), copy=["zip", "file"], clear=TRUE)
+Output: []
+
+Query: SELECT * FROM Artifact.Linux.Forensics.Journal( JournalGlob='/system.journal')
+Output: [
  {
   "System": {
    "Seq": 19161,
@@ -36,7 +40,11 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir), copy=["zip"
   },
   "_Source": "Linux.Forensics.Journal"
  }
-]SELECT * FROM Artifact.Linux.Forensics.Journal( JournalGlob='/compact.journal') LIMIT 10[
+]
+
+# Check that we also support compact style files
+Query: SELECT * FROM Artifact.Linux.Forensics.Journal( JournalGlob='/compact.journal') LIMIT 10
+Output: [
  {
   "System": {
    "Seq": 4837,
@@ -480,14 +488,22 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir), copy=["zip"
   },
   "_Source": "Linux.Forensics.Journal"
  }
-]SELECT System.Timestamp FROM Artifact.Linux.Forensics.Journal( DateAfter='2024-07-19T07:52:34.531807Z', DateBefore='2024-07-19T07:52:48.259133Z', JournalGlob='/compact.journal')[
+]
+
+# Check for time boxing
+Query: SELECT System.Timestamp FROM Artifact.Linux.Forensics.Journal( DateAfter='2024-07-19T07:52:34.531807Z', DateBefore='2024-07-19T07:52:48.259133Z', JournalGlob='/compact.journal')
+Output: [
  {
   "System.Timestamp": "2024-07-19T07:52:34.531807Z"
  },
  {
   "System.Timestamp": "2024-07-19T07:52:48.259133Z"
  }
-]SELECT * FROM parse_journald(filename='/system.journal') LIMIT 2[
+]
+
+# Test native parsing with the parse_journald() plugin
+Query: SELECT * FROM parse_journald(filename='/system.journal') LIMIT 2
+Output: [
  {
   "System": {
    "Seq": 19161,
@@ -524,7 +540,10 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir), copy=["zip"
    "INVOCATION_ID": "b1659c39e4e94e9ca8fdb5ba9f9f6cb3"
   }
  }
-]SELECT * FROM parse_journald(filename='/compact.journal') LIMIT 2[
+]
+
+Query: SELECT * FROM parse_journald(filename='/compact.journal') LIMIT 2
+Output: [
  {
   "System": {
    "Seq": 4837,
@@ -608,3 +627,4 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir), copy=["zip"
   }
  }
 ]
+

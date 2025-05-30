@@ -1,4 +1,6 @@
-SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5e52adf0a337a9', flow_id='F.BN2HJCPOF5U7U')[
+# Check the extension on file_store()
+Query: SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5e52adf0a337a9', flow_id='F.BN2HJCPOF5U7U')
+Output: [
  {
   "Timestamp": 1573198259,
   "started": "2019-11-08 07:30:59.920512962 +0000 UTC",
@@ -44,7 +46,11 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
   },
   "basename(path=file_store(path=vfs_path))": "old_style.zip"
  }
-]SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', env=dict(Device ='C:', VSSAnalysisAge=2, KapeTriage='Y')).request AS Flow FROM scope()[
+]
+
+# Schedule an artifact collection
+Query: SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', env=dict(Device ='C:', VSSAnalysisAge=2, KapeTriage='Y')).request AS Flow FROM scope()
+Output: [
  {
   "Flow": {
    "creator": "VelociraptorServer",
@@ -97,7 +103,11 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
    "ops_per_second": 0
   }
  }
-]SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', spec=dict(`Windows.KapeFiles.Targets`=dict( Device ='C:', VSSAnalysisAge=2, KapeTriage='Y'))).request AS Flow FROM scope()[
+]
+
+# Schedule using a new style spec decleration.
+Query: SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', spec=dict(`Windows.KapeFiles.Targets`=dict( Device ='C:', VSSAnalysisAge=2, KapeTriage='Y'))).request AS Flow FROM scope()
+Output: [
  {
   "Flow": {
    "creator": "VelociraptorServer",
@@ -150,18 +160,30 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
    "ops_per_second": 0
   }
  }
-]SELECT name FROM artifact_definitions(deps=TRUE, names='Windows.KapeFiles.Targets') ORDER BY name[
+]
+
+# Check that artifact_definitions work
+Query: SELECT name FROM artifact_definitions(deps=TRUE, names='Windows.KapeFiles.Targets') ORDER BY name
+Output: [
  {
   "name": "Generic.Collectors.File"
  },
  {
   "name": "Windows.KapeFiles.Targets"
  }
-]SELECT name FROM artifact_definitions() WHERE name =~ 'Windows.KapeFiles.Targets'[
+]
+
+# Make sure we can return all names
+Query: SELECT name FROM artifact_definitions() WHERE name =~ 'Windows.KapeFiles.Targets'
+Output: [
  {
   "name": "Windows.KapeFiles.Targets"
  }
-]SELECT OSPath FROM glob( globs="/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/**", accessor="fs")[
+]
+
+# Test the "fs" accessor
+Query: SELECT OSPath FROM glob( globs="/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/**", accessor="fs")
+Output: [
  {
   "OSPath": "fs:/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/file"
  },
@@ -171,25 +193,43 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
  {
   "OSPath": "fs:/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/file/C:/1.zip"
  }
-]SELECT artifact_set(definition=_value).name FROM items(item={ SELECT * FROM artifact_definitions(names="Generic.Client.Info") WHERE name =~ "Generic.Client.Info" })[
+]
+
+# Test that we can not overwrite built in artifacts
+Query: SELECT artifact_set(definition=_value).name FROM items(item={ SELECT * FROM artifact_definitions(names="Generic.Client.Info") WHERE name =~ "Generic.Client.Info" })
+Output: [
  {
   "artifact_set(definition=_value).name": null
  }
-]SELECT * FROM test_read_logs() WHERE Log =~ "Unable to override built in artifact" LIMIT 1[
+]
+
+Query: SELECT * FROM test_read_logs() WHERE Log =~ "Unable to override built in artifact" LIMIT 1
+Output: [
  {
   "Log": "Velociraptor: artifact_set: Unable to override built in artifact Generic.Client.Info\n"
  }
-]SELECT artifact_set(definition=patch( item=_value, merge=dict(name="Custom.Generic.Client.Info"))).name FROM items(item={ SELECT * FROM artifact_definitions(names="Generic.Client.Info") WHERE name =~ "Generic.Client.Info" })[
+]
+
+# Should be able to set a custom copy of it
+Query: SELECT artifact_set(definition=patch( item=_value, merge=dict(name="Custom.Generic.Client.Info"))).name FROM items(item={ SELECT * FROM artifact_definitions(names="Generic.Client.Info") WHERE name =~ "Generic.Client.Info" })
+Output: [
  {
   "artifact_set(definition=patch(item=_value, merge=dict(name=\"Custom.Generic.Client.Info\"))).name": "Custom.Generic.Client.Info"
  }
-]SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", hidden=TRUE) FROM scope()[
+]
+
+# Set artifact metadata
+Query: SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", hidden=TRUE) FROM scope()
+Output: [
  {
   "artifact_set_metadata(name=\"Custom.Generic.Client.Info\", hidden=TRUE)": {
    "hidden": true
   }
  }
-]SELECT name, metadata FROM artifact_definitions(names="Custom.Generic.Client.Info")[
+]
+
+Query: SELECT name, metadata FROM artifact_definitions(names="Custom.Generic.Client.Info")
+Output: [
  {
   "name": "Custom.Generic.Client.Info",
   "metadata": {
@@ -198,3 +238,4 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
   }
  }
 ]
+

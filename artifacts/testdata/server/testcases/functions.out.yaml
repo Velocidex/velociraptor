@@ -1,17 +1,31 @@
-LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"), len(list=dict(foo=1, bar=2, baz=3)), len(list=rows) FROM scope()[
+Query: LET rows <= SELECT * FROM scope()
+Output: []
+
+# Test the len function.
+Query: SELECT len(list=["a", "b"]), len(list="hello"), len(list=dict(foo=1, bar=2, baz=3)), len(list=rows) FROM scope()
+Output: [
  {
   "len(list=[\"a\", \"b\"])": 2,
   "len(list=\"hello\")": 5,
   "len(list=dict(foo=1, bar=2, baz=3))": 3,
   "len(list=rows)": 1
  }
-]SELECT to_dict(item={ SELECT * FROM foreach(row=items(item=dict(X=1, Y=2, Z=3)), query={ SELECT _key, _value from scope() WHERE _value = 3 }) }) AS Filtered FROM scope()[
+]
+
+# Test dict filtering: should filter all keys except Z=3 and build up
+# again into a new dict
+Query: SELECT to_dict(item={ SELECT * FROM foreach(row=items(item=dict(X=1, Y=2, Z=3)), query={ SELECT _key, _value from scope() WHERE _value = 3 }) }) AS Filtered FROM scope()
+Output: [
  {
   "Filtered": {
    "Z": 3
   }
  }
-]SELECT dict(A=1, B=2) + dict(A=3, X=1) FROM scope()[
+]
+
+# Test dict addition
+Query: SELECT dict(A=1, B=2) + dict(A=3, X=1) FROM scope()
+Output: [
  {
   "dict(A=1, B=2) + dict(A=3, X=1)": {
    "A": 3,
@@ -19,44 +33,77 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
    "X": 1
   }
  }
-]LET Foo(X) = if(condition=log(message=format(format="I Ran with %v", args=X)), then=X + 5)[]SELECT cache(func=Foo(X=5), key=5), cache(func=Foo(X=10), key=5), cache(func=Foo(X=10), key=10) FROM scope()[
+]
+
+# Test cache functions (first 2 should be same value due to caching)
+Query: LET Foo(X) = if(condition=log(message=format(format="I Ran with %v", args=X)), then=X + 5)
+Output: []
+
+Query: SELECT cache(func=Foo(X=5), key=5), cache(func=Foo(X=10), key=5), cache(func=Foo(X=10), key=10) FROM scope()
+Output: [
  {
   "cache(func=Foo(X=5), key=5)": 10,
   "cache(func=Foo(X=10), key=5)": 10,
   "cache(func=Foo(X=10), key=10)": 15
  }
-]SELECT * FROM column_filter( query={ SELECT 1 AS A, 2 AS B, 3 AS AB, 4 AS AA FROM scope() }, include="A", exclude="B")[
+]
+
+# Test column_filter
+Query: SELECT * FROM column_filter( query={ SELECT 1 AS A, 2 AS B, 3 AS AB, 4 AS AA FROM scope() }, include="A", exclude="B")
+Output: [
  {
   "A": 1,
   "AA": 4
  }
-]SELECT xor(string='test@velociraptor',key='$'), xor(string='test@velociraptor',key='test'), xor(string=unhex(string='000100010002'), key=unhex(string='2e')) FROM scope()[
+]
+
+# Test Xor stanard, multi character, hex
+Query: SELECT xor(string='test@velociraptor',key='$'), xor(string='test@velociraptor',key='test'), xor(string=unhex(string='000100010002'), key=unhex(string='2e')) FROM scope()
+Output: [
  {
   "xor(string='test@velociraptor', key='$')": "PAWPdRAHKGMVETPKV",
   "xor(string='test@velociraptor', key='test')": "\u0000\u0000\u0000\u00004\u0013\u0016\u0018\u001b\u0006\u001a\u0006\u0015\u0015\u0007\u001b\u0006",
   "xor(string=unhex(string='000100010002'), key=unhex(string='2e'))": "././.,"
  }
-]LET Foo <= dict(A=1)[]SELECT set(item=Foo, field="B", value=2) FROM scope()[
+]
+
+# Test the set function - Add a field to a dict.
+Query: LET Foo <= dict(A=1)
+Output: []
+
+Query: SELECT set(item=Foo, field="B", value=2) FROM scope()
+Output: [
  {
   "set(item=Foo, field=\"B\", value=2)": {
    "A": 1,
    "B": 2
   }
  }
-]SELECT Foo FROM scope()[
+]
+
+Query: SELECT Foo FROM scope()
+Output: [
  {
   "Foo": {
    "A": 1,
    "B": 2
   }
  }
-]SELECT cidr_contains(ip="192.168.0.132", ranges="192.168.0.0/24"), cidr_contains(ip="191.168.0.132", ranges="192.168.0.0/24"), cidr_contains(ip="10.168.0.132", ranges=["192.168.0.0/24", "10.0.0.0/8"]) FROM scope()[
+]
+
+# Test cidr function
+Query: SELECT cidr_contains(ip="192.168.0.132", ranges="192.168.0.0/24"), cidr_contains(ip="191.168.0.132", ranges="192.168.0.0/24"), cidr_contains(ip="10.168.0.132", ranges=["192.168.0.0/24", "10.0.0.0/8"]) FROM scope()
+Output: [
  {
   "cidr_contains(ip=\"192.168.0.132\", ranges=\"192.168.0.0/24\")": true,
   "cidr_contains(ip=\"191.168.0.132\", ranges=\"192.168.0.0/24\")": false,
   "cidr_contains(ip=\"10.168.0.132\", ranges=[\"192.168.0.0/24\", \"10.0.0.0/8\"])": true
  }
-]SELECT commandline_split(command='''"C:\Program Files\Velociraptor\Velociraptor.exe" service run'''), commandline_split(command="/usr/bin/ls -l 'file with space.txt'", bash_style=TRUE) FROM scope()[
+]
+
+# Test commandline_split function
+Query: SELECT commandline_split(command='''"C:\Program Files\Velociraptor\Velociraptor.exe" service run'''), commandline_split(command="/usr/bin/ls -l 'file with space.txt'", bash_style=TRUE) FROM scope()
+Output: [
  {
   "commandline_split(command='''\"C:\\Program Files\\Velociraptor\\Velociraptor.exe\" service run''')": [
    "C:\\Program Files\\Velociraptor\\Velociraptor.exe",
@@ -69,39 +116,77 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
    "file with space.txt"
   ]
  }
-]SELECT regex_transform(source="Hello world", map=dict( `^Hello`="Goodbye", `world`="Space"), key="A") FROM scope()[
+]
+
+# Test regex_transform
+Query: SELECT regex_transform(source="Hello world", map=dict( `^Hello`="Goodbye", `world`="Space"), key="A") FROM scope()
+Output: [
  {
   "regex_transform(source=\"Hello world\", map=dict(`^Hello`=\"Goodbye\", `world`=\"Space\"), key=\"A\")": "Goodbye Space"
  }
-]SELECT entropy(string="Hello world") FROM scope()[
+]
+
+# Test entropy function
+Query: SELECT entropy(string="Hello world") FROM scope()
+Output: [
  {
   "entropy(string=\"Hello world\")": 2.84
  }
-]LET base64_shellcode = 'H4sICHEBVGMAA3RleHQudHh0AMtIzcnJVyjPL8pJ4QIALTsIrwwAAAA='[]SELECT gunzip(string=base64decode(string=base64_shellcode)) FROM scope()[
+]
+
+# Test gunzip function
+Query: LET base64_shellcode = 'H4sICHEBVGMAA3RleHQudHh0AMtIzcnJVyjPL8pJ4QIALTsIrwwAAAA='
+Output: []
+
+Query: SELECT gunzip(string=base64decode(string=base64_shellcode)) FROM scope()
+Output: [
  {
   "gunzip(string=base64decode(string=base64_shellcode))": "hello world\n"
  }
-]LET TestArray <= ("Hello", "World", "Goodbye", "Universe")[]SELECT all(items=TestArray, filter="x=>x=~'Hello|Uni|Wo|G'"), all(items=TestArray, filter="x=>x=~'Hello|Uni'"), all(items=["Hi", "There"], filter="x=>x =~ 'Hi'"), all(items=["Hi", "There"], filter="x=>x =~ 'Hi|There'") FROM scope()[
+]
+
+# Test the ALL function
+Query: LET TestArray <= ("Hello", "World", "Goodbye", "Universe")
+Output: []
+
+Query: SELECT all(items=TestArray, filter="x=>x=~'Hello|Uni|Wo|G'"), all(items=TestArray, filter="x=>x=~'Hello|Uni'"), all(items=["Hi", "There"], filter="x=>x =~ 'Hi'"), all(items=["Hi", "There"], filter="x=>x =~ 'Hi|There'") FROM scope()
+Output: [
  {
   "all(items=TestArray, filter=\"x=\u003ex=~'Hello|Uni|Wo|G'\")": true,
   "all(items=TestArray, filter=\"x=\u003ex=~'Hello|Uni'\")": false,
   "all(items=[\"Hi\", \"There\"], filter=\"x=\u003ex =~ 'Hi'\")": false,
   "all(items=[\"Hi\", \"There\"], filter=\"x=\u003ex =~ 'Hi|There'\")": true
  }
-]SELECT all(items=TestArray, regex='Hello|Uni|Wo|G'), all(items=TestArray, regex='Hello|Uni'), all(items=["Hi", "There"], regex='Hi'), all(items=["Hi", "There"], regex='Hi|There') FROM scope()[
+]
+
+# For convenience all() also supports just a bunch of regex
+Query: SELECT all(items=TestArray, regex='Hello|Uni|Wo|G'), all(items=TestArray, regex='Hello|Uni'), all(items=["Hi", "There"], regex='Hi'), all(items=["Hi", "There"], regex='Hi|There') FROM scope()
+Output: [
  {
   "all(items=TestArray, regex='Hello|Uni|Wo|G')": true,
   "all(items=TestArray, regex='Hello|Uni')": false,
   "all(items=[\"Hi\", \"There\"], regex='Hi')": false,
   "all(items=[\"Hi\", \"There\"], regex='Hi|There')": true
  }
-]SELECT all(items="Hi There", regex=['Hi', "Goodbye"]), all(items="Hi There", regex=['Hi', "ere"]), all(items=["Hi", "There"], regex=['H|T', 'i|r']) FROM scope()[
+]
+
+# Or multiple regex in an array - in which case ALL regex must match
+# every item
+Query: SELECT all(items="Hi There", regex=['Hi', "Goodbye"]), all(items="Hi There", regex=['Hi', "ere"]), all(items=["Hi", "There"], regex=['H|T', 'i|r']) FROM scope()
+Output: [
  {
   "all(items=\"Hi There\", regex=['Hi', \"Goodbye\"])": false,
   "all(items=\"Hi There\", regex=['Hi', \"ere\"])": true,
   "all(items=[\"Hi\", \"There\"], regex=['H|T', 'i|r'])": true
  }
-]LET TestArray <= (dict(X=1, Y="Hello"), dict(X=2, Y="Goodbye"), dict(X=1, Y="World"))[]SELECT *, all(items=Y, filter="x=>x =~ 'Hello|World'"), all(items=Y, filter="x=>x =~ 'World'"), all(items=Y, filter="x=>x =~ 'Goodby'") FROM foreach(row=TestArray) GROUP BY X[
+]
+
+# all() can also operate on GROUP BY
+Query: LET TestArray <= (dict(X=1, Y="Hello"), dict(X=2, Y="Goodbye"), dict(X=1, Y="World"))
+Output: []
+
+Query: SELECT *, all(items=Y, filter="x=>x =~ 'Hello|World'"), all(items=Y, filter="x=>x =~ 'World'"), all(items=Y, filter="x=>x =~ 'Goodby'") FROM foreach(row=TestArray) GROUP BY X
+Output: [
  {
   "X": 1,
   "Y": "World",
@@ -116,16 +201,33 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
   "all(items=Y, filter=\"x=\u003ex =~ 'World'\")": false,
   "all(items=Y, filter=\"x=\u003ex =~ 'Goodby'\")": true
  }
-]SELECT all(items={ SELECT * FROM foreach(row=TestArray) WHERE X = 1 }, filter="x=> x.Y =~ 'Hel|Worl'") FROM scope()[
+]
+
+# all() can also operate on subqueries
+Query: SELECT all(items={ SELECT * FROM foreach(row=TestArray) WHERE X = 1 }, filter="x=> x.Y =~ 'Hel|Worl'") FROM scope()
+Output: [
  {
   "all(items={ SELECT * FROM foreach(row=TestArray) WHERE X = 1 }, filter=\"x=\u003e x.Y =~ 'Hel|Worl'\")": true
  }
-]SELECT any(items=TestArray, filter="x=>x.Y =~ 'Good'"), all(items=TestArray, filter="x=>x.Y =~ 'Good'") FROM scope()[
+]
+
+# Test the any function
+Query: SELECT any(items=TestArray, filter="x=>x.Y =~ 'Good'"), all(items=TestArray, filter="x=>x.Y =~ 'Good'") FROM scope()
+Output: [
  {
   "any(items=TestArray, filter=\"x=\u003ex.Y =~ 'Good'\")": true,
   "all(items=TestArray, filter=\"x=\u003ex.Y =~ 'Good'\")": false
  }
-]LET List <= (1, "two", 3, "", 0)[]SELECT filter(list=List, condition='x=>x'), filter(list=List, regex="."), filter(list=List, regex=".+") FROM scope()[
+]
+
+# Test the filter function
+Query: LET List <= (1, "two", 3, "", 0)
+Output: []
+
+# Regex . matches everything including empty string.
+# .+ also matches ints but not the empty string.
+Query: SELECT filter(list=List, condition='x=>x'), filter(list=List, regex="."), filter(list=List, regex=".+") FROM scope()
+Output: [
  {
   "filter(list=List, condition='x=\u003ex')": [
    1,
@@ -146,7 +248,14 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
    0
   ]
  }
-]LET teststoredquery  = SELECT 1 as field1, 2 as field2 FROM scope()[]SELECT  similarity(set1=dict(field1=1,field2=4,field2=3),set2=dict(field2=4,field1=1,field2=3)), similarity(set1=dict(field1=1,field2=4,field2=3),set2=dict(field1=1)), similarity(set1=teststoredquery[0],set2=teststoredquery[0]), similarity(set1="yolo!",set2=dict(field1=1)) FROM scope()[
+]
+
+# Test similarity function
+Query: LET teststoredquery  = SELECT 1 as field1, 2 as field2 FROM scope()
+Output: []
+
+Query: SELECT  similarity(set1=dict(field1=1,field2=4,field2=3),set2=dict(field2=4,field1=1,field2=3)), similarity(set1=dict(field1=1,field2=4,field2=3),set2=dict(field1=1)), similarity(set1=teststoredquery[0],set2=teststoredquery[0]), similarity(set1="yolo!",set2=dict(field1=1)) FROM scope()
+Output: [
  {
   "similarity(set1=dict(field1=1, field2=4, field2=3), set2=dict(field2=4, field1=1, field2=3))": 1,
   "similarity(set1=dict(field1=1, field2=4, field2=3), set2=dict(field1=1))": 0.5,
@@ -154,3 +263,4 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
   "similarity(set1=\"yolo!\", set2=dict(field1=1))": 0
  }
 ]
+

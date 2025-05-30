@@ -486,9 +486,10 @@ func (self *Repository) list() []string {
 func NewArtifactRepositoryPlugin(
 	self services.Repository, config_obj *config_proto.Config) vfilter.PluginGeneratorInterface {
 	return &ArtifactRepositoryPlugin{
-		repository: self,
-		config_obj: config_obj,
-		mocks:      make(map[string][]vfilter.Row),
+		repository:      self,
+		config_obj:      config_obj,
+		mocks:           make(map[string][]vfilter.Row),
+		mock_call_count: make(map[string]int),
 	}
 }
 

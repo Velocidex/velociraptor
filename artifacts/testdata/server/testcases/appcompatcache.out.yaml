@@ -1,4 +1,10 @@
-LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts/testdata/files/AppCompatCache/'), clear=TRUE)[]SELECT * FROM Artifact.Windows.Registry.AppCompatCache( AppCompatCacheKey="HKEY_LOCAL_MACHINE/System/ControlSet*/Control/Session Manager/AppCompatCache/*")[
+# This test ensures that all the file versions are parsed
+# correctly. We currently only support Win10 and Win8
+Query: LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts/testdata/files/AppCompatCache/'), clear=TRUE)
+Output: []
+
+Query: SELECT * FROM Artifact.Windows.Registry.AppCompatCache( AppCompatCacheKey="HKEY_LOCAL_MACHINE/System/ControlSet*/Control/Session Manager/AppCompatCache/*")
+Output: [
  {
   "Position": 0,
   "ModificationTime": "2017-03-16T22:56:01Z",
@@ -630,3 +636,4 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts
   "_Source": "Windows.Registry.AppCompatCache"
  }
 ]
+

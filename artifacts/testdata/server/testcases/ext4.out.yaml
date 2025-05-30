@@ -1,4 +1,4 @@
-SELECT *, OSPath.Path AS OSPath,
+Query: SELECT *, OSPath.Path AS OSPath,
      if(condition=NOT IsDir,
         then= read_file(length=10,
             accessor="raw_ext4", filename=OSPath)) AS Contents
@@ -11,7 +11,8 @@ FROM glob(globs='/**', accessor="raw_ext4",
         DelegateAccessor="file",
         DelegatePath=srcDir+'/artifacts/testdata/files/ext4_tests.zip')))
 ORDER BY OSPath
-[
+
+Output: [
  {
   "Name": "directory1",
   "Mtime": "2018-09-16T11:26:12.384292851Z",
@@ -349,3 +350,4 @@ ORDER BY OSPath
   "Contents": "﻿The Pro"
  }
 ]
+

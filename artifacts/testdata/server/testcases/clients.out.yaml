@@ -1,10 +1,23 @@
-LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id FROM clients(search='label:*') ORDER BY client_id[]SELECT os_info.fqdn as Hostname, client_id, last_seen_at / 1000000  as LastSeen FROM clients() order by Hostname[
+# Clear the labels from all clients.
+Query: LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id FROM clients(search='label:*') ORDER BY client_id
+Output: []
+
+# Just get a list of all clients and their hostnames.
+Query: SELECT os_info.fqdn as Hostname, client_id, last_seen_at / 1000000  as LastSeen FROM clients() order by Hostname
+Output: [
  {
   "Hostname": "DESKTOP-BP4S7TF",
   "client_id": "C.4f5e52adf0a337a9",
   "LastSeen": 1638362977.493088
  }
-]SELECT os_info.fqdn as Hostname, os_info.system as System, client_id FROM clients(search='host:testcomputer') order by client_id[]SELECT * from clients() order by client_id[
+]
+
+# Check that the clients plugin allows searching by indexes.
+Query: SELECT os_info.fqdn as Hostname, os_info.system as System, client_id FROM clients(search='host:testcomputer') order by client_id
+Output: []
+
+Query: SELECT * from clients() order by client_id
+Output: [
  {
   "client_id": "C.4f5e52adf0a337a9",
   "agent_information": {
@@ -32,7 +45,10 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
   "last_label_timestamp": 0,
   "in_flight_flows": {}
  }
-]SELECT client_id, timestamp(epoch=create_time/1000000) as CreateTime, request.artifacts as Artifacts, session_id as Flow FROM flows(client_id='C.4f5e52adf0a337a9') WHERE Artifacts =~ "Netstat"[
+]
+
+Query: SELECT client_id, timestamp(epoch=create_time/1000000) as CreateTime, request.artifacts as Artifacts, session_id as Flow FROM flows(client_id='C.4f5e52adf0a337a9') WHERE Artifacts =~ "Netstat"
+Output: [
  {
   "client_id": "C.4f5e52adf0a337a9",
   "CreateTime": "2023-11-28T12:43:36.907783031Z",
@@ -41,11 +57,18 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
   ],
   "Flow": "F.BSJMEJIPT6P9I"
  }
-]SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9', Foo='Bar', Bar='Baz', IntConvertedToString=5) FROM scope()[
+]
+
+# Test metadata setting and getting - metadata is additive.
+Query: SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9', Foo='Bar', Bar='Baz', IntConvertedToString=5) FROM scope()
+Output: [
  {
   "client_set_metadata(client_id='C.4f5e52adf0a337a9', Foo='Bar', Bar='Baz', IntConvertedToString=5)": true
  }
-]SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()[
+]
+
+Query: SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()
+Output: [
  {
   "client_metadata(client_id='C.4f5e52adf0a337a9')": {
    "Foo": "Bar",
@@ -53,11 +76,18 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
    "IntConvertedToString": "5"
   }
  }
-]SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9', AnotherItem="Hello", Bar=NULL) FROM scope()[
+]
+
+# Metadata is additive - NULL removes
+Query: SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9', AnotherItem="Hello", Bar=NULL) FROM scope()
+Output: [
  {
   "client_set_metadata(client_id='C.4f5e52adf0a337a9', AnotherItem=\"Hello\", Bar=NULL)": true
  }
-]SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()[
+]
+
+Query: SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()
+Output: [
  {
   "client_metadata(client_id='C.4f5e52adf0a337a9')": {
    "Foo": "Bar",
@@ -65,7 +95,14 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
    "AnotherItem": "Hello"
   }
  }
-]LET client_record <= client_create( first_seen_at="2020-10-01T10:11:23", last_seen_at="2021-02-03T12:12:24", labels=["Label1", "Label2"], os="windows", hostname="myHostname", client_id="C.12345678", mac_addresses=["00:11:22", "22:33:44"])[]SELECT *, client_record FROM clients(client_id=client_record.client_id)[
+]
+
+# Creating clients
+Query: LET client_record <= client_create( first_seen_at="2020-10-01T10:11:23", last_seen_at="2021-02-03T12:12:24", labels=["Label1", "Label2"], os="windows", hostname="myHostname", client_id="C.12345678", mac_addresses=["00:11:22", "22:33:44"])
+Output: []
+
+Query: SELECT *, client_record FROM clients(client_id=client_record.client_id)
+Output: [
  {
   "client_id": "C.12345678",
   "agent_information": {
@@ -132,4 +169,12 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
    "metadata": {}
   }
  }
-]SELECT * FROM client_delete(client_id=client_record.client_id, really_do_it=TRUE)[]SELECT * FROM clients(client_id=client_record.client_id)[]
+]
+
+# Remove the new client.
+Query: SELECT * FROM client_delete(client_id=client_record.client_id, really_do_it=TRUE)
+Output: []
+
+Query: SELECT * FROM clients(client_id=client_record.client_id)
+Output: []
+

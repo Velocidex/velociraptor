@@ -1,4 +1,8 @@
-LET zip_files = SELECT OSPath, Size FROM glob( globs=srcDir+"/artifacts/testdata/files/**/*.zip") WHERE Name =~ "test"[]SELECT OSPath.Basename as Name, Size FROM zip_files[
+Query: LET zip_files = SELECT OSPath, Size FROM glob( globs=srcDir+"/artifacts/testdata/files/**/*.zip") WHERE Name =~ "test"
+Output: []
+
+Query: SELECT OSPath.Basename as Name, Size FROM zip_files
+Output: [
  {
   "Name": "ext4_tests.zip",
   "Size": 324724
@@ -11,39 +15,82 @@ LET zip_files = SELECT OSPath, Size FROM glob( globs=srcDir+"/artifacts/testdata
   "Name": "test.zip",
   "Size": 1064
  }
-]LET hits = SELECT * from foreach(row=zip_files, query= { SELECT OSPath, Mtime, Size from glob( globs=pathspec(DelegateAccessor='file', DelegatePath=OSPath, Path='/**/*.txt'), accessor='zip') } )[]SELECT OSPath.Path as Name, Size, Mtime from hits[
+]
+
+# We use the new pathspec() objects.
+Query: LET hits = SELECT * from foreach(row=zip_files, query= { SELECT OSPath, Mtime, Size from glob( globs=pathspec(DelegateAccessor='file', DelegatePath=OSPath, Path='/**/*.txt'), accessor='zip') } )
+Output: []
+
+Query: SELECT OSPath.Path as Name, Size, Mtime from hits
+Output: [
  {
   "Name": "/test/secret.txt",
   "Size": 1549,
   "Mtime": "2019-02-12T11:47:10Z"
  }
-]SELECT Data, Offset, OSPath.Basename as Name FROM foreach(row=hits, query={ SELECT *, OSPath from read_file(filenames=OSPath, accessor='zip') })[
+]
+
+# Make sure we can read the contents of zip members.
+Query: SELECT Data, Offset, OSPath.Basename as Name FROM foreach(row=hits, query={ SELECT *, OSPath from read_file(filenames=OSPath, accessor='zip') })
+Output: [
  {
   "Data": "Just some text:\n\n                    GNU AFFERO GENERAL PUBLIC LICENSE\n                       Version 3, 19 November 2007\n\n Copyright (C) 2007 Free Software Foundation, Inc. \u003chttps://fsf.org/\u003e\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n                            Preamble\n\n  The GNU Affero General Public License is a free, copyleft license for\nsoftware and other kinds of works, specifically designed to ensure\ncooperation with the community in the case of network server software.\n  \n  The licenses for most software and other practical works are designed\nto take away your freedom to share and change the works.  By contrast,\nour General Public Licenses are intended to guarantee your freedom to\nshare and change all versions of a program--to make sure it remains free\nsoftware for all its users.\n  \n  When we speak of free software, we are referring to freedom, not\nprice.  Our General Public Licenses are designed to make sure that you\nhave the freedom to distribute copies of free software (and charge for\nthem if you wish), that you receive source code or can get it if you\nwant it, that you can change the software or use pieces of it in new\nfree programs, and that you know you can do these things.\n\n  Developers that use our General Public Licenses protect your rights\nwith two steps: (1) assert copyright on the software, and (2) offer\nyou this License which gives you legal permission to copy, distribute\nand/or modify the software.\n  \n\n\nThis is my secret.\n",
   "Offset": 0,
   "Name": "secret.txt"
  }
-]SELECT read_file( filename=srcDir+'/artifacts/testdata/files/hi.gz', accessor='gzip') AS Hi, read_file( filename=srcDir+'/artifacts/testdata/files/goodbye.bz2', accessor='bzip2') AS Bye FROM scope()[
+]
+
+Query: SELECT read_file( filename=srcDir+'/artifacts/testdata/files/hi.gz', accessor='gzip') AS Hi, read_file( filename=srcDir+'/artifacts/testdata/files/goodbye.bz2', accessor='bzip2') AS Bye FROM scope()
+Output: [
  {
   "Hi": "hello world\n",
   "Bye": "goodbye world\n"
  }
-]LET dynamic_gunzip(Data) = read_file(accessor="gzip", filename=pathspec(DelegateAccessor="scope", DelegatePath="Data"))[]SELECT dynamic_gunzip(Data=read_file( filename=srcDir+"/artifacts/testdata/files/hi.gz")) FROM scope()[
+]
+
+# Test Gzip a string - often the "data" accessor does not work here
+# because the binary data can not be serialized to a pathspec
+# properly. This is what the "scope" accessor is for. Define a
+# reusable function.
+Query: LET dynamic_gunzip(Data) = read_file(accessor="gzip", filename=pathspec(DelegateAccessor="scope", DelegatePath="Data"))
+Output: []
+
+# Now decompress a gzip string.
+Query: SELECT dynamic_gunzip(Data=read_file( filename=srcDir+"/artifacts/testdata/files/hi.gz")) FROM scope()
+Output: [
  {
   "dynamic_gunzip(Data=read_file(filename=srcDir + \"/artifacts/testdata/files/hi.gz\"))": "hello world\n"
  }
-]SELECT read_file( filename=srcDir+'/artifacts/testdata/files/hi.gz', accessor='gzip') AS Hi, read_file( filename=srcDir+'/artifacts/testdata/files/goodbye.bz2', accessor='bzip2') AS Bye FROM scope()[
+]
+
+# Test the gzip accessor
+Query: SELECT read_file( filename=srcDir+'/artifacts/testdata/files/hi.gz', accessor='gzip') AS Hi, read_file( filename=srcDir+'/artifacts/testdata/files/goodbye.bz2', accessor='bzip2') AS Bye FROM scope()
+Output: [
  {
   "Hi": "hello world\n",
   "Bye": "goodbye world\n"
  }
-]LET tmpdir <= tempdir()[]SELECT OriginalPath, relpath(path=NewPath, base=tmpdir, sep="/"), Size FROM unzip(filename=srcDir + '/artifacts/testdata/files/test.zip', output_directory=tmpdir)[
+]
+
+# Test the unzip() plugin
+Query: LET tmpdir <= tempdir()
+Output: []
+
+Query: SELECT OriginalPath, relpath(path=NewPath, base=tmpdir, sep="/"), Size FROM unzip(filename=srcDir + '/artifacts/testdata/files/test.zip', output_directory=tmpdir)
+Output: [
  {
   "OriginalPath": "test/secret.txt",
   "relpath(path=NewPath, base=tmpdir, sep=\"/\")": "test/secret.txt",
   "Size": 1549
  }
-]LET tmpdir_tgz <= tempdir()[]SELECT OriginalPath, relpath(path=NewPath, base=tmpdir_tgz, sep="/"), Size FROM unzip(filename=srcDir + '/artifacts/testdata/files/tar_test.tgz', output_directory=tmpdir_tgz)[
+]
+
+# Test the unzip() plugin on tar gz files
+Query: LET tmpdir_tgz <= tempdir()
+Output: []
+
+Query: SELECT OriginalPath, relpath(path=NewPath, base=tmpdir_tgz, sep="/"), Size FROM unzip(filename=srcDir + '/artifacts/testdata/files/tar_test.tgz', output_directory=tmpdir_tgz)
+Output: [
  {
   "OriginalPath": "./tar_test/1.txt",
   "relpath(path=NewPath, base=tmpdir_tgz, sep=\"/\")": "tar_test/1.txt",
@@ -54,17 +101,33 @@ LET zip_files = SELECT OSPath, Size FROM glob( globs=srcDir+"/artifacts/testdata
   "relpath(path=NewPath, base=tmpdir_tgz, sep=\"/\")": "tar_test/2.txt",
   "Size": 6
  }
-]SELECT OriginalPath, relpath(path=NewPath, base=tmpdir, sep="/"), Size FROM unzip( filename=read_file(filename=srcDir + '/artifacts/testdata/files/test.zip'), accessor="data", type="zip", output_directory=tmpdir)[
+]
+
+# Test that unzip works on virtual files.
+Query: SELECT OriginalPath, relpath(path=NewPath, base=tmpdir, sep="/"), Size FROM unzip( filename=read_file(filename=srcDir + '/artifacts/testdata/files/test.zip'), accessor="data", type="zip", output_directory=tmpdir)
+Output: [
  {
   "OriginalPath": "test/secret.txt",
   "relpath(path=NewPath, base=tmpdir, sep=\"/\")": "test/secret.txt",
   "Size": 1549
  }
-]SELECT OSPath.Path AS Member FROM glob(globs="/*.txt", accessor="zip", root=pathspec( DelegateAccessor="file", DelegatePath=srcDir + '/artifacts/testdata/files/test.zip', Path="test"))[
+]
+
+# We can pass a pathspec to zip accessor in glob root (root is on
+# test directory inside the zip).
+Query: SELECT OSPath.Path AS Member FROM glob(globs="/*.txt", accessor="zip", root=pathspec( DelegateAccessor="file", DelegatePath=srcDir + '/artifacts/testdata/files/test.zip', Path="test"))
+Output: [
  {
   "Member": "/test/secret.txt"
  }
-]LET ZIP_PASSWORDS = 'hello'[]SELECT read_file(filename=OSPath, accessor='zip'), OSPath.Basename
+]
+
+# Test that unzip can unencrypt zip files transparently.  Password
+# is set in the scope so it can not leak in output
+Query: LET ZIP_PASSWORDS = 'hello'
+Output: []
+
+Query: SELECT read_file(filename=OSPath, accessor='zip'), OSPath.Basename
 FROM glob(globs='**/BasicInformation.json',
   accessor='zip',
   root=pathspec(
@@ -72,23 +135,35 @@ FROM glob(globs='**/BasicInformation.json',
     DelegatePath=pathspec(DelegateAccessor='file',
       DelegatePath=srcDir + '/artifacts/testdata/files/encrypted_collector_password.zip',
       Path='/data.zip')))
-[
- {
-  "read_file(filename=OSPath, accessor='zip')": "{\"Name\":\"velociraptor\",\"BuildTime\":\"2022-10-10T07:34:08+10:00\",\"Version\":\"0.6.7-dev\",\"build_url\":\"\",\"Labels\":null,\"Hostname\":\"DESKTOP-SU8FH31\",\"OS\":\"windows\",\"Architecture\":\"amd64\",\"Platform\":\"Microsoft Windows 11 Enterprise Evaluation\",\"PlatformVersion\":\"10.0.22000 Build 22000\",\"KernelVersion\":\"10.0.22000 Build 22000\",\"Fqdn\":\"DESKTOP-SU8FH31.lan\",\"MACAddresses\":[\"00:0c:29:00:26:7e\"]}\n",
-  "OSPath.Basename": "BasicInformation.json"
- }
-]LET BasePath <= pathspec(
-  DelegateAccessor='zip',
-  DelegatePath=pathspec(
-    DelegateAccessor='file',
-    DelegatePath=srcDir + '/artifacts/testdata/files/encrypted_collector_password.zip',
-    Path='/data.zip'))
-[]SELECT read_file(filename=OSPath, accessor='zip'), OSPath.Basename
-FROM stat(filename=BasePath + '/generic.client.INFO/basicinformation.JSON',
-          accessor='zip_nocase')
-[
+
+Output: [
  {
   "read_file(filename=OSPath, accessor='zip')": "{\"Name\":\"velociraptor\",\"BuildTime\":\"2022-10-10T07:34:08+10:00\",\"Version\":\"0.6.7-dev\",\"build_url\":\"\",\"Labels\":null,\"Hostname\":\"DESKTOP-SU8FH31\",\"OS\":\"windows\",\"Architecture\":\"amd64\",\"Platform\":\"Microsoft Windows 11 Enterprise Evaluation\",\"PlatformVersion\":\"10.0.22000 Build 22000\",\"KernelVersion\":\"10.0.22000 Build 22000\",\"Fqdn\":\"DESKTOP-SU8FH31.lan\",\"MACAddresses\":[\"00:0c:29:00:26:7e\"]}\n",
   "OSPath.Basename": "BasicInformation.json"
  }
 ]
+
+# Test no case accessor
+Query: LET BasePath <= pathspec(
+  DelegateAccessor='zip',
+  DelegatePath=pathspec(
+    DelegateAccessor='file',
+    DelegatePath=srcDir + '/artifacts/testdata/files/encrypted_collector_password.zip',
+    Path='/data.zip'))
+
+Output: []
+
+# Read the file with messed up casing.
+# Check that OSPath Basename returns the correct casing so we can
+# open it with the regular zip accessor.
+Query: SELECT read_file(filename=OSPath, accessor='zip'), OSPath.Basename
+FROM stat(filename=BasePath + '/generic.client.INFO/basicinformation.JSON',
+          accessor='zip_nocase')
+
+Output: [
+ {
+  "read_file(filename=OSPath, accessor='zip')": "{\"Name\":\"velociraptor\",\"BuildTime\":\"2022-10-10T07:34:08+10:00\",\"Version\":\"0.6.7-dev\",\"build_url\":\"\",\"Labels\":null,\"Hostname\":\"DESKTOP-SU8FH31\",\"OS\":\"windows\",\"Architecture\":\"amd64\",\"Platform\":\"Microsoft Windows 11 Enterprise Evaluation\",\"PlatformVersion\":\"10.0.22000 Build 22000\",\"KernelVersion\":\"10.0.22000 Build 22000\",\"Fqdn\":\"DESKTOP-SU8FH31.lan\",\"MACAddresses\":[\"00:0c:29:00:26:7e\"]}\n",
+  "OSPath.Basename": "BasicInformation.json"
+ }
+]
+

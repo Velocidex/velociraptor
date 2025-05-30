@@ -1,9 +1,20 @@
-LET NTFSInfoFromImage <= parse_ntfs( filename=srcDir+'/artifacts/testdata/files/test.ntfs.dd', inode="46-128-0")[]SELECT NTFSInfoFromImage.OSPath.Path AS OSPath_Path, read_file(accessor="raw_ntfs", filename= NTFSInfoFromImage.OSPath) AS Data FROM scope()[
+# parse_ntfs can use an image file.
+Query: LET NTFSInfoFromImage <= parse_ntfs( filename=srcDir+'/artifacts/testdata/files/test.ntfs.dd', inode="46-128-0")
+Output: []
+
+# Prove we can read that data from the OSPath we received
+Query: SELECT NTFSInfoFromImage.OSPath.Path AS OSPath_Path, read_file(accessor="raw_ntfs", filename= NTFSInfoFromImage.OSPath) AS Data FROM scope()
+Output: [
  {
   "OSPath_Path": "Folder A\\Folder B\\Hello world text document.txt",
   "Data": "Hello world!"
  }
-]SELECT * FROM parse_mft( filename=pathspec( Path="$MFT", DelegateAccessor="file", DelegatePath=srcDir+'/artifacts/testdata/files/test.ntfs.dd'), accessor="raw_ntfs") WHERE OSPath =~ "document.txt:goodbye.txt"[
+]
+
+# Parsing the MFT from a raw image requires extracting it using the
+# raw_ntfs accessor because parse_mft() expect an $MFT file to read.
+Query: SELECT * FROM parse_mft( filename=pathspec( Path="$MFT", DelegateAccessor="file", DelegatePath=srcDir+'/artifacts/testdata/files/test.ntfs.dd'), accessor="raw_ntfs") WHERE OSPath =~ "document.txt:goodbye.txt"
+Output: [
  {
   "EntryNumber": 46,
   "OSPath": "Folder A\\Folder B\\Hello world text document.txt:goodbye.txt",
@@ -37,7 +48,20 @@ LET NTFSInfoFromImage <= parse_ntfs( filename=srcDir+'/artifacts/testdata/files/
   "LastAccess0x30": "2018-09-24T07:55:29.7664719Z",
   "LogFileSeqNum": 1096672
  }
-]LET MFTDir <= tempdir()[]LET MFTFile <= MFTDir + "/test.mft"[]LET _ <= copy(filename=pathspec( Path="$MFT", DelegateAccessor="file", DelegatePath=srcDir+'/artifacts/testdata/files/test.ntfs.dd'), accessor="raw_ntfs", dest=MFTFile)[]SELECT EntryNumber, OSPath, parse_ntfs(mft_filename=MFTFile, mft=EntryNumber) AS Details FROM parse_mft(filename=MFTFile, start=45) LIMIT 10[
+]
+
+# Copy the MFT file out so we can parse it by itself.
+Query: LET MFTDir <= tempdir()
+Output: []
+
+Query: LET MFTFile <= MFTDir + "/test.mft"
+Output: []
+
+Query: LET _ <= copy(filename=pathspec( Path="$MFT", DelegateAccessor="file", DelegatePath=srcDir+'/artifacts/testdata/files/test.ntfs.dd'), accessor="raw_ntfs", dest=MFTFile)
+Output: []
+
+Query: SELECT EntryNumber, OSPath, parse_ntfs(mft_filename=MFTFile, mft=EntryNumber) AS Details FROM parse_mft(filename=MFTFile, start=45) LIMIT 10
+Output: [
  {
   "EntryNumber": 45,
   "OSPath": "Folder A\\Folder B",
@@ -498,3 +522,4 @@ LET NTFSInfoFromImage <= parse_ntfs( filename=srcDir+'/artifacts/testdata/files/
   }
  }
 ]
+

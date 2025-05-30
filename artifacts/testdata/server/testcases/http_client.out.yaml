@@ -1,19 +1,55 @@
-LET URL <= url(parse="http://www.google.com/?q=Hello&lang=fr")[]SELECT url(scheme="http", host="www.google.com", query=dict(foo="bar")).String FROM scope()[
+# Common use case - take a url, extract the query string, add some
+# more parameters and make a new request.
+Query: LET URL <= url(parse="http://www.google.com/?q=Hello&lang=fr")
+Output: []
+
+# Test various URL construction
+Query: SELECT url(scheme="http", host="www.google.com", query=dict(foo="bar")).String FROM scope()
+Output: [
  {
   "url(scheme=\"http\", host=\"www.google.com\", query=dict(foo=\"bar\")).String": "http://www.google.com?foo=bar"
  }
-]LET NewQuery <= URL.Query + dict(lang="en")[]SELECT secret_define(type="HTTP Secrets", template=dict(url="")), secret_add(type="HTTP Secrets", name="Google", secret=dict(url="http://www.google.com/")), secret_modify(type="HTTP Secrets", name="Google", add_users="VelociraptorServer") FROM scope()[
+]
+
+# Dict addition can be used to override the original map replacing the
+# value of lang
+Query: LET NewQuery <= URL.Query + dict(lang="en")
+Output: []
+
+## Encode parameters in GET query. Check that we can send headers.
+#- SELECT parse_json(data=Content).url, parse_json(data=Content).headers.`Foo-Bar`
+#  FROM http_client(url="https://httpbin.org/get",
+#      params=NewQuery, headers=dict(`foo-bar`="baz"),
+#      method="GET")
+
+## Encode parameters in POST query
+#- SELECT parse_json(data=Content).data
+#  FROM http_client(url="https://httpbin.org/post",
+#       params=NewQuery, method="POST")
+
+# Test Secrets
+Query: SELECT secret_define(type="HTTP Secrets", template=dict(url="")), secret_add(type="HTTP Secrets", name="Google", secret=dict(url="http://www.google.com/")), secret_modify(type="HTTP Secrets", name="Google", add_users="VelociraptorServer") FROM scope()
+Output: [
  {
   "secret_define(type=\"HTTP Secrets\", template=dict(url=\"\"))": "HTTP Secrets",
   "secret_add(type=\"HTTP Secrets\", name=\"Google\", secret=dict(url=\"http://www.google.com/\"))": "Google",
   "secret_modify(type=\"HTTP Secrets\", name=\"Google\", add_users=\"VelociraptorServer\")": "Google"
  }
-]SELECT Response FROM http_client(url="secret://Google")[
- {
-  "Response": 200
- }
-]SELECT Response FROM http_client(url=["http://localhost:232/sdfsd", "secret://Google"])[
+]
+
+# A 200 response indicates the secret was converted to a URL and fetched.
+Query: SELECT Response FROM http_client(url="secret://Google")
+Output: [
  {
   "Response": 200
  }
 ]
+
+# Test multiple URLs: First URL will fail but next one will work.
+Query: SELECT Response FROM http_client(url=["http://localhost:232/sdfsd", "secret://Google"])
+Output: [
+ {
+  "Response": 200
+ }
+]
+

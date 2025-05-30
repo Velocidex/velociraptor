@@ -1,4 +1,15 @@
-LET Content <= xor(key="infected", string=read_file( filename=srcDir+"/artifacts/testdata/files/infected.zip.xor"))[]LET _ <= remap(config=RemappingTemplate, copy=["zip", "scope"], clear=TRUE)[]SELECT * FROM Artifact.Windows.Detection.TemplateInjection( SearchGlob='/**')[
+# Generate this file with
+# SELECT copy(accessor="data", filename=xor(key="infected",
+# string=read_file(filename="F:/malware/infected.zip")),
+# dest="F:/malware/infected.zip.xor") FROM scope()
+Query: LET Content <= xor(key="infected", string=read_file( filename=srcDir+"/artifacts/testdata/files/infected.zip.xor"))
+Output: []
+
+Query: LET _ <= remap(config=RemappingTemplate, copy=["zip", "scope"], clear=TRUE)
+Output: []
+
+Query: SELECT * FROM Artifact.Windows.Detection.TemplateInjection( SearchGlob='/**')
+Output: [
  {
   "DocumentPath": "b81717cbb23f0c6ced66a63e65356b344b85636a8ba114b3e12a14fd1a7ddb0f.docx",
   "DocumentHash": {
@@ -19,3 +30,4 @@ LET Content <= xor(key="infected", string=read_file( filename=srcDir+"/artifacts
   "_Source": "Windows.Detection.TemplateInjection"
  }
 ]
+

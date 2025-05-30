@@ -1,4 +1,12 @@
-LET _ <= mock(plugin='pslist', results=[ dict(Pid=12, Name='word.exe'), dict(Pid=10, Name='notepad.exe'), ])[]SELECT * FROM pslist()[
+# Mocking a plugin can be done in two ways:
+
+# 1. A list of dicts means that each dict is a row and all rows will
+#    be emitted each time the plugin is called.
+Query: LET _ <= mock(plugin='pslist', results=[ dict(Pid=12, Name='word.exe'), dict(Pid=10, Name='notepad.exe'), ])
+Output: []
+
+Query: SELECT * FROM pslist()
+Output: [
  {
   "Pid": 12,
   "Name": "word.exe"
@@ -7,7 +15,11 @@ LET _ <= mock(plugin='pslist', results=[ dict(Pid=12, Name='word.exe'), dict(Pid
   "Pid": 10,
   "Name": "notepad.exe"
  }
-]SELECT * FROM pslist()[
+]
+
+# Identical output for repeated calls.
+Query: SELECT * FROM pslist()
+Output: [
  {
   "Pid": 12,
   "Name": "word.exe"
@@ -16,17 +28,44 @@ LET _ <= mock(plugin='pslist', results=[ dict(Pid=12, Name='word.exe'), dict(Pid
   "Pid": 10,
   "Name": "notepad.exe"
  }
-]LET _ <= mock_clear()[]LET _ <= mock(plugin='pslist', results=[ ( dict(Pid=10, Name='notepad.exe'), ), ( dict(Pid=12, Name='word.exe'), ) ])[]SELECT * FROM pslist()[
+]
+
+Query: LET _ <= mock_clear()
+Output: []
+
+# 2. A list of lists of dicts means each list is a separate call of the plugin.
+Query: LET _ <= mock(plugin='pslist', results=[ ( dict(Pid=10, Name='notepad.exe'), ), ( dict(Pid=12, Name='word.exe'), ) ])
+Output: []
+
+# First call should give notepad.exe
+Query: SELECT * FROM pslist()
+Output: [
  {
   "Pid": 10,
   "Name": "notepad.exe"
  }
-]SELECT * FROM pslist()[
+]
+
+# Second call should give word.exe
+Query: SELECT * FROM pslist()
+Output: [
  {
   "Pid": 12,
   "Name": "word.exe"
  }
-]LET _ <= mock_clear()[]LET _ <= mock(artifact=Artifact.Windows.System.Pslist, results=[ dict(Pid=12, Name='word.exe'), dict(Pid=10, Name='notepad.exe'), ])[]SELECT * FROM Artifact.Windows.System.Pslist()[
+]
+
+Query: LET _ <= mock_clear()
+Output: []
+
+# Mocking of an artifact can be done in two ways.
+# 1. A list of dicts means that each dict is a row and all rows will
+#    be emitted each time the plugin is called.
+Query: LET _ <= mock(artifact=Artifact.Windows.System.Pslist, results=[ dict(Pid=12, Name='word.exe'), dict(Pid=10, Name='notepad.exe'), ])
+Output: []
+
+Query: SELECT * FROM Artifact.Windows.System.Pslist()
+Output: [
  {
   "Pid": 12,
   "Name": "word.exe"
@@ -35,7 +74,11 @@ LET _ <= mock(plugin='pslist', results=[ dict(Pid=12, Name='word.exe'), dict(Pid
   "Pid": 10,
   "Name": "notepad.exe"
  }
-]SELECT * FROM Artifact.Windows.System.Pslist()[
+]
+
+# Identical output for repeated calls.
+Query: SELECT * FROM Artifact.Windows.System.Pslist()
+Output: [
  {
   "Pid": 12,
   "Name": "word.exe"
@@ -44,17 +87,42 @@ LET _ <= mock(plugin='pslist', results=[ dict(Pid=12, Name='word.exe'), dict(Pid
   "Pid": 10,
   "Name": "notepad.exe"
  }
-]LET _ <= mock_clear()[]LET _ <= mock(artifact=Artifact.Windows.System.Pslist, results=[ ( dict(Pid=10, Name='notepad.exe'), ), ( dict(Pid=12, Name='word.exe'), ) ])[]SELECT * FROM Artifact.Windows.System.Pslist()[
+]
+
+Query: LET _ <= mock_clear()
+Output: []
+
+# 2. A list of lists of dicts means each list is a separate call of the plugin.
+Query: LET _ <= mock(artifact=Artifact.Windows.System.Pslist, results=[ ( dict(Pid=10, Name='notepad.exe'), ), ( dict(Pid=12, Name='word.exe'), ) ])
+Output: []
+
+# First call should give notepad.exe
+Query: SELECT * FROM Artifact.Windows.System.Pslist()
+Output: [
  {
   "Pid": 10,
   "Name": "notepad.exe"
  }
-]SELECT * FROM Artifact.Windows.System.Pslist()[
+]
+
+# Second call should give word.exe
+Query: SELECT * FROM Artifact.Windows.System.Pslist()
+Output: [
  {
-  "Pid": 10,
-  "Name": "notepad.exe"
+  "Pid": 12,
+  "Name": "word.exe"
  }
-]LET _ <= mock_clear()[]LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict(OS='windows', foo='baz')] ), mock(artifact=Artifact.Windows.Network.Netstat, results=parse_json_array(data=ArtifactNetstatMock)), mock(plugin='netstat', results=parse_json_array(data=NetstatMock)), mock(artifact=Artifact.Windows.System.Pslist, results=parse_json_array(data=PSListMock)) FROM scope()[]SELECT * FROM info()[
+]
+
+Query: LET _ <= mock_clear()
+Output: []
+
+# Mock out the info plugin just for fun.
+Query: LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict(OS='windows', foo='baz')] ), mock(artifact=Artifact.Windows.Network.Netstat, results=parse_json_array(data=ArtifactNetstatMock)), mock(plugin='netstat', results=parse_json_array(data=NetstatMock)), mock(artifact=Artifact.Windows.System.Pslist, results=parse_json_array(data=PSListMock)) FROM scope()
+Output: []
+
+Query: SELECT * FROM info()
+Output: [
  {
   "OS": "windows",
   "foo": "bar"
@@ -63,7 +131,10 @@ LET _ <= mock(plugin='pslist', results=[ dict(Pid=12, Name='word.exe'), dict(Pid
   "OS": "windows",
   "foo": "baz"
  }
-]SELECT * FROM Artifact.Windows.Network.Netstat()[
+]
+
+Query: SELECT * FROM Artifact.Windows.Network.Netstat()
+Output: [
  {
   "Pid": 2432,
   "Name": "svchost.exe",
@@ -103,7 +174,11 @@ LET _ <= mock(plugin='pslist', results=[ dict(Pid=12, Name='word.exe'), dict(Pid
   "Timestamp": "2019-12-06T05:24:30Z",
   "_Source": "Windows.Network.Netstat"
  }
-]SELECT * FROM Artifact.Windows.Network.NetstatEnriched( ProcessNameRegex='.', AuthenticodeVerified="TRUSTED", Status="LISTENING", PortRegex="3889")[
+]
+
+# Netcat is trusted because it is signed should show up here.
+Query: SELECT * FROM Artifact.Windows.Network.NetstatEnriched( ProcessNameRegex='.', AuthenticodeVerified="TRUSTED", Status="LISTENING", PortRegex="3889")
+Output: [
  {
   "Pid": 7028,
   "Ppid": 2120,
@@ -139,7 +214,15 @@ LET _ <= mock(plugin='pslist', results=[ dict(Pid=12, Name='word.exe'), dict(Pid
   "Timestamp": "2019-11-27T01:18:15Z",
   "_Source": "Windows.Network.NetstatEnriched/Netstat"
  }
-]SELECT * FROM Artifact.Windows.Network.NetstatEnriched( ProcessNameRegex='.', AuthenticodeVerified="TRUSTED", Status="LISTENING", Family="IPv4", PortRegex="3889")[]SELECT * FROM Artifact.Windows.Network.NetstatEnriched( ProcessNameRegex='.', AuthenticodeVerified="TRUSTED", Status="LISTENING", Family="IPv6", PortRegex="3889")[
+]
+
+# Netcat is listening over IPv6 so not hits here.
+Query: SELECT * FROM Artifact.Windows.Network.NetstatEnriched( ProcessNameRegex='.', AuthenticodeVerified="TRUSTED", Status="LISTENING", Family="IPv4", PortRegex="3889")
+Output: []
+
+# Netcat is listening over IPv6
+Query: SELECT * FROM Artifact.Windows.Network.NetstatEnriched( ProcessNameRegex='.', AuthenticodeVerified="TRUSTED", Status="LISTENING", Family="IPv6", PortRegex="3889")
+Output: [
  {
   "Pid": 7028,
   "Ppid": 2120,
@@ -175,7 +258,11 @@ LET _ <= mock(plugin='pslist', results=[ dict(Pid=12, Name='word.exe'), dict(Pid
   "Timestamp": "2019-11-27T01:18:15Z",
   "_Source": "Windows.Network.NetstatEnriched/Netstat"
  }
-]SELECT * FROM Artifact.Windows.Network.NetstatEnriched( ProcessNameRegex='.', Status="ESTABLISHED")[
+]
+
+# Explorer has an established connection
+Query: SELECT * FROM Artifact.Windows.Network.NetstatEnriched( ProcessNameRegex='.', Status="ESTABLISHED")
+Output: [
  {
   "Pid": 4888,
   "Ppid": 4856,
@@ -211,9 +298,19 @@ LET _ <= mock(plugin='pslist', results=[ dict(Pid=12, Name='word.exe'), dict(Pid
   "Timestamp": "2019-12-07T03:30:58Z",
   "_Source": "Windows.Network.NetstatEnriched/Netstat"
  }
-]SELECT * FROM Artifact.Windows.Network.NetstatEnriched( ProcessNameRegex='.', AuthenticodeVerified="NOT TRUSTED", Status="ESTABLISHED")[]SELECT Pid, CommandLine FROM Artifact.Windows.Network.NetstatEnriched( `**`=dict(ProcessNameRegex='.', Status="ESTABLISHED"))[
+]
+
+# Explorer has an established connection but it is trusted so wont
+# show up here.
+Query: SELECT * FROM Artifact.Windows.Network.NetstatEnriched( ProcessNameRegex='.', AuthenticodeVerified="NOT TRUSTED", Status="ESTABLISHED")
+Output: []
+
+# Test that we can call an artifact with the ** pattern
+Query: SELECT Pid, CommandLine FROM Artifact.Windows.Network.NetstatEnriched( `**`=dict(ProcessNameRegex='.', Status="ESTABLISHED"))
+Output: [
  {
   "Pid": 4888,
   "CommandLine": "C:\\Windows\\Explorer.EXE"
  }
 ]
+

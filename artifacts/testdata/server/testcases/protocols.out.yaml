@@ -1,4 +1,5 @@
-SELECT TestString, TestString[0], TestString[-1], TestString[0:5], TestString[:5], TestString[5:] FROM scope()[
+Query: SELECT TestString, TestString[0], TestString[-1], TestString[0:5], TestString[:5], TestString[5:] FROM scope()
+Output: [
  {
   "TestString": "This is a test",
   "TestString[0]": 84,
@@ -7,9 +8,14 @@ SELECT TestString, TestString[0], TestString[-1], TestString[0:5], TestString[:5
   "TestString[:5]": "This ",
   "TestString[5:]": "is a test"
  }
-]SELECT 10 =~ "1", timestamp(epoch=1666796776)  =~ "2022" FROM scope()[
+]
+
+# Regex on integers and times should convert to string first.
+Query: SELECT 10 =~ "1", timestamp(epoch=1666796776)  =~ "2022" FROM scope()
+Output: [
  {
   "10 =~ \"1\"": true,
   "timestamp(epoch=1666796776) =~ \"2022\"": true
  }
 ]
+

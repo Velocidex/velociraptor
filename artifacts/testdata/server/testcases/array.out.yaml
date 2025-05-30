@@ -1,4 +1,4 @@
-SELECT
+Query: SELECT
     -- Empty array
     array(),
 
@@ -28,7 +28,8 @@ SELECT
           c="I am a string")
 
 FROM scope()
-[
+
+Output: [
  {
   "array()": [],
   "array(b=1, a=2)": [
@@ -129,3 +130,4 @@ FROM scope()
   ]
  }
 ]
+

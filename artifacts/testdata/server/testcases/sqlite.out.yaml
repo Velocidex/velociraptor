@@ -1,4 +1,5 @@
-SELECT * FROM sqlite( file=srcDir + "/artifacts/testdata/files/history.sqlite", query="SELECT * FROM urls")[
+Query: SELECT * FROM sqlite( file=srcDir + "/artifacts/testdata/files/history.sqlite", query="SELECT * FROM urls")
+Output: [
  {
   "id": 2,
   "url": "https://localhost:8889/app.html",
@@ -17,7 +18,11 @@ SELECT * FROM sqlite( file=srcDir + "/artifacts/testdata/files/history.sqlite", 
   "last_visit_time": 13205513380758164,
   "hidden": 0
  }
-]SELECT * FROM sqlite( file=srcDir + "/artifacts/testdata/files/history.sqlite", query="SELECT * FROM urls WHERE url like ?", args='%hunt%')[
+]
+
+# Test that parameter interpolations work.
+Query: SELECT * FROM sqlite( file=srcDir + "/artifacts/testdata/files/history.sqlite", query="SELECT * FROM urls WHERE url like ?", args='%hunt%')
+Output: [
  {
   "id": 3,
   "url": "https://localhost:8889/app.html#/hunts",
@@ -27,7 +32,10 @@ SELECT * FROM sqlite( file=srcDir + "/artifacts/testdata/files/history.sqlite", 
   "last_visit_time": 13205513380758164,
   "hidden": 0
  }
-]SELECT * FROM sqlite( file=srcDir + "/artifacts/testdata/files/history.sqlite", query="SELECT * FROM urls WHERE typed_count = ? and visit_count = ?", args=[0, 41])[
+]
+
+Query: SELECT * FROM sqlite( file=srcDir + "/artifacts/testdata/files/history.sqlite", query="SELECT * FROM urls WHERE typed_count = ? and visit_count = ?", args=[0, 41])
+Output: [
  {
   "id": 3,
   "url": "https://localhost:8889/app.html#/hunts",
@@ -37,7 +45,13 @@ SELECT * FROM sqlite( file=srcDir + "/artifacts/testdata/files/history.sqlite", 
   "last_visit_time": 13205513380758164,
   "hidden": 0
  }
-]SELECT * FROM foreach( row={ SELECT Data from read_file( filenames=srcDir + "/artifacts/testdata/files/history.sqlite") }, query={ SELECT * FROM sqlite(file=Data, accessor="data", query="SELECT * FROM urls") })[
+]
+
+# Test that we can read sqlite files from accessors - we will copy
+# to a tempfile and parse that instead. This allows us to access
+# locked files.
+Query: SELECT * FROM foreach( row={ SELECT Data from read_file( filenames=srcDir + "/artifacts/testdata/files/history.sqlite") }, query={ SELECT * FROM sqlite(file=Data, accessor="data", query="SELECT * FROM urls") })
+Output: [
  {
   "id": 2,
   "url": "https://localhost:8889/app.html",
@@ -56,7 +70,11 @@ SELECT * FROM sqlite( file=srcDir + "/artifacts/testdata/files/history.sqlite", 
   "last_visit_time": 13205513380758164,
   "hidden": 0
  }
-]SELECT ID, URLTitle, URL, VisitCount, _Source, OSPath.Basename AS OSPath FROM Artifact.Generic.Collectors.SQLECmd( UseFilenames=FALSE, GlobExpr=[dict(Name="X", Glob=srcDir + "/artifacts/testdata/files/**")]) WHERE _Source =~ "Chromium Browser History"[
+]
+
+# Test the Generic.Collectors.SQLECmd artifact
+Query: SELECT ID, URLTitle, URL, VisitCount, _Source, OSPath.Basename AS OSPath FROM Artifact.Generic.Collectors.SQLECmd( UseFilenames=FALSE, GlobExpr=[dict(Name="X", Glob=srcDir + "/artifacts/testdata/files/**")]) WHERE _Source =~ "Chromium Browser History"
+Output: [
  {
   "ID": 1,
   "URLTitle": "Google",
@@ -74,3 +92,4 @@ SELECT * FROM sqlite( file=srcDir + "/artifacts/testdata/files/history.sqlite", 
   "OSPath": "ChromeHistory.sqlite"
  }
 ]
+
