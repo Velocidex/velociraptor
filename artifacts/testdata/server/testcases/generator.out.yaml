@@ -1,4 +1,8 @@
-LET Generator = generate(query={ SELECT * FROM range(start=0, end=10, step=1) }, delay=1)[]SELECT * FROM combine( a={ SELECT format(format="%v/%s", args=[_value, "A"]) AS Query FROM Generator }, b={ SELECT format(format="%v/%s", args=[_value, "B"]) AS Query FROM Generator }) ORDER BY Query[
+Query: LET Generator = generate(query={ SELECT * FROM range(start=0, end=10, step=1) }, delay=1)
+Output: []
+
+Query: SELECT * FROM combine( a={ SELECT format(format="%v/%s", args=[_value, "A"]) AS Query FROM Generator }, b={ SELECT format(format="%v/%s", args=[_value, "B"]) AS Query FROM Generator }) ORDER BY Query
+Output: [
  {
   "Query": "0/A"
  },
@@ -60,3 +64,4 @@ LET Generator = generate(query={ SELECT * FROM range(start=0, end=10, step=1) },
   "Query": "9/B"
  }
 ]
+

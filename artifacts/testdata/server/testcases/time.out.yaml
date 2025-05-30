@@ -1,4 +1,12 @@
-LET PARSE_TZ <= "Australia/Brisbane"[]LET DEBUG <= TRUE[]SELECT timestamp(string='March 3 2019'),
+# Make parsing timezone default to Brisbane time.
+Query: LET PARSE_TZ <= "Australia/Brisbane"
+Output: []
+
+# This setting causes logging of errors in timestamp parsing.
+Query: LET DEBUG <= TRUE
+Output: []
+
+Query: SELECT timestamp(string='March 3 2019'),
        timestamp(string='March 3 2019') < '2021-10-01',
        timestamp(string='07/25/2019 5pm'),
 
@@ -22,7 +30,8 @@ LET PARSE_TZ <= "Australia/Brisbane"[]LET DEBUG <= TRUE[]SELECT timestamp(string
                  format="1/2/2006 3:04:05 PM") AS FormattedTime
 
 FROM scope()
-[
+
+Output: [
  {
   "timestamp(string='March 3 2019')": "2019-03-02T14:00:00Z",
   "timestamp(string='March 3 2019') \u003c '2021-10-01'": true,
@@ -35,11 +44,19 @@ FROM scope()
   "Time3": "2021-08-31T12:53:45Z",
   "FormattedTime": "2021-08-30T08:01:28Z"
  }
-]SELECT Unix > 1630414425 FROM clock(period=60, start=0) LIMIT 1[
+]
+
+# Start the clock immediately - this should not block due to LIMIT 1
+Query: SELECT Unix > 1630414425 FROM clock(period=60, start=0) LIMIT 1
+Output: [
  {
   "Unix \u003e 1630414425": true
  }
-]SELECT timestamp(epoch=1723428985) < 1118628985,
+]
+
+# Test time comparison operators. Comparing times vs int, float and
+# strings
+Query: SELECT timestamp(epoch=1723428985) < 1118628985,
      1118628985 < timestamp(epoch=1723428985),
      timestamp(epoch=1723428985) < timestamp(epoch=1118628985),
      timestamp(epoch=1118628985) < timestamp(epoch=1723428985),
@@ -57,7 +74,8 @@ FROM scope()
      timestamp(epoch=1723428985) > "2024-08-12T02:15:25.176Z",
      "2024-08-12T02:15:25.176Z" > timestamp(epoch=1723428985)
 FROM scope()
-[
+
+Output: [
  {
   "timestamp(epoch=1723428985) \u003c 1118628985": false,
   "1118628985 \u003c timestamp(epoch=1723428985)": true,
@@ -78,3 +96,4 @@ FROM scope()
   "\"2024-08-12T02:15:25.176Z\" \u003e timestamp(epoch=1723428985)": false
  }
 ]
+

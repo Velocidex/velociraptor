@@ -1,4 +1,10 @@
-LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict(OS='windows', foo='baz')] ), mock(plugin='glob', results=[dict(OSPath='C:\\Windows\\AppCompat\\Programs\\Amcache.hve')] ), mock(plugin='read_reg_key', results=parse_json_array(data=ReadRegMock)) FROM scope()[]SELECT * FROM Artifact.Windows.Detection.Amcache(SHA1Regex = '1234567890abcdef00001234567890abcdefffff')[
+# Mock out the info plugin just for fun.
+Query: LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict(OS='windows', foo='baz')] ), mock(plugin='glob', results=[dict(OSPath='C:\\Windows\\AppCompat\\Programs\\Amcache.hve')] ), mock(plugin='read_reg_key', results=parse_json_array(data=ReadRegMock)) FROM scope()
+Output: []
+
+# This artifact uses the raw registry parser.
+Query: SELECT * FROM Artifact.Windows.Detection.Amcache(SHA1Regex = '1234567890abcdef00001234567890abcdefffff')
+Output: [
  {
   "HivePath": "/C:/Windows/AppCompat/Programs/Amcache.hve",
   "EntryKey": "/Root/File/3d4ad068-875c-4d05-915d-80dbc131d854/4800002f315",
@@ -12,7 +18,10 @@ LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict
   "BinaryType": null,
   "_Source": "Windows.Detection.Amcache"
  }
-]SELECT * FROM Artifact.Windows.Detection.Amcache(PathRegex = 'C:\\\\Users\\\\Public\\\\')[
+]
+
+Query: SELECT * FROM Artifact.Windows.Detection.Amcache(PathRegex = 'C:\\\\Users\\\\Public\\\\')
+Output: [
  {
   "HivePath": "/C:/Windows/appcompat/Programs/Amcache.hve",
   "EntryKey": "/Root/InventoryApplicationFile/1.exe|e7ecb4ace0d41711",
@@ -39,7 +48,10 @@ LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict
   "BinaryType": null,
   "_Source": "Windows.Detection.Amcache"
  }
-]SELECT * FROM Artifact.Windows.Detection.Amcache(NameRegex = '^a\\.exe$')[
+]
+
+Query: SELECT * FROM Artifact.Windows.Detection.Amcache(NameRegex = '^a\\.exe$')
+Output: [
  {
   "HivePath": "/C:/Windows/AppCompat/Programs/Amcache.hve",
   "EntryKey": "/Root/File/3d4ad068-875c-4d05-915d-80dbc131d854/4800002f315",
@@ -53,7 +65,10 @@ LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict
   "BinaryType": null,
   "_Source": "Windows.Detection.Amcache"
  }
-]SELECT * FROM Artifact.Windows.Detection.Amcache()[
+]
+
+Query: SELECT * FROM Artifact.Windows.Detection.Amcache()
+Output: [
  {
   "HivePath": "/C:/Windows/appcompat/Programs/Amcache.hve",
   "EntryKey": "/Root/InventoryDevicePnp/\"pci/ven_8086\\u0026dev_10d3\\u0026subsys_07d015ad\\u0026rev_00/000c29ffff23301200\"",
@@ -107,3 +122,4 @@ LET X <= SELECT mock(plugin='info', results=[dict(OS='windows', foo='bar'), dict
   "_Source": "Windows.Detection.Amcache"
  }
 ]
+

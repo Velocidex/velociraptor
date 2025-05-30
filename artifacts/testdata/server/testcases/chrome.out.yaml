@@ -1,4 +1,11 @@
-LET X <= format(format=RemappingTemplate, args=[srcDir + '/artifacts/testdata/files/Session Storage.zip'])[]LET _ <= remap(config=X, clear=TRUE)[]SELECT * FROM Artifact.Generic.Applications.Chrome.SessionStorage(Accessor="ntfs")[
+Query: LET X <= format(format=RemappingTemplate, args=[srcDir + '/artifacts/testdata/files/Session Storage.zip'])
+Output: []
+
+Query: LET _ <= remap(config=X, clear=TRUE)
+Output: []
+
+Query: SELECT * FROM Artifact.Generic.Applications.Chrome.SessionStorage(Accessor="ntfs")
+Output: [
  {
   "OSPath": "C:\\Users\\Admin\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Session Storage",
   "GUID": "28bf6ff6_2c1e_41ce_9a1e_e3b35dabc4ae",
@@ -48,3 +55,4 @@ LET X <= format(format=RemappingTemplate, args=[srcDir + '/artifacts/testdata/fi
   "_Source": "Generic.Applications.Chrome.SessionStorage"
  }
 ]
+

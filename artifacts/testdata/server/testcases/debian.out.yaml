@@ -1,4 +1,5 @@
-SELECT OSPath.Basename AS OSPath, * FROM Artifact.Linux.Debian.AptSources( source="Sources", linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list/*")], aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/" )[
+Query: SELECT OSPath.Basename AS OSPath, * FROM Artifact.Linux.Debian.AptSources( source="Sources", linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list/*")], aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/" )
+Output: [
  {
   "OSPath": "misc.sources",
   "X-Repolib-Name": "MongoDb",
@@ -173,7 +174,10 @@ SELECT OSPath.Basename AS OSPath, * FROM Artifact.Linux.Debian.AptSources( sourc
   "Components": "multiverse",
   "_Source": "Linux.Debian.AptSources/Sources"
  }
-]SELECT OSPath.Basename AS OSPath, * FROM Artifact.Linux.Debian.AptSources( source="SourcesFlattened", linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list/*")], aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/" )[
+]
+
+Query: SELECT OSPath.Basename AS OSPath, * FROM Artifact.Linux.Debian.AptSources( source="SourcesFlattened", linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list/*")], aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/" )
+Output: [
  {
   "OSPath": "misc.sources",
   "X-Repolib-Name": "MongoDb",
@@ -642,8 +646,11 @@ SELECT OSPath.Basename AS OSPath, * FROM Artifact.Linux.Debian.AptSources( sourc
   "Components": "multiverse",
   "_Source": "Linux.Debian.AptSources/SourcesFlattened"
  }
-]SELECT OSPath.Basename as OSPath, NULL AS Mtime, NULL AS Ctime, NULL AS Atime, NULL AS Source, *
-FROM Artifact.Linux.Debian.AptSources( source="SourcesCacheFiles", linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list/sources.list")], aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/" ) WHERE Record[
+]
+
+Query: SELECT OSPath.Basename as OSPath, NULL AS Mtime, NULL AS Ctime, NULL AS Atime, NULL AS Source, *
+FROM Artifact.Linux.Debian.AptSources( source="SourcesCacheFiles", linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list/sources.list")], aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/" ) WHERE Record
+Output: [
  {
   "OSPath": "au.archive.ubuntu.com_ubuntu_dists_jammy_InRelease",
   "Mtime": null,
@@ -663,7 +670,15 @@ FROM Artifact.Linux.Debian.AptSources( source="SourcesCacheFiles", linuxAptSourc
   "URIs": "http://au.archive.ubuntu.com/ubuntu",
   "_Source": "Linux.Debian.AptSources/SourcesCacheFiles"
  }
-]LET _ <= mock(plugin="http_client", results=[ dict(Response=200, Content=read_file(filename=srcDir + "/artifacts/testdata/files/debian/snaps.json")) ])[]SELECT * FROM Artifact.Linux.Debian.Packages( linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status", source="DebPackages")[
+]
+
+# Mock http_client() with the content of snaps.json
+Query: LET _ <= mock(plugin="http_client", results=[ dict(Response=200, Content=read_file(filename=srcDir + "/artifacts/testdata/files/debian/snaps.json")) ])
+Output: []
+
+# Check both sources separately - first the DebPackages then the Snaps
+Query: SELECT * FROM Artifact.Linux.Debian.Packages( linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status", source="DebPackages")
+Output: [
  {
   "Package": "adduser",
   "InstalledSize": "608 B",
@@ -709,7 +724,10 @@ FROM Artifact.Linux.Debian.AptSources( source="SourcesCacheFiles", linuxAptSourc
   "Architecture": "all",
   "_Source": "Linux.Debian.Packages/DebPackages"
  }
-]SELECT * FROM Artifact.Linux.Debian.Packages( linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status", source="Snaps")[
+]
+
+Query: SELECT * FROM Artifact.Linux.Debian.Packages( linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status", source="Snaps")
+Output: [
  {
   "Name": "snapd-desktop-integration",
   "_Summary": "Desktop Integration for snapd",
@@ -903,3 +921,4 @@ FROM Artifact.Linux.Debian.AptSources( source="SourcesCacheFiles", linuxAptSourc
   "_Source": "Linux.Debian.Packages/Snaps"
  }
 ]
+

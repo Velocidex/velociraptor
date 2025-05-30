@@ -1,8 +1,17 @@
-SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FROM scope()[
+Query: SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FROM scope()
+Output: [
  {
   "mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')])": null
  }
-]SELECT OSPath.Path AS Key, Data, Data.type AS Type FROM glob(globs="*", accessor="raw_reg", root=pathspec( Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU", DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat")) WHERE OSPath.Basename =~ "0" ORDER BY Type[
+]
+
+# Test listing a direcctory with Key named the same as a value. This
+# should show both key and value as separate entities with the same
+# name. Glob should be able to handle this because raw registry
+# accessor presents the UniqueName() interface to allow Globs to see
+# them as different entities.
+Query: SELECT OSPath.Path AS Key, Data, Data.type AS Type FROM glob(globs="*", accessor="raw_reg", root=pathspec( Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU", DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat")) WHERE OSPath.Basename =~ "0" ORDER BY Type
+Output: [
  {
   "Key": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\0",
   "Data": {
@@ -19,11 +28,20 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   },
   "Type": "REG_BINARY"
  }
-]SELECT format(format="%02x", args=read_file(accessor='raw_reg', filename=pathspec( Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU/0", DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat"))) AS ValueContent FROM scope()[
+]
+
+# Now test read_file on values. If there is a value and a key of the
+# same name an Open() will prefer the value.
+Query: SELECT format(format="%02x", args=read_file(accessor='raw_reg', filename=pathspec( Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU/0", DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat"))) AS ValueContent FROM scope()
+Output: [
  {
   "ValueContent": "14001f80cb859f6720028040b29b5540cc05aab60000"
  }
-]SELECT LastModified, Binary, Name, Size, ProductName, Publisher, BinFileVersion FROM Artifact.Windows.System.Amcache( source="InventoryApplicationFile", amCacheGlob=srcDir+"/artifacts/testdata/files/Amcache.hve") LIMIT 5[
+]
+
+# This artifact uses the raw registry parser.
+Query: SELECT LastModified, Binary, Name, Size, ProductName, Publisher, BinFileVersion FROM Artifact.Windows.System.Amcache( source="InventoryApplicationFile", amCacheGlob=srcDir+"/artifacts/testdata/files/Amcache.hve") LIMIT 5
+Output: [
  {
   "LastModified": "2019-03-02T08:21:12Z",
   "Binary": "c:\\windows\\softwaredistribution\\download\\install\\am_base.exe",
@@ -69,7 +87,11 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "Publisher": "google inc.",
   "BinFileVersion": "72.0.3626.121"
  }
-]SELECT ModTime, basename(path=Hive), KeyPath, Description, Path, _Parsed FROM Artifact.Windows.Forensics.Shellbags(SearchSpecs=[ dict( HiveGlob=srcDir+"/artifacts/testdata/files/UsrClass.dat", KeyGlob='''\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\**'''),]) ORDER BY KeyPath[
+]
+
+# Test the shell bags artifact
+Query: SELECT ModTime, basename(path=Hive), KeyPath, Description, Path, _Parsed FROM Artifact.Windows.Forensics.Shellbags(SearchSpecs=[ dict( HiveGlob=srcDir+"/artifacts/testdata/files/UsrClass.dat", KeyGlob='''\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\**'''),]) ORDER BY KeyPath
+Output: [
  {
   "ModTime": "2021-06-01T06:28:19Z",
   "basename(path=Hive)": "UsrClass.dat",
@@ -340,7 +362,11 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
    }
   }
  }
-]SELECT ParsedF, ParsedV FROM Artifact.Windows.Forensics.SAM( SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="Parsed")[
+]
+
+# Test the SAM parsers
+Query: SELECT ParsedF, ParsedV FROM Artifact.Windows.Forensics.SAM( SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="Parsed")
+Output: [
  {
   "ParsedF": {
    "LastLoginDate": "1601-01-01T00:00:00Z",
@@ -477,7 +503,10 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
    "ntpwd_hash": "\u0002\u0002\u0010"
   }
  }
-]SELECT * FROM Artifact.Windows.Forensics.SAM( SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="CreateTimes")[
+]
+
+Query: SELECT * FROM Artifact.Windows.Forensics.SAM( SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="CreateTimes")
+Output: [
  {
   "Username": "Administrator",
   "CreatedTime": "2021-10-08T00:54:13Z",
@@ -503,12 +532,21 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "CreatedTime": "2021-10-07T08:07:32Z",
   "_Source": "Windows.Forensics.SAM/CreateTimes"
  }
-]SELECT utf16(string=read_file(filename=pathspec( Path="\\Root\\DeviceCensus\\Processor\\ProcessorIdentifier", DelegatePath=srcDir+"/artifacts/testdata/files/Amcache.hve", DelegateAccessor='file'), accessor="raw_reg")) FROM scope()[
+]
+
+# Check raw reg can read values as files - REG_SZ.
+Query: SELECT utf16(string=read_file(filename=pathspec( Path="\\Root\\DeviceCensus\\Processor\\ProcessorIdentifier", DelegatePath=srcDir+"/artifacts/testdata/files/Amcache.hve", DelegateAccessor='file'), accessor="raw_reg")) FROM scope()
+Output: [
  {
   "utf16(string=read_file(filename=pathspec(Path=\"\\\\Root\\\\DeviceCensus\\\\Processor\\\\ProcessorIdentifier\", DelegatePath=srcDir + \"/artifacts/testdata/files/Amcache.hve\", DelegateAccessor='file'), accessor=\"raw_reg\"))": "Intel64 Family 6 Model 62 Stepping 4\u0000"
  }
-]SELECT utf16(string=read_file(filename=pathspec( Path="\\Root\\DeviceCensus\\WritePermissionsCheck", DelegatePath=srcDir+"/artifacts/testdata/files/Amcache.hve", DelegateAccessor='file'), accessor="raw_reg")) FROM scope()[
+]
+
+# Check raw reg can read values as files - REG_DWORD
+Query: SELECT utf16(string=read_file(filename=pathspec( Path="\\Root\\DeviceCensus\\WritePermissionsCheck", DelegatePath=srcDir+"/artifacts/testdata/files/Amcache.hve", DelegateAccessor='file'), accessor="raw_reg")) FROM scope()
+Output: [
  {
   "utf16(string=read_file(filename=pathspec(Path=\"\\\\Root\\\\DeviceCensus\\\\WritePermissionsCheck\", DelegatePath=srcDir + \"/artifacts/testdata/files/Amcache.hve\", DelegateAccessor='file'), accessor=\"raw_reg\"))": "\u0001\u0000"
  }
 ]
+

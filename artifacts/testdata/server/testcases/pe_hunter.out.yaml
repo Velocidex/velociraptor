@@ -1,4 +1,6 @@
-SELECT File.Name, File.Size, Hash.SHA1, PE FROM Artifact.Windows.Detection.BinaryHunter(TargetGlob=srcDir + "/artifacts/**/*.dll",PEInformationRegex='NetUseEnum',SHA1List='8645c878966239afe44df0593288c7c59a7878eb')[
+# Test Windows.Detection.BinaryHunter
+Query: SELECT File.Name, File.Size, Hash.SHA1, PE FROM Artifact.Windows.Detection.BinaryHunter(TargetGlob=srcDir + "/artifacts/**/*.dll",PEInformationRegex='NetUseEnum',SHA1List='8645c878966239afe44df0593288c7c59a7878eb')
+Output: [
  {
   "File.Name": "wkscli.dll",
   "File.Size": 9728,
@@ -142,3 +144,4 @@ SELECT File.Name, File.Size, Hash.SHA1, PE FROM Artifact.Windows.Detection.Binar
   }
  }
 ]
+

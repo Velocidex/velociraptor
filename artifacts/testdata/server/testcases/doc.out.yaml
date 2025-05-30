@@ -1,4 +1,5 @@
-SELECT basename(path=OfficePath) as OfficePath, OfficeSize, InternalMtime, HexContext FROM Artifact.Generic.Applications.Office.Keywords( searchGlob=srcDir + '/artifacts/testdata/files')[
+Query: SELECT basename(path=OfficePath) as OfficePath, OfficeSize, InternalMtime, HexContext FROM Artifact.Generic.Applications.Office.Keywords( searchGlob=srcDir + '/artifacts/testdata/files')
+Output: [
  {
   "OfficePath": "test.docx",
   "OfficeSize": 4172,
@@ -65,3 +66,4 @@ SELECT basename(path=OfficePath) as OfficePath, OfficeSize, InternalMtime, HexCo
   ]
  }
 ]
+

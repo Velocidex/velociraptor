@@ -1,5 +1,7 @@
-SELECT thread_info.BasePriority FROM threads(pid=getpid()) WHERE thread_info.BasePriority = 0 LIMIT 1[
+Query: SELECT thread_info.BasePriority FROM threads(pid=getpid()) WHERE thread_info.BasePriority = 0 LIMIT 1
+Output: [
  {
   "thread_info.BasePriority": 0
  }
 ]
+

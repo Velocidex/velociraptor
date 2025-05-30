@@ -1,17 +1,32 @@
-SELECT basename(path=Path) AS Name FROM Artifact.System.VFS.DownloadFile( Components=pathspec( Path=srcDir+"/artifacts/testdata/server/testcases/vfs.in.yaml").Components)[
+# Non recursive download
+Query: SELECT basename(path=Path) AS Name FROM Artifact.System.VFS.DownloadFile( Components=pathspec( Path=srcDir+"/artifacts/testdata/server/testcases/vfs.in.yaml").Components)
+Output: [
  {
   "Name": "vfs.in.yaml"
  }
-]SELECT basename(path=Path) AS Name FROM Artifact.System.VFS.DownloadFile( Recursively=TRUE, Components=pathspec( Path=srcDir+"/artifacts/definitions/System/VFS").Components) WHERE Name =~ "DownloadFile.yaml$"[
+]
+
+# Recursive download
+Query: SELECT basename(path=Path) AS Name FROM Artifact.System.VFS.DownloadFile( Recursively=TRUE, Components=pathspec( Path=srcDir+"/artifacts/definitions/System/VFS").Components) WHERE Name =~ "DownloadFile.yaml$"
+Output: [
  {
   "Name": "DownloadFile.yaml"
  }
-]SELECT Name FROM Artifact.System.VFS.ListDirectory( source="Listing", Components=pathspec(Path=srcDir+"/artifacts/definitions/System").Components) WHERE Name =~ "VFS"[
+]
+
+# List directory with one level
+Query: SELECT Name FROM Artifact.System.VFS.ListDirectory( source="Listing", Components=pathspec(Path=srcDir+"/artifacts/definitions/System").Components) WHERE Name =~ "VFS"
+Output: [
  {
   "Name": "VFS"
  }
-]SELECT Name FROM Artifact.System.VFS.ListDirectory( Depth=10, source="Listing", Components=pathspec(Path=srcDir+"/artifacts/definitions/System/").Components) WHERE _OSPath =~ "ListDirectory.yaml$"[
+]
+
+# List directory with more depth
+Query: SELECT Name FROM Artifact.System.VFS.ListDirectory( Depth=10, source="Listing", Components=pathspec(Path=srcDir+"/artifacts/definitions/System/").Components) WHERE _OSPath =~ "ListDirectory.yaml$"
+Output: [
  {
   "Name": "ListDirectory.yaml"
  }
 ]
+

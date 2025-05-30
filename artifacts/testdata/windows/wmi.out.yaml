@@ -1,7 +1,9 @@
-SELECT DNSServerSearchOrder from wmi( query='select DNSServerSearchOrder FROM win32_networkadapterconfiguration') WHERE DNSServerSearchOrder[
+Query: SELECT DNSServerSearchOrder from wmi( query='select DNSServerSearchOrder FROM win32_networkadapterconfiguration') WHERE DNSServerSearchOrder
+Output: [
  {
   "DNSServerSearchOrder": [
    "168.63.129.16"
   ]
  }
 ]
+

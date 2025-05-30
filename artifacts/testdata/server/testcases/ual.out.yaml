@@ -1,4 +1,5 @@
-SELECT *, basename(path=_OSPath) AS _OSPath FROM Artifact.Windows.Forensics.UserAccessLogs( source="Clients", SUMGlob=srcDir+"/artifacts/testdata/files/*.mdb") GROUP BY AuthenticatedUserName[
+Query: SELECT *, basename(path=_OSPath) AS _OSPath FROM Artifact.Windows.Forensics.UserAccessLogs( source="Clients", SUMGlob=srcDir+"/artifacts/testdata/files/*.mdb") GROUP BY AuthenticatedUserName
+Output: [
  {
   "RoleGuid": "{10a9226f-50ee-49d8-a393-9a501d47ce04}",
   "TenantId": "{00000000-0000-0000-0000-000000000000}",
@@ -162,7 +163,10 @@ SELECT *, basename(path=_OSPath) AS _OSPath FROM Artifact.Windows.Forensics.User
   "_Source": "Windows.Forensics.UserAccessLogs/Clients",
   "_OSPath": "{03A01CC5-91BB-4936-B685-63697785D39E}.mdb"
  }
-]SELECT *, basename(path=_OSPath) AS _OSPath FROM Artifact.Windows.Forensics.UserAccessLogs( source="SystemIdentity", SUMGlob=srcDir+"/artifacts/testdata/files/*.mdb") ORDER BY CreationTime LIMIT 1[
+]
+
+Query: SELECT *, basename(path=_OSPath) AS _OSPath FROM Artifact.Windows.Forensics.UserAccessLogs( source="SystemIdentity", SUMGlob=srcDir+"/artifacts/testdata/files/*.mdb") ORDER BY CreationTime LIMIT 1
+Output: [
  {
   "CreationTime": "2022-08-21T03:08:08Z",
   "PhysicalProcessorCount": 16,
@@ -192,3 +196,4 @@ SELECT *, basename(path=_OSPath) AS _OSPath FROM Artifact.Windows.Forensics.User
   "_OSPath": "SystemIdentity.mdb"
  }
 ]
+

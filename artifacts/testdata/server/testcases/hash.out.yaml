@@ -1,4 +1,5 @@
-SELECT hash(path=srcDir+"/artifacts/testdata/files/hello.zip") AS AllHashes, hash(path=srcDir+"/artifacts/testdata/files/hello.zip", hashselect="md5") AS MD5HashOnly, hash(path=srcDir+"/artifacts/testdata/files/hello.zip", hashselect=["md5", "sha256"]) AS MDHashAndSha256 FROM scope()[
+Query: SELECT hash(path=srcDir+"/artifacts/testdata/files/hello.zip") AS AllHashes, hash(path=srcDir+"/artifacts/testdata/files/hello.zip", hashselect="md5") AS MD5HashOnly, hash(path=srcDir+"/artifacts/testdata/files/hello.zip", hashselect=["md5", "sha256"]) AS MDHashAndSha256 FROM scope()
+Output: [
  {
   "AllHashes": {
    "MD5": "cf2b61489d0564ec415caaa298c5cdd4",
@@ -16,8 +17,12 @@ SELECT hash(path=srcDir+"/artifacts/testdata/files/hello.zip") AS AllHashes, has
    "SHA256": "3726e4d9af228eb0506913c15e0d2db20ec9c0b584d9d698a2254ef537dcf674"
   }
  }
-]SELECT tlsh_hash(path=srcDir+"/artifacts/testdata/files/hello.zip") FROM scope()[
+]
+
+Query: SELECT tlsh_hash(path=srcDir+"/artifacts/testdata/files/hello.zip") FROM scope()
+Output: [
  {
   "tlsh_hash(path=srcDir + \"/artifacts/testdata/files/hello.zip\")": "910129b04509c911c72fa938c21dc15db6eac1cbaa18980b7f0121f1b98913275bbf19"
  }
 ]
+

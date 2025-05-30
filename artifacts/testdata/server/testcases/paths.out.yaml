@@ -1,48 +1,88 @@
-SELECT basename(path="/foo/bar/baz", path_type='linux') FROM scope()[
+Query: SELECT basename(path="/foo/bar/baz", path_type='linux') FROM scope()
+Output: [
  {
   "basename(path=\"/foo/bar/baz\", path_type='linux')": "baz"
  }
-]SELECT dirname(path="/foo/bar/baz", path_type='linux') FROM scope()[
+]
+
+Query: SELECT dirname(path="/foo/bar/baz", path_type='linux') FROM scope()
+Output: [
  {
   "dirname(path=\"/foo/bar/baz\", path_type='linux')": "/foo/bar"
  }
-]SELECT relpath(path=pathspec(parse="/foo/bar"), base="/foo", sep="/") FROM scope()[
+]
+
+Query: SELECT relpath(path=pathspec(parse="/foo/bar"), base="/foo", sep="/") FROM scope()
+Output: [
  {
   "relpath(path=pathspec(parse=\"/foo/bar\"), base=\"/foo\", sep=\"/\")": "bar"
  }
-]SELECT basename(path='/foo/bar/"http://www.google.com/"', path_type='generic') FROM scope()[
+]
+
+# Test we handle proper escaping
+Query: SELECT basename(path='/foo/bar/"http://www.google.com/"', path_type='generic') FROM scope()
+Output: [
  {
   "basename(path='/foo/bar/\"http://www.google.com/\"', path_type='generic')": "http://www.google.com/"
  }
-]SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"', path_type='windows') FROM scope()[
+]
+
+Query: SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"', path_type='windows') FROM scope()
+Output: [
  {
   "basename(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"', path_type='windows')": "http://www.google.com/"
  }
-]SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path_type='windows') FROM scope()[
+]
+
+Query: SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path_type='windows') FROM scope()
+Output: [
  {
   "basename(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"/Foobar', path_type='windows')": "Foobar"
  }
-]SELECT dirname(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path_type='windows') FROM scope()[
+]
+
+Query: SELECT dirname(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar', path_type='windows') FROM scope()
+Output: [
  {
   "dirname(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"/Foobar', path_type='windows')": "c:\\foo\\bar\\\"http://www.google.com/\""
  }
-]SELECT basename(path='c:\\foo\\bar\\"F:\\foobar.txt"', path='windows') FROM scope()[
+]
+
+Query: SELECT basename(path='c:\\foo\\bar\\"F:\\foobar.txt"', path='windows') FROM scope()
+Output: [
  {
   "basename(path='c:\\\\foo\\\\bar\\\\\"F:\\\\foobar.txt\"', path='windows')": "windows"
  }
-]SELECT basename(path='c:\\foo\\bar\\"F:\\foo/bar.txt"', path='windows') FROM scope()[
+]
+
+Query: SELECT basename(path='c:\\foo\\bar\\"F:\\foo/bar.txt"', path='windows') FROM scope()
+Output: [
  {
   "basename(path='c:\\\\foo\\\\bar\\\\\"F:\\\\foo/bar.txt\"', path='windows')": "windows"
  }
-]SELECT path_split(path="/a/b/c/d/e", path_type='linux')[-2] FROM scope()[
+]
+
+# Get second last path component
+Query: SELECT path_split(path="/a/b/c/d/e", path_type='linux')[-2] FROM scope()
+Output: [
  {
   "path_split(path=\"/a/b/c/d/e\", path_type='linux')[-2]": "d"
  }
-]SELECT path_split(path="/a/b", path_type='linux')[-20] FROM scope()[
+]
+
+# Make sure we handle overflow properly by wrapping
+Query: SELECT path_split(path="/a/b", path_type='linux')[-20] FROM scope()
+Output: [
  {
   "path_split(path=\"/a/b\", path_type='linux')[-20]": "a"
  }
-]LET path_spec = pathspec(DelegateAccessor="file", DelegatePath="C:/Windows")[]SELECT
+]
+
+# Make sure pathspec parsing works.
+Query: LET path_spec = pathspec(DelegateAccessor="file", DelegatePath="C:/Windows")
+Output: []
+
+Query: SELECT
    -- Serialize to JSON string
    path_spec,
 
@@ -74,7 +114,8 @@ SELECT basename(path="/foo/bar/baz", path_type='linux') FROM scope()[
 
 
 FROM scope()
-[
+
+Output: [
  {
   "path_spec": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\"}",
   "pathspec(parse=path_spec.String)": "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"C:/Windows\"}",
@@ -99,7 +140,14 @@ FROM scope()
    "foo/bar"
   ]
  }
-]LET shadow_path <= pathspec(parse="\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows\\System32\\Notepad.exe", path_type="windows")[]SELECT shadow_path, shadow_path.Dirname, shadow_path.Dirname.Basename, shadow_path.Basename, shadow_path.Components FROM scope()[
+]
+
+# Complex Windows Paths
+Query: LET shadow_path <= pathspec(parse="\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows\\System32\\Notepad.exe", path_type="windows")
+Output: []
+
+Query: SELECT shadow_path, shadow_path.Dirname, shadow_path.Dirname.Basename, shadow_path.Basename, shadow_path.Components FROM scope()
+Output: [
  {
   "shadow_path": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows\\System32\\Notepad.exe",
   "shadow_path.Dirname": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows\\System32",
@@ -112,7 +160,13 @@ FROM scope()
    "Notepad.exe"
   ]
  }
-]LET OSPath = pathspec(parse='''C:\Users\test\desktop.ini''', path_type="windows")[]SELECT OSPath,
+]
+
+# Handle paths with subscripts
+Query: LET OSPath = pathspec(parse='''C:\Users\test\desktop.ini''', path_type="windows")
+Output: []
+
+Query: SELECT OSPath,
   OSPath.Components[0] AS Drive,
   OSPath.Components[-2] AS UserName,
   OSPath[:-1] AS HomeDirectory,
@@ -120,7 +174,8 @@ FROM scope()
   -- Adding components to an OSPath extends it into a new path.
   pathspec(parse="D:", path_type="windows") + OSPath.Components[1:] AS PathOnDDrive
 FROM scope()
-[
+
+Output: [
  {
   "OSPath": "C:\\Users\\test\\desktop.ini",
   "Drive": "C:",
@@ -129,9 +184,18 @@ FROM scope()
   "DriveRelative": "Users\\test\\desktop.ini",
   "PathOnDDrive": "D:\\Users\\test\\desktop.ini"
  }
-]LET ComplexOSPath <= pathspec( Path="ControlSet001", DelegateAccessor="raw_ntfs", DelegatePath=pathspec( Path="/Windows/System32/Config/SYSTEM", DelegateAccessor="offset", DelegatePath=pathspec( Path="122683392", DelegateAccessor="zip", DelegatePath="/shared/mnt/flat")))[]SELECT ComplexOSPath, ComplexOSPath.HumanString FROM scope()[
+]
+
+# Complex nested pathspec. Use zip here instead of file to get
+# consistant slash behavior on Linux and Windows.
+Query: LET ComplexOSPath <= pathspec( Path="ControlSet001", DelegateAccessor="raw_ntfs", DelegatePath=pathspec( Path="/Windows/System32/Config/SYSTEM", DelegateAccessor="offset", DelegatePath=pathspec( Path="122683392", DelegateAccessor="zip", DelegatePath="/shared/mnt/flat")))
+Output: []
+
+Query: SELECT ComplexOSPath, ComplexOSPath.HumanString FROM scope()
+Output: [
  {
   "ComplexOSPath": "{\"DelegateAccessor\":\"raw_ntfs\",\"DelegatePath\":\"{\\\"DelegateAccessor\\\":\\\"offset\\\",\\\"DelegatePath\\\":\\\"{\\\\\\\"DelegateAccessor\\\\\\\":\\\\\\\"zip\\\\\\\",\\\\\\\"DelegatePath\\\\\\\":\\\\\\\"/shared/mnt/flat\\\\\\\",\\\\\\\"Path\\\\\\\":\\\\\\\"/122683392\\\\\\\"}\\\",\\\"Path\\\":\\\"/Windows/System32/Config/SYSTEM\\\"}\",\"Path\":\"/ControlSet001\"}",
   "ComplexOSPath.HumanString": "/shared/mnt/flat -\u003e /122683392 -\u003e Windows\\System32\\Config\\SYSTEM -\u003e /ControlSet001"
  }
 ]
+

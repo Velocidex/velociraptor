@@ -1,20 +1,36 @@
-SELECT magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe'), magic(path=srcDir + '/artifacts/testdata/files/test.docx'), magic(path=srcDir + '/artifacts/testdata/files/access.log') FROM scope()[
+# access.log should be just data here
+Query: SELECT magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe'), magic(path=srcDir + '/artifacts/testdata/files/test.docx'), magic(path=srcDir + '/artifacts/testdata/files/access.log') FROM scope()
+Output: [
  {
   "magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe')": "PE32 executable (console) Intel 80386, for MS Windows",
   "magic(path=srcDir + '/artifacts/testdata/files/test.docx')": "Microsoft Word 2007+",
   "magic(path=srcDir + '/artifacts/testdata/files/access.log')": "ASCII text"
  }
-]SELECT magic(path=srcDir + '/artifacts/testdata/files/access.log', magic=ApacheMagic) FROM scope()[
+]
+
+# Add some custom definitions. This should trigger our magic now.
+Query: SELECT magic(path=srcDir + '/artifacts/testdata/files/access.log', magic=ApacheMagic) FROM scope()
+Output: [
  {
   "magic(path=srcDir + '/artifacts/testdata/files/access.log', magic=ApacheMagic)": "Apache Logs, ASCII text"
  }
-]SELECT magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe', accessor="file"), magic(path=sampleLog, accessor="data", magic=ApacheMagic) FROM scope()[
+]
+
+# Using an accessor to get the data allows us to magic arbitrary strings.
+Query: SELECT magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe', accessor="file"), magic(path=sampleLog, accessor="data", magic=ApacheMagic) FROM scope()
+Output: [
  {
   "magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe', accessor=\"file\")": "PE32 executable (console) Intel 80386, for MS Windows",
   "magic(path=sampleLog, accessor=\"data\", magic=ApacheMagic)": "Apache Logs, ASCII text"
  }
-]SELECT magic(path=srcDir + '/artifacts/testdata/files/') FROM scope()[
+]
+
+# When accessor is not specified we use libmagic itself to access
+# files - this allows reporting on directories, symlinks etc.
+Query: SELECT magic(path=srcDir + '/artifacts/testdata/files/') FROM scope()
+Output: [
  {
   "magic(path=srcDir + '/artifacts/testdata/files/')": "directory"
  }
 ]
+

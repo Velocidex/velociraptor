@@ -1,5 +1,13 @@
-LET Cleaned <= yara_lint(clean=TRUE, rules=YaraRules)[]SELECT Cleaned FROM scope()[
+Query: LET Cleaned <= yara_lint(clean=TRUE, rules=YaraRules)
+Output: []
+
+Query: SELECT Cleaned FROM scope()
+Output: [
  {
   "Cleaned": "import \"pe\"\n\nrule Hive {\n  condition:\n    pe.imphash() == \"f34d5f2d4577ed6d9ceec516c1f5a744\"\n}\n"
  }
-]SELECT * FROM yara(rules=Cleaned, accessor="data", files="Hello")[]
+]
+
+Query: SELECT * FROM yara(rules=Cleaned, accessor="data", files="Hello")
+Output: []
+

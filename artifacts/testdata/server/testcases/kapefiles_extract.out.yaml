@@ -1,4 +1,8 @@
-LET tmpdir <= tempdir()[]SELECT Timestamp, vfs_path, FileUpload, Metadata, UploadedFile.sha256 FROM Artifact.Windows.KapeFiles.Extract( OutputDirectory=tmpdir, ContainerPath=srcDir + TestFile)[
+Query: LET tmpdir <= tempdir()
+Output: []
+
+Query: SELECT Timestamp, vfs_path, FileUpload, Metadata, UploadedFile.sha256 FROM Artifact.Windows.KapeFiles.Extract( OutputDirectory=tmpdir, ContainerPath=srcDir + TestFile)
+Output: [
  {
   "Timestamp": "2022-11-22T02:06:02.3631543Z",
   "vfs_path": "\\\\.\\C:\\$Extend\\$UsnJrnl:$Max",
@@ -41,11 +45,24 @@ LET tmpdir <= tempdir()[]SELECT Timestamp, vfs_path, FileUpload, Metadata, Uploa
   },
   "UploadedFile.sha256": "72892da885c6a4c64d8a1e5f2369f20f5a1dd4d16fda1d2ed7fb459b96f3ca1a"
  }
-]SELECT * FROM test_read_logs() WHERE Log =~ "is too sparse - unable to expand it" AND NOT Log =~ "SELECT"[
+]
+
+# Should refuse to pad out very sparse files.
+Query: SELECT * FROM test_read_logs() WHERE Log =~ "is too sparse - unable to expand it" AND NOT Log =~ "SELECT"
+Output: [
  {
   "Log": "Velociraptor: Error: File /uploads/ntfs/%5C%5C.%5CC%3A/$Extend/$UsnJrnl%3A$J is too sparse - unable to expand it.\n"
  }
-]LET CheckTime(Time, Default) = if(condition={ SELECT * FROM info() WHERE OS=~"windows" }, then=Time, else=Default)[]SELECT Name, Mtime.Unix AS Mtime, CheckTime(Time=Ctime.Unix, Default=1629576251) AS Ctime, CheckTime(Time=Atime.Unix, Default=1629576251) AS Atime FROM glob(globs="/**", root=tmpdir) WHERE NOT IsDir ORDER BY Name[
+]
+
+# On Windows we can adjust all the timestamps but only Linux on the
+# mtime
+Query: LET CheckTime(Time, Default) = if(condition={ SELECT * FROM info() WHERE OS=~"windows" }, then=Time, else=Default)
+Output: []
+
+# Make sure that timestamps are properly adjusted
+Query: SELECT Name, Mtime.Unix AS Mtime, CheckTime(Time=Ctime.Unix, Default=1629576251) AS Ctime, CheckTime(Time=Atime.Unix, Default=1629576251) AS Atime FROM glob(globs="/**", root=tmpdir) WHERE NOT IsDir ORDER BY Name
+Output: [
  {
   "Name": "$UsnJrnl%3A$J",
   "Mtime": 1629576251,
@@ -65,3 +82,4 @@ LET tmpdir <= tempdir()[]SELECT Timestamp, vfs_path, FileUpload, Metadata, Uploa
   "Atime": 1629576251
  }
 ]
+

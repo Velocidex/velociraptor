@@ -1,4 +1,9 @@
-LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd' ]), clear=TRUE)[]SELECT * FROM Artifact.Windows.NTFS.ExtendedAttributes( MFTDrive='''\\.\C:''', SizeMax=256)[
+Query: LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd' ]), clear=TRUE)
+Output: []
+
+# EA test
+Query: SELECT * FROM Artifact.Windows.NTFS.ExtendedAttributes( MFTDrive='''\\.\C:''', SizeMax=256)
+Output: [
  {
   "OSPath": "\\\\.\\C:\\another_file.txt",
   "NtfsMetadata": {
@@ -197,7 +202,10 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   },
   "_Source": "Windows.NTFS.ExtendedAttributes"
  }
-]SELECT * FROM Artifact.Windows.NTFS.ExtendedAttributes( MFTDrive='''\\.\C:''', SizeMin=5000,SizeMax=20000)[
+]
+
+Query: SELECT * FROM Artifact.Windows.NTFS.ExtendedAttributes( MFTDrive='''\\.\C:''', SizeMin=5000,SizeMax=20000)
+Output: [
  {
   "OSPath": "\\\\.\\C:\\just_a_file.txt",
   "NtfsMetadata": {
@@ -298,3 +306,4 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "_Source": "Windows.NTFS.ExtendedAttributes"
  }
 ]
+

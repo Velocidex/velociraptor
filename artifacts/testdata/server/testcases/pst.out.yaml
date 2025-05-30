@@ -1,4 +1,5 @@
-SELECT * FROM Artifact.Windows.Forensics.Pst( PSTGlob=srcDir + "/artifacts/testdata/files/pst/Outlook.pst", AttachmentYaraRule=YaraRule, SubjectRegex="Multiple", PathRegex="Sent")[
+Query: SELECT * FROM Artifact.Windows.Forensics.Pst( PSTGlob=srcDir + "/artifacts/testdata/files/pst/Outlook.pst", AttachmentYaraRule=YaraRule, SubjectRegex="Multiple", PathRegex="Sent")
+Output: [
  {
   "Path": "ROOT_FOLDER/Top of Personal Folders/Sent Items",
   "Sender": "saqib.razzaq@xp.local",
@@ -51,3 +52,4 @@ SELECT * FROM Artifact.Windows.Forensics.Pst( PSTGlob=srcDir + "/artifacts/testd
   "_Source": "Windows.Forensics.Pst"
  }
 ]
+
