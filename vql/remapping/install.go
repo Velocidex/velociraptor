@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 // Process a "mount" type remapping directive.
@@ -207,7 +208,7 @@ func ApplyRemappingOnScope(
 
 		case "impersonation":
 			remapped_scope.AppendPlugins(NewMockerPlugin(
-				"info", []*ordereddict.Dict{
+				"info", []types.Any{
 					ordereddict.NewDict().
 						Set("Hostname", remapping.Hostname).
 						Set("Fqdn", remapping.Hostname).

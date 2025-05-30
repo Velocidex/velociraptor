@@ -17,11 +17,17 @@ Queries:
 # Now simulate failure to connect to the server. This should go
 # through the process then uninstall the table due to connectivity
 # check errors.
-- LET _ <= SELECT mock(plugin='execve', results=[
+- |
+  LET _ <= SELECT mock(plugin='execve', results=[
       dict(Stdout="nftables ran OK", Stderr="", ReturnCode=0)]),
    mock(plugin="http_client", results=[
-     dict(Response=500, Url="http://.../")
-   ])
+     // First call will be to server
+     ( dict(Response=500, Url="http://server/"), ),
+
+     // Second call will be to forbidden www.google.com
+     ( dict(Response=500, Url="http://forbidden/"), )
+
+   ]), log(message="Failing to connect to the server")
   FROM scope()
 
 - SELECT Result
@@ -29,15 +35,21 @@ Queries:
 
 - SELECT mock_replay(plugin='execve'), mock_replay(plugin='http_client')
   FROM scope()
+
+- SELECT *
+  FROM test_read_logs()
+  WHERE Log =~ "failed connection test. Removing quarantine table." AND NOT Log =~ "SELECT"
 
 - LET _ <= mock_clear()
 
 # Now we go through with the process. Success!
-- LET _ <= SELECT mock(plugin='execve', results=[
+- |
+  LET _ <= SELECT mock(plugin='execve', results=[
       dict(Stdout="nftables ran OK", Stderr="", ReturnCode=0)]),
    mock(plugin="http_client", results=[
-     dict(Response=200, Url="http://.../")
-   ])
+     ( dict(Response=200, Url="http://server success/"), ),
+     ( dict(Response=500, Url="http://forbidden failure/"), )
+   ]), log(message="Success to connect to the server, failing to connect to the forbidden - all good!")
   FROM scope()
 
 - SELECT Result
@@ -45,3 +57,29 @@ Queries:
 
 - SELECT mock_replay(plugin='execve'), mock_replay(plugin='http_client')
   FROM scope()
+
+- SELECT *
+  FROM test_read_logs()
+  WHERE Log =~ "failed connection test. Removing quarantine table." AND NOT Log =~ "SELECT"
+
+- LET _ <= mock_clear()
+
+# Now test what happens if the forbidden connection is still
+# successful somehow. We need to tear down the connection.
+- LET _ <= SELECT mock(plugin='execve', results=[
+      dict(Stdout="nftables ran OK", Stderr="", ReturnCode=0)]),
+   mock(plugin="http_client", results=[
+     ( dict(Response=200, Url="http://server successful/"), ),
+     ( dict(Response=200, Url="http://forbidden success/"), )
+   ]), log(message="Success to connect to the server, success to connect to the forbidden - should tear down")
+  FROM scope()
+
+- SELECT Result
+  FROM Artifact.Linux.Remediation.Quarantine()
+
+- SELECT mock_replay(plugin='execve'), mock_replay(plugin='http_client')
+  FROM scope()
+
+- SELECT *
+  FROM test_read_logs()
+  WHERE Log =~ "forbidden connection test - connection to https://www.google.com could be established. Removing quarantine table." AND NOT Log =~ "SELECT"
