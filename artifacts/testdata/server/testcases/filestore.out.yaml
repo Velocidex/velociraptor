@@ -1,4 +1,7 @@
-SELECT OSPath, hash(path=OSPath, accessor="fs") FROM glob( globs='/clients/C.4f5e52adf0a337a9/artifacts/**', accessor="fs") WHERE NOT IsDir ORDER BY OSPath[
+# Test the fs accessor. Glob should return an `fs:/path` path. Hash
+# should be able to read the data.
+Query: SELECT OSPath, hash(path=OSPath, accessor="fs") FROM glob( globs='/clients/C.4f5e52adf0a337a9/artifacts/**', accessor="fs") WHERE NOT IsDir ORDER BY OSPath
+Output: [
  {
   "OSPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/System.VFS.ListDirectory/F.BN2HJBD1R85EA.json",
   "hash(path=OSPath, accessor=\"fs\")": {
@@ -39,7 +42,13 @@ SELECT OSPath, hash(path=OSPath, accessor="fs") FROM glob( globs='/clients/C.4f5
    "SHA256": "8b39ee335f2f7dd7a68f57900a687fa2bcaae0b1e6d31f3ee91100f195835d9b"
   }
  }
-]SELECT hash(path='ds:/clients/C.4f5e52adf0a337a9/ping.json.db', accessor="fs") FROM scope()[
+]
+
+# We can read datastore files if the datastore and filestore
+# overlap. We can not currently find datastore objects with glob,
+# but we can open them using the fs accessor.
+Query: SELECT hash(path='ds:/clients/C.4f5e52adf0a337a9/ping.json.db', accessor="fs") FROM scope()
+Output: [
  {
   "hash(path='ds:/clients/C.4f5e52adf0a337a9/ping.json.db', accessor=\"fs\")": {
    "MD5": "e97dcefe1bb39617d1f8e9562d7944be",
@@ -47,7 +56,13 @@ SELECT OSPath, hash(path=OSPath, accessor="fs") FROM glob( globs='/clients/C.4f5
    "SHA256": "0b7a67d3cbc83cca1f9a7994bd9b22a1242c9930ddab5284e9a7d94f411235c9"
   }
  }
-]SELECT hash(path=Data.VFSPath, accessor="fs"), Data FROM enumerate_flow(client_id="C.4f5e52adf0a337a9", flow_id="F.BN2HP3OSS3LK6") WHERE Type IN ("Log", "CollectionContext", "Task", "Result")[
+]
+
+# enumerate_flow emits some fs paths and some ds paths. Here we test
+# that we can read both these types. file_store operating on the
+# string version should be same as directly.
+Query: SELECT hash(path=Data.VFSPath, accessor="fs"), Data FROM enumerate_flow(client_id="C.4f5e52adf0a337a9", flow_id="F.BN2HP3OSS3LK6") WHERE Type IN ("Log", "CollectionContext", "Task", "Result")
+Output: [
  {
   "hash(path=Data.VFSPath, accessor=\"fs\")": {
    "MD5": "8b4d424194162d8cda89e75774e059da",
@@ -89,3 +104,4 @@ SELECT OSPath, hash(path=OSPath, accessor="fs") FROM glob( globs='/clients/C.4f5
   }
  }
 ]
+

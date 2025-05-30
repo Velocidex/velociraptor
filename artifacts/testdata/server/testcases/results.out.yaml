@@ -1,4 +1,6 @@
-SELECT Authors, OSPath, License, Name, Summary, Version FROM source( client_id='C.4f5e52adf0a337a9', flow_id="F.BN2HP3OSS3LK6", artifact='Windows.Applications.ChocolateyPackages')[
+# A collection from a client.
+Query: SELECT Authors, OSPath, License, Name, Summary, Version FROM source( client_id='C.4f5e52adf0a337a9', flow_id="F.BN2HP3OSS3LK6", artifact='Windows.Applications.ChocolateyPackages')
+Output: [
  {
   "Authors": "Vinay Pamnani",
   "OSPath": "\\C:\\ProgramData\\chocolatey\\lib\\wmiexplorer\\wmiexplorer.nuspec",
@@ -7,18 +9,30 @@ SELECT Authors, OSPath, License, Name, Summary, Version FROM source( client_id='
   "Summary": "WMI Explorer is a utility intended to provide the ability to browse and view WMI namespaces/classes/instances/properties in a single pane of view.",
   "Version": "2.0.0.0"
  }
-]SELECT Path, Name FROM source( hunt_id="H.49ba8939", artifact="Windows.Network.NetstatEnriched/Netstat") LIMIT 1[
+]
+
+# Reading from hunts
+Query: SELECT Path, Name FROM source( hunt_id="H.49ba8939", artifact="Windows.Network.NetstatEnriched/Netstat") LIMIT 1
+Output: [
  {
   "Path": "C:\\Windows\\System32\\svchost.exe",
   "Name": "svchost.exe"
  }
-]SELECT * FROM source( notebook_id="N.H.19c0c0a2", notebook_cell_id="NC.BUURUOMSSMJ5I") LIMIT 1[
+]
+
+# Reading from notebook cells.
+Query: SELECT * FROM source( notebook_id="N.H.19c0c0a2", notebook_cell_id="NC.BUURUOMSSMJ5I") LIMIT 1
+Output: [
  {
   "URL": "https://login.live.com/oauth20_desktop.srf?lc=1033",
   "Visited": "2020-11-23T17:29:03Z",
   "Visit Count": 26
  }
-]SELECT * from source( client_id='C.4f5e52adf0a337a9', artifact='Windows.Events.ProcessCreation') WHERE Name =~ '(?i)psexesvc'[
+]
+
+# Reading client event artifacts
+Query: SELECT * from source( client_id='C.4f5e52adf0a337a9', artifact='Windows.Events.ProcessCreation') WHERE Name =~ '(?i)psexesvc'
+Output: [
  {
   "Timestamp": "2019-10-25T07:20:33Z",
   "PPID": 604,
@@ -28,7 +42,11 @@ SELECT Authors, OSPath, License, Name, Summary, Version FROM source( client_id='
   "ParentInfo": "",
   "_ts": 1571988100000
  }
-]SELECT * from source( start_time=1694102596, artifact='Server.Monitor.Health/Prometheus') LIMIT 2[
+]
+
+# Reading server event artifacts
+Query: SELECT * from source( start_time=1694102596, artifact='Server.Monitor.Health/Prometheus') LIMIT 2
+Output: [
  {
   "TotalFrontends": 0,
   "CPUPercent": 0,
@@ -43,7 +61,11 @@ SELECT Authors, OSPath, License, Name, Summary, Version FROM source( client_id='
   "client_comms_current_connections": 0,
   "_ts": 1694102606889
  }
-]SELECT * from source( start_row=1, start_time=1694102596, artifact='Server.Monitor.Health/Prometheus') LIMIT 1[
+]
+
+# Page it a bit.
+Query: SELECT * from source( start_row=1, start_time=1694102596, artifact='Server.Monitor.Health/Prometheus') LIMIT 1
+Output: [
  {
   "TotalFrontends": 1,
   "CPUPercent": 0,
@@ -52,3 +74,4 @@ SELECT Authors, OSPath, License, Name, Summary, Version FROM source( client_id='
   "_ts": 1694102606889
  }
 ]
+

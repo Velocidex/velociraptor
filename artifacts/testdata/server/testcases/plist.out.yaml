@@ -1,4 +1,5 @@
-SELECT * FROM Artifact.MacOS.System.Users(UserPlistGlob=srcDir + '/artifacts/testdata/files/vagrant.plist')[
+Query: SELECT * FROM Artifact.MacOS.System.Users(UserPlistGlob=srcDir + '/artifacts/testdata/files/vagrant.plist')
+Output: [
  {
   "Name": "vagrant",
   "RealName": "vagrant",
@@ -14,7 +15,10 @@ SELECT * FROM Artifact.MacOS.System.Users(UserPlistGlob=srcDir + '/artifacts/tes
   "PasswordLastSetTime": "2017-11-25T00:36:29.728411912Z",
   "_Source": "MacOS.System.Users"
  }
-]SELECT basename(path=ZipFile), Member, Key, Value FROM Artifact.MacOS.Forensics.AppleDoubleZip(ZipGlob=srcDir + '/artifacts/testdata/files/logo*.zip')[
+]
+
+Query: SELECT basename(path=ZipFile), Member, Key, Value FROM Artifact.MacOS.Forensics.AppleDoubleZip(ZipGlob=srcDir + '/artifacts/testdata/files/logo*.zip')
+Output: [
  {
   "basename(path=ZipFile)": "logo.zip",
   "Member": "/__MACOSX/._logo.svg",
@@ -37,3 +41,4 @@ SELECT * FROM Artifact.MacOS.System.Users(UserPlistGlob=srcDir + '/artifacts/tes
   "Value": "q/0081;61def1a8;Chrome;A3B40CE4-C08F-450D-88AB-C618C472337F\u0000"
  }
 ]
+

@@ -1,4 +1,6 @@
-SELECT * FROM hunt_results(hunt_id='H.49ba8939', artifact='Windows.Network.NetstatEnriched/Netstat') LIMIT 1[
+# Make sure this gives back client id and Fqdn fields.
+Query: SELECT * FROM hunt_results(hunt_id='H.49ba8939', artifact='Windows.Network.NetstatEnriched/Netstat') LIMIT 1
+Output: [
  {
   "Pid": 568,
   "Ppid": 828,
@@ -37,12 +39,20 @@ SELECT * FROM hunt_results(hunt_id='H.49ba8939', artifact='Windows.Network.Netst
   "_OrgId": "root",
   "Fqdn": "DESKTOP-BP4S7TF"
  }
-]SELECT hunt_id, create_time FROM hunts(hunt_id="H.49ba8939")[
+]
+
+# Retrieve hunt info by hunt id
+Query: SELECT hunt_id, create_time FROM hunts(hunt_id="H.49ba8939")
+Output: [
  {
   "hunt_id": "H.49ba8939",
   "create_time": 1593490948327828
  }
-]SELECT hunt_id, create_time FROM hunts() ORDER BY hunt_id LIMIT 2[
+]
+
+# List all hunts
+Query: SELECT hunt_id, create_time FROM hunts() ORDER BY hunt_id LIMIT 2
+Output: [
  {
   "hunt_id": "H.19c0c0a2",
   "create_time": 1606270777529448
@@ -51,15 +61,23 @@ SELECT * FROM hunt_results(hunt_id='H.49ba8939', artifact='Windows.Network.Netst
   "hunt_id": "H.49ba8939",
   "create_time": 1593490948327828
  }
-]SELECT hunt(description='Test Hunt1', artifacts='Generic.Client.Info', pause=TRUE, expires=now() + 18000).Request.hunt_description, hunt(description='Test Hunt2', artifacts='Generic.Client.Info', pause=TRUE, expires=timestamp(epoch=now() + 18000)).Request.hunt_description, hunt(description='Test Hunt3', artifacts='Generic.Client.Info', pause=TRUE, expires=timestamp(epoch=now() + 18000).UnixNano).Request.hunt_description, hunt(description='Test Hunt expires in past', artifacts='Generic.Client.Info', pause=TRUE, expires=now() - 18000)
-FROM scope()[
+]
+
+# Schedule a hunt with expiry in the future
+Query: SELECT hunt(description='Test Hunt1', artifacts='Generic.Client.Info', pause=TRUE, expires=now() + 18000).Request.hunt_description, hunt(description='Test Hunt2', artifacts='Generic.Client.Info', pause=TRUE, expires=timestamp(epoch=now() + 18000)).Request.hunt_description, hunt(description='Test Hunt3', artifacts='Generic.Client.Info', pause=TRUE, expires=timestamp(epoch=now() + 18000).UnixNano).Request.hunt_description, hunt(description='Test Hunt expires in past', artifacts='Generic.Client.Info', pause=TRUE, expires=now() - 18000)
+FROM scope()
+Output: [
  {
   "hunt(description='Test Hunt1', artifacts='Generic.Client.Info', pause=TRUE, expires=now() + 18000).Request.hunt_description": "Test Hunt1",
   "hunt(description='Test Hunt2', artifacts='Generic.Client.Info', pause=TRUE, expires=timestamp(epoch=now() + 18000)).Request.hunt_description": "Test Hunt2",
   "hunt(description='Test Hunt3', artifacts='Generic.Client.Info', pause=TRUE, expires=timestamp(epoch=now() + 18000).UnixNano).Request.hunt_description": "Test Hunt3",
   "hunt(description='Test Hunt expires in past', artifacts='Generic.Client.Info', pause=TRUE, expires=now() - 18000)": null
  }
-]SELECT hunt(description='Test Hunt1', artifacts='Generic.Client.Info', include_labels="Foo").Request.condition, hunt(description='Test Hunt1', artifacts='Generic.Client.Info', include_labels="Foo", exclude_labels="Bar").Request.condition, hunt(description='Test Hunt1', artifacts='Generic.Client.Info', os="linux").Request.condition FROM scope()[
+]
+
+# Schedule a hunt with conditions
+Query: SELECT hunt(description='Test Hunt1', artifacts='Generic.Client.Info', include_labels="Foo").Request.condition, hunt(description='Test Hunt1', artifacts='Generic.Client.Info', include_labels="Foo", exclude_labels="Bar").Request.condition, hunt(description='Test Hunt1', artifacts='Generic.Client.Info', os="linux").Request.condition FROM scope()
+Output: [
  {
   "hunt(description='Test Hunt1', artifacts='Generic.Client.Info', include_labels=\"Foo\").Request.condition": {
    "UnionField": {
@@ -92,7 +110,10 @@ FROM scope()[
    }
   }
  }
-]SELECT * FROM Artifact.Reporting.Hunts.Details()[
+]
+
+Query: SELECT * FROM Artifact.Reporting.Hunts.Details()
+Output: [
  {
   "hunt_id": "H.49ba8939",
   "hunt_description": "netstat",
@@ -108,3 +129,4 @@ FROM scope()[
   "_Source": "Reporting.Hunts.Details"
  }
 ]
+

@@ -1,15 +1,26 @@
-SELECT OSPath.Components, OSPath FROM glob( globs='/*', root=pathspec( DelegateAccessor="auto", DelegatePath='C:/Windows/System32/Config/SAM'), accessor="raw_reg")[
+# Make sure we can access the raw registry using the auto accessor
+Query: SELECT OSPath.Components, OSPath FROM glob( globs='/*', root=pathspec( DelegateAccessor="auto", DelegatePath='C:/Windows/System32/Config/SAM'), accessor="raw_reg")
+Output: [
  {
   "OSPath.Components": [
    "SAM"
   ],
   "OSPath": "{\"DelegateAccessor\":\"auto\",\"DelegatePath\":\"C:/Windows/System32/Config/SAM\",\"Path\":\"\\\\SAM\"}"
  }
-]SELECT OSPath.Components, OSPath FROM glob( globs='/*', root=pathspec( DelegateAccessor="ntfs", DelegatePath='C:/Windows/System32/Config/SAM'), accessor="raw_reg")[
+]
+
+# And the NTFS accessor
+Query: SELECT OSPath.Components, OSPath FROM glob( globs='/*', root=pathspec( DelegateAccessor="ntfs", DelegatePath='C:/Windows/System32/Config/SAM'), accessor="raw_reg")
+Output: [
  {
   "OSPath.Components": [
    "SAM"
   ],
   "OSPath": "{\"DelegateAccessor\":\"ntfs\",\"DelegatePath\":\"C:/Windows/System32/Config/SAM\",\"Path\":\"\\\\SAM\"}"
  }
-]SELECT OSPath.Components, OSPath FROM glob( globs='/*', root=pathspec( DelegateAccessor="file", DelegatePath='C:/Windows/System32/Config/SAM'), accessor="raw_reg")[]
+]
+
+# But file accessor should fail because it is locked
+Query: SELECT OSPath.Components, OSPath FROM glob( globs='/*', root=pathspec( DelegateAccessor="file", DelegatePath='C:/Windows/System32/Config/SAM'), accessor="raw_reg")
+Output: []
+

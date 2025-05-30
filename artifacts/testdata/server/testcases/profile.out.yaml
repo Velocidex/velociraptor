@@ -1,4 +1,5 @@
-SELECT * FROM profile(metrics=TRUE) WHERE name =~ "client_comms_current_connections"[
+Query: SELECT * FROM profile(metrics=TRUE) WHERE name =~ "client_comms_current_connections"
+Output: [
  {
   "name": "client_comms_current_connections",
   "help": "Number of currently connected clients.",
@@ -6,3 +7,4 @@ SELECT * FROM profile(metrics=TRUE) WHERE name =~ "client_comms_current_connecti
   "Profile": "Metrics"
  }
 ]
+

@@ -1,25 +1,35 @@
-SELECT read_file(filename=OSPath, accessor='collector') FROM glob(globs='**/BasicInformation.json', accessor='collector', root=pathspec( DelegatePath=srcDir + '/artifacts/testdata/files/unencrypted_collector.zip'))[
+# First unencrypted file
+Query: SELECT read_file(filename=OSPath, accessor='collector') FROM glob(globs='**/BasicInformation.json', accessor='collector', root=pathspec( DelegatePath=srcDir + '/artifacts/testdata/files/unencrypted_collector.zip'))
+Output: [
  {
   "read_file(filename=OSPath, accessor='collector')": "{\"Name\":\"velociraptor\",\"BuildTime\":\"2022-10-12T16:14:40+10:00\",\"Version\":\"0.6.7-dev\",\"build_url\":\"\",\"Labels\":null,\"Hostname\":\"DESKTOP-SU8FH31\",\"OS\":\"windows\",\"Architecture\":\"amd64\",\"Platform\":\"Microsoft Windows 11 Enterprise Evaluation\",\"PlatformVersion\":\"10.0.22000 Build 22000\",\"KernelVersion\":\"10.0.22000 Build 22000\",\"Fqdn\":\"DESKTOP-SU8FH31.lan\",\"MACAddresses\":[\"00:0c:29:00:26:7e\"]}\n"
  }
-]SELECT read_file(filename=OSPath, accessor='collector') FROM glob(globs='**/BasicInformation.json', accessor='collector', root=pathspec( DelegatePath=srcDir + '/artifacts/testdata/files/encrypted_collector_pki.zip'))[
+]
+
+# Test that unzip can unencrypt zip files transparently. This file
+# was build from the server certificate.
+Query: SELECT read_file(filename=OSPath, accessor='collector') FROM glob(globs='**/BasicInformation.json', accessor='collector', root=pathspec( DelegatePath=srcDir + '/artifacts/testdata/files/encrypted_collector_pki.zip'))
+Output: [
  {
   "read_file(filename=OSPath, accessor='collector')": "{\"Name\":\"velociraptor\",\"BuildTime\":\"2022-10-12T16:14:40+10:00\",\"Version\":\"0.6.7-dev\",\"build_url\":\"\",\"Labels\":null,\"Hostname\":\"DESKTOP-SU8FH31\",\"OS\":\"windows\",\"Architecture\":\"amd64\",\"Platform\":\"Microsoft Windows 11 Enterprise Evaluation\",\"PlatformVersion\":\"10.0.22000 Build 22000\",\"KernelVersion\":\"10.0.22000 Build 22000\",\"Fqdn\":\"DESKTOP-SU8FH31.lan\",\"MACAddresses\":[\"00:0c:29:00:26:7e\"]}\n"
  }
-]LET ZIP_PASSWORDS = "hello"[]SELECT read_file(filename=OSPath, accessor='collector') FROM glob(globs='**/BasicInformation.json', accessor='collector', root=pathspec( DelegatePath=srcDir + '/artifacts/testdata/files/encrypted_collector_password.zip'))[
+]
+
+# Password is set in the scope so it can not leak in output
+Query: LET ZIP_PASSWORDS = "hello"
+Output: []
+
+Query: SELECT read_file(filename=OSPath, accessor='collector') FROM glob(globs='**/BasicInformation.json', accessor='collector', root=pathspec( DelegatePath=srcDir + '/artifacts/testdata/files/encrypted_collector_password.zip'))
+Output: [
  {
   "read_file(filename=OSPath, accessor='collector')": "{\"Name\":\"velociraptor\",\"BuildTime\":\"2022-10-10T07:34:08+10:00\",\"Version\":\"0.6.7-dev\",\"build_url\":\"\",\"Labels\":null,\"Hostname\":\"DESKTOP-SU8FH31\",\"OS\":\"windows\",\"Architecture\":\"amd64\",\"Platform\":\"Microsoft Windows 11 Enterprise Evaluation\",\"PlatformVersion\":\"10.0.22000 Build 22000\",\"KernelVersion\":\"10.0.22000 Build 22000\",\"Fqdn\":\"DESKTOP-SU8FH31.lan\",\"MACAddresses\":[\"00:0c:29:00:26:7e\"]}\n"
  }
-]SELECT * FROM collect( artifact_definitions=split(sep_string="-----", string=Artifact1 + "-----" + Artifact2), artifacts=["Artifact1", "Artifact2"]) ORDER BY _Source[
- {
-  "X": 1,
-  "_Source": "Artifact1"
- },
- {
-  "X": 2,
-  "_Source": "Artifact2"
- }
-]SELECT * FROM collect( artifact_definitions=[Artifact1, Artifact2], artifacts=["Artifact1", "Artifact2"]) ORDER BY _Source[
+]
+
+# Test we can pass definitions to the collect() plugin. This passes
+# a []string{} to artifact_definitions.
+Query: SELECT * FROM collect( artifact_definitions=split(sep_string="-----", string=Artifact1 + "-----" + Artifact2), artifacts=["Artifact1", "Artifact2"]) ORDER BY _Source
+Output: [
  {
   "X": 1,
   "_Source": "Artifact1"
@@ -29,3 +39,17 @@ SELECT read_file(filename=OSPath, accessor='collector') FROM glob(globs='**/Basi
   "_Source": "Artifact2"
  }
 ]
+
+# This is passes a []LazyExpr{} to artifact_definitions
+Query: SELECT * FROM collect( artifact_definitions=[Artifact1, Artifact2], artifacts=["Artifact1", "Artifact2"]) ORDER BY _Source
+Output: [
+ {
+  "X": 1,
+  "_Source": "Artifact1"
+ },
+ {
+  "X": 2,
+  "_Source": "Artifact2"
+ }
+]
+

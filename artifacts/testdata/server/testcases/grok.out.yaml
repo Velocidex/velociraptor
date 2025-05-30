@@ -1,4 +1,5 @@
-SELECT grok(grok="%{COMMONAPACHELOG}", data=ApacheLogLine) FROM scope()[
+Query: SELECT grok(grok="%{COMMONAPACHELOG}", data=ApacheLogLine) FROM scope()
+Output: [
  {
   "grok(grok=\"%{COMMONAPACHELOG}\", data=ApacheLogLine)": {
    "auth": "-",
@@ -13,15 +14,27 @@ SELECT grok(grok="%{COMMONAPACHELOG}", data=ApacheLogLine) FROM scope()[
    "verb": "GET"
   }
  }
-]SELECT * FROM parse_lines(filename=srcDir + '/artifacts/testdata/files/access.log') LIMIT 1[
+]
+
+Query: SELECT * FROM parse_lines(filename=srcDir + '/artifacts/testdata/files/access.log') LIMIT 1
+Output: [
  {
   "Line": "170.238.36.21 - - [29/Dec/2019:00:09:47 +1000] \"GET / HTTP/1.0\" 401 691 \"-\" \"masscan/1.0 (https://github.com/robertdavidgraham/masscan)\""
  }
-]SELECT Line FROM parse_lines( buffer_size=25, filename=srcDir + '/artifacts/testdata/files/lines.txt')[
+]
+
+# Max buffer size for parse_lines can be adjusted if needed. Should
+# only return one line before quitting.
+Query: SELECT Line FROM parse_lines( buffer_size=25, filename=srcDir + '/artifacts/testdata/files/lines.txt')
+Output: [
  {
   "Line": "11111111111111111111111"
  }
-]SELECT * FROM test_read_logs() WHERE Log =~ "parse_lines:"[
+]
+
+# parse_lines should error out
+Query: SELECT * FROM test_read_logs() WHERE Log =~ "parse_lines:"
+Output: [
  {
   "Log": "Velociraptor: parse_lines: bufio.Scanner: token too long\n"
  },
@@ -29,3 +42,4 @@ SELECT grok(grok="%{COMMONAPACHELOG}", data=ApacheLogLine) FROM scope()[
   "Log": "Velociraptor: Running query SELECT * FROM test_read_logs() WHERE Log =~ \"parse_lines:\"\n"
  }
 ]
+

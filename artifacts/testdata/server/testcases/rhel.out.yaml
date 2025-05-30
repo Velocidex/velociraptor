@@ -1,4 +1,8 @@
-LET _ <= mock(plugin='execve', results={ SELECT read_file(filename=DNFMock, accessor="data") AS Stdout FROM scope() })[]SELECT * FROM Artifact.Linux.RHEL.Packages()[
+Query: LET _ <= mock(plugin='execve', results={ SELECT read_file(filename=DNFMock, accessor="data") AS Stdout FROM scope() })
+Output: []
+
+Query: SELECT * FROM Artifact.Linux.RHEL.Packages()
+Output: [
  {
   "Package": "diffutils.x86_64",
   "Version": "3.8-1.amzn2023.0.2",
@@ -36,3 +40,4 @@ LET _ <= mock(plugin='execve', results={ SELECT read_file(filename=DNFMock, acce
   "_Source": "Linux.RHEL.Packages"
  }
 ]
+

@@ -1,4 +1,5 @@
-SELECT * FROM parse_csv( filename=srcDir + "/artifacts/testdata/files/csv/autoruns.csv")[
+Query: SELECT * FROM parse_csv( filename=srcDir + "/artifacts/testdata/files/csv/autoruns.csv")
+Output: [
  {
   "Time": "7/21/2019 5:23 PM",
   "Entry Location": "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\BootExecute",
@@ -38,7 +39,18 @@ SELECT * FROM parse_csv( filename=srcDir + "/artifacts/testdata/files/csv/autoru
   "Version": "",
   "Launch String": ""
  }
-]LET Path = srcDir + "/artifacts/testdata/files/csv/exchange.log"[]LET Columns = split(string= parse_string_with_regex(string=read_file(filename=Path, length=1000), regex='#Fields. (.+)\n').g1, sep=",")[]SELECT * FROM parse_csv(auto_headers=TRUE, comment="#", columns=Columns, filename=Path)[
+]
+
+# Some CSV files are difficult to process. Exchange logs have a
+# comment with the fields headers in it.
+Query: LET Path = srcDir + "/artifacts/testdata/files/csv/exchange.log"
+Output: []
+
+Query: LET Columns = split(string= parse_string_with_regex(string=read_file(filename=Path, length=1000), regex='#Fields. (.+)\n').g1, sep=",")
+Output: []
+
+Query: SELECT * FROM parse_csv(auto_headers=TRUE, comment="#", columns=Columns, filename=Path)
+Output: [
  {
   "date-time": "2021-11-03T08:00:32.100Z",
   "client-ip": "1.1.1.1",
@@ -103,7 +115,31 @@ SELECT * FROM parse_csv( filename=srcDir + "/artifacts/testdata/files/csv/autoru
   "log-id": "abc-123",
   "schema-versionmessage-id": "15.01.2176.009"
  }
-]LET IISPath = srcDir + "/artifacts/testdata/files/csv/iis.log"[]LET Headers = regex_replace(source=read_file(filename=IISPath, length=1000), re="date time", replace="date_time")[]LET Columns = split(string=parse_string_with_regex(string=Headers, regex='#Fields. (.+)\n').g1, sep=" ")[]LET MyPipe = pipe(query={ SELECT regex_replace( re='''^(\d{4}-\d{2}-\d{2}) (\d{2}:)''', replace='''${1}T${2}''', source=Line) AS Line FROM parse_lines(filename=IISPath) WHERE NOT Line =~ "^#" }, sep="\n")[]SELECT * FROM parse_csv( columns=Columns, separator=" ", filename="MyPipe", accessor="pipe")[
+]
+
+# Parse a CSV with pre-processing using pipes - IIS splits date and
+# time into separate columns - this (overly complicated) query uses
+# regex to add a T between then so they get parsed as ISO times into
+# a single date_time column.
+Query: LET IISPath = srcDir + "/artifacts/testdata/files/csv/iis.log"
+Output: []
+
+# Replace separate data time columns with one date_time
+Query: LET Headers = regex_replace(source=read_file(filename=IISPath, length=1000), re="date time", replace="date_time")
+Output: []
+
+# Extract the column descriptions from the CSV header.
+Query: LET Columns = split(string=parse_string_with_regex(string=Headers, regex='#Fields. (.+)\n').g1, sep=" ")
+Output: []
+
+# Create a pipe for pre-processing the file's lines - replace date
+# space time with dateTtime. Drop comments using WHERE
+Query: LET MyPipe = pipe(query={ SELECT regex_replace( re='''^(\d{4}-\d{2}-\d{2}) (\d{2}:)''', replace='''${1}T${2}''', source=Line) AS Line FROM parse_lines(filename=IISPath) WHERE NOT Line =~ "^#" }, sep="\n")
+Output: []
+
+# Parse the data from the pipe
+Query: SELECT * FROM parse_csv( columns=Columns, separator=" ", filename="MyPipe", accessor="pipe")
+Output: [
  {
   "date_time": "2021-10-09T00:00:01",
   "s-ip": "1.1.1.1",
@@ -168,7 +204,14 @@ SELECT * FROM parse_csv( filename=srcDir + "/artifacts/testdata/files/csv/autoru
   "sc-win32-status": 0,
   "time-taken": 15
  }
-]LET PathBad = srcDir + "/artifacts/testdata/files/csv/bad.csv"[]SELECT * FROM parse_csv(filename=PathBad)[
+]
+
+# Parse bad CSV - should skip over illegal line and keep going
+Query: LET PathBad = srcDir + "/artifacts/testdata/files/csv/bad.csv"
+Output: []
+
+Query: SELECT * FROM parse_csv(filename=PathBad)
+Output: [
  {
   "Foo": "FirstColumn",
   "Bar": "SecondColumnWithLeadingSpace"
@@ -189,7 +232,12 @@ SELECT * FROM parse_csv( filename=srcDir + "/artifacts/testdata/files/csv/autoru
   "Foo": 3,
   "Bar": 4
  }
-]SELECT * FROM parse_csv(filename=Path, comment="#", columns=["Foo", "Bar"]) LIMIT 1[
+]
+
+# Test automatic column name generation (file has more columns than
+# specified).
+Query: SELECT * FROM parse_csv(filename=Path, comment="#", columns=["Foo", "Bar"]) LIMIT 1
+Output: [
  {
   "Foo": "2021-11-03T08:00:32.100Z",
   "Bar": "1.1.1.1",
@@ -222,7 +270,13 @@ SELECT * FROM parse_csv( filename=srcDir + "/artifacts/testdata/files/csv/autoru
   "Col28": "abc-123",
   "Col29": "15.01.2176.009"
  }
-]LET TempFile <= tempfile()[]SELECT * FROM write_csv(filename=TempFile,
+]
+
+# Test writing the CSV
+Query: LET TempFile <= tempfile()
+Output: []
+
+Query: SELECT * FROM write_csv(filename=TempFile,
 query={
    SELECT pathspec(Path="C:/Windows", path_type="windows") AS OSPath,
           1 AS Integer,
@@ -231,7 +285,8 @@ query={
           (1,2,3) AS List
    FROM scope()
 })
-[
+
+Output: [
  {
   "OSPath": "C:\\Windows",
   "Integer": 1,
@@ -246,3 +301,4 @@ query={
   ]
  }
 ]
+
