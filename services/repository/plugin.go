@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 
@@ -32,7 +33,8 @@ type ArtifactRepositoryPlugin struct {
 	repository services.Repository
 	config_obj *config_proto.Config
 
-	mocks map[string][]vfilter.Row
+	mock_call_count int
+	mocks           map[string][]vfilter.Row
 }
 
 func (self *ArtifactRepositoryPlugin) SetMock(
@@ -67,14 +69,34 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		// Support mocking the artifacts
 		mocks, pres := self.mocks[artifact_name]
-		if pres {
-			for _, row := range mocks {
+		if pres && len(mocks) > 0 {
+			result := mocks[self.mock_call_count%len(mocks)]
+			self.mock_call_count += 1
+
+			a_value := reflect.Indirect(reflect.ValueOf(result))
+
+			// It is a multi-call mock. The array represents an entire
+			// call.
+			if a_value.Type().Kind() == reflect.Slice {
+				for i := 0; i < a_value.Len(); i++ {
+					element := a_value.Index(i).Interface()
+					select {
+					case <-ctx.Done():
+						return
+					case output_chan <- element:
+					}
+				}
+
+				// It is a multi-row mock of a single call - dump all
+				// items into rows.
+			} else {
 				select {
 				case <-ctx.Done():
 					return
-				case output_chan <- row:
+				case output_chan <- result:
 				}
 			}
+
 			return
 		}
 
