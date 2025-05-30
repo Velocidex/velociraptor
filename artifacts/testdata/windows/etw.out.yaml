@@ -1,4 +1,9 @@
-LET SessionExists = SELECT SessionName FROM etw_sessions() WHERE SessionName =~ "VeloTest2" LIMIT 1[]SELECT ProviderGUID, { SELECT SessionName, GUID, Watchers FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }) WHERE Profile.Watchers = 2 LIMIT 1[
+Query: LET SessionExists = SELECT SessionName FROM etw_sessions() WHERE SessionName =~ "VeloTest2" LIMIT 1
+Output: []
+
+# Check that two queries for the same provider apply 2 watchers.
+Query: SELECT ProviderGUID, { SELECT SessionName, GUID, Watchers FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }) WHERE Profile.Watchers = 2 LIMIT 1
+Output: [
  {
   "ProviderGUID": "{70EB4F03-C1DE-4F73-A051-33D13D5413BD}",
   "Profile": {
@@ -10,11 +15,22 @@ LET SessionExists = SELECT SessionName FROM etw_sessions() WHERE SessionName =~ 
    "SessionName": "VeloTest2"
   }
  }
-]SELECT sleep(time=1) FROM scope()[
+]
+
+Query: SELECT sleep(time=1) FROM scope()
+Output: [
  {
   "sleep(time=1)": true
  }
-]SELECT * FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2"[]SELECT { SELECT SessionName, GUID FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" ORDER BY GUID } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5) }) LIMIT 1[
+]
+
+# Now Check that session is removed.
+Query: SELECT * FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2"
+Output: []
+
+# Now Check two queries to different proviers
+Query: SELECT { SELECT SessionName, GUID FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" ORDER BY GUID } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5) }) LIMIT 1
+Output: [
  {
   "Profile": [
    {
@@ -30,7 +46,11 @@ LET SessionExists = SELECT SessionName FROM etw_sessions() WHERE SessionName =~ 
    "SessionName": "VeloTest2"
   }
  }
-]SELECT { SELECT SessionName, GUID FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5) }) LIMIT 1[
+]
+
+# Check that GUID1 is removed when no one is interested any more
+Query: SELECT { SELECT SessionName, GUID FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5) }) LIMIT 1
+Output: [
  {
   "Profile": {
    "SessionName": "VeloTest2",
@@ -40,8 +60,17 @@ LET SessionExists = SELECT SessionName FROM etw_sessions() WHERE SessionName =~ 
    "SessionName": "VeloTest2"
   }
  }
-]SELECT sleep(time=1) FROM scope()[
+]
+
+Query: SELECT sleep(time=1) FROM scope()
+Output: [
  {
   "sleep(time=1)": true
  }
-]SELECT * FROM SessionExists[]
+]
+
+# Now make sure that the session is actually removed when there are
+# no interested parties.
+Query: SELECT * FROM SessionExists
+Output: []
+
