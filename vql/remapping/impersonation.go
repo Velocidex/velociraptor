@@ -85,8 +85,8 @@ func disablePlugins(
 	remapping *config_proto.RemappingConfig) {
 
 	for _, pl := range remapping.DisabledPlugins {
-		remapped_scope.AppendPlugins(NewMockerPlugin(
-			pl, []*ordereddict.Dict{}))
+		remapped_scope.AppendPlugins(
+			NewMockerPlugin(pl, []types.Any{}))
 	}
 
 	for _, pl := range remapping.DisabledFunctions {

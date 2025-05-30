@@ -32,6 +32,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 
 	// Load all needed plugins
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
@@ -212,7 +213,7 @@ func (self *TestSuite) SetupTest() {
 
 func (self *TestSuite) mockInfo(scope vfilter.Scope) vfilter.Scope {
 	// Mock the info plugin for stable host.json
-	mock_info := remapping.NewMockerPlugin("info", []*ordereddict.Dict{
+	mock_info := remapping.NewMockerPlugin("info", []types.Any{
 		ordereddict.NewDict().
 			Set("Hostname", "TestHost").
 			Set("HostID", "1234-56")})

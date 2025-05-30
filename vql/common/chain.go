@@ -2,7 +2,6 @@ package common
 
 import (
 	"context"
-	"sort"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -34,8 +33,9 @@ func (self _ChainPlugin) Call(
 	output_chan := make(chan types.Row)
 
 	queries := []types.StoredQuery{}
+
+	// Retain the order of clauses according to their definition order
 	members := scope.GetMembers(args)
-	sort.Strings(members)
 
 	go func() {
 		defer close(output_chan)

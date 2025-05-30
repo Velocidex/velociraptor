@@ -73,7 +73,7 @@ type MockerPlugin struct {
 	ctx  *_MockerCtx
 }
 
-func NewMockerPlugin(name string, results []*ordereddict.Dict) *MockerPlugin {
+func NewMockerPlugin(name string, results []types.Any) *MockerPlugin {
 	result := &MockerPlugin{
 		name: name,
 		ctx:  &_MockerCtx{},
@@ -104,6 +104,8 @@ func (self MockerPlugin) Call(ctx context.Context,
 		a_value := reflect.Indirect(reflect.ValueOf(result))
 		a_type := a_value.Type()
 
+		// It is a multi-call mock. The array represents an entire
+		// call.
 		if a_type.Kind() == reflect.Slice {
 			for i := 0; i < a_value.Len(); i++ {
 				element := a_value.Index(i).Interface()
@@ -114,6 +116,8 @@ func (self MockerPlugin) Call(ctx context.Context,
 				}
 			}
 
+			// It is a multi-row mock of a single call - dump all
+			// items into rows.
 		} else {
 			select {
 			case <-ctx.Done():
@@ -193,7 +197,6 @@ func (self *MockFunction) Call(ctx context.Context,
 		return types.Null{}
 	}
 
-	rows := []types.Row{}
 	results := arg.Results.Reduce(ctx)
 
 	results_query, ok := results.(types.StoredQuery)
@@ -201,24 +204,57 @@ func (self *MockFunction) Call(ctx context.Context,
 		results = types.Materialize(ctx, scope, results_query)
 	}
 
+	var plugin_results []types.Any
+
 	rt := reflect.TypeOf(results)
 	if rt == nil {
 		scope.Log("mock: results should be a list")
 		return types.Null{}
 	}
 
+	// This field can be a number of options:
+
+	// 1. A single dict - same as a list of one dict - just emit a
+	//    single dict as a row
+
+	// 2. A list of lists of dicts: Each list of dicts is a separate
+	//    plugin invocation.
+
+	// 3. A list of dicts: Multiple rows to be emitted in each
+	//    invocation.
+
 	if rt.Kind() != reflect.Slice {
-		rows = append(rows, results)
+		plugin_results = append(plugin_results, results)
 	} else {
 		value := reflect.ValueOf(results)
-		for i := 0; i < value.Len(); i++ {
-			item := value.Index(i).Interface()
-			item_lazy, ok := item.(types.LazyExpr)
-			if ok {
-				item = item_lazy.Reduce(ctx)
+		if value.Len() == 0 {
+			scope.Log("mock: results should be a list")
+			return types.Null{}
+		}
+
+		// First item is a list - this is a multi-call mock
+		if reflect.TypeOf(value.Index(0).Interface()).Kind() == reflect.Slice {
+			for i := 0; i < value.Len(); i++ {
+				item := value.Index(i).Interface()
+				item_lazy, ok := item.(types.LazyExpr)
+				if ok {
+					item = item_lazy.Reduce(ctx)
+				}
+				plugin_results = append(plugin_results, item)
 			}
 
-			rows = append(rows, item)
+			// All items are rows in a single call.
+		} else {
+			var rows []types.Row
+			for i := 0; i < value.Len(); i++ {
+				item := value.Index(i).Interface()
+				item_lazy, ok := item.(types.LazyExpr)
+				if ok {
+					item = item_lazy.Reduce(ctx)
+				}
+				rows = append(rows, item)
+			}
+			plugin_results = append(plugin_results, rows)
 		}
 	}
 
@@ -234,8 +270,7 @@ func (self *MockFunction) Call(ctx context.Context,
 			mock_plugin = &MockerPlugin{name: arg.Plugin, ctx: &_MockerCtx{}}
 			scope_context.AddPlugin(mock_plugin)
 		}
-		mock_plugin.ctx.results = append(mock_plugin.ctx.results, results)
-
+		mock_plugin.ctx.results = plugin_results
 		scope.AppendPlugins(mock_plugin)
 
 	} else if arg.Function != "" {
@@ -245,7 +280,7 @@ func (self *MockFunction) Call(ctx context.Context,
 			scope_context.AddFunction(mock_plugin)
 		}
 
-		mock_plugin.ctx.results = append(mock_plugin.ctx.results, results)
+		mock_plugin.ctx.results = plugin_results
 		scope.AppendFunctions(mock_plugin)
 
 	} else if arg.Artifact != nil {
@@ -259,6 +294,10 @@ func (self *MockFunction) Call(ctx context.Context,
 		if !ok {
 			scope.Log("mock: artifact parameter should be an artifact not %T", item)
 			return types.Null{}
+		}
+		var rows []types.Row
+		for _, i := range plugin_results {
+			rows = append(rows, i)
 		}
 		artifact_plugin.SetMock(artifact_plugin.Name(), rows)
 	} else {

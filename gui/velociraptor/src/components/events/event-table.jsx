@@ -78,6 +78,10 @@ class EventTableLabelGroup extends React.Component {
         let seen = {};
 
         let make_label = (label, table) => {
+            if (_.isEmpty(table)) {
+                return;
+            }
+
             let length = table.artifacts && table.artifacts.length;
             length = length || 0;
 
