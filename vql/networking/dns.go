@@ -44,12 +44,6 @@ func getLookupAddresses(
 		res = append(res, net.JoinHostPort(ip, port))
 	}
 
-	// As a fallback get any addresses in the config file
-	fallback, pres := config_obj.GetFallbackAddresses()[addr]
-	if pres {
-		res = append(res, fallback)
-	}
-
 	return res, nil
 }
 
@@ -98,6 +92,7 @@ func (self *CachingResolver) LookupHost(
 		}
 		self.mu.Unlock()
 	}
+
 	return ips, err
 }
 

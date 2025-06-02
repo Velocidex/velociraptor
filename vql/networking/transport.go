@@ -35,14 +35,25 @@ func GetHttpTransport(config_obj *proto.ClientConfig, extra_roots string) (*http
 		}
 
 		ips, err := getLookupAddresses(ctx, config_obj, addr)
-		if err != nil {
-			return nil, err
+		if err == nil && len(ips) > 0 {
+			for _, ip := range ips {
+				// try default dial with DNS resolution (if necessary)
+				conn, err := d.DialContext(ctx, network, ip)
+				if err == nil {
+					return conn, nil
+				}
+			}
 		}
-		for _, ip := range ips {
-			// try default dial with DNS resolution (if necessary)
-			conn, err := d.DialContext(ctx, network, ip)
-			if err == nil {
-				return conn, nil
+
+		// As a fallback get any addresses in the config file
+		fallback_addresses := config_obj.FallbackAddresses
+		if fallback_addresses != nil {
+			fallback, pres := fallback_addresses[addr]
+			if pres {
+				conn, err := d.DialContext(ctx, network, fallback)
+				if err == nil {
+					return conn, nil
+				}
 			}
 		}
 
