@@ -35,7 +35,7 @@
         "react": "^16.14.0",
         "react-ace": "^9.5.0",
         "react-autosuggest": "^10.1.0",
-        "react-bootstrap": "2.10.9",
+        "react-bootstrap": "2.10.10",
         "react-calendar-timeline": "^0.28.0",
         "react-contexify": "5.0.0",
         "react-dom": "^16.14.0",
