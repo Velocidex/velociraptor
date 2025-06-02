@@ -307,6 +307,14 @@ message ClientConfig {
             description: "This mapping provides fallback addresses for network targets so that a connection may still be established."
         }];
 
+    // If greater than 0 we install a local DNS cache. This is usually
+    // not needed as most operating systems already have local DNS
+    // caching resolvers. This DNS cache will be refreshed
+    // periodically from upstream. Note that the ttl of the record is
+    // currently ignored and we refresh according to this setting.
+    // This setting takes effect both on the client and on the server.
+    uint64 dns_cache_refresh_min = 54;
+
     // If set we disable client checkpoints and so we can not report
     // to the server when the client crashes while collecting an
     // artifact.
