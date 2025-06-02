@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/encrypted_logs"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
 // StartClientServices starts the various services needed by the
@@ -42,6 +43,11 @@ func StartClientServices(
 
 	// Start encrypted logs service if possible
 	err = encrypted_logs.StartEncryptedLog(sm.Ctx, sm.Wg, sm.Config)
+	if err != nil {
+		return sm, err
+	}
+
+	err = networking.MaybeInstallDNSCache(sm.Ctx, sm.Wg, sm.Config)
 	if err != nil {
 		return sm, err
 	}
