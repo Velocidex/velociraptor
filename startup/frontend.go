@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
 // StartFrontendServices starts the binary as a frontend
@@ -47,6 +48,11 @@ func StartFrontendServices(
 
 	// Start the listening server
 	server_builder, err := api.NewServerBuilder(sm.Ctx, config_obj, sm.Wg)
+	if err != nil {
+		return sm, err
+	}
+
+	err = networking.MaybeInstallDNSCache(sm.Ctx, sm.Wg, sm.Config)
 	if err != nil {
 		return sm, err
 	}
