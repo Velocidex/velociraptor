@@ -127,8 +127,16 @@ const base_path = ()=>{
     return base_path;
 };
 
-const api_handlers = ()=>{
-    return base_path() + "/api/";
+// Build the full URL to the API handlers based on the page URL.
+// Example: api_handlers("/v1/foo") -> https://www.example.com/base_path/api/v1/foo
+const api_handlers = url=>{
+    let parsed =  new URL(window.location);
+    let base = base_path() || "/";
+    parsed.pathname = base + "api/" + url;
+    parsed.hash = '';
+    parsed.search = '';
+
+    return parsed.href;
 };
 
 const handle_error = err=>{
@@ -186,7 +194,7 @@ const get_headers = ()=>{
 const get = function(url, params, cancel_token) {
     return axios({
         method: 'get',
-        url: api_handlers() + url,
+        url: api_handlers(url),
         params: params,
         headers: get_headers(),
         cancelToken: cancel_token,
@@ -204,7 +212,7 @@ const get_blob = function(url, params, cancel_token) {
     return axios({
         responseType: 'blob',
         method: 'get',
-        url: api_handlers() + url,
+        url: api_handlers(url),
         params: params,
         paramsSerializer: params => {
             return qs.stringify(params, {indices: false});
@@ -242,7 +250,7 @@ const get_blob = function(url, params, cancel_token) {
 const post = function(url, params, cancel_token) {
     return axios({
         method: 'post',
-        url: api_handlers() + url,
+        url: api_handlers(url),
         data: params,
         cancelToken: cancel_token,
         headers: get_headers(),
@@ -266,7 +274,7 @@ const upload = function(url, files, params) {
 
     return axios({
         method: 'post',
-        url: api_handlers() + url,
+        url: api_handlers(url),
         data: fd,
         headers: get_headers(),
     }).catch(handle_error);
@@ -338,7 +346,7 @@ const href = function(url, params, options) {
 const delete_req = function(url, params, cancel_token) {
     return axios({
         method: 'delete',
-        url: api_handlers() + url,
+        url: api_handlers(url),
         params: params,
         cancelToken: cancel_token,
         headers: get_headers(),
