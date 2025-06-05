@@ -223,7 +223,9 @@ func (self _MemoizeFunction) Call(ctx context.Context, scope vfilter.Scope,
 	result := NewCacheObj(ctx, scope, arg.Key, name)
 	result.expression = arg.Query
 	result.period = time.Duration(arg.Period) * time.Second
-	result.Materialize()
+
+	// Start the cache not materialized - it will refresh on first access.
+	// result.Materialize()
 
 	return result
 }

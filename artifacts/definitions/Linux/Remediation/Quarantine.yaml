@@ -75,12 +75,12 @@ sources:
                                       else="80"))
 
        LET add_to_in_chain(DstAddr, DstPort) = (pathToNFT, 'add', 'rule', 'inet',
-             TableName, 'inbound_chain', 'ip', 'saddr', DstAddr, 'tcp', 'sport', '{',
-             DstPort, '}', 'ct', 'state', 'established', 'accept')
+             TableName, 'inbound_chain', 'ip', 'saddr', host(name=DstAddr)[0],
+             'tcp', 'sport', '{', DstPort, '}', 'ct', 'state', 'established', 'accept')
 
        LET add_to_out_chain(DstAddr, DstPort) = (pathToNFT, 'add', 'rule', 'inet',
-             TableName, 'outbound_chain', 'ip', 'daddr', DstAddr, 'tcp', 'dport', '{',
-             DstPort, '}', 'ct', 'state', 'established,new', 'accept')
+             TableName, 'outbound_chain', 'ip', 'daddr', host(name=DstAddr)[0],
+             'tcp', 'dport', '{', DstPort, '}', 'ct', 'state', 'established,new', 'accept')
 
        // extract Velociraptor config for policy
        LET extracted_config <= SELECT get_domain(URL=_value) AS DstAddr,

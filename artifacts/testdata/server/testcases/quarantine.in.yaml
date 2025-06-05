@@ -2,7 +2,8 @@
 Queries:
 # Check that nothing happens when nftables is not installed
 - LET _ <= SELECT mock(plugin='execve', results=[
-      dict(Stderr="command not found", Stdout="", ReturnCode=1)])
+      dict(Stderr="command not found", Stdout="", ReturnCode=1)]),
+      mock(function="host", results=[ ("192.168.1.1",) ])
   FROM scope()
 
 - SELECT Result
