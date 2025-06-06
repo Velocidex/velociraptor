@@ -33,8 +33,10 @@ function debug() {
 # copy the few files we actually need into third party.
 GOOGLEAPIS_PATH=$CWD/third_party/googleapis/
 
-if ! command -v protoc-gen-go > /dev/null; then
-    go install google.golang.org/protobuf/cmd/protoc-gen-go
+PROTOC_GEN_GO_VERSION="v1.34.1"
+if ! [ -x "$(command -v protoc-gen-go)" ] || [ "$(protoc-gen-go --version)" != "protoc-gen-go $PROTOC_GEN_GO_VERSION" ]; then
+    debug "Installing protoc-gen-go $PROTOC_GEN_GO_VERSION"
+    go install "google.golang.org/protobuf/cmd/protoc-gen-go@$PROTOC_GEN_GO_VERSION"
 fi
 
 if ! command -v protoc-gen-go-grpc > /dev/null; then
@@ -45,7 +47,8 @@ if ! command -v protoc-gen-grpc-gateway > /dev/null; then
     go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
 fi
 
-PROTO_DIRECTORIES="$CWD/proto/ $CWD/crypto/proto/ \
+PROTO_DIRECTORIES="$CWD/proto/ \
+                     $CWD/crypto/proto/ \
                      $CWD/artifacts/proto/ \
                      $CWD/actions/proto/ \
                      $CWD/services/frontend/proto/ \
@@ -54,10 +57,22 @@ PROTO_DIRECTORIES="$CWD/proto/ $CWD/crypto/proto/ \
                      $CWD/acls/proto/ \
                      $CWD/flows/proto/"
 
+COMMON_OPTS="-I."
+if [ -d "$GOPATH/src/" ]; then
+    COMMON_OPTS="$COMMON_OPTS -I$GOPATH/src/"
+fi
+if [ -d "/usr/include/" ]; then
+    COMMON_OPTS="$COMMON_OPTS -I/usr/include/"
+fi
+if [ -d "/usr/local/include/" ]; then
+    COMMON_OPTS="$COMMON_OPTS -I/usr/local/include/"
+fi
+COMMON_OPTS="$COMMON_OPTS -I$GOOGLEAPIS_PATH -I$CWD"
+
 for i in  $PROTO_DIRECTORIES ; do
     debug Building protos in $i
-    debug $PROTOC -I$i -I$GOPATH/src/ -I/usr/include/ -I/usr/local/include/ -I$GOOGLEAPIS_PATH -I$CWD --go_out=paths=source_relative:$i $i/*.proto
-    $PROTOC -I$i -I$GOPATH/src/ -I/usr/include/ -I/usr/local/include/ -I$GOOGLEAPIS_PATH -I$CWD --go_out=paths=source_relative:$i $i/*.proto
+    debug $PROTOC -I$i $COMMON_OPTS $i/*.proto --go_out=paths=source_relative:$i
+    $PROTOC -I$i $COMMON_OPTS $i/*.proto --go_out=paths=source_relative:$i
 
     # Clean up extra version information the proto compiler adds to
     # the files.
@@ -67,21 +82,12 @@ done
 # Build GRPC servers.
 for i in  $CWD/api/proto/ ; do
     debug Building protos in $i
-    debug $PROTOC -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
-           -I$GOOGLEAPIS_PATH -I/usr/include/ \
-           -I$CWD $i/*.proto --go-grpc_out=paths=source_relative:$i --go_out=paths=source_relative:$i
+    debug $PROTOC -I$i $COMMON_OPTS $i/*.proto --go-grpc_out=paths=source_relative:$i --go_out=paths=source_relative:$i
 
-    $PROTOC -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
-           -I$GOOGLEAPIS_PATH -I/usr/include/ \
-           -I$CWD $i/*.proto --go-grpc_out=paths=source_relative:$i --go_out=paths=source_relative:$i
+    $PROTOC -I$i -I. $COMMON_OPTS $i/*.proto --go-grpc_out=paths=source_relative:$i --go_out=paths=source_relative:$i
 
-    debug $PROTOC -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
-           -I$GOOGLEAPIS_PATH -I/usr/include/ \
-           --grpc-gateway_out=paths=source_relative,logtostderr=true:$i $i/*.proto
-
-    $PROTOC -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
-           -I$GOOGLEAPIS_PATH -I/usr/include/ \
-           --grpc-gateway_out=paths=source_relative,logtostderr=true:$i $i/*.proto
+    debug $PROTOC -I$i -I. $COMMON_OPTS $i/*.proto --grpc-gateway_out=paths=source_relative,logtostderr=true:$i
+    $PROTOC -I$i -I. $COMMON_OPTS $i/*.proto --grpc-gateway_out=paths=source_relative,logtostderr=true:$i
 
     # Clean up extra version information the proto compiler adds to
     # the files.

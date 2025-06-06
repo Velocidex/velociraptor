@@ -168,6 +168,7 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 						ordereddict.NewDict().
 							Set("username", username).
 							Set("roles", self.user_roles).
+							Set("orgs", self.user_orgs).
 							Set("remote", r.RemoteAddr))
 					return
 				}
