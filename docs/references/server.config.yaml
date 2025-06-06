@@ -569,6 +569,11 @@ GUI:
       - analyst
       - investigator
 
+    # Optional - defaults to root org
+    saml_user_orgs:
+      - root
+      - other_org_id_1
+
     # URL to OIDC Configuration Document. The configuration should be
     # available in the 'oidc_issuer + /.well-known/openid-configuration' endpoint.
     oidc_issuer: ""

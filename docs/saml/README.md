@@ -20,6 +20,7 @@ These are expected to be set inside `server.config.yaml` under `GUI` key.
 There are also optional parameters:
 - `saml_user_attribute` to set which will be used as a user identificator. If it is not set, it will search for the `name` attribute in the SAML response from the identity provider.
 - `saml_user_roles` enables automatic creation of users and assigns them the configured roles when authenticated via SAML. If it is not set, then no users will be created automatically.
+- `saml_user_orgs` configures which orgs the user will be added do, if `saml_user_roles` is set.  If no orgs are set, they are added to the `root` org.
 
 ## Setting up testing environment
 

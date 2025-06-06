@@ -525,6 +525,9 @@ message Authenticator {
     repeated string saml_user_roles = 23 [(sem_type) = {
             description: "List of roles to assign authenticated SAML users. If this option is not set then no users will be created automatically."
         }];
+    repeated string saml_user_orgs = 28 [(sem_type) = {
+            description: "Organisations to assign when creating users.  By default, only the 'root' org will be assigned.  Requires 'saml_user_roles' to be set as well."
+        }];
     bool saml_allow_idp_initiated = 27 [(sem_type) = {
             description: "Allow IdP-initiated SAML flow."
         }];

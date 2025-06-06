@@ -31,6 +31,7 @@ type SamlAuthenticator struct {
 	user_attribute string
 	authenticator  *config_proto.Authenticator
 	user_roles     []string
+	user_orgs      []string
 }
 
 func (self *SamlAuthenticator) IsPasswordLess() bool {
@@ -152,6 +153,7 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 							Set("error", err).
 							Set("username", username).
 							Set("roles", self.user_roles).
+							Set("orgs", self.user_orgs).
 							Set("remote", r.RemoteAddr))
 					return
 				}
@@ -179,13 +181,14 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 					ordereddict.NewDict().
 						Set("username", username).
 						Set("roles", self.user_roles).
+						Set("orgs", self.user_orgs).
 						Set("remote", r.RemoteAddr))
 
 				// Use the super user principal to actually add the
 				// username so we have enough permissions.
 				err = users.AddUserToOrg(r.Context(), services.AddNewUser,
 					constants.PinnedServerName, username,
-					[]string{"root"}, policy)
+					self.user_orgs, policy)
 				if err != nil {
 					http.Error(w,
 						fmt.Sprintf("authorization failed: automatic user creation: %v", err),
@@ -234,11 +237,17 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 func NewSamlAuthenticator(
 	config_obj *config_proto.Config,
 	auther *config_proto.Authenticator) (*SamlAuthenticator, error) {
+	user_orgs := auther.SamlUserOrgs
+	if len(user_orgs) == 0 {
+		user_orgs = []string{"root"}
+	}
+
 	result := &SamlAuthenticator{
 		config_obj:     config_obj,
 		user_attribute: "name",
 		authenticator:  auther,
 		user_roles:     auther.SamlUserRoles,
+		user_orgs:      user_orgs,
 	}
 
 	if auther.SamlUserAttribute != "" {
