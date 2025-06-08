@@ -127,12 +127,13 @@ const base_path = ()=>{
     return base_path;
 };
 
+
+
 // Build the full URL to the API handlers based on the page URL.
 // Example: api_handlers("/v1/foo") -> https://www.example.com/base_path/api/v1/foo
 const api_handlers = url=>{
     let parsed =  new URL(window.location);
-    let base = base_path() || "/";
-    parsed.pathname = base + "api/" + url;
+    parsed.pathname = path.join(base_path(), "api/" , url);
     parsed.hash = '';
     parsed.search = '';
 
