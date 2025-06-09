@@ -28,7 +28,7 @@ func (self XAttrFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("xattr", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "xattr", args)()
 	defer vql_subsystem.CheckForPanic(scope, "xattr")
 
 	arg := &XAttrArgs{}

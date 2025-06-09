@@ -22,7 +22,7 @@ func (self _CIDRContains) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("cidr_contains", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "cidr_contains", args)()
 
 	arg := &_CIDRContainsArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

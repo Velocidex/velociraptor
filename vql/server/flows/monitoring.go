@@ -56,7 +56,7 @@ func (self MonitoringPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("monitoring", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "monitoring", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
@@ -167,7 +167,7 @@ func (self WatchMonitoringPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("watch_monitoring", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "watch_monitoring", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {

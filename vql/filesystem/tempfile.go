@@ -45,7 +45,7 @@ func (self *TempfileFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("tempfile", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "tempfile", args)()
 
 	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 	if err != nil {
@@ -139,7 +139,7 @@ func (self *TempdirFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("tempdir", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "tempdir", args)()
 
 	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 	if err != nil {

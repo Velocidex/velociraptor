@@ -65,7 +65,7 @@ func (self ParseJsonFunction) Call(
 	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("parse_json", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "parse_json", args)()
 
 	arg := &ParseJsonFunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -96,7 +96,7 @@ func (self ParseJsonArray) Call(
 	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("parse_json_array", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "parse_json_array", args)()
 
 	arg := &ParseJsonFunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -155,7 +155,7 @@ func (self ParseJsonlPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("parse_jsonl", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "parse_jsonl", args)()
 
 		arg := &ParseJsonlPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -270,7 +270,7 @@ func (self ParseJsonArrayPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("parse_json_array", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "parse_json_array", args)()
 
 		result := ParseJsonArray{}.Call(ctx, scope, args)
 		result_value := reflect.Indirect(reflect.ValueOf(result))
@@ -559,7 +559,7 @@ func (self WriteJSONPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("write_jsonl", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "write_jsonl", args)()
 
 		arg := &WriteJSONPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -678,7 +678,7 @@ func (self WatchJsonlPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("watch_jsonl", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "watch_jsonl", args)()
 
 		arg := &syslog.ScannerPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

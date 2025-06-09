@@ -79,7 +79,7 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("generate", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "generate", args)()
 
 	arg := &GeneratorArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

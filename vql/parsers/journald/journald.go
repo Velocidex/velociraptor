@@ -43,7 +43,7 @@ func (self JournalPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("parse_journald", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "parse_journald", args)()
 
 		arg := &JournalPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -110,7 +110,7 @@ func (self WatchJournaldPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("watch_journald", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "watch_journald", args)()
 
 		arg := &WatchJournalPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

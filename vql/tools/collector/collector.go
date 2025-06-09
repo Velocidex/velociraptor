@@ -60,7 +60,7 @@ func (self CollectPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("collect", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "collect", args)()
 
 		// This plugin allows one to create files (for the output
 		// zip), It is very privileged.

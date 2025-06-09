@@ -425,7 +425,7 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("process_tracker", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "process_tracker", args)()
 
 	arg := &_InstallProcessTrackerArgs{}
 

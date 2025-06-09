@@ -107,7 +107,7 @@ func (self NTFSFunction) Call(
 	args *ordereddict.Dict) vfilter.Any {
 
 	defer utils.RecoverVQL(scope)
-	defer vql_subsystem.RegisterMonitor("parse_ntfs", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "parse_ntfs", args)()
 
 	arg := &NTFSFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -215,7 +215,7 @@ func (self MFTScanPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer utils.RecoverVQL(scope)
-		defer vql_subsystem.RegisterMonitor("parse_mft", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "parse_mft", args)()
 
 		arg := &MFTScanPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -292,7 +292,7 @@ func (self NTFSI30ScanPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer utils.RecoverVQL(scope)
-		defer vql_subsystem.RegisterMonitor("parse_ntfs_i30", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "parse_ntfs_i30", args)()
 
 		arg := &NTFSFunctionArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -348,7 +348,7 @@ func (self NTFSRangesPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer utils.RecoverVQL(scope)
-		defer vql_subsystem.RegisterMonitor("parse_ntfs_ranges", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "parse_ntfs_ranges", args)()
 
 		arg := &NTFSFunctionArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

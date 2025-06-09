@@ -48,7 +48,7 @@ func (self UnzipPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("unzip", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "unzip", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 		if err != nil {

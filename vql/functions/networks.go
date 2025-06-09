@@ -39,7 +39,7 @@ func (self *IpFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("ip", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "ip", args)()
 
 	arg := &IpArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

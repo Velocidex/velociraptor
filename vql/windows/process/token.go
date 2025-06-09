@@ -40,7 +40,7 @@ func (self TokenFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("token", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "token", args)()
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {

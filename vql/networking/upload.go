@@ -51,7 +51,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("upload", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "upload", args)()
 
 	uploader, ok := artifacts.GetUploader(scope)
 	if !ok {
@@ -159,7 +159,7 @@ func (self *UploadDirectoryFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("upload_directory", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "upload_directory", args)()
 
 	arg := &UploadDirectoryFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

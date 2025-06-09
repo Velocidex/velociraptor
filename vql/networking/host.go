@@ -29,7 +29,7 @@ func (self *HostFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("host", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "host", args)()
 
 	arg := &HostFunctionArgs{}
 

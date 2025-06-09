@@ -63,7 +63,7 @@ func (self AuditPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("audit", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "audit", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {

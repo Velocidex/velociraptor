@@ -28,7 +28,7 @@ func (self EvalFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 func (self EvalFunction) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("eval", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "eval", args)()
 
 	arg := &EvalFunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

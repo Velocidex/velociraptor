@@ -32,7 +32,7 @@ func (self *AlertFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("alert", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "alert", args)()
 
 	// If a condition is specified we ignore the alert unless the
 	// condition is true

@@ -30,7 +30,7 @@ func (self *RekeyFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("rekey", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "rekey", args)()
 
 	arg := &RekeyFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

@@ -423,7 +423,7 @@ func (self StarlarkCompileFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("starl", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "starl", args)()
 
 	arg := StarlarkCompileArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)
