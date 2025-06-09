@@ -39,7 +39,7 @@ func (self _ChainPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("chain", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "chain", args)()
 
 		var async bool
 

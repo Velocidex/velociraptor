@@ -47,7 +47,7 @@ func (self *PatchFunction) Call(
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &PatchFunctionArgs{}
 
-	defer vql_subsystem.RegisterMonitor("patch", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "patch", args)()
 
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {

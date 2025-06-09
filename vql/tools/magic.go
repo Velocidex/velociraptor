@@ -36,7 +36,7 @@ func (self MagicFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("magic", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "magic", args)()
 
 	arg := &MagicFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

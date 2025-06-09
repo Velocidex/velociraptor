@@ -18,7 +18,7 @@ func (self _SwitchPlugin) Call(ctx context.Context,
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("switch", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "switch", args)()
 
 		queries := []vfilter.StoredQuery{}
 		members := scope.GetMembers(args)

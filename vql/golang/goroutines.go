@@ -32,7 +32,7 @@ func (self GoRoutinesPlugin) Call(ctx context.Context,
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("profile_goroutines", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "profile_goroutines", args)()
 
 		defer utils.RecoverVQL(scope)
 

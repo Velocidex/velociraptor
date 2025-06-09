@@ -30,7 +30,7 @@ func (self ParsePKCS7Function) Call(
 	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("parse_pkcs7", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "parse_pkcs7", args)()
 
 	arg := &ParsePKCS7FunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -65,7 +65,7 @@ func (self ParseX509Function) Call(
 	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("parse_x509", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "parse_x509", args)()
 
 	arg := &ParseX509FunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

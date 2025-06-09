@@ -22,7 +22,7 @@ func (self ListFavoritesPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("favorites_list", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "favorites_list", args)()
 
 		err := services.RequireFrontend()
 		if err != nil {

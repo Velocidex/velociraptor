@@ -38,7 +38,7 @@ type ArrayFunction struct{}
 func (self *ArrayFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	defer vql_subsystem.RegisterMonitor("array", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "array", args)()
 
 	result := []vfilter.Any{}
 
@@ -88,7 +88,7 @@ type JoinFunction struct{}
 func (self *JoinFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	defer vql_subsystem.RegisterMonitor("join", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "join", args)()
 	arg := &JoinFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -117,7 +117,7 @@ type FilterFunction struct{}
 func (self *FilterFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	defer vql_subsystem.RegisterMonitor("filter", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "filter", args)()
 	arg := &FilterFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -164,7 +164,7 @@ type LenFunction struct{}
 func (self *LenFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	defer vql_subsystem.RegisterMonitor("len", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "len", args)()
 	arg := &LenFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -217,7 +217,7 @@ func (self *SliceFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("slice", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "slice", args)()
 
 	arg := &SliceFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

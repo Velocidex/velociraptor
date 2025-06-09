@@ -73,7 +73,7 @@ func (self EtwSessions) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("etw_sessions", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "etw_sessions", args)()
 
 		arg := &EtwSessionsArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

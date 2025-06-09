@@ -21,7 +21,7 @@ func (self OrgsPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("orgs", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "orgs", args)()
 
 		user_manager := services.GetUserManager()
 		org_manager, err := services.GetOrgManager()

@@ -91,3 +91,12 @@ func DebugLogWhenCtxDone(ctx context.Context, name string) {
 		fmt.Printf(name + ": Ctx done!\n")
 	}()
 }
+
+func IsCtxDone(ctx context.Context) bool {
+	select {
+	case <-ctx.Done():
+		return true
+	default:
+		return false
+	}
+}

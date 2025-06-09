@@ -60,7 +60,7 @@ func (self DelayPlugin) Call(ctx context.Context,
 	sub_ctx, cancel := context.WithCancel(ctx)
 
 	go func() {
-		defer vql_subsystem.RegisterMonitor("delay", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "delay", args)()
 		defer cancel()
 
 		wg := &sync.WaitGroup{}

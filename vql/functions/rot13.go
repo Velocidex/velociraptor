@@ -36,7 +36,7 @@ func (self *Rot13) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("rot13", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "rot13", args)()
 
 	arg := &Rot13Args{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

@@ -26,7 +26,7 @@ func (self ColumnFilter) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("column_filter", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "column_filter", args)()
 
 		arg := &ColumnFilterArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

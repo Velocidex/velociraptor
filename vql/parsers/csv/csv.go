@@ -55,7 +55,7 @@ func (self ParseCSVPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("parse_csv", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "parse_csv", args)()
 
 		arg := &ParseCSVPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -184,7 +184,7 @@ func (self _WatchCSVPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("watch_csv", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "watch_csv", args)()
 
 		arg := &ParseCSVPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -255,7 +255,7 @@ func (self WriteCSVPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("write_csv", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "write_csv", args)()
 
 		arg := &WriteCSVPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

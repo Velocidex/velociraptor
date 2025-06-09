@@ -50,7 +50,7 @@ func (self S3UploadFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("upload_s3", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "upload_s3", args)()
 
 	mergeScope(ctx, scope, args)
 

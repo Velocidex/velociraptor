@@ -39,7 +39,7 @@ func (self *StripFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("strip", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "strip", args)()
 
 	arg := &StripArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -84,7 +84,7 @@ func (self *SubStrFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("substr", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "substr", args)()
 
 	arg := &SubStrArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

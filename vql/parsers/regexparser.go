@@ -144,7 +144,7 @@ func (self _ParseFileWithRegex) Call(
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
-	defer vql_subsystem.RegisterMonitor("parse_records_with_regex", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "parse_records_with_regex", args)()
 
 	arg := &_ParseFileWithRegexArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -175,7 +175,7 @@ func (self _ParseFileWithRegex) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("parse_records_with_regex", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "parse_records_with_regex", args)()
 
 		for _, filename := range arg.Filenames {
 			_ParseFile(ctx, filename, scope, arg, output_chan)
@@ -205,7 +205,7 @@ func (self *_ParseStringWithRegexFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) (result vfilter.Any) {
 
-	defer vql_subsystem.RegisterMonitor("parse_string_with_regex", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "parse_string_with_regex", args)()
 
 	arg := &_ParseStringWithRegexFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -279,7 +279,7 @@ func (self _RegexReplace) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("regex_replace", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "regex_replace", args)()
 
 	arg := &_RegexReplaceArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -349,7 +349,7 @@ func (self _RegexMap) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("regex_transform", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "regex_transform", args)()
 
 	arg := &_RegexMapArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

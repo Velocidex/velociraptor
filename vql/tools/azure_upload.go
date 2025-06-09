@@ -39,7 +39,7 @@ func (self *AzureUploadFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("upload_azure", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "upload_azure", args)()
 
 	arg := &AzureUploadArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

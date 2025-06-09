@@ -62,7 +62,7 @@ func (self ShellPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("execve", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "execve", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.EXECVE)
 		if err != nil {

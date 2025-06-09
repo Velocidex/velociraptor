@@ -23,7 +23,7 @@ func (self MemoryAllocationsPlugin) Call(ctx context.Context,
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("profile_memory", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "profile_memory", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {

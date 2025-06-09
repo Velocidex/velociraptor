@@ -190,7 +190,7 @@ func (self _FIFOPlugin) Call(ctx context.Context,
 	wg.Add(1)
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("fifo", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "fifo", args)()
 
 		arg := &_FIFOPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

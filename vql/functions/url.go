@@ -46,7 +46,7 @@ func (self UrlFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("url", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "url", args)()
 
 	arg := &UrlArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

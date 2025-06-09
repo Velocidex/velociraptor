@@ -40,7 +40,7 @@ type HumanizeFunction struct{}
 func (self *HumanizeFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	defer vql_subsystem.RegisterMonitor("humanize", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "humanize", args)()
 
 	arg := &HumanizeArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
