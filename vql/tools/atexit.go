@@ -24,7 +24,7 @@ func (self AtExitFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("atexit", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "atexit", args)()
 
 	arg := &AtExitFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

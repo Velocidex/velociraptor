@@ -46,7 +46,7 @@ func (self InterfacesPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("interfaces", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "interfaces", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {

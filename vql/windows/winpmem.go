@@ -40,7 +40,7 @@ func (self WinpmemFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("winpmem", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "winpmem", args)()
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {

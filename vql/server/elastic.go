@@ -93,7 +93,7 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("elastic", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "elastic", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
 		if err != nil {

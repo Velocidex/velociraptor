@@ -42,7 +42,7 @@ func (self *DirnameFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("dirname", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "dirname", args)()
 
 	arg := &DirnameArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -74,7 +74,7 @@ func (self *BasenameFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("basename", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "basename", args)()
 
 	arg := &DirnameArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -112,7 +112,7 @@ func (self *RelnameFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("relpath", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "relpath", args)()
 
 	arg := &RelnameFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -149,7 +149,7 @@ func (self *PathJoinFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("path_join", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "path_join", args)()
 
 	arg := &PathJoinArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -204,7 +204,7 @@ type PathSplitFunction struct{}
 func (self *PathSplitFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	defer vql_subsystem.RegisterMonitor("path_split", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "path_split", args)()
 
 	arg := &PathSplitArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

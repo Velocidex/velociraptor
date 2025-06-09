@@ -75,7 +75,7 @@ func (self *HashFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("hash", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "hash", args)()
 
 	arg := &HashFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

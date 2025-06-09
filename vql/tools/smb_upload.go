@@ -94,7 +94,7 @@ func (self *SMBUploadFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("upload_smb", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "upload_smb", args)()
 
 	arg := &SMBUploadArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

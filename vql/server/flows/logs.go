@@ -29,7 +29,7 @@ func (self FlowLogsPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("flow_logs", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "flow_logs", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {

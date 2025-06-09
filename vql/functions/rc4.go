@@ -38,7 +38,7 @@ func (self *Crypto_rc4) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("crypto_rc4", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "crypto_rc4", args)()
 
 	arg := &Crypto_rc4Args{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

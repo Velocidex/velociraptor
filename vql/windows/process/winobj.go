@@ -43,7 +43,7 @@ func (self WinObjPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("winobj", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "winobj", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {

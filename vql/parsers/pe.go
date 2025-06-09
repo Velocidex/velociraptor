@@ -56,7 +56,7 @@ func (self _PEFunction) Call(
 	args *ordereddict.Dict) vfilter.Any {
 
 	defer utils.RecoverVQL(scope)
-	defer vql_subsystem.RegisterMonitor("parse_pe", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "parse_pe", args)()
 
 	arg := &_PEFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

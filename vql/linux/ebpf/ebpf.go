@@ -45,7 +45,7 @@ func (self EBPFEventPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("watch_ebpf", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "watch_ebpf", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
@@ -144,7 +144,7 @@ func (self EBPFEventListPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("watch_ebpf", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "watch_ebpf", args)()
 
 		events := ebpf.GetEvents()
 		for _, event := range events.Keys() {

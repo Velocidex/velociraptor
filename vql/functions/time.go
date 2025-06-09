@@ -158,7 +158,7 @@ func (self _Timestamp) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 func (self _Timestamp) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("timestamp", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "timestamp", args)()
 
 	arg := &_TimestampArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -478,7 +478,7 @@ var (
 func (self _TimestampFormat) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("timestamp_format", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "timestamp_format", args)()
 
 	arg := &_TimestampFormatArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

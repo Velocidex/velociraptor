@@ -37,7 +37,7 @@ func (self UploadsPlugins) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("uploads", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "uploads", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {

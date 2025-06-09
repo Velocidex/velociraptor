@@ -34,7 +34,7 @@ func (self ImpersonatedExpand) Call(
 	ctx context.Context,
 	scope vfilter.Scope, args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("expand", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "expand", args)()
 
 	arg := &ExpandPathArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

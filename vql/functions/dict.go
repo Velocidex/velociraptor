@@ -30,7 +30,7 @@ func (self _ToDictFunc) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 func (self _ToDictFunc) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("to_dict", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "to_dict", args)()
 
 	arg := &_ToDictFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -75,7 +75,7 @@ func (self _ItemsFunc) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 
 func (self _ItemsFunc) Call(ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	defer vql_subsystem.RegisterMonitor("items", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "items", args)()
 
 	arg := &_ToDictFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -112,7 +112,7 @@ func (self _DictFunc) Info(scope types.Scope, type_map *types.TypeMap) *types.Fu
 }
 
 func (self _DictFunc) Call(ctx context.Context, scope types.Scope, args *ordereddict.Dict) types.Any {
-	defer vql_subsystem.RegisterMonitor("dict", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "dict", args)()
 
 	return dict.RowToDict(ctx, scope, args)
 }
@@ -127,7 +127,7 @@ func (self *_LazyDictFunc) Info(scope types.Scope, type_map *types.TypeMap) *typ
 }
 
 func (self *_LazyDictFunc) Call(ctx context.Context, scope types.Scope, args *ordereddict.Dict) types.Any {
-	defer vql_subsystem.RegisterMonitor("lazr_dict", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "lazr_dict", args)()
 
 	return args
 }

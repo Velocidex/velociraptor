@@ -49,7 +49,7 @@ type CopyFunction struct{}
 func (self *CopyFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	defer vql_subsystem.RegisterMonitor("copy", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "copy", args)()
 
 	select {
 	case <-ctx.Done():

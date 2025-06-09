@@ -172,7 +172,7 @@ func (self SourcePlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("source", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "source", args)()
 
 		// Depending on the parameters, we need to read from
 		// different places.
@@ -417,7 +417,7 @@ func (self FlowResultsPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("flow_results", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "flow_results", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {

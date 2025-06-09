@@ -27,7 +27,7 @@ func (self GeoIPFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("geoip", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "geoip", args)()
 
 	arg := &GeoIPFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

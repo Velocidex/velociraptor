@@ -52,7 +52,7 @@ func (self HuntsPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("hunts", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "hunts", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
@@ -151,7 +151,7 @@ func (self HuntResultsPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("hunt_results", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "hunt_results", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
@@ -351,7 +351,7 @@ func (self HuntFlowsPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("hunt_flows", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "hunt_flows", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
