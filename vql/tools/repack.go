@@ -66,7 +66,7 @@ func (self RepackFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("repack", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "repack", args)()
 
 	arg := &RepackFunctionArgs{}
 	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)

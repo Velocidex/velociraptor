@@ -65,7 +65,7 @@ func (self _SRUMLookupId) Call(
 	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("srum_lookup_id", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "srum_lookup_id", args)()
 	defer utils.RecoverVQL(scope)
 
 	arg := &_SRUMLookupIdArgs{}
@@ -185,7 +185,7 @@ func (self _ESEPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer utils.RecoverVQL(scope)
-		defer vql_subsystem.RegisterMonitor("parse_ese", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "parse_ese", args)()
 
 		arg := &_ESEArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -271,7 +271,7 @@ func (self _ESECatalogPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer utils.RecoverVQL(scope)
-		defer vql_subsystem.RegisterMonitor("parse_ese_catalog", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "parse_ese_catalog", args)()
 
 		arg := &_ESECatalogArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

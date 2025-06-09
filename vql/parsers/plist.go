@@ -50,7 +50,7 @@ func (self *PlistFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) (result vfilter.Any) {
 
-	defer vql_subsystem.RegisterMonitor("plist", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "plist", args)()
 
 	arg := &_PlistFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -132,7 +132,7 @@ func (self _PlistPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("plist", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "plist", args)()
 
 		arg := &_PlistPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

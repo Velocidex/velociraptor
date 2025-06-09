@@ -87,7 +87,7 @@ func (self HandlesPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("handles", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "handles", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {

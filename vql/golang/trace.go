@@ -30,7 +30,7 @@ func (self *TraceFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("trace", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "trace", args)()
 
 	buf := new(bytes.Buffer)
 	lf := []byte("\n")

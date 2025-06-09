@@ -38,7 +38,7 @@ func (self *IntFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("int", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "int", args)()
 
 	arg := &IntArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -96,7 +96,7 @@ func (self *StrFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("str", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "str", args)()
 
 	arg := &StrFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

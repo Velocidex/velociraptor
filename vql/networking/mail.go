@@ -95,7 +95,7 @@ func (self MailFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("mail", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "mail", args)()
 
 	res := ordereddict.NewDict()
 

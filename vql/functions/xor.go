@@ -37,7 +37,7 @@ func (self *Xor) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("xor", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "xor", args)()
 
 	arg := &XorArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

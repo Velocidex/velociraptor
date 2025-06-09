@@ -39,7 +39,7 @@ func (self *PsKillFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("pskill", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "pskill", args)()
 
 	// Need high level of access to run this - basically the same as
 	// shelling out to e.g. powershell.

@@ -96,7 +96,7 @@ func (self MonitoringLogsPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("monitoring_logs", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "monitoring_logs", args)()
 
 		// Depending on the parameters, we need to read from
 		// different places.

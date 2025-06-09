@@ -153,7 +153,7 @@ type LookupSidFunction struct{}
 func (self *LookupSidFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	defer vql_subsystem.RegisterMonitor("lookupSID", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "lookupSID", args)()
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {

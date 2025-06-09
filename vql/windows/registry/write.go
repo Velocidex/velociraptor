@@ -32,7 +32,7 @@ func (self *RegSetValueFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("reg_set_value", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "reg_set_value", args)()
 
 	arg := &RegSetValueFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -145,7 +145,7 @@ func (self *RegDeleteValueFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("reg_rm_value", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "reg_rm_value", args)()
 
 	arg := &RegDeleteValueFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -217,7 +217,7 @@ func (self *RegDeleteKeyFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("reg_rm_key", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "reg_rm_key", args)()
 
 	arg := &RegDeleteKeyFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

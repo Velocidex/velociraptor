@@ -24,7 +24,7 @@ type TLSHashFunction struct{}
 func (self *TLSHashFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	defer vql_subsystem.RegisterMonitor("tlsh_hash", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "tlsh_hash", args)()
 
 	arg := &HashFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

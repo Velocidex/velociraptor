@@ -29,7 +29,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("client_delete", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "client_delete", args)()
 
 		arg := &DeleteClientArgs{}
 

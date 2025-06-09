@@ -38,7 +38,7 @@ func (self *SimilarityFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("similarity", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "similarity", args)()
 
 	// Parse arguments using arg_parser
 	arg := &similarityArgs{}

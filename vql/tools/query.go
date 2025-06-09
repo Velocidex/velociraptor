@@ -39,7 +39,7 @@ func (self QueryPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("query", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "query", args)()
 
 		// This plugin just passes the current scope to the
 		// subquery so there is no permissions check - the

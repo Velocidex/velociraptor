@@ -156,7 +156,7 @@ func (self logscalePlugin) Call(ctx context.Context,
 
 	go func() {
 		defer close(outputChan)
-		defer vql_subsystem.RegisterMonitor("logscale", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "logscale", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
 		if err != nil {

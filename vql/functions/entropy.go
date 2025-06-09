@@ -37,7 +37,7 @@ func (self *Entropy) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("entropy", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "entropy", args)()
 
 	arg := &entropy_args{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

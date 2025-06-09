@@ -287,7 +287,7 @@ func (self *_HttpPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("http_client", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "http_client", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
 		if err != nil {

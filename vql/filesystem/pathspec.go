@@ -27,7 +27,7 @@ func (self PathSpecFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("pathspec", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "pathspec", args)()
 
 	arg := &PathSpecArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

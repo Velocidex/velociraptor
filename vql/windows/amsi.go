@@ -28,7 +28,7 @@ func (self _AMSIFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("amsi", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "amsi", args)()
 
 	arg := &_AMSIFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

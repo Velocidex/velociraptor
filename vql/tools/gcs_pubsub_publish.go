@@ -32,7 +32,7 @@ func (self *GCSPubsubPublishFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("gcs_pubsub_publish", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "gcs_pubsub_publish", args)()
 
 	arg := &GCSPubsubPublishArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

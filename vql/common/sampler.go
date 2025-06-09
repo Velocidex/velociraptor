@@ -23,7 +23,7 @@ func (self _SamplerPlugin) Call(ctx context.Context,
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("sample", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "sample", args)()
 
 		arg := &_SamplerPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

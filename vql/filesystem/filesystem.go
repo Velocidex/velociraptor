@@ -56,7 +56,7 @@ func (self GlobPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("glob", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "glob", args)()
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
@@ -260,7 +260,7 @@ func (self ReadFilePlugin) Call(
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
-	defer vql_subsystem.RegisterMonitor("read_file", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "read_file", args)()
 
 	arg := &ReadFileArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -276,7 +276,7 @@ func (self ReadFilePlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("read_file", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "read_file", args)()
 
 		err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
@@ -327,7 +327,7 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &ReadFileFunctionArgs{}
 
-	defer vql_subsystem.RegisterMonitor("read_file", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "read_file", args)()
 
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -399,7 +399,7 @@ func (self *StatPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("stat", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "stat", args)()
 
 		arg := &StatArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -455,7 +455,7 @@ func (self *StatFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("stat", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "stat", args)()
 
 	arg := &StatArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

@@ -106,7 +106,7 @@ func (self CacheDNS) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("cache_dns", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "cache_dns", args)()
 
 	arg := &CacheDNSArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

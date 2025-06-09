@@ -41,7 +41,7 @@ func (self _ParseXMLFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("parse_xml", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "parse_xml", args)()
 
 	arg := &_ParseXMLFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

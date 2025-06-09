@@ -25,7 +25,7 @@ func (self SecretsPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("secrets", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "secrets", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 		if err != nil {

@@ -63,7 +63,7 @@ func (self ParallelPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("parallel", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "parallel", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {

@@ -32,7 +32,7 @@ func (self GrokParseFunction) Call(
 	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("grok", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "grok", args)()
 
 	arg := &GrokParseFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

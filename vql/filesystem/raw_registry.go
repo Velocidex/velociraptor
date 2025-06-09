@@ -29,7 +29,7 @@ func (self ReadKeyValues) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("read_reg_key", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "read_reg_key", args)()
 
 		arg := &ReadKeyValuesArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

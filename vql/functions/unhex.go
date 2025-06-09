@@ -21,7 +21,7 @@ func (self *UnhexFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	defer vql_subsystem.RegisterMonitor("unhex", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "unhex", args)()
 
 	arg := &UnhexFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

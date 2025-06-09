@@ -27,7 +27,7 @@ func (self BackupPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("backup", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "backup", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 		if err != nil {
@@ -104,7 +104,7 @@ func (self RestoreBackupPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("backup_restore", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "backup_restore", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 		if err != nil {

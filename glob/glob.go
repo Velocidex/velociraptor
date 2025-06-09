@@ -307,7 +307,7 @@ func (self *Globber) ExpandWithContext(
 		defer close(output_chan)
 
 		// Nothing to do here
-		if len(self.filters) == 0 {
+		if len(self.filters) == 0 || utils.IsCtxDone(ctx) {
 			return
 		}
 

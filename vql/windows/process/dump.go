@@ -55,7 +55,7 @@ func (self ProcDumpPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-		defer vql_subsystem.RegisterMonitor("proc_dump", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "proc_dump", args)()
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {

@@ -99,7 +99,7 @@ func (self SQLPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer utils.RecoverVQL(scope)
-		defer vql_subsystem.RegisterMonitor("sql", args)()
+		defer vql_subsystem.RegisterMonitor(ctx, "sql", args)()
 
 		arg := &SQLPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
