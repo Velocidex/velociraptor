@@ -3,6 +3,7 @@ import hex2a from "./utils";
 import React from 'react';
 import Alert from 'react-bootstrap/Alert';
 import humanizeDuration from "humanize-duration";
+import api from '../core/api-service.jsx';
 
 import automated from "./de.json";
 
@@ -380,10 +381,10 @@ const Deutsch = {
     benötigt wird. Die Tools werden nur heruntergeladen, wenn sich ihr
     Hash geändert hat.
     </>,
-    "ServedFromURL": (base_path, url)=>
+    "ServedFromURL": (url)=>
     <>
     Die Clients rufen das Tool bei Bedarf direkt
-    von <a href={base_path + url}>{url}</a> ab. Wenn der Hashwert nicht mit dem
+    von <a href={api.href(url)}>{url}</a> ab. Wenn der Hashwert nicht mit dem
     erwarteten Hashwert übereinstimmt, weisen die Clients die Datei zurück.
     </>,
     "ServedFromGithub": (github_project, github_asset_regex)=>

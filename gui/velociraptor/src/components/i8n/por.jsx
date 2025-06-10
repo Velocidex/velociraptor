@@ -3,6 +3,7 @@ import hex2a from "./utils";
 import React from 'react';
 import Alert from 'react-bootstrap/Alert';
 import humanizeDuration from "humanize-duration";
+import api from '../core/api-service.jsx';
 
 import automated from "./por.json";
 
@@ -381,10 +382,10 @@ const Portuguese = {
     em seu próprio disco e depois compara seu hash quando necessário.
     As ferramentas só serão baixadas se o hash mudar.
         </>,
-    "ServedFromURL": (base_path, url)=>
+    "ServedFromURL": (url)=>
     <>
       Os clientes obtêm a ferramenta diretamente
-      de <a href={base_path + url}>{url}</a> se
+      de <a href={api.href(url)}>{url}</a> se
       necessário. Observe que, se o hash não corresponder ao
       hash esperado, os clientes rejeitarão o arquivo.
     </>,
