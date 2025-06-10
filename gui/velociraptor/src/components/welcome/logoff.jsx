@@ -12,7 +12,6 @@ import api from '../core/api-service.jsx';
 export default class LogoffPage extends Component {
     render() {
         let username = window.ErrorState && window.ErrorState.Username;
-        let base_path = (window.ErrorState && window.ErrorState.BasePath) || "/";
 
         return (
             <Modal className="full-height"
@@ -44,7 +43,7 @@ export default class LogoffPage extends Component {
                     <Col sm="6">
                       <Button
                         variant="outline" className="login">
-                        <a href={base_path}>
+                        <a href={api.base_path()}>
                           <Row>
                             <Col sm="1">
                               <img src={api.src_of(logo)}

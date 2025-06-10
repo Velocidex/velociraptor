@@ -12,4 +12,7 @@ build: FORCE
 lint:
 	npm run lint
 
+test: FORCE
+	npm test
+
 FORCE: ;

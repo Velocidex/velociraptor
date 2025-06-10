@@ -3,6 +3,7 @@ import hex2a from "./utils";
 import React from 'react';
 import Alert from 'react-bootstrap/Alert';
 import humanizeDuration from "humanize-duration";
+import api from '../core/api-service.jsx';
 
 import automated from "./vi.json";
 
@@ -67,10 +68,10 @@ const Vietnamese = {
     <>
    Công cụ sẽ được cung cấp từ máy chủ Velociraptor cho máy trạm nếu cần. Máy trạm sẽ lưu công cụ vào bộ nhớ cache trên ổ cứng và so sánh hàm băm vào lần chạy tiếp theo. Các công cụ sẽ chỉ được tải xuống nếu hàm băm của chúng đã thay đổi.
     </>,
-    "ServedFromURL": (base_path, url)=>
+    "ServedFromURL": (url)=>
     <>
     Máy trạm sẽ tải trực tiếp công cụ
-    từ <a href={base_path + url}>{url}</a> nếu cần thiết. Lưu ý rằng nếu hàm băm không khớp với hàm băm dự kiến, máy trạm sẽ từ chối tệp.
+    từ <a href={api.href(url)}>{url}</a> nếu cần thiết. Lưu ý rằng nếu hàm băm không khớp với hàm băm dự kiến, máy trạm sẽ từ chối tệp.
     </>,
     "ServedFromGithub": (github_project, github_asset_regex)=>
     <>
