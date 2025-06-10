@@ -1,6 +1,7 @@
 import React from 'react';
 import Alert from 'react-bootstrap/Alert';
 import humanizeDuration from "humanize-duration";
+import api from '../core/api-service.jsx';
 
 const English = {
     "SEARCH_CLIENTS": "Search clients",
@@ -99,10 +100,10 @@ const English = {
       time it is needed. Tools will only be downloaded if their
       hash has changed.
     </>,
-    "ServedFromURL": (base_path, url)=>
+    "ServedFromURL": (url)=>
     <>
       Clients will fetch the tool directly
-      from <a href={base_path + url}>{url}</a> if
+      from <a href={api.href(url)}>{url}</a> if
       needed. Note that if the hash does not match the
       expected hash the clients will reject the file.
     </>,

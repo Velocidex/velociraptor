@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import hex2a from "./utils";
+import api from '../core/api-service.jsx';
 
 import React from 'react';
 import Alert from 'react-bootstrap/Alert';
@@ -373,9 +374,9 @@ const Japanese = {
     クライアントはそのツールを自分のディスクにキャッシュし、次に必要になったときにハッシュを比較します。
     ツールは、ハッシュが変更された場合のみダウンロードされます。
     </>,
-    "ServedFromURL": (base_path, url)=>
+    "ServedFromURL": (url)=>
     <>
-      クライアントは必要に応じて、<a href={base_path + url}>{url}</a> から直接ツールを取得します。
+      クライアントは必要に応じて、<a href={api.href(url)}>{url}</a> から直接ツールを取得します。
       もしハッシュが期待されるハッシュと一致しない場合、クライアントはそのファイルを拒否することに注意してください。
     </>,
     "ServedFromGithub": (github_project, github_asset_regex)=>

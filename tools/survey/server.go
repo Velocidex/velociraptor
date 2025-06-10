@@ -70,15 +70,22 @@ consider extending the default validation.`).
 				).
 				Value(&config.CertExpiration),
 
-			huh.NewConfirm().
-				Title("Do you want to restrict VQL functionality on the server?").
-				Description(`
-This is useful for a shared server where users are not fully trusted.
-It removes potentially dangerous plugins like execve(), filesystem access etc.
+			// This causes too many problems with users who dont know
+			// what this does and enable it. Taking it out of the
+			// wizard should prevent these issues. Users can add this
+			// later.
 
-NOTE: This is an experimental feature only useful in limited situations. If you do not know you need it select N here!
-`).
-				Value(&config.ImplementAllowList),
+			/*
+			   			huh.NewConfirm().
+			   				Title("Do you want to restrict VQL functionality on the server?").
+			   				Description(`
+			   This is useful for a shared server where users are not fully trusted.
+			   It removes potentially dangerous plugins like execve(), filesystem access etc.
+
+			   NOTE: This is an experimental feature only useful in limited situations. If you do not know you need it select N here!
+			   `).
+			   				Value(&config.ImplementAllowList),
+			*/
 
 			huh.NewConfirm().
 				Title("Use registry for client writeback?").

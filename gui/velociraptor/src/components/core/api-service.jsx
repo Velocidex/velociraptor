@@ -292,11 +292,16 @@ const api_regex = new RegExp("^/(api|app|notebooks|downloads|hunts|clients|auth)
 
 // Only recognize some urls as a valid internal link.
 const internal_links = url_path=>{
-    // If the use starts with the base path, then strip it before we
+    // If the url starts with the base path, then strip it before we
     // do the check.
     let base = base_path();
     if (url_path.startsWith(base)) {
         url_path = url_path.slice(base.length);
+
+        // The URL must be absolute and rooted at /
+        if (!url_path.startsWith("/")) {
+            url_path = "/" + url_path;
+        }
     }
     return api_regex.test(url_path);
 };
@@ -315,6 +320,10 @@ const internal_links = url_path=>{
 // The org id is automatically added if needed to ensure the URLs
 // refer to the correct org.
 const href = function(url, params, options) {
+    if (_.isEmpty(url)) {
+        return window.location;
+    }
+
     let parsed = parse_url(url);
 
     // The params form the query string (after ? and before #)
