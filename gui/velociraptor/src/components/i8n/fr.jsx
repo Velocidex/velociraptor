@@ -3,6 +3,7 @@ import hex2a from "./utils";
 import React from 'react';
 import Alert from 'react-bootstrap/Alert';
 import humanizeDuration from "humanize-duration";
+import api from '../core/api-service.jsx';
 
 import automated from "./fr.json";
 
@@ -384,10 +385,10 @@ const French = {
     le hachage la prochaine fois qu'il en aura besoin.
     Les outils ne seront téléchargés que si leur hachage a changé.
     </>,
-    "ServedFromURL": (base_path, url)=>
+    "ServedFromURL": (url)=>
     <>
     Les clients iront chercher l'outil directement à partir
-    de <a href={base_path + url}>{url}</a> si
+    de <a href={api.href(url)}>{url}</a> si
     nécessaire. Notez que si le hachage ne correspond pas au
     hachage attendu, les clients rejetteront le fichier.
     </>,
