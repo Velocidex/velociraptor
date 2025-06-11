@@ -159,6 +159,10 @@ func (self *UserStorageManager) SetUser(
 
 	// Cache the new record in memory.
 	cache.user_record = proto.Clone(user_record).(*api_proto.VelociraptorUser)
+	// Remove the org list because that will be built at runtime so it
+	// does not need to be stored.
+	cache.user_record.Orgs = nil
+
 	cache.timestamp = utils.GetTime().Now()
 
 	db, err := datastore.GetDB(self.config_obj)
@@ -170,7 +174,7 @@ func (self *UserStorageManager) SetUser(
 	// user name. This is compatible with the previous behavior.
 	err = db.SetSubject(self.config_obj,
 		paths.UserPathManager{Name: user_record.Name}.Path(),
-		user_record)
+		cache.user_record)
 	if err != nil {
 		return err
 	}
@@ -503,7 +507,7 @@ func (self *UserStorageManager) DeleteUser(ctx context.Context, username string)
 	}
 
 	// No more orgs for this user, Just remove the user completely
-	user_path_manager := paths.NewUserPathManager(lower_user_name)
+	user_path_manager := paths.NewUserPathManager(username)
 	err = db.DeleteSubject(self.config_obj, user_path_manager.Path())
 	if err != nil {
 		return err
