@@ -2,6 +2,7 @@ package networking
 
 import (
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	"time"
@@ -27,7 +28,9 @@ func GetHttpTransport(config_obj *proto.ClientConfig, extra_roots string) (*http
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.TLSClientConfig = tlsConfig
-	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+	transport.DialContext = func(ctx context.Context, network, addr string) (
+		c net.Conn, ret_err error) {
+
 		d := net.Dialer{
 			Timeout:   time.Duration(timeout) * time.Second,
 			KeepAlive: time.Duration(timeout) * time.Second,
@@ -35,14 +38,22 @@ func GetHttpTransport(config_obj *proto.ClientConfig, extra_roots string) (*http
 		}
 
 		ips, err := getLookupAddresses(ctx, config_obj, addr)
-		if err == nil && len(ips) > 0 {
-			for _, ip := range ips {
-				// try default dial with DNS resolution (if necessary)
-				conn, err := d.DialContext(ctx, network, ip)
-				if err == nil {
-					return conn, nil
+		if err == nil {
+			if len(ips) > 0 {
+				for _, ip := range ips {
+					// try default dial with DNS resolution (if necessary)
+					conn, err := d.DialContext(ctx, network, ip)
+					if err == nil {
+						return conn, nil
+					}
+					ret_err = err
 				}
+			} else {
+				ret_err = errors.New("No IPs resolvable")
 			}
+
+		} else {
+			ret_err = err
 		}
 
 		// As a fallback get any addresses in the config file
@@ -54,10 +65,11 @@ func GetHttpTransport(config_obj *proto.ClientConfig, extra_roots string) (*http
 				if err == nil {
 					return conn, nil
 				}
+				ret_err = err
 			}
 		}
 
-		return nil, err
+		return nil, ret_err
 	}
 
 	transport.Proxy = proxyHandler

@@ -23,13 +23,19 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
-type VFSService struct{}
+type VFSService struct {
+	mu sync.Mutex
+
+	stats        []*VFSServiceStats
+	current_stat *VFSServiceStats
+}
 
 func (self *VFSService) Start(
 	ctx context.Context,
@@ -67,6 +73,13 @@ func (self *VFSService) Start(
 	if err != nil {
 		return err
 	}
+
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:          "VFS Service",
+		Description:   "The VFS service post processes results from VFS operations.",
+		ProfileWriter: self.WriteProfile,
+		Categories:    []string{"Org", services.GetOrgName(config_obj), "Services"},
+	})
 
 	return nil
 }
@@ -341,6 +354,9 @@ func (self *VFSService) ProcessListDirectory(
 	flow_id, _ := row.GetString("FlowId")
 	ts, _ := row.GetInt64("_ts")
 
+	// Record stats of this operation
+	defer self.startNewOperation(client_id, flow_id)()
+
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("VFSService: Processing System.VFS.ListDirectory/Stats from %v %v",
 		client_id, flow_id)
@@ -387,6 +403,8 @@ func (self *VFSService) ProcessListDirectory(
 			StartIdx:  row_obj.Stats.StartIdx,
 			EndIdx:    row_obj.Stats.EndIdx,
 		}
+
+		self.current_stat.ChargeDir(int(stats.TotalRows))
 
 		db, err := datastore.GetDB(config_obj)
 		if err != nil {
