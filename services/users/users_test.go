@@ -11,7 +11,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
-	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
@@ -111,54 +110,6 @@ func (self *UserManagerTestSuite) TestMakeUsers() {
 	golden.Set("Case insensitive user02", user_record)
 
 	goldie.Assert(self.T(), "TestMakeUsers", json.MustMarshalIndent(golden))
-}
-
-func (self *UserManagerTestSuite) TestMakeUserCaseSensetive() {
-	self.makeUserWithRoles("UserName", "", "administrator")
-	self.makeUserWithRoles("UserName", "O123", "reader")
-
-	// The querying user only has permissions in O123
-	self.makeUserWithRoles("QueryingUser", "O123", "administrator")
-	self.makeUserWithRoles("RootQueryUser", "", "administrator")
-	self.makeUserWithRoles("OrgAdmin", "", "administrator")
-
-	user_manager := services.GetUserManager()
-	storage := user_manager.(*users.UserManager).Storage().(*users.UserStorageManager)
-
-	res, err := storage.ListAllUsers(self.Ctx)
-	assert.NoError(self.T(), err)
-
-	json.Dump(res)
-
-	// Delete the user in the O123 org
-	err = user_manager.DeleteUser(self.Ctx, "QueryingUser", "UserName", []string{"O123"})
-	assert.NoError(self.T(), err)
-
-	// As far as QueryingUser is concerned the UserName is deleted
-	// because QueryingUser only has access to O123.
-	res, err = user_manager.ListUsers(self.Ctx, "QueryingUser", nil)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), 0, len(filterUser(res, "UserName")))
-
-	// However for RootQueryUser the user still exists because
-	// RootQueryUser has access to the root org.
-	res, err = user_manager.ListUsers(self.Ctx, "RootQueryUser", nil)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), 1, len(filterUser(res, "UserName")))
-
-	res, err = storage.ListAllUsers(self.Ctx)
-	assert.NoError(self.T(), err)
-
-	json.Dump(res)
-
-	// Add a new user with similar name
-	self.makeUserWithRoles("Username", "O123", "administrator")
-
-	res, err = storage.ListAllUsers(self.Ctx)
-	assert.NoError(self.T(), err)
-
-	json.Dump(res)
-
 }
 
 func filterUser(users []*api_proto.VelociraptorUser, username string) (

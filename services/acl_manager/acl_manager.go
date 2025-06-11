@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -136,9 +137,10 @@ func (self *ACLManager) GetPolicy(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	cache, pres := self.cache[utils.ToLower(principal)]
+	lower_user_name := utils.ToLower(principal)
+	cache, pres := self.cache[lower_user_name]
 	if pres {
-		return cache.policy, nil
+		return proto.Clone(cache.policy).(*acl_proto.ApiClientACL), nil
 	}
 	return nil, utils.NotFoundError
 }
@@ -185,7 +187,7 @@ func (self ACLManager) SetPolicy(
 	}
 
 	self.cache[lower_user_name] = &_CachedACLObject{
-		policy:   acl_obj,
+		policy:   proto.Clone(acl_obj).(*acl_proto.ApiClientACL),
 		username: principal,
 	}
 

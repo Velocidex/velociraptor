@@ -122,7 +122,8 @@ func (self *UserStorageManager) GetUserWithHashes(ctx context.Context, username 
 	}
 
 	// Check the LRU for a cache if it is there
-	cache, pres := self.cache[utils.ToLower(username)]
+	lower_user_name := utils.ToLower(user_record.Name)
+	cache, pres := self.cache[lower_user_name]
 	if pres && cache.user_record != nil {
 		// Return a copy to protect our version.
 		return proto.Clone(cache.user_record).(*api_proto.VelociraptorUser), nil
@@ -157,8 +158,9 @@ func (self *UserStorageManager) SetUser(
 		}
 	}
 
-	// Cache the new record in memory.
+	// Cache a copy of the new record in memory.
 	cache.user_record = proto.Clone(user_record).(*api_proto.VelociraptorUser)
+
 	// Remove the org list because that will be built at runtime so it
 	// does not need to be stored.
 	cache.user_record.Orgs = nil
@@ -459,6 +461,7 @@ func (self *UserStorageManager) GetUserOptions(ctx context.Context, username str
 		return nil, fmt.Errorf("%w: %v", services.UserNotFoundError, username)
 	}
 
+	// Return a copy of the options to preserve the integrity of the cache
 	return proto.Clone(cache.gui_options).(*api_proto.SetGUIOptionsRequest), nil
 }
 
