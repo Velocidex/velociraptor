@@ -122,7 +122,7 @@ func (self *UserStorageManager) GetUserWithHashes(ctx context.Context, username 
 	}
 
 	// Check the LRU for a cache if it is there
-	lower_user_name := utils.ToLower(user_record.Name)
+	lower_user_name := utils.ToLower(username)
 	cache, pres := self.cache[lower_user_name]
 	if pres && cache.user_record != nil {
 		// Return a copy to protect our version.
