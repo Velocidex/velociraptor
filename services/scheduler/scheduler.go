@@ -118,19 +118,29 @@ func (self *Scheduler) RegisterWorker(
 func (self *Scheduler) WriteProfile(ctx context.Context,
 	scope vfilter.Scope, output_chan chan vfilter.Row) {
 
+	var rows []*ordereddict.Dict
+
 	self.mu.Lock()
 	for queue_name, queues := range self.queues {
 		for _, q := range queues {
-			output_chan <- ordereddict.NewDict().
+			rows = append(rows, ordereddict.NewDict().
 				Set("Type", "Worker").
 				Set("Name", q.name).
 				Set("Priority", q.priority).
 				Set("Queue", queue_name).
 				Set("IsBusy", q.IsBusy()).
-				Set("Request", q.Request())
+				Set("Request", q.Request()))
 		}
 	}
 	self.mu.Unlock()
+
+	for _, r := range rows {
+		select {
+		case <-ctx.Done():
+			return
+		case output_chan <- r:
+		}
+	}
 }
 
 func (self *Scheduler) AvailableWorkers() int {
