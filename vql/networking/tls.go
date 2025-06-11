@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -157,6 +158,10 @@ func customVerifyConnection(
 
 		// Perform normal verification.
 		_, err := server_cert.Verify(public_opts)
+		if err != nil {
+			return fmt.Errorf("While verifying %v: %w", server_cert.Subject.String(), err)
+		}
+
 		return err
 	}
 }
