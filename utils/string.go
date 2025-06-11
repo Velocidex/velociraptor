@@ -1,6 +1,9 @@
 package utils
 
-import "fmt"
+import (
+	"fmt"
+	"unicode"
+)
 
 func Elide(in string, length int) string {
 	if len(in) < length {
@@ -38,4 +41,15 @@ func ToString(x interface{}) string {
 	default:
 		return fmt.Sprintf("%v", x)
 	}
+}
+
+// Lower the string in a unicode aware way. This normalizes the
+// strings for comparisons.
+func ToLower(in string) string {
+	var result []rune
+	for _, c := range in {
+		result = append(result, unicode.ToLower(c))
+	}
+
+	return string(result)
 }

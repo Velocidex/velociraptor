@@ -31,6 +31,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -206,6 +207,13 @@ func StartUserManager(
 
 	service := NewUserManager(config_obj, storage)
 	services.RegisterUserManager(service)
+
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:          "User Manager",
+		Description:   "Reporting information about current users registered on the system.",
+		ProfileWriter: service.WriteProfile,
+		Categories:    []string{"Global", "Services"},
+	})
 
 	return nil
 }

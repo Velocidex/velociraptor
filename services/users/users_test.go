@@ -1,6 +1,7 @@
 package users_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
@@ -109,6 +110,16 @@ func (self *UserManagerTestSuite) TestMakeUsers() {
 	golden.Set("Case insensitive user02", user_record)
 
 	goldie.Assert(self.T(), "TestMakeUsers", json.MustMarshalIndent(golden))
+}
+
+func filterUser(users []*api_proto.VelociraptorUser, username string) (
+	res []*api_proto.VelociraptorUser) {
+	for _, i := range users {
+		if strings.EqualFold(i.Name, username) {
+			res = append(res, i)
+		}
+	}
+	return res
 }
 
 func TestUserManger(t *testing.T) {
