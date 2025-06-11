@@ -12,7 +12,7 @@ description: |
 
 parameters:
   - name: TasksPath
-    default: c:/Windows/System32/Tasks/**
+    default: C:/Windows/System32/Tasks/**
   - name: AlsoUpload
     type: bool
     description: |
@@ -22,13 +22,16 @@ parameters:
     description: |
       If set we attempt to upload the commands that are
       mentioned in the scheduled tasks
+  - name: Username
+    type: regex
+    default: .*
 
 sources:
   - name: Analysis
     query: |
       LET Uploads = SELECT Name, OSPath, if(
            condition=AlsoUpload='Y',
-           then=upload(file=OSPath)) as Upload, Mtime
+           then=upload(file=OSPath)) AS Upload, Mtime
         FROM glob(globs=TasksPath)
         WHERE NOT IsDir
 
@@ -42,22 +45,27 @@ sources:
                     replace='')) AS XML
         FROM read_file(filenames=OSPath)
 
-      LET Results = SELECT OSPath, Mtime,
-            XML.Task.Actions.Exec.Command as Command,
-            expand(path=XML.Task.Actions.Exec.Command)  AS ExpandedCommand,
-            XML.Task.Actions.Exec.Arguments as Arguments,
-            XML.Task.Actions.ComHandler.ClassId as ComHandler,
-            XML.Task.Principals.Principal.UserId as UserId,
+      LET Results = SELECT XML.Task.RegistrationInfo.URI AS TaskName,
+            Mtime,
+            expand(path=XML.Task.Actions.Exec.Command)  AS Command,
+            XML.Task.Actions.Exec.Arguments AS Arguments,
+            XML.Task.Principals.Principal.UserId AS UserId,
+            XML.Task.Principals.Principal.RunLevel AS RunLevel,
+            XML.Task.Principals.Principal.LogonType AS LogonType,
+            XML.Task.Triggers.SessionStateChangeTrigger.StateChange AS StateChange,
+            XML.Task.Actions.ComHandler.ClassId AS ComHandler,
+            timestamp(epoch=XML.Task.RegistrationInfo.Date) AS RegistrationTime,
             timestamp(epoch=XML.Task.Triggers.CalendarTrigger.StartBoundary) AS StartBoundary,
             XML as _XML
         FROM foreach(row=Uploads, query=parse_task)
 
       SELECT *,
-         authenticode(filename=ExpandedCommand) AS Authenticode,
+         authenticode(filename=Command) AS Authenticode,
          if(condition=UploadCommands and ExpandedCommand,
-            then=upload(file=ExpandedCommand)) AS Upload
+            then=upload(file=Command)) AS Upload
       FROM Results
-
+      WHERE UserId =~ Username
+      
 column_types:
 - name: Upload
   type: upload_preview
