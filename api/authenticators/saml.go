@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -138,68 +139,35 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 			}
 
 			username := sa.GetAttributes().Get(self.user_attribute)
-			users := services.GetUserManager()
-			user_record, err := users.GetUser(r.Context(), username, username)
+
+			user_record, err := self.MaybeCreateUser(r.Context(), username, r.RemoteAddr)
 			if err != nil {
-				if !errors.Is(err, utils.NotFoundError) {
-					http.Error(w,
-						fmt.Sprintf("authorization failed: %v", err),
-						http.StatusUnauthorized)
-
-					services.LogAudit(r.Context(),
-						self.config_obj, username, "Authorization failed",
-						ordereddict.NewDict().
-							Set("error", err).
-							Set("username", username).
-							Set("roles", self.user_roles).
-							Set("remote", r.RemoteAddr))
-					return
-				}
-
-				if len(self.user_roles) == 0 {
-					http.Error(w,
-						"authorization failed: no saml user roles assigned",
-						http.StatusUnauthorized)
-
-					services.LogAudit(r.Context(),
-						self.config_obj, username, "Authorization failed: no saml user roles assigned",
-						ordereddict.NewDict().
-							Set("username", username).
-							Set("roles", self.user_roles).
-							Set("remote", r.RemoteAddr))
-					return
-				}
-
-				// Create a new user role on the fly.
-				policy := &acl_proto.ApiClientACL{
-					Roles: self.user_roles,
-				}
 				services.LogAudit(r.Context(),
-					self.config_obj, username, "Automatic User Creation",
+					self.config_obj, username, "Authorization failed",
 					ordereddict.NewDict().
+						Set("error", err).
 						Set("username", username).
 						Set("roles", self.user_roles).
 						Set("remote", r.RemoteAddr))
+				http.Error(w,
+					fmt.Sprintf("authorization failed: %v", err),
+					http.StatusUnauthorized)
+				return
+			}
+			err = self.MaybeAssignRoles(r.Context(), username)
+			if err != nil {
+				services.LogAudit(r.Context(),
+					self.config_obj, username, "authorization failed: role assignment failed",
+					ordereddict.NewDict().
+						Set("username", username).
+						Set("roles", self.user_roles).
+						Set("remote", r.RemoteAddr).
+						Set("status", http.StatusUnauthorized))
 
-				// Use the super user principal to actually add the
-				// username so we have enough permissions.
-				err = users.AddUserToOrg(r.Context(), services.AddNewUser,
-					constants.PinnedServerName, username,
-					[]string{"root"}, policy)
-				if err != nil {
-					http.Error(w,
-						fmt.Sprintf("authorization failed: automatic user creation: %v", err),
-						http.StatusUnauthorized)
-					return
-				}
-
-				user_record, err = users.GetUser(r.Context(), username, username)
-				if err != nil {
-					http.Error(w,
-						fmt.Sprintf("Failed creating user for %v: %v", username, err),
-						http.StatusUnauthorized)
-					return
-				}
+				http.Error(w,
+					fmt.Sprintf("authorization failed: role assignment failed: %v", err),
+					http.StatusUnauthorized)
+				return
 			}
 
 			// Does the user have access to the specified org?
@@ -229,6 +197,99 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 				string(serialized))
 			logger.ServeHTTP(w, r.WithContext(ctx))
 		}).AddChild("GetLoggingHandler")
+}
+
+func (self *SamlAuthenticator) MaybeCreateUser(ctx context.Context, username string, remote string) (*api_proto.VelociraptorUser, error) {
+	user_manager := services.GetUserManager()
+	user_record, err := user_manager.GetUser(ctx, username, username)
+
+	if errors.Is(err, utils.NotFoundError) {
+		// we only create users if the "user_roles" option is set
+		if len(self.user_roles) == 0 {
+			services.LogAudit(ctx,
+				self.config_obj, username, "Authorization failed: no saml user roles assigned",
+				ordereddict.NewDict().
+					Set("username", username).
+					Set("roles", self.user_roles).
+					Set("remote", remote))
+			return nil, err
+		}
+
+		user_record := &api_proto.VelociraptorUser{
+			Name: username,
+		}
+		err = services.LogAudit(ctx, self.config_obj, username,
+			"Create User From SAML",
+			ordereddict.NewDict().Set("username", username).Set("roles", self.user_roles).Set("remote", remote))
+		if err != nil {
+			return nil, err
+		}
+
+		err = user_manager.SetUser(ctx, user_record)
+		if err != nil {
+			return nil, err
+		}
+
+		return user_record, nil
+	} else {
+		return user_record, err
+	}
+}
+
+func (self *SamlAuthenticator) MaybeAssignRoles(
+	ctx context.Context,
+	username string,
+) error {
+	if len(self.user_roles) == 0 {
+		return nil
+	}
+
+	// Usually roles are set per org but setting roles through the
+	// SAML IDP will grant the roles on all orgs.
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return err
+	}
+
+	for _, org := range org_manager.ListOrgs() {
+		org_config_obj, err := org_manager.GetOrgConfig(org.Id)
+		if err != nil {
+			continue
+		}
+
+		// Get the user's ACL policy in that org
+		existing_acls, err := services.GetPolicy(org_config_obj, username)
+		if err != nil {
+			// If a user does not exist this will fail to get their
+			// policy so start with a fresh policy.
+			existing_acls = &acl_proto.ApiClientACL{}
+		}
+
+		new_roles := slices.Clone(existing_acls.Roles)
+		// Add new roles
+		for _, role := range self.user_roles {
+			if !utils.InString(new_roles, role) {
+				new_roles = append(new_roles, role)
+			}
+		}
+
+		// Only set the roles if we need to
+		if len(new_roles) > len(existing_acls.Roles) {
+			err = services.LogAudit(ctx, self.config_obj, username,
+				"Grant User Role From SAML",
+				ordereddict.NewDict().
+					Set("Roles", new_roles).
+					Set("OrgId", org.Id))
+			if err != nil {
+				continue
+			}
+			err = services.GrantRoles(org_config_obj, username, new_roles)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func NewSamlAuthenticator(
