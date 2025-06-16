@@ -3,7 +3,7 @@ velociraptor-server-master-0.74.3.x86_64-localhost-8000.rpm
 >> /etc/velociraptor/server.config.yaml
 
 File /etc/velociraptor/server.config.yaml
-Hash 42b28ebe79c07f94e7aa36d1c8bf1139a11a8b9e5981d2320b82356fe911dca1
+Hash c96c5898fee07104e85a03456da3221631cae2287cae0cf1a90d05f817a78114
 Mode 600
 Owner root
 Group root

@@ -3,7 +3,7 @@ velociraptor-server-0.74.3.x86_64.rpm
 >> /etc/velociraptor/server.config.yaml
 
 File /etc/velociraptor/server.config.yaml
-Hash 42b28ebe79c07f94e7aa36d1c8bf1139a11a8b9e5981d2320b82356fe911dca1
+Hash c96c5898fee07104e85a03456da3221631cae2287cae0cf1a90d05f817a78114
 Mode 600
 Owner root
 Group root
@@ -69,11 +69,7 @@ setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor
 /etc/velociraptor/server.config.yaml
 -----
 version:
-  name: velociraptor
   version: 0.74.3
-  compiler: go1.23.2
-  system: linux
-  architecture: amd64
 Client:
   server_urls:
   - https://localhost:8000/
@@ -111,17 +107,9 @@ Client:
     service_name: com.velocidex.velociraptor
     install_path: /usr/local/sbin/velociraptor
   version:
-    name: velociraptor
     version: 0.74.3
-    compiler: go1.23.2
-    system: linux
-    architecture: amd64
   server_version:
-    name: velociraptor
     version: 0.74.3
-    compiler: go1.23.2
-    system: linux
-    architecture: amd64
   max_upload_size: 5242880
   local_buffer:
     memory_size: 52428800

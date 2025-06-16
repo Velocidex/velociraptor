@@ -35,8 +35,9 @@ func (self *PackagingTestSuite) SetupTest() {
 	self.TestSuite.SetupTest()
 
 	// Remove the version so we can use the golden fixtures
-	self.ConfigObj.Version.Version = "0.74.3"
-	self.ConfigObj.Version.InstallTime = 0
+	self.ConfigObj.Version = &config_proto.Version{
+		Version: "0.74.3",
+	}
 	self.ConfigObj.Client.Version = self.ConfigObj.Version
 	self.ConfigObj.Client.ServerVersion = self.ConfigObj.Version
 	self.ConfigObj.Autoexec = nil
