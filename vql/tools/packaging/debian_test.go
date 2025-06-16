@@ -14,6 +14,8 @@ func (self *PackagingTestSuite) TestDEBClient() {
 	target_config, err := validateClientConfig(self.ConfigObj, min_client_config)
 	assert.NoError(self.T(), err)
 
+	self.sanitizeConfig(target_config)
+
 	spec.SetRuntimeParameters(target_config, arch, "releaseX", "", 0, self.elf_data)
 
 	builder, err := BuildDeb(spec)

@@ -1,10 +1,5 @@
 version:
-  name: velociraptor
   version: 0.74.3
-  install_time: 1747404835
-  compiler: go1.23.2
-  system: linux
-  architecture: amd64
 Client:
   server_urls:
   - https://localhost:8000/
@@ -42,11 +37,7 @@ Client:
     service_name: com.velocidex.velociraptor
     install_path: /usr/local/sbin/velociraptor
   version:
-    name: velociraptor
     version: 0.74.3
-    compiler: go1.23.2
-    system: linux
-    architecture: amd64
   server_version:
     version: 0.74.3
   max_upload_size: 5242880

@@ -31,16 +31,22 @@ type PackagingTestSuite struct {
 	elf_data []byte
 }
 
+func (self *PackagingTestSuite) sanitizeConfig(config_obj *config_proto.Config) {
+	// Remove the version so we can use the golden fixtures
+	config_obj.Version = &config_proto.Version{
+		Version: "0.74.3",
+	}
+	if config_obj.Client != nil {
+		config_obj.Client.Version = self.ConfigObj.Version
+		config_obj.Client.ServerVersion = self.ConfigObj.Version
+	}
+	config_obj.Autoexec = nil
+}
+
 func (self *PackagingTestSuite) SetupTest() {
 	self.TestSuite.SetupTest()
 
-	// Remove the version so we can use the golden fixtures
-	self.ConfigObj.Version = &config_proto.Version{
-		Version: "0.74.3",
-	}
-	self.ConfigObj.Client.Version = self.ConfigObj.Version
-	self.ConfigObj.Client.ServerVersion = self.ConfigObj.Version
-	self.ConfigObj.Autoexec = nil
+	self.sanitizeConfig(self.ConfigObj)
 
 	fd, err := os.Open("../../../artifacts/testdata/files/test.elf")
 	assert.NoError(self.T(), err)
@@ -52,6 +58,8 @@ func (self *PackagingTestSuite) TestRPMClient() {
 	spec := NewClientRPMSpec()
 	target_config, err := validateClientConfig(self.ConfigObj, min_client_config)
 	assert.NoError(self.T(), err)
+
+	self.sanitizeConfig(target_config)
 
 	arch, err := getRPMArch(self.elf_data)
 	assert.NoError(self.T(), err)
@@ -70,6 +78,8 @@ func (self *PackagingTestSuite) TestRPMClientWithServerConfig() {
 	target_config, err := validateClientConfig(
 		self.ConfigObj, test_utils.SERVER_CONFIG)
 	assert.NoError(self.T(), err)
+
+	self.sanitizeConfig(target_config)
 
 	arch, err := getRPMArch(self.elf_data)
 	assert.NoError(self.T(), err)

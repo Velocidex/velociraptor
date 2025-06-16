@@ -3,7 +3,7 @@ velociraptor_client_0.74.3_x86_64.rpm
 >> /etc/velociraptor/client.config.yaml
 
 File /etc/velociraptor/client.config.yaml
-Hash a90a51087e9c69e05476fdd1f27f7bf1b3482cb16c85fa266e5a1773182c9253
+Hash 6486ba060550ad5599d27246df46ecf686d8c8db38476e23135821043599f47c
 Mode 600
 Owner root
 Group root
