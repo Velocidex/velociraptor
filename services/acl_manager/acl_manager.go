@@ -39,6 +39,14 @@ func (self *ACLManager) reloadCache(
 	ctx context.Context, config_obj *config_proto.Config) error {
 	cache := make(map[string]*_CachedACLObject)
 
+	// We can not load ACLs from a datastore which is not
+	// configured. This is used in tools etc. It will just result in
+	// all permission denied errors as the ACL cache will be empty so
+	// we actually create a more restricted environment.
+	if config_obj.Datastore == nil {
+		return nil
+	}
+
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
@@ -109,6 +117,7 @@ func NewACLManager(
 	if err == nil {
 		backups.Register(&ACLBackupProvider{
 			config_obj: config_obj,
+			manager:    self,
 		})
 	}
 

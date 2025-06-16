@@ -1,0 +1,59 @@
+velociraptor_client_0.74.3_amd64.deb
+
+>> /etc/velociraptor/client.config.yaml
+version:
+  version: 0.74.3
+Client:
+  server_urls:
+  - http://localhost/
+  ca_certificate: |
+    -----BEGIN CERTIFICATE-----
+    MIIDTDCCAjSgAwIBAgIRAJH2OrT69FpC7IT3ZeZLmXgwDQYJKoZIhvcNAQELBQAw
+    -----END CERTIFICATE-----
+  nonce: XXX
+  max_poll: 60
+  version:
+    version: 0.74.3
+  server_version:
+    version: 0.74.3
+  max_upload_size: 5242880
+  local_buffer:
+    memory_size: 52428800
+------------
+
+>> /etc/systemd/system/velociraptor_client.service
+
+[Unit]
+Description=Velociraptor client
+After=syslog.target network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=120
+LimitNOFILE=20000
+Environment=LANG=en_US.UTF-8
+ExecStart=/usr/local/bin/velociraptor_client --config /etc/velociraptor/client.config.yaml client --quiet 
+
+[Install]
+WantedBy=multi-user.target
+------------
+
+>> /usr/local/bin/velociraptor_client
+... ELF Data ...------------
+
+>> postinst
+
+# Lock down permissions on the config file.
+chmod -R go-r $(dirname "/etc/velociraptor/client.config.yaml")
+chmod o+x /usr/local/bin/velociraptor_client
+
+/bin/systemctl enable velociraptor_client.service
+/bin/systemctl start velociraptor_client.service
+------------
+
+>> prerm
+
+/bin/systemctl disable velociraptor_client.service
+/bin/systemctl stop velociraptor_client.service
+------------

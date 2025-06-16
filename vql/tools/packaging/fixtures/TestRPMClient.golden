@@ -1,0 +1,222 @@
+velociraptor_client_0.74.3_x86_64.rpm
+
+>> /etc/velociraptor/client.config.yaml
+
+File /etc/velociraptor/client.config.yaml
+Hash 6486ba060550ad5599d27246df46ecf686d8c8db38476e23135821043599f47c
+Mode 600
+Owner root
+Group root
+------------
+
+>> /usr/local/bin/velociraptor_client
+
+File /usr/local/bin/velociraptor_client
+Hash 15e432ff4ac80d54f53c4fd7fbecb4f8ee7c691b2a58eb783bd10ec1a82e0952
+Mode 755
+Owner root
+Group root
+------------
+
+>> Postin
+
+if [ -f /bin/systemctl ] ; then
+
+cat << SYSTEMDSCRIPT > /etc/systemd/system/velociraptor_client.service
+
+[Unit]
+Description=Velociraptor client
+After=syslog.target network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=120
+LimitNOFILE=20000
+Environment=LANG=en_US.UTF-8
+ExecStart=/usr/local/bin/velociraptor_client --config /etc/velociraptor/client.config.yaml client --quiet 
+
+[Install]
+WantedBy=multi-user.target
+
+SYSTEMDSCRIPT
+
+  /bin/systemctl enable velociraptor_client.service
+  /bin/systemctl start velociraptor_client.service
+
+else
+
+cat << SYSVSCRIPT > /etc/rc.d/init.d/velociraptor_client
+
+#!/bin/bash
+#
+# velociraptor_client		Start up the velociraptor_client client daemon
+#
+# chkconfig: 2345 55 25
+# description: Velociraptor is an endpoint monitoring tool
+#
+# processname: velociraptor_client
+# config: /etc/velociraptor/client.config.yaml
+# pidfile: /var/run/velociraptor_client.pid
+
+### BEGIN INIT INFO
+# Provides: velociraptor_client
+# Required-Start: \$local_fs \$network \$syslog
+# Required-Stop: \$local_fs \$syslog
+# Should-Start: \$syslog
+# Should-Stop: \$network \$syslog
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Velociraptor is an endpoint monitoring tool
+### END INIT INFO
+
+# source function library
+. /etc/rc.d/init.d/functions
+
+RETVAL=0
+prog="velociraptor_client"
+lockfile=/var/lock/subsys/\$prog
+VELOCIRAPTOR=/usr/local/bin/velociraptor_client
+VELOCIRAPTOR_CONFIG=/etc/velociraptor/client.config.yaml
+PID_FILE=/var/run/velociraptor_client.pid
+
+runlevel=\$(set -- \$(runlevel); eval "echo \\\$\$#" )
+
+start()
+{
+	[ -x \$VELOCIRAPTOR ] || exit 5
+	[ -f \$VELOCIRAPTOR_CONFIG ] || exit 6
+
+	echo -n \$"Starting \$prog: "
+	\$VELOCIRAPTOR --config "\$VELOCIRAPTOR_CONFIG" client &
+	RETVAL=\$?
+	[ \$RETVAL -eq 0 ] && /sbin/pidof \$prog > \$PID_FILE
+	echo
+	return \$RETVAL
+}
+
+stop()
+{
+	echo -n \$"Stopping \$prog: "
+	killproc -p \$PID_FILE \$VELOCIRAPTOR
+	RETVAL=\$?
+	[ \$RETVAL -eq 0 ] && rm -f \$lockfile
+	echo
+}
+
+reload()
+{
+	echo -n \$"Reloading \$prog: "
+	killproc -p \$PID_FILE \$VELOCIRAPTOR -HUP
+	RETVAL=\$?
+	echo
+}
+
+restart() {
+	stop
+	start
+}
+
+force_reload() {
+	restart
+}
+
+rh_status() {
+	status -p \$PID_FILE velociraptor_client
+}
+
+rh_status_q() {
+	rh_status >/dev/null 2>&1
+}
+
+case "\$1" in
+	start)
+		rh_status_q && exit 0
+		start
+		;;
+	stop)
+		if ! rh_status_q; then
+			rm -f \$lockfile
+			exit 0
+		fi
+		stop
+		;;
+	restart)
+		restart
+		;;
+	reload)
+		rh_status_q || exit 7
+		reload
+		;;
+	force-reload)
+		force_reload
+		;;
+	condrestart|try-restart)
+		rh_status_q || exit 0
+		if [ -f \$lockfile ] ; then
+                 	stop
+			# avoid race
+			sleep 3
+			start
+		fi
+		;;
+	status)
+		rh_status
+		RETVAL=\$?
+		if [ \$RETVAL -eq 3 -a -f \$lockfile ] ; then
+			RETVAL=2
+		fi
+		;;
+	*)
+		echo \$"Usage: \$0 {start|stop|restart|reload|force-reload|condrestart|try-restart|status}"
+		RETVAL=2
+esac
+exit \$RETVAL
+
+SYSVSCRIPT
+
+  /bin/chmod +x /etc/rc.d/init.d/velociraptor_client
+
+  ## Set it to start at boot
+  /sbin/chkconfig --add velociraptor_client
+
+  ## Start the service immediately
+  service velociraptor_client start
+fi
+------------
+
+>> Preun
+
+if [ -f /bin/systemctl ]; then
+    if [ $1 == 1 ] ; then
+        /bin/systemctl restart velociraptor_client.service
+    fi
+
+    if [ $1 == 0 ] ; then
+        /bin/systemctl disable velociraptor_client.service
+        /bin/systemctl stop velociraptor_client.service
+    fi
+else
+    if [ $1 == 1 ] ; then
+        /sbin/service velociraptor_client start  > /dev/null 2>&1 || :
+    fi
+
+    if [ $1 == 0 ] ; then
+        /sbin/service velociraptor_client stop > /dev/null 2>&1 || :
+        /sbin/chkconfig --del velociraptor_client
+    fi
+fi
+------------
+
+>> Postun
+
+if [ -f /bin/systemctl ] ; then
+    if [ $1 = 0 ] ; then
+       rm /etc/systemd/system/velociraptor_client.service
+    fi
+else
+    if [ $1 = 0 ] ; then
+       rm /etc/rc.d/init.d/velociraptor_client
+    fi
+fi
+------------

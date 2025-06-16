@@ -135,7 +135,7 @@ func generateGUIConfig(datastore_directory, server_config_path, client_config_pa
 	fd.Close()
 
 	// Now also write a client config
-	client_config := getClientConfig(config_obj)
+	client_config := config.GetClientConfig(config_obj)
 	client_config.Logging = config_obj.Logging
 
 	serialized, err = yaml.Marshal(client_config)
