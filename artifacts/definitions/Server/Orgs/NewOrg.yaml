@@ -27,6 +27,7 @@ parameters:
   default: |
     Artifact
     Server.Utils.CreateMSI
+    Server.Utils.CreateLinuxPackages
   description: |
     Start the following server artifacts in the new org.
 

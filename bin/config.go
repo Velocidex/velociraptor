@@ -322,17 +322,6 @@ func doReissueServerKeys() error {
 	return nil
 }
 
-func getClientConfig(config_obj *config_proto.Config) *config_proto.Config {
-	// Copy only settings relevant to the client from the main
-	// config.
-	client_config := &config_proto.Config{
-		Version: config_obj.Version,
-		Client:  config_obj.Client,
-	}
-
-	return client_config
-}
-
 func doDumpClientConfig() error {
 	logging.DisableLogging()
 
@@ -357,7 +346,7 @@ func doDumpClientConfig() error {
 		return err
 	}
 
-	client_config := getClientConfig(config_obj)
+	client_config := config.GetClientConfig(config_obj)
 	res, err := yaml.Marshal(client_config)
 	if err != nil {
 		return fmt.Errorf("Unable to encode config: %w", err)

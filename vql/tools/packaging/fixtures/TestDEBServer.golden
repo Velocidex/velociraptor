@@ -1,12 +1,12 @@
-package test_utils
+velociraptor-server-0.74.3.amd64.deb
 
-const SERVER_CONFIG = `
-autoexec:
+>> /etc/velociraptor/server.config.yaml
 version:
   name: velociraptor
-  version: 0.6.4-rc4
-  commit: f3264824
-  build_time: "2022-04-14T02:23:05+10:00"
+  version: 0.74.3
+  compiler: go1.23.2
+  system: linux
+  architecture: amd64
 Client:
   server_urls:
   - https://localhost:8000/
@@ -45,9 +45,16 @@ Client:
     install_path: /usr/local/sbin/velociraptor
   version:
     name: velociraptor
-    version: 0.6.4-rc4
-    commit: f3264824
-    build_time: "2022-04-14T02:23:05+10:00"
+    version: 0.74.3
+    compiler: go1.23.2
+    system: linux
+    architecture: amd64
+  server_version:
+    name: velociraptor
+    version: 0.74.3
+    compiler: go1.23.2
+    system: linux
+    architecture: amd64
   max_upload_size: 5242880
   local_buffer:
     memory_size: 52428800
@@ -197,6 +204,7 @@ Frontend:
     jHG+zzeC/EJ3wFOKTSJ/Tmjo6N3Xaq9V7WeL8eBdtBtPztqN1yveTt94mZZ+fuID
     BhI8P2RbNR2Yey5nnhFQcoTxpmVw3EYwE01nkxoPJRs/QVvxi9Mepg==
     -----END RSA PRIVATE KEY-----
+  do_not_compress_artifacts: true
   dyn_dns: {}
   default_client_monitoring_artifacts:
   - Generic.Client.Stats
@@ -210,7 +218,6 @@ Frontend:
     default_log_batch_time: 100
     default_monitoring_log_batch_time: 100
     disable_file_buffering: true
-
 Datastore:
   implementation: Test
   location: /tmp
@@ -246,6 +253,7 @@ Writeback:
 Mail: {}
 Logging:
   debug: {}
+verbose: true
 Monitoring:
   bind_address: 127.0.0.1
   bind_port: 8003
@@ -254,33 +262,81 @@ obfuscation_nonce: RzlAlmdcUyw=
 defaults:
   hunt_expiry_hours: 168
   notebook_cell_timeout_min: 10
+  notebook_number_of_local_workers: 5
   backup_period_seconds: -1
-
 services:
-  hunt_manager: false
-  hunt_dispatcher: false
-  stats_collector: false
-  server_monitoring: false
-  server_artifacts: false
-  dyn_dns: false
-  interrogation: false
-  sanity_checker: false
-  vfs_service: false
   user_manager: true
-  client_monitoring: false
-  monitoring_service: false
-  api_server: false
   frontend_server: true
-  gui_server: false
   index_server: true
   journal_service: true
   notification_service: true
-  repository_manager: false
   test_repository_manager: true
   inventory_service: true
   client_info: true
   label: true
   launcher: true
-  notebook_service: false
+------------
 
-`
+>> /usr/local/bin/velociraptor
+... ELF Data ...------------
+
+>> /etc/systemd/system/velociraptor_server.service
+
+[Unit]
+Description=Velociraptor server
+After=syslog.target network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=120
+LimitNOFILE=20000
+Environment=LANG=en_US.UTF-8
+ExecStart=/usr/local/bin/velociraptor --config /etc/velociraptor/server.config.yaml frontend 
+User=velociraptor
+Group=velociraptor
+CapabilityBoundingSet=CAP_SYS_RESOURCE CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_SYS_RESOURCE CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
+------------
+
+>> postinst
+
+if ! getent group velociraptor >/dev/null; then
+   addgroup --system velociraptor
+fi
+
+if ! getent passwd velociraptor >/dev/null; then
+   adduser --system --home /etc/ --no-create-home \
+     --ingroup velociraptor velociraptor --shell /bin/false \
+     --gecos "Velociraptor server"
+fi
+
+
+# Make the filestore path accessible to the user.
+mkdir -p '/tmp'/config
+
+# Only chown two levels of the filestore directory in case
+# this is an upgrade and there are many files already there.
+# otherwise chown -R takes too long.
+chown velociraptor:velociraptor '/tmp' '/tmp'/*
+chown velociraptor:velociraptor -R $(dirname "/etc/velociraptor/server.config.yaml")
+
+# Lock down permissions on the config file.
+chmod -R go-r $(dirname "/etc/velociraptor/server.config.yaml")
+chmod o+x /usr/local/bin/velociraptor
+
+# Allow the server to bind to low ports and increase its fd limit.
+setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor
+/bin/systemctl enable velociraptor_server.service
+/bin/systemctl start velociraptor_server.service
+
+------------
+
+>> prerm
+
+/bin/systemctl disable velociraptor_server.service
+/bin/systemctl stop velociraptor_server.service
+------------

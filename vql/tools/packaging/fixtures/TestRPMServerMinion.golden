@@ -1,0 +1,89 @@
+velociraptor-server-minion-0.74.3.x86_64-www.example.com-8100.rpm
+
+>> /etc/velociraptor/server.config.yaml
+
+File /etc/velociraptor/server.config.yaml
+Hash 42b28ebe79c07f94e7aa36d1c8bf1139a11a8b9e5981d2320b82356fe911dca1
+Mode 600
+Owner root
+Group root
+------------
+
+>> /usr/local/bin/velociraptor
+
+File /usr/local/bin/velociraptor
+Hash 15e432ff4ac80d54f53c4fd7fbecb4f8ee7c691b2a58eb783bd10ec1a82e0952
+Mode 755
+Owner root
+Group root
+------------
+
+>> /etc/systemd/system/velociraptor_server.service
+
+File /etc/systemd/system/velociraptor_server.service
+Hash a31c3763efe6ad0a18c6c7ab11f6dfee72d45fabbf3ca0c45265aa98ec4ada3e
+Mode 644
+Owner root
+Group root
+------------
+
+>> Postin
+
+getent group velociraptor >/dev/null 2>&1 || groupadd \
+        -r \
+        velociraptor
+getent passwd velociraptor >/dev/null 2>&1 || useradd \
+        -r -l \
+        -g velociraptor \
+        -d /proc \
+        -s /sbin/nologin \
+        -c "Velociraptor server" \
+        velociraptor
+:;
+
+# Make the filestore path accessible to the user.
+mkdir -p '/tmp'/config
+
+# Only chown two levels of the filestore directory in case
+# this is an upgrade and there are many files already there.
+# otherwise chown -R takes too long.
+chown velociraptor:velociraptor '/tmp' '/tmp'/*
+chown velociraptor:velociraptor -R $(dirname "/etc/velociraptor/server.config.yaml")
+
+# Lock down permissions on the config file.
+chmod -R go-r $(dirname "/etc/velociraptor/server.config.yaml")
+chmod o+x /usr/local/bin/velociraptor
+
+# Allow the server to bind to low ports and increase its fd limit.
+setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor
+/bin/systemctl enable velociraptor_server.service
+/bin/systemctl start velociraptor_server.service
+
+------------
+
+>> Preun
+
+/bin/systemctl disable velociraptor_server.service
+/bin/systemctl stop velociraptor_server.service
+------------
+/etc/systemd/system/velociraptor_server.service
+-----
+
+[Unit]
+Description=Velociraptor server
+After=syslog.target network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=120
+LimitNOFILE=20000
+Environment=LANG=en_US.UTF-8
+ExecStart=/usr/local/bin/velociraptor --config /etc/velociraptor/server.config.yaml frontend --minion --node www.example.com-8100
+User=velociraptor
+Group=velociraptor
+CapabilityBoundingSet=CAP_SYS_RESOURCE CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_SYS_RESOURCE CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target

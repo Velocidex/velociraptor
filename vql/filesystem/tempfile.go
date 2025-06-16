@@ -24,7 +24,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -74,7 +73,7 @@ func (self *TempfileFunction) Call(ctx context.Context,
 		permissions = 0400
 	}
 
-	tmpfile, err := tempfile.TempFile("tmp*" + arg.Extension)
+	tmpfile, err := utils_tempfile.TempFile("tmp*" + arg.Extension)
 	if err != nil {
 		scope.Log("tempfile: %v", err)
 		return false
@@ -154,7 +153,7 @@ func (self *TempdirFunction) Call(ctx context.Context,
 		return false
 	}
 
-	dir, err := tempfile.TempDir("tmp")
+	dir, err := utils_tempfile.TempDir("tmp")
 	if err != nil {
 		scope.Log("tempdir: %v", err)
 		return false
@@ -238,8 +237,6 @@ func RemoveFile(retry int, tmpfile string, scope vfilter.Scope) {
 	if retry > 0 {
 		scope.Log("tempfile: removing tempfile %v (Try %v)",
 			tmpfile, retry)
-	} else {
-		scope.Log("tempfile: removing tempfile %v", tmpfile)
 	}
 
 	// On windows especially we can not remove files that
@@ -261,6 +258,8 @@ func RemoveFile(retry int, tmpfile string, scope vfilter.Scope) {
 			scope.Log("tempfile: removed tempfile %v", tmpfile)
 		}
 	}
+
+	// Remove the file from the tracker.
 	utils_tempfile.RemoveTmpFile(tmpfile, err)
 }
 
