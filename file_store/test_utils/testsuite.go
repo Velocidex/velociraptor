@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"sort"
 	"sync"
 	"time"
 
@@ -217,6 +218,7 @@ func (self *TestSuite) LoadArtifactsIntoConfig(definitions []string) {
 
 	existing_artifacts := make(map[string]*artifacts_proto.Artifact)
 	for _, def := range self.ConfigObj.Autoexec.ArtifactDefinitions {
+		def.Raw = ""
 		existing_artifacts[def.Name] = def
 	}
 
@@ -234,7 +236,12 @@ func (self *TestSuite) LoadArtifactsIntoConfig(definitions []string) {
 		artifacts = append(artifacts, v)
 	}
 
+	// Sort for stability
+	sort.Slice(artifacts, func(i, j int) bool {
+		return artifacts[i].Name < artifacts[j].Name
+	})
 	self.ConfigObj.Autoexec.ArtifactDefinitions = artifacts
+
 }
 
 func (self *TestSuite) LoadArtifactFiles(paths ...string) {
