@@ -19,6 +19,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
@@ -51,13 +52,14 @@ const (
 )
 
 type RepackFunctionArgs struct {
-	Target     string            `vfilter:"optional,field=target,doc=The name of the target OS to repack (VelociraptorWindows, VelociraptorLinux, VelociraptorDarwin)"`
-	Version    string            `vfilter:"optional,field=version,doc=Velociraptor Version to repack"`
-	Exe        *accessors.OSPath `vfilter:"optional,field=exe,doc=Alternative a path to the executable to repack"`
-	Accessor   string            `vfilter:"optional,field=accessor,doc=The accessor to use to read the file."`
-	Binaries   []string          `vfilter:"optional,field=binaries,doc=List of tool names that will be repacked into the target"`
-	Config     string            `vfilter:"required,field=config,doc=The config to be repacked in the form of a json or yaml string"`
-	UploadName string            `vfilter:"required,field=upload_name,doc=The name of the upload to create"`
+	Target       string            `vfilter:"optional,field=target,doc=The name of the target OS to repack (VelociraptorWindows, VelociraptorLinux, VelociraptorDarwin)"`
+	Version      string            `vfilter:"optional,field=version,doc=Velociraptor Version to repack"`
+	Exe          *accessors.OSPath `vfilter:"optional,field=exe,doc=Alternative a path to the executable to repack"`
+	Accessor     string            `vfilter:"optional,field=accessor,doc=The accessor to use to read the file."`
+	Binaries     []string          `vfilter:"optional,field=binaries,doc=List of tool names that will be repacked into the target"`
+	Config       string            `vfilter:"required,field=config,doc=The config to be repacked in the form of a json or yaml string"`
+	UploadName   string            `vfilter:"optional,field=upload_name,doc=The name of the upload to create"`
+	DestFilename string            `vfilter:"optional,field=dest_filename,doc=If an upload name is not provided, the file will be written to this path"`
 }
 
 type RepackFunction struct{}
@@ -78,6 +80,20 @@ func (self RepackFunction) Call(ctx context.Context,
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("ERROR:client_repack: %v", err)
+		return vfilter.Null{}
+	}
+
+	if arg.DestFilename != "" {
+		err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
+		if err != nil {
+			scope.Log("ERROR:client_repack: %v", err)
+			return vfilter.Null{}
+		}
+	}
+
+	if arg.DestFilename != "" && arg.UploadName != "" ||
+		arg.DestFilename == "" && arg.UploadName == "" {
+		scope.Log("ERROR:client_repack: One of dest_filename or upload_name should be provided")
 		return vfilter.Null{}
 	}
 
@@ -102,7 +118,7 @@ func (self RepackFunction) Call(ctx context.Context,
 
 	// If arg.Version is not specified we select the latest version
 	// available.
-	exe_bytes, err := readExeFile(ctx, config_obj, scope,
+	exe_bytes, err := ReadExeFile(ctx, config_obj, scope,
 		arg.Exe, arg.Accessor, arg.Target, arg.Version)
 	if err != nil {
 		scope.Log("ERROR:client_repack: %v", err)
@@ -163,6 +179,25 @@ func (self RepackFunction) Call(ctx context.Context,
 		exe_bytes[end+i] = compressed_config_data[i]
 	}
 
+	// Write to a local file.
+	if arg.DestFilename != "" {
+		fd, err := os.OpenFile(arg.DestFilename,
+			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		if err != nil {
+			scope.Log("ERROR:client_repack: %v", err)
+			return vfilter.Null{}
+		}
+		defer fd.Close()
+
+		_, err = fd.Write(exe_bytes)
+		if err != nil {
+			scope.Log("ERROR:client_repack: %v", err)
+			return vfilter.Null{}
+		}
+
+		return arg.DestFilename
+	}
+
 	sub_scope := scope.Copy()
 	sub_scope.AppendVars(
 		ordereddict.NewDict().Set("PACKED_Binary", exe_bytes))
@@ -179,7 +214,7 @@ func (self RepackFunction) Call(ctx context.Context,
 			Set("accessor", "scope"))
 }
 
-func readExeFile(
+func ReadExeFile(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
@@ -444,7 +479,7 @@ func (self RepackFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 		Name:     "repack",
 		Doc:      "Repack and upload a repacked binary or MSI to the server.",
 		ArgType:  type_map.AddType(scope, &RepackFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
+		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER, acls.FILESYSTEM_WRITE).Build(),
 	}
 }
 

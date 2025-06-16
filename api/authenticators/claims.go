@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -156,10 +155,9 @@ func (self *OidcAuthenticator) NewClaims(
 				}
 			}
 
-			// Only set the roles if we need to
-			sort.Strings(new_roles)
-			sort.Strings(existing_acls.Roles)
-			if !utils.StringSliceEq(new_roles, existing_acls.Roles) {
+			// Only set the roles if we need to - note we can only
+			// ever add roles to the existing roles.
+			if len(new_roles) > len(existing_acls.Roles) {
 				err = services.LogAudit(ctx, self.config_obj, email,
 					"Grant User Role From OIDC Claim",
 					ordereddict.NewDict().
