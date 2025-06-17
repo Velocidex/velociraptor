@@ -8,6 +8,7 @@ import (
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 )
 
 var (
@@ -72,7 +73,9 @@ func applyMergesAndPatches(
 
 		patched, err := patch.Apply(serialized)
 		if err != nil {
-			return fmt.Errorf("Unable to apply JSON patch: %w", err)
+			logger := logging.GetLogger(config_obj, &logging.ToolComponent)
+			logger.Info("Patch failed to apply: %v", err)
+			continue
 		}
 
 		err = json.Unmarshal(patched, &config_obj)
@@ -104,7 +107,7 @@ func getMergePatches(merge_file *os.File, merges []string) ([][]byte, error) {
 
 func getJsonPatches(patch_file *os.File, patches []string) ([]jsonpatch.Patch, error) {
 	result := make([]jsonpatch.Patch, 0)
-	if *config_generate_command_patch_file != nil {
+	if patch_file != nil {
 		data, err := ioutil.ReadAll(patch_file)
 		if err != nil {
 			return nil, fmt.Errorf("Reading patch file: %w", err)
