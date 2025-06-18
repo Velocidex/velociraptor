@@ -417,9 +417,9 @@ func RepackMSI(
 	// ones. We do this by locating all the markers in the placeholder
 	// file and building a page map.
 	page_map, cab_header_length := extractPageIndex(scope, data)
-	cab_header_offset, _ := page_map[0]
+	cab_header_offset, page_0_present := page_map[0]
 
-	if len(page_map) == 0 || cab_header_length == 0 || cab_header_offset == 0 {
+	if len(page_map) == 0 || cab_header_length == 0 || !page_0_present {
 		scope.Log("client_repack: I can not seem to locate the embedded config???? To repack an MSI, be sure to build from custom.xml with the custom.config.yaml file.")
 		return vfilter.Null{}
 	}
