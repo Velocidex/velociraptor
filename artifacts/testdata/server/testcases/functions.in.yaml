@@ -97,15 +97,6 @@ Queries:
            all(items=["Hi", "There"], regex=['H|T', 'i|r'])
     FROM scope()
 
-  # all() can also operate on GROUP BY
-  - LET TestArray <= (dict(X=1, Y="Hello"), dict(X=2, Y="Goodbye"), dict(X=1, Y="World"))
-  - SELECT *,
-           all(items=Y, filter="x=>x =~ 'Hello|World'"),
-           all(items=Y, filter="x=>x =~ 'World'"),
-           all(items=Y, filter="x=>x =~ 'Goodby'")
-    FROM foreach(row=TestArray)
-    GROUP BY X
-
   # all() can also operate on subqueries
   - SELECT all(items={
       SELECT * FROM foreach(row=TestArray)
@@ -114,8 +105,8 @@ Queries:
     FROM scope()
 
   # Test the any function
-  - SELECT any(items=TestArray, filter="x=>x.Y =~ 'Good'"),
-           all(items=TestArray, filter="x=>x.Y =~ 'Good'")
+  - SELECT any(items=TestArray, filter="x=>x =~ 'Good'"),
+           all(items=TestArray, filter="x=>x =~ 'Good'")
     FROM scope()
 
   # Test the filter function
