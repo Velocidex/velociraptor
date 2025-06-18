@@ -8,13 +8,8 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
-	"www.velocidex.com/golang/vfilter/functions"
 	"www.velocidex.com/golang/vfilter/types"
 )
-
-type allState struct {
-	triggered bool
-}
 
 type _AllFunctionArgs struct {
 	Items  vfilter.Any     `vfilter:"required,field=items,doc=The items to consider. Can be an array, subquery or stored query. Will only be lazily evaluated!"`
@@ -22,9 +17,7 @@ type _AllFunctionArgs struct {
 	Regex  []string        `vfilter:"optional,field=regex,doc=Optionally one or more regex can be provided for convenience"`
 }
 
-type _AllFunction struct {
-	functions.Aggregator
-}
+type _AllFunction struct{}
 
 func (self _AllFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
@@ -58,13 +51,6 @@ func evalAllCondition(
 	return false
 }
 
-// Aggregate functions must be copiable.
-func (self _AllFunction) Copy() types.FunctionInterface {
-	return _AllFunction{
-		Aggregator: functions.NewAggregator(),
-	}
-}
-
 func (self _AllFunction) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
@@ -81,32 +67,6 @@ func (self _AllFunction) Call(
 		return vfilter.Null{}
 	}
 
-	// Maintain aggregate state - triggered must be true for all items.
-	triggered := true
-	previous_triggered := true
-
-	defer func() {
-		// Only update the context if we need to.
-		if triggered != previous_triggered {
-			self.SetContext(scope, &allState{triggered: triggered})
-		}
-	}()
-
-	// Get previous triggered value
-	previous_state_any, pres := self.GetContext(scope)
-	if pres {
-		previous_state, ok := previous_state_any.(*allState)
-		if ok {
-			triggered = previous_state.triggered
-			previous_triggered = triggered
-		}
-	}
-
-	// Shortcut - no need to evaluate if any previous value is false .
-	if !triggered {
-		return false
-	}
-
 	// Walk over all items and evaluate them
 	switch t := arg.Items.(type) {
 	case types.LazyExpr:
@@ -115,7 +75,7 @@ func (self _AllFunction) Call(
 	case types.StoredQuery:
 		for row := range t.Eval(ctx, scope) {
 			// Evaluate the row with the callback
-			triggered = evalAllCondition(ctx, scope, arg, row)
+			triggered := evalAllCondition(ctx, scope, arg, row)
 			if !triggered {
 				return false
 			}
@@ -129,7 +89,7 @@ func (self _AllFunction) Call(
 	if a_type.Kind() == reflect.Slice {
 		for i := 0; i < a_value.Len(); i++ {
 			element := a_value.Index(i).Interface()
-			triggered = evalAllCondition(ctx, scope, arg, element)
+			triggered := evalAllCondition(ctx, scope, arg, element)
 			if !triggered {
 				return false
 			}
@@ -144,7 +104,7 @@ func (self _AllFunction) Call(
 		for _, item := range members {
 			value, pres := scope.Associative(arg.Items, item)
 			if pres {
-				triggered = evalAllCondition(ctx, scope, arg, value)
+				triggered := evalAllCondition(ctx, scope, arg, value)
 				if !triggered {
 					return false
 				}
@@ -154,8 +114,7 @@ func (self _AllFunction) Call(
 	}
 
 	// We dont know what the item actually is - let the callback tell us
-	triggered = evalAllCondition(ctx, scope, arg, arg.Items)
-	return triggered
+	return evalAllCondition(ctx, scope, arg, arg.Items)
 }
 
 func init() {

@@ -8,15 +8,13 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
-	"www.velocidex.com/golang/vfilter/functions"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
-type _AnyFunction struct {
-	functions.Aggregator
-}
+type _AnyFunction struct{}
 
-func (self _AnyFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _AnyFunction) Info(scope vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "any",
 		Doc:     "Returns TRUE if any items are true.",
@@ -49,13 +47,6 @@ func evalAnyCondition(
 	return false
 }
 
-// Aggregate functions must be copiable.
-func (self _AnyFunction) Copy() types.FunctionInterface {
-	return _AnyFunction{
-		Aggregator: functions.NewAggregator(),
-	}
-}
-
 func (self _AnyFunction) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
@@ -72,31 +63,6 @@ func (self _AnyFunction) Call(
 		return vfilter.Null{}
 	}
 
-	// Maintain aggregate state - triggered must be true for any items.
-	triggered := false
-	previous_triggered := false
-	defer func() {
-		// Only update the context if we need to.
-		if triggered != previous_triggered {
-			self.SetContext(scope, &allState{triggered: triggered})
-		}
-	}()
-
-	// Get previous triggered value
-	previous_state_any, pres := self.GetContext(scope)
-	if pres {
-		previous_state, ok := previous_state_any.(*allState)
-		if ok {
-			triggered = previous_state.triggered
-			previous_triggered = triggered
-		}
-	}
-
-	// Shortcut - no need to evaluate if any previous value is false .
-	if triggered {
-		return true
-	}
-
 	// Walk over any items and evaluate them
 	switch t := arg.Items.(type) {
 	case types.LazyExpr:
@@ -104,8 +70,8 @@ func (self _AnyFunction) Call(
 
 	case types.StoredQuery:
 		for row := range t.Eval(ctx, scope) {
-			// Evaluate the row with the canyback
-			triggered = evalAnyCondition(ctx, scope, arg, row)
+			// Evaluate the row with the callback
+			triggered := evalAnyCondition(ctx, scope, arg, row)
 			if triggered {
 				return true
 			}
@@ -119,7 +85,7 @@ func (self _AnyFunction) Call(
 	if a_type.Kind() == reflect.Slice {
 		for i := 0; i < a_value.Len(); i++ {
 			element := a_value.Index(i).Interface()
-			triggered = evalAnyCondition(ctx, scope, arg, element)
+			triggered := evalAnyCondition(ctx, scope, arg, element)
 			if triggered {
 				return true
 			}
@@ -134,7 +100,7 @@ func (self _AnyFunction) Call(
 		for _, item := range members {
 			value, pres := scope.Associative(arg.Items, item)
 			if pres {
-				triggered = evalAnyCondition(ctx, scope, arg, value)
+				triggered := evalAnyCondition(ctx, scope, arg, value)
 				if triggered {
 					return true
 				}
@@ -143,9 +109,8 @@ func (self _AnyFunction) Call(
 		return false
 	}
 
-	// We dont know what the item actuanyy is - let the canyback tell us
-	triggered = evalAnyCondition(ctx, scope, arg, arg.Items)
-	return triggered
+	// We dont know what the item actually is - let the callback tell us
+	return evalAnyCondition(ctx, scope, arg, arg.Items)
 }
 
 func init() {
