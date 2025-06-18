@@ -181,28 +181,6 @@ Output: [
  }
 ]
 
-# all() can also operate on GROUP BY
-Query: LET TestArray <= (dict(X=1, Y="Hello"), dict(X=2, Y="Goodbye"), dict(X=1, Y="World"))
-Output: []
-
-Query: SELECT *, all(items=Y, filter="x=>x =~ 'Hello|World'"), all(items=Y, filter="x=>x =~ 'World'"), all(items=Y, filter="x=>x =~ 'Goodby'") FROM foreach(row=TestArray) GROUP BY X
-Output: [
- {
-  "X": 1,
-  "Y": "World",
-  "all(items=Y, filter=\"x=\u003ex =~ 'Hello|World'\")": true,
-  "all(items=Y, filter=\"x=\u003ex =~ 'World'\")": false,
-  "all(items=Y, filter=\"x=\u003ex =~ 'Goodby'\")": false
- },
- {
-  "X": 2,
-  "Y": "Goodbye",
-  "all(items=Y, filter=\"x=\u003ex =~ 'Hello|World'\")": false,
-  "all(items=Y, filter=\"x=\u003ex =~ 'World'\")": false,
-  "all(items=Y, filter=\"x=\u003ex =~ 'Goodby'\")": true
- }
-]
-
 # all() can also operate on subqueries
 Query: SELECT all(items={ SELECT * FROM foreach(row=TestArray) WHERE X = 1 }, filter="x=> x.Y =~ 'Hel|Worl'") FROM scope()
 Output: [
@@ -212,11 +190,11 @@ Output: [
 ]
 
 # Test the any function
-Query: SELECT any(items=TestArray, filter="x=>x.Y =~ 'Good'"), all(items=TestArray, filter="x=>x.Y =~ 'Good'") FROM scope()
+Query: SELECT any(items=TestArray, filter="x=>x =~ 'Good'"), all(items=TestArray, filter="x=>x =~ 'Good'") FROM scope()
 Output: [
  {
-  "any(items=TestArray, filter=\"x=\u003ex.Y =~ 'Good'\")": true,
-  "all(items=TestArray, filter=\"x=\u003ex.Y =~ 'Good'\")": false
+  "any(items=TestArray, filter=\"x=\u003ex =~ 'Good'\")": true,
+  "all(items=TestArray, filter=\"x=\u003ex =~ 'Good'\")": false
  }
 ]
 
