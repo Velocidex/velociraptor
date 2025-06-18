@@ -424,31 +424,41 @@ func RepackMSI(
 		return vfilter.Null{}
 	}
 
-	// Join the cab header before the config data
-	config_data = append(
-		data[cab_header_offset:cab_header_offset+cab_header_length], config_data...)
+	// Join the cab header before the config data by making a new
+	// slice and copying the old data to it.
+	new_config_data := append([]byte{},
+		data[cab_header_offset:cab_header_offset+cab_header_length]...)
+	new_config_data = append(new_config_data, config_data...)
+	config_data = new_config_data
 
 	// null out the checksum because we are too lazy to calculate it.
-	data[cab_header_length-8] = 0
-	data[cab_header_length-7] = 0
-	data[cab_header_length-6] = 0
-	data[cab_header_length-5] = 0
+	config_data[cab_header_length-8] = 0
+	config_data[cab_header_length-7] = 0
+	config_data[cab_header_length-6] = 0
+	config_data[cab_header_length-5] = 0
+
+	// Pad out to page size
+	pad := OLE_PAGESIZE - len(config_data)%OLE_PAGESIZE
+	for i := 0; i < pad; i++ {
+		config_data = append(config_data, ' ')
+	}
 
 	// Now copy the config data to the MSI one page at the time.
-	for i := int64(0); i < int64(len(config_data))/OLE_PAGESIZE; i++ {
+	for i := int64(0); i < int64(len(config_data))/OLE_PAGESIZE+1; i++ {
 		msi_page_idx, pres := page_map[i]
 		if !pres {
 			scope.Log("client_repack: Insufficient space reserved in MSI file! Can not locate page %v.", i)
 			return vfilter.Null{}
 		}
 
-		end := i + OLE_PAGESIZE
+		start := i * OLE_PAGESIZE
+		end := start + OLE_PAGESIZE
 		if end > int64(len(config_data)) {
 			end = int64(len(config_data))
 		}
-		copy(data[msi_page_idx:msi_page_idx+OLE_PAGESIZE], config_data[i:end])
-		scope.Log("DEBUG:client_repack: Copying page %v to %#x->%#x in MSI\n",
-			i, msi_page_idx, msi_page_idx+OLE_PAGESIZE)
+		copy(data[msi_page_idx:msi_page_idx+OLE_PAGESIZE], config_data[start:end])
+		scope.Log("DEBUG:client_repack: Copying page %v from %#x to %#x->%#x in MSI\n",
+			i, start, msi_page_idx, msi_page_idx+OLE_PAGESIZE)
 	}
 
 	sub_scope := scope.Copy()
