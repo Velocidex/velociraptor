@@ -515,7 +515,9 @@
     basename(path="/foo/bar") -> "bar"
     ```
 
-    Related: `dirname()`
+    ### See also
+
+    - [dirname]({{< ref "/vql_reference/other/dirname/" >}})
   type: Function
   args:
   - name: path
@@ -1618,6 +1620,53 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: deb_create
+  description: Create a deployable Debian package for client or server.
+  type: Plugin
+  args:
+  - name: target
+    type: string
+    description: The name of the target OS to repack (default VelociraptorLinux)
+  - name: version
+    type: string
+    description: Velociraptor Version to repack
+  - name: release
+    type: string
+    description: Rpm package release version (A)
+  - name: server
+    type: bool
+    description: Build a server rpm if true, otherwise we build a client rpm
+  - name: exe
+    type: accessors.OSPath
+    description: Alternative a path to the executable to repack
+  - name: accessor
+    type: string
+    description: The accessor to use to read the file.
+  - name: config
+    type: string
+    description: The config to be repacked in the form of a json or yaml string. If
+      not provided we use the current config./
+  - name: show_spec
+    type: bool
+    description: If set we only show the spec that would have been used. You can use
+      this to customize the input for package_spec
+  - name: directory_name
+    type: string
+    description: Package files will be created inside this directory. If not specified
+      we use a temporary directory
+    required: true
+  - name: extra_args
+    type: string
+    description: Additional command line args to be provided to the service
+    repeated: true
+  - name: package_spec
+    type: ordereddict.Dict
+    description: A Package spec to use instead of the default, for ultimate customization
+  category: server
+  metadata:
+    permissions: COLLECT_SERVER,FILESYSTEM_WRITE,SERVER_ADMIN
+  platforms:
+  - linux_amd64_cgo
 - name: dedup
   description: Dedups the query based on a column. This will suppress rows with identical
     values for the key column
@@ -1844,7 +1893,9 @@
     dirname(path="/usr/bin/ls") -> "/usr/bin"
     ```
 
-    Related: `basename()`
+    ### See also
+
+    - [basename]({{< ref "/vql_reference/popular/basename/" >}})
   type: Function
   args:
   - name: path
@@ -6412,7 +6463,6 @@
 
     Most users need to further parse the emitted line using for
     example `grok()` or `parse_string_with_regex()`
-
   type: Plugin
   args:
   - name: filename
@@ -8367,10 +8417,13 @@
   - name: upload_name
     type: string
     description: The name of the upload to create
-    required: true
+  - name: dest_filename
+    type: string
+    description: If an upload name is not provided, the file will be written to this
+      path
   category: server
   metadata:
-    permissions: COLLECT_SERVER
+    permissions: COLLECT_SERVER,FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -8443,6 +8496,53 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: rpm_create
+  description: Create a deployable RPM package for client or server.
+  type: Plugin
+  args:
+  - name: target
+    type: string
+    description: The name of the target OS to repack (default VelociraptorLinux)
+  - name: version
+    type: string
+    description: Velociraptor Version to repack
+  - name: release
+    type: string
+    description: Rpm package release version (A)
+  - name: server
+    type: bool
+    description: Build a server rpm if true, otherwise we build a client rpm
+  - name: exe
+    type: accessors.OSPath
+    description: Alternative a path to the executable to repack
+  - name: accessor
+    type: string
+    description: The accessor to use to read the file.
+  - name: config
+    type: string
+    description: The config to be repacked in the form of a json or yaml string. If
+      not provided we use the current config./
+  - name: show_spec
+    type: bool
+    description: If set we only show the spec that would have been used. You can use
+      this to customize the input for package_spec
+  - name: directory_name
+    type: string
+    description: Package files will be created inside this directory. If not specified
+      we use a temporary directory
+    required: true
+  - name: extra_args
+    type: string
+    description: Additional command line args to be provided to the service
+    repeated: true
+  - name: package_spec
+    type: ordereddict.Dict
+    description: A Package spec to use instead of the default, for ultimate customization
+  category: server
+  metadata:
+    permissions: COLLECT_SERVER,FILESYSTEM_WRITE,SERVER_ADMIN
+  platforms:
+  - linux_amd64_cgo
 - name: rsyslog
   description: Send an RFC5424 compliant remote syslog message.
   type: Function
@@ -8622,6 +8722,7 @@
     type: ordereddict.Dict
     description: A Dict containing key/value pairs for the secret
     required: true
+  category: server
   metadata:
     permissions: SERVER_ADMIN
   platforms:
@@ -8644,6 +8745,7 @@
     type: ordereddict.Dict
     description: A Set of key/value pairs
     required: true
+  category: server
   metadata:
     permissions: SERVER_ADMIN
   platforms:
@@ -8672,6 +8774,7 @@
     type: string
     description: A list of users to remove from the secret
     repeated: true
+  category: server
   metadata:
     permissions: SERVER_ADMIN
   platforms:
@@ -8680,6 +8783,7 @@
 - name: secrets
   description: Retrieve the list of secrets on the server.
   type: Plugin
+  category: server
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
@@ -8764,16 +8868,18 @@
   description: |
     Encode an object as a string.
 
-    Several serialization formats are supported. The default format, if format
-    is not specified, is "json".
+    Several serialization formats are supported. The default format, if not
+    specified, is "json".
 
     ### Notes
 
     This function is often useful when you need to pass a data structure to an
     artifact parameter when the parameter expects a specific format. For
-    example,
-    `SELECT * FROM
-    Artifact.Linux.Search.FileFinder(SearchFilesGlobTable=serialize(format="csv",item=tlist),...)`
+    example:
+
+    ```vql
+    SELECT * FROM Artifact.Linux.Search.FileFinder(SearchFilesGlobTable=serialize(format="csv",item=tlist),...)
+    ```
     will pass a list in CSV format to the artifact's `SearchFilesGlobTable` parameter.
 
     ### See also
@@ -11803,3 +11909,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+
