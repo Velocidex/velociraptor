@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -43,12 +44,17 @@ import (
 var (
 	generic_re      = []byte(`#!/bin/sh`)
 	embedded_re     = regexp.MustCompile(`#{3}<Begin Embedded Config>\r?\n`)
-	embedded_msi_re = regexp.MustCompile(`## Velociraptor client configuration`)
+	embedded_msi_re = regexp.MustCompile(`## Velociraptor client configuration\.? \((.+?)\)`)
+
+	// Legacy MSI were not packed correctly with the marker file so
+	// only the first page is usable.
+	embedded_msi_re_legacy = regexp.MustCompile(`## Velociraptor client configuration\.`)
 )
 
 const (
-	MAX_MEMORY = 200 * 1024 * 1024
-	MSI_MAGIC  = "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"
+	MAX_MEMORY   = 200 * 1024 * 1024
+	OLE_PAGESIZE = 0x1000
+	MSI_MAGIC    = "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"
 )
 
 type RepackFunctionArgs struct {
@@ -309,6 +315,85 @@ func resizeEmbeddedSize(
 	return exe_bytes, nil
 }
 
+type file_offset_map struct {
+	config_file_offset int64
+	msi_file_offset    int64
+}
+
+// Older MSIs did not pack the marker file correctly, making only one
+// page usable.
+// https://github.com/Velocidex/velociraptor/issues/4304
+func extractPageIndexLegacy(scope vfilter.Scope, data []byte) (
+	page_idx_map map[int64]int64, cab_header_length int64) {
+	res := make(map[int64]int64)
+
+	for _, match := range embedded_msi_re_legacy.FindAllSubmatchIndex(data, -1) {
+		if len(match) < 2 {
+			continue
+		}
+
+		msi_offset := int64(match[0])
+		page_offset := msi_offset - (msi_offset % OLE_PAGESIZE)
+		cab_header_length := int64(msi_offset % OLE_PAGESIZE)
+
+		res[0] = page_offset
+		return res, cab_header_length
+	}
+
+	return res, 0
+}
+
+func extractPageIndex(scope vfilter.Scope, data []byte) (
+	page_idx_map map[int64]int64, cab_header_length int64) {
+
+	// config_file_offset -> MSI file offset
+	var offset_map []file_offset_map
+	for _, match := range embedded_msi_re.FindAllSubmatchIndex(data, -1) {
+		// Need to match the submatch so we can extract it
+		if len(match) < 4 {
+			continue
+		}
+
+		// Start of placeholder (offset of #)
+		msi_offset := match[0]
+		file_offset, err := strconv.ParseInt(string(data[match[2]:match[3]]), 0, 64)
+		if err != nil {
+			scope.Log("client_repack: Unable to parse placeholder offset: %v",
+				string(data[match[0]:match[1]]))
+			continue
+		}
+
+		if file_offset == 0 {
+			cab_header_length = int64(msi_offset % OLE_PAGESIZE)
+		}
+
+		offset_map = append(offset_map, file_offset_map{
+			config_file_offset: file_offset,
+			msi_file_offset:    int64(msi_offset),
+		})
+	}
+
+	res := make(map[int64]int64)
+
+	for _, m := range offset_map {
+		// The index of the marker within the config file page - the
+		// config file marker starts a bit after the CAB header.
+		page_idx := (m.config_file_offset + cab_header_length) / OLE_PAGESIZE
+
+		// The corresponding page index in the MSI file. Pages must be aligned!
+		page_offset := m.msi_file_offset - (m.msi_file_offset % OLE_PAGESIZE)
+
+		res[page_idx] = page_offset
+	}
+
+	// Can not find any markers - maybe it is a legacy MSI?
+	if len(offset_map) == 0 {
+		return extractPageIndexLegacy(scope, data)
+	}
+
+	return res, cab_header_length
+}
+
 func RepackMSI(
 	ctx context.Context,
 	scope vfilter.Scope, upload_name string,
@@ -327,23 +412,53 @@ func RepackMSI(
 	// confusion with the padding being considered part of the yaml.
 	config_data = append(config_data, []byte("\n\n\n# Padding")...)
 
-	match := embedded_msi_re.FindIndex(data)
-	if match == nil || match[1] < 10 {
+	// The placeholder file is spread across several OLE pages. We
+	// need to locate those pages so we can overwrite the correct
+	// ones. We do this by locating all the markers in the placeholder
+	// file and building a page map.
+	page_map, cab_header_length := extractPageIndex(scope, data)
+	cab_header_offset, page_0_present := page_map[0]
+
+	if len(page_map) == 0 || cab_header_length == 0 || !page_0_present {
 		scope.Log("client_repack: I can not seem to locate the embedded config???? To repack an MSI, be sure to build from custom.xml with the custom.config.yaml file.")
 		return vfilter.Null{}
 	}
 
-	end := match[0]
+	// Join the cab header before the config data by making a new
+	// slice and copying the old data to it.
+	new_config_data := append([]byte{},
+		data[cab_header_offset:cab_header_offset+cab_header_length]...)
+	new_config_data = append(new_config_data, config_data...)
+	config_data = new_config_data
 
 	// null out the checksum because we are too lazy to calculate it.
-	data[end-8] = 0
-	data[end-7] = 0
-	data[end-6] = 0
-	data[end-5] = 0
+	config_data[cab_header_length-8] = 0
+	config_data[cab_header_length-7] = 0
+	config_data[cab_header_length-6] = 0
+	config_data[cab_header_length-5] = 0
 
-	// Copy the config data on top of the old one
-	for i := 0; i < len(config_data); i++ {
-		data[end+i] = config_data[i]
+	// Pad out to page size
+	pad := OLE_PAGESIZE - len(config_data)%OLE_PAGESIZE
+	for i := 0; i < pad; i++ {
+		config_data = append(config_data, ' ')
+	}
+
+	// Now copy the config data to the MSI one page at the time.
+	for i := int64(0); i < int64(len(config_data))/OLE_PAGESIZE+1; i++ {
+		msi_page_idx, pres := page_map[i]
+		if !pres {
+			scope.Log("client_repack: Insufficient space reserved in MSI file! Can not locate page %v.", i)
+			return vfilter.Null{}
+		}
+
+		start := i * OLE_PAGESIZE
+		end := start + OLE_PAGESIZE
+		if end > int64(len(config_data)) {
+			end = int64(len(config_data))
+		}
+		copy(data[msi_page_idx:msi_page_idx+OLE_PAGESIZE], config_data[start:end])
+		scope.Log("DEBUG:client_repack: Copying page %v from %#x to %#x->%#x in MSI\n",
+			i, start, msi_page_idx, msi_page_idx+OLE_PAGESIZE)
 	}
 
 	sub_scope := scope.Copy()

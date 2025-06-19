@@ -153,7 +153,7 @@ func StartDynDNSService(
 	// Set sensible defaults that should work reliably most of the
 	// time.
 	if result.external_ip_url == "" {
-		result.external_ip_url = "https://domains.google.com/checkip"
+		result.external_ip_url = "https://wtfismyip.com/text"
 	}
 
 	if result.dns_server == "" {
