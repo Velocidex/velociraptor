@@ -515,7 +515,9 @@
     basename(path="/foo/bar") -> "bar"
     ```
 
-    Related: `dirname()`
+    ### See also
+
+    - [dirname]({{< ref "/vql_reference/other/dirname/" >}})
   type: Function
   args:
   - name: path
@@ -1660,6 +1662,7 @@
   - name: package_spec
     type: ordereddict.Dict
     description: A Package spec to use instead of the default, for ultimate customization
+  category: server
   metadata:
     permissions: COLLECT_SERVER,FILESYSTEM_WRITE,SERVER_ADMIN
   platforms:
@@ -1890,7 +1893,9 @@
     dirname(path="/usr/bin/ls") -> "/usr/bin"
     ```
 
-    Related: `basename()`
+    ### See also
+
+    - [basename]({{< ref "/vql_reference/popular/basename/" >}})
   type: Function
   args:
   - name: path
@@ -8533,6 +8538,7 @@
   - name: package_spec
     type: ordereddict.Dict
     description: A Package spec to use instead of the default, for ultimate customization
+  category: server
   metadata:
     permissions: COLLECT_SERVER,FILESYSTEM_WRITE,SERVER_ADMIN
   platforms:
@@ -8716,6 +8722,7 @@
     type: ordereddict.Dict
     description: A Dict containing key/value pairs for the secret
     required: true
+  category: server
   metadata:
     permissions: SERVER_ADMIN
   platforms:
@@ -8738,6 +8745,7 @@
     type: ordereddict.Dict
     description: A Set of key/value pairs
     required: true
+  category: server
   metadata:
     permissions: SERVER_ADMIN
   platforms:
@@ -8766,6 +8774,7 @@
     type: string
     description: A list of users to remove from the secret
     repeated: true
+  category: server
   metadata:
     permissions: SERVER_ADMIN
   platforms:
@@ -8774,6 +8783,7 @@
 - name: secrets
   description: Retrieve the list of secrets on the server.
   type: Plugin
+  category: server
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
@@ -8858,16 +8868,18 @@
   description: |
     Encode an object as a string.
 
-    Several serialization formats are supported. The default format, if format
-    is not specified, is "json".
+    Several serialization formats are supported. The default format, if not
+    specified, is "json".
 
     ### Notes
 
     This function is often useful when you need to pass a data structure to an
     artifact parameter when the parameter expects a specific format. For
-    example,
-    `SELECT * FROM
-    Artifact.Linux.Search.FileFinder(SearchFilesGlobTable=serialize(format="csv",item=tlist),...)`
+    example:
+
+    ```vql
+    SELECT * FROM Artifact.Linux.Search.FileFinder(SearchFilesGlobTable=serialize(format="csv",item=tlist),...)
+    ```
     will pass a list in CSV format to the artifact's `SearchFilesGlobTable` parameter.
 
     ### See also
