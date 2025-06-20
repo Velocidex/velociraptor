@@ -41,6 +41,9 @@ func MaybeSpyOnWSDialer(
 }
 
 func getTraceFile(config_obj *config_proto.Config) *os.File {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if network_dialer_fd == nil {
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
@@ -101,8 +104,6 @@ func spyOnWSDialer(dialer *websocket.Dialer, fd *os.File) *websocket.Dialer {
 func MaybeSpyOnTransport(
 	config_obj *config_proto.Config,
 	transport *http.Transport) *http.Transport {
-	mu.Lock()
-	defer mu.Unlock()
 
 	if config_obj.Client == nil ||
 		config_obj.Client.InsecureNetworkTraceFile == "" {
@@ -119,6 +120,9 @@ func MaybeSpyOnTransport(
 }
 
 func spyOnTransport(transport *http.Transport, fd *os.File) *http.Transport {
+	// Make a copy of the transport as we will change its dialer.
+	transport = transport.Clone()
+
 	dialer := &net.Dialer{
 		Timeout:   30 * time.Second,
 		KeepAlive: 30 * time.Second,

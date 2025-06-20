@@ -186,7 +186,7 @@ func (self *HTTPClientCache) GetHttpClient(
 			scope.Log("http_client: DisableSSLSecurity is deprecated, please use SkipVerify instead")
 		}
 
-		transport, err := GetHttpTransport(config_obj, "")
+		transport, err := GetNewHttpTransport(config_obj, "")
 		if err != nil {
 			return nil, nil, err
 		}
@@ -194,7 +194,8 @@ func (self *HTTPClientCache) GetHttpClient(
 		transport = MaybeSpyOnTransport(
 			&config_proto.Config{Client: config_obj}, transport)
 
-		if err = EnableSkipVerify(transport.TLSClientConfig, config_obj); err != nil {
+		err = EnableSkipVerify(transport.TLSClientConfig, config_obj)
+		if err != nil {
 			return nil, nil, err
 		}
 
@@ -306,7 +307,9 @@ func (self *_HttpPlugin) Call(
 				return
 			}
 
-			// Create a new arg and operate on a copy.
+			// Create a new arg and operate on a copy. This allows the
+			// arg to be populated from the secret but not expose the
+			// secret in logging.
 			config_obj, _ := artifacts.GetConfig(scope)
 			client, arg, err := GetHttpClient(
 				ctx, config_obj, scope, parent_arg, url_obj)
@@ -483,7 +486,7 @@ func (self *_HttpPlugin) Call(
 				}
 
 				scope.Log("http_client: Downloading %v into %v",
-					arg.Url, tmpfile.Name())
+					url_str, tmpfile.Name())
 
 				response.Content = tmpfile.Name()
 				_, err = utils.Copy(ctx, tmpfile, http_resp.Body)
@@ -580,6 +583,8 @@ func EnableSkipVerifyHttp(client HTTPClient, config_obj *config_proto.ClientConf
 	if !ok {
 		return errors.New("http client does not have a compatible transport")
 	}
+
+	t = t.Clone()
 
 	return EnableSkipVerify(t.TLSClientConfig, config_obj)
 }
