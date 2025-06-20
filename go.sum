@@ -48,8 +48,8 @@ github.com/PuerkitoBio/goquery v1.8.1 h1:uQxhNlArOIdbrH1tr0UXwdVFgDcZDrZVdcpygAc
 github.com/PuerkitoBio/goquery v1.8.1/go.mod h1:Q8ICL1kNUJ2sXGoAhPGUdYDJvgQgHzJsnnd3H7Ho5jQ=
 github.com/Showmax/go-fqdn v1.0.0 h1:0rG5IbmVliNT5O19Mfuvna9LL7zlHyRfsSvBPZmF9tM=
 github.com/Showmax/go-fqdn v1.0.0/go.mod h1:SfrFBzmDCtCGrnHhoDjuvFnKsWjEQX/Q9ARZvOrJAko=
-github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20240711041142-80f6ecbbeb7f h1:BpGczX0ppw8SCdH3h42C4v+diQFl7ToSOH6uq5v6zak=
-github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20240711041142-80f6ecbbeb7f/go.mod h1:HloPDQtxpV/iPxaKVE45+dz6DELiHZcBC1KFRlZtAtM=
+github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20250618151512-1385e105b127 h1:wGTl6M8jQuu24e7fp3wjYJSRxHFApJE5HRFsNZBuVAk=
+github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20250618151512-1385e105b127/go.mod h1:HloPDQtxpV/iPxaKVE45+dz6DELiHZcBC1KFRlZtAtM=
 github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2 h1:2cUc1SS+pldecJ6AH6vR/MSpGJRsdAn9a+7Dye9HDHk=
 github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2/go.mod h1:1fYhBBGtaKu46Kpmkd2kvTi32zvgI91AusAW8BTiTAI=
 github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b h1:ZIf5UI3RZj9bO5XJKp8yBiqkM212yt/yic0cha20ORY=
@@ -457,8 +457,8 @@ github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQL
 github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI2bnpBCr8=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/klauspost/compress v1.13.6/go.mod h1:/3/Vjq9QcHkK5uEr5lBEmyoZ1iFhe47etQ6QUkpK6sk=
-github.com/klauspost/compress v1.17.9 h1:6KIumPrER1LHsvBVuDa0r5xaG0Es51mhhB9BQB2qeMA=
-github.com/klauspost/compress v1.17.9/go.mod h1:Di0epgTjJY877eYKx5yC51cX2A2Vl2ibi7bDH9ttBbw=
+github.com/klauspost/compress v1.18.0 h1:c/Cqfb0r+Yi+JtIEq73FWXVkRonBlf0CRNYc8Zttxdo=
+github.com/klauspost/compress v1.18.0/go.mod h1:2Pp+KzxcywXVXMr50+X0Q/Lsb43OQHYWRCY2AiWywWQ=
 github.com/klauspost/pgzip v1.2.6 h1:8RXeL5crjEUFnR2/Sn6GJNWtSQ3Dk8pq4CL3jvdDyjU=
 github.com/klauspost/pgzip v1.2.6/go.mod h1:Ch1tH69qFZu15pkjo5kYi6mth2Zzwzt50oCQKQE9RUs=
 github.com/kr/fs v0.1.0 h1:Jskdu9ieNAYnjxsi0LbQp1ulIKZV1LAFgK1tWhpZgl8=
