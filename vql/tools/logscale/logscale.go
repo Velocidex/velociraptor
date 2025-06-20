@@ -524,6 +524,9 @@ func (self *LogScaleQueue) postEvents(ctx context.Context, scope vfilter.Scope,
 			atomic.AddInt64(&self.postedEvents, int64(nRows))
 			atomic.AddInt64(&self.postedBytes, int64(len(data)))
 
+			if resp != nil {
+				resp.Body.Close()
+			}
 			return nil
 		}
 
@@ -533,12 +536,16 @@ func (self *LogScaleQueue) postEvents(ctx context.Context, scope vfilter.Scope,
 		} else {
 			_, err = io.Copy(body, resp.Body)
 			if err != nil {
-				resp.Body.Close()
+				if resp != nil {
+					resp.Body.Close()
+				}
 				self.Log(scope, "copy of response failed: %v, %v", resp.Status, err)
 				return err
 			}
 			self.Log(scope, "request failed: %v, %s", resp.Status, body)
-			resp.Body.Close()
+			if resp != nil {
+				resp.Body.Close()
+			}
 		}
 
 		retry, _ := self.shouldRetryRequest(ctx, resp, err)
@@ -558,12 +565,19 @@ func (self *LogScaleQueue) postEvents(ctx context.Context, scope vfilter.Scope,
 				retries, wait)
 
 			clock.Sleep(wait)
+			if resp != nil {
+				resp.Body.Close()
+			}
 			continue
 		}
 
 		atomic.AddInt64(&self.failedEvents, int64(nRows))
 		if errors.Is(err, context.Canceled) {
 			self.Log(scope, "Failed to POST %v events while queue is closing.  Dropping remaining events.", nRows)
+			if resp != nil {
+				resp.Body.Close()
+			}
+
 			return err
 		}
 
@@ -572,6 +586,10 @@ func (self *LogScaleQueue) postEvents(ctx context.Context, scope vfilter.Scope,
 		}
 
 		self.Log(scope, "Failed to post events, lost %v events: %v", nRows, err)
+		if resp != nil {
+			resp.Body.Close()
+		}
+
 		return err
 	}
 }

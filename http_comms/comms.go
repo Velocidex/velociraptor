@@ -180,7 +180,7 @@ func NewHTTPConnector(
 		maxPollDev = 30
 	}
 
-	transport, err := networking.GetHttpTransport(config_obj.Client, "")
+	transport, err := networking.GetNewHttpTransport(config_obj.Client, "")
 	if err != nil {
 		return nil, err
 	}
@@ -297,6 +297,9 @@ func (self *HTTPConnector) retryPost(
 			case http.StatusRequestTimeout:
 				logger.Debug("%v: Retrying connection to %v: Status %v",
 					name, handler, resp.StatusCode)
+				if resp != nil {
+					resp.Body.Close()
+				}
 				continue
 
 				// 503 is retryable a couple times.
@@ -305,6 +308,9 @@ func (self *HTTPConnector) retryPost(
 					name, handler, resp.StatusCode, resp.Status)
 
 				count++
+				if resp != nil {
+					resp.Body.Close()
+				}
 				continue
 			}
 		}
@@ -314,6 +320,9 @@ func (self *HTTPConnector) retryPost(
 			logger.Debug("%v: Retrying connection to %v: %v",
 				name, handler, notConnectedError)
 			count++
+			if resp != nil {
+				resp.Body.Close()
+			}
 			continue
 		}
 
@@ -325,12 +334,18 @@ func (self *HTTPConnector) retryPost(
 		if count > MaxRetryCount {
 			logger.Debug("%v: Exceeded retry times for %v",
 				name, handler)
+			if resp != nil {
+				resp.Body.Close()
+			}
 			break
 		}
 
 		logger.Debug("%v: Retrying connection to %v for %v time",
 			name, handler, count)
 		count++
+		if resp != nil {
+			resp.Body.Close()
+		}
 	}
 
 	// Should not happen unless we messed up the logic above.
