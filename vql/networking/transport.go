@@ -23,6 +23,13 @@ type TransportCacheType struct {
 	cache map[string]*http.Transport
 }
 
+func (self *TransportCacheType) Reset() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.cache = make(map[string]*http.Transport)
+}
+
 func (self *TransportCacheType) Get(extra_roots string) (*http.Transport, bool) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
