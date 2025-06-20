@@ -19,6 +19,8 @@ func testHTTPConnection(
 	config_obj *config_proto.ClientConfig, url string) (
 	HTTPClient, []byte, error) {
 
+	TransportCache.Reset()
+
 	url_obj, err := parseURL(url)
 	if err != nil {
 		return nil, nil, err
