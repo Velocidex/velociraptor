@@ -105,7 +105,7 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return result
+	return path_specs.ToAnyType(result)
 }
 
 func (self CreateFlowDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"sync"
 	"testing"
@@ -238,11 +239,23 @@ func TestCPULimit(t *testing.T) {
 	assert.Regexp(t, "Will throttle query to 5 percent of", string(out))
 }
 
+var (
+	client_deb_regex = regexp.MustCompile("client.+\\.deb$")
+	server_deb_regex = regexp.MustCompile("server.+\\.deb$")
+)
+
 func TestBuildDeb(t *testing.T) {
 	binary, _ := SetupTest(t)
 
+	tempdir, err := tempfile.TempDir("TestBuildDeb")
+	assert.NoError(t, err)
+
+	defer os.RemoveAll(tempdir)
+
 	// A temp file for the generated config.
-	config_file, err := tempfile.TempFile("config")
+	config_file, err := os.OpenFile(filepath.Join(tempdir, "config"),
+		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+
 	assert.NoError(t, err)
 	defer os.Remove(config_file.Name())
 
@@ -258,20 +271,18 @@ func TestBuildDeb(t *testing.T) {
 
 	binary_file, _ := filepath.Abs("../artifacts/testdata/files/test.elf")
 
-	output_file, err := tempfile.TempFile("output*.deb")
-	assert.NoError(t, err)
-	output_file.Close()
-	defer os.Remove(output_file.Name())
-
 	cmd = exec.Command(
 		binary, "--config", config_file.Name(),
 		"debian", "client", "--binary", binary_file,
-		"--output", output_file.Name())
+		"--output", tempdir)
 	out, err = cmd.CombinedOutput()
 	require.NoError(t, err, string(out))
 
+	output_file, err := tempfile.FindFile(tempdir, client_deb_regex)
+	assert.NoError(t, err)
+
 	// Make sure the file is written
-	fd, err := os.Open(output_file.Name())
+	fd, err := os.Open(output_file)
 	assert.NoError(t, err)
 
 	stat, err := fd.Stat()
@@ -280,20 +291,18 @@ func TestBuildDeb(t *testing.T) {
 	assert.Greater(t, stat.Size(), int64(0))
 
 	// Now the server deb
-	output_file, err = tempfile.TempFile("output*.deb")
-	assert.NoError(t, err)
-	output_file.Close()
-	defer os.Remove(output_file.Name())
-
 	cmd = exec.Command(
 		binary, "--config", config_file.Name(),
 		"debian", "server", "--binary", binary_file,
-		"--output", output_file.Name())
+		"--output", tempdir)
 	out, err = cmd.Output()
 	require.NoError(t, err, string(out))
 
+	output_file, err = tempfile.FindFile(tempdir, server_deb_regex)
+	assert.NoError(t, err)
+
 	// Make sure the file is written
-	fd, err = os.Open(output_file.Name())
+	fd, err = os.Open(output_file)
 	assert.NoError(t, err)
 
 	stat, err = fd.Stat()

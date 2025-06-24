@@ -278,7 +278,9 @@ func (self *InventoryService) GetToolInfo(
 
 		// Already holding the mutex here - call the lock free
 		// version.
-		return self.addAllVersions(ctx, config_obj, match, version), nil
+		match = self.addAllVersions(ctx, config_obj, match, version)
+
+		return decorateServeUrls(config_obj, match)
 	}
 
 	return nil, fmt.Errorf("Tool %v not declared in inventory.", tool)
@@ -386,14 +388,17 @@ func (self *InventoryService) materializeTool(
 	tool.InvalidHash = ""
 
 	if tool.ServeLocally {
-		base_url, err := getPublicURL(org_config_obj)
+		tool.ServeUrls, err = getPublicURLs(org_config_obj, "public/"+tool.FilestorePath)
 		if err != nil {
 			return err
 		}
-		tool.ServeUrl = base_url + "public/" + tool.FilestorePath
+		if len(tool.ServeUrls) > 0 {
+			tool.ServeUrl = tool.ServeUrls[0]
+		}
 
 	} else {
 		tool.ServeUrl = tool.Url
+		tool.ServeUrls = []string{tool.ServeUrl}
 	}
 
 	db, err := datastore.GetDB(org_config_obj)
@@ -457,7 +462,7 @@ func (self *InventoryService) UpdateVersion(tool_request *artifacts_proto.Tool) 
 // inventory automatically.
 func (self *InventoryService) AddTool(
 	ctx context.Context, config_obj *config_proto.Config,
-	tool_request *artifacts_proto.Tool, opts services.ToolOptions) error {
+	tool_request *artifacts_proto.Tool, opts services.ToolOptions) (err error) {
 
 	// Clear out the system managed fields.
 	tool_request.Versions = nil
@@ -506,15 +511,18 @@ func (self *InventoryService) AddTool(
 	}
 
 	if tool.ServeLocally {
-		base_url, err := getPublicURL(config_obj)
+		tool.ServeUrls, err = getPublicURLs(config_obj, "public/"+tool.FilestorePath)
 		if err != nil {
 			return err
 		}
-		tool.ServeUrl = base_url + "public/" + tool.FilestorePath
+		if len(tool.ServeUrls) > 0 {
+			tool.ServeUrl = tool.ServeUrls[0]
+		}
 	} else {
 		// If we dont serve the tool, the clients will directly get
 		// the tool from its upstream URL.
 		tool.ServeUrl = tool.Url
+		tool.ServeUrls = []string{tool.ServeUrl}
 	}
 
 	// Set the filename to something sensible so it is always valid.
@@ -705,20 +713,48 @@ func isDefinitionBetter(old, new *artifacts_proto.Tool) bool {
 	return true
 }
 
+func decorateServeUrls(config_obj *config_proto.Config,
+	tool *artifacts_proto.Tool) (res *artifacts_proto.Tool, err error) {
+
+	tool = proto.Clone(tool).(*artifacts_proto.Tool)
+
+	if tool.ServeLocally {
+		tool.ServeUrls, err = getPublicURLs(config_obj, "public/"+tool.FilestorePath)
+		if err != nil {
+			return nil, err
+		}
+		if len(tool.ServeUrls) > 0 {
+			tool.ServeUrl = tool.ServeUrls[0]
+		}
+
+	} else {
+		tool.ServeUrl = tool.Url
+		tool.ServeUrls = []string{tool.ServeUrl}
+	}
+
+	return tool, nil
+}
+
 // Calculates the URL of the /public/ directory from the config file.
-func getPublicURL(config_obj *config_proto.Config) (string, error) {
+func getPublicURLs(config_obj *config_proto.Config, path string) (res []string, err error) {
 	if config_obj.Client == nil || len(config_obj.Client.ServerUrls) == 0 {
-		return "", fmt.Errorf("%w: No server URLs configured!", utils.InvalidConfigError)
+		return nil, fmt.Errorf("%w: No server URLs configured!", utils.InvalidConfigError)
 	}
 
-	parsed_url, err := url.Parse(config_obj.Client.ServerUrls[0])
-	if err != nil {
-		return "", fmt.Errorf("%w: %w!", utils.InvalidConfigError, err)
+	for _, server_url := range config_obj.Client.ServerUrls {
+		parsed_url, err := url.Parse(server_url)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %w!", utils.InvalidConfigError, err)
+		}
+
+		if parsed_url.Scheme == "wss" {
+			parsed_url.Scheme = "https"
+		}
+
+		parsed_url.Path += path
+
+		res = append(res, parsed_url.String())
 	}
 
-	if parsed_url.Scheme == "wss" {
-		parsed_url.Scheme = "https"
-	}
-
-	return parsed_url.String(), nil
+	return res, err
 }

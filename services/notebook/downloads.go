@@ -64,6 +64,7 @@ func (self *AttachmentManagerImpl) GetAvailableUploadFiles(notebook_id string) (
 
 		err := api.Walk(file_store_factory, cell_manager.UploadsDir(),
 			func(ps api.FSPathSpec, info os.FileInfo) error {
+				ps = path_specs.ToAnyType(ps)
 
 				// Build the vfs path by showing the relative path of
 				// the path spec relative to the uploads directory in
@@ -71,17 +72,15 @@ func (self *AttachmentManagerImpl) GetAvailableUploadFiles(notebook_id string) (
 				vfs_path_spec := path_specs.NewUnsafeFilestorePath(
 					ps.Components()[len(upload_directory.Components()):]...).
 					SetType(ps.Type())
-				vfs_path := vfs_path_spec.AsClientPath()
 
 				result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
 					Name: ps.Base(),
 					Size: uint64(info.Size()),
 					Date: info.ModTime().UTC().Format(time.RFC3339),
-					Type: api.GetExtensionForFilestore(ps),
 					Stats: &api_proto.ContainerStats{
 						Components: ps.Components(),
 						Type:       api.GetExtensionForFilestore(ps),
-						VfsPath:    vfs_path,
+						VfsPath:    vfs_path_spec.AsClientPath(),
 					},
 				})
 				return nil
@@ -93,11 +92,11 @@ func (self *AttachmentManagerImpl) GetAvailableUploadFiles(notebook_id string) (
 
 	attachment_directory := notebook_path_manager.AttachmentDirectory()
 	attachment_directory_components := len(attachment_directory.Components())
+
 	// Also include attachments
 	items, _ := file_store_factory.ListDirectory(attachment_directory)
 	for _, item := range items {
-		ps := item.PathSpec()
-		file_type := api.GetExtensionForFilestore(ps)
+		ps := path_specs.ToAnyType(item.PathSpec())
 
 		// Build the vfs path by showing the relative path of
 		// the path spec relative to the attachment
@@ -109,10 +108,9 @@ func (self *AttachmentManagerImpl) GetAvailableUploadFiles(notebook_id string) (
 			Name: ps.Base(),
 			Size: uint64(item.Size()),
 			Date: item.ModTime().UTC().Format(time.RFC3339),
-			Type: file_type,
 			Stats: &api_proto.ContainerStats{
 				Components: ps.Components(),
-				Type:       file_type,
+				Type:       api.GetExtensionForFilestore(ps),
 				VfsPath:    vfs_path_spec.AsClientPath(),
 			},
 		})

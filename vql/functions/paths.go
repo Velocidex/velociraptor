@@ -25,6 +25,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -167,7 +168,7 @@ func (self *PathJoinFunction) Call(ctx context.Context,
 	for _, c := range arg.Components {
 		os_path, err = parsePath(ctx, scope, c, arg.Sep, arg.PathType)
 		if err != nil {
-			scope.Log("dirname: %v", err)
+			scope.Log("path_join: %v", err)
 			return false
 		}
 
@@ -177,7 +178,7 @@ func (self *PathJoinFunction) Call(ctx context.Context,
 	if os_path == nil {
 		os_path, err = parsePath(ctx, scope, "", arg.Sep, arg.PathType)
 		if err != nil {
-			scope.Log("dirname: %v", err)
+			scope.Log("path_join: %v", err)
 			return false
 		}
 	}
@@ -265,6 +266,7 @@ func parsePath(
 		return accessors.ParsePath(t, path_type)
 
 	default:
+		utils.DlvBreak()
 		return nil, fmt.Errorf(
 			"Path should be an OSPath or string, not %T", path)
 	}
