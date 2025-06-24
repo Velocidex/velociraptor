@@ -70,9 +70,9 @@ require (
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
-	golang.org/x/crypto v0.36.0
+	golang.org/x/crypto v0.39.0
 	golang.org/x/mod v0.25.0
-	golang.org/x/net v0.38.0
+	golang.org/x/net v0.41.0
 	golang.org/x/sys v0.33.0
 	golang.org/x/text v0.26.0
 	golang.org/x/time v0.5.0
@@ -112,7 +112,7 @@ require (
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
 	github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9
-	github.com/Velocidex/tracee_velociraptor v0.0.0-20250304130312-661b3fd25a3c
+	github.com/Velocidex/tracee_velociraptor v0.0.0-20250620124218-01f48d6fc3a1
 	github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/alitto/pond/v2 v2.1.6
@@ -199,7 +199,7 @@ require (
 	github.com/charmbracelet/x/ansi v0.5.2 // indirect
 	github.com/charmbracelet/x/exp/strings v0.0.0-20241209212528-0eec74ecaa6f // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
-	github.com/cilium/ebpf v0.16.0 // indirect
+	github.com/cilium/ebpf v0.18.0 // indirect
 	github.com/crewjam/httperr v0.2.0 // indirect
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
@@ -282,7 +282,7 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c // indirect
 	golang.org/x/sync v0.15.0 // indirect
-	golang.org/x/term v0.30.0 // indirect
+	golang.org/x/term v0.32.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241015192408-796eee8c2d53 // indirect
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.71 // indirect
 	kernel.org/pub/linux/libs/security/libcap/psx v1.2.71 // indirect

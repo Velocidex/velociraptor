@@ -95,19 +95,16 @@ export default class NotebookUploads extends Component {
 
     getDownloadLink = (cell, row) =>{
         let stats = row.stats || {};
-        let type = row.type || "";
-        let components = stats.components;
+        let components = stats.components || [];
 
-        if (!components.length) {
+        if (_.isEmpty(components)) {
             return <></>;
         };
-
-        components[components.length-1] += type;
 
         return <a href={
             api.href("/api/v1/DownloadVFSFile", {
                 fs_components: components,
-                vfs_path: cell + type,
+                vfs_path: cell,
             })}
                   key={stats.vfs_path}
                   target="_blank" download

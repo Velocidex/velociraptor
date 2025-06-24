@@ -444,7 +444,7 @@ func RepackMSI(
 	}
 
 	// Now copy the config data to the MSI one page at the time.
-	for i := int64(0); i < int64(len(config_data))/OLE_PAGESIZE+1; i++ {
+	for i := int64(0); i < int64(len(config_data))/OLE_PAGESIZE; i++ {
 		msi_page_idx, pres := page_map[i]
 		if !pres {
 			scope.Log("client_repack: Insufficient space reserved in MSI file! Can not locate page %v.", i)

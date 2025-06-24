@@ -62,6 +62,10 @@
      {
       "key": "Tool_SomeTool_URL",
       "value": "https://localhost:8000/public/152038a5bc46cb8fc68ee6eac0269c6a3fba574c4a96a650ed26aa9b02b1cb64"
+     },
+     {
+      "key": "Tool_SomeTool_URLs",
+      "value": "[\"https://localhost:8000/public/152038a5bc46cb8fc68ee6eac0269c6a3fba574c4a96a650ed26aa9b02b1cb64\"]"
      }
     ],
     "Query": [
@@ -163,6 +167,10 @@
      {
       "key": "Tool_SomeTool_URL",
       "value": "https://localhost:8000/public/152038a5bc46cb8fc68ee6eac0269c6a3fba574c4a96a650ed26aa9b02b1cb64"
+     },
+     {
+      "key": "Tool_SomeTool_URLs",
+      "value": "[\"https://localhost:8000/public/152038a5bc46cb8fc68ee6eac0269c6a3fba574c4a96a650ed26aa9b02b1cb64\"]"
      }
     ],
     "Query": [

@@ -12,6 +12,10 @@
    {
     "key": "Tool_SampleTool_URL",
     "value": "https://localhost:8000/public/dbdbc5e2ae775342ae9189803757a07b20daf0b04a25cda9d97a99785d75ec3b"
+   },
+   {
+    "key": "Tool_SampleTool_URLs",
+    "value": "[\"https://localhost:8000/public/dbdbc5e2ae775342ae9189803757a07b20daf0b04a25cda9d97a99785d75ec3b\"]"
    }
   ],
   "max_row": 1000,
@@ -28,6 +32,9 @@
   "name": "SampleTool",
   "serve_locally": true,
   "serve_url": "https://localhost:8000/public/dbdbc5e2ae775342ae9189803757a07b20daf0b04a25cda9d97a99785d75ec3b",
+  "serve_urls": [
+   "https://localhost:8000/public/dbdbc5e2ae775342ae9189803757a07b20daf0b04a25cda9d97a99785d75ec3b"
+  ],
   "url": "htttp://www.example.com/file.exe",
   "versions": [
    {
