@@ -21,6 +21,7 @@ Output: [
    "artifact": "",
    "filestore_path": "",
    "serve_url": "",
+   "serve_urls": [],
    "serve_path": "",
    "filename": "winpmem_v3.3.rc3.exe",
    "hash": "",
@@ -45,6 +46,9 @@ Output: [
   "artifact": "",
   "filestore_path": "8adb952c7ee4388178e325b1a091c4a9e20b7e5f8436260c190df1c7c2f4a5f7",
   "serve_url": "https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe",
+  "serve_urls": [
+   "https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe"
+  ],
   "serve_path": "",
   "filename": "winpmem_v3.3.rc3.exe",
   "hash": "",
@@ -55,11 +59,17 @@ Output: [
 
 # Normally the artifact launch service will populate these
 # parameters - for this test we override them.
-Query: LET ToolInfo <= dict( Tool_WinPmem_URL="https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc3/winpmem_v3.3.rc3.exe", Tool_WinPmem_FILENAME="winpmem_v3.3.rc3.exe", Tool_WinPmem_HASH="319f6c714d682505157cf72aa928c94ada3c839fb8eb0e503d8770624e897318")
+Query: LET Tool_WinPmem_URL <= "https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc3/winpmem_v3.3.rc3.exe"
+Output: []
+
+Query: LET Tool_WinPmem_FILENAME <= "winpmem_v3.3.rc3.exe"
+Output: []
+
+Query: LET Tool_WinPmem_HASH <= "319f6c714d682505157cf72aa928c94ada3c839fb8eb0e503d8770624e897318"
 Output: []
 
 # First time we retrive the tool we should bring it from the server.
-Query: SELECT DownloadStatus, Hash FROM Artifact.Generic.Utils.FetchBinary( ToolName="WinPmem", SleepDuration=0, ToolInfo=ToolInfo)
+Query: SELECT DownloadStatus, Hash FROM Artifact.Generic.Utils.FetchBinary( ToolName="WinPmem", SleepDuration=0)
 Output: [
  {
   "DownloadStatus": "Downloaded",
@@ -72,7 +82,7 @@ Output: [
 ]
 
 # Second time it should be retrieved from the local system cache.
-Query: SELECT DownloadStatus, Hash FROM Artifact.Generic.Utils.FetchBinary( ToolName="WinPmem", SleepDuration=0, ToolInfo=ToolInfo)
+Query: SELECT DownloadStatus, Hash FROM Artifact.Generic.Utils.FetchBinary( ToolName="WinPmem", SleepDuration=0)
 Output: [
  {
   "DownloadStatus": "Cached",

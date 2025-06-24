@@ -66,13 +66,20 @@ velociraptor --config server.config.yaml debian server
 			Value(&config.MinionBindPort),
 	}
 
-	items = append(items, configureDynDNS(config)...)
-
 	for {
 		form := huh.NewForm(huh.NewGroup(items...)).WithTheme(getTheme())
 		err := form.Run()
 		if err != nil {
 			return err
+		}
+
+		questions := configureDynDNS(config)
+		if questions != nil {
+			form := huh.NewForm(huh.NewGroup(questions...)).WithTheme(getTheme())
+			err := form.Run()
+			if err != nil {
+				return err
+			}
 		}
 
 		new_config, err := config.compileFrontend(config_obj)

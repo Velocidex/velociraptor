@@ -129,6 +129,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -531,25 +532,29 @@ func AddToolDependency(
 			Key:   fmt.Sprintf("Tool_%v_PATH", tool_info.Name),
 			Value: tool_info.ServePath,
 		})
-	} else if tool_info.ServeUrl != "" {
-		// Where to download the binary from.
-		url := ""
 
-		// If we dont want to serve the binary locally, just
-		// tell the client where to get it from.
-		if tool_info.ServeUrl != "" {
-			url = tool_info.ServeUrl
-
-		} else if tool_info.Url != "" {
-			url = tool_info.Url
-
-		} else if config_obj.Client != nil {
-			url = config_obj.Client.ServerUrls[0] + "public/" + tool_info.FilestorePath
-		}
-
+	} else if len(tool_info.ServeUrls) > 0 {
 		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
 			Key:   fmt.Sprintf("Tool_%v_URL", tool_info.Name),
-			Value: url,
+			Value: tool_info.ServeUrls[0],
+		})
+
+		serialized_urls := json.MustMarshalString(tool_info.ServeUrls)
+		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
+			Key:   fmt.Sprintf("Tool_%v_URLs", tool_info.Name),
+			Value: serialized_urls,
+		})
+
+	} else if tool_info.Url != "" {
+		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
+			Key:   fmt.Sprintf("Tool_%v_URL", tool_info.Name),
+			Value: tool_info.Url,
+		})
+
+		serialized_urls := json.MustMarshalString([]string{tool_info.Url})
+		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
+			Key:   fmt.Sprintf("Tool_%v_URLs", tool_info.Name),
+			Value: serialized_urls,
 		})
 	}
 	return nil

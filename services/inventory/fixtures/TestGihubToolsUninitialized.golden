@@ -12,6 +12,10 @@
    {
     "key": "Tool_SampleTool_URL",
     "value": "htttp://www.example.com/file.exe"
+   },
+   {
+    "key": "Tool_SampleTool_URLs",
+    "value": "[\"htttp://www.example.com/file.exe\"]"
    }
   ],
   "max_row": 1000,
@@ -27,6 +31,9 @@
   "hash": "3c03cf5341a1e078c438f31852e1587a70cc9f91ee02eda315dd231aba0a0ab1",
   "name": "SampleTool",
   "serve_url": "htttp://www.example.com/file.exe",
+  "serve_urls": [
+   "htttp://www.example.com/file.exe"
+  ],
   "url": "htttp://www.example.com/file.exe",
   "versions": [
    {
