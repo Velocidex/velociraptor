@@ -56,3 +56,13 @@ func FromGenericComponentList(components []string) api.FSPathSpec {
 	}
 	return pathspec
 }
+
+// Converts a typed pathspec to an untyped pathspec. This is required
+// when using in a context that will ignore file extensions.
+func ToAnyType(in api.FSPathSpec) api.FSPathSpec {
+	if in.Type() != api.PATH_TYPE_FILESTORE_ANY {
+		return NewUnsafeFilestorePath(AsGenericComponentList(in)...).
+			SetType(api.PATH_TYPE_FILESTORE_ANY)
+	}
+	return in
+}

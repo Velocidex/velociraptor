@@ -55,9 +55,18 @@ portable than plain HTTP. Be sure to test this in your environment.
 			Value(&config.GUIBindPort))
 	}
 
-	items = append(items, configureDynDNS(config)...)
-
 	form := huh.NewForm(huh.NewGroup(items...)).WithTheme(getTheme())
+	err := form.Run()
+	if err != nil {
+		return err
+	}
+
+	questions := configureDynDNS(config)
+	if questions == nil {
+		return nil
+	}
+
+	form = huh.NewForm(huh.NewGroup(questions...)).WithTheme(getTheme())
 	return form.Run()
 }
 

@@ -15,15 +15,14 @@ Queries:
 
   # Normally the artifact launch service will populate these
   # parameters - for this test we override them.
-  - LET ToolInfo <= dict(
-       Tool_WinPmem_URL="https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc3/winpmem_v3.3.rc3.exe",
-       Tool_WinPmem_FILENAME="winpmem_v3.3.rc3.exe",
-       Tool_WinPmem_HASH="319f6c714d682505157cf72aa928c94ada3c839fb8eb0e503d8770624e897318")
+  - LET Tool_WinPmem_URL <= "https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc3/winpmem_v3.3.rc3.exe"
+  - LET Tool_WinPmem_FILENAME <= "winpmem_v3.3.rc3.exe"
+  - LET Tool_WinPmem_HASH <= "319f6c714d682505157cf72aa928c94ada3c839fb8eb0e503d8770624e897318"
 
   # First time we retrive the tool we should bring it from the server.
   - SELECT DownloadStatus, Hash FROM Artifact.Generic.Utils.FetchBinary(
-       ToolName="WinPmem", SleepDuration=0, ToolInfo=ToolInfo)
+       ToolName="WinPmem", SleepDuration=0)
 
   # Second time it should be retrieved from the local system cache.
   - SELECT DownloadStatus, Hash FROM Artifact.Generic.Utils.FetchBinary(
-       ToolName="WinPmem", SleepDuration=0, ToolInfo=ToolInfo)
+       ToolName="WinPmem", SleepDuration=0)

@@ -330,6 +330,11 @@ message Tool {
     // the url above.
     string serve_url = 8;
 
+    // More recent velociraptor servers allow multiple URLs to be
+    // tried for the tool download. This helps in situations where the
+    // server is not reachable from some networks.
+    repeated string serve_urls = 18;
+
     // Only valid for local dummy inventory.
     string serve_path = 12;
 
