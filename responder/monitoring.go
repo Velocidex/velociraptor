@@ -2,6 +2,8 @@ package responder
 
 import (
 	"context"
+	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -24,14 +26,35 @@ type MonitoringManager struct {
 	in_flight map[string]*MonitoringContext
 }
 
+func (self *MonitoringManager) reap() {
+	now := utils.GetTime().Now()
+
+	for k, v := range self.in_flight {
+		if !v.finished.IsZero() && now.Sub(v.finished) > time.Minute*5 {
+			delete(self.in_flight, k)
+		}
+	}
+}
+
 func (self *MonitoringManager) WriteProfile(
 	ctx context.Context, scope vfilter.Scope,
 	output_chan chan vfilter.Row) {
 
 	self.mu.Lock()
-	defer self.mu.Unlock()
 
+	self.reap()
+
+	var contexts []*MonitoringContext
 	for _, v := range self.in_flight {
+		contexts = append(contexts, v)
+	}
+	sort.Slice(contexts, func(i, j int) bool {
+		return contexts[i].id < contexts[j].id
+	})
+
+	self.mu.Unlock()
+
+	for _, v := range contexts {
 		output_chan <- v.Stats()
 	}
 }
@@ -40,6 +63,9 @@ func (self *MonitoringManager) WriteProfile(
 // queued in the same packet.
 func (self *MonitoringManager) flushLogMessages(ctx context.Context) {
 	self.mu.Lock()
+
+	self.reap()
+
 	snapshot := make([]*MonitoringContext, 0, len(self.in_flight))
 	for _, v := range self.in_flight {
 		snapshot = append(snapshot, v)
@@ -52,18 +78,23 @@ func (self *MonitoringManager) flushLogMessages(ctx context.Context) {
 }
 
 func (self *MonitoringManager) Context(
-	output chan *crypto_proto.VeloMessage, artifact string) *MonitoringContext {
+	output chan *crypto_proto.VeloMessage, artifact string, id int64) *MonitoringContext {
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	monitoring_context, pres := self.in_flight[artifact]
+	self.reap()
+
+	key := fmt.Sprintf("%s-%v", artifact, utils.GetId())
+	monitoring_context, pres := self.in_flight[key]
 	if !pres {
 		monitoring_context := &MonitoringContext{
+			id:       id,
 			output:   output,
 			artifact: artifact,
 			started:  utils.GetTime().Now(),
 		}
-		self.in_flight[artifact] = monitoring_context
+		self.in_flight[key] = monitoring_context
 		return monitoring_context
 	}
 
@@ -108,6 +139,8 @@ type MonitoringContext struct {
 	mu     sync.Mutex
 	output chan *crypto_proto.VeloMessage
 
+	id int64
+
 	log_messages      []byte
 	log_messages_id   uint64 // The ID of the first row in the log_messages buffer
 	log_message_count uint64
@@ -115,20 +148,27 @@ type MonitoringContext struct {
 
 	upload_id int64
 
-	started   time.Time
-	sent_rows uint64
-	bytes     uint64
+	started, finished time.Time
+	sent_rows         uint64
+	bytes             uint64
 }
 
 func (self *MonitoringContext) Stats() *ordereddict.Dict {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	duration := "running"
+	if !self.finished.IsZero() {
+		duration = self.finished.Sub(self.started).Round(time.Second).String()
+	}
+
 	return ordereddict.NewDict().
 		Set("Artifact", self.artifact).
+		Set("QueryId", self.id).
 		Set("Started", self.started).
 		Set("StartedAgo", utils.GetTime().Now().Sub(
 			self.started).Round(time.Second).String()).
+		Set("Duration", duration).
 		Set("Logs", self.log_messages_id+self.log_message_count).
 		Set("Rows", self.sent_rows).
 		Set("JSONBytes", self.bytes)
@@ -207,6 +247,13 @@ func (self *MonitoringContext) getLogMessages() (
 	return buf, start_id, message_count
 }
 
+func (self *MonitoringContext) Close() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.finished = utils.GetTime().Now()
+}
+
 func (self *MonitoringContext) flushLogMessages(ctx context.Context) {
 	self.mu.Lock()
 	buf, id, count := self.getLogMessages()
@@ -259,13 +306,14 @@ func NewMonitoringResponder(
 	config_obj *config_proto.Config,
 	monitoring_manager *MonitoringManager,
 	output chan *crypto_proto.VeloMessage,
-	artifact string) *MonitoringResponder {
+	artifact string,
+	query_id int64) *MonitoringResponder {
 
 	return &MonitoringResponder{
 		ctx:                ctx,
 		output:             output,
 		artifact:           artifact,
-		monitoring_context: monitoring_manager.Context(output, artifact),
+		monitoring_context: monitoring_manager.Context(output, artifact, query_id),
 		config_obj:         config_obj,
 	}
 }
@@ -308,4 +356,6 @@ func (self *MonitoringResponder) NextUploadId() int64 {
 	return self.monitoring_context.NextUploadId()
 }
 
-func (self *MonitoringResponder) Close() {}
+func (self *MonitoringResponder) Close() {
+	self.monitoring_context.Close()
+}

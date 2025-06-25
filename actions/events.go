@@ -261,11 +261,12 @@ func (self *EventTable) StartQueries(
 		logger.Info("<green>Starting</> monitoring query %s", artifact_name)
 		query_responder := responder.NewMonitoringResponder(
 			ctx, config_obj, self.monitoring_manager,
-			output_chan, artifact_name)
+			output_chan, artifact_name, event.QueryId)
 
 		self.wg.Add(1)
 		go func(event *actions_proto.VQLCollectorArgs) {
 			defer self.wg.Done()
+			defer query_responder.Close()
 
 			// Event tables never time out
 			if event.Timeout == 0 {
