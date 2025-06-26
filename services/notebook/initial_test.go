@@ -112,7 +112,9 @@ var (
 			},
 			check: func(t *testing.T, response *artifacts_proto.Artifact,
 				spec *flows_proto.ArtifactSpec) {
-				AssertDictRegex(t, "Welcome to Velociraptor", "Sources.0.Notebook.0.Template", response)
+				AssertDictRegex(t,
+					"Welcome to Velociraptor",
+					"Sources.0.Notebook.0.Template", response)
 			},
 		},
 
@@ -405,7 +407,8 @@ func AssertDictRegex(t *testing.T, regex, selector string, item protoreflect.Pro
 func GetField(selector string, item protoreflect.ProtoMessage) string {
 	scope := vql_subsystem.MakeScope()
 	ctx := context.Background()
-	var result interface{} = vfilter.RowToDict(ctx, scope, proto.Clone(item))
+	var result interface{} = vfilter.RowToDict(
+		ctx, scope, proto.Clone(item)).SetCaseInsensitive()
 	var pres bool
 
 	for _, member := range strings.Split(selector, ".") {

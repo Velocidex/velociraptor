@@ -70,6 +70,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -77,6 +78,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -256,6 +258,11 @@ func CalculateNotebookArtifact(
 			}
 			seen_tools[t.Name] = true
 			res.Tools = append(res.Tools, t)
+		}
+
+		// Copy out column types
+		for _, ct := range artifact.ColumnTypes {
+			res.ColumnTypes = append(res.ColumnTypes, ct)
 		}
 
 		// Copy out all the parameters
@@ -656,6 +663,22 @@ func updateNotebookRequests(
 		})
 	if err != nil {
 		return err
+	}
+
+	ct_var := ordereddict.NewDict()
+	for _, ct := range artifact.ColumnTypes {
+		ct_var.Set(ct.Name, ct.Type)
+	}
+
+	for _, r := range in.Requests {
+		r.Env = append(r.Env, &actions_proto.VQLEnv{
+			Key:   "ColumnTypes",
+			Value: json.MustMarshalString(ct_var),
+		})
+
+		r.Query = append([]*actions_proto.VQLRequest{
+			{VQL: "LET ColumnTypes <= parse_json(data=ColumnTypes)"},
+		}, r.Query...)
 	}
 
 	return nil

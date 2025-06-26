@@ -1037,6 +1037,7 @@ export default class NotebookCellRenderer extends React.Component {
               { this.state.showFormatTablesDialog &&
                 <FormatTableDialog
                   cell={this.state.cell}
+                  notebook_metadata={this.props.notebook_metadata}
                   saveCell={cell=>{
                       this.saveCell(cell);
                   }}

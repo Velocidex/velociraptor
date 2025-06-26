@@ -9,7 +9,7 @@ import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
+import { JSONparse } from '../utils/json_parse.jsx';
 
 // components/core/table.jsx getFormatter
 const column_types = [
@@ -24,6 +24,7 @@ const column_type_args_regex = /`([^`]+)`='([^']+)'/g;
 export default class FormatTableDialog extends Component {
     static propTypes = {
         cell: PropTypes.object,
+        notebook_metadata: PropTypes.object,
         saveCell: PropTypes.func,
         closeDialog: PropTypes.func,
         columns: PropTypes.array,
@@ -68,9 +69,30 @@ export default class FormatTableDialog extends Component {
                        selected_columns: _.map(selection, x=>x.column)});
     }
 
+    // Get the column types from the notebook env. We use that as the
+    // initial set.
+    getDefaultColumnTypes = ()=>{
+        let res = {};
+        let md = this.props.notebook_metadata || {};
+        let requests = md.requests || [];
+        _.each(requests, x=>{
+            _.each(x.env, x=>{
+                if(x.key === "ColumnTypes") {
+                    _.each(JSONparse(x.value), (v, k)=>{
+                        res[k] = v;
+                    });
+                }
+            });
+        });
+
+        return res;
+    }
+
     parseColumnTypes = vql=>{
+        const default_types = this.getDefaultColumnTypes();
         let selection = [];
         let selected_columns = [];
+        let types = {};
         let prefix = "";
         let suffix = "";
         let match = vql && vql.match(column_type_regex);
@@ -83,10 +105,19 @@ export default class FormatTableDialog extends Component {
             _.each(arg_match, x=>{
                 selected_columns.push(x[1]);
                 selection.push({column: x[1], type: x[2]});
+                types[x[1]] = x[2];
             });
         } else {
             suffix = vql;
         }
+
+        // merge the default types with the selected types.
+        _.each(default_types, (v, k)=>{
+            if(!types[k]) {
+                selection.push({column: k, type: v});
+                selected_columns.push(k);
+            };
+        });
 
         this.setState({selection: selection,
                        selected_columns: selected_columns,
@@ -104,7 +135,7 @@ export default class FormatTableDialog extends Component {
                             type: this.state.new_selection_type});
         }
 
-        if (selection) {
+        if (!_.isEmpty(selection)) {
             // Build the VQL for ColumnTypes
             let vql = "LET ColumnTypes<=dict("+
                 _.map(this.state.selection,

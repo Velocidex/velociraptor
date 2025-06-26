@@ -6,7 +6,7 @@ can be used to build a Windows installer package (MSI) which
 automatically installs the service.
 
 The advantage of building your own MSI is that you can customize
-aspect of the installtion like service names, binary names etc. If you
+aspect of the installation like service names, binary names etc. If you
 are happy with the default settings it is easier to just use the
 official distributed MSI packages.
 
@@ -29,7 +29,7 @@ Next, follow these steps:
    revision.
 
 2. Optional: Generate valid GUIDs to replace all GUIDs in the config
-   file. You can use the linux uuidgen program to make new GUIDs.
+   file. You can use the Linux `uuidgen` program to make new GUIDs.
 
 3. Optional: You can customize the description, comments, service name
    etc. If you decided to rename the binary you can adjust the name in
@@ -81,8 +81,8 @@ provides you the opportunity to manually replace the file at a later
 stage with a correctly formatted file specific for your deployment.
 
 However, it is possible to repack a new client configuration file into
-the MSI using the following command (i.e. replace the file within the
-MSI):
+the MSI using the artifact `Server.Utils.CreateMSI` or the following
+command (i.e. replace the file within the MSI):
 
 ```
 velociraptor config repack --exe velociraptor.msi client.config.yaml repacked_velociraptor.msi -v
@@ -96,6 +96,11 @@ the configuration wizard.
 Repacking replaces the placeholder inside the MSI with the real
 configuration file. The new MSI will then automatically install the
 correct configuration file.
+
+If you want to build a customized MSI which can also be repacked you
+need to use the placeholder config file (located in the
+`output/client.config.yaml` file) in the MSI, then the repacking code
+can find it and replace it with the final config as needed.
 
 # Official Velociraptor MSI
 

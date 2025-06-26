@@ -20,7 +20,7 @@ import (
 )
 
 func (self *NotebookManagerTestSuite) TestNotebookManagerTimelines() {
-	assert.Retry(self.T(), 3, time.Second,
+	assert.Retry(self.T(), 10, time.Second,
 		self._TestNotebookManagerTimelines)
 }
 

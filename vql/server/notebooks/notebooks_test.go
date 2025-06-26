@@ -22,6 +22,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
+	_ "www.velocidex.com/golang/velociraptor/vql/parsers"
 )
 
 var testArtifacts = []string{`
