@@ -20,6 +20,15 @@
      {
       "key": "ArtifactName",
       "value": "Notebooks.Default"
+     },
+     {
+      "key": "ColumnTypes",
+      "value": "{}"
+     }
+    ],
+    "Query": [
+     {
+      "VQL": "LET ColumnTypes \u003c= parse_json(data=ColumnTypes)"
      }
     ],
     "max_row": 1000
@@ -56,6 +65,15 @@
      {
       "key": "ArtifactName",
       "value": "Notebooks.Default"
+     },
+     {
+      "key": "ColumnTypes",
+      "value": "{}"
+     }
+    ],
+    "Query": [
+     {
+      "VQL": "LET ColumnTypes \u003c= parse_json(data=ColumnTypes)"
      }
     ],
     "max_row": 1000

@@ -21,4 +21,15 @@ parameters:
 
 sources:
   - query: |
-      SELECT * FROM execve(argv=["/bin/bash", "-c", Command])
+      LET SizeLimit <= 4096
+      SELECT if(condition=len(list=Stdout) < SizeLimit,
+                then=Stdout) AS Stdout,
+             if(condition=len(list=Stdout) >= SizeLimit,
+                then=upload(accessor="data",
+                            file=Stdout, name="Stdout")) AS StdoutUpload
+      FROM execve(argv=["/bin/bash", "-c", Command],
+                  length=10000000)
+
+column_types:
+- name: StdoutUpload
+  type: preview_upload

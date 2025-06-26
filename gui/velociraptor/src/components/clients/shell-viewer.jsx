@@ -21,6 +21,7 @@ import Button from 'react-bootstrap/Button';
 import { withRouter }  from "react-router-dom";
 import { JSONparse } from '../utils/json_parse.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
+import PreviewUpload from '../widgets/preview_uploads.jsx';
 
 // Refresh every 5 seconds
 const SHELL_POLL_TIME = 5000;
@@ -238,7 +239,18 @@ class _VeloShellCell extends Component {
 
         let output = "";
         if (this.state.loaded) {
+            let client_id = this.props.flow.client_id;
+            let flow_id = this.props.flow.session_id;
+
             output = [this.state.output.map((item, index) => {
+                if (item.StdoutUpload) {
+                    return <div className='notebook-output' key={index} >
+                             <PreviewUpload
+                               env={{client_id: client_id,
+                                 flow_id: flow_id}}
+                               upload={item.StdoutUpload} />
+                           </div>;
+                }
                 return <div className='notebook-output' key={index} >
                          <pre> {item.Stdout} </pre>
                        </div>;

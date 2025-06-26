@@ -21,6 +21,15 @@
      {
       "key": "ArtifactName",
       "value": "Notebooks.Default"
+     },
+     {
+      "key": "ColumnTypes",
+      "value": "{}"
+     }
+    ],
+    "Query": [
+     {
+      "VQL": "LET ColumnTypes \u003c= parse_json(data=ColumnTypes)"
      }
     ],
     "max_row": 1000
@@ -44,7 +53,7 @@
   "data": "{}",
   "cell_id": "NC.02",
   "messages": [
-   "DEBUG:Query Stats: {\"RowsScanned\":0,\"PluginsCalled\":0,\"FunctionsCalled\":0,\"ProtocolSearch\":0,\"ScopeCopy\":0}\n"
+   "DEBUG:Query Stats: {\"RowsScanned\":0,\"PluginsCalled\":0,\"FunctionsCalled\":1,\"ProtocolSearch\":0,\"ScopeCopy\":0}\n"
   ],
   "type": "markdown",
   "current_version": "04",
@@ -59,7 +68,7 @@
   "data": "{}",
   "cell_id": "NC.02",
   "messages": [
-   "DEBUG:Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":0,\"ProtocolSearch\":0,\"ScopeCopy\":5}\n"
+   "DEBUG:Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":1,\"ProtocolSearch\":0,\"ScopeCopy\":5}\n"
   ],
   "type": "vql",
   "current_version": "05",
@@ -91,6 +100,15 @@
      {
       "key": "ArtifactName",
       "value": "Notebooks.Default"
+     },
+     {
+      "key": "ColumnTypes",
+      "value": "{}"
+     }
+    ],
+    "Query": [
+     {
+      "VQL": "LET ColumnTypes \u003c= parse_json(data=ColumnTypes)"
      }
     ],
     "max_row": 1000
