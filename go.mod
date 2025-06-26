@@ -110,7 +110,7 @@ require (
 	github.com/Velocidex/go-vhdx v0.0.0-20250511013458-5cba970cdeda
 	github.com/Velocidex/go-vmdk v0.0.0-20250505140221-bd4633ce2fbf
 	github.com/Velocidex/grok v0.0.1
-	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
+	github.com/Velocidex/ordereddict v0.0.0-20250626035939-2f7f022fc719
 	github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9
 	github.com/Velocidex/tracee_velociraptor v0.0.0-20250620124218-01f48d6fc3a1
 	github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6

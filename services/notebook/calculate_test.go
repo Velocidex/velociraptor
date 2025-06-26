@@ -20,6 +20,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
+
+	_ "www.velocidex.com/golang/velociraptor/vql/parsers"
 )
 
 var (
@@ -38,6 +40,10 @@ parameters:
 - name: StringArg
   type: string
   default: "This is a test"
+
+column_types:
+  - name: TypedColumn
+    type: integer
 
 # This will actually get this URL below.
 tools:
