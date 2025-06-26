@@ -20,6 +20,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
+
+	_ "www.velocidex.com/golang/velociraptor/vql/parsers"
 )
 
 var (

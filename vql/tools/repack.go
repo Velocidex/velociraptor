@@ -420,7 +420,7 @@ func RepackMSI(
 	cab_header_offset, page_0_present := page_map[0]
 
 	if len(page_map) == 0 || cab_header_length == 0 || !page_0_present {
-		scope.Log("client_repack: I can not seem to locate the embedded config???? To repack an MSI, be sure to build from custom.xml with the custom.config.yaml file.")
+		scope.Log("client_repack: I can not seem to locate the embedded config???? To repack an MSI, be sure to build from the placeholder config as described in https://docs.velociraptor.app/docs/deployment/clients/#building-a-custom-msi-package-from-scratch .")
 		return vfilter.Null{}
 	}
 

@@ -80,7 +80,7 @@ func (self ShellPlugin) Call(
 		arg := &ShellPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("execve: %v", err)
+			scope.Error("execve: %v", err)
 			return
 		}
 
