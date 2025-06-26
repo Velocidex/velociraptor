@@ -159,7 +159,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 	if len(arg.IncludeLabels) > 0 {
 		if arg.OS != "" {
-			scope.Log("hunt: Both OS and label conditions set, ignoring OS")
+			scope.Log("hunt: Both OS and label conditions set, ignoring include label conditions")
 		}
 
 		hunt_request.Condition = &api_proto.HuntCondition{
@@ -169,6 +169,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 				},
 			},
 		}
+
 	}
 
 	if len(arg.ExcludeLabels) > 0 {
