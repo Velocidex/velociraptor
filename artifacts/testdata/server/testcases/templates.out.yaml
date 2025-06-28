@@ -1,0 +1,11 @@
+Query: LET Expansion = dict( Var1="Hi there", Var2=dict(Nested="Nested") )
+Output: []
+
+Query: SELECT template(template=Template, expansion=Expansion) FROM scope()
+
+Output: [
+ {
+  "template(template=Template, expansion=Expansion)": "Hello World!\n\nVar1:Hi there\nNested: \nScopeVariable: I am a scope variable.\n"
+ }
+]
+

@@ -156,3 +156,7 @@ func CopySlice(in []byte) []byte {
 	copy(result, in)
 	return result
 }
+
+func Indent(dst *bytes.Buffer, src []byte, prefix, indent string) error {
+	return json.Indent(dst, src, prefix, indent)
+}

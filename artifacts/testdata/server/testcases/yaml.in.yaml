@@ -1,0 +1,22 @@
+Parameters:
+  Yaml: |
+      name: Test
+      list:
+      - One
+      - key1: value1
+        key2: value2
+      -
+        - One.One
+        - 2
+        - 2.1
+        -
+          - One.One.One
+
+Queries:
+  - SELECT parse_yaml(filename=Yaml, accessor="data") FROM scope()
+  - SELECT serialize(item=parse_yaml(filename=Yaml, accessor="data"), format='yaml') FROM scope()
+
+  # Serialize pathspecs
+  - SELECT serialize(format='yaml',
+     item=dict(Foo=pathspec(Path="Foo", DelegateAccessor="raw_reg", Delegate=pathspec(Path="/Software"))))
+    FROM scope()

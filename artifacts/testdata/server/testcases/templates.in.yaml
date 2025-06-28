@@ -1,0 +1,17 @@
+Parameters:
+  Template: |
+    Hello World!
+
+    Var1:{{ .Var1 }}
+    Nested: {{ Get .Var1 "Nested" }}
+    ScopeVariable: {{ Scope "ScopeVariable" }}
+
+  ScopeVariable: I am a scope variable.
+
+Queries:
+  - LET Expansion = dict(
+      Var1="Hi there",
+      Var2=dict(Nested="Nested")
+    )
+  - |
+    SELECT template(template=Template, expansion=Expansion) FROM scope()
