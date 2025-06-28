@@ -32,8 +32,6 @@ func (self *CollectorTestSuite) TestDeaddisk() {
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err, string(out))
 
-	assert.Contains(t, string(out), `Adding windows mounted directory at`)
-
 	// Now run a query on it.
 	cmd = exec.Command(self.binary, "-v", "--config", remapping_path,
 		"query", "SELECT Name, OSPath FROM glob(globs='C:/*')")

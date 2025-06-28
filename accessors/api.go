@@ -1,6 +1,7 @@
 package accessors
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -265,6 +266,16 @@ func (self *OSPath) Delegate(scope vfilter.Scope) (*OSPath, error) {
 
 func (self *OSPath) MarshalJSON() ([]byte, error) {
 	return json.Marshal(self.String())
+}
+
+// MarshalText is used by the YAML marshaller. We indent the text to
+// make sure it uses multi line yaml which is more readable for
+// complex pathspecs.
+func (self *OSPath) MarshalText() ([]byte, error) {
+	json_string := []byte(self.String())
+	buf := bytes.Buffer{}
+	err := json.Indent(&buf, json_string, " ", "  ")
+	return buf.Bytes(), err
 }
 
 // A FileInfo represents information about a file. It is similar to

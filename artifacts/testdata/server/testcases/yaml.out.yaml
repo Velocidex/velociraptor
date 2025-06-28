@@ -1,0 +1,39 @@
+Query: SELECT parse_yaml(filename=Yaml, accessor="data") FROM scope()
+Output: [
+ {
+  "parse_yaml(filename=Yaml, accessor=\"data\")": {
+   "name": "Test",
+   "list": [
+    "One",
+    {
+     "key1": "value1",
+     "key2": "value2"
+    },
+    [
+     "One.One",
+     2,
+     2.1,
+     [
+      "One.One.One"
+     ]
+    ]
+   ]
+  }
+ }
+]
+
+Query: SELECT serialize(item=parse_yaml(filename=Yaml, accessor="data"), format='yaml') FROM scope()
+Output: [
+ {
+  "serialize(item=parse_yaml(filename=Yaml, accessor=\"data\"), format='yaml')": "name: Test\nlist:\n- One\n- key1: value1\n  key2: value2\n- - One.One\n  - 2\n  - 2.1\n  - - One.One.One\n"
+ }
+]
+
+# Serialize pathspecs
+Query: SELECT serialize(format='yaml', item=dict(Foo=pathspec(Path="Foo", DelegateAccessor="raw_reg", Delegate=pathspec(Path="/Software")))) FROM scope()
+Output: [
+ {
+  "serialize(format='yaml', item=dict(Foo=pathspec(Path=\"Foo\", DelegateAccessor=\"raw_reg\", Delegate=pathspec(Path=\"/Software\"))))": "Foo: |-\n  {\n     \"DelegateAccessor\": \"raw_reg\",\n     \"Delegate\": {\n       \"Path\": \"/Software\"\n     },\n     \"Path\": \"/Foo\"\n   }\n"
+ }
+]
+

@@ -49,6 +49,9 @@ func (self *ReadSeekReaderAdapter) Read(buf []byte) (int, error) {
 	// This read would exceed the size, so we read up to the size and
 	// flag the eof.
 	if self.size > 0 && self.offset+int64(len(buf)) > self.size {
+		if self.size-self.offset < 0 {
+			return 0, io.EOF
+		}
 		buf = buf[:self.size-self.offset]
 		self.eof = true
 	}

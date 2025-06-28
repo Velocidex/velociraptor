@@ -63,34 +63,41 @@ func (self ParseYamlFunction) Call(
 
 	// Unmarshal the YAML in such a way that we maintain the order
 	// of keys.
-	var result yaml.MapSlice
-	err = yaml.Unmarshal(data, &result)
+	var parsed yaml.MapSlice
+	err = yaml.Unmarshal(data, &parsed)
 	if err != nil {
 		scope.Log("parse_yaml: %v", err)
 		return nil
 	}
-	return mapSlice2OrderedDict(result)
+	return yamlToDict(parsed)
 }
 
-func mapSlice2OrderedDict(a yaml.MapSlice) *ordereddict.Dict {
-	result := ordereddict.NewDict()
-	for _, item := range a {
-		// We require keys to be strings since this is a JSON
-		// requirement.
-		key, ok := item.Key.(string)
-		if !ok {
-			continue
-		}
+func yamlToDict(item interface{}) interface{} {
+	switch t := item.(type) {
+	case yaml.MapSlice:
+		res := ordereddict.NewDict()
+		for _, v := range t {
+			// We require keys to be strings since this is a JSON
+			// requirement.
+			key, ok := v.Key.(string)
+			if !ok {
+				continue
+			}
 
-		switch t := item.Value.(type) {
-		case yaml.MapSlice:
-			result.Set(key, mapSlice2OrderedDict(t))
-		default:
-			result.Set(key, item.Value)
+			res.Set(key, yamlToDict(v.Value))
 		}
+		return res
+
+	case []interface{}:
+		res := []interface{}{}
+		for _, v := range t {
+			res = append(res, yamlToDict(v))
+		}
+		return res
+
+	default:
+		return item
 	}
-
-	return result
 }
 
 func (self ParseYamlFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
