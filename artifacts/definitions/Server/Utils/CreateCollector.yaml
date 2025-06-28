@@ -274,14 +274,13 @@ parameters:
       // This is where we write the files on the endpoint.
       LET zip_filename <= OutputPrefix + formatted_zip_name
 
-      // The log is always written to the executable path
-      LET log_filename <= pathspec(parse= baseline[0].Exe + ".log")
+      LET _ <= log(message="Log file is at %v", args=LogFile)
 
       -- Remove the zip file and log file when done if the user asked for it.
       LET _ <= if(condition=DeleteOnExit, then=atexit(query={
          SELECT rm(filename=zip_filename), rm(filename=log_filename) FROM scope()
          WHERE log(message="Removed Zip file %v", args=zip_filename)
-      }, env=dict(zip_filename=zip_filename, log_filename=log_filename)))
+      }, env=dict(zip_filename=zip_filename, log_filename=LogFile)))
 
       -- Make a random hex string as a random password
       LET RandomPassword <= SELECT format(format="%02x",
@@ -338,7 +337,7 @@ parameters:
           upload_file(filename=Container,
                       name= upload_name + ".zip",
                       accessor="file") AS Upload,
-          upload_file(filename=log_filename,
+          upload_file(filename=LogFile,
                       name= upload_name + ".log",
                       accessor="file") AS LogUpload
 
@@ -487,6 +486,7 @@ sources:
                          default=opt_progress_timeout),
                     dict(name="Timeout", default=opt_timeout, type="int"),
                     dict(name="DeleteOnExit", default=opt_delete_at_exit, type="bool"),
+                    dict(name="LogFile", default="Collector.log"),
                     dict(name="target_args",
                          default=serialize(format='json', item=target_args),
                          type="json"),
@@ -524,6 +524,7 @@ sources:
       // collection type choices.
       LET autoexec <= dict(autoexec=dict(
           argv=("artifacts", "collect", "Collector",
+                "--args", "LogFile=" + CollectorName + ".log",
                 "--logfile", CollectorName + ".log") + optional_cmdline.Opt,
           artifact_definitions=definitions)
       )

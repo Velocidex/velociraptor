@@ -7142,6 +7142,9 @@
   - name: DelegatePath
     type: string
     description: A delegate to pass to the accessor.
+  - name: Delegate
+    type: LazyExpr
+    description: A delegate to pass to the accessor (must be another pathspec).
   - name: Path
     type: Any
     description: A path to open.
@@ -9780,6 +9783,20 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: template
+  description: Expand a Go style template .
+  type: Function
+  args:
+  - name: template
+    type: string
+    description: A Go Template compatible string.
+    required: true
+  - name: expansion
+    type: ordereddict.Dict
+    description: An object to be expanded into the template.
+    required: true
+  platforms:
+  - linux_amd64_cgo
 - name: threads
   description: Enumerate threads in a process.
   type: Plugin

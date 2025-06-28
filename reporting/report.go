@@ -49,7 +49,7 @@ func (self *BaseTemplateEngine) Close() {
 	self.Scope.Close()
 }
 
-func (self *BaseTemplateEngine) getFunction(a interface{}, b string,
+func (self *BaseTemplateEngine) GetFunction(a interface{}, b string,
 	opts ...interface{}) interface{} {
 
 	res := a

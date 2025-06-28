@@ -19,7 +19,8 @@ func (self _BoolOSPath) Applicable(a vfilter.Any) bool {
 
 func (self _BoolOSPath) Bool(ctx context.Context, scope vfilter.Scope, a vfilter.Any) bool {
 	os_path, ok := a.(*OSPath)
-	return ok && len(os_path.Components) > 0
+	return ok && (len(os_path.Components) > 0 ||
+		os_path.DelegatePath() != "")
 }
 
 type _EqualOSPath struct{}

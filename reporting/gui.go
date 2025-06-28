@@ -613,11 +613,11 @@ func NewGuiTemplateEngine(
 			"TimeChart":    template_engine.TimeChart,
 			"SigmaEditor":  template_engine.SigmaEditor,
 			"Timeline":     template_engine.Timeline,
-			"Get":          template_engine.getFunction,
+			"Get":          template_engine.GetFunction,
 			"Render":       template_engine.renderFunction,
 			"Expand":       template_engine.Expand,
 			"import":       template_engine.Import,
-			"str":          strval,
+			"str":          utils.ToString,
 		})
 	return template_engine, nil
 }

@@ -123,7 +123,7 @@ func doRepack() error {
 	if err != nil {
 		return err
 	}
-	logger := &StdoutLogWriter{}
+	logger := &LogWriter{config_obj: config_obj}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
 		ACLManager: acl_managers.NewRoleACLManager(sm.Config, "administrator"),
