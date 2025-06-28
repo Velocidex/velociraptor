@@ -4,20 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/Velocidex/yaml/v2"
-	errors "github.com/go-errors/errors"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
-	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -42,218 +32,10 @@ var (
 
 	deaddisk_command_add_windows_directory = deaddisk_command.Flag(
 		"add_windows_directory", "Add a Windows mounted directory").String()
-
-	standardRegistryMounts = []struct {
-		prefix, path, key_path string
-	}{
-		{"HKEY_LOCAL_MACHINE\\Software", "/Windows/System32/Config/SOFTWARE", "/"},
-		{"HKEY_LOCAL_MACHINE\\System", "/Windows/System32/Config/SYSTEM", "/"},
-		{"HKEY_LOCAL_MACHINE\\System\\CurrentControlSet",
-			"/Windows/System32/Config/SYSTEM", "/ControlSet001"},
-	}
 )
 
-func addWindowsDirectory(
-	directory_path string, config_obj *config_proto.Config) error {
-	addCommonPermissions(config_obj)
-
-	logger := &LogWriter{config_obj: config_obj}
-	builder := services.ScopeBuilder{
-		Config:     config_obj,
-		ACLManager: acl_managers.NullACLManager{},
-		Logger:     log.New(logger, "", 0),
-	}
-
-	manager, err := services.GetRepositoryManager(config_obj)
-	if err != nil {
-		return err
-	}
-
-	scope := manager.BuildScope(builder)
-	defer scope.Close()
-
-	addCommonShadowAccessors(config_obj)
-	impersonationClause(config_obj, "windows", *deaddisk_command_hostname)
-
-	scope.Log("Adding windows mounted directory at %v", directory_path)
-
-	// Mount the directory as the "file", "auto" and "ntfs" accessor
-	config_obj.Remappings = append(config_obj.Remappings,
-		&config_proto.RemappingConfig{
-			Type: "mount",
-			Description: fmt.Sprintf(
-				"Mount the directory %v on the C: drive (NTFS)",
-				directory_path),
-			From: &config_proto.MountPoint{
-				Accessor: "file",
-				Prefix:   directory_path,
-			},
-			On: &config_proto.MountPoint{
-				Accessor: "ntfs",
-				Prefix:   "\\\\.\\C:",
-				PathType: "ntfs",
-			},
-		})
-
-	config_obj.Remappings = append(config_obj.Remappings,
-		&config_proto.RemappingConfig{
-			Type: "mount",
-			Description: fmt.Sprintf(
-				"Mount the directory %v on the C: drive (FILE Accessor)",
-				directory_path),
-			From: &config_proto.MountPoint{
-				Accessor: "file",
-				Prefix:   directory_path,
-			},
-			On: &config_proto.MountPoint{
-				Accessor: "file",
-				Prefix:   "C:",
-				PathType: "windows",
-			},
-		})
-
-	config_obj.Remappings = append(config_obj.Remappings,
-		&config_proto.RemappingConfig{
-			Type: "mount",
-			Description: fmt.Sprintf(
-				"Mount the directory %v on the C: drive (Auto Accessor)",
-				directory_path),
-			From: &config_proto.MountPoint{
-				Accessor: "file",
-				Prefix:   directory_path,
-			},
-			On: &config_proto.MountPoint{
-				Accessor: "auto",
-				Prefix:   "C:",
-				PathType: "windows",
-			},
-		})
-
-	// Now add some registry mounts
-	for _, definition := range standardRegistryMounts {
-		hive_path := filepath.Join(directory_path, definition.path)
-		scope.Log("Checking for hive at %v", hive_path)
-		_, err := os.Stat(hive_path)
-		if err != nil {
-			continue
-		}
-
-		config_obj.Remappings = append(config_obj.Remappings,
-			&config_proto.RemappingConfig{
-				Type: "mount",
-				Description: fmt.Sprintf(
-					"Map the %s Registry hive on %s (Prefixed at %v)",
-					hive_path, definition.prefix, definition.key_path),
-				From: &config_proto.MountPoint{
-					Accessor: "raw_reg",
-					Prefix: fmt.Sprintf(`{
-  "Path": %q,
-  "DelegateAccessor": "file",
-  "DelegatePath": %q
-}`, definition.key_path, hive_path),
-					PathType: "registry",
-				},
-				On: &config_proto.MountPoint{
-					Accessor: "registry",
-					Prefix:   definition.prefix,
-					PathType: "registry",
-				},
-			})
-	}
-	return logger.Error
-}
-
-func addWindowsHardDisk(
-	accessor string,
-	image string,
-	config_obj *config_proto.Config) error {
-
-	logger := &LogWriter{config_obj: config_obj}
-	builder := services.ScopeBuilder{
-		Config:     config_obj,
-		ACLManager: acl_managers.NullACLManager{},
-		Logger:     log.New(logger, "", 0),
-		Env: ordereddict.NewDict().
-			Set(vql_subsystem.ACL_MANAGER_VAR,
-				acl_managers.NewRoleACLManager(config_obj, "administrator")).
-			Set("Accessor", accessor).
-			Set("ImagePath", image),
-	}
-
-	manager, err := services.GetRepositoryManager(config_obj)
-	if err != nil {
-		return err
-	}
-	scope := manager.BuildScope(builder)
-	defer scope.Close()
-
-	if *deaddisk_command_add_windows_disk_offset < 0 {
-		rows, err := getPartitionOffsets(scope, image, config_obj)
-		if err != nil {
-			return err
-		}
-
-		for _, row := range rows {
-			// Here we are looking for a partition with a Windows
-			// directory
-			if checkForName(scope, row, "TopLevelDirectory", "Windows") {
-				partition_start := vql_subsystem.GetIntFromRow(scope, row, "StartOffset")
-				addWindowsPartition(config_obj, scope,
-					accessor, image, partition_start)
-			}
-		}
-
-	} else {
-		addWindowsPartition(
-			config_obj, scope, accessor, image,
-			uint64(*deaddisk_command_add_windows_disk_offset))
-	}
-
-	addCommonShadowAccessors(config_obj)
-
-	return logger.Error
-}
-
-func getPartitionOffsets(
-	scope vfilter.Scope,
-	image string,
-	config_obj *config_proto.Config) ([]*ordereddict.Dict, error) {
-	scope.Log("Enumerating partitions using Windows.Forensics.PartitionTable")
-	// Check the NTFS signature at the start of the image - if we find
-	// it then it must be a partition image and not a disk image, so
-	// pretend the partition starts at offset 0
-	query := `
-SELECT * FROM if(condition=read_file(accessor=Accessor, filename=ImagePath, length=4, offset=3) = "NTFS",
-then={
-  SELECT 0 AS StartOffset, ("Windows", ) AS TopLevelDirectory FROM scope()
-  WHERE log(message="Detected NTFS signature at offset 0 - assuming this is a partition image")
-}, else={
-  SELECT *
-  FROM Artifact.Windows.Forensics.PartitionTable(
-    ImagePath=ImagePath, Accessor=Accessor)
-})
-`
-	vqls, err := vfilter.MultiParse(query)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to parse VQL Query: %w", err)
-	}
-
-	ctx, cancel := InstallSignalHandler(nil, scope)
-	defer cancel()
-
-	results := []*ordereddict.Dict{}
-	for _, vql := range vqls {
-		for row := range vql.Eval(ctx, scope) {
-			results = append(results, vfilter.RowToDict(ctx, scope, row))
-		}
-	}
-	return results, nil
-}
-
 func doDeadDisk() error {
-	logging.DisableLogging()
-
-	full_config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
+	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
@@ -261,63 +43,65 @@ func doDeadDisk() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	sm, err := startup.StartToolServices(ctx, full_config_obj)
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
 	if err != nil {
 		return err
 	}
 
-	config_obj := &config_proto.Config{
-		Remappings: full_config_obj.Remappings,
+	// Close the file so we can overwrite it with VQL
+	(*deaddisk_command_output).Close()
+
+	image_path := *deaddisk_command_add_windows_disk
+	if image_path == "" {
+		image_path = *deaddisk_command_add_windows_directory
+	}
+	if image_path == "" {
+		return fmt.Errorf("Either --add_windows_disk or --add_windows_directory should be specified.")
 	}
 
-	accessor := "raw_file"
-
-	if (*deaddisk_command_add_windows_disk == "" &&
-		*deaddisk_command_add_windows_directory == "") ||
-		(*deaddisk_command_add_windows_disk != "" &&
-			*deaddisk_command_add_windows_directory != "") {
-		return errors.New("One of --add_windows_directory or --add_windows_disk are required.")
+	logger := &LogWriter{config_obj: config_obj}
+	builder := services.ScopeBuilder{
+		Config:     sm.Config,
+		ACLManager: acl_managers.NewRoleACLManager(sm.Config, "administrator"),
+		Logger:     log.New(logger, "", 0),
+		Env: ordereddict.NewDict().
+			Set("ImagePath", image_path).
+			Set("Output", (*deaddisk_command_output).Name()).
+			Set("Hostname", *deaddisk_command_hostname).
+			Set("Hostname", *deaddisk_command_hostname),
 	}
 
-	if *deaddisk_command_add_windows_disk != "" {
-		abs_path, err := filepath.Abs(*deaddisk_command_add_windows_disk)
-		if err != nil {
-			return err
-		}
+	query := `
+       SELECT copy(accessor="data",
+                   filename=Remapping,
+                   dest=Output) AS Remapping
+       FROM Artifact.Generic.Utils.DeadDiskRemapping(
+         ImagePath=ImagePath, Upload="N", Hostname=Hostname)
+    `
 
-		if strings.HasSuffix(strings.ToLower(abs_path), ".e01") {
-			accessor = "ewf"
-		} else if strings.HasSuffix(strings.ToLower(abs_path), "vhdx") {
-			accessor = "vhdx"
-		} else if strings.HasSuffix(strings.ToLower(abs_path), "vmdk") {
-			accessor = "vmdk"
-		}
-		err = addWindowsHardDisk(accessor, abs_path, config_obj)
-		if err != nil {
-			return err
-		}
-	}
-
-	if *deaddisk_command_add_windows_directory != "" {
-		abs_path, err := filepath.Abs(*deaddisk_command_add_windows_directory)
-		if err != nil {
-			return err
-		}
-
-		err = addWindowsDirectory(abs_path, config_obj)
-		if err != nil {
-			return err
-		}
-	}
-
-	res, err := yaml.Marshal(config_obj)
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}
-	_, err = (*deaddisk_command_output).Write(res)
-	return err
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	statements, err := vfilter.MultiParse(query)
+	if err != nil {
+		return err
+	}
+
+	out_fd := os.Stdout
+	for _, vql := range statements {
+		err = outputJSON(ctx, scope, vql, out_fd)
+		if err != nil {
+			return err
+		}
+	}
+
+	return logger.Error
 }
 
 func init() {
@@ -331,237 +115,4 @@ func init() {
 		}
 		return true
 	})
-}
-
-func checkForName(
-	scope vfilter.Scope, row vfilter.Row,
-	column string, regex string) bool {
-	top_level_any, pres := scope.Associative(row, column)
-	if pres {
-		TopLevelDirectory, ok := top_level_any.([]vfilter.Any)
-		if ok {
-			re := regexp.MustCompile(regex)
-			scope.Log("Searching for a Windows directory at the top level of %v",
-				row)
-			for _, i := range TopLevelDirectory {
-				i_str, ok := i.(string)
-				if !ok {
-					continue
-				}
-
-				if re.MatchString(i_str) {
-					return true
-				}
-			}
-
-		}
-	}
-	return false
-}
-
-func addPermission(config_obj *config_proto.Config, perm string) {
-	var permission_clause *config_proto.RemappingConfig
-	for _, item := range config_obj.Remappings {
-		if item.Type == "permissions" {
-			permission_clause = item
-			break
-		}
-	}
-
-	if permission_clause == nil {
-		permission_clause = &config_proto.RemappingConfig{
-			Type: "permissions",
-		}
-
-		config_obj.Remappings = append(config_obj.Remappings, permission_clause)
-	}
-
-	perm = strings.ToUpper(perm)
-	if !utils.InString(permission_clause.Permissions, perm) {
-		permission_clause.Permissions = append(
-			permission_clause.Permissions, perm)
-	}
-}
-
-func impersonationClause(
-	config_obj *config_proto.Config, os_type string,
-	hostname string) {
-	var impersonation_clause *config_proto.RemappingConfig
-	for _, item := range config_obj.Remappings {
-		if item.Type == "impersonation" {
-			impersonation_clause = item
-			break
-		}
-	}
-
-	if impersonation_clause == nil {
-		impersonation_clause = &config_proto.RemappingConfig{
-			Type: "impersonation",
-		}
-
-		config_obj.Remappings = append(config_obj.Remappings, impersonation_clause)
-	}
-
-	impersonation_clause.Os = os_type
-	impersonation_clause.Hostname = hostname
-
-	// Disable plugins that normally need live mode to work.
-	impersonation_clause.DisabledPlugins = []string{
-		"users", "certificates", "handles", "pslist", "interfaces",
-		"modules", "netstat", "partitions", "proc_dump", "proc_yara", "vad",
-		"winobj", "wmi",
-	}
-	impersonation_clause.DisabledFunctions = []string{
-		"amsi", "lookupSID", "token"}
-
-	switch os_type {
-	case "windows":
-		impersonation_clause.Env = append(impersonation_clause.Env,
-			&actions_proto.VQLEnv{Key: "SystemRoot", Value: "C:\\Windows"},
-			&actions_proto.VQLEnv{Key: "WinDir", Value: "C:\\Windows"},
-		)
-	}
-}
-
-func addCommonShadowAccessors(config_obj *config_proto.Config) {
-	for _, item := range []string{"zip", "raw_reg", "data"} {
-		config_obj.Remappings = append(config_obj.Remappings,
-			&config_proto.RemappingConfig{
-				Type: "shadow",
-				From: &config_proto.MountPoint{
-					Accessor: item,
-				},
-				On: &config_proto.MountPoint{
-					Accessor: item,
-				},
-			})
-	}
-}
-
-func addCommonPermissions(config_obj *config_proto.Config) {
-	// Add some basic permissions
-	// For actually collecting artifacts
-	addPermission(config_obj, "COLLECT_CLIENT")
-
-	// For reading filesystem accessors
-	addPermission(config_obj, "FILESYSTEM_READ")
-
-	// For writing collection zip
-	addPermission(config_obj, "FILESYSTEM_WRITE")
-
-	// If running on the server (e.g. with velociraptor gui) we need
-	// to be able to do server things
-	addPermission(config_obj, "READ_RESULTS")
-	addPermission(config_obj, "MACHINE_STATE")
-	addPermission(config_obj, "SERVER_ADMIN")
-
-	// For http_client
-	addPermission(config_obj, "COLLECT_SERVER")
-	addPermission(config_obj, "EXECVE")
-}
-
-func addWindowsPartition(
-	config_obj *config_proto.Config,
-	scope vfilter.Scope,
-	accessor string,
-	image string,
-	partition_start uint64) {
-	addCommonPermissions(config_obj)
-
-	scope.Log("Adding windows partition at offset %v", partition_start)
-
-	impersonationClause(config_obj, "windows", *deaddisk_command_hostname)
-
-	mount_point := &config_proto.MountPoint{
-		Accessor: "raw_ntfs",
-		Prefix: fmt.Sprintf(`{
-  "DelegateAccessor": "offset",
-  "Delegate": {
-    "DelegateAccessor": %q,
-    "DelegatePath": %q,
-    "Path":"%d"
-  },
-  "Path": "/"
-}
-`, accessor, image, partition_start),
-	}
-
-	// Add an NTFS mount accessible via the "ntfs" accessor
-	config_obj.Remappings = append(config_obj.Remappings,
-		&config_proto.RemappingConfig{
-			Type: "mount",
-			Description: fmt.Sprintf(
-				"Mount the partition %v (offset %v) on the C: drive (NTFS)",
-				image, partition_start),
-			From: mount_point,
-			On: &config_proto.MountPoint{
-				Accessor: "ntfs",
-				Prefix:   "\\\\.\\C:",
-				PathType: "ntfs",
-			},
-		})
-
-	// Add a "file" mount so operations of the file accessor
-	// transparently use the ntfs accessor.
-	config_obj.Remappings = append(config_obj.Remappings,
-		&config_proto.RemappingConfig{
-			Type: "mount",
-			Description: fmt.Sprintf(
-				"Mount the partition %v (offset %v) on the C: drive (File Accessor)",
-				image, partition_start),
-			From: mount_point,
-			On: &config_proto.MountPoint{
-				Accessor: "file",
-				Prefix:   "C:",
-				PathType: "windows",
-			},
-		})
-
-	// Also mount the auto accessor for the default.
-	config_obj.Remappings = append(config_obj.Remappings,
-		&config_proto.RemappingConfig{
-			Type: "mount",
-			Description: fmt.Sprintf(
-				"Mount the partition %v (offset %v) on the C: drive (Auto Accessor)",
-				image, partition_start),
-			From: mount_point,
-			On: &config_proto.MountPoint{
-				Accessor: "auto",
-				Prefix:   "C:",
-				PathType: "windows",
-			},
-		})
-
-	// Now add some registry mounts
-	for _, definition := range standardRegistryMounts {
-		config_obj.Remappings = append(config_obj.Remappings,
-			&config_proto.RemappingConfig{
-				Type: "mount",
-				Description: fmt.Sprintf(
-					"Map the %s Registry hive on %s (Prefixed at %v)",
-					definition.path, definition.prefix, definition.key_path),
-				From: &config_proto.MountPoint{
-					Accessor: "raw_reg",
-					Prefix: fmt.Sprintf(`{
-  "Path": %q,
-  "DelegateAccessor": "raw_ntfs",
-  "Delegate": {
-    "DelegateAccessor":"offset",
-    "Delegate": {
-      "DelegateAccessor": %q,
-      "DelegatePath": %q,
-      "Path": "%d"
-    },
-    "Path":%q
-  }
-}`, definition.key_path, accessor, image, partition_start, definition.path),
-					PathType: "registry",
-				},
-				On: &config_proto.MountPoint{
-					Accessor: "registry",
-					Prefix:   definition.prefix,
-					PathType: "registry",
-				},
-			})
-	}
 }

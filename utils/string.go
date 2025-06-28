@@ -35,6 +35,9 @@ func ToString(x interface{}) string {
 	case []byte:
 		return string(t)
 
+	case error:
+		return t.Error()
+
 	case fmt.Stringer:
 		return t.String()
 

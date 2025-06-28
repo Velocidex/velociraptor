@@ -1,0 +1,275 @@
+name: Generic.Utils.DeadDiskRemapping
+description: |
+  Calculate a remapping configuration from a dead disk image.
+
+  The artifact uses some heuristics to calculate a suitable remapping
+  configuration for a dead disk image:
+
+  The following cases are handled:
+
+  * If ImagePath is a directory to a mounted partition then we
+    generate directory remapping. This is suitable for handling images
+    with filesystems that Velociraptor can not yet directly handle.
+
+  * If the ImagePath points to a file which starts with the NTFS
+    signature we assume this is a partition image and not a disk
+    image.
+
+  * If the ImagePath is a full disk image we assume it has a partition
+    table at the front, we then enumerate all the partitions and look
+    for an ntfs partition with a `Windows` directory at the top
+    level. We assume this is the windows drive and remap it to the C:
+    drive.
+
+parameters:
+  - name: ImagePath
+    default: /tmp/image.dd
+    description: Path to the image file to inspect.
+
+  - name: Accessor
+    description: |
+      Accessor to read the image with.
+
+      If not provided guess based on image file extension.
+
+  - name: Hostname
+    default: Virtual Host
+
+  - name: Upload
+    type: bool
+    default: "Y"
+    description: If specified we upload the generated YAML
+
+  - name: CommonRemapping
+    description: Common clauses for all remapping in YAML
+    default: |
+      remappings:
+      - type: permissions
+        permissions:
+        - COLLECT_CLIENT
+        - FILESYSTEM_READ
+        - FILESYSTEM_WRITE
+        - READ_RESULTS
+        - MACHINE_STATE
+        - SERVER_ADMIN
+        - COLLECT_SERVER
+        - EXECVE
+      - type: impersonation
+        os: windows
+        hostname: {{ .Hostname }}
+        env:
+        - key: SystemRoot
+          value: C:\Windows
+        - key: WinDir
+          value: C:\Windows
+        disabled_functions:
+        - amsi
+        - lookupSID
+        - token
+        disabled_plugins:
+        - users
+        - certificates
+        - handles
+        - pslist
+        - interfaces
+        - modules
+        - netstat
+        - partitions
+        - proc_dump
+        - proc_yara
+        - vad
+        - winobj
+        - wmi
+      - type: shadow
+        from:
+          accessor: zip
+        "on":
+          accessor: zip
+      - type: shadow
+        from:
+          accessor: raw_reg
+        "on":
+          accessor: raw_reg
+      - type: shadow
+        from:
+          accessor: data
+        "on":
+          accessor: data
+
+export: |
+   -- Searches for a partition with a Windows directory, Unless this
+   -- is a partition image.
+   LET _FindWindowsPartition(ImagePath, Accessor) = SELECT *
+     FROM switch(
+       a={
+       SELECT 0 AS StartOffset, Accessor, ImagePath AS PartitionPath
+       FROM stat(filename=ImagePath)
+       WHERE IsDir
+     },
+       b={
+       SELECT 0 AS StartOffset, Accessor, ImagePath AS PartitionPath
+       FROM scope()
+       WHERE read_file(accessor=Accessor, filename=ImagePath, length=4, offset=3) = "NTFS"
+        AND log(message="Detected NTFS signature at offset 0 - " +
+               "assuming this is a Windows partition image")
+     },
+       c={
+       SELECT StartOffset, Accessor, _PartitionPath AS PartitionPath
+       FROM Artifact.Windows.Forensics.PartitionTable(
+           ImagePath=ImagePath,
+           Accessor=GuessAccessor(ImagePath=ImagePath))
+       WHERE log(level="DEBUG", dedup=-1,
+                 message="Searching for Windows directory: %#x-%#x (%v) %v - Magic %v",
+                 args=[StartOffset, EndOffset, Size, name, Magic])
+         AND TopLevelDirectory =~ "Windows"
+         AND log(message="<green>Found Windows Partition</> at offset %#x with top level directory %v",
+                 args=[StartOffset, TopLevelDirectory])
+       LIMIT 1
+     })
+
+   -- Guess the correct accessor based on the file extension. This
+   -- allows us to handle several image formats.
+   LET GuessAccessor(ImagePath) = Accessor ||
+     if(condition=ImagePath =~ 'vmdk$', then='vmdk') ||
+     if(condition=ImagePath =~ 'vhdx$', then='vhdx') ||
+     if(condition=ImagePath =~ 'e01$', then='ewf')
+
+   LET _MapHiveToKey(Hive, Key, Name, ImagePath) = log(dedup=-1,
+      message="<green>Adding hive %v</>", args=Hive) &&
+   dict(type="mount",
+    `description`=Name,
+    `from`=dict(accessor="raw_reg",
+      path_type="registry",
+      prefix=pathspec(
+        Path="/",
+        DelegateAccessor="raw_ntfs",
+        Delegate=ImagePath + Hive)),
+    on=dict(accessor="registry", prefix=Key, path_type="registry"))
+
+   LET _MapDirHiveToKey(Hive, Key, Name) = log(dedup=-1,
+      message="<green>Adding hive %v</>", args=Hive) &&
+   dict(type="mount",
+    `description`=Name,
+    `from`=dict(accessor="raw_reg",
+      path_type="registry",
+      prefix=pathspec(
+        Path="/",
+        DelegateAccessor="file",
+        DelegatePath=Hive)),
+    on=dict(accessor="registry", prefix=Key, path_type="registry"))
+
+    -- Look for user hives and map them in HKEY_USERS
+    LET _FindUserHives(ImagePath) = SELECT _MapHiveToKey(
+           Name="Map User hive for " + OSPath[-2],
+           Hive=OSPath,
+           Key="HKEY_USERS\\" + OSPath[-2],
+           ImagePath=ImagePath
+        ) AS Map
+      FROM glob(globs='/Users/*/NTUser.DAT',
+                accessor="raw_ntfs",
+                root=ImagePath)
+      WHERE log(dedup=-1, message="<green>Found User Hive at %v</>", args=OSPath.Path)
+
+    LET _FindDirUserHives(ImagePath) = SELECT _MapDirHiveToKey(
+           Name="Map User hive for " + OSPath[-2],
+           Hive=OSPath,
+           Key="HKEY_USERS\\" + OSPath[-2]) AS Map
+      FROM glob(globs='/Users/*/NTUser.DAT',
+                root=ImagePath)
+      WHERE log(dedup=-1, message="<green>Found User Hive at %v</>", args=OSPath.Path)
+
+    LET CalculateWindowsMappings(ImagePath) = Remappings.remappings + (
+       dict(type="mount",
+            `from`=dict(accessor="raw_ntfs", prefix=ImagePath),
+            on=dict(accessor="ntfs", prefix="\\\\.\\C:", path_type="ntfs")
+      ),
+       dict(type="mount",
+            `from`=dict(accessor="raw_ntfs", prefix=ImagePath),
+            on=dict(accessor="file", prefix="C:", path_type="windows")
+      ),
+       dict(type="mount",
+            `from`=dict(accessor="raw_ntfs", prefix=ImagePath),
+            on=dict(accessor="auto", prefix="C:", path_type="windows")
+      ),
+      _MapHiveToKey(Name="Map Software Hive",
+                    ImagePath=ImagePath,
+                    Hive="/Windows/System32/Config/SOFTWARE",
+                    Key="HKEY_LOCAL_MACHINE/Software"),
+      _MapHiveToKey(Name="Map Security Hive",
+                    ImagePath=ImagePath,
+                    Hive="/Windows/System32/Config/Security",
+                    Key="HKEY_LOCAL_MACHINE/Security"),
+      _MapHiveToKey(Name="Map System Hive",
+                    ImagePath=ImagePath,
+                    Hive="/Windows/System32/Config/System",
+                    Key="HKEY_LOCAL_MACHINE/System"),
+      _MapHiveToKey(Name="Map SAM Hive",
+                    ImagePath=ImagePath,
+                    Hive="/Windows/System32/Config/SAM",
+                    Key="SAM"),
+      _MapHiveToKey(Name="Map Amcache Hive",
+                    ImagePath=ImagePath,
+                    Hive="/Windows/appcompat/Programs/Amcache.hve",
+                    Key="Amcache")
+    ) + _FindUserHives(ImagePath=WindowsPartition.PartitionPath).Map
+
+    LET CalculateWindowsDirMappings(ImagePath) = Remappings.remappings + (
+       dict(type="mount",
+            description="Mount Directory " + ImagePath + " on C: drive",
+            `from`=dict(accessor="file", prefix=ImagePath),
+            on=dict(accessor="ntfs", prefix="\\\\.\\C:", path_type="ntfs")
+      ),
+      dict(type="mount",
+            `from`=dict(accessor="file", prefix=ImagePath),
+            on=dict(accessor="file", prefix="C:", path_type="windows")
+      ),
+       dict(type="mount",
+            `from`=dict(accessor="file", prefix=ImagePath),
+            on=dict(accessor="auto", prefix="C:", path_type="windows")
+      ),
+      _MapDirHiveToKey(Name="Map Software Hive",
+                       Hive="/Windows/System32/Config/SOFTWARE",
+                       Key="HKEY_LOCAL_MACHINE/Software"),
+      _MapDirHiveToKey(Name="Map Security Hive",
+                       Hive="/Windows/System32/Config/Security",
+                       Key="HKEY_LOCAL_MACHINE/Security"),
+      _MapDirHiveToKey(Name="Map System Hive",
+                       Hive="/Windows/System32/Config/System",
+                       Key="HKEY_LOCAL_MACHINE/System"),
+      _MapDirHiveToKey(Name="Map SAM Hive",
+                       Hive="/Windows/System32/Config/SAM",
+                       Key="SAM"),
+      _MapDirHiveToKey(Name="Map Amcache Hive",
+                       Hive="/Windows/appcompat/Programs/Amcache.hve",
+                       Key="Amcache")
+    ) + _FindDirUserHives(ImagePath=ImagePath).Map
+
+sources:
+- query: |
+    LET WindowsPartition <=
+      _FindWindowsPartition(ImagePath=ImagePath, accessor=Accessor)[0]
+
+    LET Remappings <= parse_yaml(
+      filename=template(template=CommonRemapping,
+                        expansion=dict(Hostname=Hostname)),
+      accessor="data")
+
+    -- Select the type of mapping to calculate depending on what ImagePath is.
+    LET CalculateMappings =
+       ( stat(filename=ImagePath).IsDir &&
+         CalculateWindowsDirMappings(ImagePath=ImagePath) ) ||
+       ( WindowsPartition.PartitionPath &&
+         CalculateWindowsMappings(ImagePath=WindowsPartition.PartitionPath) ) ||
+         log(message="<red>No suitable mapping found</>")
+
+    LET YamlText = serialize(format="yaml",
+         item=dict(remappings=CalculateMappings))
+
+    SELECT if(condition=Upload,
+              then=upload(accessor="data", file=YamlText, name="remapping.yaml"),
+              else=YamlText) AS Remapping
+    FROM scope()
+
+column_types:
+- name: Remapping
+  type: upload_preview
