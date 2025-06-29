@@ -13,6 +13,6 @@ func setUserPicture(ctx context.Context, username, url string) {
 	user_record, err := user_manager.GetUserWithHashes(ctx, username, username)
 	if err == nil && user_record.Picture != url {
 		user_record.Picture = url
-		user_manager.SetUser(ctx, user_record)
+		_ = user_manager.SetUser(ctx, user_record)
 	}
 }

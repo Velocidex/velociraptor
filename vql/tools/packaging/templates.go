@@ -679,8 +679,7 @@ func ExpandTemplateString(
 			},
 
 			"EscapeArgs": func(str ...string) interface{} {
-				// TODO
-				return ""
+				return EscapeArgv(str)
 			},
 		}).Parse(string(data))
 	if err != nil {

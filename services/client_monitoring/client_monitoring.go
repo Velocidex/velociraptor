@@ -236,11 +236,14 @@ func (self *ClientEventTable) setClientMonitoringState(
 	}
 
 	if principal != "" {
-		services.LogAudit(ctx,
+		err := services.LogAudit(ctx,
 			config_obj, principal, "SetClientMonitoringState",
 			ordereddict.NewDict().
 				Set("user", principal).
 				Set("state", self.state))
+		if err != nil {
+			return err
+		}
 	}
 
 	err = journal.PushRowsToArtifact(ctx, config_obj,
@@ -546,7 +549,7 @@ func (self *ClientEventTable) startLoadFileLoop(
 // Main loop.
 func (self *ClientEventTable) Start(
 	ctx context.Context,
-	wg *sync.WaitGroup, config_obj *config_proto.Config) error {
+	wg *sync.WaitGroup, config_obj *config_proto.Config) (err error) {
 
 	defer wg.Done()
 
@@ -559,7 +562,12 @@ func (self *ClientEventTable) Start(
 	}
 
 	wg.Add(1)
-	go self.startLoadFileLoop(ctx, wg, config_obj)
+	go func() {
+		err1 := self.startLoadFileLoop(ctx, wg, config_obj)
+		if err1 != nil && err == nil {
+			err = err1
+		}
+	}()
 
 	events, cancel := journal.Watch(
 		ctx, "Server.Internal.ArtifactModification",

@@ -104,10 +104,13 @@ func createInitialUsers(
 				return err
 			}
 
-			services.LogAudit(ctx,
+			err = services.LogAudit(ctx,
 				config_obj, "SanityService",
 				"Granting administrator role, because user is specified in the config's initial users",
 				ordereddict.NewDict().Set("user", user.Name))
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

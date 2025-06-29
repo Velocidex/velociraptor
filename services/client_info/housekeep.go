@@ -171,8 +171,8 @@ func (self *Store) updateClientMetadataIndex(
 				// Also update the search index with the new data so it is
 				// immediately visible.
 				if indexer != nil {
-					indexer.UnsetIndex(client_id, k+":"+old_v)
-					indexer.SetIndex(client_id, k+":"+new_v)
+					_ = indexer.UnsetIndex(client_id, k+":"+old_v)
+					_ = indexer.SetIndex(client_id, k+":"+new_v)
 				}
 				changed = true
 			}

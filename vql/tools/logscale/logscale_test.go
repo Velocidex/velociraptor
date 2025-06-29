@@ -45,6 +45,8 @@ var (
 	testTimestamp         = "2023-04-05T17:36:51Z"
 	testClientId          = "C.0030300330303000"
 	testHostname          = "testhost12"
+
+	gMaxPollDev = 30
 )
 
 type LogScaleQueueTestSuite struct {
@@ -93,10 +95,11 @@ func (self *LogScaleQueueTestSuite) populateClients() {
 	assert.NoError(self.T(), err)
 
 	client_info_manager.Set(self.Ctx,
-		&services.ClientInfo{actions_proto.ClientInfo{
-			ClientId: "C.0030300330303000",
-			Hostname: "testhost12",
-		}})
+		&services.ClientInfo{
+			ClientInfo: &actions_proto.ClientInfo{
+				ClientId: "C.0030300330303000",
+				Hostname: "testhost12",
+			}})
 }
 
 func (self *LogScaleQueueTestSuite) getHttpTransport() *http.Transport {
@@ -1200,4 +1203,27 @@ func TestLogScaleQueue(t *testing.T) {
 	gMaxPoll = 1
 	gMaxPollDev = 1
 	suite.Run(t, new(LogScaleQueueTestSuite))
+}
+
+func (self *LogScaleQueue) addDebugCallback(count int, callback func(int)) error {
+	self.lock.Lock()
+	defer self.lock.Unlock()
+
+	if self.opened {
+		return errQueueOpened
+	}
+
+	if !self.debugEventsEnabled {
+		self.debugEventsMap = map[int][]func(int){}
+		self.debugEventsEnabled = true
+	}
+
+	_, ok := self.debugEventsMap[count]
+	if ok {
+		self.debugEventsMap[count] = append(self.debugEventsMap[count], callback)
+	} else {
+		self.debugEventsMap[count] = []func(int){callback}
+	}
+
+	return nil
 }

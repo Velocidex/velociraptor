@@ -172,7 +172,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 
 					// Make sure these are pushed out ASAP to the
 					// other dispatchers.
-					journal.PushRowsToArtifact(ctx, self.config_obj,
+					_ = journal.PushRowsToArtifact(ctx, self.config_obj,
 						[]*ordereddict.Dict{
 							ordereddict.NewDict().
 								Set("HuntId", hunt_record.HuntId).
@@ -194,7 +194,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 
 					// Make sure these are pushed out ASAP to the
 					// other dispatchers.
-					journal.PushRowsToArtifact(ctx, self.config_obj,
+					_ = journal.PushRowsToArtifact(ctx, self.config_obj,
 						[]*ordereddict.Dict{
 							ordereddict.NewDict().
 								Set("HuntId", hunt_record.HuntId).
@@ -223,12 +223,14 @@ func (self *HuntDispatcher) checkForExpiry(
 		// Check if the hunt is expired and adjust its state if so
 		now := uint64(utils.GetTime().Now().UnixNano() / 1000)
 
-		self.ApplyFuncOnHunts(ctx, services.OnlyRunningHunts,
+		_ = self.ApplyFuncOnHunts(ctx, services.OnlyRunningHunts,
 			func(hunt_obj *api_proto.Hunt) error {
 				if hunt_obj.State == api_proto.Hunt_RUNNING &&
 					now > hunt_obj.Expires {
 
-					self.MutateHunt(ctx, config_obj,
+					// Even if we fail to stop one hunt, keep going to
+					// try to stop the others.
+					_ = self.MutateHunt(ctx, config_obj,
 						&api_proto.HuntMutation{
 							HuntId: hunt_obj.HuntId,
 							State:  api_proto.Hunt_STOPPED,

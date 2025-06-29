@@ -150,7 +150,11 @@ func (self *HuntStorageManagerImpl) GetLastTimestamp() uint64 {
 func (self *HuntStorageManagerImpl) Close(ctx context.Context) {
 	atomic.SwapUint64(&self.last_timestamp, 0)
 	atomic.SwapInt64(&self.closed, 1)
-	self.FlushIndex(ctx)
+	err := self.FlushIndex(ctx)
+	if err != nil {
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Error("HuntStorageManager FlushIndex %v", err)
+	}
 }
 
 func (self *HuntStorageManagerImpl) ModifyHuntObject(
@@ -272,7 +276,7 @@ func (self *HuntStorageManagerImpl) SetHunt(
 func (self *HuntStorageManagerImpl) GetTags(
 	ctx context.Context) (res []string) {
 
-	self.ApplyFuncOnHunts(ctx, services.AllHunts,
+	_ = self.ApplyFuncOnHunts(ctx, services.AllHunts,
 		func(hunt *api_proto.Hunt) error {
 			if hunt != nil {
 				res = append(res, hunt.Tags...)
@@ -398,7 +402,10 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 	ctx context.Context, config_obj *config_proto.Config) error {
 
 	// Ensure all the records are ready to read.
-	datastore.FlushDatastore(config_obj)
+	err := datastore.FlushDatastore(config_obj)
+	if err != nil {
+		return err
+	}
 
 	// Read all the data again from the data store.
 	db, err := datastore.GetDB(config_obj)

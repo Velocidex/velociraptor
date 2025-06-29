@@ -38,12 +38,23 @@ func (self *TraceFunction) Call(ctx context.Context,
 
 	// Cap the size of these dumps because the important info is near
 	// the top.
-	storeFile(zipfile, "allocs", 200000)
-	storeFile(zipfile, "goroutine", 200000)
+	err := storeFile(zipfile, "allocs", 200000)
+	if err != nil {
+		scope.Log("trace: %v", err)
+	}
+
+	err = storeFile(zipfile, "goroutine", 200000)
+	if err != nil {
+		scope.Log("trace: %v", err)
+	}
+
 	fd, err := zipfile.Create("logs.txt")
 	if err == nil {
 		for _, line := range logging.GetMemoryLogs() {
-			fd.Write([]byte(line))
+			_, err = fd.Write([]byte(line))
+			if err != nil {
+				scope.Log("trace: %v", err)
+			}
 		}
 	}
 
@@ -56,8 +67,8 @@ func (self *TraceFunction) Call(ctx context.Context,
 				continue
 			}
 
-			fd.Write(serialized)
-			fd.Write(lf)
+			_, _ = fd.Write(serialized)
+			_, _ = fd.Write(lf)
 		}
 	}
 
@@ -72,8 +83,8 @@ func (self *TraceFunction) Call(ctx context.Context,
 				if err != nil {
 					continue
 				}
-				fd.Write(serialized)
-				fd.Write(lf)
+				_, _ = fd.Write(serialized)
+				_, _ = fd.Write(lf)
 			}
 		}
 	}

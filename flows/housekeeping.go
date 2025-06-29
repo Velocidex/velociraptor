@@ -74,12 +74,15 @@ func CheckClientStatus(
 
 		// Inform the client manager that this client will now receive
 		// the latest event table.
-		client_manager.UpdateStats(ctx, client_id, &services.Stats{
+		err := client_manager.UpdateStats(ctx, client_id, &services.Stats{
 			LastEventTableVersion: update_message.UpdateEventTable.Version,
 		})
+		if err != nil {
+			return err
+		}
 
 		clientEventUpdateCounter.Inc()
-		err := client_manager.QueueMessageForClient(
+		err = client_manager.QueueMessageForClient(
 			ctx, client_id, update_message,
 			services.NOTIFY_CLIENT, utils.BackgroundWriter)
 		if err != nil {
@@ -155,8 +158,7 @@ func CheckClientStatus(
 		}
 	}
 
-	client_manager.UpdateStats(ctx, client_id, &services.Stats{
+	return client_manager.UpdateStats(ctx, client_id, &services.Stats{
 		LastHuntTimestamp: latest_timestamp,
 	})
-	return nil
 }

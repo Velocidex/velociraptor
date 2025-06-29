@@ -56,8 +56,8 @@ func DebugToFile(filename, format string, v ...interface{}) {
 	}
 	defer fd.Close()
 
-	fd.Seek(0, os.SEEK_END)
-	fd.Write([]byte(fmt.Sprintf(format, v...) + "\n"))
+	_, _ = fd.Seek(0, os.SEEK_END)
+	_, _ = fd.Write([]byte(fmt.Sprintf(format, v...) + "\n"))
 }
 
 type DebugStringer interface {

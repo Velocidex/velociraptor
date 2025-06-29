@@ -36,8 +36,12 @@ func UnzipToFilestore(
 			continue
 		}
 
-		io.Copy(fd, infd)
+		_, err = io.Copy(fd, infd)
 		fd.Close()
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

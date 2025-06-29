@@ -61,7 +61,6 @@ var (
 		Help: "Total bytes of Uploaded Files.",
 	})
 
-	notModified      = errors.New("Not modified")
 	invalidSessionId = errors.New("Invalid SessionId")
 	invalidClientId  = errors.New("Invalid ClientId")
 )
@@ -111,7 +110,7 @@ func NewCollectionContext(
 		defer self.mu.Unlock()
 
 		// Mark the collection as updated.
-		updateContext(config_obj, self.ClientId, self.SessionId)
+		_ = updateContext(config_obj, self.ClientId, self.SessionId)
 
 		if !self.send_update {
 			return

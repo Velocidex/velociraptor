@@ -602,7 +602,7 @@ func (self *Launcher) ScheduleArtifactCollection(
 			}
 
 			// Queue and notify the client about the new tasks
-			client_manager.QueueMessageForClient(
+			_ = client_manager.QueueMessageForClient(
 				ctx, collector_request.ClientId, task,
 				services.NOTIFY_CLIENT, completion)
 		})

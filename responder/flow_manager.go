@@ -49,7 +49,6 @@ type FlowManager struct {
 
 	// These are old flows that are completed.
 	finished *cache.LRUCache
-	next_id  int
 
 	// Remember all the cancelled sessions so the ring buffer file can
 	// drop any messages for flows that were already cancelled.

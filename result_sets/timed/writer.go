@@ -104,7 +104,7 @@ func (self *TimedResultSetWriterImpl) Flush() {
 	for _, row := range self.rows {
 		writer, err := self.getWriter(row.ts)
 		if err == nil {
-			writer.WriteBuffer(row.ts, row.serialized)
+			_ = writer.WriteBuffer(row.ts, row.serialized)
 		}
 	}
 

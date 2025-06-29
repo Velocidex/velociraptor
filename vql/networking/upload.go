@@ -81,7 +81,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 		accessor_name = "auto"
 	}
 
-	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
+	accessor, err := accessors.GetAccessor(accessor_name, scope)
 	if err != nil {
 		scope.Log("upload: %v", err)
 		return &uploads.UploadResponse{
@@ -117,7 +117,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 
 	upload_response, err := uploader.Upload(
 		ctx, scope, arg.File,
-		arg.Accessor,
+		accessor_name,
 		arg.Name,
 		stat.Size(), // Expected size.
 		mtime, atime, ctime, btime, stat.Mode(),

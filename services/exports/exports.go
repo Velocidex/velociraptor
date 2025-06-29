@@ -98,8 +98,6 @@ func (self *ExportManager) SetContainerStats(
 	}
 
 	return db.SetSubject(config_obj, stats_path, stats)
-
-	return nil
 }
 
 func NewExportManager(ctx context.Context,

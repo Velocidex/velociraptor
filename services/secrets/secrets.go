@@ -145,8 +145,7 @@ func (self *SecretsService) DeleteSecretDefinition(
 		}
 	}
 
-	self.definitions_lru.Remove(definition.TypeName)
-
+	_ = self.definitions_lru.Remove(definition.TypeName)
 	return db.DeleteSubject(self.config_obj,
 		secret_path_manager.SecretsDefinition(definition.TypeName))
 }
@@ -311,10 +310,7 @@ func (self *SecretsService) deleteSecret(
 		return err
 	}
 
-	err = self.secrets_lru.Remove(SecretLRUKey(type_name, secret_name))
-	if err != nil {
-		return err
-	}
+	_ = self.secrets_lru.Remove(SecretLRUKey(type_name, secret_name))
 
 	secret_path_manager := paths.SecretsPathManager{}
 	return db.DeleteSubject(self.config_obj,
@@ -399,11 +395,11 @@ func NewSecretsService(
 		config_obj:      config_obj,
 	}
 	result.definitions_lru.SetCacheSizeLimit(100)
-	result.definitions_lru.SetTTL(time.Minute)
+	_ = result.definitions_lru.SetTTL(time.Minute)
 	result.definitions_lru.SkipTTLExtensionOnHit(true)
 
 	result.secrets_lru.SetCacheSizeLimit(100)
-	result.secrets_lru.SetTTL(time.Minute)
+	_ = result.secrets_lru.SetTTL(time.Minute)
 	result.secrets_lru.SkipTTLExtensionOnHit(true)
 
 	go func() {

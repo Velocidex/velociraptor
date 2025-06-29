@@ -218,9 +218,13 @@ func doArtifactCollect() error {
 	// Stick around until the query completes so it gets a chance to
 	// close the collection zip.
 	sm.Wg.Add(1)
-	scope.AddDestructor(func() {
+	err = scope.AddDestructor(func() {
 		sm.Wg.Done()
 	})
+	if err != nil {
+		sm.Wg.Done()
+		return err
+	}
 
 	// If interrupt has occured we cancel everything and wait for any
 	// cleanups to occur. If we return too quickly from the main

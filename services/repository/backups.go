@@ -82,7 +82,11 @@ func (self RepositoryBackupProvider) BackupResults(
 				continue
 			}
 
-			writer.Write([]byte(artifact.Raw))
+			_, err = writer.Write([]byte(artifact.Raw))
+			if err != nil {
+				writer.Close()
+				continue
+			}
 			writer.Close()
 
 			record := &BackupRecord{
@@ -169,6 +173,4 @@ func (self RepositoryBackupProvider) Restore(ctx context.Context,
 			count++
 		}
 	}
-
-	return stat, nil
 }

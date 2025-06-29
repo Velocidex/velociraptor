@@ -69,7 +69,7 @@ var flateReaderPool sync.Pool
 func newFlateReader(r io.Reader) io.ReadCloser {
 	fr, ok := flateReaderPool.Get().(io.ReadCloser)
 	if ok {
-		fr.(flate.Resetter).Reset(r, nil)
+		_ = fr.(flate.Resetter).Reset(r, nil)
 	} else {
 		fr = flate.NewReader(r)
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -80,11 +81,16 @@ func (self *DefineSecretFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		org_config_obj, principal, "User Defined Secret",
 		ordereddict.NewDict().
 			Set("principal", principal).
 			Set("type", arg.Type))
+	if err != nil {
+		logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
+		logger.Error("<red>User Defined Secret</> %v %v",
+			principal, arg.Type)
+	}
 
 	return arg.Type
 }

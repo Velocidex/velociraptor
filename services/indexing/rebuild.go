@@ -44,26 +44,26 @@ func (self *Indexer) RebuildIndex(
 		count++
 
 		// The all item corresponds to the "." search term.
-		self.setIndexTree(client_id, "all", btree)
-		self.setIndexTree(client_id, client_id, btree)
+		_ = self.setIndexTree(client_id, "all", btree)
+		_ = self.setIndexTree(client_id, client_id, btree)
 
 		if client_info.Hostname != "" {
-			self.setIndexTree(client_id, "host:"+client_info.Hostname, btree)
+			_ = self.setIndexTree(client_id, "host:"+client_info.Hostname, btree)
 		}
 
 		// Add labels to the index.
 		for _, label := range client_info.Labels {
-			self.setIndexTree(client_id, "label:"+strings.ToLower(label), btree)
+			_ = self.setIndexTree(client_id, "label:"+strings.ToLower(label), btree)
 		}
 
 		// Add MAC addresses to the index.
 		for _, mac := range client_info.MacAddresses {
-			self.setIndexTree(client_id, "mac:"+mac, btree)
+			_ = self.setIndexTree(client_id, "mac:"+mac, btree)
 		}
 
 		// Now add user custom search verbs.
 		for k, v := range client_info.Metadata {
-			self.setIndexTree(client_id, k+":"+v, btree)
+			_ = self.setIndexTree(client_id, k+":"+v, btree)
 		}
 	}
 

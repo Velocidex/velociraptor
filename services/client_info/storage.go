@@ -106,7 +106,7 @@ func (self *Store) Modify(
 	var record *services.ClientInfo
 
 	if client_info != nil {
-		record = &services.ClientInfo{*client_info}
+		record = &services.ClientInfo{ClientInfo: client_info}
 	}
 
 	// If the record was not changed just ignore it.
@@ -122,7 +122,7 @@ func (self *Store) Modify(
 	}
 
 	// Write the modified record to the LRU
-	return self._SetRecord(config_obj, &new_record.ClientInfo)
+	return self._SetRecord(config_obj, new_record.ClientInfo)
 }
 
 func (self *Store) GetRecord(client_id string) (*actions_proto.ClientInfo, error) {
@@ -373,12 +373,12 @@ func (self *Store) LoadSnapshotFromLegacyData(
 			continue
 		}
 
-		client_info := &services.ClientInfo{}
+		client_info := &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
 		client_path_manager := paths.NewClientPathManager(client_id)
 
 		// Read the main client record
 		err = db.GetSubject(config_obj, client_path_manager.Path(),
-			&client_info.ClientInfo)
+			client_info.ClientInfo)
 		if err != nil {
 			continue
 		}
@@ -397,8 +397,8 @@ func (self *Store) LoadSnapshotFromLegacyData(
 		}
 
 		// Now read the ping info in case it is there.
-		ping_info := &services.ClientInfo{}
-		err = db.GetSubject(config_obj, client_path_manager.Ping(), ping_info)
+		ping_info := &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
+		err = db.GetSubject(config_obj, client_path_manager.Ping(), ping_info.ClientInfo)
 		if err == nil {
 			client_info.Ping = ping_info.Ping
 			client_info.IpAddress = ping_info.IpAddress

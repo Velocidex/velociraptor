@@ -277,8 +277,10 @@ func startSelfSignedFrontend(
 	// Launch a server for the frontend.
 	mux := api_utils.NewServeMux()
 
-	server.PrepareFrontendMux(
-		config_obj, server_obj, mux.ServeMux)
+	err := server.PrepareFrontendMux(config_obj, server_obj, mux.ServeMux)
+	if err != nil {
+		return err
+	}
 
 	if config_obj.Frontend.UsePlainHttp {
 		return StartFrontendPlainHttp(
@@ -370,7 +372,9 @@ func StartFrontendHttps(
 				server.Addr, err)
 			return
 		}
-		defer closer()
+		defer func() {
+			_ = closer()
+		}()
 
 		err = server.ServeTLS(listener, "", "")
 		if err != nil && err != http.ErrServerClosed {
@@ -568,7 +572,9 @@ func StartFrontendWithAutocert(
 				server.Addr, err)
 			return
 		}
-		defer closer()
+		defer func() {
+			_ = closer()
+		}()
 
 		err = server.ServeTLS(listener, "", "")
 		if err != nil && err != http.ErrServerClosed {

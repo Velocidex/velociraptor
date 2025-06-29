@@ -31,7 +31,6 @@ type TempFileMatrializer struct {
 	filename string
 	tempfile io.Closer
 	writer   *bufio.Writer
-	lf       []byte
 }
 
 func NewTempFileMatrializer(
@@ -47,9 +46,12 @@ func NewTempFileMatrializer(
 	utils_tempfile.AddTmpFile(tmpfile.Name())
 
 	root_scope := vql_subsystem.GetRootScope(scope)
-	root_scope.AddDestructor(func() {
+	err = root_scope.AddDestructor(func() {
 		filesystem.RemoveFile(0, tmpfile.Name(), root_scope)
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	result := &TempFileMatrializer{
 		filename: tmpfile.Name(),

@@ -100,7 +100,7 @@ func (self *RemoteDataStore) Healthy() error {
 func (self *RemoteDataStore) _GetSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,
-	message proto.Message) error {
+	message proto.Message) (err error) {
 
 	defer Instrument("read", "RemoteDataStore", urn)()
 
@@ -114,7 +114,12 @@ func (self *RemoteDataStore) _GetSubject(
 	if err != nil {
 		return err
 	}
-	defer closer()
+	defer func() {
+		err1 := closer()
+		if err1 != nil && err == nil {
+			err = err1
+		}
+	}()
 
 	result, err := conn.GetSubject(ctx, &api_proto.DataRequest{
 		OrgId: config_obj.OrgId,
@@ -181,12 +186,11 @@ func (self *RemoteDataStore) _SetSubjectWithCompletion(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,
 	message proto.Message,
-	completion func()) error {
+	completion func()) (err error) {
 
 	defer Instrument("write", "RemoteDataStore", urn)()
 
 	var value []byte
-	var err error
 
 	if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
 		value, err = protojson.Marshal(message)
@@ -211,7 +215,12 @@ func (self *RemoteDataStore) _SetSubjectWithCompletion(
 	if err != nil {
 		return err
 	}
-	defer closer()
+	defer func() {
+		err1 := closer()
+		if err1 != nil && err == nil {
+			err = err1
+		}
+	}()
 
 	_, err = conn.SetSubject(ctx, &api_proto.DataRequest{
 		OrgId: config_obj.OrgId,
@@ -236,7 +245,7 @@ func (self *RemoteDataStore) DeleteSubjectWithCompletion(
 
 func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
 	config_obj *config_proto.Config,
-	urn api.DSPathSpec, completion func()) error {
+	urn api.DSPathSpec, completion func()) (err error) {
 
 	defer Instrument("delete", "RemoteDataStore", urn)()
 
@@ -249,7 +258,12 @@ func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
 	if err != nil {
 		return err
 	}
-	defer closer()
+	defer func() {
+		err1 := closer()
+		if err1 != nil && err == nil {
+			err = err1
+		}
+	}()
 
 	_, err = conn.DeleteSubject(ctx, &api_proto.DataRequest{
 		OrgId: config_obj.OrgId,
@@ -277,7 +291,7 @@ func (self *RemoteDataStore) DeleteSubject(
 
 func (self *RemoteDataStore) _DeleteSubject(
 	config_obj *config_proto.Config,
-	urn api.DSPathSpec) error {
+	urn api.DSPathSpec) (err error) {
 
 	defer Instrument("delete", "RemoteDataStore", urn)()
 
@@ -290,7 +304,12 @@ func (self *RemoteDataStore) _DeleteSubject(
 	if err != nil {
 		return err
 	}
-	defer closer()
+	defer func() {
+		err1 := closer()
+		if err1 != nil && err == nil {
+			err = err1
+		}
+	}()
 
 	_, err = conn.DeleteSubject(ctx, &api_proto.DataRequest{
 		OrgId: config_obj.OrgId,
@@ -321,7 +340,7 @@ func (self *RemoteDataStore) ListChildren(
 // Lists all the children of a URN.
 func (self *RemoteDataStore) _ListChildren(
 	config_obj *config_proto.Config,
-	urn api.DSPathSpec) ([]api.DSPathSpec, error) {
+	urn api.DSPathSpec) (res []api.DSPathSpec, err error) {
 
 	defer Instrument("list", "RemoteDataStore", urn)()
 
@@ -334,7 +353,12 @@ func (self *RemoteDataStore) _ListChildren(
 	if err != nil {
 		return nil, err
 	}
-	defer closer()
+	defer func() {
+		err1 := closer()
+		if err1 != nil && err == nil {
+			err = err1
+		}
+	}()
 
 	result, err := conn.ListChildren(ctx, &api_proto.DataRequest{
 		OrgId: config_obj.OrgId,

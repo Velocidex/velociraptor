@@ -13,8 +13,7 @@ import (
 type metadataManager struct {
 	mu sync.Mutex
 
-	storage *artifacts_proto.ArtifactMetadataStorage
-	lookup  map[string]*artifacts_proto.ArtifactMetadata
+	lookup map[string]*artifacts_proto.ArtifactMetadata
 }
 
 func (self *metadataManager) Get(name string) (

@@ -268,8 +268,12 @@ func doGUI() error {
 
 		sm.Wg.Add(1)
 		go func() {
-			RunClient(ctx, config_obj)
-			sm.Wg.Done()
+			defer sm.Wg.Done()
+
+			err := RunClient(ctx, config_obj)
+			if err != nil {
+				logger.Error("<red>RunClient</>: %v", err)
+			}
 		}()
 
 		org_manager, err := services.GetOrgManager()
@@ -288,12 +292,16 @@ func doGUI() error {
 
 			// Make sure the client writeback is initialized
 			writeback_service := writeback.GetWritebackService()
-			writeback_service.LoadWriteback(org_config_obj)
+			_ = writeback_service.LoadWriteback(org_config_obj)
 
 			sm.Wg.Add(1)
 			go func() {
-				RunClient(ctx, org_client_config)
-				sm.Wg.Done()
+				defer sm.Wg.Done()
+
+				err := RunClient(ctx, org_client_config)
+				if err != nil {
+					logger.Error("<red>RunClient</>: %v", err)
+				}
 			}()
 		}
 	}

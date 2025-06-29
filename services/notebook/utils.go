@@ -1,16 +1,8 @@
 package notebook
 
 import (
-	"regexp"
-
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
-)
-
-var (
-	flowNotebookIdRegex  = regexp.MustCompile("N\\.(F\\.[^-]+)-(C\\..+)")
-	eventNotebookIdRegex = regexp.MustCompile("N\\.(E\\.[^-]+)-(C\\..+)")
-	huntNotebookIdRegex  = regexp.MustCompile("N\\.(H\\..+)")
 )
 
 func NewNotebookId() string {

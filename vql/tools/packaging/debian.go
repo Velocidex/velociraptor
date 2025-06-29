@@ -65,30 +65,30 @@ type DEBBuilder struct {
 	state *ordereddict.Dict
 }
 
-func (self *DEBBuilder) AddFileString(data, path string) {
+func (self *DEBBuilder) AddFileString(data, path string) error {
 
 	switch path {
 	case "Preun":
-		self.AddControlExtraString("preinst", data)
+		return self.AddControlExtraString("preinst", data)
 
 	case "Postun":
-		self.AddControlExtraString("postun", data)
+		return self.AddControlExtraString("postun", data)
 
 	case "Prerm":
-		self.AddControlExtraString("prerm", data)
+		return self.AddControlExtraString("prerm", data)
 
 	case "Postin":
-		self.AddControlExtraString("postinst", data)
+		return self.AddControlExtraString("postinst", data)
 
 	default:
 		self.state.Set(path, data)
-		self.DebPkg.AddFileString(data, path)
+		return self.DebPkg.AddFileString(data, path)
 	}
 }
 
-func (self *DEBBuilder) AddControlExtraString(path, data string) {
+func (self *DEBBuilder) AddControlExtraString(path, data string) error {
 	self.state.Set(path, data)
-	self.DebPkg.AddControlExtraString(path, data)
+	return self.DebPkg.AddControlExtraString(path, data)
 }
 
 func (self *DEBBuilder) Bytes(scope vfilter.Scope) ([]byte, error) {
@@ -173,7 +173,10 @@ func BuildDeb(spec *PackageSpec) (Builder, error) {
 			return nil, err
 		}
 		if file_spec.Template == "" {
-			deb.AddFileString(string(file_spec.RawData), filename)
+			err := deb.AddFileString(string(file_spec.RawData), filename)
+			if err != nil {
+				return nil, err
+			}
 
 		} else {
 			content, err := ExpandTemplateString(
@@ -182,7 +185,10 @@ func BuildDeb(spec *PackageSpec) (Builder, error) {
 				return nil, err
 			}
 
-			deb.AddFileString(content, filename)
+			err = deb.AddFileString(content, filename)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

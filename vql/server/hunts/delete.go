@@ -7,6 +7,7 @@ import (
 	"github.com/alitto/pond/v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -79,11 +80,15 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 			return
 		}
 
-		services.LogAudit(ctx,
+		err = services.LogAudit(ctx,
 			config_obj, principal, "hunt_delete",
 			ordereddict.NewDict().
 				Set("hunt_id", arg.HuntId).
 				Set("details", hunt_obj))
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("<red>hunt_delete</> %v %v", principal, arg.HuntId)
+		}
 
 		if arg.ArchiveOnly {
 			err := hunt_dispatcher.MutateHunt(

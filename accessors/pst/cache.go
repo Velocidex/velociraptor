@@ -70,7 +70,10 @@ func (self *PSTFile) walkFolders(folder *pst.Folder) error {
 		self.setPath(folder.Identifier, subFolder.Identifier, subFolder.Name)
 
 		// Walk the children
-		self.walkFolders(&subFolder)
+		err := self.walkFolders(&subFolder)
+		if err != nil {
+			return err
+		}
 
 		messageIterator, err := subFolder.GetMessageIterator()
 		if err != nil {
@@ -235,9 +238,7 @@ func (self *PSTCache) Open(
 
 	res.IncRef()
 
-	self.lru.Set(key, res)
-
-	return res, nil
+	return res, self.lru.Set(key, res)
 }
 
 func GetPSTCache(scope vfilter.Scope) *PSTCache {
@@ -268,7 +269,7 @@ func GetPSTCache(scope vfilter.Scope) *PSTCache {
 	}
 
 	cache.lru.SetCacheSizeLimit(cache_size)
-	cache.lru.SetTTL(time.Second * time.Duration(cache_time))
+	_ = cache.lru.SetTTL(time.Second * time.Duration(cache_time))
 
 	cache.lru.SetExpirationCallback(
 		func(key string, value interface{}) error {
@@ -281,7 +282,7 @@ func GetPSTCache(scope vfilter.Scope) *PSTCache {
 		})
 
 	root_scope := vql_subsystem.GetRootScope(scope)
-	root_scope.AddDestructor(func() {
+	_ = root_scope.AddDestructor(func() {
 		cache.Close()
 	})
 	vql_subsystem.CacheSet(root_scope, PSTCacheTag, cache)

@@ -385,7 +385,6 @@ func defaultPipeReader(
 
 		}
 	}
-	return nil
 }
 
 func init() {

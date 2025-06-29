@@ -85,7 +85,11 @@ func (self ParseCSVPlugin) Call(
 				}
 				defer fd.Close()
 
-				csv_reader := csv.NewReader(fd)
+				csv_reader, err := csv.NewReader(fd)
+				if err != nil {
+					scope.Log("parse_csv: %v", err)
+					return
+				}
 				csv_reader.TrimLeadingSpace = true
 				csv_reader.LazyQuotes = true
 

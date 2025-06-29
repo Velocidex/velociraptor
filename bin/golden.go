@@ -200,9 +200,12 @@ func runTest(fixture *testFixture, sm *services.Service,
 	storage.SetCurrentServerPem([]byte(config_obj.Frontend.Certificate))
 
 	writeback_service := writeback.GetWritebackService()
-	writeback_service.LoadWriteback(config_obj)
+	err := writeback_service.LoadWriteback(config_obj)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	err := crypto_utils.VerifyConfig(config_obj)
+	err = crypto_utils.VerifyConfig(config_obj)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -547,12 +550,16 @@ func (self WriteFilestoreFunction) Call(ctx context.Context,
 	pathspec := paths.FSPathSpecFromClientPath(arg.FSPath)
 	writer, err := file_store_factory.WriteFile(pathspec)
 	if err != nil {
-		scope.Log("write_filestore: %s", err)
+		scope.Log("write_filestore: %v", err)
 		return &vfilter.Null{}
 	}
 	defer writer.Close()
 
-	writer.Write([]byte(arg.Data))
+	_, err = writer.Write([]byte(arg.Data))
+	if err != nil {
+		scope.Log("write_filestore: %v", err)
+		return &vfilter.Null{}
+	}
 
 	return true
 }

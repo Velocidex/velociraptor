@@ -244,7 +244,7 @@ func (self *FlowContext) _Close() {
 		os.Remove(self.checkpoint)
 
 		writeback_service := writeback.GetWritebackService()
-		writeback_service.MutateWriteback(self.config_obj,
+		_ = writeback_service.MutateWriteback(self.config_obj,
 			func(wb *config_proto.Writeback) error {
 				new_list := make([]*config_proto.FlowCheckPoint,
 					0, len(wb.Checkpoints))
@@ -507,7 +507,7 @@ func (self *FlowContext) getStats() *crypto_proto.VeloMessage {
 			fd, err := os.OpenFile(self.checkpoint,
 				os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
 			if err == nil {
-				fd.Write(serialized)
+				_, _ = fd.Write(serialized)
 			}
 			fd.Close()
 		}

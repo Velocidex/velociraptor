@@ -49,7 +49,7 @@ type: INTERNAL
 	assert.NoError(self.T(), err)
 
 	client_info_manager.Set(self.Ctx, &services.ClientInfo{
-		actions_proto.ClientInfo{
+		ClientInfo: &actions_proto.ClientInfo{
 			ClientId: self.client_id,
 		},
 	})
@@ -130,7 +130,7 @@ func (self *ServicesTestSuite) TestEnrollService() {
 
 	// Check the client does not exist in the datastore yet
 	client_path_manager := paths.NewClientPathManager(self.client_id)
-	client_info := &services.ClientInfo{}
+	client_info := &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
 	err = db.GetSubject(self.ConfigObj, client_path_manager.Path(), client_info)
 	assert.Error(self.T(), err)
 	assert.Equal(self.T(), client_info.ClientId, "")

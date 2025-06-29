@@ -17,7 +17,7 @@ func (self *ClientFlowRunner) maybeProcessClientInfo(
 		return nil
 	}
 
-	client_info := &services.ClientInfo{}
+	client_info := &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
 	err := json.Unmarshal([]byte(response.JSONLResponse), &client_info.ClientInfo)
 	if err != nil {
 		return err
@@ -68,7 +68,7 @@ func (self *ClientFlowRunner) maybeProcessClientInfo(
 					client_id,
 					"host:" + client_info.Fqdn,
 					"host:" + client_info.Hostname} {
-					indexer.SetIndex(client_id, term)
+					_ = indexer.SetIndex(client_id, term)
 				}
 			}
 
@@ -83,7 +83,10 @@ func (self *ClientFlowRunner) maybeProcessClientInfo(
 		labeler := services.GetLabeler(self.config_obj)
 
 		for _, label := range client_info.Labels {
-			labeler.SetClientLabel(ctx, self.config_obj, client_id, label)
+			err = labeler.SetClientLabel(ctx, self.config_obj, client_id, label)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

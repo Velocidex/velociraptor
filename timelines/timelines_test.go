@@ -49,7 +49,7 @@ func (self *TimelineTestSuite) TestSuperTimelineWriter() {
 	defer cancel()
 
 	timeline_storer := notebook.NewTimelineStorer(self.config_obj)
-	super, err := timelines.SuperTimelineWriter{}.New(ctx, self.config_obj,
+	super, err := (&timelines.SuperTimelineWriter{}).New(ctx, self.config_obj,
 		timeline_storer, "N.1234", "Test")
 	assert.NoError(self.T(), err)
 

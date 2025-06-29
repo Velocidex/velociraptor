@@ -27,7 +27,6 @@ func init() {
 				}
 
 				panic("oops")
-				return nil
 			},
 			Doc: "Crash the program with a panic!",
 		})

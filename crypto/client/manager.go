@@ -120,7 +120,7 @@ func NewCryptoManager(
 		limiter:             rate.NewLimiter(rate.Limit(limit_rate), 100),
 	}
 
-	result.unauthenticated_lru.SetTTL(time.Second * 60)
+	_ = result.unauthenticated_lru.SetTTL(time.Second * 60)
 	result.unauthenticated_lru.SkipTTLExtensionOnHit(true)
 
 	go func() {
@@ -391,7 +391,7 @@ func (self *CryptoManager) Decrypt(
 		return msg_info, nil
 	}
 
-	self.unauthenticated_lru.Set(
+	_ = self.unauthenticated_lru.Set(
 		msg_info.Source,
 		&_Cipher{
 			cipher_metadata:   cipher_metadata,

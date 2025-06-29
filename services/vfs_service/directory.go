@@ -20,10 +20,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 )
 
-var (
-	notAvailableError = errors.New("Not available")
-)
-
 type FileInfoRow struct {
 	Name      string                       `json:"Name"`
 	Size      int64                        `json:"Size"`

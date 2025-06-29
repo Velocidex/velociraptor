@@ -322,6 +322,9 @@ func send_to_elastic(
 	b1, err := ioutil.ReadAll(res.Body)
 	if err == nil {
 		response, err = utils.ParseJsonToObject(b1)
+		if err != nil {
+			return
+		}
 	}
 
 	select {

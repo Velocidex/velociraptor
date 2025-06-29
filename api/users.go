@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -135,12 +136,17 @@ func (self *ApiServer) CreateUser(ctx context.Context,
 	err = users_manager.AddUserToOrg(ctx, mode, principal, in.Name, in.Orgs, acl)
 
 	if err == nil {
-		services.LogAudit(ctx,
+		err := services.LogAudit(ctx,
 			org_config_obj, principal, "user_create",
 			ordereddict.NewDict().
 				Set("username", in.Name).
 				Set("acl", acl).
 				Set("org_ids", in.Orgs))
+		if err != nil {
+			logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
+			logger.Error("<red>user_create</> %v %v", principal, in.Name)
+		}
+
 	}
 
 	return &emptypb.Empty{}, err
@@ -274,12 +280,17 @@ func (self *ApiServer) SetUserRoles(
 		principal, in.Name, []string{in.Org}, acl)
 
 	if err == nil {
-		services.LogAudit(ctx,
+		err := services.LogAudit(ctx,
 			org_config_obj, principal, "user_grant",
 			ordereddict.NewDict().
 				Set("username", in.Name).
 				Set("acl", acl).
 				Set("org_ids", []string{in.Org}))
+		if err != nil {
+			logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
+			logger.Error("<red>user_grant</> %v %v", principal, in.Name)
+		}
+
 	}
 
 	return &emptypb.Empty{}, err

@@ -36,6 +36,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
@@ -557,7 +558,7 @@ func searchArtifact(
 func (self *ApiServer) LoadArtifactPack(
 	ctx context.Context,
 	in *api_proto.LoadArtifactPackRequest) (
-	*api_proto.LoadArtifactPackResponse, error) {
+	res *api_proto.LoadArtifactPackResponse, err error) {
 
 	defer Instrument("LoadArtifactPack")()
 
@@ -588,7 +589,12 @@ func (self *ApiServer) LoadArtifactPack(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
-	defer closer()
+	defer func() {
+		err1 := closer()
+		if err != nil {
+			err = err1
+		}
+	}()
 
 	result := &api_proto.LoadArtifactPackResponse{
 		VfsPath: in.VfsPath,
@@ -644,11 +650,16 @@ func (self *ApiServer) LoadArtifactPack(
 			definition, err = setArtifactFile(ctx,
 				org_config_obj, principal, request, prefix)
 			if err == nil {
-				services.LogAudit(ctx,
+				err := services.LogAudit(ctx,
 					org_config_obj, principal, "LoadArtifactPack",
 					ordereddict.NewDict().
 						Set("artifact", definition.Name).
 						Set("details", request.Artifact))
+				if err != nil {
+					logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
+					logger.Error("<red>LoadArtifactPack</> %v %v",
+						principal, definition.Name)
+				}
 
 				result.SuccessfulArtifacts = append(result.SuccessfulArtifacts,
 					definition.Name)

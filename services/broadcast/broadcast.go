@@ -17,11 +17,8 @@ import (
 
 type listener struct {
 	started time.Time
-
-	// Total number of events fed to this listener
-	count  int
-	id     uint64
-	closer func()
+	id      uint64
+	closer  func()
 }
 
 type watcher struct {

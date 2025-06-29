@@ -476,7 +476,11 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 					return
 
 				case <-GetClock().After(sync_duration):
-					tracker.doFullSync(ctx, scope, sync_duration, arg.SyncQuery)
+					err := tracker.doFullSync(ctx, scope, sync_duration, arg.SyncQuery)
+					if err != nil {
+						scope.Log("<red>Process_tracker doFullSync</> %v", err)
+					}
+
 				}
 			}
 		}()
@@ -493,14 +497,16 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 
 	// When this query is done we remove the process tracker and use
 	// the dummy one. This restores the state to the initial state.
-	vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+	err = vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 		clock_mu.Lock()
 		g_tracker = &DummyProcessTracker{}
 		clock_mu.Unlock()
 
 		scope.Log("Uninstalling process tracker.")
 	})
-
+	if err != nil {
+		scope.Log("InstallProcessTracker: %v", err)
+	}
 	return tracker
 }
 

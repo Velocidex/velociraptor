@@ -50,10 +50,6 @@ type _Sentinel struct {
 	globs []string
 }
 
-var (
-	sentinel_filter = _Sentinel{}
-)
-
 type _RecursiveComponent struct {
 	path  string
 	depth int

@@ -25,7 +25,7 @@ type FileNode struct {
 	options *Options
 }
 
-func (self FileNode) Getattr(ctx context.Context,
+func (self *FileNode) Getattr(ctx context.Context,
 	f fs.FileHandle, out *fuse.AttrOut) syscall.Errno {
 
 	stat, err := self.accessor.LstatWithOSPath(self.ospath)

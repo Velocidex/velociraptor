@@ -1,17 +1,39 @@
+version: "2"
 run:
-  tests: false
   build-tags:
     - server_vql
     - extras
     - release
     - yara
     - codeanalysis
+  tests: false
+  allow-parallel-runners: false
+linters:
+  settings:
+    staticcheck:
+      checks:
+        - "-ST1006"
 
-  allow-parallel-runners: true
-
-linters-settings:
-  govet:
-    settings:
-      printf:
-        funcs:
-          - (www.velocidex.com/golang/velociraptor/logging.LogContext).Error
+    govet:
+      settings:
+        printf:
+          funcs:
+            - (www.velocidex.com/golang/velociraptor/logging.LogContext).Error
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

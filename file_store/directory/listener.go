@@ -117,7 +117,7 @@ func (self *Listener) Send(item *ordereddict.Dict) {
 
 	// No direct delivery available - force buffer file enqueue
 	if self.file_buffer_active {
-		self.file_buffer.Enqueue(item)
+		_ = self.file_buffer.Enqueue(item)
 		return
 	}
 
@@ -132,7 +132,7 @@ func (self *Listener) Send(item *ordereddict.Dict) {
 		// enqueue mode, all further messages will be enqueued to the
 		// file until it is drained.
 	default:
-		self.file_buffer.Enqueue(item)
+		_ = self.file_buffer.Enqueue(item)
 
 		// Switch to file buffer mode
 		self._switchToFileMode()

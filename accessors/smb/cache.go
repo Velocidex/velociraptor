@@ -37,12 +37,12 @@ var (
 )
 
 type SMBConnectionContext struct {
-	mu            sync.Mutex
-	err           error
-	server, share string
-	conn          net.Conn
-	session       *smb2.Session
-	mount         map[string]*smb2.Share
+	mu      sync.Mutex
+	err     error
+	server  string
+	conn    net.Conn
+	session *smb2.Session
+	mount   map[string]*smb2.Share
 }
 
 func NewSMBConnectionContext(
@@ -104,7 +104,7 @@ func (self *SMBConnectionContext) Mount(name string) (*smb2.Share, error) {
 
 func (self *SMBConnectionContext) Close() {
 	if self.session != nil {
-		self.session.Logoff()
+		_ = self.session.Logoff()
 	}
 	if self.conn != nil {
 		self.conn.Close()
@@ -148,7 +148,7 @@ func (self *SMBMountCache) GetHandle(server_name string) (
 	}
 
 	// Set to refresh the TTL
-	self.lru.Set(server_name, cached)
+	_ = self.lru.Set(server_name, cached)
 	cached.mu.Lock()
 	return cached, cached.mu.Unlock, err
 }
@@ -161,7 +161,7 @@ func NewSMBMountCache(scope vfilter.Scope) *SMBMountCache {
 		scope: scope,
 		lru:   ttlcache.NewCache(),
 	}
-	result.lru.SetTTL(time.Hour)
+	_ = result.lru.SetTTL(time.Hour)
 	result.lru.SetExpirationCallback(
 		func(key string, value interface{}) error {
 			ctx, ok := value.(*SMBConnectionContext)
@@ -172,7 +172,7 @@ func NewSMBMountCache(scope vfilter.Scope) *SMBMountCache {
 			return nil
 		})
 
-	vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+	_ = vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 		result.lru.Flush()
 		result.lru.Close()
 		cancel()

@@ -110,7 +110,7 @@ func doPoolClient() error {
 	throttler := utils.NewThrottler(*pool_client_start_rate)
 
 	for i := 0; i < number_of_clients; i++ {
-		go func(i int) error {
+		go func(i int) {
 
 			// Wait for our turn
 			throttler.Wait()
@@ -118,7 +118,8 @@ func doPoolClient() error {
 			client_config := &config_proto.Config{}
 			err := json.Unmarshal(serialized, &client_config)
 			if err != nil {
-				return fmt.Errorf("Copying configs: %w", err)
+				logger.Error("Copying configs: %v", err)
+				return
 			}
 			filename := fmt.Sprintf("pool_client.yaml.%d", i)
 
@@ -142,26 +143,26 @@ func doPoolClient() error {
 
 			// Load existing writebacks if we need them
 			writeback_service := writeback.GetWritebackService()
-			writeback_service.LoadWriteback(client_config)
+			_ = writeback_service.LoadWriteback(client_config)
 
 			// Make sure the config is ok.
 			err = crypto_utils.VerifyConfig(client_config)
 			if err != nil {
 				logger.Error("Invalid config: %v", err)
-				return fmt.Errorf("Invalid config: %w", err)
+				return
 			}
 
 			wb, err := writeback_service.GetWriteback(client_config)
 			if err != nil {
 				logger.Error("Writeback: %v", err)
-				return err
+				return
 			}
 
 			exe, err := executor.NewPoolClientExecutor(
 				ctx, wb.ClientId, client_config, i)
 			if err != nil {
 				logger.Error("Can not create executor: %v", err)
-				return fmt.Errorf("Can not create executor: %w", err)
+				return
 			}
 
 			_, err = http_comms.StartHttpCommunicatorService(
@@ -169,12 +170,10 @@ func doPoolClient() error {
 				func(ctx context.Context, config_obj *config_proto.Config) {})
 			if err != nil {
 				logger.Error("StartHttpCommunicatorService: %v", err)
-				return err
+				return
 			}
 
 			c.Inc()
-
-			return nil
 		}(i)
 	}
 

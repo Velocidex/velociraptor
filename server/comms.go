@@ -63,11 +63,6 @@ var (
 		Help: "Number of currently connected clients.",
 	})
 
-	redirectedFrontendCounter = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "frontend_redirect_count",
-		Help: "Number of times the frontend redirected.",
-	})
-
 	sendCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "frontend_send_count",
 		Help: "Number of POST requests frontend sent to the client.",
@@ -728,9 +723,9 @@ func GetLoggingHandler(config_obj *config_proto.Config,
 		return api_utils.HandlerFunc(nil,
 			func(w http.ResponseWriter, r *http.Request) {
 				rec := &http_utils.StatusRecorder{
-					w,
-					w.(http.Flusher),
-					200, nil}
+					ResponseWriter: w,
+					Flusher:        w.(http.Flusher),
+					Status:         200}
 
 				defer func() {
 					logger.WithFields(
@@ -778,7 +773,7 @@ func downloadPublic(
 			w.Header().Set("Content-Type", "binary/octet-stream")
 			w.WriteHeader(200)
 
-			utils.Copy(r.Context(), w, fd)
+			_, _ = utils.Copy(r.Context(), w, fd)
 		})
 }
 

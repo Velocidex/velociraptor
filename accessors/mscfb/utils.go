@@ -36,6 +36,9 @@ func GetMscfbCache(scope vfilter.Scope,
 
 		paged_reader, err := readers.NewAccessorReader(
 			scope, accessor, device, int(lru_size))
+		if err != nil {
+			return nil, err
+		}
 
 		cache_ctx, err = parser.GetOLEContext(paged_reader)
 		if err != nil {

@@ -379,13 +379,16 @@ func doQuery() error {
 
 		// When the scope is destroyed store it in the file again.
 		if !*do_not_update {
-			scope.AddDestructor(func() {
+			err := scope.AddDestructor(func() {
 				err := storeScopeInFile(*scope_file, scope)
 				if err != nil {
 					scope.Log("Storing scope in %v: %v",
 						*scope_file, err)
 				}
 			})
+			if err != nil {
+				return err
+			}
 		}
 
 	}
@@ -415,7 +418,11 @@ func doQuery() error {
 	t, closer := throttler.NewThrottler(
 		ctx, scope, config_obj, 0, *query_command_collect_cpu_limit, 0)
 	scope.SetThrottler(t)
-	scope.AddDestructor(closer)
+	err = scope.AddDestructor(closer)
+	if err != nil {
+		closer()
+		return err
+	}
 
 	out_fd := os.Stdout
 	if *output_file != "" {

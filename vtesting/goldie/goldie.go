@@ -13,7 +13,7 @@ import (
 
 func Retry(r *assert.R, t *testing.T, filename string, golden []byte) {
 	g := goldie.New(t)
-	g.WithFixtureDir("fixtures")
+	_ = g.WithFixtureDir("fixtures")
 
 	if r.MaxAttempts == r.Attempt {
 		g.Assert(t, filename, golden)
@@ -39,7 +39,7 @@ func Assert(t *testing.T, filename string, golden []byte) {
 	t.Helper()
 
 	g := goldie.New(t)
-	g.WithFixtureDir("fixtures")
+	_ = g.WithFixtureDir("fixtures")
 	g.Assert(t, filename, golden)
 }
 
@@ -47,7 +47,7 @@ func AssertJson(t *testing.T, filename string, golden interface{}) {
 	t.Helper()
 
 	g := goldie.New(t)
-	g.WithFixtureDir("fixtures")
+	_ = g.WithFixtureDir("fixtures")
 	g.Assert(t, filename, MustMarshalIndent(golden))
 }
 

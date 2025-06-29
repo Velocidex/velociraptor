@@ -239,8 +239,6 @@ func (self *RawRegValueInfo) Data() *ordereddict.Dict {
 
 type RawValueBuffer struct {
 	*bytes.Reader
-
-	info *RawRegValueInfo
 }
 
 type rawHiveCache struct {
@@ -406,11 +404,14 @@ func (self *RawRegFileSystemAccessor) _readDirWithOSPath(
 
 	// Cache the result of this function
 	defer func() {
-		self.cache.readdir_lru.Set(cache_key, &readDirLRUItem{
+		err1 := self.cache.readdir_lru.Set(cache_key, &readDirLRUItem{
 			children: result,
 			err:      err,
 			key:      key,
 		})
+		if err1 != nil && err == nil {
+			err = err1
+		}
 	}()
 
 	// Listing the top level of the hive.

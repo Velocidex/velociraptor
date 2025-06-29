@@ -52,7 +52,13 @@ func toolUploadHandler() http.Handler {
 				returnError(w, http.StatusBadRequest, "Unsupported params")
 				return
 			}
-			defer r.MultipartForm.RemoveAll()
+			defer func() {
+				err := r.MultipartForm.RemoveAll()
+				if err != nil {
+					logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
+					logger.Error("toolUploadHandler MultipartForm.RemoveAll: %v", err)
+				}
+			}()
 
 			tool := &artifacts_proto.Tool{}
 			params, pres := r.Form["_params_"]
@@ -181,7 +187,13 @@ func formUploadHandler() http.Handler {
 				returnError(w, http.StatusBadRequest, "Unsupported params")
 				return
 			}
-			defer r.MultipartForm.RemoveAll()
+			defer func() {
+				err := r.MultipartForm.RemoveAll()
+				if err != nil {
+					logger := logging.GetLogger(org_config_obj, &logging.GUIComponent)
+					logger.Error("formUploadHandler MultipartForm.RemoveAll: %v", err)
+				}
+			}()
 
 			form_desc := &api_proto.FormUploadMetadata{}
 			params, pres := r.Form["_params_"]

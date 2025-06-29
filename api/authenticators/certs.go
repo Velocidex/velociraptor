@@ -89,6 +89,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -99,9 +100,7 @@ var (
 
 // Certificate based authenticator.
 type CertAuthenticator struct {
-	config_obj       *config_proto.Config
-	base, public_url string
-
+	config_obj    *config_proto.Config
 	x509_roots    *x509.CertPool
 	default_roles []string
 }
@@ -113,7 +112,7 @@ func (self *CertAuthenticator) AddHandlers(mux *api_utils.ServeMux) error {
 
 // It is not really possible to log off when using client certs
 func (self *CertAuthenticator) AddLogoff(mux *api_utils.ServeMux) error {
-	mux.Handle(api_utils.Join(self.base, "/app/logoff.html"),
+	mux.Handle(api_utils.GetBasePath(self.config_obj, "/app/logoff.html"),
 		IpFilter(self.config_obj,
 			api_utils.HandlerFunc(nil,
 				func(w http.ResponseWriter, r *http.Request) {
@@ -188,11 +187,16 @@ func (self *CertAuthenticator) AuthenticateUserHandler(
 				policy := &acl_proto.ApiClientACL{
 					Roles: self.default_roles,
 				}
-				services.LogAudit(r.Context(),
+				err := services.LogAudit(r.Context(),
 					self.config_obj, username, "Automatic User Creation",
 					ordereddict.NewDict().
 						Set("roles", self.default_roles).
 						Set("remote", r.RemoteAddr))
+				if err != nil {
+					logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+					logger.Error("GetUser LogAudit: Automatic User Creation %v %v",
+						username, r.RemoteAddr)
+				}
 
 				// Use the super user principal to actually add the
 				// username so we have enough permissions.
@@ -218,11 +222,16 @@ func (self *CertAuthenticator) AuthenticateUserHandler(
 			// Does the user have access to the specified org?
 			err = CheckOrgAccess(self.config_obj, r, user_record, permission)
 			if err != nil {
-				services.LogAudit(r.Context(),
+				err := services.LogAudit(r.Context(),
 					self.config_obj, user_record.Name, "Unauthorized username",
 					ordereddict.NewDict().
 						Set("remote", r.RemoteAddr).
 						Set("status", http.StatusUnauthorized))
+				if err != nil {
+					logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+					logger.Error("CheckOrgAccess LogAudit: Unauthorized username %v %v",
+						user_record.Name, r.RemoteAddr)
+				}
 
 				http.Error(w,
 					fmt.Sprintf("authorization failed: %v", err),

@@ -123,10 +123,14 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 	sub_ctx, cancel := context.WithCancel(ctx)
 
 	// Remove the generator when the scope destroys.
-	vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+	err = vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 		scope.Log("generate: Removing generator %v", arg.Name)
 		cancel()
 	})
+	if err != nil {
+		scope.Log("generate: %v", err)
+		cancel()
+	}
 
 	go func() {
 		defer close(generator_chan)

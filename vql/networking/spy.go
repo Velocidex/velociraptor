@@ -92,7 +92,7 @@ func spyOnWSDialer(dialer *websocket.Dialer, fd *os.File) *websocket.Dialer {
 			return nil, err
 		}
 
-		fd.Write([]byte(fmt.Sprintf("\n--- %v %v->%v\n\n",
+		_, _ = fd.Write([]byte(fmt.Sprintf("\n--- %v %v->%v\n\n",
 			utils.GetTime().Now().Format(time.RFC3339),
 			network, addr)))
 		return WrapConnection(tlsConn, fd), nil
@@ -134,7 +134,7 @@ func spyOnTransport(transport *http.Transport, fd *os.File) *http.Transport {
 			return nil, err
 		}
 
-		fd.Write([]byte(fmt.Sprintf("\n--- %v %v->%v\n\n",
+		_, _ = fd.Write([]byte(fmt.Sprintf("\n--- %v %v->%v\n\n",
 			utils.GetTime().Now().Format(time.RFC3339),
 			network, address)))
 		return WrapConnection(c, fd), nil
@@ -168,7 +168,7 @@ func spyOnTransport(transport *http.Transport, fd *os.File) *http.Transport {
 			return nil, err
 		}
 
-		fd.Write([]byte(fmt.Sprintf("\n--- %v %v->%v\n\n",
+		_, _ = fd.Write([]byte(fmt.Sprintf("\n--- %v %v->%v\n\n",
 			utils.GetTime().Now().Format(time.RFC3339),
 			network, address)))
 		return WrapConnection(tlsConn, fd), nil
@@ -191,7 +191,7 @@ type spyConnection struct {
 
 func (self *spyConnection) Read(b []byte) (int, error) {
 	n, err := self.Conn.Read(b)
-	self.fd.Write([]byte(fmt.Sprintf("\n--- %v %s->%s %v bytes\n\n%v",
+	_, _ = self.fd.Write([]byte(fmt.Sprintf("\n--- %v %s->%s %v bytes\n\n%v",
 		utils.GetTime().Now().Format(time.RFC3339),
 		self.RemoteAddr(), self.LocalAddr(),
 		n, string(b[:n]))))
@@ -200,7 +200,7 @@ func (self *spyConnection) Read(b []byte) (int, error) {
 
 func (self *spyConnection) Write(b []byte) (int, error) {
 	n, err := self.Conn.Write(b)
-	self.fd.Write([]byte(fmt.Sprintf("\n--- %v  %s->%s %v bytes\n\n%v",
+	_, _ = self.fd.Write([]byte(fmt.Sprintf("\n--- %v  %s->%s %v bytes\n\n%v",
 		utils.GetTime().Now().Format(time.RFC3339),
 		self.LocalAddr(), self.RemoteAddr(),
 		n, string(b[:n]))))

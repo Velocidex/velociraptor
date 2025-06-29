@@ -3,6 +3,8 @@ package fuse
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
+	"io"
 	"strings"
 	"time"
 
@@ -66,7 +68,7 @@ func (self *Options) parseTimestamps(
 		reader := bufio.NewReader(fd)
 		for {
 			row_data, err := reader.ReadBytes('\n')
-			if len(row_data) == 0 {
+			if len(row_data) == 0 || (err != nil && !errors.Is(err, io.EOF)) {
 				break
 			}
 

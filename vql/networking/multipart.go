@@ -97,7 +97,10 @@ func GetMultiPartReader(
 	result.multipart_writer = multipart.NewWriter(
 		result.parameters_buffer)
 	if BoundaryForTests != "" {
-		result.multipart_writer.SetBoundary(BoundaryForTests)
+		err := result.multipart_writer.SetBoundary(BoundaryForTests)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Encode any parameters into the form first
@@ -118,7 +121,9 @@ func GetMultiPartReader(
 		result.multipart_writer.Boundary()))
 
 	// Start streaming output
-	go result.Start()
+	go func() {
+		_ = result.Start()
+	}()
 
 	return result, nil
 }
@@ -206,7 +211,10 @@ func (self *multiPartReader) Start() error {
 		}
 
 		// Now close the file.
-		file_info.closer()
+		err = file_info.closer()
+		if err != nil {
+			return err
+		}
 	}
 
 	// Write the end boundary

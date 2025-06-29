@@ -41,10 +41,9 @@ import (
 
 // Holds multiple artifact definitions.
 type Repository struct {
-	mu          sync.Mutex
-	Data        map[string]*artifacts_proto.Artifact
-	metadata    *metadataManager
-	loaded_dirs []string
+	mu       sync.Mutex
+	Data     map[string]*artifacts_proto.Artifact
+	metadata *metadataManager
 
 	// Each repository may have a parent - we search for the artifact
 	// in our parents as well.

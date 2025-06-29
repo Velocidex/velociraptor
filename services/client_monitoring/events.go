@@ -47,10 +47,18 @@ func listAvailableEventTimestamps(
 	}
 
 	timestamps, err := listAvailableEventTimestampFiles(ctx, config_obj, path_manager)
+	if err != nil {
+		return nil, err
+	}
+
 	result.Logs[0].RowTimestamps = timestamps
 
 	timestamps, err = listAvailableEventTimestampFiles(
 		ctx, config_obj, path_manager.Logs())
+	if err != nil {
+		return nil, err
+	}
+
 	result.Logs[0].LogTimestamps = timestamps
 
 	return result, nil
@@ -161,12 +169,11 @@ func getAllArtifacts(
 				}
 
 				artifact_name := strings.Join(relative_path, "/")
-				event, pres := seen[artifact_name]
+				_, pres = seen[artifact_name]
 				if !pres {
-					event = &api_proto.AvailableEvent{
+					seen[artifact_name] = &api_proto.AvailableEvent{
 						Artifact: artifact_name,
 					}
-					seen[artifact_name] = event
 				}
 			}
 			return nil

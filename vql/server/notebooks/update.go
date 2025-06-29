@@ -7,6 +7,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -115,12 +116,16 @@ func (self UpdateNotebookCellFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		config_obj, principal, "UpdateNotebookCell",
 		ordereddict.NewDict().
 			Set("notebook_id", notebook.NotebookId).
 			Set("cell_id", arg.CellId).
 			Set("details", vfilter.RowToDict(ctx, scope, arg)))
+	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Error("<red>UpdateNotebookCell</> %v %v", principal, notebook.NotebookId)
+	}
 
 	return notebook
 }
@@ -229,11 +234,15 @@ func (self UpdateNotebookFunction) Call(ctx context.Context,
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		config_obj, principal, "UpdateNotebookCell",
 		ordereddict.NewDict().
 			Set("notebook_id", notebook.NotebookId).
 			Set("details", vfilter.RowToDict(ctx, scope, arg)))
+	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Error("<red>UpdateNotebookCell</> %v %v", principal, notebook.NotebookId)
+	}
 
 	return notebook
 }

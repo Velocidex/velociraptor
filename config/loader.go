@@ -470,7 +470,9 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 		// directive when they prepare the config loader.
 		if self.use_writeback {
 			writeback_service := writeback.GetWritebackService()
-			writeback_service.LoadWriteback(config_obj)
+
+			// It is ok if writeback is not readable - we will create
+			_ = writeback_service.LoadWriteback(config_obj)
 		}
 		err := ValidateClientConfig(config_obj)
 		if err != nil {
@@ -532,5 +534,5 @@ func read_api_config_from_file(filename string) (*config_proto.Config, error) {
 func debug(message string, args ...interface{}) {
 	return
 
-	logging.Prelog(message, args...)
+	// logging.Prelog(message, args...)
 }

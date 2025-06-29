@@ -79,8 +79,12 @@ func (self *ServerArtifactRunner) LaunchServerArtifact(
 		defer cancel()
 		defer collection_context_manager.Close(self.ctx)
 
-		self.ProcessTask(sub_ctx, config_obj,
+		err := self.ProcessTask(sub_ctx, config_obj,
 			session_id, collection_context_manager, req)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("<red>ServerArtifactRunner ProcessTask</> %v", err)
+		}
 	}()
 
 	return nil
@@ -108,6 +112,11 @@ func (self *ServerArtifactRunner) ProcessTask(
 	collection_context CollectionContextManager,
 	req *crypto_proto.FlowRequest) error {
 
+	var (
+		err error
+		mu  sync.Mutex
+	)
+
 	defer collection_context.Close(ctx)
 
 	// Wait here for all the queries to exit then remove them from the
@@ -127,13 +136,22 @@ func (self *ServerArtifactRunner) ProcessTask(
 		go func(task *actions_proto.VQLCollectorArgs) {
 			defer wg.Done()
 
-			collection_context.RunQuery(task)
+			err1 := collection_context.RunQuery(task)
+			if err1 != nil {
+				mu.Lock()
+				if err == nil {
+					err = err1
+				}
+				mu.Unlock()
+			}
 		}(task)
 	}
 
 	wg.Wait()
 
-	return nil
+	mu.Lock()
+	defer mu.Unlock()
+	return err
 }
 
 func NewServerArtifactService(
