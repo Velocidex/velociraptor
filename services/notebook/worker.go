@@ -108,7 +108,10 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 		fmt.Sprintf("Notebook %v", in.NotebookId))
 	t, closer := throttler.NewThrottler(ctx, tmpl.Scope, config_obj, 0, 0, 0)
 	tmpl.Scope.SetThrottler(t)
-	tmpl.Scope.AddDestructor(closer)
+	err = tmpl.Scope.AddDestructor(closer)
+	if err != nil {
+		return nil, err
+	}
 
 	// Register a progress reporter so we can monitor how the
 	// template rendering is going.
@@ -260,7 +263,10 @@ func (self *NotebookWorker) updateCellContents(
 		error_cell.Calculating = false
 		error_cell.Error = err.Error()
 
-		store.SetNotebookCell(notebook_id, error_cell)
+		err1 := store.SetNotebookCell(notebook_id, error_cell)
+		if err1 != nil {
+			return nil, err1
+		}
 
 		return error_cell, fmt.Errorf("%w: While rendering notebook cell: %v",
 			utils.InlineError, err)
@@ -491,8 +497,6 @@ func (self *NotebookWorker) RegisterWorker(
 			job.Done(string(serialized), err)
 		}
 	}
-
-	return nil
 }
 
 type WorkerPool struct {

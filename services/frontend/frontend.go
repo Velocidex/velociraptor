@@ -69,7 +69,7 @@ func PushMetrics(ctx context.Context, wg *sync.WaitGroup,
 				rows[0] = ordereddict.NewDict().
 					Set("Node", node_name).
 					Set("Metrics", metrics.ToDict())
-				err = journal.PushRowsToArtifact(ctx, config_obj,
+				_ = journal.PushRowsToArtifact(ctx, config_obj,
 					rows, "Server.Internal.FrontendMetrics",
 					"server", "")
 			}
@@ -346,13 +346,14 @@ func (self *MasterFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup
 	}
 
 	go self.UpdateStats(ctx)
-	go utils.Retry(ctx, func() error {
-		return journal.WatchQueueWithCB(ctx, config_obj, wg,
-			"Server.Internal.FrontendMetrics",
-			"FrontendService",
-			self.processMetrics)
-	}, 10, time.Second)
-
+	go func() {
+		_ = utils.Retry(ctx, func() error {
+			return journal.WatchQueueWithCB(ctx, config_obj, wg,
+				"Server.Internal.FrontendMetrics",
+				"FrontendService",
+				self.processMetrics)
+		}, 1000, time.Second)
+	}()
 	return err
 }
 

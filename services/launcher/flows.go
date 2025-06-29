@@ -169,8 +169,11 @@ func (self *Launcher) CancelFlow(
 			collection_context.Backtrace = ""
 		}
 
-		self.Storage().WriteFlow(
+		err := self.Storage().WriteFlow(
 			ctx, config_obj, collection_context, utils.BackgroundWriter)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Get all queued tasks for the client and delete only those in this flow.

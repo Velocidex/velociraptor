@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package networking
@@ -13,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -64,6 +66,10 @@ func (self *ConnectionStat) TypeString() string {
 	default:
 		return fmt.Sprintf("%d", self.Type)
 	}
+}
+
+func (self *ConnectionStat) Timestamp() time.Time {
+	return self.timestamp
 }
 
 // parse addressses

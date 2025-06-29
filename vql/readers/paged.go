@@ -67,13 +67,13 @@ type ReaderPool struct {
 
 // Moves the reader to the head of the LRU.
 func (self *ReaderPool) Activate(reader *AccessorReader) {
-	self.lru.Set(reader.Key(), reader)
+	_ = self.lru.Set(reader.Key(), reader)
 }
 
 // Flush all contained readers.
 func (self *ReaderPool) Close() {
 	for _, k := range self.lru.GetKeys() {
-		self.lru.Remove(k)
+		_ = self.lru.Remove(k)
 	}
 	self.lru.Close()
 }
@@ -366,7 +366,7 @@ func NewAccessorReader(scope vfilter.Scope,
 		lru_size: lru_size,
 	}
 
-	pool.lru.Set(key, result)
+	_ = pool.lru.Set(key, result)
 
 	return result, nil
 }

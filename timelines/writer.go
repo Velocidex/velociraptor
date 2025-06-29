@@ -127,8 +127,8 @@ func (self *TimelineWriter) WriteBuffer(
 }
 
 func (self *TimelineWriter) Truncate() {
-	self.fd.Truncate()
-	self.index_fd.Truncate()
+	_ = self.fd.Truncate()
+	_ = self.index_fd.Truncate()
 }
 
 func (self *TimelineWriter) Close() {
@@ -164,8 +164,8 @@ func NewTimelineWriter(
 	}
 
 	if truncate {
-		fd.Truncate()
-		index_fd.Truncate()
+		_ = fd.Truncate()
+		_ = index_fd.Truncate()
 	}
 
 	result.fd = fd

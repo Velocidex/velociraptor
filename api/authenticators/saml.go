@@ -127,7 +127,7 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 			w.Header().Set("X-CSRF-Token", csrf.Token(r))
 
 			session, err := samlMiddleware.Session.GetSession(r)
-			if session == nil {
+			if session == nil || err != nil {
 				reject_handler.ServeHTTP(w, r)
 				return
 			}
@@ -142,13 +142,19 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 
 			user_record, err := self.MaybeCreateUser(r.Context(), username, r.RemoteAddr)
 			if err != nil {
-				services.LogAudit(r.Context(),
-					self.config_obj, username, "Authorization failed",
+				err := services.LogAudit(r.Context(),
+					self.config_obj, username, "Authorization Failed",
 					ordereddict.NewDict().
 						Set("error", err).
 						Set("username", username).
 						Set("roles", self.user_roles).
 						Set("remote", r.RemoteAddr))
+				if err != nil {
+					logger := logging.Manager.GetLogger(self.config_obj, &logging.GUIComponent)
+					logger.Error("<red>Authorization failed</> %v %v %v",
+						username, err, r.RemoteAddr)
+				}
+
 				http.Error(w,
 					fmt.Sprintf("authorization failed: %v", err),
 					http.StatusUnauthorized)
@@ -156,13 +162,17 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 			}
 			err = self.MaybeAssignRoles(r.Context(), username)
 			if err != nil {
-				services.LogAudit(r.Context(),
-					self.config_obj, username, "authorization failed: role assignment failed",
+				err := services.LogAudit(r.Context(),
+					self.config_obj, username, "Role Assignment Failed",
 					ordereddict.NewDict().
 						Set("username", username).
 						Set("roles", self.user_roles).
-						Set("remote", r.RemoteAddr).
-						Set("status", http.StatusUnauthorized))
+						Set("remote", r.RemoteAddr))
+				if err != nil {
+					logger := logging.Manager.GetLogger(self.config_obj, &logging.GUIComponent)
+					logger.Error("<red>Role Assignment Failed</> %v %v",
+						username, r.RemoteAddr)
+				}
 
 				http.Error(w,
 					fmt.Sprintf("authorization failed: role assignment failed: %v", err),
@@ -173,13 +183,18 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 			// Does the user have access to the specified org?
 			err = CheckOrgAccess(self.config_obj, r, user_record, permission)
 			if err != nil {
-				services.LogAudit(r.Context(),
+				err := services.LogAudit(r.Context(),
 					self.config_obj, username, "authorization failed: user not registered and no saml_user_roles set",
 					ordereddict.NewDict().
 						Set("username", username).
 						Set("roles", self.user_roles).
 						Set("remote", r.RemoteAddr).
 						Set("status", http.StatusUnauthorized))
+				if err != nil {
+					logger := logging.Manager.GetLogger(self.config_obj, &logging.GUIComponent)
+					logger.Error("<red>no saml_user_roles set</> %v %v",
+						username, r.RemoteAddr)
+				}
 
 				http.Error(w,
 					fmt.Sprintf("authorization failed: user not registered - contact your system administrator: %v", err),
@@ -206,7 +221,7 @@ func (self *SamlAuthenticator) MaybeCreateUser(ctx context.Context, username str
 	if errors.Is(err, utils.NotFoundError) {
 		// we only create users if the "user_roles" option is set
 		if len(self.user_roles) == 0 {
-			services.LogAudit(ctx,
+			_ = services.LogAudit(ctx,
 				self.config_obj, username, "Authorization failed: no saml user roles assigned",
 				ordereddict.NewDict().
 					Set("username", username).

@@ -9,6 +9,7 @@ import (
 	"github.com/Velocidex/ttlcache/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -108,9 +109,7 @@ func (self *Labeler) getRecord(
 	}
 
 	// Now set back to the lru with lock
-	self.lru.Set(client_id, cached)
-
-	return cached, nil
+	return cached, self.lru.Set(client_id, cached)
 }
 
 func (self *Labeler) LastLabelTimestamp(
@@ -190,7 +189,7 @@ func (self *Labeler) SetClientLabel(
 	err = client_info_manager.Modify(ctx, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if client_info == nil {
-				client_info = &services.ClientInfo{}
+				client_info = &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
 				client_info.ClientId = client_id
 			}
 
@@ -215,7 +214,7 @@ func (self *Labeler) SetClientLabel(
 
 	// Remove the record from the LRU - we will retrieve it from the
 	// client info manager later.
-	self.lru.Remove(client_id)
+	_ = self.lru.Remove(client_id)
 
 	// Notify any clients that labels are added.
 	err = self.notifyClient(ctx, config_obj, client_id, new_label, "Add")
@@ -247,7 +246,7 @@ func (self *Labeler) RemoveClientLabel(
 	err = client_info_manager.Modify(ctx, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if client_info == nil {
-				client_info = &services.ClientInfo{}
+				client_info = &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
 				client_info.ClientId = client_id
 			}
 
@@ -277,7 +276,7 @@ func (self *Labeler) RemoveClientLabel(
 
 	// Remove the record from the LRU - we will retrieve it from the
 	// client info manager later.
-	self.lru.Remove(client_id)
+	_ = self.lru.Remove(client_id)
 
 	err = self.notifyClient(ctx, config_obj, client_id, new_label, "Remove")
 	if err != nil {
@@ -320,7 +319,7 @@ func (self *Labeler) ProcessRow(
 
 	client_id, pres := row.GetString("client_id")
 	if pres {
-		self.lru.Remove(client_id)
+		_ = self.lru.Remove(client_id)
 	}
 	return nil
 }

@@ -47,7 +47,7 @@ func (self AtExitFunction) Call(
 			subscope.AppendVars(arg.Env)
 		}
 
-		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+		err := vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 			scope.Log("Running AtExit query %v", vfilter.FormatToString(scope, t))
 
 			// We need to create a new context to run the
@@ -61,6 +61,9 @@ func (self AtExitFunction) Call(
 			for _ = range t.Eval(ctx, subscope) {
 			}
 		})
+		if err != nil {
+			scope.Log("atexit: %v", err)
+		}
 	default:
 		scope.Log("atexit: Query type %T not supported.", arg.Query)
 	}

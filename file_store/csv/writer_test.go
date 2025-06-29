@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
 var writeTests = []struct {
@@ -135,7 +136,9 @@ func TestWriteAny(t *testing.T) {
 
 		rows := [][]interface{}{}
 
-		r := NewReader(strings.NewReader(out))
+		r, err := NewReader(strings.NewReader(out))
+		assert.NoError(t, err)
+
 		for {
 			row, err := r.ReadAny()
 			if err != nil {

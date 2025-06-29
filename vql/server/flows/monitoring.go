@@ -226,7 +226,7 @@ func (self WatchMonitoringPlugin) Call(
 
 		// Make sure to call this at shutdown (defer is not guaranteed
 		// to run).
-		scope.AddDestructor(cancel)
+		_ = scope.AddDestructor(cancel)
 
 		for row := range qm_chan {
 			select {

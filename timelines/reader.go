@@ -105,7 +105,7 @@ func (self *TimelineReader) Read(ctx context.Context) <-chan TimelineItem {
 	go func() {
 		defer close(output_chan)
 
-		self.fd.Seek(self.offset, os.SEEK_SET)
+		_, _ = self.fd.Seek(self.offset, os.SEEK_SET)
 		reader := bufio.NewReader(self.fd)
 		for {
 			select {

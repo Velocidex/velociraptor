@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -25,10 +26,6 @@ var (
 
 	deaddisk_command_add_windows_disk = deaddisk_command.Flag(
 		"add_windows_disk", "Add a Windows Hard Disk Image").String()
-
-	deaddisk_command_add_windows_disk_offset = deaddisk_command.Flag(
-		"offset", "The offset of the partition inside the disk").
-		Default("-1").Int64()
 
 	deaddisk_command_add_windows_directory = deaddisk_command.Flag(
 		"add_windows_directory", "Add a Windows mounted directory").String()
@@ -59,6 +56,11 @@ func doDeadDisk() error {
 	}
 	if image_path == "" {
 		return fmt.Errorf("Either --add_windows_disk or --add_windows_directory should be specified.")
+	}
+
+	image_path, err = filepath.Abs(image_path)
+	if err != nil {
+		return err
 	}
 
 	logger := &LogWriter{config_obj: config_obj}

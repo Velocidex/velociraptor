@@ -37,7 +37,7 @@ type ProcessReader struct {
 	ranges []*uploads.Range
 }
 
-func (self ProcessReader) Close() error {
+func (self *ProcessReader) Close() error {
 	return self.handle.Close()
 }
 
@@ -162,7 +162,7 @@ func (self *ProcessReader) Seek(offset int64, whence int) (int64, error) {
 	return int64(self.offset), nil
 }
 
-func (self ProcessReader) Stat() (os.FileInfo, error) {
+func (self *ProcessReader) Stat() (os.FileInfo, error) {
 	full_path, _ := accessors.NewLinuxOSPath(fmt.Sprintf("%v", self.pid))
 	return &accessors.VirtualFileInfo{
 		Path:  full_path,
@@ -172,19 +172,17 @@ func (self ProcessReader) Stat() (os.FileInfo, error) {
 
 type ProcessAccessor struct{}
 
-const _ProcessAccessorTag = "_ProcessAccessor"
-
 func (self ProcessAccessor) New(scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
 	return &ProcessAccessor{}, nil
 }
 
 func (self ProcessAccessor) ReadDir(path string) ([]accessors.FileInfo, error) {
-	return nil, errors.New("Unable to list all processes, use the pslist() plugin.")
+	return nil, errors.New("Unable to list all processes, use the pslist() plugin")
 }
 
 func (self ProcessAccessor) ReadDirWithOSPath(
 	path *accessors.OSPath) ([]accessors.FileInfo, error) {
-	return nil, errors.New("Unable to list all processes, use the pslist() plugin.")
+	return nil, errors.New("Unable to list all processes, use the pslist() plugin")
 }
 
 func (self ProcessAccessor) Lstat(filename string) (accessors.FileInfo, error) {

@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/timelines"
@@ -99,12 +100,18 @@ func (self *SuperTimelineAnnotatorImpl) AnnotateTimeline(
 			TimestampColumn: constants.TIMELINE_DEFAULT_KEY,
 			MessageColumn:   constants.TIMELINE_DEFAULT_MESSAGE,
 		}
-		defer self.SuperTimelineStorer.UpdateTimeline(
-			ctx, notebook_id, supertimeline, timeline)
+		defer func() {
+			_, err := self.SuperTimelineStorer.UpdateTimeline(
+				ctx, notebook_id, supertimeline, timeline)
+			if err != nil {
+				logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+				logger.Error("<red>SuperTimelineStorer UpdateTimeline</> %v", err)
+			}
+		}()
 
 		// Timelines have to be sorted, so we force them to be sorted
 		// by the key.
-		sorter := sorter.MergeSorter{10000}
+		sorter := sorter.MergeSorter{ChunkSize: 10000}
 		sorted_chan := sorter.Sort(ctx, scope, in,
 			constants.TIMELINE_DEFAULT_KEY, false /* desc */)
 
@@ -117,7 +124,7 @@ func (self *SuperTimelineAnnotatorImpl) AnnotateTimeline(
 			if !utils.IsNil(key) {
 				ts, err := functions.TimeFromAny(ctx, scope, key)
 				if err == nil {
-					writer.Write(ts, vfilter.RowToDict(ctx, scope, row))
+					_ = writer.Write(ts, vfilter.RowToDict(ctx, scope, row))
 				}
 
 				if timeline.StartTime == 0 {

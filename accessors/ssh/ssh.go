@@ -40,10 +40,15 @@ func (self SSHFileSystemAccessor) New(scope vfilter.Scope) (accessors.FileSystem
 	}
 
 	// Close the ssh client when the scope destroys.
-	vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+	err = vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 		sftp_client.Close()
 		_ = closer()
 	})
+	if err != nil {
+		sftp_client.Close()
+		_ = closer()
+		return nil, err
+	}
 
 	return &SSHFileSystemAccessor{
 		scope:       scope,
@@ -130,5 +135,5 @@ func (self SSHFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPath) (
 
 func init() {
 	accessors.Register("ssh", &SSHFileSystemAccessor{},
-	`Access a remote system's filesystem via SSH/SFTP.`)
+		`Access a remote system's filesystem via SSH/SFTP.`)
 }

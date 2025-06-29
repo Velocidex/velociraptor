@@ -88,9 +88,12 @@ func (self CollectPlugin) Call(
 		collection_manager.remapping = arg.Remapping
 
 		// Make sure the Close() is called under any circumstances.
-		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+		err = vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 			collection_manager.Close()
 		})
+		if err != nil {
+			scope.Log("collect: %v", err)
+		}
 
 		defer func() {
 			err := collection_manager.Close()

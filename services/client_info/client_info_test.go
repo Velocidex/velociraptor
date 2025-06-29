@@ -97,7 +97,7 @@ func (self *ClientInfoTestSuite) TestClientInfoModify() {
 	err = client_info_manager.Modify(self.Ctx, "C.DOESNOTEXIT",
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			assert.Nil(self.T(), client_info)
-			return &services.ClientInfo{actions_proto.ClientInfo{
+			return &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{
 				ClientId: "C.DOESNOTEXIT",
 				Ping:     20,
 			}}, nil

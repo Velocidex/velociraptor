@@ -89,7 +89,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 			}
 		}()
 
-		err = client_info_manager.DeleteClient(ctx, arg.ClientId, principal,
+		_ = client_info_manager.DeleteClient(ctx, arg.ClientId, principal,
 			progress, arg.ReallyDoIt)
 
 		close(progress)

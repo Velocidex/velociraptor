@@ -770,7 +770,10 @@ func NewContainerFromWriter(
 			if err != nil {
 				return nil, err
 			}
-			fh.Write(json.MustMarshalIndent(metadata))
+			_, err = fh.Write(json.MustMarshalIndent(metadata))
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		// We are writing a zip file into here - no need to
@@ -799,8 +802,12 @@ func NewContainerFromWriter(
 			if err != nil {
 				return nil, err
 			}
-			fh.Write(json.MustMarshalIndent(metadata))
-			fh.Close()
+			defer fh.Close()
+
+			_, err = fh.Write(json.MustMarshalIndent(metadata))
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

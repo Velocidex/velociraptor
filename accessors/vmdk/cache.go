@@ -60,7 +60,12 @@ func getCachedVMDKFile(
 			cache: make(map[string]*VMDKFile),
 		}
 		// Cache will remain alive for the duration of the query.
-		vql_subsystem.GetRootScope(scope).AddDestructor(cache.Close)
+		err := vql_subsystem.GetRootScope(scope).AddDestructor(cache.Close)
+		if err != nil {
+			cache.Close()
+			return nil, err
+		}
+
 		vql_subsystem.CacheSet(scope, VMDK_CACHE_TAG, cache)
 	}
 

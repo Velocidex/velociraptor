@@ -16,7 +16,6 @@ package accessors
 import (
 	"fmt"
 	"strings"
-	"sync"
 
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -66,7 +65,7 @@ func (self *node) Debug() string {
 	res := fmt.Sprintf("node: %v, prefix: %v, accessor: %T\n",
 		self.name, self.prefix.String(), self.accessor)
 	for _, c := range self.children {
-		res += fmt.Sprintf("  %v\n", strings.Replace(c.Debug(), "\n", "  \n", -1))
+		res += fmt.Sprintf("  %v\n", strings.ReplaceAll(c.Debug(), "\n", "  \n"))
 	}
 	return res
 }
@@ -151,7 +150,6 @@ func (self FileInfoWrapper) OSPath() *OSPath {
 // A mount accessor maps several delegate accessors inside the same
 // filesystem tree emulating mount points.
 type MountFileSystemAccessor struct {
-	mu    sync.Mutex
 	scope vfilter.Scope
 
 	// The root filesystem is the one registered
@@ -299,7 +297,7 @@ func (self *MountFileSystemAccessor) OpenWithOSPath(
 	return delegate_node.accessor.OpenWithOSPath(delegate_path)
 }
 
-func (self MountFileSystemAccessor) Lstat(path string) (FileInfo, error) {
+func (self *MountFileSystemAccessor) Lstat(path string) (FileInfo, error) {
 	// Parse the path into an OSPath
 	os_path, err := self.ParsePath(path)
 	if err != nil {
@@ -309,7 +307,7 @@ func (self MountFileSystemAccessor) Lstat(path string) (FileInfo, error) {
 	return self.LstatWithOSPath(os_path)
 }
 
-func (self MountFileSystemAccessor) LstatWithOSPath(os_path *OSPath) (FileInfo, error) {
+func (self *MountFileSystemAccessor) LstatWithOSPath(os_path *OSPath) (FileInfo, error) {
 	delegate_node, delegate_path, err := self.getDelegatePath(os_path)
 	if err != nil {
 		return nil, err

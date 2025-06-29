@@ -205,7 +205,7 @@ func (self ResultSetFactory) getSortedReader(
 	sorted_chan, closer, err := NewStacker(sub_ctx, scope,
 		stacker_path,
 		file_store_factory, self,
-		sorter.MergeSorter{10000}.Sort(
+		sorter.MergeSorter{ChunkSize: 10000}.Sort(
 			ctx, scope, sorter_input_chan,
 			options.SortColumn, options.SortAsc),
 		options.SortColumn)

@@ -27,7 +27,7 @@ func (self *Indexer) searchRecentsChan(
 	principal string) (
 	chan *api_proto.ApiClient, error) {
 
-	path_manager := &paths.UserPathManager{principal}
+	path_manager := &paths.UserPathManager{Name: principal}
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err

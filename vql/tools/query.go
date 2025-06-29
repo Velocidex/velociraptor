@@ -150,7 +150,10 @@ func (self QueryPlugin) Call(
 			scope.Log("query: Installing a progress alarm for %v", duration)
 		}
 		subscope.SetThrottler(throttler)
-		subscope.AddDestructor(closer)
+		err = subscope.AddDestructor(closer)
+		if err != nil {
+			scope.Log("query: %v", err)
+		}
 
 		runQuery(ctx, subscope, output_chan, arg.Query)
 	}()

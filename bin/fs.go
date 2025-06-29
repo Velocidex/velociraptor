@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	kingpin "github.com/alecthomas/kingpin/v2"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -404,17 +405,21 @@ func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case fs_command_ls.FullCommand():
-			doLS(*fs_command_ls_path, *fs_command_accessor)
+			err := doLS(*fs_command_ls_path, *fs_command_accessor)
+			kingpin.FatalIfError(err, fs_command_ls.FullCommand())
 
 		case fs_command_rm.FullCommand():
-			doRM(*fs_command_rm_path, *fs_command_accessor)
+			err := doRM(*fs_command_rm_path, *fs_command_accessor)
+			kingpin.FatalIfError(err, fs_command_rm.FullCommand())
 
 		case fs_command_cp.FullCommand():
-			doCp(*fs_command_cp_path, *fs_command_accessor, *fs_command_cp_outdir)
+			err := doCp(*fs_command_cp_path,
+				*fs_command_accessor, *fs_command_cp_outdir)
+			kingpin.FatalIfError(err, fs_command_cp.FullCommand())
 
 		case fs_command_cat.FullCommand():
-			doCat(*fs_command_cat_path, *fs_command_accessor)
-
+			err := doCat(*fs_command_cat_path, *fs_command_accessor)
+			kingpin.FatalIfError(err, fs_command_cat.FullCommand())
 		default:
 			return false
 		}

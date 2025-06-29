@@ -56,8 +56,13 @@ func (self GeoIPFunction) Call(
 		}
 		// Attach the database to the root destructor since it
 		// does not need to change very often.
-		vql_subsystem.GetRootScope(scope).
-			AddDestructor(func() { db.Close() })
+		err := vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+			db.Close()
+		})
+		if err != nil {
+			scope.Log("geoip: %v", err)
+		}
+
 		vql_subsystem.CacheSet(scope, key, db)
 
 	case *maxminddb.Reader:

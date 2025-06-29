@@ -44,9 +44,8 @@ type AzureUser struct {
 }
 
 type AzureAuthenticator struct {
-	config_obj       *config_proto.Config
-	authenticator    *config_proto.Authenticator
-	base, public_url string
+	config_obj    *config_proto.Config
+	authenticator *config_proto.Authenticator
 }
 
 // The URL that will be used to log in.

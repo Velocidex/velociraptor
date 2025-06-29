@@ -73,7 +73,7 @@ func (self *Indexer) searchRecents(
 	in *api_proto.SearchClientsRequest,
 	principal string, term string, limit uint64) (
 	*api_proto.SearchClientsResponse, error) {
-	path_manager := &paths.UserPathManager{principal}
+	path_manager := &paths.UserPathManager{Name: principal}
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err

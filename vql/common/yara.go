@@ -438,9 +438,6 @@ type scanReporter struct {
 	reader         io.ReaderAt
 	ctx            context.Context
 
-	// For accessor scanning
-	buf []byte
-
 	// Internal scan state
 	scope     vfilter.Scope
 	rules     *yara.Rules

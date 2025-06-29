@@ -40,8 +40,7 @@ type FlowResponder struct {
 	wg         *sync.WaitGroup
 	config_obj *config_proto.Config
 
-	mu     sync.Mutex
-	logger *logging.LogContext
+	mu sync.Mutex
 
 	// The status contains information about the execution of the
 	// query.

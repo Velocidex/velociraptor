@@ -348,7 +348,10 @@ func NewSQLCache(ctx context.Context, scope types.Scope) *sqlCache {
 	gSqlCacheTracker.Track(result)
 
 	// Close the entire cache when the scope is done.
-	vql_subsystem.GetRootScope(scope).AddDestructor(result.Close)
+	err := vql_subsystem.GetRootScope(scope).AddDestructor(result.Close)
+	if err != nil {
+		scope.Log("ERROR:NewSQLCache can not set desctructor: %v", err)
+	}
 
 	go func() {
 		select {

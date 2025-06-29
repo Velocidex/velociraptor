@@ -50,7 +50,7 @@ func (self DedupPlugin) Call(
 		defer lru.Close()
 
 		lru.SetCacheSizeLimit(int(arg.Size))
-		lru.SetTTL(time.Second * time.Duration(arg.Timeout))
+		_ = lru.SetTTL(time.Second * time.Duration(arg.Timeout))
 
 		event_chan := arg.Query.Eval(ctx, scope)
 
@@ -82,7 +82,7 @@ func (self DedupPlugin) Call(
 					return
 
 				case output_chan <- row:
-					lru.Set(key_str, true)
+					_ = lru.Set(key_str, true)
 				}
 			}
 		}

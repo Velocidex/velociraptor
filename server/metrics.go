@@ -30,9 +30,9 @@ func RecordHTTPStats(next http.Handler) http.Handler {
 			}
 
 			rec := &http_utils.StatusRecorder{
-				w,
-				w.(http.Flusher),
-				200, nil}
+				ResponseWriter: w,
+				Flusher:        w.(http.Flusher),
+				Status:         200}
 
 			next.ServeHTTP(rec, r)
 			status := fmt.Sprintf("%v", rec.Status)

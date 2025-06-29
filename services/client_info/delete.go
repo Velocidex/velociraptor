@@ -66,7 +66,7 @@ func (self *ClientInfoManager) DeleteClient(
 		})
 
 	// Delete the filestore files.
-	api.Walk(file_store_factory,
+	err = api.Walk(file_store_factory,
 		client_path_manager.Path().AsFilestorePath(),
 		func(filename api.FSPathSpec, info os.FileInfo) error {
 			item := services.DeleteFlowResponse{
@@ -92,9 +92,12 @@ func (self *ClientInfoManager) DeleteClient(
 
 			return nil
 		})
+	if err != nil {
+		return err
+	}
 
 	// Remove the empty directories
-	datastore.Walk(self.config_obj, db, client_path_manager.Path(),
+	err = datastore.Walk(self.config_obj, db, client_path_manager.Path(),
 		datastore.WalkWithDirectories,
 		func(filename api.DSPathSpec) error {
 			err := db.DeleteSubject(self.config_obj, filename)
@@ -109,6 +112,9 @@ func (self *ClientInfoManager) DeleteClient(
 			}
 			return nil
 		})
+	if err != nil {
+		return err
+	}
 
 	// Delete the actual client record.
 	if really_do_it {
@@ -209,11 +215,14 @@ func (self *ClientInfoManager) reallyDeleteClient(ctx context.Context,
 		return err
 	}
 
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		self.config_obj, principal, "client_delete",
 		ordereddict.NewDict().
 			Set("client_id", client_id).
 			Set("org_id", self.config_obj.OrgId))
+	if err != nil {
+		return err
+	}
 
 	err = journal.PushRowsToArtifact(ctx, self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().

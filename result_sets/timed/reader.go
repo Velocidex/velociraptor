@@ -204,7 +204,11 @@ func (self *TimedResultSetReader) maybeUpgradeIndex(
 	for row := range reader.Rows(ctx) {
 		ts, pres := row.GetInt64("_ts")
 		if pres {
-			tmp_writer.Write(time.Unix(ts, 0), row)
+			err := tmp_writer.Write(time.Unix(ts, 0), row)
+			if err != nil {
+				tmp_writer.Close()
+				return nil, err
+			}
 		}
 	}
 
@@ -212,7 +216,10 @@ func (self *TimedResultSetReader) maybeUpgradeIndex(
 
 	// Update the json file itself, and leave the new index
 	// around.
-	file_store_factory.Move(tmp_path_manager.Path(), path_manager.Path())
+	err = file_store_factory.Move(tmp_path_manager.Path(), path_manager.Path())
+	if err != nil {
+		return nil, err
+	}
 
 	reader_factory := timelines.TimelineReader{}
 

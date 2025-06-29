@@ -41,15 +41,15 @@ func GetClientInfoManager(config_obj *config_proto.Config) (ClientInfoManager, e
 
 type ClientInfo struct {
 	// The original info from disk
-	actions_proto.ClientInfo
+	*actions_proto.ClientInfo
 }
 
-func (self ClientInfo) Copy() ClientInfo {
-	copy := proto.Clone(&self.ClientInfo).(*actions_proto.ClientInfo)
-	return ClientInfo{*copy}
+func (self *ClientInfo) Copy() *ClientInfo {
+	copy := proto.Clone(self.ClientInfo).(*actions_proto.ClientInfo)
+	return &ClientInfo{ClientInfo: copy}
 }
 
-func (self ClientInfo) OS() ClientOS {
+func (self *ClientInfo) OS() ClientOS {
 	switch self.System {
 	case "windows":
 		return Windows

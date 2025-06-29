@@ -155,9 +155,12 @@ func (self *InventoryService) ProbeToolInfo(
 		if err == nil {
 			// Add all the parent's versions into our own repository.
 			for _, v := range tool.Versions {
-				self.AddTool(ctx, config_obj, v, services.ToolOptions{
+				err := self.AddTool(ctx, config_obj, v, services.ToolOptions{
 					ArtifactDefinition: true,
 				})
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			// Return the first version that matched

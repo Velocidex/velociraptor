@@ -41,7 +41,10 @@ func (self *serverLogger) Write(b []byte) (int, error) {
 		Set("Message", msg))
 
 	if level == logging.ALERT {
-		self.processAlert(msg)
+		err := self.processAlert(msg)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	return len(b), nil

@@ -76,7 +76,7 @@ func doReformat() error {
 			returned_errs[artifact_path] = err
 			continue
 		}
-		out_fd.Write([]byte(reformatted))
+		_, _ = out_fd.Write([]byte(reformatted))
 		out_fd.Close()
 	}
 

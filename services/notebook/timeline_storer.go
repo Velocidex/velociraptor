@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 
+	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -169,20 +170,18 @@ func (self *TimelineStorer) UpdateTimeline(ctx context.Context,
 	super_timeline.Name = supertimeline
 
 	// Find the existing timeline or add a new one.
-	var existing_timeline *timelines_proto.Timeline
-	for _, component := range super_timeline.Timelines {
+	var found bool
+	for idx, component := range super_timeline.Timelines {
 		if component.Id == timeline.Id {
-			existing_timeline = component
+			super_timeline.Timelines[idx] = proto.Clone(timeline).(*timelines_proto.Timeline)
+			found = true
 			break
 		}
 	}
 
-	if existing_timeline == nil {
-		existing_timeline = timeline
-		super_timeline.Timelines = append(super_timeline.Timelines, timeline)
-	} else {
-		// Make a copy
-		*existing_timeline = *timeline
+	if !found {
+		super_timeline.Timelines = append(super_timeline.Timelines,
+			proto.Clone(timeline).(*timelines_proto.Timeline))
 	}
 
 	// Now delete the actual record.
@@ -194,6 +193,10 @@ func (self *TimelineStorer) GetAvailableTimelines(
 	path_manager := paths.NewNotebookPathManager(notebook_id)
 	result := []string{}
 	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return nil
+	}
+
 	files, err := db.ListChildren(self.config_obj, path_manager.SuperTimelineDir())
 	if err != nil {
 		return nil

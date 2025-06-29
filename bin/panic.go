@@ -40,7 +40,7 @@ func writeLogOnPanic() error {
 			if err != nil {
 				return
 			}
-			fd.Write([]byte(output))
+			_, _ = fd.Write([]byte(output))
 			fd.Close()
 		})
 		if err != nil {

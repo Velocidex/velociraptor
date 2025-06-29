@@ -370,7 +370,7 @@ func ExportNotebookToZip(
 		cell_path_manager := notebook_path_manager.Cell(cell_id, version)
 
 		// Copy cell contents
-		err = copyUploads(ctx, config_obj,
+		err := copyUploads(ctx, config_obj,
 			cell_path_manager.Directory(),
 			exported_path_manager.CellDirectory(cell_id),
 			zip_writer, file_store_factory)
@@ -419,7 +419,7 @@ func ExportNotebookToZip(
 		// are none in the notebook - so this is not an error.
 		// Attachments are added to the notebook when the user pastes
 		// them into it (e.g. an image)
-		err = copyUploads(ctx, config_obj,
+		err := copyUploads(ctx, config_obj,
 			notebook_path_manager.AttachmentDirectory(),
 			exported_path_manager.AttachmentRoot(),
 			zip_writer, file_store_factory)
@@ -434,14 +434,19 @@ func ExportNotebookToZip(
 		}
 		defer f.Close()
 
-		_, err = f.Write(serialized)
+		_, _ = f.Write(serialized)
 	}()
 
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		config_obj, principal, "ExportNotebook",
 		ordereddict.NewDict().
 			Set("notebook_id", notebook_id).
 			Set("output_filename", output_filename))
+
+	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Error("<red>ExportNotebook</> %v %v", principal, notebook_id)
+	}
 
 	return output_filename, nil
 }
@@ -495,8 +500,7 @@ func ExportNotebookToHTML(
 	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
 	output_filename := notebook_path_manager.HtmlExport(preferred_name)
 
-	wg.Add(1)
-	go func() (api.FSPathSpec, error) {
+	exporter_func := func() (api.FSPathSpec, error) {
 		defer wg.Done()
 		defer cancel()
 
@@ -566,7 +570,7 @@ func ExportNotebookToHTML(
 			stats.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 			stats.TotalDuration = uint64(time.Now().Unix()) - stats.Timestamp
 
-			export_manager.SetContainerStats(ctx, config_obj, stats, opts)
+			_ = export_manager.SetContainerStats(ctx, config_obj, stats, opts)
 		}()
 
 		for _, cell_md := range notebook.CellMetadata {
@@ -689,13 +693,26 @@ func ExportNotebookToHTML(
 		}
 
 		return output_filename, nil
+	}
+
+	wg.Add(1)
+	go func() {
+		_, err := exporter_func()
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+			logger.Error("<red>ExportNotebookToHTML</>: %v", err)
+		}
 	}()
 
-	services.LogAudit(ctx,
+	err := services.LogAudit(ctx,
 		config_obj, principal, "ExportNotebook",
 		ordereddict.NewDict().
 			Set("notebook_id", notebook_id).
 			Set("output_filename", output_filename))
+	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Error("<red>ExportNotebook</> %v %v", principal, notebook_id)
+	}
 
 	return output_filename, nil
 }

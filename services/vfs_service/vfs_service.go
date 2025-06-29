@@ -137,13 +137,17 @@ func (self *VFSService) ProcessDownloadFile(
 				Error = err.Error()
 			}
 			// Record an error in the download info.
-			self.WriteDownloadInfo(ctx, config_obj, client_id, Accessor,
+			err = self.WriteDownloadInfo(ctx, config_obj, client_id, Accessor,
 				Components, &flows_proto.VFSDownloadInfo{
 					Mtime:    uint64(ts) * 1000000,
 					FlowId:   flow_id,
 					InFlight: false,
 					Error:    Error,
 				})
+			if err != nil {
+				logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+				logger.Error("VFSService WriteDownloadInfo: %v", err)
+			}
 			continue
 		}
 
@@ -153,7 +157,7 @@ func (self *VFSService) ProcessDownloadFile(
 		has_index_file := err == nil
 
 		// Now record the file has completed upload.
-		self.WriteDownloadInfo(ctx, config_obj, client_id, Accessor,
+		err = self.WriteDownloadInfo(ctx, config_obj, client_id, Accessor,
 			Components, &flows_proto.VFSDownloadInfo{
 				Components: uploaded_file_manager.
 					Path().Components(),
@@ -165,6 +169,11 @@ func (self *VFSService) ProcessDownloadFile(
 				FlowId:   flow_id,
 				InFlight: false,
 			})
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("VFSService WriteDownloadInfo: %v", err)
+		}
+
 	}
 }
 
@@ -296,8 +305,6 @@ func (self *VFSService) ProcessListDirectoryLegacy(
 		logger.Error("Unable to save directory: %v", err)
 		return
 	}
-
-	start_row = count
 }
 
 func findParam(name string, flow *flows_proto.ArtifactCollectorContext) string {

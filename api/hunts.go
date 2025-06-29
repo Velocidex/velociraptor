@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/api/tables"
 	"www.velocidex.com/golang/velociraptor/json"
 	vjson "www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -299,12 +300,16 @@ func (self *ApiServer) CreateHunt(
 	result.FlowId = in.HuntId
 
 	// Audit message for GUI access
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		org_config_obj, principal, "CreateHunt",
 		ordereddict.NewDict().
 			Set("hunt_id", result.FlowId).
 			Set("details", in).
 			Set("orgs", orgs_we_scheduled))
+	if err != nil {
+		logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
+		logger.Error("<red>CreateHunt</> %v %v", principal, result.FlowId)
+	}
 
 	return result, nil
 }
@@ -334,11 +339,15 @@ func (self *ApiServer) ModifyHunt(
 			"User is not allowed to modify hunts.")
 	}
 
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		org_config_obj, principal, "ModifyHunt",
 		ordereddict.NewDict().
 			Set("hunt_id", in.HuntId).
 			Set("details", in))
+	if err != nil {
+		logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
+		logger.Error("<red>ModifyHunt</> %v %v", principal, in.HuntId)
+	}
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
 	if err != nil {

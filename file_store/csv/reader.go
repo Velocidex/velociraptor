@@ -203,7 +203,7 @@ type Reader struct {
 }
 
 // NewReader returns a new Reader that reads from r.
-func NewReader(r io.ReadSeeker) *Reader {
+func NewReader(r io.ReadSeeker) (*Reader, error) {
 	result := &Reader{
 		Comma:      ',',
 		r:          bufio.NewReader(r),
@@ -213,10 +213,13 @@ func NewReader(r io.ReadSeeker) *Reader {
 	// Swallow the BOM if possible.
 	b, err := result.r.Peek(3)
 	if err == nil && b[0] == bom0 && b[1] == bom1 && b[2] == bom2 {
-		result.Seek(3)
+		err := result.Seek(3)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return result
+	return result, nil
 }
 
 // Read reads one record (a slice of fields) from r.

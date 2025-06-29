@@ -562,7 +562,11 @@ func NewUserStorageManager(
 				return
 
 			case <-time.After(utils.Jitter(refresh_duration)):
-				result.buildCache(ctx)
+				err := result.buildCache(ctx)
+				if err != nil {
+					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+					logger.Error("<red>UserManager</>: buildCache %v", err)
+				}
 
 			case event, ok := <-events:
 				if !ok {

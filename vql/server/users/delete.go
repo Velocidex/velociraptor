@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -57,11 +58,15 @@ func (self UserDeleteFunction) Call(
 			return vfilter.Null{}
 		}
 
-		services.LogAudit(ctx,
+		err = services.LogAudit(ctx,
 			config_obj, principal, "user_delete",
 			ordereddict.NewDict().
 				Set("username", arg.Username).
 				Set("org_ids", orgs))
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("<red>user_delete</> %v %v", principal, arg.Username)
+		}
 
 	} else {
 		scope.Log("user_delete: Will remove %v from orgs %v", arg.Username, orgs)

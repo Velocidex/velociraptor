@@ -151,8 +151,9 @@ func (self *ConfigSurvey) DefaultDatastoreLocation() string {
 	switch self.ServerType {
 	case "windows":
 		return "C:\\Windows\\Temp"
-	default:
+	case "linux":
 		return "/opt/velociraptor"
+	default:
+		return self.DatastoreLocation
 	}
-	return self.DatastoreLocation
 }

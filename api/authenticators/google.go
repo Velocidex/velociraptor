@@ -49,8 +49,6 @@ const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_
 type GoogleAuthenticator struct {
 	config_obj    *config_proto.Config
 	authenticator *config_proto.Authenticator
-	base          string
-	public_url    string
 }
 
 func (self *GoogleAuthenticator) LoginHandler() string {
@@ -262,8 +260,13 @@ func installLogoff(config_obj *config_proto.Config, mux *api_utils.ServeMux) {
 					old_username, ok := params["username"]
 					username := ""
 					if ok && len(old_username) == 1 {
-						services.LogAudit(r.Context(),
+						err := services.LogAudit(r.Context(),
 							config_obj, old_username[0], "LogOff", ordereddict.NewDict())
+						if err != nil {
+							logger := logging.GetLogger(
+								config_obj, &logging.FrontendComponent)
+							logger.Error("LogAudit: LogOff %v", old_username[0])
+						}
 						username = old_username[0]
 					}
 
@@ -350,13 +353,20 @@ func reject_with_username(
 	// Log failed login to the audit log only if there is an actual
 	// user. First redirect will have username blank.
 	if username != "" {
-		services.LogAudit(r.Context(),
+		err := services.LogAudit(r.Context(),
 			config_obj, username, "User rejected by GUI",
 			ordereddict.NewDict().
 				Set("remote", r.RemoteAddr).
 				Set("method", r.Method).
 				Set("url", r.URL.String()).
 				Set("err", err.Error()))
+		if err != nil {
+			logger := logging.GetLogger(
+				config_obj, &logging.FrontendComponent)
+			logger.Error("LogAudit: User rejected by GUI %v %v",
+				username, r.RemoteAddr)
+		}
+
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

@@ -25,6 +25,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -80,22 +81,33 @@ func (self *AddLabels) Call(ctx context.Context,
 		case "set":
 			err = labeler.SetClientLabel(ctx, config_obj, arg.ClientId, label)
 			if err == nil {
-				services.LogAudit(ctx,
+				err := services.LogAudit(ctx,
 					config_obj, principal, "SetClientLabel",
 					ordereddict.NewDict().
 						Set("client_id", arg.ClientId).
 						Set("label", label))
+				if err != nil {
+					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+					logger.Error("<red>SetClientLabel</> %v %v %v",
+						principal, arg.ClientId, label)
+				}
+
 			}
 
 		case "remove":
 			err = labeler.RemoveClientLabel(
 				ctx, config_obj, arg.ClientId, label)
 			if err == nil {
-				services.LogAudit(ctx,
+				err := services.LogAudit(ctx,
 					config_obj, principal, "RemoveClientLabel",
 					ordereddict.NewDict().
 						Set("client_id", arg.ClientId).
 						Set("label", label))
+				if err != nil {
+					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+					logger.Error("<red>RemoveClientLabel</> %v %v", principal, arg.ClientId)
+				}
+
 			}
 
 		case "check":

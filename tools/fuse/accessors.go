@@ -11,7 +11,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/vfilter"
 )
 
 type AccessorFuseFS struct {
@@ -19,7 +18,6 @@ type AccessorFuseFS struct {
 
 	config_obj *config_proto.Config
 
-	scope      vfilter.Scope
 	accessor   accessors.FileSystemAccessor
 	containers []*accessors.OSPath
 

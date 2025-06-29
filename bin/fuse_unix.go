@@ -27,10 +27,6 @@ var (
 	fuse_directory = fuse_zip_command.Arg("directory", "A directory to mount on").
 			Required().String()
 
-	fuse_tmp_dir = fuse_zip_command.Flag("tmpdir",
-		"A temporary directory to use (if not specified we use our own tempdir)").
-		String()
-
 	fuse_zip_accessor = fuse_command.Flag("accessor", "The accessor to use (default container)").
 				Default("collector").String()
 

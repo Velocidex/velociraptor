@@ -34,7 +34,7 @@ func createFile(filename string) (*os.File, error) {
 	// In tests the file has to be discoverable so we can read it -
 	// move to its known position.
 	if PREPARE_FOR_TESTS {
-		os.Rename(fd.Name(), filename)
+		err := os.Rename(fd.Name(), filename)
 		return fd, err
 	}
 

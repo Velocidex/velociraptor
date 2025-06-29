@@ -82,7 +82,7 @@ func (self *DeleteTestSuite) SetupTest() {
 	assert.NoError(self.T(), err)
 
 	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
-		actions_proto.ClientInfo{
+		ClientInfo: &actions_proto.ClientInfo{
 			ClientId: self.client_id,
 		}})
 	assert.NoError(self.T(), err)

@@ -268,7 +268,7 @@ func (self *ClientFlowRunner) removeInflightChecks(
 	return client_info_manager.Modify(ctx, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if client_info == nil {
-				client_info = &services.ClientInfo{}
+				client_info = &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
 				client_info.ClientId = client_id
 			}
 
@@ -530,7 +530,7 @@ func (self *ClientFlowRunner) FlowStats(
 		return client_info_manager.Modify(ctx, client_id,
 			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 				if client_info == nil {
-					client_info = &services.ClientInfo{}
+					client_info = &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
 					client_info.ClientId = client_id
 				}
 
@@ -548,7 +548,7 @@ func (self *ClientFlowRunner) FlowStats(
 	return client_info_manager.Modify(ctx, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if client_info == nil {
-				client_info = &services.ClientInfo{}
+				client_info = &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
 				client_info.ClientId = client_id
 			}
 
@@ -679,7 +679,7 @@ func (self *ClientFlowRunner) LogMessage(
 	}
 	defer rs_writer.Close()
 
-	rs_writer.SetStartRow(int64(msg.Id))
+	_ = rs_writer.SetStartRow(int64(msg.Id))
 
 	// The JSON payload from the client.
 	payload := artifacts.DeobfuscateString(self.config_obj, msg.Jsonl)

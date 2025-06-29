@@ -634,8 +634,8 @@ func (self WriteJSONPlugin) Call(
 
 				serialized, err := json.Marshal(row)
 				if err == nil {
-					writer.Write(serialized)
-					writer.Write(lf)
+					_, _ = writer.Write(serialized)
+					_, _ = writer.Write(lf)
 				}
 
 				select {

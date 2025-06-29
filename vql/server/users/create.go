@@ -5,6 +5,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -63,12 +64,17 @@ func (self UserCreateFunction) Call(
 		return vfilter.Null{}
 	}
 
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		org_config_obj, principal, "user_create",
 		ordereddict.NewDict().
 			Set("username", arg.Username).
 			Set("acl", policy).
 			Set("org_ids", arg.OrgIds))
+	if err != nil {
+		logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
+		logger.Error("<red>user_create</> %v: %v %v", principal,
+			arg.Username, policy)
+	}
 
 	if arg.Password != "" {
 		// Write the user record.

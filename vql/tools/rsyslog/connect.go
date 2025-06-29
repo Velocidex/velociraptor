@@ -35,6 +35,9 @@ func (self *Logger) Connect() (err error) {
 			KeepAlive: time.Second * 60,
 		}
 		self.netConn, err = tls.DialWithDialer(dialer, "tcp", self.raddr, tls_config)
+		if err != nil {
+			return err
+		}
 
 	case "udp", "tcp":
 		self.netConn, err = net.DialTimeout(self.network, self.raddr, self.connectTimeout)
@@ -64,11 +67,11 @@ func (self *Logger) Write(ctx context.Context, message string) (err error) {
 		deadline := time.Now().Add(self.connectTimeout)
 		switch self.netConn.(type) {
 		case *net.TCPConn, *tls.Conn:
-			self.netConn.SetWriteDeadline(deadline)
+			_ = self.netConn.SetWriteDeadline(deadline)
 			_, err = io.WriteString(self.netConn, message+"\n")
 
 		case *net.UDPConn:
-			self.netConn.SetWriteDeadline(deadline)
+			_ = self.netConn.SetWriteDeadline(deadline)
 			if len(message) > 1024 {
 				message = message[:1024]
 			}
@@ -123,7 +126,7 @@ func (self *connectionPool) Dial(config_obj *config_proto.ClientConfig,
 		connectTimeout: connectTimeout,
 	}
 
-	self.lru.Set(raddr, res)
+	_ = self.lru.Set(raddr, res)
 
 	return res, res.Connect()
 }

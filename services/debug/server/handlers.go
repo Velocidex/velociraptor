@@ -60,7 +60,7 @@ func (self *debugMux) HandleProfile(w http.ResponseWriter, r *http.Request) {
 		if format == "jsonl" {
 			serialized, _ := json.Marshal(row)
 			serialized = append(serialized, '\n')
-			w.Write(serialized)
+			_, _ = w.Write(serialized)
 
 		} else {
 			rows = append(rows, row)
@@ -70,7 +70,7 @@ func (self *debugMux) HandleProfile(w http.ResponseWriter, r *http.Request) {
 	if format == "json" {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		serialized, _ := json.Marshal(rows)
-		w.Write(serialized)
+		_, _ = w.Write(serialized)
 	}
 }
 

@@ -55,6 +55,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/reporting"
@@ -283,7 +284,6 @@ func vfsFileDownloadHandler() http.Handler {
 					// sent.
 					if !headers_sent {
 						returnError(w, 500, err.Error())
-						headers_sent = true
 					}
 					return
 				}
@@ -365,7 +365,7 @@ func filterData(reader_at io.ReaderAt,
 
 			case '\n':
 				lines++
-				if request.Lines <= lines {
+				if required_lines <= lines {
 					return output, offset + int64(i), nil
 				}
 				fallthrough
@@ -559,10 +559,10 @@ func downloadFileStore(prefix []string) http.Handler {
 			w.Header().Set("Content-Type",
 				utils.GetMimeString(buf[:n], utils.AutoDetectMime(true)))
 			w.WriteHeader(200)
-			w.Write(buf[:n])
+			_, _ = w.Write(buf[:n])
 
 			// Copy the rest directly.
-			utils.Copy(r.Context(), w, fd)
+			_, _ = utils.Copy(r.Context(), w, fd)
 		})
 }
 
@@ -670,11 +670,17 @@ func downloadTable() http.Handler {
 				w.Header().Set("Content-Type", "binary/octet-stream")
 				w.WriteHeader(200)
 
-				services.LogAudit(r.Context(),
+				err := services.LogAudit(r.Context(),
 					org_config_obj, principal, "DownloadTable",
 					ordereddict.NewDict().
 						Set("request", request).
 						Set("remote", r.RemoteAddr))
+				if err != nil {
+					logger := logging.GetLogger(
+						org_config_obj, &logging.FrontendComponent)
+					logger.Error("<red>DownloadTable</> %v %v",
+						principal, request)
+				}
 
 				scope := vql_subsystem.MakeScope()
 				csv_writer := csv.GetCSVAppender(
@@ -699,11 +705,15 @@ func downloadTable() http.Handler {
 				w.Header().Set("Content-Type", "binary/octet-stream")
 				w.WriteHeader(200)
 
-				services.LogAudit(r.Context(),
+				err = services.LogAudit(r.Context(),
 					org_config_obj, principal, "DownloadTable",
 					ordereddict.NewDict().
 						Set("request", request).
 						Set("remote", r.RemoteAddr))
+				if err != nil {
+					logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
+					logger.Error("<red>DownloadTable</> %v %v", principal, request)
+				}
 
 				for row := range row_chan {
 					serialized, err := json.MarshalWithOptions(
@@ -867,7 +877,7 @@ func streamZipFile(
 
 	container, err := reporting.NewContainerFromWriter(
 		fmt.Sprintf("HTTPDownload-%v", filename),
-		config_obj, utils.NopWriteCloser{w}, password, 5, nil)
+		config_obj, utils.NopWriteCloser{Writer: w}, password, 5, nil)
 	if err != nil {
 		return err
 	}

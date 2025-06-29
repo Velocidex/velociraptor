@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"regexp"
 	"sync"
 
@@ -158,11 +157,7 @@ func configServerMetadata(
 	}
 
 	result := &api_proto.ClientMetadata{}
-	err = db.GetSubject(config_obj, client_path_manager.Metadata(), result)
-	if errors.Is(err, os.ErrNotExist) {
-		// Metadata not set, start with empty set.
-		err = nil
-	}
+	_ = db.GetSubject(config_obj, client_path_manager.Metadata(), result)
 
 	is_set := func(field string) bool {
 		for _, item := range result.Items {

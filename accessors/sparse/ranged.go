@@ -94,11 +94,11 @@ func (self *RangedReader) Seek(offset int64, whence int) (int64, error) {
 	return int64(self.offset), nil
 }
 
-func (self RangedReader) Close() error {
+func (self *RangedReader) Close() error {
 	return self.handle.Close()
 }
 
-func (self RangedReader) LStat() (accessors.FileInfo, error) {
+func (self *RangedReader) LStat() (accessors.FileInfo, error) {
 	return &SparseFileInfo{size: self.size}, nil
 }
 

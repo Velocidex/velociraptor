@@ -25,11 +25,11 @@ type QueryLogEntry struct {
 	Duration int64
 }
 
-func (self *QueryLogEntry) Copy() QueryLogEntry {
+func (self *QueryLogEntry) Copy() *QueryLogEntry {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return QueryLogEntry{
+	return &QueryLogEntry{
 		Query:    self.Query,
 		Start:    self.Start,
 		Duration: self.Duration,
@@ -100,12 +100,12 @@ func (self *QueryLogType) AddQuery(query string) *QueryLogEntry {
 	return q
 }
 
-func (self *QueryLogType) Get() []QueryLogEntry {
+func (self *QueryLogType) Get() []*QueryLogEntry {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	// Return a copy of the logs
-	result := make([]QueryLogEntry, 0, len(self.Queries))
+	result := make([]*QueryLogEntry, 0, len(self.Queries))
 	for _, q := range self.Queries {
 		result = append(result, q.Copy())
 	}

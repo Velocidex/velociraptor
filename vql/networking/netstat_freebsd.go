@@ -1,3 +1,4 @@
+//go:build freebsd && cgo
 // +build freebsd,cgo
 
 package networking
@@ -8,6 +9,7 @@ import (
 	"fmt"
 	"net"
 	"syscall"
+	"time"
 	"unsafe"
 
 	"github.com/Velocidex/ordereddict"
@@ -124,6 +126,10 @@ func (self *ConnectionStat) TypeString() string {
 	default:
 		return fmt.Sprintf("%d", self.Type)
 	}
+}
+
+func (self *ConnectionStat) Timestamp() time.Time {
+	return self.timestamp
 }
 
 func gatherTCP() ([]*ConnectionStat, error) {

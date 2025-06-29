@@ -296,7 +296,7 @@ func (self *EventTable) StartFromWriteback(
 	output_chan chan *crypto_proto.VeloMessage) {
 
 	// Get the event table from the writeback if possible.
-	event_table := &actions_proto.VQLEventTable{}
+	var event_table *actions_proto.VQLEventTable
 
 	writeback_service := writeback.GetWritebackService()
 	writeback, err := writeback_service.GetWriteback(config_obj)

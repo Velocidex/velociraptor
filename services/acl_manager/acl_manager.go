@@ -130,7 +130,11 @@ func NewACLManager(
 			case <-ctx.Done():
 				return
 			case <-time.After(utils.Jitter(refresh_duration)):
-				self.reloadCache(ctx, config_obj)
+				err := self.reloadCache(ctx, config_obj)
+				if err != nil {
+					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+					logger.Error("ACLManager reloadCache: %v", err)
+				}
 			}
 		}
 
@@ -156,7 +160,7 @@ func (self *ACLManager) GetPolicy(
 
 // GetEffectivePolicy expands any roles in the policy object to
 // produce a simple object.
-func (self ACLManager) GetEffectivePolicy(
+func (self *ACLManager) GetEffectivePolicy(
 	config_obj *config_proto.Config,
 	principal string) (*acl_proto.ApiClientACL, error) {
 
@@ -181,7 +185,7 @@ func (self ACLManager) GetEffectivePolicy(
 	return policy, nil
 }
 
-func (self ACLManager) SetPolicy(
+func (self *ACLManager) SetPolicy(
 	config_obj *config_proto.Config,
 	principal string, acl_obj *acl_proto.ApiClientACL) error {
 
@@ -210,7 +214,7 @@ func (self ACLManager) SetPolicy(
 	return db.SetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 }
 
-func (self ACLManager) handleLockdown(
+func (self *ACLManager) handleLockdown(
 	permissions []acls.ACL_PERMISSION) (bool, error) {
 	if acls.LockdownToken() == nil {
 		return false, nil
@@ -225,7 +229,7 @@ func (self ACLManager) handleLockdown(
 	return false, nil
 }
 
-func (self ACLManager) CheckAccess(
+func (self *ACLManager) CheckAccess(
 	config_obj *config_proto.Config,
 	principal string,
 	permissions ...acls.ACL_PERMISSION) (bool, error) {
@@ -264,7 +268,7 @@ func (self ACLManager) CheckAccess(
 	return true, nil
 }
 
-func (self ACLManager) GrantRoles(
+func (self *ACLManager) GrantRoles(
 	config_obj *config_proto.Config,
 	principal string,
 	roles []string) error {

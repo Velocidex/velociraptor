@@ -480,7 +480,7 @@ type MockedScope struct {
 	plugins map[string]*MockerPlugin
 }
 
-func (self MockedScope) GetPlugin(name string) (types.PluginGeneratorInterface, bool) {
+func (self *MockedScope) GetPlugin(name string) (types.PluginGeneratorInterface, bool) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -492,8 +492,8 @@ func (self MockedScope) GetPlugin(name string) (types.PluginGeneratorInterface, 
 	return self.Scope.GetPlugin(name)
 }
 
-func NewMockScope(scope vfilter.Scope, plugins []*MockerPlugin) MockedScope {
-	res := MockedScope{
+func NewMockScope(scope vfilter.Scope, plugins []*MockerPlugin) *MockedScope {
+	res := &MockedScope{
 		Scope:   scope,
 		plugins: make(map[string]*MockerPlugin),
 	}

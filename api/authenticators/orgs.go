@@ -83,10 +83,8 @@ func CheckOrgAccess(
 		r.Header.Set("Grpc-Metadata-Orgid", user_options.Org)
 
 		// Log them into their org
-		user_options.Org = user_options.Org
-		user_manager.SetUserOptions(ctx, user_record.Name,
+		return user_manager.SetUserOptions(ctx, user_record.Name,
 			user_record.Name, user_options)
-		return nil
 	}
 
 	// Redirect the user to the first org they have access to
@@ -97,9 +95,8 @@ func CheckOrgAccess(
 
 			// Log them into their org
 			user_options.Org = org.Id
-			user_manager.SetUserOptions(ctx, user_record.Name,
+			return user_manager.SetUserOptions(ctx, user_record.Name,
 				user_record.Name, user_options)
-			return nil
 		}
 	}
 

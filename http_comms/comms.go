@@ -851,7 +851,10 @@ func (self *NotificationReader) SendToURL(
 
 	now := utils.Now()
 	if !urgent {
-		self.limiter.Wait(ctx)
+		err := self.limiter.Wait(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
 	self.logger.Info(

@@ -95,8 +95,8 @@ func (self *RPMBuilder) AddPostin(data string) {
 
 func (self *RPMBuilder) Bytes(scope vfilter.Scope) ([]byte, error) {
 	buff := &bytes.Buffer{}
-	self.pack.Write(buff)
-	return buff.Bytes(), nil
+	err := self.pack.Write(buff)
+	return buff.Bytes(), err
 }
 
 // Build a debug string representing the rpm so we can compare it for

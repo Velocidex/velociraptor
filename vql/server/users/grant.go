@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -73,12 +74,16 @@ func (self GrantFunction) Call(
 		return vfilter.Null{}
 	}
 
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		org_config_obj, principal, "user_grant",
 		ordereddict.NewDict().
 			Set("username", arg.Username).
 			Set("acl", policy).
 			Set("org_ids", orgs))
+	if err != nil {
+		logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
+		logger.Error("<red>user_grant</> %v %v %v", principal, arg.Username, policy)
+	}
 
 	return arg.Username
 }
