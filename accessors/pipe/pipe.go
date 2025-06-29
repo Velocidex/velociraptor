@@ -183,7 +183,12 @@ func (self PipeFilesystemAccessor) Open(variable string) (accessors.ReadSeekClos
 	variable_data_lazy, ok := variable_data.(types.StoredExpression)
 	if ok {
 		ctx, cancel := context.WithCancel(context.Background())
-		vql_subsystem.GetRootScope(self.scope).AddDestructor(cancel)
+		err := vql_subsystem.GetRootScope(self.scope).AddDestructor(cancel)
+		if err != nil {
+			cancel()
+			return nil, err
+		}
+
 		variable_data = variable_data_lazy.Reduce(ctx, self.scope)
 	}
 

@@ -416,7 +416,10 @@ func (self *HuntManager) ProcessParticipationWithError(
 	}
 
 	// Control rate of hunt recruitment to balance server load.
-	self.limiter.Wait(ctx)
+	err = self.limiter.Wait(ctx)
+	if err != nil {
+		return err
+	}
 
 	// Use hunt information to launch the flow against this
 	// client.

@@ -40,9 +40,6 @@ type OrgContext struct {
 type OrgManager struct {
 	mu sync.Mutex
 
-	// Sync the scan
-	scan_mu sync.Mutex
-
 	// The root org's ctx and wg
 	ctx context.Context
 
@@ -341,7 +338,10 @@ func (self *OrgManager) Start(
 				return
 
 			case <-time.After(utils.Jitter(10 * time.Second)):
-				self.Scan()
+				err := self.Scan()
+				if err != nil {
+					logger.Error("<red>OrgManager Scan</> %v", err)
+				}
 			}
 		}
 

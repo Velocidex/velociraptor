@@ -150,7 +150,10 @@ func (self *ReplicationService) pumpEventFromBufferFile() error {
 
 			_, err = api_client.PushEvents(self.ctx, event)
 			if err == nil {
-				closer()
+				err := closer()
+				if err != nil {
+					return err
+				}
 				break
 			}
 
@@ -158,15 +161,21 @@ func (self *ReplicationService) pumpEventFromBufferFile() error {
 			// try again later.
 			select {
 			case <-self.ctx.Done():
-				closer()
+				err := closer()
+				if err != nil {
+					return err
+				}
 				return nil
 
 			case <-time.After(utils.Jitter(self.RetryDuration())):
+				err := closer()
+				if err != nil {
+					logger.Error("<red>ReplicationService</> %v", err)
+				}
 			}
-			closer()
+
 		}
 	}
-	return nil
 }
 
 // Periodically flush the batches built up during
@@ -195,7 +204,7 @@ func (self *ReplicationService) startAsyncLoop(
 				for k, v := range todo {
 					// Ignore errors since there is no way to report
 					// to the caller.
-					self.PushJsonlToArtifact(ctx,
+					_ = self.PushJsonlToArtifact(ctx,
 						config_obj, v.Bytes(), v.row_count, k,
 						"server", "")
 				}
@@ -235,7 +244,14 @@ func (self *ReplicationService) Start(
 		return err
 	}
 
-	go self.pumpEventFromBufferFile()
+	go func() {
+		err := self.pumpEventFromBufferFile()
+		if err != nil {
+			logger := logging.GetLogger(
+				self.config_obj, &logging.FrontendComponent)
+			logger.Error("<red>pumpEventFromBufferFile</>: %v", err)
+		}
+	}()
 
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
@@ -276,7 +292,7 @@ func (self *ReplicationService) Start(
 						// for later delivery.
 						_ = self.Buffer.Enqueue(request)
 					}
-					closer()
+					_ = closer()
 				}
 			}
 		}()
@@ -668,6 +684,7 @@ func (self *ReplicationService) watchOnce(
 		logger.Error("<red>ReplicationService %v</> Unable to connect %v",
 			services.GetOrgName(self.config_obj), err)
 		close(output_chan)
+		cancel()
 		return output_chan
 	}
 
@@ -676,6 +693,7 @@ func (self *ReplicationService) watchOnce(
 		logger.Error("<red>ReplicationService %v</> Unable to connect %v",
 			services.GetOrgName(self.config_obj), err)
 		close(output_chan)
+		cancel()
 		return output_chan
 	}
 
@@ -687,14 +705,17 @@ func (self *ReplicationService) watchOnce(
 	})
 	if err != nil {
 		close(output_chan)
-		closer()
+		_ = closer()
+		cancel()
 		return output_chan
 	}
 
 	go func() {
-		defer closer()
-		defer close(output_chan)
-		defer cancel()
+		defer func() {
+			cancel()
+			close(output_chan)
+			_ = closer()
+		}()
 
 		for {
 			event, err := stream.Recv()

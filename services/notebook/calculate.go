@@ -119,7 +119,10 @@ func (self *NotebookManager) UpdateNotebookCell(
 		notebook_cell.Messages = append(notebook_cell.Messages,
 			"ERROR:"+err.Error())
 
-		self.Store.SetNotebookCell(notebook_metadata.NotebookId, notebook_cell)
+		err1 := self.Store.SetNotebookCell(notebook_metadata.NotebookId, notebook_cell)
+		if err1 != nil {
+			return notebook_cell, err1
+		}
 
 		return notebook_cell, err
 	}

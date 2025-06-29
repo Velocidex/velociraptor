@@ -72,7 +72,12 @@ func (self _ParseEvtxPlugin) Call(
 		}
 
 		// Close the db when we are done.
-		vql_subsystem.GetRootScope(scope).AddDestructor(resolver.Close)
+		err = vql_subsystem.GetRootScope(scope).AddDestructor(resolver.Close)
+		if err != nil {
+			resolver.Close()
+			scope.Log("parse_evtx: %s", err.Error())
+			return
+		}
 
 		for _, filename := range arg.Filenames {
 			func() {

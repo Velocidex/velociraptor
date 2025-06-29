@@ -274,7 +274,6 @@ type ResultSetReaderImpl struct {
 	fd       api.FileReader
 	idx_fd   api.FileReader
 	log_path api.FSPathSpec
-	idx      int64
 
 	stacker api.FSPathSpec
 }

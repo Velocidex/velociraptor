@@ -100,7 +100,10 @@ func (self *FileWritebackStore) Load() *config_proto.Writeback {
 				err, self.l2_location)
 
 			// Restore the L1 file from the backup
-			self.WriteL1(wb)
+			err = self.WriteL1(wb)
+			if err != nil {
+				logger.Error("Writeback Manager:  WriteL1: %v", err)
+			}
 
 		} else {
 			logger.Info("Writeback Manager: Unable to read writeback (%v) - will reset", err)
@@ -109,7 +112,10 @@ func (self *FileWritebackStore) Load() *config_proto.Writeback {
 
 	if wb.InstallTime == 0 {
 		wb.InstallTime = uint64(utils.GetTime().Now().Unix())
-		self.WriteL1(wb)
+		err := self.WriteL1(wb)
+		if err != nil {
+			logger.Error("Writeback Manager:  WriteL1: %v", err)
+		}
 	}
 
 	return wb

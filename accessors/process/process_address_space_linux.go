@@ -50,7 +50,7 @@ func (self *ProcessAccessor) OpenWithOSPath(
 }
 
 var (
-	maps_regexp = regexp.MustCompile("(?P<Start>^[^-]+)-(?P<End>[^\\s]+)\\s+(?P<Perm>[^\\s]+)\\s+(?P<Size>[^\\s]+)\\s+[^\\s]+\\s+(?P<PermInt>[^\\s]+)\\s+(?P<Filename>.+?)(?P<Deleted> \\(deleted\\))?$")
+	maps_regexp = regexp.MustCompile(`(?P<Start>^[^-]+)-(?P<End>[^\s]+)\s+(?P<Perm>[^\s]+)\s+(?P<Size>[^\s]+)\s+[^\s]+\s+(?P<PermInt>[^\s]+)\s+(?P<Filename>.+?)(?P<Deleted> \(deleted\))?$`)
 )
 
 func GetVads(pid uint64) ([]*uploads.Range, error) {

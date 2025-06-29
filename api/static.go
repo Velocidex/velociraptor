@@ -124,13 +124,13 @@ func (self *CachedFilesystem) Open(name string) (http.File, error) {
 			brotliDecompressionCounter.Inc()
 
 			// Cache for next time.
-			self.lru.Set(name, out_fd.Bytes())
+			err = self.lru.Set(name, out_fd.Bytes())
 
 			return &brotliBuffer{
 				Reader: bytes.NewReader(out_fd.Bytes()),
 				name:   name,
 				size:   n,
-			}, nil
+			}, err
 		}
 	}
 	return fd, err
@@ -152,7 +152,7 @@ func NewCachedFilesystem(
 		lru:        ttlcache.NewCache(),
 	}
 
-	result.lru.SetTTL(10 * time.Minute)
+	_ = result.lru.SetTTL(10 * time.Minute)
 	result.lru.SkipTTLExtensionOnHit(true)
 
 	go func() {

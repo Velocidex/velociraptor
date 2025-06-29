@@ -166,7 +166,8 @@ func CalculateNotebookArtifact(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	in *api_proto.NotebookMetadata) (
-	*artifacts_proto.Artifact, *api_proto.NotebookMetadata, error) {
+	res *artifacts_proto.Artifact,
+	md *api_proto.NotebookMetadata, ret_err error) {
 
 	out := proto.Clone(in).(*api_proto.NotebookMetadata)
 
@@ -198,7 +199,7 @@ func CalculateNotebookArtifact(
 	}
 
 	// This is a psuedo artifact used to build the notebook.
-	res := &artifacts_proto.Artifact{
+	res = &artifacts_proto.Artifact{
 		Name: "PrivateNotebook",
 	}
 
@@ -219,7 +220,13 @@ func CalculateNotebookArtifact(
 	}
 
 	// Cache it for next time.
-	defer db.SetSubject(config_obj, notebook_path_manager.Artifact(), res)
+	defer func() {
+		err1 := db.SetSubject(
+			config_obj, notebook_path_manager.Artifact(), res)
+		if err1 != nil && ret_err == nil {
+			ret_err = err1
+		}
+	}()
 
 	// Now build the psuedo artifact.
 	seen := make(map[string]bool)

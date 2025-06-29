@@ -5,6 +5,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -63,10 +64,14 @@ func (self OrgDeleteFunction) Call(
 			return vfilter.Null{}
 		}
 
-		services.LogAudit(ctx,
-			config_obj, principal, "org_delete",
+		err = services.LogAudit(ctx, config_obj, principal, "org_delete",
 			ordereddict.NewDict().
 				Set("org_id", arg.OrgId))
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("<red>org_delete</> %v %v", principal, arg.OrgId)
+		}
+
 	} else {
 		scope.Log("org_delete: Will remove org %v", arg.OrgId)
 	}

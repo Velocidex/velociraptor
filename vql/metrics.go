@@ -22,8 +22,6 @@ type PluginMonitorEntry struct {
 	ArgsFunc func() *ordereddict.Dict
 	Start    time.Time
 	Ctx      context.Context
-
-	id uint64
 }
 
 type PluginMonitor struct {

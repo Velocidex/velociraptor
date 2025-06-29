@@ -20,7 +20,10 @@ type CPUReporter struct{}
 
 func (self *CPUReporter) GetCpuTime(ctx context.Context) float64 {
 	tms := &syscall.Tms{}
-	syscall.Times(tms)
+	_, err := syscall.Times(tms)
+	if err != nil {
+		return 0
+	}
 
 	total := float64(tms.Utime+tms.Stime) / _SC_CLK_TCK
 

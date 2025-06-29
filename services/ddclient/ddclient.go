@@ -17,10 +17,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
-var (
-	ddns_service = "domains.google.com"
-)
-
 type DynDNSService struct {
 	config_obj *config_proto.Config
 

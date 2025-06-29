@@ -89,12 +89,17 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		config_obj, principal, "create_flow_download",
 		ordereddict.NewDict().
 			Set("format", format).
 			Set("client_id", arg.ClientId).
 			Set("flow_id", arg.FlowId))
+	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Error("<red>create_flow_download</> %v %v %v",
+			principal, arg.ClientId, arg.FlowId)
+	}
 
 	result, err := createDownloadFile(
 		ctx, scope, config_obj, format,
@@ -312,7 +317,7 @@ func downloadFlowToZip(
 	// record so the flow is recognized by the importer.
 	client_info, err := client_info_manager.Get(ctx, client_id)
 	if err != nil {
-		client_info = &services.ClientInfo{}
+		client_info = &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
 		client_info.ClientId = client_id
 	}
 

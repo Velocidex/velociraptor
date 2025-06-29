@@ -145,6 +145,4 @@ func (self *HuntStorageManagerImpl) Restore(ctx context.Context,
 				utils.BackgroundWriter)
 		}
 	}
-
-	return stat, nil
 }

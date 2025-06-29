@@ -276,7 +276,10 @@ func interfaceAsStarlarkValue(ctx context.Context,
 				return nil, err
 			}
 
-			result.SetKey(starlark.String(key), mapValueStarlarked)
+			err = result.SetKey(starlark.String(key), mapValueStarlarked)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		//dict := starlarkstruct.FromStringDict(starlarkstruct.Default, result)

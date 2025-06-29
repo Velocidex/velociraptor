@@ -318,7 +318,6 @@ func (self *SyslogWatcherService) monitorOnce(
 			break
 		}
 	}
-	return cursor
 }
 
 // Send the syslog line to all listeners.

@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
@@ -69,11 +70,16 @@ func (self *ApiServer) DefineSecret(
 
 	err = secrets.DefineSecret(ctx, in)
 	if err == nil {
-		services.LogAudit(ctx,
+		err := services.LogAudit(ctx,
 			org_config_obj, principal, "User Defined Secret",
 			ordereddict.NewDict().
 				Set("principal", principal).
 				Set("type", in.TypeName))
+		if err != nil {
+			logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
+			logger.Error("<red>User Defined Secret</> %v %v", principal, in.TypeName)
+		}
+
 	}
 
 	return &emptypb.Empty{}, Status(self.verbose, err)
@@ -106,11 +112,16 @@ func (self *ApiServer) DeleteSecretDefinition(
 
 	err = secrets.DeleteSecretDefinition(ctx, in)
 	if err == nil {
-		services.LogAudit(ctx,
+		err := services.LogAudit(ctx,
 			org_config_obj, principal, "User Deleted Secret Type",
 			ordereddict.NewDict().
 				Set("principal", principal).
 				Set("type", in.TypeName))
+		if err != nil {
+			logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
+			logger.Error("<red>User Deleted Secret</> %v %v", principal, in.TypeName)
+		}
+
 	}
 
 	return &emptypb.Empty{}, Status(self.verbose, err)

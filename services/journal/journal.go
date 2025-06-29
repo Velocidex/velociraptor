@@ -51,7 +51,7 @@ func (self *JournalService) GetWatchers() []string {
 }
 
 func (self *JournalService) publishWatchers(ctx context.Context) {
-	self.PushRowsToInternalEventArtifact(ctx, self.config_obj,
+	_ = self.PushRowsToInternalEventArtifact(ctx, self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("Events", self.GetWatchers())},
 		"Server.Internal.MasterRegistrations")

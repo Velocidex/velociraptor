@@ -128,9 +128,21 @@ func (self _PEDumpFunction) Call(
 	vm_offset := arg.BaseOffset - int64(pe_file.FileHeader.ImageBase)
 
 	// Copy the PE header to the output
-	writer.Seek(0, os.SEEK_SET)
-	fd.Seek(int64(vm_offset+int64(pe_file.FileHeader.ImageBase)), os.SEEK_SET)
+	_, err = writer.Seek(0, os.SEEK_SET)
+	if err != nil {
+		scope.Log("pe_dump: %v", err)
+	}
+
+	_, err = fd.Seek(int64(vm_offset+int64(pe_file.FileHeader.ImageBase)),
+		os.SEEK_SET)
+	if err != nil {
+		scope.Log("pe_dump: %v", err)
+	}
+
 	_, err = utils.CopyN(ctx, writer, fd, 0x2000)
+	if err != nil {
+		scope.Log("pe_dump: %v", err)
+	}
 
 	// Copy all the regions to the output
 	for _, section := range pe_file.Sections {
@@ -143,8 +155,15 @@ func (self _PEDumpFunction) Call(
 			continue
 		}
 
-		writer.Seek(section.FileOffset, os.SEEK_SET)
-		fd.Seek(vm_offset+int64(section.VMA), os.SEEK_SET)
+		_, err = writer.Seek(section.FileOffset, os.SEEK_SET)
+		if err != nil {
+			scope.Log("pe_dump: %v", err)
+		}
+
+		_, err = fd.Seek(vm_offset+int64(section.VMA), os.SEEK_SET)
+		if err != nil {
+			scope.Log("pe_dump: %v", err)
+		}
 
 		// TODO: Restrict the size to be reasonable.
 		_, err = utils.CopyN(ctx, writer, fd, section.Size)

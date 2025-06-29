@@ -77,7 +77,7 @@ func NewZipCryptoReader(upstream io.Reader, passphrase []byte) *ZipCryptoReader 
 
 	// skip first 12 bytes
 	buf := make([]byte, 12)
-	z.Read(buf)
+	_, _ = z.Read(buf)
 
 	return z
 }
@@ -121,10 +121,10 @@ func (z *zipCryptoWriter) Write(p []byte) (n int, err error) {
 		header[11] = byte(crc >> 8)
 
 		z.z.init()
-		z.w.Write(z.z.Encrypt(header))
+		_, _ = z.w.Write(z.z.Encrypt(header))
 		n += 12
 	}
-	z.w.Write(z.z.Encrypt(p))
+	_, _ = z.w.Write(z.z.Encrypt(p))
 	return
 }
 

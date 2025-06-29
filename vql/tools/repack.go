@@ -529,7 +529,7 @@ func AppendBinaries(
 			return nil, err
 		}
 
-		n, err := utils.Copy(ctx, outfd, fd)
+		n, _ := utils.Copy(ctx, outfd, fd)
 		fd.Close()
 
 		csv_writer.Write(ordereddict.NewDict().

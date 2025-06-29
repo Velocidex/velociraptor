@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	logging "www.velocidex.com/golang/velociraptor/logging"
@@ -169,9 +168,4 @@ func init() {
 		}
 		return true
 	})
-}
-
-func escape_sh(in string) string {
-	in = strings.ReplaceAll(in, "\\", "\\\\")
-	return strings.ReplaceAll(in, "$", "\\$")
 }

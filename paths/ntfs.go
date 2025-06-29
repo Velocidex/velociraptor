@@ -8,9 +8,6 @@ import (
 
 var (
 	// For convenience we transform paths like c:\Windows -> \\.\c:\Windows
-	driveRegex = regexp.MustCompile(
-		`(?i)^[/\\]?([a-z]:)(.*)`)
-
 	deviceDriveRegex = regexp.MustCompile(
 		`(?i)^(\\\\[\?\.]\\[a-zA-Z]:)(.*)`)
 

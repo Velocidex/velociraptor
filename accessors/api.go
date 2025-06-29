@@ -109,7 +109,7 @@ func (self *OSPath) SetPathSpec(pathspec *PathSpec) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.Manipulator.PathParse(pathspec.Path, self)
+	_ = self.Manipulator.PathParse(pathspec.Path, self)
 	self.pathspec = pathspec
 }
 

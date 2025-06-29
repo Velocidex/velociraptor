@@ -14,8 +14,8 @@ import (
 )
 
 type replacement_record struct {
-	OriginalIndex int64  `json="OriginalIndex"`
-	Data          []byte `json="Data"`
+	OriginalIndex int64  `json:"OriginalIndex"`
+	Data          []byte `json:"Data"`
 }
 
 type indexEntry struct {

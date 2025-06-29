@@ -20,7 +20,6 @@ type progressReporter struct {
 	mu             sync.Mutex
 	error          string
 	config_obj     *config_proto.Config
-	path           api.DSPathSpec
 	zip_writer     *Container
 	container_path api.FSPathSpec
 	opts           services.ContainerOptions

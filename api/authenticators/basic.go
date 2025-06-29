@@ -13,13 +13,13 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
 // Implement basic authentication.
 type BasicAuthenticator struct {
-	config_obj       *config_proto.Config
-	base, public_url string
+	config_obj *config_proto.Config
 }
 
 // Basic auth does not need any special handlers.
@@ -92,12 +92,15 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 			user_record, err := users_manager.GetUserWithHashes(r.Context(),
 				username, username)
 			if err != nil {
-				services.LogAudit(r.Context(),
+				err := services.LogAudit(r.Context(),
 					self.config_obj, username, "Unknown username",
 					ordereddict.NewDict().
 						Set("remote", r.RemoteAddr).
 						Set("status", http.StatusUnauthorized))
-
+				if err != nil {
+					logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+					logger.Error("Unknown username %v %v", username, r.RemoteAddr)
+				}
 				http.Error(w, "authorization failed", http.StatusUnauthorized)
 				return
 			}
@@ -105,11 +108,17 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 			ok, err = users_manager.VerifyPassword(r.Context(),
 				user_record.Name, user_record.Name, password)
 			if !ok || err != nil {
-				services.LogAudit(r.Context(),
+				err := services.LogAudit(r.Context(),
 					self.config_obj, user_record.Name, "Invalid password",
 					ordereddict.NewDict().
 						Set("remote", r.RemoteAddr).
 						Set("status", http.StatusUnauthorized))
+
+				// If we cant emit an audit log, log to regular logging.
+				if err != nil {
+					logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+					logger.Error("Invalid Password %v %v", user_record.Name, r.RemoteAddr)
+				}
 
 				http.Error(w, "authorization failed", http.StatusUnauthorized)
 				return
@@ -118,12 +127,17 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 			// Does the user have access to the specified org?
 			err = CheckOrgAccess(self.config_obj, r, user_record, permission)
 			if err != nil {
-				services.LogAudit(r.Context(),
+				err := services.LogAudit(r.Context(),
 					self.config_obj, user_record.Name, "User Unauthorized for Org",
 					ordereddict.NewDict().
 						Set("err", err.Error()).
 						Set("remote", r.RemoteAddr).
 						Set("status", http.StatusUnauthorized))
+				if err != nil {
+					logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+					logger.Error("CheckOrgAccess LogAudit: User Unauthorized for Org %v %v",
+						user_record.Name, r.RemoteAddr)
+				}
 
 				// Return status forbidden because we dont want the user
 				// to reauthenticate

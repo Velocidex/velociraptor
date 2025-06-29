@@ -12,7 +12,7 @@ import (
 func (self *Indexer) UpdateMRU(
 	config_obj *config_proto.Config,
 	user_name string, client_id string) error {
-	path_manager := &paths.UserPathManager{user_name}
+	path_manager := &paths.UserPathManager{Name: user_name}
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err

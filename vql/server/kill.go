@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -67,9 +68,13 @@ func (self *KillClientFunction) Call(ctx context.Context,
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		config_obj, principal, "killkillkill",
 		ordereddict.NewDict().Set("client_id", arg.ClientId))
+	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Error("<red>killkillkill</> %v %v", principal, arg.ClientId)
+	}
 
 	err = client_manager.QueueMessageForClient(ctx, arg.ClientId,
 		&crypto_proto.VeloMessage{

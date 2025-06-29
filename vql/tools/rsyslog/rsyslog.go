@@ -77,6 +77,10 @@ func (self *RsyslogFunction) Call(ctx context.Context,
 	config_obj_any, ok := scope.Resolve(constants.SCOPE_CONFIG)
 	if ok {
 		config_obj, ok = config_obj_any.(*config_proto.ClientConfig)
+		if !ok {
+			scope.Log("rsyslog: invalid config %T", config_obj_any)
+			return false
+		}
 	}
 
 	raddr := net.JoinHostPort(arg.Hostname, fmt.Sprintf("%v", arg.Port))

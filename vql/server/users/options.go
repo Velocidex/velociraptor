@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -92,11 +93,15 @@ func (self UserOptionsFunction) Call(
 			return vfilter.Null{}
 		}
 
-		services.LogAudit(ctx,
+		err = services.LogAudit(ctx,
 			org_config_obj, principal, "user_options",
 			ordereddict.NewDict().
 				Set("username", arg.Username).
 				Set("request", request))
+		if err != nil {
+			logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
+			logger.Error("<red>user_options</> %v %v", principal, arg.Username)
+		}
 	}
 
 	options, err := users_manager.GetUserOptions(ctx, arg.Username)

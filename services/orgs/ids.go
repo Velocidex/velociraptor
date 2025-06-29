@@ -50,6 +50,6 @@ func NewNonce() string {
 	}
 
 	nonce := make([]byte, 8)
-	rand.Read(nonce)
+	_, _ = rand.Read(nonce)
 	return base64.StdEncoding.EncodeToString(nonce)
 }

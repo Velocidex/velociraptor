@@ -15,6 +15,6 @@ var (
 func doPrompt() {
 	if *prompt_flag || mousetrap.StartedByExplorer() {
 		fmt.Println("Press the Enter Key to end")
-		fmt.Scanln()
+		_, _ = fmt.Scanln()
 	}
 }

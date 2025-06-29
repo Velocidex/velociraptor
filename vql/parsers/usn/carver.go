@@ -93,23 +93,8 @@ func (self *CarveUSNPluginArgs) GetStreams(scope types.Scope) (
 
 		mft_source = self.MFTFilename
 
-		// Failing this we add an empty MFT - this helps to resolve
-		// some names in the case of just a USN journal $J dump.
-	} else {
-		ntfs_ctx = ntfs.GetNTFSContextFromRawMFT(
-			bytes.NewReader(nil), 0x200, 0x200)
-
-		if self.USNFilename == nil || len(self.USNFilename.Components) == 0 {
-			return nil, nil, 0,
-				errors.New("Must specify usn_filename when not mft source is specified.")
-		}
-
-		mft_source = accessors.MustNewGenericOSPath("")
-		self.disable_full_path_resolution = true
-	}
-
-	// The USN stream to carve may be given as a separate file.
-	if self.USNFilename != nil && len(self.USNFilename.Components) > 0 {
+		// The USN stream to carve may be given as a separate file.
+	} else if self.USNFilename != nil && len(self.USNFilename.Components) > 0 {
 		accessor, err := accessors.GetAccessor(self.Accessor, scope)
 		if err != nil {
 			return nil, nil, 0, err
@@ -131,7 +116,21 @@ func (self *CarveUSNPluginArgs) GetStreams(scope types.Scope) (
 		usn_source = self.USNFilename
 
 		// Otherwise we carve the disk from the ntfs context.
+
+		// Failing this we add an empty MFT - this helps to resolve
+		// some names in the case of just a USN journal $J dump.
 	} else {
+		ntfs_ctx = ntfs.GetNTFSContextFromRawMFT(
+			bytes.NewReader(nil), 0x200, 0x200)
+
+		if self.USNFilename == nil || len(self.USNFilename.Components) == 0 {
+			return nil, nil, 0,
+				errors.New("Must specify usn_filename when not mft source is specified.")
+		}
+
+		mft_source = accessors.MustNewGenericOSPath("")
+		self.disable_full_path_resolution = true
+
 		usn_stream = ntfs_ctx.DiskReader
 		usn_source = mft_source
 	}

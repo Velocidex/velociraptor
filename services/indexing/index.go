@@ -21,7 +21,6 @@ package indexing
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"sync"
 	"time"
@@ -47,8 +46,6 @@ const (
 )
 
 var (
-	stopIteration = errors.New("stopIteration")
-
 	metricLRUTotalTerms = promauto.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "search_index_lru_total_terms",
@@ -86,8 +83,6 @@ type Indexer struct {
 	items int
 
 	ready bool
-
-	last_snapshot_read time.Time
 
 	config_obj *config_proto.Config
 
@@ -179,7 +174,11 @@ func (self *Indexer) Start(
 					continue
 				}
 
-				self.RebuildIndex(ctx, config_obj)
+				err := self.RebuildIndex(ctx, config_obj)
+				if err != nil {
+					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+					logger.Error("<red>Indexer RebuildIndex</>: %v", err)
+				}
 				last_run = utils.GetTime().Now()
 			}
 		}

@@ -96,8 +96,6 @@ velociraptor --config server.config.yaml config client > client.config.yaml
 		}
 		return fd.Close()
 	}
-
-	return nil
 }
 
 func showError(title, message string, err error) bool {

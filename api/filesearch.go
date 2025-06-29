@@ -147,9 +147,6 @@ func (self *ApiServer) SearchFile(ctx context.Context,
 			}
 		}
 	}
-
-	// No match
-	return &api_proto.SearchFileResponse{}, nil
 }
 
 type matcher interface {
@@ -190,10 +187,6 @@ func (self *regex_matcher) last_index(buff []byte) int64 {
 	}
 	last_match := matches[len(matches)-1]
 	return int64(last_match[0])
-}
-
-type case_insensitive_matcher struct {
-	lower string
 }
 
 func newMatcher(term, search_type string) (matcher, error) {

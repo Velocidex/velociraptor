@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/timelines"
@@ -64,7 +65,11 @@ func NewNotebookStore(
 			case <-ctx.Done():
 				return
 			case <-utils.GetTime().After(utils.Jitter(time.Minute)):
-				result.syncAllNotebooks()
+				err := result.syncAllNotebooks()
+				if err != nil {
+					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+					logger.Error("<red>syncAllNotebooks</> %v", err)
+				}
 			}
 		}
 	}()
@@ -237,16 +242,17 @@ func (self *NotebookStoreImpl) RemoveNotebookCell(
 	}
 
 	// Remove the empty directories
-	err = datastore.Walk(config_obj, db, notebook_path_manager.DSDirectory(),
+	_ = datastore.Walk(config_obj, db, notebook_path_manager.DSDirectory(),
 		datastore.WalkWithDirectories,
 		func(filename api.DSPathSpec) error {
-			db.DeleteSubject(config_obj, filename)
+			// Ignore errors so we can try to delete as much as possible
+			_ = db.DeleteSubject(config_obj, filename)
 			return nil
 		})
 
 	// Delete the filestore files.
 	file_store_factory := file_store.GetFileStore(config_obj)
-	err = api.Walk(file_store_factory, notebook_path_manager.Directory(),
+	_ = api.Walk(file_store_factory, notebook_path_manager.Directory(),
 		func(filename api.FSPathSpec, info os.FileInfo) error {
 			if output_chan != nil {
 				select {

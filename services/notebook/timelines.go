@@ -112,7 +112,7 @@ func (self *NotebookManager) AddTimeline(
 
 	// Timelines have to be sorted, so we force them to be sorted
 	// by the key.
-	sorter := sorter.MergeSorter{10000}
+	sorter := sorter.MergeSorter{ChunkSize: 10000}
 	sorted_chan := sorter.Sort(sub_ctx, subscope, in, key, false /* desc */)
 
 	for row := range sorted_chan {
@@ -124,7 +124,10 @@ func (self *NotebookManager) AddTimeline(
 		if !utils.IsNil(key) {
 			ts, err := functions.TimeFromAny(ctx, scope, key)
 			if err == nil {
-				writer.Write(ts, vfilter.RowToDict(sub_ctx, subscope, row))
+				err := writer.Write(ts, vfilter.RowToDict(sub_ctx, subscope, row))
+				if err != nil {
+					return nil, err
+				}
 			}
 			if timeline.StartTime == 0 {
 				timeline.StartTime = ts.UnixNano()

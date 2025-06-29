@@ -61,14 +61,14 @@ func (self *ProgressThrottler) exitWithError(scope vfilter.Scope) {
 	buf := bytes.Buffer{}
 	p := pprof.Lookup("goroutine")
 	if p != nil {
-		p.WriteTo(&buf, 1)
+		_ = p.WriteTo(&buf, 1)
 		scope.Log("Goroutine dump: %v", buf.String())
 	}
 
 	buf = bytes.Buffer{}
 	p = pprof.Lookup("mutex")
 	if p != nil {
-		p.WriteTo(&buf, 1)
+		_ = p.WriteTo(&buf, 1)
 		scope.Log("Mutex dump: %v", buf.String())
 	}
 

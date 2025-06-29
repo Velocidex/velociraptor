@@ -165,7 +165,7 @@ func (self *debugMux) renderHTML(w http.ResponseWriter, r *http.Request) {
 		description = "Show all profile items"
 	}
 
-	w.Write([]byte(fmt.Sprintf(
+	_, _ = w.Write([]byte(fmt.Sprintf(
 		HtmlTemplate,
 		html.EscapeString(profile_type),
 		html.EscapeString(description))))
@@ -202,8 +202,8 @@ func (self *debugMux) renderCategory(node *debug.CategoryTreeNode) string {
 func (self *debugMux) HandleIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	w.Write([]byte(fmt.Sprintf(indexHeader, self.base, self.base)))
+	_, _ = w.Write([]byte(fmt.Sprintf(indexHeader, self.base, self.base)))
 	categories := debug.GetProfileTree()
-	w.Write([]byte(self.renderCategory(categories)))
-	w.Write([]byte(`</body></html>`))
+	_, _ = w.Write([]byte(self.renderCategory(categories)))
+	_, _ = w.Write([]byte(`</body></html>`))
 }

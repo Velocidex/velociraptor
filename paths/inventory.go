@@ -47,6 +47,10 @@ func (self InventoryPathManager) Path() (api.FSPathSpec, api.FileStore, error) {
 	// name. We need to write the tool on the root org's public
 	// directory.
 	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return nil, nil, err
+	}
+
 	root_org_config, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
 	if err != nil {
 		return nil, nil, err

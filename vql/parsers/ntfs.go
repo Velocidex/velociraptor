@@ -434,7 +434,7 @@ func getOSPathAndAccessor(device string) (*accessors.OSPath, string, error) {
 	// The device is the first component (e.g. \\.\C:) so make a
 	// new OSPath for it to be accessed using "ntfs".
 	filename, err = accessors.NewWindowsNTFSPath(filename.Components[0])
-	return filename, "ntfs", nil
+	return filename, "ntfs", err
 }
 
 func init() {

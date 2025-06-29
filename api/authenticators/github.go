@@ -42,9 +42,8 @@ type GitHubUser struct {
 }
 
 type GitHubAuthenticator struct {
-	config_obj       *config_proto.Config
-	authenticator    *config_proto.Authenticator
-	base, public_url string
+	config_obj    *config_proto.Config
+	authenticator *config_proto.Authenticator
 }
 
 // The URL that will be used to log in.
@@ -91,7 +90,7 @@ func (self *GitHubAuthenticator) AuthenticateUserHandler(
 		self.config_obj, permission,
 		func(w http.ResponseWriter, r *http.Request, err error, username string) {
 			reject_with_username(self.config_obj, w, r, err, username,
-				utils.Join(self.base, "/auth/github/login"), "Github")
+				api_utils.GetBasePath(self.config_obj, "/auth/github/login"), "Github")
 		},
 		parent)
 }

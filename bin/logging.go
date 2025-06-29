@@ -49,15 +49,16 @@ func Prelog(format string, v ...interface{}) {
 	if *logging_flag != "" {
 		fd, err := os.OpenFile(*logging_flag, os.O_RDWR|os.O_CREATE, 0600)
 		if err == nil {
-			fd.Seek(0, os.SEEK_END)
-
-			// Write a JSONL log line
-			fd.Write([]byte(json.Format(
-				`{"level":"prelog","msg":%q,"time":%q}`,
-				fmt.Sprintf(format, v...), time.Now(),
-			)))
-			fd.Write([]byte("\n"))
-			fd.Close()
+			_, err := fd.Seek(0, os.SEEK_END)
+			if err == nil {
+				// Write a JSONL log line
+				_, _ = fd.Write([]byte(json.Format(
+					`{"level":"prelog","msg":%q,"time":%q}`,
+					fmt.Sprintf(format, v...), time.Now(),
+				)))
+				_, _ = fd.Write([]byte("\n"))
+				fd.Close()
+			}
 			return
 		}
 	}

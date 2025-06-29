@@ -16,7 +16,7 @@ type LRUCache struct {
 
 // Setter protocol allows VQL set() to be used
 func (self *LRUCache) Set(key string, value interface{}) {
-	self.lru.Set(key, value)
+	_ = self.lru.Set(key, value)
 }
 
 type LRUFunctionArgs struct {
@@ -88,9 +88,14 @@ func (self LRUFunction) Call(ctx context.Context, scope vfilter.Scope,
 	result := &LRUCache{
 		lru: ttlcache.NewCache(),
 	}
-	scope.AddDestructor(func() {
+	err = scope.AddDestructor(func() {
 		result.lru.Close()
 	})
+	if err != nil {
+		result.lru.Close()
+		scope.Log("lru: %s", err.Error())
+		return vfilter.Null{}
+	}
 
 	if arg.Size <= 0 {
 		arg.Size = 1000

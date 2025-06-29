@@ -116,7 +116,7 @@ func NewServerCryptoManager(
 			return nil
 		})
 
-	return server_manager, nil
+	return server_manager, err
 }
 
 type serverPublicKeyResolver struct {
@@ -127,7 +127,7 @@ type serverPublicKeyResolver struct {
 }
 
 func (self *serverPublicKeyResolver) DeleteSubject(client_id string) {
-	self.negative_lru.Remove(client_id)
+	_ = self.negative_lru.Remove(client_id)
 }
 
 func (self *serverPublicKeyResolver) GetPublicKey(
@@ -150,13 +150,13 @@ func (self *serverPublicKeyResolver) GetPublicKey(
 	pem := &crypto_proto.PublicKey{}
 	err = db.GetSubject(config_obj, client_path_manager.Key(), pem)
 	if err != nil {
-		self.negative_lru.Set(client_id, true)
+		_ = self.negative_lru.Set(client_id, true)
 		return nil, false
 	}
 
 	key, err := crypto_utils.PemToPublicKey(pem.Pem)
 	if err != nil {
-		self.negative_lru.Set(client_id, true)
+		_ = self.negative_lru.Set(client_id, true)
 		return nil, false
 	}
 
@@ -167,7 +167,7 @@ func (self *serverPublicKeyResolver) SetPublicKey(
 	config_obj *config_proto.Config,
 	client_id string, key *rsa.PublicKey) error {
 
-	self.negative_lru.Remove(client_id)
+	_ = self.negative_lru.Remove(client_id)
 
 	client_path_manager := paths.NewClientPathManager(client_id)
 	db, err := datastore.GetDB(config_obj)
@@ -207,7 +207,7 @@ func NewServerPublicKeyResolver(
 		}
 	}
 
-	result.negative_lru.SetTTL(timeout)
+	_ = result.negative_lru.SetTTL(timeout)
 	result.negative_lru.SkipTTLExtensionOnHit(true)
 
 	// Close the LRU when we are done here.

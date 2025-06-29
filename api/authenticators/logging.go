@@ -37,9 +37,9 @@ func GetLoggingHandler(config_obj *config_proto.Config) func(http.Handler) http.
 		return api_utils.HandlerFunc(next,
 			func(w http.ResponseWriter, r *http.Request) {
 				rec := &http_utils.StatusRecorder{
-					w,
-					w.(http.Flusher),
-					200, nil}
+					ResponseWriter: w,
+					Flusher:        w.(http.Flusher),
+					Status:         200}
 				defer func() {
 					if rec.Status == 500 {
 						logger.WithFields(

@@ -100,7 +100,10 @@ func (self *Store) Restore(ctx context.Context,
 		if err != nil {
 			stat.Error = err
 		}
-		indexer.RebuildIndex(ctx, config_obj)
+		err = indexer.RebuildIndex(ctx, config_obj)
+		if err != nil {
+			stat.Error = err
+		}
 		stat.Message = fmt.Sprintf("Restored %v clients", count)
 	}()
 
@@ -141,6 +144,4 @@ func (self *Store) Restore(ctx context.Context,
 			self.data[client_info.ClientId] = serialized
 		}
 	}
-
-	return stat, nil
 }

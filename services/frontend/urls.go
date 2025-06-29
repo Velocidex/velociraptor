@@ -25,7 +25,7 @@ func GetPublicUrl(config_obj *config_proto.Config) (res *url.URL, err error) {
 	return res, nil
 }
 
-func (self MasterFrontendManager) GetPublicUrl(
+func (self *MasterFrontendManager) GetPublicUrl(
 	config_obj *config_proto.Config) (res *url.URL, err error) {
 	return GetPublicUrl(config_obj)
 }
@@ -48,12 +48,12 @@ func GetBaseURL(config_obj *config_proto.Config) (res *url.URL, err error) {
 	return res, nil
 }
 
-func (self MasterFrontendManager) GetBaseURL(
+func (self *MasterFrontendManager) GetBaseURL(
 	config_obj *config_proto.Config) (res *url.URL, err error) {
 	return GetBaseURL(config_obj)
 }
 
-func (self MinionFrontendManager) GetBaseURL(
+func (self *MinionFrontendManager) GetBaseURL(
 	config_obj *config_proto.Config) (res *url.URL, err error) {
 	return GetBaseURL(config_obj)
 }

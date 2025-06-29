@@ -60,7 +60,7 @@ func ConvertJSONL(
 		// or convert it to csv then we can skip parsing it
 		// altogether.
 		if extra_data == nil && jsonl_out != nil && csv_out == nil {
-			jsonl_out.Write(serialized)
+			_, _ = jsonl_out.Write(serialized)
 			continue
 		}
 
@@ -78,15 +78,15 @@ func ConvertJSONL(
 			// If we dont need to add any columns we just copy the
 			// original JSONL without needing to encode it.
 			if extra_data == nil {
-				jsonl_out.Write(serialized)
+				_, _ = jsonl_out.Write(serialized)
 			} else {
-				jsonl_out.Write(
+				_, _ = jsonl_out.Write(
 					writeJsonObject(arena, obj, extra_keys, extra_value))
 			}
 		}
 
 		if csv_out != nil {
-			csv_out.Write(csv_encoder.Encode(obj))
+			_, _ = csv_out.Write(csv_encoder.Encode(obj))
 		}
 	}
 }
@@ -139,7 +139,7 @@ func (self *CSVEncoder) Encode(obj *fastjson.Object) []byte {
 		}
 
 		// Encode the headers
-		self.writer.Write(self.columns)
+		_ = self.writer.Write(self.columns)
 	}
 
 	if len(self.columns) == 0 {
@@ -191,7 +191,7 @@ func (self *CSVEncoder) Encode(obj *fastjson.Object) []byte {
 		self.row[idx] = self.extra_values[i]
 	}
 
-	self.writer.Write(self.row)
+	_ = self.writer.Write(self.row)
 	self.writer.Flush()
 
 	result := self.buf.Bytes()

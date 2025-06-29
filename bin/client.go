@@ -82,7 +82,11 @@ func RunClient(
 
 		lwg.Add(1)
 		go func() {
-			runClientOnce(subctx, lwg, config_obj)
+			err := runClientOnce(subctx, lwg, config_obj)
+			if err != nil {
+				logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+				logger.Error("<red>runClientOnce Error:</> %v", err)
+			}
 			cancel()
 		}()
 

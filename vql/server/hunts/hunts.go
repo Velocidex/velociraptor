@@ -291,7 +291,7 @@ func (self HuntResultsPlugin) Call(
 					ctx, org_config_obj,
 					flow_details.Context.ClientId,
 					flow_details.Context.SessionId,
-					arg.Artifact)
+					artifact_name)
 				if err != nil {
 					continue
 				}

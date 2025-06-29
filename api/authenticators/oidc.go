@@ -19,9 +19,8 @@ type OIDCConnector interface {
 }
 
 type OidcAuthenticator struct {
-	config_obj       *config_proto.Config
-	authenticator    *config_proto.Authenticator
-	base, public_url string
+	config_obj    *config_proto.Config
+	authenticator *config_proto.Authenticator
 }
 
 func (self *OidcAuthenticator) IsPasswordLess() bool {

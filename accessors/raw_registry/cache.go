@@ -48,22 +48,30 @@ func getRegFileSystemAccessorCache(scope vfilter.Scope) *RawRegFileSystemAccesso
 	}
 
 	cache.lru.SetCacheSizeLimit(cache_size)
-	cache.lru.SetTTL(time.Second * time.Duration(cache_time))
+	_ = cache.lru.SetTTL(time.Second * time.Duration(cache_time))
 	cache.lru.SkipTTLExtensionOnHit(true)
 
 	cache.readdir_lru.SetCacheSizeLimit(cache_size)
-	cache.readdir_lru.SetTTL(time.Second * time.Duration(cache_time))
+	_ = cache.readdir_lru.SetTTL(time.Second * time.Duration(cache_time))
 	cache.readdir_lru.SkipTTLExtensionOnHit(true)
 
 	// Add the cache to the root scope so it can be visible outside
 	// our scope. This should maximize cache hits
 	root_scope := vql_subsystem.GetRootScope(scope)
 
-	root_scope.AddDestructor(func() {
+	err := root_scope.AddDestructor(func() {
 		cache.Close()
 		cache.lru.Close()
 		cache.readdir_lru.Close()
 	})
+	if err != nil {
+		cache.Close()
+		cache.lru.Close()
+		cache.readdir_lru.Close()
+
+		return cache
+	}
+
 	vql_subsystem.CacheSet(root_scope, RAW_CACHE_TAG, cache)
 
 	return cache

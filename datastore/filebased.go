@@ -114,7 +114,7 @@ func (self *FileBaseDataStore) GetSubject(
 }
 
 func (self *FileBaseDataStore) Debug(config_obj *config_proto.Config) {
-	filepath.Walk(config_obj.Datastore.Location,
+	_ = filepath.Walk(config_obj.Datastore.Location,
 		func(path string, info os.FileInfo, err error) error {
 			fmt.Printf("%v -> %v %v\n", path, info.Size(), info.Mode())
 			return nil
@@ -396,8 +396,8 @@ func Trace(
 
 	return
 
-	fmt.Printf("Trace FileBaseDataStore: %v: %v\n", name,
-		AsDatastoreFilename(db, config_obj, filename))
+	//fmt.Printf("Trace FileBaseDataStore: %v: %v\n", name,
+	//	AsDatastoreFilename(db, config_obj, filename))
 }
 
 func TraceDirectory(
@@ -406,8 +406,8 @@ func TraceDirectory(
 
 	return
 
-	fmt.Printf("Trace FileBaseDataStore: %v: %v\n", name,
-		AsDatastoreDirectory(db, config_obj, filename))
+	//fmt.Printf("Trace FileBaseDataStore: %v: %v\n", name,
+	//	AsDatastoreDirectory(db, config_obj, filename))
 }
 
 // Support RawDataStore interface

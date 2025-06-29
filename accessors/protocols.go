@@ -117,10 +117,8 @@ func (self _AddOSPath) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	}
 
 	a_value := reflect.Indirect(reflect.ValueOf(b))
-	if a_value.Type().Kind() == reflect.Slice {
-		return true
-	}
-	return false
+
+	return a_value.Type().Kind() == reflect.Slice
 }
 
 func (self _AddOSPath) Add(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) vfilter.Any {

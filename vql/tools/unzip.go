@@ -277,7 +277,6 @@ func (self *UnzipPlugin) unpackTGZ(
 		case output_chan <- output:
 		}
 	}
-	return nil
 }
 
 func (self UnzipPlugin) Name() string {

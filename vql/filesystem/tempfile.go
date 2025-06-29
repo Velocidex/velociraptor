@@ -214,9 +214,13 @@ func RemoveDirectory(retry int, tmpdir string, scope vfilter.Scope) {
 		scope.Log("RemoveDirectory: Failed to remove %v: %v, reschedule", tmpdir, err)
 
 		// Add another detructor to try again a bit later.
-		scope.AddDestructor(func() {
+		err = scope.AddDestructor(func() {
 			RemoveFile(retry+1, tmpdir, scope)
 		})
+		if err != nil {
+			return
+		}
+
 	} else {
 		if retry > 0 {
 			scope.Log("RemoveDirectory: removed tempdir %v (Try %v)",
@@ -247,9 +251,12 @@ func RemoveFile(retry int, tmpfile string, scope vfilter.Scope) {
 		scope.Log("tempfile: Failed to remove %v: %v, reschedule", tmpfile, err)
 
 		// Add another detructor to try again a bit later.
-		scope.AddDestructor(func() {
+		err = scope.AddDestructor(func() {
 			RemoveFile(retry+1, tmpfile, scope)
 		})
+		if err != nil {
+			return
+		}
 	} else {
 		if retry > 0 {
 			scope.Log("tempfile: removed tempfile %v (Try %v)",

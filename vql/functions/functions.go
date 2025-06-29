@@ -465,7 +465,9 @@ func (self _SetFunction) Call(
 
 	case ordereddict.Dict:
 		t.Set(arg.Field, arg.Value)
-		return t
+		res := ordereddict.NewDict()
+		res.MergeFrom(&t)
+		return res
 
 	case map[string]interface{}:
 		t[arg.Field] = arg.Value

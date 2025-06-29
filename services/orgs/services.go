@@ -732,8 +732,15 @@ func maybeFlushFilesOnClose(
 		defer wg.Done()
 		<-ctx.Done()
 
-		file_store.FlushFilestore(org_config)
-		datastore.FlushDatastore(org_config)
+		logger := logging.GetLogger(org_config, &logging.FrontendComponent)
+		err := file_store.FlushFilestore(org_config)
+		if err != nil {
+			logger.Error("<red>maybeFlushFilesOnClose FlushFilestore</> %v", err)
+		}
+		err = datastore.FlushDatastore(org_config)
+		if err != nil {
+			logger.Error("<red>maybeFlushFilesOnClose FlushDatastore</> %v", err)
+		}
 	}()
 
 	return nil

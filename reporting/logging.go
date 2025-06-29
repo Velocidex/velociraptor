@@ -57,7 +57,10 @@ func (self *notebookCellLogger) Write(b []byte) (int, error) {
 		Set("message", msg))
 
 	if level == logging.ALERT {
-		self.processAlert(msg)
+		err := self.processAlert(msg)
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	// Only keep the first 10 messages in the cell. This provides a

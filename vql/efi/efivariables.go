@@ -41,6 +41,11 @@ func runEfiVariables(
 	}
 
 	firmwareVariables, err := GetEfiVariables()
+	if err != nil {
+		scope.Error("efivariables: %v", err)
+		return result
+	}
+
 	for _, item := range firmwareVariables {
 		if (arg.Namespace == "" || arg.Namespace == item.Namespace) && (arg.Name == "" || arg.Name == item.Name) {
 			if arg.Value {

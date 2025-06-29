@@ -224,7 +224,11 @@ func ReadMessageWithCtx(
 	buffer := &bytes.Buffer{}
 
 	deadline := utils.Now().Add(PongPeriod(config_obj))
-	ws.SetReadDeadline(deadline)
+	err = ws.SetReadDeadline(deadline)
+	if err != nil {
+		return 0, nil, err
+	}
+
 	messageType, r, err := ws.NextReader()
 	if err != nil {
 		return messageType, nil, err

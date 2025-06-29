@@ -277,7 +277,7 @@ func (self *Server) Process(
 		// outstanding. Eventually the real client info will be
 		// properly updated.
 		err = client_info_manager.Set(ctx, &services.ClientInfo{
-			actions_proto.ClientInfo{
+			ClientInfo: &actions_proto.ClientInfo{
 				ClientId:  message_info.Source,
 				Ping:      uint64(utils.Now().UnixNano() / 1000),
 				IpAddress: message_info.RemoteAddr,

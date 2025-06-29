@@ -11,7 +11,6 @@ import (
 )
 
 type _TestExecutor struct {
-	flow_manager  *responder.FlowManager
 	event_manager *actions.EventTable
 }
 
