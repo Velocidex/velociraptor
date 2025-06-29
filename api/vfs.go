@@ -233,14 +233,17 @@ func (self *ApiServer) VFSDownloadFile(
 		return nil, Status(self.verbose, err)
 	}
 
-	vfs_service.WriteDownloadInfo(ctx, org_config_obj, in.ClientId,
+	err = vfs_service.WriteDownloadInfo(ctx, org_config_obj, in.ClientId,
 		in.Accessor, in.Components, &flows_proto.VFSDownloadInfo{
 			FlowId:   flow_id,
 			Mtime:    uint64(utils.GetTime().Now().UnixNano() / 1000),
 			InFlight: true,
 		})
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
 
 	return &api_proto.StartFlowResponse{
 		FlowId: flow_id,
-	}, err
+	}, nil
 }

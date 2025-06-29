@@ -2,7 +2,6 @@ package notebook
 
 import (
 	"context"
-	"regexp"
 	"sort"
 	"time"
 
@@ -16,12 +15,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-)
-
-var (
-	// Notebook ids that are not indexed. These are flow, hunt and
-	// event notebooks.
-	nonIndexingRegex = regexp.MustCompile(`^N\.[EFH]\.`)
 )
 
 func (self *NotebookManager) CheckNotebookAccess(

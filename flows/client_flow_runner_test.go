@@ -126,7 +126,7 @@ func (self *ServerTestSuite) SetupTest() {
 	assert.NoError(self.T(), err)
 
 	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
-		actions_proto.ClientInfo{ClientId: self.client_id},
+		ClientInfo: &actions_proto.ClientInfo{ClientId: self.client_id},
 	})
 	assert.NoError(self.T(), err)
 }

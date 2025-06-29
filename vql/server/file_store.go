@@ -33,6 +33,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -86,9 +87,13 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 
 	vfs_path := arg.VFSPath.Reduce(ctx)
 	principal := vql_subsystem.GetPrincipal(scope)
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		config_obj, principal, "file_store_delete",
 		ordereddict.NewDict().Set("vfs", vfs_path))
+	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Error("<red>DeleteFileStoreArgs</> %v %v", principal, vfs_path)
+	}
 
 	switch t := vfs_path.(type) {
 	case *path_specs.DSPathSpec:

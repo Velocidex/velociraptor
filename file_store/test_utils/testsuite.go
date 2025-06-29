@@ -36,6 +36,9 @@ var (
 name: Server.Internal.HuntModification
 type: INTERNAL
 `, `
+name: Server.Audit.Logs
+type: INTERNAL
+`, `
 name: Server.Internal.ClientInfoSnapshot
 type: INTERNAL
 `, `
@@ -123,7 +126,7 @@ func (self *TestSuite) CreateClient(client_id string) {
 	assert.NoError(self.T(), err)
 
 	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
-		actions_proto.ClientInfo{
+		ClientInfo: &actions_proto.ClientInfo{
 			ClientId: client_id,
 		}})
 	assert.NoError(self.T(), err)
@@ -173,8 +176,9 @@ func (self *TestSuite) SetupTest() {
 		self.ConfigObj = self.LoadConfig()
 	}
 
-	datastore.SetGlobalDatastore(context.Background(),
+	err := datastore.SetGlobalDatastore(context.Background(),
 		self.ConfigObj.Datastore.Implementation, self.ConfigObj)
+	assert.NoError(self.T(), err)
 
 	self.LoadArtifactsIntoConfig(definitions)
 
@@ -183,7 +187,7 @@ func (self *TestSuite) SetupTest() {
 	self.Sm = services.NewServiceManager(self.Ctx, self.ConfigObj)
 	self.Wg = &sync.WaitGroup{}
 
-	err := orgs.StartTestOrgManager(
+	err = orgs.StartTestOrgManager(
 		self.Ctx, self.Wg, self.ConfigObj, self.Services)
 	require.NoError(self.T(), err)
 

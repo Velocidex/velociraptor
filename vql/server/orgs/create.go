@@ -5,6 +5,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -67,12 +68,17 @@ func (self OrgCreateFunction) Call(
 		return vfilter.Null{}
 	} else if org_record != nil {
 		principal := vql_subsystem.GetPrincipal(scope)
-		services.LogAudit(ctx,
+		err := services.LogAudit(ctx,
 			config_obj, principal, "org_create",
 			ordereddict.NewDict().
 				Set("name", org_record.Name).
 				Set("org_id", org_record.Id).
 				Set("nonce", org_record.Nonce))
+
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("<red>org_create</> %v %v", principal, org_record.Id)
+		}
 	}
 
 	return org_record

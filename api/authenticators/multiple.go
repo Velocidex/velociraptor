@@ -9,6 +9,7 @@ import (
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -42,12 +43,17 @@ func (self *MultiAuthenticator) reject_with_username(
 
 	// Log into the audit log.
 	if username != "" {
-		services.LogAudit(r.Context(),
+		err := services.LogAudit(r.Context(),
 			self.config_obj, username, "User rejected by GUI",
 			ordereddict.NewDict().
 				Set("remote", r.RemoteAddr).
 				Set("method", r.Method).
 				Set("err", err.Error()))
+		if err != nil {
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Error("<red>MultiAuthenticator</> reject_with_username %v %v",
+				username, r.RemoteAddr)
+		}
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")

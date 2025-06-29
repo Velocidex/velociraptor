@@ -96,9 +96,19 @@ func (self *HTTPClientCache) mergeSecretToRequest(
 	s.GetString("user_agent", &arg.UserAgent)
 	s.GetString("root_ca", &arg.RootCerts)
 	s.GetBool("skip_verify", &arg.SkipVerify)
-	s.GetDict("extra_params", arg.Params)
-	s.GetDict("extra_headers", arg.Headers)
-	s.GetDict("cookies", arg.CookieJar)
+	err = s.GetDict("extra_params", arg.Params)
+	if err != nil {
+		return nil, err
+	}
+	err = s.GetDict("extra_headers", arg.Headers)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.GetDict("cookies", arg.CookieJar)
+	if err != nil {
+		return nil, err
+	}
 
 	return &arg, nil
 }

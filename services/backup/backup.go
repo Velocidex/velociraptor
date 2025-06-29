@@ -49,7 +49,10 @@ func (self *BackupService) CreateBackup(
 		return nil, err
 	}
 
-	fd.Truncate()
+	err = fd.Truncate()
+	if err != nil {
+		return nil, err
+	}
 
 	// Create a container with the file.
 	container, err := reporting.NewContainerFromWriter(
@@ -336,7 +339,12 @@ func NewBackupService(
 				}
 
 				export_path := paths.NewBackupPathManager().BackupFile()
-				result.CreateBackup(export_path)
+				_, err := result.CreateBackup(export_path)
+				if err != nil {
+					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+					logger.Error("Backup Service: CreateBackup: %v", err)
+				}
+
 				last_run = utils.GetTime().Now()
 			}
 		}

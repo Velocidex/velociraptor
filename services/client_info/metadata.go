@@ -131,11 +131,14 @@ func (self *Store) SetMetadata(
 		return err
 	}
 
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		config_obj, principal, "SetMetadata",
 		ordereddict.NewDict().
 			Set("updated_keys", updated_keys).
 			Set("client_id", client_id))
+	if err != nil {
+		return err
+	}
 
 	// Notify the changes and log them.
 	journal, err := services.GetJournal(config_obj)

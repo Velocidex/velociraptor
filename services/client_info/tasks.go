@@ -28,12 +28,6 @@ import (
 )
 
 var (
-	tasksClearCount = promauto.NewGauge(
-		prometheus.GaugeOpts{
-			Name: "client_info_client_tasks_notifications",
-			Help: "Number of notifications received that clients have new tasks",
-		})
-
 	Clock utils.Clock = &utils.RealClock{}
 	g_id  uint64
 
@@ -370,16 +364,19 @@ func (self *ClientInfoManager) getClientTasks(
 			return nil, err
 		}
 
-		client_info_manager.Modify(ctx, client_id,
+		err = client_info_manager.Modify(ctx, client_id,
 			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 				if client_info == nil {
-					client_info = &services.ClientInfo{}
+					client_info = &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
 					client_info.ClientId = client_id
 				}
 
 				client_info.HasTasks = true
 				return client_info, nil
 			})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return result, nil
@@ -505,7 +502,7 @@ func (self *ClientInfoManager) GetClientTasks(
 		}
 
 		if len(resolved) > 0 {
-			self.storage.Modify(ctx, self.config_obj, client_id,
+			err := self.storage.Modify(ctx, self.config_obj, client_id,
 				func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 					if client_info == nil ||
 						client_info.InFlightFlows == nil {
@@ -517,6 +514,9 @@ func (self *ClientInfoManager) GetClientTasks(
 					}
 					return client_info, nil
 				})
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		// Ask the client about those flows

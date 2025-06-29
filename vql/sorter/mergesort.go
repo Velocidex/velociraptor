@@ -86,7 +86,6 @@ type MergeSorterCtx struct {
 
 	// Fallback size to files
 	ChunkSize int
-	idx       int
 }
 
 func (self *MergeSorterCtx) addProvider(p provider) {

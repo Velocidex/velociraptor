@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net"
 	"syscall"
+	"time"
 	"unsafe"
 
 	"github.com/Velocidex/ordereddict"
@@ -132,6 +133,10 @@ func (self *ConnectionStat) TypeString() string {
 	default:
 		return fmt.Sprintf("%d", self.Type)
 	}
+}
+
+func (self *ConnectionStat) Timestamp() time.Time {
+	return self.timestamp
 }
 
 // Walk over all the entries and call the callback on each.

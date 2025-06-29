@@ -52,7 +52,7 @@ func (self *HuntTestSuite) SetupTest() {
 	assert.NoError(self.T(), err)
 
 	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
-		actions_proto.ClientInfo{
+		ClientInfo: &actions_proto.ClientInfo{
 			ClientId: self.client_id,
 		}})
 	assert.NoError(self.T(), err)
@@ -543,7 +543,7 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 	client_id_2 := "C.12322"
 
 	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
-		actions_proto.ClientInfo{
+		ClientInfo: &actions_proto.ClientInfo{
 			ClientId: client_id_1,
 			System:   "windows",
 		},
@@ -551,7 +551,7 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 	assert.NoError(t, err)
 
 	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
-		actions_proto.ClientInfo{
+		ClientInfo: &actions_proto.ClientInfo{
 			ClientId: client_id_2,
 			System:   "linux",
 		},
@@ -613,7 +613,7 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 	assert.NoError(t, err)
 
 	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
-		actions_proto.ClientInfo{
+		ClientInfo: &actions_proto.ClientInfo{
 			ClientId: self.client_id,
 		},
 	})
@@ -656,7 +656,7 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 
 	// Write a new OS to it
 	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
-		actions_proto.ClientInfo{
+		ClientInfo: &actions_proto.ClientInfo{
 			ClientId: self.client_id,
 			System:   "windows",
 		},

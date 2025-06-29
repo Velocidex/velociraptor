@@ -25,7 +25,6 @@ var (
 	memcache_imp DataStore
 
 	internalError            = errors.New("Internal datastore error")
-	errorNotFound            = errors.New("Not found")
 	errorOversize            = errors.New("Oversize")
 	errorNoDirectoryMetadata = errors.New("No Directory Metadata")
 )
@@ -34,10 +33,10 @@ var (
 // tests.
 func registerGauge(g prometheus.Collector) {
 	prometheus.Unregister(g)
-	prometheus.Register(g)
+	_ = prometheus.Register(g)
 }
 
-func RegisterMemcacheDatastoreMetrics(db MemcacheStater) error {
+func RegisterMemcacheDatastoreMetrics(db MemcacheStater) {
 	// These might return an error if they are called more than once,
 	// but we assume under normal operation the config_obj does not
 	// change, therefore the datastore does not really change. So it
@@ -77,8 +76,6 @@ func RegisterMemcacheDatastoreMetrics(db MemcacheStater) error {
 			stats := db.Stats()
 			return float64(stats.DataItemSize)
 		}))
-
-	return nil
 }
 
 // Stored in data_cache contains bulk data.
@@ -260,7 +257,7 @@ func (self *DirectoryLRUCache) NewDirectoryMetadata(path string) *DirectoryMetad
 		data:     make(map[string]api.DSPathSpec),
 		max_size: self.max_item_size,
 	}
-	self.Set(path, md)
+	_ = self.Set(path, md)
 	return md
 }
 
@@ -326,7 +323,10 @@ func get_dir_metadata(
 
 	// Create top level and every level under it.
 	md = NewDirectoryMetadata(dir_cache.max_item_size)
-	dir_cache.Set(path, md)
+	err := dir_cache.Set(path, md)
+	if err != nil {
+		return nil, err
+	}
 
 	for len(urn.Components()) > 0 {
 		parent := urn.Dir()
@@ -335,7 +335,10 @@ func get_dir_metadata(
 		intermediate_md, ok := dir_cache.Get(path)
 		if !ok {
 			intermediate_md = NewDirectoryMetadata(dir_cache.max_item_size)
-			dir_cache.Set(path, intermediate_md)
+			err := dir_cache.Set(path, intermediate_md)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		key := urn.Base() + api.GetExtensionForDatastore(urn)
@@ -418,10 +421,10 @@ func (self *MemcacheDatastore) Healthy() error {
 }
 
 func (self *MemcacheDatastore) SetTimeout(duration time.Duration) {
-	self.data_cache.SetTTL(duration)
+	_ = self.data_cache.SetTTL(duration)
 	self.data_cache.SkipTTLExtensionOnHit(true)
 
-	self.dir_cache.SetTTL(duration)
+	_ = self.dir_cache.SetTTL(duration)
 	self.dir_cache.SkipTTLExtensionOnHit(true)
 }
 
@@ -568,7 +571,7 @@ func (self *MemcacheDatastore) SetChildren(
 		md.Set(child)
 	}
 
-	self.dir_cache.Set(path, md)
+	_ = self.dir_cache.Set(path, md)
 }
 
 // Lists all the children of a URN.
@@ -606,8 +609,8 @@ func (self *MemcacheDatastore) Close() {
 
 // Clear the cache and drop the data on the floor.
 func (self *MemcacheDatastore) Clear() {
-	self.data_cache.Purge()
-	self.dir_cache.Purge()
+	_ = self.data_cache.Purge()
+	_ = self.dir_cache.Purge()
 }
 
 func (self *MemcacheDatastore) GetForTests(

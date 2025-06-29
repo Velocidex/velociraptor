@@ -195,7 +195,10 @@ func (self *collectionManager) AddThrottler(
 	}
 
 	self.scope.SetThrottler(self.throttler)
-	self.scope.AddDestructor(closer)
+	err := self.scope.AddDestructor(closer)
+	if err != nil {
+		self.scope.Log("collect: %v", err)
+	}
 }
 
 func (self *collectionManager) SetMetadata(metadata vfilter.StoredQuery) {
@@ -230,10 +233,13 @@ func (self *collectionManager) storeHostInfo() error {
 	version := config.GetVersion()
 	for row := range info.Call(self.ctx, self.scope, ordereddict.NewDict()) {
 		info_dict := vfilter.RowToDict(self.ctx, self.scope, row)
-		fd.Write(json.MustMarshalIndent(info_dict.
+		_, err := fd.Write(json.MustMarshalIndent(info_dict.
 			Set("Name", version.Name).
 			Set("BuildTime", version.BuildTime).
 			Set("build_url", version.CiBuildUrl)))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -244,7 +250,11 @@ func (self *collectionManager) storeCollectionMetadata() error {
 		return err
 	}
 
-	fd.Write(json.MustMarshalIndent(self.requests))
+	_, err = fd.Write(json.MustMarshalIndent(&self.requests))
+	if err != nil {
+		return err
+	}
+
 	fd.Close()
 
 	if len(self.custom_artifacts) > 0 {
@@ -253,7 +263,10 @@ func (self *collectionManager) storeCollectionMetadata() error {
 			return err
 		}
 
-		fd.Write(json.MustMarshalIndent(self.custom_artifacts))
+		_, err = fd.Write(json.MustMarshalIndent(self.custom_artifacts))
+		if err != nil {
+			return err
+		}
 		fd.Close()
 	}
 
@@ -542,7 +555,11 @@ func (self *collectionManager) Close() error {
 		self.collection_context.TotalUploadedBytes = container_stats.TotalUploadedBytes
 		self.collection_context.TotalExpectedUploadedBytes = container_stats.TotalUploadedBytes
 
-		fd.Write([]byte(json.MustMarshalIndent(self.collection_context)))
+		_, err := fd.Write([]byte(json.MustMarshalIndent(self.collection_context)))
+		if err != nil {
+			fd.Close()
+			return err
+		}
 		fd.Close()
 	}
 

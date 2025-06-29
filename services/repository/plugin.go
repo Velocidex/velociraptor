@@ -65,7 +65,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		var artifact *artifacts_proto.Artifact = nil
+		var artifact *artifacts_proto.Artifact
 
 		artifact_name := strings.Join(self.prefix, ".")
 

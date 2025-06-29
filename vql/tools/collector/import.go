@@ -15,6 +15,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -179,7 +180,7 @@ func (self ImportCollectionFunction) importHunt(
 
 		path := root.Append(item.Name())
 
-		client_info := &services.ClientInfo{}
+		client_info := &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
 		err = self.getFile(accessor, path.Append("client_info.json"), client_info)
 		if err != nil {
 			scope.Log("import_collection: while reading client_info.json: %v", err)
@@ -350,13 +351,13 @@ func (self ImportCollectionFunction) importFlow(
 	if err != nil {
 		return nil, err
 	}
-	journal.PushRowsToArtifact(ctx, config_obj,
+	err = journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{row},
 		"System.Flow.Completion", collection_context.ClientId,
 		collection_context.SessionId,
 	)
 
-	return collection_context, nil
+	return collection_context, err
 }
 
 func (self ImportCollectionFunction) importHuntObject(
@@ -589,8 +590,6 @@ func (self ImportCollectionFunction) copyResultSet(
 			}
 		}
 	}
-
-	return nil
 }
 
 func (self ImportCollectionFunction) getFile(
@@ -656,7 +655,10 @@ func (self ImportCollectionFunction) copyFile(
 	}
 	defer out_fd.Close()
 
-	out_fd.Truncate()
+	err = out_fd.Truncate()
+	if err != nil {
+		return err
+	}
 
 	scope.Log("import_collection: Copying %v to %v", src.String(), dest.AsClientPath())
 

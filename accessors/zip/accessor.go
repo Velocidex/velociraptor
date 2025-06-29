@@ -357,9 +357,14 @@ func (self *ZipFileSystemAccessor) New(scope vfilter.Scope) (
 		}
 		vql_subsystem.CacheSet(scope, tag, result)
 
-		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+		err := vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 			result.CloseAll()
 		})
+		if err != nil {
+			result.CloseAll()
+			return nil, err
+		}
+
 		return result, nil
 	}
 

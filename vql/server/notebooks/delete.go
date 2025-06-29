@@ -61,8 +61,12 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 			return
 		}
 
-		notebook_manager.DeleteNotebook(ctx, arg.NotebookId,
+		err = notebook_manager.DeleteNotebook(ctx, arg.NotebookId,
 			output_chan, arg.ReallyDoIt)
+		if err != nil {
+			scope.Log("notebook_delete: %v", err)
+			return
+		}
 	}()
 
 	return output_chan

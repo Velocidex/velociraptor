@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"crypto/rsa"
 	"errors"
 	"os"
 	"sync"
@@ -41,8 +40,6 @@ type CryptoFileWriter struct {
 	// The PEM of the server
 	server_pem  []byte
 	server_name string
-
-	private_key *rsa.PrivateKey
 
 	written_headers bool
 
@@ -291,7 +288,10 @@ func NewCryptoFileWriter(
 	err = result.header.Read(fd)
 	if err != nil {
 		// Nope - truncate to 0 and start again
-		fd.Truncate(0)
+		err := fd.Truncate(0)
+		if err != nil {
+			return nil, err
+		}
 
 		result.header.FirstMessage = 50
 		result.header.Next = 50

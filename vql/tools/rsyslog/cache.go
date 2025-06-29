@@ -15,7 +15,7 @@ func NewConnectionPool() *connectionPool {
 		lru: ttlcache.NewCache(),
 	}
 
-	self.lru.SetTTL(time.Minute)
+	_ = self.lru.SetTTL(time.Minute)
 	self.lru.SetCacheSizeLimit(10)
 	self.lru.SetExpirationCallback(func(key string, value interface{}) error {
 		logger, ok := value.(*Logger)

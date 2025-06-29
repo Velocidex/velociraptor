@@ -72,9 +72,13 @@ IgnoreMatches:
   - services/scheduler/minion.go:NewMinionScheduler
   - vql/tools/logscale/logscale.go:LogScaleQueue.addDebugCallback
   - config/loader.go:Loader.WithEnvLiteralLoader
+  - file_store/file_store.go:ClearGlobalFilestore
+  - utils/tempfile/utils.go:FindFile
+  - vql/networking/transport.go:TransportCacheType.Reset
 
   # Used for debugging
   - vql/networking/multipart.go:multiPartReader.Debug
+  - utils/writers.go:InstrumentedWriteCloser.Write
 
   # Used by Windows
   - utils/alloc.go:AllocateBuff

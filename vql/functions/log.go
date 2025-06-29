@@ -80,9 +80,14 @@ func (self *LogFunction) Call(ctx context.Context,
 		}
 		log_cache.lru.SetCacheSizeLimit(100)
 
-		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+		err := vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 			log_cache.lru.Close()
 		})
+		if err != nil {
+			log_cache.lru.Close()
+			scope.Log("log: %s", err.Error())
+			return true
+		}
 
 	} else {
 		log_cache, _ = log_cache_any.(*logCache)
@@ -107,7 +112,7 @@ func (self *LogFunction) Call(ctx context.Context,
 	}
 
 	// Store the message in the cache for next time
-	log_cache.lru.Set(arg.Message, &logCacheEntry{
+	_ = log_cache.lru.Set(arg.Message, &logCacheEntry{
 		last_time: now,
 	})
 

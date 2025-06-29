@@ -1,8 +1,6 @@
 package networking
 
-import (
-	"time"
-)
+import "time"
 
 // Addr is implemented compatibility to psutil
 type Addr struct {

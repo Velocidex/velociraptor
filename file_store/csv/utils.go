@@ -60,7 +60,11 @@ func GetCSVReader(ctx context.Context, fd api.FileReader) CSVReader {
 	go func() {
 		defer close(output_chan)
 
-		csv_reader := NewReader(fd)
+		csv_reader, err := NewReader(fd)
+		if err != nil {
+			return
+		}
+
 		headers, err := csv_reader.Read()
 		if err != nil {
 			return

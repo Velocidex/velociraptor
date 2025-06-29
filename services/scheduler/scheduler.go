@@ -27,8 +27,6 @@ type Worker struct {
 	// Freestyle name to report in stats
 	name string
 
-	org_id string
-
 	// If this is busy we do not assign any requests to it.
 	busy bool
 

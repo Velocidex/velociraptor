@@ -27,6 +27,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -275,12 +276,16 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		config_obj, principal, "CreateHunt",
 		ordereddict.NewDict().
 			Set("hunt_id", new_hunt.HuntId).
 			Set("details", vfilter.RowToDict(ctx, scope, arg)).
 			Set("orgs", orgs_we_scheduled))
+	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Error("<red>CreateHunt</> %v %v", principal, new_hunt.HuntId)
+	}
 
 	return ordereddict.NewDict().
 		Set("HuntId", new_hunt.HuntId).
@@ -377,7 +382,7 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 				}
 
 				// Queue and notify the client about the new tasks
-				client_manager.QueueMessageForClient(
+				_ = client_manager.QueueMessageForClient(
 					ctx, arg.ClientId, task,
 					services.NOTIFY_CLIENT, utils.BackgroundWriter)
 			})

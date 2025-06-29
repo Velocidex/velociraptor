@@ -216,9 +216,11 @@ func main() {
 						return
 					}
 
-					pprof.StartCPUProfile(f2)
-					time.Sleep(time.Duration(*profile_duration) * time.Second)
-					pprof.StopCPUProfile()
+					err = pprof.StartCPUProfile(f2)
+					if err == nil {
+						time.Sleep(time.Duration(*profile_duration) * time.Second)
+						pprof.StopCPUProfile()
+					}
 					f2.Close()
 				}
 			}()

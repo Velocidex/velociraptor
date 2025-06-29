@@ -58,7 +58,10 @@ func getCachedEWFFile(
 		cache = &ewfCache{
 			cache: make(map[string]*EWFReader),
 		}
-		vql_subsystem.GetRootScope(scope).AddDestructor(cache.Close)
+		err := vql_subsystem.GetRootScope(scope).AddDestructor(cache.Close)
+		if err != nil {
+			return nil, err
+		}
 		vql_subsystem.CacheSet(scope, EWF_CACHE_TAG, cache)
 	}
 

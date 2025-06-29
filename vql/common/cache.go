@@ -213,7 +213,12 @@ func (self _MemoizeFunction) Call(ctx context.Context, scope vfilter.Scope,
 
 	// The cache needs to remain alive for the duration of the query.
 	ctx, cancel := context.WithCancel(context.Background())
-	vql_subsystem.GetRootScope(scope).AddDestructor(cancel)
+	err = vql_subsystem.GetRootScope(scope).AddDestructor(cancel)
+	if err != nil {
+		cancel()
+		scope.Log("memoize: %s", err.Error())
+		return vfilter.Null{}
+	}
 
 	name := arg.Name
 	if name == "" {

@@ -64,8 +64,12 @@ func (self *SparseReader) readDistinctPages(buf []byte) (int, error) {
 		buf_end := buf_start + PAGE_SIZE
 
 		// Repeat the read with a single page at the time.
-		self.handle.Seek(self.offset, os.SEEK_SET)
-		_, err := self.handle.Read(buf[buf_start:buf_end])
+		_, err := self.handle.Seek(self.offset, os.SEEK_SET)
+		if err != nil {
+			return 0, err
+		}
+
+		_, err = self.handle.Read(buf[buf_start:buf_end])
 		if err != nil {
 			// Error occured reading a single page, zero
 			// it out and skip the page.
@@ -97,8 +101,12 @@ func (self *SparseReader) Read(buf []byte) (int, error) {
 			}
 		} else {
 			// Read memory from process at specified offset.
-			self.handle.Seek(self.offset, os.SEEK_SET)
-			_, err := self.handle.Read(buf[:to_read])
+			_, err := self.handle.Seek(self.offset, os.SEEK_SET)
+			if err != nil {
+				return 0, err
+			}
+
+			_, err = self.handle.Read(buf[:to_read])
 
 			// A read error occured - split the read into multiple page
 			// size reads to get as much data as we can out of the
@@ -179,11 +187,11 @@ func (self *SparseReader) Seek(offset int64, whence int) (int64, error) {
 	return int64(self.offset), nil
 }
 
-func (self SparseReader) Close() error {
+func (self *SparseReader) Close() error {
 	return self.handle.Close()
 }
 
-func (self SparseReader) LStat() (accessors.FileInfo, error) {
+func (self *SparseReader) LStat() (accessors.FileInfo, error) {
 	return &SparseFileInfo{size: self.size}, nil
 }
 

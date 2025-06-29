@@ -33,7 +33,10 @@ func (self *Conn) WriteMessageWithDeadline(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.Conn.SetWriteDeadline(deadline)
+	err := self.Conn.SetWriteDeadline(deadline)
+	if err != nil {
+		return err
+	}
 	return self.Conn.WriteMessage(message_type, message)
 }
 
@@ -196,10 +199,17 @@ func (WebSocketConnectionFactoryImpl) NewWebSocketConnection(
 
 		// Extend the read and write timeouts when a ping arrives from
 		// the server.
-		ws.SetReadDeadline(deadline)
-		ws.SetWriteDeadline(deadline)
+		err := ws.SetReadDeadline(deadline)
+		if err != nil {
+			return err
+		}
 
-		err := ws.WriteControl(websocket.PongMessage,
+		err = ws.SetWriteDeadline(deadline)
+		if err != nil {
+			return err
+		}
+
+		err = ws.WriteControl(websocket.PongMessage,
 			[]byte(message), utils.GetTime().Now().Add(writeWait))
 		if err == websocket.ErrCloseSent {
 			return nil

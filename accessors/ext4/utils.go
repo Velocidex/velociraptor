@@ -36,6 +36,9 @@ func GetExt4Cache(scope vfilter.Scope,
 
 		paged_reader, err := readers.NewAccessorReader(
 			scope, accessor, device, int(lru_size))
+		if err != nil {
+			return nil, err
+		}
 
 		cache_ctx, err = ext4.GetEXT4Context(paged_reader)
 		if err != nil {

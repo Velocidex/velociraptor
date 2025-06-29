@@ -49,7 +49,11 @@ func (self *HuntDispatcher) ProcessUpdate(
 	// our currently connected clients.
 	_, pres = row.Get("TriggerParticipation")
 	if pres {
-		self.participateAllConnectedClients(ctx, config_obj, hunt_obj.HuntId)
+		err := self.participateAllConnectedClients(
+			ctx, config_obj, hunt_obj.HuntId)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Only update the version if it is ahead.

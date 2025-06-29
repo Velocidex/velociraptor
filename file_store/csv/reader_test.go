@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"unicode/utf8"
+
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
 func TestRead(t *testing.T) {
@@ -454,7 +456,8 @@ x,,,
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			r := NewReader(strings.NewReader(tt.Input))
+			r, err := NewReader(strings.NewReader(tt.Input))
+			assert.NoError(t, err)
 
 			if tt.Comma != 0 {
 				r.Comma = tt.Comma

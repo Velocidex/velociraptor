@@ -106,14 +106,14 @@ func (self *ApiServer) CancelFlow(
 	}
 
 	// Log this event as and Audit event.
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		org_config_obj, principal, "CancelFlow",
 		ordereddict.NewDict().
 			Set("client", in.ClientId).
 			Set("flow_id", in.FlowId).
 			Set("details", in))
 
-	return result, nil
+	return result, err
 }
 
 func (self *ApiServer) GetReport(
@@ -210,14 +210,14 @@ func (self *ApiServer) CollectArtifact(
 	result.FlowId = flow_id
 
 	// Log this event as an Audit event.
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		org_config_obj, request.Creator, "ScheduleFlow",
 		ordereddict.NewDict().
 			Set("client", request.ClientId).
 			Set("flow_id", flow_id).
 			Set("details", request))
 
-	return result, nil
+	return result, err
 }
 
 func (self *ApiServer) ListClients(
@@ -329,22 +329,28 @@ func (self *ApiServer) LabelClients(
 				err = labeler.SetClientLabel(ctx,
 					org_config_obj, client_id, label)
 				if err == nil {
-					services.LogAudit(ctx,
+					err := services.LogAudit(ctx,
 						org_config_obj, principal, "SetClientLabel",
 						ordereddict.NewDict().
 							Set("client_id", client_id).
 							Set("label", label))
+					if err != nil {
+						return nil, Status(self.verbose, err)
+					}
 				}
 
 			case "remove":
 				err = labeler.RemoveClientLabel(ctx,
 					org_config_obj, client_id, label)
 				if err == nil {
-					services.LogAudit(ctx,
+					err := services.LogAudit(ctx,
 						org_config_obj, principal, "RemoveClientLabel",
 						ordereddict.NewDict().
 							Set("client_id", client_id).
 							Set("label", label))
+					if err != nil {
+						return nil, Status(self.verbose, err)
+					}
 				}
 
 			default:
@@ -880,13 +886,13 @@ func (self *ApiServer) SetArtifactFile(
 		return message, Status(self.verbose, errors.New(message.ErrorMessage))
 	}
 
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		org_config_obj, principal, "SetArtifactFile",
 		ordereddict.NewDict().
 			Set("artifact", definition.Name).
 			Set("details", in.Artifact))
 
-	return &api_proto.SetArtifactResponse{}, nil
+	return &api_proto.SetArtifactResponse{}, err
 }
 
 func (self *ApiServer) Query(
@@ -1085,9 +1091,13 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	}
 
 	// Log an audit event.
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		org_config_obj, principal, "CreateDownloadRequest",
 		ordereddict.NewDict().Set("request", in))
+	if !perm || err != nil {
+		return nil, PermissionDenied(err,
+			fmt.Sprintf("User is not allowed to create downloads (%v).", permissions))
+	}
 
 	format := ""
 	if in.JsonFormat && !in.CsvFormat {

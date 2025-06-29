@@ -38,7 +38,10 @@ func (self *Claims) Valid() error {
 func (self *OidcAuthenticator) NewClaims(
 	ctx context.Context, user_info *oidc.UserInfo) (*Claims, error) {
 	claims := ordereddict.NewDict()
-	user_info.Claims(&claims)
+	err := user_info.Claims(&claims)
+	if err != nil {
+		return nil, err
+	}
 
 	if self.authenticator.OidcDebug {
 		logging.GetLogger(self.config_obj, &logging.GUIComponent).
@@ -86,7 +89,7 @@ func (self *OidcAuthenticator) NewClaims(
 	logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
 
 	// First check the user exist at all.
-	_, err := user_manager.GetUser(ctx, email, email)
+	_, err = user_manager.GetUser(ctx, email, email)
 	if errors.Is(err, utils.NotFoundError) {
 		// If the user does not exist at all, create it.
 		user_record := &api_proto.VelociraptorUser{

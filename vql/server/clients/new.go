@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -73,7 +74,7 @@ func (self NewClientFunction) Call(ctx context.Context,
 	}
 
 	// Create a client record and index with elastic.
-	record := actions_proto.ClientInfo{
+	record := &actions_proto.ClientInfo{
 		Hostname:     arg.Hostname,
 		Fqdn:         arg.Hostname,
 		System:       arg.OS,
@@ -90,7 +91,7 @@ func (self NewClientFunction) Call(ctx context.Context,
 		record.Ping = uint64(arg.LastSeenAt.UnixNano() / 1000)
 	}
 
-	err = client_info_manager.Set(ctx, &services.ClientInfo{record})
+	err = client_info_manager.Set(ctx, &services.ClientInfo{ClientInfo: record})
 	if err != nil {
 		scope.Log("client_create: %s", err)
 		return &vfilter.Null{}
@@ -126,13 +127,18 @@ func (self NewClientFunction) Call(ctx context.Context,
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	services.LogAudit(ctx,
+	err = services.LogAudit(ctx,
 		config_obj, principal, "client_create",
 		ordereddict.NewDict().
 			Set("client_id", record.ClientId).
 			Set("details", record))
+	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Error("NewClientFunction: client_create %v $%v",
+			principal, record)
+	}
 
-	return json.ConvertProtoToOrderedDict(&record)
+	return json.ConvertProtoToOrderedDict(record)
 }
 
 func (self NewClientFunction) Info(

@@ -157,7 +157,6 @@ func (self *flowIndexBuilder) buildFlowIndexFromDatastore(
 				Set("Creator", flow.Request.Creator))
 		}
 	}
-	return nil
 }
 
 // Filter the index through the journal.

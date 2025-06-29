@@ -143,15 +143,19 @@ func (self *EventTable) Update(
 	principal string,
 	request *flows_proto.ArtifactCollectorArgs) error {
 
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	if principal != "" {
-		services.LogAudit(ctx,
+		err := services.LogAudit(ctx,
 			config_obj, principal, "SetServerMonitoringState",
 			ordereddict.NewDict().
 				Set("user", principal).
 				Set("state", request))
+		if err != nil {
+			logger.Error("EventTable Update SetServerMonitoringState %v %v",
+				principal, request)
+		}
 	}
 
-	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("<green>server_monitoring</>: Updating monitoring table")
 
 	// Now store the monitoring table on disk.
@@ -460,7 +464,13 @@ func (self *EventTable) Start(
 	}
 
 	wg.Add(1)
-	go self.startLoadFileLoop(ctx, wg, config_obj)
+	go func() {
+		err := self.startLoadFileLoop(ctx, wg, config_obj)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("startLoadFileLoop: %v", err)
+		}
+	}()
 
 	events, cancel := journal.Watch(
 		ctx, "Server.Internal.ArtifactModification",

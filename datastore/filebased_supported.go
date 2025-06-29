@@ -81,7 +81,7 @@ func startFullDiskChecker(ctx context.Context, wg *sync.WaitGroup,
 	go func() {
 		defer wg.Done()
 
-		AvailableDiskSpace(db, config_obj)
+		_, _ = AvailableDiskSpace(db, config_obj)
 
 		for {
 			select {
@@ -89,7 +89,7 @@ func startFullDiskChecker(ctx context.Context, wg *sync.WaitGroup,
 				return
 
 			case <-time.After(time.Duration(disk_check_freq) * time.Second):
-				AvailableDiskSpace(db, config_obj)
+				_, _ = AvailableDiskSpace(db, config_obj)
 			}
 		}
 	}()

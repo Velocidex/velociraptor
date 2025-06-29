@@ -121,7 +121,11 @@ func (self *HuntDispatcher) GetFlows(
 	// anything other than the default table, otherwise we just query
 	// the original table.
 	if options.SortColumn != "" || options.FilterColumn != "" {
-		self.syncFlowTables(ctx, config_obj, hunt_id)
+		err := self.syncFlowTables(ctx, config_obj, hunt_id)
+		if err != nil {
+			close(output_chan)
+			return output_chan, 0, err
+		}
 		table_to_query = hunt_path_manager.EnrichedClients()
 	}
 

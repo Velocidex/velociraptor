@@ -45,7 +45,7 @@ func (self MagicFunction) Call(
 		return vfilter.Null{}
 	}
 
-	magic_type := magic.MAGIC_NONE
+	var magic_type int
 	switch arg.Type {
 	case "mime":
 		magic_type = magic.MAGIC_MIME
@@ -70,7 +70,11 @@ func (self MagicFunction) Call(
 
 	case nil:
 		handle = magic.NewMagicHandle(magic_type)
-		magic_files.LoadDefaultMagic(handle)
+		err := magic_files.LoadDefaultMagic(handle)
+		if err != nil {
+			scope.Log("magic:  %v", err)
+			return vfilter.Null{}
+		}
 
 		// Do we need to load additional magic tests?
 		if arg.Magic != "" {
@@ -82,8 +86,13 @@ func (self MagicFunction) Call(
 		}
 
 		// Attach the handle to the root destructor.
-		vql_subsystem.GetRootScope(scope).
-			AddDestructor(func() { handle.Close() })
+		err = vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+			handle.Close()
+		})
+		if err != nil {
+			scope.Log("magic:  %v", err)
+		}
+
 		vql_subsystem.CacheSet(scope, key, handle)
 
 	case *magic.Magic:

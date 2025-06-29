@@ -54,12 +54,17 @@ func getSignedJWTTokenCookie(
 	}
 
 	// Log a successful login.
-	services.LogAudit(r.Context(),
+	err = services.LogAudit(r.Context(),
 		config_obj, claims.Username, "Login",
 		ordereddict.NewDict().
 			Set("remote", r.RemoteAddr).
 			Set("authenticator", authenticator.Type).
 			Set("url", r.URL.Path))
+	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Error("getSignedJWTTokenCookie LogAudit: Login %v %v",
+			claims.Username, r.RemoteAddr)
+	}
 
 	// Sets the cookie on the browser so it is only valid from the
 	// base down.

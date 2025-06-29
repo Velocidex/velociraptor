@@ -166,7 +166,12 @@ func writeTraceProfile(
 	}
 	defer tmpfile.Close()
 
-	scope.AddDestructor(func() { remove(scope, tmpfile.Name()) })
+	err = scope.AddDestructor(func() { remove(scope, tmpfile.Name()) })
+	if err != nil {
+		remove(scope, tmpfile.Name())
+		scope.Log("profile: %s", err)
+		return
+	}
 
 	err = trace.Start(tmpfile)
 	if err != nil {

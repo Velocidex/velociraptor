@@ -13,10 +13,10 @@ import (
 )
 
 type progressReporter struct {
-	config_obj                     *config_proto.Config
-	notebook_cell                  *api_proto.NotebookCell
-	notebook_id, table_id, version string
-	last, start                    time.Time
+	config_obj           *config_proto.Config
+	notebook_cell        *api_proto.NotebookCell
+	notebook_id, version string
+	last, start          time.Time
 
 	store NotebookStore
 	tmpl  *reporting.GuiTemplateEngine

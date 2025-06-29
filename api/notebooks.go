@@ -97,11 +97,15 @@ func (self *ApiServer) GetNotebooks(
 
 	// Document not owned or collaborated with.
 	if !notebook_manager.CheckNotebookAccess(notebook_metadata, principal) {
-		services.LogAudit(ctx,
+		err := services.LogAudit(ctx,
 			org_config_obj, principal, "notebook not shared.",
 			ordereddict.NewDict().
 				Set("action", "Access Denied").
 				Set("notebook", in.NotebookId))
+		if err != nil {
+			logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
+			logger.Error("<red>notebook not shared</> %v %v", principal, in.NotebookId)
+		}
 
 		return nil, InvalidStatus("User has no access to this notebook")
 	}

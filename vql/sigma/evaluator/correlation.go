@@ -342,8 +342,6 @@ func NewSigmaCorrelatorGroup(
 	ctx context.Context, scope types.Scope,
 	rule sigma.Rule) (*SigmaCorrelatorGroup, error) {
 
-	result := &SigmaCorrelatorGroup{}
-
 	// Figure out the type of the correlation
 	switch rule.Correlation.Type {
 	case "event_count":
@@ -399,7 +397,6 @@ func NewSigmaCorrelatorGroup(
 		return nil, fmt.Errorf("Unsupported correlation type for %v: %v",
 			rule.Title, rule.Correlation.Type)
 	}
-	return result, nil
 }
 
 func getCmp(scope vfilter.Scope,

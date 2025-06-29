@@ -65,9 +65,12 @@ func streamEvents(
 	if in.Queue == "Server.Internal.MasterRegistrations" {
 		result := ordereddict.NewDict().Set("Events", journal.GetWatchers())
 		serialized, _ := result.MarshalJSON()
-		stream.Send(&api_proto.EventResponse{
+		err := stream.Send(&api_proto.EventResponse{
 			Jsonl: serialized,
 		})
+		if err != nil {
+			return err
+		}
 		stats.Sent++
 	}
 
@@ -118,8 +121,6 @@ func streamEvents(
 			}
 		}
 	}
-
-	return nil
 }
 
 // NOTE: The API server is only running on the master node.

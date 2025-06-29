@@ -37,7 +37,7 @@ func (self *SuperTimelineReader) Close() {
 
 func (self *SuperTimelineReader) SeekToTime(timestamp time.Time) {
 	for _, reader := range self.readers {
-		reader.SeekToTime(timestamp)
+		_ = reader.SeekToTime(timestamp)
 	}
 }
 
@@ -183,7 +183,7 @@ type SuperTimelineWriter struct {
 	timeline_storer ISuperTimelineStorer
 }
 
-func (self SuperTimelineWriter) New(
+func (self *SuperTimelineWriter) New(
 	ctx context.Context, config_obj *config_proto.Config,
 	storer ISuperTimelineStorer,
 	notebook_id, name string) (result ISuperTimelineWriter, err error) {

@@ -164,7 +164,7 @@ func (self *FlowStorageManager) RemoveFlowsFromJournal(
 
 	// Only clear the journal if all reindex operations are successful.
 	if r_err == nil {
-		self.clearJournal(config_obj)
+		return self.clearJournal(config_obj)
 	}
 
 	return r_err

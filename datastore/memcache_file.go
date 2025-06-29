@@ -120,7 +120,6 @@ type MemcacheFileDataStore struct {
 
 	writer chan *Mutation
 	ctx    context.Context
-	cancel func()
 
 	started bool
 }
@@ -141,7 +140,7 @@ func (self *MemcacheFileDataStore) invalidateDirCache(
 		md, pres := self.cache.dir_cache.Get(path)
 		if pres && !md.IsFull() {
 			key_path := AsDatastoreDirectory(self, config_obj, urn)
-			self.cache.dir_cache.Remove(key_path)
+			_ = self.cache.dir_cache.Remove(key_path)
 		}
 		urn = urn.Dir()
 	}
@@ -236,7 +235,11 @@ func (self *MemcacheFileDataStore) processMutation(mutation *Mutation) {
 	metricIdleWriters.Dec()
 	switch mutation.op {
 	case MUTATION_OP_SET_SUBJECT:
-		writeContentToFile(self, mutation.org_config_obj, mutation.urn, mutation.data)
+		err := writeContentToFile(self, mutation.org_config_obj, mutation.urn, mutation.data)
+		if err != nil {
+			logger := logging.GetLogger(mutation.org_config_obj, &logging.FrontendComponent)
+			logger.Error("MemcacheFileDataStore: processMutation: %v", err)
+		}
 		self.invalidateDirCache(mutation.org_config_obj, mutation.urn)
 
 		// Call the completion function once we hit
@@ -246,7 +249,12 @@ func (self *MemcacheFileDataStore) processMutation(mutation *Mutation) {
 		}
 
 	case MUTATION_OP_DEL_SUBJECT:
-		file_based_imp.DeleteSubject(mutation.org_config_obj, mutation.urn)
+		err := file_based_imp.DeleteSubject(mutation.org_config_obj, mutation.urn)
+		if err != nil {
+			logger := logging.GetLogger(mutation.org_config_obj, &logging.FrontendComponent)
+			logger.Error("MemcacheFileDataStore: processMutation: %v", err)
+		}
+
 		self.invalidateDirCache(mutation.org_config_obj, mutation.urn.Dir())
 
 		// Call the completion function once we hit
@@ -284,7 +292,10 @@ func (self *MemcacheFileDataStore) GetSubject(
 		metricDataLRUMiss.Inc()
 
 		// Store it in the cache for next time.
-		self.cache.SetData(config_obj, urn, serialized_content)
+		err = self.cache.SetData(config_obj, urn, serialized_content)
+		if err != nil {
+			return err
+		}
 
 		// Unmarshal the data into the message.
 		return unmarshalData(serialized_content, urn, message)
@@ -565,9 +576,9 @@ func (self *MemcacheFileDataStore) GetBuffer(
 	}
 
 	metricDataLRUMiss.Inc()
-	self.cache.SetData(config_obj, urn, bulk_data)
+	err = self.cache.SetData(config_obj, urn, bulk_data)
 
-	return bulk_data, nil
+	return bulk_data, err
 }
 
 // Needed to support RawDataStore interface.
@@ -641,7 +652,10 @@ func get_file_dir_metadata(
 		md, pres := dir_cache.Get(path)
 		if pres && !md.IsFull() {
 			key_path := AsDatastoreDirectory(db, config_obj, urn)
-			dir_cache.Remove(key_path)
+			err := dir_cache.Remove(key_path)
+			if err != nil {
+				return nil, err
+			}
 		}
 		urn = urn.Dir()
 	}

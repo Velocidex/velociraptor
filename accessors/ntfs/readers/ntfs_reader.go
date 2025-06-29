@@ -20,11 +20,6 @@ import (
 )
 
 var (
-	ntfsAccessorCurrentOpened = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "accessor_ntfs_current_open",
-		Help: "Number of currently opened handles to the ntfs accessor.",
-	})
-
 	ntfsCacheTotalOpened = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "ntfs_cache_total_open",
 		Help: "Total Number of times we opened the ntfs cache",

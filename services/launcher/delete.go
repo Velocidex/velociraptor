@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
@@ -48,12 +49,17 @@ func (self *FlowStorageManager) DeleteFlow(
 	}
 
 	if options.ReallyDoIt && principal != "" {
-		services.LogAudit(ctx,
+		err := services.LogAudit(ctx,
 			config_obj, principal, "delete_flow",
 			ordereddict.NewDict().
 				Set("client_id", client_id).
 				Set("flow_id", flow_id).
 				Set("flow", collection_context))
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("<red>FlowStorageManager delete_flow</> %v %v %v",
+				principal, client_id, flow_id)
+		}
 	}
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
@@ -131,7 +137,7 @@ func (self *FlowStorageManager) DeleteFlow(
 	}
 
 	r.emit_ds("Notebook", flow_path_manager.Notebook().Path())
-	datastore.Walk(config_obj, db, flow_path_manager.Notebook().DSDirectory(),
+	_ = datastore.Walk(config_obj, db, flow_path_manager.Notebook().DSDirectory(),
 		datastore.WalkWithoutDirectories,
 		func(path api.DSPathSpec) error {
 			r.emit_ds("NotebookData", path)
@@ -139,14 +145,14 @@ func (self *FlowStorageManager) DeleteFlow(
 		})
 
 	// Clean the empty directories
-	datastore.Walk(config_obj, db, flow_path_manager.Notebook().DSDirectory(),
+	_ = datastore.Walk(config_obj, db, flow_path_manager.Notebook().DSDirectory(),
 		datastore.WalkWithDirectories,
 		func(path api.DSPathSpec) error {
 			_ = db.DeleteSubject(config_obj, path)
 			return nil
 		})
 
-	api.Walk(file_store_factory,
+	_ = api.Walk(file_store_factory,
 		flow_path_manager.Notebook().Directory(),
 		func(path api.FSPathSpec, info os.FileInfo) error {
 			r.emit_fs("NotebookItem", path)
@@ -163,7 +169,7 @@ func (self *FlowStorageManager) DeleteFlow(
 		} else {
 			// Otherwise we just mark the index as pending a rebuild
 			// and move on.
-			self.writeFlowJournal(config_obj, client_id, flow_id)
+			err = self.writeFlowJournal(config_obj, client_id, flow_id)
 		}
 	}
 	r.pool.StopAndWait()

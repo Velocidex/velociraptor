@@ -3,7 +3,6 @@ package scheduler
 import (
 	"context"
 	"errors"
-	"sync"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -13,7 +12,6 @@ import (
 )
 
 type MinionScheduler struct {
-	mu         sync.Mutex
 	config_obj *config_proto.Config
 	ctx        context.Context
 }
@@ -45,7 +43,9 @@ func (self *MinionScheduler) RegisterWorker(
 	if err != nil {
 		return nil, err
 	}
-	defer closer()
+	defer func() {
+		_ = closer()
+	}()
 
 	stream, err := api_client.Scheduler(self.ctx)
 	if err != nil {
@@ -91,7 +91,7 @@ func (self *MinionScheduler) RegisterWorker(
 					}
 					logger.Debug("MinionScheduler: Completed job for queue <green>%v</> in %v on %v",
 						queue, utils.GetTime().Now().Sub(start), utils.NormalizedOrgId(req.OrgId))
-					stream.Send(
+					_ = stream.Send(
 						&api_proto.ScheduleRequest{
 							Queue:    req.Queue,
 							Type:     "response",
@@ -129,7 +129,9 @@ func (self *MinionScheduler) Start() error {
 	if err != nil {
 		return err
 	}
-	defer closer()
+	defer func() {
+		_ = closer()
+	}()
 
 	stream, err := api_client.Scheduler(self.ctx)
 	if err != nil {

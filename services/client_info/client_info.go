@@ -59,7 +59,6 @@ var (
 type ClientInfoManager struct {
 	config_obj       *config_proto.Config
 	uuid             int64
-	mu               sync.Mutex
 	mutation_manager *MutationManager
 
 	storage *Store
@@ -114,7 +113,7 @@ func (self *ClientInfoManager) UpdateMostRecentPing(ctx context.Context) {
 	for _, client_id := range self.mutation_manager.pings.Keys() {
 		if notifier.IsClientDirectlyConnected(client_id) {
 			update_stat.Ping = now
-			self.UpdateStats(ctx, client_id, update_stat)
+			_ = self.UpdateStats(ctx, client_id, update_stat)
 		}
 	}
 }
@@ -202,7 +201,10 @@ func (self *ClientInfoManager) Start(
 			defer wg.Done()
 
 			// When we teardown write the data to storage if needed.
-			defer self.storage.SaveSnapshot(ctx, config_obj, SYNC_UPDATE)
+			defer func() {
+				err := self.storage.SaveSnapshot(ctx, config_obj, SYNC_UPDATE)
+				logger.Error("<red>ClientInfo Manager</>: SaveSnapshot: %v", err)
+			}()
 
 			for {
 				select {
@@ -460,7 +462,10 @@ func (self *ClientInfoManager) ProcessPing(
 			record, err := self.storage.GetRecord(client_id)
 			if err == nil {
 				record.Ping = uint64(value)
-				self.storage.SetRecord(self.config_obj, record)
+				err := self.storage.SetRecord(self.config_obj, record)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -475,7 +480,10 @@ func (self *ClientInfoManager) ProcessPing(
 			record, err := self.storage.GetRecord(client_id)
 			if err == nil {
 				record.IpAddress = value
-				self.storage.SetRecord(self.config_obj, record)
+				err := self.storage.SetRecord(self.config_obj, record)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -491,7 +499,10 @@ func (self *ClientInfoManager) ProcessPing(
 			record, err := self.storage.GetRecord(client_id)
 			if err == nil {
 				record.LastHuntTimestamp = uint64(value)
-				self.storage.SetRecord(self.config_obj, record)
+				err := self.storage.SetRecord(self.config_obj, record)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -507,7 +518,10 @@ func (self *ClientInfoManager) ProcessPing(
 			record, err := self.storage.GetRecord(client_id)
 			if err == nil {
 				record.LastEventTableVersion = uint64(value)
-				self.storage.SetRecord(self.config_obj, record)
+				err := self.storage.SetRecord(self.config_obj, record)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -536,11 +550,14 @@ func (self *ClientInfoManager) Get(
 	if err == nil {
 		if notifier.IsClientDirectlyConnected(client_id) {
 			record.Ping = uint64(utils.GetTime().Now().UnixNano() / 1000)
-			self.storage.SetRecord(self.config_obj, record)
+			err := self.storage.SetRecord(self.config_obj, record)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
-	return &services.ClientInfo{*record}, nil
+	return &services.ClientInfo{ClientInfo: record}, nil
 }
 
 func (self *ClientInfoManager) Remove(ctx context.Context, client_id string) {
@@ -554,7 +571,7 @@ func (self *ClientInfoManager) Set(
 		return invalidClientError
 	}
 
-	return self.storage.SetRecord(self.config_obj, &client_info.ClientInfo)
+	return self.storage.SetRecord(self.config_obj, client_info.ClientInfo)
 }
 
 func NewClientInfoManager(
@@ -599,7 +616,11 @@ func NewClientInfoManager(
 			errors.New("ClientInfoService: deadline reached saving snapshot"))
 		defer cancel()
 
-		service.storage.SaveSnapshot(subctx, config_obj, SYNC_UPDATE)
+		err := service.storage.SaveSnapshot(subctx, config_obj, SYNC_UPDATE)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("ClientInfoService: SaveSnapshot: %v", err)
+		}
 	}()
 
 	return service, nil

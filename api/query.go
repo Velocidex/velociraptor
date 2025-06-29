@@ -75,6 +75,7 @@ func streamQuery(
 
 	response_channel := make(chan *actions_proto.VQLResponse)
 	sub_ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	scope_logger := MakeLogger(sub_ctx, response_channel)
 
@@ -83,6 +84,7 @@ func streamQuery(
 	if err != nil {
 		return err
 	}
+
 	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
@@ -138,7 +140,11 @@ func streamQuery(
 	t, closer := throttler.NewThrottler(sub_ctx, scope, config_obj,
 		0, float64(arg.CpuLimit), 0)
 	scope.SetThrottler(t)
-	scope.AddDestructor(closer)
+	err = scope.AddDestructor(closer)
+	if err != nil {
+		closer()
+		return err
+	}
 
 	wg.Add(1)
 	go func() {

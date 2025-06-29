@@ -20,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/executor/throttler"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -70,9 +71,16 @@ func NewCollectionContextManager(
 	CollectionContextManager, error) {
 
 	flow_id := collection_context.SessionId
+
+	// The cancel is actually embedded in the CollectionContextManager
+	// and will be closed when Close() is called.
+
+	//nolint:govet
 	sub_ctx, cancel := context.WithCancel(ctx)
+
 	log_writer, err := NewServerLogWriter(sub_ctx, config_obj, flow_id)
 	if err != nil {
+		//nolint:govet
 		return nil, err
 	}
 
@@ -204,11 +212,20 @@ func (self *contextManager) StartRefresh(wg *sync.WaitGroup) {
 		for {
 			select {
 			case <-self.sub_ctx.Done():
-				self.Save()
+				err := self.Save()
+				if err != nil {
+					logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+					logger.Error("<red>contextManager Save</> %v", err)
+				}
 				return
 
 			case <-time.After(utils.Jitter(time.Duration(10) * time.Second)):
-				self.Save()
+				err := self.Save()
+				if err != nil {
+					logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+					logger.Error("<red>contextManager Save</> %v", err)
+				}
+
 			}
 		}
 	}()
@@ -302,8 +319,12 @@ func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
 
 	// Write the context synchronously because listeners may be wait
 	// for the messages.
-	launcher.Storage().WriteFlow(
+	err = launcher.Storage().WriteFlow(
 		ctx, self.config_obj, flow_context, utils.SyncCompleter)
+	if err != nil {
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Error("<red>maybeSendCompletionMessage WriteFlow</> %v", err)
+	}
 
 	row := ordereddict.NewDict().
 		Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
@@ -428,7 +449,11 @@ func (self *contextManager) RunQuery(
 		scope.Log("query: Installing a progress alarm for %v", duration)
 	}
 	scope.SetThrottler(throttler)
-	scope.AddDestructor(closer)
+	err = scope.AddDestructor(closer)
+	if err != nil {
+		closer()
+		return err
+	}
 
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.

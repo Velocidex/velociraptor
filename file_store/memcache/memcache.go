@@ -81,7 +81,6 @@ var (
 		})
 
 	currentlyFlushingError = errors.New("CurrentlyFlushingError")
-	notTimeToFlushError    = errors.New("notTimeToFlushError")
 
 	currentlyShuttingDownError = errors.New("currentlyShuttingDownError")
 )
@@ -202,13 +201,18 @@ func (self *MemcacheFileWriter) Update(data []byte, offset int64) error {
 }
 
 // Writes go to memory first.
-func (self *MemcacheFileWriter) Write(data []byte) (int, error) {
+func (self *MemcacheFileWriter) Write(data []byte) (n int, err error) {
 	defer api.Instrument("write", "MemcacheFileWriter", nil)()
 
 	// Try to keep our memory use down - Try to flush the store. This
 	// has to happen without holding the lock on this writer in case
 	// this writer needs to be flushed too.
-	defer self.owner.ReduceMemoryToLimit()
+	defer func() {
+		err1 := self.owner.ReduceMemoryToLimit()
+		if err1 != nil && err == nil {
+			err = err1
+		}
+	}()
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -475,7 +479,12 @@ func (self *MemcacheFileWriter) _FlushSync(
 	defer writer.Close()
 
 	if truncate {
-		writer.Truncate()
+		err := writer.Truncate()
+		if err != nil {
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Error("MemcacheFileWriter: Unable to truncare file %v: %v", self.key, err)
+			return
+		}
 	}
 
 	metricCachedBytes.Sub(float64(len(data)))
@@ -754,7 +763,7 @@ func (self *MemcacheFileStore) Flush() {
 
 	// Force all writers to flush now.
 	for _, writer := range self.data_cache {
-		writer.FlushSync()
+		_ = writer.FlushSync()
 	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)

@@ -85,7 +85,7 @@ func (self *OrgManager) DeleteOrg(ctx context.Context, principal, org_id string)
 	// Wait a bit for the services to shut down so we can remove files
 	// safely.
 	go func() {
-		datastore.Walk(self.config_obj, db, org_path_manager.Path(),
+		_ = datastore.Walk(self.config_obj, db, org_path_manager.Path(),
 			datastore.WalkWithoutDirectories,
 			func(path api.DSPathSpec) error {
 				_ = db.DeleteSubject(self.config_obj, path)
@@ -93,10 +93,11 @@ func (self *OrgManager) DeleteOrg(ctx context.Context, principal, org_id string)
 			})
 
 		file_store_factory := file_store.GetFileStore(self.config_obj)
-		api.Walk(file_store_factory,
+		_ = api.Walk(file_store_factory,
 			org_path_manager.Path().AsFilestorePath(),
 			func(path api.FSPathSpec, info os.FileInfo) error {
-				file_store_factory.Delete(path)
+				// Ignore errors in deletion to attempt to delete all the files.
+				_ = file_store_factory.Delete(path)
 				return nil
 			})
 	}()

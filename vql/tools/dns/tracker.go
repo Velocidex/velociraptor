@@ -34,8 +34,8 @@ func NewDNSTracker() *DNSTracker {
 		by_ip:   ttlcache.NewCache(),
 	}
 
-	res.by_ip.SetTTL(time.Hour)
-	res.by_name.SetTTL(time.Hour)
+	_ = res.by_ip.SetTTL(time.Hour)
+	_ = res.by_name.SetTTL(time.Hour)
 	res.by_ip.SetCacheSizeLimit(1000)
 	res.by_name.SetCacheSizeLimit(1000)
 
@@ -57,7 +57,7 @@ func (self *DNSTracker) Set(ip, name string) {
 	if ok {
 		set[name] = true
 	}
-	self.by_ip.Set(ip, set)
+	_ = self.by_ip.Set(ip, set)
 
 	set_any, err = self.by_name.Get(name)
 	if err != nil {
@@ -68,7 +68,7 @@ func (self *DNSTracker) Set(ip, name string) {
 	if ok {
 		set[ip] = true
 	}
-	self.by_name.Set(name, set)
+	_ = self.by_name.Set(name, set)
 }
 
 func (self *DNSTracker) ByName(name string) (res []string) {

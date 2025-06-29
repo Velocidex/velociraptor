@@ -32,6 +32,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/time/rate"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -128,7 +129,10 @@ func (self *EnrollmentService) ProcessEnrollment(
 	}
 
 	// Wait for rate token
-	self.limiter.Wait(ctx)
+	err = self.limiter.Wait(ctx)
+	if err != nil {
+		return err
+	}
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -185,8 +189,12 @@ func (self *EnrollmentService) ProcessEnrollment(
 			// Notify the client
 			notifier, err := services.GetNotifier(config_obj)
 			if err == nil {
-				notifier.NotifyListener(ctx,
+				err := notifier.NotifyListener(ctx,
 					config_obj, client_id, "Interrogate")
+				if err != nil {
+					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+					logger.Error("NotifyListener: %v", err)
+				}
 			}
 		})
 	if err != nil {
@@ -206,7 +214,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 	err = client_info_manager.Modify(ctx, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if client_info == nil {
-				client_info = &services.ClientInfo{}
+				client_info = &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
 			}
 
 			client_info.ClientId = client_id
@@ -259,7 +267,7 @@ func modifyRecord(ctx context.Context,
 
 	// Client Id is not known make new record
 	if client_info == nil {
-		client_info = &services.ClientInfo{}
+		client_info = &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
 	}
 
 	client_info.ClientId = client_id
