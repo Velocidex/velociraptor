@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -63,6 +64,15 @@ func (self *FormatFunction) Call(ctx context.Context,
 			}
 		}
 	}
+
+	// Formatting a timestamp should emit it as UTC
+	for idx, value := range format_args {
+		switch t := value.(type) {
+		case time.Time:
+			format_args[idx] = t.UTC().Format(time.RFC3339)
+		}
+	}
+
 	return fmt.Sprintf(arg.Format, format_args...)
 }
 

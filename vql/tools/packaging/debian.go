@@ -99,7 +99,7 @@ func (self *DEBBuilder) Bytes(scope vfilter.Scope) ([]byte, error) {
 	filename := tmpfile.Name()
 	tempfile.AddTmpFile(filename)
 
-	defer filesystem.RemoveFile(0, filename, scope)
+	defer filesystem.RemoveTmpFile(0, filename, scope)
 	defer tmpfile.Close()
 
 	err = self.DebPkg.Write(filename)
