@@ -47,7 +47,7 @@ func NewTempFileMatrializer(
 
 	root_scope := vql_subsystem.GetRootScope(scope)
 	err = root_scope.AddDestructor(func() {
-		filesystem.RemoveFile(0, tmpfile.Name(), root_scope)
+		filesystem.RemoveTmpFile(0, tmpfile.Name(), root_scope)
 	})
 	if err != nil {
 		return nil, err
