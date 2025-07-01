@@ -136,6 +136,10 @@ func (self *CopyFunction) Call(ctx context.Context,
 		}
 	}
 
+	// Make sure the file is fully closed when the scope is destroyed.
+	sub_ctx, cancel := context.WithCancel(ctx)
+	scope.AddDestructor(cancel)
+
 	to, err := os.OpenFile(arg.Destination, flags, permissions)
 	if err != nil {
 		scope.Log("copy: Failed to open %v for writing: %v",
@@ -144,7 +148,7 @@ func (self *CopyFunction) Call(ctx context.Context,
 	}
 	defer to.Close()
 
-	_, err = utils.Copy(ctx, to, fd)
+	_, err = utils.Copy(sub_ctx, to, fd)
 	if err != nil {
 		scope.Log("copy: Failed to copy: %v", err)
 		return vfilter.Null{}

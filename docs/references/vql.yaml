@@ -423,6 +423,22 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: background
+  description: |
+    Run a query in the background.
+
+    All output from the query is discarded. The query will not wait
+    for the background thread to exit - instead the background query
+    will be cancelled when this query exists.
+
+  type: Function
+  version: 1
+  args:
+  - name: query
+    type: StoredQuery
+    description: Run this query to generator rows.
+  platforms:
+  - linux_amd64_cgo
 - name: backup
   description: Generates a backup file.
   type: Plugin
@@ -4897,9 +4913,12 @@
   args:
   - name: component
     type: string
+    repeated: true
+  - name: prelog
+    type: bool
   category: server
   metadata:
-    permissions: READ_RESULTS
+    permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -11926,4 +11945,3 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
-

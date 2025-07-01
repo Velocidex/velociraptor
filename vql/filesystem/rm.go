@@ -5,7 +5,9 @@ import (
 	"os"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -33,17 +35,55 @@ func (self *_RmFunction) Call(ctx context.Context,
 	arg := &_RmRequest{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("rm: %s", err.Error())
+		scope.Log("rm: %v", err)
 		return false
 	}
 
-	err = os.Remove(arg.Filename)
-	if err != nil {
-		scope.Log("rm: %s", err.Error())
+	// On windows especially we can not remove files that are opened
+	// by something else, so we keep trying for a while.
+	_, err = os.Stat(arg.Filename)
+	if errors.Is(err, os.ErrNotExist) {
 		return false
 	}
+
+	RemoveFile(ctx, 0, arg.Filename, scope)
 
 	return true
+}
+
+// Make sure the file is removed when the query is done.
+func RemoveFile(
+	ctx context.Context,
+	retry int, tmpfile string, scope vfilter.Scope) {
+	if retry >= 10 {
+		scope.Log("rm: Retry count exceeded - giving up")
+		return
+	}
+
+	if retry > 0 {
+		scope.Log("rm: removing %v (Try %v) IsCtxDone %v",
+			tmpfile, retry, utils.IsCtxDone(ctx))
+	}
+
+	// On windows especially we can not remove files that are opened
+	// by something else, so we keep trying for a while.
+	err := os.Remove(tmpfile)
+	if err != nil {
+		scope.Log("rm: Failed to remove %v: %v, reschedule", tmpfile, err)
+
+		// Add another detructor to try again a bit later.
+		err = scope.AddDestructor(func() {
+			RemoveFile(ctx, retry+1, tmpfile, scope)
+		})
+		if err != nil {
+			return
+		}
+
+	} else {
+		if retry > 0 {
+			scope.Log("rm: removed %v (After try %v)", tmpfile, retry)
+		}
+	}
 }
 
 func (self _RmFunction) Info(scope vfilter.Scope,

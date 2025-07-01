@@ -467,19 +467,19 @@ func (self *_HttpPlugin) Call(
 					scope.Log("Adding global destructor for %v", tmpfile.Name())
 					root_scope := vql_subsystem.GetRootScope(scope)
 					err := root_scope.AddDestructor(func() {
-						filesystem.RemoveFile(0, tmpfile.Name(), root_scope)
+						filesystem.RemoveTmpFile(0, tmpfile.Name(), root_scope)
 					})
 					if err != nil {
-						filesystem.RemoveFile(0, tmpfile.Name(), scope)
+						filesystem.RemoveTmpFile(0, tmpfile.Name(), scope)
 						scope.Log("http_client: %v", err)
 						return
 					}
 				} else {
 					err := scope.AddDestructor(func() {
-						filesystem.RemoveFile(0, tmpfile.Name(), scope)
+						filesystem.RemoveTmpFile(0, tmpfile.Name(), scope)
 					})
 					if err != nil {
-						filesystem.RemoveFile(0, tmpfile.Name(), scope)
+						filesystem.RemoveTmpFile(0, tmpfile.Name(), scope)
 						scope.Log("http_client: %v", err)
 						return
 					}
