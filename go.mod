@@ -85,7 +85,7 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	howett.net/plist v1.0.0
-	www.velocidex.com/golang/evtx v0.2.1-0.20250117005955-e5cd153ed377
+	www.velocidex.com/golang/evtx v0.2.1-0.20250630041705-f4fa97e6f7fb
 	www.velocidex.com/golang/go-ese v0.2.1-0.20250215160921-5af66dc0f6ed
 	www.velocidex.com/golang/go-ntfs v0.2.1-0.20250322152626-3c09d909d740
 	www.velocidex.com/golang/go-pe v0.1.1-0.20250101153735-7a925ba8334b

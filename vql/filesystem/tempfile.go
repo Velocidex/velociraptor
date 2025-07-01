@@ -100,18 +100,18 @@ func (self *TempfileFunction) Call(ctx context.Context,
 		scope.Log("Adding global destructor for %v", tmpfile.Name())
 		root_scope := vql_subsystem.GetRootScope(scope)
 		err := root_scope.AddDestructor(func() {
-			RemoveFile(0, tmpfile.Name(), root_scope)
+			RemoveTmpFile(0, tmpfile.Name(), root_scope)
 		})
 		if err != nil {
-			RemoveFile(0, tmpfile.Name(), scope)
+			RemoveTmpFile(0, tmpfile.Name(), scope)
 			scope.Log("tempfile: %v", err)
 		}
 	} else {
 		err := scope.AddDestructor(func() {
-			RemoveFile(0, tmpfile.Name(), scope)
+			RemoveTmpFile(0, tmpfile.Name(), scope)
 		})
 		if err != nil {
-			RemoveFile(0, tmpfile.Name(), scope)
+			RemoveTmpFile(0, tmpfile.Name(), scope)
 			scope.Log("tempfile: %v", err)
 		}
 	}
@@ -215,7 +215,7 @@ func RemoveDirectory(retry int, tmpdir string, scope vfilter.Scope) {
 
 		// Add another detructor to try again a bit later.
 		err = scope.AddDestructor(func() {
-			RemoveFile(retry+1, tmpdir, scope)
+			RemoveTmpFile(retry+1, tmpdir, scope)
 		})
 		if err != nil {
 			return
@@ -232,7 +232,7 @@ func RemoveDirectory(retry int, tmpdir string, scope vfilter.Scope) {
 }
 
 // Make sure the file is removed when the query is done.
-func RemoveFile(retry int, tmpfile string, scope vfilter.Scope) {
+func RemoveTmpFile(retry int, tmpfile string, scope vfilter.Scope) {
 	if retry >= 10 {
 		scope.Log("tempfile: Retry count exceeded - giving up")
 		return
@@ -252,7 +252,7 @@ func RemoveFile(retry int, tmpfile string, scope vfilter.Scope) {
 
 		// Add another detructor to try again a bit later.
 		err = scope.AddDestructor(func() {
-			RemoveFile(retry+1, tmpfile, scope)
+			RemoveTmpFile(retry+1, tmpfile, scope)
 		})
 		if err != nil {
 			return

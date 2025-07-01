@@ -193,13 +193,18 @@ func (self *LogContext) AddListener(c chan string) func() {
 	}
 }
 
-func (self *LogContext) forwardMessage(msg string) {
+func (self *LogContext) forwardMessage(level, msg string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	for _, c := range self.listeners {
+		msg = strings.TrimSpace(msg)
+
+		line := json.Format(`{"time":%q,"level":%q,"msg":%q}`,
+			utils.GetTime().Now().UTC().Format(time.RFC3339), level, msg)
+
 		select {
-		case c <- msg:
+		case c <- line:
 		default:
 		}
 	}
@@ -210,7 +215,7 @@ func (self *LogContext) Debug(format string, v ...interface{}) {
 	if self.Logger != nil {
 		self.Logger.Debug(msg)
 	}
-	self.forwardMessage(msg)
+	self.forwardMessage(DEBUG, msg)
 }
 
 func (self *LogContext) Info(format string, v ...interface{}) {
@@ -218,7 +223,7 @@ func (self *LogContext) Info(format string, v ...interface{}) {
 	if self.Logger != nil {
 		self.Logger.Info(msg)
 	}
-	self.forwardMessage(msg)
+	self.forwardMessage(INFO, msg)
 }
 
 func (self *LogContext) Warn(format string, v ...interface{}) {
@@ -226,7 +231,7 @@ func (self *LogContext) Warn(format string, v ...interface{}) {
 	if self.Logger != nil {
 		self.Logger.Warn(msg)
 	}
-	self.forwardMessage(msg)
+	self.forwardMessage(WARN, msg)
 }
 
 func (self *LogContext) Error(format string, v ...interface{}) {
@@ -234,7 +239,7 @@ func (self *LogContext) Error(format string, v ...interface{}) {
 	if self.Logger != nil {
 		self.Logger.Error(msg)
 	}
-	self.forwardMessage(msg)
+	self.forwardMessage(ERROR, msg)
 }
 
 func (self *LogContext) IsEnabled(level string) bool {
@@ -364,6 +369,9 @@ func (self *LogManager) makeNewComponent(
 	Log := logrus.New()
 	Log.Out = newInMemoryLogWriter()
 	Log.Level = logrus.DebugLevel
+	Log.Formatter = &logrus.JSONFormatter{
+		DisableHTMLEscape: true,
+	}
 
 	if !disable_log_to_files &&
 		config_obj != nil &&

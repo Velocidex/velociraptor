@@ -269,12 +269,26 @@ parameters:
       // template. This will be the name uploaded to the bucket.
       LET formatted_zip_name <= regex_replace(
           source=expand(path=FormatMessage(Message=FilenameTemplate)),
-          re="[^0-9A-Za-z\\-]", replace="_") + ".zip"
+          re="[^0-9A-Za-z\\-]", replace="_")
 
       // This is where we write the files on the endpoint.
-      LET zip_filename <= OutputPrefix + formatted_zip_name
+      LET zip_filename <= OutputPrefix + ( formatted_zip_name + ".zip" )
+      LET LogFile <= OutputPrefix + ( formatted_zip_name + ".log" )
 
       LET _ <= log(message="Log file is at %v", args=LogFile)
+
+      // Create the log file and start writing into it
+      // Just forward output from the logging() plugin
+      LET LogPipe <= pipe(query={
+        SELECT format(format="[%v] %v %v\n",
+                      args=(level, time, msg)) AS Line
+        FROM logging(prelog=TRUE)
+      })
+
+      LET _ <= background(query={
+          SELECT copy(accessor="pipe", filename="LogPipe", dest=LogFile) AS C
+          FROM scope()
+      })
 
       -- Remove the zip file and log file when done if the user asked for it.
       LET _ <= if(condition=DeleteOnExit, then=atexit(query={
@@ -486,7 +500,6 @@ sources:
                          default=opt_progress_timeout),
                     dict(name="Timeout", default=opt_timeout, type="int"),
                     dict(name="DeleteOnExit", default=opt_delete_at_exit, type="bool"),
-                    dict(name="LogFile", default="Collector.log"),
                     dict(name="target_args",
                          default=serialize(format='json', item=target_args),
                          type="json"),
@@ -523,9 +536,7 @@ sources:
       // Build the autoexec config file depending on the user's
       // collection type choices.
       LET autoexec <= dict(autoexec=dict(
-          argv=("artifacts", "collect", "Collector",
-                "--args", "LogFile=" + CollectorName + ".log",
-                "--logfile", CollectorName + ".log") + optional_cmdline.Opt,
+          argv=("artifacts", "collect", "Collector") + optional_cmdline.Opt,
           artifact_definitions=definitions)
       )
 
