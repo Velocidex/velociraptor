@@ -9,6 +9,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
@@ -96,7 +97,8 @@ func (self *DisabledPlugin) Call(ctx context.Context,
 	output_chan := make(chan types.Row)
 	go func() {
 		defer close(output_chan)
-		scope.Log("Call to plugin %v disabled", self.name)
+
+		functions.DeduplicatedLog(ctx, scope, "Call to plugin %v disabled", self.name)
 	}()
 	return output_chan
 }
@@ -120,7 +122,7 @@ func (self *DisabledFunction) Copy() types.FunctionInterface {
 
 func (self *DisabledFunction) Call(ctx context.Context,
 	scope types.Scope, args *ordereddict.Dict) types.Any {
-	scope.Log("Call to function %v disabled", self.name)
+	functions.DeduplicatedLog(ctx, scope, "Call to function %v disabled", self.name)
 	return vfilter.Null{}
 }
 
