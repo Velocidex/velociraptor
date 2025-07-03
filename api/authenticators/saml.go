@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"slices"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -280,7 +279,7 @@ func (self *SamlAuthenticator) MaybeAssignRoles(
 			existing_acls = &acl_proto.ApiClientACL{}
 		}
 
-		new_roles := slices.Clone(existing_acls.Roles)
+		new_roles := append([]string{}, existing_acls.Roles...)
 		// Add new roles
 		for _, role := range self.user_roles {
 			if !utils.InString(new_roles, role) {
