@@ -48,6 +48,12 @@ checks = [Check(re=re.compile("ioutil.TempFile"),
           Check(re=re.compile("httptest.NewTLSServer"),
                 allowed=re.compile("vtesting/tls"),
                 replaced="/vtesting/NewTLSServer"),
+
+          # We can not use the slices package because it does not
+          # exist on go 1.20 so the legacy build will fail.
+          Check(re=re.compile("slices\\.(.+)"),
+                allowed=re.compile("Use append()"),
+                replaced="Use built in operations append and avoid slices package"),
           ]
 
 def DiscoverAPI(path):

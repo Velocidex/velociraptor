@@ -461,6 +461,10 @@ func (self *UserStorageManager) GetUserOptions(ctx context.Context, username str
 		return nil, fmt.Errorf("%w: %v", services.UserNotFoundError, username)
 	}
 
+	if cache.gui_options == nil {
+		cache.gui_options = &api_proto.SetGUIOptionsRequest{}
+	}
+
 	// Return a copy of the options to preserve the integrity of the cache
 	return proto.Clone(cache.gui_options).(*api_proto.SetGUIOptionsRequest), nil
 }
