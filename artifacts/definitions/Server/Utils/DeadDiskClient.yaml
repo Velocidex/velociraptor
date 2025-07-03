@@ -1,0 +1,81 @@
+name: Server.Utils.DeadDiskClient
+description: |
+  Automates the analysis of dead disk images in Velociraptor
+
+  Velociraptor can analyze dead disk images using accessor
+  remapping. The process involves detecting a suitable remapping
+  configuration to remap various image partitions into the relevant
+  accessors and emulate a "Virtual Host".
+
+  Once the remapping configuration is caluculated, a new virtual
+  client can be launched to appear like it is operating on the dead
+  disk image. Using this technique is it possible to interact with
+  this virtual client, collect artifacts, join in hunts etc.
+
+  This artifact automates this process. While the artifact is running,
+  the virtual client will be up. To kill the virtual client you can
+  cancel this collection. By default the artifact will remain running
+  for 1 hour but you can extend the time limit while launching the
+  artifact using the resources tab.
+
+type: SERVER
+
+resources:
+  timeout: 3600
+
+parameters:
+- name: ImagePath
+  default: /path/to/image.vmdk
+  description: |
+    This is the path to the image (.vmdk, .vhdx etc) which must reside on the server.
+
+- name: Hostname
+  default: DeadDiskHost
+  description: The virtual host to provide to the client
+
+- name: WritebackFile
+  default: /tmp/remapping.writeback.yaml
+  description: |
+    Where to store the writeback file. This contains the client ID and
+    should persist between invocations.
+
+sources:
+- query: |
+     LET RemappingFile <= tempfile(extension=".yaml")
+
+     LET ClientConfig <= tempfile(extension=".yaml")
+
+     LET _Exe <= SELECT Exe
+       FROM info()
+
+     // Our own binary we use to run.
+     LET Exe <= _Exe[0].Exe
+
+     LET CalculateDeadDisk = SELECT copy(accessor="data",
+                                         filename=Remapping,
+                                         dest=RemappingFile) AS RemappingFile,
+                                    copy(accessor="data",
+                                         filename=serialize(
+                                           format="yaml",
+                                           item=org()._client_config),
+                                         dest=ClientConfig) AS ClientConfig
+       FROM Artifact.Generic.Utils.DeadDiskRemapping(
+         Upload=FALSE,
+         Hostname=Hostname,
+         ImagePath=ImagePath)
+
+     SELECT Stdout
+     FROM foreach(row=CalculateDeadDisk,
+                  query={
+         SELECT *
+         FROM execve(argv=[Exe, "--remap", RemappingFile, "--config",
+                       ClientConfig, "--config.client-writeback-linux",
+                       WritebackFile, "--config.client-writeback-windows",
+                       WritebackFile, "--config.client-writeback-darwin",
+                       WritebackFile, "-v", "client"],
+                     sep="\n")
+       })
+
+column_types:
+- name: Stdout
+  type: nobreak

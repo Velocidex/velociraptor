@@ -80,17 +80,59 @@ func installExpandMock(
 	scope.AppendFunctions(&ImpersonatedExpand{Env: mock_env})
 }
 
+type DisabledPlugin struct {
+	name string
+}
+
+func (self *DisabledPlugin) Info(scope types.Scope,
+	type_map *types.TypeMap) *types.PluginInfo {
+	return &types.PluginInfo{
+		Name: self.name,
+	}
+}
+
+func (self *DisabledPlugin) Call(ctx context.Context,
+	scope types.Scope, args *ordereddict.Dict) <-chan types.Row {
+	output_chan := make(chan types.Row)
+	go func() {
+		defer close(output_chan)
+		scope.Log("Call to plugin %v disabled", self.name)
+	}()
+	return output_chan
+}
+
+type DisabledFunction struct {
+	name string
+}
+
+func (self *DisabledFunction) Info(scope types.Scope,
+	type_map *types.TypeMap) *types.FunctionInfo {
+	return &types.FunctionInfo{
+		Name: self.name,
+	}
+}
+
+func (self *DisabledFunction) Copy() types.FunctionInterface {
+	return &DisabledFunction{
+		name: self.name,
+	}
+}
+
+func (self *DisabledFunction) Call(ctx context.Context,
+	scope types.Scope, args *ordereddict.Dict) types.Any {
+	scope.Log("Call to function %v disabled", self.name)
+	return vfilter.Null{}
+}
+
 func disablePlugins(
 	remapped_scope vfilter.Scope,
 	remapping *config_proto.RemappingConfig) {
 
 	for _, pl := range remapping.DisabledPlugins {
-		remapped_scope.AppendPlugins(
-			NewMockerPlugin(pl, []types.Any{}))
+		remapped_scope.AppendPlugins(&DisabledPlugin{name: pl})
 	}
 
 	for _, pl := range remapping.DisabledFunctions {
-		remapped_scope.AppendFunctions(
-			NewMockerFunction(pl, []types.Any{types.Null{}}))
+		remapped_scope.AppendFunctions(&DisabledFunction{name: pl})
 	}
 }
