@@ -7,7 +7,7 @@ description: |
   configuration to remap various image partitions into the relevant
   accessors and emulate a "Virtual Host".
 
-  Once the remapping configuration is caluculated, a new virtual
+  Once the remapping configuration is calculated, a new virtual
   client can be launched to appear like it is operating on the dead
   disk image. Using this technique is it possible to interact with
   this virtual client, collect artifacts, join in hunts etc.
