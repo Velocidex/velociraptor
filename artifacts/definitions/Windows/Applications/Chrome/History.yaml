@@ -37,7 +37,7 @@ parameters:
                 WHEN 6 THEN 'ImportFromChrome/Edge'
                 WHEN 7 THEN 'ImportFromEdgeHTML'
                 ELSE 'Local'
-             END Source,
+             END source,
              V.from_visit,
              strftime('%H:%M:%f',V.visit_duration/1000000.0, 'unixepoch') as visit_duration,
              V.transition
@@ -77,7 +77,7 @@ sources:
                    timestamp(winfiletime=last_visit_time * 10) AS last_visit_time,
                    hidden,
                    from_visit AS from_url_id,
-                   Source,
+                   source,
                    visit_duration,transition,
                    timestamp(winfiletime=last_visit_time * 10) as _SourceLastModificationTimestamp,
                    OSPath
