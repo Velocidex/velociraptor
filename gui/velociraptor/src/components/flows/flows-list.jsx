@@ -8,6 +8,9 @@ import VeloPagedTable, {
     TablePaginationControl,
     TransformViewer,
 } from '../core/paged-table.jsx';
+
+import VeloTable, { getFormatter } from '../core/table.jsx';
+
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
@@ -48,7 +51,7 @@ const SLIDE_STATES = [{
 export class DeleteFlowDialog extends React.PureComponent {
     static propTypes = {
         client: PropTypes.object,
-        flow: PropTypes.object,
+        flows: PropTypes.array,
         onClose: PropTypes.func.isRequired,
     }
 
@@ -66,13 +69,13 @@ export class DeleteFlowDialog extends React.PureComponent {
 
     startDeleteFlow = () => {
         let client_id = this.props.client && this.props.client.client_id;
-        let flow_id = this.props.flow && this.props.flow.session_id;
+        let flow_ids = _.map(this.props.flows, x=>x.session_id);
 
-        if (flow_id && client_id) {
+        if (!_.isEmpty(flow_ids) && client_id) {
             this.setState({loading: true});
             runArtifact("server",   // This collection happens on the server.
                         "Server.Utils.DeleteFlow",
-                        {FlowId: flow_id,
+                        {FlowIds: JSON.stringify(flow_ids),
                          ClientId: client_id,
                          Sync: "Y",
                          ReallyDoIt: "Y"}, ()=>{
@@ -83,18 +86,29 @@ export class DeleteFlowDialog extends React.PureComponent {
     }
 
     render() {
-        let collected_artifacts = this.props.flow.artifacts_with_results || [];
-        let artifacts = collected_artifacts.join(",");
-        let total_bytes = this.props.flow.total_uploaded_bytes/1024/1024 || 0;
-        let total_rows = this.props.flow.total_collected_rows || 0;
         return (
-            <Modal show={true} onHide={this.props.onClose}>
+            <Modal show={true}
+                   size="lg"
+                   dialogClassName="modal-90w"
+                   onHide={this.props.onClose}>
               <Modal.Header closeButton>
-            <Modal.Title>{T("Permanently delete collection")}</Modal.Title>
+            <Modal.Title>{T("Permanently delete collections")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                {T("ArtifactDeletionDialog", this.props.flow.session_id,
-                   artifacts, total_bytes, total_rows)}
+                <VeloTable
+                  rows={this.props.flows}
+                  columns={["session_id", "artifacts_with_results",
+                            "total_collected_rows", "total_uploaded_bytes"]}
+                  column_renderers={{
+                      artifacts_with_results: flowRowRenderer.Artifacts,
+                      total_uploaded_bytes: getFormatter("mb"),
+                  }}
+                  header_renderers={{session_id: "FlowId",
+                                     artifacts_with_results: "Artifacts",
+                                     total_collected_rows: "Rows",
+                                     total_uploaded_bytes: "Bytes",
+                                    }}
+                />
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={this.props.onClose}>
@@ -193,6 +207,7 @@ class FlowsList extends React.Component {
     static propTypes = {
         client: PropTypes.object,
         setSelectedFlow: PropTypes.func,
+        setMultiSelectedFlow: PropTypes.func,
         selected_flow: PropTypes.object,
         collapseToggle: PropTypes.func,
 
@@ -213,6 +228,7 @@ class FlowsList extends React.Component {
         version: {version: 0},
         slider: 0,
         transform: undefined,
+        multiSelectedFlows: [],
     }
 
     incrementVersion = () => {
@@ -361,7 +377,7 @@ class FlowsList extends React.Component {
         let router_flow_id = this.props.match && this.props.match.params &&
             this.props.match.params.flow_id;
 
-        const selectRow = {
+        let selectRow = {
             mode: "radio",
             clickToSelect: true,
             hideSelectColumn: true,
@@ -369,6 +385,15 @@ class FlowsList extends React.Component {
             onSelect: row=>{
                 this.props.setSelectedFlow(row._Flow);
                 this.setState({selectedFlowId: row._id});
+            },
+            onMultiSelect: rows=>{
+                let flows = [];
+                _.each(rows, x=>{
+                    if(!_.isEmpty(x._Flow)) {
+                        flows.push(x._Flow);
+                    }
+                });
+                this.setState({multiSelectedFlows: flows});
             },
             selected: [this.state.selectedFlowId],
         };
@@ -402,7 +427,7 @@ class FlowsList extends React.Component {
               { this.state.showDeleteWizard &&
                 <DeleteFlowDialog
                   client={this.props.client}
-                  flow={this.props.selected_flow}
+                  flows={this.state.multiSelectedFlows}
                   onClose={e=>{
                       this.setState({showDeleteWizard: false});
                       this.incrementVersion();

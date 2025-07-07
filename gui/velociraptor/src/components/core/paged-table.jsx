@@ -600,6 +600,8 @@ class VeloPagedTable extends Component {
         column_widths: {},
 
         compact_columns: {},
+
+        start_selection_idx: -1,
     }
 
     componentDidMount = () => {
@@ -1175,7 +1177,7 @@ class VeloPagedTable extends Component {
                </React.Fragment>;
     };
 
-    selectRow = (row, idx)=>{
+    selectRow = (row, idx, start_region)=>{
         if (!this.props.selectRow) {
             return;
         }
@@ -1184,14 +1186,62 @@ class VeloPagedTable extends Component {
             this.props.selectRow.onSelect(row);
         }
 
+        if(this.props.selectRow.onMultiSelect) {
+            if(start_region || this.state.start_selection_idx < 0) {
+                this.props.selectRow.onMultiSelect([row]);
+            } else {
+                let rows = [];
+                let first = this.state.start_selection_idx;
+                let last = idx;
+                if (first > last) {
+                    let tmp = last;
+                    last = first;
+                    first = tmp;
+                }
+
+                for(let i=first;i<=last;i++) {
+                    rows.push(this.state.rows[i]);
+                };
+
+                this.props.selectRow.onMultiSelect(rows);
+            }
+
+            // First click without shift: Clear end selection and set start selection.
+            if(start_region) {
+                this.setState({end_selection_idx: -1, start_selection_idx: idx});
+
+                // Second click with a shift: Set end selection
+            } else if (this.state.start_selection_idx >= 0) {
+                this.setState({end_selection_idx: idx});
+            }
+        }
+
         this.setState({selected_row: row, selected_row_idx: idx});
     }
 
+    isRowSelected = idx=>{
+        if(this.state.start_selection_idx >= 0 &&
+           this.state.end_selection_idx >= 0) {
+            let start = this.state.start_selection_idx;
+            let end = this.state.end_selection_idx;
+            if (start > end) {
+                let tmp = start;
+                start = end;
+                end = tmp;
+            };
+            return idx >= start  && idx <= end;
+        }
+        return this.state.selected_row_idx === idx;
+    }
+
     renderRow = (row, idx)=>{
-        let selected_cls = (this.props.selectRow &&
+        let last_selected_cls = (this.props.selectRow &&
                             this.props.selectRow.classes) || "row-selected";
-        if(this.state.selected_row_idx !== idx) {
-            selected_cls = "";
+        let selected_cls = "";
+        if(this.state.selected_row_idx === idx) {
+            selected_cls += " " + last_selected_cls;
+        } else if(this.isRowSelected(idx)) {
+            selected_cls += " row-multi-selected " + last_selected_cls;
         }
 
         if(this.props.row_classes) {
@@ -1200,7 +1250,14 @@ class VeloPagedTable extends Component {
 
         return (
             <tr key={idx}
-                onClick={x=>this.selectRow(row, idx)}
+                onClick={e=>{
+                    e.stopPropagation();
+                    // Prevent the browser from selecting with shift key
+                    if (e.shiftKey) {
+                        document.getSelection().removeAllRanges();
+                    }
+                    this.selectRow(row, idx, !e.shiftKey);
+                }}
                 className={selected_cls}>
               {_.map(this.activeColumns(), c=>this.renderCell(c, row, idx))}
             </tr>);

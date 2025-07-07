@@ -573,6 +573,10 @@ body.veloci-light {
   color: var(--color-foreground);
 }
 
+.veloci-light .table tbody tr.row-multi-selected {
+  opacity: 0.5;
+}
+
 /* Footer */
 
 .veloci-light .app-footer.fixed-bottom {
