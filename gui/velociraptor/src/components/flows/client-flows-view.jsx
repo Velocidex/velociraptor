@@ -22,6 +22,7 @@ class ClientFlowsView extends React.Component {
     state = {
         currentFlow: {},
         topPaneSize: undefined,
+        selectedMultiFlows: [],
     }
 
     componentDidMount = () => {
@@ -61,6 +62,10 @@ class ClientFlowsView extends React.Component {
         }
     }
 
+    setMultiSelectedFlow = flows=>{
+        this.setState({selectedMultiFlows: flows});
+    }
+
     collapse = level=> {
         this.setState({topPaneSize: level});
     }
@@ -76,6 +81,7 @@ class ClientFlowsView extends React.Component {
                   selected_flow={this.state.currentFlow}
                   collapseToggle={this.collapse}
                   setSelectedFlow={this.setSelectedFlow}
+                  setMultiSelectedFlow={this.setMultiSelectedFlow}
                   client={this.props.client}/>
                 <FlowInspector
                   flow={this.state.currentFlow}

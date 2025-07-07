@@ -357,6 +357,8 @@ class VeloClientList extends Component {
         page_size: 10,
         sort: UNSORTED,
         filter: UNFILTERED,
+
+        selected_idx: -1,
     };
 
     componentDidMount = () => {
@@ -620,19 +622,51 @@ class VeloClientList extends Component {
                       return (
                           <tr key={i}
                               className={(is_selected && "row-selected") || ""}
-                              onClick={()=>{
+                              onClick={e=>{
+                                  e.stopPropagation();
+                                  // User pressed shift - we select
+                                  // all clients from the previous
+                                  // selection.
+                                  if(e.shiftKey) {
+                                      document.getSelection().removeAllRanges();
+
+                                      let first = this.state.selected_idx;
+                                      let last = i;
+                                      if (first > last) {
+                                          let tmp = first;
+                                          first = last;
+                                          last = tmp;
+                                      }
+
+                                      let new_selected = [...this.state.selected];
+
+                                      for(let j=first; j<=last;j++) {
+                                          let client_id = this.state.clients[j].client_id;
+                                          if (!_.includes(new_selected, client_id)) {
+                                              new_selected.push(client_id);
+                                          }
+                                      }
+
+                                      this.setState({selected: new_selected});
+                                      return;
+                                  }
+
+                                  this.setState({selected_idx: i});
                                   if(is_selected) {
-                                      let new_selected = _.filter(this.state.selected, x=>x !== c.client_id );
+                                      let new_selected = _.filter(this.state.selected,
+                                                                  x=>x !== c.client_id );
                                       this.setState({
                                           selected: new_selected,
-                                          selected_icon: new_selected.length ? "square-minus" : "square",
+                                          selected_icon: new_selected.length ?
+                                              "square-minus" : "square",
                                       });
 
                                   } else {
                                       let new_selected = [...this.state.selected, client_id];
                                       this.setState({
                                           selected: new_selected,
-                                          selected_icon: new_selected.length === num_clients ? "square-check" : "square-minus" ,
+                                          selected_icon: new_selected.length === num_clients ?
+                                              "square-check" : "square-minus" ,
                                       });
                                   }
                               }}>
