@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
@@ -30,7 +31,7 @@ type CreatePackageArgs struct {
 	Accessor    string            `vfilter:"optional,field=accessor,doc=The accessor to use to read the file."`
 	Config      string            `vfilter:"optional,field=config,doc=The config to be repacked in the form of a json or yaml string. If not provided we use the current config./"`
 	ShowSpec    bool              `vfilter:"optional,field=show_spec,doc=If set we only show the spec that would have been used. You can use this to customize the input for package_spec"`
-	DirName     string            `vfilter:"required,field=directory_name,doc=Package files will be created inside this directory. If not specified we use a temporary directory"`
+	DirName     string            `vfilter:"optional,field=directory_name,doc=Package files will be created inside this directory. If not specified we use a temporary directory"`
 	ExtraArgs   []string          `vfilter:"optional,field=extra_args,doc=Additional command line args to be provided to the service"`
 	PackageSpec *ordereddict.Dict `vfilter:"optional,field=package_spec,doc=A Package spec to use instead of the default, for ultimate customization"`
 }
@@ -54,6 +55,26 @@ func (self CreatePackagePlugin) parseSpec(spec *ordereddict.Dict) (*PackageSpec,
 	err = json.Unmarshal(serialized, result)
 	if err != nil {
 		return nil, err
+	}
+
+	if result.Files == nil {
+		result.Files = ordereddict.NewDict()
+	}
+
+	for _, k := range result.Files.Keys() {
+		v, _ := result.Files.Get(k)
+		v_dict, ok := v.(*ordereddict.Dict)
+		if !ok {
+			continue
+		}
+
+		fp := FileSpec{}
+		mode, _ := v_dict.GetInt64("Mode")
+		fp.Mode = uint(mode)
+		fp.Owner, _ = v_dict.GetString("Owner")
+		fp.Template, _ = v_dict.GetString("Template")
+
+		result.Files.Update(k, fp)
 	}
 
 	return result, nil
@@ -106,7 +127,7 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 
 		var spec *PackageSpec
 		if arg.PackageSpec != nil {
-			spec, err := self.parseSpec(arg.PackageSpec)
+			spec, err = self.parseSpec(arg.PackageSpec)
 			if err != nil {
 				scope.Log("ERROR:%v: %v", self.name, err)
 				return
@@ -135,7 +156,8 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 		}
 
 		if arg.ShowSpec {
-			output_chan <- ordereddict.NewDict().Set("Spec", spec)
+			pure_spec, _ := utils.ToPureDict(spec)
+			output_chan <- ordereddict.NewDict().Set("Spec", pure_spec)
 			return
 		}
 
@@ -158,6 +180,10 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 		if err != nil {
 			scope.Log("ERROR:%v: %v", self.name, err)
 			return
+		}
+
+		if arg.DirName == "" {
+			arg.DirName = "."
 		}
 
 		abs_path, err := filepath.Abs(arg.DirName)
