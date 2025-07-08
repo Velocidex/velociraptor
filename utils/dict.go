@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"reflect"
 	"strconv"
 	"strings"
@@ -80,4 +81,16 @@ func GetAny(dict *ordereddict.Dict, key string) vfilter.Any {
 	subdict, last := _get(dict, key)
 	res, _ := subdict.Get(last)
 	return res
+}
+
+func ToPureDict(a interface{}) (*ordereddict.Dict, error) {
+	serialized, err := json.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+
+	result := ordereddict.NewDict()
+	err = json.Unmarshal(serialized, result)
+
+	return result, err
 }
