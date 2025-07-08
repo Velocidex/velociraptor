@@ -430,13 +430,12 @@
     All output from the query is discarded. The query will not wait
     for the background thread to exit - instead the background query
     will be cancelled when this query exists.
-
   type: Function
   version: 1
   args:
   - name: query
     type: StoredQuery
-    description: Run this query to generator rows.
+    description: Run this query in the background.
   platforms:
   - linux_amd64_cgo
 - name: backup
@@ -1675,7 +1674,6 @@
     type: string
     description: Package files will be created inside this directory. If not specified
       we use a temporary directory
-    required: true
   - name: extra_args
     type: string
     description: Additional command line args to be provided to the service
@@ -8629,7 +8627,6 @@
     type: string
     description: Package files will be created inside this directory. If not specified
       we use a temporary directory
-    required: true
   - name: extra_args
     type: string
     description: Additional command line args to be provided to the service
@@ -12022,3 +12019,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+
