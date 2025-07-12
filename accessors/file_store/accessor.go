@@ -79,6 +79,11 @@ func (self FileStoreFileSystemAccessor) LstatWithOSPath(filename *accessors.OSPa
 	accessors.FileInfo, error) {
 
 	fullpath := path_specs.FromGenericComponentList(filename.Components)
+	err := isFileAccessible(fullpath)
+	if err != nil {
+		return nil, err
+	}
+
 	lstat, err := self.file_store.StatFile(fullpath)
 	if err != nil {
 		// If it didnt work, we try case insensitive open
@@ -130,6 +135,11 @@ func (self FileStoreFileSystemAccessor) ReadDirWithOSPath(
 	[]accessors.FileInfo, error) {
 
 	fullpath := path_specs.FromGenericComponentList(filename.Components)
+	err := isFileAccessible(fullpath)
+	if err != nil {
+		return nil, err
+	}
+
 	files, err := self.file_store.ListDirectory(fullpath)
 	if err != nil {
 		// If it didnt work, we try case insensitive
@@ -185,6 +195,11 @@ func (self FileStoreFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPat
 		}
 	} else {
 		fullpath = path_specs.FromGenericComponentList(filename.Components)
+	}
+
+	err := isFileAccessible(fullpath)
+	if err != nil {
+		return nil, err
 	}
 
 	file, err := self.openFile(fullpath)
