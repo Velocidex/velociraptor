@@ -62,6 +62,7 @@ API:
   bind_scheme: tcp
   pinned_gw_name: GRPC_GW
 GUI:
+  public_url: https://localhost:8889/app/index.html
   bind_address: 127.0.0.1
   bind_port: 8889
   gw_certificate: |
