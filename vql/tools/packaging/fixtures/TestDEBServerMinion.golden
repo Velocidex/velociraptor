@@ -108,6 +108,7 @@ GUI:
     W5gJrneEd85yOMZRQ+zR9lUBnfK+csnfdPys6Tf+lnTBlXGtXaN69rmAHD1WJp5l
     JL5WubPDAGJoNCt7TqNBOwMk6avXZPFQkVljQclVoysIBQ44Tac=
     -----END RSA PRIVATE KEY-----
+  public_url: https://localhost:8889/app/index.html
   authenticator:
     type: Basic
 CA:
