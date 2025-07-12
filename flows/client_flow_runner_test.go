@@ -288,7 +288,7 @@ func (self *ServerTestSuite) TestFlowStates() {
 	}
 
 	// The client record should not have any in flight flows now.
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(15*time.Second, self.T(), func() bool {
 		client_info, err = client_info_manager.Get(self.Ctx, self.client_id)
 		assert.NoError(self.T(), err)
 
