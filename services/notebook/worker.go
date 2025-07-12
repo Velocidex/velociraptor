@@ -102,6 +102,7 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 	defer tmpl.Close()
 
 	tmpl.SetEnv("NotebookId", in.NotebookId)
+	tmpl.SetEnv("NotebookCellId", in.CellId)
 
 	// Throttle the notebook accordingly.
 	tmpl.Scope.SetContext(constants.SCOPE_QUERY_NAME,

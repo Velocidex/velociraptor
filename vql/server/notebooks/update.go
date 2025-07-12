@@ -7,6 +7,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -19,8 +20,9 @@ import (
 type UpdateNotebookCellFunctionArgs struct {
 	NotebookId string `vfilter:"required,field=notebook_id,doc=The id of the notebook to update"`
 	CellId     string `vfilter:"optional,field=cell_id,doc=The cell of the notebook to update. If this is empty we add a new cell to the notebook"`
+	Delete     bool   `vfilter:"optional,field=delete,doc=If set the notebook cell is removed from the notebook."`
 	Type       string `vfilter:"optional,field=type,doc=Set the type of the cell if needed (markdown or vql)."`
-	Input      string `vfilter:"required,field=input,doc=The new cell content."`
+	Input      string `vfilter:"optional,field=input,doc=The new cell content."`
 	Output     string `vfilter:"optional,field=output,doc=If this is set, we do not calculate the cell but set this as the rendered output."`
 }
 
@@ -53,6 +55,15 @@ func (self UpdateNotebookCellFunction) Call(ctx context.Context,
 	if !pres {
 		scope.Log("notebook_update_cell: must be running on the server")
 		return vfilter.Null{}
+	}
+
+	if arg.Delete {
+		res, err := self.deleteCell(ctx, config_obj, scope, arg.NotebookId, arg.CellId)
+		if err != nil {
+			scope.Log("notebook_update_cell: %v", err)
+			return vfilter.Null{}
+		}
+		return res
 	}
 
 	notebook_manager, err := services.GetNotebookManager(config_obj)
@@ -128,6 +139,36 @@ func (self UpdateNotebookCellFunction) Call(ctx context.Context,
 	}
 
 	return notebook
+}
+
+func (self UpdateNotebookCellFunction) deleteCell(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	scope vfilter.Scope,
+	notebook_id, cell_id string,
+) (*api_proto.NotebookMetadata, error) {
+
+	notebook_manager, err := services.GetNotebookManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	notebook, err := notebook_manager.GetNotebook(
+		ctx, notebook_id, services.DO_NOT_INCLUDE_UPLOADS)
+	if err != nil {
+		return nil, err
+	}
+
+	var new_cells []*api_proto.NotebookCell
+	for _, c := range notebook.CellMetadata {
+		if c.CellId != cell_id {
+			new_cells = append(new_cells, c)
+		}
+	}
+
+	notebook.CellMetadata = new_cells
+	return notebook, notebook_manager.UpdateNotebook(ctx, notebook)
+
 }
 
 func (self UpdateNotebookCellFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

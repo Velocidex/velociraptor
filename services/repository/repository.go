@@ -250,7 +250,8 @@ func (self *Repository) LoadProto(
 				// Check we can parse it properly.
 				queries, err := vfilter.MultiParse(source.Query)
 				if err != nil {
-					return nil, fmt.Errorf("While parsing source query: %w", err)
+					return nil, fmt.Errorf("While parsing source query %v: %w",
+						source.Name, err)
 				}
 
 				// Make sure the source format is correct

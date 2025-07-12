@@ -5796,13 +5796,15 @@
     type: string
     description: The cell of the notebook to update. If this is empty we add a new
       cell to the notebook
+  - name: delete
+    type: bool
+    description: If set the notebook cell is removed from the notebook.
   - name: type
     type: string
     description: Set the type of the cell if needed (markdown or vql).
   - name: input
     type: string
     description: The new cell content.
-    required: true
   - name: output
     type: string
     description: If this is set, we do not calculate the cell but set this as the

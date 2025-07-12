@@ -261,35 +261,11 @@ func (self MailFunction) mergeSecretToRequest(
 		return err
 	}
 
-	get := func(field string, target *string) {
-		res := vql_subsystem.GetStringFromRow(
-			scope, secret_record.Data, field)
-		if res != "" {
-			*target = res
-		}
-	}
-
-	get_int := func(field string, target *uint64) {
-		res := vql_subsystem.GetIntFromRow(
-			scope, secret_record.Data, field)
-		if res != 0 {
-			*target = res
-		}
-	}
-
-	get_bool := func(field string, target *bool) {
-		res := vql_subsystem.GetStringFromRow(
-			scope, secret_record.Data, field)
-		if res != "" {
-			*target = vql_subsystem.GetBoolFromString(res)
-		}
-	}
-
-	get("server", &arg.Server)
-	get_int("server_port", &arg.ServerPort)
-	get("auth_username", &arg.AuthUsername)
-	get("auth_password", &arg.AuthPassword)
-	get_bool("skip_verify", &arg.SkipVerify)
+	secret_record.GetString("server", &arg.Server)
+	secret_record.GetUint64("server_port", &arg.ServerPort)
+	secret_record.GetString("auth_username", &arg.AuthUsername)
+	secret_record.GetString("auth_password", &arg.AuthPassword)
+	secret_record.GetBool("skip_verify", &arg.SkipVerify)
 
 	return nil
 }

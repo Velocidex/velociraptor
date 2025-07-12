@@ -57,6 +57,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -139,6 +140,14 @@ func (self *Secret) GetBool(field string, target *bool) {
 	res, pres := self.Data.GetString(field)
 	if pres && res != "" {
 		*target = vql_subsystem.GetBoolFromString(res)
+	}
+}
+
+func (self *Secret) GetUint64(field string, target *uint64) {
+	res, pres := self.Data.GetString(field)
+	if pres && res != "" {
+		res_int, _ := strconv.ParseInt(res, 0, 64)
+		*target = uint64(res_int)
 	}
 }
 

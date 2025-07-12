@@ -115,6 +115,7 @@ func GetDefaultConfig() *config_proto.Config {
 			// reachable IP address you must enable TLS!
 			BindAddress:  "127.0.0.1",
 			BindPort:     8889,
+			PublicUrl:    "https://localhost:8889/app/index.html",
 			ReverseProxy: []*config_proto.ReverseProxyConfig{},
 			Authenticator: &config_proto.Authenticator{
 				Type: "Basic",
