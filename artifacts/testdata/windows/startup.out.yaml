@@ -1,4 +1,4 @@
-Query: SELECT Name, Details, Enabled FROM Artifact.Windows.Sys.StartupItems() WHERE Name =~ 'msht' ORDER BY Name
+Query: SELECT Name, Details, Enabled FROM Artifact.Windows.Sys.StartupItems() WHERE Name =~ 'msht' AND Details =~ "Hello" ORDER BY Name
 Output: [
  {
   "Name": "c:\\windows\\system32\\msht.exe",
