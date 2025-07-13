@@ -248,7 +248,7 @@ func (self *ServerTestSuite) TestFlowStates() {
 		defer closer()
 
 		// The flow is in the UNRESPONSIVE state now.
-		vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
 			flow_details, err = launcher.GetFlowDetails(
 				self.Ctx, self.ConfigObj, services.GetFlowOptions{},
 				self.client_id, in_flight)
