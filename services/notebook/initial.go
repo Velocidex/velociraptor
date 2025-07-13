@@ -305,7 +305,7 @@ func CalculateNotebookArtifact(
 			for _, n := range s.Notebook {
 				new_source.Notebook = append(new_source.Notebook, n)
 				switch strings.ToLower(n.Type) {
-				case "vql", "md", "markdown":
+				case "vql", "md", "markdown", "none":
 					custom_cells = true
 				}
 			}

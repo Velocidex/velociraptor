@@ -64,7 +64,7 @@ func (self *ConfigSurvey) Compile() (*config_proto.Config, error) {
 	config_obj.GUI.BindPort = uint32(port)
 
 	config_obj.GUI.PublicUrl = fmt.Sprintf(
-		"https://%s:%d/", config_obj.Frontend.Hostname,
+		"https://%s:%d/app/index.html", config_obj.Frontend.Hostname,
 		config_obj.GUI.BindPort)
 
 	config_obj.GUI.Authenticator.Type = "Basic"

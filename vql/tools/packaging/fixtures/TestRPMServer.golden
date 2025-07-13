@@ -3,7 +3,7 @@ velociraptor-server-0.74.3.x86_64.rpm
 >> /etc/velociraptor/server.config.yaml
 
 File /etc/velociraptor/server.config.yaml
-Hash c96c5898fee07104e85a03456da3221631cae2287cae0cf1a90d05f817a78114
+Hash 7ee2540d1ea95ce52b68d915b991c15e1b766ec102a68ac3b7cae181f681542d
 Mode 600
 Owner root
 Group root
@@ -175,6 +175,7 @@ GUI:
     W5gJrneEd85yOMZRQ+zR9lUBnfK+csnfdPys6Tf+lnTBlXGtXaN69rmAHD1WJp5l
     JL5WubPDAGJoNCt7TqNBOwMk6avXZPFQkVljQclVoysIBQ44Tac=
     -----END RSA PRIVATE KEY-----
+  public_url: https://localhost:8889/app/index.html
   authenticator:
     type: Basic
 CA:

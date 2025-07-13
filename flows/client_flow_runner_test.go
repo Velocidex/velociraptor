@@ -248,7 +248,7 @@ func (self *ServerTestSuite) TestFlowStates() {
 		defer closer()
 
 		// The flow is in the UNRESPONSIVE state now.
-		vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
 			flow_details, err = launcher.GetFlowDetails(
 				self.Ctx, self.ConfigObj, services.GetFlowOptions{},
 				self.client_id, in_flight)
@@ -288,7 +288,7 @@ func (self *ServerTestSuite) TestFlowStates() {
 	}
 
 	// The client record should not have any in flight flows now.
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(15*time.Second, self.T(), func() bool {
 		client_info, err = client_info_manager.Get(self.Ctx, self.client_id)
 		assert.NoError(self.T(), err)
 

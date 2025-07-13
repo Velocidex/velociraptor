@@ -1251,7 +1251,6 @@ class VeloPagedTable extends Component {
         return (
             <tr key={idx}
                 onClick={e=>{
-                    e.stopPropagation();
                     // Prevent the browser from selecting with shift key
                     if (e.shiftKey) {
                         document.getSelection().removeAllRanges();

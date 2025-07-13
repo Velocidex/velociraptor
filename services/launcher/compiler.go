@@ -333,7 +333,8 @@ func mergeSources(
 		// queries except for the last one.
 		queries, err := vfilter.MultiParse(source.Query)
 		if err != nil {
-			return fmt.Errorf("While parsing source query: %w", err)
+			return fmt.Errorf("While parsing source query %v: %w",
+				source.Name, err)
 		}
 
 		for idx2, vql := range queries {

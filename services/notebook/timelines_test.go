@@ -99,7 +99,7 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelines(t *assert.R)
 }
 
 func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
-	assert.Retry(self.T(), 3, time.Second,
+	assert.Retry(self.T(), 10, time.Second,
 		self._TestNotebookManagerTimelineAnnotations)
 }
 

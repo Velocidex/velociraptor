@@ -46,6 +46,10 @@ func (self *SanityChecks) CheckFrontendSettings(
 			}
 		}
 
+		if !strings.HasSuffix(config_obj.GUI.PublicUrl, "/app/index.html") {
+			return fmt.Errorf("Invalid GUI.public_url - this should refer to the externally accessible URL for the GUI application. It should end with '/app/index.html'")
+		}
+
 	}
 	return nil
 }
