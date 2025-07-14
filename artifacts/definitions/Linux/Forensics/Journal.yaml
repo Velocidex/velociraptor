@@ -11,18 +11,15 @@ parameters:
 - name: IdentifierRegex
   type: regex
   description: "Regex of event source e.g sshd or kernel"
-  default: .
 - name: IocRegex
   type: regex
   description: "IOC Regex in event data"
-  default: .
 - name: DateAfter
   type: timestamp
   description: "search for events after this date. YYYY-MM-DDTmm:hh:ssZ"
 - name: DateBefore
   type: timestamp
   description: "search for events before this date. YYYY-MM-DDTmm:hh:ssZ"
-
 - name: AlsoUpload
   type: bool
   description: If set we also upload the raw files.
@@ -30,22 +27,79 @@ parameters:
 sources:
 - name: Uploads
   query: |
-    SELECT * FROM if(condition=AlsoUpload,
-    then={
-       SELECT OSPath, upload(file=OSPath) AS Upload
-       FROM glob(globs=JournalGlob)
-    })
+     SELECT *
+     FROM if(condition=AlsoUpload,
+             then={
+         SELECT OSPath,
+                upload(file=OSPath) AS Upload
+         FROM glob(globs=JournalGlob)
+       })
+
 
 - query: |
-    SELECT * FROM foreach(row={
-      SELECT OSPath FROM glob(globs=JournalGlob)
-    }, query={
-      SELECT *
-      FROM parse_journald(filename=OSPath,
-          start_time=DateAfter, end_time=DateBefore)
-      WHERE format(format='%s',args=EventData.SYSLOG_IDENTIFIER) =~ IdentifierRegex
-        AND format(format='%s_%s_%s',args=[EventData,System._CMDLINE,System._EXE]) =~ IocRegex
-    })
+     LET standard = SELECT *
+       FROM foreach(row={
+         SELECT OSPath
+         FROM glob(globs=JournalGlob)
+       },
+                    query={
+         SELECT *
+         FROM parse_journald(filename=OSPath,
+                             start_time=DateAfter,
+                             end_time=DateBefore)
+       })
+     
+     LET identifier_only = SELECT *
+       FROM foreach(row={
+         SELECT OSPath
+         FROM glob(globs=JournalGlob)
+       },
+                    query={
+         SELECT *
+         FROM parse_journald(filename=OSPath,
+                             start_time=DateAfter,
+                             end_time=DateBefore)
+         WHERE EventData.SYSLOG_IDENTIFIER =~ IdentifierRegex
+       })
+     
+     LET all_regex = SELECT *
+       FROM foreach(row={
+         SELECT OSPath
+         FROM glob(globs=JournalGlob)
+       },
+                    query={
+         SELECT *
+         FROM parse_journald(filename=OSPath,
+                             start_time=DateAfter,
+                             end_time=DateBefore)
+         WHERE EventData.SYSLOG_IDENTIFIER =~ IdentifierRegex
+          AND format(format='%s_%s_%s',
+                     args=[EventData, System._CMDLINE, System._EXE]) =~
+                IocRegex
+       })
+     
+     LET ioc_only = SELECT *
+       FROM foreach(row={
+         SELECT OSPath
+         FROM glob(globs=JournalGlob)
+       },
+                    query={
+         SELECT *
+         FROM parse_journald(filename=OSPath,
+                             start_time=DateAfter,
+                             end_time=DateBefore)
+         WHERE format(format='%s_%s_%s',
+                      args=[EventData, System._CMDLINE,
+                        System._EXE]) =~ IocRegex
+       })
+     
+     SELECT *
+     FROM if(condition=IdentifierRegex
+              AND IocRegex,
+             then=all_regex,
+             else=if(condition=IdentifierRegex,
+                     then=identifier_only,
+                     else=if(condition=IocRegex, then=ioc_only, else=standard)))
 
   notebook:
     - type: vql_suggestion
