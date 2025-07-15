@@ -403,61 +403,84 @@ func getFlowResultSetReader(
 
 // Override SourcePluginArgs from the scope.
 func (self *SourcePluginArgs) ParseSourceArgsFromScope(scope vfilter.Scope) {
-	client_id, pres := scope.Resolve("ClientId")
-	if pres {
-		self.ClientId, _ = client_id.(string)
-	}
-
-	flow_id, pres := scope.Resolve("FlowId")
-	if pres {
-		self.FlowId, _ = flow_id.(string)
-	}
-
-	artifact_name, pres := scope.Resolve("ArtifactName")
-	if pres {
-		artifact, ok := artifact_name.(string)
-		if ok {
-			self.Artifact = artifact
+	if self.ClientId == "" {
+		client_id, pres := scope.Resolve("ClientId")
+		if pres {
+			self.ClientId, _ = client_id.(string)
 		}
 	}
 
-	start_time, pres := scope.Resolve("StartTime")
-	if pres {
-		self.StartTime = start_time
+	if self.FlowId == "" {
+		flow_id, pres := scope.Resolve("FlowId")
+		if pres {
+			self.FlowId, _ = flow_id.(string)
+		}
 	}
 
-	end_time, pres := scope.Resolve("EndTime")
-	if pres {
-		self.EndTime = end_time
+	if self.Artifact == "" {
+		artifact_name, pres := scope.Resolve("ArtifactName")
+		if pres {
+			artifact, ok := artifact_name.(string)
+			if ok {
+				self.Artifact = artifact
+			}
+		}
 	}
 
-	notebook_id, pres := scope.Resolve("NotebookId")
-	if pres {
-		self.NotebookId, _ = notebook_id.(string)
-	}
-	notebook_cell_id, pres := scope.Resolve("NotebookCellId")
-	if pres {
-		self.NotebookCellId, _ = notebook_cell_id.(string)
+	if self.StartTime == "" {
+		start_time, pres := scope.Resolve("StartTime")
+		if pres {
+			self.StartTime = start_time
+		}
 	}
 
-	notebook_cell_table, pres := scope.Resolve("NotebookCellTable")
-	if pres {
-		self.NotebookCellTable, _ = notebook_cell_table.(int64)
+	if self.EndTime == "" {
+		end_time, pres := scope.Resolve("EndTime")
+		if pres {
+			self.EndTime = end_time
+		}
 	}
 
-	start_row, pres := scope.Resolve("StartRow")
-	if pres {
-		self.StartRow, _ = start_row.(int64)
+	if self.NotebookId == "" {
+		notebook_id, pres := scope.Resolve("NotebookId")
+		if pres {
+			self.NotebookId, _ = notebook_id.(string)
+		}
 	}
 
-	limit, pres := scope.Resolve("Limit")
-	if pres {
-		self.Limit, _ = limit.(int64)
+	if self.NotebookCellId == "" {
+		notebook_cell_id, pres := scope.Resolve("NotebookCellId")
+		if pres {
+			self.NotebookCellId, _ = notebook_cell_id.(string)
+		}
 	}
 
-	hunt_id, pres := scope.Resolve("HuntId")
-	if pres {
-		self.HuntId, _ = hunt_id.(string)
+	if self.NotebookCellTable == 0 {
+		notebook_cell_table, pres := scope.Resolve("NotebookCellTable")
+		if pres {
+			self.NotebookCellTable, _ = notebook_cell_table.(int64)
+		}
+	}
+
+	if self.StartRow == 0 {
+		start_row, pres := scope.Resolve("StartRow")
+		if pres {
+			self.StartRow, _ = start_row.(int64)
+		}
+	}
+
+	if self.Limit == 0 {
+		limit, pres := scope.Resolve("Limit")
+		if pres {
+			self.Limit, _ = limit.(int64)
+		}
+	}
+
+	if self.HuntId == "" {
+		hunt_id, pres := scope.Resolve("HuntId")
+		if pres {
+			self.HuntId, _ = hunt_id.(string)
+		}
 	}
 }
 

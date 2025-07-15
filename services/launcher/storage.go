@@ -85,6 +85,24 @@ func (self *FlowStorageManager) WriteTask(
 		}, utils.BackgroundWriter)
 }
 
+func shouldRefreshRS(
+	config_obj *config_proto.Config,
+	rs_reader result_sets.ResultSetReader) bool {
+
+	if rs_reader.TotalRows() <= 0 {
+		return true
+	}
+
+	now := utils.GetTime().Now()
+	max_age := 600 * time.Second
+	if config_obj.Defaults != nil &&
+		config_obj.Defaults.ReindexPeriodSeconds > 0 {
+		max_age = time.Duration(config_obj.Defaults.ReindexPeriodSeconds) * time.Second
+	}
+
+	return now.Add(-max_age).Before(rs_reader.MTime())
+}
+
 func (self *FlowStorageManager) ListFlows(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -97,7 +115,8 @@ func (self *FlowStorageManager) ListFlows(
 	rs_reader, err := result_sets.NewResultSetReaderWithOptions(
 		ctx, config_obj, file_store_factory,
 		client_path_manager.FlowIndex(), options)
-	if err != nil || rs_reader.TotalRows() <= 0 {
+
+	if err != nil || shouldRefreshRS(config_obj, rs_reader) {
 		// Try to rebuild the index
 		err = self.buildFlowIndexFromDatastore(ctx, config_obj, client_id)
 		if err != nil {
