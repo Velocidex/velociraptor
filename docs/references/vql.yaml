@@ -9286,14 +9286,38 @@
   description: |
     Retrieve rows from an artifact's source.
 
-    This plugin is mostly useful in reports. It attempts to do the
-    right thing automatically by inferring most parameters from its
+    This plugin is mostly useful in notebooks. It attempts to do the
+    right thing automatically by inferring many parameters from its
     execution environment.
 
-    For example when called within a CLIENT report context, it will
-    automatically fill its flow id, client id etc. Typically this
-    means that you only need to specify the source name (for
-    multi-source artifacts).
+    The goal with this plugin is to reduce the boiler plate code
+    required by infering many of the parameters from the notebook
+    environment. The `source()` plugin serves as a proxy to other more
+    specific plugins such as `hunt_results()` and `flow_results()`.
+
+    For example, when running within a collection notebook, the GUI
+    will automatically pass the `ClientId`, `FlowId` and `Artifact`
+    parameters to the notebook environment. Therefore it is not
+    necessary to specify those at all:
+
+    ```vql
+    -- Artifact, ClientId and FlowId are populated from the notebook context.
+    SELECT * FROM source()
+    ```
+
+    On the other hand, when running the above query in a hunt
+    notebook, the `HuntId` will be available in the notebook context,
+    therefore the `source()` plugin will be equivalent to the
+    `hunt_results()` plugin.
+
+    When accessing another notebook cell, both the `notebook_id` and
+    `notebook_cell` parameters must be explicitly specified:
+
+    ```vql
+    SELECT * FROM source(notebook_id="N.123", notebook_cell="NC.1234")
+    ```
+
+
   type: Plugin
   args:
   - name: client_id
@@ -12021,4 +12045,3 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
-

@@ -518,16 +518,9 @@ func (self *ClientFlowRunner) FlowStats(
 	// If this is the final response, then we will notify a flow
 	// completion.
 	if msg.FlowComplete {
-		self.flow_completion_messages = append(self.flow_completion_messages,
-			ordereddict.NewDict().
-				Set("Timestamp", time.Now().UTC().Unix()).
-				Set("Flow", stats).
-				Set("FlowId", flow_id).
-				Set("ClientId", client_id))
-
 		// Immediately remove this flow from the local InFlightFlows
 		// so we dont schedule it again.
-		return client_info_manager.Modify(ctx, client_id,
+		err := client_info_manager.Modify(ctx, client_id,
 			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 				if client_info == nil {
 					client_info = &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
@@ -538,11 +531,51 @@ func (self *ClientFlowRunner) FlowStats(
 					client_info.InFlightFlows = make(map[string]int64)
 				}
 
+				_, pres := client_info.InFlightFlows[flow_id]
+				if !pres {
+					return client_info, utils.NotFoundError
+				}
+
 				// Update the timestamp that we last received a stats
 				// update from this flow.
 				delete(client_info.InFlightFlows, flow_id)
 				return client_info, nil
 			})
+
+		// We have no idea about this flow - we need to check more closely.
+		if errors.Is(err, utils.NotFoundError) {
+			// Slow path - normally the flow will already be in the
+			// InFlightFlows so most of the time this wont
+			// happen. However, if the flow is unexpected we need to
+			// load the collection from the datastore and check it
+			// more closely.
+			launcher, err := services.GetLauncher(self.config_obj)
+			if err != nil {
+				return err
+			}
+
+			flow_context, err := launcher.Storage().LoadCollectionContext(
+				ctx, self.config_obj, client_id, flow_id)
+			if err != nil {
+				return err
+			}
+
+			// If the flow is already done, do not send the Completion
+			// message again!
+			if flow_context.State == flows_proto.ArtifactCollectorContext_ERROR ||
+				flow_context.State == flows_proto.ArtifactCollectorContext_FINISHED {
+				return nil
+			}
+		}
+
+		self.flow_completion_messages = append(self.flow_completion_messages,
+			ordereddict.NewDict().
+				Set("Timestamp", time.Now().UTC().Unix()).
+				Set("Flow", stats).
+				Set("FlowId", flow_id).
+				Set("ClientId", client_id))
+
+		return err
 	}
 
 	return client_info_manager.Modify(ctx, client_id,
