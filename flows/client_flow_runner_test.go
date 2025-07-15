@@ -245,15 +245,20 @@ func (self *ServerTestSuite) TestFlowStates() {
 		// Advance time by 10 minutes to emulate client going away for
 		// a while.
 		time_origin += 600
-		closer := utils.MockTime(utils.NewMockClock(time.Unix(time_origin, 0)))
+		clock := utils.NewMockClock(time.Unix(time_origin, 0))
+		closer := utils.MockTime(clock)
 		defer closer()
 
 		// The flow is in the UNRESPONSIVE state now.
-		vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
+		vtesting.WaitUntil(1*time.Second, self.T(), func() bool {
 			flow_details, err = launcher.GetFlowDetails(
 				self.Ctx, self.ConfigObj, services.GetFlowOptions{},
 				self.client_id, in_flight)
 			assert.NoError(self.T(), err)
+
+			// Move time forward on each iteration
+			time_origin += 60
+			clock.Set(time.Unix(time_origin, 0))
 
 			return flow_details.Context.State == flows_proto.ArtifactCollectorContext_UNRESPONSIVE
 		})
@@ -308,12 +313,20 @@ func (self *ServerTestSuite) TestFlowStates() {
 	// Now lets simulate the client crashing... Advance time by 10 minutes
 	time_origin += 600
 
-	closer = utils.MockTime(utils.NewMockClock(time.Unix(time_origin, 0)))
+	clock := utils.NewMockClock(time.Unix(time_origin, 0))
+	closer = utils.MockTime(clock)
 	defer closer()
 
-	// Get the next set of tasks for the client.
-	tasks, err = client_info_manager.GetClientTasks(self.Ctx, self.client_id)
-	assert.NoError(self.T(), err)
+	vtesting.WaitUntil(15*time.Second, self.T(), func() bool {
+		// Get the next set of tasks for the client.
+		tasks, err = client_info_manager.GetClientTasks(self.Ctx, self.client_id)
+		assert.NoError(self.T(), err)
+
+		time_origin += 60
+		clock.Set(time.Unix(time_origin, 0))
+
+		return len(tasks) == 1
+	})
 
 	// The server will send the client a flow stats request - please
 	// tell me about these flows. If the client really crashed it will

@@ -228,10 +228,6 @@ func (self *Launcher) CancelFlow(
 // colletion. We derive this information from the specific results of
 // each query.
 func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
-	if collection_context.InflightTime > 0 {
-		utils.DlvBreak()
-	}
-
 	// Support older colletions which do not have this info
 	if len(collection_context.QueryStats) == 0 &&
 		collection_context.InflightTime == 0 {
@@ -322,7 +318,8 @@ func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 
 	// The flow has been scheduled - either indicate it as waiting, in
 	// progress or unresponsive.
-	if collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING &&
+	if (collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING ||
+		collection_context.State == flows_proto.ArtifactCollectorContext_IN_PROGRESS) &&
 		collection_context.InflightTime > 0 {
 
 		// If the client did not send any status updates yet the query
