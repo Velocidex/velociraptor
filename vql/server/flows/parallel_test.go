@@ -89,14 +89,17 @@ func (self *TestSuite) TestArtifactSource() {
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
+	arg := &ParallelPluginArgs{
+		Artifact:  "Test.Artifact",
+		FlowId:    self.flow_id,
+		ClientId:  self.client_id,
+		BatchSize: 10,
+	}
+	err = arg.DetermineMode(ctx, self.ConfigObj, scope, nil)
+	assert.NoError(self.T(), err)
+
 	row_chan, err := breakIntoScopes(
-		ctx, self.ConfigObj, scope,
-		&ParallelPluginArgs{
-			Artifact:  "Test.Artifact",
-			FlowId:    self.flow_id,
-			ClientId:  self.client_id,
-			BatchSize: 10,
-		})
+		ctx, self.ConfigObj, scope, arg)
 	assert.NoError(self.T(), err)
 
 	for args := range row_chan {
@@ -214,13 +217,15 @@ func (self *TestSuite) TestHuntsSource() {
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
-	row_chan, err := breakIntoScopes(
-		ctx, self.ConfigObj, scope,
-		&ParallelPluginArgs{
-			Artifact:  "Test.Artifact",
-			HuntId:    hunt_id,
-			BatchSize: 10,
-		})
+	arg := &ParallelPluginArgs{
+		Artifact:  "Test.Artifact",
+		HuntId:    hunt_id,
+		BatchSize: 10,
+	}
+	err = arg.DetermineMode(ctx, self.ConfigObj, scope, nil)
+	assert.NoError(self.T(), err)
+
+	row_chan, err := breakIntoScopes(ctx, self.ConfigObj, scope, arg)
 	assert.NoError(self.T(), err)
 
 	sections := []string{}

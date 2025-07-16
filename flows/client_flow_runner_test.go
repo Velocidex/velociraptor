@@ -27,11 +27,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -244,15 +246,20 @@ func (self *ServerTestSuite) TestFlowStates() {
 		// Advance time by 10 minutes to emulate client going away for
 		// a while.
 		time_origin += 600
-		closer := utils.MockTime(utils.NewMockClock(time.Unix(time_origin, 0)))
+		clock := utils.NewMockClock(time.Unix(time_origin, 0))
+		closer := utils.MockTime(clock)
 		defer closer()
 
 		// The flow is in the UNRESPONSIVE state now.
-		vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
+		vtesting.WaitUntil(1*time.Second, self.T(), func() bool {
 			flow_details, err = launcher.GetFlowDetails(
 				self.Ctx, self.ConfigObj, services.GetFlowOptions{},
 				self.client_id, in_flight)
 			assert.NoError(self.T(), err)
+
+			// Move time forward on each iteration
+			time_origin += 60
+			clock.Set(time.Unix(time_origin, 0))
 
 			return flow_details.Context.State == flows_proto.ArtifactCollectorContext_UNRESPONSIVE
 		})
@@ -307,12 +314,20 @@ func (self *ServerTestSuite) TestFlowStates() {
 	// Now lets simulate the client crashing... Advance time by 10 minutes
 	time_origin += 600
 
-	closer = utils.MockTime(utils.NewMockClock(time.Unix(time_origin, 0)))
+	clock := utils.NewMockClock(time.Unix(time_origin, 0))
+	closer = utils.MockTime(clock)
 	defer closer()
 
-	// Get the next set of tasks for the client.
-	tasks, err = client_info_manager.GetClientTasks(self.Ctx, self.client_id)
-	assert.NoError(self.T(), err)
+	vtesting.WaitUntil(15*time.Second, self.T(), func() bool {
+		// Get the next set of tasks for the client.
+		tasks, err = client_info_manager.GetClientTasks(self.Ctx, self.client_id)
+		assert.NoError(self.T(), err)
+
+		time_origin += 60
+		clock.Set(time.Unix(time_origin, 0))
+
+		return len(tasks) == 1
+	})
 
 	// The server will send the client a flow stats request - please
 	// tell me about these flows. If the client really crashed it will
@@ -1045,6 +1060,99 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 	// The flow stats are written as normal.
 	err = db.GetSubject(self.ConfigObj, path_manager.Stats(), collection_context)
 	assert.NoError(t, err)
+}
+
+// Test an unknown flow. What happens when the server receives a
+// message to an unknown flow.
+func (self *ServerTestSuite) TestMultipleFlowComplete() {
+	time_origin := int64(100)
+
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(time_origin, 0)))
+	defer closer()
+
+	completions := ordereddict.NewDict()
+
+	err := journal.WatchQueueWithCB(self.Ctx, self.ConfigObj, self.Wg,
+		"System.Flow.Completion", "",
+		func(ctx context.Context, config_obj *config_proto.Config,
+			row *ordereddict.Dict) error {
+			key := fmt.Sprintf("%d", len(completions.Keys()))
+			completions.Set(key, row)
+			return nil
+		})
+	assert.NoError(self.T(), err)
+
+	flow_id, err := self.createArtifactCollection()
+	require.NoError(self.T(), err)
+
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Now draine some messages to the client - this will trigger the
+	// flow to be in flight.
+	tasks, err := client_info_manager.GetClientTasks(self.Ctx, self.client_id)
+	assert.NoError(self.T(), err)
+	assert.True(self.T(), len(tasks) > 0)
+
+	// Check the client record
+	client_record, err := client_info_manager.Get(self.Ctx, self.client_id)
+	assert.NoError(self.T(), err)
+
+	// Make sure the flow is now in flight.
+	_, pres := client_record.InFlightFlows[flow_id]
+	assert.True(self.T(), pres)
+
+	// Emulate a response from the flow - This flow is completed.
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	runner.ProcessSingleMessage(self.Ctx,
+		&crypto_proto.VeloMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			RequestId: constants.ProcessVQLResponses,
+			FlowStats: &crypto_proto.FlowStats{
+				QueryStatus: []*crypto_proto.VeloStatus{
+					{
+						Status: crypto_proto.VeloStatus_OK,
+					},
+				},
+				FlowComplete: true,
+			},
+		})
+	runner.Close(self.Ctx)
+
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		return len(completions.Keys()) > 0
+	})
+
+	// Now send more responses to this flow. For example, if the
+	// client crashed. This should not send a second Completions
+	// event!
+	for i := 0; i < 10; i++ {
+		runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+		runner.ProcessSingleMessage(self.Ctx,
+			&crypto_proto.VeloMessage{
+				Source:    self.client_id,
+				SessionId: flow_id,
+				RequestId: constants.STATS_SINK,
+				FlowStats: &crypto_proto.FlowStats{
+					FlowComplete: true,
+					QueryStatus: []*crypto_proto.VeloStatus{
+						{
+							Status:       crypto_proto.VeloStatus_GENERIC_ERROR,
+							ErrorMessage: "Flow not known - maybe the client crashed?",
+						},
+					},
+				},
+			})
+		runner.Close(self.Ctx)
+	}
+	time.Sleep(time.Second / 2)
+
+	// No more completion events are sent.
+	if len(completions.Keys()) != 1 {
+		json.Dump(completions)
+	}
+	assert.Equal(self.T(), len(completions.Keys()), 1)
 }
 
 func getFlowRequests(messages []*crypto_proto.VeloMessage) (res []*crypto_proto.VeloMessage) {

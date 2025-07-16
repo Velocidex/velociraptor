@@ -36,6 +36,16 @@ func (self *Throttler) Close() {
 // automatically back off and attempt to reconnect in a short time.
 func NewThrottler(connections_per_second uint64) *Throttler {
 	if connections_per_second == 0 || connections_per_second > 1000 {
+		return NewThrottlerWithDuration(0)
+	}
+
+	duration := time.Duration(
+		1000000/connections_per_second) * time.Microsecond
+	return NewThrottlerWithDuration(duration)
+}
+
+func NewThrottlerWithDuration(duration time.Duration) *Throttler {
+	if duration == 0 {
 		result := &Throttler{
 			ticker: make(chan time.Time),
 			done:   make(chan bool),
@@ -45,15 +55,16 @@ func NewThrottler(connections_per_second uint64) *Throttler {
 		return result
 	}
 
-	duration := time.Duration(1000000/connections_per_second) * time.Microsecond
 	result := &Throttler{
 		// Have some buffering so we can spike QPS temporarily
 		// for 10 seconds
-		ticker: make(chan time.Time, connections_per_second*10),
+		ticker: make(chan time.Time, 10),
 		done:   make(chan bool),
 	}
 
 	go func() {
+		defer close(result.ticker)
+
 		ticker := time.NewTicker(duration)
 		defer ticker.Stop()
 

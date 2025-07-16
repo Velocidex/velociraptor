@@ -452,12 +452,51 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 	assert.Equal(self.T(), uploaded_size, int64(12))
 }
 
+// Schedule the flow and drain its messages to emulate it being
+// inflight.
+func (self *TestSuite) scheduleFlow() {
+	closer := utils.SetFlowIdForTests(self.flow_id)
+	defer closer()
+
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(
+		self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	request := &flows_proto.ArtifactCollectorArgs{
+		ClientId:  self.client_id,
+		Creator:   utils.GetSuperuserName(self.ConfigObj),
+		Artifacts: []string{"Generic.Client.Info"},
+	}
+
+	flow_id, err := launcher.ScheduleArtifactCollection(
+		self.Ctx, self.ConfigObj,
+		acl_managers.NullACLManager{},
+		repository, request, nil)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), flow_id, self.flow_id)
+
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	_, err = client_info_manager.GetClientTasks(
+		self.Ctx, self.client_id)
+	assert.NoError(self.T(), err)
+}
+
 // Just a normal collection with error log - receive some rows and an
 // ok status but an error log. NOTE: Earlier versions would maintain
 // flow state on the server, but in recent versions flow state is
 // maintained on the client. This means the client flow runner just
 // writes exactly what FlowStats is sending.
 func (self *TestSuite) TestCollectionCompletionErrorLogWithOkStatus() {
+
+	self.scheduleFlow()
 
 	// Emulate messages being sent from the client. Clients maintain
 	// flow state so nothing happens until FlowStats is sent.
@@ -516,6 +555,8 @@ func (self *TestSuite) TestCollectionCompletionErrorLogWithOkStatus() {
 
 // Just a normal collection - receive some rows and an ok status
 func (self *TestSuite) TestCollectionCompletionMultiQueryOkStatus() {
+	self.scheduleFlow()
+
 	flow := self.testCollectionCompletion(1, []*crypto_proto.VeloMessage{
 		{
 			SessionId: self.flow_id,

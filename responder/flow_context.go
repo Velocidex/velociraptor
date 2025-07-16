@@ -169,6 +169,7 @@ func (self *FlowContext) isFlowComplete() bool {
 		return false
 	}
 
+	// We are only complete when *all* the responders are complete!
 	for _, r := range self.responders {
 		if !r.IsComplete() {
 			return false
