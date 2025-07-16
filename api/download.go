@@ -53,7 +53,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
-	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -464,17 +463,24 @@ func getTransformer(
 			client_id := utils.GetString(row, "ClientId")
 			flow_id := utils.GetString(row, "FlowId")
 
-			flow, err := flows.LoadCollectionContext(
-				ctx, config_obj, client_id, flow_id)
-			if err != nil {
-				flow = flows.NewCollectionContext(ctx, config_obj)
-			}
-
-			return ordereddict.NewDict().
+			base := ordereddict.NewDict().
 				Set("ClientId", client_id).
 				Set("Hostname", services.GetHostname(ctx, config_obj, client_id)).
 				Set("FlowId", flow_id).
-				Set("StartedTime", time.Unix(utils.GetInt64(row, "Timestamp"), 0)).
+				Set("StartedTime", time.Unix(utils.GetInt64(row, "Timestamp"), 0))
+
+			launcher, err := services.GetLauncher(config_obj)
+			if err != nil {
+				return base.Set("State", fmt.Sprintf("Unknown: %v", err))
+			}
+
+			flow, err := launcher.Storage().LoadCollectionContext(
+				ctx, config_obj, client_id, flow_id)
+			if err != nil {
+				return base.Set("State", fmt.Sprintf("Unknown: %v", err))
+			}
+
+			return base.
 				Set("State", flow.State.String()).
 				Set("Duration", flow.ExecutionDuration/1000000000).
 				Set("TotalBytes", flow.TotalUploadedBytes).
