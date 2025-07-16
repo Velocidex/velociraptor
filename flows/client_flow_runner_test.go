@@ -27,6 +27,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
@@ -1148,6 +1149,9 @@ func (self *ServerTestSuite) TestMultipleFlowComplete() {
 	time.Sleep(time.Second / 2)
 
 	// No more completion events are sent.
+	if len(completions.Keys()) != 1 {
+		json.Dump(completions)
+	}
 	assert.Equal(self.T(), len(completions.Keys()), 1)
 }
 

@@ -30,6 +30,9 @@ type FlowStorageManager struct {
 
 	// Protects the global flows journal
 	flow_journal_mu sync.Mutex
+
+	// Throttle index rebuilds so they are not too frequent.
+	throttler *utils.Throttler
 }
 
 func (self *FlowStorageManager) WriteFlow(
@@ -85,7 +88,7 @@ func (self *FlowStorageManager) WriteTask(
 		}, utils.BackgroundWriter)
 }
 
-func shouldRefreshRS(
+func (self *FlowStorageManager) shouldRefreshRS(
 	config_obj *config_proto.Config,
 	rs_reader result_sets.ResultSetReader) bool {
 
@@ -100,7 +103,15 @@ func shouldRefreshRS(
 		max_age = time.Duration(config_obj.Defaults.ReindexPeriodSeconds) * time.Second
 	}
 
-	return now.Add(-max_age).Before(rs_reader.MTime())
+	// The reader is not older than max_age, lets just use it.
+	if now.Add(-max_age).Before(rs_reader.MTime()) {
+		return false
+	}
+
+	// Only reindex if we are ready - this helps to spread out the
+	// load when we read flow indexes very quickly (e.g in a VQL
+	// query)
+	return self.throttler.Ready()
 }
 
 func (self *FlowStorageManager) ListFlows(
@@ -116,7 +127,7 @@ func (self *FlowStorageManager) ListFlows(
 		ctx, config_obj, file_store_factory,
 		client_path_manager.FlowIndex(), options)
 
-	if err != nil || shouldRefreshRS(config_obj, rs_reader) {
+	if err != nil || self.shouldRefreshRS(config_obj, rs_reader) {
 		// Try to rebuild the index
 		err = self.buildFlowIndexFromDatastore(ctx, config_obj, client_id)
 		if err != nil {
@@ -346,6 +357,7 @@ func NewFlowStorageManager(
 	wg *sync.WaitGroup) *FlowStorageManager {
 	res := &FlowStorageManager{
 		indexBuilders: make(map[string]*flowIndexBuilder),
+		throttler:     utils.NewThrottlerWithDuration(time.Minute),
 	}
 
 	wg.Add(1)
