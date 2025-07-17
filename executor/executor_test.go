@@ -416,6 +416,60 @@ func (self *ExecutorTestSuite) TestLogMessages() {
 	assert.True(self.T(), len(log_messages) <= 2, "Too many log messages")
 }
 
+// Test the error messages are generated when logs match.
+func (self *ExecutorTestSuite) TestErrorRegexLogMessages() {
+	t := self.T()
+
+	// Max time for deadlock detection.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	config_obj := config.GetDefaultConfig()
+	executor, err := NewClientExecutor(ctx, "", config_obj)
+	require.NoError(t, err)
+
+	collector := NewMessageCollector(ctx, executor)
+
+	// Send two requests for the same flow in parallel these should
+	// generate a bunch of log messages.
+	flow_id := fmt.Sprintf("F.XXX%d", utils.GetId())
+	executor.Inbound <- &crypto_proto.VeloMessage{
+		AuthState: crypto_proto.VeloMessage_AUTHENTICATED,
+		SessionId: flow_id,
+		FlowRequest: &crypto_proto.FlowRequest{
+			// Specify a custom error regex which should trigger.
+			LogErrorRegex: "i am an error",
+			VQLClientActions: []*actions_proto.VQLCollectorArgs{{
+				Query: []*actions_proto.VQLRequest{
+					// Log 10 messages
+					{
+						Name: "LoggingArtifact",
+						VQL:  "SELECT log(message='i am an error message') FROM scope()",
+					},
+				}}},
+		},
+		RequestId: 1}
+
+	// collect the log messages and ensure they are all batched in one response.
+	messages := []*crypto_proto.VeloMessage{}
+
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		messages = nil
+
+		for _, msg := range collector.Messages() {
+			if msg.FlowStats != nil && msg.FlowStats.FlowComplete {
+				messages = append(messages, msg)
+			}
+		}
+
+		return len(messages) > 0
+	})
+
+	// This should be marked as an error.
+	error_message := messages[0].FlowStats.QueryStatus[0].ErrorMessage
+	assert.Contains(self.T(), error_message, "i am an error message")
+}
+
 // Schedule a flow in the database and return its flow id
 func (self ExecutorTestSuite) createArtifactCollection(name string) (string, error) {
 	manager, err := services.GetRepositoryManager(self.ConfigObj)

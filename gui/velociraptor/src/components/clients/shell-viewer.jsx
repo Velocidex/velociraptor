@@ -277,7 +277,7 @@ class _VeloShellCell extends Component {
               { this.state.showDeleteWizard &&
                 <DeleteFlowDialog
                   client={this.props.client}
-                  flow={this.props.flow}
+                  flows={[this.props.flow]}
                   onClose={e=>{
                       this.setState({showDeleteWizard: false});
                   }}
@@ -513,7 +513,7 @@ class _VeloVQLCell extends Component {
               { this.state.showDeleteWizard &&
                 <DeleteFlowDialog
                   client={this.props.client}
-                  flow={this.props.flow}
+                  flows={[this.props.flow]}
                   onClose={e=>{
                       this.setState({showDeleteWizard: false});
                   }}

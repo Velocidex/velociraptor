@@ -654,6 +654,10 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		},
 	}
 
+	if config_obj.Frontend.CollectionErrorRegex != "" {
+		task.FlowRequest.LogErrorRegex = config_obj.Frontend.CollectionErrorRegex
+	}
+
 	if collector_request.TraceFreqSec > 0 {
 		task.FlowRequest.Trace, err = self.calculateTraceQuery(ctx, config_obj,
 			collector_request.TraceFreqSec)

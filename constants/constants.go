@@ -129,7 +129,7 @@ const (
 	// Certain VQL errors represent a failure in artifact
 	// collection. We use this RegExp to determine if log messages
 	// represent failure.
-	VQL_ERROR_REGEX = "(?i)(Error:|Symbol.+?not found|Expecting a path arg type, not)"
+	VQL_ERROR_REGEX = "(?i)(Error:|Symbol.+?not found|Expecting a path arg type, not|Field.+?is required)"
 
 	// Set in the scope with one or more passwords. Used by the zip
 	// accessor to open password protected zip files.

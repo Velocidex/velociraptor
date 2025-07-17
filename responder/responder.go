@@ -19,14 +19,20 @@ package responder
 
 import (
 	"context"
+	"regexp"
 	"runtime/debug"
 	"sync"
 
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	defaultLogErrorRegex = regexp.MustCompile(constants.VQL_ERROR_REGEX)
 )
 
 // The Responder tracks a single query with the flow.
@@ -51,6 +57,8 @@ type FlowResponder struct {
 	flow_context *FlowContext
 
 	completed bool
+
+	logErrorRegex *regexp.Regexp
 }
 
 // A Responder manages responses for a single query. A collection (or
@@ -61,6 +69,7 @@ func newFlowResponder(
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup,
 	output chan *crypto_proto.VeloMessage,
+	req *crypto_proto.FlowRequest,
 	owner *FlowContext) *FlowResponder {
 
 	sub_ctx, cancel := context.WithCancel(ctx)
@@ -75,7 +84,16 @@ func newFlowResponder(
 			Status:      crypto_proto.VeloStatus_PROGRESS,
 			FirstActive: uint64(utils.GetTime().Now().UnixNano() / 1000),
 		},
+		logErrorRegex: defaultLogErrorRegex,
 	}
+
+	if req.LogErrorRegex != "" {
+		re, err := regexp.Compile(req.LogErrorRegex)
+		if err == nil {
+			result.logErrorRegex = re
+		}
+	}
+
 	return result
 }
 
@@ -295,6 +313,13 @@ func (self *FlowResponder) Return(ctx context.Context) {
 // right away, but queue it locally and combine with other log
 // messages for self.flushLogMessages() to send.
 func (self *FlowResponder) Log(ctx context.Context, level string, msg string) {
+	// If the log message looks like an error then mark it as an
+	// error.
+	if level != logging.ERROR &&
+		self.logErrorRegex.FindStringIndex(msg) != nil {
+		level = logging.ERROR
+	}
+
 	// We dont need to hold the lock because we are just delegating to
 	// the flow context.
 	self.flow_context.AddLogMessage(ctx, level, msg)

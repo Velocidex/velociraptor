@@ -397,7 +397,8 @@ func (self *FlowContext) NewResponder(
 	// Done in the Close() method.
 	self.wg.Add(1)
 	responder := newFlowResponder(
-		self.ctx, self.config_obj, self.wg, self.output, self)
+		self.ctx, self.config_obj, self.wg, self.output,
+		self.req, self)
 	self.responders = append(self.responders, responder)
 
 	return self.ctx, responder
