@@ -1,0 +1,22 @@
+# Wait a bit and try to run an invalid symbol
+Query: LET _ <= background(query={
+   SELECT * FROM chain(a=sleep(time=1),
+   b={
+     SELECT * FROM http_clientXX()
+  })
+})
+
+Output: []
+
+# Watch for the log message to match.
+Query: SELECT Level, Msg FROM logging()
+WHERE Msg =~ "http_clientXX"
+LIMIT 1
+
+Output: [
+ {
+  "Level": "INFO",
+  "Msg": "Velociraptor: ERROR:Plugin http_clientXX not found. Current Scope is [NULL], [GoldenOutput, _SessionId, $mock, srcDir, $device_manager, config, $acl, $uploader, Artifact, $repository, $root], [_]"
+ }
+]
+

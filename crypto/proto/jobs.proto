@@ -43,6 +43,11 @@ message FlowRequest {
 
     // Execute this trace query while the main collection is running.
     repeated VQLCollectorArgs trace = 6;
+
+    // If specified we use this regex to detect errors in log
+    // messages. This regex will determine if the flow should be
+    // flagged with an error depending on the log message.
+    string log_error_regex = 8;
 }
 
 

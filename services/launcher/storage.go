@@ -32,7 +32,8 @@ type FlowStorageManager struct {
 	flow_journal_mu sync.Mutex
 
 	// Throttle index rebuilds so they are not too frequent.
-	throttler *utils.Throttler
+	throttler          *utils.Throttler
+	concurrencyControl *utils.Concurrency
 }
 
 func (self *FlowStorageManager) WriteFlow(
@@ -128,10 +129,18 @@ func (self *FlowStorageManager) ListFlows(
 		client_path_manager.FlowIndex(), options)
 
 	if err != nil || self.shouldRefreshRS(config_obj, rs_reader) {
-		// Try to rebuild the index
-		err = self.buildFlowIndexFromDatastore(ctx, config_obj, client_id)
-		if err != nil {
-			return nil, 0, fmt.Errorf("buildFlowIndexFromDatastore %w", err)
+		// Try to get concurrency here - if we fail, we just make do
+		// with the old result set - no big deal.
+		closer, err := self.concurrencyControl.StartConcurrencyControl(ctx)
+		if err == nil {
+			defer closer()
+
+			// Try to rebuild the index
+			err = self.buildFlowIndexFromDatastore(
+				ctx, config_obj, client_id)
+			if err != nil {
+				return nil, 0, fmt.Errorf("buildFlowIndexFromDatastore %w", err)
+			}
 		}
 
 		rs_reader, err = result_sets.NewResultSetReaderWithOptions(
@@ -357,7 +366,13 @@ func NewFlowStorageManager(
 	wg *sync.WaitGroup) *FlowStorageManager {
 	res := &FlowStorageManager{
 		indexBuilders: make(map[string]*flowIndexBuilder),
-		throttler:     utils.NewThrottlerWithDuration(time.Minute),
+		throttler:     utils.NewThrottlerWithDuration(time.Second),
+
+		// Do not allow more than one reindex at the same time. If we
+		// cant get to reindex quickly, we just dont worry about it
+		// and use the old index snapshot.
+		concurrencyControl: utils.NewConcurrencyControl(
+			1, 100*time.Millisecond),
 	}
 
 	wg.Add(1)

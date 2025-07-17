@@ -194,10 +194,15 @@ func (self *LogContext) AddListener(c chan string) func() {
 }
 
 func (self *LogContext) forwardMessage(level, msg string) {
+	// Avoid deadlocks by taking a copy
 	self.mu.Lock()
-	defer self.mu.Unlock()
-
+	var listeners []chan string
 	for _, c := range self.listeners {
+		listeners = append(listeners, c)
+	}
+	self.mu.Unlock()
+
+	for _, c := range listeners {
 		msg = strings.TrimSpace(msg)
 
 		line := json.Format(`{"time":%q,"level":%q,"msg":%q}`,

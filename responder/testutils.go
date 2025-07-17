@@ -37,10 +37,11 @@ func TestResponderWithFlowId(
 	flow_manager := NewFlowManager(ctx, config_obj, "")
 	result := &TestResponderType{
 		FlowResponder: &FlowResponder{
-			ctx:    sub_ctx,
-			cancel: sub_cancel,
-			wg:     &sync.WaitGroup{},
-			output: output_chan,
+			ctx:           sub_ctx,
+			cancel:        sub_cancel,
+			wg:            &sync.WaitGroup{},
+			output:        output_chan,
+			logErrorRegex: defaultLogErrorRegex,
 		},
 		Drain: drain,
 	}

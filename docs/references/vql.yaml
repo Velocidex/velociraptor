@@ -131,16 +131,6 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
-- name: appcompatcache
-  description: Parses the appcompatcache.
-  type: Plugin
-  category: windows
-  platforms:
-  - darwin_amd64_cgo
-  - darwin_arm64_cgo
-  - linux_amd64_cgo
-  - windows_386_cgo
-  - windows_amd64_cgo
 - name: array
   description: |
     Create an array.
@@ -9291,7 +9281,7 @@
     execution environment.
 
     The goal with this plugin is to reduce the boiler plate code
-    required by infering many of the parameters from the notebook
+    required by inferring many of the parameters from the notebook
     environment. The `source()` plugin serves as a proxy to other more
     specific plugins such as `hunt_results()` and `flow_results()`.
 

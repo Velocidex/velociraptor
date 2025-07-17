@@ -1,0 +1,15 @@
+Queries:
+  # Wait a bit and try to run an invalid symbol
+  - |
+    LET _ <= background(query={
+       SELECT * FROM chain(a=sleep(time=1),
+       b={
+         SELECT * FROM http_clientXX()
+      })
+    })
+
+  # Watch for the log message to match.
+  - |
+    SELECT Level, Msg FROM logging()
+    WHERE Msg =~ "http_clientXX"
+    LIMIT 1

@@ -67,7 +67,7 @@ func GetContainerFormat(format string) (ContainerFormat, error) {
 	default:
 	}
 	return 0, fmt.Errorf(
-		"Unknown format parameter %v either 'json', 'jsonl', 'cvs' or 'csv_only'.",
+		"Unknown format parameter %v either 'json', 'jsonl', 'csv' or 'csv_only'.",
 		format)
 }
 

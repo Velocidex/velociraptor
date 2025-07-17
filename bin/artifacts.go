@@ -92,8 +92,8 @@ var (
 		Default("").String()
 
 	artifact_command_collect_format = artifact_command_collect.Flag(
-		"format", "Output format to use  (text,json,csv,jsonl).").
-		Default("json").Enum("text", "json", "csv", "jsonl")
+		"format", "Output format to use  (csv, json, csv_only).").
+		Default("json").Enum("json", "csv", "csv_only")
 
 	artifact_command_collect_names = artifact_command_collect.Arg(
 		"artifact_name", "The artifact name to collect.").
