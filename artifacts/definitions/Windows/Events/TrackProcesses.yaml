@@ -4,7 +4,7 @@ description: |
   processes using the Velociraptor process tracker.
 
   The Process Tracker keeps track of exited processes, and resolves
-  process callchains from it in memory cache.
+  process call chains from it in memory cache.
 
   This event artifact enables the global process tracker and makes it
   possible to run many other artifacts that depend on the process

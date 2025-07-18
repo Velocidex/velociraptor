@@ -1,6 +1,6 @@
 name: Windows.Forensics.RecycleBin
 description: |
-  This artefact will parse the `$I` files found in the `$Recycle.Bin` folder to
+  This artifact will parse the `$I` files found in the `$Recycle.Bin` folder to
   obtain the time of deletion and the original path and file name.
 
   Supports Recycle Bin format found in Vista onwards. This will not parse INFO2

@@ -9,7 +9,7 @@ description: |
   lifecycle. A valuable hunt is to search Scriptblock logs for signs of
   malicious content.
 
-  There are several parameter's available for search leveraging regex.
+  There are several parameters available for search leveraging regex.
     - DateAfter enables search for events after this date.
     - DateBefore enables search for events before this date.
     - SearchStrings enables regex search over scriptblock text field.

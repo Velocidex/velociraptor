@@ -19,7 +19,7 @@ description: |
 
       - Secondary fields are not consistent across AMCache types and some legacy
       versions do not return these fields.
-      - Some enrichment has occured but any secondary fields should be treated as
+      - Some enrichment has occurred but any secondary fields should be treated as
       guidance only.
       - This artifact collects only entries with a SHA1, for complete AMCache
       analysis please download raw artifact sets.

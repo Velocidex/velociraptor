@@ -44,6 +44,6 @@ sources:
       SELECT * FROM foreach(row=bin,
       query={
          SELECT * FROM execve(
-              argv=["msiexec.exe", "/i", Dest, "/q"],
+              argv=["msiexec," "/i", Dest, "/q", "REINSTALL=ALL", "REINSTALLMODE=A"],
               length=10000000)
       })

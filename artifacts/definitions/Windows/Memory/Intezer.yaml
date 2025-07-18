@@ -1,6 +1,6 @@
 name: Windows.Memory.Intezer
 description: |
-   This artifact will trigger an intezer agent scan on the endpoint.
+   This artifact will trigger an Intezer agent scan on the endpoint.
 
    Scan: The scanner collects running code from memory and sends it to Intezer Analyze.
    Scans take approximately five to ten minutes. The first scan may take additional time.

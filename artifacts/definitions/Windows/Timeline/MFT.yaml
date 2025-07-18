@@ -6,7 +6,7 @@ description: |
   such as time, path or other ntfs attributes.
 
   Output is to Timeline field format to enable simple review across Timeline
-  queries. The TimeOutput paramater enables configuring which NTFS attribute
+  queries. The TimeOutput parameter enables configuring which NTFS attribute
   timestamps are in focus as event_time. for example:
     STANDARD_INFORMATION (4), FILE_NAME (4) or ALL (8)
 

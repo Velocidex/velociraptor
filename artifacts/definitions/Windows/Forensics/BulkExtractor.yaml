@@ -7,30 +7,30 @@ description: |
     collection to remove the need for a disk image.
 
     **Settings**
-    Target - Can be \\\\.\\PhysicalDrive[X], \\\\?\\HarddiskVolumeShadowCopy[Y]
-    or C:\\Folder\\Path"
+    Target - Can be `\\\\.\\PhysicalDrive[X], \\\\?\\HarddiskVolumeShadowCopy[Y]`
+    or `C:\\Folder\\Path`
     TargetAllPhysical - boolean option to include all attached physical disks
     TargetVSS - boolean option to target all VSC
     CarveEvtx - boolean option to include evtx carving
     FindRegex - regex to include for BulkExtractor find plugins
 
     FreeCommand - supersedes evtx or find options and allows free form switch
-    generation for adlib use cases.
-    e.g '-E evtx, -e zip -S unzip_carve_mode=2'"
+    generation for ad-hoc use cases.
+    e.g `-E evtx, -e zip -S unzip_carve_mode=2'`
     Will add:
-    command prefix: "-q 99999999999 -R'" and
-    postfix: "-o [Outfolder] [Target]".
-    To make: bulk_extractor q 99999999999 -R -E evtx, -e zip -S unzip_carve_mode=2 -o [outfolder] [Target]
+    command prefix: `-q 99999999999 -R'` and
+    postfix: `-o [Outfolder] [Target]`.
+    To make: `bulk_extractor q 99999999999 -R -E evtx, -e zip -S unzip_carve_mode=2 -o [outfolder] [Target]`
 
-    If FindRegex or "-f" has been used in FreeCommand the artifact will attempt
-    to parse find.txt output.
+    If FindRegex or `-f` has been used in FreeCommand the artifact will attempt
+    to parse `find.txt` output.
 
     **Note**
     1. Currently only supported for x64 bit machines.
     2. This artifact usually takes a long time. Ensure default timeout is high
     enough for completion.
     3. This content is NOT recommended for hunting without great consideration as
-    bulk_extractor is a multithreaded tool and utilises all CPU available on the
+    bulk_extractor is a multithreaded tool and utilizes all CPU available on the
     endpoint.
     4. The artifact copies carved data to the local disk prior to upload which
     is not ideal from a forensic viewpoint.

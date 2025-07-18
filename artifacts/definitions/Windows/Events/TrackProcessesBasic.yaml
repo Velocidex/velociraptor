@@ -2,7 +2,7 @@ name: Windows.Events.TrackProcessesBasic
 description: |
   This artifact is a basic Process tracker using a simple polled
   pslist(). The Process Tracker keeps track of exited processes, and
-  resolves process callchains from it in memory cache.
+  resolves process call chains from it in memory cache.
 
   This event artifact enables the global process tracker and makes it
   possible to run many other artifacts that depend on the process

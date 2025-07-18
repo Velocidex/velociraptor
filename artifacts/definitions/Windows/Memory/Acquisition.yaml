@@ -10,7 +10,7 @@ description: |
   artifact offers a few compression methods for the output
   file. Reducing the size of the file will decrease time needed for IO
   but will increase CPU requirements so this is a
-  tradeoff. Empirically we found that using S2 compression gives a
+  trade-off. Empirically we found that using S2 compression gives a
   reasonable compression and very high speed reducing acquisition time
   from the no compression options significantly.
 
