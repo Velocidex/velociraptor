@@ -10,8 +10,8 @@ description: |
   unless the -NoProfile flag is used when it is launched.
 
   The artifact will by default search both User profiles and System-wide
-  configured profiles. The user can also targert and exclude specific content
-  with relevant regex filters
+  configured profiles. The user can also target and exclude specific content
+  with relevant regex filters.
 
 reference:
   - https://attack.mitre.org/techniques/T1546/013/

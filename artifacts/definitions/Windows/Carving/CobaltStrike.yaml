@@ -674,7 +674,7 @@ sources:
             OR DecodedConfig.Server =~ '^[ -~]+' -- AND DecodedConfig.TargetUri )
             OR Rule='cobalt_strike_sleepfunction' )
 
-      -- add decoded data seperate to keep pretty output
+      -- add decoded data separate to keep pretty output
       LET output_decoded_data = SELECT *,
             upload(accessor = 'data',
                 file = if(condition = Rule='cobalt_strike_beacon',

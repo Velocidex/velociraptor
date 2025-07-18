@@ -3,7 +3,7 @@ author: "Matt Green - @mgreen27"
 description: |
     This artifact enables hunting for binary attributes.
 
-    The artifact takes a glob targetting input, then checks each file in scope for an MZ header.
+    The artifact takes a glob targeting input, then checks each file in scope for an MZ header.
     The artifact also queries Authenticode details and parses out PE attributes.
 
     Both PE and Authenticode output can be queried for relevant strings using a regex filter and whitelist to hunt with.

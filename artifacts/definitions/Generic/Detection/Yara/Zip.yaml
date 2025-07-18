@@ -1,7 +1,7 @@
 name: Generic.Detection.Yara.Zip
 author: "Matt Green - @mgreen27"
 description: |
-    This artifact enables running Yara on embeded compressed files.
+    This artifact enables running Yara on embedded compressed files.
 
     The artifact:
 
@@ -9,7 +9,7 @@ description: |
     * then applies yara on files inside.
     * files matching ZipFilenameRegex are recursively searched as above.
 
-    The artifact is optimised to recursively search through embedded zip,
+    The artifact is optimized to recursively search through embedded zip,
     jar,war and ear files by extracting any discovered containers.
     Select UploadHits to upload Discovered file for further analysis.  It is
     recommended to increase default artifact timeout for large servers or target

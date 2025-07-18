@@ -21,7 +21,7 @@ description: |
   * Extension at a path: `C:\\Windows\\System32\\.+\.dll$`
   * More wildcards: `Windows\\.+\\.+\.dll$`
   * Specific file: `Windows\\System32\\kernel32\.dll$`
-  * Multiple extentions: `\.(php|aspx|resx|asmx)$`
+  * Multiple extensions: `\.(php|aspx|resx|asmx)$`
 
   Note: no drive and forward slashes - these expressions are for paths
   relative to the root of the filesystem.

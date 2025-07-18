@@ -8,7 +8,7 @@ description: |
 
   NOTE: This binary is treated as malware by many detection engines
   since it is capable of dumping user passwords and search history!!!
-  Running it on the endpoint may (hopefully) trigger endpoint defences.
+  Running it on the endpoint may (hopefully) trigger endpoint defenses.
 
   BrowsingHistoryView v2.55 - View browsing history of your Web browsers
   Copyright (c) 2012 - 2023 Nir Sofer

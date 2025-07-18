@@ -1,7 +1,7 @@
 name: Windows.KapeFiles.Remapping
 description: |
    This artifact automates the rebuilding of remapping rules to be
-   able to easily post process the results of the
+   able to easily post-process the results of the
    Windows.KapeFiles.Targets.
 
    Use as follows in the flow notebook cell of a collection:

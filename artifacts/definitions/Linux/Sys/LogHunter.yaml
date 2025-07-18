@@ -7,7 +7,7 @@ description: |
   and automatically skip hitting notorious locations like /proc.
 
   NOTE: nosymlink feature of glob is set so unexpected results may occur if
-  targetting includes symlink files.
+  targeting includes symlink files.
 
 parameters:
   - name: TargetFiles

@@ -3,7 +3,7 @@ author: Matt Green - @mgreen27
 description: |
   This artifact monitors DNS queries using ETW.
 
-  There are several filteres availible to the user to filter out and target with
+  There are several filters available to the user to filter out and target with
   regex, by default duplicate DNSCache requests are filtered out.
 
 type: CLIENT_EVENT

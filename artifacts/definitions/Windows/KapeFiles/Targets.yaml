@@ -2,7 +2,7 @@ name: Windows.KapeFiles.Targets
 description: |
 
     Kape is a popular bulk collector tool for triaging a system
-    quickly. While KAPE itself is not an opensource tool, the logic it
+    quickly. While KAPE itself is not an open source tool, the logic it
     uses to decide which files to collect is encoded in YAML files
     hosted on the KapeFiles project
     (https://github.com/EricZimmerman/KapeFiles) and released under an
@@ -12,7 +12,7 @@ description: |
     contributed and maintained by the community. This artifact only
     encapsulates the KAPE "Targets" - basically a bunch of glob
     expressions used for collecting files on the endpoint. We do not
-    do any post processing of these files - we just collect them.
+    do any post-processing of these files - we just collect them.
 
     We recommend that timeouts and upload limits be used
     conservatively with this artifact because we can upload really

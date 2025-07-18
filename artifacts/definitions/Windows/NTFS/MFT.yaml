@@ -20,7 +20,7 @@ description: |
   - Fileregex: `^filename.ext$` or partial `string1|string2`
   - Time bounds to select files with a timestamp within time ranges
   - FileSize bounds
-  - MFTDrive: drive to target collection and show as source in results during offline pricessing.
+  - MFTDrive: drive to target collection and show as source in results during offline processing.
   - MFTPath: optional filter for offline MFT processing.
 
   NOTE: Generally more efficient to filter on filename.

@@ -3,7 +3,7 @@ author: "Matt Green - @mgreen27"
 description: |
     This artifact will detect renamed binaries commonly abused by adversaries.
 
-    Binary rename is a defence evasion technique used to bypass brittle process
+    Binary rename is a defense evasion technique used to bypass brittle process
     name and path based detections. Observed in use across
     all stages of the attack lifecycle it is a technique used by a large
     selection of actors from commodity malware crews through to Nation States.

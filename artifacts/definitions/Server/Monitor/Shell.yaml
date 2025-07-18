@@ -7,7 +7,7 @@ description: |
    Obviously being able to run arbitrary commands on the end point is
    a powerful feature and should be used sparingly. There is an audit
    trail for shell commands executed and their output available by
-   streaming all shell commands to the "Shell" client evnt monitoring
+   streaming all shell commands to the "Shell" client event monitoring
    artifact.
 
    This server event artifact centralizes all shell access from all

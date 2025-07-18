@@ -1,7 +1,7 @@
 name: Windows.Forensics.Lnk
 author: Matt Green - @mgreen27
 description: |
-  This artiact parses LNK shortcut files.
+  This artifact parses LNK shortcut files.
 
   A LNK file is a type of Shell Item that serves as a shortcut or reference to a
   specific file, folder, or application. It contains metadata and information
@@ -52,8 +52,8 @@ description: |
     * WebDAV - Checks for NetworkProviderType = WNNC_NET_DAV
     * Line break in StringData.Name
     * Suspicious argument size - large sized arguments over 250 characters as default
-    * Environment variable script - environment vatiable with a common script configured (bat|cmd|ps1|js|vbs|vbe|py)
-    * No Target with environmant variable - environment variable only execution
+    * Environment variable script - environment variable with a common script configured (bat|cmd|ps1|js|vbs|vbe|py)
+    * No Target with environment variable - environment variable only execution
     * Suspicious hostname - some common malicious hostnames
     * Created in VM - Check TrackerData MacAddress for known VM prefix
     * Local Admin- check PropertyStore for indications LNK created by local admin UID 500

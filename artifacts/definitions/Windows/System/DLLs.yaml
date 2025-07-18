@@ -18,7 +18,7 @@ parameters:
     default: .
     type: regex
   - name: DllRegex
-    description: A regex applied to the full dll path (e.g. whitelist all system dlls)
+    description: A regex applied to the full DLL path (e.g. whitelist all system DLLs)
     default: .
     type: regex
   - name: Calculate_Hash

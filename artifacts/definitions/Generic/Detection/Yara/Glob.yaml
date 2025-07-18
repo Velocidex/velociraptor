@@ -21,7 +21,7 @@ description: |
   * Specific binary: `/usr/bin/ls`
   * Wildcards: `/var/www/*.js`
   * More wildcards: `/var/www/**/*.js`
-  * Multiple extentions: `/var/www/*\.{php,aspx,js,html}`
+  * Multiple extensions: `/var/www/*\.{php,aspx,js,html}`
   * Windows: `C:/Users/**/*.{exe,dll,ps1,bat}`
   * Windows: `C:\Users\**\*.{exe,dll,ps1,bat}`
 
