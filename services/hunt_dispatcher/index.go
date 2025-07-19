@@ -29,6 +29,17 @@ func (self *HuntStorageManagerImpl) FlushIndex(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	start := utils.GetTime().Now()
+	if start.Sub(self.last_flush_time) < 5*time.Second {
+		return nil
+	}
+
+	return self._FlushIndex(ctx)
+}
+
+func (self *HuntStorageManagerImpl) _FlushIndex(
+	ctx context.Context) error {
+
 	// Nothing to do because none of the records are dirty.
 	if !self.dirty {
 		return nil
@@ -42,9 +53,6 @@ func (self *HuntStorageManagerImpl) FlushIndex(
 	// fast events. Note that flushes occur periodically anyway so if
 	// we skip a flush we will get it later.
 	start := utils.GetTime().Now()
-	if start.Sub(self.last_flush_time) < 5*time.Second {
-		return nil
-	}
 	self.last_flush_time = start
 
 	hunt_ids := make([]string, 0, len(self.hunts))
@@ -54,6 +62,7 @@ func (self *HuntStorageManagerImpl) FlushIndex(
 
 	defer func() {
 		now := utils.GetTime().Now()
+		self.last_flush_time = now
 
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Debug("HuntDispatcher: <green>Rebuilt Hunt Index in %v for %v (%v hunts)</>",

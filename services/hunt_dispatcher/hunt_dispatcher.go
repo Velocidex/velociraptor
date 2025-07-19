@@ -372,11 +372,7 @@ func (self *HuntDispatcher) CreateHunt(
 	if err != nil {
 		return nil, err
 	}
-
-	// Trigger a refresh of the hunt dispatcher. This guarantees that
-	// fresh data will be read in subsequent ListHunt() calls and the
-	// GUI will show the new hunt immediately.
-	return hunt, self.Store.FlushIndex(ctx)
+	return hunt, nil
 }
 
 func (self *HuntDispatcher) StartRefresh(

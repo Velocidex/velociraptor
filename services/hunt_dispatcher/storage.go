@@ -100,11 +100,15 @@ type HuntStorageManagerImpl struct {
 
 	hunts map[string]*HuntRecord
 
+	// The last time the hunts map was updated.
+	last_update time.Time
+
 	I_am_master bool
 
 	// If any of the hunt objects are dirty this will be set.
 	dirty bool
 
+	// The last time the index was flushed.
 	last_flush_time time.Time
 }
 
@@ -253,6 +257,7 @@ func (self *HuntStorageManagerImpl) SetHunt(
 	if hunt.State == api_proto.Hunt_DELETED {
 		delete(self.hunts, hunt.HuntId)
 		self.dirty = true
+		self.last_update = utils.GetTime().Now()
 		return nil
 	}
 
@@ -263,6 +268,7 @@ func (self *HuntStorageManagerImpl) SetHunt(
 		atomic.StoreUint64(&self.last_timestamp, hunt.StartTime)
 	}
 
+	self.last_update = utils.GetTime().Now()
 	self.hunts[hunt.HuntId] = &HuntRecord{
 		Hunt:  hunt,
 		dirty: true,
@@ -303,6 +309,30 @@ func (self *HuntStorageManagerImpl) ListHunts(
 	if err != nil {
 		return nil, 0, err
 	}
+
+	// If the index is too old force it to refresh anyway so we always
+	// get fresh results.
+	self.mu.Lock()
+	if rs_reader.MTime().Before(self.last_update) {
+		rs_reader.Close()
+
+		err := self._FlushIndex(ctx)
+		if err != nil {
+			self.mu.Unlock()
+			return nil, 0, err
+		}
+
+		// Reopen the index with fresh data.
+		rs_reader, err = result_sets.NewResultSetReaderWithOptions(
+			ctx, self.config_obj, file_store_factory,
+			hunt_path_manager.HuntIndex(), options)
+		if err != nil {
+			self.mu.Unlock()
+			return nil, 0, err
+		}
+	}
+	self.mu.Unlock()
+
 	defer rs_reader.Close()
 
 	err = rs_reader.SeekToRow(offset)
@@ -383,6 +413,7 @@ func (self *HuntStorageManagerImpl) LoadHuntsFromIndex(
 		if err != nil {
 			continue
 		}
+		self.last_update = utils.GetTime().Now()
 		self.hunts[hunt_obj.HuntId] = &HuntRecord{
 			Hunt:       hunt_obj,
 			serialized: serialized,
@@ -480,6 +511,7 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 		self.dirty = true
 
 		self.hunts[hunt_id] = old_hunt_record
+		self.last_update = utils.GetTime().Now()
 	}
 
 	return nil
@@ -533,6 +565,7 @@ func (self *HuntStorageManagerImpl) DeleteHunt(
 	self.mu.Lock()
 	// First remove from the local memory cache.
 	delete(self.hunts, hunt_id)
+	self.last_update = utils.GetTime().Now()
 	self.dirty = true
 	self.mu.Unlock()
 
