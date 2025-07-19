@@ -21,8 +21,8 @@ description: |
     Any artifacts that look into the HKEY_USERS registry hive should
     be using the `Windows.Registry.NTUser` artifact instead of
     accessing the hive via the API. The API only makes the currently
-    logged in users available in that hive and so if we rely on the
-    windows API we will likely miss any settings for users not
+    logged in users available in that hive, so if we rely on the
+    windows API we will miss any settings for the users not
     currently logged on.
 
   {{% /notice %}}

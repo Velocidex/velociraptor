@@ -9,13 +9,12 @@ description: |
   ETW events for registry modifications.
 
   This artifact parses these events and ties them back to the
-  accessing process. It is recommended to run this artifact with the
+  accessing process. We recommend running this artifact with the
   process tracker.
 
-  NOTE: Experience shows this ETW provider is not very reliable and
-  seems to miss a lot of registry events.
-
-  This artifact is experimental.
+  NOTE: Experience shows this ETW provider is not very reliable and seems to
+  miss a lot of registry events. This artifact should therefore be considered
+  experimental.
 
 type: CLIENT_EVENT
 

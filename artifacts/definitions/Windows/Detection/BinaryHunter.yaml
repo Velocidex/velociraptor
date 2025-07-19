@@ -6,7 +6,7 @@ description: |
     The artifact takes a glob targeting input, then checks each file in scope for an MZ header.
     The artifact also queries Authenticode details and parses out PE attributes.
 
-    Both PE and Authenticode output can be queried for relevant strings using a regex filter and whitelist to hunt with.
+    Both PE and Authenticode output can be queried for relevant strings by using a regex filter and whitelist to hunt with.
     This enables unique capability to hunt for specific things such as PE imports, exports or other attributes.
 
     Note: this artifacts filters are cumulative so a hash based hit will return

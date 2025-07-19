@@ -444,8 +444,8 @@ sources:
         FROM deb_sources
         GROUP BY URIs, Suites
 
-        /* This runs if the file was found. Read the entire file into
-            memory and parse the same record using multiple RegExps.
+        /* This runs if the file was found. Reads the entire file into
+            memory and parses the same record using multiple regular expressions.
         */
         LET parsed_cache_files(file) = SELECT Name, Architectures, URIs, Types,
             Source, parse_string_with_regex(

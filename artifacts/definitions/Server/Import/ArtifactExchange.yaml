@@ -14,7 +14,7 @@ description: |
    Rapid7!
 
    Contributions to the exchange must meet a lower quality bar than
-   built in artifacts (for example lacking tests), which means that
+   built-in artifacts (for example lacking tests), which means that
    they may break at any time or not work as described!
 
    Collecting any of the artifacts in the exchange is purely at your

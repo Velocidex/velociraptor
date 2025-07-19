@@ -5,11 +5,11 @@ description: |
 
   It is useful for establishing where a process came from - for
   example, if a powershell process is spawned from Winword (event via
-  a number of intermediary processes) it could mean word was
+  several intermediary processes) it could mean word was
   compromised.
 
   This artifact uses the process tracker which was introduced in
-  release 0.6.5. (Import an older version of this artifact using the
+  release 0.6.5. (Import an older version of this artifact by using the
   Server.Import.PreviousReleases if your client is older than this).
 
   A more accurate call chain will be available when the

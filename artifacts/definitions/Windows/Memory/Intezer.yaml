@@ -1,13 +1,16 @@
 name: Windows.Memory.Intezer
 description: |
-   This artifact will trigger an Intezer agent scan on the endpoint.
+   Runs an Intezer agent scan on the endpoint.
 
-   Scan: The scanner collects running code from memory and sends it to Intezer Analyze.
-   Scans take approximately five to ten minutes. The first scan may take additional time.
+   - Scan: The scanner collects running code from memory and sends it to Intezer Analyze.
+     Scans take approximately five to ten minutes. The first scan may take additional time.
+
    Please note: The scanner only collects executable code, not documents or any other
    data that is not binary code.
-   Analyze: The collected modules are analyzed using Genetic Malware Analysis technology.
-   View results: https://analyze.intezer.com/ endpoint analysis report.
+
+   - Analyze: The collected modules are analyzed using Genetic Malware Analysis technology.
+
+   - View results: https://analyze.intezer.com/ endpoint analysis report.
 
 author: Matt Green - @mgreen27
 

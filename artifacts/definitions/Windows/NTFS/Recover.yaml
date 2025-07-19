@@ -2,14 +2,14 @@ name: Windows.NTFS.Recover
 description: |
   Attempt to recover deleted files.
 
-  This artifact uploads all streams from an MFTId. If the MFT entry is
-  not allocated there is a chance that the cluster that contain the
-  actual data of the file will be intact still on the disk. Therefore
-  this artifact can be used to attempt to recover a deleted file.
+  This artifact uploads all streams from an MFTId. If the MFT entry is not
+  allocated there is a chance that the cluster that contains the actual data of
+  the file will still be intact on the disk. Therefore it may be possible to
+  recover such deleted files, which is what this artifact attempts to do.
 
   A common use is to recover deleted directory entries using the
-  Windows.NTFS.I30 artifact and identify MFT entries of interest. This
-  is artifact can be used to attempt to recover some data.
+  `Windows.NTFS.I30` artifact to identify MFT entries of interest. This artifact
+  can then be used to attempt recovery of the file data.
 
 parameters:
  - name: MFTId

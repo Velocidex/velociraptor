@@ -18,7 +18,7 @@ parameters:
     description: |
       If specified we upload a Velociraptor Compatible sparse file
       upload instead of a crash dump. This makes it easier to run
-      postprocessing using Velociraptor
+      post-processing using Velociraptor
 
 sources:
   - query: |

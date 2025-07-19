@@ -1,11 +1,11 @@
 name: Generic.Forensic.LocalHashes.Query
 description: |
   This artifact maintains a local (client side) database of file
-  hashes. It is then possible to query this database using the
+  hashes. It is then possible to query this database by using the
   Generic.Forensic.LocalHashes.Query artifact.
 
   NOTE: This artifact expects a CSV file with one hash per line. On
-  the command line you can encode carriage return using powershell
+  the command line you can encode carriage return by using powershell
   like this:
 
   ```

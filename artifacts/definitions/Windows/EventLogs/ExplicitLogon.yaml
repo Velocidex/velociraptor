@@ -1,18 +1,18 @@
 name: Windows.EventLogs.ExplicitLogon
 description: |
-    This artifact enables querying for explicit logon events.  i.e Event ID 4648:
-    A logon was attempted using explicit credentials.
+    Searches the Windows Security event log for explicit logon events, that is
+    Event ID 4648: "A logon was attempted using explicit credentials".
 
-    If logging is enabled, these events are generated on the source machine when
-    an authentication attempt occurs under a different user context. Examples
-    include a user authenticating to another machine using wmic or mapping a
-    drive using different credentials, or using the RunAs option locally.
+    If logging is enabled, these events are generated on the source machine
+    whenever an authentication attempt occurs under a different user context.
+    Examples include a user authenticating to another machine using wmic or
+    mapping a drive using different credentials, or using the RunAs option
+    locally.
 
-    This artifact by default filters all events with localhost as the server and
-    MACHINE$ as target user. A recommended hunt for lateral movement would be
-    activity to other machines from commonly abused lolbins or explicit logon
+    This artifact by default filters all events with `localhost` as the server
+    and `MACHINE$` as target user. A recommended hunt for lateral movement would
+    be activity to other machines from commonly abused lolbins or explicit logon
     events from unusual processes.
-
 
 author: Matt Green - @mgreen27
 

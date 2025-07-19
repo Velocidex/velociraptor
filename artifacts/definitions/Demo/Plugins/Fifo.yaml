@@ -7,16 +7,16 @@ description: |
 
   You can use this to build queries which consider historical events
   together with current events at the same time. In this example, we
-  check for a successful logon preceded by a number of failed logon
+  check for a successful logon preceded by several failed logon
   attempts.
 
   In this example, we use the clock() plugin to simulate events. We
-  simulate failed logon attempts using the clock() plugin every
+  simulate failed logon attempts by using the clock() plugin every
   second. By feeding the failed logon events to the fifo() plugin we
   ensure the fifo() plugin cache contains the last 5 failed logon
   events.
 
-  We simulate a successful logon event every 3 seconds, again using
+  We simulate a successful logon event every 3 seconds, again by using
   the clock plugin. Once a successful logon event is detected, we go
   back over the last 5 login events, count them and collect the last
   failed logon times (using the GROUP BY operator we group the

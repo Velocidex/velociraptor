@@ -2,8 +2,8 @@ name: Admin.Client.Upgrade.RedHat
 description: |
   Remotely push new client updates to Red Hat hosts.
 
-  NOTE: This artifact requires that you supply a client Red Hat package using the
-  tools interface or using the "rpm client" command. Simply click on the tool
+  NOTE: This artifact requires that you supply a client Red Hat package by using the
+  tools interface or by using the "rpm client" command. Simply click on the tool
   in the GUI and upload a package.
 
 tools:

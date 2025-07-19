@@ -1,17 +1,17 @@
 name: Server.Import.PreviousReleases
 description: |
-  When upgrading the Velociraptor server the built in artifacts may
-  change using newer VQL features that are not present on older
-  clients.
+  When upgrading the Velociraptor server, the built-in artifacts may change and
+  use newer VQL features that are not present in older clients.
 
-  If you have some older clients that can not be upgraded, sometimes
-  collecting standard built-in artifacts will fail. In this case it is
-  handy to import older VQL artifacts that work with these older
-  clients.
+  If you have some older clients that cannot be upgraded, sometimes collection
+  of updated built-in artifacts will fail due to incompatibility. In such
+  situations it is necessary to import older VQL artifacts that will work with
+  these older clients.
 
-  This server artifact allows you to automatically import all
-  artifacts that came bundled with previous versions. These should be
-  compatible with older clients.
+  This server artifact allows you to automatically import all artifacts that
+  came bundled with previous versions. These should be compatible with older
+  clients, but may lack newer features and improvements that the latest
+  artifacts have.
 
 type: SERVER
 
@@ -23,11 +23,12 @@ parameters:
     description: |
       The Velociraptor Release to import.
     type: choices
-    default: v0.72
+    default: v0.73
     choices:
       - v0.7.0
       - v0.7.1
       - v0.72
+      - v0.73
 
 sources:
   - query: |

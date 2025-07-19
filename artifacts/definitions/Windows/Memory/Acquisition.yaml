@@ -1,6 +1,6 @@
 name: Windows.Memory.Acquisition
 description: |
-  Acquires a full memory image using the built in WinPmem driver.
+  Acquires a full memory image by using the built-in WinPmem driver.
 
   NOTE: This artifact usually transfers a lot of data. You should
   increase the default timeout to allow it to complete.

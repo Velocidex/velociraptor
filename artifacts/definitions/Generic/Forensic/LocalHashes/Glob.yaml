@@ -1,7 +1,7 @@
 name: Generic.Forensic.LocalHashes.Glob
 description: |
   This artifact maintains a local (client side) database of file
-  hashes. It is then possible to query this database using the
+  hashes. It is then possible to query this database by using the
   Generic.Forensic.LocalHashes.Query artifact
 
   Maintaining hashes client side allows Velociraptor to answer the
@@ -9,12 +9,12 @@ description: |
   quickly. Velociraptor only needs to lookup the each client's local
   database of file hashes.
 
-  Maintaining this database case be done using this artifact or using
+  Maintaining this database case be done by using this artifact or by using
   the Windows.Forensics.LocalHashes.Usn artifact.
 
   This artifact simply crawls the filesystem hashing files as
   specified by the glob expression, and adds them to the local hash
-  database. You can rate limit this artifact using the ops/sec setting
+  database. You can rate limit this artifact by using the ops/sec setting
   to perform a slow update of the local file hash database.
 
 parameters:

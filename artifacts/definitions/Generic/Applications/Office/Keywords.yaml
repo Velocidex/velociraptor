@@ -1,8 +1,8 @@
 name: Generic.Applications.Office.Keywords
 description: |
   Microsoft Office documents among other document format (such as
-  LibraOffice) are actually stored in zip files. The zip file contain
-  the document encoded as XML in a number of zip members.
+  LibraOffice) are actually stored in zip files. The zip file contains
+  the document encoded as XML in several zip members.
 
   This makes it difficult to search for keywords within office
   documents because the ZIP files are typically compressed.

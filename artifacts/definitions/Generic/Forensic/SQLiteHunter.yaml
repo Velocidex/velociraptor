@@ -2,24 +2,24 @@
 name: Generic.Forensic.SQLiteHunter
 description: |
     Hunt for SQLite files.
-    
+
     SQLite has become the de-facto standard for storing application data,
     in many types of applications:
-    
+
     - Web Browsers
     - Operating Systems
     - Various applications, such as iMessage, TCC etc
-    
+
     This artifact can hunt for these artifacts in a mostly automated way.
     More info at https://github.com/Velocidex/SQLiteHunter
-    
+
     NOTE: If you want to use this artifact on just a bunch of files already
     collected (for example the files collected using the
-    Windows.KapeFiles.Targets artifact) you can use the CustomGlob parameter
+    `Windows.KapeFiles.Targets` artifact) you can use the CustomGlob parameter
     (for example set it to "/tmp/unpacked/**" to consider all files in the
     unpacked directory).
-    
-    
+
+
 
 column_types:
 - name: Image
@@ -175,7 +175,7 @@ sources:
     FROM Rows
     WHERE Timestamp > DateAfter AND Timestamp < DateBefore
       AND (MessageText, RoomName) =~ FilterRegex
-    
+
 
 
 - name: Chromium Browser Autofill_Profiles
@@ -190,7 +190,7 @@ sources:
     FROM Rows
     WHERE UseDate > DateAfter AND UseDate < DateBefore
       AND (FirstName, MiddleName, LastName, EmailAddress, CompanyName, StreetAddress) =~ FilterRegex
-    
+
 
 
 - name: Chromium Browser Autofill_Masked Credit Cards
@@ -220,10 +220,10 @@ sources:
           SELECT * FROM ReportFolder(Data=_value, BaseName=BaseName + " | " + Data.name)
        })
     })
-    
+
     LET MatchingFiles = SELECT OSPath, parse_json(data=read_file(filename=OSPath)) AS Data
     FROM Rows
-    
+
     SELECT * FROM foreach(row=MatchingFiles, query={
       SELECT * FROM chain(
       a={
@@ -239,7 +239,7 @@ sources:
         FROM ReportFolder(Data=Data.roots.synced, BaseName="")
       })
     })
-    
+
 
 
 - name: Chromium Browser_Cookies
@@ -257,7 +257,7 @@ sources:
     FROM Rows
     WHERE LastAccessUTC > DateAfter AND LastAccessUTC < DateBefore
       AND (Name, Path) =~ FilterRegex
-    
+
 
 
 - name: Chromium Browser Extensions
@@ -267,19 +267,19 @@ sources:
     LET ResolveName(Message, Locale) = get(item=Locale,
           field=lowcase(string=parse_string_with_regex(regex="^__MSG_(.+)__$", string=Message).g1),
           default=Message).message || Message
-    
+
     -- Read the manifest files
     LET ManifestData = SELECT OSPath, parse_json(data=read_file(filename=OSPath)) AS Manifest
     FROM Rows
-    
+
     -- Find the Locale file to help with.
     LET LocaleData = SELECT *, if(condition=Manifest.default_locale, else=dict(),
          then=parse_json(data=read_file(
             filename=OSPath.Dirname + "_locales" + Manifest.default_locale + "messages.json"))) AS Locale
     FROM ManifestData
-    
+
     LET GetIcon(Manifest) = Manifest.icons.`128` || Manifest.icons.`64` || Manifest.icons.`32` || Manifest.icons.`16`
-    
+
     SELECT OSPath, Manifest.author.email AS Email,
       ResolveName(Message = Manifest.name, Locale=Locale) AS name,
       ResolveName(Message = Manifest.description, Locale=Locale) AS description,
@@ -290,7 +290,7 @@ sources:
       Manifest AS _Manifest
     FROM LocaleData
     WHERE (name, description) =~ FilterRegex
-    
+
 
 
 - name: Chromium Browser Favicons
@@ -305,7 +305,7 @@ sources:
       OSPath as _OSPath
     FROM Rows
     WHERE LastUpdated > DateAfter AND LastUpdated < DateBefore
-    
+
 
 
 - name: Chromium Browser History_Visits
@@ -323,7 +323,7 @@ sources:
     WHERE VisitTime > DateAfter
       AND VisitTime < DateBefore
       AND (URLTitle, URL) =~ FilterRegex
-    
+
 
 
 - name: Chromium Browser History_Downloads
@@ -341,7 +341,7 @@ sources:
       `35`='Server Certificate Problem', `36`='Server Access Forbidden', `37`='Server Unreachable',
       `38`='Content Length Mismatch', `39`='Cross Origin Redirect', `40`='Cancelled', `41`='Browser Shutdown',
       `50`='Browser Crashed')
-    
+
     SELECT ID, GUID, CurrentPath, TargetPath, OriginalMIMEType, ReceivedBytes, TotalBytes,
       timestamp(winfiletime=(start_time * 10) || 0) AS StartTime,
       timestamp(winfiletime=(end_time * 10) || 0) AS EndTime,
@@ -355,7 +355,7 @@ sources:
     FROM Rows
     WHERE LastAccessTime > DateAfter AND LastAccessTime < DateBefore
       AND (SiteURL, DownloadURL, TabURL, TabReferrerURL, ReferrerURL, DownloadURL) =~ FilterRegex
-    
+
 
 
 - name: Chromium Browser History_Keywords
@@ -367,7 +367,7 @@ sources:
     FROM Rows
     WHERE LastVisitedTime > DateAfter AND LastVisitedTime < DateBefore
       AND (Title, KeywordSearchTerm, URL) =~ FilterRegex
-    
+
 
 
 - name: Chromium Browser Media_History
@@ -381,7 +381,7 @@ sources:
     FROM Rows
     WHERE LastUpdated > DateAfter AND LastUpdated < DateBefore
       AND URL =~ FilterRegex
-    
+
 
 
 - name: Chromium Browser Media_Playback Session
@@ -395,7 +395,7 @@ sources:
     FROM Rows
     WHERE LastUpdated > DateAfter AND LastUpdated < DateBefore
       AND URL =~ FilterRegex
-    
+
 
 
 - name: Chromium Browser Network_Predictor
@@ -403,14 +403,14 @@ sources:
     LET Rows = SELECT * FROM ApplyFile(SourceName="Chromium Browser Network_Predictor")
     SELECT * FROM Rows
     WHERE UserText =~ FilterRegex
-    
+
 
 
 - name: Chromium Browser Notifications_Site Engagements
   query: |
     LET Rows = SELECT * FROM FilterFile(SourceName="Chromium Browser Notifications_Site Engagements")
     LET JSON = SELECT parse_json(data=read_file(filename=OSPath)) AS Data, OSPath FROM Rows
-    
+
     SELECT * FROM foreach(row={
       SELECT OSPath, Data.profile.content_settings.exceptions AS exceptions FROM JSON
     },  query={
@@ -420,14 +420,14 @@ sources:
          OSPath
       FROM items(item=exceptions.site_engagement)
     })
-    
+
 
 
 - name: Chromium Browser Notifications_App Banners
   query: |
     LET Rows = SELECT * FROM FilterFile(SourceName="Chromium Browser Notifications_App Banners")
     LET JSON = SELECT parse_json(data=read_file(filename=OSPath)) AS Data, OSPath FROM Rows
-    
+
     SELECT * FROM foreach(row={
       SELECT OSPath, Data.profile.content_settings.exceptions AS exceptions FROM JSON
     },  query={
@@ -442,16 +442,16 @@ sources:
          OSPath
       FROM items(item=exceptions.app_banner)
     })
-    
+
 
 
 - name: Chromium Browser Notifications_Notification Preferences
   query: |
     LET Rows = SELECT * FROM FilterFile(SourceName="Chromium Browser Notifications_Notification Preferences")
     LET ContentSettings <= array(`0`="Default",`1`="Allow",`2`="Block",`3`="Ask",`4`="Session Only",`5`="Detect Important Content")
-    
+
     LET JSON = SELECT parse_json(data=read_file(filename=OSPath)) AS Data, OSPath FROM Rows
-    
+
     SELECT * FROM foreach(row={
       SELECT OSPath, Data.profile.content_settings.exceptions AS exceptions FROM JSON
     },  query={
@@ -461,7 +461,7 @@ sources:
         OSPath
       FROM items(item=exceptions.notifications)
     })
-    
+
 
 
 - name: Chromium Browser Notifications_Notification Interactions
@@ -469,7 +469,7 @@ sources:
     LET Rows = SELECT * FROM FilterFile(SourceName="Chromium Browser Notifications_Notification Interactions")
     LET JSON = SELECT parse_json(data=read_file(filename=OSPath)) AS Data, OSPath FROM Rows
     LET S = scope()
-    
+
     SELECT * FROM foreach(row={
       SELECT OSPath, Data.profile.content_settings.exceptions AS exceptions FROM JSON
     },  query={
@@ -480,7 +480,7 @@ sources:
         OSPath
       FROM items(item=S.notification_interactions || dict())
     })
-    
+
 
 
 - name: Chromium Browser Shortcuts
@@ -493,7 +493,7 @@ sources:
     FROM Rows
     WHERE LastAccessTime > DateAfter AND LastAccessTime < DateBefore
       AND (Contents, Description) =~ FilterRegex
-    
+
 
 
 - name: Chromium Sessions_Sessions
@@ -511,7 +511,7 @@ sources:
     FROM Rows
     WHERE LastAccessUTC > DateAfter AND LastAccessUTC < DateBefore
       AND (Name, Path) =~ FilterRegex
-    
+
 
 
 - name: Chromium Browser Top Sites
@@ -519,7 +519,7 @@ sources:
     LET Rows = SELECT * FROM ApplyFile(SourceName="Chromium Browser Top Sites")
     SELECT * FROM Rows
     WHERE ( URL =~ FilterRegex OR Title =~ FilterRegex )
-    
+
 
 
 - name: Edge Browser Autofill_CombinedAutofill
@@ -528,7 +528,7 @@ sources:
     SELECT timestamp(epoch=date_last_used) AS DateLastUsed
     FROM Rows
     WHERE DateLastUsed > DateAfter AND DateLastUsed < DateBefore
-    
+
 
 
 - name: Edge Browser Navigation History_Navigation History
@@ -541,7 +541,7 @@ sources:
     WHERE `Last Visited Time` > DateAfter
       AND `Last Visited Time` < DateBefore
       AND (Title, URL) =~ FilterRegex
-    
+
 
 
 - name: Firefox Places
@@ -556,7 +556,7 @@ sources:
     FROM Rows
     WHERE LastModified > DateAfter AND LastModified < DateBefore
       AND (Title, URL) =~ FilterRegex
-    
+
 
 
 - name: Firefox Places_Downloads
@@ -569,7 +569,7 @@ sources:
     FROM Rows
     WHERE LastModified > DateAfter AND LastModified < DateBefore
       AND Content =~ FilterRegex
-    
+
 
 
 - name: Firefox Places_History
@@ -578,7 +578,7 @@ sources:
     LET VisitType <= dict(`1`='TRANSITION_LINK', `2`='TRANSITION_TYPED', `3`='TRANSITION_BOOKMARK',
       `4`='TRANSITION_EMBED', `5`= 'TRANSITION_REDIRECT_PERMANENT', `6`='TRANSITION_REDIRECT_TEMPORARY',
       `7`='TRANSITION_DOWNLOAD', `8`='TRANSITION_FRAMED_LINK', `9`='TRANSITION_RELOAD')
-    
+
     SELECT VisitID, FromVisitID,
        timestamp(epoch= last_visit_date) AS LastVisitDate,
        VisitCount, URL, Title, Description,
@@ -589,7 +589,7 @@ sources:
     FROM Rows
     WHERE LastVisitDate > DateAfter AND LastVisitDate < DateBefore
       AND (Title, URL, Description) =~ FilterRegex
-    
+
 
 
 - name: Firefox Cookies
@@ -605,7 +605,7 @@ sources:
     WHERE LastAccessedTime > DateAfter
       AND LastAccessedTime < DateBefore
       AND ( Name =~ FilterRegex OR Value =~ FilterRegex )
-    
+
 
 
 - name: Firefox Downloads
@@ -620,7 +620,7 @@ sources:
     WHERE StartTime > DateAfter
       AND StartTime < DateBefore
       AND Name =~ FilterRegex
-    
+
 
 
 - name: Firefox Favicons
@@ -630,7 +630,7 @@ sources:
        timestamp(epoch= expire_ms) AS Expiration,
        OSPath
     FROM Rows
-    
+
 
 
 - name: Firefox Form History
@@ -643,7 +643,7 @@ sources:
     FROM Rows
     WHERE LastUsed > DateAfter AND LastUsed < DateBefore
       AND ( FieldName =~ FilterRegex OR Value =~ FilterRegex )
-    
+
 
 
 - name: IE or Edge WebCacheV01_All Data
@@ -651,12 +651,12 @@ sources:
     LET Rows = SELECT * FROM FilterFile(SourceName="IE or Edge WebCacheV01_All Data")
     LET MatchingFiles = SELECT OSPath FROM Rows
     LET S = scope()
-    
+
     LET Containers(OSPath) = SELECT Table
     FROM parse_ese_catalog(file=OSPath)
     WHERE Table =~ "Container_"
     GROUP BY Table
-    
+
     LET AllHits(OSPath) = SELECT * FROM foreach(row={
         SELECT * FROM Containers(OSPath=OSPath)
     }, query={
@@ -666,13 +666,13 @@ sources:
           S.Url AS Url, *
        FROM parse_ese(file=OSPath, table=Table)
     })
-    
+
     SELECT * FROM foreach(row=MatchingFiles, query={
       SELECT * FROM AllHits(OSPath=OSPath)
     })
     WHERE AccessedTime > DateAfter AND AccessedTime < DateBefore
       AND Url =~ FilterRegex
-    
+
 
 
 - name: IE or Edge WebCacheV01_Highlights
@@ -684,7 +684,7 @@ sources:
     })
     WHERE AccessedTime > DateAfter AND AccessedTime < DateBefore
       AND Url =~ FilterRegex
-    
+
 
 
 - name: MacOS Applications Cache
@@ -705,7 +705,7 @@ sources:
     FROM Rows
     WHERE Timestamp > DateAfter AND Timestamp < DateBefore
       AND Application =~ FilterRegex
-    
+
 
 
 - name: MacOS NetworkUsage
@@ -726,7 +726,7 @@ sources:
       ZXOUT AS _XOut,
       Z_PK AS LiveUsageTableID
     FROM Rows
-    
+
 
 
 - name: MacOS Notes
@@ -757,7 +757,7 @@ sources:
     FROM Rows
     WHERE LastOpenedTime > DateAfter AND LastOpenedTime < DateBefore
       AND ( Title =~ FilterRegex OR Data =~ FilterRegex )
-    
+
 
 
 - name: MacOS XProtect Detections
@@ -769,7 +769,7 @@ sources:
       AND dt < DateBefore
       AND (violated_rule, exec_path, responsible_path, responsible_signing_id,
         exec_cdhash, exec_sha256, responsible_cdhash, responsible_sha256 ) =~ FilterRegex
-    
+
 
 
 - name: Windows Activities Cache_ActivityPackageId
@@ -780,7 +780,7 @@ sources:
       ActivityId[8:10], ActivityId[10:] ]) AS ActivityId,
       Platform, PackageName, ExpirationTime, OSPath
     FROM Rows
-    
+
 
 
 - name: Windows Activities Cache_Clipboard
@@ -801,23 +801,23 @@ sources:
     WHERE StartTime > DateAfter
       AND StartTime < DateBefore
       AND ClipboardPayload =~ FilterRegex
-    
+
 
 
 - name: Windows Search Service_SystemIndex_Gthr
   query: |
     LET Rows = SELECT * FROM FilterFile(SourceName="Windows Search Service_SystemIndex_Gthr")
     LET MatchingFiles = SELECT OSPath FROM Rows
-    
+
     LET FormatTimeB(T) = timestamp(winfiletime=parse_binary(
        filename=T, accessor="data", struct="uint64b"))
-    
+
     LET FormatTime(T) = timestamp(winfiletime=parse_binary(
        filename=T, accessor="data", struct="uint64"))
-    
+
     LET FormatSize(T) = parse_binary(
        filename=T, accessor="data", struct="uint64")
-    
+
     SELECT * FROM foreach(row=MatchingFiles, query={
        SELECT ScopeID, DocumentID, SDID,
           FormatTimeB(T=LastModified) AS LastModified,
@@ -826,7 +826,7 @@ sources:
     })
     WHERE LastModified > DateAfter AND LastModified < DateBefore
       AND FileName =~ FilterRegex
-    
+
 
 
 - name: Windows Search Service_SystemIndex_GthrPth
@@ -837,14 +837,14 @@ sources:
        FROM parse_ese(file=OSPath, table= "SystemIndex_GthrPth")
     })
     WHERE Name =~ FilterRegex
-    
+
 
 
 - name: Windows Search Service_SystemIndex_PropertyStore
   query: |
     LET Rows = SELECT * FROM FilterFile(SourceName="Windows Search Service_SystemIndex_PropertyStore")
     LET X = scope()
-    
+
     -- The PropertyStore columns look like
     -- <random>-ProperName so we strip the
     -- random part off to display it properly.
@@ -852,7 +852,7 @@ sources:
       SELECT split(sep_string="-", string=_key)[1] || _key AS _key, _value
       FROM items(item=Dict)
     })
-    
+
     LET PropStore(OSPath) = SELECT *,
        FormatTime(T=X.System_Search_GatherTime) AS System_Search_GatherTime,
        FormatSize(T=X.System_Size) AS System_Size,
@@ -865,13 +865,13 @@ sources:
          SELECT * FROM parse_ese(file=OSPath, table="SystemIndex_PropertyStore")
       })
     }, column="_value")
-    
+
     SELECT * FROM foreach(row=MatchingFiles, query={
        SELECT *
        FROM PropStore(OSPath=OSPath)
     })
     WHERE System_DateAccessed > DateAfter AND System_DateAccessed < DateBefore
-    
+
 
 
 - name: Windows Search Service_SystemIndex_PropertyStore_Highlights
@@ -891,7 +891,7 @@ sources:
        FROM PropStore(OSPath=OSPath)
     })
     WHERE System_DateAccessed > DateAfter AND System_DateAccessed < DateBefore
-    
+
 
 
 - name: Windows Search Service_BrowsingActivity
@@ -904,7 +904,7 @@ sources:
        FROM PropStore(OSPath=OSPath)
        WHERE Activity_ContentUri
     })
-    
+
 
 
 - name: Windows Search Service_UserActivityLogging
@@ -920,7 +920,7 @@ sources:
     })
     WHERE ActivityHistory_StartTime > DateAfter
       AND ActivityHistory_StartTime < DateBefore
-    
+
 
 
 
