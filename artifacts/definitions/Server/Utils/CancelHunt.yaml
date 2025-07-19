@@ -11,19 +11,25 @@ type: SERVER
 
 parameters:
   - name: HuntId
+  - name: Hunts
+    type: json_array
+    description: A list of hunts to cancel
+    default: '[]'
 
 sources:
   - query: |
-      LET all_flows = SELECT Flow.client_id AS client_id, Flow.session_id AS flow_id
+      LET all_flows(HuntId) = SELECT Flow.client_id AS client_id, Flow.session_id AS flow_id
       FROM hunt_flows(hunt_id=HuntId)
       WHERE NOT Flow.state =~ "ERROR|FINISHED"
 
-      LET cancellations = SELECT client_id, flow_id,
+      LET cancellations(HuntId) = SELECT HuntId, client_id, flow_id,
              cancel_flow(client_id=client_id, flow_id=flow_id) AS Cancellation
-      FROM all_flows
+      FROM all_flows(HuntId=HuntId)
 
-      SELECT * FROM if(condition=HuntId, then=cancellations,
-      else={
-         SELECT * FROM scope()
-         WHERE log(message="Hunt ID must be specified.") AND NULL
+      LET AllHunts <= if(condition=HuntId, then=Hunts + HuntId, else=Hunts)
+
+      SELECT * FROM foreach(row={
+        SELECT _value as HuntId FROM items(item=AllHunts)
+      }, query={
+        SELECT * FROM cancellations(HuntId=HuntId)
       })
