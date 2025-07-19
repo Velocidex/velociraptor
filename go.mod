@@ -149,7 +149,7 @@ require (
 	github.com/valyala/fastjson v1.6.4
 	github.com/vincent-petithory/dataurl v1.0.0
 	github.com/virtuald/go-paniclog v0.0.0-20190812204905-43a7fa316459
-	golang.org/x/oauth2 v0.22.0
+	golang.org/x/oauth2 v0.27.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240814211410-ddb44dafa142
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	gopkg.in/yaml.v2 v2.4.0
