@@ -52,6 +52,8 @@ export class DeleteFlowDialog extends React.PureComponent {
     static propTypes = {
         client: PropTypes.object,
         flows: PropTypes.array,
+
+        // onClose(ok bool) -> did the user select to delete
         onClose: PropTypes.func.isRequired,
     }
 
@@ -79,7 +81,7 @@ export class DeleteFlowDialog extends React.PureComponent {
                          ClientId: client_id,
                          Sync: "Y",
                          ReallyDoIt: "Y"}, ()=>{
-                             this.props.onClose();
+                             this.props.onClose(true);
                              this.setState({loading: false});
                          }, this.source.token);
         }
@@ -309,15 +311,19 @@ class FlowsList extends React.Component {
 
     cancelButtonClicked = () => {
         let client_id = this.props.selected_flow && this.props.selected_flow.client_id;
-        let flow_id = this.props.selected_flow && this.props.selected_flow.session_id;
+        let flow_ids = {};
 
-        if (client_id && flow_id) {
+        _.each(this.state.multiSelectedFlows, x=>{
+            flow_ids[x.session_id] = true;
             api.post("v1/CancelFlow", {
-                client_id: client_id, flow_id: flow_id
+                client_id: client_id, flow_id: x.session_id,
             }, this.source.token).then((response) => {
-                this.incrementVersion();
+                delete flow_ids[x.session_id];
+                if(_.isEmpty(flow_ids)) {
+                    this.incrementVersion();
+                };
             });
-        }
+        });
     }
 
     gotoTab = (tab) => {
@@ -428,8 +434,15 @@ class FlowsList extends React.Component {
                 <DeleteFlowDialog
                   client={this.props.client}
                   flows={this.state.multiSelectedFlows}
-                  onClose={e=>{
+                  onClose={ok=>{
                       this.setState({showDeleteWizard: false});
+                      if(ok) {
+                          this.setState({
+                              selectedFlowId: undefined,
+                              multiSelectedFlows: [],
+                          });
+                          this.props.setSelectedFlow({});
+                      };
                       this.incrementVersion();
                   }}/>
               }
@@ -529,8 +542,9 @@ class FlowsList extends React.Component {
                     </Button>
                   </ToolTip>
                   <ToolTip tooltip={T("Cancel Artifact Collection")}>
-                    <Button disabled={this.props.selected_flow.state === "FINISHED" ||
-                                      this.props.selected_flow.state === "ERROR"}
+                    <Button disabled={this.state.multiSelectedFlows.length < 2 &&
+                                      (this.props.selected_flow.state === "FINISHED" ||
+                                       this.props.selected_flow.state === "ERROR")}
                             onClick={this.cancelButtonClicked}
                             variant="default">
                       <FontAwesomeIcon icon="stop"/>

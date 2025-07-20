@@ -21,20 +21,21 @@ package hunts
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	vql_utils "www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -178,51 +179,30 @@ func (self HuntResultsPlugin) Call(
 			return
 		}
 
+		available_artifacts, err := self.GetAvailableArtifacts(ctx, config_obj, arg.HuntId)
+		if err != nil {
+			scope.Log("hunt_results: %v", err)
+			return
+		}
+
+		if len(available_artifacts) == 0 {
+			scope.Log("hunt_results: not artifacts available")
+			return
+		}
+
 		// If no artifact is specified, get the first one from
 		// the hunt.
 		if arg.Artifact == "" {
-			hunt_dispatcher_service, err := services.GetHuntDispatcher(config_obj)
-			if err != nil {
-				scope.Log("hunt_results: %v", err)
-				return
-			}
-
-			hunt_obj, pres := hunt_dispatcher_service.GetHunt(ctx, arg.HuntId)
-			if !pres {
-				return
-			}
-
-			hunt_dispatcher.FindCollectedArtifacts(ctx, config_obj, hunt_obj)
-			if len(hunt_obj.Artifacts) == 0 {
-				scope.Log("hunt_results: no artifacts in hunt")
-				return
-			}
-
-			if arg.Source == "" {
-				arg.Artifact, arg.Source = paths.SplitFullSourceName(
-					hunt_obj.Artifacts[0])
-			}
-
-			// If the source is not specified find the first named
-			// source from the artifact definition.
-			if arg.Source == "" {
-				repo, err := vql_utils.GetRepository(scope)
-				if err == nil {
-					artifact_def, ok := repo.Get(ctx, config_obj, arg.Artifact)
-					if ok {
-						for _, source := range artifact_def.Sources {
-							if source.Name != "" {
-								arg.Source = source.Name
-								break
-							}
-						}
-					}
-				}
-			}
+			arg.Artifact = available_artifacts[0]
+		} else if arg.Source != "" {
+			arg.Artifact += "/" + arg.Source
 		}
 
-		if arg.Source != "" {
-			arg.Artifact += "/" + arg.Source
+		if !utils.InString(available_artifacts, arg.Artifact) {
+			scope.Log("hunt_results: artifact %v not available in hunt. "+
+				"Available artifacts are %v",
+				arg.Artifact, strings.Join(available_artifacts, ", "))
+			return
 		}
 
 		if len(arg.Orgs) == 0 {
@@ -324,6 +304,52 @@ func (self HuntResultsPlugin) Call(
 	}()
 
 	return output_chan
+}
+
+func (self HuntResultsPlugin) GetAvailableArtifacts(
+	ctx context.Context,
+	config_obj *config_proto.Config, hunt_id string) ([]string, error) {
+
+	hunt_dispatcher_service, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	hunt_obj, pres := hunt_dispatcher_service.GetHunt(ctx, hunt_id)
+	if !pres {
+		return nil, utils.Wrap(utils.NotFoundError, "Hunt not found")
+	}
+
+	hunt_dispatcher.FindCollectedArtifacts(ctx, config_obj, hunt_obj)
+
+	var artifacts []string
+
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, artifact := range hunt_obj.Artifacts {
+		artifact_def, ok := repository.Get(ctx, config_obj, artifact)
+		if ok {
+			for _, source := range artifact_def.Sources {
+				name := artifact_def.Name
+
+				if source.Name != "" {
+					name += "/" + source.Name
+				}
+
+				artifacts = append(artifacts, name)
+			}
+		}
+	}
+
+	return artifacts, nil
 }
 
 func (self HuntResultsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {

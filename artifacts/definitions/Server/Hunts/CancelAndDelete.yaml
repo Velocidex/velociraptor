@@ -23,7 +23,12 @@ type: SERVER
 parameters:
   - name: HuntId
     description: hunt_id you would like to kill all associated flows.
-    default: "H.XXXXXX"
+
+  - name: Hunts
+    type: json_array
+    description: A list of hunt ids to delete
+    default: '[]'
+
   - name: DeleteAllFiles
     description: Also delete all collected files
     type: bool
@@ -31,17 +36,15 @@ parameters:
 sources:
   - name: CancelFlows
     query: |
-      // Get the flows and their running state for this hunt.
-      LET flows = SELECT ClientId, FlowId, HuntId, {
-            SELECT state FROM flows(client_id=ClientId, flow_id=FlowId)
-        } AS FlowState
-      FROM hunt_flows(hunt_id=HuntId)
-
-      // Only cancel running flows.
-      SELECT *, cancel_flow(client_id=ClientId, flow_id=FlowId) as cancel_flow
-      FROM flows
-      WHERE NOT FlowState =~ "ERROR|FINISHED"
+      SELECT * FROM Artifact.Server.Utils.CancelHunt(Hunts=Hunts)
 
   - name: HuntFiles
     query: |
-      SELECT * FROM hunt_delete(hunt_id=HuntId, really_do_it=DeleteAllFiles)
+      LET AllHunts <= if(condition=HuntId, then=Hunts + HuntId, else=Hunts)
+
+      SELECT * FROM foreach(row={
+        SELECT _value as HuntId FROM items(item=AllHunts)
+      }, query={
+        SELECT *
+        FROM hunt_delete(hunt_id=HuntId, really_do_it=DeleteAllFiles)
+      })
