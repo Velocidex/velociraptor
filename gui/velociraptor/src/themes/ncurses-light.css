@@ -49,7 +49,7 @@
   --color-sidebar-active-background: var(--color-foreground);
 
   --color-client-link-hover: white;
-  --color-tooltip-background: var(--color-foreground);
+  --color-tooltip-background: var(--color-foreground-inverse);
 
   --color-tab: var(--color-btn-default-background);
   --color-tab-active: var(--color-foreground-inverse);
@@ -114,9 +114,22 @@ body.ncurses-light {
   color: var(--color-foreground-inverse);
 }
 
-.ncurses-light .tooltip.show {
+.ncurses-light .tooltip.show,
+.ncurses-light .tooltip.bs-tooltip-top {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
+  background-color: #10181C;
+  color: var(--color-foreground);
+}
+
+.ncurses-light .tooltip-inner {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  background-color: var(--color-tooltip-background);
+}
+
+.ncurses-light .bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: var(--color-tooltip-background);
 }
 
 /* ACE things */
@@ -945,10 +958,19 @@ body.ncurses-light {
   max-height: calc(100vh - 138px);
 }
 
-/* .ncurses-light .artifact-search-table td:hover {
+.ncurses-light .artifact-search-table tr td {
+  background: var(--color-form-control-background);
+}
+
+.ncurses-light .artifact-search-table td:hover {
   background: var(--color-table-row-hover);
   color: unset;
-} */
+}
+
+.ncurses-light .artifact-search-table tbody tr.row-selected td {
+  background: var(--color-table-row-selected);
+  color: var(--color-foreground);
+}
 
 .ncurses-light .event-report-viewer {
   background: lightgrey;
