@@ -13,8 +13,6 @@ description: |
   Sysmon) or Windows.Events.TrackProcessesBasic (does not require
   Sysmon)
 
-  Minimum Version: 0.6.6
-
 parameters:
   - name: CommandlineRegex
     default: .
