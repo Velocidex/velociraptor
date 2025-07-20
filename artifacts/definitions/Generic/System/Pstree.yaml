@@ -8,10 +8,6 @@ description: |
   several intermediary processes) it could mean word was
   compromised.
 
-  This artifact uses the process tracker which was introduced in
-  release 0.6.5. (Import an older version of this artifact by using the
-  Server.Import.PreviousReleases if your client is older than this).
-
   A more accurate call chain will be available when the
   Windows.Events.TrackProcesses artifact is collected (required
   Sysmon) or Windows.Events.TrackProcessesBasic (does not require
