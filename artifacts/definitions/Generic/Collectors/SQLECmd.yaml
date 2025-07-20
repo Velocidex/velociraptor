@@ -7,13 +7,15 @@ description: |
   ## NOTES
 
   1. This artifact is automatically generated from the SQLECmd project
+
   2. This artifact uses the SQLite library, since the library does not
      support accurate CPU limits, this artifact can use a lot of CPU
      despite a CPU limit specified.
+
   3. Locked or in use SQLite files will be copied to a tempfile and
      then queried.
 
-  4. If UseFilenames is enabled we only look at known
+  4. If UseFilenames is enabled we only examine known
      filenames. Disabling it will try to identify all sqlite files
      within the search glob. This is slower but may find more
      potential files (e.g. renamed).

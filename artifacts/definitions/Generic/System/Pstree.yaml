@@ -4,7 +4,7 @@ description: |
   system by traversing the process's parent ID.
 
   It is useful for establishing where a process came from - for
-  example, if a powershell process is spawned from Winword (event via
+  example, if a PowerShell process is spawned from Winword (event via
   several intermediary processes) it could mean word was
   compromised.
 

@@ -1,7 +1,8 @@
 name: Linux.Sys.LastUserLogin
 description: |
-  Find and parse system wtmp files. This indicate when the user last
-  logged in.
+  Finds and parses system WTMP files.
+
+  These indicate when users last logged in.
 
 parameters:
   - name: wtmpGlobs
@@ -96,7 +97,7 @@ sources:
                  ) AS Parsed
       FROM glob(globs=split(string=wtmpGlobs, sep=","))
 
-      // In Order to combine Login/Logout into one Table, we create a
+      // To combine Login/Logout into one Table, we create a
       // logout table first
       LET logout_table <= SELECT * FROM foreach(row=parsed,
       query={

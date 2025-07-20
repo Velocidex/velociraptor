@@ -1,31 +1,33 @@
 name: Linux.Sys.LogHunter
 author: "Matt Green - @mgreen27"
 description: |
-  This artifact enables grep of Linux, MacOS and Windows logs.
-  Parameters include SearchRegex and WhitelistRegex as regex terms.
-  I have also included a Path exclusion regex to improve result output
-  and automatically skip hitting notorious locations like /proc.
+  Allows grep-like searching of Linux, MacOS and Windows logs.
 
-  NOTE: nosymlink feature of glob is set so unexpected results may occur if
-  targeting includes symlink files.
+  Parameters include `SearchRegex` and `WhitelistRegex` as regex terms.
+
+  Also included is a Path exclusion regex (`ExcludePathRegex`) to refine results
+  and automatically exclude hits in commonly unwanted locations such as `/proc`.
+
+  NOTE: The `nosymlink` feature of glob is set so unexpected results may occur
+  if your targets includes symlink files.
 
 parameters:
   - name: TargetFiles
     default: '/var/log/**'
   - name: SearchRegex
-    description: "Regex of strings to search in log line."
+    description: "Regex pattern to match in log lines."
     default: ' POST '
     type: regex
   - name: FilterRegex
-    description: "Regex of strings to leave out of output."
+    description: "Regex pattern to exclude matched lines from output."
     default:
     type: regex
   - name: ExcludeDirectoryRegex
     type: regex
-    description: "Does not descend into directories that match this Regex."
+    description: "Do not descend into directories that match this regex pattern."
     default: "^/(shared|proc|snap)"
   - name: ExcludePathRegex
-    description: "Regex of paths to exclude from scanning."
+    description: "Regex pattern describing paths to exclude from scanning."
     default: '\.journal$'
     type: regex
 

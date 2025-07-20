@@ -1,12 +1,19 @@
 name: Server.Import.UpdatedBuiltin
 description: |
-  This artifact allows importing updated versions of some common built
-  in artifacts. If you do not want to wait for the next full release
-  you can use this artifact to import a more recent version of some
-  select artifacts which might include later feature.
+  This artifact allows importing updated versions of certain built-in artifacts.
 
-  NOTE: There is no guarantees that the updated artifact will work on
-  an older version. Make sure to test properly.
+  Currently these artifacts can be updated:
+
+  - `Windows.KapeFiles.Targets`
+  - `Generic.Forensic.SQLiteHunter`
+
+  If you do not want to wait for the next full release, which will include any
+  recent updates to these artifacts, then you can use this artifact to import
+  the updated artifact version which may include features or improvements.
+
+  NOTE: There are no guarantees that the updated artifacts will work on
+  older Velociraptor versions. Ensure that you test thoroughly before deploying
+  widely to clients.
 
 type: SERVER
 

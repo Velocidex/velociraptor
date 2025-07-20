@@ -5,7 +5,7 @@ description: |
   Generic.Forensic.LocalHashes.Query artifact.
 
   NOTE: This artifact expects a CSV file with one hash per line. On
-  the command line you can encode carriage return by using powershell
+  the command line you can encode carriage return by using PowerShell
   like this:
 
   ```

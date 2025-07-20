@@ -1,10 +1,11 @@
 name: Linux.Utils.InstallDeb
 author: Andreas Misje – @misje
 description: |
-   Install a deb package and configure it with debconf answers. The package
-   may either be specified by name, as an uploaded file or as a "tool". If the
-   package already exists, it may be optionally reconfigured with debconf
-   answers.
+   Install a deb package and configure it with debconf answers.
+
+   The package may either be specified by name, as an uploaded file or as a
+   "tool". If the package already exists, it may be optionally reconfigured with
+   debconf answers.
 
    There are three ways to specify a package (listed in order of preference if
    all are set):

@@ -13,7 +13,7 @@ description: |
   also records if they are encrypted or not. Not all key types are
   supported
 
-  NOTE: In order to encrypt your private key run:
+  NOTE: To encrypt your private key run:
 
   ```
   ssh-keygen -p -f my_private_key
@@ -37,13 +37,15 @@ parameters:
     default: "^/(proc|sys|run|snap)"
     type: regex
     description: If this regex matches the path of any directory we do not even descend inside of it.
-    
+
   - name: LocalFilesystemOnly
     default: Y
     type: bool
     description:  |
-      When set, we stay on local attached filesystems including loop, attached disk, cdrom, device mapper, and excluding proc, nfs etc.
-      When set, it can miss keys in some Linux distros. If not sure, or run accross multiple distros, it is recommended to not set it.
+      When set, we stay on local attached filesystems including loop, attached
+      disk, cdrom, device mapper, and excluding proc, nfs etc. When set, it can
+      potentially miss keys in some Linux distros. If not sure, or if being run
+      across multiple distros, then we recommend that you not set it.
 
 sources:
   - query: |

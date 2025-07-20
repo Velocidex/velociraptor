@@ -8,7 +8,7 @@ description: |
 
   While typically the MSI will contain the Velociraptor windows
   client, you can install any other MSI as well by customizing this
-  artifact or uploading a different msi file.
+  artifact or uploading a different MSI file.
 
 tools:
   - name: WindowsMSI

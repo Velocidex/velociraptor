@@ -1,5 +1,7 @@
 name: Network.ExternalIpAddress
-description: Detect the external ip address of the end point.
+description: |
+  Identifies the external IP address of the endpoint using an external web
+  service.
 parameters:
   - name: externalUrl
     default: http://www.myexternalip.com/raw

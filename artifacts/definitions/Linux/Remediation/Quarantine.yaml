@@ -1,21 +1,21 @@
 name: Linux.Remediation.Quarantine
 description: |
-  This artifact applies quarantine to Linux systems via nftables.
-  It expects the target system to have nftables installed, and
-  hence the availability of nft CLI.
+  Applies network quarantine to a Linux system using nftables.
 
-  This artifact will create a table, with the default name
-  *vrr_quarantine_table*, which contains three chains. One
-  for inbound traffic, one for outbound traffic, and the other
-  for forwarding traffic. The chains will cut off all traffics
-  except those for DNS lookup and velociraptor itself.
+  It expects the target system to have nftables installed, and uses the
+  associated `nft` CLI tool.
 
-  To unquarantine the system, set the *RemovePolicy* parameter to
-  *True*.
+  The artifact will create a table, with the default name
+  `vrr_quarantine_table`, which contains three chains: One for inbound traffic,
+  one for outbound traffic, and the other for forwarding traffic. The chains
+  will cut off all traffic except those for DNS lookup and to the Velociraptor
+  server.
 
-  The parameter *ForbiddenTestURL* is used for testing if the
-  quarantine is working as expected, so set it to a URL that should
-  not be reachable from a quarantined system.
+  To unquarantine the system, set the `RemovePolicy` parameter to `True`.
+
+  The parameter `ForbiddenTestURL` is used to test if the quarantine is working
+  as expected, so set it to a URL that should not be reachable from a
+  quarantined system.
 
 precondition: SELECT OS From info() where OS = 'linux'
 

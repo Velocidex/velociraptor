@@ -11,7 +11,7 @@ description: |
 
     This artifact by default filters all events with `localhost` as the server
     and `MACHINE$` as target user. A recommended hunt for lateral movement would
-    be activity to other machines from commonly abused lolbins or explicit logon
+    be activity to other machines from commonly abused LOLBins or explicit logon
     events from unusual processes.
 
 author: Matt Green - @mgreen27

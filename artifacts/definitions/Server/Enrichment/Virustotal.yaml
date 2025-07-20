@@ -1,16 +1,19 @@
 name: Server.Enrichment.Virustotal
 author: Wes Lambert -- @therealwlambert, Whitney Champion -- @shortxstack
 description: |
-  Submit a file hash or IP to Virustotal for details. Default Public API restriction is 4 requests/min.
+  Submit a file hash or IP to VirusTotal for details.
 
-  This artifact can be called from within another artifact (such as one looking for files) to enrich the data made available by that artifact.
+  Note that the default public API rate limit is 4 requests/min.
 
-  Ex.
+  This artifact can be called from within another artifact (such as one looking
+  for files) to enrich the data made available by that artifact.
+
+  Example:
 
     `SELECT * from Artifact.Server.Enrichment.Virustotal(Hash=$YOURHASH)`
     `SELECT * from Artifact.Server.Enrichment.Virustotal(IP=$YOURIP,QueryType='ip')`
 
-  `TO-DO`: Implement a timer to spread out requests
+  TODO: Implement a timer to spread out requests
 
 type: SERVER
 

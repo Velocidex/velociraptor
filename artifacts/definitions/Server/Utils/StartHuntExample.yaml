@@ -11,7 +11,7 @@ description: |
 
   Usually to start a hunt, the user must have the `START_HUNT`
   permission - usually granted by the `administrator` or
-  `investigator` roles. Additionally, in order to collect this
+  `investigator` roles. Additionally, to collect this
   artifact, a user must have the `COLLECT_SERVER` permission - usually
   only granted by the `administrator` role.
 

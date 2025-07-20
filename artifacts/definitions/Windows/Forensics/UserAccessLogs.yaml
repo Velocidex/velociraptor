@@ -58,7 +58,7 @@ export: |
                            filename=Address, struct="IP6",
                            profile=IPProfile).IP,
 
-           -- We dont know what kind of address it is.
+           -- We don't know what kind of address it is.
            else=format(format="%x", args=Address)))
 
     -- Get the Clients table from all snapshot files.

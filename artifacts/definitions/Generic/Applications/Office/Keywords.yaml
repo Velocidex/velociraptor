@@ -8,7 +8,7 @@ description: |
   documents because the ZIP files are typically compressed.
 
   This artifact searches for office documents by file extension and
-  glob then uses the zip filesystem accessor to launch a yara scan
+  glob then uses the zip filesystem accessor to launch a YARA scan
   again the uncompressed data of the document. Keywords are more
   likely to match when scanning the decompressed XML data.
 

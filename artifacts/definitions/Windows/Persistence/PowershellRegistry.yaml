@@ -1,11 +1,11 @@
 name: Windows.Persistence.PowershellRegistry
 description: |
   A common method of persistence is to install a hook into a user profile
-  registry hive, using Powershell. When the user logs in, the Powershell script
+  registry hive, using PowerShell. When the user logs in, the PowerShell script
   downloads a payload and executes it.
 
   This artifact searches the user's profile registry hive for signatures related
-  to general Powershell execution. We use a YARA signature specifically
+  to general PowerShell execution. We use a YARA signature specifically
   targeting the user's profile which we extract by using raw NTFS parsing (in
   case the user is currently logged on and the registry hive is locked).
 

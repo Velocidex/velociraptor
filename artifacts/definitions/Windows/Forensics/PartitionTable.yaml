@@ -2,14 +2,14 @@ name: Windows.Forensics.PartitionTable
 description: |
   Parses the raw disk for partition tables.
 
-  This artifact also applies magic() check to indicate the type of
-  partition stored. If a partition contains NTFS filesystems, the
-  artifact will also list the top level directory. This allows a quick
-  overview of what type of partition this is (e.g. System OS or data
+  This artifact also applies a magic() check to indicate the type of
+  partitions found. If a partition contains an NTFS filesystem, the
+  artifact will also list the top level directories. This allows a quick
+  overview of what type of partition this is (e.g. System/OS or data
   drive).
 
-  Currently handles only GPT (Most common) and Primary Dos partition
-  tables
+  The artifact currently handles only GPT (Most common) and Primary Dos
+  partition tables.
 
 parameters:
   - name: ImagePath

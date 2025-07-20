@@ -1,6 +1,6 @@
 name: Windows.Attack.ParentProcess
 description: |
-  Maps the Mitre Att&ck framework process executions into artifacts.
+  Maps the MITRE Att&ck framework process executions into artifacts.
 
   NOTE: This artifact uses the process tracker. If you also enable the
   Windows.Events.TrackProcesses or Windows.Events.TrackProcessesBasic

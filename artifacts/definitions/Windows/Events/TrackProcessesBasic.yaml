@@ -1,15 +1,15 @@
 name: Windows.Events.TrackProcessesBasic
 description: |
-  This artifact is a basic Process tracker using a simple polled
-  pslist(). The Process Tracker keeps track of exited processes, and
-  resolves process call chains from it in memory cache.
+  A basic process tracker which uses a simple polled pslist().
 
-  This event artifact enables the global process tracker and makes it
-  possible to run many other artifacts that depend on the process
-  tracker.
+  The Process Tracker keeps track of exited processes, and resolves process call
+  chains from it in memory cache.
 
-  This tracker DOES NOT require sysmon and is **incompatible** with
-  Windows.Events.TrackProcesses (only one should be running).
+  This event artifact enables the global process tracker and makes it possible
+  to run many other artifacts that depend on the process tracker.
+
+  This tracker DOES NOT require Sysmon and is **incompatible** with
+  `Windows.Events.TrackProcesses` (only one should be running).
 
 type: CLIENT_EVENT
 
