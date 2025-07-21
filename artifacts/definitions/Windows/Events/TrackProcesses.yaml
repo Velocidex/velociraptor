@@ -1,7 +1,7 @@
 name: Windows.Events.TrackProcesses
 description: |
-  This artifact uses sysmon and pslist to keep track of running
-  processes using the Velociraptor process tracker.
+  Uses Sysmon and pslist to keep track of running processes by using the
+  Velociraptor Process Tracker.
 
   The Process Tracker keeps track of exited processes, and resolves
   process call chains from it in memory cache.
@@ -44,7 +44,7 @@ sources:
       SELECT OS From info() where OS = 'windows'
 
     query: |
-      // Make sure sysmon is installed.
+      // Ensure that sysmon is installed.
       LET _ <= SELECT * FROM Artifact.Windows.Sysinternals.SysmonInstall(
          SysmonFileLocation=SysmonFileLocation)
 

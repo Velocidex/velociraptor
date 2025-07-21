@@ -1,17 +1,19 @@
 name: Server.Enrichment.GeoIPISP
 description: |
-  This artifact can use the MaxMind database to Geo resolve an IP
-  address using the GeoIP ISP Database. You will need to provide a valid GeoIP ISP database.
+  Look up geo-information for an IP address using the MaxMind "GeoIP ISP"
+  database.
 
-  You can obtain a free to use (gratis but not libre) database from
+  You can obtain a free-to-use (gratis but not libre) database from
   https://www.maxmind.com/ or you can pay for a more accurate option.
 
-  After storing the database somewhere on your server, you should the
-  location in the server metadata screen to it under the key "GeoIPISPDB"
-  (for example `/usr/shared/GeoIP2-City_20210910/GeoIP2-ISP.mmdb`)
+  You will need to provide the path to a valid GeoIP ISP database located on
+  your server. The artifact expects you to store the database location in the
+  server metadata, under the metadata key "GeoIPISPDB" (for example
+  `/usr/shared/GeoIP2-City_20210910/GeoIP2-ISP.mmdb`).
 
-  Alternatively you can import this artifact to gain access to the
-  utility functions (or just copy them into your own artifact).
+  Although you can collect this artifact directly, it is more likely that you
+  would import this artifact from your own artifact to gain access to the
+  utility lookup functions.
 
 export: |
   LET ISPDB = server_metadata().GeoIPISPDB

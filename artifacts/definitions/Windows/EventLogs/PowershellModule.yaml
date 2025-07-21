@@ -3,7 +3,7 @@ description: |
   This Artifact will search and extract Module events (Event ID 4103) from
   Powershell-Operational Event Logs.
 
-  Powershell is commonly used by attackers across all stages of the attack
+  PowerShell is commonly used by attackers across all stages of the attack
   lifecycle. Although quite noisy Module logging can provide valuable insight.
 
   There are several parameters available for search leveraging regex.

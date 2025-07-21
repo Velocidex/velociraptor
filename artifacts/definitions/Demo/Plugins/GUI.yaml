@@ -224,7 +224,7 @@ sources:
         name: Test Default ColumnTypes
         template: |
           /*
-          ## Make sure Base64hex data is automatically typed
+          ## Ensure that Base64hex data is automatically typed
           */
           SELECT base64encode(string="This should popup in a hex editor") AS Base64Hex FROM scope()
 

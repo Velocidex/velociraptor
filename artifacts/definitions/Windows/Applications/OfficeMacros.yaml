@@ -1,13 +1,12 @@
 name: Windows.Applications.OfficeMacros
 description: |
-  Office macros are a favourite initial infection vector. Many users
-  click through the warning dialogs.
+  Scans through a given directory glob for common office files. Then tries to
+  extract any embedded macros by parsing the OLE file structure.
 
-  This artifact scans through the given directory glob for common
-  office files. We then try to extract any embedded macros by parsing
-  the OLE file structure.
+  Office macros are a prominent initial infection vector. Many users click
+  through the warning dialogs, thus leading to infection.
 
-  If a macro calls an external program (e.g. Powershell) this is very
+  If a macro calls an external program (e.g. PowerShell) this is very
   suspicious!
 
 parameters:

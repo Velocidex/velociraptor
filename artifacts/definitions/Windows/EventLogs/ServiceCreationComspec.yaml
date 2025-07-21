@@ -1,14 +1,13 @@
 name: Windows.EventLogs.ServiceCreationComspec
 description: |
+  Detects the string "COMSPEC" (nocase) in Windows Service
+  Creation (SCM) events. That is: EventID 7045 from the System event log.
 
-  This Detection hts on the string "COMSPEC" (nocase) in Windows Service
-  Creation events. That is: EventID 7045 from the System event log.
+  This detects many hack tools that use SCM based lateral movement
+  including `smbexec`.
 
-  This detects many hack tools that leverage SCM based lateral movement
-  including smbexec.
-
-  SearchVSS allows querying VSS instances of EventLog Path with event
-  deduplication.
+  If `VSSAnalysisAge` is non-zero then this enables querying VSS instances for
+  the `EventLog` path, which includes event deduplication.
 
 author: Matt Green - @mgreen27
 

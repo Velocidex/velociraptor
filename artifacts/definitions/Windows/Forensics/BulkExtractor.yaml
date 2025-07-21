@@ -2,7 +2,7 @@ name: Windows.Forensics.BulkExtractor
 description: |
     This content will execute bulk_extractor with record carving plugins from
     4n6ist. Initially developed to carve EventLogs from physical disk and
-    unallocated space, this content may also be leveraged for other
+    unallocated space, this content may also be used for other
     bulk extractor capability. Best use case is for remote targeted machine
     collection to remove the need for a disk image.
 

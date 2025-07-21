@@ -55,7 +55,7 @@ description: |
 
   Entries in deb822 sources files may be disabled by including
   "Enabled: no" instead of commenting out all lines. If this field
-  is not present with a falsly value, the entry is enabled. Use the
+  is not present with a "false" value, the entry is enabled. Use the
   exported functions DebTrue()/DebFalse() to correctly parse all
   accepted true/false strings, or use the VQL suggestion "Only enabled
   sources" to filter on this column (true), if present.
@@ -63,7 +63,7 @@ description: |
   If the GPG key is embedded in a .sources file, the whole GPG key
   will be included in the cell. Otherwise the value will be a file
   path. Use the VQL suggestion "Hide embedded GPG keys" to replace
-  embedded GPG keys with "(embedded)" in the results. In order to
+  embedded GPG keys with "(embedded)" in the results. To
   inspect the keys themselves (files or embedded data), use the
   exchange artifact Linux.Debian.GPGKeys.
 
@@ -444,8 +444,8 @@ sources:
         FROM deb_sources
         GROUP BY URIs, Suites
 
-        /* This runs if the file was found. Read the entire file into
-            memory and parse the same record using multiple RegExps.
+        /* This runs if the file was found. Reads the entire file into
+            memory and parses the same record using multiple regular expressions.
         */
         LET parsed_cache_files(file) = SELECT Name, Architectures, URIs, Types,
             Source, parse_string_with_regex(

@@ -1,12 +1,12 @@
 name: Generic.Detection.Yara.Zip
 author: "Matt Green - @mgreen27"
 description: |
-    This artifact enables running Yara on embedded compressed files.
+    This artifact enables running YARA on embedded compressed files.
 
     The artifact:
 
     * firstly searches for compressed zip files (PK header)
-    * then applies yara on files inside.
+    * then applies YARA on files inside.
     * files matching ZipFilenameRegex are recursively searched as above.
 
     The artifact is optimized to recursively search through embedded zip,
@@ -25,7 +25,7 @@ description: |
     NOTE: this artifact runs the glob plugin with the nosymlink switch
     turned on.  This will NOT follow any symlinks and may cause
     unexpected results if unknowingly targeting a folder with
-    symlinks. Yara is not applied to the containers, only contained contents
+    symlinks. YARA is not applied to the containers, only contained contents
     that are not containers.
 
 parameters:

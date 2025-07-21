@@ -46,8 +46,8 @@ description: |
     * Startup Path - Path with \Startup\
     * Zeroed Headers - Check for ShellHeader items zeroed.
     * Hidden window - Check for ShellLinkHeader.ShowCommand as SHOWMINNOACTIVE
-    * Target Changed path - Check LNK TargetPath different to PropertyStore path.
-    * Target Changed size - Check LNK ShellLinkHeader.FileSize different to PropertyStore size.
+    * Target Changed path - Check LNK TargetPath different from PropertyStore path.
+    * Target Changed size - Check LNK ShellLinkHeader.FileSize different from PropertyStore size.
     * Risky target - Checks several LNK target paths to the RiskyExe regex.
     * WebDAV - Checks for NetworkProviderType = WNNC_NET_DAV
     * Line break in StringData.Name
@@ -62,14 +62,14 @@ description: |
     * Korean Language - check PropertyStore for Korean strings
     * Persian Language - check PropertyStore for Persian strings
     * Vietnamese Language - check PropertyStore for Vietnamese strings
-    * CodePage - checks for existance of a ExtraData code page setting. Rare enough to report on - 936:Simplified Chinese, 949:Korean, 950:Traditional Chinese
+    * CodePage - checks for existence of a ExtraData code page setting. Rare enough to report on - 936:Simplified Chinese, 949:Korean, 950:Traditional Chinese
     * Has Overlay - check for overlay and extra data attached to LNK
     * Long Base64 - check for a long base64 blog over 20 decoded characters
     * Arguments have ticks - ticks are common in malicious LNK files
     * Arguments have environment variables - environment variables (%|\$env:) are common in malicious LNKs
     * Arguments have rare characters - looks for specific rare characters that may indicate obfuscation (\?|\!|\~|\@)
     * Arguments have leading space - malicious LNK files may have a many leading spaces to obfuscate some tools
-    * Arguments have http strings - LNKs are reguarly used as a download cradle - https?://
+    * Arguments have http strings - LNKs are regularly used as a download cradle - https?://
     * Arguments have UNC strings
     * Suspicious arguments - some common malicious arguments observed in field (with mind to False positive)
 

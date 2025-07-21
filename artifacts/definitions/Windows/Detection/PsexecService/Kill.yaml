@@ -5,7 +5,7 @@ description: |
     service are killed.
 
     NOTE: There is an inherent race between detection and response. If
-    the psexec is very quick we will miss it.
+    the PsExec is very quick we will miss it.
 
 type: CLIENT_EVENT
 

@@ -4,17 +4,17 @@ description: |
 
   The cookies are typically encrypted by the DPAPI using the user's
   credentials. Since Velociraptor is typically not running in the user
-  context we can not decrypt these. It may be possible to decrypt the
+  context we cannot decrypt these. It may be possible to decrypt the
   cookies off line.
 
-  The pertinant information from a forensic point of view is the
-  user's Created and LastAccess timestamp and the fact that the user
+  The pertinent information from a forensic point of view are the
+  user's Created and LastAccess timestamps, and the fact that the user
   has actually visited the site and obtained a cookie.
 
   ## NOTES:
 
   This artifact is deprecated in favor of
-  Generic.Forensic.SQLiteHunter and will be removed in future
+  `Generic.Forensic.SQLiteHunter` and will be removed in future
 
 parameters:
   - name: cookieGlobs

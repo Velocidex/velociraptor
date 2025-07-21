@@ -1,7 +1,7 @@
 name: Windows.Persistence.PowershellProfile
 author: Matt Green - @mgreen27
 description: |
-  This Artifact will search and parse Powershell profile scripts.
+  This Artifact will search and parse PowerShell profile scripts.
 
   PowerShell supports several profiles depending on the user or host program.
   Adversaries may create or modify these profiles to include arbitrary commands,
@@ -21,10 +21,10 @@ type: CLIENT
 parameters:
   - name: UserProfileGlob
     default: '\Documents\{WindowsPowerShell,Powershell}\{Profile,Microsoft.*_profile}.ps1'
-    description: Glob for Powershell user profiles.
+    description: Glob for PowerShell user profiles.
   - name: PSHomeProfileGlob
     default: 'C:\Windows\System32\{WindowsPowerShell,Powershell}\v1.0\{Profile,Microsoft.*_profile}.ps1'
-    description: Glob for Powershell PSHome profiles.
+    description: Glob for PowerShell PSHome profiles.
   - name: SearchStrings
     default: .
     type: regex

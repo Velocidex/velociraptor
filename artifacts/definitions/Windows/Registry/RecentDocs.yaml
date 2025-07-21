@@ -98,7 +98,7 @@ sources:
             AND Data.type =~ 'BINARY'
 
 
-      -- Glob method allows offline processing but can not filter by user
+      -- Glob method allows offline processing but cannot filter by user
       LET GlobValues = SELECT
             Mtime,
             OSPath.Components[-2] AS Type,

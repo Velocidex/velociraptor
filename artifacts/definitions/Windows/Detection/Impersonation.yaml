@@ -18,7 +18,7 @@ description: |
 
   This artifact enumerates all threads on the system which have an
   impersonation token. That is, they are operating with a different token
-  then the token the entire process has. For example mimikatz has a
+  then the token the entire process has. For example Mimikatz has a
   command called `token::elevate` to do just such a thing:
 
   ```

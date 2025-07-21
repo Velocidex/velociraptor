@@ -1,8 +1,8 @@
 name: Windows.Detection.Yara.UEFI
 author: Matt Green - @mgreen27
 description: |
-  This artifact enables running yara over files in an EFI System Partition (ESP).
-  
+  This artifact enables running YARA over files in an EFI System Partition (ESP).
+
 
 parameters:
   - name: ImagePath
@@ -66,9 +66,9 @@ parameters:
                     $trait_2= {83 EC 4C 53 57 68 A0 10 01 00 8D 45 F8}
                     $trait_3= {53 81 C7 FF 0F 00 00 68 54 44 55 00 81 E7 00 F0 FF FF 57 6A 01}
                     $trait_4= {50 68 08 08 08 08 68 D0 43 DE DE 68 1F 96 00 00 BF E4 10 01 00}
-                    $string_0 = "winlogon.exe" 
+                    $string_0 = "winlogon.exe"
                 condition:
-                    1 of ($trait_*) and 
+                    1 of ($trait_*) and
                     1 of ($string_*)
             }
   - name: NumberOfHits
@@ -97,15 +97,15 @@ sources:
                 then= stamp > DateAfter,
                 else= True
             )))
-            
+
       LET find_efi = SELECT StartOffset,EndOffset,
             Size AS PartitionSize,
             name AS PartitionName
        FROM Artifact.Windows.Forensics.PartitionTable(
           ImagePath=ImagePath, SectorSize=SectorSize)
       WHERE PartitionName =~ "EFI"
-      
-      LET find_files = SELECT * FROM foreach(row=find_efi, 
+
+      LET find_files = SELECT * FROM foreach(row=find_efi,
         query={
             SELECT *,
                 StartOffset,EndOffset,
@@ -120,8 +120,8 @@ sources:
                         DelegatePath=ImagePath,
                         Path=format(format="%d", args=StartOffset))))
         })
-      
-      LET target_files = SELECT 
+
+      LET target_files = SELECT
             StartOffset as PartitionOffset, PartitionSize,
             OSPath,
             Size, Mtime, Atime, Ctime, Btime,
@@ -141,11 +141,11 @@ sources:
                     OR time_test(stamp=Atime)
                     OR time_test(stamp=Ctime)
                     OR time_test(stamp=Btime))
-        
+
       -- scan files and prepare hit metadata
       LET hits = SELECT * FROM foreach(row=target_files,
         query={
-            SELECT 
+            SELECT
                 OSPath as _OSPath,
                 OSPath.Path as OSPath,
                 File.Size as Size,
@@ -168,10 +168,10 @@ sources:
             FROM yara( accessor='fat', rules=yara_rules,files=OSPath,
                     context=ContextBytes,number=NumberOfHits )
         })
-      
+
       -- upload files if selected
-      LET upload_hits = SELECT *, 
-            upload(accessor='fat',file=_OSPath,name=_OSPath.Path) as Upload 
+      LET upload_hits = SELECT *,
+            upload(accessor='fat',file=_OSPath,name=_OSPath.Path) as Upload
         FROM hits
 
       -- return rows

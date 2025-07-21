@@ -3,7 +3,7 @@ description: |
   This artifact will remove customized artifacts from the Velociraptor
   server based on a regex.
 
-  NOTE: It is impossible to remove built in artifacts.
+  NOTE: It is impossible to remove built-in artifacts.
 
 type: SERVER
 

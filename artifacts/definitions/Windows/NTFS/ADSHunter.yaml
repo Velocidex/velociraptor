@@ -2,23 +2,23 @@ name: Windows.NTFS.ADSHunter
 author: "Matt Green - @mgreen27"
 description: |
    This artifact hunts
-   for Alternate Data Streams on NTFS file systems. 
-   Adversaries may use NTFS file attributes for covert storage in order to evade 
-   detection. 
-   Alternate Data Streams (ADS) are additional $DATA attributes for an MFT entry in 
-   NTFS file systems. In NTFS, the primary $DATA attribute is 
+   for Alternate Data Streams on NTFS file systems.
+   Adversaries may use NTFS file attributes for covert storage to evade
+   detection.
+   Alternate Data Streams (ADS) are additional $DATA attributes for an MFT entry in
+   NTFS file systems. In NTFS, the primary $DATA attribute is
    never named but subsequent $DATA attributes must be named.
-   
-   Targeting is via mix of path globs and include / exclude regex. 
-   
+
+   Targeting is via mix of path globs and include / exclude regex.
+
    - TargetGlob is a glob to target for ADS. NOTE **\* is recursive. To hit C drive we need to search for C:\*
-   - AdsName is name in glob format: e.g *, Zone.Identifier or Zone.*. 
-   - AdsNameExclusion - A regex value, common ADS added to exclusions have been 
+   - AdsName is name in glob format: e.g *, Zone.Identifier or Zone.*.
+   - AdsNameExclusion - A regex value, common ADS added to exclusions have been
    added by default. The artifact also excludes NTFS system files by default.
 
 reference:
   - https://attack.mitre.org/techniques/T1564/004/
-  
+
 type: CLIENT
 
 parameters:
@@ -48,7 +48,7 @@ parameters:
  - name: UploadDataStream
    description: If selected wil upload non-resident data streams.
    type: bool
-   
+
 sources:
  - query: |
       -- Collect ADS entries using glob but exclude ntfs objects that contain ads
@@ -58,7 +58,7 @@ sources:
             Size,
             OSPath.Dirname + split(string=Name,sep=':')[0] as HostObject,
             dict(Mtime=Mtime,Atime=Atime,Ctime=Ctime,Btime=Btime) as HostTimestampsSI
-        FROM glob(globs=TargetGlob + ":" + AdsNameGlob, 
+        FROM glob(globs=TargetGlob + ":" + AdsNameGlob,
                   accessor="ntfs",
                   nosymlink='Y')
         WHERE
@@ -72,7 +72,7 @@ sources:
             AND NOT if(condition=AdsNameExclusion,
                         then= AdsName =~ AdsNameExclusion,
                         else= False )
-      
+
       -- Extract content and filter
       LET hits = SELECT *,
             read_file(filename=OSPath[0]+Inode, accessor="mft",offset=0,length=1024) as AdsContent -- only upload first 1k of each hit
@@ -81,13 +81,13 @@ sources:
             AND NOT if(condition=AdsContentExclusion,
                     then= AdsContent =~ AdsContentExclusion,
                     else= False )
-                    
+
       -- upload hits
-      LET upload_hits = SELECT *, 
+      LET upload_hits = SELECT *,
             upload(file=OSPath,accessor='ntfs') as Upload
         FROM hits
-      
-      -- output rows 
+
+      -- output rows
       SELECT * FROM if(condition=UploadDataStream,
                         then= upload_hits,
                         else= hits)

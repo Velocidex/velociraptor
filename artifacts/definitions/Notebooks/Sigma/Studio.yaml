@@ -21,7 +21,7 @@ parameters:
       - LinuxEvents
 
   - name: Debug
-    description: Enable this to match all rules (even if they did not match) in order to see what detections matched.
+    description: Enable this to match all rules (even if they did not match) to see what detections matched.
     type: bool
 
   - name: LogSource

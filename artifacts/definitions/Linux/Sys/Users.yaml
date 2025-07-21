@@ -1,5 +1,5 @@
 name: Linux.Sys.Users
-description: Get User specific information like homedir, group etc from /etc/passwd.
+description: Get User specific information like homedir, group, etc. from `/etc/passwd`.
 parameters:
   - name: PasswordFile
     default: /etc/passwd

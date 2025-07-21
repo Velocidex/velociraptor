@@ -1,18 +1,19 @@
 name: Windows.Applications.Chrome.History
 description: |
-  Enumerates a targets chrome history. Source based on Hindsight and
-  code review of
+  Enumerates a targets chrome history.
+
+  Source based on Hindsight and code review of
   https://source.chromium.org/chromium/chromium/src/+/master:components/history/core/browser/history_types.h.
 
-  NOTE: Some research has shown that older browsers may not have this
-  table, then you should be treating it as you would in a traditional
-  investigation, this changes is aimed at taking advantage of the
-  newer tables to reduce false postitives.
+  #### NOTES:
 
-  ## NOTES:
+  - Some research has shown that older browsers may not have this
+    table. In that case you should treat it as you would in a traditional
+    investigation. This artifact is aimed at taking advantage of the
+    newer tables to reduce false positives.
 
-  This artifact is deprecated in favor of
-  Generic.Forensic.SQLiteHunter and will be removed in future
+  - This artifact is deprecated in favor of `Generic.Forensic.SQLiteHunter` and
+    will be removed in future
 
 
 author: Angry-Bender @angry-bender
