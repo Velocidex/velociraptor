@@ -933,7 +933,6 @@ body.ncurses-dark {
 }
 
 .ncurses-dark .table tbody tr:nth-of-type(odd) {
-  background: unset;
   border: none;
 }
 
@@ -943,6 +942,7 @@ body.ncurses-dark {
 }
 
 .ncurses-dark .table tbody tr.row-selected,
+.ncurses-dark .table tbody tr.row-selected:hover,
 .ncurses-dark .table tbody tr.row_selected td {
   background: var(--color-table-row-selected);
   color: var(--color-foreground);

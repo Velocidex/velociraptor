@@ -550,13 +550,14 @@ body.midnight {
   border: none;
 }
 
-.midnight .table-hover tbody tr:hover {
+.midnight .paged-table.table tbody tr:hover td {
   background: var(--color-table-row-hover);
-  color: unset;
+  color: var(--color-foreground);
 }
 
-.midnight .table tbody tr.row-selected,
-.midnight .table tbody tr.row_selected td {
+.midnight .paged-table.table tbody tr.row-selected,
+.midnight .paged-table.table tbody tr.row-selected:hover,
+.midnight .paged-table.table tbody tr.row-selected td {
   background: var(--color-table-row-selected);
   color: var(--color-table-row-selected-text);
   font-weight: 700;

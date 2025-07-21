@@ -75,7 +75,7 @@
   --color-table-row-stripe: rgba(0, 0, 0, 0.05);
   --color-table-row-selected: var(--color-accent-100);
   --color-table-row-selected-text: var(--color-foreground);
-  --color-table-row-hover: rgba(255, 255, 255, 0.4);
+  --color-table-row-hover: var(--color-accent-25);
   --color-table-heading-background: darkgrey;
 
   --color-no-content: var(--color-foreground);
@@ -919,16 +919,16 @@ body.ncurses-light {
 }
 
 .ncurses-light .table tbody tr:nth-of-type(odd) {
-  background: unset;
   border: none;
 }
 
 .ncurses-light .table-hover tbody tr:hover {
   background: var(--color-table-row-hover);
-  color: unset;
+  color: var(--color-foreground);
 }
 
 .ncurses-light .table tbody tr.row-selected,
+.ncurses-light .table tbody tr.row-selected:hover,
 .ncurses-light .table tbody tr.row_selected td {
   background: var(--color-table-row-selected);
   color: var(--color-foreground);

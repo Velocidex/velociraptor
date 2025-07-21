@@ -375,7 +375,6 @@ body.pink-light {
 }
 
 .pink-light .table tbody tr:nth-of-type(odd) {
-  background: unset;
   border: none;
 }
 
