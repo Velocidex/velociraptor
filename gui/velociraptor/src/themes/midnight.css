@@ -550,13 +550,14 @@ body.midnight {
   border: none;
 }
 
-.midnight .table-hover tbody tr:hover {
+.midnight .paged-table.table tbody tr:hover td {
   background: var(--color-table-row-hover);
-  color: unset;
+  color: var(--color-foreground);
 }
 
-.midnight .table tbody tr.row-selected,
-.midnight .table tbody tr.row_selected td {
+.midnight .paged-table.table tbody tr.row-selected,
+.midnight .paged-table.table tbody tr.row-selected:hover,
+.midnight .paged-table.table tbody tr.row-selected td {
   background: var(--color-table-row-selected);
   color: var(--color-table-row-selected-text);
   font-weight: 700;
@@ -972,15 +973,16 @@ body.midnight {
   background: #200000;
 }
 
-.midnight .modal-header .close {
-  color: var(--color-foreground);
-  opacity: 1;
+.midnight .modal-header .btn-close {
+  color: var(--color-foreground-dimmed);
+  opacity: 0.8;
+  filter: brightness(0) saturate(100%) invert(16%) sepia(62%) saturate(7115%) hue-rotate(358deg) brightness(96%) contrast(122%);
   text-shadow: none;
   outline: none;
 }
 
-.midnight .modal-header .close:hover,
-.midnight .modal-header .close:focus {
+.midnight .modal-header .btn-close:hover,
+.midnight .modal-header .btn-close:focus {
   color: var(--color-foreground);
   opacity: 1;
   text-shadow: none;
@@ -1199,14 +1201,8 @@ body.midnight {
   border: 1px solid var(--color-btn-border);
 }
 
-.midnight .btn-tooltip[data-tooltip]::before {
-  border-radius: 0;
-  color: var(--color-foreground);
-}
-
 .midnight .tooltip.show {
   background: var(--color-canvas-background);
-  border: 1px solid var(--color-btn-border);
   color: var(--color-foreground);
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
@@ -1214,9 +1210,21 @@ body.midnight {
 
 .midnight .tooltip-inner {
   color: #FFD500;
+  background-color: var(--color-tooltip-background);
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
   font-weight: 700;
+}
+
+.midnight .tooltip.bs-tooltip-top {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-foreground);
+}
+
+.midnight .bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: var(--color-tooltip-background);
 }
 
 .midnight .file-hex-view td,

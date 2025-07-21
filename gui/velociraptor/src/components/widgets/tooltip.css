@@ -1,4 +1,10 @@
 .tooltip-inner {
     background-color: var(--color-canvas-background);
     color: var(--color-foreground);
+    border-radius: 0;
+}
+
+.tooltip.show {
+    border-radius: 0;
+    opacity: 1;
 }
