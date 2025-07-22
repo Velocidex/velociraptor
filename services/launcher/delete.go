@@ -83,6 +83,10 @@ func (self *FlowStorageManager) DeleteFlow(
 				pathspec := path_specs.NewUnsafeFilestorePath(
 					components...).SetType(api.PATH_TYPE_FILESTORE_ANY)
 				r.emit_fs("Upload", pathspec)
+				r.emit_fs("UploadIdx", pathspec.
+					SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX))
+				r.emit_fs("UploadChunk", pathspec.
+					SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
 				continue
 			}
 
@@ -94,6 +98,10 @@ func (self *FlowStorageManager) DeleteFlow(
 					SetType(api.PATH_TYPE_FILESTORE_ANY)
 
 				r.emit_fs("Upload", pathspec)
+				r.emit_fs("UploadIdx", pathspec.
+					SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX))
+				r.emit_fs("UploadChunk", pathspec.
+					SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
 			}
 		}
 		reader.Close()
@@ -120,6 +128,8 @@ func (self *FlowStorageManager) DeleteFlow(
 		r.emit_fs("Result", result_path)
 		r.emit_fs("ResultIndex",
 			result_path.SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
+		r.emit_fs("ResultChunkIndex",
+			result_path.SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
 
 	}
 

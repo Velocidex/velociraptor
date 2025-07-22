@@ -571,6 +571,11 @@ func (self *ClientInfoManager) Set(
 		return invalidClientError
 	}
 
+	err := self.ValidateClientId(client_info.ClientId)
+	if err != nil {
+		return err
+	}
+
 	return self.storage.SetRecord(self.config_obj, client_info.ClientInfo)
 }
 

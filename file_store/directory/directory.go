@@ -38,62 +38,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
-
-const (
-	// On windows all file paths must be prefixed by this to
-	// support long paths.
-	WINDOWS_LFN_PREFIX = "\\\\?\\"
-)
-
-type DirectoryFileWriter struct {
-	Fd         *os.File
-	completion func()
-}
-
-func (self *DirectoryFileWriter) Size() (int64, error) {
-	return self.Fd.Seek(0, os.SEEK_END)
-}
-
-func (self *DirectoryFileWriter) Update(data []byte, offset int64) error {
-	_, err := self.Fd.Seek(offset, os.SEEK_SET)
-	if err != nil {
-		return err
-	}
-
-	_, err = self.Fd.Write(data)
-	return err
-}
-
-func (self *DirectoryFileWriter) Write(data []byte) (int, error) {
-
-	defer api.InstrumentWithDelay("write", "DirectoryFileWriter", nil)()
-
-	_, err := self.Fd.Seek(0, os.SEEK_END)
-	if err != nil {
-		return 0, err
-	}
-
-	return self.Fd.Write(data)
-}
-
-func (self *DirectoryFileWriter) Truncate() error {
-	return self.Fd.Truncate(0)
-}
-
-func (self *DirectoryFileWriter) Flush() error { return nil }
-
-func (self *DirectoryFileWriter) Close() error {
-	err := self.Fd.Close()
-
-	// DirectoryFileWriter is synchronous... complete on Close()
-	if self.completion != nil &&
-		!utils.CompareFuncs(self.completion, utils.SyncCompleter) {
-		self.completion()
-	}
-	return err
-}
 
 type DirectoryFileStore struct {
 	config_obj *config_proto.Config
@@ -171,6 +118,17 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 	return result, nil
 }
 
+func isPathCompressible(path api.FSPathSpec) bool {
+	switch path.Type() {
+	case api.PATH_TYPE_FILESTORE_CHUNK_INDEX,
+		api.PATH_TYPE_FILESTORE_JSON_INDEX,
+		api.PATH_TYPE_FILESTORE_SPARSE_IDX:
+		return false
+	default:
+		return true
+	}
+}
+
 func (self *DirectoryFileStore) ReadFile(
 	filename api.FSPathSpec) (api.FileReader, error) {
 	file_path := datastore.AsFilestoreFilename(
@@ -182,9 +140,29 @@ func (self *DirectoryFileStore) ReadFile(
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}
-	return &api.FileAdapter{
+	reader := &api.FileAdapter{
 		File:      file,
 		PathSpec_: filename,
+	}
+
+	if !isPathCompressible(filename) {
+		return reader, nil
+	}
+
+	chunk_file_path := datastore.AsFilestoreFilename(
+		self.db, self.config_obj, filename.
+			SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
+	chunk_fd, err := os.OpenFile(chunk_file_path, os.O_RDWR, 0600)
+	if err != nil {
+		return reader, nil
+	}
+
+	return &CompressedDirectoryReader{
+		chunkIndex: api.NewChunkIndex(&api.FileAdapter{
+			File: chunk_fd,
+		}),
+		reader:     reader,
+		chunkCache: cache.NewLRUCache(10),
 	}, nil
 }
 
@@ -222,7 +200,7 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 	}
 
 	file_path := datastore.AsFilestoreFilename(self.db, self.config_obj, filename)
-	file, err := os.OpenFile(file_path, os.O_RDWR|os.O_CREATE, 0700)
+	file, err := os.OpenFile(file_path, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Error("Unable to open file %v: %v", file_path, err)
@@ -230,8 +208,22 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 		return nil, errors.Wrap(err, 0)
 	}
 
+	var chunk_fd *os.File
+
+	if isPathCompressible(filename) {
+		chunk_file_path := datastore.AsFilestoreFilename(
+			self.db, self.config_obj, filename.
+				SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
+		chunk_fd, _ = os.OpenFile(chunk_file_path, os.O_RDWR, 0600)
+	}
+
 	return &DirectoryFileWriter{
 		Fd:         file,
+		ChunkFd:    chunk_fd,
+		path:       filename,
+		db:         self.db,
+		config_obj: self.config_obj,
+
 		completion: completion,
 	}, nil
 }

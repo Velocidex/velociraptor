@@ -186,6 +186,11 @@ func (self *Labeler) SetClientLabel(
 		return err
 	}
 
+	err = client_info_manager.ValidateClientId(client_id)
+	if err != nil {
+		return err
+	}
+
 	err = client_info_manager.Modify(ctx, client_id,
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if client_info == nil {

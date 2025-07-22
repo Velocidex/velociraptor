@@ -38,6 +38,7 @@ type FlowContext struct {
 	// Flow wide totals
 	total_rows           uint64
 	total_uploaded_bytes uint64
+	total_jsonl_bytes    map[string]uint64
 	total_logs           uint64
 	logs_disabled        bool
 
@@ -116,15 +117,17 @@ func newFlowContext(ctx context.Context,
 	// Allow the flow to be cancelled.
 	sub_ctx, cancel := context.WithCancel(ctx)
 	self := &FlowContext{
-		ctx:            sub_ctx,
-		cancel:         cancel,
-		wg:             &sync.WaitGroup{},
-		output:         output,
-		req:            req.FlowRequest,
-		frequency_msec: frequency_msec,
-		config_obj:     config_obj,
-		flow_id:        flow_id,
-		owner:          owner,
+		ctx:               sub_ctx,
+		cancel:            cancel,
+		wg:                &sync.WaitGroup{},
+		output:            output,
+		req:               req.FlowRequest,
+		frequency_msec:    frequency_msec,
+		config_obj:        config_obj,
+		flow_id:           flow_id,
+		owner:             owner,
+		total_jsonl_bytes: make(map[string]uint64),
+
 		// Disable checkpoints for now since the server will get the
 		// flow state anyway.
 		// checkpoint:     makeCheckpoint(config_obj, flow_id),
@@ -190,6 +193,23 @@ func (self *FlowContext) ChargeRows(rows uint64) error {
 
 	}
 	return nil
+}
+
+func (self *FlowContext) GetJSONLBytes(name string) uint64 {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	count, _ := self.total_jsonl_bytes[name]
+	return count
+}
+
+func (self *FlowContext) ChargeJSONLBytes(name string, bytes uint64) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	count, _ := self.total_jsonl_bytes[name]
+	count += bytes
+	self.total_jsonl_bytes[name] = count
 }
 
 func (self *FlowContext) ChargeBytes(bytes uint64) error {

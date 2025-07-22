@@ -14,6 +14,24 @@ var (
 	basePathRegEx = regexp.MustCompile("^/[^/][a-zA-Z0-9_-]+[^/]$")
 )
 
+func (self *SanityChecks) CheckDatastoreSettings(
+	config_obj *config_proto.Config) error {
+
+	if config_obj.Datastore == nil {
+		return nil
+	}
+
+	switch strings.ToLower(config_obj.Datastore.Compression) {
+	case "", "zlib":
+		config_obj.Datastore.Compression = "zlib"
+	case "none":
+		config_obj.Datastore.Compression = "none"
+	default:
+		return fmt.Errorf("Datastore.compression should be one of 'none', 'zlib'")
+	}
+	return nil
+}
+
 func (self *SanityChecks) CheckFrontendSettings(
 	config_obj *config_proto.Config) error {
 
@@ -49,7 +67,6 @@ func (self *SanityChecks) CheckFrontendSettings(
 		if !strings.HasSuffix(config_obj.GUI.PublicUrl, "/app/index.html") {
 			return fmt.Errorf("Invalid GUI.public_url - this should refer to the externally accessible URL for the GUI application. It should end with '/app/index.html'")
 		}
-
 	}
 	return nil
 }

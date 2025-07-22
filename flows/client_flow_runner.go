@@ -373,8 +373,16 @@ func (self *ClientFlowRunner) FileBuffer(
 		}
 	}
 
-	// Write the actual data to the file.
-	_, err = fd.Write(file_buffer.Data)
+	if file_buffer.UncompressedLength > 0 {
+		_, err = fd.WriteCompressed(file_buffer.Data,
+			file_buffer.Offset,
+			int(file_buffer.UncompressedLength))
+
+	} else {
+		// Write the actual data to the file.
+		_, err = fd.Write(file_buffer.Data)
+	}
+
 	if err != nil {
 		logger.Error("While writing to %v: %v",
 			file_path_manager.Path().AsClientPath(), err)
@@ -652,8 +660,16 @@ func (self *ClientFlowRunner) VQLResponse(
 		}
 	}
 
-	rs_writer.WriteJSONL(
-		[]byte(response.JSONLResponse), response.TotalRows)
+	if response.UncompressedSize > 0 {
+		rs_writer.WriteCompressedJSONL(
+			response.CompressedJsonResponse,
+			response.ByteOffset, int(response.UncompressedSize),
+			response.TotalRows)
+
+	} else {
+		rs_writer.WriteJSONL(
+			[]byte(response.JSONLResponse), response.TotalRows)
+	}
 
 	return nil
 }

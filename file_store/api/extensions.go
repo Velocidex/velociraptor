@@ -46,6 +46,9 @@ func GetExtensionForFilestore(path_spec FSPathSpec) string {
 	case PATH_TYPE_FILESTORE_DOWNLOAD_ZIP:
 		return ".zip"
 
+	case PATH_TYPE_FILESTORE_CHUNK_INDEX:
+		return ".chunk"
+
 	case PATH_TYPE_FILESTORE_DOWNLOAD_REPORT:
 		return ".html"
 
@@ -106,6 +109,10 @@ func GetFileStorePathTypeFromExtension(name string) (PathType, string) {
 
 	if strings.HasSuffix(name, ".zip") {
 		return PATH_TYPE_FILESTORE_DOWNLOAD_ZIP, name[:len(name)-4]
+	}
+
+	if strings.HasSuffix(name, ".chunk") {
+		return PATH_TYPE_FILESTORE_CHUNK_INDEX, name[:len(name)-7]
 	}
 
 	if strings.HasSuffix(name, ".html") {

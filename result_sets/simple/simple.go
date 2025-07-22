@@ -138,6 +138,33 @@ func (self *ResultSetWriterImpl) WriteJSONL(serialized []byte, total_rows uint64
 	_, _ = self.index_fd.Write(offsets.Bytes())
 }
 
+func (self *ResultSetWriterImpl) WriteCompressedJSONL(
+	serialized []byte, byte_offset uint64, uncompressed_size int,
+	total_rows uint64) {
+
+	// Sync the index with the current buffers.
+	self.Flush()
+
+	// Write an index that spans the serialized range.
+	offset, err := self.fd.Size()
+	if err != nil {
+		return
+	}
+
+	// All the index slots will point to the start of the blob
+	offsets := new(bytes.Buffer)
+	for i := uint64(0); i < total_rows; i++ {
+		value := uint64(offset) | (i << 40)
+		err = binary.Write(offsets, binary.LittleEndian, value)
+		if err != nil {
+			return
+		}
+	}
+
+	_, _ = self.fd.WriteCompressed(serialized, byte_offset, uncompressed_size)
+	_, _ = self.index_fd.Write(offsets.Bytes())
+}
+
 func (self *ResultSetWriterImpl) Write(row *ordereddict.Dict) {
 	self.mu.Lock()
 	defer self.mu.Unlock()

@@ -329,6 +329,128 @@ func (self *FileStoreTestSuite) TestFileUpdatePastEndOfFile() {
 		string(buff[:n]))
 }
 
+func (self *FileStoreTestSuite) TestCompressedFileReadWrite() {
+	filename := path_specs.NewSafeFilestorePath("compressed", "foo")
+	fd, err := self.filestore.WriteFile(filename)
+	assert.NoError(self.T(), err)
+
+	// Write some data.
+	test_str := []byte("Some data")
+	buffer, err := utils.Compress(test_str)
+	assert.NoError(self.T(), err)
+
+	_, err = fd.WriteCompressed(buffer, 0, len(test_str))
+	assert.NoError(self.T(), err)
+
+	// Check that size is incremeented.
+	size, err := fd.Size()
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), int64(len(test_str)), size)
+
+	test_str2 := []byte("MORE data")
+	buffer, err = utils.Compress(test_str2)
+	assert.NoError(self.T(), err)
+
+	_, err = fd.WriteCompressed(
+		buffer, uint64(len(test_str)), len(test_str2))
+	assert.NoError(self.T(), err)
+	fd.Close()
+
+	buff := make([]byte, 6)
+	reader, err := self.filestore.ReadFile(filename)
+	assert.NoError(self.T(), err)
+	defer reader.Close()
+
+	n, err := reader.Read(buff)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), n, len(buff))
+	assert.Equal(self.T(), "Some d", string(buff))
+
+	n, err = reader.Read(buff)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), n, len(buff))
+	assert.Equal(self.T(), "ataMOR", string(buff))
+
+	// Over read past the end.
+	buff = make([]byte, 60)
+	n, err = reader.Read(buff)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), n, 6)
+	assert.Equal(self.T(), "E data", string(buff[:n]))
+
+	// Read at EOF - gives an EOF and 0 byte read.
+	n, err = reader.Read(buff)
+	assert.Equal(self.T(), err, io.EOF)
+	assert.Equal(self.T(), n, 0)
+
+	// Write some more data to the end of the file.
+	fd, err = self.filestore.WriteFile(filename)
+	assert.NoError(self.T(), err)
+
+	test_str3 := []byte("EXTRA EXTRA")
+	buffer, err = utils.Compress(test_str3)
+	assert.NoError(self.T(), err)
+
+	_, err = fd.WriteCompressed(buffer,
+		uint64(len(test_str)+len(test_str2)),
+		len(test_str3))
+	assert.NoError(self.T(), err)
+	fd.Close()
+
+	// New read picks the new data.
+	n, err = reader.Read(buff)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), n, 11)
+	assert.Equal(self.T(), "EXTRA EXTRA", string(buff[:n]))
+
+	// Seek to middle of first chunk and read within first chunk.
+	_, err = reader.Seek(2, io.SeekStart)
+	assert.NoError(self.T(), err)
+
+	buff = make([]byte, 2)
+	n, err = reader.Read(buff)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), n, len(buff))
+	assert.Equal(self.T(), "me", string(buff[:n]))
+
+	// Seek to middle of first chunk and read some data across to next chunk.
+	_, err = reader.Seek(2, io.SeekStart)
+	assert.NoError(self.T(), err)
+
+	buff = make([]byte, 6)
+	n, err = reader.Read(buff)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), n, len(buff))
+	assert.Equal(self.T(), "me dat", string(buff[:n]))
+
+	// Seek to no man's land
+	_, err = reader.Seek(200, io.SeekStart)
+	assert.NoError(self.T(), err)
+
+	// Reading past the end of file should produce empty data.
+	n, err = reader.Read(buff)
+	assert.Equal(self.T(), err, io.EOF)
+	assert.Equal(self.T(), n, 0)
+
+	// Seek to the last chunk and read a large buffer.
+	_, err = reader.Seek(25, io.SeekStart)
+	assert.NoError(self.T(), err)
+
+	// Reading past the end of file should produce empty data.
+	buff = make([]byte, 1000)
+	n, err = reader.Read(buff)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), n, 4)
+
+	// Reopenning the file should give the right size.
+	fd, err = self.filestore.WriteFile(filename)
+	assert.NoError(self.T(), err)
+	size, err = fd.Size()
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), int64(29), size)
+	fd.Close()
+}
+
 func (self *FileStoreTestSuite) TestFileReadWrite() {
 	filename := path_specs.NewSafeFilestorePath("test", "foo")
 	fd, err := self.filestore.WriteFile(filename)

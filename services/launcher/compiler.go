@@ -126,7 +126,7 @@ func (self *Launcher) CompileSingleArtifact(
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				VQL: fmt.Sprintf(`
 LET %v <= if(
-    condition=format(format="%%T", args=%v) =~ "string",
+    condition=format(format="%%T", args=[%v,]) =~ "string",
     then=starl(code=%v),
     else=%v)
 `,
@@ -136,7 +136,7 @@ LET %v <= if(
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				VQL: fmt.Sprintf(`
 LET %v <= SELECT * FROM if(
-    condition=format(format="%%T", args=%v) =~ "string",
+    condition=format(format="%%T", args=[%v,]) =~ "string",
     then={SELECT * FROM parse_csv(filename=%v, accessor='data')},
     else=%v)
 `,
@@ -148,7 +148,7 @@ LET %v <= SELECT * FROM if(
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				VQL: fmt.Sprintf(`
 LET %v <= if(
-    condition=format(format="%%T", args=%v) =~ "string",
+    condition=format(format="%%T", args=[%v,]) =~ "string",
     then=parse_json(data=%v),
     else=%v)
 `,
@@ -159,7 +159,7 @@ LET %v <= if(
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				VQL: fmt.Sprintf(`
 LET %v <= if(
-    condition=format(format="%%T", args=%v) = "string",
+    condition=format(format="%%T", args=[%v,]) = "string",
     then=parse_json_array(data=%v),
     else=%v)
 `,
@@ -170,7 +170,7 @@ LET %v <= if(
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				VQL: fmt.Sprintf(`
 LET %v <= if(
-    condition=format(format="%%T", args=%v) =~ "string",
+    condition=format(format="%%T", args=[%v,]) =~ "string",
     then=parse_xml(file=%v, accessor="data"),
     else=%v)
 `,
@@ -181,7 +181,7 @@ LET %v <= if(
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				VQL: fmt.Sprintf(`
 LET %v <= if(
-    condition=format(format="%%T", args=%v) =~ "string",
+    condition=format(format="%%T", args=[%v,]) =~ "string",
     then=parse_yaml(filename=%v, accessor="data"),
     else=%v)
 `,

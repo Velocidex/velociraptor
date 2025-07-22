@@ -200,6 +200,18 @@ func (self *MemcacheFileWriter) Update(data []byte, offset int64) error {
 	return writer.Update(data, offset)
 }
 
+func (self *MemcacheFileWriter) WriteCompressed(
+	data []byte,
+	logical_offset uint64,
+	uncompressed_size int) (int, error) {
+	uncompressed, err := utils.Uncompress(context.Background(), data)
+	if err != nil {
+		return 0, err
+	}
+
+	return self.Write(uncompressed)
+}
+
 // Writes go to memory first.
 func (self *MemcacheFileWriter) Write(data []byte) (n int, err error) {
 	defer api.Instrument("write", "MemcacheFileWriter", nil)()

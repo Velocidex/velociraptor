@@ -70,6 +70,11 @@ func (self *SanityChecks) CheckRootOrg(
 		return err
 	}
 
+	err = self.CheckDatastoreSettings(config_obj)
+	if err != nil {
+		return err
+	}
+
 	err = self.CheckAPISettings(config_obj)
 	if err != nil {
 		return err

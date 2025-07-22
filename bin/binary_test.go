@@ -131,8 +131,8 @@ func TestAutoexec(t *testing.T) {
 	// If provided args it works normally.
 	cmd = exec.Command(exe.Name(),
 		"artifacts", "collect", "Windows.Sys.Interfaces", "--format", "jsonl")
-	out, err = cmd.Output()
-	require.NoError(t, err)
+	out, err = cmd.CombinedOutput()
+	require.NoError(t, err, string(out))
 
 	// Config artifacts override built in artifacts.
 	require.Contains(t, string(out), "MySpecialInterface")
