@@ -93,7 +93,7 @@ var (
 
 	artifact_command_collect_format = artifact_command_collect.Flag(
 		"format", "Output format to use  (csv, json, csv_only).").
-		Default("json").Enum("json", "csv", "csv_only")
+		Default("json").Enum("json", "jsonl", "csv", "csv_only")
 
 	artifact_command_collect_names = artifact_command_collect.Arg(
 		"artifact_name", "The artifact name to collect.").

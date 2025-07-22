@@ -31,6 +31,7 @@ var (
 		"Client.version",
 		"Client.server_version",
 		"Client.local_buffer.filename",
+		"Client.dns_cache_refresh_min",
 		"GUI.internal_cidr",
 		"GUI.vpn_cidr",
 		"GUI.authenticator.sub_authenticators",

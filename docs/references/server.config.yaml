@@ -384,6 +384,14 @@ Client:
   # threadhold. Set to a large number to disable.
   low_resource_cpu_count: 1
 
+  # If greater than 0 we install a local DNS cache. This is usually
+  # not needed as most operating systems already have local DNS
+  # caching resolvers. This DNS cache will be refreshed periodically
+  # from upstream. Note that the ttl of the record is currently
+  # ignored and we refresh according to this setting.  This setting
+  # takes effect both on the client and on the server.
+  dns_cache_refresh_min: 0
+
 ## This section configures the API service. The API server accepts
 ## connections from the GUI gRPC gateway, as well as connections from
 ## the gRPC API clients (e.g. with pyvelociraptor).
@@ -515,6 +523,12 @@ GUI:
     ## If this is set to true, the user needs to be authenticated to
     ## Velociraptor before they are proxied.
     require_auth: true
+
+  # A list of domains that we will trust to send us the CSRF
+  # token. Use this only when serving the JS from a different domain
+  # than the API server.
+  trusted_origins:
+    - www.example.com
 
   ## When the Velociraptor server starts for the first time, the
   ## server can create the following initial user with admin level
@@ -981,6 +995,21 @@ Datastore:
   memcache_datastore_max_dir_size: 50000
 
 
+  # The compression mode for collections. This setting allows
+  # compressed results to be stored on the server. For performance
+  # reasons, the client must compress the data into chunks and the
+  # server simply writes the results to storage. This means it is only
+  # supported by clients more recent than 0.75.
+  #
+  # Allowed settings:
+  # - none: No compression - disable compression in client
+  #   transmission. Note that for older clients (prior to 0.75),
+  #   compression is not supported anyway, but this setting will
+  #   disable compression on new clients as well.
+  #
+  # - zlib: Zlib compression enabled on collections. This is the
+  #   default setting when communicating with newer clients.
+  compression: "zlib"
 
 ## Configure logging behavior
 Logging:

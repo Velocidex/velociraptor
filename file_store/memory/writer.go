@@ -153,9 +153,8 @@ func (self *MemoryWriter) Truncate() error {
 	defer api.InstrumentWithDelay("truncate", "MemoryWriter", nil)()
 
 	self.memory_file_store.mu.Lock()
-	defer self.memory_file_store.mu.Unlock()
-
 	self.buf = nil
+	self.memory_file_store.mu.Unlock()
 
 	return self.memory_file_store.Delete(
 		self.pathSpec_.SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))

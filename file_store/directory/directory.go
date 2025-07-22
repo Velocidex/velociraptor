@@ -118,6 +118,17 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 	return result, nil
 }
 
+func isPathCompressible(path api.FSPathSpec) bool {
+	switch path.Type() {
+	case api.PATH_TYPE_FILESTORE_CHUNK_INDEX,
+		api.PATH_TYPE_FILESTORE_JSON_INDEX,
+		api.PATH_TYPE_FILESTORE_SPARSE_IDX:
+		return false
+	default:
+		return true
+	}
+}
+
 func (self *DirectoryFileStore) ReadFile(
 	filename api.FSPathSpec) (api.FileReader, error) {
 	file_path := datastore.AsFilestoreFilename(
@@ -134,8 +145,7 @@ func (self *DirectoryFileStore) ReadFile(
 		PathSpec_: filename,
 	}
 
-	if filename.Type() == api.PATH_TYPE_FILESTORE_CHUNK_INDEX ||
-		filename.Type() == api.PATH_TYPE_FILESTORE_JSON_INDEX {
+	if !isPathCompressible(filename) {
 		return reader, nil
 	}
 
@@ -200,10 +210,10 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 
 	var chunk_fd *os.File
 
-	if filename.Type() != api.PATH_TYPE_FILESTORE_CHUNK_INDEX &&
-		filename.Type() != api.PATH_TYPE_FILESTORE_JSON_INDEX {
-		chunk_file_path := datastore.AsFilestoreFilename(self.db, self.config_obj, filename.
-			SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
+	if isPathCompressible(filename) {
+		chunk_file_path := datastore.AsFilestoreFilename(
+			self.db, self.config_obj, filename.
+				SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
 		chunk_fd, _ = os.OpenFile(chunk_file_path, os.O_RDWR, 0600)
 	}
 
