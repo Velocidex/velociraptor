@@ -48,6 +48,13 @@ message FlowRequest {
     // messages. This regex will determine if the flow should be
     // flagged with an error depending on the log message.
     string log_error_regex = 8;
+
+    enum Compression {
+        NONE = 0;
+        ZLIB = 1;
+    }
+
+    Compression compression = 9;
 }
 
 

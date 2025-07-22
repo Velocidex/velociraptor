@@ -960,6 +960,17 @@ message DatastoreConfig {
     string location = 2;
     string filestore_directory = 3;
 
+    // The compression mode for collections.
+
+    // Allowed settings:
+    // - none: No compression - disable compression in client
+    //   transmission. Note that for older clients (prior to 0.75),
+    //   compression is not supported anyway, but this setting will
+    //   disable compression on new clients as well.
+    // - zlib: Zlib compression enabled on collections. This is the
+    //   default setting when communicating with newer clients.
+    string compression = 19;
+
     // Used by the default FileBaseDataStore
 
     // Set to the min required disk space. When we fall below this

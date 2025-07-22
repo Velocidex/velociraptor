@@ -3,7 +3,6 @@ package memory
 import (
 	"encoding/hex"
 	"fmt"
-	"io"
 	"os"
 	"path"
 	"runtime"
@@ -60,182 +59,6 @@ func NewMemoryFileStore(config_obj *config_proto.Config) *MemoryFileStore {
 	return Test_memory_file_store
 }
 
-type MemoryReader struct {
-	pathSpec_ api.FSPathSpec
-	filename  string
-	offset    int
-	closed    bool
-
-	memory_file_store *MemoryFileStore
-}
-
-func (self *MemoryReader) Read(buf []byte) (int, error) {
-	defer api.InstrumentWithDelay("read", "MemoryReader", nil)()
-
-	fs_buf, pres := self.memory_file_store.Get(self.filename)
-	if !pres {
-		return 0, os.ErrNotExist
-	}
-
-	if self.offset >= len(fs_buf) {
-		return 0, io.EOF
-	}
-
-	to_read := len(buf)
-	if self.offset+to_read > len(fs_buf) {
-		to_read = len(fs_buf) - self.offset
-	}
-
-	for i := 0; i < to_read; i++ {
-		buf[i] = fs_buf[self.offset+i]
-	}
-	self.offset += to_read
-	return to_read, nil
-}
-
-func (self *MemoryReader) Seek(offset int64, whence int) (int64, error) {
-	switch whence {
-	case os.SEEK_SET:
-		self.offset = int(offset)
-	case os.SEEK_CUR:
-		offset += int64(self.offset)
-	case os.SEEK_END:
-		buff, ok := self.memory_file_store.Get(self.filename)
-		if !ok {
-			return 0, io.EOF
-		}
-		offset += int64(len(buff))
-	}
-	return offset, nil
-}
-
-func (self *MemoryReader) Close() error {
-	if self.closed {
-		panic("MemoryReader already closed")
-	}
-	self.closed = true
-	return nil
-}
-
-func (self *MemoryReader) Stat() (api.FileInfo, error) {
-	defer api.InstrumentWithDelay("stat", "MemoryReader", nil)()
-
-	fs_buf, pres := self.memory_file_store.Get(self.filename)
-	if !pres {
-		return nil, os.ErrNotExist
-	}
-
-	return vtesting.MockFileInfo{
-		Name_:     self.pathSpec_.Base(),
-		PathSpec_: self.pathSpec_,
-		FullPath_: self.filename,
-		Size_:     int64(len(fs_buf)),
-	}, nil
-}
-
-type MemoryWriter struct {
-	buf               []byte
-	memory_file_store *MemoryFileStore
-	filename          string
-	closed            bool
-	completion        func()
-}
-
-func (self *MemoryWriter) Size() (int64, error) {
-	self.memory_file_store.mu.Lock()
-	defer self.memory_file_store.mu.Unlock()
-
-	return int64(len(self.buf)), nil
-}
-
-func (self *MemoryWriter) Update(data []byte, offset int64) error {
-	defer api.InstrumentWithDelay("update", "MemoryWriter", nil)()
-
-	err := self._Flush()
-	if err != nil {
-		return err
-	}
-
-	buff, ok := self.memory_file_store.Get(self.filename)
-	if !ok {
-		return os.ErrNotExist
-	}
-
-	if offset >= int64(len(buff)) {
-		return os.ErrNotExist
-	}
-
-	// Write the bytes into buffer offset
-	for i := 0; i < len(data); i++ {
-		if offset >= int64(len(buff)) {
-			buff = append(buff, data[i])
-		} else {
-			buff[offset] = data[i]
-		}
-		offset++
-	}
-
-	self.memory_file_store.mu.Lock()
-	defer self.memory_file_store.mu.Unlock()
-
-	self.memory_file_store.Data.Set(self.filename, buff)
-	self.buf = buff
-	return nil
-}
-
-func (self *MemoryWriter) Write(data []byte) (int, error) {
-	defer api.InstrumentWithDelay("write", "MemoryWriter", nil)()
-
-	self.memory_file_store.mu.Lock()
-	defer self.memory_file_store.mu.Unlock()
-
-	self.buf = append(self.buf, data...)
-	return len(data), nil
-}
-
-func (self *MemoryWriter) Flush() error {
-	self.memory_file_store.mu.Lock()
-	defer self.memory_file_store.mu.Unlock()
-
-	return self._Flush()
-}
-
-func (self *MemoryWriter) _Flush() error {
-	self.memory_file_store.Data.Set(self.filename, self.buf)
-	self.buf = nil
-
-	return nil
-}
-
-func (self *MemoryWriter) Close() error {
-	if self.closed {
-		// panic("MemoryWriter already closed")
-	}
-	self.closed = true
-
-	// MemoryWriter is actually synchronous... Complete on close.
-	if self.completion != nil &&
-		!utils.CompareFuncs(self.completion, utils.SyncCompleter) {
-		defer self.completion()
-	}
-
-	self.memory_file_store.mu.Lock()
-	defer self.memory_file_store.mu.Unlock()
-
-	self.memory_file_store.Data.Set(self.filename, self.buf)
-	return nil
-}
-
-func (self *MemoryWriter) Truncate() error {
-	defer api.InstrumentWithDelay("truncate", "MemoryWriter", nil)()
-
-	self.memory_file_store.mu.Lock()
-	defer self.memory_file_store.mu.Unlock()
-
-	self.buf = nil
-	return nil
-}
-
 type MemoryFileStore struct {
 	mu sync.Mutex
 
@@ -275,20 +98,37 @@ func (self *MemoryFileStore) ReadFile(path api.FSPathSpec) (api.FileReader, erro
 	defer api.InstrumentWithDelay("read_open", "MemoryFileStore", nil)()
 
 	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	filename := pathSpecToPath(self.db, self.config_obj, path)
 	self.Trace("ReadFile", filename)
+
 	_, pres := self.Data.Get(filename)
-	if pres {
-		return &MemoryReader{
-			pathSpec_:         path,
-			filename:          filename,
-			memory_file_store: self,
-		}, nil
+	if !pres {
+		self.mu.Unlock()
+		return nil, os.ErrNotExist
 	}
 
-	return nil, os.ErrNotExist
+	reader := &MemoryReader{
+		pathSpec_:         path,
+		filename:          filename,
+		memory_file_store: self,
+	}
+	self.mu.Unlock()
+
+	if path.Type() == api.PATH_TYPE_FILESTORE_CHUNK_INDEX {
+		return reader, nil
+	}
+
+	chunk_reader, err := self.ReadFile(
+		path.SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
+	if err != nil {
+		return reader, nil
+	}
+
+	res := &CompressedMemoryReader{
+		chunkIndex: api.NewChunkIndex(chunk_reader),
+		reader:     reader,
+	}
+	return res, nil
 }
 
 func (self *MemoryFileStore) WriteFile(path api.FSPathSpec) (api.FileWriter, error) {
@@ -314,6 +154,7 @@ func (self *MemoryFileStore) WriteFileWithCompletion(
 
 	return &MemoryWriter{
 		buf:               buf.([]byte),
+		pathSpec_:         path,
 		memory_file_store: self,
 		filename:          filename,
 		completion:        completion,

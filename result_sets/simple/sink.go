@@ -8,6 +8,11 @@ func (self NullResultSetWriter) WriteJSONL(
 	serialized []byte, total_rows uint64) {
 }
 
+func (self NullResultSetWriter) WriteCompressedJSONL(
+	serialized []byte, byte_offset uint64, uncompressed_size int,
+	total_rows uint64) {
+}
+
 func (self NullResultSetWriter) Update(index uint64, row *ordereddict.Dict) error {
 	return nil
 }

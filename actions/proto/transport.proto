@@ -59,6 +59,10 @@ message FileBuffer {
 
     bytes data = 3;
 
+    // If this is > 0 then then data field contains already compressed
+    // data. The length of the uncompressed data will be given here.
+    uint64 uncompressed_length = 17;
+
     // For uploaders that do not transfer the bulk data inside the
     // data field, we need a way to specify how much data was
     // transferred in thie buffer. In the usual uploader this will be

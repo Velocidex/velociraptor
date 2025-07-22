@@ -654,6 +654,10 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		},
 	}
 
+	if config_obj.Datastore.Compression == "zlib" {
+		task.FlowRequest.Compression = crypto_proto.FlowRequest_ZLIB
+	}
+
 	if config_obj.Frontend.CollectionErrorRegex != "" {
 		task.FlowRequest.LogErrorRegex = config_obj.Frontend.CollectionErrorRegex
 	}

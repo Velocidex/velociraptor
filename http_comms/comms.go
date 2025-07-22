@@ -921,6 +921,7 @@ func (self *NotificationReader) maybeCallOnExit() {
 func (self *NotificationReader) Start(
 	ctx context.Context, wg *sync.WaitGroup) {
 
+	// Decide if we should compress the outer envelope.
 	compression := crypto_proto.PackedMessageList_ZCOMPRESSION
 	if self.config_obj.Client.DisableCompression {
 		compression = crypto_proto.PackedMessageList_UNCOMPRESSED

@@ -35,6 +35,13 @@ type FileReader interface {
 type FileWriter interface {
 	Size() (int64, error)
 	Write(data []byte) (int, error)
+
+	// WriteCompressed writes an already compressed buffer.
+	WriteCompressed(
+		data []byte, // The compressed data
+		offset uint64, // The offset of the chunk in the logical file.
+		uncompressed_size int, // The size of the data in the logical file
+	) (int, error)
 	Truncate() error
 	Close() error
 

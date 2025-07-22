@@ -171,6 +171,17 @@ func (self *FlowResponder) AddResponse(message *crypto_proto.VeloMessage) {
 
 	// Check flow limits. Must be done without a lock on the responder.
 	if message.FileBuffer != nil {
+		uncompressed_size := uint64(len(message.FileBuffer.Data))
+
+		if uncompressed_size > 0 &&
+			self.flow_context.req.Compression == crypto_proto.FlowRequest_ZLIB {
+			compressed, err := utils.Compress(message.FileBuffer.Data)
+			if err == nil {
+				message.FileBuffer.UncompressedLength = uncompressed_size
+				message.FileBuffer.Data = compressed
+			}
+		}
+
 		err := self.flow_context.ChargeBytes(
 			uint64(message.FileBuffer.DataLength))
 		if err != nil {
@@ -182,6 +193,26 @@ func (self *FlowResponder) AddResponse(message *crypto_proto.VeloMessage) {
 	}
 
 	if message.VQLResponse != nil {
+		name := ""
+		if message.VQLResponse.Query != nil {
+			name = message.VQLResponse.Query.Name
+		}
+
+		uncompressed_size := uint64(len(message.VQLResponse.JSONLResponse))
+		if uncompressed_size > 0 &&
+			self.flow_context.req.Compression == crypto_proto.FlowRequest_ZLIB {
+
+			compressed, err := utils.Compress(
+				[]byte(message.VQLResponse.JSONLResponse))
+			if err == nil {
+				message.VQLResponse.UncompressedSize = uncompressed_size
+				message.VQLResponse.CompressedJsonResponse = compressed
+				message.VQLResponse.JSONLResponse = ""
+				message.VQLResponse.ByteOffset = self.flow_context.GetJSONLBytes(name)
+			}
+		}
+		self.flow_context.ChargeJSONLBytes(name, uncompressed_size)
+
 		err := self.flow_context.ChargeRows(message.VQLResponse.TotalRows)
 		if err != nil {
 			self.RaiseError(self.ctx, err.Error())

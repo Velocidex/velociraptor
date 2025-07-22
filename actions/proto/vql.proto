@@ -117,6 +117,16 @@ message VQLResponse {
             description: "JSON encoded response.",
         }];
 
+    bytes CompressedJsonResponse = 15;
+
+    // If uncompressed_size > 0 then the above JSONLResponse is
+    // compressed and this field contains the uncompressed size.
+    uint64 uncompressed_size = 13;
+
+    // The offset in the file stream of the uncompressed JSONLResponse
+    // buffer.
+    uint64 byte_offset = 14;
+
     repeated string Columns = 2 [(sem_type) = {
             description: "A list of column headings produced by the query.",
         }];
