@@ -18,7 +18,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"log"
@@ -33,6 +35,7 @@ import (
 	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/file_store/uploader"
 	logging "www.velocidex.com/golang/velociraptor/logging"
@@ -40,6 +43,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -72,6 +76,13 @@ var (
 	fs_command_cat      = fs_command.Command("cat", "Dump a file to the terminal")
 	fs_command_cat_path = fs_command_cat.Arg(
 		"path", "The path to cat").Required().String()
+
+	fs_command_zcat = fs_command.Command(
+		"zcat", "Dump a compressed filestore file")
+	fs_command_zcat_chunk_path = fs_command_zcat.Arg(
+		"chunk_path", "The path to the .chunk index file").Required().File()
+	fs_command_zcat_file_path = fs_command_zcat.Arg(
+		"file_path", "The path to the compressed file to dump").Required().File()
 
 	fs_command_rm      = fs_command.Command("rm", "Remove file (only filestore supported)")
 	fs_command_rm_path = fs_command_rm.Arg(
@@ -381,6 +392,52 @@ func doCat(path, accessor_name string) error {
 	return err
 }
 
+func doZCat(chunk_fd, file_fd *os.File) error {
+	defer chunk_fd.Close()
+	defer file_fd.Close()
+
+	if !strings.HasSuffix(chunk_fd.Name(), ".chunk") {
+		return fmt.Errorf("Chunk file %v does not have the .chunk extension", chunk_fd.Name())
+	}
+
+	chunk_buf := make([]byte, api.SizeofCompressedChunk)
+	for {
+		_, err := chunk_fd.Read(chunk_buf)
+		if err != nil {
+			break
+		}
+
+		chunk := &api.CompressedChunk{}
+		err = binary.Read(bytes.NewReader(chunk_buf), binary.LittleEndian, chunk)
+		if err != nil {
+			return err
+		}
+
+		compressed := make([]byte, chunk.CompressedLength)
+		_, err = file_fd.Seek(chunk.ChunkOffset, os.SEEK_SET)
+		if err != nil {
+			return err
+		}
+
+		n, err := file_fd.Read(compressed)
+		if err != nil || int64(n) != chunk.CompressedLength {
+			break
+		}
+
+		uncompressed, err := utils.Uncompress(context.Background(), compressed)
+		if err != nil {
+			break
+		}
+
+		_, err = io.Copy(os.Stdout, bytes.NewReader(uncompressed))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Only register the filesystem accessor if we have a proper valid server config.
 func initFilestoreAccessor(config_obj *config_proto.Config) error {
 	if config_obj.Datastore != nil {
@@ -420,6 +477,11 @@ func init() {
 		case fs_command_cat.FullCommand():
 			err := doCat(*fs_command_cat_path, *fs_command_accessor)
 			kingpin.FatalIfError(err, fs_command_cat.FullCommand())
+
+		case fs_command_zcat.FullCommand():
+			err := doZCat(*fs_command_zcat_chunk_path, *fs_command_zcat_file_path)
+			kingpin.FatalIfError(err, fs_command_zcat.FullCommand())
+
 		default:
 			return false
 		}

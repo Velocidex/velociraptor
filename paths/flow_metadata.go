@@ -92,6 +92,10 @@ func (self FlowPathManager) UploadMetadata() api.FSPathSpec {
 	return self.Path().AddChild("uploads").AsFilestorePath()
 }
 
+func (self FlowPathManager) UploadTransactions() api.FSPathSpec {
+	return self.Path().AddChild("upload_transactions").AsFilestorePath()
+}
+
 func (self FlowPathManager) UploadContainer() api.FSPathSpec {
 	return self.Path().AddUnsafeChild("uploads").
 		AsFilestorePath().

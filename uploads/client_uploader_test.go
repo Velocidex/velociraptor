@@ -55,9 +55,8 @@ func GetIndex(responses []*crypto_proto.VeloMessage) []*actions_proto.Range {
 
 func TestClientUploaderSparse(t *testing.T) {
 	resp := responder.TestResponderWithFlowId(nil, "TestClientUploaderSparse")
-	uploader := &VelociraptorUploader{
-		Responder: resp,
-	}
+	uploader := NewVelociraptorUploader(resp)
+	defer uploader.Close()
 
 	BUFF_SIZE = 10000
 
@@ -98,9 +97,8 @@ func TestClientUploaderSparse(t *testing.T) {
 func TestClientUploaderSparseWithEOF(t *testing.T) {
 	resp := responder.TestResponderWithFlowId(
 		nil, "TestClientUploaderSparseWithEOF")
-	uploader := &VelociraptorUploader{
-		Responder: resp,
-	}
+	uploader := NewVelociraptorUploader(resp)
+	defer uploader.Close()
 
 	BUFF_SIZE = 10000
 
@@ -142,9 +140,8 @@ func TestClientUploaderMultipleBuffers(t *testing.T) {
 
 	responder_obj := responder.TestResponderWithFlowId(
 		nil, "TestClientUploader")
-	uploader := &VelociraptorUploader{
-		Responder: responder_obj,
-	}
+	uploader := NewVelociraptorUploader(responder_obj)
+	defer uploader.Close()
 
 	BUFF_SIZE = 10
 
@@ -186,9 +183,8 @@ func TestClientUploaderMultipleUploads(t *testing.T) {
 
 	responder_obj := responder.TestResponderWithFlowId(
 		nil, "TestClientUploader")
-	uploader := &VelociraptorUploader{
-		Responder: responder_obj,
-	}
+	uploader := NewVelociraptorUploader(responder_obj)
+	defer uploader.Close()
 
 	BUFF_SIZE = 1000
 
@@ -235,9 +231,8 @@ func TestClientUploaderMultipleUploads(t *testing.T) {
 func TestClientUploaderCompletelySparse(t *testing.T) {
 	resp := responder.TestResponderWithFlowId(
 		nil, "TestClientUploaderCompletelySparse")
-	uploader := &VelociraptorUploader{
-		Responder: resp,
-	}
+	uploader := NewVelociraptorUploader(resp)
+	defer uploader.Close()
 
 	BUFF_SIZE = 10000
 
@@ -271,9 +266,8 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 
 	resp := responder.TestResponderWithFlowId(
 		nil, fmt.Sprintf("Test%d", utils.GetId()))
-	uploader := &VelociraptorUploader{
-		Responder: resp,
-	}
+	uploader := NewVelociraptorUploader(resp)
+	defer uploader.Close()
 
 	// 2 bytes per message
 	BUFF_SIZE = 2
@@ -340,9 +334,8 @@ func TestClientUploaderUploadId(t *testing.T) {
 	resp := responder.TestResponderWithFlowId(nil, fmt.Sprintf("Test22"))
 	defer resp.Close()
 
-	uploader := &VelociraptorUploader{
-		Responder: resp,
-	}
+	uploader := NewVelociraptorUploader(resp)
+	defer uploader.Close()
 
 	data := "Hello world"
 
@@ -378,9 +371,8 @@ func TestClientUploaderDeduplicateStoreAsName(t *testing.T) {
 	resp := responder.TestResponderWithFlowId(nil, fmt.Sprintf("Test23"))
 	defer resp.Close()
 
-	uploader := &VelociraptorUploader{
-		Responder: resp,
-	}
+	uploader := NewVelociraptorUploader(resp)
+	defer uploader.Close()
 
 	data := "Hello world"
 
@@ -415,9 +407,8 @@ func TestClientUploaderDeduplicateStoreAsName(t *testing.T) {
 func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
 	resp := responder.TestResponderWithFlowId(
 		nil, "TestClientUploaderNoIndexIfNotSparse")
-	uploader := &VelociraptorUploader{
-		Responder: resp,
-	}
+	uploader := NewVelociraptorUploader(resp)
+	defer uploader.Close()
 
 	// 2 bytes per message
 	BUFF_SIZE = 2

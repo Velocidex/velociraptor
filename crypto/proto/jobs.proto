@@ -120,6 +120,7 @@ message VeloMessage {
   VeloStatus status = 25;
   ForemanCheckin ForemanCheckin = 27;  // Upon initial connection.
   FileBuffer FileBuffer = 28;  // For uploads.
+  UploadTransaction UploadTransaction = 44;
   Certificate CSR = 29;   // For enrollment.
   VQLResponse VQLResponse = 33;
   LogMessage LogMessage = 34;
@@ -135,6 +136,9 @@ message VeloMessage {
   // Requests a flow to be collected - contains all the queries that
   // make up the collection.
   FlowRequest FlowRequest = 42;
+
+  // Instructs the client to resume transactions
+  ResumeTransactions ResumeTransactions = 45;
 
   // Check up on in progress flows. Causes the client to return a set
   // of FlowStats for inflight flows.
@@ -443,4 +447,22 @@ message PublicKey {
     // The timestamp when the key was saved (the client
     // enrolled). This is used to deduce the first_seen_time.
     uint64 enroll_time = 2;
+}
+
+
+message ResumeTransactions {
+    string flow_id = 1;
+    string client_id = 2;
+    uint64 timeout = 7;
+    uint64 max_upload_bytes = 3;
+
+    enum Compression {
+        NONE = 0;
+        ZLIB = 1;
+    }
+    Compression compression = 4;
+
+    repeated UploadTransaction transactions = 5;
+
+    repeated VeloStatus query_stats = 6;
 }

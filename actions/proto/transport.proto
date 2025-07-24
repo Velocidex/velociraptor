@@ -95,3 +95,29 @@ message ForemanCheckin {
     uint64 last_hunt_timestamp = 1;
     uint64 last_event_table_version = 2;
 }
+
+// An UploadTransaction represents an intention for the client to
+// begin an upload. The upload will proceed in the future. The actual
+// upload may be cancelled or timed out and then can be resumed by the
+// user.
+//
+// The goal of this message is to capture state as much as possible to
+// allow the upload to resume, i.e. reflect the uploader interface
+// args.
+message UploadTransaction {
+    string filename = 1;
+    string accessor = 2;
+    string store_as_name = 3;
+    repeated string components = 13;
+    int64 expected_size = 4;
+    int64 mtime = 5;
+    int64 atime = 6;
+    int64 ctime = 7;
+    int64 btime = 8;
+    int64 mode = 9;
+    int64 start_offset = 10;
+    int64 upload_id = 11;
+
+    // A JSON object that represents the result of the upload
+    string response = 12;
+}

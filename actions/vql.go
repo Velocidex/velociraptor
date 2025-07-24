@@ -51,6 +51,17 @@ type LogWriter struct {
 	ctx        context.Context
 }
 
+func NewLogWriter(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	responder responder.Responder) *LogWriter {
+	return &LogWriter{
+		ctx:        ctx,
+		config_obj: config_obj,
+		responder:  responder,
+	}
+}
+
 func (self *LogWriter) Write(b []byte) (int, error) {
 	level, msg := logging.SplitIntoLevelAndLog(b)
 
@@ -67,6 +78,8 @@ func (self VQLClientAction) StartQuery(
 	ctx context.Context,
 	responder responder.Responder,
 	arg *actions_proto.VQLCollectorArgs) {
+
+	defer responder.Return(ctx)
 
 	// Just ignore requests that are too old.
 	if arg.Expiry > 0 && arg.Expiry < uint64(utils.Now().Unix()) {
@@ -143,9 +156,10 @@ func (self VQLClientAction) StartQuery(
 		}
 	}
 
-	uploader := &uploads.VelociraptorUploader{
-		Responder: responder,
-	}
+	logger := log.New(NewLogWriter(ctx, config_obj, responder), "", 0)
+	uploader := uploads.NewVelociraptorUploader(sub_ctx, logger,
+		time.Duration(timeout)*time.Second, responder)
+	defer uploader.Close()
 
 	builder := services.ScopeBuilder{
 		Config: &config_proto.Config{
@@ -165,7 +179,7 @@ func (self VQLClientAction) StartQuery(
 			Set(constants.SCOPE_RESPONDER, responder),
 		Uploader:   uploader,
 		Repository: repository,
-		Logger:     log.New(&LogWriter{config_obj, responder, ctx}, "", 0),
+		Logger:     logger,
 	}
 
 	for _, env_spec := range arg.Env {
@@ -268,6 +282,8 @@ func (self VQLClientAction) StartQuery(
 				// can at least return any data it
 				// has.
 				cancel()
+				uploader.Abort()
+
 				scope.Close()
 
 				// Try again after a while to prevent spinning here.
@@ -323,12 +339,10 @@ func (self VQLClientAction) StartQuery(
 		}
 	}
 
-	if uploader.Count > 0 {
+	if uploader.GetCount() > 0 {
 		responder.Log(ctx, logging.DEFAULT,
-			fmt.Sprintf("%v: Uploaded %v files.", name, uploader.Count))
+			fmt.Sprintf("%v: Uploaded %v files.", name, uploader.GetCount()))
 	}
-
-	responder.Return(ctx)
 }
 
 func CheckPreconditions(

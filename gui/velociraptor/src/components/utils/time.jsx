@@ -113,7 +113,6 @@ class VeloTimestamp extends Component {
     render() {
         let value = this.props.iso || this.props.usec;
         let ts = ToStandardTime(value);
-
         if (_.isNaN(ts)) {
             return <></>;
         }
@@ -125,6 +124,10 @@ class VeloTimestamp extends Component {
 
         let timezone = this.context.traits.timezone || "UTC";
         let formatted_ts = FormatRFC3339(ts, timezone);
+        if (formatted_ts.match("Invalid date")) {
+            return <></>;
+        }
+
         return <>
                  <ContextMenu value={formatted_ts}>
                    <ToolTip tooltip={renderHumanTime(ts)}>

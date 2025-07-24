@@ -9,14 +9,19 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"os"
+	"sync"
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -25,10 +30,183 @@ var (
 	UPLOAD_CTX = "__uploads"
 )
 
+type Transaction struct {
+	*actions_proto.UploadTransaction
+
+	scope    vfilter.Scope
+	sentinel bool
+}
+
 // An uploader delivering files from client to server.
 type VelociraptorUploader struct {
 	Responder responder.Responder
-	Count     int
+
+	mu           sync.Mutex
+	ctx          context.Context
+	cancel       func()
+	transactions chan *Transaction
+	logger       *log.Logger
+	count        int
+
+	wg sync.WaitGroup
+}
+
+func NewVelociraptorUploader(
+	ctx context.Context,
+	logger *log.Logger,
+	deadline time.Duration,
+	responder responder.Responder) *VelociraptorUploader {
+	sub_ctx, cancel := context.WithTimeout(ctx, deadline)
+
+	res := &VelociraptorUploader{
+		Responder:    responder,
+		ctx:          sub_ctx,
+		cancel:       cancel,
+		logger:       logger,
+		transactions: make(chan *Transaction, 10000),
+	}
+
+	res.wg.Add(1)
+	go res.Start(ctx)
+	return res
+}
+
+func (self *VelociraptorUploader) Abort() {
+	self.cancel()
+
+	self.reportOutstanding()
+}
+
+func (self *VelociraptorUploader) reportOutstanding() {
+	count := 0
+outer:
+	for {
+		select {
+		case <-self.transactions:
+			count++
+		default:
+			break outer
+		}
+	}
+
+	if count > 0 {
+		self.logger.Printf(
+			"ERROR:Client Uploader:Aborting client uploader with %v transactions outstanding: %v",
+			count, utils.Cause(self.ctx))
+	}
+}
+
+func (self *VelociraptorUploader) Start(ctx context.Context) {
+	defer self.wg.Done()
+	defer self.reportOutstanding()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case t, ok := <-self.transactions:
+			if !ok {
+				return
+			}
+
+			// This represents last transaction - we can quit.
+			if t.sentinel {
+				return
+			}
+
+			resp, err := self.processTransaction(t)
+			if err == utils.CancelledError {
+				return
+			}
+
+			if err != nil {
+				t.scope.Log("Client Uploader: %v", err)
+				resp = &UploadResponse{
+					Error:      err.Error(),
+					Path:       t.StoreAsName,
+					Size:       uint64(t.ExpectedSize),
+					StoredSize: uint64(t.ExpectedSize),
+					StoredName: t.StoreAsName,
+					Components: t.Components,
+					Accessor:   t.Accessor,
+					ID:         t.UploadId,
+				}
+			}
+
+			t.Response, _ = json.MarshalString(resp)
+
+			self.Responder.AddResponse(&crypto_proto.VeloMessage{
+				RequestId:         constants.TransferWellKnownFlowId,
+				UploadTransaction: t.UploadTransaction,
+			})
+		}
+	}
+
+}
+
+func (self *VelociraptorUploader) processTransaction(t *Transaction) (
+	*UploadResponse, error) {
+	fs, err := accessors.GetAccessor(t.Accessor, t.scope)
+	if err != nil {
+		return nil, err
+	}
+
+	file_name, err := fs.ParsePath(t.Filename)
+	if err != nil {
+		return nil, err
+	}
+	store_as_name := file_name
+
+	if t.StoreAsName != "" {
+		store_as_name, err = fs.ParsePath(t.StoreAsName)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	reader, err := fs.OpenWithOSPath(file_name)
+	if err != nil {
+		return nil, err
+	}
+
+	self.wg.Add(1)
+	return self._Upload(self.ctx,
+		t.scope, file_name, t.Accessor, store_as_name,
+		t.ExpectedSize,
+		time.Unix(0, t.Mtime),
+		time.Unix(0, t.Atime),
+		time.Unix(0, t.Ctime),
+		time.Unix(0, t.Btime),
+		os.FileMode(t.Mode),
+		reader,
+		t.StartOffset,
+		t.UploadId)
+
+}
+
+func (self *VelociraptorUploader) IncCount() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.count++
+}
+
+func (self *VelociraptorUploader) GetCount() int {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.count
+}
+
+func (self *VelociraptorUploader) Close() {
+	// Signal the worker the uploads are done.
+	self.transactions <- &Transaction{
+		sentinel: true,
+	}
+
+	// Wait until all the transactions are processed.
+	self.wg.Wait()
 }
 
 func (self *VelociraptorUploader) Upload(
@@ -43,8 +221,7 @@ func (self *VelociraptorUploader) Upload(
 	ctime time.Time,
 	btime time.Time,
 	mode os.FileMode,
-	reader io.Reader) (
-	*UploadResponse, error) {
+	reader io.ReadSeeker) (*UploadResponse, error) {
 
 	if mode.IsDir() {
 		return nil, fmt.Errorf("%w: Directories not supported",
@@ -67,6 +244,101 @@ func (self *VelociraptorUploader) Upload(
 
 	upload_id := self.Responder.NextUploadId()
 
+	// Send the start of the transaction
+	transaction := &Transaction{
+		UploadTransaction: &actions_proto.UploadTransaction{
+			Filename:     filename.String(),
+			Accessor:     accessor,
+			StoreAsName:  store_as_name.String(),
+			Components:   store_as_name.Components,
+			ExpectedSize: expected_size,
+			Mtime:        mtime.UnixNano(),
+			Atime:        atime.UnixNano(),
+			Ctime:        ctime.UnixNano(),
+			Btime:        btime.UnixNano(),
+			Mode:         int64(mode),
+			UploadId:     upload_id,
+		},
+		scope: scope,
+	}
+
+	self.Responder.AddResponse(&crypto_proto.VeloMessage{
+		RequestId:         constants.TransferWellKnownFlowId,
+		UploadTransaction: transaction.UploadTransaction})
+
+	// Resumable uploads
+	if self.shouldUploadAsync(scope, accessor) {
+
+		// Schedule the transaction for execution.
+		self.transactions <- transaction
+
+		// When we upload asynchronously we return an upload id which
+		// can be used to track the upload (or resume it) in future.
+		return &UploadResponse{
+			StoredName: store_as_name.String(),
+			Accessor:   accessor,
+			Components: store_as_name.Components[:],
+			ID:         upload_id,
+		}, nil
+
+	} else {
+		self.wg.Add(1)
+		return self._Upload(ctx, scope, filename, accessor,
+			store_as_name, expected_size, mtime, atime, ctime, btime,
+			mode, reader, 0, upload_id)
+	}
+}
+
+func (self *VelociraptorUploader) ReplayTransaction(
+	scope vfilter.Scope,
+	t *actions_proto.UploadTransaction) {
+	self.transactions <- &Transaction{
+		UploadTransaction: t,
+		scope:             scope,
+	}
+}
+
+func (self *VelociraptorUploader) shouldUploadAsync(
+	scope vfilter.Scope,
+	accessor string) bool {
+	if !vql_subsystem.GetBoolFromRow(
+		scope, scope, constants.UPLOAD_IS_RESUMABLE) {
+		return false
+	}
+
+	// Only certain accessors are eligible for resuming. The
+	// requirements are that it is possible to re-open the reader from
+	// the filename and accessor alone. Ie. that the reader is context
+	// free and hermetic.
+
+	// For example, the "scope" accessor requires the scope to be
+	// recreated, the "s3" accessor requires configuration via the
+	// scope etc.
+	switch accessor {
+	case "ntfs", "file", "ext4", "auto":
+		return true
+	}
+	return false
+}
+
+func (self *VelociraptorUploader) _Upload(
+	ctx context.Context,
+	scope vfilter.Scope,
+	filename *accessors.OSPath,
+	accessor string,
+	store_as_name *accessors.OSPath,
+	expected_size int64,
+	mtime time.Time,
+	atime time.Time,
+	ctime time.Time,
+	btime time.Time,
+	mode os.FileMode,
+	reader io.ReadSeeker,
+	start_offset int64,
+	upload_id int64) (*UploadResponse, error) {
+
+	defer self.wg.Done()
+
 	// Try to collect sparse files if possible
 	result, err := self.maybeUploadSparse(
 		ctx, scope, filename, accessor, store_as_name,
@@ -80,17 +352,23 @@ func (self *VelociraptorUploader) Upload(
 		StoredName: store_as_name.String(),
 		Accessor:   accessor,
 		Components: store_as_name.Components[:],
+		ID:         upload_id,
 	}
 	if accessor != "data" {
 		result.Path = filename.String()
 	}
 
 	offset := uint64(0)
-	self.Count += 1
+	self.IncCount()
 
 	md5_sum := md5.New()
 	sha_sum := sha256.New()
 
+	_, err = reader.Seek(start_offset, os.SEEK_SET)
+	if err != nil {
+		scope.Log("Unable to seek %v to offset %v",
+			result.StoredName, start_offset)
+	}
 	for {
 		// Ensure there is a fresh allocation for every
 		// iteration to prevent overwriting in flight buffers.
@@ -99,6 +377,8 @@ func (self *VelociraptorUploader) Upload(
 		if err != nil && err != io.EOF {
 			return nil, err
 		}
+
+		time.Sleep(time.Second)
 
 		data := buffer[:read_bytes]
 		_, err = sha_sum.Write(data)
@@ -134,7 +414,7 @@ func (self *VelociraptorUploader) Upload(
 
 		select {
 		case <-ctx.Done():
-			return nil, errors.New("Cancelled!")
+			return nil, utils.CancelledError
 
 		default:
 			// Send the packet to the server.
@@ -196,7 +476,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 		result.Path = filename.String()
 	}
 
-	self.Count += 1
+	self.IncCount()
 
 	md5_sum := md5.New()
 	sha_sum := sha256.New()
@@ -304,6 +584,8 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 				return nil, err
 			}
 
+			time.Sleep(time.Second)
+
 			// End of range - go to the next range
 			if read_bytes == 0 || err == io.EOF {
 				to_read = 0
@@ -339,7 +621,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 
 			select {
 			case <-ctx.Done():
-				return nil, errors.New("Cancelled!")
+				return nil, utils.CancelledError
 
 			default:
 				// Send the packet to the server.

@@ -81,7 +81,7 @@ func (self *FileBasedUploader) Upload(
 	ctime time.Time,
 	btime time.Time,
 	mode os.FileMode,
-	reader io.Reader) (*UploadResponse, error) {
+	reader io.ReadSeeker) (*UploadResponse, error) {
 
 	if self.UploadDir == "" {
 		scope.Log("UploadDir is not set")

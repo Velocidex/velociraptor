@@ -62,6 +62,14 @@ func MustMarshalString(v interface{}) string {
 	return string(result)
 }
 
+func MarshalString(v interface{}) (string, error) {
+	result, err := Marshal(v)
+	if err != nil {
+		return "", err
+	}
+	return string(result), nil
+}
+
 func StringIndent(v interface{}) string {
 	result, err := MarshalIndent(v)
 	if err != nil {

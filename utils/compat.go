@@ -11,3 +11,7 @@ func WithTimeoutCause(ctx context.Context, duration time.Duration, err error) (
 	context.Context, func()) {
 	return context.WithTimeoutCause(ctx, duration, err)
 }
+
+func Cause(ctx context.Context) error {
+	return context.Cause(ctx)
+}

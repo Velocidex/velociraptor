@@ -156,6 +156,11 @@ func (self *ClientExecutor) processRequestPlugin(
 		return
 	}
 
+	if req.ResumeTransactions != nil {
+		self.ResumeTransactions(ctx, config_obj, req)
+		return
+	}
+
 	if req.UpdateEventTable != nil {
 		self.event_manager.UpdateEventTable(
 			self.ctx, self.wg, config_obj,

@@ -43,7 +43,7 @@ func (self *ServerUploader) Upload(
 	ctime time.Time,
 	btime time.Time,
 	mode os.FileMode,
-	reader io.Reader) (*uploads.UploadResponse, error) {
+	reader io.ReadSeeker) (*uploads.UploadResponse, error) {
 
 	if !mode.IsRegular() {
 		return nil, fmt.Errorf("%w: Directories not supported",

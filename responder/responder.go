@@ -97,6 +97,13 @@ func newFlowResponder(
 	return result
 }
 
+func (self *FlowResponder) SetStatus(s *crypto_proto.VeloStatus) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.status = *proto.Clone(s).(*crypto_proto.VeloStatus)
+}
+
 func (self *FlowResponder) Close() {
 	self.cancel()
 	self.wg.Done()
