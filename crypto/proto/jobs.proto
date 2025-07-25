@@ -203,6 +203,7 @@ message FlowStats {
     uint64 total_uploaded_bytes = 3;
     uint64 total_collected_rows = 4;
     uint64 total_logs = 5;
+    uint64 transactions_outstanding = 10;
 
     uint64 timestamp = 6;
 
@@ -275,6 +276,8 @@ message VeloStatus {
     // in this collection.
     int64 query_id = 8;
     int64 total_queries = 9;
+
+    uint64 transactions_outstanding = 16;
 };
 
 // This is a list of job messages.

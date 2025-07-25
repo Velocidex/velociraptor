@@ -156,6 +156,7 @@ message ArtifactCollectorContext {
 
     int64 total_requests = 35;
     int64 outstanding_requests = 31;
+    uint64 transactions_outstanding = 37;
 
     // We expect the next response from the client to have this id.
     uint64 next_response_id = 30;

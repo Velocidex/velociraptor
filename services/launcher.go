@@ -256,6 +256,13 @@ type Launcher interface {
 		client_id, flow_id, principal string) (
 		res *api_proto.StartFlowResponse, err error)
 
+	// Replay flow transactions to continue if possible.
+	ResumeFlow(
+		ctx context.Context,
+		config_obj *config_proto.Config,
+		client_id, flow_id string) (
+		[]*actions_proto.UploadTransaction, error)
+
 	DeleteEvents(
 		ctx context.Context,
 		config_obj *config_proto.Config,

@@ -22,6 +22,7 @@ import { withRouter }  from "react-router-dom";
 import { JSONparse } from '../utils/json_parse.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
+import { parseTableResponse } from '../utils/table.jsx';
 
 // Refresh every 5 seconds
 const SHELL_POLL_TIME = 5000;
@@ -101,21 +102,8 @@ class _VeloShellCell extends Component {
                 return;
             };
 
-            let data = [];
-            let columns = response.data.columns || [];
-            for(var row=0; row<response.data.rows.length; row++) {
-                let item = {};
-                let current_row = JSONparse(response.data.rows[row].json);
-                if (!_.isArray(current_row) || current_row.length < columns.length) {
-                    continue;
-                }
-
-                for(let column=0; column<columns.length; column++) {
-                    item[columns[column]] = current_row[column];
-                }
-                data.push(item);
-            }
-            this.setState({output: data, artifact: artifact});
+            this.setState({output: parseTableResponse(response),
+                           artifact: artifact});
         });
     };
 

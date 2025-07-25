@@ -302,6 +302,7 @@ func (self *FlowStorageManager) LoadCollectionContext(
 	err = db.GetSubject(
 		config_obj, flow_path_manager.Stats(), stats_context)
 
+	collection_context.TransactionsOutstanding = stats_context.TransactionsOutstanding
 	collection_context.InflightTime = uint64(in_flight_time)
 
 	// Stats file is missing that is ok and not an error.

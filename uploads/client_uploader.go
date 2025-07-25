@@ -147,6 +147,9 @@ func (self *VelociraptorUploader) Start(ctx context.Context) {
 
 func (self *VelociraptorUploader) processTransaction(t *Transaction) (
 	*UploadResponse, error) {
+
+	defer self.Responder.FlowContext().DecTransaction()
+
 	fs, err := accessors.GetAccessor(t.Accessor, t.scope)
 	if err != nil {
 		return nil, err
@@ -268,6 +271,7 @@ func (self *VelociraptorUploader) Upload(
 
 	// Resumable uploads
 	if self.shouldUploadAsync(scope, accessor) {
+		self.Responder.FlowContext().IncTransaction()
 
 		// Schedule the transaction for execution.
 		self.transactions <- transaction

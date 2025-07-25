@@ -303,6 +303,9 @@ func GetPathSpec(
 
 		case "uploads":
 			return flow_path_manager.UploadMetadata(), nil
+
+		case "upload_transactions":
+			return flow_path_manager.UploadTransactions(), nil
 		}
 
 	} else if in.HuntId != "" && in.Type == "clients" {

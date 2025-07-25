@@ -519,6 +519,7 @@ func (self *ClientFlowRunner) FlowStats(
 		TotalExpectedUploadedBytes: msg.TotalExpectedUploadedBytes,
 		TotalUploadedBytes:         msg.TotalUploadedBytes,
 		TotalCollectedRows:         msg.TotalCollectedRows,
+		TransactionsOutstanding:    msg.TransactionsOutstanding,
 		TotalLogs:                  msg.TotalLogs,
 		ActiveTime:                 msg.Timestamp,
 		QueryStats:                 msg.QueryStatus,

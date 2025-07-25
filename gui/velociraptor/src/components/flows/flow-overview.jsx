@@ -16,6 +16,7 @@ import T from '../i8n/i8n.jsx';
 import _ from 'lodash';
 import {CancelToken} from 'axios';
 import AvailableDownloads from "../notebooks/downloads.jsx";
+import TransactionDialog from "./transactions.jsx";
 
 import api from '../core/api-service.jsx';
 import UserConfig from '../core/user.jsx';
@@ -96,6 +97,8 @@ export default class FlowOverview extends React.Component {
         available_downloads: [],
         lock: false,
         expand_sparse: false,
+
+        showTransactionsDialog: false,
     };
 
     render() {
@@ -240,6 +243,17 @@ export default class FlowOverview extends React.Component {
                           {uploaded_files.length || flow.total_uploaded_files || 0 }
                         </dd>
 
+                        { flow.transactions_outstanding &&
+                          <>
+                            <dt className="col-4">{T("Transactions")}</dt>
+                            <dd className="col-8">
+                              <Button
+                                onClick={()=>this.setState({showTransactionsDialog: true})}
+                                variant="default">
+                              { flow.transactions_outstanding }
+                              </Button>
+                            </dd>
+                          </>}
                         <dt className="col-4">{T("Download Results")}</dt>
                         <dd className="col-8">
                           <ButtonGroup>
@@ -315,6 +329,11 @@ export default class FlowOverview extends React.Component {
                   </Card>
                 </Col>
               </Row>
+              { this.state.showTransactionsDialog &&
+                <TransactionDialog
+                  onClose={e=>this.setState({showTransactionsDialog: false})}
+                  flow={flow}
+                />}
             </>
         );
     }
