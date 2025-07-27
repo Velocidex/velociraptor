@@ -29,6 +29,9 @@ func ResumeTransactions(
 	responder responder.Responder,
 	stat *crypto_proto.VeloStatus,
 	req *crypto_proto.ResumeTransactions) {
+
+	defer responder.Return(ctx)
+
 	timeout := req.Timeout
 	if timeout == 0 {
 		timeout = 600
@@ -71,7 +74,7 @@ func ResumeTransactions(
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
-	scope.Log("INFO:Resuming uploads.")
+	scope.Log("INFO:Resuming uploads: %v transactions.", len(req.Transactions))
 
 	var rows []*ordereddict.Dict
 
@@ -81,7 +84,7 @@ func ResumeTransactions(
 		row.MergeFrom(json.ConvertProtoToOrderedDict(t))
 		rows = append(rows, row)
 
-		uploader.ReplayTransaction(scope, t)
+		uploader.ReplayTransaction(ctx, scope, t)
 	}
 
 	jsonl, err := json.MarshalJsonl(rows)
@@ -100,5 +103,6 @@ func ResumeTransactions(
 			VQLResponse: response})
 	}
 
+	// Wait here until the uploader is done.
 	uploader.Close()
 }

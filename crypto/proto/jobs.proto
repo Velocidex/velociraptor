@@ -241,6 +241,8 @@ message VeloStatus {
         // completed.
         PROGRESS = 4;
         GENERIC_ERROR = 10;
+
+        UNKNOWN_FLOW = 11;
     };
 
     ReturnedStatus status = 1;

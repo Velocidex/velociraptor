@@ -20,6 +20,9 @@ func (self *ClientExecutor) ResumeTransactions(
 		return
 	}
 
+	// Uncancel the flow.
+	self.flow_manager.UnCancel(req.SessionId)
+
 	flow_context := self.flow_manager.FlowContext(self.Outbound, req)
 	defer flow_context.Close()
 
@@ -48,6 +51,7 @@ func (self *ClientExecutor) ResumeTransactions(
 		_, new_responder := flow_context.NewResponder(
 			&actions_proto.VQLCollectorArgs{})
 		new_responder.SetStatus(&crypto_proto.VeloStatus{
+			Status:            crypto_proto.VeloStatus_PROGRESS,
 			NamesWithResponse: []string{constants.UPLOAD_RESUMED_SOURCE},
 		})
 

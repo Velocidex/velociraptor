@@ -52,6 +52,22 @@ func (self *FlowStorageManager) WriteFlow(
 		config_obj, flow_path_manager.Path(), flow, completion)
 }
 
+func (self *FlowStorageManager) WriteFlowStats(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	flow *flows_proto.ArtifactCollectorContext,
+	completion func()) error {
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	flow_path_manager := paths.NewFlowPathManager(flow.ClientId, flow.SessionId)
+	return db.SetSubjectWithCompletion(
+		config_obj, flow_path_manager.Stats(), flow, completion)
+}
+
 // Write the flow to the flow resultset index - this is only used for
 // the GUI.
 func (self *FlowStorageManager) WriteFlowIndex(

@@ -1343,6 +1343,8 @@ message Defaults {
     // in some large deployments.
     bool disable_active_inflight_checks = 52;
 
+    int64 inflight_check_time = 59;
+
     // Normally internal event artifacts are not written to disk but
     // passed internally. For debugging it is useful to have a written
     // record though. Enabling this will also write them to disk.

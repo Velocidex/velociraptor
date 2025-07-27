@@ -29,7 +29,7 @@ func (self *ClientExecutor) ProcessStatRequest(
 				FlowStats: &crypto_proto.FlowStats{
 					FlowComplete: true,
 					QueryStatus: []*crypto_proto.VeloStatus{{
-						Status:       crypto_proto.VeloStatus_GENERIC_ERROR,
+						Status:       crypto_proto.VeloStatus_UNKNOWN_FLOW,
 						ErrorMessage: "Flow not known - maybe the client crashed?",
 					}},
 				},

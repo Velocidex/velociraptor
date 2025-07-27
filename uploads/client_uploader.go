@@ -11,6 +11,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -47,6 +48,9 @@ type VelociraptorUploader struct {
 	transactions chan *Transaction
 	logger       *log.Logger
 	count        int
+	id           uint64
+
+	current map[int64]*actions_proto.UploadTransaction
 
 	wg sync.WaitGroup
 }
@@ -59,12 +63,16 @@ func NewVelociraptorUploader(
 	sub_ctx, cancel := context.WithTimeout(ctx, deadline)
 
 	res := &VelociraptorUploader{
+		id:           utils.GetId(),
 		Responder:    responder,
 		ctx:          sub_ctx,
 		cancel:       cancel,
 		logger:       logger,
+		current:      make(map[int64]*actions_proto.UploadTransaction),
 		transactions: make(chan *Transaction, 10000),
 	}
+
+	gClientUploaderTracker.Register(res.id, res)
 
 	res.wg.Add(1)
 	go res.Start(ctx)
@@ -73,17 +81,31 @@ func NewVelociraptorUploader(
 
 func (self *VelociraptorUploader) Abort() {
 	self.cancel()
-
-	self.reportOutstanding()
+	self.flushOutstanding()
 }
 
-func (self *VelociraptorUploader) reportOutstanding() {
+// Clear the queue from any transactions outstanding.
+func (self *VelociraptorUploader) flushOutstanding() {
 	count := 0
 outer:
 	for {
 		select {
-		case <-self.transactions:
+		case t, ok := <-self.transactions:
+			if !ok {
+				return
+			}
+
+			// Ignore the sentinel
+			if t.sentinel {
+				continue
+			}
+
+			self.mu.Lock()
+			delete(self.current, t.UploadId)
+			self.mu.Unlock()
+
 			count++
+
 		default:
 			break outer
 		}
@@ -98,7 +120,7 @@ outer:
 
 func (self *VelociraptorUploader) Start(ctx context.Context) {
 	defer self.wg.Done()
-	defer self.reportOutstanding()
+	defer self.flushOutstanding()
 
 	for {
 		select {
@@ -148,7 +170,10 @@ func (self *VelociraptorUploader) Start(ctx context.Context) {
 func (self *VelociraptorUploader) processTransaction(t *Transaction) (
 	*UploadResponse, error) {
 
-	defer self.Responder.FlowContext().DecTransaction()
+	defer func() {
+		self.Responder.FlowContext().DecTransaction()
+		delete(self.current, t.UploadId)
+	}()
 
 	fs, err := accessors.GetAccessor(t.Accessor, t.scope)
 	if err != nil {
@@ -210,6 +235,8 @@ func (self *VelociraptorUploader) Close() {
 
 	// Wait until all the transactions are processed.
 	self.wg.Wait()
+
+	gClientUploaderTracker.Unregister(self.id)
 }
 
 func (self *VelociraptorUploader) Upload(
@@ -248,33 +275,28 @@ func (self *VelociraptorUploader) Upload(
 	upload_id := self.Responder.NextUploadId()
 
 	// Send the start of the transaction
-	transaction := &Transaction{
-		UploadTransaction: &actions_proto.UploadTransaction{
-			Filename:     filename.String(),
-			Accessor:     accessor,
-			StoreAsName:  store_as_name.String(),
-			Components:   store_as_name.Components,
-			ExpectedSize: expected_size,
-			Mtime:        mtime.UnixNano(),
-			Atime:        atime.UnixNano(),
-			Ctime:        ctime.UnixNano(),
-			Btime:        btime.UnixNano(),
-			Mode:         int64(mode),
-			UploadId:     upload_id,
-		},
-		scope: scope,
+	transaction := &actions_proto.UploadTransaction{
+		Filename:     filename.String(),
+		Accessor:     accessor,
+		StoreAsName:  store_as_name.String(),
+		Components:   store_as_name.Components,
+		ExpectedSize: expected_size,
+		Mtime:        mtime.UnixNano(),
+		Atime:        atime.UnixNano(),
+		Ctime:        ctime.UnixNano(),
+		Btime:        btime.UnixNano(),
+		Mode:         int64(mode),
+		UploadId:     upload_id,
 	}
 
 	self.Responder.AddResponse(&crypto_proto.VeloMessage{
 		RequestId:         constants.TransferWellKnownFlowId,
-		UploadTransaction: transaction.UploadTransaction})
+		UploadTransaction: transaction})
 
 	// Resumable uploads
 	if self.shouldUploadAsync(scope, accessor) {
-		self.Responder.FlowContext().IncTransaction()
-
 		// Schedule the transaction for execution.
-		self.transactions <- transaction
+		self.ReplayTransaction(ctx, scope, transaction)
 
 		// When we upload asynchronously we return an upload id which
 		// can be used to track the upload (or resume it) in future.
@@ -294,11 +316,23 @@ func (self *VelociraptorUploader) Upload(
 }
 
 func (self *VelociraptorUploader) ReplayTransaction(
+	ctx context.Context,
 	scope vfilter.Scope,
 	t *actions_proto.UploadTransaction) {
-	self.transactions <- &Transaction{
+
+	transaction := &Transaction{
 		UploadTransaction: t,
 		scope:             scope,
+	}
+
+	self.Responder.FlowContext().IncTransaction()
+	self.mu.Lock()
+	self.current[t.UploadId] = t
+	self.mu.Unlock()
+
+	select {
+	case <-ctx.Done():
+	case self.transactions <- transaction:
 	}
 }
 
@@ -362,7 +396,7 @@ func (self *VelociraptorUploader) _Upload(
 		result.Path = filename.String()
 	}
 
-	offset := uint64(0)
+	offset := uint64(start_offset)
 	self.IncCount()
 
 	md5_sum := md5.New()
@@ -382,7 +416,7 @@ func (self *VelociraptorUploader) _Upload(
 			return nil, err
 		}
 
-		time.Sleep(time.Second)
+		InstrumentWithDelay()
 
 		data := buffer[:read_bytes]
 		_, err = sha_sum.Write(data)
@@ -588,7 +622,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 				return nil, err
 			}
 
-			time.Sleep(time.Second)
+			InstrumentWithDelay()
 
 			// End of range - go to the next range
 			if read_bytes == 0 || err == io.EOF {
@@ -672,4 +706,20 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 	result.Md5 = hex.EncodeToString(md5_sum.Sum(nil))
 
 	return result, nil
+}
+
+// Allow uploading to be slowed down to simulate slow networks or
+// disks. Allows testing upload timeout and transactions.
+var InstrumentWithDelay = func() {}
+
+func init() {
+	delay_str, pres := os.LookupEnv("VELOCIRAPTOR_SLOW_FILESYSTEM")
+	if pres {
+		delay, err := strconv.Atoi(delay_str)
+		if err == nil {
+			InstrumentWithDelay = func() {
+				time.Sleep(time.Duration(delay) * time.Millisecond)
+			}
+		}
+	}
 }

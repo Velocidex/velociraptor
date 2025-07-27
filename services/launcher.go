@@ -136,6 +136,12 @@ type FlowStorer interface {
 		flow *flows_proto.ArtifactCollectorContext,
 		completion func()) error
 
+	WriteFlowStats(
+		ctx context.Context,
+		config_obj *config_proto.Config,
+		flow *flows_proto.ArtifactCollectorContext,
+		completion func()) error
+
 	WriteFlowIndex(
 		ctx context.Context,
 		config_obj *config_proto.Config,

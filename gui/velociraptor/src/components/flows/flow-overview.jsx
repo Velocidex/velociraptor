@@ -97,8 +97,6 @@ export default class FlowOverview extends React.Component {
         available_downloads: [],
         lock: false,
         expand_sparse: false,
-
-        showTransactionsDialog: false,
     };
 
     render() {
@@ -242,18 +240,14 @@ export default class FlowOverview extends React.Component {
                         <dd className="col-8">
                           {uploaded_files.length || flow.total_uploaded_files || 0 }
                         </dd>
-
                         { flow.transactions_outstanding &&
                           <>
                             <dt className="col-4">{T("Transactions")}</dt>
                             <dd className="col-8">
-                              <Button
-                                onClick={()=>this.setState({showTransactionsDialog: true})}
-                                variant="default">
                               { flow.transactions_outstanding }
-                              </Button>
                             </dd>
-                          </>}
+                          </>
+                        }
                         <dt className="col-4">{T("Download Results")}</dt>
                         <dd className="col-8">
                           <ButtonGroup>
@@ -329,11 +323,6 @@ export default class FlowOverview extends React.Component {
                   </Card>
                 </Col>
               </Row>
-              { this.state.showTransactionsDialog &&
-                <TransactionDialog
-                  onClose={e=>this.setState({showTransactionsDialog: false})}
-                  flow={flow}
-                />}
             </>
         );
     }

@@ -149,6 +149,13 @@ func (self *FlowManager) IsCancelled(flow_id string) bool {
 	return pres
 }
 
+func (self *FlowManager) UnCancel(flow_id string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	delete(self.cancelled, flow_id)
+}
+
 func (self *FlowManager) Cancel(ctx context.Context, flow_id string) {
 
 	// Some flows are non-cancellable.

@@ -32,6 +32,7 @@ import UserConfig from '../core/user.jsx';
 import VeloForm from '../forms/form.jsx';
 import AddFlowToHuntDialog from './flows-add-to-hunt.jsx';
 import { EditNotebook } from '../notebooks/new-notebook.jsx';
+import TransactionDialog from "./transactions.jsx";
 
 import {CancelToken} from 'axios';
 
@@ -515,6 +516,15 @@ class FlowsList extends React.Component {
                 />
               }
 
+              { this.state.showTransactionsDialog &&
+                <TransactionDialog
+                  onClose={e=>{
+                      this.setState({showTransactionsDialog: false});
+                      this.incrementVersion();
+                  }}
+                  flow={this.props.selected_flow}
+                />}
+
               <Navbar className="flow-toolbar">
                 <ButtonGroup>
                   <ToolTip tooltip={T("New Collection")}>
@@ -599,7 +609,15 @@ class FlowsList extends React.Component {
                       </Button>
                     </ToolTip>
                   }
-
+                  { this.props.selected_flow &&
+                    this.props.selected_flow.transactions_outstanding ?
+                    <ToolTip tooltip={T("Resume Uploads")}>
+                      <Button onClick={()=>this.setState({showTransactionsDialog: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="repeat" />
+                        <span className="sr-only">{T("Resume Uploads")}</span>
+                      </Button>
+                    </ToolTip> : <></> }
                   { isServer &&
                     <ToolTip tooltip={T("Build offline collector")}>
                       <Button onClick={() => this.setState({showOfflineWizard: true})}
