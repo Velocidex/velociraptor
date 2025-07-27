@@ -111,7 +111,7 @@ outer:
 		}
 	}
 
-	if count > 0 {
+	if count > 0 && self.logger != nil {
 		self.logger.Printf(
 			"ERROR:Client Uploader:Aborting client uploader with %v transactions outstanding: %v",
 			count, utils.Cause(self.ctx))

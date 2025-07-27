@@ -9,7 +9,8 @@
   "Components": [
    "foo"
   ],
-  "Accessor": "ntfs"
+  "Accessor": "ntfs",
+  "UploadId": 0
  },
  "Messages": [
   {
@@ -161,8 +162,8 @@
     "query_status": [
      {
       "status": 4,
-      "duration": 10000000000,
       "last_active": 10000000,
+      "first_active": 10000000,
       "uploaded_files": 1,
       "uploaded_bytes": 12,
       "expected_uploaded_bytes": 18

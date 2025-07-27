@@ -147,6 +147,20 @@ func (self *messageDrain) WaitForCompletion(t *testing.T) []*crypto_proto.VeloMe
 	return responses
 }
 
+func (self *messageDrain) WaitForEof(t *testing.T) []*crypto_proto.VeloMessage {
+	var responses []*crypto_proto.VeloMessage
+	vtesting.WaitUntil(time.Second*5, t, func() bool {
+		responses = self.Messages()
+		for _, r := range responses {
+			if r.FileBuffer != nil && r.FileBuffer.Eof {
+				return true
+			}
+		}
+		return false
+	})
+	return responses
+}
+
 func (self *messageDrain) WaitForMessage(t *testing.T, count int) []*crypto_proto.VeloMessage {
 	var responses []*crypto_proto.VeloMessage
 	vtesting.WaitUntil(time.Second*5, t, func() bool {

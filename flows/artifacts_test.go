@@ -348,7 +348,7 @@ func (self *TestSuite) TestResourceLimits() {
 func (self *TestSuite) TestClientUploaderStoreFile() {
 	resp := responder.TestResponderWithFlowId(
 		self.ConfigObj, "TestClientUploaderStoreFile")
-	uploader := uploads.NewVelociraptorUploader(resp)
+	uploader := uploads.NewVelociraptorUploader(self.Ctx, nil, 0, resp)
 	defer uploader.Close()
 
 	// Just a normal file with two regular ranges.
@@ -671,7 +671,7 @@ func (self *TestSuite) testCollectionCompletion(
 func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 	resp := responder.TestResponderWithFlowId(
 		self.ConfigObj, "TestClientUploaderStoreSparseFile")
-	uploader := uploads.NewVelociraptorUploader(resp)
+	uploader := uploads.NewVelociraptorUploader(self.Ctx, nil, 0, resp)
 	defer uploader.Close()
 
 	// A sparse file with one range of 6 bytes, a sparse 6 bytes
@@ -820,7 +820,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 
 	resp := responder.TestResponderWithFlowId(
 		self.ConfigObj, "TestClientUploaderStoreSparseFileNTFS")
-	uploader := uploads.NewVelociraptorUploader(resp)
+	uploader := uploads.NewVelociraptorUploader(self.Ctx, nil, 0, resp)
 	defer uploader.Close()
 
 	// Upload the file to the responder.

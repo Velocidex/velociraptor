@@ -7,7 +7,7 @@
   "/clients/server/artifacts/AnotherTestArtifact/F.1234.json.index": "Index 8 bytes",
   "/clients/server/artifacts/TestArtifact/F.1234.json": [
    "",
-   "{\"Artifact\":\"TestArtifact\",\"Upload\":{\"Path\":\"/Hello\",\"Size\":5,\"StoredSize\":5,\"sha256\":\"185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969\",\"md5\":\"8b1a9953c4611296a827abf8c47804d7\",\"Components\":[\"clients\",\"server\",\"collections\",\"F.1234\",\"uploads\",\"data\",\"Hello\"]}}"
+   "{\"Artifact\":\"TestArtifact\",\"Upload\":{\"Path\":\"/Hello\",\"Size\":5,\"StoredSize\":5,\"sha256\":\"185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969\",\"md5\":\"8b1a9953c4611296a827abf8c47804d7\",\"Components\":[\"clients\",\"server\",\"collections\",\"F.1234\",\"uploads\",\"data\",\"Hello\"],\"UploadId\":0}}"
   ],
   "/clients/server/artifacts/TestArtifact/F.1234.json.index": "Index 8 bytes",
   "/clients/server/collections/F.1234/logs.json": [
@@ -56,7 +56,7 @@
   "/clients/server/artifacts/AnotherTestArtifact/F.1234.json.index": "Index 8 bytes",
   "/clients/server/artifacts/TestArtifact/F.1234.json": [
    "",
-   "{\"Artifact\":\"TestArtifact\",\"Upload\":{\"Path\":\"/Hello\",\"Size\":5,\"StoredSize\":5,\"sha256\":\"185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969\",\"md5\":\"8b1a9953c4611296a827abf8c47804d7\",\"Components\":[\"clients\",\"server\",\"collections\",\"F.1234\",\"uploads\",\"data\",\"Hello\"]}}"
+   "{\"Artifact\":\"TestArtifact\",\"Upload\":{\"Path\":\"/Hello\",\"Size\":5,\"StoredSize\":5,\"sha256\":\"185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969\",\"md5\":\"8b1a9953c4611296a827abf8c47804d7\",\"Components\":[\"clients\",\"server\",\"collections\",\"F.1234\",\"uploads\",\"data\",\"Hello\"],\"UploadId\":0}}"
   ],
   "/clients/server/artifacts/TestArtifact/F.1234.json.index": "Index 8 bytes",
   "/clients/server/collections/F.1234/logs.json": [

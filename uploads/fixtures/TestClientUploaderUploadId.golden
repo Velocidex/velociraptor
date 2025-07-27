@@ -3,6 +3,19 @@
   {
    "session_id": "Test22",
    "request_id": 5,
+   "UploadTransaction": {
+    "filename": "/file_0",
+    "accessor": "data",
+    "store_as_name": "/file_0",
+    "components": [
+     "file_0"
+    ],
+    "expected_size": 11
+   }
+  },
+  {
+   "session_id": "Test22",
+   "request_id": 5,
    "FileBuffer": {
     "pathspec": {
      "path": "/file_0",
@@ -37,6 +50,20 @@
   {
    "session_id": "Test22",
    "request_id": 5,
+   "UploadTransaction": {
+    "filename": "/file_1",
+    "accessor": "data",
+    "store_as_name": "/file_1",
+    "components": [
+     "file_1"
+    ],
+    "expected_size": 11,
+    "upload_id": 1
+   }
+  },
+  {
+   "session_id": "Test22",
+   "request_id": 5,
    "FileBuffer": {
     "pathspec": {
      "path": "/file_1",
@@ -68,6 +95,20 @@
     "stored_size": 11,
     "eof": true,
     "upload_number": 1
+   }
+  },
+  {
+   "session_id": "Test22",
+   "request_id": 5,
+   "UploadTransaction": {
+    "filename": "/file_2",
+    "accessor": "data",
+    "store_as_name": "/file_2",
+    "components": [
+     "file_2"
+    ],
+    "expected_size": 11,
+    "upload_id": 2
    }
   },
   {
@@ -109,6 +150,20 @@
   {
    "session_id": "Test22",
    "request_id": 5,
+   "UploadTransaction": {
+    "filename": "/file_3",
+    "accessor": "data",
+    "store_as_name": "/file_3",
+    "components": [
+     "file_3"
+    ],
+    "expected_size": 11,
+    "upload_id": 3
+   }
+  },
+  {
+   "session_id": "Test22",
+   "request_id": 5,
    "FileBuffer": {
     "pathspec": {
      "path": "/file_3",
@@ -140,6 +195,20 @@
     "stored_size": 11,
     "eof": true,
     "upload_number": 3
+   }
+  },
+  {
+   "session_id": "Test22",
+   "request_id": 5,
+   "UploadTransaction": {
+    "filename": "/file_4",
+    "accessor": "data",
+    "store_as_name": "/file_4",
+    "components": [
+     "file_4"
+    ],
+    "expected_size": 11,
+    "upload_id": 4
    }
   },
   {
