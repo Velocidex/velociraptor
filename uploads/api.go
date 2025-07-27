@@ -23,6 +23,7 @@ type UploadResponse struct {
 	Reference  string   `json:"Reference,omitempty"`
 	Components []string `json:"Components,omitempty"`
 	Accessor   string   `json:"Accessor,omitempty"`
+	ID         int64    `json:"UploadId"`
 
 	// The type of upload this is (Currently "idx" is an index file)
 	Type string `json:"Type,omitempty"`
@@ -41,7 +42,7 @@ type Uploader interface {
 		ctime time.Time,
 		btime time.Time,
 		mode os.FileMode,
-		reader io.Reader) (*UploadResponse, error)
+		reader io.ReadSeeker) (*UploadResponse, error)
 }
 
 // A generic interface for reporting file ranges. Implementations will

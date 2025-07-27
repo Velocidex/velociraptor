@@ -47,6 +47,7 @@ func TestResponderWithFlowId(
 	}
 
 	result.status.Status = crypto_proto.VeloStatus_PROGRESS
+	result.status.FirstActive = uint64(utils.GetTime().Now().UnixNano() / 1000)
 	result.wg.Add(1)
 	flow_context := flow_manager.FlowContext(
 		result.output, &crypto_proto.VeloMessage{SessionId: flow_id})
@@ -123,6 +124,35 @@ func (self *messageDrain) WaitForStatsMessage(t *testing.T) []*crypto_proto.Velo
 			if r.FlowStats != nil &&
 				len(r.FlowStats.QueryStatus) > 0 &&
 				r.FlowStats.QueryStatus[0].UploadedFiles == 1 {
+				return true
+			}
+		}
+		return false
+	})
+	return responses
+}
+
+func (self *messageDrain) WaitForCompletion(t *testing.T) []*crypto_proto.VeloMessage {
+	var responses []*crypto_proto.VeloMessage
+	vtesting.WaitUntil(time.Second*5, t, func() bool {
+		responses = self.Messages()
+		for _, r := range responses {
+			if r.FlowStats != nil &&
+				r.FlowStats.FlowComplete {
+				return true
+			}
+		}
+		return false
+	})
+	return responses
+}
+
+func (self *messageDrain) WaitForEof(t *testing.T) []*crypto_proto.VeloMessage {
+	var responses []*crypto_proto.VeloMessage
+	vtesting.WaitUntil(time.Second*5, t, func() bool {
+		responses = self.Messages()
+		for _, r := range responses {
+			if r.FileBuffer != nil && r.FileBuffer.Eof {
 				return true
 			}
 		}

@@ -108,6 +108,12 @@ const (
 	PST_CACHE_SIZE = "PST_CACHE_SIZE"
 	PST_CACHE_TIME = "PST_CACHE_TIME"
 
+	// Sets client uploaders to be async and resumable.
+	UPLOAD_IS_RESUMABLE = "UPLOAD_IS_RESUMABLE"
+
+	// The result names for the upload resumption
+	UPLOAD_RESUMED_SOURCE = "Server.Internal.ResumedUploads"
+
 	// Used by the SSH accessor to configure access
 	SSH_CONFIG = "SSH_CONFIG"
 

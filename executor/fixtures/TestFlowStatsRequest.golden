@@ -21,7 +21,7 @@
   "flow_stats": {
    "query_status": [
     {
-     "status": 10,
+     "status": 11,
      "error_message": "Flow not known - maybe the client crashed?"
     }
    ],

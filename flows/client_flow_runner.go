@@ -332,6 +332,14 @@ func (self *ClientFlowRunner) ProcessSingleMessage(
 		return nil
 	}
 
+	if msg.UploadTransaction != nil {
+		err := self.UploadTransaction(ctx, client_id, flow_id, msg.UploadTransaction)
+		if err != nil {
+			return fmt.Errorf("UploadTransaction: %w", err)
+		}
+		return nil
+	}
+
 	return nil
 }
 
@@ -470,13 +478,81 @@ func (self *ClientFlowRunner) FileBuffer(
 	return nil
 }
 
+func (self *ClientFlowRunner) UploadTransaction(
+	ctx context.Context, client_id, flow_id string,
+	transaction *actions_proto.UploadTransaction) error {
+
+	file_store_factory := file_store.GetFileStore(self.config_obj)
+
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
+
+	rs_writer, err := result_sets.NewResultSetWriter(
+		file_store_factory, flow_path_manager.UploadTransactions(),
+		json.DefaultEncOpts(),
+		self.completer.GetCompletionFunc(),
+		result_sets.AppendMode)
+	if err != nil {
+		return err
+	}
+
+	defer rs_writer.Close()
+
+	rs_writer.Write(json.ConvertProtoToOrderedDict(transaction))
+
+	return nil
+}
+
 func (self *ClientFlowRunner) Close(ctx context.Context) {
 	self.closer()
+}
+
+// If the client does not know about the flow, we need to terminate
+// the existing flow. This is a bit slower as we need to open the flow
+// for reading.
+func (self *ClientFlowRunner) handleUnknwonFlow(
+	ctx context.Context, client_id, flow_id string,
+	msg *crypto_proto.FlowStats) error {
+
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	// Just a blind write will eventually hit the disk.
+	stats := &flows_proto.ArtifactCollectorContext{}
+	err = db.GetSubject(self.config_obj, flow_path_manager.Stats(), stats)
+	if err != nil {
+		return nil
+	}
+
+	// Mark all the stats as terminated if they are still running.
+	for _, s := range stats.QueryStats {
+		if s.Status == crypto_proto.VeloStatus_PROGRESS {
+			s.Status = crypto_proto.VeloStatus_GENERIC_ERROR
+			s.ErrorMessage = msg.QueryStatus[0].ErrorMessage
+		}
+	}
+
+	launcher.UpdateFlowStats(stats)
+
+	return db.SetSubjectWithCompletion(self.config_obj,
+		flow_path_manager.Stats(), stats, nil)
 }
 
 func (self *ClientFlowRunner) FlowStats(
 	ctx context.Context, client_id, flow_id string,
 	msg *crypto_proto.FlowStats) error {
+
+	if msg.FlowComplete && len(msg.QueryStatus) == 1 {
+		stats := msg.QueryStatus[0]
+		if stats.Status == crypto_proto.VeloStatus_UNKNOWN_FLOW ||
+
+			// Backwards compatibility
+			strings.HasPrefix(stats.ErrorMessage, "Flow not known") {
+			return self.handleUnknwonFlow(ctx, client_id, flow_id, msg)
+		}
+	}
 
 	// Write a partial ArtifactCollectorContext protobuf containing
 	// all the dynamic fields
@@ -487,6 +563,7 @@ func (self *ClientFlowRunner) FlowStats(
 		TotalExpectedUploadedBytes: msg.TotalExpectedUploadedBytes,
 		TotalUploadedBytes:         msg.TotalUploadedBytes,
 		TotalCollectedRows:         msg.TotalCollectedRows,
+		TransactionsOutstanding:    msg.TransactionsOutstanding,
 		TotalLogs:                  msg.TotalLogs,
 		ActiveTime:                 msg.Timestamp,
 		QueryStats:                 msg.QueryStatus,

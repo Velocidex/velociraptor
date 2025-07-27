@@ -352,6 +352,13 @@ service API {
         };
     }
 
+    rpc ResumeFlow(ApiFlowRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/ResumeFlow",
+            body: "*"
+        };
+    }
+
     rpc GetFlowDetails(ApiFlowRequest) returns (FlowDetails) {
         option (google.api.http) = {
             get: "/api/v1/GetFlowDetails",

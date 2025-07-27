@@ -94,6 +94,11 @@ parameters:
     type: hidden
     default: "file"
 
+  - name: UPLOAD_IS_RESUMABLE
+    type: bool
+    default: Y
+    description: If set the uploads can be resumed if the flow times out or errors.
+
 sources:
 - query: |
     -- This list comes from cat /proc/devices and represents actual

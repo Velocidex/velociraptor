@@ -27,6 +27,14 @@ func (self *DummyStorer) WriteFlow(
 	return notAvailableError
 }
 
+func (self *DummyStorer) WriteFlowStats(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	flow *flows_proto.ArtifactCollectorContext,
+	completion func()) error {
+	return notAvailableError
+}
+
 func (self *DummyStorer) WriteFlowIndex(
 	ctx context.Context,
 	config_obj *config_proto.Config,

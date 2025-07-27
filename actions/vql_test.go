@@ -113,7 +113,7 @@ func (self *ClientVQLTestSuite) TestDependentArtifacts() {
 	var responses []*crypto_proto.VeloMessage
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		responses = resp.Drain.Messages()
-		return "{\"X\":1,\"_Source\":\"Custom.Foo.Bar.Baz.A\"}\n" ==
+		return "Target: Query, JSONL: {\"X\":1,\"_Source\":\"Custom.Foo.Bar.Baz.A\"}\n\n" ==
 			getVQLResponse(responses)
 	})
 }
@@ -209,27 +209,6 @@ func (self *ClientVQLTestSuite) TestMaxWait() {
 				return len(payloads) == 2 && payloads[0] == 2 && payloads[1] == 2
 			})
 		}))
-}
-
-func getLogs(responses []*crypto_proto.VeloMessage) string {
-	result := ""
-	for _, item := range responses {
-		if item.LogMessage != nil {
-			result += item.LogMessage.Jsonl + "\n"
-		}
-	}
-
-	return result
-}
-
-func getVQLResponse(responses []*crypto_proto.VeloMessage) string {
-	for _, item := range responses {
-		if item.VQLResponse != nil {
-			return item.VQLResponse.JSONLResponse
-		}
-	}
-
-	return ""
 }
 
 func TestClientVQL(t *testing.T) {

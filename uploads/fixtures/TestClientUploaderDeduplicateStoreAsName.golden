@@ -3,6 +3,19 @@
   {
    "session_id": "Test23",
    "request_id": 5,
+   "UploadTransaction": {
+    "filename": "/file_0",
+    "accessor": "data",
+    "store_as_name": "/TestFile.txt",
+    "components": [
+     "TestFile.txt"
+    ],
+    "expected_size": 11
+   }
+  },
+  {
+   "session_id": "Test23",
+   "request_id": 5,
    "FileBuffer": {
     "pathspec": {
      "path": "/TestFile.txt",

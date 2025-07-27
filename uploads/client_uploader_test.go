@@ -54,10 +54,11 @@ func GetIndex(responses []*crypto_proto.VeloMessage) []*actions_proto.Range {
 }
 
 func TestClientUploaderSparse(t *testing.T) {
+	ctx := context.Background()
+
 	resp := responder.TestResponderWithFlowId(nil, "TestClientUploaderSparse")
-	uploader := &VelociraptorUploader{
-		Responder: resp,
-	}
+	uploader := NewVelociraptorUploader(ctx, nil, 0, resp)
+	defer uploader.Close()
 
 	BUFF_SIZE = 10000
 
@@ -72,14 +73,14 @@ func TestClientUploaderSparse(t *testing.T) {
 	}
 	range_reader, ok := interface{}(reader).(RangeReader)
 	assert.Equal(t, ok, true)
-	ctx := context.Background()
+
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
 		filename, "ntfs", nil, 1000, nilTime,
 		resp.NextUploadId(),
 		range_reader)
 
-	responses := resp.Drain.WaitForMessage(t, 3)
+	responses := resp.Drain.WaitForEof(t)
 
 	// Expected size is the combined sum of all ranges with data
 	// in them
@@ -96,11 +97,11 @@ func TestClientUploaderSparse(t *testing.T) {
 // Test what happens when the underlying reader is shorter than the
 // ranges.
 func TestClientUploaderSparseWithEOF(t *testing.T) {
+	ctx := context.Background()
 	resp := responder.TestResponderWithFlowId(
 		nil, "TestClientUploaderSparseWithEOF")
-	uploader := &VelociraptorUploader{
-		Responder: resp,
-	}
+	uploader := NewVelociraptorUploader(ctx, nil, 0, resp)
+	defer uploader.Close()
 
 	BUFF_SIZE = 10000
 
@@ -116,7 +117,7 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 	}
 	range_reader, ok := interface{}(reader).(RangeReader)
 	assert.Equal(t, ok, true)
-	ctx := context.Background()
+
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
 		filename, "ntfs", nil, 1000, nilTime,
@@ -137,18 +138,18 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 }
 
 func TestClientUploaderMultipleBuffers(t *testing.T) {
+	ctx := context.Background()
+
 	cancel := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	defer cancel()
 
 	responder_obj := responder.TestResponderWithFlowId(
 		nil, "TestClientUploader")
-	uploader := &VelociraptorUploader{
-		Responder: responder_obj,
-	}
+	uploader := NewVelociraptorUploader(ctx, nil, 0, responder_obj)
+	defer uploader.Close()
 
 	BUFF_SIZE = 10
 
-	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 
 	resp, err := uploader.Upload(
@@ -157,7 +158,7 @@ func TestClientUploaderMultipleBuffers(t *testing.T) {
 
 		// Expected_size
 		1000, nilTime, nilTime, nilTime, nilTime, 0,
-		bytes.NewBufferString("Hello world Hello world"))
+		bytes.NewReader([]byte("Hello world Hello world")))
 	assert.NoError(t, err)
 
 	responder_obj.Close()
@@ -181,18 +182,18 @@ func TestClientUploaderMultipleBuffers(t *testing.T) {
 }
 
 func TestClientUploaderMultipleUploads(t *testing.T) {
+	ctx := context.Background()
+
 	cancel := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	defer cancel()
 
 	responder_obj := responder.TestResponderWithFlowId(
 		nil, "TestClientUploader")
-	uploader := &VelociraptorUploader{
-		Responder: responder_obj,
-	}
+	uploader := NewVelociraptorUploader(ctx, nil, 0, responder_obj)
+	defer uploader.Close()
 
 	BUFF_SIZE = 1000
 
-	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 
 	var resp interface{}
@@ -206,7 +207,7 @@ func TestClientUploaderMultipleUploads(t *testing.T) {
 
 			// Expected_size
 			1000, nilTime, nilTime, nilTime, nilTime, 0,
-			bytes.NewBufferString("Hello world"))
+			bytes.NewReader([]byte("Hello world")))
 		assert.NoError(t, err)
 	}
 
@@ -233,11 +234,12 @@ func TestClientUploaderMultipleUploads(t *testing.T) {
 // Trying to upload a completely sparse file with no data but real
 // size.
 func TestClientUploaderCompletelySparse(t *testing.T) {
+	ctx := context.Background()
+
 	resp := responder.TestResponderWithFlowId(
 		nil, "TestClientUploaderCompletelySparse")
-	uploader := &VelociraptorUploader{
-		Responder: resp,
-	}
+	uploader := NewVelociraptorUploader(ctx, nil, 0, resp)
+	defer uploader.Close()
 
 	BUFF_SIZE = 10000
 
@@ -249,7 +251,7 @@ func TestClientUploaderCompletelySparse(t *testing.T) {
 	}
 	range_reader, ok := interface{}(reader).(RangeReader)
 	assert.Equal(t, ok, true)
-	ctx := context.Background()
+
 	scope := vql_subsystem.MakeScope()
 
 	uploader.maybeUploadSparse(ctx, scope,
@@ -257,7 +259,7 @@ func TestClientUploaderCompletelySparse(t *testing.T) {
 		resp.NextUploadId(),
 		range_reader)
 
-	responses := resp.Drain.WaitForMessage(t, 1)
+	responses := resp.Drain.WaitForEof(t)
 
 	// Expected size is the combined sum of all ranges with data
 	// in them.
@@ -266,14 +268,15 @@ func TestClientUploaderCompletelySparse(t *testing.T) {
 }
 
 func TestClientUploaderSparseMultiBuffer(t *testing.T) {
+	ctx := context.Background()
+
 	cancel := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	defer cancel()
 
 	resp := responder.TestResponderWithFlowId(
 		nil, fmt.Sprintf("Test%d", utils.GetId()))
-	uploader := &VelociraptorUploader{
-		Responder: resp,
-	}
+	uploader := NewVelociraptorUploader(ctx, nil, 0, resp)
+	defer uploader.Close()
 
 	// 2 bytes per message
 	BUFF_SIZE = 2
@@ -292,7 +295,6 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 	}
 	range_reader, ok := interface{}(reader).(RangeReader)
 	assert.Equal(t, ok, true)
-	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 
 	upload_resp, err := uploader.maybeUploadSparse(ctx, scope,
@@ -340,26 +342,29 @@ func TestClientUploaderUploadId(t *testing.T) {
 	resp := responder.TestResponderWithFlowId(nil, fmt.Sprintf("Test22"))
 	defer resp.Close()
 
-	uploader := &VelociraptorUploader{
-		Responder: resp,
-	}
+	uploader := NewVelociraptorUploader(ctx, nil, 0, resp)
+	defer uploader.Close()
 
 	data := "Hello world"
+	scope := vql_subsystem.MakeScope()
 
 	// Upload the file multiple times
 	for i := 0; i < 5; i++ {
 		fd := bytes.NewReader([]byte(data))
 		ospath := accessors.MustNewLinuxOSPath(fmt.Sprintf("file_%d", i))
-		scope := vql_subsystem.MakeScope()
 		_, err := uploader.Upload(ctx, scope,
 			ospath, "data", nil, int64(len(data)),
 			nilTime, nilTime, nilTime, nilTime, 0, fd)
 		assert.NoError(t, err)
 	}
 
-	responses := resp.Drain.WaitForMessage(t, 10)
-	golden := ordereddict.NewDict().
-		Set("responses", responses)
+	// 3 messages per file:
+	//
+	// 1. UploadTransaction,
+	// 2. FileBuffer with data
+	// 3. FileBuffer with EOF
+	responses := resp.Drain.WaitForMessage(t, 3*5)
+	golden := ordereddict.NewDict().Set("responses", responses)
 
 	goldie.Assert(t, "TestClientUploaderUploadId",
 		json.MustMarshalIndent(golden))
@@ -378,9 +383,8 @@ func TestClientUploaderDeduplicateStoreAsName(t *testing.T) {
 	resp := responder.TestResponderWithFlowId(nil, fmt.Sprintf("Test23"))
 	defer resp.Close()
 
-	uploader := &VelociraptorUploader{
-		Responder: resp,
-	}
+	uploader := NewVelociraptorUploader(ctx, nil, 0, resp)
+	defer uploader.Close()
 
 	data := "Hello world"
 
@@ -401,9 +405,16 @@ func TestClientUploaderDeduplicateStoreAsName(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
-	responses := resp.Drain.WaitForMessage(t, 2)
+	responses := resp.Drain.WaitForEof(t)
+	var eof_responses []*crypto_proto.VeloMessage
+	for _, i := range responses {
+		if i.FileBuffer != nil && i.FileBuffer.Eof {
+			eof_responses = append(eof_responses, i)
+		}
+	}
+
 	// Only two responses corresponding to one actual upload.
-	assert.Equal(t, 2, len(responses))
+	assert.Equal(t, 1, len(eof_responses))
 
 	golden := ordereddict.NewDict().
 		Set("responses", responses)
@@ -413,11 +424,12 @@ func TestClientUploaderDeduplicateStoreAsName(t *testing.T) {
 }
 
 func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
+	ctx := context.Background()
+
 	resp := responder.TestResponderWithFlowId(
 		nil, "TestClientUploaderNoIndexIfNotSparse")
-	uploader := &VelociraptorUploader{
-		Responder: resp,
-	}
+	uploader := NewVelociraptorUploader(ctx, nil, 0, resp)
+	defer uploader.Close()
 
 	// 2 bytes per message
 	BUFF_SIZE = 2
@@ -435,14 +447,14 @@ func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
 	}
 	range_reader, ok := interface{}(reader).(RangeReader)
 	assert.Equal(t, ok, true)
-	ctx := context.Background()
+
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
 		filename, "ntfs", nil, 1000, nilTime,
 		resp.NextUploadId(),
 		range_reader)
 
-	responses := resp.Drain.WaitForMessage(t, 7)
+	responses := resp.Drain.WaitForEof(t)
 	assert.Equal(t, CombineOutput("/foo", responses), "Hello hello ")
 
 	// No idx written when there are no sparse ranges.

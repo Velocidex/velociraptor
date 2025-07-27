@@ -170,7 +170,8 @@ func (self *ClientInfoManager) QueueMessageForClient(
 	}
 
 	completer := utils.NewCompleter(func() {
-		if completion != nil {
+		if completion != nil &&
+			!utils.CompareFuncs(completion, utils.SyncCompleter) {
 			completion()
 		}
 
@@ -398,9 +399,16 @@ func (self *ClientInfoManager) GetClientTasks(
 	inflight_requests := 0
 
 	inflight_checks_enabled := true
-	if self.config_obj.Defaults != nil &&
-		self.config_obj.Defaults.DisableActiveInflightChecks {
-		inflight_checks_enabled = false
+	inflight_check_time := int64(60)
+	if self.config_obj.Defaults != nil {
+		if self.config_obj.Defaults.DisableActiveInflightChecks {
+			inflight_checks_enabled = false
+		}
+
+		if self.config_obj.Defaults.InflightCheckTime > 0 {
+			inflight_check_time = self.config_obj.Defaults.InflightCheckTime
+		}
+
 	}
 
 	now := utils.GetTime().Now().Unix()
@@ -424,7 +432,7 @@ func (self *ClientInfoManager) GetClientTasks(
 			// (could be more depending on poll).
 			if inflight_checks_enabled {
 				for k, v := range client_info.InFlightFlows {
-					if now-v > 60 {
+					if now-v > inflight_check_time {
 						inflight_notifications = append(
 							inflight_notifications, k)
 					}
@@ -486,6 +494,9 @@ func (self *ClientInfoManager) GetClientTasks(
 			flow_obj, err := launcher.GetFlowDetails(ctx, self.config_obj,
 				services.GetFlowOptions{}, client_id, n)
 			if err != nil {
+				// The flow can not be loaded - we can not check up on
+				// it any more - remove it from the in flight set.
+				resolved = append(resolved, n)
 				continue
 			}
 

@@ -9,9 +9,23 @@
   "Components": [
    "test.txt"
   ],
-  "Accessor": "file"
+  "Accessor": "file",
+  "UploadId": 0
  },
  "Messages": [
+  {
+   "session_id": "TestClientUploader",
+   "request_id": 5,
+   "UploadTransaction": {
+    "filename": "/test.txt",
+    "accessor": "file",
+    "store_as_name": "/test.txt",
+    "components": [
+     "test.txt"
+    ],
+    "expected_size": 1000
+   }
+  },
   {
    "session_id": "TestClientUploader",
    "request_id": 5,
@@ -89,8 +103,8 @@
     "query_status": [
      {
       "status": 4,
-      "duration": 10000000000,
       "last_active": 10000000,
+      "first_active": 10000000,
       "uploaded_files": 1,
       "uploaded_bytes": 23,
       "expected_uploaded_bytes": 1000

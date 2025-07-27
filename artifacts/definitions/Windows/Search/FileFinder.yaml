@@ -79,6 +79,11 @@ parameters:
       If larger than 0 we restrict VSS age to this many days
       ago. Otherwise we find all VSS.
 
+  - name: UPLOAD_IS_RESUMABLE
+    type: bool
+    default: Y
+    description: If set, file uploads will be asynchronous and resumable.
+
 sources:
   - query: |
       LET file_search = SELECT OSPath,

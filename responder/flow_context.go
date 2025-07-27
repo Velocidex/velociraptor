@@ -36,11 +36,12 @@ type FlowContext struct {
 	req *crypto_proto.FlowRequest
 
 	// Flow wide totals
-	total_rows           uint64
-	total_uploaded_bytes uint64
-	total_jsonl_bytes    map[string]uint64
-	total_logs           uint64
-	logs_disabled        bool
+	total_rows               uint64
+	total_uploaded_bytes     uint64
+	total_jsonl_bytes        map[string]uint64
+	total_logs               uint64
+	logs_disabled            bool
+	transactions_outstanding uint64
 
 	// Send the messages to this channel
 	output chan *crypto_proto.VeloMessage
@@ -507,7 +508,9 @@ func (self *FlowContext) getStats() *crypto_proto.VeloMessage {
 	result := &crypto_proto.VeloMessage{
 		SessionId: self.flow_id,
 		RequestId: constants.STATS_SINK,
-		FlowStats: &crypto_proto.FlowStats{},
+		FlowStats: &crypto_proto.FlowStats{
+			TransactionsOutstanding: self.transactions_outstanding,
+		},
 	}
 
 	// Fill in all the responder's stats.
@@ -536,4 +539,18 @@ func (self *FlowContext) getStats() *crypto_proto.VeloMessage {
 	}
 
 	return result
+}
+
+func (self *FlowContext) IncTransaction() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.transactions_outstanding++
+}
+
+func (self *FlowContext) DecTransaction() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.transactions_outstanding--
 }

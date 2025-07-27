@@ -352,6 +352,11 @@ func ArtifactCollectorProcessOneMessage(
 		return CheckForStatus(config_obj, collection_context, message)
 	}
 
+	// Ignore new style messages
+	if message.UploadTransaction != nil {
+		return nil
+	}
+
 	// Check that this is not a retransmission - if it is we drop
 	// it on the floor. Backwards compatibility - older clients
 	// increment response id from 0 but newer clients use nano

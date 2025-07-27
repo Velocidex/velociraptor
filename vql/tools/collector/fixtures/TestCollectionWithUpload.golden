@@ -37,7 +37,8 @@
       "uploads",
       "data",
       "file.db"
-     ]
+     ],
+     "UploadId": 0
     },
     "SparseUpload": {
      "Path": "{\"DelegateAccessor\":\"data\",\"DelegatePath\":\"This is...",
@@ -51,7 +52,8 @@
       "sparse",
       "C:",
       "file.sparse.txt"
-     ]
+     ],
+     "UploadId": 0
     }
    }
   ],

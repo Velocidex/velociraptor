@@ -13,7 +13,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
 	"google.golang.org/grpc"
@@ -22,8 +21,9 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
-	proto_8 "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	proto_6 "www.velocidex.com/golang/velociraptor/flows/proto"
+	"google.golang.org/protobuf/types/known/emptypb"
+	proto_4 "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	proto_1 "www.velocidex.com/golang/velociraptor/flows/proto"
 )
 
 // Suppress "imported and not used" errors
@@ -211,7 +211,7 @@ func local_request_API_GetHunt_0(ctx context.Context, marshaler runtime.Marshale
 }
 
 func request_API_GetHuntTags_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetHuntTags(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -220,7 +220,7 @@ func request_API_GetHuntTags_0(ctx context.Context, marshaler runtime.Marshaler,
 }
 
 func local_request_API_GetHuntTags_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetHuntTags(ctx, &protoReq)
@@ -649,7 +649,7 @@ func local_request_API_GetClientFlows_0(ctx context.Context, marshaler runtime.M
 }
 
 func request_API_GetUserUITraits_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetUserUITraits(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -658,7 +658,7 @@ func request_API_GetUserUITraits_0(ctx context.Context, marshaler runtime.Marsha
 }
 
 func local_request_API_GetUserUITraits_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetUserUITraits(ctx, &protoReq)
@@ -701,7 +701,7 @@ func local_request_API_SetGUIOptions_0(ctx context.Context, marshaler runtime.Ma
 }
 
 func request_API_GetUsers_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetUsers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -710,7 +710,7 @@ func request_API_GetUsers_0(ctx context.Context, marshaler runtime.Marshaler, cl
 }
 
 func local_request_API_GetUsers_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetUsers(ctx, &protoReq)
@@ -719,7 +719,7 @@ func local_request_API_GetUsers_0(ctx context.Context, marshaler runtime.Marshal
 }
 
 func request_API_GetGlobalUsers_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetGlobalUsers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -728,7 +728,7 @@ func request_API_GetGlobalUsers_0(ctx context.Context, marshaler runtime.Marshal
 }
 
 func local_request_API_GetGlobalUsers_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetGlobalUsers(ctx, &protoReq)
@@ -1297,7 +1297,7 @@ func local_request_API_SearchFile_0(ctx context.Context, marshaler runtime.Marsh
 }
 
 func request_API_CollectArtifact_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.ArtifactCollectorArgs
+	var protoReq proto_1.ArtifactCollectorArgs
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1314,7 +1314,7 @@ func request_API_CollectArtifact_0(ctx context.Context, marshaler runtime.Marsha
 }
 
 func local_request_API_CollectArtifact_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.ArtifactCollectorArgs
+	var protoReq proto_1.ArtifactCollectorArgs
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1360,6 +1360,40 @@ func local_request_API_CancelFlow_0(ctx context.Context, marshaler runtime.Marsh
 	}
 
 	msg, err := server.CancelFlow(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_API_ResumeFlow_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ApiFlowRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ResumeFlow(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_API_ResumeFlow_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ApiFlowRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ResumeFlow(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1437,7 +1471,7 @@ func local_request_API_GetFlowRequests_0(ctx context.Context, marshaler runtime.
 }
 
 func request_API_GetKeywordCompletions_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetKeywordCompletions(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -1446,7 +1480,7 @@ func request_API_GetKeywordCompletions_0(ctx context.Context, marshaler runtime.
 }
 
 func local_request_API_GetKeywordCompletions_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetKeywordCompletions(ctx, &protoReq)
@@ -1631,7 +1665,7 @@ var (
 )
 
 func request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_8.Tool
+	var protoReq proto_4.Tool
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1647,7 +1681,7 @@ func request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler,
 }
 
 func local_request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_8.Tool
+	var protoReq proto_4.Tool
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1663,7 +1697,7 @@ func local_request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Mars
 }
 
 func request_API_SetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_8.Tool
+	var protoReq proto_4.Tool
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1680,7 +1714,7 @@ func request_API_SetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler,
 }
 
 func local_request_API_SetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_8.Tool
+	var protoReq proto_4.Tool
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1731,7 +1765,7 @@ func local_request_API_GetReport_0(ctx context.Context, marshaler runtime.Marsha
 }
 
 func request_API_GetServerMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetServerMonitoringState(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -1740,7 +1774,7 @@ func request_API_GetServerMonitoringState_0(ctx context.Context, marshaler runti
 }
 
 func local_request_API_GetServerMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetServerMonitoringState(ctx, &protoReq)
@@ -1749,7 +1783,7 @@ func local_request_API_GetServerMonitoringState_0(ctx context.Context, marshaler
 }
 
 func request_API_SetServerMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.ArtifactCollectorArgs
+	var protoReq proto_1.ArtifactCollectorArgs
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1766,7 +1800,7 @@ func request_API_SetServerMonitoringState_0(ctx context.Context, marshaler runti
 }
 
 func local_request_API_SetServerMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.ArtifactCollectorArgs
+	var protoReq proto_1.ArtifactCollectorArgs
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1787,7 +1821,7 @@ var (
 )
 
 func request_API_GetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.GetClientMonitoringStateRequest
+	var protoReq proto_1.GetClientMonitoringStateRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1803,7 +1837,7 @@ func request_API_GetClientMonitoringState_0(ctx context.Context, marshaler runti
 }
 
 func local_request_API_GetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.GetClientMonitoringStateRequest
+	var protoReq proto_1.GetClientMonitoringStateRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1819,7 +1853,7 @@ func local_request_API_GetClientMonitoringState_0(ctx context.Context, marshaler
 }
 
 func request_API_SetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.ClientEventTable
+	var protoReq proto_1.ClientEventTable
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1836,7 +1870,7 @@ func request_API_SetClientMonitoringState_0(ctx context.Context, marshaler runti
 }
 
 func local_request_API_SetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.ClientEventTable
+	var protoReq proto_1.ClientEventTable
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -2435,7 +2469,7 @@ func local_request_API_DeleteSecretDefinition_0(ctx context.Context, marshaler r
 }
 
 func request_API_GetSecretDefinitions_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetSecretDefinitions(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -2444,7 +2478,7 @@ func request_API_GetSecretDefinitions_0(ctx context.Context, marshaler runtime.M
 }
 
 func local_request_API_GetSecretDefinitions_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq emptypb.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetSecretDefinitions(ctx, &protoReq)
@@ -3387,6 +3421,29 @@ func RegisterAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 		}
 
 		forward_API_CancelFlow_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_API_ResumeFlow_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/proto.API/ResumeFlow", runtime.WithHTTPPathPattern("/api/v1/ResumeFlow"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_API_ResumeFlow_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_API_ResumeFlow_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -4979,6 +5036,26 @@ func RegisterAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 
 	})
 
+	mux.Handle("POST", pattern_API_ResumeFlow_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/proto.API/ResumeFlow", runtime.WithHTTPPathPattern("/api/v1/ResumeFlow"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_API_ResumeFlow_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_API_ResumeFlow_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_API_GetFlowDetails_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -5775,6 +5852,8 @@ var (
 
 	pattern_API_CancelFlow_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "CancelFlow"}, ""))
 
+	pattern_API_ResumeFlow_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "ResumeFlow"}, ""))
+
 	pattern_API_GetFlowDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "GetFlowDetails"}, ""))
 
 	pattern_API_GetFlowRequests_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "GetFlowRequests"}, ""))
@@ -5920,6 +5999,8 @@ var (
 	forward_API_CollectArtifact_0 = runtime.ForwardResponseMessage
 
 	forward_API_CancelFlow_0 = runtime.ForwardResponseMessage
+
+	forward_API_ResumeFlow_0 = runtime.ForwardResponseMessage
 
 	forward_API_GetFlowDetails_0 = runtime.ForwardResponseMessage
 

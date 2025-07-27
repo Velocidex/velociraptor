@@ -38,7 +38,7 @@ func (self *FileStoreUploader) Upload(
 	ctime time.Time,
 	btime time.Time,
 	mode os.FileMode,
-	reader io.Reader) (
+	reader io.ReadSeeker) (
 	*uploads.UploadResponse, error) {
 
 	if !mode.IsRegular() {

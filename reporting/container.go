@@ -379,7 +379,7 @@ func (self *Container) Upload(
 	ctime time.Time,
 	btime time.Time,
 	mode os.FileMode,
-	reader io.Reader) (*uploads.UploadResponse, error) {
+	reader io.ReadSeeker) (*uploads.UploadResponse, error) {
 
 	result := &uploads.UploadResponse{
 		Path: formatFilename(filename, accessor),

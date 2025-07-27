@@ -9,9 +9,23 @@
   "Components": [
    "test231.txt"
   ],
-  "Accessor": "file"
+  "Accessor": "file",
+  "UploadId": 1
  },
  "Messages": [
+  {
+   "session_id": "TestClientUploader",
+   "request_id": 5,
+   "UploadTransaction": {
+    "filename": "/test230.txt",
+    "accessor": "file",
+    "store_as_name": "/test230.txt",
+    "components": [
+     "test230.txt"
+    ],
+    "expected_size": 1000
+   }
+  },
   {
    "session_id": "TestClientUploader",
    "request_id": 5,
@@ -44,6 +58,20 @@
     "size": 1000,
     "stored_size": 11,
     "eof": true
+   }
+  },
+  {
+   "session_id": "TestClientUploader",
+   "request_id": 5,
+   "UploadTransaction": {
+    "filename": "/test231.txt",
+    "accessor": "file",
+    "store_as_name": "/test231.txt",
+    "components": [
+     "test231.txt"
+    ],
+    "expected_size": 1000,
+    "upload_id": 1
    }
   },
   {
@@ -89,8 +117,8 @@
     "query_status": [
      {
       "status": 4,
-      "duration": 10000000000,
       "last_active": 10000000,
+      "first_active": 10000000,
       "uploaded_files": 2,
       "uploaded_bytes": 22,
       "expected_uploaded_bytes": 2000

@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/api/tables"
@@ -11,6 +13,96 @@ import (
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 )
+
+func (self *ApiServer) CancelFlow(
+	ctx context.Context,
+	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
+
+	defer Instrument("CancelFlow")()
+
+	users := services.GetUserManager()
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+	principal := user_record.Name
+
+	permissions := acls.COLLECT_CLIENT
+	if in.ClientId == "server" {
+		permissions = acls.COLLECT_SERVER
+	}
+
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
+	if !perm || err != nil {
+		return nil, PermissionDenied(err,
+			"User is not allowed to cancel flows.")
+	}
+
+	launcher, err := services.GetLauncher(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
+	result, err := launcher.CancelFlow(
+		ctx, org_config_obj, in.ClientId, in.FlowId, principal)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	// Log this event as and Audit event.
+	err = services.LogAudit(ctx,
+		org_config_obj, principal, "CancelFlow",
+		ordereddict.NewDict().
+			Set("client", in.ClientId).
+			Set("flow_id", in.FlowId).
+			Set("details", in))
+
+	return result, err
+}
+
+func (self *ApiServer) ResumeFlow(
+	ctx context.Context,
+	in *api_proto.ApiFlowRequest) (*emptypb.Empty, error) {
+
+	defer Instrument("ResumeFlow")()
+
+	users := services.GetUserManager()
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+	principal := user_record.Name
+
+	permissions := acls.COLLECT_CLIENT
+	if in.ClientId == "server" {
+		permissions = acls.COLLECT_SERVER
+	}
+
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
+	if !perm || err != nil {
+		return nil, PermissionDenied(err,
+			"User is not allowed to resume flows.")
+	}
+
+	launcher, err := services.GetLauncher(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
+	_, err = launcher.ResumeFlow(
+		ctx, org_config_obj, in.ClientId, in.FlowId)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	// Log this event as and Audit event.
+	err = services.LogAudit(ctx,
+		org_config_obj, principal, "ResumeFlow",
+		ordereddict.NewDict().
+			Set("client", in.ClientId).
+			Set("flow_id", in.FlowId).
+			Set("details", in))
+
+	return &emptypb.Empty{}, err
+}
 
 func (self *ApiServer) GetClientFlows(
 	ctx context.Context,
