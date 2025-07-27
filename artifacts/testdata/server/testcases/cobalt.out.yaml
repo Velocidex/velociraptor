@@ -117,7 +117,8 @@ Output: [
     "uploads",
     "data",
     "cobalt_strike_beacon_0.bin"
-   ]
+   ],
+   "UploadId": 0
   }
  },
  {
@@ -161,7 +162,8 @@ Output: [
     "uploads",
     "data",
     "cobalt_strike_beacon_11001.bin"
-   ]
+   ],
+   "UploadId": 0
   }
  }
 ]
