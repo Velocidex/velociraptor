@@ -170,7 +170,8 @@ func (self *ClientInfoManager) QueueMessageForClient(
 	}
 
 	completer := utils.NewCompleter(func() {
-		if completion != nil {
+		if completion != nil &&
+			!utils.CompareFuncs(completion, utils.SyncCompleter) {
 			completion()
 		}
 

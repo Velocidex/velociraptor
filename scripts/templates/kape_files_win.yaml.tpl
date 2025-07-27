@@ -49,6 +49,11 @@ parameters:
       that when using VSS analysis we have to use the ntfs accessor
       for everything which will be much slower.
 
+  - name: UPLOAD_IS_RESUMABLE
+    type: bool
+    default: Y
+    description: If set the uploads can be resumed if the flow times out or errors.
+
 %(parameters)s
   - name: KapeRules
     type: hidden
@@ -112,6 +117,7 @@ sources:
               SELECT * FROM Artifact.Generic.Collectors.File(
                 Root=Device,
                 Accessor="ntfs_vss",
+                UPLOAD_IS_RESUMABLE=UPLOAD_IS_RESUMABLE,
                 collectionSpec=rule_specs_ntfs + rule_specs_lazy_ntfs)
            }, else={
              SELECT * FROM chain(async=TRUE,
@@ -121,6 +127,7 @@ sources:
                    SELECT * FROM Artifact.Generic.Collectors.File(
                       Root=Device,
                       Accessor="ntfs",
+                      UPLOAD_IS_RESUMABLE=UPLOAD_IS_RESUMABLE,
                       collectionSpec=rule_specs_ntfs)
                }, b={
 
@@ -129,6 +136,7 @@ sources:
                    -- will be faster.
                    SELECT * FROM Artifact.Generic.Collectors.File(
                       Root=Device,
+                      UPLOAD_IS_RESUMABLE=UPLOAD_IS_RESUMABLE,
                       Accessor=if(condition=UseAutoAccessor,
                                   then="auto", else="lazy_ntfs"),
                       collectionSpec=rule_specs_lazy_ntfs)

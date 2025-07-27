@@ -691,20 +691,17 @@ func (self *ClientFlowRunner) VQLResponse(
 
 	err := artifacts.Deobfuscate(self.config_obj, response)
 	if err != nil {
-		fmt.Printf("Deobfuscate\n")
 		return err
 	}
 
 	if response.Query.Name == "" ||
 		strings.HasPrefix(response.Query.Name, "$") {
-		fmt.Printf("Query Name\n")
 		return nil
 	}
 
 	path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
 		self.config_obj, client_id, flow_id, response.Query.Name)
 	if err != nil {
-		fmt.Printf("Path_manager %v\n", err)
 		return err
 	}
 
@@ -714,7 +711,6 @@ func (self *ClientFlowRunner) VQLResponse(
 		self.completer.GetCompletionFunc(),
 		result_sets.AppendMode)
 	if err != nil {
-		fmt.Printf("NewResultSetWriter %v\n", err)
 		return err
 	}
 	defer rs_writer.Close()

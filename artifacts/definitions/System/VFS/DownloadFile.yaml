@@ -22,6 +22,10 @@ parameters:
     description: |
       If specified, Path is interpreted as a directory and
       we download all files below it.
+  - name: UPLOAD_IS_RESUMABLE
+    type: bool
+    default: Y
+    description: If set the uploads can be resumed if the flow times out or errors.
 
 sources:
   - query: |
