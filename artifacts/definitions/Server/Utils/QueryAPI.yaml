@@ -1,0 +1,299 @@
+name: Server.Utils.QueryAPI
+author: Andreas Misje – @misje
+description: |
+  Query an HTTP JSON API with login and pagination support
+
+  Querying an HTTP API is easy with `http_client()`. However, when an additional
+  query is needed to log in in order to retrieve a short-lived token, and
+  especially if the API also requires pagination, the additional boilerplate code
+  gets tedious to repeat.
+
+  This helper artifact tried to get rid of a lot of the repetitive code, as well
+  as gracefully handling errors. It does not cover every use case, so pay
+  attention to the following assumptions and limitations:
+
+  - All responses are expected to be JSON
+  - The "login" query is a POST query where every detail of the query (headers,
+    parameters etc.) must be specified in the server secret
+  - The "login" query is expected to return a token in its JSON response
+  - Unless a secret is used for the main query (instead of a separate login
+    query), the authentication method is assumed to be Bearer token
+  - A login is performed for every request
+  - URLs are not required if the login query or main query's secret contain a
+    full URL
+  - The main query is expected to return an JSON array of objects
+
+  If you want to log in once, then use this utility to query paginated APIs with
+  a token, simply ignore the Login parameters and pass the token manually in
+  QueryParams (retrieving it with a simple `http_client()` call).
+
+  If the query fails (determined by OKResponses), no rows are returned, and
+  the response code and error message is logged (level ERROR).
+
+  Remember to set both PageSize and MaxPages in order to enable pagination!
+
+  ## Examples
+
+  ```SQL
+  SELECT *
+  FROM Artifact.Server.Utils.QueryAPI(
+  LoginSecret='my_secret',
+  URL='https://example.org/foo/bar',
+  ErrorField='user_message',
+  ResultsField='items',
+  PageSize=500,
+  MaxPages=100,
+  OffsetField='from',
+  LimitField='limit',
+  TotalField='total_items')
+  ```
+
+  This API does not return a size field, so in order to paginate, `QueryAPI()`
+  terminates when fewer rows than page size is returned:
+
+  ```SQL
+  SELECT *
+  FROM Artifact.Server.Utils.QueryAPI(
+  LoginSecret='my_secret',
+  TokenField='access_token',
+  URL='https://example.org/foo/bar',
+  ErrorField='error.message',
+  ResultsField='value',
+  PageSize=1000,
+  MaxPages=20,
+  OffsetField='$skip',
+  LimitField='$top')
+  ```
+
+type: SERVER
+
+parameters:
+  - name: APIName
+    description: |
+      Name of the API, used in log messages. Useful if utility is used more than
+      once.
+    default: API
+
+  - name: LoginURL
+    description: |
+      The URL to log into. Required if the secret does not contain a full URL.
+
+  - name: LoginSecret
+    description: |
+      Secret to use to log in in order to retrieve a token. Not necessary if an
+      additional login query is not needed.
+
+  - name: LoginOKResponses
+    type: regex
+    description: |
+      HTTP codes that indicates a successful login
+    default: '^200$'
+
+  - name: TokenField
+    description: |
+      Name of the token field in the login response (e.g. "token", "access_token")
+    default: token
+
+  - name: Token
+    description: |
+      Use this token instead of running a login query
+
+  - name: URL
+    description: |
+      URL to query. Required unless Secret is used and contains a full URL.
+
+  - name: Secret
+    description: |
+      Secret used for the main query. Required unless LoginSecret is used, or if
+      the API does not require authentication.
+
+  - name: Method
+    type: choices
+    description: |
+      HTTP method used in the main query
+    choices:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+    default: GET
+
+  - name: QueryParams
+    type: json
+    description: |
+      Query parameters used in main query (combined with any parameters in the
+      Secret)
+    default: '{}'
+
+  - name: OKResponses
+    type: regex
+    description: |
+      HTTP codes that indicates a successful response
+    default: '^200$'
+
+  - name: ErrorField
+    description: |
+      Name of the error field in responses (e.g. "error", "user_error", "message")
+    default: error
+
+  - name: PageSize
+    type: int
+    description: |
+      Number of items to query in each request. If unset, paging is disabled.
+
+  - name: MaxPages
+    type: int
+    description: |
+      Maximum number of pages to query. Used as a safe-guard to prevent huge
+      responses. If unset, paging is disabled.
+
+  - name: LimitField
+    description: |
+      Name of field used to specify page size (e.g. "limit")
+    default: limit
+
+  - name: OffsetField
+    description: |
+      Name of field used to specify page offset (e.g. "offset", "from")
+    default: offset
+
+  - name: TotalField
+    description: |
+      Name of field used to retrieve total number of items returned by query (
+      e.g. "total", "total_items")
+    default: total
+
+  - name: ResultsField
+    description: |
+      Name of field containing the results (e.g. "rows", "items")
+    default: rows
+
+
+sources:
+  - query: |
+       // Some APIs needs an additional query to "log in" in order to retrieve
+       // a short-lived token:
+       LET LoginResult = if(condition=LoginSecret
+                             AND NOT Token,
+                            then={
+           SELECT Response,
+                  get(item=parse_json(data=Content), member=TokenField) AS Token
+           FROM http_client(url=if(condition=LoginURL,
+                                   then=LoginURL,
+                                   else='secret://' + LoginSecret),
+                            method='POST',
+                            secret=LoginSecret)
+           WHERE (Response =~ LoginOKResponses
+              AND log(level='DEBUG',
+                      message=format(format='Successfully logged in to %v',
+                                     args=APIName))) OR log(
+             level='ERROR',
+             message=format(
+               format='Failed to log in to %v: %v: %v',
+               args=(APIName, Response, get(item=Content, member=ErrorField))))
+         })
+
+       // Create a query param. dict with a token if a login query is used:
+       LET TokenDict <= if(condition=Token,
+                           then=dict(Authorization='Bearer ' + Token),
+                           else=if(condition=LoginSecret,
+                                   then=dict(Authorization='Bearer ' +
+                                               LoginResult[0].Token),
+                                   else=dict()))
+
+       LET Min(A, B) = if(condition=A < B, then=A, else=B)
+
+       // If paging is used, create a dict with query parameters:
+       LET PageDict(Offset) = if(condition=PageSize > 0
+                                  AND MaxPages > 0,
+                                 then=set(item=set(item=dict(),
+                                                   field=OffsetField,
+                                                   value=Offset),
+                                          field=LimitField,
+                                          value=PageSize),
+                                 else=dict())
+
+       // A helper function that simply builds a param. dict and calls http_client():
+       LET _QueryAPI(PageNo) = SELECT Response,
+                                      parse_json(data=Content) AS Content
+         FROM http_client(url=if(condition=URL, then=URL, else='secret://' + Secret),
+                          method=Method,
+                          headers=dict(`Content-Type`='application/json',
+                                       Accept='application/json') +
+                            TokenDict,
+                          params=PageDict(Offset=PageNo * PageSize) +
+                            QueryParams,
+                          secret=Secret)
+
+       // Query an HTTP API with optional pagination:
+       LET QueryAPI(PageNo) = SELECT
+           Response,
+           Response =~ OKResponses AS Success,
+           if(condition=NOT Response =~ OKResponses,
+              then=get(item=Content, member=ErrorField)) AS Error,
+           if(condition=Response =~ OKResponses,
+              then=get(item=Content, member=ResultsField),
+              else=[]) AS Rows,
+           int(int=get(item=Content, member=TotalField)) AS Total
+         FROM _QueryAPI(PageNo=PageNo)
+         WHERE if(condition=NOT Success,
+                  then=log(level='ERROR',
+                           message='Failed to query %v: %v: %v',
+                           args=(APIName, Response, Error, )),
+                  else=if(condition=PageSize,
+                          then=log(level='DEBUG',
+                                   message='Fetching %v out of %v rows',
+                                   dedup=-1,
+                                   args=(if(condition=Total,
+                                            then=Min(A=(PageNo + 1) *
+                                                       PageSize,
+                                                     B=Total),
+                                            else=(PageNo + 1) *
+                                              PageSize), if(
+                                       condition=Total,
+                                       then=Total,
+                                       else='?'), )),
+                          else=true))
+
+       // Used to determine whether paginated query is done:
+       LET QueryMeta <= dict(IsDone=false)
+
+       // Call API until all pages have been fetched, an error is reported, or
+       // until a set limit (MaxPages) has been reached:
+       LET Results <= SELECT Response,
+                             Success,
+                             Error,
+                             Rows
+         FROM foreach(row={
+           SELECT _value
+           FROM range(start=0, end=MaxPages OR 1)
+           WHERE NOT QueryMeta.IsDone
+         },
+                      query={
+           SELECT *
+           FROM if(condition=NOT QueryMeta.IsDone,
+                   then={
+           SELECT _value AS PageNo,
+                  *
+           FROM QueryAPI(PageNo=_value)
+           WHERE set(item=QueryMeta,
+                     field='IsDone',
+                     value=NOT Success OR len(list=Rows) <
+                       PageSize OR if(
+                       condition=Total,
+                       then=(PageNo + 1) * PageSize > Total,
+                       else=false))
+            AND Success
+         })
+         })
+
+       // Return results as individual rows instead of a single row (which would
+       // quickly reach cell byte size limits):
+       SELECT *
+       FROM if(condition=Results[0].Success,
+               then={
+           SELECT *
+           FROM foreach(row=Results.Rows, query={ SELECT * FROM _value })
+         },
+               else=Results)
