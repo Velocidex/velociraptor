@@ -1,8 +1,11 @@
 name: Windows.Applications.IISLogs
 description: |
   This artifact enables grep of IISLogs.
-  Parameters include SearchRegex and WhitelistRegex as regex terms and MoreRecentThan as timestamp to improve performance on systems with many and/or huge log files.
-  Hint: Make sure to get the right location of the log files as they are often stored at different non-default locations.
+  Parameters include SearchRegex and WhitelistRegex as regex terms and MoreRecentThan as timestamp.
+  
+  **Hint:** Make sure to get the right location of the log files as they are often stored at different non-default locations.
+  
+  **Hint 2:** MoreRecentThan filter is only applied to the Last Modified Time of files returned by the IISLogFiles glob. This improves the artefact's performance on systems with many log files. Use the SearchRegex filter for filtering on a per line basis.
 
 author: "Matt Green - @mgreen27, Updated by Stephan Mikiss"
 
@@ -36,15 +39,12 @@ sources:
 
       SELECT * FROM foreach(row=more_recent,
           query={
-              SELECT grok(data=Line,grok="%{TIMESTAMP_ISO8601:LogTimeStamp}").LogTimeStamp as EventTime,Line, OSPath FROM parse_lines(filename=OSPath)
+              SELECT Line, OSPath FROM parse_lines(filename=OSPath)
               WHERE
                 Line =~ SearchRegex
                 AND NOT if(condition= WhitelistRegex,
                     then= Line =~ WhitelistRegex,
                     else= FALSE)
-                    AND if(condition= MoreRecentThan,
-                        then= EventTime > MoreRecentThan,
-                        else= TRUE)
           })
 
     notebook:
