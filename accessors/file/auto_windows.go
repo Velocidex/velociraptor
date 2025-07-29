@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 // Implements an automatic fallback to NTFS accessor when
@@ -166,7 +167,8 @@ func (self *AutoFilesystemAccessor) Open(path string) (accessors.ReadSeekCloser,
 	return self.OpenWithOSPath(pathspec)
 }
 
-func (self *AutoFilesystemAccessor) OpenWithOSPath(path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
+func (self *AutoFilesystemAccessor) OpenWithOSPath(
+	path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
 	result, err := self.file_delegate.OpenWithOSPath(path)
 	if err != nil {
 		ntfs_path := accessors.WindowsNTFSPathFromOSPath(path)

@@ -1,6 +1,7 @@
 package secrets_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -10,10 +11,12 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/secrets"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
@@ -62,8 +65,9 @@ func (self *SecretsTestSuite) TestSecretsService() {
 	golden := ordereddict.NewDict()
 	db := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
 
-	golden.Set("Added Secret", getData(self.ConfigObj, db,
-		"config/secrets/MySecretType/MySecret"))
+	golden.Set("Added Secret",
+		getSecretFromStore(self.T(), self.ConfigObj, db,
+			"config/secrets/MySecretType/MySecret"))
 
 	// Grant the secret to two users
 	err = secrets.ModifySecret(self.Ctx,
@@ -73,8 +77,9 @@ func (self *SecretsTestSuite) TestSecretsService() {
 			AddUsers: []string{"User1", "User2"}})
 	assert.NoError(self.T(), err)
 
-	golden.Set("Granted Secret", getData(self.ConfigObj, db,
-		"config/secrets/MySecretType/MySecret"))
+	golden.Set("Granted Secret",
+		getSecretFromStore(self.T(), self.ConfigObj, db,
+			"config/secrets/MySecretType/MySecret"))
 
 	// User2 asks for the secret
 	secret_data, err := secrets.GetSecret(
@@ -91,8 +96,9 @@ func (self *SecretsTestSuite) TestSecretsService() {
 			RemoveUsers: []string{"User2"}})
 	assert.NoError(self.T(), err)
 
-	golden.Set("Revoked Secret", getData(self.ConfigObj, db,
-		"config/secrets/MySecretType/MySecret"))
+	golden.Set("Revoked Secret",
+		getSecretFromStore(self.T(), self.ConfigObj, db,
+			"config/secrets/MySecretType/MySecret"))
 
 	// User2 asks for the secret again - this time denied
 	secret_data, err = secrets.GetSecret(
@@ -122,25 +128,59 @@ func (self *SecretsTestSuite) TestSecretsService() {
 
 	// Try to get the old secret but it should be deleted.
 	assert.Equal(self.T(), len(
-		getData(self.ConfigObj,
+		getSecretFromStore(self.T(), self.ConfigObj,
 			db, "config/secrets/MySecretType/MySecret").Keys()), 0)
 
 	goldie.Assert(self.T(), "TestSecretsService",
 		json.MustMarshalIndent(golden))
 }
 
-func getData(
+func verifyData(
+	t *testing.T,
 	config_obj *config_proto.Config,
 	db *datastore.MemcacheDatastore,
-	path string) *ordereddict.Dict {
+	path_spec api.DSPathSpec) {
 
-	path_spec := path_specs.NewUnsafeDatastorePath(strings.Split(path, "/")...)
 	b, _ := db.GetBuffer(config_obj, path_spec)
 
 	result := ordereddict.NewDict()
 	json.Unmarshal(b, result)
 
-	return result
+	// The actual secret should not be stored in clear text
+	_, pres := result.Get("secret")
+	assert.False(t, pres)
+
+	data, pres := result.Get("encryptedSecret")
+	assert.True(t, pres)
+	assert.True(t, len(data.(string)) > 10)
+}
+
+func getSecretFromStore(
+	t *testing.T,
+	config_obj *config_proto.Config,
+	db *datastore.MemcacheDatastore,
+	path string) *ordereddict.Dict {
+
+	path_spec := path_specs.NewUnsafeDatastorePath(strings.Split(path, "/")...)
+	secret_proto := &api_proto.Secret{}
+	err := db.GetSubject(config_obj, path_spec, secret_proto)
+	if err != nil {
+		return ordereddict.NewDict()
+	}
+
+	result, err := secrets.NewSecretFromProto(context.Background(),
+		config_obj, secret_proto)
+	if err != nil {
+		return ordereddict.NewDict()
+	}
+
+	verifyData(t, config_obj, db, path_spec)
+
+	return ordereddict.NewDict().
+		Set("name", result.Name).
+		Set("typeName", result.TypeName).
+		Set("secret", result.Data).
+		Set("users", result.Users)
 }
 
 func TestSecretsService(t *testing.T) {

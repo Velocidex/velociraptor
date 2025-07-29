@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -33,7 +34,8 @@ func (self *JournalTestSuite) SetupTest() {
 
 	os.Setenv("VELOCIRAPTOR_LITERAL_CONFIG", test_utils.SERVER_CONFIG)
 	self.ConfigObj, err = new(config.Loader).
-		WithEnvLiteralLoader("VELOCIRAPTOR_LITERAL_CONFIG").WithRequiredFrontend().
+		WithEnvLiteralLoader(constants.VELOCIRAPTOR_LITERAL_CONFIG).
+		WithRequiredFrontend().
 		WithVerbose(true).LoadAndValidate()
 	require.NoError(self.T(), err)
 

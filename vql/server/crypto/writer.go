@@ -7,6 +7,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -46,6 +47,13 @@ func (self WriteCryptFilePlugin) Call(
 		}
 
 		err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
+		if err != nil {
+			scope.Log("write_crypto_file: %v", err)
+			return
+		}
+
+		// Make sure we are allowed to write there.
+		err = file.CheckPrefix(arg.Filename)
 		if err != nil {
 			scope.Log("write_crypto_file: %v", err)
 			return

@@ -34,6 +34,7 @@ import (
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/uploads"
@@ -190,6 +191,11 @@ func (self *NTFSFileSystemAccessor) ReadDirWithOSPath(
 			err, _ = r.(error)
 		}
 	}()
+
+	err = file.CheckPrefix(fullpath)
+	if err != nil {
+		return nil, err
+	}
 
 	result := []accessors.FileInfo{}
 
@@ -362,6 +368,11 @@ func (self *NTFSFileSystemAccessor) OpenWithOSPath(
 		}
 	}()
 
+	err = file.CheckPrefix(fullpath)
+	if err != nil {
+		return nil, err
+	}
+
 	device := self.device
 	accessor := self.accessor
 	if device == nil {
@@ -458,6 +469,11 @@ func (self *NTFSFileSystemAccessor) LstatWithOSPath(
 			err, _ = r.(error)
 		}
 	}()
+
+	err = file.CheckPrefix(fullpath)
+	if err != nil {
+		return nil, err
+	}
 
 	device := self.device
 	accessor := self.accessor

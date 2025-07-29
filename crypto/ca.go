@@ -122,9 +122,9 @@ func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBund
 	}
 
 	days_valid := int64(365)
-	if config_obj.Defaults != nil &&
-		config_obj.Defaults.CertificateValidityDays > 0 {
-		days_valid = config_obj.Defaults.CertificateValidityDays
+	if config_obj.Security != nil &&
+		config_obj.Security.CertificateValidityDays > 0 {
+		days_valid = config_obj.Security.CertificateValidityDays
 	}
 
 	start_time := time.Now()

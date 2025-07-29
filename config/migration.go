@@ -200,10 +200,76 @@ func migrate_0_7_0(config_obj *config_proto.Config) {
 	}
 }
 
+func migrate_0_7_5(config_obj *config_proto.Config) {
+	if config_obj.Security == nil {
+		config_obj.Security = &config_proto.Security{}
+	}
+
+	if len(config_obj.Defaults.AllowedPlugins) > 0 {
+		config_obj.Security.AllowedPlugins = append(
+			config_obj.Security.AllowedPlugins,
+			config_obj.Defaults.AllowedPlugins...)
+		config_obj.Defaults.AllowedPlugins = nil
+	}
+
+	if len(config_obj.Defaults.AllowedFunctions) > 0 {
+		config_obj.Security.AllowedFunctions = append(
+			config_obj.Security.AllowedFunctions,
+			config_obj.Defaults.AllowedFunctions...)
+		config_obj.Defaults.AllowedFunctions = nil
+	}
+
+	if len(config_obj.Defaults.AllowedAccessors) > 0 {
+		config_obj.Security.AllowedAccessors = append(
+			config_obj.Security.AllowedAccessors,
+			config_obj.Defaults.AllowedAccessors...)
+		config_obj.Defaults.AllowedAccessors = nil
+	}
+
+	if len(config_obj.Defaults.DeniedPlugins) > 0 {
+		config_obj.Security.DeniedPlugins = append(
+			config_obj.Security.DeniedPlugins,
+			config_obj.Defaults.DeniedPlugins...)
+		config_obj.Defaults.DeniedPlugins = nil
+	}
+
+	if len(config_obj.Defaults.DeniedFunctions) > 0 {
+		config_obj.Security.DeniedFunctions = append(
+			config_obj.Security.DeniedFunctions,
+			config_obj.Defaults.DeniedFunctions...)
+		config_obj.Defaults.DeniedFunctions = nil
+	}
+
+	if len(config_obj.Defaults.DeniedAccessors) > 0 {
+		config_obj.Security.DeniedAccessors = append(
+			config_obj.Security.DeniedAccessors,
+			config_obj.Defaults.DeniedAccessors...)
+		config_obj.Defaults.DeniedAccessors = nil
+	}
+
+	if len(config_obj.Defaults.LockdownDeniedPermissions) > 0 {
+		config_obj.Security.LockdownDeniedPermissions = append(
+			config_obj.Security.LockdownDeniedPermissions,
+			config_obj.Defaults.LockdownDeniedPermissions...)
+		config_obj.Defaults.LockdownDeniedPermissions = nil
+	}
+
+	if config_obj.Defaults.CertificateValidityDays > 0 {
+		config_obj.Security.CertificateValidityDays =
+			config_obj.Defaults.CertificateValidityDays
+	}
+
+	if config_obj.Defaults.DisableInventoryServiceExternalAccess {
+		config_obj.Security.DisableInventoryServiceExternalAccess = true
+	}
+
+}
+
 func migrate(config_obj *config_proto.Config) {
 	migrate_0_4_2(config_obj)
 	migrate_0_4_6(config_obj)
 	migrate_0_5_6(config_obj)
 	migrate_0_6_1(config_obj)
 	migrate_0_7_0(config_obj)
+	migrate_0_7_5(config_obj)
 }

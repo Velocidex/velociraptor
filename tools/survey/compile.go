@@ -15,15 +15,15 @@ import (
 func (self *ConfigSurvey) Compile() (*config_proto.Config, error) {
 	config_obj := config.GetDefaultConfig()
 
-	if config_obj.Defaults == nil {
-		config_obj.Defaults = &config_proto.Defaults{}
+	if config_obj.Security == nil {
+		config_obj.Security = &config_proto.Security{}
 	}
 
 	cert_expiry, _ := utils.ToInt64(self.CertExpiration)
 	if cert_expiry == 0 {
 		cert_expiry = 1
 	}
-	config_obj.Defaults.CertificateValidityDays = 365 * cert_expiry
+	config_obj.Security.CertificateValidityDays = 365 * cert_expiry
 
 	if self.UseRegistryWriteback {
 		config_obj.Client.WritebackWindows = "HKLM\\SOFTWARE\\Velocidex\\Velociraptor"
@@ -139,9 +139,9 @@ func (self *ConfigSurvey) Compile() (*config_proto.Config, error) {
 	}
 
 	if self.ImplementAllowList {
-		config_obj.Defaults.AllowedPlugins = allowed_plugins
-		config_obj.Defaults.AllowedFunctions = allowed_functions
-		config_obj.Defaults.AllowedAccessors = allowed_accessors
+		config_obj.Security.AllowedPlugins = allowed_plugins
+		config_obj.Security.AllowedFunctions = allowed_functions
+		config_obj.Security.AllowedAccessors = allowed_accessors
 	}
 
 	return config_obj, nil

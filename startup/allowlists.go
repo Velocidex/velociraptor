@@ -9,36 +9,36 @@ import (
 
 // Potentially restrict server functionality.
 func MaybeEnforceAllowLists(config_obj *config_proto.Config) error {
-	if config_obj.Defaults == nil {
+	if config_obj.Security == nil {
 		return nil
 	}
 
-	if len(config_obj.Defaults.AllowedPlugins) > 0 {
+	if len(config_obj.Security.AllowedPlugins) > 0 {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("Restricting VQL plugins to set %v and functions to set %v\n",
-			config_obj.Defaults.AllowedPlugins, config_obj.Defaults.AllowedFunctions)
+			config_obj.Security.AllowedPlugins, config_obj.Security.AllowedFunctions)
 	}
 
-	if len(config_obj.Defaults.DeniedPlugins) > 0 {
+	if len(config_obj.Security.DeniedPlugins) > 0 {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("Removing VQL plugins to set %v and functions to set %v\n",
-			config_obj.Defaults.DeniedPlugins, config_obj.Defaults.DeniedPlugins)
+			config_obj.Security.DeniedPlugins, config_obj.Security.DeniedPlugins)
 	}
 
 	err := vql_subsystem.EnforceVQLAllowList(
-		config_obj.Defaults.AllowedPlugins,
-		config_obj.Defaults.AllowedFunctions,
-		config_obj.Defaults.DeniedPlugins,
-		config_obj.Defaults.DeniedFunctions)
+		config_obj.Security.AllowedPlugins,
+		config_obj.Security.AllowedFunctions,
+		config_obj.Security.DeniedPlugins,
+		config_obj.Security.DeniedFunctions)
 	if err != nil {
 		return err
 	}
 
-	if len(config_obj.Defaults.AllowedAccessors) > 0 ||
-		len(config_obj.Defaults.DeniedAccessors) > 0 {
+	if len(config_obj.Security.AllowedAccessors) > 0 ||
+		len(config_obj.Security.DeniedAccessors) > 0 {
 		err = accessors.EnforceAccessorAllowList(
-			config_obj.Defaults.AllowedAccessors,
-			config_obj.Defaults.DeniedAccessors,
+			config_obj.Security.AllowedAccessors,
+			config_obj.Security.DeniedAccessors,
 		)
 		if err != nil {
 			return err

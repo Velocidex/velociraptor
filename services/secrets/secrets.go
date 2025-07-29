@@ -55,18 +55,6 @@ func SecretLRUKey(type_name, name string) string {
 	return type_name + "/" + name
 }
 
-func NewSecretFromProto(secret *api_proto.Secret) *services.Secret {
-	result := &services.Secret{
-		Secret: secret,
-		Data:   ordereddict.NewDict(),
-	}
-
-	for k, v := range secret.Secret {
-		result.Data.Set(k, v)
-	}
-	return result
-}
-
 func NewSecret(type_name, name string,
 	secret *ordereddict.Dict) *services.Secret {
 	result := &services.Secret{
@@ -217,7 +205,11 @@ func (self *SecretsService) getSecret(
 		return nil, err
 	}
 
-	result := NewSecretFromProto(secret_proto)
+	result, err := NewSecretFromProto(ctx, self.config_obj, secret_proto)
+	if err != nil {
+		return nil, err
+	}
+
 	return result, self.secrets_lru.Set(
 		SecretLRUKey(type_name, secret_name), result)
 }
@@ -250,11 +242,17 @@ func (self *SecretsService) setSecret(
 		return err
 	}
 
+	stored_secret, err := PrepareForStorage(
+		ctx, self.config_obj, secret_record)
+	if err != nil {
+		return err
+	}
+
 	secret_path_manager := paths.SecretsPathManager{}
 	err = db.SetSubject(self.config_obj,
 		secret_path_manager.Secret(
 			secret_record.TypeName, secret_record.Name),
-		secret_record.Secret)
+		stored_secret)
 
 	if err != nil {
 		return err

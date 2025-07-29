@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -51,6 +52,12 @@ func (self *Compress) Call(ctx context.Context,
 
 	arg := &CompressArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("compress: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	err = file.CheckPath(arg.Path)
 	if err != nil {
 		scope.Log("compress: %s", err.Error())
 		return vfilter.Null{}

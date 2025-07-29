@@ -619,8 +619,8 @@ func NewInventoryService(
 	}
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
-	if config_obj.Defaults != nil &&
-		config_obj.Defaults.DisableInventoryServiceExternalAccess {
+	if config_obj.Security != nil &&
+		config_obj.Security.DisableInventoryServiceExternalAccess {
 		inventory_service.Client = DummyHTTPClient{}
 	}
 

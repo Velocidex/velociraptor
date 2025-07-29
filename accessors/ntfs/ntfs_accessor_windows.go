@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package ntfs
@@ -7,6 +8,7 @@ import (
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/constants"
@@ -33,7 +35,13 @@ func (self *WindowsNTFSFileSystemAccessor) Lstat(path string) (accessors.FileInf
 	return self.LstatWithOSPath(os_path)
 }
 
-func (self *WindowsNTFSFileSystemAccessor) LstatWithOSPath(os_path *accessors.OSPath) (accessors.FileInfo, error) {
+func (self *WindowsNTFSFileSystemAccessor) LstatWithOSPath(
+	os_path *accessors.OSPath) (accessors.FileInfo, error) {
+
+	err := file.CheckPrefix(os_path)
+	if err != nil {
+		return nil, err
+	}
 
 	// Calling an LStat on the device shall return file info about the
 	// device itself (including size). e.g. Lstat("\\C:\") -> info about the volume.

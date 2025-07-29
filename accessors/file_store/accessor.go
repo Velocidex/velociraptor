@@ -156,8 +156,15 @@ func (self FileStoreFileSystemAccessor) ReadDirWithOSPath(
 
 	var result []accessors.FileInfo
 	for _, f := range files {
-		result = append(result, file_store_file_info.NewFileStoreFileInfo(
-			self.config_obj, f.PathSpec(), f))
+		child_path := f.PathSpec()
+		err := isFileAccessible(child_path)
+		if err != nil {
+			continue
+		}
+
+		child := file_store_file_info.NewFileStoreFileInfo(
+			self.config_obj, f.PathSpec(), f)
+		result = append(result, child)
 	}
 
 	return result, nil

@@ -239,10 +239,10 @@ func doRotateKeyConfig() error {
 	}
 
 	if *config_rotate_server_key_validity > 0 {
-		if config_obj.Defaults == nil {
-			config_obj.Defaults = &config_proto.Defaults{}
+		if config_obj.Security == nil {
+			config_obj.Security = &config_proto.Security{}
 		}
-		config_obj.Defaults.CertificateValidityDays = *config_rotate_server_key_validity
+		config_obj.Security.CertificateValidityDays = *config_rotate_server_key_validity
 	}
 
 	// Frontends must have a well known common name.

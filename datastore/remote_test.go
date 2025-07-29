@@ -13,6 +13,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -30,7 +31,8 @@ func (self *RemoteTestSuite) SetupTest() {
 	var err error
 	os.Setenv("VELOCIRAPTOR_LITERAL_CONFIG", test_utils.SERVER_CONFIG)
 	self.ConfigObj, err = new(config.Loader).
-		WithEnvLiteralLoader("VELOCIRAPTOR_LITERAL_CONFIG").WithRequiredFrontend().
+		WithEnvLiteralLoader(constants.VELOCIRAPTOR_LITERAL_CONFIG).
+		WithRequiredFrontend().
 		WithVerbose(true).LoadAndValidate()
 	require.NoError(self.T(), err)
 

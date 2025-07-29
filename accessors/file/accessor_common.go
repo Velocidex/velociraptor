@@ -257,6 +257,11 @@ func (self OSFileSystemAccessor) Lstat(filename string) (accessors.FileInfo, err
 func (self OSFileSystemAccessor) LstatWithOSPath(
 	full_path *accessors.OSPath) (accessors.FileInfo, error) {
 
+	err := CheckPrefix(full_path)
+	if err != nil {
+		return nil, err
+	}
+
 	filename := full_path.PathSpec().Path
 
 	lstat, err := os.Lstat(filename)
@@ -304,6 +309,12 @@ func (self *OSFileSystemAccessor) GetUnderlyingAPIFilename(
 
 func (self OSFileSystemAccessor) ReadDirWithOSPath(
 	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
+
+	err := CheckPrefix(full_path)
+	if err != nil {
+		return nil, err
+	}
+
 	dir := full_path.PathSpec().Path
 
 	lstat, err := os.Lstat(dir)
@@ -374,6 +385,11 @@ func (self OSFileSystemAccessor) ReadDirWithOSPath(
 	var result []accessors.FileInfo
 	for _, f := range files {
 		fp := full_path.Append(f.Name())
+		err := CheckPrefix(fp)
+		if err != nil {
+			continue
+		}
+
 		var fstype string
 		if f.IsDir() {
 			fstype = getFSType(fp.String())
@@ -421,7 +437,10 @@ func (self *OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, e
 func (self OSFileSystemAccessor) OpenWithOSPath(
 	full_path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
 
-	var err error
+	err := CheckPrefix(full_path)
+	if err != nil {
+		return nil, err
+	}
 
 	path := full_path.PathSpec().Path
 

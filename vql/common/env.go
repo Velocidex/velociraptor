@@ -24,10 +24,21 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+)
+
+var (
+	// Prevent VQL from having access to these critical env variables.
+	ShadowedEnv = []string{
+		constants.VELOCIRAPTOR_CONFIG,
+		constants.VELOCIRAPTOR_LITERAL_CONFIG,
+		constants.VELOCIRAPTOR_API_CONFIG,
+	}
 )
 
 type EnvPluginArgs struct {
@@ -54,6 +65,11 @@ func (self *EnvFunction) Call(ctx context.Context,
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("environ: %s", err.Error())
+		return false
+	}
+
+	if utils.InString(ShadowedEnv, arg.Var) {
+		scope.Log("environ: access to env var %s is denied", arg.Var)
 		return false
 	}
 
@@ -99,6 +115,12 @@ func init() {
 				if len(arg.Vars) == 0 {
 					for _, env_var := range os.Environ() {
 						parts := strings.SplitN(env_var, "=", 2)
+
+						if utils.InString(ShadowedEnv, parts[0]) {
+							scope.Log("environ: access to env var %s is denied", parts[0])
+							continue
+						}
+
 						if len(parts) > 1 {
 							row.Set(parts[0], parts[1])
 						}
@@ -107,6 +129,10 @@ func init() {
 					for _, env_var := range arg.Vars {
 						value, pres := os.LookupEnv(env_var)
 						if pres {
+							if utils.InString(ShadowedEnv, env_var) {
+								scope.Log("environ: access to env var %s is denied", env_var)
+								continue
+							}
 							row.Set(env_var, value)
 						}
 					}

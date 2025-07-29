@@ -31,6 +31,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -589,6 +590,13 @@ func (self WriteJSONPlugin) Call(
 			err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 			if err != nil {
 				scope.Log("write_jsonl: %s", err)
+				return
+			}
+
+			// Make sure we are allowed to write there.
+			err = file.CheckPrefix(arg.Filename)
+			if err != nil {
+				scope.Log("write_jsonl: %v", err)
 				return
 			}
 

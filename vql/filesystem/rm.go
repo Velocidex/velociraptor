@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/go-errors/errors"
+	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -34,6 +35,13 @@ func (self *_RmFunction) Call(ctx context.Context,
 
 	arg := &_RmRequest{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("rm: %v", err)
+		return false
+	}
+
+	// Make sure we are allowed to write there.
+	err = file.CheckPath(arg.Filename)
 	if err != nil {
 		scope.Log("rm: %v", err)
 		return false

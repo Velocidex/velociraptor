@@ -22,6 +22,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/uploads"
@@ -165,6 +166,13 @@ func (self *UploadDirectoryFunction) Call(ctx context.Context,
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("upload_directory: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	// Make sure we are allowed to write there.
+	err = file.CheckPath(arg.OutputPath)
+	if err != nil {
+		scope.Log("upload_directory: %v", err)
 		return vfilter.Null{}
 	}
 

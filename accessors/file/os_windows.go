@@ -203,6 +203,11 @@ func (self OSFileSystemAccessor) ReadDirWithOSPath(
 	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
 	var result []accessors.FileInfo
 
+	err := CheckPrefix(full_path)
+	if err != nil {
+		return nil, err
+	}
+
 	// No drive part, so list all drives.
 	if len(full_path.Components) == 0 {
 		return discoverDriveLetters()
@@ -249,11 +254,17 @@ func (self OSFileSystemAccessor) ReadDirWithOSPath(
 	}
 
 	for _, f := range files {
+		child_path := full_path.Append(f.Name())
+		err := CheckPrefix(child_path)
+		if err != nil {
+			continue
+		}
+
 		result = append(result,
 			&OSFileInfo{
 				follow_links: self.follow_links,
 				FileInfo:     f,
-				_full_path:   full_path.Append(f.Name()),
+				_full_path:   child_path,
 			})
 	}
 	return result, nil
@@ -283,6 +294,11 @@ func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, er
 
 func (self OSFileSystemAccessor) OpenWithOSPath(full_path *accessors.OSPath) (
 	accessors.ReadSeekCloser, error) {
+
+	err := CheckPrefix(full_path)
+	if err != nil {
+		return nil, err
+	}
 
 	// Opening the drive letter directly produces a reader over the
 	// raw disk.
@@ -337,6 +353,12 @@ func (self *OSFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error)
 	if err != nil {
 		return nil, err
 	}
+
+	err = CheckPrefix(full_path)
+	if err != nil {
+		return nil, err
+	}
+
 	stat, err := os.Lstat(full_path.String())
 	return &OSFileInfo{
 		follow_links: self.follow_links,
@@ -347,6 +369,11 @@ func (self *OSFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error)
 
 func (self *OSFileSystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) (
 	accessors.FileInfo, error) {
+
+	err := CheckPrefix(full_path)
+	if err != nil {
+		return nil, err
+	}
 
 	// An Lstat of a device returns metadata about the device
 	if len(full_path.Components) == 1 {
