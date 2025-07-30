@@ -13,9 +13,13 @@ description: |
   attention to the following assumptions and limitations:
 
   - All responses are expected to be JSON
+  - When pagination is used, the pagination fields must be keys in a flat JSON
+    object used as query parameters. i.e. nested query parameters like
+    {"filter": [{"offset": 0, "limit": 100}]} are not supported.
   - The "login" query is a POST query where every detail of the query (headers,
     parameters etc.) must be specified in the server secret
   - The "login" query is expected to return a token in its JSON response
+  - The token is used as an 'Authorization: "Bearer: <token>"' header
   - Unless a secret is used for the main query (instead of a separate login
     query), the authentication method is assumed to be Bearer token
   - A login is performed for every request
@@ -119,6 +123,14 @@ parameters:
       - DELETE
     default: GET
 
+  - name: QueryHeaders
+    type: json
+    description: |
+      Query headers used in main query (combined with any headers in the Secret,
+      as well as an Authorization header from the login response, if login is
+      used).
+    default: '{"Content-Type": "application/json", "Accept":"application/json", "User-Agent": "Velociraptor"}'
+
   - name: QueryParams
     type: json
     description: |
@@ -157,6 +169,13 @@ parameters:
     description: |
       Name of field used to specify page offset (e.g. "offset", "from")
     default: offset
+    
+  - name: OffsetStart
+    type: int
+    description: |
+      Start at a different offset than 0. Some APIs start at 1. May also be used
+      to skip pages in the beginning of the request
+    default: 0
 
   - name: TotalField
     description: |
@@ -217,14 +236,12 @@ sources:
        // A helper function that simply builds a param. dict and calls http_client():
        LET _QueryAPI(PageNo) = SELECT Response,
                                       parse_json(data=Content) AS Content
-         FROM http_client(url=if(condition=URL, then=URL, else='secret://' + Secret),
-                          method=Method,
-                          headers=dict(`Content-Type`='application/json',
-                                       Accept='application/json') +
-                            TokenDict,
-                          params=PageDict(Offset=PageNo * PageSize) +
-                            QueryParams,
-                          secret=Secret)
+         FROM http_client(
+           url=if(condition=URL, then=URL, else='secret://' + Secret),
+           method=Method,
+           headers=QueryHeaders + TokenDict,
+           params=PageDict(Offset=PageNo * PageSize) + QueryParams,
+           secret=Secret)
 
        // Query an HTTP API with optional pagination:
        LET QueryAPI(PageNo) = SELECT
@@ -237,25 +254,27 @@ sources:
               else=[]) AS Rows,
            int(int=get(item=Content, member=TotalField)) AS Total
          FROM _QueryAPI(PageNo=PageNo)
-         WHERE if(condition=NOT Success,
-                  then=log(level='ERROR',
-                           message='Failed to query %v: %v: %v',
-                           args=(APIName, Response, Error, )),
-                  else=if(condition=PageSize,
-                          then=log(level='DEBUG',
-                                   message='Fetching %v out of %v rows',
-                                   dedup=-1,
-                                   args=(if(condition=Total,
-                                            then=Min(A=(PageNo + 1) *
-                                                       PageSize,
-                                                     B=Total),
-                                            else=(PageNo + 1) *
-                                              PageSize), if(
-                                       condition=Total,
-                                       then=Total,
-                                       else='?'), )),
-                          else=true))
-
+         WHERE if(
+           condition=NOT Success,
+           then=log(level='ERROR',
+                    message='Failed to query %v: %v: %v',
+                    args=(APIName, Response, Error, )),
+           else=if(condition=PageSize,
+                   then=log(level='DEBUG',
+                            message='Fetching %v out of %v rows',
+                            dedup=-1,
+                            args=(if(condition=Total,
+                                     then=Min(A=(PageNo + 1 -
+                                                  OffsetStart) *
+                                                PageSize,
+                                              B=Total),
+                                     else=(PageNo + 1 - OffsetStart) *
+                                       PageSize), if(
+                                condition=Total,
+                                then=Total,
+                                else='?'), )),
+                   else=true))
+       
        // Used to determine whether paginated query is done:
        LET QueryMeta <= dict(IsDone=false)
 
@@ -267,7 +286,7 @@ sources:
                              Rows
          FROM foreach(row={
            SELECT _value
-           FROM range(start=0, end=MaxPages OR 1)
+           FROM range(start=OffsetStart, end=MaxPages OR OffsetStart + 1)
            WHERE NOT QueryMeta.IsDone
          },
                       query={
