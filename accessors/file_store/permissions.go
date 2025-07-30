@@ -3,27 +3,30 @@ package file_store
 import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
-	ForbiddenPrefixes = []api.FSPathSpec{
-		paths.CONFIG_ROOT.AsFilestorePath(),
-		paths.USERS_ROOT.AsFilestorePath(),
-		paths.ORGS_ROOT.AsFilestorePath(),
-		paths.BACKUPS_ROOT,
-	}
+	// By default all filestore access is allowed.
+	AllowedPrefixes *utils.PrefixTree
+	DeniedError     = utils.Wrap(acls.PermissionDenied, "No accesss to file store path")
 )
 
 // Some parts of the filestore are blocked off from reading. This
 // helps prevent circumvention of the ACL system by reading files
 // directly from disk.
 func isFileAccessible(filename api.FSPathSpec) error {
-	for _, parent := range ForbiddenPrefixes {
-		if path_specs.IsSubPath(parent, filename) {
-			return acls.PermissionDenied
-		}
+	if AllowedPrefixes == nil {
+		return nil
 	}
-	return nil
+	components := filename.Components()
+	if len(components) == 0 {
+		return nil
+	}
+
+	if AllowedPrefixes.Present(components) {
+		return nil
+	}
+
+	return DeniedError
 }

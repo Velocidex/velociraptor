@@ -26,6 +26,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -95,6 +96,14 @@ func (self RepackFunction) Call(ctx context.Context,
 			scope.Log("ERROR:client_repack: %v", err)
 			return vfilter.Null{}
 		}
+
+		// Make sure we are allowed to write there.
+		err = file.CheckPath(arg.DestFilename)
+		if err != nil {
+			scope.Log("ERROR:client_repack: %v", err)
+			return vfilter.Null{}
+		}
+
 	}
 
 	if arg.DestFilename != "" && arg.UploadName != "" ||

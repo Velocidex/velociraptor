@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
@@ -106,6 +107,12 @@ sources:
 - precondition: SELECT * FROM info()
   query: SELECT * FROM info()
   name: Users
+`, `
+name: Artifact.With.Parameters
+parameters:
+- name: Param1
+sources:
+- query: SELECT * FROM info()
 `,
 	}
 )
@@ -159,7 +166,8 @@ func (self *TestSuite) CreateFlow(client_id, flow_id string) {
 func (self *TestSuite) LoadConfig() *config_proto.Config {
 	os.Setenv("VELOCIRAPTOR_LITERAL_CONFIG", SERVER_CONFIG)
 	config_obj, err := new(config.Loader).
-		WithEnvLiteralLoader("VELOCIRAPTOR_LITERAL_CONFIG").WithRequiredFrontend().
+		WithEnvLiteralLoader(constants.VELOCIRAPTOR_LITERAL_CONFIG).
+		WithRequiredFrontend().
 		WithWriteback().WithVerbose(true).
 		LoadAndValidate()
 	require.NoError(self.T(), err)

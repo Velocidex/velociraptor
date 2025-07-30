@@ -3,6 +3,7 @@ package accessors
 import (
 	"fmt"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -716,4 +717,12 @@ func MustNewZipFilePath(path string) *OSPath {
 		panic(err)
 	}
 	return res
+}
+
+func NewNativePath(path string) (*OSPath, error) {
+	if runtime.GOOS == "windows" {
+		return NewLinuxOSPath(path)
+	} else {
+		return NewWindowsOSPath(path)
+	}
 }

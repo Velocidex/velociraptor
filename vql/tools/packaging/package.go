@@ -10,6 +10,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -193,6 +194,13 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 		}
 
 		base_path, err := accessor.ParsePath(abs_path)
+		if err != nil {
+			scope.Log("ERROR:%v: %v", self.name, err)
+			return
+		}
+
+		// Make sure we are allowed to write there.
+		err = file.CheckPrefix(base_path)
 		if err != nil {
 			scope.Log("ERROR:%v: %v", self.name, err)
 			return

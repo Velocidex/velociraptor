@@ -15,6 +15,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -81,6 +82,13 @@ func (self UnzipPlugin) Call(
 		}
 
 		filter_reg, err := regexp.Compile("(?i)" + filter)
+		if err != nil {
+			scope.Log("unzip: %v", err)
+			return
+		}
+
+		// Make sure we are allowed to write there.
+		err = file.CheckPath(arg.OutputDirectory)
 		if err != nil {
 			scope.Log("unzip: %v", err)
 			return

@@ -30,6 +30,7 @@ import (
 	errors "github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
 	vsurvey "www.velocidex.com/golang/velociraptor/tools/survey"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -176,13 +177,13 @@ func main() {
 	APIConfigLoader = new(config.Loader).WithVerbose(*verbose_flag).
 		WithTempdir(*tempdir_flag).
 		WithApiLoader(*api_config_path).
-		WithEnvApiLoader("VELOCIRAPTOR_API_CONFIG").
+		WithEnvApiLoader(constants.VELOCIRAPTOR_API_CONFIG).
 		WithCustomValidator("Validator maybe_unlock_api_config",
 			maybe_unlock_api_config).
 		WithFileLoader(*config_path).
 		WithEmbedded(*embedded_config_path).
-		WithEnvLoader("VELOCIRAPTOR_CONFIG").
-		WithEnvLiteralLoader("VELOCIRAPTOR_LITERAL_CONFIG").
+		WithEnvLoader(constants.VELOCIRAPTOR_CONFIG).
+		WithEnvLiteralLoader(constants.VELOCIRAPTOR_LITERAL_CONFIG).
 		WithConfigMutator("Mutator mergeFlagConfig",
 			func(config_obj *config_proto.Config) error {
 				return mergeFlagConfig(config_obj, default_config)
@@ -248,8 +249,8 @@ func makeDefaultConfigLoader() *config.Loader {
 		WithTempdir(*tempdir_flag).
 		WithFileLoader(*config_path).
 		WithEmbedded(*embedded_config_path).
-		WithEnvLoader("VELOCIRAPTOR_CONFIG").
-		WithEnvLiteralLoader("VELOCIRAPTOR_LITERAL_CONFIG").
+		WithEnvLoader(constants.VELOCIRAPTOR_CONFIG).
+		WithEnvLiteralLoader(constants.VELOCIRAPTOR_LITERAL_CONFIG).
 		WithConfigMutator("Mutator mergeFlagConfig",
 			func(config_obj *config_proto.Config) error {
 				return mergeFlagConfig(config_obj, default_config)

@@ -1227,20 +1227,6 @@ message Defaults {
     // is a lot slower. Default 30000
     uint64 max_in_memory_group_by = 9;
 
-    // If these are set we enforce VQL to only have the specified
-    // allowed VQL plugins and functions. This is a way to harden the
-    // server by removing potentially sensitive functionality to allow
-    // only approved VQL plugins to run.
-    repeated string allowed_plugins = 10;
-    repeated string allowed_functions = 11;
-    repeated string allowed_accessors = 12;
-
-    // Alternatively, it might be easier to deny specific plugins and
-    // functions.
-    repeated string denied_plugins = 54;
-    repeated string denied_functions = 55;
-    repeated string denied_accessors = 58;
-
     // How long to cache ACL policies (default 60 sec)
     uint64 acl_lru_timeout_sec = 13;
 
@@ -1267,25 +1253,6 @@ message Defaults {
     uint64 max_logs = 56;
     uint64 max_row_buffer_size = 31;
     uint64 max_batch_wait = 35;
-
-    // When the server is in lockdown mode the following permissions
-    // will be denied (Even for administrators).
-    // The default list is:
-    // - ARTIFACT_WRITER
-    // - SERVER_ARTIFACT_WRITER
-    // - EXECVE
-    // - SERVER_ADMIN
-    // - FILESYSTEM_WRITE
-    // - FILESYSTEM_READ
-    // - MACHINE_STATE
-    repeated string lockdown_denied_permissions = 32;
-
-    // Default expiry of certificate issuances (default 365 days)
-    int64 certificate_validity_days = 33;
-
-    // Normally the inventory service attempts to download tools in
-    // its own but if this is set, we prevent any external access.
-    bool disable_inventory_service_external_access = 34;
 
     // Controls how exports work (creating hunt or colletion exports
     // to a zip file).
@@ -1350,6 +1317,17 @@ message Defaults {
     // record though. Enabling this will also write them to disk.
     bool write_internal_events = 53;
 
+    // DEPRECATED: The below are deprecated and will be moved by the
+    // upgrade code.
+    repeated string allowed_plugins = 10;
+    repeated string allowed_functions = 11;
+    repeated string allowed_accessors = 12;
+    repeated string denied_plugins = 54;
+    repeated string denied_functions = 55;
+    repeated string denied_accessors = 58;
+    repeated string lockdown_denied_permissions = 32;
+    int64 certificate_validity_days = 33;
+    bool disable_inventory_service_external_access = 34;
 }
 
 // Configures crypto preferences
@@ -1442,6 +1420,80 @@ message RemappingConfig {
     repeated string disabled_plugins = 9;
 }
 
+// Various security related configuration options for the server.
+message Security {
+    // A list of path prefixes allowed for the 'file' accessor. If
+    // this is empty the file accessor will be disabled. If you want
+    // to enable access to the server's filesystem you can set this to
+    // "/".
+    repeated string allowed_file_accessor_prefix = 1;
+
+    // A list of prefixes allowed for the fs accessor. All other
+    // prefixes will be rejected. The default is:
+    // - artifact_definitions
+    // - clients
+    // - downloads
+    // - notebooks
+    // - public
+    // - temp
+    // - server_artifacts
+    // - server_artifacts_logs
+    //
+    // to allow all access set this to "/"
+    repeated string allowed_fs_accessor_prefix = 2;
+
+    // If these are set we enforce VQL to only have the specified
+    // allowed VQL plugins and functions. This is a way to harden the
+    // server by removing potentially sensitive functionality to allow
+    // only approved VQL plugins to run.
+    repeated string allowed_plugins = 10;
+    repeated string allowed_functions = 11;
+    repeated string allowed_accessors = 12;
+
+    // Alternatively, it might be easier to deny specific plugins and
+    // functions.
+    repeated string denied_plugins = 54;
+    repeated string denied_functions = 55;
+    repeated string denied_accessors = 58;
+
+    // When the server is in lockdown mode the following permissions
+    // will be denied (Even for administrators).
+    // The default list is:
+    // - ARTIFACT_WRITER
+    // - SERVER_ARTIFACT_WRITER
+    // - EXECVE
+    // - SERVER_ADMIN
+    // - FILESYSTEM_WRITE
+    // - FILESYSTEM_READ
+    // - MACHINE_STATE
+    repeated string lockdown_denied_permissions = 32;
+
+
+    // Default expiry of certificate issuances (default 365 days)
+    int64 certificate_validity_days = 33;
+
+    // Normally the inventory service attempts to download tools in
+    // its own but if this is set, we prevent any external access.
+    bool disable_inventory_service_external_access = 34;
+
+    // The Data Encryptions Key to use for protecting the secrets in
+    // storage. This can take a number of forms:
+
+    // 1. If it starts with env:// the secret will be taken from an
+    //    Environment variable.
+    // 2. If empty the secret is taken from obfuscation_nonce (which
+    //    by default is the hash of the private key).
+    //
+    // In future further methods may be implemented (e.g. EKMS).
+    string secrets_dek = 3;
+
+    // Prevent VQL from having access to these environment
+    // variables. Environment Vars sometimes may contain secrets and
+    // confidential information.
+    repeated string shadowed_env_vars = 4;
+}
+
+
 message Config {
     string autocert_domain = 21 [deprecated=true];
 
@@ -1509,7 +1561,8 @@ message Config {
             description: "Type of server (linux, windows, darwin)"
         }];
 
-    // If set we obfuscate VQL to the clients using this key.
+    // If set we obfuscate VQL to the clients using this key. If not
+    // set this is set to the hash of the Frontend.PrivateKey.
     string obfuscation_nonce = 32;
 
     // Various defaults can be changed here (usually not needed).
@@ -1520,7 +1573,7 @@ message Config {
     // from the operating system used on the device. DEPRECATED!
     string analysis_target = 34;
 
-    // The list of data sources which Velociraptor should map instead of the
+
     // host's own file system.
     repeated RemappingConfig remappings = 35;
 
@@ -1536,6 +1589,10 @@ message Config {
     // set in the config file by the user but is propagated from the
     // startup code.
     ServerServicesConfig services = 38;
+
+    // Specifies various security related configuration options for
+    // the server.
+    Security security = 42;
 
     // The Velociraptor server may be placed into "lockdown"
     // mode. While in lockdown mode certain permissions are denied -

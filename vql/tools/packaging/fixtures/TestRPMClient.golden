@@ -20,6 +20,11 @@ Group root
 
 >> Postin
 
+# Lock down permissions on the config file.
+chmod -R go-r $(dirname "/etc/velociraptor/client.config.yaml")
+chown root:root /usr/local/bin/velociraptor_client
+chmod 755 /usr/local/bin/velociraptor_client
+
 if [ -f /bin/systemctl ] ; then
 
 cat << SYSTEMDSCRIPT > /etc/systemd/system/velociraptor_client.service

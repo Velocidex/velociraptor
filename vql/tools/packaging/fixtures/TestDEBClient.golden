@@ -46,7 +46,8 @@ WantedBy=multi-user.target
 
 # Lock down permissions on the config file.
 chmod -R go-r $(dirname "/etc/velociraptor/client.config.yaml")
-chmod o+x /usr/local/bin/velociraptor_client
+chown root:root /usr/local/bin/velociraptor_client
+chmod 755 /usr/local/bin/velociraptor_client
 
 /bin/systemctl enable velociraptor_client.service
 /bin/systemctl start velociraptor_client.service

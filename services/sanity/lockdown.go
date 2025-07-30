@@ -38,10 +38,10 @@ func (self SanityChecks) CheckForLockdown(
 		OrgAdmin:      true,
 	}
 
-	if config_obj.Defaults != nil &&
-		len(config_obj.Defaults.LockdownDeniedPermissions) > 0 {
+	if config_obj.Security != nil &&
+		len(config_obj.Security.LockdownDeniedPermissions) > 0 {
 		lockdown_token = &acl_proto.ApiClientACL{}
-		for _, perm_name := range config_obj.Defaults.LockdownDeniedPermissions {
+		for _, perm_name := range config_obj.Security.LockdownDeniedPermissions {
 			err := acls.SetTokenPermission(lockdown_token, perm_name)
 			if err != nil {
 				return fmt.Errorf("Invalid permission %v while parsing lockdown_denied_permissions",

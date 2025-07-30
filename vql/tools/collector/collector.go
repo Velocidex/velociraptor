@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -102,7 +103,8 @@ func (self CollectPlugin) Call(
 			}
 		}()
 
-		request, err := self.configureCollection(ctx, collection_manager, arg)
+		request, err := self.configureCollection(
+			ctx, scope, collection_manager, arg)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return
@@ -121,8 +123,10 @@ func (self CollectPlugin) Call(
 
 // Configures the collection manager with the provided args.
 func (self CollectPlugin) configureCollection(
-	ctx context.Context, manager *collectionManager, arg *CollectPluginArgs) (
-	*flows_proto.ArtifactCollectorArgs, error) {
+	ctx context.Context,
+	scope vfilter.Scope,
+	manager *collectionManager,
+	arg *CollectPluginArgs) (*flows_proto.ArtifactCollectorArgs, error) {
 
 	format, err := reporting.GetContainerFormat(arg.Format)
 	if err != nil {
@@ -154,6 +158,12 @@ func (self CollectPlugin) configureCollection(
 
 	// If required create an output container
 	if arg.Output != "" {
+
+		// Make sure we are allowed to write there.
+		err = file.CheckPath(arg.Output)
+		if err != nil {
+			return nil, err
+		}
 
 		// Set any metadata for the container.
 		if !utils.IsNil(arg.Metadata) {
