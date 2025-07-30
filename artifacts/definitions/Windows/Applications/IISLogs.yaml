@@ -1,11 +1,21 @@
 name: Windows.Applications.IISLogs
 description: |
   This artifact enables grep of IISLogs.
-  Parameters include SearchRegex and WhitelistRegex as regex terms and MoreRecentThan as timestamp.
-  
-  **Hint:** Make sure to get the right location of the log files as they are often stored at different non-default locations.
-  
-  **Hint 2:** MoreRecentThan filter is only applied to the Last Modified Time of files returned by the IISLogFiles glob. This improves the artefact's performance on systems with many log files. Use the SearchRegex filter for filtering on a per line basis.
+
+  Parameters include SearchRegex and WhitelistRegex as regex terms and
+  MoreRecentThan as timestamp.
+
+  **Hint:** Make sure to get the right location of the log files as
+    they are often stored at different non-default locations.
+
+  **Hint 2:** MoreRecentThan filter is only applied to the Last
+    Modified Time of files returned by the IISLogFiles glob. This
+    improves the artefact's performance on systems with many log
+    files. Use the SearchRegex filter for filtering on a per line
+    basis.
+
+    For example, a regex like `2025-07-2[1-5]` will efficiently
+    recover lines with ISO times between the 21st and 25th July 2025.
 
 author: "Matt Green - @mgreen27, Updated by Stephan Mikiss"
 
@@ -29,7 +39,7 @@ sources:
 
     query: |
       LET files = SELECT OSPath,Mtime AS MTime FROM glob(globs=IISLogFiles)
-      
+
       LET more_recent = SELECT * FROM if(
         condition=MoreRecentThan,
         then={

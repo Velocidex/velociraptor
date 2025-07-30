@@ -41,6 +41,9 @@ func (self *SanityChecks) CheckSecuritySettings(
 		}
 	}
 
+	if file_store.AllowedPrefixes == nil {
+		file_store.AllowedPrefixes = utils.NewPrefixTree()
+	}
 	for _, allowed := range config_obj.Security.AllowedFsAccessorPrefix {
 		file_store.AllowedPrefixes.Add([]string{allowed})
 	}

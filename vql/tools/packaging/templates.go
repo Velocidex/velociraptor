@@ -163,6 +163,11 @@ exit $RETVAL
 		// installs. We create the relevant files in this script based
 		// on detecting the type of system we are running on.
 		"Postin": `
+# Lock down permissions on the config file.
+chmod -R go-r $(dirname "{{.ConfigPath}}")
+chown root:root {{.VelociraptorBinaryPath}}
+chmod 755 {{.VelociraptorBinaryPath}}
+
 if [ -f /bin/systemctl ] ; then
 
 cat << SYSTEMDSCRIPT > /etc/systemd/system/{{.SystemdServiceFile}}
@@ -293,7 +298,8 @@ chown {{.ServerUser}}:{{.ServerUser}} -R $(dirname "{{.ConfigPath}}")
 
 # Lock down permissions on the config file.
 chmod -R go-r $(dirname "{{.ConfigPath}}")
-chmod o+x {{.VelociraptorBinaryPath}}
+chown root:root {{.VelociraptorBinaryPath}}
+chmod 755 {{.VelociraptorBinaryPath}}
 
 # Allow the server to bind to low ports and increase its fd limit.
 setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip {{.VelociraptorBinaryPath}}
@@ -311,7 +317,8 @@ setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip {{.VelociraptorBinaryPath}}
 		"PostInst": `
 # Lock down permissions on the config file.
 chmod -R go-r $(dirname "{{.ConfigPath}}")
-chmod o+x {{.VelociraptorBinaryPath}}
+chown root:root {{.VelociraptorBinaryPath}}
+chmod 755 {{.VelociraptorBinaryPath}}
 
 /bin/systemctl enable {{.SystemdServiceFile}}
 /bin/systemctl start {{.SystemdServiceFile}}

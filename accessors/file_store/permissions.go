@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	AllowedPrefixes = utils.NewPrefixTree()
+	// By default all filestore access is allowed.
+	AllowedPrefixes *utils.PrefixTree
 	DeniedError     = utils.Wrap(acls.PermissionDenied, "No accesss to file store path")
 )
 
@@ -15,6 +16,9 @@ var (
 // helps prevent circumvention of the ACL system by reading files
 // directly from disk.
 func isFileAccessible(filename api.FSPathSpec) error {
+	if AllowedPrefixes == nil {
+		return nil
+	}
 	components := filename.Components()
 	if len(components) == 0 {
 		return nil

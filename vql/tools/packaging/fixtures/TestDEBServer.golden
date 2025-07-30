@@ -264,6 +264,7 @@ services:
   client_info: true
   label: true
   launcher: true
+security: {}
 ------------
 
 >> /usr/local/bin/velociraptor
@@ -315,7 +316,8 @@ chown velociraptor:velociraptor -R $(dirname "/etc/velociraptor/server.config.ya
 
 # Lock down permissions on the config file.
 chmod -R go-r $(dirname "/etc/velociraptor/server.config.yaml")
-chmod o+x /usr/local/bin/velociraptor
+chown root:root /usr/local/bin/velociraptor
+chmod 755 /usr/local/bin/velociraptor
 
 # Allow the server to bind to low ports and increase its fd limit.
 setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor

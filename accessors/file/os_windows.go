@@ -176,6 +176,11 @@ func discoverDriveLetters() ([]accessors.FileInfo, error) {
 					return nil, err
 				}
 
+				err = CheckPrefix(device_path)
+				if err != nil {
+					continue
+				}
+
 				result = append(result, &accessors.VirtualFileInfo{
 					IsDir_: true,
 					Size_:  size,

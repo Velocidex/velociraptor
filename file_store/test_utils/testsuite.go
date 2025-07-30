@@ -107,6 +107,12 @@ sources:
 - precondition: SELECT * FROM info()
   query: SELECT * FROM info()
   name: Users
+`, `
+name: Artifact.With.Parameters
+parameters:
+- name: Param1
+sources:
+- query: SELECT * FROM info()
 `,
 	}
 )

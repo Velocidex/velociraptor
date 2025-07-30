@@ -3,7 +3,7 @@ velociraptor-server-master-0.74.3.x86_64-localhost-8000.rpm
 >> /etc/velociraptor/server.config.yaml
 
 File /etc/velociraptor/server.config.yaml
-Hash 7ee2540d1ea95ce52b68d915b991c15e1b766ec102a68ac3b7cae181f681542d
+Hash 658e8ab09d4795b94f6600dc3485d0149e48774047ad0cebb27d0809ca0e4cac
 Mode 600
 Owner root
 Group root
@@ -52,7 +52,8 @@ chown velociraptor:velociraptor -R $(dirname "/etc/velociraptor/server.config.ya
 
 # Lock down permissions on the config file.
 chmod -R go-r $(dirname "/etc/velociraptor/server.config.yaml")
-chmod o+x /usr/local/bin/velociraptor
+chown root:root /usr/local/bin/velociraptor
+chmod 755 /usr/local/bin/velociraptor
 
 # Allow the server to bind to low ports and increase its fd limit.
 setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor

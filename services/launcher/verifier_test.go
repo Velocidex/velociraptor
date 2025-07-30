@@ -20,6 +20,9 @@ var (
 		{"Calling Artifact with unknown parameter",
 			"SELECT * FROM Artifact.Generic.Client.Info(Foo=3)",
 			"Call to Artifact.Generic.Client.Info contains unknown parameter Foo"},
+		{"Calling Artifact with known parameter",
+			"SELECT * FROM Artifact.Artifact.With.Parameters(`Param1`='hello')",
+			""},
 
 		{"Calling unknown Artifact",
 			"SELECT * FROM Artifact.Generic.Unknown.Artifact()",
@@ -32,6 +35,10 @@ var (
 		{"Function with args - Missing required arg",
 			`SELECT parse_string_with_regex(string='hello') FROM scope()`,
 			"While calling vql function parse_string_with_regex.+, required arg regex is not called"},
+
+		{"Function with args - delimited by `",
+			"SELECT parse_string_with_regex(`string`='hello', `regex`='bar') FROM scope()",
+			""},
 	}
 )
 
