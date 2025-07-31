@@ -261,3 +261,26 @@ Output: [
  }
 ]
 
+# Test VarInts
+Query: LET X <= parse_binary(accessor="data", filename=VarIntData, offset=0, profile=VarIntProfile, struct="Header")
+Output: []
+
+# Arrays can be indexed. Retrieving the array member is actually a
+# VarInt object because we need to get its size since it is
+# variable. If we want to do addition etc we need to get the Value.
+Query: SELECT X.Array, X.Array[0], X.Array[0].Size, X.Array[0].Value, X.Field1, X.Field1.Size FROM scope()
+Output: [
+ {
+  "X.Array": [
+   10230993603,
+   10230993603,
+   10230993603
+  ],
+  "X.Array[0]": 10230993603,
+  "X.Array[0].Size": 5,
+  "X.Array[0].Value": 10230993603,
+  "X.Field1": 10230993603,
+  "X.Field1.Size": 5
+ }
+]
+

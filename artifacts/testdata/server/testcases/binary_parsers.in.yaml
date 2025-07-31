@@ -9,6 +9,15 @@ Parameters:
        }]
       ]]
     ]
+  VarIntData: "\xe5\x8e\x26\xe5\x8e\x26\xe5\x8e\x26\xe5\x8e\x26\x00\x00"
+  VarIntProfile: |
+    [[Header, 0, [
+       [Field1, 0, leb128],
+       [Array, 0, Array, {
+         type: "leb128",
+         count: 3,
+      }]
+    ]]]
 
 Queries:
   - SELECT ModuleName, Timestamp, Functions[1]
@@ -36,3 +45,21 @@ Queries:
          filename=unhex(string=Data),profile=Profile, struct="MRU").Items AS Items
       FROM scope()
     })
+
+  # Test VarInts
+  -  LET X <= parse_binary(accessor="data",
+                          filename=VarIntData,
+                          offset=0,
+                          profile=VarIntProfile,
+                          struct="Header")
+
+  # Arrays can be indexed. Retrieving the array member is actually a
+  # VarInt object because we need to get its size since it is
+  # variable. If we want to do addition etc we need to get the Value.
+  - SELECT X.Array,
+           X.Array[0],
+           X.Array[0].Size,
+           X.Array[0].Value,
+           X.Field1,
+           X.Field1.Size
+    FROM scope()
