@@ -24,6 +24,25 @@ import { JSONparse } from '../utils/json_parse.jsx';
 import VeloSigmaEditor from '../artifacts/sigma-editor.jsx';
 
 
+const cleanupHTML = (html) => {
+    // React expect no whitespace between table elements
+    html = html.replace(/>\s*<thead/g, "><thead");
+    html = html.replace(/>\s*<tbody/g, "><tbody");
+    html = html.replace(/>\s*<tr/g, "><tr");
+    html = html.replace(/>\s*<th/g, "><th");
+    html = html.replace(/>\s*<td/g, "><td");
+
+    html = html.replace(/>\s*<\/table/g, "></table");
+    html = html.replace(/>\s*<\/thead/g, "></thead");
+    html = html.replace(/>\s*<\/tbody/g, "></tbody");
+    html = html.replace(/>\s*<\/tr/g, "></tr");
+    html = html.replace(/>\s*<\/th/g, "></th");
+    html = html.replace(/>\s*<\/td/g, "></td");
+    return html;
+};
+
+
+
 const parse_param = domNode=>JSONparse(decodeURIComponent(
     domNode.attribs.params, {}));
 
@@ -109,7 +128,7 @@ export default class NotebookReportRenderer extends React.Component {
         }
 
         let cell_id = this.props.cell && this.props.cell.cell_id;
-        let template = parseHTML(this.props.cell.output, {
+        let template = parseHTML(cleanupHTML(this.props.cell.output), {
             replace: (domNode) => {
                 if (domNode.name === "velo-value") {
                     let value = decodeURIComponent(domNode.attribs.value || "");
@@ -172,7 +191,6 @@ export default class NotebookReportRenderer extends React.Component {
                 return domNode;
             }
         });
-
         result.push(<div key="3" className="report-viewer">{template}</div>);
         return result;
     }
