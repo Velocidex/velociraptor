@@ -1,0 +1,7 @@
+Queries:
+  - LET X = scope()
+  - |
+    SELECT OSPath.Basename, X.TabState.Header AS TabState, X.WindowState AS WindowState
+    FROM Artifact.Windows.Forensics.NotepadParser(
+      WindowStateGlob=srcDir + "/artifacts/testdata/files/notepad/*[01].bin",
+      TabStateGlob=srcDir + "/artifacts/testdata/files/notepad/*.bin")

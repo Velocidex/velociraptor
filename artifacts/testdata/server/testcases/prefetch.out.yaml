@@ -43,6 +43,7 @@ Output: [
      }
     ],
     "RunCount": 30,
+    "ExecutablePath": "\\DEVICE\\MUP\\VMWARE-HOST\\SHARED FOLDERS\\SHARED\\VELOCIRAPTOR.EXE",
     "Metrics": [
      {
       "Filename": "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\WINDOWS\\SYSTEM32\\NTDLL.DLL"
