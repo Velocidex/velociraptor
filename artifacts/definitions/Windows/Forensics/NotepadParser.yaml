@@ -1,0 +1,183 @@
+name: Windows.Forensics.NotepadParser
+description: |
+  Parse the Windows 11 Notepad state files.
+
+  Based on the research work published by ogmini.
+
+reference:
+  - https://github.com/ogmini/Notepad-State-Library
+  - https://ogmini.github.io/tags.html#Windows-Notepad
+
+author: ogmini https://ogmini.github.io/ and Mike Cohen
+
+parameters:
+  - name: WindowStateGlob
+    default: C:/Users/*/AppData/Local*/Packages/Microsoft.WindowsNotepad*/LocalState/WindowState/*[01].bin
+  - name: TabStateGlob
+    default: C:/Users/*/AppData/Local*/Packages/Microsoft.WindowsNotepad*/LocalState/TabState/*.bin
+
+export: |
+    LET WinNotepadProfile <= '''[
+      [WindowStateHeader, 0, [
+        [Signature, 0, String, {
+            length: 2,
+        }],
+        [Sequence, 2, leb128],
+        [BytesToCRC, "x=>x.Sequence.EndOf", leb128],
+        [NumberTabs, "x=>x.BytesToCRC.EndOf + 1", leb128],
+        [Tabs, "x=>x.NumberTabs.EndOf", Array, {
+           type: GUID,
+           count: "x=>x.NumberTabs.Value",
+           sentinel: "x=>x.__D1 = 0 AND x.__D2 = 0",
+        }],
+        [ActiveTab, "x=>x.Tabs.EndOf", leb128],
+        [Offset, 0, Value, {
+          value: "x=>x.Tabs.EndOf",
+        }]
+      ]],
+
+      ["GUID", 16, [
+        ["__D1", 0, "uint32"],
+        ["__D2", 4, "uint16"],
+        ["__D3", 6, "uint16"],
+        ["__D4", 8, "String", {"term": "", "length": 2}],
+        ["__D5", 10, "String", {"term": "", "length": 6}],
+        ["Value", 0, "Value", { "value": "x=>upcase(string=
+            format(format='%08x-%04x-%04x-%02x-%02x',
+              args=[x.__D1, x.__D2, x.__D3, x.__D4, x.__D5]))" }],
+      ]],
+
+      [TabStateHeader, 0, [
+        [Signature, 0, String, {
+            length: 2,
+        }],
+        [Sequence, 2, leb128],
+        [Type, "x=>x.Sequence.EndOf", leb128],
+        [Header, 0, Union, {
+           selector: "x=>x.Type.Value",
+           choices: {
+             "0": "TabStateHeaderUnsaved",
+             "1": "TabStateHeaderSaved",
+           },
+        }],
+      ]],
+
+      [TabStateHeaderUnsaved, 0, [
+        [Signature, 0, String, {
+            length: 2,
+        }],
+        [Sequence, 2, leb128],
+        [Type, "x=>x.Sequence.EndOf", leb128],
+
+        [CursorPosition, "x=>x.Type.EndOf + 1", CursorPosition],
+        [ConfigurationBlock, "x=>x.CursorPosition.EndOf", ConfigurationBlock],
+        [ContentLength, "x=>x.ConfigurationBlock.EndOf", leb128],
+        [Content, "x=>x.ContentLength.EndOf", String, {
+            encoding: "utf16",
+            length: "x=>x.ContentLength.Value * 2",
+            max_length: 100000,
+        }],
+        [Unsaved, "x=>x.ContentLength.EndOf + x.ContentLength.Value * 2", uint8],
+        [CRC32, "x=>x.ContentLength.EndOf + x.ContentLength.Value * 2 + 1", uint32],
+      ]],
+
+      [TabStateHeaderSaved, 0, [
+        [HeaderType, 0, Value, {
+          value: "Saved",
+        }],
+        [Signature, 0, String, {
+            length: 2,
+        }],
+        [Sequence, 2, leb128],
+        [Type, "x=>x.Sequence.EndOf", leb128],
+        [FilePathLength, "x=>x.Type.EndOf", leb128],
+        [FilePath, "x=>x.FilePathLength.EndOf", String, {
+            encoding: "utf16",
+            length: "x=>x.FilePathLength.Value * 2",
+        }],
+        [SavedFileContentLength,
+            "x=>x.FilePathLength.EndOf + x.FilePathLength.Value * 2",
+            leb128],
+        [EncodingType, "x=>x.SavedFileContentLength.EndOf", "uint8"],
+        [CarriageReturnType,
+            "x=>x.SavedFileContentLength.EndOf + 1", uint8],
+        [__Timestamp, "x=>x.SavedFileContentLength.EndOf + 2", leb128],
+        [Timestamp, 0, Value, {
+            value: "x=>timestamp(winfiletime=x.__Timestamp.Value)",
+        }],
+        [FileHash, "x=>x.__Timestamp.EndOf", String, {
+            length: 32, term: "",
+        }],
+        [CursorPosition, "x=>x.__Timestamp.EndOf + 34", CursorPosition],
+        [ConfigurationBlock, "x=>x.CursorPosition.EndOf",
+             ConfigurationBlock],
+        [ContentLength, "x=>x.ConfigurationBlock.EndOf", leb128],
+        [Content, "x=>x.ContentLength.EndOf", String, {
+            encoding: "utf16",
+            length: "x=>x.ContentLength.Value * 2",
+            max_length: 100000,
+        }],
+        [Unsaved, "x=>x.ContentLength.EndOf + x.ContentLength.Value * 2", uint8],
+        [CRC32, "x=>x.ContentLength.EndOf + x.ContentLength.Value * 2 + 1", uint32],
+        [UnsavedBuffers, "x=>x.ContentLength.EndOf + x.ContentLength.Value * 2 + 1 + 4", Array, {
+           type: UnsavedBuffer,
+           count: 100,
+           sentinel: "x=>x.AdditionAction.Value = 0",
+        }],
+      ]],
+      [ConfigurationBlock, "x=>x.MoreOptions.EndOf + x.MoreOptions.Value - x.OffsetOf", [
+         ["WordWrap", 0, uint8],
+         ["RightToLeft", 1, uint8],
+         [ShowUnicode, 2, uint8],
+         [MoreOptions, 3, leb128],
+      ]],
+      [CursorPosition, "x=>x.SelectionEndIndex.EndOf - x.OffsetOf", [
+        [SelectionStartIndex, 0, leb128],
+        [SelectionEndIndex, "x=>x.SelectionStartIndex.SizeOf", leb128],
+      ]],
+
+      [UnsavedBuffer,
+          "x=>x.AdditionAction.EndOf + 4 + (2 * x.AdditionAction.Value) - x.OffsetOf", [
+        [Offset, 0, Value, {
+          value: "x=>x.OffsetOf",
+        }],
+        [CursorPosition, 0, leb128],
+        [DeletionAction, "x=>x.CursorPosition.EndOf - x.OffsetOf", leb128],
+        [AdditionAction, "x=>x.DeletionAction.EndOf - x.OffsetOf", leb128],
+        [AddedChars, "x=>x.AdditionAction.EndOf - x.OffsetOf", String, {
+            encoding: "utf16",
+            length: "x=>x.AdditionAction.Value * 2",
+        }]
+      ]],
+    ]
+    '''
+
+
+sources:
+- name: TabState
+  query:
+    LET AllFiles = SELECT OSPath, Mtime, Size
+       FROM glob(globs=TabStateGlob)
+
+    SELECT *, parse_binary(
+      filename=OSPath,
+      offset=0,
+      profile=WinNotepadProfile,
+      struct="TabStateHeader") AS TabState
+
+    FROM AllFiles
+    WHERE TabState.Header.Signature
+
+- name: WindowState
+  query:
+    LET AllFiles = SELECT OSPath, Mtime, Size
+       FROM glob(globs=WindowStateGlob)
+
+    SELECT *, parse_binary(
+      filename=OSPath,
+      offset=0,
+      profile=WinNotepadProfile,
+      struct="WindowStateHeader") AS WindowState
+
+    FROM AllFiles
+    WHERE WindowState.Signature = "NP"

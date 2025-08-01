@@ -75,8 +75,7 @@ export: |
             "type": "uint32",
         }],
         ["ut_ip_address", 348, "int64"],
-    ]
-    ]
+      ]]
     ]]
     ]'''
 
@@ -120,7 +119,7 @@ sources:
          query={
            SELECT OSPath,
               ut_type AS login_Type,
-              ut_id AS login_ID,
+              ut_terminal_identifier AS login_ID,
               ut_pid as login_PID,
               ut_hostname as login_Host,
               ut_user as login_User,

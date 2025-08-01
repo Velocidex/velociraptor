@@ -1,0 +1,114 @@
+Query: LET X = scope()
+Output: []
+
+Query: SELECT OSPath.Basename, X.TabState.Header AS TabState, X.WindowState AS WindowState
+FROM Artifact.Windows.Forensics.NotepadParser(
+  WindowStateGlob=srcDir + "/artifacts/testdata/files/notepad/*[01].bin",
+  TabStateGlob=srcDir + "/artifacts/testdata/files/notepad/*.bin")
+
+Output: [
+ {
+  "OSPath.Basename": "SavedFile-LargeCopyPaste-Closed.bin",
+  "TabState": {
+   "HeaderType": "Saved",
+   "Signature": "NP",
+   "Sequence": 0,
+   "Type": 1,
+   "FilePathLength": 87,
+   "FilePath": "C:\\Users\\Reversing\\Desktop\\Test Cases\\Saved File\\SavedFile-LargeCopyPaste-NotClosed.txt",
+   "SavedFileContentLength": 32,
+   "EncodingType": 5,
+   "CarriageReturnType": 1,
+   "Timestamp": "2024-04-16T17:18:43Z",
+   "FileHash": "Z\ufffd\ufffd\ufffd\ufffd\ufffdM\ufffd\u000b\ufffd\ufffd\ufffd\ufffd\ufffd\u0005XƷ\ufffd\t\u0015h\ufffd\ufffd6,?{\ufffd\ufffd+6",
+   "CursorPosition": {
+    "SelectionStartIndex": 781,
+    "SelectionEndIndex": 781
+   },
+   "ConfigurationBlock": {
+    "WordWrap": 1,
+    "RightToLeft": 0,
+    "ShowUnicode": 0,
+    "MoreOptions": 0
+   },
+   "ContentLength": 815,
+   "Content": "Saved file with large copy paste\r\rLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Viverra nibh cras pulvinar mattis nunc sed blandit libero. Sit amet cursus sit amet dictum sit amet. A arcu cursus vitae congue mauris rhoncus. Lorem dolor sed viverra ipsum. Faucibus et molestie ac feugiat. At lectus urna duis convallis convallis tellus id interdum velit. Sit amet dictum sit amet justo donec enim diam. Sem nulla pharetra diam sit amet nisl suscipit. Tempus iaculis urna id volutpat lacus laoreet non. Libero volutpat sed cras ornare arcu dui. Commodo elit at imperdiet dui accumsan sit amet. Augue neque gravida in fermentum et sollicitudin. Pellentesque dignissim enim sit amet venenatis urna cursus eget. Ornare arcu odio ut sem nulla.",
+   "Unsaved": 1,
+   "CRC32": 3505495462,
+   "UnsavedBuffers": []
+  },
+  "WindowState": null
+ },
+ {
+  "OSPath.Basename": "SavedFile-LargeCopyPaste-NotClosed.bin",
+  "TabState": {
+   "HeaderType": "Saved",
+   "Signature": "NP",
+   "Sequence": 0,
+   "Type": 1,
+   "FilePathLength": 87,
+   "FilePath": "C:\\Users\\Reversing\\Desktop\\Test Cases\\Saved File\\SavedFile-LargeCopyPaste-NotClosed.txt",
+   "SavedFileContentLength": 32,
+   "EncodingType": 5,
+   "CarriageReturnType": 1,
+   "Timestamp": "2024-04-16T17:18:43Z",
+   "FileHash": "Z\ufffd\ufffd\ufffd\ufffd\ufffdM\ufffd\u000b\ufffd\ufffd\ufffd\ufffd\ufffd\u0005XƷ\ufffd\t\u0015h\ufffd\ufffd6,?{\ufffd\ufffd+6",
+   "CursorPosition": {
+    "SelectionStartIndex": 32,
+    "SelectionEndIndex": 32
+   },
+   "ConfigurationBlock": {
+    "WordWrap": 1,
+    "RightToLeft": 0,
+    "ShowUnicode": 0,
+    "MoreOptions": 0
+   },
+   "ContentLength": 32,
+   "Content": "Saved file with large copy paste",
+   "Unsaved": 0,
+   "CRC32": 2174608819,
+   "UnsavedBuffers": [
+    {
+     "Offset": 301,
+     "CursorPosition": 32,
+     "DeletionAction": 0,
+     "AdditionAction": 1,
+     "AddedChars": "\r"
+    },
+    {
+     "Offset": 310,
+     "CursorPosition": 33,
+     "DeletionAction": 0,
+     "AdditionAction": 1,
+     "AddedChars": "\r"
+    },
+    {
+     "Offset": 319,
+     "CursorPosition": 34,
+     "DeletionAction": 0,
+     "AdditionAction": 781,
+     "AddedChars": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Viverra nibh cras pulvinar mattis nunc sed blandit libero. Sit amet cursus sit amet dictum sit amet. A arcu cursus vitae congue mauris rhoncus. Lorem dolor sed viverra ipsum. Faucibus et molestie ac feugiat. At lectus urna duis convallis convallis tellus id interdum velit. Sit amet dictum sit amet justo donec enim diam. Sem nulla pharetra diam sit amet nisl suscipit. Tempus iaculis urn"
+    }
+   ]
+  },
+  "WindowState": null
+ },
+ {
+  "OSPath.Basename": "SavedFile-Long.0.bin",
+  "TabState": null,
+  "WindowState": {
+   "Signature": "NP",
+   "Sequence": 0,
+   "BytesToCRC": 14,
+   "NumberTabs": 1680221,
+   "Tabs": [
+    {
+     "Value": "C833A2C8-33A2-0001-0000-B79F74280000"
+    }
+   ],
+   "ActiveTab": 0,
+   "Offset": 24
+  }
+ }
+]
+

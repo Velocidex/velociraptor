@@ -5,7 +5,7 @@ Output: [
  {
   "OSPath": "wtmp.1",
   "login_Type": "USER_PROCESS",
-  "login_ID": null,
+  "login_ID": "ts/9",
   "login_PID": 3435060,
   "login_Host": "192.168.1.2",
   "login_User": "mic",
