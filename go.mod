@@ -155,7 +155,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	software.sslmate.com/src/go-pkcs12 v0.2.0
-	www.velocidex.com/golang/vtypes v0.0.0-20250801090559-44be16b21dfa
+	www.velocidex.com/golang/vtypes v0.0.0-20250802153006-821cec8fd392
 )
 
 require (

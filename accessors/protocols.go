@@ -23,6 +23,18 @@ func (self _BoolOSPath) Bool(ctx context.Context, scope vfilter.Scope, a vfilter
 		os_path.DelegatePath() != "")
 }
 
+type _BoolFileInfo struct{}
+
+func (self _BoolFileInfo) Applicable(a vfilter.Any) bool {
+	_, ok := a.(FileInfo)
+	return ok
+}
+
+func (self _BoolFileInfo) Bool(
+	ctx context.Context, scope vfilter.Scope, a vfilter.Any) bool {
+	return true
+}
+
 type _EqualOSPath struct{}
 
 func (self _EqualOSPath) Applicable(a vfilter.Any, b vfilter.Any) bool {
@@ -242,6 +254,7 @@ func (self _AssociativeOSPath) GetMembers(scope vfilter.Scope, a vfilter.Any) []
 
 func init() {
 	vql_subsystem.RegisterProtocol(&_BoolOSPath{})
+	vql_subsystem.RegisterProtocol(&_BoolFileInfo{})
 	vql_subsystem.RegisterProtocol(&_EqualOSPath{})
 	vql_subsystem.RegisterProtocol(&_LtOSPath{})
 	vql_subsystem.RegisterProtocol(&_AddOSPath{})

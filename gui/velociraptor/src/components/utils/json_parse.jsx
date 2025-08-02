@@ -13,3 +13,20 @@ export function JSONparse(x, default_value) {
         return x;
     };
 }
+
+export function ValidateJSON(x) {
+    try {
+        JSON.parse(x);
+        return true;
+    } catch(e) {
+        return false;
+    };
+}
+
+export function serializeJSON(x) {
+    try {
+        return JSON.stringify(x);
+    } catch(e) {
+        return "";
+    };
+}

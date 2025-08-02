@@ -20,6 +20,7 @@ package tables
 import (
 	"context"
 	"io"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -128,8 +129,13 @@ func getTable(
 		ctx, config_obj,
 		file_store_factory, path_spec, options)
 
-	if err != nil {
+	// if the result does not exist yet, just return an empty result.
+	if errors.Is(err, os.ErrNotExist) {
 		return result, nil
+	}
+
+	if err != nil {
+		return nil, err
 	}
 	defer rs_reader.Close()
 
