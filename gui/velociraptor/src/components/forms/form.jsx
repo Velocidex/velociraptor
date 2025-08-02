@@ -14,6 +14,7 @@ import YaraEditor from './yara.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
 import Alert from 'react-bootstrap/Alert';
 import CSVForm from './csv.jsx';
+import JSONArrayForm from './json_array.jsx';
 import Select from 'react-select';
 import T from '../i8n/i8n.jsx';
 import { JSONparse } from '../utils/json_parse.jsx';
@@ -215,6 +216,13 @@ export default class VeloForm extends React.Component {
         switch(param.type) {
         case "hidden":
             return <></>;
+
+        case "json_array": {
+            return <JSONArrayForm
+                     param={this.props.param}
+                     value={this.props.value}
+                     setValue={this.props.setValue}/>;
+        }
 
         case "csv": {
             return <CSVForm

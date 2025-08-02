@@ -1,0 +1,71 @@
+name: Generic.Utils.SendEmail
+description: |
+  A Utility artifact for sending emails.
+
+type: SERVER
+
+parameters:
+- name: Secret
+  default: gmail
+  description: The name of the secret to use to send the mail with.
+
+- name: Receipient
+  default: noone@gmail.com
+  description: Where to send the mail to.
+
+- name: FilesToUpload
+  type: json_array
+  default: '["C:/test.txt"]'
+
+- name: PlainTextMessage
+  default: A test email
+
+- name: Subject
+  default: A message from Velociraptor
+
+export: |
+   LET Boundary = format(format="-----------------------------9051914041544843%v",
+                         args=now())
+
+   -- A Helper function to make a plain text message.
+   LET PlainData(Value) = format(
+       format='--%s\r\nContent-Type: text/plain; charset="utf-8"\r\n\r\n%v\r\n',
+       args=[Boundary, Value])
+
+   -- Encodes the file as base64 with lines split on 80 chars
+   LET EncodeFile(Filename) = regex_replace(
+       re="(.{80})",
+       replace="$1\r\n",
+       source=base64encode(string=read_file(filename=Filename)))
+
+   -- A Helper function to embed a file content from disk.
+   LET AttachFile(Filename) = format(
+       format='--%s\r\nContent-Type: application/octet-stream; name="%s"\r\nContent-Disposition: attachment; filename="%s"\r\nContent-Transfer-Encoding: base64\r\n\r\n%v\r\n\r\n',
+       args=[Boundary, basename(path=Filename),
+             basename(path=Filename), EncodeFile(Filename=Filename)])
+
+   -- The End boundary signals the last part
+   LET END = format(format="%s--\r\n", args=Boundary)
+
+sources:
+- query: |
+    LET MessageParts = SELECT AttachFile(Filename=_value) AS Part
+       FROM foreach(row=FilesToUpload)
+       WHERE stat(filename=_value).OSPath
+         AND log(message="Attaching %v", args=_value, dedup=-1)
+
+    LET Headers <= dict(
+     `Content-Type`='multipart/mixed; boundary=' + Boundary)
+
+    // Build the email parts - first the plain text message, then the
+    // attachments.
+    LET Message <= join(sep="\r\n",
+       array=( PlainData(Value=PlainTextMessage) , ) + MessageParts.Part + END)
+
+    -- Send the mail
+    SELECT mail(secret=Secret,
+                `to`=Receipient,
+                subject=Subject,
+                headers=Headers,
+                `body`=Message) AS Mail
+    FROM scope()

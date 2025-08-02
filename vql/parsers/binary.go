@@ -87,8 +87,8 @@ func (self ParseBinaryFunction) Call(
 }
 
 func init() {
-	vql_subsystem.RegisterProtocol(&vtypes.StructAssociative{})
-	vql_subsystem.RegisterProtocol(&vtypes.ArrayAssociative{})
-	vql_subsystem.RegisterProtocol(&vtypes.ArrayIterator{})
+	for _, p := range vtypes.GetProtocols() {
+		vql_subsystem.RegisterProtocol(p)
+	}
 	vql_subsystem.RegisterFunction(&ParseBinaryFunction{})
 }

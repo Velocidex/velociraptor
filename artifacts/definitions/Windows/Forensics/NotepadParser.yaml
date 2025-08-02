@@ -23,8 +23,8 @@ export: |
             length: 2,
         }],
         [Sequence, 2, leb128],
-        [BytesToCRC, "x=>x.Sequence.EndOf", leb128],
-        [NumberTabs, "x=>x.BytesToCRC.EndOf + 1", leb128],
+        [BytesToCRC, "x=>x.`@Sequence`.EndOf", leb128],
+        [NumberTabs, "x=>x.`@BytesToCRC`.EndOf + 1", leb128],
         [Tabs, "x=>x.NumberTabs.EndOf", Array, {
            type: GUID,
            count: "x=>x.NumberTabs.Value",
@@ -77,8 +77,8 @@ export: |
             length: "x=>x.ContentLength.Value * 2",
             max_length: 100000,
         }],
-        [Unsaved, "x=>x.ContentLength.EndOf + x.ContentLength.Value * 2", uint8],
-        [CRC32, "x=>x.ContentLength.EndOf + x.ContentLength.Value * 2 + 1", uint32],
+        [Unsaved, "x=>x.`@Content`.EndOf", uint8],
+        [CRC32, "x=>x.`@Unsaved`.EndOf", uint32],
       ]],
 
       [TabStateHeaderSaved, 0, [
@@ -95,31 +95,27 @@ export: |
             encoding: "utf16",
             length: "x=>x.FilePathLength.Value * 2",
         }],
-        [SavedFileContentLength,
-            "x=>x.FilePathLength.EndOf + x.FilePathLength.Value * 2",
-            leb128],
-        [EncodingType, "x=>x.SavedFileContentLength.EndOf", "uint8"],
-        [CarriageReturnType,
-            "x=>x.SavedFileContentLength.EndOf + 1", uint8],
-        [__Timestamp, "x=>x.SavedFileContentLength.EndOf + 2", leb128],
+        [SavedFileContentLength, "x=>x.`@FilePath`.EndOf", leb128],
+        [EncodingType, "x=>x.SavedFileContentLength.EndOf", uint8],
+        [CarriageReturnType, "x=>x.`@EncodingType`.EndOf", uint8],
+        [__Timestamp, "x=>x.`@CarriageReturnType`.EndOf", leb128],
         [Timestamp, 0, Value, {
             value: "x=>timestamp(winfiletime=x.__Timestamp.Value)",
         }],
         [FileHash, "x=>x.__Timestamp.EndOf", String, {
             length: 32, term: "",
         }],
-        [CursorPosition, "x=>x.__Timestamp.EndOf + 34", CursorPosition],
-        [ConfigurationBlock, "x=>x.CursorPosition.EndOf",
-             ConfigurationBlock],
+        [CursorPosition, "x=>x.`@FileHash`.EndOf + 2", CursorPosition],
+        [ConfigurationBlock, "x=>x.CursorPosition.EndOf", ConfigurationBlock],
         [ContentLength, "x=>x.ConfigurationBlock.EndOf", leb128],
         [Content, "x=>x.ContentLength.EndOf", String, {
             encoding: "utf16",
             length: "x=>x.ContentLength.Value * 2",
             max_length: 100000,
         }],
-        [Unsaved, "x=>x.ContentLength.EndOf + x.ContentLength.Value * 2", uint8],
-        [CRC32, "x=>x.ContentLength.EndOf + x.ContentLength.Value * 2 + 1", uint32],
-        [UnsavedBuffers, "x=>x.ContentLength.EndOf + x.ContentLength.Value * 2 + 1 + 4", Array, {
+        [Unsaved, "x=>x.`@Content`.EndOf", uint8],
+        [CRC32, "x=>x.`@Unsaved`.EndOf", uint32],
+        [UnsavedBuffers, "x=>x.`@CRC32`.EndOf", Array, {
            type: UnsavedBuffer,
            count: 100,
            sentinel: "x=>x.AdditionAction.Value = 0",
@@ -133,20 +129,20 @@ export: |
       ]],
       [CursorPosition, "x=>x.SelectionEndIndex.EndOf - x.OffsetOf", [
         [SelectionStartIndex, 0, leb128],
-        [SelectionEndIndex, "x=>x.SelectionStartIndex.SizeOf", leb128],
+        [SelectionEndIndex, "x=>x.`@SelectionStartIndex`.RelEndOf", leb128],
       ]],
 
-      [UnsavedBuffer,
-          "x=>x.AdditionAction.EndOf + 4 + (2 * x.AdditionAction.Value) - x.OffsetOf", [
+      [UnsavedBuffer, "x=>x.`@AddedChars`.EndOf + 4 - x.OffsetOf", [
         [Offset, 0, Value, {
           value: "x=>x.OffsetOf",
         }],
         [CursorPosition, 0, leb128],
-        [DeletionAction, "x=>x.CursorPosition.EndOf - x.OffsetOf", leb128],
-        [AdditionAction, "x=>x.DeletionAction.EndOf - x.OffsetOf", leb128],
-        [AddedChars, "x=>x.AdditionAction.EndOf - x.OffsetOf", String, {
+        [DeletionAction, "x=>x.`@CursorPosition`.RelEndOf", leb128],
+        [AdditionAction, "x=>x.`@DeletionAction`.RelEndOf", leb128],
+        [AddedChars, "x=>x.`@AdditionAction`.RelEndOf", String, {
             encoding: "utf16",
             length: "x=>x.AdditionAction.Value * 2",
+            max_length: 100000,
         }]
       ]],
     ]

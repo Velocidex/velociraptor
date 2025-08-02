@@ -169,7 +169,7 @@ func (self MailFunction) Call(ctx context.Context,
 		from = "no-reply@velociraptor.example.com"
 	}
 
-	m := gomail.NewMessage()
+	m := gomail.NewMessage(gomail.SetEncoding(gomail.Unencoded))
 	m.SetHeader("From", from)
 	m.SetHeader("To", arg.To...)
 	if len(arg.CC) > 0 {
