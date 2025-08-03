@@ -48,9 +48,9 @@ sources:
       WHERE hostname =~ HostnameRegex
 
       LET SearchClients = SELECT * FROM if(
-           condition=SearchDeletedClients,
-           then=SearchDeletedClientsQuery,
-           else=SearchRegisteredClientsQuery)
+           condition=OnlyRegisteredClients,
+           then=SearchRegisteredClientsQuery,
+           else=SearchDeletedClientsQuery)
 
       SELECT * FROM foreach(row=SearchClients,
       query={
@@ -60,7 +60,7 @@ sources:
                if(condition=ReallyDoIt, then=file_store_delete(path=OSPath)) AS ReallyDoIt
         FROM glob(
           globs="/**.json*", accessor="fs",
-          root="/clients/"+ client_id + "/monitoring")
+          root="/clients/"+ ClientId + "/monitoring")
         WHERE ArtifactName =~ ArtifactRegex
           AND Timestamp < DateBefore
       }, workers=10)
