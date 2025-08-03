@@ -10,6 +10,63 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
+type matcher struct {
+	includes []*regexp.Regexp
+	excludes []*regexp.Regexp
+
+	cache map[string]bool
+}
+
+func (self *matcher) ShouldInclude(column string) bool {
+	res, pres := self.cache[column]
+	if pres {
+		return res
+	}
+
+	// Column has to appear in the include set if an include set is
+	// specified.
+	for _, re := range self.includes {
+		if !re.MatchString(column) {
+			self.cache[column] = false
+			return false
+		}
+	}
+
+	// If the column is in the exclude set, then we exclude it.
+	for _, re := range self.excludes {
+		if re.MatchString(column) {
+			self.cache[column] = false
+			return false
+		}
+	}
+
+	self.cache[column] = true
+	return true
+}
+
+func newMatcher(includes []string, excludes []string) (*matcher, error) {
+	self := &matcher{
+		cache: make(map[string]bool),
+	}
+	for _, include := range includes {
+		c, err := regexp.Compile(include)
+		if err != nil {
+			return nil, err
+		}
+		self.includes = append(self.includes, c)
+	}
+
+	for _, exclude := range excludes {
+		c, err := regexp.Compile(exclude)
+		if err != nil {
+			return nil, err
+		}
+		self.excludes = append(self.excludes, c)
+	}
+
+	return self, nil
+}
+
 type ColumnFilterArgs struct {
 	Query   vfilter.StoredQuery `vfilter:"required,field=query,doc=This query will be run to produce the columns."`
 	Exclude []string            `vfilter:"optional,field=exclude,doc=One of more regular expressions that will exclude columns."`
@@ -35,60 +92,18 @@ func (self ColumnFilter) Call(
 			return
 		}
 
-		if len(arg.Include) == 0 {
-			arg.Include = []string{"."}
+		column_matcher, err := newMatcher(arg.Include, arg.Exclude)
+		if err != nil {
+			scope.Log("column_filter: %v", err)
+			return
 		}
-
-		includes := []*regexp.Regexp{}
-
-		for _, include := range arg.Include {
-			c, err := regexp.Compile(include)
-			if err != nil {
-				scope.Log("column_filter: %v", err)
-				return
-			}
-			includes = append(includes, c)
-		}
-
-		excludes := []*regexp.Regexp{}
-
-		for _, exclude := range arg.Exclude {
-			c, err := regexp.Compile(exclude)
-			if err != nil {
-				scope.Log("column_filter: %v", err)
-				return
-			}
-			excludes = append(excludes, c)
-		}
-
-		does_match := func(column string, checks []*regexp.Regexp) bool {
-			for _, re := range checks {
-				if re.MatchString(column) {
-					return true
-				}
-			}
-			return false
-		}
-
-		var column_filter map[string]bool
 
 		// Force the in parameter to be a query.
 		for item := range arg.Query.Eval(ctx, scope) {
-			if column_filter == nil {
-				column_filter = make(map[string]bool)
-				for _, column := range scope.GetMembers(item) {
-					if does_match(column, includes) &&
-						!does_match(column, excludes) {
-						column_filter[column] = true
-					}
-				}
-			}
-
 			new_row := ordereddict.NewDict()
 			for _, column := range scope.GetMembers(item) {
 				value, _ := scope.Associative(item, column)
-				_, pres := column_filter[column]
-				if pres {
+				if column_matcher.ShouldInclude(column) {
 					new_row.Set(column, value)
 				}
 			}

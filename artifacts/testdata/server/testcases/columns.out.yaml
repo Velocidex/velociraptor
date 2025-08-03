@@ -1,0 +1,27 @@
+# Should include column 1 and 3 but not column 2
+Query: SELECT * FROM column_filter(query={ SELECT * FROM parse_json_array(data=MisMatchedRows) }, exclude="Column[2]")
+Output: [
+ {
+  "Column1": 1
+ },
+ {
+  "Column1": 4,
+  "Column3": 5
+ },
+ {
+  "Column3": 2
+ }
+]
+
+# Should only include column 1
+Query: SELECT * FROM column_filter(query={ SELECT * FROM parse_json_array(data=MisMatchedRows) }, include="Column[1-2]", exclude="Column[2]")
+Output: [
+ {
+  "Column1": 1
+ },
+ {
+  "Column1": 4
+ },
+ {}
+]
+

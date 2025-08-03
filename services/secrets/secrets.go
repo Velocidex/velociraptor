@@ -3,7 +3,6 @@ package secrets
 import (
 	"context"
 	"fmt"
-	"sort"
 	"sync"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -80,62 +80,11 @@ func NewSecret(type_name, name string,
 }
 
 type SecretsService struct {
-	definitions_lru *ttlcache.Cache
-	secrets_lru     *ttlcache.Cache
+	mu          sync.Mutex
+	definitions map[string]*SecretDefinition
+	secrets_lru *ttlcache.Cache
 
 	config_obj *config_proto.Config
-}
-
-func (self *SecretsService) DefineSecret(
-	ctx context.Context, definition *api_proto.SecretDefinition) error {
-
-	result, err := NewSecretDefinition(definition)
-	if err != nil {
-		return err
-	}
-	secret_path_manager := paths.SecretsPathManager{}
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return err
-	}
-
-	err = db.SetSubject(self.config_obj,
-		secret_path_manager.SecretsDefinition(definition.TypeName),
-		result.SecretDefinition)
-	if err != nil {
-		return err
-	}
-
-	return self.definitions_lru.Set(definition.TypeName, result)
-}
-
-func (self *SecretsService) DeleteSecretDefinition(
-	ctx context.Context, definition *api_proto.SecretDefinition) error {
-
-	// Get the existing secrets
-	secrets, err := self.getSecretsForDefinition(definition.TypeName)
-	if err != nil {
-		return err
-	}
-
-	secret_path_manager := paths.SecretsPathManager{}
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return err
-	}
-
-	// Delete all secrets
-	for _, name := range secrets {
-		err = db.DeleteSubject(self.config_obj,
-			secret_path_manager.Secret(definition.TypeName, name))
-		if err != nil {
-			continue
-		}
-	}
-
-	_ = self.definitions_lru.Remove(definition.TypeName)
-	return db.DeleteSubject(self.config_obj,
-		secret_path_manager.SecretsDefinition(definition.TypeName))
 }
 
 func (self *SecretsService) getSecretsForDefinition(
@@ -147,7 +96,7 @@ func (self *SecretsService) getSecretsForDefinition(
 	}
 
 	children, _ := db.ListChildren(self.config_obj,
-		paths.SecretsPathManager{}.SecretsDefinition(type_name))
+		paths.SecretsPathManager{}.SecretsDefinitionDir(type_name))
 	for _, c := range children {
 		secret_name := c.Base()
 		res = append(res, secret_name)
@@ -157,30 +106,13 @@ func (self *SecretsService) getSecretsForDefinition(
 
 func (self *SecretsService) getSecretDefinition(
 	ctx context.Context, type_name string) (*SecretDefinition, error) {
-	definition, err := self.definitions_lru.Get(type_name)
-	if err == nil {
-		return definition.(*SecretDefinition).Clone(), nil
+	definition, pres := self.definitions[type_name]
+	if !pres {
+		return nil, fmt.Errorf("SecretDefinition %v not found: %w",
+			type_name, utils.NotFoundError)
 	}
 
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	secret_path_manager := paths.SecretsPathManager{}
-	secrets_definition := &api_proto.SecretDefinition{}
-	err = db.GetSubject(self.config_obj,
-		secret_path_manager.SecretsDefinition(type_name),
-		secrets_definition)
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := NewSecretDefinition(secrets_definition)
-	if err != nil {
-		return nil, err
-	}
-	return result, self.definitions_lru.Set(type_name, result)
+	return definition, nil
 }
 
 func (self *SecretsService) getSecret(
@@ -221,6 +153,14 @@ func (self *SecretsService) AddSecret(ctx context.Context,
 	secrets_definition, err := self.getSecretDefinition(ctx, type_name)
 	if err != nil {
 		return err
+	}
+
+	// Ensure all the fields in the template are defined.
+	for _, field := range secrets_definition.Fields {
+		_, pres := secret.Get(field)
+		if !pres {
+			secret.Set(field, "")
+		}
 	}
 
 	// Verify the secret using the verifier
@@ -265,39 +205,13 @@ func (self *SecretsService) setSecret(
 
 func (self *SecretsService) GetSecretDefinitions(
 	ctx context.Context) (result []*api_proto.SecretDefinition) {
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return nil
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for _, v := range self.definitions {
+		result = append(result,
+			proto.Clone(v.SecretDefinition).(*api_proto.SecretDefinition))
 	}
-
-	children, err := db.ListChildren(self.config_obj,
-		paths.SecretsPathManager{}.SecretsDefinition("X").Dir())
-	if err != nil {
-		return nil
-	}
-
-	seen := make(map[string]bool)
-	for _, c := range children {
-		type_name := c.Base()
-		_, pres := seen[type_name]
-		if pres {
-			continue
-		}
-		seen[type_name] = true
-
-		definition, err := self.getSecretDefinition(ctx, type_name)
-		if err != nil {
-			continue
-		}
-
-		definition.SecretNames, _ = self.getSecretsForDefinition(type_name)
-		result = append(result, definition.SecretDefinition)
-	}
-
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].TypeName < result[j].TypeName
-	})
-
 	return result
 }
 
@@ -388,13 +302,10 @@ func NewSecretsService(
 	config_obj *config_proto.Config) (services.SecretsService, error) {
 
 	result := &SecretsService{
-		definitions_lru: ttlcache.NewCache(),
-		secrets_lru:     ttlcache.NewCache(),
-		config_obj:      config_obj,
+		definitions: buildInitialSecretDefinitions(),
+		secrets_lru: ttlcache.NewCache(),
+		config_obj:  config_obj,
 	}
-	result.definitions_lru.SetCacheSizeLimit(100)
-	_ = result.definitions_lru.SetTTL(time.Minute)
-	result.definitions_lru.SkipTTLExtensionOnHit(true)
 
 	result.secrets_lru.SetCacheSizeLimit(100)
 	_ = result.secrets_lru.SetTTL(time.Minute)
@@ -402,7 +313,6 @@ func NewSecretsService(
 
 	go func() {
 		<-ctx.Done()
-		result.definitions_lru.Close()
 		result.secrets_lru.Close()
 	}()
 

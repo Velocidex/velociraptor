@@ -577,20 +577,6 @@ service API {
     }
 
     // Secret management
-    rpc DefineSecret(SecretDefinition) returns (google.protobuf.Empty) {
-        option (google.api.http) = {
-            post: "/api/v1/DefineSecret",
-            body: "*",
-        };
-    }
-
-    rpc DeleteSecretDefinition(SecretDefinition) returns (google.protobuf.Empty) {
-        option (google.api.http) = {
-            post: "/api/v1/DeleteSecretDefinition",
-            body: "*",
-        };
-    }
-
     rpc GetSecretDefinitions(google.protobuf.Empty) returns (SecretDefinitionList) {
         option (google.api.http) = {
             get: "/api/v1/GetSecretDefinitions",

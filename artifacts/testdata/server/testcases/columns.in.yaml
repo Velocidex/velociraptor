@@ -1,0 +1,16 @@
+Parameters:
+  MisMatchedRows: |
+    [{"Column1": 1, "Column2": 2},
+     {"Column1": 4, "Column3": 5},
+     {"Column2": 1, "Column3": 2}]
+
+Queries:
+  # Should include column 1 and 3 but not column 2
+  - SELECT * FROM column_filter(query={
+      SELECT * FROM parse_json_array(data=MisMatchedRows)
+    }, exclude="Column[2]")
+
+  # Should only include column 1
+  - SELECT * FROM column_filter(query={
+      SELECT * FROM parse_json_array(data=MisMatchedRows)
+    }, include="Column[1-2]", exclude="Column[2]")
