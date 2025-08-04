@@ -141,6 +141,7 @@ require (
 	github.com/jackwakefield/gopac v1.0.2
 	github.com/leodido/go-syslog v1.0.1
 	github.com/lpar/gzipped v1.1.0
+	github.com/mccutchen/go-httpbin/v2 v2.18.3
 	github.com/mooijtech/go-pst/v6 v6.0.2
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.12.0

@@ -14,26 +14,60 @@ Queries:
 # value of lang
 - LET NewQuery <= URL.Query + dict(lang="en")
 
+# Spin up a local httpbin server for testing
+- LET HTTPBINURL <= httpbin()
+
 ## Encode parameters in GET query. Check that we can send headers.
-#- SELECT parse_json(data=Content).url, parse_json(data=Content).headers.`Foo-Bar`
-#  FROM http_client(url="https://httpbin.org/get",
-#      params=NewQuery, headers=dict(`foo-bar`="baz"),
-#      method="GET")
+- SELECT parse_json(data=Content).url, parse_json(data=Content).headers.`Foo-Bar`
+  FROM http_client(url=HTTPBINURL + "/get",
+      params=NewQuery, headers=dict(`foo-bar`="baz"),
+      method="GET")
 
 ## Encode parameters in POST query
-#- SELECT parse_json(data=Content).data
-#  FROM http_client(url="https://httpbin.org/post",
-#       params=NewQuery, method="POST")
+- SELECT parse_json(data=Content).data
+  FROM http_client(url=HTTPBINURL + "/post",
+       params=NewQuery, method="POST")
 
 # Test Secrets
-- SELECT secret_define(type="HTTP Secrets", template=dict(url="")),
-         secret_add(type="HTTP Secrets", name="Google",
-           secret=dict(url="http://www.google.com/")),
-         secret_modify(type="HTTP Secrets", name="Google", add_users="VelociraptorServer")
+- |
+  SELECT secret_add(type="HTTP Secrets", name="httpbin",
+         secret=dict(url=HTTPBINURL + "/get",
+                       extra_params="Foo: Value")),
+         secret_modify(type="HTTP Secrets",
+                       name="httpbin",
+                       add_users="VelociraptorServer")
   FROM scope()
 
-# A 200 response indicates the secret was converted to a URL and fetched.
-- SELECT Response FROM http_client(url="secret://Google")
+# A Check that the secret was used correctly with added extra_params.
+# The user will receive the requested URL but the actual URL seen by
+# the server will be the secret one.
+- SELECT Url, parse_json(data=Content).url
+  FROM http_client(url="secret://httpbin")
+
+# Test Secret filtering URLs. Filter allows user to append parameters
+# to URLs
+- |
+  SELECT secret_add(type="HTTP Secrets", name="httpbinAPIs",
+           secret=dict(url_regex=HTTPBINURL + "/get.+",
+                       extra_params="Foo: Value")),
+          secret_modify(type="HTTP Secrets", name="httpbinAPIs",
+                       add_users="VelociraptorServer")
+  FROM scope()
+
+# The request contains both user supplied and secret supplied
+# parameters. User variables should be overridden by the secret.
+- SELECT Url, parse_json(data=Content).url
+  FROM http_client(url=HTTPBINURL + "/get?arg1=2&Foo=OldValue",
+     secret="httpbinAPIs")
+
+# This connection should be rejected
+- SELECT Response FROM http_client(url="http://www.microsoft.com/",
+     secret="httpbinAPIs")
+
+- SELECT * FROM test_read_logs()
+  WHERE Log =~ "forbids connection to http://www.microsoft.com/"
+    AND NOT Log =~ "SELECT"
 
 # Test multiple URLs: First URL will fail but next one will work.
-- SELECT Response FROM http_client(url=["http://localhost:232/sdfsd", "secret://Google"])
+- SELECT Url, Response FROM http_client(
+    url=["http://localhost:232/sdfsd", "secret://httpbin"])

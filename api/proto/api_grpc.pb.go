@@ -116,8 +116,6 @@ type APIClient interface {
 	RemoveNotebookAttachment(ctx context.Context, in *NotebookFileUploadRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AnnotateTimeline(ctx context.Context, in *AnnotationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Secret management
-	DefineSecret(ctx context.Context, in *SecretDefinition, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	DeleteSecretDefinition(ctx context.Context, in *SecretDefinition, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetSecretDefinitions(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SecretDefinitionList, error)
 	AddSecret(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ModifySecret(ctx context.Context, in *ModifySecretRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -755,24 +753,6 @@ func (c *aPIClient) AnnotateTimeline(ctx context.Context, in *AnnotationRequest,
 	return out, nil
 }
 
-func (c *aPIClient) DefineSecret(ctx context.Context, in *SecretDefinition, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/proto.API/DefineSecret", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *aPIClient) DeleteSecretDefinition(ctx context.Context, in *SecretDefinition, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/proto.API/DeleteSecretDefinition", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *aPIClient) GetSecretDefinitions(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SecretDefinitionList, error) {
 	out := new(SecretDefinitionList)
 	err := c.cc.Invoke(ctx, "/proto.API/GetSecretDefinitions", in, out, opts...)
@@ -1074,8 +1054,6 @@ type APIServer interface {
 	RemoveNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*emptypb.Empty, error)
 	AnnotateTimeline(context.Context, *AnnotationRequest) (*emptypb.Empty, error)
 	// Secret management
-	DefineSecret(context.Context, *SecretDefinition) (*emptypb.Empty, error)
-	DeleteSecretDefinition(context.Context, *SecretDefinition) (*emptypb.Empty, error)
 	GetSecretDefinitions(context.Context, *emptypb.Empty) (*SecretDefinitionList, error)
 	AddSecret(context.Context, *Secret) (*emptypb.Empty, error)
 	ModifySecret(context.Context, *ModifySecretRequest) (*emptypb.Empty, error)
@@ -1307,12 +1285,6 @@ func (UnimplementedAPIServer) RemoveNotebookAttachment(context.Context, *Noteboo
 }
 func (UnimplementedAPIServer) AnnotateTimeline(context.Context, *AnnotationRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AnnotateTimeline not implemented")
-}
-func (UnimplementedAPIServer) DefineSecret(context.Context, *SecretDefinition) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DefineSecret not implemented")
-}
-func (UnimplementedAPIServer) DeleteSecretDefinition(context.Context, *SecretDefinition) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteSecretDefinition not implemented")
 }
 func (UnimplementedAPIServer) GetSecretDefinitions(context.Context, *emptypb.Empty) (*SecretDefinitionList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSecretDefinitions not implemented")
@@ -2578,42 +2550,6 @@ func _API_AnnotateTimeline_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _API_DefineSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SecretDefinition)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(APIServer).DefineSecret(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.API/DefineSecret",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).DefineSecret(ctx, req.(*SecretDefinition))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _API_DeleteSecretDefinition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SecretDefinition)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(APIServer).DeleteSecretDefinition(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.API/DeleteSecretDefinition",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).DeleteSecretDefinition(ctx, req.(*SecretDefinition))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _API_GetSecretDefinitions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -3172,14 +3108,6 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AnnotateTimeline",
 			Handler:    _API_AnnotateTimeline_Handler,
-		},
-		{
-			MethodName: "DefineSecret",
-			Handler:    _API_DefineSecret_Handler,
-		},
-		{
-			MethodName: "DeleteSecretDefinition",
-			Handler:    _API_DeleteSecretDefinition_Handler,
 		},
 		{
 			MethodName: "GetSecretDefinitions",

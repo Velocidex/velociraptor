@@ -6,7 +6,6 @@
     width: 100%;
 }
 
-
 .full-width {
     width: 100%;
 }
@@ -23,4 +22,8 @@
 
 div.velo__menu {
     z-index: 100;
+}
+
+.form-control:disabled {
+    opacity: 0.5;
 }

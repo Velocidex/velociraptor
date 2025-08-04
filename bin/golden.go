@@ -33,6 +33,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
+	"github.com/mccutchen/go-httpbin/v2/httpbin"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"gopkg.in/yaml.v3"
 	"www.velocidex.com/golang/velociraptor/actions"
@@ -55,6 +56,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/psutils"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -309,6 +311,7 @@ func doGolden() error {
 	vql_subsystem.RegisterPlugin(&MemoryLogPlugin{})
 	vql_subsystem.RegisterFunction(&WriteFilestoreFunction{})
 	vql_subsystem.RegisterFunction(&MockTimeFunciton{})
+	vql_subsystem.RegisterFunction(&HTTPBinFunction{})
 
 	config_obj, err := makeDefaultConfigLoader().LoadAndValidate()
 	if err != nil {
@@ -634,4 +637,28 @@ func parseFixture(data []byte) (res testFixture, err error) {
 	}
 
 	return res, err
+}
+
+// A helper function to spin up go-httpbin for testing http
+// connections.
+type HTTPBinFunction struct{}
+
+func (self HTTPBinFunction) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	app := httpbin.New()
+	testServer := vtesting.NewServer(app, 8006)
+
+	vql_subsystem.GetRootScope(scope).AddDestructor(testServer.Close)
+
+	return testServer.URL
+}
+
+func (self HTTPBinFunction) Info(
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name: "httpbin",
+		Doc:  "Start HTTPBin and return the URL",
+	}
 }

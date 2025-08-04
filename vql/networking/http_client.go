@@ -74,7 +74,8 @@ func (self *HTTPClientCache) getCacheKey(url *url.URL) string {
 }
 
 type HttpPluginRequest struct {
-	Url []string `vfilter:"required,field=url,doc=The URL to fetch"`
+	// Optional to allows specifying just a secret.
+	Url []string `vfilter:"optional,field=url,doc=The URL to fetch"`
 
 	// Filled in from the Url and FallbackURLs field or the
 	// secret. Store in a different variable to avoid logging the URL
@@ -136,14 +137,14 @@ func (self *HTTPClientCache) GetHttpClient(
 	ctx context.Context,
 	config_obj *config_proto.ClientConfig,
 	scope vfilter.Scope,
-	arg *HttpPluginRequest,
+	parent_arg *HttpPluginRequest,
 	url_obj *url.URL) (res HTTPClient, new_args *HttpPluginRequest, err error) {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	// Make a copy of the args to be used with the secret.
-	arg, err = self.mergeSecretToRequest(ctx, scope, arg, url_obj)
+	// Update the request with the secret to produce a new copied arg
+	arg, err := self.mergeSecretToRequest(ctx, scope, parent_arg, url_obj)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -264,7 +265,11 @@ func (self *_HttpPlugin) Call(
 
 	// A secret is specified
 	if parent_arg.Secret != "" {
-		parent_arg.Url = []string{"secret://" + parent_arg.Secret}
+		parent_arg.Url, err = self.filterURLsWithSecret(
+			ctx, scope, parent_arg.Url, parent_arg.Secret)
+		if err != nil {
+			goto error
+		}
 	}
 
 	if parent_arg.Chunk == 0 {

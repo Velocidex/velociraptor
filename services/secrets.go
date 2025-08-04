@@ -76,13 +76,6 @@ type Secret struct {
 }
 
 type SecretsService interface {
-	// Allows the user to define a new type of secret and attach a VQL
-	// lambda to allow verification of new secrets.
-	DefineSecret(ctx context.Context, definition *api_proto.SecretDefinition) error
-
-	DeleteSecretDefinition(
-		ctx context.Context, definition *api_proto.SecretDefinition) error
-
 	GetSecretDefinitions(ctx context.Context) []*api_proto.SecretDefinition
 
 	// Add a new managed secret. This function applies any verifiers

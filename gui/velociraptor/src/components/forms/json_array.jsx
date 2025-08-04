@@ -80,6 +80,22 @@ export default class JSONArrayForm extends Component {
         );
     }
 
+    isEditable = (data, rowIdx)=>{
+        let item = data[rowIdx];
+        if (_.isString(item) || _.isUndefined(item) || _.isNull(item)){
+            return true
+        }
+        return false;
+    }
+
+    displayValue = item=>{
+        if (_.isString(item) || _.isUndefined(item) || _.isNull(item)){
+            return item;
+        }
+
+        return serializeJSON(item);
+    }
+
     renderTable = data=>{
         return (
             <Table className="paged-table csv-table">
@@ -144,8 +160,9 @@ export default class JSONArrayForm extends Component {
                           </td>
                           <td>
                             <Form.Control
+                              disabled={!this.isEditable(data, rowIdx)}
                               as="textarea" rows={1}
-                              value={value || ""}
+                              value={this.displayValue(value)}
                               onChange={e=>{
                                   data[rowIdx]=e.currentTarget.value;
                                   let new_data = serializeJSON(data);
