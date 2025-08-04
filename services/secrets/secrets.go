@@ -87,23 +87,6 @@ type SecretsService struct {
 	config_obj *config_proto.Config
 }
 
-func (self *SecretsService) getSecretsForDefinition(
-	type_name string) (res []string, err error) {
-
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	children, _ := db.ListChildren(self.config_obj,
-		paths.SecretsPathManager{}.SecretsDefinitionDir(type_name))
-	for _, c := range children {
-		secret_name := c.Base()
-		res = append(res, secret_name)
-	}
-	return res, nil
-}
-
 func (self *SecretsService) getSecretDefinition(
 	ctx context.Context, type_name string) (*SecretDefinition, error) {
 	definition, pres := self.definitions[type_name]
@@ -153,6 +136,14 @@ func (self *SecretsService) AddSecret(ctx context.Context,
 	secrets_definition, err := self.getSecretDefinition(ctx, type_name)
 	if err != nil {
 		return err
+	}
+
+	// Make sure no extra fields are specified - just drop them on the
+	// floor if they are.
+	for _, k := range secret.Keys() {
+		if !utils.InString(secrets_definition.Fields, k) {
+			secret.Delete(k)
+		}
 	}
 
 	// Ensure all the fields in the template are defined.

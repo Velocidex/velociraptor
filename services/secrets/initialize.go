@@ -35,6 +35,7 @@ var (
 	}, {
 		TypeName:    constants.SSH_PRIVATE_KEY,
 		Description: "SSH Credentials in the form of a private_key and public key",
+		Verifier:    "x=>x.username AND x.hostname AND ( x.password OR x.private_key) ",
 		Fields: []string{
 			"username",
 			"password",

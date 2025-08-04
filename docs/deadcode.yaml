@@ -43,6 +43,9 @@ IgnoreFunctions:
   - ConvertToDevice
   - NewNTFSFileSystemAccessor
 
+  - PrefixNode.DebugString
+  - PrefixTree.DebugString
+
 IgnoreMatches:
   # Third party code
   - third_party/zip/.+

@@ -276,7 +276,7 @@ func (self *MockFunction) Call(ctx context.Context,
 	} else if arg.Function != "" {
 		mock_plugin := scope_context.GetFunction(arg.Function)
 		if mock_plugin == nil {
-			mock_plugin = &MockerFunction{name: arg.Function, ctx: &_MockerCtx{}}
+			mock_plugin = NewMockerFunction(arg.Function, []types.Any{})
 			scope_context.AddFunction(mock_plugin)
 		}
 
