@@ -25,7 +25,7 @@ parameters:
      description: Set accessor to use. blank is default, file for api, ntfs for raw, ntfs_vss for vss
    - name: UserRegex
      default: .
-     description: Regex filter of user to target. StartOf(^) and EndOf($)) regex may behave unexpectanly.
+     description: Regex filter of user to target. StartOf(^) and EndOf($)) regex may behave unexpectedly.
      type: regex
    - name: DateAfter
      type: timestamp
