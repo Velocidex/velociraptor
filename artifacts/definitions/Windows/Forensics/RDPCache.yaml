@@ -27,6 +27,12 @@ parameters:
      default: .
      description: Regex filter of user to target. StartOf(^) and EndOf($)) regex may behave unexpectanly.
      type: regex
+   - name: DateAfter
+     type: timestamp
+     description: "search for cache files modified after this date. YYYY-MM-DDTmm:hh:ssZ"
+   - name: DateBefore
+     type: timestamp
+     description: "search for cache files modified before this date. YYYY-MM-DDTmm:hh:ssZ"
    - name: ParseCache
      description: If selected will parse .BIN RDPcache files.
      type: bool
@@ -42,9 +48,22 @@ sources:
   - name: TargetFiles
     description: RDP BitmapCache files in scope.
     query: |
+      LET time_test(stamp) =
+            if(condition= DateBefore AND DateAfter,
+                then= stamp < DateBefore AND stamp > DateAfter,
+                else=
+            if(condition=DateBefore,
+                then= stamp < DateBefore,
+                else=
+            if(condition= DateAfter,
+                then= stamp > DateAfter,
+                else= True
+            )))
+            
       LET results = SELECT OSPath, Size, Mtime, Atime, Ctime, Btime
         FROM glob(globs=RDPCacheGlob,accessor=Accessor)
         WHERE OSPath =~ UserRegex
+            AND time_test(stamp=Mtime)
 
       LET upload_results = SELECT *, upload(file=OSPath) as CacheUpload
         FROM results
