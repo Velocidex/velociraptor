@@ -6,6 +6,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -71,16 +73,29 @@ var testcases = []testCases{
 }
 
 func TestVQLParsing(t *testing.T) {
+	config_obj := &config_proto.Config{}
+
+	// To make this test run on Linux and Windows the same we use a
+	// neutral accessor.
+	device_manager := accessors.GetDefaultDeviceManager(config_obj).Copy()
+	device_manager.Register(accessors.DescribeAccessor(
+		accessors.NewVirtualFilesystemAccessor(accessors.MustNewLinuxOSPath("")),
+		accessors.AccessorDescriptor{
+			Name: "virt",
+		}))
+
 	ctx := context.Background()
-	scope := vql_subsystem.MakeScope().AppendVars(
-		ordereddict.NewDict().
-			Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
+	scope := vql_subsystem.MakeScope().
+		AppendVars(ordereddict.NewDict().
+			Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}).
+			Set(constants.SCOPE_DEVICE_MANAGER, device_manager),
+		)
 
 	result := ordereddict.NewDict()
 
 	for _, testcase := range testcases {
 		args := ordereddict.NewDict().
-			Set("accessor", "file").
+			Set("accessor", "virt").
 			Set("path", testcase.in)
 		arg := &testStruct{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

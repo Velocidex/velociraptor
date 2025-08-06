@@ -118,7 +118,7 @@ var human_string_tests = []human_string_tests_t{
         "Delegate": {
           "DelegateAccessor":"offset",
           "Delegate": {
-            "DelegateAccessor": "file",
+            "DelegateAccessor": "virt",
             "DelegatePath": "/shared/mnt/flat",
             "Path": "122683392"
           },
@@ -131,10 +131,19 @@ var human_string_tests = []human_string_tests_t{
 
 func TestOSPathHumanString(t *testing.T) {
 	config_obj := &config_proto.Config{}
+
+	// To make this test run on Linux and Windows the same we use a
+	// neutral accessor.
+	device_manager := accessors.GetDefaultDeviceManager(config_obj).Copy()
+	device_manager.Register(accessors.DescribeAccessor(
+		accessors.NewVirtualFilesystemAccessor(accessors.MustNewLinuxOSPath("")),
+		accessors.AccessorDescriptor{
+			Name: "virt",
+		}))
+
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
 		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}).
-		Set(constants.SCOPE_DEVICE_MANAGER,
-			accessors.GetDefaultDeviceManager(config_obj).Copy()))
+		Set(constants.SCOPE_DEVICE_MANAGER, device_manager))
 
 	result := ordereddict.NewDict()
 	for _, test_case := range human_string_tests {

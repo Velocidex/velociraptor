@@ -93,7 +93,7 @@ func MustNewGenericOSPathWithBackslashSeparator(path string) *OSPath {
 }
 
 func NewGenericOSPath(path string) (*OSPath, error) {
-	manipulator := GenericPathManipulator{}
+	manipulator := GenericPathManipulator{Sep: "/"}
 	result := &OSPath{
 		Manipulator: manipulator,
 	}
