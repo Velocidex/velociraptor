@@ -618,6 +618,14 @@ func NewGuiTemplateEngine(
 			"Expand":       template_engine.Expand,
 			"import":       template_engine.Import,
 			"str":          utils.ToString,
+
+			// Remove sprig's functions
+			"env": func() string {
+				return ""
+			},
+			"expandenv": func() string {
+				return ""
+			},
 		})
 	return template_engine, nil
 }

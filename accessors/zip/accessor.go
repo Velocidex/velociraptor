@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -157,7 +158,7 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 	accessor, err := accessors.GetAccessor(
 		pathspec.DelegateAccessor, self.scope)
 	if err != nil {
-		self.scope.Log("%v: did you provide a PathSpec?", err)
+		self.scope.Log("ZipFileSystemAccessor: %v", err)
 		return nil, err
 	}
 
@@ -169,7 +170,7 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 
 	stat, err := accessor.Lstat(filename)
 	if err != nil {
-		self.scope.Log("Lstat: %v", err)
+		self.scope.Log("ZipFileSystemAccessor: %v", err)
 		return nil, err
 	}
 
@@ -338,6 +339,16 @@ func (self *ZipFileSystemAccessor) ReadDirWithOSPath(
 func (self ZipFileSystemAccessor) ParsePath(path string) (
 	*accessors.OSPath, error) {
 	return accessors.NewGenericOSPath(path)
+}
+
+func (self ZipFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "zip",
+		Description: `Open a zip file as if it was a directory.`,
+
+		// Doent need special permissions as we open the delegate
+		Permissions: []acls.ACL_PERMISSION{},
+	}
 }
 
 func (self *ZipFileSystemAccessor) New(scope vfilter.Scope) (

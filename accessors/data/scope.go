@@ -16,6 +16,13 @@ type ScopeFilesystemAccessor struct {
 	scope vfilter.Scope
 }
 
+func (self ScopeFilesystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "scope",
+		Description: `Present the content of a scope variable as a file.`,
+	}
+}
+
 func (self ScopeFilesystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 	return ScopeFilesystemAccessor{scope}, nil
@@ -111,6 +118,5 @@ func (self ScopeFilesystemAccessor) Open(path string) (
 }
 
 func init() {
-	accessors.Register("scope", &ScopeFilesystemAccessor{},
-		`Present the content of a scope variable as a file.`)
+	accessors.Register(&ScopeFilesystemAccessor{})
 }

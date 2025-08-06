@@ -104,12 +104,6 @@ func (self YaraScanPlugin) Call(
 			arg.Blocksize = 1024 * 1024
 		}
 
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("yara: %s", err.Error())
-			return
-		}
-
 		rules, err := getYaraRules(arg.Key, arg.Namespace, arg.Rules,
 			arg.YaraVariables, scope)
 		if err != nil {

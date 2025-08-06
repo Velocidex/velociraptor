@@ -630,7 +630,6 @@ const Portuguese = {
     "Role_artifact_writer": "Escritor de artefato",
      "Role_api": "Cliente de API somente leitura",
 
-    "Perm_ALL_QUERY": "Todas as Consultas",
      "Perm_ANY_QUERY": "Qualquer consulta",
      "Perm_PUBISH": "Publicar",
      "Perm_READ_RESULTS": "Ler resultados",
@@ -651,9 +650,7 @@ const Portuguese = {
      "Perm_PREPARE_RESULTS": "Preparar resultados",
      "Perm_DATASTORE_ACCESS": "Acesso ao armazenamento de dados",
 
-
-     "ToolPerm_ALL_QUERY": "Emitir todas as consultas sem restrição",
-     "ToolPerm_ANY_QUERY": "Emitir qualquer consulta (AllQuery implica AnyQuery)",
+     "ToolPerm_ANY_QUERY": "Emitir qualquer consulta ",
      "ToolPerm_PUBISH": "Publicar eventos em filas do lado do servidor (normalmente não é necessário)",
      "ToolPerm_READ_RESULTS": "Ler resultados de buscas, fluxos ou notebooks já executados",
      "ToolPerm_LABEL_CLIENT": "Pode manipular rótulos e metadados do cliente",

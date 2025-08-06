@@ -78,7 +78,10 @@ func GetEWFImage(full_path *accessors.OSPath, scope vfilter.Scope) (
 		pathspec.DelegatePath = pathspec.Path
 		pathspec.DelegateAccessor = "auto"
 		pathspec.Path = "/"
-		full_path.SetPathSpec(pathspec)
+		err := full_path.SetPathSpec(pathspec)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	accessor, err := accessors.GetAccessor(pathspec.DelegateAccessor, scope)
@@ -91,7 +94,11 @@ func GetEWFImage(full_path *accessors.OSPath, scope vfilter.Scope) (
 }
 
 func init() {
-	accessors.Register("ewf", zip.NewGzipFileSystemAccessor(
-		accessors.MustNewLinuxOSPath(""), GetEWFImage),
-		`Allow reading an EWF file.`)
+	accessors.Register(accessors.DescribeAccessor(
+		zip.NewGzipFileSystemAccessor(
+			accessors.MustNewLinuxOSPath(""), GetEWFImage),
+		accessors.AccessorDescriptor{
+			Name:        "ewf",
+			Description: `Allow reading an EWF file.`,
+		}))
 }

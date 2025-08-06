@@ -12,7 +12,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -117,12 +116,6 @@ func GetRangedReaderFile(full_path *accessors.OSPath, scope vfilter.Scope) (
 
 	pathspec := full_path.PathSpec()
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, pathspec.DelegateAccessor)
-	if err != nil {
-		scope.Log("%v: DelegateAccessor denied", err)
-		return nil, err
-	}
-
 	accessor, err := accessors.GetAccessor(pathspec.DelegateAccessor, scope)
 	if err != nil {
 		scope.Log("%v: did you provide a PathSpec?", err)
@@ -154,7 +147,11 @@ func GetRangedReaderFile(full_path *accessors.OSPath, scope vfilter.Scope) (
 }
 
 func init() {
-	accessors.Register("ranged", zip.NewGzipFileSystemAccessor(
-		accessors.MustNewPathspecOSPath(""), GetRangedReaderFile),
-		`Reconstruct sparse files from idx and base`)
+	accessors.Register(accessors.DescribeAccessor(
+		zip.NewGzipFileSystemAccessor(
+			accessors.MustNewPathspecOSPath(""), GetRangedReaderFile),
+		accessors.AccessorDescriptor{
+			Name:        "ranged",
+			Description: `Reconstruct sparse files from idx and base`,
+		}))
 }

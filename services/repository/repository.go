@@ -207,7 +207,7 @@ func (self *Repository) LoadProto(
 		// Check RequiredPermissions
 		for _, perm := range artifact.RequiredPermissions {
 			if acls.GetPermission(perm) == acls.NO_PERMISSIONS {
-				return nil, errors.New("Invalid artifact permission")
+				return nil, fmt.Errorf("Invalid artifact permission: %v", perm)
 			}
 		}
 

@@ -83,7 +83,10 @@ func GetVHDXImage(full_path *accessors.OSPath, scope vfilter.Scope) (
 		pathspec.DelegatePath = pathspec.Path
 		pathspec.DelegateAccessor = "auto"
 		pathspec.Path = "/"
-		full_path.SetPathSpec(pathspec)
+		err := full_path.SetPathSpec(pathspec)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	accessor, err := accessors.GetAccessor(pathspec.DelegateAccessor, scope)
@@ -96,7 +99,11 @@ func GetVHDXImage(full_path *accessors.OSPath, scope vfilter.Scope) (
 }
 
 func init() {
-	accessors.Register("vhdx", zip.NewGzipFileSystemAccessor(
-		accessors.MustNewLinuxOSPath(""), GetVHDXImage),
-		`Allow reading a VHDX file.`)
+	accessors.Register(accessors.DescribeAccessor(
+		zip.NewGzipFileSystemAccessor(
+			accessors.MustNewLinuxOSPath(""), GetVHDXImage),
+		accessors.AccessorDescriptor{
+			Name:        "vhdx",
+			Description: `Allow reading a VHDX file.`,
+		}))
 }

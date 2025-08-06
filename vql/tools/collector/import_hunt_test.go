@@ -63,7 +63,7 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 	hunt_dispatcher_service.SetHuntIdForTests("H.1234")
 
 	fs_factory := file_store_accessor.NewFileStoreFileSystemAccessor(self.ConfigObj)
-	accessors.Register("fs", fs_factory, "")
+	accessors.Register(fs_factory)
 
 	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)

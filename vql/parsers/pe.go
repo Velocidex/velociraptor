@@ -65,12 +65,6 @@ func (self _PEFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-	if err != nil {
-		scope.Log("parse_pe: %s", err)
-		return &vfilter.Null{}
-	}
-
 	lru_size := vql_subsystem.GetIntFromRow(scope, scope, constants.BINARY_CACHE_SIZE)
 	paged_reader, err := readers.NewAccessorReader(
 		scope, arg.Accessor, arg.Filename, int(lru_size))

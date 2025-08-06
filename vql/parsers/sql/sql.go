@@ -120,12 +120,6 @@ func (self SQLPlugin) Call(
 			return
 
 		case "sqlite":
-			err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-			if err != nil {
-				scope.Log("sql: %s", err)
-				return
-			}
-
 			handle, err = GetHandleSqlite(ctx, arg, scope)
 			if err == notValidDatabase {
 				return

@@ -149,6 +149,13 @@ func NewNTFSFileSystemAccessor(
 	}
 }
 
+func (self NTFSFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "raw_ntfs",
+		Description: `Access the NTFS filesystem inside an image by parsing NTFS.`,
+	}
+}
+
 func (self NTFSFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 	// Create a new cache in the scope.
@@ -597,8 +604,7 @@ func Open(scope vfilter.Scope, self *ntfs.MFT_ENTRY,
 }
 
 func init() {
-	accessors.Register("raw_ntfs", &NTFSFileSystemAccessor{},
-		`Access the NTFS filesystem inside an image by parsing NTFS.`)
+	accessors.Register(&NTFSFileSystemAccessor{})
 
 	json.RegisterCustomEncoder(&NTFSFileInfo{}, accessors.MarshalGlobFileInfo)
 }

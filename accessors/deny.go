@@ -55,6 +55,13 @@ func (self UnimplementedAccessor) New(scope vfilter.Scope) (FileSystemAccessor, 
 		self.Name, NotImplementedError)
 }
 
+func (self UnimplementedAccessor) Describe() *AccessorDescriptor {
+	return &AccessorDescriptor{
+		Name:        self.Name,
+		Description: "Blocked accessor",
+	}
+}
+
 func EnforceAccessorAllowList(
 	allowed_accessors []string, deny_accessors []string) error {
 	mu.Lock()
@@ -72,17 +79,13 @@ func EnforceAccessorAllowList(
 			}
 
 			globalDeviceManager.handlers[allowed] = impl
-			desc, pres := global_manager.descriptions.Get(allowed)
-			if pres {
-				globalDeviceManager.descriptions.Set(allowed, desc)
-			}
 		}
 	}
 
 	for _, deny := range deny_accessors {
-		globalDeviceManager.Register(deny, &UnimplementedAccessor{
+		globalDeviceManager.Register(&UnimplementedAccessor{
 			Name: deny,
-		}, "Blocked accessor")
+		})
 	}
 
 	return nil

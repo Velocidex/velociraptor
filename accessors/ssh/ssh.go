@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/sftp"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -22,12 +23,6 @@ type SSHFileSystemAccessor struct {
 }
 
 func (self SSHFileSystemAccessor) New(scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
-
-	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
-	if err != nil {
-		return nil, err
-	}
-
 	ssh_client, closer, err := GetSSHClient(scope)
 	if err != nil {
 		return nil, err
@@ -54,6 +49,16 @@ func (self SSHFileSystemAccessor) New(scope vfilter.Scope) (accessors.FileSystem
 		scope:       scope,
 		sftp_client: sftp_client,
 	}, nil
+}
+
+func (self SSHFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "ssh",
+		Description: `Access a remote system's filesystem via SSH/SFTP.`,
+		Permissions: []acls.ACL_PERMISSION{acls.NETWORK},
+		ScopeVar:    constants.SSH_CONFIG,
+		ArgType:     &SSHAccessorArgs{},
+	}
 }
 
 func (self SSHFileSystemAccessor) Lstat(filename string) (
@@ -134,6 +139,5 @@ func (self SSHFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPath) (
 }
 
 func init() {
-	accessors.Register("ssh", &SSHFileSystemAccessor{},
-		`Access a remote system's filesystem via SSH/SFTP.`)
+	accessors.Register(&SSHFileSystemAccessor{})
 }

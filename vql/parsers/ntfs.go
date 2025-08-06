@@ -224,12 +224,6 @@ func (self MFTScanPlugin) Call(
 			return
 		}
 
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("parse_mft: %s", err)
-			return
-		}
-
 		// Choose a managed reader to ensure it does not get closed prematurely.
 		fd, err := vql_readers.NewAccessorReader(scope, arg.Accessor, arg.Filename, 1000)
 		if err != nil {

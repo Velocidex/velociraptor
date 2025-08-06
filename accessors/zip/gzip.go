@@ -177,6 +177,13 @@ func (self GzipFileSystemAccessor) ParsePath(path string) (
 	return self.root.Parse(path)
 }
 
+func (self GzipFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "gzip",
+		Description: `Access the content of gzip files. The filename is a pathspec with a delegate accessor opening the actual gzip file.`,
+	}
+}
+
 func (self GzipFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 	return &GzipFileSystemAccessor{
@@ -330,13 +337,17 @@ func GetGzipFile(full_path *accessors.OSPath, scope vfilter.Scope) (ReaderStat, 
 }
 
 func init() {
-	accessors.Register("gzip", NewGzipFileSystemAccessor(
+	accessors.Register(NewGzipFileSystemAccessor(
 		accessors.MustNewLinuxOSPath(""), GetGzipFile),
-		`Access the content of gzip files. The filename is a pathspec with a delegate accessor opening the actual gzip file.`)
+	)
 
-	accessors.Register("bzip2", NewGzipFileSystemAccessor(
-		accessors.MustNewLinuxOSPath(""), GetBzip2File),
-		`Access the content of gzip files. The filename is a pathspec with a delegate accessor opening the actual gzip file.`)
+	accessors.Register(accessors.DescribeAccessor(
+		NewGzipFileSystemAccessor(
+			accessors.MustNewLinuxOSPath(""), GetBzip2File),
+		accessors.AccessorDescriptor{
+			Name:        "bzip2",
+			Description: `Access the content of gzip files. The filename is a pathspec with a delegate accessor opening the actual gzip file.`,
+		}))
 
 	json.RegisterCustomEncoder(&GzipFileInfo{}, accessors.MarshalGlobFileInfo)
 }

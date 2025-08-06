@@ -36,12 +36,6 @@ func (self *TLSHashFunction) Call(ctx context.Context,
 	cached_buffer := pool.Get().(*[]byte)
 	defer pool.Put(cached_buffer)
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-	if err != nil {
-		scope.Log("tlsh_hash: %s", err)
-		return vfilter.Null{}
-	}
-
 	fs, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("tlsh_hash: %v", err)

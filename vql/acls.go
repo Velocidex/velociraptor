@@ -111,26 +111,6 @@ func CheckAccessWithArgs(scope vfilter.Scope, permissions acls.ACL_PERMISSION,
 	return nil
 }
 
-func CheckFilesystemAccess(scope vfilter.Scope, accessor string) error {
-	switch accessor {
-
-	// These accessor are OK to use at any time.
-	case "data":
-		return nil
-
-		// Direct filestore access only allowed for server
-		// admins.
-	case "filestore", "fs":
-		return CheckAccess(scope, acls.SERVER_ADMIN)
-
-	case "process":
-		return CheckAccess(scope, acls.MACHINE_STATE)
-
-	default:
-		return CheckAccess(scope, acls.FILESYSTEM_READ)
-	}
-}
-
 // Get the principal that is running the query if possible.
 func GetPrincipal(scope vfilter.Scope) string {
 	manager_any, pres := scope.Resolve(ACL_MANAGER_VAR)

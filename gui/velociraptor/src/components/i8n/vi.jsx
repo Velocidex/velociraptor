@@ -129,7 +129,6 @@ const Vietnamese = {
      "Role_artifact_writer": "Artifact Writer",
      "Role_api": "API Client",
 
-    "Perm_ALL_QUERY": "All Query",
      "Perm_ANY_QUERY": "Any Query",
      "Perm_PUBISH": "Publish",
      "Perm_READ_RESULTS" : "Đọc kết quả",
@@ -150,9 +149,7 @@ const Vietnamese = {
      "Perm_PREPARE_RESULTS": "Chuẩn bị kết quả",
      "Perm_DATASTORE_ACCESS": "Truy cập Datastore",
 
-
-     "ToolPerm_ALL_QUERY" : "Thực hiện tất cả các query không bị giới hạn",
-     "ToolPerm_ANY_QUERY": "Thực hiện query bất kỳ trên tất cả (AllQuery bao gồm AnyQuery)",
+     "ToolPerm_ANY_QUERY": "Thực hiện query bất kỳ trên tất cả",
      "ToolPerm_PUBISH": "Xuất sự kiện lên hàng đợi của máy chủ (thường không cần thiết)",
      "ToolPerm_READ_RESULTS": "Đọc kết quả từ các lần hunt đã chạy, flows hoặc ghi chú",
      "ToolPerm_LABEL_CLIENT": "Có thể thao tác với nhãn và metadata",

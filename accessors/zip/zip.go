@@ -690,13 +690,14 @@ func (self *SeekableZip) seek(offset int64, whence int) (int64, error) {
 }
 
 func init() {
-	accessors.Register("zip", &ZipFileSystemAccessor{
-		nocase: false,
-	},
-		`Open a zip file as if it was a directory.`)
-	accessors.Register("zip_nocase", &ZipFileSystemAccessor{
-		nocase: true,
-	}, `Open a zip file as if it was a directory. Although zip files are case-sensitive, this accessor behaves case-insensitive`)
+	accessors.Register(&ZipFileSystemAccessor{})
+	accessors.Register(accessors.DescribeAccessor(
+		&ZipFileSystemAccessor{
+			nocase: true,
+		}, accessors.AccessorDescriptor{
+			Name:        "zip_nocase",
+			Description: `Open a zip file as if it was a directory. Although zip files are case-sensitive, this accessor behaves case-insensitive`,
+		}))
 
 	json.RegisterCustomEncoder(&ZipFileInfo{}, accessors.MarshalGlobFileInfo)
 

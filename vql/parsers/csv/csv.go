@@ -65,12 +65,6 @@ func (self ParseCSVPlugin) Call(
 			return
 		}
 
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("parse_csv: %s", err)
-			return
-		}
-
 		for _, filename := range arg.Filenames {
 			func() {
 				accessor, err := accessors.GetAccessor(arg.Accessor, scope)
@@ -195,12 +189,6 @@ func (self _WatchCSVPlugin) Call(
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("watch_csv: %s", err.Error())
-			return
-		}
-
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("watch_csv: %s", err)
 			return
 		}
 

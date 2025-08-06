@@ -632,7 +632,6 @@ const Deutsch = {
      "Role_artifact_writer": "Artefaktschreiber",
      "Role_api": "Schreibgeschützter API-Client",
 
-    "Perm_ALL_QUERY": "Alle Abfragen",
      "Perm_ANY_QUERY": "Jede Abfrage",
      "Perm_PUBISH": "Veröffentlichen",
      "Perm_READ_RESULTS" : "Ergebnisse lesen",
@@ -654,8 +653,7 @@ const Deutsch = {
      "Perm_DATASTORE_ACCESS": "Datenspeicherzugriff",
 
 
-     "ToolPerm_ALL_QUERY" : "Alle Abfragen uneingeschränkt ausgeben",
-     "ToolPerm_ANY_QUERY": "Jede Abfrage überhaupt ausgeben (AllQuery impliziert AnyQuery)",
+     "ToolPerm_ANY_QUERY": "Jede Abfrage überhaupt ausgeben",
      "ToolPerm_PUBISH": "Ereignisse in serverseitigen Warteschlangen veröffentlichen (normalerweise nicht erforderlich)",
      "ToolPerm_READ_RESULTS": "Ergebnisse von bereits ausgeführten Jagden, Flows oder Notizbüchern lesen",
      "ToolPerm_LABEL_CLIENT": "Kann Client-Labels und Metadaten manipulieren",

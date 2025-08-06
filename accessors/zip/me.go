@@ -175,7 +175,14 @@ func (self MEFileSystemAccessor) New(scope vfilter.Scope) (
 	return &MEFileSystemAccessor{base.(*ZipFileSystemAccessor)}, nil
 }
 
+func (self MEFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "me",
+		Description: `Access files bundled inside the Velociraptor binary itself. This is used for unpacking extra files delivered by the Offline Collector`,
+	}
+}
+
 func init() {
-	accessors.Register("me", &MEFileSystemAccessor{},
-		`Access files bundled inside the Velociraptor binary itself. This is used for unpacking extra files delivered by the Offline Collector`)
+	accessors.Register(&MEFileSystemAccessor{})
+
 }

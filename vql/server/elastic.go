@@ -95,7 +95,7 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "elastic", args)()
 
-		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
+		err := vql_subsystem.CheckAccess(scope, acls.NETWORK)
 		if err != nil {
 			scope.Log("elastic: %v", err)
 			return
@@ -103,6 +103,12 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 
 		arg := &_ElasticPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("elastic: %v", err)
+			return
+		}
+
+		err = self.maybeForceSecrets(ctx, scope, arg)
 		if err != nil {
 			scope.Log("elastic: %v", err)
 			return
@@ -374,6 +380,28 @@ func sanitize_index(name string) string {
 	return strings.ToLower(string(res))
 }
 
+func (self _ElasticPlugin) maybeForceSecrets(
+	ctx context.Context, scope vfilter.Scope, arg *_ElasticPluginArgs) error {
+
+	// Not running on the server, secrets dont work.
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return nil
+	}
+
+	if config_obj.Security != nil &&
+		!config_obj.Security.VqlMustUseSecrets {
+		return nil
+	}
+
+	// If an explicit secret is defined let it filter the URLs.
+	if arg.Secret != "" {
+		return nil
+	}
+
+	return utils.SecretsEnforced
+}
+
 func mergeSecretElastic(ctx context.Context, scope vfilter.Scope, arg *_ElasticPluginArgs) error {
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
@@ -431,7 +459,7 @@ func (self _ElasticPlugin) Info(
 	return &vfilter.PluginInfo{
 		Name:     "elastic_upload",
 		Doc:      "Upload rows to elastic.",
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
+		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
 		ArgType:  type_map.AddType(scope, &_ElasticPluginArgs{}),
 	}
 }

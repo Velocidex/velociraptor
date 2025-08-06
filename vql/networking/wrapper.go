@@ -67,12 +67,6 @@ func (self httpClientWrapper) Do(req *http.Request) (*http.Response, error) {
 // retrieved from the socket using http.
 func (self httpClientWrapper) doUnix(req *http.Request) (*http.Response, error) {
 
-	// Make sure the principal is allowed to access files.
-	err := vql_subsystem.CheckFilesystemAccess(self.scope, "file")
-	if err != nil {
-		return nil, err
-	}
-
 	new_req := *req
 	new_req.URL = &url.URL{
 		Scheme: "http",
@@ -88,12 +82,6 @@ func (self httpClientWrapper) doFile(
 	req *http.Request) (*http.Response, error) {
 	if req.Method != "GET" {
 		return nil, unsupportedMethod
-	}
-
-	// Make sure the principal is allowed to access files.
-	err := vql_subsystem.CheckFilesystemAccess(self.scope, req.URL.Scheme)
-	if err != nil {
-		return nil, err
 	}
 
 	accessor, err := accessors.GetAccessor(req.URL.Scheme, self.scope)

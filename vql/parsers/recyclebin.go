@@ -63,12 +63,6 @@ func (self _RecycleBinPlugin) Call(
 			return
 		}
 
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("parse_recyclebin: %s", err)
-			return
-		}
-
 		for _, filename := range arg.Filenames {
 			func() {
 				defer utils.RecoverVQL(scope)

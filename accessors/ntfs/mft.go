@@ -43,6 +43,13 @@ func (self MFTFileSystemAccessor) ParsePath(path string) (
 	return accessors.NewWindowsNTFSPath(path)
 }
 
+func (self MFTFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "mft",
+		Description: `Access arbitrary MFT streams as files.`,
+	}
+}
+
 func (self MFTFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 	return &MFTFileSystemAccessor{scope: scope}, nil
@@ -209,6 +216,5 @@ func (self *MFTFileSystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) 
 }
 
 func init() {
-	accessors.Register("mft", &MFTFileSystemAccessor{},
-		`Access arbitrary MFT streams as files.`)
+	accessors.Register(&MFTFileSystemAccessor{})
 }

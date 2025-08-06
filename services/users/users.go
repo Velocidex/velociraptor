@@ -75,7 +75,7 @@ const (
   "newLineMode":"auto",
   "useSoftTabs":true,
   "navigateWithinSoftTabs":false,
-  "tabSize":4,
+  "tabSize":2,
   "wrap":"free",
   "indentedSoftWrap":true,
   "foldStyle":"markbegin",

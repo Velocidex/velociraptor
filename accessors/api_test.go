@@ -105,8 +105,9 @@ func TestOSPathOperationsAppendComponents(t *testing.T) {
 }
 
 type human_string_tests_t struct {
-	name     string
-	pathspec string
+	name      string
+	pathspec  string
+	path_type string
 }
 
 var human_string_tests = []human_string_tests_t{
@@ -117,28 +118,44 @@ var human_string_tests = []human_string_tests_t{
         "Delegate": {
           "DelegateAccessor":"offset",
           "Delegate": {
-            "DelegateAccessor": "file",
+            "DelegateAccessor": "virt",
             "DelegatePath": "/shared/mnt/flat",
             "Path": "122683392"
           },
           "Path":"/Windows/System32/Config/SYSTEM"
         }
       }
-`},
-	{"Normal path", `C:\Windows\System32`},
+`, "linux"},
+	{"Normal path", `C:\Windows\System32`, "windows"},
 }
 
 func TestOSPathHumanString(t *testing.T) {
 	config_obj := &config_proto.Config{}
+
+	// To make this test run on Linux and Windows the same we use a
+	// neutral accessor.
+	device_manager := accessors.GetDefaultDeviceManager(config_obj).Copy()
+	device_manager.Register(accessors.DescribeAccessor(
+		accessors.NewVirtualFilesystemAccessor(accessors.MustNewLinuxOSPath("")),
+		accessors.AccessorDescriptor{
+			Name: "virt",
+		}))
+
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
 		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}).
-		Set(constants.SCOPE_DEVICE_MANAGER,
-			accessors.GetDefaultDeviceManager(config_obj).Copy()))
+		Set(constants.SCOPE_DEVICE_MANAGER, device_manager))
 
 	result := ordereddict.NewDict()
 	for _, test_case := range human_string_tests {
-		a := accessors.MustNewGenericOSPath(test_case.pathspec)
-		result.Set(test_case.name, a.HumanString(scope))
+		switch test_case.path_type {
+		case "linux":
+			a := accessors.MustNewLinuxOSPath(test_case.pathspec)
+			result.Set(test_case.name, a.HumanString(scope))
+
+		case "windows":
+			a := accessors.MustNewWindowsOSPath(test_case.pathspec)
+			result.Set(test_case.name, a.HumanString(scope))
+		}
 	}
 	goldie.Assert(t, "TestOSPathHumanString",
 		json.MustMarshalIndent(result))
@@ -147,5 +164,5 @@ func TestOSPathHumanString(t *testing.T) {
 func init() {
 	// Override the file accessor with something that uses Generic
 	// ospath so tests are the same on windows and linux.
-	accessors.Register("file", &zip.ZipFileSystemAccessor{}, "")
+	accessors.Register(&zip.ZipFileSystemAccessor{})
 }

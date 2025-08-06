@@ -10,9 +10,11 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/leodido/go-syslog/rfc5424"
+	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -49,6 +51,12 @@ func (self *RsyslogFunction) Call(ctx context.Context,
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("rsyslog: %s", err.Error())
+		return false
+	}
+
+	err = vql_subsystem.CheckAccess(scope, acls.NETWORK)
+	if err != nil {
+		scope.Log("rsyslog: %s", err)
 		return false
 	}
 
@@ -129,10 +137,11 @@ func (self *RsyslogFunction) Call(ctx context.Context,
 
 func (self RsyslogFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "rsyslog",
-		Doc:     "Send an RFC5424 compliant remote syslog message.",
-		ArgType: type_map.AddType(scope, &RsyslogFunctionArgs{}),
-		Version: 2,
+		Name:     "rsyslog",
+		Doc:      "Send an RFC5424 compliant remote syslog message.",
+		ArgType:  type_map.AddType(scope, &RsyslogFunctionArgs{}),
+		Version:  2,
+		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
 	}
 }
 

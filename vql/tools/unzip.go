@@ -64,12 +64,6 @@ func (self UnzipPlugin) Call(
 			return
 		}
 
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("unzip: %s", err)
-			return
-		}
-
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("unzip: %v", err)

@@ -33,12 +33,6 @@ type VFSFileSystemAccessor struct {
 func (self VFSFileSystemAccessor) New(
 	scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
 
-	// Check we have permission to open files.
-	err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
-	if err != nil {
-		return nil, err
-	}
-
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		return nil, errors.New("vfs accessor: can only run on the server")
@@ -71,6 +65,14 @@ func (self VFSFileSystemAccessor) New(
 		file_store_accessor: accessor,
 		config_obj:          config_obj,
 	}, nil
+}
+
+func (self VFSFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "vfs",
+		Description: `Access client's VFS filesystem on the server.`,
+		Permissions: []acls.ACL_PERMISSION{acls.READ_RESULTS},
+	}
 }
 
 func (self VFSFileSystemAccessor) Lstat(filename string) (
@@ -269,5 +271,5 @@ func rowCellToFSInfo(cell []interface{}) (accessors.FileInfo, error) {
 }
 
 func init() {
-	accessors.Register("vfs", &VFSFileSystemAccessor{}, `Access client's VFS filesystem on the server.`)
+	accessors.Register(&VFSFileSystemAccessor{})
 }

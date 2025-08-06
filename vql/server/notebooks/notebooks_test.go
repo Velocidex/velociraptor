@@ -185,9 +185,15 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 	// Check uploads - uploads are stored in each cell so they can be versioned
 	// mem_file_store.Debug()
 
-	upload, _ := mem_file_store.Get(
-		"/notebooks/N.01/NC.02-05/uploads/data/file.txt")
-	assert.Contains(self.T(), string(upload), `hello`)
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		upload, pres := mem_file_store.Get(
+			"/notebooks/N.01/NC.02-05/uploads/data/file.txt")
+		if !pres {
+			return false
+		}
+		assert.Contains(self.T(), string(upload), `hello`)
+		return len(upload) > 0
+	})
 
 	// Attachments are global to the whole notebook and are not
 	// versioned.

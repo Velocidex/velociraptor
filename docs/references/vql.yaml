@@ -408,6 +408,8 @@
     On other operating systems, the `auto` accessor is an alias to the
     `file` accessor.
   type: Accessor
+  metadata:
+    permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -428,6 +430,7 @@
     description: Run this query in the background.
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: backup
   description: Generates a backup file.
   type: Plugin
@@ -1676,6 +1679,7 @@
     permissions: COLLECT_SERVER,FILESYSTEM_WRITE,SERVER_ADMIN
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: dedup
   description: Dedups the query based on a column. This will suppress rows with identical
     values for the key column
@@ -2031,7 +2035,7 @@
     description: Alternatively use a secret from the secrets service. Secret must
       be of type 'AWS S3 Creds'
   metadata:
-    permissions: COLLECT_SERVER
+    permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -2561,6 +2565,8 @@
     on some Linux systems you will find `/usr/bin/ls` instead of
     `/bin/ls` since `/bin` is a symlink to `/usr/bin/`
   type: Accessor
+  metadata:
+    permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -2589,6 +2595,8 @@
     due to incorrect casing making it impossible to find the right
     files.
   type: Accessor
+  metadata:
+    permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -2944,6 +2952,8 @@
     them. Typically references to filestore or datastore files have
     the "fs:" or "ds:" prefix.
   type: Accessor
+  metadata:
+    permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -2956,6 +2966,8 @@
     This accessor expands sparse files. Reading from a sparse region
     will result in zeros being returned.
   type: Accessor
+  metadata:
+    permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -3680,7 +3692,6 @@
     type: string
     description: The URL to fetch
     repeated: true
-    required: true
   - name: params
     type: ordereddict.Dict
     description: Parameters to encode as POST or GET query strings
@@ -3731,7 +3742,7 @@
     repeated: true
   category: popular
   metadata:
-    permissions: COLLECT_SERVER
+    permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4971,7 +4982,7 @@
     type: bool
     description: Enable verbose logging.
   metadata:
-    permissions: COLLECT_SERVER
+    permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -5207,7 +5218,7 @@
     type: ordereddict.Dict
     description: A dict of headers to send.
   metadata:
-    permissions: SERVER_ADMIN
+    permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -5630,7 +5641,7 @@
     type: int
     description: Seconds to wait before retry - default 0 - do not retry
   metadata:
-    permissions: COLLECT_SERVER
+    permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -6054,10 +6065,6 @@
     ```
   type: Plugin
   args:
-  - name: query
-    type: StoredQuery
-    description: The query will be run in parallel over batches.
-    required: true
   - name: client_id
     type: string
     description: The client id to extract
@@ -6088,6 +6095,10 @@
   - name: notebook_cell_table
     type: int64
     description: A notebook cell can have multiple tables.)
+  - name: query
+    type: StoredQuery
+    description: The query will be run in parallel over batches.
+    required: true
   - name: workers
     type: int64
     description: Number of workers to spawn.)
@@ -7488,6 +7499,8 @@
     not an error to read from unmapped regions, but it will just
     return nulls.
   type: Accessor
+  metadata:
+    permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -7751,6 +7764,8 @@
 
 
   type: Accessor
+  metadata:
+    permissions: FILESYSTEM_READ
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
@@ -8033,6 +8048,8 @@
     string to the underlying OS APIs. This allows us to read arbitrary
     devices.
   type: Accessor
+  metadata:
+    permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -8234,6 +8251,8 @@
     Please see [the registry accessor]({{< ref "/vql_reference/accessors/registry/" >}})
     for more information.
   type: Accessor
+  metadata:
+    permissions: FILESYSTEM_READ
   platforms:
   - windows_386_cgo
   - windows_amd64_cgo
@@ -8633,6 +8652,7 @@
     permissions: COLLECT_SERVER,FILESYSTEM_WRITE,SERVER_ADMIN
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: rsyslog
   description: Send an RFC5424 compliant remote syslog message.
   type: Function
@@ -8678,6 +8698,8 @@
     type: string
     description: As a better alternative to disable_ssl_security, allows root ca certs
       to be added here.
+  metadata:
+    permissions: NETWORK
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
@@ -8712,6 +8734,9 @@
     "/blog/2024/2024-03-10-release-notes-0.72/#secret-management" >}})
     introduced in version 0.72 to manage these credentials.
   type: Accessor
+  metadata:
+    ScopeVar: S3_CREDENTIALS
+    permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -8817,6 +8842,7 @@
     permissions: SERVER_ADMIN
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: secret_define
   description: Define a new secret template
   type: Function
@@ -9269,6 +9295,15 @@
     "/blog/2024/2024-03-10-release-notes-0.72/#secret-management" >}})
     in 0.72 to manage these credentials.
   type: Accessor
+  args:
+  - name: hosts
+    type: ordereddict.Dict
+    description: A dict mapping hostname to connection strings. The connection string
+      consists of username and password joined by colon (e.g. fred:hunter2 ).
+    required: true
+  metadata:
+    ScopeVar: SMB_CREDENTIALS
+    permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -9308,8 +9343,6 @@
     ```vql
     SELECT * FROM source(notebook_id="N.123", notebook_cell="NC.1234")
     ```
-
-
   type: Plugin
   args:
   - name: client_id
@@ -9524,7 +9557,7 @@
     description: Alternatively use a secret from the secrets service. Secret must
       be of type 'AWS S3 Creds'
   metadata:
-    permissions: COLLECT_SERVER
+    permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -9636,6 +9669,25 @@
     "/blog/2024/2024-03-10-release-notes-0.72/#secret-management" >}}) in
     0.72 to manage these credentials.
   type: Accessor
+  args:
+  - name: secret
+    type: string
+    description: The name of a secret to use.
+  - name: username
+    type: string
+    description: The username to use to log into the remote system.
+  - name: password
+    type: string
+    description: The password to use to log into the remote system.
+  - name: private_key
+    type: string
+    description: A private key to use to log into the remote system instead of a password.
+  - name: hostname
+    type: string
+    description: The hostname to log into.
+  metadata:
+    ScopeVar: SSH_CONFIG
+    permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -9908,6 +9960,7 @@
     required: true
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: threads
   description: Enumerate threads in a process.
   type: Plugin
@@ -10621,7 +10674,7 @@
     description: Alternatively use a secret from the secrets service. Secret must
       be of type 'AWS S3 Creds'
   metadata:
-    permissions: FILESYSTEM_READ
+    permissions: NETWORK,FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -10704,6 +10757,20 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: upload_transactions
+  description: View the outstanding transactions for uploads.
+  type: Plugin
+  args:
+  - name: client_id
+    type: string
+    required: true
+  - name: flow_id
+    type: string
+  metadata:
+    permissions: READ_RESULTS
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: upload_webdav
   description: Upload files to a WebDAV server.
   type: Function
@@ -10738,7 +10805,7 @@
     type: string
     description: If specified, set a HTTP User-Agent.
   metadata:
-    permissions: FILESYSTEM_READ
+    permissions: FILESYSTEM_READ,NETWORK
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -11060,6 +11127,7 @@
     required: true
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: version
   description: |
     Gets the version of a VQL plugin or function.
@@ -11117,6 +11185,8 @@
     This accessor is mostly used in the `System.VFS.Export` artifact
     to facilitate snapshotting of the VFS view in the GUI.
   type: Accessor
+  metadata:
+    permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -11651,6 +11721,8 @@
   description: Access physical memory like a file. Any filename will result in a sparse
     view of physical memory.
   type: Accessor
+  metadata:
+    permissions: MACHINE_STATE
   platforms:
   - windows_amd64_cgo
 - name: winpmem
@@ -12037,3 +12109,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+

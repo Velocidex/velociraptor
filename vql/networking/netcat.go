@@ -42,7 +42,7 @@ func (self *NetcatPlugin) Call(
 			return
 		}
 
-		err = vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
+		err = vql_subsystem.CheckAccess(scope, acls.NETWORK)
 		if err != nil {
 			scope.Log("netcat: %s", err)
 			return
@@ -146,7 +146,7 @@ func (self NetcatPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 		Name:     "netcat",
 		Doc:      "Make a tcp connection and read data from a socket.",
 		ArgType:  type_map.AddType(scope, &NetcatPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
+		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
 	}
 }
 

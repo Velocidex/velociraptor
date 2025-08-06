@@ -53,12 +53,6 @@ func (self _PEDumpFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, "process")
-	if err != nil {
-		scope.Log("pe_dump: %v", err)
-		return &vfilter.Null{}
-	}
-
 	lru_size := vql_subsystem.GetIntFromRow(
 		scope, scope, constants.BINARY_CACHE_SIZE)
 	if lru_size == 0 {

@@ -15,6 +15,7 @@ import (
 	"sync"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -172,6 +173,14 @@ func (self *ProcessReader) Stat() (os.FileInfo, error) {
 
 type ProcessAccessor struct{}
 
+func (self ProcessAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "process",
+		Description: `Access process memory like a file. The Path is taken in the form "/<pid>", i.e. the pid appears as the top level file.`,
+		Permissions: []acls.ACL_PERMISSION{acls.MACHINE_STATE},
+	}
+}
+
 func (self ProcessAccessor) New(scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
 	return &ProcessAccessor{}, nil
 }
@@ -218,7 +227,5 @@ func (self *ProcessAccessor) Open(
 }
 
 func init() {
-	accessors.Register("process",
-		&ProcessAccessor{},
-		`Access process memory like a file. The Path is taken in the form "/<pid>", i.e. the pid appears as the top level file.`)
+	accessors.Register(&ProcessAccessor{})
 }

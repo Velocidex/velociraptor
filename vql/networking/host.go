@@ -33,7 +33,7 @@ func (self *HostFunction) Call(ctx context.Context,
 
 	arg := &HostFunctionArgs{}
 
-	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+	err := vql_subsystem.CheckAccess(scope, acls.NETWORK)
 	if err != nil {
 		scope.Log("host: %v", err)
 		return false

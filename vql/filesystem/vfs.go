@@ -39,12 +39,6 @@ func (self VFSListDirectoryPlugin) Call(
 			return
 		}
 
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("vfs_ls: %v", err)
-			return
-		}
-
 		if arg.Accessor == "" {
 			arg.Accessor = "file"
 		}

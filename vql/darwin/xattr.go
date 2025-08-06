@@ -38,12 +38,6 @@ func (self XAttrFunction) Call(
 		return nil
 	}
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-	if err != nil {
-		scope.Log("xattr: %s", err)
-		return nil
-	}
-
 	filename, err := accessors.GetUnderlyingAPIFilename(
 		arg.Accessor, scope, arg.Filename)
 	if err != nil {

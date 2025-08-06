@@ -20,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
@@ -61,6 +62,12 @@ func (self S3UploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = self.maybeForceSecrets(ctx, scope, arg)
+	if err != nil {
+		scope.Log("upload_S3: %s", err.Error())
+		return vfilter.Null{}
+	}
+
 	if arg.Secret != "" {
 		err := mergeSecret(ctx, scope, arg)
 		if err != nil {
@@ -69,7 +76,7 @@ func (self S3UploadFunction) Call(ctx context.Context,
 		}
 	}
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	err = vql_subsystem.CheckAccess(scope, acls.NETWORK)
 	if err != nil {
 		scope.Log("upload_S3: %s", err)
 		return vfilter.Null{}
@@ -234,12 +241,35 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 func (self S3UploadFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "upload_s3",
-		Doc:      "Upload files to S3.",
-		ArgType:  type_map.AddType(scope, &S3UploadArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
-		Version:  2,
+		Name:    "upload_s3",
+		Doc:     "Upload files to S3.",
+		ArgType: type_map.AddType(scope, &S3UploadArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(
+			acls.NETWORK, acls.FILESYSTEM_READ).Build(),
+		Version: 2,
 	}
+}
+
+func (self S3UploadFunction) maybeForceSecrets(
+	ctx context.Context, scope vfilter.Scope, arg *S3UploadArgs) error {
+
+	// Not running on the server, secrets dont work.
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return nil
+	}
+
+	if config_obj.Security != nil &&
+		!config_obj.Security.VqlMustUseSecrets {
+		return nil
+	}
+
+	// If an explicit secret is defined let it filter the URLs.
+	if arg.Secret != "" {
+		return nil
+	}
+
+	return utils.SecretsEnforced
 }
 
 var critical_fields = []string{

@@ -606,7 +606,6 @@ const Japanese = {
      "Role_artifact_writer" : "アーティファクト ライター",
      "Role_api" : "読み取り専用 API クライアント",
 
-    "Perm_ALL_QUERY": "すべてのクエリ",
      "Perm_ANY_QUERY": "任意のクエリ",
      "Perm_PUBISH": "公開",
      "Perm_READ_RESULTS": "結果の読み取り",
@@ -627,9 +626,7 @@ const Japanese = {
      "Perm_PREPARE_RESULTS": "結果の準備",
      "Perm_DATASTORE_ACCESS": "データストアアクセス",
 
-
-     "ToolPerm_ALL_QUERY": "すべてのクエリを無制限に発行",
-     "ToolPerm_ANY_QUERY": "すべてのクエリを発行します (AllQuery は AnyQuery を意味します)",
+     "ToolPerm_ANY_QUERY": "すべてのクエリを発行します ",
      "ToolPerm_PUBISH": "サーバー側のキューにイベントを発行します (通常は必要ありません)",
      "ToolPerm_READ_RESULTS": "すでに実行されているハント、フロー、またはノートブックから結果を読み取る",
      "ToolPerm_LABEL_CLIENT": "クライアントのラベルとメタデータを操作できます",

@@ -82,6 +82,13 @@ func NewExt4FileSystemAccessor(
 	}
 }
 
+func (self Ext4FileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "raw_ext4",
+		Description: `Access the Ext4 filesystem inside an image by parsing the image.`,
+	}
+}
+
 func (self Ext4FileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 	// Create a new cache in the scope.
@@ -313,8 +320,7 @@ func (self *Ext4FileSystemAccessor) LstatWithOSPath(
 }
 
 func init() {
-	accessors.Register("raw_ext4", &Ext4FileSystemAccessor{},
-		`Access the Ext4 filesystem inside an image by parsing the image.`)
+	accessors.Register(&Ext4FileSystemAccessor{})
 
 	json.RegisterCustomEncoder(&Ext4FileInfo{}, accessors.MarshalGlobFileInfo)
 }

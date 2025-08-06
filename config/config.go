@@ -161,6 +161,10 @@ func GetDefaultConfig() *config_proto.Config {
 			// this to something more permanent.
 			Location:           "/var/tmp/velociraptor/",
 			FilestoreDirectory: "/var/tmp/velociraptor/",
+
+			// This is the default but we add it here for clarity. Set
+			// to none to disable.
+			Compression: "zlib",
 		},
 		Logging: &config_proto.LoggingConfig{
 			// Disable debug logging by default.

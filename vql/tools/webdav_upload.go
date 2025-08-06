@@ -58,7 +58,7 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 		arg.UserAgent = constants.USER_AGENT
 	}
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	err = vql_subsystem.CheckAccess(scope, acls.NETWORK)
 	if err != nil {
 		scope.Log("upload_webdav: %s", err)
 		return vfilter.Null{}
@@ -181,10 +181,11 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 func (self WebDAVUploadFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "upload_webdav",
-		Doc:      "Upload files to a WebDAV server.",
-		ArgType:  type_map.AddType(scope, &WebDAVUploadArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Name:    "upload_webdav",
+		Doc:     "Upload files to a WebDAV server.",
+		ArgType: type_map.AddType(scope, &WebDAVUploadArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(
+			acls.FILESYSTEM_READ, acls.NETWORK).Build(),
 	}
 }
 

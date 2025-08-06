@@ -143,7 +143,7 @@ func collectorPathToDelegatePath(full_path *accessors.OSPath) *accessors.OSPath 
 	collector_pathspec := full_path.PathSpec()
 
 	res := full_path.Copy()
-	res.SetPathSpec(&accessors.PathSpec{
+	_ = res.SetPathSpec(&accessors.PathSpec{
 		Path:             collector_pathspec.Path,
 		DelegateAccessor: "collector",
 		DelegatePath: accessors.PathSpec{
@@ -421,12 +421,23 @@ func (self *CollectorAccessor) ReadDirWithOSPath(
 	return res, nil
 }
 
-func init() {
-	accessors.Register("collector", &CollectorAccessor{
-		expandSparse: true,
-	}, `Open a collector zip file as if it was a directory - automatically expand sparse files.`)
+func (self CollectorAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "collector",
+		Description: `Open a collector zip file as if it was a directory - automatically expand sparse files.`,
+	}
+}
 
-	accessors.Register("collector_sparse", &CollectorAccessor{
-		expandSparse: false,
-	}, `Open a collector zip file as if it was a directory - does not expand sparse files.`)
+func init() {
+	accessors.Register(&CollectorAccessor{
+		expandSparse: true,
+	})
+
+	accessors.Register(accessors.DescribeAccessor(
+		&CollectorAccessor{
+			expandSparse: false,
+		}, accessors.AccessorDescriptor{
+			Name:        "collector_sparse",
+			Description: `Open a collector zip file as if it was a directory - does not expand sparse files.`,
+		}))
 }

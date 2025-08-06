@@ -28,6 +28,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -99,7 +100,7 @@ func (self MailFunction) Call(ctx context.Context,
 
 	res := ordereddict.NewDict()
 
-	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+	err := vql_subsystem.CheckAccess(scope, acls.NETWORK)
 	if err != nil {
 		scope.Log("ERROR:mail: %s", err)
 		return res.Set("ErrorStatus", err.Error())
@@ -113,6 +114,12 @@ func (self MailFunction) Call(ctx context.Context,
 
 	arg := &MailPluginArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("ERROR:mail: %v", err)
+		return res.Set("ErrorStatus", err.Error())
+	}
+
+	err = self.maybeForceSecrets(ctx, scope, arg)
 	if err != nil {
 		scope.Log("ERROR:mail: %v", err)
 		return res.Set("ErrorStatus", err.Error())
@@ -239,6 +246,29 @@ func (self MailFunction) Call(ctx context.Context,
 	return res.Set("ErrorStatus", "OK: Message Sent")
 }
 
+func (self *MailFunction) maybeForceSecrets(
+	ctx context.Context, scope vfilter.Scope,
+	arg *MailPluginArgs) error {
+
+	// Not running on the server, secrets dont work.
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return nil
+	}
+
+	if config_obj.Security != nil &&
+		!config_obj.Security.VqlMustUseSecrets {
+		return nil
+	}
+
+	// If an explicit secret is defined let it filter the URLs.
+	if arg.Secret != "" {
+		return nil
+	}
+
+	return utils.SecretsEnforced
+}
+
 func (self MailFunction) mergeSecretToRequest(
 	ctx context.Context, scope vfilter.Scope,
 	arg *MailPluginArgs, secret_name string) error {
@@ -261,6 +291,8 @@ func (self MailFunction) mergeSecretToRequest(
 		return err
 	}
 
+	// Wipe the args to prevent users from selecting anything here.
+	arg = &MailPluginArgs{}
 	secret_record.GetString("server", &arg.Server)
 	secret_record.GetUint64("server_port", &arg.ServerPort)
 	secret_record.GetString("auth_username", &arg.AuthUsername)
@@ -275,7 +307,7 @@ func (self MailFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 		Name:     "mail",
 		Doc:      "Send Email to a remote server.",
 		ArgType:  type_map.AddType(scope, &MailPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
 	}
 }
 

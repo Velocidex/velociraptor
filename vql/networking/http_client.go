@@ -263,6 +263,8 @@ func (self *_HttpPlugin) Call(
 		goto error
 	}
 
+	self.maybeForceSecrets(ctx, scope, parent_arg)
+
 	// A secret is specified
 	if parent_arg.Secret != "" {
 		parent_arg.Url, err = self.filterURLsWithSecret(
@@ -295,7 +297,7 @@ func (self *_HttpPlugin) Call(
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "http_client", args)()
 
-		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
+		err := vql_subsystem.CheckAccess(scope, acls.NETWORK)
 		if err != nil {
 			scope.Log("http_client: %s", err)
 			return
@@ -557,7 +559,7 @@ func (self _HttpPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Doc:      "Make a http request.",
 		ArgType:  type_map.AddType(scope, &HttpPluginRequest{}),
 		Version:  3,
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
+		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
 	}
 }
 

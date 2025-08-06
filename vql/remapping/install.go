@@ -125,8 +125,11 @@ func InstallMountPoints(
 	}
 
 	// Register the new accessor.
-	manager.Register(on_accessor, mount_fs,
-		fmt.Sprintf("Remapping %v", remappings))
+	manager.Register(accessors.DescribeAccessor(
+		mount_fs, accessors.AccessorDescriptor{
+			Name:        on_accessor,
+			Description: fmt.Sprintf("Remapping %v", remappings),
+		}))
 
 	return nil
 }
@@ -191,7 +194,11 @@ func ApplyRemappingOnScope(
 			}
 
 			// Install on top of the manager
-			manager.Register(remapping.On.Accessor, to_fs, "Shadowed")
+			manager.Register(accessors.DescribeAccessor(
+				to_fs, accessors.AccessorDescriptor{
+					Name:        remapping.On.Accessor,
+					Description: "Shadowed",
+				}))
 
 		case "mount":
 			if remapping.From == nil || remapping.On == nil {

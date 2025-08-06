@@ -83,7 +83,10 @@ func GetVMDKImage(full_path *accessors.OSPath, scope vfilter.Scope) (
 		pathspec.DelegatePath = pathspec.Path
 		pathspec.DelegateAccessor = "auto"
 		pathspec.Path = "/"
-		full_path.SetPathSpec(pathspec)
+		err := full_path.SetPathSpec(pathspec)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	accessor, err := accessors.GetAccessor(pathspec.DelegateAccessor, scope)
@@ -96,7 +99,11 @@ func GetVMDKImage(full_path *accessors.OSPath, scope vfilter.Scope) (
 }
 
 func init() {
-	accessors.Register("vmdk", zip.NewGzipFileSystemAccessor(
-		accessors.MustNewLinuxOSPath(""), GetVMDKImage),
-		`Allow reading a VMDK file.`)
+	accessors.Register(accessors.DescribeAccessor(
+		zip.NewGzipFileSystemAccessor(
+			accessors.MustNewLinuxOSPath(""), GetVMDKImage),
+		accessors.AccessorDescriptor{
+			Name:        "vmdk",
+			Description: `Allow reading a VMDK file.`,
+		}))
 }
