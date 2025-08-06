@@ -44,6 +44,7 @@ reference:
 
 required_permissions:
   - EXECVE
+  - NETWORK
 
 precondition: SELECT OS From info() where OS = 'windows'
 

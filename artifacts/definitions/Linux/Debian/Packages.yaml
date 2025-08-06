@@ -40,6 +40,9 @@ parameters:
      response will simply be ignored.
     default: /run/snapd.socket
 
+implied_permissions:
+- NETWORK
+
 precondition: |
  SELECT OS
  FROM info()

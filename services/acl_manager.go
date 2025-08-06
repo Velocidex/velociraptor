@@ -155,6 +155,9 @@ func CheckAccessWithToken(
 	case acls.FILESYSTEM_READ:
 		return token.FilesystemRead, nil
 
+	case acls.NETWORK:
+		return token.Network, nil
+
 	case acls.FILESYSTEM_WRITE:
 		return token.FilesystemWrite, nil
 

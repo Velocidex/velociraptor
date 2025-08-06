@@ -23,6 +23,7 @@ type: CLIENT
 
 required_permissions:
   - EXECVE
+  - NETWORK
 
 parameters:
   - name: pathToNFT

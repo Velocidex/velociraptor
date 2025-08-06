@@ -85,7 +85,6 @@ Output: [
    ]
   },
   "effective_policy": {
-   "all_query": true,
    "any_query": true,
    "read_results": true,
    "label_clients": true,
@@ -102,6 +101,7 @@ Output: [
    "server_admin": true,
    "filesystem_read": true,
    "filesystem_write": true,
+   "network": true,
    "machine_state": true,
    "prepare_results": true,
    "delete_results": true
@@ -123,7 +123,6 @@ Output: [
    ]
   },
   "effective_policy": {
-   "all_query": true,
    "any_query": true,
    "read_results": true,
    "label_clients": true,
@@ -139,6 +138,7 @@ Output: [
    "server_admin": true,
    "filesystem_read": true,
    "filesystem_write": true,
+   "network": true,
    "machine_state": true,
    "prepare_results": true,
    "delete_results": true
@@ -222,7 +222,6 @@ Output: [
    ]
   },
   "effective_policy": {
-   "all_query": true,
    "any_query": true,
    "read_results": true,
    "label_clients": true,
@@ -239,6 +238,7 @@ Output: [
    "server_admin": true,
    "filesystem_read": true,
    "filesystem_write": true,
+   "network": true,
    "machine_state": true,
    "prepare_results": true,
    "delete_results": true
@@ -284,7 +284,6 @@ Output: [
    ]
   },
   "effective_policy": {
-   "all_query": true,
    "any_query": true,
    "read_results": true,
    "label_clients": true,
@@ -300,6 +299,7 @@ Output: [
    "server_admin": true,
    "filesystem_read": true,
    "filesystem_write": true,
+   "network": true,
    "machine_state": true,
    "prepare_results": true,
    "delete_results": true
@@ -394,7 +394,6 @@ Output: [
    ]
   },
   "effective_policy": {
-   "all_query": true,
    "any_query": true,
    "read_results": true,
    "label_clients": true,
@@ -410,6 +409,7 @@ Output: [
    "server_admin": true,
    "filesystem_read": true,
    "filesystem_write": true,
+   "network": true,
    "machine_state": true,
    "prepare_results": true,
    "delete_results": true
