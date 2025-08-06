@@ -10,6 +10,7 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/file_store_file_info"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
@@ -38,12 +39,39 @@ func NewFileStoreFileSystemAccessor(
 	}
 }
 
+type SparseFileStoreFileSystemAccessor struct {
+	FileStoreFileSystemAccessor
+}
+
+func (self SparseFileStoreFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name: "fs_sparse",
+		Description: `Provide access to the server's filestore and datastore.
+
+This accessor expands sparse files. Reading from a sparse region will result in zeros being returned.
+`,
+		Permissions: []acls.ACL_PERMISSION{acls.SERVER_ADMIN},
+	}
+}
+
 func NewSparseFileStoreFileSystemAccessor(
-	config_obj *config_proto.Config) *FileStoreFileSystemAccessor {
-	return &FileStoreFileSystemAccessor{
-		file_store: file_store.GetFileStore(config_obj),
-		config_obj: config_obj,
-		sparse:     true,
+	config_obj *config_proto.Config) *SparseFileStoreFileSystemAccessor {
+	return &SparseFileStoreFileSystemAccessor{
+		FileStoreFileSystemAccessor: FileStoreFileSystemAccessor{
+			file_store: file_store.GetFileStore(config_obj),
+			config_obj: config_obj,
+			sparse:     true,
+		}}
+}
+
+func (self FileStoreFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name: "fs",
+		Description: `Provide access to the server's filestore and datastore.
+
+Many VQL plugins produce references to files stored on the server. This accessor can be used to open those files and read them. Typically references to filestore or datastore files have the "fs:" or "ds:" prefix.
+`,
+		Permissions: []acls.ACL_PERMISSION{acls.SERVER_ADMIN},
 	}
 }
 

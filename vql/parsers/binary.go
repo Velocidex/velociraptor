@@ -48,12 +48,6 @@ func (self ParseBinaryFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-	if err != nil {
-		scope.Log("parse_binary: %s", err)
-		return &vfilter.Null{}
-	}
-
 	// Compile the profile and cache it in the scope for next time.
 	profile, ok := vql_subsystem.CacheGet(scope, arg.Profile).(*vtypes.Profile)
 	if !ok {

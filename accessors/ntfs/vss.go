@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package ntfs
@@ -212,9 +213,15 @@ func (self VSSFileInfo) UniqueName() string {
 	return self.device + self.FileInfo.Name()
 }
 
+func (self WindowsVSSFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "ntfs_vss",
+		Description: `Access the NTFS filesystem by considering all VSS.`,
+	}
+}
+
 func init() {
-	accessors.Register("ntfs_vss", &WindowsVSSFileSystemAccessor{
+	accessors.Register(&WindowsVSSFileSystemAccessor{
 		WindowsNTFSFileSystemAccessor: &WindowsNTFSFileSystemAccessor{},
-	},
-		`Access the NTFS filesystem by considering all VSS.`)
+	})
 }

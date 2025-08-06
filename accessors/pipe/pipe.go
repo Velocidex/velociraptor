@@ -141,6 +141,13 @@ func (self PipeFilesystemAccessor) ParsePath(path string) (*accessors.OSPath, er
 	return accessors.NewLinuxOSPath(path)
 }
 
+func (self PipeFilesystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "pipe",
+		Description: `Read from a VQL pipe.`,
+	}
+}
+
 func (self PipeFilesystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 	return PipeFilesystemAccessor{scope}, nil
@@ -209,7 +216,6 @@ func (self PipeFilesystemAccessor) OpenWithOSPath(
 }
 
 func init() {
-	accessors.Register("pipe", &PipeFilesystemAccessor{},
-		`Read from a VQL pipe.`)
+	accessors.Register(&PipeFilesystemAccessor{})
 	vql_subsystem.RegisterFunction(&PipeFunction{})
 }

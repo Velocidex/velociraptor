@@ -16,11 +16,23 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/utils/dict"
 )
 
 const (
 	S3_TAG = "_S3_TAG"
 )
+
+type S3AcccessorArgs struct {
+	Secret            string `vfilter:"optional,field=secret,doc=The name of a secret to use."`
+	Region            string `vfilter:"optional,field=region,doc=The region."`
+	CredentialsKey    string `vfilter:"optional,field=credentials_key"`
+	CredentialsSecret string `vfilter:"optional,field=credentials_secret"`
+	CredentialsToken  string `vfilter:"optional,field=credentials_token"`
+	Endpoint          string `vfilter:"optional,field=endpoint"`
+	SkipVerify        bool   `vfilter:"optional,field=skip_verify"`
+}
 
 func GetS3Client(
 	ctx context.Context,
@@ -33,51 +45,42 @@ func GetS3Client(
 		setting = ordereddict.NewDict()
 	}
 
+	args := dict.RowToDict(ctx, scope, setting)
+	arg := &S3AcccessorArgs{}
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		return nil, err
+	}
+
 	// Check for a secret from the secrets service
-	secret := vql_subsystem.GetStringFromRow(scope, setting, "secret")
-	if secret != "" {
-		setting, err = getSecret(ctx, scope, secret)
+	if arg.Secret != "" {
+		arg, err = getSecret(ctx, scope, arg.Secret)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	conf := []func(*config.LoadOptions) error{}
-	region := vql_subsystem.GetStringFromRow(scope, setting, "region")
-	if region != "" {
-		conf = append(conf, config.WithRegion(region))
+	if arg.Region != "" {
+		conf = append(conf, config.WithRegion(arg.Region))
 	}
 
-	credentials_key := vql_subsystem.GetStringFromRow(
-		scope, setting, "credentials_key")
-
-	credentials_secret := vql_subsystem.GetStringFromRow(
-		scope, setting, "credentials_secret")
-
-	token := vql_subsystem.GetStringFromRow(
-		scope, setting, "credentials_token")
-
-	if credentials_key != "" && credentials_secret != "" {
+	if arg.CredentialsKey != "" && arg.CredentialsSecret != "" {
 		conf = append(conf, config.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider(
-				credentials_key, credentials_secret, token),
+				arg.CredentialsKey, arg.CredentialsSecret,
+				arg.CredentialsToken),
 		))
 	}
 
 	s3_opts := []func(*s3.Options){}
 
-	endpoint := vql_subsystem.GetStringFromRow(
-		scope, setting, "endpoint")
-
-	if endpoint != "" {
+	if arg.Endpoint != "" {
 		s3_opts = append(s3_opts, func(o *s3.Options) {
-			o.BaseEndpoint = aws.String(endpoint)
+			o.BaseEndpoint = aws.String(arg.Endpoint)
 		})
 
-		cert_no_verify := vql_subsystem.GetBoolFromRow(
-			scope, setting, "skip_verify")
-
-		if cert_no_verify {
+		if arg.SkipVerify {
 			config_obj, pres := vql_subsystem.GetServerConfig(scope)
 			if !pres {
 				config_obj = vconfig.GetDefaultConfig()
@@ -111,8 +114,7 @@ func GetS3Client(
 
 func getSecret(
 	ctx context.Context,
-	scope vfilter.Scope, secret string) (
-	*ordereddict.Dict, error) {
+	scope vfilter.Scope, secret string) (*S3AcccessorArgs, error) {
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		return nil, errors.New("Secrets may only be used on the server")
@@ -124,12 +126,19 @@ func getSecret(
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-
 	secret_record, err := secrets_service.GetSecret(ctx, principal,
 		constants.AWS_S3_CREDS, secret)
 	if err != nil {
 		return nil, err
 	}
 
-	return secret_record.Data, nil
+	arg := &S3AcccessorArgs{}
+	secret_record.GetString("region", &arg.Region)
+	secret_record.GetString("credentials_key", &arg.CredentialsKey)
+	secret_record.GetString("credentials_secret", &arg.CredentialsSecret)
+	secret_record.GetString("credentials_token", &arg.CredentialsToken)
+	secret_record.GetString("endpoint", &arg.Endpoint)
+	secret_record.GetBool("skip_verify", &arg.SkipVerify)
+
+	return arg, nil
 }

@@ -83,12 +83,6 @@ func (self _ParseEvtxPlugin) Call(
 			func() {
 				defer utils.RecoverVQL(scope)
 
-				err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-				if err != nil {
-					scope.Log("parse_evtx: %s", err)
-					return
-				}
-
 				accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 				if err != nil {
 					scope.Log("parse_evtx: %v", err)
@@ -155,12 +149,6 @@ func (self _WatchEvtxPlugin) Call(
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("watch_evtx: %s", err.Error())
-			return
-		}
-
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("watch_evtx: %s", err)
 			return
 		}
 

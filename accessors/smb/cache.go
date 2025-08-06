@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/utils/dict"
 )
 
@@ -189,11 +190,21 @@ func getCreadentials(
 		return nil, errors.New("No credentials provided for smb connections")
 	}
 
-	creds, pres := dict.RowToDict(ctx, scope, credentials).GetString(hostname)
+	args := dict.RowToDict(ctx, scope, credentials)
+
+	var creds string
+	arg := &SMBAccessorArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		// Try to support the old style args for backwards compatibility.
+		creds, pres = args.GetString(hostname)
+	} else {
+		creds, pres = arg.Hosts.GetString(hostname)
+	}
+
 	if !pres {
 		return nil, fmt.Errorf("No credentials found for %v", hostname)
 	}
-
 	parts := strings.SplitN(creds, ":", 2)
 	if len(parts) < 2 {
 		return nil, fmt.Errorf("Invalid credentials provided for %v", hostname)

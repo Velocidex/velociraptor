@@ -113,12 +113,6 @@ func (self MagicFunction) Call(
 		return magic
 	}
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-	if err != nil {
-		scope.Log("magic: %v", err)
-		return vfilter.Null{}
-	}
-
 	// Read a header from the file and pass to the libmagic
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {

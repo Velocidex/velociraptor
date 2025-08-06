@@ -16,8 +16,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -45,17 +45,20 @@ func (self RawS3SystemAccessor) ParsePath(path string) (*accessors.OSPath, error
 func (self RawS3SystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 
-	// Check we have permission to open files.
-	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
-	if err != nil {
-		return nil, err
-	}
-
 	result := &RawS3SystemAccessor{
 		ctx:   context.TODO(),
 		scope: scope,
 	}
 	return result, nil
+}
+
+func (self RawS3SystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "s3",
+		Description: `Allows access to S3 buckets.`,
+		Permissions: []acls.ACL_PERMISSION{acls.NETWORK},
+		ScopeVar:    constants.S3_CREDENTIALS,
+	}
 }
 
 func (self RawS3SystemAccessor) ReadDir(
@@ -254,8 +257,7 @@ func (self RawS3SystemAccessor) LstatWithOSPath(
 }
 
 func init() {
-	accessors.Register("s3", &RawS3SystemAccessor{},
-		`Allows access to S3 buckets.`)
+	accessors.Register(&RawS3SystemAccessor{})
 }
 
 // Set the page size for tests. Normally we dont need to adjust this

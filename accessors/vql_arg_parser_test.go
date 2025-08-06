@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 	"www.velocidex.com/golang/vfilter"
@@ -71,7 +72,10 @@ var testcases = []testCases{
 
 func TestVQLParsing(t *testing.T) {
 	ctx := context.Background()
-	scope := vql_subsystem.MakeScope()
+	scope := vql_subsystem.MakeScope().AppendVars(
+		ordereddict.NewDict().
+			Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
+
 	result := ordereddict.NewDict()
 
 	for _, testcase := range testcases {

@@ -14,6 +14,7 @@ import (
 	"sync"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -136,6 +137,17 @@ func (self AutoFilesystemAccessor) New(scope vfilter.Scope) (accessors.FileSyste
 	}, nil
 }
 
+func (self AutoFilesystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name: "auto",
+		Description: `Automatically access the filesystem using the best method.
+
+On Windows, we fallback to ntfs accessor if the file is not readable or locked.
+`,
+		Permissions: []acls.ACL_PERMISSION{acls.FILESYSTEM_READ},
+	}
+}
+
 func (self *AutoFilesystemAccessor) GetUnderlyingAPIFilename(
 	full_path *accessors.OSPath) (string, error) {
 	return full_path.PathSpec().Path, nil
@@ -207,9 +219,5 @@ func (self *AutoFilesystemAccessor) LstatWithOSPath(
 }
 
 func init() {
-	accessors.Register("auto", &AutoFilesystemAccessor{},
-		`Automatically access the filesystem using the best method.
-
-On Windows, we fallback to ntfs accessor if the file is not readable or locked.
-`)
+	accessors.Register(&AutoFilesystemAccessor{})
 }

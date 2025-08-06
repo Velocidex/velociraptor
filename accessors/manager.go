@@ -1,9 +1,9 @@
 package accessors
 
 import (
+	"fmt"
 	"sync"
 
-	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -24,7 +24,7 @@ type DeviceManager interface {
 	GetAccessor(scheme string, scope vfilter.Scope) (FileSystemAccessor, error)
 	Copy() DeviceManager
 	Clear()
-	Register(scheme string, accessor FileSystemAccessor, description string)
+	Register(accessor FileSystemAccessor)
 }
 
 func GetManager(scope vfilter.Scope) DeviceManager {
@@ -71,15 +71,13 @@ func GetAccessor(scheme string, scope vfilter.Scope) (FileSystemAccessor, error)
 
 // The default device manager is global and uses the
 type DefaultDeviceManager struct {
-	mu           sync.Mutex
-	handlers     map[string]FileSystemAccessor
-	descriptions *ordereddict.Dict
+	mu       sync.Mutex
+	handlers map[string]FileSystemAccessor
 }
 
 func NewDefaultDeviceManager() *DefaultDeviceManager {
 	return &DefaultDeviceManager{
-		handlers:     make(map[string]FileSystemAccessor),
-		descriptions: ordereddict.NewDict(),
+		handlers: make(map[string]FileSystemAccessor),
 	}
 }
 
@@ -91,26 +89,36 @@ func (self *DefaultDeviceManager) GetAccessor(
 	self.mu.Unlock()
 
 	if pres {
+		// Check permissions for accessing this handler.
+		for _, p := range handler.Describe().Permissions {
+			err := vql_subsystem.CheckAccess(scope, p)
+			if err != nil {
+				return nil, fmt.Errorf("Accessor %v: %w", scheme, err)
+			}
+		}
+
 		res, err := handler.New(scope)
 		return res, err
 	}
 	return nil, errors.New("Unknown filesystem accessor " + scheme)
 }
 
-func (self *DefaultDeviceManager) Register(
-	scheme string, accessor FileSystemAccessor, description string) {
+func (self *DefaultDeviceManager) Register(accessor FileSystemAccessor) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.handlers[scheme] = accessor
-	self.descriptions.Set(scheme, description)
+	desc := accessor.Describe()
+	self.handlers[desc.Name] = accessor
 }
 
-func (self *DefaultDeviceManager) DescribeAccessors() *ordereddict.Dict {
+func (self *DefaultDeviceManager) DescribeAccessors() (res []*AccessorDescriptor) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self.descriptions
+	for _, h := range self.handlers {
+		res = append(res, h.Describe())
+	}
+	return res
 }
 
 func (self *DefaultDeviceManager) Clear() {
@@ -118,7 +126,6 @@ func (self *DefaultDeviceManager) Clear() {
 	defer self.mu.Unlock()
 
 	self.handlers = make(map[string]FileSystemAccessor)
-	self.descriptions = ordereddict.NewDict()
 }
 
 func (self *DefaultDeviceManager) Copy() DeviceManager {
@@ -133,17 +140,13 @@ func (self *DefaultDeviceManager) copy() *DefaultDeviceManager {
 	for k, v := range self.handlers {
 		result.handlers[k] = v
 	}
-
-	result.descriptions = ordereddict.NewDict()
-	result.descriptions.MergeFrom(self.descriptions)
 	return result
 }
 
-func Register(
-	scheme string, accessor FileSystemAccessor, description string) {
-	globalDeviceManager.Register(scheme, accessor, description)
+func Register(accessor FileSystemAccessor) {
+	globalDeviceManager.Register(accessor)
 }
 
-func DescribeAccessors() *ordereddict.Dict {
+func DescribeAccessors() []*AccessorDescriptor {
 	return globalDeviceManager.DescribeAccessors()
 }

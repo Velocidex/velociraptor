@@ -51,12 +51,6 @@ func _ParseFile(
 	arg *_ParseFileWithRegexArgs,
 	output_chan chan vfilter.Row) {
 
-	err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-	if err != nil {
-		scope.Log("parse_records_with_regex: %s", err)
-		return
-	}
-
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("error: %v", err)

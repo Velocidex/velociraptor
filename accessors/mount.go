@@ -197,6 +197,10 @@ func (self *MountFileSystemAccessor) getDelegateNode(os_path *OSPath) (
 	return node, nil, nil
 }
 
+func (self MountFileSystemAccessor) Describe() *AccessorDescriptor {
+	return &AccessorDescriptor{}
+}
+
 func (self *MountFileSystemAccessor) New(scope vfilter.Scope) (FileSystemAccessor, error) {
 	return &MountFileSystemAccessor{
 		scope: scope,

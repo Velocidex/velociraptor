@@ -634,7 +634,6 @@ const French = {
     "Role_artifact_writer": "Auteur d'artefacts",
     "Role_api": "Client API en lecture seule",
 
-    "Perm_ALL_QUERY": "Toutes les requêtes",
      "Perm_ANY_QUERY": "N'importe quelle requête",
      "Perm_PUBISH": "Publier",
      "Perm_READ_RESULTS": "Lire les résultats",
@@ -655,9 +654,7 @@ const French = {
      "Perm_PREPARE_RESULTS": "Préparer les résultats",
      "Perm_DATASTORE_ACCESS": "Accès à la banque de données",
 
-
-     "ToolPerm_ALL_QUERY": "Émettre toutes les requêtes sans restriction",
-     "ToolPerm_ANY_QUERY": "Emettre n'importe quelle requête (AllQuery implique AnyQuery)",
+     "ToolPerm_ANY_QUERY": "Emettre n'importe quelle requête",
      "ToolPerm_PUBISH": "Publier les événements dans les files d'attente côté serveur (généralement non nécessaires)",
      "ToolPerm_READ_RESULTS": "Lire les résultats des chasses, des flux ou des cahiers déjà exécutés",
      "ToolPerm_LABEL_CLIENT": "Peut manipuler les étiquettes et les métadonnées des clients",

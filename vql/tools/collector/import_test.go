@@ -86,7 +86,7 @@ func (self *TestSuite) TestCreateAndImportCollection() {
 	defer utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))()
 
 	fs_factory := file_store_accessor.NewFileStoreFileSystemAccessor(self.ConfigObj)
-	accessors.Register("fs", fs_factory, "")
+	accessors.Register(fs_factory)
 
 	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)

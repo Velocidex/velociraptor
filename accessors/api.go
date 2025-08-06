@@ -11,6 +11,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -105,12 +106,16 @@ func (self *OSPath) Copy() *OSPath {
 	}
 }
 
-func (self *OSPath) SetPathSpec(pathspec *PathSpec) {
+func (self *OSPath) SetPathSpec(pathspec *PathSpec) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	_ = self.Manipulator.PathParse(pathspec.Path, self)
+	err := self.Manipulator.PathParse(pathspec.Path, self)
+	if err != nil {
+		return err
+	}
 	self.pathspec = pathspec
+	return nil
 }
 
 func (self *OSPath) PathSpec() *PathSpec {
@@ -357,6 +362,8 @@ type FileSystemAccessor interface {
 	OpenWithOSPath(path *OSPath) (ReadSeekCloser, error)
 	LstatWithOSPath(path *OSPath) (FileInfo, error)
 	New(scope vfilter.Scope) (FileSystemAccessor, error)
+
+	Describe() *AccessorDescriptor
 }
 
 // Some filesystems can attempt to retrieve the underlying file. If
@@ -385,4 +392,54 @@ func GetUnderlyingAPIFilename(accessor string,
 	}
 
 	return raw_accessor.GetUnderlyingAPIFilename(path)
+}
+
+type AccessorDescriptor struct {
+	Name        string
+	Description string
+
+	// The required permissions for using this accessor
+	Permissions []acls.ACL_PERMISSION
+
+	// The name of the scope parameter that configures this accessor
+	// if needed.
+	ScopeVar string
+
+	// The type description for the ScopeVar if present.
+	ArgType vfilter.Any
+}
+
+func (self AccessorDescriptor) Metadata() *ordereddict.Dict {
+	var permissions []string
+	for _, p := range self.Permissions {
+		permissions = append(permissions, p.String())
+	}
+
+	res := ordereddict.NewDict()
+	if len(permissions) > 0 {
+		res.Set("permissions", strings.Join(permissions, ","))
+	}
+
+	if self.ScopeVar != "" {
+		res.Set("ScopeVar", self.ScopeVar)
+	}
+
+	return res
+}
+
+type DescriptorWrapper struct {
+	FileSystemAccessor
+	descriptor AccessorDescriptor
+}
+
+func (self DescriptorWrapper) Describe() *AccessorDescriptor {
+	return &self.descriptor
+}
+
+func DescribeAccessor(target FileSystemAccessor,
+	desc AccessorDescriptor) FileSystemAccessor {
+	return DescriptorWrapper{
+		FileSystemAccessor: target,
+		descriptor:         desc,
+	}
 }

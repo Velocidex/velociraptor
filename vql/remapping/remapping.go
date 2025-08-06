@@ -78,7 +78,8 @@ func (self RemappingFunc) Call(ctx context.Context,
 			return vfilter.Null{}
 		}
 
-		manager.Register(cp, accessor, "")
+		manager.Register(accessors.DescribeAccessor(accessor,
+			accessors.AccessorDescriptor{Name: cp}))
 	}
 
 	// Reset the scope to default for remapping accessors.

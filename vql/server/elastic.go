@@ -95,7 +95,7 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "elastic", args)()
 
-		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
+		err := vql_subsystem.CheckAccess(scope, acls.NETWORK)
 		if err != nil {
 			scope.Log("elastic: %v", err)
 			return
@@ -431,7 +431,7 @@ func (self _ElasticPlugin) Info(
 	return &vfilter.PluginInfo{
 		Name:     "elastic_upload",
 		Doc:      "Upload rows to elastic.",
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
+		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
 		ArgType:  type_map.AddType(scope, &_ElasticPluginArgs{}),
 	}
 }

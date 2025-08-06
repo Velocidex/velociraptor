@@ -41,7 +41,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/files"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -143,14 +142,15 @@ func (self OSFileSystemAccessor) ParsePath(path string) (
 func (self OSFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 
-	// Check we have permission to open files.
-	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
-	if err != nil {
-		return nil, err
-	}
+	return &OSFileSystemAccessor{follow_links: self.follow_links}, nil
+}
 
-	result := &OSFileSystemAccessor{follow_links: self.follow_links}
-	return result, nil
+func (self OSFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "file",
+		Description: `Access the filesystem using the OS API.`,
+		Permissions: []acls.ACL_PERMISSION{acls.FILESYSTEM_READ},
+	}
 }
 
 func (self *OSFileSystemAccessor) GetUnderlyingAPIFilename(
@@ -405,21 +405,28 @@ func (self *OSFileSystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) (
 }
 
 func init() {
-	accessors.Register("file", &OSFileSystemAccessor{},
-		`Access the filesystem using the OS API.`)
+	accessors.Register(&OSFileSystemAccessor{})
 
 	// Windows filesystem is already case insensitive so we provide an
 	// alias so artifacts can work with either.
-	accessors.Register("file_nocase", &OSFileSystemAccessor{},
-		`Access the filesystem using the OS API.`)
+	accessors.Register(accessors.DescribeAccessor(
+		&OSFileSystemAccessor{}, accessors.AccessorDescriptor{
+			Name:        "file_nocase",
+			Description: `Access the filesystem using the OS API.`,
+		}))
 
 	// Register a variant which allows following links - be
 	// careful with it - it can get stuck on loops.
-	accessors.Register("file_links", &OSFileSystemAccessor{
-		follow_links: true,
-	}, `Access the filesystem using the OS APIs.
-
-This Accessor also follows any symlinks - Note: Take care with this accessor because there may be circular links.`)
+	accessors.Register(accessors.DescribeAccessor(
+		&OSFileSystemAccessor{
+			follow_links: true,
+		}, accessors.AccessorDescriptor{
+			Name: "file_links",
+			Description: `Access the filesystem using the OS API.
+This Accessor also follows any symlinks - Note: Take care with this accessor because there may be circular links.
+`,
+			Permissions: []acls.ACL_PERMISSION{acls.FILESYSTEM_READ},
+		}))
 
 	// We do not register the OSFileSystemAccessor directly - it
 	// is used through the AutoFilesystemAccessor: If we can not

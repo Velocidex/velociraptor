@@ -48,12 +48,6 @@ func (self *GCSUploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-	if err != nil {
-		scope.Log("upload_gcs: %s", err)
-		return vfilter.Null{}
-	}
-
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("ERROR:upload_gcs: %v", err)

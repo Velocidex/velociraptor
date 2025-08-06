@@ -71,12 +71,6 @@ func (self *UploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-	if err != nil {
-		scope.Log("upload: %v", err)
-		return vfilter.Null{}
-	}
-
 	accessor_name := arg.Accessor
 	if accessor_name == "" {
 		accessor_name = "auto"
@@ -181,13 +175,6 @@ func (self *UploadDirectoryFunction) Call(ctx context.Context,
 	}
 
 	if arg.File == nil {
-		return vfilter.Null{}
-	}
-
-	// We need to be able to read from the accessor
-	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-	if err != nil {
-		scope.Log("upload_directory: %s", err)
 		return vfilter.Null{}
 	}
 

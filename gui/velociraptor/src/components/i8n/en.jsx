@@ -212,7 +212,6 @@ const English = {
     This role is required to provide the ability for the user to connect over the API port.
     </>,
 
-    "Perm_ALL_QUERY" : "All Query",
     "Perm_ANY_QUERY" : "Any Query",
     "Perm_PUBISH" : "Publish",
     "Perm_READ_RESULTS" : "Read results",
@@ -230,14 +229,14 @@ const English = {
     "Perm_IMPERSONATION" : "Impersonation",
     "Perm_FILESYSTEM_READ" : "Filesystem Read",
     "Perm_FILESYSTEM_WRITE" : "Filesystem Write",
+    "Perm_NETWORK": "Network Access",
     "Perm_MACHINE_STATE" : "Machine State",
     "Perm_PREPARE_RESULTS" : "Prepare Results",
     "Perm_DELETE_RESULTS" : "Delete Results",
     "Perm_DATASTORE_ACCESS" : "Datastore Access",
 
 
-    "ToolPerm_ALL_QUERY" : "Issue all queries without restriction",
-    "ToolPerm_ANY_QUERY" : "Issue any query at all (AllQuery implies AnyQuery)",
+    "ToolPerm_ANY_QUERY" : "Issue any query at all ",
     "ToolPerm_PUBISH" : "Publish events to server side queues (typically not needed)",
     "ToolPerm_READ_RESULTS" : "Read results from already run hunts, flows, or notebooks",
     "ToolPerm_LABEL_CLIENT" : "Can manipulate client labels and metadata",
@@ -254,6 +253,7 @@ const English = {
     "ToolPerm_IMPERSONATION" : "Allows the user to specify a different username for the query() plugin",
     "ToolPerm_FILESYSTEM_READ" : "Allowed to read arbitrary files from the filesystem",
     "ToolPerm_FILESYSTEM_WRITE" : "Allowed to create files on the filesystem",
+    "ToolPerm_NETWORK": "Allowed to run plugins that make network connections",
     "ToolPerm_MACHINE_STATE" : "Allowed to collect state information from machines (e.g. pslist())",
     "ToolPerm_PREPARE_RESULTS" : "Allowed to create zip files",
     "ToolPerm_DELETE_RESULTS" : "Allowed to delete clients, flows and other data",

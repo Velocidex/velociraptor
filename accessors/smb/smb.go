@@ -5,11 +5,13 @@ import (
 	"io/fs"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
 	"github.com/hirochachacha/go-smb2"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -17,6 +19,10 @@ import (
 const (
 	SMB_TAG = "$SMB_CACHE"
 )
+
+type SMBAccessorArgs struct {
+	Hosts *ordereddict.Dict `vfilter:"required,field=hosts,doc=A dict mapping hostname to connection strings. The connection string consists of username and password joined by colon (e.g. fred:hunter2 )."`
+}
 
 // Real implementation for non windows OSs:
 type SMBFileSystemAccessor struct {
@@ -29,14 +35,18 @@ func (self *SMBFileSystemAccessor) ParsePath(path string) (*accessors.OSPath, er
 	return self.root.Parse(path)
 }
 
+func (self SMBFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "smb",
+		Description: `Allows access to SMB shares.`,
+		Permissions: []acls.ACL_PERMISSION{acls.NETWORK},
+		ScopeVar:    constants.SMB_CREDENTIALS,
+		ArgType:     &SMBAccessorArgs{},
+	}
+}
+
 func (self *SMBFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
-
-	// Check we have permission to open files.
-	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
-	if err != nil {
-		return nil, err
-	}
 
 	return &SMBFileSystemAccessor{
 		root:  self.root,
@@ -264,7 +274,7 @@ func init() {
 	root_path := &accessors.OSPath{
 		Manipulator: &SMBPathManipulator{},
 	}
-	accessors.Register("smb", &SMBFileSystemAccessor{
+	accessors.Register(&SMBFileSystemAccessor{
 		root: root_path,
-	}, `Allows access to SMB shares.`)
+	})
 }

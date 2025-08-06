@@ -149,12 +149,10 @@ func reformatNode(vql_node nodeContext) (m mutation, err error) {
 
 	// Indent this block to the start of the previous block
 	indented := []string{}
-	ind := strings.Repeat(" ", vql_node.parent.Column+2)
+	ind := strings.Repeat(" ", vql_node.parent.Column+1)
 	for _, l := range lines {
 		indented = append(indented, ind+l)
 	}
-
-	indented = append(indented, "")
 
 	return mutation{
 		original_start_line: vql_node.Line,

@@ -147,5 +147,5 @@ func TestOSPathHumanString(t *testing.T) {
 func init() {
 	// Override the file accessor with something that uses Generic
 	// ospath so tests are the same on windows and linux.
-	accessors.Register("file", &zip.ZipFileSystemAccessor{}, "")
+	accessors.Register(&zip.ZipFileSystemAccessor{})
 }

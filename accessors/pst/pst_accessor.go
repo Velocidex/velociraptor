@@ -14,6 +14,7 @@ import (
 
 	pst "github.com/mooijtech/go-pst/v6/pkg"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -35,6 +36,25 @@ type PSTFileSystemAccessor struct {
 func (self PSTFileSystemAccessor) ParsePath(path string) (
 	*accessors.OSPath, error) {
 	return accessors.NewGenericOSPath(path)
+}
+
+func (self PSTFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name: "pst",
+		Description: `An accessor to open attachments in PST files.
+
+This accessor allows opening of attachments for scanning or reading.
+
+The OSPath used is structured in the form:
+
+{
+  Path: "Msg/<msg_id>/Att/<attach_id>/filename",
+  DelegatePath: <path to PST file>,
+  DelegateAccessor: <accessor for PST file>
+}
+`,
+		Permissions: []acls.ACL_PERMISSION{acls.FILESYSTEM_READ},
+	}
 }
 
 func (self PSTFileSystemAccessor) New(scope vfilter.Scope) (
@@ -149,19 +169,5 @@ func (self *PSTFileSystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) 
 }
 
 func init() {
-	accessors.Register("pst", &PSTFileSystemAccessor{},
-		`An accessor to open attachments in PST files.
-
-This accessor allows opening of attachments for scanning or reading.
-
-The OSPath used is structured in the form:
-
-{
-  Path: "Msg/<msg_id>/Att/<attach_id>/filename",
-  DelegatePath: <path to PST file>,
-  DelegateAccessor: <accessor for PST file>
-}
-
-
-`)
+	accessors.Register(&PSTFileSystemAccessor{})
 }

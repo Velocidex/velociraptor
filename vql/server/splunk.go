@@ -72,7 +72,7 @@ func (self _SplunkPlugin) Call(ctx context.Context,
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "splunk_upload", args)()
 
-		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
+		err := vql_subsystem.CheckAccess(scope, acls.NETWORK)
 		if err != nil {
 			return
 		}
@@ -340,7 +340,7 @@ func (self _SplunkPlugin) Info(
 		Name:     "splunk_upload",
 		Doc:      "Upload rows to splunk.",
 		ArgType:  type_map.AddType(scope, &_SplunkPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
+		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
 	}
 }
 

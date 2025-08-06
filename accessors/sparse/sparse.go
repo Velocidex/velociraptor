@@ -10,7 +10,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors/zip"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/uploads"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -219,12 +218,6 @@ func GetSparseFile(full_path *accessors.OSPath, scope vfilter.Scope) (
 
 	pathspec := full_path.PathSpec()
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, pathspec.DelegateAccessor)
-	if err != nil {
-		scope.Log("%v: DelegateAccessor denied", err)
-		return nil, err
-	}
-
 	accessor, err := accessors.GetAccessor(pathspec.DelegateAccessor, scope)
 	if err != nil {
 		scope.Log("%v: did you provide a URL or PathSpec?", err)
@@ -253,7 +246,11 @@ func GetSparseFile(full_path *accessors.OSPath, scope vfilter.Scope) (
 }
 
 func init() {
-	accessors.Register("sparse", zip.NewGzipFileSystemAccessor(
-		accessors.MustNewPathspecOSPath(""), GetSparseFile),
-		`Allows reading another file by overlaying a sparse map on top of it.`)
+	accessors.Register(accessors.DescribeAccessor(
+		zip.NewGzipFileSystemAccessor(
+			accessors.MustNewPathspecOSPath(""), GetSparseFile),
+		accessors.AccessorDescriptor{
+			Name:        "sparse",
+			Description: `Allows reading another file by overlaying a sparse map on top of it.`,
+		}))
 }

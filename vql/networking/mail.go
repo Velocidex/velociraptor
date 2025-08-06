@@ -99,7 +99,7 @@ func (self MailFunction) Call(ctx context.Context,
 
 	res := ordereddict.NewDict()
 
-	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+	err := vql_subsystem.CheckAccess(scope, acls.NETWORK)
 	if err != nil {
 		scope.Log("ERROR:mail: %s", err)
 		return res.Set("ErrorStatus", err.Error())
@@ -275,7 +275,7 @@ func (self MailFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 		Name:     "mail",
 		Doc:      "Send Email to a remote server.",
 		ArgType:  type_map.AddType(scope, &MailPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
 	}
 }
 

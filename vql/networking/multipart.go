@@ -12,7 +12,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -55,13 +54,6 @@ func GetMultiPartReader(
 		}
 
 		// Check the user's access to this file.
-		err = vql_subsystem.CheckFilesystemAccess(scope, file_spec.Accessor)
-		if err != nil {
-			scope.Log("http_client: When uploading %v: %v",
-				file_spec.Path.String(), err)
-			continue
-		}
-
 		accessor, err := accessors.GetAccessor(file_spec.Accessor, scope)
 		if err != nil {
 			scope.Log("http_client: When uploading %v: %v",

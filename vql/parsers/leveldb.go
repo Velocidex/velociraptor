@@ -48,12 +48,6 @@ func (self LevelDBPlugin) Call(
 			arg.Accessor = "auto"
 		}
 
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("leveldb: %s", err)
-			return
-		}
-
 		db, err := getLevelDBHandle(ctx, scope, arg.Accessor, arg.Filename)
 		if err != nil {
 			return

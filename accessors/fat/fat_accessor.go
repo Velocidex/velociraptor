@@ -111,6 +111,13 @@ type FATFileSystemAccessor struct {
 	root *accessors.OSPath
 }
 
+func (self FATFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "fat",
+		Description: `Access the FAT filesystem inside an image by parsing FAT.`,
+	}
+}
+
 func (self FATFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 	// Create a new cache in the scope.
@@ -329,8 +336,7 @@ func (self *FATFileSystemAccessor) LstatWithOSPath(
 }
 
 func init() {
-	accessors.Register("fat", &FATFileSystemAccessor{},
-		`Access the FAT filesystem inside an image by parsing FAT.`)
+	accessors.Register(&FATFileSystemAccessor{})
 
 	json.RegisterCustomEncoder(&FATFileInfo{}, accessors.MarshalGlobFileInfo)
 }

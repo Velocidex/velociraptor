@@ -4,17 +4,15 @@
   "name: Foo",
   "sources:",
   "- query: |",
-  "     SELECT A,",
-  "            B,",
-  "            C",
-  "     FROM info(arg1=Foobar, arg2=\"XXXXX\")",
-  "",
+  "    SELECT A,",
+  "           B,",
+  "           C",
+  "    FROM info(arg1=Foobar, arg2=\"XXXXX\")",
   "- query: |-",
-  "     SELECT A,",
-  "            B,",
-  "            C",
-  "     FROM info()",
-  "",
+  "    SELECT A,",
+  "           B,",
+  "           C",
+  "    FROM info()",
   "- description: Foo bar",
   ""
  ],
@@ -24,17 +22,15 @@
   "sources:",
   "- query: SELECT * FROM info()",
   "- query: |",
-  "     SELECT A",
-  "     FROM scope()",
-  ""
+  "    SELECT A",
+  "    FROM scope()"
  ],
  "export reformatted": [
   "",
   "name: Exported",
   "export: |",
-  "   SELECT *",
-  "   FROM scope()",
-  ""
+  "  SELECT *",
+  "  FROM scope()"
  ],
  "preconditions": [
   "",
@@ -42,8 +38,7 @@
   "precondition: SELECT * FROM info()",
   "sources:",
   "- precondition: |",
-  "     SELECT *",
-  "     FROM info()",
-  ""
+  "    SELECT *",
+  "    FROM info()"
  ]
 }

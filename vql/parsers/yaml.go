@@ -35,12 +35,6 @@ func (self ParseYamlFunction) Call(
 		return nil
 	}
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-	if err != nil {
-		scope.Log("parse_yaml: %s", err)
-		return nil
-	}
-
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("parse_yaml: %v", err)

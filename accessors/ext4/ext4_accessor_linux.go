@@ -41,8 +41,7 @@ func (self LinuxExt4FileSystemAccessor) GetVirtualFS(scope vfilter.Scope) (
 
 	root_path := accessors.MustNewLinuxOSPath("/")
 	virtual_fs := accessors.NewVirtualFilesystemAccessor(root_path)
-	mount_fs = accessors.NewMountFileSystemAccessor(
-		root_path, virtual_fs)
+	mount_fs = accessors.NewMountFileSystemAccessor(root_path, virtual_fs)
 
 	vql_subsystem.CacheSet(scope, EXT4_Tag, mount_fs)
 
@@ -91,7 +90,13 @@ func (self LinuxExt4FileSystemAccessor) New(scope vfilter.Scope) (
 	}, err
 }
 
+func (self LinuxExt4FileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "ext4",
+		Description: `Access files by parsing the raw ext4 filesystems.`,
+	}
+}
+
 func init() {
-	accessors.Register("ext4", &LinuxExt4FileSystemAccessor{},
-		`Access files by parsing the raw ext4 filesystems.`)
+	accessors.Register(&LinuxExt4FileSystemAccessor{})
 }

@@ -69,7 +69,7 @@ func (self S3UploadFunction) Call(ctx context.Context,
 		}
 	}
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	err = vql_subsystem.CheckAccess(scope, acls.NETWORK)
 	if err != nil {
 		scope.Log("upload_S3: %s", err)
 		return vfilter.Null{}
@@ -234,11 +234,12 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 func (self S3UploadFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "upload_s3",
-		Doc:      "Upload files to S3.",
-		ArgType:  type_map.AddType(scope, &S3UploadArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
-		Version:  2,
+		Name:    "upload_s3",
+		Doc:     "Upload files to S3.",
+		ArgType: type_map.AddType(scope, &S3UploadArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(
+			acls.NETWORK, acls.FILESYSTEM_READ).Build(),
+		Version: 2,
 	}
 }
 

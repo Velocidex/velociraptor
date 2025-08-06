@@ -44,6 +44,7 @@ message ApiClientACL {
     bool server_admin = 12;
     bool filesystem_read = 13;
     bool filesystem_write = 14;
+    bool network = 25;
     bool machine_state = 16;
     bool prepare_results = 17;
     bool delete_results = 23;

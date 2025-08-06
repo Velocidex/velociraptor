@@ -385,6 +385,13 @@ type RegFileSystemAccessor struct {
 	cache *RegFileSystemAccessorCache
 }
 
+func (self RegFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "registry",
+		Description: `Access the registery like a filesystem using the OS APIs.`,
+	}
+}
+
 func (self *RegFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 
@@ -713,10 +720,7 @@ func getHiveAndKey(full_path *accessors.OSPath) (registry.Key, string, error) {
 }
 
 func init() {
-	description := `Access the registery like a filesystem using the OS APIs.`
-	accessors.Register("reg", &RegFileSystemAccessor{}, description)
-	accessors.Register("registry", &RegFileSystemAccessor{}, description)
-
+	accessors.Register(&RegFileSystemAccessor{})
 	json.RegisterCustomEncoder(&RegKeyInfo{}, accessors.MarshalGlobFileInfo)
 	json.RegisterCustomEncoder(&RegValueInfo{}, accessors.MarshalGlobFileInfo)
 }

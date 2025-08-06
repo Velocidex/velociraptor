@@ -46,10 +46,19 @@ func ParseOSPath(ctx context.Context,
 		return t, nil
 
 	case *PathSpec:
-		return accessor.ParsePath(t.String())
+		root, err := accessor.ParsePath("")
+		if err != nil {
+			return accessor.ParsePath(t.String())
+		}
+		return root, root.SetPathSpec(t)
 
 	case PathSpec:
-		return accessor.ParsePath(t.String())
+
+		root, err := accessor.ParsePath("")
+		if err != nil {
+			return accessor.ParsePath(t.String())
+		}
+		return root, root.SetPathSpec(&t)
 
 	case api.FSPathSpec:
 		// Create an OSPath to represent the abstract filestore path.

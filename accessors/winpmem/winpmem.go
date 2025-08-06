@@ -11,6 +11,7 @@ import (
 
 	"github.com/Velocidex/WinPmem/go-winpmem"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -134,6 +135,14 @@ func (self WinpmemAccessor) New(scope vfilter.Scope) (
 	return result_any.(*WinpmemAccessor), nil
 }
 
+func (self WinpmemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "winpmem",
+		Description: `Access physical memory like a file. Any filename will result in a sparse view of physical memory.`,
+		Permissions: []acls.ACL_PERMISSION{acls.MACHINE_STATE},
+	}
+}
+
 func (self WinpmemAccessor) ParsePath(path string) (
 	*accessors.OSPath, error) {
 	return accessors.NewLinuxOSPath(path)
@@ -188,6 +197,5 @@ func (self *WinpmemAccessor) OpenWithOSPath(
 }
 
 func init() {
-	accessors.Register("winpmem", &WinpmemAccessor{},
-		`Access physical memory like a file. Any filename will result in a sparse view of physical memory.`)
+	accessors.Register(&WinpmemAccessor{})
 }

@@ -29,6 +29,13 @@ import (
 
 type DataFilesystemAccessor struct{}
 
+func (self DataFilesystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "data",
+		Description: `Makes a string appears as an in memory file. Path is taken as a literal string to use as the file's data`,
+	}
+}
+
 func (self DataFilesystemAccessor) New(
 	scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
 	return DataFilesystemAccessor{}, nil
@@ -86,6 +93,5 @@ func (self DataFilesystemAccessor) OpenWithOSPath(
 }
 
 func init() {
-	accessors.Register("data", &DataFilesystemAccessor{},
-		`Makes a string appears as an in memory file. Path is taken as a literal string to use as the file's data`)
+	accessors.Register(&DataFilesystemAccessor{})
 }

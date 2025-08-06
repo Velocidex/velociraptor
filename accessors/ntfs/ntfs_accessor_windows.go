@@ -187,11 +187,20 @@ func (self *WindowsNTFSFileSystemAccessor) New(
 	return result, nil
 }
 
-func init() {
-	// For backwards compatibility.
-	accessors.Register("lazy_ntfs", &WindowsNTFSFileSystemAccessor{},
-		`Access the NTFS filesystem by parsing NTFS structures.`)
+func (self WindowsNTFSFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "ntfs",
+		Description: `Access the NTFS filesystem by parsing NTFS structures.`,
+	}
+}
 
-	accessors.Register("ntfs", &WindowsNTFSFileSystemAccessor{},
-		`Access the NTFS filesystem by parsing NTFS structures.`)
+func init() {
+	// For backwards compatibility. It is the same as "ntfs"
+	accessors.Register(accessors.DescribeAccessor(
+		&WindowsNTFSFileSystemAccessor{},
+		accessors.AccessorDescriptor{
+			Name:        "lazy_ntfs",
+			Description: `Access the NTFS filesystem by parsing NTFS structures.`,
+		}))
+	accessors.Register(&WindowsNTFSFileSystemAccessor{})
 }

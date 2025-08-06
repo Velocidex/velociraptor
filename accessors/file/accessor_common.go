@@ -21,7 +21,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -187,15 +186,18 @@ func (self OSFileSystemAccessor) ParsePath(path string) (*accessors.OSPath, erro
 	return self.root.Parse(path)
 }
 
+func (self OSFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "file",
+		Description: `Access files using the operating system's API. Does not allow access to raw devices.`,
+		Permissions: []acls.ACL_PERMISSION{acls.FILESYSTEM_READ},
+	}
+}
+
 func (self OSFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 
 	// Check we have permission to open files.
-	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
-	if err != nil {
-		return nil, err
-	}
-
 	return &OSFileSystemAccessor{
 		context: &AccessorContext{
 			links: make(map[_inode]bool),
@@ -495,19 +497,29 @@ func (self OSFileSystemAccessor) OpenWithOSPath(
 
 func init() {
 	root_path, _ := accessors.NewLinuxOSPath("")
-	accessors.Register("file", &OSFileSystemAccessor{
+	accessors.Register(&OSFileSystemAccessor{
 		root: root_path,
-	}, `Access files using the operating system's API. Does not allow access to raw devices.`)
+	})
 
-	accessors.Register("file_nocase", &OSFileSystemAccessor{
-		root:   root_path,
-		nocase: true,
-	}, `Access files using the operating system's API. This is case insensitive - even on Unix Operating systems.`)
+	accessors.Register(accessors.DescribeAccessor(
+		&OSFileSystemAccessor{
+			root:   root_path,
+			nocase: true,
+		}, accessors.AccessorDescriptor{
+			Name:        "file_nocase",
+			Description: `Access files using the operating system's API. This is case insensitive - even on Unix Operating systems.`,
+			Permissions: []acls.ACL_PERMISSION{acls.FILESYSTEM_READ},
+		}))
 
 	// On Linux the auto accessor is the same as file.
-	accessors.Register("auto", &OSFileSystemAccessor{
-		root: root_path,
-	}, `Access the file using the best accessor possible. On windows we fall back to NTFS parsing in case the file is locked or unreadable.`)
+	accessors.Register(accessors.DescribeAccessor(
+		&OSFileSystemAccessor{
+			root: root_path,
+		}, accessors.AccessorDescriptor{
+			Name:        "auto",
+			Description: `Access the file using the best accessor possible. On windows we fall back to NTFS parsing in case the file is locked or unreadable.`,
+			Permissions: []acls.ACL_PERMISSION{acls.FILESYSTEM_READ},
+		}))
 
 	json.RegisterCustomEncoder(&OSFileInfo{}, accessors.MarshalGlobFileInfo)
 }

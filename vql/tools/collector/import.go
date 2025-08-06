@@ -82,11 +82,6 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 
 	// Do not expand sparse files when we import them - they can be
 	// deflated by the user later.
-	err = vql_subsystem.CheckFilesystemAccess(scope, "collector_sparse")
-	if err != nil {
-		scope.Log("import_collection: %v", err)
-		return vfilter.Null{}
-	}
 
 	// Open the collection using the accessor
 	accessor, err := accessors.GetAccessor("collector_sparse", scope)

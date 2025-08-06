@@ -29,6 +29,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows"
@@ -296,6 +297,14 @@ func (self ProcessAccessor) New(scope vfilter.Scope) (
 	return result_any.(*ProcessAccessor), nil
 }
 
+func (self ProcessAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "process",
+		Description: `Access process memory like a file. The Path is taken in the form "/<pid>", i.e. the pid appears as the top level file.`,
+		Permissions: []acls.ACL_PERMISSION{acls.MACHINE_STATE},
+	}
+}
+
 func (self ProcessAccessor) ParsePath(path string) (
 	*accessors.OSPath, error) {
 	return accessors.NewLinuxOSPath(path)
@@ -397,6 +406,5 @@ func (self *ProcessAccessor) OpenWithOSPath(
 }
 
 func init() {
-	accessors.Register("process", &ProcessAccessor{},
-		`Access process memory like a file. The Path is taken in the form "/<pid>", i.e. the pid appears as the top level file.`)
+	accessors.Register(&ProcessAccessor{})
 }

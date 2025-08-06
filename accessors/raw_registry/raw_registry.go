@@ -341,6 +341,13 @@ func getRegHive(scope vfilter.Scope,
 
 const RawRegFileSystemTag = "_RawReg"
 
+func (self RawRegFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "raw_reg",
+		Description: `Access keys and values by parsing the raw registry hive. Path is a pathspec having delegate opening the raw registry hive.`,
+	}
+}
+
 func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 
@@ -598,10 +605,9 @@ func (self *RawRegFileSystemAccessor) multiLstat(
 }
 
 func init() {
-	accessors.Register("raw_reg", &RawRegFileSystemAccessor{
+	accessors.Register(&RawRegFileSystemAccessor{
 		root: accessors.MustNewGenericOSPathWithBackslashSeparator(""),
-	},
-		`Access keys and values by parsing the raw registry hive. Path is a pathspec having delegate opening the raw registry hive.`)
+	})
 
 	json.RegisterCustomEncoder(&RawRegKeyInfo{}, accessors.MarshalGlobFileInfo)
 	json.RegisterCustomEncoder(&RawRegValueInfo{}, accessors.MarshalGlobFileInfo)

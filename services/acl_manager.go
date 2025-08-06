@@ -99,8 +99,6 @@ func CheckAccessWithToken(
 
 	// Requested permission
 	switch permission {
-	case acls.ALL_QUERY:
-		return token.AllQuery, nil
 
 	case acls.ANY_QUERY:
 		return token.AnyQuery, nil

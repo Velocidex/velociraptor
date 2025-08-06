@@ -186,12 +186,6 @@ func (self *PSTParser) Call(
 			return
 		}
 
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("parse_pst: %s", err)
-			return
-		}
-
 		pst_cache := pst_accessor.GetPSTCache(scope)
 		pstFile, err := pst_cache.Open(scope, arg.Accessor, arg.Filename)
 		if err != nil {

@@ -57,10 +57,7 @@ type ACL_PERMISSION int
 const (
 	NO_PERMISSIONS ACL_PERMISSION = iota
 
-	// Issue all queries without restriction
-	ALL_QUERY
-
-	// Issue any query at all (ALL_QUERY implies ANY_QUERY).
+	// Issue any query at all.
 	ANY_QUERY
 
 	// Publish events to server side queues
@@ -113,6 +110,9 @@ const (
 	// Allowed to create files on the filesystem.
 	FILESYSTEM_WRITE
 
+	// Allowed to make network connections
+	NETWORK
+
 	// Allowed to collect state information from machines (e.g. pslist()).
 	MACHINE_STATE
 
@@ -141,8 +141,6 @@ func (self ACL_PERMISSION) String() string {
 	switch self {
 	case NO_PERMISSIONS:
 		return "NO_PERMISSIONS"
-	case ALL_QUERY:
-		return "ALL_QUERY"
 	case ANY_QUERY:
 		return "ANY_QUERY"
 	case PUBLISH:
@@ -177,6 +175,8 @@ func (self ACL_PERMISSION) String() string {
 		return "FILESYSTEM_READ"
 	case FILESYSTEM_WRITE:
 		return "FILESYSTEM_WRITE"
+	case NETWORK:
+		return "NETWORK"
 	case MACHINE_STATE:
 		return "MACHINE_STATE"
 	case PREPARE_RESULTS:
@@ -194,9 +194,6 @@ func GetPermission(name string) ACL_PERMISSION {
 	switch strings.ToUpper(name) {
 	case "NO_PERMISSIONS":
 		return NO_PERMISSIONS
-
-	case "ALL_QUERY":
-		return ALL_QUERY
 	case "ANY_QUERY":
 		return ANY_QUERY
 	case "PUBLISH":
@@ -231,6 +228,8 @@ func GetPermission(name string) ACL_PERMISSION {
 		return FILESYSTEM_READ
 	case "FILESYSTEM_WRITE":
 		return FILESYSTEM_WRITE
+	case "NETWORK":
+		return NETWORK
 	case "MACHINE_STATE":
 		return MACHINE_STATE
 	case "PREPARE_RESULTS":

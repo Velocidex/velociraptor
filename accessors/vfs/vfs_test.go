@@ -65,7 +65,10 @@ func setVirtualFilesystem() {
 	}
 
 	// Install this under a new accessor name.
-	accessors.Register("vfs_test", root_fs_accessor, "")
+	accessors.Register(accessors.DescribeAccessor(
+		root_fs_accessor, accessors.AccessorDescriptor{
+			Name: "vfs_test",
+		}))
 }
 
 type TestSuite struct {
@@ -188,7 +191,10 @@ func (self *TestSuite) TestVFSAccessor() {
 	})
 
 	fs_factory := file_store.NewFileStoreFileSystemAccessor(self.ConfigObj)
-	accessors.Register("fs", fs_factory, "")
+	accessors.Register(accessors.DescribeAccessor(fs_factory,
+		accessors.AccessorDescriptor{
+			Name: "fs",
+		}))
 
 	// Now create a download of this collection.
 	builder := services.ScopeBuilder{

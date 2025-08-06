@@ -89,12 +89,6 @@ func (self *HashFunction) Call(ctx context.Context,
 
 	buf := *cached_buffer
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-	if err != nil {
-		scope.Log("hash: %s", err)
-		return vfilter.Null{}
-	}
-
 	fs, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("hash: %v", err)

@@ -94,6 +94,13 @@ type MscfbFileSystemAccessor struct {
 	root *accessors.OSPath
 }
 
+func (self MscfbFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
+	return &accessors.AccessorDescriptor{
+		Name:        "mscfb",
+		Description: `Parse a MSCFB file as an archive.`,
+	}
+}
+
 func (self MscfbFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 	// Create a new cache in the scope.
@@ -249,8 +256,7 @@ func (self *MscfbFileSystemAccessor) LstatWithOSPath(
 }
 
 func init() {
-	accessors.Register("mscfb", &MscfbFileSystemAccessor{},
-		`Parse a MSCFB file as an archive.`)
+	accessors.Register(&MscfbFileSystemAccessor{})
 
 	json.RegisterCustomEncoder(&MscfbFileInfo{}, accessors.MarshalGlobFileInfo)
 }

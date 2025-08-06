@@ -173,6 +173,13 @@ func (self VirtualFilesystemAccessor) New(scope vfilter.Scope) (
 	return self, nil
 }
 
+func (self VirtualFilesystemAccessor) Describe() *AccessorDescriptor {
+	return &AccessorDescriptor{
+		Name:        "virtual",
+		Description: "An accessor for virtual mapped filesystems",
+	}
+}
+
 func (self VirtualFilesystemAccessor) ParsePath(path string) (*OSPath, error) {
 	return self.root.file_info.OSPath().Parse(path)
 }

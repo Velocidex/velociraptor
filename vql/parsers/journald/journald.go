@@ -52,12 +52,6 @@ func (self JournalPlugin) Call(
 			return
 		}
 
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("parse_journald: %s", err)
-			return
-		}
-
 		for _, filename := range arg.Filenames {
 			func() {
 				// Choose a managed reader because we will return raw
@@ -114,12 +108,6 @@ func (self WatchJournaldPlugin) Call(
 
 		arg := &WatchJournalPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
-		if err != nil {
-			scope.Log("watch_journald: %v", err)
-			return
-		}
-
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
 			scope.Log("watch_journald: %v", err)
 			return

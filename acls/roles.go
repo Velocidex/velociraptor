@@ -15,7 +15,6 @@ var (
 		"artifact_writer", "api"}
 
 	ALL_PERMISSIONS = []string{
-		"ALL_QUERY",
 		"ANY_QUERY",
 		"READ_RESULTS",
 		"LABEL_CLIENT",
@@ -32,6 +31,7 @@ var (
 		"IMPERSONATION",
 		"FILESYSTEM_READ",
 		"FILESYSTEM_WRITE",
+		"NETWORK",
 		"MACHINE_STATE",
 		"PREPARE_RESULTS",
 		"DELETE_RESULTS",
@@ -45,9 +45,6 @@ func ValidateRole(role string) bool {
 
 func DescribePermissions(token *acl_proto.ApiClientACL) []string {
 	result := []string{}
-	if token.AllQuery {
-		result = append(result, "ALL_QUERY")
-	}
 	if token.AnyQuery {
 		result = append(result, "ANY_QUERY")
 	}
@@ -98,6 +95,10 @@ func DescribePermissions(token *acl_proto.ApiClientACL) []string {
 		result = append(result, "FILESYSTEM_WRITE")
 	}
 
+	if token.Network {
+		result = append(result, "NETWORK")
+	}
+
 	if token.MachineState {
 		result = append(result, "MACHINE_STATE")
 	}
@@ -121,8 +122,6 @@ func SetTokenPermission(
 	token *acl_proto.ApiClientACL, permissions ...string) error {
 	for _, perm := range permissions {
 		switch strings.ToUpper(perm) {
-		case "ALL_QUERY":
-			token.AllQuery = true
 		case "ANY_QUERY":
 			token.AnyQuery = true
 		case "READ_RESULTS":
@@ -155,6 +154,8 @@ func SetTokenPermission(
 			token.FilesystemRead = true
 		case "FILESYSTEM_WRITE":
 			token.FilesystemWrite = true
+		case "NETWORK":
+			token.Network = true
 		case "MACHINE_STATE":
 			token.MachineState = true
 		case "PREPARE_RESULTS":
@@ -184,7 +185,6 @@ func GetRolePermissions(
 
 		// Admins get all query access
 		case "administrator":
-			result.AllQuery = true
 			result.AnyQuery = true
 			result.ReadResults = true
 			result.Impersonation = true
@@ -200,6 +200,7 @@ func GetRolePermissions(
 			result.ServerAdmin = true
 			result.FilesystemRead = true
 			result.FilesystemWrite = true
+			result.Network = true
 			result.MachineState = true
 			result.PrepareResults = true
 			result.DeleteResults = true

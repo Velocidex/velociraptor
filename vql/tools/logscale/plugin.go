@@ -158,7 +158,7 @@ func (self logscalePlugin) Call(ctx context.Context,
 		defer close(outputChan)
 		defer vql_subsystem.RegisterMonitor(ctx, "logscale", args)()
 
-		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
+		err := vql_subsystem.CheckAccess(scope, acls.NETWORK)
 		if err != nil {
 			scope.Log("logscale: %v", err)
 			return
@@ -262,7 +262,7 @@ func (self logscalePlugin) Info(
 		Doc:  "Upload rows to LogScale ingestion server.",
 
 		ArgType:  type_map.AddType(scope, &logscalePluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
+		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
 	}
 }
 

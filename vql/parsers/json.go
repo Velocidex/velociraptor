@@ -165,12 +165,6 @@ func (self ParseJsonlPlugin) Call(
 			return
 		}
 
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("parse_jsonl: %s", err)
-			return
-		}
-
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("parse_jsonl: %v", err)
@@ -690,12 +684,6 @@ func (self WatchJsonlPlugin) Call(
 
 		arg := &syslog.ScannerPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
-		if err != nil {
-			scope.Log("watch_jsonl: %v", err)
-			return
-		}
-
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
 			scope.Log("watch_jsonl: %v", err)
 			return

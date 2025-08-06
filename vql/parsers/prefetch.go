@@ -61,12 +61,6 @@ func (self _PrefetchPlugin) Call(
 			func() {
 				defer utils.RecoverVQL(scope)
 
-				err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-				if err != nil {
-					scope.Log("prefetch: %s", err)
-					return
-				}
-
 				accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 				if err != nil {
 					scope.Log("prefetch: %v", err)
