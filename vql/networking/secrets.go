@@ -132,6 +132,45 @@ func (self *HTTPClientCache) mergeSecretToRequest(
 	return &arg, nil
 }
 
+func (self *_HttpPlugin) maybeForceSecrets(
+	ctx context.Context, scope vfilter.Scope,
+	arg *HttpPluginRequest) {
+
+	// Not running on the server, secrets dont work.
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return
+	}
+
+	if config_obj.Security != nil &&
+		!config_obj.Security.VqlMustUseSecrets {
+		return
+	}
+
+	// If an explicit secret is defined let it filter the URLs.
+	if arg.Secret != "" {
+		return
+	}
+
+	// If we have to use secrets we must filter all the urls which are
+	// not secrets.
+	filtered_urls := make([]string, 0, len(arg.Url))
+	for _, url := range arg.Url {
+		url_obj, err := parseURL(url)
+		if err != nil {
+			scope.Log("http_client: parsing %s: %v", url, err)
+			continue
+		}
+
+		if url_obj.Scheme != "secret" {
+			scope.Log("http_client: must use secrets is enforced, dropping url %s", url)
+			continue
+		}
+
+		filtered_urls = append(filtered_urls, url)
+	}
+}
+
 func (self *_HttpPlugin) filterURLsWithSecret(
 	ctx context.Context,
 	scope vfilter.Scope,

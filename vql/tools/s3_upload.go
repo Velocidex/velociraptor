@@ -20,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
@@ -56,6 +57,12 @@ func (self S3UploadFunction) Call(ctx context.Context,
 
 	arg := &S3UploadArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("upload_S3: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	err = self.maybeForceSecrets(ctx, scope, arg)
 	if err != nil {
 		scope.Log("upload_S3: %s", err.Error())
 		return vfilter.Null{}
@@ -241,6 +248,28 @@ func (self S3UploadFunction) Info(
 			acls.NETWORK, acls.FILESYSTEM_READ).Build(),
 		Version: 2,
 	}
+}
+
+func (self S3UploadFunction) maybeForceSecrets(
+	ctx context.Context, scope vfilter.Scope, arg *S3UploadArgs) error {
+
+	// Not running on the server, secrets dont work.
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return nil
+	}
+
+	if config_obj.Security != nil &&
+		!config_obj.Security.VqlMustUseSecrets {
+		return nil
+	}
+
+	// If an explicit secret is defined let it filter the URLs.
+	if arg.Secret != "" {
+		return nil
+	}
+
+	return utils.SecretsEnforced
 }
 
 var critical_fields = []string{

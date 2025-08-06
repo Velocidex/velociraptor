@@ -13,6 +13,7 @@ import (
 	vconfig "www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
@@ -48,6 +49,11 @@ func GetS3Client(
 	args := dict.RowToDict(ctx, scope, setting)
 	arg := &S3AcccessorArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		return nil, err
+	}
+
+	err = maybeForceSecrets(ctx, scope, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -110,6 +116,28 @@ func GetS3Client(
 	client := s3.NewFromConfig(sess, s3_opts...)
 
 	return client, nil
+}
+
+func maybeForceSecrets(
+	ctx context.Context, scope vfilter.Scope, arg *S3AcccessorArgs) error {
+
+	// Not running on the server, secrets dont work.
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return nil
+	}
+
+	if config_obj.Security != nil &&
+		!config_obj.Security.VqlMustUseSecrets {
+		return nil
+	}
+
+	// If an explicit secret is defined let it filter the URLs.
+	if arg.Secret != "" {
+		return nil
+	}
+
+	return utils.SecretsEnforced
 }
 
 func getSecret(

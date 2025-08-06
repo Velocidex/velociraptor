@@ -263,6 +263,8 @@ func (self *_HttpPlugin) Call(
 		goto error
 	}
 
+	self.maybeForceSecrets(ctx, scope, parent_arg)
+
 	// A secret is specified
 	if parent_arg.Secret != "" {
 		parent_arg.Url, err = self.filterURLsWithSecret(

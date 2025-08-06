@@ -108,6 +108,12 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 			return
 		}
 
+		err = self.maybeForceSecrets(ctx, scope, arg)
+		if err != nil {
+			scope.Log("elastic: %v", err)
+			return
+		}
+
 		if arg.Secret != "" {
 			err := mergeSecretElastic(ctx, scope, arg)
 			if err != nil {
@@ -372,6 +378,28 @@ func sanitize_index(name string) string {
 	}
 
 	return strings.ToLower(string(res))
+}
+
+func (self _ElasticPlugin) maybeForceSecrets(
+	ctx context.Context, scope vfilter.Scope, arg *_ElasticPluginArgs) error {
+
+	// Not running on the server, secrets dont work.
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return nil
+	}
+
+	if config_obj.Security != nil &&
+		!config_obj.Security.VqlMustUseSecrets {
+		return nil
+	}
+
+	// If an explicit secret is defined let it filter the URLs.
+	if arg.Secret != "" {
+		return nil
+	}
+
+	return utils.SecretsEnforced
 }
 
 func mergeSecretElastic(ctx context.Context, scope vfilter.Scope, arg *_ElasticPluginArgs) error {

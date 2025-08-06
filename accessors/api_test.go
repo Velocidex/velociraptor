@@ -105,8 +105,9 @@ func TestOSPathOperationsAppendComponents(t *testing.T) {
 }
 
 type human_string_tests_t struct {
-	name     string
-	pathspec string
+	name      string
+	pathspec  string
+	path_type string
 }
 
 var human_string_tests = []human_string_tests_t{
@@ -124,8 +125,8 @@ var human_string_tests = []human_string_tests_t{
           "Path":"/Windows/System32/Config/SYSTEM"
         }
       }
-`},
-	{"Normal path", `C:\Windows\System32`},
+`, "linux"},
+	{"Normal path", `C:\Windows\System32`, "windows"},
 }
 
 func TestOSPathHumanString(t *testing.T) {
@@ -137,8 +138,15 @@ func TestOSPathHumanString(t *testing.T) {
 
 	result := ordereddict.NewDict()
 	for _, test_case := range human_string_tests {
-		a := accessors.MustNewGenericOSPath(test_case.pathspec)
-		result.Set(test_case.name, a.HumanString(scope))
+		switch test_case.path_type {
+		case "linux":
+			a := accessors.MustNewLinuxOSPath(test_case.pathspec)
+			result.Set(test_case.name, a.HumanString(scope))
+
+		case "windows":
+			a := accessors.MustNewWindowsOSPath(test_case.pathspec)
+			result.Set(test_case.name, a.HumanString(scope))
+		}
 	}
 	goldie.Assert(t, "TestOSPathHumanString",
 		json.MustMarshalIndent(result))

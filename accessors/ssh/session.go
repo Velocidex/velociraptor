@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -36,6 +37,11 @@ func GetSSHClient(scope vfilter.Scope) (
 	args := dict.RowToDict(ctx, scope, setting)
 	arg := &SSHAccessorArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = maybeForceSecrets(ctx, scope, arg)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -78,6 +84,28 @@ func GetSSHClient(scope vfilter.Scope) (
 	scope.Log("INFO:ssh: Initiated connection to host %v", arg.Hostname)
 
 	return client, client.Close, nil
+}
+
+func maybeForceSecrets(
+	ctx context.Context, scope vfilter.Scope, arg *SSHAccessorArgs) error {
+
+	// Not running on the server, secrets dont work.
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return nil
+	}
+
+	if config_obj.Security != nil &&
+		!config_obj.Security.VqlMustUseSecrets {
+		return nil
+	}
+
+	// If an explicit secret is defined let it filter the URLs.
+	if arg.Secret != "" {
+		return nil
+	}
+
+	return utils.SecretsEnforced
 }
 
 func getSecret(

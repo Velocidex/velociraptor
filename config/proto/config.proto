@@ -1468,7 +1468,6 @@ message Security {
     // - MACHINE_STATE
     repeated string lockdown_denied_permissions = 32;
 
-
     // Default expiry of certificate issuances (default 365 days)
     int64 certificate_validity_days = 33;
 
@@ -1486,6 +1485,13 @@ message Security {
     //
     // In future further methods may be implemented (e.g. EKMS).
     string secrets_dek = 3;
+
+    // This controls VQL plugins that may accept secrets as well full
+    // parameters. If this flag is set, those plugins will refuse to
+    // accept direct parameters, instead only accepting a secret
+    // name. This allows the admin to control exactly how these
+    // plugins work without disabling them completely.
+    bool vql_must_use_secrets = 5;
 
     // Prevent VQL from having access to these environment
     // variables. Environment Vars sometimes may contain secrets and

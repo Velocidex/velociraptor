@@ -35,6 +35,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
@@ -80,6 +81,12 @@ func (self _SplunkPlugin) Call(ctx context.Context,
 		arg := &_SplunkPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
+			return
+		}
+
+		err = self.maybeForceSecrets(ctx, scope, arg)
+		if err != nil {
+			scope.Log("splunk_upload: %v", err)
 			return
 		}
 
@@ -300,6 +307,28 @@ func send_to_splunk(
 			Set("Response", len(buf)):
 		}
 	}
+}
+
+func (self _SplunkPlugin) maybeForceSecrets(
+	ctx context.Context, scope vfilter.Scope, arg *_SplunkPluginArgs) error {
+
+	// Not running on the server, secrets dont work.
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return nil
+	}
+
+	if config_obj.Security != nil &&
+		!config_obj.Security.VqlMustUseSecrets {
+		return nil
+	}
+
+	// If an explicit secret is defined let it filter the URLs.
+	if arg.Secret != "" {
+		return nil
+	}
+
+	return utils.SecretsEnforced
 }
 
 func mergeSecretSplunk(ctx context.Context, scope vfilter.Scope, arg *_SplunkPluginArgs) error {
