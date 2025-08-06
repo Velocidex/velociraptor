@@ -1,11 +1,13 @@
 package sanity_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/proto"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -49,6 +51,35 @@ type: INTERNAL
 	self.ConfigObj.Services.SchedulerService = true
 
 	self.TestSuite.SetupTest()
+}
+
+func (self *ServicesTestSuite) TestBasePath() {
+	test_cases := []struct {
+		sample string
+		ok     bool
+	}{{"/velociraptor", true},
+		{"/velociraptor/", false},
+		{"/a", true},
+		{"/ui", true},
+		{"/foo/bar", true},
+		{"/foo/bar/", false}}
+
+	sanity_checker := &sanity.SanityChecks{}
+
+	for _, tc := range test_cases {
+		config_obj := proto.Clone(self.ConfigObj).(*config_proto.Config)
+		config_obj.GUI.BasePath = tc.sample
+		config_obj.GUI.PublicUrl = fmt.Sprintf(
+			"https://www.example.com/%s/app/index.html", tc.sample)
+
+		ok := true
+		err := sanity_checker.CheckFrontendSettings(config_obj)
+		if err != nil {
+			ok = false
+		}
+
+		assert.Equal(self.T(), ok, tc.ok, "Failed %v", tc.sample)
+	}
 }
 
 // Check tool upgrade.
