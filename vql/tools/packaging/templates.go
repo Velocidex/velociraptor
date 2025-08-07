@@ -341,7 +341,7 @@ if ! getent group {{.ServerUser}} >/dev/null; then
 fi
 
 if ! getent passwd {{.ServerUser}} >/dev/null; then
-   adduser --system --home /etc/ --no-create-home \
+   adduser --system --home /etc/{{.ServerUser}} --no-create-home \
      --ingroup {{.ServerUser}} {{.ServerUser}} --shell /bin/false \
      --gecos "{{.ServiceDescription}}"
 fi

@@ -169,6 +169,8 @@ func (self *_HttpPlugin) maybeForceSecrets(
 
 		filtered_urls = append(filtered_urls, url)
 	}
+
+	arg.Url = filtered_urls
 }
 
 func (self *_HttpPlugin) filterURLsWithSecret(

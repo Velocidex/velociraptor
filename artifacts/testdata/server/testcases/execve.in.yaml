@@ -1,0 +1,33 @@
+ConfigMerges:
+  # Enforce secret use on execve.
+  - |
+    {"security": {"vql_must_use_secrets": true}}
+
+Queries:
+- LET X <= SELECT * FROM info()
+- LET Exe <= X[0].Exe
+
+# Calling execve when secrets are enforced will fail.
+- SELECT * FROM execve(argv=[Exe, "version"])
+
+# Rejects the call.
+- SELECT * FROM test_read_logs() WHERE Log =~ "execve. Secrets are enforced" AND NOT Log =~ "SELECT"
+
+# Define a secret that allows calling the velociraptor binary only
+# with the version command.
+- |
+  SELECT secret_add(type="Execve Secrets", name="VR Version",
+                    secret=dict(prefix_commandline = Exe + " version ")),
+         secret_modify(type="Execve Secrets", name="VR Version",
+                       add_users="VelociraptorServer")
+  FROM scope()
+
+# Now call execve with the secret.
+- |
+  SELECT Stdout =~ "name. velociraptor" AS StdoutMatched, ReturnCode
+  FROM execve(argv=[Exe, "version"], secret="VR Version")
+
+# Trying to run other commands with the secret will not work they will
+# just be appended to the secret command.
+- SELECT Stderr =~ "usage. velociraptor version" AS StdoutMatched, ReturnCode
+  FROM execve(argv=["-h"], secret="VR Version")

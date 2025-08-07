@@ -302,7 +302,7 @@ if ! getent group velociraptor >/dev/null; then
 fi
 
 if ! getent passwd velociraptor >/dev/null; then
-   adduser --system --home /etc/ --no-create-home \
+   adduser --system --home /etc/velociraptor --no-create-home \
      --ingroup velociraptor velociraptor --shell /bin/false \
      --gecos "Velociraptor server"
 fi

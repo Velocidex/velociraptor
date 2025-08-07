@@ -3,6 +3,7 @@ package secrets
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -199,10 +200,28 @@ func (self *SecretsService) GetSecretDefinitions(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	for _, v := range self.definitions {
-		result = append(result,
-			proto.Clone(v.SecretDefinition).(*api_proto.SecretDefinition))
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return nil
 	}
+
+	for _, v := range self.definitions {
+		def := proto.Clone(v.SecretDefinition).(*api_proto.SecretDefinition)
+		result = append(result, def)
+
+		path_manager := paths.SecretsPathManager{}
+		children, err := db.ListChildren(self.config_obj,
+			path_manager.SecretsDefinitionDir(v.TypeName))
+		if err == nil {
+			for _, c := range children {
+				def.SecretNames = append(def.SecretNames, c.Base())
+			}
+		}
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].TypeName < result[j].TypeName
+	})
+
 	return result
 }
 
