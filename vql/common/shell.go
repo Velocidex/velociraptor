@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -36,6 +37,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -348,7 +350,7 @@ func (self ShellPlugin) mergeSecretToRequest(
 	}
 
 	// Parse the command line into argv
-	secret_argv, err := shlex.Split(commandline)
+	secret_argv, err := CommandlineToArgv(commandline)
 	if err != nil {
 		return nil, err
 	}
@@ -487,4 +489,12 @@ func init() {
 	vql_subsystem.RegisterPlugin(&ShellPlugin{
 		pipeReader: defaultPipeReader,
 	})
+}
+
+func CommandlineToArgv(in string) ([]string, error) {
+	if runtime.GOOS == "windows" {
+		return functions.CommandLineToArgv(in), nil
+	}
+
+	return shlex.Split(in)
 }
