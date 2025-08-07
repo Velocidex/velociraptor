@@ -2,7 +2,9 @@ name: Windows.Forensics.NotepadParser
 description: |
   Parse the Windows 11 Notepad state files.
 
-  Based on the research work published by ogmini.
+  Based on the research work published by ogmini. This artifact parses
+  the TabState and WindowState files and also uploads them for
+  preservation.
 
 reference:
   - https://github.com/ogmini/Notepad-State-Library
@@ -31,9 +33,6 @@ export: |
            sentinel: "x=>x.__D1 = 0 AND x.__D2 = 0",
         }],
         [ActiveTab, "x=>x.Tabs.EndOf", leb128],
-        [Offset, 0, Value, {
-          value: "x=>x.Tabs.EndOf",
-        }]
       ]],
 
       ["GUID", 16, [
@@ -148,32 +147,53 @@ export: |
     ]
     '''
 
+column_types:
+- name: Upload
+  type: preview_upload
+
 
 sources:
 - name: TabState
   query:
-    LET AllFiles = SELECT OSPath, Mtime, Size
-       FROM glob(globs=TabStateGlob)
+    LET AllFiles = SELECT OSPath, Mtime, Size,
+        upload(file=OSPath, mtime=Mtime) AS Upload
+    FROM glob(globs=TabStateGlob)
 
-    SELECT *, parse_binary(
+    LET AllTabState = SELECT *, parse_binary(
       filename=OSPath,
       offset=0,
       profile=WinNotepadProfile,
-      struct="TabStateHeader") AS TabState
-
+      struct="TabStateHeader") AS _TabState
     FROM AllFiles
-    WHERE TabState.Header.Signature
+    WHERE _TabState.Header.Signature
+
+    SELECT *,
+       _TabState.Header.FilePath AS EditedFile,
+       _TabState.Header.Timestamp AS EditTimestamp,
+       _TabState.Header.Content AS Content,
+       _TabState.Header.UnsavedBuffers.AddedChars AS UnsavedBuffers,
+       Upload
+    FROM AllTabState
 
 - name: WindowState
   query:
-    LET AllFiles = SELECT OSPath, Mtime, Size
-       FROM glob(globs=WindowStateGlob)
+    LET AllFiles = SELECT OSPath, Mtime, Size,
+        upload(file=OSPath, mtime=Mtime) AS Upload
+    FROM glob(globs=WindowStateGlob)
 
-    SELECT *, parse_binary(
+    LET AllTabState = SELECT *, parse_binary(
       filename=OSPath,
       offset=0,
       profile=WinNotepadProfile,
-      struct="WindowStateHeader") AS WindowState
+      struct="WindowStateHeader") AS _WindowState
 
     FROM AllFiles
-    WHERE WindowState.Signature = "NP"
+    WHERE _WindowState.Signature = "NP"
+
+
+    SELECT *,
+       _WindowState.NumberOfTabs AS NumberOfTabs,
+       _WindowState.Tabs.Value.Value AS Tabs,
+       _WindowState.ActiveTab AS ActiveTab,
+       Upload
+    FROM AllTabState

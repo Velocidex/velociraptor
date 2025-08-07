@@ -2309,11 +2309,14 @@
     type: int64
     description: Size of buffer to capture output per row.
   - name: env
-    type: LazyExpr
+    type: ordereddict.Dict
     description: Environment variables to launch with.
   - name: cwd
     type: string
     description: If specified we change to this working directory first.
+  - name: secret
+    type: string
+    description: The name of a secret to use.
   category: popular
   metadata:
     permissions: EXECVE
@@ -8734,6 +8737,23 @@
     "/blog/2024/2024-03-10-release-notes-0.72/#secret-management" >}})
     introduced in version 0.72 to manage these credentials.
   type: Accessor
+  args:
+  - name: secret
+    type: string
+    description: The name of a secret to use.
+  - name: region
+    type: string
+    description: The region.
+  - name: credentials_key
+    type: string
+  - name: credentials_secret
+    type: string
+  - name: credentials_token
+    type: string
+  - name: endpoint
+    type: string
+  - name: skip_verify
+    type: bool
   metadata:
     ScopeVar: S3_CREDENTIALS
     permissions: NETWORK

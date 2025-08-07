@@ -1,0 +1,110 @@
+name: Server.Utils.Policy
+description: |
+  This artifact defines a set of security policies.
+
+type: SERVER
+
+parameters:
+- name: ServerConfigFile
+  type: string
+  description: The path to the server.config.yaml
+
+- name: OutputFilePath
+  type: string
+  description: Where to write the modified configuration file.
+  default: /tmp/1.yaml
+
+- name: GUIAccessByIP
+  type: csv
+  description: |
+    Only allow access to the GUI from these CIDR networks.
+
+  default: |
+    CIDR,Description
+    0.0.0.0/0,Allow all (Skip)
+
+- name: LockDown
+  type: bool
+  description: If enabled, switch to lockdown mode.
+
+- name: DisableServerPlugins_Write
+  type: bool
+  default: Y
+  description: |
+    Disable server plugins that allow:
+    1. Writing to the filesystem.
+    2. Collecting server machine state.
+
+- name: DisableServerPlugins_Network
+  type: bool
+  description: |
+    Disable server plugins which allow connecting to external
+    resources over the network. These include for exaxmple:
+    1. http_client()
+    2. upload_elastic()
+    3. upload_s3()
+
+    An alternative to this setting is ForceSecrets to allow these
+    plugin to only work with named secrets.
+
+- name: ForceSecrets
+  type: bool
+  description: |
+    Force network plugins to only use named secrets. This allows an
+    admin to permit only well controlled network access without
+    allowing users to connect to arbitrary URLs.
+
+- name: DisableInventoryServiceExternalAccess
+  type: bool
+  description: |
+    Normally the inventory service attempts to download tools in its
+    own but if this is set, we prevent any external access.
+
+
+export: |
+  LET PluginsWithFileWrite <= SELECT name, metadata.permissions as perms
+      FROM help()
+      WHERE type =~ "Plugin" AND perms =~ "FILESYSTEM_WRITE|MACHINE_STATE"
+      ORDER BY name
+
+  LET FunctionsWithFileWrite <= SELECT name, metadata.permissions as perms
+      FROM help()
+      WHERE type =~ "Function" AND perms =~ "FILESYSTEM_WRITE|MACHINE_STATE"
+      ORDER BY name
+
+sources:
+- query: |
+    LET config <= parse_yaml(filename=ServerConfigFile)
+    LET GUIAccessByIP <= SELECT * FROM foreach(row= GUIAccessByIP)
+      WHERE NOT Description =~ "Skip"
+       AND CIDR =~ '''\d+\.\d+\.\d+\.\d+/\d{1,2}''' OR (
+        log(message="GUIAccessByIP: Invalid CIDR %v - rejecting",
+            args=CIDR, dedup= -1) AND FALSE )
+
+    LET _ <= GUIAccessByIP.CIDR && set(item=config.GUI,
+               field='allowed_cidr',
+               value=GUIAccessByIP.CIDR)
+
+    LET _ <= LockDown &&
+        set(item=config, field="lockdown", value=TRUE)
+
+    -- Make sure the security section exists
+    LET _ <= NOT config.security && set(item=config,
+       field="security", value=dict())
+
+    LET _ <= DisableServerPlugins_Write &&
+        set(item=config.security,
+            field="denied_plugins",
+            value=PluginsWithFileWrite.name ) AND
+        set(item=config.security,
+            field="denied_functions",
+            value=FunctionsWithFileWrite.name)
+
+    LET _ <= ForceSecrets &&
+        set(item=config.security,
+            field="vql_must_use_secrets",
+            value=TRUE )
+
+    SELECT copy(dest= OutputFilePath, accessor="data",
+                filename=serialize(item=config, format='yaml'))
+    FROM scope()

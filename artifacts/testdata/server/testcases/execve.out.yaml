@@ -1,0 +1,54 @@
+Query: LET X <= SELECT * FROM info()
+Output: []
+
+Query: LET Exe <= X[0].Exe
+Output: []
+
+# Calling execve when secrets are enforced will fail.
+Query: SELECT * FROM execve(argv=[Exe, "version"])
+Output: []
+
+# Rejects the call.
+Query: SELECT * FROM test_read_logs() WHERE Log =~ "execve. Secrets are enforced" AND NOT Log =~ "SELECT"
+Output: [
+ {
+  "Log": "Velociraptor: ERROR:execve: Secrets are enforced - you must specify a secret name\n"
+ }
+]
+
+# Define a secret that allows calling the velociraptor binary only
+# with the version command.
+Query: SELECT secret_add(type="Execve Secrets", name="VR Version",
+                  secret=dict(prefix_commandline = Exe + " version ")),
+       secret_modify(type="Execve Secrets", name="VR Version",
+                     add_users="VelociraptorServer")
+FROM scope()
+
+Output: [
+ {
+  "secret_add(type=\"Execve Secrets\", name=\"VR Version\", secret=dict(prefix_commandline=Exe + \" version \"))": "VR Version",
+  "secret_modify(type=\"Execve Secrets\", name=\"VR Version\", add_users=\"VelociraptorServer\")": "VR Version"
+ }
+]
+
+# Now call execve with the secret.
+Query: SELECT Stdout =~ "name. velociraptor" AS StdoutMatched, ReturnCode
+FROM execve(argv=[Exe, "version"], secret="VR Version")
+
+Output: [
+ {
+  "StdoutMatched": true,
+  "ReturnCode": 0
+ }
+]
+
+# Trying to run other commands with the secret will not work they will
+# just be appended to the secret command.
+Query: SELECT Stderr =~ "usage. velociraptor version" AS StdoutMatched, ReturnCode FROM execve(argv=["-h"], secret="VR Version")
+Output: [
+ {
+  "StdoutMatched": true,
+  "ReturnCode": 0
+ }
+]
+

@@ -120,6 +120,18 @@ var (
 			"server_port": "587",
 			"skip_verify": "FALSE",
 		},
+	}, {
+		TypeName:    constants.EXECVE_SECRET,
+		Description: "Enforce a prefix command on the execve() plugin",
+		Verifier:    "x=>x.prefix_commandline",
+		Fields: []string{
+			"prefix_commandline",
+			"env",
+			"cwd",
+		},
+		Template: map[string]string{
+			"env": "# Add extra parameters as YAML strings\n#Foo: Value\n#Baz:Value2\n",
+		},
 	}}
 )
 

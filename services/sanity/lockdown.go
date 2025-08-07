@@ -29,6 +29,7 @@ func (self SanityChecks) CheckForLockdown(
 		StartHunt:            true,
 		Execve:               true,
 		ServerAdmin:          true,
+		Network:              true,
 		FilesystemWrite:      true,
 		FilesystemRead:       true,
 		MachineState:         true,

@@ -1423,9 +1423,10 @@ message RemappingConfig {
 // Various security related configuration options for the server.
 message Security {
     // A list of path prefixes allowed for the 'file' accessor. If
-    // this is empty the file accessor will be disabled. If you want
-    // to enable access to the server's filesystem you can set this to
-    // "/".
+    // this is empty the file accessor will work on all
+    // directories. If you want to disable access to the server's
+    // filesystem you can set this to a non existent directory,
+    // e.g. /nonexistent/ .
     repeated string allowed_file_accessor_prefix = 1;
 
     // A list of prefixes allowed for the fs accessor. All other
@@ -1466,6 +1467,7 @@ message Security {
     // - FILESYSTEM_WRITE
     // - FILESYSTEM_READ
     // - MACHINE_STATE
+    // - NETWORK
     repeated string lockdown_denied_permissions = 32;
 
     // Default expiry of certificate issuances (default 365 days)

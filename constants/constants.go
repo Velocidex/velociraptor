@@ -184,6 +184,7 @@ const (
 	SPLUNK_CREDS    = "Splunk Creds"
 	ELASTIC_CREDS   = "Elastic Creds"
 	SMTP_CREDS      = "SMTP Creds"
+	EXECVE_SECRET   = "Execve Secrets"
 
 	// The name of the annotation timeline
 	TIMELINE_ANNOTATION      = "Annotation"

@@ -58,6 +58,7 @@ func (self RawS3SystemAccessor) Describe() *accessors.AccessorDescriptor {
 		Description: `Allows access to S3 buckets.`,
 		Permissions: []acls.ACL_PERMISSION{acls.NETWORK},
 		ScopeVar:    constants.S3_CREDENTIALS,
+		ArgType:     S3AcccessorArgs{},
 	}
 }
 
