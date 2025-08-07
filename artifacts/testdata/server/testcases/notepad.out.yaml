@@ -1,7 +1,7 @@
 Query: LET X = scope()
 Output: []
 
-Query: SELECT OSPath.Basename, X.TabState.Header AS TabState, X.WindowState AS WindowState
+Query: SELECT OSPath.Basename, X._TabState.Header AS TabState, X._WindowState AS WindowState
 FROM Artifact.Windows.Forensics.NotepadParser(
   WindowStateGlob=srcDir + "/artifacts/testdata/files/notepad/*[01].bin",
   TabStateGlob=srcDir + "/artifacts/testdata/files/notepad/*.bin")
@@ -106,8 +106,7 @@ Output: [
      "Value": "C833A2C8-33A2-0001-0000-B79F74280000"
     }
    ],
-   "ActiveTab": 0,
-   "Offset": 24
+   "ActiveTab": 0
   }
  }
 ]
