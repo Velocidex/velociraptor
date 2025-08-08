@@ -96,12 +96,14 @@ func doFuseZip() error {
 			return fmt.Errorf("Parsing %v with accessor %v: %v",
 				filename, *fuse_zip_accessor, err)
 		}
-		ospath.SetPathSpec(
+		err = ospath.SetPathSpec(
 			&accessors.PathSpec{
 				DelegatePath: filename,
 				Path:         *fuse_zip_prefix,
 			})
-
+		if err != nil {
+			return err
+		}
 		paths = append(paths, ospath)
 	}
 

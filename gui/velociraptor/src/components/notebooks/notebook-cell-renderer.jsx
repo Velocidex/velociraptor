@@ -318,7 +318,6 @@ export default class NotebookCellRenderer extends React.Component {
 
         if (!this.state.visible && this.state.unloaded) {
             let cell = this.state.cell;
-            let cell_metadata = this.props.cell_metadata || {};
             cell.cell_id = this.props.cell_metadata.cell_id;
 
             // Take up a reasonable amount of vertical space to keep

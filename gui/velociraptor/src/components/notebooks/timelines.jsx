@@ -263,9 +263,6 @@ export class AddVQLCellToTimeline extends React.Component {
     }
 
     render() {
-        let timelines = this.props.notebook_metadata &&
-            this.props.notebook_metadata.timelines;
-
         let global_timeline_options = _.map(this.state.global_timelines, x=>{
             return {value: x.name,
                     label: sprintf(T("%s (notebook %s)"), x.name, x.title),

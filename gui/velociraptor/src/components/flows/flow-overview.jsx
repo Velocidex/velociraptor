@@ -16,7 +16,6 @@ import T from '../i8n/i8n.jsx';
 import _ from 'lodash';
 import {CancelToken} from 'axios';
 import AvailableDownloads from "../notebooks/downloads.jsx";
-import TransactionDialog from "./transactions.jsx";
 
 import api from '../core/api-service.jsx';
 import UserConfig from '../core/user.jsx';

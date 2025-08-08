@@ -17,7 +17,6 @@ import Row from 'react-bootstrap/Row';
 import DictEditor from '../forms/dict.jsx';
 import UserForm from '../utils/users.jsx';
 import Form from 'react-bootstrap/Form';
-import Alert from 'react-bootstrap/Alert';
 import ToolTip from '../widgets/tooltip.jsx';
 
 import "./secrets.css";

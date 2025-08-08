@@ -666,8 +666,10 @@ func (self HTTPBinFunction) Call(ctx context.Context,
 	app := httpbin.New()
 	testServer := vtesting.NewServer(app, 8006)
 
-	vql_subsystem.GetRootScope(scope).AddDestructor(testServer.Close)
-
+	err := vql_subsystem.GetRootScope(scope).AddDestructor(testServer.Close)
+	if err != nil {
+		scope.Log("httpbin: %v", err)
+	}
 	return testServer.URL
 }
 

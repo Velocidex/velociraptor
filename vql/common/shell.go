@@ -72,8 +72,11 @@ func (self *ShellPlugin) maybeForceSecrets(
 		return nil
 	}
 
-	if config_obj.Security != nil &&
-		!config_obj.Security.VqlMustUseSecrets {
+	if config_obj.Security == nil {
+		return nil
+	}
+
+	if !config_obj.Security.VqlMustUseSecrets {
 		return nil
 	}
 
@@ -338,7 +341,11 @@ func (self ShellPlugin) mergeSecretToRequest(
 	new_arg := &ShellPluginArgs{
 		Env: ordereddict.NewDict(),
 	}
-	secret_record.GetDict("env", new_arg.Env)
+	err = secret_record.GetDict("env", new_arg.Env)
+	if err != nil {
+		return nil, fmt.Errorf("Secret %v: While parsing env %w",
+			arg.Secret, err)
+	}
 	secret_record.GetString("cwd", &new_arg.Cwd)
 
 	var commandline string

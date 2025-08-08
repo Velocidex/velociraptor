@@ -10,7 +10,7 @@
         "@fortawesome/free-solid-svg-icons": "^6.7.2",
         "@fortawesome/react-fontawesome": "0.2.2",
         "@popperjs/core": "^2.11.8",
-        "ace-builds": "1.43.0",
+        "ace-builds": "1.43.1",
         "axios": ">=1.11.0",
         "axios-retry": "3.9.1",
         "bootstrap": "5.3.7",
@@ -55,7 +55,7 @@
     "scripts": {
         "build": "vite build",
         "start": "vite serve --force",
-        "lint": "eslint ./src --ext .js,.jsx",
+        "lint": "eslint ./src --ignore-pattern '*.test.jsx' --ext .js,.jsx",
         "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
         "postinstall": "patch-package"
     },

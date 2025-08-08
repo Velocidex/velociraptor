@@ -50,7 +50,7 @@ type FlowResponder struct {
 
 	// The status contains information about the execution of the
 	// query.
-	status crypto_proto.VeloStatus
+	status *crypto_proto.VeloStatus
 
 	// Our parent context that is shared between all queries from the
 	// same collection.
@@ -80,7 +80,7 @@ func newFlowResponder(
 		config_obj:   config_obj,
 		flow_context: owner,
 		output:       output,
-		status: crypto_proto.VeloStatus{
+		status: &crypto_proto.VeloStatus{
 			Status:      crypto_proto.VeloStatus_PROGRESS,
 			FirstActive: uint64(utils.GetTime().Now().UnixNano() / 1000),
 		},
@@ -101,7 +101,7 @@ func (self *FlowResponder) SetStatus(s *crypto_proto.VeloStatus) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.status = *proto.Clone(s).(*crypto_proto.VeloStatus)
+	self.status = proto.Clone(s).(*crypto_proto.VeloStatus)
 }
 
 func (self *FlowResponder) Close() {
@@ -137,7 +137,7 @@ func (self *FlowResponder) GetStatus() *crypto_proto.VeloStatus {
 		self.status.Duration = int64(self.status.LastActive-self.status.FirstActive) * 1000
 	}
 
-	status := proto.Clone(&self.status).(*crypto_proto.VeloStatus)
+	status := proto.Clone(self.status).(*crypto_proto.VeloStatus)
 	self.mu.Unlock()
 
 	return status

@@ -378,10 +378,7 @@ details: "Field %%field_name%%"
         let selected_source = profile.Sources[this.state.selected_source];
         let lines = (profile.Description || "").split("\n");
         let title = lines[0];
-        let desc = "";
-        if (lines.length > 1) {
-            desc = lines.slice(1).join("\n");
-        }
+
         return <>
                  <Alert variant="secondary">{title}</Alert>
                  <Form.Group as={Row}>
@@ -400,8 +397,6 @@ details: "Field %%field_name%%"
                        placeholder={T("Select Sigma Log Source")}
                        onChange={e=>this.selectSource(e.value)}
                        options={_.map(profile.Sources || {}, (v, k)=>{
-                           let lines = (v.description || "").split("\n");
-                           let title = lines[0];
                            let desc = "";
                            if (desc) {
                                desc = " ( " + desc + " ) ";
