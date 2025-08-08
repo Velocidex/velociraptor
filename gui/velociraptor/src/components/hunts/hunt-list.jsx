@@ -16,12 +16,10 @@ import Alert from 'react-bootstrap/Alert';
 import { EditNotebook } from '../notebooks/new-notebook.jsx';
 import Spinner from '../utils/spinner.jsx';
 
-import { flowRowRenderer } from '../flows/flows-list.jsx';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter } from "react-router-dom";
 
-import VeloTable, { getFormatter } from '../core/table.jsx';
+import VeloTable from '../core/table.jsx';
 
 import VeloForm from '../forms/form.jsx';
 import VeloPagedTable, {

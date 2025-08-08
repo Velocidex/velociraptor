@@ -140,7 +140,7 @@ func (self *CopyFunction) Call(ctx context.Context,
 
 	// Make sure the file is fully closed when the scope is destroyed.
 	sub_ctx, cancel := context.WithCancel(ctx)
-	scope.AddDestructor(cancel)
+	_ = scope.AddDestructor(cancel)
 
 	to, err := os.OpenFile(arg.Destination, flags, permissions)
 	if err != nil {

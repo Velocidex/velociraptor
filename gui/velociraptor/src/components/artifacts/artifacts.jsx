@@ -370,7 +370,6 @@ class ArtifactInspector extends React.Component {
 
     render() {
         let selected = this.state.selectedDescriptor && this.state.selectedDescriptor.name;
-        let descriptor = this.state.fullSelectedDescriptor || this.state.selectedDescriptor;
         let deletable = [];
         _.each(this.state.multiSelectedDescriptors, item=>{
             if(this.isDeletable(item)) {

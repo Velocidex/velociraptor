@@ -175,7 +175,7 @@ const handle_error = err=>{
 
 const get_headers = ()=>{
     let org_id = window.globals.OrgId;
-    if (org_id.substring(0,2) === "\{\{") {
+    if (org_id.substring(0,2) === "{{") {
         org_id = "";
     }
 
@@ -184,7 +184,7 @@ const get_headers = ()=>{
     };
 
     let csrf = window.CsrfToken;
-    if (csrf.substring(0,2) !== "\{\{") {
+    if (csrf.substring(0,2) !== "{{") {
         headers["X-CSRF-Token"] = csrf;
     };
 

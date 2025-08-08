@@ -338,7 +338,11 @@ func (self ShellPlugin) mergeSecretToRequest(
 	new_arg := &ShellPluginArgs{
 		Env: ordereddict.NewDict(),
 	}
-	secret_record.GetDict("env", new_arg.Env)
+	err = secret_record.GetDict("env", new_arg.Env)
+	if err != nil {
+		return nil, fmt.Errorf("Secret %v: While parsing env %w",
+			arg.Secret, err)
+	}
 	secret_record.GetString("cwd", &new_arg.Cwd)
 
 	var commandline string

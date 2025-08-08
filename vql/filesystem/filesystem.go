@@ -140,7 +140,11 @@ func (self GlobPlugin) Call(
 				pathspec := root.PathSpec()
 				item = pathspec.Path
 				pathspec.Path = ""
-				root.SetPathSpec(pathspec)
+				err = root.SetPathSpec(pathspec)
+				if err != nil {
+					scope.Log("glob: %v", err)
+					return
+				}
 			}
 
 			item_path, err := root.Parse(item)

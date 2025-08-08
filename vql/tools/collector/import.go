@@ -96,10 +96,14 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	root.SetPathSpec(&accessors.PathSpec{
+	err = root.SetPathSpec(&accessors.PathSpec{
 		DelegateAccessor: arg.Accessor,
 		DelegatePath:     arg.Filename,
 	})
+	if err != nil {
+		scope.Log("import_collection: %v", err)
+		return vfilter.Null{}
+	}
 
 	if arg.ImportType != "hunt" && arg.ImportType != "collector" {
 		arg.ImportType = ""

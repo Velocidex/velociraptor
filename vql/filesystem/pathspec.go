@@ -127,15 +127,17 @@ func (self PathSpecFunction) Call(ctx context.Context,
 			default:
 				scope.Log("pathspec: delegate %v is of type %T but should be a pathspec",
 					delegate, delegate)
-				json.Dump(arg)
 				return vfilter.Null{}
 			}
 
 		}
 	}
 
-	result.SetPathSpec(ps)
-
+	err = result.SetPathSpec(ps)
+	if err != nil {
+		scope.Log("pathspec: %v", err)
+		return vfilter.Null{}
+	}
 	return result
 }
 

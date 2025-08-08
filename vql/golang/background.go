@@ -31,7 +31,12 @@ func (self *BackgroundFunction) Call(ctx context.Context,
 
 	// Cancel the subquery when the scope closes.
 	sub_ctx, cancel := context.WithCancel(ctx)
-	scope.AddDestructor(cancel)
+	err = scope.AddDestructor(cancel)
+	if err != nil {
+		cancel()
+		scope.Log("background: %s", err.Error())
+		return false
+	}
 
 	go func() {
 		for item := range arg.Query.Eval(sub_ctx, scope) {

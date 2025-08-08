@@ -55,7 +55,7 @@
     "scripts": {
         "build": "vite build",
         "start": "vite serve --force",
-        "lint": "eslint ./src --ext .js,.jsx",
+        "lint": "eslint ./src --ignore-pattern '*.test.jsx' --ext .js,.jsx",
         "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
         "postinstall": "patch-package"
     },

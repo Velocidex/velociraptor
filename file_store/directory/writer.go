@@ -120,10 +120,13 @@ func (self *DirectoryFileWriter) Truncate() error {
 	if self.ChunkFd != nil {
 		filename := self.ChunkFd.Name()
 
-		self.ChunkFd.Truncate(0)
+		err := self.ChunkFd.Truncate(0)
 		self.ChunkFd.Close()
 		os.Remove(filename)
 
+		if err != nil {
+			return err
+		}
 		self.ChunkFd = nil
 	}
 
