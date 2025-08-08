@@ -70,56 +70,13 @@ func (self *LogFunction) Call(ctx context.Context,
 		arg.DedupTime = 60
 	}
 
-	// Get the log cache and check if the message was emitted recently.
-	var log_cache *logCache
-
-	log_cache_any := vql_subsystem.CacheGet(scope, LOG_TAG)
-	if utils.IsNil(log_cache_any) {
-		log_cache = &logCache{
-			lru: ttlcache.NewCache(),
-		}
-		log_cache.lru.SetCacheSizeLimit(100)
-
-		err := vql_subsystem.GetRootScope(scope).AddDestructor(func() {
-			log_cache.lru.Close()
-		})
-		if err != nil {
-			log_cache.lru.Close()
-			scope.Log("log: %s", err.Error())
-			return true
-		}
-
-	} else {
-		log_cache, _ = log_cache_any.(*logCache)
-		if log_cache == nil {
-			// Cant really happen
-			return false
-		}
+	// If we need to suppress the message, drop it on the floor.
+	if self.ShouldMessageBeSuppressed(
+		ctx, scope, arg.Message, arg.DedupTime) {
+		return true
 	}
-
-	now := utils.GetTime().Now().Unix()
-
-	// Was this message emitted recently?
-	log_cache_entry_any, err := log_cache.lru.Get(arg.Message)
-	if err == nil {
-		log_cache_entry, ok := log_cache_entry_any.(*logCacheEntry)
-
-		// Message is identical to last and within the dedup time.
-		if ok && arg.DedupTime > 0 &&
-			log_cache_entry.last_time+arg.DedupTime > now {
-			return true
-		}
-	}
-
-	// Store the message in the cache for next time
-	_ = log_cache.lru.Set(arg.Message, &logCacheEntry{
-		last_time: now,
-	})
-
-	vql_subsystem.CacheSet(scope, LOG_TAG, log_cache)
 
 	// Go ahead and format the message now
-
 	level := strings.ToUpper(arg.Level)
 	switch level {
 	case logging.DEFAULT, logging.ERROR, logging.INFO,
@@ -147,6 +104,68 @@ func (self *LogFunction) Call(ctx context.Context,
 	}
 	scope.Log("%v", message)
 	return true
+}
+
+func (self *LogFunction) ShouldMessageBeSuppressed(
+	ctx context.Context, scope vfilter.Scope,
+	message string, dedup_time int64) bool {
+
+	// Get the log cache and check if the message was emitted
+	// recently.
+	var log_cache *logCache
+
+	log_cache_any := vql_subsystem.CacheGet(scope, LOG_TAG)
+	if utils.IsNil(log_cache_any) {
+		// Make a new log cache.
+		log_cache = &logCache{
+			lru: ttlcache.NewCache(),
+		}
+		log_cache.lru.SetCacheSizeLimit(100)
+
+		err := vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+			log_cache.lru.Close()
+		})
+
+		// Can only happen if the scope is already closed for some
+		// reason.
+		if err != nil {
+			log_cache.lru.Close()
+			scope.Log("log: %s", err.Error())
+			return true
+		}
+
+	} else {
+		log_cache, _ = log_cache_any.(*logCache)
+		if log_cache == nil {
+			// Cant really happen
+			return false
+		}
+	}
+
+	now := utils.GetTime().Now().Unix()
+
+	// Was this message emitted recently?
+	log_cache_entry_any, err := log_cache.lru.Get(message)
+	if err == nil {
+		log_cache_entry, ok := log_cache_entry_any.(*logCacheEntry)
+
+		// Message is identical to last and within the dedup time:
+		// suppress.
+		if ok && dedup_time > 0 &&
+			log_cache_entry.last_time+dedup_time > now {
+			return true
+		}
+	}
+
+	// Store the message in the cache for next time
+	_ = log_cache.lru.Set(message, &logCacheEntry{
+		last_time: now,
+	})
+
+	vql_subsystem.CacheSet(scope, LOG_TAG, log_cache)
+
+	// If we get here do not deduplicate the message.
+	return false
 }
 
 func (self LogFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
