@@ -1,0 +1,23 @@
+# Send 10 alerts in a row.
+Query: LET _ <= SELECT alert( name="AlertName", event_id=_value, timestamp=now(), detail=["Foo", "Bar"]) FROM range(end=10)
+Output: []
+
+Query: LET Logs <= SELECT * FROM test_read_logs() WHERE NOT Log =~ "SELECT"
+Output: []
+
+# There should be one alert emitted at level ALERT
+Query: SELECT count() FROM Logs WHERE Log =~ "ALERT:" GROUP BY 1
+Output: [
+ {
+  "count()": 1
+ }
+]
+
+# There should be 9 alerts emitted at level INFO
+Query: SELECT count() FROM Logs WHERE Log =~ "INFO:" GROUP BY 1
+Output: [
+ {
+  "count()": 9
+ }
+]
+

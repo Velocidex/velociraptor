@@ -80,6 +80,23 @@ func (self *AlertFunction) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
+	// Deduplicate alerts based on the alert name. If the alert is to
+	// be duduplicated, we send a log at the logging.INFO level in
+	// order to preserve the information.
+
+	// The intention here is that the deduplicated ALERT level message
+	// be captured by the system and direct attention of the user to a
+	// client and time range of interest, where the full details of
+	// the alert be further examined.
+	log_fuction := &LogFunction{}
+	if log_fuction.ShouldMessageBeSuppressed(
+		ctx, scope, alert_name, dedup_time) {
+		return (&LogFunction{}).Call(ctx, scope, ordereddict.NewDict().
+			Set("message", string(serialized)).
+			Set("dedup", dedup_time).
+			Set("level", logging.INFO))
+	}
+
 	return (&LogFunction{}).Call(ctx, scope, ordereddict.NewDict().
 		Set("message", string(serialized)).
 		Set("dedup", dedup_time).
