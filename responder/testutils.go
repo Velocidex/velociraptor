@@ -42,6 +42,7 @@ func TestResponderWithFlowId(
 			wg:            &sync.WaitGroup{},
 			output:        output_chan,
 			logErrorRegex: defaultLogErrorRegex,
+			status:        &crypto_proto.VeloStatus{},
 		},
 		Drain: drain,
 	}
