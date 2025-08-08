@@ -5,6 +5,7 @@ import api from '../core/api-service.jsx';
 import VeloReportViewer from "../artifacts/reporting.jsx";
 import Select from 'react-select';
 import Spinner from '../utils/spinner.jsx';
+import Alert from 'react-bootstrap/Alert';
 
 import _ from 'lodash';
 import {CancelToken} from 'axios';
@@ -48,16 +49,28 @@ class DeleteOKDialog extends React.Component {
     static propTypes = {
         onClose: PropTypes.func.isRequired,
         onAccept: PropTypes.func.isRequired,
-        name: PropTypes.string,
+        names: PropTypes.array,
     }
 
     render() {
         return (
             <Modal show={true} onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>{T("Delete an artifact")}</Modal.Title>
+                <Modal.Title>{T("Delete artifacts")}</Modal.Title>
               </Modal.Header>
-              <Modal.Body>{T("You are about to delete", this.props.name)}</Modal.Body>
+              <Modal.Body>
+                <Alert variant="danger">
+                  {T("You are about to delete the following artifacts")}
+                </Alert>
+                <table>
+                  <tbody>
+                    {_.map(this.props.names, (name, idx)=>{
+                        return <tr><td key={idx}>{name}</td></tr>;
+                    })}
+                  </tbody>
+                </table>
+
+              </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={this.props.onClose}>
                   {T("Close")}
@@ -82,6 +95,7 @@ class ArtifactInspector extends React.Component {
 
     state = {
         selectedDescriptor: undefined,
+        multiSelectedDescriptors: [],
         fullSelectedDescriptor: {},
 
         // A list of descriptors that match the search term.
@@ -162,6 +176,7 @@ class ArtifactInspector extends React.Component {
 
                     for(let i=0; i<items.length; i++) {
                         var desc = items[i];
+                        desc.idx = i;
                         matchingDescriptors.push(desc);
                     };
 
@@ -173,6 +188,35 @@ class ArtifactInspector extends React.Component {
     }
 
     onSelect = (row, e) => {
+        if (e.shiftKey) {
+            document.getSelection().removeAllRanges();
+            let first = 0;
+            if (!_.isEmpty(this.state.selectedDescriptor)) {
+                first = this.state.selectedDescriptor.idx;
+            };
+
+            if (!_.isEmpty(this.state.multiSelectedDescriptors) &&
+                this.state.multiSelectedDescriptors[0].idx < first ){
+                first = this.state.multiSelectedDescriptors[0].idx;
+            }
+
+            let current = row.idx;
+            if(current < first) {
+                let tmp = first;
+                first = current;
+                current = tmp;
+            };
+            let multi_selection = [];
+            for (let i=first;i<current;i++) {
+                multi_selection.push(this.state.matchingDescriptors[i]);
+            }
+            this.setState({multiSelectedDescriptors: multi_selection});
+
+        } else {
+            // Clear the selection.
+            this.setState({multiSelectedDescriptors: []});
+        }
+
         this.setState({
             selectedDescriptor: row,
             fullSelectedDescriptor: {},
@@ -184,6 +228,24 @@ class ArtifactInspector extends React.Component {
 
         return this.getArtifactDescription(row.name);
    }
+
+    getClassName = item=>{
+        if (this.state.selectedDescriptor &&
+            item.name === this.state.selectedDescriptor.name) {
+            return "row-selected";
+        }
+        if (_.isEmpty(this.state.multiSelectedDescriptors)) {
+            return "";
+        }
+        let first = this.state.multiSelectedDescriptors[0];
+        let last = this.state.multiSelectedDescriptors[
+            this.state.multiSelectedDescriptors.length-1];
+
+        if (item.idx >= first.idx && item.idx <= last.idx) {
+            return "row-selected row-multi-selected";
+        }
+        return "";
+    }
 
     getArtifactDescription = (name) => {
         // Fetch the full description
@@ -246,15 +308,22 @@ class ArtifactInspector extends React.Component {
         this.props.history.push("/collected/" + client_id + "/new/" + name);
     }
 
-    deleteArtifact = (selected) => {
-        api.post('v1/SetArtifactFile', {
-            artifact: "name: "+selected,
-            op: "DELETE",
-        }, this.source.token).then(resp => {
-            if (resp.cancel) return;
-
-            this.fetchRows(this.state.current_filter, this.state.preset_filter);
-            this.setState({showDeleteArtifactDialog: false});
+    deleteArtifacts = (selected) => {
+        let counter = 0;
+        _.each(selected, name=>{
+            counter++;
+            api.post('v1/SetArtifactFile', {
+                artifact: "name: "+name,
+                op: "DELETE",
+            }, this.source.token).then(resp => {
+                if (resp.cancel) return;
+                counter--;
+                if (counter==0) {
+                    this.fetchRows(
+                        this.state.current_filter, this.state.preset_filter);
+                    this.setState({showDeleteArtifactDialog: false});
+                };
+            });
         });
     }
 
@@ -292,13 +361,26 @@ class ArtifactInspector extends React.Component {
                </span>;
     };
 
-    render() {
-        let selected = this.state.selectedDescriptor && this.state.selectedDescriptor.name;
-        let descriptor = this.state.fullSelectedDescriptor || this.state.selectedDescriptor;
-        let deletable = descriptor &&
+    isDeletable = descriptor=>{
+        return descriptor &&
             !descriptor.built_in &&
             !descriptor.is_alias &&
             !descriptor.is_inherited;
+    }
+
+    render() {
+        let selected = this.state.selectedDescriptor && this.state.selectedDescriptor.name;
+        let descriptor = this.state.fullSelectedDescriptor || this.state.selectedDescriptor;
+        let deletable = [];
+        _.each(this.state.multiSelectedDescriptors, item=>{
+            if(this.isDeletable(item)) {
+                deletable.push(item.name);
+            };
+        });
+        if(_.isEmpty(deletable) &&
+           this.isDeletable(this.state.selectedDescriptor)) {
+            deletable.push(this.state.selectedDescriptor.name);
+        };
 
         return (
             <div className="full-width-height"><Spinner loading={this.state.loading}/>
@@ -333,9 +415,9 @@ class ArtifactInspector extends React.Component {
 
               { this.state.showDeleteArtifactDialog &&
                 <DeleteOKDialog
-                  name={selected}
+                  names={deletable}
                   onClose={()=>this.setState({showDeleteArtifactDialog: false})}
-                  onAccept={()=>this.deleteArtifact(selected)}
+                  onAccept={()=>this.deleteArtifacts(deletable)}
                 />
               }
               { this.state.showArtifactsUploadDialog &&
@@ -370,7 +452,7 @@ class ArtifactInspector extends React.Component {
                   </ToolTip>
                   <ToolTip tooltip={T("Delete Artifact")} >
                     <Button onClick={() => this.setState({showDeleteArtifactDialog: true})}
-                            disabled={!deletable}
+                            disabled={_.isEmpty(deletable)}
                             variant="default">
                       <FontAwesomeIcon icon="trash"/>
                       <span className="sr-only">{T("Delete Artifact")}</span>
@@ -440,11 +522,8 @@ class ArtifactInspector extends React.Component {
                     <Table  hover size="sm">
                       <tbody>
                         { _.map(this.state.matchingDescriptors, (item, idx) => {
-                            return <tr key={idx} className={
-                                this.state.selectedDescriptor &&
-                                    item.name === this.state.selectedDescriptor.name ?
-                                    "row-selected" : undefined
-                            }>
+                            return <tr key={idx}
+                                       className={this.getClassName(item)}>
                                      <td>
                                        <button type="button"
                                                href="#"
