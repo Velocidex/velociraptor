@@ -1,0 +1,35 @@
+name: Server.Import.Extras
+description: |
+  This artifact imports additional artifacts maintained outside the
+  Velociraptor tree.
+
+  * [The Velociraptor Sigma Project](https://sigma.velocidex.com/)
+  * [The Artifact Exchange](https://docs.velociraptor.app/exchange/)
+  * [Rapid7 Labs](https://github.com/rapid7/Rapid7-Labs)
+  * [The Registry Hunter](https://registry-hunter.velocidex.com/)
+  * [The SQLite Hunter](https://sqlitehunter.velocidex.com/)
+  * [The Triage Artifacts](https://triage.velocidex.com/)
+
+type: SERVER
+
+required_permissions:
+- SERVER_ADMIN
+
+parameters:
+  - name: Details
+    type: csv
+    default: |
+      Name,Tag,URL
+      The Velociraptor Sigma Project,Extras,https://sigma.velocidex.com/Velociraptor.Sigma.Artifacts.zip
+      Artifact Exchange,Exchange,https://github.com/Velocidex/velociraptor-docs/raw/gh-pages/exchange/artifact_exchange_v2.zip
+      Rapid7Labs,Exchange,https://github.com/rapid7/Rapid7-Labs/raw/main/Vql/release/Rapid7LabsVQL.zip
+      The Registry Hunter,Extras,https://registry-hunter.velocidex.com/Windows.Registry.Hunter.zip
+      The SQLiteHunter,Extras,https://sqlitehunter.velocidex.com/SQLiteHunter.zip
+      The Triage Artifacts,Extras,https://triage.velocidex.com/artifacts/Velociraptor_Triage_v0.1.zip
+
+sources:
+  - query: |
+      SELECT * FROM foreach(row=Details,
+      query={
+        SELECT * FROM Artifact.Server.Import.ArtifactExchange(ExchangeURL=URL, Tag=Tag)
+      })

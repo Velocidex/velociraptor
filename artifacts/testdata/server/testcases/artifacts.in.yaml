@@ -7,24 +7,24 @@ Queries:
   # Schedule an artifact collection
   - SELECT collect_client(
         client_id='C.11a3013ccaXXXXX',
-        artifacts='Windows.KapeFiles.Targets',
-        env=dict(Device ='C:', VSSAnalysisAge=2, KapeTriage='Y')).request AS Flow
+        artifacts='Windows.Search.FileFinder',
+        env=dict(SearchFilesGlobTable ='Glob\nC:/*.txt\n')).request AS Flow
     FROM scope()
 
   # Schedule using a new style spec decleration.
   - SELECT collect_client(
         client_id='C.11a3013ccaXXXXX',
-        artifacts='Windows.KapeFiles.Targets',
-        spec=dict(`Windows.KapeFiles.Targets`=dict(
-            Device ='C:', VSSAnalysisAge=2, KapeTriage='Y'))).request AS Flow
+        artifacts='Windows.Search.FileFinder',
+        spec=dict(`Windows.Search.FileFinder`=dict(
+            SearchFilesGlobTable ='Glob\nC:/*.txt\n'))).request AS Flow
     FROM scope()
 
 
   # Check that artifact_definitions work
-  - SELECT name FROM artifact_definitions(deps=TRUE, names='Windows.KapeFiles.Targets') ORDER BY name
+  - SELECT name FROM artifact_definitions(deps=TRUE, names='Windows.Search.FileFinder') ORDER BY name
 
   # Make sure we can return all names
-  - SELECT name FROM artifact_definitions() WHERE name =~ 'Windows.KapeFiles.Targets'
+  - SELECT name FROM artifact_definitions() WHERE name =~ 'Windows.Search.FileFinder'
 
   # Test the "fs" accessor
   - SELECT OSPath FROM glob(

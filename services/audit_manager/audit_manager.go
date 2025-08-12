@@ -24,7 +24,7 @@ func (self *AuditManager) LogAudit(
 		Set("details", details)
 
 	logger := logging.GetLogger(config_obj, &logging.Audit)
-	logger.WithFields(logrus.Fields(*record.ToDict())).Info(operation)
+	logger.WithFields(logrus.Fields(record.ToMap())).Info(operation)
 
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {

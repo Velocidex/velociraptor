@@ -136,10 +136,6 @@ func (self *RepositoryManager) SetArtifactMetadata(
 	principal, name string, metadata *artifacts_proto.ArtifactMetadata) error {
 
 	self.metadata.Set(name, metadata)
-	err := self.metadata.saveMetadata(ctx, config_obj)
-	if err != nil {
-		return err
-	}
 
 	// Tell interested parties that we modified this artifact.
 	journal, err := services.GetJournal(config_obj)
@@ -314,11 +310,7 @@ func (self *RepositoryManager) DeleteArtifactFile(
 func NewRepositoryManagerForTest(
 	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (services.RepositoryManager, error) {
-	self := _newRepositoryManager(config_obj, wg)
-
-	// It is not an error if the metadata file does not exist, just
-	// move on.
-	_ = self.metadata.loadMetadata(ctx, config_obj)
+	self := _newRepositoryManager(ctx, config_obj, wg)
 
 	// Load some artifacts via the autoexec mechanism.
 	if config_obj.Autoexec != nil {
@@ -338,22 +330,28 @@ func NewRepositoryManagerForTest(
 }
 
 func _newRepositoryManager(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) *RepositoryManager {
 
-	// Shared between the manager repositories.
-	metadata_manager := &metadataManager{}
+	global_repository := &Repository{
+		// Artifact name -> definition
+		Data:     make(map[string]*artifacts_proto.Artifact),
+		metadata: NewMetadataManager(ctx, config_obj),
+	}
 
+	// Start the metada house keeping loop.
+	wg.Add(1)
+	go global_repository.metadata.HouseKeeping(
+		ctx, config_obj, wg, global_repository)
+
+	// Shared between the manager repositories.
 	return &RepositoryManager{
-		wg:         wg,
-		id:         utils.GetId(),
-		config_obj: config_obj,
-		global_repository: &Repository{
-			// Artifact name -> definition
-			Data:     make(map[string]*artifacts_proto.Artifact),
-			metadata: metadata_manager,
-		},
-		metadata: metadata_manager,
+		wg:                wg,
+		id:                utils.GetId(),
+		config_obj:        config_obj,
+		global_repository: global_repository,
+		metadata:          global_repository.metadata,
 	}
 }
 
@@ -364,11 +362,7 @@ func NewRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 	logger.Info("Starting repository manager for %v", services.GetOrgName(config_obj))
 
 	// Load all the artifacts in the repository and compile them in the background.
-	self := _newRepositoryManager(config_obj, wg)
-
-	// It is not an error if the metadata file does not exist, just
-	// move on.
-	_ = self.metadata.loadMetadata(ctx, config_obj)
+	self := _newRepositoryManager(ctx, config_obj, wg)
 
 	// Backup the custom artifacts - only for the Master node.
 	if services.IsMaster(config_obj) {

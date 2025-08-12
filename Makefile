@@ -95,15 +95,6 @@ debug_client:
 lint:
 	golangci-lint run
 
-KapeFilesSync:
-	python3 scripts/kape_files.py -t win --state_file_path scripts/templates/kape_files_state.json ~/projects/KapeFiles/ > artifacts/definitions/Windows/KapeFiles/Targets.yaml
-
-SQLECmdSync:
-	python3 scripts/sqlecmd_convert.py ~/projects/SQLECmd/ ~/projects/KapeFiles/ artifacts/definitions/Generic/Collectors/SQLECmd.yaml
-
-SQLiteHunter:
-	cp ~/projects/SQLiteHunter/output/SQLiteHunter.yaml artifacts/definitions/Generic/Forensic/SQLiteHunter.yaml
-
 # Do this after fetching the build artifacts with `gh run download <RunID>`
 UpdateCIArtifacts:
 	mv artifact/server/* artifacts/testdata/server/testcases/

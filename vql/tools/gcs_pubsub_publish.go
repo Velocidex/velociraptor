@@ -61,10 +61,10 @@ func (self *GCSPubsubPublishFunction) Call(ctx context.Context,
 	}
 
 	attributesOrderedDict := arg.Attributes
-	attributesInterfaceMap := attributesOrderedDict.ToDict()
+	attributesInterfaceMap := attributesOrderedDict.ToMap()
 	attributesStringMap := make(map[string]string)
 
-	for key, value := range *attributesInterfaceMap {
+	for key, value := range attributesInterfaceMap {
 		strValue := fmt.Sprintf("%v", value)
 		attributesStringMap[key] = strValue
 	}

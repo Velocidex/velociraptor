@@ -263,6 +263,28 @@ type matchPlan struct {
 
 	// Show basic artifacts
 	basic *bool
+
+	tags []string
+}
+
+func (self *matchPlan) matchTag(artifact *artifacts_proto.Artifact) bool {
+	if len(self.tags) == 0 {
+		return true
+	}
+
+	if artifact.Metadata == nil || len(artifact.Metadata.Tags) == 0 {
+		return false
+	}
+
+	for _, i := range self.tags {
+		for _, j := range artifact.Metadata.Tags {
+			if strings.EqualFold(i, j) {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func (self *matchPlan) matchDescOrName(artifact *artifacts_proto.Artifact) bool {
@@ -380,6 +402,10 @@ func (self *matchPlan) matchArtifact(artifact *artifacts_proto.Artifact) bool {
 		return false
 	}
 
+	if !self.matchTag(artifact) {
+		return false
+	}
+
 	if !self.matchPreconditions(artifact) {
 		return false
 	}
@@ -459,8 +485,11 @@ func prepareMatchPlan(search string) *matchPlan {
 					result.basic = &value
 				}
 				continue
-			}
 
+			case "tag":
+				result.tags = append(result.tags, strings.ToLower(term))
+				continue
+			}
 		}
 		re, err := regexp.Compile("(?i)" + token)
 		if err == nil {
@@ -549,6 +578,13 @@ func searchArtifact(
 
 		if len(result.Items) >= int(number_of_results) {
 			break
+		}
+	}
+
+	if fields != nil && fields.Tags {
+		result.Tags, err = repository.Tags(ctx, config_obj)
+		if err != nil {
+			return nil, Status(config_obj.Verbose, err)
 		}
 	}
 

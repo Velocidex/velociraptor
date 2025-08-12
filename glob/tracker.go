@@ -22,6 +22,7 @@ var (
 type Action struct {
 	time       time.Time
 	path       *accessors.OSPath
+	accessor   string
 	file_count int
 }
 
@@ -71,13 +72,15 @@ func (self *Actions) Get() []Action {
 }
 
 func (self *Globber) recordDirectory(
-	path *accessors.OSPath, file_count int) {
+	path *accessors.OSPath, accessor string,
+	file_count int) {
 	if self.root != nil && path != nil {
 		self.root.mu.Lock()
 		defer self.root.mu.Unlock()
 
 		self.root.last_dir.Push(Action{
 			path:       path,
+			accessor:   accessor,
 			file_count: file_count,
 		})
 	}
@@ -125,7 +128,8 @@ func (self *GlobTracker) ProfileWriter(ctx context.Context,
 				Set("Time", action.time).
 				Set("Age", now.Sub(action.time).String()).
 				Set("Dir", action.path.String()).
-				Set("DirCount", action.file_count)
+				Set("DirCount", action.file_count).
+				Set("Accessor", action.accessor)
 			output_chan <- row
 		}
 	}

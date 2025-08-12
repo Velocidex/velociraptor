@@ -14,7 +14,7 @@ import (
 func ParsePolicyFromDict(scope vfilter.Scope, in *ordereddict.Dict) (
 	result *acl_proto.ApiClientACL, err error) {
 
-	policy_map := *in.ToDict()
+	policy_map := in.ToMap()
 
 	result = &acl_proto.ApiClientACL{}
 	result_value := reflect.Indirect(reflect.ValueOf(result))

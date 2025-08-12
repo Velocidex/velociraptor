@@ -103,5 +103,5 @@ func (self *TestSuite) TestListenerPreserveTypes() {
 
 	assert.Equal(self.T(), 1, len(events))
 	assert.True(self.T(), reflect.DeepEqual(
-		events[0].ToDict(), event_source.ToDict()))
+		events[0].ToMap(), event_source.ToMap()))
 }

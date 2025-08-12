@@ -13,6 +13,7 @@ message FieldSelector {
     bool description = 2;
     bool type = 3;
     bool sources = 4;
+    bool tags = 5;
 }
 
 message GetArtifactsRequest {

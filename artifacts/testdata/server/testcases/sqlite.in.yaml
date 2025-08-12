@@ -26,10 +26,3 @@ Queries:
          SELECT * FROM sqlite(file=Data, accessor="data",
            query="SELECT * FROM urls")
       })
-
-  # Test the Generic.Collectors.SQLECmd artifact
-  - SELECT ID, URLTitle, URL, VisitCount, _Source, OSPath.Basename AS OSPath
-    FROM Artifact.Generic.Collectors.SQLECmd(
-      UseFilenames=FALSE,
-      GlobExpr=[dict(Name="X", Glob=srcDir + "/artifacts/testdata/files/**")])
-    WHERE _Source =~ "Chromium Browser History"

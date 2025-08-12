@@ -37,7 +37,6 @@ const presetFilters = ()=>[
     {value: "type:CLIENT_EVENT", label: T("Client Monitoring")},
     {value: "type:SERVER_EVENT", label: T("Server Monitoring")},
     {value: "tool:.+", label: T("Using Tools")},
-    {value: "^exchange.+", label: T("Exchange")},
     {value: "builtin:yes", label: T("BuiltIn Only")},
     {value: "builtin:no", label: T("Custom Only")},
     {value: "metadata:basic", label: T("Basic Only")},
@@ -65,7 +64,7 @@ class DeleteOKDialog extends React.Component {
                 <table>
                   <tbody>
                     {_.map(this.props.names, (name, idx)=>{
-                        return <tr><td key={idx}>{name}</td></tr>;
+                        return <tr key={idx}><td>{name}</td></tr>;
                     })}
                   </tbody>
                 </table>
@@ -119,6 +118,9 @@ class ArtifactInspector extends React.Component {
         version: 0,
 
         filter_name: T("Client Artifacts"),
+
+        // All the knowns tags for artifacts.
+        tags: [],
     }
 
     componentDidMount = () => {
@@ -165,6 +167,7 @@ class ArtifactInspector extends React.Component {
                     // are still fast enough for now.
                     fields: {
                         name: true,
+                        tags: true,
                     },
                     number_of_results: 1000,
                 },
@@ -181,6 +184,7 @@ class ArtifactInspector extends React.Component {
                     };
 
                     this.setState({
+                        tags: response.data.tags,
                         matchingDescriptors: matchingDescriptors,
                         loading: false,
                     });
@@ -328,13 +332,18 @@ class ArtifactInspector extends React.Component {
     }
 
     renderFilter = ()=>{
-        let option_value = _.filter(presetFilters(), x=>{
+        let filters = presetFilters();
+        _.each(this.state.tags, x=>{
+           filters.push({value: "tag:" + x, label: T("Tag") + " " + x});
+        });
+
+        let option_value = _.filter(filters, x=>{
             return x.label === this.state.filter_name;
         });
         return <Select
                  className="artifact-filter"
                  classNamePrefix="velo"
-                 options={presetFilters()}
+                 options={filters}
                  value={option_value}
                  onChange={x=>{
                      this.setState({

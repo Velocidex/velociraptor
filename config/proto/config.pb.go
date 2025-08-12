@@ -4759,9 +4759,10 @@ type Security struct {
 	unknownFields protoimpl.UnknownFields
 
 	// A list of path prefixes allowed for the 'file' accessor. If
-	// this is empty the file accessor will be disabled. If you want
-	// to enable access to the server's filesystem you can set this to
-	// "/".
+	// this is empty the file accessor will work on all
+	// directories. If you want to disable access to the server's
+	// filesystem you can set this to a non existent directory,
+	// e.g. /nonexistent/ .
 	AllowedFileAccessorPrefix []string `protobuf:"bytes,1,rep,name=allowed_file_accessor_prefix,json=allowedFileAccessorPrefix,proto3" json:"allowed_file_accessor_prefix,omitempty"`
 	// A list of prefixes allowed for the fs accessor. All other
 	// prefixes will be rejected. The default is:
@@ -4798,6 +4799,7 @@ type Security struct {
 	// - FILESYSTEM_WRITE
 	// - FILESYSTEM_READ
 	// - MACHINE_STATE
+	// - NETWORK
 	LockdownDeniedPermissions []string `protobuf:"bytes,32,rep,name=lockdown_denied_permissions,json=lockdownDeniedPermissions,proto3" json:"lockdown_denied_permissions,omitempty"`
 	// Default expiry of certificate issuances (default 365 days)
 	CertificateValidityDays int64 `protobuf:"varint,33,opt,name=certificate_validity_days,json=certificateValidityDays,proto3" json:"certificate_validity_days,omitempty"`
