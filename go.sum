@@ -93,8 +93,8 @@ github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a/go.mod h1:ukJBuruT9
 github.com/Velocidex/ordereddict v0.0.0-20220107075049-3dbe58412844/go.mod h1:Y5Tfx5SKGOzkulpqfonrdILSPIuNg+GqKE/DhVJgnpg=
 github.com/Velocidex/ordereddict v0.0.0-20221110130714-6a7cb85851cd/go.mod h1:+MqO5UMBemyFSm+yRXslbpFTwPUDhFHUf7HPV92twg4=
 github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d/go.mod h1:+MqO5UMBemyFSm+yRXslbpFTwPUDhFHUf7HPV92twg4=
-github.com/Velocidex/ordereddict v0.0.0-20250811072607-2630ed0484d0 h1:Te6JrYD18LSnpZGRiWSCPgYzH1xAeASBiOWTvfCJBWg=
-github.com/Velocidex/ordereddict v0.0.0-20250811072607-2630ed0484d0/go.mod h1:+MqO5UMBemyFSm+yRXslbpFTwPUDhFHUf7HPV92twg4=
+github.com/Velocidex/ordereddict v0.0.0-20250813023426-1619f9c6bd30 h1:BgU0sWNKIPQ3Jy4GeBI3xv8ceIr5Um2xl1ZzCMvaEhQ=
+github.com/Velocidex/ordereddict v0.0.0-20250813023426-1619f9c6bd30/go.mod h1:+MqO5UMBemyFSm+yRXslbpFTwPUDhFHUf7HPV92twg4=
 github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a h1:H7dVazNcaE80V8cy99TF7LPpwzvr1uJ4I2nDjb5ek7E=
 github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a/go.mod h1:/fy/Eg4TQz9KkJduvZfGCnbWTQ/LKaknS2wYB52cU6c=
 github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1 h1:fLJ2AjY0dtDZEBhekp3bxyxGpWh5D/+NfOVlGXB5ROA=
