@@ -235,7 +235,11 @@
     description: Artifact definition in YAML
   - name: prefix
     type: string
-    description: Required name prefix
+    description: Optional name prefix (deprecated ignored)
+  - name: tags
+    type: string
+    description: Optional tags to attach to the artifact.
+    repeated: true
   category: server
   metadata:
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
@@ -280,6 +284,10 @@
     type: bool
     description: Set to true make the artifact a 'basic' artifact. This allows users
       with the COLLECT_BASIC permission able to collect it.
+  - name: tags
+    type: string
+    description: Optional tags to attach to the artifact.
+    repeated: true
   category: server
   metadata:
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER

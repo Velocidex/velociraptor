@@ -57,7 +57,7 @@ func (self *TemplateFunction) Call(ctx context.Context,
 	}
 
 	buffer := &bytes.Buffer{}
-	err = template.Execute(buffer, arg.Expansion.ToDict())
+	err = template.Execute(buffer, arg.Expansion.ToMap())
 	if err != nil {
 		scope.Log("template: %v", err)
 		return vfilter.Null{}

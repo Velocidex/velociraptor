@@ -35,6 +35,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -141,6 +142,15 @@ func (self *Repository) LoadProto(
 	artifact.Metadata = nil
 	artifact.BuiltIn = options.ArtifactIsBuiltIn
 	artifact.CompiledIn = options.ArtifactIsCompiledIn
+
+	if len(options.Tags) > 0 {
+		artifact.Metadata = &artifacts_proto.ArtifactMetadata{
+			Tags: options.Tags,
+		}
+		if self.metadata != nil {
+			self.metadata.Set(artifact.Name, artifact.Metadata)
+		}
+	}
 
 	err := validateArtifactName(artifact.Name)
 	if err != nil {
@@ -445,6 +455,18 @@ func (self *Repository) Del(name string) {
 	defer self.mu.Unlock()
 
 	delete(self.Data, name)
+
+	if self.metadata != nil {
+		self.metadata.Clear(name)
+	}
+}
+
+func (self *Repository) Tags(ctx context.Context,
+	config_obj *config_proto.Config) ([]string, error) {
+	if self.metadata != nil {
+		return self.metadata.Tags(), nil
+	}
+	return nil, utils.NotFoundError
 }
 
 func (self *Repository) List(ctx context.Context,

@@ -18,8 +18,9 @@ import (
 )
 
 type ArtifactSetFunctionArgs struct {
-	Definition string `vfilter:"optional,field=definition,doc=Artifact definition in YAML"`
-	Prefix     string `vfilter:"optional,field=prefix,doc=Required name prefix"`
+	Definition string   `vfilter:"optional,field=definition,doc=Artifact definition in YAML"`
+	Prefix     string   `vfilter:"optional,field=prefix,doc=Optional name prefix (deprecated ignored)"`
+	Tags       []string `vfilter:"optional,field=tags,doc=Optional tags to attach to the artifact."`
 }
 
 type ArtifactSetFunction struct{}
@@ -53,6 +54,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 		services.ArtifactOptions{
 			ValidateArtifact:  true,
 			ArtifactIsBuiltIn: false,
+			Tags:              arg.Tags,
 		})
 	if err != nil {
 		definition := arg.Definition
@@ -321,9 +323,10 @@ func (self ArtifactsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 }
 
 type ArtifactSetMetadataFunctionArgs struct {
-	Name   string `vfilter:"required,field=name,doc=The Artifact to update"`
-	Hidden bool   `vfilter:"optional,field=hidden,doc=Set to true make the artifact hidden in the GUI, false to make it visible again."`
-	Basic  bool   `vfilter:"optional,field=basic,doc=Set to true make the artifact a 'basic' artifact. This allows users with the COLLECT_BASIC permission able to collect it."`
+	Name   string   `vfilter:"required,field=name,doc=The Artifact to update"`
+	Hidden bool     `vfilter:"optional,field=hidden,doc=Set to true make the artifact hidden in the GUI, false to make it visible again."`
+	Basic  bool     `vfilter:"optional,field=basic,doc=Set to true make the artifact a 'basic' artifact. This allows users with the COLLECT_BASIC permission able to collect it."`
+	Tags   []string `vfilter:"optional,field=tags,doc=Optional tags to attach to the artifact."`
 }
 
 type ArtifactSetMetadataFunction struct{}
@@ -394,6 +397,11 @@ func (self *ArtifactSetMetadataFunction) Call(ctx context.Context,
 	_, pres = args.Get("basic")
 	if pres {
 		metadata.Basic = arg.Basic
+	}
+
+	tags, pres := args.GetStrings("tags")
+	if pres {
+		metadata.Tags = tags
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)

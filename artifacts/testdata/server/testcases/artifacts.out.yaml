@@ -51,7 +51,7 @@ Output: [
 ]
 
 # Schedule an artifact collection
-Query: SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', env=dict(Device ='C:', VSSAnalysisAge=2, KapeTriage='Y')).request AS Flow FROM scope()
+Query: SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.Search.FileFinder', env=dict(SearchFilesGlobTable ='Glob\nC:/*.txt\n')).request AS Flow FROM scope()
 Output: [
  {
   "Flow": {
@@ -61,26 +61,16 @@ Output: [
    "flow_id": "",
    "urgent": false,
    "artifacts": [
-    "Windows.KapeFiles.Targets"
+    "Windows.Search.FileFinder"
    ],
    "specs": [
     {
-     "artifact": "Windows.KapeFiles.Targets",
+     "artifact": "Windows.Search.FileFinder",
      "parameters": {
       "env": [
        {
-        "key": "Device",
-        "value": "C:",
-        "comment": ""
-       },
-       {
-        "key": "VSSAnalysisAge",
-        "value": "2",
-        "comment": ""
-       },
-       {
-        "key": "KapeTriage",
-        "value": "Y",
+        "key": "SearchFilesGlobTable",
+        "value": "Glob\nC:/*.txt\n",
         "comment": ""
        }
       ]
@@ -108,7 +98,7 @@ Output: [
 ]
 
 # Schedule using a new style spec decleration.
-Query: SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', spec=dict(`Windows.KapeFiles.Targets`=dict( Device ='C:', VSSAnalysisAge=2, KapeTriage='Y'))).request AS Flow FROM scope()
+Query: SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.Search.FileFinder', spec=dict(`Windows.Search.FileFinder`=dict( SearchFilesGlobTable ='Glob\nC:/*.txt\n'))).request AS Flow FROM scope()
 Output: [
  {
   "Flow": {
@@ -118,26 +108,16 @@ Output: [
    "flow_id": "",
    "urgent": false,
    "artifacts": [
-    "Windows.KapeFiles.Targets"
+    "Windows.Search.FileFinder"
    ],
    "specs": [
     {
-     "artifact": "Windows.KapeFiles.Targets",
+     "artifact": "Windows.Search.FileFinder",
      "parameters": {
       "env": [
        {
-        "key": "Device",
-        "value": "C:",
-        "comment": ""
-       },
-       {
-        "key": "VSSAnalysisAge",
-        "value": "2",
-        "comment": ""
-       },
-       {
-        "key": "KapeTriage",
-        "value": "Y",
+        "key": "SearchFilesGlobTable",
+        "value": "Glob\nC:/*.txt\n",
         "comment": ""
        }
       ]
@@ -165,21 +145,18 @@ Output: [
 ]
 
 # Check that artifact_definitions work
-Query: SELECT name FROM artifact_definitions(deps=TRUE, names='Windows.KapeFiles.Targets') ORDER BY name
+Query: SELECT name FROM artifact_definitions(deps=TRUE, names='Windows.Search.FileFinder') ORDER BY name
 Output: [
  {
-  "name": "Generic.Collectors.File"
- },
- {
-  "name": "Windows.KapeFiles.Targets"
+  "name": "Windows.Search.FileFinder"
  }
 ]
 
 # Make sure we can return all names
-Query: SELECT name FROM artifact_definitions() WHERE name =~ 'Windows.KapeFiles.Targets'
+Query: SELECT name FROM artifact_definitions() WHERE name =~ 'Windows.Search.FileFinder'
 Output: [
  {
-  "name": "Windows.KapeFiles.Targets"
+  "name": "Windows.Search.FileFinder"
  }
 ]
 
@@ -236,7 +213,8 @@ Output: [
   "name": "Custom.Generic.Client.Info",
   "metadata": {
    "hidden": true,
-   "basic": false
+   "basic": false,
+   "tags": []
   }
  }
 ]

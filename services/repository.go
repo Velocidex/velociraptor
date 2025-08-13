@@ -49,6 +49,9 @@ type ArtifactOptions struct {
 	ValidateArtifact bool
 
 	AllowOverridingAlias bool
+
+	// Attach these tags to the artifact in the repository.
+	Tags []string
 }
 
 func GetRepositoryManager(config_obj *config_proto.Config) (RepositoryManager, error) {
@@ -108,6 +111,9 @@ type Repository interface {
 
 	// List
 	List(ctx context.Context, config_obj *config_proto.Config) ([]string, error)
+
+	// List all unique tags
+	Tags(ctx context.Context, config_obj *config_proto.Config) ([]string, error)
 
 	SetParent(parent Repository,
 		parent_config_obj *config_proto.Config)

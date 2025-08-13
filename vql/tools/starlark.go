@@ -270,7 +270,7 @@ func interfaceAsStarlarkValue(ctx context.Context,
 		}
 
 		result := starlark.NewDict(new_dict.Len())
-		for key, value := range *new_dict.ToDict() {
+		for key, value := range new_dict.ToMap() {
 			mapValueStarlarked, err := interfaceAsStarlarkValue(ctx, scope, value)
 			if err != nil {
 				return nil, err
@@ -303,7 +303,7 @@ func reduceRecurse(obj vfilter.Any, ctx context.Context, scope vfilter.Scope) (v
 	case *ordereddict.Dict:
 		{
 			sub_dict := ordereddict.NewDict()
-			for key, value := range *t.ToDict() {
+			for key, value := range t.ToMap() {
 				results, err := reduceRecurse(value, ctx, scope)
 				if err != nil {
 					return nil, err

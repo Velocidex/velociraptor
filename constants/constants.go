@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	VERSION = "0.74.5"
+	VERSION = "0.75.1-rc1"
 
 	// This is the version of dependent client binaries that will be
 	// included in the offline collector or MSI. Usually this will be
@@ -135,7 +135,7 @@ const (
 	// Certain VQL errors represent a failure in artifact
 	// collection. We use this RegExp to determine if log messages
 	// represent failure.
-	VQL_ERROR_REGEX = "(?i)(Error:|Symbol.+?not found|Expecting a path arg type, not|Field.+?is required)"
+	VQL_ERROR_REGEX = "(?i)(Error:|Symbol.+?not found|Expecting a path arg type, not|Field.+?is required|Unexpected arg)"
 
 	// Set in the scope with one or more passwords. Used by the zip
 	// accessor to open password protected zip files.

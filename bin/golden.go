@@ -404,7 +404,7 @@ func doGolden() error {
 
 		result, err := runTest(&fixture, sm, config_obj)
 		if err != nil {
-			return fmt.Errorf("Running test %v: %w", fixture, err)
+			return fmt.Errorf("Running test %v: %w", file_path, err)
 		}
 
 		outfile := strings.Replace(file_path, ".in.", ".out.", -1)

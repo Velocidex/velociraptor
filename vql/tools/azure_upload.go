@@ -14,14 +14,17 @@ package tools
 
 import (
 	"context"
+	"net/url"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -89,14 +92,34 @@ func (self *AzureUploadFunction) Call(ctx context.Context,
 	return vfilter.Null{}
 }
 
-func upload_azure(ctx context.Context, scope vfilter.Scope,
+func upload_azure(
+	ctx context.Context, scope vfilter.Scope,
 	reader accessors.ReadSeekCloser,
 	name string, sas_url string, size uint64) (
 	*uploads.UploadResponse, error) {
 
 	scope.Log("upload_azure: Uploading %v", name)
 
-	azClient, err := azblob.NewClientWithNoCredential(sas_url, nil)
+	options := &azblob.ClientOptions{}
+
+	config_obj, ok := artifacts.GetConfig(scope)
+	if ok {
+		url_obj, err := url.Parse(sas_url)
+		if err != nil {
+			return nil, err
+		}
+
+		transport, _, err := networking.GetHttpClient(ctx, config_obj,
+			scope, &networking.HttpPluginRequest{
+				Url: []string{sas_url},
+			}, url_obj)
+		if err != nil {
+			return nil, err
+		}
+		options.Transport = transport
+	}
+
+	azClient, err := azblob.NewClientWithNoCredential(sas_url, options)
 	if err != nil {
 		return nil, err
 	}

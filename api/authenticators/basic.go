@@ -127,13 +127,13 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 			// Does the user have access to the specified org?
 			err = CheckOrgAccess(self.config_obj, r, user_record, permission)
 			if err != nil {
-				err := services.LogAudit(r.Context(),
+				err1 := services.LogAudit(r.Context(),
 					self.config_obj, user_record.Name, "User Unauthorized for Org",
 					ordereddict.NewDict().
 						Set("err", err.Error()).
 						Set("remote", r.RemoteAddr).
 						Set("status", http.StatusUnauthorized))
-				if err != nil {
+				if err1 != nil {
 					logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 					logger.Error("CheckOrgAccess LogAudit: User Unauthorized for Org %v %v",
 						user_record.Name, r.RemoteAddr)

@@ -253,6 +253,7 @@ message Artifact {
 
 message ArtifactDescriptors {
     repeated Artifact items = 1;
+    repeated string tags = 2;
 }
 
 
@@ -262,6 +263,8 @@ message ArtifactMetadata {
     // Do not show this artifact in the GUI search screen.
     bool hidden = 1;
     bool basic = 2;
+
+    repeated string tags = 3;
 }
 
 message ArtifactMetadataStorage {

@@ -299,6 +299,8 @@ func (self *Globber) ExpandWithContext(
 	accessor accessors.FileSystemAccessor) <-chan accessors.FileInfo {
 	output_chan := make(chan accessors.FileInfo)
 
+	accessor_name := accessor.Describe().Name
+
 	go func() {
 		defer close(output_chan)
 
@@ -316,12 +318,12 @@ func (self *Globber) ExpandWithContext(
 		// Walk the filter tree. List the directory and for each file
 		// that matches a filter at this level, recurse into the next
 		// level.
-		self.recordDirectory(root, 0)
+		self.recordDirectory(root, accessor_name, 0)
 		files, err := accessor.ReadDirWithOSPath(root)
 		if errors.Is(err, os.ErrNotExist) {
 			return
 		}
-		self.recordDirectory(root, len(files))
+		self.recordDirectory(root, accessor_name, len(files))
 
 		if err != nil {
 			scope.Log("Globber: %v while processing %v",
