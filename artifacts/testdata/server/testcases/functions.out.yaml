@@ -236,7 +236,7 @@ Query: SELECT  similarity(set1=dict(field1=1,field2=4,field3=3),set2=dict(field2
 Output: [
  {
   "similarity(set1=dict(field1=1, field2=4, field3=3), set2=dict(field2=4, field1=1, field3=3))": 1,
-  "similarity(set1=dict(field1=1, field2=4, field3=3), set2=dict(field1=1))": 0.5,
+  "similarity(set1=dict(field1=1, field2=4, field3=3), set2=dict(field1=1))": 0.33333333333333337,
   "similarity(set1=teststoredquery[0], set2=teststoredquery[0])": 1,
   "similarity(set1=\"yolo!\", set2=dict(field1=1))": 0
  }
