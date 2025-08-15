@@ -274,7 +274,8 @@ func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
 			Tag:        urn.Tag(),
 		}})
 
-	if completion != nil {
+	if completion != nil &&
+		!utils.CompareFuncs(completion, utils.SyncCompleter) {
 		completion()
 	}
 

@@ -193,6 +193,7 @@ func main() {
 		WithCustomValidator("validator: initDebugServer", initDebugServer).
 		WithCustomValidator("validator: timezone", initTimezone).
 		WithConfigMutator("Mutator: applyMinionRole", applyMinionRole).
+		WithCustomValidator("validator: ensureProxy", proxy.ConfigureProxy).
 		WithCustomValidator("validator: applyRemapping", applyRemapping).
 		WithConfigMutator("OverrideFlag", deprecatedOverride).
 		WithLogFile(*logging_flag).

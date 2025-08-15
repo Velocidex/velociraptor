@@ -6,6 +6,7 @@ import (
 	"sort"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/suite"
@@ -77,7 +78,9 @@ func (self *TestSuite) TestArtifactSource() {
 	}
 	rs_writer.Close()
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
 		ACLManager: acl_managers.NullACLManager{},
@@ -141,7 +144,8 @@ func (self *TestSuite) TestHuntsSource() {
 		ArtifactIsBuiltIn: true})
 
 	assert.NoError(self.T(), err)
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(self.T(), err)

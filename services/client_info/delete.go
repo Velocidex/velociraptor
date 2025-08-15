@@ -118,7 +118,6 @@ func (self *ClientInfoManager) DeleteClient(
 
 	// Delete the actual client record.
 	if really_do_it {
-		utils.DlvBreak()
 		err = self.reallyDeleteClient(ctx, client_id, principal)
 		if err != nil {
 			progress <- services.DeleteFlowResponse{

@@ -297,14 +297,13 @@ func (self *Store) SaveSnapshot(
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>ClientInfo Manager</> Written snapshot for org %v in %v (%v records)",
 			services.GetOrgName(config_obj), time.Now().Sub(now), record_count)
-
 	}
 
 	// The final write must be synchronous because we need to
 	// guarantee it hits the disk
 	if sync {
-		defer completion()
-
+		// For sync writes we dont care about publising snapshot
+		// events. These occur during shutdown so it does not matter.
 		completion = utils.SyncCompleter
 	}
 

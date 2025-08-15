@@ -1,0 +1,120 @@
+[
+ {
+  "type": "Upload",
+  "data": {
+   "VFSPath": "fs:/clients/C.123/collections/F.1234/uploads/ntfs/\"\\\\.\\C:\"/Windows/notepad.exe"
+  },
+  "error": ""
+ },
+ {
+  "type": "UploadMetadata",
+  "data": {
+   "VFSPath": "fs:/clients/C.123/collections/F.1234/uploads.json"
+  },
+  "error": ""
+ },
+ {
+  "type": "UploadTransactions",
+  "data": {
+   "VFSPath": "fs:/clients/C.123/collections/F.1234/upload_transactions.json"
+  },
+  "error": ""
+ },
+ {
+  "type": "Log",
+  "data": {
+   "VFSPath": "fs:/clients/C.123/collections/F.1234/logs.json"
+  },
+  "error": ""
+ },
+ {
+  "type": "CollectionContext",
+  "data": {
+   "VFSPath": "ds:/clients/C.123/collections/F.1234.json.db"
+  },
+  "error": ""
+ },
+ {
+  "type": "Task",
+  "data": {
+   "VFSPath": "ds:/clients/C.123/collections/F.1234/task.db"
+  },
+  "error": ""
+ },
+ {
+  "type": "Stats",
+  "data": {
+   "VFSPath": "ds:/clients/C.123/collections/F.1234/stats.json.db"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Notebook",
+   "vfs_path": "ds:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU.json.db"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Notebook",
+   "vfs_path": "ds:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT16FBL4PM.json.db"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Notebook",
+   "vfs_path": "ds:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/artifact.json.db"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/logs.json"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/logs.json.index"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json.index"
+  },
+  "error": ""
+ },
+ {
+  "resident_paths": [
+   "/clients/C.123/flow_index.json",
+   "/clients/C.123/flow_index.json.index"
+  ]
+ }
+]

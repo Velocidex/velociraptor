@@ -7,6 +7,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/utils"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
 )
@@ -31,6 +32,13 @@ func (self TimedFactory) NewTimedResultSetReader(
 		files:      path_manager.GetAvailableFiles(ctx),
 		config_obj: config_obj,
 	}, nil
+}
+
+func (self TimedFactory) DeleteTimedResultSet(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	path_manager api.PathManager) error {
+	return utils.NotImplementedError
 }
 
 func init() {

@@ -20,6 +20,10 @@ func NotebookDir() api.DSPathSpec {
 	return NOTEBOOK_ROOT
 }
 
+func (self *NotebookPathManager) NotebookId() string {
+	return self.notebook_id
+}
+
 // Attachments are not the same as uploads - they are usually uploaded
 // by pasting in the cell eg an image. We want the attachment to
 // remain whenever the cell is updated to a new version.

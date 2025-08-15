@@ -3,14 +3,13 @@ package s3
 import (
 	"context"
 	"errors"
-	"net/http"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	vconfig "www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -80,30 +79,29 @@ func GetS3Client(
 	}
 
 	s3_opts := []func(*s3.Options){}
-
 	if arg.Endpoint != "" {
 		s3_opts = append(s3_opts, func(o *s3.Options) {
 			o.BaseEndpoint = aws.String(arg.Endpoint)
 		})
+	}
 
+	clientConfig, ok := artifacts.GetConfig(scope)
+	if ok {
 		if arg.SkipVerify {
-			config_obj, pres := vql_subsystem.GetServerConfig(scope)
-			if !pres {
-				config_obj = vconfig.GetDefaultConfig()
-			}
-
-			tlsConfig, err := networking.GetSkipVerifyTlsConfig(
-				config_obj.Client)
+			http_client, err := networking.GetSkipVerifyHTTPClient(
+				ctx, clientConfig, scope, "", nil)
 			if err != nil {
 				return nil, err
 			}
 
-			tr := &http.Transport{
-				Proxy:           networking.GetProxy(),
-				TLSClientConfig: tlsConfig,
-			}
+			conf = append(conf, config.WithHTTPClient(http_client))
 
-			http_client := &http.Client{Transport: tr}
+		} else {
+			http_client, err := networking.GetDefaultHTTPClient(
+				ctx, clientConfig, scope, "", nil)
+			if err != nil {
+				return nil, err
+			}
 			conf = append(conf, config.WithHTTPClient(http_client))
 		}
 	}
