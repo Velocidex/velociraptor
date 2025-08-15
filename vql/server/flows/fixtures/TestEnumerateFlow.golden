@@ -1,5 +1,12 @@
 [
  {
+  "type": "Upload",
+  "data": {
+   "VFSPath": "fs:/clients/C.123/collections/F.1234/uploads/ntfs/\"\\\\.\\C:\"/Windows/notepad.exe"
+  },
+  "error": ""
+ },
+ {
   "type": "UploadMetadata",
   "data": {
    "VFSPath": "fs:/clients/C.123/collections/F.1234/uploads.json"
@@ -7,9 +14,9 @@
   "error": ""
  },
  {
-  "type": "UploadMetadataIndex",
+  "type": "UploadTransactions",
   "data": {
-   "VFSPath": "fs:/clients/C.123/collections/F.1234/uploads.json.index"
+   "VFSPath": "fs:/clients/C.123/collections/F.1234/upload_transactions.json"
   },
   "error": ""
  },
@@ -17,13 +24,6 @@
   "type": "Log",
   "data": {
    "VFSPath": "fs:/clients/C.123/collections/F.1234/logs.json"
-  },
-  "error": ""
- },
- {
-  "type": "LogIndex",
-  "data": {
-   "VFSPath": "fs:/clients/C.123/collections/F.1234/logs.json.index"
   },
   "error": ""
  },
@@ -49,37 +49,173 @@
   "error": ""
  },
  {
-  "type": "Notebook",
+  "type": "NotebookData",
   "data": {
-   "VFSPath": "ds:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123.json.db"
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Notebook",
+   "vfs_path": "ds:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU.json.db"
   },
   "error": ""
  },
  {
   "type": "NotebookData",
   "data": {
-   "VFSPath": "ds:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU.json.db"
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Notebook",
+   "vfs_path": "ds:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT16FBL4PM.json.db"
   },
   "error": ""
  },
  {
   "type": "NotebookData",
   "data": {
-   "VFSPath": "ds:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT16FBL4PM.json.db"
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Notebook",
+   "vfs_path": "ds:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/artifact.json.db"
   },
   "error": ""
  },
  {
-  "type": "NotebookItem",
+  "type": "NotebookData",
   "data": {
-   "VFSPath": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json"
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/logs.json"
   },
   "error": ""
  },
  {
-  "type": "NotebookItem",
+  "type": "NotebookData",
   "data": {
-   "VFSPath": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json.index"
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/logs.json.index"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json.index"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/logs.json"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/logs.json.index"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json.index"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/logs.json"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/logs.json.index"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json.index"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/logs.json"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/logs.json.index"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json"
+  },
+  "error": ""
+ },
+ {
+  "type": "NotebookData",
+  "data": {
+   "notebook_id": "N.F.1234-C.123",
+   "type": "Filestore",
+   "vfs_path": "fs:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123/NC.C4BKT1195IMMU/query_1.json.index"
   },
   "error": ""
  }

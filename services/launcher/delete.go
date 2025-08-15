@@ -22,6 +22,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 func (self *FlowStorageManager) DeleteFlow(
@@ -63,8 +64,7 @@ func (self *FlowStorageManager) DeleteFlow(
 	}
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-
-	upload_metadata_path := flow_path_manager.UploadMetadata()
+	flow_base_path := flow_path_manager.Path().Components()
 
 	r := &reporter{
 		really_do_it: options.ReallyDoIt,
@@ -78,30 +78,19 @@ func (self *FlowStorageManager) DeleteFlow(
 		file_store_factory, flow_path_manager.UploadMetadata())
 	if err == nil {
 		for row := range reader.Rows(ctx) {
+			// Some uploads list components relative to the client.
 			components, pres := row.GetStrings("_Components")
-			if pres {
+			if pres && len(components) > 0 {
+
+				// Make sure the uploads exist within this flow.
+				if !utils.SlicePrefixMatch(components, flow_base_path) {
+					continue
+				}
+
 				pathspec := path_specs.NewUnsafeFilestorePath(
 					components...).SetType(api.PATH_TYPE_FILESTORE_ANY)
-				r.emit_fs("Upload", pathspec)
-				r.emit_fs("UploadIdx", pathspec.
-					SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX))
-				r.emit_fs("UploadChunk", pathspec.
-					SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
+				r.emit_bulk_file("Upload", pathspec)
 				continue
-			}
-
-			upload, pres := row.GetString("vfs_path")
-			if pres {
-				// Each row is the full filestore path of the upload.
-				pathspec := path_specs.NewUnsafeFilestorePath(
-					utils.SplitComponents(upload)...).
-					SetType(api.PATH_TYPE_FILESTORE_ANY)
-
-				r.emit_fs("Upload", pathspec)
-				r.emit_fs("UploadIdx", pathspec.
-					SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX))
-				r.emit_fs("UploadChunk", pathspec.
-					SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
 			}
 		}
 		reader.Close()
@@ -109,9 +98,9 @@ func (self *FlowStorageManager) DeleteFlow(
 
 	// Order results to facilitate deletion - container deletion
 	// happens after we read its contents.
-	r.emit_fs("UploadMetadata", upload_metadata_path)
-	r.emit_fs("UploadMetadataIndex", upload_metadata_path.
-		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
+	r.emit_result_set("UploadMetadata", flow_path_manager.UploadMetadata())
+	r.emit_result_set("UploadTransactions",
+		flow_path_manager.UploadTransactions())
 
 	// Remove all result sets from artifacts.
 	for _, artifact_name := range collection_context.ArtifactsWithResults {
@@ -125,49 +114,17 @@ func (self *FlowStorageManager) DeleteFlow(
 		if err != nil {
 			continue
 		}
-		r.emit_fs("Result", result_path)
-		r.emit_fs("ResultIndex",
-			result_path.SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
-		r.emit_fs("ResultChunkIndex",
-			result_path.SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
-
+		r.emit_result_set("Result", result_path)
 	}
 
-	r.emit_fs("Log", flow_path_manager.Log())
-	r.emit_fs("LogIndex", flow_path_manager.Log().
-		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
+	r.emit_result_set("Log", flow_path_manager.Log())
+
 	r.emit_ds("CollectionContext", flow_path_manager.Path())
 	r.emit_ds("Task", flow_path_manager.Task())
 	r.emit_ds("Stats", flow_path_manager.Stats())
 
 	// Walk the flow's datastore and filestore
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	r.emit_ds("Notebook", flow_path_manager.Notebook().Path())
-	_ = datastore.Walk(config_obj, db, flow_path_manager.Notebook().DSDirectory(),
-		datastore.WalkWithoutDirectories,
-		func(path api.DSPathSpec) error {
-			r.emit_ds("NotebookData", path)
-			return nil
-		})
-
-	// Clean the empty directories
-	_ = datastore.Walk(config_obj, db, flow_path_manager.Notebook().DSDirectory(),
-		datastore.WalkWithDirectories,
-		func(path api.DSPathSpec) error {
-			_ = db.DeleteSubject(config_obj, path)
-			return nil
-		})
-
-	_ = api.Walk(file_store_factory,
-		flow_path_manager.Notebook().Directory(),
-		func(path api.FSPathSpec, info os.FileInfo) error {
-			r.emit_fs("NotebookItem", path)
-			return nil
-		})
+	r.emit_notebook("Notebook", flow_path_manager.Notebook())
 
 	if options.ReallyDoIt {
 		// User specified the flow must be removed immediately.
@@ -182,7 +139,17 @@ func (self *FlowStorageManager) DeleteFlow(
 			err = self.writeFlowJournal(config_obj, client_id, flow_id)
 		}
 	}
-	r.pool.StopAndWait()
+	r.wait()
+
+	// Wait for all the deletions to finish then delete anything left
+	// over that we missed. This should help trap future missed items
+	if options.ReallyDoIt {
+		r.reset()
+		r.emit_walk_fs("Unknown",
+			flow_path_manager.Path().AsFilestorePath().
+				SetType(api.PATH_TYPE_FILESTORE_ANY))
+		r.wait()
+	}
 
 	// Sort responses to keep output stable
 	sort.Slice(r.responses, func(i, j int) bool {
@@ -203,78 +170,183 @@ type reporter struct {
 	pool         pond.Pool
 }
 
-func (self *reporter) emit_ds(
-	item_type string, target api.DSPathSpec) {
-
-	client_path := target.String()
-	var error_message string
-
+func (self *reporter) reset() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if self.seen[client_path] {
-		return
-	}
-	self.seen[client_path] = true
+	self.pool = pond.NewPool(10)
+}
 
-	self.id++
-	id := self.id
+func (self *reporter) wait() {
+	self.mu.Lock()
+	pool := self.pool
+	self.mu.Unlock()
+
+	pool.StopAndWait()
+}
+
+func (self *reporter) emit_ds(
+	item_type string, target api.DSPathSpec) {
+	self.emit(item_type, target.String(), func() error {
+		db, err := datastore.GetDB(self.config_obj)
+		if err != nil {
+			return err
+		}
+		return db.DeleteSubject(self.config_obj, target)
+	})
+}
+
+func (self *reporter) emit_result_set(
+	item_type string, target api.FSPathSpec) {
+
+	self.emit(item_type, target.String(), func() error {
+		file_store_factory := file_store.GetFileStore(self.config_obj)
+		return result_sets.DeleteResultSet(file_store_factory, target)
+	})
+}
+
+func (self *reporter) emit_notebook(
+	item_type string, notebook_path_manager *paths.NotebookPathManager) {
+
+	id := self.get_id()
 
 	self.pool.Submit(func() {
-		self.mu.Lock()
-		defer self.mu.Unlock()
-
-		if self.really_do_it {
-			db, err := datastore.GetDB(self.config_obj)
-			if err == nil {
-				err = db.DeleteSubject(self.config_obj, target)
-				if err != nil {
-					error_message = fmt.Sprintf(
-						"Error deleting %v: %v", client_path, err)
-				}
-			}
+		notebook_manager, err := services.GetNotebookManager(self.config_obj)
+		if err != nil {
+			return
 		}
+		output_chan := make(chan vfilter.Row)
 
-		self.responses = append(self.responses, &services.DeleteFlowResponse{
-			Id:    id,
-			Type:  item_type,
-			Data:  ordereddict.NewDict().Set("VFSPath", client_path),
-			Error: error_message,
-		})
+		go func() {
+			defer close(output_chan)
+
+			err = notebook_manager.DeleteNotebook(
+				self.ctx, notebook_path_manager.NotebookId(), output_chan,
+				self.really_do_it)
+			if err != nil {
+				self.add_response(&services.DeleteFlowResponse{
+					Type: "Notebook",
+					Id:   id,
+					Data: ordereddict.NewDict().Set("VFSPath",
+						notebook_path_manager.Path()),
+					Error: err.Error(),
+				})
+
+			}
+		}()
+
+		for row := range output_chan {
+			row_dict, ok := row.(*ordereddict.Dict)
+			if !ok {
+				continue
+			}
+			self.add_response(&services.DeleteFlowResponse{
+				Id:   self.get_id(),
+				Type: "NotebookData",
+				Data: row_dict,
+			})
+		}
 	})
+}
 
+func (self *reporter) emit_walk_fs(
+	item_type string, target api.FSPathSpec) {
+
+	self.pool.Submit(func() {
+		file_store_factory := file_store.GetFileStore(self.config_obj)
+		_ = api.Walk(file_store_factory, target,
+			func(urn api.FSPathSpec, info os.FileInfo) error {
+				error_message := ""
+				if !self.should_do_it() {
+					err := file_store_factory.Delete(urn)
+					if err != nil {
+						error_message = err.Error()
+					}
+				}
+
+				self.add_response(&services.DeleteFlowResponse{
+					Id:   self.get_id(),
+					Type: item_type,
+					Data: ordereddict.NewDict().
+						Set("VFSPath", urn.String()).
+						Set("Size", info.Size()),
+					Error: error_message,
+				})
+				return nil
+			})
+	})
+}
+
+func (self *reporter) emit_bulk_file(
+	item_type string, target api.FSPathSpec) {
+
+	self.emit(item_type, target.String(), func() error {
+		file_store_factory := file_store.GetFileStore(self.config_obj)
+		return file_store.DeleteBulkFile(file_store_factory, target)
+	})
 }
 
 func (self *reporter) emit_fs(
 	item_type string, target api.FSPathSpec) {
-	client_path := target.String()
-	var error_message string
 
+	self.emit(item_type, target.String(), func() error {
+		file_store_factory := file_store.GetFileStore(self.config_obj)
+		return file_store_factory.Delete(target)
+	})
+}
+
+func (self *reporter) should_do_it() bool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	return self.really_do_it
+}
+
+func (self *reporter) deduplicate(client_path string) bool {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	if self.seen[client_path] {
-		return
+		return true
 	}
 	self.seen[client_path] = true
+	return false
+}
 
+func (self *reporter) get_id() int {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 	self.id++
-	id := self.id
+	return self.id
+}
+func (self *reporter) add_response(response *services.DeleteFlowResponse) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.responses = append(self.responses, response)
+}
+
+func (self *reporter) emit(
+	item_type string, client_path string,
+	deleter func() error) {
+
+	if self.deduplicate(client_path) {
+		return
+	}
+
+	id := self.get_id()
 
 	self.pool.Submit(func() {
-		self.mu.Lock()
-		defer self.mu.Unlock()
+		var error_message string
 
-		if self.really_do_it {
-			file_store_factory := file_store.GetFileStore(self.config_obj)
-			err := file_store_factory.Delete(target)
+		if self.should_do_it() {
+			err := deleter()
 			if err != nil {
 				error_message = fmt.Sprintf(
 					"Error deleting %v: %v", client_path, err)
 			}
 		}
 
-		self.responses = append(self.responses, &services.DeleteFlowResponse{
+		self.add_response(&services.DeleteFlowResponse{
 			Id:    id,
 			Type:  item_type,
 			Data:  ordereddict.NewDict().Set("VFSPath", client_path),

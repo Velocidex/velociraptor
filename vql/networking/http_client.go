@@ -249,6 +249,41 @@ func GetDefaultHTTPClient(
 	}, nil
 }
 
+// Get a http client which is configured to skip verification, if
+// permitted by the config.
+func GetSkipVerifyHTTPClient(
+	ctx context.Context,
+	config_obj *config_proto.ClientConfig,
+	scope vfilter.Scope,
+	extra_roots string,
+	cookie_jar *ordereddict.Dict) (HTTPClient, error) {
+
+	transport, err := GetNewHttpTransport(config_obj, extra_roots)
+	if err != nil {
+		return nil, err
+	}
+
+	tlsConfig, err := GetSkipVerifyTlsConfig(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	transport = MaybeSpyOnTransport(
+		&config_proto.Config{Client: config_obj}, transport)
+
+	transport.TLSClientConfig = tlsConfig
+
+	return &httpClientWrapper{
+		Client: http.Client{
+			Timeout:   time.Second * 10000,
+			Jar:       NewDictJar(cookie_jar),
+			Transport: transport,
+		},
+		ctx:   ctx,
+		scope: scope,
+	}, nil
+}
+
 func (self *_HttpPlugin) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
@@ -638,6 +673,13 @@ func NewRequestWithContext(
 	}
 
 	return http.NewRequestWithContext(ctx, method, url_obj.String(), body)
+}
+
+func SetTransport(http_client HTTPClient, tr *http.Transport) {
+	wrapper, ok := http_client.(*httpClientWrapper)
+	if ok {
+		wrapper.Client.Transport = tr
+	}
 }
 
 func init() {

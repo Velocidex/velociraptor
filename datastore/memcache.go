@@ -456,6 +456,7 @@ func (self *MemcacheDatastore) SetSubjectWithCompletion(
 		var wg sync.WaitGroup
 		wg.Add(1)
 		defer wg.Wait()
+
 		completion = wg.Done
 	}
 
@@ -518,7 +519,8 @@ func (self *MemcacheDatastore) DeleteSubjectWithCompletion(
 	urn api.DSPathSpec, completion func()) error {
 
 	err := self.DeleteSubject(config_obj, urn)
-	if completion != nil {
+	if completion != nil &&
+		!utils.CompareFuncs(completion, utils.SyncCompleter) {
 		completion()
 	}
 
@@ -648,7 +650,8 @@ func (self *MemcacheDatastore) SetBuffer(
 	urn api.DSPathSpec, data []byte, completion func()) error {
 
 	err := self.SetData(config_obj, urn, data)
-	if completion != nil {
+	if completion != nil &&
+		!utils.CompareFuncs(completion, utils.SyncCompleter) {
 		completion()
 	}
 	return err

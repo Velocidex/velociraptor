@@ -124,6 +124,7 @@ func (self ShellPlugin) Call(
 			return
 		}
 
+		original_args := append([]string{}, arg.Argv...)
 		if arg.Secret != "" {
 			arg, err = self.mergeSecretToRequest(ctx, scope, arg, arg.Secret)
 			if err != nil {
@@ -134,6 +135,16 @@ func (self ShellPlugin) Call(
 
 		if len(arg.Argv) == 0 {
 			scope.Log("execve: no command to run")
+			return
+		}
+
+		// This often happens when people accidentally use VQL
+		// expressions to calculate the program name which results in
+		// NULL. To avoid a security issue where and attacker can add
+		// a binary called "null", we just refuse to run binaries with
+		// that name.
+		if strings.ToLower(arg.Argv[0]) == "null" {
+			scope.Error("execve: Attempt to run NULL, rejected")
 			return
 		}
 
@@ -149,7 +160,7 @@ func (self ShellPlugin) Call(
 
 		// Report the command we ran for auditing
 		// purposes. This will be collected in the flow logs.
-		scope.Log("execve: Running external command %v", arg.Argv)
+		scope.Log("execve: Running external command %v", original_args)
 
 		if arg.Length == 0 {
 			arg.Length = 10240

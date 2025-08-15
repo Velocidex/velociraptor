@@ -142,7 +142,8 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 	}
 
 	if skipVerify {
-		if err := networking.EnableSkipVerifyHttp(client, config_obj); err != nil {
+		err := networking.EnableSkipVerifyHttp(client, config_obj)
+		if err != nil {
 			return nil, err
 		}
 	}

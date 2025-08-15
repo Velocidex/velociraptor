@@ -2,9 +2,7 @@ package tools
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
-	"net/http"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -169,26 +167,25 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 		s3_opts = append(s3_opts, func(o *s3.Options) {
 			o.BaseEndpoint = aws.String(endpoint)
 		})
+	}
 
+	clientConfig, ok := artifacts.GetConfig(scope)
+	if ok {
 		if NoVerifyCert {
-			clientConfig, _ := artifacts.GetConfig(scope)
-			tlsConfig, err := networking.GetSkipVerifyTlsConfig(clientConfig)
-
+			http_client, err := networking.GetSkipVerifyHTTPClient(
+				ctx, clientConfig, scope, "", nil)
 			if err != nil {
-				return &uploads.UploadResponse{
-					Error: err.Error(),
-				}, err
+				return nil, err
 			}
 
-			tr := &http.Transport{
-				Proxy:           networking.GetProxy(),
-				TLSClientConfig: tlsConfig,
-				TLSNextProto: make(map[string]func(
-					authority string, c *tls.Conn) http.RoundTripper),
+			conf = append(conf, config.WithHTTPClient(http_client))
+
+		} else {
+			http_client, err := networking.GetDefaultHTTPClient(
+				ctx, clientConfig, scope, "", nil)
+			if err != nil {
+				return nil, err
 			}
-
-			http_client := &http.Client{Transport: tr}
-
 			conf = append(conf, config.WithHTTPClient(http_client))
 		}
 	}

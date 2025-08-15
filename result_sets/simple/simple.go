@@ -534,6 +534,40 @@ func (self NullReader) Stat() (api.FileInfo, error) {
 	return nil, errors.New("Not found")
 }
 
+func (self ResultSetFactory) DeleteResultSet(
+	file_store_factory api.FileStore,
+	path api.FSPathSpec) (err error) {
+
+	// A result set consists of:
+	// 1. The main jsonl file
+	// 2. An index jsonl file
+	// 3. optionally a chunk file for compressed result sets
+	// 4. A directory hierarchy of transformed cache files.
+
+	// Try to delete these but dont worry if they are missing
+	_ = file_store_factory.Delete(path.
+		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
+
+	_ = file_store_factory.Delete(path.
+		SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
+
+	err = file_store_factory.Delete(path)
+	if err != nil {
+		return err
+	}
+
+	deleter := func(urn api.FSPathSpec, info os.FileInfo) error {
+		return file_store_factory.Delete(urn)
+	}
+	_ = api.Walk(file_store_factory,
+		path.AddChild("sorted"), deleter)
+
+	_ = api.Walk(file_store_factory,
+		path.AddChild("filtered"), deleter)
+
+	return err
+}
+
 func (self ResultSetFactory) NewResultSetReader(
 	file_store_factory api.FileStore,
 	log_path api.FSPathSpec) (result_sets.ResultSetReader, error) {

@@ -29,3 +29,20 @@ func FlushFilestore(config_obj *config_proto.Config) error {
 
 	return nil
 }
+
+// Remove all the files that make up a bulk file.
+func DeleteBulkFile(
+	file_store api.FileStore,
+	path api.FSPathSpec) error {
+
+	// For bulk files remove their supporting index and chunk index
+	// files.
+	if path.Type() == api.PATH_TYPE_FILESTORE_ANY {
+		_ = file_store.Delete(path.
+			SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX))
+
+		_ = file_store.Delete(path.
+			SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
+	}
+	return file_store.Delete(path)
+}

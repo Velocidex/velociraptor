@@ -67,6 +67,14 @@ func StringSliceEq(a []string, b []string) bool {
 	return true
 }
 
+func SlicePrefixMatch(slice []string, prefix []string) bool {
+	if len(slice) < len(prefix) {
+		return false
+	}
+
+	return StringSliceEq(prefix, slice[:len(prefix)])
+}
+
 func FilterSlice(a []string, needle string) (res []string) {
 	for _, i := range a {
 		if i != needle {

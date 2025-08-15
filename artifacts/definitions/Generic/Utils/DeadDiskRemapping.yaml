@@ -21,6 +21,8 @@ description: |
     level. We assume this is the windows drive and remap it to the C:
     drive.
 
+type: SERVER
+
 parameters:
   - name: ImagePath
     default: /tmp/image.dd

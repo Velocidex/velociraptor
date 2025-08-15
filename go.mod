@@ -324,6 +324,7 @@ require (
 // replace github.com/Velocidex/fileb0x => ../fileb0x
 // replace github.com/Velocidex/go-ext4 => ../go-ext4
 // replace github.com/Velocidex/amsi => ../amsi
+// replace github.com/Velocidex/go-journalctl ../go-journalctl
 
 // Remove search for html end block. This allows inserting unbalanced
 // HTML tags into the markdown
