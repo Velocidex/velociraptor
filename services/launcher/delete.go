@@ -126,11 +126,6 @@ func (self *FlowStorageManager) DeleteFlow(
 	// Walk the flow's datastore and filestore
 	r.emit_notebook("Notebook", flow_path_manager.Notebook())
 
-	// Delete anything that we missed
-	r.emit_walk_fs("Unknown",
-		flow_path_manager.Path().AsFilestorePath().
-			SetType(api.PATH_TYPE_FILESTORE_ANY))
-
 	if options.ReallyDoIt {
 		// User specified the flow must be removed immediately.
 		if options.Sync {
@@ -144,7 +139,17 @@ func (self *FlowStorageManager) DeleteFlow(
 			err = self.writeFlowJournal(config_obj, client_id, flow_id)
 		}
 	}
-	r.pool.StopAndWait()
+	r.wait()
+
+	// Wait for all the deletions to finish then delete anything left
+	// over that we missed. This should help trap future missed items
+	if options.ReallyDoIt {
+		r.reset()
+		r.emit_walk_fs("Unknown",
+			flow_path_manager.Path().AsFilestorePath().
+				SetType(api.PATH_TYPE_FILESTORE_ANY))
+		r.wait()
+	}
 
 	// Sort responses to keep output stable
 	sort.Slice(r.responses, func(i, j int) bool {
@@ -163,6 +168,21 @@ type reporter struct {
 	mu           sync.Mutex
 	id           int
 	pool         pond.Pool
+}
+
+func (self *reporter) reset() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.pool = pond.NewPool(10)
+}
+
+func (self *reporter) wait() {
+	self.mu.Lock()
+	pool := self.pool
+	self.mu.Unlock()
+
+	pool.StopAndWait()
 }
 
 func (self *reporter) emit_ds(
