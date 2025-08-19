@@ -3,6 +3,8 @@ description: |
    This artifact will parse /proc and reveal information
    about current network connections.
 
+   We also extract corresponding process information.
+
 type: CLIENT
 
 parameters:
@@ -11,64 +13,106 @@ parameters:
      default: "LISTEN|ESTAB"
      description: Only show these states
 
+precondition:
+  SELECT OS From info() where OS = 'linux'
+
 sources:
-  - precondition:
-      SELECT OS From info() where OS = 'linux'
-
+  - name: TCP4
     query: |
-        -- Break down the address of the form 0100007F:22B9
-        LET _X(x) = parse_string_with_regex(string=addr,
-          regex="(..)(..)(..)(..):(....)")
+      // Extract the port as an int (part after the :)
+      LET GetPort(X) = int(int="0x" + regex_replace(source=X, re=".+:", replace=""))
 
-        -- Unroll hex encoded IPv4 address into more usual form.
-        LET ParseAddress(addr) = dict(
-            IP=format(format="%d.%d.%d.%d", args=[
-               int(int="0x" + _X(x=addr).g4),
-               int(int="0x" + _X(x=addr).g3),
-               int(int="0x" + _X(x=addr).g2),
-               int(int="0x" + _X(x=addr).g1)]),
-            Port=int(int="0x" + _X(x=addr).g5)
-        )
+      // Remove the part after the :: for the IPv6 address
+      LET _GetIP6Part(X) = regex_replace(source=X, re="::.+", replace="")
 
-        -- https://elixir.bootlin.com/linux/latest/source/include/net/tcp_states.h#L14
-        LET StateLookup <= dict(
-           `01`="Established",
-           `02`="Syn Sent",
-           `06`="Time Wait", -- No owner process
-           `0A`="Listening"
-        )
+      // Insert a : between each 4 digits - IPv6 addresses look like
+      // 0000:0000:0000:0000:0000:0000:0000:0000
+      LET ParseIP6(addr) = ip(parse=_GetIP6Part(
+                                X=regex_replace(re="(....)",
+                                                replace="$1:",
+                                                source=addr)))
 
-        -- Enumerate all the sockets and cache them in memory for
-        -- reverse lookup. The following is basically lsof.
-        LET X = SELECT OSPath[1] AS Pid,
-               Data.Link AS Filename,
-               parse_string_with_regex(
-                  string=Data.Link,
-                  regex="(?P<Type>socket|pipe):\\[(?P<inode>[0-9]+)\\]") AS Details
+      // Extract the first 4 hex digits in reverse order
+      LET _ParseIP4(X) = SELECT int(int="0x" + _value) AS I,
+                                _key
+        FROM items(item=split(sep=":",
+                              string=regex_replace(
+                                source=X,
+                                re="(..)",
+                                replace="$1:")))
+        WHERE _key < 4
+        ORDER BY _key DESC
+
+      // Join them on a . and parse as an IP address
+      LET ParseIP4(X) = ip(parse=join(array=_ParseIP4(X=X).I, sep="."))
+
+      -- https://elixir.bootlin.com/linux/latest/source/include/net/tcp_states.h#L14
+      LET StateLookup <= dict(`01`="Established",
+                              `02`="Syn Sent",
+                              `06`="Time Wait",
+                              -- No owner process
+                              `0A`="Listening")
+
+      -- Enumerate all the sockets and cache them in memory for
+      -- reverse lookup. The following is basically lsof.
+      LET X = SELECT
+          OSPath[1] AS Pid,
+          Data.Link AS Filename,
+          parse_string_with_regex(
+            string=Data.Link,
+            regex="(?P<Type>socket|pipe):\\[(?P<inode>[0-9]+)\\]") AS Details
         FROM glob(globs="/proc/*/fd/*")
 
-        LET AllSockets <= SELECT atoi(string=Pid) AS Pid,
-               read_file(filename="/proc/" + Pid + "/comm") AS Command,
-               read_file(filename="/proc/" + Pid + "/cmdline") AS CommandLine,
-               Filename,
-               Details.Type AS Type,
-               Details.inode AS Inode
+      LET _ <= log(message="Scanning all process handles")
+
+      LET AllSockets <= SELECT
+          atoi(string=Pid) AS Pid,
+          read_file(filename="/proc/" + Pid + "/comm") AS Command,
+          read_file(filename="/proc/" + Pid + "/cmdline") AS CommandLine,
+          Filename,
+          Details.Type AS Type,
+          Details.inode AS Inode
         FROM X
         WHERE Type =~ "socket"
 
-        -- Parse the TCP table and refer back to the socket
-        -- so we can print process info.
-        SELECT inode, get(item=StateLookup, field=st) AS State, uid, {
-                  SELECT * FROM AllSockets
-                  WHERE Inode=inode
-                  LIMIT 1
-               } AS ProcessInfo,
-               ParseAddress(addr=local_address) AS LocalAddr,
-               ParseAddress(addr=rem_address) AS RemoteAddr
-        FROM split_records(
-             columns=["_", "sl","local_address", "rem_address", "st", "queues", "tr_tm_when",
-                      "retransmit", "uid", "timeout", "inode"],
-             filenames="/proc/net/tcp",
-             regex=" +")
-        WHERE sl =~ ":"  -- Remove header row
-          AND State =~ StateRegex
+      LET GetProcByInode(indoe) = SELECT *
+        FROM AllSockets
+        WHERE Inode = inode
+        LIMIT 1
+
+      -- Parse the TCP table and refer back to the socket
+      -- so we can print process info.
+      SELECT inode,
+             get(item=StateLookup, field=st) AS State,
+             uid,
+             GetProcByInode(inode=inode)[0] AS ProcessInfo,
+             ParseIP4(addr=local_address) AS LocalAddr,
+             GetPort(X=local_address) AS LocalPort,
+             ParseIP4(addr=rem_address) AS RemoteAddr,
+             GetPort(X=rem_address) AS RemotePort
+      FROM split_records(
+        columns=["_", "sl", "local_address", "rem_address", "st", "queues", "tr_tm_when", "retransmit", "uid", "timeout", "inode"],
+        filenames="/proc/net/tcp",
+        regex=" +")
+      WHERE sl =~ ":"
+       AND State =~ StateRegex
+
+  - name: TCP6
+    query:  |
+      -- Parse the TCP6 table and refer back to the socket
+      -- so we can print process info.
+      SELECT "TCP6" AS Type,
+             inode,
+             get(item=StateLookup, field=st) AS State,
+             uid,
+             GetProcByInode(inode=inode)[0] AS ProcessInfo,
+             ParseIP6(addr=local_address) AS LocalAddr,
+             GetPort(X=local_address) AS LocalPort,
+             ParseIP6(addr=rem_address) AS RemoteAddr,
+             GetPort(X=rem_address) AS RemotePort
+      FROM split_records(
+        columns=["_", "sl", "local_address", "rem_address", "st", "queues", "tr_tm_when", "retransmit", "uid", "timeout", "inode"],
+        filenames="/proc/net/tcp6",
+        regex=" +")
+      WHERE sl =~ ":"
+       AND State =~ StateRegex

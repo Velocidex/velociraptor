@@ -53,7 +53,7 @@ Output: [
 ]
 
 # Check the lnk parser
-Query: SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData FROM Artifact.Windows.Forensics.Lnk(TargetGlob=srcDir + "/artifacts/testdata/files/1.lnk")
+Query: SELECT ShellLinkHeader, LinkInfo, LinkTarget.LinkTarget, StringData, ExtraData FROM Artifact.Windows.Forensics.Lnk(TargetGlob=srcDir + "/artifacts/testdata/files/1.lnk")
 Output: [
  {
   "ShellLinkHeader": {
@@ -173,55 +173,55 @@ Output: [
     {
      "GuidId": "DABD30ED-0043-4789-A7F8-D013A4736622/100",
      "Description": "Item Folder Path Display Narrow",
-     "Type": "LPWSTR",
+     "Type": 31,
      "Value": "System32 (C:\\Windows)"
     },
     {
      "GuidId": "46588AE2-4CBC-4338-BBFC-139326986DCE/4",
      "Description": "SID",
-     "Type": "LPWSTR",
+     "Type": 31,
      "Value": "S-1-5-21-730516628-3352102648-2216876345-1001"
     },
     {
      "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/10",
      "Description": "System.ItemNameDisplay",
-     "Type": "LPWSTR",
+     "Type": 31,
      "Value": "cmd.exe"
     },
     {
      "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/15",
      "Description": "System.DateCreated",
-     "Type": "FILETIME",
+     "Type": 64,
      "Value": "2021-06-05T12:05:14Z"
     },
     {
      "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/12",
      "Description": "System.Size",
-     "Type": "UI8",
+     "Type": 21,
      "Value": 331776
     },
     {
      "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/4",
      "Description": "System.ItemTypeText",
-     "Type": "LPWSTR",
+     "Type": 31,
      "Value": "Application"
     },
     {
      "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/14",
      "Description": "System.DateModified",
-     "Type": "FILETIME",
+     "Type": 64,
      "Value": "2021-06-05T12:05:12Z"
     },
     {
      "GuidId": "28636AA6-953D-11D2-B5D6-00C04FD918D0/30",
      "Description": "ParsingPath",
-     "Type": "LPWSTR",
+     "Type": 31,
      "Value": "C:\\Windows\\System32\\cmd.exe"
     },
     {
      "GuidId": "446D16B1-8DAD-4870-A748-402EA43D788C/104",
-     "Description": "VolumeId",
-     "Type": "CLSID",
+     "Description": "Volume Id",
+     "Type": 72,
      "Value": "15B7A6CC-2A32-42E4-B157-5824DCAFF312"
     }
    ]
@@ -281,6 +281,64 @@ Output: [
   "X.Array[0].Value": 10230993603,
   "X.Field1": 10230993603,
   "X.Field1.Size": 5
+ }
+]
+
+Query: LET _ <= import(artifact="Windows.Forensics.Lnk")
+Output: []
+
+Query: LET Parse(Lnk) = parse_binary(filename=base64decode(string=Lnk), accessor="data", profile=Profile, struct="ItemIDList")
+Output: []
+
+Query: SELECT copy(accessor="data", dest="/tmp/1.bin", filename=base64decode(string=ShellBag2)) FROM scope()
+Output: [
+ {
+  "copy(accessor=\"data\", dest=\"/tmp/1.bin\", filename=base64decode(string=ShellBag2))": "/tmp/1.bin"
+ }
+]
+
+Query: SELECT Parse(Lnk=ShellBag2).ShellBag AS ParsedShellBag,
+       ShowLinkTarget(Parsed=Parse(Lnk=ShellBag2).ShellBag) AS LinkTarget
+FROM scope()
+
+Output: [
+ {
+  "ParsedShellBag": {
+   "DataSize": 30017,
+   "DataSig": 281959,
+   "PropertySheetListSize": 0,
+   "IdentifierSize": 2,
+   "IdentifierData": "",
+   "PropertyList": [
+    {
+     "StorageSize": 65536,
+     "Offset": 16,
+     "Version": "x",
+     "Format": "00000000-5953-90A0-1100-4D494352234D",
+     "PropertyValue": [
+      {
+       "ValueSize": 32305,
+       "Offset": 40,
+       "GuidId": "00000000-5953-90A0-1100-4D494352234D/589920",
+       "Description": "GUID not known",
+       "Type": 61184,
+       "Value": null
+      }
+     ]
+    }
+   ],
+   "Properties": {
+    "GUID not known": null
+   },
+   "Description": {
+    "Type": "CDBurn",
+    "LongName": "Microsoft Visual Studio"
+   }
+  },
+  "LinkTarget": {
+   "LinkTarget": "",
+   "LinkTargetIDList": null
+  }
  }
 ]
 

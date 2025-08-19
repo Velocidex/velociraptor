@@ -1,0 +1,32 @@
+Queries:
+- |
+  LET _ <= SELECT mock(plugin='split_records',
+      results=[
+      ( dict(
+          sl=":",
+          local_address="3500007F:0035",
+          rem_address="00000000:0000",
+          st="0A",
+          inode="14610",
+          uid="102"),
+      ),
+      ( dict(
+          sl=":",
+          local_address="0000000000000000FFFF00000100007F:1F40",
+          rem_address="0000000000000000FFFF00000B01A8C0:DD36",
+          st="01",
+          inode="15440305",
+          uid="102"),
+      )]),
+      mock(plugin='glob', results=[
+         dict(OSPath=pathspec(parse="/proc/3252/fd/1", path_type='linux'),
+              Data=dict(Link="socket:[14610]")),
+         dict(OSPath=pathspec(parse="/proc/15423/fd/1", path_type='linux'),
+              Data=dict(Link="socket:[15440305]")),
+      ]),
+      mock(function="read_file", results=[ ("bash",) , ("bash -i",), ("nc",),  ("nc -l",)])
+  FROM scope()
+
+# check that parsing IP addresses looks good and that inode matches up
+# with the process details.
+- SELECT * FROM Artifact.Linux.Network.Netstat()

@@ -712,8 +712,8 @@ Frontend:
     ignore_environment: false
 
   ## Velociraptor can attempt to obfuscate artifact names when
-  ## compiling them into raw VQL. If this is set this obfuscation is
-  ## removed.
+  ## compiling them into raw VQL. If this is set to false this
+  ## obfuscation is removed.
   do_not_compress_artifacts: true
 
   ## The publicly accessible hostname of the frontend.
@@ -750,7 +750,7 @@ Frontend:
 
   ## If configured, Velociraptor will attempt to update the dynamic
   ## DNS server with its public IP address. Currently we only support
-  ## Google Domains although other providers may also work.
+  ## a number of providers including noip and cloudflare.
   dyn_dns:
     # The type of DynDNS provider (Can be cloudfront or noip)
     type: noip

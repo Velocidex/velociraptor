@@ -19,6 +19,12 @@ Parameters:
       }]
     ]]]
 
+  ShellBag: |
+    GgIAABQCu6+TOwYCBAAAAAAARQAAADFTUFMC1c3VnC4bEJOXCAArLPmuKQAAAAIAAAAAHxAAAAEAAAAJAAAAQwBvAG0AcAB1AHQAZQByAAAAAAAAAAAA1gAAADFTUFNzQ+UKvkOtT4XkadyGM5huEQAAAAsAAAAACwAAAP//AACpAAAABwAAAAAfAAAATAAAAFAAcgBvAHYAaQBkAGUAcgBcAE0AaQBjAHIAbwBzAG8AZgB0AC4ATgBlAHQAdwBvAHIAawBpAG4AZwAuAE4AZQB0AGIAaQBvAHMALwAvAFYATQB3AGEAcgBlACAAUwBoAGEAcgBlAGQAIABGAG8AbABkAGUAcgBzADoAOgBcAFwAdgBtAHcAYQByAGUALQBoAG8AcwB0AAAAAAAAAEUAAAAxU1BTMPElt+9HGhCl8QJgjJ7rrCkAAAAKAAAAAB8AAAAMAAAAdgBtAHcAYQByAGUALQBoAG8AcwB0AAAAAAAAABwAAAAxU1BTsztqZcDs/UOEd0rgQEqWzQAAAABZAAAAMVNQU6ZqYyg9ldIRtdYAwE/ZGNA9AAAAHwAAAAAfAAAAFgAAAFYATQB3AGEAcgBlACAAUwBoAGEAcgBlAGQAIABGAG8AbABkAGUAcgBzAAAAAAAAAC0AAAAxU1BTOqS93rM3g0OR50SY2imVqxEAAAADAAAAABMAAAACAAAAAAAAAAAAAAAAAAAA
+  ShellBag2: |
+    DAEAAEF1Z00EAAAAAgAAAAAAAQB4ADEAAAAAAFNZoJARAE1JQ1IjTTF+AABgAAkABADvvlNZoJBTWaCQLgAAAA4AAAAAAACAAAAAAAAAAAAAAAAAAAAgbk4ATQBpAGMAcgBvAHMAbwBmAHQAIABWAGkAcwB1AGEAbAAgAFMAdAB1AGQAaQBvAAAAGAAAAAEAAAB4ADEAAAAAAFNZoJARAE1JQ1IjTTF+AABgAAkABADvvlNZoJBTWaCQLgAAAA4AAAAAAACAAAAAAAAAAAAAAAAAAAAgbk4ATQBpAGMAcgBvAHMAbwBmAHQAIABWAGkAcwB1AGEAbAAgAFMAdAB1AGQAaQBvAAAAGAAAAAAA
+
+
 Queries:
   - SELECT ModuleName, Timestamp, Functions[1]
     FROM Artifact.Windows.System.Powershell.ModuleAnalysisCache(GlobLookup=srcDir +
@@ -26,7 +32,11 @@ Queries:
     LIMIT 10
 
   # Check the lnk parser
-  - SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData
+  - SELECT ShellLinkHeader,
+           LinkInfo,
+           LinkTarget.LinkTarget,
+           StringData,
+           ExtraData
     FROM Artifact.Windows.Forensics.Lnk(TargetGlob=srcDir + "/artifacts/testdata/files/1.lnk")
 
   - SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData
@@ -62,4 +72,17 @@ Queries:
            X.Array[0].Value,
            X.Field1,
            X.Field1.Size
+    FROM scope()
+
+  - LET _ <= import(artifact="Windows.Forensics.Lnk")
+
+  - LET Parse(Lnk) = parse_binary(filename=base64decode(string=Lnk), accessor="data",
+       profile=Profile, struct="ItemIDList")
+
+  - SELECT copy(accessor="data", dest="/tmp/1.bin", filename=base64decode(string=ShellBag2))
+    FROM scope()
+
+  - |
+    SELECT Parse(Lnk=ShellBag2).ShellBag AS ParsedShellBag,
+           ShowLinkTarget(Parsed=Parse(Lnk=ShellBag2).ShellBag) AS LinkTarget
     FROM scope()
