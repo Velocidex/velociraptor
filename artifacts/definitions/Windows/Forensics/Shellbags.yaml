@@ -94,7 +94,7 @@ sources:
            array=GetParents(Hive=Hive, Components=Components).Name, sep=" -> ")
 
        LET X = SELECT Hive,
-                      dirname(path=RegValue) AS KeyPath,
+                      dirname(path=RegValue, path_type="registry") AS KeyPath,
                       basename(path=RegValue) AS Slot,
                       GetFullPath(Hive=Hive, Components=Components) AS FullPath,
                       RawData AS _RawData,

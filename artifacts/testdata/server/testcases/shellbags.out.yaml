@@ -8,12 +8,9 @@ Query: LET Parse(Lnk) = parse_binary(filename=base64decode(string=Lnk), accessor
 Output: []
 
 # Use this to write the test file for inspection with a hex editor.
-Query: SELECT copy(accessor="data", dest="/tmp/1.bin", filename=base64decode(string=ShellBags[13])) FROM scope()
-Output: [
- {
-  "copy(accessor=\"data\", dest=\"/tmp/1.bin\", filename=base64decode(string=ShellBags[13]))": "/tmp/1.bin"
- }
-]
+#  - SELECT copy(accessor="data", dest="/tmp/1.bin",
+#                filename=base64decode(string=ShellBags[13]))
+#    FROM scope()
 
 Query: SELECT count() - 1 AS IDX,
        Parse(Lnk=_value) AS ParsedShellBag FROM foreach(row=ShellBags)
