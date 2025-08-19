@@ -27,76 +27,83 @@ imports:
 
 sources:
   - query: |
-      LET AllHives = SELECT * FROM foreach(row=SearchSpecs,
-        query={
-            SELECT OSPath AS HivePath, KeyGlob
-            FROM glob(globs=HiveGlob)
-            WHERE log(message="Inspecting hive " + HivePath)
-        })
+       LET AllHives = SELECT *
+         FROM foreach(row=SearchSpecs,
+                      query={
+           SELECT OSPath AS HivePath,
+                  KeyGlob
+           FROM glob(globs=HiveGlob)
+           WHERE log(message="Inspecting hive %v", args=HivePath)
+         })
 
-      LET ShellValues = SELECT * FROM foreach(row=AllHives,
-        query={
-           SELECT OSPath, Data, ModTime
-           FROM glob(
-              root=pathspec(DelegatePath=HivePath),
-              globs=KeyGlob,
-              accessor="raw_reg")
-           WHERE Data.type =~ "BINARY" AND OSPath.Basename =~ "^[0-9]+$"
-        })
+       -- Form a lookup key based on the hive and the components.
+       LET MakeKey(Hive, Components) = regex_replace(
+           re="\\\\", replace="/", source=Hive) + join(array=Components, sep="/")
 
-      LET ParsedValues = SELECT
-          OSPath.Dirname AS KeyPath, OSPath.Basename AS ValueName,
-          parse_binary(profile=Profile, filename=Data.value,
-                       accessor="data", struct="ItemIDList") as _Parsed,
-          base64encode(string=Data.value) AS _RawData, ModTime
-      FROM ShellValues
+       LET ShellValues <= SELECT
+           *, MakeKey(Hive=Hive, Components=Components) AS LookupKey
+         FROM foreach(row=AllHives,
+                      query={
+           SELECT OSPath.DelegatePath AS Hive,
+                  OSPath.Path AS RegValue,
+                  OSPath.Components AS Components,
+                  Data.value AS RawData,
+                  parse_binary(profile=Profile,
+                               filename=Data.value,
+                               accessor="data",
+                               struct="ItemIDList") AS _Parsed,
+                  ModTime
+           FROM glob(root=pathspec(DelegatePath=HivePath),
+                     globs=KeyGlob,
+                     accessor="raw_reg")
+           WHERE Data.type =~ "BINARY"
+            AND OSPath.Basename =~ "^[0-9]+$"
+         })
 
-      LET AllResults <= SELECT KeyPath, ValueName,
-        _Parsed.ShellBag.Description AS Description,
-        _Parsed, _RawData, ModTime
-      FROM ParsedValues
+       LET Lookup <= memoize(key="LookupKey", period=10000,
+                             query={
+           SELECT LookupKey,
+                  _Parsed
+           FROM ShellValues
+         })
 
-      // Recursive function to join path components together.
-      // Limit recursion depth just in case.
-      LET FormPath(MRUPath, Description, Depth) = SELECT * FROM if(
-        condition=Depth < 20,
-        then={SELECT * FROM chain(
-          b={
-            SELECT MRUPath, Description, Depth,
-              -- Signify unknown component as ?
-              Description.LongName || Description.ShortName || "?" AS Name
-            FROM scope()
-          },
-          c={
-            SELECT * FROM foreach(row={
-              SELECT KeyPath, ValueName, Description, Depth
-              FROM AllResults
-              WHERE KeyPath = MRUPath.Dirname
-              LIMIT 1
-            }, query={
-              SELECT * FROM FormPath(MRUPath=KeyPath,
-                                     Description=Description, Depth=Depth + 1)
-            })
-          })
-          ORDER BY Depth DESC
-          LIMIT 10
-        })
+       LET GetRecord(Hive, Components) = get(
+           item=Lookup, field=MakeKey(Hive=Hive, Components=Components))
 
-        // Now display all hits and their reconstructed path
-        LET ReconstructedPath = SELECT ModTime, KeyPath, ValueName, Description, {
-           SELECT * FROM FormPath(
-                MRUPath=KeyPath, Description=Description, Depth=0)
-        } AS Chain, _RawData, _Parsed
-        FROM AllResults
+       -- Recursive function to get the parents from the lookup cache.
+       LET GetParents(Hive, Components) = SELECT
+           LookupKey,
+            _Parsed,
+            _Parsed.ShellBag.Description.LongName ||
+            _Parsed.ShellBag.Description.ShortName || "?" AS Name
+         FROM chain(a={
+             SELECT *
+             FROM foreach(row=GetRecord(Hive=Hive, Components=Components))
+         }, b={
+             SELECT * FROM if(condition=Components,
+             then={
+                SELECT * FROM foreach(row=GetParents(Hive=Hive, Components=Components[:-1]))
+             })
+         })
 
-        SELECT ModTime,
-           KeyPath AS _OSPath,
-           KeyPath.DelegatePath AS Hive,
-           KeyPath.Path AS KeyPath, ValueName, Description,
-               join(array=Chain.Name, sep=" -> ") AS Path,
-               _RawData, _Parsed
-        FROM ReconstructedPath
-        ORDER BY Path
+         -- Shorter keys are higher in the directory heirarchy
+         ORDER BY LookupKey
+
+       // Compute the full path to the item by traversing the parents.
+       LET GetFullPath(Hive, Components) = join(
+           array=GetParents(Hive=Hive, Components=Components).Name, sep=" -> ")
+
+       LET X = SELECT Hive,
+                      dirname(path=RegValue) AS KeyPath,
+                      basename(path=RegValue) AS Slot,
+                      GetFullPath(Hive=Hive, Components=Components) AS FullPath,
+                      RawData AS _RawData,
+                      ModTime,
+                      get(item=Lookup, field=LookupKey)._Parsed AS _Parsed
+         FROM ShellValues
+
+       SELECT *, _Parsed.ShellBag.Description AS Description
+       FROM X
 
 column_types:
   - name: _RawData

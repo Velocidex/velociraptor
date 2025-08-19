@@ -166,12 +166,14 @@ export: |
        `F1B32785-6FBA-4FCF-9D55-7B8E7F157091`='LocalAppData',
        `2A00375E-224C-49DE-B8D1-440DF7EF3DDC`='LocalizedResourcesDir',
        `4BD8D571-6D19-48D3-BE97-422220080E43`='Music',
+       `3DFDF296-DBEC-4FB4-81D1-6A3438BCF4DE`="Music",
        `C5ABBF53-E17F-4121-8900-86626FC2C973`='NetHood',
        `D20BEEC4-5CA8-4905-AE3B-BF251EA09B53`='Network',
        `31C0DD25-9439-4F12-BF41-7FF4EDA38722`='Objects3D',
        `2C36C0AA-5812-4B87-BFD0-4CD0DFB19B39`='OriginalImages',
        `69D2CF90-FC33-4FB7-9A0C-EBB0F0FCB43C`='PhotoAlbums',
        `33E28130-4E1E-4676-835A-98395C3BC3BB`='Pictures',
+       `24AD3AD4-A569-4530-98E1-AB02F9417AA8`="LocalPictures",
        `DE92C1C7-837F-4F69-A3BB-86E631204A23`='Playlists',
        `76FC4E2D-D6AD-4519-A663-37BD56068185`='Printers',
        `9274BD8D-CFD1-41C3-B35E-B13F55A758F4`='PrintHood',
@@ -184,6 +186,7 @@ export: |
        `6D809377-6AF0-444B-8957-A3773F02200E`='ProgramFilesX64',
        `7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E`='ProgramFilesX86',
        `A77F5D77-2E2B-44C3-A6A2-ABA601054A51`='Programs',
+       `7B81BE6A-CE2B-4676-A29E-EB907A5126C5`='Programs and Features',
        `DFDF76A2-C82A-4D63-906A-5644AC457385`='Public',
        `C4AA340D-F20F-4863-AFEF-F87EF2E6BA25`='PublicDesktop',
        `ED4824AF-DCE4-45A8-81E2-FC7965083634`='PublicDocuments',
@@ -491,16 +494,17 @@ export: |
           value: "x=>format(format='%#02x', args=x.Type)",
         }],
 
-        # For now only support some common shell bags
+        # https://github.com/EricZimmerman/Lnk/blob/a9e6ebcf7e032efd1172ff8a88a4e870b446fa18/Lnk/LnkFile.cs#L131
         ["ShellBag", 0, "Union", {
            "selector": "x=>format(format='%#02x', args=x.Type)",
             "choices": {
                "0x00": "ShellBag0x00",
-               "0x01": "ShellBag0x1f",
+               "0x01": "ShellBag0x01",
                "0x02": "ShellBag0x20",
                "0x03": "ShellBag0x30",
                "0x04": "ShellBag0x40",
 
+               "0x13": "ShellBagZipContentsWithParent",
                "0x1f": "ShellBag0x1f",
                "0x20": "ShellBag0x20",
                "0x21": "ShellBag0x20",
@@ -510,20 +514,23 @@ export: |
                "0x2e": "ShellBag0x20",
                "0x2f": "ShellBag0x20",
                "0x31": "ShellBag0x30",
-               "0x32": "ShellBag0x30",
+               "0x32": "ShellBag0x32",
                "0x35": "ShellBag0x30",
                "0x36": "ShellBag0x30",
                "0x3a": "ShellBag0x30",
                "0x3a": "ShellBag0x30",
+               "0x3f": "ShellBagZipContentsWithParent",
                "0x41": "ShellBag0x40",
                "0x42": "ShellBag0x40",
                "0x43": "ShellBag0x40",
                "0x46": "ShellBag0x40",
                "0x47": "ShellBag0x40",
+               "0x4b": "ShellBagZipContentsWithParent",
+               "0x52": "ShellBagZipContentsWithParent",
                "0x61": "ShellBag0x61",
                "0x71": "ShellBag0x71",
-               "0x74": "ShellBag0x77",
-               "0x77": "ShellBag0x77",
+               "0x74": "ShellBag0x74",
+               "0x77": "ShellBag0x74",
                "0x79": "ShellBagZipContents",
                "0xaa": "ShellBagZipContents",
                "0xae": "ShellBagZipContents",
@@ -551,11 +558,19 @@ export: |
             "value": 'x=>GetPropertyValues(Values=x.PropertyList.PropertyValue)'
         }],
         ["__CDBurnType", 0, Value, {value: "x=>x.__Magic = 0x4d677541"}],
+        ["__ZipFileContents", 0, "ShellBagZipContents"],
         ["__CDBurn", 0, "ShellBagCDBurn"],
+        ["__ItemNameDisplay", 0, Value, {
+            value: "x=>get(item=x.Properties, field='System.ItemNameDisplay')",
+         }],
 
         # Handle some special cases.
         ["Description", 0, "Value", {
-            value: "x=> (x.__CDBurnType && x.__CDBurn.Description) || dict(ShortName=get(item=x.Properties, member='System.ItemNameDisplay'))"
+            value: "x=> (x.__CDBurnType && x.__CDBurn.Description) ||
+                        (x.__ItemNameDisplay && dict(Type='Variable',
+                                                     Properties=x.Properties,
+                                                     LongName=x.__ItemNameDisplay) ) ||
+                         x.__ZipFileContents.Description",
         }]
       ]],
 
@@ -580,20 +595,80 @@ export: |
 
         # Put all the data together in a convenient location
         ["Description", 0, "Value", {
-            "value": 'x=>dict(Type="CDBurn", LongName=x.Extension.LongName)',
+            "value": 'x=>dict(
+                Type="CDBurn",
+                LongName=x.Extension.LongName)',
         }],
       ]],
 
-      ["CDBurnChunk", 10, [
+      ["ShellBag0x01", 0, [
+        ["ItemSize", 0, "uint16"],
+        ["__SpecialDataSig", 4, "uint32"],
+        ["__SpecialDataSigString", 14, String, {
+           length: "x=>x.ItemSize - 14",
+           term: "",
+        }],
+        ["Category", 8, Enumeration, {
+           type: "uint8",
+           choices: {
+             "0": "All Control Panel Items",
+             "1": "Appearance and Personalization",
+             "2":  "Hardware and Sound",
+             "3": "Network and Internet",
+             "4": "Sound, Speech and Audio Devices",
+             "5": "System and Security",
+             "6": "Clock, Language, and Region",
+             "7": "Ease of Access",
+             "8": "Programs",
+             "9": "User Accounts",
+             "10": "Security Center",
+             "11": "Mobile PC",
+           }
+        }],
+        ["Description", 0, "Value", {
+            "value": 'x=>dict(
+                Type="Control Panel",
+                LongName="Control Panel\\" + x.Category)',
+        }],
+      ]],
 
+      ["ShellBag0x71", 0, [
+        ["GUID", 14, "GUID"],
+        ["Description", 0, "Value", {
+            "value": 'x=>dict(
+                Type="GUID: Control Panel",
+                LongName="Control Panel\\" + GetClassName(GUID=x.GUID.Value))',
+        }],
+      ]],
 
+      ["ShellBag0x74", 0, [
+        ["Size", 4, "uint16"],
+
+        # Variable length search for the extension signature from the
+        # start of the struct.
+        ["__pre", 0, "String", {
+           "term_hex": "0400efbe"
+        }],
+
+        # The extension tag should be immediately after the search string.
+        ["__ExtensionTag", "x=>len(list=x.__pre)", "uint32"],
+
+        # Extension starts 4 bytes before the tag
+        ["Extension", "x=>len(list=x.__pre) - 4", "Union", {
+             "selector": "x=>format(format='%#x', args=x.__ExtensionTag)",
+             "choices": {
+                 "0xbeef0004": "Beef0004",
+             }
+        }],
+
+        ["Description", 0, "Value", {
+            "value": 'x=>dict(
+                Type="Users Files Folder",
+                LongName=x.Extension.LongName)',
+        }],
       ]],
 
       # TODO
-      ["ShellBag0x71", 0, [
-
-      ]],
-
       ["ShellBag0x61", 0, [
 
       ]],
@@ -602,13 +677,53 @@ export: |
 
       ]],
 
-      ["ShellBag0x77", 0, [
-
-      ]],
-
       ["ShellBagZipContents", 0, [
-
+         ["DateString", 0x24, String, {
+            encoding: "utf16",
+         }],
+         ["__FolderNameSize1", 84, uint32],
+         ["__FolderNameSize2", 88, uint32],
+         ["__FolderNameSize", 0, Value, {
+            value: "x=>x.__FolderNameSize1 || x.__FolderNameSize2"
+          }],
+         ["FolderName", 92, String, {
+           encoding: "utf16",
+           length: "x=>x.__FolderNameSize * 2",
+         }],
+         ["Description", 0, "Value", {
+             "value": 'x=>dict(
+               Type="Zip file contents",
+               DateString=x.DateString,
+               LongName=x.FolderName
+             )'
+         }]
       ]],
+
+      ["ShellBagZipContentsWithParent", 0, [
+         ["DateString", 0x24, String, {
+            encoding: "utf16",
+         }],
+         ["__FolderNameSize", 84, uint32],
+         ["__ParentFolderNameSize", 88, uint32],
+         ["FolderName", 92, String, {
+           encoding: "utf16",
+           length: "x=>x.__FolderNameSize * 2",
+         }],
+         ["Start", 0, Value, {value: "x=>x.__FolderNameSize *2 + 94"}],
+         ["ParentFolderName", "x=>x.__FolderNameSize *2 + 94", String, {
+           encoding: "utf16",
+           length: "x=>x.__ParentFolderNameSize * 2",
+         }],
+         ["Description", 0, "Value", {
+             "value": 'x=>dict(
+               Type="Zip file contents",
+               DateString=x.DateString,
+               LongName=x.FolderName,
+               FullPath=x.ParentFolderName + x.FolderName
+             )'
+         }]
+      ]],
+
 
       ["ShellBag0x40", 0, [
          ["Name", 5, "String", {
@@ -616,8 +731,8 @@ export: |
          }],
          ["Description", 0, "Value", {
              "value": 'x=>dict(
-             Type="NetworkLocation",
-             ShortName=x.Name
+               Type="NetworkLocation",
+               LongName=x.Name
              )'
          }]
       ]],
@@ -792,14 +907,15 @@ export: |
         ["UserPropertyName", 13, "String", {length: 3}],
         ["GUID", 4, "GUID"],
         ["Description", 0, "Value", {
-            "value": 'x=>if(condition=x.UserPropertyType != 0x2f, then=dict(
-               ShortName=GetClassName(GUID=x.GUID.Value) || "My Computer",
-               GUID=x.GUID.Value,
-               Type="Root"
-            ), else=dict(
-               Type="UserPropertyType",
-               ShortName=x.UserPropertyName
-            ))'
+            "value": 'x=> ( x.UserPropertyType != 0x2f &&
+              dict(
+                 LongName=GetClassName(GUID=x.GUID.Value) || "My Computer",
+                 GUID=x.GUID.Value,
+                 Type="Root"
+              )) || dict(
+                 Type="UserPropertyType",
+                 LongName=x.UserPropertyName
+              )'
         }]
       ]],
 
@@ -851,6 +967,33 @@ export: |
         ]],
 
         ["ShellBag0x32", 0, [
+          ["Size", 0, "uint16"],
+          ["ShellBagZipContents", 0, "ShellBagZipContents"],
+          ["__ShellBagZipContentsValid", 0, Value, {
+            value: "x=>x.Size > 0x28",
+           }],
+
+          ["__pre", 0, "String", {
+             "term_hex": "0400efbe"
+          }],
+
+          # The extension tag should be immediately after the search string.
+          ["__ExtensionTag", "x=>len(list=x.__pre)", "uint32"],
+
+          # Extension starts 4 bytes before the tag
+          ["Extension", "x=>len(list=x.__pre) - 4", "Union", {
+             "selector": "x=>format(format='%#x', args=x.__ExtensionTag)",
+             "choices": {
+                 "0xbeef0004": "Beef0004",
+             }
+          }],
+
+          ["Description", 0, "Value", {
+            "value": 'x=>if(condition=x.__ShellBagZipContentsValid AND NOT x.Extension.LongName,
+                            then=x.ShellBagZipContents.Description,
+                            else=dict(Type="File",
+                                      LongName=x.Extension.LongName))',
+          }],
 
         ]],
 
