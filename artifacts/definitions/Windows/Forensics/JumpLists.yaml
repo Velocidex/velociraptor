@@ -695,7 +695,7 @@ sources:
             split(sep_string=".", string=AutomaticDestinationsPath.Basename)[0] AS ApplicationId,
             ShowHeader(Parsed=Parsed) as _ShellLinkHeader,
             Parsed.LinkInfo as _LinkInfo,
-            ShowLinkTarget(Parsed=Parsed) as _LinkTarget,
+            ShowLinkTarget(ShellBag=Parsed.LinkTargetIDList.IDList.ShellBag) as _LinkTarget,
             Parsed.StringData as _StringData,
             ShowExtraData(Parsed=Parsed) as _ExtraData,
             property_store(data=Parsed) as _PropertyStore

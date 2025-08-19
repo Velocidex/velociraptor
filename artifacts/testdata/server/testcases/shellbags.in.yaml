@@ -34,9 +34,9 @@ Queries:
        profile=Profile, struct="ItemIDList")
 
 # Use this to write the test file for inspection with a hex editor.
-  - SELECT copy(accessor="data", dest="/tmp/1.bin",
-                filename=base64decode(string=ShellBags[13]))
-    FROM scope()
+#  - SELECT copy(accessor="data", dest="/tmp/1.bin",
+#                filename=base64decode(string=ShellBags[13]))
+#    FROM scope()
 
   - |
     SELECT count() - 1 AS IDX,
