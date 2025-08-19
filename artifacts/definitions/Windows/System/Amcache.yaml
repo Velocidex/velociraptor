@@ -43,7 +43,7 @@ sources:
         FROM foreach(
           row={
             SELECT OSPath from glob(globs=expand(path=amCacheGlob))
-            WHERE log(message="Processing "+OSPath)
+            WHERE log(message="Processing %v", args=OSPath)
           }, query={
             SELECT * from read_reg_key(
                globs=amCacheRegPath,

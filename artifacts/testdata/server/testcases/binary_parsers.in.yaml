@@ -19,6 +19,8 @@ Parameters:
       }]
     ]]]
 
+
+
 Queries:
   - SELECT ModuleName, Timestamp, Functions[1]
     FROM Artifact.Windows.System.Powershell.ModuleAnalysisCache(GlobLookup=srcDir +
@@ -26,7 +28,11 @@ Queries:
     LIMIT 10
 
   # Check the lnk parser
-  - SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData
+  - SELECT ShellLinkHeader,
+           LinkInfo,
+           LinkTarget.LinkTarget,
+           StringData,
+           ExtraData
     FROM Artifact.Windows.Forensics.Lnk(TargetGlob=srcDir + "/artifacts/testdata/files/1.lnk")
 
   - SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData

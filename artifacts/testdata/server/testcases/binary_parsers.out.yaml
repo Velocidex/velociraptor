@@ -53,7 +53,7 @@ Output: [
 ]
 
 # Check the lnk parser
-Query: SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData FROM Artifact.Windows.Forensics.Lnk(TargetGlob=srcDir + "/artifacts/testdata/files/1.lnk")
+Query: SELECT ShellLinkHeader, LinkInfo, LinkTarget.LinkTarget, StringData, ExtraData FROM Artifact.Windows.Forensics.Lnk(TargetGlob=srcDir + "/artifacts/testdata/files/1.lnk")
 Output: [
  {
   "ShellLinkHeader": {
@@ -173,55 +173,55 @@ Output: [
     {
      "GuidId": "DABD30ED-0043-4789-A7F8-D013A4736622/100",
      "Description": "Item Folder Path Display Narrow",
-     "Type": "LPWSTR",
+     "Type": 31,
      "Value": "System32 (C:\\Windows)"
     },
     {
      "GuidId": "46588AE2-4CBC-4338-BBFC-139326986DCE/4",
      "Description": "SID",
-     "Type": "LPWSTR",
+     "Type": 31,
      "Value": "S-1-5-21-730516628-3352102648-2216876345-1001"
     },
     {
      "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/10",
      "Description": "System.ItemNameDisplay",
-     "Type": "LPWSTR",
+     "Type": 31,
      "Value": "cmd.exe"
     },
     {
      "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/15",
      "Description": "System.DateCreated",
-     "Type": "FILETIME",
+     "Type": 64,
      "Value": "2021-06-05T12:05:14Z"
     },
     {
      "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/12",
      "Description": "System.Size",
-     "Type": "UI8",
+     "Type": 21,
      "Value": 331776
     },
     {
      "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/4",
      "Description": "System.ItemTypeText",
-     "Type": "LPWSTR",
+     "Type": 31,
      "Value": "Application"
     },
     {
      "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/14",
      "Description": "System.DateModified",
-     "Type": "FILETIME",
+     "Type": 64,
      "Value": "2021-06-05T12:05:12Z"
     },
     {
      "GuidId": "28636AA6-953D-11D2-B5D6-00C04FD918D0/30",
      "Description": "ParsingPath",
-     "Type": "LPWSTR",
+     "Type": 31,
      "Value": "C:\\Windows\\System32\\cmd.exe"
     },
     {
      "GuidId": "446D16B1-8DAD-4870-A748-402EA43D788C/104",
-     "Description": "VolumeId",
-     "Type": "CLSID",
+     "Description": "Volume Id",
+     "Type": 72,
      "Value": "15B7A6CC-2A32-42E4-B157-5824DCAFF312"
     }
    ]

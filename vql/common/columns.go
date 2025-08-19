@@ -17,6 +17,15 @@ type matcher struct {
 	cache map[string]bool
 }
 
+func matchAny(needle string, filters []*regexp.Regexp) bool {
+	for _, f := range filters {
+		if f.MatchString(needle) {
+			return true
+		}
+	}
+	return false
+}
+
 func (self *matcher) ShouldInclude(column string) bool {
 	res, pres := self.cache[column]
 	if pres {
@@ -25,19 +34,17 @@ func (self *matcher) ShouldInclude(column string) bool {
 
 	// Column has to appear in the include set if an include set is
 	// specified.
-	for _, re := range self.includes {
-		if !re.MatchString(column) {
-			self.cache[column] = false
-			return false
-		}
+	if len(self.includes) > 0 &&
+		!matchAny(column, self.includes) {
+		self.cache[column] = false
+		return false
 	}
 
 	// If the column is in the exclude set, then we exclude it.
-	for _, re := range self.excludes {
-		if re.MatchString(column) {
-			self.cache[column] = false
-			return false
-		}
+	if len(self.excludes) > 0 &&
+		matchAny(column, self.excludes) {
+		self.cache[column] = false
+		return false
 	}
 
 	self.cache[column] = true
@@ -102,9 +109,11 @@ func (self ColumnFilter) Call(
 		for item := range arg.Query.Eval(ctx, scope) {
 			new_row := ordereddict.NewDict()
 			for _, column := range scope.GetMembers(item) {
-				value, _ := scope.Associative(item, column)
 				if column_matcher.ShouldInclude(column) {
-					new_row.Set(column, value)
+					value, pres := scope.Associative(item, column)
+					if pres {
+						new_row.Set(column, value)
+					}
 				}
 			}
 

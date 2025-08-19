@@ -1,0 +1,582 @@
+Query: LET _ <= import(artifact="Windows.Forensics.Lnk")
+Output: []
+
+Query: LET ShellBags <= parse_json_array(data=_ShellBags)
+Output: []
+
+Query: LET Parse(Lnk) = parse_binary(filename=base64decode(string=Lnk), accessor="data", profile=Profile, struct="ItemIDList")
+Output: []
+
+# Use this to write the test file for inspection with a hex editor.
+#  - SELECT copy(accessor="data", dest="/tmp/1.bin",
+#                filename=base64decode(string=ShellBags[13]))
+#    FROM scope()
+
+Query: SELECT count() - 1 AS IDX,
+       Parse(Lnk=_value) AS ParsedShellBag FROM foreach(row=ShellBags)
+
+Output: [
+ {
+  "IDX": 0,
+  "ParsedShellBag": {
+   "ItemIDSize": 538,
+   "Offset": 0,
+   "Type": 0,
+   "TypeHex": "0x00",
+   "ShellBag": {
+    "DataSize": 532,
+    "DataSig": 999534523,
+    "PropertySheetListSize": 518,
+    "IdentifierSize": 4,
+    "IdentifierData": "",
+    "PropertyList": [
+     {
+      "StorageSize": 69,
+      "Offset": 18,
+      "Version": "1SPS",
+      "Format": "D5CDD502-2E9C-101B-9397-08002B2CF9AE",
+      "PropertyValue": [
+       {
+        "ValueSize": 41,
+        "Offset": 42,
+        "GuidId": "D5CDD502-2E9C-101B-9397-08002B2CF9AE/2",
+        "Description": {
+         "Offset": 46,
+         "Type": 2
+        },
+        "Type": 4127,
+        "Value": null
+       }
+      ]
+     },
+     {
+      "StorageSize": 214,
+      "Offset": 87,
+      "Version": "1SPS",
+      "Format": "0AE54373-43BE-4FAD-85E4-69DC8633986E",
+      "PropertyValue": [
+       {
+        "ValueSize": 17,
+        "Offset": 111,
+        "GuidId": "0AE54373-43BE-4FAD-85E4-69DC8633986E/11",
+        "Description": "GUID not known",
+        "Type": 11,
+        "Value": true
+       },
+       {
+        "ValueSize": 169,
+        "Offset": 128,
+        "GuidId": "0AE54373-43BE-4FAD-85E4-69DC8633986E/7",
+        "Description": "GUID not known",
+        "Type": 31,
+        "Value": "Provider\\Microsoft.Networking.Netbios//VMware Shared Folders::\\\\vmware-host"
+       }
+      ]
+     },
+     {
+      "StorageSize": 69,
+      "Offset": 301,
+      "Version": "1SPS",
+      "Format": "B725F130-47EF-101A-A5F1-02608C9EEBAC",
+      "PropertyValue": [
+       {
+        "ValueSize": 41,
+        "Offset": 325,
+        "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/10",
+        "Description": "System.ItemNameDisplay",
+        "Type": 31,
+        "Value": "vmware-host"
+       }
+      ]
+     },
+     {
+      "StorageSize": 28,
+      "Offset": 370,
+      "Version": "1SPS",
+      "Format": "656A3BB3-ECC0-43FD-8477-4AE0404A96CD",
+      "PropertyValue": []
+     },
+     {
+      "StorageSize": 89,
+      "Offset": 398,
+      "Version": "1SPS",
+      "Format": "28636AA6-953D-11D2-B5D6-00C04FD918D0",
+      "PropertyValue": [
+       {
+        "ValueSize": 61,
+        "Offset": 422,
+        "GuidId": "28636AA6-953D-11D2-B5D6-00C04FD918D0/31",
+        "Description": "Network Provider",
+        "Type": 31,
+        "Value": "VMware Shared Folders"
+       }
+      ]
+     },
+     {
+      "StorageSize": 45,
+      "Offset": 487,
+      "Version": "1SPS",
+      "Format": "DEBDA43A-37B3-4383-91E7-4498DA2995AB",
+      "PropertyValue": [
+       {
+        "ValueSize": 17,
+        "Offset": 511,
+        "GuidId": "DEBDA43A-37B3-4383-91E7-4498DA2995AB/3",
+        "Description": "0x3",
+        "Type": 19,
+        "Value": 2
+       }
+      ]
+     }
+    ],
+    "Properties": {
+     "GUID not known": true,
+     "System.ItemNameDisplay": "vmware-host",
+     "Network Provider": "VMware Shared Folders",
+     "0x3": 2
+    },
+    "Description": {
+     "Type": "Variable",
+     "Properties": {
+      "GUID not known": true,
+      "System.ItemNameDisplay": "vmware-host",
+      "Network Provider": "VMware Shared Folders",
+      "0x3": 2
+     },
+     "LongName": "vmware-host"
+    }
+   }
+  }
+ },
+ {
+  "IDX": 1,
+  "ParsedShellBag": {
+   "ItemIDSize": 268,
+   "Offset": 0,
+   "Type": 0,
+   "TypeHex": "0x00",
+   "ShellBag": {
+    "DataSize": 30017,
+    "DataSig": 281959,
+    "PropertySheetListSize": 0,
+    "IdentifierSize": 2,
+    "IdentifierData": "",
+    "PropertyList": [
+     {
+      "StorageSize": 65536,
+      "Offset": 16,
+      "Version": "x",
+      "Format": "00000000-5953-90A0-1100-4D494352234D",
+      "PropertyValue": [
+       {
+        "ValueSize": 32305,
+        "Offset": 40,
+        "GuidId": "00000000-5953-90A0-1100-4D494352234D/589920",
+        "Description": "GUID not known",
+        "Type": 61184,
+        "Value": null
+       }
+      ]
+     }
+    ],
+    "Properties": {
+     "GUID not known": null
+    },
+    "Description": {
+     "Type": "CDBurn",
+     "LongName": "Microsoft Visual Studio"
+    }
+   }
+  }
+ },
+ {
+  "IDX": 2,
+  "ParsedShellBag": {
+   "ItemIDSize": 12,
+   "Offset": 0,
+   "Type": 1,
+   "TypeHex": "0x01",
+   "ShellBag": {
+    "ItemSize": 12,
+    "Category": "Network and Internet",
+    "Description": {
+     "Type": "Control Panel",
+     "LongName": "Control Panel\\Network and Internet"
+    }
+   }
+  }
+ },
+ {
+  "IDX": 3,
+  "ParsedShellBag": {
+   "ItemIDSize": 30,
+   "Offset": 0,
+   "Type": 113,
+   "TypeHex": "0x71",
+   "ShellBag": {
+    "GUID": {
+     "Value": "7B81BE6A-CE2B-4676-A29E-EB907A5126C5"
+    },
+    "Description": {
+     "Type": "GUID: Control Panel",
+     "LongName": "Control Panel\\Programs and Features"
+    }
+   }
+  }
+ },
+ {
+  "IDX": 4,
+  "ParsedShellBag": {
+   "ItemIDSize": 538,
+   "Offset": 0,
+   "Type": 0,
+   "TypeHex": "0x00",
+   "ShellBag": {
+    "DataSize": 532,
+    "DataSig": 999534523,
+    "PropertySheetListSize": 518,
+    "IdentifierSize": 4,
+    "IdentifierData": "",
+    "PropertyList": [
+     {
+      "StorageSize": 69,
+      "Offset": 18,
+      "Version": "1SPS",
+      "Format": "D5CDD502-2E9C-101B-9397-08002B2CF9AE",
+      "PropertyValue": [
+       {
+        "ValueSize": 41,
+        "Offset": 42,
+        "GuidId": "D5CDD502-2E9C-101B-9397-08002B2CF9AE/2",
+        "Description": {
+         "Offset": 46,
+         "Type": 2
+        },
+        "Type": 4127,
+        "Value": null
+       }
+      ]
+     },
+     {
+      "StorageSize": 214,
+      "Offset": 87,
+      "Version": "1SPS",
+      "Format": "0AE54373-43BE-4FAD-85E4-69DC8633986E",
+      "PropertyValue": [
+       {
+        "ValueSize": 17,
+        "Offset": 111,
+        "GuidId": "0AE54373-43BE-4FAD-85E4-69DC8633986E/11",
+        "Description": "GUID not known",
+        "Type": 11,
+        "Value": true
+       },
+       {
+        "ValueSize": 169,
+        "Offset": 128,
+        "GuidId": "0AE54373-43BE-4FAD-85E4-69DC8633986E/7",
+        "Description": "GUID not known",
+        "Type": 31,
+        "Value": "Provider\\Microsoft.Networking.Netbios//VMware Shared Folders::\\\\vmware-host"
+       }
+      ]
+     },
+     {
+      "StorageSize": 69,
+      "Offset": 301,
+      "Version": "1SPS",
+      "Format": "B725F130-47EF-101A-A5F1-02608C9EEBAC",
+      "PropertyValue": [
+       {
+        "ValueSize": 41,
+        "Offset": 325,
+        "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/10",
+        "Description": "System.ItemNameDisplay",
+        "Type": 31,
+        "Value": "vmware-host"
+       }
+      ]
+     },
+     {
+      "StorageSize": 28,
+      "Offset": 370,
+      "Version": "1SPS",
+      "Format": "656A3BB3-ECC0-43FD-8477-4AE0404A96CD",
+      "PropertyValue": []
+     },
+     {
+      "StorageSize": 89,
+      "Offset": 398,
+      "Version": "1SPS",
+      "Format": "28636AA6-953D-11D2-B5D6-00C04FD918D0",
+      "PropertyValue": [
+       {
+        "ValueSize": 61,
+        "Offset": 422,
+        "GuidId": "28636AA6-953D-11D2-B5D6-00C04FD918D0/31",
+        "Description": "Network Provider",
+        "Type": 31,
+        "Value": "VMware Shared Folders"
+       }
+      ]
+     },
+     {
+      "StorageSize": 45,
+      "Offset": 487,
+      "Version": "1SPS",
+      "Format": "DEBDA43A-37B3-4383-91E7-4498DA2995AB",
+      "PropertyValue": [
+       {
+        "ValueSize": 17,
+        "Offset": 511,
+        "GuidId": "DEBDA43A-37B3-4383-91E7-4498DA2995AB/3",
+        "Description": "0x3",
+        "Type": 19,
+        "Value": 2
+       }
+      ]
+     }
+    ],
+    "Properties": {
+     "GUID not known": true,
+     "System.ItemNameDisplay": "vmware-host",
+     "Network Provider": "VMware Shared Folders",
+     "0x3": 2
+    },
+    "Description": {
+     "Type": "Variable",
+     "Properties": {
+      "GUID not known": true,
+      "System.ItemNameDisplay": "vmware-host",
+      "Network Provider": "VMware Shared Folders",
+      "0x3": 2
+     },
+     "LongName": "vmware-host"
+    }
+   }
+  }
+ },
+ {
+  "IDX": 5,
+  "ParsedShellBag": {
+   "ItemIDSize": 130,
+   "Offset": 0,
+   "Type": 116,
+   "TypeHex": "0x74",
+   "ShellBag": {
+    "Size": 28,
+    "Extension": {
+     "Size": 64,
+     "Version": 9,
+     "Signature": "0xbeef0004",
+     "CreateDate": "2024-10-14T13:48:00Z",
+     "LastAccessed": "2024-10-14T13:48:00Z",
+     "MFTReference": {
+      "MFTID": 96423,
+      "SequenceNumber": 2
+     },
+     "LongName": "AppData"
+    },
+    "Description": {
+     "Type": "Users Files Folder",
+     "LongName": "AppData"
+    }
+   }
+  }
+ },
+ {
+  "IDX": 6,
+  "ParsedShellBag": {
+   "ItemIDSize": 166,
+   "Offset": 0,
+   "Type": 50,
+   "TypeHex": "0x32",
+   "ShellBag": {
+    "Size": 166,
+    "ShellBagZipContents": {
+     "DateString": "12/18/2024  15:15:58",
+     "FolderName": "llvm-mingw-20241217-msvcrt-x86_64",
+     "Description": {
+      "Type": "Zip file contents",
+      "DateString": "12/18/2024  15:15:58",
+      "LongName": "llvm-mingw-20241217-msvcrt-x86_64"
+     }
+    },
+    "Extension": null,
+    "Description": {
+     "Type": "Zip file contents",
+     "DateString": "12/18/2024  15:15:58",
+     "LongName": "llvm-mingw-20241217-msvcrt-x86_64"
+    }
+   }
+  }
+ },
+ {
+  "IDX": 7,
+  "ParsedShellBag": {
+   "ItemIDSize": 130,
+   "Offset": 0,
+   "Type": 50,
+   "TypeHex": "0x32",
+   "ShellBag": {
+    "Size": 130,
+    "ShellBagZipContents": {
+     "DateString": "婲ᔂ婲ᔄ.",
+     "FolderName": ".2-2326-win64.zip",
+     "Description": {
+      "Type": "Zip file contents",
+      "DateString": "婲ᔂ婲ᔄ.",
+      "LongName": ".2-2326-win64.zip"
+     }
+    },
+    "Extension": {
+     "Size": 102,
+     "Version": 9,
+     "Signature": "0xbeef0004",
+     "CreateDate": "2025-03-18T02:40:04Z",
+     "LastAccessed": "2025-03-18T02:40:08Z",
+     "MFTReference": {
+      "MFTID": 0,
+      "SequenceNumber": 0
+     },
+     "LongName": "yara-v4.5.2-2326-win64.zip"
+    },
+    "Description": {
+     "Type": "File",
+     "LongName": "yara-v4.5.2-2326-win64.zip"
+    }
+   }
+  }
+ },
+ {
+  "IDX": 8,
+  "ParsedShellBag": {
+   "ItemIDSize": 110,
+   "Offset": 0,
+   "Type": 0,
+   "TypeHex": "0x00",
+   "ShellBag": {
+    "DataSize": 0,
+    "DataSig": 0,
+    "PropertySheetListSize": 0,
+    "IdentifierSize": 0,
+    "IdentifierData": "",
+    "PropertyList": [],
+    "Properties": {},
+    "Description": {
+     "Type": "Zip file contents",
+     "DateString": "N/A",
+     "LongName": "amd64"
+    }
+   }
+  }
+ },
+ {
+  "IDX": 9,
+  "ParsedShellBag": {
+   "ItemIDSize": 146,
+   "Offset": 0,
+   "Type": 63,
+   "TypeHex": "0x3f",
+   "ShellBag": {
+    "DateString": "N/A",
+    "FolderName": "hayabusa",
+    "Start": 110,
+    "ParentFolderName": "original_rules/",
+    "Description": {
+     "Type": "Zip file contents",
+     "DateString": "N/A",
+     "LongName": "hayabusa",
+     "FullPath": "original_rules/hayabusa"
+    }
+   }
+  }
+ },
+ {
+  "IDX": 10,
+  "ParsedShellBag": {
+   "ItemIDSize": 158,
+   "Offset": 0,
+   "Type": 19,
+   "TypeHex": "0x13",
+   "ShellBag": {
+    "DateString": "N/A",
+    "FolderName": "sigma",
+    "Start": 104,
+    "ParentFolderName": "original_rules/hayabusa/",
+    "Description": {
+     "Type": "Zip file contents",
+     "DateString": "N/A",
+     "LongName": "sigma",
+     "FullPath": "original_rules/hayabusa/sigma"
+    }
+   }
+  }
+ },
+ {
+  "IDX": 11,
+  "ParsedShellBag": {
+   "ItemIDSize": 112,
+   "Offset": 0,
+   "Type": 75,
+   "TypeHex": "0x4b",
+   "ShellBag": {
+    "DateString": "N/A",
+    "FolderName": "output",
+    "Start": 106,
+    "ParentFolderName": "",
+    "Description": {
+     "Type": "Zip file contents",
+     "DateString": "N/A",
+     "LongName": "output",
+     "FullPath": "output"
+    }
+   }
+  }
+ },
+ {
+  "IDX": 12,
+  "ParsedShellBag": {
+   "ItemIDSize": 172,
+   "Offset": 0,
+   "Type": 82,
+   "TypeHex": "0x52",
+   "ShellBag": {
+    "DateString": "N/A",
+    "FolderName": "sysmon",
+    "Start": 106,
+    "ParentFolderName": "original_rules/hayabusa/sigma/",
+    "Description": {
+     "Type": "Zip file contents",
+     "DateString": "N/A",
+     "LongName": "sysmon",
+     "FullPath": "original_rules/hayabusa/sigma/sysmon"
+    }
+   }
+  }
+ },
+ {
+  "IDX": 13,
+  "ParsedShellBag": {
+   "ItemIDSize": 128,
+   "Offset": 0,
+   "Type": 0,
+   "TypeHex": "0x00",
+   "ShellBag": {
+    "DataSize": 22,
+    "DataSig": 32771,
+    "PropertySheetListSize": 0,
+    "IdentifierSize": 0,
+    "IdentifierData": "",
+    "PropertyList": [],
+    "Properties": {},
+    "Description": {
+     "Type": "Zip file contents",
+     "DateString": "01/02/2025  07:26:00",
+     "LongName": "GhostTask-main"
+    }
+   }
+  }
+ }
+]
+

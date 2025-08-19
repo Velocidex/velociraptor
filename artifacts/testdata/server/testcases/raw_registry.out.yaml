@@ -90,25 +90,33 @@ Output: [
 ]
 
 # Test the shell bags artifact
-Query: SELECT ModTime, basename(path=Hive), KeyPath, Description, Path, _Parsed FROM Artifact.Windows.Forensics.Shellbags(SearchSpecs=[ dict( HiveGlob=srcDir+"/artifacts/testdata/files/UsrClass.dat", KeyGlob='''\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\**'''),]) ORDER BY KeyPath
+Query: SELECT ModTime, basename(path=Hive), KeyPath, Slot, Description, _Parsed FROM Artifact.Windows.Forensics.Shellbags(SearchSpecs=[ dict( HiveGlob=srcDir+"/artifacts/testdata/files/UsrClass.dat", KeyGlob='''\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\**'''),]) ORDER BY KeyPath
 Output: [
  {
   "ModTime": "2021-06-01T06:28:19Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU",
+  "KeyPath": "Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU",
+  "Slot": "0",
   "Description": {
-   "ShortName": "My Computer",
+   "LongName": "Quick Access",
+   "GUID": "679F85CB-0220-4080-B29B-5540CC05AAB6",
    "Type": "Root"
   },
-  "Path": "My Computer",
   "_Parsed": {
    "ItemIDSize": 20,
    "Offset": 0,
-   "Type": 1,
-   "Subtype": 1,
+   "Type": 31,
+   "TypeHex": "0x1f",
    "ShellBag": {
+    "Type": 20,
+    "UserPropertyType": 203,
+    "UserPropertyName": "\ufffdU@",
+    "GUID": {
+     "Value": "679F85CB-0220-4080-B29B-5540CC05AAB6"
+    },
     "Description": {
-     "ShortName": "My Computer",
+     "LongName": "Quick Access",
+     "GUID": "679F85CB-0220-4080-B29B-5540CC05AAB6",
      "Type": "Root"
     }
    }
@@ -117,20 +125,28 @@ Output: [
  {
   "ModTime": "2021-06-01T06:28:19Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU",
+  "KeyPath": "Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU",
+  "Slot": "1",
   "Description": {
-   "ShortName": "My Computer",
+   "LongName": "My Computer",
+   "GUID": "20D04FE0-3AEA-1069-A2D8-08002B30309D",
    "Type": "Root"
   },
-  "Path": "My Computer",
   "_Parsed": {
    "ItemIDSize": 20,
    "Offset": 0,
-   "Type": 1,
-   "Subtype": 1,
+   "Type": 31,
+   "TypeHex": "0x1f",
    "ShellBag": {
+    "Type": 20,
+    "UserPropertyType": 224,
+    "UserPropertyName": "\ufffd\u0008",
+    "GUID": {
+     "Value": "20D04FE0-3AEA-1069-A2D8-08002B30309D"
+    },
     "Description": {
-     "ShortName": "My Computer",
+     "LongName": "My Computer",
+     "GUID": "20D04FE0-3AEA-1069-A2D8-08002B30309D",
      "Type": "Root"
     }
    }
@@ -139,21 +155,27 @@ Output: [
  {
   "ModTime": "2021-06-01T06:28:19Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU",
+  "KeyPath": "Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU",
+  "Slot": "2",
   "Description": {
-   "ShortName": "My Computer",
-   "Type": "Root"
+   "Type": "UserPropertyType",
+   "LongName": "D:\\"
   },
-  "Path": "My Computer",
   "_Parsed": {
    "ItemIDSize": 85,
    "Offset": 0,
-   "Type": 1,
-   "Subtype": 1,
+   "Type": 31,
+   "TypeHex": "0x1f",
    "ShellBag": {
+    "Type": 85,
+    "UserPropertyType": 47,
+    "UserPropertyName": "D:\\",
+    "GUID": {
+     "Value": "B710002F-F5A6-0019-2F44-3A5C00000000"
+    },
     "Description": {
-     "ShortName": "My Computer",
-     "Type": "Root"
+     "Type": "UserPropertyType",
+     "LongName": "D:\\"
     }
    }
   }
@@ -161,20 +183,28 @@ Output: [
  {
   "ModTime": "2021-06-01T06:28:19Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU",
+  "KeyPath": "Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU",
+  "Slot": "3",
   "Description": {
-   "ShortName": "My Computer",
+   "LongName": "Computers and Devices",
+   "GUID": "F02C1A0D-BE21-4350-88B0-7367FC96EF3C",
    "Type": "Root"
   },
-  "Path": "My Computer",
   "_Parsed": {
    "ItemIDSize": 20,
    "Offset": 0,
-   "Type": 1,
-   "Subtype": 1,
+   "Type": 31,
+   "TypeHex": "0x1f",
    "ShellBag": {
+    "Type": 20,
+    "UserPropertyType": 13,
+    "UserPropertyName": "\ufffdsg",
+    "GUID": {
+     "Value": "F02C1A0D-BE21-4350-88B0-7367FC96EF3C"
+    },
     "Description": {
-     "ShortName": "My Computer",
+     "LongName": "Computers and Devices",
+     "GUID": "F02C1A0D-BE21-4350-88B0-7367FC96EF3C",
      "Type": "Root"
     }
    }
@@ -183,23 +213,26 @@ Output: [
  {
   "ModTime": "2021-06-01T06:27:57Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\1",
+  "KeyPath": "Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\1",
+  "Slot": "0",
   "Description": {
-   "LongName": "",
-   "ShortName": "",
+   "LongName": "Downloads",
+   "ShortName": "Downloads",
+   "GUID": "088E3905-0323-4B02-9826-5D99428E115F",
    "Type": "Volume"
   },
-  "Path": "My Computer -\u003e ?",
   "_Parsed": {
    "ItemIDSize": 20,
    "Offset": 0,
-   "Type": 2,
-   "Subtype": 0,
+   "Type": 46,
+   "TypeHex": "0x2e",
    "ShellBag": {
-    "Name": "",
+    "Subtype": 0,
+    "Name": "Downloads",
     "Description": {
-     "LongName": "",
-     "ShortName": "",
+     "LongName": "Downloads",
+     "ShortName": "Downloads",
+     "GUID": "088E3905-0323-4B02-9826-5D99428E115F",
      "Type": "Volume"
     }
    }
@@ -208,44 +241,167 @@ Output: [
  {
   "ModTime": "2021-06-01T06:28:10Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3",
-  "Description": null,
-  "Path": "My Computer -\u003e ?",
+  "KeyPath": "Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3",
+  "Slot": "0",
+  "Description": {
+   "Type": "Variable",
+   "Properties": {
+    "GUID not known": true,
+    "System.ItemNameDisplay": "vmware-host",
+    "Network Provider": "VMware Shared Folders",
+    "0x3": 2
+   },
+   "LongName": "vmware-host"
+  },
   "_Parsed": {
    "ItemIDSize": 538,
    "Offset": 0,
    "Type": 0,
-   "Subtype": 0,
-   "ShellBag": null
-  }
- },
- {
-  "ModTime": "2021-06-01T06:28:10Z",
-  "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0",
-  "Description": {
-   "Type": "NetworkLocation",
-   "ShortName": "\\\\vmware-host\\Shared Folders"
-  },
-  "Path": "My Computer -\u003e ? -\u003e \\\\vmware-host\\Shared Folders",
-  "_Parsed": {
-   "ItemIDSize": 58,
-   "Offset": 0,
-   "Type": 4,
-   "Subtype": 1,
+   "TypeHex": "0x00",
    "ShellBag": {
-    "Name": "\\\\vmware-host\\Shared Folders",
+    "DataSize": 532,
+    "DataSig": 999534523,
+    "PropertySheetListSize": 518,
+    "IdentifierSize": 4,
+    "IdentifierData": "",
+    "PropertyList": [
+     {
+      "StorageSize": 69,
+      "Offset": 18,
+      "Version": "1SPS",
+      "Format": "D5CDD502-2E9C-101B-9397-08002B2CF9AE",
+      "PropertyValue": [
+       {
+        "ValueSize": 41,
+        "Offset": 42,
+        "GuidId": "D5CDD502-2E9C-101B-9397-08002B2CF9AE/2",
+        "Description": {
+         "Offset": 46,
+         "Type": 2
+        },
+        "Type": 4127,
+        "Value": null
+       }
+      ]
+     },
+     {
+      "StorageSize": 214,
+      "Offset": 87,
+      "Version": "1SPS",
+      "Format": "0AE54373-43BE-4FAD-85E4-69DC8633986E",
+      "PropertyValue": [
+       {
+        "ValueSize": 17,
+        "Offset": 111,
+        "GuidId": "0AE54373-43BE-4FAD-85E4-69DC8633986E/11",
+        "Description": "GUID not known",
+        "Type": 11,
+        "Value": true
+       },
+       {
+        "ValueSize": 169,
+        "Offset": 128,
+        "GuidId": "0AE54373-43BE-4FAD-85E4-69DC8633986E/7",
+        "Description": "GUID not known",
+        "Type": 31,
+        "Value": "Provider\\Microsoft.Networking.Netbios//VMware Shared Folders::\\\\vmware-host"
+       }
+      ]
+     },
+     {
+      "StorageSize": 69,
+      "Offset": 301,
+      "Version": "1SPS",
+      "Format": "B725F130-47EF-101A-A5F1-02608C9EEBAC",
+      "PropertyValue": [
+       {
+        "ValueSize": 41,
+        "Offset": 325,
+        "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/10",
+        "Description": "System.ItemNameDisplay",
+        "Type": 31,
+        "Value": "vmware-host"
+       }
+      ]
+     },
+     {
+      "StorageSize": 28,
+      "Offset": 370,
+      "Version": "1SPS",
+      "Format": "656A3BB3-ECC0-43FD-8477-4AE0404A96CD",
+      "PropertyValue": []
+     },
+     {
+      "StorageSize": 89,
+      "Offset": 398,
+      "Version": "1SPS",
+      "Format": "28636AA6-953D-11D2-B5D6-00C04FD918D0",
+      "PropertyValue": [
+       {
+        "ValueSize": 61,
+        "Offset": 422,
+        "GuidId": "28636AA6-953D-11D2-B5D6-00C04FD918D0/31",
+        "Description": "Network Provider",
+        "Type": 31,
+        "Value": "VMware Shared Folders"
+       }
+      ]
+     },
+     {
+      "StorageSize": 45,
+      "Offset": 487,
+      "Version": "1SPS",
+      "Format": "DEBDA43A-37B3-4383-91E7-4498DA2995AB",
+      "PropertyValue": [
+       {
+        "ValueSize": 17,
+        "Offset": 511,
+        "GuidId": "DEBDA43A-37B3-4383-91E7-4498DA2995AB/3",
+        "Description": "0x3",
+        "Type": 19,
+        "Value": 2
+       }
+      ]
+     }
+    ],
+    "Properties": {
+     "GUID not known": true,
+     "System.ItemNameDisplay": "vmware-host",
+     "Network Provider": "VMware Shared Folders",
+     "0x3": 2
+    },
     "Description": {
-     "Type": "NetworkLocation",
-     "ShortName": "\\\\vmware-host\\Shared Folders"
+     "Type": "Variable",
+     "Properties": {
+      "GUID not known": true,
+      "System.ItemNameDisplay": "vmware-host",
+      "Network Provider": "VMware Shared Folders",
+      "0x3": 2
+     },
+     "LongName": "vmware-host"
     }
    }
   }
  },
  {
+  "ModTime": "2021-06-01T06:28:10Z",
+  "basename(path=Hive)": "UsrClass.dat",
+  "KeyPath": "Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0",
+  "Slot": "0",
+  "Description": null,
+  "_Parsed": {
+   "ItemIDSize": 58,
+   "Offset": 0,
+   "Type": 195,
+   "TypeHex": "0xc3",
+   "ShellBag": {}
+  }
+ },
+ {
   "ModTime": "2021-06-01T06:28:12Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0\\0",
+  "KeyPath": "Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0\\0",
+  "Slot": "0",
   "Description": {
    "Type": [
     "Directory",
@@ -259,12 +415,11 @@ Output: [
    "MFTID": 49548416,
    "MFTSeq": 0
   },
-  "Path": "My Computer -\u003e ? -\u003e \\\\vmware-host\\Shared Folders -\u003e shared",
   "_Parsed": {
    "ItemIDSize": 84,
    "Offset": 0,
-   "Type": 3,
-   "Subtype": 1,
+   "Type": 49,
+   "TypeHex": "0x31",
    "ShellBag": {
     "Size": 84,
     "Type": 49,
@@ -305,7 +460,8 @@ Output: [
  {
   "ModTime": "2021-06-01T06:28:19Z",
   "basename(path=Hive)": "UsrClass.dat",
-  "KeyPath": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0\\0\\0",
+  "KeyPath": "Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\3\\0\\0\\0",
+  "Slot": "0",
   "Description": {
    "Type": [
     "Directory",
@@ -319,12 +475,11 @@ Output: [
    "MFTID": 8651087,
    "MFTSeq": 0
   },
-  "Path": "My Computer -\u003e ? -\u003e \\\\vmware-host\\Shared Folders -\u003e shared -\u003e tmp",
   "_Parsed": {
    "ItemIDSize": 74,
    "Offset": 0,
-   "Type": 3,
-   "Subtype": 1,
+   "Type": 49,
+   "TypeHex": "0x31",
    "ShellBag": {
     "Size": 74,
     "Type": 49,
