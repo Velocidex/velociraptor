@@ -132,6 +132,7 @@ export: |
 
      LET KnownGUIDLookup <= dict(
        `20D04FE0-3AEA-1069-A2D8-08002B30309D`="My Computer",
+       `F02C1A0D-BE21-4350-88B0-7367FC96EF3C`="Computers and Devices",
        `679F85CB-0220-4080-B29B-5540CC05AAB6`="Quick Access",
        `DE61D971-5EBC-4F02-A3A9-6C82895E5C04`='AddNewPrograms',
        `724EF170-A42D-4FEF-9F26-B60E846FBA4F`='AdminTools',

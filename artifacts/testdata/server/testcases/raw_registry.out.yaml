@@ -186,7 +186,7 @@ Output: [
   "KeyPath": "Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU",
   "Slot": "3",
   "Description": {
-   "LongName": "F02C1A0D-BE21-4350-88B0-7367FC96EF3C",
+   "LongName": "Computers and Devices",
    "GUID": "F02C1A0D-BE21-4350-88B0-7367FC96EF3C",
    "Type": "Root"
   },
@@ -203,7 +203,7 @@ Output: [
      "Value": "F02C1A0D-BE21-4350-88B0-7367FC96EF3C"
     },
     "Description": {
-     "LongName": "F02C1A0D-BE21-4350-88B0-7367FC96EF3C",
+     "LongName": "Computers and Devices",
      "GUID": "F02C1A0D-BE21-4350-88B0-7367FC96EF3C",
      "Type": "Root"
     }
