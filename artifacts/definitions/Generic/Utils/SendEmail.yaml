@@ -37,8 +37,7 @@ parameters:
     Refuse to send mails more often than this interval (in seconds). This throttling
     is applied to the whole server.
 
-sources:
-- query: |
+export: |
     -- Create a random string suitable as a MIME boundary:
     LET _RandomString = SELECT format(format="%c", args=20 + rand(range=107)) AS Ch
       FROM range(end=1000)
@@ -94,7 +93,9 @@ sources:
             path=Filename),
           data=EncodeFile(
             Filename=Filename)))
-    
+
+sources:
+- query: |
     LET Texts <= WrapAlternative(
         Plain=WrapText(Value=PlainTextMessage, Type='plain'),
         HTML=WrapText(Value=HTMLMessage, Type='html'))
