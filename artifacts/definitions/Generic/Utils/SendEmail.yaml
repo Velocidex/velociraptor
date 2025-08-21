@@ -6,7 +6,6 @@ type: SERVER
 
 parameters:
 - name: Secret
-  default: gmail
   description: The name of the secret to use to send the mail with.
 
 - name: Recipients
@@ -18,8 +17,10 @@ parameters:
   description: The sender address (from).
 
 - name: FilesToUpload
-  type: json_array
-  default: '["C:/test.txt"]'
+  type: csv
+  description: Files to upload, optionally renamed.
+  default: |
+    Path,Filename
 
 - name: PlainTextMessage
   description: A plain-text message.
@@ -38,72 +39,78 @@ parameters:
     is applied to the whole server.
 
 export: |
-    -- Create a random string suitable as a MIME boundary:
-    LET _RandomString = SELECT format(format="%c", args=20 + rand(range=107)) AS Ch
-      FROM range(end=1000)
-      WHERE Ch =~ "[A-Za-z0-9'()+_,./:=?]"
-      LIMIT 70
-    
-    LET RandomString = join(array=_RandomString.Ch)
-    
-    -- Wrap Sections in boundaries. Header may be used to create a sub-boundary,
-    -- useful for multipart/alternative:
-    LET WrapInBoundary(Boundary, Sections, Header) = template(
-        template="{{ if .header }}{{ .header }}; boundary={{ .boundary }}\r\n\r\n{{ end }}{{ range .sections }}--{{ $.boundary }}\r\n{{ . }}{{ end }}--{{ $.boundary }}--\r\n",
-        expansion=dict(
-          boundary=Boundary,
-          sections=Sections,
-          header=get(
-            field='Header',
-            default='')))
-    
-    -- Add content type ("plain" or "html") and newlines to text:
-    LET WrapText(Value, Type) = if(
-        condition=Value,
-        then=format(format='Content-Type: text/%s; charset="utf-8"\r\n\r\n%v\r\n',
-                    args=[Type, Value]))
-    
-    -- Wrap text (plain, HTML or both) in multipart/alternative, letting clients
-    -- pick either HTML or plain-text, depending on what they support. If just
-    -- one of Plain/HTML is specified, multipart/alternative is not used:
-    LET WrapAlternative(Plain, HTML) = if(
-        condition=Plain
-         AND HTML,
-        then=WrapInBoundary(Header="Content-Type: multipart/alternative",
-                            Boundary=RandomString,
-                            Sections=(Plain, HTML)),
-        else=Plain || HTML)
-    
-    -- Encodes the file as base64 with lines split on 80 chars:
-    LET EncodeFile(Filename) = regex_replace(
-        re="(.{80})",
-        replace="$1\r\n",
-        source=base64encode(string=read_file(filename=Filename)))
-    
-    -- A Helper function to embed a file content from disk:
-    LET AttachFile(Filename) = template(
-        template='Content-Type: application/octet-stream; name="{{ .name }}"\r\nContent-Disposition: attachment; filename="{{ .filename }}"\r\nContent-Transfer-Encoding: base64\r\n\r\n{{ .data }}\r\n\r\n',
-        expansion=dict(
-          name=regex_replace(
-            source=basename(
-              path=Filename),
-            re='''\..+$''',
-            replace=''),
-          filename=basename(
+  -- Create a random string suitable as a MIME boundary:
+  LET _RandomString = SELECT format(format="%c", args=20 + rand(range=107)) AS Ch
+    FROM range(end=1000)
+    WHERE Ch =~ "[A-Za-z0-9'()+_,./:=?]"
+    LIMIT 70
+  
+  LET RandomString = join(array=_RandomString.Ch)
+  
+  -- Wrap Sections in boundaries. Header may be used to create a sub-boundary,
+  -- useful for multipart/alternative:
+  LET WrapInBoundary(Boundary, Sections, Header) = template(
+      template="{{ if .header }}{{ .header }}; boundary={{ .boundary }}\r\n\r\n{{ end }}{{ range .sections }}--{{ $.boundary }}\r\n{{ . }}{{ end }}--{{ $.boundary }}--\r\n",
+      expansion=dict(
+        boundary=Boundary,
+        sections=Sections,
+        header=get(
+          field='Header',
+          default='')))
+  
+  -- Add content type ("plain" or "html") and newlines to text:
+  LET WrapText(Value, Type) = if(
+      condition=Value,
+      then=format(format='Content-Type: text/%s; charset="utf-8"\r\n\r\n%v\r\n',
+                  args=[Type, Value]))
+  
+  -- Wrap text (plain, HTML or both) in multipart/alternative, letting clients
+  -- pick either HTML or plain-text, depending on what they support. If just
+  -- one of Plain/HTML is specified, multipart/alternative is not used:
+  LET WrapAlternative(Plain, HTML) = if(
+      condition=Plain
+       AND HTML,
+      then=WrapInBoundary(Header="Content-Type: multipart/alternative",
+                          Boundary=RandomString,
+                          Sections=(Plain, HTML)),
+      else=Plain || HTML)
+  
+  -- Encodes the file as base64 with lines split on 80 chars:
+  LET EncodeFile(Filename) = regex_replace(
+      re="(.{80})",
+      replace="$1\r\n",
+      source=base64encode(string=read_file(filename=Filename)))
+  
+  -- A Helper function to embed a file content from disk.
+  LET AttachFile(Path, Filename) = template(
+      template='Content-Type: application/octet-stream; name="{{ .name }}"\r\nContent-Disposition: attachment; filename="{{ .filename }}"\r\nContent-Transfer-Encoding: base64\r\n\r\n{{ .data }}\r\n\r\n',
+      expansion=dict(
+        name=regex_replace(
+          source=basename(
             path=Filename),
-          data=EncodeFile(
-            Filename=Filename)))
-
-    -- Call AttachFile() for each file in Filenames that exist
-    LET AttachFiles(Filenames) = SELECT AttachFile(Filename=_value) AS Part
-      FROM foreach(row=Filenames)
-      WHERE (stat(filename=_value).OSPath
-         AND log(message="Attaching %v", args=_value, dedup=-1, level='INFO')) OR NOT
-        log(
-          message="Fail to attach %v",
-          args=_value,
-          dedup=-1,
-          level='WARN')
+          re='''\..+$''',
+          replace=''),
+        filename=basename(
+          path=Filename),
+        data=EncodeFile(
+          Filename=Path)))
+  
+  -- Call AttachFile() for each file in Files that exist. Files must be an array
+  -- of dicts with the members "Path" and an optional "Filename", which is used
+  -- to replace the attachment filename. Useful for temporary files:
+  LET AttachFiles(Files) = SELECT AttachFile(Path=Path,
+                                             Filename=
+                                               get(field='Filename',
+                                                   default=
+                                                     Path)) AS Part
+    FROM foreach(row=Files)
+    WHERE (stat(filename=Path).OSPath
+       AND log(message="Attaching %v", args=Path, dedup=-1, level='INFO')) OR NOT
+      log(
+        message="Fail to attach %v",
+        args=Path,
+        dedup=-1,
+        level='WARN')
 
 sources:
 - query: |
@@ -121,7 +128,7 @@ sources:
     // attachments.
     LET Message <= WrapInBoundary(
         Boundary=Boundary,
-        Sections=Texts + AttachFiles(Filenames=FilesToUpload).Part)
+        Sections=Texts + AttachFiles(Files=FilesToUpload).Part)
     
     -- Send the mail
     SELECT mail(secret=Secret,
