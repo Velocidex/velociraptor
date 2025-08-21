@@ -40,7 +40,7 @@ parameters:
 sources:
 - query: |
     -- Create a random string suitable as a MIME boundary:
-    LET _RandomString = SELECT format(format="%c", args=20 + rand(range=127)) AS Ch
+    LET _RandomString = SELECT format(format="%c", args=20 + rand(range=107)) AS Ch
       FROM range(end=1000)
       WHERE Ch =~ "[A-Za-z0-9'()+_,./:=?]"
       LIMIT 70
