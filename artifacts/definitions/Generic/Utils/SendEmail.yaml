@@ -9,62 +9,117 @@ parameters:
   default: gmail
   description: The name of the secret to use to send the mail with.
 
-- name: Receipient
-  default: noone@gmail.com
+- name: Recipients
+  type: json_array
+  default: '["noone@example.org"]'
   description: Where to send the mail to.
+
+- name: Sender
+  description: The sender address (from).
 
 - name: FilesToUpload
   type: json_array
   default: '["C:/test.txt"]'
 
 - name: PlainTextMessage
-  default: A test email
+  description: A plain-text message.
+
+- name: HTMLMessage
+  description: An HTML-formatted message.
 
 - name: Subject
   default: A message from Velociraptor
 
-export: |
-   LET Boundary = format(format="-----------------------------9051914041544843%v",
-                         args=now())
-
-   -- A Helper function to make a plain text message.
-   LET PlainData(Value) = format(
-       format='--%s\r\nContent-Type: text/plain; charset="utf-8"\r\n\r\n%v\r\n',
-       args=[Boundary, Value])
-
-   -- Encodes the file as base64 with lines split on 80 chars
-   LET EncodeFile(Filename) = regex_replace(
-       re="(.{80})",
-       replace="$1\r\n",
-       source=base64encode(string=read_file(filename=Filename)))
-
-   -- A Helper function to embed a file content from disk.
-   LET AttachFile(Filename) = format(
-       format='--%s\r\nContent-Type: application/octet-stream; name="%s"\r\nContent-Disposition: attachment; filename="%s"\r\nContent-Transfer-Encoding: base64\r\n\r\n%v\r\n\r\n',
-       args=[Boundary, basename(path=Filename),
-             basename(path=Filename), EncodeFile(Filename=Filename)])
-
-   -- The End boundary signals the last part
-   LET END = format(format="%s--\r\n", args=Boundary)
+- name: Period
+  type: int
+  default: 10
+  description: |
+    Refuse to send mails more often than this interval (in seconds). This throttling
+    is applied to the whole server.
 
 sources:
 - query: |
+    -- Create a random string suitable as a MIME boundary:
+    LET _RandomString = SELECT format(format="%c", args=20 + rand(range=127)) AS Ch
+      FROM range(end=1000)
+      WHERE Ch =~ "[A-Za-z0-9'()+_,./:=?]"
+      LIMIT 70
+    
+    LET RandomString = join(array=_RandomString.Ch)
+    
+    -- Wrap Sections in boundaries. Header may be used to create a sub-boundary,
+    -- useful for multipart/alternative:
+    LET WrapInBoundary(Boundary, Sections, Header) = template(
+        template="{{ if .header }}{{ .header }}; boundary={{ .boundary }}\r\n\r\n{{ end }}{{ range .sections }}--{{ $.boundary }}\r\n{{ . }}{{ end }}--{{ $.boundary }}--\r\n",
+        expansion=dict(
+          boundary=Boundary,
+          sections=Sections,
+          header=get(
+            field='Header',
+            default='')))
+    
+    -- Add content type ("plain" or "html") and newlines to text:
+    LET WrapText(Value, Type) = if(
+        condition=Value,
+        then=format(format='Content-Type: text/%s; charset="utf-8"\r\n\r\n%v\r\n',
+                    args=[Type, Value]))
+    
+    -- Wrap text (plain, HTML or both) in multipart/alternative, letting clients
+    -- pick either HTML or plain-text, depending on what they support. If just
+    -- one of Plain/HTML is specified, multipart/alternative is not used:
+    LET WrapAlternative(Plain, HTML) = if(
+        condition=Plain
+         AND HTML,
+        then=WrapInBoundary(Header="Content-Type: multipart/alternative",
+                            Boundary=RandomString,
+                            Sections=(Plain, HTML)),
+        else=Plain || HTML)
+    
+    -- Encodes the file as base64 with lines split on 80 chars:
+    LET EncodeFile(Filename) = regex_replace(
+        re="(.{80})",
+        replace="$1\r\n",
+        source=base64encode(string=read_file(filename=Filename)))
+    
+    -- A Helper function to embed a file content from disk:
+    LET AttachFile(Filename) = template(
+        template='Content-Type: application/octet-stream; name="{{ .name }}"\r\nContent-Disposition: attachment; filename="{{ .filename }}"\r\nContent-Transfer-Encoding: base64\r\n\r\n{{ .data }}\r\n\r\n',
+        expansion=dict(
+          name=regex_replace(
+            source=basename(
+              path=Filename),
+            re='''\..+$''',
+            replace=''),
+          filename=basename(
+            path=Filename),
+          data=EncodeFile(
+            Filename=Filename)))
+    
+    LET Texts <= WrapAlternative(
+        Plain=WrapText(Value=PlainTextMessage, Type='plain'),
+        HTML=WrapText(Value=HTMLMessage, Type='html'))
+    
+    LET Texts <= if(condition=Texts, then=[Texts], else=[])
+    
     LET MessageParts = SELECT AttachFile(Filename=_value) AS Part
-       FROM foreach(row=FilesToUpload)
-       WHERE stat(filename=_value).OSPath
-         AND log(message="Attaching %v", args=_value, dedup=-1)
-
-    LET Headers <= dict(
-     `Content-Type`='multipart/mixed; boundary=' + Boundary)
-
+      FROM foreach(row=FilesToUpload)
+      WHERE stat(filename=_value).OSPath
+       AND log(message="Attaching %v", args=_value, dedup=-1)
+    
+    LET Boundary <= RandomString
+    
+    LET Headers <= dict(`Content-Type`='multipart/mixed; boundary=' + Boundary)
+    
     // Build the email parts - first the plain text message, then the
     // attachments.
-    LET Message <= join(sep="\r\n",
-       array=( PlainData(Value=PlainTextMessage) , ) + MessageParts.Part + END)
-
+    LET Message <= WrapInBoundary(Boundary=Boundary,
+                                  Sections=Texts + MessageParts.Part)
+    
     -- Send the mail
     SELECT mail(secret=Secret,
-                `to`=Receipient,
+                `to`=Recipients,
+                `from`=Sender,
+                period=Period,
                 subject=Subject,
                 headers=Headers,
                 `body`=Message) AS Mail
