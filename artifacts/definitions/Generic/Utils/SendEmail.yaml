@@ -1,4 +1,4 @@
-name: Custom.Generic.Utils.SendEmail
+name: Generic.Utils.SendEmail
 author: Andreas Misje – @misje
 description: |
   A Utility artifact for sending emails.
@@ -95,9 +95,10 @@ export: |
         format='Content-Type: text/%s; charset="utf-8"%s\r\n\r\n%v\r\n',
         args=[Type, if(condition=get(field='Encode', default=false),
                        then="\r\nContent-Transfer-Encoding: base64",
-                       else=""), if(condition=Encode,
-                                    then=EncodeData(Data=Value),
-                                    else=Value)]))
+                       else=""), if(
+          condition=get(field='Encode', default=false),
+          then=EncodeData(Data=Value),
+          else=Value)]))
   
   -- Wrap text (plain, HTML or both) in multipart/alternative, letting clients
   -- pick either HTML or plain-text, depending on what they support. If just
@@ -167,6 +168,8 @@ sources:
     
     -- Send the mail
     SELECT mail(secret=Secret,
+                `to`=Recipients,
+                `from`=Sender,
                 period=Period,
                 subject=Subject,
                 headers=Headers,
