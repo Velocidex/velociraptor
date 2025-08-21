@@ -94,6 +94,17 @@ export: |
           data=EncodeFile(
             Filename=Filename)))
 
+    -- Call AttachFile() for each file in Filenames that exist
+    LET AttachFiles(Filenames) = SELECT AttachFile(Filename=_value) AS Part
+      FROM foreach(row=Filenames)
+      WHERE (stat(filename=_value).OSPath
+         AND log(message="Attaching %v", args=_value, dedup=-1, level='INFO')) OR NOT
+        log(
+          message="Fail to attach %v",
+          args=_value,
+          dedup=-1,
+          level='WARN')
+
 sources:
 - query: |
     LET Texts <= WrapAlternative(
@@ -102,19 +113,15 @@ sources:
     
     LET Texts <= if(condition=Texts, then=[Texts], else=[])
     
-    LET MessageParts = SELECT AttachFile(Filename=_value) AS Part
-      FROM foreach(row=FilesToUpload)
-      WHERE stat(filename=_value).OSPath
-       AND log(message="Attaching %v", args=_value, dedup=-1)
-    
     LET Boundary <= RandomString
     
     LET Headers <= dict(`Content-Type`='multipart/mixed; boundary=' + Boundary)
     
     // Build the email parts - first the plain text message, then the
     // attachments.
-    LET Message <= WrapInBoundary(Boundary=Boundary,
-                                  Sections=Texts + MessageParts.Part)
+    LET Message <= WrapInBoundary(
+        Boundary=Boundary,
+        Sections=Texts + AttachFiles(Filenames=FilesToUpload).Part)
     
     -- Send the mail
     SELECT mail(secret=Secret,
