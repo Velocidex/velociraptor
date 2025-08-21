@@ -92,7 +92,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20250529114725-e36ea8a283e2
 	www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959
 	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7
-	www.velocidex.com/golang/vfilter v0.0.0-20250730023345-e96cf083b79c
+	www.velocidex.com/golang/vfilter v0.0.0-20250821063846-abe702264eca
 )
 
 require (
@@ -110,7 +110,7 @@ require (
 	github.com/Velocidex/go-vhdx v0.0.0-20250511013458-5cba970cdeda
 	github.com/Velocidex/go-vmdk v0.0.0-20250505140221-bd4633ce2fbf
 	github.com/Velocidex/grok v0.0.1
-	github.com/Velocidex/ordereddict v0.0.0-20250813031713-7996a9397018
+	github.com/Velocidex/ordereddict v0.0.0-20250821063524-02dc06e46238
 	github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9
 	github.com/Velocidex/tracee_velociraptor v0.0.0-20250620124218-01f48d6fc3a1
 	github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6

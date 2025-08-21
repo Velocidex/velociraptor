@@ -114,6 +114,7 @@ var (
 			"auth_username",
 			"auth_password",
 			"skip_verify",
+			"root_ca",
 		},
 		Template: map[string]string{
 			"server":      "127.0.0.1",

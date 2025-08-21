@@ -120,6 +120,58 @@
    "Details": "This is column Foo=Bar Int=4 List=[1,2,3] Dict={\"X\":1,\"Y\":2}"
   }
  ],
+ "Rule With Details with arrays": [
+  {
+   "Foo": "Bar",
+   "Data": [
+    "Element1",
+    "Element2"
+   ],
+   "_Match": {
+    "match": true,
+    "search_results": {
+     "selection": true
+    },
+    "condition_results": [
+     true
+    ]
+   },
+   "_Rule": {
+    "Title": "RuleWithDetailsWithArrays",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "event_matchers": [
+        [
+         {
+          "field": "Foo",
+          "values": [
+           "Bar"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "Condition": [
+      {
+       "Search": {
+        "Name": "selection"
+       }
+      }
+     ]
+    },
+    "AdditionalFields": {
+     "details": "This is column Foo=%Data[1]% Bar=%Data[2]% Exceeded=%Data[6]%"
+    }
+   },
+   "Details": "This is column Foo=Element1 Bar=Element2 Exceeded="
+  }
+ ],
  "Default Details in callback": [
   {
    "Foo": "Bar",

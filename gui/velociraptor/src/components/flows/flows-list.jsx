@@ -22,7 +22,6 @@ import OfflineCollectorWizard from './offline-collector.jsx';
 import DeleteNotebookDialog from '../notebooks/notebook-delete.jsx';
 import ExportNotebook from '../notebooks/export-notebook.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { HotKeys } from "react-hotkeys";
 import { withRouter } from "react-router-dom";
 import { runArtifact, getNotebookId } from "./utils.jsx";
 import Spinner from '../utils/spinner.jsx';
@@ -327,13 +326,6 @@ class FlowsList extends React.Component {
         });
     }
 
-    gotoTab = (tab) => {
-        let client_id = this.props.selected_flow && this.props.selected_flow.client_id;
-        let selected_flow = this.props.selected_flow && this.props.selected_flow.session_id;
-        this.props.history.push(
-            "/collected/" + client_id + "/" + selected_flow + "/" + tab);
-    }
-
     setFullScreen = () => {
         let client_id = this.props.selected_flow &&
             this.props.selected_flow.client_id;
@@ -390,13 +382,15 @@ class FlowsList extends React.Component {
             hideSelectColumn: true,
             classes: "row-selected",
             onSelect: row=>{
-                this.props.setSelectedFlow(row._Flow);
-                this.setState({selectedFlowId: row._id});
+                if(row) {
+                    this.props.setSelectedFlow(row._Flow);
+                    this.setState({selectedFlowId: row._id});
+                }
             },
             onMultiSelect: rows=>{
                 let flows = [];
                 _.each(rows, x=>{
-                    if(!_.isEmpty(x._Flow)) {
+                    if(x && !_.isEmpty(x._Flow)) {
                         flows.push(x._Flow);
                     }
                 });
@@ -407,25 +401,6 @@ class FlowsList extends React.Component {
 
         // When running on the server we have some special GUI.
         let isServer = client_id === "server";
-        let KeyMap = {
-            GOTO_RESULTS: {
-                name: "Display server dashboard",
-                sequence: "r",
-            },
-            GOTO_LOGS: "l",
-            GOTO_OVERVIEW: "o",
-            GOTO_UPLOADS: "u",
-            COLLECT: "c",
-        };
-
-        let keyHandlers={
-            GOTO_RESULTS: (e)=>this.gotoTab("results"),
-            GOTO_LOGS: (e)=>this.gotoTab("logs"),
-            GOTO_UPLOADS: (e)=>this.gotoTab("uploads"),
-            GOTO_OVERVIEW: (e)=>this.gotoTab("overview"),
-            COLLECT: ()=>this.setState({showWizard: true}),
-        };
-
         let transform = this.state.transform || {};
 
         return (
@@ -708,28 +683,26 @@ class FlowsList extends React.Component {
               </Navbar>
 
               <div className="fill-parent no-margins toolbar-margin selectable">
-                <HotKeys keyMap={KeyMap} handlers={keyHandlers}>
-                  <VeloPagedTable
-                    url="v1/GetClientFlows"
-                    params={{client_id: client_id}}
-                    translate_column_headers={true}
-                    prevent_transformations={{
-                        Mb: true, Rows: true,
-                        State: true, "Last Active": true}}
-                    selectRow={selectRow}
-                    renderers={flowRowRenderer}
-                    version={this.state.version}
-                    no_spinner={true}
-                    row_classes={rowClassRenderer(router_flow_id)}
-                    transform={this.state.transform}
-                    setTransform={x=>{
-                        this.setState({transform: x});
-                    }}
-                    no_toolbar={true}
-                    name={"GetClientFlows" + client_id}
-                    setPageState={x=>this.setState({page_state: x})}
-                  />
-                </HotKeys>
+                <VeloPagedTable
+                  url="v1/GetClientFlows"
+                  params={{client_id: client_id}}
+                  translate_column_headers={true}
+                  prevent_transformations={{
+                      Mb: true, Rows: true,
+                      State: true, "Last Active": true}}
+                  selectRow={selectRow}
+                  renderers={flowRowRenderer}
+                  version={this.state.version}
+                  no_spinner={true}
+                  row_classes={rowClassRenderer(router_flow_id)}
+                  transform={this.state.transform}
+                  setTransform={x=>{
+                      this.setState({transform: x});
+                  }}
+                  no_toolbar={true}
+                  name={"GetClientFlows" + client_id}
+                  setPageState={x=>this.setState({page_state: x})}
+                />
               </div>
             </>
         );

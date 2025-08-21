@@ -6,6 +6,7 @@ import './paged-table.css';
 
 import {CancelToken} from 'axios';
 
+import { HotKeys, ObserveKeys } from "react-hotkeys";
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -773,7 +774,14 @@ class VeloPagedTable extends Component {
                 });
             }
 
-        }).catch(() => {
+            if(this.state.select_on_load >= 0 &&
+               this.state.select_on_load < pageData.rows.length) {
+                let row = pageData.rows[this.state.select_on_load];
+                this.selectRow(row, this.state.select_on_load, false);
+                this.setState({select_on_load: -1});
+            }
+
+        }).catch(response=>{
             this.setState({loading: false, rows: [], columns: [], stack_path: []});
         });
     }
@@ -1293,6 +1301,104 @@ class VeloPagedTable extends Component {
         this.setState({columns: new_columns});
     }
 
+    getLastPage = ()=>{
+        let total_size = parseInt(this.state.total_size || 0);
+        let total_pages = parseInt(total_size / this.state.page_size) + 1;
+        let last_page = total_pages - 1;
+
+        // Ensure the last page has some data - otherwise back up one
+        // page.
+        if (last_page * this.state.page_size===this.state.total_size) {
+            last_page -= 1;
+        }
+
+        if (last_page <= 0) {
+            last_page = 0;
+        }
+
+        return last_page;
+    }
+
+    nextSelection = (e)=>{
+        if(e){
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+
+        let rows_length = this.state.rows.length;
+        if(rows_length === 0 || this.state.selected_row_idx < 0 ||
+           !this.props.selectRow) {
+            return;
+        };
+
+        let next_row = this.state.selected_row_idx + 1;
+        if(next_row < rows_length) {
+            let row = this.state.rows[next_row];
+            this.selectRow(row, next_row, true);
+        } else if(next_row + this.state.start_row < this.state.total_size) {
+            // Next page
+            this.nextPage();
+            this.setState({select_on_load: 0});
+        }
+    }
+
+    prevSelection = e=>{
+        if(e){
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        if(this.state.selected_row_idx >= 0 && this.props.selectRow) {
+            let prev_row = this.state.selected_row_idx - 1;
+
+            if(prev_row >= 0) {
+                let row = this.state.rows[prev_row];
+                this.selectRow(row, prev_row, true);
+            } else if(prev_row + this.state.start_row >= 0) {
+                // Previous page
+                this.previousPage();
+                this.setState({select_on_load: 0});
+            }
+        }
+    }
+
+    nextPage = (e)=>{
+        if(e){
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        let last_page = this.getLastPage();
+        let current_page = parseInt(this.state.start_row / this.state.page_size);
+        let next_page = current_page + 1;
+
+        if ( next_page <= last_page) {
+            this.setState({start_row: next_page * this.state.page_size });
+        }
+
+        if(this.state.selected_row_idx >= 0 && this.props.selectRow) {
+            this.setState({select_on_load: this.state.selected_row_idx});
+        }
+    }
+
+    previousPage = (e)=>{
+        if(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        let current_page = parseInt(this.state.start_row / this.state.page_size);
+        let next_page = current_page - 1;
+        if ( next_page >= 0) {
+            this.setState({start_row: next_page * this.state.page_size });
+        }
+
+        if(this.state.selected_row_idx >= 0 && this.props.selectRow) {
+            this.setState({select_on_load: this.state.selected_row_idx});
+        }
+    }
+
     renderPaginator = (direction)=>{
         let end = this.state.start_row + this.state.page_size;
         if(end>this.state.total_size) {
@@ -1326,16 +1432,21 @@ class VeloPagedTable extends Component {
     renderTable = ()=>{
         return (
             <>
-              <Table className="paged-table">
-                <thead>
-                  <tr className="paged-table-header">
-                    {_.map(this.activeColumns(), this.renderHeader)}
-                  </tr>
-                </thead>
-                <tbody className="fixed-table-body">
-                  {_.map(this.state.rows, this.renderRow)}
-                </tbody>
-              </Table>
+              <HotKeys keyMap={this.keymap} handlers={this.handlers}>
+                <ObserveKeys>
+                  <Table className="paged-table">
+                    <thead>
+                      <tr className="paged-table-header">
+                        {_.map(this.activeColumns(), this.renderHeader)}
+                      </tr>
+                    </thead>
+                    <tbody className="fixed-table-body">
+                      {_.map(this.state.rows, this.renderRow)}
+                    </tbody>
+                  </Table>
+                </ObserveKeys>
+              </HotKeys>
+
               { this.state.showStackDialog &&
                 <StackDialog
                   name={this.state.showStackDialog}
@@ -1356,14 +1467,29 @@ class VeloPagedTable extends Component {
         );
     }
 
+    keymap={
+        NEXT: "n",
+        PREVIOUS: "p",
+        NEXT_SELECTION: "k",
+        PREVIOUS_SELECTION: "j",
+    };
+
+    handlers={
+        NEXT: this.nextPage,
+        PREVIOUS: this.previousPage,
+        NEXT_SELECTION: this.nextSelection,
+        PREVIOUS_SELECTION: this.prevSelection,
+    };
+
     render = ()=>{
         return (
-            <>{ this.renderToolbar() }
-            { _.isEmpty(this.state.columns) ?
-              <div className="no-content">
-                {T("Table contains no data")}
-              </div>
-              : this.renderTable()}
+            <>
+                  { this.renderToolbar() }
+                  { _.isEmpty(this.state.columns) ?
+                    <div className="no-content">
+                      {T("Table contains no data")}
+                    </div>
+                    : this.renderTable()}
             </>);
     }
 }

@@ -5,6 +5,7 @@ import SplitPane from 'react-split-pane';
 import FlowsList from './flows-list.jsx';
 import FlowInspector from "./flows-inspector.jsx";
 import { withRouter }  from "react-router-dom";
+import { HotKeys, ObserveKeys } from "react-hotkeys";
 
 import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
@@ -62,6 +63,13 @@ class ClientFlowsView extends React.Component {
         }
     }
 
+    gotoTab = (tab) => {
+        let client_id = this.props.client.client_id;
+        let selected_flow = this.state.currentFlow && this.state.currentFlow.session_id;
+        this.props.history.push(
+            "/collected/" + client_id + "/" + selected_flow + "/" + tab);
+    }
+
     setMultiSelectedFlow = flows=>{
         this.setState({selectedMultiFlows: flows});
     }
@@ -71,22 +79,48 @@ class ClientFlowsView extends React.Component {
     }
 
     render() {
+        let KeyMap = {
+            GOTO_RESULTS: {
+                name: "Display server dashboard",
+                sequence: "r",
+            },
+            GOTO_LOGS: "l",
+            GOTO_OVERVIEW: "o",
+            GOTO_UPLOADS: "u",
+            COLLECT: "c",
+            NOTEBOOK: "b",
+        };
+
+        let keyHandlers={
+            GOTO_RESULTS: (e)=>this.gotoTab("results"),
+            GOTO_LOGS: (e)=>this.gotoTab("logs"),
+            GOTO_UPLOADS: (e)=>this.gotoTab("uploads"),
+            GOTO_OVERVIEW: (e)=>this.gotoTab("overview"),
+            NOTEBOOK: (e)=>this.gotoTab("notebook"),
+            COLLECT: ()=>this.setState({showWizard: true}),
+        };
+
+
         return (
             <>
-              <SplitPane split="horizontal"
-                         size={this.state.topPaneSize}
-                         onResizerDoubleClick={x=>this.collapse("50%")}
-                         defaultSize="80%">
-                <FlowsList
-                  selected_flow={this.state.currentFlow}
-                  collapseToggle={this.collapse}
-                  setSelectedFlow={this.setSelectedFlow}
-                  setMultiSelectedFlow={this.setMultiSelectedFlow}
-                  client={this.props.client}/>
-                <FlowInspector
-                  flow={this.state.currentFlow}
-                  client={{client_id: this.props.client}}/>
-              </SplitPane>
+              <HotKeys keyMap={KeyMap} handlers={keyHandlers}>
+                <ObserveKeys>
+                  <SplitPane split="horizontal"
+                             size={this.state.topPaneSize}
+                             onResizerDoubleClick={x=>this.collapse("50%")}
+                             defaultSize="80%">
+                    <FlowsList
+                      selected_flow={this.state.currentFlow}
+                      collapseToggle={this.collapse}
+                      setSelectedFlow={this.setSelectedFlow}
+                      setMultiSelectedFlow={this.setMultiSelectedFlow}
+                      client={this.props.client}/>
+                    <FlowInspector
+                      flow={this.state.currentFlow}
+                      client={{client_id: this.props.client}}/>
+                  </SplitPane>
+                </ObserveKeys>
+              </HotKeys>
             </>
         );
     }

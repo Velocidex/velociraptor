@@ -153,6 +153,28 @@ detection:
 			rows:          testRows,
 		},
 		{
+			description: "Rule With Details with arrays",
+			rule: `
+title: RuleWithDetailsWithArrays
+# Indexes are 1 based - first element is %Data[1]%
+details: This is column Foo=%Data[1]% Bar=%Data[2]% Exceeded=%Data[6]%
+logsource:
+   product: windows
+   service: application
+
+detection:
+  selection:
+     Foo: Bar
+  condition: selection
+`,
+			fieldmappings: ordereddict.NewDict(),
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Foo", "Bar").
+					Set("Data", []string{"Element1", "Element2"}),
+			},
+		},
+		{
 			description: "Default Details in callback",
 			rule: `
 title: RuleWithDetails

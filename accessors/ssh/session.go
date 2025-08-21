@@ -130,11 +130,12 @@ func getSecret(
 		return nil, err
 	}
 
-	arg := &SSHAccessorArgs{}
-	secret_record.GetString("username", &arg.Username)
-	secret_record.GetString("hostname", &arg.Hostname)
-	secret_record.GetString("password", &arg.Password)
-	secret_record.GetString("private_key", &arg.PrivateKey)
-
+	// Override the following from the secret
+	arg := &SSHAccessorArgs{
+		Username:   secret_record.GetString("username"),
+		Hostname:   secret_record.GetString("hostname"),
+		Password:   secret_record.GetString("password"),
+		PrivateKey: secret_record.GetString("private_key"),
+	}
 	return arg, nil
 }

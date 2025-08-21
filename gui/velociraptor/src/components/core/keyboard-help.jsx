@@ -31,8 +31,6 @@ const helpTextCol1 = [
 
 const helpTextCol2 = [
     [T("Collected Artifacts"), [
-        ["n", T("Select next collection")],
-        ["p", T("Select previous collection")],
         ["r", T("View selected collection results")],
         ["o", T("View selected collection overview")],
         ["l", T("View selected collection logs")],
@@ -41,6 +39,12 @@ const helpTextCol2 = [
     [T("Editor shortcuts"), [
         ["ctrl+,", T("Popup the editor configuration dialog")],
         ["ctrl+enter", T("Save editor contents")],
+    ]],
+    [T("Table navigation"), [
+        ["n", T("Go to next page")],
+        ["p", T("Go to previous page")],
+        ["j", T("Move to previous selection")],
+        ["k", T("Move to next selection")],
     ]],
 ];
 
@@ -86,12 +90,12 @@ export default class KeyboardHelp extends React.PureComponent {
                                      {T(title)}
                                    </td></tr>
                                  { _.map(desc, (x, i)=>{
-                                     return <tr key={i}>
-                                        <td className="key">
-                                          {this.renderKey(x[0])}  :
-                                        </td>
-                                        <td className="desc">{x[1]}</td>
-                                      </tr>;
+                                     return <tr key={"X"+i}>
+                                              <td className="key">
+                                                {this.renderKey(x[0])}  :
+                                              </td>
+                                              <td className="desc">{x[1]}</td>
+                                            </tr>;
                                  })}
                                </React.Fragment>);
                    })}

@@ -352,16 +352,17 @@ func (self ShellPlugin) mergeSecretToRequest(
 	new_arg := &ShellPluginArgs{
 		Env: ordereddict.NewDict(),
 	}
-	err = secret_record.GetDict("env", new_arg.Env)
+
+	new_arg.Env, err = secret_record.GetDict("env")
 	if err != nil {
 		return nil, fmt.Errorf("Secret %v: While parsing env %w",
 			arg.Secret, err)
 	}
-	secret_record.GetString("cwd", &new_arg.Cwd)
 
-	var commandline string
-	secret_record.GetString("prefix_commandline", &commandline)
+	// Optional secret variable - it is ok to let the user override.
+	secret_record.UpdateString("cwd", &new_arg.Cwd)
 
+	commandline := secret_record.GetString("prefix_commandline")
 	if commandline == "" {
 		return nil, fmt.Errorf(
 			"Secret %v does not specify a prefix_commandline", arg.Secret)
