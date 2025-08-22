@@ -350,14 +350,15 @@ func mergeSecretSplunk(ctx context.Context, scope vfilter.Scope, arg *_SplunkPlu
 		return err
 	}
 
-	s.GetString("url", &arg.URL)
-	s.GetString("token", &arg.Token)
-	s.GetString("index", &arg.Index)
-	s.GetString("source", &arg.Source)
-	s.GetString("root_ca", &arg.RootCerts)
-	s.GetString("hostname", &arg.Hostname)
-	s.GetString("hostname_field", &arg.HostnameField)
-	s.GetBool("skip_verify", &arg.SkipVerify)
+	s.UpdateString("source", &arg.Source)
+
+	arg.URL = s.GetString("url")
+	arg.Token = s.GetString("token")
+	arg.Index = s.GetString("index")
+	arg.RootCerts = s.GetString("root_ca")
+	arg.Hostname = s.GetString("hostname")
+	arg.HostnameField = s.GetString("hostname_field")
+	arg.SkipVerify = s.GetBool("skip_verify")
 
 	return nil
 }

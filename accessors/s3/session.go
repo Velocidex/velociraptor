@@ -158,13 +158,13 @@ func getSecret(
 		return nil, err
 	}
 
-	arg := &S3AcccessorArgs{}
-	secret_record.GetString("region", &arg.Region)
-	secret_record.GetString("credentials_key", &arg.CredentialsKey)
-	secret_record.GetString("credentials_secret", &arg.CredentialsSecret)
-	secret_record.GetString("credentials_token", &arg.CredentialsToken)
-	secret_record.GetString("endpoint", &arg.Endpoint)
-	secret_record.GetBool("skip_verify", &arg.SkipVerify)
-
+	arg := &S3AcccessorArgs{
+		Region:            secret_record.GetString("region"),
+		CredentialsKey:    secret_record.GetString("credentials_key"),
+		CredentialsSecret: secret_record.GetString("credentials_secret"),
+		CredentialsToken:  secret_record.GetString("credentials_token"),
+		Endpoint:          secret_record.GetString("endpoint"),
+		SkipVerify:        secret_record.GetBool("skip_verify"),
+	}
 	return arg, nil
 }

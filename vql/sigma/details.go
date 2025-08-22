@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	expandRegEx = regexp.MustCompile("%[A-Z.a-z_0-9]+%")
+	expandRegEx = regexp.MustCompile(`%([A-Z.a-z_0-9]+)(\[([0-9]+)\])?%`)
 )
 
 func (self *SigmaContext) AddDetail(
@@ -40,11 +40,31 @@ func (self *SigmaContext) AddDetail(
 			if len(in) <= 2 {
 				return in
 			}
-			in = in[1 : len(in)-1]
 
-			resolved, err := rule.GetFieldValuesFromEvent(ctx, scope, in, row)
+			match := expandRegEx.FindStringSubmatch(in)
+			variable := match[1]
+
+			// Support indexed expressions like %Data[1]%
+			index := int64(-1)
+			if len(match) == 4 {
+				parsed_index, ok := utils.ToInt64(match[3])
+				if ok {
+					// Indexes are 1 based - i.e. first element is %Data[1]%
+					index = parsed_index - 1
+				}
+			}
+
+			resolved, err := rule.GetFieldValuesFromEvent(ctx, scope, variable, row)
 			if err != nil || len(resolved) == 0 {
 				return in
+			}
+
+			if index != -1 {
+				if index < int64(len(resolved)) {
+					resolved = []interface{}{resolved[index]}
+				} else {
+					return ""
+				}
 			}
 
 			if len(resolved) == 1 {

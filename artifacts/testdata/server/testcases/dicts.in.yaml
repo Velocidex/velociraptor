@@ -1,0 +1,9 @@
+# Test dict handling
+Queries:
+  - LET D1 <= dict(A=1, B=2, C=3)
+
+  # Check access to dict methods
+  - SELECT D1.`@Keys`, D1.`@Values`, D1.`@Len`, D1.`@String` FROM scope()
+
+  # Iterate over dict items.
+  - SELECT * FROM D1.`@Items`

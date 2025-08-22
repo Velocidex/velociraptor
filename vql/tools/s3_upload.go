@@ -329,13 +329,13 @@ func mergeSecret(ctx context.Context, scope vfilter.Scope, arg *S3UploadArgs) er
 		return err
 	}
 
-	s.GetString("region", &arg.Region)
-	s.GetString("credentials_key", &arg.CredentialsKey)
-	s.GetString("credentials_secret", &arg.CredentialsSecret)
-	s.GetString("credentials_token", &arg.CredentialsToken)
-	s.GetString("endpoint", &arg.Endpoint)
-	s.GetString("serverside_encryption", &arg.ServerSideEncryption)
-	s.GetString("kms_encryption_key", &arg.KmsEncryptionKey)
+	arg.Region = s.GetString("region")
+	arg.CredentialsKey = s.GetString("credentials_key")
+	arg.CredentialsSecret = s.GetString("credentials_secret")
+	arg.CredentialsToken = s.GetString("credentials_token")
+	arg.Endpoint = s.GetString("endpoint")
+	arg.ServerSideEncryption = s.GetString("serverside_encryption")
+	arg.KmsEncryptionKey = s.GetString("kms_encryption_key")
 
 	return nil
 }

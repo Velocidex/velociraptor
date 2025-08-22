@@ -421,34 +421,24 @@ func mergeSecretElastic(ctx context.Context, scope vfilter.Scope, arg *_ElasticP
 		return err
 	}
 
-	arg.Addresses = nil
-	s.GetStrings("addresses", &arg.Addresses)
+	arg.Addresses = s.GetStrings("addresses")
 
 	if arg.Addresses == nil {
 		return errors.New("No addresses present in elastic secret!")
 	}
 
 	// Allow the user to override the index
-	if arg.Index == "" {
-		s.GetString("index", &arg.Index)
-	}
+	s.UpdateString("index", &arg.Index)
+	s.UpdateString("type", &arg.Type)
+	s.UpdateString("pipeline", &arg.PipeLine)
+	s.UpdateString("action", &arg.Action)
 
-	if arg.Type == "" {
-		s.GetString("type", &arg.Type)
-	}
-
-	s.GetString("username", &arg.Username)
-	s.GetString("password", &arg.Password)
-	s.GetString("cloud_id", &arg.CloudID)
-	s.GetString("api_key", &arg.APIKey)
-
-	if arg.PipeLine != "" {
-		s.GetString("pipeline", &arg.PipeLine)
-	}
-
-	s.GetBool("skip_verify", &arg.SkipVerify)
-	s.GetString("root_ca", &arg.RootCerts)
-	s.GetString("action", &arg.Action)
+	arg.Username = s.GetString("username")
+	arg.Password = s.GetString("password")
+	arg.CloudID = s.GetString("cloud_id")
+	arg.APIKey = s.GetString("api_key")
+	arg.SkipVerify = s.GetBool("skip_verify")
+	arg.RootCerts = s.GetString("root_ca")
 
 	return nil
 }

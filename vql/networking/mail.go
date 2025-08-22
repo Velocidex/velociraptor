@@ -291,13 +291,14 @@ func (self MailFunction) mergeSecretToRequest(
 		return err
 	}
 
-	// Wipe the args to prevent users from selecting anything here.
-	arg = &MailPluginArgs{}
-	secret_record.GetString("server", &arg.Server)
-	secret_record.GetUint64("server_port", &arg.ServerPort)
-	secret_record.GetString("auth_username", &arg.AuthUsername)
-	secret_record.GetString("auth_password", &arg.AuthPassword)
-	secret_record.GetBool("skip_verify", &arg.SkipVerify)
+	// Replace the following args from the secret - do not allow users
+	// to override them.
+	arg.Server = secret_record.GetString("server")
+	arg.ServerPort = secret_record.GetUint64("server_port")
+	arg.AuthUsername = secret_record.GetString("auth_username")
+	arg.AuthPassword = secret_record.GetString("auth_password")
+	arg.RootCerts = secret_record.GetString("root_ca")
+	arg.SkipVerify = secret_record.GetBool("skip_verify")
 
 	return nil
 }

@@ -108,14 +108,24 @@ func GetSecretsService(config_obj *config_proto.Config) (SecretsService, error) 
 }
 
 // Utilities to extract secrets
-func (self *Secret) GetString(field string, target *string) {
+
+// Update the string field from the secret if it is set.
+func (self *Secret) UpdateString(field string, target *string) {
 	res, pres := self.Data.GetString(field)
 	if pres && res != "" {
 		*target = res
 	}
 }
 
-func (self *Secret) GetStrings(field string, target *[]string) {
+// Get the string from the secret or return an emptry field..
+func (self *Secret) GetString(field string) string {
+	var res string
+	self.UpdateString(field, &res)
+	return res
+}
+
+// Update the strings field from the secret if it is set.
+func (self *Secret) UpdateStrings(field string, target *[]string) {
 	res, pres := self.Data.GetString(field)
 	if pres && res != "" {
 		*target = []string{}
@@ -129,14 +139,28 @@ func (self *Secret) GetStrings(field string, target *[]string) {
 	}
 }
 
-func (self *Secret) GetBool(field string, target *bool) {
+func (self *Secret) GetStrings(field string) []string {
+	var res []string
+	self.UpdateStrings(field, &res)
+	return res
+}
+
+// Update the bool field from the secret if it is set.
+func (self *Secret) UpdateBool(field string, target *bool) {
 	res, pres := self.Data.GetString(field)
 	if pres && res != "" {
 		*target = vql_subsystem.GetBoolFromString(res)
 	}
 }
 
-func (self *Secret) GetUint64(field string, target *uint64) {
+func (self *Secret) GetBool(field string) bool {
+	var res bool
+	self.UpdateBool(field, &res)
+	return res
+}
+
+// Update the uint64 field from the secret if it is set.
+func (self *Secret) UpdateUint64(field string, target *uint64) {
 	res, pres := self.Data.GetString(field)
 	if pres && res != "" {
 		res_int, _ := strconv.ParseInt(res, 0, 64)
@@ -144,8 +168,14 @@ func (self *Secret) GetUint64(field string, target *uint64) {
 	}
 }
 
-// We expect Dict parameters to be a YAML formatted object.
-func (self *Secret) GetDict(field string, target *ordereddict.Dict) error {
+func (self *Secret) GetUint64(field string) uint64 {
+	var res uint64
+	self.UpdateUint64(field, &res)
+	return res
+}
+
+// Update the dict field from the secret if it is set.
+func (self *Secret) UpdateDict(field string, target *ordereddict.Dict) error {
 	res, pres := self.Data.GetString(field)
 	if pres && res != "" {
 		tmp := make(map[string]string)
@@ -162,4 +192,10 @@ func (self *Secret) GetDict(field string, target *ordereddict.Dict) error {
 	}
 
 	return nil
+}
+
+func (self *Secret) GetDict(field string) (*ordereddict.Dict, error) {
+	res := ordereddict.NewDict()
+	err := self.UpdateDict(field, res)
+	return res, err
 }
