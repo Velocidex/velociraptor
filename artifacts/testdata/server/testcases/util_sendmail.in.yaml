@@ -1,0 +1,83 @@
+#Parameters:
+Queries:
+  - LET _ <= import(artifact="Generic.Utils.SendEmail")
+  # We expect a 1–70-character long string consisting of DIGIT / ALPHA / "'" /
+  # "(" / ")" / "+" / "_" / "," / "-" / "." / "/" / ":" / "=" / "?", not ending
+  # in space, as per RFC 1341 7.2.1:
+  - >-
+    LET rfc_bcharsnospace <= "0-9A-Za-z'()+_,./:=?"
+  - LET rfc_bchars <= rfc_bcharsnospace + " "
+  - >-
+    LET rfc_boundary <= "[" + rfc_bchars + "]{0,69}" + "[" + rfc_bcharsnospace + "]"
+  # Generate a few random strings and ensure that they are all according to
+  # spec.:
+  - >-
+    SELECT * FROM foreach(row={ SELECT * FROM range(end=10) }, query={
+      SELECT RandomString =~ rfc_boundary AS OK
+      FROM scope()
+    })
+    GROUP BY OK
+
+  - LET D(X) = split(string=X, sep="\r\n")
+  - |
+    SELECT D(X=WrapText(Value='Foo bar baz', Type='plain')) AS Plain,
+           D(X=WrapText(Value='HTML string', Type='html')) AS HTML FROM scope()
+
+  - LET Plain <= WrapText(Value='This is the plain text', Type='plain')
+  - LET HTML <= WrapText(Value='<!DOCTYPE html><html lang="en"><body><h1>Hello</h1></body></html>', Type='html')
+
+  # In order to get consistent output for test results, mock the random barrier
+  # string:
+  - LET _ <= SELECT mock(function='rand', results=45) FROM scope()
+
+  # Re-import to apply mock():
+  - LET _ <= import(artifact="Generic.Utils.SendEmail")
+
+  # Sanity check – ensure output is not random:
+  - SELECT rand(range=100), RandomString FROM scope()
+
+  # Ensure that just plain text and just HTML results in their individual
+  # unaltered messages, while both results in a multipart/alternative message:
+  - SELECT D(X=WrapAlternative(Plain=Plain, HTML=null)) AS JustPlain FROM scope()
+  - SELECT D(X=WrapAlternative(Plain=null, HTML=HTML)) AS JustHTML FROM scope()
+  - SELECT D(X=WrapAlternative(Plain=Plain, HTML=HTML)) AS Both FROM scope()
+
+  # Create some files:
+  - LET tmp1 <= tempfile()
+  - LET _ <= copy(accessor="data", filename="First attachment contents", dest=tmp1)
+  - LET tmp2 <= tempfile()
+  - LET _ <= copy(accessor="data", filename="Second attachment contents", dest=tmp2)
+
+  # Create attachment:
+  - SELECT D(X=AttachFile(Path=tmp1, Filename='Attachment 1.txt')) AS file FROM scope()
+
+  # Create attachments:
+  - |
+    SELECT AttachFiles(Files=[
+      dict(Path=tmp1, Filename='Attachment 1.txt'),
+      dict(Path=tmp2, Filename='Attachment 2.txt')]) AS files FROM scope()
+
+  # Create a boundary for the main multipart in order to distinguish from the
+  # multipart/alternative:
+  - LET Boundary <= 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'
+
+  # Create multipart with just attachments:
+  - |
+    SELECT D(X=WrapInBoundary(Boundary=Boundary,
+        Sections=AttachFiles(Files=[
+           dict(Path=tmp1, Filename='Attachment 1.txt'),
+           dict(Path=tmp2, Filename='Attachment 2.txt')]).Part)) AS attachments FROM scope()
+
+  # Create multipart with plain-text, HTML and attachments:
+  - |
+    SELECT D(X=WrapInBoundary(Boundary=Boundary,
+        Sections=(WrapAlternative(Plain=Plain, HTML=HTML),) +
+                  AttachFiles(Files=[
+                    dict(Path=tmp1, Filename='Attachment 1.txt'),
+                    dict(Path=tmp2, Filename='Attachment 2.txt')]).Part)) AS attachments
+    FROM scope()
+
+  # Create multipart with no attachments (empty):
+  - |
+    SELECT D(X=WrapInBoundary(Boundary=Boundary,
+        Sections=(WrapAlternative(HTML=HTML),) + AttachFiles(Files=[]))) FROM scope()

@@ -1,70 +1,168 @@
 name: Generic.Utils.SendEmail
+author: Andreas Misje – @misje
 description: |
   A Utility artifact for sending emails.
+
+  This artifact handles the challenges of MIME, encodings and other pitfalls
+  of sending anything but simple plain-text emails. It will, among other things,
+
+  - Let you provide both HTML and plain-text email bodies, letting the email
+    client pick either HTML or plain-text, depending on what it supports (utilising
+    "multipart/alternative")
+  - Text is encoded as Base64 (unless disabled), split into 76-character-wide
+    lines in order to conform with RFC standards
+  - Attachments are supported and automatically encoded
+  - The whole email is sent as a multi-part message
+
+  All of the functions used to create the final body of the email are exported
+  and are available for further customisation when sending an email.
 
 type: SERVER
 
 parameters:
 - name: Secret
-  default: gmail
   description: The name of the secret to use to send the mail with.
 
-- name: Receipient
-  default: noone@gmail.com
+- name: Recipients
+  type: json_array
+  default: '["noone@example.org"]'
   description: Where to send the mail to.
 
+- name: Sender
+  description: The sender address (from).
+
 - name: FilesToUpload
-  type: json_array
-  default: '["C:/test.txt"]'
+  type: csv
+  description: Files to upload, optionally renamed.
+  default: |
+    Path,Filename
 
 - name: PlainTextMessage
-  default: A test email
+  description: A plain-text message.
+
+- name: HTMLMessage
+  description: An HTML-formatted message.
+
+- name: EncodeText
+  type: bool
+  default: true
+  description: |
+    Base64-encode plain-text and HTML. If disabled, ensure to keep lines within
+    998 octets, or encode the data manually and include an encoding header.
 
 - name: Subject
   default: A message from Velociraptor
 
+- name: Period
+  type: int
+  default: 10
+  description: |
+    Refuse to send mails more often than this interval (in seconds). This throttling
+    is applied to the whole server.
+
 export: |
-   LET Boundary = format(format="-----------------------------9051914041544843%v",
-                         args=now())
+  LET _RandomString = SELECT format(format="%c", args=20 + rand(range=107)) AS Ch
+    FROM range(end=1000)
+    WHERE Ch =~ "[A-Za-z0-9'()+_,./:=?]"
+    LIMIT 70
 
-   -- A Helper function to make a plain text message.
-   LET PlainData(Value) = format(
-       format='--%s\r\nContent-Type: text/plain; charset="utf-8"\r\n\r\n%v\r\n',
-       args=[Boundary, Value])
+  -- Create a random string suitable as a MIME boundary:
+  LET RandomString = join(array=_RandomString.Ch)
 
-   -- Encodes the file as base64 with lines split on 80 chars
-   LET EncodeFile(Filename) = regex_replace(
-       re="(.{80})",
-       replace="$1\r\n",
-       source=base64encode(string=read_file(filename=Filename)))
+  -- Base64-encode data and split the result into 76-character long lines (as per
+  -- RFC 2045 6.8). Note that a "Content-Transfer-Encoding: base64" header is
+  -- needed for this message to interpreted correctly:
+  LET EncodeData(Data) = regex_replace(re="(.{76})",
+                                       replace="$1\r\n",
+                                       source=base64encode(string=Data))
 
-   -- A Helper function to embed a file content from disk.
-   LET AttachFile(Filename) = format(
-       format='--%s\r\nContent-Type: application/octet-stream; name="%s"\r\nContent-Disposition: attachment; filename="%s"\r\nContent-Transfer-Encoding: base64\r\n\r\n%v\r\n\r\n',
-       args=[Boundary, basename(path=Filename),
-             basename(path=Filename), EncodeFile(Filename=Filename)])
+  -- Wrap Sections in boundaries. Header may be used to create a sub-boundary,
+  -- useful for multipart/alternative:
+  LET WrapInBoundary(Boundary, Sections, Header) = template(
+      template="{{ if .header }}{{ .header }}; boundary={{ .boundary }}\r\n\r\n{{ end }}{{ range .sections }}--{{ $.boundary }}\r\n{{ . }}{{ end }}--{{ $.boundary }}--\r\n",
+      expansion=dict(
+        boundary=Boundary,
+        sections=Sections,
+        header=get(
+          field='Header',
+          default='')))
 
-   -- The End boundary signals the last part
-   LET END = format(format="%s--\r\n", args=Boundary)
+  -- Add content type ("plain" or "html") and newlines to text. If Encode is set,
+  -- encode the text in Base64 and add a suitable transfer header:
+  LET WrapText(Value, Type, Encode) = if(
+      condition=Value,
+      then=format(
+        format='Content-Type: text/%s; charset="utf-8"%s\r\n\r\n%v\r\n',
+        args=[Type, if(condition=get(field='Encode', default=false),
+                       then="\r\nContent-Transfer-Encoding: base64",
+                       else=""), if(
+          condition=get(field='Encode', default=false),
+          then=EncodeData(Data=Value),
+          else=Value)]))
+
+  -- Wrap text (plain, HTML or both) in multipart/alternative, letting clients
+  -- pick either HTML or plain-text, depending on what they support. If just
+  -- one of Plain/HTML is specified, multipart/alternative is not used:
+  LET WrapAlternative(Plain, HTML) = if(
+      condition=Plain
+       AND HTML,
+      then=WrapInBoundary(Header="Content-Type: multipart/alternative",
+                          Boundary=RandomString,
+                          Sections=(Plain, HTML)),
+      else=Plain || HTML)
+
+  -- Encodes the file as base64:
+  LET EncodeFile(Filename) = EncodeData(Data=read_file(filename=Filename))
+
+  -- A Helper function to embed a file content from disk.
+  LET AttachFile(Path, Filename) = template(
+      template='Content-Type: application/octet-stream; name="{{ .name }}"\r\nContent-Disposition: attachment; filename="{{ .filename }}"\r\nContent-Transfer-Encoding: base64\r\n\r\n{{ .data }}\r\n\r\n',
+      expansion=dict(
+        name=regex_replace(source=basename(path=Filename),
+                           re='''\..+$''',
+                           replace=''),
+        filename=basename(path=Filename),
+        data=EncodeFile(Filename=Path)))
+
+  -- Call AttachFile() for each file in Files that exist. Files must be an array
+  -- of dicts with the members "Path" and an optional "Filename", which is used
+  -- to replace the attachment filename. Useful for temporary files:
+  LET AttachFiles(Files) = array(_={
+     SELECT AttachFile(
+       Path=Path,
+       Filename=get(field='Filename', default= Path)) AS Part
+     FROM foreach(row=Files)
+     WHERE (stat(filename=Path).OSPath
+       AND log(message="Attaching %v", args=Path, dedup=-1, level='INFO')) OR NOT
+           log(message="Fail to attach %v", args=Path, dedup=-1, level='WARN')
+  })
 
 sources:
 - query: |
-    LET MessageParts = SELECT AttachFile(Filename=_value) AS Part
-       FROM foreach(row=FilesToUpload)
-       WHERE stat(filename=_value).OSPath
-         AND log(message="Attaching %v", args=_value, dedup=-1)
+    LET Texts <= WrapAlternative(Plain=WrapText(
+                                   Value=PlainTextMessage,
+                                   Type='plain',
+                                   Encode=EncodeText),
+                                 HTML=WrapText(Value=HTMLMessage,
+                                               Type='html',
+                                               Encode=EncodeText))
 
-    LET Headers <= dict(
-     `Content-Type`='multipart/mixed; boundary=' + Boundary)
+    LET Texts <= if(condition=Texts, then=[Texts], else=[])
 
-    // Build the email parts - first the plain text message, then the
-    // attachments.
-    LET Message <= join(sep="\r\n",
-       array=( PlainData(Value=PlainTextMessage) , ) + MessageParts.Part + END)
+    LET Boundary <= RandomString
+
+    LET Headers <= dict(`Content-Type`='multipart/mixed; boundary=' + Boundary)
+
+    -- Build the email parts - first the text message, then the attachments.
+    LET Message <= WrapInBoundary(
+        Boundary=Boundary,
+        Sections=Texts + AttachFiles(Files=FilesToUpload).Part)
 
     -- Send the mail
     SELECT mail(secret=Secret,
-                `to`=Receipient,
+                `to`=Recipients,
+                `from`=Sender,
+                period=Period,
                 subject=Subject,
                 headers=Headers,
                 `body`=Message) AS Mail
