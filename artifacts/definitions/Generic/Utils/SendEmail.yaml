@@ -65,17 +65,17 @@ export: |
     FROM range(end=1000)
     WHERE Ch =~ "[A-Za-z0-9'()+_,./:=?]"
     LIMIT 70
-  
+
   -- Create a random string suitable as a MIME boundary:
   LET RandomString = join(array=_RandomString.Ch)
-  
+
   -- Base64-encode data and split the result into 76-character long lines (as per
   -- RFC 2045 6.8). Note that a "Content-Transfer-Encoding: base64" header is
   -- needed for this message to interpreted correctly:
   LET EncodeData(Data) = regex_replace(re="(.{76})",
                                        replace="$1\r\n",
                                        source=base64encode(string=Data))
-  
+
   -- Wrap Sections in boundaries. Header may be used to create a sub-boundary,
   -- useful for multipart/alternative:
   LET WrapInBoundary(Boundary, Sections, Header) = template(
@@ -86,7 +86,7 @@ export: |
         header=get(
           field='Header',
           default='')))
-  
+
   -- Add content type ("plain" or "html") and newlines to text. If Encode is set,
   -- encode the text in Base64 and add a suitable transfer header:
   LET WrapText(Value, Type, Encode) = if(
@@ -99,7 +99,7 @@ export: |
           condition=get(field='Encode', default=false),
           then=EncodeData(Data=Value),
           else=Value)]))
-  
+
   -- Wrap text (plain, HTML or both) in multipart/alternative, letting clients
   -- pick either HTML or plain-text, depending on what they support. If just
   -- one of Plain/HTML is specified, multipart/alternative is not used:
@@ -110,40 +110,32 @@ export: |
                           Boundary=RandomString,
                           Sections=(Plain, HTML)),
       else=Plain || HTML)
-  
+
   -- Encodes the file as base64:
   LET EncodeFile(Filename) = EncodeData(Data=read_file(filename=Filename))
-  
+
   -- A Helper function to embed a file content from disk.
   LET AttachFile(Path, Filename) = template(
       template='Content-Type: application/octet-stream; name="{{ .name }}"\r\nContent-Disposition: attachment; filename="{{ .filename }}"\r\nContent-Transfer-Encoding: base64\r\n\r\n{{ .data }}\r\n\r\n',
       expansion=dict(
-        name=regex_replace(
-          source=basename(
-            path=Filename),
-          re='''\..+$''',
-          replace=''),
-        filename=basename(
-          path=Filename),
-        data=EncodeFile(
-          Filename=Path)))
-  
+        name=regex_replace(source=basename(path=Filename),
+                           re='''\..+$''',
+                           replace=''),
+        filename=basename(path=Filename),
+        data=EncodeFile(Filename=Path)))
+
   -- Call AttachFile() for each file in Files that exist. Files must be an array
   -- of dicts with the members "Path" and an optional "Filename", which is used
   -- to replace the attachment filename. Useful for temporary files:
-  LET AttachFiles(Files) = SELECT AttachFile(Path=Path,
-                                             Filename=
-                                               get(field='Filename',
-                                                   default=
-                                                     Path)) AS Part
-    FROM foreach(row=Files)
-    WHERE (stat(filename=Path).OSPath
+  LET AttachFiles(Files) = array(_={
+     SELECT AttachFile(
+       Path=Path,
+       Filename=get(field='Filename', default= Path)) AS Part
+     FROM foreach(row=Files)
+     WHERE (stat(filename=Path).OSPath
        AND log(message="Attaching %v", args=Path, dedup=-1, level='INFO')) OR NOT
-      log(
-        message="Fail to attach %v",
-        args=Path,
-        dedup=-1,
-        level='WARN')
+           log(message="Fail to attach %v", args=Path, dedup=-1, level='WARN')
+  })
 
 sources:
 - query: |
@@ -154,18 +146,18 @@ sources:
                                  HTML=WrapText(Value=HTMLMessage,
                                                Type='html',
                                                Encode=EncodeText))
-    
+
     LET Texts <= if(condition=Texts, then=[Texts], else=[])
-    
+
     LET Boundary <= RandomString
-    
+
     LET Headers <= dict(`Content-Type`='multipart/mixed; boundary=' + Boundary)
-    
+
     -- Build the email parts - first the text message, then the attachments.
     LET Message <= WrapInBoundary(
         Boundary=Boundary,
         Sections=Texts + AttachFiles(Files=FilesToUpload).Part)
-    
+
     -- Send the mail
     SELECT mail(secret=Secret,
                 `to`=Recipients,
