@@ -178,18 +178,16 @@ func (self *ProcessTracker) Enrich(
 		return nil, false
 	}
 
-	for _, k := range self.enrichments.Keys() {
-		enrichment_any, _ := self.enrichments.Get(k)
-		enrichment, ok := enrichment_any.(*vfilter.Lambda)
+	for _, v := range self.enrichments.Values() {
+		enrichment, ok := v.(*vfilter.Lambda)
 		if !ok {
 			continue
 		}
 		update := enrichment.Reduce(ctx, scope, []vfilter.Any{pe})
 		update_dict, ok := update.(*ordereddict.Dict)
 		if ok {
-			for _, k := range update_dict.Keys() {
-				v, _ := update_dict.Get(k)
-				pe.Data.Update(k, v)
+			for _, i := range update_dict.Items() {
+				pe.Data.Update(i.Key, i.Value)
 			}
 		}
 	}

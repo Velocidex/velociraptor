@@ -121,10 +121,9 @@ func (self *DEBBuilder) Bytes(scope vfilter.Scope) ([]byte, error) {
 // rpm  -qp --scripts velociraptor_client_0.74.3_x86_64.rpm
 func (self *DEBBuilder) Debug() string {
 	res := self.Spec.OutputFilename() + "\n"
-	for _, k := range self.state.Keys() {
-		v, _ := self.state.Get(k)
-		res += fmt.Sprintf("\n>> %v\n", k)
-		switch t := v.(type) {
+	for _, i := range self.state.Items() {
+		res += fmt.Sprintf("\n>> %v\n", i.Key)
+		switch t := i.Value.(type) {
 
 		case string:
 			if strings.Contains(t[:10], "ELF") {
@@ -135,7 +134,7 @@ func (self *DEBBuilder) Debug() string {
 			res += "------------\n"
 
 		default:
-			res += fmt.Sprintf("%T\n", v)
+			res += fmt.Sprintf("%T\n", i.Value)
 			res += "------------\n"
 		}
 	}
@@ -160,9 +159,9 @@ func BuildDeb(spec *PackageSpec) (Builder, error) {
 		deb.SetDepends(spec.Expansion.Depends)
 	}
 
-	for _, path := range spec.Files.Keys() {
-		file_spec_any, _ := spec.Files.Get(path)
-		file_spec, ok := file_spec_any.(FileSpec)
+	for _, i := range spec.Files.Items() {
+		path := i.Key
+		file_spec, ok := i.Value.(FileSpec)
 		if !ok {
 			continue
 		}

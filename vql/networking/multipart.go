@@ -97,9 +97,9 @@ func GetMultiPartReader(
 
 	// Encode any parameters into the form first
 	if params != nil {
-		for _, k := range params.Keys() {
-			v, _ := params.Get(k)
-			err := result.multipart_writer.WriteField(k, utils.ToString(v))
+		for _, i := range params.Items() {
+			err := result.multipart_writer.WriteField(
+				i.Key, utils.ToString(i.Value))
 			if err != nil {
 				return nil, err
 			}

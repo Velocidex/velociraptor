@@ -103,17 +103,16 @@ func (self AddClientMonitoringFunction) Call(
 			return vfilter.Null{}
 		}
 
-		for _, k := range params_dict.Keys() {
-			v, _ := params_dict.Get(k)
-			v_str, ok := v.(string)
+		for _, i := range params_dict.Items() {
+			v_str, ok := i.Value.(string)
 			if !ok {
 				scope.Log(
 					"add_client_monitoring: parameter %v should has a string value",
-					k)
+					i.Key)
 				return vfilter.Null{}
 			}
 			new_specs.Parameters.Env = append(new_specs.Parameters.Env,
-				&actions_proto.VQLEnv{Key: k, Value: v_str})
+				&actions_proto.VQLEnv{Key: i.Key, Value: v_str})
 		}
 	}
 
@@ -267,17 +266,16 @@ func (self AddServerMonitoringFunction) Call(
 		}
 	}
 
-	for _, k := range params_dict.Keys() {
-		v, _ := params_dict.Get(k)
-		v_str, ok := v.(string)
+	for _, i := range params_dict.Items() {
+		v_str, ok := i.Value.(string)
 		if !ok {
 			scope.Log(
 				"add_server_monitoring: parameter %v should has a string value",
-				k)
+				i.Key)
 			return vfilter.Null{}
 		}
 		new_specs.Parameters.Env = append(new_specs.Parameters.Env,
-			&actions_proto.VQLEnv{Key: k, Value: v_str})
+			&actions_proto.VQLEnv{Key: i.Key, Value: v_str})
 	}
 	event_config.Specs = append(event_config.Specs, new_specs)
 

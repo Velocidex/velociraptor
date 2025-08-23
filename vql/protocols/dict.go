@@ -66,14 +66,12 @@ func (self _AddDict) Add(scope types.Scope, a types.Any, b types.Any) types.Any 
 
 	res := ordereddict.NewDict()
 
-	for _, k := range a_dict.Keys() {
-		v, _ := a_dict.Get(k)
-		res.Set(k, v)
+	for _, i := range a_dict.Items() {
+		res.Set(i.Key, i.Value)
 	}
 
-	for _, k := range b_dict.Keys() {
-		v, _ := b_dict.Get(k)
-		res.Update(k, v)
+	for _, i := range b_dict.Items() {
+		res.Update(i.Key, i.Value)
 	}
 
 	return res
@@ -103,11 +101,10 @@ func (self _SubDict) Sub(scope types.Scope, a types.Any, b types.Any) types.Any 
 	// dict.
 	res := ordereddict.NewDict()
 
-	for _, k := range a_dict.Keys() {
-		_, pres := b_dict.Get(k)
+	for _, i := range a_dict.Items() {
+		_, pres := b_dict.Get(i.Key)
 		if !pres {
-			v, _ := a_dict.Get(k)
-			res.Set(k, v)
+			res.Set(i.Key, i.Value)
 		}
 	}
 
@@ -137,11 +134,10 @@ func (self _MulDict) Mul(scope types.Scope, a types.Any, b types.Any) types.Any 
 	// dict.
 	res := ordereddict.NewDict()
 
-	for _, k := range a_dict.Keys() {
-		_, pres := b_dict.Get(k)
+	for _, i := range a_dict.Items() {
+		_, pres := b_dict.Get(i.Key)
 		if pres {
-			v, _ := a_dict.Get(k)
-			res.Set(k, v)
+			res.Set(i.Key, i.Value)
 		}
 	}
 
@@ -166,9 +162,8 @@ func (self _AddMap) Add(scope types.Scope, a types.Any, b types.Any) types.Any {
 	a_dict := vfilter.RowToDict(ctx, scope, a)
 	b_dict := vfilter.RowToDict(ctx, scope, b)
 
-	for _, k := range b_dict.Keys() {
-		v, _ := b_dict.Get(k)
-		a_dict.Set(k, v)
+	for _, i := range b_dict.Items() {
+		a_dict.Set(i.Key, i.Value)
 	}
 
 	return a_dict

@@ -67,13 +67,10 @@ func NewSecret(type_name, name string,
 		Data: secret,
 	}
 
-	for _, k := range secret.Keys() {
-		v, pres := secret.Get(k)
-		if pres {
-			v_str, ok := v.(string)
-			if ok {
-				result.Secret.Secret[k] = v_str
-			}
+	for _, i := range secret.Items() {
+		v_str, ok := i.Value.(string)
+		if ok {
+			result.Secret.Secret[i.Key] = v_str
 		}
 	}
 

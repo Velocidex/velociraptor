@@ -63,11 +63,7 @@ func (self *EventTraceWatcherService) SessionContext(
 	sessionContext, pres := self.sessions[name]
 	if !pres {
 		// Create a new session
-		sessionContext = &SessionContext{
-			name:            name,
-			registrations:   make(map[string]*Registration),
-			rundown_options: options.RundownOptions,
-		}
+		sessionContext = NewSessionContext(name, options)
 		self.sessions[name] = sessionContext
 	}
 

@@ -45,6 +45,8 @@ const helpTextCol2 = [
         ["p", T("Go to previous page")],
         ["j", T("Move to previous selection")],
         ["k", T("Move to next selection")],
+        ["Home", T("Move to first page")],
+        ["End", T("Move to last page")],
     ]],
 ];
 

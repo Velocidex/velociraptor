@@ -57,13 +57,12 @@ func (self *ArrayFunction) Call(ctx context.Context,
 		}
 	}
 
-	for _, key := range args.Keys() {
-		if key == "_" {
+	for _, i := range args.Items() {
+		if i.Key == "_" {
 			continue
 		}
 
-		value, _ := args.Get(key)
-		value = vql_subsystem.Materialize(ctx, scope, value)
+		value = vql_subsystem.Materialize(ctx, scope, i.Value)
 		result = append(result, value)
 	}
 

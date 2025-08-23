@@ -1076,7 +1076,7 @@ func (self *ServerTestSuite) TestMultipleFlowComplete() {
 		"System.Flow.Completion", "",
 		func(ctx context.Context, config_obj *config_proto.Config,
 			row *ordereddict.Dict) error {
-			key := fmt.Sprintf("%d", len(completions.Keys()))
+			key := fmt.Sprintf("%d", completions.Len())
 			completions.Set(key, row)
 			return nil
 		})
@@ -1121,7 +1121,7 @@ func (self *ServerTestSuite) TestMultipleFlowComplete() {
 	runner.Close(self.Ctx)
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		return len(completions.Keys()) > 0
+		return completions.Len() > 0
 	})
 
 	// Now send more responses to this flow. For example, if the
@@ -1149,10 +1149,10 @@ func (self *ServerTestSuite) TestMultipleFlowComplete() {
 	time.Sleep(time.Second / 2)
 
 	// No more completion events are sent.
-	if len(completions.Keys()) != 1 {
+	if completions.Len() != 1 {
 		json.Dump(completions)
 	}
-	assert.Equal(self.T(), len(completions.Keys()), 1)
+	assert.Equal(self.T(), completions.Len(), 1)
 }
 
 func getFlowRequests(messages []*crypto_proto.VeloMessage) (res []*crypto_proto.VeloMessage) {

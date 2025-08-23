@@ -304,21 +304,17 @@ func NewDirectoryQueueManager(config_obj *config_proto.Config,
 			scope vfilter.Scope, output_chan chan vfilter.Row) {
 
 			d := result.Debug()
-			keys := []string{}
-			for _, k := range d.Keys() {
-				keys = append(keys, k)
-			}
+			items := d.Items()
+			sort.Slice(items, func(i, j int) bool {
+				return items[i].Key < items[j].Key
+			})
 
-			sort.Strings(keys)
-
-			for _, k := range keys {
-				v, _ := d.Get(k)
-
+			for _, i := range items {
 				output_chan <- ordereddict.NewDict().
 					Set("Type", "QueueManager").
 					Set("Org", services.GetOrgName(config_obj)).
-					Set("Name", k).
-					Set("Listener", v)
+					Set("Name", i.Key).
+					Set("Listener", i.Value)
 			}
 		},
 	})

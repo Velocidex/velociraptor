@@ -207,26 +207,24 @@ func (self *ArtifactRepositoryPlugin) Call(
 				}
 
 				// Allow the args to override the artifact defaults.
-				for _, k := range args.Keys() {
-					if k == "source" || k == "preconditions" {
+				for _, i := range args.Items() {
+					if i.Key == "source" || i.Key == "preconditions" {
 						continue
 					}
 
-					_, pres := env.Get(k)
+					_, pres := env.Get(i.Key)
 					if !pres {
 						child_scope.Log(fmt.Sprintf(
 							"Unknown parameter %s provided to artifact %v",
-							k, strings.Join(self.prefix, ".")))
+							i.Key, strings.Join(self.prefix, ".")))
 						return
 					}
 
-					v, _ := args.Get(k)
-
-					lazy_v, ok := v.(types.LazyExpr)
+					lazy_v, ok := i.Value.(types.LazyExpr)
 					if ok {
-						v = lazy_v.Reduce(ctx)
+						i.Value = lazy_v.Reduce(ctx)
 					}
-					env.Set(k, v)
+					env.Set(i.Key, i.Value)
 				}
 
 				// Add the scope args

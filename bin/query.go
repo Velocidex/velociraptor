@@ -188,12 +188,9 @@ func doRemoteQuery(
 	}
 
 	if env != nil {
-		for _, k := range env.Keys() {
-			v, ok := env.GetString(k)
-			if ok {
-				request.Env = append(request.Env, &actions_proto.VQLEnv{
-					Key: k, Value: v})
-			}
+		for _, i := range env.Items() {
+			request.Env = append(request.Env, &actions_proto.VQLEnv{
+				Key: i.Key, Value: utils.ToString(i.Value)})
 		}
 	}
 

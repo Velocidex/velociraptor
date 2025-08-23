@@ -233,11 +233,10 @@ func compileRules(scope vfilter.Scope,
 	}
 
 	if vars != nil {
-		for _, k := range vars.Keys() {
-			v, _ := vars.Get(k)
-			err := compiler.DefineVariable(k, v)
+		for _, i := range vars.Items() {
+			err := compiler.DefineVariable(i.Key, i.Value)
 			if err != nil {
-				vql_subsystem.CacheSet(scope, key, err)
+				vql_subsystem.CacheSet(scope, i.Key, err)
 				return nil, err
 			}
 		}

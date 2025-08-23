@@ -145,8 +145,7 @@ func (self *NotebookStoreImpl) _GetNotebook(notebook_id string) (*api_proto.Note
 	}
 
 	notebook.CellMetadata = nil
-	for _, k := range cell_metadata.Keys() {
-		v, _ := cell_metadata.Get(k)
+	for _, v := range cell_metadata.Values() {
 		notebook.CellMetadata = append(notebook.CellMetadata,
 			v.(*api_proto.NotebookCell))
 	}

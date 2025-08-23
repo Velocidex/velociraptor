@@ -293,16 +293,15 @@ func (self _ESECatalogPlugin) Call(
 			return
 		}
 
-		for _, name := range catalog.Tables.Keys() {
-			table_any, _ := catalog.Tables.Get(name)
-			table := table_any.(*parser.Table)
+		for _, i := range catalog.Tables.Items() {
+			table := i.Value.(*parser.Table)
 
 			for _, column := range table.Columns {
 				select {
 				case <-ctx.Done():
 					return
 				case output_chan <- ordereddict.NewDict().
-					Set("Table", name).
+					Set("Table", i.Key).
 					Set("Column", column.Name).
 					Set("Type", column.Type):
 				}

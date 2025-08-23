@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func (self *ApiServer) GetClientMetadata(
@@ -72,15 +73,12 @@ func (self *ApiServer) GetClientMetadata(
 		return nil, Status(self.verbose, err)
 	}
 
-	for _, k := range client_metadata.Keys() {
-		v, _ := client_metadata.GetString(k)
-		if v != "" {
-			result.Items = append(result.Items,
-				&api_proto.ClientMetadataItem{
-					Key:   k,
-					Value: v,
-				})
-		}
+	for _, i := range client_metadata.Items() {
+		result.Items = append(result.Items,
+			&api_proto.ClientMetadataItem{
+				Key:   i.Key,
+				Value: utils.ToString(i.Value),
+			})
 	}
 
 	return result, nil

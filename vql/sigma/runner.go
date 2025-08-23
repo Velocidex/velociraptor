@@ -215,19 +215,20 @@ func NewSigmaContext(
 	// protect it. This is O(1) but lock free. Using map copies uses
 	// up significant amount of memory for local map copies.
 	if fieldmappings != nil {
-		for _, k := range fieldmappings.Keys() {
-			v, _ := fieldmappings.Get(k)
-			v_str, ok := v.(string)
+		for _, i := range fieldmappings.Items() {
+			v_str, ok := i.Value.(string)
 			if !ok {
-				return nil, fmt.Errorf("fieldmapping for %s should be string, got(%T)", k, v)
+				return nil, fmt.Errorf("fieldmapping for %s should be string, got(%T)",
+					i.Key, i.Value)
 			}
 
 			// Compile it.
 			lambda, err := vfilter.ParseLambda(v_str)
 			if err != nil {
-				return nil, fmt.Errorf("fieldmapping for %s is not a valid VQL Lambda: %v", k, err)
+				return nil, fmt.Errorf("fieldmapping for %s is not a valid VQL Lambda: %v",
+					i.Key, err)
 			}
-			self.fieldmappings.Set(k, lambda)
+			self.fieldmappings.Set(i.Key, lambda)
 		}
 	}
 

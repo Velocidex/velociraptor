@@ -14,9 +14,8 @@ func (self *BroadcastService) ProfileWriter(ctx context.Context,
 	defer self.mu.Unlock()
 
 	queue_stats := self.pool.Stats()
-	for _, k := range queue_stats.Keys() {
-		v, _ := queue_stats.Get(k)
-		stats, ok := v.([]*ordereddict.Dict)
+	for _, value := range queue_stats.Values() {
+		stats, ok := value.([]*ordereddict.Dict)
 		if ok {
 			for _, s := range stats {
 				output_chan <- s

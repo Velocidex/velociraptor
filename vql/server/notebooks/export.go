@@ -772,15 +772,10 @@ func convertCSVTags(
 		}
 
 		output.WriteString("  <tr>\n")
-		for _, header := range row.Keys() {
-			value, pres := row.Get(header)
-			if !pres {
-				value = ""
-			}
+		for _, v := range row.Values() {
 			output.WriteString(
 				fmt.Sprintf("    <td>%s</td>\n",
-					html.EscapeString(
-						fmt.Sprintf("%v", value))))
+					html.EscapeString(fmt.Sprintf("%v", v))))
 		}
 		output.WriteString("  </tr>\n")
 	}

@@ -77,18 +77,17 @@ func (self *MemoryFileStore) DebugString() string {
 	defer self.mu.Unlock()
 
 	result := "MemoryFileStore: \n"
-	for _, k := range self.Data.Keys() {
-		v_any, _ := self.Data.Get(k)
-		v := v_any.([]byte)
+	for _, i := range self.Data.Items() {
+		v := i.Value.([]byte)
 		// Render index files especially
-		if strings.HasSuffix(k, ".index") ||
-			strings.HasSuffix(k, ".idx") ||
-			strings.HasSuffix(k, ".tidx") {
-			result += fmt.Sprintf("%v: %v\n", k, hex.Dump(v))
+		if strings.HasSuffix(i.Key, ".index") ||
+			strings.HasSuffix(i.Key, ".idx") ||
+			strings.HasSuffix(i.Key, ".tidx") {
+			result += fmt.Sprintf("%v: %v\n", i.Key, hex.Dump(v))
 			continue
 		}
 
-		result += fmt.Sprintf("%v: %v\n", k, string(v))
+		result += fmt.Sprintf("%v: %v\n", i.Key, string(v))
 	}
 
 	return result
@@ -214,9 +213,9 @@ func (self *MemoryFileStore) ListDirectory(root_path api.FSPathSpec) ([]api.File
 	seen_files := make(map[string]api.FileInfo)
 	seen_dirs := make(map[string]api.FileInfo)
 
-	for _, filename := range self.Paths.Keys() {
-		path_spec_any, _ := self.Paths.Get(filename)
-		path_spec := path_spec_any.(api.FSPathSpec)
+	for _, i := range self.Paths.Items() {
+		filename := i.Key
+		path_spec := i.Value.(api.FSPathSpec)
 
 		if !path_specs.IsSubPath(root_path, path_spec) {
 			continue
