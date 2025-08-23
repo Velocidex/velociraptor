@@ -88,10 +88,9 @@ func (self _ItemsFunc) Call(ctx context.Context, scope vfilter.Scope,
 
 	switch t := arg.Item.(type) {
 	case *ordereddict.Dict:
-		for _, k := range t.Keys() {
-			v, _ := t.Get(k)
+		for _, i := range t.Items() {
 			result = append(result, ordereddict.NewDict().
-				Set("_key", k).Set("_value", v))
+				Set("_key", i.Key).Set("_value", i.Value))
 		}
 	default:
 		result = append(result, ordereddict.NewDict().

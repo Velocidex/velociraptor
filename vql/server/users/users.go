@@ -103,10 +103,8 @@ func ConvertPolicyToOrderedDict(
 	policy *acl_proto.ApiClientACL) *ordereddict.Dict {
 	policy_dict := json.ConvertProtoToOrderedDict(policy)
 	result := ordereddict.NewDict()
-	for _, k := range policy_dict.Keys() {
-		v, _ := policy_dict.Get(k)
-
-		switch t := v.(type) {
+	for _, i := range policy_dict.Items() {
+		switch t := i.Value.(type) {
 		case bool:
 			if !t {
 				continue
@@ -128,7 +126,7 @@ func ConvertPolicyToOrderedDict(
 			}
 		}
 
-		result.Set(k, v)
+		result.Set(i.Key, i.Value)
 	}
 
 	return result
@@ -177,12 +175,9 @@ func getUserRecord(
 
 func cleanupDict(scope types.Scope, in *ordereddict.Dict) *ordereddict.Dict {
 	result := ordereddict.NewDict()
-	for _, k := range in.Keys() {
-		v, ok := in.Get(k)
-		if ok {
-			if scope.Bool(v) {
-				result.Set(k, v)
-			}
+	for _, i := range in.Items() {
+		if scope.Bool(i.Value) {
+			result.Set(i.Key, i.Value)
 		}
 	}
 	return result

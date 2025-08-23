@@ -115,11 +115,8 @@ func (self *RsyslogFunction) Call(ctx context.Context,
 		SetProcID(arg.ProcId)
 
 	if arg.Args != nil {
-		for _, k := range arg.Args.Keys() {
-			v, ok := arg.Args.Get(k)
-			if ok {
-				message.SetParameter(arg.SdID, k, utils.ToString(v))
-			}
+		for _, i := range arg.Args.Items() {
+			message.SetParameter(arg.SdID, i.Key, utils.ToString(i.Value))
 		}
 	}
 

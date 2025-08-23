@@ -1399,6 +1399,32 @@ class VeloPagedTable extends Component {
         }
     }
 
+    gotoHome = e=>{
+        if(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        this.setState({start_row: 0 });
+        if(this.state.selected_row_idx >= 0 && this.props.selectRow) {
+            this.setState({select_on_load: 0});
+        }
+    }
+
+    gotoEnd = e=>{
+        if(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        let last_page = this.getLastPage();
+        this.setState({start_row: last_page * this.state.page_size });
+
+        if(this.state.selected_row_idx >= 0 && this.props.selectRow) {
+            this.setState({select_on_load: 0});
+        }
+    }
+
     renderPaginator = (direction)=>{
         let end = this.state.start_row + this.state.page_size;
         if(end>this.state.total_size) {
@@ -1472,6 +1498,8 @@ class VeloPagedTable extends Component {
         PREVIOUS: "p",
         NEXT_SELECTION: "k",
         PREVIOUS_SELECTION: "j",
+        END: "End",
+        HOME: "Home",
     };
 
     handlers={
@@ -1479,6 +1507,8 @@ class VeloPagedTable extends Component {
         PREVIOUS: this.previousPage,
         NEXT_SELECTION: this.nextSelection,
         PREVIOUS_SELECTION: this.prevSelection,
+        END: this.gotoEnd,
+        HOME: this.gotoHome,
     };
 
     render = ()=>{

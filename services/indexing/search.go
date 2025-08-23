@@ -536,8 +536,7 @@ func (self *Indexer) searchVerbs(ctx context.Context,
 		SearchTerm: in,
 	}
 
-	for _, k := range items.Keys() {
-		v, _ := items.Get(k)
+	for _, v := range items.Values() {
 		res.Items = append(res.Items, v.(*api_proto.ApiClient))
 	}
 

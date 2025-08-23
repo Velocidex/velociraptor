@@ -384,16 +384,15 @@ func ConvertRowsToTableResponse(
 	column_known := make(map[string]bool)
 	for row := range in {
 		data := make(map[string]interface{})
-		for _, key := range row.Keys() {
+		for _, i := range row.Items() {
 			// Do we already know about this column?
-			_, pres := column_known[key]
+			_, pres := column_known[i.Key]
 			if !pres {
-				result.Columns = append(result.Columns, key)
-				column_known[key] = true
+				result.Columns = append(result.Columns, i.Key)
+				column_known[i.Key] = true
 			}
 
-			value, _ := row.Get(key)
-			data[key] = value
+			data[i.Key] = i.Value
 		}
 
 		json_out := make([]interface{}, 0, len(result.Columns))

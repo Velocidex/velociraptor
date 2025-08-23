@@ -65,9 +65,8 @@ func formatPlugins(
 		if pres {
 			record += "Arg | Description | Type\n"
 			record += "----|-------------|-----\n"
-			for _, k := range arg_desc.Fields.Keys() {
-				v_any, _ := arg_desc.Fields.Get(k)
-				v, ok := v_any.(*types.TypeReference)
+			for _, i := range arg_desc.Fields.Items() {
+				v, ok := i.Value.(*types.TypeReference)
 				if !ok {
 					continue
 				}
@@ -87,7 +86,7 @@ func formatPlugins(
 					doc = matches[1]
 				}
 				record += fmt.Sprintf(
-					"%s | %s | %s %s\n", k, doc, target, required)
+					"%s | %s | %s %s\n", i.Key, doc, target, required)
 			}
 		}
 
@@ -122,9 +121,8 @@ func formatFunctions(
 		if pres {
 			record += "Arg | Description | Type\n"
 			record += "----|-------------|-----\n"
-			for _, k := range arg_desc.Fields.Keys() {
-				v_any, _ := arg_desc.Fields.Get(k)
-				v, ok := v_any.(*types.TypeReference)
+			for _, i := range arg_desc.Fields.Items() {
+				v, ok := i.Value.(*types.TypeReference)
 				if !ok {
 					continue
 				}
@@ -144,7 +142,7 @@ func formatFunctions(
 					doc = matches[1]
 				}
 				record += fmt.Sprintf(
-					"%s | %s | %s %s\n", k, doc, target, required)
+					"%s | %s | %s %s\n", i.Key, doc, target, required)
 			}
 		}
 
@@ -213,11 +211,10 @@ func exportAccessors(old_data []*api_proto.Completion) []*api_proto.Completion {
 		lookup[description.Name] = description
 		var metadata map[string]string
 		desc_md := description.Metadata()
-		if len(desc_md.Keys()) > 0 {
+		if desc_md.Len() > 0 {
 			metadata = make(map[string]string)
-			for _, k := range desc_md.Keys() {
-				v, _ := desc_md.GetString(k)
-				metadata[k] = v
+			for _, i := range desc_md.Items() {
+				metadata[i.Key] = utils.ToString(i.Value)
 			}
 		}
 
@@ -320,9 +317,8 @@ func doVQLExport() error {
 		var metadata map[string]string
 		if item.Metadata != nil {
 			metadata = make(map[string]string)
-			for _, k := range item.Metadata.Keys() {
-				v, _ := item.Metadata.GetString(k)
-				metadata[k] = v
+			for _, i := range item.Metadata.Items() {
+				metadata[i.Key] = utils.ToString(i.Value)
 			}
 		}
 
@@ -369,9 +365,8 @@ func doVQLExport() error {
 		var metadata map[string]string
 		if item.Metadata != nil {
 			metadata = make(map[string]string)
-			for _, k := range item.Metadata.Keys() {
-				v, _ := item.Metadata.GetString(k)
-				metadata[k] = v
+			for _, i := range item.Metadata.Items() {
+				metadata[i.Key] = utils.ToString(i.Value)
 			}
 		}
 
@@ -463,16 +458,15 @@ func addTypeDescription(new_item *api_proto.Completion, arg_desc *types.TypeDesc
 	// Clear the old args
 	new_item.Args = nil
 
-	for _, k := range arg_desc.Fields.Keys() {
-		v_any, _ := arg_desc.Fields.Get(k)
-		v, ok := v_any.(*types.TypeReference)
+	for _, i := range arg_desc.Fields.Items() {
+		v, ok := i.Value.(*types.TypeReference)
 		if !ok {
 			continue
 		}
 
 		arg := &api_proto.ArgDescriptor{
 			Repeated: v.Repeated,
-			Name:     k,
+			Name:     i.Key,
 			Type:     v.Target,
 		}
 

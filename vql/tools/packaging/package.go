@@ -2,7 +2,6 @@ package packaging
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -62,9 +62,8 @@ func (self CreatePackagePlugin) parseSpec(spec *ordereddict.Dict) (*PackageSpec,
 		result.Files = ordereddict.NewDict()
 	}
 
-	for _, k := range result.Files.Keys() {
-		v, _ := result.Files.Get(k)
-		v_dict, ok := v.(*ordereddict.Dict)
+	for _, i := range result.Files.Items() {
+		v_dict, ok := i.Value.(*ordereddict.Dict)
 		if !ok {
 			continue
 		}
@@ -75,7 +74,7 @@ func (self CreatePackagePlugin) parseSpec(spec *ordereddict.Dict) (*PackageSpec,
 		fp.Owner, _ = v_dict.GetString("Owner")
 		fp.Template, _ = v_dict.GetString("Template")
 
-		result.Files.Update(k, fp)
+		result.Files.Update(i.Key, fp)
 	}
 
 	return result, nil

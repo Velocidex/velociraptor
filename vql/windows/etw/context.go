@@ -5,11 +5,14 @@ package etw
 
 import (
 	"context"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Velocidex/etw"
+	"github.com/Velocidex/ordereddict"
+	"github.com/Velocidex/ttlcache/v2"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -52,6 +55,25 @@ type SessionContext struct {
 	is_kernel_trace bool
 
 	kernel_info_manager *etw.KernelInfoManager
+
+	process_metadata *ttlcache.Cache
+}
+
+func NewSessionContext(name string, options ETWOptions) *SessionContext {
+	res := &SessionContext{
+		name:             name,
+		registrations:    make(map[string]*Registration),
+		rundown_options:  options.RundownOptions,
+		process_metadata: ttlcache.NewCache(),
+	}
+
+	_ = res.process_metadata.SetTTL(time.Minute)
+	res.process_metadata.SetCacheSizeLimit(1000)
+	return res
+}
+
+func (self *SessionContext) Close() {
+	self.process_metadata.Close()
 }
 
 // Handle is used to track all watchers. We write the event on to the
@@ -264,25 +286,73 @@ func (self *SessionContext) kernelInfoManager() *etw.KernelInfoManager {
 	return self.kernel_info_manager
 }
 
+func fixInt(props *ordereddict.Dict, field string) {
+	value_str, ok := props.GetString(field)
+	if ok {
+		value, err := strconv.ParseInt(value_str, 0, 64)
+		if err == nil {
+			props.Update(field, value)
+		}
+	}
+}
+
+func (self *SessionContext) fixFilename(
+	props *ordereddict.Dict, field string) {
+	filename, ok := props.GetString(field)
+	if ok {
+		props.Update(field, self.kernelInfoManager().
+			NormalizeFilename(filename))
+	}
+}
+
+func (self *SessionContext) getProcessMetadata(
+	props *ordereddict.Dict) *ordereddict.Dict {
+	pid, pres := props.GetInt64("ProcessId")
+	if pres {
+		PidStr := strconv.FormatInt(pid, 10)
+		process_info, err := self.process_metadata.Get(PidStr)
+		if err != nil || process_info == nil {
+			process_info = ordereddict.NewDict()
+			self.process_metadata.Set(PidStr, process_info)
+		}
+		return process_info.(*ordereddict.Dict)
+	}
+	return nil
+}
+
 func (self *SessionContext) enrichEvent(guid string, e *etw.Event) {
+	props := e.Props()
+	fixInt(props, "ProcessId")
+	fixInt(props, "ParentId")
+
 	switch guid {
 	// Microsoft-Windows-Kernel-File
 	// We resolve the paths into filesystem names instead of kernel paths.
 	case "{EDD08927-9CC4-4E65-B970-C2560FB5C289}":
-		props := e.Props()
-		filename, ok := props.GetString("FileName")
-		if ok {
-			props.Set("FileName", self.kernelInfoManager().NormalizeFilename(filename))
+		self.fixFilename(props, "FileName")
+
+		// "KernelEventType":"LoadImage"
+	case "{2CB15D1D-5FC1-11D2-ABE1-00A0C911F518}":
+		self.fixFilename(props, "FileName")
+
+		if etw.GetKernelEventType(e) == etw.LoadImage {
+			md := self.getProcessMetadata(props)
+			if md != nil {
+				props.Set("ProcessInfo", md)
+			}
+		}
+
+	case "{3D6FA8D0-FE05-11D0-9DDA-00C04FD7BA7C}":
+		if etw.GetKernelEventType(e) == etw.CreateProcess {
+			md := self.getProcessMetadata(props)
+			if md != nil {
+				md.MergeFrom(props)
+			}
 		}
 
 		// Microsoft-Windows-Kernel-Process
 	case "{22FB2CD6-0E7B-422B-A0C7-2FAD1FD0E716}":
-		props := e.Props()
-		filename, ok := props.GetString("ImageName")
-		if ok {
-			props.Set("ImageName", self.kernelInfoManager().NormalizeFilename(filename))
-		}
-
+		self.fixFilename(props, "ImageName")
 	}
 }
 

@@ -13,8 +13,7 @@ type TypeOfFunction struct{}
 
 func (self TypeOfFunction) Call(ctx context.Context,
 	scope vfilter.Scope, args *ordereddict.Dict) vfilter.Any {
-	for _, k := range args.Keys() {
-		v, _ := args.Get(k)
+	for _, v := range args.Values() {
 		return fmt.Sprintf("%T", vql_subsystem.Materialize(ctx, scope, v))
 	}
 

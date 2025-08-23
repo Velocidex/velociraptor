@@ -63,25 +63,24 @@ func (self *Store) SetMetadata(
 
 	// Merge the new keys with the existing metdata
 	updated_keys := []string{}
-	for _, key := range metadata.Keys() {
-		value_any, _ := metadata.Get(key)
-		if utils.IsNil(value_any) {
-			updated_keys = append(updated_keys, key)
-			existing_metadata.Set(key, nil)
+	for _, item := range metadata.Items() {
+		if utils.IsNil(item.Value) {
+			updated_keys = append(updated_keys, item.Key)
+			existing_metadata.Set(item.Key, nil)
 			continue
 		}
 
-		value, ok := value_any.(string)
+		value, ok := item.Value.(string)
 		if !ok {
-			value = utils.ToString(value_any)
+			value = utils.ToString(item.Value)
 		}
 
-		existing_value, pres := existing_metadata.GetString(key)
+		existing_value, pres := existing_metadata.GetString(item.Key)
 		// Update the key is it is not there, or if it is different
 		// from the existing value.
 		if !pres || existing_value != value {
-			updated_keys = append(updated_keys, key)
-			existing_metadata.Update(key, value)
+			updated_keys = append(updated_keys, item.Key)
+			existing_metadata.Update(item.Key, value)
 		}
 	}
 

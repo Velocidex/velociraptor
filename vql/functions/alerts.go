@@ -57,13 +57,12 @@ func (self *AlertFunction) Call(ctx context.Context,
 
 	// Build an EventData
 	event_data := ordereddict.NewDict()
-	for _, k := range args.Keys() {
-		switch k {
+	for _, i := range args.Items() {
+		switch i.Key {
 		case "name", "dedup":
 			// skip these fields
 		default:
-			v, _ := args.Get(k)
-			event_data.Set(k, v)
+			event_data.Set(i.Key, i.Value)
 		}
 	}
 

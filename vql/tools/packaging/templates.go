@@ -16,6 +16,11 @@ import (
 
 var (
 	RPMClientTemplate = map[string]string{
+		// Metadata is a JSON encoded struct expanded into the RPM
+		// metadata struct.
+		// https://github.com/google/rpmpack/blob/2467806670a618497006ff8d8623b0430c7605a9/rpm.go#L56
+		"Metadata": `{"name": "{{ .SysvService }}", "version": "{{ .Version }}", "release": "{{ .Release}}", "arch": "{{.Arch}}"}`,
+
 		"ServiceDefinition": `
 [Unit]
 Description=Velociraptor client
@@ -238,6 +243,8 @@ fi
 	}
 
 	RPMServerTemplates = map[string]string{
+		"Metadata": `{"name": "{{ .SysvService }}", "version": "{{ .Version }}", "release": "{{ .Release}}", "arch": "{{.Arch}}"}`,
+
 		"ServiceDefinition": `
 [Unit]
 Description={{.ServiceDescription}}

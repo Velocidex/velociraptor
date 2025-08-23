@@ -117,9 +117,8 @@ func renderValue(v interface{}) interface{} {
 func renderArgs(args *ordereddict.Dict) func() *ordereddict.Dict {
 	return func() *ordereddict.Dict {
 		result := ordereddict.NewDict()
-		for _, k := range args.Keys() {
-			v, _ := args.Get(k)
-			result.Set(k, renderValue(v))
+		for _, i := range args.Items() {
+			result.Set(i.Key, renderValue(i.Value))
 		}
 		return result
 	}

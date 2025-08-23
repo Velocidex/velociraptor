@@ -30,16 +30,12 @@ func ConvertJSONL(
 	var extra_value [][]byte
 
 	if extra_data != nil {
-		for _, k := range extra_data.Keys() {
-			value, pres := extra_data.Get(k)
-			if !pres {
-				continue
-			}
-			v, err := json.Marshal(value)
+		for _, i := range extra_data.Items() {
+			v, err := json.Marshal(i.Value)
 			if err != nil {
 				continue
 			}
-			extra_keys = append(extra_keys, k)
+			extra_keys = append(extra_keys, i.Key)
 			extra_value = append(extra_value, v)
 		}
 	}
@@ -110,13 +106,10 @@ func NewCSVEncoder(extra_data *ordereddict.Dict) *CSVEncoder {
 	self.writer = csv.NewWriter(&self.buf)
 
 	if extra_data != nil {
-		for _, k := range extra_data.Keys() {
-			v, pres := extra_data.Get(k)
-			if pres {
-				self.extra_keys = append(self.extra_keys, k)
-				self.extra_values = append(self.extra_values,
-					AnyToString(v, DefaultEncOpts()))
-			}
+		for _, i := range extra_data.Items() {
+			self.extra_keys = append(self.extra_keys, i.Key)
+			self.extra_values = append(self.extra_values,
+				AnyToString(i.Value, DefaultEncOpts()))
 		}
 	}
 

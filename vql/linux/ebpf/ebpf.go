@@ -147,16 +147,14 @@ func (self EBPFEventListPlugin) Call(
 		defer vql_subsystem.RegisterMonitor(ctx, "watch_ebpf", args)()
 
 		events := ebpf.GetEvents()
-		for _, event := range events.Keys() {
-			value, _ := events.Get(event)
-
+		for _, i := range events.Items() {
 			select {
 			case <-ctx.Done():
 				return
 
 			case output_chan <- ordereddict.NewDict().
-				Set("Event", event).
-				Set("Metadata", value):
+				Set("Event", i.Key).
+				Set("Metadata", i.Value):
 			}
 		}
 

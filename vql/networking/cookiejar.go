@@ -40,15 +40,14 @@ func NewDictJar(dict *ordereddict.Dict) http.CookieJar {
 		Jar:  jar,
 	}
 
-	for _, key := range dict.Keys() {
-		url, err := url.Parse(key)
+	for _, i := range dict.Items() {
+		url, err := url.Parse(i.Key)
 		if err != nil {
 			continue
 		}
 
-		value, ok := dict.Get(key)
-		if ok && !utils.IsNil(value) {
-			cookies, err := member_to_cookies(value)
+		if !utils.IsNil(i.Value) {
+			cookies, err := member_to_cookies(i.Value)
 			if err == nil {
 				self.Jar.SetCookies(url, cookies)
 			}

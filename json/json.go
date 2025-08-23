@@ -37,10 +37,10 @@ func MarshalJSONDict(v interface{}, opts *json.EncOpts) ([]byte, error) {
 	buf := &bytes.Buffer{}
 
 	buf.Write([]byte("{"))
-	for _, k := range self.Keys() {
+	for _, i := range self.Items() {
 
 		// add key
-		kEscaped, err := json.MarshalWithOptions(k, opts)
+		kEscaped, err := json.MarshalWithOptions(i.Key, opts)
 		if err != nil {
 			continue
 		}
@@ -48,19 +48,17 @@ func MarshalJSONDict(v interface{}, opts *json.EncOpts) ([]byte, error) {
 		buf.Write(kEscaped)
 		buf.Write([]byte(":"))
 
-		// add value
-		v, ok := self.Get(k)
-		if !ok {
-			v = "null"
+		if i.Value == nil {
+			i.Value = &vfilter.Null{}
 		}
 
 		// If v is a callable, run it
-		callable, ok := v.(func() vfilter.Any)
+		callable, ok := i.Value.(func() vfilter.Any)
 		if ok {
-			v = callable()
+			i.Value = callable()
 		}
 
-		vBytes, err := json.MarshalWithOptions(v, opts)
+		vBytes, err := json.MarshalWithOptions(i.Value, opts)
 		if err == nil {
 			buf.Write(vBytes)
 			buf.Write([]byte(","))
@@ -68,7 +66,8 @@ func MarshalJSONDict(v interface{}, opts *json.EncOpts) ([]byte, error) {
 			buf.Write([]byte("null,"))
 		}
 	}
-	if len(self.Keys()) > 0 {
+
+	if self.Len() > 0 {
 		buf.Truncate(buf.Len() - 1)
 	}
 	buf.Write([]byte("}"))

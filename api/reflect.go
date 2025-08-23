@@ -49,9 +49,8 @@ func IntrospectDescription() []*api_proto.Completion {
 		var metadata map[string]string
 		if item.Metadata != nil {
 			metadata = make(map[string]string)
-			for _, k := range item.Metadata.Keys() {
-				v, _ := item.Metadata.GetString(k)
-				metadata[k] = v
+			for _, i := range item.Metadata.Items() {
+				metadata[i.Key] = utils.ToString(i.Value)
 			}
 		}
 		result = append(result, &api_proto.Completion{
@@ -67,9 +66,8 @@ func IntrospectDescription() []*api_proto.Completion {
 		var metadata map[string]string
 		if item.Metadata != nil {
 			metadata = make(map[string]string)
-			for _, k := range item.Metadata.Keys() {
-				v, _ := item.Metadata.GetString(k)
-				metadata[k] = v
+			for _, i := range item.Metadata.Items() {
+				metadata[i.Key] = utils.ToString(i.Value)
 			}
 		}
 		result = append(result, &api_proto.Completion{
@@ -151,9 +149,8 @@ func getArgDescriptors(
 	args := []*api_proto.ArgDescriptor{}
 	arg_desc, pres := type_map.Get(scope, arg_type)
 	if pres && arg_desc != nil && arg_desc.Fields != nil {
-		for _, k := range arg_desc.Fields.Keys() {
-			v_any, _ := arg_desc.Fields.Get(k)
-			v, ok := v_any.(*types.TypeReference)
+		for _, i := range arg_desc.Fields.Items() {
+			v, ok := i.Value.(*types.TypeReference)
 			if !ok {
 				continue
 			}
@@ -173,7 +170,7 @@ func getArgDescriptors(
 				doc = matches[1]
 			}
 			args = append(args, &api_proto.ArgDescriptor{
-				Name:        k,
+				Name:        i.Key,
 				Description: doc + required,
 				Type:        target,
 			})

@@ -132,9 +132,8 @@ func (self TokenFunction) Call(
 		Set("Groups", groups).
 		Set("GroupNames", func() vfilter.Any {
 			result := ordereddict.NewDict()
-			for _, k := range groups.Keys() {
-				v, _ := groups.Get(k)
-				result.Set(vwindows.GetNameFromSID(k), v)
+			for _, i := range groups.Items() {
+				result.Set(vwindows.GetNameFromSID(i.Key), i.Value)
 			}
 			return result
 		}).

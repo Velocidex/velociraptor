@@ -168,12 +168,9 @@ func (self ShellPlugin) Call(
 
 		command := exec.CommandContext(sub_ctx, arg.Argv[0], arg.Argv[1:]...)
 		if arg.Env != nil {
-			for _, k := range arg.Env.Keys() {
-				v, pres := arg.Env.GetString(k)
-				if pres {
-					command.Env = append(command.Env,
-						fmt.Sprintf("%s=%s", k, v))
-				}
+			for _, i := range arg.Env.Items() {
+				command.Env = append(command.Env,
+					fmt.Sprintf("%s=%s", i.Key, i.Value))
 			}
 		}
 		command.Dir = arg.Cwd
