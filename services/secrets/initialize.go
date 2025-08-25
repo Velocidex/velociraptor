@@ -114,6 +114,7 @@ var (
 			"auth_username",
 			"auth_password",
 			"skip_verify",
+			"from",
 			"root_ca",
 		},
 		Template: map[string]string{

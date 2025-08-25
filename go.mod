@@ -10,7 +10,7 @@ require (
 	github.com/Velocidex/etw v0.0.0-20250314035532-6115b05b9430
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-magic v0.0.0-20250203094020-32f94b14f00f
-	github.com/Velocidex/go-yara v1.1.10-0.20240309155455-3f491847cec9
+	github.com/Velocidex/go-yara v1.1.10-0.20250823152352-e5fc0843e50e
 	github.com/Velocidex/grpc-go-pool v1.2.2-0.20241016164850-ff0cb80037a8
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
 	github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a
@@ -105,13 +105,13 @@ require (
 	github.com/Velocidex/go-ewf v0.0.0-20240210123447-97dc81b7d8c3
 	github.com/Velocidex/go-ext4 v0.0.0-20250510085914-b0b955af0359
 	github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a
-	github.com/Velocidex/go-journalctl v0.0.0-20241004063153-cc1c858415bd
+	github.com/Velocidex/go-journalctl v0.0.0-20250813052126-d39241ea8ef7
 	github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002
 	github.com/Velocidex/go-vhdx v0.0.0-20250511013458-5cba970cdeda
 	github.com/Velocidex/go-vmdk v0.0.0-20250505140221-bd4633ce2fbf
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20250821063524-02dc06e46238
-	github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9
+	github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250
 	github.com/Velocidex/tracee_velociraptor v0.0.0-20250620124218-01f48d6fc3a1
 	github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6
 	github.com/alecthomas/kingpin/v2 v2.4.0

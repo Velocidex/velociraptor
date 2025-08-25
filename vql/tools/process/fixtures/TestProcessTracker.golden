@@ -5,7 +5,6 @@
     {
      "Id": "5",
      "ParentId": "1-?",
-     "RealParentId": "",
      "UpdateType": "",
      "StartTime": "2021-01-01T10:30:00Z",
      "EndTime": "2021-01-01T12:30:00Z",
@@ -16,7 +15,6 @@
     {
      "Id": "2",
      "ParentId": "5",
-     "RealParentId": "",
      "UpdateType": "",
      "StartTime": "2021-01-01T12:30:00Z",
      "EndTime": "0001-01-01T00:00:00Z",
@@ -33,7 +31,6 @@
     {
      "Id": "1",
      "ParentId": "0-?",
-     "RealParentId": "",
      "UpdateType": "",
      "StartTime": "2021-01-01T12:30:00Z",
      "EndTime": "0001-01-01T00:00:00Z",
@@ -44,7 +41,6 @@
     {
      "Id": "2",
      "ParentId": "1",
-     "RealParentId": "",
      "UpdateType": "",
      "StartTime": "2021-01-01T12:30:00Z",
      "EndTime": "0001-01-01T00:00:00Z",
@@ -61,7 +57,6 @@
     {
      "Id": "1",
      "ParentId": "0-?",
-     "RealParentId": "",
      "UpdateType": "",
      "StartTime": "2021-01-01T12:30:00Z",
      "EndTime": "0001-01-01T00:00:00Z",
@@ -72,7 +67,6 @@
     {
      "Id": "2",
      "ParentId": "1",
-     "RealParentId": "",
      "UpdateType": "",
      "StartTime": "2021-01-01T12:30:00Z",
      "EndTime": "2021-01-01T14:30:00Z",
@@ -95,7 +89,6 @@
     {
      "Id": "5",
      "ParentId": "1-?",
-     "RealParentId": "",
      "UpdateType": "",
      "StartTime": "2021-01-01T10:30:00Z",
      "EndTime": "2022-04-26TZ",
@@ -106,7 +99,6 @@
     {
      "Id": "2",
      "ParentId": "5",
-     "RealParentId": "",
      "UpdateType": "",
      "StartTime": "2021-01-01T12:30:00Z",
      "EndTime": "2022-04-26TZ",
@@ -129,7 +121,6 @@
     {
      "Id": "5-1609497000",
      "ParentId": "1-?",
-     "RealParentId": "",
      "UpdateType": "",
      "StartTime": "2021-01-01T10:30:00Z",
      "EndTime": "2022-04-26TZ",
@@ -140,7 +131,6 @@
     {
      "Id": "2",
      "ParentId": "5-1609497000",
-     "RealParentId": "",
      "UpdateType": "",
      "StartTime": "2021-01-01T12:30:00Z",
      "EndTime": "2022-04-26TZ",
@@ -162,7 +152,6 @@
     {
      "Id": "2",
      "ParentId": "5-?",
-     "RealParentId": "",
      "UpdateType": "",
      "StartTime": "2021-01-01T12:30:00Z",
      "EndTime": "2022-04-26TZ",
@@ -179,7 +168,6 @@
     {
      "Id": "5-1609497000",
      "ParentId": "1-?",
-     "RealParentId": "",
      "UpdateType": "",
      "StartTime": "2021-01-01T10:30:00Z",
      "EndTime": "0001-01-01T00:00:00Z",
@@ -190,7 +178,6 @@
     {
      "Id": "2",
      "ParentId": "5-1609497000",
-     "RealParentId": "",
      "UpdateType": "",
      "StartTime": "2021-01-01T12:30:00Z",
      "EndTime": "0001-01-01T00:00:00Z",

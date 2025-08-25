@@ -300,6 +300,9 @@ func (self MailFunction) mergeSecretToRequest(
 	arg.RootCerts = secret_record.GetString("root_ca")
 	arg.SkipVerify = secret_record.GetBool("skip_verify")
 
+	// Optional parameters may be set in the secret.
+	secret_record.UpdateString("from", &arg.From)
+
 	return nil
 }
 
