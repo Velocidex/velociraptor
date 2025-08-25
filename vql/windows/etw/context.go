@@ -325,35 +325,27 @@ func (self *SessionContext) enrichEvent(guid string, e *etw.Event) {
 	fixInt(props, "ProcessId")
 	fixInt(props, "ParentId")
 
-	switch guid {
-	// Microsoft-Windows-Kernel-File
-	// We resolve the paths into filesystem names instead of kernel paths.
-	case "{EDD08927-9CC4-4E65-B970-C2560FB5C289}":
-		self.fixFilename(props, "FileName")
+	// Try to resolve filenames into normal paths from kernel paths.
+	self.fixFilename(props, "FileName")
 
-		// "KernelEventType":"LoadImage"
-	case "{2CB15D1D-5FC1-11D2-ABE1-00A0C911F518}":
-		self.fixFilename(props, "FileName")
+	// Special handling for various providers.
 
-		if etw.GetKernelEventType(e) == etw.LoadImage {
-			md := self.getProcessMetadata(props)
-			if md != nil {
-				props.Set("ProcessInfo", md)
-			}
+	// Currently no special handling.
+	/*
+		switch guid {
+		// Microsoft-Windows-Kernel-File
+		// We resolve the paths into filesystem names instead of kernel paths.
+		case "{EDD08927-9CC4-4E65-B970-C2560FB5C289}":
+
+			// "KernelEventType":"LoadImage"
+		case "{2CB15D1D-5FC1-11D2-ABE1-00A0C911F518}":
+
+		case "{3D6FA8D0-FE05-11D0-9DDA-00C04FD7BA7C}":
+
+			// Microsoft-Windows-Kernel-Process
+		case "{22FB2CD6-0E7B-422B-A0C7-2FAD1FD0E716}":
 		}
-
-	case "{3D6FA8D0-FE05-11D0-9DDA-00C04FD7BA7C}":
-		if etw.GetKernelEventType(e) == etw.CreateProcess {
-			md := self.getProcessMetadata(props)
-			if md != nil {
-				md.MergeFrom(props)
-			}
-		}
-
-		// Microsoft-Windows-Kernel-Process
-	case "{22FB2CD6-0E7B-422B-A0C7-2FAD1FD0E716}":
-		self.fixFilename(props, "ImageName")
-	}
+	*/
 }
 
 func (self *SessionContext) Stats() []ProviderStat {

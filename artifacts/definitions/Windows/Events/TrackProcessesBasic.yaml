@@ -9,7 +9,8 @@ description: |
   to run many other artifacts that depend on the process tracker.
 
   This tracker DOES NOT require Sysmon and is **incompatible** with
-  `Windows.Events.TrackProcesses` (only one should be running).
+  `Windows.Events.TrackProcesses` and
+  `Windows.Events.TrackProcessesETW` (only one should be running).
 
 type: CLIENT_EVENT
 
