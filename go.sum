@@ -73,8 +73,6 @@ github.com/Velocidex/go-ext4 v0.0.0-20250510085914-b0b955af0359 h1:IPYiFWk8IlTOQ
 github.com/Velocidex/go-ext4 v0.0.0-20250510085914-b0b955af0359/go.mod h1:Sbqqh1t+nYXmNWw0dZC8LOIxP7z5Wg94SP+4Ej1QZqg=
 github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a h1:dWHPlB3C86vh+M5P14dZxF6Hh8o2/u8FTRF/bs2EM+Q=
 github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a/go.mod h1:g74FCv59tsVP48V2o1eyIK8aKbNKPLJIJ+HuiUPVc6E=
-github.com/Velocidex/go-journalctl v0.0.0-20241004063153-cc1c858415bd h1:CSTW6zYoG1IFxaGM3N42wSwruigV1xZ4gNzjLgb2xIc=
-github.com/Velocidex/go-journalctl v0.0.0-20241004063153-cc1c858415bd/go.mod h1:5WxXsCtLdEvnc4FsFa+QfMwOWYkfey3nlQbPssZWqjc=
 github.com/Velocidex/go-journalctl v0.0.0-20250813052126-d39241ea8ef7 h1:xRVLqfsZYJO9LAPifPk9y/+IipfdT3LQVQZCSF56zTs=
 github.com/Velocidex/go-journalctl v0.0.0-20250813052126-d39241ea8ef7/go.mod h1:5WxXsCtLdEvnc4FsFa+QfMwOWYkfey3nlQbPssZWqjc=
 github.com/Velocidex/go-magic v0.0.0-20250203094020-32f94b14f00f h1:KCDi0hKrkDrn0DI2L8cSMkrF0yWj57c6VIhAKmmQFV8=
@@ -102,8 +100,6 @@ github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a h1:H7dVazNcaE80V8c
 github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a/go.mod h1:/fy/Eg4TQz9KkJduvZfGCnbWTQ/LKaknS2wYB52cU6c=
 github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1 h1:fLJ2AjY0dtDZEBhekp3bxyxGpWh5D/+NfOVlGXB5ROA=
 github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1/go.mod h1:UpFVihkMZWl2JRkVRiZYie0e2l7Ry+vjlCHCs6XVKGU=
-github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9 h1:YavusWZ+svpybfVg8cKk9MuSyeI479a0EGJ07VGpSm8=
-github.com/Velocidex/sigma-go v0.0.0-20241025122940-1b771d3d57a9/go.mod h1:ukLFs2t1+ud7MC4oN+zImhtTRP/eQHaDL3TwLs58uUA=
 github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250 h1:GhiTVVoHNhb0mzUDgieUwjfJeEaUHCHIVvV/mHzLQOI=
 github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250/go.mod h1:ukLFs2t1+ud7MC4oN+zImhtTRP/eQHaDL3TwLs58uUA=
 github.com/Velocidex/tracee_velociraptor v0.0.0-20250620124218-01f48d6fc3a1 h1:kFFoB6xKCLsQ2Zx8zD+WsxgNHoS1scFhVvUtZI0t+oI=
@@ -687,8 +683,8 @@ github.com/tklauser/go-sysconf v0.3.12 h1:0QaGUFOdQaIVdPgfITYzaTegZvdCjmYO52cSFA
 github.com/tklauser/go-sysconf v0.3.12/go.mod h1:Ho14jnntGE1fpdOqQEEaiKRpvIavV0hSfmBq8nJbHYI=
 github.com/tklauser/numcpus v0.6.1 h1:ng9scYS7az0Bk4OZLvrNXNSAO2Pxr1XXRAPyjhIx+Fk=
 github.com/tklauser/numcpus v0.6.1/go.mod h1:1XfjsgE2zo8GVw7POkMbHENHzVg3GzmoZ9fESEdAacY=
-github.com/ulikunitz/xz v0.5.11 h1:kpFauv27b6ynzBNT/Xy+1k+fK4WswhN/6PN5WhFAGw8=
-github.com/ulikunitz/xz v0.5.11/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
+github.com/ulikunitz/xz v0.5.14 h1:uv/0Bq533iFdnMHZdRBTOlaNMdb1+ZxXIlHDZHIHcvg=
+github.com/ulikunitz/xz v0.5.14/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fastjson v1.6.4 h1:uAUNq9Z6ymTgGhcm0UynUAB6tlbakBrz6CQFax3BXVQ=
