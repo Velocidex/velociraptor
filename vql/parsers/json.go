@@ -613,7 +613,7 @@ func (self WriteJSONPlugin) Call(
 			defer writer.Flush()
 
 		default:
-			scope.Log("write_csv: Unsupported accessor for writing %v", arg.Accessor)
+			scope.Log("write_jsonl: Unsupported accessor for writing %v", arg.Accessor)
 			return
 		}
 
