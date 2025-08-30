@@ -68,6 +68,11 @@ th.paged-table-header:hover .sort-element {
     visibility: hidden;
 }
 
+input.hidden-edit {
+    display: none;
+}
+
+
 td.column-resizer {
     width: 0px;
     padding: 5px;

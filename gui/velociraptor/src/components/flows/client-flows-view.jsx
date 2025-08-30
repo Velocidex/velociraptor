@@ -82,13 +82,13 @@ class ClientFlowsView extends React.Component {
         let KeyMap = {
             GOTO_RESULTS: {
                 name: "Display server dashboard",
-                sequence: "r",
+                sequence: "alt+r",
             },
-            GOTO_LOGS: "l",
-            GOTO_OVERVIEW: "o",
-            GOTO_UPLOADS: "u",
-            COLLECT: "c",
-            NOTEBOOK: "b",
+            GOTO_LOGS: "alt+l",
+            GOTO_OVERVIEW: "alt+o",
+            GOTO_UPLOADS: "alt+u",
+            COLLECT: "alt+c",
+            NOTEBOOK: "alt+b",
         };
 
         let keyHandlers={

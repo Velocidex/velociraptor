@@ -33,10 +33,18 @@ import {
     PrepareData,
 } from './table.jsx';
 
+let guid = 1;
+
+const getID = ()=>{
+    guid++;
+    return "ID" + guid;
+}
+
 
 export class ColumnFilter extends Component {
     static propTypes = {
         column:  PropTypes.string,
+        table_id: PropTypes.string,
         transform: PropTypes.object,
         setTransform: PropTypes.func,
     }
@@ -54,6 +62,11 @@ export class ColumnFilter extends Component {
         if (!_.isEqual(prevProps.transform, this.props.transform)) {
             this.updateFiltersFromTransform();
         }
+    }
+
+    // The GUID should be unique for this column and table.
+    guid = ()=>{
+        return this.props.table_id + this.props.column;
     }
 
     updateFiltersFromTransform = () => {
@@ -89,53 +102,43 @@ export class ColumnFilter extends Component {
 
     render() {
         let classname = "hidden-edit";
-
+        let tooltip = T("Filter");
         if(this.state.edit_visible) {
-            return (
-                <ToolTip tooltip={this.props.column}>
-                  <Form
-                    onSubmit={e=>{
-                        e.preventDefault();
-                        this.submitSearch();
-                        return false;
-                    }}>
-                    <InputGroup className="mb-3">
-                      <Button
-                        size="sm"
-                        type="button"
-                        variant="default"
-                        className="visible"
-                        onClick={this.submitSearch}>
-                        <FontAwesomeIcon icon="filter"/>
-                      </Button>
-                      <Form.Control
-                        as="input"
-                        placeholder={T("Regex Filter")}
-                        spellCheck="false"
-                        className="visible"
-                        value={this.state.edit_filter}
-                        onChange={e=> {
-                          this.setState({edit_filter: e.currentTarget.value});
-                      }}/>
-                    </InputGroup>
-                  </Form>
-                </ToolTip>
-            );
+            tooltip = this.props.column;
+            classname = "visible";
         }
 
         return (
-            <ToolTip tooltip={T("Filter")}>
+            <ToolTip tooltip={tooltip}>
                 <Form
                   onSubmit={e=>{
                       e.preventDefault();
+                      e.stopPropagation();
+
+                      if(this.state.edit_visible) {
+                          this.submitSearch();
+                      }
                       return false;
                   }}>
+                  <InputGroup className="mb-3">
                   <Button
                     size="sm"
                     type="button"
                     variant="outline-dark"
                     className={classname}
                     onClick={()=>{
+                        if (this.state.edit_visible) {
+                            this.submitSearch();
+                            return;
+                        }
+
+                        // Set the focus on the element outside the react loop.
+                        window.setTimeout(()=>{
+                            const el = document.getElementById(this.guid());
+                            if (el) {
+                                el.focus();
+                            }}, 0);
+
                         this.setState({
                             edit_visible: true,
                         });
@@ -143,6 +146,17 @@ export class ColumnFilter extends Component {
                     }}>
                     <FontAwesomeIcon icon="filter"/>
                   </Button>
+                      <Form.Control
+                        as="input"
+                        id={this.guid()}
+                        placeholder={T("Regex Filter")}
+                        spellCheck="false"
+                        className={classname}
+                        value={this.state.edit_filter}
+                        onChange={e=> {
+                          this.setState({edit_filter: e.currentTarget.value});
+                      }}/>
+                    </InputGroup>
                 </Form>
               </ToolTip>
             );
@@ -603,11 +617,15 @@ class VeloPagedTable extends Component {
         compact_columns: {},
 
         start_selection_idx: -1,
+
+        guid: "",
     }
 
     componentDidMount = () => {
         this.source = CancelToken.source();
-        this.setState({page_size: this.props.initial_page_size || 10});
+        this.setState({
+            guid: getID(),
+            page_size: this.props.initial_page_size || 10});
 
         this.fetchRows();
     }
@@ -1055,6 +1073,7 @@ class VeloPagedTable extends Component {
                   { this.state.transform.editing ?
                     <ButtonGroup className="hover-buttons">
                       <ColumnFilter column={column}
+                                    table_id={this.state.guid}
                                     transform={this.state.transform}
                                     setTransform={this.setTransform}
                       />
@@ -1081,6 +1100,7 @@ class VeloPagedTable extends Component {
                       />
 
                       <ColumnFilter column={column}
+                                    table_id={this.state.guid}
                                     transform={this.state.transform}
                                     setTransform={this.setTransform}
                       />
