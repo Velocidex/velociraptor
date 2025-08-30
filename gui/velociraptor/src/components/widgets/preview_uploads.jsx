@@ -106,6 +106,8 @@ class TextViewTab extends React.Component {
 
         api.get_blob(this.props.url, params, this.source.token).then(
             response=>{
+                if (response.cancel) return;
+
                 let content_range = response.blob && response.blob.headers &&
                     response.blob.headers["content-range"];
                 if(content_range) {
@@ -269,6 +271,8 @@ class HexViewTab  extends React.Component {
 
         api.get_blob(this.props.url, params, this.source.token).then(
             response=>{
+                if (response.cancel) return;
+
                 const view = new Uint8Array(response.data);
                 this.setState({
                     base_offset: params.offset,
@@ -526,6 +530,7 @@ export default class PreviewUpload extends Component {
 
         api.get_blob(url, params, this.source.token).then(
             response=>{
+                if (response.cancel) return;
                 if(response.data && response.data.error) {
                     this.setState({error: true});
 
