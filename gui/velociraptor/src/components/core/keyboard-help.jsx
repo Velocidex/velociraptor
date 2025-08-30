@@ -31,10 +31,11 @@ const helpTextCol1 = [
 
 const helpTextCol2 = [
     [T("Collected Artifacts"), [
-        ["r", T("View selected collection results")],
-        ["o", T("View selected collection overview")],
-        ["l", T("View selected collection logs")],
-        ["u", T("View selected collection uploaded files")],
+        ["alt+r", T("View selected collection results")],
+        ["alt+o", T("View selected collection overview")],
+        ["alt+l", T("View selected collection logs")],
+        ["alt+u", T("View selected collection uploaded files")],
+        ["alt+b", T("View selected collection notebook")],
     ]],
     [T("Editor shortcuts"), [
         ["ctrl+,", T("Popup the editor configuration dialog")],
