@@ -5,6 +5,7 @@ import SplitPane from 'react-split-pane';
 import FlowsList from './flows-list.jsx';
 import FlowInspector from "./flows-inspector.jsx";
 import { withRouter }  from "react-router-dom";
+import { HotKeys, ObserveKeys } from "react-hotkeys";
 
 import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
@@ -65,22 +66,54 @@ class ServerFlowsView extends React.Component {
         this.setState({topPaneSize: level});
     }
 
+    gotoTab = (tab) => {
+        let selected_flow = this.state.currentFlow && this.state.currentFlow.session_id;
+        this.props.history.push(
+            "/collected/server/" + selected_flow + "/" + tab);
+    }
+
+
     render() {
+        let KeyMap = {
+            GOTO_RESULTS: {
+                name: "Display server dashboard",
+                sequence: "alt+r",
+            },
+            GOTO_LOGS: "alt+l",
+            GOTO_OVERVIEW: "alt+o",
+            GOTO_UPLOADS: "alt+u",
+            COLLECT: "alt+c",
+            NOTEBOOK: "alt+b",
+        };
+
+        let keyHandlers={
+            GOTO_RESULTS: (e)=>this.gotoTab("results"),
+            GOTO_LOGS: (e)=>this.gotoTab("logs"),
+            GOTO_UPLOADS: (e)=>this.gotoTab("uploads"),
+            GOTO_OVERVIEW: (e)=>this.gotoTab("overview"),
+            NOTEBOOK: (e)=>this.gotoTab("notebook"),
+            COLLECT: ()=>this.setState({showWizard: true}),
+        };
+
         return (
             <>
-              <SplitPane split="horizontal"
-                         size={this.state.topPaneSize}
-                         onResizerDoubleClick={x=>this.collapse("50%")}
-                         defaultSize="30%">
-                <FlowsList
-                  selected_flow={this.state.currentFlow}
-                  collapseToggle={this.collapse}
-                  setSelectedFlow={this.setSelectedFlow}
-                  client={{client_id: "server"}}/>
-                <FlowInspector
-                  flow={this.state.currentFlow}
-                  client={{client_id: "server"}}/>
-              </SplitPane>
+              <HotKeys keyMap={KeyMap} handlers={keyHandlers}>
+                <ObserveKeys>
+                  <SplitPane split="horizontal"
+                             size={this.state.topPaneSize}
+                             onResizerDoubleClick={x=>this.collapse("50%")}
+                             defaultSize="30%">
+                    <FlowsList
+                      selected_flow={this.state.currentFlow}
+                      collapseToggle={this.collapse}
+                      setSelectedFlow={this.setSelectedFlow}
+                      client={{client_id: "server"}}/>
+                    <FlowInspector
+                      flow={this.state.currentFlow}
+                      client={{client_id: "server"}}/>
+                  </SplitPane>
+                </ObserveKeys>
+              </HotKeys>
             </>
         );
     }

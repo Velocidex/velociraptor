@@ -31,10 +31,11 @@ const helpTextCol1 = [
 
 const helpTextCol2 = [
     [T("Collected Artifacts"), [
-        ["r", T("View selected collection results")],
-        ["o", T("View selected collection overview")],
-        ["l", T("View selected collection logs")],
-        ["u", T("View selected collection uploaded files")],
+        ["alt+r", T("View selected collection results")],
+        ["alt+o", T("View selected collection overview")],
+        ["alt+l", T("View selected collection logs")],
+        ["alt+u", T("View selected collection uploaded files")],
+        ["alt+b", T("View selected collection notebook")],
     ]],
     [T("Editor shortcuts"), [
         ["ctrl+,", T("Popup the editor configuration dialog")],
@@ -79,7 +80,7 @@ export default class KeyboardHelp extends React.PureComponent {
         return results;
     }
 
-    makeColumn = (specs) => {
+    makeColumn = (specs, colnum) => {
         return <table>
                  <tbody>
                    { _.map(specs, (spec, v)=>{
@@ -92,7 +93,7 @@ export default class KeyboardHelp extends React.PureComponent {
                                      {T(title)}
                                    </td></tr>
                                  { _.map(desc, (x, i)=>{
-                                     return <tr key={"X"+i}>
+                                     return <tr key={"X" + colnum + v+i}>
                                               <td className="key">
                                                 {this.renderKey(x[0])}  :
                                               </td>
@@ -142,10 +143,10 @@ export default class KeyboardHelp extends React.PureComponent {
                           <tbody>
                             <tr>
                               <td className="column">
-                                { this.makeColumn(helpTextCol1)}
+                                { this.makeColumn(helpTextCol1, 0)}
                               </td>
                               <td className="column">
-                                { this.makeColumn(helpTextCol2)}
+                                { this.makeColumn(helpTextCol2, 1)}
                               </td>
                           </tr>
                         </tbody>
