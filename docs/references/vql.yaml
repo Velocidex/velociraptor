@@ -11996,7 +11996,7 @@
     cache the rules with, but you can provide a separate `key` for
     caching these rules for more efficiency.
 
-    It is therefore appropriate to repeatadly call the yara() plugin
+    It is therefore appropriate to repeatedly call the yara() plugin
     many times on many different files for scanning.
 
     ## Notes:
