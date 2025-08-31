@@ -258,6 +258,12 @@ class FlowsList extends React.Component {
         }
 
         if (action === "new") {
+            // Special handling for the offline collector builder.
+            if (name==="Server.Utils.CreateCollector") {
+                this.setState({showOfflineWizard: true});
+                return;
+            }
+
             let specs = {};
             specs[name] = {};
 

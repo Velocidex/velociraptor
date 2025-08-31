@@ -94,7 +94,7 @@ class UserDashboard extends React.Component {
                     <Button variant="default"
                             onClick={() => {
                                 this.props.history.push(
-                                    "/artifacts/Server.Monitor.Health");
+                                    "/artifacts/Server.Monitor.Health/edit");
                             }} >
                       <FontAwesomeIcon icon="pencil-alt"/>
                     </Button>
