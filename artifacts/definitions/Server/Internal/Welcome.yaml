@@ -24,18 +24,27 @@ reports:
 
       # Welcome to Velociraptor!
 
-      ## Common tasks:
+      <table><tbody><tr><td>
 
-      * <a href="#/dashboard">Inspect the server's state</a>
-      * <a href="#/collected/server">Build an Offline Collector</a>
-      * <a href="#/notebooks">Write VQL notebooks</a>
+      * <a href="#/dashboard">View server dashboard</a>
+      * <a href="#/collected/server/new/Server.Import.Extras">Import Extra artifacts</a>
+      * <a href="#/collected/server/new/Server.Utils.CreateLinuxPackages">Build Linux client packages</a>
+      * <a href="#/collected/server/new/Server.Utils.CreateMSI">Build Windows client MSI</a>
+      * <a href="#/collected/server/new/Server.Utils.CreateCollector">Build an Offline Collector</a>
+      * <a href="#/collected/server/new/Server.Orgs.NewOrg">Create a new Org</a>
+
+      </td><td>
+
       * <a href="#/host/server">View Server Configuration</a>
       * <a href="#/events/server/Server.Audit.Logs">Inspect Server Audit Log</a>
       * <a href="#/secrets">Manage Server Secrets</a>
-      * <a href="#/artifacts/Server.Internal.Welcome">Customize this welcome screen</a>
+      * <a href="#/users">Manage Velociraptor Users</a>
+      * <a href="#/artifacts/Server.Internal.Welcome/edit">Customize this welcome screen</a>
       * <a href="{{ Scope "DebugLink" }}">Debug the server</a>
 
-      Or simply search for a client in the search bar above.
+      </td></tr></tbody></table>
+
+      Or search for a client in the search bar above.
 
       You can always get back to this welcome screen by clicking the
       little green reptile above!
