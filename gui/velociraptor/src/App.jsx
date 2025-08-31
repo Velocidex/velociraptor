@@ -164,7 +164,7 @@ class App extends Component {
                      <Route path="/secrets/">
                        <SecretManager/>
                      </Route>
-                     <Route path="/artifacts/:artifact?">
+                     <Route path="/artifacts/:artifact?/:action?">
                        <ArtifactInspector client={this.state.client}/>
                      </Route>
                      <Route path="/users/:user?" component={UserInspector}/>

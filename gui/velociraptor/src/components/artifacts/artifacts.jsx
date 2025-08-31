@@ -133,6 +133,7 @@ class ArtifactInspector extends React.Component {
             this.fetchRows("...", this.state.preset_filter);
             return;
         }
+
         // If we get here the url contains the artifact name, we
         // therefore have to allow all types of artifacts because we
         // dont know which type the artifact is
@@ -141,6 +142,11 @@ class ArtifactInspector extends React.Component {
                        current_filter: artifact_name});
         this.updateSearch(artifact_name);
         this.getArtifactDescription(artifact_name);
+
+        if (this.props.match && this.props.match.params &&
+            this.props.match.params.action === "edit") {
+            this.setState({showEditedArtifactDialog: true});
+        }
     }
 
     componentWillUnmount() {
