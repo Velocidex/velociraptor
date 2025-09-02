@@ -1290,7 +1290,7 @@ sources:
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), getReqName(compiled[0]), "Test.Artifact.Timeout")
-	assert.Equal(self.T(), compiled[0].Timeout, uint64(20))
+	assert.Equal(self.T(), compiled[0].Timeout, uint64(5))
 
 	assert.Equal(self.T(), getReqName(compiled[1]), "Test.Artifact.MaxRows")
 	assert.Equal(self.T(), compiled[1].Timeout, uint64(20))
