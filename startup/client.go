@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
+	"www.velocidex.com/golang/velociraptor/vql/parsers/journald"
 )
 
 // StartClientServices starts the various services needed by the
@@ -40,6 +41,9 @@ func StartClientServices(
 	scope.SetLogger(logging.NewPlainLogger(config_obj, &logging.ClientComponent))
 
 	vql_subsystem.InstallUnimplemented(scope)
+
+	// Start the journald watcher service if needed.
+	journald.StartGlobalJournaldService(ctx, config_obj)
 
 	// Start encrypted logs service if possible
 	err = encrypted_logs.StartEncryptedLog(sm.Ctx, sm.Wg, sm.Config)

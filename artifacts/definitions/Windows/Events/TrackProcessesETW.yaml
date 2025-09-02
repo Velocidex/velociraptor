@@ -72,9 +72,10 @@ export: |
         ProcessId=EventData.ProcessId,
         Created=System.TimeStamp,
         ParentId=EventData.ParentId,
-        UserSID=EventData.UserSID,
-        ImageFileName=EventData.ImageFileName,
-        CommandLine=EventData.CommandLine
+        Username=EventData.UserSID,
+        Name=EventData.ImageFileName,
+        CommandLine=EventData.CommandLine,
+        Exe=EventData.CommandLine
     ))
 
     -- Insert the event into the local LRU cache and return it.

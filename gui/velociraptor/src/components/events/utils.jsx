@@ -31,6 +31,10 @@ function _ArtifactCollectorArgs_to_label_table(event_table) {
         if(spec.max_batch_rows) {
             param_dict.max_batch_rows = spec.max_batch_rows;
         }
+
+        if(spec.timeout) {
+            param_dict.timeout = spec.timeout;
+        }
     });
 
     // If there is no spec the add an empty one.
@@ -147,6 +151,11 @@ function _label_table2ArtifactCollectorArgs(label_table) {
 
             if(k==="max_batch_rows") {
                 spec.max_batch_rows = parseInt(v);
+                return;
+            }
+
+            if(k==="timeout") {
+                spec.timeout = parseInt(v);
                 return;
             }
 

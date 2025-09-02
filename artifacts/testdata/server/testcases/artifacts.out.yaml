@@ -78,7 +78,8 @@ Output: [
      "cpu_limit": 0,
      "max_batch_wait": 0,
      "max_batch_rows": 0,
-     "max_batch_rows_buffer": 0
+     "max_batch_rows_buffer": 0,
+     "timeout": 0
     }
    ],
    "cpu_limit": 0,
@@ -125,7 +126,8 @@ Output: [
      "cpu_limit": 0,
      "max_batch_wait": 0,
      "max_batch_rows": 0,
-     "max_batch_rows_buffer": 0
+     "max_batch_rows_buffer": 0,
+     "timeout": 0
     }
    ],
    "cpu_limit": 0,

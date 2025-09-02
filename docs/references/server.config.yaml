@@ -1345,53 +1345,12 @@ defaults:
   # is a lot slower but has no memory limitations. Default 30000
   max_in_memory_group_by: 30000
 
-  # If these are set we enforce VQL to only have the specified allowed
-  # VQL plugins and functions. This is a way to harden the server by
-  # removing potentially sensitive functionality to allow only
-  # approved VQL plugins to run.
-  allowed_plugins:
-    - glob
-  allowed_functions:
-    - dict
-  allowed_accessors:
-    - auto
-
-  # Alternatively, it might be easier to deny specific plugins and
-  # functions and accessors.
-  denied_plugins:
-    - execve
-
-  denied_functions:
-    - rm
-
-  denied_accessors:
-    - s3
-
   # How long to cache ACL policies (default 60 sec)
   acl_lru_timeout_sec: 60
 
   # Ignore messages from unauthenticated clients for this long - gives
   # them a chance to enrol first (default 10 sec).
   unauthenticated_lru_timeout_sec: 10
-
-  # Normally the inventory service attempts to download tools in
-  # its own but if this is set, we prevent any external access.
-  disable_inventory_service_external_access: false
-
-  # Default expiry of certificate issuance (default 365 days). This
-  # will apply for e.g. rotating certificates or issuing an api cert.
-  certificate_validity_days: 365
-
-  # When the server is in lockdown mode the following permissions
-  # will be denied (Even for administrators).
-  lockdown_denied_permissions:
-   - ARTIFACT_WRITER
-   - SERVER_ARTIFACT_WRITER
-   - EXECVE
-   - SERVER_ADMIN
-   - FILESYSTEM_WRITE
-   - FILESYSTEM_READ
-   - MACHINE_STATE
 
   # Controls how exports work (creating hunt or collection exports to a
   # zip file). On slow filesystems, increase the number of worker
@@ -1511,3 +1470,90 @@ Minion:
   # minion workers have higher priority than the master node allowing
   # minions to take over notebook calculations most of he time.
   notebook_worker_priority: 10
+
+security:
+  # A list of path prefixes allowed for the 'file' accessor. If
+  # this is empty the file accessor will work on all
+  # directories. If you want to disable access to the server's
+  # filesystem you can set this to a non existent directory,
+  # e.g. /nonexistent/ .
+  allowed_file_accessor_prefix:
+    - /tmp/
+
+  # A list of prefixes allowed for the fs accessor. All other
+  # prefixes will be rejected.
+  allowed_fs_accessor_prefix:
+   - artifact_definitions
+   - clients
+   - downloads
+   - notebooks
+   - public
+   - temp
+   - server_artifacts
+   - server_artifacts_logs
+
+
+  # If these are set we enforce VQL to only have the specified allowed
+  # VQL plugins and functions. This is a way to harden the server by
+  # removing potentially sensitive functionality to allow only
+  # approved VQL plugins to run.
+  allowed_plugins:
+    - glob
+  allowed_functions:
+    - dict
+  allowed_accessors:
+    - auto
+
+  # Alternatively, it might be easier to deny specific plugins and
+  # functions and accessors.
+  denied_plugins:
+    - execve
+
+  denied_functions:
+    - rm
+
+  denied_accessors:
+    - s3
+
+  # When the server is in lockdown mode the following permissions
+  # will be denied (Even for administrators).
+  lockdown_denied_permissions:
+   - ARTIFACT_WRITER
+   - SERVER_ARTIFACT_WRITER
+   - EXECVE
+   - SERVER_ADMIN
+   - FILESYSTEM_WRITE
+   - FILESYSTEM_READ
+   - MACHINE_STATE
+
+  # Default expiry of certificate issuance (default 365 days). This
+  # will apply for e.g. rotating certificates or issuing an api cert.
+  certificate_validity_days: 365
+
+  # Normally the inventory service attempts to download tools in
+  # its own but if this is set, we prevent any external access.
+  disable_inventory_service_external_access: false
+
+  # The Data Encryptions Key to use for protecting the secrets in
+  # storage. This can take a number of forms:
+
+  # 1. If it starts with "env://<VAR>" the secret will be taken from an
+  #    Environment variable.
+  # 2. If empty the secret is taken from obfuscation_nonce (which
+  #    by default is the hash of the private key).
+  #
+  # In future further methods may be implemented (e.g. EKMS).
+  secrets_dek: ""
+
+  # This controls VQL plugins that may accept secrets as well full
+  # parameters. If this flag is set, those plugins will refuse to
+  # accept direct parameters, instead only accepting a secret
+  # name. This allows the admin to control exactly how these
+  # plugins work without disabling them completely.
+  vql_must_use_secrets: false
+
+  # Prevent VQL from having access to these environment
+  # variables. Environment Vars sometimes may contain secrets and
+  # confidential information.
+  shadowed_env_vars:
+    - VELOCIRAPTOR_CONFIG

@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/parsers/journald"
 )
 
 // Start minimal services for tools.
@@ -20,6 +21,7 @@ func StartToolServices(
 	scope.SetLogger(logging.NewPlainLogger(config_obj, &logging.ToolComponent))
 
 	vql_subsystem.InstallUnimplemented(scope)
+	journald.StartGlobalJournaldService(ctx, config_obj)
 
 	sm := services.NewServiceManager(ctx, config_obj)
 

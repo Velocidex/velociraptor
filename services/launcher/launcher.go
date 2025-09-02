@@ -200,6 +200,7 @@ func (self *Launcher) CompileCollectorArgs(
 		var local_cpu_limit float32
 		var max_batch_wait, max_batch_rows uint64
 		var max_batch_row_buffer uint64
+		var local_timeout uint64
 
 		if config_obj != nil && config_obj.Defaults != nil {
 			max_batch_rows = config_obj.Defaults.MaxRows
@@ -260,6 +261,10 @@ func (self *Launcher) CompileCollectorArgs(
 			if artifact.Resources.MaxBatchRowsBuffer > max_batch_row_buffer {
 				max_batch_row_buffer = artifact.Resources.MaxBatchRowsBuffer
 			}
+
+			if artifact.Resources.Timeout > local_timeout {
+				local_timeout = artifact.Resources.Timeout
+			}
 		}
 
 		// If the spec specifies a value it overrides the artifact
@@ -280,6 +285,10 @@ func (self *Launcher) CompileCollectorArgs(
 			max_batch_wait = spec.MaxBatchWait
 		}
 
+		if spec.Timeout > 0 {
+			local_timeout = spec.Timeout
+		}
+
 		for _, expanded_artifact := range expandArtifacts(artifact) {
 			vql_collector_args, err := self.GetVQLCollectorArgs(
 				ctx, config_obj, repository, expanded_artifact,
@@ -290,6 +299,10 @@ func (self *Launcher) CompileCollectorArgs(
 
 			if local_cpu_limit > 0 {
 				vql_collector_args.CpuLimit = local_cpu_limit
+			}
+
+			if local_timeout > 0 {
+				vql_collector_args.Timeout = local_timeout
 			}
 
 			vql_collector_args.MaxRow = max_batch_rows
@@ -314,7 +327,8 @@ func (self *Launcher) CompileCollectorArgs(
 				vql_collector_args.IopsLimit = collector_request.IopsLimit
 			}
 
-			if collector_request.Timeout > 0 {
+			if vql_collector_args.Timeout == 0 &&
+				collector_request.Timeout > 0 {
 				vql_collector_args.Timeout = collector_request.Timeout
 			}
 

@@ -78,6 +78,17 @@ var (
 		"defaults.max_vfs_directory_size",
 		"Datastore.remote_datastore_rpc_deadline",
 
+		// Deprecated fields that were moved to security:
+		"defaults.inflight_check_time",
+		"defaults.allowed_plugins",
+		"defaults.allowed_functions",
+		"defaults.allowed_accessors",
+		"defaults.denied_plugins",
+		"defaults.denied_functions",
+		"defaults.denied_accessors",
+		"defaults.lockdown_denied_permissions",
+		"defaults.certificate_validity_days",
+
 		// Fields that are already handled but their default value is
 		// false or 0.
 		"GUI.use_plain_http",
@@ -120,6 +131,9 @@ var (
 		"Frontend.proxy_config.ignore_environment",
 		"defaults.disable_active_inflight_checks",
 		"defaults.write_internal_events",
+		"security.secrets_dek",
+		"security.vql_must_use_secrets",
+		"security.disable_inventory_service_external_access",
 	}
 )
 

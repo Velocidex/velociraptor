@@ -968,6 +968,10 @@ class NewCollectionWizard extends React.Component {
                     spec.max_batch_rows = v;
                     return;
                 }
+                if (k==="timeout") {
+                    spec.timeout = v;
+                    return;
+                }
 
                 // If the value is cleared just let the artifact use
                 // its own default value and dont mention it in the
