@@ -15,6 +15,7 @@ import VeloLiveClock from './components/utils/clock.jsx';
 import ClientFlowsView from './components/flows/client-flows-view.jsx';
 import ServerFlowsView from './components/flows/server-flows-view.jsx';
 import Notebook from './components/notebooks/notebook.jsx';
+import FullScreenTable from './components/notebooks/table_view.jsx';
 import FullScreenNotebook from './components/notebooks/full_notebook.jsx';
 import FullScreenHuntNotebook from './components/hunts/hunt-full-notebook.jsx';
 import FullScreenFlowNotebook from './components/flows/flow-full-notebook.jsx';
@@ -241,6 +242,9 @@ class App extends Component {
                     </Route>
                     <Route path="/fullscreen/collected/:client_id/:flow_id/notebook">
                       <FullScreenFlowNotebook />
+                    </Route>
+                    <Route path="/fullscreen/table/:state">
+                      <FullScreenTable />
                     </Route>
                     <Route>
                       { this.renderApp() }

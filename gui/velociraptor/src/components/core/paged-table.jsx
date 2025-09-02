@@ -22,7 +22,8 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import StackDialog from './stack.jsx';
 import ColumnResizer from "./column-resizer.jsx";
 import InputGroup from 'react-bootstrap/InputGroup';
-
+import { serializeJSON } from '../utils/json_parse.jsx';
+import { Link }  from "react-router-dom";
 
 import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
@@ -421,7 +422,7 @@ export class TablePaginationControl extends React.Component {
         });
 
         return (
-            <>
+            <ButtonGroup>
               <Button variant="default" className="goto-start"
                       disabled={current_page===0}
                       onClick={()=>this.props.onRowChange(0)}>
@@ -505,7 +506,7 @@ export class TablePaginationControl extends React.Component {
                   </Dropdown.Menu>
                 </Dropdown>
               </ToolTip>
-            </>
+            </ButtonGroup>
         );
     }
 }
@@ -582,6 +583,10 @@ class VeloPagedTable extends Component {
 
         // If set we update the callback with the pagination state.
         setPageState: PropTypes.func,
+
+        // React router props.
+        is_fullscreen: PropTypes.bool,
+        history: PropTypes.object,
     }
 
     state = {
@@ -871,6 +876,15 @@ class VeloPagedTable extends Component {
         return res;
     }
 
+    fullscreen_state = ()=>{
+        let state = {
+            params: this.props.params,
+            url: this.props.url,
+            env: this.props.env,
+        };
+        return "/fullscreen/table/" + btoa(serializeJSON(state));
+    }
+
     renderToolbar = ()=>{
         if(this.props.no_toolbar) {
             return <></>;
@@ -965,13 +979,21 @@ class VeloPagedTable extends Component {
                     <span className="sr-only">{T("Download CSV")}</span>
                   </Button>
                 </ToolTip>
-
-                { this.renderPaginator() }
+                { !this.props.is_fullscreen &&
+                  <ToolTip tooltip={T("Fullscreen")}>
+                    <Link to={this.fullscreen_state()}
+                          target="_blank" rel="noopener noreferrer"
+                          role="button" className="btn btn-default">
+                      <FontAwesomeIcon icon="maximize"/>
+                      <span className="sr-only">{T("Fullscreen")}</span>
+                    </Link>
+                  </ToolTip> }
 
               </ButtonGroup>
-                <ButtonGroup className="float-right">
-                  { this.getTransformedRenderer(transformed) }
-                </ButtonGroup>
+              { this.renderPaginator() }
+              <ButtonGroup className="float-right">
+                { this.getTransformedRenderer(transformed) }
+              </ButtonGroup>
               { this.props.toolbar || <></> }
             </Navbar>
         );
@@ -1388,6 +1410,8 @@ class VeloPagedTable extends Component {
             e.preventDefault();
             e.stopPropagation();
         }
+        console.log(e);
+        console.log(e.isPropagationStopped());
 
         let last_page = this.getLastPage();
         let current_page = parseInt(this.state.start_row / this.state.page_size);
@@ -1453,16 +1477,21 @@ class VeloPagedTable extends Component {
 
         return (
             <>
-              <TablePaginationControl
-                total_size={this.state.total_size}
-                start_row={this.state.start_row}
-                page_size={this.state.page_size}
-                current_page={this.state.start_row / this.state.page_size}
-                onRowChange={row_offset=>this.setState({start_row: row_offset})}
-                onPageSizeChange={size=>this.setState({page_size: size})}
-                direction={direction}
-              />
-            </>    );
+              <HotKeys keyMap={this.keymap} component={"span"} handlers={this.handlers}>
+                <ObserveKeys component={"span"}>
+                  <TablePaginationControl
+                    total_size={this.state.total_size}
+                    start_row={this.state.start_row}
+                    page_size={this.state.page_size}
+                    current_page={this.state.start_row / this.state.page_size}
+                    onRowChange={row_offset=>this.setState({start_row: row_offset})}
+                    onPageSizeChange={size=>this.setState({page_size: size})}
+                    direction={direction}
+                  />
+                </ObserveKeys>
+              </HotKeys>
+            </>
+        );
     }
 
     getDesc = c=>{
@@ -1478,9 +1507,9 @@ class VeloPagedTable extends Component {
     renderTable = ()=>{
         return (
             <>
-              <HotKeys keyMap={this.keymap} handlers={this.handlers}>
-                <ObserveKeys>
-                  <Table className="paged-table">
+              <HotKeys keyMap={this.keymap} component={"span"} handlers={this.handlers}>
+                <ObserveKeys component={"span"}>
+                  <Table tabIndex="0" className="paged-table">
                     <thead>
                       <tr className="paged-table-header">
                         {_.map(this.activeColumns(), this.renderHeader)}
