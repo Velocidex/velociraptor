@@ -747,6 +747,30 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: cat
+  description: |-
+    Read files in chunks.
+
+    This is mostly useful for character devices on Linux or special files which can not be read in blocks.
+  type: Plugin
+  args:
+  - name: filename
+    type: accessors.OSPath
+    description: File to open.
+    required: true
+  - name: accessor
+    type: string
+    description: An accessor to use.
+  - name: chunk
+    type: int
+    description: length of each chunk to read from the file.
+  - name: timeout
+    type: int
+    description: If specified we abort reading after this much time.
+  metadata:
+    permissions: FILESYSTEM_READ
+  platforms:
+  - linux_amd64_cgo
 - name: certificates
   description: |
     Collect certificate from the system trust store.
@@ -12075,7 +12099,6 @@
     loaded cleanly but any conditions will not match. Considering that
     signatures can be easily invalidated, robust rules typically have
     other conditions as a fallback so the impact should be minimal.
-
   type: Plugin
   args:
   - name: rules
@@ -12226,3 +12249,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+

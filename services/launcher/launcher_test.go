@@ -431,6 +431,21 @@ parameters:
 sources:
 - query:  |
     SELECT * FROM info()
+`, `
+name: Test.ArtifactResources
+resources:
+ timeout: 250
+ cpu_limit: 20
+ max_batch_rows: 256
+ max_batch_wait: 101
+
+parameters:
+ - name: Foo
+   default: Foo2
+
+sources:
+- query:  |
+    SELECT * FROM info()
 `}
 
 func (self *LauncherTestSuite) TestCompilingMultipleArtifacts() {
@@ -481,6 +496,56 @@ func (self *LauncherTestSuite) TestCompilingMultipleArtifacts() {
 	assert.Equal(self.T(), compiled[0].Env[0].Value, "Foo1")
 	assert.Equal(self.T(), compiled[1].Env[0].Key, "Foo")
 	assert.Equal(self.T(), compiled[1].Env[0].Value, "Foo2")
+}
+
+func (self *LauncherTestSuite) TestCompilingMultipleLimitedArtifacts() {
+	repository := self.LoadArtifacts(CompilingMultipleArtifacts...)
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:   "UserX",
+		ClientId:  "C.1234",
+		Artifacts: []string{"Test.Artifact", "Test.ArtifactResources"},
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				// Here we specify limits in the artifact spec.
+				Artifact: "Test.Artifact",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "Foo", Value: "Foo1"},
+					},
+				},
+				CpuLimit:           12,
+				MaxBatchRows:       200,
+				MaxBatchRowsBuffer: 300,
+				MaxBatchWait:       400,
+				Timeout:            500,
+			},
+			{
+				// This one specified limits in the artifact
+				// definition.
+				Artifact: "Test.ArtifactResources",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "Foo", Value: "Foo2"},
+					},
+				},
+			},
+		},
+	}
+	ctx := context.Background()
+	acl_manager := acl_managers.NullACLManager{}
+
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.ConfigObj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	json.Dump(compiled)
 }
 
 // Server events need to be compiled slighly differently - each source
@@ -1225,7 +1290,7 @@ sources:
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), getReqName(compiled[0]), "Test.Artifact.Timeout")
-	assert.Equal(self.T(), compiled[0].Timeout, uint64(20))
+	assert.Equal(self.T(), compiled[0].Timeout, uint64(5))
 
 	assert.Equal(self.T(), getReqName(compiled[1]), "Test.Artifact.MaxRows")
 	assert.Equal(self.T(), compiled[1].Timeout, uint64(20))

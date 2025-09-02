@@ -32,6 +32,8 @@ var (
 	artifact_definitions = []string{`
 name: EventArtifact1
 type: CLIENT_EVENT
+parameters:
+- name: Foo
 sources:
 - query: SELECT * FROM info()
 `, `
@@ -119,20 +121,22 @@ func (self *EventsTestSuite) TearDownTest() {
 	os.Remove(self.writeback) // clean up file buffer
 }
 
-var server_state = &flows_proto.ClientEventTable{
-	Artifacts: &flows_proto.ArtifactCollectorArgs{
-		// These apply to all labels.
-		Artifacts: []string{"EventArtifact1"},
-	},
-
-	// If the client is labeled as "Label1" then it will
-	// receive these
-	LabelEvents: []*flows_proto.LabelEvents{{
-		Label: "Label1",
+func server_state() *flows_proto.ClientEventTable {
+	return &flows_proto.ClientEventTable{
 		Artifacts: &flows_proto.ArtifactCollectorArgs{
-			Artifacts: []string{"EventArtifact2"},
-		}},
-	},
+			// These apply to all labels.
+			Artifacts: []string{"EventArtifact1"},
+		},
+
+		// If the client is labeled as "Label1" then it will
+		// receive these
+		LabelEvents: []*flows_proto.LabelEvents{{
+			Label: "Label1",
+			Artifacts: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{"EventArtifact2"},
+			}},
+		},
+	}
 }
 
 func (self *EventsTestSuite) TestEventTableUpdate() {
@@ -150,7 +154,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	table := self.InitializeEventTable(ctx, wg, output_chan)
 
 	require.NoError(self.T(), client_manager.SetClientMonitoringState(
-		ctx, self.ConfigObj, "", server_state))
+		ctx, self.ConfigObj, "", server_state()))
 
 	// Check the version of the initial Event table it should be 0
 	version := table.Version()
@@ -281,6 +285,38 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// Make sure the event queries end up in the writeback file
 	assert.Contains(self.T(), string(data), "EventArtifact1")
 	assert.Contains(self.T(), string(data), "EventArtifact2")
+
+	// The below checks that the event table is updated if only a
+	// parameter is changed.
+
+	// Check that Foo is empty right now
+	assert.Equal(self.T(), "", table.Events[0].Env[0].Value)
+
+	// Update the monitoring table but only change artifact
+	// parameters. Set Foo to "X"
+	new_state := server_state()
+	new_state.Artifacts.Specs = append(new_state.Artifacts.Specs,
+		&flows_proto.ArtifactSpec{
+			Artifact: "EventArtifact1",
+			Parameters: &flows_proto.ArtifactParameters{
+				Env: []*actions_proto.VQLEnv{
+					{Key: "Foo", Value: "X"},
+				},
+			},
+		})
+
+	require.NoError(self.T(), client_manager.SetClientMonitoringState(
+		ctx, self.ConfigObj, "", new_state))
+
+	new_message = client_manager.GetClientUpdateEventTableMessage(
+		self.Ctx, self.ConfigObj, self.client_id)
+
+	// Force the update on the table.
+	table.UpdateEventTable(ctx, wg, self.ConfigObj, output_chan,
+		new_message.UpdateEventTable)
+
+	// The update took hold - the new parameter value is "X"
+	assert.Equal(self.T(), "X", table.Events[0].Env[0].Value)
 }
 
 // What do we consider a change in the event table. The server may
@@ -302,7 +338,7 @@ func (self *EventsTestSuite) TestEventEqual() {
 	_ = table
 
 	require.NoError(self.T(), client_manager.SetClientMonitoringState(
-		ctx, self.ConfigObj, "", server_state))
+		ctx, self.ConfigObj, "", server_state()))
 
 	message := client_manager.GetClientUpdateEventTableMessage(
 		self.Ctx, self.ConfigObj, self.client_id)
