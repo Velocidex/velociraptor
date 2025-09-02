@@ -24,6 +24,9 @@ const requestToParameters = (request) => {
             if (spec.cpu_limit) {
                 artifact_parameters["cpu_limit"] = spec.cpu_limit;
             }
+            if (spec.timeout) {
+                artifact_parameters["timeout"] = spec.timeout;
+            }
 
             parameters[spec.artifact] = artifact_parameters;
         });

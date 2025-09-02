@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
+	"www.velocidex.com/golang/velociraptor/vql/parsers/journald"
 )
 
 // StartFrontendServices starts the binary as a frontend
@@ -40,6 +41,8 @@ func StartFrontendServices(
 	scope.SetLogger(logging.NewPlainLogger(config_obj, &logging.FrontendComponent))
 
 	vql_subsystem.InstallUnimplemented(scope)
+
+	journald.StartGlobalJournaldService(ctx, config_obj)
 
 	_, err = orgs.NewOrgManager(sm.Ctx, sm.Wg, config_obj)
 	if err != nil {
