@@ -16,18 +16,12 @@ import (
 )
 
 var (
-	mu               sync.Mutex
 	gJournaldService *JournaldWatcherService
 )
 
-func GlobalJournaldService(config_obj *config_proto.Config) *JournaldWatcherService {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if gJournaldService == nil {
-		gJournaldService = NewJournaldWatcherService(config_obj)
-	}
-	return gJournaldService
+func StartGlobalJournaldService(
+	ctx context.Context, config_obj *config_proto.Config) {
+	gJournaldService = NewJournaldWatcherService(ctx, config_obj)
 }
 
 // This service watches one or more event logs files and multiplexes
@@ -42,9 +36,11 @@ type JournaldWatcherService struct {
 	buffer_size int64
 
 	monitor_count int
+	ctx           context.Context
 }
 
 func NewJournaldWatcherService(
+	ctx context.Context,
 	config_obj *config_proto.Config) *JournaldWatcherService {
 
 	sleep_time := 3 * time.Second
@@ -60,6 +56,7 @@ func NewJournaldWatcherService(
 	}
 
 	return &JournaldWatcherService{
+		ctx:           ctx,
 		sleep_time:    sleep_time,
 		buffer_size:   buffer_size,
 		config_obj:    config_obj,
@@ -214,7 +211,7 @@ func (self *JournaldWatcherService) monitorOnce(
 		return cursor
 	}
 
-	for log := range journal.GetLogs() {
+	for log := range journal.GetLogs(self.ctx) {
 		handles = self.distributeLog(log, key, handles)
 
 		// No more listeners - we dont care any more.

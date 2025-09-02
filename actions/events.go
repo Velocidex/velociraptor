@@ -30,6 +30,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -195,7 +196,7 @@ func (self *EventTable) GetEventQueries(
 	result := make([]*actions_proto.VQLCollectorArgs, 0, len(self.Events))
 	result = append(result, self.Events...)
 
-	// If there are no build in additional event artifacts we are done
+	// If there are no built in additional event artifacts we are done
 	// - just run the queries from the event table.
 	if config_obj.Client == nil ||
 		len(config_obj.Client.AdditionalEventArtifacts) == 0 {
@@ -248,7 +249,6 @@ func (self *EventTable) StartQueries(
 	}
 
 	// Start a new query for each event.
-	action_obj := &VQLClientAction{}
 	for _, event := range events {
 
 		// Name of the query we are running. There must be at least
@@ -268,9 +268,9 @@ func (self *EventTable) StartQueries(
 			defer self.wg.Done()
 			defer query_responder.Close()
 
-			// Event tables never time out
+			// Event tables get refreshed by default every 12 hours.
 			if event.Timeout == 0 {
-				event.Timeout = 99999999
+				event.Timeout = 12 * 60 * 60
 			}
 
 			// Dont heartbeat too often for event queries
@@ -281,12 +281,65 @@ func (self *EventTable) StartQueries(
 
 			// Start the query - if it is an event query this will
 			// never complete until it is cancelled.
-			action_obj.StartQuery(
-				config_obj, self.Ctx, query_responder, event)
+			self.RunQuery(self.Ctx, config_obj,
+				artifact_name, query_responder, event)
 			if artifact_name != "" {
 				logger.Info("Finished monitoring query %s", artifact_name)
 			}
 		}(proto.Clone(event).(*actions_proto.VQLCollectorArgs))
+	}
+}
+
+func (self *EventTable) RunQuery(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	artifact_name string,
+	query_responder responder.Responder,
+	event *actions_proto.VQLCollectorArgs) {
+
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+
+	refresh_timeout := event.Timeout
+	event.Timeout = 999999
+
+	for {
+		sub_ctx, cancel := context.WithCancel(ctx)
+
+		refresh := utils.Jitter(time.Second * time.Duration(refresh_timeout))
+
+		// Start the query - if it is an event query this will not
+		// complete until we cancell it due to refresh. If it is not
+		// an event query, it will complete sooner but we wont start
+		// it again until the refresh time.
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			query_responder.Log(ctx, logging.DEBUG,
+				fmt.Sprintf("Starting monitoring query %s with refresh in %v",
+					artifact_name, refresh.Round(2).String()))
+
+			action_obj := &VQLClientAction{}
+			action_obj.StartQuery(
+				config_obj, sub_ctx, query_responder, event)
+		}()
+
+		select {
+		// Exit completely when the parent ctx is done.
+		case <-ctx.Done():
+			cancel()
+			return
+
+			// When the deadline fires, we refresh the query.
+		case <-time.After(refresh):
+			query_responder.Log(ctx, logging.DEBUG,
+				fmt.Sprintf("Refreshing monitoring query %s", artifact_name))
+			cancel()
+
+			// Wait here for it to be done.
+			wg.Wait()
+		}
 	}
 }
 

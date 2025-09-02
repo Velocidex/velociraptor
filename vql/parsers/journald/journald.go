@@ -8,8 +8,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/artifacts"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
@@ -74,7 +72,7 @@ func (self JournalPlugin) Call(
 				journal.MinTime = arg.StartTime
 				journal.MaxTime = arg.EndTime
 
-				for log := range journal.GetLogs() {
+				for log := range journal.GetLogs(ctx) {
 					select {
 					case <-ctx.Done():
 						return
@@ -113,22 +111,12 @@ func (self WatchJournaldPlugin) Call(
 			return
 		}
 
-		// This plugin needs to be running on clients which have no
-		// server config object.
-		client_config_obj, ok := artifacts.GetConfig(scope)
-		if !ok {
-			scope.Log("watch_journald: unable to get config")
-			return
-		}
-
-		config_obj := &config_proto.Config{Client: client_config_obj}
-
 		event_channel := make(chan vfilter.Row)
 
 		// Register the output channel as a listener to the
 		// global event.
 		for _, filename := range arg.Filenames {
-			cancel := GlobalJournaldService(config_obj).Register(
+			cancel := gJournaldService.Register(
 				filename, arg.Accessor, ctx, scope,
 				arg.Raw, event_channel)
 
