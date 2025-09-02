@@ -522,6 +522,9 @@ class VeloPagedTable extends Component {
         // A dict containing renderers for each column.
         renderers: PropTypes.object,
 
+        // An alternative to renderers - resolved using getFormatter()
+        formatters: PropTypes.object,
+
         // A unique name we use to identify this table. We use this
         // name to save column preferences in the application user
         // context.
@@ -674,6 +677,10 @@ class VeloPagedTable extends Component {
     }
 
     getColumnRenderer = column => {
+        if(this.props.formatters && this.props.formatters[column]) {
+            return getFormatter(this.props.formatters[column], column);
+        }
+
         if(this.props.renderers && this.props.renderers[column]) {
             return this.props.renderers[column];
         }
@@ -881,6 +888,7 @@ class VeloPagedTable extends Component {
             params: this.props.params,
             url: this.props.url,
             env: this.props.env,
+            formatters: this.props.formatters,
         };
         return "/fullscreen/table/" + btoa(serializeJSON(state));
     }

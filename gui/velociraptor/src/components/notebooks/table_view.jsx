@@ -22,6 +22,7 @@ class FullScreenTable extends Component {
                     params: state.params,
                     url: state.url,
                     env: state.env,
+                    formatters: state.formatters,
                 });
             }
         };
@@ -41,6 +42,7 @@ class FullScreenTable extends Component {
               params={this.state.params}
               url={this.state.url}
               env={this.state.env}
+              formatters={this.state.formatters}
             />
         );
     }
