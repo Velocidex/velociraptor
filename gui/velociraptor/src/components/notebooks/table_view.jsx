@@ -1,9 +1,12 @@
 import _ from 'lodash';
+import './table_view.css';
+
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withRouter }  from "react-router-dom";
 import { JSONparse } from "../utils/json_parse.jsx";
 import VeloPagedTable from "../core/paged-table.jsx";
+
 
 class FullScreenTable extends Component {
     static propTypes = {
@@ -37,13 +40,15 @@ class FullScreenTable extends Component {
 
     render() {
         return (
-            <VeloPagedTable
-              is_fullscreen={true}
-              params={this.state.params}
-              url={this.state.url}
-              env={this.state.env}
-              formatters={this.state.formatters}
-            />
+            <div className="fullscreen-table Pane horizontal Pane2 ">
+              <VeloPagedTable
+                is_fullscreen={true}
+                params={this.state.params}
+                url={this.state.url}
+                env={this.state.env}
+                formatters={this.state.formatters}
+              />
+            </div>
         );
     }
 }
