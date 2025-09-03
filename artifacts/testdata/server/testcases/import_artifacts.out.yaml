@@ -1,0 +1,17 @@
+Query: LET _ <= import(artifact="Server.Import.ArtifactExchange")
+Output: []
+
+Query: SELECT ("Exchange",) + Tags(Data=Def), ("Exchange",) + Tags(Data='') FROM scope()
+Output: [
+ {
+  "(\"Exchange\", ) + Tags(Data=Def)": [
+   "Exchange",
+   "hello",
+   "world"
+  ],
+  "(\"Exchange\", ) + Tags(Data='')": [
+   "Exchange"
+  ]
+ }
+]
+

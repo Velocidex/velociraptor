@@ -34,12 +34,29 @@ parameters:
    - name: ArchiveGlob
      default: "/**/*.{yaml,yml}"
    - name: Tag
-     description: Tag artifacts with this tag.
+     description: |
+       Tag artifacts with this tag.
+
+       This applied in addition to any tags contained in the artifact
+       description.
      default: "Exchange"
+
+export: |
+  LET _Tags(Data) = SELECT * FROM foreach(row={
+    SELECT * FROM parse_lines(accessor="data", filename=Data, buffer_size=10000000)
+    WHERE Line =~ '''^\s*tags:'''
+  }, query={
+    SELECT * FROM parse_records_with_regex(
+       accessor="data", file=Line, regex="#(?P<Tag>[^ ]+)")
+  })
+
+  LET Tags(Data) = _Tags(Data=Data).Tag
 
 sources:
   - query: |
-        LET X = SELECT artifact_set(definition=Definition, tags=[Tag,]) AS Definition
+        LET X = SELECT artifact_set(
+          definition=Definition,
+          tags=(Tag,) + Tags(Data=Definition) ) AS Definition
         FROM foreach(row={
           SELECT Content FROM http_client(
              remove_last=TRUE,

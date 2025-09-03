@@ -203,7 +203,7 @@ export default class VeloForm extends React.Component {
 
                 this.setState({invalid: invalid});
             } catch(e){
-                console.log(e);
+                console.log("setValueWithValidator", e);
             }
         }
         this.props.setValue(value);
