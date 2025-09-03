@@ -2,12 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import VeloPagedTable from '../core/paged-table.jsx';
-import VeloTimestamp from "../utils/time.jsx";
-import LogLevel from '../utils/log_level.jsx';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Form from 'react-bootstrap/Form';
 import T from '../i8n/i8n.jsx';
-import VeloLog from "../widgets/logs.jsx";
 
 function getFlowState(flow) {
     return {flow_id: flow.session_id,
@@ -48,29 +45,12 @@ export default class FlowLogs extends React.Component {
 
     render() {
         let flow_id = this.props.flow && this.props.flow.session_id;
-
-        let renderers = {
-            client_time: (cell, row, rowIndex) => {
-                return (
-                    <VeloTimestamp usec={cell * 1000}/>
-                );
-            },
-            _ts: (cell, row, rowIndex) => {
-                return (
-                    <VeloTimestamp usec={cell * 1000}/>
-                );
-            },
-            level:  (cell, row, rowIndex) => {
-                return <LogLevel type={cell}/>;
-            },
-            Timestamp: (cell, row, rowIndex) => {
-                return (
-                    <VeloTimestamp usec={cell / 1000}/>
-                );
-            },
-            message: (cell, row, rowIndex) => {
-                return <VeloLog value={cell} />;
-            },
+        let formatters = {
+            client_time: "timestamp",
+            _ts: "timestamp",
+            level: "log_level",
+            Timestamp: "timestamp",
+            message: "log",
         };
 
         let toolbar = <ButtonGroup className="float-right">
@@ -92,7 +72,7 @@ export default class FlowLogs extends React.Component {
         return (
             <VeloPagedTable
               className="col-12"
-              renderers={renderers}
+              formatters={formatters}
               params={this.getParams()}
               translate_column_headers={true}
               toolbar={toolbar}
