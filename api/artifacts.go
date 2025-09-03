@@ -381,6 +381,21 @@ func (self *matchPlan) matchType(artifact *artifacts_proto.Artifact) bool {
 	return true
 }
 
+func (self *matchPlan) hideEmptySources() bool {
+	// User wants to show empty sources
+	if self.empty_source {
+		return false
+	}
+
+	// Tag searches should show all artifacts - including ones without
+	// sources.
+	if len(self.tags) > 0 {
+		return false
+	}
+
+	return true
+}
+
 // All conditions must match
 func (self *matchPlan) matchArtifact(artifact *artifacts_proto.Artifact) bool {
 	if !self.hidden && // Dont show hidden artifacts
@@ -390,7 +405,7 @@ func (self *matchPlan) matchArtifact(artifact *artifacts_proto.Artifact) bool {
 		return false
 	}
 
-	if !self.empty_source && len(artifact.Sources) == 0 {
+	if self.hideEmptySources() && len(artifact.Sources) == 0 {
 		return false
 	}
 

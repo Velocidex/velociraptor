@@ -1418,9 +1418,6 @@ class VeloPagedTable extends Component {
             e.preventDefault();
             e.stopPropagation();
         }
-        console.log(e);
-        console.log(e.isPropagationStopped());
-
         let last_page = this.getLastPage();
         let current_page = parseInt(this.state.start_row / this.state.page_size);
         let next_page = current_page + 1;
@@ -1486,17 +1483,15 @@ class VeloPagedTable extends Component {
         return (
             <>
               <HotKeys keyMap={this.keymap} component={"span"} handlers={this.handlers}>
-                <ObserveKeys component={"span"}>
-                  <TablePaginationControl
-                    total_size={this.state.total_size}
-                    start_row={this.state.start_row}
-                    page_size={this.state.page_size}
-                    current_page={this.state.start_row / this.state.page_size}
-                    onRowChange={row_offset=>this.setState({start_row: row_offset})}
-                    onPageSizeChange={size=>this.setState({page_size: size})}
-                    direction={direction}
-                  />
-                </ObserveKeys>
+                <TablePaginationControl
+                  total_size={this.state.total_size}
+                  start_row={this.state.start_row}
+                  page_size={this.state.page_size}
+                  current_page={this.state.start_row / this.state.page_size}
+                  onRowChange={row_offset=>this.setState({start_row: row_offset})}
+                  onPageSizeChange={size=>this.setState({page_size: size})}
+                  direction={direction}
+                />
               </HotKeys>
             </>
         );
@@ -1516,18 +1511,16 @@ class VeloPagedTable extends Component {
         return (
             <>
               <HotKeys keyMap={this.keymap} component={"span"} handlers={this.handlers}>
-                <ObserveKeys component={"span"}>
-                  <Table tabIndex="0" className="paged-table">
-                    <thead>
-                      <tr className="paged-table-header">
-                        {_.map(this.activeColumns(), this.renderHeader)}
-                      </tr>
-                    </thead>
-                    <tbody className="fixed-table-body">
-                      {_.map(this.state.rows, this.renderRow)}
-                    </tbody>
-                  </Table>
-                </ObserveKeys>
+                <Table tabIndex="0" className="paged-table">
+                  <thead>
+                    <tr className="paged-table-header">
+                      {_.map(this.activeColumns(), this.renderHeader)}
+                    </tr>
+                  </thead>
+                  <tbody className="fixed-table-body">
+                    {_.map(this.state.rows, this.renderRow)}
+                  </tbody>
+                </Table>
               </HotKeys>
 
               { this.state.showStackDialog &&

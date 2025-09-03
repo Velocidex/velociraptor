@@ -107,3 +107,9 @@ span.user-edit {
 .built-in-icon {
     padding-right: 5px;
 }
+
+.deleting-artifacts {
+    height: 60vh;
+    overflow: auto;
+    display: block;
+}

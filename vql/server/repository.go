@@ -54,7 +54,6 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 		services.ArtifactOptions{
 			ValidateArtifact:  true,
 			ArtifactIsBuiltIn: false,
-			Tags:              arg.Tags,
 		})
 	if err != nil {
 		definition := arg.Definition
@@ -93,6 +92,22 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("artifact_set: %s", err)
 		return vfilter.Null{}
+	}
+
+	if len(arg.Tags) > 0 {
+		metadata := definition.Metadata
+		if metadata == nil {
+			metadata = &artifacts_proto.ArtifactMetadata{}
+		}
+
+		metadata.Tags = arg.Tags
+
+		err = manager.SetArtifactMetadata(ctx, config_obj,
+			principal, definition.Name, metadata)
+		if err != nil {
+			scope.Log("artifact_set: %s", err)
+			return vfilter.Null{}
+		}
 	}
 
 	return json.ConvertProtoToOrderedDict(definition)
@@ -399,6 +414,7 @@ func (self *ArtifactSetMetadataFunction) Call(ctx context.Context,
 		metadata.Basic = arg.Basic
 	}
 
+	// Override the tags if specified.
 	tags, pres := args.GetStrings("tags")
 	if pres {
 		metadata.Tags = tags
