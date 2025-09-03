@@ -27,6 +27,8 @@ import VeloLog from "../widgets/logs.jsx";
 import ColumnResizer from "./column-resizer.jsx";
 import Table from 'react-bootstrap/Table';
 import { TablePaginationControl, ColumnToggle } from './paged-table.jsx';
+import NumberFormatter from '../utils/number.jsx';
+import LogLevel from '../utils/log_level.jsx';
 
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
@@ -148,9 +150,6 @@ export function PrepareData(value) {
 // Returns a formatter by type.
 export function getFormatter(column_type, text) {
     switch(column_type) {
-    case "number":
-        return (cell, row) => <span className="right-align">{cell}</span>;
-
     case "mb":
         return (cell, row) => {
             let result = parseInt(cell/1024/1024);
@@ -334,11 +333,22 @@ export function getFormatter(column_type, text) {
                                 <VeloValueRenderer value={cell} />
                               </ContextMenu>;
 
+    case "number":
+        return (cell, row) => {
+            return <NumberFormatter value={cell}/>;
+        };
+
     case "hidden":
         return (cell, row) =><></>;
 
     case "log":
         return (cell, row) =><VeloLog value={cell}/>;
+
+    case "log_level":
+        return (cell, row) =><LogLevel type={cell}/>;
+
+    case "translated":
+        return (cell, row) => { return T(cell); };
 
     default:
         console.log("Unsupported column type " + column_type);
