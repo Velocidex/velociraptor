@@ -1,0 +1,14 @@
+Parameters:
+  Def: |
+    name: foobar
+    description: |
+      This is a description
+
+      Mark the artifact with tags like this:
+      tags: #hello #world
+
+Queries:
+  - LET _ <= import(artifact="Server.Import.ArtifactExchange")
+  - SELECT ("Exchange",) + Tags(Data=Def),
+           ("Exchange",) + Tags(Data='')
+    FROM scope()

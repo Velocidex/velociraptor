@@ -23,12 +23,11 @@ parameters:
     description: |
       The Velociraptor Release to import.
     type: choices
-    default: v0.73
+    default: v0.74
     choices:
-      - v0.7.0
-      - v0.7.1
       - v0.72
       - v0.73
+      - v0.74
 
 sources:
   - query: |
@@ -36,7 +35,7 @@ sources:
       LET ExchangeURL = "https://docs.velociraptor.app/release_artifacts/release_artifacts_" + VelociraptorRelease + ".zip"
 
       LET X = SELECT artifact_set(
-           prefix=Prefix,
+           prefix=Prefix, tags=VelociraptorRelease,
            definition=Definition) AS Definition
         FROM foreach(row={
           SELECT Content FROM http_client(

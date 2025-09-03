@@ -141,7 +141,10 @@ func (self *_HttpPlugin) maybeForceSecrets(
 		return
 	}
 
-	if config_obj.Security != nil &&
+	// The Security part of the config is normally only on the server.
+	if config_obj.Security == nil ||
+
+		// The default is to allow arbitrary URL access.
 		!config_obj.Security.VqlMustUseSecrets {
 		return
 	}

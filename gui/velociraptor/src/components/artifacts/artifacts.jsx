@@ -61,7 +61,7 @@ class DeleteOKDialog extends React.Component {
                 <Alert variant="danger">
                   {T("You are about to delete the following artifacts")}
                 </Alert>
-                <table>
+                <table className="deleting-artifacts">
                   <tbody>
                     {_.map(this.props.names, (name, idx)=>{
                         return <tr key={idx}><td>{name}</td></tr>;
@@ -217,7 +217,7 @@ class ArtifactInspector extends React.Component {
                 current = tmp;
             };
             let multi_selection = [];
-            for (let i=first;i<current;i++) {
+            for (let i=first;i<=current;i++) {
                 multi_selection.push(this.state.matchingDescriptors[i]);
             }
             this.setState({multiSelectedDescriptors: multi_selection});
