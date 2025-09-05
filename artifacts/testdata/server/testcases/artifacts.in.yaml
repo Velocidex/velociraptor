@@ -53,3 +53,21 @@ Queries:
     FROM scope()
 
   - SELECT name, metadata FROM artifact_definitions(names="Custom.Generic.Client.Info")
+
+  # Set artifact tags
+  - SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", tags=["OneTag"])
+    FROM scope()
+
+  - SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", tags="OneTag")
+    FROM scope()
+
+  # Single tag list
+  - SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", tags=["OneTag",])
+    FROM scope()
+
+  - SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", tags=["OneTag", "TwoTags"])
+    FROM scope()
+
+  # Clear the tags
+  - SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", tags=[])
+    FROM scope()

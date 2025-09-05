@@ -415,9 +415,9 @@ func (self *ArtifactSetMetadataFunction) Call(ctx context.Context,
 	}
 
 	// Override the tags if specified.
-	tags, pres := args.GetStrings("tags")
+	_, pres = args.Get("tags")
 	if pres {
-		metadata.Tags = tags
+		metadata.Tags = arg.Tags
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
