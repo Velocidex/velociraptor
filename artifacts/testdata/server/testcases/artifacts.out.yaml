@@ -221,3 +221,64 @@ Output: [
  }
 ]
 
+# Set artifact tags
+Query: SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", tags=["OneTag"]) FROM scope()
+Output: [
+ {
+  "artifact_set_metadata(name=\"Custom.Generic.Client.Info\", tags=[\"OneTag\"])": {
+   "hidden": true,
+   "tags": [
+    "OneTag"
+   ]
+  }
+ }
+]
+
+Query: SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", tags="OneTag") FROM scope()
+Output: [
+ {
+  "artifact_set_metadata(name=\"Custom.Generic.Client.Info\", tags=\"OneTag\")": {
+   "hidden": true,
+   "tags": [
+    "OneTag"
+   ]
+  }
+ }
+]
+
+# Single tag list
+Query: SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", tags=["OneTag",]) FROM scope()
+Output: [
+ {
+  "artifact_set_metadata(name=\"Custom.Generic.Client.Info\", tags=[\"OneTag\", ])": {
+   "hidden": true,
+   "tags": [
+    "OneTag"
+   ]
+  }
+ }
+]
+
+Query: SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", tags=["OneTag", "TwoTags"]) FROM scope()
+Output: [
+ {
+  "artifact_set_metadata(name=\"Custom.Generic.Client.Info\", tags=[\"OneTag\", \"TwoTags\"])": {
+   "hidden": true,
+   "tags": [
+    "OneTag",
+    "TwoTags"
+   ]
+  }
+ }
+]
+
+# Clear the tags
+Query: SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", tags=[]) FROM scope()
+Output: [
+ {
+  "artifact_set_metadata(name=\"Custom.Generic.Client.Info\", tags=[])": {
+   "hidden": true
+  }
+ }
+]
+
