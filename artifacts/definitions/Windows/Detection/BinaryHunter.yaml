@@ -71,6 +71,10 @@ parameters:
     description: |
       Enable this to disable potentially flakey APIs which may cause
       crashes.
+  - name: UploadFiles
+    type: bool
+    description: |
+      Select to upload files.
 
 sources:
   - query: |
@@ -120,7 +124,7 @@ sources:
 
 
       -- parse PE attributes and run final filters
-      SELECT
+      LET results = SELECT
         dict(OSPath=OSPath,Name=Name,Size=Size,
             Timestamps=dict(Mtime=Mtime,Atime=Atime,Ctime=Ctime,Btime=Btime)
                 ) as File,
@@ -149,3 +153,11 @@ sources:
                  OR if(condition= SHA256List,
                         then= Hash.SHA256 in SHA256Array)
             ), else = True )
+      
+      LET upload_files= SELECT *,
+            upload(file=File.OSPath) as UploadFile
+      FROM results
+      
+      SELECT * FROM if(condition= UploadFiles,
+                        then= upload_files,
+                        else= results)
