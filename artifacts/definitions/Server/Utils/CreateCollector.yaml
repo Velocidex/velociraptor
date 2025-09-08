@@ -85,7 +85,7 @@ parameters:
     description: A directory to write tempfiles in
 
   - name: opt_level
-    default: "4"
+    default: "5"
     type: int
     description: Compression level (0=no compression).
 

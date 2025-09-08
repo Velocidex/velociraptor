@@ -365,7 +365,7 @@ SELECT * from foreach(
 func doCat(path, accessor_name string) error {
 	logging.DisableLogging()
 
-	_, err := APIConfigLoader.
+	config_obj, err := APIConfigLoader.
 		WithNullLoader().LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)
@@ -377,7 +377,31 @@ func doCat(path, accessor_name string) error {
 		path = matches[2]
 	}
 
-	scope := vql_subsystem.MakeScope()
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	config_obj.Services = services.GenericToolServices()
+	sm, err := startup.StartToolServices(ctx, config_obj)
+	defer sm.Close()
+
+	if err != nil {
+		return err
+	}
+
+	logger := &LogWriter{config_obj: config_obj}
+	builder := services.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: acl_managers.NullACLManager{},
+		Logger:     log.New(logger, "", 0),
+	}
+
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return err
+	}
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
 	accessor, err := accessors.GetAccessor(accessor_name, scope)
 	if err != nil {
 		return err
