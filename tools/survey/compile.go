@@ -92,7 +92,7 @@ func (self *ConfigSurvey) Compile() (*config_proto.Config, error) {
 		config_obj.GUI.BindPort = 443
 		config_obj.GUI.BindAddress = "0.0.0.0"
 		config_obj.GUI.PublicUrl = fmt.Sprintf(
-			"https://%s/", config_obj.Frontend.Hostname)
+			"https://%s/app/index.html", config_obj.Frontend.Hostname)
 
 		config_obj.Client.ServerUrls = []string{
 			self.getURL(config_obj.Frontend)}
