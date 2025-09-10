@@ -227,6 +227,13 @@ func (self *VelociraptorUploader) GetCount() int {
 	return self.count
 }
 
+func (self *VelociraptorUploader) GetTransactionCount() int {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return len(self.current)
+}
+
 func (self *VelociraptorUploader) Close() {
 	// Signal the worker the uploads are done.
 	self.transactions <- &Transaction{
