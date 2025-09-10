@@ -133,3 +133,7 @@ th.paged-table-header {
 .draggable:active {
     cursor: grabbing;
 }
+
+.transform-viewer {
+    margin-left: 5px;
+}
