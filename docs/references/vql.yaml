@@ -5856,6 +5856,17 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: notebooks
+  description: List all notebooks
+  type: Plugin
+  args:
+  - name: all
+    type: bool
+    description: List all notebooks, not just the ones shared with the user
+  metadata:
+    permissions: SERVER_ADMIN,READ_RESULTS
+  platforms:
+  - linux_amd64_cgo
 - name: now
   description: |
     Returns the current time in seconds since epoch.

@@ -7,6 +7,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import ExportNotebook from './export-notebook.jsx';
 import NotebookUploads from './notebook-uploads.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
+import VeloPagedTable, {
+    TablePaginationControl,
+    TransformViewer,
+} from '../core/paged-table.jsx';
 
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
@@ -21,7 +25,7 @@ import T from '../i8n/i8n.jsx';
 
 import { NewNotebook, EditNotebook } from './new-notebook.jsx';
 import { getFormatter } from "../core/table.jsx";
-import VeloPagedTable from "../core/paged-table.jsx";
+
 
 class DeleteNotebook extends React.Component {
     static propTypes = {
@@ -94,6 +98,10 @@ class NotebooksList extends React.Component {
         showEditNotebookDialog: false,
         showExportNotebookDialog: false,
         showNotebookUploadsDialog: false,
+
+        transform: {},
+        filter: "",
+        page_state: {},
     }
 
     setFullScreen = () => {
@@ -224,6 +232,26 @@ class NotebooksList extends React.Component {
                       </Button>
                     </ToolTip>
                   </ButtonGroup>
+
+                  <ButtonGroup>
+                    { this.state.page_state ?
+                      <TablePaginationControl
+                        total_size={this.state.page_state.total_size}
+                        start_row={this.state.page_state.start_row}
+                        page_size={this.state.page_state.page_size}
+                        current_page={this.state.page_state.start_row /
+                                      this.state.page_state.page_size}
+                        onRowChange={this.state.page_state.onRowChange}
+                        onPageSizeChange={this.state.page_state.onPageSizeChange}
+                      /> :  <TablePaginationControl total_size={0}/> }
+                  </ButtonGroup>
+
+                  <ButtonGroup>
+                    <TransformViewer
+                      transform={this.state.transform}
+                      setTransform={t=>this.setState({transform: t})}
+                    />
+                  </ButtonGroup>
                 </Navbar>
               }
               <div className="fill-parent no-margins toolbar-margin selectable">
@@ -243,6 +271,12 @@ class NotebooksList extends React.Component {
                           return "row-selected";
                       };
                       return "";
+                  }}
+                  no_toolbar={true}
+                  setPageState={x=>this.setState({page_state: x})}
+                  transform={this.state.transform}
+                  setTransform={x=>{
+                      this.setState({transform: x, filter: ""});
                   }}
                 />
               </div>
