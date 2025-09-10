@@ -6,7 +6,7 @@ import './paged-table.css';
 
 import {CancelToken} from 'axios';
 
-import { HotKeys, ObserveKeys } from "react-hotkeys";
+import { HotKeys } from "react-hotkeys";
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -1589,42 +1589,46 @@ export class TransformViewer extends Component {
 
         if (transform.filter_column) {
             result.push(
-                <ToolTip tooltip={T("Clear")} key="1" >
-                  <Button onClick={()=>{
-                      let new_transform = Object.assign({}, this.props.transform);
-                      new_transform.filter_column = undefined;
-                      this.props.setTransform(new_transform);
-                  }}
-                          className="table-transformed"
-                          variant="outline-dark">
-                    { transform.filter_column } ( {transform.filter_regex} )
-                    <span className="transform-button">
-                      <FontAwesomeIcon icon="filter"/>
-                    </span>
-                  </Button>
-                </ToolTip>
+                <div className="transform-viewer">
+                  <ToolTip tooltip={T("Clear")} key="1">
+                    <Button onClick={()=>{
+                        let new_transform = Object.assign({}, this.props.transform);
+                        new_transform.filter_column = undefined;
+                        this.props.setTransform(new_transform);
+                    }}
+                            className="table-transformed"
+                            variant="outline-dark">
+                      { transform.filter_column } ( {transform.filter_regex} )
+                      <span className="transform-button">
+                        <FontAwesomeIcon icon="filter"/>
+                      </span>
+                    </Button>
+                  </ToolTip>
+                </div>
             );
         }
 
         if (transform.sort_column) {
             result.push(
-                <ToolTip tooltip={T("Transformed")} key="2" >
-                  <Button onClick={()=>{
-                      let new_transform = Object.assign({}, this.props.transform);
-                      new_transform.sort_column = undefined;
-                      this.props.setTransform(new_transform);
-                  }}
-                          variant="outline-dark">
-                    {transform.sort_column}
-                    <span className="transform-button">
-                      {
-                          transform.sort_direction === "Ascending" ?
-                              <FontAwesomeIcon icon="sort-alpha-up"/> :
-                              <FontAwesomeIcon icon="sort-alpha-down"/>
-                      }
-                    </span>
-                  </Button>
-                </ToolTip>
+                <div className="transform-viewer">
+                  <ToolTip tooltip={T("Transformed")} key="2" >
+                    <Button onClick={()=>{
+                        let new_transform = Object.assign({}, this.props.transform);
+                        new_transform.sort_column = undefined;
+                        this.props.setTransform(new_transform);
+                    }}
+                            variant="outline-dark">
+                      {transform.sort_column}
+                      <span className="transform-button">
+                        {
+                            transform.sort_direction === "Ascending" ?
+                                <FontAwesomeIcon icon="sort-alpha-up"/> :
+                                <FontAwesomeIcon icon="sort-alpha-down"/>
+                        }
+                      </span>
+                    </Button>
+                  </ToolTip>
+                </div>
             );
         }
 
