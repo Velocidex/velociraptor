@@ -340,8 +340,16 @@ func (self VQLClientAction) StartQuery(
 	}
 
 	if uploader.GetCount() > 0 {
-		responder.Log(ctx, logging.DEFAULT,
-			fmt.Sprintf("%v: Uploaded %v files.", name, uploader.GetCount()))
+		if uploader.GetTransactionCount() > 0 {
+			responder.Log(ctx, logging.DEFAULT,
+				fmt.Sprintf("%v: Uploaded %v files with %v outstanding upload transactions.",
+					name, uploader.GetCount(),
+					uploader.GetTransactionCount()))
+		} else {
+			responder.Log(ctx, logging.DEFAULT,
+				fmt.Sprintf("%v: Uploaded %v files.",
+					name, uploader.GetCount()))
+		}
 	}
 }
 
