@@ -97,20 +97,22 @@ export class DeleteFlowDialog extends React.PureComponent {
             <Modal.Title>{T("Permanently delete collections")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <VeloTable
-                  rows={this.props.flows}
-                  columns={["session_id", "artifacts_with_results",
-                            "total_collected_rows", "total_uploaded_bytes"]}
-                  column_renderers={{
-                      artifacts_with_results: flowRowRenderer.Artifacts,
-                      total_uploaded_bytes: getFormatter("mb"),
-                  }}
-                  header_renderers={{session_id: "FlowId",
-                                     artifacts_with_results: "Artifacts",
-                                     total_collected_rows: "Rows",
-                                     total_uploaded_bytes: "Bytes",
-                                    }}
-                />
+                <div className="delete-flow-table">
+                  <VeloTable
+                    rows={this.props.flows}
+                    columns={["session_id", "artifacts_with_results",
+                              "total_collected_rows", "total_uploaded_bytes"]}
+                    column_renderers={{
+                        artifacts_with_results: flowRowRenderer.Artifacts,
+                        total_uploaded_bytes: getFormatter("mb"),
+                    }}
+                    header_renderers={{session_id: "FlowId",
+                                       artifacts_with_results: "Artifacts",
+                                       total_collected_rows: "Rows",
+                                       total_uploaded_bytes: "Bytes",
+                                      }}
+                  />
+                </div>
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={this.props.onClose}>
