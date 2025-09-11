@@ -8,7 +8,7 @@ import ToolTip from '../widgets/tooltip.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
 import api from '../core/api-service.jsx';
 import UserConfig from '../core/user.jsx';
-
+import VeloTimestamp from "../utils/time.jsx";
 
 // Older collections had the upload includes the full filestore path
 // to the file, but this is un necessary because the file must reside
@@ -37,6 +37,10 @@ export default class FlowUploads extends React.Component {
         let flow_id = this.props.flow && this.props.flow.session_id;
 
         let renderers = {
+            Timestamp: (cell, row) => {
+                return <VeloTimestamp usec={cell}/>;
+            },
+
             Preview: (cell, row, rowIndex) => {
                 let client_id = this.props.flow && this.props.flow.client_id;
                 let flow_id = this.props.flow && this.props.flow.session_id;
