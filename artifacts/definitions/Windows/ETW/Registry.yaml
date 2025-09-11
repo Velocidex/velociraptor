@@ -63,6 +63,7 @@ sources:
     WHERE KeyName =~ KeyNameRegex
 
     SELECT Timestamp, EventType,
+       System AS _System, EventData AS _EventData,
        Process.Name AS ProcessName, Process.Username AS Owner,
        Process.CommandLine AS CommandLine,
        KeyName, EventData.ValueName AS ValueName
