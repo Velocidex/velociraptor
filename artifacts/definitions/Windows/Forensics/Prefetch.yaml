@@ -314,6 +314,21 @@ export: |
         })
         WHERE SCCAHeader.Signature = "SCCA"
 
+        // These functions help to resolve the Kernel Device Filenames
+        // into a regular filename with drive letter.
+        LET DriveReplaceLookup <= SELECT
+           split(sep_string="\\", string=Name)[-1] AS Drive,
+           upcase(string=SymlinkTarget) AS Target,
+           len(list=SymlinkTarget) AS Len
+        FROM winobj()
+        WHERE Name =~ "^\\\\GLOBAL\\?\\?\\\\.:"
+
+        LET _DriveReplace(Path) = SELECT Drive + Path[Len:] AS ResolvedPath
+        FROM DriveReplaceLookup
+        WHERE upcase(string=Path[:Len]) = Target
+
+        LET DriveReplace(Path) = _DriveReplace(Path=Path)[0].ResolvedPath || Path
+
 sources:
   - query: |
         // Parse prefetch files and apply non time filters
@@ -330,6 +345,7 @@ sources:
                   filter(list=SCCAHeader.Info.LastRunTimes.Date, condition="x=>x.Unix > 0") AS LastRunTimes,
                   SCCAHeader.Info.RunCount AS RunCount,
                   SCCAHeader.Info.ExecutablePath AS ExecutablePath,
+                  DriveReplace(Path=SCCAHeader.Info.ExecutablePath) AS ExecutableDosPath,
                   OSPath,
                   Name AS PrefetchFileName,
                   Btime as CreationTime,
