@@ -39,3 +39,8 @@ div .flow-status-icon {
     display: inline;
     padding-right: 5px;
 }
+
+.delete-flow-table {
+    overflow-y: auto;
+    max-height: 60vh;
+}

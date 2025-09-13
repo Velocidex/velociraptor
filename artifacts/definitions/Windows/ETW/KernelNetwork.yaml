@@ -43,6 +43,7 @@ sources:
            description="Microsoft-Windows-Kernel-Network")
 
       SELECT System.ID AS EID,
+         System AS _System,
          get(item=EIDLookup, field=str(str=System.ID)) AS EventType,
          process_tracker_get(id=EventData.PID).Data AS ProcInfo,
          process_tracker_callchain(id=EventData.PID).Data.Exe AS CallChain,

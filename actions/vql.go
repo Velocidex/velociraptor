@@ -25,6 +25,7 @@ import (
 	"os"
 	"runtime"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -132,7 +133,7 @@ func (self VQLClientAction) StartQuery(
 		return
 	}
 
-	name := utils.GetQueryName(arg.Query)
+	name := strings.Split(utils.GetQueryName(arg.Query), "/")[0]
 
 	// Clients do not have a copy of artifacts so they need to be
 	// sent all artifacts from the server.
@@ -340,8 +341,16 @@ func (self VQLClientAction) StartQuery(
 	}
 
 	if uploader.GetCount() > 0 {
-		responder.Log(ctx, logging.DEFAULT,
-			fmt.Sprintf("%v: Uploaded %v files.", name, uploader.GetCount()))
+		if uploader.GetTransactionCount() > 0 {
+			responder.Log(ctx, logging.DEFAULT,
+				fmt.Sprintf("%v: Uploaded %v files with %v outstanding upload transactions.",
+					name, uploader.GetCount(),
+					uploader.GetTransactionCount()))
+		} else {
+			responder.Log(ctx, logging.DEFAULT,
+				fmt.Sprintf("%v: Uploaded %v files.",
+					name, uploader.GetCount()))
+		}
 	}
 }
 

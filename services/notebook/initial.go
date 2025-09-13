@@ -282,7 +282,14 @@ func CalculateNotebookArtifact(
 			res.Parameters = append(res.Parameters, p)
 		}
 
-		for _, s := range artifact.Sources {
+		// If there are no sources in this artifact add a single fake
+		// source so we can do something.
+		sources := artifact.Sources
+		if len(sources) == 0 {
+			sources = append(sources, &artifacts_proto.ArtifactSource{})
+		}
+
+		for _, s := range sources {
 			new_source := &artifacts_proto.ArtifactSource{
 				Name: s.Name,
 			}
@@ -305,6 +312,11 @@ func CalculateNotebookArtifact(
 			for _, n := range s.Notebook {
 				new_source.Notebook = append(new_source.Notebook, n)
 				switch strings.ToLower(n.Type) {
+
+				// Artifacts may set a notebook cell to type "none" to
+				// declare a custom notebook which will not actually
+				// be used. This allows suppressing notebook cells for
+				// this source.
 				case "vql", "md", "markdown", "none":
 					custom_cells = true
 				}

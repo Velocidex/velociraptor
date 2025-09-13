@@ -329,12 +329,13 @@ class DeleteHuntDialog extends React.Component {
 
               <Modal.Body>
                 <p>{T("Are you sure you want to delete these hunts?")}</p>
-
-                <VeloTable
-                  rows={this.props.hunts}
-                  columns={["State", "Tags", "HuntId", "Description", "Created"]}
-                  column_renderers={huntRowRenderer(this)}
-                />
+                <div className="delete-hunt-table">
+                  <VeloTable
+                    rows={this.props.hunts}
+                    columns={["State", "Tags", "HuntId", "Description", "Created"]}
+                    column_renderers={huntRowRenderer(this)}
+                  />
+                </div>
 
               </Modal.Body>
 
