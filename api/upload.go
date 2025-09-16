@@ -230,6 +230,7 @@ func formUploadHandler() http.Handler {
 			}
 
 			form_desc.Url = path_manager.URL()
+			form_desc.VfsPath = pathspec.Components()
 
 			writer, err := file_store_factory.WriteFile(pathspec)
 			if err != nil {

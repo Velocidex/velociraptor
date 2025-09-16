@@ -34,4 +34,7 @@ message CreateDownloadResponse {
 message FormUploadMetadata {
     string filename = 1;
     string url = 2;
+
+    // A list of Path components to the VFS
+    repeated string VfsPath = 3;
 }

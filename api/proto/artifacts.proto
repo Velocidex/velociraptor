@@ -36,10 +36,6 @@ message GetArtifactsRequest {
 }
 
 message GetArtifactRequest {
-    // Deprecated.
-    // string vfs_path = 1 [(sem_type) = {
-    //        description: "The vfs path relative to the artifacts definition store."
-    //    }];
     string name = 2 [(sem_type) = {
             description: "The artifact name."
         }];
@@ -53,14 +49,12 @@ message GetArtifactResponse {
 
 
 message SetArtifactRequest {
-    // Deprecated
-    //    string vfs_path = 1 [(sem_type) = {
-    //        description: "The vfs path relative to the artifacts definition store."
-    //    }];
-
     string artifact = 2 [(sem_type) = {
             description: "The artifact data, or a default.",
         }];
+
+    // Also set these tags.
+    repeated string tags = 4;
 
     enum Operation {
         SET = 0;
@@ -91,6 +85,7 @@ message LoadArtifactError {
 
 message LoadArtifactPackRequest {
     string prefix = 1;
+    repeated string tags = 6;
     string filter = 2;
 
     // The API can specify the archive two ways:
