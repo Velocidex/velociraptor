@@ -28,6 +28,7 @@ export default class ArtifactsUpload extends React.Component {
     state = {
         pack_file: null,
         prefix: "",
+        tags: "",
         loading: false,
         uploaded: [],
         filter: "",
@@ -39,6 +40,8 @@ export default class ArtifactsUpload extends React.Component {
 
     componentDidMount() {
         this.source = CancelToken.source();
+        this.setState({id: crypto.randomUUID()});
+
     }
 
     componentWillUnmount() {
@@ -48,6 +51,7 @@ export default class ArtifactsUpload extends React.Component {
     componentDidUpdate = (prevProps, prevState, rootNode) => {
         if(!_.isEqual(prevState.filter, this.state.filter) ||
            !_.isEqual(prevState.prefix, this.state.prefix) ||
+           !_.isEqual(prevState.tags, this.state.tags) ||
            !_.isEqual(prevState.vfs_path, this.state.vfs_path)) {
             this.updateFile();
             return true;
@@ -58,44 +62,29 @@ export default class ArtifactsUpload extends React.Component {
     // The first call uploads the file and records the cached
     // filestore path
     uploadFile = () => {
-        if (!this.state.pack_file) {
+        if (!this.state.pack_file.name) {
             return;
         }
 
-        var reader = new FileReader();
-        reader.onload = (event) => {
-            var request = {
-                prefix: this.state.prefix,
-                filter: this.state.filter,
-                data: reader.result.split(",")[1],
-            };
+        this.setState({loading: true});
+        api.upload("v1/UploadFormFile",
+                   {file: this.state.pack_file},
+                   {name: "ArtifactPack", type: "upload_file"}).then(
+                       response=>{
+                           let url = response.data.url;
+                           this.setState({
+                               loading: false,
+                               upload_info: response.data,
+                           }, this.updateFile);
 
-            this.setState({loading: true});
-            api.post("v1/LoadArtifactPack", request,
-                     this.source.token).then(response => {
-                         if (response.data.cancel) {
-                             return ;
-                         }
+                       }).catch(response=>{
+                           return this.setState({
+                               loading:false, upload_info: {}});
+                       });
+    }
 
-                         let uploaded = _.map(
-                             response.data.successful_artifacts,
-                             (x, idx)=>{
-                                 return {name: x, id: idx};
-                             });
-                         this.setState({loading:false,
-                                        current_error: undefined,
-                                        errors: response.data.errors || [],
-                                        vfs_path: response.data.vfs_path,
-                                        uploaded: uploaded});
-                     }).catch(err=>{
-                         let data = err.response &&
-                             err.response.data && err.response.data.message;
-                         this.setState({current_error: data,
-                                        loading:false,
-                                        pack_file: undefined});
-                     });
-        };
-        reader.readAsDataURL(this.state.pack_file);
+    tags = ()=>{
+        return _.filter(_.map(this.state.tags.split(" "), x=>x.trim()));
     }
 
     updateFile = () => {
@@ -103,10 +92,12 @@ export default class ArtifactsUpload extends React.Component {
             return;
         }
 
+        this.setState({loading: true});
         var request = {
             prefix: this.state.prefix,
+            tags: this.tags(),
             filter: this.state.filter,
-            vfs_path: this.state.vfs_path,
+            vfs_path: this.state.upload_info.VfsPath,
         };
         api.post("v1/LoadArtifactPack", request,
                  this.source.token).then(response => {
@@ -125,9 +116,11 @@ export default class ArtifactsUpload extends React.Component {
                  });
     };
 
+    // Called when the user really wants the import.
     importFile = () => {
         var request = {
             prefix: this.state.prefix,
+            tags: this.tags(),
             filter: this.state.filter,
             vfs_path: this.state.vfs_path,
             really_do_it: true,
@@ -160,16 +153,20 @@ export default class ArtifactsUpload extends React.Component {
                       <Col sm="12">
                         <InputGroup className="full-width custom-file-button">
                           <Button variant="default"
-                            className={classNames({"disabled": !this.state.pack_file})}
+                            className={classNames({
+                                "disabled": !this.state.pack_file
+                            })}
                             onClick={()=>this.uploadFile()}>
                             { this.state.loading ?
                               <FontAwesomeIcon icon="spinner" spin/> :
                               T("Click to Upload") }
                           </Button>
-                          <Form.Control type="file" id="upload"
+                          <Form.Control type="file" id={this.state.id}
                                         onChange={e => {
                                             if (!_.isEmpty(e.currentTarget.files)) {
-                                                this.setState({pack_file: e.currentTarget.files[0]});
+                                                this.setState({
+                                                    upload_info: {},
+                                                    pack_file: e.currentTarget.files[0]});
                                             }
                                         }}
                           />
@@ -208,6 +205,19 @@ export default class ArtifactsUpload extends React.Component {
                         </Col>
                       </Form.Group>
                       <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Tags")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control as="input" rows={3}
+                                        placeholder={T("Set these tags on all artifacts")}
+                                        spellCheck="false"
+                                        value={this.state.tags}
+                                        onChange={e => {
+                                            this.setState({tags: e.target.value});
+                                        }}
+                          />
+                        </Col>
+                      </Form.Group>
+                     <Form.Group as={Row}>
                         <Form.Label column sm="3">{T("Filter")}</Form.Label>
                         <Col sm="8">
                           <Form.Control as="input"
