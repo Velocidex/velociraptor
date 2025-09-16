@@ -171,7 +171,7 @@ Query: LET Boundary <= 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
 Output: []
 
 # Create multipart with just attachments:
-Query: SELECT D(X=WrapInBoundary(Boundary=Boundary,
+Query: SELECT D(X=WrapInBoundary(Boundary=Boundary, Header="",
     Sections=AttachFiles(Files=[
        dict(Path=tmp1, Filename='Attachment 1.txt'),
        dict(Path=tmp2, Filename='Attachment 2.txt')]).Part)) AS attachments FROM scope()
@@ -200,7 +200,7 @@ Output: [
 ]
 
 # Create multipart with plain-text, HTML and attachments:
-Query: SELECT D(X=WrapInBoundary(Boundary=Boundary,
+Query: SELECT D(X=WrapInBoundary(Boundary=Boundary, Header="",
     Sections=(WrapAlternative(Plain=Plain, HTML=HTML),) +
               AttachFiles(Files=[
                 dict(Path=tmp1, Filename='Attachment 1.txt'),
@@ -243,12 +243,12 @@ Output: [
 ]
 
 # Create multipart with no attachments (empty):
-Query: SELECT D(X=WrapInBoundary(Boundary=Boundary,
+Query: SELECT D(X=WrapInBoundary(Boundary=Boundary, Header="",
     Sections=(WrapAlternative(HTML=HTML),) + AttachFiles(Files=[]))) FROM scope()
 
 Output: [
  {
-  "D(X=WrapInBoundary(Boundary=Boundary, Sections=(WrapAlternative(HTML=HTML), ) + AttachFiles(Files=[])))": [
+  "D(X=WrapInBoundary(Boundary=Boundary, Header=\"\", Sections=(WrapAlternative(HTML=HTML), ) + AttachFiles(Files=[])))": [
    "--BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
    "Content-Type: multipart/alternative; boundary=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
    "",

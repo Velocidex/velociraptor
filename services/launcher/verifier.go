@@ -24,6 +24,9 @@ type AnalysisState struct {
 	Permissions []string
 	Errors      []error
 	Warnings    []string
+
+	// Keep track of existing definitions in LET queries.
+	Definitions map[string]vfilter.CallSite
 }
 
 func (self *AnalysisState) SetError(err error) {
@@ -75,7 +78,8 @@ func (self *AnalysisState) AnalyseArtifactRequiredPermissions(
 
 func NewAnalysisState(artifact string) *AnalysisState {
 	return &AnalysisState{
-		Artifact: artifact,
+		Artifact:    artifact,
+		Definitions: make(map[string]vfilter.CallSite),
 	}
 }
 
@@ -84,6 +88,8 @@ type Required bool
 type CallDesciptor struct {
 	ArgsRequired map[string]Required
 	Permissions  []string
+
+	FreeFormArgs bool
 }
 
 func (self *CallDesciptor) SetPermissions(api *api_proto.Completion) {
@@ -98,6 +104,7 @@ func (self *CallDesciptor) SetPermissions(api *api_proto.Completion) {
 func NewCallDesciptor(api *api_proto.Completion) CallDesciptor {
 	res := &CallDesciptor{
 		ArgsRequired: make(map[string]Required),
+		FreeFormArgs: api.FreeFormArgs,
 	}
 
 	res.SetPermissions(api)
@@ -129,9 +136,7 @@ func (self *ApiDescription) init() error {
 				for _, arg := range api.Args {
 					desc.ArgsRequired[arg.Name] = Required(arg.Required)
 				}
-				if !api.FreeFormArgs {
-					self.functions[api.Name] = desc
-				}
+				self.functions[api.Name] = desc
 			}
 			if api.Type == "Plugin" {
 				desc := NewCallDesciptor(api)
@@ -141,9 +146,7 @@ func (self *ApiDescription) init() error {
 				for _, arg := range api.Args {
 					desc.ArgsRequired[arg.Name] = Required(arg.Required)
 				}
-				if !api.FreeFormArgs {
-					self.plugins[api.Name] = desc
-				}
+				self.plugins[api.Name] = desc
 			}
 		}
 	}
@@ -198,9 +201,41 @@ func (self *ApiDescription) VerifyCallSite(
 			repository, artifact_name, callsite)
 	}
 
+	// If the callsite contains a . we have no idea what it
+	// means. Assume this is not an error. It may be a startlark
+	// module for example.
+	if strings.Contains(callsite.Name, ".") {
+		return nil
+	}
+
 	if callsite.Type == "plugin" {
 		desc, pres := self.plugins[callsite.Name]
-		if pres {
+		if !pres {
+			// Is this already defined?
+			desc, pres := state.Definitions[callsite.Name]
+			if !pres {
+				res = append(res, fmt.Errorf(
+					"Unknown plugin %v()", callsite.Name))
+			}
+
+			for _, arg := range callsite.Args {
+				if !utils.InString(desc.Args, arg) {
+					res = append(res, fmt.Errorf(
+						"Invalid arg %v for VQL definition %v",
+						arg, callsite.Name))
+				}
+			}
+
+			// Now check if any of the required args are missing
+			for _, arg := range desc.Args {
+				if !utils.InString(callsite.Args, arg) {
+					res = append(res, fmt.Errorf(
+						"While calling VQL definition %v(), required arg %v is not provided",
+						callsite.Name, arg))
+				}
+			}
+
+		} else if !desc.FreeFormArgs {
 			state.AnalyseCall(callsite, desc)
 
 			for _, arg := range callsite.Args {
@@ -225,7 +260,32 @@ func (self *ApiDescription) VerifyCallSite(
 
 	if callsite.Type == "function" {
 		desc, pres := self.functions[callsite.Name]
-		if pres {
+		if !pres {
+			// Is this already defined?
+			desc, pres := state.Definitions[callsite.Name]
+			if !pres {
+				res = append(res, fmt.Errorf(
+					"Unknown function %v()", callsite.Name))
+			}
+
+			for _, arg := range callsite.Args {
+				if !utils.InString(desc.Args, arg) {
+					res = append(res, fmt.Errorf(
+						"Invalid arg %v for VQL definition %v",
+						arg, callsite.Name))
+				}
+			}
+
+			// Now check if any of the required args are missing
+			for _, arg := range desc.Args {
+				if !utils.InString(callsite.Args, arg) {
+					res = append(res, fmt.Errorf(
+						"While calling VQL definition %v(), required arg %v is not provided",
+						callsite.Name, arg))
+				}
+			}
+
+		} else if !desc.FreeFormArgs {
 			state.AnalyseCall(callsite, desc)
 
 			for _, arg := range callsite.Args {
@@ -264,6 +324,21 @@ func VerifyVQL(ctx context.Context, config_obj *config_proto.Config,
 		return []error{err}
 	}
 
+	// In VQL sometimes it is possible to use definition defined after
+	// the place of use. We therefore make two passes - one to find
+	// the definition the second pass we check for use. We may not
+	// find callsite that will fail at runtime but we assume they are
+	// available.
+	for _, vql := range vqls {
+		// Visit the VQL looking for plugin callsites.
+		visitor := vfilter.NewVisitor(scope, vfilter.CollectCallSites)
+		visitor.Visit(vql)
+
+		for _, def := range visitor.Definitions {
+			state.Definitions[def.Name] = def
+		}
+	}
+
 	for _, vql := range vqls {
 		// Visit the VQL looking for plugin callsites.
 		visitor := vfilter.NewVisitor(scope, vfilter.CollectCallSites)
@@ -278,47 +353,86 @@ func VerifyVQL(ctx context.Context, config_obj *config_proto.Config,
 	return res
 }
 
+var VQLPaths = []string{
+	"sources.[].query",
+	"export",
+	"precondition",
+	"sources.[].precondition",
+}
+
 func VerifyArtifact(
 	ctx context.Context, config_obj *config_proto.Config,
 	repository services.Repository,
 	artifact *artifacts_proto.Artifact,
 	state *AnalysisState) {
 
+	preamble := ""
+	for _, imp := range artifact.Imports {
+		dep, pres := repository.Get(ctx, config_obj, imp)
+		if !pres {
+			state.SetError(fmt.Errorf(
+				"%v: invalid import: Artifact %v not found", artifact.Name, imp))
+		} else {
+			if dep.Export == "" {
+				state.SetError(fmt.Errorf(
+					"%v: invalid import: Artifact %v does not export anything",
+					artifact.Name, imp))
+
+			} else {
+				preamble += dep.Export
+			}
+		}
+	}
+
 	if artifact.Precondition != "" {
 		for _, err := range VerifyVQL(ctx, config_obj,
 			artifact.Precondition, repository, state) {
-			state.SetError(err)
+			state.SetError(fmt.Errorf(
+				"%v: precondition: %w", artifact.Name, err))
 		}
 	}
 
 	if artifact.Export != "" {
 		for _, err := range VerifyVQL(ctx, config_obj,
-			artifact.Export, repository, state) {
-			state.SetError(err)
+			preamble+artifact.Export, repository, state) {
+			state.SetError(fmt.Errorf(
+				"%v: export: %w", artifact.Name, err))
 		}
+
+		preamble += artifact.Export
 	}
 
 	for _, s := range artifact.Sources {
+		name := artifact.Name
+		if s.Name != "" {
+			name += "/" + s.Name
+		}
+
 		if s.Query != "" {
 			dependency := make(map[string]int)
 
+			query := preamble + s.Query
+
+			// The export section if it exists is injection prior to
+			// any query.
 			err := GetQueryDependencies(ctx, config_obj,
-				repository, s.Query, 0, dependency)
+				repository, query, 0, dependency)
 			if err != nil {
-				state.SetError(err)
+				state.SetError(fmt.Errorf("%v: query: %w", name, err))
 				continue
 			}
 
 			// Now check for broken callsites
 			for _, err := range VerifyVQL(ctx, config_obj,
-				s.Query, repository, state) {
-				state.SetError(err)
+				query, repository, state) {
+				state.SetError(fmt.Errorf("%v: query: %w", name, err))
 			}
 		}
+
 		if s.Precondition != "" {
 			for _, err := range VerifyVQL(ctx, config_obj,
 				s.Precondition, repository, state) {
-				state.SetError(err)
+				state.SetError(fmt.Errorf("%v: precondition: %w", name, err))
 			}
 		}
 	}

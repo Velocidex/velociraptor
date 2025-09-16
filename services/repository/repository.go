@@ -227,7 +227,8 @@ func (self *Repository) LoadProto(
 			_, err := vfilter.MultiParse(artifact.Precondition)
 			if err != nil {
 				return nil, fmt.Errorf(
-					"While parsing artifact precondition: %w", err)
+					"While parsing artifact precondition: %w",
+					reportError(err, artifact, "precondition", 0))
 			}
 		}
 
@@ -236,12 +237,13 @@ func (self *Repository) LoadProto(
 			_, err := vfilter.MultiParse(artifact.Export)
 			if err != nil {
 				return nil, fmt.Errorf(
-					"While parsing artifact export: %w", err)
+					"While parsing artifact export: %w",
+					reportError(err, artifact, "export", 0))
 			}
 		}
 
 		// Check each source for validity
-		for _, source := range artifact.Sources {
+		for idx, source := range artifact.Sources {
 			if source.Precondition != "" {
 				if artifact.Precondition != "" {
 					return nil, fmt.Errorf(
@@ -251,7 +253,9 @@ func (self *Repository) LoadProto(
 
 				_, err := vfilter.MultiParse(source.Precondition)
 				if err != nil {
-					return nil, fmt.Errorf("While parsing precondition: %w", err)
+					return nil, fmt.Errorf("While parsing precondition: %w",
+						reportError(err, artifact,
+							"sources.[].precondition", idx))
 				}
 			}
 
@@ -261,7 +265,9 @@ func (self *Repository) LoadProto(
 				queries, err := vfilter.MultiParse(source.Query)
 				if err != nil {
 					return nil, fmt.Errorf("While parsing source query %v: %w",
-						source.Name, err)
+						source.Name,
+						reportError(err, artifact,
+							"sources.[].query", idx))
 				}
 
 				// Make sure the source format is correct

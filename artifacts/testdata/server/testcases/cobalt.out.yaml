@@ -109,6 +109,7 @@ Output: [
   "DecodedData": {
    "Path": "data",
    "Size": 10000,
+   "UploadId": 0,
    "StoredSize": 10000,
    "sha256": "e4827601fe57d67ef030a3d3aa5b7d8d18e5bd51bbee5cd8ce58ce64986aeaba",
    "md5": "8f5f398cc5f2df9253a5c0d1e49d9d0f",
@@ -117,8 +118,7 @@ Output: [
     "uploads",
     "data",
     "cobalt_strike_beacon_0.bin"
-   ],
-   "UploadId": 0
+   ]
   }
  },
  {
@@ -154,6 +154,7 @@ Output: [
   "DecodedData": {
    "Path": "data",
    "Size": 10000,
+   "UploadId": 0,
    "StoredSize": 10000,
    "sha256": "f80f9893cf9d92f655df9a87841067a17e8296ab758a7b8aee6f3866bcd7ecf4",
    "md5": "ce8f0108acdd1307d1879865c4e35f2f",
@@ -162,8 +163,7 @@ Output: [
     "uploads",
     "data",
     "cobalt_strike_beacon_11001.bin"
-   ],
-   "UploadId": 0
+   ]
   }
  }
 ]

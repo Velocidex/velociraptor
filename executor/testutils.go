@@ -26,6 +26,7 @@ func NewClientExecutorForTests(config_obj *config_proto.Config) *ClientExecutor 
 		Inbound:       make(chan *crypto_proto.VeloMessage),
 		event_manager: &actions.EventTable{},
 		config_obj:    config_obj,
+		ctx:           context.Background(),
 	}
 }
 

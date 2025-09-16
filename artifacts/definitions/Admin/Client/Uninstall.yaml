@@ -39,7 +39,8 @@ sources:
           argv=commandline_split(command=UninstallString) + "/quiet")
 
       SELECT KeyName, DisplayName, UninstallString,
-          if(condition=ReallyDoIt, then=uninstall(Name=UninstallString).Stdout) AS UninstallLog
+          if(condition=ReallyDoIt,
+             then=uninstall(UninstallString=UninstallString).Stdout) AS UninstallLog
       FROM packages
 
   - name: Debian

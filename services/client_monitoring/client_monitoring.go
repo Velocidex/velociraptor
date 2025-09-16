@@ -18,8 +18,9 @@ package client_monitoring
 import (
 	"context"
 	"errors"
-	"math/rand"
 	"sync"
+
+	"www.velocidex.com/golang/velociraptor/utils/rand"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/google/uuid"

@@ -115,7 +115,7 @@
  },
  "results/TestArtifact.csv": [
   "Col,OSPath,Upload1,Upload2",
-  "Hello,/bin/ls,\"{\"\"Path\"\":\"\"/test.txt\"\",\"\"Size\"\":9,\"\"StoredSize\"\":9,\"\"sha256\"\":\"\"2d27ec8437ec76ec2db484c98ed89f7793f0575e271518dd1d62a18fde6e202d\"\",\"\"md5\"\":\"\"30057e5031bcf44d47b005a1f1700f7b\"\",\"\"Components\"\":[\"\"clients\"\",\"\"server\"\",\"\"collections\"\",\"\"F.1234\"\",\"\"uploads\"\",\"\"data\"\",\"\"test.txt\"\"],\"\"UploadId\"\":0}\",\"{\"\"Path\"\":\"\"/test2.txt\"\",\"\"Size\"\":15,\"\"StoredSize\"\":15,\"\"sha256\"\":\"\"c42af293c4c339ce802ae6827124cc416bfffb574da3d9f35068b6068a75528b\"\",\"\"md5\"\":\"\"d89eef4147c900bc8af8a49e73a09de4\"\",\"\"Components\"\":[\"\"clients\"\",\"\"server\"\",\"\"collections\"\",\"\"F.1234\"\",\"\"uploads\"\",\"\"data\"\",\"\"test2.txt\"\"],\"\"UploadId\"\":0}\"",
+  "Hello,/bin/ls,\"{\"\"Path\"\":\"\"/test.txt\"\",\"\"Size\"\":9,\"\"UploadId\"\":0,\"\"StoredSize\"\":9,\"\"sha256\"\":\"\"2d27ec8437ec76ec2db484c98ed89f7793f0575e271518dd1d62a18fde6e202d\"\",\"\"md5\"\":\"\"30057e5031bcf44d47b005a1f1700f7b\"\",\"\"Components\"\":[\"\"clients\"\",\"\"server\"\",\"\"collections\"\",\"\"F.1234\"\",\"\"uploads\"\",\"\"data\"\",\"\"test.txt\"\"]}\",\"{\"\"Path\"\":\"\"/test2.txt\"\",\"\"Size\"\":15,\"\"UploadId\"\":0,\"\"StoredSize\"\":15,\"\"sha256\"\":\"\"c42af293c4c339ce802ae6827124cc416bfffb574da3d9f35068b6068a75528b\"\",\"\"md5\"\":\"\"d89eef4147c900bc8af8a49e73a09de4\"\",\"\"Components\"\":[\"\"clients\"\",\"\"server\"\",\"\"collections\"\",\"\"F.1234\"\",\"\"uploads\"\",\"\"data\"\",\"\"test2.txt\"\"]}\"",
   ""
  ],
  "results/TestArtifact.json": [
@@ -125,6 +125,7 @@
    "Upload1": {
     "Path": "/test.txt",
     "Size": 9,
+    "UploadId": 0,
     "StoredSize": 9,
     "sha256": "2d27ec8437ec76ec2db484c98ed89f7793f0575e271518dd1d62a18fde6e202d",
     "md5": "30057e5031bcf44d47b005a1f1700f7b",
@@ -136,12 +137,12 @@
      "uploads",
      "data",
      "test.txt"
-    ],
-    "UploadId": 0
+    ]
    },
    "Upload2": {
     "Path": "/test2.txt",
     "Size": 15,
+    "UploadId": 0,
     "StoredSize": 15,
     "sha256": "c42af293c4c339ce802ae6827124cc416bfffb574da3d9f35068b6068a75528b",
     "md5": "d89eef4147c900bc8af8a49e73a09de4",
@@ -153,8 +154,7 @@
      "uploads",
      "data",
      "test2.txt"
-    ],
-    "UploadId": 0
+    ]
    }
   }
  ],
