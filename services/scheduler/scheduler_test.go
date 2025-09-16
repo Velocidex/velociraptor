@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils/rand"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -24,6 +25,8 @@ func (self *SchedulerTestSuite) SetupTest() {
 }
 
 func (self *SchedulerTestSuite) TestScheduler() {
+	defer rand.DisableRand()
+
 	scheduler, err := services.GetSchedulerService(self.ConfigObj)
 	assert.NoError(self.T(), err)
 

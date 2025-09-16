@@ -25,12 +25,13 @@ import (
 	"html"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
 	"sync/atomic"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/utils/rand"
 
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/datastore"

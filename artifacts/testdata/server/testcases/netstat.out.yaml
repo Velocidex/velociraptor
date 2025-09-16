@@ -47,7 +47,7 @@ Output: [
    "Type": "socket",
    "Inode": "14610"
   },
-  "LocalAddr": "0.0.0.0",
+  "LocalAddr": "127.0.0.53",
   "LocalPort": 53,
   "RemoteAddr": "0.0.0.0",
   "RemotePort": 0,

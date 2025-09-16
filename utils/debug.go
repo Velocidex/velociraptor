@@ -78,17 +78,17 @@ func DebugString(v interface{}) string {
 func DebugCtx(ctx context.Context, name string) {
 	select {
 	case <-ctx.Done():
-		fmt.Printf(name + ": Ctx is done!\n")
+		fmt.Printf("%s: Ctx is done!\n", name)
 
 	default:
-		fmt.Printf(name + ": Ctx is still valid!\n")
+		fmt.Printf("%s: Ctx is still valid!\n", name)
 	}
 }
 
 func DebugLogWhenCtxDone(ctx context.Context, name string) {
 	go func() {
 		<-ctx.Done()
-		fmt.Printf(name + ": Ctx done!\n")
+		fmt.Printf("%s: Ctx done!\n", name)
 	}()
 }
 
