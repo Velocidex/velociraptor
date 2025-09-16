@@ -1767,7 +1767,7 @@ sources:
         ShowLinkTarget(ShellBag=Parsed.LinkTargetIDList.IDList.ShellBag) as LinkTarget,
         Parsed.StringData as StringData,
         ShowExtraData(Parsed=Parsed) as ExtraData,
-        property_store(data=Parsed) as PropertyStore,
+        property_store(Parsed=Parsed) as PropertyStore,
         Parsed.Overlay as Overlay,
         Parsed
       FROM lnk_files

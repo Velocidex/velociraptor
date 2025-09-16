@@ -698,7 +698,7 @@ sources:
             ShowLinkTarget(ShellBag=Parsed.LinkTargetIDList.IDList.ShellBag) as _LinkTarget,
             Parsed.StringData as _StringData,
             ShowExtraData(Parsed=Parsed) as _ExtraData,
-            property_store(data=Parsed) as _PropertyStore
+            property_store(Parsed=Parsed) as _PropertyStore
       FROM X
 
       SELECT *, ApplicationId,

@@ -2,8 +2,9 @@ package functions
 
 import (
 	"context"
-	"math/rand"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/utils/rand"
 
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"

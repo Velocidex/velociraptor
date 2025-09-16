@@ -738,7 +738,7 @@ func (self *FlowRunner) ProcessSingleMessage(
 				return nil
 			}
 
-			logger.Error(fmt.Sprintf("Unable to load flow %s: %v", job.SessionId, err))
+			logger.Error("Unable to load flow %s: %v", job.SessionId, err)
 
 			client_manager, err := services.GetClientInfoManager(self.config_obj)
 			if err != nil {

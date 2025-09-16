@@ -54,6 +54,10 @@ checks = [Check(re=re.compile("ioutil.TempFile"),
           Check(re=re.compile("slices\\.(.+)"),
                 allowed=re.compile("Use append()"),
                 replaced="Use built in operations append and avoid slices package"),
+
+          Check(re=re.compile("math/rand"),
+                allowed=re.compile("utils/rand"),
+                replaced="/utils/rand"),
           ]
 
 def DiscoverAPI(path):

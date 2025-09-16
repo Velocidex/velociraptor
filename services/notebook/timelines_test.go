@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/rand"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -105,6 +106,7 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
 
 func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelineAnnotations(
 	t *assert.R) {
+	defer rand.DisableRand()
 
 	closer := utils.MockTime(utils.NewMockClock(time.Unix(1715775587, 0)))
 	defer closer()

@@ -10,11 +10,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/utils/rand"
 )
 
 // TODO(adg): a more sophisticated test suite
