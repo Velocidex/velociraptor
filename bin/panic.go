@@ -65,5 +65,5 @@ func writeLogOnPanic() error {
 
 func FatalIfError(command *kingpin.CmdClause, cb func() error) {
 	err := cb()
-	kingpin.FatalIfError(err, command.FullCommand())
+	kingpin.FatalIfError(err, "%s", command.FullCommand())
 }

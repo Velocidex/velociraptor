@@ -251,7 +251,7 @@ export: |
 sources:
 - query: |
     LET WindowsPartition <=
-      _FindWindowsPartition(ImagePath=ImagePath, accessor=Accessor)[0]
+      _FindWindowsPartition(ImagePath=ImagePath, Accessor=Accessor)[0]
 
     LET Remappings <= parse_yaml(
       filename=template(template=CommonRemapping,

@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/alecthomas/participle"
-	"gopkg.in/yaml.v3"
+	"www.velocidex.com/golang/velociraptor/utils/yaml"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/reformat"
@@ -20,74 +19,6 @@ type mutation struct {
 	err                                    error
 }
 
-type nodeContext struct {
-	*yaml.Node
-
-	parent *yaml.Node
-}
-
-// The yaml library emits nodes in an incosistent way which makes them
-// hard to navigate. This function reorders the nodes into a proper
-// document structure and fetches the relevant node.
-func getYamlNodes(node, parent *yaml.Node,
-	components []string, nodes *[]nodeContext) bool {
-
-	if len(components) == 0 {
-		*nodes = append(*nodes, nodeContext{
-			Node:   node,
-			parent: parent,
-		})
-		return true
-	}
-
-	next := components[0]
-	if next == "[]" {
-		if node.Tag != "!!seq" {
-			return false
-		}
-		res := false
-		for _, c := range node.Content {
-			if getYamlNodes(c, node, components[1:], nodes) {
-				res = true
-			}
-		}
-		return res
-	}
-
-	idx, err := strconv.ParseInt(next, 0, 64)
-	if err == nil {
-		// It is not a sequence
-		if node.Tag != "!!seq" ||
-			// Sequence too short
-			len(node.Content) < int(idx) {
-			return false
-		}
-
-		// Child is found - keep going to the next component
-		return getYamlNodes(node.Content[idx], node, components[1:], nodes)
-	}
-
-	// Walk a mapping
-	if node.Tag == "!!map" {
-		// should not happen
-		if len(node.Content)%2 != 0 {
-			return false
-		}
-
-		// Maps are set up in node.Content as a list of key, value.
-		for i := 0; i < len(node.Content); i += 2 {
-			key := node.Content[i].Value
-			if key == next {
-				return getYamlNodes(node.Content[i+1], node, components[1:], nodes)
-			}
-		}
-		// Didnt find it
-		return false
-	}
-
-	return false
-}
-
 var VQLPaths = []string{
 	"sources.[].query",
 	"export",
@@ -96,10 +27,10 @@ var VQLPaths = []string{
 }
 
 func getAllMutations(root *yaml.Node) (res []mutation, err error) {
-	var nodes []nodeContext
+	var nodes []yaml.NodeContext
 
 	for _, p := range VQLPaths {
-		getYamlNodes(root, root, strings.Split(p, "."), &nodes)
+		yaml.GetYamlNodes(root, root, strings.Split(p, "."), &nodes)
 	}
 
 	for _, n := range nodes {
@@ -123,7 +54,7 @@ func getAllMutations(root *yaml.Node) (res []mutation, err error) {
 	return res, nil
 }
 
-func reformatNode(vql_node nodeContext) (m mutation, err error) {
+func reformatNode(vql_node yaml.NodeContext) (m mutation, err error) {
 	scope := vql_subsystem.MakeScope()
 	reformatted, err := reformat.ReFormatVQL(
 		scope, vql_node.Value, vfilter.DefaultFormatOptions)
@@ -149,7 +80,7 @@ func reformatNode(vql_node nodeContext) (m mutation, err error) {
 
 	// Indent this block to the start of the previous block
 	indented := []string{}
-	ind := strings.Repeat(" ", vql_node.parent.Column+1)
+	ind := strings.Repeat(" ", vql_node.Parent.Column+1)
 	for _, l := range lines {
 		indented = append(indented, ind+l)
 	}

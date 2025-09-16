@@ -31,7 +31,7 @@ OS: Windows
 
 # The list of artifacts and their args.
 Artifacts:
- Windows.KapeFiles.Targets:
+ Windows.Triage.Targets:
     EventLogs: Y
  Windows.Sysinternals.Autoruns:
     All: Y
@@ -153,8 +153,8 @@ func doCollector() error {
 		// Need to generate a new config. This config is the same as
 		// the `gui` command makes. You can keep this datastore around
 		// for the next collector.
-		Prelog("No valid config found - " +
-			"will generate a new one at <green>" + server_config_path)
+		Prelog("No valid config found - "+
+			"will generate a new one at <green>%s</>", server_config_path)
 
 		config_obj, err = generateGUIConfig(
 			datastore_directory, server_config_path, client_config_path)

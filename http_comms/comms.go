@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
@@ -31,6 +30,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/utils/rand"
 
 	"github.com/go-errors/errors"
 	"github.com/sirupsen/logrus"
@@ -58,9 +59,7 @@ var (
 	// enrolment (sending HTTP 406 status).
 	EnrolError = errors.New("EnrolError")
 
-	mu   sync.Mutex
-	Rand func(int) int = rand.Intn
-
+	mu           sync.Mutex
 	proxyHandler = http.ProxyFromEnvironment
 
 	MaxRetryCount = 2
@@ -210,7 +209,7 @@ func NewHTTPConnector(
 		// Start with a random URL from the set of
 		// preconfigured URLs. This should distribute clients
 		// randomly to all frontends.
-		current_url_idx: GetRand()(len(urls)),
+		current_url_idx: rand.Intn(len(urls)),
 
 		minPoll:    time.Duration(1) * time.Second,
 		maxPoll:    time.Duration(max_poll) * time.Second,
@@ -431,7 +430,7 @@ func (self *HTTPConnector) Post(
 			// For safety we wait after redirect in case we end up
 			// in a redirect loop.
 			wait := self.maxPoll + time.Duration(
-				GetRand()(int(self.maxPollDev)))*time.Second
+				rand.Intn(int(self.maxPollDev)))*time.Second
 			self.logger.Info("Waiting after redirect: %v", wait)
 			<-self.clock.After(wait)
 		}
@@ -507,7 +506,7 @@ func (self *HTTPConnector) advanceToNextServer(ctx context.Context) {
 	// sleep to back off.
 	if self.current_url_idx == self.last_success_idx {
 		wait := self.maxPoll + time.Duration(
-			GetRand()(int(self.maxPollDev)))*time.Second
+			rand.Intn(int(self.maxPollDev)))*time.Second
 
 		self.logger.Info(
 			"Waiting for a reachable server: %v", wait)
@@ -533,13 +532,6 @@ func (self *HTTPConnector) advanceToNextServer(ctx context.Context) {
 	} else {
 		self.mu.Unlock()
 	}
-}
-
-func GetRand() func(int) int {
-	mu.Lock()
-	defer mu.Unlock()
-
-	return Rand
 }
 
 func (self *HTTPConnector) String() string {
@@ -811,7 +803,7 @@ func (self *NotificationReader) sendMessageList(
 		// Add random wait between polls to avoid
 		// synchronization of endpoints.
 		wait := self.maxPoll + time.Duration(
-			GetRand()(int(self.maxPollDev)))*time.Second
+			rand.Intn(int(self.maxPollDev)))*time.Second
 		self.logger.Info("Sleeping for %v", wait)
 
 		// While we wait to reconnect we need to update the nanny or

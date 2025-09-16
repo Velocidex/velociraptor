@@ -192,6 +192,35 @@ func (self _RegexDict) Match(scope types.Scope,
 	return scope.Match(pattern, string(serialized))
 }
 
+type _LtDict struct{}
+
+func (self _LtDict) Applicable(a, b types.Any) bool {
+	_, a_ok := a.(*ordereddict.Dict)
+	_, b_ok := b.(*ordereddict.Dict)
+
+	return a_ok || b_ok
+}
+
+func (self _LtDict) Lt(scope types.Scope, a types.Any, b types.Any) bool {
+	a_dict, a_ok := a.(*ordereddict.Dict)
+	b_dict, b_ok := b.(*ordereddict.Dict)
+
+	if !a_ok && b_ok {
+		return true
+	}
+
+	if !b_ok && a_ok {
+		return false
+	}
+
+	if !b_ok && !a_ok {
+		return false
+	}
+
+	return a_dict.Len() < b_dict.Len()
+
+}
+
 func init() {
 	vql_subsystem.RegisterProtocol(&_RegexDict{})
 	vql_subsystem.RegisterProtocol(&_BoolDict{})
@@ -199,4 +228,5 @@ func init() {
 	vql_subsystem.RegisterProtocol(&_SubDict{})
 	vql_subsystem.RegisterProtocol(&_MulDict{})
 	vql_subsystem.RegisterProtocol(&_AddMap{})
+	vql_subsystem.RegisterProtocol(&_LtDict{})
 }

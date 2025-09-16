@@ -122,7 +122,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 			Error: err.Error(),
 		}
 	}
-	return upload_response
+	return upload_response.AsDict()
 }
 
 func (self UploadFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

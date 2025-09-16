@@ -29,6 +29,7 @@
     "Upload": {
      "Path": "data",
      "Size": 11,
+     "UploadId": 0,
      "StoredSize": 11,
      "sha256": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
      "md5": "5eb63bbbe01eeed093cb22bb8f5acdc3",
@@ -37,12 +38,12 @@
       "uploads",
       "data",
       "file.db"
-     ],
-     "UploadId": 0
+     ]
     },
     "SparseUpload": {
      "Path": "{\"DelegateAccessor\":\"data\",\"DelegatePath\":\"This is...",
      "Size": 13,
+     "UploadId": 0,
      "StoredSize": 8,
      "sha256": "d2bc3dd9279837fd268d82ea397b6980dee5ae462464493c80f495786b4025c2",
      "md5": "f55a5cc260e3fc562d841a2f6d2b7d22",
@@ -52,8 +53,7 @@
       "sparse",
       "C:",
       "file.sparse.txt"
-     ],
-     "UploadId": 0
+     ]
     }
    }
   ],
