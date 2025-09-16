@@ -151,8 +151,24 @@ func setArtifactFile(
 			})
 
 	case api_proto.SetArtifactRequest_SET:
-		return manager.SetArtifactFile(ctx,
+		result, err := manager.SetArtifactFile(ctx,
 			config_obj, principal, in.Artifact, required_prefix)
+		if err != nil {
+			return nil, Status(config_obj.Verbose, err)
+		}
+
+		if len(in.Tags) > 0 {
+			err = manager.SetArtifactMetadata(ctx, config_obj, principal,
+				result.Name, &artifacts_proto.ArtifactMetadata{
+					Tags: in.Tags,
+				})
+			if err != nil {
+				return nil, Status(config_obj.Verbose, err)
+			}
+		}
+
+		return result, nil
+
 	}
 
 	return nil, InvalidStatus("Unknown op")
@@ -673,15 +689,24 @@ func (self *ApiServer) LoadArtifactPack(
 			request := &api_proto.SetArtifactRequest{
 				Op:       api_proto.SetArtifactRequest_CHECK,
 				Artifact: artifact_definition,
+				Tags:     in.Tags,
 			}
 
 			definition, err := setArtifactFile(ctx,
 				org_config_obj, principal, request, prefix)
 			if err != nil {
-				result.Errors = append(result.Errors, &api_proto.LoadArtifactError{
-					Filename: file.Name,
-					Error:    err.Error(),
-				})
+				if len(result.Errors) < 10 {
+					result.Errors = append(result.Errors, &api_proto.LoadArtifactError{
+						Filename: file.Name,
+						Error:    err.Error(),
+					})
+
+				} else if len(result.Errors) == 10 {
+					result.Errors = append(result.Errors, &api_proto.LoadArtifactError{
+						Filename: file.Name,
+						Error:    "Too many errors - suppressing",
+					})
+				}
 				continue
 			}
 
@@ -762,7 +787,8 @@ func getZipReader(
 		return nil, nil, errors.New("vfs_path should be specified")
 	}
 
-	if in.VfsPath[0] != paths.TEMP_ROOT.Components()[0] {
+	if in.VfsPath[0] != paths.TEMP_ROOT.Components()[0] &&
+		in.VfsPath[0] != paths.PUBLIC_ROOT.Components()[0] {
 		return nil, nil, errors.New("vfs_path should be a temp path")
 	}
 
