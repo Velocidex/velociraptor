@@ -13,7 +13,8 @@ import (
 )
 
 type getChainArgs struct {
-	Id string `vfilter:"required,field=id,doc=Process ID."`
+	Id       string `vfilter:"required,field=id,doc=Process ID."`
+	MaxItems int64  `vfilter:"optional,field=max_items,doc=The maximum number of process entries to return (default 10)"`
 }
 
 type getChain struct{}
@@ -35,7 +36,7 @@ func (self getChain) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
-	return tracker.CallChain(ctx, scope, arg.Id)
+	return tracker.CallChain(ctx, scope, arg.Id, arg.MaxItems)
 }
 
 func (self getChain) Info(scope types.Scope,
