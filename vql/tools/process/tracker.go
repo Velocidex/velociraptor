@@ -225,8 +225,13 @@ func (self *ProcessTracker) Processes(
 
 // Return all the processes that are children of this id
 func (self *ProcessTracker) Children(
-	ctx context.Context, scope vfilter.Scope, id string) []*ProcessEntry {
+	ctx context.Context, scope vfilter.Scope,
+	id string, max_items int64) []*ProcessEntry {
 	res := []*ProcessEntry{}
+
+	if max_items == 0 {
+		max_items = 10
+	}
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -236,6 +241,9 @@ func (self *ProcessTracker) Children(
 		if pres {
 			if v.ParentId == id {
 				res = append(res, v)
+				if int64(len(res)) > max_items {
+					break
+				}
 			}
 		}
 	}
@@ -369,9 +377,14 @@ func (self *ProcessTracker) maybeSendUpdate(update *ProcessEntry) {
 }
 
 func (self *ProcessTracker) CallChain(
-	ctx context.Context, scope vfilter.Scope, id string) []*ProcessEntry {
+	ctx context.Context, scope vfilter.Scope,
+	id string, max_items int64) []*ProcessEntry {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if max_items == 0 {
+		max_items = 10
+	}
 
 	result := []*ProcessEntry{}
 	for {
@@ -383,6 +396,9 @@ func (self *ProcessTracker) CallChain(
 		// Make a copy so the caller does not need to lock
 		proc_copy := *proc
 		result = append(result, &proc_copy)
+		if int64(len(result)) > max_items {
+			return reverse(result)
+		}
 
 		id = proc.ParentId
 		if id_seen(id, result) || len(result) > 10 {

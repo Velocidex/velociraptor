@@ -39,7 +39,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e
       with:
-        node-version: 20
+        node-version: 22.19
 
     - name: npm install gui
       run: |
