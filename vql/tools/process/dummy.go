@@ -104,7 +104,12 @@ func (self *DummyProcessTracker) Processes(
 }
 
 func (self *DummyProcessTracker) CallChain(
-	ctx context.Context, scope vfilter.Scope, id string) []*ProcessEntry {
+	ctx context.Context, scope vfilter.Scope,
+	id string, max_items int64) []*ProcessEntry {
+
+	if max_items == 0 {
+		max_items = 10
+	}
 
 	lookup := self.getLookup(ctx, scope)
 	result := []*ProcessEntry{}
@@ -117,6 +122,9 @@ func (self *DummyProcessTracker) CallChain(
 		}
 
 		result = append(result, proc)
+		if int64(len(result)) > max_items {
+			break
+		}
 		id = proc.ParentId
 	}
 
@@ -124,12 +132,20 @@ func (self *DummyProcessTracker) CallChain(
 }
 
 func (self *DummyProcessTracker) Children(
-	ctx context.Context, scope vfilter.Scope, id string) []*ProcessEntry {
+	ctx context.Context, scope vfilter.Scope,
+	id string, max_items int64) []*ProcessEntry {
+
+	if max_items == 0 {
+		max_items = 10
+	}
 
 	result := []*ProcessEntry{}
 	for _, proc := range self.Processes(ctx, scope) {
 		if proc.ParentId == id {
 			result = append(result, proc)
+			if int64(len(result)) > max_items {
+				break
+			}
 		}
 	}
 
