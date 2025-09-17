@@ -12,8 +12,10 @@ type IProcessTracker interface {
 	Enrich(ctx context.Context, scope vfilter.Scope, id string) (*ProcessEntry, bool)
 	Stats() cache.Stats
 	Processes(ctx context.Context, scope vfilter.Scope) []*ProcessEntry
-	Children(ctx context.Context, scope vfilter.Scope, id string) []*ProcessEntry
-	CallChain(ctx context.Context, scope vfilter.Scope, id string) []*ProcessEntry
+	Children(ctx context.Context, scope vfilter.Scope,
+		id string, max_items int64) []*ProcessEntry
+	CallChain(ctx context.Context, scope vfilter.Scope,
+		id string, max_items int64) []*ProcessEntry
 
 	// Listen to the update stream from the tracker.
 	Updates() chan *ProcessEntry
