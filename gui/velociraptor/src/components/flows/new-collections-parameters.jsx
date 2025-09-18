@@ -194,12 +194,37 @@ export class NewCollectionConfigParametersForm extends React.Component {
         this.props.setParameters(parameters);
     }
 
-   removeArtifact = (name) => {
+    toggleBooleanParams = (artifact, on) => {
+        let parameters = this.props.parameters;
+        let artifact_parameters = (parameters[artifact] || {});
+
+        // Find the artifact descriptor to know param types
+        const descriptor = _.find(this.props.artifacts, x=>x.name === artifact);
+        const boolParamNames = _.map(
+            _.filter((descriptor && descriptor.parameters) || [], p=>p.type === 'bool'),
+            p=>p.name
+        );
+
+        _.each(boolParamNames, name => {
+            artifact_parameters[name] = on;
+        });
+
+        parameters[artifact] = artifact_parameters;
+        this.props.setParameters(parameters);
+
+        // Reflect the desired state in the UI toggle map
+        let booleansToggle = this.state.booleansToggle;
+        booleansToggle[artifact] = on;
+        this.setState({booleansToggle: booleansToggle});
+    }
+ 
+    removeArtifact = (name) => {
         this.props.setArtifacts(remove_artifact(this.props.artifacts, name));
     }
 
     state = {
         filters: {},
+        booleansToggle: {},
     }
 
     artifactParameterRenderer = artifact => {
@@ -246,6 +271,13 @@ export class NewCollectionConfigParametersForm extends React.Component {
               setValue={(param_name, value) => this.setValue(
                   artifact.name, param_name, value)}/>);
         };
+
+         // Per-artifact boolean toggle button
+        const currentToggle = this.state.booleansToggle[artifact.name] || false;
+        let toogleAll = (
+                <VeloForm param={{type: "bool", name: "Enable/disable all", description: ""}} key={`toggle-${artifact.name}`} name={`toggle-${artifact.name}`} value={currentToggle} setValue={(value) => this.toggleBooleanParams(artifact.name, value)}/>
+        );
+
         if(suggestions.length > 6) {
             results.push(
                 <ParameterSuggestion key="Autosuggest" name="Autosuggest"
@@ -258,6 +290,7 @@ export class NewCollectionConfigParametersForm extends React.Component {
             );
         }
 
+        results = results.concat(toogleAll);
         results = results.concat(form_parameters);
         return results;
 
