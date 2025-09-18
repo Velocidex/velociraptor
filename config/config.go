@@ -24,6 +24,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Embed build time constants into here for reporting client version.
@@ -48,7 +49,7 @@ func GetVersion() *config_proto.Version {
 		CiBuildUrl:   ci_run_url,
 		Compiler:     runtime.Version(),
 		System:       runtime.GOOS,
-		Architecture: runtime.GOARCH,
+		Architecture: utils.GetArch(),
 	}
 }
 

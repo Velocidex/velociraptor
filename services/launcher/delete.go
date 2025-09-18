@@ -286,15 +286,6 @@ func (self *reporter) emit_bulk_file(
 	})
 }
 
-func (self *reporter) emit_fs(
-	item_type string, target api.FSPathSpec) {
-
-	self.emit(item_type, target.String(), func() error {
-		file_store_factory := file_store.GetFileStore(self.config_obj)
-		return file_store_factory.Delete(target)
-	})
-}
-
 func (self *reporter) should_do_it() bool {
 	self.mu.Lock()
 	defer self.mu.Unlock()
