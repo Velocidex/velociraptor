@@ -278,15 +278,31 @@ func (self *HTTPConnector) retryPost(
 	data []byte, urgent bool) (resp *http.Response, err error) {
 
 	logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
+
+	// Retry a limited number of times immediately. After this many
+	// immediate tries, this function will return the error and the
+	// limiter will be engaged before the next attempt.
 	count := 0
 
 	for {
+		// Exit if the retry count is exceeded. Our caller will retry
+		// after rate limiting.
+		if count > MaxRetryCount {
+			logger.Debug("%v: Exceeded retry times for %v",
+				name, handler)
+			if resp != nil {
+				resp.Body.Close()
+			}
+			break
+		}
+
 		req, err := self.prepareRequest(ctx, name, handler, data, urgent)
 		if err != nil {
 			return nil, err
 		}
 
 		resp, err = self.client.Do(req)
+
 		// Represents a retryable error in websockets.
 		if resp != nil {
 			switch resp.StatusCode {
@@ -328,15 +344,6 @@ func (self *HTTPConnector) retryPost(
 		// No errors - we are good!
 		if resp != nil && err == nil {
 			return resp, err
-		}
-
-		if count > MaxRetryCount {
-			logger.Debug("%v: Exceeded retry times for %v",
-				name, handler)
-			if resp != nil {
-				resp.Body.Close()
-			}
-			break
 		}
 
 		logger.Debug("%v: Retrying connection to %v for %v time",

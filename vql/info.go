@@ -21,13 +21,13 @@ import (
 	"context"
 	"os"
 	"runtime"
-	"strings"
 	"time"
 
 	fqdn "github.com/Showmax/go-fqdn"
 	"github.com/Velocidex/ordereddict"
 
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/psutils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -104,32 +104,11 @@ func init() {
 
 				item := GetInfo(info).
 					Set("Fqdn", fqdn.Get()).
-					Set("Architecture", getArch())
+					Set("Architecture", utils.GetArch())
 				result = append(result, item)
 
 				return result
 			},
 			Doc: "Get information about the running host.",
 		})
-}
-
-func getArch() string {
-	res := runtime.GOARCH
-
-	// On windows, detect if we are running in Wow64
-	if runtime.GOOS == "windows" {
-		proc_arch := os.Getenv("PROCESSOR_ARCHITECTURE")
-		if proc_arch != "" {
-			res = proc_arch
-
-			if proc_arch == "x86" {
-				wow_arch := os.Getenv("PROCESSOR_ARCHITEW6432")
-				if wow_arch == "AMD64" {
-					res = "wow64"
-				}
-			}
-		}
-	}
-
-	return strings.ToLower(res)
 }
