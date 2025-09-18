@@ -330,7 +330,7 @@ require (
 // HTML tags into the markdown
 replace github.com/russross/blackfriday/v2 => github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b
 
-go 1.24.0
+go 1.24.7
 
 // Needed for syntax highlighting VQL. Removes extra fat.
 replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c

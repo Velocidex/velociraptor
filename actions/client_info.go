@@ -2,11 +2,11 @@ package actions
 
 import (
 	"context"
-	"runtime"
 
 	"github.com/Showmax/go-fqdn"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/psutils"
 )
 
@@ -42,7 +42,7 @@ func GetClientInfo(
 		result.Hostname = info.Hostname
 		result.System = info.OS
 		result.Release = info.Platform + info.PlatformVersion
-		result.Architecture = runtime.GOARCH
+		result.Architecture = utils.GetArch()
 		result.Fqdn = fqdn.Get()
 	}
 

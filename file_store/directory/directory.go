@@ -192,7 +192,13 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 
 	defer api.InstrumentWithDelay("open_write", "DirectoryFileStore", filename)()
 
-	err := datastore.MkdirAll(self.db, self.config_obj, filename.Dir())
+	// Writes are only possible when the datastore is healthy.
+	err := self.db.Healthy()
+	if err != nil {
+		return nil, err
+	}
+
+	err = datastore.MkdirAll(self.db, self.config_obj, filename.Dir())
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Error("Can not create dir: %v", err)
