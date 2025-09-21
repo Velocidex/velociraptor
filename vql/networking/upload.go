@@ -133,6 +133,7 @@ func (self UploadFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 			"it in the server's file store.",
 		ArgType:  type_map.AddType(scope, &UploadFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 
