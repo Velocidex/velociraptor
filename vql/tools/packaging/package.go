@@ -2,6 +2,7 @@ package packaging
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -133,7 +134,15 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 				return
 			}
 			if spec.Server {
-				target_config = validateServerConfig(config_obj)
+				target_config, err = validateServerConfig(config_obj)
+				if err != nil {
+					scope.Log("ERROR:%v: %v", self.name, err)
+					return
+				}
+
+				// We force the binary to run as the velociraptor user
+				target_config.Frontend.RunAsUser = spec.Expansion.ServerUser
+
 			} else {
 				target_config, err = validateClientConfig(config_obj, arg.Config)
 				if err != nil {
@@ -144,7 +153,14 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 
 		} else if arg.Server {
 			spec = self.serverSpecFactory()
-			target_config = validateServerConfig(config_obj)
+			target_config, err = validateServerConfig(config_obj)
+			if err != nil {
+				scope.Log("ERROR:%v: %v", self.name, err)
+				return
+			}
+
+			// We force the binary to run as the velociraptor user
+			target_config.Frontend.RunAsUser = spec.Expansion.ServerUser
 
 		} else {
 			spec = self.clientSpecFactory()
@@ -281,9 +297,13 @@ func expandSpec(
 	return res
 }
 
-func validateServerConfig(config_obj *config_proto.Config) *config_proto.Config {
+func validateServerConfig(config_obj *config_proto.Config) (*config_proto.Config, error) {
 	res := proto.Clone(config_obj).(*config_proto.Config)
-	return res
+	if res.Frontend == nil || res.Client == nil {
+		return nil, errors.New("Server Config requires a Frontend and Client sections.")
+	}
+
+	return res, nil
 }
 
 func validateClientConfig(

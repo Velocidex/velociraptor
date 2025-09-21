@@ -275,7 +275,7 @@ func (self *VelociraptorUploader) Upload(
 
 	cached, pres, closer := DeduplicateUploads(scope, store_as_name)
 	defer closer()
-	if pres {
+	if pres && cached != nil {
 		return cached, nil
 	}
 

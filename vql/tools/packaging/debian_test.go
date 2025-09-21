@@ -30,7 +30,8 @@ func (self *PackagingTestSuite) TestDEBServer() {
 	arch, err := getDebArch(self.elf_data)
 	assert.NoError(self.T(), err)
 
-	target_config := validateServerConfig(self.ConfigObj)
+	target_config, err := validateServerConfig(self.ConfigObj)
+	assert.NoError(self.T(), err)
 	spec.SetRuntimeParameters(target_config, arch, "releaseX", "", 0, self.elf_data)
 
 	builder, err := BuildDeb(spec)
@@ -50,7 +51,8 @@ func (self *PackagingTestSuite) TestDEBServerMaster() {
 		BindPort: 8100,
 	}}
 
-	target_config := validateServerConfig(self.ConfigObj)
+	target_config, err := validateServerConfig(self.ConfigObj)
+	assert.NoError(self.T(), err)
 	spec.SetRuntimeParameters(target_config, arch, "releaseX", "master", 0, self.elf_data)
 
 	builder, err := BuildDeb(spec)
@@ -70,7 +72,9 @@ func (self *PackagingTestSuite) TestDEBServerMinion() {
 		BindPort: 8100,
 	}}
 
-	target_config := validateServerConfig(self.ConfigObj)
+	target_config, err := validateServerConfig(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	spec.SetRuntimeParameters(target_config, arch, "releaseX", "minion", 0, self.elf_data)
 
 	builder, err := BuildDeb(spec)
