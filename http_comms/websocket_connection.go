@@ -227,7 +227,41 @@ func (WebSocketConnectionFactoryImpl) NewWebSocketConnection(
 		return nil, err
 	}
 
-	ws := &Conn{conn: ws_}
+	// Log when ping messages arrive from the server. The server is
+	// responsible for pinging the client periodically. If the
+	// connection goes aways (e.g. network is dropped etc) then ping
+	// messages wont get through and the read timeouts will be
+	// triggered to tear the connection down.
+	logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
+
+	ws := WrapWS(ws_)
+
+	ws_.SetPingHandler(func(message string) error {
+		logger.Debug("Socket %v: Received Ping", key)
+
+		deadline := utils.GetTime().Now().Add(PongPeriod(self.config_obj))
+
+		// Extend the read and write timeouts when a ping arrives from
+		// the server. We are currently holding the lock so do it
+		// at a later time.
+		go func() {
+			_ = ws.SetReadDeadline(deadline)
+			_ = ws.SetWriteDeadline(deadline)
+		}()
+
+		err = ws.WriteControl(websocket.PongMessage,
+			[]byte(message), utils.GetTime().Now().Add(writeWait))
+		if err == websocket.ErrCloseSent {
+			return nil
+		} else if _, ok := err.(net.Error); ok {
+			return nil
+		}
+
+		// Update the nanny as we got a valid read message.
+		self.nanny.UpdateReadFromServer()
+
+		return err
+	})
 
 	ctx, cancel := context.WithCancel(ctx)
 
@@ -247,43 +281,6 @@ func (WebSocketConnectionFactoryImpl) NewWebSocketConnection(
 		key:         key,
 		id:          utils.GetId(),
 	}
-
-	// Log when ping messages arrive from the server. The server is
-	// responsible for pinging the client periodically. If the
-	// connection goes aways (e.g. network is dropped etc) then ping
-	// messages wont get through and the read timeouts will be
-	// triggered to tear the connection down.
-	logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
-	ws.conn.SetPingHandler(func(message string) error {
-		logger.Debug("Socket %v: Received Ping", res.key)
-
-		deadline := utils.GetTime().Now().Add(PongPeriod(self.config_obj))
-
-		// Extend the read and write timeouts when a ping arrives from
-		// the server.
-		err := ws.SetReadDeadline(deadline)
-		if err != nil {
-			return err
-		}
-
-		err = ws.SetWriteDeadline(deadline)
-		if err != nil {
-			return err
-		}
-
-		err = ws.WriteControl(websocket.PongMessage,
-			[]byte(message), utils.GetTime().Now().Add(writeWait))
-		if err == websocket.ErrCloseSent {
-			return nil
-		} else if _, ok := err.(net.Error); ok {
-			return nil
-		}
-
-		// Update the nanny as we got a valid read message.
-		self.nanny.UpdateReadFromServer()
-
-		return err
-	})
 
 	// Pump messages from the remote server to the channel.
 	go func() {
