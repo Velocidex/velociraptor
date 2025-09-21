@@ -114,7 +114,9 @@ func (self *PackagingTestSuite) TestRPMServer() {
 	arch, err := getRPMArch(self.elf_data)
 	assert.NoError(self.T(), err)
 
-	target_config := validateServerConfig(self.ConfigObj)
+	target_config, err := validateServerConfig(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	spec.SetRuntimeParameters(
 		target_config, arch, "releaseX", "server", 0, self.elf_data)
 
@@ -139,7 +141,9 @@ func (self *PackagingTestSuite) TestRPMServerMaster() {
 		BindPort: 8100,
 	}}
 
-	target_config := validateServerConfig(self.ConfigObj)
+	target_config, err := validateServerConfig(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	spec.SetRuntimeParameters(
 		target_config, arch, "releaseX", "master", 0, self.elf_data)
 
@@ -165,7 +169,9 @@ func (self *PackagingTestSuite) TestRPMServerMinion() {
 		BindPort: 8100,
 	}}
 
-	target_config := validateServerConfig(self.ConfigObj)
+	target_config, err := validateServerConfig(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	spec.SetRuntimeParameters(
 		target_config, arch, "releaseX", "minion", 0, self.elf_data)
 

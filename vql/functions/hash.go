@@ -65,6 +65,7 @@ type HashFunctionArgs struct {
 	Path       *accessors.OSPath `vfilter:"required,field=path,doc=Path to open and hash."`
 	Accessor   string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	HashSelect []string          `vfilter:"optional,field=hashselect,doc=The hash function to use (MD5,SHA1,SHA256)"`
+	MaxSize    uint64            `vfilter:"optional,field=max_size,doc=The maximum size of the file that will be hashed (default 100mb)"`
 }
 
 // HashFunction calculates a hash of a file. It may be expensive
@@ -82,6 +83,10 @@ func (self *HashFunction) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("hash: %v", err)
 		return vfilter.Null{}
+	}
+
+	if arg.MaxSize == 0 {
+		arg.MaxSize = 100 * 1024 * 1024
 	}
 
 	cached_buffer := pool.Get().(*[]byte)
@@ -127,6 +132,7 @@ func (self *HashFunction) Call(ctx context.Context,
 		}
 	}
 
+	var count uint64
 	for {
 		select {
 		case <-ctx.Done():
@@ -134,6 +140,13 @@ func (self *HashFunction) Call(ctx context.Context,
 
 		default:
 			n, err := file.Read(buf)
+
+			count += uint64(n)
+			if count > arg.MaxSize {
+				DeduplicatedLog(
+					ctx, scope, "Hash of %v aborted due to exceeding size", arg.Path)
+				n = 0
+			}
 
 			// We are done!
 			if n == 0 || err == io.EOF {
