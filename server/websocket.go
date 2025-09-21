@@ -14,7 +14,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/http_comms"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -58,7 +57,7 @@ func ws_server_pem(
 	}
 	defer ws_.Close()
 
-	ws := &http_comms.Conn{Conn: ws_}
+	ws := http_comms.WrapWS(ws_)
 
 	for {
 		// Just read a message and ignore it.
@@ -87,7 +86,7 @@ func ws_receive_client_messages(
 	}
 	defer ws_.Close()
 
-	ws := &http_comms.Conn{Conn: ws_}
+	ws := http_comms.WrapWS(ws_)
 
 	ws.SetPongHandler(func(string) error {
 		deadline := utils.Now().Add(
@@ -230,7 +229,7 @@ func ws_send_client_messages(
 	}
 	defer ws_.Close()
 
-	ws := &http_comms.Conn{Conn: ws_}
+	ws := http_comms.WrapWS(ws_)
 
 	// Keep track of currently connected clients.
 	currentWSConnections.Inc()
@@ -360,13 +359,7 @@ func ws_send_client_messages(
 
 			for {
 				deadline := utils.Now().Add(http_comms.PongPeriod(config_obj))
-				err := ws.SetReadDeadline(deadline)
-				if err != nil {
-					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-					logger.Error("<red>ws_send_client_messages SetReadDeadline</> %v", err)
-				}
-
-				_, _, err = ws.NextReader()
+				_, _, err = ws.NextReaderWithDeadline(deadline)
 				if err != nil {
 					return
 				}

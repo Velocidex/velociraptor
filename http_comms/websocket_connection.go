@@ -2,6 +2,7 @@ package http_comms
 
 import (
 	"context"
+	"io"
 	"net"
 	"net/http"
 	"sync"
@@ -22,29 +23,93 @@ var (
 // The websocket connection is not thread safe so we need to
 // synchronize it.
 type Conn struct {
-	*websocket.Conn
+	conn *websocket.Conn
 
-	mu sync.Mutex
+	read_mu  sync.Mutex
+	write_mu sync.Mutex
+}
+
+func WrapWS(ws *websocket.Conn) *Conn {
+	return &Conn{
+		conn: ws,
+	}
+}
+
+func (self *Conn) SetPongHandler(h func(appData string) error) {
+	self.conn.SetPongHandler(h)
+}
+
+func (self *Conn) Close() {
+	// The Close and WriteControl methods can be called concurrently
+	// with all other methods.
+
+	self.conn.Close()
+}
+
+func (self *Conn) SetReadDeadline(deadline time.Time) error {
+	self.read_mu.Lock()
+	defer self.read_mu.Unlock()
+
+	return self.conn.SetReadDeadline(deadline)
+}
+
+func (self *Conn) SetWriteDeadline(deadline time.Time) error {
+	self.read_mu.Lock()
+	defer self.read_mu.Unlock()
+
+	return self.conn.SetWriteDeadline(deadline)
+}
+
+func (self *Conn) ReadMessage() (messageType int, p []byte, err error) {
+	self.read_mu.Lock()
+	defer self.read_mu.Unlock()
+
+	return self.conn.ReadMessage()
+}
+
+func (self *Conn) SetReadLimit(limit int64) {
+	self.read_mu.Lock()
+	defer self.read_mu.Unlock()
+
+	self.conn.SetReadLimit(limit)
+}
+
+func (self *Conn) WriteControl(messageType int, data []byte, deadline time.Time) error {
+	// The Close and WriteControl methods can be called concurrently
+	// with all other methods.
+	return self.conn.WriteControl(messageType, data, deadline)
+}
+
+func (self *Conn) NextReaderWithDeadline(deadline time.Time) (int, io.Reader, error) {
+	self.read_mu.Lock()
+	defer self.read_mu.Unlock()
+
+	err := self.conn.SetReadDeadline(deadline)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return self.conn.NextReader()
 }
 
 // Control access to the underlying connection.
 func (self *Conn) WriteMessageWithDeadline(
 	message_type int, message []byte, deadline time.Time) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
+	self.write_mu.Lock()
+	defer self.write_mu.Unlock()
 
-	err := self.Conn.SetWriteDeadline(deadline)
+	err := self.conn.SetWriteDeadline(deadline)
 	if err != nil {
 		return err
 	}
-	return self.Conn.WriteMessage(message_type, message)
+	return self.conn.WriteMessage(message_type, message)
 }
 
 func (self *Conn) WriteMessage(message_type int, message []byte) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
+	self.write_mu.Lock()
+	defer self.write_mu.Unlock()
 
-	return self.Conn.WriteMessage(message_type, message)
+	return self.conn.WriteMessage(message_type, message)
 }
 
 type WebSocketConnection struct {
@@ -115,9 +180,6 @@ func (self *WebSocketConnection) Id() uint64 {
 }
 
 func (self *WebSocketConnection) Close() {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	self.cancel()
 	self.ws.Close()
 }
@@ -165,7 +227,7 @@ func (WebSocketConnectionFactoryImpl) NewWebSocketConnection(
 		return nil, err
 	}
 
-	ws := &Conn{Conn: ws_}
+	ws := &Conn{conn: ws_}
 
 	ctx, cancel := context.WithCancel(ctx)
 
@@ -192,7 +254,7 @@ func (WebSocketConnectionFactoryImpl) NewWebSocketConnection(
 	// messages wont get through and the read timeouts will be
 	// triggered to tear the connection down.
 	logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
-	ws.SetPingHandler(func(message string) error {
+	ws.conn.SetPingHandler(func(message string) error {
 		logger.Debug("Socket %v: Received Ping", res.key)
 
 		deadline := utils.GetTime().Now().Add(PongPeriod(self.config_obj))
