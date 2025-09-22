@@ -49,21 +49,30 @@ var (
 
 // Used when we deliberately want to override a registered plugin.
 func OverridePlugin(plugin vfilter.PluginGeneratorInterface) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	name := plugin.Info(nil, nil).Name
 	exportedPlugins[name] = plugin
 
-	ResetGlobalScopeCache()
+	resetGlobalScopeCache()
 }
 
 // Used when we deliberately want to override a registered function.
 func OverrideFunction(function vfilter.FunctionInterface) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	name := function.Info(nil, nil).Name
 	exportedFunctions[name] = function
 
-	ResetGlobalScopeCache()
+	resetGlobalScopeCache()
 }
 
 func RegisterPlugin(plugin vfilter.PluginGeneratorInterface) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	name := plugin.Info(nil, nil).Name
 	_, pres := exportedPlugins[name]
 	if pres {
@@ -72,10 +81,13 @@ func RegisterPlugin(plugin vfilter.PluginGeneratorInterface) {
 
 	exportedPlugins[name] = plugin
 
-	ResetGlobalScopeCache()
+	resetGlobalScopeCache()
 }
 
 func RegisterFunction(plugin vfilter.FunctionInterface) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	name := plugin.Info(nil, nil).Name
 	_, pres := exportedFunctions[name]
 	if pres {
@@ -84,13 +96,16 @@ func RegisterFunction(plugin vfilter.FunctionInterface) {
 
 	exportedFunctions[name] = plugin
 
-	ResetGlobalScopeCache()
+	resetGlobalScopeCache()
 }
 
 func RegisterProtocol(plugin vfilter.Any) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	exportedProtocolImpl = append(exportedProtocolImpl, plugin)
 
-	ResetGlobalScopeCache()
+	resetGlobalScopeCache()
 }
 
 func EnforceVQLAllowList(
@@ -149,7 +164,7 @@ func EnforceVQLAllowList(
 	}
 
 	// Reset the global scope so we will be forced to recreate it.
-	globalScope = nil
+	resetGlobalScopeCache()
 
 	return nil
 }
@@ -162,19 +177,19 @@ var (
 	globalScope vfilter.Scope
 )
 
-func _makeRootScope() vfilter.Scope {
+func MakeScope() vfilter.Scope {
 	mu.Lock()
 	defer mu.Unlock()
 
+	return _makeRootScope()
+}
+
+func _makeRootScope() vfilter.Scope {
 	if globalScope == nil {
-		globalScope = MakeNewScope()
+		globalScope = _MakeNewScope()
 	}
 
 	return globalScope.NewScope()
-}
-
-func MakeScope() vfilter.Scope {
-	return _makeRootScope()
 }
 
 func GetRootScope(scope vfilter.Scope) vfilter.Scope {
@@ -191,6 +206,13 @@ func GetRootScope(scope vfilter.Scope) vfilter.Scope {
 // MakeNewScope makes a new scope from scratch. You do not need to use
 // this! use MakeScope() above which is much faster.
 func MakeNewScope() vfilter.Scope {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return _MakeNewScope()
+}
+
+func _MakeNewScope() vfilter.Scope {
 	scopeCounter.Inc()
 
 	result := vfilter.NewScope()
@@ -214,5 +236,10 @@ func MakeNewScope() vfilter.Scope {
 func ResetGlobalScopeCache() {
 	mu.Lock()
 	defer mu.Unlock()
+
+	globalScope = nil
+}
+
+func resetGlobalScopeCache() {
 	globalScope = nil
 }

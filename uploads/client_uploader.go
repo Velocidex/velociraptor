@@ -172,6 +172,10 @@ func (self *VelociraptorUploader) processTransaction(t *Transaction) (
 
 	defer func() {
 		self.Responder.FlowContext().DecTransaction()
+
+		self.mu.Lock()
+		defer self.mu.Unlock()
+
 		delete(self.current, t.UploadId)
 	}()
 
