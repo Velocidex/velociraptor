@@ -13,7 +13,7 @@
         "ace-builds": "1.43.2",
         "axios": ">=1.12.0",
         "axios-retry": "3.9.1",
-        "bootstrap": "5.3.7",
+        "bootstrap": "5.3.8",
         "classnames": "^2.5.1",
         "csv-parse": "4.16.3",
         "csv-stringify": "5.6.5",
