@@ -105,17 +105,6 @@
    "_AnnotatedBy": "admin",
    "_AnnotationID": "TdAAAAAAAAA=",
    "_Source": "Annotation"
-  },
-  {
-   "Timestamp": "2024-05-15T12:36:27Z",
-   "Message": "Original Event Message 2",
-   "Description": "",
-   "OriginalEventField": "Extra field 2",
-   "Foo": "Older Bar 2",
-   "Notes": "Updated First Annotation - all other fields remain",
-   "_AnnotatedBy": "admin",
-   "_AnnotationID": "TtAAAAAAAAA=",
-   "_Source": "Annotation"
   }
  ],
  "Next Annotation": [
@@ -156,18 +145,29 @@
    ]
   }
  ],
- "First Event Updated": {
-  "Timestamp": "2024-05-15T12:36:27Z",
+ "First Event to update": {
+  "Timestamp": "2024-03-30T05:13:07Z",
   "Message": "Original Event Message 2",
   "Description": "",
   "OriginalEventField": "Extra field 2",
   "Foo": "Older Bar 2",
-  "_Source": "Annotation",
-  "Notes": "Updated First Annotation - all other fields remain",
-  "_AnnotatedBy": "admin",
-  "_AnnotationID": "TtAAAAAAAAA="
+  "Notes": "An Earlier Foo is suspicious at being Older Bar!",
+  "_AnnotatedBy": "mike",
+  "_AnnotationID": "TtAAAAAAAAA=",
+  "_Source": "Annotation"
  },
  "Updated Annotations": [
+  {
+   "Timestamp": "2024-03-30T05:13:07Z",
+   "Message": "Original Event Message 2",
+   "Description": "",
+   "OriginalEventField": "Extra field 2",
+   "Foo": "Older Bar 2",
+   "Notes": "Updated First Annotation - all other fields remain",
+   "_AnnotatedBy": "admin",
+   "_AnnotationID": "TtAAAAAAAAA=",
+   "_Source": "Annotation"
+  },
   {
    "Timestamp": "2024-05-15T12:19:47Z",
    "Message": "Original Event Message 1",
@@ -177,17 +177,6 @@
    "Notes": "Foo is suspicious at being Bar!",
    "_AnnotatedBy": "admin",
    "_AnnotationID": "TdAAAAAAAAA=",
-   "_Source": "Annotation"
-  },
-  {
-   "Timestamp": "2024-05-15T12:36:27Z",
-   "Message": "Original Event Message 2",
-   "Description": "",
-   "OriginalEventField": "Extra field 2",
-   "Foo": "Older Bar 2",
-   "Notes": "Updated First Annotation - all other fields remain",
-   "_AnnotatedBy": "admin",
-   "_AnnotationID": "TtAAAAAAAAA=",
    "_Source": "Annotation"
   }
  ]
