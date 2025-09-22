@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -57,7 +58,9 @@ func ws_server_pem(
 	}
 	defer ws_.Close()
 
-	ws := http_comms.WrapWS(ws_)
+	key := fmt.Sprintf("server_pem->%v", req.RemoteAddr)
+	ws := http_comms.NewWS(key, ws_)
+	defer ws.Close()
 
 	for {
 		// Just read a message and ignore it.
@@ -86,13 +89,12 @@ func ws_receive_client_messages(
 	}
 	defer ws_.Close()
 
-	ws := http_comms.WrapWS(ws_)
+	// We are receiving messages from the endpoint
+	key := fmt.Sprintf("<-%v", req.RemoteAddr)
+	ws := http_comms.NewWS(key, ws_)
+	defer ws.Close()
 
-	ws.SetPongHandler(func(string) error {
-		deadline := utils.Now().Add(
-			http_comms.PongPeriod(config_obj))
-		return ws.SetReadDeadline(deadline)
-	})
+	ws.SetPongHandler(config_obj)
 
 	ctx, cancel := context.WithCancel(req.Context())
 	defer cancel()
@@ -104,7 +106,8 @@ func ws_receive_client_messages(
 			case <-ctx.Done():
 				return
 			case <-utils.GetTime().After(http_comms.PingWait(config_obj)):
-				_ = send_ping(ws, config_obj)
+				err := send_ping(ws, config_obj)
+				fmt.Printf("send-ping %v\n", err)
 			}
 		}
 	}()
@@ -229,17 +232,16 @@ func ws_send_client_messages(
 	}
 	defer ws_.Close()
 
-	ws := http_comms.WrapWS(ws_)
+	// Sending messages to the client
+	key := fmt.Sprintf("->%v", req.RemoteAddr)
+	ws := http_comms.NewWS(key, ws_)
+	defer ws.Close()
 
 	// Keep track of currently connected clients.
 	currentWSConnections.Inc()
 	defer currentWSConnections.Dec()
 
-	ws.SetPongHandler(func(string) error {
-		deadline := utils.Now().Add(http_comms.PongPeriod(config_obj))
-		_ = ws.SetReadDeadline(deadline)
-		return nil
-	})
+	ws.SetPongHandler(config_obj)
 
 	ctx, cancel := context.WithCancel(req.Context())
 	defer cancel()
@@ -334,7 +336,6 @@ func ws_send_client_messages(
 
 		// Check for conflicting clients
 		if notifier.IsClientDirectlyConnected(source) {
-
 			// Send a message that there is a client conflict.
 			journal, err := services.GetJournal(org_config_obj)
 			if err == nil {
@@ -356,10 +357,12 @@ func ws_send_client_messages(
 		// https://github.com/gorilla/websocket/issues/633)
 		go func() {
 			defer cancel()
+			defer ws.Close()
 
 			for {
 				deadline := utils.Now().Add(http_comms.PongPeriod(config_obj))
 				_, _, err = ws.NextReaderWithDeadline(deadline)
+				fmt.Printf("NextReaderWithDeadline %v\n", err)
 				if err != nil {
 					return
 				}

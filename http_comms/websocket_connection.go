@@ -24,39 +24,102 @@ var (
 // synchronize it.
 type Conn struct {
 	conn *websocket.Conn
+	key  string
+
+	// report stats in lock free way for the profile tracker.
+	stats *ConnStats
 
 	read_mu  sync.Mutex
 	write_mu sync.Mutex
 }
 
-func WrapWS(ws *websocket.Conn) *Conn {
-	return &Conn{
+func NewWS(key string, ws *websocket.Conn) *Conn {
+	res := &Conn{
 		conn: ws,
+		key:  key,
+		stats: &ConnStats{
+			create_time: utils.GetTime().Now(),
+			id:          utils.GetId(),
+		},
 	}
+
+	wsTracker.Register(key, res)
+
+	return res
 }
 
-func (self *Conn) SetPongHandler(h func(appData string) error) {
-	self.conn.SetPongHandler(h)
+func (self *Conn) SetPingHandler(h func(message string) error) {
+	self.conn.SetPingHandler(func(message string) error {
+		self.stats.SetLastPing(utils.GetTime().Now())
+
+		return h(message)
+	})
+}
+
+func (self *Conn) SetPongHandler(config_obj *config_proto.Config) {
+	self.conn.SetPongHandler(func(string) error {
+
+		// On the server this is the best estimate of the last ping we
+		// sent.
+		self.stats.SetLastPing(utils.GetTime().Now())
+
+		// Called with read_mu already held
+		deadline := utils.Now().Add(PongPeriod(config_obj))
+		return self._SetReadDeadline(deadline)
+	})
 }
 
 func (self *Conn) Close() {
 	// The Close and WriteControl methods can be called concurrently
 	// with all other methods.
-
 	self.conn.Close()
+
+	wsTracker.Unregister(self.key)
 }
 
 func (self *Conn) SetReadDeadline(deadline time.Time) error {
 	self.read_mu.Lock()
 	defer self.read_mu.Unlock()
 
+	self.stats.SetReadLock(true)
+	defer self.stats.SetReadLock(false)
+
+	return self._SetReadDeadline(deadline)
+}
+
+func (self *Conn) _SetReadDeadline(deadline time.Time) error {
+	stats := self.stats.Get()
+
+	if deadline.Before(stats.read_deadline) {
+		return nil
+	}
+
+	self.stats.SetReadDeadline(deadline)
 	return self.conn.SetReadDeadline(deadline)
 }
 
-func (self *Conn) SetWriteDeadline(deadline time.Time) error {
-	self.read_mu.Lock()
-	defer self.read_mu.Unlock()
+func (self *Conn) GetStats() *ConnStats {
+	return self.stats.Get()
+}
 
+func (self *Conn) SetWriteDeadline(deadline time.Time) error {
+	self.write_mu.Lock()
+	defer self.write_mu.Unlock()
+
+	self.stats.SetWriteLock(true)
+	defer self.stats.SetWriteLock(false)
+
+	return self._SetWriteDeadline(deadline)
+}
+
+func (self *Conn) _SetWriteDeadline(deadline time.Time) error {
+	stats := self.stats.Get()
+
+	if deadline.Before(stats.write_deadline) {
+		return nil
+	}
+
+	self.stats.SetWriteDeadline(deadline)
 	return self.conn.SetWriteDeadline(deadline)
 }
 
@@ -64,12 +127,18 @@ func (self *Conn) ReadMessage() (messageType int, p []byte, err error) {
 	self.read_mu.Lock()
 	defer self.read_mu.Unlock()
 
+	self.stats.SetReadLock(true)
+	defer self.stats.SetReadLock(false)
+
 	return self.conn.ReadMessage()
 }
 
 func (self *Conn) SetReadLimit(limit int64) {
 	self.read_mu.Lock()
 	defer self.read_mu.Unlock()
+
+	self.stats.SetReadLock(true)
+	defer self.stats.SetReadLock(false)
 
 	self.conn.SetReadLimit(limit)
 }
@@ -84,7 +153,10 @@ func (self *Conn) NextReaderWithDeadline(deadline time.Time) (int, io.Reader, er
 	self.read_mu.Lock()
 	defer self.read_mu.Unlock()
 
-	err := self.conn.SetReadDeadline(deadline)
+	self.stats.SetReadLock(true)
+	defer self.stats.SetReadLock(false)
+
+	err := self._SetReadDeadline(deadline)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -98,7 +170,10 @@ func (self *Conn) WriteMessageWithDeadline(
 	self.write_mu.Lock()
 	defer self.write_mu.Unlock()
 
-	err := self.conn.SetWriteDeadline(deadline)
+	self.stats.SetWriteLock(true)
+	defer self.stats.SetWriteLock(false)
+
+	err := self._SetWriteDeadline(deadline)
 	if err != nil {
 		return err
 	}
@@ -108,6 +183,9 @@ func (self *Conn) WriteMessageWithDeadline(
 func (self *Conn) WriteMessage(message_type int, message []byte) error {
 	self.write_mu.Lock()
 	defer self.write_mu.Unlock()
+
+	self.stats.SetWriteLock(true)
+	defer self.stats.SetWriteLock(false)
 
 	return self.conn.WriteMessage(message_type, message)
 }
@@ -180,7 +258,9 @@ func (self *WebSocketConnection) Id() uint64 {
 }
 
 func (self *WebSocketConnection) Close() {
-	self.cancel()
+	if self.cancel != nil {
+		self.cancel()
+	}
 	self.ws.Close()
 }
 
@@ -234,22 +314,25 @@ func (WebSocketConnectionFactoryImpl) NewWebSocketConnection(
 	// triggered to tear the connection down.
 	logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
 
-	ws := WrapWS(ws_)
+	ws := NewWS(key, ws_)
 
-	ws_.SetPingHandler(func(message string) error {
+	ws.SetPingHandler(func(message string) error {
 		logger.Debug("Socket %v: Received Ping", key)
 
 		deadline := utils.GetTime().Now().Add(PongPeriod(self.config_obj))
 
 		// Extend the read and write timeouts when a ping arrives from
-		// the server. We are currently holding the lock so do it
-		// at a later time.
-		go func() {
-			_ = ws.SetReadDeadline(deadline)
-			_ = ws.SetWriteDeadline(deadline)
-		}()
+		// the server.
 
-		err = ws.WriteControl(websocket.PongMessage,
+		// This ping handler is called from NextReaderWithDeadline and
+		// so it is already holding the read lock.
+		_ = ws._SetReadDeadline(deadline)
+
+		// We must set the write deadline with a lock since we are
+		// called with the read lock.
+		_ = ws.SetWriteDeadline(deadline)
+
+		err = ws_.WriteControl(websocket.PongMessage,
 			[]byte(message), utils.GetTime().Now().Add(writeWait))
 		if err == websocket.ErrCloseSent {
 			return nil
@@ -284,6 +367,7 @@ func (WebSocketConnectionFactoryImpl) NewWebSocketConnection(
 
 	// Pump messages from the remote server to the channel.
 	go func() {
+		defer ws.Close()
 		defer self.removeConnection(req, res.Id())
 
 		res.PumpMessagesFromServer(req)
@@ -291,6 +375,7 @@ func (WebSocketConnectionFactoryImpl) NewWebSocketConnection(
 
 	// Pump messages from the channel to the remote server.
 	go func() {
+		defer ws.Close()
 		defer self.removeConnection(req, res.Id())
 
 		res.PumpMessagesToServer()
