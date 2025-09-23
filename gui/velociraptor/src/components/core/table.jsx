@@ -15,6 +15,7 @@ import VeloAce, { SettingsButton } from '../core/ace.jsx';
 import VeloValueRenderer from '../utils/value.jsx';
 import { NavLink } from "react-router-dom";
 import ClientLink from '../clients/client-link.jsx';
+import FlowLink from '../flows/flow-link.jsx';
 import { HexViewPopup } from '../utils/hex.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
 import T from '../i8n/i8n.jsx';
@@ -222,16 +223,13 @@ export function getFormatter(column_type, text) {
         };
 
     case "flow":
+    case "flow_id":
         return (cell, row) => {
             let client_id = row["ClientId"];
             if (!client_id) {
                 return cell;
             };
-            return <NavLink
-                     tabIndex="0"
-                     id={cell}
-                     to={"/collected/" + client_id + "/" + cell}>{cell}
-                   </NavLink>;
+            return <FlowLink flow_id={cell} client_id={client_id}/>;
         };
 
     case "collapsed":
