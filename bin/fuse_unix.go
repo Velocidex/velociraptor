@@ -27,7 +27,7 @@ var (
 	fuse_directory = fuse_zip_command.Arg("directory", "A directory to mount on").
 			Required().String()
 
-	fuse_zip_accessor = fuse_command.Flag("accessor", "The accessor to use (default container)").
+	fuse_zip_accessor = fuse_command.Flag("accessor", "The accessor to use (default collector)").
 				Default("collector").String()
 
 	fuse_zip_prefix = fuse_command.Flag("prefix",

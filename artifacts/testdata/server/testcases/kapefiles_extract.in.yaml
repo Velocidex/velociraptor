@@ -9,7 +9,9 @@ Queries:
          ContainerPath=srcDir + TestFile)
 
   # Should refuse to pad out very sparse files.
-  - SELECT * FROM test_read_logs() WHERE Log =~ "is too sparse - unable to expand it" AND NOT Log =~ "SELECT"
+  - |
+    SELECT Log =~ "Collection-WIN-E5K9RC5GU23-2021-11-21T18_05_56-08_00.zip"
+    FROM test_read_logs() WHERE Log =~ "is too sparse - unable to expand it" AND NOT Log =~ "SELECT"
 
   # On Windows we can adjust all the timestamps but only Linux on the
   # mtime

@@ -106,7 +106,8 @@ func (self *TestSuite) TestAutomaticDecryption() {
 			Set("root", root_path_spec)) {
 
 		full_path, _ := scope.Associative(row, "OSPath")
-		lines = append(lines, full_path)
+		full_path_path, _ := scope.Associative(full_path, "Path")
+		lines = append(lines, full_path_path)
 	}
 
 	goldie.AssertJson(self.T(), "TestAutomaticDecryption", lines)

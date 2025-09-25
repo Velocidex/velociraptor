@@ -48,10 +48,12 @@ Output: [
 ]
 
 # Should refuse to pad out very sparse files.
-Query: SELECT * FROM test_read_logs() WHERE Log =~ "is too sparse - unable to expand it" AND NOT Log =~ "SELECT"
+Query: SELECT Log =~ "Collection-WIN-E5K9RC5GU23-2021-11-21T18_05_56-08_00.zip"
+FROM test_read_logs() WHERE Log =~ "is too sparse - unable to expand it" AND NOT Log =~ "SELECT"
+
 Output: [
  {
-  "Log": "Velociraptor: Error: File /uploads/ntfs/%5C%5C.%5CC%3A/$Extend/$UsnJrnl%3A$J is too sparse - unable to expand it.\n"
+  "Log =~ \"Collection-WIN-E5K9RC5GU23-2021-11-21T18_05_56-08_00.zip\"": true
  }
 ]
 
