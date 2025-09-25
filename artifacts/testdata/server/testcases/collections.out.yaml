@@ -35,7 +35,7 @@ Output: []
 # file from the serialized version of the pathspec.
 Query: SELECT read_file(filename=OSPath, accessor='zip'),
        read_file(filename=OSPath.String, accessor='zip'),
-       OSPath.String, OSPath.Components, OSPath.Path
+       OSPath.Components, OSPath.Path
 FROM glob(globs='*', accessor='zip',
       root=pathspec(Path='/uploads/file/tmp/',
                     DelegatePath=srcDir + '/vql/tools/collector/fixtures/import.zip'))
@@ -44,7 +44,6 @@ Output: [
  {
   "read_file(filename=OSPath, accessor='zip')": "hello world\n",
   "read_file(filename=OSPath.String, accessor='zip')": "hello world\n",
-  "OSPath.String": "{\"DelegatePath\":\"/home/mic/projects/velociraptor/vql/tools/collector/fixtures/import.zip\",\"Path\":\"/uploads/file/tmp/ls%5Cwith%5Cback%3Aslash\"}",
   "OSPath.Components": [
    "uploads",
    "file",
@@ -59,7 +58,7 @@ Output: [
 # the file from the serialized version of the pathspec.
 Query: SELECT read_file(filename=OSPath, accessor='collector'),
        read_file(filename=OSPath.String, accessor='collector'),
-       OSPath.String, OSPath.Components, OSPath.Path
+       OSPath.Components, OSPath.Path
 FROM glob(globs='*', accessor='collector',
       root=pathspec(Path='/uploads/file/tmp/',
                     DelegatePath=srcDir + '/vql/tools/collector/fixtures/import.zip'))
@@ -68,7 +67,6 @@ Output: [
  {
   "read_file(filename=OSPath, accessor='collector')": "hello world\n",
   "read_file(filename=OSPath.String, accessor='collector')": "hello world\n",
-  "OSPath.String": "{\"DelegatePath\":\"/home/mic/projects/velociraptor/vql/tools/collector/fixtures/import.zip\",\"Path\":\"/uploads/file/tmp/ls%5Cwith%5Cback%3Aslash\"}",
   "OSPath.Components": [
    "uploads",
    "file",

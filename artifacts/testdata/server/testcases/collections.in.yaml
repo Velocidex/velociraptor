@@ -48,7 +48,7 @@ Queries:
   - |
     SELECT read_file(filename=OSPath, accessor='zip'),
            read_file(filename=OSPath.String, accessor='zip'),
-           OSPath.String, OSPath.Components, OSPath.Path
+           OSPath.Components, OSPath.Path
     FROM glob(globs='*', accessor='zip',
           root=pathspec(Path='/uploads/file/tmp/',
                         DelegatePath=srcDir + '/vql/tools/collector/fixtures/import.zip'))
@@ -58,7 +58,7 @@ Queries:
   - |
     SELECT read_file(filename=OSPath, accessor='collector'),
            read_file(filename=OSPath.String, accessor='collector'),
-           OSPath.String, OSPath.Components, OSPath.Path
+           OSPath.Components, OSPath.Path
     FROM glob(globs='*', accessor='collector',
           root=pathspec(Path='/uploads/file/tmp/',
                         DelegatePath=srcDir + '/vql/tools/collector/fixtures/import.zip'))
