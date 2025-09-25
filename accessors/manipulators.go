@@ -665,7 +665,7 @@ func (self ZipFileManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	components := make([]string, 0, len(path.Components))
 	for _, c := range path.Components {
 		if c != "" {
-			components = append(components, utils.SanitizeString(c))
+			components = append(components, utils.SanitizeStringForZip(c))
 		}
 	}
 	result.Path = "/" + strings.Join(components, "/")
@@ -673,11 +673,13 @@ func (self ZipFileManipulator) AsPathSpec(path *OSPath) *PathSpec {
 }
 
 func (self ZipFileManipulator) PathJoin(path *OSPath) string {
-	components := []string{}
-	for _, c := range path.Components {
-		components = append(components, utils.SanitizeStringForZip(c))
+	osPathSerializations.Inc()
+
+	result := self.AsPathSpec(path)
+	if result.GetDelegateAccessor() == "" && result.GetDelegatePath() == "" {
+		return result.Path
 	}
-	return "/" + strings.Join(components, "/")
+	return result.String()
 }
 
 func (self ZipFileManipulator) PathParse(

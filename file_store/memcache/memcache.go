@@ -394,6 +394,7 @@ func (self *MemcacheFileWriter) _Flush(async bool) error {
 	if len(completions) == 0 &&
 		!self.closed &&
 		!truncated && self.buffer.Len() == 0 {
+		self.flushing = false
 		return nil
 	}
 
@@ -403,10 +404,11 @@ func (self *MemcacheFileWriter) _Flush(async bool) error {
 
 	// Flush in the foreground and wait until the data hits the disk.
 	if !async {
-
 		self.mu.Unlock()
 		self._FlushSync(buffer.Bytes(), truncated, completions)
 		self.mu.Lock()
+
+		self.flushing = false
 
 		return nil
 	}

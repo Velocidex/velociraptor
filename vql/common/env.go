@@ -116,8 +116,10 @@ func init() {
 					for _, env_var := range os.Environ() {
 						parts := strings.SplitN(env_var, "=", 2)
 
+						// Just hide ShadowedEnv but do not warn about
+						// it since there is nothing the caller can do
+						// to avoid it.
 						if utils.InString(ShadowedEnv, parts[0]) {
-							scope.Log("environ: access to env var %s is denied", parts[0])
 							continue
 						}
 
