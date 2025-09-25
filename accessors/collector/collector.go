@@ -161,19 +161,21 @@ func collectorPathToDelegatePath(full_path *accessors.OSPath) *accessors.OSPath 
 func (self *CollectorAccessor) maybeSetZipPassword(
 	full_path *accessors.OSPath) (*accessors.OSPath, error) {
 
-	// Password is already cached in the context - just return it as is.
-	_, pres := self.scope.GetContext(constants.ZIP_PASSWORDS)
-	if pres {
-
-		// Transform the path so it is ready to be used by the zip
-		// accessor.
-		return collectorPathToDelegatePath(full_path), nil
-	}
-
 	// If password is already set in the scope, just use it as it is.
 	pass, pres := self.scope.Resolve(constants.ZIP_PASSWORDS)
-	if pres && !utils.IsNil(pass) {
-		return collectorPathToDelegatePath(full_path), nil
+	if pres {
+		if utils.ToString(pass) != "" {
+			return collectorPathToDelegatePath(full_path), nil
+		}
+	} else {
+		// Password is already cached in the context - just return it as is.
+		pass, pres = self.scope.GetContext(constants.ZIP_PASSWORDS)
+		if pres && !utils.IsNil(pass) {
+
+			// Transform the path so it is ready to be used by the zip
+			// accessor.
+			return collectorPathToDelegatePath(full_path), nil
+		}
 	}
 
 	// Check if data.zip exists at the top level.
