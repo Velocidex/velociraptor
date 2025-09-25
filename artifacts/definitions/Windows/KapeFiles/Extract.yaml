@@ -59,7 +59,7 @@ sources:
                              filename=RootPathSpec + MetadataFile)
           })
 
-      LET ALLUploads = SELECT *, RootPathSpec + _Components AS FileUpload,
+      LET ALLUploads = SELECT *, ( RootPathSpec + _Components ).Path AS FileUpload,
                               OutputPathSpec + _Components[2:] AS Dest,
                               get(item=AllFileMetadata,
                                   field=vfs_path) AS Metadata

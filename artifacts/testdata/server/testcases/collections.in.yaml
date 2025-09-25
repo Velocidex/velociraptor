@@ -30,13 +30,38 @@ Queries:
               '/artifacts/testdata/files/encrypted_collector_pki.zip'))
 
   # Password is set in the scope so it can not leak in output
-  - LET ZIP_PASSWORDS = "hello"
+  - LET ZIP_PASSWORDS <= "hello"
   - SELECT read_file(filename=OSPath, accessor='collector')
     FROM glob(globs='**/BasicInformation.json',
       accessor='collector',
       root=pathspec(
           DelegatePath=srcDir +
               '/artifacts/testdata/files/encrypted_collector_password.zip'))
+
+
+  # Clear the password now.
+  - LET ZIP_PASSWORDS <= ""
+
+  # This file contains a complex filename with illegal characters. We
+  # escape those for the zip container. We must be able to read the
+  # file from the serialized version of the pathspec.
+  - |
+    SELECT read_file(filename=OSPath, accessor='zip'),
+           read_file(filename=OSPath.String, accessor='zip'),
+           OSPath.Components, OSPath.Path
+    FROM glob(globs='*', accessor='zip',
+          root=pathspec(Path='/uploads/file/tmp/',
+                        DelegatePath=srcDir + '/vql/tools/collector/fixtures/import.zip'))
+
+  # Same as above for the collector accessor. We must be able to read
+  # the file from the serialized version of the pathspec.
+  - |
+    SELECT read_file(filename=OSPath, accessor='collector'),
+           read_file(filename=OSPath.String, accessor='collector'),
+           OSPath.Components, OSPath.Path
+    FROM glob(globs='*', accessor='collector',
+          root=pathspec(Path='/uploads/file/tmp/',
+                        DelegatePath=srcDir + '/vql/tools/collector/fixtures/import.zip'))
 
   # Test we can pass definitions to the collect() plugin. This passes
   # a []string{} to artifact_definitions.

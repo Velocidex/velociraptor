@@ -298,7 +298,7 @@ func (self *TestSuite) TestCollectionWithDirectories() {
 			Set("accessor", "collector").
 			Set("root", root_path_spec)) {
 		line := json.MustMarshalString(row)
-		if strings.Contains(line, "/Subdir/data/hello.txt\"") {
+		if strings.Contains(line, `/Subdir/data/hello.txt\"`) {
 			found = true
 		}
 	}
@@ -321,7 +321,7 @@ func (self *TestSuite) TestCollectionWithDirectories() {
 			Set("accessor", "collector").
 			Set("root", root_path_spec)) {
 		line := json.MustMarshalString(row)
-		if strings.Contains(line, "/Subdir/data/hello.txt\"") {
+		if strings.Contains(line, `/Subdir/data/hello.txt\"`) {
 			found = true
 		}
 	}
