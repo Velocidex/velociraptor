@@ -75,7 +75,7 @@ func (self *Throttler) CanRun(stats *statsCollector) bool {
 	}
 
 	if self.iops_limit > 0 &&
-		stats.GetAverageIOPS() > self.cpu_load_limit {
+		stats.GetAverageIOPS() > self.iops_limit {
 		return false
 	}
 
