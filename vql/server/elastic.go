@@ -239,8 +239,9 @@ func upload_rows(
 				return
 			}
 
-			id = int64(utils.GetId())
-			err := append_row_to_buffer(ctx, scope, action, row, id, &buf, arg, opts)
+			id += int64(utils.GetId())
+			err := append_row_to_buffer(ctx, scope, action, row,
+				id, &buf, arg, opts)
 			if err != nil {
 				scope.Log("elastic: %v", err)
 				continue
@@ -279,14 +280,23 @@ func append_row_to_buffer(
 		row_dict.Delete("_index")
 	}
 
+	// Allow the user to specify the elastic document ID as the _id
+	// column.
+	_id, pres := row_dict.GetString("_id")
+	if pres {
+		row_dict.Delete("_id")
+	} else {
+		_id = fmt.Sprintf("%v", id)
+	}
+
 	var meta []byte
 	pipeline := arg.PipeLine
 	if pipeline != "" {
-		meta = []byte(fmt.Sprintf(`{ %q : {"_id" : "%d", "_index": %q, "pipeline": %q } }%s`,
-			action, id, index, pipeline, "\n"))
+		meta = []byte(fmt.Sprintf(`{ %q : {"_id" : "%s", "_index": %q, "pipeline": %q } }%s`,
+			action, _id, index, pipeline, "\n"))
 	} else {
-		meta = []byte(fmt.Sprintf(`{ %q : {"_id" : "%d", "_index": %q} }%s`,
-			action, id, index, "\n"))
+		meta = []byte(fmt.Sprintf(`{ %q : {"_id" : "%s", "_index": %q} }%s`,
+			action, _id, index, "\n"))
 	}
 
 	data, err := json.MarshalWithOptions(row_dict, opts)
