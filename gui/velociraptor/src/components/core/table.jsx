@@ -336,6 +336,29 @@ export function getFormatter(column_type, text) {
             return <NumberFormatter value={cell}/>;
         };
 
+        // A json object which is completely collapsed at all levels.
+    case "json/0":
+        return (cell, row) => <VeloValueRenderer
+                                value={cell}
+                                expand_map={{}} />;
+
+        // A json object which is completely collapsed at all levels
+        // except for the first level which is expanded.
+    case "json/1":
+        return (cell, row) => <VeloValueRenderer
+                                value={cell}
+                                expand_map={{0:1}} />;
+
+    case "json/2":
+        return (cell, row) => <VeloValueRenderer
+                                value={cell}
+                                expand_map={{0:1,1:1}} />;
+
+    case "json/3":
+        return (cell, row) => <VeloValueRenderer
+                                value={cell}
+                                expand_map={{0:1,1:1,2:1}} />;
+
     case "hidden":
         return (cell, row) =><></>;
 

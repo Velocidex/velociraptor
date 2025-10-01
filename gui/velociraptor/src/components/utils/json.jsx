@@ -17,7 +17,8 @@ const base64regex = new RegExp("(^[-A-Za-z0-9+/=]$)|(={1,3}$)");
 class RenderString extends Component {
     static propTypes = {
         value: PropTypes.any,
-        collapsed: PropTypes.bool,
+        expand_map: PropTypes.object,
+        depth: PropTypes.number,
     };
 
     state = {
@@ -108,13 +109,16 @@ class RenderObject extends Component {
     static propTypes = {
         key_item: PropTypes.string,
         value: PropTypes.any,
-        collapsed: PropTypes.bool,
+        expand_map: PropTypes.object,
+        depth: PropTypes.number,
         indent: PropTypes.number,
         trailingComponents: PropTypes.array,
     };
 
     componentDidMount = () => {
-        this.setState({expanded: !this.props.collapsed});
+        // Set the intiial expanded state.
+        let depth = this.props.depth || 0;
+        this.setState({expanded: this.props.expand_map[depth]});
     }
 
     state = {
@@ -154,7 +158,8 @@ class RenderObject extends Component {
                                 <RenderArray
                                   value={v}
                                   key_item={k}
-                                  collapsed={this.props.collapsed}
+                                  expand_map={this.props.expand_map}
+                                  depth={this.props.depth + 1}
                                   indent={indent  + 3 * scale}/>
                               </div>);
 
@@ -163,7 +168,8 @@ class RenderObject extends Component {
                                 <RenderObject
                                   value={v}
                                   key_item={k}
-                                  collapsed={this.props.collapsed}
+                                  expand_map={this.props.expand_map}
+                                  depth={this.props.depth + 1}
                                   indent={indent  + 3 * scale}/>
                               </div>);
 
@@ -178,7 +184,8 @@ class RenderObject extends Component {
                                 { pad_elements }
                                 <span className={classes}>{ k }</span>:
                                 <JsonView value={v}
-                                          collapsed={this.props.collapsed}/>
+                                          expand_map={this.props.expand_map}
+                                          depth={this.props.depth + 1} />
                               </div>);
             }
         });
@@ -323,7 +330,8 @@ class RenderArray extends RenderObject {
                        value={abridged}
                        key_item={this.props.key_item}
                        indent={this.props.indent}
-                       collapsed={this.props.collapsed}
+                       expand_map={this.props.expand_map}
+                       depth={this.props.depth + 1}
                        trailingComponents={buttons}
                      />
                      { this.state.showModal &&
@@ -345,11 +353,13 @@ class RenderArray extends RenderObject {
 export default class JsonView extends PureComponent {
     static propTypes = {
         value: PropTypes.any,
-        collapsed: PropTypes.bool,
+        expand_map: PropTypes.object,
         indent: PropTypes.number,
     };
 
     render() {
+        let expand_map = this.props.expand_map || {};
+        let depth = 0;
         let res = [];
         let pad = <span className="json-pad json-string"
            style={{paddingLeft: this.props.indent}}/>;
@@ -357,12 +367,14 @@ export default class JsonView extends PureComponent {
         if (_.isArray(this.props.value)) {
             res = <RenderArray value={this.props.value}
                                indent={this.props.indent}
-                               collapsed={this.props.collapsed} />;
+                               expand_map={expand_map}
+                               depth={depth} />;
 
         } else if (_.isObject(this.props.value)) {
             res = <RenderObject value={this.props.value}
                                 indent={this.props.indent}
-                                collapsed={this.props.collapsed} />;
+                                expand_map={expand_map}
+                                depth={depth} />;
 
         } else if (_.isString(this.props.value)) {
             res = <RenderString value={this.props.value} />;
