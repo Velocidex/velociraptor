@@ -2,6 +2,7 @@ package notebook_test
 
 import (
 	"fmt"
+	"testing"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -100,6 +101,10 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelines(t *assert.R)
 }
 
 func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
+	if testing.Short() {
+		self.T().Skip("skipping test in short mode - too flakey on CI.")
+		return
+	}
 	assert.Retry(self.T(), 10, time.Second,
 		self._TestNotebookManagerTimelineAnnotations)
 }
