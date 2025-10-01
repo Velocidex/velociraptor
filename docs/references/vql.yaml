@@ -3549,6 +3549,9 @@
     type: string
     description: The hash function to use (MD5,SHA1,SHA256)
     repeated: true
+  - name: max_size
+    type: uint64
+    description: The maximum size of the file that will be hashed (default 100mb)
   category: encode
   metadata:
     permissions: FILESYSTEM_READ
@@ -7604,6 +7607,9 @@
     type: string
     description: Process ID.
     required: true
+  - name: max_items
+    type: int64
+    description: The maximum number of process entries to return (default 10)
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -7618,6 +7624,9 @@
     type: string
     description: Process ID.
     required: true
+  - name: max_items
+    type: int64
+    description: The maximum number of process entries to return (default 10)
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -7632,6 +7641,9 @@
     type: string
     description: Process ID.
     required: true
+  - name: max_items
+    type: int64
+    description: The maximum number of process entries to return (default 10)
   category: popular
   platforms:
   - darwin_amd64_cgo
@@ -7660,6 +7672,9 @@
     type: vfilter.Lambda
     description: A VQL Lambda function to that receives a ProcessEntry and returns
       the data node for each process.
+  - name: max_items
+    type: int64
+    description: The maximum number of process entries to return (default 1000)
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -10586,8 +10601,8 @@
     It does not usually make sense to upload temp files using
     resumable uploads because the temporary file will be cleared after
     the query ends.
-
   type: Function
+  version: 2
   args:
   - name: file
     type: accessors.OSPath
@@ -11755,20 +11770,53 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: watch_syslog
-  description: 'Watch a syslog file and stream events from it. '
+  description: |
+    Watch a syslog file and stream events from it.
+
+    When the plugin starts watching, it seeks to the end of the file
+    and forwards any new lines from it.
+
+    This plugin will tail a line delimited text file and emit rows for
+    each new line that appears in the file (It does not have to be a
+    syslog file, as many programs log into a line delimited text
+    file).
+
+    You can specify a set of non-existent files in the `filename` arg
+    and the plugin will wait for the files to appear, then stream
+    their content. When new files appear, the plugin will also dump
+    their entire file content to ensure no lines are missed.
+
+    Sometimes it is not known in advance what the filename is, so in
+    this case you can specify the query parameter to search for new
+    files to watch periodically. If a new file appears, this plugin
+    will dump all its existing lines then seek to the end of the file
+    and continue dumping any new lines (So no lines should be missed).
+
+    ## Example:
+
+    ```vql
+    SELECT OSPath, Line
+    FROM watch_syslog(query={
+        SELECT OSPath FROM glob(globs='/var/log/logfile*.log')
+    })
+    ```
+
   type: Plugin
   args:
   - name: filename
     type: accessors.OSPath
     description: A list of log files to parse.
     repeated: true
-    required: true
   - name: accessor
     type: string
     description: The accessor to use.
   - name: buffer_size
     type: int
     description: Maximum size of line buffer.
+  - name: query
+    type: StoredQuery
+    description: If specified we run this query periodically to watch for new files.
+      Rows must have an OSPath column.
   category: event
   metadata:
     permissions: FILESYSTEM_READ
