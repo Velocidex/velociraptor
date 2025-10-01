@@ -7,16 +7,23 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+)
+
+const (
+	DUMP_FILES = true
 )
 
 type ScannerPluginArgs struct {
@@ -99,6 +106,144 @@ func (self ScannerPlugin) Call(
 	return output_chan
 }
 
+type fileEntry struct {
+	full_path *accessors.OSPath
+	cancel    func()
+}
+
+type fileManager struct {
+	mu    sync.Mutex
+	files map[string]*fileEntry
+
+	config_obj    *config_proto.Config
+	accessor      string
+	ctx           context.Context
+	scope         vfilter.Scope
+	event_channel chan vfilter.Row
+	query         vfilter.StoredQuery
+}
+
+func (self *fileManager) AddFiles(
+	files []*accessors.OSPath, dump_new bool) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	new_files := make(map[string]*fileEntry)
+	for _, f := range files {
+		key := f.String()
+
+		entry, pres := self.files[key]
+		if pres {
+			new_files[key] = entry
+			continue
+		}
+		entry = &fileEntry{
+			full_path: f,
+		}
+
+		syslog_service := GlobalSyslogService(self.config_obj)
+
+		entry.cancel = syslog_service.Register(
+			f, self.accessor, self.ctx, self.scope,
+			self.event_channel)
+		new_files[key] = entry
+
+		// This is a new file - dump it if we need to.
+		if dump_new {
+			accessor, err := accessors.GetAccessor(self.accessor, self.scope)
+			if err == nil {
+				_ = syslog_service.monitorOnce(
+					entry.full_path, self.accessor, accessor, &Cursor{})
+			}
+		}
+	}
+
+	// Delete old trackers if the file is disappeared.
+	for key, entry := range self.files {
+		_, pres := new_files[key]
+		if !pres {
+			entry.cancel()
+		}
+	}
+
+	self.files = new_files
+
+	GlobalSyslogService(self.config_obj).Reap()
+}
+
+func (self *fileManager) Start() {
+	if len(self.files) == 0 && self.query == nil {
+		self.Close()
+		return
+	}
+
+	sleep_time := 3 * time.Second
+	if self.config_obj.Defaults != nil {
+		if self.config_obj.Defaults.WatchPluginFrequency > 0 {
+			sleep_time = time.Second * time.Duration(
+				self.config_obj.Defaults.WatchPluginFrequency)
+		}
+	}
+
+	go func() {
+		for {
+			var files []*accessors.OSPath
+
+			for row := range self.query.Eval(self.ctx, self.scope) {
+				full_path_any, pres := self.scope.Associative(row, "OSPath")
+				if pres {
+					full_path, ok := full_path_any.(*accessors.OSPath)
+					if ok {
+						files = append(files, full_path)
+					}
+				}
+			}
+			self.AddFiles(files, DUMP_FILES)
+			utils.SleepWithCtx(self.ctx, sleep_time)
+		}
+	}()
+}
+
+func (self *fileManager) Close() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.files == nil {
+		return
+	}
+
+	for _, entry := range self.files {
+		entry.cancel()
+	}
+
+	close(self.event_channel)
+	self.files = nil
+}
+
+func newFileManager(
+	ctx context.Context,
+	scope vfilter.Scope,
+	config_obj *config_proto.Config,
+	accessor string,
+	query vfilter.StoredQuery) *fileManager {
+	return &fileManager{
+		ctx:           ctx,
+		config_obj:    config_obj,
+		accessor:      accessor,
+		scope:         scope,
+		query:         query,
+		event_channel: make(chan vfilter.Row),
+		files:         make(map[string]*fileEntry),
+	}
+}
+
+type WatchSyslogPluginArgs struct {
+	Filenames  []*accessors.OSPath `vfilter:"optional,field=filename,doc=A list of log files to parse."`
+	Accessor   string              `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	BufferSize int                 `vfilter:"optional,field=buffer_size,doc=Maximum size of line buffer."`
+	Query      vfilter.StoredQuery `vfilter:"optional,field=query,doc=If specified we run this query periodically to watch for new files. Rows must have an OSPath column."`
+}
+
 type WatchSyslogPlugin struct{}
 
 func (self WatchSyslogPlugin) Call(
@@ -111,7 +256,7 @@ func (self WatchSyslogPlugin) Call(
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "watch_syslog", args)()
 
-		arg := &ScannerPluginArgs{}
+		arg := &WatchSyslogPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("watch_syslog: %v", err)
@@ -127,18 +272,12 @@ func (self WatchSyslogPlugin) Call(
 		}
 
 		config_obj := &config_proto.Config{Client: client_config_obj}
+		manager := newFileManager(ctx, scope, config_obj,
+			arg.Accessor, arg.Query)
+		defer manager.Close()
 
-		event_channel := make(chan vfilter.Row)
-
-		// Register the output channel as a listener to the
-		// global event.
-		for _, filename := range arg.Filenames {
-			cancel := GlobalSyslogService(config_obj).Register(
-				filename, arg.Accessor, ctx, scope,
-				event_channel)
-
-			defer cancel()
-		}
+		manager.AddFiles(arg.Filenames, !DUMP_FILES)
+		manager.Start()
 
 		// Wait until the query is complete.
 		for {
@@ -146,7 +285,11 @@ func (self WatchSyslogPlugin) Call(
 			case <-ctx.Done():
 				return
 
-			case event := <-event_channel:
+			case event, ok := <-manager.event_channel:
+				if !ok {
+					return
+				}
+
 				select {
 				case <-ctx.Done():
 					return
@@ -164,7 +307,7 @@ func (self WatchSyslogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 	return &vfilter.PluginInfo{
 		Name:     "watch_syslog",
 		Doc:      "Watch a syslog file and stream events from it. ",
-		ArgType:  type_map.AddType(scope, &ScannerPluginArgs{}),
+		ArgType:  type_map.AddType(scope, &WatchSyslogPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
