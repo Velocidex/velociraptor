@@ -191,6 +191,29 @@ func (self *SyslogWatcherService) findLastLineOffset(
 	return cursor
 }
 
+func (self *SyslogWatcherService) Reap() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	new_registrations := make(map[string][]*Handle)
+
+	for key, handles := range self.registrations {
+		new_handles := make([]*Handle, 0, len(handles))
+		for _, handle := range handles {
+			select {
+			case <-handle.ctx.Done():
+				handle.scope.Log("Unregistering watcher for %v", key)
+			default:
+				new_handles = append(new_handles, handle)
+			}
+		}
+		if len(new_handles) > 0 {
+			new_registrations[key] = new_handles
+		}
+	}
+	self.registrations = new_registrations
+}
+
 func (self *SyslogWatcherService) monitorOnce(
 	filename *accessors.OSPath,
 	accessor_name string,
@@ -326,7 +349,9 @@ func (self *SyslogWatcherService) distributeLine(
 	filename *accessors.OSPath,
 	key string,
 	handles []*Handle) []*Handle {
-	event := ordereddict.NewDict().Set("Line", line)
+	event := ordereddict.NewDict().
+		Set("OSPath", filename).
+		Set("Line", line)
 
 	new_handles := make([]*Handle, 0, len(handles))
 	for _, handle := range handles {
