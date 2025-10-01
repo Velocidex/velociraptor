@@ -13,9 +13,10 @@ import { JSONparse } from '../utils/json_parse.jsx';
 
 // components/core/table.jsx getFormatter
 const column_types = [
-    "string", "number", "mb", "timestamp", "nobreak", "tree", "url", "url_internal",
-    "safe_url", "flow", "preview_upload", "download", "client", "hex",
-    "base64", "collapsed"
+    "string", "number", "mb", "timestamp", "nobreak",
+    "json/0", "json/1", "json/2", "json/3",
+    "url", "url_internal", "safe_url", "flow", "preview_upload",
+    "download", "client", "hex", "base64", "collapsed"
 ];
 
 const column_type_regex = /^([\s\S]*)LET ColumnTypes<=dict\((.+)\)\n\n([\S\s]+)$/m;
