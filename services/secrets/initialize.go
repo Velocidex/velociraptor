@@ -42,7 +42,9 @@ var (
 			"private_key",
 			"hostname",
 		},
-		Template: map[string]string{},
+		Template: map[string]string{
+			"username": "uploader",
+		},
 	}, {
 		TypeName:    constants.HTTP_SECRETS,
 		Description: "Credentials to be used in HTTP requests with http_client() calls.",
