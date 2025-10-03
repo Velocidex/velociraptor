@@ -36,14 +36,14 @@ type: CLIENT
 parameters:
   - name: SearchGlob
     description: Glob to search
-    default: C:\Users\**\*.{rtf,doc,dot,docx,docm,dotx,dotm,docb,xls,xlt,xlm,xlsx,xlsm,xltx,xltm,xlsb,ppt,pptx,pptm,potx,potm}
+    default: C:\Users\**\*.{rtf,doc,dot,docx,docm,dotx,dotm,docb,xls,xlt,xlm,xlsx,xlsm,xltx,xltm,xlsb,ppt,pptx,pptm,potx,potm,ppsx}
   - name: TemplateFileRegex
     description: Regex to search inside resource section.
-    default: '(document|settings)\.xml\.rels$'
+    default: '\.xml\.rels$'
     type: regex
   - name: TemplateTargetRegex
     description: Regex to search inside resource section.
-    default: '^(https?|smb|\\\\|//|mhtml)'
+    default: '^(https?|smb|\\\\|//|mhtml|script)'
     type: regex
   - name: UploadDocument
     type: bool
