@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	VERSION = "0.75.1"
+	VERSION = "0.75.2"
 
 	// This is the version of dependent client binaries that will be
 	// included in the offline collector or MSI. Usually this will be

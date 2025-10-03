@@ -402,6 +402,14 @@ func GetQueryDependencies(
 
 		dependency[artifact_name] = depth
 
+		if dep.Export != "" {
+			err := GetQueryDependencies(ctx, config_obj, repository,
+				dep.Export, 0, dependency)
+			if err != nil {
+				return err
+			}
+		}
+
 		// Add any artifact that this one imports as a dependency.
 		for _, imp := range dep.Imports {
 			_, pres = dependency[imp]

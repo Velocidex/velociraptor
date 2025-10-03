@@ -318,8 +318,11 @@ func (self _SplunkPlugin) maybeForceSecrets(
 		return nil
 	}
 
-	if config_obj.Security != nil &&
-		!config_obj.Security.VqlMustUseSecrets {
+	if config_obj.Security == nil {
+		return nil
+	}
+
+	if !config_obj.Security.VqlMustUseSecrets {
 		return nil
 	}
 

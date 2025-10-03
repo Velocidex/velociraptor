@@ -172,6 +172,10 @@ func (self *VelociraptorUploader) processTransaction(t *Transaction) (
 
 	defer func() {
 		self.Responder.FlowContext().DecTransaction()
+
+		self.mu.Lock()
+		defer self.mu.Unlock()
+
 		delete(self.current, t.UploadId)
 	}()
 
@@ -275,7 +279,7 @@ func (self *VelociraptorUploader) Upload(
 
 	cached, pres, closer := DeduplicateUploads(scope, store_as_name)
 	defer closer()
-	if pres {
+	if pres && cached != nil {
 		return cached, nil
 	}
 

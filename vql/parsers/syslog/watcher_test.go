@@ -69,8 +69,10 @@ func (self *SyslogWatcherTestSuite) SetupTest() {
 				if !ok {
 					return
 				}
+				line, _ := self.scope.Associative(item, "Line")
 				self.mu.Lock()
-				self.result = append(self.result, item)
+				self.result = append(self.result, ordereddict.NewDict().
+					Set("Line", line))
 				self.mu.Unlock()
 			}
 		}

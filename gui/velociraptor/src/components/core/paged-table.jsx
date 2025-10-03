@@ -1589,7 +1589,7 @@ export class TransformViewer extends Component {
 
         if (transform.filter_column) {
             result.push(
-                <div className="transform-viewer">
+                <div className="transform-viewer"  key={result.length}>
                   <ToolTip tooltip={T("Clear")} key="1">
                     <Button onClick={()=>{
                         let new_transform = Object.assign({}, this.props.transform);
@@ -1610,7 +1610,7 @@ export class TransformViewer extends Component {
 
         if (transform.sort_column) {
             result.push(
-                <div className="transform-viewer">
+                <div className="transform-viewer" key={result.length}>
                   <ToolTip tooltip={T("Transformed")} key="2" >
                     <Button onClick={()=>{
                         let new_transform = Object.assign({}, this.props.transform);

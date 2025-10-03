@@ -1,0 +1,258 @@
+name: Windows.Collectors.Remapping
+description: |
+  Calculate a remapping file for a collection zip.
+
+  You can get the colection zip using the offline collector or by
+  exporting the Windows.Triage.Targets collection from the GUI.
+
+  This artifact calculates a remapping config that allows Velociraptor
+  to directly analyze the ZIP file itself, without needing to extract
+  it first. This is useful for serverless analysis and to avoid having
+  to import the artifact first.
+
+  In a way, this remapping allows Velociraptor to treat the collection
+  zip as a dead disk image in a similar way to
+  Generic.Utils.DeadDiskRemapping
+
+  ## Use instructions
+
+  1. Collect files using Triage collector - For example
+     Windows.Registry.AppCompatCache with the _BasicCollection target
+     is a good option.
+  2. Generate a remapping file:
+
+  ```
+  velociraptor artifacts collect -v Windows.Collectors.Remapping
+     --args ImagePath=/path/to/triage_collection.zip
+     --args WriteRemappingPath=/tmp/test.remapping.yaml
+  ```
+
+  3. Apply the remapping file when collecting further artifacts:
+
+  ```
+  velociraptor --remap /tmp/test.remapping.yaml
+    artifacts collect -v Windows.Registry.Hunter
+       --args RemappingStrategy=None
+  ```
+
+  Note that for Windows.Registry.Hunter we need to disable its own
+  remapping config so that the remapping we provide takes hold.
+
+type: SERVER
+
+parameters:
+  - name: ImagePath
+    default: /tmp/image.dd
+    description: Path to the image file to inspect.
+
+  - name: Accessor
+    description: |
+      Accessor to read the image with.
+
+      If not provided guess based on image file extension.
+
+  - name: Hostname
+    default: Virtual Host
+
+  - name: Upload
+    type: bool
+    default: "Y"
+    description: If specified we upload the generated YAML
+
+  - name: WriteRemappingPath
+    description: If specified we write the yaml file to this path
+
+  - name: CommonRemapping
+    description: Common clauses for all remapping in YAML
+    default: |
+      remappings:
+      - type: permissions
+        permissions:
+        - COLLECT_CLIENT
+        - FILESYSTEM_READ
+        - FILESYSTEM_WRITE
+        - READ_RESULTS
+        - MACHINE_STATE
+        - SERVER_ADMIN
+        - COLLECT_SERVER
+        - EXECVE
+      - type: impersonation
+        os: windows
+        hostname: {{ .Hostname }}
+        env:
+        - key: SystemRoot
+          value: C:\Windows
+        - key: WinDir
+          value: C:\Windows
+        disabled_functions:
+        - amsi
+        - lookupSID
+        - token
+        disabled_plugins:
+        - execve
+        - http_client
+        - users
+        - certificates
+        - handles
+        - pslist
+        - interfaces
+        - modules
+        - netstat
+        - partitions
+        - proc_dump
+        - proc_yara
+        - vad
+        - winobj
+        - wmi
+      - type: shadow
+        from:
+          accessor: zip
+        "on":
+          accessor: zip
+      - type: shadow
+        from:
+          accessor: raw_reg
+        "on":
+          accessor: raw_reg
+      - type: shadow
+        from:
+          accessor: data
+        "on":
+          accessor: data
+
+export: |
+   LET Unescape(Path) = regex_transform(source=Path, map=dict(
+       `%3A`=":"
+     ), key="A")
+
+   -- Searches for a partition with a Windows directory, Unless this
+   -- is a partition image.
+   LET _GetRootAccessor(ImagePath, Accessor) = SELECT
+     pathspec(
+        DelegatePath=ImagePath,
+        DelegateAccessor=Accessor,
+        Path=Unescape(Path=OSPath.Path)) AS OSPath
+     FROM glob(accessor="collector", globs="*:", root=pathspec(
+       DelegatePath=ImagePath,
+       DelegateAccessor=Accessor,
+       Path="/uploads/auto/"))
+     WHERE log(message="Container Root OSPath at %v", args=OSPath)
+
+   LET _MapHiveToKey(Hive, Key, Name, ImagePath) = log(dedup=-1,
+      message="<green>Adding hive %v</>", args=Hive) &&
+   dict(type="mount",
+    `description`=Name,
+    `from`=dict(accessor="raw_reg",
+      path_type="registry",
+      prefix=pathspec(
+        Path="/",
+        DelegateAccessor="collector",
+        Delegate=ImagePath + Hive)),
+    on=dict(accessor="registry", prefix=Key, path_type="registry"))
+
+   LET _MapDirHiveToKey(Hive, Key, Name) = log(dedup=-1,
+      message="<green>Adding hive %v</>", args=Hive) &&
+   dict(type="mount",
+    `description`=Name,
+    `from`=dict(accessor="raw_reg",
+      path_type="registry",
+      prefix=pathspec(
+        Path="/",
+        DelegateAccessor="file",
+        DelegatePath=Hive)),
+    on=dict(accessor="registry", prefix=Key, path_type="registry"))
+
+    -- Look for user hives and map them in HKEY_USERS
+    LET _FindUserHives(ImagePath) = SELECT _MapHiveToKey(
+           Name="Map User hive for " + OSPath[-2],
+           Hive=OSPath,
+           Key="HKEY_USERS\\" + OSPath[-2],
+           ImagePath=ImagePath
+        ) AS Map
+      FROM glob(globs='/Users/*/NTUser.DAT',
+                accessor="collector",
+                root=ImagePath)
+      WHERE log(dedup=-1, message="<green>Found User Hive at %v</>", args=OSPath.Path)
+
+    LET _FindDirUserHives(ImagePath) = SELECT _MapDirHiveToKey(
+           Name="Map User hive for " + OSPath[-2],
+           Hive=OSPath,
+           Key="HKEY_USERS\\" + OSPath[-2]) AS Map
+      FROM glob(globs='/Users/*/NTUser.DAT',
+                root=ImagePath)
+      WHERE log(dedup=-1, message="<green>Found User Hive at %v</>", args=OSPath.Path)
+
+    LET CalculateWindowsMappings(ImagePath) = Remappings.remappings + (
+       dict(type="mount",
+            `from`=dict(accessor="collector", prefix=ImagePath),
+            on=dict(accessor="ntfs", prefix="\\\\.\\C:", path_type="ntfs")
+      ),
+       dict(type="mount",
+            `from`=dict(accessor="collector", prefix=ImagePath),
+            on=dict(accessor="file", prefix="C:", path_type="windows")
+      ),
+       dict(type="mount",
+            `from`=dict(accessor="collector", prefix=ImagePath),
+            on=dict(accessor="auto", prefix="C:", path_type="windows")
+      ),
+      _MapHiveToKey(Name="Map Software Hive",
+                    ImagePath=ImagePath,
+                    Hive="/Windows/System32/Config/SOFTWARE",
+                    Key="HKEY_LOCAL_MACHINE/Software"),
+      _MapHiveToKey(Name="Map Security Hive",
+                    ImagePath=ImagePath,
+                    Hive="/Windows/System32/Config/Security",
+                    Key="HKEY_LOCAL_MACHINE/Security"),
+      _MapHiveToKey(Name="Map System Hive",
+                    ImagePath=ImagePath,
+                    Hive="/Windows/System32/Config/System",
+                    Key="HKEY_LOCAL_MACHINE/System"),
+      _MapHiveToKey(Name="Map SAM Hive",
+                    ImagePath=ImagePath,
+                    Hive="/Windows/System32/Config/SAM",
+                    Key="SAM"),
+      _MapHiveToKey(Name="Map Amcache Hive",
+                    ImagePath=ImagePath,
+                    Hive="/Windows/appcompat/Programs/Amcache.hve",
+                    Key="Amcache")
+    ) + _FindUserHives(ImagePath=ImagePath).Map
+
+sources:
+- query: |
+    LET Remappings = parse_yaml(
+      filename=template(template=CommonRemapping,
+                        expansion=dict(Hostname=Hostname)),
+      accessor="data")
+
+    -- Select the type of mapping to calculate depending on what ImagePath is.
+    LET CalculateMappings <= SELECT * FROM foreach(row={
+      SELECT OSPath
+      FROM _GetRootAccessor(ImagePath=ImagePath, Accessor="auto")
+    },
+    query={
+      SELECT * FROM CalculateWindowsMappings(ImagePath=OSPath)
+    })
+
+    LET YamlText <= serialize(format="yaml",
+         item=dict(remappings=CalculateMappings))
+
+    LET _ <= WriteRemappingPath &&
+       copy(dest=WriteRemappingPath, accessor='data', filename=YamlText)
+
+    SELECT Upload && upload(accessor="data", file=YamlText, name="remapping.yaml") AS Upload,
+           WriteRemappingPath &&
+              copy(dest=WriteRemappingPath,
+                   accessor='data',
+                   filename=YamlText) AS RemappingFile
+    FROM scope()
+
+- name: TestRegistry
+  query:
+    LET _ <= remap(config=YamlText)
+    SELECT OSPath
+    FROM glob(globs="HKEY_LOCAL_MACHINE/Software/*", accessor='registry')
+
+- name: TestFile
+  query:
+    SELECT OSPath
+    FROM glob(globs="*/*")

@@ -104,7 +104,7 @@ func (self *metadataManager) Set(
 
 	if utils.GetTime().Now().Sub(last_write) > time.Second &&
 		repository != nil {
-		self.SaveMetadata(self.ctx, self.config_obj, self.repository)
+		_ = self.SaveMetadata(self.ctx, self.config_obj, self.repository)
 	}
 }
 
@@ -131,7 +131,7 @@ func (self *metadataManager) HouseKeeping(
 				continue
 			}
 
-			self.SaveMetadata(ctx, config_obj, repository)
+			_ = self.SaveMetadata(ctx, config_obj, repository)
 		}
 	}
 }

@@ -9,10 +9,10 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
-    - name: Set up Go 1.23
+    - name: Set up Go 1.24
       uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe
       with:
-        go-version: 1.23
+        go-version: 1.24.7
 
         # Caching seems to really slow down the build due to the time
         # taken to save the cache.

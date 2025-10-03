@@ -1159,7 +1159,7 @@ autoexec:
         # Hex encoded sha256 hash of the file. Endpoints will check
         # this hash against their fetch file to ensure it was
         # correctly transferred.
-        hash: 1234
+        expected_hash: 1234
 
         # If set on a request we refresh the hash.
         materialize: true

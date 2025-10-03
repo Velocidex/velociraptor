@@ -21,7 +21,12 @@ type Timestamps struct {
 
 var (
 	knownMetadataFiles = [][]string{
+		// 0.74 and below
 		{"results", "Windows.KapeFiles.Targets/All File Metadata.json"},
+
+		// 0.75 +
+		{"results", "Windows.KapeFiles.Targets/All Matches Metadata.json"},
+		{"results", "Windows.Triage.Targets/All Matches Metadata.json"},
 	}
 )
 

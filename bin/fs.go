@@ -479,24 +479,24 @@ func init() {
 		switch command {
 		case fs_command_ls.FullCommand():
 			err := doLS(*fs_command_ls_path, *fs_command_accessor)
-			kingpin.FatalIfError(err, fs_command_ls.FullCommand())
+			kingpin.FatalIfError(err, "%s", fs_command_ls.FullCommand())
 
 		case fs_command_rm.FullCommand():
 			err := doRM(*fs_command_rm_path, *fs_command_accessor)
-			kingpin.FatalIfError(err, fs_command_rm.FullCommand())
+			kingpin.FatalIfError(err, "%s", fs_command_rm.FullCommand())
 
 		case fs_command_cp.FullCommand():
 			err := doCp(*fs_command_cp_path,
 				*fs_command_accessor, *fs_command_cp_outdir)
-			kingpin.FatalIfError(err, fs_command_cp.FullCommand())
+			kingpin.FatalIfError(err, "%s", fs_command_cp.FullCommand())
 
 		case fs_command_cat.FullCommand():
 			err := doCat(*fs_command_cat_path, *fs_command_accessor)
-			kingpin.FatalIfError(err, fs_command_cat.FullCommand())
+			kingpin.FatalIfError(err, "%s", fs_command_cat.FullCommand())
 
 		case fs_command_zcat.FullCommand():
 			err := doZCat(*fs_command_zcat_chunk_path, *fs_command_zcat_file_path)
-			kingpin.FatalIfError(err, fs_command_zcat.FullCommand())
+			kingpin.FatalIfError(err, "%s", fs_command_zcat.FullCommand())
 
 		default:
 			return false

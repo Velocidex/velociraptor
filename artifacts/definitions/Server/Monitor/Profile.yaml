@@ -82,7 +82,6 @@ sources:
              get(member="Line") AS Line
       FROM profile(allocs=Allocs, block=Block, goroutine=Goroutine,
                    heap=Heap, mutex=Mutex, profile=Profile, trace=Trace,
-                   logs=Logs, queries=QueryLogs, metrics=Metrics,
                    debug=if(condition=Verbose, then=2, else=1),
                    duration=atoi(string=Duration))
 

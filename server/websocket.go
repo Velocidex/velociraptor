@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -14,7 +15,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/http_comms"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -32,7 +32,7 @@ var (
 	conflictError     = errors.New("Another Client connection exists. " +
 		"Only a single instance of the client is " +
 		"allowed to connect at the same time.")
-	notConnectedError = errors.New("WS Socket is not conencted")
+	notConnectedError = errors.New("WS Socket is not connected")
 
 	currentWSConnections = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "client_comms_current_ws_connections",
@@ -58,7 +58,9 @@ func ws_server_pem(
 	}
 	defer ws_.Close()
 
-	ws := &http_comms.Conn{Conn: ws_}
+	key := fmt.Sprintf("server_pem->%v", req.RemoteAddr)
+	ws := http_comms.NewWS(key, ws_)
+	defer ws.Close()
 
 	for {
 		// Just read a message and ignore it.
@@ -87,13 +89,12 @@ func ws_receive_client_messages(
 	}
 	defer ws_.Close()
 
-	ws := &http_comms.Conn{Conn: ws_}
+	// We are receiving messages from the endpoint
+	key := fmt.Sprintf("<-%v", req.RemoteAddr)
+	ws := http_comms.NewWS(key, ws_)
+	defer ws.Close()
 
-	ws.SetPongHandler(func(string) error {
-		deadline := utils.Now().Add(
-			http_comms.PongPeriod(config_obj))
-		return ws.SetReadDeadline(deadline)
-	})
+	ws.SetPongHandler(config_obj)
 
 	ctx, cancel := context.WithCancel(req.Context())
 	defer cancel()
@@ -105,7 +106,8 @@ func ws_receive_client_messages(
 			case <-ctx.Done():
 				return
 			case <-utils.GetTime().After(http_comms.PingWait(config_obj)):
-				_ = send_ping(ws, config_obj)
+				err := send_ping(ws, config_obj)
+				fmt.Printf("send-ping %v\n", err)
 			}
 		}
 	}()
@@ -230,17 +232,16 @@ func ws_send_client_messages(
 	}
 	defer ws_.Close()
 
-	ws := &http_comms.Conn{Conn: ws_}
+	// Sending messages to the client
+	key := fmt.Sprintf("->%v", req.RemoteAddr)
+	ws := http_comms.NewWS(key, ws_)
+	defer ws.Close()
 
 	// Keep track of currently connected clients.
 	currentWSConnections.Inc()
 	defer currentWSConnections.Dec()
 
-	ws.SetPongHandler(func(string) error {
-		deadline := utils.Now().Add(http_comms.PongPeriod(config_obj))
-		_ = ws.SetReadDeadline(deadline)
-		return nil
-	})
+	ws.SetPongHandler(config_obj)
 
 	ctx, cancel := context.WithCancel(req.Context())
 	defer cancel()
@@ -335,7 +336,6 @@ func ws_send_client_messages(
 
 		// Check for conflicting clients
 		if notifier.IsClientDirectlyConnected(source) {
-
 			// Send a message that there is a client conflict.
 			journal, err := services.GetJournal(org_config_obj)
 			if err == nil {
@@ -357,16 +357,12 @@ func ws_send_client_messages(
 		// https://github.com/gorilla/websocket/issues/633)
 		go func() {
 			defer cancel()
+			defer ws.Close()
 
 			for {
 				deadline := utils.Now().Add(http_comms.PongPeriod(config_obj))
-				err := ws.SetReadDeadline(deadline)
-				if err != nil {
-					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-					logger.Error("<red>ws_send_client_messages SetReadDeadline</> %v", err)
-				}
-
-				_, _, err = ws.NextReader()
+				_, _, err = ws.NextReaderWithDeadline(deadline)
+				fmt.Printf("NextReaderWithDeadline %v\n", err)
 				if err != nil {
 					return
 				}

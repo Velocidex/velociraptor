@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/services/scheduler"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/rand"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
@@ -407,5 +408,6 @@ sources:
 }
 
 func TestNotebookManager(t *testing.T) {
+	defer rand.DisableRand()
 	suite.Run(t, &NotebookManagerTestSuite{})
 }

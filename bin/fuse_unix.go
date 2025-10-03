@@ -27,23 +27,28 @@ var (
 	fuse_directory = fuse_zip_command.Arg("directory", "A directory to mount on").
 			Required().String()
 
-	fuse_zip_accessor = fuse_command.Flag("accessor", "The accessor to use (default container)").
+	fuse_zip_accessor = fuse_command.Flag("accessor", "The accessor to use (default collector)").
 				Default("collector").String()
 
-	fuse_zip_prefix = fuse_command.Flag("prefix", "Export all files below this directory in the zip file").
-			Default("/").String()
+	fuse_zip_prefix = fuse_command.Flag("prefix",
+		"Export all files below this directory in the zip file").
+		Default("/").String()
 
 	fuse_files = fuse_zip_command.Arg("files", "list of zip files to mount").
 			Required().Strings()
 
-	fuse_options_map_device_names_to_letters = fuse_zip_command.Flag("map_device_names_to_letters", "Convert raw device names to drive letters").
-							Bool()
-	fuse_options_strip_colons_on_drive_letters = fuse_zip_command.Flag("strip_colons_on_drive_letters", "Remove the : on drive letters").
-							Bool()
-	fuse_options_unix_path_escaping = fuse_zip_command.Flag("unix_path_escaping", "If set we escape only few characters in file names otherwise escape windows compatible chars").
-					Bool()
-	fuse_options_emulate_timestamps = fuse_zip_command.Flag("emulate_timestamps", "If set emulate timestamps for common artifacts like Windows.KapeFiles.Targets.").
-					Bool()
+	fuse_options_map_device_names_to_letters = fuse_zip_command.Flag(
+		"map_device_names_to_letters", "Convert raw device names to drive letters").
+		Bool()
+	fuse_options_strip_colons_on_drive_letters = fuse_zip_command.Flag(
+		"strip_colons_on_drive_letters", "Remove the : on drive letters").
+		Bool()
+	fuse_options_unix_path_escaping = fuse_zip_command.Flag("unix_path_escaping",
+		"If set we escape only few characters in file names otherwise escape windows compatible chars").
+		Bool()
+	fuse_options_emulate_timestamps = fuse_zip_command.Flag("emulate_timestamps",
+		"If set emulate timestamps for common artifacts like Windows.Triage.Targets.").
+		Bool()
 )
 
 func doFuseZip() error {

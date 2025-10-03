@@ -159,7 +159,7 @@ func FlushPrelogs(config_obj *config_proto.Config) {
 	memory_log_mu.Unlock()
 
 	for _, msg := range lprelogs {
-		logger.Info(msg)
+		logger.Info("%s", msg)
 	}
 	prelogs = make([]string, 0)
 }

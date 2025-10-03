@@ -24,13 +24,17 @@ func (self getChildren) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	if arg.MaxItems == 0 {
+		arg.MaxItems = 100
+	}
+
 	tracker := GetGlobalTracker()
 	if tracker == nil {
 		scope.Log("process_tracker_children: Initialize a process tracker first with process_tracker_install()")
 		return &vfilter.Null{}
 	}
 
-	return tracker.Children(ctx, scope, arg.Id)
+	return tracker.Children(ctx, scope, arg.Id, arg.MaxItems)
 }
 
 func (self getChildren) Info(scope types.Scope,

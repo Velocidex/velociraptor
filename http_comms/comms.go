@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
@@ -31,6 +30,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/utils/rand"
 
 	"github.com/go-errors/errors"
 	"github.com/sirupsen/logrus"
@@ -58,9 +59,7 @@ var (
 	// enrolment (sending HTTP 406 status).
 	EnrolError = errors.New("EnrolError")
 
-	mu   sync.Mutex
-	Rand func(int) int = rand.Intn
-
+	mu           sync.Mutex
 	proxyHandler = http.ProxyFromEnvironment
 
 	MaxRetryCount = 2
@@ -210,7 +209,7 @@ func NewHTTPConnector(
 		// Start with a random URL from the set of
 		// preconfigured URLs. This should distribute clients
 		// randomly to all frontends.
-		current_url_idx: GetRand()(len(urls)),
+		current_url_idx: rand.Intn(len(urls)),
 
 		minPoll:    time.Duration(1) * time.Second,
 		maxPoll:    time.Duration(max_poll) * time.Second,
@@ -279,15 +278,31 @@ func (self *HTTPConnector) retryPost(
 	data []byte, urgent bool) (resp *http.Response, err error) {
 
 	logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
+
+	// Retry a limited number of times immediately. After this many
+	// immediate tries, this function will return the error and the
+	// limiter will be engaged before the next attempt.
 	count := 0
 
 	for {
+		// Exit if the retry count is exceeded. Our caller will retry
+		// after rate limiting.
+		if count > MaxRetryCount {
+			logger.Debug("%v: Exceeded retry times for %v",
+				name, handler)
+			if resp != nil {
+				resp.Body.Close()
+			}
+			break
+		}
+
 		req, err := self.prepareRequest(ctx, name, handler, data, urgent)
 		if err != nil {
 			return nil, err
 		}
 
 		resp, err = self.client.Do(req)
+
 		// Represents a retryable error in websockets.
 		if resp != nil {
 			switch resp.StatusCode {
@@ -329,15 +344,6 @@ func (self *HTTPConnector) retryPost(
 		// No errors - we are good!
 		if resp != nil && err == nil {
 			return resp, err
-		}
-
-		if count > MaxRetryCount {
-			logger.Debug("%v: Exceeded retry times for %v",
-				name, handler)
-			if resp != nil {
-				resp.Body.Close()
-			}
-			break
 		}
 
 		logger.Debug("%v: Retrying connection to %v for %v time",
@@ -431,7 +437,7 @@ func (self *HTTPConnector) Post(
 			// For safety we wait after redirect in case we end up
 			// in a redirect loop.
 			wait := self.maxPoll + time.Duration(
-				GetRand()(int(self.maxPollDev)))*time.Second
+				rand.Intn(int(self.maxPollDev)))*time.Second
 			self.logger.Info("Waiting after redirect: %v", wait)
 			<-self.clock.After(wait)
 		}
@@ -507,7 +513,7 @@ func (self *HTTPConnector) advanceToNextServer(ctx context.Context) {
 	// sleep to back off.
 	if self.current_url_idx == self.last_success_idx {
 		wait := self.maxPoll + time.Duration(
-			GetRand()(int(self.maxPollDev)))*time.Second
+			rand.Intn(int(self.maxPollDev)))*time.Second
 
 		self.logger.Info(
 			"Waiting for a reachable server: %v", wait)
@@ -533,13 +539,6 @@ func (self *HTTPConnector) advanceToNextServer(ctx context.Context) {
 	} else {
 		self.mu.Unlock()
 	}
-}
-
-func GetRand() func(int) int {
-	mu.Lock()
-	defer mu.Unlock()
-
-	return Rand
 }
 
 func (self *HTTPConnector) String() string {
@@ -811,7 +810,7 @@ func (self *NotificationReader) sendMessageList(
 		// Add random wait between polls to avoid
 		// synchronization of endpoints.
 		wait := self.maxPoll + time.Duration(
-			GetRand()(int(self.maxPollDev)))*time.Second
+			rand.Intn(int(self.maxPollDev)))*time.Second
 		self.logger.Info("Sleeping for %v", wait)
 
 		// While we wait to reconnect we need to update the nanny or
