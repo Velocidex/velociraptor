@@ -79,6 +79,9 @@ parameters:
     default: 0
     type: int
 
+implied_permissions:
+  - EXECVE
+
 sources:
   - query: |
       LET _BinPath = SELECT * FROM Artifact.Generic.Utils.FetchBinary(
