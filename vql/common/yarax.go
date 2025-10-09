@@ -33,7 +33,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	yara_x "github.com/Velocidex/yara-x"
+	yara_x "github.com/Velocidex/yara-x-go"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/uploads"
