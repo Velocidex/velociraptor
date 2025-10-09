@@ -1,0 +1,159 @@
+name: Windows.Detection.YaraX.Glob
+author: Matt Green - @mgreen27
+description: |
+  This artifact returns a list of target files then runs YARA over the target
+  list.
+
+  There are 2 kinds of YARA rules that can be deployed:
+
+  1. Url link to a YARA rule.
+  2. or a Standard YARA rule attached as a parameter.
+
+  Only one method of YARA will be applied and search order is as above.
+
+  The artifact uses Glob for search so relevant filters can be applied
+  including Glob, Size and date. Date filters will target files with a timestamp
+  before LatestTime and after EarliestTime. The artifact also has an option to
+  upload any files with YARA hits.
+
+  Some examples of path glob may include:
+
+  * Specific binary: `/usr/bin/ls`
+  * Wildcards: `/var/www/*.js`
+  * More wildcards: `/var/www/**/*.js`
+  * Multiple extensions: `/var/www/*\.{php,aspx,js,html}`
+  * Windows: `C:/Users/**/*.{exe,dll,ps1,bat}`
+  * Windows: `C:\Users\**\*.{exe,dll,ps1,bat}`
+
+  NOTE: this artifact runs the glob plugin with the nosymlink switch turned on.
+  This will NOT follow any symlinks and may cause unexpected results if
+  unknowingly targeting a folder with symlinks.
+  If upload is selected NumberOfHits is redundant and not advised as hits are
+  grouped by path to ensure files only downloaded once.
+
+tools:
+  - name: YaraXWindowsDLL
+    url: https://github.com/Velocidex/yara-x-go/releases/download/0.1/yara_x_capi.dll
+    expected_hash: 16971806c3ffd01b50f16eb9bc536f6b7abd621c6875cd11935336958942676f
+
+type: CLIENT
+parameters:
+  - name: PathGlob
+    description: Only file names that match this glob will be scanned.
+    default: /usr/bin/ls
+  - name: SizeMax
+    description: maximum size of target file.
+    type: int64
+  - name: SizeMin
+    description: minimum size of target file.
+    type: int64
+  - name: UploadHits
+    type: bool
+  - name: DateAfter
+    type: timestamp
+    description: "search for events after this date. YYYY-MM-DDTmm:hh:ssZ"
+  - name: DateBefore
+    type: timestamp
+    description: "search for events before this date. YYYY-MM-DDTmm:hh:ssZ"
+  - name: YaraUrl
+    description: If configured will attempt to download Yara rules form Url
+    type: upload
+  - name: YaraRule
+    type: yara
+    description: Final Yara option and the default if no other options provided.
+    default: |
+        rule IsELF:TestRule {
+           meta:
+              author = "the internet"
+              date = "2021-05-03"
+              description = "A simple ELF rule to test yara features"
+          condition:
+             uint32(0) == 0x464c457f
+        }
+  - name: NumberOfHits
+    description: This artifact will stop by default at one hit. This setting allows additional hits
+    default: 1
+    type: int
+  - name: ContextBytes
+    description: Include this amount of bytes around hit as context.
+    default: 0
+    type: int
+
+sources:
+  - query: |
+      LET _BinPath = SELECT * FROM Artifact.Generic.Utils.FetchBinary(
+        ToolName="YaraXWindowsDLL", IsExecutable=FALSE)
+
+      LET BinPath = log(message="FetchBinary", dedup=-1) && _BinPath[0].OSPath
+
+      -- check which Yara to use
+      LET yara_rules <= YaraUrl || YaraRule
+
+      -- time testing
+      LET time_test(stamp) =
+            if(condition= DateBefore AND DateAfter,
+                then= stamp < DateBefore AND stamp > DateAfter,
+                else=
+            if(condition=DateBefore,
+                then= stamp < DateBefore,
+                else=
+            if(condition= DateAfter,
+                then= stamp > DateAfter,
+                else= True
+            )))
+
+      -- first find all matching glob
+      LET files = SELECT OSPath, Name, Size, Mtime, Atime, Ctime, Btime
+        FROM glob(globs=PathGlob,nosymlink='True')
+        WHERE
+          NOT IsDir AND NOT IsLink
+          AND if(condition=SizeMin,
+            then= SizeMin < Size,
+            else= True)
+          AND if(condition=SizeMax,
+            then=SizeMax > Size,
+            else= True)
+          AND
+             ( time_test(stamp=Mtime)
+            OR time_test(stamp=Atime)
+            OR time_test(stamp=Ctime)
+            OR time_test(stamp=Btime))
+
+      -- scan files and prepare hit metadata
+      LET hits = SELECT * FROM foreach(row=files,
+            query={
+                SELECT
+                    OSPath,
+                    File.Size as Size,
+                    Mtime, Atime, Ctime, Btime,
+                    Rule, Tags, Meta,
+                    String.Name as YaraString,
+                    String.Offset as HitOffset,
+                    upload( accessor='scope',
+                            file='String.Data',
+                            name=format(format="%v-%v-%v",
+                            args=[
+                                OSPath,
+                                if(condition= String.Offset - ContextBytes < 0,
+                                    then= 0,
+                                    else= String.Offset - ContextBytes),
+                                if(condition= String.Offset + ContextBytes > Size,
+                                    then= Size,
+                                    else= String.Offset + ContextBytes) ]
+                            )) as HitContext
+                FROM yarax(rules=yara_rules,files=OSPath,
+                           dll_path="x=>BinPath",
+                           context=ContextBytes,number=NumberOfHits)
+            })
+
+      -- upload files if selected
+      LET upload_hits = SELECT *, upload(file=OSPath,name=OSPath) as Upload FROM hits
+
+      -- return rows
+      SELECT * FROM if(condition= UploadHits,
+                        then= upload_hits,
+                        else= hits )
+
+column_types:
+  - name: HitContext
+    type: preview_upload

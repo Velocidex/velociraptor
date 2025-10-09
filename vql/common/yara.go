@@ -26,7 +26,6 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -194,27 +193,29 @@ func getYaraRules(key, namespace, rules string,
 		key = string(rule_hash[:])
 	}
 	cached_result := vql_subsystem.CacheGet(scope, key)
-	if cached_result == nil {
-		compiled_rules, err := compileRules(
-			scope, vars, key, namespace, rules)
-		if err != nil {
-			vql_subsystem.CacheSet(scope, key, err)
-			return nil, err
+	if cached_result != nil {
+		switch t := cached_result.(type) {
+		case error:
+			return nil, t
+
+		case *yara.Rules:
+			return t, nil
+
+		default:
+			// Unknown type - recompile again.
 		}
-
-		// Cache the successful rules for further use
-		vql_subsystem.CacheSet(scope, key, compiled_rules)
-		return compiled_rules, nil
 	}
 
-	switch t := cached_result.(type) {
-	case error:
-		return nil, t
-	case *yara.Rules:
-		return t, nil
-	default:
-		return nil, errors.New("Error")
+	compiled_rules, err := compileRules(
+		scope, vars, key, namespace, rules)
+	if err != nil {
+		vql_subsystem.CacheSet(scope, key, err)
+		return nil, err
 	}
+
+	// Cache the successful rules for further use
+	vql_subsystem.CacheSet(scope, key, compiled_rules)
+	return compiled_rules, nil
 }
 
 func compileRules(scope vfilter.Scope,

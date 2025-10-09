@@ -37,9 +37,9 @@ parameters:
    type: regex
 
 export: |
-    -- HivePath: The path to the hive on disk
-    -- RegistryPath: The path in the registry to mount the hive
-    -- RegMountPoint: The path inside the hive to mount (usually /)
+    // HivePath: The path to the hive on disk
+    // RegistryPath: The path in the registry to mount the hive
+    // RegMountPoint: The path inside the hive to mount (usually /)
     LET _map_file_to_reg_path(HivePath, RegistryPath, RegMountPoint, Accessor, Description) = dict(
        type="mount", description=Description,
        `from`=dict(accessor='raw_reg',

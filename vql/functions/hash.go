@@ -30,6 +30,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -83,6 +84,11 @@ func (self *HashFunction) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("hash: %v", err)
 		return vfilter.Null{}
+	}
+
+	if arg.MaxSize == 0 {
+		arg.MaxSize = vql_subsystem.GetIntFromRow(
+			scope, scope, constants.HASH_MAX_SIZE)
 	}
 
 	if arg.MaxSize == 0 {
@@ -196,7 +202,7 @@ func (self HashFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 		Name:     "hash",
 		Doc:      "Calculate the hash of a file.",
 		ArgType:  type_map.AddType(scope, &HashFunctionArgs{}),
-		Version:  2,
+		Version:  3,
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
