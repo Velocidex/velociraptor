@@ -13,6 +13,9 @@ description: |
 
 type: SERVER
 
+sources:
+- query: SELECT * FROM info()
+
 reports:
   - type: CLIENT
     template: |
