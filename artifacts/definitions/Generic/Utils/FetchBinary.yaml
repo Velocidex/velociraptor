@@ -50,6 +50,11 @@ implied_permissions:
 
 sources:
   - query: |
+      LET S = scope()
+
+      -- 1GB max
+      LET HASH_MAX_SIZE <= S.HASH_MAX_SIZE || 1000000000
+
       -- Optionally accepts multiple download URLs from the server
       LET ParseUrls(Url) = parse_json_array(data=Url || '[]')
 

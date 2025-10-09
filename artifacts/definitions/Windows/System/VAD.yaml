@@ -7,9 +7,9 @@ description: |
 
   Available filters include process, mapping path, memory permissions
   or by content with yara.
-  
+
   Use the UploadSection switch to upload any sections.
-  
+
   A notebook suggestion is available for Strings analysis on uploaded sections.
 
   NOTE:
@@ -17,7 +17,7 @@ description: |
   - ProtectionChoice is a choice to filter on section protection. Default is
   all sections and ProtectionRegex can override selection.
   - To filter on unmapped sections the MappingNameRegex: ^$ can be used.
-  - When uploading sections during analysis, its recommended to run once for 
+  - When uploading sections during analysis, its recommended to run once for
   scoping, then a second time once confirmed for upload.
 
 parameters:
@@ -52,6 +52,21 @@ parameters:
     default: 0
     type: int
 
+export: |
+  // These functions help to resolve the Kernel Device Filenames
+  // into a regular filename with drive letter.
+  LET DriveReplaceLookup <= SELECT
+     split(sep_string="\\", string=Name)[-1] AS Drive,
+     upcase(string=SymlinkTarget) AS Target,
+     len(list=SymlinkTarget) AS Len
+  FROM winobj()
+  WHERE Name =~ "^\\\\GLOBAL\\?\\?\\\\.:"
+
+  LET _DriveReplace(Path) = SELECT Drive + Path[Len:] AS ResolvedPath
+  FROM DriveReplaceLookup
+  WHERE upcase(string=Path[:Len]) = Target
+
+  LET DriveReplace(Path) = _DriveReplace(Path=Path)[0].ResolvedPath || Path
 
 sources:
   - query: |
@@ -67,7 +82,8 @@ sources:
       LET sections = SELECT * FROM foreach(
           row=processes,
           query={
-            SELECT StartTime as ProcessCreateTime,Pid, Name, MappingName,
+            SELECT StartTime as ProcessCreateTime,Pid, Name,
+                DriveReplace(Path=MappingName) AS MappingName,
                 format(format='%x-%x', args=[Address, Address+Size]) AS AddressRange,
                 Address as _Address,
                 State,Type,ProtectionMsg,Protection,
@@ -163,7 +179,7 @@ sources:
             /*
             # Strings analysis
             */
-            
+
             LET MinStringSize = 8
             LET FindPrintable = '''
                     rule find_strings {
@@ -174,22 +190,22 @@ sources:
                             any of them
                     }'''
             LET YaraRule = regex_replace(source=FindPrintable,re='''\%\#\%''',replace=str(str=MinStringSize))
-            
-            
+
+
             LET sections = SELECT vfs_path, client_path,file_size, uploaded_size
                 FROM uploads(client_id=ClientId, flow_id=FlowId)
                 WHERE vfs_path =~ '\.bin$'
-            
+
             LET find_result(name) = SELECT *
                 FROM source(artifact="Windows.System.VAD")
                 WHERE SectionDump.StoredName = name
                 LIMIT 1
-            
-            
+
+
             LET row_results = SELECT *, find_result(name=client_path)[0] as Result
             FROM sections
             WHERE Result
-            
+
             SELECT * FROM foreach(row=row_results,
                 query={
                     SELECT
@@ -198,7 +214,7 @@ sources:
                         String.Offset as Offset,
                         Result.MappingName as MappingName,
                         Result.AddressRange as AddressRange,
-                        Result.Name as ProcesName, 
+                        Result.Name as ProcesName,
                         Result.Pid as Pid,
                         Result.Protection as Protection
                         --,vfs_path

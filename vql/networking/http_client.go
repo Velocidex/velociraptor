@@ -506,7 +506,7 @@ func (self *_HttpPlugin) Call(
 				}
 
 				if arg.RemoveLast {
-					scope.Log("Adding global destructor for %v", tmpfile.Name())
+					scope.Log("http_client: Adding global destructor for %v", tmpfile.Name())
 					root_scope := vql_subsystem.GetRootScope(scope)
 					err := root_scope.AddDestructor(func() {
 						filesystem.RemoveTmpFile(0, tmpfile.Name(), root_scope)
