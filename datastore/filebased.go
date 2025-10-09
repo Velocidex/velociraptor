@@ -94,7 +94,8 @@ func (self *FileBaseDataStore) GetSubject(
 		// characters. If the file is empty something went wrong -
 		// usually this is because the disk was full.
 		if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
-			return invalidFileError
+			return fmt.Errorf("While accessing %v: %w",
+				urn.AsClientPath(), invalidFileError)
 		}
 		return nil
 	}

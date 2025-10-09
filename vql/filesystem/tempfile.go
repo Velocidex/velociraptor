@@ -97,7 +97,7 @@ func (self *TempfileFunction) Call(ctx context.Context,
 	}
 
 	if arg.RemoveLast {
-		scope.Log("Adding global destructor for %v", tmpfile.Name())
+		scope.Log("tempfile: Adding global destructor for %v", tmpfile.Name())
 		root_scope := vql_subsystem.GetRootScope(scope)
 		err := root_scope.AddDestructor(func() {
 			RemoveTmpFile(0, tmpfile.Name(), root_scope)
@@ -160,7 +160,7 @@ func (self *TempdirFunction) Call(ctx context.Context,
 	}
 
 	if arg.RemoveLast {
-		scope.Log("Adding global destructor for %v", dir)
+		scope.Log("tempdir: Adding global destructor for %v", dir)
 		root_scope := vql_subsystem.GetRootScope(scope)
 		err := root_scope.AddDestructor(func() {
 			RemoveDirectory(0, dir, root_scope)
