@@ -108,8 +108,8 @@ github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130 h1:+QujZ0D
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130/go.mod h1:3/pI9BBAF7gydBWvMVtV7W1qRwshEG9lBwed/d8xfFg=
 github.com/Velocidex/yaml/v2 v2.2.8 h1:GUrSy4SBJ6RjGt43k6MeBKtw2z/27gh4A3hfFmFY3No=
 github.com/Velocidex/yaml/v2 v2.2.8/go.mod h1:PlXIg/Pxmoja48C1vMHo7C5pauAZvLq/UEPOQ3DsjS4=
-github.com/Velocidex/yara-x-go v0.0.0-20251009070906-8a26008fdef5 h1:viqSizcgX3SHsGx5IzB6hQ74bKGUGSWohB18BdhwBeI=
-github.com/Velocidex/yara-x-go v0.0.0-20251009070906-8a26008fdef5/go.mod h1:nCopKG7AZZpc0mVgW2+z2i+CVYK1yIEl6YFJKkYNg4I=
+github.com/Velocidex/yara-x-go v0.0.0-20251010010632-d8eaad9c539c h1:3X4jyfzsTuOhiGaDXPu+WOrwRxDx2gk1akUdnpb4NHE=
+github.com/Velocidex/yara-x-go v0.0.0-20251010010632-d8eaad9c539c/go.mod h1:nCopKG7AZZpc0mVgW2+z2i+CVYK1yIEl6YFJKkYNg4I=
 github.com/Velocidex/zip v0.0.0-20250102162034-1a0ec0ec569c h1:+/E/0rL46fcD0ykUWrY66JBxpjjksxN+ZnC596XgHIQ=
 github.com/Velocidex/zip v0.0.0-20250102162034-1a0ec0ec569c/go.mod h1:1p8CU2cp64BG4334sKzhuyH/vm3k1OXEdeBCwYTssAs=
 github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6 h1:GmGcpAb8o8VL5tZS+TSZL2V/jbBVVdsx4SFyG+S/7nY=

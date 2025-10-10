@@ -40,26 +40,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
 )
-
-type YaraHit struct {
-	Name    string
-	Offset  uint64
-	HexData []string
-	Data    []byte
-}
-
-type YaraResult struct {
-	Rule     string
-	Meta     *ordereddict.Dict
-	Tags     []string
-	String   *YaraHit
-	File     accessors.FileInfo
-	FileName *accessors.OSPath
-}
 
 type YaraScanPluginArgs struct {
 	Rules           string            `vfilter:"optional,field=rules,doc=Yara rules in the yara DSL or after being compiled by the yarac compiler."`
@@ -91,7 +76,7 @@ func (self YaraScanPlugin) Call(
 		arg := &YaraScanPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("yara: %v", err)
+			scope.Error("yara: %v", err)
 			return
 		}
 
@@ -106,7 +91,7 @@ func (self YaraScanPlugin) Call(
 		rules, err := getYaraRules(arg.Key, arg.Namespace, arg.Rules,
 			arg.YaraVariables, scope)
 		if err != nil {
-			scope.Log("yara: %v", err)
+			functions.DeduplicatedLog(ctx, scope, "ERROR:yara: "+err.Error())
 			return
 		}
 
@@ -129,7 +114,7 @@ func (self YaraScanPlugin) Call(
 
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("yara: %v", err)
+			scope.Error("yara: %v", err)
 			return
 		}
 
@@ -141,12 +126,6 @@ func (self YaraScanPlugin) Call(
 				return
 			}
 			matcher.filename = filename
-
-			accessor, err := accessors.GetAccessor(arg.Accessor, scope)
-			if err != nil {
-				scope.Log("yara: %v", err)
-				return
-			}
 
 			// As an optimization, we try to call yara's ScanFile API
 			// which mmaps the entire file into memory avoiding the
@@ -162,7 +141,7 @@ func (self YaraScanPlugin) Call(
 					if err == nil {
 						continue
 					} else {
-						scope.Log("Directly scanning file %v failed, will use accessor",
+						scope.Log("yara: Directly scanning file %v failed, will use accessor",
 							filename.String())
 					}
 				}
@@ -629,13 +608,13 @@ func (self YaraProcPlugin) Call(
 		rules, err := getYaraRules(arg.Key, arg.Namespace,
 			arg.Rules, arg.YaraVariables, scope)
 		if err != nil {
-			scope.Log("proc_yara: %v", err)
+			functions.DeduplicatedLog(ctx, scope, "ERROR:proc_yara: "+err.Error())
 			return
 		}
 
 		scanner, err := yara.NewScanner(rules)
 		if err != nil {
-			scope.Log("proc_yara: %v", err)
+			functions.DeduplicatedLog(ctx, scope, "ERROR:proc_yara: "+err.Error())
 			return
 		}
 
