@@ -12313,11 +12313,6 @@
     [YaraX](https://github.com/VirusTotal/yara-x) project instead of
     the more traditional C based Yara engine.
 
-    NOTE: Yara X is an experiemental new implementation of Yara and
-    the Velociraptor team does not consider it to be stable yet. In
-    our testing there are still many performance and correctness
-    issues with it so you should not rely on it.
-
     One of the biggest issues for Velociraptor integration is the very
     large size of the `YaraX` library (which is written in
     Rust). Including `YaraX` in Velociraptor will increase our binary
@@ -12333,43 +12328,6 @@
     loaded, it is not unloaded again. This way you can avoid having to
     download or hash the dll until actually needed.
 
-    ## Some limitations with Yara X
-
-    YaraX currently offers two modes for scanning:
-    * Block mode: The file is fed to the engine one block at the time.
-
-    * Buffer mode: The entire file is read into one buffer and scanned at once.
-
-    Unlike the C Yara, YaraX does not scan a file in its entirety.
-    When we scan with YaraX we need to decide if to use block mode or
-    buffer mode.
-
-    When used in block mode, YaraX disables most Yara rule functions
-    (such as `uint64()`) and many modules (such as `pe`). This causes
-    many rules to silently fail.
-
-    This is the algorithm Velociraptor currently uses:
-
-    1. If the block size is larger than the size of the file, we scan
-       in buffer mode. This allows all yara functions and modules to work
-       in the rule.
-
-    2. If the block size is smaller than the size of the file we read
-       the first block and scan it in buffer mode first, then again in
-       block mode. Subsequent blocks are scanned in block mode.
-
-       This means that rules that use yara functions like `uint64()`
-       (usually used to check for file headers) will work as long as
-       all the strings in the rule occur within the first
-       block. Matches from other blocks will not work (unlike the
-       current C Yara implementation which looks at the entire file
-       regardless of block size ).
-
-    Additionally, when used in block mode, `YaraX` currently does not
-    report hits until the end of the file. This means we are unable to
-    shortcut scanning and report a hit early for large files. This may
-    slow down performance for scans of large files which are expected
-    to produce hits.
   type: Plugin
   args:
   - name: rules
