@@ -34,7 +34,7 @@ description: |
 tools:
   - name: YaraXWindowsDLL
     url: https://github.com/Velocidex/yara-x-go/releases/download/0.1/yara_x_capi.dll
-    expected_hash: 16971806c3ffd01b50f16eb9bc536f6b7abd621c6875cd11935336958942676f
+    expected_hash: 98af253ec3477fe2b899d3500a2da8289782fef2aab8fa201865f35cba7d2089
 
 type: CLIENT
 parameters:
@@ -86,8 +86,6 @@ sources:
   - query: |
       LET _BinPath = SELECT * FROM Artifact.Generic.Utils.FetchBinary(
         ToolName="YaraXWindowsDLL", IsExecutable=FALSE)
-
-      LET BinPath = log(message="FetchBinary", dedup=-1) && _BinPath[0].OSPath
 
       -- check which Yara to use
       LET yara_rules <= YaraUrl || YaraRule
@@ -145,7 +143,7 @@ sources:
                                     else= String.Offset + ContextBytes) ]
                             )) as HitContext
                 FROM yarax(rules=yara_rules,files=OSPath,
-                           dll_path="x=>BinPath",
+                           dll_path="x=>x._BinPath[0].OSPath",
                            context=ContextBytes,number=NumberOfHits)
             })
 

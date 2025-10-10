@@ -28,6 +28,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -40,24 +41,26 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
 type YaraXScanPluginArgs struct {
-	Rules         string            `vfilter:"optional,field=rules,doc=Yara rules in the yara DSL or after being compiled by the yarac compiler."`
-	Files         []types.Any       `vfilter:"required,field=files,doc=The list of files to scan."`
-	Accessor      string            `vfilter:"optional,field=accessor,doc=Accessor (e.g. ntfs,file)"`
-	Context       int               `vfilter:"optional,field=context,doc=How many bytes to include around each hit"`
-	Start         uint64            `vfilter:"optional,field=start,doc=The start offset to scan"`
-	End           uint64            `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`
-	NumberOfHits  int64             `vfilter:"optional,field=number,doc=Stop after this many hits (1)."`
-	Blocksize     uint64            `vfilter:"optional,field=blocksize,doc=Blocksize for scanning (10mb)."`
-	Key           string            `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
-	Namespace     string            `vfilter:"optional,field=namespace,doc=The Yara namespece to use."`
-	YaraVariables *ordereddict.Dict `vfilter:"optional,field=vars,doc=The Yara variables to use."`
-	YaraXDLLPath  *vfilter.Lambda   `vfilter:"required,field=dll_path,doc=Function to resolve path to the yarax DLL"`
+	Rules           string            `vfilter:"optional,field=rules,doc=Yara rules in the yara DSL or after being compiled by the yarac compiler."`
+	Files           []types.Any       `vfilter:"required,field=files,doc=The list of files to scan."`
+	Accessor        string            `vfilter:"optional,field=accessor,doc=Accessor (e.g. ntfs,file)"`
+	Context         int               `vfilter:"optional,field=context,doc=How many bytes to include around each hit"`
+	Start           uint64            `vfilter:"optional,field=start,doc=The start offset to scan"`
+	End             uint64            `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`
+	NumberOfHits    int64             `vfilter:"optional,field=number,doc=Stop after this many hits (1)."`
+	Blocksize       uint64            `vfilter:"optional,field=blocksize,doc=Blocksize for scanning (10mb)."`
+	Key             string            `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
+	Namespace       string            `vfilter:"optional,field=namespace,doc=The Yara namespece to use."`
+	YaraVariables   *ordereddict.Dict `vfilter:"optional,field=vars,doc=The Yara variables to use."`
+	YaraXDLLPath    *vfilter.Lambda   `vfilter:"required,field=dll_path,doc=Function to resolve path to the yarax DLL"`
+	ForceBufferScan bool              `vfilter:"optional,field=force_buffers,doc=Force buffer scan in all cases."`
 }
 
 type YaraXScanPlugin struct{}
@@ -86,7 +89,7 @@ func (self YaraXScanPlugin) Call(
 			// Make sure the path is absolute as we dont want any dll
 			// hijacking possibility.
 			if !filepath.IsAbs(yara_dll_path) {
-				scope.Log("yarax: dll path must be an absolute path, not %v",
+				scope.Error("yarax: dll path must be an absolute path, not %v",
 					yara_dll_path)
 				return
 			}
@@ -94,7 +97,7 @@ func (self YaraXScanPlugin) Call(
 			// Attempt to load the dll if needed.
 			res := yara_x.LoadYaraXDLL(yara_dll_path)
 			if res != "" {
-				scope.Log("yarax: %v", res)
+				scope.Error("yarax: %v", res)
 				return
 			}
 		}
@@ -110,7 +113,7 @@ func (self YaraXScanPlugin) Call(
 		rules, err := yaraXgetYaraRules(arg.Key, arg.Namespace, arg.Rules,
 			arg.YaraVariables, scope)
 		if err != nil {
-			scope.Log("yara: %v", err.Error())
+			functions.DeduplicatedLog(ctx, scope, "ERROR:yarax: "+err.Error())
 			return
 		}
 
@@ -126,23 +129,37 @@ func (self YaraXScanPlugin) Call(
 
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("yara: %v", err)
+			scope.Error("yara: %v", err)
 			return
 		}
 
 		for _, filename_any := range arg.Files {
-			filename, err := accessors.ParseOSPath(
-				ctx, scope, accessor, filename_any)
+			filename, err := accessors.ParseOSPath(ctx, scope, accessor, filename_any)
 			if err != nil {
 				scope.Log("yara: %v", err)
-				return
+				continue
 			}
 			matcher.filename = filename
 
-			accessor, err := accessors.GetAccessor(arg.Accessor, scope)
-			if err != nil {
-				scope.Log("yara: %v", err)
-				return
+			// As an optimization, we try to call yara's ScanFile API
+			// which mmaps the entire file into memory avoiding the
+			// need for buffering.
+			raw_accessor, ok := accessor.(accessors.RawFileAPIAccessor)
+
+			// If the start offset is specified we always use the
+			// accessor.
+			if !arg.ForceBufferScan && arg.Start == 0 && ok {
+				underlying_file, err := raw_accessor.GetUnderlyingAPIFilename(filename)
+				if err == nil {
+					err := matcher.scanFile(ctx, underlying_file, output_chan)
+					if err == nil {
+						continue
+
+					} else {
+						scope.Log("yarax: Directly scanning file %v failed, will use accessor",
+							filename.String())
+					}
+				}
 			}
 
 			matcher.scanFileByAccessor(ctx, arg.Accessor, accessor,
@@ -222,6 +239,52 @@ func yaraXcompileRules(scope vfilter.Scope,
 
 }
 
+// Scan a file called when no accessor is specified. We pass the
+// filename to libyara directly for faster scanning using mmap. This
+// also ensures that all yara features (like the PE plugin) work.
+func (self *yaraXscanReporter) scanFile(
+	ctx context.Context,
+	underlying_file string,
+	output_chan chan vfilter.Row) error {
+
+	fd, err := os.Open(underlying_file)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	// Fill in the file stat if possible.
+	file_accessor, err := accessors.GetAccessor("auto", self.scope)
+	if err == nil {
+		self.file_info, _ = file_accessor.LstatWithOSPath(self.filename)
+	}
+	self.reader = fd
+
+	scanner := yara_x.NewScanner(self.rules)
+
+	// Do not wait for the GC to cleanup.
+	defer scanner.Destroy()
+
+	scanner.SetTimeout(100 * time.Second)
+
+	// There is no way to actively cancel the yara scan so this is as
+	// good as we can get - do not set the timeout too long or we wont
+	// be able to cancel it promptly.
+	result, err := scanner.ScanFile(underlying_file)
+	if err != nil {
+		return err
+	}
+
+	for _, hit := range result.MatchingRules() {
+		self.ReportMatch(hit)
+	}
+
+	// We count an op as one file scanned.
+	self.scope.ChargeOp()
+
+	return nil
+}
+
 func (self *yaraXscanReporter) scanFileByAccessor(
 	ctx context.Context,
 	accessor_name string,
@@ -284,7 +347,10 @@ func (self *yaraXscanReporter) scanFileByAccessor(
 	// 5) Patterns won't match across block boundaries. Every match
 	//    will be completely contained within one of the blocks.
 
-	block_scanning_mode := self.file_info.Size() > int64(self.blocksize)
+	block_scanning_mode := self.file_info.Size() > int64(self.blocksize) ||
+		// If we need to start mid way through the file, we have to
+		// scan in blocks.
+		start > 0
 
 	// In block scanning mode we get all the hits when we finished
 	// scanning the file instead.
