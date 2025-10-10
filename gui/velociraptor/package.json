@@ -11,7 +11,7 @@
         "@fortawesome/react-fontawesome": "0.2.6",
         "@popperjs/core": "^2.11.8",
         "ace-builds": "1.43.3",
-        "axios": ">=1.12.0",
+        "axios": ">=1.12.2",
         "axios-retry": "3.9.1",
         "bootstrap": "5.3.8",
         "classnames": "^2.5.1",
