@@ -1,0 +1,170 @@
+# Initialize the yarax() plugin by fetching the correct shared object.
+Query: LET _URL = SELECT * FROM switch(a={
+   SELECT "https://github.com/Velocidex/yara-x-go/releases/download/0.1/yara_x_capi.dll" AS URL
+   FROM info() WHERE OS =~ 'windows'
+}, b={
+   SELECT "https://github.com/Velocidex/yara-x-go/releases/download/0.1/libyara_x_capi.so" AS URL
+   FROM info() WHERE OS =~ 'linux'
+})
+
+Output: []
+
+# Fetch the correct dll.
+Query: LET Content = SELECT * FROM http_client(url=_URL[0].URL, remove_last=TRUE, tempfile_extension='.dll')
+Output: []
+
+# You can cache the dll locally here.
+Query: LET DllPath <= ""
+Output: []
+
+Query: LET Lmd <= if(condition=DllPath AND stat(filename=DllPath), then="x=>DllPath", else="x=>Content[0].Content")
+Output: []
+
+# Check the yara plugin works. For large block size the entire file
+# will be in memory.
+Query: SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yarax(rules=hiveSig, blocksize=10, dll_path=Lmd,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+
+Output: []
+
+Query: SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yarax(rules=hiveSig, blocksize=1000, dll_path=Lmd,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+
+Output: [
+ {
+  "String.Offset": 26,
+  "Hit": "program"
+ }
+]
+
+Query: SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yarax(rules=findX, number=1, dll_path=Lmd,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+
+Output: [
+ {
+  "String.Offset": 4,
+  "Hit": "X"
+ }
+]
+
+Query: SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yarax(rules=findX, number=2, dll_path=Lmd,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+
+Output: [
+ {
+  "String.Offset": 4,
+  "Hit": "X"
+ },
+ {
+  "String.Offset": 5,
+  "Hit": "X"
+ }
+]
+
+Query: SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yarax(rules=findX, start=10, number=1,
+dll_path=Lmd,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+
+Output: [
+ {
+  "String.Offset": 10,
+  "Hit": "X"
+ }
+]
+
+Query: SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yarax(rules=findX, start=10, end=12, number=20,
+dll_path=Lmd,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+
+Output: [
+ {
+  "String.Offset": 10,
+  "Hit": "X"
+ },
+ {
+  "String.Offset": 11,
+  "Hit": "X"
+ }
+]
+
+Query: SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yarax(rules=findX, number=1, context=2,
+dll_path=Lmd,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+
+Output: [
+ {
+  "String.Offset": 4,
+  "Hit": "gfXXX"
+ }
+]
+
+Query: SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yarax(rules=findX, number=1, context=10,
+dll_path=Lmd,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+
+Output: [
+ {
+  "String.Offset": 4,
+  "Hit": "regfXXXXXXXXXXX"
+ }
+]
+
+# For "file" accessors we mmap the file and so blocksize is
+# ignored. This should work as above.
+Query: SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yarax(rules=hiveSig, blocksize=10,
+dll_path=Lmd,
+files=srcDir+"/artifacts/testdata/files/Amcache.hve")
+
+Output: [
+ {
+  "String.Offset": 200759,
+  "Hit": "program"
+ }
+]
+
+Query: SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yarax(rules=hiveSig, context=10,
+dll_path=Lmd,
+files=srcDir+"/artifacts/testdata/files/yara_test.txt")
+
+Output: [
+ {
+  "String.Offset": 12,
+  "Hit": "gfXXXXXXXXprogram\n"
+ }
+]
+
+Query: SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yarax(rules=hiveSig, context=10, accessor="file",
+dll_path=Lmd,
+files=srcDir+"/artifacts/testdata/files/yara_test.txt")
+
+Output: [
+ {
+  "String.Offset": 12,
+  "Hit": "gfXXXXXXXXprogram\n"
+ }
+]
+
+# Imphash should also work
+Query: SELECT "imphash", basename(path=FileName)
+FROM yarax(rules=imphashSig, accessor="file",
+dll_path=Lmd,
+files=srcDir+"/artifacts/testdata/files/3DBuilder.ResourceResolver.exe")
+
+Output: [
+ {
+  "\"imphash\"": "imphash",
+  "basename(path=FileName)": "3DBuilder.ResourceResolver.exe"
+ }
+]
+
