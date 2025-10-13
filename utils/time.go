@@ -75,6 +75,10 @@ func MarshalTimes(v interface{}, opts *json.EncOpts) ([]byte, error) {
 	return nil, json.EncoderCallbackSkip
 }
 
+func WinFileTime(in int64) time.Time {
+	return time.Unix((in/10000000)-11644473600, 0).UTC()
+}
+
 func init() {
 	vjson.RegisterCustomEncoder(time.Time{}, MarshalTimes)
 	vjson.RegisterCustomEncoder(&time.Time{}, MarshalTimes)

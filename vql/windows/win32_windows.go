@@ -189,6 +189,7 @@ const (
 
 	// NtQueryInformationThread
 	ThreadBasicInformation   = 0
+	ThreadTimes              = 1
 	ThreadImpersonationToken = 5
 
 	PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
@@ -254,6 +255,13 @@ type THREAD_BASIC_INFORMATION struct {
 	AffinityMask    uint64
 	Priority        uint32
 	BasePriority    uint32
+}
+
+type KERNEL_USER_TIMES struct {
+	CreateTime uint64 // The creation time of the process or thread.
+	ExitTime   uint64 // The exit time of the process or thread.
+	KernelTime uint64 // The amount of time the process has executed in kernel mode.
+	UserTime   uint64
 }
 
 type OBJECT_TYPE_INFORMATION struct {

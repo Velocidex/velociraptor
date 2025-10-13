@@ -7,12 +7,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"syscall"
 	"unsafe"
 
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vwindows "www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
@@ -135,6 +137,19 @@ func checkThread(
 	if status != vwindows.STATUS_SUCCESS || length == 0 {
 		return nil, fmt.Errorf("NtQueryInformationProcess failed, %X", status)
 	}
+	length = 0
+
+	user_times := vwindows.KERNEL_USER_TIMES{}
+	status, _ = vwindows.NtQueryInformationThread(
+		syscall.Handle(thread),
+		vwindows.ThreadTimes,
+		(*byte)(unsafe.Pointer(&user_times)),
+		uint32(unsafe.Sizeof(user_times)),
+		&length)
+	if status != vwindows.STATUS_SUCCESS || length == 0 {
+		scope.Log("NtQueryInformationProcess failed (ThreadTimes) for pid %v, %X",
+			pid, status)
+	}
 
 	var thread_start_address uint64
 
@@ -177,13 +192,31 @@ func checkThread(
 		}
 	}
 
+	kim := GetKernelInfoManager(scope)
+	rva := int64(thread_start_address - memory_basic_info.AllocationBase)
+	module_path := kim.NormalizeFilename(filename)
+	module_file_name := filepath.Base(module_path)
+
+	func_name := kim.GuessFunctionName(module_path, rva)
+	if func_name != "" {
+		func_name = fmt.Sprintf("%v!%v", module_file_name, func_name)
+	} else {
+		func_name = fmt.Sprintf("%v!%#x", module_file_name, rva)
+	}
+
 	ret := ordereddict.NewDict().
 		Set("pid", pid).
 		Set("tid", entry.ThreadID).
 		Set("thread_info", thread_info).
 		Set("thread_start_address", thread_start_address).
+		Set("thread_start_address_name", func_name).
 		Set("memory_basic_info", memory_basic_info).
-		Set("filename", filename)
+		Set("times", ordereddict.NewDict().
+			Set("CreateTime", utils.WinFileTime(int64(user_times.CreateTime))).
+			Set("ExitTime", utils.WinFileTime(int64(user_times.ExitTime))).
+			Set("KernelTime", user_times.KernelTime).
+			Set("UserTime", user_times.UserTime)).
+		Set("filename", module_path)
 
 	return ret, nil
 }

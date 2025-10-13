@@ -20,10 +20,38 @@ type cachedUploadResponse struct {
 	response *UploadResponse
 }
 
+// Lease the response for a time, when the caller is done with it,
+// they can return it by calling the callback.
+func (self *cachedUploadResponse) LeaseResponse() (
+	response *UploadResponse, closer func(response *UploadResponse)) {
+
+	self.mu.Lock()
+	if self.response == nil {
+		return nil, func(response *UploadResponse) {
+			if response != nil {
+				self.response = response
+			}
+			self.mu.Unlock()
+		}
+	}
+
+	return self.response, func(response *UploadResponse) {
+		self.mu.Unlock()
+	}
+}
+
 // Manage the uploader cache - this is used to deduplicate files that
 // are uploaded multiple time so they only upload one file.
 func DeduplicateUploads(scope vfilter.Scope,
-	store_as_name *accessors.OSPath) (*UploadResponse, bool, func()) {
+	store_as_name *accessors.OSPath) (
+	*UploadResponse, func(response *UploadResponse)) {
+
+	cached_response := getCacheResponse(scope, store_as_name)
+	return cached_response.LeaseResponse()
+}
+
+func getCacheResponse(scope vfilter.Scope,
+	store_as_name *accessors.OSPath) *cachedUploadResponse {
 
 	dedup_mu.Lock()
 	defer dedup_mu.Unlock()
@@ -46,23 +74,30 @@ func DeduplicateUploads(scope vfilter.Scope,
 	if pres {
 		cached_response, ok := cached_response_any.(*cachedUploadResponse)
 		if ok {
-			cached_response.mu.Lock()
-			return cached_response.response, true, cached_response.mu.Unlock
+			return cached_response
 		}
 	}
 
 	// If there is no cached item, we need to add a placeholder, so
 	// other uploaders will wait for us to complete.
 	placeholder := &cachedUploadResponse{}
-	placeholder.mu.Lock()
 	cache.Set(key, placeholder)
-	return nil, false, placeholder.mu.Unlock
+
+	return placeholder
 }
 
 // Add the result into the cache
 func CacheUploadResult(scope vfilter.Scope,
 	store_as_name *accessors.OSPath,
 	response *UploadResponse) {
+
+	if response == nil {
+		return
+	}
+
+	dedup_mu.Lock()
+	defer dedup_mu.Unlock()
+
 	root_scope := vql_subsystem.GetRootScope(scope)
 	cache_any := vql_subsystem.CacheGet(root_scope, UPLOAD_CTX)
 	if utils.IsNil(cache_any) {

@@ -92,10 +92,10 @@ func (self *FileBasedUploader) Upload(
 		store_as_name = filename
 	}
 
-	cached, pres, closer := DeduplicateUploads(scope, store_as_name)
-	defer closer()
-	if pres {
-		return cached, nil
+	result, closer := DeduplicateUploads(scope, store_as_name)
+	defer closer(result)
+	if result != nil {
+		return result, nil
 	}
 
 	file_path := self.sanitize_path(store_as_name.String())
@@ -115,20 +115,17 @@ func (self *FileBasedUploader) Upload(
 			return nil, err
 		}
 
-		result := &UploadResponse{
+		result = &UploadResponse{
 			Path:       file_path,
 			Components: store_as_name.Components,
 		}
-
-		CacheUploadResult(scope, store_as_name, result)
 		return result, nil
 	}
 
 	// Try to collect sparse files if possible
-	result, err := self.maybeCollectSparseFile(
+	result, err = self.maybeCollectSparseFile(
 		ctx, reader, store_as_name, file_path)
 	if err == nil {
-		CacheUploadResult(scope, store_as_name, result)
 		return result, nil
 	}
 
@@ -183,8 +180,6 @@ func (self *FileBasedUploader) Upload(
 		Sha256:     hex.EncodeToString(sha_sum.Sum(nil)),
 		Md5:        hex.EncodeToString(md5_sum.Sum(nil)),
 	}
-
-	CacheUploadResult(scope, store_as_name, result)
 	return result, nil
 }
 

@@ -262,7 +262,7 @@ func (self *VelociraptorUploader) Upload(
 	ctime time.Time,
 	btime time.Time,
 	mode os.FileMode,
-	reader io.ReadSeeker) (*UploadResponse, error) {
+	reader io.ReadSeeker) (result *UploadResponse, err error) {
 
 	if mode.IsDir() {
 		return nil, fmt.Errorf("%w: Directories not supported",
@@ -277,10 +277,10 @@ func (self *VelociraptorUploader) Upload(
 		store_as_name = filename
 	}
 
-	cached, pres, closer := DeduplicateUploads(scope, store_as_name)
-	defer closer()
-	if pres && cached != nil {
-		return cached, nil
+	result, closer := DeduplicateUploads(scope, store_as_name)
+	defer closer(result)
+	if result != nil {
+		return result, nil
 	}
 
 	upload_id := self.Responder.NextUploadId()
@@ -311,19 +311,21 @@ func (self *VelociraptorUploader) Upload(
 
 		// When we upload asynchronously we return an upload id which
 		// can be used to track the upload (or resume it) in future.
-		return &UploadResponse{
+		result = &UploadResponse{
 			StoredName: store_as_name.String(),
 			Accessor:   accessor,
 			Components: store_as_name.Components[:],
 			ID:         upload_id,
-		}, nil
+		}
+		return result, nil
 
-	} else {
-		self.wg.Add(1)
-		return self._Upload(ctx, scope, filename, accessor,
-			store_as_name, expected_size, mtime, atime, ctime, btime,
-			mode, reader, 0, upload_id)
 	}
+
+	self.wg.Add(1)
+	result, err = self._Upload(ctx, scope, filename, accessor,
+		store_as_name, expected_size, mtime, atime, ctime, btime,
+		mode, reader, 0, upload_id)
+	return result, err
 }
 
 func (self *VelociraptorUploader) ReplayTransaction(

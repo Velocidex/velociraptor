@@ -400,11 +400,12 @@ func (self *Container) Upload(
 		store_as_name = filename
 	}
 
-	cached, pres, closer := uploads.DeduplicateUploads(scope, store_as_name)
-	defer closer()
-	if pres {
-		return cached, nil
+	result, closer := uploads.DeduplicateUploads(scope, store_as_name)
+	defer closer(result)
+	if result != nil {
+		return result, nil
 	}
+	result = &uploads.UploadResponse{}
 
 	store_path, err := accessors.NewZipFilePath("uploads")
 	if err != nil {
@@ -434,7 +435,6 @@ func (self *Container) Upload(
 		self.uploads = append(self.uploads, result)
 		self.mu.Unlock()
 
-		uploads.CacheUploadResult(scope, store_as_name, result)
 		return result, nil
 	}
 
