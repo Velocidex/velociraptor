@@ -1,0 +1,128 @@
+name: Windows.ActiveDirectory.SharpHound
+author: Matt Green - @mgreen27
+description: |
+   This artifact allows deployment of the BloodHound collection tool Sharphound.
+
+   BloodHound is a popular Active Directory Assessment tool that uses graph
+   theory to reveal the hidden and often unintended relationships. It can also be
+   used to identify and eliminate potentially risky domain configuration.
+
+   NOTE: 
+
+   - EDR exclusions are required.
+   - General recommendation is to run this artifact on only a handful of machines 
+     in a typical domain then deduplicate output.  
+   
+reference:
+  - https://github.com/SpecterOps/SharpHound/
+
+required_permissions:
+  - EXECVE
+  - FILESYSTEM_WRITE
+
+tools:
+  - name: SharpHound
+    url: https://github.com/SpecterOps/SharpHound/releases/download/v2.7.2/SharpHound_v2.7.2_windows_x86.zip
+    expected_hash: 6df744243fa5c24414061ea8916e774486ceaf0f8cef5cbc701d7c0a98f1c73c
+    serve_locally: true
+    
+type: CLIENT
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+      -- obtain hostname for output prefix
+      LET hostname <= SELECT Fqdn FROM info()
+      
+      -- get context on target binary
+      LET payload <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
+                    ToolName="SharpHound",IsExecutable='N')
+
+      -- build tempfolder for output
+      LET tempfolder <= tempdir()
+      
+      LET unzipped <= SELECT NewPath as OSPath FROM unzip(filename=payload.OSPath[0],filename_filter='\.exe$',output_directory=tempfolder)
+
+      -- execute payload
+      LET deploy <= SELECT * FROM execve(argv=[unzipped.OSPath[0],'--outputdirectory',
+                tempfolder,'--nozip'])
+                
+      LET collection <= SELECT OSPath, Name, Size--, upload(file=OSPath,name=Name) as UploadInfo
+        FROM glob(globs="/*.json",root=tempfolder) 
+      
+      LET results = SELECT * FROM foreach(row=collection, query={ SELECT Name, * FROM parse_jsonl(filename=OSPath) })
+      
+      SELECT * FROM results
+
+    notebook:
+      - type: vql_suggestion
+        name: Computers
+        template: |
+            LET Computers = SELECT * FROM source(artifact="Windows.ActiveDirectory.SharpHound")
+                WHERE meta.type =~ 'Computers'
+            
+            SELECT * FROM foreach(row=Computers, query={
+                SELECT Name, * FROM foreach(row=data)
+                })
+                
+      - type: vql_suggestion
+        name: Containers
+        template: |
+            LET Containers = SELECT * FROM source(artifact="Windows.ActiveDirectory.SharpHound")
+                WHERE meta.type =~ 'Containers'
+            
+            SELECT * FROM foreach(row=Containers, query={
+                SELECT Name, * FROM foreach(row=data)
+                })
+                
+      - type: vql_suggestion
+        name: Domains
+        template: |
+            LET Domains = SELECT * FROM source(artifact="Windows.ActiveDirectory.SharpHound")
+                WHERE meta.type =~ 'Domains'
+            
+            SELECT * FROM foreach(row=Domains, query={
+                SELECT Name, * FROM foreach(row=data)
+                })
+                
+      - type: vql_suggestion
+        name: GPOs
+        template: |
+            LET GPOs = SELECT * FROM source(artifact="Windows.ActiveDirectory.SharpHound")
+                WHERE meta.type =~ 'GPOs'
+            
+            SELECT * FROM foreach(row=GPOs, query={
+                SELECT Name, * FROM foreach(row=data)
+                })
+                
+      - type: vql_suggestion
+        name: Groups
+        template: |
+            LET Groups = SELECT * FROM source(artifact="Windows.ActiveDirectory.SharpHound")
+                WHERE meta.type =~ 'Groups'
+            
+            SELECT * FROM foreach(row=Groups, query={
+                SELECT Name, * FROM foreach(row=data)
+                })
+                
+      - type: vql_suggestion
+        name: OUs
+        template: |
+            LET OUs = SELECT * FROM source(artifact="Windows.ActiveDirectory.SharpHound")
+                WHERE meta.type =~ 'OUs'
+            
+            SELECT * FROM foreach(row=OUs, query={
+                SELECT Name, * FROM foreach(row=data)
+                })
+                
+      - type: vql_suggestion
+        name: Users
+        template: |
+            LET Users = SELECT * FROM source(artifact="Windows.ActiveDirectory.SharpHound")
+                WHERE meta.type =~ 'Users'
+            
+            SELECT * FROM foreach(row=Users, query={
+                SELECT Name, * FROM foreach(row=data)
+                })
