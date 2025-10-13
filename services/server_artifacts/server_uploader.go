@@ -116,6 +116,7 @@ func (self *ServerUploader) Upload(
 		"System.Upload.Completion",
 		"server", self.session_id,
 	)
+	closer(result)
 	return result, err
 }
 

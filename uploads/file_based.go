@@ -119,6 +119,7 @@ func (self *FileBasedUploader) Upload(
 			Path:       file_path,
 			Components: store_as_name.Components,
 		}
+		closer(result)
 		return result, nil
 	}
 
@@ -126,6 +127,7 @@ func (self *FileBasedUploader) Upload(
 	result, err = self.maybeCollectSparseFile(
 		ctx, reader, store_as_name, file_path)
 	if err == nil {
+		closer(result)
 		return result, nil
 	}
 
@@ -180,6 +182,7 @@ func (self *FileBasedUploader) Upload(
 		Sha256:     hex.EncodeToString(sha_sum.Sum(nil)),
 		Md5:        hex.EncodeToString(md5_sum.Sum(nil)),
 	}
+	closer(result)
 	return result, nil
 }
 

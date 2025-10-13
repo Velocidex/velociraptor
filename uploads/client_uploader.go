@@ -317,6 +317,7 @@ func (self *VelociraptorUploader) Upload(
 			Components: store_as_name.Components[:],
 			ID:         upload_id,
 		}
+		closer(result)
 		return result, nil
 
 	}
@@ -325,6 +326,7 @@ func (self *VelociraptorUploader) Upload(
 	result, err = self._Upload(ctx, scope, filename, accessor,
 		store_as_name, expected_size, mtime, atime, ctime, btime,
 		mode, reader, 0, upload_id)
+	closer(result)
 	return result, err
 }
 
@@ -395,7 +397,6 @@ func (self *VelociraptorUploader) _Upload(
 		ctx, scope, filename, accessor, store_as_name,
 		expected_size, mtime, upload_id, reader)
 	if err == nil {
-		CacheUploadResult(scope, store_as_name, result)
 		return result, nil
 	}
 
@@ -485,8 +486,6 @@ func (self *VelociraptorUploader) _Upload(
 			result.StoredSize = offset
 			result.Sha256 = hex.EncodeToString(sha_sum.Sum(nil))
 			result.Md5 = hex.EncodeToString(md5_sum.Sum(nil))
-
-			CacheUploadResult(scope, store_as_name, result)
 			return result, nil
 		}
 	}

@@ -81,5 +81,6 @@ func (self *NotebookUploader) Upload(
 		Sha256:     res.Sha256,
 		Md5:        res.Md5,
 	}
+	closer(result)
 	return result, nil
 }

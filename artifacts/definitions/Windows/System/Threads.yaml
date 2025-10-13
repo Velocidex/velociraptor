@@ -32,5 +32,5 @@ sources:
                  thread_start_address_name AS StartAddressName,
                  Hex(X=memory_basic_info.BaseAddress) AS BaseAddress,
                  filename AS Filename
-          FROM threads(pid=Pid)o
+          FROM threads(pid=Pid)
       })

@@ -434,7 +434,7 @@ func (self *Container) Upload(
 		self.mu.Lock()
 		self.uploads = append(self.uploads, result)
 		self.mu.Unlock()
-
+		closer(result)
 		return result, nil
 	}
 
@@ -465,6 +465,7 @@ func (self *Container) Upload(
 	if err != nil {
 		result.StoredSize = uint64(count)
 		result.Error = err.Error()
+		closer(result)
 		return result, err
 	}
 
@@ -480,7 +481,7 @@ func (self *Container) Upload(
 	self.stats.TotalUploadedBytes += result.Size
 	self.stats_mu.Unlock()
 
-	uploads.CacheUploadResult(scope, store_as_name, result)
+	closer(result)
 	return result, nil
 }
 
