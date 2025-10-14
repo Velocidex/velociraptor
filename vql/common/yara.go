@@ -36,6 +36,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -100,13 +101,18 @@ func (self YaraScanPlugin) Call(
 			yara_flag = yara.ScanFlagsFastMode
 		}
 
+		logger, closer := utils.NewDeduplicatedLogger(10 * time.Second)
+		defer closer()
+
 		matcher := &scanReporter{
 			output_chan:    output_chan,
 			blocksize:      arg.Blocksize,
 			number_of_hits: arg.NumberOfHits,
 			context:        arg.Context,
 			ctx:            ctx,
-
+			log_level: vql_subsystem.GetIntFromRow(
+				scope, scope, constants.YARA_LOG_LEVEL),
+			logger:    logger,
 			rules:     rules,
 			scope:     scope,
 			yara_flag: yara_flag,
@@ -297,7 +303,10 @@ func (self *scanReporter) scanFileByAccessor(
 func (self *scanReporter) scanRange(start, end uint64, f accessors.ReadSeekCloser) {
 	buf := make([]byte, self.blocksize)
 
-	// self.scope.Log("Scanning %v from %#0x to %#0x", self.filename, start, end)
+	if self.log_level >= 1 {
+		self.logger.Log(self.scope,
+			"Scanning %v from %#0x to %#0x", self.filename, start, end)
+	}
 
 	// base_offset reflects the file offset where we scan.
 	for self.base_offset = start; self.base_offset < end; {
@@ -344,6 +353,13 @@ func (self *scanReporter) scanRange(start, end uint64, f accessors.ReadSeekClose
 		// Advance the read pointer
 		self.base_offset += uint64(n)
 		self.reader = nil
+
+		if self.log_level >= 2 {
+			self.logger.Log(self.scope,
+				"Range %v from %#0x to %#0x: Got to %#0x (%d %%)",
+				self.filename, start, end, self.base_offset,
+				100*(self.base_offset-start)/(end-start))
+		}
 
 		// We count an op as one MB scanned.
 		self.scope.ChargeOp()
@@ -410,6 +426,8 @@ type scanReporter struct {
 	end            uint64
 	reader         io.ReaderAt
 	ctx            context.Context
+	log_level      uint64
+	logger         *utils.DeduplicatedLogger
 
 	// Internal scan state
 	scope     vfilter.Scope

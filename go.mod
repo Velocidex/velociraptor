@@ -99,7 +99,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.0
 	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/Masterminds/sprig/v3 v3.2.2
-	github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20250618151512-1385e105b127
+	github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20251014141320-f59d776a3def
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
 	github.com/Velocidex/fileb0x v1.1.2-0.20241111170537-c093c89cd042
 	github.com/Velocidex/go-ewf v0.0.0-20240210123447-97dc81b7d8c3
