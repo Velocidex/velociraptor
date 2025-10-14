@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2
-	github.com/Velocidex/etw v0.0.0-20250314035532-6115b05b9430
+	github.com/Velocidex/etw v0.0.0-20251013141050-6697409b99d1
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-magic v0.0.0-20250203094020-32f94b14f00f
 	github.com/Velocidex/go-yara v1.1.10-0.20250823152352-e5fc0843e50e
@@ -71,10 +71,10 @@ require (
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
 	golang.org/x/crypto v0.39.0
-	golang.org/x/mod v0.27.0
+	golang.org/x/mod v0.28.0
 	golang.org/x/net v0.41.0
-	golang.org/x/sys v0.33.0
-	golang.org/x/text v0.29.0
+	golang.org/x/sys v0.37.0
+	golang.org/x/text v0.30.0
 	golang.org/x/time v0.5.0
 	google.golang.org/api v0.169.0
 	google.golang.org/genproto v0.0.0-20240213162025-012b6fc9bca9 // indirect
@@ -89,7 +89,7 @@ require (
 	www.velocidex.com/golang/go-ese v0.2.1-0.20250215160921-5af66dc0f6ed
 	www.velocidex.com/golang/go-ntfs v0.2.1-0.20250322152626-3c09d909d740
 	www.velocidex.com/golang/go-pe v0.1.1-0.20250101153735-7a925ba8334b
-	www.velocidex.com/golang/go-prefetch v0.0.0-20250529114725-e36ea8a283e2
+	www.velocidex.com/golang/go-prefetch v0.0.0-20250811151430-517c09ca75e9
 	www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959
 	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7
 	www.velocidex.com/golang/vfilter v0.0.0-20250915140904-eb07b966bcef

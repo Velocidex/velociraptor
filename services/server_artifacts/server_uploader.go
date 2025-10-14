@@ -43,7 +43,7 @@ func (self *ServerUploader) Upload(
 	ctime time.Time,
 	btime time.Time,
 	mode os.FileMode,
-	reader io.ReadSeeker) (*uploads.UploadResponse, error) {
+	reader io.ReadSeeker) (result *uploads.UploadResponse, err error) {
 
 	if !mode.IsRegular() {
 		return nil, fmt.Errorf("%w: Directories not supported",
@@ -58,13 +58,13 @@ func (self *ServerUploader) Upload(
 		store_as_name = filename
 	}
 
-	cached, pres, closer := uploads.DeduplicateUploads(scope, store_as_name)
-	defer closer()
-	if pres {
-		return cached, nil
+	result, closer := uploads.DeduplicateUploads(scope, store_as_name)
+	defer closer(result)
+	if result != nil {
+		return result, nil
 	}
 
-	result, err := self.FileStoreUploader.Upload(ctx, scope, filename,
+	result, err = self.FileStoreUploader.Upload(ctx, scope, filename,
 		accessor, store_as_name, expected_size,
 		mtime, atime, ctime, btime, mode, reader)
 	if err != nil {
@@ -116,8 +116,7 @@ func (self *ServerUploader) Upload(
 		"System.Upload.Completion",
 		"server", self.session_id,
 	)
-
-	uploads.CacheUploadResult(scope, store_as_name, result)
+	closer(result)
 	return result, err
 }
 

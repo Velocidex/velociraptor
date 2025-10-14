@@ -2,6 +2,7 @@ package uploads
 
 import (
 	"sync"
+	"sync/atomic"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -15,15 +16,65 @@ var (
 )
 
 type cachedUploadResponse struct {
-	mu sync.Mutex
+	mu        sync.Mutex
+	is_locked int64
 
 	response *UploadResponse
+}
+
+func (self *cachedUploadResponse) isLocked() bool {
+	return atomic.LoadInt64(&self.is_locked) != 0
+}
+
+// Lease the response for a time, when the caller is done with it,
+// they can return it by calling the closer callback. It is safe to
+// call the closer multiple times - only the first call will take an
+// effect.
+//
+// result, closer := Deduplicate(....)
+// defer closer(result) // Ensure that the closer is called for all error paths.
+// ...
+// Calculate a better result
+// closer(result) // This will set the result in the cache.
+// The defer call will have no effect if a better result was obtained.
+func (self *cachedUploadResponse) LeaseResponse() (
+	response *UploadResponse, closer func(response *UploadResponse)) {
+
+	self.mu.Lock()
+	atomic.StoreInt64(&self.is_locked, 1)
+
+	if self.response == nil {
+		return nil, func(response *UploadResponse) {
+			if !self.isLocked() {
+				return
+			}
+
+			if response != nil {
+				self.response = response
+			}
+			self.mu.Unlock()
+			atomic.StoreInt64(&self.is_locked, 0)
+		}
+	}
+
+	return self.response, func(response *UploadResponse) {
+		self.mu.Unlock()
+		atomic.StoreInt64(&self.is_locked, 0)
+	}
 }
 
 // Manage the uploader cache - this is used to deduplicate files that
 // are uploaded multiple time so they only upload one file.
 func DeduplicateUploads(scope vfilter.Scope,
-	store_as_name *accessors.OSPath) (*UploadResponse, bool, func()) {
+	store_as_name *accessors.OSPath) (
+	*UploadResponse, func(response *UploadResponse)) {
+
+	cached_response := getCacheResponse(scope, store_as_name)
+	return cached_response.LeaseResponse()
+}
+
+func getCacheResponse(scope vfilter.Scope,
+	store_as_name *accessors.OSPath) *cachedUploadResponse {
 
 	dedup_mu.Lock()
 	defer dedup_mu.Unlock()
@@ -46,49 +97,14 @@ func DeduplicateUploads(scope vfilter.Scope,
 	if pres {
 		cached_response, ok := cached_response_any.(*cachedUploadResponse)
 		if ok {
-			cached_response.mu.Lock()
-			return cached_response.response, true, cached_response.mu.Unlock
+			return cached_response
 		}
 	}
 
 	// If there is no cached item, we need to add a placeholder, so
 	// other uploaders will wait for us to complete.
 	placeholder := &cachedUploadResponse{}
-	placeholder.mu.Lock()
 	cache.Set(key, placeholder)
-	return nil, false, placeholder.mu.Unlock
-}
 
-// Add the result into the cache
-func CacheUploadResult(scope vfilter.Scope,
-	store_as_name *accessors.OSPath,
-	response *UploadResponse) {
-	root_scope := vql_subsystem.GetRootScope(scope)
-	cache_any := vql_subsystem.CacheGet(root_scope, UPLOAD_CTX)
-	if utils.IsNil(cache_any) {
-		return
-	}
-
-	cache, ok := cache_any.(*ordereddict.Dict)
-	if ok {
-		key := store_as_name.String()
-		cached_response_any, pres := cache.Get(key)
-		if !pres {
-			cached_response_any = &cachedUploadResponse{
-				response: response,
-			}
-		}
-
-		cached_response, ok := cached_response_any.(*cachedUploadResponse)
-		if ok {
-			cached_response.response = response
-		} else {
-			// Should not really happen but if it does, we just cache
-			// it anyway
-			cached_response = &cachedUploadResponse{
-				response: response,
-			}
-		}
-		cache.Set(key, cached_response)
-	}
+	return placeholder
 }
