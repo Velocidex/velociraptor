@@ -154,7 +154,10 @@ func generateGUIConfig(datastore_directory, server_config_path, client_config_pa
 	}
 	fd.Close()
 
-	return config_obj, nil
+	// Re-read the config from the file we just made.
+	return makeDefaultConfigLoader().
+		WithVerbose(true).
+		WithFileLoader(server_config_path).LoadAndValidate()
 }
 
 func doGUI() error {

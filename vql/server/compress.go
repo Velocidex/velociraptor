@@ -35,7 +35,7 @@ import (
 
 type CompressArgs struct {
 	Path   string `vfilter:"required,field=path,doc=A path to compress"`
-	Output string `vfilter:"optional,field=output,doc=A path to write the output - default is the path with a .gz extension"`
+	Output string `vfilter:"required,field=output,doc=A path to write the output - default is the path with a .gz extension"`
 }
 
 type Compress struct{}
