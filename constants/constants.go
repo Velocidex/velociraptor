@@ -163,6 +163,11 @@ const (
 	// timezone actually serialized.
 	TZ = "TZ"
 
+	// Log levels for the Yara plugin:
+	// 1: Log ranges
+	// 2: Log Bytes scanned with 30 second deduplicated logs
+	YARA_LOG_LEVEL = "YARA_LOG_LEVEL"
+
 	PinnedServerName = "VelociraptorServer"
 
 	// Default gateway identity. This is only used when creating the
