@@ -381,18 +381,6 @@ func (self *Container) Upload(
 	mode os.FileMode,
 	reader io.ReadSeeker) (*uploads.UploadResponse, error) {
 
-	result := &uploads.UploadResponse{
-		Path: formatFilename(filename, accessor),
-		Size: uint64(expected_size),
-	}
-
-	// Avoid sending huge strings inside the JSON
-	if accessor == "data" {
-		result.Path = "data"
-	} else if accessor == "" {
-		accessor = "auto"
-	}
-
 	// The filename to store the file inside the zip - due to escaping
 	// issues this may not be exactly the same as the file name we
 	// receive.
@@ -405,7 +393,18 @@ func (self *Container) Upload(
 	if result != nil {
 		return result, nil
 	}
-	result = &uploads.UploadResponse{}
+
+	result = &uploads.UploadResponse{
+		Path: formatFilename(filename, accessor),
+		Size: uint64(expected_size),
+	}
+
+	// Avoid sending huge strings inside the JSON
+	if accessor == "data" {
+		result.Path = "data"
+	} else if accessor == "" {
+		accessor = "auto"
+	}
 
 	store_path, err := accessors.NewZipFilePath("uploads")
 	if err != nil {
