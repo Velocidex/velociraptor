@@ -169,6 +169,4 @@ File issues on https://github.com/Velocidex/velociraptor
 Read more about Velociraptor on our blog:
 https://docs.velociraptor.app/blog/
 
-Hang out on Medium https://medium.com/velociraptor-ir
-
 Follow us on Twitter [@velocidex](https://twitter.com/velocidex)

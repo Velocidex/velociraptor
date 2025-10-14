@@ -103,7 +103,9 @@ func setOneValue(result *ordereddict.Dict, value protoreflect.Value,
 	// VQL.
 	case protoreflect.EnumKind:
 		value_descriptor := field.Enum().Values().ByNumber(value.Enum())
-		result.Set(field_name, string(value_descriptor.Name()))
+		if value_descriptor != nil {
+			result.Set(field_name, string(value_descriptor.Name()))
+		}
 
 	case protoreflect.MessageKind:
 		result.Set(field_name, descriptorToDict(value.Message()))
