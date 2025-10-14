@@ -49,8 +49,8 @@ github.com/PuerkitoBio/goquery v1.8.1 h1:uQxhNlArOIdbrH1tr0UXwdVFgDcZDrZVdcpygAc
 github.com/PuerkitoBio/goquery v1.8.1/go.mod h1:Q8ICL1kNUJ2sXGoAhPGUdYDJvgQgHzJsnnd3H7Ho5jQ=
 github.com/Showmax/go-fqdn v1.0.0 h1:0rG5IbmVliNT5O19Mfuvna9LL7zlHyRfsSvBPZmF9tM=
 github.com/Showmax/go-fqdn v1.0.0/go.mod h1:SfrFBzmDCtCGrnHhoDjuvFnKsWjEQX/Q9ARZvOrJAko=
-github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20250618151512-1385e105b127 h1:wGTl6M8jQuu24e7fp3wjYJSRxHFApJE5HRFsNZBuVAk=
-github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20250618151512-1385e105b127/go.mod h1:HloPDQtxpV/iPxaKVE45+dz6DELiHZcBC1KFRlZtAtM=
+github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20251014141320-f59d776a3def h1:1FiSNT+Xh7UGohKsOoeDMkuw0gVyf6SUlnxeDbqiHPw=
+github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20251014141320-f59d776a3def/go.mod h1:HloPDQtxpV/iPxaKVE45+dz6DELiHZcBC1KFRlZtAtM=
 github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2 h1:2cUc1SS+pldecJ6AH6vR/MSpGJRsdAn9a+7Dye9HDHk=
 github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2/go.mod h1:1fYhBBGtaKu46Kpmkd2kvTi32zvgI91AusAW8BTiTAI=
 github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b h1:ZIf5UI3RZj9bO5XJKp8yBiqkM212yt/yic0cha20ORY=
