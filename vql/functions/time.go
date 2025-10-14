@@ -176,7 +176,7 @@ func (self _Timestamp) Call(ctx context.Context, scope vfilter.Scope,
 	}
 
 	if arg.WinFileTime > 0 {
-		return time.Unix((arg.WinFileTime/10000000)-11644473600, 0).UTC()
+		return utils.WinFileTime(arg.WinFileTime)
 	}
 
 	if arg.String != "" {

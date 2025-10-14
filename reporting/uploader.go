@@ -44,10 +44,10 @@ func (self *NotebookUploader) Upload(
 		store_as_name = filename
 	}
 
-	cached, pres, closer := uploads.DeduplicateUploads(scope, store_as_name)
-	defer closer()
-	if pres {
-		return cached, nil
+	result, closer := uploads.DeduplicateUploads(scope, store_as_name)
+	defer closer(result)
+	if result != nil {
+		return result, nil
 	}
 
 	dest_path_spec := self.notebook_cell_path_manager.GetUploadsFile(
@@ -71,7 +71,7 @@ func (self *NotebookUploader) Upload(
 		return nil, err
 	}
 
-	result := &uploads.UploadResponse{
+	result = &uploads.UploadResponse{
 		Path:       res.Path,
 		StoredName: store_as_name.String(),
 		Accessor:   accessor,
@@ -81,7 +81,6 @@ func (self *NotebookUploader) Upload(
 		Sha256:     res.Sha256,
 		Md5:        res.Md5,
 	}
-
-	uploads.CacheUploadResult(scope, store_as_name, result)
+	closer(result)
 	return result, nil
 }

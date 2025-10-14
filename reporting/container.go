@@ -381,7 +381,20 @@ func (self *Container) Upload(
 	mode os.FileMode,
 	reader io.ReadSeeker) (*uploads.UploadResponse, error) {
 
-	result := &uploads.UploadResponse{
+	// The filename to store the file inside the zip - due to escaping
+	// issues this may not be exactly the same as the file name we
+	// receive.
+	if store_as_name == nil {
+		store_as_name = filename
+	}
+
+	result, closer := uploads.DeduplicateUploads(scope, store_as_name)
+	defer closer(result)
+	if result != nil {
+		return result, nil
+	}
+
+	result = &uploads.UploadResponse{
 		Path: formatFilename(filename, accessor),
 		Size: uint64(expected_size),
 	}
@@ -391,19 +404,6 @@ func (self *Container) Upload(
 		result.Path = "data"
 	} else if accessor == "" {
 		accessor = "auto"
-	}
-
-	// The filename to store the file inside the zip - due to escaping
-	// issues this may not be exactly the same as the file name we
-	// receive.
-	if store_as_name == nil {
-		store_as_name = filename
-	}
-
-	cached, pres, closer := uploads.DeduplicateUploads(scope, store_as_name)
-	defer closer()
-	if pres {
-		return cached, nil
 	}
 
 	store_path, err := accessors.NewZipFilePath("uploads")
@@ -433,8 +433,7 @@ func (self *Container) Upload(
 		self.mu.Lock()
 		self.uploads = append(self.uploads, result)
 		self.mu.Unlock()
-
-		uploads.CacheUploadResult(scope, store_as_name, result)
+		closer(result)
 		return result, nil
 	}
 
@@ -465,6 +464,7 @@ func (self *Container) Upload(
 	if err != nil {
 		result.StoredSize = uint64(count)
 		result.Error = err.Error()
+		closer(result)
 		return result, err
 	}
 
@@ -480,7 +480,7 @@ func (self *Container) Upload(
 	self.stats.TotalUploadedBytes += result.Size
 	self.stats_mu.Unlock()
 
-	uploads.CacheUploadResult(scope, store_as_name, result)
+	closer(result)
 	return result, nil
 }
 

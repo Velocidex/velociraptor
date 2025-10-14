@@ -21,6 +21,9 @@ type LZXpressFunction struct{}
 func (self *LZXpressFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.CheckForPanic(scope, "lzxpress_decompress")
+
 	arg := &LZXpressFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
