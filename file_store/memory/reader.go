@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -22,7 +23,7 @@ func (self *MemoryReader) Read(buf []byte) (int, error) {
 
 	fs_buf, pres := self.memory_file_store.Get(self.filename)
 	if !pres {
-		return 0, os.ErrNotExist
+		return 0, utils.NotFoundError
 	}
 
 	if self.offset >= len(fs_buf) {
@@ -70,7 +71,7 @@ func (self *MemoryReader) Stat() (api.FileInfo, error) {
 
 	fs_buf, pres := self.memory_file_store.Get(self.filename)
 	if !pres {
-		return nil, os.ErrNotExist
+		return nil, utils.NotFoundError
 	}
 
 	return vtesting.MockFileInfo{

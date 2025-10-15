@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -25,10 +24,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-)
-
-var (
-	HuntNotFoundError = utils.Wrap(os.ErrNotExist, "Hunt not found")
 )
 
 type HuntIndexEntry struct {

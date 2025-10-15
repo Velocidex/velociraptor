@@ -182,7 +182,7 @@ func (self PipeFilesystemAccessor) ReadDirWithOSPath(path *accessors.OSPath) (
 func (self PipeFilesystemAccessor) Open(variable string) (accessors.ReadSeekCloser, error) {
 	variable_data, pres := self.scope.Resolve(variable)
 	if !pres || utils.IsNil(variable_data) {
-		return nil, os.ErrNotExist
+		return nil, utils.NotFoundError
 	}
 	variable_data_lazy, ok := variable_data.(types.StoredExpression)
 	if ok {
@@ -198,7 +198,7 @@ func (self PipeFilesystemAccessor) Open(variable string) (accessors.ReadSeekClos
 
 	pipe, ok := variable_data.(*Pipe)
 	if !ok {
-		return nil, os.ErrNotExist
+		return nil, utils.NotFoundError
 	}
 
 	return pipe, nil
@@ -207,7 +207,7 @@ func (self PipeFilesystemAccessor) Open(variable string) (accessors.ReadSeekClos
 func (self PipeFilesystemAccessor) OpenWithOSPath(
 	path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
 	if len(path.Components) != 1 {
-		return nil, os.ErrNotExist
+		return nil, utils.NotFoundError
 	}
 	return self.Open(path.Components[0])
 }

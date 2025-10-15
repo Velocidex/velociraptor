@@ -3,7 +3,6 @@ package memory
 import (
 	"bytes"
 	"encoding/binary"
-	"os"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -47,11 +46,11 @@ func (self *MemoryWriter) Update(data []byte, offset int64) error {
 
 	buff, ok := self.memory_file_store.Get(self.filename)
 	if !ok {
-		return os.ErrNotExist
+		return utils.NotFoundError
 	}
 
 	if offset >= int64(len(buff)) {
-		return os.ErrNotExist
+		return utils.NotFoundError
 	}
 
 	// Write the bytes into buffer offset

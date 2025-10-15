@@ -28,7 +28,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -143,7 +142,7 @@ func (self *Store) _GetRecord(client_id string) (*actions_proto.ClientInfo, erro
 
 	serialized, pres := self.data[client_id]
 	if !pres {
-		return nil, os.ErrNotExist
+		return nil, utils.NotFoundError
 	}
 
 	client_info := &actions_proto.ClientInfo{}
