@@ -71,6 +71,17 @@ Queries:
 # OrgUser should be an admin in ORGID and reader in ORGID2
 - SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) WHERE name =~ "OrgUser" ORDER BY Key
 
+# Create some clients
+- |
+  LET _ <= SELECT * FROM query(query={
+     SELECT client_create(client_id="C.123") FROM scope()
+  }, org_id="ORGID")
+
+- |
+  LET _ <= SELECT * FROM query(query={
+     SELECT client_create(client_id="C.123") FROM scope()
+  }, org_id="ORGID2")
+
 # Launching collections on different orgs can be done using a number of ways.
 # 1. Use the query() plugin to run the query on another org.
 - SELECT * FROM query(query={

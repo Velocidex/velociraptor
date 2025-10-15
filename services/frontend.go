@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"os"
 	"sync/atomic"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -17,7 +16,7 @@ import (
 // frontends to spread the load between them.
 
 var (
-	FrontendIsMaster          = fmt.Errorf("FrontendIsMaster: %w", os.ErrNotExist)
+	FrontendIsMaster          = fmt.Errorf("FrontendIsMaster: %w", utils.NotFoundError)
 	NotRunningInFrontendError = utils.Wrap(utils.InvalidConfigError,
 		"Command not available when running without a frontend service. To perform administrative tasks on the command line, connect to the server using the API https://docs.velociraptor.app/docs/server_automation/server_api/")
 

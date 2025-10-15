@@ -53,6 +53,7 @@ export default class RegExArray extends Component {
               {_.map(this.getRegexArray(), (x, idx)=>{
                   return <div key={idx} className="regex_array_item">
                            <Button variant="default-outline" size="sm"
+                                   className="left-joined-btn"
                                    onClick={(e)=>{
                                        this.removeRegex(idx);
                                        e.preventDefault();

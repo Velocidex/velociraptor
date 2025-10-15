@@ -43,7 +43,6 @@ package services
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -65,7 +64,7 @@ const (
 )
 
 var (
-	FlowNotFoundError = utils.Wrap(os.ErrNotExist, "Flow not found")
+	FlowNotFoundError = utils.Wrap(utils.NotFoundError, "Flow not found")
 	DryRunOnly        = DeleteFlowOptions{
 		ReallyDoIt: false,
 	}

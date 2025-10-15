@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 	"sync"
@@ -382,7 +381,8 @@ func (self *MemcacheDatastore) GetSubject(
 
 		if err != nil {
 			return fmt.Errorf(
-				"While opening %v: %w", urn.AsClientPath(), os.ErrNotExist)
+				"While opening %v: %w", urn.AsClientPath(),
+				utils.NotFoundError)
 		}
 	}
 
@@ -411,7 +411,7 @@ func unmarshalData(serialized_content []byte,
 
 	if err != nil {
 		return fmt.Errorf("While decoding %v: %w",
-			urn.AsClientPath(), os.ErrNotExist)
+			urn.AsClientPath(), utils.NotFoundError)
 	}
 	return nil
 }

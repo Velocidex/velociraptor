@@ -4,7 +4,6 @@ package s3
 
 import (
 	"context"
-	"os"
 	"strings"
 	"sync"
 
@@ -169,7 +168,7 @@ func (self RawS3SystemAccessor) ReadDirWithOSPath(
 
 func getBucketAndKey(path *accessors.OSPath) (string, string, error) {
 	if len(path.Components) == 0 {
-		return "", "", os.ErrNotExist
+		return "", "", utils.NotFoundError
 	}
 
 	bucket := path.Components[0]

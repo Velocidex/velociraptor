@@ -26,11 +26,11 @@ package ntfs
 
 import (
 	"errors"
-	"os"
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -89,7 +89,7 @@ func (self MFTFileSystemAccessor) parseMFTPath(full_path *accessors.OSPath) (
 		delegate_accessor = full_path.DelegateAccessor()
 		subpath = full_path.Components[0]
 	} else if len(full_path.Components) < 2 {
-		return nil, "", "", os.ErrNotExist
+		return nil, "", "", utils.NotFoundError
 	} else {
 		subpath = full_path.Components[1]
 	}
@@ -101,7 +101,7 @@ func (self *MFTFileSystemAccessor) Open(path string) (
 
 	full_path, err := self.ParsePath(path)
 	if err != nil || len(full_path.Components) == 0 {
-		return nil, os.ErrNotExist
+		return nil, utils.NotFoundError
 	}
 
 	return self.OpenWithOSPath(full_path)
@@ -169,7 +169,7 @@ func (self *MFTFileSystemAccessor) Lstat(path string) (
 	accessors.FileInfo, error) {
 	full_path, err := self.ParsePath(path)
 	if err != nil || len(full_path.Components) == 0 {
-		return nil, os.ErrNotExist
+		return nil, utils.NotFoundError
 	}
 
 	return self.LstatWithOSPath(full_path)

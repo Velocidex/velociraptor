@@ -170,7 +170,7 @@ func (self *MemoryFileStore) StatFile(path api.FSPathSpec) (api.FileInfo, error)
 	self.Trace("StatFile", filename)
 	buff, pres := self.Data.Get(filename)
 	if !pres {
-		return nil, os.ErrNotExist
+		return nil, utils.NotFoundError
 	}
 
 	return &vtesting.MockFileInfo{
@@ -190,7 +190,7 @@ func (self *MemoryFileStore) Move(src, dest api.FSPathSpec) error {
 	dest_filename := pathSpecToPath(self.db, self.config_obj, dest)
 	buff, pres := self.Data.Get(src_filename)
 	if !pres {
-		return os.ErrNotExist
+		return utils.NotFoundError
 	}
 
 	self.Data.Set(dest_filename, buff)

@@ -1,7 +1,6 @@
 package zip
 
 import (
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -113,7 +112,7 @@ func (self *ZipFileSystemAccessor) getCachedZipFile(cache_key string) (
 		return nil, nil
 	}
 
-	return nil, os.ErrNotExist
+	return nil, utils.NotFoundError
 }
 
 // Returns a ZipFileCache wrapper around the zip.Reader. Be sure to
