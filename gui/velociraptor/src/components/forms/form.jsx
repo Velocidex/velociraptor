@@ -19,6 +19,10 @@ import Select from 'react-select';
 import T from '../i8n/i8n.jsx';
 import { JSONparse } from '../utils/json_parse.jsx';
 import { parseCSV, serializeCSV } from '../utils/csv.jsx';
+import Button from 'react-bootstrap/Button';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
 import "./validated.css";
 import "./forms.css";
 
@@ -362,19 +366,29 @@ export default class VeloForm extends React.Component {
                     </ToolTip>
                   </Form.Label>
                   <Col sm="8">
-                    <Select
-                      placeholder={T("Choose one or more items")}
-                      className="velo"
-                      classNamePrefix="velo"
-                      closeMenuOnSelect={false}
-                      isMulti
-                      defaultValue={defaults}
-                      onChange={e=>{
-                          let data = _.map(e, x=>x.value);
-                          this.props.setValue(JSON.stringify(data));
-                      }}
-                      options={options}
-                      />
+                    <ButtonGroup className="full-width multichoice-select">
+                      <Button variant="default"
+                              onClick={x=>{
+                                  this.props.setValue(JSON.stringify(
+                                      this.props.param.choices));
+                              }}>
+                        <FontAwesomeIcon icon="border-all"/>
+                      </Button>
+                        <Select
+                          placeholder={T("Choose one or more items")}
+                          className="velo"
+                          classNamePrefix="velo"
+                          closeMenuOnSelect={false}
+                          isMulti
+                          defaultValue={defaults}
+                          value={defaults}
+                          onChange={e=>{
+                              let data = _.map(e, x=>x.value);
+                              this.props.setValue(JSON.stringify(data));
+                          }}
+                          options={options}
+                        />
+                    </ButtonGroup>
                   </Col>
                 </Form.Group>
             );

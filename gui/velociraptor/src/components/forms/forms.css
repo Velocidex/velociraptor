@@ -27,3 +27,21 @@ div.velo__menu {
 .form-control:disabled {
     opacity: 0.5;
 }
+
+.multichoice-select .btn,
+.left-joined-btn {
+    max-width: 30.5px;
+    padding-left: 9px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.multichoice-select .velo {
+    width: 100%;
+}
+
+.multichoice-select  .velo__control,
+.regex-form .velo-ace-editor {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}

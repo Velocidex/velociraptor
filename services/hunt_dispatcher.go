@@ -24,7 +24,6 @@ package services
 
 import (
 	"context"
-	"os"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -35,7 +34,7 @@ import (
 )
 
 var (
-	HuntNotFoundError = utils.Wrap(os.ErrNotExist, "Hunt no found")
+	HuntNotFoundError = utils.Wrap(utils.NotFoundError, "Hunt no found")
 )
 
 // How was the hunt modified and what should be done about it?

@@ -86,7 +86,7 @@ func (self *FileBaseDataStore) GetSubject(
 	serialized_content, err := readContentFromFile(self, config_obj, urn)
 	if err != nil {
 		return fmt.Errorf("While opening %v: %w", urn.AsClientPath(),
-			os.ErrNotExist)
+			utils.NotFoundError)
 	}
 
 	if len(serialized_content) == 0 {
@@ -109,7 +109,7 @@ func (self *FileBaseDataStore) GetSubject(
 
 	if err != nil {
 		return fmt.Errorf("While opening %v: %w",
-			urn.AsClientPath(), os.ErrNotExist)
+			urn.AsClientPath(), utils.NotFoundError)
 	}
 	return nil
 }

@@ -3,11 +3,11 @@ package data
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -39,7 +39,7 @@ func (self ScopeFilesystemAccessor) getData(variable string) (string, error) {
 		}
 		result, pres = self.scope.Associative(result, member)
 		if !pres {
-			return "", os.ErrNotExist
+			return "", utils.NotFoundError
 		}
 	}
 
@@ -63,7 +63,7 @@ func (self ScopeFilesystemAccessor) ParsePath(path string) (
 func (self ScopeFilesystemAccessor) LstatWithOSPath(path *accessors.OSPath) (
 	accessors.FileInfo, error) {
 	if len(path.Components) != 1 {
-		return nil, os.ErrNotExist
+		return nil, utils.NotFoundError
 	}
 
 	return self.Lstat(path.Components[0])
@@ -100,7 +100,7 @@ func (self ScopeFilesystemAccessor) ReadDirWithOSPath(path *accessors.OSPath) (
 func (self ScopeFilesystemAccessor) OpenWithOSPath(path *accessors.OSPath) (
 	accessors.ReadSeekCloser, error) {
 	if len(path.Components) != 1 {
-		return nil, os.ErrNotExist
+		return nil, utils.NotFoundError
 	}
 
 	return self.Open(path.Components[0])
