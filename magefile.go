@@ -444,7 +444,8 @@ func DarwinBase() error {
 
 func Clean() error {
 	for _, target := range assets {
-		err := sh.Rm(target)
+		go_target := filepath.Join(filepath.Dir(target), "ab0x.go")
+		err := sh.Rm(go_target)
 		if err != nil {
 			return err
 		}

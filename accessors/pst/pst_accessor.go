@@ -8,7 +8,6 @@ package pst
 import (
 	"errors"
 	"io"
-	"os"
 	"strconv"
 	"strings"
 
@@ -77,7 +76,7 @@ func (self *PSTFileSystemAccessor) Open(path string) (
 
 	full_path, err := self.ParsePath(path)
 	if err != nil || len(full_path.Components) == 0 {
-		return nil, os.ErrNotExist
+		return nil, utils.NotFoundError
 	}
 
 	return self.OpenWithOSPath(full_path)
@@ -108,7 +107,7 @@ func (self *PSTFileSystemAccessor) Lstat(path string) (
 	accessors.FileInfo, error) {
 	full_path, err := self.ParsePath(path)
 	if err != nil || len(full_path.Components) == 0 {
-		return nil, os.ErrNotExist
+		return nil, utils.NotFoundError
 	}
 
 	return self.LstatWithOSPath(full_path)

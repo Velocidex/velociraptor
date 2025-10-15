@@ -10,6 +10,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -242,7 +243,7 @@ func (self VirtualFilesystemAccessor) OpenWithOSPath(path *OSPath) (
 	ReadSeekCloser, error) {
 	node, err := self.getNode(path)
 	if err != nil {
-		return nil, os.ErrNotExist
+		return nil, utils.NotFoundError
 	}
 
 	return VirtualReadSeekCloser{
@@ -258,7 +259,7 @@ func (self VirtualFilesystemAccessor) getNode(path *OSPath) (*directory_node, er
 			next_node := node.GetChild(c)
 			if next_node == nil {
 				return nil, fmt.Errorf("While finding %v: Can not find %v: %w",
-					path, c, os.ErrNotExist)
+					path, c, utils.NotFoundError)
 			}
 			node = next_node
 		}
