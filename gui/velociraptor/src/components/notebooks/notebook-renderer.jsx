@@ -23,7 +23,7 @@ export default class NotebookRenderer extends React.Component {
         // A locked notebook can not be edited. Each time a cell is in
         // flight, we increment the lock count until the notebook is in
         // a valid state, then the lock is decremented. This ensures
-        // notebooks can only be edited is places where the server
+        // notebooks can only be edited in places where the server
         // acknowledges the current state.
         locked: 0,
     }
@@ -65,9 +65,9 @@ export default class NotebookRenderer extends React.Component {
                      this.source.token).then(response=>{
                          if (response.cancel) return;
                          this.props.updateVersion();
-                         this.setState({loading: false});
+                         this.setState({loading: false, locked: 0});
                      }).catch(e=> {
-                         this.setState({loading: false});
+                         this.setState({loading: false, locked: 0});
                          this.props.updateVersion();
                      });
         }
@@ -100,9 +100,9 @@ export default class NotebookRenderer extends React.Component {
                          if (response.cancel) return;
 
                          this.props.updateVersion();
-                         this.setState({loading: false});
+                         this.setState({loading: false, locked: 0});
                      }).catch(e=>{
-                         this.setState({loading: false});
+                         this.setState({loading: false, locked: 0});
                          this.props.updateVersion();
                      });
         }
@@ -135,9 +135,9 @@ export default class NotebookRenderer extends React.Component {
                      this.source.token).then(response=>{
                          if (response.cancel) return;
                          this.props.updateVersion();
-                         this.setState({loading: false});
+                         this.setState({loading: false, locked: 0});
                      }).catch(e=>{
-                         this.setState({loading: false});
+                         this.setState({loading: false, locked: 0});
                          this.props.updateVersion();
                      });
         }

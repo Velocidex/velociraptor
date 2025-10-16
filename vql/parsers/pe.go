@@ -88,6 +88,13 @@ func (self _PEFunction) Call(
 		return &vfilter.Null{}
 	}
 
+	// Set the max hash size if needed
+	hash_max_size := vql_subsystem.GetIntFromRow(
+		scope, scope, constants.HASH_MAX_SIZE)
+	if hash_max_size > 0 {
+		pe.SetHashSizeLimit(int64(hash_max_size))
+	}
+
 	// Return a lazy object.
 	return ordereddict.NewDict().
 		Set("FileHeader", pe_file.FileHeader).
@@ -124,7 +131,11 @@ func (self _PEFunction) Call(
 			return pe.PKCS7ToOrderedDict(info)
 		}).
 		Set("AuthenticodeHash", func() vfilter.Any {
-			return pe_file.CalcHashToDict()
+			res, err := pe_file.CalcHashToDict(ctx)
+			if err != nil {
+				res = ordereddict.NewDict()
+			}
+			return res
 		})
 }
 
