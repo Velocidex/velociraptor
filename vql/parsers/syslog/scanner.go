@@ -171,9 +171,10 @@ func (self *fileManager) AddFiles(
 	GlobalSyslogService(self.config_obj).Reap()
 }
 
+// Run the query periodically and update the watched files list. NOTE:
+// Watched files are never removed, only added by the query.
 func (self *fileManager) Start() {
-	if len(self.files) == 0 && self.query == nil {
-		self.Close()
+	if self.query == nil {
 		return
 	}
 
@@ -185,6 +186,22 @@ func (self *fileManager) Start() {
 		}
 	}
 
+	// First run through do not dump existing lines
+	var files []*accessors.OSPath
+
+	for row := range self.query.Eval(self.ctx, self.scope) {
+		full_path_any, pres := self.scope.Associative(row, "OSPath")
+		if pres {
+			full_path, ok := full_path_any.(*accessors.OSPath)
+			if ok {
+				files = append(files, full_path)
+			}
+		}
+	}
+	self.AddFiles(files, !DUMP_FILES)
+
+	// Now periodically check for updates. If a new file appears by
+	// the query, dump it from the start.
 	go func() {
 		for {
 			var files []*accessors.OSPath
