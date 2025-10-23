@@ -32,7 +32,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"text/template"
@@ -40,6 +39,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
@@ -91,7 +91,7 @@ func (self NoIPUpdater) UpdateDDNSRecord(
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := utils.ReadAllWithLimit(req.Body, constants.MAX_MEMORY)
 	if err != nil {
 		return err
 	}

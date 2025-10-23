@@ -6,11 +6,11 @@ package file_store
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/file_store_file_info"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
@@ -341,7 +341,7 @@ func getIndex(config_obj *config_proto.Config,
 	}
 	defer fd.Close()
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 	if err != nil {
 		return nil, err
 	}

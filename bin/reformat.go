@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/constants"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -56,7 +57,7 @@ func doReformat() error {
 			continue
 		}
 
-		data, err := ioutil.ReadAll(fd)
+		data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 		if err != nil {
 			returned_errs[artifact_path] = err
 			fd.Close()

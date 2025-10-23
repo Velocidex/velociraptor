@@ -40,7 +40,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
@@ -335,7 +334,7 @@ func send_to_elastic(
 	}
 
 	var response *ordereddict.Dict
-	b1, err := ioutil.ReadAll(res.Body)
+	b1, err := utils.ReadAllWithLimit(res.Body, constants.MAX_MEMORY)
 	if err == nil {
 		response, err = utils.ParseJsonToObject(b1)
 		if err != nil {

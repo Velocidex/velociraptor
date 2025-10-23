@@ -2,12 +2,14 @@ package parsers
 
 import (
 	"context"
-	"io/ioutil"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/json"
+	json_tools "www.velocidex.com/golang/velociraptor/tools/json"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -17,6 +19,7 @@ import (
 type ParseYamlFunctionArgs struct {
 	Filename *accessors.OSPath `vfilter:"required,field=filename,doc=Yaml Filename"`
 	Accessor string            `vfilter:"optional,field=accessor,doc=File accessor"`
+	Schema   []string          `vfilter:"optional,field=schema,doc=Json schema to use for validation."`
 }
 
 type ParseYamlFunction struct{}
@@ -49,7 +52,7 @@ func (self ParseYamlFunction) Call(
 	}
 	defer fd.Close()
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := utils.ReadAllWithCtx(ctx, scope, fd)
 	if err != nil {
 		scope.Log("parse_yaml: %v", err)
 		return nil
@@ -63,7 +66,31 @@ func (self ParseYamlFunction) Call(
 		scope.Log("parse_yaml: %v", err)
 		return nil
 	}
-	return yamlToDict(parsed)
+	result := yamlToDict(parsed)
+	result_dict, ok := result.(*ordereddict.Dict)
+	if len(arg.Schema) == 0 || !ok {
+		return result
+	}
+
+	// Validating the json requires us to pass to parse_json.
+	var options json_tools.ValidationOptions
+	serialized, err := json.Marshal(result)
+	if err != nil {
+		scope.Log("parse_yaml: %v", err)
+		return &vfilter.Null{}
+	}
+
+	intermediate, schema, errs := json_tools.ParseJsonToMapWithSchema(
+		string(serialized), arg.Schema, options)
+	if len(errs) > 0 {
+		for _, err := range errs {
+			scope.Log("ERROR:parse_yaml: %v", err)
+		}
+		return &vfilter.Null{}
+	}
+
+	json_tools.PopulateDefaults(result_dict, intermediate, schema)
+	return result_dict
 }
 
 func yamlToDict(item interface{}) interface{} {

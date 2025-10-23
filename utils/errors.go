@@ -22,6 +22,7 @@ var (
 	NoAccessToOrgError  = errors.New("No access to org")
 	CancelledError      = errors.New("Cancelled")
 	SecretsEnforced     = errors.New("Secrets are enforced - you must specify a secret name")
+	PermissionDenied    = errors.New("PermissionDenied")
 )
 
 // This is a custom error type that wraps an inner error but does not

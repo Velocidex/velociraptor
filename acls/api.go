@@ -1,7 +1,7 @@
 package acls
 
-import "errors"
+import "www.velocidex.com/golang/velociraptor/utils"
 
 var (
-	PermissionDenied = errors.New("PermissionDenied")
+	PermissionDenied = utils.Wrap(utils.PermissionDenied, "PermissionDenied")
 )

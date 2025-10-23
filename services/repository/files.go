@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Loads the global repository with artifacts from local filesystem
@@ -90,7 +91,7 @@ func loadRepositoryFromDirectory(
 			defer fd.Close()
 
 			// Skip files we can not read.
-			data, err := ioutil.ReadAll(fd)
+			data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 			if err != nil {
 				logger.Error("InitializeGlobalRepositoryFromFilesystem: %v", err)
 				return nil

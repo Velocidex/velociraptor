@@ -1,11 +1,12 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 
 	errors "github.com/go-errors/errors"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/marshal"
@@ -27,7 +28,7 @@ func loadScopeFromFile(filename string, scope types.Scope) (types.Scope, error) 
 	}
 	defer fd.Close()
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 	if err != nil {
 		return nil, err
 	}

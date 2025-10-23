@@ -1,12 +1,12 @@
 package test_utils
 
 import (
-	"io/ioutil"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/require"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -44,7 +44,7 @@ func FileReadAll(t *testing.T, config_obj *config_proto.Config,
 
 	defer fd.Close()
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 	require.NoError(t, err)
 
 	return string(data)

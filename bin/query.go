@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -301,7 +300,7 @@ func doQuery() error {
 			if err != nil {
 				return fmt.Errorf("While opening query file %v: %w", q, err)
 			}
-			data, err := ioutil.ReadAll(fd)
+			data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 			if err != nil {
 				return fmt.Errorf("While opening query file %v: %w", q, err)
 			}

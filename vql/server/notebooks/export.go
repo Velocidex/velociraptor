@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"html"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"regexp"
@@ -23,6 +22,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
@@ -594,7 +594,7 @@ func ExportNotebookToHTML(
 					return "", err
 				}
 
-				data, err := ioutil.ReadAll(fd)
+				data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 				if err != nil {
 					return "", err
 				}
@@ -668,7 +668,8 @@ func ExportNotebookToHTML(
 						continue
 					}
 
-					data, err := ioutil.ReadAll(fd)
+					data, err := utils.ReadAllWithLimit(fd,
+						constants.MAX_MEMORY)
 					if err != nil {
 						continue
 					}

@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"compress/zlib"
 	"io"
-	"io/ioutil"
 	"os"
 
 	"github.com/Velocidex/yaml/v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func ExtractEmbeddedConfig(
@@ -25,7 +25,7 @@ func ExtractEmbeddedConfig(
 	// files. If there are embedded binaries they will not be read and
 	// will be ignored at this stage (thay can be extracted with the
 	// 'me' accessor).
-	buf, err := ioutil.ReadAll(io.LimitReader(fd, 10*1024*1024))
+	buf, err := utils.ReadAllWithLimit(fd, 10*1024*1024)
 	if err != nil {
 		return nil, err
 	}

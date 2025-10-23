@@ -19,7 +19,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"regexp"
 	"sort"
 	"strings"
@@ -28,6 +27,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/constants"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vutils "www.velocidex.com/golang/velociraptor/utils"
@@ -281,7 +281,8 @@ func doVQLExport() error {
 
 	old_data := []*api_proto.Completion{}
 	if vql_info_export_old_file != nil {
-		data, err := ioutil.ReadAll(*vql_info_export_old_file)
+		data, err := utils.ReadAllWithLimit(*vql_info_export_old_file,
+			constants.MAX_MEMORY)
 		if err == nil {
 			err = yaml.Unmarshal(data, &old_data)
 			if err != nil {

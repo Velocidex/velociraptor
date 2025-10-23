@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -242,7 +241,7 @@ func getGithubRelease(ctx context.Context, Client networking.HTTPClient,
 		return "", fmt.Errorf("Error: %v", res.Status)
 	}
 
-	response, err := ioutil.ReadAll(res.Body)
+	response, err := utils.ReadAllWithLimit(res.Body, constants.MAX_MEMORY)
 	if err != nil {
 		return "", fmt.Errorf(
 			"While making Github API call to %v: %w ", url, err)

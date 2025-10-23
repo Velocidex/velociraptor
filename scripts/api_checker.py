@@ -58,6 +58,10 @@ checks = [Check(re=re.compile("ioutil.TempFile"),
           Check(re=re.compile("math/rand"),
                 allowed=re.compile("utils/rand"),
                 replaced="/utils/rand"),
+
+          Check(re=re.compile("ioutil.ReadAll"),
+                allowed=re.compile("magefile.go|/utils/copy|_test.go$"),
+                replaced="utils.ReadAllWithCtx"),
           ]
 
 def DiscoverAPI(path):

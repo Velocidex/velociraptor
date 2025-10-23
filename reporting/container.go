@@ -559,7 +559,7 @@ func (self *Container) maybeCollectSparseFile(
 		// example. However we still need to maintain alignment here
 		// so we pad with zeros.
 		if int64(n) < rng.Length {
-			scope.Log("Unable to fully copy range %v in %v - padding %v bytes",
+			scope.Log("Unable to fully copy range %#v in %v - padding %v bytes",
 				rng, result.StoredName, rng.Length-int64(n))
 			_, _ = utils.CopyN(
 				ctx, run_writer, utils.ZeroReader{}, rng.Length-int64(n))
