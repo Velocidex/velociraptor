@@ -60,7 +60,7 @@ checks = [Check(re=re.compile("ioutil.TempFile"),
                 replaced="/utils/rand"),
 
           Check(re=re.compile("ioutil.ReadAll"),
-                allowed=re.compile("/utils/copy|_test.go$"),
+                allowed=re.compile("magefile.go|/utils/copy|_test.go$"),
                 replaced="utils.ReadAllWithCtx"),
           ]
 

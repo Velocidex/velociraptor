@@ -25,6 +25,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -42,7 +43,6 @@ import (
 	"gopkg.in/yaml.v2"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -65,6 +65,11 @@ var (
 	version            = "v" + constants.VERSION
 	base_tags          = " server_vql extras "
 )
+
+func ReadAllWithLimit(
+	fd io.Reader, limit int) ([]byte, error) {
+	return ioutil.ReadAll(io.LimitReader(fd, int64(limit)))
+}
 
 type Builder struct {
 	goos          string
@@ -614,7 +619,7 @@ func UpdateDependentTools() error {
 	}
 	defer fd.Close()
 
-	data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
+	data, err := ReadAllWithLimit(fd, constants.MAX_MEMORY)
 	if err != nil {
 		return err
 	}
@@ -715,7 +720,7 @@ func Deadcode() error {
 		return err
 	}
 
-	data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
+	data, err := ReadAllWithLimit(fd, constants.MAX_MEMORY)
 	if err != nil {
 		return err
 	}
