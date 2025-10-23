@@ -34,8 +34,6 @@ package datastore
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -358,8 +356,7 @@ func readContentFromFile(
 	if err == nil {
 		defer file.Close()
 
-		result, err := ioutil.ReadAll(
-			io.LimitReader(file, constants.MAX_MEMORY))
+		result, err := utils.ReadAllWithLimit(file, constants.MAX_MEMORY)
 		if err != nil {
 			return nil, errors.Wrap(err, 0)
 		}
@@ -378,8 +375,7 @@ func readContentFromFile(
 		if err == nil {
 			defer file.Close()
 
-			result, err := ioutil.ReadAll(
-				io.LimitReader(file, constants.MAX_MEMORY))
+			result, err := utils.ReadAllWithLimit(file, constants.MAX_MEMORY)
 			if err != nil {
 				return nil, errors.Wrap(err, 0)
 			}

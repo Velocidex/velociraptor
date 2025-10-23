@@ -32,9 +32,10 @@ OS: Windows
 # The list of artifacts and their args.
 Artifacts:
  Windows.Triage.Targets:
-    EventLogs: Y
+   HighLevelTargets: '["_SANS_Triage", "_KapeTriage"]'
+   Devices: '["C:","D:","E:"]'
  Windows.Sysinternals.Autoruns:
-    All: Y
+   All: Y
 
 # Can be ZIP, GCS, S3, Azure, SMBShare, SFTP
 Target: ZIP
@@ -187,7 +188,7 @@ func doCollector() error {
 		return err
 	}
 
-	logger := &StdoutLogWriter{}
+	logger := &LogWriter{config_obj: config_obj}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
 		ACLManager: acl_managers.NewRoleACLManager(sm.Config, "administrator"),
@@ -203,9 +204,13 @@ func doCollector() error {
 	// start so their tools are fully registred.
 	query := `
 LET _ <= SELECT name FROM artifact_definitions()
-LET Spec <= parse_yaml(filename=SPECFILE)
+LET _ <= import(artifact="Server.Utils.CreateCollector")
+
+LET Spec <= parse_yaml(filename=SPECFILE, schema=SpecSchema)
 LET _K = SELECT _key FROM items(item=Spec.Artifacts)
-SELECT * FROM Artifact.Server.Utils.CreateCollector(
+
+SELECT * FROM if(condition=Spec.OS, then={
+  SELECT * FROM Artifact.Server.Utils.CreateCollector(
    OS=Spec.OS,
    artifacts=serialize(item=_K._key),
    parameters=serialize(item=Spec.Artifacts),
@@ -230,8 +235,14 @@ SELECT * FROM Artifact.Server.Utils.CreateCollector(
    opt_version=Spec.OptVersion,
    opt_delete_at_exit=Spec.OptDeleteAtExit
    )
+})
 `
-	return runQueryWithEnv(query, builder, "json")
+	err = runQueryWithEnv(query, builder, "json")
+	if err != nil {
+		return err
+	}
+
+	return logger.Error
 }
 
 func init() {

@@ -20,7 +20,6 @@ package api
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"regexp"
 	"strings"
 
@@ -674,7 +673,7 @@ func (self *ApiServer) LoadArtifactPack(
 				continue
 			}
 
-			data, err := ioutil.ReadAll(fd)
+			data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 			fd.Close()
 
 			if err != nil {

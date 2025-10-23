@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"html"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -507,8 +506,7 @@ func send_client_messages(
 
 			sendCounter.Inc()
 
-			body, err := ioutil.ReadAll(
-				io.LimitReader(req.Body, constants.MAX_MEMORY))
+			body, err := utils.ReadAllWithLimit(req.Body, constants.MAX_MEMORY)
 			if err != nil {
 				server_obj.Error("Unable to read body: %v", err)
 				http.Error(w, "", http.StatusServiceUnavailable)

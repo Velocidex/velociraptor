@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"sort"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -575,7 +575,7 @@ func (self *QueueManagerTestSuite) Debug() {
 func (self *QueueManagerTestSuite) FilestoreGet(path api.FSPathSpec) string {
 	fd, err := self.file_store.ReadFile(path)
 	assert.NoError(self.T(), err)
-	value, err := ioutil.ReadAll(fd)
+	value, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 	assert.NoError(self.T(), err)
 	return string(value)
 }

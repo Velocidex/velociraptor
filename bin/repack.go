@@ -21,7 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package main
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -29,10 +28,12 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -86,7 +87,8 @@ func doRepack() error {
 	executable = abs_executable
 
 	// Read the config file
-	config_data, err := ioutil.ReadAll(*repack_command_config)
+	config_data, err := utils.ReadAllWithLimit(*repack_command_config,
+		constants.MAX_MEMORY)
 	if err != nil {
 		return err
 	}

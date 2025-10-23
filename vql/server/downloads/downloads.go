@@ -5,7 +5,6 @@ package downloads
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"sync"
 	"time"
 
@@ -16,6 +15,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
@@ -627,7 +627,7 @@ func maybeExpandSparseFile(
 	}
 	defer idx_fd.Close()
 
-	serialized, err := ioutil.ReadAll(idx_fd)
+	serialized, err := utils.ReadAllWithLimit(idx_fd, constants.MAX_MEMORY)
 	if err != nil {
 		return reader
 	}

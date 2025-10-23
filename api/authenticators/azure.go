@@ -21,8 +21,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/sirupsen/logrus"
@@ -30,11 +28,11 @@ import (
 	"golang.org/x/oauth2/microsoft"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
-	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 type AzureUser struct {
@@ -130,7 +128,7 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 			if oauthState == nil || r.FormValue("state") != oauthState.Value {
 				logging.GetLogger(self.config_obj, &logging.GUIComponent).
 					Error("invalid oauth azure state")
-				http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
 			}
@@ -150,7 +148,7 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 					WithFields(logrus.Fields{
 						"err": err.Error(),
 					}).Error("getUserDataFromAzure")
-				http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
 			}
@@ -167,13 +165,13 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 					WithFields(logrus.Fields{
 						"err": err.Error(),
 					}).Error("getUserDataFromAzure")
-				http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
 			}
 
 			http.SetCookie(w, cookie)
-			http.Redirect(w, r, utils.Homepage(self.config_obj),
+			http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 				http.StatusTemporaryRedirect)
 		})
 }
@@ -199,8 +197,7 @@ func (self *AzureAuthenticator) getUserDataFromAzure(
 	}
 	defer response.Body.Close()
 
-	contents, err := ioutil.ReadAll(
-		io.LimitReader(response.Body, constants.MAX_MEMORY))
+	contents, err := utils.ReadAllWithLimit(response.Body, constants.MAX_MEMORY)
 	if err != nil {
 		return nil, fmt.Errorf("failed read response: %s", err.Error())
 	}
@@ -236,7 +233,8 @@ func (self *AzureAuthenticator) getAzurePicture(
 	}
 	defer response.Body.Close()
 
-	data, _ := ioutil.ReadAll(response.Body)
+	data, _ := utils.ReadAllWithLimit(response.Body,
+		constants.MAX_MEMORY)
 
 	return fmt.Sprintf("data:image/jpeg;base64,%v",
 		base64.StdEncoding.EncodeToString(data))

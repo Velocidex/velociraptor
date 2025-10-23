@@ -21,7 +21,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"io/ioutil"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/oleparse"
@@ -93,7 +92,7 @@ func _OLEVBAPlugin_ParseFile(
 			defer fd.Close()
 		}
 
-		data, err := ioutil.ReadAll(io.LimitReader(fd, constants.MAX_MEMORY))
+		data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 		if err != nil {
 			return nil, err
 		}
@@ -115,8 +114,8 @@ func _OLEVBAPlugin_ParseFile(
 				if err != nil {
 					return nil, err
 				}
-				data, err := ioutil.ReadAll(
-					io.LimitReader(rc, constants.MAX_MEMORY))
+				data, err := utils.ReadAllWithLimit(rc,
+					constants.MAX_MEMORY)
 				if err != nil {
 					return nil, err
 				}

@@ -39,7 +39,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -47,6 +46,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
@@ -115,7 +115,7 @@ func (self CloudflareUpdater) getRequest(
 	}
 	defer resp.Body.Close()
 
-	res_body, err := ioutil.ReadAll(resp.Body)
+	res_body, err := utils.ReadAllWithLimit(resp.Body, constants.MAX_MEMORY)
 	if err != nil {
 		return nil, err
 	}

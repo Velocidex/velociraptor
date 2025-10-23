@@ -25,6 +25,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -64,6 +65,11 @@ var (
 	version            = "v" + constants.VERSION
 	base_tags          = " server_vql extras "
 )
+
+func ReadAllWithLimit(
+	fd io.Reader, limit int) ([]byte, error) {
+	return ioutil.ReadAll(io.LimitReader(fd, int64(limit)))
+}
 
 type Builder struct {
 	goos          string
@@ -613,7 +619,7 @@ func UpdateDependentTools() error {
 	}
 	defer fd.Close()
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := ReadAllWithLimit(fd, constants.MAX_MEMORY)
 	if err != nil {
 		return err
 	}
@@ -714,7 +720,7 @@ func Deadcode() error {
 		return err
 	}
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := ReadAllWithLimit(fd, constants.MAX_MEMORY)
 	if err != nil {
 		return err
 	}

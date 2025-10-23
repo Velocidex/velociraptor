@@ -20,8 +20,6 @@ package authenticators
 import (
 	"context"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/sirupsen/logrus"
@@ -29,11 +27,11 @@ import (
 	"golang.org/x/oauth2/github"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
-	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 type GitHubUser struct {
@@ -131,7 +129,7 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 			if oauthState == nil || r.FormValue("state") != oauthState.Value {
 				logging.GetLogger(self.config_obj, &logging.GUIComponent).
 					Error("invalid oauth github state")
-				http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
 			}
@@ -146,7 +144,7 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 					WithFields(logrus.Fields{
 						"err": formError,
 					}).Error("getUserDataFromGithub")
-				http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
 			}
@@ -157,7 +155,7 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 					WithFields(logrus.Fields{
 						"err": err.Error(),
 					}).Error("getUserDataFromGithub")
-				http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
 			}
@@ -169,7 +167,7 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 					WithFields(logrus.Fields{
 						"err": err.Error(),
 					}).Error("getUserDataFromGithub")
-				http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
 			}
@@ -189,13 +187,13 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 					WithFields(logrus.Fields{
 						"err": err.Error(),
 					}).Error("getUserDataFromGithub")
-				http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
 			}
 
 			http.SetCookie(w, cookie)
-			http.Redirect(w, r, utils.Homepage(self.config_obj),
+			http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 				http.StatusTemporaryRedirect)
 		})
 }
@@ -217,8 +215,7 @@ func (self *GitHubAuthenticator) getUserDataFromGithub(
 	}
 	defer response.Body.Close()
 
-	contents, err := ioutil.ReadAll(
-		io.LimitReader(response.Body, constants.MAX_MEMORY))
+	contents, err := utils.ReadAllWithLimit(response.Body, constants.MAX_MEMORY)
 	if err != nil {
 		return nil, fmt.Errorf("failed read response: %s", err.Error())
 	}

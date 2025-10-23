@@ -1424,7 +1424,6 @@
     ```
 
     Unlike the common `gzip` utility the file is not removed after compression.
-
   type: Function
   args:
   - name: path
@@ -6461,12 +6460,31 @@
     Note that when VQL dereferences fields in a dict it returns a Null for
     those fields that do not exist. Thus there is no error in actually
     accessing missing fields, the column will just return nil.
+
+    ## Validating against a JSON schema.
+
+    A JSON schema allows us to define a required structure on the JSON
+    object and reject it if it does not validate.  See
+    https://json-schema.org/docs for an introduction to JSON schemas.
+
+    If the JSON object does not validate the provided schema, several
+    log messages will be emitted at level ERROR and an empty object
+    returned. This would normally cause the artifact collection to
+    fail.
+
   type: Function
+  version: 2
   args:
   - name: data
     type: string
     description: Json encoded string.
     required: true
+  - name: schema
+    type: string
+    description: |
+      Json schema to use for validation.
+
+    repeated: true
   category: parsers
   platforms:
   - darwin_amd64_cgo
@@ -6486,6 +6504,10 @@
     type: string
     description: Json encoded string.
     required: true
+  - name: schema
+    type: string
+    description: Json schema to use for validation.
+    repeated: true
   category: parsers
   platforms:
   - darwin_amd64_cgo
@@ -6501,6 +6523,10 @@
     type: string
     description: Json encoded string.
     required: true
+  - name: schema
+    type: string
+    description: Json schema to use for validation.
+    repeated: true
   category: parsers
   platforms:
   - darwin_amd64_cgo
@@ -6841,7 +6867,6 @@
     is usually safer to remove these fields because they may not be
     that relevant or corrupted and may result in slowing down the
     query.
-
   type: Function
   args:
   - name: file
@@ -7153,6 +7178,10 @@
   - name: accessor
     type: string
     description: File accessor
+  - name: schema
+    type: string
+    description: Json schema to use for validation.
+    repeated: true
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
@@ -9000,30 +9029,6 @@
   - name: secret
     type: ordereddict.Dict
     description: A Dict containing key/value pairs for the secret
-    required: true
-  category: server
-  metadata:
-    permissions: SERVER_ADMIN
-  platforms:
-  - linux_amd64_cgo
-  - windows_amd64_cgo
-- name: secret_define
-  description: Define a new secret template
-  type: Function
-  args:
-  - name: type
-    type: string
-    description: Type of the secret
-    required: true
-  - name: verifier
-    type: string
-    description: A VQL Lambda function to verify the secret
-  - name: description
-    type: string
-    description: A description of the secret type
-  - name: template
-    type: ordereddict.Dict
-    description: A Set of key/value pairs
     required: true
   category: server
   metadata:
@@ -11892,7 +11897,6 @@
     SELECT OSPath, Line
     FROM watch_syslog(filename='/var/log/logfile.log')
     ```
-
   type: Plugin
   args:
   - name: filename
@@ -12420,7 +12424,6 @@
     the absolute path to the YaraX DLL on disk. Once the dll is
     loaded, it is not unloaded again. This way you can avoid having to
     download or hash the dll until actually needed.
-
   type: Plugin
   args:
   - name: rules
@@ -12462,6 +12465,9 @@
     type: vfilter.Lambda
     description: Function to resolve path to the yarax DLL
     required: true
+  - name: force_buffers
+    type: bool
+    description: Force buffer scan in all cases.
   metadata:
     permissions: FILESYSTEM_READ,EXECVE
   platforms:

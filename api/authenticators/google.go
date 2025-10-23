@@ -22,8 +22,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -35,13 +33,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
-	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
@@ -142,7 +140,7 @@ func generateStateOauthCookie(
 	state := base64.URLEncoding.EncodeToString(b)
 	cookie := http.Cookie{
 		Name:     "oauthstate",
-		Path:     utils.GetBasePath(config_obj),
+		Path:     api_utils.GetBasePath(config_obj),
 		Value:    state,
 		Secure:   true,
 		HttpOnly: true,
@@ -160,7 +158,7 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 			if oauthState == nil || r.FormValue("state") != oauthState.Value {
 				logging.GetLogger(self.config_obj, &logging.GUIComponent).
 					Error("invalid oauth google state")
-				http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
 			}
@@ -171,7 +169,7 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 					WithFields(logrus.Fields{
 						"err": err.Error(),
 					}).Error("getUserDataFromGoogle")
-				http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
 			}
@@ -183,7 +181,7 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 					WithFields(logrus.Fields{
 						"err": err.Error(),
 					}).Error("getUserDataFromGoogle")
-				http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
 			}
@@ -204,13 +202,13 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 					WithFields(logrus.Fields{
 						"err": err.Error(),
 					}).Error("getUserDataFromGoogle")
-				http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
 			}
 
 			http.SetCookie(w, cookie)
-			http.Redirect(w, r, utils.Homepage(self.config_obj),
+			http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 				http.StatusTemporaryRedirect)
 		})
 }
@@ -242,8 +240,7 @@ func (self *GoogleAuthenticator) getUserDataFromGoogle(
 	}
 	defer response.Body.Close()
 
-	contents, err := ioutil.ReadAll(
-		io.LimitReader(response.Body, constants.MAX_MEMORY))
+	contents, err := utils.ReadAllWithLimit(response.Body, constants.MAX_MEMORY)
 	if err != nil {
 		return nil, fmt.Errorf("failed read response: %s", err.Error())
 	}
@@ -252,7 +249,7 @@ func (self *GoogleAuthenticator) getUserDataFromGoogle(
 }
 
 func installLogoff(config_obj *config_proto.Config, mux *api_utils.ServeMux) {
-	mux.Handle(utils.GetBasePath(config_obj, "/app/logoff.html"),
+	mux.Handle(api_utils.GetBasePath(config_obj, "/app/logoff.html"),
 		IpFilter(config_obj,
 			api_utils.HandlerFunc(nil,
 				func(w http.ResponseWriter, r *http.Request) {
@@ -273,7 +270,7 @@ func installLogoff(config_obj *config_proto.Config, mux *api_utils.ServeMux) {
 					// Clear the cookie
 					http.SetCookie(w, &http.Cookie{
 						Name:     "VelociraptorAuth",
-						Path:     utils.GetBaseDirectory(config_obj),
+						Path:     api_utils.GetBaseDirectory(config_obj),
 						Value:    "deleted",
 						Secure:   true,
 						HttpOnly: true,

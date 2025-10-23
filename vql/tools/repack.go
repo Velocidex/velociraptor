@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -53,6 +52,8 @@ var (
 )
 
 const (
+	// Repacking uses a lot of memory because currently it is all done
+	// in memory.
 	MAX_MEMORY   = 200 * 1024 * 1024
 	OLE_PAGESIZE = 0x1000
 	MSI_MAGIC    = "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1"
@@ -249,7 +250,7 @@ func ReadExeFile(
 		}
 		defer fd.Close()
 
-		return ioutil.ReadAll(fd)
+		return utils.ReadAllWithLimit(fd, MAX_MEMORY)
 	}
 
 	// Fetch the tool definition. NOTE: The definitions are in the

@@ -2,7 +2,6 @@ package uploads
 
 import (
 	"sync"
-	"sync/atomic"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -16,14 +15,8 @@ var (
 )
 
 type cachedUploadResponse struct {
-	mu        sync.Mutex
-	is_locked int64
-
+	mu       sync.Mutex
 	response *UploadResponse
-}
-
-func (self *cachedUploadResponse) isLocked() bool {
-	return atomic.LoadInt64(&self.is_locked) != 0
 }
 
 // Lease the response for a time, when the caller is done with it,
@@ -40,26 +33,16 @@ func (self *cachedUploadResponse) isLocked() bool {
 func (self *cachedUploadResponse) LeaseResponse() (
 	response *UploadResponse, closer func(response *UploadResponse)) {
 
+	var once sync.Once
+
 	self.mu.Lock()
-	atomic.StoreInt64(&self.is_locked, 1)
-
-	if self.response == nil {
-		return nil, func(response *UploadResponse) {
-			if !self.isLocked() {
-				return
-			}
-
+	return self.response, func(response *UploadResponse) {
+		once.Do(func() {
 			if response != nil {
 				self.response = response
 			}
 			self.mu.Unlock()
-			atomic.StoreInt64(&self.is_locked, 0)
-		}
-	}
-
-	return self.response, func(response *UploadResponse) {
-		self.mu.Unlock()
-		atomic.StoreInt64(&self.is_locked, 0)
+		})
 	}
 }
 
