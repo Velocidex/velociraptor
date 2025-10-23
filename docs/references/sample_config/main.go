@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"regexp"
@@ -13,6 +12,8 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -265,7 +266,7 @@ func parse_config(filename string) error {
 		return err
 	}
 
-	serialized, err := ioutil.ReadAll(fd)
+	serialized, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 	if err != nil {
 		return err
 	}

@@ -36,6 +36,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	json_tools "www.velocidex.com/golang/velociraptor/tools/json"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -50,7 +51,8 @@ const (
 )
 
 type ParseJsonFunctionArg struct {
-	Data string `vfilter:"required,field=data,doc=Json encoded string."`
+	Data   string   `vfilter:"required,field=data,doc=Json encoded string."`
+	Schema []string `vfilter:"optional,field=schema,doc=Json schema to use for validation."`
 }
 type ParseJsonFunction struct{}
 
@@ -59,6 +61,7 @@ func (self ParseJsonFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Name:    "parse_json",
 		Doc:     "Parse a JSON string into an object.",
 		ArgType: type_map.AddType(scope, &ParseJsonFunctionArg{}),
+		Version: 2,
 	}
 }
 
@@ -75,9 +78,22 @@ func (self ParseJsonFunction) Call(
 		return &vfilter.Null{}
 	}
 
+	if len(arg.Schema) > 0 {
+		var options json_tools.ValidationOptions
+		result, errs := json_tools.ParseJsonToObjectWithSchema(
+			arg.Data, arg.Schema, options)
+		if len(errs) > 0 {
+			for _, err := range errs {
+				scope.Log("ERROR:parse_json: %v", err)
+			}
+			return &vfilter.Null{}
+		}
+		return result
+	}
+
 	result, err := utils.ParseJsonToObject([]byte(arg.Data))
 	if err != nil {
-		scope.Log("parse_json: %v", err)
+		scope.Log("parse_json: %v: %v", err, utils.Elide(arg.Data, 100))
 		return &vfilter.Null{}
 	}
 	return result

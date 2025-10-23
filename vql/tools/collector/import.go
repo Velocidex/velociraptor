@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -18,6 +17,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -601,8 +601,7 @@ func (self ImportCollectionFunction) getFile(
 	}
 	defer fd.Close()
 
-	limitedReader := &io.LimitedReader{R: fd, N: BUFF_SIZE}
-	data, err := ioutil.ReadAll(limitedReader)
+	data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 	if err != nil && err != io.EOF {
 		return err
 	}
@@ -688,8 +687,7 @@ func (self ImportCollectionFunction) checkHuntInfo(
 	}
 	defer fd.Close()
 
-	limitedReader := &io.LimitedReader{R: fd, N: BUFF_SIZE}
-	data, err := ioutil.ReadAll(limitedReader)
+	data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 	if err != nil && err != io.EOF {
 		return nil, err
 	}

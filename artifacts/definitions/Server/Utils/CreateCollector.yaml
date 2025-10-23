@@ -408,6 +408,203 @@ parameters:
               Filename AS Name
        FROM matching_tools
 
+export: |
+  // Use this JSON schema to validate an offline collector spec.yaml
+  LET SpecSchema <= '''
+  {
+    "type": "object",
+    "properties": {
+        "OS": {
+           "description": "OS Target to use",
+           "enum": ["Generic", "Windows", "Linux", "Windows_x86"],
+           "default": "Generic"
+        },
+        "Artifacts": {
+           "type": "object",
+           "description": "Keys are artifact names to collect and values are strings",
+           "patternProperties": {
+              "^.+$": {
+                "type": "object",
+                "patternProperties": {
+                   "^.+$": {
+                      "type": "string"
+                   }
+                }
+              }
+           }
+        },
+        "Target": {
+           "description": "The type of collector to use",
+           "enum": ["ZIP", "GCS", "S3", "Azure", "SMBShare", "SFTP"]
+        },
+        "EncryptionScheme": {
+           "enum": ["None", "X509"],
+           "default": "None"
+        },
+        "OptVerbose": {
+           "type": "boolean",
+           "default": true
+        },
+        "OptBanner": {
+           "type": "boolean",
+           "default": true
+        },
+        "OptPrompt": {
+           "type": "boolean",
+           "default": false
+        },
+        "OptAdmin": {
+           "type": "boolean",
+           "default": true
+        },
+        "OptTempdir": {
+            "type": "string",
+            "default": "$TMP"
+        },
+        "OptLevel": {
+           "type": "integer",
+           "default": 5
+        },
+        "OptConcurrency": {
+           "type": "integer",
+           "default": 2
+        },
+        "OptFilenameTemplate": {
+           "type": "string",
+           "default": "Collection-%FQDN%-%TIMESTAMP%"
+        },
+        "OptCollectorTemplate": {"type": "string"},
+        "OptFormat": {
+          "enum": ["jsonl", "csv"],
+          "default": "jsonl"
+        },
+        "OptOutputDirectory":  {"type": "string"},
+        "OptCpuLimit":  {"type": "integer"},
+        "OptProgressTimeout":  {"type": "integer"},
+        "OptTimeout":  {"type": "integer"},
+        "OptDeleteAtExit":  {"type": "boolean"}
+    },
+    "allOf": [
+      { "description": "Target Args for GCS",
+        "if": {
+           "properties": { "Target": { "const": "GCS" } }
+        },
+        "then": {
+           "properties": {
+              "TargetArgs": {
+                 "type": "object",
+                 "properties": {
+                    "bucket": {"type": "string"},
+                    "GCSKey": {"type": "string"}
+                 },
+                 "additionalProperties": false,
+                 "required": ["bucket", "GCSKey"]
+              }
+           }
+        }
+      },
+      { "description": "Target Args for S3",
+        "if": {
+           "properties": { "Target": { "const": "S3" } }
+        },
+        "then": {
+           "properties": {
+              "TargetArgs": {
+               "type": "object",
+               "properties": {
+                 "bucket": {"type": "string"},
+                 "credentialsKey": {"type": "string"},
+                 "credentialsSecret": {"type": "string"},
+                 "credentialsToken": {"type": "string"},
+                 "region": {"type": "string"},
+                 "endpoint": {"type": "string"},
+                 "serverSideEncryption": {"type": "string"},
+                 "kmsEncryptionKey": {"type": "string"},
+                 "s3UploadRoot": {"type": "string"},
+                 "noverifycert": {"type": "boolean"}
+               },
+               "additionalProperties": false,
+               "required": ["bucket"]
+              }
+           }
+        }
+      },
+      { "description": "Target Args for AzureSASURL",
+        "if": {
+           "properties": { "Target": { "const": "AzureSASURL" } }
+        },
+        "then": {
+           "properties": {
+              "TargetArgs": {
+                 "type": "object",
+                 "properties": {
+                    "sas_url": {"type": "string"}
+                 },
+                 "additionalProperties": false,
+                 "required": ["sas_url"]
+              }
+           }
+        }
+      },
+      { "description": "Target Args for SMBCollection",
+        "if": {
+           "properties": { "Target": { "const": "SMBCollection" } }
+        },
+        "then": {
+           "properties": {
+              "TargetArgs": {
+                 "type": "object",
+                 "properties": {
+                   "username": {"type": "string"},
+                   "password": {"type": "string"},
+                   "server_address": {"type": "string"}
+                 },
+                 "additionalProperties": false,
+                 "required": ["username", "password", "server_address"]
+              }
+           }
+        }
+      },
+      { "description": "Target Args for SFTPCollection",
+        "if": {
+           "properties": { "Target": { "const": "SFTPCollection" } }
+        },
+        "then": {
+           "properties": {
+              "TargetArgs": {
+                 "type": "object",
+                  "properties": {
+                     "user": {"type": "string"},
+                     "path": {"type": "string"},
+                     "privatekey": {"type": "string"},
+                     "endpoint": {"type": "string"},
+                     "hostkey": {"type": "string"}
+                  },
+                  "additionalProperties": false,
+                  "required": ["user", "privatekey", "endpoint"]
+              }
+           }
+        }
+      },
+      { "description": "Target Args for ZIP",
+        "if": {
+           "properties": { "Target": { "const": "ZIP" } }
+        },
+        "then": {
+           "properties": {
+              "TargetArgs": {
+                 "type": "object",
+                 "default": {},
+                 "additionalProperties": false,
+                 "properties": {}
+             }
+           }
+        }
+      }
+    ]
+  }
+  '''
+
 sources:
   - query: |
       LET Binaries <= SELECT * FROM foreach(
@@ -472,7 +669,7 @@ sources:
          condition=use_server_cert,
          then=dict(public_key=server_frontend_cert(),
                    scheme="x509"),
-         else=encryption_args
+         else=encryption_args || dict()
       )
 
       -- Add custom definition if needed. Built in definitions are not added
@@ -546,6 +743,30 @@ sources:
           argv=("artifacts", "collect", "Collector") + optional_cmdline.Opt,
           artifact_definitions=definitions)
       )
+
+      LET _ <= upload(accessor="data", file=serialize(format="yaml",
+        item=dict(
+          OS=OS,
+          Artifacts=parameters,
+          Target=target,
+          EncryptionScheme=encryption_scheme || "None",
+          EncryptionArgs=encryption_args || dict(),
+          OptVerbose=opt_verbose,
+          OptBanner=opt_banner,
+          OptPrompt=opt_prompt,
+          OptAdmin=opt_admin,
+          OptTempdir=opt_tempdir,
+          OptLevel=opt_level,
+          OptConcurrency=opt_concurrency,
+          OptFormat=opt_format,
+          OptOutputDirectory=opt_output_directory,
+          OptFilenameTemplate=opt_filename_template,
+          OptCollectorFilename=opt_collector_filename,
+          OptCpuLimit=opt_cpu_limit,
+          OptProgressTimeout=opt_progress_timeout,
+          OptTimeout=opt_timeout,
+          OptDeleteAtExit=opt_delete_at_exit
+        )), name="spec.yaml")
 
       // Do the actual repacking.
       SELECT repack(

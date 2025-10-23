@@ -3,8 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"io"
-	"io/ioutil"
 	"os"
 	"sync/atomic"
 	"time"
@@ -16,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Loads the global repository with artifacts from the frontend path
@@ -68,8 +67,7 @@ func InitializeGlobalRepositoryFromFilestore(
 			}
 			defer fd.Close()
 
-			data, err := ioutil.ReadAll(
-				io.LimitReader(fd, constants.MAX_MEMORY))
+			data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 			if err != nil {
 				logger.Error("GetGlobalRepository: %v", err)
 				return nil

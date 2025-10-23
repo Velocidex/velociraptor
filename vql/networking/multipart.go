@@ -5,12 +5,12 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -165,7 +165,8 @@ func (self *multiPartReader) Reader() io.Reader {
 }
 
 func (self *multiPartReader) Debug() string {
-	result, err := ioutil.ReadAll(self.pipe_reader)
+	result, err := utils.ReadAllWithLimit(self.pipe_reader,
+		constants.MAX_MEMORY)
 	if err != nil {
 		return fmt.Sprintf("Error: %v\n", err)
 	}

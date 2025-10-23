@@ -5,12 +5,12 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
-	"io/ioutil"
 	"runtime/pprof"
 
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -60,7 +60,8 @@ func (self GoRoutinesPlugin) Call(ctx context.Context,
 					return
 				}
 
-				cleartext, err := ioutil.ReadAll(reader)
+				cleartext, err := utils.ReadAllWithLimit(reader,
+					constants.MAX_MEMORY)
 				if err != nil {
 					return
 				}

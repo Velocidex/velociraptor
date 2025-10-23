@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
@@ -16,6 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -115,7 +115,7 @@ func (self *HTTPClientWithWebSocketTransport) roundTripWS(
 	// Write the request on the channel
 	var data []byte
 	if req.Body != nil {
-		data, _ = ioutil.ReadAll(req.Body)
+		data, _ = utils.ReadAllWithLimit(req.Body, constants.MAX_MEMORY)
 	}
 
 	select {

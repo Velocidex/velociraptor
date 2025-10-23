@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/startup"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -65,7 +66,7 @@ func doVerify() error {
 			continue
 		}
 
-		data, err := ioutil.ReadAll(fd)
+		data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 		if err != nil {
 			state.SetError(err)
 			continue

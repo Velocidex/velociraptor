@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -198,7 +197,7 @@ func (self *CollectorAccessor) maybeSetZipPassword(
 		return full_path, nil
 	}
 
-	buf, err := ioutil.ReadAll(mhandle)
+	buf, err := utils.ReadAllWithLimit(mhandle, constants.MAX_MEMORY)
 	if err != nil {
 		return nil, fmt.Errorf("Decoding metadata.json: %w", err)
 	}
@@ -284,7 +283,8 @@ func (self *CollectorAccessor) getIndex(
 		return nil, err
 	}
 
-	serialized, err := ioutil.ReadAll(idx_reader)
+	serialized, err := utils.ReadAllWithLimit(idx_reader,
+		constants.MAX_MEMORY)
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,6 @@ package authenticode
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"syscall"
 	"unsafe"
@@ -157,7 +156,7 @@ func ParseCatFile(cat_file string, output *ordereddict.Dict, verbose bool) error
 	if err != nil {
 		return err
 	}
-	data, err := ioutil.ReadAll(cat_fd)
+	data, err := utils.ReadAllWithLimit(cat_fd, constants.MAX_MEMORY)
 	if err != nil {
 		return err
 	}

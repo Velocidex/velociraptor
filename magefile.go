@@ -42,6 +42,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -613,7 +614,7 @@ func UpdateDependentTools() error {
 	}
 	defer fd.Close()
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 	if err != nil {
 		return err
 	}
@@ -714,7 +715,7 @@ func Deadcode() error {
 		return err
 	}
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 	if err != nil {
 		return err
 	}

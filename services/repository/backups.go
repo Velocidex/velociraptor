@@ -3,11 +3,11 @@ package repository
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"sync"
 
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -158,7 +158,7 @@ func (self RepositoryBackupProvider) Restore(ctx context.Context,
 				continue
 			}
 
-			data, err := ioutil.ReadAll(fd)
+			data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 			if err != nil {
 				continue
 			}
