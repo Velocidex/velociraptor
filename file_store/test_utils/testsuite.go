@@ -2,7 +2,6 @@ package test_utils
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"sort"
 	"sync"
@@ -265,7 +264,7 @@ func (self *TestSuite) LoadArtifactFiles(paths ...string) {
 		fd, err := os.Open(p)
 		assert.NoError(self.T(), err)
 
-		def, err := ioutil.ReadAll(fd)
+		def, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
 		assert.NoError(self.T(), err)
 
 		_, err = global_repo.LoadYaml(string(def),

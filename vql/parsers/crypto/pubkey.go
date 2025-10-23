@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -14,7 +13,9 @@ import (
 	"golang.org/x/crypto/openpgp/packet"
 
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -205,7 +206,8 @@ func (self *PKDecryptFunction) Call(ctx context.Context,
 				scope.Log("ERROR:pk_decrypt: %s", err.Error())
 				return vfilter.Null{}
 			}
-			bytes, err := ioutil.ReadAll(m.UnverifiedBody)
+			bytes, err := utils.ReadAllWithLimit(m.UnverifiedBody,
+				constants.MAX_MEMORY)
 			if err != nil {
 				scope.Log("ERROR:pk_decrypt: %s", err.Error())
 				return vfilter.Null{}

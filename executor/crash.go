@@ -4,15 +4,16 @@ package executor
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"sync"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func CheckForCrashes(
@@ -50,7 +51,8 @@ func CheckForCrashes(
 						continue
 					}
 
-					serialized, err := ioutil.ReadAll(fd)
+					serialized, err := utils.ReadAllWithLimit(fd,
+						constants.MAX_MEMORY)
 					// Try to remove the checkpoint in any case
 					_ = fd.Close()
 					_ = os.Remove(cp.Path)

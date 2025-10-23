@@ -22,7 +22,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
@@ -465,8 +464,7 @@ func (self *HTTPConnector) Post(
 	case 200:
 		encrypted := &bytes.Buffer{}
 
-		// We need to be able to cancel the read here so we do not use
-		// ioutil.ReadAll()
+		// We need to be able to cancel the read here.
 		n, err := utils.Copy(ctx, encrypted, resp.Body)
 		if err != nil {
 			return nil, errors.Wrap(err, 0)
@@ -635,7 +633,7 @@ func (self *HTTPConnector) rekeyWithURL(ctx context.Context, url string) error {
 		return err
 	}
 
-	pem, err := ioutil.ReadAll(io.LimitReader(resp.Body, constants.MAX_MEMORY))
+	pem, err := utils.ReadAllWithLimit(resp.Body, constants.MAX_MEMORY)
 	if err != nil {
 		self.server_name = ""
 		self.logger.Info("While reading %v: %v", url, err)
