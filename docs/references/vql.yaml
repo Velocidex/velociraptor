@@ -6084,6 +6084,43 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: overlay
+  description: |
+    Merges several paths into a single path.
+
+    This accessor allows an overlay of several other paths as possible
+    prefixes.  For example consider the following base paths:
+
+    - /bin/
+    - /usr/bin/
+
+    Then when attempting to open the file "ls", this accessor first
+    searches for it in in /bin/ls, then /usr/bin/ls.
+
+    The search paths are selected using a scope variable:
+
+    ```vql
+    LET OVERLAY_ACCESSOR_DELEGATES <= dict(
+       accessor="file",
+       paths=["/bin", "/usr/bin"])
+
+    SELECT * FROM glob(globs='*', accessor="overlay")
+    ```
+
+  type: Accessor
+  args:
+  - name: paths
+    type: accessors.OSPath
+    description: A list of paths to try to resolve each path.
+    repeated: true
+    required: true
+  - name: accessor
+    type: string
+    description: File accessor
+  metadata:
+    ScopeVar: OVERLAY_ACCESSOR_DELEGATES
+  platforms:
+  - linux_amd64_cgo
 - name: panic
   description: Crash the program with a panic!
   type: Plugin
@@ -6471,7 +6508,6 @@
     log messages will be emitted at level ERROR and an empty object
     returned. This would normally cause the artifact collection to
     fail.
-
   type: Function
   version: 2
   args:
@@ -6481,9 +6517,7 @@
     required: true
   - name: schema
     type: string
-    description: |
-      Json schema to use for validation.
-
+    description: Json schema to use for validation.
     repeated: true
   category: parsers
   platforms:

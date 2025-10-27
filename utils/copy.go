@@ -13,7 +13,7 @@ import (
 var (
 	pool = sync.Pool{
 		New: func() interface{} {
-			buffer := make([]byte, 32*1024)
+			buffer := make([]byte, 1024*1024)
 			return &buffer
 		},
 	}

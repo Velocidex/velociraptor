@@ -127,6 +127,9 @@ const (
 	// Used by the S3 accessor to configure credentials.
 	S3_CREDENTIALS = "S3_CREDENTIALS"
 
+	// Used by the overlay accessor to configure delegates'
+	OVERLAY_ACCESSOR_DELEGATES = "OVERLAY_ACCESSOR_DELEGATES"
+
 	// VQL tries to balance memory/cpu tradeoffs and also place limits
 	// on memory use. These parameters control this behavior. You can
 	// set them in the VQL environment to influence how the engine

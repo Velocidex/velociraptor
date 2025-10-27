@@ -12,6 +12,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/accessors/mscfb"
 	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
 	_ "www.velocidex.com/golang/velociraptor/accessors/offset"
+	_ "www.velocidex.com/golang/velociraptor/accessors/overlay"
 	_ "www.velocidex.com/golang/velociraptor/accessors/pipe"
 	_ "www.velocidex.com/golang/velociraptor/accessors/process"
 	_ "www.velocidex.com/golang/velociraptor/accessors/pst"

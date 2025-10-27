@@ -42,6 +42,13 @@ var (
 	DEFAULT_COMPRESSION int64         = 5
 
 	ZipRootPath = accessors.MustNewZipFilePath("/")
+
+	pool = sync.Pool{
+		New: func() interface{} {
+			buffer := make([]byte, 1024*1024)
+			return &buffer
+		},
+	}
 )
 
 type ContainerFormat int
@@ -379,7 +386,7 @@ func (self *Container) Upload(
 	ctime time.Time,
 	btime time.Time,
 	mode os.FileMode,
-	reader io.ReadSeeker) (*uploads.UploadResponse, error) {
+	reader io.ReadSeeker) (res *uploads.UploadResponse, res_err error) {
 
 	// The filename to store the file inside the zip - due to escaping
 	// issues this may not be exactly the same as the file name we
@@ -441,7 +448,10 @@ func (self *Container) Upload(
 	if err != nil {
 		return nil, err
 	}
-	defer writer.Close()
+
+	defer func() {
+		res_err = writer.Close()
+	}()
 
 	files.Add(result.StoredName)
 	defer files.Remove(result.StoredName)
@@ -460,7 +470,10 @@ func (self *Container) Upload(
 		time.Duration(10*time.Second))
 	defer cancel()
 
-	count, err := utils.Copy(ctx, tee_writer, reader)
+	buff := pool.Get().(*[]byte)
+	defer pool.Put(buff)
+
+	count, err := utils.CopyWithBuffer(ctx, tee_writer, reader, *buff)
 	if err != nil {
 		result.StoredSize = uint64(count)
 		result.Error = err.Error()
@@ -722,7 +735,7 @@ func NewContainer(
 	files.Add(path)
 
 	res, err := NewContainerFromWriter(path, config_obj,
-		fd, password, level, metadata)
+		NewBufferedCloser(fd), password, level, metadata)
 	if err != nil {
 		return nil, err
 	}
