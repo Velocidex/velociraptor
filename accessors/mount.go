@@ -140,11 +140,23 @@ func (self FileInfoWrapper) OSPath() *OSPath {
 	}
 
 	delegate_path := self.FileInfo.OSPath()
-	trimmed_path := delegate_path.TrimComponents(
-		self.remove_prefix.Components...)
+	trimmed_path := delegate_path
+	if self.remove_prefix != nil {
+		trimmed_path = delegate_path.TrimComponents(
+			self.remove_prefix.Components...)
+	}
 
 	self._ospath = self.prefix.Append(trimmed_path.Components...)
 	return self._ospath
+}
+
+func NewFileInfoWrapper(fsinfo FileInfo,
+	prefix, remove_prefix *OSPath) *FileInfoWrapper {
+	return &FileInfoWrapper{
+		FileInfo:      fsinfo,
+		prefix:        prefix,
+		remove_prefix: remove_prefix,
+	}
 }
 
 // A mount accessor maps several delegate accessors inside the same

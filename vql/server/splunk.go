@@ -353,14 +353,15 @@ func mergeSecretSplunk(ctx context.Context, scope vfilter.Scope, arg *_SplunkPlu
 		return err
 	}
 
+	// Allow the user to override these fields
 	s.UpdateString("source", &arg.Source)
+	s.UpdateString("index", &arg.Index)
+	s.UpdateString("hostname_field", &arg.HostnameField)
+	s.UpdateString("hostname", &arg.Hostname)
 
 	arg.URL = s.GetString("url")
 	arg.Token = s.GetString("token")
-	arg.Index = s.GetString("index")
 	arg.RootCerts = s.GetString("root_ca")
-	arg.Hostname = s.GetString("hostname")
-	arg.HostnameField = s.GetString("hostname_field")
 	arg.SkipVerify = s.GetBool("skip_verify")
 
 	return nil

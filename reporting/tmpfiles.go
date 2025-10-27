@@ -1,29 +1,27 @@
 package reporting
 
 import (
+	"bufio"
 	"os"
-
-	concurrent_zip "github.com/Velocidex/zip"
-	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
-type TmpfileFactory int
+type BufferedCloser struct {
+	*bufio.Writer
+	fd *os.File
+}
 
-func (self TmpfileFactory) TempFile() (*os.File, error) {
-	tmpfile, err := tempfile.TempFile("zip")
-	if err != nil {
-		return nil, err
+func (self *BufferedCloser) Name() string {
+	return self.fd.Name()
+}
+
+func (self *BufferedCloser) Close() error {
+	self.Writer.Flush()
+	return self.fd.Close()
+}
+
+func NewBufferedCloser(fd *os.File) *BufferedCloser {
+	return &BufferedCloser{
+		Writer: bufio.NewWriterSize(fd, 1024*1204),
+		fd:     fd,
 	}
-	tempfile.AddTmpFile(tmpfile.Name())
-
-	return tmpfile, nil
-}
-
-func (self TmpfileFactory) RemoveTempFile(filename string) {
-	err := os.Remove(filename)
-	tempfile.RemoveTmpFile(filename, err)
-}
-
-func init() {
-	concurrent_zip.SetTmpfileProvider(TmpfileFactory(0))
 }

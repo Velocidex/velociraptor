@@ -5,6 +5,7 @@
 // https://www.codeproject.com/Articles/13601/COM-in-plain-C
 
 #define _WIN32_DCOM
+#include <stdint.h>
 #include <wbemidl.h>
 #include <initguid.h>
 #include <stdio.h>
@@ -322,6 +323,6 @@ void Error(void *go_ctx, char *function, HRESULT hres) {
     // store the HRESULT - users can lookup the MSDN to figure out
     // what it means.
     char buf[512];
-    snprintf(buf, 512, "%s: Error code %#x", function, hres);
+    snprintf(buf, 512, "%s: Error code %#lx", function, (uint32_t)hres);
     log_error(go_ctx, buf);
 }
