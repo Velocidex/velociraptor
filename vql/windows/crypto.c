@@ -5,6 +5,7 @@
 // https://github.com/facebook/osquery/blob/master/osquery/tables/system/windows/certificates.cpp
 
 #include <windows.h>
+#include <stdint.h>
 #include <wchar.h>
 #include <stdio.h>
 #include <wincrypt.h>
@@ -32,13 +33,16 @@ BOOL WINAPI certEnumSystemStoreCallback(const void* systemStore,
     LPCWSTR store_name = (LPCWSTR)systemStore;
     HCERTSTORE hCertStore = CertOpenSystemStoreW(0, store_name);
     if (hCertStore == NULL) {
-        printf("Failed to open cert store %S with %d\n", systemStore, GetLastError());
+        printf("Failed to open cert store %S with %ld\n",
+               (wchar_t *)systemStore, (uint32_t)GetLastError());
         return FALSE;
     }
 
-    while(pCertContext=CertEnumCertificatesInStore(
-              hCertStore,
-              pCertContext)) {
+    while(1) {
+        pCertContext=CertEnumCertificatesInStore(hCertStore, pCertContext);
+        if (pCertContext == NULL) {
+            break;
+        }
 
         // Just pass the certificate to Go - we will deal with it
         // there.

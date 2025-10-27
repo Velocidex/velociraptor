@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"io"
+	"sync"
 )
 
 type Closer interface {
@@ -10,6 +11,7 @@ type Closer interface {
 }
 
 type ReadSeekReaderAdapter struct {
+	mu     sync.Mutex
 	reader io.ReaderAt
 	offset int64
 	size   int64
@@ -18,7 +20,10 @@ type ReadSeekReaderAdapter struct {
 	closer func()
 }
 
-func (self ReadSeekReaderAdapter) Close() error {
+func (self *ReadSeekReaderAdapter) Close() error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	// Try to close our delegate if possible
 	switch t := self.reader.(type) {
 	case Flusher:
@@ -38,6 +43,9 @@ func (self ReadSeekReaderAdapter) Close() error {
 }
 
 func (self *ReadSeekReaderAdapter) Read(buf []byte) (int, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	if self.eof {
 		return 0, io.EOF
 	}
@@ -67,6 +75,9 @@ func (self *ReadSeekReaderAdapter) Read(buf []byte) (int, error) {
 }
 
 func (self *ReadSeekReaderAdapter) SetSize(size int64) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.size = size
 }
 
@@ -78,6 +89,9 @@ func (self *ReadSeekReaderAdapter) Seek(offset int64, whence int) (int64, error)
 	if whence != 0 {
 		return 0, errors.New("Unsupported whence")
 	}
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	self.offset = offset
 	return offset, nil

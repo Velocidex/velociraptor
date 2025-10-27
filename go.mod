@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2
-	github.com/Velocidex/etw v0.0.0-20251013141050-6697409b99d1
+	github.com/Velocidex/etw v0.0.0-20251027041548-6d97883fd588
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-magic v0.0.0-20250203094020-32f94b14f00f
 	github.com/Velocidex/go-yara v1.1.10-0.20250823152352-e5fc0843e50e
@@ -17,7 +17,7 @@ require (
 	github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1
 	github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130
 	github.com/Velocidex/yaml/v2 v2.2.8
-	github.com/Velocidex/zip v0.0.0-20250102162034-1a0ec0ec569c
+	github.com/Velocidex/zip v0.0.0-20251027040802-582e676739bd
 	github.com/alecthomas/assert v1.0.0
 	github.com/alecthomas/chroma v0.7.3
 	github.com/alecthomas/participle v0.7.1
@@ -131,6 +131,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/glaslos/tlsh v0.2.0
 	github.com/go-errors/errors v1.4.2
+	github.com/go-json-experiment/json v0.0.0-20250910080747-cc2cfa0554c3
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/websocket v1.5.2-0.20240215025916-695e9095ce87
@@ -203,6 +204,8 @@ require (
 	github.com/charmbracelet/x/exp/strings v0.0.0-20241209212528-0eec74ecaa6f // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/cilium/ebpf v0.18.0 // indirect
+	github.com/clipperhouse/stringish v0.1.1 // indirect
+	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/crewjam/httperr v0.2.0 // indirect
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
@@ -215,7 +218,6 @@ require (
 	github.com/geoffgarside/ber v1.1.0 // indirect
 	github.com/gizak/termui/v3 v3.1.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
-	github.com/go-json-experiment/json v0.0.0-20250910080747-cc2cfa0554c3 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
@@ -249,7 +251,7 @@ require (
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mattermost/xml-roundtrip-validator v0.1.0 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
-	github.com/mattn/go-runewidth v0.0.16 // indirect
+	github.com/mattn/go-runewidth v0.0.19 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect

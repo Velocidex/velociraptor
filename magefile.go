@@ -91,12 +91,12 @@ type Builder struct {
 }
 
 func (self *Builder) Name() string {
-	if self.filename != "" {
-		return self.filename
-	}
-
 	if self.goos == "windows" {
 		self.extension = ".exe"
+	}
+
+	if self.filename != "" {
+		return self.filename + self.extension
 	}
 
 	name := fmt.Sprintf("%s-%s-%s-%s%s",
@@ -381,7 +381,7 @@ func WindowsDev() error {
 	return Builder{
 		goos:       "windows",
 		extra_tags: " release yara ",
-		filename:   "velociraptor.exe",
+		filename:   "velociraptor",
 		arch:       "amd64"}.Run()
 }
 
@@ -394,7 +394,7 @@ func WindowsTest() error {
 	return Builder{
 		goos:        "windows",
 		extra_tags:  " release yara ",
-		filename:    "velociraptor.exe",
+		filename:    "velociraptor",
 		arch:        "amd64",
 		extra_flags: []string{"-race"}}.Run()
 }
