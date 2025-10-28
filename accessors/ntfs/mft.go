@@ -110,6 +110,8 @@ func (self *MFTFileSystemAccessor) Open(path string) (
 func (self *MFTFileSystemAccessor) OpenWithOSPath(full_path *accessors.OSPath) (
 	accessors.ReadSeekCloser, error) {
 
+	defer Instrument("OpenWithOSPath")()
+
 	delegate_device, delegate_accessor, subpath, err := self.parseMFTPath(
 		full_path)
 	if err != nil {
