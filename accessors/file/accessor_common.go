@@ -180,6 +180,8 @@ type OSFileSystemAccessor struct {
 	nocase bool
 
 	root *accessors.OSPath
+
+	scope vfilter.Scope
 }
 
 func (self OSFileSystemAccessor) ParsePath(path string) (*accessors.OSPath, error) {
@@ -204,6 +206,7 @@ func (self OSFileSystemAccessor) New(scope vfilter.Scope) (
 		},
 		root:   self.root,
 		nocase: self.nocase,
+		scope:  scope,
 	}, nil
 }
 
