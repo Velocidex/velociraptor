@@ -98,6 +98,8 @@ func (self *NannyService) _CheckTime(t time.Time, message string) bool {
 		self.Logger.Error(
 			"NannyService: <red>Last %v too long ago %v (now is %v MaxConnectionDelay is %v)</>",
 			message, t, now, self.MaxConnectionDelay)
+
+		// Only exit on first attempt, otherwise record we fired.
 		self._Exit()
 		return true
 	}
@@ -125,13 +127,20 @@ func (self *NannyService) _Exit() {
 	self.on_exit_called = true
 }
 
+// Golang handles time shift transparently so suspend should not
+// affect time arithmetics. Here we want to fall back on the specific
+// handling for time shifts so we can report it.
+func reparseTime(t time.Time) time.Time {
+	return time.Unix(0, t.UnixNano())
+}
+
 func (self *NannyService) checkOnce(period time.Duration) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	// Keep track of the last time we checked things.
-	last_check_time := self.last_check_time
-	self.last_check_time = utils.GetTime().Now()
+	last_check_time := reparseTime(self.last_check_time)
+	self.last_check_time = reparseTime(utils.GetTime().Now())
 
 	// We should update self.last_check_time periodically
 	// so it shoud never be more than 20 sec behind this
@@ -139,8 +148,17 @@ func (self *NannyService) checkOnce(period time.Duration) {
 	// - in that case the last check time is far before
 	// this check time. In this case we cosider the check
 	// invalid and try again later.
-	if last_check_time.Add(period * 2).
-		Before(self.last_check_time) {
+	if last_check_time.Add(period * 2).Before(self.last_check_time) {
+		self.Logger.Error(
+			"NannyService: <red>Detected timeshift:</> last_check_time was %v which is %v ago",
+			last_check_time.UTC().Format(time.RFC3339),
+			self.last_check_time.Sub(last_check_time).
+				Round(time.Second).String())
+
+		// Reset all the times to compensate for the time shift
+		self.last_pump_rb_to_server_attempt = self.last_check_time
+		self.last_pump_to_rb_attempt = self.last_check_time
+		self.last_read_from_server = self.last_check_time
 		return
 	}
 
