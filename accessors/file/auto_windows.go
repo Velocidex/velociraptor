@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"sync"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -85,8 +86,7 @@ func (self *FileReaderWrapper) Read(buf []byte) (int, error) {
 
 	n, err := self.ReadSeekCloser.Read(buf)
 	if err != nil &&
-		!errors.Is(err, io.ErrUnexpectedEOF) &&
-		!errors.Is(err, io.EOF) &&
+		shouldTryNTFS(self.path.Basename(), err) &&
 		!self.switched_to_ntfs {
 
 		// Reopen as an ntfs parsed file.
@@ -182,7 +182,7 @@ func (self *AutoFilesystemAccessor) Open(path string) (accessors.ReadSeekCloser,
 func (self *AutoFilesystemAccessor) OpenWithOSPath(
 	path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
 	result, err := self.file_delegate.OpenWithOSPath(path)
-	if err != nil {
+	if err != nil && shouldTryNTFS(path.Basename(), err) {
 		ntfs_path := accessors.WindowsNTFSPathFromOSPath(path)
 		result, err1 := self.ntfs_delegate.OpenWithOSPath(ntfs_path)
 		if err1 != nil {
@@ -200,9 +200,44 @@ func (self *AutoFilesystemAccessor) OpenWithOSPath(
 	}, err
 }
 
+func shouldTryNTFS(path string, err error) bool {
+	// Special NTFS files start with a $
+	if strings.Contains(path, "\\$") || strings.HasPrefix(path, "$") {
+		return true
+	}
+
+	// For permission denied we fallback to ntfs parsing.
+	if errors.Is(err, os.ErrPermission) {
+		return true
+	}
+
+	// These are regular errors - falling back to ntfs parsing will
+	// not help much.
+	if errors.Is(err, io.ErrUnexpectedEOF) ||
+		errors.Is(err, io.EOF) ||
+		errors.Is(err, os.ErrClosed) {
+		return false
+	}
+
+	// If the file does not exist using the APIs then it is unlikely
+	// that nts parsing will find it.
+	if errors.Is(err, os.ErrNotExist) {
+		return false
+	}
+
+	// This mostly occurs on directories.
+	if strings.Contains(err.Error(), "Incorrect function") {
+		return false
+	}
+
+	// Give ntfs parsing a shot - maybe it will work?
+	return true
+}
+
 func (self *AutoFilesystemAccessor) Lstat(path string) (accessors.FileInfo, error) {
 	result, err := self.file_delegate.Lstat(path)
 	if err != nil {
+
 		return self.ntfs_delegate.Lstat(path)
 	}
 	return result, err
@@ -211,7 +246,7 @@ func (self *AutoFilesystemAccessor) Lstat(path string) (accessors.FileInfo, erro
 func (self *AutoFilesystemAccessor) LstatWithOSPath(
 	path *accessors.OSPath) (accessors.FileInfo, error) {
 	result, err := self.file_delegate.LstatWithOSPath(path)
-	if err != nil {
+	if err != nil && shouldTryNTFS(path.Basename(), err) {
 		ntfs_path := accessors.WindowsNTFSPathFromOSPath(path)
 		return self.ntfs_delegate.LstatWithOSPath(ntfs_path)
 	}
