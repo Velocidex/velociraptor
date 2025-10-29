@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
@@ -64,6 +65,9 @@ func TestNannySleep(t *testing.T) {
 	// If we did not communicate with the server in 60 sec, hard exit.
 	config_obj := config.GetDefaultConfig()
 	config_obj.Client.NannyMaxConnectionDelay = 60
+	config_obj.Verbose = true
+
+	logging.InitLogging(config_obj)
 
 	closer := utils.MockTime(utils.NewMockClock(time.Unix(1000, 0)))
 	defer closer()
@@ -82,21 +86,33 @@ func TestNannySleep(t *testing.T) {
 	// the pumps were touched.
 	Nanny.checkOnce(period)
 
+	logging.ClearMemoryLogs()
+
 	// Now emulate a suspend cycle - the next check occurs a long time
 	// after the last check
 	utils.MockTime(utils.NewMockClock(time.Unix(2000, 0)))
 
+	// This should detect the timeshift and reset the above timers
 	Nanny.checkOnce(period)
 
 	// Did not trigger an exit.
 	assert.True(t, helper.exit_called.IsZero())
 
-	// Step the next check by 10 sec
-	utils.MockTime(utils.NewMockClock(time.Unix(2010, 0)))
+	// The nanny detected the timeshift
+	assert.Regexp(t, "Detected timeshift", logging.GetMemoryLogs())
 
-	// This will now trigger an exit
-	Nanny.checkOnce(period)
+	// Now emulate regular nanny heartbeats for the next while.
+	for t := int64(2010); t < 3000; t += 10 {
+		// Step the next check by 20 sec
+		utils.MockTime(utils.NewMockClock(time.Unix(t, 0)))
+		Nanny.checkOnce(period)
+
+		// Stop as soon as the exit was called.
+		if !helper.exit_called.IsZero() {
+			break
+		}
+	}
 
 	// First check after the 60 second timeout will trigger an exit.
-	assert.Equal(t, int64(2010), helper.exit_called.Unix())
+	assert.Equal(t, int64(2070), helper.exit_called.Unix())
 }
