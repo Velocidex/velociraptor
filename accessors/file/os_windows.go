@@ -35,12 +35,10 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/utils/files"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -132,6 +130,7 @@ func (self *OSFileInfo) sys() *syscall.Win32FileAttributeData {
 
 type OSFileSystemAccessor struct {
 	follow_links bool
+	scope        vfilter.Scope
 }
 
 func (self OSFileSystemAccessor) ParsePath(path string) (
@@ -142,7 +141,10 @@ func (self OSFileSystemAccessor) ParsePath(path string) (
 func (self OSFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 
-	return &OSFileSystemAccessor{follow_links: self.follow_links}, nil
+	return &OSFileSystemAccessor{
+		follow_links: self.follow_links,
+		scope:        scope,
+	}, nil
 }
 
 func (self OSFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
@@ -208,6 +210,8 @@ func (self OSFileSystemAccessor) ReadDirWithOSPath(
 	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
 	var result []accessors.FileInfo
 
+	defer Instrument("ReadDirWithOSPath")()
+
 	err := CheckPrefix(full_path)
 	if err != nil {
 		return nil, err
@@ -215,7 +219,7 @@ func (self OSFileSystemAccessor) ReadDirWithOSPath(
 
 	// No drive part, so list all drives.
 	if len(full_path.Components) == 0 {
-		return discoverDriveLetters()
+		return Cache.DiscoverDriveLetters()
 	}
 
 	// Add a final \ to turn path into a directory path. This is
@@ -300,6 +304,8 @@ func (self OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, er
 func (self OSFileSystemAccessor) OpenWithOSPath(full_path *accessors.OSPath) (
 	accessors.ReadSeekCloser, error) {
 
+	defer Instrument("OpenWithOSPath")()
+
 	err := CheckPrefix(full_path)
 	if err != nil {
 		return nil, err
@@ -309,34 +315,7 @@ func (self OSFileSystemAccessor) OpenWithOSPath(full_path *accessors.OSPath) (
 	// raw disk.
 	if len(full_path.Components) == 1 {
 		device_name := full_path.Components[0]
-		if !strings.HasPrefix(device_name, "\\\\") {
-			device_name = "\\\\.\\" + device_name
-		}
-		file, err := os.Open(device_name)
-		if err != nil {
-			return nil, err
-		}
-
-		files.Add(device_name)
-
-		// Need to read the raw device in pagesize sizes
-		reader, err := ntfs.NewPagedReader(file, 0x1000, 1000)
-		if err != nil {
-			return nil, err
-		}
-
-		res := utils.NewReadSeekReaderAdapter(reader, func() {
-			files.Remove(device_name)
-		})
-
-		// Try to figure out the size - not necessary but in case we
-		// can we can limit readers to this size.
-		stat, err1 := os.Lstat(device_name)
-		if err1 == nil {
-			res.SetSize(stat.Size())
-		}
-
-		return res, err
+		return getDeviceReader(self.scope, device_name)
 	}
 
 	filename := full_path.String()
@@ -353,6 +332,7 @@ func (self OSFileSystemAccessor) OpenWithOSPath(full_path *accessors.OSPath) (
 }
 
 func (self *OSFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error) {
+	defer Instrument("Lstat")()
 
 	full_path, err := self.ParsePath(path)
 	if err != nil {
@@ -375,6 +355,8 @@ func (self *OSFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error)
 func (self *OSFileSystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) (
 	accessors.FileInfo, error) {
 
+	defer Instrument("LstatWithOSPath")()
+
 	err := CheckPrefix(full_path)
 	if err != nil {
 		return nil, err
@@ -382,7 +364,7 @@ func (self *OSFileSystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) (
 
 	// An Lstat of a device returns metadata about the device
 	if len(full_path.Components) == 1 {
-		devices, err := discoverDriveLetters()
+		devices, err := Cache.DiscoverDriveLetters()
 		if err != nil {
 			return nil, err
 		}
@@ -393,7 +375,7 @@ func (self *OSFileSystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) (
 				return d, nil
 			}
 		}
-		return nil, errors.New("Not found")
+		return nil, utils.NotFoundError
 	}
 
 	stat, err := os.Lstat(full_path.String())

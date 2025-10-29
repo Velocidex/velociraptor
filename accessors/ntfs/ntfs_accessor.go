@@ -190,6 +190,9 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (
 
 func (self *NTFSFileSystemAccessor) ReadDirWithOSPath(
 	fullpath *accessors.OSPath) (res []accessors.FileInfo, err error) {
+
+	defer Instrument("ReadDirWithOSPath")()
+
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -366,6 +369,8 @@ func (self *NTFSFileSystemAccessor) Open(
 func (self *NTFSFileSystemAccessor) OpenWithOSPath(
 	fullpath *accessors.OSPath) (res accessors.ReadSeekCloser, err error) {
 
+	defer Instrument("OpenWithOSPath")()
+
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -393,6 +398,8 @@ func (self *NTFSFileSystemAccessor) OpenWithOSPath(
 	// We dont want to open a subpath of the filesystem, instead we
 	// special case this as openning the raw device.
 	if len(fullpath.Components) == 0 {
+		defer Instrument("RawDevice")()
+
 		accessor, err := accessors.GetAccessor(accessor, self.scope)
 		if err != nil {
 			return nil, err
@@ -406,7 +413,7 @@ func (self *NTFSFileSystemAccessor) OpenWithOSPath(
 		files.Add(device.String())
 
 		reader, err := ntfs.NewPagedReader(
-			utils.MakeReaderAtter(file), 0x1000, 10000)
+			utils.MakeReaderAtter(file), 0x1000, 1000)
 		if err != nil {
 			return nil, err
 		}
@@ -538,6 +545,8 @@ func Open(scope vfilter.Scope, self *ntfs.MFT_ENTRY,
 	ntfs_ctx *ntfs.NTFSContext,
 	device *accessors.OSPath, accessor string,
 	filename *accessors.OSPath) (*ntfs.MFT_ENTRY, error) {
+
+	defer Instrument("Open")()
 
 	components := filename.Components
 
