@@ -73,6 +73,8 @@ sources:
 type NotebookManagerTestSuite struct {
 	test_utils.TestSuite
 	closer func()
+
+	client_id string
 }
 
 func (self *NotebookManagerTestSuite) SetupTest() {
@@ -100,6 +102,14 @@ func (self *NotebookManagerTestSuite) SetupTest() {
 
 	// Create an administrator user
 	err := services.GrantRoles(self.ConfigObj, "admin", []string{"administrator"})
+	assert.NoError(self.T(), err)
+
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
+		&actions_proto.ClientInfo{
+			ClientId: self.client_id,
+		}})
 	assert.NoError(self.T(), err)
 }
 
@@ -409,5 +419,7 @@ sources:
 
 func TestNotebookManager(t *testing.T) {
 	defer rand.DisableRand()
-	suite.Run(t, &NotebookManagerTestSuite{})
+	suite.Run(t, &NotebookManagerTestSuite{
+		client_id: "C.1235",
+	})
 }

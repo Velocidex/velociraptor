@@ -69,6 +69,19 @@ type ExecutorTestSuite struct {
 	client_id string
 }
 
+func (self *ExecutorTestSuite) SetupTest() {
+	self.TestSuite.SetupTest()
+
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
+		&actions_proto.ClientInfo{
+			ClientId: self.client_id,
+		}})
+	assert.NoError(self.T(), err)
+}
+
 // Cancelling the flow multiple times will cause a single
 // cancellation state and then ignore the rest.
 func (self *ExecutorTestSuite) TestCancellation() {
