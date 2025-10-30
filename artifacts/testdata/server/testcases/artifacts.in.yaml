@@ -2,9 +2,6 @@ Parameters:
   CLIENT_ID: "C.4f5e52adf0a337a9"
 
 Queries:
-  # Create a client for this test
-  - SELECT client_create(client_id=CLIENT_ID) FROM scope()
-
   # Check the extension on file_store()
   - SELECT *, basename(path=file_store(path=vfs_path))
     FROM uploads(client_id=CLIENT_ID,

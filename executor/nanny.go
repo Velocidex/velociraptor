@@ -93,6 +93,7 @@ func (self *NannyService) _CheckTime(t time.Time, message string) bool {
 		return false
 	}
 
+	t = reparseTime(t)
 	now := utils.GetTime().Now()
 	if t.Add(self.MaxConnectionDelay).Before(now) {
 		self.Logger.Error(
@@ -109,7 +110,7 @@ func (self *NannyService) _CheckTime(t time.Time, message string) bool {
 
 func (self *NannyService) _Exit() {
 	// If we already called the OnExit one time, we just hard exit.
-	if self.OnExit == nil || self.on_exit_called {
+	if self.on_exit_called {
 		self.Logger.Error("Hard Exit called!")
 		if self.OnExit2 != nil {
 			self.OnExit2()
@@ -120,10 +121,15 @@ func (self *NannyService) _Exit() {
 	}
 
 	on_exit := self.OnExit
-	self.mu.Unlock()
-	// Release the lock in case the on exit function needs to send things.
-	on_exit()
-	self.mu.Lock()
+	if on_exit != nil {
+		// Release the lock in case the on exit function needs to send
+		// things.
+		self.mu.Unlock()
+		on_exit()
+		self.mu.Lock()
+	}
+
+	self.Logger.Debug("Nanny: <red>First warning...</> Next compliance check will result in hard exit")
 	self.on_exit_called = true
 }
 
@@ -183,6 +189,9 @@ func (self *NannyService) checkOnce(period time.Duration) {
 
 	// Allow the trigger to be disarmed if the on_exit was able to
 	// reduce memory use or unstick the process.
+	if self.on_exit_called {
+		self.Logger.Debug("NannyService: <green>Back in compliance</> - disarming")
+	}
 	self.on_exit_called = false
 }
 

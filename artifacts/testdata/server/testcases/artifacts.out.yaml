@@ -1,37 +1,3 @@
-# Create a client for this test
-Query: SELECT client_create(client_id=CLIENT_ID) FROM scope()
-Output: [
- {
-  "client_create(client_id=CLIENT_ID)": {
-   "client_id": "C.4f5e52adf0a337a9",
-   "hostname": "",
-   "fqdn": "",
-   "system": "",
-   "release": "",
-   "architecture": "",
-   "ip_address": "",
-   "ping": 0,
-   "ping_time": "",
-   "client_version": "",
-   "client_name": "",
-   "first_seen_at": 0,
-   "build_time": "",
-   "build_url": "",
-   "install_time": 0,
-   "labels": [],
-   "mac_addresses": [],
-   "has_tasks": false,
-   "last_interrogate_flow_id": "",
-   "last_interrogate_artifact_name": "",
-   "last_hunt_timestamp": 0,
-   "last_event_table_version": 0,
-   "labels_timestamp": 0,
-   "in_flight_flows": {},
-   "metadata": {}
-  }
- }
-]
-
 # Check the extension on file_store()
 Query: SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id=CLIENT_ID, flow_id='F.BN2HJCPOF5U7U')
 Output: [
