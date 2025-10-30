@@ -106,8 +106,7 @@ func ws_receive_client_messages(
 			case <-ctx.Done():
 				return
 			case <-utils.GetTime().After(http_comms.PingWait(config_obj)):
-				err := send_ping(ws, config_obj)
-				fmt.Printf("send-ping %v\n", err)
+				send_ping(ws, config_obj)
 			}
 		}
 	}()
