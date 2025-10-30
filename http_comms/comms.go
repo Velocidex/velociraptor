@@ -314,6 +314,7 @@ func (self *HTTPConnector) retryPost(
 				if resp != nil {
 					resp.Body.Close()
 				}
+				count++
 				continue
 
 				// 503 is retryable a couple times.

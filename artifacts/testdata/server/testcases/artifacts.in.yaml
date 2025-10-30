@@ -1,19 +1,22 @@
+Parameters:
+  CLIENT_ID: "C.4f5e52adf0a337a9"
+
 Queries:
   # Check the extension on file_store()
   - SELECT *, basename(path=file_store(path=vfs_path))
-    FROM uploads(client_id='C.4f5e52adf0a337a9',
+    FROM uploads(client_id=CLIENT_ID,
                  flow_id='F.BN2HJCPOF5U7U')
 
   # Schedule an artifact collection
   - SELECT collect_client(
-        client_id='C.11a3013ccaXXXXX',
+        client_id=CLIENT_ID,
         artifacts='Windows.Search.FileFinder',
         env=dict(SearchFilesGlobTable ='Glob\nC:/*.txt\n')).request AS Flow
     FROM scope()
 
   # Schedule using a new style spec decleration.
   - SELECT collect_client(
-        client_id='C.11a3013ccaXXXXX',
+        client_id=CLIENT_ID,
         artifacts='Windows.Search.FileFinder',
         spec=dict(`Windows.Search.FileFinder`=dict(
             SearchFilesGlobTable ='Glob\nC:/*.txt\n'))).request AS Flow
@@ -28,7 +31,7 @@ Queries:
 
   # Test the "fs" accessor
   - SELECT OSPath FROM glob(
-     globs="/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/**",
+     globs="/clients/" + CLIENT_ID + "/collections/F.BN2HJCPOF5U7U/uploads/**",
      accessor="fs")
 
   # Test that we can not overwrite built in artifacts

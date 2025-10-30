@@ -640,6 +640,13 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		return "", err
 	}
 
+	// If the client id is not known, refuse to schedule messages to
+	// it.
+	_, err = client_manager.Get(ctx, client_id)
+	if err != nil {
+		return "", err
+	}
+
 	session_id := collector_request.FlowId
 	if session_id == "" {
 		session_id = utils.NewFlowId(client_id)

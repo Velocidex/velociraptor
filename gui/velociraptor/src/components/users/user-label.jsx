@@ -126,12 +126,12 @@ class _PasswordChangeForm extends React.PureComponent {
 
 export const PasswordChangeForm = withRouter(_PasswordChangeForm);
 
-class UserSettings extends React.PureComponent {
+class UserSettingsDialog extends React.PureComponent {
     static contextType = UserConfig;
     static propTypes = {
         onClose: PropTypes.func.isRequired,
         setSetting: PropTypes.func.isRequired,
-
+        setClient: PropTypes.func.isRequired,
         history: PropTypes.object,
     }
 
@@ -218,6 +218,7 @@ class UserSettings extends React.PureComponent {
         this.saveSettings({org: org,
                            org_changed: true,
                            previous_org: previous_org});
+        this.props.setClient({client_id: null});
         this.props.onClose();
     }
 
@@ -416,12 +417,12 @@ class UserSettings extends React.PureComponent {
     };
 }
 
-const UserSettingsWithRouter = withRouter(UserSettings);
+const UserSettingsDialogWithRouter = withRouter(UserSettingsDialog);
 
 export default class UserLabel extends React.Component {
     static contextType = UserConfig;
     static propTypes = {
-
+        setClient: PropTypes.func.isRequired,
     };
 
     state = {
@@ -526,7 +527,8 @@ export default class UserLabel extends React.Component {
         return (
             <>
               { this.state.showUserSettings &&
-                <UserSettingsWithRouter
+                <UserSettingsDialogWithRouter
+                  setClient={this.props.setClient}
                   setSetting={this.setSettings}
                   onClose={()=>this.setState({showUserSettings: false})} />
               }

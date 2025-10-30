@@ -1,46 +1,61 @@
+Parameters:
+  ClientId: "C.123NewClient"
+
 Queries:
-  # Clear the labels from all clients.
-  - LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id
-    FROM clients(search='label:*') ORDER BY client_id
-
-  # Just get a list of all clients and their hostnames.
-  - SELECT os_info.fqdn as Hostname, client_id, last_seen_at / 1000000  as LastSeen
-    FROM clients() order by Hostname
-
-  # Check that the clients plugin allows searching by indexes.
-  - SELECT os_info.fqdn as Hostname, os_info.system as System, client_id
-    FROM clients(search='host:testcomputer') order by client_id
-
-  - SELECT * from clients() order by client_id
-
-  - SELECT client_id, timestamp(epoch=create_time/1000000) as CreateTime,
-           request.artifacts as Artifacts,
-           session_id as Flow
-    FROM flows(client_id='C.4f5e52adf0a337a9')
-    WHERE Artifacts =~ "Netstat"
-
-  # Test metadata setting and getting - metadata is additive.
-  - SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9',
-      Foo='Bar', Bar='Baz', IntConvertedToString=5) FROM scope()
-  - SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()
-
-  # Metadata is additive - NULL removes
-  - SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9',
-         AnotherItem="Hello", Bar=NULL) FROM scope()
-  - SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()
-
-  # Creating clients
+  # Create a new client
   - LET client_record <= client_create(
        first_seen_at="2020-10-01T10:11:23",
        last_seen_at="2021-02-03T12:12:24",
        labels=["Label1", "Label2"],
        os="windows",
        hostname="myHostname",
-       client_id="C.12345678",
+       client_id=ClientId,
        mac_addresses=["00:11:22", "22:33:44"])
 
-  - SELECT *, client_record FROM clients(client_id=client_record.client_id)
+  # Check client exists
+  - SELECT *, client_record
+    FROM clients(client_id=client_record.client_id)
+
+  # Clear the labels from all clients.
+  - LET _ <= SELECT label(client_id=client_id,
+       op='remove', labels=labels), client_id
+    FROM clients(search='label:*') ORDER BY client_id
+
+  # Just get a list of all clients and their hostnames.
+  - SELECT os_info.fqdn as Hostname, client_id,
+           last_seen_at / 1000000  as LastSeen
+    FROM clients()
+    WHERE Hostname =~ "myHostname"
+
+  # Check that the clients plugin allows searching by indexes.
+  - SELECT os_info.fqdn as Hostname, os_info.system as System, client_id
+    FROM clients(search='host:myHostname') order by client_id
+
+  # Schedule a flow on the client
+  - SELECT collect_client(client_id=ClientId,
+      artifacts="Windows.Network.Netstat")
+    FROM scope()
+
+  # Find the flow in the new client
+  - SELECT client_id, timestamp(epoch=create_time/1000000) as CreateTime,
+           request.artifacts as Artifacts,
+           session_id as Flow
+    FROM flows(client_id=ClientId)
+    WHERE Artifacts =~ "Netstat"
+
+  # Test metadata setting and getting - metadata is additive.
+  - SELECT client_set_metadata(client_id=ClientId,
+      Foo='Bar', Bar='Baz', IntConvertedToString=5) FROM scope()
+  - SELECT client_metadata(client_id=ClientId) FROM scope()
+
+  # Metadata is additive - NULL removes
+  - SELECT client_set_metadata(client_id=ClientId,
+         AnotherItem="Hello", Bar=NULL) FROM scope()
+  - SELECT client_metadata(client_id=ClientId) FROM scope()
 
   # Remove the new client.
-  - SELECT * FROM client_delete(client_id=client_record.client_id, really_do_it=TRUE)
+  - SELECT * FROM client_delete(
+       client_id=client_record.client_id, really_do_it=TRUE)
+    GROUP BY 1
+
   - SELECT * FROM clients(client_id=client_record.client_id)

@@ -10,6 +10,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/suite"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -172,10 +173,19 @@ func (self *TestSuite) TestHuntsSource() {
 	gen := &ConstantIdGenerator{}
 	defer utils.SetIdGenerator(gen)()
 
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	for client_number := 0; client_number < 10; client_number++ {
 		gen.SetId(fmt.Sprintf("%s_%v", self.flow_id, client_number))
 
 		client_id := fmt.Sprintf("%s_%v", self.client_id, client_number)
+		err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
+			&actions_proto.ClientInfo{
+				ClientId: client_id,
+			}})
+		assert.NoError(self.T(), err)
+
 		flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx,
 			self.ConfigObj, acl_managers.NullACLManager{},
 			repository, &flows_proto.ArtifactCollectorArgs{
