@@ -100,11 +100,13 @@ sources:
 
 type checker func(t *testing.T, response *artifacts_proto.Artifact, spec *flows_proto.ArtifactSpec)
 
-var (
-	initialTestCases = []struct {
-		req   *api_proto.NotebookMetadata
-		check checker
-	}{
+type notebookTestCase struct {
+	req   *api_proto.NotebookMetadata
+	check checker
+}
+
+func initialTestCases(client_id string) []notebookTestCase {
+	return []notebookTestCase{
 		{
 			req: &api_proto.NotebookMetadata{
 				Name:        "Unspecified Artifacts",
@@ -125,7 +127,7 @@ var (
 				// Client notebooks have predetermined notebook id. This
 				// should cause the PrivateNotebook to add client id and
 				// flow id to the artifact parameters.
-				NotebookId:  "N.F.1234-C.1235",
+				NotebookId:  "N.F.1234-" + client_id,
 				Description: "Notebook based on a client artifact with no custom notebooks.",
 				Artifacts:   []string{"Generic.Client.Info"},
 			},
@@ -138,7 +140,7 @@ var (
 
 				// ClientId and Flow ID are added
 				AssertDictRegex(t, "ClientId", "Parameters.2.Name", artifact)
-				AssertDictRegex(t, "C.1235", "Parameters.2.Default", artifact)
+				AssertDictRegex(t, client_id, "Parameters.2.Default", artifact)
 
 				AssertDictRegex(t, "FlowId", "Parameters.3.Name", artifact)
 				AssertDictRegex(t, "F.1234", "Parameters.3.Default", artifact)
@@ -151,7 +153,7 @@ var (
 		{
 			req: &api_proto.NotebookMetadata{
 				Name:        "Custom.Generic.Client.Info",
-				NotebookId:  "N.F.1235-C.1235",
+				NotebookId:  "N.F.1235-" + client_id,
 				Description: "Based on custom notebook cells",
 				Artifacts:   []string{"Custom.Generic.Client.Info"},
 			},
@@ -165,7 +167,7 @@ var (
 			req: &api_proto.NotebookMetadata{
 				Name:        "EventArtifact",
 				Description: "Building a notebook from an event artifact adds StartTime and EndTime",
-				NotebookId:  "N.E.Generic.Events-C.1235",
+				NotebookId:  "N.E.Generic.Events-" + client_id,
 				Artifacts:   []string{"Generic.Events"},
 				Env: []*api_proto.Env{{
 					Key: "StartTime", Value: "2020-01-10",
@@ -192,7 +194,7 @@ var (
 			req: &api_proto.NotebookMetadata{
 				Name:        "EventArtifact Default",
 				Description: "Building a notebook from an event artifact without custom notebooks. This should populate the spec from the installed client event monitoring table.",
-				NotebookId:  "N.E.Generic.Events-C.1235",
+				NotebookId:  "N.E.Generic.Events-" + client_id,
 				Artifacts:   []string{"Generic.Events"},
 				Env: []*api_proto.Env{
 					{Key: "StartTime", Value: "2024-10"},
@@ -284,7 +286,7 @@ var (
 			},
 		},
 	}
-)
+}
 
 func (self *NotebookManagerTestSuite) createFlow(
 	flow_id, client_id, artifact string) {
@@ -363,11 +365,11 @@ func (self *NotebookManagerTestSuite) createFlow(
 func (self *NotebookManagerTestSuite) TestInitialNotebook() {
 	self.LoadArtifacts(InitialArtifacts...)
 
-	self.createFlow("F.1234", "C.1235", "Generic.Client.Info")
-	self.createFlow("F.1235", "C.1235", "Custom.Generic.Client.Info")
+	self.createFlow("F.1234", self.client_id, "Generic.Client.Info")
+	self.createFlow("F.1235", self.client_id, "Custom.Generic.Client.Info")
 
 	golden := ordereddict.NewDict()
-	for _, tc := range initialTestCases {
+	for _, tc := range initialTestCases(self.client_id) {
 		req := tc.req
 		golden.Set(req.Name+" Request", proto.Clone(req))
 

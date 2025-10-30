@@ -1,110 +1,12 @@
-# Clear the labels from all clients.
-Query: LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id FROM clients(search='label:*') ORDER BY client_id
+# Create a new client
+Query: LET client_record <= client_create( first_seen_at="2020-10-01T10:11:23", last_seen_at="2021-02-03T12:12:24", labels=["Label1", "Label2"], os="windows", hostname="myHostname", client_id=ClientId, mac_addresses=["00:11:22", "22:33:44"])
 Output: []
 
-# Just get a list of all clients and their hostnames.
-Query: SELECT os_info.fqdn as Hostname, client_id, last_seen_at / 1000000  as LastSeen FROM clients() order by Hostname
-Output: [
- {
-  "Hostname": "DESKTOP-BP4S7TF",
-  "client_id": "C.4f5e52adf0a337a9",
-  "LastSeen": 1638362977.493088
- }
-]
-
-# Check that the clients plugin allows searching by indexes.
-Query: SELECT os_info.fqdn as Hostname, os_info.system as System, client_id FROM clients(search='host:testcomputer') order by client_id
-Output: []
-
-Query: SELECT * from clients() order by client_id
-Output: [
- {
-  "client_id": "C.4f5e52adf0a337a9",
-  "agent_information": {
-   "version": "2019-11-07T22:08:33+10:00",
-   "name": "velociraptor",
-   "build_time": "",
-   "build_url": ""
-  },
-  "os_info": {
-   "system": "windows",
-   "hostname": "DESKTOP-BP4S7TF",
-   "release": "Microsoft Windows 10 Enterprise Evaluation10.0.18362 Build 18362",
-   "machine": "amd64",
-   "fqdn": "DESKTOP-BP4S7TF",
-   "mac_addresses": []
-  },
-  "first_seen_at": 0,
-  "last_seen_at": 1638362977493088,
-  "last_ip": "192.168.1.112:60239",
-  "last_interrogate_flow_id": "F.BN21C82J8DM8K",
-  "last_interrogate_artifact_name": "",
-  "labels": [],
-  "last_hunt_timestamp": 0,
-  "last_event_table_version": 0,
-  "last_label_timestamp": 0,
-  "in_flight_flows": {}
- }
-]
-
-Query: SELECT client_id, timestamp(epoch=create_time/1000000) as CreateTime, request.artifacts as Artifacts, session_id as Flow FROM flows(client_id='C.4f5e52adf0a337a9') WHERE Artifacts =~ "Netstat"
-Output: [
- {
-  "client_id": "C.4f5e52adf0a337a9",
-  "CreateTime": "2023-11-28T12:43:36.907783031Z",
-  "Artifacts": [
-   "Windows.Network.NetstatEnriched"
-  ],
-  "Flow": "F.BSJMEJIPT6P9I"
- }
-]
-
-# Test metadata setting and getting - metadata is additive.
-Query: SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9', Foo='Bar', Bar='Baz', IntConvertedToString=5) FROM scope()
-Output: [
- {
-  "client_set_metadata(client_id='C.4f5e52adf0a337a9', Foo='Bar', Bar='Baz', IntConvertedToString=5)": true
- }
-]
-
-Query: SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()
-Output: [
- {
-  "client_metadata(client_id='C.4f5e52adf0a337a9')": {
-   "Foo": "Bar",
-   "Bar": "Baz",
-   "IntConvertedToString": "5"
-  }
- }
-]
-
-# Metadata is additive - NULL removes
-Query: SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9', AnotherItem="Hello", Bar=NULL) FROM scope()
-Output: [
- {
-  "client_set_metadata(client_id='C.4f5e52adf0a337a9', AnotherItem=\"Hello\", Bar=NULL)": true
- }
-]
-
-Query: SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()
-Output: [
- {
-  "client_metadata(client_id='C.4f5e52adf0a337a9')": {
-   "Foo": "Bar",
-   "IntConvertedToString": "5",
-   "AnotherItem": "Hello"
-  }
- }
-]
-
-# Creating clients
-Query: LET client_record <= client_create( first_seen_at="2020-10-01T10:11:23", last_seen_at="2021-02-03T12:12:24", labels=["Label1", "Label2"], os="windows", hostname="myHostname", client_id="C.12345678", mac_addresses=["00:11:22", "22:33:44"])
-Output: []
-
+# Check client exists
 Query: SELECT *, client_record FROM clients(client_id=client_record.client_id)
 Output: [
  {
-  "client_id": "C.12345678",
+  "client_id": "C.123NewClient",
   "agent_information": {
    "version": "",
    "name": "",
@@ -136,7 +38,7 @@ Output: [
   "last_label_timestamp": 0,
   "in_flight_flows": {},
   "client_record": {
-   "client_id": "C.12345678",
+   "client_id": "C.123NewClient",
    "hostname": "myHostname",
    "fqdn": "myHostname",
    "system": "windows",
@@ -171,9 +73,124 @@ Output: [
  }
 ]
 
-# Remove the new client.
-Query: SELECT * FROM client_delete(client_id=client_record.client_id, really_do_it=TRUE)
+# Clear the labels from all clients.
+Query: LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id FROM clients(search='label:*') ORDER BY client_id
 Output: []
+
+# Just get a list of all clients and their hostnames.
+Query: SELECT os_info.fqdn as Hostname, client_id, last_seen_at / 1000000  as LastSeen FROM clients() WHERE Hostname =~ "myHostname"
+Output: [
+ {
+  "Hostname": "myHostname",
+  "client_id": "C.123NewClient",
+  "LastSeen": 1612354344
+ }
+]
+
+# Check that the clients plugin allows searching by indexes.
+Query: SELECT os_info.fqdn as Hostname, os_info.system as System, client_id FROM clients(search='host:myHostname') order by client_id
+Output: [
+ {
+  "Hostname": "myHostname",
+  "System": "windows",
+  "client_id": "C.123NewClient"
+ }
+]
+
+# Schedule a flow on the client
+Query: SELECT collect_client(client_id=ClientId, artifacts="Windows.Network.Netstat") FROM scope()
+Output: [
+ {
+  "collect_client(client_id=ClientId, artifacts=\"Windows.Network.Netstat\")": {
+   "flow_id": "F.01",
+   "request": {
+    "creator": "VelociraptorServer",
+    "user_data": "",
+    "client_id": "C.123NewClient",
+    "flow_id": "",
+    "urgent": false,
+    "artifacts": [
+     "Windows.Network.Netstat"
+    ],
+    "specs": [],
+    "cpu_limit": 0,
+    "iops_limit": 0,
+    "progress_timeout": 0,
+    "timeout": 0,
+    "max_rows": 0,
+    "max_logs": 0,
+    "max_upload_bytes": 0,
+    "trace_freq_sec": 0,
+    "allow_custom_overrides": false,
+    "log_batch_time": 0,
+    "compiled_collector_args": [],
+    "ops_per_second": 0
+   }
+  }
+ }
+]
+
+# Find the flow in the new client
+Query: SELECT client_id, timestamp(epoch=create_time/1000000) as CreateTime, request.artifacts as Artifacts, session_id as Flow FROM flows(client_id=ClientId) WHERE Artifacts =~ "Netstat"
+Output: [
+ {
+  "client_id": "C.123NewClient",
+  "CreateTime": "2020-05-31T15:28:05Z",
+  "Artifacts": [
+   "Windows.Network.Netstat"
+  ],
+  "Flow": "F.01"
+ }
+]
+
+# Test metadata setting and getting - metadata is additive.
+Query: SELECT client_set_metadata(client_id=ClientId, Foo='Bar', Bar='Baz', IntConvertedToString=5) FROM scope()
+Output: [
+ {
+  "client_set_metadata(client_id=ClientId, Foo='Bar', Bar='Baz', IntConvertedToString=5)": true
+ }
+]
+
+Query: SELECT client_metadata(client_id=ClientId) FROM scope()
+Output: [
+ {
+  "client_metadata(client_id=ClientId)": {
+   "Foo": "Bar",
+   "Bar": "Baz",
+   "IntConvertedToString": "5"
+  }
+ }
+]
+
+# Metadata is additive - NULL removes
+Query: SELECT client_set_metadata(client_id=ClientId, AnotherItem="Hello", Bar=NULL) FROM scope()
+Output: [
+ {
+  "client_set_metadata(client_id=ClientId, AnotherItem=\"Hello\", Bar=NULL)": true
+ }
+]
+
+Query: SELECT client_metadata(client_id=ClientId) FROM scope()
+Output: [
+ {
+  "client_metadata(client_id=ClientId)": {
+   "Foo": "Bar",
+   "IntConvertedToString": "5",
+   "AnotherItem": "Hello"
+  }
+ }
+]
+
+# Remove the new client.
+Query: SELECT * FROM client_delete( client_id=client_record.client_id, really_do_it=TRUE) GROUP BY 1
+Output: [
+ {
+  "client_id": "C.123NewClient",
+  "type": "DeleteDirectory",
+  "vfs_path": "/clients/C.123NewClient/tasks",
+  "error": "client_delete: Removing directory /clients/C.123NewClient/tasks: DeleteSubject"
+ }
+]
 
 Query: SELECT * FROM clients(client_id=client_record.client_id)
 Output: []

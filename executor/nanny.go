@@ -93,6 +93,7 @@ func (self *NannyService) _CheckTime(t time.Time, message string) bool {
 		return false
 	}
 
+	t = reparseTime(t)
 	now := utils.GetTime().Now()
 	if t.Add(self.MaxConnectionDelay).Before(now) {
 		self.Logger.Error(
@@ -109,7 +110,7 @@ func (self *NannyService) _CheckTime(t time.Time, message string) bool {
 
 func (self *NannyService) _Exit() {
 	// If we already called the OnExit one time, we just hard exit.
-	if self.OnExit == nil || self.on_exit_called {
+	if self.on_exit_called {
 		self.Logger.Error("Hard Exit called!")
 		if self.OnExit2 != nil {
 			self.OnExit2()
@@ -120,10 +121,15 @@ func (self *NannyService) _Exit() {
 	}
 
 	on_exit := self.OnExit
-	self.mu.Unlock()
-	// Release the lock in case the on exit function needs to send things.
-	on_exit()
-	self.mu.Lock()
+	if on_exit != nil {
+		// Release the lock in case the on exit function needs to send
+		// things.
+		self.mu.Unlock()
+		on_exit()
+		self.mu.Lock()
+	}
+
+	self.Logger.Debug("Nanny: <red>First warning...</> Next compliance check will result in hard exit")
 	self.on_exit_called = true
 }
 
@@ -162,22 +168,31 @@ func (self *NannyService) checkOnce(period time.Duration) {
 		return
 	}
 
-	called := self._CheckTime(self.last_pump_to_rb_attempt, "Pump to Ring Buffer")
-	if self._CheckTime(self.last_pump_rb_to_server_attempt, "Pump Ring Buffer to Server") {
-		called = true
+	// Only call the exit function once - if it was called skip all
+	// the other checks until the next round. Otherwise the other
+	// times will be out of compliance as well and the exit function
+	// will be called again in this round.
+	if self._CheckTime(self.last_pump_to_rb_attempt,
+		"Pump to Ring Buffer") {
+		return
+	}
+	if self._CheckTime(self.last_pump_rb_to_server_attempt,
+		"Pump Ring Buffer to Server") {
+		return
 	}
 	if self._CheckTime(self.last_read_from_server, "Read From Server") {
-		called = true
+		return
 	}
 	if self._CheckMemory("Exceeded HardMemoryLimit") {
-		called = true
+		return
 	}
 
-	// Allow the trigger to be disarmed if the on_exit was
-	// able to reduce memory use or unstick the process.
-	if !called {
-		self.on_exit_called = false
+	// Allow the trigger to be disarmed if the on_exit was able to
+	// reduce memory use or unstick the process.
+	if self.on_exit_called {
+		self.Logger.Debug("NannyService: <green>Back in compliance</> - disarming")
 	}
+	self.on_exit_called = false
 }
 
 func (self *NannyService) Start(

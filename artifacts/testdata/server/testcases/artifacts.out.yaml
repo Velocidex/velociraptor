@@ -1,5 +1,5 @@
 # Check the extension on file_store()
-Query: SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5e52adf0a337a9', flow_id='F.BN2HJCPOF5U7U')
+Query: SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id=CLIENT_ID, flow_id='F.BN2HJCPOF5U7U')
 Output: [
  {
   "Timestamp": 1573198259,
@@ -51,13 +51,13 @@ Output: [
 ]
 
 # Schedule an artifact collection
-Query: SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.Search.FileFinder', env=dict(SearchFilesGlobTable ='Glob\nC:/*.txt\n')).request AS Flow FROM scope()
+Query: SELECT collect_client( client_id=CLIENT_ID, artifacts='Windows.Search.FileFinder', env=dict(SearchFilesGlobTable ='Glob\nC:/*.txt\n')).request AS Flow FROM scope()
 Output: [
  {
   "Flow": {
    "creator": "VelociraptorServer",
    "user_data": "",
-   "client_id": "C.11a3013ccaXXXXX",
+   "client_id": "C.4f5e52adf0a337a9",
    "flow_id": "",
    "urgent": false,
    "artifacts": [
@@ -99,13 +99,13 @@ Output: [
 ]
 
 # Schedule using a new style spec decleration.
-Query: SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.Search.FileFinder', spec=dict(`Windows.Search.FileFinder`=dict( SearchFilesGlobTable ='Glob\nC:/*.txt\n'))).request AS Flow FROM scope()
+Query: SELECT collect_client( client_id=CLIENT_ID, artifacts='Windows.Search.FileFinder', spec=dict(`Windows.Search.FileFinder`=dict( SearchFilesGlobTable ='Glob\nC:/*.txt\n'))).request AS Flow FROM scope()
 Output: [
  {
   "Flow": {
    "creator": "VelociraptorServer",
    "user_data": "",
-   "client_id": "C.11a3013ccaXXXXX",
+   "client_id": "C.4f5e52adf0a337a9",
    "flow_id": "",
    "urgent": false,
    "artifacts": [
@@ -163,7 +163,7 @@ Output: [
 ]
 
 # Test the "fs" accessor
-Query: SELECT OSPath FROM glob( globs="/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/**", accessor="fs")
+Query: SELECT OSPath FROM glob( globs="/clients/" + CLIENT_ID + "/collections/F.BN2HJCPOF5U7U/uploads/**", accessor="fs")
 Output: [
  {
   "OSPath": "fs:/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/file"
