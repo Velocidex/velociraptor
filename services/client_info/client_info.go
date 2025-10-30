@@ -540,7 +540,8 @@ func (self *ClientInfoManager) Get(
 	ctx context.Context, client_id string) (*services.ClientInfo, error) {
 	record, err := self.storage.GetRecord(client_id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Client ID %v not known in this org: %w",
+			client_id, err)
 	}
 
 	// If the client is presently connected, then update the current

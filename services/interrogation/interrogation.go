@@ -122,8 +122,8 @@ func (self *EnrollmentService) ProcessEnrollment(
 	client_info, err := client_info_manager.Get(ctx, client_id)
 
 	// If we have a valid client record we do not need to
-	// interrogate. Interrogation happens automatically only once
-	// - the first time a client appears.
+	// interrogate. Interrogation happens automatically only once -
+	// the first time a client appears.
 	if err == nil && client_info.LastInterrogateFlowId != "" {
 		return nil
 	}
@@ -153,6 +153,15 @@ func (self *EnrollmentService) ProcessEnrollment(
 		return nil
 	}
 
+	// Create a placeholder client record for interrogation.
+	err = client_info_manager.Set(ctx, &services.ClientInfo{
+		&actions_proto.ClientInfo{
+			ClientId: client_id,
+		}})
+	if err != nil {
+		return err
+	}
+
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
@@ -167,7 +176,8 @@ func (self *EnrollmentService) ProcessEnrollment(
 
 	// Allow the user to override the basic interrogation
 	// functionality.  Check for any customized versions
-	definition, pres := repository.Get(ctx, config_obj, "Custom.Generic.Client.Info")
+	definition, pres := repository.Get(ctx, config_obj,
+		"Custom.Generic.Client.Info")
 	if pres {
 		interrogation_artifact = definition.Name
 	}
