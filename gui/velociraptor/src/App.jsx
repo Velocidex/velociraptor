@@ -145,7 +145,9 @@ class App extends Component {
                    <VeloClientSummary
                      setClient={this.setClient}
                      client={this.state.client}/>
-                   <UserLabel className="navbar-text"/>
+                   <UserLabel
+                     setClient={this.setClient}
+                     className="navbar-text"/>
                  </Navbar>
                  <div id="content">
                    <Switch>
@@ -185,7 +187,8 @@ class App extends Component {
                        <ServerInfo  />
                      </Route>
                      <Route path="/vfs/:client_id/:vfs_path(.*)">
-                       <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
+                       <ClientSetterFromRoute client={this.state.client}
+                                              setClient={this.setClient} />
                        <VFSViewer client={this.state.client}
                                   selectedRow={this.state.selected_row}
                                   updateCurrentNode={this.updateCurrentNode}

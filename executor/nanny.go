@@ -162,22 +162,28 @@ func (self *NannyService) checkOnce(period time.Duration) {
 		return
 	}
 
-	called := self._CheckTime(self.last_pump_to_rb_attempt, "Pump to Ring Buffer")
-	if self._CheckTime(self.last_pump_rb_to_server_attempt, "Pump Ring Buffer to Server") {
-		called = true
+	// Only call the exit function once - if it was called skip all
+	// the other checks until the next round. Otherwise the other
+	// times will be out of compliance as well and the exit function
+	// will be called again in this round.
+	if self._CheckTime(self.last_pump_to_rb_attempt,
+		"Pump to Ring Buffer") {
+		return
+	}
+	if self._CheckTime(self.last_pump_rb_to_server_attempt,
+		"Pump Ring Buffer to Server") {
+		return
 	}
 	if self._CheckTime(self.last_read_from_server, "Read From Server") {
-		called = true
+		return
 	}
 	if self._CheckMemory("Exceeded HardMemoryLimit") {
-		called = true
+		return
 	}
 
-	// Allow the trigger to be disarmed if the on_exit was
-	// able to reduce memory use or unstick the process.
-	if !called {
-		self.on_exit_called = false
-	}
+	// Allow the trigger to be disarmed if the on_exit was able to
+	// reduce memory use or unstick the process.
+	self.on_exit_called = false
 }
 
 func (self *NannyService) Start(
