@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/faults"
 )
 
 const (
@@ -108,7 +109,6 @@ func (self *HTTPClientWithWebSocketTransport) roundTripWS(
 
 	conn, err := self.getConnection(req)
 	if err != nil {
-		utils.DlvBreak()
 		return nil, err
 	}
 
@@ -116,6 +116,7 @@ func (self *HTTPClientWithWebSocketTransport) roundTripWS(
 	var data []byte
 	if req.Body != nil {
 		data, _ = utils.ReadAllWithLimit(req.Body, constants.MAX_MEMORY)
+		faults.FaultInjector.BlockHTTPDo(req.Context())
 	}
 
 	select {

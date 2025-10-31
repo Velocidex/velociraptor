@@ -262,6 +262,8 @@ func (self OSFileSystemAccessor) Lstat(filename string) (accessors.FileInfo, err
 func (self OSFileSystemAccessor) LstatWithOSPath(
 	full_path *accessors.OSPath) (accessors.FileInfo, error) {
 
+	defer Instrument("LstatWithOSPath")()
+
 	err := CheckPrefix(full_path)
 	if err != nil {
 		return nil, err
@@ -314,6 +316,8 @@ func (self *OSFileSystemAccessor) GetUnderlyingAPIFilename(
 
 func (self OSFileSystemAccessor) ReadDirWithOSPath(
 	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
+
+	defer Instrument("ReadDirWithOSPath")()
 
 	err := CheckPrefix(full_path)
 	if err != nil {
@@ -441,6 +445,8 @@ func (self *OSFileSystemAccessor) Open(path string) (accessors.ReadSeekCloser, e
 
 func (self OSFileSystemAccessor) OpenWithOSPath(
 	full_path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
+
+	defer Instrument("OpenWithOSPath")()
 
 	err := CheckPrefix(full_path)
 	if err != nil {

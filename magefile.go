@@ -735,7 +735,10 @@ func Deadcode() error {
 	ignore_functions := regexp.MustCompile(strings.Join(ignore.IgnoreFunctions, "|"))
 	ignore_matches := regexp.MustCompile(strings.Join(ignore.IgnoreMatches, "|"))
 
-	out, err := sh.OutCmd("deadcode")("-tags", "server_vql extras", "-json", "./bin")
+	// go install golang.org/x/tools/cmd/deadcode@latest
+	out, err := sh.OutputWith(map[string]string{
+		"GOOS": "windows",
+	}, "deadcode", "-tags", "server_vql extras", "-json", "./bin")
 	if err != nil {
 		return err
 	}
