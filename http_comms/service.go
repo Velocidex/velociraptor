@@ -43,7 +43,9 @@ func StartHttpCommunicatorService(
 		crypto_manager,
 		exe,
 		config_obj.Client.ServerUrls,
-		func() { on_error(ctx, config_obj) },
+		func() {
+			on_error(ctx, config_obj)
+		},
 		utils.RealClock{},
 	)
 	if err != nil {

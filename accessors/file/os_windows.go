@@ -39,7 +39,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -158,42 +157,6 @@ func (self OSFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
 func (self *OSFileSystemAccessor) GetUnderlyingAPIFilename(
 	full_path *accessors.OSPath) (string, error) {
 	return full_path.PathSpec().Path, nil
-}
-
-func discoverDriveLetters() ([]accessors.FileInfo, error) {
-	result := []accessors.FileInfo{}
-
-	shadow_volumes, err := wmi.Query(
-		"SELECT DeviceID, Description, VolumeName, FreeSpace, "+
-			"Size, SystemName, VolumeSerialNumber "+
-			"from Win32_LogicalDisk",
-		"ROOT\\CIMV2")
-	if err == nil {
-		for _, row := range shadow_volumes {
-			size := utils.GetInt64(row, "Size")
-			device_name, pres := row.GetString("DeviceID")
-			if pres {
-				device_path, err := accessors.NewWindowsOSPath(device_name)
-				if err != nil {
-					return nil, err
-				}
-
-				err = CheckPrefix(device_path)
-				if err != nil {
-					continue
-				}
-
-				result = append(result, &accessors.VirtualFileInfo{
-					IsDir_: true,
-					Size_:  size,
-					Data_:  row,
-					Path:   device_path,
-				})
-			}
-		}
-	}
-
-	return result, nil
 }
 
 func (self OSFileSystemAccessor) ReadDir(path string) (

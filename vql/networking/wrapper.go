@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/smb"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/faults"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -46,6 +47,9 @@ type httpClientWrapper struct {
 }
 
 func (self httpClientWrapper) Do(req *http.Request) (*http.Response, error) {
+	// Emulate a significant network delay on HTTP
+	defer faults.FaultInjector.BlockHTTPDo(req.Context())
+
 	if req.URL != nil {
 		// Handle different url schemes
 		switch req.URL.Scheme {

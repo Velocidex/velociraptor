@@ -245,8 +245,8 @@ func doArtifactCollect() error {
 			MaxMemoryHardLimit: *artifact_command_collect_hardmemory,
 			Logger: logging.GetLogger(
 				config_obj, &logging.ToolComponent),
-			OnExit: sm.Close,
 		}
+		Nanny.RegisterOnWarnings(utils.GetId(), sm.Close)
 
 		// Keep the nanny running after the query is done so it can
 		// hard kill the process if cancellation is not enough.
