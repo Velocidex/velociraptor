@@ -85,6 +85,7 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case <-self.clock.After(self.minPoll):
+				executor.Nanny.UpdatePumpToRb()
 				continue
 			}
 		}
@@ -174,9 +175,6 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 // real client.
 func (self *Sender) PumpRingBufferToSendMessage(ctx context.Context) {
 
-	// We should never exit from this.
-	defer self.maybeCallOnExit()
-
 	compression := crypto_proto.PackedMessageList_ZCOMPRESSION
 	if self.config_obj.Client.DisableCompression {
 		compression = crypto_proto.PackedMessageList_UNCOMPRESSED
@@ -191,7 +189,11 @@ func (self *Sender) PumpRingBufferToSendMessage(ctx context.Context) {
 				self.config_obj.Client.MaxUploadSize, compression)
 			if len(compressed_messages) > 0 {
 				self.sendMessageList(ctx, compressed_messages, URGENT, compression)
-				self.urgent_buffer.Commit()
+				if utils.IsCtxDone(ctx) {
+					self.ring_buffer.Rollback()
+				} else {
+					self.ring_buffer.Commit()
+				}
 			}
 
 			// Grab some messages from the ring buffer.
@@ -203,7 +205,11 @@ func (self *Sender) PumpRingBufferToSendMessage(ctx context.Context) {
 				// know the messages are sent so we can commit them
 				// from the ring buffer.
 				self.sendMessageList(ctx, compressed_messages, !URGENT, compression)
-				self.ring_buffer.Commit()
+				if utils.IsCtxDone(ctx) {
+					self.ring_buffer.Rollback()
+				} else {
+					self.ring_buffer.Commit()
+				}
 			}
 		}
 
@@ -245,7 +251,25 @@ func (self *Sender) Start(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		self.PumpRingBufferToSendMessage(ctx)
+
+		// We should never exit from this.
+		defer self.maybeCallOnExit()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+
+			// Allow cancellation of the main loop. This will restart
+			// it as needed.
+			sub_ctx, cancel := context.WithCancel(ctx)
+			self.cancel = cancel
+
+			self.PumpRingBufferToSendMessage(sub_ctx)
+			cancel()
+		}
 	}()
 
 	wg.Add(1)
@@ -284,10 +308,17 @@ func NewSender(
 		// urgent queries. This ensures urgent queries can
 		// skip the buffer ahead of normal queries.
 		urgent_buffer: NewRingBuffer(config_obj, executor.FlowManager(),
-			2*config_obj.Client.MaxUploadSize),
+			2*config_obj.Client.MaxUploadSize, "UrgentBuffer"),
 		release: make(chan bool),
 		clock:   clock,
 	}
+
+	executor.Nanny().RegisterOnWarnings(result.id, func() {
+		result.logger.Info(
+			"<red>%s: Nanny issued first warning!</> Restarting Sender comms",
+			result.name)
+		result.Restart()
+	})
 
 	return result, nil
 }

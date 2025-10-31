@@ -4,20 +4,27 @@ import (
 	"context"
 	"os"
 	"runtime"
-	"runtime/debug"
+	os_debug "runtime/debug"
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
-	Nanny = &NannyService{}
+	Nanny = &NannyService{
+		OnWarnings: make(map[uint64]func()),
+	}
 )
 
 type NannyService struct {
+	Ready bool
+
 	mu                             sync.Mutex
 	last_pump_to_rb_attempt        time.Time
 	last_pump_rb_to_server_attempt time.Time
@@ -33,10 +40,57 @@ type NannyService struct {
 	// specs condition. If not specified we exit immediately.  This
 	// function will only be called once. If the exit condition occurs
 	// further OnExit2 will be called repeatadly.
-	OnExit  func()
+
+	// Called on First warning.
+	OnWarnings map[uint64]func()
+
+	// Called on hard exit.
 	OnExit2 func()
 
-	on_exit_called bool
+	// Set when we are in the warning phase. Next compliance check
+	// will call hard exit.
+	warning bool
+}
+
+func (self *NannyService) ProfileWriter(ctx context.Context,
+	scope vfilter.Scope, output_chan chan vfilter.Row) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	now := utils.GetTime().Now()
+	display := func(t time.Time) string {
+		if t.IsZero() {
+			return ""
+		}
+		return now.Sub(t).Round(time.Second).String()
+	}
+
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+
+	output_chan <- ordereddict.NewDict().
+		Set("Timestamp", now.UTC()).
+		Set("WarningMode", self.warning).
+		Set("LastPumpToRb", display(self.last_pump_to_rb_attempt)).
+		Set("LastPumpToServer", display(self.last_pump_rb_to_server_attempt)).
+		Set("LastReadFromServer", display(self.last_read_from_server)).
+		Set("LastCheckTime", display(self.last_check_time)).
+		Set("MaxMemoryHardLimit", self.MaxMemoryHardLimit).
+		Set("CurrentMemory", m.Alloc).
+		Set("MaxConnectionDelay",
+			time.Duration(self.MaxConnectionDelay*time.Second).String())
+}
+
+func (self *NannyService) RegisterOnWarnings(id uint64, cb func()) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if cb == nil {
+		delete(self.OnWarnings, id)
+	} else {
+		self.OnWarnings[id] = cb
+	}
 }
 
 func (self *NannyService) UpdatePumpToRb() {
@@ -66,7 +120,7 @@ func (self *NannyService) _CheckMemory(message string) bool {
 	// prioritizes low memory footprint over latency. We
 	// just sent data to the server and we wont need that
 	// for a while so we can free our memory to the OS.
-	debug.FreeOSMemory()
+	os_debug.FreeOSMemory()
 
 	if self.MaxMemoryHardLimit == 0 {
 		return false
@@ -109,8 +163,9 @@ func (self *NannyService) _CheckTime(t time.Time, message string) bool {
 }
 
 func (self *NannyService) _Exit() {
-	// If we already called the OnExit one time, we just hard exit.
-	if self.on_exit_called {
+	// If we already called the OnWarnings one time, we just hard
+	// exit.
+	if self.warning {
 		self.Logger.Error("Hard Exit called!")
 		if self.OnExit2 != nil {
 			self.OnExit2()
@@ -120,17 +175,16 @@ func (self *NannyService) _Exit() {
 		return
 	}
 
-	on_exit := self.OnExit
-	if on_exit != nil {
-		// Release the lock in case the on exit function needs to send
+	self.Logger.Debug("Nanny: <red>First warning...</> Next compliance check will result in hard exit")
+	for _, cb := range self.OnWarnings {
+		// Release the lock in case the warning function needs to send
 		// things.
 		self.mu.Unlock()
-		on_exit()
+		cb()
 		self.mu.Lock()
 	}
 
-	self.Logger.Debug("Nanny: <red>First warning...</> Next compliance check will result in hard exit")
-	self.on_exit_called = true
+	self.warning = true
 }
 
 // Golang handles time shift transparently so suspend should not
@@ -189,10 +243,10 @@ func (self *NannyService) checkOnce(period time.Duration) {
 
 	// Allow the trigger to be disarmed if the on_exit was able to
 	// reduce memory use or unstick the process.
-	if self.on_exit_called {
+	if self.warning {
 		self.Logger.Debug("NannyService: <green>Back in compliance</> - disarming")
 	}
-	self.on_exit_called = false
+	self.warning = false
 }
 
 func (self *NannyService) Start(
@@ -225,11 +279,13 @@ func (self *NannyService) Start(
 func NewNanny(
 	config_obj *config_proto.Config) *NannyService {
 	return &NannyService{
+		Ready:              true,
 		MaxMemoryHardLimit: config_obj.Client.MaxMemoryHardLimit,
 		last_check_time:    utils.GetTime().Now(),
 		MaxConnectionDelay: time.Duration(
 			config_obj.Client.NannyMaxConnectionDelay) * time.Second,
-		Logger: logging.GetLogger(config_obj, &logging.ClientComponent),
+		Logger:     logging.GetLogger(config_obj, &logging.ClientComponent),
+		OnWarnings: make(map[uint64]func()),
 	}
 }
 
@@ -237,13 +293,22 @@ func StartNannyService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
-	if config_obj.Client == nil {
+
+	// Allow at most a single functional nanny
+	if config_obj.Client == nil || Nanny.Ready {
 		return nil
 	}
 
 	Nanny = NewNanny(config_obj)
 	if config_obj.Client.NannyMaxConnectionDelay > 0 {
 		Nanny.Start(ctx, wg)
+
+		debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+			Name:          "Nanny",
+			Description:   "Inspect status of the nanny",
+			ProfileWriter: Nanny.ProfileWriter,
+			Categories:    []string{"Client"},
+		})
 	}
 	return nil
 }

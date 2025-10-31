@@ -139,6 +139,7 @@ func (self *UserStorageManager) SetUser(
 	defer self.mu.Unlock()
 
 	if user_record.Name == "" {
+		utils.PrintStack()
 		return errors.New("Must set a username")
 	}
 
@@ -361,6 +362,9 @@ func (self *UserStorageManager) SetUserOptions(ctx context.Context,
 
 	// Merge the old options with the new options
 	old_options := cache.gui_options
+	if old_options == nil {
+		old_options = &api_proto.SetGUIOptionsRequest{}
+	}
 
 	// For now we do not allow the user to set the links in their
 	// profile.

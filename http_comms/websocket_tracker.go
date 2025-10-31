@@ -115,16 +115,20 @@ func (self *Conn) ProfileWriter(ctx context.Context,
 	// Get a copy of the stats so we dont block the actual connection.
 	stats := self.stats.Get()
 
+	display := func(t time.Time) string {
+		if t.IsZero() {
+			return ""
+		}
+
+		return now.Sub(t).Round(time.Second).String()
+	}
+
 	output_chan <- ordereddict.NewDict().
 		Set("Key", self.key).
-		Set("Age", now.Sub(stats.create_time).
-			Round(time.Second).String()).
-		Set("ReadDeadline", now.Sub(stats.read_deadline).
-			Round(time.Second).String()).
-		Set("WriteDeadline", now.Sub(stats.write_deadline).
-			Round(time.Second).String()).
-		Set("LastPing", now.Sub(stats.last_ping).
-			Round(time.Second).String()).
+		Set("Age", display(stats.create_time)).
+		Set("ReadDeadline", display(stats.read_deadline)).
+		Set("WriteDeadline", display(stats.write_deadline)).
+		Set("LastPing", display(stats.last_ping)).
 		Set("ReadLocked", stats.read_locked).
 		Set("WrtieLocked", stats.write_locked)
 }

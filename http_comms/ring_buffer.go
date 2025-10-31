@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/go-errors/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
@@ -18,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 const (
@@ -34,6 +36,9 @@ var (
 )
 
 type IRingBuffer interface {
+	ProfileWriter(ctx context.Context, scope vfilter.Scope,
+		output_chan chan vfilter.Row)
+
 	Enqueue(item []byte)
 
 	// How many bytes are currently available to be sent.
@@ -48,6 +53,9 @@ type IRingBuffer interface {
 	TotalSize() uint64
 
 	Commit()
+	Rollback()
+
+	// Clear the buffer
 	Reset()
 	Close()
 }
@@ -101,7 +109,13 @@ type ReadWriterAt interface {
 	Truncate(size int64) error
 }
 
+type transaction struct {
+	LeasedPointer int64
+	LeasedBytes   int64
+}
+
 type FileBasedRingBuffer struct {
+	id         uint64
 	config_obj *config_proto.Config
 
 	mu sync.Mutex
@@ -120,6 +134,22 @@ type FileBasedRingBuffer struct {
 	log_ctx *logging.LogContext
 
 	flow_manager *responder.FlowManager
+
+	current_transaction transaction
+}
+
+func (self *FileBasedRingBuffer) ProfileWriter(
+	ctx context.Context, scope vfilter.Scope,
+	output_chan chan vfilter.Row) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	output_chan <- ordereddict.NewDict().
+		Set("Type", "FileBasedRingBuffer").
+		Set("Filename", self.fd.Name()).
+		Set("Header", self.header).
+		Set("Closed", self.closed).
+		Set("Transaction", self.current_transaction)
 }
 
 func (self *FileBasedRingBuffer) Enqueue(item []byte) {
@@ -133,12 +163,12 @@ func (self *FileBasedRingBuffer) Enqueue(item []byte) {
 	binary.LittleEndian.PutUint64(self.write_buf, uint64(len(item)))
 	_, err := self.fd.WriteAt(self.write_buf, int64(self.header.WritePointer))
 	if err != nil {
-		self.Reset()
+		self._Truncate()
 		return
 	}
 	n, err := self.fd.WriteAt(item, int64(self.header.WritePointer+8))
 	if err != nil {
-		self.Reset()
+		self._Truncate()
 		return
 	}
 
@@ -148,7 +178,7 @@ func (self *FileBasedRingBuffer) Enqueue(item []byte) {
 	serialized, _ := self.header.MarshalBinary()
 	_, err = self.fd.WriteAt(serialized, 0)
 	if err != nil {
-		self.Reset()
+		self._Truncate()
 		return
 	}
 
@@ -225,6 +255,11 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 
 	result := []byte{}
 
+	// Take a snapshot of the current file state.
+	if self.current_transaction.LeasedPointer == 0 {
+		self.current_transaction.LeasedPointer = self.leased_pointer
+	}
+
 	for self.header.WritePointer > self.leased_pointer {
 		n, err := self.fd.ReadAt(self.read_buf, self.leased_pointer)
 		if err == nil && n == len(self.read_buf) {
@@ -232,10 +267,12 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 
 			// File might be corrupt - just reset the entire file.
 			if length > constants.MAX_MEMORY*2 || length <= 0 {
-				self.log_ctx.Error("Possible corruption detected - item length is too large.")
+				self.log_ctx.Error(
+					"Possible corruption detected - item length is too large.")
 				self._Truncate()
 				return nil
 			}
+
 			item := make([]byte, length)
 			n, err := self.fd.ReadAt(item, self.leased_pointer+8)
 			if err != nil || int64(n) != length {
@@ -257,6 +294,8 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 			self.header.LeasedBytes += int64(n)
 			self.header.AvailableBytes -= int64(n)
 
+			self.current_transaction.LeasedBytes += int64(n)
+
 			if uint64(len(result)) > size {
 				break
 			}
@@ -266,7 +305,6 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 			self._Truncate()
 		}
 	}
-
 	return result
 }
 
@@ -278,6 +316,8 @@ func (self *FileBasedRingBuffer) _Truncate() {
 	self.header.WritePointer = FirstRecordOffset
 	self.header.AvailableBytes = 0
 	self.header.LeasedBytes = 0
+	self.current_transaction.LeasedBytes = 0
+	self.current_transaction.LeasedPointer = 0
 
 	self.leased_pointer = FirstRecordOffset
 	serialized, _ := self.header.MarshalBinary()
@@ -306,6 +346,23 @@ func (self *FileBasedRingBuffer) Close() {
 	// Unblock any blocked writers to let them know this file is now
 	// closed.
 	self.c.Broadcast()
+
+	Tracker.Register(self.id, nil)
+}
+
+// Undo the actions of Leased() and put the data back.
+func (self *FileBasedRingBuffer) Rollback() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.log_ctx.Debug("<red>FileBasedRingBuffer: Rollback %v bytes.",
+		self.current_transaction.LeasedBytes)
+
+	self.leased_pointer = self.current_transaction.LeasedPointer
+	self.header.AvailableBytes += self.current_transaction.LeasedBytes
+	self.header.LeasedBytes -= self.current_transaction.LeasedBytes
+	self.current_transaction.LeasedBytes = 0
+	self.current_transaction.LeasedPointer = 0
 }
 
 func (self *FileBasedRingBuffer) Commit() {
@@ -322,6 +379,8 @@ func (self *FileBasedRingBuffer) Commit() {
 
 	self.header.ReadPointer = self.leased_pointer
 	self.header.LeasedBytes = 0
+	self.current_transaction.LeasedBytes = 0
+	self.current_transaction.LeasedPointer = 0
 
 	serialized, _ := self.header.MarshalBinary()
 	_, _ = self.fd.WriteAt(serialized, 0)
@@ -420,6 +479,7 @@ func newFileBasedRingBuffer(
 	}
 
 	result := &FileBasedRingBuffer{
+		id:             utils.GetId(),
 		config_obj:     config_obj,
 		fd:             fd,
 		header:         header,
@@ -437,10 +497,14 @@ func newFileBasedRingBuffer(
 		"max_size": result.header.MaxSize,
 	}).Info("FileBasedRingBuffer: Creation")
 
+	Tracker.Register(result.id, result)
+
 	return result, nil
 }
 
 type RingBuffer struct {
+	id         uint64
+	name       string
 	config_obj *config_proto.Config
 
 	// We serialize messages into the messages queue as they
@@ -466,6 +530,21 @@ type RingBuffer struct {
 	Size uint64
 
 	flow_manager *responder.FlowManager
+}
+
+func (self *RingBuffer) ProfileWriter(
+	ctx context.Context, scope vfilter.Scope,
+	output_chan chan vfilter.Row) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	output_chan <- ordereddict.NewDict().
+		Set("Type", self.name).
+		Set("Messages", len(self.messages)).
+		Set("LeasedIdx", self.leased_idx).
+		Set("LeasedLength", self.leased_length).
+		Set("MaxSize", self.Size).
+		Set("CurrentSize", self.total_length)
 }
 
 func (self *RingBuffer) Reset() {
@@ -630,6 +709,7 @@ func (self *RingBuffer) Close() {
 	self.total_length = 0
 	self.messages = nil
 	self.c.Broadcast()
+	Tracker.Register(self.id, nil)
 }
 
 // Commits by removing the read messages from the ring buffer.
@@ -658,15 +738,22 @@ func (self *RingBuffer) Commit() {
 	self.c.Broadcast()
 }
 
-func NewRingBuffer(config_obj *config_proto.Config,
-	flow_manager *responder.FlowManager, size uint64) *RingBuffer {
+func NewRingBuffer(
+	config_obj *config_proto.Config,
+	flow_manager *responder.FlowManager,
+	size uint64,
+	name string) *RingBuffer {
 	result := &RingBuffer{
+		id:           utils.GetId(),
+		name:         name,
 		messages:     make([][]byte, 0),
 		Size:         size,
 		config_obj:   config_obj,
 		flow_manager: flow_manager,
 	}
 	result.c = sync.NewCond(&result.mu)
+
+	Tracker.Register(result.id, result)
 
 	return result
 }
@@ -708,5 +795,5 @@ func NewLocalBuffer(
 		}
 	}
 	return NewRingBuffer(config_obj, flow_manager,
-		config_obj.Client.LocalBuffer.MemorySize)
+		config_obj.Client.LocalBuffer.MemorySize, "FlowBuffer")
 }
