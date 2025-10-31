@@ -680,6 +680,8 @@ func (self *HTTPConnector) rekeyWithURL(ctx context.Context, url string) error {
 
 // Manages reading jobs from the reader notification channel.
 type NotificationReader struct {
+	id uint64
+
 	// Pause the PumpRingBufferToSendMessage loop - stops transmitting
 	// data to the server temporarily. New data will still be queued
 	// in the ring buffer if there is room.
@@ -719,6 +721,9 @@ type NotificationReader struct {
 	mu                 sync.Mutex
 	last_update_time   time.Time
 	last_update_period time.Duration
+
+	// Cancellation can be called to restart the main loop.
+	cancel func()
 }
 
 func NewNotificationReader(
@@ -754,7 +759,8 @@ func NewNotificationReader(
 		last_update_period = 0
 	}
 
-	return &NotificationReader{
+	self := &NotificationReader{
+		id:                    utils.GetId(),
 		config_obj:            config_obj,
 		connector:             connector,
 		manager:               manager,
@@ -772,6 +778,13 @@ func NewNotificationReader(
 		clock:                 clock,
 		last_update_period:    last_update_period,
 	}
+
+	executor.Nanny().RegisterOnWarnings(self.id, func() {
+		self.logger.Info("<red>%s: Nanny issued first warning!</> Restarting Receiver comms",
+			self.name)
+		self.Restart()
+	})
+	return self
 }
 
 // Block until the messages are sent. Will retry, back off and rekey
@@ -791,7 +804,6 @@ func (self *NotificationReader) sendMessageList(
 
 			// If we are being redirected do not wait -
 			// just retry again.
-
 			if errors.Is(err, RedirectError) {
 				continue
 			}
@@ -905,6 +917,7 @@ func (self *NotificationReader) maybeCallOnExit() {
 	if self.on_exit != nil {
 		self.on_exit()
 	}
+	self.executor.Nanny().RegisterOnWarnings(self.id, nil)
 }
 
 // The Receiver channel is used to receive commands from the server:
@@ -919,51 +932,79 @@ func (self *NotificationReader) maybeCallOnExit() {
 func (self *NotificationReader) Start(
 	ctx context.Context, wg *sync.WaitGroup) {
 
-	// Decide if we should compress the outer envelope.
-	compression := crypto_proto.PackedMessageList_ZCOMPRESSION
-	if self.config_obj.Client.DisableCompression {
-		compression = crypto_proto.PackedMessageList_UNCOMPRESSED
-	}
-
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		defer self.maybeCallOnExit()
 		defer utils.CheckForPanic("Panic in main loop")
 
-		// Periodically read from executor and push to ring buffer.
 		for {
-			self.executor.Nanny().UpdateReadFromServer()
-
-			// The Reader does not send any server bound
-			// messages - it is blocked reading server
-			// responses.
-			message_list := self.GetMessageList()
-			serialized_message_list, err := proto.Marshal(message_list)
-			if err == nil {
-				if compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
-					compressed, err := utils.Compress(serialized_message_list)
-					if err == nil {
-						self.sendMessageList(
-							ctx, [][]byte{compressed}, !URGENT, compression)
-					}
-
-				} else {
-					self.sendMessageList(
-						ctx, [][]byte{serialized_message_list}, !URGENT, compression)
-				}
-			}
-
 			select {
 			case <-ctx.Done():
 				return
-
-				// Reconnect quickly for low latency.
-			case <-self.clock.After(self.minPoll):
-				continue
+			default:
 			}
+
+			// Allow cancellation of the main loop. This will restart
+			// it as needed.
+			sub_ctx, cancel := context.WithCancel(ctx)
+			self.cancel = cancel
+
+			self.mainLoop(sub_ctx)
+			cancel()
 		}
 	}()
+}
+
+func (self *NotificationReader) Restart() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.cancel != nil {
+		self.cancel()
+	}
+}
+
+func (self *NotificationReader) mainLoop(ctx context.Context) {
+
+	// Decide if we should compress the outer envelope.
+	compression := crypto_proto.PackedMessageList_ZCOMPRESSION
+	if self.config_obj.Client.DisableCompression {
+		compression = crypto_proto.PackedMessageList_UNCOMPRESSED
+	}
+
+	// Periodically read from executor and push to ring buffer.
+	for {
+		self.executor.Nanny().UpdateReadFromServer()
+
+		// The Reader does not send any server bound
+		// messages - it is blocked reading server
+		// responses.
+		message_list := self.GetMessageList()
+		serialized_message_list, err := proto.Marshal(message_list)
+		if err == nil {
+			if compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
+				compressed, err := utils.Compress(serialized_message_list)
+				if err == nil {
+					self.sendMessageList(
+						ctx, [][]byte{compressed}, !URGENT, compression)
+				}
+
+			} else {
+				self.sendMessageList(
+					ctx, [][]byte{serialized_message_list}, !URGENT, compression)
+			}
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+
+			// Reconnect quickly for low latency.
+		case <-self.clock.After(self.minPoll):
+			continue
+		}
+	}
 }
 
 // Velociraptor's foreman is very quick (since it is just an int
@@ -1101,6 +1142,7 @@ func NewHTTPCommunicator(
 		if on_exit != nil {
 			on_exit()
 		}
+		rb.Close()
 	}
 
 	// The sender sends messages to the server. We want the sender to

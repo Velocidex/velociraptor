@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/encrypted_logs"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/debug"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/velociraptor/vql/parsers/journald"
 )
@@ -41,6 +42,9 @@ func StartClientServices(
 	scope.SetLogger(logging.NewPlainLogger(config_obj, &logging.ClientComponent))
 
 	vql_subsystem.InstallUnimplemented(scope)
+
+	// Maybe add various debug plugins if we are in debug mode.
+	debug.AddDebugPlugins(config_obj)
 
 	// Start the journald watcher service if needed.
 	journald.StartGlobalJournaldService(ctx, config_obj)
