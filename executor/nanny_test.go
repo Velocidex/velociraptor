@@ -33,7 +33,7 @@ func TestNanny(t *testing.T) {
 
 	helper := OnExitHelper{}
 	Nanny := NewNanny(config_obj)
-	Nanny.OnExit = helper.Exit
+	Nanny.RegisterOnWarnings(1, helper.Exit)
 	Nanny.OnExit2 = helper.Exit
 
 	// Set all checks to now.
@@ -74,7 +74,8 @@ func TestNannySleep(t *testing.T) {
 
 	helper := OnExitHelper{}
 	Nanny := NewNanny(config_obj)
-	Nanny.OnExit = helper.Exit
+	Nanny.RegisterOnWarnings(1, helper.Exit)
+
 	Nanny.OnExit2 = helper.Exit
 
 	// Set all checks to now.

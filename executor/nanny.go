@@ -17,7 +17,9 @@ import (
 )
 
 var (
-	Nanny = &NannyService{}
+	Nanny = &NannyService{
+		OnWarnings: make(map[uint64]func()),
+	}
 )
 
 type NannyService struct {

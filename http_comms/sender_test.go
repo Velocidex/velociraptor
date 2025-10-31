@@ -218,7 +218,7 @@ func TestSender(t *testing.T) {
 	// Make the ring buffer 10 bytes - this is enough for one
 	// message but no more.
 	flow_manager := responder.NewFlowManager(ctx, config_obj, "")
-	rb := NewRingBuffer(config_obj, flow_manager, 10)
+	rb := NewRingBuffer(config_obj, flow_manager, 10, "Sender")
 	testRingBuffer(ctx, rb, config_obj, "0123456789", t)
 }
 
