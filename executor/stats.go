@@ -2,7 +2,6 @@ package executor
 
 import (
 	"context"
-	"errors"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -22,7 +21,7 @@ func (self *ClientExecutor) ProcessStatRequest(
 		flow_context, err := self.flow_manager.Get(flow_id)
 
 		var stats *crypto_proto.VeloMessage
-		if errors.Is(err, utils.NotFoundError) {
+		if utils.IsNotFound(err) {
 			stats = &crypto_proto.VeloMessage{
 				SessionId: flow_id,
 				RequestId: constants.STATS_SINK,

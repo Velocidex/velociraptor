@@ -297,13 +297,17 @@ export: |
         '''
 
         LET ParsePrefetch(PrefetchFile) = SELECT
-          parse_binary(accessor="data", filename=Data,
+          parse_binary(accessor="data", filename=Data || "",
             profile=PrefetchProfile, struct="SCCAHeader") AS SCCAHeader
         FROM switch(a={
             -- Handle compressed MAM prefetch files.
             SELECT
-              parse_binary(filename=PrefetchFile, profile=PrefetchProfile, struct="Header") AS Header,
-              parse_binary(filename=PrefetchFile, profile=PrefetchProfile, struct="Header").Decompressed AS Data
+              parse_binary(filename=PrefetchFile,
+                           profile=PrefetchProfile,
+                           struct="Header") AS Header,
+              parse_binary(filename=PrefetchFile,
+                           profile=PrefetchProfile,
+                           struct="Header").Decompressed AS Data
             FROM scope()
             WHERE Header.Signature = "MAM"
         },

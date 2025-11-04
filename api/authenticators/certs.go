@@ -175,7 +175,7 @@ func (self *CertAuthenticator) AuthenticateUserHandler(
 			users_manager := services.GetUserManager()
 			user_record, err := users_manager.GetUser(r.Context(), username, username)
 			if err != nil {
-				if errors.Is(err, utils.NotFoundError) ||
+				if utils.IsNotFound(err) ||
 					len(self.default_roles) == 0 {
 					http.Error(w,
 						fmt.Sprintf("authorization failed for %v: %v", username, err),

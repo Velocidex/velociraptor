@@ -103,10 +103,10 @@ parameters:
     description: Where we actually write the collection to. You can specify this as a mapped drive to write over the network.
 
   - name: opt_filename_template
-    default: "Collection-%FQDN%-%TIMESTAMP%"
+    default: "Collection-%Hostname%-%TIMESTAMP%"
     description: |
       The filename to use. You can expand environment variables as
-      well as the following %FQDN% and %TIMESTAMP%.
+      well as the following: %Hostname%, %FQDN% and %TIMESTAMP%.
 
   - name: opt_collector_filename
     type: string
@@ -255,7 +255,8 @@ parameters:
              " version " + (S.Version || "Unknown"))
 
       LET baseline <= SELECT Fqdn, dirname(path=Exe) AS ExePath, Exe,
-         scope().CWD AS CWD FROM info()
+         scope().CWD AS CWD, Hostname
+      FROM info()
 
       LET OutputPrefix <= if(condition= OutputPrefix,
         then=pathspec(parse=OutputPrefix),
@@ -267,6 +268,7 @@ parameters:
 
       LET FormatMessage(Message) = regex_transform(
           map=dict(`%FQDN%`=baseline[0].Fqdn,
+                   `%Hostname%`=baseline[0].Hostname,
                    `%Timestamp%`=timestamp(epoch=now()).MarshalText),
           source=Message)
 
