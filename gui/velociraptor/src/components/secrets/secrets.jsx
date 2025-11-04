@@ -31,7 +31,9 @@ class EditSecretDialog extends Component {
 
     componentDidMount = () => {
         this.source = CancelToken.source();
-        this.setState({new_users: this.props.secret.users});
+        this.setState({
+            new_users: this.props.secret.users,
+            visible_to_all_orgs: this.props.secret.visible_to_all_orgs});
     }
 
     componentWillUnmount = () => {
@@ -50,6 +52,7 @@ class EditSecretDialog extends Component {
             type_name: this.props.secret.type_name,
             name: this.props.secret.name,
             add_users: this.state.new_users,
+            visible_to_all_orgs: this.state.visible_to_all_orgs,
             remove_users: this.props.secret.users,
         },  this.source.token).then(response=>{
             if (response.cancel)
@@ -65,6 +68,8 @@ class EditSecretDialog extends Component {
     }
 
     render() {
+        let org_id = window.globals.OrgId || "root";
+
         return(
             <Modal show={true}
                    size="lg"
@@ -81,6 +86,17 @@ class EditSecretDialog extends Component {
                   includeSuperuser={true}
                   value={this.state.new_users}
                   onChange={users=>this.setState({new_users: users})}/>
+                { org_id == "root" &&
+                  <VeloForm
+                    value={this.state.visible_to_all_orgs}
+                    setValue={x=>this.setState(
+                        {visible_to_all_orgs: x==="Y"})}
+                    param={{
+                        name: T("Visible To All Orgs"),
+                        description: T("Make the secret visible to all sub orgs"),
+                        type: "bool",
+                    }}/>
+                }
 
               </Modal.Body>
               <Modal.Footer>
@@ -136,6 +152,7 @@ class DeleteSecretDialog extends Component {
         secret: {},
         previous_users: [],
         new_users: [],
+        visible_to_all_orgs: false,
     }
 
     render() {

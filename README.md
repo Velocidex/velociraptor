@@ -124,7 +124,7 @@ If you fork the project on GitHub, the pipelines will run on your own
 fork as well as long as you enable GitHub Actions on your fork. If you
 need to prepare a PR for a new feature or modify an existing feature
 you can use this to build your own binaries for testing on all
-architectures before send us the PR.
+architectures before sending us the PR.
 
 ## Supported platforms
 

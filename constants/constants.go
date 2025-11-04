@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	VERSION = "0.75.4"
+	VERSION = "0.75.5"
 
 	// This is the version of dependent client binaries that will be
 	// included in the offline collector or MSI. Usually this will be
@@ -48,7 +48,7 @@ const (
 	ProcessVQLResponses     = 1
 
 	// Largest buffer we use for comms.
-	MAX_MEMORY    = 5 * 1024 * 1024
+	MAX_MEMORY    = 50 * 1024 * 1024
 	MAX_POST_SIZE = 5 * 1024 * 1024
 
 	// Messages to the client which we dont care about their responses.

@@ -47,9 +47,9 @@ import (
 type _SplunkPluginArgs struct {
 	Query          vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
 	Threads        int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
-	URL            string              `vfilter:"required,field=url,doc=The Splunk Event Collector URL."`
+	URL            string              `vfilter:"optional,field=url,doc=The Splunk Event Collector URL."`
 	Token          string              `vfilter:"optional,field=token,doc=Splunk HEC Token."`
-	Index          string              `vfilter:"required,field=index,doc=The name of the index to upload to. If not specified, ensure a column is named _splunk_index."`
+	Index          string              `vfilter:"optional,field=index,doc=The name of the index to upload to. If not specified, ensure a column is named _splunk_index."`
 	Source         string              `vfilter:"optional,field=source,doc=The source field for splunk. If not specified ensure a column is named _splunk_source or this will be 'velociraptor'."`
 	SourceType     string              `vfilter:"optional,field=sourcetype,doc=The sourcetype field for splunk. If not specified ensure a column is named _splunk_source_type or this will 'vql'"`
 	ChunkSize      int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
@@ -59,7 +59,7 @@ type _SplunkPluginArgs struct {
 	Hostname       string              `vfilter:"optional,field=hostname,doc=Hostname for Splunk Events. Defaults to server hostname."`
 	TimestampField string              `vfilter:"optional,field=timestamp_field,doc=Field to use as event timestamp."`
 	HostnameField  string              `vfilter:"optional,field=hostname_field,doc=Field to use as event hostname. Overrides hostname parameter."`
-	Secret         string              `vfilter:"optional,field=secret,doc=Alternatively use a secret from the secrets service. Secret must be of type 'AWS S3 Creds'"`
+	Secret         string              `vfilter:"optional,field=secret,doc=Alternatively use a secret from the secrets service. Secret must be of type 'Splunk'"`
 }
 
 type _SplunkPlugin struct{}
@@ -75,12 +75,14 @@ func (self _SplunkPlugin) Call(ctx context.Context,
 
 		err := vql_subsystem.CheckAccess(scope, acls.NETWORK)
 		if err != nil {
+			scope.Log("splunk_upload: %v", err)
 			return
 		}
 
 		arg := &_SplunkPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
+			scope.Log("splunk_upload: %v", err)
 			return
 		}
 
@@ -96,6 +98,16 @@ func (self _SplunkPlugin) Call(ctx context.Context,
 				scope.Log("splunk_upload: %v", err)
 				return
 			}
+		}
+
+		if arg.URL == "" {
+			scope.Log("splunk_upload: field url is required")
+			return
+		}
+
+		if arg.Index == "" {
+			scope.Log("splunk_upload: field index is required")
+			return
 		}
 
 		if arg.Threads == 0 {

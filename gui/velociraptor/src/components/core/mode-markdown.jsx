@@ -47,4 +47,6 @@ export default class MarkdownMode extends window.ace.acequire('ace/mode/markdown
 
         this.HighlightRules = MarkdownHighlightRules;
     }
+
+    static path = "ace/mode/md";
 }

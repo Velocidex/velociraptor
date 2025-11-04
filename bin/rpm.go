@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
 	logging "www.velocidex.com/golang/velociraptor/logging"
@@ -70,6 +71,11 @@ func doClientRPM() error {
 		}
 	}
 
+	*client_rpm_command_binary, err = filepath.Abs(*client_rpm_command_binary)
+	if err != nil {
+		return err
+	}
+
 	// By default write to current directory
 	if *client_rpm_command_output == "" {
 		*client_rpm_command_output = "."
@@ -124,6 +130,11 @@ func doServerRPM() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	*server_rpm_command_binary, err = filepath.Abs(*server_rpm_command_binary)
+	if err != nil {
+		return err
 	}
 
 	// By default write to current directory
