@@ -29,7 +29,7 @@ parameters:
 sources:
   - name: Analysis
     query: |
-      LET Uploads = SELECT Name, OSPath, if(
+      LET Uploads(TasksPath) = SELECT Name, OSPath, if(
            condition=AlsoUpload='Y',
            then=upload(file=OSPath)) AS Upload, Mtime
         FROM glob(globs=TasksPath)
@@ -37,7 +37,7 @@ sources:
 
       // Job files contain invalid XML which confuses the parser - we
       // use regex to remove the invalid tags.
-      LET parse_task = select OSPath, Mtime, parse_xml(
+      LET parse_task(OSPath, Mtime) = select OSPath, Mtime, parse_xml(
                accessor='data',
                file=regex_replace(
                     source=utf16(string=Data),
@@ -56,8 +56,13 @@ sources:
             XML.Task.Actions.ComHandler.ClassId AS ComHandler,
             timestamp(epoch=XML.Task.RegistrationInfo.Date) AS RegistrationTime,
             timestamp(epoch=XML.Task.Triggers.CalendarTrigger.StartBoundary) AS StartBoundary,
-            XML as _XML
-        FROM foreach(row=Uploads, query=parse_task)
+            XML as _XML,
+            OSPath
+        FROM foreach(row={
+          SELECT * FROM Uploads(TasksPath= TasksPath)
+        } , query={
+          SELECT * FROM parse_task(OSPath=OSPath, Mtime=Mtime)
+        })
 
       SELECT *,
          authenticode(filename=Command) AS Authenticode,
@@ -65,7 +70,7 @@ sources:
             then=upload(file=Command)) AS Upload
       FROM Results
       WHERE UserId =~ Username
-      
+
 column_types:
 - name: Upload
   type: upload_preview

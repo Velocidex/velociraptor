@@ -805,7 +805,7 @@ function getDefaultCollectionParameters() {
         opt_concurrency: undefined,
         opt_output_directory: undefined,
         opt_tempdir: undefined,
-        opt_filename_template: "Collection-%FQDN%-%TIMESTAMP%",
+        opt_filename_template: "Collection-%Hostname%-%TIMESTAMP%",
         opt_collector_filename: undefined,
         opt_delete_at_exit: "N",
         opt_format: "jsonl",

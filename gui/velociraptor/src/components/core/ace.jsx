@@ -92,6 +92,45 @@ import RegexMode from './mode-regex.jsx';
 import YaraMode from './mode-yara.jsx';
 import classNames from "classnames";
 
+import ace from 'ace-builds/src-noconflict/ace.js';
+
+// Only support the following modes.
+ace.config.set('basePath', '/');
+ace.config.$modes = {
+    'ace/mode/vql': new VqlMode(),
+    'ace/mode/md': new MarkdownMode(),
+    'ace/mode/yaml': new YamlMode(),
+    'ace/mode/sigma': new SigmaMode(),
+    'ace/mode/regex': new RegexMode(),
+    'ace/mode/yara': new YaraMode(),
+};
+_.each(ace.config.$modes, (v, k)=>{
+    ace.define(k, null, v);
+});
+
+let options = window.ace.acequire("ace/ext/options");
+options.optionGroups.Main.Mode.items = [
+    {
+        caption: "VQL",
+        value: "ace/mode/vql",
+    }, {
+        caption: "YAML",
+        value: "ace/mode/yaml",
+    }, {
+        caption: "Markdown",
+        value: "ace/mode/md",
+    }, {
+        caption: "Sigma",
+        value: "ace/mode/sigma",
+    }, {
+        caption: "Regex",
+        value: "ace/mode/regex",
+    },  {
+        caption: "Yara",
+        value: "ace/mode/yara",
+    },
+];
+
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -216,18 +255,20 @@ export default class VeloAce extends Component {
         if (ref && this.props.mode !== this.state.mode) {
             this.setState({mode: this.props.mode});
 
+            let sess = ref.editor.getSession();
+            sess.setUseWorker(false);
             if (this.props.mode === "vql") {
-                ref.editor.getSession().setMode(new VqlMode());
+                sess.setMode(new VqlMode());
             } else if(this.props.mode === "markdown") {
-                ref.editor.getSession().setMode(new MarkdownMode());
+                sess.setMode(new MarkdownMode());
             } else if(this.props.mode === "yaml") {
-                ref.editor.getSession().setMode(new YamlMode());
+                sess.setMode(new YamlMode());
             } else if(this.props.mode === "sigma") {
-                ref.editor.getSession().setMode(new SigmaMode());
+                sess.setMode(new SigmaMode());
             } else if(this.props.mode === "regex") {
-                ref.editor.getSession().setMode(new RegexMode());
+                sess.setMode(new RegexMode());
             } else if(this.props.mode === "yara") {
-                ref.editor.getSession().setMode(new YaraMode());
+                sess.setMode(new YaraMode());
             }
         }
     }

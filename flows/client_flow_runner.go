@@ -628,7 +628,7 @@ func (self *ClientFlowRunner) FlowStats(
 			})
 
 		// We have no idea about this flow - we need to check more closely.
-		if errors.Is(err, utils.NotFoundError) {
+		if utils.IsNotFound(err) {
 			// Slow path - normally the flow will already be in the
 			// InFlightFlows so most of the time this wont
 			// happen. However, if the flow is unexpected we need to

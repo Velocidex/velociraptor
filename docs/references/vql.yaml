@@ -6840,15 +6840,15 @@
     This function parses a PE file from disk or memory to extract the
     different aspects of the PE file. The fields include:
 
-    - FileHeader: The basic PE file header information.
-    - Directories: The different directories in the PE file (For
-      example Export_Directory, IAT_Directory etc).
-    - VersionInformation: The VersionInformation field contains
-      metadata about the binary.
-    - Imports: Parses the Import table of the PE file.
-    - Exports: Parses the export table of the PE file.
-    - Forward: Any linker forward to other DLLs.
-    - Authenticode: Calculates the Authenticode hash of the PE file
+    - `FileHeader`: The basic PE file header information.
+    - `Directories`: The different directories in the PE file (For
+      example `Export_Directory`, `IAT_Directory` etc).
+    - `VersionInformation`: This field contains
+      metadata about the binary (Such as the Author, Company etc).
+    - `Imports`: Parses the Import table of the PE file.
+    - `Exports`: Parses the export table of the PE file.
+    - `Forward`: Any linker forward to other DLLs.
+    - `Authenticode`: Calculates the Authenticode hash of the PE file
       and also check if it is trusted.
 
     The result of `parse_pe()` is a lazily evaluated dict. This means
@@ -6881,7 +6881,7 @@
     similar way to the `pedump` plugin from Volatility)
 
     To do this you need to know the memory address where the PE file
-    is loaded at. This is usually called the BaseAddress and plugins
+    is loaded at. This is usually called the `BaseAddress` and plugins
     like `vad()` can provide it for a running process.
 
     ```vql
@@ -9071,7 +9071,46 @@
   - linux_amd64_cgo
   - windows_amd64_cgo
 - name: secret_modify
-  description: Modify the secret
+  description: |
+    Modify the secret
+
+    This function allows you to programmatically modify the secret
+    metadata. For example, assign the secrets to certain users, orgs
+    etc.
+
+    Note that secrets must be added to specific users to be usable -
+    this additional requirement extends in addition to the regular
+    user ACLs. So a user may have NETWORK access to call the
+    `http_client()` plugin, but will require a specific secret to be
+    assigned to be able to use that in the `http_client()` call.
+
+    # Secret inheritance
+    Secrets are managed per org. Each org has its own secret manager
+    and the org admin is able to define new secrets for their org.
+
+    In many multi-tenanted deployments it is convenient to have secrets
+    set at the root org level, and have all child orgs inherit the
+    secrets. This allows the root org admin to manage access to shared
+    resources securely.
+
+    It is possible to control visibility of secrets at the root org
+    using the secret_modify() VQL function. The secret may be added to
+    specific orgs or made visible to all orgs.
+
+    NOTE: Making a secret visible to another org allows the secret
+    manager in that org to **copy** the secret to their org. By
+    modifying the secret in the child org (i.e. adding or removing
+    users) the secret is copied into the child org. This means that if
+    the root org administrator removes access to the org after that
+    fact, the child org can continue working on the copy of the secret
+    in their org.
+
+    If the root org admin wants to remove access to the secret from all
+    child orgs they need to use the VQL function
+    secret_modify(delete=TRUE) to truly delete the secret in the child
+    org context (see the query() plugin to switch org contexts).
+
+
   type: Function
   args:
   - name: name
@@ -12440,14 +12479,14 @@
   description: |
     Scan files using yara rules (Using the new yarax engine).
 
-    This is an experiemental new functionality to use the
+    This is an experimental new functionality to use the
     [YaraX](https://github.com/VirusTotal/yara-x) project instead of
     the more traditional C based Yara engine.
 
     One of the biggest issues for Velociraptor integration is the very
     large size of the `YaraX` library (which is written in
     Rust). Including `YaraX` in Velociraptor will increase our binary
-    size by a third (about 25Mb) for a single experiemental plugin.
+    size by a third (about 25Mb) for a single experimental plugin.
 
     Therefore, we have decided to distribute `YaraX` as a [third party
     tool](https://docs.velociraptor.app/docs/artifacts/tools/) and

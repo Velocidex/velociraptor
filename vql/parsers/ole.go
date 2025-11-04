@@ -92,7 +92,12 @@ func _OLEVBAPlugin_ParseFile(
 			defer fd.Close()
 		}
 
-		data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
+		max_memory := arg.MaxSize
+		if max_memory == 0 {
+			max_memory = constants.MAX_MEMORY
+		}
+
+		data, err := utils.ReadAllWithLimit(fd, int(max_memory))
 		if err != nil {
 			return nil, err
 		}
@@ -114,8 +119,12 @@ func _OLEVBAPlugin_ParseFile(
 				if err != nil {
 					return nil, err
 				}
-				data, err := utils.ReadAllWithLimit(rc,
-					constants.MAX_MEMORY)
+				max_memory := constants.MAX_MEMORY
+				if max_memory == 0 {
+					max_memory = constants.MAX_MEMORY
+				}
+
+				data, err := utils.ReadAllWithLimit(rc, max_memory)
 				if err != nil {
 					return nil, err
 				}

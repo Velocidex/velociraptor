@@ -95,14 +95,10 @@ func GetDefaultConfig() *config_proto.Config {
 
 			DarwinInstaller: &config_proto.DarwinInstallerConfig{
 				ServiceName: "com.velocidex.velociraptor",
-				InstallPath: "/usr/local/sbin/velociraptor",
+				InstallPath: "/usr/local/bin/velociraptor",
 			},
 
-			// If set to true this will stop
-			// arbitrary code execution on the
-			// client.
-			PreventExecve: false,
-			MaxUploadSize: constants.MAX_MEMORY,
+			MaxUploadSize: constants.MAX_POST_SIZE,
 		},
 		API: &config_proto.APIConfig{
 			// Bind port for gRPC endpoint - this should not

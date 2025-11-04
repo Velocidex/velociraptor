@@ -64,3 +64,7 @@ func Errf(e error) interface{} {
 	}
 	return e.Error()
 }
+
+func IsNotFound(err error) bool {
+	return errors.Is(err, os.ErrNotExist)
+}

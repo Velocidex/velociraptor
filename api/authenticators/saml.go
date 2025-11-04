@@ -2,7 +2,6 @@ package authenticators
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -217,7 +216,7 @@ func (self *SamlAuthenticator) MaybeCreateUser(ctx context.Context, username str
 	user_manager := services.GetUserManager()
 	user_record, err := user_manager.GetUser(ctx, username, username)
 
-	if errors.Is(err, utils.NotFoundError) {
+	if utils.IsNotFound(err) {
 		// we only create users if the "user_roles" option is set
 		if len(self.user_roles) == 0 {
 			_ = services.LogAudit(ctx,
