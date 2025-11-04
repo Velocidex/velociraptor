@@ -25,4 +25,6 @@ export default class SigmaMode extends window.ace.acequire('ace/mode/yaml').Mode
 
         this.HighlightRules = SigmaHighlightRules;
     }
+
+    static path = "ace/mode/sigma";
 }

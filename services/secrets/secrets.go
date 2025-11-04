@@ -78,11 +78,16 @@ func NewSecret(type_name, name string,
 }
 
 type SecretsService struct {
-	mu          sync.Mutex
+	mu sync.Mutex
+
+	// These are fixed and initialized in initialize.go
 	definitions map[string]*SecretDefinition
 	secrets_lru *ttlcache.Cache
 
 	config_obj *config_proto.Config
+
+	// A reference to the root org's secret manager for delegation.
+	parent *SecretsService
 }
 
 func (self *SecretsService) getSecretDefinition(
@@ -114,8 +119,15 @@ func (self *SecretsService) getSecret(
 	err = db.GetSubject(self.config_obj,
 		secret_path_manager.Secret(type_name, secret_name),
 		secret_proto)
+
+	// If we dont have the secret ourselves, but we have a delegate
+	// manager, we can call them to try and resolve the secret.
+	if self.parent != nil && utils.IsNotFound(err) {
+		return self.parent.getSecret(ctx, type_name, secret_name)
+	}
+
 	if err != nil {
-		return nil, err
+		return nil, utils.Wrap(err, "Secret Not Found")
 	}
 
 	result, err := NewSecretFromProto(ctx, self.config_obj, secret_proto)
@@ -202,6 +214,15 @@ func (self *SecretsService) GetSecretDefinitions(
 		return nil
 	}
 
+	parent_definitions := make(map[string]*api_proto.SecretDefinition)
+
+	// Merge the root secrets if needed.
+	if self.parent != nil {
+		for _, def := range self.parent.GetSecretDefinitions(ctx) {
+			parent_definitions[def.TypeName] = def
+		}
+	}
+
 	for _, v := range self.definitions {
 		def := proto.Clone(v.SecretDefinition).(*api_proto.SecretDefinition)
 		result = append(result, def)
@@ -215,6 +236,34 @@ func (self *SecretsService) GetSecretDefinitions(
 			}
 		}
 	}
+
+	// Add any secret names defined by the parent.
+	for _, def := range result {
+		parent_def, pres := parent_definitions[def.TypeName]
+		if !pres {
+			continue
+		}
+
+		for _, parent_secret_name := range parent_def.SecretNames {
+			md, err := self.parent.GetSecretMetadata(ctx,
+				parent_def.TypeName, parent_secret_name)
+			if err != nil {
+				continue
+			}
+
+			if !md.VisibleToAllOrgs &&
+				!utils.InString(md.Orgs, self.config_obj.OrgId) {
+				continue
+			}
+
+			if !utils.InString(def.SecretNames, parent_secret_name) {
+				def.SecretNames = append(def.SecretNames, parent_secret_name)
+			}
+		}
+
+		sort.Strings(def.SecretNames)
+	}
+
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].TypeName < result[j].TypeName
 	})
@@ -263,6 +312,21 @@ func (self *SecretsService) ModifySecret(ctx context.Context,
 
 	secret_record.Users = users.Keys()
 
+	orgs := ordereddict.NewDict()
+	for _, org := range secret_record.Orgs {
+		orgs.Set(org, 1)
+	}
+
+	for _, org := range request.RemoveOrgs {
+		orgs.Delete(org)
+	}
+
+	for _, org := range request.AddOrgs {
+		orgs.Set(org, 1)
+	}
+	secret_record.Orgs = orgs.Keys()
+	secret_record.VisibleToAllOrgs = request.VisibleToAllOrgs
+
 	return self.setSecret(ctx, secret_record)
 }
 
@@ -298,8 +362,10 @@ func (self *SecretsService) GetSecretMetadata(ctx context.Context,
 			Name:     secret_record.Name,
 
 			// Do not return any actual secrets
-			Secret: nil,
-			Users:  secret_record.Users,
+			Secret:           nil,
+			Users:            secret_record.Users,
+			Orgs:             secret_record.Orgs,
+			VisibleToAllOrgs: secret_record.VisibleToAllOrgs,
 		}}, nil
 }
 
@@ -312,6 +378,32 @@ func NewSecretsService(
 		definitions: buildInitialSecretDefinitions(),
 		secrets_lru: ttlcache.NewCache(),
 		config_obj:  config_obj,
+	}
+
+	// For child orgs, set the parent to be the root org secrets
+	// manager.
+	if !utils.IsRootOrg(config_obj.OrgId) {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return nil, err
+		}
+
+		root_config_obj, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
+		if err != nil {
+			return nil, err
+		}
+
+		root_secrets_manager, err := services.GetSecretsService(root_config_obj)
+		if err != nil {
+			return nil, err
+		}
+
+		// We need to make private calls to the root secrets manager
+		// so we can get the full secret details.
+		private_manager, ok := root_secrets_manager.(*SecretsService)
+		if ok {
+			result.parent = private_manager
+		}
 	}
 
 	result.secrets_lru.SetCacheSizeLimit(100)

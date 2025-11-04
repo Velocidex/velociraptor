@@ -54,4 +54,6 @@ export default class RegexMode extends window.ace.acequire('ace/mode/text').Mode
 
         this.HighlightRules = RegexHighlightRules;
     }
+
+    static path = "ace/mode/regex";
 }

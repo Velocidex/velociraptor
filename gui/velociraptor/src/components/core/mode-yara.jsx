@@ -125,4 +125,6 @@ export default class YaraMode extends window.ace.acequire('ace/mode/text').Mode 
 
         this.HighlightRules = YaraHighlightRules;
     }
+
+    static path = "ace/mode/yara";
 }

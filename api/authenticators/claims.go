@@ -90,7 +90,7 @@ func (self *OidcAuthenticator) NewClaims(
 
 	// First check the user exist at all.
 	_, err = user_manager.GetUser(ctx, email, email)
-	if errors.Is(err, utils.NotFoundError) {
+	if utils.IsNotFound(err) {
 		// If the user does not exist at all, create it.
 		user_record := &api_proto.VelociraptorUser{
 			Name: email,

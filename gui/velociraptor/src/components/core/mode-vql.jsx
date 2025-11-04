@@ -99,4 +99,6 @@ export default class VqlMode extends window.ace.acequire('ace/mode/sql').Mode {
     static setCompletions = (completions) => {
         gcompletions = completions;
     }
+
+    static path = "ace/mode/vql";
 }
