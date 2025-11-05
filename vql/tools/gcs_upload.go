@@ -9,17 +9,21 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
+	"net/url"
 
 	"cloud.google.com/go/storage"
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/api/option"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -48,6 +52,12 @@ func (self *GCSUploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	client_config, ok := artifacts.GetConfig(scope)
+	if !ok {
+		scope.Log("upload_gcs: unable to fetch config")
+		return vfilter.Null{}
+	}
+
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("ERROR:upload_gcs: %v", err)
@@ -72,7 +82,8 @@ func (self *GCSUploadFunction) Call(ctx context.Context,
 			arg.File, err)
 	} else if !stat.IsDir() {
 		upload_response, err := upload_gcs(
-			ctx, scope, file, arg.Project,
+			ctx, client_config,
+			scope, file, arg.Project,
 			arg.Bucket,
 			arg.Name, arg.Credentials)
 		if err != nil {
@@ -85,7 +96,10 @@ func (self *GCSUploadFunction) Call(ctx context.Context,
 	return vfilter.Null{}
 }
 
-func upload_gcs(ctx context.Context, scope vfilter.Scope,
+func upload_gcs(
+	ctx context.Context,
+	config_obj *config_proto.ClientConfig,
+	scope vfilter.Scope,
 	reader io.Reader,
 	projectID, bucket, name string,
 	credentials string) (
@@ -95,8 +109,29 @@ func upload_gcs(ctx context.Context, scope vfilter.Scope,
 	var bucket_handle *storage.BucketHandle
 	bucket_handle_cache := vql_subsystem.CacheGet(scope, bucket)
 	if bucket_handle_cache == nil {
-		client, err := storage.NewClient(ctx, option.WithCredentialsJSON(
-			[]byte(credentials)))
+		url := &url.URL{
+			Scheme: "https",
+			Host:   "storage.googleapis.com",
+		}
+
+		request := &networking.HttpPluginRequest{
+			Url: []string{url.String()},
+		}
+
+		http_client, _, err := networking.GetHttpClient(
+			ctx, config_obj, scope, request, url)
+		if err != nil {
+			return nil, err
+		}
+
+		base_http_client, err := networking.GetHTTPClient(http_client)
+		if err != nil {
+			return nil, err
+		}
+
+		client, err := storage.NewClient(ctx,
+			option.WithHTTPClient(base_http_client),
+			option.WithCredentialsJSON([]byte(credentials)))
 		if err != nil {
 			return nil, err
 		}
