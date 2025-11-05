@@ -35,15 +35,46 @@ Artifacts:
    HighLevelTargets: '["_SANS_Triage", "_KapeTriage"]'
    Devices: '["C:","D:","E:"]'
  Windows.Sysinternals.Autoruns:
-   All: Y
+   All: "Y"
 
 # Can be ZIP, GCS, S3, Azure, SMBShare, SFTP
 Target: ZIP
 
-# Relevant args to the Target type above.
-TargetArgs:
-  bucket:
-  GCSKey:
+# When the Target is GCS:
+#TargetArgs:
+#  bucket:
+#  GCSKey:
+
+# When the Target is S3
+#TargetArgs:
+#  bucket: "
+#  credentialsKey: ""
+#  credentialsSecret: ""
+#  credentialsToken: ""
+#  region: ""
+#  endpoint: ""
+#  serverSideEncryption: ""
+#  kmsEncryptionKey: ""
+#  s3UploadRoot": ""
+#  noverifycert": false
+
+# When the Target is Azure
+#TargetArgs:
+#  sas_url: ""
+
+# When the Target is SMBShare
+#TargetArgs:
+#  username: ""
+#  password: ""
+#  server_address: ""
+
+# When the Target is SFTP
+#TargetArgs:
+#  user: ""
+#  path: ""
+#  privatekey: ""
+#  endpoint: ""
+#  hostkey: ""
 
 # Can be None, X509
 # NOTE: You can unzip the encrypted zip using
@@ -57,7 +88,7 @@ OptPrompt: N
 OptAdmin: Y
 
 # A path to use for the temp file (Blank for system default)
-OptTempdir:
+OptTempdir: ""
 
 # Compression level to use
 OptLevel: 5

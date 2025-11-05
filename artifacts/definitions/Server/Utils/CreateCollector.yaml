@@ -533,7 +533,7 @@ export: |
       },
       { "description": "Target Args for AzureSASURL",
         "if": {
-           "properties": { "Target": { "const": "AzureSASURL" } }
+           "properties": { "Target": { "const": "Azure" } }
         },
         "then": {
            "properties": {
@@ -569,7 +569,7 @@ export: |
       },
       { "description": "Target Args for SFTPCollection",
         "if": {
-           "properties": { "Target": { "const": "SFTPCollection" } }
+           "properties": { "Target": { "const": "SFTP" } }
         },
         "then": {
            "properties": {
@@ -609,6 +609,19 @@ export: |
 
 sources:
   - query: |
+      LET ParameterSpec <= to_dict(item={
+         SELECT _value AS _key, dict() AS _value
+         FROM foreach(row=artifacts)
+      }) + parameters
+
+      -- Check for errors in the Spec
+      LET _ <= SELECT {
+         SELECT name FROM artifact_definitions(names=_key)
+      } AS Def
+      FROM items(item=ParameterSpec)
+      WHERE Def || log(message="Artifact <red>%v</> not found",
+           args=_key, dedup= -1, level="ERROR")
+
       LET Binaries <= SELECT * FROM foreach(
           row={
              SELECT tools FROM artifact_definitions(deps=TRUE, names=artifacts)
@@ -687,7 +700,7 @@ sources:
                          default=serialize(format='json', item=artifacts),
                          type="json_array"),
                     dict(name="Parameters",
-                         default=serialize(format='json', item=parameters),
+                         default=serialize(format='json', item=ParameterSpec),
                          type="json"),
                     dict(name="encryption_scheme", default=encryption_scheme),
                     dict(name="encryption_args",
@@ -749,7 +762,7 @@ sources:
       LET _ <= upload(accessor="data", file=serialize(format="yaml",
         item=dict(
           OS=OS,
-          Artifacts=parameters,
+          Artifacts=ParameterSpec,
           Target=target,
           EncryptionScheme=encryption_scheme || "None",
           EncryptionArgs=encryption_args || dict(),
