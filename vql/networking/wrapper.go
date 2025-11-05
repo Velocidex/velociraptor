@@ -46,6 +46,14 @@ type httpClientWrapper struct {
 	ctx   context.Context
 }
 
+func GetHTTPClient(client HTTPClient) (*http.Client, error) {
+	wrapper, ok := client.(*httpClientWrapper)
+	if !ok {
+		return nil, utils.Wrap(utils.InvalidArgError, "HTTPClient is not a wrapper")
+	}
+	return &wrapper.Client, nil
+}
+
 func (self httpClientWrapper) Do(req *http.Request) (*http.Response, error) {
 	// Emulate a significant network delay on HTTP
 	defer faults.FaultInjector.BlockHTTPDo(req.Context())
