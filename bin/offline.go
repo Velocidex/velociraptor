@@ -23,6 +23,10 @@ var (
 	collector_command_datastore = collector.Flag(
 		"datastore", "Path to a datastore directory (defaults to temp)").
 		ExistingDir()
+
+	collector_format = collector.Flag(
+		"format", "Output format to use (text,json,csv,jsonl).").
+		Default("json").Enum("text", "json", "csv", "jsonl")
 )
 
 const SampleSpec = `
@@ -172,7 +176,7 @@ func doCollector() error {
 
 	// Try to open the config file from there
 	config_obj, err := makeDefaultConfigLoader().
-		WithVerbose(true).
+		WithVerbose(*verbose_flag).
 		WithFileLoader(server_config_path).LoadAndValidate()
 	if err != nil || config_obj.Frontend == nil {
 		// Stop on hard errors but if the file does not exist we need
@@ -268,7 +272,7 @@ SELECT * FROM if(condition=Spec.OS, then={
    )
 })
 `
-	err = runQueryWithEnv(query, builder, "json")
+	err = runQueryWithEnv(query, builder, *collector_format)
 	if err != nil {
 		return err
 	}
