@@ -50,7 +50,7 @@ require (
 	github.com/magefile/mage v1.15.0
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
-	github.com/mattn/go-sqlite3 v1.14.24
+	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/microcosm-cc/bluemonday v1.0.23
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/panicwrap v1.0.0
@@ -63,8 +63,8 @@ require (
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
 	github.com/robertkrimen/otto v0.3.0
 	github.com/russross/blackfriday/v2 v2.1.0
-	github.com/sebdah/goldie/v2 v2.5.3
-	github.com/sergi/go-diff v1.3.1
+	github.com/sebdah/goldie/v2 v2.8.0
+	github.com/sergi/go-diff v1.4.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.11.1
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
@@ -85,10 +85,10 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	howett.net/plist v1.0.0
-	www.velocidex.com/golang/evtx v0.2.1-0.20250630041705-f4fa97e6f7fb
+	www.velocidex.com/golang/evtx v0.2.1-0.20251107004037-f9f4e4ed0236
 	www.velocidex.com/golang/go-ese v0.2.1-0.20250215160921-5af66dc0f6ed
 	www.velocidex.com/golang/go-ntfs v0.2.1-0.20250322152626-3c09d909d740
-	www.velocidex.com/golang/go-pe v0.1.1-0.20251015235828-0a2958753ebf
+	www.velocidex.com/golang/go-pe v0.1.1-0.20251107001057-f93001158cd9
 	www.velocidex.com/golang/go-prefetch v0.0.0-20251027080408-85407689d0cb
 	www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959
 	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7
