@@ -44,7 +44,8 @@ func (self *NotebookUploader) Upload(
 		store_as_name = filename
 	}
 
-	result, closer := uploads.DeduplicateUploads(scope, store_as_name)
+	result, closer := uploads.DeduplicateUploads(
+		accessor, scope, store_as_name)
 	defer closer(result)
 	if result != nil {
 		return result, nil

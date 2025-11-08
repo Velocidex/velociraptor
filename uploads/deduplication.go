@@ -48,15 +48,18 @@ func (self *cachedUploadResponse) LeaseResponse() (
 
 // Manage the uploader cache - this is used to deduplicate files that
 // are uploaded multiple time so they only upload one file.
-func DeduplicateUploads(scope vfilter.Scope,
+func DeduplicateUploads(
+	accessor string,
+	scope vfilter.Scope,
 	store_as_name *accessors.OSPath) (
 	*UploadResponse, func(response *UploadResponse)) {
 
-	cached_response := getCacheResponse(scope, store_as_name)
+	cached_response := getCacheResponse(accessor, scope, store_as_name)
 	return cached_response.LeaseResponse()
 }
 
-func getCacheResponse(scope vfilter.Scope,
+func getCacheResponse(
+	accessor string, scope vfilter.Scope,
 	store_as_name *accessors.OSPath) *cachedUploadResponse {
 
 	dedup_mu.Lock()
@@ -75,7 +78,7 @@ func getCacheResponse(scope vfilter.Scope,
 	defer vql_subsystem.CacheSet(root_scope, UPLOAD_CTX, cache)
 
 	// Search for the cached upload response.
-	key := store_as_name.String()
+	key := accessors.GetCanonicalFilename(accessor, scope, store_as_name)
 	cached_response_any, pres := cache.Get(key)
 	if pres {
 		cached_response, ok := cached_response_any.(*cachedUploadResponse)

@@ -401,6 +401,27 @@ func GetUnderlyingAPIFilename(accessor string,
 	return raw_accessor.GetUnderlyingAPIFilename(path)
 }
 
+// For case insensitive filesystems, the canonical filename (used in
+// comparisons) can be different from the actual filename.
+type CanonicalFilenameAccessor interface {
+	GetCanonicalFilename(path *OSPath) string
+}
+
+func GetCanonicalFilename(accessor string,
+	scope vfilter.Scope, path *OSPath) string {
+	accessor_obj, err := GetAccessor(accessor, scope)
+	if err != nil {
+		return path.String()
+	}
+
+	raw_accessor, ok := accessor_obj.(CanonicalFilenameAccessor)
+	if !ok {
+		return path.String()
+	}
+
+	return raw_accessor.GetCanonicalFilename(path)
+}
+
 type AccessorDescriptor struct {
 	Name        string
 	Description string

@@ -188,6 +188,12 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (
 	return self.ReadDirWithOSPath(fullpath)
 }
 
+// NTFS filesystems are usually case insensitive.
+func (self NTFSFileSystemAccessor) GetCanonicalFilename(
+	path *accessors.OSPath) string {
+	return strings.ToLower(path.String())
+}
+
 func (self *NTFSFileSystemAccessor) ReadDirWithOSPath(
 	fullpath *accessors.OSPath) (res []accessors.FileInfo, err error) {
 
