@@ -270,6 +270,12 @@ type RawRegFileSystemAccessor struct {
 	cache *RawRegFileSystemAccessorCache
 }
 
+// Registery filesystems are usually case insensitive.
+func (self RawRegFileSystemAccessor) GetCanonicalFilename(
+	path *accessors.OSPath) string {
+	return strings.ToLower(path.String())
+}
+
 func getRegHiveCache(scope vfilter.Scope) *rawHiveCache {
 	result_any := vql_subsystem.CacheGet(scope, RawRegFileSystemTag)
 	if result_any != nil {

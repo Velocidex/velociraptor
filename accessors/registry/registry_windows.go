@@ -392,6 +392,12 @@ func (self RegFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
 	}
 }
 
+// Registery filesystems are usually case insensitive.
+func (self RegFileSystemAccessor) GetCanonicalFilename(
+	path *accessors.OSPath) string {
+	return strings.ToLower(path.String())
+}
+
 func (self *RegFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 

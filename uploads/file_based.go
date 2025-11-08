@@ -92,7 +92,7 @@ func (self *FileBasedUploader) Upload(
 		store_as_name = filename
 	}
 
-	result, closer := DeduplicateUploads(scope, store_as_name)
+	result, closer := DeduplicateUploads(accessor, scope, store_as_name)
 	defer closer(result)
 	if result != nil {
 		return result, nil
