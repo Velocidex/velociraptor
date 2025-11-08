@@ -139,7 +139,6 @@ func (self *UserStorageManager) SetUser(
 	defer self.mu.Unlock()
 
 	if user_record.Name == "" {
-		utils.PrintStack()
 		return errors.New("Must set a username")
 	}
 

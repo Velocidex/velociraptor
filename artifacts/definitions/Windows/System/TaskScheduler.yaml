@@ -45,9 +45,23 @@ sources:
                     replace='')) AS XML
         FROM read_file(filenames=OSPath)
 
+      // Extract the binary from the command line. Fix up some common
+      // problems with the command specification.
+      LET _ExpandedTransforms <= dict(
+         `^\\\\SystemRoot\\\\`="%SystemRoot%\\",
+         `^system32\\\\`="%SystemRoot%\\System32\\",
+         `^{.+}.+`="\\$0",
+         `^.:\\\\Program Files[^\\\\]*\\\\[^ ]+`='"$0"',
+         `^%[^ ]+%[^ ]+`='"$0"'
+      )
+
+      LET ExpandPath(Path) = lowcase(string=commandline_split(
+        command=expand(path=regex_transform(source=Path,
+         map=_ExpandedTransforms)))[0])
+
       LET Results = SELECT XML.Task.RegistrationInfo.URI AS TaskName,
             Mtime,
-            expand(path=XML.Task.Actions.Exec.Command)  AS Command,
+            ExpandPath(Path=XML.Task.Actions.Exec.Command)  AS Command,
             XML.Task.Actions.Exec.Arguments AS Arguments,
             XML.Task.Principals.Principal.UserId AS UserId,
             XML.Task.Principals.Principal.RunLevel AS RunLevel,
@@ -66,7 +80,7 @@ sources:
 
       SELECT *,
          authenticode(filename=Command) AS Authenticode,
-         if(condition=UploadCommands and ExpandedCommand,
+         if(condition=UploadCommands AND Command,
             then=upload(file=Command)) AS Upload
       FROM Results
       WHERE UserId =~ Username

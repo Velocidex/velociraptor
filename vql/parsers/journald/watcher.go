@@ -16,11 +16,15 @@ import (
 )
 
 var (
+	mu               sync.Mutex
 	gJournaldService *JournaldWatcherService
 )
 
 func StartGlobalJournaldService(
 	ctx context.Context, config_obj *config_proto.Config) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	gJournaldService = NewJournaldWatcherService(ctx, config_obj)
 }
 

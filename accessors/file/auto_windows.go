@@ -115,6 +115,12 @@ type AutoFilesystemAccessor struct {
 	file_delegate accessors.FileSystemAccessor
 }
 
+// On Windows filesystems are usually case insensitive.
+func (self AutoFilesystemAccessor) GetCanonicalFilename(
+	path *accessors.OSPath) string {
+	return strings.ToLower(path.String())
+}
+
 func (self AutoFilesystemAccessor) ParsePath(path string) (
 	*accessors.OSPath, error) {
 	return accessors.NewWindowsOSPath(path)
