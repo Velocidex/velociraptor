@@ -169,6 +169,12 @@ func (self OSFileSystemAccessor) ReadDir(path string) (
 	return self.ReadDirWithOSPath(full_path)
 }
 
+// On Windows filesystems are usually case insensitive.
+func (self OSFileSystemAccessor) GetCanonicalFilename(
+	path *accessors.OSPath) string {
+	return strings.ToLower(path.String())
+}
+
 func (self OSFileSystemAccessor) ReadDirWithOSPath(
 	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
 	var result []accessors.FileInfo

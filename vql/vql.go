@@ -126,19 +126,32 @@ func EnforceVQLAllowList(
 				impl, ok = base_scope.GetPlugin(plugin_name)
 				if !ok {
 					// Cant add it - just insert a stub
-					impl = &UnimplementedPlugin{Name: plugin_name}
+					impl = NewRejectedPlugin(plugin_name)
 				}
 			}
 			new_exported_plugins[plugin_name] = impl
+		}
+
+		// Now install rejected plugins in place of all the existing
+		// plugins so we can emit the correct error message.
+		for k, v := range exportedPlugins {
+			_, pres := new_exported_plugins[k]
+			if pres {
+				continue
+			}
+
+			_, pres = v.(*UnimplementedPlugin)
+			if pres {
+				continue
+			}
+			new_exported_plugins[k] = NewRejectedPlugin(k)
 		}
 
 		exportedPlugins = new_exported_plugins
 	}
 
 	for _, deny := range deny_plugins {
-		exportedPlugins[deny] = &UnimplementedPlugin{
-			Name: deny,
-		}
+		exportedPlugins[deny] = NewRejectedPlugin(deny)
 	}
 
 	if len(allowed_functions) > 0 {
@@ -149,18 +162,32 @@ func EnforceVQLAllowList(
 				// Maybe this is provided by the base scope.
 				impl, ok = base_scope.GetFunction(func_name)
 				if !ok {
-					impl = &UnimplementedFunction{Name: func_name}
+					impl = NewRejectedFunction(func_name)
 				}
 			}
 			new_exported_functions[func_name] = impl
 		}
+
+		// Now install rejected plugins in place of all the existing
+		// plugins so we can emit the correct error message.
+		for k, v := range exportedFunctions {
+			_, pres := new_exported_functions[k]
+			if pres {
+				continue
+			}
+
+			_, pres = v.(*UnimplementedFunction)
+			if pres {
+				continue
+			}
+			new_exported_functions[k] = NewRejectedFunction(k)
+		}
+
 		exportedFunctions = new_exported_functions
 	}
 
 	for _, deny := range deny_functions {
-		exportedFunctions[deny] = &UnimplementedFunction{
-			Name: deny,
-		}
+		exportedFunctions[deny] = NewRejectedFunction(deny)
 	}
 
 	// Reset the global scope so we will be forced to recreate it.

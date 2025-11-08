@@ -21,7 +21,14 @@ var (
 
 func ReadAllWithLimit(
 	fd io.Reader, limit int) ([]byte, error) {
-	return ioutil.ReadAll(io.LimitReader(fd, int64(limit)))
+
+	// If we reach the limit signal this as an error!
+	res, err := ioutil.ReadAll(io.LimitReader(fd, int64(limit)))
+	if len(res) >= limit {
+		return nil, Wrap(IOError, "Memory buffer exceeded")
+	}
+
+	return res, err
 }
 
 func ReadAllWithCtx(

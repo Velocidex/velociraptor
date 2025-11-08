@@ -50,6 +50,35 @@ func (self *UnimplementedFunction) Info(scope vfilter.Scope, type_map *vfilter.T
 	}
 }
 
+type RejectedFunction struct {
+	UnimplementedFunction
+}
+
+func (self *RejectedFunction) Copy() types.FunctionInterface {
+	return &RejectedFunction{
+		UnimplementedFunction{
+			Name:      self.Name,
+			Platforms: self.Platforms,
+		}}
+}
+
+func (self *RejectedFunction) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	DeduplicatedLog(scope, self.Name,
+		"VQL Function %v() has been blocked in the configuration. Please update the configuration file to allow it.",
+		self.Name)
+
+	return vfilter.Null{}
+}
+
+func NewRejectedFunction(name string) *RejectedFunction {
+	return &RejectedFunction{UnimplementedFunction{
+		Name: name,
+	}}
+}
+
 type UnimplementedPlugin struct {
 	Name      string
 	Platforms []string
@@ -79,6 +108,31 @@ func (self *UnimplementedPlugin) Info(scope vfilter.Scope, type_map *vfilter.Typ
 		// exist. Version 0 is the default version for new plugins.
 		Version: -1,
 	}
+}
+
+type RejectedPlugin struct {
+	UnimplementedPlugin
+}
+
+func (self *RejectedPlugin) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+
+	output_chan := make(chan vfilter.Row)
+
+	DeduplicatedLog(scope, self.Name,
+		"VQL Plugin %v() has been blocked in the configuration. Please update the configuration file to allow it.",
+		self.Name)
+
+	close(output_chan)
+
+	return output_chan
+}
+
+func NewRejectedPlugin(name string) *RejectedPlugin {
+	return &RejectedPlugin{UnimplementedPlugin{
+		Name: name,
+	}}
 }
 
 func _GetMyPlatform() string {
