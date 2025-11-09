@@ -6,8 +6,10 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 func (self SanityChecks) CheckForLockdown(
@@ -52,8 +54,19 @@ func (self SanityChecks) CheckForLockdown(
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<red>Server is in lockdown!</> The following permissions are denied: %v",
+	msg := fmt.Sprintf("<red>Server is in lockdown!</> The following permissions are denied: %v",
 		acls.DescribePermissions(lockdown_token))
+	logger.Info("%v", msg)
+
+	frontend_service, err := services.GetFrontendManager(config_obj)
+	if err == nil {
+		frontend_service.SetGlobalMessage(
+			&api_proto.GlobalUserMessage{
+				Key:     "Lockdown",
+				Level:   "INFO",
+				Message: msg,
+			})
+	}
 
 	acls.SetLockdownToken(lockdown_token)
 	return nil

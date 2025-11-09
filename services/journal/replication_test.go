@@ -37,6 +37,14 @@ func (self MockFrontendService) GetMinionCount() int {
 	return 1
 }
 
+func (self MockFrontendService) SetGlobalMessage(
+	message *api_proto.GlobalUserMessage) {
+}
+
+func (self MockFrontendService) GetGlobalMessages() []*api_proto.GlobalUserMessage {
+	return nil
+}
+
 func (self MockFrontendService) GetPublicUrl(
 	config_obj *config_proto.Config) (res *url.URL, err error) {
 	return frontend.GetPublicUrl(config_obj)

@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -26,7 +27,46 @@ type BackupService struct {
 	wg         *sync.WaitGroup
 	config_obj *config_proto.Config
 
+	delay         time.Duration
+	last_run      time.Time
 	registrations []services.BackupProvider
+	stats         []*BackupTrackerStats
+}
+
+func (self *BackupService) Start() {
+	defer self.wg.Done()
+
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger.Info("Starting <green>Backup Services</> for %v every %v",
+		services.GetOrgName(self.config_obj), self.delay)
+
+	for {
+		self.mu.Lock()
+		last_run := self.last_run
+		self.mu.Unlock()
+
+		select {
+		case <-self.ctx.Done():
+			return
+
+		case <-utils.GetTime().After(utils.Jitter(self.delay)):
+			// Avoid doing backups too quickly. This is mainly for
+			// tests where the time is mocked for the After(delay)
+			// above does not work.
+			if utils.GetTime().Now().Sub(last_run) < time.Second {
+				utils.SleepWithCtx(self.ctx, time.Minute)
+				continue
+			}
+
+			export_path := paths.NewBackupPathManager().BackupFile()
+			_, err := self.CreateBackup(export_path)
+			if err != nil {
+				logger := logging.GetLogger(
+					self.config_obj, &logging.FrontendComponent)
+				logger.Error("Backup Service: CreateBackup: %v", err)
+			}
+		}
+	}
 }
 
 func (self *BackupService) CreateBackup(
@@ -36,7 +76,17 @@ func (self *BackupService) CreateBackup(
 	defer self.mu.Unlock()
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	start := utils.GetTime().Now()
+	self.last_run = utils.GetTime().Now()
+
+	tracker_stats := NewBackupTrackerStats(export_path)
+	defer func() {
+		tracker_stats.Stats = append([]services.BackupStat{}, stats...)
+
+		self.stats = append(self.stats, tracker_stats)
+		if len(self.stats) > 10 {
+			self.stats = self.stats[len(self.stats)-10:]
+		}
+	}()
 
 	// Create a container to hold the backup
 	file_store_factory := file_store.GetFileStore(self.config_obj)
@@ -67,13 +117,13 @@ func (self *BackupService) CreateBackup(
 
 		logger.Info("BackupService: <green>Completed Backup to %v (size %v) in %v</>",
 			export_path.String(), zip_stats.TotalCompressedBytes,
-			utils.GetTime().Now().Sub(start))
+			utils.GetTime().Now().Sub(self.last_run))
 
 		stats = append(stats, services.BackupStat{
 			Name: "BackupService",
 			Message: fmt.Sprintf("Completed Backup to %v (size %v) in %v",
 				export_path.String(), zip_stats.TotalCompressedBytes,
-				utils.GetTime().Now().Sub(start)),
+				utils.GetTime().Now().Sub(self.last_run)),
 		})
 
 	}()
@@ -117,6 +167,7 @@ func (self *BackupService) CreateBackup(
 	return stats, err
 }
 
+// Invoke each provider to produce the backup rows.
 func (self *BackupService) writeBackups(
 	container services.BackupContainerWriter,
 	prefix string) (stats []services.BackupStat, err error) {
@@ -213,6 +264,7 @@ func (self *BackupService) RestoreBackup(
 	return stats, nil
 }
 
+// Feed the provider from backup rows so it can restore the state.
 func (self *BackupService) feedProvider(
 	provider services.BackupProvider,
 	container services.BackupContainerReader) (stat services.BackupStat, err error) {
@@ -298,10 +350,12 @@ func NewBackupService(
 		ctx:        ctx,
 		wg:         wg,
 		config_obj: config_obj,
+		delay:      time.Hour * 24,
+		last_run:   utils.GetTime().Now(),
 	}
 
 	// Every day
-	delay := time.Hour * 24
+
 	if config_obj.Defaults != nil {
 		// Backups are disabled.
 		if config_obj.Defaults.BackupPeriodSeconds < 0 {
@@ -309,46 +363,21 @@ func NewBackupService(
 		}
 
 		if config_obj.Defaults.BackupPeriodSeconds > 0 {
-			delay = time.Duration(
+			result.delay = time.Duration(
 				config_obj.Defaults.BackupPeriodSeconds) * time.Second
 		}
 	}
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Starting <green>Backup Services</> for %v every %v",
-		services.GetOrgName(config_obj), delay)
-
 	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	go result.Start()
 
-		last_run := utils.GetTime().Now()
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-
-			case <-utils.GetTime().After(utils.Jitter(delay)):
-				// Avoid doing backups too quickly. This is mainly for
-				// tests where the time is mocked for the After(delay)
-				// above does not work.
-				if utils.GetTime().Now().Sub(last_run) < time.Second {
-					utils.SleepWithCtx(ctx, time.Minute)
-					continue
-				}
-
-				export_path := paths.NewBackupPathManager().BackupFile()
-				_, err := result.CreateBackup(export_path)
-				if err != nil {
-					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-					logger.Error("Backup Service: CreateBackup: %v", err)
-				}
-
-				last_run = utils.GetTime().Now()
-			}
-		}
-	}()
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:          "Backups " + utils.GetOrgId(config_obj),
+		Description:   "Show recent backup operations",
+		ProfileWriter: result.ProfileWriter,
+		Categories: []string{"Org", services.GetOrgName(config_obj),
+			"Services"},
+	})
 
 	return result
 }

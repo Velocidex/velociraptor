@@ -1,8 +1,9 @@
-.log-green {
-    background-color: var(--color-accent-25);
+.global-messages {
+    margin-left: 55px;
+    margin-top: 5px;
 }
 
-.log-red {
+.btn.global-messages.danger {
     background-color: var(--color-level-error);
     color: var(--color-foreground-inverse);
 }
