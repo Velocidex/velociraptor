@@ -439,6 +439,8 @@ func (self *ApiServer) GetUserUITraits(
 			if err == nil {
 				result.InterfaceTraits.BasePath = url.Path
 			}
+
+			result.GlobalMessages = frontend_service.GetGlobalMessages()
 		}
 	}
 

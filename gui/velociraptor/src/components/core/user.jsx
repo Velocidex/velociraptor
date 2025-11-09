@@ -26,63 +26,71 @@ class _UserSettings extends React.Component {
         this.source = CancelToken.source();
         api.get("v1/GetUserUITraits", {},
                 this.source.token).then((response) => {
-            let traits = response.data.interface_traits;
-            if (_.isUndefined(traits)) {
-                return;
-            }
+                    let traits = response.data.interface_traits;
+                    if (_.isUndefined(traits)) {
+                        return;
+                    }
 
-            if (traits.lang) {
-                window.globals.lang = traits.lang;
-            }
+                    if (traits.lang) {
+                        window.globals.lang = traits.lang;
+                    }
 
-            if (traits.org) {
-                // Get the org id from the url if possible. If it is
-                // not in the URL, get the default from the user
-                // traits.
-                let search = window.location.search.replace('?', '');
-                let params = qs.parse(search);
-                let org_id = params.org_id || traits.org;
+                    if (traits.org) {
+                        // Get the org id from the url if possible. If it is
+                        // not in the URL, get the default from the user
+                        // traits.
+                        let search = window.location.search.replace('?', '');
+                        let params = qs.parse(search);
+                        let org_id = params.org_id || traits.org;
 
-                window.globals.OrgId = org_id;
+                        window.globals.OrgId = org_id;
 
-                // If the URL does not specify an org, then we need to
-                // set it to the default org from the traits.
-                if (_.isEmpty(params.org_id)) {
-                    window.history.pushState({}, "", api.href("/app/index.html", {}));
-                    this.props.history.replace("/welcome");
-                }
-            }
+                        // If the URL does not specify an org, then we need to
+                        // set it to the default org from the traits.
+                        if (_.isEmpty(params.org_id)) {
+                            window.history.pushState({}, "", api.href("/app/index.html", {}));
+                            this.props.history.replace("/welcome");
+                        }
+                    }
 
-            if (traits.auth_redirect_template) {
-                window.globals.AuthRedirectTemplate = traits.auth_redirect_template;
-            }
+                    if (traits.auth_redirect_template) {
+                        window.globals.AuthRedirectTemplate = traits.auth_redirect_template;
+                    }
 
-            traits.username = response.data.username;
-            traits.orgs = response.data.orgs;
+                    traits.username = response.data.username;
+                    traits.orgs = response.data.orgs;
 
-            this.setState({traits: traits});
+                    let current_theme = this.state.traits.theme;
 
-            document.body.classList.remove('no-theme');
-            document.body.classList.remove('veloci-dark');
-            document.body.classList.remove('veloci-light');
-            document.body.classList.remove('veloci-docs');
-            document.body.classList.remove('pink-light');
-            document.body.classList.remove('github-dimmed-dark');
-            document.body.classList.remove('ncurses-light');
-            document.body.classList.remove('ncurses-dark');
-            document.body.classList.remove('coolgray-dark');
-            document.body.classList.remove('midnight');
-            document.body.classList.add(traits.theme || "veloci-light");
+                    this.setState({
+                        traits: traits,
+                        global_messages: response.data.global_messages || []});
 
-            // veloci-docs is just a modified version of veloci-light
-            if (traits.theme === "veloci-docs") {
-                document.body.classList.add("veloci-light");
-            }
-        });
+                    // Only upate the theme if it changed.
+                    if (current_theme !== traits.theme) {
+                        document.body.classList.remove('no-theme');
+                        document.body.classList.remove('veloci-dark');
+                        document.body.classList.remove('veloci-light');
+                        document.body.classList.remove('veloci-docs');
+                        document.body.classList.remove('pink-light');
+                        document.body.classList.remove('github-dimmed-dark');
+                        document.body.classList.remove('ncurses-light');
+                        document.body.classList.remove('ncurses-dark');
+                        document.body.classList.remove('coolgray-dark');
+                        document.body.classList.remove('midnight');
+                        document.body.classList.add(traits.theme || "veloci-light");
+
+                        // veloci-docs is just a modified version of veloci-light
+                        if (traits.theme === "veloci-docs") {
+                            document.body.classList.add("veloci-light");
+                        }
+                    }
+                });
     }
 
     state = {
         traits: {},
+        global_messages: [],
         updateTraits: this.updateTraits,
     }
 

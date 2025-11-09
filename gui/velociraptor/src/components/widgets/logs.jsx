@@ -4,7 +4,7 @@ import "./logs.css";
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
-const tags = new RegExp("(.*?)<(green|red|yellow)>(.+?)(</>|$)(.*)", "g");
+const tags = new RegExp("(.*?)<(green|red|yellow)>(.+?)(</.*?>|$)(.*)", "g");
 
 
 export default class VeloLog extends Component {
