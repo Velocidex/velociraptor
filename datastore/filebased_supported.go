@@ -5,13 +5,16 @@ package datastore
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/psutils"
 	"www.velocidex.com/golang/vfilter"
@@ -73,16 +76,36 @@ func AvailableDiskSpace(
 		// stop writing.
 		if isDisabled(config_obj) ||
 			free_mb < min_allowed_file_space_mb {
-			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.Error("FileBaseDataStore: Insufficient free disk space! We need at least %v Mb but we have %v!. Disabling write operations to avoid file corruption. Free some disk space or grow the partition.",
+			msg := fmt.Sprintf("FileBaseDataStore: Insufficient free disk space! We need at least %v Mb but we have %v!. Disabling write operations to avoid file corruption. Free some disk space or grow the partition.",
 				min_allowed_file_space_mb, free_mb)
+
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("%v", msg)
 
 			// Stop writing - disk is full!
 			filebased_db.SetError(insufficientDiskSpace)
 
+			frontend_service, err := services.GetFrontendManager(config_obj)
+			if err == nil {
+				frontend_service.SetGlobalMessage(
+					&api_proto.GlobalUserMessage{
+						Key:     "DiskSpace",
+						Level:   "ERROR",
+						Message: msg,
+					})
+			}
+
 		} else {
 			// Start writing again.
 			filebased_db.SetError(nil)
+
+			frontend_service, err := services.GetFrontendManager(config_obj)
+			if err == nil {
+				frontend_service.SetGlobalMessage(
+					&api_proto.GlobalUserMessage{
+						Key: "DiskSpace",
+					})
+			}
 		}
 	}
 	return stat.Free, nil

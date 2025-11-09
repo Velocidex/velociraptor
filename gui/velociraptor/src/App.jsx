@@ -4,6 +4,7 @@ import qs from "qs";
 
 import PropTypes from 'prop-types';
 import VeloNavigator from './components/sidebar/navigator.jsx';
+import GlobalMessages from './components/users/global-messages.jsx';
 import VeloClientSearch from './components/clients/search.jsx';
 import VeloClientList from './components/clients/clients-list.jsx';
 import VeloHostInfo from './components/clients/host-info.jsx';
@@ -221,7 +222,9 @@ class App extends Component {
                    </Switch>
                  </div>
                  <Navbar fixed="bottom" className="app-footer justify-content-between ">
-                   <Nav></Nav>
+                   <Nav>
+                     <GlobalMessages/>
+                   </Nav>
                    <Nav>
                      <VeloLiveClock className="float-right" />
                      <Snackbar />

@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -35,14 +37,16 @@ func (self *SanityChecks) CheckCertificates(
 
 	if cert.NotBefore.After(now) || cert.NotAfter.Before(now) {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Error("<red>Frontend Certificate is not valid</>: Certificate Valid NotBefore %v and Not After %v but Now is %v. See https://docs.velociraptor.app/knowledge_base/tips/rolling_certificates/",
+		msg1 := fmt.Sprintf("<red>Frontend Certificate is not valid</>: Certificate Valid NotBefore %v and Not After %v but Now is %v. See https://docs.velociraptor.app/knowledge_base/tips/rolling_certificates/",
 			cert.NotBefore.Format(time.RFC3339),
 			cert.NotAfter.Format(time.RFC3339),
 			now.Format(time.RFC3339),
 		)
+		logger.Error("%v", msg1)
 
 		if config_obj.CA != nil && config_obj.CA.PrivateKey != "" {
-			logger.Info("<green>Found CA private key in config</>, will automatically rotate keys, but you should consider updating the config file using `velociraptor config rotate`")
+			msg2 := fmt.Sprintf("<green>Found CA private key in config</>, I will automatically rotate keys, but you should consider updating the config file using `velociraptor config rotate_keys`")
+			logger.Info("%s", msg2)
 
 			frontend_cert, err := crypto.GenerateServerCert(
 				config_obj, utils.GetSuperuserName(config_obj))
@@ -65,6 +69,23 @@ func (self *SanityChecks) CheckCertificates(
 				config_obj.GUI.GwPrivateKey = gw_certificate.PrivateKey
 			}
 
+			// Make sure the user knows about the issue!
+			frontend_service, err := services.GetFrontendManager(config_obj)
+			if err == nil {
+				frontend_service.SetGlobalMessage(
+					&api_proto.GlobalUserMessage{
+						Key:     "ExpiredCert",
+						Level:   "ERROR",
+						Message: msg1,
+					})
+				frontend_service.SetGlobalMessage(
+					&api_proto.GlobalUserMessage{
+						Key:     "ExpiredCert2",
+						Level:   "INFO",
+						Message: msg2,
+					})
+
+			}
 			return nil
 		}
 
