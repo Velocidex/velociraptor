@@ -410,63 +410,93 @@ func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 	accessor accessors.FileSystemAccessor) (string, error) {
 
 	// Try to get the host info from the collection.
-	host_info := ordereddict.NewDict()
+	host_info := ordereddict.NewDict().SetCaseInsensitive()
 	path := root.Append("client_info.json")
 	err := self.getFile(accessor, path, host_info)
 	if err == nil {
+		// Check if the client is already known.
+		client_info_manager, err := services.GetClientInfoManager(config_obj)
+		if err != nil {
+			return "", err
+		}
+
+		// Override the hostname with the one in the collection.
+		collection_hostname, pres := host_info.GetString("hostname")
+		if pres {
+			hostname = collection_hostname
+		}
+
+		client_id, pres := host_info.GetString("client_id")
+
+		// We dont know this client id - Search for a client id we do
+		// know, that has the same hostname.
+		if !pres && hostname != "" {
+			indexer, err := services.GetIndexer(config_obj)
+			if err != nil {
+				return "", err
+			}
+
+			scope.Log("Searching for a client id with hostname '%v'", hostname)
+
+			// Search for an existing client with the same hostname
+			search_resp, err := indexer.SearchClients(ctx, config_obj,
+				&api_proto.SearchClientsRequest{Query: "host:" + hostname}, "")
+			if err == nil {
+				for _, resp := range search_resp.Items {
+					if strings.EqualFold(resp.OsInfo.Hostname, hostname) {
+						scope.Log("client id found '%v'", resp.ClientId)
+						return resp.ClientId, nil
+					}
+				}
+			}
+		}
+
+		// No client id - create one based on the host id
 		host_id, pres := host_info.GetString("HostID")
 		if pres {
 			// Make the client id based on the host id. This is used
 			// to ensure that the client id is consistent each time
 			// the offline collector is run on the same endpoint.
-			client_id := "C." + strings.TrimPrefix(host_id, "C.")
+			client_id = "C." + strings.TrimPrefix(host_id, "C.")
+		}
 
-			// Check if the client is already known.
-			client_info_manager, err := services.GetClientInfoManager(config_obj)
-			if err != nil {
-				return "", err
-			}
-
-			_, err = client_info_manager.Get(ctx, client_id)
-			if err != nil {
-				hostname, _ := host_info.GetString("Hostname")
-
-				// Client is not known, create it.
-				clients.NewClientFunction{}.Call(ctx, scope, ordereddict.NewDict().
-					Set("client_id", client_id).
-					Set("first_seen_at", time.Now()).
-					Set("last_seen_at", time.Now()).
-					Set("hostname", hostname))
-			}
-
-			scope.Log("Found client_info.json file in collection: Using client id as GUID %v, with hostname %v",
-				client_id, hostname)
+		// Check to see if we know about this client id. If we do
+		// then just return the same client id as in the
+		// container.
+		_, err = client_info_manager.Get(ctx, client_id)
+		if err == nil {
 			return client_id, nil
 		}
-	}
 
-	if hostname != "" {
-		indexer, err := services.GetIndexer(config_obj)
+		// If we get here we dont know the client so we just create a
+		// new one with this client id
+		_, err = client_info_manager.Get(ctx, client_id)
 		if err != nil {
-			return "", err
-		}
-
-		scope.Log("Searching for a client id with hostname '%v'", hostname)
-
-		// Search for an existing client with the same hostname
-		search_resp, err := indexer.SearchClients(ctx, config_obj,
-			&api_proto.SearchClientsRequest{Query: "host:" + hostname}, "")
-		if err == nil {
-			for _, resp := range search_resp.Items {
-				if strings.EqualFold(resp.OsInfo.Hostname, hostname) {
-					scope.Log("client id found '%v'", resp.ClientId)
-					return resp.ClientId, nil
-				}
+			if hostname == "" {
+				hostname, _ = host_info.GetString("Hostname")
 			}
+
+			// Client is not known, create it.
+			clients.NewClientFunction{}.Call(ctx, scope, ordereddict.NewDict().
+				Set("client_id", client_id).
+				Set("first_seen_at", time.Now()).
+				Set("last_seen_at", time.Now()).
+				Set("hostname", hostname))
+
+			scope.Log(
+				"Found client_info.json file in collection: Creating client id '%v' and hostname '%v'",
+				client_id, hostname)
+
+		} else {
+
+			scope.Log(
+				"Found client_info.json file in collection: With client id %v and hostname %v",
+				client_id, hostname)
 		}
+		return client_id, nil
 	}
 
-	// Create a new client
+	// Create a new client with a random client id
 	res := clients.NewClientFunction{}.Call(ctx, scope, ordereddict.NewDict().
 		Set("first_seen_at", time.Now()).
 		Set("last_seen_at", time.Now()).

@@ -175,6 +175,40 @@ type MasterFrontendManager struct {
 
 	mu    sync.Mutex
 	stats map[string]*FrontendMetrics
+
+	messages []*api_proto.GlobalUserMessage
+}
+
+func (self *MasterFrontendManager) SetGlobalMessage(
+	message *api_proto.GlobalUserMessage) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	found := false
+	for idx, item := range self.messages {
+		if item.Key == message.Key {
+			self.messages[idx] = message
+			found = true
+		}
+	}
+
+	if !found {
+		self.messages = append(self.messages, message)
+	}
+}
+
+func (self *MasterFrontendManager) GetGlobalMessages() []*api_proto.GlobalUserMessage {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	res := []*api_proto.GlobalUserMessage{}
+	for _, item := range self.messages {
+		if item.Level != "" {
+			res = append(res, item)
+		}
+	}
+
+	return res
 }
 
 func (self *MasterFrontendManager) processMetrics(ctx context.Context,
@@ -366,6 +400,14 @@ func NewMinionFrontendManager(
 	config_obj *config_proto.Config,
 	name string) *MinionFrontendManager {
 	return &MinionFrontendManager{config_obj: config_obj, name: name}
+}
+
+func (self MinionFrontendManager) SetGlobalMessage(
+	message *api_proto.GlobalUserMessage) {
+}
+
+func (self MinionFrontendManager) GetGlobalMessages() []*api_proto.GlobalUserMessage {
+	return nil
 }
 
 func (self MinionFrontendManager) GetMinionCount() int {
