@@ -372,7 +372,7 @@ func NewBackupService(
 	go result.Start()
 
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
-		Name:          "Backups" + utils.GetOrgId(config_obj),
+		Name:          "Backups " + utils.GetOrgId(config_obj),
 		Description:   "Show recent backup operations",
 		ProfileWriter: result.ProfileWriter,
 		Categories: []string{"Org", services.GetOrgName(config_obj),

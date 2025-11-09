@@ -35,15 +35,17 @@ func (self *BackupService) ProfileWriter(
 		return t.UTC().Round(time.Second).Format(time.RFC3339)
 	}
 
+	now := utils.GetTime().Now()
+
 	output_chan <- ordereddict.NewDict().
-		Set("OrgId", utils.GetOrgId(self.config_obj)).
 		Set("Delay", self.delay.Round(time.Second).String()).
 		Set("LastRun", display_time(self.last_run)).
-		Set("NextRun", display_time(self.last_run.Add(self.delay)))
+		Set("NextRun", display_time(self.last_run.Add(self.delay))).
+		Set("NextRunIn", self.last_run.Add(self.delay).Sub(now).
+			Round(time.Second).String())
 
 	for _, s := range self.stats {
 		output_chan <- ordereddict.NewDict().
-			Set("OrgId", utils.GetOrgId(self.config_obj)).
 			Set("Timestamp", display_time(s.Timestamp)).
 			Set("Filename", s.Filename).
 			Set("Stats", s.Stats)
