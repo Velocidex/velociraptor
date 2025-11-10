@@ -40,6 +40,7 @@ type S3UploadArgs struct {
 	KmsEncryptionKey     string            `vfilter:"optional,field=kms_encryption_key,doc=The server side KMS key to use"`
 	S3UploadRoot         string            `vfilter:"optional,field=s3upload_root,doc=Prefix for the S3 object"`
 	SkipVerify           bool              `vfilter:"optional,field=skip_verify,doc=Skip TLS Verification"`
+	UsePathStyle         bool              `vfilter:"optional,field=path_style,doc=Use path style URLs if set"`
 	Secret               string            `vfilter:"optional,field=secret,doc=Alternatively use a secret from the secrets service. Secret must be of type 'AWS S3 Creds'"`
 }
 
@@ -108,18 +109,7 @@ func (self S3UploadFunction) Call(ctx context.Context,
 		// Cancel the s3 upload when the scope destroys.
 		_ = scope.AddDestructor(cancel)
 		upload_response, err := upload_S3(
-			sub_ctx, scope, file,
-			arg.Bucket,
-			arg.Name,
-			arg.CredentialsKey,
-			arg.CredentialsSecret,
-			arg.CredentialsToken,
-			arg.Region,
-			arg.Endpoint,
-			arg.ServerSideEncryption,
-			arg.KmsEncryptionKey,
-			arg.S3UploadRoot,
-			arg.SkipVerify,
+			sub_ctx, scope, file, arg,
 			uint64(stat.Size()))
 		if err != nil {
 			scope.Log("upload_S3: %v", err)
@@ -134,44 +124,41 @@ func (self S3UploadFunction) Call(ctx context.Context,
 
 func upload_S3(ctx context.Context, scope vfilter.Scope,
 	reader accessors.ReadSeekCloser,
-	bucket, name string,
-	credentialsKey string,
-	credentialsSecret string,
-	credentialsToken string,
-	region string,
-	endpoint string,
-	serverSideEncryption string,
-	kmsEncryptionKey string,
-	s3UploadRoot string,
-	NoVerifyCert bool,
+	arg *S3UploadArgs,
 	size uint64) (
 	*uploads.UploadResponse, error) {
 
-	if s3UploadRoot != "" {
-		name = s3UploadRoot + name
+	if arg.S3UploadRoot != "" {
+		arg.Name = arg.S3UploadRoot + arg.Name
 	}
-	scope.Log("upload_S3: Uploading %v to %v", name, bucket)
+	scope.Log("upload_S3: Uploading %v to %v", arg.Name, arg.Bucket)
 
 	conf := []func(*config.LoadOptions) error{
-		config.WithRegion(region)}
+		config.WithRegion(arg.Region)}
 
-	if credentialsKey != "" && credentialsSecret != "" {
+	if arg.CredentialsKey != "" && arg.CredentialsSecret != "" {
 		conf = append(conf, config.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider(
-				credentialsKey, credentialsSecret, credentialsToken),
+				arg.CredentialsKey, arg.CredentialsSecret, arg.CredentialsToken),
 		))
 	}
 
 	s3_opts := []func(*s3.Options){}
-	if endpoint != "" {
+	if arg.Endpoint != "" {
 		s3_opts = append(s3_opts, func(o *s3.Options) {
-			o.BaseEndpoint = aws.String(endpoint)
+			o.BaseEndpoint = aws.String(arg.Endpoint)
+		})
+	}
+
+	if arg.UsePathStyle {
+		s3_opts = append(s3_opts, func(o *s3.Options) {
+			o.UsePathStyle = true
 		})
 	}
 
 	clientConfig, ok := artifacts.GetConfig(scope)
 	if ok {
-		if NoVerifyCert {
+		if arg.SkipVerify {
 			http_client, err := networking.GetSkipVerifyHTTPClient(
 				ctx, clientConfig, scope, "", nil)
 			if err != nil {
@@ -206,16 +193,16 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 	var result *manager.UploadOutput
 
 	s3_params := &s3.PutObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(name),
+		Bucket: aws.String(arg.Bucket),
+		Key:    aws.String(arg.Name),
 		Body:   reader,
 	}
-	if serverSideEncryption != "" {
-		s3_params.ServerSideEncryption = types.ServerSideEncryption(serverSideEncryption)
+	if arg.ServerSideEncryption != "" {
+		s3_params.ServerSideEncryption = types.ServerSideEncryption(arg.ServerSideEncryption)
 	}
 
-	if kmsEncryptionKey != "" {
-		s3_params.SSEKMSKeyId = aws.String(kmsEncryptionKey)
+	if arg.KmsEncryptionKey != "" {
+		s3_params.SSEKMSKeyId = aws.String(arg.KmsEncryptionKey)
 	}
 
 	result, err = uploader.Upload(ctx, s3_params)
@@ -243,7 +230,7 @@ func (self S3UploadFunction) Info(
 		ArgType: type_map.AddType(scope, &S3UploadArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(
 			acls.NETWORK, acls.FILESYSTEM_READ).Build(),
-		Version: 2,
+		Version: 3,
 	}
 }
 
