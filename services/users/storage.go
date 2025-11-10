@@ -201,13 +201,20 @@ func (self *UserStorageManager) notifyChanges(
 		"Server.Internal.UserManager", "server", "")
 }
 
+// Update fixed fields in the options to override user choices. This
+// ensures we have known fields.
 func setDefaultGUIOptions(
 	options *api_proto.SetGUIOptionsRequest,
 	config_obj *config_proto.Config) {
+
 	if options.Options == "" {
 		// If the record is not found we need to create one from scratch.
 		options.Options = default_user_options
 	}
+
+	// options.Links can not be set by the user it must be derived
+	// from the config file and the default links. So we force them
+	// each time.
 
 	// Add any links in the config file to the user's preferences.
 	if config_obj.GUI != nil {
@@ -215,13 +222,16 @@ func setDefaultGUIOptions(
 	}
 
 	// Add the defaults.
-	options.Links = MergeGUILinks(options.Links, DefaultLinks)
 
 	// NOTE: It is possible for a user to disable one of the default
 	// targets by simply adding an entry with disabled: true - we will
 	// not override the configured link from the default and it will
 	// be ignored.
+	options.Links = MergeGUILinks(options.Links, DefaultLinks)
 
+	// Force the below settings from the config file. They can not be
+	// overridden by a user. This is just a mechanism to communicate
+	// the defaults to the GUI.
 	defaults := &config_proto.Defaults{}
 	if config_obj.Defaults != nil {
 		defaults = config_obj.Defaults
@@ -238,10 +248,7 @@ func setDefaultGUIOptions(
 	options.Customizations.HuntExpiryHours = defaults.HuntExpiryHours
 	options.Customizations.DisableServerEvents = defaults.DisableServerEvents
 	options.Customizations.DisableQuarantineButton = defaults.DisableQuarantineButton
-	if config_obj.Defaults != nil {
-		options.Customizations.IndexedClientMetadata = config_obj.
-			Defaults.IndexedClientMetadata
-	}
+	options.Customizations.IndexedClientMetadata = defaults.IndexedClientMetadata
 
 	// Specify a default theme if specified in the config file.
 	if options.Theme == "" {
@@ -252,7 +259,6 @@ func setDefaultGUIOptions(
 	if options.Theme == "" {
 		options.Theme = "veloci-light"
 	}
-
 }
 
 func (self *UserStorageManager) loadUserRecrodIntoCache(
@@ -480,8 +486,10 @@ func (self *UserStorageManager) GetUserOptions(ctx context.Context, username str
 
 	if cache.gui_options == nil {
 		cache.gui_options = &api_proto.SetGUIOptionsRequest{}
-		setDefaultGUIOptions(cache.gui_options, self.config_obj)
 	}
+
+	// Enforce the fixed fields
+	setDefaultGUIOptions(cache.gui_options, self.config_obj)
 
 	// Return a copy of the options to preserve the integrity of the cache
 	return proto.Clone(cache.gui_options).(*api_proto.SetGUIOptionsRequest), nil
