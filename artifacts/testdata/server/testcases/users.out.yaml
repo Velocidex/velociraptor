@@ -259,6 +259,8 @@ Output: [
    "theme": "veloci-dark",
    "lang": "fr",
    "default_password": "foobar",
+   "options": "{\n  \"selectionStyle\":\"line\",\n  \"highlightActiveLine\":true,\n  \"highlightSelectedWord\":true,\n  \"copyWithEmptySelection\":false,\n  \"cursorStyle\":\"ace\",\n  \"mergeUndoDeltas\":true,\n  \"behavioursEnabled\":true,\n  \"wrapBehavioursEnabled\":true,\n  \"showLineNumbers\":true,\n  \"relativeLineNumbers\":true,\n  \"hScrollBarAlwaysVisible\":false,\n  \"vScrollBarAlwaysVisible\":false,\n  \"highlightGutterLine\":true,\n  \"animatedScroll\":false,\n  \"showInvisibles\":false,\n  \"showPrintMargin\":true,\n  \"printMarginColumn\":80,\n  \"printMargin\":80,\n  \"fadeFoldWidgets\":false,\n  \"showFoldWidgets\":true,\n  \"displayIndentGuides\":true,\n  \"showGutter\":true,\n  \"fontSize\":15,\n  \"fontFamily\":\"monospace\",\n  \"scrollPastEnd\":0,\n  \"theme\":\"ace/theme/xcode\",\n  \"useTextareaForIME\":true,\n  \"scrollSpeed\":2,\n  \"dragDelay\":0,\n  \"dragEnabled\":true,\n  \"focusTimeout\":0,\n  \"tooltipFollowsMouse\":true,\n  \"firstLineNumber\":1,\n  \"overwrite\":false,\n  \"newLineMode\":\"auto\",\n  \"useSoftTabs\":true,\n  \"navigateWithinSoftTabs\":false,\n  \"tabSize\":2,\n  \"wrap\":\"free\",\n  \"indentedSoftWrap\":true,\n  \"foldStyle\":\"markbegin\",\n  \"enableMultiselect\":true,\n  \"enableBlockSelect\":true,\n  \"enableEmmet\":true,\n  \"enableBasicAutocompletion\":true,\n  \"enableLiveAutocompletion\":true}",
+   "customizations": {},
    "links": [
     {
      "text": "Foobar",
