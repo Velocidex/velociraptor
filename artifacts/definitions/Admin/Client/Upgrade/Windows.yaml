@@ -41,9 +41,25 @@ sources:
 
       // Call the binary and return all its output in a single row.
       // If we fail to download the binary we do not run the command.
+
+      // msiexec needs some random set of commands to really force a
+      // reinstall. We dont know which one will be correct at runtime so
+      // we just try them all. If we succeed then the client will get
+      // killed and restarted.
       SELECT * FROM foreach(row=bin,
       query={
+       SELECT * FROM chain(a={
          SELECT * FROM execve(
               argv=["msiexec.exe", "/i", Dest, "/q", "REINSTALL=ALL", "REINSTALLMODE=A"],
               length=10000000)
+
+       }, b={
+         SELECT * FROM execve(
+              argv=["msiexec.exe", "/i", Dest, "/q"], length=10000000)
+
+       }, c={
+         SELECT * FROM execve(
+              argv=["msiexec.exe", "/f", "/i", Dest, "/q"], length=10000000)
+
+       })
       })

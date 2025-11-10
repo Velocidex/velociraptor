@@ -1,0 +1,72 @@
+Parameters:
+# Generate these gpg key pairs like this:
+# $ gpg --full-generate-key
+#
+# This will generate a new key with key id - do not protect with a
+# password. The keys below must not be protected with a password.
+#
+# $ gpg --export -a keyid > publickeyname.key
+# $ gpg --export-secret-key -a keyid > privatekeyname.key
+#
+
+  Private:  |
+    -----BEGIN PGP PRIVATE KEY BLOCK-----
+
+    lQHYBGkR20UBBADe1btZ9EbycqDgBLCbET1Hofi5AjiYBEBTPAo4XQZ5eVNmUEIJ
+    FvLZHIvq+23utvwe+3uTfMm7yZS1Xm5LldTvc+HCEKqw4QWaEoWAid97M+rk9lha
+    I6jIFWUJjP2mQx+OYrk4DY1bkjKPwwJGSy2cBtR2irNjgUQIEWA0EQw7IQARAQAB
+    AAP9Hf9q0cDDPkc1JgMrnSx0cey5lXpZkQldeXcHLzBCu16cXhUm1p9qwNSJd3Ay
+    i+TBSxBywdeWNrv703Cra2x3tiYhuDxKfG1GFlL8lXIskKveOWo6UMlnKugi7qlO
+    WFs6gf358WU+NuDykB4WI34GjYKqGlCSQk4YdDGljjfF24MCAOMexG6JlIIBjjnl
+    rCNhvATPfzYmhZ1zhCxyKUBfQSWQJRsa+Soi5McjPos+uHrl9r7SsVZPgIUwNjLH
+    u66dXdMCAPsreCQ/lilKe0SrtsgEHPuEsOBeFIsVjjaD3TO8mL+jFAO8RGVoV5/i
+    eFP5p0GpUJqsGVzSpaXGMRII9R4rRrsCAN58OnJ11cJPgIPKfEwCyg1LlPqGNmuD
+    KFkNbqgiAX4xuQp1qyGzPlAcFU0PBH15VSOb9ZDMkkw+fBDaJDDo8wCSeLQFbm9v
+    bmWIzgQTAQoAOBYhBAtG/FNBQhx3doMdQfo24shLxn0fBQJpEdtFAhsDBQsJCAcC
+    BhUKCQgLAgQWAgMBAh4BAheAAAoJEPo24shLxn0fCxkD/0MOrLYF9/axlNaAE8sn
+    rAQJXX429nrWKceHQ7AJU1fVNRPzv5lRLkXr/TcNJ8TeXPHakHLbIduDT2Yjtg0g
+    VXJkdxxkkjinjiopGq4ar+7BgIU1DgOknkLPW0vRWQWsDEtomFWJ9qQemcJhCDEE
+    xPegPMIUmF1IqH3UraDKyv54nQHYBGkR20UBBACXwdDt54TrrH86lNUS98CqVKDs
+    /oRCQPI6qR5osj1Nj44H4Pjsn1Md01zurO9O3K3gBYbPr8MCr0io7lh1fuNhLrkZ
+    4KGNcwiLlwJhflNPLOwBgCnbWNbeEYCizuF0kfz46Aw2xJLU6uBZs/Z1sVNK8Nzo
+    qDclJCeEx03nsJ05AwARAQABAAP9Gg3M5GNIpzt8tl6B/FkrqzKPVFDX/RXwYFDT
+    py7epne8by7ZHaq21tqITHPFPBlYAquAOxzWUposU9BjwHxR5gQzO6vuIQgPvjdR
+    TDuS68bU9DVL8TFiK1DsuG/wc3XKcfYTdD7Wu8XBLB6GTi4z0kqFosyC4n4458jr
+    lgRPs6ECAMIxTcxP4IOMDi6un2SwDYKksQys9BQbI0Ocln+KShu/xIIxOB2YNqT8
+    mMy/JgM3I/BJnMorU3z8/PVHhiQKIWECAMgO5KjlxcbjuR7Br5UfoAxZGxc8AIcb
+    Bit7g8efzjqhL1W/o45N6acCkx7hvufYLelEXzcMw1nAw+nt7GvloOMB/0rJkXbY
+    v/AP+O7v/GTb41afcSa+N6LavTyh67U2JXdyZ9sU7R+G6NrfGiGz/cGvPy6igA3s
+    4waFLXEuQsVSTgCjF4i2BBgBCgAgFiEEC0b8U0FCHHd2gx1B+jbiyEvGfR8FAmkR
+    20UCGwwACgkQ+jbiyEvGfR9TRAQAqAs9/0P14nmLa7pKVPWgo3OcmBaCUpDLpgky
+    BP3vzb5GVPWccQdXVLKAcf6zYu9JxgrbmCv9R04Xk8VdcONlc05T7/ET4jKpoxE6
+    DHRKKg4SMuK0p/WMWtmwLNFjYr+HGotReSttQ2ePLZNDQpHI9yfvkwbgVXesc7wK
+    Am+qPOA=
+    =0BXw
+    -----END PGP PRIVATE KEY BLOCK-----
+
+  Public: |
+    -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+    mI0EaRHbRQEEAN7Vu1n0RvJyoOAEsJsRPUeh+LkCOJgEQFM8CjhdBnl5U2ZQQgkW
+    8tkci+r7be62/B77e5N8ybvJlLVebkuV1O9z4cIQqrDhBZoShYCJ33sz6uT2WFoj
+    qMgVZQmM/aZDH45iuTgNjVuSMo/DAkZLLZwG1HaKs2OBRAgRYDQRDDshABEBAAG0
+    BW5vb25liM4EEwEKADgWIQQLRvxTQUIcd3aDHUH6NuLIS8Z9HwUCaRHbRQIbAwUL
+    CQgHAgYVCgkICwIEFgIDAQIeAQIXgAAKCRD6NuLIS8Z9HwsZA/9DDqy2Bff2sZTW
+    gBPLJ6wECV1+NvZ61inHh0OwCVNX1TUT87+ZUS5F6/03DSfE3lzx2pBy2yHbg09m
+    I7YNIFVyZHccZJI4p44qKRquGq/uwYCFNQ4DpJ5Cz1tL0VkFrAxLaJhVifakHpnC
+    YQgxBMT3oDzCFJhdSKh91K2gysr+eLiNBGkR20UBBACXwdDt54TrrH86lNUS98Cq
+    VKDs/oRCQPI6qR5osj1Nj44H4Pjsn1Md01zurO9O3K3gBYbPr8MCr0io7lh1fuNh
+    LrkZ4KGNcwiLlwJhflNPLOwBgCnbWNbeEYCizuF0kfz46Aw2xJLU6uBZs/Z1sVNK
+    8NzoqDclJCeEx03nsJ05AwARAQABiLYEGAEKACAWIQQLRvxTQUIcd3aDHUH6NuLI
+    S8Z9HwUCaRHbRQIbDAAKCRD6NuLIS8Z9H1NEBACoCz3/Q/XieYtrukpU9aCjc5yY
+    FoJSkMumCTIE/e/NvkZU9ZxxB1dUsoBx/rNi70nGCtuYK/1HTheTxV1w42VzTlPv
+    8RPiMqmjEToMdEoqDhIy4rSn9Yxa2bAs0WNiv4cai1F5K21DZ48tk0NCkcj3J++T
+    BuBVd6xzvAoCb6o84A==
+    =GMhX
+    -----END PGP PUBLIC KEY BLOCK-----
+
+Queries:
+  # This will be different each time but the same length.
+  - LET Crypted <= pk_encrypt(data="Hello world", public_key=Public, scheme="pgp")
+  - SELECT len(list=Crypted), str(str=pk_decrypt(data=Crypted, private_key=Private, scheme="pgp"))
+    FROM scope()
