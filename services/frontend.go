@@ -62,6 +62,10 @@ func IsMaster(config_obj *config_proto.Config) bool {
 	return true
 }
 
+func IsClient(config_obj *config_proto.Config) bool {
+	return config_obj.Frontend == nil
+}
+
 func IsMinion(config_obj *config_proto.Config) bool {
 	return !IsMaster(config_obj)
 }

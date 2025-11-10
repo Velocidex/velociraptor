@@ -57,6 +57,7 @@ func (self *Compress) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	// Are we allowed to write there?
 	err = file.CheckPath(arg.Path)
 	if err != nil {
 		scope.Log("compress: %s", err.Error())

@@ -63,6 +63,8 @@ type BackupStat struct {
 
 	// Which org owns this backup service.
 	OrgId string
+
+	Warnings []string
 }
 
 type BackupRestoreOptions struct {

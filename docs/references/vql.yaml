@@ -455,7 +455,12 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: backup_restore
-  description: Restore state from a backup file.
+  description: |
+    Restore state from a backup file.
+
+    Note that the backups file can only reside in the file store under
+    the `<filestor>/backups` directory.
+
   type: Plugin
   args:
   - name: name
