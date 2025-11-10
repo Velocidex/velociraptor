@@ -71,3 +71,8 @@ Queries:
 # Test multiple URLs: First URL will fail but next one will work.
 - SELECT Url, Response FROM http_client(
     url=["http://localhost:232/sdfsd", "secret://httpbin"])
+
+# Cleanup
+- SELECT secret_modify(type="HTTP Secrets", name="httpbinAPIs", delete=TRUE),
+         secret_modify(type="HTTP Secrets", name="httpbin", delete=TRUE)
+  FROM scope()

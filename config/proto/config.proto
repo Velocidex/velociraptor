@@ -1429,6 +1429,9 @@ message Security {
     // e.g. /nonexistent/ .
     repeated string allowed_file_accessor_prefix = 1;
 
+    // Deny takes precedent over allow.
+    repeated string denied_file_accessor_prefix = 59;
+
     // A list of prefixes allowed for the fs accessor. All other
     // prefixes will be rejected. The default is:
     // - artifact_definitions

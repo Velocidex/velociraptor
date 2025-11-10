@@ -160,6 +160,8 @@ func (self *NotebookStoreImpl) SetNotebookCell(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	in.NotebookId = notebook_id
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -327,6 +329,10 @@ func (self *NotebookStoreImpl) GetNotebookCell(
 	notebook_cell := &api_proto.NotebookCell{}
 	err = db.GetSubject(self.config_obj, notebook_path_manager.Path(),
 		notebook_cell)
+
+	// Ensure the cell carries its owner ID.
+	notebook_cell.NotebookId = notebook_id
+
 	return notebook_cell, err
 }
 
