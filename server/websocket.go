@@ -361,7 +361,6 @@ func ws_send_client_messages(
 			for {
 				deadline := utils.Now().Add(http_comms.PongPeriod(config_obj))
 				_, _, err = ws.NextReaderWithDeadline(deadline)
-				fmt.Printf("NextReaderWithDeadline %v\n", err)
 				if err != nil {
 					return
 				}

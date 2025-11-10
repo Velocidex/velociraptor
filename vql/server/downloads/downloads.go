@@ -822,7 +822,8 @@ func createHuntDownloadFile(
 		defer zip_writer.Close()
 
 		err = zip_writer.WriteJSON(
-			paths.ZipPathFromFSPathSpec(path_specs.NewUnsafeFilestorePath().AddChild("hunt_info")),
+			paths.ZipPathFromFSPathSpec(
+				path_specs.NewUnsafeFilestorePath().AddChild("hunt_info")),
 			hunt_details)
 		if err != nil {
 			return
@@ -911,7 +912,8 @@ func generateCombinedResults(
 		path_manager := path_specs.NewUnsafeFilestorePath(
 			"results", "All "+artifact_source)
 
-		json_writer, csv_writer := getWriters(path_manager, format, zip_writer)
+		json_writer, csv_writer := getWriters(
+			path_manager, format, zip_writer)
 		defer maybeClose(json_writer)
 		defer maybeClose(csv_writer)
 
