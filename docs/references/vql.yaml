@@ -448,6 +448,8 @@
     description: The name of the backup file.
     required: true
   category: server
+  metadata:
+    permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -460,7 +462,6 @@
 
     Note that the backups file can only reside in the file store under
     the `<filestor>/backups` directory.
-
   type: Plugin
   args:
   - name: name
@@ -475,6 +476,8 @@
     type: string
     description: If provided only restore providers matching this regex.
   category: server
+  metadata:
+    permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4254,7 +4257,6 @@
     This only works in notebooks! In an artifact definition this
     statement is not needed, since you can always add the dependent
     artifact to the `imports` section.
-
   type: Function
   args:
   - name: artifact
@@ -4312,7 +4314,6 @@
 
     Combine this function with the hunt_add() function to add a
     manual offline collection to an ongoing hunt.
-
   type: Function
   args:
   - name: client_id
@@ -4403,7 +4404,6 @@
       environment variable), in which case we report the
       `Architecture` as `wow64`. Note that this configuration is not
       supported and may lead to crashes and undetermined behavior!
-
   type: Plugin
   category: popular
   metadata:
@@ -6196,7 +6196,6 @@
 
     SELECT * FROM glob(globs='*', accessor="overlay")
     ```
-
   type: Accessor
   args:
   - name: paths
@@ -9199,8 +9198,6 @@
     child orgs they need to use the VQL function
     secret_modify(delete=TRUE) to truly delete the secret in the child
     org context (see the query() plugin to switch org contexts).
-
-
   type: Function
   args:
   - name: name
@@ -9221,6 +9218,17 @@
   - name: remove_users
     type: string
     description: A list of users to remove from the secret
+    repeated: true
+  - name: visible_to_all_orgs
+    type: bool
+    description: If set we make the secret visible to all orgs
+  - name: add_orgs
+    type: string
+    description: A list of orgs to add to the secret
+    repeated: true
+  - name: remove_orgs
+    type: string
+    description: A list of orgs to remove from the secret
     repeated: true
   category: server
   metadata:
@@ -9845,7 +9853,6 @@
   - name: url
     type: string
     description: The Splunk Event Collector URL.
-    required: true
   - name: token
     type: string
     description: Splunk HEC Token.
@@ -9853,7 +9860,6 @@
     type: string
     description: The name of the index to upload to. If not specified, ensure a column
       is named _splunk_index.
-    required: true
   - name: source
     type: string
     description: The source field for splunk. If not specified ensure a column is
@@ -9887,7 +9893,7 @@
   - name: secret
     type: string
     description: Alternatively use a secret from the secrets service. Secret must
-      be of type 'AWS S3 Creds'
+      be of type 'Splunk'
   metadata:
     permissions: NETWORK
   platforms:
@@ -10990,7 +10996,7 @@
 - name: upload_s3
   description: Upload files to S3.
   type: Function
-  version: 2
+  version: 3
   args:
   - name: file
     type: accessors.OSPath
@@ -11033,6 +11039,9 @@
   - name: skip_verify
     type: bool
     description: Skip TLS Verification
+  - name: path_style
+    type: bool
+    description: Use path style URLs if set
   - name: secret
     type: string
     description: Alternatively use a secret from the secrets service. Secret must
@@ -12672,3 +12681,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+
