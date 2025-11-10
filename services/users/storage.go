@@ -201,6 +201,60 @@ func (self *UserStorageManager) notifyChanges(
 		"Server.Internal.UserManager", "server", "")
 }
 
+func setDefaultGUIOptions(
+	options *api_proto.SetGUIOptionsRequest,
+	config_obj *config_proto.Config) {
+	if options.Options == "" {
+		// If the record is not found we need to create one from scratch.
+		options.Options = default_user_options
+	}
+
+	// Add any links in the config file to the user's preferences.
+	if config_obj.GUI != nil {
+		options.Links = MergeGUILinks(options.Links, config_obj.GUI.Links)
+	}
+
+	// Add the defaults.
+	options.Links = MergeGUILinks(options.Links, DefaultLinks)
+
+	// NOTE: It is possible for a user to disable one of the default
+	// targets by simply adding an entry with disabled: true - we will
+	// not override the configured link from the default and it will
+	// be ignored.
+
+	defaults := &config_proto.Defaults{}
+	if config_obj.Defaults != nil {
+		defaults = config_obj.Defaults
+	}
+
+	// Deprecated - moved to customizations
+	options.DisableServerEvents = defaults.DisableServerEvents
+	options.DisableQuarantineButton = defaults.DisableQuarantineButton
+
+	if options.Customizations == nil {
+		options.Customizations = &api_proto.GUICustomizations{}
+	}
+
+	options.Customizations.HuntExpiryHours = defaults.HuntExpiryHours
+	options.Customizations.DisableServerEvents = defaults.DisableServerEvents
+	options.Customizations.DisableQuarantineButton = defaults.DisableQuarantineButton
+	if config_obj.Defaults != nil {
+		options.Customizations.IndexedClientMetadata = config_obj.
+			Defaults.IndexedClientMetadata
+	}
+
+	// Specify a default theme if specified in the config file.
+	if options.Theme == "" {
+		options.Theme = defaults.DefaultTheme
+	}
+
+	// Default theme if not set is veloci-light
+	if options.Theme == "" {
+		options.Theme = "veloci-light"
+	}
+
+}
+
 func (self *UserStorageManager) loadUserRecrodIntoCache(
 	ctx context.Context, username string) (*_CachedUserObject, error) {
 	path_manager := paths.UserPathManager{Name: username}
@@ -222,49 +276,7 @@ func (self *UserStorageManager) loadUserRecrodIntoCache(
 		options = &api_proto.SetGUIOptionsRequest{}
 	}
 
-	if options.Options == "" {
-		// If the record is not found we need to create one from scratch.
-		options.Options = default_user_options
-	}
-
-	// Add any links in the config file to the user's preferences.
-	if self.config_obj.GUI != nil {
-		options.Links = MergeGUILinks(options.Links, self.config_obj.GUI.Links)
-	}
-
-	// Add the defaults.
-	options.Links = MergeGUILinks(options.Links, DefaultLinks)
-
-	// NOTE: It is possible for a user to disable one of the default
-	// targets by simply adding an entry with disabled: true - we will
-	// not override the configured link from the default and it will
-	// be ignored.
-
-	defaults := &config_proto.Defaults{}
-	if self.config_obj.Defaults != nil {
-		defaults = self.config_obj.Defaults
-	}
-
-	// Deprecated - moved to customizations
-	options.DisableServerEvents = defaults.DisableServerEvents
-	options.DisableQuarantineButton = defaults.DisableQuarantineButton
-
-	if options.Customizations == nil {
-		options.Customizations = &api_proto.GUICustomizations{}
-	}
-
-	options.Customizations.HuntExpiryHours = defaults.HuntExpiryHours
-	options.Customizations.DisableServerEvents = defaults.DisableServerEvents
-	options.Customizations.DisableQuarantineButton = defaults.DisableQuarantineButton
-	if self.config_obj.Defaults != nil {
-		options.Customizations.IndexedClientMetadata = self.config_obj.
-			Defaults.IndexedClientMetadata
-	}
-
-	// Specify a default theme if specified in the config file.
-	if options.Theme == "" {
-		options.Theme = defaults.DefaultTheme
-	}
+	setDefaultGUIOptions(options, self.config_obj)
 
 	return &_CachedUserObject{
 		user_record: user_record,
@@ -364,6 +376,8 @@ func (self *UserStorageManager) SetUserOptions(ctx context.Context,
 	if old_options == nil {
 		old_options = &api_proto.SetGUIOptionsRequest{}
 	}
+
+	setDefaultGUIOptions(old_options, self.config_obj)
 
 	// For now we do not allow the user to set the links in their
 	// profile.
@@ -466,6 +480,7 @@ func (self *UserStorageManager) GetUserOptions(ctx context.Context, username str
 
 	if cache.gui_options == nil {
 		cache.gui_options = &api_proto.SetGUIOptionsRequest{}
+		setDefaultGUIOptions(cache.gui_options, self.config_obj)
 	}
 
 	// Return a copy of the options to preserve the integrity of the cache
