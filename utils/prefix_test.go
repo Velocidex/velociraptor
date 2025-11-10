@@ -7,7 +7,7 @@ import (
 )
 
 func TestPrefix(t *testing.T) {
-	tree := NewPrefixTree()
+	tree := NewPrefixTree(true)
 	tree.Add([]string{"C:", "Windows"})
 	tree.Add([]string{"C:", "Users"})
 
