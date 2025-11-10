@@ -1,0 +1,12 @@
+# This will be different each time but the same length.
+Query: LET Crypted <= pk_encrypt(data="Hello world", public_key=Public, scheme="pgp")
+Output: []
+
+Query: SELECT len(list=Crypted), str(str=pk_decrypt(data=Crypted, private_key=Private, scheme="pgp")) FROM scope()
+Output: [
+ {
+  "len(list=Crypted)": 211,
+  "str(str=pk_decrypt(data=Crypted, private_key=Private, scheme=\"pgp\"))": "Hello world"
+ }
+]
+
