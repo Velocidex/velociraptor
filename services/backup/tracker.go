@@ -35,6 +35,12 @@ func (self *BackupService) ProfileWriter(
 		return t.UTC().Round(time.Second).Format(time.RFC3339)
 	}
 
+	for _, r := range self.registrations {
+		output_chan <- ordereddict.NewDict().
+			Set("Prvovider", r.ProviderName()).
+			Set("Name", r.Name())
+	}
+
 	now := utils.GetTime().Now()
 
 	output_chan <- ordereddict.NewDict().

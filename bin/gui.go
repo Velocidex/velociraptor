@@ -83,6 +83,12 @@ func generateGUIConfig(datastore_directory, server_config_path, client_config_pa
 	config_obj.Datastore.Location = datastore_directory
 	config_obj.Datastore.FilestoreDirectory = datastore_directory
 
+	// By default prevent direct access to the filestore - Use the
+	// "fs" accessor.
+	config_obj.Security.DeniedFileAccessorPrefix = []string{
+		datastore_directory,
+	}
+
 	// Make events run much faster in this configuration
 	config_obj.Defaults.EventMaxWait = 1
 	config_obj.Defaults.EventMaxWaitJitter = 1

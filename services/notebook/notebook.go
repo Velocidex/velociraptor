@@ -82,6 +82,10 @@ func (self *NotebookManager) NewNotebook(
 		in.NotebookId = NewNotebookId()
 	}
 
+	if in.NotebookId == "" {
+		in.NotebookId = NewNotebookId()
+	}
+
 	err := self.Store.SetNotebook(in)
 	if err != nil {
 		return nil, err
@@ -285,6 +289,15 @@ func NewNotebookManagerService(
 		annotator,
 		NewAttachmentManager(config_obj, store),
 	)
+
+	// Global Notebooks can be backed up.
+	backup_service, err := services.GetBackupService(config_obj)
+	if err == nil {
+		backup_service.Register(&NotebookBackupProvider{
+			notebook_manager: notebook_service,
+			config_obj:       config_obj,
+		})
+	}
 
 	return notebook_service, notebook_service.Start(ctx, config_obj, wg)
 }
