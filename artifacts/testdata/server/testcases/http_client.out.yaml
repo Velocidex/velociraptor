@@ -112,3 +112,12 @@ Output: [
  }
 ]
 
+# Cleanup
+Query: SELECT secret_modify(type="HTTP Secrets", name="httpbinAPIs", delete=TRUE), secret_modify(type="HTTP Secrets", name="httpbin", delete=TRUE) FROM scope()
+Output: [
+ {
+  "secret_modify(type=\"HTTP Secrets\", name=\"httpbinAPIs\", delete=TRUE)": "httpbinAPIs",
+  "secret_modify(type=\"HTTP Secrets\", name=\"httpbin\", delete=TRUE)": "httpbin"
+ }
+]
+

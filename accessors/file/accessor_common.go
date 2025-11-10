@@ -259,6 +259,12 @@ func (self OSFileSystemAccessor) Lstat(filename string) (accessors.FileInfo, err
 	return self.LstatWithOSPath(full_path)
 }
 
+// On Windows filesystems are usually case insensitive.
+func (self OSFileSystemAccessor) GetCanonicalFilename(
+	path *accessors.OSPath) string {
+	return path.String()
+}
+
 func (self OSFileSystemAccessor) LstatWithOSPath(
 	full_path *accessors.OSPath) (accessors.FileInfo, error) {
 

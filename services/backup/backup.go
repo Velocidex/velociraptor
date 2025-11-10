@@ -141,6 +141,8 @@ func (self *BackupService) CreateBackup(
 			return stats, err
 		}
 
+		// Ask all the other orgs to also write their backups in this
+		// container.
 		for _, org := range org_manager.ListOrgs() {
 			backup, err := org_manager.Services(org.Id).BackupService()
 			if err != nil {
@@ -178,7 +180,8 @@ func (self *BackupService) writeBackups(
 	for _, provider := range self.registrations {
 		dest := strings.Join(append([]string{prefix}, provider.Name()...), "/")
 		stat := services.BackupStat{
-			Name: provider.ProviderName(),
+			Name:  provider.ProviderName(),
+			OrgId: utils.GetOrgId(self.config_obj),
 		}
 
 		rows, err := provider.BackupResults(self.ctx, self.wg, container)
@@ -257,6 +260,7 @@ func (self *BackupService) RestoreBackup(
 				dest, err)
 			stat.Name = provider.ProviderName()
 			stat.Error = err
+			stat.OrgId = utils.GetOrgId(self.config_obj)
 		}
 		stats = append(stats, stat)
 	}
