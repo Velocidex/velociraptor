@@ -492,21 +492,25 @@ func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 		}
 
 		// No client id - create one based on the host id
-		host_id, pres := host_info.GetString("HostID")
-		if pres {
-			// Make the client id based on the host id. This is used
-			// to ensure that the client id is consistent each time
-			// the offline collector is run on the same endpoint.
-			client_id = "C." + strings.TrimPrefix(host_id, "C.")
+		if client_id == "" {
+			host_id, pres := host_info.GetString("HostID")
+			if pres {
+				// Make the client id based on the host id. This is used
+				// to ensure that the client id is consistent each time
+				// the offline collector is run on the same endpoint.
+				client_id = "C." + strings.TrimPrefix(host_id, "C.")
+			}
 		}
 
-		scope.Log(
-			"Found client_info.json file in collection: "+
-				"Using client id '%v' and hostname '%v'",
-			client_id, hostname)
+		if client_id != "" {
+			scope.Log(
+				"Found client_info.json file in collection: "+
+					"Using client id '%v' and hostname '%v'",
+				client_id, hostname)
 
-		return client_id, self.ensureClientId(
-			ctx, scope, config_obj, client_id, hostname)
+			return client_id, self.ensureClientId(
+				ctx, scope, config_obj, client_id, hostname)
+		}
 	}
 
 	// If we get here the collection does not have a client_info.json
