@@ -244,14 +244,17 @@ func (self ImportCollectionFunction) importFlow(
 		collection_context = details.Context
 	}
 
-	if client_id == "auto" || client_id == "" {
-		client_id, err = self.getClientIdFromHostnameOrCollection(
-			ctx, scope, config_obj, hostname, root, accessor)
-		if err != nil {
-			return nil, err
-		}
+	if client_id == "auto" {
+		client_id = ""
 	}
 
+	client_id, err = self.getClientIdFromHostnameOrCollection(
+		ctx, scope, config_obj, client_id, hostname, root, accessor)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update the collection_context to refer to the new client id
 	collection_context.ClientId = client_id
 
 	launcher, err := services.GetLauncher(config_obj)
@@ -401,10 +404,46 @@ func (self ImportCollectionFunction) importHuntObject(
 	return hunt.HuntId, err
 }
 
+// Ensure the client record exists, if not create it.
+func (self ImportCollectionFunction) ensureClientId(
+	ctx context.Context,
+	scope vfilter.Scope,
+	config_obj *config_proto.Config,
+	client_id string,
+	hostname string) error {
+
+	// Check if the client is already known.
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		return err
+	}
+
+	// Check to see if we know about this client id. If we do
+	// then just return the same client id as in the
+	// container.
+	_, err = client_info_manager.Get(ctx, client_id)
+	if err == nil {
+		return nil
+	}
+
+	// If we get here we dont know the client so we just create a
+	// new one with this client id
+
+	// Client is not known, create it.
+	clients.NewClientFunction{}.Call(ctx, scope, ordereddict.NewDict().
+		Set("client_id", client_id).
+		Set("first_seen_at", time.Now()).
+		Set("last_seen_at", time.Now()).
+		Set("hostname", hostname))
+
+	return nil
+}
+
 func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 	ctx context.Context,
 	scope types.Scope,
 	config_obj *config_proto.Config,
+	client_id string,
 	hostname string,
 	root *accessors.OSPath,
 	accessor accessors.FileSystemAccessor) (string, error) {
@@ -414,23 +453,22 @@ func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 	path := root.Append("client_info.json")
 	err := self.getFile(accessor, path, host_info)
 	if err == nil {
-		// Check if the client is already known.
-		client_info_manager, err := services.GetClientInfoManager(config_obj)
-		if err != nil {
-			return "", err
-		}
-
 		// Override the hostname with the one in the collection.
 		collection_hostname, pres := host_info.GetString("hostname")
 		if pres {
 			hostname = collection_hostname
 		}
 
-		client_id, pres := host_info.GetString("client_id")
+		// Honor the caller's client id over the client id stored in
+		// the collection.
+		if client_id == "" {
+			client_id, _ = host_info.GetString("client_id")
+		}
 
 		// We dont know this client id - Search for a client id we do
-		// know, that has the same hostname.
-		if !pres && hostname != "" {
+		// know, that has the same hostname. This happens in importing
+		// the offline collection which does not contain a client id.
+		if client_id == "" && hostname != "" {
 			indexer, err := services.GetIndexer(config_obj)
 			if err != nil {
 				return "", err
@@ -438,9 +476,11 @@ func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 
 			scope.Log("Searching for a client id with hostname '%v'", hostname)
 
-			// Search for an existing client with the same hostname
 			search_resp, err := indexer.SearchClients(ctx, config_obj,
-				&api_proto.SearchClientsRequest{Query: "host:" + hostname}, "")
+				&api_proto.SearchClientsRequest{
+					Query: "host:" + hostname,
+				}, "")
+
 			if err == nil {
 				for _, resp := range search_resp.Items {
 					if strings.EqualFold(resp.OsInfo.Hostname, hostname) {
@@ -460,61 +500,24 @@ func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 			client_id = "C." + strings.TrimPrefix(host_id, "C.")
 		}
 
-		// Check to see if we know about this client id. If we do
-		// then just return the same client id as in the
-		// container.
-		_, err = client_info_manager.Get(ctx, client_id)
-		if err == nil {
-			return client_id, nil
-		}
+		scope.Log(
+			"Found client_info.json file in collection: "+
+				"Using client id '%v' and hostname '%v'",
+			client_id, hostname)
 
-		// If we get here we dont know the client so we just create a
-		// new one with this client id
-		_, err = client_info_manager.Get(ctx, client_id)
-		if err != nil {
-			if hostname == "" {
-				hostname, _ = host_info.GetString("Hostname")
-			}
-
-			// Client is not known, create it.
-			clients.NewClientFunction{}.Call(ctx, scope, ordereddict.NewDict().
-				Set("client_id", client_id).
-				Set("first_seen_at", time.Now()).
-				Set("last_seen_at", time.Now()).
-				Set("hostname", hostname))
-
-			scope.Log(
-				"Found client_info.json file in collection: Creating client id '%v' and hostname '%v'",
-				client_id, hostname)
-
-		} else {
-
-			scope.Log(
-				"Found client_info.json file in collection: With client id %v and hostname %v",
-				client_id, hostname)
-		}
-		return client_id, nil
+		return client_id, self.ensureClientId(
+			ctx, scope, config_obj, client_id, hostname)
 	}
 
-	// Create a new client with a random client id
-	res := clients.NewClientFunction{}.Call(ctx, scope, ordereddict.NewDict().
-		Set("first_seen_at", time.Now()).
-		Set("last_seen_at", time.Now()).
-		Set("hostname", hostname))
-	if !utils.IsNil(res) {
-		client_id_any, pres := scope.Associative(res, "client_id")
-		if pres {
-			client_id, ok := client_id_any.(string)
-			if ok {
-				scope.Log("Creating a new client with id '%v'", client_id)
-				return client_id, nil
-			}
-		}
+	// If we get here the collection does not have a client_info.json
+	// file - this should not happen unless the collection is very
+	// old!
+	if client_id == "" {
+		client_id = clients.NewClientId()
+		scope.Log("Creating a new client id '%v'", client_id)
 	}
-
-	client_id := clients.NewClientId()
-	scope.Log("Creating a new client id '%v'", client_id)
-	return client_id, nil
+	return client_id, self.ensureClientId(
+		ctx, scope, config_obj, client_id, hostname)
 }
 
 func (self ImportCollectionFunction) checkClientIdExists(
