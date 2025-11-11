@@ -40,11 +40,11 @@ sources:
                               Path=serialize(item=Regions(Pid=Pid).Sparse),
                               DelegateAccessor="process",
                               DelegatePath=format(format="/%d", args=Pid)),
-                              name=pathspec(Path=format(format="%d.dd", args=Pid))) AS ProcessMemory
+                              name=pathspec(Path=format(format="%d_%s.dmp", args=[Pid,ProcessName]))) AS ProcessMemory
              FROM scope()
           }, else={
             SELECT ProcessName, CommandLine, Pid, OSPath,
-                   upload(file=OSPath) as CrashDump
+                   upload(file=OSPath,name=format(format="%d_%s.dmp", args=[Pid,ProcessName])) as CrashDump
             FROM proc_dump(pid=Pid)
           })
 
