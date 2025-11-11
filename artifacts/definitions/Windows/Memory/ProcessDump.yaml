@@ -40,7 +40,7 @@ sources:
                               Path=serialize(item=Regions(Pid=Pid).Sparse),
                               DelegateAccessor="process",
                               DelegatePath=format(format="/%d", args=Pid)),
-                              name=pathspec(Path=format(format="%d_%s.dmp", args=[Pid,ProcessName]))) AS ProcessMemory
+                              name=pathspec(Path=format(format="%d_%s.dd", args=[Pid,ProcessName]))) AS ProcessMemory
              FROM scope()
           }, else={
             SELECT ProcessName, CommandLine, Pid, OSPath,
