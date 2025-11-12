@@ -1445,6 +1445,7 @@ message Security {
     //
     // to allow all access set this to "/"
     repeated string allowed_fs_accessor_prefix = 2;
+    repeated string denied_fs_accessor_prefix = 60;
 
     // If these are set we enforce VQL to only have the specified
     // allowed VQL plugins and functions. This is a way to harden the
