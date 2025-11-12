@@ -187,10 +187,7 @@ func GetDefaultConfig() *config_proto.Config {
 			HuntExpiryHours:        24 * 7,
 			NotebookCellTimeoutMin: 10,
 		},
-		Security: &config_proto.Security{
-			// By default prevent direct access to the filestore.
-			DeniedFileAccessorPrefix: []string{"/var/tmp/velociraptor/"},
-		},
+		Security: &config_proto.Security{},
 	}
 
 	// The client's version needs to keep in sync with the

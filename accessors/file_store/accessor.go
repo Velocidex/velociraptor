@@ -107,7 +107,7 @@ func (self FileStoreFileSystemAccessor) LstatWithOSPath(filename *accessors.OSPa
 	accessors.FileInfo, error) {
 
 	fullpath := path_specs.FromGenericComponentList(filename.Components)
-	err := isFileAccessible(fullpath)
+	err := IsFileAccessible(fullpath)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +163,7 @@ func (self FileStoreFileSystemAccessor) ReadDirWithOSPath(
 	[]accessors.FileInfo, error) {
 
 	fullpath := path_specs.FromGenericComponentList(filename.Components)
-	err := isFileAccessible(fullpath)
+	err := IsFileAccessible(fullpath)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +185,7 @@ func (self FileStoreFileSystemAccessor) ReadDirWithOSPath(
 	var result []accessors.FileInfo
 	for _, f := range files {
 		child_path := f.PathSpec()
-		err := isFileAccessible(child_path)
+		err := IsFileAccessible(child_path)
 		if err != nil {
 			continue
 		}
@@ -232,7 +232,7 @@ func (self FileStoreFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPat
 		fullpath = path_specs.FromGenericComponentList(filename.Components)
 	}
 
-	err := isFileAccessible(fullpath)
+	err := IsFileAccessible(fullpath)
 	if err != nil {
 		return nil, err
 	}

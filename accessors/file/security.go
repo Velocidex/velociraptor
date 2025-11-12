@@ -11,10 +11,18 @@ import (
 var (
 	mu sync.Mutex
 
-	AllowedPrefixes *utils.PrefixTree
-	DeniedPrefixes  *utils.PrefixTree
+	allowedPrefixes *utils.PrefixTree
+	deniedPrefixes  *utils.PrefixTree
 	DeniedError     = utils.Wrap(acls.PermissionDenied, "No accesss to filesystem path")
 )
+
+func SetPrefixes(allowed *utils.PrefixTree, denied *utils.PrefixTree) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	allowedPrefixes = allowed
+	deniedPrefixes = denied
+}
 
 func CheckPath(full_path string) error {
 	destination_path, err := accessors.NewNativePath(full_path)
@@ -29,22 +37,45 @@ func CheckPrefix(full_path *accessors.OSPath) error {
 	mu.Lock()
 	defer mu.Unlock()
 
+	return CheckAccessForPrefixes(full_path.Components, allowedPrefixes, deniedPrefixes)
+}
+
+func CheckAccessForPrefixes(components []string,
+	allowed *utils.PrefixTree,
+	denied *utils.PrefixTree) error {
+
 	// Check denies first
-	if DeniedPrefixes != nil &&
-		DeniedPrefixes.Present(full_path.Components) {
-		return DeniedError
+	if denied != nil {
+		match, denied_depth := denied.Present(components)
+		if match {
+			// If there is a more specific allow rule, then allow it,
+			// otherwise we deny it.
+			if allowed != nil {
+				match, allowed_depth := allowed.Present(components)
+
+				// If the allowed prefix is longer than the denied prefix,
+				// then allow it.
+				if match && allowed_depth > denied_depth {
+					return nil
+				}
+			}
+			return DeniedError
+		}
 	}
 
 	// All files are allowed
-	if AllowedPrefixes == nil {
+	if allowed == nil {
 		return nil
 	}
 
-	if len(full_path.Components) == 0 {
+	if len(components) == 0 {
 		return nil
 	}
 
-	if AllowedPrefixes.Present(full_path.Components) {
+	// There is only an AllowedPrefixes and no deny prefix, this means
+	// we deny anything not inside the AllowedPrefixes.
+	match, _ := allowed.Present(components)
+	if match {
 		return nil
 	}
 
