@@ -326,6 +326,7 @@ func mergeSecret(ctx context.Context, scope vfilter.Scope, arg *S3UploadArgs) er
 	arg.Endpoint = s.GetString("endpoint")
 	arg.ServerSideEncryption = s.GetString("serverside_encryption")
 	arg.KmsEncryptionKey = s.GetString("kms_encryption_key")
+	arg.UsePathStyle = s.GetBool("path_style")
 
 	return nil
 }
