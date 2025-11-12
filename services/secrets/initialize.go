@@ -28,6 +28,7 @@ var (
 			"endpoint",
 			"serverside_encryption",
 			"kms_encryption_key",
+			"path_style",
 		},
 		Template: map[string]string{
 			"region": "us-east-1",
