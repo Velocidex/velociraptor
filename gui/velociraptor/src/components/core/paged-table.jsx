@@ -1510,7 +1510,9 @@ class VeloPagedTable extends Component {
     renderTable = ()=>{
         return (
             <>
-              <HotKeys keyMap={this.keymap} component={"span"} handlers={this.handlers}>
+              <HotKeys keyMap={this.keymap}
+                       className="table-panel"
+                       component={"div"} handlers={this.handlers}>
                 <Table tabIndex="0" className="paged-table">
                   <thead>
                     <tr className="paged-table-header">
