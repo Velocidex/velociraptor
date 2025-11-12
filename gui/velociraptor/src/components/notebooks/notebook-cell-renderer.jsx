@@ -762,6 +762,23 @@ export default class NotebookCellRenderer extends React.Component {
         let selected = this.props.selected_cell_id &&
             this.state.cell.cell_id === this.props.selected_cell_id;
 
+        let cell_id = this.state.cell.cell_id;
+        let cells = (this.props.notebook_metadata &&
+                     this.props.notebook_metadata.cell_metadata) || [];
+        let pos = 0;
+        // Find the cell position.
+        for(pos=0;pos < cells.length; pos++) {
+            if(cell_id == cells[pos].cell_id) {
+                break;
+            }
+        }
+
+        // If the cell is first it can not go up.
+        let cellCanGoUp = pos !== 0;
+
+        // If the cell is last it can not go down.
+        let cellCanGoDown = pos < cells.length -1 ;
+
         // There are 3 states for the cell:
         // 1. The cell is selected but not being edited: Show the cell manipulation toolbar.
         // 2. The cell is being edited: Show the editing toolbar
@@ -815,7 +832,7 @@ export default class NotebookCellRenderer extends React.Component {
                   </Button>
                 </ToolTip>
                 <ToolTip tooltip={T("Up Cell")}>
-                  <Button disabled={this.props.notebookLocked}
+                  <Button disabled={!cellCanGoUp}
                           onClick={() => {
                               this.props.upCell(this.state.cell.cell_id);
                           }}
@@ -824,7 +841,7 @@ export default class NotebookCellRenderer extends React.Component {
                   </Button>
                 </ToolTip>
                 <ToolTip tooltip={T("Down Cell")}>
-                  <Button disabled={this.props.notebookLocked}
+                  <Button disabled={!cellCanGoDown}
                           onClick={() => {
                               this.props.downCell(this.state.cell.cell_id);
                           }}
