@@ -24,50 +24,65 @@ func (self *SanityChecks) CheckSecuritySettings(
 		case_insensitive = true
 	}
 
+	var allowed_tree, denied_tree *utils.PrefixTree
+
 	if len(config_obj.Security.AllowedFileAccessorPrefix) > 0 {
-		file.AllowedPrefixes = utils.NewPrefixTree(case_insensitive)
+		allowed_tree = utils.NewPrefixTree(case_insensitive)
 		for _, allowed := range config_obj.Security.AllowedFileAccessorPrefix {
 			full_path, err := accessors.NewNativePath(allowed)
 			if err != nil {
 				continue
 			}
 
-			file.AllowedPrefixes.Add(full_path.Components)
+			allowed_tree.Add(full_path.Components)
 		}
 	}
 
 	if len(config_obj.Security.DeniedFileAccessorPrefix) > 0 {
-		file.DeniedPrefixes = utils.NewPrefixTree(case_insensitive)
+		denied_tree = utils.NewPrefixTree(case_insensitive)
 		for _, denied := range config_obj.Security.DeniedFileAccessorPrefix {
 			full_path, err := accessors.NewNativePath(denied)
 			if err != nil {
 				continue
 			}
 
-			file.DeniedPrefixes.Add(full_path.Components)
+			denied_tree.Add(full_path.Components)
 		}
 	}
+
+	// Clear the initial state
+	file.SetPrefixes(allowed_tree, denied_tree)
+
+	// Now handle the fs accessor
+	allowed_tree = nil
+	denied_tree = nil
 
 	// Load default set of FS accessor prefixs
-	if len(config_obj.Security.AllowedFsAccessorPrefix) == 0 {
-		config_obj.Security.AllowedFsAccessorPrefix = []string{
-			"artifact_definitions",
-			"clients",
-			"downloads",
-			"notebooks",
-			"public",
-			"temp",
-			"server_artifacts",
-			"server_artifacts_logs",
+	if len(config_obj.Security.AllowedFsAccessorPrefix) > 0 {
+		allowed_tree = utils.NewPrefixTree(false)
+		for _, allowed := range config_obj.Security.AllowedFileAccessorPrefix {
+			full_path, err := accessors.NewFileStorePath(allowed)
+			if err != nil {
+				continue
+			}
+
+			allowed_tree.Add(full_path.Components)
 		}
 	}
 
-	if file_store.AllowedPrefixes == nil {
-		file_store.AllowedPrefixes = utils.NewPrefixTree(case_insensitive)
+	if len(config_obj.Security.DeniedFsAccessorPrefix) > 0 {
+		denied_tree = utils.NewPrefixTree(false)
+		for _, denied := range config_obj.Security.DeniedFsAccessorPrefix {
+			full_path, err := accessors.NewFileStorePath(denied)
+			if err != nil {
+				continue
+			}
+
+			denied_tree.Add(full_path.Components)
+		}
 	}
-	for _, allowed := range config_obj.Security.AllowedFsAccessorPrefix {
-		file_store.AllowedPrefixes.Add([]string{allowed})
-	}
+
+	file_store.SetPrefixes(allowed_tree, denied_tree)
 
 	// Populate any additional environ vars that need to be shadowed.
 	for _, s := range config_obj.Security.ShadowedEnvVars {

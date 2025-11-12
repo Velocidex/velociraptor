@@ -65,6 +65,10 @@ type DebugStringer interface {
 }
 
 func DebugString(v interface{}) string {
+	if IsNil(v) {
+		return "nil"
+	}
+
 	switch t := v.(type) {
 	case DebugStringer:
 		return t.DebugString()

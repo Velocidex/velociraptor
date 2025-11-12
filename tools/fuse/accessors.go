@@ -28,7 +28,7 @@ type AccessorFuseFS struct {
 
 func (self *AccessorFuseFS) Close() {
 	logger := logging.GetLogger(self.config_obj, &logging.ToolComponent)
-	logger.Info("Fuse: Existing! Dont forget to unmount the filesystem")
+	logger.Info("Fuse: Exiting! Dont forget to unmount the filesystem")
 }
 
 func (self *AccessorFuseFS) add(
