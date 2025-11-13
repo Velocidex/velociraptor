@@ -142,7 +142,7 @@ func runUnzipPrint(builder services.ScopeBuilder) error {
           FROM glob(globs=MemberGlob,
                     root=pathspec(DelegatePath=ZipPath),
                     accessor='collector')
-          WHERE NOT IsDir AND FullPath =~ '.json$'
+          WHERE NOT IsDir AND OSPath =~ '.json$'
        }, query={
            SELECT *
           FROM parse_jsonl(filename=OSPath, accessor='collector')

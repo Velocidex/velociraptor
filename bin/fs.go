@@ -185,7 +185,8 @@ func doLS(path, accessor string) error {
 	query := "SELECT Name, Size, Mode.String AS Mode, Mtime, Data " +
 		"FROM glob(globs=path, accessor=accessor) "
 	if *fs_command_verbose {
-		query = strings.Replace(query, "Name", "FullPath", 1)
+		query = "SELECT OSPath, Size, Mode.String AS Mode, Mtime, Data " +
+			"FROM glob(globs=path, accessor=accessor) "
 	}
 
 	// Special handling for ntfs.
@@ -251,8 +252,8 @@ func doRM(path, accessor string) error {
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
-	query := "SELECT FullPath, Size, Mode.String AS Mode, Mtime, " +
-		"file_store_delete(path=FullPath) AS Deletion " +
+	query := "SELECT OSPath, Size, Mode.String AS Mode, Mtime, " +
+		"file_store_delete(path=OSPath) AS Deletion " +
 		"FROM glob(globs=path, accessor=accessor) "
 
 	err = eval_query(sm.Ctx,
@@ -348,11 +349,11 @@ func doCp(path, accessor string, dump_dir string) error {
 SELECT * from foreach(
   row={
     SELECT Name, Size, Mode.String AS Mode,
-       Mtime, Data, FullPath
+       Mtime, Data, OSPath
     FROM glob(globs=path, accessor=accessor)
   }, query={
      SELECT Name, Size, Mode, Mtime, Data,
-     upload(file=FullPath, accessor=accessor, name=Name) AS Upload
+     upload(file=OSPath, accessor=accessor, name=Name) AS Upload
      FROM scope()
   })`, scope, builder.Env)
 	if err != nil {

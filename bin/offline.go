@@ -18,13 +18,13 @@ import (
 
 var (
 	// Command line interface for VQL commands.
-	collector                   = app.Command("collector", "Build an offline collector")
-	spec_file                   = collector.Arg("spec_file", "A Spec file to use.").String()
-	collector_command_datastore = collector.Flag(
+	collector_cmd               = app.Command("collector", "Build an offline collector")
+	spec_file                   = collector_cmd.Arg("spec_file", "A Spec file to use.").String()
+	collector_command_datastore = collector_cmd.Flag(
 		"datastore", "Path to a datastore directory (defaults to temp)").
 		ExistingDir()
 
-	collector_format = collector.Flag(
+	collector_format = collector_cmd.Flag(
 		"format", "Output format to use (text,json,csv,jsonl).").
 		Default("json").Enum("text", "json", "csv", "jsonl")
 )
@@ -283,8 +283,11 @@ SELECT * FROM if(condition=Spec.OS, then={
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
-		case collector.FullCommand():
-			FatalIfError(collector, doCollector)
+		case collector_cmd.FullCommand():
+			FatalIfError(collector_cmd, doCollector)
+
+		case collector_decrypt.FullCommand():
+			FatalIfError(collector_decrypt, doCollectorDecrypt)
 
 		default:
 			return false
