@@ -156,6 +156,83 @@ func collectorPathToDelegatePath(full_path *accessors.OSPath) *accessors.OSPath 
 	return res
 }
 
+// Attempt to extract the password from the container.
+func ExtractPassword(
+	scope vfilter.Scope,
+	accessor accessors.FileSystemAccessor,
+	full_path *accessors.OSPath) (string, error) {
+
+	// Check if data.zip exists at the top level.
+	root := full_path.Copy()
+	root.Components = nil
+
+	datazip := root.Append("data.zip")
+	_, err := accessor.LstatWithOSPath(datazip)
+	if err != nil {
+		// Nope - no data.zip so do not transform the pathspec.
+		return "", err
+	}
+
+	// Check if metadata.json exists. If so, try to extract password
+	meta := root.Append("metadata.json")
+	mhandle, err := accessor.OpenWithOSPath(meta)
+	if err != nil {
+		// No metadata file is found - this might be a plain
+		// collection zip.
+		return "", err
+	}
+
+	buf, err := utils.ReadAllWithLimit(mhandle, constants.MAX_MEMORY)
+	if err != nil {
+		return "", fmt.Errorf("Decoding metadata.json: %w", err)
+	}
+
+	rows := []*ordereddict.Dict{}
+	err = json.Unmarshal(buf, &rows)
+	if err != nil {
+		return "", fmt.Errorf("Decoding metadata.json: %w", err)
+	}
+
+	// metadata.json can be multiple rows
+	for _, row := range rows {
+		scheme, ok := row.GetString("Scheme")
+		if !ok {
+			// Maybe multiple rows?
+			continue
+		}
+
+		if strings.ToLower(scheme) == "x509" {
+			ep, ok := row.GetString("EncryptedPass")
+			if !ok {
+				return "", errors.New(
+					"EncryptedPass must be given and be of type string!")
+			}
+
+			err = vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+			if err != nil {
+				return "", errors.New(
+					"Must be server admin to use private key")
+			}
+
+			key, err := crypto_utils.GetPrivateKeyFromScope(scope)
+			if err != nil {
+				return "", fmt.Errorf("GetPrivateKeyFromScope: %w", err)
+			}
+
+			zip_pass, err := crypto_utils.Base64DecryptRSAOAEP(key, ep)
+			if err != nil {
+				return "", fmt.Errorf("Unable to extract zip password: %w", err)
+			}
+
+			// Transform the path so it can be used by the zip
+			// collector.
+			return string(zip_pass), nil
+		}
+	}
+
+	return "", utils.NotFoundError
+}
+
 // Try to set a password if it exists in metadata
 func (self *CollectorAccessor) maybeSetZipPassword(
 	full_path *accessors.OSPath) (*accessors.OSPath, error) {
@@ -177,78 +254,26 @@ func (self *CollectorAccessor) maybeSetZipPassword(
 		}
 	}
 
-	// Check if data.zip exists at the top level.
-	root := full_path.Copy()
-	root.Components = nil
+	zip_pass, err := ExtractPassword(self.scope,
+		self.ZipFileSystemAccessor, full_path)
+	if err == nil {
+		// Record the password in the scope so next time we can
+		// automatically use it.
+		self.scope.SetContext(constants.ZIP_PASSWORDS, string(zip_pass))
 
-	datazip := root.Append("data.zip")
-	_, err := self.ZipFileSystemAccessor.LstatWithOSPath(datazip)
-	if err != nil {
-		// Nope - no data.zip so do not transform the pathspec.
-		return full_path, nil
-	}
-
-	// Check if metadata.json exists. If so, try to extract password
-	meta := root.Append("metadata.json")
-	mhandle, err := self.ZipFileSystemAccessor.OpenWithOSPath(meta)
-	if err != nil {
-		// No metadata file is found - this might be a plain
-		// collection zip.
-		return full_path, nil
-	}
-
-	buf, err := utils.ReadAllWithLimit(mhandle, constants.MAX_MEMORY)
-	if err != nil {
-		return nil, fmt.Errorf("Decoding metadata.json: %w", err)
-	}
-
-	rows := []*ordereddict.Dict{}
-	err = json.Unmarshal(buf, &rows)
-	if err != nil {
-		return nil, fmt.Errorf("Decoding metadata.json: %w", err)
-	}
-
-	// metadata.json can be multiple rows
-	for _, row := range rows {
-		scheme, ok := row.GetString("Scheme")
-		if !ok {
-			// Maybe multiple rows?
-			continue
+		value, pres := self.scope.Resolve(constants.REPORT_ZIP_PASSWORD)
+		if pres && self.scope.Bool(value) {
+			self.scope.Log(
+				"CollectorAccessor: X509 Decrypted password is %q",
+				string(zip_pass))
 		}
 
-		if strings.ToLower(scheme) == "x509" {
-			ep, ok := row.GetString("EncryptedPass")
-			if !ok {
-				return nil, errors.New(
-					"EncryptedPass must be given and be of type string!")
-			}
+		return collectorPathToDelegatePath(full_path), nil
+	}
 
-			err = vql_subsystem.CheckAccess(self.scope, acls.SERVER_ADMIN)
-			if err != nil {
-				return nil, errors.New(
-					"Must be server admin to use private key")
-			}
-
-			key, err := crypto_utils.GetPrivateKeyFromScope(self.scope)
-			if err != nil {
-				return nil, fmt.Errorf("GetPrivateKeyFromScope: %w", err)
-			}
-
-			zip_pass, err := crypto_utils.Base64DecryptRSAOAEP(key, ep)
-			if err != nil {
-				return nil, fmt.Errorf("Unable to extract zip password: %w", err)
-			}
-
-			self.scope.SetContext(constants.ZIP_PASSWORDS, string(zip_pass))
-			value, pres := self.scope.Resolve(constants.REPORT_ZIP_PASSWORD)
-			if pres && self.scope.Bool(value) {
-				self.scope.Log("CollectorAccessor: X509 Decrypted password is %q",
-					string(zip_pass))
-			}
-			// Transform the path so it can be used by the zip
-			// collector.
-			return collectorPathToDelegatePath(full_path), nil
-		}
+	// Report serious errors
+	if !utils.IsNotFound(err) {
+		return nil, err
 	}
 
 	// No metadata found - this might be a plain unencrypted
@@ -366,7 +391,9 @@ func (self *CollectorAccessor) LstatWithOSPath(
 	updated_full_path, err := self.maybeSetZipPassword(full_path)
 	if err != nil {
 		self.scope.Log(err.Error())
+		updated_full_path = full_path
 	}
+
 	stat, err := self.ZipFileSystemAccessor.LstatWithOSPath(updated_full_path)
 	if err != nil {
 		return nil, err

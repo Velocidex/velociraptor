@@ -112,6 +112,7 @@ Output: [
     "mscoree.dll!_CorExeMain"
    ],
    "Exports": [],
+   "ExportRVAs": null,
    "Forwards": [],
    "ImpHash": "f34d5f2d4577ed6d9ceec516c1f5a744",
    "Authenticode": null,
