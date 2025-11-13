@@ -779,6 +779,7 @@
     permissions: FILESYSTEM_READ
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: certificates
   description: |
     Collect certificate from the system trust store.
@@ -1833,6 +1834,42 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: describe_address
+  description: |
+    Describe an address in the PE text section.
+
+    This is used to guess the function this address resides in. We
+    look up the export table of the PE file and match the earliest
+    exported address before the specified address.
+
+    The information is cached for the life of the query so it is fast
+    to use this to decorate many addresses.
+
+    Example:
+
+    ```vql
+    LET DLL <= "C:/Windows/system32/ntdll.dll"
+
+    SELECT _value.Name AS Name,
+           _value.RVA AS RVA,
+           describe_address(rva=_value.RVA + 10, module=DLL) AS Description
+    FROM foreach(row=parse_pe(file=DLL).ExportRVAs)
+    ```
+
+  type: Function
+  args:
+  - name: rva
+    type: int64
+    description: The Relative Virtual Address to describe.
+    required: true
+  - name: module
+    type: string
+    description: The path of the PE file to inspect.
+    required: true
+  metadata:
+    permissions: FILESYSTEM_READ
+  platforms:
+  - windows_amd64_cgo
 - name: dict
   description: |
     Construct a dict from arbitrary keyword args.
@@ -2639,6 +2676,8 @@
     entering the `/proc` part of the filesystem because it contains
     circular links to everywhere.
   type: Accessor
+  metadata:
+    permissions: FILESYSTEM_READ
   platforms:
   - windows_386_cgo
   - windows_amd64_cgo
@@ -2653,8 +2692,6 @@
     due to incorrect casing making it impossible to find the right
     files.
   type: Accessor
-  metadata:
-    permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -5975,6 +6012,7 @@
     permissions: SERVER_ADMIN,READ_RESULTS
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: now
   description: |
     Returns the current time in seconds since epoch.
@@ -6210,6 +6248,7 @@
     ScopeVar: OVERLAY_ACCESSOR_DELEGATES
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: panic
   description: Crash the program with a panic!
   type: Plugin
@@ -6930,13 +6969,23 @@
     different aspects of the PE file. The fields include:
 
     - `FileHeader`: The basic PE file header information.
+
     - `Directories`: The different directories in the PE file (For
       example `Export_Directory`, `IAT_Directory` etc).
-    - `VersionInformation`: This field contains
-      metadata about the binary (Such as the Author, Company etc).
+
+    - `VersionInformation`: This field contains metadata about the
+      binary (Such as the Author, Company etc).
+
     - `Imports`: Parses the Import table of the PE file.
+
     - `Exports`: Parses the export table of the PE file.
+
+    - `ExportRVAs`: A more complete dump of the exported functions,
+         including their name, types and Relative Virtual Addresses
+         (RVA)
+
     - `Forward`: Any linker forward to other DLLs.
+
     - `Authenticode`: Calculates the Authenticode hash of the PE file
       and also check if it is trusted.
 
@@ -6951,7 +7000,8 @@
 
     If you dont need that field you can remove it or select only some
     fields using [set
-    operations](https://docs.velociraptor.app/knowledge_base/tips/set_operations/). This will make the operations a lot faster.
+    operations](https://docs.velociraptor.app/knowledge_base/tips/set_operations/). This
+    will make the operations a lot faster.
 
     ```vql
     LET FieldMask <= dict(VersionInformation=TRUE, Imports=TRUE)
@@ -12644,6 +12694,7 @@
     permissions: FILESYSTEM_READ,EXECVE
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: zip
   description: |
     Open a zip file as if it was a directory.
@@ -12681,4 +12732,3 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
-

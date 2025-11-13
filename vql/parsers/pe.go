@@ -114,6 +114,9 @@ func (self _PEFunction) Call(
 		Set("Exports", func() vfilter.Any {
 			return pe_file.Exports()
 		}).
+		Set("ExportRVAs", func() vfilter.Any {
+			return pe_file.ExportRVAs()
+		}).
 		Set("Forwards", func() vfilter.Any {
 			return pe_file.Forwards()
 		}).
