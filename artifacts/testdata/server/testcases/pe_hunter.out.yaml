@@ -108,6 +108,169 @@ Output: [
    },
    "Imports": [],
    "Exports": [],
+   "ExportRVAs": [
+    {
+     "Ordinal": 0,
+     "Name": "C:\\windows\\system32\\wkscli.NetAddAlternateComputerName",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetAddAlternateComputerName",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 1,
+     "Name": "C:\\windows\\system32\\wkscli.NetEnumerateComputerNames",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetEnumerateComputerNames",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 2,
+     "Name": "C:\\windows\\system32\\wkscli.NetGetJoinInformation",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetGetJoinInformation",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 3,
+     "Name": "C:\\windows\\system32\\wkscli.NetGetJoinableOUs",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetGetJoinableOUs",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 4,
+     "Name": "C:\\windows\\system32\\wkscli.NetJoinDomain",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetJoinDomain",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 5,
+     "Name": "C:\\windows\\system32\\wkscli.NetRemoveAlternateComputerName",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetRemoveAlternateComputerName",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 6,
+     "Name": "C:\\windows\\system32\\wkscli.NetRenameMachineInDomain",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetRenameMachineInDomain",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 7,
+     "Name": "C:\\windows\\system32\\wkscli.NetSetPrimaryComputerName",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetSetPrimaryComputerName",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 8,
+     "Name": "C:\\windows\\system32\\wkscli.NetUnjoinDomain",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetUnjoinDomain",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 9,
+     "Name": "C:\\windows\\system32\\wkscli.NetUseAdd",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetUseAdd",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 10,
+     "Name": "C:\\windows\\system32\\wkscli.NetUseDel",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetUseDel",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 11,
+     "Name": "C:\\windows\\system32\\wkscli.NetUseEnum",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetUseEnum",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 12,
+     "Name": "C:\\windows\\system32\\wkscli.NetUseGetInfo",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetUseGetInfo",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 13,
+     "Name": "C:\\windows\\system32\\wkscli.NetValidateName",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetValidateName",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 14,
+     "Name": "C:\\windows\\system32\\wkscli.NetWkstaGetInfo",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetWkstaGetInfo",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 15,
+     "Name": "C:\\windows\\system32\\wkscli.NetWkstaSetInfo",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetWkstaSetInfo",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 16,
+     "Name": "C:\\windows\\system32\\wkscli.NetWkstaStatisticsGet",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetWkstaStatisticsGet",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 17,
+     "Name": "C:\\windows\\system32\\wkscli.NetWkstaTransportAdd",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetWkstaTransportAdd",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 18,
+     "Name": "C:\\windows\\system32\\wkscli.NetWkstaTransportDel",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetWkstaTransportDel",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 19,
+     "Name": "C:\\windows\\system32\\wkscli.NetWkstaTransportEnum",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetWkstaTransportEnum",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 20,
+     "Name": "C:\\windows\\system32\\wkscli.NetWkstaUserEnum",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetWkstaUserEnum",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 21,
+     "Name": "C:\\windows\\system32\\wkscli.NetWkstaUserGetInfo",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetWkstaUserGetInfo",
+     "DLLName": "MZ\ufffd"
+    },
+    {
+     "Ordinal": 22,
+     "Name": "C:\\windows\\system32\\wkscli.NetWkstaUserSetInfo",
+     "RVA": 0,
+     "Forwarder": "C:\\windows\\system32\\wkscli.NetWkstaUserSetInfo",
+     "DLLName": "MZ\ufffd"
+    }
+   ],
    "Forwards": [
     "C:\\windows\\system32\\wkscli.NetAddAlternateComputerName",
     "C:\\windows\\system32\\wkscli.NetEnumerateComputerNames",
