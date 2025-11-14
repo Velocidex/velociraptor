@@ -68,6 +68,22 @@ func MarshalJson(scope vfilter.Scope) vfilter.RowEncoder {
 func MarshalJsonIndent(scope vfilter.Scope) vfilter.RowEncoder {
 	opts := EncOptsFromScope(scope)
 	return func(rows []vfilter.Row) ([]byte, error) {
+		b, err := json.MarshalWithOptions(rows, opts)
+		if err != nil {
+			return nil, err
+		}
+		var buf bytes.Buffer
+		err = json.Indent(&buf, b, "", " ")
+		if err != nil {
+			return nil, err
+		}
+		return buf.Bytes(), nil
+	}
+}
+
+func MarshalJsonIndentIgnoreEmpty(scope vfilter.Scope) vfilter.RowEncoder {
+	opts := EncOptsFromScope(scope)
+	return func(rows []vfilter.Row) ([]byte, error) {
 		// Ignore empty rows
 		if len(rows) == 0 {
 			return nil, nil
