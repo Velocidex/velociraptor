@@ -350,14 +350,15 @@ class OfflineCollectorParameters  extends React.Component {
                       <Form.Group as={Row}>
                       <Form.Label column sm="3">File Name Prefix</Form.Label>
                       <Col sm="8">
-                        <Form.Control as="textarea" rows={3}
-                                        placeholder={T("Prefix for files being uploaded. end in / for folders (blank if not used)")}
-                                        spellCheck="false"
-                                        value={this.props.parameters.target_args.s3UploadRoot}
-                                        onChange={(e) => {
-                                            this.props.parameters.target_args.s3UploadRoot = e.target.value;
-                                            this.props.setParameters(this.props.parameters);
-                                        }}
+                        <Form.Control
+                          as="textarea" rows={3}
+                          placeholder={T("Prefix for files being uploaded. end in / for folders (blank if not used)")}
+                          spellCheck="false"
+                          value={this.props.parameters.target_args.s3UploadRoot}
+                          onChange={(e) => {
+                              this.props.parameters.target_args.s3UploadRoot = e.target.value;
+                              this.props.setParameters(this.props.parameters);
+                          }}
                         >
                         </Form.Control>
                       </Col>
@@ -382,14 +383,15 @@ class OfflineCollectorParameters  extends React.Component {
                       <Form.Group as={Row}>
                       <Form.Label column sm="3">KMS Encryption Key</Form.Label>
                       <Col sm="8">
-                        <Form.Control as="textarea" rows={3}
-                                        placeholder={T("KMS Encryption Key ARN (blank if KMS not used)")}
-                                        spellCheck="false"
-                                        value={this.props.parameters.target_args.kmsEncryptionKey}
-                                        onChange={(e) => {
-                                            this.props.parameters.target_args.kmsEncryptionKey = e.target.value;
-                                            this.props.setParameters(this.props.parameters);
-                                        }}
+                        <Form.Control
+                          as="textarea" rows={3}
+                          placeholder={T("KMS Encryption Key ARN (blank if KMS not used)")}
+                          spellCheck="false"
+                          value={this.props.parameters.target_args.kmsEncryptionKey}
+                          onChange={(e) => {
+                              this.props.parameters.target_args.kmsEncryptionKey = e.target.value;
+                              this.props.setParameters(this.props.parameters);
+                          }}
                         >
                         </Form.Control>
                       </Col>
