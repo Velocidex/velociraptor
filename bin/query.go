@@ -97,7 +97,7 @@ func outputJSON(ctx context.Context,
 	out io.Writer) error {
 	for result := range vfilter.GetResponseChannel(
 		vql, ctx, scope,
-		vql_subsystem.MarshalJsonIndent(scope),
+		vql_subsystem.MarshalJsonIndentIgnoreEmpty(scope),
 		10, *max_wait) {
 		_, err := out.Write(result.Payload)
 		if err != nil {
