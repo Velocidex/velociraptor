@@ -440,8 +440,21 @@ export: |
            "enum": ["ZIP", "GCS", "S3", "Azure", "SMBShare", "SFTP"]
         },
         "EncryptionScheme": {
-           "enum": ["None", "X509"],
+           "enum": ["None", "X509", "Password", "PGP"],
            "default": "None"
+        },
+        "EncryptionArgs": {
+           "type": "object",
+           "description": "Args for encryption",
+           "properties": {
+             "public_key": {
+               "type": "string"
+             },
+             "password": {
+               "type": "string"
+             }
+           },
+           "additionalProperties": false
         },
         "OptVerbose": {
            "type": "boolean",
