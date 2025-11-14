@@ -27,6 +27,9 @@ var (
 	collector_format = collector_cmd.Flag(
 		"format", "Output format to use (text,json,csv,jsonl).").
 		Default("json").Enum("text", "json", "csv", "jsonl")
+
+	collector_cmd_force = collector_cmd.Flag(
+		"force", "Ignore schema errors and use it anyway").Bool()
 )
 
 const SampleSpec = `
@@ -84,6 +87,7 @@ Target: ZIP
 # NOTE: You can unzip the encrypted zip using
 # velociraptor --config server.config.yaml unzip --dump_dir output file.zip
 EncryptionScheme: None
+EncryptionArgs: {}
 
 # Following can be Y or N
 OptVerbose: Y
@@ -229,6 +233,7 @@ func doCollector() error {
 		ACLManager: acl_managers.NewRoleACLManager(sm.Config, "administrator"),
 		Logger:     log.New(logger, "", 0),
 		Env: ordereddict.NewDict().
+			Set("FORCE", *collector_cmd_force).
 			Set("SPECFILE", spec_filename),
 		Uploader: &uploads.FileBasedUploader{
 			UploadDir: datastore_directory,
@@ -241,7 +246,10 @@ func doCollector() error {
 LET _ <= SELECT name FROM artifact_definitions()
 LET _ <= import(artifact="Server.Utils.CreateCollector")
 
-LET Spec <= parse_yaml(filename=SPECFILE, schema=SpecSchema)
+LET Spec <= parse_yaml(filename=SPECFILE, schema=SpecSchema) || (
+    FORCE && parse_yaml(filename=SPECFILE) ) ||
+    log(level="ERROR", message="<red>Abording</> due to invalid spec file!")
+
 LET _K = SELECT _key FROM items(item=Spec.Artifacts)
 
 SELECT * FROM if(condition=Spec.OS, then={
