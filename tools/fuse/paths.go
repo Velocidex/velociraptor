@@ -17,6 +17,11 @@ var (
 func (self *Options) RemapPath(path *accessors.OSPath) string {
 	basename := path.Basename()
 
+	// Map all the accessors into a files directory
+	if self.MergeAllAccessors && len(path.Components) == 2 {
+		return "files"
+	}
+
 	if self.MapDeviceNamesToLetters {
 		matches := deviceLetterRegex.FindStringSubmatch(basename)
 		if len(matches) > 1 {
