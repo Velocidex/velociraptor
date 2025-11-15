@@ -39,22 +39,24 @@ var (
 
 	fuse_options_map_device_names_to_letters = fuse_zip_command.Flag(
 		"map_device_names_to_letters", "Convert raw device names to drive letters").
-		Bool()
+		Default("true").Bool()
+
 	fuse_options_strip_colons_on_drive_letters = fuse_zip_command.Flag(
 		"strip_colons_on_drive_letters", "Remove the : on drive letters").
-		Bool()
+		Default("true").Bool()
+
 	fuse_options_unix_path_escaping = fuse_zip_command.Flag("unix_path_escaping",
 		"If set we escape only few characters in file names otherwise escape windows compatible chars").
 		Bool()
 
 	fuse_options_emulate_timestamps = fuse_zip_command.Flag("emulate_timestamps",
 		"If set emulate timestamps for common artifacts like Windows.Triage.Targets.").
-		Bool()
+		Default("true").Bool()
 
 	fuse_options_merge_accessors = fuse_zip_command.Flag("merge_accessors",
 		"If set merge all the accessors into the same "+
 			"directory (implied --map_device_names_to_letters).").
-		Bool()
+		Default("true").Bool()
 )
 
 func doFuseZip() error {
