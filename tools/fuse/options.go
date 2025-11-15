@@ -18,6 +18,13 @@ type Options struct {
 	// Windows.KapeFiles.Targets)
 	EmulateTimestamps bool
 
+	// If set we merge all accessors into the same
+	// directory. Velociraptor stores uploads under the name of the
+	// accessor to keep track of which accessor was used to read the
+	// file. However, this separates files obtained from the ntfs
+	// accessor separated from the auto accessor.
+	MergeAllAccessors bool
+
 	mu         sync.Mutex
 	timestamps map[string]*Timestamps
 }
