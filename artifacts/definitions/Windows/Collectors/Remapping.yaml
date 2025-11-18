@@ -139,9 +139,9 @@ export: |
 
   -- Normalize the drive name from device to drive. NTFS accessor uses
   -- device notation. TODO - we currently do nothing with VSS devices.
-  LET NormalizeDrive(Path) = regex_transform(
+  LET NormalizeDrive(Path) = upcase(string=regex_transform(
       source=Path,
-      map=dict(`\\\\\\\\.\\\\`=""), key="A")
+      map=dict(`\\\\\\\\.\\\\`=""), key="A"))
 
   // Get all the unique drive letters so we can combine them at the
   // same place.
