@@ -341,6 +341,15 @@ func (self *ZipFileCache) Open(full_path *accessors.OSPath, nocase bool) (
 		return nil, err
 	}
 
+	// If there is no member file then this is a directory. We return
+	// it successfully but attempting to read from it is not going to
+	// work.
+	if info.member_file == nil {
+		return &DirectoryZipFile{
+			path: info._full_path,
+		}, nil
+	}
+
 	// Disable stream authentication because the library unpacks the
 	// entire stream into memory to verify it. In practice, the
 	// embedded data.zip file provides sufficient authentication
@@ -396,17 +405,38 @@ func (self *ZipFileCache) _GetZipInfo(full_path *accessors.OSPath, nocase bool) 
 		eq = self.isComponentEqualNoCase
 	}
 
+	full_path_components := full_path.Components
+
+	var subdir *accessors.OSPath
+
 	// This is O(n) but due to the components length check it is very
 	// fast.
 	for _, cd_cache := range self.lookup {
-		if !eq(full_path.Components, cd_cache.full_path.Components) {
+		cd_components := cd_cache.full_path.Components
+		if !eq(full_path_components, cd_components) {
+			if subdir == nil &&
+				len(cd_components) > len(full_path_components) &&
+				eq(full_path_components,
+					cd_components[:len(full_path_components)]) {
+
+				subdir = full_path.Copy()
+			}
 			continue
 		}
 
+		// This is an exact match - return it.
 		return &ZipFileInfo{
 			member_file: cd_cache.member_file,
 			// Return the actual correct casing
 			_full_path: cd_cache.full_path.Copy(),
+		}, nil
+	}
+
+	// This is the best we can do - we have a subdir match
+	if subdir != nil {
+		return &ZipFileInfo{
+			// Return the actual correct casing
+			_full_path: subdir,
 		}, nil
 	}
 
@@ -472,7 +502,6 @@ loop:
 
 			// A directory has no member file
 		} else {
-			// Preserve the original casing for the directory
 			basename := cd_cache.full_path.Components[depth]
 			seen[member_name] = &ZipFileInfo{
 				_full_path: full_path.Append(basename),
@@ -687,6 +716,22 @@ func (self *SeekableZip) seek(offset int64, whence int) (int64, error) {
 		self.offset = current_offset
 	}
 	return current_offset, err
+}
+
+type DirectoryZipFile struct {
+	path *accessors.OSPath
+}
+
+func (self DirectoryZipFile) Read(buff []byte) (int, error) {
+	return 0, utils.Wrap(utils.IOError, "read %v: is a directory", self.path.String())
+}
+
+func (self DirectoryZipFile) Seek(offset int64, whence int) (int64, error) {
+	return 0, nil
+}
+
+func (self DirectoryZipFile) Close() error {
+	return nil
 }
 
 func init() {

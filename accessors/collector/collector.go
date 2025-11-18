@@ -239,7 +239,7 @@ func (self *CollectorAccessor) maybeSetZipPassword(
 
 	// If password is already set in the scope, just use it as it is.
 	pass, pres := self.scope.Resolve(constants.ZIP_PASSWORDS)
-	if pres {
+	if pres && !utils.IsNil(pass) {
 		if utils.ToString(pass) != "" {
 			return collectorPathToDelegatePath(full_path), nil
 		}

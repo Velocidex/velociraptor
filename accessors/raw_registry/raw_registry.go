@@ -586,19 +586,17 @@ func (self *RawRegFileSystemAccessor) multiLstat(
 	name := full_path.Basename()
 	container := full_path.Dirname()
 
-	// If the full_path refers to the default value of the key, return
-	// it.
-	if name == "@" {
-		name = ""
-	}
-
 	children, err := self.ReadDirWithOSPath(container)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, child := range children {
-		if strings.EqualFold(child.Name(), name) {
+		child_name := child.Name()
+
+		// Fetch default value as either @ or ""
+		if strings.EqualFold(child_name, name) ||
+			(name == "@" && child_name == "") {
 			res = append(res, child)
 		}
 	}

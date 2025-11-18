@@ -127,7 +127,7 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 		DelegateAccessor: pathspec.DelegateAccessor,
 		DelegatePath:     pathspec.GetDelegatePath(),
 	}
-	cache_key := base_pathspec.String()
+	cache_key := base_pathspec.String() + full_path.DescribeType()
 
 	for {
 		mu.Lock()
