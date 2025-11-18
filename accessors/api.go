@@ -41,6 +41,7 @@ type PathManipulator interface {
 	PathParse(path string, result *OSPath) error
 	PathJoin(path *OSPath) string
 	AsPathSpec(path *OSPath) *PathSpec
+	ComponentEqual(a, b string) bool
 }
 
 type OSPath struct {
@@ -206,7 +207,8 @@ func (self *OSPath) TrimComponents(components ...string) *OSPath {
 
 	result := self.Copy()
 	for idx, c := range result.Components {
-		if idx >= len(components) || c != components[idx] {
+		if idx >= len(components) ||
+			!self.Manipulator.ComponentEqual(c, components[idx]) {
 			result := &OSPath{
 				Components:  utils.CopySlice(self.Components[idx:]),
 				pathspec:    self.pathspec,

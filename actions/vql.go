@@ -190,6 +190,10 @@ func (self VQLClientAction) StartQuery(
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
+	// The uploader needs to be flushed before the scope is destroyed
+	// because transactions may still be active.
+	defer uploader.Close()
+
 	// Allow VQL to gain access to the flow responder for low level
 	// functionality.
 	scope.SetContext(constants.SCOPE_RESPONDER_CONTEXT, responder)
