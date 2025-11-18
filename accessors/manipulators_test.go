@@ -179,3 +179,29 @@ func TestFileStoreManipulators(t *testing.T) {
 		assert.Equal(t, testcase.expected_path, path.String())
 	}
 }
+
+// The ZipFileManipulator is used by the offline collector to abstract
+// access to the collector zip files..
+var zipfile_testcases = []testcase{
+	{
+		serialized_path: "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"/F.D4FD20VLKDJ2G.zip\",\"Path\":\"/uploads/auto/C%3A\"}",
+		components:      []string{"uploads", "auto", "C:"},
+	},
+	{
+		serialized_path: "{\"DelegateAccessor\":\"file\",\"DelegatePath\":\"/F.D4FD20VLKDJ2G.zip\",\"Path\":\"/uploads/ntfs/%5C%5C.%5CC%3A\"}",
+		components:      []string{"uploads", "ntfs", `\\.\C:`},
+	},
+}
+
+func TestZipFileManipulators(t *testing.T) {
+	for _, testcase := range zipfile_testcases {
+		path, err := NewZipFilePath(testcase.serialized_path)
+		assert.NoError(t, err)
+		assert.Equal(t, testcase.components, path.Components)
+		expected_path := testcase.expected_path
+		if expected_path == "" {
+			expected_path = testcase.serialized_path
+		}
+		assert.Equal(t, expected_path, path.String())
+	}
+}

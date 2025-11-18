@@ -74,6 +74,11 @@ func ResumeTransactions(
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
+	// Uploader needs an active scope so it needs to close before the
+	// scope is destroyed because it still needs to use transaction
+	// scopes.
+	defer uploader.Close()
+
 	scope.Log("INFO:Resuming uploads: %v transactions.", len(req.Transactions))
 
 	var rows []*ordereddict.Dict
