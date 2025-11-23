@@ -974,7 +974,7 @@ export default class NotebookCellRenderer extends React.Component {
         let ace_toolbar = (
             <>
               <ButtonGroup>
-                <ToolTip tooltip={T("Undo")}>
+                <ToolTip tooltip={T("Close")}>
                   <Button onClick={() => {this.setEditing(false); }}
                           variant="default">
                     <FontAwesomeIcon icon="window-close"/>
@@ -991,7 +991,7 @@ export default class NotebookCellRenderer extends React.Component {
                     </Button>
                   </ToolTip>
                 }
-                <ToolTip tooltip={T("Save")}>
+                <ToolTip tooltip={T("Save & Run")}>
                   <Button onClick={()=>{
                               let cell = this.state.cell;
                               cell.input = this.state.ace.getValue();
