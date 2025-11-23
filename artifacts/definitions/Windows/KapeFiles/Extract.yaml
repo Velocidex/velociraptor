@@ -1,12 +1,15 @@
 name: Windows.KapeFiles.Extract
 description: |
-  The Windows.KapeFiles.Targets artifact collects files into a Zip
+  Extracts file collected by the `Windows.KapeFiles.Targets` or
+  `Windows.Triage.Targets` artifacts. and restores the original
+  timestamps on the extracted files.
+
+  These artifacts collect files from the endpoint into a zip
   file. Zip files cannot generally preserve timestamps since they
   only have a single timestamp concept. Velociraptor will only record
   the modified time in the zip file header itself but all the times
-  are present in the metadata file:
-
-  "Windows.KapeFiles.Targets/All File Metadata.json"
+  are present in the internal metadata file:
+  `Windows.KapeFiles.Targets/All File Metadata.json`
 
   Sometimes, users wish to extract the contents of a collection to a
   directory, and run an external tool over the data. Some such
@@ -22,10 +25,10 @@ description: |
   Btime), while Linux only allows 2 timestamps (Modified and
   Accessed).
 
-  ## Example - command line invocation
+  ### Example - command line use
 
   ```
-  velociraptor-v0.6.7-linux-amd64 artifacts collect Windows.KapeFiles.Extract --args ContainerPath=Collection-DESKTOP-2OR51GL-2021-07-16_06_56_50_-0700_PDT.zip --args OutputDirectory=/tmp/MyOutput/
+  velociraptor artifacts collect Windows.KapeFiles.Extract --args ContainerPath=Collection-DESKTOP-2OR51GL-2021-07-16_06_56_50_-0700_PDT.zip --args OutputDirectory=/tmp/MyOutput/
   ```
 
 type: SERVER

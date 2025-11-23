@@ -1,21 +1,27 @@
 name: Windows.KapeFiles.Remapping
 description: |
-   This artifact automates the rebuilding of remapping rules to be able to
-   easily post-process the results of the Windows.KapeFiles.Targets.
+  Automates the creation of remapping rules to enable post-processing file
+  uploads collected by the `Windows.KapeFiles.Targets` or
+  `Windows.Triage.Targets` artifacts.
 
-   Use as follows in the flow notebook cell of a collection:
+  Use as follows in the flow notebook cell of a collection:
 
-   ```vql
-   LET _ <=
-      SELECT * FROM Artifact.Windows.KapeFiles.Remapping(ClientId=ClientId, FlowId=FlowId)
+  ```vql
+  LET _ <=
+    SELECT * FROM Artifact.Windows.KapeFiles.Remapping(ClientId=ClientId, FlowId=FlowId)
 
-   SELECT * FROM Artifact.Windows.System.TaskScheduler()
-   ```
+  SELECT * FROM Artifact.Windows.System.TaskScheduler()
+  ```
 
-   NOTE: Not all plugins are enabled in this mode for obvious reasons
-   (e.g. pslist, wmi etc).
+  When used in a collection notebook the `ClientId` and `FlowId` are already
+  present in the notebook's scope, and so their values do not need to be
+  explicitly set.
 
-   See https://docs.velociraptor.app/blog/2022/2022-08-04-post-processing/
+  The remapping config disables certain plugins for obvious reasons
+  (e.g. pslist, wmi etc).
+
+references:
+  - https://docs.velociraptor.app/blog/2022/2022-08-04-post-processing/
 
 type: CLIENT
 
