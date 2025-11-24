@@ -23,6 +23,7 @@ import (
 	"os"
 	"runtime/debug"
 	"sync"
+	"time"
 
 	"github.com/davecgh/go-spew/spew"
 )
@@ -102,5 +103,26 @@ func IsCtxDone(ctx context.Context) bool {
 		return true
 	default:
 		return false
+	}
+}
+
+// Alterantives to context.WithCancel to see when contexts are being
+// cancelled.
+func WithCancel(ctx context.Context) (context.Context, func()) {
+	res, cancel := context.WithCancel(ctx)
+	return res, func() {
+		cancel()
+	}
+}
+
+// Alterantives to context.WithTimeout to see when contexts are being
+// cancelled.
+func WithTimeout(ctx context.Context, wait time.Duration) (
+	context.Context, func()) {
+	res, cancel := context.WithTimeout(ctx, wait)
+	return res, func() {
+		DlvBreak()
+		fmt.Printf("Timeout %v\n", wait)
+		cancel()
 	}
 }
