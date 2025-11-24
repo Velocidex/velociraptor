@@ -101,7 +101,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20251014141320-f59d776a3def
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
-	github.com/Velocidex/fileb0x v1.1.2-0.20241111170537-c093c89cd042
+	github.com/Velocidex/fileb0x v1.1.2-0.20251122021447-f71ad8da5502
 	github.com/Velocidex/go-ewf v0.0.0-20240210123447-97dc81b7d8c3
 	github.com/Velocidex/go-ext4 v0.0.0-20250510085914-b0b955af0359
 	github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a
