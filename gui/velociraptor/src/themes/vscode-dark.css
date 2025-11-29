@@ -1,0 +1,1106 @@
+@font-face {
+  font-family: "Iosevka Term";
+  font-style: normal;
+  font-weight: 500;
+  src: local(""),
+    url("../fonts/iosevka-term-medium-subset.woff2") format("woff2");
+    unicode-range: U+0020-007E, U+0080-00FF;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Iosevka Term";
+  font-style: bold;
+  font-weight: 700;
+  src: local(""),
+    url("../fonts/iosevka-term-bold-subset.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+0080-00FF;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Noto Sans";
+  font-style: normal;
+  font-weight: 400;
+  src: local(""),
+    url("../fonts/noto-sans-v27-latin-ext_latin-regular.woff2") format("woff2");
+  font-display: block;
+}
+
+@font-face {
+  font-family: "Noto Sans";
+  font-style: bold;
+  font-weight: 600;
+  src: local(""),
+    url("../fonts/noto-sans-v27-latin-ext_latin-600.woff2") format("woff2");
+  font-display: block;
+}
+
+.vscode-dark {
+  --font-size-large: 16px;
+  --font-size-base: 14px;
+  --font-size-small: 13px;
+  --font-family-sans-serif: "Iosevka Term", Iosevka-Term, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-family-monospace: "Iosevka Term", Iosevka-Term, SFMono-Regular, Menlo, Monaco,
+    "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-family-paragraph: "Noto Sans", -apple-system, BlinkMacSystemFont, roboto, "Segoe UI",
+    "Helvetica Neue", Arial, sans-serif;
+
+  /* VS Code Dark Modern gray accent */
+  --accent-color: #474849;
+  --color-accent: 71, 72, 73;
+  --color-accent-complement: #5A5B5C;
+  --color-accent-100: rgba(var(--color-accent), 1);
+  --color-accent-75: rgba(var(--color-accent), 0.75);
+  --color-accent-50: rgba(var(--color-accent), 0.5);
+  --color-accent-25: rgba(var(--color-accent), 0.25);
+
+  /* VS Code Dark Modern backgrounds */
+  --color-header-background: #181818;
+  --color-footer-background: #181818;
+  --color-canvas-background: #1F1F1F;
+  --color-canvas-background-complement: #2B2B2B;
+  --color-form-control-background: #313131;
+
+  /* VS Code Dark Modern foreground */
+  --color-foreground: #CCCCCC;
+  --color-foreground-inverse: #1F1F1F;
+  --color-foreground-dimmed: #9D9D9D;
+
+  /* Sidebar - VS Code Dark Modern style */
+  --color-sidebar-inactive-foreground-hover: #FFFFFF;
+  --color-sidebar-inactive-background-hover: #2B2B2B;
+  --color-sidebar-foreground: #CCCCCC;
+  --color-sidebar-disabled-foreground: #6E6E6E;
+  --color-sidebar-background: #181818;
+  --color-sidebar-active-foreground: #FFFFFF;
+  --color-sidebar-active-background: #37373D;
+
+  --color-client-link: #3794FF;
+  --color-client-link-hover: #4FC3F7;
+  --color-tooltip-background: #1F1F1F;
+
+  /* Buttons - VS Code Dark Modern style */
+  --color-btn-border: #3C3C3C;
+  --color-btn-default-border: #3C3C3C;
+  --color-btn-default-background: #3C3C3C;
+  --color-btn-default-background-hover: #505050;
+  --color-btn-outline-link: rgba(var(--color-accent), 0.3);
+  --color-btn-outline-link-hover: rgba(var(--color-accent), 0.5);
+
+  /* Tabs - VS Code Dark Modern style */
+  --color-tab: #181818;
+  --color-tab-active: #1F1F1F;
+
+  /* Resizers and scrollbars */
+  --color-resizer: #474849;
+  --color-resizer-hover: #5A5B5C;
+  --color-scrollbar-track: #1F1F1F;
+  --color-scrollbar-thumb: rgba(121, 121, 121, 0.4);
+  --color-scrollbar-thumb-hover: rgba(100, 100, 100, 0.7);
+  --color-scrollbar-main: var(--color-accent-25);
+  --color-scrollbar-background: rgba(var(--color-accent), 0.1);
+
+  --color-cell-toolbar-background: #181818;
+  --color-card-heading-background: #2B2B2B;
+  --color-monospace-color: #CCCCCC;
+
+  /* Pagination */
+  --color-page-link-active-background: var(--color-accent-50);
+  --color-page-link-hover-background: var(--color-accent-25);
+  --color-page-link-background: var(--color-canvas-background);
+  --color-pagination-disabled: #6E6E6E;
+
+  /* Tables - VS Code Dark Modern selection */
+  --color-table-row-stripe: rgba(255, 255, 255, 0.04);
+  --color-table-row: var(--color-canvas-background);
+  --color-table-row-selected: #37373D;
+  --color-table-row-selected-text: #FFFFFF;
+  --color-table-row-hover: rgba(55, 55, 61, 0.5);
+  --color-table-heading-background: #2B2B2B;
+
+  --color-code: #9CDCFE;
+
+  --color-calendar-background: #1F1F1F;
+  --color-calendar-tile: #1F1F1F;
+
+  /* Timeline colors */
+  --color-timeline-header: rgba(43, 43, 43, 0.8);
+  --color-timeline-table-shown: rgba(71, 72, 73, 0.3);
+  --color-timeline-1: #37373D;
+  --color-timeline-2: #F85149;
+  --color-timeline-3: #3794FF;
+  --color-timeline-4: #CCA700;
+  --color-timeline-5: #858585;
+  --color-timeline-6: #4EC9B0;
+  --color-timeline-7: #C586C0;
+
+  --color-vfs-files-timestomped: #569CD6;
+  --color-level-error: #F85149;
+
+  --hex-highlight-background: #474849;
+  --hex-highlight-foreground: #FFFFFF;
+
+  --invalid-form-control-error: #5A1D1D;
+}
+
+body.vscode-dark {
+  background: var(--color-canvas-background);
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  letter-spacing: 0.4px;
+}
+
+.vscode-dark code,
+.vscode-dark pre,
+.vscode-dark .monospace {
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-base);
+  color: var(--color-code);
+}
+
+.vscode-dark dl {
+  font-family: var(--font-family-sans-serif);
+}
+
+.vscode-dark h1,
+.vscode-dark h2,
+.vscode-dark h3 {
+  color: var(--color-foreground);
+}
+
+.vscode-dark a {
+  color: #3794FF;
+}
+
+.vscode-dark .alert-secondary {
+  color: var(--color-foreground);
+  background: var(--color-card-heading-background);
+  border-color: var(--color-btn-border);
+  border-radius: 0;
+}
+
+.vscode-dark .alert-secondary th {
+  border-color: #3C3C3C;
+}
+
+
+/* Top Navbar */
+.vscode-dark .main-navbar {
+  background: var(--color-header-background);
+  border-color: var(--color-header-background);
+}
+
+.vscode-dark .hamburger {
+  color: var(--color-sidebar-foreground);
+}
+
+.vscode-dark .dropdown .dropdown-toggle.btn.btn-default {
+  border-radius: 0;
+  border-left-width: 0;
+}
+
+.vscode-dark .client-summary {
+  float: left;
+  font-family: var(--font-family-sans-serif);
+}
+
+.vscode-dark .client-status .client-name {
+  color: #FFFFFF;
+  background: var(--color-btn-default-background);
+  text-decoration: none !important;
+  text-shadow: none;
+  padding: 6px 10px 8px 10px;
+  border-radius: 0;
+  margin: 5px;
+  font-size: var(--font-size-base);
+  border-color: var(--color-btn-default-border);
+}
+
+.vscode-dark .client-status .client-name:hover {
+  background: var(--color-btn-default-background-hover);
+}
+
+.vscode-dark .react-autosuggest__input {
+  background: var(--color-form-control-background);
+  border: 1px solid var(--color-btn-border);
+  border-radius: 0;
+  color: var(--color-foreground);
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  text-decoration: none !important;
+  text-shadow: none;
+}
+
+.vscode-dark .react-autosuggest__suggestions-container--open {
+  background: var(--color-form-control-background);
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--color-foreground);
+  border: 1px solid var(--color-btn-border);
+}
+
+.vscode-dark .react-autosuggest__suggestion--highlighted {
+  background: var(--color-table-row-selected);
+}
+
+/* Sidebar navbar */
+
+.vscode-dark div#navigator {
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-sans-serif);
+  color: var(--color-sidebar-foreground);
+  box-shadow: none;
+  border-right: none;
+  background: var(--color-sidebar-background);
+}
+
+.vscode-dark .navigator.nav-pills.nav li:hover {
+  color: var(--color-sidebar-inactive-foreground-hover);
+  background: var(--color-sidebar-inactive-background-hover);
+}
+
+.vscode-dark .navigator.nav-pills.nav li:has(a.active) {
+  background: var(--color-sidebar-active-background);
+}
+
+.vscode-dark .navigator.nav-pills.nav li a.active {
+  color: var(--color-sidebar-active-foreground);
+}
+
+.vscode-dark .navigator.nav-pills.nav .nav-link.disabled {
+  color: var(--color-sidebar-disabled-foreground);
+  background: var(--color-sidebar-background);
+  pointer-events: none;
+}
+
+/* Buttons - Square edges */
+.vscode-dark .btn,
+.vscode-dark .btn-default {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  color: #FFFFFF;
+  text-shadow: none;
+  box-shadow: none;
+  background: var(--color-btn-default-background);
+  border-color: var(--color-btn-border);
+  border-radius: 0;
+}
+
+.vscode-dark .btn.btn-default.active {
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.vscode-dark .btn-default:hover {
+  background: var(--color-btn-default-background-hover);
+  color: #FFFFFF;
+  border-radius: 0;
+}
+
+.vscode-dark .btn-default:focus {
+  background: var(--color-btn-default-background);
+  color: #FFFFFF;
+  border-radius: 0;
+}
+
+.vscode-dark .btn[disabled] {
+  color: #6E6E6E;
+  background: #3C3C3C;
+  opacity: 0.5;
+  border-radius: 0;
+}
+
+.vscode-dark .btn-primary {
+  text-shadow: none;
+  box-shadow: none;
+  background: var(--color-btn-default-background);
+  border-radius: 0;
+}
+
+.vscode-dark .btn-primary:hover:not(:disabled):not(.disabled) {
+  background: var(--color-btn-default-background-hover);
+  border-radius: 0;
+}
+
+.vscode-dark .btn-secondary {
+  text-shadow: none;
+  box-shadow: none;
+  background: #3C3C3C;
+  color: var(--color-foreground);
+  border-radius: 0;
+}
+
+.vscode-dark .btn-secondary:hover {
+  background: #505050;
+  border-radius: 0;
+}
+
+.vscode-dark .btn-outline-default {
+  border-width: 0;
+  background: none;
+  border-radius: 0;
+}
+
+.vscode-dark .btn.btn-outline-info {
+  background: var(--color-btn-outline-link);
+  color: var(--color-foreground);
+  border-color: transparent;
+  margin: 1px;
+  font-weight: 500;
+  border-radius: 0;
+}
+
+.vscode-dark .btn.btn-link {
+  background: var(--color-btn-outline-link);
+  color: var(--color-foreground);
+  border-color: transparent;
+  margin: 1px;
+  font-weight: 500;
+  width: 100%;
+  border-radius: 0;
+}
+
+.vscode-dark .client-link.btn.btn-outline-info {
+  width: unset;
+  border-radius: 0;
+}
+
+.vscode-dark .btn-outline-info:hover {
+  background: var(--color-btn-outline-link-hover);
+  text-shadow: none;
+  color: var(--color-foreground);
+  border-radius: 0;
+}
+
+.vscode-dark .btn-danger,
+.vscode-dark .btn-danger:hover {
+  border-radius: 0;
+}
+
+/* Tables */
+
+.vscode-dark .table {
+  color: var(--color-foreground);
+  background: var(--color-canvas-background);
+  vertical-align: middle;
+  font-weight: 500;
+  font-size: var(--font-size-base);
+  text-shadow: none;
+  box-shadow: none;
+  border: 1px solid var(--color-btn-border);
+}
+
+.vscode-dark .table thead th {
+  color: var(--color-foreground);
+  font-weight: 700;
+  vertical-align: middle;
+  background: var(--color-table-heading-background);
+  border: none;
+}
+
+.vscode-dark .table-bordered thead th {
+  color: var(--color-foreground);
+  font-weight: 700;
+  vertical-align: middle;
+  border: 1px solid var(--color-btn-border);
+}
+
+.vscode-dark .table tbody tr td {
+  border: none;
+  vertical-align: middle;
+}
+
+.vscode-dark .table-bordered .notebook-filter td {
+  border: none;
+  text-shadow: none;
+  box-shadow: none;
+  background: var(--color-table-heading-background);
+}
+
+.vscode-dark .table-bordered td {
+  border: 1px solid var(--color-btn-border);
+}
+
+.vscode-dark .table-hover tbody tr:hover {
+  background: var(--color-table-row-hover);
+  color: unset;
+}
+
+.vscode-dark .new-artifact-search-table.selectable .table,
+.vscode-dark .new-artifact-search-table.selectable .table tbody tr,
+.vscode-dark .new-artifact-search-table.selectable .table thead th {
+  background: none;
+  border: none;
+}
+
+.vscode-dark .new-artifact-search-table.selectable .btn.btn-link:hover {
+  background: var(--color-btn-outline-link-hover);
+}
+
+.vscode-dark .new-artifact-search-table.selectable .btn.btn-link {
+  background: var(--color-accent-25);
+}
+
+.vscode-dark .new-artifact-search-table.selectable .table.table tbody > tr.row-selected > td > button.btn.btn-link,
+.vscode-dark .new-artifact-search-table.selectable .table.table tbody > tr.row-selected > td > button.btn.btn-link:hover {
+  background: var(--color-table-row-selected);
+  color: #FFFFFF;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.vscode-dark .new-artifact-search-table .btn-link:hover,
+.vscode-dark .new-artifact-search-table .btn-link:focus,
+.vscode-dark .new-artifact-search-table .btn-link.focus {
+  text-decoration: none;
+}
+
+.vscode-dark .table tbody tr.row-selected,
+.vscode-dark .table tbody tr.row_selected td {
+  background: var(--color-table-row-selected);
+  color: #FFFFFF;
+}
+
+/* Column search screen */
+.vscode-dark th.sortable input {
+  background: var(--color-canvas-background);
+  color: var(--color-foreground);
+  border-color: var(--color-btn-border);
+  border-radius: 0;
+}
+
+/* Resizer dividers */
+.vscode-dark .Resizer.horizontal {
+  border: none;
+  background: var(--color-btn-border);
+  height: 3px;
+}
+
+.vscode-dark .Resizer.horizontal:hover {
+  background: var(--color-resizer-hover);
+}
+
+.vscode-dark .Resizer.vertical {
+  border: none;
+  background: var(--color-btn-border);
+  width: 3px;
+}
+
+.vscode-dark .Resizer.vertical:hover {
+  background: var(--color-resizer-hover);
+}
+
+.vscode-dark .Resizer:hover {
+  transition: all 200ms ease-in-out;
+}
+
+/* Cards - Square edges */
+
+.vscode-dark .card {
+  background: var(--color-canvas-background);
+  border-color: var(--color-btn-border);
+  border-radius: 0;
+}
+
+.vscode-dark .dashboard .card {
+  border: none;
+  border-radius: 0;
+}
+
+.vscode-dark .card-header {
+  background: var(--color-card-heading-background);
+  color: var(--color-foreground);
+  border-radius: 0;
+}
+
+.vscode-dark .card-body {
+  background: var(--color-canvas-background);
+  color: var(--color-foreground);
+  border-radius: 0;
+}
+
+.vscode-dark .card-body dt,
+.vscode-dark .card-body label {
+  font-weight: 500;
+  color: #9CDCFE;
+}
+
+/* Json container */
+.vscode-dark div.pretty-json-container {
+  font-family: var(--font-family-monospace);
+  filter: invert(1);
+}
+
+.vscode-dark .invalid.form-control,
+.vscode-dark .invalid.form-control:focus {
+  background: var(--invalid-form-control-error);
+  border-radius: 0;
+}
+
+/* Tabs - Square edges */
+.vscode-dark .tab-content {
+  color: var(--color-foreground);
+}
+
+.vscode-dark .nav-tabs {
+  border-bottom: 1px solid var(--color-btn-border);
+}
+
+.vscode-dark .nav-tabs > a,
+.vscode-dark .nav-tabs .nav-link {
+  background: var(--color-tab);
+  color: #9D9D9D;
+  border-top-color: var(--color-btn-border);
+  border-right-color: var(--color-btn-border);
+  border-bottom: var(--color-btn-border);
+  border-left-color: var(--color-btn-border);
+  border-radius: 0;
+}
+
+.vscode-dark .nav-tabs > a:hover,
+.vscode-dark .nav-tabs .nav-link:hover {
+  background: #2B2B2B;
+  color: var(--color-foreground);
+  border-color: var(--color-btn-border);
+  border-radius: 0;
+}
+
+.vscode-dark .nav-tabs > a.active,
+.vscode-dark .nav-tabs .nav-link.active {
+  background: var(--color-tab-active);
+  color: #FFFFFF;
+  border-top-color: var(--color-accent-100);
+  border-right-color: var(--color-btn-border);
+  border-bottom-color: transparent;
+  border-left-color: var(--color-btn-border);
+  border-radius: 0;
+}
+
+.vscode-dark .tooltip.show,
+.vscode-dark .tooltip.bs-tooltip-top {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  background-color: var(--color-tooltip-background);
+  color: var(--color-foreground);
+}
+
+.vscode-dark .tooltip-inner {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  background-color: var(--color-tooltip-background);
+  border: 1px solid #3C3C3C;
+  border-radius: 0;
+}
+
+.vscode-dark .bs-tooltip-top .tooltip-arrow::before {
+  border-top-color: var(--color-tooltip-background);
+}
+
+/* Form controls - Square edges */
+
+.vscode-dark .estimate.alert-info {
+  border: 1px solid var(--color-btn-border);
+  background: #37373D;
+  color: var(--color-foreground);
+  border-radius: 0;
+}
+
+.vscode-dark .form-switch input.form-check-input:checked {
+  background-color: var(--color-accent-75);
+  border-color: var(--color-accent-75);
+  accent-color: var(--color-accent-75);
+}
+
+.vscode-dark .form-control,
+.vscode-dark .custom-file-input {
+  background: var(--color-form-control-background);
+  color: var(--color-foreground);
+  border-color: var(--color-btn-default-border);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  border-radius: 0;
+}
+
+.vscode-dark .form-control:focus {
+  background: var(--color-form-control-background);
+  box-shadow: 0 0 0 1px var(--color-accent-100);
+  border-color: var(--color-accent-100);
+  border-radius: 0;
+}
+
+.vscode-dark .input-group-prepend .input-group-text,
+.vscode-dark .input-group-text {
+  background: #3C3C3C;
+  box-shadow: none;
+  color: var(--color-foreground);
+  text-shadow: none;
+  border: 1px solid var(--color-btn-default-border);
+  font-size: var(--font-size-base);
+  border-radius: 0;
+}
+
+.vscode-dark .input-group .custom-file-label {
+  background: var(--color-form-control-background);
+  color: var(--color-foreground);
+  border: 1px solid var(--color-btn-default-border);
+  font-size: var(--font-size-base);
+  border-radius: 0;
+}
+
+.vscode-dark .input-group .custom-file-label:after {
+  background: var(--color-btn-default-background);
+  box-shadow: none;
+  color: #FFFFFF;
+  text-shadow: none;
+  font-weight: 500;
+  border-radius: 0;
+}
+
+/* Pagination - Square edges */
+
+.vscode-dark .page-item .page-link {
+  background: var(--color-page-link-background);
+  border-color: var(--color-btn-border);
+  color: var(--color-foreground);
+  border-radius: 0;
+}
+
+.vscode-dark .page-item:first-child .page-link,
+.vscode-dark .page-item:last-child .page-link {
+  border-radius: 0;
+}
+
+.vscode-dark .page-item.disabled span {
+  color: var(--color-pagination-disabled);
+}
+
+.vscode-dark .page-item input {
+  background: var(--color-form-control-background);
+  color: var(--color-foreground);
+  border: 1px solid var(--color-btn-border);
+  border-radius: 0;
+}
+
+.vscode-dark .page-item.active .page-link:hover,
+.vscode-dark .page-item.active .page-link {
+  background: var(--color-page-link-active-background);
+  border-color: var(--color-btn-border);
+  border-radius: 0;
+}
+
+.vscode-dark .page-item .page-link:hover {
+  background: var(--color-page-link-hover-background);
+  border-radius: 0;
+}
+
+.vscode-dark .page-item .page-link:focus {
+  box-shadow: 0 0 0 0.2rem rgba(71, 72, 73, 0.25);
+}
+
+.vscode-dark .react-bootstrap-table-pagination-total {
+  color: var(--color-foreground);
+  padding-left: 15px;
+}
+
+/* Artifact viewer screen */
+
+.vscode-dark .report-viewer .description-content {
+  font-family: var(--font-family-paragraph);
+  font-size: var(--font-size-large);
+  background: #2B2B2B;
+  border-radius: 0;
+  padding: 12px;
+}
+
+.vscode-dark .report-viewer h3 {
+  margin-top: 2rem;
+  color: #3794FF;
+  font-weight: 500;
+}
+
+.vscode-dark .report-viewer h4 {
+  color: #9CDCFE;
+  font-weight: 500;
+}
+
+.vscode-dark .report-viewer h5 {
+  color: #9CDCFE;
+  font-weight: 500;
+  font-size: var(--font-size-base);
+}
+
+.vscode-dark .artifact-search-table a {
+  color: var(--color-foreground);
+}
+
+.vscode-dark .report-viewer {
+  color: var(--color-foreground);
+}
+
+.vscode-dark .report-viewer pre > a {
+  color: var(--color-foreground-inverse);
+}
+
+.vscode-dark .report-viewer pre {
+  filter: invert(1);
+  background: rgba(255,255,255,.05);
+  color: var(--color-canvas-background);
+  border-radius: 0;
+  border: none;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.vscode-dark .report-viewer code {
+  background: rgba(255,255,255,.1);
+  border-radius: 0;
+  border: 0.5px solid rgba(255,255,255,.1);
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.vscode-dark .report-viewer dt,
+.vscode-dark .report-viewer dd {
+  font-family: var(--font-family-paragraph);
+}
+
+.vscode-dark .artifact-search-table.selectable.container tbody tr:hover {
+  background: var(--color-table-row-hover);
+}
+
+.vscode-dark .artifact-search-table.selectable.container tr.row-selected,
+.vscode-dark .artifact-search-table.selectable.container tr.row-selected:hover,
+.vscode-dark .artifact-search-table.selectable.container tr.row_selected > td {
+  background: var(--color-table-row-selected);
+  color: #FFFFFF;
+}
+
+/* Modal dialogs - Square edges */
+
+.vscode-dark .modal-content {
+  background: #1F1F1F;
+  color: var(--color-foreground);
+  border: 1px solid #3C3C3C;
+  border-radius: 0;
+}
+
+.vscode-dark .modal-header {
+  border-bottom: 1px solid #3C3C3C;
+  border-radius: 0;
+}
+
+.vscode-dark .modal-footer {
+  border-top: 1px solid #3C3C3C;
+  border-radius: 0;
+}
+
+.vscode-dark .modal-header .btn-close {
+  color: var(--color-foreground-dimmed);
+  opacity: 0.8;
+  filter: invert(1);
+  text-shadow: none;
+  outline: none;
+}
+
+.vscode-dark .modal-header .btn-close:hover,
+.vscode-dark .modal-header .btn-close:focus {
+  color: var(--color-foreground);
+  opacity: 1;
+  text-shadow: none;
+  outline: none;
+}
+
+/* Notebooks */
+.vscode-dark .cell-toolbar,
+.vscode-dark .notebook-input {
+  background: #181818;
+  color: var(--color-foreground);
+}
+
+.vscode-dark .notebook-input pre {
+  background: var(--color-canvas-background);
+  color: var(--color-foreground);
+  border-radius: 0;
+}
+
+.vscode-dark .notebook-cell.selected {
+  border-color: var(--color-accent-100);
+}
+
+/* React timelines */
+.vscode-dark .react-calendar-timeline .rct-sidebar,
+.vscode-dark .react-calendar-timeline .rct-dateHeader {
+  color: var(--color-foreground);
+  font-size: var(--font-size-small);
+}
+
+/* File tree */
+
+.vscode-dark .file-tree .isActive {
+  color: var(--color-foreground);
+}
+
+/* Dropdown menus - Square edges */
+.vscode-dark .dropdown-menu {
+  background: #1F1F1F;
+  border: 1px solid #3C3C3C;
+  border-radius: 0;
+}
+
+.vscode-dark .dropdown-item {
+  background: #1F1F1F;
+  color: var(--color-foreground);
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  border-radius: 0;
+}
+
+.vscode-dark .dropdown-item:hover,
+.vscode-dark .dropdown-item.active:hover {
+  background: #37373D;
+}
+
+.vscode-dark .dropdown-item.active {
+  background: #37373D;
+  color: #FFFFFF;
+}
+
+/* Footer - VS Code Dark Modern status bar */
+.vscode-dark .app-footer.fixed-bottom {
+  background: var(--color-footer-background);
+  color: var(--color-foreground);
+  font-family: var(--font-family-sans-serif);
+  border-top: 1px solid #2B2B2B;
+}
+
+/* ACE things */
+.vscode-dark .ace_tooltip {
+  background: var(--color-canvas-background);
+  color: var(--color-foreground);
+  border-radius: 0;
+}
+
+.vscode-dark .custom-tooltip {
+  margin: 0;
+  padding: 10px;
+  background: var(--color-canvas-background);
+  border: 1px solid #3C3C3C;
+  white-space: nowrap;
+  display: block;
+  border-radius: 0;
+}
+
+.vscode-dark .sidebar-icon {
+  filter: invert(1);
+}
+
+.vscode-dark .file-hex-view td,
+.vscode-dark .file-hex-view th {
+  border: 0px;
+}
+
+.vscode-dark .labels,
+.vscode-dark .velo__menu {
+  background: var(--color-form-control-background);
+  border-color: var(--color-btn-default-border) !important;
+  box-shadow: none;
+  color: var(--color-foreground);
+  border-radius: 0;
+}
+
+.vscode-dark .velo__control {
+  background: var(--color-form-control-background);
+  border-color: var(--color-btn-default-border);
+  color: var(--color-foreground);
+  border-radius: 0;
+}
+
+.vscode-dark .velo__control--is-focused,
+.vscode-dark .velo__control--menu-is-open {
+  background: var(--color-form-control-background);
+  box-shadow: 0 0 0 1px var(--color-accent-100);
+  border-color: var(--color-accent-100);
+  color: var(--color-foreground);
+  border-radius: 0;
+}
+
+.vscode-dark .velo__control:hover {
+  box-shadow: 0 0 0 1px var(--color-foreground-dimmed);
+  border-color: var(--color-btn-default-border);
+  border-radius: 0;
+}
+
+.vscode-dark .accordion,
+.vscode-dark .accordion > .card,
+.vscode-dark .accordion > .card > .card-header {
+  border-color: var(--color-btn-default-border);
+  color: var(--color-foreground);
+  border-radius: 0;
+}
+
+.vscode-dark .accordion-item {
+  border-radius: 0;
+}
+
+.vscode-dark .accordion-button {
+  border-radius: 0;
+}
+
+.vscode-dark ::placeholder {
+  color: #6E6E6E !important;
+  font-weight: 500 !important;
+}
+
+.vscode-dark .velo__placeholder {
+  color: #6E6E6E;
+}
+
+.vscode-dark .ace_placeholder {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-large);
+  letter-spacing: 0.4px;
+  color: #6E6E6E !important;
+  font-weight: 500 !important;
+  position: inherit;
+  z-index: 1000;
+}
+
+.vscode-dark .velo__input {
+  color: var(--color-foreground);
+}
+
+.vscode-dark .velo__option:hover,
+.vscode-dark .velo__option--is-focused {
+  background: #37373D;
+}
+
+.vscode-dark .velo__multi-value {
+  background-color: #37373D;
+  border-radius: 0;
+}
+
+.vscode-dark .velo__multi-value__label {
+  color: #FFFFFF;
+  background-color: #37373D;
+  border: none;
+  font-size: var(--font-size-small);
+  border-radius: 0;
+}
+
+.vscode-dark .velo__multi-value__remove {
+  color: #FFFFFF;
+  background-color: #37373D;
+  border: none;
+  border-radius: 0;
+}
+
+.vscode-dark .velo__multi-value__remove:hover {
+  color: #FFFFFF;
+  background-color: #505050;
+  font-weight: 700;
+  border-radius: 0;
+}
+
+.vscode-dark hr {
+  background: #3C3C3C;
+  height: 1px;
+  border: none;
+  margin-top: 2em;
+}
+
+.vscode-dark .flow-log-filter,
+.vscode-dark .flow-log-filter:focus {
+  border-color: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* JSON syntax colors - VS Code Dark Modern style */
+.vscode-dark .json-expand-button {
+  color: #858585;
+}
+
+.vscode-dark .json-index {
+  color: #DCDCAA;
+}
+
+.vscode-dark .json-key {
+  color: #9CDCFE;
+}
+
+.vscode-dark .json-string {
+  padding-left: 5px;
+  color: #CE9178;
+}
+
+.vscode-dark .json-number {
+  padding-left: 5px;
+  color: #B5CEA8;
+}
+
+.vscode-dark .json-null {
+  padding-left: 5px;
+  color: #569CD6;
+}
+
+.vscode-dark .json-boolean {
+  padding-left: 5px;
+  color: #569CD6;
+}
+
+.vscode-dark .new-artifact-search-table table.table td {
+  background-color: var(--color-card-heading-background);
+}
+
+/* Calendar */
+.vscode-dark .calendar-selector:hover {
+  background: var(--color-canvas-background);
+}
+
+.vscode-dark div.calendar-day:hover,
+.vscode-dark div.calendar-other-day:hover,
+.vscode-dark div.calendar-selected-date {
+  background: var(--color-accent-75);
+  color: #FFFFFF;
+}
+
+/* Scrollbar styling - Square edges */
+.vscode-dark ::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+.vscode-dark ::-webkit-scrollbar-track {
+  background: var(--color-scrollbar-track);
+}
+
+.vscode-dark ::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbar-thumb);
+  border-radius: 0;
+}
+
+.vscode-dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scrollbar-thumb-hover);
+}
+
+.vscode-dark ::-webkit-scrollbar-corner {
+  background: var(--color-canvas-background);
+}
+
+/* Badge styling */
+.vscode-dark .badge {
+  border-radius: 0;
+}
+
+/* Alert styling */
+.vscode-dark .alert {
+  border-radius: 0;
+}

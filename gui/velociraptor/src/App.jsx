@@ -52,6 +52,7 @@ import './themes/ncurses-light.css';
 import './themes/ncurses-dark.css';
 import './themes/coolgray-dark.css';
 import './themes/midnight.css';
+import './themes/vscode-dark.css';
 
 /* This is the main App page.
 
