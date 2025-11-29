@@ -1,18 +1,9 @@
-Query: LET _ <= mock(artifact=Artifact.Linux.Sys.Users, results={ SELECT 1000 AS Uid, 'foouser' AS User, 'bardir' AS Homedir FROM scope() })
-Output: []
-
-Query: LET _ <= mock(plugin='glob', results={ SELECT pathspec(parse=srcDir + '/artifacts/testdata/files/linux/authorized_keys') AS OSPath, NULL AS Mtime, NULL AS Ctime FROM scope() })
-Output: []
-
 Query: SELECT *, OSPath.Basename AS OSPath
 FROM Artifact.Linux.Ssh.AuthorizedKeys(
-   sshKeyFiles='authorized_keys'
-)
+   sshKeyFilesGlob=srcDir + '/artifacts/testdata/files/linux/authorized_keys')
 
 Output: [
  {
-  "Uid": 1000,
-  "User": "foouser",
   "_Upload": null,
   "options": "",
   "keytype": "ssh-rsa",
@@ -22,8 +13,6 @@ Output: [
   "OSPath": "authorized_keys"
  },
  {
-  "Uid": 1000,
-  "User": "foouser",
   "_Upload": null,
   "options": "",
   "keytype": "ssh-rsa",
@@ -33,8 +22,6 @@ Output: [
   "OSPath": "authorized_keys"
  },
  {
-  "Uid": 1000,
-  "User": "foouser",
   "_Upload": null,
   "options": "",
   "keytype": "ssh-ed25519",
@@ -44,8 +31,6 @@ Output: [
   "OSPath": "authorized_keys"
  },
  {
-  "Uid": 1000,
-  "User": "foouser",
   "_Upload": null,
   "options": [
    "command=/usr/local/bin/validate-rsync",
@@ -58,8 +43,6 @@ Output: [
   "OSPath": "authorized_keys"
  },
  {
-  "Uid": 1000,
-  "User": "foouser",
   "_Upload": null,
   "options": [
    "opt1",
