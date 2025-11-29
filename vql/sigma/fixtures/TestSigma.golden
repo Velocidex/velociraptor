@@ -1781,6 +1781,111 @@
    "Details": null
   }
  ],
+ "One of Condition": [
+  {
+   "Match": "Should match selection1 and selection2 contains single element",
+   "Decoded": "jejfjefhellorfriufirtestkdkdg",
+   "Foo": "amVqZmplZmhlbGxvcmZyaXVmaXJ0ZXN0a2RrZGc=",
+   "_Match": {
+    "match": true,
+    "search_results": {
+     "selection1": true,
+     "selection2": true,
+     "selection3": false,
+     "selection4": false
+    },
+    "condition_results": [
+     true
+    ]
+   },
+   "_Rule": {
+    "Title": "One Of",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection1": {
+       "event_matchers": [
+        [
+         {
+          "field": "Foo",
+          "modifiers": [
+           "base64offset",
+           "contains"
+          ],
+          "values": [
+           "hello"
+          ]
+         }
+        ]
+       ]
+      },
+      "selection2": {
+       "event_matchers": [
+        [
+         {
+          "field": "Foo",
+          "modifiers": [
+           "base64offset",
+           "contains"
+          ],
+          "values": [
+           "test"
+          ]
+         }
+        ]
+       ]
+      },
+      "selection3": {
+       "event_matchers": [
+        [
+         {
+          "field": "Foo",
+          "modifiers": [
+           "base64offset",
+           "contains",
+           "all"
+          ],
+          "values": [
+           "sprite",
+           "pepsi"
+          ]
+         }
+        ]
+       ]
+      },
+      "selection4": {
+       "event_matchers": [
+        [
+         {
+          "field": "Foo",
+          "modifiers": [
+           "base64offset",
+           "contains"
+          ],
+          "values": [
+           "velo",
+           "ciraptorex"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "Condition": [
+      {
+       "Search": {
+        "Pattern": "selection*"
+       }
+      }
+     ]
+    }
+   },
+   "Details": null
+  }
+ ],
  "Test VQL Events": [
   {
    "Foo": 1,

@@ -28,6 +28,7 @@ export default defineConfig({
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
         'process.env.MY_ENV': JSON.stringify(process.env.MY_ENV),
     },
+
     css : {
       // Creates inline source maps which don't work with Chrome (108)
       // dev tools Coverage analysis. Rather use build.sourcemap:true
@@ -68,6 +69,10 @@ export default defineConfig({
     ],
     server: {
       port: 3000,
+      // By default only bind to localhost for development.
+      host: "127.0.0.1",
+      // Sometimes it is useful to bind on all interfaces.
+      // host: "0.0.0.0",
       strictPort: true,
       proxy: {
         "/api": {

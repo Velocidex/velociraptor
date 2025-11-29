@@ -564,6 +564,39 @@ detection:
 			},
 		},
 		{
+			description: "One of Condition",
+			rule: `
+title: One Of
+logsource:
+  product: windows
+  service: application
+
+detection:
+  selection1:
+     Foo|base64offset|contains: hello
+  selection2:
+     Foo|base64offset|contains: test
+  selection3:
+    Foo|base64offset|contains|all:
+      - sprite
+      - pepsi
+  selection4:
+    Foo|base64offset|contains:
+      - velo
+      - ciraptorex
+  condition: 1 of selection*
+`,
+			fieldmappings: ordereddict.NewDict().
+				Set("Foo", "x=>x.Foo"),
+			debug: true,
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Match", "Should match selection1 and selection2 contains single element").
+					Set("Decoded", "jejfjefhellorfriufirtestkdkdg").
+					Set("Foo", base64.StdEncoding.EncodeToString([]byte("jejfjefhellorfriufirtestkdkdg"))),
+			},
+		},
+		{
 			description: "Test VQL Events",
 			rule: `
 title: VQL Events
