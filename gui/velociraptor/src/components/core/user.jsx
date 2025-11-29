@@ -78,6 +78,7 @@ class _UserSettings extends React.Component {
                         document.body.classList.remove('ncurses-dark');
                         document.body.classList.remove('coolgray-dark');
                         document.body.classList.remove('midnight');
+                        document.body.classList.remove('vscode-dark');
                         document.body.classList.add(traits.theme || "veloci-light");
 
                         // veloci-docs is just a modified version of veloci-light

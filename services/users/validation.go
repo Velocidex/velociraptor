@@ -51,11 +51,12 @@ func (self Validator) validateTheme(theme string) (string, error) {
 		"no-theme", "pink-light",
 		"ncurses-light", "ncurses-dark",
 		"github-dimmed-dark",
-		"coolgray-dark", "midnight":
+		"coolgray-dark", "midnight",
+		"vscode-dark":
 		return theme, nil
 
 	default:
-		return "", fmt.Errorf("Invalid theme %v. Can only be veloci-light, veloci-dark, veloci-docs, no-theme, pink-light, ncurses-light, ncurses-dark, github-dimmed-dark, coolgray-dark, midnight", theme)
+		return "", fmt.Errorf("Invalid theme %v. Can only be veloci-light, veloci-dark, veloci-docs, no-theme, pink-light, ncurses-light, ncurses-dark, github-dimmed-dark, coolgray-dark, midnight, vscode-dark", theme)
 	}
 }
 
