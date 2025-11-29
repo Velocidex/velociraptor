@@ -274,6 +274,7 @@ class UserSettingsDialog extends React.PureComponent {
                                   }}>
                       <option value="veloci-light">{T("Velociraptor (light)")}</option>
                       <option value="veloci-dark">{T("Velociraptor (dark)")}</option>
+                      <option value="vscode-dark">{T("VS Code (dark)")}</option>
                       <option value="no-theme">{T("Velociraptor Classic (light)")}</option>
                       <option value="pink-light">{T("Strawberry Milkshake (light)")}</option>
                       <option value="ncurses-light">{T("Ncurses (light)")}</option>
@@ -470,6 +471,9 @@ export default class UserLabel extends React.Component {
                 ace_options.fontFamily = "Iosevka Term";
             } else if(params.theme === "midnight") {
                 ace_options.theme = "ace/theme/terminal";
+                ace_options.fontFamily = "Iosevka Term";
+            } else if(params.theme === "vscode-dark") {
+                ace_options.theme = "ace/theme/tomorrow_night";
                 ace_options.fontFamily = "Iosevka Term";
             }
 
