@@ -135,7 +135,8 @@ func main() {
 		os.Exit(s)
 	})
 
-	args := os.Args[1:]
+	args, err := transformArgv(os.Args[1:])
+	kingpin.FatalIfError(err, "Command line.")
 
 	// If no args are given check if there is an embedded config
 	// with autoexec.
@@ -154,7 +155,7 @@ func main() {
 	}
 
 	// Log the actual argv that will be run.
-	err := logArgv(append([]string{os.Args[0]}, args...))
+	err = logArgv(append([]string{os.Args[0]}, args...))
 	if err != nil {
 		fmt.Printf("Error sending to the event log: %v\n", err)
 	}

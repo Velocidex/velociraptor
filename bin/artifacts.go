@@ -28,10 +28,12 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
+	errors "github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
@@ -48,6 +50,10 @@ var (
 
 	artifact_command_show = artifact_command.Command(
 		"show", "Show an artifact")
+
+	artifact_command_collect_cli_mode = artifact_command_collect.Flag(
+		"cli_help_mode", "Display help like a CLI command").
+		Bool()
 
 	artifact_command_show_name = artifact_command_show.Arg(
 		"name", "Name to show.").Required().String()
@@ -164,6 +170,16 @@ func doArtifactCollect() error {
 		return err
 	}
 
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
 	spec := ordereddict.NewDict()
 	for _, name := range *artifact_command_collect_names {
 		collect_args := ordereddict.NewDict()
@@ -182,19 +198,31 @@ func doArtifactCollect() error {
 			parts := strings.SplitN(item, "=", 2)
 			arg_name := parts[0]
 
+			arg_type, err := getParameterType(ctx, config_obj,
+				repository, name, arg_name)
+			if err != nil {
+				return err
+			}
+
 			if len(parts) < 2 {
 				collect_args.Set(arg_name, "Y")
 			} else {
-				collect_args.Set(arg_name, parts[1])
+				collect_args.Set(arg_name,
+					parseArtifactType(arg_type, parts[1]))
 			}
 		}
 
 		spec.Set(name, collect_args)
 	}
 
-	manager, err := services.GetRepositoryManager(config_obj)
-	if err != nil {
-		return err
+	if len(*artifact_command_collect_names) == 0 {
+		return errors.New("Need some artifact to collect")
+	}
+
+	if *artifact_command_collect_cli_mode {
+		for _, name := range *artifact_command_collect_names {
+			return doArtifactCLIHelp(ctx, config_obj, manager, name)
+		}
 	}
 
 	logger := &LogWriter{config_obj: config_obj}
@@ -315,7 +343,8 @@ func doArtifactShow() error {
 		return err
 	}
 
-	artifact, pres := repository.Get(ctx, config_obj, *artifact_command_show_name)
+	artifact, pres := repository.Get(ctx, config_obj,
+		*artifact_command_show_name)
 	if !pres {
 		return fmt.Errorf("Artifact %s not found",
 			*artifact_command_show_name)
@@ -419,6 +448,66 @@ func doArtifactList() error {
 	return nil
 }
 
+func doArtifactCLIHelp(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	manager services.RepositoryManager, artifact_name string) error {
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+	artifact, pres := repository.Get(ctx, config_obj, artifact_name)
+	if !pres {
+		return utils.Wrap(utils.NotFoundError,
+			"Unknown artifact %v", artifact_name)
+	}
+
+	parse_context, err := app.ParseContext(
+		[]string{"artifacts", "collect", artifact.Name})
+	if err != nil {
+		return err
+	}
+	app.UsageForContextWithTemplate(
+		parse_context, 2, fmt.Sprintf(`
+usage: {{.App.Name}}[<common flags> ...] -r %v [<artifact params> ...]:
+
+Common Flags:
+{{with .Context.Flags|FlagsToTwoColumns}}{{FormatTwoColumnsWithIndent . 4 2}}{{end}}
+Artifact Parameters:
+`, artifact.Name))
+
+	for _, param := range artifact.Parameters {
+		desc := strings.TrimSpace(param.Description)
+		type_str := ""
+		if param.Type != "" {
+			type_str = fmt.Sprintf(" [%v] ", param.Type)
+			switch param.Type {
+			case "bool":
+				desc += "\n\nValid values: Y / N"
+			case "multichoice":
+				desc += `
+
+NOTE: Provide one or more of the following separated by ,
+Valid values one or more of: ` + strings.Join(param.Choices, ", ")
+
+			case "regex":
+				desc += "\n\nNOTE: Be careful to escape regex backslashes from the shell!"
+			}
+		}
+
+		desc = utils.Indent(utils.WrapString(desc, 100), 10) + "\n"
+
+		if param.Default != "" {
+			fmt.Printf(" --%v%v\n   default: '%v'\n%v",
+				param.Name, type_str, param.Default, desc)
+		} else {
+			fmt.Printf(" --%v%v\n%v",
+				param.Name, type_str, desc)
+		}
+	}
+	return nil
+}
+
 func maybeAddDefinitionsDirectory(config_obj *config_proto.Config) error {
 	if *artifact_definitions_dir != "" {
 		if config_obj.Defaults == nil {
@@ -430,6 +519,48 @@ func maybeAddDefinitionsDirectory(config_obj *config_proto.Config) error {
 			*artifact_definitions_dir)
 	}
 	return nil
+}
+
+// Simplify parsing of some parameter types. Since typing complicated
+// JSON escapes on the command line may be complicated (especially on
+// Windows) we also support some simpler types here
+func parseArtifactType(param_type string, param string) string {
+	switch param_type {
+	case "multichoice":
+		var res []string
+		err := json.Unmarshal([]byte(param), &res)
+		if err != nil {
+			// As an alternative for multi choice we allow items to be
+			// separated by comma.
+			for _, part := range strings.Split(param, ",") {
+				res = append(res, strings.TrimSpace(part))
+			}
+			return json.MustMarshalString(res)
+		}
+	}
+	return param
+}
+
+func getParameterType(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	repository services.Repository,
+	artifact_name, param_name string) (string, error) {
+	artifact, pres := repository.Get(ctx, config_obj, artifact_name)
+	if !pres {
+		return "", utils.Wrap(utils.NotFoundError,
+			"Unknown artifact %v", artifact_name)
+	}
+
+	for _, p := range artifact.Parameters {
+		if p.Name == param_name {
+			return p.Type, nil
+		}
+	}
+
+	return "", utils.Wrap(utils.NotFoundError,
+		"Parameter %v not known for artifact %v",
+		param_name, artifact_name)
 }
 
 func init() {
