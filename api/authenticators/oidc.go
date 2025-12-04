@@ -2,16 +2,20 @@ package authenticators
 
 import (
 	"context"
+	"encoding/base64"
 	"net/http"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	oidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 type OIDCConnector interface {
@@ -172,6 +176,27 @@ func (self *OidcAuthenticator) oauthOidcLogin(
 		})
 }
 
+func (self *OidcAuthenticator) maybeGetClaimsFromToken(
+	ctx context.Context, token *oauth2.Token) (*Claims, error) {
+	data, err := base64.StdEncoding.DecodeString(token.AccessToken)
+	if err != nil {
+		return nil, utils.InvalidArgError
+	}
+
+	if self.authenticator.OidcDebug {
+		logging.GetLogger(self.config_obj, &logging.GUIComponent).
+			Debug("OidcAuthenticator: Getting claims from access token: %s", data)
+	}
+
+	claims := ordereddict.NewDict()
+	err = json.Unmarshal(data, claims)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.newClaimsFromDict(ctx, claims)
+}
+
 func (self *OidcAuthenticator) oauthOidcCallback(
 	provider *oidc.Provider) http.Handler {
 	return api_utils.HandlerFunc(nil,
@@ -229,11 +254,15 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 			// Map the OIDC claims to our own claims.
 			claims, err := self.NewClaims(ctx, userInfo)
 			if err != nil {
-				logging.GetLogger(self.config_obj, &logging.GUIComponent).
-					Error("oauthOidcCallback: Unable to parse claims: %v", err)
-				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
-					http.StatusTemporaryRedirect)
-				return
+				new_claims, err1 := self.maybeGetClaimsFromToken(ctx, oauthToken)
+				if err1 != nil {
+					logging.GetLogger(self.config_obj, &logging.GUIComponent).
+						Error("oauthOidcCallback: Unable to parse claims: %v", err)
+					http.Redirect(w, r, api_utils.Homepage(self.config_obj),
+						http.StatusTemporaryRedirect)
+					return
+				}
+				claims = new_claims
 			}
 
 			cookie, err := getSignedJWTTokenCookie(

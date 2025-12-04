@@ -43,6 +43,12 @@ func (self *OidcAuthenticator) NewClaims(
 		return nil, err
 	}
 
+	return self.newClaimsFromDict(ctx, claims)
+}
+
+func (self *OidcAuthenticator) newClaimsFromDict(
+	ctx context.Context, claims *ordereddict.Dict) (*Claims, error) {
+
 	if self.authenticator.OidcDebug {
 		logging.GetLogger(self.config_obj, &logging.GUIComponent).
 			Debug("OidcAuthenticator: Parsing claims from OIDC Claims: %#v", claims)
@@ -89,7 +95,7 @@ func (self *OidcAuthenticator) NewClaims(
 	logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
 
 	// First check the user exist at all.
-	_, err = user_manager.GetUser(ctx, email, email)
+	_, err := user_manager.GetUser(ctx, email, email)
 	if utils.IsNotFound(err) {
 		// If the user does not exist at all, create it.
 		user_record := &api_proto.VelociraptorUser{
