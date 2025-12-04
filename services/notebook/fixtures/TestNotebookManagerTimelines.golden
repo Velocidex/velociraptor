@@ -39,6 +39,7 @@
   "notebook_id": "N.01",
   "cell_metadata": [
    {
+    "summary": "Welcome to Velociraptor notebooks!",
     "cell_id": "NC.02",
     "timestamp": 1715775587000000000,
     "type": "markdown",
