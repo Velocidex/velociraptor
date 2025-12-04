@@ -26,8 +26,8 @@ import (
 // constants from netinet/tcp.h, renamed to match Windows
 // implementation
 var socketStates = map[uint16]string{
-	1:  "ESTAB",    // ESTABLISHED
-	2:  "SENT",     // SYN_SENT
+	1:  "ESTAB", // ESTABLISHED
+	2:  "SYN_SENT",
 	3:  "SYN_RCVD", // SYN_RECV
 	4:  "FIN_WAIT1",
 	5:  "FIN_WAIT2",

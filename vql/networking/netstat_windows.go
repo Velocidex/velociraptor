@@ -57,7 +57,7 @@ var (
 	MIB_TCP_STATE = map[int]string{
 		1:  "CLOSED",
 		2:  "LISTEN",
-		3:  "SENT",
+		3:  "SYN_SENT",
 		4:  "SYN_RCVD",
 		5:  "ESTAB",
 		6:  "FIN_WAIT1",
