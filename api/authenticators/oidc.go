@@ -2,18 +2,15 @@ package authenticators
 
 import (
 	"context"
-	"encoding/base64"
 	"net/http"
 	"strings"
 
-	"github.com/Velocidex/ordereddict"
 	oidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 )
@@ -176,27 +173,6 @@ func (self *OidcAuthenticator) oauthOidcLogin(
 		})
 }
 
-func (self *OidcAuthenticator) maybeGetClaimsFromToken(
-	ctx context.Context, token *oauth2.Token) (*Claims, error) {
-	data, err := base64.StdEncoding.DecodeString(token.AccessToken)
-	if err != nil {
-		return nil, utils.InvalidArgError
-	}
-
-	if self.authenticator.OidcDebug {
-		logging.GetLogger(self.config_obj, &logging.GUIComponent).
-			Debug("OidcAuthenticator: Getting claims from access token: %s", data)
-	}
-
-	claims := ordereddict.NewDict()
-	err = json.Unmarshal(data, claims)
-	if err != nil {
-		return nil, err
-	}
-
-	return self.newClaimsFromDict(ctx, claims)
-}
-
 func (self *OidcAuthenticator) oauthOidcCallback(
 	provider *oidc.Provider) http.Handler {
 	return api_utils.HandlerFunc(nil,
@@ -254,15 +230,29 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 			// Map the OIDC claims to our own claims.
 			claims, err := self.NewClaims(ctx, userInfo)
 			if err != nil {
+				// Try to get the claims from the AccessToken. ADFS
+				// passes user info in the token instead of the user
+				// info endpoint (https://stackoverflow.com/questions/45058571/adfs-4-0-userinfo-endpoint-returns-only-sub-claim)
 				new_claims, err1 := self.maybeGetClaimsFromToken(ctx, oauthToken)
-				if err1 != nil {
+				if err1 == nil {
+					// Fallback method worked! Lets use it.
+					claims = new_claims
+
+					// No claims in AccessToken - report original error
+				} else if err1 == utils.InvalidArgError {
 					logging.GetLogger(self.config_obj, &logging.GUIComponent).
 						Error("oauthOidcCallback: Unable to parse claims: %v", err)
-					http.Redirect(w, r, api_utils.Homepage(self.config_obj),
-						http.StatusTemporaryRedirect)
-					return
+
+					// Failed to parse the AccessToken claims, report both errors.
+				} else {
+					logging.GetLogger(self.config_obj, &logging.GUIComponent).
+						Error("oauthOidcCallback: Unable to parse claims: %v, "+
+							"and then parsing AccessToken: %v", err1)
 				}
-				claims = new_claims
+
+				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
+					http.StatusTemporaryRedirect)
+				return
 			}
 
 			cookie, err := getSignedJWTTokenCookie(
