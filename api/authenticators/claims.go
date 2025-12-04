@@ -40,6 +40,11 @@ func (self *Claims) Valid() error {
 
 func (self *OidcAuthenticator) maybeGetClaimsFromToken(
 	ctx context.Context, token *oauth2.Token) (*Claims, error) {
+	if self.authenticator.OidcDebug {
+		logging.GetLogger(self.config_obj, &logging.GUIComponent).
+			Debug("OidcAuthenticator: Will try to get claims from token: %#v", token)
+	}
+
 	data, err := base64.StdEncoding.DecodeString(token.AccessToken)
 	if err != nil {
 		return nil, utils.InvalidArgError

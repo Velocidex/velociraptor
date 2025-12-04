@@ -247,7 +247,7 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 				} else {
 					logging.GetLogger(self.config_obj, &logging.GUIComponent).
 						Error("oauthOidcCallback: Unable to parse claims: %v, "+
-							"and then parsing AccessToken: %v", err1)
+							"and then parsing AccessToken: %v", err, err1)
 				}
 
 				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
