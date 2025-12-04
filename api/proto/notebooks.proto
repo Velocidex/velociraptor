@@ -131,6 +131,9 @@ message NotebookCell {
     string notebook_id = 16;
     string input = 1;
     string output = 2;
+
+    // A short summary of the notebook cell.
+    string summary = 17;
     string data  = 3;
     string cell_id = 4;
     repeated string messages = 5;
