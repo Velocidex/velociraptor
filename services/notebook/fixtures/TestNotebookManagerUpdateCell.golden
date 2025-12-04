@@ -38,6 +38,7 @@
   "notebook_id": "N.01",
   "cell_metadata": [
    {
+    "summary": "Welcome to Velociraptor notebooks!",
     "cell_id": "NC.02",
     "type": "markdown",
     "current_version": "03",
