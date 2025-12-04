@@ -95,7 +95,7 @@ func to_addr(family C.uint32_t, addr *[16]byte, port C.uint16_t) Addr {
 var socketStates = map[uint16]string{
 	0:  "CLOSE", // CLOSED
 	1:  "LISTEN",
-	2:  "SENT",     // SYN_SENT
+	2:  "SYN_SENT",
 	3:  "SYN_RCVD", // SYN_RECEIVED
 	4:  "ESTAB",    // ESTABLISHED
 	5:  "CLOSE_WAIT",
