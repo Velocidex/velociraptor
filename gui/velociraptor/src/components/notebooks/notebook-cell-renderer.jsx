@@ -229,6 +229,7 @@ export default class NotebookCellRenderer extends React.Component {
     constructor(props) {
         super(props);
         this.myRef = React.createRef();
+        this.scrollRef = React.createRef();
     }
 
     componentDidMount() {
@@ -1017,7 +1018,6 @@ export default class NotebookCellRenderer extends React.Component {
                 </ToolTip>
 
                 <FormControl as="select"
-                             ref={ (el) => this.element=el }
                              value={this.state.cell.type}
                              onChange={() => {
                                  let cell = this.state.cell;
@@ -1035,7 +1035,8 @@ export default class NotebookCellRenderer extends React.Component {
         );
 
         return (
-            <div>
+            <div ref={this.scrollRef}
+                 className={this.props.cell_metadata.cell_id + " hello"}>
             { this.state.showAddCellFromHunt &&
                 <AddCellFromHunt
                   addCell={(text, type, env)=>{

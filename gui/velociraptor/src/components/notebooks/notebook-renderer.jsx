@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import NotebookCellRenderer from './notebook-cell-renderer.jsx';
+import NotebookNavigator from './notebook-navigator.jsx';
 import Spinner from '../utils/spinner.jsx';
 import _ from 'lodash';
 import T from '../i8n/i8n.jsx';
@@ -26,6 +27,7 @@ export default class NotebookRenderer extends React.Component {
         // notebooks can only be edited in places where the server
         // acknowledges the current state.
         locked: 0,
+        refs: {},
     }
 
     setSelectedCellId = (cell_id) => {
@@ -171,6 +173,24 @@ export default class NotebookRenderer extends React.Component {
                  });
     }
 
+    scrollToCell = cell_id=>{
+        let ref = this.getRef(cell_id);
+        if(ref && ref.current && ref.current.scrollRef) {
+            ref.current.scrollRef.current.scrollIntoView({
+                behavior: "smooth",
+            });
+        }
+    }
+
+    getRef = cell_id=>{
+        let res = this.state.refs[cell_id];
+        if(!res) {
+            res = React.createRef();
+            this.state.refs[cell_id] = res;
+        }
+        return res;
+    }
+
     render() {
         if (!this.props.notebook || _.isEmpty(this.props.notebook.cell_metadata)) {
             return <h5 className="no-content">
@@ -180,10 +200,16 @@ export default class NotebookRenderer extends React.Component {
 
         return (
             <>
+              <NotebookNavigator
+                scrollToCell={this.scrollToCell}
+                notebook={this.props.notebook}
+              />
               <Spinner loading={this.state.loading || this.props.notebook.loading} />
+              <div className="notebook-contents">
               { _.map(this.props.notebook.cell_metadata, (cell_md, idx) => {
                   return <NotebookCellRenderer
                            env={this.props.env}
+                           ref={this.getRef(cell_md.cell_id)}
                            selected_cell_id={this.state.selected_cell_id}
                            setSelectedCellId={this.setSelectedCellId}
                            notebook_id={this.props.notebook.notebook_id}
@@ -203,6 +229,7 @@ export default class NotebookRenderer extends React.Component {
                                })}
                       />;
               })}
+              </div>
             </>
         );
     }

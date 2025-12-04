@@ -21,6 +21,7 @@ import (
 	"context"
 	"regexp"
 	"strings"
+	"sync"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -33,8 +34,39 @@ import (
 )
 
 var (
-	doc_regex = regexp.MustCompile("doc=(.+)")
+	doc_regex          = regexp.MustCompile("doc=(.+)")
+	mu                 sync.Mutex
+	cachedDescriptions []*api_proto.Completion
 )
+
+// Get the top level description line.
+func elideDescription(in string) string {
+	parts := strings.SplitN(in, ".", 2)
+	return utils.Elide(parts[0], 80)
+}
+
+func loadApiDescriptions() []*api_proto.Completion {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if len(cachedDescriptions) > 0 {
+		return cachedDescriptions
+	}
+
+	descriptions, err := utils.LoadApiDescription()
+	if err != nil {
+		descriptions = IntrospectDescription()
+	}
+
+	for _, d := range descriptions {
+		d.Description = elideDescription(d.Description)
+	}
+
+	// Cache it for next time.
+	cachedDescriptions = descriptions
+
+	return cachedDescriptions
+}
 
 func IntrospectDescription() []*api_proto.Completion {
 	result := []*api_proto.Completion{}
@@ -55,7 +87,7 @@ func IntrospectDescription() []*api_proto.Completion {
 		}
 		result = append(result, &api_proto.Completion{
 			Name:        item.Name,
-			Description: item.Doc,
+			Description: elideDescription(item.Doc),
 			Type:        "Function",
 			Args:        getArgDescriptors(item.ArgType, type_map, scope),
 			Metadata:    metadata,
@@ -72,7 +104,7 @@ func IntrospectDescription() []*api_proto.Completion {
 		}
 		result = append(result, &api_proto.Completion{
 			Name:        item.Name,
-			Description: item.Doc,
+			Description: elideDescription(item.Doc),
 			Type:        "Plugin",
 			Args:        getArgDescriptors(item.ArgType, type_map, scope),
 			Metadata:    metadata,
@@ -108,11 +140,7 @@ func (self *ApiServer) GetKeywordCompletions(
 		},
 	}
 
-	descriptions, err := utils.LoadApiDescription()
-	if err != nil {
-		descriptions = IntrospectDescription()
-	}
-	result.Items = append(result.Items, descriptions...)
+	result.Items = append(result.Items, loadApiDescriptions()...)
 
 	manager, err := services.GetRepositoryManager(org_config_obj)
 	if err != nil {
@@ -171,7 +199,7 @@ func getArgDescriptors(
 			}
 			args = append(args, &api_proto.ArgDescriptor{
 				Name:        i.Key,
-				Description: doc + required,
+				Description: elideDescription(doc) + required,
 				Type:        target,
 			})
 		}
@@ -185,7 +213,7 @@ func getArtifactParamDescriptors(artifact *artifacts_proto.Artifact) []*api_prot
 	for _, parameter := range artifact.Parameters {
 		args = append(args, &api_proto.ArgDescriptor{
 			Name:        parameter.Name,
-			Description: parameter.Description,
+			Description: elideDescription(parameter.Description),
 			Type:        "Artifact Parameter",
 		})
 	}
