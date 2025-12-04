@@ -7,7 +7,7 @@ on: [pull_request]
 
 jobs:
   build:
-    if: github.event.pull_request.merged
+    #if: github.event.pull_request.merged
     name: Build
     runs-on: ubuntu-latest
     steps:
