@@ -4,13 +4,17 @@ div.notebook_nav {
     height: -webkit-fill-available;
     overflow-y: auto;
     margin-bottom: 50px;
-    margin-left: -10px;
+    margin-left: -5px;
 }
 
 div.notebook_nav.uncollapsed {
     width: 100%;
     z-index: 1000;
     background: var(--color-sidebar-background);
+}
+
+div.notebook_nav.collapsed {
+    width: 34px;
 }
 
 div.notebook_nav.collapsed .notebook-outline {

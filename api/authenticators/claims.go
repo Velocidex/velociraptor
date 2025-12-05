@@ -2,14 +2,17 @@ package authenticators
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	oidc "github.com/coreos/go-oidc/v3/oidc"
+	"golang.org/x/oauth2"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -35,6 +38,32 @@ func (self *Claims) Valid() error {
 	return nil
 }
 
+func (self *OidcAuthenticator) maybeGetClaimsFromToken(
+	ctx context.Context, token *oauth2.Token) (*Claims, error) {
+	if self.authenticator.OidcDebug {
+		logging.GetLogger(self.config_obj, &logging.GUIComponent).
+			Debug("OidcAuthenticator: Will try to get claims from token: %#v", token)
+	}
+
+	data, err := base64.StdEncoding.DecodeString(token.AccessToken)
+	if err != nil {
+		return nil, utils.InvalidArgError
+	}
+
+	if self.authenticator.OidcDebug {
+		logging.GetLogger(self.config_obj, &logging.GUIComponent).
+			Debug("OidcAuthenticator: Getting claims from access token: %s", data)
+	}
+
+	claims := ordereddict.NewDict()
+	err = json.Unmarshal(data, claims)
+	if err != nil {
+		return nil, utils.InvalidArgError
+	}
+
+	return self.newClaimsFromDict(ctx, claims)
+}
+
 func (self *OidcAuthenticator) NewClaims(
 	ctx context.Context, user_info *oidc.UserInfo) (*Claims, error) {
 	claims := ordereddict.NewDict()
@@ -42,6 +71,12 @@ func (self *OidcAuthenticator) NewClaims(
 	if err != nil {
 		return nil, err
 	}
+
+	return self.newClaimsFromDict(ctx, claims)
+}
+
+func (self *OidcAuthenticator) newClaimsFromDict(
+	ctx context.Context, claims *ordereddict.Dict) (*Claims, error) {
 
 	if self.authenticator.OidcDebug {
 		logging.GetLogger(self.config_obj, &logging.GUIComponent).
@@ -89,7 +124,7 @@ func (self *OidcAuthenticator) NewClaims(
 	logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
 
 	// First check the user exist at all.
-	_, err = user_manager.GetUser(ctx, email, email)
+	_, err := user_manager.GetUser(ctx, email, email)
 	if utils.IsNotFound(err) {
 		// If the user does not exist at all, create it.
 		user_record := &api_proto.VelociraptorUser{

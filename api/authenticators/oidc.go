@@ -12,6 +12,7 @@ import (
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 type OIDCConnector interface {
@@ -229,8 +230,26 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 			// Map the OIDC claims to our own claims.
 			claims, err := self.NewClaims(ctx, userInfo)
 			if err != nil {
-				logging.GetLogger(self.config_obj, &logging.GUIComponent).
-					Error("oauthOidcCallback: Unable to parse claims: %v", err)
+				// Try to get the claims from the AccessToken. ADFS
+				// passes user info in the token instead of the user
+				// info endpoint (https://stackoverflow.com/questions/45058571/adfs-4-0-userinfo-endpoint-returns-only-sub-claim)
+				new_claims, err1 := self.maybeGetClaimsFromToken(ctx, oauthToken)
+				if err1 == nil {
+					// Fallback method worked! Lets use it.
+					claims = new_claims
+
+					// No claims in AccessToken - report original error
+				} else if err1 == utils.InvalidArgError {
+					logging.GetLogger(self.config_obj, &logging.GUIComponent).
+						Error("oauthOidcCallback: Unable to parse claims: %v", err)
+
+					// Failed to parse the AccessToken claims, report both errors.
+				} else {
+					logging.GetLogger(self.config_obj, &logging.GUIComponent).
+						Error("oauthOidcCallback: Unable to parse claims: %v, "+
+							"and then parsing AccessToken: %v", err, err1)
+				}
+
 				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 					http.StatusTemporaryRedirect)
 				return
