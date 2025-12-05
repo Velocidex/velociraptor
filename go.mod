@@ -65,7 +65,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/sebdah/goldie/v2 v2.8.0
 	github.com/sergi/go-diff v1.4.0
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.8.3
 	github.com/stretchr/testify v1.11.1
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v1.0.0
@@ -145,6 +145,7 @@ require (
 	github.com/leodido/go-syslog v1.0.1
 	github.com/lpar/gzipped v1.1.0
 	github.com/mccutchen/go-httpbin/v2 v2.18.3
+	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/mooijtech/go-pst/v6 v6.0.2
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.12.0
@@ -253,7 +254,6 @@ require (
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.19 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
-	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
