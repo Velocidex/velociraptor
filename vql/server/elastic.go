@@ -81,6 +81,7 @@ type _ElasticPluginArgs struct {
 	MaxMemoryBuffer    uint64              `vfilter:"optional,field=max_memory_buffer,doc=How large we allow the memory buffer to grow to while we are trying to contact the Elastic server (default 100mb)."`
 	Action             string              `vfilter:"optional,field=action,doc=Either index or create. For data streams this must be create."`
 	Secret             string              `vfilter:"optional,field=secret,doc=Alternatively use a secret from the secrets service. Secret must be of type 'AWS S3 Creds'"`
+	TimesketchEnrichment bool            `vfilter:"optional,field=timesketch_enrichment,doc=Add Timesketch compatible timestamp and message fields."`
 }
 
 type _ElasticPlugin struct{}
@@ -271,6 +272,11 @@ func append_row_to_buffer(
 	arg *_ElasticPluginArgs, opts *json.EncOpts) error {
 
 	row_dict := vfilter.RowToDict(ctx, scope, row)
+
+	if arg.TimesketchEnrichment {
+		applyTimesketchEnrichment(row_dict)
+	}
+
 	index := arg.Index
 	index_any, pres := row_dict.Get("_index")
 	if pres {
@@ -468,4 +474,130 @@ func (self _ElasticPlugin) Info(
 
 func init() {
 	vql_subsystem.RegisterPlugin(&_ElasticPlugin{})
+}
+
+func applyTimesketchEnrichment(doc *ordereddict.Dict) {
+	ts := determineTimestamp(doc)
+	iso8601Time := ts.Format(time.RFC3339)
+
+	// Ensure datetime field exists (ISO8601 format)
+	if _, pres := doc.Get("datetime"); !pres {
+		doc.Set("datetime", iso8601Time)
+	} else {
+		val, _ := doc.Get("datetime")
+		if dt, ok := val.(string); ok {
+			if _, err := time.Parse(time.RFC3339, dt); err != nil {
+				doc.Set("datetime", iso8601Time)
+			}
+		} else {
+			doc.Set("datetime", iso8601Time)
+		}
+	}
+
+	// Ensure message field exists
+	if _, pres := doc.Get("message"); !pres {
+		bytes, err := json.Marshal(doc)
+		if err == nil {
+			doc.Set("message", string(bytes))
+		} else {
+			doc.Set("message", "Velociraptor Event")
+		}
+	} else {
+		val, _ := doc.Get("message")
+		if _, ok := val.(string); !ok {
+			bytes, _ := json.Marshal(val)
+			doc.Set("message", string(bytes))
+		}
+	}
+
+	// Ensure timestamp_desc field exists
+	if _, pres := doc.Get("timestamp_desc"); !pres {
+		doc.Set("timestamp_desc", determineTimestampDescValue(doc))
+	} else {
+		val, _ := doc.Get("timestamp_desc")
+		if str, ok := val.(string); ok {
+			if strings.TrimSpace(str) == "" {
+				doc.Set("timestamp_desc", determineTimestampDescValue(doc))
+			}
+		} else {
+			doc.Set("timestamp_desc", determineTimestampDescValue(doc))
+		}
+	}
+
+	// Add other required fields
+	doc.Set("@timestamp", ts.Format(time.RFC3339Nano))
+	doc.Set("timestamp", ts.UnixNano()/int64(time.Microsecond))
+}
+
+func determineTimestamp(doc *ordereddict.Dict) time.Time {
+	keys := []string{"time", "timestamp", "@timestamp"}
+	for _, key := range keys {
+		if val, pres := doc.Get(key); pres {
+			if ts, ok := parseTimestampValue(val); ok {
+				return ts
+			}
+		}
+	}
+	return time.Now().UTC()
+}
+
+func parseTimestampValue(val interface{}) (time.Time, bool) {
+	switch v := val.(type) {
+	case string:
+		if ts, err := time.Parse(time.RFC3339Nano, v); err == nil {
+			return ts.UTC(), true
+		}
+		if ts, err := time.Parse(time.RFC3339, v); err == nil {
+			return ts.UTC(), true
+		}
+	case float64:
+		return parseNumericTimestamp(v)
+	case int64:
+		return parseNumericTimestamp(float64(v))
+	case uint64:
+		return parseNumericTimestamp(float64(v))
+	case int:
+		return parseNumericTimestamp(float64(v))
+	case time.Time:
+		return v.UTC(), true
+	}
+	return time.Time{}, false
+}
+
+func parseNumericTimestamp(value float64) (time.Time, bool) {
+	if value <= 0 {
+		return time.Time{}, false
+	}
+
+	switch {
+	case value > 1e18:
+		// nanoseconds
+		return time.Unix(0, int64(value)).UTC(), true
+	case value > 1e15:
+		// microseconds
+		return time.Unix(0, int64(value)*int64(time.Microsecond)).UTC(), true
+	case value > 1e12:
+		// milliseconds
+		ms := int64(value)
+		return time.Unix(0, ms*int64(time.Millisecond)).UTC(), true
+	default:
+		// seconds (fractional)
+		sec := int64(value)
+		nsec := int64((value - float64(sec)) * 1e9)
+		return time.Unix(sec, nsec).UTC(), true
+	}
+}
+
+func determineTimestampDescValue(doc *ordereddict.Dict) string {
+	if val, pres := doc.Get("event"); pres {
+		if event, ok := val.(string); ok && strings.TrimSpace(event) != "" {
+			return event
+		}
+	}
+	if val, pres := doc.Get("operation"); pres {
+		if operation, ok := val.(string); ok && strings.TrimSpace(operation) != "" {
+			return operation
+		}
+	}
+	return "Velociraptor Event"
 }

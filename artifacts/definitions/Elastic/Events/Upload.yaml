@@ -48,6 +48,9 @@ parameters:
     description: |
       A root CA certificate in PEM for trusting TLS protected Elastic
       servers.
+  - name: TimesketchEnrichment
+    type: bool
+    description: Add Timesketch compatible timestamp and message fields.
 
 sources:
   - query: |
@@ -82,4 +85,5 @@ sources:
           api_key=APIKey,
           root_ca=RootCA,
           disable_ssl_security=DisableSSLSecurity,
+          timesketch_enrichment=TimesketchEnrichment,
           type="ClientEvents")
