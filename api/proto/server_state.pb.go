@@ -8,6 +8,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -18,20 +19,17 @@ const (
 )
 
 type ServerInstallRecord struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	InstallTime   uint64                 `protobuf:"varint,1,opt,name=install_time,json=installTime,proto3" json:"install_time,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	InstallTime uint64 `protobuf:"varint,1,opt,name=install_time,json=installTime,proto3" json:"install_time,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ServerInstallRecord) Reset() {
 	*x = ServerInstallRecord{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_server_state_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_server_state_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ServerInstallRecord) String() string {
@@ -42,7 +40,7 @@ func (*ServerInstallRecord) ProtoMessage() {}
 
 func (x *ServerInstallRecord) ProtoReflect() protoreflect.Message {
 	mi := &file_server_state_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -66,32 +64,26 @@ func (x *ServerInstallRecord) GetInstallTime() uint64 {
 
 var File_server_state_proto protoreflect.FileDescriptor
 
-var file_server_state_proto_rawDesc = []byte{
-	0x0a, 0x12, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x73, 0x74, 0x61, 0x74, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x38, 0x0a, 0x13, 0x53,
-	0x65, 0x72, 0x76, 0x65, 0x72, 0x49, 0x6e, 0x73, 0x74, 0x61, 0x6c, 0x6c, 0x52, 0x65, 0x63, 0x6f,
-	0x72, 0x64, 0x12, 0x21, 0x0a, 0x0c, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6c, 0x6c, 0x5f, 0x74, 0x69,
-	0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0b, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6c,
-	0x6c, 0x54, 0x69, 0x6d, 0x65, 0x42, 0x31, 0x5a, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c,
-	0x6f, 0x63, 0x69, 0x64, 0x65, 0x78, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e,
-	0x67, 0x2f, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72, 0x2f, 0x61,
-	0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+const file_server_state_proto_rawDesc = "" +
+	"\n" +
+	"\x12server_state.proto\x12\x05proto\"8\n" +
+	"\x13ServerInstallRecord\x12!\n" +
+	"\finstall_time\x18\x01 \x01(\x04R\vinstallTimeB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
 
 var (
 	file_server_state_proto_rawDescOnce sync.Once
-	file_server_state_proto_rawDescData = file_server_state_proto_rawDesc
+	file_server_state_proto_rawDescData []byte
 )
 
 func file_server_state_proto_rawDescGZIP() []byte {
 	file_server_state_proto_rawDescOnce.Do(func() {
-		file_server_state_proto_rawDescData = protoimpl.X.CompressGZIP(file_server_state_proto_rawDescData)
+		file_server_state_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_server_state_proto_rawDesc), len(file_server_state_proto_rawDesc)))
 	})
 	return file_server_state_proto_rawDescData
 }
 
 var file_server_state_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_server_state_proto_goTypes = []interface{}{
+var file_server_state_proto_goTypes = []any{
 	(*ServerInstallRecord)(nil), // 0: proto.ServerInstallRecord
 }
 var file_server_state_proto_depIdxs = []int32{
@@ -107,25 +99,11 @@ func file_server_state_proto_init() {
 	if File_server_state_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_server_state_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ServerInstallRecord); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_server_state_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_server_state_proto_rawDesc), len(file_server_state_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
@@ -136,7 +114,6 @@ func file_server_state_proto_init() {
 		MessageInfos:      file_server_state_proto_msgTypes,
 	}.Build()
 	File_server_state_proto = out.File
-	file_server_state_proto_rawDesc = nil
 	file_server_state_proto_goTypes = nil
 	file_server_state_proto_depIdxs = nil
 }

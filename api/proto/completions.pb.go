@@ -8,6 +8,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -18,24 +19,21 @@ const (
 )
 
 type ArgDescriptor struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Repeated      bool                   `protobuf:"varint,4,opt,name=repeated,proto3" json:"repeated,omitempty"`
+	Required      bool                   `protobuf:"varint,5,opt,name=required,proto3" json:"required,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Name        string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Type        string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
-	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Repeated    bool   `protobuf:"varint,4,opt,name=repeated,proto3" json:"repeated,omitempty"`
-	Required    bool   `protobuf:"varint,5,opt,name=required,proto3" json:"required,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ArgDescriptor) Reset() {
 	*x = ArgDescriptor{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_completions_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_completions_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ArgDescriptor) String() string {
@@ -46,7 +44,7 @@ func (*ArgDescriptor) ProtoMessage() {}
 
 func (x *ArgDescriptor) ProtoReflect() protoreflect.Message {
 	mi := &file_completions_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -97,28 +95,25 @@ func (x *ArgDescriptor) GetRequired() bool {
 }
 
 type Completion struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Type          string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	Version       uint64                 `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
+	Args          []*ArgDescriptor       `protobuf:"bytes,4,rep,name=args,proto3" json:"args,omitempty"`
+	Category      string                 `protobuf:"bytes,5,opt,name=category,proto3" json:"category,omitempty"`
+	Metadata      map[string]string      `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Platforms     []string               `protobuf:"bytes,8,rep,name=platforms,proto3" json:"platforms,omitempty"`
+	FreeFormArgs  bool                   `protobuf:"varint,9,opt,name=free_form_args,json=freeFormArgs,proto3" json:"free_form_args,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Name         string            `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Description  string            `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Type         string            `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
-	Version      uint64            `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
-	Args         []*ArgDescriptor  `protobuf:"bytes,4,rep,name=args,proto3" json:"args,omitempty"`
-	Category     string            `protobuf:"bytes,5,opt,name=category,proto3" json:"category,omitempty"`
-	Metadata     map[string]string `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	Platforms    []string          `protobuf:"bytes,8,rep,name=platforms,proto3" json:"platforms,omitempty"`
-	FreeFormArgs bool              `protobuf:"varint,9,opt,name=free_form_args,json=freeFormArgs,proto3" json:"free_form_args,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Completion) Reset() {
 	*x = Completion{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_completions_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_completions_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Completion) String() string {
@@ -129,7 +124,7 @@ func (*Completion) ProtoMessage() {}
 
 func (x *Completion) ProtoReflect() protoreflect.Message {
 	mi := &file_completions_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -208,20 +203,17 @@ func (x *Completion) GetFreeFormArgs() bool {
 }
 
 type KeywordCompletions struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*Completion          `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Items []*Completion `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *KeywordCompletions) Reset() {
 	*x = KeywordCompletions{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_completions_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_completions_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *KeywordCompletions) String() string {
@@ -232,7 +224,7 @@ func (*KeywordCompletions) ProtoMessage() {}
 
 func (x *KeywordCompletions) ProtoReflect() protoreflect.Message {
 	mi := &file_completions_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -256,65 +248,46 @@ func (x *KeywordCompletions) GetItems() []*Completion {
 
 var File_completions_proto protoreflect.FileDescriptor
 
-var file_completions_proto_rawDesc = []byte{
-	0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x12, 0x05, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x91, 0x01, 0x0a, 0x0d, 0x41,
-	0x72, 0x67, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x12, 0x12, 0x0a, 0x04,
-	0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65,
-	0x12, 0x12, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
-	0x74, 0x79, 0x70, 0x65, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74,
-	0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72,
-	0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x65, 0x61, 0x74,
-	0x65, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x08, 0x72, 0x65, 0x70, 0x65, 0x61, 0x74,
-	0x65, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x71, 0x75, 0x69, 0x72, 0x65, 0x64, 0x18, 0x05,
-	0x20, 0x01, 0x28, 0x08, 0x52, 0x08, 0x72, 0x65, 0x71, 0x75, 0x69, 0x72, 0x65, 0x64, 0x22, 0xf4,
-	0x02, 0x0a, 0x0a, 0x43, 0x6f, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x12, 0x0a,
-	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d,
-	0x65, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74,
-	0x69, 0x6f, 0x6e, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69,
-	0x6f, 0x6e, 0x18, 0x06, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f,
-	0x6e, 0x12, 0x28, 0x0a, 0x04, 0x61, 0x72, 0x67, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32,
-	0x14, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x41, 0x72, 0x67, 0x44, 0x65, 0x73, 0x63, 0x72,
-	0x69, 0x70, 0x74, 0x6f, 0x72, 0x52, 0x04, 0x61, 0x72, 0x67, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x63,
-	0x61, 0x74, 0x65, 0x67, 0x6f, 0x72, 0x79, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x63,
-	0x61, 0x74, 0x65, 0x67, 0x6f, 0x72, 0x79, 0x12, 0x3b, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0x18, 0x07, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x4d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0x12, 0x1c, 0x0a, 0x09, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d,
-	0x73, 0x18, 0x08, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72,
-	0x6d, 0x73, 0x12, 0x24, 0x0a, 0x0e, 0x66, 0x72, 0x65, 0x65, 0x5f, 0x66, 0x6f, 0x72, 0x6d, 0x5f,
-	0x61, 0x72, 0x67, 0x73, 0x18, 0x09, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0c, 0x66, 0x72, 0x65, 0x65,
-	0x46, 0x6f, 0x72, 0x6d, 0x41, 0x72, 0x67, 0x73, 0x1a, 0x3b, 0x0a, 0x0d, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76,
-	0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75,
-	0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x3d, 0x0a, 0x12, 0x4b, 0x65, 0x79, 0x77, 0x6f, 0x72, 0x64,
-	0x43, 0x6f, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x27, 0x0a, 0x05, 0x69,
-	0x74, 0x65, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x05, 0x69,
-	0x74, 0x65, 0x6d, 0x73, 0x42, 0x31, 0x5a, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f,
-	0x63, 0x69, 0x64, 0x65, 0x78, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67,
-	0x2f, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72, 0x2f, 0x61, 0x70,
-	0x69, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+const file_completions_proto_rawDesc = "" +
+	"\n" +
+	"\x11completions.proto\x12\x05proto\"\x91\x01\n" +
+	"\rArgDescriptor\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1a\n" +
+	"\brepeated\x18\x04 \x01(\bR\brepeated\x12\x1a\n" +
+	"\brequired\x18\x05 \x01(\bR\brequired\"\xf4\x02\n" +
+	"\n" +
+	"Completion\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x12\n" +
+	"\x04type\x18\x03 \x01(\tR\x04type\x12\x18\n" +
+	"\aversion\x18\x06 \x01(\x04R\aversion\x12(\n" +
+	"\x04args\x18\x04 \x03(\v2\x14.proto.ArgDescriptorR\x04args\x12\x1a\n" +
+	"\bcategory\x18\x05 \x01(\tR\bcategory\x12;\n" +
+	"\bmetadata\x18\a \x03(\v2\x1f.proto.Completion.MetadataEntryR\bmetadata\x12\x1c\n" +
+	"\tplatforms\x18\b \x03(\tR\tplatforms\x12$\n" +
+	"\x0efree_form_args\x18\t \x01(\bR\ffreeFormArgs\x1a;\n" +
+	"\rMetadataEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"=\n" +
+	"\x12KeywordCompletions\x12'\n" +
+	"\x05items\x18\x01 \x03(\v2\x11.proto.CompletionR\x05itemsB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
 
 var (
 	file_completions_proto_rawDescOnce sync.Once
-	file_completions_proto_rawDescData = file_completions_proto_rawDesc
+	file_completions_proto_rawDescData []byte
 )
 
 func file_completions_proto_rawDescGZIP() []byte {
 	file_completions_proto_rawDescOnce.Do(func() {
-		file_completions_proto_rawDescData = protoimpl.X.CompressGZIP(file_completions_proto_rawDescData)
+		file_completions_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_completions_proto_rawDesc), len(file_completions_proto_rawDesc)))
 	})
 	return file_completions_proto_rawDescData
 }
 
 var file_completions_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_completions_proto_goTypes = []interface{}{
+var file_completions_proto_goTypes = []any{
 	(*ArgDescriptor)(nil),      // 0: proto.ArgDescriptor
 	(*Completion)(nil),         // 1: proto.Completion
 	(*KeywordCompletions)(nil), // 2: proto.KeywordCompletions
@@ -336,49 +309,11 @@ func file_completions_proto_init() {
 	if File_completions_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_completions_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ArgDescriptor); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_completions_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Completion); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_completions_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*KeywordCompletions); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_completions_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_completions_proto_rawDesc), len(file_completions_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   4,
 			NumExtensions: 0,
@@ -389,7 +324,6 @@ func file_completions_proto_init() {
 		MessageInfos:      file_completions_proto_msgTypes,
 	}.Build()
 	File_completions_proto = out.File
-	file_completions_proto_rawDesc = nil
 	file_completions_proto_goTypes = nil
 	file_completions_proto_depIdxs = nil
 }

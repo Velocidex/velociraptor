@@ -8,6 +8,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -21,24 +22,21 @@ const (
 // monitor for the dashboard. For proper monitoring use
 // graphana/prometheus.
 type Metrics struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	ProcessCpuNanoSecondsTotal int64 `protobuf:"varint,1,opt,name=process_cpu_nano_seconds_total,json=processCpuNanoSecondsTotal,proto3" json:"process_cpu_nano_seconds_total,omitempty"`
+	state                      protoimpl.MessageState `protogen:"open.v1"`
+	ProcessCpuNanoSecondsTotal int64                  `protobuf:"varint,1,opt,name=process_cpu_nano_seconds_total,json=processCpuNanoSecondsTotal,proto3" json:"process_cpu_nano_seconds_total,omitempty"`
 	// Percent of one core used by this frontend process.
 	CpuLoadPercent                int64 `protobuf:"varint,4,opt,name=cpu_load_percent,json=cpuLoadPercent,proto3" json:"cpu_load_percent,omitempty"`
 	ClientCommsCurrentConnections int64 `protobuf:"varint,2,opt,name=client_comms_current_connections,json=clientCommsCurrentConnections,proto3" json:"client_comms_current_connections,omitempty"`
 	ProcessResidentMemoryBytes    int64 `protobuf:"varint,3,opt,name=process_resident_memory_bytes,json=processResidentMemoryBytes,proto3" json:"process_resident_memory_bytes,omitempty"`
+	unknownFields                 protoimpl.UnknownFields
+	sizeCache                     protoimpl.SizeCache
 }
 
 func (x *Metrics) Reset() {
 	*x = Metrics{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_frontend_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_frontend_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Metrics) String() string {
@@ -49,7 +47,7 @@ func (*Metrics) ProtoMessage() {}
 
 func (x *Metrics) ProtoReflect() protoreflect.Message {
 	mi := &file_frontend_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -94,10 +92,7 @@ func (x *Metrics) GetProcessResidentMemoryBytes() int64 {
 
 // Describe the frontend state.
 type FrontendState struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// The unique name of the frontend.
 	Name    string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Version string `protobuf:"bytes,5,opt,name=version,proto3" json:"version,omitempty"`
@@ -108,16 +103,16 @@ type FrontendState struct {
 	Url string `protobuf:"bytes,3,opt,name=url,proto3" json:"url,omitempty"`
 	// DEPRECATED. Metrics are now sent over
 	// Server.Internal.FrontendMetrics
-	Metrics *Metrics `protobuf:"bytes,4,opt,name=metrics,proto3" json:"metrics,omitempty"`
+	Metrics       *Metrics `protobuf:"bytes,4,opt,name=metrics,proto3" json:"metrics,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *FrontendState) Reset() {
 	*x = FrontendState{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_frontend_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_frontend_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *FrontendState) String() string {
@@ -128,7 +123,7 @@ func (*FrontendState) ProtoMessage() {}
 
 func (x *FrontendState) ProtoReflect() protoreflect.Message {
 	mi := &file_frontend_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -180,55 +175,35 @@ func (x *FrontendState) GetMetrics() *Metrics {
 
 var File_frontend_proto protoreflect.FileDescriptor
 
-var file_frontend_proto_rawDesc = []byte{
-	0x0a, 0x0e, 0x66, 0x72, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x64, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x12, 0x05, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x83, 0x02, 0x0a, 0x07, 0x4d, 0x65, 0x74, 0x72,
-	0x69, 0x63, 0x73, 0x12, 0x42, 0x0a, 0x1e, 0x70, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x5f, 0x63,
-	0x70, 0x75, 0x5f, 0x6e, 0x61, 0x6e, 0x6f, 0x5f, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x5f,
-	0x74, 0x6f, 0x74, 0x61, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x1a, 0x70, 0x72, 0x6f,
-	0x63, 0x65, 0x73, 0x73, 0x43, 0x70, 0x75, 0x4e, 0x61, 0x6e, 0x6f, 0x53, 0x65, 0x63, 0x6f, 0x6e,
-	0x64, 0x73, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x12, 0x28, 0x0a, 0x10, 0x63, 0x70, 0x75, 0x5f, 0x6c,
-	0x6f, 0x61, 0x64, 0x5f, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28,
-	0x03, 0x52, 0x0e, 0x63, 0x70, 0x75, 0x4c, 0x6f, 0x61, 0x64, 0x50, 0x65, 0x72, 0x63, 0x65, 0x6e,
-	0x74, 0x12, 0x47, 0x0a, 0x20, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x63, 0x6f, 0x6d, 0x6d,
-	0x73, 0x5f, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x5f, 0x63, 0x6f, 0x6e, 0x6e, 0x65, 0x63,
-	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x1d, 0x63, 0x6c, 0x69,
-	0x65, 0x6e, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x73, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x43,
-	0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x41, 0x0a, 0x1d, 0x70, 0x72,
-	0x6f, 0x63, 0x65, 0x73, 0x73, 0x5f, 0x72, 0x65, 0x73, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x5f, 0x6d,
-	0x65, 0x6d, 0x6f, 0x72, 0x79, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x03, 0x52, 0x1a, 0x70, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x69, 0x64, 0x65,
-	0x6e, 0x74, 0x4d, 0x65, 0x6d, 0x6f, 0x72, 0x79, 0x42, 0x79, 0x74, 0x65, 0x73, 0x22, 0x97, 0x01,
-	0x0a, 0x0d, 0x46, 0x72, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x64, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12,
-	0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e,
-	0x61, 0x6d, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x05,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x1c, 0x0a,
-	0x09, 0x68, 0x65, 0x61, 0x72, 0x74, 0x62, 0x65, 0x61, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03,
-	0x52, 0x09, 0x68, 0x65, 0x61, 0x72, 0x74, 0x62, 0x65, 0x61, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x75,
-	0x72, 0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x75, 0x72, 0x6c, 0x12, 0x28, 0x0a,
-	0x07, 0x6d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x73, 0x52, 0x07,
-	0x6d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x73, 0x42, 0x3f, 0x5a, 0x3d, 0x77, 0x77, 0x77, 0x2e, 0x76,
-	0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64, 0x65, 0x78, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c,
-	0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72,
-	0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x66, 0x72, 0x6f, 0x6e, 0x74, 0x65,
-	0x6e, 0x64, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+const file_frontend_proto_rawDesc = "" +
+	"\n" +
+	"\x0efrontend.proto\x12\x05proto\"\x83\x02\n" +
+	"\aMetrics\x12B\n" +
+	"\x1eprocess_cpu_nano_seconds_total\x18\x01 \x01(\x03R\x1aprocessCpuNanoSecondsTotal\x12(\n" +
+	"\x10cpu_load_percent\x18\x04 \x01(\x03R\x0ecpuLoadPercent\x12G\n" +
+	" client_comms_current_connections\x18\x02 \x01(\x03R\x1dclientCommsCurrentConnections\x12A\n" +
+	"\x1dprocess_resident_memory_bytes\x18\x03 \x01(\x03R\x1aprocessResidentMemoryBytes\"\x97\x01\n" +
+	"\rFrontendState\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
+	"\aversion\x18\x05 \x01(\tR\aversion\x12\x1c\n" +
+	"\theartbeat\x18\x02 \x01(\x03R\theartbeat\x12\x10\n" +
+	"\x03url\x18\x03 \x01(\tR\x03url\x12(\n" +
+	"\ametrics\x18\x04 \x01(\v2\x0e.proto.MetricsR\ametricsB?Z=www.velocidex.com/golang/velociraptor/services/frontend/protob\x06proto3"
 
 var (
 	file_frontend_proto_rawDescOnce sync.Once
-	file_frontend_proto_rawDescData = file_frontend_proto_rawDesc
+	file_frontend_proto_rawDescData []byte
 )
 
 func file_frontend_proto_rawDescGZIP() []byte {
 	file_frontend_proto_rawDescOnce.Do(func() {
-		file_frontend_proto_rawDescData = protoimpl.X.CompressGZIP(file_frontend_proto_rawDescData)
+		file_frontend_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_frontend_proto_rawDesc), len(file_frontend_proto_rawDesc)))
 	})
 	return file_frontend_proto_rawDescData
 }
 
 var file_frontend_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_frontend_proto_goTypes = []interface{}{
+var file_frontend_proto_goTypes = []any{
 	(*Metrics)(nil),       // 0: proto.Metrics
 	(*FrontendState)(nil), // 1: proto.FrontendState
 }
@@ -246,37 +221,11 @@ func file_frontend_proto_init() {
 	if File_frontend_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_frontend_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Metrics); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_frontend_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FrontendState); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_frontend_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_frontend_proto_rawDesc), len(file_frontend_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
@@ -287,7 +236,6 @@ func file_frontend_proto_init() {
 		MessageInfos:      file_frontend_proto_msgTypes,
 	}.Build()
 	File_frontend_proto = out.File
-	file_frontend_proto_rawDesc = nil
 	file_frontend_proto_goTypes = nil
 	file_frontend_proto_depIdxs = nil
 }

@@ -8,6 +8,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 	proto1 "www.velocidex.com/golang/velociraptor/crypto/proto"
 	proto "www.velocidex.com/golang/velociraptor/flows/proto"
 )
@@ -20,22 +21,19 @@ const (
 )
 
 type ContainerMemberStats struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Name             string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	UncompressedSize uint64 `protobuf:"varint,2,opt,name=uncompressed_size,json=uncompressedSize,proto3" json:"uncompressed_size,omitempty"`
-	CompressedSize   uint64 `protobuf:"varint,3,opt,name=compressed_size,json=compressedSize,proto3" json:"compressed_size,omitempty"`
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Name             string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	UncompressedSize uint64                 `protobuf:"varint,2,opt,name=uncompressed_size,json=uncompressedSize,proto3" json:"uncompressed_size,omitempty"`
+	CompressedSize   uint64                 `protobuf:"varint,3,opt,name=compressed_size,json=compressedSize,proto3" json:"compressed_size,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *ContainerMemberStats) Reset() {
 	*x = ContainerMemberStats{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_flows_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_flows_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ContainerMemberStats) String() string {
@@ -46,7 +44,7 @@ func (*ContainerMemberStats) ProtoMessage() {}
 
 func (x *ContainerMemberStats) ProtoReflect() protoreflect.Message {
 	mi := &file_flows_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -84,10 +82,7 @@ func (x *ContainerMemberStats) GetCompressedSize() uint64 {
 
 // Stats about exported containers
 type ContainerStats struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// Seconds since epoch
 	Timestamp          uint64 `protobuf:"varint,8,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	TotalUploadedFiles uint64 `protobuf:"varint,1,opt,name=total_uploaded_files,json=totalUploadedFiles,proto3" json:"total_uploaded_files,omitempty"`
@@ -111,15 +106,15 @@ type ContainerStats struct {
 	// A string representation of the file path
 	VfsPath       string                  `protobuf:"bytes,12,opt,name=vfs_path,json=vfsPath,proto3" json:"vfs_path,omitempty"`
 	ActiveMembers []*ContainerMemberStats `protobuf:"bytes,13,rep,name=active_members,json=activeMembers,proto3" json:"active_members,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ContainerStats) Reset() {
 	*x = ContainerStats{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_flows_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_flows_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ContainerStats) String() string {
@@ -130,7 +125,7 @@ func (*ContainerStats) ProtoMessage() {}
 
 func (x *ContainerStats) ProtoReflect() protoreflect.Message {
 	mi := &file_flows_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -237,27 +232,24 @@ func (x *ContainerStats) GetActiveMembers() []*ContainerMemberStats {
 }
 
 type AvailableDownloadFile struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Path string `protobuf:"bytes,5,opt,name=path,proto3" json:"path,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Path  string                 `protobuf:"bytes,5,opt,name=path,proto3" json:"path,omitempty"`
 	// Deprecated things are now stored in the stats.
-	Type     string          `protobuf:"bytes,6,opt,name=type,proto3" json:"type,omitempty"`
-	Complete bool            `protobuf:"varint,2,opt,name=complete,proto3" json:"complete,omitempty"`
-	Size     uint64          `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
-	Date     string          `protobuf:"bytes,4,opt,name=date,proto3" json:"date,omitempty"`
-	Stats    *ContainerStats `protobuf:"bytes,8,opt,name=stats,proto3" json:"stats,omitempty"`
+	Type          string          `protobuf:"bytes,6,opt,name=type,proto3" json:"type,omitempty"`
+	Complete      bool            `protobuf:"varint,2,opt,name=complete,proto3" json:"complete,omitempty"`
+	Size          uint64          `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
+	Date          string          `protobuf:"bytes,4,opt,name=date,proto3" json:"date,omitempty"`
+	Stats         *ContainerStats `protobuf:"bytes,8,opt,name=stats,proto3" json:"stats,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AvailableDownloadFile) Reset() {
 	*x = AvailableDownloadFile{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_flows_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_flows_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *AvailableDownloadFile) String() string {
@@ -268,7 +260,7 @@ func (*AvailableDownloadFile) ProtoMessage() {}
 
 func (x *AvailableDownloadFile) ProtoReflect() protoreflect.Message {
 	mi := &file_flows_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -333,20 +325,17 @@ func (x *AvailableDownloadFile) GetStats() *ContainerStats {
 }
 
 type AvailableDownloads struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState   `protogen:"open.v1"`
+	Files         []*AvailableDownloadFile `protobuf:"bytes,1,rep,name=files,proto3" json:"files,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Files []*AvailableDownloadFile `protobuf:"bytes,1,rep,name=files,proto3" json:"files,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AvailableDownloads) Reset() {
 	*x = AvailableDownloads{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_flows_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_flows_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *AvailableDownloads) String() string {
@@ -357,7 +346,7 @@ func (*AvailableDownloads) ProtoMessage() {}
 
 func (x *AvailableDownloads) ProtoReflect() protoreflect.Message {
 	mi := &file_flows_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -380,21 +369,18 @@ func (x *AvailableDownloads) GetFiles() []*AvailableDownloadFile {
 }
 
 type FlowDetails struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state              protoimpl.MessageState          `protogen:"open.v1"`
 	Context            *proto.ArtifactCollectorContext `protobuf:"bytes,1,opt,name=context,proto3" json:"context,omitempty"`
 	AvailableDownloads *AvailableDownloads             `protobuf:"bytes,16,opt,name=available_downloads,json=availableDownloads,proto3" json:"available_downloads,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *FlowDetails) Reset() {
 	*x = FlowDetails{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_flows_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_flows_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *FlowDetails) String() string {
@@ -405,7 +391,7 @@ func (*FlowDetails) ProtoMessage() {}
 
 func (x *FlowDetails) ProtoReflect() protoreflect.Message {
 	mi := &file_flows_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -439,22 +425,19 @@ func (x *FlowDetails) GetAvailableDownloads() *AvailableDownloads {
 // for sending to the client. NOTE: Clients do not know anything about
 // artifacts - they only interprect raw VQL as compiled by the server.
 type ApiFlowRequestDetails struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*proto1.VeloMessage  `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	ClientId      string                 `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	FlowId        string                 `protobuf:"bytes,3,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Items    []*proto1.VeloMessage `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
-	ClientId string                `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	FlowId   string                `protobuf:"bytes,3,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ApiFlowRequestDetails) Reset() {
 	*x = ApiFlowRequestDetails{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_flows_proto_msgTypes[5]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_flows_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ApiFlowRequestDetails) String() string {
@@ -465,7 +448,7 @@ func (*ApiFlowRequestDetails) ProtoMessage() {}
 
 func (x *ApiFlowRequestDetails) ProtoReflect() protoreflect.Message {
 	mi := &file_flows_proto_msgTypes[5]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -502,20 +485,17 @@ func (x *ApiFlowRequestDetails) GetFlowId() string {
 }
 
 type ApiFlowResultDetails struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*proto1.VeloMessage  `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Items []*proto1.VeloMessage `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ApiFlowResultDetails) Reset() {
 	*x = ApiFlowResultDetails{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_flows_proto_msgTypes[6]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_flows_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ApiFlowResultDetails) String() string {
@@ -526,7 +506,7 @@ func (*ApiFlowResultDetails) ProtoMessage() {}
 
 func (x *ApiFlowResultDetails) ProtoReflect() protoreflect.Message {
 	mi := &file_flows_proto_msgTypes[6]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -549,20 +529,17 @@ func (x *ApiFlowResultDetails) GetItems() []*proto1.VeloMessage {
 }
 
 type ApiFlowLogDetails struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*proto1.LogMessage   `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Items []*proto1.LogMessage `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ApiFlowLogDetails) Reset() {
 	*x = ApiFlowLogDetails{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_flows_proto_msgTypes[7]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_flows_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ApiFlowLogDetails) String() string {
@@ -573,7 +550,7 @@ func (*ApiFlowLogDetails) ProtoMessage() {}
 
 func (x *ApiFlowLogDetails) ProtoReflect() protoreflect.Message {
 	mi := &file_flows_proto_msgTypes[7]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -596,26 +573,23 @@ func (x *ApiFlowLogDetails) GetItems() []*proto1.LogMessage {
 }
 
 type ApiFlowRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	ClientId        string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	FlowId          string `protobuf:"bytes,2,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
-	Offset          uint64 `protobuf:"varint,3,opt,name=offset,proto3" json:"offset,omitempty"`
-	Count           uint64 `protobuf:"varint,4,opt,name=count,proto3" json:"count,omitempty"`
-	IncludeArchived bool   `protobuf:"varint,5,opt,name=include_archived,json=includeArchived,proto3" json:"include_archived,omitempty"`
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	ClientId        string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	FlowId          string                 `protobuf:"bytes,2,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	Offset          uint64                 `protobuf:"varint,3,opt,name=offset,proto3" json:"offset,omitempty"`
+	Count           uint64                 `protobuf:"varint,4,opt,name=count,proto3" json:"count,omitempty"`
+	IncludeArchived bool                   `protobuf:"varint,5,opt,name=include_archived,json=includeArchived,proto3" json:"include_archived,omitempty"`
 	// If specified we only return flows that collected this artifact.
-	Artifact string `protobuf:"bytes,6,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	Artifact      string `protobuf:"bytes,6,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ApiFlowRequest) Reset() {
 	*x = ApiFlowRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_flows_proto_msgTypes[8]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_flows_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ApiFlowRequest) String() string {
@@ -626,7 +600,7 @@ func (*ApiFlowRequest) ProtoMessage() {}
 
 func (x *ApiFlowRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_flows_proto_msgTypes[8]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -684,21 +658,18 @@ func (x *ApiFlowRequest) GetArtifact() string {
 }
 
 type ApiFlowResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState            `protogen:"open.v1"`
+	Total         uint64                            `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
+	Items         []*proto.ArtifactCollectorContext `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Total uint64                            `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
-	Items []*proto.ArtifactCollectorContext `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ApiFlowResponse) Reset() {
 	*x = ApiFlowResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_flows_proto_msgTypes[9]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_flows_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ApiFlowResponse) String() string {
@@ -709,7 +680,7 @@ func (*ApiFlowResponse) ProtoMessage() {}
 
 func (x *ApiFlowResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_flows_proto_msgTypes[9]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -740,134 +711,76 @@ func (x *ApiFlowResponse) GetItems() []*proto.ArtifactCollectorContext {
 
 var File_flows_proto protoreflect.FileDescriptor
 
-var file_flows_proto_rawDesc = []byte{
-	0x0a, 0x0b, 0x66, 0x6c, 0x6f, 0x77, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x17, 0x63, 0x72, 0x79, 0x70, 0x74, 0x6f, 0x2f, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x2f, 0x6a, 0x6f, 0x62, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x24, 0x66,
-	0x6c, 0x6f, 0x77, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x61, 0x72, 0x74, 0x69, 0x66,
-	0x61, 0x63, 0x74, 0x5f, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0x80, 0x01, 0x0a, 0x14, 0x43, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65,
-	0x72, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x53, 0x74, 0x61, 0x74, 0x73, 0x12, 0x12, 0x0a, 0x04,
-	0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65,
-	0x12, 0x2b, 0x0a, 0x11, 0x75, 0x6e, 0x63, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64,
-	0x5f, 0x73, 0x69, 0x7a, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x10, 0x75, 0x6e, 0x63,
-	0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x53, 0x69, 0x7a, 0x65, 0x12, 0x27, 0x0a,
-	0x0f, 0x63, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x5f, 0x73, 0x69, 0x7a, 0x65,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0e, 0x63, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73,
-	0x65, 0x64, 0x53, 0x69, 0x7a, 0x65, 0x22, 0x9a, 0x04, 0x0a, 0x0e, 0x43, 0x6f, 0x6e, 0x74, 0x61,
-	0x69, 0x6e, 0x65, 0x72, 0x53, 0x74, 0x61, 0x74, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x08, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69,
-	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x30, 0x0a, 0x14, 0x74, 0x6f, 0x74, 0x61, 0x6c,
-	0x5f, 0x75, 0x70, 0x6c, 0x6f, 0x61, 0x64, 0x65, 0x64, 0x5f, 0x66, 0x69, 0x6c, 0x65, 0x73, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x12, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x55, 0x70, 0x6c, 0x6f,
-	0x61, 0x64, 0x65, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x12, 0x30, 0x0a, 0x14, 0x74, 0x6f, 0x74,
-	0x61, 0x6c, 0x5f, 0x75, 0x70, 0x6c, 0x6f, 0x61, 0x64, 0x65, 0x64, 0x5f, 0x62, 0x79, 0x74, 0x65,
-	0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x12, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x55, 0x70,
-	0x6c, 0x6f, 0x61, 0x64, 0x65, 0x64, 0x42, 0x79, 0x74, 0x65, 0x73, 0x12, 0x38, 0x0a, 0x18, 0x74,
-	0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x75, 0x6e, 0x63, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65,
-	0x64, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x16, 0x74,
-	0x6f, 0x74, 0x61, 0x6c, 0x55, 0x6e, 0x63, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64,
-	0x42, 0x79, 0x74, 0x65, 0x73, 0x12, 0x34, 0x0a, 0x16, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x63,
-	0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x18,
-	0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x14, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x43, 0x6f, 0x6d, 0x70,
-	0x72, 0x65, 0x73, 0x73, 0x65, 0x64, 0x42, 0x79, 0x74, 0x65, 0x73, 0x12, 0x32, 0x0a, 0x15, 0x74,
-	0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x63, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x5f, 0x66,
-	0x69, 0x6c, 0x65, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04, 0x52, 0x13, 0x74, 0x6f, 0x74, 0x61,
-	0x6c, 0x43, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x12,
-	0x12, 0x0a, 0x04, 0x68, 0x61, 0x73, 0x68, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x68,
-	0x61, 0x73, 0x68, 0x12, 0x25, 0x0a, 0x0e, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x64, 0x75, 0x72,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x09, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0d, 0x74, 0x6f, 0x74,
-	0x61, 0x6c, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1e, 0x0a, 0x0a, 0x63, 0x6f,
-	0x6d, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x73, 0x18, 0x07, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0a,
-	0x63, 0x6f, 0x6d, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x79,
-	0x70, 0x65, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x14,
-	0x0a, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x65,
-	0x72, 0x72, 0x6f, 0x72, 0x12, 0x19, 0x0a, 0x08, 0x76, 0x66, 0x73, 0x5f, 0x70, 0x61, 0x74, 0x68,
-	0x18, 0x0c, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x76, 0x66, 0x73, 0x50, 0x61, 0x74, 0x68, 0x12,
-	0x42, 0x0a, 0x0e, 0x61, 0x63, 0x74, 0x69, 0x76, 0x65, 0x5f, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72,
-	0x73, 0x18, 0x0d, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
-	0x43, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x53,
-	0x74, 0x61, 0x74, 0x73, 0x52, 0x0d, 0x61, 0x63, 0x74, 0x69, 0x76, 0x65, 0x4d, 0x65, 0x6d, 0x62,
-	0x65, 0x72, 0x73, 0x22, 0xc4, 0x01, 0x0a, 0x15, 0x41, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c,
-	0x65, 0x44, 0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x12, 0x0a,
-	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d,
-	0x65, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x74, 0x68, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x04, 0x70, 0x61, 0x74, 0x68, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x06, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x63, 0x6f, 0x6d,
-	0x70, 0x6c, 0x65, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x08, 0x63, 0x6f, 0x6d,
-	0x70, 0x6c, 0x65, 0x74, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x69, 0x7a, 0x65, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x04, 0x52, 0x04, 0x73, 0x69, 0x7a, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74,
-	0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x64, 0x61, 0x74, 0x65, 0x12, 0x2b, 0x0a,
-	0x05, 0x73, 0x74, 0x61, 0x74, 0x73, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x43, 0x6f, 0x6e, 0x74, 0x61, 0x69, 0x6e, 0x65, 0x72, 0x53, 0x74,
-	0x61, 0x74, 0x73, 0x52, 0x05, 0x73, 0x74, 0x61, 0x74, 0x73, 0x22, 0x48, 0x0a, 0x12, 0x41, 0x76,
-	0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x44, 0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x73,
-	0x12, 0x32, 0x0a, 0x05, 0x66, 0x69, 0x6c, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
-	0x1c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x41, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c,
-	0x65, 0x44, 0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x52, 0x05, 0x66,
-	0x69, 0x6c, 0x65, 0x73, 0x22, 0x94, 0x01, 0x0a, 0x0b, 0x46, 0x6c, 0x6f, 0x77, 0x44, 0x65, 0x74,
-	0x61, 0x69, 0x6c, 0x73, 0x12, 0x39, 0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x78, 0x74, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x41, 0x72,
-	0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x43,
-	0x6f, 0x6e, 0x74, 0x65, 0x78, 0x74, 0x52, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x78, 0x74, 0x12,
-	0x4a, 0x0a, 0x13, 0x61, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x5f, 0x64, 0x6f, 0x77,
-	0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x73, 0x18, 0x10, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x41, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x44, 0x6f,
-	0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x73, 0x52, 0x12, 0x61, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62,
-	0x6c, 0x65, 0x44, 0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x73, 0x22, 0x77, 0x0a, 0x15, 0x41,
-	0x70, 0x69, 0x46, 0x6c, 0x6f, 0x77, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x44, 0x65, 0x74,
-	0x61, 0x69, 0x6c, 0x73, 0x12, 0x28, 0x0a, 0x05, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x18, 0x01, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x56, 0x65, 0x6c, 0x6f,
-	0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52, 0x05, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x12, 0x1b,
-	0x0a, 0x09, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x08, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x66,
-	0x6c, 0x6f, 0x77, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x66, 0x6c,
-	0x6f, 0x77, 0x49, 0x64, 0x22, 0x40, 0x0a, 0x14, 0x41, 0x70, 0x69, 0x46, 0x6c, 0x6f, 0x77, 0x52,
-	0x65, 0x73, 0x75, 0x6c, 0x74, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x12, 0x28, 0x0a, 0x05,
-	0x69, 0x74, 0x65, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x2e, 0x56, 0x65, 0x6c, 0x6f, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52,
-	0x05, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x22, 0x3c, 0x0a, 0x11, 0x41, 0x70, 0x69, 0x46, 0x6c, 0x6f,
-	0x77, 0x4c, 0x6f, 0x67, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x12, 0x27, 0x0a, 0x05, 0x69,
-	0x74, 0x65, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x2e, 0x4c, 0x6f, 0x67, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52, 0x05, 0x69,
-	0x74, 0x65, 0x6d, 0x73, 0x22, 0xbb, 0x01, 0x0a, 0x0e, 0x41, 0x70, 0x69, 0x46, 0x6c, 0x6f, 0x77,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x63, 0x6c, 0x69, 0x65, 0x6e,
-	0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x63, 0x6c, 0x69, 0x65,
-	0x6e, 0x74, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x66, 0x6c, 0x6f, 0x77, 0x5f, 0x69, 0x64, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x66, 0x6c, 0x6f, 0x77, 0x49, 0x64, 0x12, 0x16, 0x0a,
-	0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x6f,
-	0x66, 0x66, 0x73, 0x65, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04,
-	0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x29, 0x0a, 0x10, 0x69,
-	0x6e, 0x63, 0x6c, 0x75, 0x64, 0x65, 0x5f, 0x61, 0x72, 0x63, 0x68, 0x69, 0x76, 0x65, 0x64, 0x18,
-	0x05, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0f, 0x69, 0x6e, 0x63, 0x6c, 0x75, 0x64, 0x65, 0x41, 0x72,
-	0x63, 0x68, 0x69, 0x76, 0x65, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61,
-	0x63, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61,
-	0x63, 0x74, 0x22, 0x5e, 0x0a, 0x0f, 0x41, 0x70, 0x69, 0x46, 0x6c, 0x6f, 0x77, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x12, 0x35, 0x0a, 0x05, 0x69,
-	0x74, 0x65, 0x6d, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x2e, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65,
-	0x63, 0x74, 0x6f, 0x72, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x78, 0x74, 0x52, 0x05, 0x69, 0x74, 0x65,
-	0x6d, 0x73, 0x42, 0x31, 0x5a, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69,
-	0x64, 0x65, 0x78, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x76,
-	0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+const file_flows_proto_rawDesc = "" +
+	"\n" +
+	"\vflows.proto\x12\x05proto\x1a\x17crypto/proto/jobs.proto\x1a$flows/proto/artifact_collector.proto\"\x80\x01\n" +
+	"\x14ContainerMemberStats\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12+\n" +
+	"\x11uncompressed_size\x18\x02 \x01(\x04R\x10uncompressedSize\x12'\n" +
+	"\x0fcompressed_size\x18\x03 \x01(\x04R\x0ecompressedSize\"\x9a\x04\n" +
+	"\x0eContainerStats\x12\x1c\n" +
+	"\ttimestamp\x18\b \x01(\x04R\ttimestamp\x120\n" +
+	"\x14total_uploaded_files\x18\x01 \x01(\x04R\x12totalUploadedFiles\x120\n" +
+	"\x14total_uploaded_bytes\x18\x02 \x01(\x04R\x12totalUploadedBytes\x128\n" +
+	"\x18total_uncompressed_bytes\x18\x03 \x01(\x04R\x16totalUncompressedBytes\x124\n" +
+	"\x16total_compressed_bytes\x18\x04 \x01(\x04R\x14totalCompressedBytes\x122\n" +
+	"\x15total_container_files\x18\x05 \x01(\x04R\x13totalContainerFiles\x12\x12\n" +
+	"\x04hash\x18\x06 \x01(\tR\x04hash\x12%\n" +
+	"\x0etotal_duration\x18\t \x01(\x04R\rtotalDuration\x12\x1e\n" +
+	"\n" +
+	"components\x18\a \x03(\tR\n" +
+	"components\x12\x12\n" +
+	"\x04type\x18\n" +
+	" \x01(\tR\x04type\x12\x14\n" +
+	"\x05error\x18\v \x01(\tR\x05error\x12\x19\n" +
+	"\bvfs_path\x18\f \x01(\tR\avfsPath\x12B\n" +
+	"\x0eactive_members\x18\r \x03(\v2\x1b.proto.ContainerMemberStatsR\ractiveMembers\"\xc4\x01\n" +
+	"\x15AvailableDownloadFile\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04path\x18\x05 \x01(\tR\x04path\x12\x12\n" +
+	"\x04type\x18\x06 \x01(\tR\x04type\x12\x1a\n" +
+	"\bcomplete\x18\x02 \x01(\bR\bcomplete\x12\x12\n" +
+	"\x04size\x18\x03 \x01(\x04R\x04size\x12\x12\n" +
+	"\x04date\x18\x04 \x01(\tR\x04date\x12+\n" +
+	"\x05stats\x18\b \x01(\v2\x15.proto.ContainerStatsR\x05stats\"H\n" +
+	"\x12AvailableDownloads\x122\n" +
+	"\x05files\x18\x01 \x03(\v2\x1c.proto.AvailableDownloadFileR\x05files\"\x94\x01\n" +
+	"\vFlowDetails\x129\n" +
+	"\acontext\x18\x01 \x01(\v2\x1f.proto.ArtifactCollectorContextR\acontext\x12J\n" +
+	"\x13available_downloads\x18\x10 \x01(\v2\x19.proto.AvailableDownloadsR\x12availableDownloads\"w\n" +
+	"\x15ApiFlowRequestDetails\x12(\n" +
+	"\x05items\x18\x01 \x03(\v2\x12.proto.VeloMessageR\x05items\x12\x1b\n" +
+	"\tclient_id\x18\x02 \x01(\tR\bclientId\x12\x17\n" +
+	"\aflow_id\x18\x03 \x01(\tR\x06flowId\"@\n" +
+	"\x14ApiFlowResultDetails\x12(\n" +
+	"\x05items\x18\x01 \x03(\v2\x12.proto.VeloMessageR\x05items\"<\n" +
+	"\x11ApiFlowLogDetails\x12'\n" +
+	"\x05items\x18\x01 \x03(\v2\x11.proto.LogMessageR\x05items\"\xbb\x01\n" +
+	"\x0eApiFlowRequest\x12\x1b\n" +
+	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12\x17\n" +
+	"\aflow_id\x18\x02 \x01(\tR\x06flowId\x12\x16\n" +
+	"\x06offset\x18\x03 \x01(\x04R\x06offset\x12\x14\n" +
+	"\x05count\x18\x04 \x01(\x04R\x05count\x12)\n" +
+	"\x10include_archived\x18\x05 \x01(\bR\x0fincludeArchived\x12\x1a\n" +
+	"\bartifact\x18\x06 \x01(\tR\bartifact\"^\n" +
+	"\x0fApiFlowResponse\x12\x14\n" +
+	"\x05total\x18\x01 \x01(\x04R\x05total\x125\n" +
+	"\x05items\x18\x02 \x03(\v2\x1f.proto.ArtifactCollectorContextR\x05itemsB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
 
 var (
 	file_flows_proto_rawDescOnce sync.Once
-	file_flows_proto_rawDescData = file_flows_proto_rawDesc
+	file_flows_proto_rawDescData []byte
 )
 
 func file_flows_proto_rawDescGZIP() []byte {
 	file_flows_proto_rawDescOnce.Do(func() {
-		file_flows_proto_rawDescData = protoimpl.X.CompressGZIP(file_flows_proto_rawDescData)
+		file_flows_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_flows_proto_rawDesc), len(file_flows_proto_rawDesc)))
 	})
 	return file_flows_proto_rawDescData
 }
 
 var file_flows_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
-var file_flows_proto_goTypes = []interface{}{
+var file_flows_proto_goTypes = []any{
 	(*ContainerMemberStats)(nil),           // 0: proto.ContainerMemberStats
 	(*ContainerStats)(nil),                 // 1: proto.ContainerStats
 	(*AvailableDownloadFile)(nil),          // 2: proto.AvailableDownloadFile
@@ -904,133 +817,11 @@ func file_flows_proto_init() {
 	if File_flows_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_flows_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ContainerMemberStats); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_flows_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ContainerStats); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_flows_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AvailableDownloadFile); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_flows_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AvailableDownloads); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_flows_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FlowDetails); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_flows_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ApiFlowRequestDetails); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_flows_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ApiFlowResultDetails); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_flows_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ApiFlowLogDetails); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_flows_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ApiFlowRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_flows_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ApiFlowResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_flows_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_flows_proto_rawDesc), len(file_flows_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   10,
 			NumExtensions: 0,
@@ -1041,7 +832,6 @@ func file_flows_proto_init() {
 		MessageInfos:      file_flows_proto_msgTypes,
 	}.Build()
 	File_flows_proto = out.File
-	file_flows_proto_rawDesc = nil
 	file_flows_proto_goTypes = nil
 	file_flows_proto_depIdxs = nil
 }
