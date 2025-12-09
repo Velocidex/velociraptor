@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/suite"
@@ -380,7 +381,7 @@ type OauthTestSuire struct {
 }
 
 func (self *OauthTestSuire) TestProvider() {
-	closer := utils.MockTime(&utils.IncClock{NowTime: 1765349444})
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(1765349444, 0)))
 	defer closer()
 
 	t := self.T()
@@ -430,6 +431,8 @@ func (self *OauthTestSuire) TestProvider() {
 			continue
 		}
 		assert.NoError(t, err)
+		cookie.Value = fmt.Sprintf("String of length %v", len(cookie.Value))
+
 		g.Set("Cookie", cookie)
 		g.Set("Claims", claims)
 	}
