@@ -9318,6 +9318,17 @@
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
+- name: semver
+  description: Parse a semantic version string.
+  type: Function
+  version: 1
+  args:
+  - name: version
+    type: string
+    description: A string to convert to a semantic version
+    required: true
+  platforms:
+  - linux_amd64_cgo
 - name: send_event
   description: |
     Sends an event to a server event monitoring queue.
@@ -10934,7 +10945,7 @@
     resumable uploads because the temporary file will be cleared after
     the query ends.
   type: Function
-  version: 2
+  version: 3
   args:
   - name: file
     type: accessors.OSPath
