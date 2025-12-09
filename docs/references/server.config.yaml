@@ -183,19 +183,18 @@ Client:
   ## from different orgs have different nonce.
   nonce: rKNKAYam310=
 
-  ## The following are the locations to write the writeback file- this
-  ## file is used to keep client state (See Writeback section). In the
-  ## default configuration, writeback files persist across
-  ## uninstall/reinstall cycles to keep the client id consistent. If
-  ## you don't want this you can change the location of the writeback
-  ## to be inside the inside the tempdir_windows directory (it will be
-  ## removed on uninstall).
+  ## The following are the locations to write the writeback file -
+  ## this file is used to keep client state. In the default
+  ## configuration, writeback files persist across uninstall/reinstall
+  ## cycles to keep the client id consistent. If you don't want this
+  ## you can change the location of the writeback to be inside the
+  ## tempdir_windows directory (it will be removed on uninstall).
   writeback_darwin: /etc/velociraptor.writeback.yaml
   writeback_linux: /tmp/velociraptor.writeback.yaml
 
-  ## From 0.7.0-3: On Windows if the writeback path starts with HKLM\
-  ## the path will be interpreted as a registry key that will be used
-  ## to store the writeback instead of files on disk.
+  ## On Windows, if the writeback path starts with HKLM\ the path will
+  ## be interpreted as a registry key that will be used to store the
+  ## writeback instead of files on disk.
   writeback_windows: $ProgramFiles\Velociraptor\velociraptor.writeback.yaml
 
   # If this value is specified, Velociraptor will create a level 2

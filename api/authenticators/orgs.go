@@ -63,7 +63,8 @@ func CheckOrgAccess(
 	// otherwise we need to give the user a more specific error that
 	// they are not authorized for this org.
 	if !utils.IsRootOrg(org_id) &&
-		!errors.Is(err, services.OrgNotFoundError) {
+		!errors.Is(err, services.OrgNotFoundError) &&
+		!errors.Is(err, utils.NoAccessToOrgError) {
 		return err
 	}
 
