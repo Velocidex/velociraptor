@@ -13,6 +13,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 type OidcAuthenticator struct {
@@ -101,7 +102,7 @@ func (self *OidcAuthenticator) GetGenOauthConfig() (*oauth2.Config, error) {
 func generateStateOauthCookie(
 	config_obj *config_proto.Config,
 	w http.ResponseWriter) *http.Cookie {
-	var expiration = time.Now().Add(time.Hour)
+	var expiration = utils.GetTime().Now().Add(time.Hour)
 
 	b := make([]byte, 16)
 	_, _ = rand.Read(b)

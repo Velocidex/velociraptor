@@ -8,9 +8,10 @@ import (
 
 	jwt "github.com/golang-jwt/jwt/v4"
 	"golang.org/x/oauth2"
-	utils "www.velocidex.com/golang/velociraptor/api/utils"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Abstract oauth and oidc authenticators so we can reuse them in
@@ -93,7 +94,7 @@ func (self *Provider) getSignedJWTTokenCookie(
 	// We force expiry in the JWT **as well** as the session
 	// cookie. The JWT expiry is most important as the browser can
 	// replay session cookies past expiry.
-	expiry := time.Now().Add(time.Minute * time.Duration(expiry_min))
+	expiry := utils.GetTime().Now().Add(time.Minute * time.Duration(expiry_min))
 
 	// Enforce the JWT to expire
 	claims.Expires = float64(expiry.Unix())
@@ -112,7 +113,7 @@ func (self *Provider) getSignedJWTTokenCookie(
 	return &http.Cookie{
 		Name:     "VelociraptorAuth",
 		Value:    tokenString,
-		Path:     utils.GetBaseDirectory(config_obj),
+		Path:     api_utils.GetBaseDirectory(config_obj),
 		Secure:   true,
 		HttpOnly: true,
 		Expires:  expiry,

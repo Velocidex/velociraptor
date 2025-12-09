@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	oidc "github.com/coreos/go-oidc/v3/oidc"
@@ -32,7 +31,7 @@ func (self *Claims) Valid() error {
 		return errors.New("username not present")
 	}
 
-	if self.Expires < float64(time.Now().Unix()) {
+	if self.Expires < float64(utils.GetTime().Now().Unix()) {
 		return errors.New("the JWT is expired - reauthenticate")
 	}
 	return nil

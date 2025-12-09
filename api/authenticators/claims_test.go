@@ -15,6 +15,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
@@ -379,6 +380,9 @@ type OauthTestSuire struct {
 }
 
 func (self *OauthTestSuire) TestProvider() {
+	closer := utils.MockTime(&utils.IncClock{NowTime: 1765349444})
+	defer closer()
+
 	t := self.T()
 
 	config_obj := config.GetDefaultConfig()
