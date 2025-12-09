@@ -475,6 +475,12 @@ message OIDCClaims {
     //      roles:
     //        - reader
     map<string, OIDCACL> role_map = 3;
+
+    // Velociraptor usually requires the email_verified claim before
+    // we can trust the email claim and use it as the
+    // username. However, some IDP (e.g. Azure) do not set this. If
+    // you want to ignore this requirement, set the below to true.
+    bool allow_unverified_email = 4;
 }
 
 message Authenticator {

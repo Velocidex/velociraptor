@@ -78,7 +78,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/gorilla/csrf"
@@ -139,7 +138,7 @@ func (self *CertAuthenticator) AuthRedirectTemplate() string {
 func (self *CertAuthenticator) getUserNameFromTLSCerts(r *http.Request) (string, error) {
 	// We only trust certs issued by the Velociraptor CA.
 	x509_opts := x509.VerifyOptions{
-		CurrentTime: time.Now(),
+		CurrentTime: utils.GetTime().Now(),
 		Roots:       self.x509_roots,
 	}
 

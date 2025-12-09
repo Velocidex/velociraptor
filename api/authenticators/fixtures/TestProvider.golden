@@ -1,0 +1,205 @@
+{
+ "Typical Flow": {
+  "Redirect URL": "https://www.example.com/o/oauth2/v2/auth?client_id=ClientIdXXXX\u0026redirect_uri=https%3A%2F%2Flocalhost%3A8889%2Fauth%2Foidc%2Fcallback\u0026response_type=code\u0026scope=openid+email\u0026state=StateString",
+  "Cookie": {
+   "Name": "VelociraptorAuth",
+   "Value": "String of length 183",
+   "Quoted": false,
+   "Path": "/",
+   "Domain": "",
+   "Expires": "2025-12-11T06:50:44Z",
+   "RawExpires": "",
+   "MaxAge": 0,
+   "Secure": true,
+   "HttpOnly": true,
+   "SameSite": 0,
+   "Partitioned": false,
+   "Raw": "",
+   "Unparsed": null
+  },
+  "Claims": {
+   "username": "user@example.com",
+   "picture": "",
+   "expires": 1765435844,
+   "token": ""
+  }
+ },
+ "AWS congnito": {
+  "Redirect URL": "https://www.example.com/o/oauth2/v2/auth?client_id=ClientIdXXXX\u0026redirect_uri=https%3A%2F%2Flocalhost%3A8889%2Fauth%2Foidc%2Fcallback\u0026response_type=code\u0026scope=openid+email\u0026state=StateString",
+  "Cookie": {
+   "Name": "VelociraptorAuth",
+   "Value": "String of length 183",
+   "Quoted": false,
+   "Path": "/",
+   "Domain": "",
+   "Expires": "2025-12-11T06:50:44Z",
+   "RawExpires": "",
+   "MaxAge": 0,
+   "Secure": true,
+   "HttpOnly": true,
+   "SameSite": 0,
+   "Partitioned": false,
+   "Raw": "",
+   "Unparsed": null
+  },
+  "Claims": {
+   "username": "user@example.com",
+   "picture": "",
+   "expires": 1765435844,
+   "token": ""
+  }
+ },
+ "MS ADFS": {
+  "Redirect URL": "https://www.example.com/o/oauth2/v2/auth?client_id=ClientIdXXXX\u0026redirect_uri=https%3A%2F%2Flocalhost%3A8889%2Fauth%2Foidc%2Fcallback\u0026response_type=code\u0026scope=openid+email\u0026state=StateString",
+  "Cookie": {
+   "Name": "VelociraptorAuth",
+   "Value": "String of length 184",
+   "Quoted": false,
+   "Path": "/",
+   "Domain": "",
+   "Expires": "2025-12-11T06:50:44Z",
+   "RawExpires": "",
+   "MaxAge": 0,
+   "Secure": true,
+   "HttpOnly": true,
+   "SameSite": 0,
+   "Partitioned": false,
+   "Raw": "",
+   "Unparsed": null
+  },
+  "Claims": {
+   "username": "noone@nowhere.com",
+   "picture": "",
+   "expires": 1765435844,
+   "token": ""
+  }
+ },
+ "Email is not verified": {
+  "Redirect URL": "https://www.example.com/o/oauth2/v2/auth?client_id=ClientIdXXXX\u0026redirect_uri=https%3A%2F%2Flocalhost%3A8889%2Fauth%2Foidc%2Fcallback\u0026response_type=code\u0026scope=openid+email\u0026state=StateString"
+ },
+ "Email is not verified but it is allowed": {
+  "Redirect URL": "https://www.example.com/o/oauth2/v2/auth?client_id=ClientIdXXXX\u0026redirect_uri=https%3A%2F%2Flocalhost%3A8889%2Fauth%2Foidc%2Fcallback\u0026response_type=code\u0026scope=openid+email\u0026state=StateString",
+  "Cookie": {
+   "Name": "VelociraptorAuth",
+   "Value": "String of length 183",
+   "Quoted": false,
+   "Path": "/",
+   "Domain": "",
+   "Expires": "2025-12-11T06:50:44Z",
+   "RawExpires": "",
+   "MaxAge": 0,
+   "Secure": true,
+   "HttpOnly": true,
+   "SameSite": 0,
+   "Partitioned": false,
+   "Raw": "",
+   "Unparsed": null
+  },
+  "Claims": {
+   "username": "user@example.com",
+   "picture": "",
+   "expires": 1765435844,
+   "token": ""
+  }
+ },
+ "Unusual claim name": {
+  "Redirect URL": "https://www.example.com/o/oauth2/v2/auth?client_id=ClientIdXXXX\u0026redirect_uri=https%3A%2F%2Flocalhost%3A8889%2Fauth%2Foidc%2Fcallback\u0026response_type=code\u0026scope=openid+email\u0026state=StateString",
+  "Cookie": {
+   "Name": "VelociraptorAuth",
+   "Value": "String of length 183",
+   "Quoted": false,
+   "Path": "/",
+   "Domain": "",
+   "Expires": "2025-12-11T06:50:44Z",
+   "RawExpires": "",
+   "MaxAge": 0,
+   "Secure": true,
+   "HttpOnly": true,
+   "SameSite": 0,
+   "Partitioned": false,
+   "Raw": "",
+   "Unparsed": null
+  },
+  "Claims": {
+   "username": "user@example.com",
+   "picture": "",
+   "expires": 1765435844,
+   "token": ""
+  }
+ },
+ "Google Authenticator": {
+  "Redirect URL": "https://accounts.google.com/o/oauth2/auth?client_id=ClientIdXXXX\u0026redirect_uri=https%3A%2F%2Flocalhost%3A8889%2Fauth%2Fgoogle%2Fcallback\u0026response_type=code\u0026scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email\u0026state=StateString",
+  "Cookie": {
+   "Name": "VelociraptorAuth",
+   "Value": "String of length 183",
+   "Quoted": false,
+   "Path": "/",
+   "Domain": "",
+   "Expires": "2025-12-11T06:50:44Z",
+   "RawExpires": "",
+   "MaxAge": 0,
+   "Secure": true,
+   "HttpOnly": true,
+   "SameSite": 0,
+   "Partitioned": false,
+   "Raw": "",
+   "Unparsed": null
+  },
+  "Claims": {
+   "username": "user@example.com",
+   "picture": "",
+   "expires": 1765435844,
+   "token": ""
+  }
+ },
+ "Github Authenticator": {
+  "Redirect URL": "https://github.com/login/oauth/authorize?client_id=ClientIdXXXX\u0026redirect_uri=https%3A%2F%2Flocalhost%3A8889%2Fauth%2Fgithub%2Fcallback\u0026response_type=code\u0026scope=user%3Aemail\u0026state=StateString",
+  "Cookie": {
+   "Name": "VelociraptorAuth",
+   "Value": "String of length 171",
+   "Quoted": false,
+   "Path": "/",
+   "Domain": "",
+   "Expires": "2025-12-11T06:50:44Z",
+   "RawExpires": "",
+   "MaxAge": 0,
+   "Secure": true,
+   "HttpOnly": true,
+   "SameSite": 0,
+   "Partitioned": false,
+   "Raw": "",
+   "Unparsed": null
+  },
+  "Claims": {
+   "username": "gh_user",
+   "picture": "",
+   "expires": 1765435844,
+   "token": ""
+  }
+ },
+ "Azure Authenticator": {
+  "Redirect URL": "https://login.microsoftonline.com/F1234/oauth2/v2.0/authorize?client_id=ClientIdXXXX\u0026redirect_uri=https%3A%2F%2Flocalhost%3A8889%2Fauth%2Fazure%2Fcallback\u0026response_type=code\u0026scope=User.Read\u0026state=StateString",
+  "Cookie": {
+   "Name": "VelociraptorAuth",
+   "Value": "String of length 183",
+   "Quoted": false,
+   "Path": "/",
+   "Domain": "",
+   "Expires": "2025-12-11T06:50:44Z",
+   "RawExpires": "",
+   "MaxAge": 0,
+   "Secure": true,
+   "HttpOnly": true,
+   "SameSite": 0,
+   "Partitioned": false,
+   "Raw": "",
+   "Unparsed": null
+  },
+  "Claims": {
+   "username": "user@example.com",
+   "picture": "",
+   "expires": 1765435844,
+   "token": ""
+  }
+ }
+}
