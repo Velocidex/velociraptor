@@ -10949,7 +10949,7 @@
     resumable uploads because the temporary file will be cleared after
     the query ends.
   type: Function
-  version: 3
+  version: 2
   args:
   - name: file
     type: accessors.OSPath
