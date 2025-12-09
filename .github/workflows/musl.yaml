@@ -1,4 +1,3 @@
-# Only trigger when a PR is committed.
 name: Linux Build Musl Static
 #on: [pull_request]
 on:
@@ -7,6 +6,7 @@ on:
 
 jobs:
   build:
+    # Only trigger when a PR is committed.
     if: github.event.pull_request.merged
     name: Build
     runs-on: ubuntu-latest

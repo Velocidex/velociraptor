@@ -1035,8 +1035,7 @@ export default class NotebookCellRenderer extends React.Component {
         );
 
         return (
-            <div ref={this.scrollRef}
-                 className={this.props.cell_metadata.cell_id + " hello"}>
+            <div ref={this.scrollRef}>
             { this.state.showAddCellFromHunt &&
                 <AddCellFromHunt
                   addCell={(text, type, env)=>{

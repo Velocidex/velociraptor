@@ -90,54 +90,27 @@ func (self *MultiAuthenticator) AuthRedirectTemplate() string {
 }
 
 func NewMultiAuthenticator(
+	ctx *HTTPClientContext,
 	config_obj *config_proto.Config,
 	auth_config *config_proto.Authenticator) (Authenticator, error) {
 	result := &MultiAuthenticator{
 		config_obj: config_obj,
 	}
 	for _, authenticator_config := range auth_config.SubAuthenticators {
-		auth, err := getAuthenticatorByType(config_obj, authenticator_config)
+		auth, err := getAuthenticatorByType(
+			ctx, config_obj, authenticator_config)
 		if err != nil {
 			return nil, err
 		}
 
 		// Only accept supported sub types.
 		switch t := auth.(type) {
-		case *GitHubAuthenticator:
-			result.delegate_info = append(result.delegate_info,
-				velociraptor.AuthenticatorInfo{
-					LoginURL:     t.LoginURL(),
-					ProviderName: "Github",
-				})
-
-		case *GoogleAuthenticator:
-			result.delegate_info = append(result.delegate_info,
-				velociraptor.AuthenticatorInfo{
-					LoginURL:     t.LoginURL(),
-					ProviderName: `Google`,
-				})
-
-		case *AzureAuthenticator:
-			result.delegate_info = append(result.delegate_info,
-				velociraptor.AuthenticatorInfo{
-					LoginURL:     t.LoginURL(),
-					ProviderName: `Microsoft`,
-				})
-
 		case *OidcAuthenticator:
 			result.delegate_info = append(result.delegate_info,
 				velociraptor.AuthenticatorInfo{
-					LoginURL:       t.LoginURL(),
-					ProviderName:   t.authenticator.OidcName,
-					ProviderAvatar: t.authenticator.Avatar,
-				})
-
-		case *OidcAuthenticatorCognito:
-			result.delegate_info = append(result.delegate_info,
-				velociraptor.AuthenticatorInfo{
-					LoginURL:       t.LoginURL(),
-					ProviderName:   t.authenticator.OidcName,
-					ProviderAvatar: t.authenticator.Avatar,
+					LoginURL:       t.router.LoginURL(),
+					ProviderName:   t.router.Name(),
+					ProviderAvatar: t.router.Avatar(),
 				})
 
 		default:
