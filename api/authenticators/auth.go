@@ -26,6 +26,12 @@ var (
 	auth_cache Authenticator
 )
 
+func ResetAuthCache() {
+	mu.Lock()
+	defer mu.Unlock()
+	auth_cache = nil
+}
+
 // All SSO Authenticators implement this interface.
 type Authenticator interface {
 	AddHandlers(mux *utils.ServeMux) error

@@ -21,6 +21,8 @@ type APIProxyTestSuite struct {
 }
 
 func (self *APIProxyTestSuite) TestMultiAuthenticator() {
+	authenticators.ResetAuthCache()
+
 	mux := api_utils.NewServeMux()
 
 	config_obj := proto.Clone(self.ConfigObj).(*config_proto.Config)
@@ -42,12 +44,6 @@ func (self *APIProxyTestSuite) TestMultiAuthenticator() {
 			OauthClientId:     "CCCCC",
 			OauthClientSecret: "secret",
 		}, {
-			Type:              "oidc-cognito",
-			OidcIssuer:        "https://accounts.google.com",
-			OauthClientId:     "CCCCC",
-			OauthClientSecret: "secret",
-			OidcName:          "cognito",
-		}, {
 			Type:              "azure",
 			OauthClientId:     "CCCCC",
 			OauthClientSecret: "secret",
@@ -66,14 +62,14 @@ func (self *APIProxyTestSuite) TestMultiAuthenticator() {
 	golden := ordereddict.NewDict()
 
 	for _, delegate := range auther_multi.Delegates() {
-		auther_oidc, ok := delegate.(authenticators.OIDCConnector)
+		auther_oidc, ok := delegate.(*authenticators.OidcAuthenticator)
 		if !ok {
 			continue
 		}
 
 		oidc_config, err := auther_oidc.GetGenOauthConfig()
 		assert.NoError(self.T(), err)
-		golden.Set(fmt.Sprintf("Redirect Provider %T", delegate),
+		golden.Set(fmt.Sprintf("Redirect Provider %T %v", delegate, auther_oidc.Name()),
 			oidc_config.RedirectURL)
 	}
 
@@ -83,6 +79,8 @@ func (self *APIProxyTestSuite) TestMultiAuthenticator() {
 }
 
 func (self *APIProxyTestSuite) TestBasicAuthenticator() {
+	authenticators.ResetAuthCache()
+
 	mux := api_utils.NewServeMux()
 
 	config_obj := proto.Clone(self.ConfigObj).(*config_proto.Config)

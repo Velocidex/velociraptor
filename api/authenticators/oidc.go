@@ -23,6 +23,10 @@ type OidcAuthenticator struct {
 	authenticator *config_proto.Authenticator
 }
 
+func (self *OidcAuthenticator) Name() string {
+	return self.router.Name()
+}
+
 func (self *OidcAuthenticator) IsPasswordLess() bool {
 	return true
 }

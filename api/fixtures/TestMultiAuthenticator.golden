@@ -1,9 +1,8 @@
 {
- "Redirect Provider *authenticators.OidcAuthenticator": "https://www.example.com/velociraptor/auth/oidc/callback",
- "Redirect Provider *authenticators.GoogleAuthenticator": "https://www.example.com/velociraptor/auth/google/callback",
- "Redirect Provider *authenticators.GitHubAuthenticator": "https://www.example.com/velociraptor/auth/github/callback",
- "Redirect Provider *authenticators.OidcAuthenticatorCognito": "https://www.example.com/velociraptor/auth/oidc/cognito/callback",
- "Redirect Provider *authenticators.AzureAuthenticator": "https://www.example.com/velociraptor/auth/azure/callback",
+ "Redirect Provider *authenticators.OidcAuthenticator Generic OIDC Connector": "https://www.example.com/velociraptor/auth/oidc/callback",
+ "Redirect Provider *authenticators.OidcAuthenticator Google": "https://www.example.com/velociraptor/auth/google/callback",
+ "Redirect Provider *authenticators.OidcAuthenticator GitHub": "https://www.example.com/velociraptor/auth/github/callback",
+ "Redirect Provider *authenticators.OidcAuthenticator Azure": "https://www.example.com/velociraptor/auth/azure/callback",
  "Mux": {
   "/favicon.png": [
    "*http.redirectHandler"
@@ -66,39 +65,31 @@
   ],
   "/velociraptor/auth/azure/callback": [
    "authenticators.IpFilter",
-   " authenticators.(*AzureAuthenticator).oauthAzureCallback"
+   " authenticators.(*OidcAuthenticator).oauthOidcCallback"
   ],
   "/velociraptor/auth/azure/login": [
    "authenticators.IpFilter",
-   " authenticators.(*AzureAuthenticator).oauthAzureLogin"
+   " authenticators.(*OidcAuthenticator).oauthOidcLogin"
   ],
   "/velociraptor/auth/github/callback": [
    "authenticators.IpFilter",
-   " authenticators.(*GitHubAuthenticator).oauthGithubCallback"
+   " authenticators.(*OidcAuthenticator).oauthOidcCallback"
   ],
   "/velociraptor/auth/github/login": [
    "authenticators.IpFilter",
-   " authenticators.(*GitHubAuthenticator).oauthGithubLogin"
+   " authenticators.(*OidcAuthenticator).oauthOidcLogin"
   ],
   "/velociraptor/auth/google/callback": [
    "authenticators.IpFilter",
-   " authenticators.(*GoogleAuthenticator).oauthGoogleCallback"
+   " authenticators.(*OidcAuthenticator).oauthOidcCallback"
   ],
   "/velociraptor/auth/google/login": [
    "authenticators.IpFilter",
-   " authenticators.(*GoogleAuthenticator).oauthGoogleLogin"
+   " authenticators.(*OidcAuthenticator).oauthOidcLogin"
   ],
   "/velociraptor/auth/oidc/callback": [
    "authenticators.IpFilter",
    " authenticators.(*OidcAuthenticator).oauthOidcCallback"
-  ],
-  "/velociraptor/auth/oidc/cognito/callback": [
-   "authenticators.IpFilter",
-   " authenticators.(*OidcAuthenticatorCognito).oauthOidcCallback"
-  ],
-  "/velociraptor/auth/oidc/cognito/login": [
-   "authenticators.IpFilter",
-   " authenticators.(*OidcAuthenticator).oauthOidcLogin"
   ],
   "/velociraptor/auth/oidc/login": [
    "authenticators.IpFilter",
