@@ -89,13 +89,16 @@ func traceNetwork(config_obj *config_proto.Config) func(rt RoundTripFunc) RoundT
 			}
 			defer res.Body.Close()
 
+			ct, _ := res.Header["Content-Type"]
+
 			bs, err := io.ReadAll(res.Body)
 			if err != nil {
 				return nil, err
 			}
 
 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-			logger.Debug("oidc: Calling URL: %v, Response: %v", req.URL, string(bs))
+			logger.Debug("oidc: Calling URL: %v, Response: %v (CT %v)",
+				req.URL, string(bs), ct)
 
 			res.Body = io.NopCloser(bytes.NewReader(bs))
 			return res, nil

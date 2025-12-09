@@ -69,7 +69,8 @@ func NewOidcClaimsGetter(
 	if err != nil {
 		return nil, err
 	}
-	router.SetEndpoint(delegate.Endpoint())
+	ep := delegate.Endpoint()
+	router.SetEndpoint(ep)
 
 	return &OidcClaimsGetter{
 		config_obj:    config_obj,
@@ -134,6 +135,25 @@ func (self *OidcClaimsGetter) GetClaims(
 	return self.newClaimsFromDict(ctx, self.config_obj, claims_dict)
 }
 
+func (self *OidcClaimsGetter) shouldRequireEmailVerify(
+	authenticator *config_proto.Authenticator) bool {
+	if authenticator.Claims == nil {
+		return true
+	}
+
+	if authenticator.Claims.AllowUnverifiedEmail {
+		return false
+	}
+
+	// If the user wants to use a different claim than email then
+	// email verified is not relevant.
+	if authenticator.Claims.Username != "" {
+		return false
+	}
+
+	return true
+}
+
 func (self *OidcClaimsGetter) getClaims(
 	ctx context.Context, token *oauth2.Token) (claims *ordereddict.Dict, err error) {
 
@@ -145,8 +165,7 @@ func (self *OidcClaimsGetter) getClaims(
 	// Make sure the user's email is verified because this is what we
 	// use as the identity.
 	if !user_info.EmailVerified &&
-		(self.authenticator.Claims == nil ||
-			!self.authenticator.Claims.AllowUnverifiedEmail) {
+		self.shouldRequireEmailVerify(self.authenticator) {
 		return nil, fmt.Errorf("Email %v is not verified", user_info.Email)
 	}
 
