@@ -1,0 +1,80 @@
+{
+ "Typical Flow": {
+  "Redirect URL": "https://www.example.com/o/oauth2/v2/auth?client_id=ClientIdXXXX\u0026redirect_uri=%2F\u0026response_type=code\u0026scope=openid+email\u0026state=StateString",
+  "Cookie": {
+   "Name": "VelociraptorAuth",
+   "Value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXJAZXhhbXBsZS5jb20iLCJwaWN0dXJlIjoiIiwiZXhwaXJlcyI6MTc2NTMzMjg4MywidG9rZW4iOiIifQ.BIFTWv4-EdpbquR-q5pTWsorIuNi8XU2HPAl2P683Bc",
+   "Quoted": false,
+   "Path": "/",
+   "Domain": "",
+   "Expires": "2025-12-10T02:14:43.535488646Z",
+   "RawExpires": "",
+   "MaxAge": 0,
+   "Secure": true,
+   "HttpOnly": true,
+   "SameSite": 0,
+   "Partitioned": false,
+   "Raw": "",
+   "Unparsed": null
+  },
+  "Claims": {
+   "username": "user@example.com",
+   "picture": "",
+   "expires": 1765332883,
+   "token": ""
+  }
+ },
+ "AWS congnito": {
+  "Redirect URL": "https://www.example.com/o/oauth2/v2/auth?client_id=ClientIdXXXX\u0026redirect_uri=%2F\u0026response_type=code\u0026scope=openid+email\u0026state=StateString",
+  "Cookie": {
+   "Name": "VelociraptorAuth",
+   "Value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXJAZXhhbXBsZS5jb20iLCJwaWN0dXJlIjoiIiwiZXhwaXJlcyI6MTc2NTMzMjg4MywidG9rZW4iOiIifQ.BIFTWv4-EdpbquR-q5pTWsorIuNi8XU2HPAl2P683Bc",
+   "Quoted": false,
+   "Path": "/",
+   "Domain": "",
+   "Expires": "2025-12-10T02:14:43.535571883Z",
+   "RawExpires": "",
+   "MaxAge": 0,
+   "Secure": true,
+   "HttpOnly": true,
+   "SameSite": 0,
+   "Partitioned": false,
+   "Raw": "",
+   "Unparsed": null
+  },
+  "Claims": {
+   "username": "user@example.com",
+   "picture": "",
+   "expires": 1765332883,
+   "token": ""
+  }
+ },
+ "MS ADFS": {
+  "Redirect URL": "https://www.example.com/o/oauth2/v2/auth?client_id=ClientIdXXXX\u0026redirect_uri=%2F\u0026response_type=code\u0026scope=openid+email\u0026state=StateString",
+  "Cookie": {
+   "Name": "VelociraptorAuth",
+   "Value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im5vb25lQG5vd2hlcmUuY29tIiwicGljdHVyZSI6IiIsImV4cGlyZXMiOjE3NjUzMzI4ODMsInRva2VuIjoiIn0.DvvFEks85ou3bDb1G4xPyH9XK4HIfUJK3rozVGmJpYA",
+   "Quoted": false,
+   "Path": "/",
+   "Domain": "",
+   "Expires": "2025-12-10T02:14:43.53585395Z",
+   "RawExpires": "",
+   "MaxAge": 0,
+   "Secure": true,
+   "HttpOnly": true,
+   "SameSite": 0,
+   "Partitioned": false,
+   "Raw": "",
+   "Unparsed": null
+  },
+  "Claims": {
+   "username": "noone@nowhere.com",
+   "picture": "",
+   "expires": 1765332883,
+   "token": ""
+  }
+ },
+ "Email is not verified": {
+  "Redirect URL": "https://www.example.com/o/oauth2/v2/auth?client_id=ClientIdXXXX\u0026redirect_uri=%2F\u0026response_type=code\u0026scope=openid+email\u0026state=StateString"
+ }
+}

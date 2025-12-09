@@ -2,17 +2,17 @@ package authenticators
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	oidc "github.com/coreos/go-oidc/v3/oidc"
+	jwt "github.com/golang-jwt/jwt/v4"
 	"golang.org/x/oauth2"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/json"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -38,50 +38,131 @@ func (self *Claims) Valid() error {
 	return nil
 }
 
-func (self *OidcAuthenticator) maybeGetClaimsFromToken(
-	ctx context.Context, token *oauth2.Token) (*Claims, error) {
-	if self.authenticator.OidcDebug {
-		logging.GetLogger(self.config_obj, &logging.GUIComponent).
-			Debug("OidcAuthenticator: Will try to get claims from token: %#v", token)
-	}
-
-	data, err := base64.StdEncoding.DecodeString(token.AccessToken)
-	if err != nil {
-		return nil, utils.InvalidArgError
-	}
-
-	if self.authenticator.OidcDebug {
-		logging.GetLogger(self.config_obj, &logging.GUIComponent).
-			Debug("OidcAuthenticator: Getting claims from access token: %s", data)
-	}
-
-	claims := ordereddict.NewDict()
-	err = json.Unmarshal(data, claims)
-	if err != nil {
-		return nil, utils.InvalidArgError
-	}
-
-	return self.newClaimsFromDict(ctx, claims)
+// A ClaimsGetter is responsible for fetching a claim from the oauth
+// server. Depending on the server type the claims are encoded
+// differently or fetched from different locations using different
+// methods.
+type ClaimsGetter interface {
+	GetClaims(ctx *HTTPClientContext, token *oauth2.Token) (*Claims, error)
 }
 
-func (self *OidcAuthenticator) NewClaims(
-	ctx context.Context, user_info *oidc.UserInfo) (*Claims, error) {
-	claims := ordereddict.NewDict()
-	err := user_info.Claims(&claims)
+// The ClaimsGetter for standard OIDC endpoints. This fetches the
+// claims from:
+//  1. The standard OIDC UserInfo endpoint
+//  2. Attempts to decode the claim from the AccessToken if it is a JWT.
+//     This behaviour was observed on ADFS.
+type OidcClaimsGetter struct {
+	config_obj    *config_proto.Config
+	authenticator *config_proto.Authenticator
+	router        OidcRouter
+
+	provider *oidc.Provider
+}
+
+func NewOidcClaimsGetter(
+	ctx *HTTPClientContext,
+	config_obj *config_proto.Config,
+	authenticator *config_proto.Authenticator,
+	router OidcRouter) (*OidcClaimsGetter, error) {
+
+	delegate, err := oidc.NewProvider(ctx, router.Issuer())
+	if err != nil {
+		return nil, err
+	}
+	router.SetEndpoint(delegate.Endpoint())
+
+	return &OidcClaimsGetter{
+		config_obj:    config_obj,
+		authenticator: authenticator,
+		router:        router,
+		provider:      delegate,
+	}, nil
+}
+
+func (self *OidcClaimsGetter) maybeGetClaimsFromToken(
+	ctx context.Context, token *oauth2.Token) (*ordereddict.Dict, error) {
+
+	// The token came from the ADFS server and will be used again to
+	// get the UserInfo so it must be valid. We do not need to check
+	// its signature.
+	claims := jwt.MapClaims{}
+	_, _, err := jwt.NewParser().ParseUnverified(token.AccessToken, claims)
+	if err != nil {
+		return nil, err
+	}
+	res := ordereddict.NewDict()
+	for k, v := range claims {
+		res.Set(k, v)
+	}
+	return res, nil
+}
+
+func (self *OidcClaimsGetter) UserInfo(
+	ctx context.Context,
+	token *oauth2.Token) (*oidc.UserInfo, error) {
+	user_info, err := self.provider.UserInfo(
+		ctx, oauth2.StaticTokenSource(token))
+	if err != nil {
+		return nil, err
+	}
+	return user_info, err
+}
+
+func (self *OidcClaimsGetter) Debug(message string, args ...interface{}) {
+	if self.authenticator.OidcDebug {
+		logging.GetLogger(self.config_obj, &logging.GUIComponent).
+			Debug(message, args...)
+	}
+}
+
+func (self *OidcClaimsGetter) GetClaims(
+	ctx *HTTPClientContext, token *oauth2.Token) (claims *Claims, err error) {
+
+	claims_dict, err := self.getClaims(ctx, token)
+	if err != nil {
+		self.Debug("Unable to parse claims from user info: %v", err)
+
+		// Fallsback to try to get the claims from the token
+		token_claims_dict, err1 := self.maybeGetClaimsFromToken(ctx, token)
+		if err1 != nil {
+			return nil, err
+		}
+		self.Debug("Unwrapped claims from AccessToken: %v", token_claims_dict)
+		claims_dict = token_claims_dict
+	}
+
+	return self.newClaimsFromDict(ctx, self.config_obj, claims_dict)
+}
+
+func (self *OidcClaimsGetter) getClaims(
+	ctx context.Context, token *oauth2.Token) (claims *ordereddict.Dict, err error) {
+
+	user_info, err := self.UserInfo(ctx, token)
+	if err != nil {
+		return nil, fmt.Errorf("can not get UserInfo from OIDC provider: %v", err)
+	}
+
+	// Make sure the user's email is verified because this is what we
+	// use as the identity.
+	if !user_info.EmailVerified &&
+		(self.authenticator.Claims == nil ||
+			!self.authenticator.Claims.AllowUnverifiedEmail) {
+		return nil, fmt.Errorf("Email %v is not verified", user_info.Email)
+	}
+
+	claims = ordereddict.NewDict()
+	err = user_info.Claims(&claims)
 	if err != nil {
 		return nil, err
 	}
 
-	return self.newClaimsFromDict(ctx, claims)
+	return claims, nil
 }
 
-func (self *OidcAuthenticator) newClaimsFromDict(
-	ctx context.Context, claims *ordereddict.Dict) (*Claims, error) {
-
-	if self.authenticator.OidcDebug {
-		logging.GetLogger(self.config_obj, &logging.GUIComponent).
-			Debug("OidcAuthenticator: Parsing claims from OIDC Claims: %#v", claims)
-	}
+func (self *OidcClaimsGetter) newClaimsFromDict(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	claims *ordereddict.Dict) (*Claims, error) {
 
 	username_field := "email"
 	roles_field := ""
@@ -89,6 +170,7 @@ func (self *OidcAuthenticator) newClaimsFromDict(
 	if self.authenticator.Claims != nil {
 		if self.authenticator.Claims.Username != "" {
 			username_field = self.authenticator.Claims.Username
+			self.Debug("Using field %v in claims for username", username_field)
 		}
 
 		if self.authenticator.Claims.Roles != "" {
@@ -121,7 +203,7 @@ func (self *OidcAuthenticator) newClaimsFromDict(
 
 	user_manager := services.GetUserManager()
 
-	logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 
 	// First check the user exist at all.
 	_, err := user_manager.GetUser(ctx, email, email)
@@ -131,7 +213,7 @@ func (self *OidcAuthenticator) newClaimsFromDict(
 			Name: email,
 		}
 
-		err = services.LogAudit(ctx, self.config_obj, email,
+		err = services.LogAudit(ctx, config_obj, email,
 			"Create User From OIDC Roles",
 			ordereddict.NewDict().Set("Claims", claims))
 		if err != nil {
@@ -172,10 +254,7 @@ func (self *OidcAuthenticator) newClaimsFromDict(
 		for _, oidc_role := range roles {
 			acl_spec, pres := self.authenticator.Claims.RoleMap[oidc_role]
 			if !pres {
-				if self.authenticator.OidcDebug {
-					logging.GetLogger(self.config_obj, &logging.GUIComponent).
-						Debug("No allowed claim role map for OIDC claim %#v", oidc_role)
-				}
+				self.Debug("No allowed claim role map for OIDC claim %#v", oidc_role)
 				continue
 			}
 
@@ -196,7 +275,7 @@ func (self *OidcAuthenticator) newClaimsFromDict(
 			// Only set the roles if we need to - note we can only
 			// ever add roles to the existing roles.
 			if len(new_roles) > len(existing_acls.Roles) {
-				err = services.LogAudit(ctx, self.config_obj, email,
+				err = services.LogAudit(ctx, config_obj, email,
 					"Grant User Role From OIDC Claim",
 					ordereddict.NewDict().
 						Set("Roles", new_roles).
