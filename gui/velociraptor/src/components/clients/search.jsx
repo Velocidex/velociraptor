@@ -34,9 +34,17 @@ class VeloClientSearch extends Component {
         let query = this.props.match && this.props.match.params &&
             this.props.match.params.query;
         if (query && query !== this.state.query) {
-            this.this.setState({query: query});
+            this.setState({query: query});
         };
     };
+
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        let query = this.props.match && this.props.match.params &&
+            this.props.match.params.query;
+        if (query && query !== this.state.query) {
+            this.setState({query: query});
+        };
+    }
 
     componentWillUnmount() {
         this.source.cancel("unmounted");
@@ -149,6 +157,5 @@ class VeloClientSearch extends Component {
         );
     }
 };
-
 
 export default withRouter(VeloClientSearch);

@@ -139,10 +139,11 @@ class App extends Component {
                      <VeloNavigator
                        vfs_path={vfs_path}
                        client={this.state.client} />
-
-                     <VeloClientSearch
-                       setSearch={this.setClientSearch}
-                     />
+                     <Route path="/search/:query?">
+                       <VeloClientSearch
+                         setSearch={this.setClientSearch}
+                       />
+                     </Route>
                    </div>
                    <VeloClientSummary
                      setClient={this.setClient}
