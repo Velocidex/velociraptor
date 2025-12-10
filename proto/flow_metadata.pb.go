@@ -4,12 +4,11 @@
 package proto
 
 import (
+	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
 	reflect "reflect"
 	sync "sync"
-	unsafe "unsafe"
 )
 
 const (
@@ -20,17 +19,20 @@ const (
 )
 
 type FlowMetaData struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Category      string                 `protobuf:"bytes,1,opt,name=category,proto3" json:"category,omitempty"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Category string `protobuf:"bytes,1,opt,name=category,proto3" json:"category,omitempty"`
 }
 
 func (x *FlowMetaData) Reset() {
 	*x = FlowMetaData{}
-	mi := &file_flow_metadata_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_flow_metadata_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *FlowMetaData) String() string {
@@ -41,7 +43,7 @@ func (*FlowMetaData) ProtoMessage() {}
 
 func (x *FlowMetaData) ProtoReflect() protoreflect.Message {
 	mi := &file_flow_metadata_proto_msgTypes[0]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -65,7 +67,7 @@ func (x *FlowMetaData) GetCategory() string {
 
 var file_flow_metadata_proto_extTypes = []protoimpl.ExtensionInfo{
 	{
-		ExtendedType:  (*descriptorpb.MessageOptions)(nil),
+		ExtendedType:  (*descriptor.MessageOptions)(nil),
 		ExtensionType: (*FlowMetaData)(nil),
 		Field:         65661,
 		Name:          "proto.flow_metadata",
@@ -74,7 +76,7 @@ var file_flow_metadata_proto_extTypes = []protoimpl.ExtensionInfo{
 	},
 }
 
-// Extension fields to descriptorpb.MessageOptions.
+// Extension fields to descriptor.MessageOptions.
 var (
 	// optional proto.FlowMetaData flow_metadata = 65661;
 	E_FlowMetadata = &file_flow_metadata_proto_extTypes[0]
@@ -82,29 +84,41 @@ var (
 
 var File_flow_metadata_proto protoreflect.FileDescriptor
 
-const file_flow_metadata_proto_rawDesc = "" +
-	"\n" +
-	"\x13flow_metadata.proto\x12\x05proto\x1a google/protobuf/descriptor.proto\"*\n" +
-	"\fFlowMetaData\x12\x1a\n" +
-	"\bcategory\x18\x01 \x01(\tR\bcategory:[\n" +
-	"\rflow_metadata\x12\x1f.google.protobuf.MessageOptions\x18\xfd\x80\x04 \x01(\v2\x13.proto.FlowMetaDataR\fflowMetadataB-Z+www.velocidex.com/golang/velociraptor/protob\x06proto3"
+var file_flow_metadata_proto_rawDesc = []byte{
+	0x0a, 0x13, 0x66, 0x6c, 0x6f, 0x77, 0x5f, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x20, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x64, 0x65,
+	0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x6f, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x2a,
+	0x0a, 0x0c, 0x46, 0x6c, 0x6f, 0x77, 0x4d, 0x65, 0x74, 0x61, 0x44, 0x61, 0x74, 0x61, 0x12, 0x1a,
+	0x0a, 0x08, 0x63, 0x61, 0x74, 0x65, 0x67, 0x6f, 0x72, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x08, 0x63, 0x61, 0x74, 0x65, 0x67, 0x6f, 0x72, 0x79, 0x3a, 0x5b, 0x0a, 0x0d, 0x66, 0x6c,
+	0x6f, 0x77, 0x5f, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x1f, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x4d, 0x65,
+	0x73, 0x73, 0x61, 0x67, 0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0xfd, 0x80, 0x04,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x46, 0x6c, 0x6f,
+	0x77, 0x4d, 0x65, 0x74, 0x61, 0x44, 0x61, 0x74, 0x61, 0x52, 0x0c, 0x66, 0x6c, 0x6f, 0x77, 0x4d,
+	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x42, 0x2d, 0x5a, 0x2b, 0x77, 0x77, 0x77, 0x2e, 0x76,
+	0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64, 0x65, 0x78, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c,
+	0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72,
+	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+}
 
 var (
 	file_flow_metadata_proto_rawDescOnce sync.Once
-	file_flow_metadata_proto_rawDescData []byte
+	file_flow_metadata_proto_rawDescData = file_flow_metadata_proto_rawDesc
 )
 
 func file_flow_metadata_proto_rawDescGZIP() []byte {
 	file_flow_metadata_proto_rawDescOnce.Do(func() {
-		file_flow_metadata_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_flow_metadata_proto_rawDesc), len(file_flow_metadata_proto_rawDesc)))
+		file_flow_metadata_proto_rawDescData = protoimpl.X.CompressGZIP(file_flow_metadata_proto_rawDescData)
 	})
 	return file_flow_metadata_proto_rawDescData
 }
 
 var file_flow_metadata_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_flow_metadata_proto_goTypes = []any{
-	(*FlowMetaData)(nil),                // 0: proto.FlowMetaData
-	(*descriptorpb.MessageOptions)(nil), // 1: google.protobuf.MessageOptions
+var file_flow_metadata_proto_goTypes = []interface{}{
+	(*FlowMetaData)(nil),              // 0: proto.FlowMetaData
+	(*descriptor.MessageOptions)(nil), // 1: google.protobuf.MessageOptions
 }
 var file_flow_metadata_proto_depIdxs = []int32{
 	1, // 0: proto.flow_metadata:extendee -> google.protobuf.MessageOptions
@@ -121,11 +135,25 @@ func file_flow_metadata_proto_init() {
 	if File_flow_metadata_proto != nil {
 		return
 	}
+	if !protoimpl.UnsafeEnabled {
+		file_flow_metadata_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*FlowMetaData); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_flow_metadata_proto_rawDesc), len(file_flow_metadata_proto_rawDesc)),
+			RawDescriptor: file_flow_metadata_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 1,
@@ -137,6 +165,7 @@ func file_flow_metadata_proto_init() {
 		ExtensionInfos:    file_flow_metadata_proto_extTypes,
 	}.Build()
 	File_flow_metadata_proto = out.File
+	file_flow_metadata_proto_rawDesc = nil
 	file_flow_metadata_proto_goTypes = nil
 	file_flow_metadata_proto_depIdxs = nil
 }

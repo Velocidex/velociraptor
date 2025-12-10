@@ -8,7 +8,6 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
-	unsafe "unsafe"
 	proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	proto1 "www.velocidex.com/golang/velociraptor/flows/proto"
 	_ "www.velocidex.com/golang/velociraptor/proto"
@@ -75,21 +74,24 @@ func (SetArtifactRequest_Operation) EnumDescriptor() ([]byte, []int) {
 }
 
 type FieldSelector struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          bool                   `protobuf:"varint,1,opt,name=name,proto3" json:"name,omitempty"`
-	Description   bool                   `protobuf:"varint,2,opt,name=description,proto3" json:"description,omitempty"`
-	Type          bool                   `protobuf:"varint,3,opt,name=type,proto3" json:"type,omitempty"`
-	Sources       bool                   `protobuf:"varint,4,opt,name=sources,proto3" json:"sources,omitempty"`
-	Tags          bool                   `protobuf:"varint,5,opt,name=tags,proto3" json:"tags,omitempty"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Name        bool `protobuf:"varint,1,opt,name=name,proto3" json:"name,omitempty"`
+	Description bool `protobuf:"varint,2,opt,name=description,proto3" json:"description,omitempty"`
+	Type        bool `protobuf:"varint,3,opt,name=type,proto3" json:"type,omitempty"`
+	Sources     bool `protobuf:"varint,4,opt,name=sources,proto3" json:"sources,omitempty"`
+	Tags        bool `protobuf:"varint,5,opt,name=tags,proto3" json:"tags,omitempty"`
 }
 
 func (x *FieldSelector) Reset() {
 	*x = FieldSelector{}
-	mi := &file_artifacts_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *FieldSelector) String() string {
@@ -100,7 +102,7 @@ func (*FieldSelector) ProtoMessage() {}
 
 func (x *FieldSelector) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[0]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -151,7 +153,10 @@ func (x *FieldSelector) GetTags() bool {
 }
 
 type GetArtifactsRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
 	// Deprecated
 	IncludeEventArtifacts  bool   `protobuf:"varint,1,opt,name=include_event_artifacts,json=includeEventArtifacts,proto3" json:"include_event_artifacts,omitempty"`
 	IncludeServerArtifacts bool   `protobuf:"varint,2,opt,name=include_server_artifacts,json=includeServerArtifacts,proto3" json:"include_server_artifacts,omitempty"`
@@ -160,17 +165,17 @@ type GetArtifactsRequest struct {
 	Type                   string `protobuf:"bytes,5,opt,name=type,proto3" json:"type,omitempty"`
 	ReportType             string `protobuf:"bytes,7,opt,name=report_type,json=reportType,proto3" json:"report_type,omitempty"`
 	// Allow the caller to specify just the fields they want.
-	Fields        *FieldSelector `protobuf:"bytes,8,opt,name=fields,proto3" json:"fields,omitempty"`
-	Names         []string       `protobuf:"bytes,6,rep,name=names,proto3" json:"names,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Fields *FieldSelector `protobuf:"bytes,8,opt,name=fields,proto3" json:"fields,omitempty"`
+	Names  []string       `protobuf:"bytes,6,rep,name=names,proto3" json:"names,omitempty"`
 }
 
 func (x *GetArtifactsRequest) Reset() {
 	*x = GetArtifactsRequest{}
-	mi := &file_artifacts_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *GetArtifactsRequest) String() string {
@@ -181,7 +186,7 @@ func (*GetArtifactsRequest) ProtoMessage() {}
 
 func (x *GetArtifactsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[1]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -253,17 +258,20 @@ func (x *GetArtifactsRequest) GetNames() []string {
 }
 
 type GetArtifactRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 }
 
 func (x *GetArtifactRequest) Reset() {
 	*x = GetArtifactRequest{}
-	mi := &file_artifacts_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *GetArtifactRequest) String() string {
@@ -274,7 +282,7 @@ func (*GetArtifactRequest) ProtoMessage() {}
 
 func (x *GetArtifactRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[2]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -297,17 +305,20 @@ func (x *GetArtifactRequest) GetName() string {
 }
 
 type GetArtifactResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Artifact      string                 `protobuf:"bytes,1,opt,name=artifact,proto3" json:"artifact,omitempty"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Artifact string `protobuf:"bytes,1,opt,name=artifact,proto3" json:"artifact,omitempty"`
 }
 
 func (x *GetArtifactResponse) Reset() {
 	*x = GetArtifactResponse{}
-	mi := &file_artifacts_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *GetArtifactResponse) String() string {
@@ -318,7 +329,7 @@ func (*GetArtifactResponse) ProtoMessage() {}
 
 func (x *GetArtifactResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[3]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -341,20 +352,23 @@ func (x *GetArtifactResponse) GetArtifact() string {
 }
 
 type SetArtifactRequest struct {
-	state    protoimpl.MessageState `protogen:"open.v1"`
-	Artifact string                 `protobuf:"bytes,2,opt,name=artifact,proto3" json:"artifact,omitempty"`
-	// Also set these tags.
-	Tags          []string                     `protobuf:"bytes,4,rep,name=tags,proto3" json:"tags,omitempty"`
-	Op            SetArtifactRequest_Operation `protobuf:"varint,3,opt,name=op,proto3,enum=proto.SetArtifactRequest_Operation" json:"op,omitempty"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Artifact string `protobuf:"bytes,2,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	// Also set these tags.
+	Tags []string                     `protobuf:"bytes,4,rep,name=tags,proto3" json:"tags,omitempty"`
+	Op   SetArtifactRequest_Operation `protobuf:"varint,3,opt,name=op,proto3,enum=proto.SetArtifactRequest_Operation" json:"op,omitempty"`
 }
 
 func (x *SetArtifactRequest) Reset() {
 	*x = SetArtifactRequest{}
-	mi := &file_artifacts_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *SetArtifactRequest) String() string {
@@ -365,7 +379,7 @@ func (*SetArtifactRequest) ProtoMessage() {}
 
 func (x *SetArtifactRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[4]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -402,20 +416,23 @@ func (x *SetArtifactRequest) GetOp() SetArtifactRequest_Operation {
 }
 
 type SetArtifactResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Error         bool                   `protobuf:"varint,1,opt,name=error,proto3" json:"error,omitempty"`
-	ErrorMessage  string                 `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
-	Errors        []string               `protobuf:"bytes,3,rep,name=errors,proto3" json:"errors,omitempty"`
-	Warnings      []string               `protobuf:"bytes,4,rep,name=warnings,proto3" json:"warnings,omitempty"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Error        bool     `protobuf:"varint,1,opt,name=error,proto3" json:"error,omitempty"`
+	ErrorMessage string   `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	Errors       []string `protobuf:"bytes,3,rep,name=errors,proto3" json:"errors,omitempty"`
+	Warnings     []string `protobuf:"bytes,4,rep,name=warnings,proto3" json:"warnings,omitempty"`
 }
 
 func (x *SetArtifactResponse) Reset() {
 	*x = SetArtifactResponse{}
-	mi := &file_artifacts_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *SetArtifactResponse) String() string {
@@ -426,7 +443,7 @@ func (*SetArtifactResponse) ProtoMessage() {}
 
 func (x *SetArtifactResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[5]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -470,18 +487,21 @@ func (x *SetArtifactResponse) GetWarnings() []string {
 }
 
 type LoadArtifactError struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Filename      string                 `protobuf:"bytes,1,opt,name=filename,proto3" json:"filename,omitempty"`
-	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Filename string `protobuf:"bytes,1,opt,name=filename,proto3" json:"filename,omitempty"`
+	Error    string `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
 }
 
 func (x *LoadArtifactError) Reset() {
 	*x = LoadArtifactError{}
-	mi := &file_artifacts_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *LoadArtifactError) String() string {
@@ -492,7 +512,7 @@ func (*LoadArtifactError) ProtoMessage() {}
 
 func (x *LoadArtifactError) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[6]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -522,23 +542,26 @@ func (x *LoadArtifactError) GetError() string {
 }
 
 type LoadArtifactPackRequest struct {
-	state  protoimpl.MessageState `protogen:"open.v1"`
-	Prefix string                 `protobuf:"bytes,1,opt,name=prefix,proto3" json:"prefix,omitempty"`
-	Tags   []string               `protobuf:"bytes,6,rep,name=tags,proto3" json:"tags,omitempty"`
-	Filter string                 `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
-	// NOTE: the vfs path must be in the VFS temp directory.
-	Data          []byte   `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
-	VfsPath       []string `protobuf:"bytes,5,rep,name=vfs_path,json=vfsPath,proto3" json:"vfs_path,omitempty"`
-	ReallyDoIt    bool     `protobuf:"varint,4,opt,name=really_do_it,json=reallyDoIt,proto3" json:"really_do_it,omitempty"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Prefix string   `protobuf:"bytes,1,opt,name=prefix,proto3" json:"prefix,omitempty"`
+	Tags   []string `protobuf:"bytes,6,rep,name=tags,proto3" json:"tags,omitempty"`
+	Filter string   `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
+	// NOTE: the vfs path must be in the VFS temp directory.
+	Data       []byte   `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	VfsPath    []string `protobuf:"bytes,5,rep,name=vfs_path,json=vfsPath,proto3" json:"vfs_path,omitempty"`
+	ReallyDoIt bool     `protobuf:"varint,4,opt,name=really_do_it,json=reallyDoIt,proto3" json:"really_do_it,omitempty"`
 }
 
 func (x *LoadArtifactPackRequest) Reset() {
 	*x = LoadArtifactPackRequest{}
-	mi := &file_artifacts_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *LoadArtifactPackRequest) String() string {
@@ -549,7 +572,7 @@ func (*LoadArtifactPackRequest) ProtoMessage() {}
 
 func (x *LoadArtifactPackRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[7]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -607,19 +630,22 @@ func (x *LoadArtifactPackRequest) GetReallyDoIt() bool {
 }
 
 type LoadArtifactPackResponse struct {
-	state               protoimpl.MessageState `protogen:"open.v1"`
-	SuccessfulArtifacts []string               `protobuf:"bytes,1,rep,name=successful_artifacts,json=successfulArtifacts,proto3" json:"successful_artifacts,omitempty"`
-	VfsPath             []string               `protobuf:"bytes,3,rep,name=vfs_path,json=vfsPath,proto3" json:"vfs_path,omitempty"`
-	Errors              []*LoadArtifactError   `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	SuccessfulArtifacts []string             `protobuf:"bytes,1,rep,name=successful_artifacts,json=successfulArtifacts,proto3" json:"successful_artifacts,omitempty"`
+	VfsPath             []string             `protobuf:"bytes,3,rep,name=vfs_path,json=vfsPath,proto3" json:"vfs_path,omitempty"`
+	Errors              []*LoadArtifactError `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
 }
 
 func (x *LoadArtifactPackResponse) Reset() {
 	*x = LoadArtifactPackResponse{}
-	mi := &file_artifacts_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *LoadArtifactPackResponse) String() string {
@@ -630,7 +656,7 @@ func (*LoadArtifactPackResponse) ProtoMessage() {}
 
 func (x *LoadArtifactPackResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[8]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -667,18 +693,21 @@ func (x *LoadArtifactPackResponse) GetErrors() []*LoadArtifactError {
 }
 
 type APIResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Error         bool                   `protobuf:"varint,1,opt,name=error,proto3" json:"error,omitempty"`
-	ErrorMessage  string                 `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Error        bool   `protobuf:"varint,1,opt,name=error,proto3" json:"error,omitempty"`
+	ErrorMessage string `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
 }
 
 func (x *APIResponse) Reset() {
 	*x = APIResponse{}
-	mi := &file_artifacts_proto_msgTypes[9]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *APIResponse) String() string {
@@ -689,7 +718,7 @@ func (*APIResponse) ProtoMessage() {}
 
 func (x *APIResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[9]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -719,10 +748,13 @@ func (x *APIResponse) GetErrorMessage() string {
 }
 
 type GetReportRequest struct {
-	state    protoimpl.MessageState `protogen:"open.v1"`
-	Artifact string                 `protobuf:"bytes,1,opt,name=artifact,proto3" json:"artifact,omitempty"`
-	Type     string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
-	Format   string                 `protobuf:"bytes,3,opt,name=format,proto3" json:"format,omitempty"`
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Artifact string `protobuf:"bytes,1,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	Type     string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Format   string `protobuf:"bytes,3,opt,name=format,proto3" json:"format,omitempty"`
 	// Common parameters
 	ClientId string `protobuf:"bytes,5,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
 	// Parameters for SERVER_EVENT reports
@@ -732,17 +764,17 @@ type GetReportRequest struct {
 	// Parameters for CLIENT reports
 	FlowId string `protobuf:"bytes,7,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
 	// Parameters for HUNT reports
-	HuntId        string                     `protobuf:"bytes,10,opt,name=hunt_id,json=huntId,proto3" json:"hunt_id,omitempty"`
-	Parameters    []*proto.ArtifactParameter `protobuf:"bytes,4,rep,name=parameters,proto3" json:"parameters,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	HuntId     string                     `protobuf:"bytes,10,opt,name=hunt_id,json=huntId,proto3" json:"hunt_id,omitempty"`
+	Parameters []*proto.ArtifactParameter `protobuf:"bytes,4,rep,name=parameters,proto3" json:"parameters,omitempty"`
 }
 
 func (x *GetReportRequest) Reset() {
 	*x = GetReportRequest{}
-	mi := &file_artifacts_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *GetReportRequest) String() string {
@@ -753,7 +785,7 @@ func (*GetReportRequest) ProtoMessage() {}
 
 func (x *GetReportRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[10]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -843,19 +875,22 @@ func (x *GetReportRequest) GetParameters() []*proto.ArtifactParameter {
 // json encoded object, then "template" is an angular template to be
 // evaluated with the data.
 type GetReportResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Data          string                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
-	Template      string                 `protobuf:"bytes,2,opt,name=template,proto3" json:"template,omitempty"`
-	Messages      []string               `protobuf:"bytes,3,rep,name=messages,proto3" json:"messages,omitempty"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Data     string   `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	Template string   `protobuf:"bytes,2,opt,name=template,proto3" json:"template,omitempty"`
+	Messages []string `protobuf:"bytes,3,rep,name=messages,proto3" json:"messages,omitempty"`
 }
 
 func (x *GetReportResponse) Reset() {
 	*x = GetReportResponse{}
-	mi := &file_artifacts_proto_msgTypes[11]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *GetReportResponse) String() string {
@@ -866,7 +901,7 @@ func (*GetReportResponse) ProtoMessage() {}
 
 func (x *GetReportResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[11]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -904,16 +939,18 @@ func (x *GetReportResponse) GetMessages() []string {
 
 // Deprecated.
 type ArtifactCompressionDict struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
 }
 
 func (x *ArtifactCompressionDict) Reset() {
 	*x = ArtifactCompressionDict{}
-	mi := &file_artifacts_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *ArtifactCompressionDict) String() string {
@@ -924,7 +961,7 @@ func (*ArtifactCompressionDict) ProtoMessage() {}
 
 func (x *ArtifactCompressionDict) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[12]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -940,23 +977,26 @@ func (*ArtifactCompressionDict) Descriptor() ([]byte, []int) {
 }
 
 type ListAvailableEventResultsRequest struct {
-	state    protoimpl.MessageState `protogen:"open.v1"`
-	ClientId string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
 	// Which artifact to list timestamps for. If not specified we only
 	// list artifact names.
 	Artifact string `protobuf:"bytes,2,opt,name=artifact,proto3" json:"artifact,omitempty"`
 	// This can be empty or "logs" to list the logs.
-	LogType       string `protobuf:"bytes,3,opt,name=log_type,json=logType,proto3" json:"log_type,omitempty"`
-	OrgId         string `protobuf:"bytes,4,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	LogType string `protobuf:"bytes,3,opt,name=log_type,json=logType,proto3" json:"log_type,omitempty"`
+	OrgId   string `protobuf:"bytes,4,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
 }
 
 func (x *ListAvailableEventResultsRequest) Reset() {
 	*x = ListAvailableEventResultsRequest{}
-	mi := &file_artifacts_proto_msgTypes[13]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *ListAvailableEventResultsRequest) String() string {
@@ -967,7 +1007,7 @@ func (*ListAvailableEventResultsRequest) ProtoMessage() {}
 
 func (x *ListAvailableEventResultsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[13]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -1011,20 +1051,23 @@ func (x *ListAvailableEventResultsRequest) GetOrgId() string {
 }
 
 type AvailableEvent struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Artifact      string                 `protobuf:"bytes,1,opt,name=artifact,proto3" json:"artifact,omitempty"`
-	Definition    *proto.Artifact        `protobuf:"bytes,3,opt,name=definition,proto3" json:"definition,omitempty"`
-	RowTimestamps []int32                `protobuf:"varint,2,rep,packed,name=row_timestamps,json=rowTimestamps,proto3" json:"row_timestamps,omitempty"`
-	LogTimestamps []int32                `protobuf:"varint,4,rep,packed,name=log_timestamps,json=logTimestamps,proto3" json:"log_timestamps,omitempty"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Artifact      string          `protobuf:"bytes,1,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	Definition    *proto.Artifact `protobuf:"bytes,3,opt,name=definition,proto3" json:"definition,omitempty"`
+	RowTimestamps []int32         `protobuf:"varint,2,rep,packed,name=row_timestamps,json=rowTimestamps,proto3" json:"row_timestamps,omitempty"`
+	LogTimestamps []int32         `protobuf:"varint,4,rep,packed,name=log_timestamps,json=logTimestamps,proto3" json:"log_timestamps,omitempty"`
 }
 
 func (x *AvailableEvent) Reset() {
 	*x = AvailableEvent{}
-	mi := &file_artifacts_proto_msgTypes[14]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *AvailableEvent) String() string {
@@ -1035,7 +1078,7 @@ func (*AvailableEvent) ProtoMessage() {}
 
 func (x *AvailableEvent) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[14]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -1079,17 +1122,20 @@ func (x *AvailableEvent) GetLogTimestamps() []int32 {
 }
 
 type ListAvailableEventResultsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Logs          []*AvailableEvent      `protobuf:"bytes,1,rep,name=logs,proto3" json:"logs,omitempty"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Logs []*AvailableEvent `protobuf:"bytes,1,rep,name=logs,proto3" json:"logs,omitempty"`
 }
 
 func (x *ListAvailableEventResultsResponse) Reset() {
 	*x = ListAvailableEventResultsResponse{}
-	mi := &file_artifacts_proto_msgTypes[15]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[15]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *ListAvailableEventResultsResponse) String() string {
@@ -1100,7 +1146,7 @@ func (*ListAvailableEventResultsResponse) ProtoMessage() {}
 
 func (x *ListAvailableEventResultsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[15]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -1123,18 +1169,21 @@ func (x *ListAvailableEventResultsResponse) GetLogs() []*AvailableEvent {
 }
 
 type GetMonitoringStateRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Client monitoring states are controlled by labels.
-	Label         string `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Client monitoring states are controlled by labels.
+	Label string `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
 }
 
 func (x *GetMonitoringStateRequest) Reset() {
 	*x = GetMonitoringStateRequest{}
-	mi := &file_artifacts_proto_msgTypes[16]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[16]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *GetMonitoringStateRequest) String() string {
@@ -1145,7 +1194,7 @@ func (*GetMonitoringStateRequest) ProtoMessage() {}
 
 func (x *GetMonitoringStateRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[16]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -1168,18 +1217,21 @@ func (x *GetMonitoringStateRequest) GetLabel() string {
 }
 
 type GetMonitoringStateResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// List all the labels matching the request
-	Requests      []*SetMonitoringStateRequest `protobuf:"bytes,1,rep,name=requests,proto3" json:"requests,omitempty"`
-	unknownFields protoimpl.UnknownFields
+	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// List all the labels matching the request
+	Requests []*SetMonitoringStateRequest `protobuf:"bytes,1,rep,name=requests,proto3" json:"requests,omitempty"`
 }
 
 func (x *GetMonitoringStateResponse) Reset() {
 	*x = GetMonitoringStateResponse{}
-	mi := &file_artifacts_proto_msgTypes[17]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[17]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *GetMonitoringStateResponse) String() string {
@@ -1190,7 +1242,7 @@ func (*GetMonitoringStateResponse) ProtoMessage() {}
 
 func (x *GetMonitoringStateResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[17]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -1213,20 +1265,23 @@ func (x *GetMonitoringStateResponse) GetRequests() []*SetMonitoringStateRequest 
 }
 
 type SetMonitoringStateRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
 	// Sets the monitoring table for a subset of clients specified by
 	// label.
-	Label         string                        `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
-	Request       *proto1.ArtifactCollectorArgs `protobuf:"bytes,2,opt,name=request,proto3" json:"request,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Label   string                        `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
+	Request *proto1.ArtifactCollectorArgs `protobuf:"bytes,2,opt,name=request,proto3" json:"request,omitempty"`
 }
 
 func (x *SetMonitoringStateRequest) Reset() {
 	*x = SetMonitoringStateRequest{}
-	mi := &file_artifacts_proto_msgTypes[18]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
+	if protoimpl.UnsafeEnabled {
+		mi := &file_artifacts_proto_msgTypes[18]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
 }
 
 func (x *SetMonitoringStateRequest) String() string {
@@ -1237,7 +1292,7 @@ func (*SetMonitoringStateRequest) ProtoMessage() {}
 
 func (x *SetMonitoringStateRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_artifacts_proto_msgTypes[18]
-	if x != nil {
+	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -1268,120 +1323,225 @@ func (x *SetMonitoringStateRequest) GetRequest() *proto1.ArtifactCollectorArgs {
 
 var File_artifacts_proto protoreflect.FileDescriptor
 
-const file_artifacts_proto_rawDesc = "" +
-	"\n" +
-	"\x0fartifacts.proto\x12\x05proto\x1a\x14proto/semantic.proto\x1a\x1eartifacts/proto/artifact.proto\x1a$flows/proto/artifact_collector.proto\"\x87\x01\n" +
-	"\rFieldSelector\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\bR\x04name\x12 \n" +
-	"\vdescription\x18\x02 \x01(\bR\vdescription\x12\x12\n" +
-	"\x04type\x18\x03 \x01(\bR\x04type\x12\x18\n" +
-	"\asources\x18\x04 \x01(\bR\asources\x12\x12\n" +
-	"\x04tags\x18\x05 \x01(\bR\x04tags\"\xf3\x02\n" +
-	"\x13GetArtifactsRequest\x126\n" +
-	"\x17include_event_artifacts\x18\x01 \x01(\bR\x15includeEventArtifacts\x128\n" +
-	"\x18include_server_artifacts\x18\x02 \x01(\bR\x16includeServerArtifacts\x12\x1f\n" +
-	"\vsearch_term\x18\x03 \x01(\tR\n" +
-	"searchTerm\x12*\n" +
-	"\x11number_of_results\x18\x04 \x01(\x04R\x0fnumberOfResults\x12\x12\n" +
-	"\x04type\x18\x05 \x01(\tR\x04type\x12\x1f\n" +
-	"\vreport_type\x18\a \x01(\tR\n" +
-	"reportType\x12,\n" +
-	"\x06fields\x18\b \x01(\v2\x14.proto.FieldSelectorR\x06fields\x12:\n" +
-	"\x05names\x18\x06 \x03(\tB$\xe2\xfc\xe3\xc4\x01\x1e\x12\x1cA list of artifacts to fetchR\x05names\"D\n" +
-	"\x12GetArtifactRequest\x12.\n" +
-	"\x04name\x18\x02 \x01(\tB\x1a\xe2\xfc\xe3\xc4\x01\x14\x12\x12The artifact name.R\x04name\"[\n" +
-	"\x13GetArtifactResponse\x12D\n" +
-	"\bartifact\x18\x01 \x01(\tB(\xe2\xfc\xe3\xc4\x01\"\x12 The artifact data, or a default.R\bartifact\"\x8a\x02\n" +
-	"\x12SetArtifactRequest\x12D\n" +
-	"\bartifact\x18\x02 \x01(\tB(\xe2\xfc\xe3\xc4\x01\"\x12 The artifact data, or a default.R\bartifact\x12\x12\n" +
-	"\x04tags\x18\x04 \x03(\tR\x04tags\x12Z\n" +
-	"\x02op\x18\x03 \x01(\x0e2#.proto.SetArtifactRequest.OperationB%\xe2\xfc\xe3\xc4\x01\x1f\x12\x1dWhat to do with the artifact?R\x02op\">\n" +
-	"\tOperation\x12\a\n" +
-	"\x03SET\x10\x00\x12\n" +
-	"\n" +
-	"\x06DELETE\x10\x01\x12\t\n" +
-	"\x05CHECK\x10\x02\x12\x11\n" +
-	"\rCHECK_AND_SET\x10\x03\"\x84\x01\n" +
-	"\x13SetArtifactResponse\x12\x14\n" +
-	"\x05error\x18\x01 \x01(\bR\x05error\x12#\n" +
-	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\x12\x16\n" +
-	"\x06errors\x18\x03 \x03(\tR\x06errors\x12\x1a\n" +
-	"\bwarnings\x18\x04 \x03(\tR\bwarnings\"E\n" +
-	"\x11LoadArtifactError\x12\x1a\n" +
-	"\bfilename\x18\x01 \x01(\tR\bfilename\x12\x14\n" +
-	"\x05error\x18\x02 \x01(\tR\x05error\"\xae\x01\n" +
-	"\x17LoadArtifactPackRequest\x12\x16\n" +
-	"\x06prefix\x18\x01 \x01(\tR\x06prefix\x12\x12\n" +
-	"\x04tags\x18\x06 \x03(\tR\x04tags\x12\x16\n" +
-	"\x06filter\x18\x02 \x01(\tR\x06filter\x12\x12\n" +
-	"\x04data\x18\x03 \x01(\fR\x04data\x12\x19\n" +
-	"\bvfs_path\x18\x05 \x03(\tR\avfsPath\x12 \n" +
-	"\freally_do_it\x18\x04 \x01(\bR\n" +
-	"reallyDoIt\"\x9a\x01\n" +
-	"\x18LoadArtifactPackResponse\x121\n" +
-	"\x14successful_artifacts\x18\x01 \x03(\tR\x13successfulArtifacts\x12\x19\n" +
-	"\bvfs_path\x18\x03 \x03(\tR\avfsPath\x120\n" +
-	"\x06errors\x18\x02 \x03(\v2\x18.proto.LoadArtifactErrorR\x06errors\"y\n" +
-	"\vAPIResponse\x12E\n" +
-	"\x05error\x18\x01 \x01(\bB/\xe2\xfc\xe3\xc4\x01)\x12'An error occurred setting the artifact.R\x05error\x12#\n" +
-	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\"\xf9\x03\n" +
-	"\x10GetReportRequest\x12D\n" +
-	"\bartifact\x18\x01 \x01(\tB(\xe2\xfc\xe3\xc4\x01\"\x12 The artifact for which we reportR\bartifact\x12K\n" +
-	"\x04type\x18\x02 \x01(\tB7\xe2\xfc\xe3\xc4\x011\x12/The report type we need (e.g. MONITORING_DAILY)R\x04type\x120\n" +
-	"\x06format\x18\x03 \x01(\tB\x18\xe2\xfc\xe3\xc4\x01\x12\x12\x10Format e.g. htmlR\x06format\x12\x1b\n" +
-	"\tclient_id\x18\x05 \x01(\tR\bclientId\x12\x19\n" +
-	"\bday_name\x18\x06 \x01(\tR\adayName\x12\x1d\n" +
-	"\n" +
-	"start_time\x18\b \x01(\x04R\tstartTime\x12\x19\n" +
-	"\bend_time\x18\t \x01(\x04R\aendTime\x12\x17\n" +
-	"\aflow_id\x18\a \x01(\tR\x06flowId\x12\x17\n" +
-	"\ahunt_id\x18\n" +
-	" \x01(\tR\x06huntId\x12|\n" +
-	"\n" +
-	"parameters\x18\x04 \x03(\v2\x18.proto.ArtifactParameterBB\xe2\xfc\xe3\xc4\x01<\x12:Report parameters. These depend on the type of the report.R\n" +
-	"parameters\"\x83\x01\n" +
-	"\x11GetReportResponse\x12\x12\n" +
-	"\x04data\x18\x01 \x01(\tR\x04data\x12\x1a\n" +
-	"\btemplate\x18\x02 \x01(\tR\btemplate\x12>\n" +
-	"\bmessages\x18\x03 \x03(\tB\"\xe2\xfc\xe3\xc4\x01\x1c\x12\x1aError or warning messages.R\bmessages\"\x19\n" +
-	"\x17ArtifactCompressionDict\"\xfb\x01\n" +
-	" ListAvailableEventResultsRequest\x12\x88\x01\n" +
-	"\tclient_id\x18\x01 \x01(\tBk\xe2\xfc\xe3\xc4\x01e\x12cThe client ID we list the available monitoring logs. If empty we list the server's monitoring logs.R\bclientId\x12\x1a\n" +
-	"\bartifact\x18\x02 \x01(\tR\bartifact\x12\x19\n" +
-	"\blog_type\x18\x03 \x01(\tR\alogType\x12\x15\n" +
-	"\x06org_id\x18\x04 \x01(\tR\x05orgId\"\xab\x01\n" +
-	"\x0eAvailableEvent\x12\x1a\n" +
-	"\bartifact\x18\x01 \x01(\tR\bartifact\x12/\n" +
-	"\n" +
-	"definition\x18\x03 \x01(\v2\x0f.proto.ArtifactR\n" +
-	"definition\x12%\n" +
-	"\x0erow_timestamps\x18\x02 \x03(\x05R\rrowTimestamps\x12%\n" +
-	"\x0elog_timestamps\x18\x04 \x03(\x05R\rlogTimestamps\"N\n" +
-	"!ListAvailableEventResultsResponse\x12)\n" +
-	"\x04logs\x18\x01 \x03(\v2\x15.proto.AvailableEventR\x04logs\"1\n" +
-	"\x19GetMonitoringStateRequest\x12\x14\n" +
-	"\x05label\x18\x01 \x01(\tR\x05label\"Z\n" +
-	"\x1aGetMonitoringStateResponse\x12<\n" +
-	"\brequests\x18\x01 \x03(\v2 .proto.SetMonitoringStateRequestR\brequests\"i\n" +
-	"\x19SetMonitoringStateRequest\x12\x14\n" +
-	"\x05label\x18\x01 \x01(\tR\x05label\x126\n" +
-	"\arequest\x18\x02 \x01(\v2\x1c.proto.ArtifactCollectorArgsR\arequestB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
+var file_artifacts_proto_rawDesc = []byte{
+	0x0a, 0x0f, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x12, 0x05, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f,
+	0x73, 0x65, 0x6d, 0x61, 0x6e, 0x74, 0x69, 0x63, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e,
+	0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f,
+	0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x24,
+	0x66, 0x6c, 0x6f, 0x77, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x61, 0x72, 0x74, 0x69,
+	0x66, 0x61, 0x63, 0x74, 0x5f, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0x87, 0x01, 0x0a, 0x0d, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x53, 0x65,
+	0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65,
+	0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52,
+	0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x12, 0x0a, 0x04,
+	0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65,
+	0x12, 0x18, 0x0a, 0x07, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x08, 0x52, 0x07, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x61,
+	0x67, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x74, 0x61, 0x67, 0x73, 0x22, 0xf3,
+	0x02, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x73, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x36, 0x0a, 0x17, 0x69, 0x6e, 0x63, 0x6c, 0x75, 0x64,
+	0x65, 0x5f, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x5f, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74,
+	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x15, 0x69, 0x6e, 0x63, 0x6c, 0x75, 0x64, 0x65,
+	0x45, 0x76, 0x65, 0x6e, 0x74, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x73, 0x12, 0x38,
+	0x0a, 0x18, 0x69, 0x6e, 0x63, 0x6c, 0x75, 0x64, 0x65, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72,
+	0x5f, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08,
+	0x52, 0x16, 0x69, 0x6e, 0x63, 0x6c, 0x75, 0x64, 0x65, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x41,
+	0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x73, 0x12, 0x1f, 0x0a, 0x0b, 0x73, 0x65, 0x61, 0x72,
+	0x63, 0x68, 0x5f, 0x74, 0x65, 0x72, 0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73,
+	0x65, 0x61, 0x72, 0x63, 0x68, 0x54, 0x65, 0x72, 0x6d, 0x12, 0x2a, 0x0a, 0x11, 0x6e, 0x75, 0x6d,
+	0x62, 0x65, 0x72, 0x5f, 0x6f, 0x66, 0x5f, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x04, 0x52, 0x0f, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x4f, 0x66, 0x52, 0x65,
+	0x73, 0x75, 0x6c, 0x74, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x05, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x72, 0x65, 0x70,
+	0x6f, 0x72, 0x74, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a,
+	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x54, 0x79, 0x70, 0x65, 0x12, 0x2c, 0x0a, 0x06, 0x66, 0x69,
+	0x65, 0x6c, 0x64, 0x73, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x2e, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72,
+	0x52, 0x06, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x73, 0x12, 0x3a, 0x0a, 0x05, 0x6e, 0x61, 0x6d, 0x65,
+	0x73, 0x18, 0x06, 0x20, 0x03, 0x28, 0x09, 0x42, 0x24, 0xe2, 0xfc, 0xe3, 0xc4, 0x01, 0x1e, 0x12,
+	0x1c, 0x41, 0x20, 0x6c, 0x69, 0x73, 0x74, 0x20, 0x6f, 0x66, 0x20, 0x61, 0x72, 0x74, 0x69, 0x66,
+	0x61, 0x63, 0x74, 0x73, 0x20, 0x74, 0x6f, 0x20, 0x66, 0x65, 0x74, 0x63, 0x68, 0x52, 0x05, 0x6e,
+	0x61, 0x6d, 0x65, 0x73, 0x22, 0x44, 0x0a, 0x12, 0x47, 0x65, 0x74, 0x41, 0x72, 0x74, 0x69, 0x66,
+	0x61, 0x63, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x04, 0x6e, 0x61,
+	0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x1a, 0xe2, 0xfc, 0xe3, 0xc4, 0x01, 0x14,
+	0x12, 0x12, 0x54, 0x68, 0x65, 0x20, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x20, 0x6e,
+	0x61, 0x6d, 0x65, 0x2e, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x5b, 0x0a, 0x13, 0x47, 0x65,
+	0x74, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x44, 0x0a, 0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x28, 0xe2, 0xfc, 0xe3, 0xc4, 0x01, 0x22, 0x12, 0x20, 0x54, 0x68, 0x65,
+	0x20, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x20, 0x64, 0x61, 0x74, 0x61, 0x2c, 0x20,
+	0x6f, 0x72, 0x20, 0x61, 0x20, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x52, 0x08, 0x61,
+	0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x22, 0x8a, 0x02, 0x0a, 0x12, 0x53, 0x65, 0x74, 0x41,
+	0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x44,
+	0x0a, 0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x42, 0x28, 0xe2, 0xfc, 0xe3, 0xc4, 0x01, 0x22, 0x12, 0x20, 0x54, 0x68, 0x65, 0x20, 0x61, 0x72,
+	0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x20, 0x64, 0x61, 0x74, 0x61, 0x2c, 0x20, 0x6f, 0x72, 0x20,
+	0x61, 0x20, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x52, 0x08, 0x61, 0x72, 0x74, 0x69,
+	0x66, 0x61, 0x63, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x61, 0x67, 0x73, 0x18, 0x04, 0x20, 0x03,
+	0x28, 0x09, 0x52, 0x04, 0x74, 0x61, 0x67, 0x73, 0x12, 0x5a, 0x0a, 0x02, 0x6f, 0x70, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x0e, 0x32, 0x23, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x74,
+	0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e,
+	0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x25, 0xe2, 0xfc, 0xe3, 0xc4, 0x01,
+	0x1f, 0x12, 0x1d, 0x57, 0x68, 0x61, 0x74, 0x20, 0x74, 0x6f, 0x20, 0x64, 0x6f, 0x20, 0x77, 0x69,
+	0x74, 0x68, 0x20, 0x74, 0x68, 0x65, 0x20, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x3f,
+	0x52, 0x02, 0x6f, 0x70, 0x22, 0x3e, 0x0a, 0x09, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x12, 0x07, 0x0a, 0x03, 0x53, 0x45, 0x54, 0x10, 0x00, 0x12, 0x0a, 0x0a, 0x06, 0x44, 0x45,
+	0x4c, 0x45, 0x54, 0x45, 0x10, 0x01, 0x12, 0x09, 0x0a, 0x05, 0x43, 0x48, 0x45, 0x43, 0x4b, 0x10,
+	0x02, 0x12, 0x11, 0x0a, 0x0d, 0x43, 0x48, 0x45, 0x43, 0x4b, 0x5f, 0x41, 0x4e, 0x44, 0x5f, 0x53,
+	0x45, 0x54, 0x10, 0x03, 0x22, 0x84, 0x01, 0x0a, 0x13, 0x53, 0x65, 0x74, 0x41, 0x72, 0x74, 0x69,
+	0x66, 0x61, 0x63, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05,
+	0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x05, 0x65, 0x72, 0x72,
+	0x6f, 0x72, 0x12, 0x23, 0x0a, 0x0d, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x5f, 0x6d, 0x65, 0x73, 0x73,
+	0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x65, 0x72, 0x72, 0x6f, 0x72,
+	0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x65, 0x72, 0x72, 0x6f, 0x72,
+	0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09, 0x52, 0x06, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x73, 0x12,
+	0x1a, 0x0a, 0x08, 0x77, 0x61, 0x72, 0x6e, 0x69, 0x6e, 0x67, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28,
+	0x09, 0x52, 0x08, 0x77, 0x61, 0x72, 0x6e, 0x69, 0x6e, 0x67, 0x73, 0x22, 0x45, 0x0a, 0x11, 0x4c,
+	0x6f, 0x61, 0x64, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x45, 0x72, 0x72, 0x6f, 0x72,
+	0x12, 0x1a, 0x0a, 0x08, 0x66, 0x69, 0x6c, 0x65, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x08, 0x66, 0x69, 0x6c, 0x65, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x14, 0x0a, 0x05,
+	0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x65, 0x72, 0x72,
+	0x6f, 0x72, 0x22, 0xae, 0x01, 0x0a, 0x17, 0x4c, 0x6f, 0x61, 0x64, 0x41, 0x72, 0x74, 0x69, 0x66,
+	0x61, 0x63, 0x74, 0x50, 0x61, 0x63, 0x6b, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x16,
+	0x0a, 0x06, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
+	0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x61, 0x67, 0x73, 0x18, 0x06,
+	0x20, 0x03, 0x28, 0x09, 0x52, 0x04, 0x74, 0x61, 0x67, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x66, 0x69,
+	0x6c, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74,
+	0x65, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c,
+	0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x12, 0x19, 0x0a, 0x08, 0x76, 0x66, 0x73, 0x5f, 0x70, 0x61,
+	0x74, 0x68, 0x18, 0x05, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x76, 0x66, 0x73, 0x50, 0x61, 0x74,
+	0x68, 0x12, 0x20, 0x0a, 0x0c, 0x72, 0x65, 0x61, 0x6c, 0x6c, 0x79, 0x5f, 0x64, 0x6f, 0x5f, 0x69,
+	0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0a, 0x72, 0x65, 0x61, 0x6c, 0x6c, 0x79, 0x44,
+	0x6f, 0x49, 0x74, 0x22, 0x9a, 0x01, 0x0a, 0x18, 0x4c, 0x6f, 0x61, 0x64, 0x41, 0x72, 0x74, 0x69,
+	0x66, 0x61, 0x63, 0x74, 0x50, 0x61, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x31, 0x0a, 0x14, 0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x66, 0x75, 0x6c, 0x5f, 0x61,
+	0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x13,
+	0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x66, 0x75, 0x6c, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61,
+	0x63, 0x74, 0x73, 0x12, 0x19, 0x0a, 0x08, 0x76, 0x66, 0x73, 0x5f, 0x70, 0x61, 0x74, 0x68, 0x18,
+	0x03, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x76, 0x66, 0x73, 0x50, 0x61, 0x74, 0x68, 0x12, 0x30,
+	0x0a, 0x06, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4c, 0x6f, 0x61, 0x64, 0x41, 0x72, 0x74, 0x69, 0x66,
+	0x61, 0x63, 0x74, 0x45, 0x72, 0x72, 0x6f, 0x72, 0x52, 0x06, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x73,
+	0x22, 0x79, 0x0a, 0x0b, 0x41, 0x50, 0x49, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x45, 0x0a, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x42, 0x2f,
+	0xe2, 0xfc, 0xe3, 0xc4, 0x01, 0x29, 0x12, 0x27, 0x41, 0x6e, 0x20, 0x65, 0x72, 0x72, 0x6f, 0x72,
+	0x20, 0x6f, 0x63, 0x63, 0x75, 0x72, 0x72, 0x65, 0x64, 0x20, 0x73, 0x65, 0x74, 0x74, 0x69, 0x6e,
+	0x67, 0x20, 0x74, 0x68, 0x65, 0x20, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x2e, 0x52,
+	0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x12, 0x23, 0x0a, 0x0d, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x5f,
+	0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x65,
+	0x72, 0x72, 0x6f, 0x72, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0xf9, 0x03, 0x0a, 0x10,
+	0x47, 0x65, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x44, 0x0a, 0x08, 0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x28, 0xe2, 0xfc, 0xe3, 0xc4, 0x01, 0x22, 0x12, 0x20, 0x54, 0x68, 0x65, 0x20,
+	0x61, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x20, 0x66, 0x6f, 0x72, 0x20, 0x77, 0x68, 0x69,
+	0x63, 0x68, 0x20, 0x77, 0x65, 0x20, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x08, 0x61, 0x72,
+	0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x12, 0x4b, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x42, 0x37, 0xe2, 0xfc, 0xe3, 0xc4, 0x01, 0x31, 0x12, 0x2f, 0x54, 0x68,
+	0x65, 0x20, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x20, 0x74, 0x79, 0x70, 0x65, 0x20, 0x77, 0x65,
+	0x20, 0x6e, 0x65, 0x65, 0x64, 0x20, 0x28, 0x65, 0x2e, 0x67, 0x2e, 0x20, 0x4d, 0x4f, 0x4e, 0x49,
+	0x54, 0x4f, 0x52, 0x49, 0x4e, 0x47, 0x5f, 0x44, 0x41, 0x49, 0x4c, 0x59, 0x29, 0x52, 0x04, 0x74,
+	0x79, 0x70, 0x65, 0x12, 0x30, 0x0a, 0x06, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x18, 0xe2, 0xfc, 0xe3, 0xc4, 0x01, 0x12, 0x12, 0x10, 0x46, 0x6f, 0x72,
+	0x6d, 0x61, 0x74, 0x20, 0x65, 0x2e, 0x67, 0x2e, 0x20, 0x68, 0x74, 0x6d, 0x6c, 0x52, 0x06, 0x66,
+	0x6f, 0x72, 0x6d, 0x61, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f,
+	0x69, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74,
+	0x49, 0x64, 0x12, 0x19, 0x0a, 0x08, 0x64, 0x61, 0x79, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x06,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x64, 0x61, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x1d, 0x0a,
+	0x0a, 0x73, 0x74, 0x61, 0x72, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x09, 0x73, 0x74, 0x61, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x19, 0x0a, 0x08,
+	0x65, 0x6e, 0x64, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x09, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07,
+	0x65, 0x6e, 0x64, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x66, 0x6c, 0x6f, 0x77, 0x5f,
+	0x69, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x66, 0x6c, 0x6f, 0x77, 0x49, 0x64,
+	0x12, 0x17, 0x0a, 0x07, 0x68, 0x75, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x0a, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x06, 0x68, 0x75, 0x6e, 0x74, 0x49, 0x64, 0x12, 0x7c, 0x0a, 0x0a, 0x70, 0x61, 0x72,
+	0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x50, 0x61,
+	0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x42, 0x42, 0xe2, 0xfc, 0xe3, 0xc4, 0x01, 0x3c, 0x12,
+	0x3a, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x20, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65,
+	0x72, 0x73, 0x2e, 0x20, 0x54, 0x68, 0x65, 0x73, 0x65, 0x20, 0x64, 0x65, 0x70, 0x65, 0x6e, 0x64,
+	0x20, 0x6f, 0x6e, 0x20, 0x74, 0x68, 0x65, 0x20, 0x74, 0x79, 0x70, 0x65, 0x20, 0x6f, 0x66, 0x20,
+	0x74, 0x68, 0x65, 0x20, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x2e, 0x52, 0x0a, 0x70, 0x61, 0x72,
+	0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x22, 0x83, 0x01, 0x0a, 0x11, 0x47, 0x65, 0x74, 0x52,
+	0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a,
+	0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x64, 0x61, 0x74,
+	0x61, 0x12, 0x1a, 0x0a, 0x08, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x08, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x3e, 0x0a,
+	0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09, 0x42,
+	0x22, 0xe2, 0xfc, 0xe3, 0xc4, 0x01, 0x1c, 0x12, 0x1a, 0x45, 0x72, 0x72, 0x6f, 0x72, 0x20, 0x6f,
+	0x72, 0x20, 0x77, 0x61, 0x72, 0x6e, 0x69, 0x6e, 0x67, 0x20, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67,
+	0x65, 0x73, 0x2e, 0x52, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x22, 0x19, 0x0a,
+	0x17, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x43, 0x6f, 0x6d, 0x70, 0x72, 0x65, 0x73,
+	0x73, 0x69, 0x6f, 0x6e, 0x44, 0x69, 0x63, 0x74, 0x22, 0xfb, 0x01, 0x0a, 0x20, 0x4c, 0x69, 0x73,
+	0x74, 0x41, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52,
+	0x65, 0x73, 0x75, 0x6c, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x88, 0x01,
+	0x0a, 0x09, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x6b, 0xe2, 0xfc, 0xe3, 0xc4, 0x01, 0x65, 0x12, 0x63, 0x54, 0x68, 0x65, 0x20, 0x63,
+	0x6c, 0x69, 0x65, 0x6e, 0x74, 0x20, 0x49, 0x44, 0x20, 0x77, 0x65, 0x20, 0x6c, 0x69, 0x73, 0x74,
+	0x20, 0x74, 0x68, 0x65, 0x20, 0x61, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x20, 0x6d,
+	0x6f, 0x6e, 0x69, 0x74, 0x6f, 0x72, 0x69, 0x6e, 0x67, 0x20, 0x6c, 0x6f, 0x67, 0x73, 0x2e, 0x20,
+	0x49, 0x66, 0x20, 0x65, 0x6d, 0x70, 0x74, 0x79, 0x20, 0x77, 0x65, 0x20, 0x6c, 0x69, 0x73, 0x74,
+	0x20, 0x74, 0x68, 0x65, 0x20, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x27, 0x73, 0x20, 0x6d, 0x6f,
+	0x6e, 0x69, 0x74, 0x6f, 0x72, 0x69, 0x6e, 0x67, 0x20, 0x6c, 0x6f, 0x67, 0x73, 0x2e, 0x52, 0x08,
+	0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x49, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x61, 0x72, 0x74, 0x69,
+	0x66, 0x61, 0x63, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x61, 0x72, 0x74, 0x69,
+	0x66, 0x61, 0x63, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x6c, 0x6f, 0x67, 0x5f, 0x74, 0x79, 0x70, 0x65,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6c, 0x6f, 0x67, 0x54, 0x79, 0x70, 0x65, 0x12,
+	0x15, 0x0a, 0x06, 0x6f, 0x72, 0x67, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x05, 0x6f, 0x72, 0x67, 0x49, 0x64, 0x22, 0xab, 0x01, 0x0a, 0x0e, 0x41, 0x76, 0x61, 0x69, 0x6c,
+	0x61, 0x62, 0x6c, 0x65, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x61, 0x72, 0x74,
+	0x69, 0x66, 0x61, 0x63, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x61, 0x72, 0x74,
+	0x69, 0x66, 0x61, 0x63, 0x74, 0x12, 0x2f, 0x0a, 0x0a, 0x64, 0x65, 0x66, 0x69, 0x6e, 0x69, 0x74,
+	0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x2e, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x52, 0x0a, 0x64, 0x65, 0x66, 0x69,
+	0x6e, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x25, 0x0a, 0x0e, 0x72, 0x6f, 0x77, 0x5f, 0x74, 0x69,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x05, 0x52, 0x0d,
+	0x72, 0x6f, 0x77, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x73, 0x12, 0x25, 0x0a,
+	0x0e, 0x6c, 0x6f, 0x67, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x73, 0x18,
+	0x04, 0x20, 0x03, 0x28, 0x05, 0x52, 0x0d, 0x6c, 0x6f, 0x67, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74,
+	0x61, 0x6d, 0x70, 0x73, 0x22, 0x4e, 0x0a, 0x21, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x76, 0x61, 0x69,
+	0x6c, 0x61, 0x62, 0x6c, 0x65, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x29, 0x0a, 0x04, 0x6c, 0x6f, 0x67,
+	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
+	0x41, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x04,
+	0x6c, 0x6f, 0x67, 0x73, 0x22, 0x31, 0x0a, 0x19, 0x47, 0x65, 0x74, 0x4d, 0x6f, 0x6e, 0x69, 0x74,
+	0x6f, 0x72, 0x69, 0x6e, 0x67, 0x53, 0x74, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x14, 0x0a, 0x05, 0x6c, 0x61, 0x62, 0x65, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x05, 0x6c, 0x61, 0x62, 0x65, 0x6c, 0x22, 0x5a, 0x0a, 0x1a, 0x47, 0x65, 0x74, 0x4d, 0x6f,
+	0x6e, 0x69, 0x74, 0x6f, 0x72, 0x69, 0x6e, 0x67, 0x53, 0x74, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3c, 0x0a, 0x08, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
+	0x53, 0x65, 0x74, 0x4d, 0x6f, 0x6e, 0x69, 0x74, 0x6f, 0x72, 0x69, 0x6e, 0x67, 0x53, 0x74, 0x61,
+	0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x08, 0x72, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x73, 0x22, 0x69, 0x0a, 0x19, 0x53, 0x65, 0x74, 0x4d, 0x6f, 0x6e, 0x69, 0x74, 0x6f,
+	0x72, 0x69, 0x6e, 0x67, 0x53, 0x74, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x14, 0x0a, 0x05, 0x6c, 0x61, 0x62, 0x65, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x05, 0x6c, 0x61, 0x62, 0x65, 0x6c, 0x12, 0x36, 0x0a, 0x07, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
+	0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f,
+	0x72, 0x41, 0x72, 0x67, 0x73, 0x52, 0x07, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x42, 0x31,
+	0x5a, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64, 0x65, 0x78, 0x2e,
+	0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65, 0x6c, 0x6f, 0x63,
+	0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+}
 
 var (
 	file_artifacts_proto_rawDescOnce sync.Once
-	file_artifacts_proto_rawDescData []byte
+	file_artifacts_proto_rawDescData = file_artifacts_proto_rawDesc
 )
 
 func file_artifacts_proto_rawDescGZIP() []byte {
 	file_artifacts_proto_rawDescOnce.Do(func() {
-		file_artifacts_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_artifacts_proto_rawDesc), len(file_artifacts_proto_rawDesc)))
+		file_artifacts_proto_rawDescData = protoimpl.X.CompressGZIP(file_artifacts_proto_rawDescData)
 	})
 	return file_artifacts_proto_rawDescData
 }
 
 var file_artifacts_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_artifacts_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
-var file_artifacts_proto_goTypes = []any{
+var file_artifacts_proto_goTypes = []interface{}{
 	(SetArtifactRequest_Operation)(0),         // 0: proto.SetArtifactRequest.Operation
 	(*FieldSelector)(nil),                     // 1: proto.FieldSelector
 	(*GetArtifactsRequest)(nil),               // 2: proto.GetArtifactsRequest
@@ -1427,11 +1587,241 @@ func file_artifacts_proto_init() {
 	if File_artifacts_proto != nil {
 		return
 	}
+	if !protoimpl.UnsafeEnabled {
+		file_artifacts_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*FieldSelector); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetArtifactsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetArtifactRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetArtifactResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SetArtifactRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SetArtifactResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LoadArtifactError); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LoadArtifactPackRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LoadArtifactPackResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*APIResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetReportRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetReportResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ArtifactCompressionDict); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListAvailableEventResultsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AvailableEvent); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListAvailableEventResultsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetMonitoringStateRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetMonitoringStateResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_artifacts_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SetMonitoringStateRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_artifacts_proto_rawDesc), len(file_artifacts_proto_rawDesc)),
+			RawDescriptor: file_artifacts_proto_rawDesc,
 			NumEnums:      1,
 			NumMessages:   19,
 			NumExtensions: 0,
@@ -1443,6 +1833,7 @@ func file_artifacts_proto_init() {
 		MessageInfos:      file_artifacts_proto_msgTypes,
 	}.Build()
 	File_artifacts_proto = out.File
+	file_artifacts_proto_rawDesc = nil
 	file_artifacts_proto_goTypes = nil
 	file_artifacts_proto_depIdxs = nil
 }
