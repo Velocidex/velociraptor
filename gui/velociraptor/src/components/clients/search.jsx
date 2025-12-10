@@ -8,7 +8,6 @@ import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import FormGroup from 'react-bootstrap/FormGroup';
 import Form from 'react-bootstrap/Form';
-import { withRouter }  from "react-router-dom";
 import Autosuggest from 'react-autosuggest';
 import Dropdown from 'react-bootstrap/Dropdown';
 import UserConfig from '../core/user.jsx';
@@ -18,31 +17,25 @@ import {CancelToken} from 'axios';
 import T from '../i8n/i8n.jsx';
 
 
-class VeloClientSearch extends Component {
+export default class VeloClientSearch extends Component {
     static contextType = UserConfig;
     static propTypes = {
         // Update the applications's search parameter.
         setSearch: PropTypes.func.isRequired,
-
-        // React router props.
-        match: PropTypes.object,
-        history: PropTypes.object,
     };
 
     componentDidMount = () => {
         this.source = CancelToken.source();
-        let query = this.props.match && this.props.match.params &&
-            this.props.match.params.query;
+        let query = this.getQueryFromLocation();
         if (query && query !== this.state.query) {
             this.setState({query: query});
         };
     };
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
-        let query = this.props.match && this.props.match.params &&
-            this.props.match.params.query;
+        let query = this.getQueryFromLocation();
         if (query && query !== this.state.query) {
-            this.setState({query: query});
+            this.setQuery(query);
         };
     }
 
@@ -54,6 +47,14 @@ class VeloClientSearch extends Component {
         // query used to update suggestions.
         query: "",
         options: [],
+    }
+
+    getQueryFromLocation = ()=>{
+        let hash = window.location.hash || "";
+        if(hash.startsWith("#/search/")) {
+            return hash.substring(9);
+        };
+        return "";
     }
 
     showAll = () => {
@@ -157,5 +158,3 @@ class VeloClientSearch extends Component {
         );
     }
 };
-
-export default withRouter(VeloClientSearch);
