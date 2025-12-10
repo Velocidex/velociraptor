@@ -137,6 +137,10 @@ func (self *SemverFunction) Call(ctx context.Context, scope vfilter.Scope,
 		return vfilter.Null{}
 	}
 
+	if arg.Version == "" {
+		return vfilter.Null{}
+	}
+
 	result, err := NewSemverResult(arg.Version)
 	if err != nil {
 		if errors.Is(err, semver.ErrInvalidSemVer) {
