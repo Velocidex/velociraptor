@@ -1,0 +1,49 @@
+Queries:
+  # Test function output format
+  - SELECT semver(version="v1.2.3-dev") FROM scope()
+
+  # Test comparison against version strings
+  - SELECT
+      semver(version="1.2.3") = "1.2.3",
+      semver(version="1.2.3") != "1.0.0",
+      semver(version="1.2.3") > "0.1.0",
+      semver(version="1.2.3") >= "0.1.0",
+      semver(version="1.2.3") < "2.0.0",
+      semver(version="1.2.3") <= "2.0.0"
+    FROM scope()
+
+  # Test comparison against semver outputs 
+  - SELECT
+      semver(version="1.2.3") = semver(version="1.2.3"),
+      semver(version="1.2.3") != semver(version="1.0.0"),
+      semver(version="1.2.3") > semver(version="0.1.0"),
+      semver(version="1.2.3") >= semver(version="0.1.0"),
+      semver(version="1.2.3") < semver(version="2.0.0"),
+      semver(version="1.2.3") <= semver(version="2.0.0")
+    FROM scope()
+
+  # Test comparison against partial version strings
+  - SELECT
+      semver(version="1.0.0") = "1",
+      semver(version="1.1.0") = "1.1",
+      semver(version="1.1") = "1.1",
+      semver(version="1") = "1.0.0",
+      semver(version="1") != "1.0.1",
+      semver(version="2.5.1") >= "2.5",
+      semver(version="2.5") < "3.0"
+    FROM scope()
+
+  # Test invalid semantic version arguments (should be null)
+  - SELECT
+      semver(version=""),
+      semver(version="invalid")
+    FROM scope()
+
+  # Test comparison against invalid versions (should be false)
+  - SELECT
+      semver(version="1.0.0") = "",
+      semver(version="1.0.0") = "invalid",
+      semver(version="1.0.0") > "invalid",
+      semver(version="1.0.0") < "invalid",
+      semver(version="1.0.0") = 1
+    FROM scope()
