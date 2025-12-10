@@ -491,6 +491,10 @@ class VeloClientList extends Component {
         });
     }
 
+    searchLabel = (label, client) => {
+        this.props.setSearch("label:" + label);
+    }
+
     isSelected = c=>{
         return _.includes(this.state.selected, c.client_id);
     }
@@ -693,14 +697,18 @@ class VeloClientList extends Component {
                             <td>{c && c.os_info && c.os_info.fqdn}</td>
                             <td>{c && c.os_info && c.os_info.release}</td>
                             <td>{_.map(c.labels, (label, idx)=>{
-                                return <Button size="sm" key={idx}
-                                          onClick={() => this.removeLabel(label, c)}
-                                          variant="default">
-                                         <span className="button-label">{label}</span>
-                                         <span className="button-label">
+                                return <ButtonGroup key={idx}>
+                                         <Button size="sm"
+                                                 onClick={() => this.searchLabel(label, c)}
+                                                 variant="default">
+                                           <span className="button-label">{label}</span>
+                                         </Button>
+                                         <Button size="sm"
+                                                 onClick={() => this.removeLabel(label, c)}
+                                                 variant="default">
                                            <FontAwesomeIcon icon="window-close"/>
-                                         </span>
-                                       </Button>;
+                                         </Button>
+                                       </ButtonGroup>;
                             })}</td>
                           </tr>);
                   })}
