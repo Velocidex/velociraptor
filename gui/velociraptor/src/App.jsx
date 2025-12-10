@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import './css/App.css';
 import qs from "qs";
+import _ from 'lodash';
 
 import PropTypes from 'prop-types';
 import VeloNavigator from './components/sidebar/navigator.jsx';
@@ -96,6 +97,9 @@ class App extends Component {
     };
 
     setClientSearch = (query) => {
+        if (!_.isString(query)) {
+            return;
+        }
         let now = new Date();
         this.setState({query: query, query_version: now.getTime()});
         this.props.history.push('/search/' + (query || "all"));
@@ -139,10 +143,8 @@ class App extends Component {
                      <VeloNavigator
                        vfs_path={vfs_path}
                        client={this.state.client} />
-
                      <VeloClientSearch
-                       setSearch={this.setClientSearch}
-                     />
+                       setSearch={this.setClientSearch} />
                    </div>
                    <VeloClientSummary
                      setClient={this.setClient}
