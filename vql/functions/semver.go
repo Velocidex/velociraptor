@@ -58,14 +58,14 @@ func NewSemverResult(version string) (*SemverResult, error) {
 }
 
 // IsSemverResult returns whether the given value is a SemverResult type.
-func IsSemverResult(value vfilter.Any) (SemverResult, bool) {
+func IsSemverResult(value vfilter.Any) (*SemverResult, bool) {
 	switch v := value.(type) {
 	case *SemverResult:
-		return *v, true
-	case SemverResult:
 		return v, true
+	case SemverResult:
+		return &v, true
 	default:
-		return SemverResult{}, false
+		return &SemverResult{}, false
 	}
 }
 
@@ -75,48 +75,47 @@ SemverFromAny attempts to convert any given value to a SemverResult.
 It currently only supports the conversion of strings to SemverResults
 for comparison.
 */
-func SemverFromAny(ctx context.Context, scope vfilter.Scope, value vfilter.Any) (SemverResult, error) {
+func SemverFromAny(ctx context.Context, scope vfilter.Scope, value vfilter.Any) (*SemverResult, error) {
 	switch v := value.(type) {
 	case vfilter.LazyExpr:
 		return SemverFromAny(ctx, scope, v.ReduceWithScope(ctx, scope))
 
 	case string:
 		result, err := NewSemverResult(v)
-		return *result, err
+		return result, err
 
 	case SemverResult:
-		return v, nil
+		return &v, nil
 
 	case *SemverResult:
-		return *v, nil
+		return v, nil
 
 	case nil, types.Null, *types.Null:
-		return SemverResult{}, ErrBadSemver
+		return &SemverResult{}, ErrBadSemver
 
 	default:
 		str, ok := v.(string)
 		if !ok {
-			return SemverResult{}, ErrBadSemver
+			return &SemverResult{}, ErrBadSemver
 		}
 
 		result, err := NewSemverResult(str)
-		return *result, err
+		return result, err
 	}
-
 }
 
 // GreaterThan returns whether this version is greater than the other.
-func (self *SemverResult) GreaterThan(other SemverResult) bool {
+func (self *SemverResult) GreaterThan(other *SemverResult) bool {
 	return self.parsed.GreaterThan(other.parsed)
 }
 
 // LessThan returns whether this version is less than the other.
-func (self *SemverResult) LessThan(other SemverResult) bool {
+func (self *SemverResult) LessThan(other *SemverResult) bool {
 	return self.parsed.LessThan(other.parsed)
 }
 
 // Equals returns whether this version is equal to the other.
-func (self *SemverResult) Equals(other SemverResult) bool {
+func (self *SemverResult) Equals(other *SemverResult) bool {
 	return self.parsed.Equal(other.parsed)
 }
 
@@ -164,7 +163,7 @@ func (self SemverFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 type _SemverLtString struct{}
 
 func (self _SemverLtString) getVersions(ctx context.Context, scope vfilter.Scope,
-	a, b vfilter.Any) (SemverResult, SemverResult, bool) {
+	a, b vfilter.Any) (*SemverResult, *SemverResult, bool) {
 	a_ver, a_is_ver := IsSemverResult(a)
 	b_ver, b_is_ver := IsSemverResult(b)
 	a_str, a_is_str := a.(string)
@@ -192,7 +191,7 @@ func (self _SemverLtString) getVersions(ctx context.Context, scope vfilter.Scope
 		return a_ver, b_ver, true
 	}
 
-	return SemverResult{}, SemverResult{}, false
+	return &SemverResult{}, &SemverResult{}, false
 }
 
 func (self _SemverLtString) Lt(scope vfilter.Scope, a, b vfilter.Any) bool {
