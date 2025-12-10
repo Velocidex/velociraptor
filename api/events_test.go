@@ -8,6 +8,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
+	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -254,6 +255,93 @@ func (self *GeneralAPITest) TestVFSGetBuffer() {
 	buf, err = client.VFSGetBuffer(self.Ctx, message)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), string(buf.Data), "Hello")
+}
+
+func (self *GeneralAPITest) TestVFSGetBufferSparse() {
+	// Create a sparse file that contains "HelloWorld"
+	filename := path_specs.FromGenericComponentList([]string{"sparse_upload.txt"}).
+		SetType(file_store_api.PATH_TYPE_FILESTORE_ANY)
+	filename_idx := filename.SetType(file_store_api.PATH_TYPE_FILESTORE_SPARSE_IDX)
+
+	file_store_factory := file_store.GetFileStore(self.ConfigObj)
+
+	w, err := file_store_factory.WriteFile(filename)
+	assert.NoError(self.T(), err)
+	w.Write([]byte("HelloWorld"))
+	w.Close()
+
+	// Only 10 bytes are written to the filestore.
+	stat_file, err := file_store_factory.StatFile(filename)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), stat_file.Size(), int64(10))
+
+	w, err = file_store_factory.WriteFile(filename_idx)
+	assert.NoError(self.T(), err)
+
+	// Original offset refers to the offset in the remote sparse file.
+	// file offset refers to the offset within the filestore file
+	w.Write([]byte(`
+{
+ "ranges": [
+  {
+   "file_offset": 0,
+   "original_offset": 0,
+   "file_length": 5,
+   "length": 5
+  },
+  {
+   "file_offset": 5,
+   "original_offset": 5,
+   "length": 5,
+   "file_length": 0
+  },
+  {
+   "file_offset": 5,
+   "original_offset": 10,
+   "file_length": 5,
+   "length": 5
+  }
+ ]
+}`)) // This represents: Hello<.....>World with the gap being sparse.
+	w.Close()
+
+	// Create the user
+	user_manager := services.GetUserManager()
+	err = user_manager.SetUser(self.Ctx, &api_proto.VelociraptorUser{
+		Name: self.username,
+	})
+
+	// Make the user a reader on the root org.
+	err = services.GrantUserToOrg(self.Ctx,
+		utils.GetSuperuserName(self.ConfigObj),
+		self.username,
+		[]string{"root"}, &acl_proto.ApiClientACL{
+			Roles: []string{"reader"},
+		})
+	assert.NoError(self.T(), err)
+
+	client, closer, err := grpc_client.Factory.GetAPIClient(
+		self.Ctx, grpc_client.API_User, self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	defer closer()
+
+	// Read padded buffer this should default to padding = true
+	buf, err := client.VFSGetBuffer(self.Ctx, &api_proto.VFSFileBuffer{
+		Components: filename.Components(),
+		Length:     100,
+	})
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), string(buf.Data), "Hello\x00\x00\x00\x00\x00World")
+
+	// Read unpadded buffer
+	buf, err = client.VFSGetBuffer(self.Ctx, &api_proto.VFSFileBuffer{
+		Components: filename.Components(),
+		Length:     100,
+		Padding:    proto.Bool(false),
+	})
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), string(buf.Data), "HelloWorld")
 }
 
 func (self *GeneralAPITest) TestPushEvents() {
