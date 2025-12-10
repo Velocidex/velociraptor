@@ -62,6 +62,7 @@ message VFSFileBuffer {
     bytes data = 5;
     repeated string components = 6;
     string org_id = 7;
+    optional bool padding = 8;
 }
 
 
