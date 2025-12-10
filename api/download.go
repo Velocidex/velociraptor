@@ -737,9 +737,8 @@ func downloadTable() http.Handler {
 		})
 }
 
-func vfsGetBuffer(
-	config_obj *config_proto.Config,
-	client_id string, vfs_path api.FSPathSpec, offset uint64, length uint32) (
+func vfsGetBuffer(config_obj *config_proto.Config, client_id string,
+	vfs_path api.FSPathSpec, offset uint64, length uint32, padding bool) (
 	*api_proto.VFSFileBuffer, error) {
 
 	file, err := file_store.GetFileStore(config_obj).ReadFile(vfs_path)
@@ -758,7 +757,7 @@ func vfsGetBuffer(
 	index, err := getIndex(config_obj, vfs_path)
 
 	// If the file is sparse, we use the sparse reader.
-	if err == nil && len(index.Ranges) > 0 {
+	if err == nil && padding && len(index.Ranges) > 0 {
 		reader_at = &utils.RangedReader{
 			ReaderAt: reader_at,
 			Index:    index,

@@ -634,8 +634,13 @@ func (self *ApiServer) VFSGetBuffer(
 		return nil, status.Error(codes.InvalidArgument,
 			"Invalid pathspec")
 	}
-	result, err := vfsGetBuffer(
-		org_config_obj, in.ClientId, pathspec, in.Offset, in.Length)
+
+	padding := true
+	if in.Padding != nil {
+		padding = *in.Padding
+	}
+
+	result, err := vfsGetBuffer(org_config_obj, in.ClientId, pathspec, in.Offset, in.Length, padding)
 
 	return result, Status(self.verbose, err)
 }
