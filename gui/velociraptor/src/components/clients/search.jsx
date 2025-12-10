@@ -1,4 +1,5 @@
 import "./search.css";
+import _ from 'lodash';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -46,6 +47,14 @@ export default class VeloClientSearch extends Component {
     state = {
         // query used to update suggestions.
         query: "",
+
+        // When the user begins editing the query string we set the
+        // new query here. When the user submits the query, we clear
+        // this and set the query in the upstream component.
+
+        // When the edit box is editing, we block automatic updates of
+        // the query content from the URL.
+        pending_query: null,
         options: [],
     }
 
@@ -63,7 +72,10 @@ export default class VeloClientSearch extends Component {
     }
 
     setQuery = (query) => {
-        this.setState({query: query});
+        if(_.isString(this.state.pending_query)) {
+            query = this.state.pending_query;
+        }
+        this.setState({query: query, pending_query: null});
         this.props.setSearch(query);
     }
 
@@ -84,6 +96,17 @@ export default class VeloClientSearch extends Component {
         });
     }
 
+    // Ensure the query string is a string.
+    getQuery = ()=>{
+        if(_.isString(this.state.pending_query)) {
+            return this.state.pending_query;
+        }
+        if(_.isString(this.state.query)) {
+            return this.state.query;
+        }
+        return "";
+    };
+
     render() {
         return (
             <Form onSubmit={e=>{
@@ -97,20 +120,22 @@ export default class VeloClientSearch extends Component {
                     onSuggestionsFetchRequested={(x) => this.showSuggestions(x.value)}
                     onSuggestionsClearRequested={() => this.setState({options: []})}
                     onSuggestionSelected={(e, x) => {
-                        this.setQuery(x.suggestionValue);
+                        this.setState({pending_query: null});
+                        this.props.setSearch(x.suggestionValue);
                     }}
                     getSuggestionValue={x=>x}
                     renderSuggestion={(x) => <div className="search-suggestions">{x}</div>}
                     inputProps={{
                         placeholder: T("SEARCH_CLIENTS"),
                         spellCheck: "false",
-                        value: this.state.query,
+                        value: this.getQuery(),
                         id: "client-search-bar",
                         onChange: (e, {newValue, method}) => {
-                            this.setState({query: newValue});
+                            this.setState({pending_query: newValue});
                             e.preventDefault();
                             return false;
                         },
+                        onBlur: ()=>this.setQuery(this.state.pending_query),
                     }}
 
                   />
