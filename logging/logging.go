@@ -543,6 +543,8 @@ func GetLogger(config_obj *config_proto.Config, component *string) *LogContext {
 		if err != nil {
 			panic(err)
 		}
+		lManager = Manager()
+
 	}
 	return lManager.GetLogger(config_obj, component)
 }
