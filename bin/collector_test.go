@@ -254,7 +254,6 @@ func (self *CollectorTestSuite) TestCollectorPlain() {
 		"--args", "target=ZIP",
 		"--args", "opt_admin=N",
 		"--args", "opt_prompt=N",
-		"--args", "template=Custom.TestArtifact",
 		"--output", output_zip,
 	}
 

@@ -478,7 +478,7 @@ func StartFrontendWithAutocert(
 		return errors.New("Frontend server not configured")
 	}
 
-	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 
 	// Autocert directory must be unique since it is usually kept in
 	// shared storage.
@@ -550,7 +550,7 @@ func StartFrontendWithAutocert(
 	go func() {
 		err := http.ListenAndServe(":http", certManager.HTTPHandler(nil))
 		if err != nil {
-			logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 			logger.Error("Failed to bind to http server: %v", err)
 		}
 	}()
@@ -616,7 +616,7 @@ func StartHTTPGUI(
 		return errors.New("GUI server not configured")
 	}
 
-	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 
 	listenAddr := fmt.Sprintf("%s:%d",
 		config_obj.GUI.BindAddress,
@@ -672,7 +672,7 @@ func StartSelfSignedGUI(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config, mux http.Handler) error {
-	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 	if config_obj.GUI == nil {
 		return errors.New("GUI server not configured")
 	}

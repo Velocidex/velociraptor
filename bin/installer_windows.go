@@ -582,6 +582,7 @@ func runOnce(ctx context.Context,
 	}
 
 	maybeWritePanicFile(log_name, config_obj)
+	_ = InstallAuditlogger()
 
 	writeback_service := writeback.GetWritebackService()
 	writeback, err := writeback_service.GetWriteback(config_obj)

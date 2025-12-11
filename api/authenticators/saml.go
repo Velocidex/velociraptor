@@ -45,7 +45,7 @@ func (self *SamlAuthenticator) AuthRedirectTemplate() string {
 }
 
 func (self *SamlAuthenticator) AddHandlers(mux *api_utils.ServeMux) error {
-	logger := logging.Manager.GetLogger(self.config_obj, &logging.GUIComponent)
+	logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
 	key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr([]byte(
 		self.authenticator.SamlPrivateKey))
 	if err != nil {
@@ -148,7 +148,7 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 						Set("roles", self.user_roles).
 						Set("remote", r.RemoteAddr))
 				if err != nil {
-					logger := logging.Manager.GetLogger(self.config_obj, &logging.GUIComponent)
+					logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
 					logger.Error("<red>Authorization failed</> %v %v %v",
 						username, err, r.RemoteAddr)
 				}
@@ -167,7 +167,7 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 						Set("roles", self.user_roles).
 						Set("remote", r.RemoteAddr))
 				if err != nil {
-					logger := logging.Manager.GetLogger(self.config_obj, &logging.GUIComponent)
+					logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
 					logger.Error("<red>Role Assignment Failed</> %v %v",
 						username, r.RemoteAddr)
 				}
@@ -189,7 +189,7 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 						Set("remote", r.RemoteAddr).
 						Set("status", http.StatusUnauthorized))
 				if err != nil {
-					logger := logging.Manager.GetLogger(self.config_obj, &logging.GUIComponent)
+					logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
 					logger.Error("<red>no saml_user_roles set</> %v %v",
 						username, r.RemoteAddr)
 				}
