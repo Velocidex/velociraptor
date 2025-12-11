@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	"www.velocidex.com/golang/velociraptor/executor"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -33,6 +35,15 @@ func StartHttpCommunicatorService(
 	crypto_manager, err := crypto_client.NewClientCryptoManager(ctx,
 		config_obj, []byte(writeback.PrivateKey))
 	if err != nil {
+		return nil, err
+	}
+
+	err = services.LogAudit(ctx, config_obj,
+		utils.GetSuperuserName(config_obj), "client_communicator",
+		ordereddict.NewDict().
+			Set("server_urls", config_obj.Client.ServerUrls))
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
 		return nil, err
 	}
 
