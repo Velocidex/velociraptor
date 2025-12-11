@@ -10,13 +10,15 @@ func RunningOnClient(config_obj *config_proto.Config) bool {
 	}
 
 	// Clients also run the event table service.
-	if config_obj.Services.ClientEventTable {
-		return true
-	}
+	if config_obj.Services != nil {
+		if config_obj.Services.ClientEventTable {
+			return true
+		}
 
-	// Server only run the hunt dispatcher.
-	if config_obj.Services.HuntDispatcher {
-		return false
+		// Server only run the hunt dispatcher.
+		if config_obj.Services.HuntDispatcher {
+			return false
+		}
 	}
 
 	return false
