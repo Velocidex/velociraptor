@@ -63,6 +63,11 @@ func doClient() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
+	err = InstallAuditlogger()
+	if err != nil {
+		return err
+	}
+
 	return RunClient(ctx, config_obj)
 }
 

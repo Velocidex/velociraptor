@@ -21,3 +21,7 @@ func checkMutex() error { return nil }
 func logArgv(argv []string) error {
 	return nil
 }
+
+func InstallAuditlogger() error {
+	return nil
+}
