@@ -55,8 +55,9 @@ var (
 	Audit = "VelociraptorAudit"
 
 	// Lock for log manager.
-	mu                   sync.Mutex
-	Manager              *LogManager
+	mu      sync.Mutex
+	manager *LogManager
+
 	disable_log_to_files bool
 	node_name            = ""
 
@@ -68,6 +69,13 @@ var (
 	tag_regex         = regexp.MustCompile("<([^>/0]+)>")
 	closing_tag_regex = regexp.MustCompile("</>")
 )
+
+func Manager() *LogManager {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return manager
+}
 
 func SetNodeName(name string) {
 	mu.Lock()
@@ -86,8 +94,7 @@ func DisableLogging() {
 }
 
 func InitLogging(config_obj *config_proto.Config) error {
-	mu.Lock()
-	Manager = &LogManager{
+	new_manager := &LogManager{
 		contexts: make(map[*string]*LogContext),
 	}
 
@@ -102,20 +109,22 @@ func InitLogging(config_obj *config_proto.Config) error {
 	}
 
 	for _, component := range components {
-		logger, err := Manager.makeNewComponent(config_obj, component)
+		logger, err := new_manager.makeNewComponent(config_obj, component)
 		if err != nil {
 			mu.Unlock()
 			return err
 		}
-		Manager.contexts[component] = logger
+		new_manager.contexts[component] = logger
 	}
 
-	err := maybeAddRemoteSyslog(config_obj, Manager)
-	mu.Unlock()
-
+	err := maybeAddRemoteSyslog(config_obj, new_manager)
 	if err != nil {
 		return err
 	}
+
+	mu.Lock()
+	manager = new_manager
+	mu.Unlock()
 
 	FlushPrelogs(config_obj)
 
@@ -274,6 +283,16 @@ type LogManager struct {
 	contexts map[*string]*LogContext
 }
 
+func (self *LogManager) AddHook(hook logrus.Hook, component *string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	v, pres := self.contexts[component]
+	if pres {
+		v.Logger.Hooks.Add(hook)
+	}
+}
+
 // Get the logger from cache - creating it if it needs to.
 func (self *LogManager) GetLogger(
 	config_obj *config_proto.Config,
@@ -314,8 +333,11 @@ func (self *LogManager) Reset() {
 }
 
 func Reset() {
-	if Manager != nil {
-		Manager.Reset()
+	mu.Lock()
+	defer mu.Unlock()
+
+	if manager != nil {
+		manager.Reset()
 	}
 }
 
@@ -469,7 +491,7 @@ func AddLogFile(filename string) error {
 		logrus.WarnLevel:  fd,
 	}
 
-	for _, log := range Manager.contexts {
+	for _, log := range Manager().contexts {
 		log.Hooks.Add(lfshook.NewHook(
 			writer_map, &JSONFormatter{&logrus.JSONFormatter{
 				DisableHTMLEscape: true,
@@ -515,17 +537,14 @@ func NewPlainLogger(
 }
 
 func GetLogger(config_obj *config_proto.Config, component *string) *LogContext {
-	mu.Lock()
-	lManager := Manager
-	mu.Unlock()
-
+	lManager := Manager()
 	if lManager == nil {
 		err := InitLogging(config_obj)
 		if err != nil {
 			panic(err)
 		}
 	}
-	return Manager.GetLogger(config_obj, component)
+	return lManager.GetLogger(config_obj, component)
 }
 
 type stackTracer interface {

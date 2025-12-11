@@ -1,3 +1,4 @@
+//go:build !windows
 // +build !windows
 
 package logging
@@ -64,11 +65,8 @@ func maybeAddRemoteSyslog(
 		return err
 	}
 
-	for k, v := range manager.contexts {
-		_, pres := components[k]
-		if pres {
-			v.Logger.Hooks.Add(hook)
-		}
+	for k := range components {
+		manager.AddHook(hook, k)
 	}
 
 	return nil
