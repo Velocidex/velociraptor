@@ -496,6 +496,7 @@ func NewClientRPMSpec() *PackageSpec {
 		Templates: RPMClientTemplate,
 		Expansion: TemplateExpansion{
 			Name:            "velociraptor-client",
+			Release:         "A",
 			Maintainer:      "Velocidex Enterprises",
 			MaintainerEmail: "support@velocidex.com",
 			Homepage:        "https://www.velocidex.com",
