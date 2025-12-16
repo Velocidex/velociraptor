@@ -459,6 +459,10 @@ func (self *ZipFileCache) GetChildren(
 
 loop:
 	for _, cd_cache := range self.lookup {
+		cd_components := cd_cache.full_path.Components
+		if len(cd_components) <= len(full_path.Components) {
+			continue loop
+		}
 		// This breaks if the cd component does not have the same
 		// prefix as required.
 		for j, component := range full_path.Components {
@@ -472,12 +476,12 @@ loop:
 
 		// The required directory depth we need.
 		depth := len(full_path.Components)
-		if len(cd_cache.full_path.Components) <= depth {
+		if len(cd_components) <= depth {
 			continue
 		}
 
 		// Get the part of the path that is at the required depth.
-		member_name := normalizer(cd_cache.full_path.Components[depth])
+		member_name := normalizer(cd_components[depth])
 
 		// Have we seen this before?
 		old_result, pres := seen[member_name]
