@@ -36,7 +36,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 
@@ -156,7 +156,11 @@ func PrepareFrontendMux(
 	// from the filestore.
 	router.Handle(base+"/public/", GetLoggingHandler(config_obj, "/public")(
 		http.StripPrefix(base,
-			downloadPublic(config_obj, []string{"public"}))))
+			downloadPublic(config_obj, [][]string{
+				// Allow all files in the public directory to be
+				// accessible.
+				[]string{"public"},
+			}))))
 
 	return nil
 }
@@ -742,21 +746,22 @@ func GetLoggingHandler(config_obj *config_proto.Config,
 	}
 }
 
+// A handler that makes parts of the file store available for
+// download. This is used to directly download e.g. attachments in
+// notebooks.
 func downloadPublic(
-	config_obj *config_proto.Config, prefix []string) http.Handler {
+	config_obj *config_proto.Config, patterns [][]string) http.Handler {
 	return api_utils.HandlerFunc(nil,
 		func(w http.ResponseWriter, r *http.Request) {
-			path_spec := paths.FSPathSpecFromClientPath(r.URL.Path)
-			components := path_spec.Components()
+			components := utils.SplitComponents(r.URL.Path)
 
 			// make sure the prefix is correct
-			for i, p := range prefix {
-				if len(components) <= i || p != components[i] {
-					returnError(config_obj, w, 404, notFoundError)
-					return
-				}
+			if !path_specs.MatchComponentPattern(components, patterns) {
+				returnError(config_obj, w, 404, notFoundError)
+				return
 			}
 
+			path_spec := path_specs.FromGenericComponentList(components)
 			file_store_factory := file_store.GetFileStore(config_obj)
 			fd, err := file_store_factory.ReadFile(path_spec)
 			if err != nil {

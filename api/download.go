@@ -495,8 +495,7 @@ func getTransformer(
 func downloadFileStore(prefix []string) http.Handler {
 	return api_utils.HandlerFunc(nil,
 		func(w http.ResponseWriter, r *http.Request) {
-			path_spec := paths.FSPathSpecFromClientPath(r.URL.Path)
-			components := path_spec.Components()
+			components := utils.SplitComponents(r.URL.Path)
 
 			// make sure the prefix is correct
 			for i, p := range prefix {
@@ -505,6 +504,8 @@ func downloadFileStore(prefix []string) http.Handler {
 					return
 				}
 			}
+
+			path_spec := path_specs.FromGenericComponentList(components)
 
 			org_id := authenticators.GetOrgIdFromRequest(r)
 			org_manager, err := services.GetOrgManager()
