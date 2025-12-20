@@ -111,13 +111,6 @@ func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
 	assert.NoError(self.T(), err)
 	fd.Close()
 
-	// FIXME: This will create a file named Foo in place of the
-	// intermediate directory causing the below to fail.
-	//fd, err = self.filestore.WriteFile(dir_path_spec.AddChild("Foo").
-	//	SetType(api.PATH_TYPE_FILESTORE_ANY))
-	//assert.NoError(self.T(), err)
-	//fd.Close()
-
 	// Add an intermediate directory - this will add a directory info
 	// for the intermediate directory.
 	fd, err = self.filestore.WriteFile(dir_path_spec.AddChild("Foo", "dir", "value").
@@ -155,7 +148,9 @@ func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
 		json.MustMarshalIndent(golden))
 }
 
-// List children recovers child's type based on extensions.
+// List children recovers child's type based on extensions.  NOTE:
+// This only works in typed directories. For Untyped directories,
+// ListDirectory() always recovers types as untyped.
 func (self *FileStoreTestSuite) TestListChildrenWithTypes() {
 
 	for idx, t := range []api.PathType{
@@ -214,6 +209,51 @@ func (self *FileStoreTestSuite) TestListChildrenWithTypes() {
 
 		// The type should be correct.
 		assert.Equal(self.T(), t, path_specs[0].Type())
+	}
+}
+
+// Storing files in untypes locations recovers them as untyped.
+func (self *FileStoreTestSuite) TestListChildrenUntypedPaths() {
+
+	for idx, t := range []api.PathType{
+		api.PATH_TYPE_FILESTORE_JSON_INDEX,
+		api.PATH_TYPE_FILESTORE_JSON,
+		api.PATH_TYPE_FILESTORE_JSON_TIME_INDEX,
+
+		// Used to write sparse indexes
+		api.PATH_TYPE_FILESTORE_SPARSE_IDX,
+
+		// Used to write zip files in the download folder.
+		api.PATH_TYPE_FILESTORE_DOWNLOAD_ZIP,
+		api.PATH_TYPE_FILESTORE_DOWNLOAD_REPORT,
+
+		// TMP files
+		api.PATH_TYPE_FILESTORE_TMP,
+		api.PATH_TYPE_FILESTORE_CSV,
+
+		// Used for artifacts
+		api.PATH_TYPE_FILESTORE_YAML,
+
+		api.PATH_TYPE_FILESTORE_ANY,
+	} {
+		filename := path_specs.NewSafeFilestorePath(
+			"public", fmt.Sprintf("b%v", idx)).SetType(t)
+
+		fd, err := self.filestore.WriteFile(filename.AddChild("Foo.txt"))
+		assert.NoError(self.T(), err)
+		fd.Close()
+
+		infos, err := self.filestore.ListDirectory(filename)
+		assert.NoError(self.T(), err)
+
+		assert.Equal(self.T(), 1, len(infos))
+
+		// Upon reading the path should be untyped.
+		assert.Equal(self.T(), api.PATH_TYPE_FILESTORE_ANY, infos[0].PathSpec().Type())
+
+		// The filename should contain the extension as part of the file.
+		assert.Equal(self.T(), infos[0].Name(), "Foo.txt"+
+			api.GetExtensionForFilestore(filename))
 	}
 }
 

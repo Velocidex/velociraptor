@@ -54,6 +54,11 @@ type OSPath struct {
 	pathspec    *PathSpec
 	serialized  *string
 	Manipulator PathManipulator
+
+	// Opaque data that can be stored in the OSPath. This provides a
+	// mechanism to transport additional data in the OSPath and avoid
+	// having to convert back and forth.
+	Data interface{}
 }
 
 func (self *OSPath) Equal(other *OSPath) bool {

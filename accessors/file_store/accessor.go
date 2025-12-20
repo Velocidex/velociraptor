@@ -4,7 +4,6 @@ package file_store
 // the generic filestore. This allows us to run globs on the file
 // store regardless of the specific filestore implementation.
 import (
-	"encoding/json"
 	"errors"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -14,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/files"
@@ -103,7 +103,8 @@ func (self FileStoreFileSystemAccessor) Lstat(filename string) (
 	return self.LstatWithOSPath(full_path)
 }
 
-func (self FileStoreFileSystemAccessor) LstatWithOSPath(filename *accessors.OSPath) (
+func (self FileStoreFileSystemAccessor) LstatWithOSPath(
+	filename *accessors.OSPath) (
 	accessors.FileInfo, error) {
 
 	fullpath := path_specs.FromGenericComponentList(filename.Components)

@@ -44,17 +44,88 @@ func AsGenericComponentList(path api.FSPathSpec) []string {
 	return components
 }
 
-// Builds a filestore pathspec from a plain components list. Uses the
-// extension of the filename component to determine the path type.
+// Builds a filestore pathspec from a plain components list.
+//
+// A PathSpec contains a list of components **and** a type, so just a
+// list of components is not sufficient to infer the type. This
+// function relied on internal knowledge of the filestore structure to
+// infer the correct type from the component list.
 func FromGenericComponentList(components []string) api.FSPathSpec {
-	pathspec := NewUnsafeFilestorePath(components...)
-	if len(components) > 0 {
-		last_idx := len(components) - 1
-		fs_type, name := api.GetFileStorePathTypeFromExtension(
-			components[last_idx])
-		return pathspec.Dir().AddChild(name).SetType(fs_type)
+	components, path_type := getTypeFromComponents(components)
+	return NewUnsafeFilestorePath(components...).SetType(path_type)
+}
+
+var (
+	anyPrefixes = [][]string{
+		[]string{"public"},
+		[]string{"backups"},
+		[]string{"temp"},
+
+		// Uploaded collections from the client.
+		[]string{"clients", "", "collections", "", "uploads"},
+
+		// Notebooks: attachments and uploads
+		[]string{"notebooks", "", "attach"},
+		[]string{"notebooks", "", "", "uploads"},
+
+		// Client notebooks
+		[]string{"clients", "", "collections", "", "notebook", "", "attach"},
+		[]string{"clients", "", "collections", "", "notebook", "", "", "uploads"},
+
+		// Client monitoring notebooks
+		[]string{"clients", "", "monitoring_notebooks", "", "attach"},
+		[]string{"clients", "", "monitoring_notebooks", "", "", "uploads"},
+
+		// Hunt notebooks
+		[]string{"hunts", "", "notebook", "", "attach"},
+		[]string{"hunts", "", "notebook", "", "", "uploads"},
 	}
-	return pathspec
+)
+
+// Returns true if the components address a path which is untyped.
+func IsComponentUntyped(components []string) bool {
+	return MatchComponentPattern(components, anyPrefixes)
+}
+
+func MatchComponentPattern(components []string, patterns [][]string) bool {
+	// Everything under the public path is untyped.
+	for _, prefix := range patterns {
+		if matchPrefix(components, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func getTypeFromComponents(components []string) ([]string, api.PathType) {
+	if len(components) == 0 || IsComponentUntyped(components) {
+		return components, api.PATH_TYPE_FILESTORE_ANY
+	}
+
+	// Client uploads are all untyped
+	if len(components) > 4 && components[0] == "clients" {
+		return components, api.PATH_TYPE_FILESTORE_ANY
+	}
+
+	last_component := components[len(components)-1]
+
+	// Fallback, use the extension to deduce the type.
+	fs_type, name := api.GetFileStorePathTypeFromExtension(last_component)
+	return append(components[:len(components)-1], name), fs_type
+}
+
+func matchPrefix(components []string, prefix []string) bool {
+	if len(components) < len(prefix) {
+		return false
+	}
+
+	for idx, m := range prefix {
+		if m != "" && components[idx] != m {
+			return false
+		}
+	}
+
+	return true
 }
 
 // Converts a typed pathspec to an untyped pathspec. This is required
