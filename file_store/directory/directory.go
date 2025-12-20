@@ -37,6 +37,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -89,6 +90,8 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 		return nil, err
 	}
 
+	untyped := path_specs.IsComponentUntyped(dirname.Components())
+
 	var result []api.FileInfo
 	for _, fileinfo := range files {
 		// Each file from the filesystem will be potentially
@@ -100,19 +103,26 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 			continue
 		}
 
+		// Name may be compressed
+		name = datastore.UncompressComponent(
+			self.db, self.config_obj, name)
+
+		// Fixme: Use api.FromGenericComponentList
 		var name_type api.PathType
 		if fileinfo.IsDir() {
 			name_type = api.PATH_TYPE_DATASTORE_DIRECTORY
+
+		} else if untyped {
+			name_type = api.PATH_TYPE_FILESTORE_ANY
+
 		} else {
 			name_type, name = api.GetFileStorePathTypeFromExtension(name)
 		}
-		result = append(result, file_store_file_info.NewFileStoreFileInfo(
-			self.config_obj,
-			dirname.AddUnsafeChild(
-				datastore.UncompressComponent(
-					self.db, self.config_obj, name)).
-				SetType(name_type),
-			fileinfo))
+
+		result = append(result,
+			file_store_file_info.NewFileStoreFileInfo(self.config_obj,
+				dirname.AddUnsafeChild(name).SetType(name_type),
+				fileinfo))
 	}
 
 	return result, nil
@@ -152,6 +162,7 @@ func (self *DirectoryFileStore) ReadFile(
 	chunk_file_path := datastore.AsFilestoreFilename(
 		self.db, self.config_obj, filename.
 			SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
+
 	chunk_fd, err := os.OpenFile(chunk_file_path, os.O_RDWR, 0600)
 	if err != nil {
 		return reader, nil

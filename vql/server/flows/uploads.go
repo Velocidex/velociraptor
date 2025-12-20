@@ -111,6 +111,7 @@ func (self UploadsPlugins) Call(
 					Set("file_size", upload.Size).
 					Set("uploaded_size", upload.Size).
 					Set("vfs_path", vfs_path).
+					Set("client_path", "").
 					Set("Upload", uploads.UploadResponse{
 						Path:       vfs_path.String(),
 						Size:       upload.Size,
@@ -227,6 +228,8 @@ func readFlowUploads(
 			pathspec = path_specs.NewUnsafeFilestorePath(
 				utils.SplitComponents(vfs_path)...).
 				SetType(api.PATH_TYPE_FILESTORE_ANY)
+
+			row.Set("client_path", "")
 		}
 
 		row.Update("vfs_path", pathspec)
