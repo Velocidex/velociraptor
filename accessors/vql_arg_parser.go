@@ -88,11 +88,6 @@ func ParseOSPath(ctx context.Context,
 		}
 		return MustNewFileStorePath("ds:").Append(components...), nil
 
-		// WHERE version(plugin="glob") > 2:
-		// Initializer can be a list of components. In this case we
-		// take the base pathspec (which is accessor determined) and
-		// add the components to it.
-
 	case string:
 		return accessor.ParsePath(t)
 
