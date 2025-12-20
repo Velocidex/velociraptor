@@ -209,6 +209,8 @@ func (self *MemoryFileStore) ListDirectory(root_path api.FSPathSpec) ([]api.File
 
 	root_components := root_path.Components()
 
+	untyped := path_specs.IsComponentUntyped(root_components)
+
 	// Mapping between the base name and the files
 	seen_files := make(map[string]api.FileInfo)
 	seen_dirs := make(map[string]api.FileInfo)
@@ -245,8 +247,15 @@ func (self *MemoryFileStore) ListDirectory(root_path api.FSPathSpec) ([]api.File
 				continue
 			}
 
+			name := path_spec.Base()
+			// Force the file to be untyped.
+			if untyped {
+				name += api.GetExtensionForFilestore(path_spec)
+				path_spec = path_spec.SetType(api.PATH_TYPE_FILESTORE_ANY)
+			}
+
 			new_child := &vtesting.MockFileInfo{
-				Name_:     path_spec.Base(),
+				Name_:     name,
 				PathSpec_: path_spec,
 				FullPath_: path_spec.AsClientPath(),
 				Size_:     int64(len(v)),
