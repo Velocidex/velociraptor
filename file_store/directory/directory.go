@@ -107,7 +107,6 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 		name = datastore.UncompressComponent(
 			self.db, self.config_obj, name)
 
-		// Fixme: Use api.FromGenericComponentList
 		var name_type api.PathType
 		if fileinfo.IsDir() {
 			name_type = api.PATH_TYPE_DATASTORE_DIRECTORY
@@ -146,6 +145,11 @@ func (self *DirectoryFileStore) ReadFile(
 
 	defer api.InstrumentWithDelay("open_read", "DirectoryFileStore", filename)()
 
+	err := checkPath(file_path)
+	if err != nil {
+		return nil, err
+	}
+
 	file, err := os.Open(file_path)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
@@ -163,7 +167,12 @@ func (self *DirectoryFileStore) ReadFile(
 		self.db, self.config_obj, filename.
 			SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
 
-	chunk_fd, err := os.OpenFile(chunk_file_path, os.O_RDWR, 0600)
+	err = checkPath(chunk_file_path)
+	if err != nil {
+		return nil, err
+	}
+
+	chunk_fd, err := os.Open(chunk_file_path)
 	if err != nil {
 		return reader, nil
 	}
@@ -217,6 +226,11 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 	}
 
 	file_path := datastore.AsFilestoreFilename(self.db, self.config_obj, filename)
+	err = checkPath(file_path)
+	if err != nil {
+		return nil, err
+	}
+
 	file, err := os.OpenFile(file_path, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
@@ -231,7 +245,20 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 		chunk_file_path := datastore.AsFilestoreFilename(
 			self.db, self.config_obj, filename.
 				SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
-		chunk_fd, _ = os.OpenFile(chunk_file_path, os.O_RDWR, 0600)
+
+		err = checkPath(chunk_file_path)
+		if err != nil {
+			return nil, err
+		}
+
+		// If the index exists, we open it for append mode. If the
+		// index does not exist, then we wait to create it on the
+		// first call to WriteCompressed()
+		chunk_fd, err = os.OpenFile(chunk_file_path, os.O_RDWR, 0600)
+		if errors.Is(err, os.ErrNotExist) {
+			// Delay chunk writer until first call to WriteCompressed()
+			chunk_fd = nil
+		}
 	}
 
 	return &DirectoryFileWriter{
