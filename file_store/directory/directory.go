@@ -178,6 +178,11 @@ func (self *DirectoryFileStore) ReadFile(
 
 	defer api.InstrumentWithDelay("open_read", "DirectoryFileStore", filename)()
 
+	err := checkPath(file_path)
+	if err != nil {
+		return nil, err
+	}
+
 	file, err := os.Open(file_path)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
@@ -222,7 +227,12 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 	}
 
 	file_path := datastore.AsFilestoreFilename(self.db, self.config_obj, filename)
-	file, err := os.OpenFile(file_path, os.O_RDWR|os.O_CREATE, 0700)
+	err = checkPath(file_path)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := os.OpenFile(file_path, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Error("Unable to open file %v: %v", file_path, err)
