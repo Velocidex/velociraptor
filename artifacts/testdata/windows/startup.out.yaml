@@ -4,6 +4,11 @@ Output: [
   "Name": "c:\\windows\\system32\\msht.exe",
   "Details": "Hello",
   "Enabled": "disabled"
+ },
+ {
+  "Name": "c:\\windows\\system32\\msht.exe",
+  "Details": 1,
+  "Enabled": "disabled"
  }
 ]
 
