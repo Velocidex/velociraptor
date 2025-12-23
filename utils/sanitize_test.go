@@ -26,6 +26,8 @@ func TestSanitize(t *testing.T) {
 
 		// Windows can not represent a name with a trailing .
 		"foo.",
+
+		"../../foo.",
 	} {
 		sanitized := SanitizeString(name)
 		unsanitized := UnsanitizeComponent(sanitized)

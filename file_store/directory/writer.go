@@ -66,6 +66,11 @@ func (self *DirectoryFileWriter) WriteCompressed(
 			self.db, self.config_obj, self.path.
 				SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
 
+		err = checkPath(chunk_file_path)
+		if err != nil {
+			return 0, err
+		}
+
 		self.ChunkFd, err = os.OpenFile(chunk_file_path,
 			os.O_RDWR|os.O_CREATE, 0600)
 		if err != nil {
