@@ -81,8 +81,9 @@ parameters:
 
   - name: UPLOAD_IS_RESUMABLE
     type: bool
-    default: Y
-    description: If set, file uploads will be asynchronous and resumable.
+    default: N
+    description: |
+      If set, file uploads will be asynchronous and resumable.
 
 sources:
   - query: |
