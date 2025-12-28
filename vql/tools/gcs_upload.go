@@ -9,11 +9,14 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
-	"net/url"
+	"net/http"
 
 	"cloud.google.com/go/storage"
 	"github.com/Velocidex/ordereddict"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
+	"google.golang.org/api/transport"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -34,7 +37,7 @@ type GCSUploadArgs struct {
 	Accessor    string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	Bucket      string            `vfilter:"required,field=bucket,doc=The bucket to upload to"`
 	Project     string            `vfilter:"required,field=project,doc=The project to upload to"`
-	Credentials string            `vfilter:"required,field=credentials,doc=The credentials to use"`
+	Credentials string            `vfilter:"optional,field=credentials,doc=The credentials to use"`
 }
 
 type GCSUploadFunction struct{}
@@ -109,29 +112,39 @@ func upload_gcs(
 	var bucket_handle *storage.BucketHandle
 	bucket_handle_cache := vql_subsystem.CacheGet(scope, bucket)
 	if bucket_handle_cache == nil {
-		url := &url.URL{
-			Scheme: "https",
-			Host:   "storage.googleapis.com",
-		}
-
-		request := &networking.HttpPluginRequest{
-			Url: []string{url.String()},
-		}
-
-		http_client, _, err := networking.GetHttpClient(
-			ctx, config_obj, scope, request, url)
+		http_transport, err := networking.GetHttpTransport(config_obj, "")
 		if err != nil {
 			return nil, err
 		}
 
-		base_http_client, err := networking.GetHTTPClient(http_client)
+		http_transport = networking.MaybeSpyOnTransport(
+			&config_proto.Config{Client: config_obj}, http_transport)
+
+		var creds *google.Credentials
+		if len(credentials) > 0 {
+			creds, err = transport.Creds(ctx,
+				option.WithAuthCredentialsJSON(option.ServiceAccount, []byte(credentials)),
+				option.WithScopes(storage.ScopeReadWrite))
+		} else {
+			creds, err = google.FindDefaultCredentials(ctx)
+		}
 		if err != nil {
 			return nil, err
 		}
 
+		t_http_client := &http.Client{
+			Transport: &oauth2.Transport{
+				Base:   http_transport,
+				Source: creds.TokenSource,
+			},
+		}
+
+		// Theoretically option.WithCredentialsJSON can be provided to
+		// storage.NewClient but this is currently broken upstream. We
+		// add the credentials to the transport directly instead.
+		// https://github.com/googleapis/google-api-go-client/issues/3414
 		client, err := storage.NewClient(ctx,
-			option.WithHTTPClient(base_http_client),
-			option.WithCredentialsJSON([]byte(credentials)))
+			option.WithHTTPClient(t_http_client))
 		if err != nil {
 			return nil, err
 		}
