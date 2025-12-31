@@ -32,6 +32,7 @@ func WriteProfile(ctx context.Context,
 			Set("EIDMonitored", stats.EIDMonitored).
 			Set("IdleTime", idle).
 			Set("IdleUnloadTimeout", stats.IdleUnloadTimeout.String()).
+			Set("PrefilteredCount", stats.PrefilterEventCount).
 			Set("EventCount", stats.EventCount)
 	}
 }

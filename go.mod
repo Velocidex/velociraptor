@@ -111,7 +111,7 @@ require (
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20250821063524-02dc06e46238
 	github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250
-	github.com/Velocidex/tracee_velociraptor v0.0.0-20250620124218-01f48d6fc3a1
+	github.com/Velocidex/tracee_velociraptor v0.0.0-20251231004915-03828c8ab890
 	github.com/Velocidex/yara-x-go v0.0.0-20251010010632-d8eaad9c539c
 	github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6
 	github.com/alecthomas/kingpin/v2 v2.4.0
@@ -211,7 +211,7 @@ require (
 	github.com/charmbracelet/x/ansi v0.5.2 // indirect
 	github.com/charmbracelet/x/exp/strings v0.0.0-20241209212528-0eec74ecaa6f // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
-	github.com/cilium/ebpf v0.18.0 // indirect
+	github.com/cilium/ebpf v0.20.0 // indirect
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20251210132809-ee656c7534f5 // indirect
@@ -346,6 +346,7 @@ require (
 // replace github.com/Velocidex/WinPmem/go-winpmem => ../WinPmem/go-winpmem
 // replace github.com/Velocidex/sigma-go => ../sigma-go
 // replace github.com/Velocidex/tracee_velociraptor => ../tracee_velociraptor
+
 // replace github.com/Velocidex/fileb0x => ../fileb0x
 // replace github.com/Velocidex/go-ext4 => ../go-ext4
 // replace github.com/Velocidex/amsi => ../amsi
