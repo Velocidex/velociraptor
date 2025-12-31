@@ -24,15 +24,12 @@ func MaybeSpyOnWSDialer(
 	config_obj *config_proto.Config,
 	dialer *websocket.Dialer) *websocket.Dialer {
 
-	mu.Lock()
-	defer mu.Unlock()
-
 	if config_obj.Client == nil ||
 		config_obj.Client.InsecureNetworkTraceFile == "" {
 		return dialer
 	}
 
-	fd := getTraceFile(config_obj)
+	fd := GetTraceFile(config_obj)
 	if fd == nil {
 		return dialer
 	}
@@ -40,7 +37,7 @@ func MaybeSpyOnWSDialer(
 	return spyOnWSDialer(dialer, fd)
 }
 
-func getTraceFile(config_obj *config_proto.Config) *os.File {
+func GetTraceFile(config_obj *config_proto.Config) *os.File {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -110,7 +107,7 @@ func MaybeSpyOnTransport(
 		return transport
 	}
 
-	fd := getTraceFile(config_obj)
+	fd := GetTraceFile(config_obj)
 	if fd == nil {
 		return transport
 	}

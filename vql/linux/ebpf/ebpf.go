@@ -6,6 +6,7 @@ package ebpf
 
 import (
 	"context"
+	"regexp"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/tracee_velociraptor/userspace/ebpf"
@@ -22,8 +23,9 @@ var (
 )
 
 type EBPFEventPluginArgs struct {
-	EventNames []string `vfilter:"required,field=events,doc=A list of event names to acquire."`
-	IncludeEnv bool     `vfilter:"optional,field=include_env,doc=Include process environment variables."`
+	EventNames     []string `vfilter:"required,field=events,doc=A list of event names to acquire."`
+	IncludeEnv     bool     `vfilter:"optional,field=include_env,doc=Include process environment variables."`
+	RegexPrefilter string   `vfilter:"optional,field=regex_prefilter,doc=A regex that must match the raw buffer before we process it."`
 }
 
 type EBPFEventPlugin struct{}
@@ -101,7 +103,21 @@ func (self EBPFEventPlugin) Call(
 
 		}
 
-		events_chan, closer, err := gEbpfManager.Watch(ctx, selected_events)
+		opts := ebpf.EBPFWatchOptions{
+			SelectedEvents: selected_events,
+		}
+
+		if arg.RegexPrefilter != "" {
+			re, err := regexp.Compile(arg.RegexPrefilter)
+			if err != nil {
+				scope.Log("watch_ebpf: Unable to compile regex_prefilter %v", err)
+				return
+			}
+
+			opts.Prefilter = re.Match
+		}
+
+		events_chan, closer, err := gEbpfManager.Watch(ctx, opts)
 		if err != nil {
 			scope.Log("watch_ebpf: %v", err)
 			return
