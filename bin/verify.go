@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -134,6 +135,13 @@ func doVerify() error {
 
 		if outfile == "" {
 			outfile = fmt.Sprintf("report_%d.%s", time.Now().Unix(), format)
+		}
+
+		dir := filepath.Dir(outfile)
+		err = os.MkdirAll(dir, 0755)
+		if err != nil {
+			logger.Error("verifier: %v", err)
+			return ret
 		}
 
 		file, err := os.Create(outfile)
