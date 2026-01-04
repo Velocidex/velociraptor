@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	errors "github.com/go-errors/errors"
@@ -114,7 +115,8 @@ func doVerify() error {
 	}
 
 	if *verify_format != "" {
-		report, err := launcher.NewVerifierReporter(*verify_format)
+		format := strings.ToLower(*verify_format)
+		report, err := launcher.NewVerifierReporter(format)
 		if err != nil {
 			logger.Error("verifier: %v", err)
 			return ret
@@ -132,7 +134,7 @@ func doVerify() error {
 		outfile := *verify_output
 
 		if outfile == "" {
-			outfile = fmt.Sprintf("report_%d.%s", time.Now().Unix(), *verify_format)
+			outfile = fmt.Sprintf("report_%d.%s", time.Now().Unix(), format)
 		}
 
 		file, err := os.Create(outfile)
@@ -145,7 +147,7 @@ func doVerify() error {
 		report.SetExit(ret)
 		report.Generate(file)
 
-		logger.Info("verifier: wrote %s report to '%s'", *verify_format, file.Name())
+		logger.Info("verifier: wrote %s report to '%s'", format, file.Name())
 	}
 
 	return ret
