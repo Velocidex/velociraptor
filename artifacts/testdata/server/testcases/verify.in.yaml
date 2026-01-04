@@ -29,7 +29,7 @@ Queries:
 
   # Check the Server.Utils.ArtifactVerifier works on some bad
   # artifacts. Filter out the absolute path to make test reproducible
-  - SELECT *, {
+  - SELECT summary, artifacts, {
        SELECT *, basename(path=path) as path
        FROM results
     } AS results
