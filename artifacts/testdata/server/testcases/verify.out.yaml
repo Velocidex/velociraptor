@@ -45,19 +45,9 @@ Output: [
 
 # Check the Server.Utils.ArtifactVerifier works on some bad
 # artifacts. Filter out the absolute path to make test reproducible
-Query: SELECT *, { SELECT *, basename(path=path) as path FROM results } AS results FROM Artifact.Server.Utils.ArtifactVerifier( SearchGlob=srcDir+"/artifacts/testdata/files/artifacts/*")
+Query: SELECT summary, artifacts, { SELECT *, basename(path=path) as path FROM results } AS results FROM Artifact.Server.Utils.ArtifactVerifier( SearchGlob=srcDir+"/artifacts/testdata/files/artifacts/*")
 Output: [
  {
-  "timestamp": "2026-01-04T15:33:43Z",
-  "metadata": {
-   "name": "velociraptor",
-   "version": "0.75.6",
-   "commit": "b4403b36a",
-   "build_time": "2026-01-05T01:24:01+10:00",
-   "compiler": "go1.25.3",
-   "system": "linux",
-   "architecture": "amd64"
-  },
   "summary": {
    "total": 4,
    "passed": 2,
@@ -70,7 +60,6 @@ Output: [
    "BrokenQuery",
    "WarnningExecve"
   ],
-  "_Source": "Server.Utils.ArtifactVerifier",
   "results": [
    {
     "name": "Good",
