@@ -201,7 +201,7 @@ func checkArtifact(
 
 	if err != nil {
 		return &launcher.AnalysisState{
-			Errors: []error{err},
+			Errors: []string{err.Error()},
 		}, nil
 	}
 
