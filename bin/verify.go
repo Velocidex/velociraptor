@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	errors "github.com/go-errors/errors"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	logging "www.velocidex.com/golang/velociraptor/logging"
@@ -97,7 +98,7 @@ func doVerify() error {
 		}
 		for _, err := range state.Errors {
 			logger.Error("%v: <red>%v</>", artifact_path, err)
-			ret = err
+			ret = errors.New(err)
 		}
 		for _, msg := range state.Warnings {
 			logger.Info("%v: %v", artifact_path, msg)

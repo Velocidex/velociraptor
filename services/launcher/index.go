@@ -150,6 +150,11 @@ func (self *flowIndexBuilder) buildFlowIndexFromDatastore(
 			if !ok {
 				return nil
 			}
+
+			if flow == nil || flow.Request == nil {
+				continue
+			}
+
 			rs_writer.Write(ordereddict.NewDict().
 				Set("FlowId", flow.SessionId).
 				Set("Artifacts", flow.Request.Artifacts).
