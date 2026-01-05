@@ -3,9 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
-	"time"
 
 	errors "github.com/go-errors/errors"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -21,9 +18,6 @@ var (
 	verify                = artifact_command.Command("verify", "Verify a set of artifacts")
 	verify_args           = verify.Arg("paths", "Paths to artifact yaml files").Required().Strings()
 	verify_allow_override = verify.Flag("builtin", "Allow overriding of built in artifacts").Bool()
-	verify_soft_fail      = verify.Flag("soft_fail", "Do not return error code on verification failures").Bool()
-	verify_format         = verify.Flag("format", "Output format (json)").Default("").String()
-	verify_output         = verify.Flag("output", "Output file for report").Default("").String()
 )
 
 func doVerify() error {
@@ -109,53 +103,6 @@ func doVerify() error {
 		for _, msg := range state.Warnings {
 			logger.Info("%v: %v", artifact_path, msg)
 		}
-	}
-
-	if *verify_soft_fail {
-		ret = nil
-	}
-
-	if *verify_format != "" {
-		format := strings.ToLower(*verify_format)
-		report, err := launcher.NewVerifierReporter(format)
-		if err != nil {
-			logger.Error("verifier: %v", err)
-			return ret
-		}
-
-		for artifact_path, state := range states {
-			name := "Unknown"
-			if artifact, ok := artifacts[artifact_path]; ok {
-				name = artifact.GetName()
-			}
-
-			report.AddArtifact(name, artifact_path, state)
-		}
-
-		outfile := *verify_output
-
-		if outfile == "" {
-			outfile = fmt.Sprintf("report_%d.%s", time.Now().Unix(), format)
-		}
-
-		dir := filepath.Dir(outfile)
-		err = os.MkdirAll(dir, 0755)
-		if err != nil {
-			logger.Error("verifier: %v", err)
-			return ret
-		}
-
-		file, err := os.Create(outfile)
-		if err != nil {
-			logger.Error("verifier: %v", err)
-			return ret
-		}
-		defer file.Close()
-
-		report.SetExit(ret)
-		report.Generate(file)
-
-		logger.Info("verifier: wrote %s report to '%s'", format, file.Name())
 	}
 
 	return ret
