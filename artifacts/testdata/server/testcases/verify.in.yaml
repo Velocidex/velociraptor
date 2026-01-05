@@ -1,5 +1,37 @@
+Parameters:
+  Broken1: |
+    name: BrokenYaml
+    someweirdfield: 1
+
+  Broken2: |
+    name: BrokenQuery
+    sources:
+    - query: SELECT * FROM nosuchplugin()
+
+  Broken3: |
+    name: BrokenSubArtifact
+    sources:
+    - query: SELECT * FROM Artifact.No.Such.Artifact()
+
+  Warn1: |
+    name: WarnningExecve
+    sources:
+    - query: SELECT * FROM execve(argv=["ls"])
+
+
 Queries:
-  - SELECT count()  AS Count ,
-       verify(artifact=name) AS V
-    FROM artifact_definitions()
-    WHERE type=~'client' AND built_in AND V.Warnings
+  # Basic verification of some artifacts.
+  - SELECT verify(artifact=Broken1) AS Broken1,
+           verify(artifact=Broken2) AS Broken2,
+           verify(artifact=Broken3) AS Broken3,
+           verify(artifact=Warn1) AS Warn1
+    FROM scope()
+
+  # Check the Server.Utils.ArtifactVerifier works on some bad
+  # artifacts. Filter out the absolute path to make test reproducible
+  - SELECT summary, artifacts, {
+       SELECT *, basename(path=path) as path
+       FROM results
+    } AS results
+    FROM Artifact.Server.Utils.ArtifactVerifier(
+       SearchGlob=srcDir+"/artifacts/testdata/files/artifacts/*")

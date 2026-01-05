@@ -76,7 +76,9 @@ func NewFlowReader(
 			for session_id := range in {
 				collection_context, err := storage_manager.
 					LoadCollectionContext(ctx, config_obj, client_id, session_id)
-				if err == nil {
+				if err == nil &&
+					collection_context != nil &&
+					collection_context.Request != nil {
 					select {
 					case <-ctx.Done():
 						return

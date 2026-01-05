@@ -1,3 +1,7 @@
+//go:build linux && (arm64 || amd64)
+// +build linux
+// +build arm64 amd64
+
 package ebpf
 
 import (

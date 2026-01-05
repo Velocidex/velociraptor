@@ -799,7 +799,7 @@ func (self *ApiServer) SetArtifactFile(
 			}
 
 			for _, e := range state.Errors {
-				res.Errors = append(res.Errors, e.Error())
+				res.Errors = append(res.Errors, e)
 			}
 
 			return res, nil

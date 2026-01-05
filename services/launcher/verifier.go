@@ -22,7 +22,7 @@ var (
 type AnalysisState struct {
 	Artifact    string
 	Permissions []string
-	Errors      []error
+	Errors      []string
 	Warnings    []string
 
 	// Keep track of existing definitions in LET queries.
@@ -30,7 +30,7 @@ type AnalysisState struct {
 }
 
 func (self *AnalysisState) SetError(err error) {
-	self.Errors = append(self.Errors, err)
+	self.Errors = append(self.Errors, err.Error())
 }
 
 func (self *AnalysisState) AnalyseCall(

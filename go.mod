@@ -64,13 +64,13 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/sebdah/goldie/v2 v2.8.0
 	github.com/sergi/go-diff v1.4.0
-	github.com/sirupsen/logrus v1.8.3
+	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.11.1
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
 	golang.org/x/crypto v0.46.0
-	golang.org/x/mod v0.30.0
+	golang.org/x/mod v0.31.0
 	golang.org/x/net v0.48.0
 	golang.org/x/sys v0.39.0
 	golang.org/x/text v0.32.0
@@ -111,7 +111,7 @@ require (
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20250821063524-02dc06e46238
 	github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250
-	github.com/Velocidex/tracee_velociraptor v0.0.0-20251231004915-03828c8ab890
+	github.com/Velocidex/tracee_velociraptor v0.0.0-20260102153735-470363a4efa4
 	github.com/Velocidex/yara-x-go v0.0.0-20251010010632-d8eaad9c539c
 	github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6
 	github.com/alecthomas/kingpin/v2 v2.4.0
@@ -183,6 +183,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
+	github.com/aquasecurity/tracee/api v0.0.0-20251229080346-032e875eaa90 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.1 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.2 // indirect
@@ -211,7 +212,7 @@ require (
 	github.com/charmbracelet/x/ansi v0.5.2 // indirect
 	github.com/charmbracelet/x/exp/strings v0.0.0-20241209212528-0eec74ecaa6f // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
-	github.com/cilium/ebpf v0.20.0 // indirect
+	github.com/cilium/ebpf v0.20.1-0.20251215101449-df5c3096bd8c // indirect
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20251210132809-ee656c7534f5 // indirect
@@ -231,7 +232,7 @@ require (
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/goccy/go-yaml v1.18.0 // indirect
+	github.com/goccy/go-yaml v1.19.1 // indirect
 	github.com/godzie44/go-uring v0.0.0-20220926161041-69611e8b13d5 // indirect
 	github.com/golang/gddo v0.0.0-20210115222349-20d68f94ee1f // indirect
 	github.com/golang/glog v1.2.5 // indirect
@@ -305,7 +306,8 @@ require (
 	go.opentelemetry.io/otel/trace v1.39.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c // indirect
+	golang.org/x/arch v0.23.0 // indirect
+	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/term v0.38.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251222181119-0a764e51fe1b // indirect

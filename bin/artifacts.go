@@ -229,7 +229,7 @@ func doArtifactCollect() error {
 	scope := manager.BuildScope(services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: acl_managers.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj: config_obj}, "", 0),
+		Logger:     log.New(logger, "", 0),
 		Env: ordereddict.NewDict().
 			Set("Artifacts", *artifact_command_collect_names).
 			Set("Output", *artifact_command_collect_output).
@@ -526,7 +526,7 @@ func maybeAddDefinitionsDirectory(config_obj *config_proto.Config) error {
 // Windows) we also support some simpler types here
 func parseArtifactType(param_type string, param string) string {
 	switch param_type {
-	case "multichoice":
+	case "multichoice", "json_array":
 		var res []string
 		err := json.Unmarshal([]byte(param), &res)
 		if err != nil {

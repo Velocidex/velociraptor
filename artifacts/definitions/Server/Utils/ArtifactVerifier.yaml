@@ -1,0 +1,70 @@
+name: Server.Utils.ArtifactVerifier
+description: |
+  Verify a set of artifacts and returns results in a structured way.
+
+  You can run this on the command line like:
+  ```
+  velociraptor -r Server.Utils.ArtifactVerifier --SearchGlob '/path/to/*.yaml'
+  ```
+
+type: SERVER
+
+parameters:
+- name: SearchGlob
+  default: /tmp/*.yaml
+  description: A glob to capture all artifacts to verify
+
+- name: ErrorIsFatal
+  type: bool
+  default: N
+  description: If set, an error is produced if any artifact is failed.
+
+sources:
+- query: |
+    -- Convert the array to a string
+    LET _Stringify(X) = SELECT str(str=_value) AS value
+      FROM foreach(row=X)
+    LET Stringify(X) = _Stringify(X=X).value
+
+    LET maybeLog(Path) = if(condition=ErrorIsFatal,
+      then=log(level="ERROR", dedup= -1, message="%v failed!", args=Path),
+      else=TRUE)
+
+    LET PassLogError(Verify, Path) = NOT Verify.Errors
+      OR NOT maybeLog(Path=Path)
+
+    -- Extract the name of the artifact from the raw data - needed if
+    -- the yaml can not be parsed at all then we need to fallback to a
+    -- regex.
+    LET GetName(Artifact) = parse_string_with_regex(
+        regex='''^name:\s*(.+)''', string=Artifact).g1
+
+    LET Files = SELECT OSPath,
+                       read_file(filename=OSPath, length=10000) AS Data
+      FROM glob(globs=SearchGlob)
+
+    LET Results <= SELECT name,
+           path,
+           PassLogError(Verify=Verify, Path=path) AS passed,
+           Stringify(X=Verify.Errors) AS errors,
+           Stringify(X=Verify.Warnings) AS warnings
+    FROM foreach(row=Files,
+                 query={
+        SELECT OSPath AS path,
+               GetName(Artifact=Data) AS name,
+               verify(artifact=Data) AS Verify
+        FROM scope()
+      })
+
+    -- Add some metadata to the output and present in the same row.
+    SELECT timestamp(epoch=now()) AS timestamp,
+       config.version as metadata,
+       dict(
+         total=len(list=Results),
+         passed=len(list=filter(list=Results, condition="x=>x.passed")),
+         failed=len(list=filter(list=Results, condition="x=>NOT x.passed")),
+         warnings=len(list=filter(list=Results, condition="x=>x.warnings"))
+       ) AS summary,
+       { SELECT name FROM Results } as artifacts,
+       Results as results
+    FROM scope()

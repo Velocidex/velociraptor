@@ -1,3 +1,101 @@
-Query: SELECT count()  AS Count , verify(artifact=name) AS V FROM artifact_definitions() WHERE type=~'client' AND built_in AND V.Warnings
-Output: []
+# Basic verification of some artifacts.
+Query: SELECT verify(artifact=Broken1) AS Broken1, verify(artifact=Broken2) AS Broken2, verify(artifact=Broken3) AS Broken3, verify(artifact=Warn1) AS Warn1 FROM scope()
+Output: [
+ {
+  "Broken1": {
+   "Artifact": "name: BrokenYaml\nsomeweirdfield: 1\n",
+   "Permissions": null,
+   "Errors": [
+    "yaml: unmarshal errors:\n  line 2: field someweirdfield not found in type proto.Artifact"
+   ],
+   "Warnings": null,
+   "Definitions": {}
+  },
+  "Broken2": {
+   "Artifact": "name: BrokenQuery\nsources:\n- query: SELECT * FROM nosuchplugin()\n",
+   "Permissions": null,
+   "Errors": [
+    "BrokenQuery: query: Unknown plugin nosuchplugin()"
+   ],
+   "Warnings": null,
+   "Definitions": {}
+  },
+  "Broken3": {
+   "Artifact": "name: BrokenSubArtifact\nsources:\n- query: SELECT * FROM Artifact.No.Such.Artifact()\n",
+   "Permissions": null,
+   "Errors": [
+    "BrokenSubArtifact: query: Unknown artifact reference No.Such.Artifact"
+   ],
+   "Warnings": null,
+   "Definitions": {}
+  },
+  "Warn1": {
+   "Artifact": "name: WarnningExecve\nsources:\n- query: SELECT * FROM execve(argv=[\"ls\"])\n",
+   "Permissions": [
+    "EXECVE"
+   ],
+   "Errors": null,
+   "Warnings": [
+    "\u003cyellow\u003eSuggestion\u003c/\u003e: Add EXECVE to artifact's required_permissions or implied_permissions fields"
+   ],
+   "Definitions": {}
+  }
+ }
+]
+
+# Check the Server.Utils.ArtifactVerifier works on some bad
+# artifacts. Filter out the absolute path to make test reproducible
+Query: SELECT summary, artifacts, { SELECT *, basename(path=path) as path FROM results } AS results FROM Artifact.Server.Utils.ArtifactVerifier( SearchGlob=srcDir+"/artifacts/testdata/files/artifacts/*")
+Output: [
+ {
+  "summary": {
+   "total": 4,
+   "passed": 2,
+   "failed": 2,
+   "warnings": 1
+  },
+  "artifacts": [
+   "Good",
+   "BrokenYaml",
+   "BrokenQuery",
+   "WarnningExecve"
+  ],
+  "results": [
+   {
+    "name": "Good",
+    "passed": true,
+    "errors": [],
+    "warnings": [],
+    "path": "good.yaml"
+   },
+   {
+    "name": "BrokenYaml",
+    "passed": false,
+    "errors": [
+     "yaml: unmarshal errors:\n  line 2: field someweirdfield not found in type proto.Artifact"
+    ],
+    "warnings": [],
+    "path": "invalid1.yaml"
+   },
+   {
+    "name": "BrokenQuery",
+    "passed": false,
+    "errors": [
+     "BrokenQuery: query: Unknown plugin nosuchplugin()"
+    ],
+    "warnings": [],
+    "path": "invalid2.yaml"
+   },
+   {
+    "name": "WarnningExecve",
+    "passed": true,
+    "errors": [],
+    "warnings": [
+     "\u003cyellow\u003eSuggestion\u003c/\u003e: Add EXECVE to artifact's required_permissions or implied_permissions fields"
+    ],
+    "path": "invalid3.yaml"
+   }
+  ]
+ }
+]
 
