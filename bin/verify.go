@@ -71,11 +71,12 @@ func doVerify() error {
 		ACLManager: acl_managers.NewRoleACLManager(sm.Config, "administrator"),
 		Logger:     log.New(artifact_logger, "", 0),
 		Env: ordereddict.NewDict().
-			Set("Artifacts", artifact_paths),
+			Set("Artifacts", artifact_paths).
+			Set("DisableOverride", !*verify_allow_override),
 	}
 
 	query := `
-		SELECT Filename, verify(artifact=Data) AS Result FROM read_file(filenames=Artifacts)
+		SELECT Filename, verify(artifact=Data, disable_override=DisableOverride) AS Result FROM read_file(filenames=Artifacts)
 	`
 
 	scope := manager.BuildScope(builder)
