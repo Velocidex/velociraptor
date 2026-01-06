@@ -2,16 +2,18 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"log"
+	"path/filepath"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
-	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/startup"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -46,49 +48,69 @@ func doVerify() error {
 		return err
 	}
 
-	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
-
 	// Report all errors and keep going as much as possible.
-	artifacts := make(map[string]*artifacts_proto.Artifact)
 	states := make(map[string]*launcher.AnalysisState)
 
-	repository, err := manager.GetGlobalRepository(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
+
+	var artifact_paths []string
+
+	for _, artifact_path := range *verify_args {
+		abs, err := filepath.Abs(artifact_path)
+		if err != nil {
+			logger.Error("verify: could not get absolute path for %v", artifact_path)
+			continue
+		}
+
+		artifact_paths = append(artifact_paths, abs)
+	}
+
+	artifact_logger := &LogWriter{config_obj: sm.Config}
+	builder := services.ScopeBuilder{
+		Config:     sm.Config,
+		ACLManager: acl_managers.NewRoleACLManager(sm.Config, "administrator"),
+		Logger:     log.New(artifact_logger, "", 0),
+		Env: ordereddict.NewDict().
+			Set("Artifacts", artifact_paths),
+	}
+
+	query := `
+		SELECT Filename, verify(artifact=Data) AS Result FROM read_file(filenames=Artifacts)
+	`
+
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	statements, err := vfilter.MultiParse(query)
 	if err != nil {
+		logger.Error("verify: error passing query: %v", query)
 		return err
 	}
 
-	for _, artifact_path := range *verify_args {
-		state := launcher.NewAnalysisState(artifact_path)
-		states[artifact_path] = state
+	for _, vql := range statements {
+		for row := range vql.Eval(sm.Ctx, scope) {
+			dict := vfilter.RowToDict(ctx, scope, row)
 
-		fd, err := os.Open(artifact_path)
-		if err != nil {
-			state.SetError(err)
-			continue
+			path, pres := dict.GetString("Filename")
+			if !pres {
+				continue
+			}
+
+			result, pres := dict.Get("Result")
+			if !pres {
+				continue
+			}
+
+			serialized := json.MustMarshalIndent(result)
+			state := &launcher.AnalysisState{}
+			err := json.Unmarshal(serialized, state)
+			if err != nil {
+				logger.Error("verify: could not unmarshal analysis state")
+				continue
+			}
+
+			states[path] = state
 		}
-
-		data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
-		if err != nil {
-			state.SetError(err)
-			continue
-		}
-
-		a, err := repository.LoadYaml(string(data), services.ArtifactOptions{
-			ValidateArtifact:     true,
-			ArtifactIsBuiltIn:    *verify_allow_override,
-			AllowOverridingAlias: true,
-		})
-		if err != nil {
-			state.SetError(err)
-			continue
-		}
-		artifacts[artifact_path] = a
-	}
-
-	for artifact_path, artifact := range artifacts {
-		state, _ := states[artifact_path]
-		launcher.VerifyArtifact(ctx, config_obj,
-			repository, artifact, state)
 	}
 
 	var ret error
