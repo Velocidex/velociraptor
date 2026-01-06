@@ -12,7 +12,8 @@ import (
 )
 
 type VerifyFunctionArgs struct {
-	Artifact string `vfilter:"required,field=artifact,doc=The artifact to verify. This can be an artifact source in yaml or json or the name of an artifact"`
+	Artifact        string `vfilter:"required,field=artifact,doc=The artifact to verify. This can be an artifact source in yaml or json or the name of an artifact"`
+	DisableOverride bool   `vfilter:"optional,field=disable_override,doc=If set, we do not allow override of built-in artifacts (allowed by default)"`
 }
 
 func init() {
@@ -63,7 +64,7 @@ This function will verify the artifact and flag any potential errors or warnings
 					artifact, err = local_repository.LoadYaml(arg.Artifact,
 						services.ArtifactOptions{
 							ValidateArtifact:     true,
-							ArtifactIsBuiltIn:    true,
+							ArtifactIsBuiltIn:    !arg.DisableOverride,
 							AllowOverridingAlias: true,
 						})
 					if err != nil {
