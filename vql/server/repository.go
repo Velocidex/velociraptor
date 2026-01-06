@@ -21,6 +21,7 @@ type ArtifactSetFunctionArgs struct {
 	Definition string   `vfilter:"optional,field=definition,doc=Artifact definition in YAML"`
 	Prefix     string   `vfilter:"optional,field=prefix,doc=Optional name prefix (deprecated ignored)"`
 	Tags       []string `vfilter:"optional,field=tags,doc=Optional tags to attach to the artifact."`
+	Repository string   `vfilter:"optional,field=repository,doc=Add the artifact to this repository, if not set, we add the artifact to the global repository."`
 }
 
 type ArtifactSetFunction struct{}
@@ -86,6 +87,40 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
+
+	global_repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		scope.Log("artifact_set: %s", err)
+		return vfilter.Null{}
+	}
+
+	if arg.Repository != "" {
+		var local_repository services.Repository
+		cached_any := vql_subsystem.CacheGet(scope, arg.Repository)
+
+		if cached_repository, ok := cached_any.(services.Repository); ok {
+			local_repository = cached_repository
+		} else {
+			scope.Log("artifact_set: creating new repository '%s'", arg.Repository)
+			local_repository = manager.NewRepository()
+			local_repository.SetParent(global_repository, config_obj)
+		}
+
+		definition, err := local_repository.LoadYaml(arg.Definition,
+			services.ArtifactOptions{
+				ValidateArtifact:  true,
+				ArtifactIsBuiltIn: true,
+			})
+		if err != nil {
+			scope.Log("artifact_set: %s", err)
+			return vfilter.Null{}
+		}
+
+		scope.Log("artifact_set: added %s to repository '%s'", definition.Name, arg.Repository)
+		vql_subsystem.CacheSet(scope, arg.Repository, local_repository)
+
+		return json.ConvertProtoToOrderedDict(definition)
+	}
 
 	definition, err = manager.SetArtifactFile(ctx,
 		config_obj, principal, arg.Definition, arg.Prefix)
