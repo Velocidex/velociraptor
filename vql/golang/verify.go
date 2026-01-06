@@ -58,10 +58,7 @@ This function will verify the artifact and flag any potential errors or warnings
 
 				artifact, pres := repository.Get(ctx, config_obj, arg.Artifact)
 				if !pres {
-					local_repository := manager.NewRepository()
-					local_repository.SetParent(repository, config_obj)
-
-					artifact, err = local_repository.LoadYaml(arg.Artifact,
+					artifact, err = repository.LoadYaml(arg.Artifact,
 						services.ArtifactOptions{
 							ValidateArtifact:     true,
 							ArtifactIsBuiltIn:    !arg.DisableOverride,
@@ -71,8 +68,6 @@ This function will verify the artifact and flag any potential errors or warnings
 						state.SetError(err)
 						return state
 					}
-
-					repository = local_repository
 				}
 
 				// Verify the artifact
