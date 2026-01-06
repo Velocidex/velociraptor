@@ -111,7 +111,7 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 
 func upload_webdav(ctx context.Context, scope vfilter.Scope,
 	reader io.Reader,
-	contentLength int64,
+	size int64,
 	name string,
 	webdavUrl string,
 	basicAuthUser string,
@@ -157,7 +157,6 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 	}
 
 	req.Header.Set("User-Agent", userAgent)
-	req.ContentLength = contentLength
 	req.SetBasicAuth(basicAuthUser, basicAuthPassword)
 
 	resp, err := client.Do(req)
@@ -175,7 +174,7 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 
 	return &uploads.UploadResponse{
 		Path: name,
-		Size: uint64(contentLength),
+		Size: uint64(size),
 	}, nil
 }
 
