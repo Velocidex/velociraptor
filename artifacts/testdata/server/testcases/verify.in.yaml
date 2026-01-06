@@ -18,6 +18,16 @@ Parameters:
     sources:
     - query: SELECT * FROM execve(argv=["ls"])
 
+  Override1: |
+    name: Generic.Client.Info
+    sources:
+    - query: SELECT * FROM scope()
+  
+  Override2: |
+    name: Override2
+    sources:
+    - query: SELECT * FROM scope()
+
 
 Queries:
   # Basic verification of some artifacts.
@@ -35,3 +45,10 @@ Queries:
     } AS results
     FROM Artifact.Server.Utils.ArtifactVerifier(
        SearchGlob=srcDir+"/artifacts/testdata/files/artifacts/*")
+
+  # Check the "disable_override" argument produces an error when overriding a built-in,
+  # but not when creating a new artifact when True is specified.
+  - SELECT 
+      verify(artifact=Override1, disable_override=True) AS Override1,
+      verify(artifact=Override2, disable_override=True) AS Override2
+    FROM scope()
