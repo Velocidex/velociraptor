@@ -44,7 +44,7 @@ Artifacts:
  Windows.Sysinternals.Autoruns:
    All: "Y"
 
-# Can be ZIP, GCS, S3, Azure, SMBShare, SFTP
+# Can be ZIP, GCS, S3, Azure, SMBShare, SFTP, WebDAV
 Target: ZIP
 
 # When the Target is GCS:
@@ -82,6 +82,13 @@ Target: ZIP
 #  privatekey: ""
 #  endpoint: ""
 #  hostkey: ""
+
+# When the Target is WebDAV
+#TargetArgs:
+#  url: ""
+#  basic_auth_user: ""
+#  basic_auth_password: ""
+#  user_agent: ""
 
 # Can be None, X509
 # NOTE: You can unzip the encrypted zip using
