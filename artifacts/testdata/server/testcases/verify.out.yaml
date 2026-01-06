@@ -99,3 +99,27 @@ Output: [
  }
 ]
 
+# Check the "disable_override" argument produces an error when overriding a built-in,
+# but not when creating a new artifact when True is specified.
+Query: SELECT verify(artifact=Override1, disable_override=True) AS Override1, verify(artifact=Override2, disable_override=True) AS Override2 FROM scope()
+Output: [
+ {
+  "Override1": {
+   "Artifact": "name: Generic.Client.Info\nsources:\n- query: SELECT * FROM scope()\n",
+   "Permissions": null,
+   "Errors": [
+    "Unable to override built in artifact Generic.Client.Info"
+   ],
+   "Warnings": null,
+   "Definitions": {}
+  },
+  "Override2": {
+   "Artifact": "name: Override2\nsources:\n- query: SELECT * FROM scope()\n",
+   "Permissions": null,
+   "Errors": null,
+   "Warnings": null,
+   "Definitions": {}
+  }
+ }
+]
+
