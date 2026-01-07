@@ -43,16 +43,20 @@ sources:
                        read_file(filename=OSPath, length=4194304) AS Data
       FROM glob(globs=SearchGlob)
 
+    LET Artifacts <= SELECT *,
+       artifact_set(definition=Data, repository="local") AS Definition
+    FROM Files
+
     LET Results <= SELECT name,
            path,
            PassLogError(Verify=Verify, Path=path) AS passed,
            Stringify(X=Verify.Errors) AS errors,
            Stringify(X=Verify.Warnings) AS warnings
-    FROM foreach(row=Files,
+    FROM foreach(row=Artifacts,
                  query={
         SELECT OSPath AS path,
                GetName(Artifact=Data) AS name,
-               verify(artifact=Data) AS Verify
+               verify(artifact=Data, repository="local") AS Verify
         FROM scope()
       })
 

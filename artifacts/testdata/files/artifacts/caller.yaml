@@ -1,0 +1,3 @@
+name: Caller
+sources:
+- query: SELECT * FROM Artifact.Good()

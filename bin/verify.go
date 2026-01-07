@@ -7,7 +7,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
-	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
@@ -48,9 +47,6 @@ func doVerify() error {
 		return err
 	}
 
-	// Report all errors and keep going as much as possible.
-	states := make(map[string]*launcher.AnalysisState)
-
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 
 	var artifact_paths []string
@@ -77,13 +73,17 @@ func doVerify() error {
 
 	query := `
 		-- Load artifacts into local repository
-		LET Definitions <= SELECT Filename, artifact_set(definition=Data, repository="local") AS Definition FROM read_file(filenames=Artifacts)
+		LET Definitions <= SELECT Filename, Data,
+           artifact_set(definition=Data, repository="local") AS Definition
+        FROM read_file(filenames=Artifacts)
 
 		-- Verify artifacts from local repository
 		SELECT Filename, Result FROM foreach(
 			row=Definitions,
-			query={ SELECT Filename, verify(artifact=Definition.name, repository="local") AS Result FROM scope() WHERE Definition }
-		)
+			query={
+          SELECT Filename, verify(artifact=Data, repository="local") AS Result
+          FROM scope()
+       })
 	`
 
 	scope := manager.BuildScope(builder)
@@ -95,11 +95,12 @@ func doVerify() error {
 		return err
 	}
 
+	var ret error
 	for _, vql := range statements {
 		for row := range vql.Eval(sm.Ctx, scope) {
 			dict := vfilter.RowToDict(ctx, scope, row)
 
-			path, pres := dict.GetString("Filename")
+			artifact_path, pres := dict.GetString("Filename")
 			if !pres {
 				continue
 			}
@@ -109,29 +110,20 @@ func doVerify() error {
 				continue
 			}
 
-			serialized := json.MustMarshalIndent(result)
-			state := &launcher.AnalysisState{}
-			err := json.Unmarshal(serialized, state)
-			if err != nil {
-				logger.Error("verify: could not unmarshal analysis state")
+			state, ok := result.(*launcher.AnalysisState)
+			if !ok {
 				continue
 			}
-
-			states[path] = state
-		}
-	}
-
-	var ret error
-	for artifact_path, state := range states {
-		if len(state.Errors) == 0 {
-			logger.Info("Verified %v: <green>OK</>", artifact_path)
-		}
-		for _, err := range state.Errors {
-			logger.Error("%v: <red>%v</>", artifact_path, err)
-			ret = errors.New(err)
-		}
-		for _, msg := range state.Warnings {
-			logger.Info("%v: %v", artifact_path, msg)
+			if len(state.Errors) == 0 {
+				logger.Info("Verified %v: <green>OK</>", artifact_path)
+			}
+			for _, err := range state.Errors {
+				logger.Error("%v: <red>%v</>", artifact_path, err)
+				ret = errors.New(err)
+			}
+			for _, msg := range state.Warnings {
+				logger.Info("%v: %v", artifact_path, msg)
+			}
 		}
 	}
 
