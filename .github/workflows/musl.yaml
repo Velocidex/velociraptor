@@ -3,11 +3,12 @@ name: Linux Build Musl Static
 on:
   pull_request:
     types: [closed]
+  workflow_dispatch:
 
 jobs:
   build:
-    # Only trigger when a PR is committed.
-    if: github.event.pull_request.merged
+    # Only trigger when a PR is committed or manually triggered.
+    if: github.event.pull_request.merged || github.event_name == 'workflow_dispatch'
     name: Build
     runs-on: ubuntu-latest
     steps:

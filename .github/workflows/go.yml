@@ -1,4 +1,4 @@
-# Only trigger when a PR is committed.
+# Only trigger when a PR is committed or manually.
 name: Linux Build All Arches
 #on: [pull_request]
 on:
@@ -6,10 +6,11 @@ on:
     types: [closed]
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
   build:
-    if: github.event.pull_request.merged
+    if: github.event.pull_request.merged || github.event_name == 'workflow_dispatch'
     name: Build
     # We used to build on ubuntu-18.04 but that is now deprecated by
     # GitHub. Earlier distributions will have to use the musl build.
