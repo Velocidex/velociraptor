@@ -264,6 +264,10 @@
     type: string
     description: Optional tags to attach to the artifact.
     repeated: true
+  - name: repository
+    type: string
+    description: Add the artifact to this repository, if not set, we add the artifact
+      to the global repository.
   category: server
   metadata:
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
@@ -11588,6 +11592,10 @@
     description: The artifact to verify. This can be an artifact source in yaml or
       json or the name of an artifact
     required: true
+  - name: repository
+    type: string
+    description: The repository to use for verification, if not set, we default to
+      the global repository.
   - name: disable_override
     type: bool
     description: If set, we do not allow override of built-in artifacts (allowed by
