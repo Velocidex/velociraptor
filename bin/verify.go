@@ -73,18 +73,23 @@ func doVerify() error {
 
 	query := `
 		-- Load artifacts into local repository
-		LET Definitions <= SELECT Filename, Data,
-           artifact_set(definition=Data, repository="local") AS Definition
-        FROM read_file(filenames=Artifacts)
+		LET Definitions <= SELECT
+			Filename,
+			Data,
+			artifact_set(definition=Data, repository="local") AS Definition
+		FROM read_file(filenames=Artifacts)
 
 		-- Verify artifacts from local repository
-		SELECT Filename, Result FROM foreach(
-			row=Definitions,
-			query={
-          SELECT Filename,
-		    verify(artifact=Data, repository="local", disable_override=DisableOverride) AS Result
-          FROM scope()
-       })
+		SELECT Filename,
+			Result
+		FROM foreach(row=Definitions,
+					query={
+			SELECT Filename,
+				verify(artifact=Data,
+						repository="local",
+						disable_override=DisableOverride) AS Result
+			FROM scope()
+		})
 	`
 
 	scope := manager.BuildScope(builder)
