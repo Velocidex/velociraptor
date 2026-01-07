@@ -17,6 +17,10 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
+const (
+	REPOSITORY_CACHE_TAG = "__REPOSITORY_"
+)
+
 type ArtifactSetFunctionArgs struct {
 	Definition string   `vfilter:"optional,field=definition,doc=Artifact definition in YAML"`
 	Prefix     string   `vfilter:"optional,field=prefix,doc=Optional name prefix (deprecated ignored)"`
@@ -96,7 +100,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 
 	if arg.Repository != "" {
 		var local_repository services.Repository
-		cached_any := vql_subsystem.CacheGet(scope, arg.Repository)
+		cached_any := vql_subsystem.CacheGet(scope, REPOSITORY_CACHE_TAG+arg.Repository)
 
 		if cached_repository, ok := cached_any.(services.Repository); ok {
 			local_repository = cached_repository
@@ -117,7 +121,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 		}
 
 		scope.Log("artifact_set: added %s to repository '%s'", definition.Name, arg.Repository)
-		vql_subsystem.CacheSet(scope, arg.Repository, local_repository)
+		vql_subsystem.CacheSet(scope, REPOSITORY_CACHE_TAG+arg.Repository, local_repository)
 
 		return json.ConvertProtoToOrderedDict(definition)
 	}
