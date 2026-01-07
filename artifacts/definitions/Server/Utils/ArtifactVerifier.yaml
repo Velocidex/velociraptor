@@ -40,7 +40,7 @@ sources:
         regex='''^name:\s*(.+)''', string=Artifact).g1
 
     LET Files = SELECT OSPath,
-                       read_file(filename=OSPath, length=4194304) AS Data
+                       read_file(filename=OSPath) AS Data
       FROM glob(globs=SearchGlob)
 
     LET Artifacts <= SELECT *,
