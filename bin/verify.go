@@ -81,7 +81,8 @@ func doVerify() error {
 		SELECT Filename, Result FROM foreach(
 			row=Definitions,
 			query={
-          SELECT Filename, verify(artifact=Data, repository="local") AS Result
+          SELECT Filename,
+		    verify(artifact=Data, repository="local", disable_override=DisableOverride) AS Result
           FROM scope()
        })
 	`
