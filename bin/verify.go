@@ -19,6 +19,7 @@ var (
 	verify                = artifact_command.Command("verify", "Verify a set of artifacts")
 	verify_args           = verify.Arg("paths", "Paths to artifact yaml files").Required().Strings()
 	verify_allow_override = verify.Flag("builtin", "Allow overriding of built in artifacts").Bool()
+	verify_issues_only    = verify.Flag("issues_only", "If set, we only emit warning and error messages").Bool()
 )
 
 func doVerify() error {
@@ -121,7 +122,9 @@ func doVerify() error {
 				continue
 			}
 			if len(state.Errors) == 0 {
-				logger.Info("Verified %v: <green>OK</>", artifact_path)
+				if !*verify_issues_only {
+					logger.Info("Verified %v: <green>OK</>", artifact_path)
+				}
 			}
 			for _, err := range state.Errors {
 				logger.Error("%v: <red>%v</>", artifact_path, err)
