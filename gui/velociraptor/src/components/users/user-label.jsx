@@ -9,7 +9,6 @@ import PropTypes from 'prop-types';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
 import { withRouter }  from "react-router-dom";
 
 import Accordion from 'react-bootstrap/Accordion';
@@ -223,7 +222,6 @@ class UserSettingsDialog extends React.PureComponent {
     }
 
     render() {
-
         return (
             <Modal show={true}
                    dialogClassName="modal-70w"
@@ -240,14 +238,20 @@ class UserSettingsDialog extends React.PureComponent {
                       </ToolTip>
                     </Form.Label>
                     <Col sm="8">
-                      <Form.Control as="select"
-                                    value={this.state.org}
-                                    placeholder={T("Select an org")}
-                                    onChange={e=>this.changeOrg(e.currentTarget.value)}>
-                        {_.map(this.context.traits.orgs || [], function(x) {
-                            return <option key={x.id} value={x.id}>{x.name}</option>;
-                        })}
-                      </Form.Control>
+                      <Select
+                        value={this.state.org}
+                        placeholder={T("Select an org")}
+                        classNamePrefix="velo"
+                        onChange={e=>this.changeOrg(e.value)}
+                        spellCheck="false"
+                        options={_.map(_.sortBy(
+                            this.context.traits.orgs, x=>x.name) || [],
+                                       k=>{
+                                           return {value: k.id,
+                                                   label: k.name,
+                                                   isFixed: true};
+                                       })}
+                      />
                     </Col>
                   </Form.Group>
                 }

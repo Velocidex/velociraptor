@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
@@ -148,8 +149,10 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 		}
 	}
 
+	count_reader := utils.NewCountingReader(reader)
+
 	req, err := http.NewRequestWithContext(ctx,
-		http.MethodPut, parsedUrl.String(), reader)
+		http.MethodPut, parsedUrl.String(), count_reader)
 	if err != nil {
 		return &uploads.UploadResponse{
 			Error: err.Error(),
@@ -173,8 +176,9 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 	scope.Log("upload_webdav: HTTP status %v", resp.StatusCode)
 
 	return &uploads.UploadResponse{
-		Path: name,
-		Size: uint64(size),
+		Path:       name,
+		Size:       uint64(size),
+		StoredSize: uint64(count_reader.Count),
 	}, nil
 }
 
