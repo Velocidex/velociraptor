@@ -13,6 +13,7 @@ import (
 
 type VerifyFunctionArgs struct {
 	Artifact        string `vfilter:"required,field=artifact,doc=The artifact to verify. This can be an artifact source in yaml or json or the name of an artifact"`
+	Repository      string `vfilter:"optional,field=repository,doc=The repository to use for verification, if not set, we default to the global repository."`
 	DisableOverride bool   `vfilter:"optional,field=disable_override,doc=If set, we do not allow override of built-in artifacts (allowed by default)"`
 }
 
@@ -55,6 +56,14 @@ This function will verify the artifact and flag any potential errors or warnings
 				}
 
 				state := launcher.NewAnalysisState(arg.Artifact)
+
+				if arg.Repository != "" {
+					cached_any := vql_subsystem.CacheGet(scope, arg.Repository)
+
+					if cached_repository, ok := cached_any.(services.Repository); ok {
+						repository = cached_repository
+					}
+				}
 
 				artifact, pres := repository.Get(ctx, config_obj, arg.Artifact)
 				if !pres {
