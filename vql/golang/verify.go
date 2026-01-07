@@ -7,12 +7,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	vql_server "www.velocidex.com/golang/velociraptor/vql/server"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
-)
-
-const (
-	REPOSITORY_CACHE_TAG = "__REPOSITORY_"
 )
 
 type VerifyFunctionArgs struct {
@@ -62,7 +59,7 @@ This function will verify the artifact and flag any potential errors or warnings
 				state := launcher.NewAnalysisState(arg.Artifact)
 
 				if arg.Repository != "" {
-					cached_any := vql_subsystem.CacheGet(scope, REPOSITORY_CACHE_TAG+arg.Repository)
+					cached_any := vql_subsystem.CacheGet(scope, vql_server.REPOSITORY_CACHE_TAG+arg.Repository)
 
 					if cached_repository, ok := cached_any.(services.Repository); ok {
 						repository = cached_repository
