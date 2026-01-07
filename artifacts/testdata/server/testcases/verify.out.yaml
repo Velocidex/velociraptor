@@ -49,24 +49,40 @@ Query: SELECT summary, artifacts, { SELECT *, basename(path=path) as path FROM r
 Output: [
  {
   "summary": {
-   "total": 4,
-   "passed": 2,
+   "total": 6,
+   "passed": 4,
    "failed": 2,
    "warnings": 1
   },
   "artifacts": [
+   "Caller",
    "Good",
+   "Generic.Client.Info",
    "BrokenYaml",
    "BrokenQuery",
    "WarnningExecve"
   ],
   "results": [
    {
+    "name": "Caller",
+    "passed": true,
+    "errors": [],
+    "warnings": [],
+    "path": "caller.yaml"
+   },
+   {
     "name": "Good",
     "passed": true,
     "errors": [],
     "warnings": [],
     "path": "good.yaml"
+   },
+   {
+    "name": "Generic.Client.Info",
+    "passed": true,
+    "errors": [],
+    "warnings": [],
+    "path": "info.yaml"
    },
    {
     "name": "BrokenYaml",
