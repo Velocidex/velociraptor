@@ -60,6 +60,9 @@ type _SplunkPluginArgs struct {
 	TimestampField string              `vfilter:"optional,field=timestamp_field,doc=Field to use as event timestamp."`
 	HostnameField  string              `vfilter:"optional,field=hostname_field,doc=Field to use as event hostname. Overrides hostname parameter."`
 	Secret         string              `vfilter:"optional,field=secret,doc=Alternatively use a secret from the secrets service. Secret must be of type 'Splunk'"`
+	MaxRetries     int64               `vfilter:"optional,field=max_retries,doc=Maximum number of retries for failed uploads (default: 3)."`
+	RetryWait      int64               `vfilter:"optional,field=retry_wait,doc=Base wait time in seconds for exponential backoff between retries (default: 2). Actual wait times: 2s, 4s, 8s, 16s..."`
+	IdleConnTimeout int64              `vfilter:"optional,field=idle_conn_timeout,doc=How long to keep idle HTTP connections open in seconds (default: 55). Lower values help with firewalls/load balancer/HECs that close connections."`
 }
 
 type _SplunkPlugin struct{}
@@ -122,6 +125,18 @@ func (self _SplunkPlugin) Call(ctx context.Context,
 			arg.WaitTime = 2
 		}
 
+		if arg.MaxRetries == 0 {
+			arg.MaxRetries = 3
+		}
+
+		if arg.RetryWait == 0 {
+			arg.RetryWait = 2
+		}
+
+		if arg.IdleConnTimeout == 0 {
+			arg.IdleConnTimeout = 55
+		}
+
 		if len(arg.SourceType) == 0 {
 			arg.SourceType = "vql"
 		}
@@ -180,6 +195,7 @@ func _upload_rows(
 			Transport: &http.Transport{
 				Proxy:           networking.GetProxy(),
 				TLSClientConfig: tlsConfig,
+				IdleConnTimeout: time.Duration(arg.IdleConnTimeout) * time.Second,
 			},
 		}, // Optional HTTP Client objects
 		arg.URL,
@@ -302,22 +318,43 @@ func send_to_splunk(
 		}
 	}
 
-	err := client.LogEvents(events)
+	// Attempt to send events with retry logic
+	var err error
+	for attempt := int64(0); attempt <= arg.MaxRetries; attempt++ {
+		err = client.LogEvents(events)
 
-	if err != nil {
-		select {
-		case <-ctx.Done():
+		if err == nil {
+			// Success
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- ordereddict.NewDict().
+				Set("Response", len(buf)):
+			}
 			return
-		case output_chan <- ordereddict.NewDict().
-			Set("Response", err.Error()):
 		}
-	} else {
-		select {
-		case <-ctx.Done():
-			return
-		case output_chan <- ordereddict.NewDict().
-			Set("Response", len(buf)):
+
+		// If this wasn't the last attempt, wait before retrying with exponential backoff
+		if attempt < arg.MaxRetries {
+			// Exponential backoff: retry_wait * 2^attempt (e.g., 2s, 4s, 8s, 16s)
+			backoffWait := time.Duration(arg.RetryWait*(1<<attempt)) * time.Second
+			scope.Log("splunk_upload: attempt %d failed: %v, retrying in %v...", attempt+1, err, backoffWait)
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(backoffWait):
+				// Continue to next retry
+			}
 		}
+	}
+
+	// All retries exhausted
+	scope.Log("ERROR:splunk_upload: all %d attempts failed: %v", arg.MaxRetries+1, err)
+	select {
+	case <-ctx.Done():
+		return
+	case output_chan <- ordereddict.NewDict().
+		Set("Response", err.Error()):
 	}
 }
 
