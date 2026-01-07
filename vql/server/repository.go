@@ -110,10 +110,25 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 			local_repository.SetParent(global_repository, config_obj)
 		}
 
-		definition, err := local_repository.LoadYaml(arg.Definition,
+		// Determine if this is a built-in artifact
+		tmp_repository := local_repository.Copy()
+		built_in := false
+
+		artifact, err := tmp_repository.LoadYaml(arg.Definition,
 			services.ArtifactOptions{
 				ValidateArtifact:  true,
 				ArtifactIsBuiltIn: true,
+			})
+		if err == nil {
+			if global_artifact, pres := global_repository.Get(ctx, config_obj, artifact.Name); pres {
+				built_in = global_artifact.BuiltIn
+			}
+		}
+
+		definition, err := local_repository.LoadYaml(arg.Definition,
+			services.ArtifactOptions{
+				ValidateArtifact:  true,
+				ArtifactIsBuiltIn: built_in,
 			})
 		if err != nil {
 			scope.Log("artifact_set: %s", err)
