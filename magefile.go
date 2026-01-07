@@ -63,7 +63,12 @@ var (
 	musl_xcompiler     = "musl-gcc"
 	name               = "velociraptor"
 	version            = "v" + constants.VERSION
-	base_tags          = " server_vql extras "
+
+	// https://github.com/googleapis/google-cloud-go/issues/11448
+	// google cloud suddenly increased its dependency size by about
+	// 20mb without warning. This little documented tag is used to
+	// remove useless bloat.
+	base_tags = " server_vql extras disable_grpc_modules "
 )
 
 func ReadAllWithLimit(

@@ -188,3 +188,20 @@ func NewOffsetReader(reader io.ReaderAt, offset, size int64) io.ReaderAt {
 		length: offset + size,
 	}
 }
+
+type CountingReader struct {
+	Reader io.Reader
+	Count  int
+}
+
+func (self *CountingReader) Read(b []byte) (n int, err error) {
+	n, err = self.Reader.Read(b)
+	self.Count += n
+	return n, err
+}
+
+func NewCountingReader(r io.Reader) *CountingReader {
+	return &CountingReader{
+		Reader: r,
+	}
+}
