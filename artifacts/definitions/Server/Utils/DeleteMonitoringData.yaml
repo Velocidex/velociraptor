@@ -59,8 +59,13 @@ sources:
                timestamp(epoch=split(string=OSPath.Basename, sep="\\.")[0]) AS Timestamp,
                if(condition=ReallyDoIt, then=file_store_delete(path=OSPath)) AS ReallyDoIt
         FROM glob(
-          globs="/**.json*", accessor="fs",
-          root="/clients/"+ ClientId + "/monitoring")
+          globs=[
+            "/monitoring/**.json*",
+            "/monitoring_logs/**.json*"
+          ],
+          accessor="fs",
+          root="/clients/" + ClientId
+        )
         WHERE ArtifactName =~ ArtifactRegex
           AND Timestamp < DateBefore
       }, workers=10)
