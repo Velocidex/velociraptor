@@ -81,6 +81,11 @@ func doClientRPM() error {
 		*client_rpm_command_output = "."
 	}
 
+	// By default it should be set to A
+	if *rpm_command_release == "" {
+		*rpm_command_release = "A"
+	}
+	
 	logger := &LogWriter{config_obj: sm.Config}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
@@ -141,7 +146,12 @@ func doServerRPM() error {
 	if *server_rpm_command_output == "" {
 		*server_rpm_command_output = "."
 	}
-
+	
+	// By default it should be set to A
+	if *rpm_command_release == "" {
+		*rpm_command_release = "A"
+	}
+	
 	logger := &LogWriter{config_obj: sm.Config}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
