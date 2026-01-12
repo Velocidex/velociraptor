@@ -143,6 +143,9 @@
   --hex-highlight-foreground: #FFFFFF;
 
   --invalid-form-control-error: #5A1D1D;
+
+  --hljs-color: #FFFFFF;
+  --hljs-comment: #4EC9B0;
 }
 
 body.vscode-dark {

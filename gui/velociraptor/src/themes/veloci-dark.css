@@ -131,6 +131,9 @@
   --color-level-error: #ff0000;
 
   --invalid-form-control-error: #3f0505;
+
+  --hljs-color: #FFFFFF;
+  --hljs-comment: #4EC9B0;
 }
 
 body.veloci-dark {

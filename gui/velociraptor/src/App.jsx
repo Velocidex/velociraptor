@@ -8,6 +8,7 @@ import VeloNavigator from './components/sidebar/navigator.jsx';
 import GlobalMessages from './components/users/global-messages.jsx';
 import VeloClientSearch from './components/clients/search.jsx';
 import VeloClientList from './components/clients/clients-list.jsx';
+import DocButton from './components/docs/doc-button.jsx';
 import VeloHostInfo from './components/clients/host-info.jsx';
 import ServerInfo from './components/server/server-info.jsx';
 import ClientSetterFromRoute from './components/clients/client_info.jsx';
@@ -37,6 +38,7 @@ import { UserSettings } from './components/core/user.jsx';
 import { Switch, Route, withRouter } from "react-router-dom";
 import { Join } from './components/utils/paths.jsx';
 import SecretManager from './components/secrets/secrets.jsx';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
@@ -226,7 +228,10 @@ class App extends Component {
                  </div>
                  <Navbar fixed="bottom" className="app-footer justify-content-between ">
                    <Nav>
-                     <GlobalMessages/>
+                     <ButtonGroup>
+                       <GlobalMessages/>
+                       <DocButton />
+                     </ButtonGroup>
                    </Nav>
                    <Nav>
                      <VeloLiveClock className="float-right" />

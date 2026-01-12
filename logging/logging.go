@@ -111,7 +111,6 @@ func InitLogging(config_obj *config_proto.Config) error {
 	for _, component := range components {
 		logger, err := new_manager.makeNewComponent(config_obj, component)
 		if err != nil {
-			mu.Unlock()
 			return err
 		}
 		new_manager.contexts[component] = logger

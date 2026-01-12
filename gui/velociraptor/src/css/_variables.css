@@ -92,4 +92,16 @@
     --hex-highlight-foreground: var(--color-canvas-background);
 
     --invalid-form-control-error:  linear-gradient(to bottom, #f2dede 0%, #e7c3c3 100%);
+
+    --hljs-color: #404040;
+    --hljs-background: #ffffff;
+    --hljs-color-selection: #c0c0c0;
+    --hljs-comment: #808080;
+    --hljs-name: #c41a15;
+    --hljs-literal: #eb8500;
+    --hljs-title:  #826b28;
+    --hljs-code: #007400;
+    --hljs-quote: #318495;
+    --hljs-func: #0000ff;
+    --hljs-keyword: #a90d91;
 }

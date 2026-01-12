@@ -36,7 +36,7 @@
   --accent-color: red;
   --color-accent: 135, 184, 221;
   --color-accent-complement: blue;
-  --color-accent-100: #ff0000;
+  --color-accent-100: #ffffffff;
   --color-accent-75: #BF0000;
   --color-accent-50: #800000;
   --color-accent-25: #400000;
@@ -117,6 +117,8 @@
   --color-danger-emphasis: #dd4b3920;
 
   --invalid-form-control-error: #ff7f00;
+
+
 }
 
 .midnight img.velo-logo {

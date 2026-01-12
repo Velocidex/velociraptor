@@ -4,6 +4,7 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 import {CancelToken} from 'axios';
+import { cleanupHTML } from '../core/sanitize.jsx';
 import parseHTML from '../core/sanitize.jsx';
 
 import api from '../core/api-service.jsx';
@@ -131,25 +132,8 @@ export default class VeloReportViewer extends React.Component {
         });
     }
 
-    cleanupHTML = (html) => {
-        // React expect no whitespace between table elements
-        html = html.replace(/>\s*<thead/g, "><thead");
-        html = html.replace(/>\s*<tbody/g, "><tbody");
-        html = html.replace(/>\s*<tr/g, "><tr");
-        html = html.replace(/>\s*<th/g, "><th");
-        html = html.replace(/>\s*<td/g, "><td");
-
-        html = html.replace(/>\s*<\/thead/g, "></thead");
-        html = html.replace(/>\s*<\/tbody/g, "></tbody");
-        html = html.replace(/>\s*<\/tr/g, "></tr");
-        html = html.replace(/>\s*<\/th/g, "></th");
-        html = html.replace(/>\s*<\/td/g, "></td");
-
-        return html;
-    }
-
     render() {
-        let template = parseHTML(this.cleanupHTML(this.state.template), {
+        let template = parseHTML(cleanupHTML(this.state.template), {
             replace: (domNode) => {
                 if (domNode.name === "velo-csv-viewer") {
                     try {

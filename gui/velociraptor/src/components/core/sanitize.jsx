@@ -9,6 +9,7 @@ import DOMPurify from 'dompurify';
 
 export function sanitize(html) {
     let clean = DOMPurify.sanitize(html, {
+        USE_PROFILES: { html: true },
 
         // Line up with NewBlueMondayPolicy() in reporting/gui.go
         CUSTOM_ELEMENT_HANDLING: {
@@ -23,6 +24,25 @@ export function sanitize(html) {
     return clean;
 }
 
+export function cleanupHTML(html) {
+    // React expect no whitespace between table elements
+    html = html.replace(/>\s*<thead/g, "><thead");
+    html = html.replace(/>\s*<tbody/g, "><tbody");
+    html = html.replace(/>\s*<tr/g, "><tr");
+    html = html.replace(/>\s*<th/g, "><th");
+    html = html.replace(/>\s*<td/g, "><td");
+
+    html = html.replace(/>\s*<\/thead/g, "></thead");
+    html = html.replace(/>\s*<\/tbody/g, "></tbody");
+    html = html.replace(/>\s*<\/tr/g, "></tr");
+    html = html.replace(/>\s*<\/th/g, "></th");
+    html = html.replace(/>\s*<\/td/g, "></td");
+
+    return html;
+};
+
+
 export default function parseHTML(html, options) {
+    html = cleanupHTML(html);
     return parse(sanitize(html), options);
 }

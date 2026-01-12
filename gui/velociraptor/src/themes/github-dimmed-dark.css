@@ -129,6 +129,10 @@
 
   --color-level-error: #aa0000;
   --invalid-form-control-error: #aa0000;
+
+  --hljs-color: #FFFFFF;
+  --hljs-comment: #4EC9B0;
+  --hljs-keyword: #2aabd2;
 }
 
 body.github-dimmed-dark {

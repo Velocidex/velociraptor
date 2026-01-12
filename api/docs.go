@@ -1,5 +1,12 @@
 package api
 
+import (
+	"context"
+
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/services"
+)
+
 /*
 
 # How does the Velociraptor server work?
@@ -69,3 +76,22 @@ NOTE: The gateway's certificates are critical to protect - if an actor
 
 
 */
+
+func (self *ApiServer) SearchDocs(
+	ctx context.Context,
+	in *api_proto.DocSearchRequest) (*api_proto.DocSearchResponses, error) {
+
+	users := services.GetUserManager()
+	_, org_config_obj, err := users.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	// All users can search the docs with no permission required.
+	doc_manager, err := services.GetDocManager(org_config_obj)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	return doc_manager.Search(ctx, in.Query, int(in.Start), int(in.Length))
+}
