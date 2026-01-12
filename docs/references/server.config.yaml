@@ -561,7 +561,7 @@ GUI:
   ## authenticator to use.
   authenticator:
     ## The type of authenticator to use. Currently:
-    ## basic, google, azure, oidc-cognito, github, saml, oidc, multi
+    ## basic, google, azure, oidc-cognito (prior to v0.75.6), github, saml, oidc, multi
     type: basic
 
     ## Used by SAML authenticator
