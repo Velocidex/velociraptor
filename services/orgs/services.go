@@ -18,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
+	"www.velocidex.com/golang/velociraptor/services/docs"
 	"www.velocidex.com/golang/velociraptor/services/exports"
 	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
@@ -65,6 +66,7 @@ type ServiceContainer struct {
 	secrets                 services.SecretsService
 	backups                 services.BackupService
 	export_manager          services.ExportManager
+	doc_manager             services.DocManager
 }
 
 func (self *ServiceContainer) MockFrontendManager(svc services.FrontendManager) {
@@ -239,6 +241,16 @@ func (self *ServiceContainer) Journal() (services.JournalService, error) {
 		return nil, errors.New("Journal service not ready")
 	}
 	return self.journal, nil
+}
+
+func (self *ServiceContainer) DocManager() (services.DocManager, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.doc_manager == nil {
+		return nil, errors.New("Doc Manager service not ready")
+	}
+	return self.doc_manager, nil
 }
 
 func (self *ServiceContainer) ClientInfoManager() (services.ClientInfoManager, error) {
@@ -569,8 +581,14 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 			return err
 		}
 
+		dm, err := docs.NewDocManager(ctx, wg, org_config)
+		if err != nil {
+			return err
+		}
+
 		service_container.mu.Lock()
 		service_container.repository = repo_manager
+		service_container.doc_manager = dm
 		service_container.mu.Unlock()
 	}
 

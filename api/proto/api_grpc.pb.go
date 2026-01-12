@@ -80,6 +80,8 @@ type APIClient interface {
 	GetArtifactFile(ctx context.Context, in *GetArtifactRequest, opts ...grpc.CallOption) (*GetArtifactResponse, error)
 	SetArtifactFile(ctx context.Context, in *SetArtifactRequest, opts ...grpc.CallOption) (*SetArtifactResponse, error)
 	LoadArtifactPack(ctx context.Context, in *LoadArtifactPackRequest, opts ...grpc.CallOption) (*LoadArtifactPackResponse, error)
+	// Documentation
+	SearchDocs(ctx context.Context, in *DocSearchRequest, opts ...grpc.CallOption) (*DocSearchResponses, error)
 	// Tools
 	GetToolInfo(ctx context.Context, in *proto1.Tool, opts ...grpc.CallOption) (*proto1.Tool, error)
 	SetToolInfo(ctx context.Context, in *proto1.Tool, opts ...grpc.CallOption) (*proto1.Tool, error)
@@ -555,6 +557,15 @@ func (c *aPIClient) LoadArtifactPack(ctx context.Context, in *LoadArtifactPackRe
 	return out, nil
 }
 
+func (c *aPIClient) SearchDocs(ctx context.Context, in *DocSearchRequest, opts ...grpc.CallOption) (*DocSearchResponses, error) {
+	out := new(DocSearchResponses)
+	err := c.cc.Invoke(ctx, "/proto.API/SearchDocs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *aPIClient) GetToolInfo(ctx context.Context, in *proto1.Tool, opts ...grpc.CallOption) (*proto1.Tool, error) {
 	out := new(proto1.Tool)
 	err := c.cc.Invoke(ctx, "/proto.API/GetToolInfo", in, out, opts...)
@@ -1018,6 +1029,8 @@ type APIServer interface {
 	GetArtifactFile(context.Context, *GetArtifactRequest) (*GetArtifactResponse, error)
 	SetArtifactFile(context.Context, *SetArtifactRequest) (*SetArtifactResponse, error)
 	LoadArtifactPack(context.Context, *LoadArtifactPackRequest) (*LoadArtifactPackResponse, error)
+	// Documentation
+	SearchDocs(context.Context, *DocSearchRequest) (*DocSearchResponses, error)
 	// Tools
 	GetToolInfo(context.Context, *proto1.Tool) (*proto1.Tool, error)
 	SetToolInfo(context.Context, *proto1.Tool) (*proto1.Tool, error)
@@ -1219,6 +1232,9 @@ func (UnimplementedAPIServer) SetArtifactFile(context.Context, *SetArtifactReque
 }
 func (UnimplementedAPIServer) LoadArtifactPack(context.Context, *LoadArtifactPackRequest) (*LoadArtifactPackResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoadArtifactPack not implemented")
+}
+func (UnimplementedAPIServer) SearchDocs(context.Context, *DocSearchRequest) (*DocSearchResponses, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SearchDocs not implemented")
 }
 func (UnimplementedAPIServer) GetToolInfo(context.Context, *proto1.Tool) (*proto1.Tool, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetToolInfo not implemented")
@@ -2154,6 +2170,24 @@ func _API_LoadArtifactPack_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _API_SearchDocs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DocSearchRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).SearchDocs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/SearchDocs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).SearchDocs(ctx, req.(*DocSearchRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _API_GetToolInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(proto1.Tool)
 	if err := dec(in); err != nil {
@@ -3020,6 +3054,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LoadArtifactPack",
 			Handler:    _API_LoadArtifactPack_Handler,
+		},
+		{
+			MethodName: "SearchDocs",
+			Handler:    _API_SearchDocs_Handler,
 		},
 		{
 			MethodName: "GetToolInfo",

@@ -12,6 +12,7 @@ import "google/protobuf/empty.proto";
 import "artifacts.proto";
 import "clients.proto";
 import "datastore.proto";
+import "docs.proto";
 import "health.proto";
 import "hunts.proto";
 import "flows.proto";
@@ -411,6 +412,13 @@ service API {
         option (google.api.http) = {
             post: "/api/v1/LoadArtifactPack",
             body: "*",
+        };
+    }
+
+    // Documentation
+    rpc SearchDocs(DocSearchRequest) returns (DocSearchResponses) {
+        option (google.api.http) = {
+            get: "/api/v1/SearchDocs",
         };
     }
 

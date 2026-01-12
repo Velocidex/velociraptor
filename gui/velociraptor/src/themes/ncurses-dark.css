@@ -102,6 +102,9 @@
   --color-level-error: #ef5350;
 
   --invalid-form-control-error: #ff6666;
+
+  --hljs-color: #FFFFFF;
+  --hljs-comment: #4EC9B0;
 }
 
 body.ncurses-dark {

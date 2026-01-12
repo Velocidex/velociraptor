@@ -39,3 +39,7 @@ tools:
     url: https://github.com/Velocidex/velociraptor/releases/download/v0.75/velociraptor-v0.75.6-windows-386.msi
     serve_locally: true
     version: 0.75.6
+
+  - name: DocsIndex
+    url: https://docs.velociraptor.app/docs_index/docs_index_v1.zip
+    serve_locally: true
