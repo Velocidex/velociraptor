@@ -22,6 +22,7 @@ import ToolViewer from '../tools/tool-viewer.jsx';
 import markdownit from 'markdown-it';
 import { TablePaginationControl } from '../core/paged-table.jsx';
 import InputGroup from 'react-bootstrap/InputGroup';
+import Image from './image.jsx';
 
 import "./docs.css";
 
@@ -127,7 +128,22 @@ class HelpDialog extends Component {
     }
 
     sanitize = text=>{
-        return parseHTML(text);
+        return parseHTML(text, {
+            replace: domNode=>{
+                if(domNode.name === "img") {
+                    let attr = domNode.attribs || {};
+                    return <Image alt={attr.alt} src={attr.src} />;
+                }
+
+                // Make sure images are opened in a new tab.
+                if(domNode.name === "a") {
+                    domNode.attribs.target = "_blank";
+                    domNode.attribs.rel = "noopener noreferrer";
+                    return domNode;
+                }
+
+                return domNode;
+            }});
     }
 
     render() {
@@ -147,7 +163,7 @@ class HelpDialog extends Component {
 
         return (
             <Modal show={true}
-                   dialogClassName="modal-90w"
+                   dialogClassName="modal-70w"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
                 <Modal.Title>{T("Search Documentation")}</Modal.Title>

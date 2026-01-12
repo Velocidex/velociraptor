@@ -201,3 +201,41 @@ code.hljs {
 .hljs-meta-keyword {
   font-weight: bold;
 }
+
+a.image-popup {
+    width: 100%;
+}
+
+.image-popup span {
+    text-align: center;
+    max-width: 100%;
+    display: block;
+}
+
+.image-popup img {
+    margin-top: 2rem;
+    margin-right: auto;
+    margin-left: auto;
+    margin-bottom: 1rem;
+    text-align: center;
+    max-width: 80%;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgb(0 0 0 / 50%);
+}
+
+span.figcaption {
+    color: var(--color-foreground);
+}
+
+.image-popup .modal-body {
+    text-align: center;
+    width: 100%;
+}
+
+img.fullscreen-popup {
+    margin: 20px;
+}
+
+.image-popup.modal.show {
+    background: var(--color-foreground);
+}
