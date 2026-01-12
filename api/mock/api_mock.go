@@ -241,26 +241,6 @@ func (mr *MockAPIClientMockRecorder) CreateUser(arg0, arg1 interface{}, arg2 ...
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockAPIClient)(nil).CreateUser), varargs...)
 }
 
-// DefineSecret mocks base method.
-func (m *MockAPIClient) DefineSecret(arg0 context.Context, arg1 *proto0.SecretDefinition, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "DefineSecret", varargs...)
-	ret0, _ := ret[0].(*emptypb.Empty)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// DefineSecret indicates an expected call of DefineSecret.
-func (mr *MockAPIClientMockRecorder) DefineSecret(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DefineSecret", reflect.TypeOf((*MockAPIClient)(nil).DefineSecret), varargs...)
-}
-
 // DeleteNotebook mocks base method.
 func (m *MockAPIClient) DeleteNotebook(arg0 context.Context, arg1 *proto0.NotebookMetadata, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
@@ -279,26 +259,6 @@ func (mr *MockAPIClientMockRecorder) DeleteNotebook(arg0, arg1 interface{}, arg2
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNotebook", reflect.TypeOf((*MockAPIClient)(nil).DeleteNotebook), varargs...)
-}
-
-// DeleteSecretDefinition mocks base method.
-func (m *MockAPIClient) DeleteSecretDefinition(arg0 context.Context, arg1 *proto0.SecretDefinition, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "DeleteSecretDefinition", varargs...)
-	ret0, _ := ret[0].(*emptypb.Empty)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// DeleteSecretDefinition indicates an expected call of DeleteSecretDefinition.
-func (mr *MockAPIClientMockRecorder) DeleteSecretDefinition(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSecretDefinition", reflect.TypeOf((*MockAPIClient)(nil).DeleteSecretDefinition), varargs...)
 }
 
 // DeleteSubject mocks base method.
@@ -1279,6 +1239,26 @@ func (mr *MockAPIClientMockRecorder) Scheduler(arg0 interface{}, arg1 ...interfa
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Scheduler", reflect.TypeOf((*MockAPIClient)(nil).Scheduler), varargs...)
+}
+
+// SearchDocs mocks base method.
+func (m *MockAPIClient) SearchDocs(arg0 context.Context, arg1 *proto0.DocSearchRequest, arg2 ...grpc.CallOption) (*proto0.DocSearchResponses, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SearchDocs", varargs...)
+	ret0, _ := ret[0].(*proto0.DocSearchResponses)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SearchDocs indicates an expected call of SearchDocs.
+func (mr *MockAPIClientMockRecorder) SearchDocs(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchDocs", reflect.TypeOf((*MockAPIClient)(nil).SearchDocs), varargs...)
 }
 
 // SearchFile mocks base method.
