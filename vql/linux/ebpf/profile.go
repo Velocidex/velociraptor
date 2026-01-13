@@ -21,19 +21,25 @@ func WriteProfile(ctx context.Context,
 
 	} else {
 		stats := gEbpfManager.Stats()
-		idle := ""
-		if stats.NumberOfListeners == 0 {
-			idle = stats.IdleTime.String()
+
+		if len(stats.Listeners) == 0 {
+			output_chan <- ordereddict.NewDict().
+				Set("EBFProgramStatus", stats.EBFProgramStatus).
+				Set("IdleTime", stats.IdleTime.String()).
+				Set("IdleUnloadTimeout", stats.IdleUnloadTimeout.String())
+			return
 		}
 
-		output_chan <- ordereddict.NewDict().
-			Set("EBFProgramStatus", stats.EBFProgramStatus).
-			Set("NumberOfListeners", stats.NumberOfListeners).
-			Set("EIDMonitored", stats.EIDMonitored).
-			Set("IdleTime", idle).
-			Set("IdleUnloadTimeout", stats.IdleUnloadTimeout.String()).
-			Set("PrefilteredCount", stats.PrefilterEventCount).
-			Set("EventCount", stats.EventCount)
+		for _, l := range stats.Listeners {
+			output_chan <- ordereddict.NewDict().
+				Set("EBFProgramStatus", stats.EBFProgramStatus).
+				Set("IdleTime", "").
+				Set("IdleUnloadTimeout", stats.IdleUnloadTimeout.String()).
+				Set("PoilcyID", l.PolicyID).
+				Set("Poilcy", l.Policy).
+				Set("EventCount", l.EventCount).
+				Set("EIDMonitored", l.EIDMonitored)
+		}
 	}
 }
 
