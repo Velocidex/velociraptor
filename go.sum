@@ -127,8 +127,8 @@ github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1 h1:fLJ2AjY0dtDZ
 github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1/go.mod h1:UpFVihkMZWl2JRkVRiZYie0e2l7Ry+vjlCHCs6XVKGU=
 github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250 h1:GhiTVVoHNhb0mzUDgieUwjfJeEaUHCHIVvV/mHzLQOI=
 github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250/go.mod h1:ukLFs2t1+ud7MC4oN+zImhtTRP/eQHaDL3TwLs58uUA=
-github.com/Velocidex/tracee_velociraptor v0.0.0-20260113081034-dbc8107f6e3d h1:sO53DvohKarwGELhnDYAl1XKQ2lUsnjjKkCvT7XvD+U=
-github.com/Velocidex/tracee_velociraptor v0.0.0-20260113081034-dbc8107f6e3d/go.mod h1:yKAS4I7VYdd6FzlEitbrqxGLoLAIeujjqpbP6OOTKxU=
+github.com/Velocidex/tracee_velociraptor v0.0.0-20260113161018-f7c951ffeab2 h1:jlV2oHd2u9XQnGZxPB5zxqsG+iNAjBS1TVV/gnCaD6Q=
+github.com/Velocidex/tracee_velociraptor v0.0.0-20260113161018-f7c951ffeab2/go.mod h1:yKAS4I7VYdd6FzlEitbrqxGLoLAIeujjqpbP6OOTKxU=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130 h1:+QujZ0D7KSy3WJVchkOhMkvAUab6/CIisO5LCoN48q4=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130/go.mod h1:3/pI9BBAF7gydBWvMVtV7W1qRwshEG9lBwed/d8xfFg=
 github.com/Velocidex/velociraptor-site-search v0.0.0-20260112074704-546a177e6dad h1:AE7V8khX6vG/5jN0BRPQFY73eAZ1kIrFqnMatTl7oUw=

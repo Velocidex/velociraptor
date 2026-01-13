@@ -11852,16 +11852,6 @@
     to the VQL query. If you want to handle the events simply handle
     it in VQL.
 
-    NOTE: Currently all watchers that watch the same event id will
-    receive all events - regardless if their specific policy
-    applies or if another listener selected the same event with
-    another policy. Therefore events should be post-filtered again.
-
-    Therefore, Policy filters should be considered as a performance
-    optimization only. Your VQL query should **also** filter down the
-    events you are interested in to ensure that other ebpf queries'
-    policies do not match additional events.
-
     For example:
 
     ```yaml
@@ -11887,12 +11877,16 @@
 
     ```vql
     SELECT * FROM watch_ebpf(policy=Policy)
-    WHERE EventData.pathname =~ "^/home/"
     ```
 
-    Note that currently the additional VQL filter is needed to avoid
-    other ebpf listners from inserting additional policies into the
-    kernel.
+    NOTES:
+
+    1. The policy name is optional, if you do not specify it, a random
+       name is used. This is preferable to ensure that a second
+       instance of the query can register the same policy again.
+
+    2. There is a limit of 64 policies leading to a limit of 64
+       concurrent `watch_ebpf()` queries.
 
     ### See also
 
