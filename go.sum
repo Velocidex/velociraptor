@@ -127,8 +127,8 @@ github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1 h1:fLJ2AjY0dtDZ
 github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1/go.mod h1:UpFVihkMZWl2JRkVRiZYie0e2l7Ry+vjlCHCs6XVKGU=
 github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250 h1:GhiTVVoHNhb0mzUDgieUwjfJeEaUHCHIVvV/mHzLQOI=
 github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250/go.mod h1:ukLFs2t1+ud7MC4oN+zImhtTRP/eQHaDL3TwLs58uUA=
-github.com/Velocidex/tracee_velociraptor v0.0.0-20260102153735-470363a4efa4 h1:k7izTGQzBedw0wzOwVvSVNoYUd+y9usbbVIBz2C7Eto=
-github.com/Velocidex/tracee_velociraptor v0.0.0-20260102153735-470363a4efa4/go.mod h1:nOb8af1ftRw8owHabTPNZ0R2X2WnPt6BftzQDRzVlxs=
+github.com/Velocidex/tracee_velociraptor v0.0.0-20260113081034-dbc8107f6e3d h1:sO53DvohKarwGELhnDYAl1XKQ2lUsnjjKkCvT7XvD+U=
+github.com/Velocidex/tracee_velociraptor v0.0.0-20260113081034-dbc8107f6e3d/go.mod h1:yKAS4I7VYdd6FzlEitbrqxGLoLAIeujjqpbP6OOTKxU=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130 h1:+QujZ0D7KSy3WJVchkOhMkvAUab6/CIisO5LCoN48q4=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130/go.mod h1:3/pI9BBAF7gydBWvMVtV7W1qRwshEG9lBwed/d8xfFg=
 github.com/Velocidex/velociraptor-site-search v0.0.0-20260112074704-546a177e6dad h1:AE7V8khX6vG/5jN0BRPQFY73eAZ1kIrFqnMatTl7oUw=
@@ -177,8 +177,6 @@ github.com/andybalholm/cascadia v1.2.0/go.mod h1:YCyR8vOZT9aZ1CHEd8ap0gMVm2aFgxB
 github.com/andybalholm/cascadia v1.3.1/go.mod h1:R4bJ1UQfqADjvDa4P6HZHLh/3OxWWEqc0Sk8XGwHqvA=
 github.com/andybalholm/cascadia v1.3.2 h1:3Xi6Dw5lHF15JtdcmAHD3i1+T8plmv7BQ/nsViSLyss=
 github.com/andybalholm/cascadia v1.3.2/go.mod h1:7gtRlve5FxPPgIgX36uWBX58OdBsSS6lUvCFb+h7KvU=
-github.com/aquasecurity/tracee/api v0.0.0-20251229080346-032e875eaa90 h1:7c1+tK01z+wbie3Y6K49oRaRPjGVIK9zFFQh5VIPgqo=
-github.com/aquasecurity/tracee/api v0.0.0-20251229080346-032e875eaa90/go.mod h1:51UhfaqeC9MU/kMMQYHnHvz4jEu9J7E3GC0UfSO6xxw=
 github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de h1:FxWPpzIjnTlhPwqqXc4/vE0f7GvRjuAsbW+HOIe8KnA=
 github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de/go.mod h1:DCaWoUhZrYW9p1lxo/cm8EmUOOzAPSEZNGF2DK1dJgw=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=

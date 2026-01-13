@@ -9,7 +9,7 @@ import (
 	"regexp"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/Velocidex/tracee_velociraptor/userspace/ebpf"
+	"github.com/Velocidex/tracee_velociraptor/manager"
 	"github.com/Velocidex/tracee_velociraptor/userspace/events"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -19,12 +19,13 @@ import (
 )
 
 var (
-	gEbpfManager *ebpf.EBPFManager
+	gEbpfManager *manager.EBPFManager
 )
 
 type EBPFEventPluginArgs struct {
-	EventNames     []string `vfilter:"required,field=events,doc=A list of event names to acquire."`
+	EventNames     []string `vfilter:"optional,field=events,doc=A list of event names to acquire."`
 	IncludeEnv     bool     `vfilter:"optional,field=include_env,doc=Include process environment variables."`
+	Policy         string   `vfilter:"optional,field=policy,doc=Use a tracee policy in YAML format to specify events instead."`
 	RegexPrefilter string   `vfilter:"optional,field=regex_prefilter,doc=A regex that must match the raw buffer before we process it."`
 }
 
@@ -36,6 +37,7 @@ func (self EBPFEventPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 		Doc:      "Watch for events from eBPF.",
 		ArgType:  type_map.AddType(scope, &EBPFEventPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		Version:  2,
 	}
 }
 
@@ -65,7 +67,7 @@ func (self EBPFEventPlugin) Call(
 		var selected_events []events.ID
 
 		for _, event_name := range arg.EventNames {
-			desc, pres := ebpf.DescByEventName(event_name)
+			desc, pres := manager.DescByEventName(event_name)
 			if !pres {
 				scope.Error("watch_ebpf: invalid event name %v", event_name)
 				continue
@@ -76,25 +78,21 @@ func (self EBPFEventPlugin) Call(
 			}
 		}
 
-		if len(selected_events) == 0 {
-			scope.Error("watch_ebpf: no events to watch")
-			return
-		}
-
 		if gEbpfManager == nil {
 			config_obj, _ := vql_subsystem.GetServerConfig(scope)
 			logger := NewLogger(config_obj)
 			logger.SetScope(scope)
 
-			config := ebpf.Config{
-				Options: ebpf.OptTranslateFDFilePath,
+			config := manager.Config{
+				Options: manager.OptTranslateFDFilePath,
 			}
 
 			if arg.IncludeEnv {
-				config.Options |= ebpf.OptExecEnv | ebpf.OptTranslateFDFilePath
+				config.Options |= manager.OptExecEnv |
+					manager.OptTranslateFDFilePath
 			}
 
-			gEbpfManager, err = ebpf.NewEBPFManager(
+			gEbpfManager, err = manager.NewEBPFManager(
 				context.Background(), config, logger)
 			if err != nil {
 				scope.Log("watch_ebpf: %v", err)
@@ -103,8 +101,9 @@ func (self EBPFEventPlugin) Call(
 
 		}
 
-		opts := ebpf.EBPFWatchOptions{
+		opts := manager.EBPFWatchOptions{
 			SelectedEvents: selected_events,
+			Policy:         arg.Policy,
 		}
 
 		if arg.RegexPrefilter != "" {
@@ -162,7 +161,7 @@ func (self EBPFEventListPlugin) Call(
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "watch_ebpf", args)()
 
-		events := ebpf.GetEvents()
+		events := manager.GetEvents()
 		for _, i := range events.Items() {
 			select {
 			case <-ctx.Done():
