@@ -111,7 +111,7 @@ require (
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20250821063524-02dc06e46238
 	github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250
-	github.com/Velocidex/tracee_velociraptor v0.0.0-20260102153735-470363a4efa4
+	github.com/Velocidex/tracee_velociraptor v0.0.0-20260113081034-dbc8107f6e3d
 	github.com/Velocidex/velociraptor-site-search v0.0.0-20260112074704-546a177e6dad
 	github.com/Velocidex/yara-x-go v0.0.0-20251010010632-d8eaad9c539c
 	github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6
@@ -186,7 +186,6 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
-	github.com/aquasecurity/tracee/api v0.0.0-20251229080346-032e875eaa90 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.1 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.2 // indirect

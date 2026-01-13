@@ -9988,6 +9988,17 @@
     type: string
     description: Alternatively use a secret from the secrets service. Secret must
       be of type 'Splunk'
+  - name: max_retries
+    type: int64
+    description: 'Maximum number of retries for failed uploads (default: 3).'
+  - name: retry_wait
+    type: int64
+    description: 'Base wait time in seconds for exponential backoff between retries
+      (default: 2). Actual wait times: 2s, 4s, 8s, 16s...'
+  - name: idle_conn_timeout
+    type: int64
+    description: 'How long to keep idle HTTP connections open in seconds (default:
+      55). Lower values help with firewalls/load balancer/HECs that close connections.'
   metadata:
     permissions: NETWORK
   platforms:
@@ -10953,7 +10964,7 @@
     resumable uploads because the temporary file will be cleared after
     the query ends.
   type: Function
-  version: 2
+  version: 3
   args:
   - name: file
     type: accessors.OSPath
@@ -11078,7 +11089,6 @@
   - name: credentials
     type: string
     description: The credentials to use
-    required: true
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
@@ -11826,20 +11836,84 @@
 
     See https://github.com/Velocidex/tracee_velociraptor for more details.
 
+    ## Tracee policies.
+
+    As of release 0.76, when calling this plugins, callers can supply
+    a tracee policy instead of a list of events. The policy is a YAML
+    file in a format described
+    [here](https://aquasecurity.github.io/tracee/v0.14/docs/policies/)
+
+    Velociraptor supports a subset of Tracee policies. Currently:
+
+    * [Scope](https://aquasecurity.github.io/tracee/v0.14/docs/policies/scopes/): This allows targeting the policy at a particular process
+    * [Rules](https://aquasecurity.github.io/tracee/v0.14/docs/policies/rules/): This allows kernel side filtering of events - essential for reducing CPU load.
+
+    Tracee actions are not supported, as the events are simply passed
+    to the VQL query. If you want to handle the events simply handle
+    it in VQL.
+
+    NOTE: Currently all watchers that watch the same event id will
+    receive all events - regardless if their specific policy
+    applies or if another listener selected the same event with
+    another policy. Therefore events should be post-filtered again.
+
+    Therefore, Policy filters should be considered as a performance
+    optimization only. Your VQL query should **also** filter down the
+    events you are interested in to ensure that other ebpf queries'
+    policies do not match additional events.
+
+    For example:
+
+    ```yaml
+    metadata:
+       name: file-open-home
+    spec:
+      scope:
+        - global
+      rules:
+        - event: security_file_open
+          filters:
+            - args.pathname=/home/*
+    ```
+
+    The above policy matches all processes (scope is global). The
+    policy adds one event to watch (`security_file_open` reports when
+    a file is opened). Normally there are many such events, so to save
+    on CPU load, the policy also filters the pathname to start with
+    `/home/`.
+
+    This will report all processes opening all files in the `/home/`
+    directory.
+
+    ```vql
+    SELECT * FROM watch_ebpf(policy=Policy)
+    WHERE EventData.pathname =~ "^/home/"
+    ```
+
+    Note that currently the additional VQL filter is needed to avoid
+    other ebpf listners from inserting additional policies into the
+    kernel.
+
     ### See also
 
     - [ebpf_events]({{< ref "/vql_reference/linux/ebpf_events/" >}}): Dumps information about
       potential ebpf_events.
   type: Plugin
+  version: 2
   args:
   - name: events
     type: string
     description: A list of event names to acquire.
     repeated: true
-    required: true
   - name: include_env
     type: bool
     description: Include process environment variables.
+  - name: policy
+    type: string
+    description: Use a tracee policy in YAML format to specify events instead.
+  - name: regex_prefilter
+    type: string
+    description: A regex that must match the raw buffer before we process it.
   category: linux
   metadata:
     permissions: MACHINE_STATE
@@ -12784,4 +12858,3 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
-
