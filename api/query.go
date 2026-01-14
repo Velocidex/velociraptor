@@ -136,20 +136,22 @@ func streamQuery(
 		}()
 	}
 
-	// Throttle the query if required.
-	t, closer := throttler.NewThrottler(sub_ctx, scope, config_obj,
-		0, float64(arg.CpuLimit), 0)
-	scope.SetThrottler(t)
-	err = scope.AddDestructor(closer)
-	if err != nil {
-		closer()
-		return err
-	}
-
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		defer close(response_channel)
+
+		// Throttle the query if required. This must run in a
+		// goroutine so it can emit logs otherwise we deadlock!
+		t, closer := throttler.NewThrottler(sub_ctx, scope, config_obj,
+			0, float64(arg.CpuLimit), 0)
+		scope.SetThrottler(t)
+		err = scope.AddDestructor(closer)
+		if err != nil {
+			closer()
+			return
+		}
+
 		defer scope.Close()
 		defer cancel()
 
