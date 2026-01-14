@@ -17,7 +17,7 @@
         "classnames": "^2.5.1",
         "csv-parse": "4.16.3",
         "csv-stringify": "5.6.5",
-        "dompurify": "3.3.0",
+        "dompurify": "3.3.1",
         "env-cmd": "^10.1.0",
         "highlight.js": "11.11.1",
         "hosted-git-info": "^2.8.9",
