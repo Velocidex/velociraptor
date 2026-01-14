@@ -36,16 +36,17 @@ sources:
           AND Config.Client.ca_certificate =~ "(?ms)-----BEGIN CERTIFICATE-----.+-----END CERTIFICATE-----"
           AND Config.Client.nonce
 
+        LET ExpandedConfigPath = expand(path=ConfigPath)
         LET CheckConfigPath(ConfigPath) = SELECT * FROM stat(filename=ConfigPath)
         LET Config <=  parse_yaml(accessor="data", filename=ConfigYaml)
 
         LET DoIt = if(condition=ValidateConfig(Config=Config),
           else=log(level="ERROR", message="Config is invalid") AND FALSE,
-          then=if(condition=CheckConfigPath(ConfigPath=ConfigPath).OSPath,
+          then=if(condition=CheckConfigPath(ConfigPath=ExpandedConfigPath).OSPath,
              else=log(level="ERROR",
                       message="Config Path %v is invalid",
-                      args=ConfigPath) AND FALSE,
-             then=copy(accessor="data", filename=ConfigYaml, dest=ConfigPath)
+                      args=ExpandedConfigPath) AND FALSE,
+             then=copy(accessor="data", filename=ConfigYaml, dest=ExpandedConfigPath)
                 AND if(condition= RekeyClient,
                 then=log(message="Rekeying in %v seconds ", args=WaitPeriod)
                      AND rekey(wait=WaitPeriod),
@@ -61,7 +62,7 @@ sources:
 
         LET ClientId = "C.622d19ea21109231"
         LET RequiredOrgId = "O123"
-        LET ConfigPath = "C:/Program Files/Velociraptor/client.config.yaml"
+        LET ConfigPath = "%ProgramFiles%/Velociraptor/client.config.yaml"
 
         SELECT _client_config AS Config, OrgId ,
             collect_client(artifacts="Admin.Client.UpdateClientConfig",
