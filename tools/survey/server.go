@@ -61,7 +61,7 @@ Make sure there is sufficient disk space available!`).
 				Title("Internal PKI Certificate Expiration").
 				Description(`By default internal certificates are issued for 1 year.
 
-If you expect this deployment to exist part one year you might
+If you expect this deployment to exist past one year you might
 consider extending the default validation.`).
 				Options(
 					huh.NewOption("1 Year", "1"),
