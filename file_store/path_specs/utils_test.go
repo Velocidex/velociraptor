@@ -92,3 +92,12 @@ func TestFromGenericComponentList(t *testing.T) {
 			path.AsClientPath(), tc.client_path)
 	}
 }
+
+// Test that FromGenericComponentList does not mutate the passed components slice.
+func TestFromGenericComponentListImmutable(t *testing.T) {
+	components := []string{"downloads", "C.3c4f2d6cfc5d7219", "F.D5NVNO28H7U54", "RAPTOR-C.3c4f2d6cfc5d7219-F.D5NVNO28H7U54.zip"}
+	expected := []string{"downloads", "C.3c4f2d6cfc5d7219", "F.D5NVNO28H7U54", "RAPTOR-C.3c4f2d6cfc5d7219-F.D5NVNO28H7U54.zip"}
+
+	_ = FromGenericComponentList(components)
+	assert.Equal(t, components, expected, "slice was mutated: got %v; expected %v", components, expected)
+}
