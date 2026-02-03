@@ -14,6 +14,7 @@ description: |
       - SHA1regex - regex entries to filter by SHA1.
       - PathRegex - filter on path if available.
       - NameRegex - filter on EntryName OR OriginalFileName.
+      - VersionRegex - filter on Version
 
     NOTE:
 
