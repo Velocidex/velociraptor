@@ -33,11 +33,7 @@ func (self _ProcessTrackerPsList) Call(
 			case <-ctx.Done():
 				return
 
-			case output_chan <- proc.Data.
-				Update("Pid", proc.Id).
-				Update("Ppid", proc.ParentId).
-				Update("StartTime", proc.StartTime).
-				Update("EndTime", proc.EndTime):
+			case output_chan <- proc.Data():
 			}
 		}
 	}()

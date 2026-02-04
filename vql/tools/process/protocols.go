@@ -44,7 +44,7 @@ func (self ProcessTrackerUpdater) Call(
 		for _, p := range tracker.Processes(ctx, scope) {
 			update.Set(p.Id, p)
 		}
-		event := &ProcessEntry{
+		event := &UpdateProcessEntry{
 			UpdateType: "sync",
 			Data:       update,
 		}

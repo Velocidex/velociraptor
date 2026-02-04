@@ -39,6 +39,11 @@ parameters:
     type: bool
     description: Add process information enrichments (can use more resources)
 
+  - name: PROCESS_TRACKER_CACHE
+    default: '%TEMP%/processes.sqlite'
+    description: |
+      Cache file for process tracker.
+
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'

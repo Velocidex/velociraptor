@@ -112,6 +112,9 @@ const (
 	PST_CACHE_SIZE = "PST_CACHE_SIZE"
 	PST_CACHE_TIME = "PST_CACHE_TIME"
 
+	// Path to disk based process tracker cache
+	PROCESS_TRACKER_CACHE = "PROCESS_TRACKER_CACHE"
+
 	// Sets client uploaders to be async and resumable.
 	UPLOAD_IS_RESUMABLE = "UPLOAD_IS_RESUMABLE"
 
@@ -171,6 +174,9 @@ const (
 	// 1: Log ranges
 	// 2: Log Bytes scanned with 30 second deduplicated logs
 	YARA_LOG_LEVEL = "YARA_LOG_LEVEL"
+
+	// Set this to see extended debug messages of various LRU
+	LRU_DEBUG = "LRU_DEBUG"
 
 	PinnedServerName = "VelociraptorServer"
 

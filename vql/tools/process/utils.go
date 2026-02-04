@@ -11,7 +11,7 @@ func reverse(l []*ProcessEntry) []*ProcessEntry {
 
 func id_seen(id string, l []*ProcessEntry) bool {
 	for _, i := range l {
-		if i.Id == id {
+		if i.RealId == id {
 			return true
 		}
 	}

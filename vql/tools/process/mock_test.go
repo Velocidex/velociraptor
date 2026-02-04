@@ -62,7 +62,12 @@ func (self _MockPslist) Call(
 		mu.Unlock()
 
 		for _, res := range responses {
-			output_chan <- res
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- res:
+			}
 		}
 	}()
 
@@ -112,6 +117,7 @@ func init() {
 				result = append(result, i)
 			}
 			mu.Lock()
+
 			plugin_update_done = true
 			mu.Unlock()
 
@@ -144,7 +150,7 @@ func init() {
 				case <-ctx.Done():
 					return &vfilter.Null{}
 
-				case <-time.After(10 * time.Millisecond):
+				case <-time.After(100 * time.Millisecond):
 					mu.Lock()
 					done := plugin_update_done
 					mu.Unlock()

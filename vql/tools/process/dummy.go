@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/third_party/cache"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -26,6 +26,8 @@ type DummyProcessTracker struct {
 	mu     sync.Mutex
 	lookup map[string]*ProcessEntry
 	age    time.Time
+
+	max_items int64
 }
 
 // Refresh the local cache to avoid having to make too many pslist calls.
@@ -79,8 +81,13 @@ func (self *DummyProcessTracker) Get(ctx context.Context,
 	return entry, pres
 }
 
-func (self *DummyProcessTracker) Stats() cache.Stats {
-	return cache.Stats{}
+func (self *DummyProcessTracker) Peek(ctx context.Context,
+	scope vfilter.Scope, id string) (*ProcessEntry, bool) {
+	return self.Get(ctx, scope, id)
+}
+
+func (self *DummyProcessTracker) Stats() Stats {
+	return Stats{}
 }
 
 func (self *DummyProcessTracker) Enrich(
@@ -107,10 +114,6 @@ func (self *DummyProcessTracker) CallChain(
 	ctx context.Context, scope vfilter.Scope,
 	id string, max_items int64) []*ProcessEntry {
 
-	if max_items == 0 {
-		max_items = 10
-	}
-
 	lookup := self.getLookup(ctx, scope)
 	result := []*ProcessEntry{}
 
@@ -133,27 +136,28 @@ func (self *DummyProcessTracker) CallChain(
 
 func (self *DummyProcessTracker) Children(
 	ctx context.Context, scope vfilter.Scope,
-	id string, max_items int64) []*ProcessEntry {
+	id string, max_items int64) (res []*ProcessEntry) {
 
-	if max_items == 0 {
-		max_items = 10
+	entry, pres := self.Get(ctx, scope, id)
+	if !pres {
+		return nil
 	}
 
-	result := []*ProcessEntry{}
-	for _, proc := range self.Processes(ctx, scope) {
-		if proc.ParentId == id {
-			result = append(result, proc)
-			if int64(len(result)) > max_items {
-				break
-			}
+	for _, child_id := range entry.Children {
+		child, pres := self.Get(ctx, scope, child_id)
+		if pres {
+			res = append(res, child)
+		}
+		if int64(len(res)) > max_items {
+			break
 		}
 	}
 
-	return result
+	return res
 }
 
-func (self *DummyProcessTracker) Updates() chan *ProcessEntry {
-	output_chan := make(chan *ProcessEntry)
+func (self *DummyProcessTracker) Updates() chan *UpdateProcessEntry {
+	output_chan := make(chan *UpdateProcessEntry)
 	close(output_chan)
 
 	return output_chan
@@ -199,10 +203,12 @@ func getProcessEntry(ctx context.Context,
 		create_time = t
 	}
 
+	serialized, _ := json.MarshalString(row)
+
 	return &ProcessEntry{
 		Id:        fmt.Sprintf("%v", pid),
 		ParentId:  fmt.Sprintf("%v", ppid),
 		StartTime: create_time,
-		Data:      row,
+		JSONData:  serialized,
 	}, true
 }

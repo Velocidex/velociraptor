@@ -1,0 +1,309 @@
+{
+ "Parent Process Exiting (update)": [
+  {
+   "process_tracker_callchain(id=2)": [
+    {
+     "Id": "5-1609497000",
+     "ParentId": "1-?",
+     "StartTime": "2021-01-01T10:30:00Z",
+     "EndTime": "2021-01-01T12:30:00Z",
+     "Data": {
+      "Name": "Process5",
+      "Pid": "5-1609497000",
+      "Ppid": "1-?",
+      "StartTime": "2021-01-01T10:30:00Z",
+      "EndTime": "2021-01-01T12:30:00Z"
+     },
+     "Children": [
+      "2-1609504200"
+     ]
+    },
+    {
+     "Id": "2-1609504200",
+     "ParentId": "5-1609497000",
+     "StartTime": "2021-01-01T12:30:00Z",
+     "EndTime": "0001-01-01T00:00:00Z",
+     "Data": {
+      "Name": "Process2",
+      "Pid": "2-1609504200",
+      "Ppid": "5-1609497000",
+      "StartTime": "2021-01-01T12:30:00Z",
+      "EndTime": "0001-01-01T00:00:00Z"
+     },
+     "Children": []
+    }
+   ]
+  }
+ ],
+ "New Process (update)": [
+  {
+   "process_tracker_callchain(id=2)": [
+    {
+     "Id": "1-1609504200",
+     "ParentId": "0-?",
+     "StartTime": "2021-01-01T12:30:00Z",
+     "EndTime": "0001-01-01T00:00:00Z",
+     "Data": {
+      "Name": "Process1",
+      "Pid": "1-1609504200",
+      "Ppid": "0-?",
+      "StartTime": "2021-01-01T12:30:00Z",
+      "EndTime": "0001-01-01T00:00:00Z"
+     },
+     "Children": [
+      "2-1609504200"
+     ]
+    },
+    {
+     "Id": "2-1609504200",
+     "ParentId": "1-1609504200",
+     "StartTime": "2021-01-01T12:30:00Z",
+     "EndTime": "0001-01-01T00:00:00Z",
+     "Data": {
+      "Name": "Process2",
+      "Pid": "2-1609504200",
+      "Ppid": "1-1609504200",
+      "StartTime": "2021-01-01T12:30:00Z",
+      "EndTime": "0001-01-01T00:00:00Z"
+     },
+     "Children": []
+    }
+   ]
+  }
+ ],
+ "New Process Start/End (update)": [
+  {
+   "process_tracker_callchain(id=2)": [
+    {
+     "Id": "1-1609504200",
+     "ParentId": "0-?",
+     "StartTime": "2021-01-01T12:30:00Z",
+     "EndTime": "0001-01-01T00:00:00Z",
+     "Data": {
+      "Name": "Process1",
+      "Pid": "1-1609504200",
+      "Ppid": "0-?",
+      "StartTime": "2021-01-01T12:30:00Z",
+      "EndTime": "0001-01-01T00:00:00Z"
+     },
+     "Children": [
+      "2-1609504200"
+     ]
+    },
+    {
+     "Id": "2-1609504200",
+     "ParentId": "1-1609504200",
+     "StartTime": "2021-01-01T12:30:00Z",
+     "EndTime": "2021-01-01T14:30:00Z",
+     "Data": {
+      "Name": "Process2",
+      "Pid": "2-1609504200",
+      "Ppid": "1-1609504200",
+      "StartTime": "2021-01-01T12:30:00Z",
+      "EndTime": "2021-01-01T14:30:00Z"
+     },
+     "Children": []
+    }
+   ]
+  }
+ ],
+ "Parent Process Exiting (pslist)": [
+  {
+   "process_tracker_callchain(id=2).Data.Name": [
+    "Process5",
+    "Process2"
+   ]
+  },
+  {
+   "process_tracker_callchain(id=2)": [
+    {
+     "Id": "5-1609497000",
+     "ParentId": "1-?",
+     "StartTime": "2021-01-01T10:30:00Z",
+     "EndTime": "0001-01-01T00:00:00Z",
+     "Data": {
+      "Name": "Process5",
+      "Pid": "5-1609497000",
+      "Ppid": "1-?",
+      "StartTime": "2021-01-01T10:30:00Z",
+      "EndTime": "0001-01-01T00:00:00Z"
+     },
+     "Children": [
+      "2-1609504200"
+     ]
+    },
+    {
+     "Id": "2-1609504200",
+     "ParentId": "5-1609497000",
+     "StartTime": "2021-01-01T12:30:00Z",
+     "EndTime": "0001-01-01T00:00:00Z",
+     "Data": {
+      "Name": "Process2",
+      "Pid": "2-1609504200",
+      "Ppid": "5-1609497000",
+      "StartTime": "2021-01-01T12:30:00Z",
+      "EndTime": "0001-01-01T00:00:00Z"
+     },
+     "Children": []
+    }
+   ]
+  }
+ ],
+ "Pid reuse": [
+  {
+   "process_tracker_callchain(id=2).Data.Name": [
+    "NewProcess5",
+    "Process2"
+   ]
+  },
+  {
+   "process_tracker_callchain(id=2)": [
+    {
+     "Id": "5-1610361000",
+     "ParentId": "1-?",
+     "StartTime": "2021-01-11T10:30:00Z",
+     "EndTime": "0001-01-01T00:00:00Z",
+     "Data": {
+      "Name": "NewProcess5",
+      "Pid": "5-1610361000",
+      "Ppid": "1-?",
+      "StartTime": "2021-01-11T10:30:00Z",
+      "EndTime": "0001-01-01T00:00:00Z"
+     },
+     "Children": [
+      "2-1609504200"
+     ]
+    },
+    {
+     "Id": "2-1609504200",
+     "ParentId": "5-1610361000",
+     "StartTime": "2021-01-01T12:30:00Z",
+     "EndTime": "0001-01-01T00:00:00Z",
+     "Data": {
+      "Name": "Process2",
+      "Pid": "2-1609504200",
+      "Ppid": "5-1610361000",
+      "StartTime": "2021-01-01T12:30:00Z",
+      "EndTime": "0001-01-01T00:00:00Z"
+     },
+     "Children": []
+    }
+   ]
+  }
+ ],
+ "Pid reuse with missing parent": [
+  {
+   "process_tracker_callchain(id=2).Data.Name": [
+    "Process2",
+    "NewProcess5"
+   ]
+  },
+  {
+   "process_tracker_callchain(id=2)": [
+    {
+     "Id": "5-1609504200",
+     "ParentId": "10-?",
+     "StartTime": "2021-01-01T12:30:00Z",
+     "EndTime": "0001-01-01T00:00:00Z",
+     "Data": {
+      "Name": "Process2",
+      "Pid": "5-1609504200",
+      "Ppid": "10-?",
+      "StartTime": "2021-01-01T12:30:00Z",
+      "EndTime": "0001-01-01T00:00:00Z"
+     },
+     "Children": [
+      "2-1609504200"
+     ]
+    },
+    {
+     "Id": "2-1609504200",
+     "ParentId": "5-1609504200",
+     "StartTime": "2021-01-01T12:30:00Z",
+     "EndTime": "0001-01-01T00:00:00Z",
+     "Data": {
+      "Name": "NewProcess5",
+      "Pid": "2-1609504200",
+      "Ppid": "5-1609504200",
+      "StartTime": "2021-01-01T12:30:00Z",
+      "EndTime": "0001-01-01T00:00:00Z"
+     },
+     "Children": []
+    }
+   ]
+  }
+ ],
+ "Spoof (update)": [
+  {
+   "process_tracker_callchain(id=2)": [
+    {
+     "Id": "5-1609497000",
+     "ParentId": "1-?",
+     "StartTime": "2021-01-01T10:30:00Z",
+     "EndTime": "0001-01-01T00:00:00Z",
+     "Data": {
+      "Name": "Process5",
+      "Pid": "5-1609497000",
+      "Ppid": "1-?",
+      "StartTime": "2021-01-01T10:30:00Z",
+      "EndTime": "0001-01-01T00:00:00Z"
+     },
+     "Children": [
+      "2-1609504200"
+     ]
+    },
+    {
+     "Id": "2-1609504200",
+     "ParentId": "5-1609497000",
+     "StartTime": "2021-01-01T12:30:00Z",
+     "EndTime": "0001-01-01T00:00:00Z",
+     "Data": {
+      "Name": "Process2",
+      "Pid": "2-1609504200",
+      "Ppid": "5-1609497000",
+      "StartTime": "2021-01-01T12:30:00Z",
+      "EndTime": "0001-01-01T00:00:00Z"
+     },
+     "Children": []
+    }
+   ]
+  }
+ ],
+ "Overflow cache": [
+  {
+   "Name": "NewProcess18",
+   "Pid": "18-1610368260",
+   "Ppid": "1-1609504201",
+   "StartTime": "2021-01-11T12:31:00Z",
+   "EndTime": "0001-01-01T00:00:00Z"
+  },
+  {
+   "Name": "NewProcess19",
+   "Pid": "19-1610368320",
+   "Ppid": "1-1609504201",
+   "StartTime": "2021-01-11T12:32:00Z",
+   "EndTime": "0001-01-01T00:00:00Z"
+  },
+  {
+   "Name": "NewProcess20",
+   "Pid": "20-1610368380",
+   "Ppid": "1-1609504201",
+   "StartTime": "2021-01-11T12:33:00Z",
+   "EndTime": "0001-01-01T00:00:00Z"
+  },
+  {
+   "Name": "NewProcess21",
+   "Pid": "21-1610368440",
+   "Ppid": "1-1609504201",
+   "StartTime": "2021-01-11T12:34:00Z",
+   "EndTime": "0001-01-01T00:00:00Z"
+  },
+  {
+   "Name": "Process1",
+   "Pid": "1-1609504201",
+   "Ppid": "5-?",
+   "StartTime": "2021-01-01T12:30:01Z",
+   "EndTime": "0001-01-01T00:00:00Z"
+  }
+ ]
+}

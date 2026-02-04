@@ -99,7 +99,7 @@ func authenticateUserHandle(
 func reject_with_username(
 	config_obj *config_proto.Config,
 	w http.ResponseWriter, r *http.Request,
-	err error, username, login_url, provider string) {
+	err error, username, login_url, provider, avatar string) {
 
 	// Log failed login to the audit log only if there is an actual
 	// user. First redirect will have username blank.
@@ -126,8 +126,9 @@ func reject_with_username(
 	renderRejectionMessage(config_obj,
 		r, w, err, username, []velociraptor.AuthenticatorInfo{
 			{
-				LoginURL:     api_utils.PublicURL(config_obj, login_url),
-				ProviderName: provider,
+				LoginURL:       api_utils.PublicURL(config_obj, login_url),
+				ProviderAvatar: avatar,
+				ProviderName:   provider,
 			},
 		})
 }

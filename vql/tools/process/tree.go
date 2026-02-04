@@ -62,7 +62,7 @@ func (self getProcessTree) Call(ctx context.Context,
 		Id:        entry.Id,
 		Name:      getEntryName(entry),
 		StartTime: entry.StartTime,
-		Data:      entry.Data,
+		Data:      entry.Data(),
 	}
 
 	seen := make(map[string]bool)
@@ -74,8 +74,8 @@ func (self getProcessTree) Call(ctx context.Context,
 }
 
 func getEntryName(entry *ProcessEntry) string {
-	if entry.Data != nil {
-		name, pres := entry.Data.GetString("Name")
+	if entry.JSONData != "" {
+		name, pres := entry.Data().GetString("Name")
 		if pres {
 			return name
 		}
@@ -99,10 +99,6 @@ func getTreeChildren(
 		}
 		seen[e.Id] = true
 
-		// Update these from the process entry
-		e.Data.Update("StartTime", e.StartTime)
-		e.Data.Update("EndTime", e.EndTime)
-
 		*max_items--
 		if *max_items < 0 {
 			functions.DeduplicatedLog(ctx, scope,
@@ -114,7 +110,7 @@ func getTreeChildren(
 			Id:        e.Id,
 			Name:      getEntryName(e),
 			StartTime: e.StartTime,
-			Data:      e.Data,
+			Data:      e.Data(),
 		}
 		n.Children = append(n.Children, new_node)
 		getTreeChildren(ctx, scope, new_node, seen, tracker,

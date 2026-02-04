@@ -357,8 +357,14 @@ func GetTokenInfo(scope vfilter.Scope, handle syscall.Handle) *TokenHandleInfo {
 
 	// Find the token user
 	tokenUser, err := token.GetTokenUser()
-	if err == nil {
+	utils.Debug(tokenUser)
+	if err == nil &&
+		tokenUser != nil &&
+		tokenUser.User.Sid != nil {
 		result.User = tokenUser.User.Sid.String()
+
+		// look up domain account by sid
+		result.Username = getUsernameFromSid(scope, tokenUser.User.Sid)
 	}
 
 	token_groups, err := token.GetTokenGroups()
@@ -369,9 +375,6 @@ func GetTokenInfo(scope vfilter.Scope, handle syscall.Handle) *TokenHandleInfo {
 				result.Groups, group_name)
 		}
 	}
-
-	// look up domain account by sid
-	result.Username = getUsernameFromSid(scope, tokenUser.User.Sid)
 
 	profile_dir, err := token.GetUserProfileDirectory()
 	if err == nil {
