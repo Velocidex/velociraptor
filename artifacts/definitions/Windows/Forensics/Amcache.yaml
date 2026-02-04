@@ -8,9 +8,9 @@ description: |
   that were run and lists the path of the files that’s executed which
   can then be used to find the executed program.
   
-  References:
-    https://www.ssi.gouv.fr/uploads/2019/01/anssi-coriin_2019-analysis_amcache.pdf
-    https://github.com/libyal/dtformats/blob/main/documentation/AMCache%20file%20(AMCache.hve)%20format.asciidoc
+reference:
+    - https://www.ssi.gouv.fr/uploads/2019/01/anssi-coriin_2019-analysis_amcache.pdf
+    - https://github.com/libyal/dtformats/blob/main/documentation/AMCache%20file%20(AMCache.hve)%20format.asciidoc
 
 type: CLIENT
 
