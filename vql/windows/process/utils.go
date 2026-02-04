@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package process
@@ -15,7 +16,7 @@ func GetProcessContext(
 	tracker := process.GetGlobalTracker()
 	record, ok := tracker.Get(ctx, scope, fmt.Sprintf("%v", pid))
 	if ok {
-		name, _ := record.Data.GetString("Name")
+		name, _ := record.Data().GetString("Name")
 		if name == "" {
 			name = "unknown"
 		}

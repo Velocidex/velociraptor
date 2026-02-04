@@ -152,7 +152,7 @@ def format_type(x, indent="", options=LongOptions):
     var = x.Value
 
     if x.Type == "time.Time":
-        return str(var)
+        return str(var).split("(")[1].split(")")[0]
 
     if x.Type == "void":
         return "%snil%s" % (comment_color, reset_code)

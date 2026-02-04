@@ -140,6 +140,8 @@ func streamQuery(
 	go func() {
 		defer wg.Done()
 		defer close(response_channel)
+		defer scope.Close()
+		defer cancel()
 
 		// Throttle the query if required. This must run in a
 		// goroutine so it can emit logs otherwise we deadlock!
@@ -151,9 +153,6 @@ func streamQuery(
 			closer()
 			return
 		}
-
-		defer scope.Close()
-		defer cancel()
 
 		scope.Log("Starting query execution.")
 

@@ -81,7 +81,7 @@ func (self *OidcAuthenticator) AuthenticateUserHandler(
 		self.config_obj, permission,
 		func(w http.ResponseWriter, r *http.Request, err error, username string) {
 			reject_with_username(self.config_obj, w, r, err, username,
-				self.router.LoginHandler(), self.router.Name())
+				self.router.LoginHandler(), self.router.Name(), self.router.Avatar())
 		},
 		parent)
 }

@@ -37,7 +37,9 @@ type testCases_t struct {
 
 var (
 	stockUpdateTest = `
-LET Tracker <= process_tracker(sync_query={
+LET Tracker <= process_tracker(
+cache=CacheFile,
+sync_query={
   SELECT Pid AS id,
          Ppid AS parent_id,
          CreateTime AS start_time,
@@ -56,7 +58,9 @@ FROM scope()
 `
 
 	stockSyncTest = `
-LET Tracker <= process_tracker(sync_query={
+LET Tracker <= process_tracker(
+cache=CacheFile,
+sync_query={
   SELECT Pid AS id,
          Ppid AS parent_id,
          CreateTime AS start_time,
@@ -78,7 +82,9 @@ FROM scope()
 `
 
 	overflowTest = `
-LET Tracker <= process_tracker(sync_query={
+LET Tracker <= process_tracker(
+cache=CacheFile,
+sync_query={
   SELECT Pid AS id,
          Ppid AS parent_id,
          CreateTime AS start_time,
@@ -86,7 +92,7 @@ LET Tracker <= process_tracker(sync_query={
   FROM mock_pslist()
 }, update_query={
   SELECT * FROM mock_update()
-}, sync_period=500000, max_size=5)
+}, sync_period=500000, max_size=10)
 
 // Wait for the tracker to be updated
 LET _ <= mock_update_wait()
@@ -94,7 +100,7 @@ LET _ <= mock_update_wait()
 SELECT * FROM  process_tracker_pslist()
 `
 
-	testCases = []testCases_t{
+	testCases = []*testCases_t{
 		{
 			Name: "Parent Process Exiting (update)",
 			Mock: `
@@ -105,7 +111,7 @@ SELECT * FROM  process_tracker_pslist()
  {"update_type":"exit","id":"5","end_time":"2021-01-01T12:30Z"}
 ]`,
 			Query: stockUpdateTest,
-			Clock: &utils.RealClock{},
+			Clock: &utils.IncClock{NowTime: 1651000000},
 		},
 		{
 			Name: "New Process (update)",
@@ -117,7 +123,7 @@ SELECT * FROM  process_tracker_pslist()
    "data": {"Name": "Process2"}}
 ]`,
 			Query: stockUpdateTest,
-			Clock: &utils.RealClock{},
+			Clock: &utils.IncClock{NowTime: 1651000000},
 		},
 
 		{
@@ -131,7 +137,7 @@ SELECT * FROM  process_tracker_pslist()
  {"update_type":"exit","id":2,"end_time":"2021-01-01T14:30Z"}
 ]`,
 			Query: stockUpdateTest,
-			Clock: &utils.RealClock{},
+			Clock: &utils.IncClock{NowTime: 1651000000},
 		},
 
 		{
@@ -241,6 +247,46 @@ SELECT * FROM  process_tracker_pslist()
 
 type ProcessTrackerTestSuite struct {
 	test_utils.TestSuite
+
+	name           string
+	cache_filename string
+}
+
+func (self *ProcessTrackerTestSuite) runTC(
+	ctx context.Context, test_case *testCases_t) []*ordereddict.Dict {
+	closer := utils.MockTime(test_case.Clock)
+	defer closer()
+
+	loadMockPlugin(self.T(), test_case.Mock)
+	if test_case.UpdateMock != "" {
+		loadMockUpdatePlugin(self.T(), test_case.UpdateMock)
+	}
+
+	// Just build a standard scope.
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
+		Env: ordereddict.NewDict().
+			Set("LRU_Debug", true).
+			Set("CacheFile", self.cache_filename),
+	}
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	scope := manager.BuildScope(builder)
+	rows := make([]*ordereddict.Dict, 0)
+	mvql, err := vfilter.MultiParse(test_case.Query)
+	for _, vql := range mvql {
+		for row := range vql.Eval(ctx, scope) {
+			rows = append(rows, vfilter.RowToDict(ctx, scope, row))
+		}
+	}
+	scope.Close()
+
+	return rows
+
 }
 
 func (self *ProcessTrackerTestSuite) TestProcessTracker() {
@@ -250,52 +296,26 @@ func (self *ProcessTrackerTestSuite) TestProcessTracker() {
 	defer cancel()
 
 	for idx, test_case := range testCases {
-		//if idx != 7 {
-		//	continue
-		//}
-
-		_ = idx
-		SetClock(test_case.Clock)
-
-		loadMockPlugin(self.T(), test_case.Mock)
-		if test_case.UpdateMock != "" {
-			loadMockUpdatePlugin(self.T(), test_case.UpdateMock)
+		if false && idx != 1 {
+			continue
 		}
 
-		// Just build a standard scope.
-		builder := services.ScopeBuilder{
-			Config:     self.ConfigObj,
-			ACLManager: acl_managers.NullACLManager{},
-			Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
-		}
-
-		manager, err := services.GetRepositoryManager(self.ConfigObj)
-		assert.NoError(self.T(), err)
-
-		scope := manager.BuildScope(builder)
-		rows := make([]*ordereddict.Dict, 0)
-		mvql, err := vfilter.MultiParse(test_case.Query)
-		for _, vql := range mvql {
-			for row := range vql.Eval(ctx, scope) {
-				rows = append(rows, vfilter.RowToDict(ctx, scope, row))
-			}
-		}
-		scope.Close()
-
-		results.Set(test_case.Name, rows)
+		results.Set(test_case.Name, self.runTC(ctx, test_case))
 	}
 
 	normalize := regexp.MustCompile("2022-04-26T.*?Z").ReplaceAllString(
 		string(json.MustMarshalIndent(results)), "2022-04-26TZ")
 
-	goldie.Assert(self.T(), "TestProcessTracker", []byte(normalize))
+	goldie.Assert(self.T(),
+		self.name+"TestProcessTracker", []byte(normalize))
 }
 
 func (self *ProcessTrackerTestSuite) TestForkBomb() {
-	vql_subsystem.RegisterPlugin(&_MockForkBombUpdate{})
+	vql_subsystem.OverridePlugin(&_MockForkBombUpdate{})
 
 	query := `
 LET Tracker <= process_tracker(
+cache=CacheFile,
 update_query={
   SELECT * FROM mock_forkbomb(depth=Depth)
 }, sync_period=500000, max_size=100000)
@@ -323,6 +343,8 @@ FROM scope()
 			ACLManager: acl_managers.NullACLManager{},
 			Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 			Env: ordereddict.NewDict().
+				Set("LRU_Debug", true).
+				Set("CacheFile", self.cache_filename).
 				Set("Depth", depth),
 		}
 
@@ -340,11 +362,40 @@ FROM scope()
 		scope.Close()
 	}
 
-	goldie.Assert(self.T(), "TestForkBomb", []byte(golden))
+	goldie.Assert(self.T(), self.name+"TestForkBomb", []byte(golden))
 }
 
-func TestProcessTracker(t *testing.T) {
-	suite.Run(t, &ProcessTrackerTestSuite{})
+func TestProcessTrackerMemory(t *testing.T) {
+	suite.Run(t, &ProcessTrackerTestSuite{
+		name: "ProcessTrackerMemoryTest_",
+	})
+}
+
+type ProcessTrackerTestSuiteFile struct {
+	ProcessTrackerTestSuite
+}
+
+func (self *ProcessTrackerTestSuiteFile) SetupTest() {
+	self.ProcessTrackerTestSuite.SetupTest()
+
+	// For testing we use an in memory sqlite database so it is a bit
+	// faster. In practice this will be a real file.
+	self.cache_filename = ":memory:"
+}
+
+func TestProcessTrackerFile(t *testing.T) {
+	// Check that CGO is enabled - this is required for sqlite
+	// support.
+	if !utils.CGO_ENABLED {
+		t.Skip("Skipping disk based process tracker because CGO is disabled.")
+		return
+	}
+
+	suite.Run(t, &ProcessTrackerTestSuiteFile{
+		ProcessTrackerTestSuite{
+			name: "ProcessTrackerFileTest_",
+		},
+	})
 }
 
 type _MockForkBombUpdateArgs struct {

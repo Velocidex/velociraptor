@@ -431,7 +431,7 @@ GUI:
 
   # The public URL of this server. Change this if you are proxying the
   # GUI using a different URL.
-  public_url: http://velo.example.com
+  public_url: http://velo.example.com/app/index.html
 
   # A list of CIDR addresses from permitted networks. If this is not
   # set, permit all connections to the GUI from anywhere. This is
