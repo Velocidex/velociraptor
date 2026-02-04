@@ -357,7 +357,6 @@ func GetTokenInfo(scope vfilter.Scope, handle syscall.Handle) *TokenHandleInfo {
 
 	// Find the token user
 	tokenUser, err := token.GetTokenUser()
-	utils.Debug(tokenUser)
 	if err == nil &&
 		tokenUser != nil &&
 		tokenUser.User.Sid != nil {

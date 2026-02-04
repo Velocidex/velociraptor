@@ -384,6 +384,13 @@ func (self *ProcessTrackerTestSuiteFile) SetupTest() {
 }
 
 func TestProcessTrackerFile(t *testing.T) {
+	// Check that CGO is enabled - this is required for sqlite
+	// support.
+	if !utils.CGO_ENABLED {
+		t.Skip("Skipping disk based process tracker because CGO is disabled.")
+		return
+	}
+
 	suite.Run(t, &ProcessTrackerTestSuiteFile{
 		ProcessTrackerTestSuite{
 			name: "ProcessTrackerFileTest_",
