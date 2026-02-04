@@ -26,5 +26,5 @@ sources:
       WHERE Binary =~ "wmic.exe"
   - name: AmCache
     query: |
-      SELECT * FROM Artifact.Windows.System.Amcache()
-      WHERE Binary =~ "wmic.exe"
+      SELECT * FROM Artifact.Windows.Detection.Amcache()
+      WHERE EntryPath =~ "wmic.exe"
