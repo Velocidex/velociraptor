@@ -133,8 +133,8 @@ github.com/Velocidex/tracee_velociraptor v0.0.0-20260113161018-f7c951ffeab2 h1:j
 github.com/Velocidex/tracee_velociraptor v0.0.0-20260113161018-f7c951ffeab2/go.mod h1:yKAS4I7VYdd6FzlEitbrqxGLoLAIeujjqpbP6OOTKxU=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130 h1:+QujZ0D7KSy3WJVchkOhMkvAUab6/CIisO5LCoN48q4=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130/go.mod h1:3/pI9BBAF7gydBWvMVtV7W1qRwshEG9lBwed/d8xfFg=
-github.com/Velocidex/velociraptor-site-search v0.0.0-20260112074704-546a177e6dad h1:AE7V8khX6vG/5jN0BRPQFY73eAZ1kIrFqnMatTl7oUw=
-github.com/Velocidex/velociraptor-site-search v0.0.0-20260112074704-546a177e6dad/go.mod h1:Uxx/8s068gjruUaKHvhfkXllL3dDbWenSc5VNfW0I1o=
+github.com/Velocidex/velociraptor-site-search v0.0.0-20260205051915-8d028f2816e8 h1:zVXse3410fjp1FO5Ln5YEUrUcNixR9y8tahhe4cHdmY=
+github.com/Velocidex/velociraptor-site-search v0.0.0-20260205051915-8d028f2816e8/go.mod h1:t6HDdZ37MZCbc9kqaG9kzEWD80cHuxucWly0GwWCzZM=
 github.com/Velocidex/yaml/v2 v2.2.8 h1:GUrSy4SBJ6RjGt43k6MeBKtw2z/27gh4A3hfFmFY3No=
 github.com/Velocidex/yaml/v2 v2.2.8/go.mod h1:PlXIg/Pxmoja48C1vMHo7C5pauAZvLq/UEPOQ3DsjS4=
 github.com/Velocidex/yara-x-go v0.0.0-20251010010632-d8eaad9c539c h1:3X4jyfzsTuOhiGaDXPu+WOrwRxDx2gk1akUdnpb4NHE=

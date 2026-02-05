@@ -31,7 +31,8 @@ func (self *DocManager) Search(
 
 	query := bleve.NewQueryStringQuery(query_str)
 	searchRequest := bleve.NewSearchRequest(query)
-	searchRequest.Fields = []string{"title", "text", "url", "tags", "rank"}
+	searchRequest.Fields = []string{"title", "text",
+		"url", "tags", "rank", "crumbs"}
 	searchRequest.Highlight = bleve.NewHighlight()
 	searchRequest.From = start
 	searchRequest.Size = len
@@ -57,6 +58,7 @@ func (self *DocManager) Search(
 			FullText: page.Text,
 			Link:     page.Url,
 			Tags:     page.Tags,
+			Crumbs:   page.BreadCrumbs,
 		}
 
 		// We only highlight the Text field

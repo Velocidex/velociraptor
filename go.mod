@@ -113,7 +113,7 @@ require (
 	github.com/Velocidex/ordereddict v0.0.0-20250821063524-02dc06e46238
 	github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250
 	github.com/Velocidex/tracee_velociraptor v0.0.0-20260113161018-f7c951ffeab2
-	github.com/Velocidex/velociraptor-site-search v0.0.0-20260112074704-546a177e6dad
+	github.com/Velocidex/velociraptor-site-search v0.0.0-20260205051915-8d028f2816e8
 	github.com/Velocidex/yara-x-go v0.0.0-20251010010632-d8eaad9c539c
 	github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6
 	github.com/alecthomas/kingpin/v2 v2.4.0
@@ -372,7 +372,8 @@ require (
 // replace github.com/Velocidex/go-ext4 => ../go-ext4
 // replace github.com/Velocidex/amsi => ../amsi
 // replace github.com/Velocidex/go-journalctl ../go-journalctl
-// replace github.com/Velocidex/velociraptor-site-search => ../velociraptor-site-search
+// replace github.com/Velocidex/velociraptor-site-search => ../velociraptor-docs/velociraptor-site-search
+
 // Remove search for html end block. This allows inserting unbalanced
 // HTML tags into the markdown
 replace github.com/russross/blackfriday/v2 => github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b

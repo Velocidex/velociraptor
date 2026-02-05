@@ -32,6 +32,11 @@
     width: 100%;
 }
 
+.hit-body {
+    overflow: auto;
+    max-height: 60vh;
+}
+
 .vql_type {
     background-color: var(--color-accent-50);
     padding: 5px;
@@ -43,6 +48,18 @@
     border-width: 2px;
     border-style: solid;
     padding: 2px;
+    overflow-wrap: break-word;
+    white-space: pre;
+    position: relative;
+    text-align: initial;
+    text-wrap-mode: nowrap;
+    word-break: break-all;
+}
+
+.search-hit pre code.hljs {
+    vertical-align: baseline;
+    word-break: break-all;
+    text-wrap-mode: wrap;
 }
 
 .permission_list {
@@ -238,4 +255,36 @@ img.fullscreen-popup {
 
 .image-popup.modal.show {
     background: var(--color-foreground);
+}
+
+.admonition.card .card-header {
+    display: flex;
+}
+
+.admonition-icon {
+    margin-right: 20px;
+}
+
+.admonition.card {
+    margin-bottom: 20px;
+}
+
+a.breadcrumb {
+    display: inline;
+    font-size: small;
+    font-style: italic;
+    text-decoration: inherit;
+}
+
+.hit-row.row a.breadcrumb {
+    color: var(--color-foreground);
+}
+
+div.breadcrumb-divider {
+    display: inline;
+    margin-left: 5px;
+}
+
+div.breadcrumb-divider::after {
+    content: "-> ";
 }
