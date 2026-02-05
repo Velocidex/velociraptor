@@ -186,11 +186,44 @@ func (self ImportCollectionFunction) importHunt(
 			continue
 		}
 
+		// Attempt to map the client by hostname if the ID is unknown.
+		// 1. Check if the Client ID exists
+		client_manager, err := services.GetClientInfoManager(config_obj)
+		if err == nil {
+			_, err := client_manager.Get(ctx, client_info.ClientId)
+			// 2. Client ID not found locally.
+			if err != nil && client_info.Hostname != "" {
+				// 3. Search for the hostname
+				indexer, err := services.GetIndexer(config_obj)
+				if err == nil {
+					search_resp, err := indexer.SearchClients(ctx, config_obj,
+						&api_proto.SearchClientsRequest{
+							Query: "host:" + client_info.Hostname,
+						}, "")
+					if err == nil {
+						for _, item := range search_resp.Items {
+							// 4. Found a match? Merge with existing client.
+							if strings.EqualFold(item.OsInfo.Hostname, client_info.Hostname) {
+								scope.Log("Mapping hunt client %v to existing client %v (%v)",
+									client_info.ClientId, item.ClientId, client_info.Hostname)
+								client_info.ClientId = item.ClientId
+								break
+							}
+						}
+					}
+				}
+			}
+		}
+		// If neither ID nor Hostname matched, we fall through to checkClientIdExists
+		// which will create a new client using the ID from the zip.
+
 		err = self.checkClientIdExists(ctx, config_obj, scope, client_info)
 		if err != nil {
 			scope.Log("import_collection: checkClientIdExists: %v", err)
 			continue
 		}
+
+		
 
 		// Import the flow into the system
 		flow, err := self.importFlow(
