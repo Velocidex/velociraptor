@@ -24,6 +24,8 @@ message DocSearchResponse {
     repeated Highlight highlights = 6;
     repeated string tags = 7;
 
+    // JSON encoded crumbs structure
+    string crumbs = 8;
 }
 
 message DocSearchResponses {

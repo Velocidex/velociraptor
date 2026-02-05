@@ -14,7 +14,7 @@ export function sanitize(html) {
         // Line up with NewBlueMondayPolicy() in reporting/gui.go
         CUSTOM_ELEMENT_HANDLING: {
             tagNameCheck: /^(notebook|grr|bar-chart|scatter-chart|time-chart|tool-viewer|velo)-/,
-            attributeNameCheck: /value|params|base-url/,
+            attributeNameCheck: /value|params|base-url|adtype|caption/,
             allowCustomizedBuiltInElements: true,
         },
     });

@@ -23,8 +23,49 @@ import markdownit from 'markdown-it';
 import { TablePaginationControl } from '../core/paged-table.jsx';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Image from './image.jsx';
+import { domToReact } from 'html-react-parser';
+import Card from 'react-bootstrap/Card';
+import { JSONparse } from '../utils/json_parse.jsx';
 
 import "./docs.css";
+
+
+class Admonition extends Component {
+    static propTypes = {
+        type: PropTypes.string,
+        caption: PropTypes.string,
+    }
+
+    renderType = ()=>{
+        switch(this.props.type) {
+        case "tip":
+            return <FontAwesomeIcon icon="lightbulb" />;
+        case "note":
+        case "info":
+            return <FontAwesomeIcon icon="note-sticky" />;
+        case "warning":
+            return <FontAwesomeIcon icon="bomb" />;
+        default:
+            return <></>;
+        }
+    }
+
+    render() {
+        return (
+            <Card className="admonition">
+              <Card.Header>
+                <div className="admonition-icon">{ this.renderType() }</div>
+                <div className="caption">{ this.props.caption }</div>
+              </Card.Header>
+              <Card.Body>
+                <Card.Text>
+                  { this.props.children }
+                </Card.Text>
+              </Card.Body>
+            </Card>
+        );
+    }
+}
 
 
 class HelpDialog extends Component {
@@ -86,6 +127,14 @@ class HelpDialog extends Component {
             return text;
         }
 
+        // The highlights are given in bytes so we need to decode from
+        // UTF8, add slices and re-encode. Otherwise multi-byte UTF8
+        // sequences will screw up the alignment.
+        const encoder = new TextEncoder();
+        const decoder = new TextDecoder();
+
+        text = encoder.encode(text);
+
         let res = [];
         let offset = 0;
         let text_len = text.length;
@@ -99,15 +148,17 @@ class HelpDialog extends Component {
             }
 
             if(start > offset) {
-                res.push(text.slice(offset, start));
+                res.push(decoder.decode(text.slice(offset, start)));
             }
 
-            res.push("<span class='highlight'>" + text.slice(start, end) + "</span>");
+            res.push("<span class='highlight'>" +
+                     decoder.decode(text.slice(start, end)) +
+                     "</span>");
             offset = end;
         }
 
         if(offset < text_len) {
-            res.push(text.slice(offset, text_len));
+            res.push(decoder.decode(text.slice(offset, text_len)));
         }
 
         return res.join("");
@@ -140,6 +191,13 @@ class HelpDialog extends Component {
                     domNode.attribs.target = "_blank";
                     domNode.attribs.rel = "noopener noreferrer";
                     return domNode;
+                }
+
+                if(domNode.name === "velo-admonition") {
+                    let attr = domNode.attribs || {};
+                    return <Admonition type={attr.adtype} caption={attr.caption} >
+                             { domToReact(domNode.children) }
+                           </Admonition>;
                 }
 
                 return domNode;
@@ -193,18 +251,34 @@ class HelpDialog extends Component {
                   {_.map(this.state.hits, (v, idx)=>{
                       let full_text = this.highlight(v.full_text, v.highlights);
                       full_text = md.render(full_text || "");
+
+                      let crumbs = JSONparse(v.crumbs) || [];
+
                       return <Accordion.Item eventKey={idx} key={idx}>
                                <Accordion.Header>
                                  <Row className="hit-row">
                                    <Col sm="2">{this.renderTags(v.tags)}</Col>
                                    <Col sm="10">
+                                     { _.map(crumbs, (c, idx)=>{
+                                         return (
+                                             <>
+                                               <a target="_blank"
+                                                  className="breadcrumb"
+                                                   href={c.url}
+                                                   key={idx}>
+                                                  { c.name }
+                                               </a>
+                                               <div className="breadcrumb-divider"/>
+                                             </>
+                                         );
+                                     })}
                                      <a target="_blank" href={v.link}>
                                        {v.title}
                                      </a>
                                    </Col>
                                  </Row>
                                </Accordion.Header>
-                               <Accordion.Body>
+                               <Accordion.Body className="hit-body">
                                  {this.sanitize(full_text)}
                                </Accordion.Body>
                              </Accordion.Item>;
