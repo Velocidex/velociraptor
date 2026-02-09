@@ -98,6 +98,7 @@ sync_query={
 LET _ <= mock_update_wait()
 
 SELECT * FROM  process_tracker_pslist()
+ORDER BY Name
 `
 
 	testCases = []*testCases_t{
