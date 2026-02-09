@@ -234,6 +234,7 @@
    "artifacts": [
     "Custom.TestArtifactUpload"
    ],
+   "max_upload_bytes": "1073741824",
    "compiled_collector_args": [
     {
      "query_id": "1",
