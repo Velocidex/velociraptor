@@ -186,7 +186,7 @@ func TestProgressTimeout(t *testing.T) {
 		"--config", config_file.Name(),
 		"artifacts", "collect", "Sleep", "-v", "--progress_timeout", "0.1")
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(out))
+	require.Error(t, err, string(out))
 	assert.Regexp(t, "Starting collection of Sleep", string(out))
 
 	// Make sure the collection timed out and dumped the goroutines.

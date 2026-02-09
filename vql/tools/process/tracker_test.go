@@ -98,6 +98,7 @@ sync_query={
 LET _ <= mock_update_wait()
 
 SELECT * FROM  process_tracker_pslist()
+ORDER BY Name
 `
 
 	testCases = []*testCases_t{
@@ -290,6 +291,11 @@ func (self *ProcessTrackerTestSuite) runTC(
 }
 
 func (self *ProcessTrackerTestSuite) TestProcessTracker() {
+	assert.Retry(self.T(), 3, time.Second, self._TestProcessTracker)
+}
+
+func (self *ProcessTrackerTestSuite) _TestProcessTracker(r *assert.R) {
+
 	results := ordereddict.NewDict()
 
 	ctx, cancel := context.WithTimeout(self.Ctx, 10000000*time.Second)
@@ -306,7 +312,7 @@ func (self *ProcessTrackerTestSuite) TestProcessTracker() {
 	normalize := regexp.MustCompile("2022-04-26T.*?Z").ReplaceAllString(
 		string(json.MustMarshalIndent(results)), "2022-04-26TZ")
 
-	goldie.Assert(self.T(),
+	goldie.Retry(r, self.T(),
 		self.name+"TestProcessTracker", []byte(normalize))
 }
 

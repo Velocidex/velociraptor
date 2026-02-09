@@ -87,9 +87,14 @@ loop:
 
 		default:
 			n, err := reader.Read(buf)
-			if n == 0 || err == io.EOF {
+			if err != nil && err != io.EOF {
 				break loop
 			}
+
+			if n == 0 {
+				break loop
+			}
+
 			data := buf[:n]
 
 			_, err = out_fd.Write(data)

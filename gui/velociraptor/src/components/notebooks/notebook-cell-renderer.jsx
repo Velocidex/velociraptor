@@ -1019,9 +1019,9 @@ export default class NotebookCellRenderer extends React.Component {
 
                 <FormControl as="select"
                              value={this.state.cell.type}
-                             onChange={() => {
+                             onChange={x=> {
                                  let cell = this.state.cell;
-                                 cell.type = this.element.value;
+                                 cell.type = x.currentTarget.value;
                                  this.setState({cell: cell});
                              }} >
                   { _.map(cell_types, (v, idx) => {

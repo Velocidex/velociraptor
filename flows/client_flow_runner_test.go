@@ -442,6 +442,7 @@ func (self *ServerTestSuite) TestForeman() {
 	// The hunt will launch the Generic.Client.Info on the client.
 	expected := api.MakeCollectorRequest(
 		self.client_id, "Generic.Client.Info")
+	expected.MaxUploadBytes = 1073741824
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(self.T(), err)

@@ -16,11 +16,13 @@
      ]
     }
    }
-  ]
+  ],
+  "max_upload_bytes": 1073741824
  },
  "Removing artifact from label": {
   "artifacts": [
    "Server.Monitor.Health"
-  ]
+  ],
+  "max_upload_bytes": 1073741824
  }
 }

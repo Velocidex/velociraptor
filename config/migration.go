@@ -182,10 +182,15 @@ func migrate_0_6_1(config_obj *config_proto.Config) {
 	}
 
 	if config_obj.Defaults == nil {
-		config_obj.Defaults = &config_proto.Defaults{
-			HuntExpiryHours:        24 * 7,
-			NotebookCellTimeoutMin: 10,
-		}
+		config_obj.Defaults = &config_proto.Defaults{}
+	}
+
+	if config_obj.Defaults.HuntExpiryHours == 0 {
+		config_obj.Defaults.HuntExpiryHours = 24 * 7
+	}
+
+	if config_obj.Defaults.NotebookCellTimeoutMin == 0 {
+		config_obj.Defaults.NotebookCellTimeoutMin = 10
 	}
 }
 

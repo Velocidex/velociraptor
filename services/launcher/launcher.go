@@ -355,6 +355,12 @@ func (self *Launcher) CompileCollectorArgs(
 		collector_request.MaxUploadBytes = max_upload_bytes
 	}
 
+	// Enforce a max upload limit if it is not specified by anything
+	// else.
+	if collector_request.MaxUploadBytes == 0 {
+		collector_request.MaxUploadBytes = 1024 * 1024 * 1024 // 1Gb
+	}
+
 	if collector_request.Timeout == 0 {
 		collector_request.Timeout = timeout
 	}

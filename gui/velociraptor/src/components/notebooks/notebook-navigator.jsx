@@ -52,6 +52,9 @@ class NotebookNavigator extends Component {
     }
 
     render() {
+        let md = (this.props.notebook &&
+                  this.props.notebook.cell_metadata) || [];
+
         return (
             <div className="float-left navigator">
               <div
@@ -89,9 +92,9 @@ class NotebookNavigator extends Component {
                     </li>
                     <span className="notebook-outline">
                       <VeloTable
-                        rows={this.props.notebook.cell_metadata}
+                        rows={md}
                         columns={["cell_id", "timestamp", "type", "summary"]}
-                        no_toolbar={true}
+                        no_toolbar={md.length < 10}
                         header_renderers={{"cell_id": T("Cell"),
                                            "timestamp": T("Timestamp"),
                                            "type": T("Type")}}

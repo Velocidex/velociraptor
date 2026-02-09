@@ -6,7 +6,8 @@
   "client_id": "server",
   "artifacts": [
    "TestMultiSourceSerial"
-  ]
+  ],
+  "max_upload_bytes": 1073741824
  },
  "create_time": 10000000,
  "start_time": 10000000,

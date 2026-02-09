@@ -68,7 +68,8 @@
       ]
      }
     }
-   ]
+   ],
+   "max_upload_bytes": 1073741824
   },
   "create_time": 1602103388000000000,
   "total_collected_rows": 1,
