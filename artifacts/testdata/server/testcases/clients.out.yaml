@@ -119,7 +119,7 @@ Output: [
     "timeout": 0,
     "max_rows": 0,
     "max_logs": 0,
-    "max_upload_bytes": 0,
+    "max_upload_bytes": 1073741824,
     "trace_freq_sec": 0,
     "allow_custom_overrides": false,
     "log_batch_time": 0,
