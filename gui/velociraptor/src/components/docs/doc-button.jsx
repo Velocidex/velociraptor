@@ -165,7 +165,7 @@ class HelpDialog extends Component {
     }
 
     searchTag = tag=>{
-        this.setState({query: "tags:" + tag + " " + this.state.query});
+        this.setState({query: "+tags:" + tag + " " + this.state.query});
     }
 
 
