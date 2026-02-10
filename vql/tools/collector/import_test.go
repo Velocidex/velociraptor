@@ -235,7 +235,6 @@ func (self *TestSuite) TestImportCollectionFromFixture() {
 
 	// Importing the collection again and providing the same host name
 	// will reuse the client id
-
 	result2 := collector.ImportCollectionFunction{}.Call(ctx, scope,
 		ordereddict.NewDict().
 			Set("client_id", "auto").
@@ -247,6 +246,17 @@ func (self *TestSuite) TestImportCollectionFromFixture() {
 	// The new flow was created on the same client id as before.
 	assert.Equal(self.T(), context2.ClientId, context.ClientId)
 	assert.Equal(self.T(), context2.ClientId, new_client_id)
+
+	// Importing the collection with a fixed client id will use that client id.
+	spec_client_id := "C.1XYZ23"
+	result3 := collector.ImportCollectionFunction{}.Call(ctx, scope,
+		ordereddict.NewDict().
+			Set("client_id", spec_client_id).
+			Set("filename", import_file_path))
+	context3, ok := result3.(*proto.ArtifactCollectorContext)
+	assert.True(self.T(), ok)
+
+	assert.Equal(self.T(), context3.ClientId, spec_client_id)
 
 	// Now ensure the uploads file is properly adjusted to refer to
 	// the client's file store.
