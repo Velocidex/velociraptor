@@ -30,7 +30,7 @@ func (self *ClientInfoManager) DeleteClient(
 
 	if really_do_it {
 		err := self.clearIndexer(ctx, client_id, principal)
-		if err != nil {
+		if err != nil && progress != nil {
 			progress <- services.DeleteFlowResponse{
 				Error: fmt.Sprintf("client_delete: clearIndexer: %v", err),
 			}
@@ -55,11 +55,13 @@ func (self *ClientInfoManager) DeleteClient(
 				}
 			}
 
-			select {
-			case <-ctx.Done():
-				return nil
+			if progress != nil {
+				select {
+				case <-ctx.Done():
+					return nil
 
-			case progress <- item:
+				case progress <- item:
+				}
 			}
 
 			return nil
@@ -83,11 +85,13 @@ func (self *ClientInfoManager) DeleteClient(
 				}
 			}
 
-			select {
-			case <-ctx.Done():
-				return nil
+			if progress != nil {
+				select {
+				case <-ctx.Done():
+					return nil
 
-			case progress <- item:
+				case progress <- item:
+				}
 			}
 
 			return nil
@@ -101,7 +105,7 @@ func (self *ClientInfoManager) DeleteClient(
 		datastore.WalkWithDirectories,
 		func(filename api.DSPathSpec) error {
 			err := db.DeleteSubject(self.config_obj, filename)
-			if err != nil {
+			if err != nil && progress != nil {
 				progress <- services.DeleteFlowResponse{
 					Type: "DeleteDirectory",
 					Data: ordereddict.NewDict().
@@ -119,7 +123,7 @@ func (self *ClientInfoManager) DeleteClient(
 	// Delete the actual client record.
 	if really_do_it {
 		err = self.reallyDeleteClient(ctx, client_id, principal)
-		if err != nil {
+		if err != nil && progress != nil {
 			progress <- services.DeleteFlowResponse{
 				Error: fmt.Sprintf("client_delete: reallyDeleteClient %s", err),
 			}
@@ -129,7 +133,7 @@ func (self *ClientInfoManager) DeleteClient(
 		err = db.DeleteSubject(
 			self.config_obj,
 			paths.NewClientPathManager(client_id).Path().SetDir())
-		if err != nil && !errors.Is(err, os.ErrNotExist) {
+		if err != nil && !errors.Is(err, os.ErrNotExist) && progress != nil {
 			progress <- services.DeleteFlowResponse{
 				Error: fmt.Sprintf("client_delete: reallyDeleteClient %s", err),
 			}
@@ -142,7 +146,7 @@ func (self *ClientInfoManager) DeleteClient(
 	if err == nil {
 		err = notifier.NotifyListener(ctx,
 			self.config_obj, client_id, "DeleteClient")
-		if err != nil {
+		if err != nil && progress != nil {
 			progress <- services.DeleteFlowResponse{
 				Error: fmt.Sprintf("client_delete: reallyDeleteClient %s", err),
 			}

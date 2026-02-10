@@ -12,11 +12,16 @@ import (
 
 const (
 	NOTIFY_CLIENT = true
+	ReallyDoIt    = true
 
 	Unknown ClientOS = iota
 	Windows
 	Linux
 	MacOS
+)
+
+var (
+	DiscardDeleteProgress chan DeleteFlowResponse = nil
 )
 
 type ClientOS int

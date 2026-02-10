@@ -1,0 +1,29 @@
+{
+ "/clients/C.1234abcd/artifacts/Windows.Search.FileFinder/F.CKRG32QRAB5N0.H.json": [
+  "",
+  "{\"OSPath\":\"C:\\\\Program Files\\\\Velociraptor\\\\Velociraptor.exe\",\"Inode\":null,\"Mode\":\"-rw-rw-rw-\",\"Size\":56814904,\"MTime\":\"2023-10-16T23:44:48.877109Z\",\"ATime\":\"2023-10-23T23:27:49.1920759Z\",\"CTime\":\"2023-10-16T23:44:48.877109Z\",\"BTime\":\"2023-10-16T23:44:35.8050967Z\",\"Keywords\":\"\",\"IsDir\":false,\"Upload\":null,\"Hash\":null,\"Data\":{}}"
+ ],
+ "/clients/C.1234abcd/artifacts/Windows.Search.FileFinder/F.CKRG32QRAB5N0.H.json.index": "Index 8 bytes",
+ "/clients/C.1234abcd/collections/F.CKRG32QRAB5N0.H/uploads.json": [
+  ""
+ ],
+ "/clients/C.1234abcd/collections/F.CKRG32QRAB5N0.H/uploads.json.index": "Index 0 bytes",
+ "/clients/C.1234abcd/collections/F.CKRG32QRAB5N0.H/logs.json": [
+  "",
+  "{\"client_time\":1698103696,\"level\":\"INFO\",\"message\":\"Starting query execution for Windows.Search.FileFinder.\\n\"}",
+  "{\"client_time\":1698103698,\"level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":8,\\\"PluginsCalled\\\":9,\\\"FunctionsCalled\\\":10,\\\"ProtocolSearch\\\":154,\\\"ScopeCopy\\\":27}\\n\"}",
+  "{\"client_time\":1698103698,\"level\":\"DEFAULT\",\"message\":\"Windows.Search.FileFinder: Time 1: Windows.Search.FileFinder: Sending response part 0 330 B (1 rows).\"}",
+  "{\"client_time\":1698103698,\"level\":\"INFO\",\"message\":\"Collection Windows.Search.FileFinder is done after 1.9158156s\\n\"}"
+ ],
+ "/clients/C.1234abcd/collections/F.CKRG32QRAB5N0.H/logs.json.index": "Index 32 bytes",
+ "/hunts/H.CKRG32QRAB5N0.json": [
+  "",
+  "{\"HuntId\":\"H.CKRG32QRAB5N0\",\"ClientId\":\"C.1234abcd\",\"FlowId\":\"F.CKRG32QRAB5N0.H\",\"Timestamp\":10}"
+ ],
+ "/hunts/H.CKRG32QRAB5N0.json.index": "Index 8 bytes",
+ "/hunts/H.CKRG32QRAB5N0_errors.json": [
+  "",
+  "{\"ClientId\":\"C.1234abcd\",\"FlowId\":\"F.CKRG32QRAB5N0.H\",\"StartTime\":\"2023-10-23T23:28:16.679965Z\",\"EndTime\":\"2023-10-23T23:28:18.596793Z\",\"Status\":\"FINISHED\",\"Error\":\"\"}"
+ ],
+ "/hunts/H.CKRG32QRAB5N0_errors.json.index": "Index 8 bytes"
+}
