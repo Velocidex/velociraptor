@@ -20,14 +20,21 @@ import (
 	hunt_dispatcher_service "www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vql/server/clients"
 	"www.velocidex.com/golang/velociraptor/vql/server/downloads"
 	"www.velocidex.com/golang/velociraptor/vql/server/hunts"
 	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
+	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
+)
+
+const (
+	fixtureClientId = "C.a99faf363b5601fe"
+	fixtureHostname = "devlp"
 )
 
 var (
@@ -82,15 +89,10 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	// Now create a download of this collection.
-	builder := services.ScopeBuilder{
-		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
-		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
-		Env:        ordereddict.NewDict(),
-	}
+	scope := self.makeScope()
+	defer scope.Close()
+
 	ctx := self.Ctx
-	scope := manager.BuildScope(builder)
 
 	hunt, err := hunt_dispatcher.CreateHunt(
 		self.Ctx, self.ConfigObj, acl_manager, request)
@@ -197,7 +199,7 @@ func (self *TestSuite) snapshotHuntFlow() *ordereddict.Dict {
 	})
 }
 
-func (self *TestSuite) TestImportHuntFromFixture() {
+func (self *TestSuite) _TestImportHuntFromFixture() {
 	self.CreateFlow("server", "F.1234")
 
 	defer utils.SetFlowIdForTests("F.1234XX")()
@@ -212,15 +214,10 @@ func (self *TestSuite) TestImportHuntFromFixture() {
 
 	assert.NoError(self.T(), err)
 
-	builder := services.ScopeBuilder{
-		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
-		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
-		Env:        ordereddict.NewDict(),
-	}
+	scope := self.makeScope()
+	defer scope.Close()
 
 	ctx := self.Ctx
-	scope := manager.BuildScope(builder)
 
 	import_file_path, err := filepath.Abs("fixtures/import_hunt.zip")
 	assert.NoError(self.T(), err)
@@ -257,19 +254,67 @@ func (self *TestSuite) TestImportHuntFromFixture() {
 		value, _ := fs.Get("/hunts/H.CKRG32QRAB5N0.json")
 		return len(value) > 0
 	})
-
-	goldie.Assert(self.T(), "TestImportHuntFromFixture",
-		json.MustMarshalIndent(self.snapshotStaticHuntFlow()))
 }
 
-func (self *TestSuite) snapshotStaticHuntFlow() *ordereddict.Dict {
+func (self *TestSuite) TestImportHuntFromFixture() {
+	// Make sure the fixture client id does not exist - importing will
+	// create it with the same id.
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = client_info_manager.DeleteClient(
+		self.Ctx, fixtureClientId,
+		utils.GetSuperuserName(self.ConfigObj),
+		services.DiscardDeleteProgress, services.ReallyDoIt)
+	assert.NoError(self.T(), err)
+
+	self._TestImportHuntFromFixture()
+
+	goldie.Assert(self.T(), "TestImportHuntFromFixture",
+		json.MustMarshalIndent(self.snapshotStaticHuntFlow(fixtureClientId)))
+}
+
+func (self *TestSuite) TestImportHuntFromFixtureWithExistingHostname() {
+	// Delete the old client id and create a new client with the same
+	// hostname.
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = client_info_manager.DeleteClient(
+		self.Ctx, fixtureClientId,
+		utils.GetSuperuserName(self.ConfigObj),
+		services.DiscardDeleteProgress, services.ReallyDoIt)
+
+	assert.NoError(self.T(), err)
+
+	// Make a new client with a different client id but same
+	// hostname. The importer will select this one in favor of the
+	// original client id.
+	new_client_id := "C.1234abcd"
+
+	scope := self.makeScope()
+	defer scope.Close()
+
+	res := clients.NewClientFunction{}.Call(self.Ctx, scope, ordereddict.NewDict().
+		Set("client_id", new_client_id).
+		Set("hostname", fixtureHostname))
+	assert.False(self.T(), utils.IsNil(res))
+
+	self._TestImportHuntFromFixture()
+
+	goldie.Assert(self.T(), "TestImportHuntFromFixtureWithExistingHostname",
+		json.MustMarshalIndent(self.snapshotStaticHuntFlow(new_client_id)))
+}
+
+func (self *TestSuite) snapshotStaticHuntFlow(
+	client_id string) *ordereddict.Dict {
 	return self.snapshot([]string{
-		"/clients/C.a99faf363b5601fe/artifacts/Windows.Search.FileFinder/F.CKRG32QRAB5N0.H.json",
-		"/clients/C.a99faf363b5601fe/artifacts/Windows.Search.FileFinder/F.CKRG32QRAB5N0.H.json.index",
-		"/clients/C.a99faf363b5601fe/collections/F.CKRG32QRAB5N0.H/uploads.json",
-		"/clients/C.a99faf363b5601fe/collections/F.CKRG32QRAB5N0.H/uploads.json.index",
-		"/clients/C.a99faf363b5601fe/collections/F.CKRG32QRAB5N0.H/logs.json",
-		"/clients/C.a99faf363b5601fe/collections/F.CKRG32QRAB5N0.H/logs.json.index",
+		"/clients/" + client_id + "/artifacts/Windows.Search.FileFinder/F.CKRG32QRAB5N0.H.json",
+		"/clients/" + client_id + "/artifacts/Windows.Search.FileFinder/F.CKRG32QRAB5N0.H.json.index",
+		"/clients/" + client_id + "/collections/F.CKRG32QRAB5N0.H/uploads.json",
+		"/clients/" + client_id + "/collections/F.CKRG32QRAB5N0.H/uploads.json.index",
+		"/clients/" + client_id + "/collections/F.CKRG32QRAB5N0.H/logs.json",
+		"/clients/" + client_id + "/collections/F.CKRG32QRAB5N0.H/logs.json.index",
 
 		"/hunts/H.CKRG32QRAB5N0.json",
 		"/hunts/H.CKRG32QRAB5N0.json.index",
@@ -303,4 +348,19 @@ func (self *TestSuite) snapshot(paths []string) *ordereddict.Dict {
 		result.Set(path, golden)
 	}
 	return result
+}
+
+func (self *TestSuite) makeScope() vfilter.Scope {
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Now create a download of this collection.
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
+		Env:        ordereddict.NewDict(),
+	}
+
+	return manager.BuildScope(builder)
 }

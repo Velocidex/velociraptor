@@ -14,7 +14,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -42,7 +41,10 @@ import (
 )
 
 const (
-	BUFF_SIZE = 1000000
+	BUFF_SIZE     = 1000000
+	GuessClientId = ""
+	GuessHostname = ""
+	ImportAHunt   = true
 )
 
 type ImportCollectionFunctionArgs struct {
@@ -122,7 +124,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		flow, err := self.importFlow(
 			ctx, scope, config_obj,
 			accessor, root, arg.ClientId,
-			arg.Hostname, false)
+			arg.Hostname, !ImportAHunt)
 		if err != nil {
 			scope.Log("import_collection: %v", err)
 			return vfilter.Null{}
@@ -179,23 +181,12 @@ func (self ImportCollectionFunction) importHunt(
 
 		path := root.Append(item.Name())
 
-		client_info := &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
-		err = self.getFile(accessor, path.Append("client_info.json"), client_info)
-		if err != nil {
-			scope.Log("import_collection: while reading client_info.json: %v", err)
-			continue
-		}
-
-		err = self.checkClientIdExists(ctx, config_obj, scope, client_info)
-		if err != nil {
-			scope.Log("import_collection: checkClientIdExists: %v", err)
-			continue
-		}
-
 		// Import the flow into the system
 		flow, err := self.importFlow(
 			ctx, scope, config_obj,
-			accessor, path, client_info.ClientId, client_info.Hostname, true)
+			accessor, path,
+			GuessClientId, GuessHostname,
+			ImportAHunt)
 
 		// And now add it to the hunt.
 		if err != nil {
@@ -209,11 +200,11 @@ func (self ImportCollectionFunction) importHunt(
 				Set("mutation", &api_proto.HuntMutation{
 					HuntId: hunt_info.HuntId,
 					Assignment: &api_proto.FlowAssignment{
-						ClientId: client_info.ClientId,
+						ClientId: flow.ClientId,
 						FlowId:   flow.SessionId,
 					},
 				})},
-			"Server.Internal.HuntModification", client_info.ClientId, "")
+			"Server.Internal.HuntModification", flow.ClientId, "")
 	}
 
 	return hunt_info, nil
@@ -439,6 +430,16 @@ func (self ImportCollectionFunction) ensureClientId(
 	return nil
 }
 
+// Reads the client_info.json and attempts to find a client id that
+// would work.
+// This is based on the following logic:
+//  1. If the user provides a client_id then we use that.
+//  2. If the collection contains a client id which already exists on
+//     this server we use that.
+//  3. If there is no exact client id on this server but there is a
+//     client with the same host id or hostname, we use that instead.
+//  4. Finally we create a new client with a new client id to contain
+//     the import.
 func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 	ctx context.Context,
 	scope types.Scope,
@@ -457,12 +458,6 @@ func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 		collection_hostname, pres := host_info.GetString("hostname")
 		if pres {
 			hostname = collection_hostname
-		}
-
-		// Honor the caller's client id over the client id stored in
-		// the collection.
-		if client_id == "" {
-			client_id, _ = host_info.GetString("client_id")
 		}
 
 		// We dont know this client id - Search for a client id we do
@@ -494,7 +489,7 @@ func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 		// No client id - create one based on the host id
 		if client_id == "" {
 			host_id, pres := host_info.GetString("HostID")
-			if pres {
+			if pres && host_id != "" {
 				// Make the client id based on the host id. This is used
 				// to ensure that the client id is consistent each time
 				// the offline collector is run on the same endpoint.
@@ -502,14 +497,16 @@ func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 			}
 		}
 
+		// Just use the client id stored in the collection.
+		if client_id == "" {
+			client_id, _ = host_info.GetString("client_id")
+		}
+
 		if client_id != "" {
 			scope.Log(
 				"Found client_info.json file in collection: "+
 					"Using client id '%v' and hostname '%v'",
 				client_id, hostname)
-
-			return client_id, self.ensureClientId(
-				ctx, scope, config_obj, client_id, hostname)
 		}
 	}
 
@@ -559,7 +556,7 @@ func (self ImportCollectionFunction) checkClientIdExists(
 		Set("os", client_info.System).
 		Set("mac_addresses", client_info.MacAddresses))
 
-	if res == nil {
+	if utils.IsNil(res) {
 		return errors.New("Failed to create new client.")
 	}
 
