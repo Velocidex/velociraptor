@@ -20,10 +20,6 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
-var (
-	Pool = NewConnectionPool()
-)
-
 type RsyslogFunctionArgs struct {
 	Hostname       string            `vfilter:"required,field=hostname,doc=Destination host to connect to."`
 	Port           uint64            `vfilter:"optional,field=port,doc=Destination port to connect to. If not specified we use 514"`
@@ -93,8 +89,10 @@ func (self *RsyslogFunction) Call(ctx context.Context,
 
 	raddr := net.JoinHostPort(arg.Hostname, fmt.Sprintf("%v", arg.Port))
 
+	pool := GetPool(ctx, scope)
+
 	// This will be closed later by the connection pool.
-	logger, err := Pool.Dial(config_obj, strings.ToLower(arg.Protocol),
+	logger, err := pool.Dial(config_obj, strings.ToLower(arg.Protocol),
 		raddr, arg.RootCerts, connect_timeout)
 	if err != nil {
 		scope.Log("rsyslog: %s", err.Error())
@@ -105,6 +103,7 @@ func (self *RsyslogFunction) Call(ctx context.Context,
 		arg.SdID = "msg@123"
 	}
 
+	// Format the message for sending.
 	message := &rfc5424.SyslogMessage{}
 	message.SetVersion(1).
 		SetMessage(arg.Message).
@@ -125,7 +124,7 @@ func (self *RsyslogFunction) Call(ctx context.Context,
 		scope.Log("rsyslog: %v", err)
 	}
 
-	err = logger.Write(ctx, out)
+	err = logger.Write(out)
 	if err != nil {
 		scope.Log("rsyslog: %v", err)
 	}

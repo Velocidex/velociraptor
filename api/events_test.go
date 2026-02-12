@@ -8,7 +8,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
-	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -36,6 +35,8 @@ var (
 name: Server.Audit.Logs
 type: SERVER_EVENT
 `}
+
+	FALSE = false
 )
 
 // Tests the public API endpoints
@@ -338,7 +339,7 @@ func (self *GeneralAPITest) TestVFSGetBufferSparse() {
 	buf, err = client.VFSGetBuffer(self.Ctx, &api_proto.VFSFileBuffer{
 		Components: filename.Components(),
 		Length:     100,
-		Padding:    proto.Bool(false),
+		Padding:    &FALSE,
 	})
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), string(buf.Data), "HelloWorld")

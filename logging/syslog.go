@@ -1,17 +1,17 @@
-//go:build !windows
-// +build !windows
-
 package logging
 
 import (
-	"log/syslog"
+	"context"
+	"fmt"
 	"strings"
+	"time"
 
-	lSyslog "github.com/sirupsen/logrus/hooks/syslog"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils/syslog"
 )
 
 func maybeAddRemoteSyslog(
+	ctx context.Context,
 	config_obj *config_proto.Config, manager *LogManager) error {
 
 	if config_obj.Logging == nil ||
@@ -58,11 +58,11 @@ func maybeAddRemoteSyslog(
 	Prelog("<green>Will connect to syslog server %v over %v</>",
 		server, protocol)
 
-	hook, err := lSyslog.NewSyslogHook(
-		protocol, server, syslog.LOG_INFO, "")
+	connect_timeout := time.Minute
+	hook, err := syslog.NewHook(ctx, config_obj.Client, protocol, server,
+		"", connect_timeout)
 	if err != nil {
-		Prelog("While connecting to Syslog %v: %v", server, err)
-		return err
+		return fmt.Errorf("While connecting to Syslog Server: %w", err)
 	}
 
 	for k := range components {
