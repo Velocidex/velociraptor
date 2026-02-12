@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package logging
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -116,7 +117,7 @@ func InitLogging(config_obj *config_proto.Config) error {
 		new_manager.contexts[component] = logger
 	}
 
-	err := maybeAddRemoteSyslog(config_obj, new_manager)
+	err := maybeAddRemoteSyslog(context.Background(), config_obj, new_manager)
 	if err != nil {
 		return err
 	}
