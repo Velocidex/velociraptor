@@ -182,6 +182,7 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 	}
 
 	modification := cb(hunt_record)
+
 	switch modification {
 	case services.HuntUnmodified:
 		return services.HuntUnmodified
@@ -189,6 +190,10 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 		// Asyncronously write to datastore later but update the in
 		// memory record now.
 	case services.HuntFlushToDatastoreAsync:
+
+		// Update the hunt version
+		incVersion(hunt_record.Hunt)
+
 		hunt_record.dirty = true
 		self.dirty = true
 
@@ -203,7 +208,7 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 		self.dirty = true
 
 		// Update the hunt version
-		hunt_record.Version = utils.GetTime().Now().UnixNano()
+		incVersion(hunt_record.Hunt)
 
 		// The hunts start time could have been modified.
 		self._MaybeUpdateTimestamp(hunt_record.StartTime)
@@ -465,6 +470,9 @@ func (self *HuntStorageManagerImpl) loadHuntObjFromDisk(
 		ctx, config_obj, launcher, hunt_obj.HuntId, refresh_stats)
 	if err == nil && isStatsUpdated(stats, hunt_obj.Stats) {
 		hunt_obj.Stats = stats
+		if hunt_obj.State == api_proto.Hunt_STOPPED {
+			hunt_obj.Stats.Stopped = true
+		}
 
 		_ = db.SetSubjectWithCompletion(config_obj,
 			hunt_path_manager.Path(), hunt_obj, utils.BackgroundWriter)
@@ -534,7 +542,6 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 
 	// Now merge the database entries with the current in memory set.
 	for _, hunt_obj := range new_hunts {
-
 		// Ignore errored hunts
 		if hunt_obj.HuntId == "" {
 			continue
@@ -681,6 +688,16 @@ func (self *HuntStorageManagerImpl) WriteProfile(
 	ctx context.Context, scope vfilter.Scope,
 	output_chan chan vfilter.Row) {
 	self.tracker.WriteProfile(ctx, scope, output_chan)
+}
+
+func incVersion(hunt_record *api_proto.Hunt) {
+	version := hunt_record.Version
+	next_version := utils.GetTime().Now().UnixNano()
+	if next_version == version {
+		next_version++
+	}
+
+	hunt_record.Version = next_version
 }
 
 func isStatsUpdated(new, old *api_proto.HuntStats) bool {

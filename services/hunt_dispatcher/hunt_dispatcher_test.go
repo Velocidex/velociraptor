@@ -43,7 +43,9 @@ func (self *HuntDispatcherTestSuite) SetupTest() {
 	self.ConfigObj.Services.HuntManager = true
 	self.ConfigObj.Services.RepositoryManager = true
 	self.ConfigObj.Services.JournalService = true
-	self.ConfigObj.Defaults.HuntDispatcherRefreshSec = 1
+
+	// Disable refresh - we will do it in the test
+	self.ConfigObj.Defaults.HuntDispatcherRefreshSec = -1
 
 	self.LoadArtifactsIntoConfig([]string{`
 name: Server.Internal.HuntUpdate
@@ -60,7 +62,7 @@ type: INTERNAL
 		hunt_obj := &api_proto.Hunt{
 			HuntId:    fmt.Sprintf("H.%d", i),
 			State:     api_proto.Hunt_RUNNING,
-			Version:   now,
+			Version:   now * 1000000,
 			StartTime: uint64(now),
 			Expires:   uint64(now+10) * 1000000,
 		}
@@ -80,11 +82,17 @@ type: INTERNAL
 	self.master_dispatcher = master_dispatcher.(*hunt_dispatcher.HuntDispatcher)
 	self.master_dispatcher.Store.(*hunt_dispatcher.HuntStorageManagerImpl).I_am_master = true
 
+	err = self.master_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	minion_dispatcher, err := hunt_dispatcher.NewHuntDispatcher(
 		self.Ctx, self.Wg, self.ConfigObj)
 	assert.NoError(self.T(), err)
 	self.minion_dispatcher = minion_dispatcher.(*hunt_dispatcher.HuntDispatcher)
 	self.minion_dispatcher.Store.(*hunt_dispatcher.HuntStorageManagerImpl).I_am_master = false
+
+	err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	assert.NoError(self.T(), err)
 
 	// Wait until the hunt dispatchers are fully loaded.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -99,10 +107,10 @@ type: INTERNAL
 }
 
 func (self *HuntDispatcherTestSuite) TestLoadingFromDisk() {
-	// All hunts are now running.
-	hunts := self.getAllHunts()
-
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+
+		// All hunts are now running.
+		hunts := self.getAllHunts()
 		if len(hunts) != 5 {
 			return false
 		}
@@ -213,6 +221,9 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_STOPPED)
 
 	// And eventually also visible in minion
+	err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		hunt_obj, pres = self.minion_dispatcher.GetHunt(self.Ctx, "H.2")
 		return pres && hunt_obj.State == api_proto.Hunt_STOPPED
@@ -251,10 +262,13 @@ func (self *HuntDispatcherTestSuite) TestExpiringHunts() {
 
 	hunt_id := "H.121222"
 
+	master_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	now := utils.GetTime().Now().Unix()
 	acl_manager := acl_managers.NullACLManager{}
 
-	hunt_obj, err := self.master_dispatcher.CreateHunt(self.Ctx, self.ConfigObj,
+	hunt_obj, err := master_dispatcher.CreateHunt(self.Ctx, self.ConfigObj,
 		acl_manager, &api_proto.Hunt{
 			HuntId:    hunt_id,
 			State:     api_proto.Hunt_RUNNING,
@@ -272,8 +286,12 @@ func (self *HuntDispatcherTestSuite) TestExpiringHunts() {
 	closer = utils.MockTime(utils.RealClockWithOffset{Duration: 600 * time.Second})
 	defer closer()
 
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		hunt_obj, pres := self.master_dispatcher.GetHunt(self.Ctx, hunt_id)
+	vtesting.WaitUntil(500*time.Second, self.T(), func() bool {
+		// And eventually also visible in minion
+		err = master_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+		assert.NoError(self.T(), err)
+
+		hunt_obj, pres := master_dispatcher.GetHunt(self.Ctx, hunt_id)
 		assert.True(self.T(), pres)
 
 		return hunt_obj.State == api_proto.Hunt_STOPPED

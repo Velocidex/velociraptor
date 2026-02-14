@@ -170,7 +170,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 				journal, err := services.GetJournal(self.config_obj)
 				if err == nil {
 					hunt_copy := proto.Clone(hunt_record.Hunt).(*api_proto.Hunt)
-					hunt_copy.Version = utils.GetTime().Now().UnixNano()
+					incVersion(hunt_copy)
 
 					// Make sure these are pushed out ASAP to the
 					// other dispatchers.
@@ -192,7 +192,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 					hunt_copy := proto.Clone(hunt_record.Hunt).(*api_proto.Hunt)
 
 					// Increment the hunt version
-					hunt_copy.Version = utils.GetTime().Now().UnixNano()
+					incVersion(hunt_copy)
 
 					// Make sure these are pushed out ASAP to the
 					// other dispatchers.
@@ -409,6 +409,10 @@ func (self *HuntDispatcher) StartRefresh(
 		err := self.Store.Refresh(ctx, config_obj)
 		if err != nil {
 			logger.Error("Unable to sync hunts: %v", err)
+		}
+
+		if refresh < 0 {
+			return
 		}
 
 		for {
