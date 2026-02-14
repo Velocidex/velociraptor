@@ -4,93 +4,105 @@ import (
 	"context"
 	"errors"
 	"io"
-	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
-	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
-func (self *HuntDispatcher) syncFlowTables(
-	ctx context.Context, config_obj *config_proto.Config,
-	hunt_id string) error {
+func syncFlowTables(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	launcher services.Launcher,
+	hunt_id string,
+	refresh_stats *HuntRefreshStats) (*api_proto.HuntStats, error) {
 
-	count := 0
-
+	// Update the stats if needed.
+	stats := &api_proto.HuntStats{}
 	now := utils.GetTime().Now()
 
 	options := result_sets.ResultSetOptions{}
-	scope := vql_subsystem.MakeScope()
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
 	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_reader, err := result_sets.NewResultSetReaderWithOptions(
-		ctx, self.config_obj, file_store_factory,
+		ctx, config_obj, file_store_factory,
 		hunt_path_manager.Clients(), options)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer rs_reader.Close()
 
 	enriched_reader, err := result_sets.NewResultSetReaderWithOptions(
-		ctx, self.config_obj, file_store_factory,
+		ctx, config_obj, file_store_factory,
 		hunt_path_manager.EnrichedClients(), options)
 	if err == nil {
 		enriched_reader.Close()
 
 		// Skip refreshing the enriched table if it is newer than 5 min
 		// old - this helps to reduce unnecessary updates.
-		if now.Sub(enriched_reader.MTime()) < 5*time.Minute {
-			return nil
+		if now.Sub(enriched_reader.MTime()) < HuntDispatcherRefreshSec(config_obj) {
+			return nil, utils.CancelledError
 		}
 	}
-
-	// Report how long it took to refresh the table
-	defer func() {
-		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Info("<green>HuntDispatcher:</> Mirrored client table in %v (%v records)",
-			utils.GetTime().Now().Sub(now), count)
-	}()
 
 	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
 		hunt_path_manager.EnrichedClients(), json.DefaultEncOpts(),
 		utils.SyncCompleter, result_sets.TruncateMode)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer rs_writer.Close()
 
-	launcher, err := services.GetLauncher(config_obj)
+	json_chan, err := rs_reader.JSON(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	for row := range rs_reader.Rows(ctx) {
+	for json_str := range json_chan {
 		participation_row := &hunt_manager.ParticipationRecord{}
-		err := arg_parser.ExtractArgsWithContext(ctx, scope, row, participation_row)
-		if err != nil {
-			return err
-		}
-
-		flow, err := launcher.GetFlowDetails(
-			ctx, config_obj,
-			services.GetFlowOptions{},
-			participation_row.ClientId, participation_row.FlowId)
+		err := json.Unmarshal(json_str, participation_row)
 		if err != nil {
 			continue
 		}
 
-		count++
+		refresh_stats.Lock()
+		refresh_stats.TotalFlowsInspected++
+		refresh_stats.Unlock()
+
+		// If the client is deleted or the flow disappeared, this will
+		// error out. We then ignore this row.
+		flow, err := launcher.GetFlowDetails(
+			ctx, config_obj,
+			services.GetFlowOptions{},
+			participation_row.ClientId, participation_row.FlowId)
+		if err != nil || flow.Context == nil {
+			continue
+		}
+
+		stats.TotalClientsScheduled++
+		stats.TotalUploadedBytes += flow.Context.TotalUploadedBytes
+		stats.TotalCollectedRows += flow.Context.TotalCollectedRows
+		if flow.Context.TotalCollectedRows > 0 {
+			stats.TotalClientsWithResults++
+		}
+
+		switch flow.Context.State {
+		case flows_proto.ArtifactCollectorContext_ERROR:
+			stats.TotalClientsWithErrors++
+			stats.TotalFinishedClients++
+
+		case flows_proto.ArtifactCollectorContext_FINISHED:
+			stats.TotalFinishedClients++
+		}
+
 		rs_writer.WriteJSONL([]byte(
 			json.Format(`{"ClientId": %q, "Hostname": %q, "FlowId": %q, "StartedTime": %q, "State": %q, "Duration": %q, "TotalBytes": %q, "TotalRows": %q}
 `,
@@ -103,7 +115,7 @@ func (self *HuntDispatcher) syncFlowTables(
 				flow.Context.TotalUploadedBytes,
 				flow.Context.TotalCollectedRows)), 1)
 	}
-	return nil
+	return stats, nil
 }
 
 func (self *HuntDispatcher) GetFlows(
@@ -117,12 +129,19 @@ func (self *HuntDispatcher) GetFlows(
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
 	table_to_query := hunt_path_manager.Clients()
 
+	launcher, err := services.GetLauncher(config_obj)
+	if err != nil {
+		close(output_chan)
+		return output_chan, 0, err
+	}
+
 	// We only need to sync the tables if the options need to use
 	// anything other than the default table, otherwise we just query
 	// the original table.
 	if options.SortColumn != "" || options.FilterColumn != "" {
-		err := self.syncFlowTables(ctx, config_obj, hunt_id)
-		if err != nil {
+		_, err := syncFlowTables(ctx, config_obj, launcher, hunt_id,
+			&HuntRefreshStats{})
+		if err != nil && !errors.Is(err, utils.CancelledError) {
 			close(output_chan)
 			return output_chan, 0, err
 		}
@@ -147,13 +166,6 @@ func (self *HuntDispatcher) GetFlows(
 		return output_chan, 0, nil
 	}
 
-	if err != nil {
-		close(output_chan)
-		rs_reader.Close()
-		return output_chan, 0, err
-	}
-
-	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		close(output_chan)
 		rs_reader.Close()

@@ -48,6 +48,8 @@ func (self *Indexer) getVerbs() (res []string) {
 }
 
 func splitIntoOperatorAndTerms(term string) (string, string) {
+	term = strings.TrimSpace(term)
+
 	if term == "all" {
 		return "all", ""
 	}

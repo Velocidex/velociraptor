@@ -719,7 +719,10 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 
 	// This will schedule a hunt on this client.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		h, _ := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+		h, pres := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+		if !pres {
+			return false
+		}
 		return h.Stats.TotalClientsScheduled == 1
 	})
 
@@ -749,7 +752,10 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 		}, "System.Flow.Completion", self.client_id, ""))
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		h, _ := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+		h, pres := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+		if !pres {
+			return false
+		}
 		return h.Stats.TotalClientsWithResults == 1
 	})
 
@@ -765,7 +771,10 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 		}, "Server.Internal.HuntModification", "", ""))
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		h, _ := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+		h, pres := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+		if !pres {
+			return false
+		}
 		return h.State == api_proto.Hunt_STOPPED
 	})
 
@@ -808,7 +817,10 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 
 	// This will schedule a hunt on this client.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		h, _ := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+		h, pres := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+		if !pres {
+			return false
+		}
 		return h.Stats.TotalClientsScheduled == 1
 	})
 

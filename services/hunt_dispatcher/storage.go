@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/alitto/pond/v2"
 	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -24,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 type HuntIndexEntry struct {
@@ -77,6 +79,10 @@ type HuntStorageManager interface {
 	Close(ctx context.Context)
 
 	GetTags(ctx context.Context) []string
+
+	// Debug and profile.
+	WriteProfile(ctx context.Context, scope vfilter.Scope,
+		output_chan chan vfilter.Row)
 }
 
 type HuntStorageManagerImpl struct {
@@ -105,6 +111,8 @@ type HuntStorageManagerImpl struct {
 
 	// The last time the index was flushed.
 	last_flush_time time.Time
+
+	tracker *HuntDispatcherTracker
 }
 
 func NewHuntStorageManagerImpl(
@@ -113,6 +121,7 @@ func NewHuntStorageManagerImpl(
 		config_obj:  config_obj,
 		hunts:       make(map[string]*HuntRecord),
 		I_am_master: services.IsMaster(config_obj),
+		tracker:     &HuntDispatcherTracker{},
 	}
 
 	if result.I_am_master {
@@ -173,6 +182,7 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 	}
 
 	modification := cb(hunt_record)
+
 	switch modification {
 	case services.HuntUnmodified:
 		return services.HuntUnmodified
@@ -180,6 +190,10 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 		// Asyncronously write to datastore later but update the in
 		// memory record now.
 	case services.HuntFlushToDatastoreAsync:
+
+		// Update the hunt version
+		incVersion(hunt_record.Hunt)
+
 		hunt_record.dirty = true
 		self.dirty = true
 
@@ -194,7 +208,7 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 		self.dirty = true
 
 		// Update the hunt version
-		hunt_record.Version = utils.GetTime().Now().UnixNano()
+		incVersion(hunt_record.Hunt)
 
 		// The hunts start time could have been modified.
 		self._MaybeUpdateTimestamp(hunt_record.StartTime)
@@ -421,11 +435,63 @@ func (self *HuntStorageManagerImpl) LoadHuntsFromIndex(
 	return nil
 }
 
+// Loads a single hunt object from disk
+func (self *HuntStorageManagerImpl) loadHuntObjFromDisk(
+	ctx context.Context, config_obj *config_proto.Config,
+	launcher services.Launcher, hunt_obj *api_proto.Hunt,
+	refresh_stats *HuntRefreshStats) {
+
+	// Read all the data again from the data store.
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		hunt_obj.HuntId = ""
+		return
+	}
+
+	hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
+	err = db.GetSubject(config_obj, hunt_path_manager.Path(), hunt_obj)
+	if err != nil {
+		hunt_obj.HuntId = ""
+		return
+	}
+
+	// Ignore invalid hunts
+	if hunt_obj.HuntId == "" ||
+		hunt_obj.State == api_proto.Hunt_ARCHIVED {
+		hunt_obj.HuntId = ""
+		return
+	}
+
+	// Scan the client list to update the scheduled and errored count.
+	stats, err := syncFlowTables(
+		ctx, config_obj, launcher, hunt_obj.HuntId, refresh_stats)
+	if err == nil && isStatsUpdated(stats, hunt_obj.Stats) {
+		hunt_obj.Stats = stats
+		if hunt_obj.State == api_proto.Hunt_STOPPED {
+			hunt_obj.Stats.Stopped = true
+		}
+
+		_ = db.SetSubjectWithCompletion(config_obj,
+			hunt_path_manager.Path(), hunt_obj, utils.BackgroundWriter)
+	}
+
+	refresh_stats.Lock()
+	refresh_stats.TotalHunts++
+	refresh_stats.TotalFlows += hunt_obj.Stats.TotalClientsScheduled
+	refresh_stats.Unlock()
+}
+
 // Loads hunts from the datastore files. The hunt objects are written
 // as discrete files in the data store and this reloads the index from
 // those.
+// This function is only called by the master node.
 func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 	ctx context.Context, config_obj *config_proto.Config) error {
+
+	stats := &HuntRefreshStats{
+		Type: "Datastore",
+		Time: utils.GetTime().Now(),
+	}
 
 	// Ensure all the records are ready to read.
 	err := datastore.FlushDatastore(config_obj)
@@ -439,41 +505,45 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 		return err
 	}
 
+	launcher, err := services.GetLauncher(config_obj)
+	if err != nil {
+		return err
+	}
+
 	hunt_path_manager := paths.NewHuntPathManager("")
 	hunts, err := db.ListChildren(config_obj, hunt_path_manager.HuntDirectory())
 	if err != nil {
 		return err
 	}
 
-	requests := make([]*datastore.MultiGetSubjectRequest, 0, len(hunts))
+	new_hunts := make(map[string]*api_proto.Hunt)
 	for _, hunt_path := range hunts {
 		hunt_id := hunt_path.Base()
 		if !constants.HuntIdRegex.MatchString(hunt_id) {
 			continue
 		}
-
-		requests = append(requests, datastore.NewMultiGetSubjectRequest(
-			&api_proto.Hunt{}, paths.NewHuntPathManager(hunt_id).Path(), hunt_id))
+		new_hunts[hunt_id] = &api_proto.Hunt{
+			HuntId: hunt_id,
+		}
 	}
 
-	err = datastore.MultiGetSubject(config_obj, requests)
-	if err != nil {
-		return err
+	pool := pond.NewPool(10)
+	for _, h := range new_hunts {
+		pool.Submit(func() {
+			self.loadHuntObjFromDisk(ctx, config_obj, launcher, h, stats)
+		})
 	}
+	pool.StopAndWait()
 
+	// The below should be very fast so we hold the lock over the
+	// entire operation.
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	// Now merge the database entries with the current in memory set.
-	for _, request := range requests {
-		hunt_id := request.Data.(string)
-		message := request.Message()
-		hunt_obj, ok := message.(*api_proto.Hunt)
-		if !ok {
-			continue
-		}
-
-		if request.Err != nil || hunt_obj.HuntId != hunt_id {
+	for _, hunt_obj := range new_hunts {
+		// Ignore errored hunts
+		if hunt_obj.HuntId == "" {
 			continue
 		}
 
@@ -482,7 +552,7 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 			continue
 		}
 
-		old_hunt_record, pres := self.hunts[hunt_id]
+		old_hunt_record, pres := self.hunts[hunt_obj.HuntId]
 		if !pres {
 			old_hunt_record = &HuntRecord{
 				Hunt:  hunt_obj,
@@ -498,6 +568,7 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 		// Maintain the last timestamp as the latest hunt start time.
 		self._MaybeUpdateTimestamp(hunt_obj.StartTime)
 
+		// Assign the new hunt from disk to the hunt record in memory.
 		old_hunt_record.Hunt = hunt_obj
 
 		// Hunts read from the old datastore hunt files are marked
@@ -505,9 +576,12 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 		old_hunt_record.dirty = true
 		self.dirty = true
 
-		self.hunts[hunt_id] = old_hunt_record
+		self.hunts[hunt_obj.HuntId] = old_hunt_record
 		self.last_update = utils.GetTime().Now()
 	}
+
+	stats.Duration = utils.GetTime().Now().Sub(stats.Time)
+	self.tracker.AddRefreshStats(stats)
 
 	return nil
 }
@@ -608,4 +682,29 @@ func (self *HuntStorageManagerImpl) DeleteHunt(
 	}
 
 	return nil
+}
+
+func (self *HuntStorageManagerImpl) WriteProfile(
+	ctx context.Context, scope vfilter.Scope,
+	output_chan chan vfilter.Row) {
+	self.tracker.WriteProfile(ctx, scope, output_chan)
+}
+
+func incVersion(hunt_record *api_proto.Hunt) {
+	version := hunt_record.Version
+	next_version := utils.GetTime().Now().UnixNano()
+	if next_version == version {
+		next_version++
+	}
+
+	hunt_record.Version = next_version
+}
+
+func isStatsUpdated(new, old *api_proto.HuntStats) bool {
+	return old.TotalClientsScheduled != new.TotalClientsScheduled ||
+		old.TotalUploadedBytes != new.TotalUploadedBytes ||
+		old.TotalCollectedRows != new.TotalCollectedRows ||
+		old.TotalFinishedClients != new.TotalFinishedClients ||
+		old.TotalClientsWithErrors != new.TotalClientsWithErrors ||
+		old.TotalClientsWithResults != new.TotalClientsWithResults
 }

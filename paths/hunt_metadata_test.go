@@ -7,7 +7,7 @@ import (
 
 func (self *PathManagerTestSuite) TestHuntPathManager() {
 	manager := paths.NewHuntPathManager("H.1234")
-	assert.Equal(self.T(), "/ds/hunts/H.1234.db",
+	assert.Equal(self.T(), "/ds/hunts/H.1234.json.db",
 		self.getDatastorePath(manager.Path()))
 
 	assert.Equal(self.T(), "/fs/downloads/hunts/H.1234/%E4%BD%A0%E5%A5%BD%E4%B8%96%E7%95%8CH.1234-summary.zip",

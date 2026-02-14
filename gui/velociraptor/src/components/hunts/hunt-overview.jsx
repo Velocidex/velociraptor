@@ -231,9 +231,20 @@ export default class HuntOverview extends React.Component {
                       {stats.total_clients_scheduled}
                     </dd>
 
-                    <dt className="col-4">{T("Finished clients")}</dt>
+                    <dt className="col-4">{T("Finished")}</dt>
+                    <dd className="col-8">{stats.total_finished_clients || 0}</dd>
+
+                    <dt className="col-4">{T("Clients With Results")}</dt>
                     <dd className="col-8">{stats.total_clients_with_results || 0}</dd>
 
+                    <dt className="col-4">{T("Collected Rows")}</dt>
+                    <dd className="col-8">{stats.total_collected_rows || 0}</dd>
+
+                    <dt className="col-4">{T("Collected Bytes")}</dt>
+                    <dd className="col-8">{stats.total_collected_bytes || 0}</dd>
+
+                    <dt className="col-4">{T("Clients With Error")}</dt>
+                    <dd className="col-8">{stats.total_clients_with_errors || 0}</dd>
 
                     <dt className="col-4">{T("Download Results")}</dt>
                     <dd className="col-8">

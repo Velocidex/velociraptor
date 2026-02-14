@@ -470,6 +470,12 @@ func (self *ClientInfoManager) GetClientTasks(
 		max_inflight_requests = 2 + int(self.config_obj.Client.Concurrency)
 	}
 
+	// If the feature is disabled we dont have a limit on the number
+	// of tasks we send.
+	if !inflight_checks_enabled {
+		max_inflight_requests = 100000
+	}
+
 	result, err = self.getClientTasks(ctx, client_id,
 		max_inflight_requests-inflight_requests)
 	if err != nil {
