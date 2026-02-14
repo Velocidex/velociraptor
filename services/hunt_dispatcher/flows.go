@@ -73,7 +73,9 @@ func syncFlowTables(
 			continue
 		}
 
+		refresh_stats.Lock()
 		refresh_stats.TotalFlowsInspected++
+		refresh_stats.Unlock()
 
 		// If the client is deleted or the flow disappeared, this will
 		// error out. We then ignore this row.

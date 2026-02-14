@@ -462,8 +462,6 @@ func (self *HuntStorageManagerImpl) loadHuntObjFromDisk(
 		return
 	}
 
-	refresh_stats.TotalHunts++
-
 	// Scan the client list to update the scheduled and errored count.
 	stats, err := syncFlowTables(
 		ctx, config_obj, launcher, hunt_obj.HuntId, refresh_stats)
@@ -476,7 +474,11 @@ func (self *HuntStorageManagerImpl) loadHuntObjFromDisk(
 		_ = db.SetSubjectWithCompletion(config_obj,
 			hunt_path_manager.Path(), hunt_obj, utils.BackgroundWriter)
 	}
+
+	refresh_stats.Lock()
+	refresh_stats.TotalHunts++
 	refresh_stats.TotalFlows += hunt_obj.Stats.TotalClientsScheduled
+	refresh_stats.Unlock()
 }
 
 // Loads hunts from the datastore files. The hunt objects are written

@@ -10,6 +10,8 @@ import (
 )
 
 type HuntRefreshStats struct {
+	sync.Mutex
+
 	Type                string
 	Time                time.Time
 	Duration            time.Duration
