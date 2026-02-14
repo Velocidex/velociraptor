@@ -48,7 +48,7 @@ var (
 			SetType(api.PATH_TYPE_DATASTORE_JSON)
 
 	HUNTS_ROOT = path_specs.NewSafeDatastorePath("hunts").
-			SetType(api.PATH_TYPE_DATASTORE_PROTO)
+			SetType(api.PATH_TYPE_DATASTORE_JSON)
 
 	USERS_ROOT = path_specs.NewUnsafeDatastorePath("users").
 			SetType(api.PATH_TYPE_DATASTORE_JSON)

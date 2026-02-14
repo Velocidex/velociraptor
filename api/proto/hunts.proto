@@ -65,12 +65,21 @@ message HuntStats {
             friendly_name: "Total Clients with Errors",
         }];
 
+    uint64 total_uploaded_bytes = 18;
+    uint64 total_collected_rows = 19;
+    uint64 total_finished_clients = 20;
+
     bool stopped = 1 [(sem_type) = {
             description: "If this is set then the hunt is stopped. This field "
             "is manipulated by the hunt manager."
         }];
 
     AvailableDownloads available_downloads = 2;
+
+    // The last time the client table was scanned. This is used
+    // internally for a quick comparison when refreshing the hunt
+    // stats.
+    int64 last_client_table_scan = 17;
 }
 
 

@@ -83,7 +83,15 @@ func GetLauncher(config_obj *config_proto.Config) (Launcher, error) {
 		return nil, err
 	}
 
-	return org_manager.Services(config_obj.OrgId).Launcher()
+	svc := org_manager.Services(config_obj.OrgId)
+
+	// We need the client info manager to be up first
+	_, err = svc.ClientInfoManager()
+	if err != nil {
+		return nil, err
+	}
+
+	return svc.Launcher()
 }
 
 // Options for the GetFlowOptions API. This ensures we do no more work

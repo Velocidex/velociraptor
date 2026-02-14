@@ -72,7 +72,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
-	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 var (
@@ -82,16 +81,16 @@ var (
 // This is the record that will be sent by the foreman to the hunt
 // manager.
 type ParticipationRecord struct {
-	HuntId    string `vfilter:"required,field=HuntId"`
-	ClientId  string `vfilter:"required,field=ClientId"`
-	Fqdn      string `vfilter:"optional,field=Fqdn"`
-	FlowId    string `vfilter:"optional,field=FlowId"`
-	Override  bool   `vfilter:"optional,field=Override"`
-	Timestamp uint64 `vfilter:"optional,field=Timestamp"`
-	TS        uint64 `vfilter:"optional,field=_ts"`
+	HuntId    string `json:"HuntId"`
+	ClientId  string `json:"ClientId"`
+	Fqdn      string `json:"Fqdn"`
+	FlowId    string `json:"FlowId"`
+	Override  bool   `json:"Override"`
+	Timestamp uint64 `json:"Timestamp"`
+	TS        uint64 `json:"_ts"`
 
 	// Deprecated
-	Participate bool `vfilter:"optional,field=Participate"`
+	Participate bool `json:"Participate"`
 }
 
 type HuntManager struct {
@@ -321,7 +320,7 @@ func (self *HuntManager) ProcessParticipation(
 	row *ordereddict.Dict) error {
 
 	// Ignore errors from the callback since they are not really
-	// errors just reasons why the cliet should be ignored. There is
+	// errors just reasons why the client should be ignored. There is
 	// no need to log them.
 	_ = self.ProcessParticipationWithError(ctx, config_obj, row)
 	return nil
@@ -332,9 +331,13 @@ func (self *HuntManager) ProcessParticipationWithError(
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
 
+	serialized, err := row.MarshalJSON()
+	if err != nil {
+		return err
+	}
+
 	participation_row := &ParticipationRecord{}
-	err := arg_parser.ExtractArgsWithContext(
-		ctx, self.scope, row, participation_row)
+	err = json.Unmarshal(serialized, participation_row)
 	if err != nil {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Debug("ProcessParticipation: %v", err)

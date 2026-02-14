@@ -38,9 +38,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -375,26 +377,21 @@ func (self *HuntDispatcher) CreateHunt(
 	return hunt, nil
 }
 
+func (self *HuntDispatcher) WriteProfile(
+	ctx context.Context, scope vfilter.Scope,
+	output_chan chan vfilter.Row) {
+	self.Store.WriteProfile(ctx, scope, output_chan)
+}
+
 func (self *HuntDispatcher) StartRefresh(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	err := self.Store.Refresh(ctx, config_obj)
-	if err != nil {
-		return err
-	}
-
 	// flush the hunts periodically
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-
-		refresh := int64(60)
-		if config_obj.Defaults != nil &&
-			config_obj.Defaults.HuntDispatcherRefreshSec > 0 {
-			refresh = config_obj.Defaults.HuntDispatcherRefreshSec
-		}
 
 		// On the client we register a dummy dispatcher since
 		// there is nothing to sync from.
@@ -402,9 +399,17 @@ func (self *HuntDispatcher) StartRefresh(
 			return
 		}
 
+		refresh := HuntDispatcherRefreshSec(config_obj)
+
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> Hunt Dispatcher Service for %v.",
 			services.GetOrgName(config_obj))
+
+		// Start the first refresh immediately, then after some time.
+		err := self.Store.Refresh(ctx, config_obj)
+		if err != nil {
+			logger.Error("Unable to sync hunts: %v", err)
+		}
 
 		for {
 			select {
@@ -417,7 +422,7 @@ func (self *HuntDispatcher) StartRefresh(
 				self.Close(ctx)
 				return
 
-			case <-time.After(utils.Jitter(time.Duration(refresh) * time.Second)):
+			case <-time.After(utils.Jitter(refresh)):
 				// Re-read the hunts from the data store.
 				err := self.Refresh(ctx, config_obj)
 				if err != nil {
@@ -447,6 +452,14 @@ func NewHuntDispatcher(
 	config_obj *config_proto.Config) (services.IHuntDispatcher, error) {
 
 	res := MakeHuntDispatcher(config_obj)
+
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:          "Hunt Dispatcher " + utils.GetOrgId(config_obj),
+		Description:   "The hunt dispatcher maintain hunt information.",
+		ProfileWriter: res.WriteProfile,
+		Categories:    []string{"Org", services.GetOrgName(config_obj), "Services"},
+	})
+
 	return res, res.StartRefresh(ctx, wg, config_obj)
 }
 
@@ -472,6 +485,15 @@ func GetNewHuntId() string {
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
 
 	return constants.HUNT_PREFIX + result
+}
+
+func HuntDispatcherRefreshSec(config_obj *config_proto.Config) time.Duration {
+	if config_obj.Defaults != nil &&
+		config_obj.Defaults.HuntDispatcherRefreshSec > 0 {
+		return time.Duration(config_obj.Defaults.HuntDispatcherRefreshSec) * time.Second
+	}
+
+	return time.Minute
 }
 
 func init() {

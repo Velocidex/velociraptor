@@ -592,25 +592,6 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.mu.Unlock()
 	}
 
-	if spec.HuntDispatcher {
-		hd, err := hunt_dispatcher.NewHuntDispatcher(
-			ctx, wg, org_config)
-		if err != nil {
-			return err
-		}
-
-		export_manager, err := exports.NewExportManager(
-			ctx, wg, org_config)
-		if err != nil {
-			return err
-		}
-
-		service_container.mu.Lock()
-		service_container.hunt_dispatcher = hd
-		service_container.export_manager = export_manager
-		service_container.mu.Unlock()
-	}
-
 	if spec.HuntManager {
 		err = hunt_manager.NewHuntManager(
 			ctx, wg, org_config)
@@ -640,6 +621,25 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 		service_container.mu.Lock()
 		service_container.client_info_manager = c
+		service_container.mu.Unlock()
+	}
+
+	if spec.HuntDispatcher {
+		hd, err := hunt_dispatcher.NewHuntDispatcher(
+			ctx, wg, org_config)
+		if err != nil {
+			return err
+		}
+
+		export_manager, err := exports.NewExportManager(
+			ctx, wg, org_config)
+		if err != nil {
+			return err
+		}
+
+		service_container.mu.Lock()
+		service_container.hunt_dispatcher = hd
+		service_container.export_manager = export_manager
 		service_container.mu.Unlock()
 	}
 

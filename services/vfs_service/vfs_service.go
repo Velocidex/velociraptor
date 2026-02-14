@@ -75,7 +75,7 @@ func (self *VFSService) Start(
 	}
 
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
-		Name:          "VFS Service",
+		Name:          "VFS Service " + utils.GetOrgId(config_obj),
 		Description:   "The VFS service post processes results from VFS operations.",
 		ProfileWriter: self.WriteProfile,
 		Categories:    []string{"Org", services.GetOrgName(config_obj), "Services"},
