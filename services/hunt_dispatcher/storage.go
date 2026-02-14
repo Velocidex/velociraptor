@@ -457,7 +457,6 @@ func (self *HuntStorageManagerImpl) loadHuntObjFromDisk(
 
 	// Ignore invalid hunts
 	if hunt_obj.HuntId == "" ||
-		hunt_obj.Version == 0 ||
 		hunt_obj.State == api_proto.Hunt_ARCHIVED {
 		hunt_obj.HuntId = ""
 		return
@@ -521,7 +520,6 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 		if !constants.HuntIdRegex.MatchString(hunt_id) {
 			continue
 		}
-
 		new_hunts[hunt_id] = &api_proto.Hunt{
 			HuntId: hunt_id,
 		}
