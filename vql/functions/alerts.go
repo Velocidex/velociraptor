@@ -46,7 +46,7 @@ func (self *AlertFunction) Call(ctx context.Context,
 
 	alert_name, pres := args.GetString("name")
 	if !pres {
-		scope.Log("alert: Alert name must be specified!")
+		scope.Log("ERROR:alert: Alert name must be specified!")
 		return &vfilter.Null{}
 	}
 

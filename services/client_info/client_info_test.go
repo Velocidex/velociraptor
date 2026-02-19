@@ -48,6 +48,11 @@ type: INTERNAL
 `, `
 name: Server.Audit.Logs
 type: INTERNAL
+`, `
+name: Client.Test
+type: CLIENT
+sources:
+- query: SELECT * FROM info()
 `})
 
 	// Create a client in the datastore so we can test initializing

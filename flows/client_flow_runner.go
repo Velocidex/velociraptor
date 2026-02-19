@@ -513,31 +513,38 @@ func (self *ClientFlowRunner) handleUnknwonFlow(
 	ctx context.Context, client_id, flow_id string,
 	msg *crypto_proto.FlowStats) error {
 
-	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	db, err := datastore.GetDB(self.config_obj)
+	if len(msg.QueryStatus) == 0 {
+		return nil
+	}
+
+	launcher_service, err := services.GetLauncher(self.config_obj)
 	if err != nil {
 		return err
 	}
 
-	// Just a blind write will eventually hit the disk.
-	stats := &flows_proto.ArtifactCollectorContext{}
-	err = db.GetSubject(self.config_obj, flow_path_manager.Stats(), stats)
+	// If we dont know anything about the flow, ignore it.
+	collection_context, err := launcher_service.Storage().LoadCollectionContext(
+		ctx, self.config_obj, client_id, flow_id)
 	if err != nil {
 		return nil
 	}
 
 	// Mark all the stats as terminated if they are still running.
-	for _, s := range stats.QueryStats {
-		if s.Status == crypto_proto.VeloStatus_PROGRESS {
-			s.Status = crypto_proto.VeloStatus_GENERIC_ERROR
-			s.ErrorMessage = msg.QueryStatus[0].ErrorMessage
+	if len(collection_context.QueryStats) == 0 {
+		collection_context.QueryStats = append(
+			collection_context.QueryStats, msg.QueryStatus...)
+	} else {
+		for _, s := range collection_context.QueryStats {
+			if s.Status == crypto_proto.VeloStatus_PROGRESS {
+				s.Status = msg.QueryStatus[0].Status
+				s.ErrorMessage = msg.QueryStatus[0].ErrorMessage
+			}
 		}
 	}
 
-	launcher.UpdateFlowStats(stats)
-
-	return db.SetSubjectWithCompletion(self.config_obj,
-		flow_path_manager.Stats(), stats, nil)
+	// Update the flow.
+	return launcher_service.Storage().WriteFlow(ctx, self.config_obj,
+		collection_context, utils.BackgroundWriter)
 }
 
 func (self *ClientFlowRunner) FlowStats(

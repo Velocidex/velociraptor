@@ -276,6 +276,15 @@ func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 			collection_context.StartTime = s.FirstActive
 		}
 
+		// If the Query stats represents an unknown flow, we mark the
+		// flow as errored.
+		if s.Status == crypto_proto.VeloStatus_UNKNOWN_FLOW {
+			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+			collection_context.Status = s.ErrorMessage
+			collection_context.Backtrace = s.Backtrace
+			break
+		}
+
 		// Get the first errored query and mark the entire collection_context with it.
 		if collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING &&
 			s.Status == crypto_proto.VeloStatus_GENERIC_ERROR {

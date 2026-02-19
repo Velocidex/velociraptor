@@ -26,4 +26,4 @@ config/ab0x.go
 
 __debug*
 debug.test*
-enriched.json*
+artifacts/testdata/server/hunts/H.*
