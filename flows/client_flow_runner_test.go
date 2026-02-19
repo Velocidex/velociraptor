@@ -3,7 +3,6 @@ package flows_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -1025,17 +1024,36 @@ func (self *ServerTestSuite) TestCancellation() {
 
 // Test an unknown flow. What happens when the server receives a
 // message to an unknown flow.
+
+// This message is received in response to the in flight keep
+// alive. If the client crashes, the server will send a status request
+// for the in flight flow. But the client does not know about this
+// flow id. The server will terminate the flow.
 func (self *ServerTestSuite) TestUnknownFlow() {
 	t := self.T()
 
-	db, err := datastore.GetDB(self.ConfigObj)
-	require.NoError(t, err)
+	closer := utils.SetFlowIdForTests("F.SomeFlow")
+	defer closer()
+
+	// Create a new collection flow
+	flow_id, err := self.createArtifactCollection()
+	require.NoError(self.T(), err)
+	assert.Equal(self.T(), "F.SomeFlow", flow_id)
+
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(t, err)
+
+	collection_context, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj,
+		services.GetFlowOptions{}, self.client_id, flow_id)
+	assert.NoError(t, err)
+
+	assert.Equal(self.T(), collection_context.Context.State,
+		flows_proto.ArtifactCollectorContext_RUNNING)
 
 	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
 	defer runner.Close(self.Ctx)
 
 	// Send a message to a random non-existant flow from client.
-	flow_id := "F.NONEXISTENT"
 	runner.ProcessSingleMessage(
 		self.Ctx,
 		&crypto_proto.VeloMessage{
@@ -1043,24 +1061,25 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 			SessionId: flow_id,
 			FlowStats: &crypto_proto.FlowStats{
 				QueryStatus: []*crypto_proto.VeloStatus{
-					{Status: crypto_proto.VeloStatus_OK, QueryId: 1},
+					{
+						Status:       crypto_proto.VeloStatus_UNKNOWN_FLOW,
+						ErrorMessage: "Unknown flow",
+					},
 				},
 			},
 		})
 
-	// We used to send cancellation message to the client, but this
-	// too expensive for the server to keep track of. Now we just
-	// write data in the flow as if it exists anyway.
-
-	// The flow does not exist - make sure it still does not.
-	collection_context := &flows_proto.ArtifactCollectorContext{}
-	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
-	err = db.GetSubject(self.ConfigObj, path_manager.Path(), collection_context)
-	require.Error(t, err, os.ErrNotExist)
-
-	// The flow stats are written as normal.
-	err = db.GetSubject(self.ConfigObj, path_manager.Stats(), collection_context)
+	collection_context, err = launcher.GetFlowDetails(self.Ctx, self.ConfigObj,
+		services.GetFlowOptions{}, self.client_id, flow_id)
 	assert.NoError(t, err)
+
+	assert.Equal(self.T(), collection_context.Context.State,
+		flows_proto.ArtifactCollectorContext_ERROR)
+
+	assert.Equal(self.T(), collection_context.Context.Status,
+		"Unknown flow")
+
+	assert.Equal(self.T(), len(collection_context.Context.QueryStats), 1)
 }
 
 // Test an unknown flow. What happens when the server receives a

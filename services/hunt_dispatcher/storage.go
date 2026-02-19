@@ -561,7 +561,7 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 			self.dirty = true
 
 			// The old hunt record is newer than the one on disk, ignore it.
-		} else if old_hunt_record.Version >= hunt_obj.Version {
+		} else if old_hunt_record.Version > hunt_obj.Version {
 			continue
 		}
 

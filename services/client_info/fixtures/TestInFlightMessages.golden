@@ -1,0 +1,42 @@
+{
+ "InFlightFlows": {
+  "client_id": "C.1234",
+  "hostname": "Hostname",
+  "has_tasks": true,
+  "in_flight_flows": {
+   "F.0": 10,
+   "F.1": 10,
+   "F.2": 10,
+   "F.3": 10
+  }
+ },
+ "StatusChecks": [
+  {
+   "session_id": "F.Status",
+   "flow_stats_request": {
+    "flow_id": [
+     "F.0",
+     "F.1",
+     "F.2",
+     "F.3"
+    ]
+   }
+  }
+ ],
+ "AfterCompletion": {
+  "client_id": "C.1234",
+  "hostname": "Hostname",
+  "has_tasks": true
+ },
+ "SecondSetOfTasks": {
+  "client_id": "C.1234",
+  "hostname": "Hostname",
+  "has_tasks": true,
+  "in_flight_flows": {
+   "F.4": 100,
+   "F.5": 100,
+   "F.6": 100,
+   "F.7": 100
+  }
+ }
+}

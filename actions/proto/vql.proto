@@ -228,7 +228,7 @@ message ClientInfo {
     map<string, int64> in_flight_flows = 28;
 
 
-    // A list of indexed metadata fields. There are not all metadata
+    // A list of indexed metadata fields. These are not all metadata
     // fields, only the ones that are important enough to be indexed.
     map<string, string> metadata = 29;
 }
