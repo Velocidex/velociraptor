@@ -85,11 +85,16 @@ func reformatNode(vql_node yaml.NodeContext) (m mutation, err error) {
 		indented = append(indented, ind+l)
 	}
 
+	// Check if node style is chomping (no final new line)
+	length := len(strings.Split(vql_node.Value, "\n"))
+	if strings.HasSuffix(vql_node.Value, "\n") {
+		length--
+	}
+
 	return mutation{
 		original_start_line: vql_node.Line,
-		original_end_line: vql_node.Line +
-			len(strings.Split(vql_node.Value, "\n")) - 1,
-		replacement: indented,
+		original_end_line:   vql_node.Line + length,
+		replacement:         indented,
 	}, nil
 }
 
@@ -103,6 +108,10 @@ func applyMutations(text string, mu []mutation) (string, error) {
 	current_mu_idx := 0
 
 	for i := 0; i < len(lines); {
+		if current_mu.err != nil {
+			return text, current_mu.err
+		}
+
 		if i < current_mu.original_start_line {
 			result = append(result, lines[i])
 			i++
@@ -111,10 +120,15 @@ func applyMutations(text string, mu []mutation) (string, error) {
 
 		if i == current_mu.original_start_line {
 			result = append(result, current_mu.replacement...)
+
 			i = current_mu.original_end_line
+			if current_mu.original_end_line == current_mu.original_start_line {
+				i++
+			}
+
 			if current_mu_idx+1 >= len(mu) {
 				// No more mutations, just copy the rest and return
-				result = append(result, lines[i+1:]...)
+				result = append(result, lines[i:]...)
 				return strings.Join(result, "\n"), nil
 			}
 			current_mu_idx++
