@@ -23,14 +23,16 @@
   "- query: SELECT * FROM info()",
   "- query: |",
   "    SELECT A",
-  "    FROM scope()"
+  "    FROM scope()",
+  ""
  ],
  "export reformatted": [
   "",
   "name: Exported",
   "export: |",
   "  SELECT *",
-  "  FROM scope()"
+  "  FROM scope()",
+  ""
  ],
  "preconditions": [
   "",
@@ -39,6 +41,37 @@
   "sources:",
   "- precondition: |",
   "    SELECT *",
-  "    FROM info()"
+  "    FROM info()",
+  ""
+ ],
+ "notebook": [
+  "",
+  "name: Notebook",
+  "sources:",
+  "- query: |",
+  "    SELECT A,",
+  "           B,",
+  "           C",
+  "    FROM scope()",
+  "  notebook:",
+  "    - name: Test",
+  "      type: vql_suggestion",
+  "      template: |",
+  "        SELECT * FROM scope()",
+  ""
+ ],
+ "column types": [
+  "",
+  "name: Column Types",
+  "sources:",
+  "- query: |",
+  "    SELECT A,",
+  "           B,",
+  "           C",
+  "    FROM scope()",
+  "column_types:",
+  "  - name: A",
+  "    type: string",
+  ""
  ]
 }
