@@ -1,0 +1,62 @@
+# This file contains the same tests that are in services/repository/reformat_test.go
+
+Parameters:
+  Simple: |
+    name: Foo
+    sources:
+    - query: |
+        SELECT A,B,C
+        FROM info(arg1=Foobar, arg2="XXXXX")
+    - query: |-
+        SELECT A,B,C      FROM info()
+    - description: Foo bar
+  
+  SingleLine: |
+    name: Single line
+    sources:
+    - query: SELECT * FROM info()
+    - query: |
+        SELECT A FROM scope()
+
+  Exported: |
+    name: Exported
+    export: |
+      SELECT * FROM scope()
+
+  Preconditions: |
+    name: Preconditions
+    precondition: SELECT * FROM info()
+    sources:
+    - precondition: |
+        SELECT * FROM info()
+
+  Notebook: |
+    name: Notebook
+    sources:
+    - query: |
+        SELECT A,B,C
+        FROM scope()
+      notebook:
+        - name: Test
+          type: vql_suggestion
+          template: |
+            SELECT * FROM scope()
+
+  ColumnTypes: |
+    name: Column Types
+    sources:
+    - query: |
+        SELECT A,B,C
+        FROM scope()
+    column_types:
+      - name: A
+        type: string
+
+Queries:
+  - SELECT reformat(artifact=Simple) AS Simple,
+      reformat(artifact=SingleLine) AS SingleLine,
+      reformat(artifact=Exported) AS Exported,
+      reformat(artifact=Preconditions) AS Preconditions,
+      reformat(artifact=Notebook) AS Notebook,
+      reformat(artifact=ColumnTypes) AS ColumnTypes
+    FROM scope()
