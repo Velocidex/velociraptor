@@ -1,0 +1,30 @@
+Query: SELECT reformat(artifact=Simple) AS Simple, reformat(artifact=SingleLine) AS SingleLine, reformat(artifact=Exported) AS Exported, reformat(artifact=Preconditions) AS Preconditions, reformat(artifact=Notebook) AS Notebook, reformat(artifact=ColumnTypes) AS ColumnTypes FROM scope()
+Output: [
+ {
+  "Simple": {
+   "Artifact": "name: Foo\nsources:\n- query: |\n    SELECT A,\n           B,\n           C\n    FROM info(arg1=Foobar, arg2=\"XXXXX\")\n- query: |-\n    SELECT A,\n           B,\n           C\n    FROM info()\n- description: Foo bar",
+   "Error": null
+  },
+  "SingleLine": {
+   "Artifact": "name: Single line\nsources:\n- query: SELECT * FROM info()\n- query: |\n    SELECT A\n    FROM scope()",
+   "Error": null
+  },
+  "Exported": {
+   "Artifact": "name: Exported\nexport: |\n  SELECT *\n  FROM scope()",
+   "Error": null
+  },
+  "Preconditions": {
+   "Artifact": "name: Preconditions\nprecondition: SELECT * FROM info()\nsources:\n- precondition: |\n    SELECT *\n    FROM info()",
+   "Error": null
+  },
+  "Notebook": {
+   "Artifact": "name: Notebook\nsources:\n- query: |\n    SELECT A,\n           B,\n           C\n    FROM scope()\n  notebook:\n    - name: Test\n      type: vql_suggestion\n      template: |\n        SELECT * FROM scope()",
+   "Error": null
+  },
+  "ColumnTypes": {
+   "Artifact": "name: Column Types\nsources:\n- query: |\n    SELECT A,\n           B,\n           C\n    FROM scope()\ncolumn_types:\n  - name: A\n    type: string",
+   "Error": null
+  }
+ }
+]
+
