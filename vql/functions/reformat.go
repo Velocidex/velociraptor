@@ -19,7 +19,7 @@ type ReformatFunction struct{}
 
 type ReformatFunctionResult struct {
 	Artifact string
-	Error    error
+	Error    string
 }
 
 func (self *ReformatFunctionResult) ToDict() *ordereddict.Dict {
@@ -38,8 +38,8 @@ func (self *ReformatFunction) Call(ctx context.Context, scope vfilter.Scope, arg
 	if err != nil {
 		scope.Log("reformat: %v", err)
 		result.Artifact = ""
-		result.Error = err
-		return result
+		result.Error = err.Error()
+		return result.ToDict()
 	}
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
@@ -52,22 +52,22 @@ func (self *ReformatFunction) Call(ctx context.Context, scope vfilter.Scope, arg
 	if err != nil {
 		scope.Log("reformat: %v", err)
 		result.Artifact = ""
-		result.Error = err
-		return result
+		result.Error = err.Error()
+		return result.ToDict()
 	}
 
 	reformatted, err := manager.ReformatVQL(ctx, arg.Artifact)
 	if err != nil {
 		scope.Log("reformat: %v", err)
 		result.Artifact = ""
-		result.Error = err
-		return result
+		result.Error = err.Error()
+		return result.ToDict()
 	}
 
 	result.Artifact = strings.Trim(reformatted, "\n")
-	result.Error = nil
+	result.Error = ""
 
-	return result
+	return result.ToDict()
 }
 
 func (self ReformatFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
