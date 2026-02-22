@@ -37,7 +37,7 @@ func (self *ReformatFunction) Call(ctx context.Context, scope vfilter.Scope, arg
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("reformat: %v", err)
-		result.Artifact = ""
+		result.Artifact = arg.Artifact
 		result.Error = err.Error()
 		return result.ToDict()
 	}
@@ -51,7 +51,7 @@ func (self *ReformatFunction) Call(ctx context.Context, scope vfilter.Scope, arg
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		scope.Log("reformat: %v", err)
-		result.Artifact = ""
+		result.Artifact = arg.Artifact
 		result.Error = err.Error()
 		return result.ToDict()
 	}
@@ -59,7 +59,7 @@ func (self *ReformatFunction) Call(ctx context.Context, scope vfilter.Scope, arg
 	reformatted, err := manager.ReformatVQL(ctx, arg.Artifact)
 	if err != nil {
 		scope.Log("reformat: %v", err)
-		result.Artifact = ""
+		result.Artifact = arg.Artifact
 		result.Error = err.Error()
 		return result.ToDict()
 	}
