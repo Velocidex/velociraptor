@@ -53,10 +53,11 @@ Parameters:
         type: string
 
 Queries:
-  - SELECT reformat(artifact=Simple) AS Simple,
-      reformat(artifact=SingleLine) AS SingleLine,
-      reformat(artifact=Exported) AS Exported,
-      reformat(artifact=Preconditions) AS Preconditions,
-      reformat(artifact=Notebook) AS Notebook,
-      reformat(artifact=ColumnTypes) AS ColumnTypes
+  - SELECT 
+      split(string=reformat(artifact=Simple).Artifact, sep="\\n") AS Simple,
+      split(string=reformat(artifact=SingleLine).Artifact, sep="\\n") AS SingleLine,
+      split(string=reformat(artifact=Exported).Artifact, sep="\\n") AS Exported,
+      split(string=reformat(artifact=Preconditions).Artifact, sep="\\n") AS Preconditions,
+      split(string=reformat(artifact=Notebook).Artifact, sep="\\n") AS Notebook,
+      split(string=reformat(artifact=ColumnTypes).Artifact, sep="\\n") AS ColumnTypes
     FROM scope()
