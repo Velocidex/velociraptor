@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
@@ -12,8 +11,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
-	"www.velocidex.com/golang/velociraptor/vql/functions"
-	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -42,17 +39,9 @@ func doReformat() error {
 		return err
 	}
 
-	manager, err := services.GetRepositoryManager(config_obj)
-	if err != nil {
-		return err
-	}
-
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 
-	// Report all errors and keep going as much as possible.
-	returned_errs := make(map[string]error)
 	var artifact_paths []string
-
 	for _, artifact_path := range *reformat_args {
 		abs, err := filepath.Abs(artifact_path)
 		if err != nil {
@@ -73,72 +62,43 @@ func doReformat() error {
 	}
 
 	query := `
-		SELECT FilePath,
-			   Result
+		LET Results <= SELECT FilePath,
+							Result
 		FROM foreach(row=Artifacts,
-					 query={
+					query={
 			SELECT _value AS FilePath,
-				   reformat(artifact=read_file(filename=_value)) AS Result
+				reformat(artifact=read_file(filename=_value)) AS Result
+			FROM scope()
+		})
+
+		LET Errors <= SELECT *
+		FROM foreach(row=Results,
+					query={
+			SELECT log(level="ERROR", message="%s: %s", args=[FilePath, Result.Error])
+			FROM scope()
+			WHERE Result.Error
+		})
+
+		SELECT *
+		FROM foreach(row=Results,
+					query={
+			SELECT FilePath,
+				Result.Artifact AS Artifact,
+				Result.Error AS Error,
+				if(condition=NOT Result.Error,
+					then=copy(filename=Result.Artifact,
+								accessor="data",
+								dest=FilePath)) AS _Copy
 			FROM scope()
 		})
 	`
 
-	scope := manager.BuildScope(builder)
-	defer scope.Close()
-
-	statements, err := vfilter.MultiParse(query)
+	err = runQueryWithEnv(query, builder, "json")
 	if err != nil {
-		logger.Error("reformat: error parsing query: %v", query)
-		return err
+		logger.Error("reformat: error running query: %v", query)
 	}
 
-	for _, vql := range statements {
-		for row := range vql.Eval(sm.Ctx, scope) {
-			dict := vfilter.RowToDict(ctx, scope, row)
-
-			artifact_path, pres := dict.GetString("FilePath")
-			if !pres {
-				continue
-			}
-
-			result_val, pres := dict.Get("Result")
-			if !pres {
-				continue
-			}
-
-			result, ok := result_val.(*functions.ReformatFunctionResult)
-			if !ok {
-				continue
-			}
-
-			if result.Error != nil {
-				returned_errs[artifact_path] = result.Error
-				continue
-			}
-
-			out_fd, err := os.OpenFile(artifact_path, os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0600)
-			if err != nil {
-				returned_errs[artifact_path] = err
-				continue
-			}
-			_, _ = out_fd.Write([]byte(result.Artifact))
-			out_fd.Close()
-
-			returned_errs[artifact_path] = nil
-		}
-	}
-
-	var ret error
-	for artifact_path, err := range returned_errs {
-		if err != nil {
-			logger.Error("%v: <red>%v</>", artifact_path, err)
-			ret = err
-		} else {
-			logger.Info("Reformatted %v: <green>OK</>", artifact_path)
-		}
-	}
-
-	return ret
+	return artifact_logger.Error
 }
 
 func init() {
