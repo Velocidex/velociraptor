@@ -8621,6 +8621,23 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: reformat
+  description: |-
+    Reformat VQL
+
+    This function will reformat the artifact provided and return the reformatted content.
+  type: Function
+  args:
+  - name: artifact
+    type: string
+    description: The artifact VQL to reformat.
+    required: true
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_arm64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: reg
   description: |
     An alias for the `registry` accessor, which accesses the registry using the
