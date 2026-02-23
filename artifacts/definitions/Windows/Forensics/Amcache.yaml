@@ -1,12 +1,13 @@
 name: Windows.Forensics.Amcache
 author: Matthieu Chatelan, Yann Malherbe
 description: |
-  Get information from the system's amcache.
-
-  The Amcache.hve file is a registry file that stores the information
-  of executed applications. Amcache.hve records the recent processes
-  that were run and lists the path of the files that’s executed which
-  can then be used to find the executed program.
+  The Amcache.hve file is a registry file that stores metadata
+  used by the OS’s application compatibility infrastructure to 
+  record metadata about binaries present on the system. This 
+  includes file paths, hashes, timestamps, and install/interaction 
+  information for executables and drivers. 
+  
+  NOTE: execution must be corroborated with additional artifacts.
   
 reference:
     - https://www.ssi.gouv.fr/uploads/2019/01/anssi-coriin_2019-analysis_amcache.pdf
