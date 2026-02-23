@@ -14,8 +14,9 @@ import (
 )
 
 var (
-	reformat      = artifact_command.Command("reformat", "Reformat a set of artifacts")
-	reformat_args = reformat.Arg("paths", "Paths to artifact yaml files").Required().Strings()
+	reformat         = artifact_command.Command("reformat", "Reformat a set of artifacts")
+	reformat_dry_run = reformat.Flag("dry", "Do not overwrite files, just report errors").Bool()
+	reformat_args    = reformat.Arg("paths", "Paths to artifact yaml files").Required().Strings()
 )
 
 func doReformat() error {
@@ -58,41 +59,25 @@ func doReformat() error {
 		ACLManager: acl_managers.NewRoleACLManager(sm.Config, "administrator"),
 		Logger:     log.New(artifact_logger, "", 0),
 		Env: ordereddict.NewDict().
+			Set("DryRun", *reformat_dry_run).
 			Set("Artifacts", artifact_paths),
 	}
 
 	query := `
-		LET Results <= SELECT FilePath,
-							Result
-		FROM foreach(row=Artifacts,
-					query={
-			SELECT _value AS FilePath,
-				reformat(artifact=read_file(filename=_value)) AS Result
-			FROM scope()
-		})
+      LET Reformatted = SELECT reformat(artifact=read_file(filename=_value)) AS Result
+        FROM foreach(row=Artifacts)
+      WHERE if(condition=Result.Error,
+          then=log(level="ERROR", message="%v: <red>%v</>",
+                   args=[_value, Result.Error], dedup=-1),
+          else=log(message="Reformatted %v: <green>OK</>",
+                   args=_value, dedup=-1)
+               AND NOT DryRun
+               AND copy(accessor="data", dest=_value, filename=Result.Artifact))
+       AND FALSE
 
-		LET Errors <= SELECT *
-		FROM foreach(row=Results,
-					query={
-			SELECT log(level="ERROR", message="%s: %s", args=[FilePath, Result.Error])
-			FROM scope()
-			WHERE Result.Error
-		})
+      SELECT * FROM Reformatted
 
-		SELECT *
-		FROM foreach(row=Results,
-					query={
-			SELECT FilePath,
-				Result.Artifact AS Artifact,
-				Result.Error AS Error,
-				if(condition=NOT Result.Error,
-					then=copy(filename=Result.Artifact,
-								accessor="data",
-								dest=FilePath)) AS _Copy
-			FROM scope()
-		})
-	`
-
+    `
 	err = runQueryWithEnv(query, builder, "json")
 	if err != nil {
 		logger.Error("reformat: error running query: %v", query)
