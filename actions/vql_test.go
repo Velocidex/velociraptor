@@ -18,6 +18,7 @@ import (
 
 	// For execve and query
 	_ "www.velocidex.com/golang/velociraptor/vql/common"
+	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 	_ "www.velocidex.com/golang/velociraptor/vql/tools"
 )
 
