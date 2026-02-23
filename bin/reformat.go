@@ -64,7 +64,7 @@ func doReformat() error {
 	}
 
 	query := `
-      LET Reformatted = SELECT reformat(artifact=read_file(filename=_value)) AS Result
+      SELECT reformat(artifact=read_file(filename=_value)) AS Result
         FROM foreach(row=Artifacts)
       WHERE if(condition=Result.Error,
           then=log(level="ERROR", message="%v: <red>%v</>",
@@ -74,9 +74,6 @@ func doReformat() error {
                AND NOT DryRun
                AND copy(accessor="data", dest=_value, filename=Result.Artifact))
        AND FALSE
-
-      SELECT * FROM Reformatted
-
     `
 	err = runQueryWithEnv(query, builder, "json")
 	if err != nil {
