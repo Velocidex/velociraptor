@@ -3,7 +3,8 @@ package tools
 import (
 	"bytes"
 	"context"
-	"text/template"
+	html_template "html/template"
+	text_template "text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/Velocidex/ordereddict"
@@ -18,6 +19,7 @@ import (
 type TemplateFunctionArgs struct {
 	Template  string            `vfilter:"required,field=template,doc=A Go Template compatible string."`
 	Expansion *ordereddict.Dict `vfilter:"required,field=expansion,doc=An object to be expanded into the template."`
+	HTML      bool              `vfilter:"optional,field=html,doc=Use when the output should be html escaped."`
 }
 
 type TemplateFunction struct{}
@@ -37,8 +39,38 @@ func (self *TemplateFunction) Call(ctx context.Context,
 		Scope: scope,
 	}
 
-	tmpl := template.New("").Funcs(sprig.TxtFuncMap()).Funcs(
-		template.FuncMap{
+	if arg.HTML {
+		tmpl := html_template.New("").Funcs(sprig.TxtFuncMap()).Funcs(
+			html_template.FuncMap{
+				"Scope": template_engine.GetScope,
+				"Get":   template_engine.GetFunction,
+				"str":   utils.ToString,
+				"env": func() string {
+					return ""
+				},
+				"expandenv": func() string {
+					return ""
+				},
+			})
+
+		template, err := tmpl.Parse(reporting.SanitizeGoTemplates(arg.Template))
+		if err != nil {
+			scope.Log("template: %v", err)
+			return vfilter.Null{}
+		}
+
+		buffer := &bytes.Buffer{}
+		err = template.Execute(buffer, arg.Expansion.ToMap())
+		if err != nil {
+			scope.Log("template: %v", err)
+			return vfilter.Null{}
+		}
+
+		return string(buffer.Bytes())
+	}
+
+	tmpl := text_template.New("").Funcs(sprig.TxtFuncMap()).Funcs(
+		text_template.FuncMap{
 			"Scope": template_engine.GetScope,
 			"Get":   template_engine.GetFunction,
 			"str":   utils.ToString,

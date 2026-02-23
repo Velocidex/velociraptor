@@ -85,7 +85,7 @@ func doClientRPM() error {
 	if *rpm_command_release == "" {
 		*rpm_command_release = "A"
 	}
-	
+
 	logger := &LogWriter{config_obj: sm.Config}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
@@ -106,7 +106,12 @@ func doClientRPM() error {
                        release=Release)
 `
 
-	return runQueryWithEnv(query, builder, "json")
+	err = runQueryWithEnv(query, builder, "json")
+	if err != nil {
+		return err
+	}
+
+	return logger.Error
 }
 
 // Systemd based start up scripts (CentOS 7+)
@@ -146,12 +151,12 @@ func doServerRPM() error {
 	if *server_rpm_command_output == "" {
 		*server_rpm_command_output = "."
 	}
-	
+
 	// By default it should be set to A
 	if *rpm_command_release == "" {
 		*rpm_command_release = "A"
 	}
-	
+
 	logger := &LogWriter{config_obj: sm.Config}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
@@ -172,7 +177,12 @@ func doServerRPM() error {
                        release=Release)
 `
 
-	return runQueryWithEnv(query, builder, "json")
+	err = runQueryWithEnv(query, builder, "json")
+	if err != nil {
+		return err
+	}
+
+	return logger.Error
 }
 
 func init() {

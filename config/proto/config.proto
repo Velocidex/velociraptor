@@ -1175,6 +1175,7 @@ message Defaults {
 
     // How often to refresh the hunt index (default 600 sec)
     int64 hunt_dispatcher_refresh_sec = 43;
+    uint64 hunt_dispatcher_refresh_rate = 60;
 
     // By default new cells only list 50 rows if there is no custom
     // cell template. This is to make refreshing the cell

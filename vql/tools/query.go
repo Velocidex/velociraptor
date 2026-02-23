@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type QueryPluginArgs struct {
@@ -27,6 +28,7 @@ type QueryPluginArgs struct {
 	OrgId           string            `vfilter:"optional,field=org_id,doc=If specified, the query will run in the specified org space (Use 'root' to refer to the root org)"`
 	Principal       string            `vfilter:"optional,field=runas,doc=If specified, the query will run as the specified user"`
 	InheritScope    bool              `vfilter:"optional,field=inherit,doc=If specified we inherit the scope instead of building a new one."`
+	ExitCB          *vfilter.Lambda   `vfilter:"optional,field=exit,doc=A callback to consider each row. When the callback returns TRUE the query is aborted"`
 }
 
 type QueryPlugin struct{}
@@ -112,9 +114,16 @@ func (self QueryPlugin) Call(
 			return
 		}
 
+		// Make the context cancellable.
 		if arg.Timeout > 0 {
 			subctx, cancel := context.WithTimeout(
 				ctx, time.Duration(arg.Timeout)*time.Second)
+			defer cancel()
+
+			ctx = subctx
+
+		} else {
+			subctx, cancel := context.WithCancel(ctx)
 			defer cancel()
 
 			ctx = subctx
@@ -155,7 +164,7 @@ func (self QueryPlugin) Call(
 			scope.Log("query: %v", err)
 		}
 
-		runQuery(ctx, subscope, output_chan, arg.Query)
+		runQuery(ctx, subscope, output_chan, arg.Query, arg.ExitCB)
 	}()
 
 	return output_chan
@@ -166,17 +175,18 @@ func runQuery(
 	ctx context.Context,
 	scope vfilter.Scope,
 	output_chan chan vfilter.Row,
-	query vfilter.Any) {
+	query vfilter.Any,
+	limit *vfilter.Lambda) {
 
 	switch t := query.(type) {
 	case string:
-		runStringQuery(ctx, scope, output_chan, t)
+		runStringQuery(ctx, scope, output_chan, t, limit)
 
 	case vfilter.StoredQuery:
-		runStoredQuery(ctx, scope, output_chan, t)
+		runStoredQuery(ctx, scope, output_chan, t, limit)
 
 	case vfilter.LazyExpr:
-		runQuery(ctx, scope, output_chan, t.ReduceWithScope(ctx, scope))
+		runQuery(ctx, scope, output_chan, t.ReduceWithScope(ctx, scope), limit)
 
 	default:
 		scope.Log("ERROR:query: query should be a string or subquery")
@@ -188,7 +198,8 @@ func runStoredQuery(
 	ctx context.Context,
 	scope vfilter.Scope,
 	output_chan chan vfilter.Row,
-	query vfilter.StoredQuery) {
+	query vfilter.StoredQuery,
+	limit *vfilter.Lambda) {
 
 	row_chan := query.Eval(ctx, scope)
 	for {
@@ -200,6 +211,12 @@ func runStoredQuery(
 			if !ok {
 				return
 			}
+
+			if limit != nil &&
+				scope.Bool(limit.Reduce(ctx, scope, []types.Any{row})) {
+				return
+			}
+
 			output_chan <- row
 		}
 	}
@@ -209,7 +226,8 @@ func runStringQuery(
 	ctx context.Context,
 	scope vfilter.Scope,
 	output_chan chan vfilter.Row,
-	query_string string) {
+	query_string string,
+	limit *vfilter.Lambda) {
 
 	// Parse and compile the query
 	scope.Log("query: running query %v", query_string)
@@ -230,6 +248,11 @@ func runStringQuery(
 			case row, ok := <-row_chan:
 				if !ok {
 					break get_rows
+				}
+
+				if limit != nil &&
+					scope.Bool(limit.Reduce(ctx, scope, []types.Any{row})) {
+					return
 				}
 
 				output_chan <- row

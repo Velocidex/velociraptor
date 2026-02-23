@@ -43,7 +43,8 @@ func (self *HuntDispatcherTracker) WriteProfile(
 	defer self.mu.Unlock()
 
 	for _, item := range self.RecentRefresh {
-		output_chan <- ordereddict.NewDict().
+		item.Lock()
+		res := ordereddict.NewDict().
 			Set("Type", item.Type).
 			Set("Time", item.Time.UTC().Format(time.RFC3339)).
 			Set("Ago", time.Now().Sub(item.Time).Round(time.Second).String()).
@@ -51,5 +52,8 @@ func (self *HuntDispatcherTracker) WriteProfile(
 			Set("TotalHunts", item.TotalHunts).
 			Set("TotalFlows", item.TotalFlows).
 			Set("TotalFlowsInspected", item.TotalFlowsInspected)
+		item.Unlock()
+
+		output_chan <- res
 	}
 }

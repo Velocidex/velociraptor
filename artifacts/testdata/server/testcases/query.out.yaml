@@ -1,0 +1,17 @@
+# Exit query with callback
+Query: SELECT * FROM query(query={
+  SELECT _value AS Value FROM range(end=100)
+}, exit="x=>x.Value >= 3")
+
+Output: [
+ {
+  "Value": 0
+ },
+ {
+  "Value": 1
+ },
+ {
+  "Value": 2
+ }
+]
+

@@ -7879,6 +7879,7 @@
     The tracker has two queries: a sync_query and an update_query. The update
     query resets the internal database.
   type: Function
+  version: 2
   args:
   - name: sync_query
     type: StoredQuery
@@ -7891,13 +7892,19 @@
     type: StoredQuery
     description: An Event query that produces live updates of the tracker state.
   - name: max_size
-    type: int64
+    type: uint64
     description: Maximum size of process tracker LRU.
+  - name: max_expiry
+    type: uint64
+    description: Expire process records older than this much.
   - name: enrichments
     type: string
     description: One or more VQL lambda functions that can enrich the data for the
       process.
     repeated: true
+  - name: cache
+    type: string
+    description: The path to the cache file - if not set we use a memory based cache.
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -11855,7 +11862,7 @@
 
     ## Tracee policies.
 
-    As of release 0.76, when calling this plugins, callers can supply
+    As of release 0.76, when calling this plugin, callers can supply
     a tracee policy instead of a list of events. The policy is a YAML
     file in a format described
     [here](https://aquasecurity.github.io/tracee/v0.14/docs/policies/)
@@ -12869,3 +12876,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+

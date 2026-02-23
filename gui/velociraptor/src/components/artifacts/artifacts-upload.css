@@ -3,6 +3,9 @@
     overflow-y: auto;
 }
 
+.hidden-file-upload {
+    display: none;
+}
 
 #upload {
     display: none;

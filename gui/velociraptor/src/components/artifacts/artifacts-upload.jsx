@@ -113,6 +113,9 @@ export default class ArtifactsUpload extends React.Component {
                      this.setState({loading:false,
                                     vfs_path: response.data.vfs_path,
                                     uploaded: uploaded});
+                 }).catch(err=>{
+                     console.log(err);
+                     this.setState({loading: false});
                  });
     };
 
@@ -127,10 +130,14 @@ export default class ArtifactsUpload extends React.Component {
         };
         api.post("v1/LoadArtifactPack", request,
                  this.source.token).then(response => {
+                     console.log(response);
+
                      if (response.data.cancel) {
                          return ;
                      }
                      this.props.onClose();
+                 }).catch(response=>{
+                     this.setState({loading: false});
                  });
     };
 
@@ -152,16 +159,16 @@ export default class ArtifactsUpload extends React.Component {
                     <Form.Group as={Row}>
                       <Col sm="12">
                         <InputGroup className="full-width custom-file-button">
-                          <Button variant="default"
-                            className={classNames({
-                                "disabled": !this.state.pack_file
-                            })}
-                            onClick={()=>this.uploadFile()}>
-                            { this.state.loading ?
-                              <FontAwesomeIcon icon="spinner" spin/> :
-                              T("Click to Upload") }
-                          </Button>
+                          { this.state.pack_file &&
+                            <Button variant="default"
+                                    onClick={()=>this.uploadFile()}>
+                              { this.state.loading ?
+                                <FontAwesomeIcon icon="spinner" spin/> :
+                                T("Click to Upload") }
+                            </Button> }
                           <Form.Control type="file" id={this.state.id}
+                                        className="hidden-file-upload"
+                                        placeholder={T("Select a file")}
                                         onChange={e => {
                                             if (!_.isEmpty(e.currentTarget.files)) {
                                                 this.setState({
@@ -173,7 +180,7 @@ export default class ArtifactsUpload extends React.Component {
                           <ToolTip tooltip={T("Select artifact pack (Zip file with YAML definitions)")}>
                             <Button variant="default-outline"
                                     className="flush-right">
-                              <Form.Label data-browse="Select file" htmlFor="upload">
+                              <Form.Label data-browse="Select file" htmlFor={this.state.id}>
                                 {this.state.pack_file ? this.state.pack_file.name :
                                  T("Select artifact pack (Zip file with YAML definitions)")}
                               </Form.Label>

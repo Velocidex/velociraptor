@@ -6,12 +6,14 @@ package ebpf
 
 import (
 	"context"
+	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/tracee_velociraptor/manager"
-	"github.com/Velocidex/tracee_velociraptor/userspace/events"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -64,18 +66,12 @@ func (self EBPFEventPlugin) Call(
 			return
 		}
 
-		var selected_events []events.ID
-
-		for _, event_name := range arg.EventNames {
-			desc, pres := manager.DescByEventName(event_name)
-			if !pres {
-				scope.Error("watch_ebpf: invalid event name %v", event_name)
-				continue
+		if arg.Policy == "" {
+			if len(arg.EventNames) == 0 {
+				scope.Log("watch_ebpf: should provide a policy or a list of events")
+				return
 			}
-			id, pres := desc.GetInt64("Id")
-			if pres {
-				selected_events = append(selected_events, events.ID(id))
-			}
+			arg.Policy = generateDefaultPolicy(arg.EventNames)
 		}
 
 		if gEbpfManager == nil {
@@ -102,8 +98,7 @@ func (self EBPFEventPlugin) Call(
 		}
 
 		opts := manager.EBPFWatchOptions{
-			SelectedEvents: selected_events,
-			Policy:         arg.Policy,
+			Policy: arg.Policy,
 		}
 
 		if arg.RegexPrefilter != "" {
@@ -140,6 +135,22 @@ func (self EBPFEventPlugin) Call(
 	}()
 
 	return output_chan
+}
+
+func generateDefaultPolicy(events []string) string {
+	var rules []string
+	for _, e := range events {
+		rules = append(rules, "   - event: "+e)
+	}
+
+	return fmt.Sprintf(`
+metadata:
+   name: policy_%d
+spec:
+   scope:
+     - global
+   rules:
+`, utils.GetTime().Now().Unix()) + strings.Join(rules, "\n")
 }
 
 type EBPFEventListPlugin struct{}

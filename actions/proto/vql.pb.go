@@ -723,7 +723,7 @@ type ClientInfo struct {
 	// A List of flows that are currently in flight and their last
 	// update epoch time.
 	InFlightFlows map[string]int64 `protobuf:"bytes,28,rep,name=in_flight_flows,json=inFlightFlows,proto3" json:"in_flight_flows,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
-	// A list of indexed metadata fields. There are not all metadata
+	// A list of indexed metadata fields. These are not all metadata
 	// fields, only the ones that are important enough to be indexed.
 	Metadata map[string]string `protobuf:"bytes,29,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }

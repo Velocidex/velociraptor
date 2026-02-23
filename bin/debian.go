@@ -121,7 +121,12 @@ func doServerDeb() error {
                        directory_name=Output,
                        release=Release)`
 
-	return runQueryWithEnv(query, builder, "json")
+	err = runQueryWithEnv(query, builder, "json")
+	if err != nil {
+		return err
+	}
+
+	return logger.Error
 }
 
 func doClientDeb() error {
@@ -181,7 +186,12 @@ func doClientDeb() error {
                        directory_name=Output,
                        release=Release)`
 
-	return runQueryWithEnv(query, builder, "json")
+	err = runQueryWithEnv(query, builder, "json")
+	if err != nil {
+		return err
+	}
+
+	return logger.Error
 }
 
 func init() {

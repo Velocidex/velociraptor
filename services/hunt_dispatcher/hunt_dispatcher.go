@@ -399,7 +399,7 @@ func (self *HuntDispatcher) StartRefresh(
 			return
 		}
 
-		refresh := HuntDispatcherRefreshSec(config_obj)
+		refresh := HuntDispatcherRefresh(config_obj)
 
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> Hunt Dispatcher Service for %v.",
@@ -491,13 +491,14 @@ func GetNewHuntId() string {
 	return constants.HUNT_PREFIX + result
 }
 
-func HuntDispatcherRefreshSec(config_obj *config_proto.Config) time.Duration {
+func HuntDispatcherRefresh(config_obj *config_proto.Config) time.Duration {
 	if config_obj.Defaults != nil &&
 		config_obj.Defaults.HuntDispatcherRefreshSec > 0 {
 		return time.Duration(config_obj.Defaults.HuntDispatcherRefreshSec) * time.Second
 	}
 
-	return time.Minute
+	// By default refresh every 10 minutes
+	return 10 * time.Minute
 }
 
 func init() {

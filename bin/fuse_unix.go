@@ -153,7 +153,7 @@ func doFuseZip() error {
 
 	<-ctx.Done()
 
-	return nil
+	return logger.Error
 }
 
 func init() {

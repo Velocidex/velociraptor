@@ -113,15 +113,26 @@ type HuntStorageManagerImpl struct {
 	last_flush_time time.Time
 
 	tracker *HuntDispatcherTracker
+
+	refresh_throttler *utils.Throttler
 }
 
 func NewHuntStorageManagerImpl(
 	config_obj *config_proto.Config) HuntStorageManager {
+
+	// To limit CPU and IO we throttle the refresh operation
+	refresh_rate := uint64(100)
+	if config_obj.Defaults != nil &&
+		config_obj.Defaults.HuntDispatcherRefreshRate > 0 {
+		refresh_rate = config_obj.Defaults.HuntDispatcherRefreshRate
+	}
+
 	result := &HuntStorageManagerImpl{
-		config_obj:  config_obj,
-		hunts:       make(map[string]*HuntRecord),
-		I_am_master: services.IsMaster(config_obj),
-		tracker:     &HuntDispatcherTracker{},
+		config_obj:        config_obj,
+		hunts:             make(map[string]*HuntRecord),
+		I_am_master:       services.IsMaster(config_obj),
+		tracker:           &HuntDispatcherTracker{},
+		refresh_throttler: utils.NewThrottler(refresh_rate),
 	}
 
 	if result.I_am_master {
@@ -163,6 +174,7 @@ func (self *HuntStorageManagerImpl) Close(ctx context.Context) {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Error("HuntStorageManager FlushIndex %v", err)
 	}
+	self.refresh_throttler.Close()
 }
 
 func (self *HuntStorageManagerImpl) ModifyHuntObject(
@@ -464,7 +476,8 @@ func (self *HuntStorageManagerImpl) loadHuntObjFromDisk(
 
 	// Scan the client list to update the scheduled and errored count.
 	stats, err := syncFlowTables(
-		ctx, config_obj, launcher, hunt_obj.HuntId, refresh_stats)
+		ctx, config_obj, launcher, hunt_obj.HuntId,
+		refresh_stats, self.refresh_throttler)
 	if err == nil && isStatsUpdated(stats, hunt_obj.Stats) {
 		hunt_obj.Stats = stats
 		if hunt_obj.State == api_proto.Hunt_STOPPED {
@@ -492,6 +505,8 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 		Type: "Datastore",
 		Time: utils.GetTime().Now(),
 	}
+
+	self.tracker.AddRefreshStats(stats)
 
 	// Ensure all the records are ready to read.
 	err := datastore.FlushDatastore(config_obj)
@@ -580,8 +595,9 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 		self.last_update = utils.GetTime().Now()
 	}
 
+	stats.Lock()
 	stats.Duration = utils.GetTime().Now().Sub(stats.Time)
-	self.tracker.AddRefreshStats(stats)
+	stats.Unlock()
 
 	return nil
 }

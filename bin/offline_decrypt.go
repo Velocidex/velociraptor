@@ -125,5 +125,5 @@ FROM stat(filename=copy(
 		fmt.Printf("Password is: %v\n", password)
 	}
 
-	return nil
+	return logger.Error
 }

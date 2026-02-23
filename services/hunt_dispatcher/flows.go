@@ -23,7 +23,8 @@ func syncFlowTables(
 	config_obj *config_proto.Config,
 	launcher services.Launcher,
 	hunt_id string,
-	refresh_stats *HuntRefreshStats) (*api_proto.HuntStats, error) {
+	refresh_stats *HuntRefreshStats,
+	throttler *utils.Throttler) (*api_proto.HuntStats, error) {
 
 	// Update the stats if needed.
 	stats := &api_proto.HuntStats{}
@@ -48,7 +49,7 @@ func syncFlowTables(
 
 		// Skip refreshing the enriched table if it is newer than 5 min
 		// old - this helps to reduce unnecessary updates.
-		if now.Sub(enriched_reader.MTime()) < HuntDispatcherRefreshSec(config_obj) {
+		if now.Sub(enriched_reader.MTime()) < HuntDispatcherRefresh(config_obj) {
 			return nil, utils.CancelledError
 		}
 	}
@@ -67,6 +68,10 @@ func syncFlowTables(
 	}
 
 	for json_str := range json_chan {
+		if throttler != nil {
+			throttler.Wait()
+		}
+
 		participation_row := &hunt_manager.ParticipationRecord{}
 		err := json.Unmarshal(json_str, participation_row)
 		if err != nil {
@@ -140,7 +145,7 @@ func (self *HuntDispatcher) GetFlows(
 	// the original table.
 	if options.SortColumn != "" || options.FilterColumn != "" {
 		_, err := syncFlowTables(ctx, config_obj, launcher, hunt_id,
-			&HuntRefreshStats{})
+			&HuntRefreshStats{}, nil)
 		if err != nil && !errors.Is(err, utils.CancelledError) {
 			close(output_chan)
 			return output_chan, 0, err
