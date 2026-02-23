@@ -1,7 +1,7 @@
 name: Windows.Forensics.Amcache
 author: Matthieu Chatelan, Yann Malherbe
 description: |
-  The Amcache.hve file is a registry file that stores metadata
+  The Amcache.hve is a registry file that stores metadata
   used by the OS’s application compatibility infrastructure to 
   record metadata about binaries present on the system. This 
   includes file paths, hashes, timestamps, and install/interaction 
