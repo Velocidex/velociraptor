@@ -311,6 +311,12 @@ func (self *HuntDispatcherTestSuite) TestDeleteHunts() {
 			State:  api_proto.Hunt_DELETED,
 		})
 
+	err := self.master_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	// Check the master is removed.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		_, pres := self.master_dispatcher.GetHunt(self.Ctx, hunt_id)
