@@ -57,6 +57,7 @@ Output: [
   "org_name": "\u003croot\u003e",
   "picture": "",
   "email": false,
+  "stats": null,
   "roles": [
    "reader"
   ],
@@ -76,6 +77,7 @@ Output: [
   "org_name": "\u003croot\u003e",
   "picture": "",
   "email": false,
+  "stats": null,
   "roles": [
    "administrator"
   ],
@@ -114,6 +116,7 @@ Output: [
   "org_name": "MyOrg",
   "picture": "",
   "email": false,
+  "stats": null,
   "roles": [
    "administrator"
   ],
@@ -151,6 +154,7 @@ Output: [
   "org_name": "MyOrg",
   "picture": "",
   "email": false,
+  "stats": null,
   "roles": [
    "reader"
   ],
@@ -170,6 +174,7 @@ Output: [
   "org_name": "\u003croot\u003e",
   "picture": "",
   "email": false,
+  "stats": null,
   "roles": [
    "reader"
   ],
@@ -194,6 +199,7 @@ Output: [
   "org_name": "\u003croot\u003e",
   "picture": "",
   "email": false,
+  "stats": null,
   "roles": [
    "reader"
   ],
@@ -213,6 +219,7 @@ Output: [
   "org_name": "\u003croot\u003e",
   "picture": "",
   "email": false,
+  "stats": null,
   "roles": [
    "administrator"
   ],
@@ -251,6 +258,7 @@ Output: [
   "org_name": "\u003croot\u003e",
   "picture": "",
   "email": false,
+  "stats": null,
   "roles": [
    "reader"
   ],
@@ -275,6 +283,7 @@ Output: [
   "org_name": "MyOrg",
   "picture": "",
   "email": false,
+  "stats": null,
   "roles": [
    "administrator"
   ],
@@ -312,6 +321,7 @@ Output: [
   "org_name": "MyOrg",
   "picture": "",
   "email": false,
+  "stats": null,
   "roles": [
    "reader"
   ],
@@ -385,6 +395,7 @@ Output: [
   "org_name": "MyOrg",
   "picture": "",
   "email": false,
+  "stats": null,
   "roles": [
    "administrator"
   ],
@@ -422,6 +433,7 @@ Output: [
   "org_name": "MySecondOrg",
   "picture": "",
   "email": false,
+  "stats": null,
   "roles": [
    "reader"
   ],
