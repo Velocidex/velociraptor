@@ -15,6 +15,12 @@ message Strings {
     repeated string strings = 1;
 }
 
+message UserStats {
+    // Last time the user's record was fetched from the cache.
+    int64 last_active_time = 1;
+    string last_ip_address = 2;
+}
+
 message VelociraptorUser {
     string name = 1 [(sem_type) = {
             description: "The username"
@@ -45,6 +51,8 @@ message VelociraptorUser {
     // Only used by the GUI/API to determine the currently selected
     // org the user wants to see.
     string current_org = 12;
+
+    UserStats stats = 13;
 }
 
 message UpdateUserRequest {

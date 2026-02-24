@@ -41,6 +41,12 @@ type IUserStorageManager interface {
 		principal, fav_type string) (*api_proto.Favorites, error)
 
 	DeleteUser(ctx context.Context, username string) error
+
+	SetUserStats(
+		ctx context.Context,
+		org_config_obj *config_proto.Config,
+		username string,
+		stats *api_proto.UserStats) error
 }
 
 // The NullStorage Manager is used for tools and clients. In this
@@ -83,6 +89,14 @@ func (self *NullStorageManager) GetFavorites(
 	return nil, utils.NotImplementedError
 }
 
+func (self *NullStorageManager) SetUserStats(
+	ctx context.Context,
+	org_config_obj *config_proto.Config,
+	username string,
+	stats *api_proto.UserStats) error {
+	return utils.NotImplementedError
+}
+
 /*
   The User Manager is responsible for coordinating access to user
   records.
@@ -110,6 +124,53 @@ type UserStorageManager struct {
 	id int64
 
 	validator Validator
+}
+
+func (self *UserStorageManager) SetUserStats(
+	ctx context.Context,
+	org_config_obj *config_proto.Config,
+	username string,
+	stats *api_proto.UserStats) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if username == "" {
+		return errors.New("Must set a username")
+	}
+
+	// Check the LRU for a cache if it is there
+	lower_user_name := utils.ToLower(username)
+	cache, pres := self.cache[lower_user_name]
+	if !pres || cache.user_record == nil {
+		return utils.NotFoundError
+	}
+
+	cache.user_record.Stats = stats
+	old_timestamp := cache.timestamp
+	now := utils.GetTime().Now()
+
+	if now.Sub(old_timestamp) > 60*time.Minute {
+		cache.timestamp = now
+
+		db, err := datastore.GetDB(org_config_obj)
+		if err != nil {
+			return err
+		}
+
+		// Update the user record in the datastore but use the original
+		// user name. This is compatible with the previous behavior.
+		err = db.SetSubject(org_config_obj,
+			paths.UserPathManager{Name: cache.user_record.Name}.Path(),
+			cache.user_record)
+		if err != nil {
+			return err
+		}
+
+		self.cache[lower_user_name] = cache
+	}
+
+	return nil
 }
 
 func (self *UserStorageManager) GetUserWithHashes(ctx context.Context, username string) (
@@ -350,6 +411,9 @@ func (self *UserStorageManager) ListAllUsers(
 	for _, cache := range self.cache {
 		user_record := proto.Clone(cache.user_record).(*api_proto.VelociraptorUser)
 		result = append(result, user_record)
+		if user_record.Name == "mic" {
+			utils.DlvBreak()
+		}
 	}
 
 	sort.Slice(result, func(i, j int) bool {

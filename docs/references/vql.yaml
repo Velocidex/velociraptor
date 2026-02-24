@@ -8273,6 +8273,22 @@
     this (Usually only admins have it). This permission is equivalent
     to administrator because a user with this permission can become
     any user they want including the administrator.
+
+    ### Dynamic exit condition
+
+    You can use the `query()` plugin to terminate a query early by
+    setting a lambda callback for the `exit` parameter:
+
+    ```vql
+    LET my_limit <= 5
+
+    SELECT *
+    FROM query(query={
+       SELECT _value AS Value
+       FROM range(start=0, end=20)
+    }, exit='x=>x._value >= my_limit', inherit=true)
+    ```
+
   type: Plugin
   args:
   - name: query
@@ -8310,6 +8326,10 @@
   - name: inherit
     type: bool
     description: If specified we inherit the scope instead of building a new one.
+  - name: exit
+    type: vfilter.Lambda
+    description: A callback to consider each row. When the callback returns TRUE the
+      query is aborted
   category: server
   metadata:
     permissions: IMPERSONATION
@@ -10425,6 +10445,9 @@
     type: ordereddict.Dict
     description: An object to be expanded into the template.
     required: true
+  - name: html
+    type: bool
+    description: Use when the output should be html escaped.
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
@@ -12876,4 +12899,3 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
-

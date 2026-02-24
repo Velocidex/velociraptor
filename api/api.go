@@ -36,6 +36,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
@@ -900,6 +901,17 @@ func (self *ApiServer) Query(
 			"Permission denied: User %v requires permission %v to run queries",
 			principal, permissions))
 	}
+
+	peer, ok := peer.FromContext(stream.Context())
+	if !ok {
+		return status.Error(codes.PermissionDenied, "No peer")
+	}
+
+	_ = users.SetUserStats(stream.Context(), org_config_obj, principal,
+		&api_proto.UserStats{
+			LastActiveTime: utils.GetTime().Now().Unix(),
+			LastIpAddress:  peer.Addr.String(),
+		})
 
 	return streamQuery(stream.Context(), org_config_obj, in, stream, principal)
 }

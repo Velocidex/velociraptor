@@ -70,3 +70,7 @@
     background-color: var(--color-table-row-stripe);
     color: var(--color-foreground);
 }
+
+.user-status {
+    max-width: 28px;
+}

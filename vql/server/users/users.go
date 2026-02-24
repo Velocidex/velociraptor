@@ -152,7 +152,8 @@ func getUserRecord(
 		Set("org_id", org_id).
 		Set("org_name", org_name).
 		Set("picture", user_details.Picture).
-		Set("email", user_details.VerifiedEmail)
+		Set("email", user_details.VerifiedEmail).
+		Set("stats", user_details.Stats)
 	policy, err := services.GetPolicy(org_config_obj, user_details.Name)
 	if err == nil {
 		details.Set("roles", policy.Roles)

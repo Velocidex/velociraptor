@@ -27,6 +27,10 @@ import ToolTip from '../widgets/tooltip.jsx';
 
 const POLL_TIME = 5000;
 
+// In ms
+const Duration15Min = 60 * 15 * 1000;
+const Duration24Hours = 60 * 60 * 24 * 1000;
+
 function getOrgRecordsForUser(users, name) {
     if (_.isEmpty(users)) {
         return [];
@@ -274,6 +278,61 @@ class PermissionViewer extends Component {
     }
 }
 
+class UserStats extends Component {
+    static propTypes = {
+        user: PropTypes.object,
+    }
+
+    last_active_ms() {
+        return ((this.props.user &&
+                this.props.user.stats &&
+                 this.props.user.stats.last_active_time) || 0) * 1000;
+    }
+
+    renderStatus() {
+        let last_active_ms = this.last_active_ms();
+        let date = new Date();
+        let now_ms = date.getTime();
+
+        if ((now_ms - last_active_ms) < Duration15Min) {
+            return  <div className="online-btn" alt="online" />;
+        }
+        if ((now_ms - last_active_ms) < Duration24Hours) {
+            return  <FontAwesomeIcon icon="fa-solid fa-triangle-exclamation"
+                                 className="fa-fade fa-offline-btn" alt="online1d" />;
+        }
+        return <FontAwesomeIcon icon="fa-solid fa-triangle-exclamation"
+                                className="fa-offline-btn " alt="online1d" />;
+    }
+
+    render() {
+        let tt = "";
+        let last_active_ms = this.last_active_ms();
+        if(last_active_ms > 0) {
+            let now = new Date().getTime();
+            let difference = (now-last_active_ms);
+            let last_ip_address = (this.props.user &&
+                                   this.props.user.stats &&
+                                   this.props.user.stats.last_ip_address) || "";
+            if (last_ip_address) {
+                last_ip_address = <span>{T(" from ")} {last_ip_address}</span>;
+            }
+            tt = <span>
+                   {T("HumanizeDuration", difference)}
+                   {last_ip_address}
+                 </span>;
+
+        }
+        return <ToolTip tooltip={tt}>
+                 <Button
+                   className="user-status"
+                   variant="outline-default">
+                   { this.renderStatus() }
+                 </Button>
+               </ToolTip>;
+    }
+}
+
 
 class UsersOverview extends Component {
     static contextType = UserConfig;
@@ -384,6 +443,7 @@ class UsersOverview extends Component {
                     <Table size="sm">
                       <thead>
                         <tr>
+                          <th></th>
                           <th>
                             {T("Users")}
                             { !this.context.traits.password_less &&
@@ -425,7 +485,10 @@ class UsersOverview extends Component {
                             return <tr key={idx} className={
                                     this.state.user_name === item.name ?
                                     "row-selected" : undefined
-                                }>
+                            }>
+                                     <td className="user-status">
+                                       <UserStats user={item}/>
+                                     </td>
                                      <td onClick={e=>{
                                          this.setState({user_name: item.name});
                                          this.getACL(item.name, this.state.org);
@@ -560,13 +623,19 @@ class OrgsOverview extends UsersOverview {
             <Container className="selectable user-list">
              <Table size="sm">
                      <thead>
-                       <tr><th>{T("Users")}</th></tr>
+                       <tr>
+                         <th></th>
+                         <th>{T("Users")}</th>
+                       </tr>
                      </thead>
                      <tbody>
                  { _.map(selected_users, (item, idx)=>{
                      return <tr key={idx} className={
                          this.state.user_name === item.name ?
                              "row-selected" : undefined}>
+                              <td className="user-status">
+                                  <UserStats user={item}/>
+                              </td>
                               <td onClick={e=>{
                                   this.setState({user_name: item.name});
                                   this.getACL(item.name, this.state.org);

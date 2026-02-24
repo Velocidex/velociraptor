@@ -9,12 +9,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
-	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Implement basic authentication.
@@ -44,7 +44,7 @@ func (self *BasicAuthenticator) AddLogoff(mux *api_utils.ServeMux) error {
 					old_username, ok := params["username"]
 					if ok && len(old_username) == 1 && old_username[0] != username {
 						// Authenticated as someone else.
-						http.Redirect(w, r, utils.Homepage(self.config_obj),
+						http.Redirect(w, r, api_utils.Homepage(self.config_obj),
 							http.StatusTemporaryRedirect)
 						return
 					}
@@ -157,6 +157,12 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 			serialized, _ := json.Marshal(user_info)
 			ctx := context.WithValue(
 				r.Context(), constants.GRPC_USER_CONTEXT, string(serialized))
+
+			_ = users_manager.SetUserStats(r.Context(), self.config_obj, username,
+				&api_proto.UserStats{
+					LastActiveTime: utils.GetTime().Now().Unix(),
+					LastIpAddress:  r.RemoteAddr,
+				})
 
 			// Need to call logging after auth so it can access
 			// the USER value in the context.

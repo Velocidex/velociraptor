@@ -153,6 +153,14 @@ func (self UserManager) SetUser(
 	return self.storage.SetUser(ctx, user_record)
 }
 
+func (self UserManager) SetUserStats(
+	ctx context.Context,
+	org_config_obj *config_proto.Config,
+	username string,
+	stats *api_proto.UserStats) error {
+	return self.storage.SetUserStats(ctx, org_config_obj, username, stats)
+}
+
 func (self UserManager) SetUserOptions(ctx context.Context,
 	principal, username string,
 	options *api_proto.SetGUIOptionsRequest) error {

@@ -89,6 +89,12 @@ func authenticateUserHandle(
 			ctx := context.WithValue(
 				r.Context(), constants.GRPC_USER_CONTEXT, string(serialized))
 
+			_ = users.SetUserStats(r.Context(), config_obj, username,
+				&api_proto.UserStats{
+					LastActiveTime: utils.GetTime().Now().Unix(),
+					LastIpAddress:  r.RemoteAddr,
+				})
+
 			// Need to call logging after auth so it can access
 			// the contextKeyUser value in the context.
 			logger.ServeHTTP(w, r.WithContext(ctx))

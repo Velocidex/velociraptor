@@ -117,6 +117,12 @@ type UserManager interface {
 		principal, username string,
 		password, current_org string) error
 
+	SetUserStats(
+		ctx context.Context,
+		org_config_obj *config_proto.Config,
+		username string,
+		stats *api_proto.UserStats) error
+
 	// Removes the user record.
 	// principal - is the user who is requesting this account removal.
 	// username - the user to remove.

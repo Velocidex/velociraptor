@@ -4,6 +4,7 @@ import (
 	"context"
 	"sort"
 
+	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -12,10 +13,10 @@ import (
 )
 
 // List all the users visible to this principal.
-// - If the principal is an ORG_ADMIN they can see all users
-// - If the user is SERVER_ADMIN they will see the full user records.
-// - Otherwise list all users belonging to the orgs in which the user
-//   has at least read access. Only user names will be shown.
+//   - If the principal is an ORG_ADMIN they can see all users
+//   - If the user is SERVER_ADMIN they will see the full user records.
+//   - Otherwise list all users belonging to the orgs in which the user
+//     has at least read access. Only user names will be shown.
 func (self *UserManager) ListUsers(
 	ctx context.Context,
 	principal string, orgs []string) ([]*api_proto.VelociraptorUser, error) {
@@ -99,7 +100,8 @@ func (self *UserManager) ListUsers(
 
 		// This is the record we will return.
 		user_record := &api_proto.VelociraptorUser{
-			Name: user.Name,
+			Name:  user.Name,
+			Stats: proto.Clone(user.Stats).(*api_proto.UserStats),
 		}
 
 		for org_id, org_info := range plan {
