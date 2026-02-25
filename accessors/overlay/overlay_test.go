@@ -90,12 +90,14 @@ func (self *OverlayAccessorTestSuite) TestOverlay() {
 			assert.NoError(self.T(), err)
 			fd.Close()
 
-			golden.Set(f.OSPath().String(), string(data))
+			components := strings.Join(f.OSPath().Components, ":")
+
+			golden.Set(components, string(data))
 
 			stat, err := accessor.LstatWithOSPath(f.OSPath())
 			assert.NoError(self.T(), err)
 
-			golden.Set(f.OSPath().String()+" Stat", stat.OSPath())
+			golden.Set(components+" Stat", stat.OSPath())
 
 		}
 	}

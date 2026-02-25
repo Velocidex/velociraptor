@@ -1,8 +1,8 @@
 {
- "/file1.txt": "Hello",
- "/file1.txt Stat": "/file1.txt",
- "/file2.txt": "Hello Two",
- "/file2.txt Stat": "/file2.txt",
- "/subdir/file2.txt": "Hello Subdir",
- "/subdir/file2.txt Stat": "/subdir/file2.txt"
+ "file1.txt": "Hello",
+ "file1.txt Stat": "/file1.txt",
+ "file2.txt": "Hello Two",
+ "file2.txt Stat": "/file2.txt",
+ "subdir:file2.txt": "Hello Subdir",
+ "subdir:file2.txt Stat": "/subdir/file2.txt"
 }
