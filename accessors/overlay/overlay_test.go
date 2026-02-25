@@ -97,8 +97,8 @@ func (self *OverlayAccessorTestSuite) TestOverlay() {
 			stat, err := accessor.LstatWithOSPath(f.OSPath())
 			assert.NoError(self.T(), err)
 
-			golden.Set(components+" Stat", stat.OSPath())
-
+			golden.Set(components+" Stat",
+				strings.Join(stat.OSPath().Components, ":"))
 		}
 	}
 	check_dir("/")
