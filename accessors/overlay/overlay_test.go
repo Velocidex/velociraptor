@@ -91,6 +91,12 @@ func (self *OverlayAccessorTestSuite) TestOverlay() {
 			fd.Close()
 
 			golden.Set(f.OSPath().String(), string(data))
+
+			stat, err := accessor.LstatWithOSPath(f.OSPath())
+			assert.NoError(self.T(), err)
+
+			golden.Set(f.OSPath().String()+" Stat", stat.OSPath())
+
 		}
 	}
 	check_dir("/")

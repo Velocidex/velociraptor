@@ -16,7 +16,7 @@ import (
 )
 
 type OverlayFileSystemAccessorArgs struct {
-	Paths    []*accessors.OSPath `vfilter:"required,field=paths,doc=A list of paths to try to resolve each path."`
+	Paths    []*accessors.OSPath `vfilter:"required,field=paths,doc=A list of paths to try to resolve."`
 	Accessor string              `vfilter:"optional,field=accessor,doc=File accessor"`
 }
 
@@ -74,17 +74,19 @@ func (self OverlayFileSystemAccessor) ReadDirWithOSPath(
 		return nil, err
 	}
 
-	base, _ := accessors.NewGenericOSPath("/")
-
 	for _, basepath := range overlayer.Paths {
 		delegate_path := basepath.Append(path.Components...)
 		delegate_dir, err := accessor.ReadDirWithOSPath(delegate_path)
 		if err != nil {
 			continue
 		}
+
+		base := basepath.TrimComponents(basepath.Components...)
+
 		for _, fsinfo := range delegate_dir {
-			res = append(res, accessors.NewFileInfoWrapper(
-				fsinfo, base, basepath.Copy()))
+			item := accessors.NewFileInfoWrapper(
+				fsinfo, base, basepath.Copy())
+			res = append(res, item)
 		}
 	}
 
@@ -158,6 +160,8 @@ func (self OverlayFileSystemAccessor) LstatWithOSPath(
 			basepath.Append(path.Components...))
 		// Return the first successful opened file
 		if res_err == nil {
+			base := basepath.TrimComponents(basepath.Components...)
+			res = accessors.NewFileInfoWrapper(res, base, basepath.Copy())
 			break
 		}
 	}

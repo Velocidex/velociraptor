@@ -226,6 +226,21 @@ func (self *OSPath) TrimComponents(components ...string) *OSPath {
 	return result
 }
 
+// Does the path has the required prefix?
+func (self *OSPath) HasPrefix(components ...string) bool {
+	if len(self.Components) > len(components) {
+		return false
+	}
+
+	for idx, c := range components {
+		if !self.Manipulator.ComponentEqual(c, self.Components[idx]) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Produce a human readable string - this is a one way conversion: It
 // is not possible to go back to a proper OSPath from this.
 func (self *OSPath) HumanString(scope types.Scope) string {
