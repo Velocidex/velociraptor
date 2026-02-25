@@ -8288,7 +8288,6 @@
        FROM range(start=0, end=20)
     }, exit='x=>x._value >= my_limit', inherit=true)
     ```
-
   type: Plugin
   args:
   - name: query
@@ -12507,6 +12506,35 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: write_file
+  description: |
+    Writes a string onto a file.
+
+    This VQL function is a convenience wrapper to the copy() function.
+
+  type: Function
+  args:
+  - name: data
+    type: string
+    description: The data to write
+    required: true
+  - name: dest
+    type: string
+    description: The destination file to write.
+    required: true
+  - name: permissions
+    type: string
+    description: Required permissions (e.g. 'x').
+  - name: append
+    type: bool
+    description: If true we append to the target file otherwise truncate it
+  - name: create_directories
+    type: bool
+    description: If true we ensure the destination directories exist
+  metadata:
+    permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
+  platforms:
+  - linux_amd64_cgo
 - name: write_jsonl
   description: Write a query into a JSONL file.
   type: Plugin

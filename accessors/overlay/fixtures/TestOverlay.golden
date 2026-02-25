@@ -1,4 +1,5 @@
 {
  "/file1.txt": "Hello",
- "/file2.txt": "Hello Two"
+ "/file2.txt": "Hello Two",
+ "/subdir/file2.txt": "Hello Subdir"
 }

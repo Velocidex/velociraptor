@@ -826,8 +826,12 @@ func NewLauncherService(
 		return &Launcher{Storage_: &DummyStorer{}}, nil
 	}
 
-	res := &Launcher{
-		Storage_: NewFlowStorageManager(ctx, config_obj, wg),
+	storage, err := NewFlowStorageManager(ctx, config_obj, wg)
+	if err != nil {
+		return nil, err
 	}
-	return res, nil
+
+	return &Launcher{
+		Storage_: storage,
+	}, nil
 }

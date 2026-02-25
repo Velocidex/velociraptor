@@ -583,7 +583,11 @@ func (self *ClientInfoManager) Set(
 func NewClientInfoManager(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) (*ClientInfoManager, error) {
+	config_obj *config_proto.Config) (services.ClientInfoManager, error) {
+
+	if config_obj.Datastore == nil {
+		return &DummyClientInfoManager{}, nil
+	}
 
 	// Calculate a unique id for each service.
 	service := &ClientInfoManager{
@@ -614,8 +618,6 @@ func NewClientInfoManager(
 
 		<-ctx.Done()
 
-		utils.DlvBreak()
-
 		// When we shut down make sure to save the snapshot.
 		subctx, cancel := utils.WithTimeoutCause(
 			context.Background(), 100*time.Second,
@@ -628,6 +630,11 @@ func NewClientInfoManager(
 			logger.Error("ClientInfoService: SaveSnapshot: %v", err)
 		}
 	}()
+
+	err = service.Start(ctx, config_obj, wg)
+	if err != nil {
+		return nil, err
+	}
 
 	return service, nil
 }

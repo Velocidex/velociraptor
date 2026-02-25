@@ -84,13 +84,6 @@ func GetLauncher(config_obj *config_proto.Config) (Launcher, error) {
 	}
 
 	svc := org_manager.Services(config_obj.OrgId)
-
-	// We need the client info manager to be up first
-	_, err = svc.ClientInfoManager()
-	if err != nil {
-		return nil, err
-	}
-
 	return svc.Launcher()
 }
 

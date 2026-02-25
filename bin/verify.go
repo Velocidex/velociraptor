@@ -52,7 +52,7 @@ func doVerify() error {
 
 	var artifact_paths []string
 
-	for _, artifact_path := range *verify_args {
+	for _, artifact_path := range expandGlobs(*verify_args) {
 		abs, err := filepath.Abs(artifact_path)
 		if err != nil {
 			logger.Error("verify: could not get absolute path for %v", artifact_path)

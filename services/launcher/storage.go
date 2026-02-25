@@ -380,7 +380,7 @@ func (self *FlowStorageManager) GetFlowRequests(
 func NewFlowStorageManager(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	wg *sync.WaitGroup) *FlowStorageManager {
+	wg *sync.WaitGroup) (*FlowStorageManager, error) {
 	res := &FlowStorageManager{
 		indexBuilders: make(map[string]*flowIndexBuilder),
 		throttler:     utils.NewThrottlerWithDuration(time.Second),
@@ -392,8 +392,14 @@ func NewFlowStorageManager(
 			1, 100*time.Millisecond),
 	}
 
+	// We need the client info manager to be up first
+	_, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	wg.Add(1)
 	go res.houseKeeping(ctx, config_obj, wg)
 
-	return res
+	return res, nil
 }

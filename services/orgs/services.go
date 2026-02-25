@@ -505,6 +505,16 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.mu.Unlock()
 	}
 
+	if spec.ClientInfo {
+		c, err := client_info.NewClientInfoManager(ctx, wg, org_config)
+		if err != nil {
+			return err
+		}
+		service_container.mu.Lock()
+		service_container.client_info_manager = c
+		service_container.mu.Unlock()
+	}
+
 	if spec.Launcher {
 		launch, err := launcher.NewLauncherService(
 			ctx, wg, org_config)
@@ -607,21 +617,6 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		if err != nil {
 			return err
 		}
-	}
-
-	if spec.ClientInfo {
-		c, err := client_info.NewClientInfoManager(ctx, wg, org_config)
-		if err != nil {
-			return err
-		}
-		err = c.Start(ctx, org_config, wg)
-		if err != nil {
-			return err
-		}
-
-		service_container.mu.Lock()
-		service_container.client_info_manager = c
-		service_container.mu.Unlock()
 	}
 
 	if spec.HuntDispatcher {

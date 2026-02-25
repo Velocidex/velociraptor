@@ -160,6 +160,8 @@ func doArtifactCollect() error {
 		return fmt.Errorf("Unable to create config: %w", err)
 	}
 
+	config_obj.Services = services.GenericToolServices()
+
 	ctx, top_cancel := install_sig_handler()
 	defer top_cancel()
 

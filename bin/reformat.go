@@ -43,7 +43,7 @@ func doReformat() error {
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 
 	var artifact_paths []string
-	for _, artifact_path := range *reformat_args {
+	for _, artifact_path := range expandGlobs(*reformat_args) {
 		abs, err := filepath.Abs(artifact_path)
 		if err != nil {
 			logger.Error("reformat: could not get absolute path for %v", artifact_path)

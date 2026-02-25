@@ -54,6 +54,7 @@ func (self *OverlayAccessorTestSuite) makeFile(path string, content string) {
 func (self *OverlayAccessorTestSuite) TestOverlay() {
 	self.makeFile("foo1/file1.txt", "Hello")
 	self.makeFile("foo2/file2.txt", "Hello Two")
+	self.makeFile("foo2/subdir/file2.txt", "Hello Subdir")
 
 	scope := vql_subsystem.MakeScope().
 		AppendVars(ordereddict.NewDict().
@@ -71,21 +72,29 @@ func (self *OverlayAccessorTestSuite) TestOverlay() {
 	accessor, err := accessors.GetAccessor("overlay", scope)
 	assert.NoError(self.T(), err)
 
-	files, err := accessor.ReadDir("/")
-	assert.NoError(self.T(), err)
-
 	golden := ordereddict.NewDict()
 
-	for _, f := range files {
-		fd, err := accessor.OpenWithOSPath(f.OSPath())
+	check_dir := func(file_path string) {
+		files, err := accessor.ReadDir(file_path)
 		assert.NoError(self.T(), err)
 
-		data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
-		assert.NoError(self.T(), err)
-		fd.Close()
+		for _, f := range files {
+			if f.IsDir() {
+				continue
+			}
 
-		golden.Set(f.OSPath().String(), string(data))
+			fd, err := accessor.OpenWithOSPath(f.OSPath())
+			assert.NoError(self.T(), err)
+
+			data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY)
+			assert.NoError(self.T(), err)
+			fd.Close()
+
+			golden.Set(f.OSPath().String(), string(data))
+		}
 	}
+	check_dir("/")
+	check_dir("/subdir/")
 
 	goldie.Assert(self.T(), "TestOverlay", json.MustMarshalIndent(golden))
 

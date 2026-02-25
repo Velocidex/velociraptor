@@ -47,7 +47,7 @@ type CopyFunctionArgs struct {
 
 type CopyFunction struct{}
 
-func (self *CopyFunction) Call(ctx context.Context,
+func (self CopyFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	defer vql_subsystem.RegisterMonitor(ctx, "copy", args)()
@@ -169,5 +169,5 @@ func (self CopyFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 }
 
 func init() {
-	vql_subsystem.RegisterFunction(&CopyFunction{})
+	vql_subsystem.RegisterFunction(CopyFunction{})
 }
