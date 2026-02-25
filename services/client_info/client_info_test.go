@@ -160,7 +160,7 @@ func (self *ClientInfoTestSuite) TestMasterMinion() {
 		self.Ctx, self.Sm.Wg, minion_config)
 	assert.NoError(self.T(), err)
 
-	err = minion_client_info_manager.Start(
+	err = minion_client_info_manager.(*client_info.ClientInfoManager).Start(
 		self.Ctx, minion_config, self.Sm.Wg)
 	assert.NoError(self.T(), err)
 
