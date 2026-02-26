@@ -26,8 +26,9 @@ import (
 	"runtime/trace"
 	"time"
 
+	"errors"
+
 	kingpin "github.com/alecthomas/kingpin/v2"
-	errors "github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -151,6 +152,10 @@ func main() {
 			}
 			args = append(args, post...)
 			Prelog("Autoexec with parameters: %v", args)
+		}
+
+		if errors.Is(err, utils.EmbeddedConfigError) {
+			kingpin.FatalIfError(err, "EmbeddedConfigError")
 		}
 	}
 

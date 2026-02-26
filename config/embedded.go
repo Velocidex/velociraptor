@@ -3,6 +3,8 @@ package config
 import (
 	"bytes"
 	"compress/zlib"
+	"errors"
+	"fmt"
 	"io"
 	"os"
 
@@ -16,30 +18,34 @@ func ExtractEmbeddedConfig(
 
 	fd, err := os.Open(embedded_file)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", utils.EmbeddedConfigError, err)
 	}
 
 	// Read a lot of the file into memory so we can extract the
-	// configuration. This solution only loads the first 10mb into
+	// configuration. This solution only loads the first 100mb into
 	// memory which should be sufficient for most practical config
 	// files. If there are embedded binaries they will not be read and
 	// will be ignored at this stage (thay can be extracted with the
 	// 'me' accessor).
-	buf, err := utils.ReadAllWithLimit(fd, 10*1024*1024)
-	if err != nil {
-		return nil, err
+	buf, err := utils.ReadAllWithLimit(fd, 100*1024*1024)
+
+	// It is ok to have a short read here.
+	if err != nil && !errors.Is(err, utils.MemoryBufferExceeded) {
+		return nil, fmt.Errorf("%w: %v", utils.EmbeddedConfigError, err)
 	}
 
 	// Find the embedded marker in the buffer.
 	match := embedded_re.FindIndex(buf)
 	if match == nil {
-		return nil, noEmbeddedConfig
+		return nil, fmt.Errorf("%w: Unable to find signature", utils.EmbeddedConfigError)
 	}
 
 	embedded_string := buf[match[0]:]
 	return decode_embedded_config(embedded_string)
 }
 
+// Read the embedded config from this binary - just uses the static
+// allocated string variable.
 func read_embedded_config() (*config_proto.Config, error) {
 	return decode_embedded_config(FileConfigDefaultYaml)
 }
@@ -49,14 +55,15 @@ func decode_embedded_config(encoded_string []byte) (*config_proto.Config, error)
 	idx := bytes.IndexByte(encoded_string, '\n')
 
 	if len(encoded_string) < idx+10 {
-		return nil, noEmbeddedConfig
+		return nil, fmt.Errorf("%w: embedded file too short", utils.EmbeddedConfigError)
 	}
 
 	// If the following line still starts with # then the file is not
 	// repacked - the repacker will replace all further data with the
 	// compressed string.
 	if encoded_string[idx+1] == '#' {
-		return nil, noEmbeddedConfig
+		return nil, fmt.Errorf("%w: embedded file is not packed yet",
+			utils.EmbeddedConfigError)
 	}
 
 	// Decompress the rest of the data - note that zlib will ignore
@@ -65,20 +72,20 @@ func decode_embedded_config(encoded_string []byte) (*config_proto.Config, error)
 	// whole string here.
 	r, err := zlib.NewReader(bytes.NewReader(encoded_string[idx+1:]))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", utils.EmbeddedConfigError, err)
 	}
 
 	b := &bytes.Buffer{}
 	_, err = io.Copy(b, r)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", utils.EmbeddedConfigError, err)
 	}
 	r.Close()
 
 	result := &config_proto.Config{}
 	err = yaml.Unmarshal(b.Bytes(), result)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", utils.EmbeddedConfigError, err)
 	}
 	return result, nil
 }

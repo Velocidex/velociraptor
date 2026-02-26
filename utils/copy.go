@@ -17,15 +17,16 @@ var (
 			return &buffer
 		},
 	}
+
+	MemoryBufferExceeded = Wrap(IOError, "Memory buffer exceeded")
 )
 
-func ReadAllWithLimit(
-	fd io.Reader, limit int) ([]byte, error) {
+func ReadAllWithLimit(fd io.Reader, limit int) ([]byte, error) {
 
 	// If we reach the limit signal this as an error!
 	res, err := ioutil.ReadAll(io.LimitReader(fd, int64(limit)))
 	if len(res) >= limit {
-		return nil, Wrap(IOError, "Memory buffer exceeded")
+		return res, MemoryBufferExceeded
 	}
 
 	return res, err

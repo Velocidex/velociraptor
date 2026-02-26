@@ -36,6 +36,7 @@ func ClientServicesSpec() *config_proto.ServerServicesConfig {
 		Launcher:            true,
 		HttpCommunicator:    true,
 		ClientEventTable:    true,
+		ClientInfo:          true,
 	}
 }
 
