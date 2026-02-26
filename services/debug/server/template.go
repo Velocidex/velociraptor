@@ -135,6 +135,7 @@ $(document).ready(function() {
   </head>
 <body>
 <h1>Velociraptor Debug Server</h1>
+<a href="%s/debug/everything">Everything</a>
 <div class="category">Internal</div>
 <ul class="categories">
   <li><a href="%s/debug/metrics">Metrics</a></li>

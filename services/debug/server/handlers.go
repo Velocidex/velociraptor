@@ -136,6 +136,9 @@ func (self *debugMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "metrics":
 		promhttp.Handler().ServeHTTP(w, r)
 
+	case "everything":
+		self.handleEverything(w, r)
+
 	default:
 		self.HandleIndex(w, r)
 	}
