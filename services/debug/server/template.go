@@ -203,7 +203,7 @@ func (self *debugMux) renderCategory(node *debug.CategoryTreeNode) string {
 func (self *debugMux) HandleIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	_, _ = w.Write([]byte(fmt.Sprintf(indexHeader, self.base, self.base)))
+	_, _ = w.Write([]byte(fmt.Sprintf(indexHeader, self.base, self.base, self.base)))
 	categories := debug.GetProfileTree()
 	_, _ = w.Write([]byte(self.renderCategory(categories)))
 	_, _ = w.Write([]byte(`</body></html>`))
