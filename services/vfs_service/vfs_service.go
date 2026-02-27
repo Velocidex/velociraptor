@@ -125,6 +125,20 @@ func (self *VFSService) ProcessDownloadFile(
 		SHA256, _ := row.GetString("Sha256")
 		Error, _ := row.GetString("Error")
 
+		// Code to log metadata about the downloaded file.
+		user := ""
+		if flow.Request != nil {
+			user = flow.Request.Creator
+		}
+
+		logger.Debug(
+			"VFSService: Collecting %s from %s for %s, flow=%s",
+			Path,
+			client_id,
+			user,
+			flow_id
+		)
+
 		// Figure out where the file was uploaded to.
 		uploaded_file_manager := flow_path_manager.GetUploadsFile(
 			Accessor, Path, Components)
