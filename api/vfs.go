@@ -73,7 +73,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
 // Split the vfs path into a client path and an accessor. We only
@@ -173,27 +172,13 @@ func (self *ApiServer) VFSDownloadFile(
 	defer Instrument("VFSDownloadFile")()
 
 	users := services.GetUserManager()
-	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-	principal := user_record.Name
-
-	permissions := acls.COLLECT_CLIENT
-	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
-	if !perm || err != nil {
-		return nil, PermissionDenied(err,
-			"User is not allowed to collect files from the VFS.")
-	}
-
-	launcher, err := services.GetLauncher(org_config_obj)
+	_, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
 	request := &flows_proto.ArtifactCollectorArgs{
 		ClientId:  in.ClientId,
-		Creator:   principal,
 		Urgent:    true,
 		Artifacts: []string{"System.VFS.DownloadFile"},
 		Specs: []*flows_proto.ArtifactSpec{{
@@ -210,20 +195,7 @@ func (self *ApiServer) VFSDownloadFile(
 		}},
 	}
 
-	manager, err := services.GetRepositoryManager(org_config_obj)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
-	repository, err := manager.GetGlobalRepository(org_config_obj)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
-	acl_manager := acl_managers.NullACLManager{}
-	flow_id, err := launcher.ScheduleArtifactCollection(
-		ctx, org_config_obj, acl_manager, repository, request,
-		utils.BackgroundWriter)
+	resp, err := self.CollectArtifact(ctx, request)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -235,7 +207,7 @@ func (self *ApiServer) VFSDownloadFile(
 
 	err = vfs_service.WriteDownloadInfo(ctx, org_config_obj, in.ClientId,
 		in.Accessor, in.Components, &flows_proto.VFSDownloadInfo{
-			FlowId:   flow_id,
+			FlowId:   resp.FlowId,
 			Mtime:    uint64(utils.GetTime().Now().UnixNano() / 1000),
 			InFlight: true,
 		})
@@ -244,6 +216,6 @@ func (self *ApiServer) VFSDownloadFile(
 	}
 
 	return &api_proto.StartFlowResponse{
-		FlowId: flow_id,
+		FlowId: resp.FlowId,
 	}, nil
 }
