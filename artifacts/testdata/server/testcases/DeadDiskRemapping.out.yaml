@@ -1,7 +1,12 @@
 Query: LET X <= SELECT * FROM Artifact.Generic.Utils.DeadDiskRemapping( Upload=FALSE, ImagePath=srcDir + "/artifacts/testdata/files/partition_image.E01")
 Output: []
 
-Query: SELECT * FROM parse_lines(accessor="data", filename=X.Remapping)
+Query: SELECT regex_replace(
+  source=Line,
+  replace="DelegatePath: partition_image.E01",
+  re="DelegatePath.+partition_image.E01") AS Line
+FROM parse_lines(accessor="data", filename=X.Remapping)
+
 Output: [
  {
   "Line": "remappings:"
@@ -190,7 +195,7 @@ Output: [
   "Line": "           \"DelegateAccessor\": \"ewf\","
  },
  {
-  "Line": "           \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+  "Line": "           \"DelegatePath: partition_image.E01\","
  },
  {
   "Line": "           \"Path\": \"/0\""
@@ -238,7 +243,7 @@ Output: [
   "Line": "           \"DelegateAccessor\": \"ewf\","
  },
  {
-  "Line": "           \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+  "Line": "           \"DelegatePath: partition_image.E01\","
  },
  {
   "Line": "           \"Path\": \"/0\""
@@ -286,7 +291,7 @@ Output: [
   "Line": "           \"DelegateAccessor\": \"ewf\","
  },
  {
-  "Line": "           \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+  "Line": "           \"DelegatePath: partition_image.E01\","
  },
  {
   "Line": "           \"Path\": \"/0\""
@@ -346,7 +351,7 @@ Output: [
   "Line": "             \"DelegateAccessor\": \"ewf\","
  },
  {
-  "Line": "             \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+  "Line": "             \"DelegatePath: partition_image.E01\","
  },
  {
   "Line": "             \"Path\": \"/0\""
@@ -412,7 +417,7 @@ Output: [
   "Line": "             \"DelegateAccessor\": \"ewf\","
  },
  {
-  "Line": "             \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+  "Line": "             \"DelegatePath: partition_image.E01\","
  },
  {
   "Line": "             \"Path\": \"/0\""
@@ -478,7 +483,7 @@ Output: [
   "Line": "             \"DelegateAccessor\": \"ewf\","
  },
  {
-  "Line": "             \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+  "Line": "             \"DelegatePath: partition_image.E01\","
  },
  {
   "Line": "             \"Path\": \"/0\""
@@ -544,7 +549,7 @@ Output: [
   "Line": "             \"DelegateAccessor\": \"ewf\","
  },
  {
-  "Line": "             \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+  "Line": "             \"DelegatePath: partition_image.E01\","
  },
  {
   "Line": "             \"Path\": \"/0\""
@@ -610,7 +615,7 @@ Output: [
   "Line": "             \"DelegateAccessor\": \"ewf\","
  },
  {
-  "Line": "             \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+  "Line": "             \"DelegatePath: partition_image.E01\","
  },
  {
   "Line": "             \"Path\": \"/0\""
@@ -676,7 +681,7 @@ Output: [
   "Line": "             \"DelegateAccessor\": \"ewf\","
  },
  {
-  "Line": "             \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+  "Line": "             \"DelegatePath: partition_image.E01\","
  },
  {
   "Line": "             \"Path\": \"/0\""

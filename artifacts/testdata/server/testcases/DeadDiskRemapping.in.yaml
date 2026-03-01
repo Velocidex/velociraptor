@@ -2,4 +2,9 @@ Queries:
 - LET X <= SELECT * FROM Artifact.Generic.Utils.DeadDiskRemapping(
      Upload=FALSE,
      ImagePath=srcDir + "/artifacts/testdata/files/partition_image.E01")
-- SELECT * FROM parse_lines(accessor="data", filename=X.Remapping)
+- |
+  SELECT regex_replace(
+    source=Line,
+    replace="DelegatePath: partition_image.E01",
+    re="DelegatePath.+partition_image.E01") AS Line
+  FROM parse_lines(accessor="data", filename=X.Remapping)
