@@ -34,6 +34,8 @@ import (
 #include <arpa/inet.h>
 #include <netinet/in_pcb.h>
 #include <netinet/tcp_var.h>
+#include <libproc.h>
+#include <sys/proc_info.h>
 
 typedef struct conn_stat {
    uint32_t family;
@@ -44,6 +46,17 @@ typedef struct conn_stat {
    char laddr[16];
    uint32_t st;
 } conn_stat;
+
+// Socket info extracted from proc_pidfdinfo for PID mapping.
+typedef struct sock_pid_info {
+   int32_t  pid;
+   int32_t  family;
+   int32_t  proto;
+   uint16_t lport;
+   uint16_t fport;
+   char     laddr[16];
+   char     faddr[16];
+} sock_pid_info;
 
 typedef struct xinpgen xinpgen;
 typedef struct xinpcb xinpcb;
@@ -80,6 +93,43 @@ uint32_t extract_xinpcb(xinpcb* xi, conn_stat* cs) {
     memcpy(cs->faddr, &(xi->xi_inp.inp_dependfaddr), 16);
     memcpy(cs->laddr, &(xi->xi_inp.inp_dependladdr), 16);
     return xi->xi_len;
+}
+
+// Extract socket address info from a socket_fdinfo into a flat struct.
+// Returns 1 on success (TCP or UDP inet socket), 0 otherwise.
+int extract_socket_info(struct socket_fdinfo* sfi, sock_pid_info* out) {
+    struct socket_info* si = &sfi->psi;
+
+    if (si->soi_family != AF_INET && si->soi_family != AF_INET6) {
+        return 0;
+    }
+
+    out->family = si->soi_family;
+    out->proto = si->soi_protocol;
+
+    struct in_sockinfo* ini;
+    if (si->soi_protocol == IPPROTO_TCP) {
+        ini = &si->soi_proto.pri_tcp.tcpsi_ini;
+    } else if (si->soi_protocol == IPPROTO_UDP) {
+        ini = &si->soi_proto.pri_in;
+    } else {
+        return 0;
+    }
+
+    out->lport = ntohs((uint16_t)ini->insi_lport);
+    out->fport = ntohs((uint16_t)ini->insi_fport);
+
+    if (si->soi_family == AF_INET) {
+        memset(out->laddr, 0, 16);
+        memcpy(out->laddr + 12, &ini->insi_laddr.ina_46.i46a_addr4.s_addr, 4);
+        memset(out->faddr, 0, 16);
+        memcpy(out->faddr + 12, &ini->insi_faddr.ina_46.i46a_addr4.s_addr, 4);
+    } else {
+        memcpy(out->laddr, &ini->insi_laddr.ina_6, 16);
+        memcpy(out->faddr, &ini->insi_faddr.ina_6, 16);
+    }
+
+    return 1;
 }
 
 */
@@ -247,8 +297,125 @@ func gatherUDP() ([]*ConnectionStat, error) {
 	return res, err
 }
 
+type socketKey struct {
+	Family uint32
+	Proto  uint32
+	Laddr  string
+	Lport  uint32
+	Raddr  string
+	Rport  uint32
+}
+
+// buildSocketPIDMap uses macOS libproc APIs to map sockets to PIDs.
+func buildSocketPIDMap() map[socketKey]int32 {
+	m := make(map[socketKey]int32)
+
+	// Get the number of PIDs. proc_listpids returns bytes, not count.
+	nbytesNeeded := int(C.proc_listpids(C.PROC_ALL_PIDS, 0, nil, 0))
+	if nbytesNeeded <= 0 {
+		return m
+	}
+
+	// Over-allocate by 20% to handle processes spawning between calls.
+	npids := nbytesNeeded/int(unsafe.Sizeof(C.int(0)))*120/100 + 1
+	pids := make([]C.int, npids)
+	nbytes := C.proc_listpids(C.PROC_ALL_PIDS, 0,
+		unsafe.Pointer(&pids[0]), C.int(npids*int(unsafe.Sizeof(pids[0]))))
+	if nbytes <= 0 {
+		return m
+	}
+	npids = int(nbytes) / int(unsafe.Sizeof(pids[0]))
+
+	for i := 0; i < npids; i++ {
+		pid := pids[i]
+		if pid == 0 {
+			continue
+		}
+
+		// Get FD list size, over-allocate for TOCTOU safety.
+		fdBufSize := C.proc_pidinfo(pid, C.PROC_PIDLISTFDS, 0, nil, 0)
+		if fdBufSize <= 0 {
+			continue
+		}
+
+		nfds := int(fdBufSize)/int(C.PROC_PIDLISTFD_SIZE)*120/100 + 1
+		fds := make([]C.struct_proc_fdinfo, nfds)
+		fdBufSize = C.int(nfds) * C.int(C.PROC_PIDLISTFD_SIZE)
+		fdBufSize = C.proc_pidinfo(pid, C.PROC_PIDLISTFDS, 0,
+			unsafe.Pointer(&fds[0]), fdBufSize)
+		if fdBufSize <= 0 {
+			continue
+		}
+		nfds = int(fdBufSize) / int(C.PROC_PIDLISTFD_SIZE)
+
+		for j := 0; j < nfds; j++ {
+			if fds[j].proc_fdtype != C.PROX_FDTYPE_SOCKET {
+				continue
+			}
+
+			var sfi C.struct_socket_fdinfo
+			nb := C.proc_pidfdinfo(pid, fds[j].proc_fd,
+				C.PROC_PIDFDSOCKETINFO,
+				unsafe.Pointer(&sfi),
+				C.int(unsafe.Sizeof(sfi)))
+			if nb != C.int(unsafe.Sizeof(sfi)) {
+				continue
+			}
+
+			var spi C.sock_pid_info
+			spi.pid = C.int32_t(pid)
+			if C.extract_socket_info(&sfi, &spi) == 0 {
+				continue
+			}
+
+			family := uint32(spi.family)
+			laddr := to_addr(C.uint32_t(spi.family),
+				(*[16]byte)(unsafe.Pointer(&spi.laddr[0])),
+				C.uint16_t(spi.lport))
+			raddr := to_addr(C.uint32_t(spi.family),
+				(*[16]byte)(unsafe.Pointer(&spi.faddr[0])),
+				C.uint16_t(spi.fport))
+
+			key := socketKey{
+				Family: family,
+				Proto:  uint32(spi.proto),
+				Laddr:  laddr.IP,
+				Lport:  laddr.Port,
+				Raddr:  raddr.IP,
+				Rport:  raddr.Port,
+			}
+			m[key] = int32(pid)
+
+			// IPv6 sockets carrying IPv4 traffic may appear as
+			// AF_INET in the sysctl data. Store an AF_INET key
+			// too so the lookup succeeds either way.
+			if family == syscall.AF_INET6 {
+				lraw := (*[16]byte)(unsafe.Pointer(&spi.laddr[0]))
+				rraw := (*[16]byte)(unsafe.Pointer(&spi.faddr[0]))
+				lip4 := net.IP(lraw[:]).To4()
+				rip4 := net.IP(rraw[:]).To4()
+				if lip4 != nil && rip4 != nil {
+					key4 := socketKey{
+						Family: syscall.AF_INET,
+						Proto:  uint32(spi.proto),
+						Laddr:  lip4.String(),
+						Lport:  laddr.Port,
+						Raddr:  rip4.String(),
+						Rport:  raddr.Port,
+					}
+					m[key4] = int32(pid)
+				}
+			}
+		}
+	}
+
+	return m
+}
+
 func runNetstat(ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
+
+	pidMap := buildSocketPIDMap()
 
 	cs, err := gatherTCP()
 	if err != nil {
@@ -256,6 +423,17 @@ func runNetstat(ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict
 	}
 
 	for _, item := range cs {
+		key := socketKey{
+			Family: item.Family,
+			Proto:  syscall.IPPROTO_TCP,
+			Laddr:  item.Laddr.IP,
+			Lport:  item.Laddr.Port,
+			Raddr:  item.Raddr.IP,
+			Rport:  item.Raddr.Port,
+		}
+		if pid, ok := pidMap[key]; ok {
+			item.Pid = pid
+		}
 		result = append(result, item)
 	}
 
@@ -265,6 +443,17 @@ func runNetstat(ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict
 	}
 
 	for _, item := range cs {
+		key := socketKey{
+			Family: item.Family,
+			Proto:  syscall.IPPROTO_UDP,
+			Laddr:  item.Laddr.IP,
+			Lport:  item.Laddr.Port,
+			Raddr:  item.Raddr.IP,
+			Rport:  item.Raddr.Port,
+		}
+		if pid, ok := pidMap[key]; ok {
+			item.Pid = pid
+		}
 		result = append(result, item)
 	}
 
