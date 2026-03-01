@@ -1,7 +1,6 @@
 package path_specs
 
 import (
-	"slices"
 	"strings"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -113,7 +112,7 @@ func getTypeFromComponents(components []string) ([]string, api.PathType) {
 	// Fallback, use the extension to deduce the type.
 	fs_type, name := api.GetFileStorePathTypeFromExtension(last_component)
 
-	clone := slices.Clone(components[:len(components)-1])
+	clone := utils.CopySlice(components[:len(components)-1])
 	return append(clone, name), fs_type
 }
 

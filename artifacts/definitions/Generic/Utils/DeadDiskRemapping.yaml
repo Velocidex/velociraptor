@@ -111,13 +111,28 @@ export: |
        WHERE IsDir
      },
        b={
-       SELECT 0 AS StartOffset, Accessor, ImagePath AS PartitionPath
+       // Check for a partition image if there is an NTFS header at
+       // the start.
+       SELECT 0 AS StartOffset,
+              GuessAccessor(ImagePath=ImagePath) AS Accessor,
+              pathspec(
+                 DelegateAccessor="offset",
+                 Delegate=pathspec(
+                    DelegateAccessor=GuessAccessor(ImagePath=ImagePath),
+                    DelegatePath=ImagePath,
+                    Path="0")) AS PartitionPath,
+              read_file(accessor=GuessAccessor(ImagePath=ImagePath),
+                       filename=ImagePath,
+                       length=4, offset=3) AS Magic
        FROM scope()
-       WHERE read_file(accessor=Accessor, filename=ImagePath, length=4, offset=3) = "NTFS"
+       WHERE Magic = "NTFS"
         AND log(message="Detected NTFS signature at offset 0 - " +
                "assuming this is a Windows partition image")
      },
        c={
+
+       // Assume this is a disk image with a partition table - look
+       // for the first Windows OS partition
        SELECT StartOffset, Accessor, _PartitionPath AS PartitionPath
        FROM Artifact.Windows.Forensics.PartitionTable(
            ImagePath=ImagePath,

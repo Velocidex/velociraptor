@@ -1,0 +1,709 @@
+Query: LET X <= SELECT * FROM Artifact.Generic.Utils.DeadDiskRemapping( Upload=FALSE, ImagePath=srcDir + "/artifacts/testdata/files/partition_image.E01")
+Output: []
+
+Query: SELECT * FROM parse_lines(accessor="data", filename=X.Remapping)
+Output: [
+ {
+  "Line": "remappings:"
+ },
+ {
+  "Line": "- type: permissions"
+ },
+ {
+  "Line": "  permissions:"
+ },
+ {
+  "Line": "  - COLLECT_CLIENT"
+ },
+ {
+  "Line": "  - FILESYSTEM_READ"
+ },
+ {
+  "Line": "  - FILESYSTEM_WRITE"
+ },
+ {
+  "Line": "  - READ_RESULTS"
+ },
+ {
+  "Line": "  - MACHINE_STATE"
+ },
+ {
+  "Line": "  - SERVER_ADMIN"
+ },
+ {
+  "Line": "  - COLLECT_SERVER"
+ },
+ {
+  "Line": "  - EXECVE"
+ },
+ {
+  "Line": "- type: impersonation"
+ },
+ {
+  "Line": "  os: windows"
+ },
+ {
+  "Line": "  hostname: Virtual Host"
+ },
+ {
+  "Line": "  env:"
+ },
+ {
+  "Line": "  - key: SystemRoot"
+ },
+ {
+  "Line": "    value: C:\\Windows"
+ },
+ {
+  "Line": "  - key: WinDir"
+ },
+ {
+  "Line": "    value: C:\\Windows"
+ },
+ {
+  "Line": "  disabled_functions:"
+ },
+ {
+  "Line": "  - amsi"
+ },
+ {
+  "Line": "  - lookupSID"
+ },
+ {
+  "Line": "  - token"
+ },
+ {
+  "Line": "  disabled_plugins:"
+ },
+ {
+  "Line": "  - execve"
+ },
+ {
+  "Line": "  - http_client"
+ },
+ {
+  "Line": "  - users"
+ },
+ {
+  "Line": "  - certificates"
+ },
+ {
+  "Line": "  - handles"
+ },
+ {
+  "Line": "  - pslist"
+ },
+ {
+  "Line": "  - interfaces"
+ },
+ {
+  "Line": "  - modules"
+ },
+ {
+  "Line": "  - netstat"
+ },
+ {
+  "Line": "  - partitions"
+ },
+ {
+  "Line": "  - proc_dump"
+ },
+ {
+  "Line": "  - proc_yara"
+ },
+ {
+  "Line": "  - vad"
+ },
+ {
+  "Line": "  - winobj"
+ },
+ {
+  "Line": "  - wmi"
+ },
+ {
+  "Line": "- type: shadow"
+ },
+ {
+  "Line": "  from:"
+ },
+ {
+  "Line": "    accessor: zip"
+ },
+ {
+  "Line": "  \"on\":"
+ },
+ {
+  "Line": "    accessor: zip"
+ },
+ {
+  "Line": "- type: shadow"
+ },
+ {
+  "Line": "  from:"
+ },
+ {
+  "Line": "    accessor: raw_reg"
+ },
+ {
+  "Line": "  \"on\":"
+ },
+ {
+  "Line": "    accessor: raw_reg"
+ },
+ {
+  "Line": "- type: shadow"
+ },
+ {
+  "Line": "  from:"
+ },
+ {
+  "Line": "    accessor: data"
+ },
+ {
+  "Line": "  \"on\":"
+ },
+ {
+  "Line": "    accessor: data"
+ },
+ {
+  "Line": "- type: mount"
+ },
+ {
+  "Line": "  from:"
+ },
+ {
+  "Line": "    accessor: raw_ntfs"
+ },
+ {
+  "Line": "    prefix: |-"
+ },
+ {
+  "Line": "      {"
+ },
+ {
+  "Line": "         \"DelegateAccessor\": \"offset\","
+ },
+ {
+  "Line": "         \"Delegate\": {"
+ },
+ {
+  "Line": "           \"DelegateAccessor\": \"ewf\","
+ },
+ {
+  "Line": "           \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+ },
+ {
+  "Line": "           \"Path\": \"/0\""
+ },
+ {
+  "Line": "         }"
+ },
+ {
+  "Line": "       }"
+ },
+ {
+  "Line": "  \"on\":"
+ },
+ {
+  "Line": "    accessor: ntfs"
+ },
+ {
+  "Line": "    prefix: '\\\\.\\C:'"
+ },
+ {
+  "Line": "    path_type: ntfs"
+ },
+ {
+  "Line": "- type: mount"
+ },
+ {
+  "Line": "  from:"
+ },
+ {
+  "Line": "    accessor: raw_ntfs"
+ },
+ {
+  "Line": "    prefix: |-"
+ },
+ {
+  "Line": "      {"
+ },
+ {
+  "Line": "         \"DelegateAccessor\": \"offset\","
+ },
+ {
+  "Line": "         \"Delegate\": {"
+ },
+ {
+  "Line": "           \"DelegateAccessor\": \"ewf\","
+ },
+ {
+  "Line": "           \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+ },
+ {
+  "Line": "           \"Path\": \"/0\""
+ },
+ {
+  "Line": "         }"
+ },
+ {
+  "Line": "       }"
+ },
+ {
+  "Line": "  \"on\":"
+ },
+ {
+  "Line": "    accessor: file"
+ },
+ {
+  "Line": "    prefix: 'C:'"
+ },
+ {
+  "Line": "    path_type: windows"
+ },
+ {
+  "Line": "- type: mount"
+ },
+ {
+  "Line": "  from:"
+ },
+ {
+  "Line": "    accessor: raw_ntfs"
+ },
+ {
+  "Line": "    prefix: |-"
+ },
+ {
+  "Line": "      {"
+ },
+ {
+  "Line": "         \"DelegateAccessor\": \"offset\","
+ },
+ {
+  "Line": "         \"Delegate\": {"
+ },
+ {
+  "Line": "           \"DelegateAccessor\": \"ewf\","
+ },
+ {
+  "Line": "           \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+ },
+ {
+  "Line": "           \"Path\": \"/0\""
+ },
+ {
+  "Line": "         }"
+ },
+ {
+  "Line": "       }"
+ },
+ {
+  "Line": "  \"on\":"
+ },
+ {
+  "Line": "    accessor: auto"
+ },
+ {
+  "Line": "    prefix: 'C:'"
+ },
+ {
+  "Line": "    path_type: windows"
+ },
+ {
+  "Line": "- type: mount"
+ },
+ {
+  "Line": "  description: Map Software Hive"
+ },
+ {
+  "Line": "  from:"
+ },
+ {
+  "Line": "    accessor: raw_reg"
+ },
+ {
+  "Line": "    path_type: registry"
+ },
+ {
+  "Line": "    prefix: |-"
+ },
+ {
+  "Line": "      {"
+ },
+ {
+  "Line": "         \"DelegateAccessor\": \"raw_ntfs\","
+ },
+ {
+  "Line": "         \"Delegate\": {"
+ },
+ {
+  "Line": "           \"DelegateAccessor\": \"offset\","
+ },
+ {
+  "Line": "           \"Delegate\": {"
+ },
+ {
+  "Line": "             \"DelegateAccessor\": \"ewf\","
+ },
+ {
+  "Line": "             \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+ },
+ {
+  "Line": "             \"Path\": \"/0\""
+ },
+ {
+  "Line": "           },"
+ },
+ {
+  "Line": "           \"Path\": \"/Windows/System32/Config/SOFTWARE\""
+ },
+ {
+  "Line": "         }"
+ },
+ {
+  "Line": "       }"
+ },
+ {
+  "Line": "  \"on\":"
+ },
+ {
+  "Line": "    accessor: registry"
+ },
+ {
+  "Line": "    prefix: HKEY_LOCAL_MACHINE/Software"
+ },
+ {
+  "Line": "    path_type: registry"
+ },
+ {
+  "Line": "- type: mount"
+ },
+ {
+  "Line": "  description: Map Security Hive"
+ },
+ {
+  "Line": "  from:"
+ },
+ {
+  "Line": "    accessor: raw_reg"
+ },
+ {
+  "Line": "    path_type: registry"
+ },
+ {
+  "Line": "    prefix: |-"
+ },
+ {
+  "Line": "      {"
+ },
+ {
+  "Line": "         \"DelegateAccessor\": \"raw_ntfs\","
+ },
+ {
+  "Line": "         \"Delegate\": {"
+ },
+ {
+  "Line": "           \"DelegateAccessor\": \"offset\","
+ },
+ {
+  "Line": "           \"Delegate\": {"
+ },
+ {
+  "Line": "             \"DelegateAccessor\": \"ewf\","
+ },
+ {
+  "Line": "             \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+ },
+ {
+  "Line": "             \"Path\": \"/0\""
+ },
+ {
+  "Line": "           },"
+ },
+ {
+  "Line": "           \"Path\": \"/Windows/System32/Config/Security\""
+ },
+ {
+  "Line": "         }"
+ },
+ {
+  "Line": "       }"
+ },
+ {
+  "Line": "  \"on\":"
+ },
+ {
+  "Line": "    accessor: registry"
+ },
+ {
+  "Line": "    prefix: HKEY_LOCAL_MACHINE/Security"
+ },
+ {
+  "Line": "    path_type: registry"
+ },
+ {
+  "Line": "- type: mount"
+ },
+ {
+  "Line": "  description: Map System Hive"
+ },
+ {
+  "Line": "  from:"
+ },
+ {
+  "Line": "    accessor: raw_reg"
+ },
+ {
+  "Line": "    path_type: registry"
+ },
+ {
+  "Line": "    prefix: |-"
+ },
+ {
+  "Line": "      {"
+ },
+ {
+  "Line": "         \"DelegateAccessor\": \"raw_ntfs\","
+ },
+ {
+  "Line": "         \"Delegate\": {"
+ },
+ {
+  "Line": "           \"DelegateAccessor\": \"offset\","
+ },
+ {
+  "Line": "           \"Delegate\": {"
+ },
+ {
+  "Line": "             \"DelegateAccessor\": \"ewf\","
+ },
+ {
+  "Line": "             \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+ },
+ {
+  "Line": "             \"Path\": \"/0\""
+ },
+ {
+  "Line": "           },"
+ },
+ {
+  "Line": "           \"Path\": \"/Windows/System32/Config/System\""
+ },
+ {
+  "Line": "         }"
+ },
+ {
+  "Line": "       }"
+ },
+ {
+  "Line": "  \"on\":"
+ },
+ {
+  "Line": "    accessor: registry"
+ },
+ {
+  "Line": "    prefix: HKEY_LOCAL_MACHINE/System"
+ },
+ {
+  "Line": "    path_type: registry"
+ },
+ {
+  "Line": "- type: mount"
+ },
+ {
+  "Line": "  description: Map SAM Hive"
+ },
+ {
+  "Line": "  from:"
+ },
+ {
+  "Line": "    accessor: raw_reg"
+ },
+ {
+  "Line": "    path_type: registry"
+ },
+ {
+  "Line": "    prefix: |-"
+ },
+ {
+  "Line": "      {"
+ },
+ {
+  "Line": "         \"DelegateAccessor\": \"raw_ntfs\","
+ },
+ {
+  "Line": "         \"Delegate\": {"
+ },
+ {
+  "Line": "           \"DelegateAccessor\": \"offset\","
+ },
+ {
+  "Line": "           \"Delegate\": {"
+ },
+ {
+  "Line": "             \"DelegateAccessor\": \"ewf\","
+ },
+ {
+  "Line": "             \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+ },
+ {
+  "Line": "             \"Path\": \"/0\""
+ },
+ {
+  "Line": "           },"
+ },
+ {
+  "Line": "           \"Path\": \"/Windows/System32/Config/SAM\""
+ },
+ {
+  "Line": "         }"
+ },
+ {
+  "Line": "       }"
+ },
+ {
+  "Line": "  \"on\":"
+ },
+ {
+  "Line": "    accessor: registry"
+ },
+ {
+  "Line": "    prefix: SAM"
+ },
+ {
+  "Line": "    path_type: registry"
+ },
+ {
+  "Line": "- type: mount"
+ },
+ {
+  "Line": "  description: Map Amcache Hive"
+ },
+ {
+  "Line": "  from:"
+ },
+ {
+  "Line": "    accessor: raw_reg"
+ },
+ {
+  "Line": "    path_type: registry"
+ },
+ {
+  "Line": "    prefix: |-"
+ },
+ {
+  "Line": "      {"
+ },
+ {
+  "Line": "         \"DelegateAccessor\": \"raw_ntfs\","
+ },
+ {
+  "Line": "         \"Delegate\": {"
+ },
+ {
+  "Line": "           \"DelegateAccessor\": \"offset\","
+ },
+ {
+  "Line": "           \"Delegate\": {"
+ },
+ {
+  "Line": "             \"DelegateAccessor\": \"ewf\","
+ },
+ {
+  "Line": "             \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+ },
+ {
+  "Line": "             \"Path\": \"/0\""
+ },
+ {
+  "Line": "           },"
+ },
+ {
+  "Line": "           \"Path\": \"/Windows/appcompat/Programs/Amcache.hve\""
+ },
+ {
+  "Line": "         }"
+ },
+ {
+  "Line": "       }"
+ },
+ {
+  "Line": "  \"on\":"
+ },
+ {
+  "Line": "    accessor: registry"
+ },
+ {
+  "Line": "    prefix: Amcache"
+ },
+ {
+  "Line": "    path_type: registry"
+ },
+ {
+  "Line": "- type: mount"
+ },
+ {
+  "Line": "  description: Map User hive for Administrator"
+ },
+ {
+  "Line": "  from:"
+ },
+ {
+  "Line": "    accessor: raw_reg"
+ },
+ {
+  "Line": "    path_type: registry"
+ },
+ {
+  "Line": "    prefix: |-"
+ },
+ {
+  "Line": "      {"
+ },
+ {
+  "Line": "         \"DelegateAccessor\": \"raw_ntfs\","
+ },
+ {
+  "Line": "         \"Delegate\": {"
+ },
+ {
+  "Line": "           \"DelegateAccessor\": \"offset\","
+ },
+ {
+  "Line": "           \"Delegate\": {"
+ },
+ {
+  "Line": "             \"DelegateAccessor\": \"ewf\","
+ },
+ {
+  "Line": "             \"DelegatePath\": \"/home/mic/projects/velociraptor/artifacts/testdata/files/partition_image.E01\","
+ },
+ {
+  "Line": "             \"Path\": \"/0\""
+ },
+ {
+  "Line": "           },"
+ },
+ {
+  "Line": "           \"Path\": \"Users\\\\Administrator\\\\NTUser.dat\""
+ },
+ {
+  "Line": "         }"
+ },
+ {
+  "Line": "       }"
+ },
+ {
+  "Line": "  \"on\":"
+ },
+ {
+  "Line": "    accessor: registry"
+ },
+ {
+  "Line": "    prefix: HKEY_USERS\\Administrator"
+ },
+ {
+  "Line": "    path_type: registry"
+ }
+]
+

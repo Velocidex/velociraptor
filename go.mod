@@ -72,7 +72,7 @@ require (
 	golang.org/x/crypto v0.46.0
 	golang.org/x/mod v0.31.0
 	golang.org/x/net v0.48.0
-	golang.org/x/sys v0.40.0
+	golang.org/x/sys v0.41.0
 	golang.org/x/text v0.32.0
 	golang.org/x/time v0.14.0
 	google.golang.org/api v0.258.0
@@ -102,9 +102,9 @@ require (
 	github.com/Velocidex/disklru v0.0.0-20260204055416-324452f39e80
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
 	github.com/Velocidex/fileb0x v1.1.2-0.20251122021447-f71ad8da5502
-	github.com/Velocidex/go-ewf v0.0.0-20240210123447-97dc81b7d8c3
+	github.com/Velocidex/go-ewf v0.0.0-20260301075014-ed09cb7887b6
 	github.com/Velocidex/go-ext4 v0.0.0-20250510085914-b0b955af0359
-	github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a
+	github.com/Velocidex/go-fat v0.0.0-20260301005230-08fb790838a9
 	github.com/Velocidex/go-journalctl v0.0.0-20250902002606-881a5f66df10
 	github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002
 	github.com/Velocidex/go-vhdx v0.0.0-20250511013458-5cba970cdeda
