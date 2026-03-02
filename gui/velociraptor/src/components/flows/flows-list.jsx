@@ -266,9 +266,6 @@ class FlowsList extends React.Component {
                 return;
             }
 
-            let specs = {};
-            specs[name] = {};
-
             let initial_flow = {
                 request: {
                     client_id: client_id,

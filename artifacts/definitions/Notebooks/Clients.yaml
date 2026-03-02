@@ -1,0 +1,57 @@
+name: Server.Utils.Clients
+description: |
+  View detailed client informations
+
+  This template will create an interactive notebook that allows more
+  refined inspection of clients.
+
+type: NOTEBOOK
+
+parameters:
+  - name: SearchTerm
+    default: "all"
+    description: "A search term - e.g. 'host:DESKTOP*'"
+
+sources:
+  - notebook:
+      - type: markdown
+        template: |
+          # View client information
+
+          * Click the cell below and then the `Edit` toolbar icon to adjust the query.
+          * Recalculate the notebook for the most recent results
+          * Modify the `AllClients` query to filter the clients seen
+          * Use the table headers to sort or group as needed.
+          * Modify the `Display` query to perform an action on each client.
+          * You can remove this cell at any time.
+
+      - type: vql
+        name: Filtered Clients
+        template: |
+          /*
+          # Client Information
+          */
+
+          LET Display = SELECT client_id,
+               os_info.hostname as HostName,
+               os_info.system as OS,
+               os_info.release as Release,
+               timestamp(epoch=last_seen_at) as LastSeenAt,
+               last_ip AS LastIP,
+               last_seen_at AS _LastSeenAt
+          FROM scope()
+
+          LET AllClients = SELECT *
+            FROM clients(search=SearchTerm)
+            -- WHERE Hostname =~ "MyHost"
+
+          SELECT * FROM foreach(row=AllClients, query=Display)
+          ORDER BY _LastSeenAt DESC
+
+          -- Uncomment this to see all the fields available
+          -- SELECT * FROM AllClients LIMIT 10
+
+
+column_types:
+  - name: client_id
+    type: client_id

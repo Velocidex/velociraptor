@@ -12,13 +12,15 @@ import Form from 'react-bootstrap/Form';
 import Autosuggest from 'react-autosuggest';
 import Dropdown from 'react-bootstrap/Dropdown';
 import UserConfig from '../core/user.jsx';
+import { withRouter }  from "react-router-dom";
 
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 import T from '../i8n/i8n.jsx';
 
+import {NewNotebook} from '../notebooks/new-notebook.jsx';
 
-export default class VeloClientSearch extends Component {
+class VeloClientSearch extends Component {
     static contextType = UserConfig;
     static propTypes = {
         // Update the applications's search parameter.
@@ -175,11 +177,39 @@ export default class VeloClientSearch extends Component {
                         <FontAwesomeIcon icon="tags"/>
                         <span className="button-label">{T("Unlabeled Hosts")}</span>
                       </Dropdown.Item>
+                      <Dropdown.Item
+                        onClick={e=>this.setState({showNotebookDialog: true})}
+                        variant="default" type="button">
+                        <FontAwesomeIcon icon="book"/>
+                        <span className="button-label">{T("Create Notebook")}</span>
+                      </Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
                 </ButtonGroup>
               </FormGroup>
+            { this.state.showNotebookDialog &&
+              <NewNotebook
+                notebook_parameters={{
+                    name: T("Client Search"),
+                    description: T("Cusomize client management with VQL"),
+                }}
+                parameters={{
+                    "Server.Utils.Clients": {
+                        "SearchTerm": this.state.query,
+                    },
+                }}
+                closeDialog={x=>this.setState({showNotebookDialog: false})}
+                updateNotebooks={resp=>{
+                    if(resp.data && resp.data.notebook_id) {
+                        this.props.history.push('/notebooks/' + resp.data.notebook_id);
+                    }
+                    this.setState({showNotebookDialog: false});
+                }}
+              />}
             </Form>
         );
     }
 };
+
+
+export default withRouter(VeloClientSearch);

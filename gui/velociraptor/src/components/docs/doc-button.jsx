@@ -58,9 +58,7 @@ class Admonition extends Component {
                 <div className="caption">{ this.props.caption }</div>
               </Card.Header>
               <Card.Body>
-                <Card.Text>
-                  { this.props.children }
-                </Card.Text>
+                { this.props.children }
               </Card.Body>
             </Card>
         );
@@ -261,7 +259,7 @@ class HelpDialog extends Component {
                                    <Col sm="10">
                                      { _.map(crumbs, (c, idx)=>{
                                          return (
-                                             <>
+                                             <React.Fragment key={idx}>
                                                <a target="_blank"
                                                   className="breadcrumb"
                                                    href={c.url}
@@ -269,7 +267,7 @@ class HelpDialog extends Component {
                                                   { c.name }
                                                </a>
                                                <div className="breadcrumb-divider"/>
-                                             </>
+                                             </React.Fragment>
                                          );
                                      })}
                                      <a target="_blank" href={v.link}>

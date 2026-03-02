@@ -154,23 +154,29 @@ class NewNotebookLaunch extends React.Component {
 
 export class NewNotebook extends React.Component {
     static propTypes = {
-        notebook: PropTypes.object,
+        notebook_paramerers: PropTypes.object,
+        parameters: PropTypes.object,
         closeDialog: PropTypes.func.isRequired,
         updateNotebooks: PropTypes.func.isRequired,
     }
 
     componentDidMount = () => {
         this.source = CancelToken.source();
-        if(!_.isEmpty(this.props.notebook)) {
-            this.setState({parameters: {
-                name: this.props.notebook.name,
-                notebook_id: this.props.notebook.notebook_id,
-                public: this.props.notebook.public,
-                description: this.props.notebook.description,
-                modified_time: this.props.notebook.modified_time,
-                cell_metadata: this.props.notebook.cell_metadata,
-                collaborators: this.props.notebook.collaborators || [],
-            }});
+        let notebook_parameters = this.props.notebook_parameters;
+        if(!_.isEmpty(notebook_parameters)) {
+            this.setState({notebook_parameters: notebook_parameters});
+        }
+
+        if(!_.isEmpty(this.props.parameters)) {
+            let artifacts = [];
+            _.each(this.props.parameters, (v,k)=>{
+                artifacts.push({name: k});
+            });
+
+            this.setState({
+                artifacts: artifacts,
+                parameters: this.props.parameters,
+            });
         }
     }
 
@@ -195,10 +201,12 @@ export class NewNotebook extends React.Component {
     }
 
     setParameters = (params) => {
+        console.log("setParameters", params);
         this.setState({parameters: params});
     }
 
     setNotebookParameters = (params) => {
+        console.log("setNotebookParameters", params);
         this.setState({notebook_parameters: params});
     }
 
@@ -231,7 +239,7 @@ export class NewNotebook extends React.Component {
     }
 
     render() {
-        return (
+         return (
             <Modal show={true}
                    className="full-height"
                    dialogClassName="modal-90w"
