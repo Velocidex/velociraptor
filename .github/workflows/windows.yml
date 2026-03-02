@@ -27,7 +27,7 @@ jobs:
       # Check the last 2 commits for API changes.
       run: |
         pip install pyyaml
-        python3 ./scripts/check_versions.py 2
+        python3 -X utf8 ./scripts/check_versions.py 2
 
     - name: Configure test environment
       shell: cmd
@@ -51,7 +51,7 @@ jobs:
         regedit /S artifacts/testdata/windows/init.reg
 
     - name: Build
-      if: always()
+      if: success()
       env:
         CC: x86_64-w64-mingw32-gcc
       shell: bash
@@ -81,7 +81,7 @@ jobs:
 
     - name: Test
       shell: bash
-      if: always()
+      if: success()
       env:
         # Disable CGO for building tests - it takes too long and it is
         # not needed (mainly disables Yara building again).
