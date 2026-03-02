@@ -605,6 +605,7 @@ func (self RepackFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 		Doc:      "Repack and upload a repacked binary or MSI to the server.",
 		ArgType:  type_map.AddType(scope, &RepackFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER, acls.FILESYSTEM_WRITE).Build(),
+		Version:  2,
 	}
 }
 

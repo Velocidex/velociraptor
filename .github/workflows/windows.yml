@@ -83,6 +83,13 @@ jobs:
         # Only run short tests on CI because the CI machines are slow
         go test -short -v ./... --tags server_vql -p 2
 
+    - name: Check Plugin Versions
+      shell: bash
+      if: always()
+      # Check the last 2 commits for API changes.
+      run: |
+        python3 ./scripts/check_versions.py 2
+
     - name: Test Golden Generic
       shell: cmd
       if: success()

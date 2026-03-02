@@ -291,6 +291,7 @@ func (self UnzipPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Doc:      "Unzips a file into a directory",
 		ArgType:  type_map.AddType(scope, &UnzipPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE, acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 

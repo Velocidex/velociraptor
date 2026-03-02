@@ -194,6 +194,7 @@ func (self _MemoizeFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 		Name:    "memoize",
 		Doc:     "Memoize a query into memory.",
 		ArgType: type_map.AddType(scope, &_MemoizeFunctionArgs{}),
+		Version: 2,
 	}
 }
 

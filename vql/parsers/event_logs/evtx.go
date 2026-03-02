@@ -128,6 +128,7 @@ func (self _ParseEvtxPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 		Doc:      "Parses events from an EVTX file.",
 		ArgType:  type_map.AddType(scope, &_ParseEvtxPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 
@@ -189,6 +190,7 @@ func (self _WatchEvtxPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 		Doc:      "Watch an EVTX file and stream events from it. ",
 		ArgType:  type_map.AddType(scope, &_ParseEvtxPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 

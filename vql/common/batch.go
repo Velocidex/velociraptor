@@ -118,6 +118,7 @@ func (self BatchPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Name:    "batch",
 		Doc:     "Batches query rows into multiple arrays.",
 		ArgType: type_map.AddType(scope, &BatchPluginArgs{}),
+		Version: 2,
 	}
 }
 

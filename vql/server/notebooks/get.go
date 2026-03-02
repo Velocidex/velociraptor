@@ -111,6 +111,7 @@ func (self GetNotebookFunction) Info(scope vfilter.Scope, type_map *vfilter.Type
 		ArgType: type_map.AddType(scope, &GetNotebookFunctionArg{}),
 		Metadata: vql.VQLMetadata().Permissions(
 			acls.READ_RESULTS).Build(),
+		Version: 2,
 	}
 }
 

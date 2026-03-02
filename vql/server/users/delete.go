@@ -80,6 +80,7 @@ func (self UserDeleteFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 		Name:    "user_delete",
 		Doc:     "Deletes a user from the server.",
 		ArgType: type_map.AddType(scope, &UserDeleteFunctionArgs{}),
+		Version: 2,
 	}
 }
 

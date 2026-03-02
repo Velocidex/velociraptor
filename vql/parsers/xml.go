@@ -78,6 +78,7 @@ func (self _ParseXMLFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Doc:      "Parse an XML document into a map.",
 		ArgType:  type_map.AddType(scope, &_ParseXMLFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 

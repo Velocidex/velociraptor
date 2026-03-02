@@ -172,6 +172,7 @@ func (self DeleteHuntPlugin) Info(
 		Doc:      "Delete a hunt. ",
 		ArgType:  type_map.AddType(scope, &DeleteHuntArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Version:  2,
 	}
 }
 

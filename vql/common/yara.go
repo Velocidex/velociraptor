@@ -552,6 +552,7 @@ func (self YaraScanPlugin) Info(
 		Doc:      "Scan files using yara rules.",
 		ArgType:  type_map.AddType(scope, &YaraScanPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 
@@ -575,6 +576,7 @@ func (self YaraProcPlugin) Info(
 		Doc:      "Scan processes using yara rules.",
 		ArgType:  type_map.AddType(scope, &YaraProcPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		Version:  2,
 	}
 }
 

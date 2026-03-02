@@ -86,6 +86,7 @@ func (self ModifySecretFunction) Info(
 		Doc:      "Modify the secret",
 		ArgType:  type_map.AddType(scope, &ModifySecretFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Version:  2,
 	}
 }
 

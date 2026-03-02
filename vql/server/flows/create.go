@@ -203,6 +203,7 @@ func (self ScheduleCollectionFunction) Info(scope vfilter.Scope, type_map *vfilt
 		ArgType: type_map.AddType(scope, &ScheduleCollectionFunctionArg{}),
 		Metadata: vql.VQLMetadata().Permissions(
 			acls.COLLECT_CLIENT, acls.COLLECT_SERVER, acls.COLLECT_BASIC).Build(),
+		Version: 2,
 	}
 }
 

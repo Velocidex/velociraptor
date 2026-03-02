@@ -48,6 +48,7 @@ func (self _PEFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Doc:      "Parse a PE file.",
 		ArgType:  type_map.AddType(scope, &_PEFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 

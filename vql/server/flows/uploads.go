@@ -258,6 +258,7 @@ func (self UploadsPlugins) Info(
 		Doc:      "Retrieve information about a flow's uploads.",
 		ArgType:  type_map.AddType(scope, &UploadsPluginsArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Version:  2,
 	}
 }
 

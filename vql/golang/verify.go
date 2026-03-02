@@ -18,73 +18,81 @@ type VerifyFunctionArgs struct {
 	DisableOverride bool   `vfilter:"optional,field=disable_override,doc=If set, we do not allow override of built-in artifacts (allowed by default)"`
 }
 
-func init() {
-	vql_subsystem.RegisterFunction(
-		vfilter.GenericFunction{
-			FunctionName: "verify",
-			Doc: `verify an artifact
+type VerifyFunction struct{}
+
+func (self VerifyFunction) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	defer vql_subsystem.RegisterMonitor(ctx, "verify", args)()
+
+	arg := &VerifyFunctionArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("verify: %v", err)
+		return vfilter.Null{}
+	}
+
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("verify: Must run on the server")
+		return vfilter.Null{}
+	}
+
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
+	state := launcher.NewAnalysisState(arg.Artifact)
+
+	if arg.Repository != "" {
+		cached_any := vql_subsystem.CacheGet(scope, vql_server.REPOSITORY_CACHE_TAG+arg.Repository)
+
+		if cached_repository, ok := cached_any.(services.Repository); ok {
+			repository = cached_repository
+		}
+	}
+
+	artifact, pres := repository.Get(ctx, config_obj, arg.Artifact)
+	if !pres {
+		artifact, err = repository.LoadYaml(arg.Artifact,
+			services.ArtifactOptions{
+				ValidateArtifact:     true,
+				ArtifactIsBuiltIn:    !arg.DisableOverride,
+				AllowOverridingAlias: true,
+			})
+		if err != nil {
+			state.SetError(err)
+			return state
+		}
+	}
+
+	// Verify the artifact
+	launcher.VerifyArtifact(
+		ctx, config_obj, repository, artifact, state)
+
+	return state
+}
+
+func (self VerifyFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name: "verify",
+		Doc: `verify an artifact
 
 This function will verify the artifact and flag any potential errors or warnings.
 `,
-			Metadata: vql_subsystem.VQLMetadata().Build(),
-			ArgType:  &VerifyFunctionArgs{},
-			Function: func(
-				ctx context.Context,
-				scope vfilter.Scope,
-				args *ordereddict.Dict) vfilter.Any {
+		Metadata: vql_subsystem.VQLMetadata().Build(),
+		Version:  2,
+		ArgType:  type_map.AddType(scope, &VerifyFunctionArgs{}),
+	}
+}
 
-				arg := &VerifyFunctionArgs{}
-				err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
-				if err != nil {
-					scope.Log("verify: %v", err)
-					return vfilter.Null{}
-				}
-
-				config_obj, ok := vql_subsystem.GetServerConfig(scope)
-				if !ok {
-					scope.Log("verify: Must run on the server")
-					return vfilter.Null{}
-				}
-
-				manager, err := services.GetRepositoryManager(config_obj)
-				if err != nil {
-					return err
-				}
-
-				repository, err := manager.GetGlobalRepository(config_obj)
-				if err != nil {
-					return err
-				}
-
-				state := launcher.NewAnalysisState(arg.Artifact)
-
-				if arg.Repository != "" {
-					cached_any := vql_subsystem.CacheGet(scope, vql_server.REPOSITORY_CACHE_TAG+arg.Repository)
-
-					if cached_repository, ok := cached_any.(services.Repository); ok {
-						repository = cached_repository
-					}
-				}
-
-				artifact, pres := repository.Get(ctx, config_obj, arg.Artifact)
-				if !pres {
-					artifact, err = repository.LoadYaml(arg.Artifact,
-						services.ArtifactOptions{
-							ValidateArtifact:     true,
-							ArtifactIsBuiltIn:    !arg.DisableOverride,
-							AllowOverridingAlias: true,
-						})
-					if err != nil {
-						state.SetError(err)
-						return state
-					}
-				}
-
-				// Verify the artifact
-				launcher.VerifyArtifact(
-					ctx, config_obj, repository, artifact, state)
-
-				return state
-			},
-		})
+func init() {
+	vql_subsystem.RegisterFunction(&VerifyFunction{})
 }

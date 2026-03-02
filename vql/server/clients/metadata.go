@@ -158,6 +158,7 @@ func (self ClientSetMetadataFunction) Info(
 		Doc:      "Sets client metadata. Client metadata is a set of free form key/value data",
 		ArgType:  type_map.AddType(scope, &ClientSetMetadataFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_CLIENT, acls.SERVER_ADMIN).Build(),
+		Version:  2,
 	}
 }
 

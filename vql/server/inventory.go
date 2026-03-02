@@ -140,6 +140,7 @@ func (self *InventoryAddFunction) Info(
 		Doc:      "Add tool to ThirdParty inventory.",
 		ArgType:  type_map.AddType(scope, &InventoryAddFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Version:  2,
 	}
 }
 
@@ -214,6 +215,7 @@ func (self *InventoryGetFunction) Info(
 		Doc:      "Get tool info from inventory service.",
 		ArgType:  type_map.AddType(scope, &InventoryGetFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Version:  2,
 	}
 }
 

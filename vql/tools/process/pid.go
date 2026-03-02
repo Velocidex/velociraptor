@@ -43,6 +43,7 @@ func (self getProcess) Info(scope types.Scope,
 		Name:    "process_tracker_get",
 		Doc:     "Get a single process from the global tracker.",
 		ArgType: type_map.AddType(scope, &getChainArgs{}),
+		Version: 2,
 	}
 }
 

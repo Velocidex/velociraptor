@@ -93,6 +93,7 @@ func (self DeleteTimelineFunction) Info(
 		Doc:      "Delete a super timeline.",
 		ArgType:  type_map.AddType(scope, &DeleteTimelineFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.NOTEBOOK_EDITOR).Build(),
+		Version:  2,
 	}
 }
 

@@ -326,6 +326,7 @@ func (self WatchSyslogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Doc:      "Watch a syslog file and stream events from it. ",
 		ArgType:  type_map.AddType(scope, &WatchSyslogPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 

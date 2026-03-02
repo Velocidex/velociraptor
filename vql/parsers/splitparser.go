@@ -222,6 +222,7 @@ func (self SplitRecordParser) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Doc:      "Parses files by splitting lines into records.",
 		ArgType:  type_map.AddType(scope, &_SplitRecordParserArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 

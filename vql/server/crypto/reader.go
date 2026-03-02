@@ -114,6 +114,7 @@ func (self ReadCryptFilePlugin) Info(scope vfilter.Scope, type_map *vfilter.Type
 		Doc:      "Read a previously stored encrypted local storage file.",
 		ArgType:  type_map.AddType(scope, &ReadCryptFilePluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 

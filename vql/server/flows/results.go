@@ -309,6 +309,7 @@ func (self SourcePlugin) Info(
 		Doc:      "Retrieve rows from stored result sets. This is a one stop show for retrieving stored result set for post processing.",
 		ArgType:  type_map.AddType(scope, &SourcePluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Version:  2,
 	}
 }
 

@@ -123,6 +123,7 @@ func (self AddTimelineFunction) Info(
 		Doc:      "Add a new query to a timeline.",
 		ArgType:  type_map.AddType(scope, &AddTimelineFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Version:  2,
 	}
 }
 

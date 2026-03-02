@@ -188,6 +188,7 @@ func (self WatchETWPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 		Name:    "watch_etw",
 		Doc:     "Watch for events from an ETW provider.",
 		ArgType: type_map.AddType(scope, &WatchETWArgs{}),
+		Version: 2,
 	}
 }
 

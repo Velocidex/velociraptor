@@ -43,6 +43,7 @@ func (self getChildren) Info(scope types.Scope,
 		Name:    "process_tracker_children",
 		Doc:     "Get all children of a process.",
 		ArgType: type_map.AddType(scope, &getChainArgs{}),
+		Version: 2,
 	}
 }
 

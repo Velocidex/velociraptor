@@ -190,6 +190,7 @@ func (self WebDAVUploadFunction) Info(
 		ArgType: type_map.AddType(scope, &WebDAVUploadArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(
 			acls.FILESYSTEM_READ, acls.NETWORK).Build(),
+		Version: 2,
 	}
 }
 

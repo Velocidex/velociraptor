@@ -393,6 +393,7 @@ func (self ShellPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Doc:      "Execute the commands given by argv.",
 		ArgType:  type_map.AddType(scope, &ShellPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.EXECVE).Build(),
+		Version:  2,
 	}
 }
 

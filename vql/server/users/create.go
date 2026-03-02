@@ -94,6 +94,7 @@ func (self UserCreateFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 		Name:    "user_create",
 		Doc:     "Creates a new user from the server, or updates their permissions or reset their password.",
 		ArgType: type_map.AddType(scope, &UserCreateFunctionArgs{}),
+		Version: 2,
 	}
 }
 

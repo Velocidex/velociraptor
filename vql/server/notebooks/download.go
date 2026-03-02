@@ -70,6 +70,7 @@ func (self CreateNotebookDownload) Info(scope vfilter.Scope, type_map *vfilter.T
 		Doc:      "Creates a notebook export zip file.",
 		ArgType:  type_map.AddType(scope, &CreateNotebookDownloadArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.PREPARE_RESULTS).Build(),
+		Version:  2,
 	}
 }
 

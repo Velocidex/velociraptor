@@ -31,6 +31,7 @@ func (self JournalPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Doc:      "Parse a journald file.",
 		ArgType:  type_map.AddType(scope, &JournalPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 

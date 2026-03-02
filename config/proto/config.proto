@@ -120,8 +120,6 @@ message DarwinInstallerConfig {
 }
 
 message RingBufferConfig {
-    string filename = 3 [deprecated = true];
-
     uint64 memory_size = 1 [(sem_type) = {
        description: "How many bytes to store in the ring buffer in memory."
     }];
@@ -628,17 +626,6 @@ message GUIConfig {
     // token. Use this only when serving the JS from a different
     // domain than the API server.
     repeated string trusted_origins = 25;
-
-    // SAML info deprecated - will be moved to a saml authenticator.
-    string saml_certificate = 12;
-    string saml_private_key = 13;
-    string saml_idp_metadata_url = 14;
-    string saml_root_url = 15;
-    string saml_user_attribute = 16;
-
-    // DEPRECATED: Will be moved to a Google authenticator
-    string google_oauth_client_id = 5;
-    string google_oauth_client_secret = 6;
 }
 
 message GUIUser {
@@ -661,8 +648,6 @@ message ReverseProxyConfig {
 
 
 message DynDNSConfig {
-    string hostname = 1 [deprecated=true];
-
     // Type of DynDNS server. Currently supported:
     // * empty string or dyndns
     // * cloudflare
@@ -795,8 +780,6 @@ message FrontendResourceControl {
 
 
 message FrontendConfig {
-    string public_path = 8 [deprecated=true];
-
     // Publicly accessible hostname for this frontend.
     string hostname = 19;
 
@@ -1514,8 +1497,6 @@ message Security {
 
 
 message Config {
-    string autocert_domain = 21 [deprecated=true];
-
     Version version = 8 [(sem_type) = {
             description: "Version information."
         }];
