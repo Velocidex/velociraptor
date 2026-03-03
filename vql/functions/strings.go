@@ -69,6 +69,7 @@ func (self StripFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Name:    "strip",
 		Doc:     "Strip a prefix or suffix from a string.",
 		ArgType: type_map.AddType(scope, &StripArgs{}),
+		Version: 2,
 	}
 }
 

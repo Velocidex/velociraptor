@@ -165,6 +165,7 @@ func (self CopyFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 		Doc:      "Copy a file.",
 		ArgType:  type_map.AddType(scope, &CopyFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE, acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 

@@ -119,6 +119,7 @@ func (self CreateFlowDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 		Doc:      "Creates a download pack for the flow.",
 		ArgType:  type_map.AddType(scope, &CreateFlowDownloadArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.PREPARE_RESULTS).Build(),
+		Version:  2,
 	}
 }
 
@@ -187,6 +188,7 @@ func (self CreateHuntDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 		Doc:      "Creates a download pack for a hunt.",
 		ArgType:  type_map.AddType(scope, &CreateHuntDownloadArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.PREPARE_RESULTS).Build(),
+		Version:  2,
 	}
 }
 

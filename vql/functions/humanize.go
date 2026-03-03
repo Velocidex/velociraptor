@@ -69,6 +69,7 @@ func (self HumanizeFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 		Name:    "humanize",
 		Doc:     "Format items in human readable way.",
 		ArgType: type_map.AddType(scope, &HumanizeArgs{}),
+		Version: 2,
 	}
 }
 

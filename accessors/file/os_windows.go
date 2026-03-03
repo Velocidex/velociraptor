@@ -364,6 +364,7 @@ func init() {
 		&OSFileSystemAccessor{}, accessors.AccessorDescriptor{
 			Name:        "file_nocase",
 			Description: `Access the filesystem using the OS API.`,
+			Permissions: []acls.ACL_PERMISSION{acls.FILESYSTEM_READ},
 		}))
 
 	// Register a variant which allows following links - be

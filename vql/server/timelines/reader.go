@@ -115,6 +115,7 @@ func (self TimelinePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 		Doc:      "Read a timeline. You can create a timeline with the timeline_add() function",
 		ArgType:  type_map.AddType(scope, &TimelinePluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Version:  2,
 	}
 }
 

@@ -627,6 +627,7 @@ func (self YaraXScanPlugin) Info(
 		// EXECVE is needed because we load the yarax DLL dynamically.
 		Metadata: vql.VQLMetadata().Permissions(
 			acls.FILESYSTEM_READ, acls.EXECVE).Build(),
+		Version: 2,
 	}
 }
 

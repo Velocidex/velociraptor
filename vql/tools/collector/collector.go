@@ -190,6 +190,7 @@ func (self CollectPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Doc:      "Collect artifacts into a local file.",
 		ArgType:  type_map.AddType(scope, &CollectPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
+		Version:  2,
 	}
 }
 

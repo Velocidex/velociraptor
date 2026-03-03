@@ -87,6 +87,7 @@ func (self MailPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 		Name:    "mail",
 		Doc:     "Send Email to a remote server.",
 		ArgType: type_map.AddType(scope, &MailPluginArgs{}),
+		Version: 2,
 	}
 }
 
@@ -315,6 +316,7 @@ func (self MailFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 		Doc:      "Send Email to a remote server.",
 		ArgType:  type_map.AddType(scope, &MailPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
+		Version:  2,
 	}
 }
 

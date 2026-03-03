@@ -85,6 +85,7 @@ func (self OrgDeleteFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Doc:      "Deletes an Org from the server.",
 		ArgType:  type_map.AddType(scope, &OrgDeleteFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.ORG_ADMIN).Build(),
+		Version:  2,
 	}
 }
 

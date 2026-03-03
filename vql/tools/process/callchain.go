@@ -45,6 +45,7 @@ func (self getChain) Info(scope types.Scope,
 		Name:    "process_tracker_callchain",
 		Doc:     "Get a call chain from the global process tracker.",
 		ArgType: type_map.AddType(scope, &getChainArgs{}),
+		Version: 2,
 	}
 }
 

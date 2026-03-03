@@ -463,6 +463,7 @@ func (self _ElasticPlugin) Info(
 		Doc:      "Upload rows to elastic.",
 		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
 		ArgType:  type_map.AddType(scope, &_ElasticPluginArgs{}),
+		Version:  2,
 	}
 }
 

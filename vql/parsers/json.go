@@ -106,6 +106,7 @@ func (self ParseJsonArray) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 		Name:    "parse_json_array",
 		Doc:     "Parse a JSON string into an array.",
 		ArgType: type_map.AddType(scope, &ParseJsonFunctionArg{}),
+		Version: 2,
 	}
 }
 
@@ -268,6 +269,7 @@ func (self ParseJsonlPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 		Doc:      "Parses a line oriented json file.",
 		ArgType:  type_map.AddType(scope, &ParseJsonlPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 
@@ -307,6 +309,7 @@ func (self ParseJsonArrayPlugin) Info(scope vfilter.Scope, type_map *vfilter.Typ
 		Name:    "parse_json_array",
 		Doc:     "Parses events from a line oriented json file.",
 		ArgType: type_map.AddType(scope, &ParseJsonFunctionArg{}),
+		Version: 2,
 	}
 }
 
@@ -675,6 +678,7 @@ func (self WriteJSONPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 		Doc:      "Write a query into a JSONL file.",
 		ArgType:  type_map.AddType(scope, &WriteJSONPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
+		Version:  2,
 	}
 }
 

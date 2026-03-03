@@ -298,6 +298,7 @@ func (self ProfilePlugin) Info(
 		Doc:      "Returns a profile dump from the running process.",
 		ArgType:  type_map.AddType(scope, &ProfilePluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		Version:  2,
 	}
 }
 

@@ -129,6 +129,7 @@ func (self getProcessTree) Info(scope types.Scope,
 		Name:    "process_tracker_tree",
 		Doc:     "Get the full process tree under the process id.",
 		ArgType: type_map.AddType(scope, &getProcessTreeArgs{}),
+		Version: 2,
 	}
 }
 

@@ -49,23 +49,23 @@ func (self *SamlAuthenticator) AddHandlers(mux *api_utils.ServeMux) error {
 	key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr([]byte(
 		self.authenticator.SamlPrivateKey))
 	if err != nil {
-		return err
+		return fmt.Errorf("SamlAuthenticator: %w", err)
 	}
 
 	cert, err := crypto_utils.ParseX509CertFromPemStr([]byte(
 		self.authenticator.SamlCertificate))
 	if err != nil {
-		return err
+		return fmt.Errorf("SamlAuthenticator: %w", err)
 	}
 
 	idpMetadataURL, err := url.Parse(self.authenticator.SamlIdpMetadataUrl)
 	if err != nil {
-		return err
+		return fmt.Errorf("SamlAuthenticator: %w", err)
 	}
 
 	rootURL, err := url.Parse(self.authenticator.SamlRootUrl)
 	if err != nil {
-		return err
+		return fmt.Errorf("SamlAuthenticator: %w", err)
 	}
 
 	idpMetadata, err := samlsp.FetchMetadata(
@@ -73,7 +73,7 @@ func (self *SamlAuthenticator) AddHandlers(mux *api_utils.ServeMux) error {
 		http.DefaultClient,
 		*idpMetadataURL)
 	if err != nil {
-		return err
+		return fmt.Errorf("SamlAuthenticator: %w", err)
 	}
 
 	opts := samlsp.Options{
@@ -85,7 +85,7 @@ func (self *SamlAuthenticator) AddHandlers(mux *api_utils.ServeMux) error {
 	}
 	samlMiddleware, err = samlsp.New(opts)
 	if err != nil {
-		return err
+		return fmt.Errorf("SamlAuthenticator: %w", err)
 	}
 
 	expiry_min := self.authenticator.DefaultSessionExpiryMin

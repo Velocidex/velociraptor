@@ -194,6 +194,7 @@ func (self RestoreBackupPlugin) Info(scope vfilter.Scope,
 		ArgType: type_map.AddType(scope, &RestoreBackupPluginArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.SERVER_ADMIN).Build(),
+		Version: 2,
 	}
 }
 

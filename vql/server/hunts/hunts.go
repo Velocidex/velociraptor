@@ -358,6 +358,7 @@ func (self HuntResultsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Doc:      "Retrieve the results of a hunt.",
 		ArgType:  type_map.AddType(scope, &HuntResultsPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Version:  2,
 	}
 }
 
@@ -454,6 +455,7 @@ func (self HuntFlowsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 		Doc:      "Retrieve the flows launched by a hunt.",
 		ArgType:  type_map.AddType(scope, &HuntFlowsPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Version:  2,
 	}
 }
 

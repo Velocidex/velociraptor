@@ -10,6 +10,8 @@ jobs:
     steps:
     - name: Check out code into the Go module directory
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      with:
+        fetch-depth: 50
 
     - name: Set up Go 1.25
       uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe
@@ -20,6 +22,14 @@ jobs:
         # taken to save the cache.
         cache: false
       id: go
+
+    - name: Check Plugin Versions
+      shell: bash
+      if: always()
+      # Check the last 3 commits for API changes.
+      run: |
+        pip install pyyaml
+        python3 -X utf8 ./scripts/check_versions.py 3
 
     - name: Configure test environment
       shell: cmd
@@ -43,7 +53,7 @@ jobs:
         regedit /S artifacts/testdata/windows/init.reg
 
     - name: Build
-      if: always()
+      if: success()
       env:
         CC: x86_64-w64-mingw32-gcc
       shell: bash
@@ -73,7 +83,7 @@ jobs:
 
     - name: Test
       shell: bash
-      if: always()
+      if: success()
       env:
         # Disable CGO for building tests - it takes too long and it is
         # not needed (mainly disables Yara building again).

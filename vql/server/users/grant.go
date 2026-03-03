@@ -93,6 +93,7 @@ func (self GrantFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Name:    "user_grant",
 		Doc:     "Grants the user the specified roles.",
 		ArgType: type_map.AddType(scope, &GrantFunctionArgs{}),
+		Version: 2,
 	}
 }
 

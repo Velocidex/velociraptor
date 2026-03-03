@@ -178,6 +178,7 @@ func (self UpdateNotebookCellFunction) Info(scope vfilter.Scope, type_map *vfilt
 		ArgType: type_map.AddType(scope, &UpdateNotebookCellFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(
 			acls.COLLECT_SERVER).Build(),
+		Version: 2,
 	}
 }
 

@@ -104,6 +104,7 @@ func (self *TemplateFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Doc:      "Expand a Go style template .",
 		ArgType:  type_map.AddType(scope, &TemplateFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Build(),
+		Version:  2,
 	}
 }
 

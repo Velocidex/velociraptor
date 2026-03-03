@@ -175,6 +175,7 @@ func (self ArtifactSetFunction) Info(
 		ArgType: type_map.AddType(scope, &ArtifactSetFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(
 			acls.ARTIFACT_WRITER, acls.SERVER_ARTIFACT_WRITER).Build(),
+		Version: 2,
 	}
 }
 
@@ -498,6 +499,7 @@ func (self ArtifactSetMetadataFunction) Info(
 		ArgType: type_map.AddType(scope, &ArtifactSetMetadataFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(
 			acls.ARTIFACT_WRITER, acls.SERVER_ARTIFACT_WRITER).Build(),
+		Version: 2,
 	}
 }
 

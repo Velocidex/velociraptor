@@ -253,6 +253,7 @@
 - name: artifact_set
   description: Sets an artifact into the global repository.
   type: Function
+  version: 2
   args:
   - name: definition
     type: string
@@ -299,6 +300,7 @@
     FROM artifact_definitions() WHERE NOT description =~ "ACME"
     ```
   type: Function
+  version: 2
   args:
   - name: name
     type: string
@@ -491,6 +493,7 @@
     Note that the backups file can only reside in the file store under
     the `<filestor>/backups` directory.
   type: Plugin
+  version: 2
   args:
   - name: name
     type: string
@@ -605,6 +608,7 @@
     }, batch_size=3)
     ```
   type: Plugin
+  version: 2
   args:
   - name: batch_size
     type: int64
@@ -895,6 +899,7 @@
 - name: client_create
   description: Create a new client in the data store.
   type: Function
+  version: 2
   args:
   - name: first_seen_at
     type: time.Time
@@ -1038,6 +1043,7 @@
     - [client_metadata]({{< ref "/vql_reference/server/client_metadata/" >}}):
       Returns client metadata from the datastore.
   type: Function
+  version: 2
   args:
   - name: client_id
     type: string
@@ -1136,6 +1142,7 @@
     collect --output file.zip` command. It will collect the artifacts
     into a zip file.
   type: Plugin
+  version: 2
   args:
   - name: artifacts
     type: string
@@ -1278,6 +1285,7 @@
     you will often need to specify a field name containing full
     stop. You can escape this using the backticks like the example above.
   type: Function
+  version: 2
   args:
   - name: client_id
     type: string
@@ -1508,6 +1516,7 @@
 
     NOTE: Sparse files are padded out
   type: Function
+  version: 2
   args:
   - name: filename
     type: accessors.OSPath
@@ -1575,6 +1584,7 @@
     Using the `wait` parameter you can wait for the download to
     complete or just kick it off asynchronously.
   type: Function
+  version: 2
   args:
   - name: client_id
     type: string
@@ -1626,6 +1636,7 @@
     Using the `wait` parameter you can wait for the download to
     complete or just kick it off asynchronously.
   type: Function
+  version: 2
   args:
   - name: hunt_id
     type: string
@@ -1661,6 +1672,7 @@
 - name: create_notebook_download
   description: Creates a notebook export zip file.
   type: Function
+  version: 2
   args:
   - name: notebook_id
     type: string
@@ -1841,6 +1853,7 @@
 - name: delete_flow
   description: Delete all the files that make up a flow.
   type: Plugin
+  version: 2
   args:
   - name: flow_id
     type: string
@@ -2091,6 +2104,7 @@
     `index` parameter or provide an `_index` column in the query
     itself to send the row to a different index each time.
   type: Plugin
+  version: 2
   args:
   - name: query
     type: StoredQuery
@@ -2309,6 +2323,7 @@
     SELECT eval(func="x=>AddTwo(x=1)") AS Three FROM scope()
     ```
   type: Function
+  version: 2
   args:
   - name: func
     type: vfilter.Lambda
@@ -2415,6 +2430,7 @@
     it does not invoke powershell which means that any execution
     artifacts are not trampled by this VQL.
   type: Plugin
+  version: 2
   args:
   - name: argv
     type: string
@@ -3182,7 +3198,7 @@
     `watch_etw()` query will never terminate since it is an event
     query.
   type: Function
-  version: 2
+  version: 3
   args:
   - name: name
     type: string
@@ -3606,6 +3622,7 @@
   description: |
     Enumerate process handles.
   type: Plugin
+  version: 2
   args:
   - name: pid
     type: uint64
@@ -3882,6 +3899,7 @@
 
     Formats a byte count in human readable way (e.g. Mb, Gb etc).
   type: Function
+  version: 2
   args:
   - name: bytes
     type: int64
@@ -3936,6 +3954,7 @@
     FROM scope()
     ```
   type: Function
+  version: 2
   args:
   - name: description
     type: string
@@ -4027,6 +4046,7 @@
     manually re-run these collections and then when successful re-add
     them to the hunt.
   type: Function
+  version: 2
   args:
   - name: client_id
     type: string
@@ -4053,6 +4073,7 @@
 - name: hunt_delete
   description: 'Delete a hunt. '
   type: Plugin
+  version: 2
   args:
   - name: hunt_id
     type: string
@@ -4085,6 +4106,7 @@
     You can use this to figure out if all the collections were
     successful by looking at the result of each flow object.
   type: Plugin
+  version: 2
   args:
   - name: hunt_id
     type: string
@@ -4172,6 +4194,7 @@
 - name: hunt_update
   description: Update a hunt.
   type: Function
+  version: 2
   args:
   - name: hunt_id
     type: string
@@ -4381,6 +4404,7 @@
     Combine this function with the hunt_add() function to add a
     manual offline collection to an ongoing hunt.
   type: Function
+  version: 2
   args:
   - name: client_id
     type: string
@@ -4536,6 +4560,7 @@
     readable by the server (so the file must reside on the server or
     be accessible over a network share).
   type: Function
+  version: 2
   args:
   - name: tool
     type: string
@@ -4569,6 +4594,7 @@
 - name: inventory_get
   description: Get tool info from inventory service.
   type: Function
+  version: 2
   args:
   - name: tool
     type: string
@@ -4637,6 +4663,7 @@
     - [geoip]({{< ref "/vql_reference/other/geoip/" >}}): Lookup an IP Address
       using the MaxMind GeoIP database.
   type: Function
+  version: 2
   args:
   - name: parse
     type: string
@@ -4997,6 +5024,7 @@
     actually valid - i.e. it does not check that the client id refers
     to a real client, flow id to a real flow, etc.
   type: Function
+  version: 2
   args:
   - name: type
     type: string
@@ -5125,6 +5153,7 @@
 - name: logging
   description: Watch the logs emitted by the server.
   type: Plugin
+  version: 2
   args:
   - name: component
     type: string
@@ -5376,6 +5405,7 @@
     FROM scope()
     ```
   type: Function
+  version: 2
   args:
   - name: to
     type: string
@@ -5440,6 +5470,7 @@
 
     See the mail() function for more details.
   type: Plugin
+  version: 2
   args:
   - name: to
     type: string
@@ -5586,6 +5617,7 @@
     FROM source()
     ```
   type: Function
+  version: 2
   args:
   - name: query
     type: LazyExpr
@@ -5947,6 +5979,7 @@
 - name: notebook_get
   description: Get a notebook.
   type: Function
+  version: 2
   args:
   - name: notebook_id
     type: string
@@ -5999,6 +6032,7 @@
 - name: notebook_update_cell
   description: Update a notebook cell.
   type: Function
+  version: 2
   args:
   - name: notebook_id
     type: string
@@ -6214,6 +6248,7 @@
 - name: org_delete
   description: Deletes an Org from the server.
   type: Function
+  version: 2
   args:
   - name: org
     type: string
@@ -6267,7 +6302,7 @@
   args:
   - name: paths
     type: accessors.OSPath
-    description: A list of paths to try to resolve each path.
+    description: A list of paths to try to resolve.
     repeated: true
     required: true
   - name: accessor
@@ -6577,6 +6612,7 @@
     FROM watch_evtx(filename=systemLogFile) WHERE EventID = 7045
     ```
   type: Plugin
+  version: 2
   args:
   - name: filename
     type: accessors.OSPath
@@ -6620,6 +6656,7 @@
 - name: parse_journald
   description: Parse a journald file.
   type: Plugin
+  version: 2
   args:
   - name: filename
     type: accessors.OSPath
@@ -6690,6 +6727,7 @@
     This function is similar to `parse_json()` but works for a JSON list
     instead of an object.
   type: Function
+  version: 2
   args:
   - name: data
     type: string
@@ -6728,6 +6766,7 @@
 - name: parse_jsonl
   description: Parses a line oriented json file.
   type: Plugin
+  version: 2
   args:
   - name: filename
     type: accessors.OSPath
@@ -6818,7 +6857,7 @@
          accessor="raw_ntfs")
     ```
   type: Plugin
-  version: 2
+  version: 3
   args:
   - name: filename
     type: accessors.OSPath
@@ -6880,6 +6919,7 @@
     reconstruct all attributes (for example if attributes are not
     stored in the $MFT but in external clusters).
   type: Function
+  version: 2
   args:
   - name: device
     type: string
@@ -6921,6 +6961,7 @@
     Note: You can also use a raw $MFT file to operate on - see
     `parse_ntfs()` for a full description.
   type: Plugin
+  version: 2
   args:
   - name: device
     type: string
@@ -6959,6 +7000,7 @@
     Note: You can also use a raw $MFT file to operate on - see
     `parse_ntfs()` for a full description.
   type: Plugin
+  version: 2
   args:
   - name: device
     type: string
@@ -7070,6 +7112,7 @@
     that relevant or corrupted and may result in slowing down the
     query.
   type: Function
+  version: 2
   args:
   - name: file
     type: accessors.OSPath
@@ -7352,6 +7395,7 @@
   description: |
     Parse an XML document into a dict like object.
   type: Function
+  version: 2
   args:
   - name: file
     type: accessors.OSPath
@@ -7372,6 +7416,7 @@
 - name: parse_yaml
   description: Parse yaml into an object.
   type: Function
+  version: 2
   args:
   - name: filename
     type: accessors.OSPath
@@ -7524,7 +7569,7 @@
 - name: pathspec
   description: Create a structured path spec to pass to certain accessors.
   type: Function
-  version: 1
+  version: 2
   args:
   - name: DelegateAccessor
     type: string
@@ -7807,6 +7852,7 @@
 
     {{% /notice %}}
   type: Plugin
+  version: 2
   args:
   - name: rules
     type: string
@@ -7923,6 +7969,7 @@
 - name: process_tracker_callchain
   description: Get a call chain from the global process tracker.
   type: Function
+  version: 2
   args:
   - name: id
     type: string
@@ -7940,6 +7987,7 @@
 - name: process_tracker_children
   description: Get all children of a process.
   type: Function
+  version: 2
   args:
   - name: id
     type: string
@@ -7957,6 +8005,7 @@
 - name: process_tracker_get
   description: Get a single process from the global tracker.
   type: Function
+  version: 2
   args:
   - name: id
     type: string
@@ -7985,6 +8034,7 @@
 - name: process_tracker_tree
   description: Get the full process tree under the process id.
   type: Function
+  version: 2
   args:
   - name: id
     type: string
@@ -8014,6 +8064,7 @@
 - name: profile
   description: Returns a profile dump from the running process.
   type: Plugin
+  version: 2
   args:
   - name: allocs
     type: bool
@@ -8289,6 +8340,7 @@
     }, exit='x=>x._value >= my_limit', inherit=true)
     ```
   type: Plugin
+  version: 2
   args:
   - name: query
     type: Any
@@ -8542,6 +8594,7 @@
 - name: read_crypto_file
   description: Read a previously stored encrypted local storage file.
   type: Plugin
+  version: 2
   args:
   - name: filename
     type: accessors.OSPath
@@ -8734,6 +8787,7 @@
   description: Search and replace a string with a regexp. Note you can use $1 to replace
     the capture string.
   type: Function
+  version: 2
   args:
   - name: source
     type: string
@@ -8923,6 +8977,7 @@
 - name: repack
   description: Repack and upload a repacked binary or MSI to the server.
   type: Function
+  version: 2
   args:
   - name: target
     type: string
@@ -9321,6 +9376,7 @@
     secret_modify(delete=TRUE) to truly delete the secret in the child
     org context (see the query() plugin to switch org contexts).
   type: Function
+  version: 2
   args:
   - name: name
     type: string
@@ -9821,6 +9877,7 @@
     SELECT * FROM source(notebook_id="N.123", notebook_cell="NC.1234")
     ```
   type: Plugin
+  version: 2
   args:
   - name: client_id
     type: string
@@ -9938,6 +9995,7 @@
 - name: split_records
   description: Parses files by splitting lines into records.
   type: Plugin
+  version: 2
   args:
   - name: filenames
     type: accessors.OSPath
@@ -9979,6 +10037,7 @@
 - name: splunk_upload
   description: Upload rows to splunk.
   type: Plugin
+  version: 2
   args:
   - name: query
     type: StoredQuery
@@ -10308,6 +10367,7 @@
     strip(string="   lorem ipsum   ") -> "lorem ipsum"
     ```
   type: Function
+  version: 2
   args:
   - name: string
     type: string
@@ -10435,6 +10495,7 @@
 - name: template
   description: Expand a Go style template .
   type: Function
+  version: 2
   args:
   - name: template
     type: string
@@ -10467,6 +10528,7 @@
   description: Read a timeline. You can create a timeline with the timeline_add()
     function
   type: Plugin
+  version: 2
   args:
   - name: timeline
     type: string
@@ -10498,6 +10560,7 @@
 - name: timeline_add
   description: Add a new query to a timeline.
   type: Function
+  version: 2
   args:
   - name: timeline
     type: string
@@ -10537,6 +10600,7 @@
 - name: timeline_delete
   description: Delete a super timeline.
   type: Function
+  version: 2
   args:
   - name: timeline
     type: string
@@ -11297,6 +11361,7 @@
 - name: upload_webdav
   description: Upload files to a WebDAV server.
   type: Function
+  version: 2
   args:
   - name: file
     type: accessors.OSPath
@@ -11338,6 +11403,7 @@
 - name: uploads
   description: Retrieve information about a flow's uploads.
   type: Plugin
+  version: 2
   args:
   - name: client_id
     type: string
@@ -11385,6 +11451,7 @@
     possible in the general case to simply append strings. You need to use
     the `url()` function to build the proper url.
   type: Function
+  version: 2
   args:
   - name: scheme
     type: string
@@ -11432,6 +11499,7 @@
   description: Creates a new user from the server, or updates their permissions or
     reset their password.
   type: Function
+  version: 2
   args:
   - name: user
     type: string
@@ -11460,6 +11528,7 @@
 - name: user_delete
   description: Deletes a user from the server.
   type: Function
+  version: 2
   args:
   - name: user
     type: string
@@ -11483,6 +11552,7 @@
 - name: user_grant
   description: Grants the user the specified roles.
   type: Function
+  version: 2
   args:
   - name: user
     type: string
@@ -11642,6 +11712,7 @@
 
     This function will verify the artifact and flag any potential errors or warnings.
   type: Function
+  version: 2
   args:
   - name: artifact
     type: string
@@ -12088,6 +12159,7 @@
     }
     ```
   type: Plugin
+  version: 2
   args:
   - name: name
     type: string
@@ -12153,6 +12225,7 @@
 
     {{% /notice %}}
   type: Plugin
+  version: 2
   args:
   - name: filename
     type: accessors.OSPath
@@ -12286,6 +12359,7 @@
     FROM watch_syslog(filename='/var/log/logfile.log')
     ```
   type: Plugin
+  version: 2
   args:
   - name: filename
     type: accessors.OSPath
@@ -12385,6 +12459,7 @@
     SELECT winpmem(image_path='c:/test.dd', compression='s2') FROM scope()
     ```
   type: Function
+  version: 2
   args:
   - name: service
     type: string
@@ -12511,7 +12586,6 @@
     Writes a string onto a file.
 
     This VQL function is a convenience wrapper to the copy() function.
-
   type: Function
   args:
   - name: data
@@ -12535,9 +12609,11 @@
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: write_jsonl
   description: Write a query into a JSONL file.
   type: Plugin
+  version: 2
   args:
   - name: filename
     type: accessors.OSPath
@@ -12707,6 +12783,7 @@
     signatures can be easily invalidated, robust rules typically have
     other conditions as a fallback so the impact should be minimal.
   type: Plugin
+  version: 2
   args:
   - name: rules
     type: string
@@ -12842,6 +12919,7 @@
     loaded, it is not unloaded again. This way you can avoid having to
     download or hash the dll until actually needed.
   type: Plugin
+  version: 2
   args:
   - name: rules
     type: string

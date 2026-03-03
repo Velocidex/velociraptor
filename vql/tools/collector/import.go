@@ -708,6 +708,7 @@ func (self ImportCollectionFunction) Info(scope vfilter.Scope, type_map *vfilter
 		Doc:      "Imports an offline collection zip file (experimental).",
 		ArgType:  type_map.AddType(scope, &ImportCollectionFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER, acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 

@@ -177,6 +177,7 @@ func (self WinpmemFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 		Doc:      "Uses the winpmem driver to take a memory image. This plugin is also needed to facilitate the winpmem accessor.",
 		ArgType:  type_map.AddType(scope, &WinpmemArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		Version:  2,
 	}
 }
 

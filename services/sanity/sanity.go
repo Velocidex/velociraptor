@@ -101,13 +101,6 @@ func (self *SanityChecks) CheckRootOrg(
 			config_obj.Frontend.Resources.ExpectedClients = 10000
 		}
 
-		// DynDns.Hostname is deprecated, moved to Frontend.Hostname
-		if config_obj.Frontend.Hostname == "" &&
-			config_obj.Frontend.DynDns != nil &&
-			config_obj.Frontend.DynDns.Hostname != "" {
-			config_obj.Frontend.Hostname = config_obj.Frontend.DynDns.Hostname
-		}
-
 		if config_obj.Frontend.CollectionErrorRegex != "" {
 			_, err := regexp.Compile(config_obj.Frontend.CollectionErrorRegex)
 			if err != nil {

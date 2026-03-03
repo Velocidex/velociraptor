@@ -127,6 +127,7 @@ func (self ParseYamlFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Doc:      "Parse yaml into an object.",
 		ArgType:  type_map.AddType(scope, &ParseYamlFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 

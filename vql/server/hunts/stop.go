@@ -144,6 +144,7 @@ func (self UpdateHuntFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 		Doc:      "Update a hunt.",
 		ArgType:  type_map.AddType(scope, &UpdateHuntFunctionArg{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.START_HUNT).Build(),
+		Version:  2,
 	}
 }
 

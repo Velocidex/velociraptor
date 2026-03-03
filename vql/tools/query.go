@@ -267,6 +267,7 @@ func (self QueryPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Doc:      "Evaluate a VQL query.",
 		ArgType:  type_map.AddType(scope, &QueryPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.IMPERSONATION).Build(),
+		Version:  2,
 	}
 }
 

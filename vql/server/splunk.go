@@ -45,24 +45,24 @@ import (
 )
 
 type _SplunkPluginArgs struct {
-	Query          vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
-	Threads        int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
-	URL            string              `vfilter:"optional,field=url,doc=The Splunk Event Collector URL."`
-	Token          string              `vfilter:"optional,field=token,doc=Splunk HEC Token."`
-	Index          string              `vfilter:"optional,field=index,doc=The name of the index to upload to. If not specified, ensure a column is named _splunk_index."`
-	Source         string              `vfilter:"optional,field=source,doc=The source field for splunk. If not specified ensure a column is named _splunk_source or this will be 'velociraptor'."`
-	SourceType     string              `vfilter:"optional,field=sourcetype,doc=The sourcetype field for splunk. If not specified ensure a column is named _splunk_source_type or this will 'vql'"`
-	ChunkSize      int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
-	SkipVerify     bool                `vfilter:"optional,field=skip_verify,doc=Skip SSL verification(default: False)."`
-	RootCerts      string              `vfilter:"optional,field=root_ca,doc=As a better alternative to skip_verify, allows root ca certs to be added here."`
-	WaitTime       int64               `vfilter:"optional,field=wait_time,doc=Batch splunk upload this long (2 sec)."`
-	Hostname       string              `vfilter:"optional,field=hostname,doc=Hostname for Splunk Events. Defaults to server hostname."`
-	TimestampField string              `vfilter:"optional,field=timestamp_field,doc=Field to use as event timestamp."`
-	HostnameField  string              `vfilter:"optional,field=hostname_field,doc=Field to use as event hostname. Overrides hostname parameter."`
-	Secret         string              `vfilter:"optional,field=secret,doc=Alternatively use a secret from the secrets service. Secret must be of type 'Splunk'"`
-	MaxRetries     int64               `vfilter:"optional,field=max_retries,doc=Maximum number of retries for failed uploads (default: 3)."`
-	RetryWait      int64               `vfilter:"optional,field=retry_wait,doc=Base wait time in seconds for exponential backoff between retries (default: 2). Actual wait times: 2s, 4s, 8s, 16s..."`
-	IdleConnTimeout int64              `vfilter:"optional,field=idle_conn_timeout,doc=How long to keep idle HTTP connections open in seconds (default: 55). Lower values help with firewalls/load balancer/HECs that close connections."`
+	Query           vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
+	Threads         int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
+	URL             string              `vfilter:"optional,field=url,doc=The Splunk Event Collector URL."`
+	Token           string              `vfilter:"optional,field=token,doc=Splunk HEC Token."`
+	Index           string              `vfilter:"optional,field=index,doc=The name of the index to upload to. If not specified, ensure a column is named _splunk_index."`
+	Source          string              `vfilter:"optional,field=source,doc=The source field for splunk. If not specified ensure a column is named _splunk_source or this will be 'velociraptor'."`
+	SourceType      string              `vfilter:"optional,field=sourcetype,doc=The sourcetype field for splunk. If not specified ensure a column is named _splunk_source_type or this will 'vql'"`
+	ChunkSize       int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
+	SkipVerify      bool                `vfilter:"optional,field=skip_verify,doc=Skip SSL verification(default: False)."`
+	RootCerts       string              `vfilter:"optional,field=root_ca,doc=As a better alternative to skip_verify, allows root ca certs to be added here."`
+	WaitTime        int64               `vfilter:"optional,field=wait_time,doc=Batch splunk upload this long (2 sec)."`
+	Hostname        string              `vfilter:"optional,field=hostname,doc=Hostname for Splunk Events. Defaults to server hostname."`
+	TimestampField  string              `vfilter:"optional,field=timestamp_field,doc=Field to use as event timestamp."`
+	HostnameField   string              `vfilter:"optional,field=hostname_field,doc=Field to use as event hostname. Overrides hostname parameter."`
+	Secret          string              `vfilter:"optional,field=secret,doc=Alternatively use a secret from the secrets service. Secret must be of type 'Splunk'"`
+	MaxRetries      int64               `vfilter:"optional,field=max_retries,doc=Maximum number of retries for failed uploads (default: 3)."`
+	RetryWait       int64               `vfilter:"optional,field=retry_wait,doc=Base wait time in seconds for exponential backoff between retries (default: 2). Actual wait times: 2s, 4s, 8s, 16s..."`
+	IdleConnTimeout int64               `vfilter:"optional,field=idle_conn_timeout,doc=How long to keep idle HTTP connections open in seconds (default: 55). Lower values help with firewalls/load balancer/HECs that close connections."`
 }
 
 type _SplunkPlugin struct{}
@@ -424,6 +424,7 @@ func (self _SplunkPlugin) Info(
 		Doc:      "Upload rows to splunk.",
 		ArgType:  type_map.AddType(scope, &_SplunkPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
+		Version:  2,
 	}
 }
 

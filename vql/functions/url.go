@@ -122,6 +122,7 @@ func (self UrlFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Name:    "url",
 		Doc:     "Construct a URL or parse one.",
 		ArgType: type_map.AddType(scope, &UrlArgs{}),
+		Version: 2,
 	}
 }
 

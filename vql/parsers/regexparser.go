@@ -322,6 +322,7 @@ func (self _RegexReplace) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Doc: "Search and replace a string with a regexp. " +
 			"Note you can use $1 to replace the capture string.",
 		ArgType: type_map.AddType(scope, &_RegexReplaceArg{}),
+		Version: 2,
 	}
 }
 

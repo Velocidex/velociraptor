@@ -43,7 +43,7 @@ sources:
 
           LET AllClients = SELECT *
             FROM clients(search=SearchTerm)
-            -- WHERE Hostname =~ "MyHost"
+            -- WHERE HostName =~ "MyHost"
 
           SELECT * FROM foreach(row=AllClients, query=Display)
           ORDER BY _LastSeenAt DESC

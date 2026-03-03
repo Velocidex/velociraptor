@@ -22,6 +22,7 @@ func (self EvalFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 		Name:    "eval",
 		Doc:     "Evaluate a vql lambda function on the current scope.",
 		ArgType: type_map.AddType(scope, EvalFunctionArg{}),
+		Version: 2,
 	}
 }
 

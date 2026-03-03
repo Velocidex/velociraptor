@@ -91,6 +91,7 @@ func (self DeleteFlowPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 		Doc:      "Delete all the files that make up a flow.",
 		ArgType:  type_map.AddType(scope, &DeleteFlowPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.DELETE_RESULTS).Build(),
+		Version:  2,
 	}
 }
 

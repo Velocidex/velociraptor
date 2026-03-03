@@ -148,6 +148,7 @@ func (self NewClientFunction) Info(
 		Doc:      "Create a new client in the data store.",
 		ArgType:  type_map.AddType(scope, &NewClientArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Version:  2,
 	}
 }
 

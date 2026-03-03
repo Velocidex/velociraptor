@@ -80,6 +80,7 @@ func (self IpFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 		Name:    "ip",
 		Doc:     "Format an IP address.",
 		ArgType: type_map.AddType(scope, &IpArgs{}),
+		Version: 2,
 	}
 }
 

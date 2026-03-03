@@ -127,6 +127,7 @@ func (self HandlesPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Doc:      "Enumerate process handles.",
 		ArgType:  type_map.AddType(scope, &HandlesPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		Version:  2,
 	}
 }
 

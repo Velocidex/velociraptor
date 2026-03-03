@@ -169,7 +169,7 @@ func (self GeneratorFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Name:    "generate",
 		Doc:     "Create a named generator that receives rows from the query.",
 		ArgType: type_map.AddType(scope, &GeneratorArgs{}),
-		Version: 2,
+		Version: 3,
 	}
 }
 
