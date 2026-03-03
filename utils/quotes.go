@@ -13,3 +13,10 @@ func UnQuote(in string) string {
 	}
 	return res
 }
+
+func MaybeStripWrappingQuotes(path string) string {
+	if len(path) >= 2 && path[0] == '\'' && path[len(path)-1] == '\'' {
+		return path[1 : len(path)-1]
+	}
+	return path
+}

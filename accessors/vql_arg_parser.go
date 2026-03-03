@@ -89,10 +89,10 @@ func ParseOSPath(ctx context.Context,
 		return MustNewFileStorePath("ds:").Append(components...), nil
 
 	case string:
-		return accessor.ParsePath(t)
+		return accessor.ParsePath(utils.MaybeStripWrappingQuotes(t))
 
 	case []uint8:
-		return accessor.ParsePath(string(t))
+		return accessor.ParsePath(utils.MaybeStripWrappingQuotes(string(t)))
 
 	default:
 		result, _ := accessor.ParsePath("")

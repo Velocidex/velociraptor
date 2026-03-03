@@ -70,6 +70,15 @@ var testcases = []testCases{
 
 	{name: "Multiple parts of mixed type 2",
 		in: []vfilter.Any{"/root/home", `{"Path": "/a/b"}`, "Hello.txt"}},
+
+	{name: "Single-Quoted Path (macOS Finder)",
+		in: "'/usr/bin/ls'"},
+
+	{name: "Single-Quoted Path With Spaces",
+		in: "'/path/to/my file.json'"},
+
+	{name: "Unquoted Path",
+		in: "/usr/bin/ls"},
 }
 
 func TestVQLParsing(t *testing.T) {

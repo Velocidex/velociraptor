@@ -113,5 +113,35 @@
   "PathSpec": {
    "Path": "/root/home/a/b/Hello.txt"
   }
+ },
+ "Single-Quoted Path (macOS Finder)": {
+  "Components": [
+   "usr",
+   "bin",
+   "ls"
+  ],
+  "PathSpec": {
+   "Path": "/usr/bin/ls"
+  }
+ },
+ "Single-Quoted Path With Spaces": {
+  "Components": [
+   "path",
+   "to",
+   "my file.json"
+  ],
+  "PathSpec": {
+   "Path": "/path/to/my file.json"
+  }
+ },
+ "Unquoted Path": {
+  "Components": [
+   "usr",
+   "bin",
+   "ls"
+  ],
+  "PathSpec": {
+   "Path": "/usr/bin/ls"
+  }
  }
 }
