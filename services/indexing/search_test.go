@@ -26,6 +26,11 @@ func (self *TestSuite) TestWildCardSearch() {
 
 		// Regex based searches
 		"client:C./023.+13.+/",
+
+		"label:*",
+
+		// With no search term it means match all
+		"label:",
 	} {
 		ctx := context.Background()
 		scope := vql_subsystem.MakeScope()

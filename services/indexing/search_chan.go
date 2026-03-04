@@ -240,7 +240,7 @@ func (self *Indexer) searchUnlabeledClientsChan(
 // be the last character)
 
 var (
-	simple_wildcard_regex = regexp.MustCompile(`^([^*]*)([*].+)$`)
+	simple_wildcard_regex = regexp.MustCompile(`^([^*]*)([*].*)$`)
 	regex_wildcard_regex  = regexp.MustCompile(`^([^/]*)/(.+)/$`)
 
 	// Just match everything
