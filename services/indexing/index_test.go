@@ -3,6 +3,7 @@ package indexing_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -80,8 +81,14 @@ func (self *TestSuite) TestEnumerateIndex() {
 	// Read all clients.
 	ctx := context.Background()
 	searched_clients := []string{}
+
+	// Empty prefix should return all items
 	for hit := range indexer.SearchIndexWithPrefix(ctx, self.ConfigObj, "") {
-		if hit != nil && hit.Term != "all" {
+		if hit != nil &&
+			hit.Term != "all" &&
+
+			// Do not count verb terms (e.g. label:Foo)
+			!strings.Contains(hit.Term, ":") {
 			client_id := hit.Entity
 			searched_clients = append(searched_clients, client_id)
 		}
