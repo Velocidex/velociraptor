@@ -3,13 +3,12 @@ package indexing_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
@@ -25,20 +24,23 @@ type TestSuite struct {
 func (self *TestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
 	self.ConfigObj.Services.IndexServer = true
+	self.ConfigObj.Services.Label = true
+	self.ConfigObj.Services.ClientInfo = true
 	self.ConfigObj.Frontend.Resources.IndexSnapshotFrequency = 100000
 
-	self.populatedClientRecords()
-
 	self.TestSuite.SetupTest()
+
+	self.populatedClientRecords()
 }
 
 // Make some clients in the index.
 func (self *TestSuite) populatedClientRecords() {
 	self.clients = nil
-	db, err := datastore.GetDB(self.ConfigObj)
-	assert.NoError(self.T(), err)
 
 	count := 0
+
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
 
 	bytes := []byte("00000000")
 	for i := 0; i < 4; i++ {
@@ -51,13 +53,25 @@ func (self *TestSuite) populatedClientRecords() {
 				self.clients = append(self.clients, client_id)
 				count++
 
-				path_manager := paths.NewClientPathManager(client_id)
-				record := &actions_proto.ClientInfo{ClientId: client_id}
-				err = db.SetSubject(self.ConfigObj, path_manager.Path(), record)
+				err := client_info_manager.Set(self.Ctx, &services.ClientInfo{
+					&actions_proto.ClientInfo{
+						ClientId: client_id,
+					}})
 				assert.NoError(self.T(), err)
 			}
 		}
 	}
+
+	labeler := services.GetLabeler(self.ConfigObj)
+	err = labeler.SetClientLabel(
+		self.Ctx, self.ConfigObj, "C.0030300030303002", "MyLabel")
+	assert.NoError(self.T(), err)
+
+	indexer, err := services.GetIndexer(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = indexer.RebuildIndex(self.Ctx, self.ConfigObj)
+	assert.NoError(self.T(), err)
 }
 
 func (self *TestSuite) TestEnumerateIndex() {
@@ -67,8 +81,14 @@ func (self *TestSuite) TestEnumerateIndex() {
 	// Read all clients.
 	ctx := context.Background()
 	searched_clients := []string{}
+
+	// Empty prefix should return all items
 	for hit := range indexer.SearchIndexWithPrefix(ctx, self.ConfigObj, "") {
-		if hit != nil && hit.Term != "all" {
+		if hit != nil &&
+			hit.Term != "all" &&
+
+			// Do not count verb terms (e.g. label:Foo)
+			!strings.Contains(hit.Term, ":") {
 			client_id := hit.Entity
 			searched_clients = append(searched_clients, client_id)
 		}

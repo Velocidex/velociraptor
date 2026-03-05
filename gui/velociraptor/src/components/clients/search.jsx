@@ -63,7 +63,7 @@ class VeloClientSearch extends Component {
     getQueryFromLocation = ()=>{
         let hash = window.location.hash || "";
         if(hash.startsWith("#/search/")) {
-            return hash.substring(9);
+            return decodeURIComponent(hash.substring(9));
         };
         return "";
     }
