@@ -107,16 +107,17 @@ func (self *Handle) Close() {
 // Try to send but skip closed handles.
 func (self *Handle) Send(event *etw.Event) {
 	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	if self.closed {
+		self.mu.Unlock()
 		return
 	}
+	output_chan := self.output_chan
+	self.mu.Unlock()
 
 	select {
 	case <-self.ctx.Done():
 		return
-	case self.output_chan <- event:
+	case output_chan <- event:
 	}
 }
 
@@ -512,7 +513,7 @@ func (self *SessionContext) DeregisterHandle(
 	if err == nil {
 		err := session.UnsubscribeFromProvider(guid)
 		if err != nil {
-			scope.Log("ERROR:etw: failed to disable provider; %w", err)
+			scope.Log("ERROR:etw: failed to disable provider; %v", err)
 		}
 	}
 

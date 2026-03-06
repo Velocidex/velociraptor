@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -80,16 +82,18 @@ type: INTERNAL
 	assert.NoError(self.T(), err)
 
 	self.master_dispatcher = master_dispatcher.(*hunt_dispatcher.HuntDispatcher)
-	self.master_dispatcher.Store.(*hunt_dispatcher.HuntStorageManagerImpl).I_am_master = true
 
 	err = self.master_dispatcher.Refresh(self.Ctx, self.ConfigObj)
 	assert.NoError(self.T(), err)
 
+	config_obj := proto.Clone(self.ConfigObj).(*config_proto.Config)
+	config_obj.Frontend.IsMinion = true
+
 	minion_dispatcher, err := hunt_dispatcher.NewHuntDispatcher(
-		self.Ctx, self.Wg, self.ConfigObj)
+		self.Ctx, self.Wg, config_obj)
 	assert.NoError(self.T(), err)
+
 	self.minion_dispatcher = minion_dispatcher.(*hunt_dispatcher.HuntDispatcher)
-	self.minion_dispatcher.Store.(*hunt_dispatcher.HuntStorageManagerImpl).I_am_master = false
 
 	err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj)
 	assert.NoError(self.T(), err)
