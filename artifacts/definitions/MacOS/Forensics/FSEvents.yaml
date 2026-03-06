@@ -221,7 +221,7 @@ sources:
         WHERE   if(condition=DateAfter, then= Btime > DateAfter, else= True )
             AND if(condition=DateBefore, then= Mtime < DateBefore, else= True )
             AND log(message=OSPath)
-
+            
       LET x = SELECT * FROM foreach(row=files,
         query={
             SELECT
@@ -232,11 +232,10 @@ sources:
                 Btime as SourceBtime
             FROM
                 foreach(row=parse_binary(
-                    filename=read_file(filename=OSPath, accessor="gzip", length=1000000),
+                    filename=read_file(filename=OSPath, accessor="gzip", length=10000000), 
                     accessor="data",
                     profile=FSEventProfile, struct="FSEventsProfile").Entries)
         })
-        WHERE EntryPath =~ PathRegex AND EntryFlags =~ FlagsRegex
 
       SELECT
         items.path as EntryPath,
@@ -249,3 +248,4 @@ sources:
         Version
       FROM
         flatten(query=x)
+      WHERE EntryPath =~ PathRegex AND EntryFlags =~ FlagsRegex
