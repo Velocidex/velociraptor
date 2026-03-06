@@ -111,12 +111,13 @@ func (self *Handle) Send(event *etw.Event) {
 		self.mu.Unlock()
 		return
 	}
+	output_chan := self.output_chan
 	self.mu.Unlock()
 
 	select {
 	case <-self.ctx.Done():
 		return
-	case self.output_chan <- event:
+	case output_chan <- event:
 	}
 }
 
