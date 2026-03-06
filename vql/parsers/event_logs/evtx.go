@@ -171,12 +171,22 @@ func (self _WatchEvtxPlugin) Call(
 		}
 
 		// Wait until the query is complete.
-		for event := range event_channel {
+		for {
 			select {
 			case <-ctx.Done():
 				return
 
-			case output_chan <- event:
+			case event, ok := <-event_channel:
+				if !ok {
+					return
+				}
+
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- event:
+				}
 			}
 		}
 	}()
