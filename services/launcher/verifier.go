@@ -26,7 +26,7 @@ type AnalysisState struct {
 	Warnings    []string
 
 	// Keep track of existing definitions in LET queries.
-	Definitions map[string]vfilter.CallSite
+	Definitions map[string]vfilter.DefinitionSite
 }
 
 func (self *AnalysisState) SetError(err error) {
@@ -79,7 +79,7 @@ func (self *AnalysisState) AnalyseArtifactRequiredPermissions(
 func NewAnalysisState(artifact string) *AnalysisState {
 	return &AnalysisState{
 		Artifact:    artifact,
-		Definitions: make(map[string]vfilter.CallSite),
+		Definitions: make(map[string]vfilter.DefinitionSite),
 	}
 }
 
@@ -211,7 +211,7 @@ func (self *ApiDescription) VerifyCallSite(
 	if callsite.Type == "plugin" {
 		desc, pres := self.plugins[callsite.Name]
 		if !pres {
-			// Is this already defined?
+			// Handle LET definitions
 			desc, pres := state.Definitions[callsite.Name]
 			if !pres {
 				res = append(res, fmt.Errorf(
@@ -219,6 +219,7 @@ func (self *ApiDescription) VerifyCallSite(
 			}
 
 			for _, arg := range callsite.Args {
+				// The callsite is calling some unknown parameter
 				if !utils.InString(desc.Args, arg) {
 					res = append(res, fmt.Errorf(
 						"Invalid arg %v for VQL definition %v",
@@ -228,6 +229,15 @@ func (self *ApiDescription) VerifyCallSite(
 
 			// Now check if any of the required args are missing
 			for _, arg := range desc.Args {
+				// The arg has a default so the caller does not have
+				// to specify it.
+				if utils.InString(desc.Defaults, arg) {
+					continue
+				}
+
+				// The definition parameter is missing from the
+				// caller's args - this is required so we need to
+				// error.
 				if !utils.InString(callsite.Args, arg) {
 					res = append(res, fmt.Errorf(
 						"While calling VQL definition %v(), required arg %v is not provided",
@@ -235,6 +245,7 @@ func (self *ApiDescription) VerifyCallSite(
 				}
 			}
 
+			// Plugin is found as a regular plugin.
 		} else if !desc.FreeFormArgs {
 			state.AnalyseCall(callsite, desc)
 
@@ -278,6 +289,12 @@ func (self *ApiDescription) VerifyCallSite(
 
 			// Now check if any of the required args are missing
 			for _, arg := range desc.Args {
+				// The arg has a default so the caller does not have
+				// to specify it.
+				if utils.InString(desc.Defaults, arg) {
+					continue
+				}
+
 				if !utils.InString(callsite.Args, arg) {
 					res = append(res, fmt.Errorf(
 						"While calling VQL definition %v(), required arg %v is not provided",
