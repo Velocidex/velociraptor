@@ -1,0 +1,119 @@
+# Test VQL Function default args.
+Query: LET Foo(X, Y=3, Z=ExternalParam + "World") =
+   format(format="%v: Sum of %v and %v is %v", args=[Z, X, Y, X + Y])
+
+Output: []
+
+# Omit the default parameter and then set it.
+Query: SELECT Foo(X=5), Foo(X=5, Y=4) FROM scope()
+Output: [
+ {
+  "Foo(X=5)": "Hello World: Sum of 5 and 3 is 8",
+  "Foo(X=5, Y=4)": "Hello World: Sum of 5 and 4 is 9"
+ }
+]
+
+# Default values are resolved from the calling scope so Z will now
+# be a different thing.
+Query: LET ExternalParam <= "Goodby"
+Output: []
+
+Query: SELECT Foo(X=5), Foo(X=5, Y=4) FROM scope()
+Output: [
+ {
+  "Foo(X=5)": "GoodbyWorld: Sum of 5 and 3 is 8",
+  "Foo(X=5, Y=4)": "GoodbyWorld: Sum of 5 and 4 is 9"
+ }
+]
+
+# Stored query with default args (the order does not matter).
+Query: LET Query(X = 5, Y) = SELECT X + Y FROM scope()
+Output: []
+
+Query: SELECT * FROM Query(Y=3)
+Output: [
+ {
+  "X + Y": 8
+ }
+]
+
+# Parameter definitions with escaped identifiers
+Query: LET Foo(`X.Y`, `X.Z` = 5) = `X.Y` + `X.Z`
+Output: []
+
+Query: SELECT Foo(`X.Y` = 3) FROM scope()
+Output: [
+ {
+  "Foo(`X.Y`=3)": 8
+ }
+]
+
+# Test that the verifier understands default values
+Query: SELECT verify(artifact=Broken1) AS Broken1, verify(artifact=Broken2) AS Broken2, verify(artifact=Ok1) AS Ok1 FROM scope()
+Output: [
+ {
+  "Broken1": {
+   "Artifact": "name: NotCallingRequiredArg\nsources:\n- query: |\n    LET Foo(X, Y=1) = X+Y\n    SELECT Foo() FROM scope()\n",
+   "Permissions": null,
+   "Errors": [
+    "NotCallingRequiredArg: query: While calling VQL definition Foo(), required arg X is not provided"
+   ],
+   "Warnings": null,
+   "Definitions": {
+    "Foo": {
+     "Type": "definition",
+     "Name": "Foo",
+     "Args": [
+      "X",
+      "Y"
+     ],
+     "Defaults": [
+      "Y"
+     ]
+    }
+   }
+  },
+  "Broken2": {
+   "Artifact": "name: CallingBadArg\nsources:\n- query: |\n    LET Foo(X, Y=1) = X+Y\n    SELECT Foo(Z=1) FROM scope()\n",
+   "Permissions": null,
+   "Errors": [
+    "CallingBadArg: query: Invalid arg Z for VQL definition Foo",
+    "CallingBadArg: query: While calling VQL definition Foo(), required arg X is not provided"
+   ],
+   "Warnings": null,
+   "Definitions": {
+    "Foo": {
+     "Type": "definition",
+     "Name": "Foo",
+     "Args": [
+      "X",
+      "Y"
+     ],
+     "Defaults": [
+      "Y"
+     ]
+    }
+   }
+  },
+  "Ok1": {
+   "Artifact": "name: NotCallingRequiredArg\nsources:\n- query: |\n    LET Foo(X, Y=1) = X+Y\n    SELECT Foo(X=1), Foo(X=1, Y=5) FROM scope()\n",
+   "Permissions": null,
+   "Errors": null,
+   "Warnings": null,
+   "Definitions": {
+    "Foo": {
+     "Type": "definition",
+     "Name": "Foo",
+     "Args": [
+      "X",
+      "Y"
+     ],
+     "Defaults": [
+      "Y"
+     ]
+    }
+   }
+  }
+ }
+]
+

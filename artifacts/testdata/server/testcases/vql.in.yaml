@@ -1,0 +1,50 @@
+Parameters:
+  ExternalParam: "Hello "
+  Broken1: |
+    name: NotCallingRequiredArg
+    sources:
+    - query: |
+        LET Foo(X, Y=1) = X+Y
+        SELECT Foo() FROM scope()
+
+  Broken2: |
+    name: CallingBadArg
+    sources:
+    - query: |
+        LET Foo(X, Y=1) = X+Y
+        SELECT Foo(Z=1) FROM scope()
+
+  Ok1: |
+    name: NotCallingRequiredArg
+    sources:
+    - query: |
+        LET Foo(X, Y=1) = X+Y
+        SELECT Foo(X=1), Foo(X=1, Y=5) FROM scope()
+
+Queries:
+  # Test VQL Function default args.
+  - |
+    LET Foo(X, Y=3, Z=ExternalParam + "World") =
+       format(format="%v: Sum of %v and %v is %v", args=[Z, X, Y, X + Y])
+
+  # Omit the default parameter and then set it.
+  - SELECT Foo(X=5), Foo(X=5, Y=4) FROM scope()
+
+  # Default values are resolved from the calling scope so Z will now
+  # be a different thing.
+  - LET ExternalParam <= "Goodby"
+  - SELECT Foo(X=5), Foo(X=5, Y=4) FROM scope()
+
+  # Stored query with default args (the order does not matter).
+  - LET Query(X = 5, Y) = SELECT X + Y FROM scope()
+  - SELECT * FROM Query(Y=3)
+
+  # Parameter definitions with escaped identifiers
+  - LET Foo(`X.Y`, `X.Z` = 5) = `X.Y` + `X.Z`
+  - SELECT Foo(`X.Y` = 3) FROM scope()
+
+  # Test that the verifier understands default values
+  - SELECT verify(artifact=Broken1) AS Broken1,
+           verify(artifact=Broken2) AS Broken2,
+           verify(artifact=Ok1) AS Ok1
+    FROM scope()

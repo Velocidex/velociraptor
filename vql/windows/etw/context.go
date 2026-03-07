@@ -134,7 +134,7 @@ func NewHandle(ctx context.Context,
 		ctx:         subctx,
 		cancel:      cancel,
 		id:          utils.GetId(),
-		output_chan: make(chan vfilter.Row),
+		output_chan: make(chan vfilter.Row, 100),
 		scope:       scope,
 		guid:        guid,
 	}
