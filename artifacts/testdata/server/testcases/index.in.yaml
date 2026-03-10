@@ -1,0 +1,17 @@
+Parameters:
+  Docs: |
+    {"Foo": "The quick brown fox"}
+    {"Foo": "Jumps over"}
+    {"Foo": "The lazy dog"}
+
+Queries:
+  - LET IndexPath <= tempdir()
+
+  # Create the index.
+  - |
+    SELECT * FROM index(query={
+      SELECT * FROM parse_jsonl(accessor='data', filename=Docs)
+    }, output=IndexPath)
+
+  # Query the index.
+  - SELECT * FROM index_search(path=IndexPath, fields="Foo", search="fox dog")

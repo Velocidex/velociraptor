@@ -84,7 +84,7 @@ func (self _SRUMLookupId) Call(
 		// Use a managed reader
 		reader, err := readers.NewAccessorReader(scope, arg.Accessor, arg.Filename, 10000)
 		if err != nil {
-			scope.Log("srum_lookup_id: Unable to open file %s: %v",
+			scope.Log("srum_lookup_id: NewAccessorReader: Unable to open file %s: %v",
 				arg.Filename, err)
 			return &vfilter.Null{}
 		}
@@ -92,14 +92,14 @@ func (self _SRUMLookupId) Call(
 
 		ese_ctx, err := parser.NewESEContext(reader)
 		if err != nil {
-			scope.Log("srum_lookup_id: Unable to open file %s: %v",
+			scope.Log("srum_lookup_id: NewESEContext: Unable to open file %s: %v",
 				arg.Filename, err)
 			return &vfilter.Null{}
 		}
 
 		catalog, err := parser.ReadCatalog(ese_ctx)
 		if err != nil {
-			scope.Log("srum_lookup_id: Unable to open file %s: %v",
+			scope.Log("srum_lookup_id: ReadCatalog: Unable to open file %s: %v",
 				arg.Filename, err)
 			return &vfilter.Null{}
 		}

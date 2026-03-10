@@ -72,7 +72,7 @@ require (
 	golang.org/x/crypto v0.46.0
 	golang.org/x/mod v0.32.0
 	golang.org/x/net v0.48.0
-	golang.org/x/sys v0.41.0
+	golang.org/x/sys v0.42.0
 	golang.org/x/text v0.34.0
 	golang.org/x/time v0.14.0
 	google.golang.org/api v0.258.0
@@ -91,7 +91,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20251027080408-85407689d0cb
 	www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959
 	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7
-	www.velocidex.com/golang/vfilter v0.0.0-20260307074308-36fc6ee55aac
+	www.velocidex.com/golang/vfilter v0.0.0-20260310003853-3961ef15ea84
 )
 
 require (
@@ -113,7 +113,7 @@ require (
 	github.com/Velocidex/ordereddict v0.0.0-20250821063524-02dc06e46238
 	github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250
 	github.com/Velocidex/tracee_velociraptor v0.0.0-20260113161018-f7c951ffeab2
-	github.com/Velocidex/velociraptor-site-search v0.0.0-20260205051915-8d028f2816e8
+	github.com/Velocidex/velociraptor-site-search v0.0.0-20260310004226-7ffcab8a8ff6
 	github.com/Velocidex/yara-x-go v0.0.0-20251010010632-d8eaad9c539c
 	github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6
 	github.com/alecthomas/kingpin/v2 v2.4.0
@@ -124,7 +124,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.6
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.8
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.51.3
-	github.com/blevesearch/bleve v1.0.14
+	github.com/blevesearch/bleve/v2 v2.5.7
 	github.com/charmbracelet/huh v0.6.0
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221027171526-76a36be4fa02
@@ -182,7 +182,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.54.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.54.0 // indirect
 	github.com/PuerkitoBio/goquery v1.8.1 // indirect
-	github.com/RoaringBitmap/roaring v1.9.4 // indirect
+	github.com/RoaringBitmap/roaring/v2 v2.14.5 // indirect
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
@@ -207,15 +207,23 @@ require (
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.24.4 // indirect
+	github.com/blevesearch/bleve_index_api v1.3.2 // indirect
+	github.com/blevesearch/geo v0.2.5 // indirect
+	github.com/blevesearch/go-faiss v1.0.27 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.3 // indirect
-	github.com/blevesearch/mmap-go v1.0.4 // indirect
+	github.com/blevesearch/gtreap v0.1.1 // indirect
+	github.com/blevesearch/mmap-go v1.2.0 // indirect
+	github.com/blevesearch/scorch_segment_api/v2 v2.4.1 // indirect
 	github.com/blevesearch/segment v0.9.1 // indirect
 	github.com/blevesearch/snowballstem v0.9.0 // indirect
-	github.com/blevesearch/zap/v11 v11.0.14 // indirect
-	github.com/blevesearch/zap/v12 v12.0.14 // indirect
-	github.com/blevesearch/zap/v13 v13.0.6 // indirect
-	github.com/blevesearch/zap/v14 v14.0.5 // indirect
-	github.com/blevesearch/zap/v15 v15.0.3 // indirect
+	github.com/blevesearch/upsidedown_store_api v1.0.2 // indirect
+	github.com/blevesearch/vellum v1.2.0 // indirect
+	github.com/blevesearch/zapx/v11 v11.4.3 // indirect
+	github.com/blevesearch/zapx/v12 v12.4.3 // indirect
+	github.com/blevesearch/zapx/v13 v13.4.3 // indirect
+	github.com/blevesearch/zapx/v14 v14.4.3 // indirect
+	github.com/blevesearch/zapx/v15 v15.4.3 // indirect
+	github.com/blevesearch/zapx/v16 v16.3.1 // indirect
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
 	github.com/catppuccin/go v0.2.0 // indirect
 	github.com/cavaliergopher/cpio v1.0.1 // indirect
@@ -229,7 +237,6 @@ require (
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20251210132809-ee656c7534f5 // indirect
-	github.com/couchbase/vellum v1.0.2 // indirect
 	github.com/crewjam/httperr v0.2.0 // indirect
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
@@ -263,6 +270,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hillu/go-yara/v4 v4.3.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kaptinlin/go-i18n v0.2.0 // indirect
 	github.com/kaptinlin/messageformat-go v0.4.6 // indirect
 	github.com/karrick/godirwalk v1.17.0 // indirect
@@ -281,6 +289,8 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
@@ -300,14 +310,12 @@ require (
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
-	github.com/steveyen/gtreap v0.1.0 // indirect
 	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/tinylib/msgp v1.6.3 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/willf/bitset v1.1.11 // indirect
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.etcd.io/bbolt v1.4.3 // indirect
@@ -372,7 +380,7 @@ require (
 // replace github.com/Velocidex/go-ext4 => ../go-ext4
 // replace github.com/Velocidex/amsi => ../amsi
 // replace github.com/Velocidex/go-journalctl ../go-journalctl
-// replace github.com/Velocidex/velociraptor-site-search => ../velociraptor-docs/velociraptor-site-search
+// replace github.com/Velocidex/velociraptor-site-search => ../velociraptor-site-search
 
 // Remove search for html end block. This allows inserting unbalanced
 // HTML tags into the markdown
