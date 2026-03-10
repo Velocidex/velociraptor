@@ -4,6 +4,9 @@ Parameters:
     {"Foo": "Jumps over"}
     {"Foo": "The lazy dog"}
 
+  Docs2: |
+    {"Foo": "Another fox"}
+
 Queries:
   - LET IndexPath <= tempdir()
 
@@ -11,6 +14,12 @@ Queries:
   - |
     SELECT * FROM index(query={
       SELECT * FROM parse_jsonl(accessor='data', filename=Docs)
+    }, output=IndexPath)
+
+  # Append to the index
+  - |
+    SELECT * FROM index(query={
+      SELECT * FROM parse_jsonl(accessor='data', filename=Docs2)
     }, output=IndexPath)
 
   # Query the index.
