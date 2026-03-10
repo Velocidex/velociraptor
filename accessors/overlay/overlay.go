@@ -74,6 +74,8 @@ func (self OverlayFileSystemAccessor) ReadDirWithOSPath(
 		return nil, err
 	}
 
+	seen := make(map[string]bool)
+
 	for _, basepath := range overlayer.Paths {
 		delegate_path := basepath.Append(path.Components...)
 		delegate_dir, err := accessor.ReadDirWithOSPath(delegate_path)
@@ -84,6 +86,14 @@ func (self OverlayFileSystemAccessor) ReadDirWithOSPath(
 		base := basepath.TrimComponents(basepath.Components...)
 
 		for _, fsinfo := range delegate_dir {
+			name := fsinfo.Name()
+			_, pres := seen[name]
+			if pres {
+				continue
+			}
+
+			seen[name] = true
+
 			item := accessors.NewFileInfoWrapper(
 				fsinfo, base, basepath.Copy())
 			res = append(res, item)

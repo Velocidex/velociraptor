@@ -1,0 +1,31 @@
+Query: LET IndexPath <= tempdir()
+Output: []
+
+# Create the index.
+Query: SELECT * FROM index(query={
+  SELECT * FROM parse_jsonl(accessor='data', filename=Docs)
+}, output=IndexPath)
+
+Output: [
+ {
+  "Foo": "The quick brown fox"
+ },
+ {
+  "Foo": "Jumps over"
+ },
+ {
+  "Foo": "The lazy dog"
+ }
+]
+
+# Query the index.
+Query: SELECT * FROM index_search(path=IndexPath, fields="Foo", search="fox dog")
+Output: [
+ {
+  "Foo": "The lazy dog"
+ },
+ {
+  "Foo": "The quick brown fox"
+ }
+]
+

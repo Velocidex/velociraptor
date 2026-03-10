@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/Velocidex/velociraptor-site-search/api"
-	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
