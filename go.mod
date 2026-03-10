@@ -376,7 +376,7 @@ require (
 // replace github.com/Velocidex/sigma-go => ../sigma-go
 // replace github.com/Velocidex/tracee_velociraptor => ../tracee_velociraptor
 // replace github.com/Velocidex/disklru => ../disklru
-replace github.com/Velocidex/go-elasticsearch/v9 => ../go-elasticsearch
+// replace github.com/Velocidex/go-elasticsearch/v9 => ../go-elasticsearch
 
 // replace github.com/Velocidex/fileb0x => ../fileb0x
 // replace github.com/Velocidex/go-ext4 => ../go-ext4
