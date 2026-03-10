@@ -617,7 +617,22 @@ func NewGuiTemplateEngine(
 			"Render":       template_engine.renderFunction,
 			"Expand":       template_engine.Expand,
 			"import":       template_engine.Import,
-			"str":          utils.ToString,
+			"bool": func(value interface{}) bool {
+				return scope.Bool(value)
+			},
+			"lt": func(x, y interface{}) bool {
+				return scope.Lt(x, y)
+			},
+			"gt": func(x, y interface{}) bool {
+				return scope.Gt(x, y)
+			},
+			"eq": func(x, y interface{}) bool {
+				return scope.Eq(x, y)
+			},
+			"not": func(x interface{}) bool {
+				return !scope.Bool(x)
+			},
+			"str": utils.ToString,
 
 			// Remove sprig's functions
 			"env": func() string {

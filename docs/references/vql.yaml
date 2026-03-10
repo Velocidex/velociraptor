@@ -3700,6 +3700,7 @@
     No caching is currently provided so this may generate a lot
     of load on DNS servers when scanning many rows.
   type: Function
+  version: 2
   args:
   - name: name
     type: string
@@ -4164,6 +4165,7 @@
     It is equivalent to the source() plugin in the hunt notebook
     context.
   type: Plugin
+  version: 2
   args:
   - name: artifact
     type: string
@@ -4432,6 +4434,73 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: index
+  description: |
+    Create a local index from a query.
+
+    This plugin uses [bleve](https://blevesearch.com/) to build an
+    on-disk full text index of the query. The index can be searched
+    with `index_search()`.
+
+    In order to build the index, the fields must be analyzed. The
+    analyzer breaks the text into tokens which are then indexed. The
+    process depends on the nature of the data.
+
+    The mappings can dictate how this process is done:
+
+    - `text`: This is the default analyzer - it considers the text to
+      be English text and breaks it into words, applies suffixes etc.
+    - `number`: The field is considered to be a number
+    - `date`: The field is considered to be a date and parsed into a standard form.
+    - `bool`: The field is considered a bool (true or false)
+    - `ip`: The field is parsed as an IP.
+
+    If no field mappings are specified we treat all fields as text.
+
+    For example:
+    ```
+    LET DataStream = SELECT OSPath, read_file(filename=OSPath) AS Data
+    FROM glob(globs="/etc/*")
+    WHERE NOT IsDir AND NOT IsLink
+
+    SELECT * FROM index(query=DataStream, output=IndexPath)
+    ```
+
+    Once the index is created it can be searched. For example:
+    ```
+    SELECT *
+    FROM index_search(path=IndexPath, fields="Data", search="syslog")
+    ```
+
+  type: Plugin
+  version: 1
+  args:
+  - name: query
+    type: StoredQuery
+    description: A VQL Query to parse and execute.
+    required: true
+  - name: mapping
+    type: ordereddict.Dict
+    description: A dict to describe field mapping.
+  - name: default_analyzer
+    type: string
+    description: The default analyzer to use.
+  - name: output
+    type: string
+    description: The file path to create the index on.
+    required: true
+  metadata:
+    permissions: FILESYSTEM_WRITE
+  platforms:
+  - linux_amd64_cgo
+- name: index_search
+  description: Search a previously created index.
+  type: Plugin
+  version: 1
+  metadata:
+    permissions: FILESYSTEM_READ
+  platforms:
+  - linux_amd64_cgo
 - name: info
   description: |
     Get information about the running host.
@@ -6747,6 +6816,7 @@
 - name: parse_json_array
   description: Parses events from a line oriented json file.
   type: Plugin
+  version: 2
   args:
   - name: data
     type: string
@@ -10993,6 +11063,7 @@
     else you can force a type using the `type` parameter (`tgz` or
     `zip`).
   type: Plugin
+  version: 2
   args:
   - name: filename
     type: accessors.OSPath
