@@ -4,13 +4,13 @@
 // $ goweight ./bin/
 //    15 MB github.com/elastic/go-elasticsearch/v7/esapi
 
-// We observe a 6mb increase in the binary for this dependency which
+// We observe a 16mb increase in the binary for this dependency which
 // was deemed unacceptable. Further investigation revealed the size
 // was because the API Surface is huge and the client library supports
 // it all. Since we only actually bulk upload data to elastic we do
 // not need the entire API anyway. We therefore maintain a fork of the
-// client library for now. This allows us to include it in all builds
-// with a very minimal footprint.
+// client library. This allows us to include it in all builds with a
+// very minimal footprint (approximately 200kb vs 16Mb).
 
 /*
    Velociraptor - Dig Deeper
@@ -45,7 +45,7 @@ import (
 	"sync"
 	"time"
 
-	elasticsearch "github.com/Velocidex/go-elasticsearch/v7"
+	elasticsearch "github.com/Velocidex/go-elasticsearch/v9"
 	"github.com/Velocidex/ordereddict"
 	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/acls"

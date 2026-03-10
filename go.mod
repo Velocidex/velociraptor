@@ -8,7 +8,6 @@ require (
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2
 	github.com/Velocidex/etw v0.0.0-20251027041548-6d97883fd588
-	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-magic v0.0.0-20250203094020-32f94b14f00f
 	github.com/Velocidex/go-yara v1.1.10-0.20250823152352-e5fc0843e50e
 	github.com/Velocidex/grpc-go-pool v1.2.2-0.20241016164850-ff0cb80037a8
@@ -28,7 +27,6 @@ require (
 	github.com/crewjam/saml v0.4.14
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/dustin/go-humanize v1.0.1
-	github.com/elastic/go-elasticsearch/v7 v7.3.0 // indirect
 	github.com/go-ole/go-ole v1.2.6
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/golang/mock v1.6.0
@@ -46,7 +44,7 @@ require (
 	github.com/jonboulle/clockwork v0.3.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/lib/pq v1.10.9
-	github.com/magefile/mage v1.15.0
+	github.com/magefile/mage v1.16.0
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
 	github.com/mattn/go-sqlite3 v1.14.33
@@ -102,6 +100,7 @@ require (
 	github.com/Velocidex/disklru v0.0.0-20260204055416-324452f39e80
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
 	github.com/Velocidex/fileb0x v1.1.2-0.20251122021447-f71ad8da5502
+	github.com/Velocidex/go-elasticsearch/v9 v9.0.0-20260310165104-23947f88cc85
 	github.com/Velocidex/go-ewf v0.0.0-20260301075014-ed09cb7887b6
 	github.com/Velocidex/go-ext4 v0.0.0-20250510085914-b0b955af0359
 	github.com/Velocidex/go-fat v0.0.0-20260301005230-08fb790838a9
@@ -225,6 +224,7 @@ require (
 	github.com/blevesearch/zapx/v15 v15.4.3 // indirect
 	github.com/blevesearch/zapx/v16 v16.3.1 // indirect
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
+	github.com/bmatcuk/doublestar/v4 v4.10.0 // indirect
 	github.com/catppuccin/go v0.2.0 // indirect
 	github.com/cavaliergopher/cpio v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -242,6 +242,7 @@ require (
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/dustmop/soup v1.1.2-0.20190516214245-38228baa104e // indirect
 	github.com/ebitengine/purego v0.8.3 // indirect
+	github.com/elastic/elastic-transport-go/v8 v8.9.1-0.20260224212447-513c84c73cc8 // indirect
 	github.com/emersion/go-message v0.16.0 // indirect
 	github.com/emersion/go-textwrapper v0.0.0-20200911093747-65d896831594 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.36.0 // indirect
@@ -325,11 +326,11 @@ require (
 	go.opentelemetry.io/contrib/detectors/gcp v1.39.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.64.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.64.0 // indirect
-	go.opentelemetry.io/otel v1.40.0 // indirect
-	go.opentelemetry.io/otel/metric v1.40.0 // indirect
+	go.opentelemetry.io/otel v1.42.0 // indirect
+	go.opentelemetry.io/otel/metric v1.42.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.40.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.40.0 // indirect
-	go.opentelemetry.io/otel/trace v1.40.0 // indirect
+	go.opentelemetry.io/otel/trace v1.42.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/arch v0.23.0 // indirect
@@ -375,6 +376,7 @@ require (
 // replace github.com/Velocidex/sigma-go => ../sigma-go
 // replace github.com/Velocidex/tracee_velociraptor => ../tracee_velociraptor
 // replace github.com/Velocidex/disklru => ../disklru
+// replace github.com/Velocidex/go-elasticsearch/v9 => ../go-elasticsearch
 
 // replace github.com/Velocidex/fileb0x => ../fileb0x
 // replace github.com/Velocidex/go-ext4 => ../go-ext4
