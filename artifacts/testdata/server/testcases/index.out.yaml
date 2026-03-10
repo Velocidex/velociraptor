@@ -18,11 +18,25 @@ Output: [
  }
 ]
 
+# Append to the index
+Query: SELECT * FROM index(query={
+  SELECT * FROM parse_jsonl(accessor='data', filename=Docs2)
+}, output=IndexPath)
+
+Output: [
+ {
+  "Foo": "Another fox"
+ }
+]
+
 # Query the index.
 Query: SELECT * FROM index_search(path=IndexPath, fields="Foo", search="fox dog")
 Output: [
  {
   "Foo": "The lazy dog"
+ },
+ {
+  "Foo": "Another fox"
  },
  {
   "Foo": "The quick brown fox"

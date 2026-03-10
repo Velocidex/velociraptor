@@ -110,10 +110,16 @@ func (self IndexPlugin) Call(
 		idx_mapping.DefaultMapping = doc_mapping
 		idx_mapping.DefaultAnalyzer = arg.DefaultAnalyzer
 
-		index, err := bleve.New(arg.Output, idx_mapping)
+		// Try to open an existing index
+		index, err := bleve.Open(arg.Output)
 		if err != nil {
-			scope.Log("index: %v", err)
-			return
+
+			// Try to create a new one
+			index, err = bleve.New(arg.Output, idx_mapping)
+			if err != nil {
+				scope.Log("index: %v", err)
+				return
+			}
 		}
 		defer index.Close()
 

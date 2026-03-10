@@ -37,12 +37,13 @@ import (
 )
 
 type CopyFunctionArgs struct {
-	Filename    *accessors.OSPath `vfilter:"required,field=filename,doc=The file to copy from."`
-	Accessor    string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
-	Destination string            `vfilter:"required,field=dest,doc=The destination file to write."`
-	Permissions string            `vfilter:"optional,field=permissions,doc=Required permissions (e.g. 'x')."`
-	Append      bool              `vfilter:"optional,field=append,doc=If true we append to the target file otherwise truncate it"`
-	Directories bool              `vfilter:"optional,field=create_directories,doc=If true we ensure the destination directories exist"`
+	Filename       *accessors.OSPath `vfilter:"required,field=filename,doc=The file to copy from."`
+	Accessor       string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Destination    string            `vfilter:"required,field=dest,doc=The destination file to write."`
+	Permissions    string            `vfilter:"optional,field=permissions,doc=Permissions for the destination file (e.g. 'rw-rw-rwx' or '0755')."`
+	DirPermissions string            `vfilter:"optional,field=dir_permissions,doc=Permissions for intermediate directories."`
+	Append         bool              `vfilter:"optional,field=append,doc=If true we append to the target file otherwise truncate it"`
+	Directories    bool              `vfilter:"optional,field=create_directories,doc=If true we ensure the destination directories exist"`
 }
 
 type CopyFunction struct{}
@@ -87,19 +88,28 @@ func (self CopyFunction) Call(ctx context.Context,
 	defer fd.Close()
 
 	permissions := os.FileMode(0600)
-
-	switch arg.Permissions {
-	case "x":
-		permissions = 0700
-
-		// On windows executable means it has a .exe extension.
-		if runtime.GOOS == "windows" &&
-			!strings.HasSuffix(arg.Destination, ".exe") {
-			arg.Destination += ".exe"
+	if arg.Permissions != "" {
+		permissions, err = utils.ParseFileMode(arg.Permissions)
+		if err != nil {
+			scope.Log("copy: %v", err)
+			return vfilter.Null{}
 		}
+	}
 
-	case "r":
-		permissions = 0400
+	dir_permissions := os.FileMode(0o700)
+	if arg.DirPermissions != "" {
+		dir_permissions, err = utils.ParseFileMode(arg.DirPermissions)
+		if err != nil {
+			scope.Log("copy: %v", err)
+			return vfilter.Null{}
+		}
+	}
+
+	// On windows executable means it has a .exe extension.
+	if runtime.GOOS == "windows" &&
+		(permissions&0o111 > 0) &&
+		!strings.HasSuffix(arg.Destination, ".exe") {
+		arg.Destination += ".exe"
 	}
 
 	// Report the command we ran for auditing
@@ -130,7 +140,7 @@ func (self CopyFunction) Call(ctx context.Context,
 	}
 
 	if arg.Directories {
-		err = os.MkdirAll(filepath.Dir(arg.Destination), 0700)
+		err = os.MkdirAll(filepath.Dir(arg.Destination), dir_permissions)
 		if err != nil {
 			scope.Log("copy: Failed to create directories for %v: %v",
 				arg.Destination, err)
@@ -165,7 +175,7 @@ func (self CopyFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 		Doc:      "Copy a file.",
 		ArgType:  type_map.AddType(scope, &CopyFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE, acls.FILESYSTEM_READ).Build(),
-		Version:  2,
+		Version:  3,
 	}
 }
 
