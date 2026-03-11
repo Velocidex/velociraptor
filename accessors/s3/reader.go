@@ -1,3 +1,6 @@
+//go:build sumo
+// +build sumo
+
 package s3
 
 import (

@@ -1,5 +1,5 @@
-//go:build sumo
-// +build sumo
+//go:build !sumo
+// +build !sumo
 
 package s3
 
@@ -8,16 +8,12 @@ import (
 	"errors"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"www.velocidex.com/golang/velociraptor/artifacts"
+	"github.com/minio/minio-go/v7"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/networking"
+	"www.velocidex.com/golang/velociraptor/vql/tools"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/utils/dict"
@@ -39,7 +35,7 @@ type S3AcccessorArgs struct {
 
 func GetS3Client(
 	ctx context.Context,
-	scope vfilter.Scope) (res *s3.Client, err error) {
+	scope vfilter.Scope) (res *minio.Client, err error) {
 
 	// Empty credentials are OK - they just mean to get creds from the
 	// process env
@@ -68,55 +64,14 @@ func GetS3Client(
 		}
 	}
 
-	conf := []func(*config.LoadOptions) error{}
-	if arg.Region != "" {
-		conf = append(conf, config.WithRegion(arg.Region))
-	}
-
-	if arg.CredentialsKey != "" && arg.CredentialsSecret != "" {
-		conf = append(conf, config.WithCredentialsProvider(
-			credentials.NewStaticCredentialsProvider(
-				arg.CredentialsKey, arg.CredentialsSecret,
-				arg.CredentialsToken),
-		))
-	}
-
-	s3_opts := []func(*s3.Options){}
-	if arg.Endpoint != "" {
-		s3_opts = append(s3_opts, func(o *s3.Options) {
-			o.BaseEndpoint = aws.String(arg.Endpoint)
-		})
-	}
-
-	clientConfig, ok := artifacts.GetConfig(scope)
-	if ok {
-		if arg.SkipVerify {
-			http_client, err := networking.GetSkipVerifyHTTPClient(
-				ctx, clientConfig, scope, "", nil)
-			if err != nil {
-				return nil, err
-			}
-
-			conf = append(conf, config.WithHTTPClient(http_client))
-
-		} else {
-			http_client, err := networking.GetDefaultHTTPClient(
-				ctx, clientConfig, scope, "", nil)
-			if err != nil {
-				return nil, err
-			}
-			conf = append(conf, config.WithHTTPClient(http_client))
-		}
-	}
-
-	sess, err := config.LoadDefaultConfig(ctx, conf...)
-	if err != nil {
-		return nil, err
-	}
-
-	client := s3.NewFromConfig(sess, s3_opts...)
-
-	return client, nil
+	return tools.GetS3Client(ctx, scope, &tools.S3UploadArgs{
+		Region:            arg.Region,
+		CredentialsKey:    arg.CredentialsKey,
+		CredentialsSecret: arg.CredentialsSecret,
+		CredentialsToken:  arg.CredentialsToken,
+		Endpoint:          arg.Endpoint,
+		SkipVerify:        arg.SkipVerify,
+	})
 }
 
 func maybeForceSecrets(

@@ -249,6 +249,13 @@ func Linux() error {
 		arch:       "amd64"}.Run()
 }
 
+func LinuxSumo() error {
+	return Builder{
+		extra_tags: " release yara sumo ",
+		goos:       "linux",
+		arch:       "amd64"}.Run()
+}
+
 func LinuxMusl() error {
 	return Builder{
 		extra_tags:    " release yara ",

@@ -1,5 +1,5 @@
-//go:build sumo
-// +build sumo
+//go:build !sumo
+// +build !sumo
 
 /* An accessor for an S3 bucket */
 
@@ -11,9 +11,7 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/minio/minio-go/v7"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -26,7 +24,7 @@ import (
 var (
 	// Total number of keys we fetch in each ListObjects call
 	mu      sync.Mutex
-	maxKeys = int32(1000)
+	maxKeys = 1000
 
 	metricS3OpsListObjects = promauto.NewCounter(
 		prometheus.CounterOpts{
@@ -78,22 +76,22 @@ func (self RawS3SystemAccessor) ReadDir(
 func (self RawS3SystemAccessor) ReadDirWithOSPath(
 	path *accessors.OSPath) ([]accessors.FileInfo, error) {
 
-	client, err := GetS3Client(self.ctx, self.scope)
+	s3Client, err := GetS3Client(self.ctx, self.scope)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(path.Components) == 0 {
-		resp, err := client.ListBuckets(self.ctx, &s3.ListBucketsInput{})
+		resp, err := s3Client.ListBuckets(self.ctx)
 		if err != nil {
 			return nil, err
 		}
-		result := make([]accessors.FileInfo, 0, len(resp.Buckets))
-		for _, b := range resp.Buckets {
+		result := make([]accessors.FileInfo, 0, len(resp))
+		for _, b := range resp {
 			result = append(result, &S3FileInfo{
-				path:     accessors.MustNewLinuxOSPath(*b.Name),
+				path:     accessors.MustNewLinuxOSPath(b.Name),
 				is_dir:   true,
-				mod_time: *b.CreationDate,
+				mod_time: b.CreationDate,
 			})
 		}
 		return result, nil
@@ -108,31 +106,29 @@ func (self RawS3SystemAccessor) ReadDirWithOSPath(
 	child_directories := ordereddict.NewDict()
 	child_files := []*S3FileInfo{}
 
-	params := &s3.ListObjectsV2Input{
-		Bucket: aws.String(bucket),
-		Prefix: aws.String(key),
+	opts := minio.ListObjectsOptions{
+		Prefix:  key,
+		MaxKeys: maxKeys,
 	}
 
-	// Create the Paginator for the ListObjectsV2 operation.
-	paginator := s3.NewListObjectsV2Paginator(
-		client, params, func(o *s3.ListObjectsV2PaginatorOptions) {
-			mu.Lock()
-			defer mu.Unlock()
+	obj_chan := s3Client.ListObjects(self.ctx, bucket, opts)
 
-			o.Limit = maxKeys
-		})
+outer:
+	for {
+		select {
+		case <-self.ctx.Done():
+			return nil, nil
 
-	result := []accessors.FileInfo{}
-	for paginator.HasMorePages() {
-		metricS3OpsListObjects.Inc()
+		case object, ok := <-obj_chan:
+			if !ok {
+				break outer
+			}
 
-		page, err := paginator.NextPage(self.ctx)
-		if err != nil {
-			return nil, err
-		}
+			if object.Err != nil {
+				continue
+			}
 
-		for _, object := range page.Contents {
-			component_path, err := self.ParsePath(*object.Key)
+			component_path, err := self.ParsePath(object.Key)
 			if err != nil {
 				continue
 			}
@@ -148,13 +144,14 @@ func (self RawS3SystemAccessor) ReadDirWithOSPath(
 				child_files = append(child_files, &S3FileInfo{
 					path:     object_path,
 					is_dir:   false,
-					size:     *object.Size,
-					mod_time: *object.LastModified,
+					size:     object.Size,
+					mod_time: object.LastModified,
 				})
 			}
 		}
 	}
 
+	result := []accessors.FileInfo{}
 	for _, child_dir := range child_directories.Keys() {
 		result = append(result, &S3FileInfo{
 			path:   path.Append(child_dir),
@@ -184,7 +181,7 @@ func getBucketAndKey(path *accessors.OSPath) (string, string, error) {
 func (self RawS3SystemAccessor) OpenWithOSPath(
 	path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
 
-	svc, err := GetS3Client(self.ctx, self.scope)
+	s3Client, err := GetS3Client(self.ctx, self.scope)
 	if err != nil {
 		return nil, err
 	}
@@ -194,11 +191,10 @@ func (self RawS3SystemAccessor) OpenWithOSPath(
 		return nil, err
 	}
 
-	reader := &S3Reader{
-		ctx:        self.ctx,
-		downloader: manager.NewDownloader(svc),
-		bucket:     bucket,
-		key:        key,
+	reader, err := s3Client.GetObject(
+		self.ctx, bucket, key, minio.GetObjectOptions{})
+	if err != nil {
+		return nil, err
 	}
 
 	// Wrap the reader in an in memory cache so we do not have many
@@ -232,7 +228,7 @@ func (self RawS3SystemAccessor) Lstat(path string) (accessors.FileInfo, error) {
 func (self RawS3SystemAccessor) LstatWithOSPath(
 	path *accessors.OSPath) (accessors.FileInfo, error) {
 
-	svc, err := GetS3Client(self.ctx, self.scope)
+	client, err := GetS3Client(self.ctx, self.scope)
 	if err != nil {
 		return nil, err
 	}
@@ -242,20 +238,17 @@ func (self RawS3SystemAccessor) LstatWithOSPath(
 		return nil, err
 	}
 
-	headObj := s3.HeadObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	}
-
-	result, err := svc.HeadObject(self.ctx, &headObj)
+	stat_obj, err := client.StatObject(self.ctx, bucket, key,
+		minio.StatObjectOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	return &accessors.VirtualFileInfo{
-		Data_: ordereddict.NewDict(),
-		Path:  path,
-		Size_: *result.ContentLength,
+		Data_:  ordereddict.NewDict(),
+		Path:   path,
+		Size_:  stat_obj.Size,
+		Mtime_: stat_obj.LastModified,
 	}, nil
 }
 
@@ -265,7 +258,7 @@ func init() {
 
 // Set the page size for tests. Normally we dont need to adjust this
 // at all. Used in tests.
-func SetPageSize(size int32) {
+func SetPageSize(size int) {
 	mu.Lock()
 	defer mu.Unlock()
 
