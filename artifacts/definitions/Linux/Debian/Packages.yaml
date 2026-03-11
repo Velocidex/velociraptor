@@ -1,14 +1,20 @@
 name: Linux.Debian.Packages
+author: Andreas Misje – @Misje
 description: |
  List all packages installed on the system, both deb packages and "snaps".
+
  The installed deb package information is fetched from the DPKG status file,
  while the snap package list is fetched from the snap daemon through a UNIX
  socket HTTP call (since detailed snap package information is not easily
- in files).
+ found in files).
 
  The following columns are parsed from the DPKG status file:
 
   - Package
+  - _SelectionState (install, hold, deinstall, purge, unknown)
+  - _Flag (ok, reinstreq)
+  - State (not-installed, config-files, half-installed, unpacked,
+    half-configured, triggers-awaited, triggers-pending, installed)
   - InstalledSize
   - Version
   - Source
@@ -17,14 +23,15 @@ description: |
 
  The following columns are parsed from the snap package response (/v2/snaps):
 
- - Name
- - _Summary
- - _Description
- - InstalledSize
- - Publisher
- - InstalledAt
- - Version
- - Channel
+  - Name
+  - _Summary
+  - _Description
+  - Status (available, installed, active, removed, priced)
+  - InstalledSize
+  - Publisher
+  - InstalledAt
+  - Version
+  - Channel
 
  Both package sources provide more information than this and, and the artifact
  can easily be modified to include more details.
@@ -33,6 +40,7 @@ parameters:
   - name: linuxDpkgStatus
     description: The DPKG status file to read deb package information from
     default: /var/lib/dpkg/status
+
   - name: snapdSocket
     description: |
      The location of the snap deamon UNIX socket, used for fetching the snap
@@ -41,12 +49,12 @@ parameters:
     default: /run/snapd.socket
 
 implied_permissions:
-- NETWORK
+  - NETWORK
 
 precondition: |
- SELECT OS
- FROM info()
- WHERE OS = 'linux'
+  SELECT OS
+  FROM info()
+  WHERE OS = 'linux'
 
 sources:
   - name: DebPackages
@@ -54,82 +62,130 @@ sources:
       - type: none
 
     query: |
-     LET ColumnTypes <= dict(`_Description`='nobreak')
+      LET ColumnTypes <= dict(`_Description`='nobreak')
 
-     /* First pass - split file into records starting with
-        Package and ending with \n\n.
-        Then parse each record using multiple regular expressions.
-     */
-     LET packages = SELECT parse_string_with_regex(
-         string=Record,
-         regex=['Package:\\s(?P<Package>.+)',
-                'Installed-Size:\\s(?P<InstalledSize>.+)',
-                'Version:\\s(?P<Version>.+)',
-                'Source:\\s(?P<Source>.+)',
-                '''Description:\s+(?P<Description>.+(\n\s+.+)*)''',
-                'Architecture:\\s(?P<Architecture>.+)']) AS Record
-     FROM parse_records_with_regex(file=linuxDpkgStatus,
-                                     regex='(?sm)^(?P<Record>Package:.+?)\\n\\n')
 
-     SELECT Record.Package AS Package,
-            humanize(bytes=atoi(string=Record.InstalledSize)) AS InstalledSize,
-            Record.Version AS Version,
-            Record.Source AS Source,
-            regex_replace(source=Record.Description,
-                          re='''^\s+\.$''') AS _Description,
-            Record.Architecture AS Architecture
-     FROM packages
+      /* First pass - split file into records starting with
+         Package and ending with \n\n.
+         Then parse each record using multiple regular expressions.
+      */
+      LET packages = SELECT
+          parse_string_with_regex(
+            string=Record,
+            regex=['''Package:\s(?P<Package>.+)''', '''Status:\s(?P<SelectionState>\S+)\s(?P<Flag>\S+)\s(?P<State>\S+)''', '''Installed-Size:\s(?P<InstalledSize>.+)''', '''Version:\s(?P<Version>.+)''', '''Source:\s(?P<Source>.+)''', '''Description:\s+(?P<Description>.+(\n\s+.+)*)''', '''Architecture:\s(?P<Architecture>.+)''']) AS Record
+        FROM parse_records_with_regex(
+          file=linuxDpkgStatus,
+          regex='''(?sm)^(?P<Record>Package:.+?)\n\n''')
+
+      SELECT
+          Record.Package AS Package,
+          Record.SelectionState AS _SelectionState,
+          Record.Flag AS _Flag,
+          Record.State AS State,
+          humanize(bytes=atoi(string=Record.InstalledSize)) AS InstalledSize,
+          Record.Version AS Version,
+          Record.Source AS Source,
+          regex_replace(source=Record.Description, re='''^\s+\.$''') AS _Description,
+          Record.Architecture AS Architecture
+      FROM packages
 
   - name: Snaps
     query: |
-     LET ColumnTypes <= dict(`_Summary`='nobreak', `_Description`='nobreak')
+      LET ColumnTypes <= dict(`_Summary`='nobreak', `_Description`='nobreak')
 
-     LET SnapSocketCheck = SELECT
-         parse_json(data=Content).result AS Result
-       FROM http_client(url=snapdSocket + ':unix/v2/snaps')
-       WHERE Response = 200
-         OR NOT log(message="Error fetching snap: %v", args=Content)
+      LET SnapSocketCheck = SELECT parse_json(data=Content).result AS Result
+        FROM http_client(url=snapdSocket + ':unix/v2/snaps')
+        WHERE Response = 200 OR NOT log(message="Error fetching snap: %v",
+                                        args=Content)
 
-     SELECT * FROM foreach(
-         row=SnapSocketCheck,
-         query={
-           SELECT name AS Name,
-                  summary AS _Summary,
-                  description AS _Description,
-                  humanize(bytes=`installed-size`) AS InstalledSize,
-                  publisher.`display-name` AS Publisher,
-                  timestamp(string=`install-date`) AS InstalledAt,
-                  version AS Version,
-                  channel AS Channel,
-                  id AS PackageId
-           FROM foreach(row=Result)
-         })
+      SELECT *
+      FROM foreach(row=SnapSocketCheck,
+                   query={
+          SELECT name AS Name,
+                 summary AS _Summary,
+                 description AS _Description,
+                 status AS Status,
+                 humanize(bytes=`installed-size`) AS InstalledSize,
+                 publisher.`display-name` AS Publisher,
+                 timestamp(string=`install-date`) AS InstalledAt,
+                 version AS Version,
+                 channel AS Channel,
+                 id AS PackageId
+          FROM foreach(row=Result)
+        })
 
     notebook:
       - type: vql
         template: |
-          /*
-          ## Combined results
-          */
           LET ColumnTypes <= dict(`_Description`='nobreak')
 
-          SELECT *
+          /*
+          # All traces of installed deb packages
+
+          Packages that has either been
+
+            - Removed/purged, but it has once been installed ("not-installed")
+            - Removed, but with configuration files left behind ("config-files")
+            - Partially installed ("half-installed", "unpacked", "half-configured",
+              "triggers-awaited", "triggers-pending"))
+            - Installed ("installed")
+
+          A package that has never been installed will not have made an entry in this
+          database.
+          */
+          SELECT
+              *
+          FROM source(
+            source="DebPackages")
+
+          /*
+          # All traces of installed snaps
+
+          Snaps on the system should either be
+
+            - installed
+            - active
+            - removed
+
+          Two additional statuses are possible:
+
+            - available
+            - priced
+          */
+          SELECT
+              *
+          FROM source(
+            source="Snaps")
+
+          /*
+          # All installed packages (deb and snap combined)
+
+          Only fully installed packages are included.
+          */
+          SELECT
+              *
           FROM chain(
             debs={
-              SELECT Package AS Name,
-                     'deb' AS Type,
-                     InstalledSize,
-                     Version,
-                     _Description,
-                     Architecture
-              FROM source(artifact="Linux.Debian.Packages/DebPackages")
+              SELECT
+              Package AS Name,
+              'deb' AS Type,
+              InstalledSize,
+              Version,
+              _Description,
+              Architecture
+              FROM source(
+                source="DebPackages")
+              WHERE NOT State IN ("not-installed", "config-files")
             },
             snaps={
-              SELECT Name,
-                     'snap' AS Type,
-                     InstalledSize,
-                     Version,
-                     _Description,
-                     NULL AS Architecture
-              FROM source(artifact="Linux.Debian.Packages/Snaps")
+              SELECT
+              Name,
+              'snap' AS Type,
+              InstalledSize,
+              Version,
+              _Description,
+              NULL AS Architecture
+              FROM source(
+                source="Snaps")
+              WHERE NOT Status IN ("installed", "active")
             })
