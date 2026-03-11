@@ -67,9 +67,9 @@ require (
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
-	golang.org/x/crypto v0.46.0
+	golang.org/x/crypto v0.48.0
 	golang.org/x/mod v0.32.0
-	golang.org/x/net v0.48.0
+	golang.org/x/net v0.51.0
 	golang.org/x/sys v0.42.0
 	golang.org/x/text v0.34.0
 	golang.org/x/time v0.14.0
@@ -118,9 +118,9 @@ require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/alitto/pond/v2 v2.1.6
 	github.com/andybalholm/brotli v1.0.5
-	github.com/aws/aws-sdk-go-v2 v1.25.2
+	github.com/aws/aws-sdk-go-v2 v1.41.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.6
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.6
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.11
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.8
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.51.3
 	github.com/blevesearch/bleve/v2 v2.5.7
@@ -146,6 +146,7 @@ require (
 	github.com/leodido/go-syslog v1.0.1
 	github.com/lpar/gzipped v1.1.0
 	github.com/mccutchen/go-httpbin/v2 v2.18.3
+	github.com/minio/minio-go/v7 v7.0.99
 	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/mooijtech/go-pst/v6 v6.0.2
 	github.com/pkg/errors v0.9.1
@@ -187,20 +188,20 @@ require (
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
-	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.1 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.2 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.2 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.2 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.20.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.28.3 // indirect
-	github.com/aws/smithy-go v1.20.1 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.6 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.19 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.19 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.19 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.5 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.20 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.11 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.19 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.19 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.30.12 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.16 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.41.8 // indirect
+	github.com/aws/smithy-go v1.24.2 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
@@ -251,6 +252,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/geoffgarside/ber v1.1.0 // indirect
 	github.com/gizak/termui/v3 v3.1.0 // indirect
+	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -270,12 +272,13 @@ require (
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hillu/go-yara/v4 v4.3.2 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kaptinlin/go-i18n v0.2.0 // indirect
 	github.com/kaptinlin/messageformat-go v0.4.6 // indirect
 	github.com/karrick/godirwalk v1.17.0 // indirect
-	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/klauspost/compress v1.18.2 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.11 // indirect
+	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/labstack/echo v3.3.10+incompatible // indirect
@@ -288,6 +291,8 @@ require (
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.19 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
+	github.com/minio/crc64nvme v1.1.1 // indirect
+	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -307,6 +312,7 @@ require (
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rotisserie/eris v0.5.4 // indirect
+	github.com/rs/xid v1.6.0 // indirect
 	github.com/russellhaering/goxmldsig v1.3.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
@@ -333,10 +339,11 @@ require (
 	go.opentelemetry.io/otel/trace v1.42.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/arch v0.23.0 // indirect
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/term v0.38.0 // indirect
+	golang.org/x/term v0.40.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251222181119-0a764e51fe1b // indirect
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.71 // indirect
 	kernel.org/pub/linux/libs/security/libcap/psx v1.2.71 // indirect
@@ -377,7 +384,6 @@ require (
 // replace github.com/Velocidex/tracee_velociraptor => ../tracee_velociraptor
 // replace github.com/Velocidex/disklru => ../disklru
 // replace github.com/Velocidex/go-elasticsearch/v9 => ../go-elasticsearch
-
 // replace github.com/Velocidex/fileb0x => ../fileb0x
 // replace github.com/Velocidex/go-ext4 => ../go-ext4
 // replace github.com/Velocidex/amsi => ../amsi

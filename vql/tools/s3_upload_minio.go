@@ -1,19 +1,19 @@
-//go:build sumo
-// +build sumo
+//go:build !sumo
+// +build !sumo
 
 package tools
 
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/url"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/minio/minio-go/v7/pkg/encrypt"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -54,6 +54,8 @@ func (self S3UploadFunction) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 
 	defer vql_subsystem.RegisterMonitor(ctx, "upload_s3", args)()
+
+	scope.Log("DEBUG:upload_s3 is built with the minio library. For full features rebuild with the `sumo` option")
 
 	mergeScope(ctx, scope, args)
 
@@ -112,10 +114,10 @@ func (self S3UploadFunction) Call(ctx context.Context,
 		// Cancel the s3 upload when the scope destroys.
 		_ = scope.AddDestructor(cancel)
 		upload_response, err := upload_S3(
-			sub_ctx, scope, file, arg,
-			uint64(stat.Size()))
+			sub_ctx, scope, file, arg, uint64(stat.Size()))
 		if err != nil {
 			scope.Log("upload_S3: %v", err)
+
 			// Relay the error in the UploadResponse
 			return upload_response
 		}
@@ -123,6 +125,52 @@ func (self S3UploadFunction) Call(ctx context.Context,
 	}
 
 	return vfilter.Null{}
+}
+
+func GetS3Client(
+	ctx context.Context, scope vfilter.Scope,
+	arg *S3UploadArgs) (*minio.Client, error) {
+	s3_opts := &minio.Options{}
+	if arg.CredentialsKey != "" && arg.CredentialsSecret != "" {
+		s3_opts.Creds = credentials.NewStaticV4(
+			arg.CredentialsKey, arg.CredentialsSecret, arg.CredentialsToken)
+	}
+
+	endpoint := arg.Endpoint
+	if endpoint == "" {
+		endpoint = "s3.amazonaws.com"
+	}
+
+	if strings.HasPrefix(endpoint, "http") {
+		u, err := url.Parse(endpoint)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to parse endpoint URL %v", endpoint)
+		}
+
+		s3_opts.Secure = u.Scheme == "https"
+		endpoint = u.Host
+	}
+
+	clientConfig, ok := artifacts.GetConfig(scope)
+	if ok {
+		if arg.SkipVerify {
+			http_client, err := networking.GetSkipVerifyHTTPClient(
+				ctx, clientConfig, scope, "", nil)
+			if err != nil {
+				return nil, err
+			}
+			s3_opts.Transport = http_client.Transport()
+		} else {
+			http_client, err := networking.GetDefaultHTTPClient(
+				ctx, clientConfig, scope, "", nil)
+			if err != nil {
+				return nil, err
+			}
+			s3_opts.Transport = http_client.Transport()
+		}
+	}
+
+	return minio.New(endpoint, s3_opts)
 }
 
 func upload_S3(ctx context.Context, scope vfilter.Scope,
@@ -136,80 +184,30 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 	}
 	scope.Log("upload_S3: Uploading %v to %v", arg.Name, arg.Bucket)
 
-	conf := []func(*config.LoadOptions) error{
-		config.WithRegion(arg.Region)}
-
-	if arg.CredentialsKey != "" && arg.CredentialsSecret != "" {
-		conf = append(conf, config.WithCredentialsProvider(
-			credentials.NewStaticCredentialsProvider(
-				arg.CredentialsKey, arg.CredentialsSecret, arg.CredentialsToken),
-		))
-	}
-
-	s3_opts := []func(*s3.Options){}
-	if arg.Endpoint != "" {
-		s3_opts = append(s3_opts, func(o *s3.Options) {
-			o.BaseEndpoint = aws.String(arg.Endpoint)
-		})
-	}
-
-	if arg.UsePathStyle {
-		s3_opts = append(s3_opts, func(o *s3.Options) {
-			o.UsePathStyle = true
-		})
-	}
-
-	clientConfig, ok := artifacts.GetConfig(scope)
-	if ok {
-		if arg.SkipVerify {
-			http_client, err := networking.GetSkipVerifyHTTPClient(
-				ctx, clientConfig, scope, "", nil)
-			if err != nil {
-				return nil, err
-			}
-
-			conf = append(conf, config.WithHTTPClient(http_client))
-
-		} else {
-			http_client, err := networking.GetDefaultHTTPClient(
-				ctx, clientConfig, scope, "", nil)
-			if err != nil {
-				return nil, err
-			}
-			conf = append(conf, config.WithHTTPClient(http_client))
-		}
-	}
-
-	sess, err := config.LoadDefaultConfig(ctx, conf...)
+	s3Client, err := GetS3Client(ctx, scope, arg)
 	if err != nil {
 		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
 
-	client := s3.NewFromConfig(sess, s3_opts...)
-
-	uploader := manager.NewUploader(client, func(u *manager.Uploader) {
-		// Define a strategy that will buffer 25 MiB in memory
-		u.BufferProvider = manager.NewBufferedReadSeekerWriteToPool(25 * 1024 * 1024)
-	})
-	var result *manager.UploadOutput
-
-	s3_params := &s3.PutObjectInput{
-		Bucket: aws.String(arg.Bucket),
-		Key:    aws.String(arg.Name),
-		Body:   reader,
-	}
+	put_options := minio.PutObjectOptions{}
 	if arg.ServerSideEncryption != "" {
-		s3_params.ServerSideEncryption = types.ServerSideEncryption(arg.ServerSideEncryption)
+		// Create a key based on the password and bucket and object names.
+		encryption := encrypt.DefaultPBKDF(
+			[]byte(arg.ServerSideEncryption), []byte(arg.Bucket+arg.Name))
+		put_options.ServerSideEncryption = encryption
 	}
 
 	if arg.KmsEncryptionKey != "" {
-		s3_params.SSEKMSKeyId = aws.String(arg.KmsEncryptionKey)
+		err := fmt.Errorf("KmsEncryptionKey not supported, rebuild with sumo option")
+		return &uploads.UploadResponse{
+			Error: err.Error(),
+		}, err
 	}
 
-	result, err = uploader.Upload(ctx, s3_params)
-
+	upload_info, err := s3Client.PutObject(
+		ctx, arg.Bucket, arg.Name, reader, int64(size), put_options)
 	if err != nil {
 		return &uploads.UploadResponse{
 			Error: err.Error(),
@@ -218,10 +216,10 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 
 	// All good! report the outcome.
 	response := &uploads.UploadResponse{
-		Path: result.Location,
+		Path: upload_info.Location,
 	}
 
-	response.Size = size
+	response.Size = uint64(upload_info.Size)
 	return response, nil
 }
 

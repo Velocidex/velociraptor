@@ -411,9 +411,6 @@ func (self *UserStorageManager) ListAllUsers(
 	for _, cache := range self.cache {
 		user_record := proto.Clone(cache.user_record).(*api_proto.VelociraptorUser)
 		result = append(result, user_record)
-		if user_record.Name == "mic" {
-			utils.DlvBreak()
-		}
 	}
 
 	sort.Slice(result, func(i, j int) bool {

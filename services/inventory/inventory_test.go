@@ -34,6 +34,10 @@ type MockClient struct {
 	count int
 }
 
+func (self *MockClient) Transport() http.RoundTripper {
+	return nil
+}
+
 func (self *MockClient) Do(req *http.Request) (*http.Response, error) {
 	url := req.URL.String()
 

@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -38,8 +40,25 @@ func getReport(ctx context.Context,
 	notebook_cell_path_manager := paths.NewDashboardPathManager(
 		in.Type, bare_artifact_name, in.ClientId)
 
+	builder := services.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: acl_manager,
+		Logger: logging.NewPlainLogger(
+			config_obj, &logging.FrontendComponent),
+		Repository: repository,
+		Env:        ordereddict.NewDict(),
+	}
+
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
 	template_engine, err := reporting.NewGuiTemplateEngine(
-		config_obj, ctx, nil, /* default scope */
+		config_obj, ctx, scope,
 		acl_manager, repository,
 		notebook_cell_path_manager,
 		in.Artifact)
@@ -47,7 +66,7 @@ func getReport(ctx context.Context,
 		if strings.HasPrefix(in.Artifact,
 			constants.ARTIFACT_CUSTOM_NAME_PREFIX) {
 			template_engine, err = reporting.NewGuiTemplateEngine(
-				config_obj, ctx, nil, /* default scope */
+				config_obj, ctx, scope,
 				acl_manager, repository,
 				notebook_cell_path_manager,
 				bare_artifact_name)

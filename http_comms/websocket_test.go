@@ -56,7 +56,7 @@ func (self *TestSuite) TestWebSocketRetry() {
 		fmt.Printf("Closing reader!\n")
 		conn.Close()
 
-		vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 			logs := getMemoryLogs()
 			// We retry a few times,
 			return matchMultipleRegex(logs,

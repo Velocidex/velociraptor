@@ -1,5 +1,5 @@
-//go:build extras
-// +build extras
+//go:build sumo
+// +build sumo
 
 package tools
 
