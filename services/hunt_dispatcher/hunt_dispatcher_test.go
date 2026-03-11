@@ -315,9 +315,15 @@ func (self *HuntDispatcherTestSuite) TestDeleteHunts() {
 			State:  api_proto.Hunt_DELETED,
 		})
 
+	// Make sure the changes are written to the disk.
 	err := self.master_dispatcher.Refresh(self.Ctx, self.ConfigObj)
 	assert.NoError(self.T(), err)
 
+	err = self.master_dispatcher.Store.FlushIndex(self.Ctx)
+	assert.NoError(self.T(), err)
+
+	// This will happen in time but we force it now to make the test
+	// go faster
 	err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -330,6 +336,10 @@ func (self *HuntDispatcherTestSuite) TestDeleteHunts() {
 	// Check the minion is removed.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		_, pres := self.minion_dispatcher.GetHunt(self.Ctx, hunt_id)
+		if pres {
+			err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+			assert.NoError(self.T(), err)
+		}
 		return pres == false
 	})
 
