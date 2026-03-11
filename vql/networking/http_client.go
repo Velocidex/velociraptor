@@ -615,13 +615,7 @@ func GetProxy() func(*http.Request) (*url.URL, error) {
 // If the TLS Verification policy allows it, enable SkipVerify to
 // allow connections to invalid TLS servers.
 func EnableSkipVerifyHttp(client HTTPClient, config_obj *config_proto.ClientConfig) error {
-	http_client := client.(*httpClientWrapper)
-
-	if http_client == nil || http_client.Transport == nil {
-		return nil
-	}
-
-	t, ok := http_client.Transport.(*http.Transport)
+	t, ok := client.Transport().(*http.Transport)
 	if !ok {
 		return errors.New("http client does not have a compatible transport")
 	}
