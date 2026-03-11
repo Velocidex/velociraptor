@@ -27,6 +27,7 @@ var (
 // Create a HTTPClient with superpowers to be used everywhere.
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
+	Transport() http.RoundTripper
 }
 
 type fdWrapper struct {
@@ -44,6 +45,10 @@ type httpClientWrapper struct {
 	http.Client
 	scope vfilter.Scope
 	ctx   context.Context
+}
+
+func (self *httpClientWrapper) Transport() http.RoundTripper {
+	return self.Client.Transport
 }
 
 func GetHTTPClient(client HTTPClient) (*http.Client, error) {

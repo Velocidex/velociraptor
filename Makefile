@@ -39,6 +39,9 @@ darwin_m1:
 linux_m1:
 	go run make.go -v LinuxM1
 
+linux_sumo:
+	go run make.go -v LinuxSumo
+
 linux_arm64:
 	go run make.go -v LinuxArm64
 

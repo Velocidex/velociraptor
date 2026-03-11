@@ -353,6 +353,14 @@ func (self *Dummy) RemoveTool(
 	return nil
 }
 
+type HTTPClientWrapper struct {
+	*http.Client
+}
+
+func (self *HTTPClientWrapper) Transport() http.RoundTripper {
+	return self.Client.Transport
+}
+
 func NewInventoryDummyService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
@@ -361,7 +369,7 @@ func NewInventoryDummyService(
 	inventory_service := &Dummy{
 		Clock:    utils.RealClock{},
 		binaries: &artifacts_proto.ThirdParty{},
-		Client: &http.Client{
+		Client: &HTTPClientWrapper{&http.Client{
 			Transport: &http.Transport{
 				DialContext: (&net.Dialer{
 					Timeout:   300 * time.Second,
@@ -374,7 +382,7 @@ func NewInventoryDummyService(
 				ExpectContinueTimeout: 10 * time.Second,
 				ResponseHeaderTimeout: 100 * time.Second,
 			},
-		},
+		}},
 	}
 
 	wg.Add(1)
@@ -392,6 +400,10 @@ func NewInventoryDummyService(
 }
 
 type DummyHTTPClient struct{}
+
+func (self DummyHTTPClient) Transport() http.RoundTripper {
+	return nil
+}
 
 func (self DummyHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	return nil, errors.New("External tool access is disabled on this server. You can try to manually upload tools in the Tool Setup GUI")
