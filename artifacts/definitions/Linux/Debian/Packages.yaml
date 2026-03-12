@@ -193,5 +193,5 @@ sources:
               NULL AS Architecture
               FROM source(
                 source="Snaps")
-              WHERE NOT Status IN ("installed", "active")
+              WHERE Status IN ("installed", "active")
             })
