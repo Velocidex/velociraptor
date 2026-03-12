@@ -130,3 +130,14 @@ Output: [
  }
 ]
 
+# Schedule a hunt with tags
+Query: SELECT hunt(description='Test Tags', artifacts='Generic.Client.Info', tags=['Tag1', 'Tag2']).Request.tags FROM scope()
+Output: [
+ {
+  "hunt(description='Test Tags', artifacts='Generic.Client.Info', tags=['Tag1', 'Tag2']).Request.tags": [
+   "Tag1",
+   "Tag2"
+  ]
+ }
+]
+
