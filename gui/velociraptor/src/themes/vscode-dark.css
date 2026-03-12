@@ -99,8 +99,6 @@
   --color-scrollbar-track: #1F1F1F;
   --color-scrollbar-thumb: rgba(121, 121, 121, 0.4);
   --color-scrollbar-thumb-hover: rgba(100, 100, 100, 0.7);
-  --color-scrollbar-main: var(--color-accent-25);
-  --color-scrollbar-background: rgba(var(--color-accent), 0.1);
 
   --color-cell-toolbar-background: #181818;
   --color-card-heading-background: #2B2B2B;
@@ -139,7 +137,7 @@
   --color-vfs-files-timestomped: #569CD6;
   --color-level-error: #F85149;
 
-  --hex-highlight-background: #474849;
+  --hex-highlight-background: var(--color-client-link);
   --hex-highlight-foreground: #FFFFFF;
 
   --invalid-form-control-error: #5A1D1D;
@@ -784,6 +782,20 @@ body.vscode-dark {
 .vscode-dark .artifact-search-table.selectable.container tr.row_selected > td {
   background: var(--color-table-row-selected);
   color: #FFFFFF;
+}
+
+/* Offline docs search */
+
+.vscode-dark .hit-body.accordion-body {
+  background: #2B2B2B;
+}
+
+.vscode-dark .hit-body.accordion-body :not(pre) > code {
+  background: rgba(255,255,255,.1);
+  border-radius: 0;
+  border: 0.5px solid rgba(255,255,255,.1);
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 /* Modal dialogs - Square edges */

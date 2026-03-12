@@ -99,6 +99,9 @@
   --color-vfs-files-timestomped: #ed5d40;
   --color-level-error: #aa0000;
 
+  --hex-highlight-background: #ccff00;
+  --hex-highlight-foreground: var(--color-foreground);
+
   --invalid-form-control-error: #ff6666;
 }
 
@@ -1135,6 +1138,21 @@ body.ncurses-light {
   border-right: 1px solid black;
   border-bottom: 1px solid black;
   box-shadow: 10px 10px 0px #000000;
+}
+
+/* Offline docs search */
+
+.ncurses-light .hit-body.accordion-body {
+  background: white;
+  font-size: var(--font-size-base);
+}
+
+.ncurses-light .hit-body.accordion-body :not(pre) > code {
+  background: lightgrey;
+  border-radius: 0;
+  border: none;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 /* Modal dialogs */
