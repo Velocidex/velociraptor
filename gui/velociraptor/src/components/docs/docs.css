@@ -25,11 +25,11 @@
     font-size: var(--font-size-large);
 }
 
-.hit-body.accordion-body h1,h2,h3 {
+.hit-body.accordion-body h1,h2,h3,h4,h5,h6 {
     font-weight: 700;
 }
 
-.hit-body.accordion-body h4 {
+.hit-body.accordion-body h4,h5,h6 {
     font-size: 18px;
 }
 
