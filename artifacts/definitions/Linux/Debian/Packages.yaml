@@ -72,7 +72,13 @@ sources:
       LET packages = SELECT
           parse_string_with_regex(
             string=Record,
-            regex=['''Package:\s(?P<Package>.+)''', '''Status:\s(?P<SelectionState>\S+)\s(?P<Flag>\S+)\s(?P<State>\S+)''', '''Installed-Size:\s(?P<InstalledSize>.+)''', '''Version:\s(?P<Version>.+)''', '''Source:\s(?P<Source>.+)''', '''Description:\s+(?P<Description>.+(\n\s+.+)*)''', '''Architecture:\s(?P<Architecture>.+)''']) AS Record
+            regex=['''Package:\s(?P<Package>.+)''',
+                   '''Status:\s(?P<SelectionState>\S+)\s(?P<Flag>\S+)\s(?P<State>\S+)''',
+                   '''Installed-Size:\s(?P<InstalledSize>.+)''',
+                   '''Version:\s(?P<Version>.+)''',
+                   '''Source:\s(?P<Source>.+)''',
+                   '''Description:\s+(?P<Description>.+(\n\s+.+)*)''',
+                   '''Architecture:\s(?P<Architecture>.+)''']) AS Record
         FROM parse_records_with_regex(
           file=linuxDpkgStatus,
           regex='''(?sm)^(?P<Record>Package:.+?)\n\n''')
