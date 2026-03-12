@@ -3955,11 +3955,15 @@
     FROM scope()
     ```
   type: Function
-  version: 2
+  version: 3
   args:
   - name: description
     type: string
     description: Description of the hunt
+  - name: tags
+    type: string
+    description: A list of tags to add to the hunt
+    repeated: true
   - name: artifacts
     type: string
     description: A list of artifacts to collect

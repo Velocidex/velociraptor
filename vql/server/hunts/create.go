@@ -43,6 +43,7 @@ import (
 
 type ScheduleHuntFunctionArg struct {
 	Description   string           `vfilter:"optional,field=description,doc=Description of the hunt"`
+	Tags          []string         `vfilter:"optional,field=tags,doc=A list of tags to add to the hunt"`
 	Artifacts     []string         `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
 	Expires       vfilter.LazyExpr `vfilter:"optional,field=expires,doc=A time for expiry (e.g. now() + 1800)"`
 	Spec          vfilter.Any      `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
@@ -156,6 +157,10 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		StartRequest:    request,
 		Expires:         expires,
 		State:           state,
+	}
+
+	if len(arg.Tags) > 0 {
+		hunt_request.Tags = append(hunt_request.Tags, arg.Tags...)
 	}
 
 	if len(arg.IncludeLabels) > 0 {
