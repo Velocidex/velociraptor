@@ -330,6 +330,11 @@ func (self *HuntDispatcherTestSuite) TestDeleteHunts() {
 	// Check the master is removed.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		_, pres := self.master_dispatcher.GetHunt(self.Ctx, hunt_id)
+		if pres {
+			err = self.master_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+			assert.NoError(self.T(), err)
+		}
+
 		return pres == false
 	})
 

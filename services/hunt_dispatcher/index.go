@@ -65,7 +65,8 @@ func (self *HuntStorageManagerImpl) _FlushIndex(
 		self.last_flush_time = now
 
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-		logger.Debug("HuntDispatcher: <green>Rebuilt Hunt Index in %v for %v (%v hunts)</>",
+		logger.Debug(
+			"HuntDispatcher: <green>Rebuilt Hunt Index in %v for %v (%v hunts)</>",
 			now.Sub(start), services.GetOrgName(self.config_obj), len(hunt_ids))
 	}()
 

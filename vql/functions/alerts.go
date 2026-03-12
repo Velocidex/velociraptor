@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
@@ -34,43 +35,29 @@ func (self *AlertFunction) Call(ctx context.Context,
 
 	defer vql_subsystem.RegisterMonitor(ctx, "alert", args)()
 
+	arg := &AlertFunctionArgs{}
+	kwargs, err := arg_parser.ExtractKWArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("ERROR:alert: %v", err)
+		return &vfilter.Null{}
+	}
+
 	// If a condition is specified we ignore the alert unless the
 	// condition is true
-	condition, pres := args.Get("condition")
-	if pres && !scope.Bool(condition) {
+	if arg.Condition != nil &&
+		!scope.Bool(vql_subsystem.Materialize(ctx, scope, arg.Condition)) {
 		return &vfilter.Null{}
 	}
 
-	// Make sure all the args are materialized.
-	args = vfilter.RowToDict(ctx, scope, args)
-
-	alert_name, pres := args.GetString("name")
-	if !pres {
-		scope.Log("ERROR:alert: Alert name must be specified!")
-		return &vfilter.Null{}
-	}
-
-	dedup_time, _ := args.GetInt64("dedup")
-	if dedup_time == 0 {
-		dedup_time = 7200
-	}
-
-	// Build an EventData
-	event_data := ordereddict.NewDict()
-	for _, i := range args.Items() {
-		switch i.Key {
-		case "name", "dedup":
-			// skip these fields
-		default:
-			event_data.Set(i.Key, i.Value)
-		}
+	if arg.DedupTime == 0 {
+		arg.DedupTime = 7200
 	}
 
 	// Build a structured alert message
 	alert := services.AlertMessage{
 		Timestamp: utils.GetTime().Now(),
-		AlertName: alert_name,
-		EventData: event_data,
+		AlertName: arg.AlertName,
+		EventData: kwargs,
 	}
 
 	serialized, err := json.Marshal(alert)
@@ -89,16 +76,16 @@ func (self *AlertFunction) Call(ctx context.Context,
 	// the alert be further examined.
 	log_fuction := &LogFunction{}
 	if log_fuction.ShouldMessageBeSuppressed(
-		ctx, scope, alert_name, dedup_time) {
+		ctx, scope, arg.AlertName, arg.DedupTime) {
 		return (&LogFunction{}).Call(ctx, scope, ordereddict.NewDict().
 			Set("message", string(serialized)).
-			Set("dedup", dedup_time).
+			Set("dedup", arg.DedupTime).
 			Set("level", logging.INFO))
 	}
 
 	return (&LogFunction{}).Call(ctx, scope, ordereddict.NewDict().
 		Set("message", string(serialized)).
-		Set("dedup", dedup_time).
+		Set("dedup", arg.DedupTime).
 		Set("level", logging.ALERT))
 }
 

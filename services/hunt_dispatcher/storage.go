@@ -115,6 +115,8 @@ type HuntStorageManagerImpl struct {
 	tracker *HuntDispatcherTracker
 
 	refresh_throttler *utils.Throttler
+
+	uuid int64
 }
 
 func NewHuntStorageManagerImpl(
@@ -133,6 +135,7 @@ func NewHuntStorageManagerImpl(
 		I_am_master:       services.IsMaster(config_obj),
 		tracker:           &HuntDispatcherTracker{},
 		refresh_throttler: utils.NewThrottler(refresh_rate),
+		uuid:              utils.GetGUID(),
 	}
 
 	if result.I_am_master {
