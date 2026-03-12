@@ -4442,7 +4442,7 @@
   description: |
     Create a local index from a query.
 
-    This plugin uses [bleve](https://blevesearch.com/) to build an
+    This plugin uses [Bleve](https://blevesearch.com/) to build an
     on-disk full text index of the query. The index can be searched
     with `index_search()`.
 
@@ -10503,6 +10503,15 @@
 
     Executes each query in order. If a query returns any rows, those
     are emitted. Any further queries are ignored.
+
+    For example:
+    ```vql
+    SELECT * FROM switch(a={
+      SELECT * FROM First
+    }, b={
+      SELECT * FROM Second
+    })
+    ```
   type: Plugin
   category: popular
   platforms:
