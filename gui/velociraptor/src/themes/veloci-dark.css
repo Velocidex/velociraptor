@@ -89,11 +89,9 @@
 
   --color-resizer: var(--color-accent-50);
   --color-resizer-hover: var(--color-accent-100);
-  --color-scrollbar-track: var(--color-btn-border);
-  --color-scrollbar-thumb: #555d6e;
-  --color-scrollbar-thumb-hover: #767c89;
-  --color-scrollbar-main: var(--color-accent-25);
-  --color-scrollbar-background: rgba(var(--color-accent), 0.1);
+  --color-scrollbar-track: #3f4754;
+  --color-scrollbar-thumb: #767c89;
+  --color-scrollbar-thumb-hover: var(--color-btn-default-background);
 
   --color-cell-toolbar-background: #121212;
   --color-card-heading-background: #3f4754;
@@ -129,6 +127,9 @@
   --color-vfs-files-timestomped: #0220af;
   --color-timeline-table-shown: #5cd00a80;
   --color-level-error: #ff0000;
+
+  --hex-highlight-background: #0dd606;
+  --hex-highlight-foreground: white;
 
   --invalid-form-control-error: #3f0505;
 
@@ -698,6 +699,20 @@ body.veloci-dark {
 .veloci-dark .artifact-search-table.selectable.container tr.row_selected > td {
   background: var(--color-table-row-selected);
   color: var(--color-foreground);
+}
+
+/* Offline docs search */
+
+.veloci-dark .hit-body.accordion-body {
+  background: #3f4754;
+}
+
+.veloci-dark .hit-body.accordion-body :not(pre) > code {
+  background: rgba(255,255,255,.05);
+  border-radius: 4px;
+  border: 0.5px solid rgba(255,255,255,.1);
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 /* modal dialogs */
