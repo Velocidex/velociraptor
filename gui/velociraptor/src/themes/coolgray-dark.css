@@ -69,8 +69,6 @@
   --color-scrollbar-track: var(--color-canvas-background);
   --color-scrollbar-thumb: var(--color-accent-25);
   --color-scrollbar-thumb-hover: var(--color-accent-50);
-  --color-scrollbar-main: var(--color-accent-25);
-  --color-scrollbar-background: rgba(var(--color-accent), 0.1);
 
   --color-btn-border: #636e7b; /* --color-border-muted  --color-scale-gray-7 */
   --color-btn-default-border: #636e7b; /* --color-btn-border */
@@ -113,6 +111,8 @@
   --color-vfs-files-timestomped: #ed5d40;
   --color-calendar-background: var(--color-canvas-background);
   --color-level-error: #ff0000;
+  --hex-highlight-background: var(--color-accent-complement);
+  --hex-highlight-foreground: var(--color-canvas-background);
   --invalid-form-control-error: #ff0000;
   --color-danger-emphasis: #dd4b3920;
 
@@ -915,6 +915,20 @@ body.coolgray-dark {
 .coolgray-dark .artifact-search-table.selectable.container tr.row_selected > td {
   background: var(--color-table-row-selected);
   color: var(--color-foreground);
+}
+
+/* Offline docs search */
+
+.coolgray-dark .hit-body.accordion-body {
+  background: #34424D;
+}
+
+.coolgray-dark .hit-body.accordion-body :not(pre) > code {
+  background: rgba(255,255,255,.05);
+  border-radius: 4px;
+  border: 0.5px solid rgba(255,255,255,.1);
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 /* Modal dialogs */

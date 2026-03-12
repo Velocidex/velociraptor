@@ -68,9 +68,7 @@
   --color-resizer-hover: var(--color-accent-100);
   --color-scrollbar-track: var(--color-canvas-background);
   --color-scrollbar-thumb: var(--color-accent-50);
-  --color-scrollbar-thumb-hover: var(--color-accent-100);
-  --color-scrollbar-main: var(--color-accent-25);
-  --color-scrollbar-background: rgba(var(--color-accent), 0.1);
+  --color-scrollbar-thumb-hover: var(--accent-color);
 
   --color-btn-border: #850000;
   --color-btn-default-border: #850000;
@@ -112,6 +110,8 @@
 
   --color-vfs-files-timestomped: #ed5d40;
   --color-calendar-background: var(--color-canvas-background);
+  --hex-highlight-background: var(--color-table-row-selected-text);
+  --hex-highlight-foreground: var(--color-canvas-background);
   --color-level-error: #ff0000;
 
   --color-danger-emphasis: #dd4b3920;
@@ -162,7 +162,8 @@ body.midnight {
 
 .midnight code {
   font-family: var(--font-family-monospace);
-  color: var(--color-accent-100);
+  color: var(--color-sidebar-inactive-foreground-hover);
+  background-color: black;
   font-size: var(--font-size-base);
   letter-spacing: 0.4px;
 }
@@ -955,6 +956,16 @@ body.midnight {
 .midnight .artifact-search-table.selectable.container tr.row_selected > td {
   background: var(--color-table-row-selected);
   color: #FFD500;
+}
+
+/* Offline docs search */
+
+.midnight .hit-body.accordion-body :not(pre) > code {
+  background: #800000;
+  border-radius: 0;
+  border: none;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 /* Modal dialogs */

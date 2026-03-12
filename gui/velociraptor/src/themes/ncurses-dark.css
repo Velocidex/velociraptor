@@ -60,8 +60,6 @@
   --color-scrollbar-track: #808080;
   --color-scrollbar-thumb: var(--color-tab);
   --color-scrollbar-thumb-hover: var(--color-accent-100);
-  --color-scrollbar-main: var(--color-accent-25);
-  --color-scrollbar-background: rgba(var(--color-accent), 0.1);
 
   --color-btn-border: var(--color-btn-default-border);
   --color-btn-default-border: grey;
@@ -100,6 +98,9 @@
 
   --color-vfs-files-timestomped: #ed5d40;
   --color-level-error: #ef5350;
+
+  --hex-highlight-background: #ccff00;
+  --hex-highlight-foreground: var(--color-foreground-inverse);
 
   --invalid-form-control-error: #ff6666;
 
@@ -1156,6 +1157,21 @@ body.ncurses-dark {
   border-right: 1px solid dimgrey;
   border-bottom: 1px solid dimgrey;
   box-shadow: 10px 10px 0px #000000;
+}
+
+/* Offline docs search */
+
+.ncurses-dark .hit-body.accordion-body {
+  background: var(--color-foreground-inverse);
+  font-size: var(--font-size-base);
+}
+
+.ncurses-dark .hit-body.accordion-body :not(pre) > code {
+  background: #303030;
+  border-radius: 0;
+  border: none;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 /* Modal dialogs */
