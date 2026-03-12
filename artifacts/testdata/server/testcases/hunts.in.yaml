@@ -36,3 +36,10 @@ Queries:
     FROM scope()
 
   - SELECT * FROM Artifact.Reporting.Hunts.Details()
+
+  # Schedule a hunt with tags
+  - SELECT
+        hunt(description='Test Tags',
+             artifacts='Generic.Client.Info',
+             tags=['Tag1', 'Tag2']).Request.tags
+    FROM scope()
