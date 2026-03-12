@@ -116,3 +116,4 @@ sources:
                EventData.SYSLOG_IDENTIFIER AS Unit,
                EventData.MESSAGE AS Message
         FROM source()
+        ORDER BY Timestamp
