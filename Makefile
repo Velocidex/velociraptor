@@ -55,6 +55,9 @@ linux_musl:
 linux_musl_debug:
 	go run make.go -v LinuxMuslDebug
 
+linux_debug:
+	go run make.go -v LinuxDebug
+
 linux:
 	go run make.go -v linux
 

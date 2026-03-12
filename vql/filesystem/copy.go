@@ -40,7 +40,7 @@ type CopyFunctionArgs struct {
 	Filename       *accessors.OSPath `vfilter:"required,field=filename,doc=The file to copy from."`
 	Accessor       string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	Destination    string            `vfilter:"required,field=dest,doc=The destination file to write."`
-	Permissions    string            `vfilter:"optional,field=permissions,doc=Permissions for the destination file (e.g. 'rw-rw-rwx' or '0755')."`
+	Permissions    string            "vfilter:\"optional,field=permissions,doc=Permissions for the destination file (e.g. `rw-rw-rwx` or `0755`).\""
 	DirPermissions string            `vfilter:"optional,field=dir_permissions,doc=Permissions for intermediate directories."`
 	Append         bool              `vfilter:"optional,field=append,doc=If true we append to the target file otherwise truncate it"`
 	Directories    bool              `vfilter:"optional,field=create_directories,doc=If true we ensure the destination directories exist"`
