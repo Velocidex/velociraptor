@@ -220,6 +220,7 @@ class HelpDialog extends Component {
         return (
             <Modal show={true}
                    dialogClassName="modal-70w"
+                   autoFocus={false}
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
                 <Modal.Title>{T("Search Documentation")}</Modal.Title>
@@ -232,7 +233,8 @@ class HelpDialog extends Component {
                         value={this.state.query}
                         onChange={e=>this.setState({query: e.target.value})}
                         as="input"
-                        placeholder={T("Search Docs")} />
+                        placeholder={T("Search Docs")}
+                        autoFocus={true} />
                       <TablePaginationControl
                         total_size={this.state.total_size}
                         start_row={this.state.start}

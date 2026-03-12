@@ -12,9 +12,33 @@
     color: var(--hex-highlight-foreground);
 }
 
-
 .accordion-body img {
     width: 100%;
+}
+
+.accordion-button:not(.collapsed) {
+    box-shadow: none;
+}
+
+.hit-body.accordion-body {
+    font-family: var(--font-family-paragraph);
+    font-size: var(--font-size-large);
+}
+
+.hit-body.accordion-body h1,h2,h3,h4,h5,h6 {
+    font-weight: 700;
+}
+
+.hit-body.accordion-body h4 {
+    font-size: 18px;
+}
+
+.hit-body.accordion-body h5 {
+    font-size: 17px;
+}
+
+.hit-body.accordion-body h6 {
+    font-size: 16px;
 }
 
 .tag.bg-primary {
@@ -221,6 +245,7 @@ code.hljs {
 
 a.image-popup {
     width: 100%;
+    text-decoration-line: none;
 }
 
 .image-popup span {
@@ -241,7 +266,10 @@ a.image-popup {
 }
 
 span.figcaption {
-    color: var(--color-foreground);
+    color: var(--color-foreground-dimmed);
+    font-weight: 400;
+    font-size: var(--font-size-base);
+    font-style: italic;
 }
 
 .image-popup .modal-body {
