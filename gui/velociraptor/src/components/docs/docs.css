@@ -29,8 +29,16 @@
     font-weight: 700;
 }
 
-.hit-body.accordion-body h4,h5,h6 {
+.hit-body.accordion-body h4 {
     font-size: 18px;
+}
+
+.hit-body.accordion-body h5 {
+    font-size: 17px;
+}
+
+.hit-body.accordion-body h6 {
+    font-size: 16px;
 }
 
 .tag.bg-primary {
