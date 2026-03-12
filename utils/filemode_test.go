@@ -18,11 +18,19 @@ var (
 		// Parse as an octal
 		{"0755", 0o755, false},
 
-		// Parse as a short string
-		{"x", 0o001, false},
-		{"rwx", 0o007, false},
+		// Parse as a short string - if the string is short this
+		// refers to the owner, then group.
 
-		// Parse full permission specs as a string
+		{"x", 0o700, false}, // Special cased for backwards compatibility
+
+		// Means rwx for owner
+		{"rwx", 0o700, false},
+
+		// Means rwx for owner, rw for group
+		{"rwxrw-", 0o760, false},
+
+		// Parse full permission specs as a string: Mean rw for owner,
+		// rw for group and rwx for other.
 		{"rw-rw-rwx", 0o667, false},
 
 		// Invalid char should be an error

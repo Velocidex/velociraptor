@@ -21,3 +21,11 @@ Output: [
  }
 ]
 
+# Check that alert supports the ** conventions
+Query: SELECT alert(`**`=dict(name="Second", event_id=1)) FROM scope()
+Output: [
+ {
+  "alert(`**`=dict(name=\"Second\", event_id=1))": true
+ }
+]
+

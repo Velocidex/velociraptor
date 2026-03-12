@@ -249,6 +249,14 @@ func Linux() error {
 		arch:       "amd64"}.Run()
 }
 
+func LinuxDebug() error {
+	return Builder{
+		extra_tags:  " release yara ",
+		goos:        "linux",
+		debug_build: true,
+		arch:        "amd64"}.Run()
+}
+
 func LinuxSumo() error {
 	return Builder{
 		extra_tags: " release yara sumo ",

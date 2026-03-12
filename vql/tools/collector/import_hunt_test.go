@@ -2,6 +2,7 @@ package collector_test
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -19,7 +20,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	hunt_dispatcher_service "www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vql/filesystem"
 	"www.velocidex.com/golang/velociraptor/vql/server/clients"
 	"www.velocidex.com/golang/velociraptor/vql/server/downloads"
 	"www.velocidex.com/golang/velociraptor/vql/server/hunts"
@@ -146,6 +149,18 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 	assert.True(self.T(), ok)
 	assert.NotEmpty(self.T(), download_pathspec.String())
 
+	output_file, err := tempfile.TempFile("zip")
+	assert.NoError(self.T(), err)
+	output_file.Close()
+
+	defer os.Remove(output_file.Name())
+
+	// Copy the download to a temp file so we can delete the hunt.
+	filesystem.CopyFunction{}.Call(ctx, scope, ordereddict.NewDict().
+		Set("filename", download_pathspec).
+		Set("accessor", "fs").
+		Set("dest", output_file.Name()))
+
 	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		snapshot, _ := self.snapshotHuntFlow().Get("/hunts/H.1234.json")
@@ -166,8 +181,8 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
 
 	imported_hunt := (&collector.ImportCollectionFunction{}).Call(ctx, scope, ordereddict.NewDict().
-		Set("filename", download_pathspec).
-		Set("accessor", "fs").
+		Set("filename", output_file.Name()).
+		Set("accessor", "file").
 		Set("import_type", "hunt"))
 	assert.IsType(self.T(), &api_proto.Hunt{}, imported_hunt)
 

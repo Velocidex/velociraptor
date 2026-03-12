@@ -43,10 +43,9 @@
   "/clients/server/collections/F.1234/logs.json.index": "Index 0 bytes",
   "/clients/server/collections/F.1234/uploads/data/Hello": "",
   "/hunts/H.1234.json": [
-   "",
-   "{\"HuntId\":\"H.1234\",\"ClientId\":\"server\",\"FlowId\":\"F.1234\",\"Timestamp\":10}"
+   ""
   ],
-  "/hunts/H.1234.json.index": "Index 8 bytes"
+  "/hunts/H.1234.json.index": "Index 0 bytes"
  },
  "Imported Flow": {
   "/clients/server/artifacts/AnotherTestArtifact/F.1234.json": [

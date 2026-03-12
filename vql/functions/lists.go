@@ -40,11 +40,17 @@ func (self *ArrayFunction) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 	defer vql_subsystem.RegisterMonitor(ctx, "array", args)()
 
+	arg := &ArrayFunctionArgs{}
+	kwargs, err := arg_parser.ExtractKWArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("ERROR:alert: %v", err)
+		return &vfilter.Null{}
+	}
+
 	result := []vfilter.Any{}
 
-	value, pres := args.Get("_")
-	if pres {
-		value = vql_subsystem.Materialize(ctx, scope, value)
+	if arg.Value != nil {
+		value := vql_subsystem.Materialize(ctx, scope, arg.Value)
 
 		a_value := reflect.Indirect(reflect.ValueOf(value))
 		a_type := a_value.Type()
@@ -57,12 +63,8 @@ func (self *ArrayFunction) Call(ctx context.Context,
 		}
 	}
 
-	for _, i := range args.Items() {
-		if i.Key == "_" {
-			continue
-		}
-
-		value = vql_subsystem.Materialize(ctx, scope, i.Value)
+	for _, i := range kwargs.Items() {
+		value := vql_subsystem.Materialize(ctx, scope, i.Value)
 		result = append(result, value)
 	}
 
