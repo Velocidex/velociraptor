@@ -80,6 +80,10 @@ func (self *DocManager) unpackIndex(
 	ctx context.Context,
 	inventory_path, index_path fs_api.FSPathSpec) error {
 
+	// Purge any existing indexes before we unpack the new index to
+	// ensure the files are properly closed.
+	api.PurgeCache()
+
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	reader, err := file_store_factory.ReadFile(inventory_path)
 	if err != nil {

@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/Velocidex/velociraptor-site-search/api"
 	errors "github.com/go-errors/errors"
 	"github.com/mccutchen/go-httpbin/v2/httpbin"
 	"github.com/sergi/go-diff/diffmatchpatch"
@@ -309,6 +310,9 @@ func runTest(fixture *testFixture, sm *services.Service,
 			return "", fmt.Errorf("Log out matches %q", msg)
 		}
 	}
+
+	// Purge any active index files
+	api.PurgeCache()
 
 	return result, nil
 }

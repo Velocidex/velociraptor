@@ -112,7 +112,7 @@ require (
 	github.com/Velocidex/ordereddict v0.0.0-20250821063524-02dc06e46238
 	github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250
 	github.com/Velocidex/tracee_velociraptor v0.0.0-20260113161018-f7c951ffeab2
-	github.com/Velocidex/velociraptor-site-search v0.0.0-20260314085120-417bf19d515e
+	github.com/Velocidex/velociraptor-site-search v0.0.0-20260314163535-8ba24623bb72
 	github.com/Velocidex/yara-x-go v0.0.0-20251010010632-d8eaad9c539c
 	github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6
 	github.com/alecthomas/kingpin/v2 v2.4.0
