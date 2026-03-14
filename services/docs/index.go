@@ -122,13 +122,17 @@ func (self *DocManager) unpackIndex(
 	}
 
 	for _, file := range zipfd.File {
+		if file.FileInfo().IsDir() {
+			continue
+		}
+
 		fd, err := file.Open()
 		if err != nil {
 			return err
 		}
 
 		w, err := file_store_factory.WriteFile(
-			index_path.AddUnsafeChild(file.Name))
+			index_path.AddUnsafeChild(utils.SplitComponents(file.Name)...))
 		if err != nil {
 			return err
 		}
