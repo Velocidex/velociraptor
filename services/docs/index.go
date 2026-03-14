@@ -80,6 +80,10 @@ func (self *DocManager) unpackIndex(
 	ctx context.Context,
 	inventory_path, index_path fs_api.FSPathSpec) error {
 
+	// Purge any existing indexes before we unpack the new index to
+	// ensure the files are properly closed.
+	api.PurgeCache()
+
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	reader, err := file_store_factory.ReadFile(inventory_path)
 	if err != nil {
@@ -123,40 +127,33 @@ func (self *DocManager) unpackIndex(
 
 // Gets a working index.  If the index does not exist in the file
 // store, we use the inventory service to fetch it.
-func (self *DocManager) GetIndex(ctx context.Context) (res api.Index, err error) {
+func (self *DocManager) GetIndex(ctx context.Context) (res *api.Index, err error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if self.index != nil {
-		return self.index, nil
-	}
+	if self.index_filename == "" {
 
-	inventory_path, index_path, unpack, err := self.shouldUnpackTool(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if unpack {
-		err = self.unpackIndex(ctx, inventory_path, index_path)
+		inventory_path, index_path, unpack, err := self.shouldUnpackTool(ctx)
 		if err != nil {
 			return nil, err
 		}
+
+		if unpack {
+			err = self.unpackIndex(ctx, inventory_path, index_path)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		db, err := datastore.GetDB(self.config_obj)
+		if err != nil {
+			return nil, err
+		}
+
+		// The raw underlying filename on disk.
+		self.index_filename = datastore.AsFilestoreFilename(
+			db, self.config_obj, index_path)
 	}
 
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	// The raw underlying filename on disk.
-	raw_filename := datastore.AsFilestoreFilename(
-		db, self.config_obj, index_path)
-
-	index, err := api.OpenIndex(raw_filename)
-	if err != nil {
-		return nil, err
-	}
-
-	self.index = index
-	return index, err
+	return api.OpenIndex(self.index_filename)
 }

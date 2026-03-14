@@ -5,22 +5,38 @@ Output: []
 Query: SELECT * FROM index(query={
   SELECT * FROM parse_jsonl(accessor='data', filename=Docs)
 }, output=IndexPath)
+ORDER BY Foo
 
 Output: [
- {
-  "Foo": "The quick brown fox"
- },
  {
   "Foo": "Jumps over"
  },
  {
   "Foo": "The lazy dog"
+ },
+ {
+  "Foo": "The quick brown fox"
+ }
+]
+
+# Append to the index
+Query: SELECT * FROM index(query={
+  SELECT * FROM parse_jsonl(accessor='data', filename=Docs2)
+}, output=IndexPath)
+ORDER BY Foo
+
+Output: [
+ {
+  "Foo": "Another fox"
  }
 ]
 
 # Query the index.
-Query: SELECT * FROM index_search(path=IndexPath, fields="Foo", search="fox dog")
+Query: SELECT * FROM index_search(path=IndexPath, fields="Foo", search="fox dog") ORDER BY Foo
 Output: [
+ {
+  "Foo": "Another fox"
+ },
  {
   "Foo": "The lazy dog"
  },
@@ -28,4 +44,3 @@ Output: [
   "Foo": "The quick brown fox"
  }
 ]
-

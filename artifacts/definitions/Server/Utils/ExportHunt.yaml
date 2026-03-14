@@ -1,0 +1,47 @@
+name: Server.Utils.ExportHunt
+description: |
+  Export a hunt to a Zip download.
+
+  Sometimes exporting a hunt through the GUI takes longer than the 10
+  Min limit. If you need more time, you can use this artifact.
+
+  Once this artifact is done you should be able to download the export
+  from the hunt's overview page.
+
+type: SERVER
+parameters:
+  - name: HuntId
+    description: The hunt ID to export.
+  - name: OnlyCombined
+    type: bool
+    description: Set to only produce a combined export (i.e. do not export individual client flows).
+  - name: BaseName
+    description: A name to be prepended to the filename.
+  - name: Format
+    type: choices
+    choices:
+      - Combined
+      - JSON
+      - CSV
+
+sources:
+  - query: |
+      LET Base = if(condition=BaseName, then=BaseName + "-", else="")
+
+      LET FormatLookup <= dict(
+         Combined="",
+         JSON="json",
+         CVS="csv")
+
+      SELECT create_hunt_download(
+         hunt_id=HuntId,
+         only_combined=OnlyCombined,
+         password=user_options(user=whoami()).default_password,
+         wait=TRUE,
+         base=Base,
+         format=get(item=FormatLookup, field=Format),
+         expand_sparse=TRUE) AS VFSPath
+      FROM scope()
+
+resources:
+  timeout: 6000
