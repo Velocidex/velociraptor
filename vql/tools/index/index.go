@@ -5,9 +5,12 @@ import (
 	"fmt"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/Velocidex/velociraptor-site-search/api"
+	"github.com/alitto/pond/v2"
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/standard"
 	"github.com/blevesearch/bleve/v2/mapping"
+	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -47,6 +50,7 @@ type IndexPluginArgs struct {
 	Mapping         *ordereddict.Dict   `vfilter:"optional,field=mapping,doc=A dict to describe field mapping."`
 	DefaultAnalyzer string              `vfilter:"optional,field=default_analyzer,doc=The default analyzer to use."`
 	Output          string              `vfilter:"required,field=output,doc=The file path to create the index on."`
+	Workers         int64               `vfilter:"optional,field=workers,doc=Index with this many workers (default 2)"`
 }
 
 type IndexPlugin struct{}
@@ -74,6 +78,13 @@ func (self IndexPlugin) Call(
 		err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 		if err != nil {
 			scope.Log("index: %s", err)
+			return
+		}
+
+		// Make sure we are allowed to write there.
+		err = file.CheckPath(arg.Output)
+		if err != nil {
+			scope.Log("index: %v", err)
 			return
 		}
 
@@ -110,12 +121,23 @@ func (self IndexPlugin) Call(
 		idx_mapping.DefaultMapping = doc_mapping
 		idx_mapping.DefaultAnalyzer = arg.DefaultAnalyzer
 
-		index, err := bleve.New(arg.Output, idx_mapping)
+		index, err := api.NewIndex(arg.Output, idx_mapping)
 		if err != nil {
 			scope.Log("index: %v", err)
 			return
 		}
+
 		defer index.Close()
+
+		workers := 2
+		if arg.Workers > 0 {
+			workers = int(arg.Workers)
+		}
+
+		pool := pond.NewPool(workers)
+
+		// Wait here for all the workers on exit.
+		defer pool.StopAndWait()
 
 		row_chan := arg.Query.Eval(ctx, scope)
 
@@ -128,27 +150,31 @@ func (self IndexPlugin) Call(
 					return
 				}
 
-				row_dict := vfilter.RowToDict(ctx, scope, row)
-				doc_id, pres := row_dict.GetString("_id")
-				if !pres {
-					doc_id = fmt.Sprintf("%v", utils.GetId())
-				}
+				pool.Submit(func() {
+					row_dict := vfilter.RowToDict(ctx, scope, row)
 
-				m := make(map[string]string)
-				for _, item := range row_dict.Items() {
-					m[item.Key] = utils.ToString(item.Value)
-				}
+					doc_id, pres := row_dict.GetString("_id")
+					if !pres {
+						doc_id = fmt.Sprintf("%v", utils.GetId())
+					}
 
-				err := index.Index(doc_id, m)
-				if err != nil {
-					scope.Log("index: %v", err)
-				}
-				select {
-				case <-ctx.Done():
-					return
+					m := make(map[string]string)
+					for _, item := range row_dict.Items() {
+						m[item.Key] = utils.ToString(item.Value)
+					}
 
-				case output_chan <- row_dict:
-				}
+					err := index.Index(doc_id, m)
+					if err != nil {
+						scope.Log("index: %v", err)
+					}
+
+					select {
+					case <-ctx.Done():
+						return
+
+					case output_chan <- row_dict:
+					}
+				})
 			}
 		}
 
@@ -170,8 +196,8 @@ func (self IndexPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 
 type IndexSearchPluginArgs struct {
 	IndexPath   string   `vfilter:"required,field=path,doc=The file path to the index to open."`
-	SearchQuery string   `vfilter:"required,field=search,doc=A Bleve search query."`
-	Fields      []string `vfilter:"required,field=fields,doc=A list of fields to include from the index."`
+	SearchQuery string   `vfilter:"required,field=search,doc=A Bleve search query. See https://blevesearch.com/docs/Query-String-Query/"`
+	Fields      []string `vfilter:"optional,field=fields,doc=A list of fields to include from the index."`
 	Sort        []string `vfilter:"optional,field=sort,doc=The field to sort by (preceed with - to sort in descending order)."`
 	Start       uint64   `vfilter:"optional,field=start,doc=Row number to start."`
 }
@@ -204,7 +230,14 @@ func (self IndexSearchPlugin) Call(
 			return
 		}
 
-		index, err := bleve.Open(arg.IndexPath)
+		// Make sure we are allowed to write there.
+		err = file.CheckPath(arg.IndexPath)
+		if err != nil {
+			scope.Log("index: %v", err)
+			return
+		}
+
+		index, err := api.OpenIndex(arg.IndexPath)
 		if err != nil {
 			scope.Log("index_search: %v", err)
 			return
@@ -214,7 +247,11 @@ func (self IndexSearchPlugin) Call(
 		query := bleve.NewQueryStringQuery(arg.SearchQuery)
 		searchRequest := bleve.NewSearchRequest(query)
 
+		// If no fields specified, get them all
 		searchRequest.Fields = arg.Fields
+		if len(arg.Fields) == 0 {
+			searchRequest.Fields, _ = index.Fields()
+		}
 
 		if len(arg.Sort) > 0 {
 			searchRequest.SortBy(arg.Sort)
@@ -232,10 +269,21 @@ func (self IndexSearchPlugin) Call(
 			}
 
 			for _, hit := range result.Hits {
+
+				// Preverse the order of the fields since Bleve
+				// returns an unordered map.
+				row := ordereddict.NewDict()
+				for _, f := range searchRequest.Fields {
+					v, pres := hit.Fields[f]
+					if pres {
+						row.Set(f, v)
+					}
+				}
+
 				select {
 				case <-ctx.Done():
 					return
-				case output_chan <- hit.Fields:
+				case output_chan <- row:
 				}
 			}
 
@@ -257,7 +305,7 @@ func (self IndexSearchPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 	return &vfilter.PluginInfo{
 		Name:     "index_search",
 		Doc:      "Search a previously created index.",
-		ArgType:  type_map.AddType(scope, &IndexSearchPlugin{}),
+		ArgType:  type_map.AddType(scope, &IndexSearchPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 		Version:  1,
 	}
