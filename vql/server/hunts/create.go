@@ -303,7 +303,7 @@ func (self ScheduleHuntFunction) Info(scope vfilter.Scope, type_map *vfilter.Typ
 		Doc:      "Launch an artifact collection against a client.",
 		ArgType:  type_map.AddType(scope, &ScheduleHuntFunctionArg{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.START_HUNT, acls.ORG_ADMIN).Build(),
-		Version:  2,
+		Version:  3,
 	}
 }
 
