@@ -1531,7 +1531,7 @@
     required: true
   - name: permissions
     type: string
-    description: Permissions for the destination file (e.g. 'rw-rw-rwx' or '0755').
+    description: Permissions for the destination file (e.g. `rw-rw-rwx` or `0755`).
   - name: dir_permissions
     type: string
     description: Permissions for intermediate directories.
@@ -4479,7 +4479,7 @@
     FROM index_search(path=IndexPath, fields="Data", search="syslog")
     ```
   type: Plugin
-  version: 1
+  version: 2
   args:
   - name: query
     type: StoredQuery
@@ -4495,6 +4495,18 @@
     type: string
     description: The file path to create the index on.
     required: true
+  - name: workers
+    type: int64
+    description: Index with this many workers (default 2)
+  - name: purge
+    type: bool
+    description: If set we delete the index to start fresh
+  - name: batch
+    type: int64
+    description: Default batch size for index (default 1000)
+  - name: silent
+    type: bool
+    description: Do not forward events (this is faster)
   metadata:
     permissions: FILESYSTEM_WRITE
   platforms:
@@ -4503,6 +4515,26 @@
   description: Search a previously created index.
   type: Plugin
   version: 1
+  args:
+  - name: path
+    type: string
+    description: The file path to the index to open.
+    required: true
+  - name: search
+    type: string
+    description: A Bleve search query. See https://blevesearch.com/docs/Query-String-Query/
+    required: true
+  - name: fields
+    type: string
+    description: A list of fields to include from the index.
+    repeated: true
+  - name: sort
+    type: string
+    description: The field to sort by (preceed with - to sort in descending order).
+    repeated: true
+  - name: start
+    type: uint64
+    description: Row number to start.
   metadata:
     permissions: FILESYSTEM_READ
   platforms:
