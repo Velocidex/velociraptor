@@ -167,7 +167,7 @@ func (self IndexPlugin) Call(
 		row_chan := arg.Query.Eval(ctx, scope)
 		batch_rows := make([]vfilter.Row, 0, arg.BatchSize+1)
 
-		flush := func(batch_rows []vfilter.Row) {
+		flush := func() {
 			batch := index.NewBatch()
 			for _, row := range batch_rows {
 				row_dict := vfilter.RowToDict(ctx, scope, row)
@@ -204,7 +204,7 @@ func (self IndexPlugin) Call(
 		}
 
 		// Flush any outstanding rows on exit
-		defer flush(batch_rows)
+		defer flush()
 
 		for {
 			select {
@@ -217,7 +217,7 @@ func (self IndexPlugin) Call(
 
 				batch_rows = append(batch_rows, row)
 				if len(batch_rows) > int(arg.BatchSize) {
-					flush(batch_rows)
+					flush()
 					batch_rows = batch_rows[:0]
 				}
 			}
