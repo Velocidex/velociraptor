@@ -3,6 +3,7 @@ package docs
 import (
 	"archive/zip"
 	"context"
+	"os"
 
 	"github.com/Velocidex/velociraptor-site-search/api"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -82,7 +83,26 @@ func (self *DocManager) unpackIndex(
 
 	// Purge any existing indexes before we unpack the new index to
 	// ensure the files are properly closed.
-	api.PurgeCache()
+	err := api.PurgeCache()
+	if err != nil {
+		return err
+	}
+
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+	path_manager := paths.NewDocsIndexPathManager()
+	index_filename := datastore.AsFilestoreFilename(
+		db, self.config_obj, path_manager.Index())
+
+	// If the docs index already exists we can remove it for a
+	// smoother upgrade. This handles Bleve V1 -> Bleve V2 upgrade
+	// smoothly.
+	stats, err := os.Lstat(index_filename)
+	if err == nil && stats.IsDir() {
+		_ = os.RemoveAll(index_filename)
+	}
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	reader, err := file_store_factory.ReadFile(inventory_path)
@@ -131,8 +151,7 @@ func (self *DocManager) GetIndex(ctx context.Context) (res *api.Index, err error
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if self.index_filename == "" {
-
+	if self.indexFilename() == "" {
 		inventory_path, index_path, unpack, err := self.shouldUnpackTool(ctx)
 		if err != nil {
 			return nil, err
@@ -153,6 +172,7 @@ func (self *DocManager) GetIndex(ctx context.Context) (res *api.Index, err error
 		// The raw underlying filename on disk.
 		self.index_filename = datastore.AsFilestoreFilename(
 			db, self.config_obj, index_path)
+		self.index_filename_age = utils.GetTime().Now()
 	}
 
 	return api.OpenIndex(self.index_filename)

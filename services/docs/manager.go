@@ -3,6 +3,7 @@ package docs
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/Velocidex/velociraptor-site-search/api"
 	"github.com/blevesearch/bleve/v2"
@@ -19,7 +20,20 @@ type DocManager struct {
 
 	config_obj *config_proto.Config
 
-	index_filename string
+	index_filename     string
+	index_filename_age time.Time
+}
+
+// Debounce the filename a bit so we dont check too often.
+func (self *DocManager) indexFilename() string {
+	now := utils.GetTime().Now()
+
+	if self.index_filename != "" &&
+		now.Add(-10*time.Second).After(self.index_filename_age) {
+		return ""
+	}
+
+	return self.index_filename
 }
 
 func (self *DocManager) Search(
@@ -113,8 +127,6 @@ func init() {
 		Description: "Report information of currently opened Bleve indexes.",
 		ProfileWriter: func(ctx context.Context,
 			scope vfilter.Scope, output_chan chan vfilter.Row) {
-
-			utils.Debug(api.GetStats())
 
 			for _, item := range api.GetStats() {
 				output_chan <- item
