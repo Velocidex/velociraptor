@@ -3,6 +3,7 @@ package index
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/velociraptor-site-search/api"
@@ -51,6 +52,9 @@ type IndexPluginArgs struct {
 	DefaultAnalyzer string              `vfilter:"optional,field=default_analyzer,doc=The default analyzer to use."`
 	Output          string              `vfilter:"required,field=output,doc=The file path to create the index on."`
 	Workers         int64               `vfilter:"optional,field=workers,doc=Index with this many workers (default 2)"`
+	Purge           bool                `vfilter:"optional,field=purge,doc=If set we delete the index to start fresh"`
+	BatchSize       int64               `vfilter:"optional,field=batch,doc=Default batch size for index (default 1000)"`
+	Silent          bool                `vfilter:"optional,field=silent,doc=Do not forward events (this is faster)"`
 }
 
 type IndexPlugin struct{}
@@ -86,6 +90,27 @@ func (self IndexPlugin) Call(
 		if err != nil {
 			scope.Log("index: %v", err)
 			return
+		}
+
+		if arg.BatchSize == 0 {
+			arg.BatchSize = 1000
+		}
+
+		if arg.Purge {
+			err := api.PurgeCache()
+			if err != nil {
+				scope.Log("index: %v", err)
+				return
+			}
+
+			stat, err := os.Lstat(arg.Output)
+			if err == nil && stat.IsDir() {
+				err := os.RemoveAll(arg.Output)
+				if err != nil {
+					scope.Log("index: %v", err)
+					return
+				}
+			}
 		}
 
 		if arg.DefaultAnalyzer == "" {
@@ -140,6 +165,46 @@ func (self IndexPlugin) Call(
 		defer pool.StopAndWait()
 
 		row_chan := arg.Query.Eval(ctx, scope)
+		batch_rows := make([]vfilter.Row, 0, arg.BatchSize+1)
+
+		flush := func() {
+			batch := index.NewBatch()
+			for _, row := range batch_rows {
+				row_dict := vfilter.RowToDict(ctx, scope, row)
+
+				doc_id, pres := row_dict.GetString("_id")
+				if !pres {
+					doc_id = fmt.Sprintf("%v", utils.GetId())
+				}
+
+				m := make(map[string]string)
+				for _, item := range row_dict.Items() {
+					m[item.Key] = utils.ToString(item.Value)
+				}
+
+				err := batch.Index(doc_id, m)
+				if err != nil {
+					scope.Log("index: %v", err)
+				}
+
+				if !arg.Silent {
+					select {
+					case <-ctx.Done():
+						return
+
+					case output_chan <- row_dict:
+					}
+				}
+			}
+
+			err := index.Batch(batch)
+			if err != nil {
+				scope.Log("index: %v", err)
+			}
+		}
+
+		// Flush any outstanding rows on exit
+		defer flush()
 
 		for {
 			select {
@@ -150,31 +215,11 @@ func (self IndexPlugin) Call(
 					return
 				}
 
-				pool.Submit(func() {
-					row_dict := vfilter.RowToDict(ctx, scope, row)
-
-					doc_id, pres := row_dict.GetString("_id")
-					if !pres {
-						doc_id = fmt.Sprintf("%v", utils.GetId())
-					}
-
-					m := make(map[string]string)
-					for _, item := range row_dict.Items() {
-						m[item.Key] = utils.ToString(item.Value)
-					}
-
-					err := index.Index(doc_id, m)
-					if err != nil {
-						scope.Log("index: %v", err)
-					}
-
-					select {
-					case <-ctx.Done():
-						return
-
-					case output_chan <- row_dict:
-					}
-				})
+				batch_rows = append(batch_rows, row)
+				if len(batch_rows) > int(arg.BatchSize) {
+					flush()
+					batch_rows = batch_rows[:0]
+				}
 			}
 		}
 
@@ -190,7 +235,7 @@ func (self IndexPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Doc:      "Create a local index from a query.",
 		ArgType:  type_map.AddType(scope, &IndexPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
-		Version:  1,
+		Version:  2,
 	}
 }
 
