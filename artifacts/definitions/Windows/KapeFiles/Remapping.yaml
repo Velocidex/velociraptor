@@ -153,5 +153,6 @@ export: |
 
 sources:
   - query: |
-      SELECT remap(clear=TRUE, config=GetRemapping) AS Remapping
+      SELECT remap(clear=TRUE,
+         config=GetRemapping(FlowId=FlowId, ClientId=ClientId)) AS Remapping
       FROM scope()

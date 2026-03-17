@@ -1,33 +1,36 @@
 # Basic verification of some artifacts.
-Query: SELECT verify(artifact=Broken1) AS Broken1, verify(artifact=Broken2) AS Broken2, verify(artifact=Broken3) AS Broken3, verify(artifact=Warn1) AS Warn1 FROM scope()
+Query: SELECT verify(artifact=Broken1) AS Broken1, verify(artifact=Broken2) AS Broken2, verify(artifact=Broken3) AS Broken3, verify(artifact=Warn1) AS Warn1, verify(artifact=KWArgs) AS KWArgs, verify(artifact=NotCalled) AS NotCalled, verify(artifact=Suppressions) AS Suppressions FROM scope()
 Output: [
  {
   "Broken1": {
    "Artifact": "name: BrokenYaml\nsomeweirdfield: 1\n",
    "Permissions": null,
    "Errors": [
-    "yaml: unmarshal errors:\n  line 2: field someweirdfield not found in type proto.Artifact"
+    "yaml_error:YAML Error: yaml: unmarshal errors:\n  line 2: field someweirdfield not found in type proto.Artifact"
    ],
    "Warnings": null,
-   "Definitions": {}
+   "Definitions": {},
+   "Suppressions": null
   },
   "Broken2": {
    "Artifact": "name: BrokenQuery\nsources:\n- query: SELECT * FROM nosuchplugin()\n",
    "Permissions": null,
    "Errors": [
-    "BrokenQuery: query: Unknown plugin nosuchplugin()"
+    "artifact_vql_error:BrokenQuery: query: unknown_plugin:Unknown plugin nosuchplugin()"
    ],
    "Warnings": null,
-   "Definitions": {}
+   "Definitions": {},
+   "Suppressions": null
   },
   "Broken3": {
    "Artifact": "name: BrokenSubArtifact\nsources:\n- query: SELECT * FROM Artifact.No.Such.Artifact()\n",
    "Permissions": null,
    "Errors": [
-    "BrokenSubArtifact: query: Unknown artifact reference No.Such.Artifact"
+    "artifact_vql_error:BrokenSubArtifact: query: Unknown artifact reference No.Such.Artifact"
    ],
    "Warnings": null,
-   "Definitions": {}
+   "Definitions": {},
+   "Suppressions": null
   },
   "Warn1": {
    "Artifact": "name: WarnningExecve\nsources:\n- query: SELECT * FROM execve(argv=[\"ls\"])\n",
@@ -36,9 +39,89 @@ Output: [
    ],
    "Errors": null,
    "Warnings": [
-    "\u003cyellow\u003eSuggestion\u003c/\u003e: Add EXECVE to artifact's required_permissions or implied_permissions fields"
+    "required_permissions:Add EXECVE to artifact's required_permissions or implied_permissions fields"
    ],
-   "Definitions": {}
+   "Definitions": {},
+   "Suppressions": null
+  },
+  "KWArgs": {
+   "Artifact": "name: KWArgs\nsources:\n- query: |\n    LET Foo(X) = 1\n\n    // dict is a KWArgs function without required args\n    // alert is a KWArgs function with required args\n    LET X = SELECT dict(X=1, Y=1), alert(needs_name=\"Bar\")\n    FROM switch(a={\n       SELECT Foo FROM glob(`**`=dict(globs=\"*\"))\n    })\n\n    SELECT * FROM switch(a={\n      SELECT Foo(`**`=dict(X=1), X=2),\n             dict(A=1, `**`=dict())\n      FROM Artifact.Generic.Client.Info(`**`=dict(X=1), X=1)\n    }, `**`=dict())\n",
+   "Permissions": [
+    "FILESYSTEM_READ"
+   ],
+   "Errors": [
+    "artifact_vql_error:KWArgs: query: required_arg_missing:While calling function alert(), required arg name is not provided",
+    "artifact_vql_error:KWArgs: query: kwargs_mixed_call:Calling plugin `switch` with kwargs (**) as well as with arg `a`",
+    "artifact_vql_error:KWArgs: query: kwargs_mixed_call:Calling function `Foo` with kwargs (**) as well as with arg `X`",
+    "artifact_vql_error:KWArgs: query: kwargs_mixed_call:Calling function `dict` with kwargs (**) as well as with arg `A`",
+    "artifact_vql_error:KWArgs: query: kwargs_mixed_call:Calling plugin `Artifact.Generic.Client.Info` with kwargs (**) as well as with arg `X`"
+   ],
+   "Warnings": [
+    "symbol_mask_warn:Use of symbol `Foo` which might mask a LET definition of the same name"
+   ],
+   "Definitions": {
+    "Foo": {
+     "Type": "definition",
+     "Name": "Foo",
+     "Args": [
+      "X"
+     ],
+     "Defaults": null
+    },
+    "X": {
+     "Type": "definition",
+     "Name": "X",
+     "Args": null,
+     "Defaults": null
+    }
+   },
+   "Suppressions": null
+  },
+  "NotCalled": {
+   "Artifact": "name: NotCalled\nsources:\n- query: |\n    LET Foo(X) = X + 1\n    LET Bar = 1\n    LET Baz() = 2\n\n    SELECT Foo,   // Not calling with parameters\n           Bar(), // Calling as function but not defined as function\n           Baz(), // This is fine.\n           Bar    // Accessing as a symbol but defined with no parameters - this is fine.\n    FROM scope()\n",
+   "Permissions": null,
+   "Errors": null,
+   "Warnings": [
+    "symbol_mask_warn:Use of symbol `Foo` which might mask a LET definition of the same name"
+   ],
+   "Definitions": {
+    "Bar": {
+     "Type": "definition",
+     "Name": "Bar",
+     "Args": null,
+     "Defaults": null
+    },
+    "Baz": {
+     "Type": "definition",
+     "Name": "Baz",
+     "Args": [],
+     "Defaults": null
+    },
+    "Foo": {
+     "Type": "definition",
+     "Name": "Foo",
+     "Args": [
+      "X"
+     ],
+     "Defaults": null
+    }
+   },
+   "Suppressions": null
+  },
+  "Suppressions": {
+   "Artifact": "name: Suppressions\nsources:\n- query: |\n    // linter: symbol_mask_warn:\"host\"\n    SELECT host, all FROM scope()\n",
+   "Permissions": null,
+   "Errors": null,
+   "Warnings": [
+    "symbol_mask_warn:Use of symbol `all` which might mask a function of the same name"
+   ],
+   "Definitions": {},
+   "Suppressions": [
+    {
+     "Name": "symbol_mask_warn",
+     "Subject": "host"
+    }
+   ]
   }
  }
 ]
@@ -88,7 +171,7 @@ Output: [
     "name": "BrokenYaml",
     "passed": false,
     "errors": [
-     "yaml: unmarshal errors:\n  line 2: field someweirdfield not found in type proto.Artifact"
+     "yaml_error:YAML Error: yaml: unmarshal errors:\n  line 2: field someweirdfield not found in type proto.Artifact"
     ],
     "warnings": [],
     "path": "invalid1.yaml"
@@ -97,7 +180,7 @@ Output: [
     "name": "BrokenQuery",
     "passed": false,
     "errors": [
-     "BrokenQuery: query: Unknown plugin nosuchplugin()"
+     "artifact_vql_error:BrokenQuery: query: unknown_plugin:Unknown plugin nosuchplugin()"
     ],
     "warnings": [],
     "path": "invalid2.yaml"
@@ -107,7 +190,7 @@ Output: [
     "passed": true,
     "errors": [],
     "warnings": [
-     "\u003cyellow\u003eSuggestion\u003c/\u003e: Add EXECVE to artifact's required_permissions or implied_permissions fields"
+     "required_permissions:Add EXECVE to artifact's required_permissions or implied_permissions fields"
     ],
     "path": "invalid3.yaml"
    }
@@ -124,17 +207,19 @@ Output: [
    "Artifact": "name: Generic.Client.Info\nsources:\n- query: SELECT * FROM scope()\n",
    "Permissions": null,
    "Errors": [
-    "Unable to override built in artifact Generic.Client.Info"
+    "yaml_error:YAML Error: Unable to override built in artifact Generic.Client.Info"
    ],
    "Warnings": null,
-   "Definitions": {}
+   "Definitions": {},
+   "Suppressions": null
   },
   "Override2": {
    "Artifact": "name: Override2\nsources:\n- query: SELECT * FROM scope()\n",
    "Permissions": null,
    "Errors": null,
    "Warnings": null,
-   "Definitions": {}
+   "Definitions": {},
+   "Suppressions": null
   }
  }
 ]

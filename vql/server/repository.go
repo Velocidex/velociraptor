@@ -77,8 +77,14 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 	switch def_type {
 	case "client", "client_event", "":
 		permission = acls.ARTIFACT_WRITER
+
 	case "server", "server_event", "notebook":
 		permission = acls.SERVER_ARTIFACT_WRITER
+
+	case "internal":
+		// Not an actual error but we are not allowed to set those
+		return vfilter.Null{}
+
 	default:
 		scope.Log("artifact_set: artifact type %v invalid", definition.Type)
 		return vfilter.Null{}

@@ -41,6 +41,8 @@ parameters:
 
 sources:
  - query: |
+        // linter: symbol_mask_warn:source|user
+
         LET hostname_lu <= SELECT Fqdn FROM info()
         LET HKEY_USERS <= pathspec(parse="HKEY_USERS", path_type="registry")
 
