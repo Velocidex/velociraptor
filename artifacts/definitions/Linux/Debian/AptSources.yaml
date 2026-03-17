@@ -169,9 +169,9 @@ export: |
 
         /* Convert a string of key–value pairs to a dict, and use consistent
            option names: */
-        LET OptStringToDict(string, flatten) = to_dict(item={
+        LET OptStringToDict(string, should_flatten) = to_dict(item={
             SELECT NormaliseOpts(string=Key)+OpName(op=Op) AS _key,
-                if(condition=flatten, then=Value,
+                if(condition=should_flatten, then=Value,
                     else=join(array=Value, sep=' ')) AS _value
             FROM OptStringToKeyValues(string=string)
         })
@@ -194,12 +194,13 @@ export: |
             )
 
         /* Parse a one-line deb sources.list file and output a dict: */
-        LET DebOneLine_Dict(OSPath, flatten) = SELECT OSPath, *
+        LET DebOneLine_Dict(OSPath, should_flatten) = SELECT OSPath, *
             FROM foreach(row=DebOneLine_Opts(OSPath=OSPath),
                 query={SELECT _value +
-                        OptStringToDict(string=Options, flatten=flatten) AS Contents
+                        OptStringToDict(string=Options,
+                                        should_flatten=should_flatten) AS Contents
                     FROM items(item={SELECT Types, URIs, _Transport, _URIBase, Suites,
-                        if(condition=flatten, then=split(sep_string=' ',
+                        if(condition=should_flatten, then=split(sep_string=' ',
                             string=Components), else=Components) AS Components
                         FROM scope()
                     })
@@ -207,7 +208,7 @@ export: |
 
         /* Parse a one-line deb sources.list file with options in individual columns: */
         LET DebOneLine(OSPath) = SELECT OSPath, * FROM foreach(
-            row=DebOneLine_Dict(OSPath=OSPath, flatten=false),
+            row=DebOneLine_Dict(OSPath=OSPath, should_flatten=false),
             column='Contents'
         )
 
@@ -215,7 +216,7 @@ export: |
            columns and flatten: */
         LET DebOneLine_Flattened(OSPath) = SELECT OSPath, * FROM flatten(
             query={SELECT * FROM foreach(
-                row=DebOneLine_Dict(OSPath=OSPath, flatten=true),
+                row=DebOneLine_Dict(OSPath=OSPath, should_flatten=true),
                 column='Contents'
                 )
             })
@@ -293,10 +294,10 @@ export: |
 
         /* Parse a deb822 sources file section into a dict with consistent option
            names: */
-        LET Deb822_KeyValues(section, flatten) = SELECT to_dict(
+        LET Deb822_KeyValues(section, should_flatten) = SELECT to_dict(
             item={
                 SELECT NormaliseOpts(string=Key) as _key,
-                    if(condition=flatten, then=Value,
+                    if(condition=should_flatten, then=Value,
                         else=join(array=Value, sep=' ')) AS _value
                 FROM Deb822_KeyValues_(section=section)
             }) AS Contents
@@ -315,7 +316,7 @@ export: |
             row=Deb822Sections(OSPath=OSPath),
             query={SELECT OSPath, * FROM flatten(query={
                 SELECT * FROM foreach(
-                    row=Deb822_KeyValues(section=Section, flatten=true),
+                    row=Deb822_KeyValues(section=Section, should_flatten=true),
                     column='Contents'
                 )
             })}
@@ -331,7 +332,7 @@ export: |
         LET Deb822(OSPath) = SELECT * FROM foreach(
             row=Deb822Sections(OSPath=OSPath),
             query={SELECT OSPath, * FROM foreach(
-                row=Deb822_KeyValues(section=Section, flatten=false),
+                row=Deb822_KeyValues(section=Section, should_flatten=false),
                 column='Contents'
             )}
         )
@@ -345,13 +346,13 @@ export: |
         })
 
         /* Parse an apt sources/list file */
-        LET parse_aptsources(OSPath, flatten) = if(
+        LET parse_aptsources(OSPath, should_flatten) = if(
             condition=OSPath=~'.list$',
-            then=if(condition=flatten,
+            then=if(condition=should_flatten,
                 then=DebOneLine_Flattened(OSPath=OSPath),
                 else=DebOneLine(OSPath=OSPath)
             ),
-            else=if(condition=flatten,
+            else=if(condition=should_flatten,
                 then=Deb822_Flattened(OSPath=OSPath),
                 else=Deb822(OSPath=OSPath)
             )
@@ -361,7 +362,7 @@ export: |
            globs=linuxAptSourcesGlobs.ListGlobs)
 
         LET deb_sources = SELECT * FROM foreach(row=files,
-            query={SELECT * FROM parse_aptsources(OSPath=OSPath, flatten=true)}
+            query={SELECT * FROM parse_aptsources(OSPath=OSPath, should_flatten=true)}
         )
 
 parameters:
@@ -385,7 +386,7 @@ sources:
     query: |
         /* Output sources in a readable format: */
         SELECT * FROM foreach(row=files,
-            query={SELECT * FROM parse_aptsources(OSPath=OSPath, flatten=false)}
+            query={SELECT * FROM parse_aptsources(OSPath=OSPath, should_flatten=false)}
         )
     notebook:
       - type: vql_suggestion

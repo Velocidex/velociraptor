@@ -28,6 +28,8 @@ precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
   - query: |
+        // linter: symbol_mask_warn:url
+
         LET places_files = SELECT * from foreach(
           row={
              SELECT Uid, Name AS User,

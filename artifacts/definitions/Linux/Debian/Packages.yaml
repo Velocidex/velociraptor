@@ -104,6 +104,7 @@ sources:
         WHERE Response = 200 OR NOT log(message="Error fetching snap: %v",
                                         args=Content)
 
+      // linter: symbol_mask_warn:version
       SELECT *
       FROM foreach(row=SnapSocketCheck,
                    query={
