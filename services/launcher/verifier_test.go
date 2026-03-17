@@ -39,7 +39,7 @@ var (
 		// With some parameters
 		{"Define VQL function - Do not pass arg",
 			"LET infoxxx(X) = SELECT * FROM info() SELECT * FROM infoxxx()",
-			"While calling VQL definition infoxxx(), required arg X is not provided"},
+			`While calling VQL definition infoxxx.+, required arg X is not provided`},
 
 		// With some parameters
 		{"Define VQL function - Pass incorrect arg",
@@ -52,7 +52,7 @@ var (
 
 		{"Function with args - Missing required arg",
 			`SELECT parse_string_with_regex(string='hello') FROM scope()`,
-			"While calling vql function parse_string_with_regex.+, required arg regex is not called"},
+			"While calling function parse_string_with_regex.+, required arg regex is not provided"},
 
 		{"Function with args - delimited by `",
 			"SELECT parse_string_with_regex(`string`='hello', `regex`='bar') FROM scope()",
@@ -76,8 +76,10 @@ func (self *LauncherTestSuite) TestVerifyVQL() {
 				self.T().Fatalf("%v: Expected no error but got %v",
 					tc.desc, errs)
 			}
+			assert.Regexp(self.T(), tc.error_regex, fmt.Sprintf("%v", errs))
 
-			assert.Regexp(self.T(), fmt.Sprintf("%v", errs), tc.error_regex)
+		} else if tc.error_regex != "" {
+			self.T().Fatalf("%v: Expected error but got no errors", tc.desc)
 		}
 	}
 }
@@ -91,27 +93,27 @@ var (
 		{"Invalid artifact precondition", `
 name: Test
 precondition: SELECT * FROM infox()
-`, "Test: precondition: Unknown plugin infox()"},
+`, "Test: precondition: unknown_plugin:Unknown plugin infox.+"},
 
 		{"Invalid source precondition", `
 name: Test
 sources:
 - name: Source
   precondition: SELECT * FROM infox()
-`, "Test/Source: precondition: Unknown plugin infox()"},
+`, "Test/Source: precondition: unknown_plugin:Unknown plugin infox.+"},
 
 		{"Invalid export", `
 name: TestExport
 export:
   SELECT * FROM infox()
-`, "TestExport: export: Unknown plugin infox()"},
+`, "TestExport: export: unknown_plugin:Unknown plugin infox.+"},
 
 		{"Invalid source query", `
 name: Test
 sources:
 - name: Source
   query: SELECT * FROM infox()
-`, "Test/Source: query: Unknown plugin infox()"},
+`, "Test/Source: query: unknown_plugin:Unknown plugin infox.+"},
 
 		{"Define in export, use in query", `
 name: TestExport
@@ -140,8 +142,8 @@ imports:
 
 sources:
 - name: Source
-  query: SELECT * FROM infox()
-`, "TestImport: invalid import: Artifact TestDoesNotExist not found"},
+  query: SELECT * FROM info()
+`, "TestImport: Artifact TestDoesNotExist not found"},
 
 		{"Import artifact that does not export anything", `
 name: TestImport
@@ -150,8 +152,59 @@ imports:
 
 sources:
 - name: Source
-  query: SELECT * FROM infox()
-`, "TestImport: invalid import: Artifact Test does not export anything"},
+  query: SELECT * FROM info()
+`, "TestImport: Artifact Test does not export anything"},
+
+		// Test supporessions
+		{"Suppress invalid plugin", `
+name: Test
+precondition: |
+   // linter: unknown_plugin:infox
+   SELECT * FROM infox()
+`, ""},
+
+		{"Suppress invalid import", `
+name: Test
+imports:
+  - TestDoesNotExist
+
+sources:
+- name: Source
+  query: |
+    // linter: invalid_import:TestDoesNotExist
+    SELECT * FROM info()
+`, ""},
+
+		{"Suppress kwarg", `
+name: Test
+sources:
+- name: Source
+  query: |
+    // linter: kwargs_mixed_call:alert
+    SELECT alert(noname='Alert', ` + "`**`" + `=dict())
+    FROM info()
+`, ""},
+
+		{"Suppress all errors with the same name", `
+name: Test
+sources:
+- name: Source
+  query: |
+    // The following linter directive matches all plugin names
+    // linter: kwargs_mixed_call:
+    SELECT alert(noname='Alert', ` + "`**`" + `=dict())
+    FROM info()
+`, ""},
+
+		{"Invalid linter directive", `
+name: Test
+sources:
+- name: Source
+  query: |
+    // linter: unknown_XXXXX:[invalid_regex
+    // linter: kwargs_mixed_call:[invalid_regex
+    SELECT FROM info()
+`, "Suppression unknown_XXXXX not known.+Suppression kwargs_mixed_call not valid: error parsing regexp"},
 	}
 )
 

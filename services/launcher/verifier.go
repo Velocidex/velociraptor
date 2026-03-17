@@ -3,6 +3,7 @@ package launcher
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -12,11 +13,22 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 var (
 	api_description = &ApiDescription{}
+	error_messages  = map[string]string{
+		"E001": "",
+	}
 )
+
+type Suppression struct {
+	Name    string
+	Subject string
+
+	subjectRegex *regexp.Regexp
+}
 
 // Contains the result of the static analysis.
 type AnalysisState struct {
@@ -26,15 +38,20 @@ type AnalysisState struct {
 	Warnings    []string
 
 	// Keep track of existing definitions in LET queries.
-	Definitions map[string]vfilter.DefinitionSite
+	Definitions  map[string]vfilter.DefinitionSite
+	Suppressions []Suppression
 }
 
-func (self *AnalysisState) SetError(err error) {
-	self.Errors = append(self.Errors, err.Error())
+func (self *AnalysisState) SetError(
+	name string, message string, args ...interface{}) {
+	if self.matchSuppression(name, args...) {
+		return
+	}
+	self.Errors = append(self.Errors, fmt.Sprintf(name+":"+message, args...))
 }
 
 func (self *AnalysisState) AnalyseCall(
-	callsite vfilter.CallSite, desc CallDesciptor) {
+	callsite vfilter.CallSite, desc CallDescriptor) {
 	self.Permissions = utils.Sort(utils.DeduplicateStringSlice(
 		append(self.Permissions, desc.Permissions...)))
 }
@@ -70,8 +87,8 @@ func (self *AnalysisState) AnalyseArtifactRequiredPermissions(
 	// about all permissions that are not required
 	for _, perm := range self.Permissions {
 		if !utils.InString(implied_permissions, perm) {
-			self.Warnings = append(self.Warnings,
-				fmt.Sprintf("<yellow>Suggestion</>: Add %v to artifact's required_permissions or implied_permissions fields", perm))
+			emitWarning(REQUIRED_PERMISSIONS, self,
+				REQUIRED_PERMISSIONS_MSG, perm)
 		}
 	}
 }
@@ -85,14 +102,14 @@ func NewAnalysisState(artifact string) *AnalysisState {
 
 type Required bool
 
-type CallDesciptor struct {
+type CallDescriptor struct {
 	ArgsRequired map[string]Required
 	Permissions  []string
 
 	FreeFormArgs bool
 }
 
-func (self *CallDesciptor) SetPermissions(api *api_proto.Completion) {
+func (self *CallDescriptor) SetPermissions(api *api_proto.Completion) {
 	if api.Metadata != nil {
 		perms, pres := api.Metadata["permissions"]
 		if pres {
@@ -101,8 +118,8 @@ func (self *CallDesciptor) SetPermissions(api *api_proto.Completion) {
 	}
 }
 
-func NewCallDesciptor(api *api_proto.Completion) CallDesciptor {
-	res := &CallDesciptor{
+func NewCallDescriptor(api *api_proto.Completion) CallDescriptor {
+	res := &CallDescriptor{
 		ArgsRequired: make(map[string]Required),
 		FreeFormArgs: api.FreeFormArgs,
 	}
@@ -112,15 +129,15 @@ func NewCallDesciptor(api *api_proto.Completion) CallDesciptor {
 }
 
 type ApiDescription struct {
-	functions map[string]CallDesciptor
-	plugins   map[string]CallDesciptor
+	functions map[string]CallDescriptor
+	plugins   map[string]CallDescriptor
 }
 
 func (self *ApiDescription) init() error {
 	// Initialize if needed
 	if self.functions == nil || self.plugins == nil {
-		self.functions = make(map[string]CallDesciptor)
-		self.plugins = make(map[string]CallDesciptor)
+		self.functions = make(map[string]CallDescriptor)
+		self.plugins = make(map[string]CallDescriptor)
 
 		apis, err := utils.LoadApiDescription()
 		if err != nil {
@@ -129,7 +146,7 @@ func (self *ApiDescription) init() error {
 
 		for _, api := range apis {
 			if api.Type == "Function" {
-				desc := NewCallDesciptor(api)
+				desc := NewCallDescriptor(api)
 
 				// Ignore ** kwargs type of call.
 				desc.ArgsRequired["**"] = Required(false)
@@ -139,7 +156,7 @@ func (self *ApiDescription) init() error {
 				self.functions[api.Name] = desc
 			}
 			if api.Type == "Plugin" {
-				desc := NewCallDesciptor(api)
+				desc := NewCallDescriptor(api)
 
 				// Ignore ** kwargs type of call.
 				desc.ArgsRequired["**"] = Required(false)
@@ -156,11 +173,13 @@ func (self *ApiDescription) init() error {
 func (self *ApiDescription) verifyArtifact(
 	ctx context.Context, config_obj *config_proto.Config,
 	repository services.Repository, artifact_name string,
-	callsite vfilter.CallSite) (res []error) {
+	callsite vfilter.CallSite,
+	state *AnalysisState, res []error) []error {
 
 	artifact, pres := repository.Get(ctx, config_obj, artifact_name)
 	if !pres {
-		return []error{fmt.Errorf("Query calls Unknown artifact %v", artifact_name)}
+		return emitError(UNKNOWN_ARTIFACT_IN_QUERY, state, res,
+			UNKNOWN_ARTIFACT_IN_QUERY_MSG, artifact_name)
 	}
 
 	parameters := make(map[string]bool)
@@ -174,13 +193,166 @@ func (self *ApiDescription) verifyArtifact(
 	}
 
 	for _, arg := range callsite.Args {
+		// If the artifact is called with kwargs we really have no
+		// idea and we can not verify it at all - So just give up.
+		if arg == "**" {
+			return self.checkKWArgs(state, callsite, res)
+		}
 		_, pres := parameters[arg]
 		if !pres {
-			res = append(res, fmt.Errorf("Call to %v contains unknown parameter %v",
-				callsite.Name, arg))
+			res = emitError(UNKNOWN_PARAMETER_IN_CALL, state, res,
+				UNKNOWN_PARAMETER_IN_CALL_MSG,
+				callsite.Name, arg)
 		}
 	}
 
+	return res
+}
+
+// When calling a plugin with a ** kwargs we can not really do any of
+// the callsite checks - We have no idea if we are calling required or
+// optional args. The only check we can do is to make sure that the
+// caller does not mix ** with regular args.
+func (self *ApiDescription) checkKWArgs(
+	state *AnalysisState, callsite vfilter.CallSite, errors []error) []error {
+
+	for _, a := range callsite.Args {
+		if a == "**" {
+			continue
+		}
+
+		errors = emitError(KWARGS_MIXED_CALL, state, errors,
+			KWARGS_MIXED_CALL_MSG, callsite.Name, a, callsite.Type)
+	}
+
+	return errors
+}
+
+func (self *ApiDescription) verifySymbol(
+	callsite vfilter.CallSite,
+	state *AnalysisState,
+	res []error) []error {
+
+	// Ignore some well known plugins that can be accessed as a symbol
+	switch callsite.Name {
+	case "Artifact":
+		return res
+	}
+
+	// Check if the symbol is masking a plugin, function or LET
+	// definition
+	symbol_type := "plugin"
+	_, pres := self.plugins[callsite.Name]
+	if !pres {
+		symbol_type = "function"
+		_, pres = self.functions[callsite.Name]
+		if !pres {
+			symbol_type = "LET definition"
+			var def vfilter.DefinitionSite
+			def, pres = state.Definitions[callsite.Name]
+			// If the definition is not a function definition it is ok
+			// to call it directly.
+			if pres && def.Args == nil {
+				pres = false
+			}
+		}
+	}
+
+	if pres {
+		emitWarning(SYMBOL_MASK_WARN, state,
+			SYMBOL_MASK_WARN_MSG, callsite.Name, symbol_type)
+	}
+
+	return res
+}
+
+func (self *ApiDescription) verifyLETCall(
+	callsite vfilter.CallSite, state *AnalysisState, res []error) []error {
+	// Handle LET definitions
+	desc, pres := state.Definitions[callsite.Name]
+	if !pres {
+		return emitError(UNKNOWN_PLUGIN, state, res,
+			UNKNOWN_PLUGIN_MSG, callsite.Name, callsite.Type)
+	}
+
+	if desc.Args == nil && callsite.Args != nil {
+		res = emitError(CALL_AS_FUNCTION, state, res,
+			CALL_AS_FUNCTION_MSG, callsite.Name)
+	}
+
+	for _, arg := range callsite.Args {
+		if arg == "**" {
+			res = self.checkKWArgs(state, callsite, res)
+			break
+		}
+
+		// The callsite is calling some unknown
+		// parameter.
+		if !utils.InString(desc.Args, arg) {
+			res = emitError(INVALID_ARG, state, res,
+				INVALID_ARG_FOR_DEFINITION_MSG, arg, callsite.Name)
+		}
+	}
+
+	// Now check if any of the required args are missing
+	for _, arg := range desc.Args {
+		// The arg has a default so the caller does not have
+		// to specify it.
+		if utils.InString(desc.Defaults, arg) {
+			continue
+		}
+
+		// The definition parameter is missing from the
+		// caller's args - this is required so we need to
+		// error.
+		if !utils.InString(callsite.Args, arg) {
+			res = emitError(REQUIRED_ARG_MISSING, state, res,
+				REQUIRED_ARG_MISSING_MSG, arg, callsite.Name)
+		}
+	}
+
+	return res
+}
+
+func (self *ApiDescription) verifyPluginCall(
+	callsite vfilter.CallSite,
+	state *AnalysisState,
+	descriptor_lookup map[string]CallDescriptor,
+	res []error) []error {
+	desc, pres := descriptor_lookup[callsite.Name]
+	if !pres {
+		return self.verifyLETCall(callsite, state, res)
+	}
+	// Plugin is found as a regular plugin.
+
+	state.AnalyseCall(callsite, desc)
+
+	for _, arg := range callsite.Args {
+		if arg == "**" {
+			return self.checkKWArgs(state, callsite, res)
+		}
+
+		// If the plugin accepts FreeFormArgs we can call it
+		// with any arg but otherwise we can only use a
+		// required arg.
+		if !desc.FreeFormArgs {
+			_, pres := desc.ArgsRequired[arg]
+			if !pres {
+				res = emitError(INVALID_ARG, state, res,
+					INVALID_ARG_FOR_PLUGIN_MSG,
+					arg, callsite.Type, callsite.Name)
+			}
+		}
+	}
+
+	// Now check if any of the required args are missing
+	for arg, required := range desc.ArgsRequired {
+		if bool(required) && !utils.InString(callsite.Args, arg) {
+			res = emitError(REQUIRED_ARG_MISSING, state, res,
+				REQUIRED_ARG_MISSING_FOR_PLUGIN_MSG,
+				arg, callsite.Type, callsite.Name)
+		}
+	}
 	return res
 }
 
@@ -198,7 +370,7 @@ func (self *ApiDescription) VerifyCallSite(
 	if strings.HasPrefix(callsite.Name, "Artifact.") {
 		artifact_name := strings.TrimPrefix(callsite.Name, "Artifact.")
 		return self.verifyArtifact(ctx, config_obj,
-			repository, artifact_name, callsite)
+			repository, artifact_name, callsite, state, res)
 	}
 
 	// If the callsite contains a . we have no idea what it
@@ -209,120 +381,15 @@ func (self *ApiDescription) VerifyCallSite(
 	}
 
 	if callsite.Type == "plugin" {
-		desc, pres := self.plugins[callsite.Name]
-		if !pres {
-			// Handle LET definitions
-			desc, pres := state.Definitions[callsite.Name]
-			if !pres {
-				res = append(res, fmt.Errorf(
-					"Unknown plugin %v()", callsite.Name))
-			}
-
-			for _, arg := range callsite.Args {
-				// The callsite is calling some unknown parameter
-				if !utils.InString(desc.Args, arg) {
-					res = append(res, fmt.Errorf(
-						"Invalid arg %v for VQL definition %v",
-						arg, callsite.Name))
-				}
-			}
-
-			// Now check if any of the required args are missing
-			for _, arg := range desc.Args {
-				// The arg has a default so the caller does not have
-				// to specify it.
-				if utils.InString(desc.Defaults, arg) {
-					continue
-				}
-
-				// The definition parameter is missing from the
-				// caller's args - this is required so we need to
-				// error.
-				if !utils.InString(callsite.Args, arg) {
-					res = append(res, fmt.Errorf(
-						"While calling VQL definition %v(), required arg %v is not provided",
-						callsite.Name, arg))
-				}
-			}
-
-			// Plugin is found as a regular plugin.
-		} else if !desc.FreeFormArgs {
-			state.AnalyseCall(callsite, desc)
-
-			for _, arg := range callsite.Args {
-				_, pres := desc.ArgsRequired[arg]
-				if !pres {
-					res = append(res, fmt.Errorf(
-						"Invalid arg %v for plugin %v()",
-						arg, callsite.Name))
-				}
-			}
-
-			// Now check if any of the required args are missing
-			for arg, required := range desc.ArgsRequired {
-				if bool(required) && !utils.InString(callsite.Args, arg) {
-					res = append(res, fmt.Errorf(
-						"While calling plugin %v(), required arg %v is not provided",
-						callsite.Name, arg))
-				}
-			}
-		}
+		return self.verifyPluginCall(callsite, state, self.plugins, res)
 	}
 
 	if callsite.Type == "function" {
-		desc, pres := self.functions[callsite.Name]
-		if !pres {
-			// Is this already defined?
-			desc, pres := state.Definitions[callsite.Name]
-			if !pres {
-				res = append(res, fmt.Errorf(
-					"Unknown function %v()", callsite.Name))
-			}
+		return self.verifyPluginCall(callsite, state, self.functions, res)
+	}
 
-			for _, arg := range callsite.Args {
-				if !utils.InString(desc.Args, arg) {
-					res = append(res, fmt.Errorf(
-						"Invalid arg %v for VQL definition %v",
-						arg, callsite.Name))
-				}
-			}
-
-			// Now check if any of the required args are missing
-			for _, arg := range desc.Args {
-				// The arg has a default so the caller does not have
-				// to specify it.
-				if utils.InString(desc.Defaults, arg) {
-					continue
-				}
-
-				if !utils.InString(callsite.Args, arg) {
-					res = append(res, fmt.Errorf(
-						"While calling VQL definition %v(), required arg %v is not provided",
-						callsite.Name, arg))
-				}
-			}
-
-		} else if !desc.FreeFormArgs {
-			state.AnalyseCall(callsite, desc)
-
-			for _, arg := range callsite.Args {
-				_, pres := desc.ArgsRequired[arg]
-				if !pres {
-					res = append(res, fmt.Errorf(
-						"Invalid arg %v for function %v()",
-						arg, callsite.Name))
-				}
-			}
-
-			// Now check if any of the required args are missing
-			for arg, required := range desc.ArgsRequired {
-				if bool(required) && !utils.InString(callsite.Args, arg) {
-					res = append(res, fmt.Errorf(
-						"While calling vql function %v(), required arg %v is not called",
-						callsite.Name, arg))
-				}
-			}
-		}
+	if callsite.Type == "symbol" {
+		return self.verifySymbol(callsite, state, res)
 	}
 
 	return res
@@ -348,7 +415,7 @@ func VerifyVQL(ctx context.Context, config_obj *config_proto.Config,
 	// available.
 	for _, vql := range vqls {
 		// Visit the VQL looking for plugin callsites.
-		visitor := vfilter.NewVisitor(scope, vfilter.CollectCallSites)
+		visitor := vfilter.NewVisitor(scope, vfilter.CollectDefinitionSites)
 		visitor.Visit(vql)
 
 		for _, def := range visitor.Definitions {
@@ -383,17 +450,24 @@ func VerifyArtifact(
 	artifact *artifacts_proto.Artifact,
 	state *AnalysisState) {
 
+	scope := vql_subsystem.MakeScope()
+
+	// First gather all the suppressions from all comments in VQL
+	// sections in this artifact.
+	gatherSuppressions(scope, state, artifact)
+
 	preamble := ""
 	for _, imp := range artifact.Imports {
 		dep, pres := repository.Get(ctx, config_obj, imp)
 		if !pres {
-			state.SetError(fmt.Errorf(
-				"%v: invalid import: Artifact %v not found", artifact.Name, imp))
+			state.SetError(
+				INVALID_IMPORT, INVALID_IMPORT_MSG,
+				imp, artifact.Name)
 		} else {
 			if dep.Export == "" {
-				state.SetError(fmt.Errorf(
-					"%v: invalid import: Artifact %v does not export anything",
-					artifact.Name, imp))
+				state.SetError(
+					INVALID_IMPORT, INVALID_IMPORT_NO_EXPORT_MSG,
+					imp, artifact.Name)
 
 			} else {
 				preamble += dep.Export
@@ -404,16 +478,18 @@ func VerifyArtifact(
 	if artifact.Precondition != "" {
 		for _, err := range VerifyVQL(ctx, config_obj,
 			artifact.Precondition, repository, state) {
-			state.SetError(fmt.Errorf(
-				"%v: precondition: %w", artifact.Name, err))
+			state.SetError(
+				ARTIFACT_VQL_ERROR, ARTIFACT_VQL_PRECOND_MSG,
+				artifact.Name, err)
 		}
 	}
 
 	if artifact.Export != "" {
 		for _, err := range VerifyVQL(ctx, config_obj,
 			preamble+artifact.Export, repository, state) {
-			state.SetError(fmt.Errorf(
-				"%v: export: %w", artifact.Name, err))
+			state.SetError(
+				ARTIFACT_VQL_ERROR, ARTIFACT_VQL_EXPORT_MSG,
+				artifact.Name, err)
 		}
 
 		preamble += artifact.Export
@@ -435,24 +511,83 @@ func VerifyArtifact(
 			err := GetQueryDependencies(ctx, config_obj,
 				repository, query, 0, dependency)
 			if err != nil {
-				state.SetError(fmt.Errorf("%v: query: %w", name, err))
+				state.SetError(
+					ARTIFACT_VQL_ERROR, ARTIFACT_VQL_QUERY_MSG,
+					name, err)
 				continue
 			}
 
 			// Now check for broken callsites
 			for _, err := range VerifyVQL(ctx, config_obj,
 				query, repository, state) {
-				state.SetError(fmt.Errorf("%v: query: %w", name, err))
+				state.SetError(
+					ARTIFACT_VQL_ERROR, ARTIFACT_VQL_QUERY_MSG, name, err)
 			}
 		}
 
 		if s.Precondition != "" {
 			for _, err := range VerifyVQL(ctx, config_obj,
 				s.Precondition, repository, state) {
-				state.SetError(fmt.Errorf("%v: precondition: %w", name, err))
+				state.SetError(ARTIFACT_VQL_ERROR,
+					ARTIFACT_VQL_PRECOND_MSG, name, err)
 			}
 		}
 	}
 
 	state.AnalyseArtifactRequiredPermissions(artifact)
+}
+
+// Gather the different supporession in different areas of the
+// artifact. NOTE: Suppressions declared in any section of the
+// artifact apply to the entire artifact.
+func gatherSuppressions(
+	scope types.Scope, state *AnalysisState, artifact *artifacts_proto.Artifact) {
+
+	gatherSuppressionFromQuery(scope, state, artifact.Precondition)
+	gatherSuppressionFromQuery(scope, state, artifact.Export)
+	for _, s := range artifact.Sources {
+		gatherSuppressionFromQuery(scope, state, s.Precondition)
+		gatherSuppressionFromQuery(scope, state, s.Query)
+	}
+}
+
+func gatherSuppressionFromQuery(
+	scope types.Scope, state *AnalysisState, query string) {
+
+	if query == "" {
+		return
+	}
+
+	vqls, err := vfilter.MultiParseWithComments(query)
+	if err != nil {
+		return
+	}
+
+	for _, vql := range vqls {
+		// Visit the VQL looking for plugin callsites.
+		visitor := vfilter.NewVisitor(scope, vfilter.CollectComments)
+		visitor.Visit(vql)
+
+		state.ParseSuppressions(visitor.Comments)
+	}
+}
+
+func emitError(name string, state *AnalysisState,
+	res []error, message string, args ...interface{}) []error {
+
+	if state.matchSuppression(name, args...) {
+		return res
+	}
+
+	return append(res, fmt.Errorf(name+":"+message, args...))
+}
+
+func emitWarning(name string, state *AnalysisState,
+	message string, args ...interface{}) {
+	if state.matchSuppression(name, args...) {
+		return
+	}
+
+	state.Warnings = append(state.Warnings,
+		fmt.Sprintf(name+":"+message, args...))
 }

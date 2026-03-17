@@ -68,7 +68,7 @@ func (self VerifyFunction) Call(ctx context.Context,
 				AllowOverridingAlias: true,
 			})
 		if err != nil {
-			state.SetError(err)
+			state.SetError(launcher.YAML_ERROR, launcher.YAML_ERROR_MSG, err)
 			return state
 		}
 	}
