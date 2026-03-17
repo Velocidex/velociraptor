@@ -22,19 +22,61 @@ Parameters:
     name: Generic.Client.Info
     sources:
     - query: SELECT * FROM scope()
-  
+
   Override2: |
     name: Override2
     sources:
     - query: SELECT * FROM scope()
 
+  KWArgs: |
+    name: KWArgs
+    sources:
+    - query: |
+        LET Foo(X) = 1
+
+        // dict is a KWArgs function without required args
+        // alert is a KWArgs function with required args
+        LET X = SELECT dict(X=1, Y=1), alert(needs_name="Bar")
+        FROM switch(a={
+           SELECT Foo FROM glob(`**`=dict(globs="*"))
+        })
+
+        SELECT * FROM switch(a={
+          SELECT Foo(`**`=dict(X=1), X=2),
+                 dict(A=1, `**`=dict())
+          FROM Artifact.Generic.Client.Info(`**`=dict(X=1), X=1)
+        }, `**`=dict())
+
+  NotCalled: |
+    name: NotCalled
+    sources:
+    - query: |
+        LET Foo(X) = X + 1
+        LET Bar = 1
+        LET Baz() = 2
+
+        SELECT Foo,   // Not calling with parameters
+               Bar(), // Calling as function but not defined as function
+               Baz(), // This is fine.
+               Bar    // Accessing as a symbol but defined with no parameters - this is fine.
+        FROM scope()
+
+  Suppressions: |
+    name: Suppressions
+    sources:
+    - query: |
+        // linter: symbol_mask_warn:"host"
+        SELECT host, all FROM scope()
 
 Queries:
   # Basic verification of some artifacts.
   - SELECT verify(artifact=Broken1) AS Broken1,
            verify(artifact=Broken2) AS Broken2,
            verify(artifact=Broken3) AS Broken3,
-           verify(artifact=Warn1) AS Warn1
+           verify(artifact=Warn1) AS Warn1,
+           verify(artifact=KWArgs) AS KWArgs,
+           verify(artifact=NotCalled) AS NotCalled,
+           verify(artifact=Suppressions) AS Suppressions
     FROM scope()
 
   # Check the Server.Utils.ArtifactVerifier works on some bad
@@ -48,7 +90,7 @@ Queries:
 
   # Check the "disable_override" argument produces an error when overriding a built-in,
   # but not when creating a new artifact when True is specified.
-  - SELECT 
+  - SELECT
       verify(artifact=Override1, disable_override=True) AS Override1,
       verify(artifact=Override2, disable_override=True) AS Override2
     FROM scope()

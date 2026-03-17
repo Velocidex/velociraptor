@@ -17,7 +17,7 @@ import (
 
 var (
 	verify                = artifact_command.Command("verify", "Verify a set of artifacts")
-	verify_args           = verify.Arg("paths", "Paths to artifact yaml files").Required().Strings()
+	verify_args           = verify.Arg("paths", "Paths to artifact yaml files. This can also be a glob. If the path is a directory we recursively search it for `.yaml` files.").Required().Strings()
 	verify_allow_override = verify.Flag("builtin", "Allow overriding of built in artifacts").Bool()
 	verify_issues_only    = verify.Flag("issues_only", "If set, we only emit warning and error messages").Bool()
 )
@@ -73,24 +73,27 @@ func doVerify() error {
 	}
 
 	query := `
-		-- Load artifacts into local repository
+        LET Globs = SELECT if(condition=stat(filename=_value).IsDir,
+                              then=_value + "/**/*.yaml",
+                              else=_value) AS Glob
+          FROM foreach(row=Artifacts)
+
+		-- Load all artifacts into local repository first.
+        -- This is needed to ensure imports work.
 		LET Definitions <= SELECT
-			Filename,
-			Data,
-			artifact_set(definition=Data, repository="local") AS Definition
-		FROM read_file(filenames=Artifacts)
+			OSPath.String AS Filename,
+			read_file(filename=OSPath, length=100000) AS Data,
+			artifact_set(definition=read_file(filename=OSPath, length=100000),
+                         repository="local") AS Definition
+		FROM glob(globs=Globs.Glob)
+        WHERE NOT IsDir
 
 		-- Verify artifacts from local repository
 		SELECT Filename,
-			Result
-		FROM foreach(row=Definitions,
-					query={
-			SELECT Filename,
-				verify(artifact=Data,
-						repository="local",
-						disable_override=DisableOverride) AS Result
-			FROM scope()
-		})
+			verify(artifact=Data,
+				   repository="local",
+				   disable_override=DisableOverride) AS Result
+		FROM Definitions
 	`
 
 	scope := manager.BuildScope(builder)
@@ -106,7 +109,6 @@ func doVerify() error {
 	for _, vql := range statements {
 		for row := range vql.Eval(sm.Ctx, scope) {
 			dict := vfilter.RowToDict(ctx, scope, row)
-
 			artifact_path, pres := dict.GetString("Filename")
 			if !pres {
 				continue
