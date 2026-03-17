@@ -56,7 +56,7 @@ Output: [
    "Artifact": "name: NotCallingRequiredArg\nsources:\n- query: |\n    LET Foo(X, Y=1) = X+Y\n    SELECT Foo() FROM scope()\n",
    "Permissions": null,
    "Errors": [
-    "NotCallingRequiredArg: query: While calling VQL definition Foo(), required arg X is not provided"
+    "artifact_vql_error:NotCallingRequiredArg: query: required_arg_missing:While calling VQL definition Foo(), required arg X is not provided"
    ],
    "Warnings": null,
    "Definitions": {
@@ -71,14 +71,15 @@ Output: [
       "Y"
      ]
     }
-   }
+   },
+   "Suppressions": null
   },
   "Broken2": {
    "Artifact": "name: CallingBadArg\nsources:\n- query: |\n    LET Foo(X, Y=1) = X+Y\n    SELECT Foo(Z=1) FROM scope()\n",
    "Permissions": null,
    "Errors": [
-    "CallingBadArg: query: Invalid arg Z for VQL definition Foo",
-    "CallingBadArg: query: While calling VQL definition Foo(), required arg X is not provided"
+    "artifact_vql_error:CallingBadArg: query: invalid_arg:Invalid arg Z for VQL definition Foo",
+    "artifact_vql_error:CallingBadArg: query: required_arg_missing:While calling VQL definition Foo(), required arg X is not provided"
    ],
    "Warnings": null,
    "Definitions": {
@@ -93,7 +94,8 @@ Output: [
       "Y"
      ]
     }
-   }
+   },
+   "Suppressions": null
   },
   "Ok1": {
    "Artifact": "name: NotCallingRequiredArg\nsources:\n- query: |\n    LET Foo(X, Y=1) = X+Y\n    SELECT Foo(X=1), Foo(X=1, Y=5) FROM scope()\n",
@@ -112,7 +114,8 @@ Output: [
       "Y"
      ]
     }
-   }
+   },
+   "Suppressions": null
   }
  }
 ]
