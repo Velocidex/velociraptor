@@ -96,6 +96,8 @@ var (
 		"GUI.links.disabled",
 		"GUI.authenticator.oidc_issuer",
 		"GUI.authenticator.claims.roles",
+		"GUI.authenticator.claims.allow_unverified_email",
+		"GUI.authenticator.claims.override_acls",
 		"GUI.authenticator.oidc_debug",
 		"Frontend.use_plain_http",
 		"Frontend.require_client_certificates",

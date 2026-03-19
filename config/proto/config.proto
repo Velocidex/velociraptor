@@ -451,6 +451,7 @@ message GUILink {
 
 message OIDCACL {
     repeated string roles = 1;
+    repeated string permissions = 2;
 }
 
 // Allow flexible claims in OIDC response - only set if you need to.
@@ -479,6 +480,12 @@ message OIDCClaims {
     // username. However, some IDP (e.g. Azure) do not set this. If
     // you want to ignore this requirement, set the below to true.
     bool allow_unverified_email = 4;
+
+    // When this is set, the OIDC roles override (clear) existing
+    // velociraptor roles. The default behavior is to ensure the
+    // user's ACL contains at least the OIDC roles. This is needed if
+    // you want to be able to **remove** access from the IDP.
+    bool override_acls = 5;
 }
 
 message Authenticator {

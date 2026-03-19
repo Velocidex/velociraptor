@@ -633,6 +633,18 @@ GUI:
           roles:
             - reader
 
+      # Velociraptor usually requires the email_verified claim before
+      # we can trust the email claim and use it as the
+      # username. However, some IDP (e.g. Azure) do not set this. If
+      # you want to ignore this requirement, set the below to true.
+      allow_unverified_email: false
+
+      # When this is set, the OIDC roles override (clear) existing
+      # velociraptor roles. The default behavior is to ensure the
+      # user's ACL contains at least the OIDC roles. This is needed if
+      # you want to be able to **remove** access from the IDP.
+      override_acls: false
+
     # This is specifically required by the Azure authenticator only.
     tenant: O...
 
@@ -1365,6 +1377,11 @@ defaults:
   # need to change it.
   hunt_dispatcher_refresh_sec: 600
 
+  # The hunt dispatcher index rebuild is rate limited to reduce load
+  # on the server. This sets how fast it should go (in flows per
+  # second). You probably do not want to change this.
+  hunt_dispatcher_refresh_rate: 10
+
   # Total number of cell versions we keep for undo/redo support.
   notebook_versions: 5
 
@@ -1479,6 +1496,10 @@ security:
   allowed_file_accessor_prefix:
     - /tmp/
 
+  # Deny takes precedent over allow.
+  denied_file_accessor_prefix:
+    - /bin/
+
   # A list of prefixes allowed for the fs accessor. All other
   # prefixes will be rejected.
   allowed_fs_accessor_prefix:
@@ -1490,6 +1511,10 @@ security:
    - temp
    - server_artifacts
    - server_artifacts_logs
+
+  # Deny takes precedent over allow.
+  denied_fs_accessor_prefix:
+   - config
 
 
   # If these are set we enforce VQL to only have the specified allowed
