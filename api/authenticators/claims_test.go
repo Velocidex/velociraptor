@@ -16,6 +16,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
@@ -380,6 +381,110 @@ type OauthTestSuire struct {
 	test_utils.TestSuite
 }
 
+func (self *OauthTestSuire) TestAutoRoleCreation() {
+	t := self.T()
+
+	ctx, err := ClientContext(
+		context.Background(), self.ConfigObj,
+		[]Transformer{testUrlReplayerCases[0].GetRoundTrip})
+	assert.NoError(t, err)
+
+	authenticator := &config_proto.Authenticator{
+		Type:              "oidc",
+		OauthClientId:     "ClientIdXXXX",
+		OauthClientSecret: "ClientSecrect1234",
+		OidcIssuer:        "https://www.example.com",
+		Claims: &config_proto.OIDCClaims{
+			Roles: "roles",
+			RoleMap: map[string]*config_proto.OIDCACL{
+				"OIDCReader": &config_proto.OIDCACL{
+					Roles: []string{"reader"},
+				},
+			},
+		},
+	}
+
+	auther, err := getAuthenticatorByType(ctx, self.ConfigObj, authenticator)
+	assert.NoError(t, err)
+
+	email := "user1"
+
+	user_manager := services.GetUserManager()
+	_, err = user_manager.GetUser(self.Ctx, email, email)
+
+	// User should not exist
+	assert.Error(t, err)
+
+	oidc_auther, ok := auther.(*OidcAuthenticator)
+	assert.True(t, ok)
+
+	claims_getter, ok := oidc_auther.claims_getter.(*OidcClaimsGetter)
+	assert.True(t, ok)
+
+	claims := ordereddict.NewDict().
+		Set("email", email).
+		Set("roles", []string{"OIDCReader"})
+
+	_, err = claims_getter.newClaimsFromDict(
+		self.Ctx, self.ConfigObj, claims)
+	assert.NoError(t, err)
+
+	policy, err := services.GetPolicy(self.ConfigObj, email)
+	assert.NoError(t, err)
+
+	g := ordereddict.NewDict()
+	g.Set("New Reader User", policy)
+
+	// Now give the user more permissions - make them into an admin
+	err = services.GrantRoles(self.ConfigObj, email, []string{"administrator"})
+	assert.NoError(t, err)
+
+	policy, err = services.GetPolicy(self.ConfigObj, email)
+	assert.NoError(t, err)
+
+	g.Set("Promote User to Admin", policy)
+
+	// Assign the OIDC roles again
+	_, err = claims_getter.newClaimsFromDict(
+		self.Ctx, self.ConfigObj, claims)
+	assert.NoError(t, err)
+
+	policy, err = services.GetPolicy(self.ConfigObj, email)
+	assert.NoError(t, err)
+
+	g.Set("OIDC Adds roles to user", policy)
+
+	// By default OIDC roles are additive. However, this means it is
+	// impossible to remove roles from users via OIDC which is a
+	// common use case. To force ACLs to be removed from the user to
+	// comply with the OIDC policy exactly we need to set the
+	// OverrideAcls flag.
+	authenticator.Claims.OverrideAcls = true
+
+	_, err = claims_getter.newClaimsFromDict(
+		self.Ctx, self.ConfigObj, claims)
+	assert.NoError(t, err)
+
+	policy, err = services.GetPolicy(self.ConfigObj, email)
+	assert.NoError(t, err)
+
+	g.Set("OIDC removes roles from user", policy)
+
+	// Now completely remove access via OIDC roles
+	claims.Set("roles", []string{})
+
+	_, err = claims_getter.newClaimsFromDict(
+		self.Ctx, self.ConfigObj, claims)
+	assert.NoError(t, err)
+
+	policy, err = services.GetPolicy(self.ConfigObj, email)
+	assert.NoError(t, err)
+
+	g.Set("OIDC removes all roles from user", policy)
+
+	goldie.Assert(t, "TestAutoRoleCreation", json.MustMarshalIndent(g))
+}
+
 func (self *OauthTestSuire) TestProvider() {
 	closer := utils.MockTime(utils.NewMockClock(time.Unix(1765349444, 0)))
 	defer closer()
@@ -417,6 +522,14 @@ func (self *OauthTestSuire) TestProvider() {
 
 		oidc_auther, ok := auther.(*OidcAuthenticator)
 		assert.True(t, ok)
+
+		claims_getter, ok := oidc_auther.claims_getter.(*OidcClaimsGetter)
+		if ok {
+			// Set by this test so we dont have to have a real ID
+			// token. In reality the claims_getter will verify the ID
+			// token with the IDP.
+			claims_getter.ignore_id_token = true
+		}
 
 		provider, err := oidc_auther.Provider()
 		assert.NoError(t, err)

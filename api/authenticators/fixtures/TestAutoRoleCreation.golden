@@ -1,0 +1,24 @@
+{
+ "New Reader User": {
+  "roles": [
+   "reader"
+  ]
+ },
+ "Promote User to Admin": {
+  "roles": [
+   "administrator"
+  ]
+ },
+ "OIDC Adds roles to user": {
+  "roles": [
+   "administrator",
+   "reader"
+  ]
+ },
+ "OIDC removes roles from user": {
+  "roles": [
+   "reader"
+  ]
+ },
+ "OIDC removes all roles from user": {}
+}

@@ -1,0 +1,10 @@
+{
+ "Merge": {
+  "collect_server": true,
+  "execve": true,
+  "roles": [
+   "reader",
+   "org_admin"
+  ]
+ }
+}

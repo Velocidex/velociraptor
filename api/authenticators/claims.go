@@ -9,9 +9,11 @@ import (
 	oidc "github.com/coreos/go-oidc/v3/oidc"
 	jwt "github.com/golang-jwt/jwt/v4"
 	"golang.org/x/oauth2"
+	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -56,6 +58,8 @@ type OidcClaimsGetter struct {
 	router        OidcRouter
 
 	provider *oidc.Provider
+
+	ignore_id_token bool
 }
 
 func NewOidcClaimsGetter(
@@ -82,18 +86,55 @@ func NewOidcClaimsGetter(
 func (self *OidcClaimsGetter) maybeGetClaimsFromToken(
 	ctx context.Context, token *oauth2.Token) (*ordereddict.Dict, error) {
 
-	// The token came from the ADFS server and will be used again to
-	// get the UserInfo so it must be valid. We do not need to check
-	// its signature.
+	res := ordereddict.NewDict()
+
+	// The AccessToken is supposed to be opaque since it is used as a
+	// bearer token by the API. We do not need to actually validate it.
+
+	// On ADFS, this token can be decoded and actually contains some
+	// information about the user so we try to get that info anyway.
 	claims := jwt.MapClaims{}
 	_, _, err := jwt.NewParser().ParseUnverified(token.AccessToken, claims)
+	if err == nil {
+		for k, v := range claims {
+			res.Set(k, v)
+		}
+	}
+
+	// Usually only used in tests - real IDPs should provide an ID
+	// token
+	if self.ignore_id_token {
+		return res, nil
+	}
+
+	// The real claim is sent in the ID token
+	oidcConfig := &oidc.Config{
+		ClientID: self.authenticator.OauthClientId,
+	}
+
+	// https://github.com/Coreos/go-oidc/blob/v2.5.0/example/idtoken/app.go
+	rawIDToken, ok := token.Extra("id_token").(string)
+	if !ok {
+		return nil, errors.New("No ID Token")
+	}
+
+	verifier := self.provider.Verifier(oidcConfig)
+	idToken, err := verifier.Verify(ctx, rawIDToken)
 	if err != nil {
 		return nil, err
 	}
-	res := ordereddict.NewDict()
-	for k, v := range claims {
+
+	raw_id_token := make(map[string]interface{})
+	err = idToken.Claims(&raw_id_token)
+	if err != nil {
+		return nil, err
+	}
+
+	// Merge the ID token into the AccessToken
+	for k, v := range raw_id_token {
 		res.Set(k, v)
 	}
+
 	return res, nil
 }
 
@@ -118,20 +159,34 @@ func (self *OidcClaimsGetter) Debug(message string, args ...interface{}) {
 func (self *OidcClaimsGetter) GetClaims(
 	ctx *HTTPClientContext, token *oauth2.Token) (claims *Claims, err error) {
 
-	claims_dict, err := self.getClaims(ctx, token)
-	if err != nil {
-		self.Debug("Unable to parse claims from user info: %v", err)
-
-		// Fallsback to try to get the claims from the token
-		token_claims_dict, err1 := self.maybeGetClaimsFromToken(ctx, token)
-		if err1 != nil {
-			return nil, err
+	claims_dict, err := self.maybeGetClaimsFromToken(ctx, token)
+	if err == nil {
+		// Try to parse the claims from the token
+		res, err := self.newClaimsFromDict(ctx, self.config_obj, claims_dict)
+		if err == nil {
+			self.Debug("Unwrapped claims from AccessToken: %v", claims_dict)
+			return res, nil
 		}
-		self.Debug("Unwrapped claims from AccessToken: %v", token_claims_dict)
-		claims_dict = token_claims_dict
+
+	} else {
+		self.Debug("Unable to parse claims from tokens: %v", err)
 	}
 
-	return self.newClaimsFromDict(ctx, self.config_obj, claims_dict)
+	// If we cant get a valid claim from the token, we fallback to
+	// try using the user info method
+	claims_dict, err = self.getClaimsFromUserInfo(ctx, token)
+	if err == nil {
+		res, err := self.newClaimsFromDict(ctx, self.config_obj, claims_dict)
+		if err == nil {
+			self.Debug("Unwrapped claims from UserInfo: %v", claims_dict)
+			return res, nil
+		}
+
+	} else {
+		self.Debug("Unable to parse claims from user info: %v", err)
+	}
+
+	return nil, err
 }
 
 func (self *OidcClaimsGetter) shouldRequireEmailVerify(
@@ -153,7 +208,7 @@ func (self *OidcClaimsGetter) shouldRequireEmailVerify(
 	return true
 }
 
-func (self *OidcClaimsGetter) getClaims(
+func (self *OidcClaimsGetter) getClaimsFromUserInfo(
 	ctx context.Context, token *oauth2.Token) (claims *ordereddict.Dict, err error) {
 
 	user_info, err := self.UserInfo(ctx, token)
@@ -163,8 +218,8 @@ func (self *OidcClaimsGetter) getClaims(
 
 	// Make sure the user's email is verified because this is what we
 	// use as the identity.
-	if !user_info.EmailVerified &&
-		self.shouldRequireEmailVerify(self.authenticator) {
+	if self.shouldRequireEmailVerify(self.authenticator) &&
+		!user_info.EmailVerified {
 		return nil, fmt.Errorf("Email %v is not verified", user_info.Email)
 	}
 
@@ -183,17 +238,12 @@ func (self *OidcClaimsGetter) newClaimsFromDict(
 	claims *ordereddict.Dict) (*Claims, error) {
 
 	username_field := "email"
-	roles_field := ""
+	if self.authenticator.Claims != nil &&
+		self.authenticator.Claims.Username != "" {
 
-	if self.authenticator.Claims != nil {
-		if self.authenticator.Claims.Username != "" {
-			username_field = self.authenticator.Claims.Username
-			self.Debug("Using field %v in claims for username", username_field)
-		}
-
-		if self.authenticator.Claims.Roles != "" {
-			roles_field = self.authenticator.Claims.Roles
-		}
+		// Custom username field
+		username_field = self.authenticator.Claims.Username
+		self.Debug("Using field %v in claims for username", username_field)
 	}
 
 	email, _ := claims.GetString(username_field)
@@ -207,16 +257,46 @@ func (self *OidcClaimsGetter) newClaimsFromDict(
 		Username: email,
 	}
 
-	if self.authenticator.Claims == nil ||
-		self.authenticator.Claims.RoleMap == nil ||
-		roles_field == "" {
-		return res, nil
+	return res, self.SetRolesForUser(
+		ctx, config_obj, email, claims)
+}
+
+func (self *OidcClaimsGetter) shouldUpdateACLs(
+	new_acl, existing_acls *acl_proto.ApiClientACL,
+) (*acl_proto.ApiClientACL, bool) {
+
+	// When OverrideAcls is specified we just replace the
+	// existing_acls with the new_acl if they are different.
+	if self.authenticator.Claims.OverrideAcls {
+		return new_acl, !acls.ACLEqual(new_acl, existing_acls)
 	}
 
+	// Merge the old ACL with the new ACL
+	new_acl = acls.MergeACL(existing_acls, new_acl)
+	return new_acl, !acls.ACLEqual(new_acl, existing_acls)
+}
+
+func (self *OidcClaimsGetter) SetRolesForUser(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	email string,
+	claims *ordereddict.Dict) error {
+
+	// The roles field must be set to enable this feature!
+	var roles_field string
+	if self.authenticator.Claims != nil &&
+		self.authenticator.Claims.Roles != "" {
+		roles_field = self.authenticator.Claims.Roles
+
+	} else {
+		// Do nothing if automatic roles are not configured.
+		return nil
+	}
+
+	// Do nothing if automatic roles are not configured.
 	roles, pres := claims.GetStrings(roles_field)
 	if !pres {
-		return res, nil
-
+		return nil
 	}
 
 	user_manager := services.GetUserManager()
@@ -235,24 +315,24 @@ func (self *OidcClaimsGetter) newClaimsFromDict(
 			"Create User From OIDC Roles",
 			ordereddict.NewDict().Set("Claims", claims))
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		err = user_manager.SetUser(ctx, user_record)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// Some other error occured - reject.
 	} else if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Usually roles are set per org but setting roles through the
 	// OIDC IDP will grant the roles on all orgs.
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for _, org := range org_manager.ListOrgs() {
@@ -269,6 +349,9 @@ func (self *OidcClaimsGetter) newClaimsFromDict(
 			existing_acls = &acl_proto.ApiClientACL{}
 		}
 
+		new_acl := &acl_proto.ApiClientACL{}
+
+		// For each role give by the IDP we assign velociraptor roles
 		for _, oidc_role := range roles {
 			acl_spec, pres := self.authenticator.Claims.RoleMap[oidc_role]
 			if !pres {
@@ -276,42 +359,33 @@ func (self *OidcClaimsGetter) newClaimsFromDict(
 				continue
 			}
 
-			var new_roles []string
 			for _, role := range acl_spec.Roles {
-				if !utils.InString(existing_acls.Roles, role) {
-					new_roles = append(new_roles, role)
+				if !utils.InString(new_acl.Roles, role) {
+					new_acl.Roles = append(new_acl.Roles, role)
 				}
 			}
+		}
 
-			// Merge old roles
-			for _, role := range existing_acls.Roles {
-				if !utils.InString(new_roles, role) {
-					new_roles = append(new_roles, role)
-				}
+		new_acl, should_update := self.shouldUpdateACLs(new_acl, existing_acls)
+		if should_update {
+			err = services.LogAudit(ctx, config_obj, email,
+				"Grant User Role From OIDC Claim",
+				ordereddict.NewDict().
+					Set("ACL", new_acl).
+					Set("OrgId", org.Id).
+					Set("Claims", claims))
+			if err != nil {
+				continue
 			}
 
-			// Only set the roles if we need to - note we can only
-			// ever add roles to the existing roles.
-			if len(new_roles) > len(existing_acls.Roles) {
-				err = services.LogAudit(ctx, config_obj, email,
-					"Grant User Role From OIDC Claim",
-					ordereddict.NewDict().
-						Set("Roles", new_roles).
-						Set("OrgId", org.Id).
-						Set("Claims", claims))
-				if err != nil {
-					continue
-				}
-
-				logger.Info("Granting roles %v to User %v in org %v",
-					new_roles, email, org.Id)
-				err = services.GrantRoles(org_config_obj, email, new_roles)
-				if err != nil {
-					return nil, err
-				}
+			logger.Info("Granting acl %v to User %v in org %v",
+				json.MustMarshalString(new_acl), email, org.Id)
+			err = services.SetPolicy(org_config_obj, email, new_acl)
+			if err != nil {
+				return err
 			}
 		}
 	}
 
-	return res, nil
+	return nil
 }
