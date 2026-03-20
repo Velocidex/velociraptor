@@ -517,8 +517,13 @@ export default class UserLabel extends React.Component {
     }
 
     orgName() {
+        let org_name = this.context.traits && this.context.traits.org_name;
+        if(org_name) {
+            return <div className="org-label">{org_name}</div>;
+        }
+
         let id = window.globals.OrgId || (
-            this.context.traits && this.context.traits.org);
+            this.context.traits && this.context.traits.org_name);
         if (!id || id==="root") {
             return <></>;
         }

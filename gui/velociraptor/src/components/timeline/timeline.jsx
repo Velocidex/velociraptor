@@ -20,6 +20,7 @@ import VeloTimestamp, {
     FormatRFC3339,
     ToStandardTime,
 } from '../utils/time.jsx';
+import { sprintf  } from 'sprintf-js';
 
 // make sure you include the timeline stylesheet or the timeline will not be styled
 import 'react-calendar-timeline/lib/Timeline.css';
@@ -532,6 +533,13 @@ class TimelineTableRenderer  extends Component {
         let classname = column==="Notes" ? "notes" : "";
 
         if(column==="Message") {
+            let text = "";
+            let transform = this.props.transform;
+            if(transform && transform.filter_column) {
+                text = sprintf("%s ( %s )",
+                               transform.filter_column,
+                               transform.filter_regex);
+            };
             th = (
                 <th className="message"
                     style={styles}
@@ -554,6 +562,7 @@ class TimelineTableRenderer  extends Component {
                   <span className="sort-element">
                     <ButtonGroup>
                       <ColumnFilter column="message"
+                                    text={text}
                                     transform={this.props.transform}
                                     setTransform={this.props.setTransform}
                       />
@@ -1192,8 +1201,7 @@ export default class TimelineRenderer extends React.Component {
                      </CustomMarker>
                    </TimelineMarkers>
                  </Timeline>
-                 { this.state.columns &&
-                   <TimelineTableRenderer
+                 { <TimelineTableRenderer
                      super_timeline={this.props.name}
                      notebook_id={this.props.notebook_id}
                      timelines={super_timeline}

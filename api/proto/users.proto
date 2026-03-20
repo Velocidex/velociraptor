@@ -117,6 +117,7 @@ message ApiUserInterfaceTraits {
 
     // Current selected Org.
     string org = 24;
+    string org_name = 30;
 
     // The user's specific base path - only used for crazy reverse
     // proxy configurations.

@@ -28,7 +28,7 @@ func ClientIdFromSourceAndOrg(source, org_id string) string {
 }
 
 func OrgIdFromClientId(client_id string) string {
-	parts := strings.Split(client_id, "-")
+	parts := strings.SplitN(client_id, "-", 2)
 	if len(parts) > 1 {
 		return parts[1]
 	}

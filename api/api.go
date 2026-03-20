@@ -422,7 +422,8 @@ func (self *ApiServer) GetUserUITraits(
 
 	user_options, err := users.GetUserOptions(ctx, result.Username)
 	if err == nil {
-		result.InterfaceTraits.Org = user_options.Org
+		result.InterfaceTraits.Org = org_config_obj.OrgId
+		result.InterfaceTraits.OrgName = org_config_obj.OrgName
 		result.InterfaceTraits.UiSettings = user_options.Options
 		result.InterfaceTraits.Theme = user_options.Theme
 		result.InterfaceTraits.Timezone = user_options.Timezone
