@@ -1,0 +1,40 @@
+Queries:
+- LET Cache(X) = cache(
+    name="MemoryCache",
+    func=log(message="I Ran with %v", args=X, dedup= -1) && (X + 5),
+    key=X, period=999999, max_size=100)
+
+# Call the function several times through the cache.
+- SELECT Cache(X=5) AS C5, Cache(X=5) AS C5_2, Cache(X=10) AS C10
+  FROM scope()
+
+# Check how many times the function was actually called.
+- SELECT * FROM test_read_logs() WHERE Log =~ "I Ran with" AND NOT Log =~ "SELECT"
+
+- LET File <= tempfile()
+- LET FileCache(X) = cache(
+    filename=File,
+    name="FileCache",
+    func=log(message="I Ran with %v", args=X, dedup= -1) && (X + 5),
+    key=X, period=999999, max_size=100)
+
+# Call the function several times through the cache.
+- SELECT FileCache(X=5) AS C5, FileCache(X=5) AS C5_2, FileCache(X=10) AS C10
+  FROM scope()
+
+# Check how many times the function was actually called.
+- SELECT * FROM test_read_logs() WHERE Log =~ "I Ran with" AND NOT Log =~ "SELECT"
+
+# Demonstrate how caches are created using lambda functions. This is
+# the modern and prefered API for the cache() function.
+- LET _ <= cache(
+    name="Once",
+    lambda='''x=>log(message="I Ran with %v", args=x, dedup= -1) && (x + 5)''',
+    period=999999,
+    max_size=100)
+
+# The following calls will use the same cache.
+- SELECT cache(name="Once", key=5) AS C5,
+         cache(name="Once", key=5) AS C5_2,
+         cache(name="Once", key=10) AS C10
+  FROM scope()

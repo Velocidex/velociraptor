@@ -1,0 +1,72 @@
+Query: LET Cache(X) = cache( name="MemoryCache", func=log(message="I Ran with %v", args=X, dedup= -1) && (X + 5), key=X, period=999999, max_size=100)
+Output: []
+
+# Call the function several times through the cache.
+Query: SELECT Cache(X=5) AS C5, Cache(X=5) AS C5_2, Cache(X=10) AS C10 FROM scope()
+Output: [
+ {
+  "C5": 10,
+  "C5_2": 10,
+  "C10": 15
+ }
+]
+
+# Check how many times the function was actually called.
+Query: SELECT * FROM test_read_logs() WHERE Log =~ "I Ran with" AND NOT Log =~ "SELECT"
+Output: [
+ {
+  "Log": "Velociraptor: Running query LET Cache(X) = cache( name=\"MemoryCache\", func=log(message=\"I Ran with %v\", args=X, dedup= -1) \u0026\u0026 (X + 5), key=X, period=999999, max_size=100)\n"
+ },
+ {
+  "Log": "Velociraptor: DEFAULT:I Ran with 5\n"
+ },
+ {
+  "Log": "Velociraptor: DEFAULT:I Ran with 10\n"
+ }
+]
+
+Query: LET File <= tempfile()
+Output: []
+
+Query: LET FileCache(X) = cache( filename=File, name="FileCache", func=log(message="I Ran with %v", args=X, dedup= -1) && (X + 5), key=X, period=999999, max_size=100)
+Output: []
+
+# Call the function several times through the cache.
+Query: SELECT FileCache(X=5) AS C5, FileCache(X=5) AS C5_2, FileCache(X=10) AS C10 FROM scope()
+Output: [
+ {
+  "C5": 10,
+  "C5_2": 10,
+  "C10": 15
+ }
+]
+
+# Check how many times the function was actually called.
+Query: SELECT * FROM test_read_logs() WHERE Log =~ "I Ran with" AND NOT Log =~ "SELECT"
+Output: [
+ {
+  "Log": "Velociraptor: Running query LET FileCache(X) = cache( filename=File, name=\"FileCache\", func=log(message=\"I Ran with %v\", args=X, dedup= -1) \u0026\u0026 (X + 5), key=X, period=999999, max_size=100)\n"
+ },
+ {
+  "Log": "Velociraptor: DEFAULT:I Ran with 5\n"
+ },
+ {
+  "Log": "Velociraptor: DEFAULT:I Ran with 10\n"
+ }
+]
+
+# Demonstrate how caches are created using lambda functions. This is
+# the modern and prefered API for the cache() function.
+Query: LET _ <= cache( name="Once", lambda='''x=>log(message="I Ran with %v", args=x, dedup= -1) && (x + 5)''', period=999999, max_size=100)
+Output: []
+
+# The following calls will use the same cache.
+Query: SELECT cache(name="Once", key=5) AS C5, cache(name="Once", key=5) AS C5_2, cache(name="Once", key=10) AS C10 FROM scope()
+Output: [
+ {
+  "C5": 10,
+  "C5_2": 10,
+  "C10": 15
+ }
+]
+

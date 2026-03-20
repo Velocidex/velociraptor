@@ -663,7 +663,7 @@
     Creates a cache object.
 
     A Cache is a data structure which is used to speed up calculating
-    data by keeping it's value in memory. A cache is essentially a key
+    data by keeping its value in memory. A cache is essentially a key
     value store - when the key is accessed, the function will be
     calculated producing a value. If the key is accessed again, the
     value is returned from the cache without calculating it again.
@@ -671,15 +671,18 @@
     For example consider the following:
 
     ```vql
-        LET get_pid_query(Lpid) =
-           SELECT Pid, Ppid, Name FROM pslist(pid=Lpid)
+    LET get_pid_query(Lpid) =
+      SELECT Pid, Ppid, Name FROM pslist(pid=Lpid)
 
-        SELECT cache(func=get_pid_query(Lpid=Pid), key=str(str=Pid))
-        FROM ....
+    LET _ <= cache(lambda='x=>get_pid_query(Lpid=x)[0]')
+
+    SELECT cache(key=getpid())
+    FROM scope()
     ```
 
-    The cache will ensure that get_pid_query() is only called once per
+    The cache will ensure that `get_pid_query()` is only called once per
     unique Pid by comparing the key against the internal memory store.
+
   type: Function
   args:
   - name: func
@@ -5708,7 +5711,7 @@
 
     ```vql
     LET m <= memoize(query={
-       SELECT str(str=Pid) AS Key, Name, Pid, Ppid FROM pslist()
+       SELECT Pid AS Key, Name, Pid, Ppid FROM pslist()
     }, key='Key')
     ```
 
@@ -5720,9 +5723,18 @@
     operator. If the key matches the entire row is retrieved:
 
     ```vql
-    SELECT get(item=m, field=str(str=Pid)).Name AS ProcessName
+    SELECT get(item=m, field=Pid).Name AS ProcessName
     FROM source()
     ```
+
+    The `period` parameter is the number of seconds before the query
+    is considered stale. When the data is stale, the query will be
+    re-run to get fresh data.
+
+    Providing the `filename` parameter allows the data to be stored to a
+    file. This is helpful when the query is very large or the results
+    need to be re-used in another query.
+
   type: Function
   version: 2
   args:
@@ -10981,11 +10993,11 @@
 
     ```vql
     LET PidLookup <= to_dict(item={
-        SELECT str(str=Pid) AS _key, Name AS _value
+        SELECT Pid AS _key, Name AS _value
         FROM pslist()
     })
 
-    SELECT Pid, get(item=PidLookup, field=str(str=Pid))
+    SELECT Pid, get(item=PidLookup, field=Pid)
     FROM pslist()
     ```
   type: Function
