@@ -47,6 +47,7 @@ Output: [
      {
       "name": "Autorun_amd64",
       "url": "https://live.sysinternals.com/tools/autorunsc64.exe",
+      "serve_locally": true,
       "artifact": "Notebooks.Demo"
      },
      {
@@ -111,6 +112,7 @@ Output: [
      {
       "name": "Autorun_amd64",
       "url": "https://live.sysinternals.com/tools/autorunsc64.exe",
+      "serve_locally": true,
       "artifact": "Notebooks.Demo"
      },
      {

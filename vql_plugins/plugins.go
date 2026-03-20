@@ -47,6 +47,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/tools/dns"
 	_ "www.velocidex.com/golang/velociraptor/vql/tools/index"
 	_ "www.velocidex.com/golang/velociraptor/vql/tools/logscale"
+	_ "www.velocidex.com/golang/velociraptor/vql/tools/lru"
 	_ "www.velocidex.com/golang/velociraptor/vql/tools/packaging"
 	_ "www.velocidex.com/golang/velociraptor/vql/tools/process"
 	_ "www.velocidex.com/golang/velociraptor/vql/tools/rsyslog"
