@@ -13,6 +13,7 @@ import Col from 'react-bootstrap/Col';
 import Container from  'react-bootstrap/Container';
 import Table  from 'react-bootstrap/Table';
 import Card  from 'react-bootstrap/Card';
+import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
@@ -350,6 +351,9 @@ class UsersOverview extends Component {
         showAddUserDialog: false,
         showAddOrgDialog: false,
         showEditUserDialog: false,
+
+        user_filter: "",
+        org_filter: "",
     }
 
     componentDidMount = () => {
@@ -395,6 +399,19 @@ class UsersOverview extends Component {
                 return;
             this.setState({acl: response.data});
         });
+    }
+
+    filterList = (users, filter)=>{
+        if(!filter) {
+            return users;
+        }
+
+        try {
+            filter = new RegExp(filter, "i");
+            return _.filter(users, x=>filter.test(x.name));
+        } catch(e) {
+            return _.filter(users, x=>x.name.includes(filter));
+        }
     }
 
     render() {
@@ -445,7 +462,14 @@ class UsersOverview extends Component {
                         <tr>
                           <th></th>
                           <th>
-                            {T("Users")}
+                            <InputGroup className="users-header">
+                              <Form.Control
+                                placeholder={T("Users")}
+                                onChange={e=>this.setState({
+                                    user_filter: e.currentTarget.value,
+                                })}
+                                value={this.state.user_filter}
+                              />
                             { !this.context.traits.password_less &&
                               <ToolTip tooltip={T("Update User Password")}>
                                 <Button
@@ -477,26 +501,29 @@ class UsersOverview extends Component {
                                 </span>
                               </Button>
                             </ToolTip>
+                            </InputGroup>
                           </th>
                         </tr>
                       </thead>
                       <tbody>
-                        { _.map(this.props.users, (item, idx)=>{
-                            return <tr key={idx} className={
-                                    this.state.user_name === item.name ?
-                                    "row-selected" : undefined
-                            }>
-                                     <td className="user-status">
-                                       <UserStats user={item}/>
-                                     </td>
-                                     <td onClick={e=>{
-                                         this.setState({user_name: item.name});
-                                         this.getACL(item.name, this.state.org);
-                                     }}>
-                                       {item.name}
-                                     </td>
-                                   </tr>;
-                        })}
+                        { _.map(this.filterList(
+                            this.props.users, this.state.user_filter),
+                                (item, idx)=>{
+                                    return <tr key={idx} className={
+                                        this.state.user_name === item.name ?
+                                            "row-selected" : undefined
+                                    }>
+                                             <td className="user-status">
+                                               <UserStats user={item}/>
+                                             </td>
+                                             <td onClick={e=>{
+                                                 this.setState({user_name: item.name});
+                                                 this.getACL(item.name, this.state.org);
+                                             }}>
+                                               {item.name}
+                                             </td>
+                                           </tr>;
+                                })}
                       </tbody>
                     </Table>
                   </Container>
@@ -507,7 +534,14 @@ class UsersOverview extends Component {
                       <thead>
                         <tr>
                           <th>
-                            {T("Orgs")}
+                            <InputGroup className="users-header">
+                              <Form.Control
+                                placeholder={T("Orgs")}
+                                onChange={e=>this.setState({
+                                    org_filter: e.currentTarget.value,
+                                })}
+                                value={this.state.org_filter}
+                              />
                             <ToolTip tooltip={T("Assign user to Orgs")}>
                               <Button
                                 disabled={!this.state.user_name}
@@ -523,6 +557,7 @@ class UsersOverview extends Component {
                                 </span>
                               </Button>
                             </ToolTip>
+                            </InputGroup>
                           </th></tr>
                       </thead>
                       <tbody>
@@ -534,11 +569,13 @@ class UsersOverview extends Component {
                               {T("Please Select a User")}
                             </td>
                           </tr> }
-                        { _.map(selected_orgs, (item, idx)=>{
-                            return <tr key={idx} className={
-                                this.state.org &&
-                                    this.state.org.name === item.name ?
-                                    "row-selected" : undefined}>
+                        { _.map(this.filterList(
+                            selected_orgs, this.state.org_filter),
+                                (item, idx)=>{
+                                    return <tr key={idx} className={
+                                        this.state.org &&
+                                            this.state.org.name === item.name ?
+                                            "row-selected" : undefined}>
                                      <td onClick={e=>{
                                          this.setState({org: item});
                                          this.getACL(this.state.user_name, item);
@@ -546,7 +583,7 @@ class UsersOverview extends Component {
                                        {item.name}
                                      </td>
                                    </tr>;
-                        })}
+                                })}
                       </tbody>
                     </Table>
                   </Container>
@@ -592,7 +629,19 @@ class OrgsOverview extends UsersOverview {
                    <Container className="selectable org-list">
                     <Table size="sm">
                      <thead>
-                       <tr><th>{T("Orgs")}</th></tr>
+                       <tr>
+                         <th>
+                            <InputGroup className="users-header">
+                              <Form.Control
+                                placeholder={T("Orgs")}
+                                onChange={e=>this.setState({
+                                    org_filter: e.currentTarget.value,
+                                })}
+                                value={this.state.org_filter}
+                              />
+                            </InputGroup>
+                         </th>
+                      </tr>
                        </thead>
                      <tbody>
                         { _.map(org_names, (name, idx)=>{
@@ -601,7 +650,7 @@ class OrgsOverview extends UsersOverview {
                                     this.state.org.name === name ?
                                     "row-selected" : undefined
                             }>
-                                      <td onClick={e=>{
+                                     <td onClick={e=>{
                                           this.setState({
                                               org: {
                                                   id: org_id_by_name[name],
@@ -625,16 +674,28 @@ class OrgsOverview extends UsersOverview {
                      <thead>
                        <tr>
                          <th></th>
-                         <th>{T("Users")}</th>
+                         <th>
+                            <InputGroup className="users-header">
+                              <Form.Control
+                                placeholder={T("Users")}
+                                onChange={e=>this.setState({
+                                    user_filter: e.currentTarget.value,
+                                })}
+                                value={this.state.user_filter}
+                              />
+                            </InputGroup>
+                         </th>
                        </tr>
                      </thead>
                      <tbody>
-                 { _.map(selected_users, (item, idx)=>{
-                     return <tr key={idx} className={
-                         this.state.user_name === item.name ?
-                             "row-selected" : undefined}>
+                       { _.map(this.filterList(
+                           selected_users, this.state.user_filter),
+                               (item, idx)=>{
+                                   return <tr key={idx} className={
+                                       this.state.user_name === item.name ?
+                                           "row-selected" : undefined}>
                               <td className="user-status">
-                                  <UserStats user={item}/>
+                                <UserStats user={item}/>
                               </td>
                               <td onClick={e=>{
                                   this.setState({user_name: item.name});
@@ -643,7 +704,7 @@ class OrgsOverview extends UsersOverview {
                                 {item.name}
                               </td>
                             </tr>;
-                 })}
+                               })}
                  </tbody>
                      </Table>
              </Container>
