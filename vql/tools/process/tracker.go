@@ -26,6 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/tools/lru"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
@@ -137,7 +138,7 @@ func (self *ProcessTracker) Peek(
 }
 
 func (self *ProcessTracker) Stats() Stats {
-	return self.lookup.Stats()
+	return Stats(self.lookup.Stats())
 }
 
 func (self *ProcessTracker) Enrich(
@@ -455,16 +456,9 @@ func NewProcessTracker(
 	ctx context.Context,
 	scope vfilter.Scope, opts Options) (res *ProcessTracker, err error) {
 
-	var cache LRUCache
-
-	if opts.Filename == "" {
-		cache = NewMemoryCache(opts)
-
-	} else {
-		cache, err = NewDiskCache(ctx, opts)
-		if err != nil {
-			return nil, err
-		}
+	cache, err := NewLRUCache(ctx, lru.Options(opts))
+	if err != nil {
+		return nil, err
 	}
 
 	result := &ProcessTracker{
@@ -522,7 +516,7 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 			MaxSize:              int(arg.MaxSize),
 			MaxExpirySec:         int(arg.MaxExpirySec),
 			UpdateExpiryOnAccess: true,
-			Clock:                LRUClock(0),
+			Clock:                lru.LRUClock(0),
 			DEBUG: vql_subsystem.GetBoolFromRow(
 				scope, scope, constants.LRU_DEBUG),
 			ClearOnStart: true,
