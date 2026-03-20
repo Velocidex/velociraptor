@@ -71,6 +71,6 @@
     color: var(--color-foreground);
 }
 
-.user-status {
-    max-width: 28px;
+button.user-status {
+    max-width: 35px;
 }

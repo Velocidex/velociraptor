@@ -38,7 +38,6 @@ class NotebookNavigator extends Component {
         if (this.props.notebook &&
             this.props.notebook.notebook_id) {
 
-            console.log(this.props.match);
             if (this.props.match.path.startsWith("/fullscreen")) {
                 this.props.history.push(
                     "/notebooks/" +
