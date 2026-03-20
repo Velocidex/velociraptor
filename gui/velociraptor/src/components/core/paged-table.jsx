@@ -48,6 +48,7 @@ export class ColumnFilter extends Component {
         table_id: PropTypes.string,
         transform: PropTypes.object,
         setTransform: PropTypes.func,
+        text: PropTypes.string,
     }
 
     state = {
@@ -108,7 +109,6 @@ export class ColumnFilter extends Component {
             tooltip = this.props.column;
             classname = "visible";
         }
-
         return (
             <ToolTip tooltip={tooltip}>
                 <Form
@@ -145,9 +145,10 @@ export class ColumnFilter extends Component {
                         });
                         this.props.setTransform({editing: this.props.column});
                     }}>
+                    { this.props.text || "" }
                     <FontAwesomeIcon icon="filter"/>
                   </Button>
-                      <Form.Control
+                    <Form.Control
                         as="input"
                         id={this.guid()}
                         placeholder={T("Regex Filter")}

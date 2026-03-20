@@ -40,9 +40,13 @@ func getReport(ctx context.Context,
 	notebook_cell_path_manager := paths.NewDashboardPathManager(
 		in.Type, bare_artifact_name, in.ClientId)
 
+	uploader := reporting.NewNotebookUploader(
+		config_obj, notebook_cell_path_manager)
+
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: acl_manager,
+		Uploader:   uploader,
 		Logger: logging.NewPlainLogger(
 			config_obj, &logging.FrontendComponent),
 		Repository: repository,

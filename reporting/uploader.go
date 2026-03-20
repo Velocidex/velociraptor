@@ -21,6 +21,15 @@ type NotebookUploader struct {
 	notebook_cell_path_manager *paths.NotebookCellPathManager
 }
 
+func NewNotebookUploader(
+	config_obj *config_proto.Config,
+	path_manager *paths.NotebookCellPathManager) *NotebookUploader {
+	return &NotebookUploader{
+		config_obj:                 config_obj,
+		notebook_cell_path_manager: path_manager,
+	}
+}
+
 func (self *NotebookUploader) Upload(
 	ctx context.Context,
 	scope vfilter.Scope,
