@@ -55,9 +55,6 @@ var (
 	api_config_path = app.Flag("api_config", "The API configuration file.").
 			Short('a').String()
 
-	override_flag = app.Flag("config_override", "A json object to override the config.").
-			Short('o').String()
-
 	run_as = app.Flag("runas", "Run as this username's ACLs").String()
 
 	artifact_definitions_dir = app.Flag(
@@ -201,7 +198,6 @@ func main() {
 		WithConfigMutator("Mutator: applyMinionRole", applyMinionRole).
 		WithCustomValidator("validator: ensureProxy", proxy.ConfigureProxy).
 		WithCustomValidator("validator: applyRemapping", applyRemapping).
-		WithConfigMutator("OverrideFlag", deprecatedOverride).
 		WithLogFile(*logging_flag).
 		WithConfigMutator("Mutator maybeAddDefinitionsDirectory", maybeAddDefinitionsDirectory)
 
@@ -267,7 +263,6 @@ func makeDefaultConfigLoader() *config.Loader {
 		WithCustomValidator("validator: initDebugServer", initDebugServer).
 		WithCustomValidator("validator: timezone", initTimezone).
 		WithLogFile(*logging_flag).
-		WithConfigMutator("OverrideFlag", deprecatedOverride).
 		WithConfigMutator("Mutator applyMinionRole", applyMinionRole).
 		WithCustomValidator("validator: ensureProxy", proxy.ConfigureProxy).
 		WithConfigMutator("Mutator applyRemapping", applyRemapping).

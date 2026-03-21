@@ -83,7 +83,7 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20251107004037-f9f4e4ed0236
-	www.velocidex.com/golang/go-ese v0.2.1-0.20250215160921-5af66dc0f6ed
+	www.velocidex.com/golang/go-ese v0.2.1-0.20260321072931-b8793d15e573
 	www.velocidex.com/golang/go-ntfs v0.2.1-0.20250322152626-3c09d909d740
 	www.velocidex.com/golang/go-pe v0.1.1-0.20251107001057-f93001158cd9
 	www.velocidex.com/golang/go-prefetch v0.0.0-20251027080408-85407689d0cb
