@@ -226,8 +226,8 @@ func (self _ESEPlugin) Call(
 		}
 
 		if err != nil {
-			scope.Log("parse_ese: Unable to dump file %s: %v",
-				arg.Filename, err)
+			scope.Log("parse_ese: Unable to dump file %s (table %v): %v",
+				arg.Filename, arg.Table, err)
 			return
 		}
 	}()

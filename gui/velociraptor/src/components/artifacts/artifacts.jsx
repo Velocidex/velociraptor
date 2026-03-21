@@ -92,6 +92,8 @@ class ArtifactInspector extends React.Component {
         history: PropTypes.object,
     };
 
+    searchInput = React.createRef();
+
     state = {
         selectedDescriptor: undefined,
         multiSelectedDescriptors: [],
@@ -125,7 +127,10 @@ class ArtifactInspector extends React.Component {
 
     componentDidMount = () => {
         this.source = CancelToken.source();
-        this.searchInput.focus();
+        if(this.searchInput && this.searchInput.current) {
+            this.searchInput.current.focus();
+        }
+
         let artifact_name = this.props.match && this.props.match.params &&
             this.props.match.params.artifact;
 
@@ -151,6 +156,7 @@ class ArtifactInspector extends React.Component {
 
     componentWillUnmount() {
         this.source.cancel();
+        this.searchInput = null;
     }
 
     updateSearch = (value) => {
@@ -500,12 +506,12 @@ class ArtifactInspector extends React.Component {
                   <InputGroup>
                     { this.renderFilter() }
                     <Form.Control className="artifact-search-input"
-                                 ref={(input) => { this.searchInput = input; }}
-                                 value={this.state.current_filter}
-                                 onChange={(e) => this.updateSearch(
-                                     e.currentTarget.value)}
-                                 placeholder={T("Search for artifact")}
-                                 spellCheck="false"
+                                  ref={this.searchInput}
+                                  value={this.state.current_filter}
+                                  onChange={(e) => this.updateSearch(
+                                      e.currentTarget.value)}
+                                  placeholder={T("Search for artifact")}
+                                  spellCheck="false"
                     />
                     <ToolTip tooltip={T("Clear")}  >
                       <Button onClick={()=>this.updateSearch("")}
