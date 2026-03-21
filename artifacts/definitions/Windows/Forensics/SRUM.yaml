@@ -3,8 +3,8 @@ description: |
   Process the SRUM database.
 
 reference:
-  - https://www.sans.org/cyber-security-summit/archives/file/summit-archive-1492184583.pdf
-  - https://cyberforensicator.com/2017/08/06/windows-srum-forensics/
+  - https://medium.com/@cyberengage.org/making-sense-of-srum-data-with-srum-dump-tool-67b90402df41
+  - https://blog.elcomsoft.com/2025/08/analyzing-the-windows-srum-database/
 
 type: client
 
