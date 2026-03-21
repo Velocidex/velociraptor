@@ -104,6 +104,7 @@ func transformArgv(argv []string) ([]string, error) {
 			}
 
 			if utils.InString(choices, arg) {
+				current_artifact_arg = arg
 				runmode_args = append(runmode_args, arg)
 				state.Push(RUN_CLI_MODE)
 				continue
