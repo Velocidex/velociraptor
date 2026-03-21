@@ -183,8 +183,14 @@ export default class ToolViewer extends React.Component {
         this.setToolInfo(tool);
     };
 
-    render() {
-        let tool = this.state.tool || {};
+    renderDialog = tool=>{
+        let tool_version_options = _.map(tool.versions, x=>{
+             return {value: x.artifact,
+                     tool: x,
+                     label: x.artifact,
+                     isFixed: true};
+        });
+
         let cards = [];
 
         if (tool.serve_locally && !this.state.hide_1) {
@@ -347,12 +353,177 @@ export default class ToolViewer extends React.Component {
             );
         }
 
-        let tool_version_options = _.map(tool.versions, x=>{
-             return {value: x.artifact,
-                     tool: x,
-                     label: x.artifact,
-                     isFixed: true};
-        });
+        return (
+            <Modal className="full-height"
+                   show={true}
+                   dialogClassName="modal-90w"
+                   enforceFocus={true}
+                   scrollable={true}
+                   onHide={() => this.setState({showDialog: false})}>
+              <Modal.Header closeButton>
+                <Modal.Title>{T("Tool")} {this.props.name}</Modal.Title>
+              </Modal.Header>
+              <Modal.Body className="tool-viewer">
+                <dl className="row">
+                  { tool.versions &&
+                    <>
+                      <dt  className="col-4">{T("Other Definitions")}</dt>
+                      <dd className="col-8">
+                        <Select
+                          className="tool-selector"
+                          classNamePrefix="velo"
+                          placeholder={T("Select other definition to reset inventory")}
+                          options={tool_version_options}
+                          onChange={e=>{
+                              e.tool && this.setState({showUpdateDialog: e.tool});
+                          }}
+                        />
+                      </dd>
+                    </>}
+                  { tool.artifact &&
+                    <>
+                      <dt className="col-4">{T("Artifact Definition")}</dt>
+                      <dd className="col-8">{tool.artifact}</dd></>}
+
+                  { tool.name &&
+                    <>
+                      <dt className="col-4">{T("Tool Name")}</dt>
+                      <dd className="col-8">{tool.name}</dd></>}
+
+                  { tool.version &&
+                    <>
+                      <dt className="col-4">{T("Tool Version")}</dt>
+                      <dd className="col-8">{tool.version}</dd></>}
+
+                  { tool.expected_hash &&
+                    <>
+                      <dt className="col-4">{T("Expected Hash")}</dt>
+                      <dd className="col-8">
+                        {tool.expected_hash}
+                      </dd></>}
+
+                  { tool.invalid_hash &&
+                    <>
+                      <dt className="col-4">{T("Upstream Hash")}</dt>
+                      <dd className="col-8">
+                        {tool.invalid_hash}
+                        <Button
+                          onClick={x=>this.acceptUpstreamHash()}
+                          variant="outline-info">
+                          {T("Click to accept")}
+                        </Button>
+                      </dd></>}
+
+                  { tool.url &&
+                    <>
+                      <dt className="col-4">{T("Upstream URL")}</dt>
+                      <dd className="col-8">{tool.url}</dd> </>}
+
+                  { tool.filename &&
+                    <>
+                      <dt className="col-4">{T("Endpoint Filename")}</dt>
+                      <dd className="col-8">{tool.filename}</dd></>}
+
+                  { tool.hash &&
+                    <>
+                      <dt className="col-4">{T("Hash")}</dt>
+                      <dd className="col-8">{ tool.hash }</dd> </>}
+
+                  { tool.github_project &&
+                    <>
+                      <dt className="col-4">{T("Github Project")}</dt>
+                      <dd className="col-8">{ tool.github_project}</dd></>}
+
+                  { tool.github_asset_regex &&
+                    <>
+                      <dt className="col-4">{T("Github Asset Regex")}</dt>
+                      <dd className="col-8">{ tool.github_asset_regex}</dd></>}
+
+                  { tool.serve_locally &&
+                    <>
+                      <dt className="col-4">{T("Serve Locally")}</dt>
+                      <dd className="col-8">{ tool.serve_locally }</dd></>}
+
+                  { tool.serve_url &&
+                    <>
+                      <dt className="col-4">{T("Serve URL")}</dt>
+                      <dd className="col-8">{ tool.serve_url }</dd></>}
+
+                  { tool.admin_override &&
+                    <>
+                      <dt className="col-4">{T("Admin Override")}</dt>
+                      <dd className="col-8">{ tool.admin_override }</dd></>}
+                </dl>
+                <Row>
+                  <Col sm="12">
+                    <Card>
+                      <Card.Header className="text-center">{T("Override Tool")}</Card.Header>
+                      <Card.Body>
+                        <Card.Text>
+                          {T("OverrideToolDesc")}
+                        </Card.Text>
+                        <Form className="selectable">
+                          <InputGroup className="mb-3 custom-file-button">
+                            { this.state.tool_file ?
+                              <Form.Label
+                                className={classNames({"foo": "bar","disabled": !this.state.tool_file})}
+                                disabled={!this.state.tool_file}
+                                onClick={this.uploadFile}>
+                                { this.state.loading ?
+                                  <FontAwesomeIcon icon="spinner" spin /> :
+                                  T("Click to upload file")
+                                }
+                              </Form.Label> :
+
+                              <Form.Label data-browse={T("Select file")}>
+                                { this.state.tool_file ? this.state.tool_file.name :
+                                  T("Select file")}
+                              </Form.Label>
+                            }
+                            <Form.Control type="file"
+                                          onChange={e => {
+                                              if (!_.isEmpty(e.currentTarget.files)) {
+                                                  this.setState({tool_file: e.currentTarget.files[0]});
+                                              }
+                                          }}
+                            />
+                          </InputGroup>
+                        </Form>
+                        <Form className="selectable">
+                          <InputGroup>
+                            <Button
+                              disabled={this.state.inflight || !this.state.remote_url}
+                              onClick={this.setServeUrl}>
+                              { this.state.inflight ?
+                                <FontAwesomeIcon icon="spinner" spin /> :
+                                T("Set Serve URL") }
+                            </Button>
+                            <Form.Control as="input"
+                                          value={this.state.remote_url}
+                                          onChange={e=>this.setState(
+                                              {remote_url: e.currentTarget.value})}
+                            />
+                          </InputGroup>
+                        </Form>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                </Row>
+                <Row>
+                  { _.map(cards, (x, i)=>{
+                      return <Col key={i}>{x}</Col>;
+                  })}
+                </Row>
+              </Modal.Body>
+              <Modal.Footer>
+              </Modal.Footer>
+            </Modal>
+        );
+    }
+
+    render() {
+        let tool = this.state.tool || {};
+
         return (
             <>
               { this.state.showUpdateDialog &&
@@ -362,170 +533,7 @@ export default class ToolViewer extends React.Component {
                       x=>this.setState({showUpdateDialog: false}))}>
                 </ResetToolDialog>
               }
-              <Modal show={this.state.showDialog}
-                     className="full-height"
-                     dialogClassName="modal-90w"
-                     enforceFocus={true}
-                     scrollable={true}
-                     onHide={() => this.setState({showDialog: false})}>
-                <Modal.Header closeButton>
-                  <Modal.Title>{T("Tool")} {this.props.name}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="tool-viewer">
-                  <dl className="row">
-                    { tool.versions &&
-                      <>
-                        <dt  className="col-4">{T("Other Definitions")}</dt>
-                        <dd className="col-8">
-                          <Select
-                            className="tool-selector"
-                            classNamePrefix="velo"
-                            placeholder={T("Select other definition to reset inventory")}
-                            options={tool_version_options}
-                            onChange={e=>{
-                                e.tool && this.setState({showUpdateDialog: e.tool});
-                            }}
-                          />
-                        </dd>
-                      </>}
-                    { tool.artifact &&
-                      <>
-                        <dt className="col-4">{T("Artifact Definition")}</dt>
-                        <dd className="col-8">{tool.artifact}</dd></>}
-
-                    { tool.name &&
-                      <>
-                        <dt className="col-4">{T("Tool Name")}</dt>
-                        <dd className="col-8">{tool.name}</dd></>}
-
-                    { tool.version &&
-                      <>
-                        <dt className="col-4">{T("Tool Version")}</dt>
-                        <dd className="col-8">{tool.version}</dd></>}
-
-                    { tool.expected_hash &&
-                      <>
-                        <dt className="col-4">{T("Expected Hash")}</dt>
-                        <dd className="col-8">
-                          {tool.expected_hash}
-                        </dd></>}
-
-                    { tool.invalid_hash &&
-                      <>
-                        <dt className="col-4">{T("Upstream Hash")}</dt>
-                        <dd className="col-8">
-                          {tool.invalid_hash}
-                          <Button
-                             onClick={x=>this.acceptUpstreamHash()}
-                            variant="outline-info">
-                            {T("Click to accept")}
-                          </Button>
-                        </dd></>}
-
-                    { tool.url &&
-                      <>
-                        <dt className="col-4">{T("Upstream URL")}</dt>
-                        <dd className="col-8">{tool.url}</dd> </>}
-
-                    { tool.filename &&
-                      <>
-                        <dt className="col-4">{T("Endpoint Filename")}</dt>
-                        <dd className="col-8">{tool.filename}</dd></>}
-
-                    { tool.hash &&
-                      <>
-                        <dt className="col-4">{T("Hash")}</dt>
-                        <dd className="col-8">{ tool.hash }</dd> </>}
-
-                    { tool.github_project &&
-                      <>
-                        <dt className="col-4">{T("Github Project")}</dt>
-                        <dd className="col-8">{ tool.github_project}</dd></>}
-
-                    { tool.github_asset_regex &&
-                      <>
-                        <dt className="col-4">{T("Github Asset Regex")}</dt>
-                        <dd className="col-8">{ tool.github_asset_regex}</dd></>}
-
-                    { tool.serve_locally &&
-                      <>
-                        <dt className="col-4">{T("Serve Locally")}</dt>
-                        <dd className="col-8">{ tool.serve_locally }</dd></>}
-
-                    { tool.serve_url &&
-                      <>
-                        <dt className="col-4">{T("Serve URL")}</dt>
-                        <dd className="col-8">{ tool.serve_url }</dd></>}
-
-                    { tool.admin_override &&
-                      <>
-                        <dt className="col-4">{T("Admin Override")}</dt>
-                        <dd className="col-8">{ tool.admin_override }</dd></>}
-                  </dl>
-                  <Row>
-                    <Col sm="12">
-                      <Card>
-                        <Card.Header className="text-center">{T("Override Tool")}</Card.Header>
-                        <Card.Body>
-                          <Card.Text>
-                            {T("OverrideToolDesc")}
-                          </Card.Text>
-                          <Form className="selectable">
-                            <InputGroup className="mb-3 custom-file-button">
-                              { this.state.tool_file ?
-                                <Form.Label
-                                  className={classNames({"foo": "bar","disabled": !this.state.tool_file})}
-                                  disabled={!this.state.tool_file}
-                                  onClick={this.uploadFile}>
-                                  { this.state.loading ?
-                                    <FontAwesomeIcon icon="spinner" spin /> :
-                                    T("Click to upload file")
-                                  }
-                                </Form.Label> :
-
-                                <Form.Label data-browse={T("Select file")}>
-                                  { this.state.tool_file ? this.state.tool_file.name :
-                                    T("Select file")}
-                                </Form.Label>
-                              }
-                              <Form.Control type="file"
-                                            onChange={e => {
-                                                if (!_.isEmpty(e.currentTarget.files)) {
-                                                    this.setState({tool_file: e.currentTarget.files[0]});
-                                                }
-                                            }}
-                              />
-                            </InputGroup>
-                          </Form>
-                          <Form className="selectable">
-                            <InputGroup>
-                              <Button
-                                disabled={this.state.inflight || !this.state.remote_url}
-                                onClick={this.setServeUrl}>
-                                { this.state.inflight ?
-                                  <FontAwesomeIcon icon="spinner" spin /> :
-                                  T("Set Serve URL") }
-                              </Button>
-                              <Form.Control as="input"
-                                            value={this.state.remote_url}
-                                            onChange={e=>this.setState(
-                                                {remote_url: e.currentTarget.value})}
-                              />
-                            </InputGroup>
-                          </Form>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  </Row>
-                  <Row>
-                    { _.map(cards, (x, i)=>{
-                        return <Col key={i}>{x}</Col>;
-                    })}
-                  </Row>
-                </Modal.Body>
-                <Modal.Footer>
-                </Modal.Footer>
-              </Modal>
+              { this.state.showDialog && this.renderDialog(tool) }
               <Button
                 className="tool-link"
                 onClick={() => this.setState({showDialog: true})}

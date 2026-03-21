@@ -90,7 +90,7 @@ func (self _SRUMLookupId) Call(
 		}
 		defer reader.Close()
 
-		ese_ctx, err := parser.NewESEContext(reader)
+		ese_ctx, err := parser.NewESEContext(reader, reader.MaxSize())
 		if err != nil {
 			scope.Log("srum_lookup_id: NewESEContext: Unable to open file %s: %v",
 				arg.Filename, err)
@@ -199,7 +199,7 @@ func (self _ESEPlugin) Call(
 		}
 		defer reader.Close()
 
-		ese_ctx, err := parser.NewESEContext(reader)
+		ese_ctx, err := parser.NewESEContext(reader, reader.MaxSize())
 		if err != nil {
 			scope.Log("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
@@ -226,8 +226,8 @@ func (self _ESEPlugin) Call(
 		}
 
 		if err != nil {
-			scope.Log("parse_ese: Unable to dump file %s: %v",
-				arg.Filename, err)
+			scope.Log("parse_ese: Unable to dump file %s (table %v): %v",
+				arg.Filename, arg.Table, err)
 			return
 		}
 	}()
@@ -272,14 +272,15 @@ func (self _ESECatalogPlugin) Call(
 			arg.Accessor = "auto"
 		}
 
-		reader, err := readers.NewAccessorReader(scope, arg.Accessor, arg.Filename, 10000)
+		reader, err := readers.NewAccessorReader(
+			scope, arg.Accessor, arg.Filename, 10000)
 		if err != nil {
 			scope.Log("parse_ese_catalog: %v", err)
 			return
 		}
 		defer reader.Close()
 
-		ese_ctx, err := parser.NewESEContext(reader)
+		ese_ctx, err := parser.NewESEContext(reader, reader.MaxSize())
 		if err != nil {
 			scope.Log("parse_ese_catalog: Unable to open file %s: %v",
 				arg.Filename, err)

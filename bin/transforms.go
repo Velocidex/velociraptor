@@ -14,55 +14,160 @@ var (
 	stopError = errors.New("Stop")
 )
 
+type STATE int
+
+type StateStack struct {
+	states []STATE
+}
+
+func (self *StateStack) State() STATE {
+	return self.states[len(self.states)-1]
+}
+
+func (self *StateStack) Push(state STATE) {
+	self.states = append(self.states, state)
+}
+
+func (self *StateStack) Pop() {
+	self.states = self.states[:len(self.states)-1]
+}
+
+const (
+	_ = iota
+
+	START_MODE STATE = iota
+
+	// We saw the -o flag, next look for the output arg
+	RUN_OUT_MODE
+
+	// We saw the -r flag - next look for the artifact name.
+	RUN_ARTIFACT_MODE
+
+	// Collecting args for run mode
+	RUN_ARGS_MODE
+
+	RUN_ARGS_VALUE_MODE
+)
+
 // Detect alternative command line processing and transform into a
 // standardized set.
 func transformArgv(argv []string) ([]string, error) {
-	for idx, arg := range argv {
+	var prefix []string
+	var runmode_args []string
 
-		// We are in run mode - any following parameters will be
-		// interpreted as CLI args to the artifact.
-		if idx < len(argv)-1 && (arg == "-r" || arg == "--run") {
-			artifact_name := argv[idx+1]
-			result := append([]string{
-				"artifacts", "collect", artifact_name}, argv[:idx]...)
+	// When parsing the artifact arg we hold this until we get the
+	// next value.
+	var current_artifact_arg string
 
-			// Expected the rest of the args to follow artifact params
-			for i := idx; i < len(argv); i++ {
-				arg := argv[i]
+	// The name of the artifact.
+	var artifact_name string
 
-				// CLI help mode
-				if arg == "-h" || arg == "--help" {
-					result := append([]string{},
-						[]string{"artifacts", "collect",
-							"--cli_help_mode", artifact_name}...)
+	state := StateStack{}
+	state.Push(START_MODE)
 
-					result = append(result, argv[:idx]...)
-					return result, nil
-				}
-
-				// The arg can contain = to separate the name and
-				// value
-				if strings.Contains(arg, "=") {
-					parts := strings.SplitN(arg, "=", 2)
-					result = append(result,
-						[]string{"--args", parts[0][2:] + "=" + parts[1]}...)
-					continue
-				}
-
-				if strings.HasPrefix(arg, "--") {
-					if i+1 >= len(argv) {
-						return nil, fmt.Errorf("Parameter %v must be followed by value",
-							arg)
-					}
-					param := argv[i+1]
-
-					// Does the parameter have an = sign in it?
-					result = append(result,
-						[]string{"--args", arg[2:] + "=" + param}...)
-				}
+	for _, arg := range argv {
+		switch state.State() {
+		case START_MODE:
+			if arg == "-r" || arg == "--run" {
+				runmode_args = []string{"artifacts", "collect"}
+				state.Push(RUN_ARTIFACT_MODE)
+				continue
 			}
-			return result, nil
+
+			// Regular args, just append them to the prefix
+			prefix = append(prefix, arg)
+
+		case RUN_ARTIFACT_MODE:
+			// Next parameter is the artifact name.
+			artifact_name = arg
+			runmode_args = append(runmode_args, artifact_name)
+
+			// Next collect artifact parameters
+			state.Push(RUN_ARGS_MODE)
+
+			// Accept the arg parameter for the artifact.
+		case RUN_ARGS_MODE:
+
+			// Allow the output parameter to be specified as part of
+			// the artifact parameters but treat it especially.
+
+			// In artifact run mode we allow the short flag -o to mean
+			// --output
+			if arg == "-o" {
+				arg = "--output"
+			}
+
+			if arg == "--output" {
+				runmode_args = append(runmode_args, arg)
+				state.Push(RUN_OUT_MODE)
+				continue
+			}
+
+			// Immediately abort all parsing and show artifact help.
+			if arg == "-h" || arg == "--help" {
+				return append(prefix, []string{"artifacts", "collect",
+					"--cli_help_mode", artifact_name}...), nil
+			}
+
+			if !strings.HasPrefix(arg, "--") {
+				return nil, fmt.Errorf(
+					"Run mode artifact parameters must start with `--`. Unexpected arg %v",
+					arg)
+			}
+
+			current_artifact_arg = arg
+			arg = strings.TrimPrefix(arg, "--")
+
+			// Allow the flag to contain `=` or not
+			if strings.Contains(arg, "=") {
+				parts := strings.SplitN(arg, "=", 2)
+				runmode_args = append(runmode_args,
+					[]string{"--args", parts[0] + "=" + parts[1]}...)
+				continue
+			}
+
+			// Need to see the arg parameter next
+			state.Push(RUN_ARGS_VALUE_MODE)
+
+		case RUN_ARGS_VALUE_MODE:
+			flag := strings.TrimPrefix(current_artifact_arg, "--")
+			runmode_args = append(runmode_args,
+				[]string{"--args", flag + "=" + arg}...)
+			state.Pop()
+
+		case RUN_OUT_MODE:
+			runmode_args = append(runmode_args, arg)
+			state.Pop()
+
+			// Something went horrible wrong!
+		default:
+			break
 		}
 	}
-	return argv, nil
+
+	// After parsing the commandline we need to know where state we
+	// are left at so we can emit errors on short command lines.
+	switch state.State() {
+	case START_MODE:
+		return prefix, nil
+
+	case RUN_ARGS_MODE:
+		res := append(prefix, runmode_args...)
+		return res, nil
+
+	case RUN_ARGS_VALUE_MODE:
+		return nil, fmt.Errorf(
+			"Expecting a value to follow flag `%v`",
+			current_artifact_arg)
+
+	case RUN_OUT_MODE:
+		return nil, fmt.Errorf(
+			"Expecting a value to follow `--output` flag")
+
+	case RUN_ARTIFACT_MODE:
+		return nil, fmt.Errorf(
+			"Expecting an artifact name to follow the --run flag")
+	}
+
+	return nil, fmt.Errorf("Failed to parse argv?")
 }

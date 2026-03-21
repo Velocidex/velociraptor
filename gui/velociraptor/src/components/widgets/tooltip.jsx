@@ -5,31 +5,30 @@ import Tooltip from 'react-bootstrap/Tooltip';
 
 import "./tooltip.css";
 
-const ToolTip = ({ id, children, tooltip, placement }) => {
-    if (!tooltip) {
-        return <>{children}</>;
+
+export default class ToolTip extends React.Component {
+    static propTypes = {
+        id: PropTypes.string,
+        children: PropTypes.node.isRequired,
+        tooltip: PropTypes.any,
+        placement: PropTypes.string,
     }
-    return (
-        <OverlayTrigger
-          placement={placement || "top"}
-          overlay={
-              <Tooltip id={id}>
-                {tooltip}
-                <span className="sr-only">
-                  {tooltip}
-                </span>
-              </Tooltip>
-          }>
-          {children}
-        </OverlayTrigger>
-    );
-};
 
-ToolTip.propTypes = {
-    id: PropTypes.string,
-    children: PropTypes.node.isRequired,
-    tooltip: PropTypes.any,
-    placement: PropTypes.string,
-};
+    render() {
+        if (!this.props.tooltip) {
+            return <>{this.props.children}</>;
+        }
 
-export default ToolTip;
+        let tp = <Tooltip id={this.props.tooltip}>
+                   {this.props.tooltip}
+                 </Tooltip>;
+
+        return (
+            <OverlayTrigger
+              placement={this.props.placement || "top"}
+              overlay={tp}>
+              {this.props.children}
+            </OverlayTrigger>
+        );
+    }
+}
