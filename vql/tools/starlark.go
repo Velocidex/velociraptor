@@ -1,6 +1,3 @@
-//go:build sumo
-// +build sumo
-
 package tools
 
 import (
@@ -16,6 +13,7 @@ import (
 	"go.starlark.net/starlarkstruct"
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
@@ -469,6 +467,10 @@ func (self starlarkFuncWrapper) Copy() types.FunctionInterface {
 
 func (self starlarkFuncWrapper) Call(ctx context.Context,
 	scope types.Scope, args *ordereddict.Dict) types.Any {
+
+	functions.DeduplicatedLog(
+		ctx, scope,
+		"starl: Warning: This module is experiemental and may be removed in the future. Please provide feedback about its usefulness to the Velociraptor team!")
 
 	// create new thread per call
 	sthread := &starlark.Thread{Name: "VQL Thread", Load: starlib.Loader}

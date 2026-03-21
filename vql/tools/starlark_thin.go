@@ -1,5 +1,5 @@
-//go:build !sumo
-// +build !sumo
+//go:build XXXXX
+// +build XXXXX
 
 package tools
 

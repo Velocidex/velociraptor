@@ -388,6 +388,13 @@ func Windows() error {
 		arch:       "amd64"}.Run()
 }
 
+func WindowsSumo() error {
+	return Builder{
+		extra_tags: " release yara sumo ",
+		goos:       "windows",
+		arch:       "amd64"}.Run()
+}
+
 // Windows client without a gui.
 func WindowsBare() error {
 	return Builder{

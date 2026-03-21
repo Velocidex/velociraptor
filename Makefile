@@ -42,6 +42,9 @@ linux_m1:
 linux_sumo:
 	go run make.go -v LinuxSumo
 
+windows_sumo:
+	go run make.go -v WindowsSumo
+
 linux_arm64:
 	go run make.go -v LinuxArm64
 

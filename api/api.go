@@ -415,8 +415,8 @@ func (self *ApiServer) GetUserUITraits(
 
 	for _, item := range result.Orgs {
 		if utils.IsRootOrg(item.Id) {
-			item.Name = "<root>"
-			item.Id = "root"
+			item.Name = services.ROOT_ORG_NAME
+			item.Id = services.ROOT_ORG_ID
 		}
 	}
 
