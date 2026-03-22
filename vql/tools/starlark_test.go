@@ -1,6 +1,3 @@
-//go:build sumo
-// +build sumo
-
 package tools
 
 import (
