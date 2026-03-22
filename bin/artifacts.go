@@ -74,13 +74,24 @@ var (
 			"store all output in it.").
 		Default("").String()
 
+	artifact_command_collect_client_id = artifact_command_collect.Flag(
+		"client_id", "Used for remote API calls to specify the client id "+
+			"to collect from. By default this is `server` to server "+
+			"artifacts").
+		Default("server").String()
+
+	artifact_command_collect_org_id = artifact_command_collect.Flag(
+		"org_id", "Used for remote API calls to specify the org id "+
+			"(default `root`)").
+		Default("root").String()
+
 	artifact_command_collect_timeout = artifact_command_collect.Flag(
 		"timeout", "Time collection out after this many seconds.").
-		Default("0").Float64()
+		Default("0").Int64()
 
 	artifact_command_collect_progress_timeout = artifact_command_collect.Flag(
 		"progress_timeout", "If specified we terminate the colleciton if no progress is made in this many seconds.").
-		Default("0").Float64()
+		Default("0").Int64()
 
 	artifact_command_collect_cpu_limit = artifact_command_collect.Flag(
 		"cpu_limit", "A number between 0 to 100 representing maximum CPU utilization.").
@@ -154,10 +165,10 @@ func doArtifactCollect() error {
 		}
 	}
 
-	config_obj, err := makeDefaultConfigLoader().
-		WithNullLoader().LoadAndValidate()
+	config_obj, err := APIConfigLoader.WithNullLoader().
+		LoadAndValidate()
 	if err != nil {
-		return fmt.Errorf("Unable to create config: %w", err)
+		return err
 	}
 
 	config_obj.Services = services.GenericToolServices()
@@ -225,6 +236,19 @@ func doArtifactCollect() error {
 		for _, name := range *artifact_command_collect_names {
 			return doArtifactCLIHelp(ctx, config_obj, manager, name)
 		}
+	}
+
+	if config_obj.ApiConfig != nil && config_obj.ApiConfig.Name != "" {
+		logging.GetLogger(config_obj, &logging.ToolComponent).
+			Info("API Client configuration loaded - will make gRPC connection.")
+		return doRemoteArtifactCollection(
+			ctx, config_obj, spec,
+			*artifact_command_collect_org_id,
+			*artifact_command_collect_cpu_limit,
+			*artifact_command_collect_timeout,
+			*artifact_command_collect_client_id,
+			*artifact_command_collect_output,
+		)
 	}
 
 	logger := &LogWriter{config_obj: config_obj}

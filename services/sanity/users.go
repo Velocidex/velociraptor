@@ -85,8 +85,8 @@ func createInitialUsers(
 				}
 
 				if utils.IsRootOrg(org_id) {
-					org_record.Name = "<root>"
-					org_record.Id = "root"
+					org_record.Name = services.ROOT_ORG_NAME
+					org_record.Id = services.ROOT_ORG_ID
 				}
 				new_user.Orgs = append(new_user.Orgs, org_record)
 
