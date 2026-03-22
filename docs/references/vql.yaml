@@ -1519,7 +1519,7 @@
 
     NOTE: Sparse files are padded out
   type: Function
-  version: 2
+  version: 3
   args:
   - name: filename
     type: accessors.OSPath
@@ -4481,7 +4481,6 @@
     SELECT *
     FROM index_search(path=IndexPath, fields="Data", search="syslog")
     ```
-
   type: Plugin
   version: 2
   args:
