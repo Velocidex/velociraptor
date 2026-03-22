@@ -123,8 +123,9 @@ sources:
                 AND Hash.SHA256 = args.ToolHash
         }, else={
            SELECT * FROM scope()
-           WHERE NOT log(message="ERROR:No valid setup - is tool " + ToolName +
-                        " configured in the server inventory?")
+           WHERE NOT log(
+             level="ERROR", message="No valid setup - is tool " + ToolName +
+             " configured in the server inventory?")
         })
 
       // Check if the existing file in the binary file cache matches

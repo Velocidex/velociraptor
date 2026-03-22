@@ -50,6 +50,16 @@ var (
 				"--args", "Foo=Bar", "--output", "/tmp/test.zip"},
 		},
 		{
+			// Use -r with artifact parameters and remote flags
+			in: []string{"-api_config", "x.yaml", "-r",
+				"Generic.Client.Info", "--Foo", "Bar",
+				"-o", "/tmp/test.zip", "--org_id", "XYZ"},
+			out: []string{"-api_config", "x.yaml",
+				"artifacts", "collect", "Generic.Client.Info",
+				"--args", "Foo=Bar", "--output", "/tmp/test.zip",
+				"--org_id", "XYZ"},
+		},
+		{
 			// Use -r with artifact parameters and -h flag
 			in: []string{"-config", "x.yaml", "-r",
 				"Generic.Client.Info", "--Foo", "Bar",

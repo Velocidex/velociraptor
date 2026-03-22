@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	errors "github.com/go-errors/errors"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -37,8 +38,10 @@ const (
 
 	START_MODE STATE = iota
 
-	// We saw the -o flag, next look for the output arg
-	RUN_OUT_MODE
+	// This state is triggered when we see a flag that belongs to the
+	// artifact_command_collect command. We ignore it and the next arg
+	// to ensure it passes undisturbed to the parser.
+	RUN_CLI_MODE
 
 	// We saw the -r flag - next look for the artifact name.
 	RUN_ARTIFACT_MODE
@@ -54,6 +57,9 @@ const (
 func transformArgv(argv []string) ([]string, error) {
 	var prefix []string
 	var runmode_args []string
+
+	// Get all flags that belong to the `artifact collect` command.
+	choices, _, _ := artifact_command_collect.FlagCompletion("", "")
 
 	// When parsing the artifact arg we hold this until we get the
 	// next value.
@@ -97,9 +103,10 @@ func transformArgv(argv []string) ([]string, error) {
 				arg = "--output"
 			}
 
-			if arg == "--output" {
+			if utils.InString(choices, arg) {
+				current_artifact_arg = arg
 				runmode_args = append(runmode_args, arg)
-				state.Push(RUN_OUT_MODE)
+				state.Push(RUN_CLI_MODE)
 				continue
 			}
 
@@ -135,7 +142,7 @@ func transformArgv(argv []string) ([]string, error) {
 				[]string{"--args", flag + "=" + arg}...)
 			state.Pop()
 
-		case RUN_OUT_MODE:
+		case RUN_CLI_MODE:
 			runmode_args = append(runmode_args, arg)
 			state.Pop()
 
@@ -160,9 +167,9 @@ func transformArgv(argv []string) ([]string, error) {
 			"Expecting a value to follow flag `%v`",
 			current_artifact_arg)
 
-	case RUN_OUT_MODE:
+	case RUN_CLI_MODE:
 		return nil, fmt.Errorf(
-			"Expecting a value to follow `--output` flag")
+			"Expecting a value to follow `%v` flag", current_artifact_arg)
 
 	case RUN_ARTIFACT_MODE:
 		return nil, fmt.Errorf(
