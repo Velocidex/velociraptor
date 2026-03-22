@@ -4,6 +4,9 @@ Parameters:
     {"Foo": "Jumps over"}
     {"Foo": "The lazy dog"}
 
+  Docs2: |
+    {"Foo": "Another fox"}
+
 Queries:
   - LET IndexPath <= tempdir()
 

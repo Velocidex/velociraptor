@@ -88,19 +88,28 @@ func (self CopyFunction) Call(ctx context.Context,
 	defer fd.Close()
 
 	permissions := os.FileMode(0600)
-
-	switch arg.Permissions {
-	case "x":
-		permissions = 0700
-
-		// On windows executable means it has a .exe extension.
-		if runtime.GOOS == "windows" &&
-			!strings.HasSuffix(arg.Destination, ".exe") {
-			arg.Destination += ".exe"
+	if arg.Permissions != "" {
+		permissions, err = utils.ParseFileMode(arg.Permissions)
+		if err != nil {
+			scope.Log("copy: %v", err)
+			return vfilter.Null{}
 		}
+	}
 
-	case "r":
-		permissions = 0400
+	dir_permissions := os.FileMode(0o700)
+	if arg.DirPermissions != "" {
+		dir_permissions, err = utils.ParseFileMode(arg.DirPermissions)
+		if err != nil {
+			scope.Log("copy: %v", err)
+			return vfilter.Null{}
+		}
+	}
+
+	// On windows executable means it has a .exe extension.
+	if runtime.GOOS == "windows" &&
+		(permissions&0o111 > 0) &&
+		!strings.HasSuffix(arg.Destination, ".exe") {
+		arg.Destination += ".exe"
 	}
 
 	// Report the command we ran for auditing
@@ -131,7 +140,7 @@ func (self CopyFunction) Call(ctx context.Context,
 	}
 
 	if arg.Directories {
-		err = os.MkdirAll(filepath.Dir(arg.Destination), 0700)
+		err = os.MkdirAll(filepath.Dir(arg.Destination), dir_permissions)
 		if err != nil {
 			scope.Log("copy: Failed to create directories for %v: %v",
 				arg.Destination, err)
@@ -166,7 +175,7 @@ func (self CopyFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 		Doc:      "Copy a file.",
 		ArgType:  type_map.AddType(scope, &CopyFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE, acls.FILESYSTEM_READ).Build(),
-		Version:  2,
+		Version:  3,
 	}
 }
 
