@@ -2,6 +2,7 @@ package functions
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -78,14 +79,15 @@ func (self *AlertFunction) Call(ctx context.Context,
 	if log_fuction.ShouldMessageBeSuppressed(
 		ctx, scope, arg.AlertName, arg.DedupTime) {
 		return (&LogFunction{}).Call(ctx, scope, ordereddict.NewDict().
-			Set("message", string(serialized)).
+			Set("message", fmt.Sprintf("Alert %v (Sup): %v", arg.AlertName,
+				string(serialized))).
 			Set("dedup", arg.DedupTime).
 			Set("level", logging.INFO))
 	}
 
 	return (&LogFunction{}).Call(ctx, scope, ordereddict.NewDict().
 		Set("message", string(serialized)).
-		Set("dedup", arg.DedupTime).
+		Set("dedup", -1).
 		Set("level", logging.ALERT))
 }
 

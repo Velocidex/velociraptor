@@ -31,7 +31,8 @@ var (
 
 	unzip_cmd_list = unzip_cmd.Flag("list", "List files in the zip").Short('l').Bool()
 
-	unzip_cmd_print = unzip_cmd.Flag("print", "Dump out the files in the zip").Short('p').Bool()
+	unzip_cmd_print    = unzip_cmd.Flag("print", "Dump out the files in the zip").Short('p').Bool()
+	unzip_cmd_password = unzip_cmd.Flag("password", "Use this password to extract ZIP").String()
 
 	unzip_cmd_file = unzip_cmd.Arg("file", "Zip file to parse").Required().String()
 
@@ -80,6 +81,7 @@ func doUnzip() error {
 			Set("ZipPath", filename).
 			Set("DumpDir", *unzip_path).
 			Set("MemberGlob", *unzip_cmd_member).
+			Set(constants.ZIP_PASSWORDS, *unzip_cmd_password).
 			Set(constants.REPORT_ZIP_PASSWORD, *unzip_cmd_report_password),
 	}
 
@@ -142,12 +144,17 @@ func runUnzipPrint(builder services.ScopeBuilder) error {
           FROM glob(globs=MemberGlob,
                     root=pathspec(DelegatePath=ZipPath),
                     accessor='collector')
-          WHERE NOT IsDir AND OSPath =~ '.json$'
+          WHERE NOT IsDir AND OSPath.Path =~ '.json$'
        }, query={
-           SELECT *
+          SELECT OSPath.Path AS Filename, *
           FROM parse_jsonl(filename=OSPath, accessor='collector')
        })
     `
+
+	if *unzip_cmd_filter != "" {
+		query += " WHERE " + *unzip_cmd_filter
+	}
+
 	return runQueryWithEnv(query, builder, *unzip_format)
 }
 
