@@ -60,7 +60,7 @@ func (self *_CacheObj) materialize() {
 		}
 	}
 
-	self.scope.Log("cache %v: Filled cache with %v rows", self.name, count)
+	self.scope.Log("memoize %v: Filled cache with %v rows", self.name, count)
 	self.expires = time.Now().Add(self.period)
 }
 
@@ -134,7 +134,12 @@ func (self _MemoizeFunction) Call(ctx context.Context, scope vfilter.Scope,
 		arg.Name = vfilter.FormatToString(scope, arg.Query)
 	}
 
-	res, err := NewCacheObj(ctx, scope, opts,
+	// The _CacheObj will outlast this function call so we tie its
+	// context to the scope.
+	sub_ctx, cancel := context.WithCancel(context.Background())
+	vql_subsystem.GetRootScope(scope).AddDestructor(cancel)
+
+	res, err := NewCacheObj(sub_ctx, scope, opts,
 		arg.Name, arg.Query, arg.Key, period)
 	if err != nil {
 		scope.Log("memoize: %s", err.Error())

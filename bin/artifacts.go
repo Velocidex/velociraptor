@@ -495,12 +495,14 @@ func doArtifactCLIHelp(
 	}
 	app.UsageForContextWithTemplate(
 		parse_context, 2, fmt.Sprintf(`
-usage: {{.App.Name}}[<common flags> ...] -r %v [<artifact params> ...]:
+usage: {{.App.Name}} [<common flags> ...] -r %v [<artifact params> ...]:
+
+%v
 
 Common Flags:
 {{with .Context.Flags|FlagsToTwoColumns}}{{FormatTwoColumnsWithIndent . 4 2}}{{end}}
 Artifact Parameters:
-`, artifact.Name))
+`, artifact.Name, artifact.Description))
 
 	for _, param := range artifact.Parameters {
 		desc := strings.TrimSpace(param.Description)

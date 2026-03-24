@@ -5,12 +5,12 @@ package materializer
 import (
 	"bufio"
 	"context"
-	"encoding/json"
 	"io"
 	"os"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
@@ -31,6 +31,7 @@ type TempFileMatrializer struct {
 	filename string
 	tempfile io.Closer
 	writer   *bufio.Writer
+	size     int
 }
 
 func NewTempFileMatrializer(
@@ -81,6 +82,7 @@ func (self *TempFileMatrializer) Close() {
 }
 
 func (self *TempFileMatrializer) WriteRow(row types.Row) error {
+	self.size++
 	serialized, err := json.Marshal(row)
 	if err != nil {
 		return err
@@ -238,6 +240,7 @@ func (self Materializer) Materialize(
 	}
 
 	if file_writer != nil {
+		scope.Log("WARN:Materialized %v rows", file_writer.size)
 		return file_writer
 	}
 	return materializer.NewInMemoryMatrializer(rows)
