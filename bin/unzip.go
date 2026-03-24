@@ -87,8 +87,10 @@ func doUnzip() error {
 
 	if *unzip_cmd_list {
 		err = runUnzipList(builder)
+
 	} else if *unzip_cmd_print {
 		err = runUnzipPrint(builder)
+
 	} else {
 		err = runUnzipFiles(builder)
 	}
