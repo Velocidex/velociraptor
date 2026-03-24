@@ -21,7 +21,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
+	"path/filepath"
 
 	errors "github.com/go-errors/errors"
 )
@@ -122,5 +122,5 @@ func Join(base string, names ...string) string {
 		}
 	}
 
-	return strings.Join(escaped, "/")
+	return filepath.Join(escaped...)
 }

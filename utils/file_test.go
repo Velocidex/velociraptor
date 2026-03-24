@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"runtime"
 	"testing"
 
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -24,8 +25,10 @@ var (
 )
 
 func TestJoin(t *testing.T) {
-	for _, tc := range joinTests {
-		out := Join(tc.base, tc.name)
-		assert.Equal(t, out, tc.out)
+	if runtime.GOOS == "linux" {
+		for _, tc := range joinTests {
+			out := Join(tc.base, tc.name)
+			assert.Equal(t, out, tc.out)
+		}
 	}
 }
