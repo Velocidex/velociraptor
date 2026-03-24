@@ -103,13 +103,6 @@ func transformArgv(argv []string) ([]string, error) {
 				arg = "--output"
 			}
 
-			if utils.InString(choices, arg) {
-				current_artifact_arg = arg
-				runmode_args = append(runmode_args, arg)
-				state.Push(RUN_CLI_MODE)
-				continue
-			}
-
 			// Immediately abort all parsing and show artifact help.
 			if arg == "-h" || arg == "--help" {
 				return append(prefix, []string{"artifacts", "collect",
@@ -120,6 +113,23 @@ func transformArgv(argv []string) ([]string, error) {
 				return nil, fmt.Errorf(
 					"Run mode artifact parameters must start with `--`. Unexpected arg %v",
 					arg)
+			}
+
+			// Special handling for args with = in them.
+			if strings.Contains(arg, "=") {
+				parts := strings.SplitN(arg, "=", 2)
+				if utils.InString(choices, parts[0]) {
+					current_artifact_arg = arg
+					runmode_args = append(runmode_args, parts...)
+					continue
+				}
+			}
+
+			if utils.InString(choices, arg) {
+				current_artifact_arg = arg
+				runmode_args = append(runmode_args, arg)
+				state.Push(RUN_CLI_MODE)
+				continue
 			}
 
 			current_artifact_arg = arg
