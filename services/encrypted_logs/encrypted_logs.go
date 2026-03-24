@@ -52,7 +52,7 @@ func StartEncryptedLog(
 	}
 
 	filename, err := filepath.Abs(
-		filepath.Join(tmpdir, config_obj.Client.LogfileName))
+		utils.Join(tmpdir, config_obj.Client.LogfileName))
 	if err != nil {
 		return err
 	}

@@ -578,6 +578,19 @@ GUI:
     # Allow IdP-initiated SAML flow.
     saml_allow_idp_initiated: false
 
+    # This feature allows roles to be set in the SAML claims. It is a
+    # similar feature to the OIDC Role setting below but less
+    # flexible. If you need more flexibility, prefer to use the OIDC
+    # flow.
+    #
+    # When these are configured, any user that authenticated with SAML
+    # will receive these roles on *all* the orgs. These roles are the
+    # minimum roles the user can have - you can add more roles via the
+    # GUI
+    #
+    # NOTE: roles are additive which means you can not revoke the
+    # roles from the IDP. If you need this use the OIDC flow below
+    # with the override_acls flag.
     saml_user_roles:
       - analyst
       - investigator
@@ -624,6 +637,8 @@ GUI:
       # claim (the claim can be named for example 'roles'). If this is
       # configured we use the role map below to assign Velociraptor
       # roles based on the OIDC server's roles.
+      #
+      # NOTE: The roles will be assigned to the user in all orgs.
       roles: ""
 
       # A mapping between OIDC claim roles and Velociraptor roles.

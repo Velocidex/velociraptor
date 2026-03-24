@@ -3,7 +3,6 @@ package orgs
 import (
 	"context"
 	"errors"
-	"path/filepath"
 	"sort"
 	"sync"
 	"time"
@@ -207,9 +206,9 @@ func (self *OrgManager) makeNewConfigObj(
 	// The root location remains at the top level but suborgs will
 	// live in <fs>/orgs/<orgid>
 	if result.Datastore != nil && !utils.IsRootOrg(record.Id) {
-		result.Datastore.Location = filepath.Join(
+		result.Datastore.Location = utils.Join(
 			result.Datastore.Location, "orgs", record.Id)
-		result.Datastore.FilestoreDirectory = filepath.Join(
+		result.Datastore.FilestoreDirectory = utils.Join(
 			result.Datastore.FilestoreDirectory, "orgs", record.Id)
 	}
 
