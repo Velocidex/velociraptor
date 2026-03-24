@@ -24,7 +24,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -406,13 +405,13 @@ func (self *LogManager) makeNewComponent(
 		config_obj.Logging.OutputDirectory != "" {
 
 		output_directory := utils.ExpandEnv(config_obj.Logging.OutputDirectory)
-		base_directory := filepath.Join(output_directory, node_name)
+		base_directory := utils.Join(output_directory, node_name)
 		err := os.MkdirAll(base_directory, 0700)
 		if err != nil {
 			return nil, errors.New("Unable to create logging directory.")
 		}
 
-		base_filename := filepath.Join(base_directory, *component)
+		base_filename := utils.Join(base_directory, *component)
 		pathMap := lfshook.WriterMap{}
 
 		Prelog("Initializing logging for %v\n", base_filename)

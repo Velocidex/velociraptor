@@ -159,14 +159,7 @@ func (self *UnzipPlugin) unpackZip(
 			continue
 		}
 
-		// Sanitize the name for writing.
-		output_path := filepath.Join(output_directory, member.Name)
-
-		// Directory traversal ...
-		if !strings.HasPrefix(output_path, output_directory) {
-			continue
-		}
-
+		output_path := utils.Join(output_directory, member.Name)
 		err = os.MkdirAll(filepath.Dir(output_path), 0700)
 		if err != nil {
 			return err
@@ -241,8 +234,13 @@ func (self *UnzipPlugin) unpackTGZ(
 			continue
 		}
 
-		// Sanitize the name for writing.
-		output_path := filepath.Join(output_directory, member.Name)
+		// Sanitize the name for writing. We do not support traversal
+		// names in the ZIP file.
+		name, err := filepath.Abs(member.Name)
+		if err != nil {
+			continue
+		}
+		output_path := filepath.Join(output_directory, name)
 
 		// Directory traversal ...
 		if !strings.HasPrefix(output_path, output_directory) {
