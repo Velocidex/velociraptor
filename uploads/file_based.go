@@ -55,8 +55,10 @@ func (self *FileBasedUploader) sanitize_path(path string) string {
 	components := []string{self.UploadDir}
 	for _, component := range utils.SplitComponents(path) {
 		if len(component) > 0 {
+			// We need less stringent escaping to write on the
+			// filesystem.
 			components = append(components,
-				string(utils.SanitizeString(component)))
+				string(utils.SanitizeStringForZip(component)))
 		}
 	}
 

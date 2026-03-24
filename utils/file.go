@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	errors "github.com/go-errors/errors"
 )
@@ -108,4 +109,18 @@ func ReadDirNames(dirname string) ([]string, error) {
 	f.Close()
 
 	return names, err
+}
+
+// Like filepath.Join but ensures that name is safe by escaping
+// it. This makes it impossible to have directory traversal as name
+// must be below base.
+func Join(base string, names ...string) string {
+	escaped := []string{base}
+	for _, n := range names {
+		for _, component := range SplitComponents(n) {
+			escaped = append(escaped, SanitizeStringForZip(component))
+		}
+	}
+
+	return filepath.Join(escaped...)
 }

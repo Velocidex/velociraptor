@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"os"
-	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -148,7 +147,7 @@ func makeLocalCopy(
 			return "", err
 		}
 
-		out_fd, err := os.OpenFile(filepath.Join(tmpdir, f_info.Name()),
+		out_fd, err := os.OpenFile(utils.Join(tmpdir, f_info.Name()),
 			os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 		if err != nil {
 			in_fd.Close()
