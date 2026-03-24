@@ -81,14 +81,14 @@ func (self UnzipPlugin) Call(
 			return
 		}
 
-		// Make sure we are allowed to write there.
-		err = file.CheckPath(arg.OutputDirectory)
+		output_directory, err := filepath.Abs(arg.OutputDirectory)
 		if err != nil {
 			scope.Log("unzip: %v", err)
 			return
 		}
 
-		output_directory, err := filepath.Abs(arg.OutputDirectory)
+		// Make sure we are allowed to write there.
+		err = file.CheckPath(output_directory)
 		if err != nil {
 			scope.Log("unzip: %v", err)
 			return
@@ -236,11 +236,7 @@ func (self *UnzipPlugin) unpackTGZ(
 
 		// Sanitize the name for writing. We do not support traversal
 		// names in the ZIP file.
-		name, err := filepath.Abs(member.Name)
-		if err != nil {
-			continue
-		}
-		output_path := filepath.Join(output_directory, name)
+		output_path := utils.Join(output_directory, member.Name)
 
 		// Directory traversal ...
 		if !strings.HasPrefix(output_path, output_directory) {
