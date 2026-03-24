@@ -230,7 +230,7 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 				return
 			}
 
-			filename := filepath.Join(arg.DirName, package_spec.OutputFilename())
+			filename := utils.Join(arg.DirName, package_spec.OutputFilename())
 			scope.Log("DEBUG:%v: writing file %v", self.name, filename)
 
 			fd, err := os.OpenFile(filename,

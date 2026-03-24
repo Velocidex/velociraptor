@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -484,8 +483,7 @@ func StartFrontendWithAutocert(
 	// shared storage.
 	cache_dir := config_obj.AutocertCertCache
 	if config_obj.Frontend.IsMinion {
-		cache_dir = filepath.Join(
-			cache_dir, services.GetNodeName(config_obj.Frontend))
+		cache_dir = utils.Join(cache_dir, services.GetNodeName(config_obj.Frontend))
 		err := os.MkdirAll(cache_dir, 0700)
 		if err != nil {
 			return err

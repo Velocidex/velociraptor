@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
@@ -167,7 +168,7 @@ func doCollector() error {
 
 	datastore_directory := *collector_command_datastore
 	if datastore_directory == "" {
-		datastore_directory = filepath.Join(
+		datastore_directory = utils.Join(
 			tempfile.GetTempDir(), "gui_datastore")
 
 		// Ensure the directory exists
@@ -182,8 +183,8 @@ func doCollector() error {
 		return fmt.Errorf("Unable find path: %w", err)
 	}
 
-	server_config_path := filepath.Join(datastore_directory, "server.config.yaml")
-	client_config_path := filepath.Join(datastore_directory, "client.config.yaml")
+	server_config_path := utils.Join(datastore_directory, "server.config.yaml")
+	client_config_path := utils.Join(datastore_directory, "client.config.yaml")
 
 	// Try to open the config file from there
 	config_obj, err := makeDefaultConfigLoader().

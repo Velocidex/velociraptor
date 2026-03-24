@@ -133,9 +133,9 @@ func GetObjects(ctx context.Context,
 		}
 
 		object_directory_infos = append(object_directory_infos, item)
-
+		full_path := utils.Join(path, item.Name.String())
 		info := &WinObjDesc{
-			Name: filepath.Join(path, item.Name.String()),
+			Name: full_path,
 			Type: item.TypeName.String(),
 		}
 		descObject(scope, info)
@@ -146,9 +146,7 @@ func GetObjects(ctx context.Context,
 		}
 
 		if item.TypeName.String() == "Directory" {
-			GetObjects(ctx, scope,
-				filepath.Join(path, item.Name.String()),
-				output_chan, depth+1)
+			GetObjects(ctx, scope, full_path, output_chan, depth+1)
 		}
 	}
 }

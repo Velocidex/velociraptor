@@ -316,9 +316,9 @@ func (self *InventoryService) materializeTool(
 		// Set the filename to something sensible so it is always valid.
 		if tool.Filename == "" {
 			if tool.Url != "" {
-				tool.Filename = path.Base(tool.Url)
+				tool.Filename = utils.SanitizeString(path.Base(tool.Url))
 			} else {
-				tool.Filename = path.Base(tool.ServeUrl)
+				tool.Filename = utils.SanitizeString(path.Base(tool.ServeUrl))
 			}
 		}
 	}
@@ -531,7 +531,7 @@ func (self *InventoryService) AddTool(
 	// Set the filename to something sensible so it is always valid.
 	if tool.Filename == "" {
 		if tool.Url != "" {
-			tool.Filename = path.Base(tool.Url)
+			tool.Filename = utils.SanitizeString(path.Base(tool.Url))
 		}
 	}
 

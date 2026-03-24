@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func writeLogOnPanic() error {
@@ -31,7 +31,7 @@ func writeLogOnPanic() error {
 		config_obj.Logging.OutputDirectory != "" {
 		exitStatus, err := panicwrap.BasicWrap(func(output string) {
 			// Create a special log file in the log directory.
-			filename := filepath.Join(
+			filename := utils.Join(
 				config_obj.Logging.OutputDirectory,
 				fmt.Sprintf("panic-%v.log", strings.Replace(
 					time.Now().Format(time.RFC3339), ":", "_", -1)))
