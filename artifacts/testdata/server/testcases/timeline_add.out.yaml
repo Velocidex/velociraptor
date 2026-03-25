@@ -1,0 +1,48 @@
+Query: LET T = SELECT * FROM parse_jsonl(accessor="data", filename=Timeline)
+Output: []
+
+Query: LET NotebookId <= notebook_create(name="Notebook").NotebookId
+Output: []
+
+# Add a timeline to a new SuperTimeline. If message_column is not
+# specified it should build a useful message from the row
+Query: SELECT timeline_add( timeline="SuperTimeline", name="Test Timeline", query=T, notebook_id=NotebookId, key="Timestamp") AS TimelineAdd FROM scope()
+Output: [
+ {
+  "TimelineAdd": {
+   "name": "SuperTimeline",
+   "timelines": [
+    {
+     "start_time": 1774853561377000000,
+     "end_time": 1774857161377000000,
+     "id": "Test Timeline",
+     "timestamp_column": "Timestamp"
+    }
+   ]
+  }
+ }
+]
+
+# Read out the SuperTimeline
+Query: SELECT * FROM timeline(timeline="SuperTimeline", notebook_id=NotebookId)
+Output: [
+ {
+  "Timestamp": "2026-03-30T06:52:41.377Z",
+  "Message": "Timestamp: 2026-03-30T06:52:41Z Value: 1 ",
+  "Description": "",
+  "Value": 1,
+  "_Source": "Test Timeline"
+ },
+ {
+  "Timestamp": "2026-03-30T07:52:41.377Z",
+  "Message": "Timestamp: 2026-03-30T07:52:41Z Value: 2 ",
+  "Description": "",
+  "Value": 2,
+  "_Source": "Test Timeline"
+ }
+]
+
+# Delete the notebook
+Query: LET _ <= SELECT * FROM notebook_delete(really_do_it=TRUE, notebook_id=NotebookId)
+Output: []
+
