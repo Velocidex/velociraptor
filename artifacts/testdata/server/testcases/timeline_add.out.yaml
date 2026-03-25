@@ -28,14 +28,14 @@ Query: SELECT * FROM timeline(timeline="SuperTimeline", notebook_id=NotebookId)
 Output: [
  {
   "Timestamp": "2026-03-30T06:52:41.377Z",
-  "Message": "Timestamp: 2026-03-30T06:52:41Z Value: 1 ",
+  "Message": "Value: 1 ",
   "Description": "",
   "Value": 1,
   "_Source": "Test Timeline"
  },
  {
   "Timestamp": "2026-03-30T07:52:41.377Z",
-  "Message": "Timestamp: 2026-03-30T07:52:41Z Value: 2 ",
+  "Message": "Value: 2 ",
   "Description": "",
   "Value": 2,
   "_Source": "Test Timeline"
