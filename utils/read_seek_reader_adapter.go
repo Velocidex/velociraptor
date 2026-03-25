@@ -20,6 +20,16 @@ type ReadSeekReaderAdapter struct {
 	closer func()
 }
 
+func (self *ReadSeekReaderAdapter) Flush() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	switch t := self.reader.(type) {
+	case Flusher:
+		t.Flush()
+	}
+}
+
 func (self *ReadSeekReaderAdapter) Close() error {
 	self.mu.Lock()
 	defer self.mu.Unlock()

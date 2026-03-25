@@ -134,8 +134,12 @@ func (self _MemoizeFunction) Call(ctx context.Context, scope vfilter.Scope,
 		arg.Name = vfilter.FormatToString(scope, arg.Query)
 	}
 
+	if arg.Name == "" {
+		arg.Name = "memoize"
+	}
+
 	// The _CacheObj will outlast this function call so we tie its
-	// context to the scope.
+	// context to the root scope.
 	sub_ctx, cancel := context.WithCancel(context.Background())
 	vql_subsystem.GetRootScope(scope).AddDestructor(cancel)
 
