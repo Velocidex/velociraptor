@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"time"
 	"unicode"
 )
 
@@ -37,6 +38,9 @@ func ToString(x interface{}) string {
 
 	case error:
 		return t.Error()
+
+	case time.Time:
+		return t.UTC().Format(time.RFC3339)
 
 	case fmt.Stringer:
 		return t.String()
