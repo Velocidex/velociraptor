@@ -15,6 +15,16 @@ type ReaderAtter struct {
 	Reader io.ReadSeeker
 }
 
+func (self *ReaderAtter) Flush() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	switch t := self.Reader.(type) {
+	case Flusher:
+		t.Flush()
+	}
+}
+
 func (self *ReaderAtter) DebugString() string {
 	return fmt.Sprintf("ReaderAtter of %v", DebugString(self.Reader))
 }

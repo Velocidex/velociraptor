@@ -145,9 +145,6 @@ func (self *NTFSCachedContext) Close() {
 func (self *NTFSCachedContext) _CloseWithLock() {
 	if self.ntfs_ctx != nil {
 		self.ntfs_ctx.Close()
-		self.ntfs_ctx = nil
-		self.started = time.Time{}
-		self.next_refresh = self.started
 	}
 	self.paged_reader.Close()
 }
@@ -247,7 +244,8 @@ func getNTFSCache(scope vfilter.Scope,
 			id:                utils.GetId(),
 		}
 
-		err := cache_ctx.Start(context.Background(), scope)
+		subctx, cancel := context.WithCancel(context.Background())
+		err := cache_ctx.Start(subctx, scope)
 		if err != nil {
 			return nil, err
 		}
@@ -262,6 +260,7 @@ func getNTFSCache(scope vfilter.Scope,
 			}
 			cache_ctx.mu.Unlock()
 			cache_ctx.Close()
+			cancel()
 			Tracker.Unregister(cache_ctx)
 		})
 		if err != nil {
