@@ -60,6 +60,8 @@ func transformArgv(argv []string) ([]string, error) {
 
 	// Get all flags that belong to the `artifact collect` command.
 	choices, _, _ := artifact_command_collect.FlagCompletion("", "")
+	app_flags, _, _ := app.FlagCompletion("", "")
+	choices = append(choices, app_flags...)
 
 	// When parsing the artifact arg we hold this until we get the
 	// next value.

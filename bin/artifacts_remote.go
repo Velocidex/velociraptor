@@ -96,7 +96,8 @@ func doRemoteArtifactCollection(
 	config_obj *config_proto.Config,
 	spec *ordereddict.Dict,
 	org_id string,
-	cpu_limit, timeout int64,
+	cpu_limit int64,
+	timeout float64,
 	client_id string,
 	output string,
 ) error {

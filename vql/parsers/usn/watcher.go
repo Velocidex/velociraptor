@@ -12,7 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -175,9 +174,6 @@ func (self *USNWatcherService) StartMonitoring(
 			// No more registrations, we dont care any more.
 			if !pres || len(handlers) == 0 {
 				delete(self.registrations, key)
-				logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-				logger.Info("Unregistering USN log watcher for %v", device)
-
 				self.mu.Unlock()
 				return
 			}

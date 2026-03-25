@@ -87,11 +87,11 @@ var (
 
 	artifact_command_collect_timeout = artifact_command_collect.Flag(
 		"timeout", "Time collection out after this many seconds.").
-		Default("0").Int64()
+		Default("0").Float64()
 
 	artifact_command_collect_progress_timeout = artifact_command_collect.Flag(
 		"progress_timeout", "If specified we terminate the colleciton if no progress is made in this many seconds.").
-		Default("0").Int64()
+		Default("0").Float64()
 
 	artifact_command_collect_cpu_limit = artifact_command_collect.Flag(
 		"cpu_limit", "A number between 0 to 100 representing maximum CPU utilization.").
