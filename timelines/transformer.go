@@ -1,11 +1,12 @@
 package timelines
 
 import (
-	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 const (
@@ -37,6 +38,27 @@ type timelineTransformer struct {
 	*timelines_proto.Timeline
 }
 
+func (self timelineTransformer) buildDefaultMessage(event *ordereddict.Dict) string {
+	var b strings.Builder
+	for _, item := range event.Items() {
+		// Drop the timestamp as it is already included
+		if item.Key == self.TimestampColumn {
+			continue
+		}
+
+		b.WriteString(item.Key)
+		b.WriteString(": ")
+		b.WriteString(utils.ToString(item.Value))
+		b.WriteString(" ")
+
+		// Truncate to 80 chars
+		if b.Len() > 80 {
+			return b.String()[:80] + " ..."
+		}
+	}
+	return b.String()
+}
+
 func (self timelineTransformer) Transform(
 	source string,
 	timestamp time.Time, event *ordereddict.Dict) TimelineItem {
@@ -46,8 +68,14 @@ func (self timelineTransformer) Transform(
 	if message_column == "" {
 		message_column = "Message"
 	}
-	message_any, _ := event.Get(message_column)
-	message := toStr(message_any)
+
+	var message string
+	message_any, pres := event.Get(message_column)
+	if pres {
+		message = utils.ToString(message_any)
+	} else {
+		message = self.buildDefaultMessage(event)
+	}
 
 	timestamp_description_column := self.TimestampDescriptionColumn
 	if timestamp_description_column == "" {
@@ -65,13 +93,4 @@ func (self timelineTransformer) Transform(
 		TimestampDescription: timestamp_description,
 		Source:               source,
 	}
-}
-
-func toStr(in interface{}) string {
-	s, ok := in.(string)
-	if ok {
-		return s
-	}
-
-	return fmt.Sprintf("%v", in)
 }
