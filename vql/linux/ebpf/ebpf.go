@@ -6,7 +6,6 @@ package ebpf
 
 import (
 	"context"
-	"crypto/rand"
 	"fmt"
 	"regexp"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/tracee_velociraptor/manager"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -143,18 +143,14 @@ func generateDefaultPolicy(events []string) string {
 		rules = append(rules, "   - event: "+e)
 	}
 
-	var b [4]byte
-	_, _ = rand.Read(b[:])
-	name := fmt.Sprintf("policy_%x", b[:])
-
 	return fmt.Sprintf(`
 metadata:
-   name: %s
+   name: policy_%d
 spec:
    scope:
      - global
    rules:
-`, name) + strings.Join(rules, "\n")
+`, utils.GetId()) + strings.Join(rules, "\n")
 }
 
 type EBPFEventListPlugin struct{}
