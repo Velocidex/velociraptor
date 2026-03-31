@@ -86,6 +86,7 @@ type Builder struct {
 	cc            string
 
 	disable_cgo bool
+	sumo        bool
 
 	debug_build bool
 
@@ -96,25 +97,30 @@ type Builder struct {
 }
 
 func (self *Builder) Name() string {
-	if self.goos == "windows" {
-		self.extension = ".exe"
-	}
 
-	if self.filename != "" {
-		return self.filename + self.extension
-	}
-
-	name := fmt.Sprintf("%s-%s-%s-%s%s",
+	name := fmt.Sprintf("%s-%s-%s-%s",
 		name, version,
 		self.goos,
-		self.arch,
-		self.extension)
+		self.arch)
+
+	if self.sumo {
+		name += "-sumo"
+	}
 
 	if self.disable_cgo {
 		name += "-nocgo"
 	}
 
 	name += self.extra_name
+
+	if self.filename != "" {
+		name = self.filename
+	}
+
+	// Windows has to have the .exe extension at the end.
+	if self.goos == "windows" {
+		name += ".exe"
+	}
 
 	return name
 }
@@ -261,6 +267,7 @@ func LinuxSumo() error {
 	return Builder{
 		extra_tags: " release yara sumo ",
 		goos:       "linux",
+		sumo:       true,
 		arch:       "amd64"}.Run()
 }
 
@@ -392,6 +399,7 @@ func WindowsSumo() error {
 	return Builder{
 		extra_tags: " release yara sumo ",
 		goos:       "windows",
+		sumo:       true,
 		arch:       "amd64"}.Run()
 }
 

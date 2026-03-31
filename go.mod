@@ -44,7 +44,7 @@ require (
 	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/lib/pq v1.10.9
-	github.com/magefile/mage v1.16.0
+	github.com/magefile/mage v1.17.0
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
 	github.com/mattn/go-sqlite3 v1.14.37
@@ -84,7 +84,7 @@ require (
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20251107004037-f9f4e4ed0236
 	www.velocidex.com/golang/go-ese v0.2.1-0.20260321072931-b8793d15e573
-	www.velocidex.com/golang/go-ntfs v0.2.1-0.20260325103807-365312b796f7
+	www.velocidex.com/golang/go-ntfs v0.2.1-0.20260331025433-9cce38e8a396
 	www.velocidex.com/golang/go-pe v0.1.1-0.20251107001057-f93001158cd9
 	www.velocidex.com/golang/go-prefetch v0.0.0-20251027080408-85407689d0cb
 	www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959
@@ -111,7 +111,7 @@ require (
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20250821063524-02dc06e46238
 	github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250
-	github.com/Velocidex/tracee_velociraptor v0.0.0-20260113161018-f7c951ffeab2
+	github.com/Velocidex/tracee_velociraptor v0.0.0-20260331030524-1e1e988d7fd9
 	github.com/Velocidex/velociraptor-site-search v0.0.0-20260316064028-d30384722e4b
 	github.com/Velocidex/yara-x-go v0.0.0-20251010010632-d8eaad9c539c
 	github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6
