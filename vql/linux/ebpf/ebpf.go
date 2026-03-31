@@ -150,7 +150,7 @@ spec:
    scope:
      - global
    rules:
-`, utils.GetTime().Now().Unix()) + strings.Join(rules, "\n")
+`, utils.GetId()) + strings.Join(rules, "\n")
 }
 
 type EBPFEventListPlugin struct{}
