@@ -128,8 +128,8 @@ github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1 h1:fLJ2AjY0dtDZ
 github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1/go.mod h1:UpFVihkMZWl2JRkVRiZYie0e2l7Ry+vjlCHCs6XVKGU=
 github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250 h1:GhiTVVoHNhb0mzUDgieUwjfJeEaUHCHIVvV/mHzLQOI=
 github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250/go.mod h1:ukLFs2t1+ud7MC4oN+zImhtTRP/eQHaDL3TwLs58uUA=
-github.com/Velocidex/tracee_velociraptor v0.0.0-20260113161018-f7c951ffeab2 h1:jlV2oHd2u9XQnGZxPB5zxqsG+iNAjBS1TVV/gnCaD6Q=
-github.com/Velocidex/tracee_velociraptor v0.0.0-20260113161018-f7c951ffeab2/go.mod h1:yKAS4I7VYdd6FzlEitbrqxGLoLAIeujjqpbP6OOTKxU=
+github.com/Velocidex/tracee_velociraptor v0.0.0-20260331030524-1e1e988d7fd9 h1:W9AnA7Nka89GiDh/YqaV3g1kZFSHQI50ENIN5W7Wti4=
+github.com/Velocidex/tracee_velociraptor v0.0.0-20260331030524-1e1e988d7fd9/go.mod h1:yKAS4I7VYdd6FzlEitbrqxGLoLAIeujjqpbP6OOTKxU=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130 h1:+QujZ0D7KSy3WJVchkOhMkvAUab6/CIisO5LCoN48q4=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130/go.mod h1:3/pI9BBAF7gydBWvMVtV7W1qRwshEG9lBwed/d8xfFg=
 github.com/Velocidex/velociraptor-site-search v0.0.0-20260316064028-d30384722e4b h1:syRrijiG7G/sYOwJpPwnZiO4KFL6o9rKSHJbJJa9ShA=
@@ -598,8 +598,8 @@ github.com/lucasb-eyer/go-colorful v1.2.0 h1:1nnpGOrhyZZuNyfu1QjKiUICQ74+3FNCN69
 github.com/lucasb-eyer/go-colorful v1.2.0/go.mod h1:R4dSotOR9KMtayYi1e77YzuveK+i7ruzyGqttikkLy0=
 github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 h1:6E+4a0GO5zZEnZ81pIr0yLvtUWk2if982qA3F3QD6H4=
 github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0/go.mod h1:zJYVVT2jmtg6P3p1VtQj7WsuWi/y4VnjVBn7F8KPB3I=
-github.com/magefile/mage v1.16.0 h1:2naaPmNwrMicCdLBCRDw288hcyClO9lmnm6FMpXyJ5I=
-github.com/magefile/mage v1.16.0/go.mod h1:z5UZb/iS3GoOSn0JgWuiw7dxlurVYTu+/jHXqQg881A=
+github.com/magefile/mage v1.17.0 h1:dS4tkq997Ism03akafC8509iqDjeE7TNTexI25Y7sXM=
+github.com/magefile/mage v1.17.0/go.mod h1:Yj51kqllmsgFpvvSzgrZPK9WtluG3kUhFaBUVLo4feA=
 github.com/magiconair/properties v1.7.4-0.20170902060319-8d7837e64d3c/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
 github.com/mattermost/xml-roundtrip-validator v0.1.0 h1:RXbVD2UAl7A7nOTR4u7E3ILa4IbtvKBHw64LDsmu9hU=
 github.com/mattermost/xml-roundtrip-validator v0.1.0/go.mod h1:qccnGMcpgwcNaBnxqpJpWWUiPNr5H3O8eDgGV9gT5To=
@@ -1123,8 +1123,8 @@ www.velocidex.com/golang/evtx v0.2.1-0.20251107004037-f9f4e4ed0236 h1:H8QobSDDiP
 www.velocidex.com/golang/evtx v0.2.1-0.20251107004037-f9f4e4ed0236/go.mod h1:eqjy0jz9Q/dy7LOMBuXNPUilcm/pe/6GMOop6CvczkY=
 www.velocidex.com/golang/go-ese v0.2.1-0.20260321072931-b8793d15e573 h1:xlvektWQLJGXwHO6BwE6CeZgr0F2XelQ3je2Y8LfbAY=
 www.velocidex.com/golang/go-ese v0.2.1-0.20260321072931-b8793d15e573/go.mod h1:H1Gw62XkspXEtZPT2ep+L57GgdKIDHwueazxKnn5EXc=
-www.velocidex.com/golang/go-ntfs v0.2.1-0.20260325103807-365312b796f7 h1:F0zumM4a0ODuZ4Y8tjvQK6RBT+qUrBcgLUlUGLWU+Hk=
-www.velocidex.com/golang/go-ntfs v0.2.1-0.20260325103807-365312b796f7/go.mod h1:4MSO8W9iNMXyBpjSpxApWfMjJUb9IWFD2Yis5JPZaSY=
+www.velocidex.com/golang/go-ntfs v0.2.1-0.20260331025433-9cce38e8a396 h1:Y3be+CIWxJvKpNH1YyeExPG8wA0e8ungTsXrxUtEBlc=
+www.velocidex.com/golang/go-ntfs v0.2.1-0.20260331025433-9cce38e8a396/go.mod h1:4MSO8W9iNMXyBpjSpxApWfMjJUb9IWFD2Yis5JPZaSY=
 www.velocidex.com/golang/go-pe v0.1.1-0.20251107001057-f93001158cd9 h1:y5nOjOAyjH36mEGZsX2Wx3XpS78e9Jk2wK1M99rn4TY=
 www.velocidex.com/golang/go-pe v0.1.1-0.20251107001057-f93001158cd9/go.mod h1:rEueOnxvtbV/uFfCeD44KvC6TL9ts/1S3VNmRudSaAc=
 www.velocidex.com/golang/go-prefetch v0.0.0-20251027080408-85407689d0cb h1:GW6agTdjRKf0mO5ZAivSo09TwqHb2sPoBCXLGSoEUE4=

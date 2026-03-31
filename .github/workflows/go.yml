@@ -58,6 +58,7 @@ jobs:
         go run make.go -v UpdateDependentTools
         go run make.go -v DarwinBase
         go run make.go -v Windows
+        go run make.go -v WindowsSumo
         go run make.go -v Windowsx86
 
     - name: StoreBinaries
