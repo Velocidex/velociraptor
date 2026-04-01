@@ -13,6 +13,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -317,7 +318,8 @@ func ws_send_client_messages(
 				[]*ordereddict.Dict{
 					ordereddict.NewDict().
 						Set("ClientId", source)},
-				"Server.Internal.Enrollment", source, "")
+				"Server.Internal.Enrollment",
+				constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 			if err != nil {
 				return send_error(ws, err, http.StatusServiceUnavailable)
 			}
@@ -343,8 +345,7 @@ func ws_send_client_messages(
 					Set("RemoteAddr", message_info.RemoteAddr).
 					Set("UserAgent", req.UserAgent())
 				journal.PushRowsToArtifactAsync(ctx, org_config_obj,
-					info,
-					"Server.Internal.ClientConflict")
+					info, "Server.Internal.ClientConflict")
 			}
 			return send_error(ws, conflictError, http.StatusConflict)
 		}

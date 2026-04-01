@@ -26,6 +26,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
@@ -324,23 +325,23 @@ func (self *SourcePluginArgs) isArtifactEvent(
 		return false, "", err
 	}
 
-	artifact_definition, pres := repository.Get(ctx, config_obj, self.Artifact)
-	if !pres {
-		return false, "", fmt.Errorf("Artifact %v not known", self.Artifact)
+	artifact_type, err := repository.GetArtifactType(ctx, config_obj, self.Artifact)
+	if err != nil {
+		return false, "", err
 	}
 
-	switch artifact_definition.Type {
-	case "client_event":
+	switch paths.ModeNameToMode(artifact_type) {
+	case paths.MODE_CLIENT_EVENT:
 		if self.ClientId == "" {
 			return false, "", fmt.Errorf(
 				"Artifact %v is a client event artifact, "+
 					"therefore a client id is required.",
-				artifact_definition.Name)
+				self.Artifact)
 		}
 		return true, self.ClientId, nil
 
-	case "server_event":
-		return true, "server", nil
+	case paths.MODE_SERVER_EVENT:
+		return true, constants.VELOCIRAPTOR_SERVER_CLIENT_ID, nil
 
 	default:
 		return false, "", nil

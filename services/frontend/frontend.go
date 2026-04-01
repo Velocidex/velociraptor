@@ -19,6 +19,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -71,7 +72,7 @@ func PushMetrics(ctx context.Context, wg *sync.WaitGroup,
 					Set("Metrics", metrics.ToDict())
 				_ = journal.PushRowsToArtifact(ctx, config_obj,
 					rows, "Server.Internal.FrontendMetrics",
-					"server", "")
+					constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 			}
 		}
 
@@ -337,7 +338,8 @@ func (self *MasterFrontendManager) UpdateStats(ctx context.Context) {
 
 			_ = journal.PushRowsToArtifact(ctx, org_config_obj,
 				[]*ordereddict.Dict{v},
-				"Server.Monitor.Health/Prometheus", "server", "")
+				"Server.Monitor.Health/Prometheus",
+				constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 		}
 	}
 }

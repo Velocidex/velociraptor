@@ -205,7 +205,8 @@ func (self *ClientFlowRunner) processMonitoringAlert(
 		return err
 	}
 	return journal.PushJsonlToArtifact(ctx, self.config_obj,
-		serialized, 1, "Server.Internal.Alerts", "server", "")
+		serialized, 1, "Server.Internal.Alerts",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 }
 
 func (self *ClientFlowRunner) MonitoringVQLResponse(
@@ -792,7 +793,8 @@ func (self *ClientFlowRunner) processAlert(
 		return err
 	}
 	return journal.PushJsonlToArtifact(ctx, self.config_obj,
-		serialized, 1, "Server.Internal.Alerts", "server", "")
+		serialized, 1, "Server.Internal.Alerts",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 }
 
 func (self *ClientFlowRunner) LogMessage(

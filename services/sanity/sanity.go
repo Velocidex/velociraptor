@@ -12,6 +12,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -148,7 +149,8 @@ func (self *SanityChecks) Check(
 func configServerMetadata(
 	ctx context.Context, config_obj *config_proto.Config) error {
 
-	client_path_manager := paths.NewClientPathManager("server")
+	client_path_manager := paths.NewClientPathManager(
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err

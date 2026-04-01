@@ -27,6 +27,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
+	"www.velocidex.com/golang/velociraptor/constants"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
@@ -292,7 +293,7 @@ func GetPathSpec(
 
 	if in.FlowId != "" && in.Artifact != "" {
 		mode := paths.MODE_CLIENT
-		if in.ClientId == "server" {
+		if in.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 			mode = paths.MODE_SERVER
 		}
 		return artifacts.NewArtifactPathManagerWithMode(

@@ -12,6 +12,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/suite"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
@@ -104,7 +105,7 @@ func (self *TestSuite) TestExportCollectionServerArtifact() {
 		repository, &flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
 			Creator:   utils.GetSuperuserName(self.ConfigObj),
-			ClientId:  "server",
+			ClientId:  constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 		}, utils.SyncCompleter)
 	assert.NoError(self.T(), err)
 
@@ -112,7 +113,7 @@ func (self *TestSuite) TestExportCollectionServerArtifact() {
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
 		flow, err := launcher.GetFlowDetails(
 			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
-			"server", flow_id)
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID, flow_id)
 		assert.NoError(self.T(), err)
 
 		return flow.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
@@ -133,7 +134,7 @@ func (self *TestSuite) TestExportCollectionServerArtifact() {
 	// pathspec to the created download file.
 	result := (&CreateFlowDownload{}).Call(ctx, scope,
 		ordereddict.NewDict().
-			Set("client_id", "server").
+			Set("client_id", constants.VELOCIRAPTOR_SERVER_CLIENT_ID).
 			Set("flow_id", flow_id).
 			Set("wait", true).
 			Set("format", "csv").

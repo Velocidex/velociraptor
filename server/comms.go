@@ -578,7 +578,8 @@ func send_client_messages(
 					[]*ordereddict.Dict{
 						ordereddict.NewDict().
 							Set("ClientId", source)},
-					"Server.Internal.Enrollment", source, "")
+					"Server.Internal.Enrollment",
+					constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 				if err != nil {
 					http.Error(w, "", http.StatusServiceUnavailable)
 					return
