@@ -104,7 +104,7 @@ func (self *HuntStorageManagerImpl) Restore(ctx context.Context,
 	count := 0
 	defer func() {
 		// Force the dispatcher to refresh from the filestore.
-		err = self.Refresh(ctx, config_obj)
+		err = self.Refresh(ctx, config_obj, FORCE_REFRESH)
 		if err != nil {
 			stat.Error = err
 		}

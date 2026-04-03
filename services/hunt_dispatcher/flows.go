@@ -18,13 +18,18 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+const (
+	FORCE_REFRESH = true
+)
+
 func syncFlowTables(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	launcher services.Launcher,
 	hunt_id string,
 	refresh_stats *HuntRefreshStats,
-	throttler *utils.Throttler) (*api_proto.HuntStats, error) {
+	throttler *utils.Throttler,
+	force bool) (*api_proto.HuntStats, error) {
 
 	// Update the stats if needed.
 	stats := &api_proto.HuntStats{}
@@ -47,10 +52,17 @@ func syncFlowTables(
 	if err == nil {
 		enriched_reader.Close()
 
-		// Skip refreshing the enriched table if it is newer than 5 min
+		// Skip refreshing the enriched table if it is newer than 10 min
 		// old - this helps to reduce unnecessary updates.
-		if now.Sub(enriched_reader.MTime()) < HuntDispatcherRefresh(config_obj) {
-			return nil, utils.CancelledError
+		if !force &&
+			now.Sub(enriched_reader.MTime()) < HuntDispatcherRefresh(config_obj) {
+
+			refresh_stats.Lock()
+			refresh_stats.TotalHuntsSkipped++
+			refresh_stats.Unlock()
+
+			return nil, utils.Wrap(utils.CancelledError,
+				"Hunt reindex cancelled because it is still fresh")
 		}
 	}
 
@@ -145,7 +157,7 @@ func (self *HuntDispatcher) GetFlows(
 	// the original table.
 	if options.SortColumn != "" || options.FilterColumn != "" {
 		_, err := syncFlowTables(ctx, config_obj, launcher, hunt_id,
-			&HuntRefreshStats{}, nil)
+			&HuntRefreshStats{}, nil, !FORCE_REFRESH)
 		if err != nil && !errors.Is(err, utils.CancelledError) {
 			close(output_chan)
 			return output_chan, 0, err

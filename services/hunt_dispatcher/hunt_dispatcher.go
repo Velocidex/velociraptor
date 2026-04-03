@@ -247,10 +247,18 @@ func (self *HuntDispatcher) checkForExpiry(
 // Check for new hunts from the datastore. The master frontend will
 // also flush updated hunt records to the datastore.
 func (self *HuntDispatcher) Refresh(
-	ctx context.Context, config_obj *config_proto.Config) error {
+	ctx context.Context, config_obj *config_proto.Config,
+	force bool) error {
+
+	// Load the hunt store before checking for expiry
+	err := self.Store.Refresh(ctx, config_obj, force)
+	if err != nil {
+		return err
+	}
+
 	self.checkForExpiry(ctx, config_obj)
 
-	return self.Store.Refresh(ctx, config_obj)
+	return nil
 }
 
 func (self *HuntDispatcher) GetTags(ctx context.Context) []string {
@@ -406,7 +414,7 @@ func (self *HuntDispatcher) StartRefresh(
 			services.GetOrgName(config_obj))
 
 		// Start the first refresh immediately, then after some time.
-		err := self.Store.Refresh(ctx, config_obj)
+		err := self.Store.Refresh(ctx, config_obj, FORCE_REFRESH)
 		if err != nil {
 			logger.Error("Unable to sync hunts: %v", err)
 		}
@@ -428,7 +436,7 @@ func (self *HuntDispatcher) StartRefresh(
 
 			case <-time.After(utils.Jitter(refresh)):
 				// Re-read the hunts from the data store.
-				err := self.Refresh(ctx, config_obj)
+				err := self.Refresh(ctx, config_obj, FORCE_REFRESH)
 				if err != nil {
 					logger.Error("Unable to sync hunts: %v", err)
 				}

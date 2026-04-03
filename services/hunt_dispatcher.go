@@ -25,6 +25,7 @@ package services
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -137,13 +138,18 @@ type IHuntDispatcher interface {
 	// periodically and can also be triggered when a change is
 	// written to the datastore (e.g. new hunt scheduled) to pick
 	// up the latest hunts.
-	Refresh(ctx context.Context, config_obj *config_proto.Config) error
+	Refresh(ctx context.Context,
+		config_obj *config_proto.Config,
+		force bool) error
 
 	// Clean up and close the hunt dispatcher. Only used in tests.
 	Close(ctx context.Context)
 
 	// Get all known tags. Used for GUI suggestions
 	GetTags(ctx context.Context) []string
+
+	RebuildHuntIndex(ctx context.Context, hunt_id string) (
+		*ordereddict.Dict, error)
 }
 
 func GetHuntDispatcher(config_obj *config_proto.Config) (IHuntDispatcher, error) {
