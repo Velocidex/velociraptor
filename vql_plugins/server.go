@@ -28,6 +28,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/server"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/clients"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/crypto"
+	_ "www.velocidex.com/golang/velociraptor/vql/server/debuggig"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/downloads"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/favorites"
 	_ "www.velocidex.com/golang/velociraptor/vql/server/flows"

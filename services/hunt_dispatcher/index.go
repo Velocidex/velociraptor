@@ -19,8 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-func (self *HuntStorageManagerImpl) FlushIndex(
-	ctx context.Context) error {
+func (self *HuntStorageManagerImpl) FlushIndex(ctx context.Context) error {
 	// Only the master flushes the records
 	if !self.I_am_master {
 		return nil
@@ -37,8 +36,7 @@ func (self *HuntStorageManagerImpl) FlushIndex(
 	return self._FlushIndex(ctx)
 }
 
-func (self *HuntStorageManagerImpl) _FlushIndex(
-	ctx context.Context) error {
+func (self *HuntStorageManagerImpl) _FlushIndex(ctx context.Context) error {
 
 	// Nothing to do because none of the records are dirty.
 	if !self.dirty {
@@ -151,4 +149,44 @@ func (self *HuntDispatcher) GetHunts(ctx context.Context,
 	}
 
 	return result, total, nil
+}
+
+func (self *HuntDispatcher) RebuildHuntIndex(
+	ctx context.Context, hunt_id string) (*ordereddict.Dict, error) {
+
+	store, ok := self.Store.(*HuntStorageManagerImpl)
+	if !ok {
+		return nil, utils.NotImplementedError
+	}
+
+	return store.RebuildHuntIndex(ctx, hunt_id)
+}
+
+// RebuildHuntIndex allows external callers to trigger an index
+// rebuild operation. This is not normally needed as the index is
+// rebuilt periodically.
+func (self *HuntStorageManagerImpl) RebuildHuntIndex(
+	ctx context.Context, hunt_id string) (*ordereddict.Dict, error) {
+
+	if hunt_id == "" {
+		refresh_stats, err := self.LoadHuntsFromDatastore(
+			ctx, self.config_obj, true)
+		return refresh_stats.ToDict(), err
+	}
+
+	refresh_stats := &HuntRefreshStats{
+		Type: "Datastore",
+		Time: utils.GetTime().Now(),
+	}
+	self.tracker.AddRefreshStats(refresh_stats)
+
+	launcher, err := services.GetLauncher(self.config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	err = self.LoadHuntObjFromDisk(
+		ctx, self.config_obj, launcher,
+		hunt_id, refresh_stats, FORCE_REFRESH)
+	return refresh_stats.ToDict(), err
 }
