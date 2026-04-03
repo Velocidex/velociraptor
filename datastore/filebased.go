@@ -54,8 +54,9 @@ var (
 	file_based_imp = &FileBaseDataStore{}
 
 	datastoreNotConfiguredError = errors.New("Datastore not configured")
-	invalidFileError            = errors.New("Invalid file error")
-	insufficientDiskSpace       = errors.New("Insufficient disk space!")
+	invalidFileError            = utils.Wrap(
+		utils.NotFoundError, "Invalid file error")
+	insufficientDiskSpace = errors.New("Insufficient disk space!")
 )
 
 const (

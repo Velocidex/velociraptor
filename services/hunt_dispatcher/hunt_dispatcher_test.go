@@ -27,6 +27,10 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
+const (
+	FORCE_REFRESH = hunt_dispatcher.FORCE_REFRESH
+)
+
 type HuntDispatcherTestSuite struct {
 	test_utils.TestSuite
 
@@ -66,7 +70,9 @@ type: INTERNAL
 			State:     api_proto.Hunt_RUNNING,
 			Version:   now * 1000000,
 			StartTime: uint64(now),
-			Expires:   uint64(now+10) * 1000000,
+
+			// Set the expiry very far in the future
+			Expires: uint64(now+1000) * 1000000,
 		}
 		hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
 		assert.NoError(self.T(),
@@ -83,7 +89,7 @@ type: INTERNAL
 
 	self.master_dispatcher = master_dispatcher.(*hunt_dispatcher.HuntDispatcher)
 
-	err = self.master_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	err = self.master_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 	assert.NoError(self.T(), err)
 
 	config_obj := proto.Clone(self.ConfigObj).(*config_proto.Config)
@@ -95,7 +101,7 @@ type: INTERNAL
 
 	self.minion_dispatcher = minion_dispatcher.(*hunt_dispatcher.HuntDispatcher)
 
-	err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 	assert.NoError(self.T(), err)
 
 	// Wait until the hunt dispatchers are fully loaded.
@@ -112,7 +118,6 @@ type: INTERNAL
 
 func (self *HuntDispatcherTestSuite) TestLoadingFromDisk() {
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-
 		// All hunts are now running.
 		hunts := self.getAllHunts()
 		if len(hunts) != 5 {
@@ -225,7 +230,7 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_STOPPED)
 
 	// And eventually also visible in minion
-	err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 	assert.NoError(self.T(), err)
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
@@ -290,9 +295,10 @@ func (self *HuntDispatcherTestSuite) TestExpiringHunts() {
 	closer = utils.MockTime(utils.RealClockWithOffset{Duration: 600 * time.Second})
 	defer closer()
 
-	vtesting.WaitUntil(500*time.Second, self.T(), func() bool {
+	// And eventually also visible in minion
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// And eventually also visible in minion
-		err = master_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+		err = master_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 		assert.NoError(self.T(), err)
 
 		hunt_obj, pres := master_dispatcher.GetHunt(self.Ctx, hunt_id)
@@ -300,6 +306,7 @@ func (self *HuntDispatcherTestSuite) TestExpiringHunts() {
 
 		return hunt_obj.State == api_proto.Hunt_STOPPED
 	})
+
 }
 
 func (self *HuntDispatcherTestSuite) TestDeleteHunts() {
@@ -316,7 +323,7 @@ func (self *HuntDispatcherTestSuite) TestDeleteHunts() {
 		})
 
 	// Make sure the changes are written to the disk.
-	err := self.master_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	err := self.master_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 	assert.NoError(self.T(), err)
 
 	err = self.master_dispatcher.Store.FlushIndex(self.Ctx)
@@ -324,14 +331,14 @@ func (self *HuntDispatcherTestSuite) TestDeleteHunts() {
 
 	// This will happen in time but we force it now to make the test
 	// go faster
-	err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 	assert.NoError(self.T(), err)
 
 	// Check the master is removed.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		_, pres := self.master_dispatcher.GetHunt(self.Ctx, hunt_id)
 		if pres {
-			err = self.master_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+			err = self.master_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 			assert.NoError(self.T(), err)
 		}
 
@@ -342,7 +349,7 @@ func (self *HuntDispatcherTestSuite) TestDeleteHunts() {
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		_, pres := self.minion_dispatcher.GetHunt(self.Ctx, hunt_id)
 		if pres {
-			err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+			err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 			assert.NoError(self.T(), err)
 		}
 		return pres == false

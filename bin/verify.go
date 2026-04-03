@@ -20,6 +20,7 @@ var (
 	verify_args           = verify.Arg("paths", "Paths to artifact yaml files. This can also be a glob. If the path is a directory we recursively search it for `.yaml` files.").Required().Strings()
 	verify_allow_override = verify.Flag("builtin", "Allow overriding of built in artifacts").Bool()
 	verify_issues_only    = verify.Flag("issues_only", "If set, we only emit warning and error messages").Bool()
+	verify_max_length     = verify.Flag("max_length", "Maximum length of artifact to read").Default("100000").Int64()
 )
 
 func doVerify() error {
@@ -69,6 +70,7 @@ func doVerify() error {
 		Logger:     log.New(artifact_logger, "", 0),
 		Env: ordereddict.NewDict().
 			Set("Artifacts", artifact_paths).
+			Set("MaxLength", *verify_max_length).
 			Set("DisableOverride", !*verify_allow_override),
 	}
 
@@ -82,7 +84,7 @@ func doVerify() error {
         -- This is needed to ensure imports work.
 		LET Definitions <= SELECT
 			OSPath.String AS Filename,
-			read_file(filename=OSPath, length=100000) AS Data,
+			read_file(filename=OSPath, length=MaxLength) AS Data,
 			artifact_set(definition=read_file(filename=OSPath, length=100000),
                          repository="local") AS Definition
 		FROM glob(globs=Globs.Glob)

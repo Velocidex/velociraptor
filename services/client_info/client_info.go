@@ -203,7 +203,9 @@ func (self *ClientInfoManager) Start(
 			// When we teardown write the data to storage if needed.
 			defer func() {
 				err := self.storage.SaveSnapshot(ctx, config_obj, SYNC_UPDATE)
-				logger.Error("<red>ClientInfo Manager</>: SaveSnapshot: %v", err)
+				if err != nil {
+					logger.Error("<red>ClientInfo Manager</>: SaveSnapshot: %v", err)
+				}
 			}()
 
 			for {
