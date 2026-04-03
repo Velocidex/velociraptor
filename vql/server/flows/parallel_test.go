@@ -29,6 +29,10 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
 )
 
+const (
+	FORCE_REFRESH = true
+)
+
 var (
 	testArtifact = `
 name: Test.Artifact
@@ -220,7 +224,7 @@ func (self *TestSuite) TestHuntsSource() {
 	}
 
 	hunt_rs_writer.Close()
-	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,

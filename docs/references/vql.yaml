@@ -682,23 +682,32 @@
 
     The cache will ensure that `get_pid_query()` is only called once per
     unique Pid by comparing the key against the internal memory store.
-
   type: Function
+  version: 2
   args:
   - name: func
     type: LazyExpr
-    description: A function to evaluate
-    required: true
+    description: A function to evaluate (deprecated - use a lambda instead)
+  - name: lambda
+    type: vfilter.Lambda
+    description: 'A VQL lambda to evaluate with the key as parameter. eg. x=>x+1 '
   - name: name
     type: string
     description: The global name of this cache (needed when more than one)
   - name: key
-    type: string
+    type: Any
     description: Cache key to use.
-    required: true
   - name: period
     type: int64
     description: The latest age of the cache.
+  - name: filename
+    type: string
+    description: Filename for a persistant cache.
+  - name: max_size
+    type: uint64
+    description: Maximum size of the LRU (default 10000).
+  metadata:
+    permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4165,6 +4174,16 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: hunt_reindex
+  description: Reindex a hunt. This is mostly useful for debugging and to force an
+    index operation out of band. Hunts will normally be reindexed periodically automatically.
+  type: Plugin
+  args:
+  - name: hunt_id
+    type: string
+    description: The hunt to reindex. If not specified we index all hunts
+  platforms:
+  - linux_amd64_cgo
 - name: hunt_results
   description: |
     Retrieve the results of a hunt.
@@ -4533,7 +4552,7 @@
     repeated: true
   - name: sort
     type: string
-    description: The field to sort by (precede with - to sort in descending order).
+    description: The field to sort by (preceed with - to sort in descending order).
     repeated: true
   - name: start
     type: uint64
@@ -5734,12 +5753,11 @@
     Providing the `filename` parameter allows the data to be stored to a
     file. This is helpful when the query is very large or the results
     need to be re-used in another query.
-
   type: Function
-  version: 2
+  version: 3
   args:
   - name: query
-    type: LazyExpr
+    type: StoredQuery
     description: Query to expand into memory
     required: true
   - name: key
@@ -5752,6 +5770,9 @@
   - name: name
     type: string
     description: The name of this cache.
+  - name: filename
+    type: string
+    description: Filename for a persistant cache.
   category: popular
   platforms:
   - darwin_amd64_cgo
@@ -11312,7 +11333,6 @@
     Version 0.76 on. Use the `upload_s3()` plugin instead.
 
     You can read how to [How To Set Up A GCS Bucket For File Uploads](https://docs.velociraptor.app/knowledge_base/tips/setup_gcs_storage)
-
   type: Function
   args:
   - name: file
@@ -11358,7 +11378,6 @@
     presentation](https://training.velociraptor.app//modules/offline_collection/cloud_upload.html#/8)
     shows how to safely configure an AWS bucket for use with this
     plugin.
-
   type: Function
   version: 3
   args:
@@ -13155,3 +13174,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+

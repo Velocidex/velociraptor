@@ -17,6 +17,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -24,6 +25,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
+)
+
+const (
+	FORCE_REFRESH = hunt_dispatcher.FORCE_REFRESH
 )
 
 type HuntTestSuite struct {
@@ -79,7 +84,7 @@ func (self *HuntTestSuite) TestHuntManager() {
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(t, err)
-	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 
 	// Simulate a System.Hunt.Participation event
 	journal, err := services.GetJournal(self.ConfigObj)
@@ -142,7 +147,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	assert.NoError(t, err)
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
-	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 
 	// Simulate a System.Hunt.Participation event
 	journal, err := services.GetJournal(self.ConfigObj)
@@ -221,7 +226,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(t, err)
-	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 
 	// Simulate a System.Hunt.Participation event
 	journal, err := services.GetJournal(self.ConfigObj)
@@ -279,7 +284,7 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(t, err)
-	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 
 	// Simulate a System.Hunt.Participation event
 	journal, err := services.GetJournal(self.ConfigObj)
@@ -351,7 +356,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(t, err)
-	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 
 	// Simulate a System.Hunt.Participation event
 	journal, err := services.GetJournal(self.ConfigObj)
@@ -433,7 +438,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(t, err)
-	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 
 	// Simulate a System.Hunt.Participation event
 	journal, err := services.GetJournal(self.ConfigObj)
@@ -493,7 +498,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasOnlyExcludedLabel() {
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(t, err)
-	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 
 	// Simulate a System.Hunt.Participation event
 	journal, err := services.GetJournal(self.ConfigObj)
@@ -567,7 +572,7 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(t, err)
-	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 
 	// Simulate a System.Hunt.Participation event
 	journal, err := services.GetJournal(self.ConfigObj)
@@ -703,7 +708,7 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 
 	dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(self.T(), err)
-	dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 
 	// Schedule a new hunt on this client if we receive a
 	// participation event.
@@ -802,7 +807,7 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 
 	dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(self.T(), err)
-	dispatcher.Refresh(self.Ctx, self.ConfigObj)
+	dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 
 	// Schedule a new hunt on this client if we receive a
 	// participation event.
