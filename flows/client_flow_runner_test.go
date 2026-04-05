@@ -218,7 +218,7 @@ func (self *ServerTestSuite) TestFlowStates() {
 		// Emulate a response from the flow - just some progress
 		// report - this acks that we are running the query now.
 		runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
-		runner.ProcessSingleMessage(self.Ctx,
+		assert.NoError(self.T(), runner.ProcessSingleMessage(self.Ctx,
 			&crypto_proto.VeloMessage{
 				Source:    self.client_id,
 				SessionId: in_flight,
@@ -230,7 +230,8 @@ func (self *ServerTestSuite) TestFlowStates() {
 						},
 					},
 				},
-			})
+			}))
+
 		runner.Close(self.Ctx)
 
 		flow_details, err = launcher.GetFlowDetails(
@@ -267,7 +268,7 @@ func (self *ServerTestSuite) TestFlowStates() {
 
 		// Lets complete the flow.
 		runner = flows.NewFlowRunner(self.Ctx, self.ConfigObj)
-		runner.ProcessSingleMessage(self.Ctx,
+		assert.NoError(self.T(), runner.ProcessSingleMessage(self.Ctx,
 			&crypto_proto.VeloMessage{
 				Source:    self.client_id,
 				SessionId: in_flight,
@@ -280,7 +281,8 @@ func (self *ServerTestSuite) TestFlowStates() {
 					},
 					FlowComplete: true,
 				},
-			})
+			}))
+
 		runner.Close(self.Ctx)
 
 		flow_details, err = launcher.GetFlowDetails(
@@ -349,9 +351,10 @@ func (self *ServerTestSuite) TestEnrollment() {
 	services.GetPublishedEvents(
 		self.ConfigObj, "Server.Internal.Enrollment", wg, 1, &messages)
 
-	self.server.ProcessSingleUnauthenticatedMessage(self.Ctx,
+	err = self.server.ProcessSingleUnauthenticatedMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			CSR: &crypto_proto.Certificate{Pem: csr_message}})
+	assert.NoError(self.T(), err)
 
 	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(self.T(), err)
@@ -405,9 +408,10 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	time.Sleep(time.Second)
 
 	// Send a message from client to trigger check
-	runner.ProcessMessages(self.Ctx, &crypto.MessageInfo{
+	err = runner.ProcessMessages(self.Ctx, &crypto.MessageInfo{
 		Source: self.client_id,
 	})
+	assert.NoError(self.T(), err)
 
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -470,9 +474,10 @@ func (self *ServerTestSuite) TestForeman() {
 	assert.Equal(t, hunt.StartRequest, expected)
 
 	// Send a message from client to trigger check
-	runner.ProcessMessages(self.Ctx, &crypto.MessageInfo{
+	err = runner.ProcessMessages(self.Ctx, &crypto.MessageInfo{
 		Source: self.client_id,
 	})
+	assert.NoError(t, err)
 
 	// Server should schedule the new hunt on the client.
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
@@ -517,7 +522,7 @@ func (self *ServerTestSuite) RequiredFilestoreContains(
 // write the rows into a jsonl file in the client's monitoring area.
 func (self *ServerTestSuite) TestMonitoring() {
 	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
-	runner.ProcessSingleMessage(self.Ctx,
+	err := runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
@@ -532,6 +537,8 @@ func (self *ServerTestSuite) TestMonitoring() {
 				},
 			},
 		})
+	assert.NoError(self.T(), err)
+
 	runner.Close(self.Ctx)
 
 	path_manager, err := artifacts.NewArtifactPathManager(self.Ctx, self.ConfigObj,
@@ -549,7 +556,7 @@ func (self *ServerTestSuite) TestMonitoringAlerts() {
 	defer closer()
 
 	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
-	runner.ProcessSingleMessage(self.Ctx,
+	err := runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
@@ -561,6 +568,8 @@ func (self *ServerTestSuite) TestMonitoringAlerts() {
 				Level:        logging.ALERT,
 			},
 		})
+	assert.NoError(self.T(), err)
+
 	runner.Close(self.Ctx)
 
 	golden := ordereddict.NewDict()
@@ -580,7 +589,7 @@ func (self *ServerTestSuite) TestMonitoringAlerts() {
 // Monitoring queries which upload data.
 func (self *ServerTestSuite) TestMonitoringWithUpload() {
 	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
-	runner.ProcessSingleMessage(self.Ctx,
+	err := runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
@@ -594,12 +603,38 @@ func (self *ServerTestSuite) TestMonitoringWithUpload() {
 				Size: 10000,
 			},
 		})
+	assert.NoError(self.T(), err)
+
 	runner.Close(self.Ctx)
 
 	path_manager := paths.NewFlowPathManager(
 		self.client_id, "F.Monitoring").GetUploadsFile(
 		"file", "/etc/passwd", []string{"etc", "passwd"})
 	self.RequiredFilestoreContains(path_manager.Path(), "Hello")
+}
+
+// Invalid montoring messages
+func (self *ServerTestSuite) TestMonitoringInvalid() {
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	err := runner.ProcessSingleMessage(self.Ctx,
+		&crypto_proto.VeloMessage{
+			Source:    self.client_id,
+			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
+			VQLResponse: &actions_proto.VQLResponse{
+				Columns: []string{
+					"ClientId", "Timestamp", "Fqdn", "HuntId"},
+				JSONLResponse: fmt.Sprintf(
+					"{\"ClientId\": \"%s\", \"HuntId\": \"H.123\"}\n", self.client_id),
+				TotalRows: 1,
+				Query: &actions_proto.VQLRequest{
+					Name: "Server.Internal.Alerts",
+				},
+			},
+		})
+	assert.ErrorContains(
+		self.T(), err, "Only servers can write to a server_event artifact_type")
+
+	runner.Close(self.Ctx)
 }
 
 // Test that log messages are written to the flow
@@ -613,7 +648,7 @@ func (self *ServerTestSuite) TestLog() {
 	// Emulate log messages from client to flow delivered in
 	// separate POST.
 	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
-	runner.ProcessSingleMessage(self.Ctx,
+	err = runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -621,9 +656,10 @@ func (self *ServerTestSuite) TestLog() {
 				Jsonl: "{\"message\":\"Foobar\"}\n",
 			},
 		})
+	assert.NoError(self.T(), err)
 	runner.Close(self.Ctx)
 
-	runner.ProcessSingleMessage(self.Ctx,
+	err = runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -631,6 +667,7 @@ func (self *ServerTestSuite) TestLog() {
 				Jsonl: "{\"message\":\"ZooBar\"}\n",
 			},
 		})
+	assert.NoError(self.T(), err)
 	runner.Close(self.Ctx)
 
 	path_spec := paths.NewFlowPathManager(self.client_id, flow_id).Log()
@@ -721,7 +758,7 @@ func (self *ServerTestSuite) TestUploadBuffer() {
 
 	// Emulate a response from this flow.
 	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
-	runner.ProcessSingleMessage(self.Ctx,
+	err = runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -737,6 +774,8 @@ func (self *ServerTestSuite) TestUploadBuffer() {
 				Eof:    true,
 			},
 		})
+	assert.NoError(self.T(), err)
+
 	runner.Close(self.Ctx)
 
 	flow_path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
@@ -759,7 +798,7 @@ func (self *ServerTestSuite) TestVQLResponse() {
 
 	// Emulate a response from this flow.
 	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
-	runner.ProcessSingleMessage(self.Ctx,
+	err = runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -773,6 +812,7 @@ func (self *ServerTestSuite) TestVQLResponse() {
 				},
 			},
 		})
+	assert.NoError(self.T(), err)
 	runner.Close(self.Ctx)
 
 	flow_path_manager, err := artifacts.NewArtifactPathManager(
@@ -781,6 +821,34 @@ func (self *ServerTestSuite) TestVQLResponse() {
 	assert.NoError(self.T(), err)
 
 	self.RequiredFilestoreContains(flow_path_manager.Path(), self.client_id)
+}
+
+// Test that VQLResponse can only be written to client artifacts
+func (self *ServerTestSuite) TestVQLResponseInvalid() {
+	t := self.T()
+
+	// Schedule a flow in the database.
+	flow_id, err := self.createArtifactCollection()
+	require.NoError(t, err)
+
+	// Emulate a response from this flow.
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	err = runner.ProcessSingleMessage(self.Ctx,
+		&crypto_proto.VeloMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			RequestId: constants.ProcessVQLResponses,
+			VQLResponse: &actions_proto.VQLResponse{
+				Columns: []string{"ClientId", "Column1"},
+				JSONLResponse: fmt.Sprintf(
+					"{\"ClientId\": \"%s\", \"Column1\": \"Foo\"}\n", self.client_id),
+				Query: &actions_proto.VQLRequest{
+					Name: "Generic.Client.Stats",
+				},
+			},
+		})
+	assert.ErrorContains(self.T(), err, "Artifact Generic.Client.Stats must be CLIENT type")
+	runner.Close(self.Ctx)
 }
 
 // When VQLResponse messages are retransmitted we need to detect and
@@ -798,46 +866,57 @@ func (self *ServerTestSuite) TestVQLResponseRetransmission() {
 	// Emulate a response from this flow.
 	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
 
-	// Retransmit the first message 10 times
-	for i := 0; i < 10; i++ {
-		runner.ProcessSingleMessage(self.Ctx,
-			&crypto_proto.VeloMessage{
-				Source:    self.client_id,
-				SessionId: flow_id,
-				RequestId: constants.ProcessVQLResponses,
-				VQLResponse: &actions_proto.VQLResponse{
-					Columns:       []string{"Row"},
-					JSONLResponse: "{\"Row\": 1}\n",
-					Query: &actions_proto.VQLRequest{
-						Name: "Generic.Client.Info",
-					},
-					// The first row in this result set.
-					TotalRows:     1,
-					QueryStartRow: 0,
-					Part:          0,
-				},
-			})
+	msg := &crypto_proto.VeloMessage{
+		Source:    self.client_id,
+		SessionId: flow_id,
+		RequestId: constants.ProcessVQLResponses,
+		VQLResponse: &actions_proto.VQLResponse{
+			Columns:       []string{"Row"},
+			JSONLResponse: "{\"Row\": 1}\n",
+			Query: &actions_proto.VQLRequest{
+				Name: "Generic.Client.Info",
+			},
+			// The first row in this result set.
+			TotalRows:     1,
+			QueryStartRow: 0,
+			Part:          0,
+		},
 	}
 
-	// Retransmit the second message 10 times
+	// First message is ok.
+	assert.NoError(self.T(), runner.ProcessSingleMessage(self.Ctx, msg))
+
+	// Retransmit the first message 10 times - each will be rejected
 	for i := 0; i < 10; i++ {
-		runner.ProcessSingleMessage(self.Ctx,
-			&crypto_proto.VeloMessage{
-				Source:    self.client_id,
-				SessionId: flow_id,
-				RequestId: constants.ProcessVQLResponses,
-				VQLResponse: &actions_proto.VQLResponse{
-					Columns:       []string{"Row"},
-					JSONLResponse: "{\"Row\": 2}\n",
-					Query: &actions_proto.VQLRequest{
-						Name: "Generic.Client.Info",
-					},
-					// The first row in this result set.
-					TotalRows:     1,
-					QueryStartRow: 1,
-					Part:          1,
-				},
-			})
+		err := runner.ProcessSingleMessage(self.Ctx, msg)
+		assert.ErrorContains(self.T(), err, "RetransmissionError")
+	}
+
+	msg = &crypto_proto.VeloMessage{
+		Source:    self.client_id,
+		SessionId: flow_id,
+		RequestId: constants.ProcessVQLResponses,
+		VQLResponse: &actions_proto.VQLResponse{
+			Columns:       []string{"Row"},
+			JSONLResponse: "{\"Row\": 2}\n",
+			Query: &actions_proto.VQLRequest{
+				Name: "Generic.Client.Info",
+			},
+			// The first row in this result set.
+			TotalRows:     1,
+			QueryStartRow: 1,
+			Part:          1,
+		},
+	}
+
+	// First message is ok.
+	assert.NoError(self.T(), runner.ProcessSingleMessage(self.Ctx, msg))
+
+	// Retransmit the second message 10 times - each will be rejected
+	for i := 0; i < 10; i++ {
+		assert.ErrorContains(self.T(),
+			runner.ProcessSingleMessage(self.Ctx, msg),
+			"RetransmissionError")
 	}
 
 	runner.Close(self.Ctx)
@@ -859,7 +938,7 @@ func (self *ServerTestSuite) TestErrorMessage() {
 
 	// Emulate a response from this flow.
 	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
-	runner.ProcessSingleMessage(self.Ctx,
+	assert.NoError(self.T(), runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -873,7 +952,7 @@ func (self *ServerTestSuite) TestErrorMessage() {
 					},
 				},
 			},
-		})
+		}))
 	runner.Close(self.Ctx)
 
 	launcher, err := services.GetLauncher(self.ConfigObj)
@@ -907,7 +986,7 @@ func (self *ServerTestSuite) TestCompletions() {
 
 	// Generic.Client.Info sends two requests, send status for one
 	// message is complete but the other is still running.
-	runner.ProcessSingleMessage(self.Ctx,
+	assert.NoError(self.T(), runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -918,7 +997,7 @@ func (self *ServerTestSuite) TestCompletions() {
 					{Status: crypto_proto.VeloStatus_PROGRESS, QueryId: 2},
 				},
 			},
-		})
+		}))
 	defer runner.Close(self.Ctx)
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -933,7 +1012,7 @@ func (self *ServerTestSuite) TestCompletions() {
 	})
 
 	// Now complete both queries
-	runner.ProcessSingleMessage(self.Ctx,
+	assert.NoError(self.T(), runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -944,7 +1023,7 @@ func (self *ServerTestSuite) TestCompletions() {
 					{Status: crypto_proto.VeloStatus_OK, QueryId: 2},
 				},
 			},
-		})
+		}))
 	defer runner.Close(self.Ctx)
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -1054,7 +1133,7 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 	defer runner.Close(self.Ctx)
 
 	// Send a message to a random non-existant flow from client.
-	runner.ProcessSingleMessage(
+	assert.NoError(t, runner.ProcessSingleMessage(
 		self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
@@ -1067,7 +1146,7 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 					},
 				},
 			},
-		})
+		}))
 
 	collection_context, err = launcher.GetFlowDetails(self.Ctx, self.ConfigObj,
 		services.GetFlowOptions{}, self.client_id, flow_id)
@@ -1124,7 +1203,7 @@ func (self *ServerTestSuite) TestMultipleFlowComplete() {
 
 	// Emulate a response from the flow - This flow is completed.
 	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
-	runner.ProcessSingleMessage(self.Ctx,
+	assert.NoError(self.T(), runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -1137,7 +1216,7 @@ func (self *ServerTestSuite) TestMultipleFlowComplete() {
 				},
 				FlowComplete: true,
 			},
-		})
+		}))
 	runner.Close(self.Ctx)
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
@@ -1149,7 +1228,7 @@ func (self *ServerTestSuite) TestMultipleFlowComplete() {
 	// event!
 	for i := 0; i < 10; i++ {
 		runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
-		runner.ProcessSingleMessage(self.Ctx,
+		assert.NoError(self.T(), runner.ProcessSingleMessage(self.Ctx,
 			&crypto_proto.VeloMessage{
 				Source:    self.client_id,
 				SessionId: flow_id,
@@ -1163,7 +1242,7 @@ func (self *ServerTestSuite) TestMultipleFlowComplete() {
 						},
 					},
 				},
-			})
+			}))
 		runner.Close(self.Ctx)
 	}
 	time.Sleep(time.Second / 2)

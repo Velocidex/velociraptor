@@ -27,6 +27,10 @@ type ArtifactPathManager struct {
 	file_store                         api.FileStore
 }
 
+func (self *ArtifactPathManager) Mode() paths.ArtifactMode {
+	return self.mode
+}
+
 func NewArtifactPathManagerWithMode(
 	config_obj *config_proto.Config,
 	client_id, flow_id, full_artifact_name string,
