@@ -148,7 +148,10 @@ type IHuntDispatcher interface {
 	// Get all known tags. Used for GUI suggestions
 	GetTags(ctx context.Context) []string
 
-	RebuildHuntIndex(ctx context.Context, hunt_id string) (
+	// If force is specified we force a rebuild event if the index is
+	// fresh enough, otherwise we skip rebuilding the index if it is
+	// fresh enough.
+	RebuildHuntIndex(ctx context.Context, hunt_id string, force bool) (
 		*ordereddict.Dict, error)
 }
 
