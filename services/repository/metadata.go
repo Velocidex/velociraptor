@@ -113,7 +113,9 @@ func (self *metadataManager) HouseKeeping(
 	wg *sync.WaitGroup, repository services.Repository) {
 	defer wg.Done()
 
+	self.mu.Lock()
 	self.repository = repository
+	self.mu.Unlock()
 
 	for {
 		last_try := utils.GetTime().Now()

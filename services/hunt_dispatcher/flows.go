@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 
+	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -30,6 +31,13 @@ func syncFlowTables(
 	refresh_stats *HuntRefreshStats,
 	throttler *utils.Throttler,
 	force bool) (*api_proto.HuntStats, error) {
+
+	// Keep track of the current hunts/flows we are working on for
+	// reporting.
+	current_hunt_stats := ordereddict.NewDict()
+	refresh_stats.CurrentHunts.Set(hunt_id, current_hunt_stats)
+
+	defer refresh_stats.CurrentHunts.Delete(hunt_id)
 
 	// Update the stats if needed.
 	stats := &api_proto.HuntStats{}
@@ -79,6 +87,7 @@ func syncFlowTables(
 		return nil, err
 	}
 
+	count := 0
 	for json_str := range json_chan {
 		if throttler != nil {
 			throttler.Wait()
@@ -93,6 +102,12 @@ func syncFlowTables(
 		refresh_stats.Lock()
 		refresh_stats.TotalFlowsInspected++
 		refresh_stats.Unlock()
+
+		count++
+		current_hunt_stats.
+			Update("Count", count).
+			Update("Flow", participation_row.FlowId).
+			Update("Client", participation_row.ClientId)
 
 		// If the client is deleted or the flow disappeared, this will
 		// error out. We then ignore this row.
@@ -157,7 +172,8 @@ func (self *HuntDispatcher) GetFlows(
 	// the original table.
 	if options.SortColumn != "" || options.FilterColumn != "" {
 		_, err := syncFlowTables(ctx, config_obj, launcher, hunt_id,
-			&HuntRefreshStats{}, nil, !FORCE_REFRESH)
+			NewHuntRefreshStats("GetFlows"), nil, !FORCE_REFRESH)
+		//		_, err := self.RebuildHuntIndex(ctx, hunt_id, !FORCE_REFRESH)
 		if err != nil && !errors.Is(err, utils.CancelledError) {
 			close(output_chan)
 			return output_chan, 0, err

@@ -152,21 +152,21 @@ func (self *HuntDispatcher) GetHunts(ctx context.Context,
 }
 
 func (self *HuntDispatcher) RebuildHuntIndex(
-	ctx context.Context, hunt_id string) (*ordereddict.Dict, error) {
+	ctx context.Context, hunt_id string, force bool) (*ordereddict.Dict, error) {
 
 	store, ok := self.Store.(*HuntStorageManagerImpl)
 	if !ok {
 		return nil, utils.NotImplementedError
 	}
 
-	return store.RebuildHuntIndex(ctx, hunt_id)
+	return store.RebuildHuntIndex(ctx, hunt_id, force)
 }
 
 // RebuildHuntIndex allows external callers to trigger an index
 // rebuild operation. This is not normally needed as the index is
 // rebuilt periodically.
 func (self *HuntStorageManagerImpl) RebuildHuntIndex(
-	ctx context.Context, hunt_id string) (*ordereddict.Dict, error) {
+	ctx context.Context, hunt_id string, force bool) (*ordereddict.Dict, error) {
 
 	if hunt_id == "" {
 		refresh_stats, err := self.LoadHuntsFromDatastore(
@@ -174,10 +174,7 @@ func (self *HuntStorageManagerImpl) RebuildHuntIndex(
 		return refresh_stats.ToDict(), err
 	}
 
-	refresh_stats := &HuntRefreshStats{
-		Type: "Datastore",
-		Time: utils.GetTime().Now(),
-	}
+	refresh_stats := NewHuntRefreshStats("Datastore")
 	self.tracker.AddRefreshStats(refresh_stats)
 
 	launcher, err := services.GetLauncher(self.config_obj)
@@ -187,6 +184,6 @@ func (self *HuntStorageManagerImpl) RebuildHuntIndex(
 
 	err = self.LoadHuntObjFromDisk(
 		ctx, self.config_obj, launcher,
-		hunt_id, refresh_stats, FORCE_REFRESH)
+		hunt_id, refresh_stats, force)
 	return refresh_stats.ToDict(), err
 }
