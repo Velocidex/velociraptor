@@ -542,10 +542,7 @@ func (self *HuntStorageManagerImpl) LoadHuntsFromDatastore(
 	// When set we force a rebuild even if the index is still fresh.
 	force bool) (*HuntRefreshStats, error) {
 
-	refresh_stats := &HuntRefreshStats{
-		Type: "Datastore",
-		Time: utils.GetTime().Now(),
-	}
+	refresh_stats := NewHuntRefreshStats("Datastore")
 
 	self.tracker.AddRefreshStats(refresh_stats)
 
@@ -573,13 +570,14 @@ func (self *HuntStorageManagerImpl) LoadHuntsFromDatastore(
 	}
 
 	pool := pond.NewPool(10)
+	tasks := []pond.Task{}
 	for _, hunt_path := range hunts {
 		hunt_id := hunt_path.Base()
 		if !constants.HuntIdRegex.MatchString(hunt_id) {
 			continue
 		}
 
-		pool.Submit(func() {
+		tasks = append(tasks, pool.Submit(func() {
 			err := self.LoadHuntObjFromDisk(
 				ctx, config_obj, launcher, hunt_id, refresh_stats,
 				!FORCE_REFRESH)
@@ -592,11 +590,18 @@ func (self *HuntStorageManagerImpl) LoadHuntsFromDatastore(
 				logger.Debug("%v:LoadHuntObjFromDisk %v: %v",
 					utils.GetOrgId(self.config_obj), hunt_id, err)
 			}
-		})
+		}))
+	}
+
+	for _, t := range tasks {
+		err1 := t.Wait()
+		if err1 != nil {
+			err = err1
+		}
 	}
 	pool.StopAndWait()
 
-	return refresh_stats, nil
+	return refresh_stats, err
 }
 
 func (self *HuntStorageManagerImpl) UpdateHuntCache(
@@ -652,7 +657,12 @@ func (self *HuntStorageManagerImpl) Refresh(
 		// Prepopulate the cache from the index - it is much faster.
 		err := self.LoadHuntsFromIndex(ctx, config_obj)
 		if err != nil {
-			return err
+			// If we can not load from index, we just continue anyway
+			// to rebuild the index.
+			logger := logging.GetLogger(self.config_obj,
+				&logging.FrontendComponent)
+			logger.Debug("LoadHuntsFromIndex: %v", err)
+
 		}
 
 		_, err = self.LoadHuntsFromDatastore(ctx, config_obj, force)
