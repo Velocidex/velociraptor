@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -20,6 +21,7 @@ type HuntRefreshStats struct {
 	TotalFlowsInspected uint64
 	TotalHuntsSkipped   uint64
 	TotalFlows          uint64
+	CurrentHunts        *ordereddict.Dict
 }
 
 func (self *HuntRefreshStats) ToDict() *ordereddict.Dict {
@@ -34,7 +36,16 @@ func (self *HuntRefreshStats) ToDict() *ordereddict.Dict {
 		Set("TotalHunts", self.TotalHunts).
 		Set("TotalHuntsSkipped", self.TotalHuntsSkipped).
 		Set("TotalFlows", self.TotalFlows).
-		Set("TotalFlowsInspected", self.TotalFlowsInspected)
+		Set("TotalFlowsInspected", self.TotalFlowsInspected).
+		Set("CurrentHunts", self.CurrentHunts)
+}
+
+func NewHuntRefreshStats(name string) *HuntRefreshStats {
+	return &HuntRefreshStats{
+		Type:         name,
+		Time:         utils.GetTime().Now(),
+		CurrentHunts: ordereddict.NewDict(),
+	}
 }
 
 type HuntDispatcherTracker struct {

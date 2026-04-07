@@ -5,6 +5,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -45,7 +46,8 @@ func (self HuntReindex) Call(
 			return
 		}
 
-		stats, err := hunt_disp.RebuildHuntIndex(ctx, arg.HuntId)
+		stats, err := hunt_disp.RebuildHuntIndex(
+			ctx, arg.HuntId, hunt_dispatcher.FORCE_REFRESH)
 		if err != nil {
 			scope.Log("ERROR:hunt_reindex: %v", err)
 			return
