@@ -208,6 +208,29 @@ func (self *ClientFlowRunner) processMonitoringAlert(
 		serialized, 1, "Server.Internal.Alerts", "server", "")
 }
 
+func IsClientEvent(ctx context.Context,
+	config_obj *config_proto.Config,
+	artifact_name string) (bool, error) {
+
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return false, err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return false, err
+	}
+
+	artifact_type, err := repository.GetArtifactType(ctx, config_obj,
+		artifact_name)
+	if err != nil {
+		return false, err
+	}
+
+	return strings.EqualFold(artifact_type, "CLIENT_EVENT"), nil
+}
+
 func (self *ClientFlowRunner) MonitoringVQLResponse(
 	ctx context.Context, client_id, flow_id string,
 	response *actions_proto.VQLResponse) error {
@@ -227,6 +250,12 @@ func (self *ClientFlowRunner) MonitoringVQLResponse(
 	query_name := response.Query.Name
 	if query_name == "" || strings.HasPrefix(query_name, "$") {
 		return nil
+	}
+
+	is_client_event, err := IsClientEvent(
+		ctx, self.config_obj, query_name)
+	if !is_client_event || err != nil {
+		return errors.New("Invalid client monitoring name")
 	}
 
 	journal, err := services.GetJournal(self.config_obj)
