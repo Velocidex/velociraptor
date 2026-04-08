@@ -204,7 +204,8 @@ func (self ImportCollectionFunction) importHunt(
 						FlowId:   flow.SessionId,
 					},
 				})},
-			"Server.Internal.HuntModification", flow.ClientId, "")
+			"Server.Internal.HuntModification",
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 	}
 
 	return hunt_info, nil
@@ -528,7 +529,7 @@ func (self ImportCollectionFunction) checkClientIdExists(
 	client_info *services.ClientInfo) error {
 
 	// This is a well known client
-	if client_info.ClientId == "server" {
+	if client_info.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		return nil
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
 )
@@ -31,7 +32,8 @@ func (self *ArtifactLogPathManager) GetRootPath() api.FSPathSpec {
 
 	case paths.MODE_SERVER, paths.MODE_NOTEBOOK:
 		return paths.CLIENTS_ROOT.AddChild(
-			"server", "collections",
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			"collections",
 			self.FlowId, "logs").AsFilestorePath().
 			SetType(api.PATH_TYPE_FILESTORE_JSON)
 
@@ -63,8 +65,8 @@ func (self *ArtifactLogPathManager) GetPathForWriting() (api.FSPathSpec, error) 
 
 	case paths.MODE_SERVER, paths.MODE_NOTEBOOK:
 		return paths.CLIENTS_ROOT.AddChild(
-			"server", "collections",
-			self.FlowId, "logs").AsFilestorePath(), nil
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			"collections", self.FlowId, "logs").AsFilestorePath(), nil
 
 	case paths.MODE_SERVER_EVENT:
 		if self.source != "" {
@@ -99,7 +101,7 @@ func (self *ArtifactLogPathManager) GetPathForWriting() (api.FSPathSpec, error) 
 
 		// Internal artifacts are not written anywhere but are
 		// still replicated.
-	case paths.INTERNAL:
+	case paths.MODE_INTERNAL:
 		return nil, nil
 	}
 
@@ -138,7 +140,7 @@ func NewArtifactLogPathManager(
 func NewArtifactLogPathManagerWithMode(
 	config_obj *config_proto.Config,
 	client_id, flow_id, full_artifact_name string,
-	mode int) *ArtifactLogPathManager {
+	mode paths.ArtifactMode) *ArtifactLogPathManager {
 	path_manager := NewArtifactPathManagerWithMode(config_obj,
 		client_id, flow_id, full_artifact_name, mode)
 	return &ArtifactLogPathManager{path_manager}

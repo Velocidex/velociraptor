@@ -27,6 +27,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -45,7 +46,7 @@ func (self *ApiServer) GetClientMetadata(
 
 	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	if in.ClientId == "server" {
+	if in.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		permissions = acls.SERVER_ADMIN
 	}
 

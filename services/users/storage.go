@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -259,7 +260,8 @@ func (self *UserStorageManager) notifyChanges(
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().Set("id", self.id).Set("username", username),
 		},
-		"Server.Internal.UserManager", "server", "")
+		"Server.Internal.UserManager",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 }
 
 // Update fixed fields in the options to override user choices. This

@@ -103,7 +103,8 @@ func (self _CombinePlugin) Info(scope types.Scope, type_map *types.TypeMap) *typ
 		Name: "combine",
 		Doc: "Combine the output of several queries into the same result set." +
 			"A convenience plugin acting like chain(async=TRUE).",
-		ArgType: type_map.AddType(scope, _CombinePlugin{}),
+		ArgType:      type_map.AddType(scope, _CombinePlugin{}),
+		FreeFormArgs: true,
 	}
 }
 

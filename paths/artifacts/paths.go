@@ -8,6 +8,7 @@ import (
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -22,17 +23,21 @@ type ArtifactPathManager struct {
 	config_obj                         *config_proto.Config
 	ClientId, FlowId, FullArtifactName string
 	base_artifact_name, source         string
-	mode                               int
+	mode                               paths.ArtifactMode
 	file_store                         api.FileStore
+}
+
+func (self *ArtifactPathManager) Mode() paths.ArtifactMode {
+	return self.mode
 }
 
 func NewArtifactPathManagerWithMode(
 	config_obj *config_proto.Config,
 	client_id, flow_id, full_artifact_name string,
-	mode int) *ArtifactPathManager {
+	mode paths.ArtifactMode) *ArtifactPathManager {
 
 	// Override the internal mode for debugging.
-	if mode == paths.INTERNAL &&
+	if mode == paths.MODE_INTERNAL &&
 		config_obj.Defaults != nil &&
 		config_obj.Defaults.WriteInternalEvents {
 		mode = paths.MODE_SERVER_EVENT
@@ -88,7 +93,7 @@ func (self *ArtifactPathManager) IsEvent() bool {
 
 		// These are all event artifacts
 	case paths.MODE_SERVER_EVENT, paths.MODE_CLIENT_EVENT,
-		paths.INTERNAL:
+		paths.MODE_INTERNAL:
 		return true
 
 	default:
@@ -178,13 +183,15 @@ func (self *ArtifactPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 			return paths.CLIENTS_ROOT.AsFilestorePath().
 				SetType(api.PATH_TYPE_FILESTORE_JSON).
 				AddChild(
-					"server", "artifacts", self.base_artifact_name,
+					constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+					"artifacts", self.base_artifact_name,
 					self.FlowId, self.source), nil
 		} else {
 			return paths.CLIENTS_ROOT.AsFilestorePath().
 				SetType(api.PATH_TYPE_FILESTORE_JSON).
 				AddChild(
-					"server", "artifacts", self.base_artifact_name,
+					constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+					"artifacts", self.base_artifact_name,
 					self.FlowId), nil
 		}
 
@@ -230,7 +237,7 @@ func (self *ArtifactPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 
 		// Internal artifacts are not written anywhere but are
 		// still replicated.
-	case paths.INTERNAL:
+	case paths.MODE_INTERNAL:
 		return nil, nil
 	}
 
@@ -310,7 +317,7 @@ func DayNameToTimestamp(name string) time.Time {
 
 func GetArtifactMode(
 	ctx context.Context, config_obj *config_proto.Config,
-	artifact_name string) (int, error) {
+	artifact_name string) (paths.ArtifactMode, error) {
 
 	if config_obj.Defaults != nil &&
 		config_obj.Defaults.WriteInternalEvents {

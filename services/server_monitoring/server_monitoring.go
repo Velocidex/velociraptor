@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -124,7 +125,7 @@ func (self *EventTable) ProcessServerMetadataModificationEvent(
 	event *ordereddict.Dict) {
 
 	client_id, pres := event.GetString("client_id")
-	if !pres || client_id != "server" {
+	if !pres || client_id != constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		return
 	}
 
@@ -320,7 +321,8 @@ func (self *EventTable) RunQuery(
 
 	// We write the logs directly to files.
 	log_path_manager, err := artifacts.NewArtifactLogPathManager(ctx,
-		config_obj, "server", "", artifact_name)
+		config_obj, constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "",
+		artifact_name)
 	if err != nil {
 		return err
 	}

@@ -8,6 +8,7 @@ import (
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
@@ -90,7 +91,8 @@ func listAvailableEventArtifacts(
 	// Figure out where all the monitoring artifacts logs are
 	// stored by looking at some examples.
 	exemplar := "Generic.Client.Stats"
-	if in.ClientId == "" || in.ClientId == "server" {
+	if in.ClientId == "" ||
+		in.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		exemplar = "Server.Monitor.Health"
 	}
 

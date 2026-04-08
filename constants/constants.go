@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	VERSION = "0.76.1"
+	VERSION = "0.76.2"
 
 	// This is the version of dependent client binaries that will be
 	// included in the offline collector or MSI. Usually this will be
@@ -213,6 +213,8 @@ const (
 	VELOCIRAPTOR_CONFIG         = "VELOCIRAPTOR_CONFIG"
 	VELOCIRAPTOR_LITERAL_CONFIG = "VELOCIRAPTOR_LITERAL_CONFIG"
 	VELOCIRAPTOR_API_CONFIG     = "VELOCIRAPTOR_API_CONFIG"
+
+	VELOCIRAPTOR_SERVER_CLIENT_ID = "server"
 )
 
 type key int

@@ -43,7 +43,7 @@ name: Server.Internal.ClientInfoSnapshot
 type: INTERNAL
 `, `
 name: Server.Internal.ClientInfo
-type: INTERNAL
+type: CLIENT_EVENT
 `, `
 name: Server.Internal.ClientDelete
 type: INTERNAL
@@ -85,7 +85,7 @@ name: System.Hunt.Participation
 type: INTERNAL
 `, `
 name: System.Upload.Completion
-type: SERVER
+type: CLIENT_EVENT
 `, `
 name: Server.Internal.Enrollment
 type: INTERNAL

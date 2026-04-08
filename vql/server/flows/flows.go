@@ -5,6 +5,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -151,7 +152,7 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 	}
 
 	permissions := acls.COLLECT_CLIENT
-	if arg.ClientId == "server" {
+	if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		permissions = acls.COLLECT_SERVER
 	}
 
@@ -283,7 +284,7 @@ func (self *GetFlowFunction) Call(ctx context.Context,
 	}
 
 	permissions := acls.COLLECT_CLIENT
-	if arg.ClientId == "server" {
+	if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		permissions = acls.COLLECT_SERVER
 	}
 

@@ -9,6 +9,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/api/tables"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -28,7 +29,7 @@ func (self *ApiServer) CancelFlow(
 	principal := user_record.Name
 
 	permissions := acls.COLLECT_CLIENT
-	if in.ClientId == "server" {
+	if in.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		permissions = acls.COLLECT_SERVER
 	}
 
@@ -73,7 +74,7 @@ func (self *ApiServer) ResumeFlow(
 	principal := user_record.Name
 
 	permissions := acls.COLLECT_CLIENT
-	if in.ClientId == "server" {
+	if in.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		permissions = acls.COLLECT_SERVER
 	}
 

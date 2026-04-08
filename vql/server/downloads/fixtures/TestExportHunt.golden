@@ -256,6 +256,8 @@
   "stats": {
    "total_clients_scheduled": "1",
    "total_clients_with_results": "1",
+   "total_collected_rows": "1",
+   "total_finished_clients": "1",
    "available_downloads": {}
   },
   "artifacts": [

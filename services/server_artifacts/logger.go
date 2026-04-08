@@ -95,7 +95,8 @@ func NewServerLogWriter(
 	config_obj *config_proto.Config,
 	session_id string) (result_sets.ResultSetWriter, error) {
 
-	path_manager := paths.NewFlowPathManager("server", session_id)
+	path_manager := paths.NewFlowPathManager(
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, session_id)
 	file_store_factory := file_store.GetFileStore(config_obj)
 	log_writer, err := result_sets.NewResultSetWriter(file_store_factory,
 		path_manager.Log(), json.DefaultEncOpts(),

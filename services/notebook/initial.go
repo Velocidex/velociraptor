@@ -76,6 +76,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -796,7 +797,7 @@ func getSpecFromEventArtifact(
 	config_obj *config_proto.Config,
 	artifact, client_id string) (res []*flows_proto.ArtifactSpec, err error) {
 
-	if client_id == "server" {
+	if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		server_monitoring_service, err := services.GetServerEventManager(
 			config_obj)
 		if err != nil {
