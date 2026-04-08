@@ -12,6 +12,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -96,7 +97,8 @@ func (self *Launcher) CompileSingleArtifact(
 		case "server_metadata":
 			client_info_manager, err := services.GetClientInfoManager(config_obj)
 			if err == nil {
-				md, err := client_info_manager.GetMetadata(ctx, "server")
+				md, err := client_info_manager.GetMetadata(ctx,
+					constants.VELOCIRAPTOR_SERVER_CLIENT_ID)
 				if err == nil {
 					value, pres := md.GetString(name)
 					if pres {

@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -109,7 +110,7 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 		acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact", "AnotherTestArtifact"},
 			Creator:   utils.GetSuperuserName(self.ConfigObj),
-			ClientId:  "server",
+			ClientId:  constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 		}, utils.SyncCompleter)
 	assert.NoError(self.T(), err)
 
@@ -117,7 +118,7 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
 		flow, err := launcher.GetFlowDetails(
 			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
-			"server", flow_id)
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID, flow_id)
 		assert.NoError(self.T(), err)
 
 		return flow.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
@@ -126,7 +127,7 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 	flow_update := (&hunts.AddToHuntFunction{}).Call(
 		ctx, scope, ordereddict.NewDict().
 			Set("hunt_id", hunt.HuntId).
-			Set("client_id", "server").
+			Set("client_id", constants.VELOCIRAPTOR_SERVER_CLIENT_ID).
 			Set("flow_id", flow_id))
 	assert.NotEmpty(self.T(), flow_update)
 
@@ -215,7 +216,7 @@ func (self *TestSuite) snapshotHuntFlow() *ordereddict.Dict {
 }
 
 func (self *TestSuite) _TestImportHuntFromFixture() {
-	self.CreateFlow("server", "F.1234")
+	self.CreateFlow(constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "F.1234")
 
 	defer utils.SetFlowIdForTests("F.1234XX")()
 	defer utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))()

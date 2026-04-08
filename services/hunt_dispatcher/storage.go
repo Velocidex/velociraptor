@@ -580,7 +580,7 @@ func (self *HuntStorageManagerImpl) LoadHuntsFromDatastore(
 		tasks = append(tasks, pool.Submit(func() {
 			err := self.LoadHuntObjFromDisk(
 				ctx, config_obj, launcher, hunt_id, refresh_stats,
-				!FORCE_REFRESH)
+				force)
 			if err != nil &&
 				// These errors are expected so dont report them.
 				!errors.Is(err, utils.CancelledError) &&
@@ -629,6 +629,10 @@ func (self *HuntStorageManagerImpl) UpdateHuntCache(
 	} else if old_hunt_record.Version > hunt_obj.Version {
 		return
 	}
+
+	// Maintain the version of the old record.
+	hunt_obj.Version = old_hunt_record.Version
+	incVersion(hunt_obj)
 
 	// Maintain the last timestamp as the latest hunt start time.
 	self._MaybeUpdateTimestamp(hunt_obj.StartTime)

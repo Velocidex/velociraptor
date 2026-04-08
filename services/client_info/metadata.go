@@ -9,6 +9,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -151,5 +152,6 @@ func (self *Store) SetMetadata(
 				Set("principal", principal).
 				Set("client_id", client_id).
 				Set("updated_keys", updated_keys),
-		}, "Server.Internal.MetadataModifications", "server", "")
+		}, "Server.Internal.MetadataModifications",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 }

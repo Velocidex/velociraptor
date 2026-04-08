@@ -460,6 +460,16 @@ func (self *Repository) Del(name string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	res, pres := self.Data[name]
+	if !pres {
+		return
+	}
+
+	// Do not allow built in artifacts to be deleted.
+	if res.BuiltIn {
+		return
+	}
+
 	delete(self.Data, name)
 
 	if self.metadata != nil {

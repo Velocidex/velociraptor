@@ -212,7 +212,8 @@ func (self WatchMonitoringPlugin) Call(
 		}
 
 		switch mode {
-		case paths.MODE_SERVER_EVENT, paths.MODE_CLIENT_EVENT, paths.INTERNAL:
+		case paths.MODE_SERVER_EVENT, paths.MODE_CLIENT_EVENT,
+			paths.MODE_INTERNAL:
 			break
 
 		default:

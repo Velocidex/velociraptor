@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	file_store_api "www.velocidex.com/golang/velociraptor/file_store/api"
@@ -370,6 +371,7 @@ func (self *GeneralAPITest) TestPushEvents() {
 
 	message := &api_proto.PushEventRequest{
 		Artifact: "Server.Audit.Logs",
+		ClientId: constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 		Jsonl:    append([]byte(`{"foo": "bar"}`), '\n'),
 		Rows:     1,
 	}
@@ -398,10 +400,9 @@ func (self *GeneralAPITest) TestPushEvents() {
 	assert.NoError(self.T(), err)
 
 	// Lets check if it is there.
-
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
-		self.ConfigObj, "server", "", "Server.Audit.Logs",
-		paths.MODE_SERVER_EVENT)
+		self.ConfigObj, constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "",
+		"Server.Audit.Logs", paths.MODE_SERVER_EVENT)
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	rs_reader, err := result_sets.NewResultSetReaderWithOptions(

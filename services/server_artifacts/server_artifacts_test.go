@@ -15,6 +15,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -95,14 +96,15 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 		self.Sm.Ctx, self.ConfigObj, acl_manager,
 		repository, &flows_proto.ArtifactCollectorArgs{
 			Creator:   user,
-			ClientId:  "server",
+			ClientId:  constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 			Artifacts: []string{name},
 		}, func() {
 			// Notify it about the new job
 			notifier, err := services.GetNotifier(self.ConfigObj)
 			assert.NoError(self.T(), err)
 
-			err = notifier.NotifyListener(ctx, self.ConfigObj, "server", "")
+			err = notifier.NotifyListener(ctx, self.ConfigObj,
+				constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 			assert.NoError(self.T(), err)
 		})
 	if err != nil {
@@ -121,7 +123,7 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 
 		details, err = launcher.GetFlowDetails(
 			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
-			"server", flow_id)
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID, flow_id)
 		assert.NoError(self.T(), err)
 
 		return details.Context.State != flows_proto.ArtifactCollectorContext_RUNNING
@@ -189,13 +191,14 @@ sources:
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
 		_, err := launcher.GetFlowDetails(
 			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
-			"server", "F.1234")
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "F.1234")
 		return err == nil
 	})
 
 	// cancel the flow
 	resp, err := launcher.CancelFlow(
-		self.Ctx, self.ConfigObj, "server", "F.1234", "admin")
+		self.Ctx, self.ConfigObj, constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+		"F.1234", "admin")
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), resp.FlowId, "F.1234")
 
@@ -257,7 +260,7 @@ sources:
 	assert.True(self.T(), run_time < 2)
 
 	flow_path_manager := paths.NewFlowPathManager(
-		"server", details.Context.SessionId)
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, details.Context.SessionId)
 	log_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
 		flow_path_manager.Log())
 	assert.Contains(self.T(), log_data,
@@ -300,7 +303,7 @@ sources:
 
 	// Make sure the upload data is stored in the upload file.
 	flow_path_manager := paths.NewFlowPathManager(
-		"server", details.Context.SessionId)
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, details.Context.SessionId)
 	uploads_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
 		flow_path_manager.UploadMetadata())
 
@@ -450,7 +453,7 @@ sources:
 	assert.True(self.T(), run_time >= 1)
 
 	flow_path_manager := paths.NewFlowPathManager(
-		"server", details.Context.SessionId)
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, details.Context.SessionId)
 	log_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
 		flow_path_manager.Log())
 	assert.Contains(self.T(), log_data, "Query timed out after ")
@@ -503,7 +506,7 @@ sources:
 	assert.Equal(self.T(), uint64(0), details.Context.TotalCollectedRows)
 
 	flow_path_manager := paths.NewFlowPathManager(
-		"server", details.Context.SessionId)
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, details.Context.SessionId)
 	log_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
 		flow_path_manager.Log())
 	assert.Contains(self.T(), log_data, "Permission denied: [MACHINE_STATE]")
@@ -588,7 +591,8 @@ sources:
 		assert.Equal(self.T(), uint64(0), details.Context.TotalCollectedRows)
 
 		flow_path_manager := paths.NewFlowPathManager(
-			"server", details.Context.SessionId)
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			details.Context.SessionId)
 		log_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
 			flow_path_manager.Log())
 		assert.Contains(self.T(), log_data, "Permission denied: [MACHINE_STATE]")
@@ -606,7 +610,8 @@ sources:
 		assert.Equal(self.T(), uint64(1), details.Context.TotalCollectedRows)
 
 		flow_path_manager := paths.NewFlowPathManager(
-			"server", details.Context.SessionId)
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			details.Context.SessionId)
 		log_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
 			flow_path_manager.Log())
 		assert.Contains(self.T(), log_data,

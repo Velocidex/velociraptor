@@ -6,6 +6,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
@@ -36,7 +37,7 @@ func CheckAccess(
 	}
 
 	permissions := acls.COLLECT_CLIENT
-	if collector_request.ClientId == "server" {
+	if collector_request.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		permissions = acls.COLLECT_SERVER
 	}
 

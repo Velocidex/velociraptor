@@ -1,6 +1,9 @@
 name: Server.Internal.ClientInfo
-type: INTERNAL
+type: CLIENT_EVENT
 description: |
   An internal artifact collecting client information. This is used to
-  update the client info indexes. Client send this automatically at
+  update the client info indexes. Clients send this automatically at
   startup and then every day.
+
+  You do not need to enable this in the clien montoring table - it is
+  client initiated.

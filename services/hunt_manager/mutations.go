@@ -8,6 +8,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -142,7 +143,7 @@ func (self *HuntManager) processMutation(
 
 				err = journal.PushRowsToArtifact(ctx, config_obj,
 					[]*ordereddict.Dict{row}, "System.Hunt.Archive",
-					"server", mutation.HuntId)
+					constants.VELOCIRAPTOR_SERVER_CLIENT_ID, mutation.HuntId)
 				if err != nil {
 					return services.HuntPropagateChanges
 				}

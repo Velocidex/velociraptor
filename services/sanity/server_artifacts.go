@@ -8,6 +8,7 @@ import (
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -91,7 +92,7 @@ func startInitialArtifacts(
 			repository,
 			&flows_proto.ArtifactCollectorArgs{
 				Creator:   principal,
-				ClientId:  "server",
+				ClientId:  constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 				Artifacts: config_obj.Frontend.InitialServerArtifacts,
 			}, nil)
 		if err != nil {

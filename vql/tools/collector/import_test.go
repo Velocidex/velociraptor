@@ -9,6 +9,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/flows/proto"
@@ -109,7 +110,7 @@ func (self *TestSuite) TestCreateAndImportCollection() {
 
 	ctx := self.Ctx
 	scope := manager.BuildScope(builder)
-	client_id := "server"
+	client_id := constants.VELOCIRAPTOR_SERVER_CLIENT_ID
 
 	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
 		acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
@@ -123,7 +124,7 @@ func (self *TestSuite) TestCreateAndImportCollection() {
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
 		flow, err := launcher.GetFlowDetails(
 			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
-			"server", flow_id)
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID, flow_id)
 		assert.NoError(self.T(), err)
 
 		return flow.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
@@ -172,7 +173,7 @@ func (self *TestSuite) TestCreateAndImportCollection() {
 }
 
 func (self *TestSuite) TestImportCollectionFromFixture() {
-	self.CreateFlow("server", "F.1234")
+	self.CreateFlow(constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "F.1234")
 	defer utils.SetFlowIdForTests("F.1234")()
 
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)

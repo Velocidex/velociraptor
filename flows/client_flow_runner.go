@@ -205,7 +205,8 @@ func (self *ClientFlowRunner) processMonitoringAlert(
 		return err
 	}
 	return journal.PushJsonlToArtifact(ctx, self.config_obj,
-		serialized, 1, "Server.Internal.Alerts", "server", "")
+		serialized, 1, "Server.Internal.Alerts",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 }
 
 func (self *ClientFlowRunner) MonitoringVQLResponse(
@@ -712,6 +713,11 @@ func (self *ClientFlowRunner) VQLResponse(
 		return err
 	}
 
+	if path_manager.Mode() != paths.MODE_CLIENT {
+		return fmt.Errorf("Invalid VQLResponse: Artifact %v must be CLIENT type",
+			response.Query.Name)
+	}
+
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
 		file_store_factory, path_manager.Path(), json.DefaultEncOpts(),
@@ -792,7 +798,8 @@ func (self *ClientFlowRunner) processAlert(
 		return err
 	}
 	return journal.PushJsonlToArtifact(ctx, self.config_obj,
-		serialized, 1, "Server.Internal.Alerts", "server", "")
+		serialized, 1, "Server.Internal.Alerts",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 }
 
 func (self *ClientFlowRunner) LogMessage(

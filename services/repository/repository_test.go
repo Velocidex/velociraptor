@@ -140,6 +140,7 @@ func TestArtifactMetadata(t *testing.T) {
 	defer cancel()
 
 	config_obj.Services = &config_proto.ServerServicesConfig{
+		ClientInfo:        true,
 		JournalService:    true,
 		RepositoryManager: true,
 	}

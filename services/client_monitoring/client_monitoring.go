@@ -254,7 +254,8 @@ func (self *ClientEventTable) setClientMonitoringState(
 				Set("principal", principal).
 				Set("artifact", "ClientEventTable").
 				Set("op", "set"),
-		}, "Server.Internal.ArtifactModification", "", "")
+		}, "Server.Internal.ArtifactModification",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 	if err != nil {
 		return err
 	}
@@ -367,7 +368,7 @@ func (self *ClientEventTable) ProcessServerMetadataModificationEvent(
 
 	// Only trigger on server metadata changes
 	client_id, pres := event.GetString("client_id")
-	if !pres || client_id != "server" {
+	if !pres || client_id != constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		return
 	}
 

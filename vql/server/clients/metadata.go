@@ -8,6 +8,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -35,7 +36,7 @@ func (self *ClientMetadataFunction) Call(ctx context.Context,
 	}
 
 	permission := acls.READ_RESULTS
-	if arg.ClientId == "server" {
+	if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		permission = acls.SERVER_ADMIN
 	}
 	err = vql_subsystem.CheckAccess(scope, permission)
@@ -113,7 +114,7 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 
 	// User needs high permissions to modify the client's metadata.
 	permission := acls.COLLECT_CLIENT
-	if client_id == "server" {
+	if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		permission = acls.SERVER_ADMIN
 	}
 
@@ -170,7 +171,7 @@ type ServerMetadataFunction struct{}
 func (self *ServerMetadataFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	args.Set("client_id", "server")
+	args.Set("client_id", constants.VELOCIRAPTOR_SERVER_CLIENT_ID)
 	return (&ClientMetadataFunction{
 		name: "server_metadata",
 	}).Call(ctx, scope, args)
@@ -195,7 +196,7 @@ type ServerSetMetadataFunction struct{}
 func (self *ServerSetMetadataFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	args.Set("client_id", "server")
+	args.Set("client_id", constants.VELOCIRAPTOR_SERVER_CLIENT_ID)
 	return (&ClientSetMetadataFunction{
 		name: "server_set_metadata",
 	}).Call(ctx, scope, args)

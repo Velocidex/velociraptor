@@ -7,18 +7,20 @@ import (
 	"strings"
 )
 
+type ArtifactMode int
+
 const (
 	// The different types of artifacts.
-	MODE_INVALID = iota
+	MODE_INVALID = ArtifactMode(iota)
 	MODE_CLIENT
 	MODE_CLIENT_EVENT
 	MODE_SERVER
 	MODE_SERVER_EVENT
 	MODE_NOTEBOOK
-	INTERNAL
+	MODE_INTERNAL
 )
 
-func ModeNameToMode(name string) int {
+func ModeNameToMode(name string) ArtifactMode {
 	name = strings.ToUpper(name)
 	switch name {
 	case "CLIENT":
@@ -32,7 +34,7 @@ func ModeNameToMode(name string) int {
 	case "NOTEBOOK":
 		return MODE_NOTEBOOK
 	case "INTERNAL":
-		return INTERNAL
+		return MODE_INTERNAL
 	}
 	return MODE_INVALID
 }

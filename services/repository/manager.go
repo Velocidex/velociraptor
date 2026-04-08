@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -151,7 +152,8 @@ func (self *RepositoryManager) SetArtifactMetadata(
 				Set("op", "metadata").
 				Set("metadata", metadata).
 				Set("id", self.id),
-		}, "Server.Internal.ArtifactModification", "server", "")
+		}, "Server.Internal.ArtifactModification",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 
 	return err
 }
@@ -253,7 +255,8 @@ func (self *RepositoryManager) SetArtifactFile(
 				Set("op", "set").
 				Set("definition", definition).
 				Set("id", self.id),
-		}, "Server.Internal.ArtifactModification", "server", "")
+		}, "Server.Internal.ArtifactModification",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 
 	return artifact, err
 }
@@ -293,7 +296,8 @@ func (self *RepositoryManager) DeleteArtifactFile(
 				Set("artifact", name).
 				Set("op", "delete").
 				Set("id", self.id),
-		}, "Server.Internal.ArtifactModification", "server", "")
+		}, "Server.Internal.ArtifactModification",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 	if err != nil {
 		return err
 	}

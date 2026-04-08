@@ -17,6 +17,7 @@ import (
 	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -206,7 +207,7 @@ func (self *ReplicationService) startAsyncLoop(
 					// to the caller.
 					_ = self.PushJsonlToArtifact(ctx,
 						config_obj, v.Bytes(), v.row_count, k,
-						"server", "")
+						constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 				}
 			}
 		}

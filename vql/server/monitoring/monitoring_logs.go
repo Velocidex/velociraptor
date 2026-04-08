@@ -25,6 +25,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -158,7 +159,7 @@ func getResultSetReader(
 		}
 
 		mode := paths.MODE_CLIENT_EVENT
-		if arg.ClientId == "server" {
+		if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 			mode = paths.MODE_SERVER_EVENT
 		}
 
