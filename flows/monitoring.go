@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	errors "github.com/go-errors/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
@@ -150,7 +151,12 @@ func flushMonitoringLogs(
 	}
 
 	for query_name, jsonl_buff := range collection_context.monitoring_batch {
-		err := journal.PushJsonlToArtifact(
+		is_client_event, err := IsClientEvent(ctx, config_obj, query_name)
+		if !is_client_event || err != nil {
+			return errors.New("Invalid client monitoring name")
+		}
+
+		err = journal.PushJsonlToArtifact(
 			ctx,
 			config_obj,
 			jsonl_buff.Bytes(), jsonl_buff.row_count,
