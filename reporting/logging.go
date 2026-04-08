@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -96,7 +97,7 @@ func (self *notebookCellLogger) processAlert(msg string) error {
 		return err
 	}
 
-	alert.ClientId = "server"
+	alert.ClientId = constants.VELOCIRAPTOR_SERVER_CLIENT_ID
 	serialized, err := json.Marshal(alert)
 	if err != nil {
 		return err
@@ -108,7 +109,8 @@ func (self *notebookCellLogger) processAlert(msg string) error {
 		return err
 	}
 	return journal.PushJsonlToArtifact(self.ctx, self.config_obj,
-		serialized, 1, "Server.Internal.Alerts", "server", "")
+		serialized, 1, "Server.Internal.Alerts",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 }
 
 func (self *notebookCellLogger) Messages() []string {

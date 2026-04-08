@@ -24,6 +24,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -238,7 +239,8 @@ func (self *Notifier) ProcessPing(ctx context.Context,
 			Set("NotifyTarget", notify_target).
 			Set("From", self.uuid).
 			Set("Connected", is_client_connected)},
-		"Server.Internal.Pong", "server", "")
+		"Server.Internal.Pong",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 }
 
 func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()) {
@@ -264,7 +266,8 @@ func (self *Notifier) NotifyListener(
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("Tag", tag).
 			Set("Target", id)},
-		"Server.Internal.Notifications", "server", "",
+		"Server.Internal.Notifications",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "",
 	)
 }
 
@@ -370,7 +373,8 @@ func (self *Notifier) IsClientConnected(
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", client_id).
 			Set("NotifyTarget", id)},
-		"Server.Internal.Ping", "server", "")
+		"Server.Internal.Ping",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 	if err != nil {
 		return false
 	}

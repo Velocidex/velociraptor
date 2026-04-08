@@ -25,6 +25,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -424,7 +425,8 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 						FlowId:   arg.FlowId,
 					},
 				})},
-			"Server.Internal.HuntModification", arg.ClientId, "")
+			"Server.Internal.HuntModification",
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 	} else {
 		err = journal.PushRowsToArtifact(ctx, config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().

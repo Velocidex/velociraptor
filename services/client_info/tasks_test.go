@@ -8,6 +8,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -25,7 +26,9 @@ func (self *ClientInfoTestSuite) TestQueueMessages() {
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	message1 := &crypto_proto.VeloMessage{Source: "Server", SessionId: "1"}
+	message1 := &crypto_proto.VeloMessage{
+		Source:    constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+		SessionId: "1"}
 	err = client_info_manager.QueueMessageForClient(
 		context.Background(),
 		self.client_id, message1,
@@ -60,7 +63,9 @@ func (self *ClientInfoTestSuite) TestFastQueueMessages() {
 	written := []*crypto_proto.VeloMessage{}
 
 	for i := 0; i < 10; i++ {
-		message := &crypto_proto.VeloMessage{Source: "Server", SessionId: fmt.Sprintf("%d", i)}
+		message := &crypto_proto.VeloMessage{
+			Source:    constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			SessionId: fmt.Sprintf("%d", i)}
 		err := client_info_manager.QueueMessageForClient(
 			context.Background(),
 			self.client_id, message,

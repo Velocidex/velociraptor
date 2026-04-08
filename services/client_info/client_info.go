@@ -45,6 +45,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -71,7 +72,7 @@ func (self *ClientInfoManager) ListClients(ctx context.Context) <-chan string {
 
 		for _, key := range self.storage.Keys() {
 			// Ignore the server - it is not a real client.
-			if key == "server" {
+			if key == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 				continue
 			}
 

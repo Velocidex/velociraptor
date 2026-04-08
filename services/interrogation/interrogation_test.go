@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -66,11 +67,12 @@ func (self *ServicesTestSuite) EmulateCollection(
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
+	err = journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		rows, artifact, self.client_id, self.flow_id)
+	assert.NoError(self.T(), err)
 
 	// Emulate a flow completion message coming from the flow processor.
-	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
+	err = journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id).
@@ -78,8 +80,11 @@ func (self *ServicesTestSuite) EmulateCollection(
 				ClientId:             self.client_id,
 				SessionId:            self.flow_id,
 				ArtifactsWithResults: []string{artifact}})},
-		"System.Flow.Completion", "server", "",
+		"System.Flow.Completion",
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "",
 	)
+	assert.NoError(self.T(), err)
+
 	return self.flow_id
 }
 
@@ -151,7 +156,7 @@ func (self *ServicesTestSuite) TestEnrollService() {
 			enroll_message, enroll_message, enroll_message, enroll_message,
 		},
 		"Server.Internal.Enrollment",
-		"server", "")
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 	assert.NoError(self.T(), err)
 
 	// Wait here until the client is enrolled

@@ -699,7 +699,7 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 
 	for _, arg := range vql_collector_args {
 		// If sending to the server, record who actually launched this.
-		if client_id == "server" {
+		if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 			arg.Principal = collector_request.Creator
 		}
 
@@ -731,7 +731,7 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 	}
 
 	// Run server artifacts inline.
-	if client_id == "server" {
+	if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		server_artifacts_service, err := services.GetServerArtifactRunner(
 			config_obj)
 		if err != nil {

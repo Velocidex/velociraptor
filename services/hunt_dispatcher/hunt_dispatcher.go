@@ -181,7 +181,8 @@ func (self *HuntDispatcher) ModifyHuntObject(
 								Set("Hunt", hunt_copy).
 								Set("TriggerParticipation", true),
 						},
-						"Server.Internal.HuntUpdate", "server", "")
+						"Server.Internal.HuntUpdate",
+						constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 				}
 				return services.HuntTriggerParticipation
 
@@ -202,7 +203,8 @@ func (self *HuntDispatcher) ModifyHuntObject(
 								Set("HuntId", hunt_record.HuntId).
 								Set("Hunt", hunt_copy),
 						},
-						"Server.Internal.HuntUpdate", "server", "")
+						"Server.Internal.HuntUpdate",
+						constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 				}
 				return services.HuntPropagateChanges
 
@@ -373,7 +375,7 @@ func (self *HuntDispatcher) CreateHunt(
 
 	err = journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{row}, "System.Hunt.Creation",
-		"server", hunt.HuntId)
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, hunt.HuntId)
 	if err != nil {
 		return nil, err
 	}

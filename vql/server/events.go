@@ -5,6 +5,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -56,7 +57,8 @@ func (self *SendEventFunction) Call(ctx context.Context,
 	// We only allow to publish server events - client events come
 	// from the client only and not from VQL.
 	err = journal.PushRowsToArtifact(ctx, config_obj,
-		[]*ordereddict.Dict{arg.Row}, arg.Artifact, "server", "")
+		[]*ordereddict.Dict{arg.Row}, arg.Artifact,
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
 	if err != nil {
 		scope.Log("send_event: %v", err)
 		return &vfilter.Null{}

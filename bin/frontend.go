@@ -71,7 +71,7 @@ func doFrontend() error {
 	// Come up with a suitable services plan depending on the frontend
 	// role.
 	if config_obj.Services == nil {
-		if *frontend_cmd_minion {
+		if config_obj.Frontend != nil && config_obj.Frontend.IsMinion {
 			config_obj.Services = services.MinionServicesSpec()
 		} else {
 			config_obj.Services = services.AllServerServicesSpec()
