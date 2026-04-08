@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
@@ -316,6 +317,24 @@ func (self *TestSuite) TestExportHunt() {
 			Set("flow_id", flow_id))
 
 	assert.Equal(self.T(), self.client_id, result.(string))
+
+	disp, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Wait some time for the hunt to be added.
+	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
+		_, total_rows, _ := disp.GetFlows(
+			ctx, self.ConfigObj,
+			services.FlowSearchOptions{BasicInformation: true}, scope,
+			hunt_id, 0)
+		return total_rows == 1
+	})
+
+	err = disp.Refresh(ctx, self.ConfigObj, hunt_dispatcher.FORCE_REFRESH)
+	assert.NoError(self.T(), err)
+
+	err = datastore.FlushDatastore(self.ConfigObj)
+	assert.NoError(self.T(), err)
 
 	time.Sleep(500 * time.Millisecond)
 
