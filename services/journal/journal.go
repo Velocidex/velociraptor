@@ -218,7 +218,7 @@ func (self *JournalService) Broadcast(
 func (self *JournalService) PushJsonlToArtifact(
 	ctx context.Context, config_obj *config_proto.Config,
 	jsonl []byte, row_count int, artifact, client_id, flows_id string) error {
-	mode, err := self.GetArtifactMode(ctx, config_obj, artifact, client_id)
+	mode, err := GetArtifactMode(ctx, config_obj, artifact, client_id)
 	if err != nil {
 		return err
 	}
@@ -249,7 +249,7 @@ func (self *JournalService) PushJsonlToArtifact(
 	}
 }
 
-func (self *JournalService) GetArtifactMode(
+func GetArtifactMode(
 	ctx context.Context, config_obj *config_proto.Config,
 	artifact, client_id string) (mode paths.ArtifactMode, err error) {
 
@@ -303,7 +303,7 @@ func (self *JournalService) PushRowsToArtifact(
 	ctx context.Context, config_obj *config_proto.Config,
 	rows []*ordereddict.Dict, artifact, client_id, flows_id string) error {
 
-	mode, err := self.GetArtifactMode(ctx, config_obj, artifact, client_id)
+	mode, err := GetArtifactMode(ctx, config_obj, artifact, client_id)
 	if err != nil {
 		return err
 	}
