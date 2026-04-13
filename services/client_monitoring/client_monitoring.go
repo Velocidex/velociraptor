@@ -20,6 +20,8 @@ import (
 	"errors"
 	"sync"
 
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/utils/rand"
 
 	"github.com/Velocidex/ordereddict"
@@ -254,8 +256,12 @@ func (self *ClientEventTable) setClientMonitoringState(
 				Set("principal", principal).
 				Set("artifact", "ClientEventTable").
 				Set("op", "set"),
-		}, "Server.Internal.ArtifactModification",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		},
+		services.JournalOptions{
+			ArtifactName: "Server.Internal.ArtifactModification",
+			ArtifactType: artifact_modes.MODE_INTERNAL,
+			Username:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+		})
 	if err != nil {
 		return err
 	}
@@ -569,12 +575,12 @@ func (self *ClientEventTable) Start(
 	}()
 
 	events, cancel := journal.Watch(
-		ctx, "Server.Internal.ArtifactModification",
+		ctx, artifacts.ARTIFACT_MODIFICATION,
 		"client_monitoring_service")
 	defer cancel()
 
 	metadata_mod_event, metadata_mod_event_cancel := journal.Watch(
-		ctx, "Server.Internal.MetadataModifications",
+		ctx, artifacts.CLIENT_METADATA_MODIFICATION,
 		"client_monitoring_service")
 	defer metadata_mod_event_cancel()
 

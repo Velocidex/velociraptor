@@ -14,10 +14,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -58,7 +58,7 @@ func (self *RepositoryManager) StartWatchingForUpdates(
 	}
 
 	row_chan, cancel := journal.Watch(ctx,
-		"Server.Internal.ArtifactModification",
+		artifacts.ARTIFACT_MODIFICATION,
 		"RepositoryManager")
 
 	wg.Add(1)
@@ -152,8 +152,7 @@ func (self *RepositoryManager) SetArtifactMetadata(
 				Set("op", "metadata").
 				Set("metadata", metadata).
 				Set("id", self.id),
-		}, "Server.Internal.ArtifactModification",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		}, artifacts.ARTIFACT_MODIFICATION)
 
 	return err
 }
@@ -255,8 +254,8 @@ func (self *RepositoryManager) SetArtifactFile(
 				Set("op", "set").
 				Set("definition", definition).
 				Set("id", self.id),
-		}, "Server.Internal.ArtifactModification",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		},
+		artifacts.ARTIFACT_MODIFICATION)
 
 	return artifact, err
 }
@@ -296,8 +295,9 @@ func (self *RepositoryManager) DeleteArtifactFile(
 				Set("artifact", name).
 				Set("op", "delete").
 				Set("id", self.id),
-		}, "Server.Internal.ArtifactModification",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		},
+		artifacts.ARTIFACT_MODIFICATION)
+
 	if err != nil {
 		return err
 	}

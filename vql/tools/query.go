@@ -92,6 +92,8 @@ func (self QueryPlugin) Call(
 
 			// The subscoope will switch to the specified org.
 			builder.Config = org_config_obj
+			builder.ACLManager = acl_managers.NewServerACLManager(
+				org_config_obj, arg.Principal)
 		}
 
 		if arg.Principal != "" {

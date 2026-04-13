@@ -37,6 +37,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -110,7 +111,7 @@ func (self *HuntDispatcher) participateAllConnectedClients(
 			ordereddict.NewDict().
 				Set("HuntId", hunt_id).
 				Set("ClientId", c),
-			"System.Hunt.Participation")
+			artifacts.HUNT_PARTICIPATION)
 	}
 
 	return nil
@@ -181,8 +182,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 								Set("Hunt", hunt_copy).
 								Set("TriggerParticipation", true),
 						},
-						"Server.Internal.HuntUpdate",
-						constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+						artifacts.HUNT_UPDATE)
 				}
 				return services.HuntTriggerParticipation
 
@@ -203,8 +203,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 								Set("HuntId", hunt_record.HuntId).
 								Set("Hunt", hunt_copy),
 						},
-						"Server.Internal.HuntUpdate",
-						constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+						artifacts.HUNT_UPDATE)
 				}
 				return services.HuntPropagateChanges
 
@@ -374,8 +373,8 @@ func (self *HuntDispatcher) CreateHunt(
 	}
 
 	err = journal.PushRowsToArtifact(ctx, config_obj,
-		[]*ordereddict.Dict{row}, "System.Hunt.Creation",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, hunt.HuntId)
+		[]*ordereddict.Dict{row},
+		artifacts.HUNT_CREATION)
 	if err != nil {
 		return nil, err
 	}
@@ -447,7 +446,7 @@ func (self *HuntDispatcher) StartRefresh(
 	}()
 
 	return journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.HuntUpdate", "HuntDispatcher",
+		artifacts.HUNT_UPDATE, "HuntDispatcher",
 		self.ProcessUpdate)
 }
 

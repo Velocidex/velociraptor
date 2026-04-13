@@ -66,10 +66,10 @@ type: CLIENT
 		assert.Equal(b, t, "client")
 	}
 
-	j := &journal.JournalService{}
 	client_id := "C.123"
-
 	for b.Loop() {
-		j.GetArtifactMode(ctx, config_obj, artifact_name, client_id)
+		journal.GetArtifactMode(ctx, config_obj, services.JournalOptions{
+			ArtifactName: artifact_name,
+			ClientId:     client_id})
 	}
 }

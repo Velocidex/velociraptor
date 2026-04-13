@@ -46,6 +46,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -292,7 +293,7 @@ func (self *Store) SaveSnapshot(
 			journal.PushRowsToArtifactAsync(ctx, config_obj,
 				ordereddict.NewDict().
 					Set("From", self.uuid),
-				"Server.Internal.ClientInfoSnapshot")
+				artifacts.CLIENT_INFO_SNAPSHOT_READY)
 		}
 
 		logger.Info("<green>ClientInfo Manager</> Written snapshot for org %v in %v (%v records)",

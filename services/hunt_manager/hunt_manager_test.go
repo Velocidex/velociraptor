@@ -11,12 +11,12 @@ import (
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
@@ -96,8 +96,7 @@ func (self *HuntTestSuite) TestHuntManager() {
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id),
 		},
-		"System.Hunt.Participation",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		artifacts.HUNT_PARTICIPATION)
 	assert.NoError(t, err)
 
 	indexer, err := services.GetIndexer(self.ConfigObj)
@@ -162,8 +161,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost"),
 		},
-		"System.Hunt.Participation",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		artifacts.HUNT_PARTICIPATION)
 	assert.NoError(t, err)
 
 	time.Sleep(time.Second)
@@ -245,8 +243,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost"),
 		},
-		"System.Hunt.Participation",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		artifacts.HUNT_PARTICIPATION)
 	assert.NoError(t, err)
 
 	indexer, err := services.GetIndexer(self.ConfigObj)
@@ -303,8 +300,7 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 			Set("ClientId", self.client_id).
 			Set("Override", true),
 		},
-		"System.Hunt.Participation",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		artifacts.HUNT_PARTICIPATION)
 	assert.NoError(t, err)
 
 	indexer, err := services.GetIndexer(self.ConfigObj)
@@ -377,8 +373,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost"),
 		},
-		"System.Hunt.Participation",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		artifacts.HUNT_PARTICIPATION)
 	assert.NoError(t, err)
 
 	indexer, err := services.GetIndexer(self.ConfigObj)
@@ -461,8 +456,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost"),
 		},
-		"System.Hunt.Participation",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		artifacts.HUNT_PARTICIPATION)
 	assert.NoError(t, err)
 
 	time.Sleep(time.Second)
@@ -523,8 +517,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasOnlyExcludedLabel() {
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost"),
 		},
-		"System.Hunt.Participation",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		artifacts.HUNT_PARTICIPATION)
 	assert.NoError(t, err)
 
 	time.Sleep(time.Second)
@@ -604,8 +597,7 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 				Set("ClientId", client_id_2).
 				Set("Fqdn", "MyHost2"),
 		},
-		"System.Hunt.Participation",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		artifacts.HUNT_PARTICIPATION)
 	assert.NoError(t, err)
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -691,8 +683,8 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 	assert.NoError(self.T(), journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id),
-		}, "Server.Internal.Interrogation",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, ""))
+		},
+		artifacts.INTERROGATION_QUEUE))
 
 	// Ensure the hunt is collected on the client.
 	mdb := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
@@ -738,8 +730,8 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", hunt_obj.HuntId).
 			Set("ClientId", self.client_id),
-		}, "System.Hunt.Participation",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, ""))
+		},
+		artifacts.HUNT_PARTICIPATION))
 
 	// This will schedule a hunt on this client.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
@@ -773,7 +765,8 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 			Set("Flow", flow_obj).
 			Set("FlowId", flow_id).
 			Set("ClientId", self.client_id),
-		}, "System.Flow.Completion", self.client_id, ""))
+		},
+		artifacts.FLOW_COMPLETION.WithClientId(self.client_id)))
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		h, pres := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
@@ -792,8 +785,8 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 				HuntId: hunt_obj.HuntId,
 				State:  api_proto.Hunt_STOPPED,
 			}),
-		}, "Server.Internal.HuntModification",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, ""))
+		},
+		artifacts.HUNT_MODIFICATIONS))
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		h, pres := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
@@ -838,8 +831,8 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", hunt_obj.HuntId).
 			Set("ClientId", self.client_id),
-		}, "System.Hunt.Participation",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, ""))
+		},
+		artifacts.HUNT_PARTICIPATION))
 
 	// This will schedule a hunt on this client.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
@@ -864,7 +857,8 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 			Set("Flow", flow_obj).
 			Set("FlowId", flow_id).
 			Set("ClientId", self.client_id),
-		}, "System.Flow.Completion", self.client_id, ""))
+		},
+		artifacts.FLOW_COMPLETION.WithClientId(self.client_id)))
 
 	// Both TotalClientsWithResults and TotalClientsWithErrors should
 	// increase.

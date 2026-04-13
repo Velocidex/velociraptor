@@ -116,7 +116,7 @@ func (self *QueuePool) getRegistrations(vfs_path string) []*Listener {
 	return nil
 }
 
-func (self *QueuePool) BroadcastJsonl(vfs_path string, jsonl []byte) {
+func (self *QueuePool) BroadcastJsonl(vfs_path string, source string, jsonl []byte) {
 	// Ensure we do not hold the lock for very long here.
 	registrations := self.getRegistrations(vfs_path)
 	if len(registrations) > 0 {
@@ -126,6 +126,8 @@ func (self *QueuePool) BroadcastJsonl(vfs_path string, jsonl []byte) {
 		rows, err := utils.ParseJsonToDicts(jsonl)
 		if err == nil {
 			for _, row := range rows {
+				row.Set("_Source", source)
+
 				for _, item := range registrations {
 					select {
 					case item.Channel <- row:
@@ -141,8 +143,10 @@ func (self *QueuePool) BroadcastJsonl(vfs_path string, jsonl []byte) {
 	}
 }
 
-func (self *QueuePool) Broadcast(vfs_path string, row *ordereddict.Dict) {
+func (self *QueuePool) Broadcast(vfs_path string, source string, row *ordereddict.Dict) {
 	registrations := self.getRegistrations(vfs_path)
+	row.Set("_Source", source)
+
 	// Ensure we do not hold the lock for very long here.
 	for _, item := range registrations {
 		select {
@@ -178,16 +182,16 @@ func (self *MemoryQueueManager) Debug() {
 }
 
 func (self *MemoryQueueManager) Broadcast(
-	path_manager api.PathManager, dict_rows []*ordereddict.Dict) {
+	path_manager api.PathManager, source string, dict_rows []*ordereddict.Dict) {
 	for _, row := range dict_rows {
 		// Set a timestamp per event for easier querying.
 		row.Set("_ts", int(utils.GetTime().Now().Unix()))
-		self.pool.Broadcast(path_manager.GetQueueName(), row)
+		self.pool.Broadcast(path_manager.GetQueueName(), source, row)
 	}
 }
 
 func (self *MemoryQueueManager) PushEventJsonl(
-	path_manager api.PathManager, jsonl []byte, row_count int) error {
+	path_manager api.PathManager, source string, jsonl []byte, row_count int) error {
 
 	// Writes are asyncronous
 	rs_writer, err := result_sets.NewTimedResultSetWriter(
@@ -200,14 +204,14 @@ func (self *MemoryQueueManager) PushEventJsonl(
 
 	jsonl = json.AppendJsonlItem(jsonl, "_ts",
 		int(utils.GetTime().Now().Unix()))
+	jsonl = json.AppendJsonlItem(jsonl, "_Source", source)
 	rs_writer.WriteJSONL(jsonl, row_count)
-
-	self.pool.BroadcastJsonl(path_manager.GetQueueName(), jsonl)
+	self.pool.BroadcastJsonl(path_manager.GetQueueName(), source, jsonl)
 	return nil
 }
 
 func (self *MemoryQueueManager) PushEventRows(
-	path_manager api.PathManager, dict_rows []*ordereddict.Dict) error {
+	path_manager api.PathManager, source string, dict_rows []*ordereddict.Dict) error {
 
 	// Writes are asyncronous
 	rs_writer, err := result_sets.NewTimedResultSetWriter(
@@ -220,9 +224,11 @@ func (self *MemoryQueueManager) PushEventRows(
 
 	for _, row := range dict_rows {
 		// Set a timestamp per event for easier querying.
-		row.Set("_ts", int(utils.GetTime().Now().Unix()))
+		row.Set("_ts", int(utils.GetTime().Now().Unix())).
+			Set("_Source", source)
+
 		rs_writer.Write(row)
-		self.pool.Broadcast(path_manager.GetQueueName(), row)
+		self.pool.Broadcast(path_manager.GetQueueName(), source, row)
 	}
 	return nil
 }

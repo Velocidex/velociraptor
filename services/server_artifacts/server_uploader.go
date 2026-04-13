@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/uploader"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -115,9 +116,9 @@ func (self *ServerUploader) Upload(
 
 	err = journal.PushRowsToArtifact(ctx, self.config_obj,
 		[]*ordereddict.Dict{row},
-		"System.Upload.Completion",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, self.session_id,
-	)
+		artifacts.UPLOAD_COMPLETION.
+			WithClientId(constants.VELOCIRAPTOR_SERVER_CLIENT_ID).
+			WithFlowId(self.session_id))
 	closer(result)
 	return result, err
 }

@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 )
@@ -85,7 +86,7 @@ func renderDBVFS(
 	// Open the original flow result set
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
 		config_obj, result.ClientId, result.FlowId,
-		artifact_name, paths.MODE_CLIENT)
+		artifact_name, artifact_modes.MODE_CLIENT)
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(

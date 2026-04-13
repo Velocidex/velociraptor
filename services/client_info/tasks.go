@@ -23,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -114,7 +115,7 @@ func (self *ClientInfoManager) QueueMessagesForClient(
 				ordereddict.NewDict().
 					Set("ClientId", client_id).
 					Set("Notify", notify),
-				"Server.Internal.ClientTasks")
+				artifacts.CLIENT_INFO_TASK)
 		}
 
 		if notify {
@@ -193,7 +194,7 @@ func (self *ClientInfoManager) QueueMessageForClient(
 			ordereddict.NewDict().
 				Set("ClientId", client_id).
 				Set("Notify", notify),
-			"Server.Internal.ClientTasks")
+			artifacts.CLIENT_INFO_TASK)
 
 		if notify {
 			notifier, err := services.GetNotifier(self.config_obj)
@@ -591,7 +592,7 @@ func (self *ClientInfoManager) GetClientTasks(
 			ordereddict.NewDict().
 				Set("ClientId", client_id).
 				Set("InFlight", inflight_flows),
-			"Server.Internal.ClientScheduled")
+			artifacts.CLIENT_INFO_SCHEDULED)
 	}
 
 	return result, nil

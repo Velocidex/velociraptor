@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -154,9 +155,13 @@ func flushMonitoringLogs(
 			ctx,
 			config_obj,
 			jsonl_buff.Bytes(), jsonl_buff.row_count,
-			query_name,
-			collection_context.ClientId,
-			collection_context.SessionId)
+			services.JournalOptions{
+				ArtifactName: query_name,
+				ArtifactType: artifact_modes.MODE_CLIENT_EVENT,
+				Username:     collection_context.ClientId,
+				ClientId:     collection_context.ClientId,
+				FlowId:       collection_context.SessionId,
+			})
 		if err != nil {
 			return err
 		}

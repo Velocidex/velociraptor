@@ -588,7 +588,8 @@ func NewGuiTemplateEngine(
 
 	// Write logs to this result set.
 	log_writer, err := newNotebookCellLogger(ctx,
-		config_obj, notebook_cell_path_manager.Logs())
+		config_obj, notebook_cell_path_manager.Logs(),
+		base_engine.Scope)
 	if err != nil {
 		return nil, err
 	}

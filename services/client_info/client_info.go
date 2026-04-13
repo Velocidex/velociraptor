@@ -47,6 +47,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -229,7 +230,7 @@ func (self *ClientInfoManager) Start(
 		// Minions watch for Server.Internal.ClientInfoSnapshot to
 		// trigger their snapshot loading.
 		err := journal.WatchQueueWithCB(ctx, config_obj, wg,
-			"Server.Internal.ClientInfoSnapshot",
+			artifacts.CLIENT_INFO_SNAPSHOT_READY,
 			"ClientInfoManager",
 			self.ProcessSnapshotWrites)
 		if err != nil {
@@ -242,7 +243,7 @@ func (self *ClientInfoManager) Start(
 	// update. Minions listen for this event and immediately update
 	// the has_tasks field in the client record.
 	err := journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.ClientTasks",
+		artifacts.CLIENT_INFO_TASK,
 		"ClientInfoManager",
 		self.ProcessNotification)
 	if err != nil {
@@ -251,7 +252,7 @@ func (self *ClientInfoManager) Start(
 
 	// Watch for flow completions and unset the inflight status.
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"System.Flow.Completion",
+		artifacts.FLOW_COMPLETION,
 		"ClientInfoManager",
 		self.ProcessFlowCompletion)
 	if err != nil {
@@ -261,7 +262,7 @@ func (self *ClientInfoManager) Start(
 	// This is a queue that synchronizes all nodes on which flows are
 	// in flight.
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.ClientScheduled",
+		artifacts.CLIENT_INFO_SCHEDULED,
 		"ClientInfoManager",
 		self.ProcessInFlightNotifications)
 	if err != nil {
@@ -270,7 +271,7 @@ func (self *ClientInfoManager) Start(
 
 	// The master will be informed when new clients appear.
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.ClientPing",
+		artifacts.PING,
 		"ClientInfoManager",
 		self.ProcessPing)
 	if err != nil {
@@ -430,7 +431,7 @@ func (self *ClientInfoManager) MutationSync(
 					ordereddict.NewDict().
 						Set("Mutation", self.mutation_manager.GetMutation()).
 						Set("From", self.uuid),
-					"Server.Internal.ClientPing")
+					artifacts.CLIENT_INFO_SYNC)
 			}
 		}
 	}
