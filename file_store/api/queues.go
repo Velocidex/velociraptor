@@ -22,12 +22,13 @@ type QueueOptions struct {
 type QueueManager interface {
 	// Broadcast events only for local listeners without writing to
 	// storage.
-	Broadcast(path_manager PathManager, rows []*ordereddict.Dict)
+	// Source is the writer who sends the broadcast.
+	Broadcast(path_manager PathManager, source string, rows []*ordereddict.Dict)
 	GetWatchers() []string
 
-	PushEventRows(path_manager PathManager, rows []*ordereddict.Dict) error
+	PushEventRows(path_manager PathManager, source string, rows []*ordereddict.Dict) error
 
-	PushEventJsonl(path_manager PathManager, jsonl []byte, row_count int) error
+	PushEventJsonl(path_manager PathManager, source string, jsonl []byte, row_count int) error
 
 	Watch(ctx context.Context, queue_name string, queue_options *QueueOptions) (
 		output <-chan *ordereddict.Dict, cancel func())

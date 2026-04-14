@@ -10,6 +10,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -25,8 +26,8 @@ func WatchForCollectionWithCB(ctx context.Context,
 		config_obj *config_proto.Config,
 		client_id, flow_id string) error) error {
 
-	return WatchQueueWithCB(ctx, config_obj, wg, "System.Flow.Completion",
-		watcher_name,
+	return WatchQueueWithCB(ctx, config_obj, wg,
+		artifacts.FLOW_COMPLETION, watcher_name,
 		func(ctx context.Context, config_obj *config_proto.Config,
 			row *ordereddict.Dict) error {
 
@@ -56,7 +57,8 @@ func WatchForCollectionWithCB(ctx context.Context,
 func WatchQueueWithCB(ctx context.Context,
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup,
-	artifact, watcher_name string,
+	queue services.JournalOptions,
+	watcher_name string,
 
 	// A processor for rows from the queue
 	processor func(ctx context.Context,
@@ -67,7 +69,7 @@ func WatchQueueWithCB(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	qm_chan, cancel := journal.Watch(ctx, artifact, watcher_name)
+	qm_chan, cancel := journal.Watch(ctx, queue, watcher_name)
 
 	wg.Add(1)
 	go func() {
@@ -80,6 +82,7 @@ func WatchQueueWithCB(ctx context.Context,
 				if !ok {
 					return
 				}
+
 				err := processor(ctx, config_obj, row)
 				if err != nil {
 					// Processor errors are not generally serious so
@@ -88,7 +91,7 @@ func WatchQueueWithCB(ctx context.Context,
 						&logging.FrontendComponent)
 					logger.WithFields(logrus.Fields{
 						"Owner":    watcher_name,
-						"Artifact": artifact,
+						"Artifact": queue.ArtifactName,
 						"Error":    err.Error(),
 					}).Debug("Event Processor Error")
 				}

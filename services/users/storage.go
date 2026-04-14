@@ -12,10 +12,10 @@ import (
 	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -260,8 +260,7 @@ func (self *UserStorageManager) notifyChanges(
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().Set("id", self.id).Set("username", username),
 		},
-		"Server.Internal.UserManager",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		artifacts.USER_MANAGER)
 }
 
 // Update fixed fields in the options to override user choices. This
@@ -634,7 +633,7 @@ func NewUserStorageManager(
 		return nil, err
 	}
 	events, cancel := journal_service.Watch(ctx,
-		"Server.Internal.UserManager", "UserManagerService")
+		artifacts.USER_MANAGER, "UserManagerService")
 
 	refresh_duration := time.Duration(300 * time.Second)
 	if config_obj.Defaults != nil &&

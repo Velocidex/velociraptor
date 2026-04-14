@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -42,6 +43,6 @@ func (self *HuntDispatcher) MutateHunt(
 		ordereddict.NewDict().
 			Set("hunt_id", mutation.HuntId).
 			Set("mutation", mutation),
-		"Server.Internal.HuntModification")
+		artifacts.HUNT_MODIFICATIONS)
 	return nil
 }

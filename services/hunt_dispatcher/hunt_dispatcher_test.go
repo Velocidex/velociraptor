@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -52,6 +53,8 @@ func (self *HuntDispatcherTestSuite) SetupTest() {
 
 	// Disable refresh - we will do it in the test
 	self.ConfigObj.Defaults.HuntDispatcherRefreshSec = -1
+
+	journal.PushRowsToArtifactAsyncIsSynchrnous = true
 
 	self.LoadArtifactsIntoConfig([]string{`
 name: Server.Internal.HuntUpdate

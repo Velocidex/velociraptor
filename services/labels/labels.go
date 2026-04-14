@@ -13,6 +13,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -169,7 +170,7 @@ func (self *Labeler) notifyClient(
 			Set("client_id", client_id).
 			Set("Operation", operation).
 			Set("Label", new_label),
-		"Server.Internal.Label")
+		artifacts.LABEL_QUEUE)
 	return nil
 }
 
@@ -360,8 +361,7 @@ func (self *Labeler) Start(ctx context.Context,
 		return err
 	}
 
-	events, cancel := journal.Watch(
-		ctx, "Server.Internal.Label", "Labeler")
+	events, cancel := journal.Watch(ctx, artifacts.LABEL_QUEUE, "Labeler")
 
 	wg.Add(1)
 	go func() {

@@ -96,7 +96,7 @@ func (self *EnrollmentService) Start(
 	}
 
 	return journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.Enrollment", "InterrogationService",
+		artifacts.ENROLLMENT_QUEUE, "InterrogationService",
 		self.ProcessEnrollment)
 }
 
@@ -432,7 +432,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	journal.PushRowsToArtifactAsync(ctx, config_obj,
 		ordereddict.NewDict().
 			Set("ClientId", client_id),
-		"Server.Internal.Interrogation")
+		artifacts.INTERROGATION_QUEUE)
 
 	return nil
 }

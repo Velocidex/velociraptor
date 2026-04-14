@@ -633,7 +633,8 @@ func (self *TestSuite) testCollectionCompletion(
 
 	// Capture output from System.Flow.Completion
 	err := journal.WatchQueueWithCB(self.Ctx, self.ConfigObj, wg,
-		"System.Flow.Completion", "", func(ctx context.Context,
+		artifacts.FLOW_COMPLETION, "",
+		func(ctx context.Context,
 			config_obj *config_proto.Config,
 			row *ordereddict.Dict) error {
 

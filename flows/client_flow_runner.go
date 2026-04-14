@@ -20,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -81,8 +82,11 @@ func (self *ClientFlowRunner) Complete() {
 		}
 
 		for _, row := range self.flow_completion_messages {
+			client_id, _ := row.GetString("ClientId")
 			journal.PushRowsToArtifactAsync(self.ctx,
-				self.config_obj, row, "System.Flow.Completion")
+				self.config_obj, row,
+				artifact_paths.FLOW_COMPLETION.
+					WithClientId(client_id))
 		}
 	}
 
@@ -93,8 +97,11 @@ func (self *ClientFlowRunner) Complete() {
 		}
 
 		for _, row := range self.upload_completion_messages {
-			journal.PushRowsToArtifactAsync(self.ctx, self.config_obj,
-				row, "System.Upload.Completion")
+			client_id, _ := row.GetString("ClientId")
+			journal.PushRowsToArtifactAsync(self.ctx,
+				self.config_obj, row,
+				artifact_paths.UPLOAD_COMPLETION.
+					WithClientId(client_id))
 		}
 	}
 }
@@ -106,15 +113,18 @@ func (self *ClientFlowRunner) ProcessMonitoringMessage(
 	client_id := msg.Source
 
 	if msg.VQLResponse != nil && msg.VQLResponse.Query != nil {
-		err := self.MonitoringVQLResponse(ctx, client_id, flow_id, msg.VQLResponse)
+		err := self.MonitoringVQLResponse(
+			ctx, client_id, flow_id, msg.VQLResponse)
 		if err != nil {
 			return fmt.Errorf("MonitoringVQLResponse: %w", err)
 		}
-		return self.maybeProcessClientInfo(ctx, client_id, msg.VQLResponse)
+		return self.maybeProcessClientInfo(
+			ctx, client_id, msg.VQLResponse)
 	}
 
 	if msg.LogMessage != nil {
-		err := self.MonitoringLogMessage(ctx, client_id, flow_id, msg.LogMessage)
+		err := self.MonitoringLogMessage(ctx,
+			client_id, flow_id, msg.LogMessage)
 		if err != nil {
 			return fmt.Errorf("MonitoringLogMessage: %w", err)
 		}
@@ -205,8 +215,7 @@ func (self *ClientFlowRunner) processMonitoringAlert(
 		return err
 	}
 	return journal.PushJsonlToArtifact(ctx, self.config_obj,
-		serialized, 1, "Server.Internal.Alerts",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		serialized, 1, artifact_paths.ALERT_QUEUE)
 }
 
 func (self *ClientFlowRunner) MonitoringVQLResponse(
@@ -242,7 +251,12 @@ func (self *ClientFlowRunner) MonitoringVQLResponse(
 
 	return journal.PushJsonlToArtifact(ctx,
 		self.config_obj, data, int(response.TotalRows),
-		query_name, client_id, flow_id)
+		services.JournalOptions{
+			ArtifactName: query_name,
+			ClientId:     client_id,
+			FlowId:       flow_id,
+			Username:     client_id,
+		})
 }
 
 func (self *ClientFlowRunner) removeInflightChecks(
@@ -256,7 +270,7 @@ func (self *ClientFlowRunner) removeInflightChecks(
 		ordereddict.NewDict().
 			Set("ClientId", client_id).
 			Set("ClearFlows", true),
-		"Server.Internal.ClientScheduled")
+		artifact_paths.CLIENT_INFO_SCHEDULED)
 
 	// Update the client's in flight flow tracker on the local system
 	// as well. This helps to update this record ASAP before waiting
@@ -713,7 +727,7 @@ func (self *ClientFlowRunner) VQLResponse(
 		return err
 	}
 
-	if path_manager.Mode() != paths.MODE_CLIENT {
+	if path_manager.Mode() != artifact_modes.MODE_CLIENT {
 		return fmt.Errorf("Invalid VQLResponse: Artifact %v must be CLIENT type",
 			response.Query.Name)
 	}
@@ -798,8 +812,7 @@ func (self *ClientFlowRunner) processAlert(
 		return err
 	}
 	return journal.PushJsonlToArtifact(ctx, self.config_obj,
-		serialized, 1, "Server.Internal.Alerts",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		serialized, 1, artifact_paths.ALERT_QUEUE)
 }
 
 func (self *ClientFlowRunner) LogMessage(

@@ -65,5 +65,5 @@ type Inventory interface {
 		tool *artifacts_proto.Tool, opts ToolOptions) error
 
 	// Remove the tool from the inventory and all its versions.
-	RemoveTool(config_obj *config_proto.Config, tool_name string) error
+	RemoveTool(ctx context.Context, config_obj *config_proto.Config, tool_name string) error
 }

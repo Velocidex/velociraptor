@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
@@ -85,7 +86,7 @@ func (self *JournalTestSuite) TestJournalWriting() {
 				Set("Foo", "Bar").
 				Set("i", i),
 			},
-			"System.Flow.Completion", "C.1234", "")
+			artifacts.FLOW_COMPLETION.WithClientId("C.1234"))
 		assert.NoError(self.T(), err)
 	}
 
@@ -134,7 +135,7 @@ func (self *JournalTestSuite) TestJournalJsonlWriting() {
 	for i := 0; i < 10; i++ {
 		err = journal.PushJsonlToArtifact(self.Ctx, self.ConfigObj,
 			[]byte(fmt.Sprintf("{\"For\":%q,\"i\":%d}\n", "Bar", i)), 1,
-			"System.Flow.Completion", "C.1234", "")
+			artifacts.FLOW_COMPLETION.WithClientId("C.1234"))
 		assert.NoError(self.T(), err)
 	}
 

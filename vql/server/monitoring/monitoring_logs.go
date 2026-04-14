@@ -26,7 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -158,9 +158,9 @@ func getResultSetReader(
 			arg.Source = ""
 		}
 
-		mode := paths.MODE_CLIENT_EVENT
+		mode := artifact_modes.MODE_CLIENT_EVENT
 		if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
-			mode = paths.MODE_SERVER_EVENT
+			mode = artifact_modes.MODE_SERVER_EVENT
 		}
 
 		path_manager := artifact_paths.NewArtifactLogPathManagerWithMode(

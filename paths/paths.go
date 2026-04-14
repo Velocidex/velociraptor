@@ -7,38 +7,6 @@ import (
 	"strings"
 )
 
-type ArtifactMode int
-
-const (
-	// The different types of artifacts.
-	MODE_INVALID = ArtifactMode(iota)
-	MODE_CLIENT
-	MODE_CLIENT_EVENT
-	MODE_SERVER
-	MODE_SERVER_EVENT
-	MODE_NOTEBOOK
-	MODE_INTERNAL
-)
-
-func ModeNameToMode(name string) ArtifactMode {
-	name = strings.ToUpper(name)
-	switch name {
-	case "CLIENT":
-		return MODE_CLIENT
-	case "CLIENT_EVENT":
-		return MODE_CLIENT_EVENT
-	case "SERVER":
-		return MODE_SERVER
-	case "SERVER_EVENT":
-		return MODE_SERVER_EVENT
-	case "NOTEBOOK":
-		return MODE_NOTEBOOK
-	case "INTERNAL":
-		return MODE_INTERNAL
-	}
-	return MODE_INVALID
-}
-
 // Fully qualified source names are obtained by joining the artifact
 // name to the source name. This splits them back up.
 func SplitFullSourceName(artifact_source string) (artifact string, source string) {

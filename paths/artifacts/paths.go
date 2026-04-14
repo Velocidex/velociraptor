@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -23,24 +24,24 @@ type ArtifactPathManager struct {
 	config_obj                         *config_proto.Config
 	ClientId, FlowId, FullArtifactName string
 	base_artifact_name, source         string
-	mode                               paths.ArtifactMode
+	mode                               artifact_modes.ArtifactMode
 	file_store                         api.FileStore
 }
 
-func (self *ArtifactPathManager) Mode() paths.ArtifactMode {
+func (self *ArtifactPathManager) Mode() artifact_modes.ArtifactMode {
 	return self.mode
 }
 
 func NewArtifactPathManagerWithMode(
 	config_obj *config_proto.Config,
 	client_id, flow_id, full_artifact_name string,
-	mode paths.ArtifactMode) *ArtifactPathManager {
+	mode artifact_modes.ArtifactMode) *ArtifactPathManager {
 
 	// Override the internal mode for debugging.
-	if mode == paths.MODE_INTERNAL &&
+	if mode == artifact_modes.MODE_INTERNAL &&
 		config_obj.Defaults != nil &&
 		config_obj.Defaults.WriteInternalEvents {
-		mode = paths.MODE_SERVER_EVENT
+		mode = artifact_modes.MODE_SERVER_EVENT
 	}
 
 	artifact_name, artifact_source := paths.SplitFullSourceName(full_artifact_name)
@@ -82,25 +83,6 @@ func NewArtifactPathManager(
 	}, nil
 }
 
-// Used to determine what kind of result set writer is needed. Event
-// artifacts need a timed result set but regular artifacts need a
-// simple result set.
-func (self *ArtifactPathManager) IsEvent() bool {
-	switch self.mode {
-	// These are regular artifacts
-	case paths.MODE_CLIENT, paths.MODE_SERVER, paths.MODE_NOTEBOOK:
-		return false
-
-		// These are all event artifacts
-	case paths.MODE_SERVER_EVENT, paths.MODE_CLIENT_EVENT,
-		paths.MODE_INTERNAL:
-		return true
-
-	default:
-		return true
-	}
-}
-
 // Where we store collection query logs
 func (self *ArtifactPathManager) Logs() *ArtifactLogPathManager {
 	return &ArtifactLogPathManager{self}
@@ -123,15 +105,15 @@ func (self *ArtifactPathManager) Path() api.FSPathSpec {
 // produce all logs for this client and all artifacts.
 func (self *ArtifactPathManager) GetRootPath() api.FSPathSpec {
 	switch self.mode {
-	case paths.MODE_CLIENT, paths.MODE_SERVER:
+	case artifact_modes.MODE_CLIENT, artifact_modes.MODE_SERVER:
 		return paths.CLIENTS_ROOT.AddChild(
 			self.ClientId, "collections",
 			self.FlowId).AsFilestorePath()
 
-	case paths.MODE_SERVER_EVENT:
+	case artifact_modes.MODE_SERVER_EVENT:
 		return paths.SERVER_MONITORING_ROOT
 
-	case paths.MODE_CLIENT_EVENT:
+	case artifact_modes.MODE_CLIENT_EVENT:
 		if self.ClientId == "" {
 			// Should never normally happen.
 			return paths.CLIENTS_ROOT.AddChild("nobody").
@@ -161,7 +143,7 @@ func (self *ArtifactPathManager) getDayName() string {
 // write artifact results.
 func (self *ArtifactPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 	switch self.mode {
-	case paths.MODE_CLIENT:
+	case artifact_modes.MODE_CLIENT:
 		if self.source != "" {
 			return paths.CLIENTS_ROOT.AsFilestorePath().
 				SetType(api.PATH_TYPE_FILESTORE_JSON).
@@ -178,7 +160,7 @@ func (self *ArtifactPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 					self.FlowId), nil
 		}
 
-	case paths.MODE_SERVER, paths.MODE_NOTEBOOK:
+	case artifact_modes.MODE_SERVER, artifact_modes.MODE_NOTEBOOK:
 		if self.source != "" {
 			return paths.CLIENTS_ROOT.AsFilestorePath().
 				SetType(api.PATH_TYPE_FILESTORE_JSON).
@@ -195,7 +177,7 @@ func (self *ArtifactPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 					self.FlowId), nil
 		}
 
-	case paths.MODE_SERVER_EVENT:
+	case artifact_modes.MODE_SERVER_EVENT:
 		if self.source != "" {
 			return paths.SERVER_MONITORING_ROOT.
 				AddChild(
@@ -208,7 +190,7 @@ func (self *ArtifactPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 					self.getDayName()), nil
 		}
 
-	case paths.MODE_CLIENT_EVENT:
+	case artifact_modes.MODE_CLIENT_EVENT:
 		if self.ClientId == "" {
 			// Should never normally happen.
 			return paths.CLIENTS_ROOT.AsFilestorePath().
@@ -237,7 +219,7 @@ func (self *ArtifactPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 
 		// Internal artifacts are not written anywhere but are
 		// still replicated.
-	case paths.MODE_INTERNAL:
+	case artifact_modes.MODE_INTERNAL:
 		return nil, nil
 	}
 
@@ -250,8 +232,8 @@ func (self *ArtifactPathManager) get_event_files(path_for_writing api.FSPathSpec
 	[]*api.ResultSetFileProperties, error) {
 
 	switch self.mode {
-	case paths.MODE_SERVER_EVENT, paths.MODE_CLIENT_EVENT:
-	case paths.MODE_CLIENT, paths.MODE_SERVER:
+	case artifact_modes.MODE_SERVER_EVENT, artifact_modes.MODE_CLIENT_EVENT:
+	case artifact_modes.MODE_CLIENT, artifact_modes.MODE_SERVER:
 		return []*api.ResultSetFileProperties{
 			&api.ResultSetFileProperties{
 				Path: path_for_writing,
@@ -317,11 +299,11 @@ func DayNameToTimestamp(name string) time.Time {
 
 func GetArtifactMode(
 	ctx context.Context, config_obj *config_proto.Config,
-	artifact_name string) (paths.ArtifactMode, error) {
+	artifact_name string) (artifact_modes.ArtifactMode, error) {
 
 	if config_obj.Defaults != nil &&
 		config_obj.Defaults.WriteInternalEvents {
-		return paths.MODE_SERVER_EVENT, nil
+		return artifact_modes.MODE_SERVER_EVENT, nil
 	}
 
 	manager, err := services.GetRepositoryManager(config_obj)
@@ -340,5 +322,5 @@ func GetArtifactMode(
 		return 0, err
 	}
 
-	return paths.ModeNameToMode(artifact_type), nil
+	return artifact_modes.ModeNameToMode(artifact_type), nil
 }

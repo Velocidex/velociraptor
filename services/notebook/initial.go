@@ -81,6 +81,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
@@ -333,8 +334,9 @@ func CalculateNotebookArtifact(
 					default_limit = config_obj.Defaults.NotebookDefaultNewCellRows
 				}
 
-				switch paths.ModeNameToMode(artifact.Type) {
-				case paths.MODE_CLIENT_EVENT, paths.MODE_SERVER_EVENT:
+				switch artifact_modes.ModeNameToMode(artifact.Type) {
+				case artifact_modes.MODE_CLIENT_EVENT,
+					artifact_modes.MODE_SERVER_EVENT:
 					new_source.Notebook = append(new_source.Notebook,
 						&artifacts_proto.NotebookSourceCell{
 							Type:   "vql",

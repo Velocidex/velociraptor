@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
@@ -113,10 +114,12 @@ func (self *TestSuite) TestQueueManager() {
 	// Push some rows without reading - this should write to the
 	// file buffer and not block.
 	for i := 0; i < 10; i++ {
-		err = manager.PushEventRows(path_manager, []*ordereddict.Dict{
-			ordereddict.NewDict().
-				Set("Foo", "Bar"),
-		})
+		err = manager.PushEventRows(
+			path_manager, constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			[]*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Foo", "Bar"),
+			})
 		assert.NoError(self.T(), err)
 	}
 
@@ -194,6 +197,7 @@ func (self *TestSuite) TestQueueManagerJsonl() {
 		// For performance critical parts it is more efficient to
 		// build the JSONL manually
 		err = manager.PushEventJsonl(path_manager,
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 			[]byte(fmt.Sprintf("{\"Foo\":%q}\n", "Bar")), 1)
 		assert.NoError(self.T(), err)
 	}

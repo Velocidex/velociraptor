@@ -7,11 +7,11 @@ import (
 	"os"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -233,8 +233,7 @@ func (self *ClientInfoManager) reallyDeleteClient(ctx context.Context,
 			Set("ClientId", client_id).
 			Set("OrgId", self.config_obj.OrgId).
 			Set("Principal", principal)},
-		"Server.Internal.ClientDelete",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		artifacts.CLIENT_DELETE_QUEUE)
 
 	if err != nil {
 		return err
@@ -267,6 +266,5 @@ func (self *ClientInfoManager) reallyDeleteClient(ctx context.Context,
 			Set("ClientId", client_id).
 			Set("OrgId", self.config_obj.OrgId).
 			Set("Principal", principal)},
-		"Server.Internal.ClientDelete",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		artifacts.CLIENT_DELETE_QUEUE)
 }

@@ -25,10 +25,10 @@ import (
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -128,8 +128,9 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	principal := vql_subsystem.GetPrincipal(scope)
 	request := &flows_proto.ArtifactCollectorArgs{
-		Creator:        vql_subsystem.GetPrincipal(scope),
+		Creator:        principal,
 		Artifacts:      arg.Artifacts,
 		OpsPerSecond:   float32(arg.OpsPerSecond),
 		CpuLimit:       float32(arg.CpuLimit),
@@ -139,7 +140,6 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		MaxUploadBytes: arg.MaxBytes,
 	}
 
-	principal := vql_subsystem.GetPrincipal(scope)
 	err = collector.AddSpecProtobuf(ctx, config_obj, repository, scope,
 		arg.Spec, request)
 	if err != nil {
@@ -425,15 +425,15 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 						FlowId:   arg.FlowId,
 					},
 				})},
-			"Server.Internal.HuntModification",
-			constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+			artifacts.HUNT_MODIFICATIONS)
+
 	} else {
 		err = journal.PushRowsToArtifact(ctx, config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("HuntId", arg.HuntId).
 				Set("ClientId", arg.ClientId).
 				Set("Override", true)},
-			"System.Hunt.Participation", arg.ClientId, "")
+			artifacts.HUNT_PARTICIPATION)
 	}
 
 	if err != nil {

@@ -4,6 +4,9 @@ description: |
   dispatcher from all nodes sends this mutation to the hunt manager
   which applies it.
 
+  Users can also watch this queue to be notified when hunts are
+  modified (e.g. stopped, started etc).
+
 type: INTERNAL
 
 column_types:

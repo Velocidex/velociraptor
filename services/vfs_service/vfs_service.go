@@ -20,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -237,7 +238,7 @@ func (self *VFSService) ProcessListDirectoryLegacy(
 
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
 		config_obj, client_id, flow_id, "System.VFS.ListDirectory",
-		paths.MODE_CLIENT)
+		artifact_modes.MODE_CLIENT)
 
 	// Read the results from the flow and build a VFSListResponse
 	// for storing in the VFS.
@@ -370,7 +371,7 @@ func (self *VFSService) ProcessListDirectory(
 
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
 		config_obj, client_id, flow_id, "System.VFS.ListDirectory/Stats",
-		paths.MODE_CLIENT)
+		artifact_modes.MODE_CLIENT)
 
 	// Read the results from the flow and build a VFSListResponse
 	// for storing in the VFS.
