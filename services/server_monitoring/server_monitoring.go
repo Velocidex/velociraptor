@@ -317,6 +317,9 @@ func (self *EventTable) RunQuery(
 			"Server monitoring can only run artifacts of type SERVER_EVENT, not %v", mode.String())
 	}
 
+	// Server event queries are always running as superuser.
+	principal := utils.GetSuperuserName(config_obj)
+
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
@@ -335,9 +338,7 @@ func (self *EventTable) RunQuery(
 	journal_opts := services.JournalOptions{
 		ArtifactName: artifact_name,
 		ArtifactType: artifact_modes.MODE_SERVER_EVENT,
-
-		// Server event queries are always running as superuser.
-		Username: constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+		Username:     principal,
 	}
 
 	// We write the logs directly to files.
@@ -350,6 +351,7 @@ func (self *EventTable) RunQuery(
 		path_manager: log_path_manager,
 		ctx:          ctx,
 		artifact:     artifact_name,
+		principal:    principal,
 	}
 
 	builder := services.ScopeBuilder{
@@ -358,7 +360,7 @@ func (self *EventTable) RunQuery(
 		// artifact launches other artifacts then it will indicate the
 		// creator was the server.
 		ACLManager: acl_managers.NewServerACLManager(
-			self.config_obj, utils.GetSuperuserName(config_obj)),
+			self.config_obj, principal),
 		Env:        ordereddict.NewDict(),
 		Repository: repository,
 		Logger:     log.New(self.logger, "", 0),

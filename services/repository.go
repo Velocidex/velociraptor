@@ -165,6 +165,8 @@ type RepositoryManager interface {
 		config_obj *config_proto.Config, principal, name string) error
 
 	ReformatVQL(ctx context.Context, artifact_yaml string) (string, error)
+
+	Flush(ctx context.Context, config_obj *config_proto.Config) error
 }
 
 type MockablePlugin interface {

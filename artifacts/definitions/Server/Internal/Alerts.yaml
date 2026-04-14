@@ -6,4 +6,8 @@ description: |
   Alerts are expected to be low frequency and high value and may be
   generated client or server side.
 
+  You can monitor this queue using the `watch_monitoring()`
+  plugin. This can be used as a building block in implementing more
+  complex escalation workflows.
+
 type: SERVER_EVENT

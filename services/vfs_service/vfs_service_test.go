@@ -11,12 +11,12 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -82,7 +82,11 @@ func (self *VFSServiceTestSuite) EmulateCollection(
 	assert.NoError(self.T(), err)
 
 	err = journal.PushRowsToArtifact(self.Ctx, self.ConfigObj, rows,
-		artifact, self.client_id, self.flow_id)
+		services.JournalOptions{
+			ArtifactName: artifact,
+			ClientId:     self.client_id,
+			FlowId:       self.flow_id,
+		})
 	assert.NoError(self.T(), err)
 
 	// Emulate a flow completion message coming from the flow processor.
@@ -96,8 +100,7 @@ func (self *VFSServiceTestSuite) EmulateCollection(
 				ArtifactsWithResults: []string{artifact},
 				TotalCollectedRows:   uint64(len(rows)),
 			})},
-		"System.Flow.Completion",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		artifacts.FLOW_COMPLETION)
 	assert.NoError(self.T(), err)
 
 	return self.flow_id
@@ -115,11 +118,20 @@ func (self *VFSServiceTestSuite) EmulateCollectionWithVFSLs(
 	assert.NoError(self.T(), err)
 
 	err = journal.PushRowsToArtifact(self.Ctx, self.ConfigObj, rows,
-		artifact+"/Listing", self.client_id, self.flow_id)
+		services.JournalOptions{
+			ArtifactName: artifact + "/Listing",
+			ClientId:     self.client_id,
+			FlowId:       self.flow_id,
+		})
+
 	assert.NoError(self.T(), err)
 
 	err = journal.PushRowsToArtifact(self.Ctx, self.ConfigObj, stats,
-		artifact+"/Stats", self.client_id, self.flow_id)
+		services.JournalOptions{
+			ArtifactName: artifact + "/Stats",
+			ClientId:     self.client_id,
+			FlowId:       self.flow_id,
+		})
 	assert.NoError(self.T(), err)
 
 	// Emulate a flow completion message coming from the flow processor.
@@ -136,8 +148,7 @@ func (self *VFSServiceTestSuite) EmulateCollectionWithVFSLs(
 				},
 				TotalCollectedRows: uint64(len(rows)),
 			})},
-		"System.Flow.Completion",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		artifacts.FLOW_COMPLETION)
 	assert.NoError(self.T(), err)
 
 	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
@@ -243,8 +254,8 @@ func (self *VFSServiceTestSuite) TestVFSListDirectoryEmpty() {
 						},
 					}},
 				}}),
-		}, "System.Flow.Completion",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		},
+		artifacts.FLOW_COMPLETION)
 	assert.NoError(self.T(), err)
 
 	db, err := datastore.GetDB(self.ConfigObj)

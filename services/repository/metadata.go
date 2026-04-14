@@ -26,6 +26,7 @@ type metadataManager struct {
 	last_write time.Time
 
 	repository services.Repository
+	id         uint64
 }
 
 func NewMetadataManager(
@@ -35,6 +36,7 @@ func NewMetadataManager(
 	res := &metadataManager{
 		ctx:        ctx,
 		config_obj: config_obj,
+		id:         utils.GetId(),
 	}
 
 	// It is not an error if there is no metadata file yet.
@@ -95,7 +97,6 @@ func (self *metadataManager) Set(
 	}
 
 	self.lookup[name] = metadata
-
 	self.dirty = true
 
 	last_write := self.last_write
@@ -113,12 +114,12 @@ func (self *metadataManager) HouseKeeping(
 	wg *sync.WaitGroup, repository services.Repository) {
 	defer wg.Done()
 
-	self.mu.Lock()
-	self.repository = repository
-	self.mu.Unlock()
-
 	for {
 		last_try := utils.GetTime().Now()
+
+		self.mu.Lock()
+		self.repository = repository
+		self.mu.Unlock()
 
 		select {
 		case <-ctx.Done():
@@ -142,19 +143,44 @@ func (self *metadataManager) SaveMetadata(
 	ctx context.Context, config_obj *config_proto.Config,
 	repository services.Repository) error {
 
-	artifacts, err := repository.List(ctx, config_obj)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		self.mu.Lock()
 		return err
 	}
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	// Filter the metadata to only contain existing artifacts
+	path_manager := paths.RepositoryPathManager{}
+
+	// Merge the existing records from the datastore.
+	existing := &artifacts_proto.ArtifactMetadataStorage{}
+	_ = db.GetSubject(config_obj, path_manager.Metadata(), existing)
+
+	if existing.Metadata == nil {
+		existing.Metadata = make(map[string]*artifacts_proto.ArtifactMetadata)
+	}
+
+	for k, v := range self.lookup {
+		existing.Metadata[k] = v
+	}
+
+	// Filter the metadata to only contain existing artifacts - this
+	// is needed to remove metadata from deleted artifacts.
 	new_lookup := make(map[string]*artifacts_proto.ArtifactMetadata)
+
+	artifacts, err := repository.List(ctx, config_obj)
+	if err != nil {
+		return err
+	}
+
 	for _, artifact_name := range artifacts {
-		md, pres := self.lookup[artifact_name]
+		md, pres := existing.Metadata[artifact_name]
+		if pres {
+			new_lookup[artifact_name] = md
+		}
+
+		md, pres = self.lookup[artifact_name]
 		if pres {
 			new_lookup[artifact_name] = md
 		}
@@ -166,12 +192,6 @@ func (self *metadataManager) SaveMetadata(
 	}
 
 	// Flush the metadata file.
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	path_manager := paths.RepositoryPathManager{}
 	err = db.SetSubject(config_obj, path_manager.Metadata(),
 		metadata_proto)
 

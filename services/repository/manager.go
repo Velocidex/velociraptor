@@ -14,7 +14,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
@@ -121,6 +123,31 @@ func (self *RepositoryManager) StartWatchingForUpdates(
 						logger.Info("Updating artifact %v in local repository", artifact.Name)
 					}
 
+				case "metadata":
+					artifact, pres := row.GetString("artifact")
+					if !pres {
+						continue
+					}
+
+					setter, _ := row.GetString("setter")
+
+					metadata_any, pres := row.Get("metadata")
+					if !pres {
+						continue
+					}
+					serialized, _ := json.Marshal(metadata_any)
+					metadata := &artifacts_proto.ArtifactMetadata{}
+					err = json.Unmarshal(serialized, metadata)
+					if err != nil {
+						continue
+					}
+
+					err = self.SetArtifactMetadata(ctx, config_obj,
+						artifact, setter, metadata)
+					if err != nil {
+						logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+						logger.Error("RepositoryManager: <red>Setting metadata</> %v", err)
+					}
 				default:
 					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 					logger.Error("RepositoryManager: <red>Unknown op %v</>", op)
@@ -260,6 +287,11 @@ func (self *RepositoryManager) SetArtifactFile(
 	return artifact, err
 }
 
+func (self *RepositoryManager) Flush(
+	ctx context.Context, config_obj *config_proto.Config) error {
+	return self.metadata.SaveMetadata(ctx, config_obj, self.global_repository)
+}
+
 func (self *RepositoryManager) SetParent(
 	config_obj *config_proto.Config, parent services.Repository) {
 	self.global_repository.SetParent(parent, config_obj)
@@ -385,6 +417,7 @@ func NewRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 // section. These are considered built in (so they can not be
 // modified) but are not actually compiled in.
 func LoadArtifactsFromConfig(
+	ctx context.Context,
 	repo_manager services.RepositoryManager,
 	config_obj *config_proto.Config) error {
 	global_repository, err := repo_manager.GetGlobalRepository(config_obj)
@@ -424,6 +457,11 @@ func LoadBuiltInArtifacts(ctx context.Context,
 	config_obj *config_proto.Config,
 	self *RepositoryManager) error {
 
+	global_repository, err := self.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
 	// Load the built in artifacts as built in. NOTE: Built in
 	// artifacts can not be overwritten!
 	options := services.ArtifactOptions{
@@ -448,7 +486,7 @@ func LoadBuiltInArtifacts(ctx context.Context,
 				continue
 			}
 
-			_, err = self.global_repository.LoadYaml(string(data), options)
+			_, err = global_repository.LoadYaml(string(data), options)
 			if err != nil {
 				logger.Info("Cant parse asset %s: %s", file, err)
 				if options.ValidateArtifact {
@@ -462,7 +500,7 @@ func LoadBuiltInArtifacts(ctx context.Context,
 	}
 
 	grepository, err := InitializeGlobalRepositoryFromFilesystem(
-		ctx, config_obj, self.global_repository)
+		ctx, config_obj, global_repository)
 	if err != nil {
 		return err
 	}
@@ -497,7 +535,47 @@ func LoadBuiltInArtifacts(ctx context.Context,
 
 	logger.Info("Loaded %d built in artifacts in %v", count, time.Since(now))
 
-	return nil
+	return LoadWellKnownArtifacts(ctx, config_obj, self)
+}
+
+// Add placeholder artifacts for well known event queues
+func LoadWellKnownArtifacts(ctx context.Context,
+	config_obj *config_proto.Config,
+	self *RepositoryManager) error {
+
+	global_repository, err := self.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
+	for _, wk := range artifacts.WELL_KNOWN_QUEUES {
+		_, pres := global_repository.Get(
+			ctx, config_obj, wk.ArtifactName)
+		if !pres {
+			_, err := global_repository.LoadProto(&artifacts_proto.Artifact{
+				Name:        wk.ArtifactName,
+				Type:        wk.ArtifactType.String(),
+				Description: "Internal Artifact - Do not use",
+			}, services.ArtifactOptions{
+				ArtifactIsBuiltIn:    true,
+				ArtifactIsCompiledIn: true,
+			})
+			if err != nil {
+				return err
+			}
+
+			err = self.SetArtifactMetadata(ctx, config_obj,
+				constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+				wk.ArtifactName, &artifacts_proto.ArtifactMetadata{
+					Hidden: true,
+				})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return self.metadata.SaveMetadata(ctx, config_obj, global_repository)
 }
 
 var (

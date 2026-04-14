@@ -10,7 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
+	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets/timed"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -21,6 +21,7 @@ type serverLogger struct {
 	path_manager api.PathManager
 	artifact     string
 	ctx          context.Context
+	principal    string
 }
 
 func (self *serverLogger) Write(b []byte) (int, error) {
@@ -74,9 +75,5 @@ func (self *serverLogger) processAlert(msg string) error {
 		return err
 	}
 	return journal.PushJsonlToArtifact(self.ctx, self.config_obj,
-		serialized, 1, services.JournalOptions{
-			ArtifactName: "Server.Internal.Alerts",
-			ArtifactType: artifact_modes.MODE_INTERNAL,
-			Username:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
-		})
+		serialized, 1, artifact_paths.ALERT_QUEUE.WithUser(self.principal))
 }

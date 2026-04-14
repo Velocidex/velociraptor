@@ -271,7 +271,7 @@ func (self *ClientInfoManager) Start(
 
 	// The master will be informed when new clients appear.
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		artifacts.PING,
+		artifacts.CLIENT_INFO_SYNC,
 		"ClientInfoManager",
 		self.ProcessPing)
 	if err != nil {

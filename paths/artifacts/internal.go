@@ -29,6 +29,7 @@ func ServerOnlyFilter(
 
 // The following are hard coded internal message queues.
 var (
+	// A noop filter that allows all events.
 	AllowAllFilter func(
 		config_obj *config_proto.Config,
 		opts services.JournalOptions,
@@ -38,7 +39,8 @@ var (
 	// Used to receive alerts from various places.
 	ALERT_QUEUE = services.JournalOptions{
 		ArtifactName: "Server.Internal.Alerts",
-		ArtifactType: artifact_modes.MODE_INTERNAL,
+		ArtifactType: artifact_modes.MODE_SERVER_EVENT,
+		ClientId:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 	}
 
 	// Get notified when the artifact definition is updated. Only
@@ -49,7 +51,8 @@ var (
 	// running the artifact_set() function in a VQL notebook)
 	ARTIFACT_MODIFICATION = services.JournalOptions{
 		ArtifactName: "Server.Internal.ArtifactModification",
-		ArtifactType: artifact_modes.MODE_INTERNAL,
+		ArtifactType: artifact_modes.MODE_SERVER_EVENT,
+		ClientId:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 		Username:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 		EventFilter:  ServerOnlyFilter,
 	}
@@ -64,7 +67,7 @@ var (
 
 	TIMELINE_ADD = services.JournalOptions{
 		ArtifactName: "Server.Internal.TimelineAdd",
-		ArtifactType: artifact_modes.MODE_INTERNAL,
+		ArtifactType: artifact_modes.MODE_SERVER_EVENT,
 		EventFilter:  AllowAllFilter,
 	}
 
@@ -113,13 +116,13 @@ var (
 		EventFilter: ServerOnlyFilter,
 	}
 
+	// This provides a way for users to listen to these events. The
+	// server does not watch this queue.
 	CLIENT_CONFLICT = services.JournalOptions{
 		ArtifactName: "Server.Internal.ClientConflict",
 		ArtifactType: artifact_modes.MODE_INTERNAL,
 		Username:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
-
-		// Only triggered internally.
-		EventFilter: ServerOnlyFilter,
+		EventFilter:  AllowAllFilter,
 	}
 
 	// Keepalive messages between master and minions
@@ -259,5 +262,19 @@ var (
 		ArtifactType: artifact_modes.MODE_INTERNAL,
 		Username:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 		EventFilter:  ServerOnlyFilter,
+	}
+
+	// All well known queues.
+	WELL_KNOWN_QUEUES = []services.JournalOptions{
+		ALERT_QUEUE, ARTIFACT_MODIFICATION, LABEL_QUEUE,
+		TIMELINE_ADD, FLOW_COMPLETION, UPLOAD_COMPLETION,
+		INTERROGATION_QUEUE, ENROLLMENT_QUEUE, CLIENT_CONFLICT,
+		PING, PONG, NOTIFICATION_QUEUE, HUNT_PARTICIPATION,
+		HUNT_UPDATE, HUNT_CREATION, HUNT_MODIFICATIONS,
+		FRONTEND_METRICS, HEALTH_STATS, CLIENT_INFO_SYNC,
+		CLIENT_DELETE_QUEUE, CLIENT_METADATA_MODIFICATION,
+		CLIENT_INFO_SNAPSHOT_READY, CLIENT_INFO_TASK,
+		CLIENT_INFO_SCHEDULED, INVENTORY_UPDATED,
+		MASTER_REGISTRATIONS, USER_MANAGER,
 	}
 )

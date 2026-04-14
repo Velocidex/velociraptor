@@ -50,7 +50,6 @@ type ClientFlowRunner struct {
 	// everything is written.
 	completer *utils.Completer
 	closer    func()
-	client_id string
 
 	// If the flow is complete we send a completion message to the
 	// master.
@@ -83,9 +82,11 @@ func (self *ClientFlowRunner) Complete() {
 		}
 
 		for _, row := range self.flow_completion_messages {
+			client_id, _ := row.GetString("ClientId")
 			journal.PushRowsToArtifactAsync(self.ctx,
 				self.config_obj, row,
-				artifact_paths.FLOW_COMPLETION.WithClientId(self.client_id))
+				artifact_paths.FLOW_COMPLETION.
+					WithClientId(client_id))
 		}
 	}
 
@@ -96,9 +97,11 @@ func (self *ClientFlowRunner) Complete() {
 		}
 
 		for _, row := range self.upload_completion_messages {
+			client_id, _ := row.GetString("ClientId")
 			journal.PushRowsToArtifactAsync(self.ctx,
 				self.config_obj, row,
-				artifact_paths.UPLOAD_COMPLETION.WithClientId(self.client_id))
+				artifact_paths.UPLOAD_COMPLETION.
+					WithClientId(client_id))
 		}
 	}
 }
@@ -109,23 +112,19 @@ func (self *ClientFlowRunner) ProcessMonitoringMessage(
 	flow_id := msg.SessionId
 	client_id := msg.Source
 
-	if client_id != self.client_id {
-		return utils.InvalidArgError
-	}
-
 	if msg.VQLResponse != nil && msg.VQLResponse.Query != nil {
 		err := self.MonitoringVQLResponse(
-			ctx, self.client_id, flow_id, msg.VQLResponse)
+			ctx, client_id, flow_id, msg.VQLResponse)
 		if err != nil {
 			return fmt.Errorf("MonitoringVQLResponse: %w", err)
 		}
 		return self.maybeProcessClientInfo(
-			ctx, self.client_id, msg.VQLResponse)
+			ctx, client_id, msg.VQLResponse)
 	}
 
 	if msg.LogMessage != nil {
 		err := self.MonitoringLogMessage(ctx,
-			self.client_id, flow_id, msg.LogMessage)
+			client_id, flow_id, msg.LogMessage)
 		if err != nil {
 			return fmt.Errorf("MonitoringLogMessage: %w", err)
 		}
@@ -298,9 +297,6 @@ func (self *ClientFlowRunner) ProcessSingleMessage(
 
 	flow_id := msg.SessionId
 	client_id := msg.Source
-	if client_id != self.client_id {
-		return utils.InvalidArgError
-	}
 
 	if flow_id == constants.MONITORING_WELL_KNOWN_FLOW {
 		return self.ProcessMonitoringMessage(ctx, msg)
@@ -859,7 +855,6 @@ func (self *ClientFlowRunner) ProcessMessages(ctx context.Context,
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Error("ForemanCheckin for client %v: %v", message_info.Source, err)
 	}
-	self.client_id = message_info.Source
 
 	return message_info.IterateJobs(ctx, self.config_obj, self.ProcessSingleMessage)
 }
