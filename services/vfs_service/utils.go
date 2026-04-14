@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	vjournal "www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -35,8 +36,8 @@ func watchForFlowCompletion(
 		return err
 	}
 
-	events, cancel := journal.Watch(
-		ctx, "System.Flow.Completion",
+	events, cancel := journal.Watch(ctx,
+		artifacts.FLOW_COMPLETION,
 		fmt.Sprintf("%s for %s", watcher_name, artifact_name))
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)

@@ -33,6 +33,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -292,9 +293,9 @@ func GetPathSpec(
 	}
 
 	if in.FlowId != "" && in.Artifact != "" {
-		mode := paths.MODE_CLIENT
+		mode := artifact_modes.MODE_CLIENT
 		if in.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
-			mode = paths.MODE_SERVER
+			mode = artifact_modes.MODE_SERVER
 		}
 		return artifacts.NewArtifactPathManagerWithMode(
 			config_obj, in.ClientId, in.FlowId, in.Artifact,

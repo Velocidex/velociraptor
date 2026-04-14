@@ -31,6 +31,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
@@ -93,6 +95,18 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 			}
 			assert.True(self.T(), len(state.Errors) == 0)
 		}
+	}
+
+	// Test that the artifacts match the well known queues
+	for _, wk := range artifacts.WELL_KNOWN_QUEUES {
+		artifact, pres := repository.Get(self.Ctx, ConfigObj, wk.ArtifactName)
+		assert.True(self.T(), pres, "Well Known Artifact %v not found",
+			wk.ArtifactName)
+
+		mode := artifact_modes.ModeNameToMode(artifact.Type)
+		assert.Equal(self.T(), mode, wk.ArtifactType,
+			"Well Known artifact %v has the wrong mode: %v vs %v",
+			wk.ArtifactName, mode.String(), wk.ArtifactType.String())
 	}
 }
 

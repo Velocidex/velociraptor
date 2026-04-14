@@ -634,6 +634,7 @@ func (self *QueueManagerTestSuite) TestPush() {
 	log_path := path_specs.NewUnsafeFilestorePath("log_path")
 	err := self.manager.PushEventRows(
 		MockPathManager{log_path, artifact_name},
+		constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 		payload)
 
 	assert.NoError(self.T(), err)

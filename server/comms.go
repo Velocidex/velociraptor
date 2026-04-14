@@ -30,6 +30,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/utils/rand"
 
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -578,8 +579,7 @@ func send_client_messages(
 					[]*ordereddict.Dict{
 						ordereddict.NewDict().
 							Set("ClientId", source)},
-					"Server.Internal.Enrollment",
-					constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+					artifacts.ENROLLMENT_QUEUE)
 				if err != nil {
 					http.Error(w, "", http.StatusServiceUnavailable)
 					return
@@ -606,8 +606,7 @@ func send_client_messages(
 						Set("RemoteAddr", message_info.RemoteAddr).
 						Set("UserAgent", req.UserAgent())
 					journal.PushRowsToArtifactAsync(ctx, org_config_obj,
-						info,
-						"Server.Internal.ClientConflict")
+						info, artifacts.CLIENT_CONFLICT)
 				}
 
 				http.Error(w, "Another Client connection exists. "+

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -101,6 +102,7 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	principal := vql_subsystem.GetPrincipal(scope)
 	journal, err := services.GetJournal(config_obj)
 	if err == nil {
 		journal.PushRowsToArtifactAsync(ctx, config_obj,
@@ -110,7 +112,7 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 				Set("Action", "AddTimeline").
 				Set("Timeline", arg.Name).
 				Set("TimestampColumn", arg.Key),
-			"Server.Internal.TimelineAdd")
+			artifacts.TIMELINE_ADD.WithUser(principal))
 	}
 
 	return super

@@ -22,6 +22,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -937,7 +938,7 @@ func generateCombinedResults(
 
 			path_manager := artifacts.NewArtifactPathManagerWithMode(
 				config_obj, client_id, flow_id, artifact_source,
-				paths.MODE_CLIENT)
+				artifact_modes.MODE_CLIENT)
 
 			reader, err := result_sets.NewResultSetReader(
 				file_store_factory, path_manager.Path())

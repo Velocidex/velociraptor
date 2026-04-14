@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -101,7 +102,7 @@ func NewServerCryptoManager(
 	}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.ClientDelete",
+		artifacts.CLIENT_DELETE_QUEUE,
 		"CryptoServerManager",
 		func(ctx context.Context,
 			config_obj *config_proto.Config,

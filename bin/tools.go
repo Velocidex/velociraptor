@@ -128,7 +128,8 @@ func doThirdPartyRm() error {
 		return err
 	}
 
-	return inventory_manager.RemoveTool(config_obj, *third_party_rm_name)
+	return inventory_manager.RemoveTool(
+		ctx, config_obj, *third_party_rm_name)
 }
 
 func doThirdPartyUpload() error {

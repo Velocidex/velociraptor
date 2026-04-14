@@ -9,13 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -67,8 +67,11 @@ func (self *ServicesTestSuite) EmulateCollection(
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	err = journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
-		rows, artifact, self.client_id, self.flow_id)
+	err = journal.PushRowsToArtifact(self.Ctx, self.ConfigObj, rows,
+		services.JournalOptions{
+			ArtifactName: artifact,
+			ClientId:     self.client_id,
+			FlowId:       self.flow_id})
 	assert.NoError(self.T(), err)
 
 	// Emulate a flow completion message coming from the flow processor.
@@ -80,8 +83,7 @@ func (self *ServicesTestSuite) EmulateCollection(
 				ClientId:             self.client_id,
 				SessionId:            self.flow_id,
 				ArtifactsWithResults: []string{artifact}})},
-		"System.Flow.Completion",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "",
+		artifacts.FLOW_COMPLETION,
 	)
 	assert.NoError(self.T(), err)
 
@@ -155,8 +157,7 @@ func (self *ServicesTestSuite) TestEnrollService() {
 		[]*ordereddict.Dict{
 			enroll_message, enroll_message, enroll_message, enroll_message,
 		},
-		"Server.Internal.Enrollment",
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		artifacts.ENROLLMENT_QUEUE)
 	assert.NoError(self.T(), err)
 
 	// Wait here until the client is enrolled

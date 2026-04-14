@@ -333,7 +333,7 @@ func (self *Dummy) AddTool(
 }
 
 func (self *Dummy) RemoveTool(
-	config_obj *config_proto.Config, tool_name string) error {
+	ctx context.Context, config_obj *config_proto.Config, tool_name string) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 

@@ -63,7 +63,8 @@ func (self *BroadcastService) RegisterGenerator(
 		// Read items from the input channel and broadcast them to all
 		// listeners.
 		for item := range input {
-			self.pool.Broadcast(name, item)
+			source, _ := item.GetString("_Source")
+			self.pool.Broadcast(name, source, item)
 		}
 	}()
 

@@ -27,6 +27,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 )
@@ -151,7 +152,7 @@ func CheckClientStatus(
 			ordereddict.NewDict().
 				Set("HuntId", hunt.HuntId).
 				Set("ClientId", client_id),
-			"System.Hunt.Participation")
+			artifacts.HUNT_PARTICIPATION)
 
 		if hunt.StartTime > latest_timestamp {
 			latest_timestamp = hunt.StartTime

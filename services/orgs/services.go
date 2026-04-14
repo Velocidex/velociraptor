@@ -495,7 +495,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 			return err
 		}
 
-		err = repository.LoadArtifactsFromConfig(repo_manager, org_config)
+		err = repository.LoadArtifactsFromConfig(ctx, repo_manager, org_config)
 		if err != nil {
 			return err
 		}
@@ -586,7 +586,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 		// Load config artifacts last so they can override all the
 		// other artifacts.
-		err = repository.LoadArtifactsFromConfig(repo_manager, org_config)
+		err = repository.LoadArtifactsFromConfig(ctx, repo_manager, org_config)
 		if err != nil {
 			return err
 		}

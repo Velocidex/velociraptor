@@ -22,6 +22,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -336,8 +337,10 @@ func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
 	if err != nil {
 		return
 	}
-	journal.PushRowsToArtifactAsync(ctx, self.config_obj,
-		row, "System.Flow.Completion")
+	journal.PushRowsToArtifactAsync(
+		ctx, self.config_obj, row,
+		artifact_paths.FLOW_COMPLETION.WithClientId(
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID))
 }
 
 func (self *contextManager) RunQuery(
@@ -491,7 +494,7 @@ func (self *contextManager) RunQuery(
 
 		artifact_path_manager := artifact_paths.NewArtifactPathManagerWithMode(
 			self.config_obj, constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
-			self.session_id, name, paths.MODE_SERVER)
+			self.session_id, name, artifact_modes.MODE_SERVER)
 		file_store_factory := file_store.GetFileStore(self.config_obj)
 		rs_writer, err = result_sets.NewResultSetWriter(
 			file_store_factory, artifact_path_manager.Path(), opts,

@@ -22,7 +22,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -212,8 +212,9 @@ func (self WatchMonitoringPlugin) Call(
 		}
 
 		switch mode {
-		case paths.MODE_SERVER_EVENT, paths.MODE_CLIENT_EVENT,
-			paths.MODE_INTERNAL:
+		case artifact_modes.MODE_SERVER_EVENT,
+			artifact_modes.MODE_CLIENT_EVENT,
+			artifact_modes.MODE_INTERNAL:
 			break
 
 		default:
@@ -222,7 +223,7 @@ func (self WatchMonitoringPlugin) Call(
 		}
 
 		// Ask the journal service to watch the event queue for us.
-		qm_chan, cancel := journal.Watch(
+		qm_chan, cancel := journal.WatchArtifact(
 			ctx, arg.Artifact, "watch_monitoring plugin")
 
 		// Make sure to call this at shutdown (defer is not guaranteed

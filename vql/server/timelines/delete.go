@@ -5,6 +5,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -72,6 +73,7 @@ func (self *DeleteTimelineFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	principal := vql_subsystem.GetPrincipal(scope)
 	journal, err := services.GetJournal(config_obj)
 	if err == nil {
 		journal.PushRowsToArtifactAsync(ctx, config_obj,
@@ -80,7 +82,7 @@ func (self *DeleteTimelineFunction) Call(ctx context.Context,
 				Set("SuperTimelineName", arg.Timeline).
 				Set("Component", arg.Component).
 				Set("Action", "Delete"),
-			"Server.Internal.TimelineAdd")
+			artifacts.TIMELINE_ADD.WithUser(principal))
 	}
 
 	return true
