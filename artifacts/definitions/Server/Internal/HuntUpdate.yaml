@@ -4,6 +4,9 @@ description: |
   certain hunt has changed and should be updated from the internal
   cache.
 
+  Users can also watch this queue to be notified when hunts are
+  modified (e.g. stopped, started etc).
+
 type: INTERNAL
 
 column_types:

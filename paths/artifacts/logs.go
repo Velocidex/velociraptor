@@ -7,6 +7,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 )
 
 // A path manager that specifically writes query log files. Controls
@@ -24,23 +25,23 @@ func (self *ArtifactLogPathManager) Path() api.FSPathSpec {
 // produce all logs for this client and all artifacts.
 func (self *ArtifactLogPathManager) GetRootPath() api.FSPathSpec {
 	switch self.mode {
-	case paths.MODE_CLIENT:
+	case artifact_modes.MODE_CLIENT:
 		return paths.CLIENTS_ROOT.AddChild(
 			self.ClientId, "collections",
 			self.FlowId, "logs").AsFilestorePath().
 			SetType(api.PATH_TYPE_FILESTORE_JSON)
 
-	case paths.MODE_SERVER, paths.MODE_NOTEBOOK:
+	case artifact_modes.MODE_SERVER, artifact_modes.MODE_NOTEBOOK:
 		return paths.CLIENTS_ROOT.AddChild(
 			constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 			"collections",
 			self.FlowId, "logs").AsFilestorePath().
 			SetType(api.PATH_TYPE_FILESTORE_JSON)
 
-	case paths.MODE_SERVER_EVENT:
+	case artifact_modes.MODE_SERVER_EVENT:
 		return paths.SERVER_MONITORING_LOGS_ROOT
 
-	case paths.MODE_CLIENT_EVENT:
+	case artifact_modes.MODE_CLIENT_EVENT:
 		if self.ClientId == "" {
 			// Should never normally happen.
 			return paths.CLIENTS_ROOT.AddChild("nobody").
@@ -58,17 +59,17 @@ func (self *ArtifactLogPathManager) GetRootPath() api.FSPathSpec {
 
 func (self *ArtifactLogPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 	switch self.mode {
-	case paths.MODE_CLIENT:
+	case artifact_modes.MODE_CLIENT:
 		return paths.CLIENTS_ROOT.AddChild(
 			self.ClientId, "collections",
 			self.FlowId, "logs").AsFilestorePath(), nil
 
-	case paths.MODE_SERVER, paths.MODE_NOTEBOOK:
+	case artifact_modes.MODE_SERVER, artifact_modes.MODE_NOTEBOOK:
 		return paths.CLIENTS_ROOT.AddChild(
 			constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 			"collections", self.FlowId, "logs").AsFilestorePath(), nil
 
-	case paths.MODE_SERVER_EVENT:
+	case artifact_modes.MODE_SERVER_EVENT:
 		if self.source != "" {
 			return paths.SERVER_MONITORING_LOGS_ROOT.AddChild(
 				self.base_artifact_name, self.source,
@@ -78,7 +79,7 @@ func (self *ArtifactLogPathManager) GetPathForWriting() (api.FSPathSpec, error) 
 				self.base_artifact_name, self.getDayName()), nil
 		}
 
-	case paths.MODE_CLIENT_EVENT:
+	case artifact_modes.MODE_CLIENT_EVENT:
 		if self.ClientId == "" {
 			// Should never normally happen.
 			return paths.CLIENTS_ROOT.AddChild(
@@ -101,7 +102,7 @@ func (self *ArtifactLogPathManager) GetPathForWriting() (api.FSPathSpec, error) 
 
 		// Internal artifacts are not written anywhere but are
 		// still replicated.
-	case paths.MODE_INTERNAL:
+	case artifact_modes.MODE_INTERNAL:
 		return nil, nil
 	}
 
@@ -140,7 +141,7 @@ func NewArtifactLogPathManager(
 func NewArtifactLogPathManagerWithMode(
 	config_obj *config_proto.Config,
 	client_id, flow_id, full_artifact_name string,
-	mode paths.ArtifactMode) *ArtifactLogPathManager {
+	mode artifact_modes.ArtifactMode) *ArtifactLogPathManager {
 	path_manager := NewArtifactPathManagerWithMode(config_obj,
 		client_id, flow_id, full_artifact_name, mode)
 	return &ArtifactLogPathManager{path_manager}

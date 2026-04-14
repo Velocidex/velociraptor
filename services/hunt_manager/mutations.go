@@ -8,7 +8,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -123,32 +122,10 @@ func (self *HuntManager) processMutation(
 				// to participate connected clients.
 				modification = services.HuntTriggerParticipation
 
+				// Deprecated - we no longer archive hunts - they must
+				// be deleted.
 			} else if mutation.State == api_proto.Hunt_ARCHIVED &&
 				hunt_obj.State != api_proto.Hunt_ARCHIVED {
-
-				hunt_obj.State = api_proto.Hunt_ARCHIVED
-
-				// For archiving hunts we also send a notification to
-				// this queue.
-				row := ordereddict.NewDict().
-					Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
-					Set("HuntId", mutation.HuntId).
-					Set("User", mutation.User)
-
-				// Alert listeners that the hunt is being archived.
-				journal, err := services.GetJournal(config_obj)
-				if err != nil {
-					return services.HuntPropagateChanges
-				}
-
-				err = journal.PushRowsToArtifact(ctx, config_obj,
-					[]*ordereddict.Dict{row}, "System.Hunt.Archive",
-					constants.VELOCIRAPTOR_SERVER_CLIENT_ID, mutation.HuntId)
-				if err != nil {
-					return services.HuntPropagateChanges
-				}
-
-				modification = services.HuntPropagateChanges
 
 				// Actually delete the hunt from disk - send all the
 				// dispatchers the updated hunt object.

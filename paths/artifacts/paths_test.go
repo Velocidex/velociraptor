@@ -11,6 +11,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
@@ -124,13 +125,15 @@ func (self *PathManageTestSuite) TestPathManager() {
 		file_store.OverrideFilestoreImplementation(self.ConfigObj, file_store_factory)
 
 		err = qm.PushEventRows(path_manager,
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 			[]*ordereddict.Dict{ordereddict.NewDict()})
 		assert.NoError(self.T(), err)
 
 		data, ok := file_store_factory.Get(cleanPath(
 			self.dirname + testcase.expected))
 		assert.Equal(self.T(), ok, true)
-		assert.Equal(self.T(), string(data), "{\"_ts\":1587800823}\n")
+		assert.Equal(self.T(), string(data), `{"_ts":1587800823,"_Source":"server"}
+`)
 	}
 }
 

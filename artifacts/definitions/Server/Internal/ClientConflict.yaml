@@ -8,4 +8,11 @@ description: |
   message. The client id will be forwarded on this artifact as well so
   the server may take action.
 
+  This can be used to create automation around identifying this common
+  misconfiguration - usually resulting from including the client
+  writeback in the SOE image.
+
+  NOTE: In multi-frontend deployments this event may not always fire
+  if the duplicated clients connect to separate nodes.
+
 type: INTERNAL

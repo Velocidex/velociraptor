@@ -19,12 +19,12 @@ import (
 	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -70,9 +70,10 @@ func PushMetrics(ctx context.Context, wg *sync.WaitGroup,
 				rows[0] = ordereddict.NewDict().
 					Set("Node", node_name).
 					Set("Metrics", metrics.ToDict())
-				_ = journal.PushRowsToArtifact(ctx, config_obj,
-					rows, "Server.Internal.FrontendMetrics",
-					constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+
+				_ = journal.PushRowsToArtifact(
+					ctx, config_obj, rows,
+					artifacts.FRONTEND_METRICS)
 			}
 		}
 
@@ -338,8 +339,7 @@ func (self *MasterFrontendManager) UpdateStats(ctx context.Context) {
 
 			_ = journal.PushRowsToArtifact(ctx, org_config_obj,
 				[]*ordereddict.Dict{v},
-				"Server.Monitor.Health/Prometheus",
-				constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+				artifacts.HEALTH_STATS)
 		}
 	}
 }
@@ -385,9 +385,8 @@ func (self *MasterFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup
 	go func() {
 		_ = utils.Retry(ctx, func() error {
 			return journal.WatchQueueWithCB(ctx, config_obj, wg,
-				"Server.Internal.FrontendMetrics",
-				"FrontendService",
-				self.processMetrics)
+				artifacts.FRONTEND_METRICS,
+				"FrontendService", self.processMetrics)
 		}, 1000, time.Second)
 	}()
 	return err

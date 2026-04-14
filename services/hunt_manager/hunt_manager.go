@@ -67,6 +67,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -111,37 +112,34 @@ func (self *HuntManager) Start(
 		config_obj.Frontend.Resources.NotificationsPerSecond)
 
 	err := journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.HuntModification",
-		"HuntManager",
-		self.ProcessMutation)
+		artifacts.HUNT_MODIFICATIONS,
+		"HuntManager", self.ProcessMutation)
 	if err != nil {
 		return err
 	}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"System.Hunt.Participation",
-		"HuntManager",
-		self.ProcessParticipation)
+		artifacts.HUNT_PARTICIPATION,
+		"HuntManager", self.ProcessParticipation)
 	if err != nil {
 		return err
 	}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.Label", "HuntManager",
-		self.ProcessLabelChange)
+		artifacts.LABEL_QUEUE, "HuntManager", self.ProcessLabelChange)
 	if err != nil {
 		return err
 	}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"Server.Internal.Interrogation", "HuntManager",
+		artifacts.INTERROGATION_QUEUE, "HuntManager",
 		self.ProcessInterrogation)
 	if err != nil {
 		return err
 	}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
-		"System.Flow.Completion", "HuntManager",
+		artifacts.FLOW_COMPLETION, "HuntManager",
 		self.ProcessFlowCompletion)
 	return err
 }
@@ -305,7 +303,8 @@ func (self *HuntManager) participateInRunningHunts(ctx context.Context,
 			journal.PushRowsToArtifactAsync(ctx, config_obj,
 				ordereddict.NewDict().
 					Set("HuntId", hunt.HuntId).
-					Set("ClientId", client_id), "System.Hunt.Participation")
+					Set("ClientId", client_id),
+				artifacts.HUNT_PARTICIPATION)
 
 			return nil
 		})

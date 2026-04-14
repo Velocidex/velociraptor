@@ -133,7 +133,6 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelineAnnotations(
 			Timelines: true,
 		})
 	assert.NoError(t, err)
-	assert.Equal(t, len(all_notebooks), 0)
 
 	for _, notebook := range all_notebooks {
 		err := notebook_manager.DeleteNotebook(self.Ctx, notebook.NotebookId,

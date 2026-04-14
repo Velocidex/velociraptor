@@ -23,7 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -53,13 +53,62 @@ func (self *JournalService) GetWatchers() []string {
 }
 
 func (self *JournalService) publishWatchers(ctx context.Context) {
-	_ = self.PushRowsToInternalEventArtifact(ctx, self.config_obj,
-		[]*ordereddict.Dict{ordereddict.NewDict().
-			Set("Events", self.GetWatchers())},
-		"Server.Internal.MasterRegistrations")
+	if self != nil && self.qm != nil {
+		self.PushRowsToArtifact(ctx, self.config_obj,
+			[]*ordereddict.Dict{ordereddict.NewDict().
+				Set("Events", self.GetWatchers())},
+			artifacts.MASTER_REGISTRATIONS)
+	}
 }
 
 func (self *JournalService) Watch(
+	ctx context.Context, queue services.JournalOptions,
+	watcher_name string) (<-chan *ordereddict.Dict, func()) {
+
+	sub_ctx, cancel := context.WithCancel(ctx)
+	child_chan, closer := self.WatchArtifact(ctx, queue.ArtifactName, watcher_name)
+
+	if queue.EventFilter == nil {
+		return child_chan, closer
+	}
+
+	output_chan := make(chan *ordereddict.Dict)
+
+	go func() {
+		defer close(output_chan)
+		defer cancel()
+
+		for {
+			select {
+			case <-sub_ctx.Done():
+				return
+
+			case row, ok := <-child_chan:
+				if !ok {
+					return
+				}
+
+				if !queue.EventFilter(self.config_obj,
+					queue, watcher_name, row) {
+					continue
+				}
+
+				select {
+				case <-sub_ctx.Done():
+					return
+				case output_chan <- row:
+				}
+			}
+		}
+	}()
+
+	return output_chan, func() {
+		cancel()
+		closer()
+	}
+}
+
+func (self *JournalService) WatchArtifact(
 	ctx context.Context, queue_name string,
 	watcher_name string) (<-chan *ordereddict.Dict, func()) {
 
@@ -173,12 +222,13 @@ func (self *JournalService) AppendJsonlToResultSet(
 }
 
 func (self *JournalService) PushRowsToArtifactAsync(
-	ctx context.Context, config_obj *config_proto.Config, row *ordereddict.Dict,
-	artifact string) {
+	ctx context.Context, config_obj *config_proto.Config,
+	row *ordereddict.Dict,
+	opts services.JournalOptions) {
 
 	f := func() {
-		err := self.PushRowsToArtifact(ctx, config_obj, []*ordereddict.Dict{row},
-			artifact, constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "")
+		err := self.PushRowsToArtifact(
+			ctx, config_obj, []*ordereddict.Dict{row}, opts)
 
 		if err != nil {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
@@ -190,7 +240,8 @@ func (self *JournalService) PushRowsToArtifactAsync(
 	// to prevent deadlocks because some of the tasks may also call
 	// the journal service to write asynchronously which they can not
 	// do when taking up a pool slot.
-	if self.pool.WaitingTasks() > 0 || PushRowsToArtifactAsyncIsSynchrnous {
+	if self.pool.WaitingTasks() > 0 ||
+		PushRowsToArtifactAsyncIsSynchrnous {
 		f()
 		return
 	}
@@ -200,100 +251,104 @@ func (self *JournalService) PushRowsToArtifactAsync(
 
 func (self *JournalService) Broadcast(
 	ctx context.Context, config_obj *config_proto.Config,
-	rows []*ordereddict.Dict, artifact, client_id, flows_id string) error {
+	rows []*ordereddict.Dict, opts services.JournalOptions) error {
 	if self == nil || self.qm == nil {
 		return notInitializedError
 	}
 
-	path_manager, err := artifacts.NewArtifactPathManager(ctx,
-		config_obj, client_id, flows_id, artifact)
-	if err != nil {
-		return err
-	}
-
-	self.qm.Broadcast(path_manager, rows)
-	return nil
-}
-
-func (self *JournalService) PushJsonlToArtifact(
-	ctx context.Context, config_obj *config_proto.Config,
-	jsonl []byte, row_count int, artifact, client_id, flows_id string) error {
-	mode, err := GetArtifactMode(ctx, config_obj, artifact, client_id)
+	mode, err := GetArtifactMode(ctx, config_obj, opts)
 	if err != nil {
 		return err
 	}
 
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
-		config_obj, client_id, flows_id, artifact, mode)
+		config_obj, opts.ClientId, opts.FlowId, opts.ArtifactName, mode)
+
+	self.qm.Broadcast(path_manager, opts.ClientId, rows)
+	return nil
+}
+
+func (self *JournalService) PushJsonlToArtifact(
+	ctx context.Context, config_obj *config_proto.Config,
+	jsonl []byte, row_count int, opts services.JournalOptions) error {
+	mode, err := GetArtifactMode(ctx, config_obj, opts)
+	if err != nil {
+		return err
+	}
+
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		config_obj, opts.ClientId, opts.FlowId, opts.ArtifactName, mode)
 
 	switch mode {
 	// Event artifacts are written directly to the queue manager
-	case paths.MODE_INTERNAL, paths.MODE_CLIENT_EVENT, paths.MODE_SERVER_EVENT:
+	case artifact_modes.MODE_INTERNAL,
+		artifact_modes.MODE_CLIENT_EVENT,
+		artifact_modes.MODE_SERVER_EVENT:
 		if self != nil && self.qm != nil {
-			return self.qm.PushEventJsonl(path_manager, jsonl, row_count)
+			return self.qm.PushEventJsonl(
+				path_manager, opts.Username, jsonl, row_count)
 		}
 		return errors.New("Filestore not initialized")
 
 		// Real artifacts are written to the filestore.
-	case paths.MODE_CLIENT, paths.MODE_SERVER:
+	case artifact_modes.MODE_CLIENT,
+		artifact_modes.MODE_SERVER:
 		path, err := path_manager.GetPathForWriting()
 		if err != nil {
 			return err
 		}
 
-		return self.AppendJsonlToResultSet(config_obj, path, jsonl, row_count)
+		return self.AppendJsonlToResultSet(
+			config_obj, path, jsonl, row_count)
 
 	default:
 		return fmt.Errorf("Invalid mode %v for artifact %v",
-			mode, artifact)
+			mode, opts.ArtifactName)
 	}
 }
 
 func GetArtifactMode(
 	ctx context.Context, config_obj *config_proto.Config,
-	artifact, client_id string) (mode paths.ArtifactMode, err error) {
+	opts services.JournalOptions) (mode artifact_modes.ArtifactMode, err error) {
 
-	manager, err := services.GetRepositoryManager(config_obj)
-	if err != nil {
-		return paths.MODE_INVALID, err
+	// Shortcut for hard coded options - we dont need to look up the
+	// artifact in the repository.
+	if artifact_modes.IsModeValid(opts.ArtifactType) {
+		return opts.ArtifactType, nil
 	}
 
-	repository, err := manager.GetGlobalRepository(config_obj)
+	mode, err = artifacts.GetArtifactMode(ctx, config_obj, opts.ArtifactName)
 	if err != nil {
-		return paths.MODE_INVALID, err
-	}
-
-	artifact_type, err := repository.GetArtifactType(ctx, config_obj,
-		artifact)
-	if err != nil {
-		return paths.MODE_INVALID, err
+		return artifact_modes.MODE_INVALID, err
 	}
 
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
-		return paths.MODE_INVALID, err
+		return artifact_modes.MODE_INVALID, err
 	}
 
-	mode = paths.ModeNameToMode(artifact_type)
 	switch mode {
-	case paths.MODE_CLIENT, paths.MODE_CLIENT_EVENT:
-		err := client_info_manager.ValidateClientId(client_id)
+	case artifact_modes.MODE_CLIENT,
+		artifact_modes.MODE_CLIENT_EVENT:
+		err := client_info_manager.ValidateClientId(opts.ClientId)
 		if err != nil {
 			return mode, fmt.Errorf(
 				"Client ID invalid to write to a CLIENT artifact_type: %w",
 				err)
 		}
 
-	case paths.MODE_SERVER, paths.MODE_SERVER_EVENT, paths.MODE_INTERNAL:
-		if client_id != constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+	case artifact_modes.MODE_SERVER,
+		artifact_modes.MODE_SERVER_EVENT,
+		artifact_modes.MODE_INTERNAL:
+		if opts.ClientId != constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 			return mode, fmt.Errorf(
 				"Only servers can write to a %v artifact_type",
-				artifact_type)
+				mode.String())
 		}
 
 	default:
 		return mode, fmt.Errorf(
-			"Invalid artifact_type %v", artifact_type)
+			"Invalid artifact_type %v", mode.String())
 	}
 
 	return mode, nil
@@ -301,51 +356,40 @@ func GetArtifactMode(
 
 func (self *JournalService) PushRowsToArtifact(
 	ctx context.Context, config_obj *config_proto.Config,
-	rows []*ordereddict.Dict, artifact, client_id, flows_id string) error {
+	rows []*ordereddict.Dict, opts services.JournalOptions) error {
 
-	mode, err := GetArtifactMode(ctx, config_obj, artifact, client_id)
+	mode, err := GetArtifactMode(ctx, config_obj, opts)
 	if err != nil {
 		return err
 	}
 
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
-		config_obj, client_id, flows_id, artifact, mode)
+		config_obj, opts.ClientId, opts.FlowId, opts.ArtifactName, mode)
 
 	switch mode {
 	// Event artifacts are written directly to the queue manager
-	case paths.MODE_INTERNAL, paths.MODE_CLIENT_EVENT, paths.MODE_SERVER_EVENT:
+	case artifact_modes.MODE_INTERNAL,
+		artifact_modes.MODE_CLIENT_EVENT,
+		artifact_modes.MODE_SERVER_EVENT:
 		if self != nil && self.qm != nil {
-			return self.qm.PushEventRows(path_manager, rows)
+			return self.qm.PushEventRows(path_manager, opts.Username, rows)
 		}
 		return errors.New("Filestore not initialized")
 
 		// Real artifacts are written to the filestore.
-	case paths.MODE_CLIENT, paths.MODE_SERVER:
+	case artifact_modes.MODE_CLIENT,
+		artifact_modes.MODE_SERVER:
 		path, err := path_manager.GetPathForWriting()
 		if err != nil {
 			return err
 		}
 
-		return self.AppendToResultSet(config_obj, path, rows,
-			services.JournalOptions{})
+		return self.AppendToResultSet(config_obj, path, rows, opts)
 
 	default:
 		return fmt.Errorf("Invalid mode %v for artifact %v",
-			mode, artifact)
+			mode, opts.ArtifactName)
 	}
-}
-
-func (self *JournalService) PushRowsToInternalEventArtifact(
-	ctx context.Context, config_obj *config_proto.Config,
-	rows []*ordereddict.Dict, artifact string) error {
-
-	path_manager := artifacts.NewArtifactPathManagerWithMode(
-		config_obj, constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
-		"F.Monitoring", artifact, paths.MODE_INTERNAL)
-	if self != nil && self.qm != nil {
-		return self.qm.PushEventRows(path_manager, rows)
-	}
-	return nil
 }
 
 func (self *JournalService) Start(config_obj *config_proto.Config) error {

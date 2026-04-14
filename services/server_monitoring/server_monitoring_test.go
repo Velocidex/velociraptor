@@ -244,6 +244,7 @@ func (self *ServerMonitoringTestSuite) TestEmptyTable() {
 	// Add the new artifacts to the repository
 	_, err = repository.LoadYaml(`
 name: Sleep
+type: SERVER_EVENT
 sources:
 - query: SELECT sleep(time=1000) FROM scope()
 `, services.ArtifactOptions{

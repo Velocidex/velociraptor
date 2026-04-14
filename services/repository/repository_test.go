@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
@@ -177,13 +178,24 @@ func TestArtifactMetadata(t *testing.T) {
 	assert.True(t, pres)
 	assert.True(t, artifact.Metadata.Hidden)
 
-	metadata_storage := &artifacts_proto.ArtifactMetadataStorage{}
+	err = manager.Flush(ctx, config_obj)
+	assert.NoError(t, err)
+
 	path_manager := paths.RepositoryPathManager{}
 	db, err := datastore.GetDB(config_obj)
 	assert.NoError(t, err)
 
-	err = db.GetSubject(config_obj, path_manager.Metadata(), metadata_storage)
-	assert.NoError(t, err)
+	var metadata *artifacts_proto.ArtifactMetadata
 
-	goldie.AssertJson(t, "TestArtifactMetadata", metadata_storage)
+	vtesting.WaitUntil(1*time.Second, t, func() bool {
+		metadata_storage := &artifacts_proto.ArtifactMetadataStorage{}
+		err = db.GetSubject(config_obj, path_manager.Metadata(), metadata_storage)
+		assert.NoError(t, err)
+
+		md, pres := metadata_storage.Metadata["Custom.BuiltIn"]
+		metadata = md
+		return pres
+	})
+
+	goldie.AssertJson(t, "TestArtifactMetadata", metadata)
 }

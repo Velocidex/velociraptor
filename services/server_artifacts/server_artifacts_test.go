@@ -22,6 +22,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -70,7 +71,7 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 	complete_flow_id := ""
 
 	err := journal.WatchQueueWithCB(self.Sm.Ctx, self.ConfigObj, self.Sm.Wg,
-		"System.Flow.Completion", "ServerArtifactsTestSuite", func(
+		artifacts.FLOW_COMPLETION, "ServerArtifactsTestSuite", func(
 			ctx context.Context,
 			ConfigObj *config_proto.Config,
 			row *ordereddict.Dict) error {
