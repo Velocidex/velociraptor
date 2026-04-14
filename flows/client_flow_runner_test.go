@@ -632,7 +632,7 @@ func (self *ServerTestSuite) TestMonitoringInvalid() {
 			},
 		})
 	assert.ErrorContains(
-		self.T(), err, "Only servers can write to a server_event artifact_type")
+		self.T(), err, "Only servers can write to a SERVER_EVENT artifact_type")
 
 	runner.Close(self.Ctx)
 }
@@ -1172,7 +1172,7 @@ func (self *ServerTestSuite) TestMultipleFlowComplete() {
 	completions := ordereddict.NewDict()
 
 	err := journal.WatchQueueWithCB(self.Ctx, self.ConfigObj, self.Wg,
-		"System.Flow.Completion", "",
+		artifacts.FLOW_COMPLETION, "",
 		func(ctx context.Context, config_obj *config_proto.Config,
 			row *ordereddict.Dict) error {
 			key := fmt.Sprintf("%d", completions.Len())

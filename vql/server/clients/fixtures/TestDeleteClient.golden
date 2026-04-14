@@ -56,7 +56,14 @@
  ],
  "After filestore": [
   "",
-  "/clients"
+  "/clients",
+  "/server_artifacts",
+  "/server_artifacts/Server.Audit.Logs",
+  "/server_artifacts/Server.Audit.Logs/2026-04-14.json",
+  "/server_artifacts/Server.Audit.Logs/2026-04-14.json.tidx",
+  "/server_artifacts/Server.Internal.ClientDelete",
+  "/server_artifacts/Server.Internal.ClientDelete/2026-04-14.json",
+  "/server_artifacts/Server.Internal.ClientDelete/2026-04-14.json.tidx"
  ],
  "Files deleted": [
   {

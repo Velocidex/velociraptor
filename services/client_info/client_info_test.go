@@ -18,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/indexing"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
@@ -35,6 +36,8 @@ func (self *ClientInfoTestSuite) SetupTest() {
 	self.ConfigObj.Frontend.Resources.ClientInfoSyncTime = 1
 	self.ConfigObj.Frontend.Resources.ClientInfoWriteTime = 1
 	self.ConfigObj.Defaults.IndexedClientMetadata = []string{"dept"}
+
+	journal.PushRowsToArtifactAsyncIsSynchrnous = true
 
 	self.LoadArtifactsIntoConfig([]string{`
 name: Server.Internal.ClientPing

@@ -14,7 +14,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -560,15 +559,6 @@ func LoadWellKnownArtifacts(ctx context.Context,
 				ArtifactIsBuiltIn:    true,
 				ArtifactIsCompiledIn: true,
 			})
-			if err != nil {
-				return err
-			}
-
-			err = self.SetArtifactMetadata(ctx, config_obj,
-				constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
-				wk.ArtifactName, &artifacts_proto.ArtifactMetadata{
-					Hidden: true,
-				})
 			if err != nil {
 				return err
 			}

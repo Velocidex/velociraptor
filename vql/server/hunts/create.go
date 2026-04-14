@@ -346,7 +346,6 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	principal := vql_subsystem.GetPrincipal(scope)
 	journal, _ := services.GetJournal(config_obj)
 	if journal == nil {
 		return vfilter.Null{}
@@ -426,7 +425,7 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 						FlowId:   arg.FlowId,
 					},
 				})},
-			artifacts.HUNT_MODIFICATIONS.WithUser(principal))
+			artifacts.HUNT_MODIFICATIONS)
 
 	} else {
 		err = journal.PushRowsToArtifact(ctx, config_obj,

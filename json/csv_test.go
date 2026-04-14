@@ -10,7 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -26,7 +26,7 @@ type CSVUtilsTestSuite struct {
 func (self *CSVUtilsTestSuite) TestCSVUtils() {
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
 		self.ConfigObj, self.client_id, self.flow_id,
-		"Artifact", paths.MODE_CLIENT)
+		"Artifact", artifact_modes.MODE_CLIENT)
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	writer, err := result_sets.NewResultSetWriter(file_store_factory,

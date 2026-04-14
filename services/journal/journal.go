@@ -240,7 +240,8 @@ func (self *JournalService) PushRowsToArtifactAsync(
 	// to prevent deadlocks because some of the tasks may also call
 	// the journal service to write asynchronously which they can not
 	// do when taking up a pool slot.
-	if self.pool.WaitingTasks() > 0 || PushRowsToArtifactAsyncIsSynchrnous {
+	if self.pool.WaitingTasks() > 0 ||
+		PushRowsToArtifactAsyncIsSynchrnous {
 		f()
 		return
 	}
@@ -320,8 +321,6 @@ func GetArtifactMode(
 	if err != nil {
 		return artifact_modes.MODE_INVALID, err
 	}
-
-	return mode, nil
 
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {

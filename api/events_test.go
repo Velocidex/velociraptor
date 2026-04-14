@@ -22,7 +22,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -402,7 +402,7 @@ func (self *GeneralAPITest) TestPushEvents() {
 	// Lets check if it is there.
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
 		self.ConfigObj, constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "",
-		"Server.Audit.Logs", paths.MODE_SERVER_EVENT)
+		"Server.Audit.Logs", artifact_modes.MODE_SERVER_EVENT)
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	rs_reader, err := result_sets.NewResultSetReaderWithOptions(

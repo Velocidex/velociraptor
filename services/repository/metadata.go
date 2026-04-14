@@ -10,6 +10,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -44,6 +45,13 @@ func NewMetadataManager(
 	if res.lookup == nil {
 		res.lookup = make(map[string]*artifacts_proto.ArtifactMetadata)
 	}
+
+	for _, wk := range artifacts.WELL_KNOWN_QUEUES {
+		res.lookup[wk.ArtifactName] = &artifacts_proto.ArtifactMetadata{
+			Hidden: true,
+		}
+	}
+
 	return res
 }
 
@@ -143,13 +151,17 @@ func (self *metadataManager) SaveMetadata(
 	ctx context.Context, config_obj *config_proto.Config,
 	repository services.Repository) error {
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		// Not an error - without a datastore run with an in-memory
+		// repository.
+		self.dirty = false
+		self.last_write = utils.GetTime().Now()
+		return nil
+	}
 
 	path_manager := paths.RepositoryPathManager{}
 
