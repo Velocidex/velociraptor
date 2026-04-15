@@ -29,7 +29,7 @@ const (
 	// included in the offline collector or MSI. Usually this will be
 	// lockstep with the server version except for server side
 	// patches.
-	CLIENT_VERSION = "0.76.2"
+	CLIENT_VERSION = "0.76.3"
 
 	ENROLLMENT_WELL_KNOWN_FLOW   = "E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW   = FLOW_PREFIX + "Monitoring"
