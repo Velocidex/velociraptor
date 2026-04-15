@@ -59,11 +59,11 @@
   "/clients",
   "/server_artifacts",
   "/server_artifacts/Server.Audit.Logs",
-  "/server_artifacts/Server.Audit.Logs/2026-04-14.json",
-  "/server_artifacts/Server.Audit.Logs/2026-04-14.json.tidx",
+  "/server_artifacts/Server.Audit.Logs/XXXX-XX-XX.json",
+  "/server_artifacts/Server.Audit.Logs/XXXX-XX-XX.json.tidx",
   "/server_artifacts/Server.Internal.ClientDelete",
-  "/server_artifacts/Server.Internal.ClientDelete/2026-04-14.json",
-  "/server_artifacts/Server.Internal.ClientDelete/2026-04-14.json.tidx"
+  "/server_artifacts/Server.Internal.ClientDelete/XXXX-XX-XX.json",
+  "/server_artifacts/Server.Internal.ClientDelete/XXXX-XX-XX.json.tidx"
  ],
  "Files deleted": [
   {

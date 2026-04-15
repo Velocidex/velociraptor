@@ -397,14 +397,6 @@ func (self *HuntDispatcher) StartRefresh(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	// Start the first refresh immediately, in the same thread, then
-	// after some time in the background. This ensures that the
-	// dispatcher is returned with valid data and no races.
-	err := self.Store.Refresh(ctx, config_obj, FORCE_REFRESH)
-	if err != nil {
-		return err
-	}
-
 	// flush the hunts periodically
 	wg.Add(1)
 	go func() {
@@ -424,6 +416,13 @@ func (self *HuntDispatcher) StartRefresh(
 
 		if refresh < 0 {
 			return
+		}
+
+		// Start the first refresh in the background as it could take
+		// a long time.
+		err := self.Store.Refresh(ctx, config_obj, FORCE_REFRESH)
+		if err != nil {
+			logger.Error("Unable to sync hunts: %v", err)
 		}
 
 		for {

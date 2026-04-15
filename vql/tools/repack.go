@@ -197,6 +197,11 @@ func (self RepackFunction) Call(ctx context.Context,
 
 	// Write to a local file.
 	if arg.DestFilename != "" {
+		err = file.CheckPath(arg.DestFilename)
+		if err != nil {
+			return err
+		}
+
 		fd, err := os.OpenFile(arg.DestFilename,
 			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		if err != nil {

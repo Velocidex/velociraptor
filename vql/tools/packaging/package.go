@@ -233,6 +233,12 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 			filename := utils.Join(arg.DirName, package_spec.OutputFilename())
 			scope.Log("DEBUG:%v: writing file %v", self.name, filename)
 
+			err = file.CheckPath(filename)
+			if err != nil {
+				scope.Log("ERROR:%v: %v", self.name, err)
+				return
+			}
+
 			fd, err := os.OpenFile(filename,
 				os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 			if err != nil {
