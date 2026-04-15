@@ -1432,6 +1432,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: commandline_split
   description: |
     Split a commandline into separate components following the windows
@@ -3947,9 +3948,6 @@
 
     ### Notes
 
-    No caching is currently provided so this may generate a lot
-    of load on DNS servers when scanning many rows.
-
     1. In the GUI hunts are always created in the paused
     state. This is not the default state when using this function (all
     hunts are immediately active - if you want the hunt to be created
@@ -3969,6 +3967,9 @@
         expires=now() + 18000)
     FROM scope()
     ```
+
+    3. Hunt conditions are not additive! A hunt can only be targeted
+       to an operating system, or label but not both.
   type: Function
   version: 3
   args:
@@ -9585,11 +9586,15 @@
     artifact (either as a VQL query running on the server or perhaps
     an external program waiting for this event via the API.
   type: Function
+  version: 2
   args:
   - name: artifact
     type: string
     description: The artifact name to send the event to.
     required: true
+  - name: client_id
+    type: string
+    description: The client_id for this event in case of a client_event artifact.
   - name: row
     type: ordereddict.Dict
     description: The row to send to the artifact

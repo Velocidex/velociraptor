@@ -115,12 +115,12 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 	ds_mu.Lock()
 	defer ds_mu.Unlock()
 
-	if g_impl != nil {
-		return g_impl, nil
-	}
-
 	if config_obj.Datastore == nil {
 		return nil, errors.New("no datastore configured")
+	}
+
+	if g_impl != nil {
+		return g_impl, nil
 	}
 
 	implementation, err := GetImplementationName(config_obj)

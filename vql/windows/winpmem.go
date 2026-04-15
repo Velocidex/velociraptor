@@ -10,6 +10,7 @@ import (
 
 	"github.com/Velocidex/WinPmem/go-winpmem"
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors/file"
 	winpmem_accessor "www.velocidex.com/golang/velociraptor/accessors/winpmem"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
@@ -88,6 +89,12 @@ func (self WinpmemFunction) Call(
 				return vfilter.Null{}
 			}
 		} else {
+			err = file.CheckPath(arg.DriverPath)
+			if err != nil {
+				scope.Log("ERROR:winpmem: %v", err)
+				return vfilter.Null{}
+			}
+
 			tmpfile, err = os.OpenFile(arg.DriverPath,
 				os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
 			if err != nil {
@@ -133,6 +140,12 @@ func (self WinpmemFunction) Call(
 
 	// The user asked for a memory image.
 	if arg.ImagePath != "" {
+		err = file.CheckPath(arg.ImagePath)
+		if err != nil {
+			scope.Log("ERROR:winpmem: %v", err)
+			return vfilter.Null{}
+		}
+
 		out_fd, err := os.OpenFile(arg.ImagePath,
 			os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
 		if err != nil {
