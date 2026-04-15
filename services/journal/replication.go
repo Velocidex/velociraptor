@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -23,6 +24,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -473,55 +475,72 @@ func (self *ReplicationService) pushRowsToLocalQueueManager(
 	ctx context.Context, config_obj *config_proto.Config,
 	rows []*ordereddict.Dict, artifact, client_id, flows_id string) error {
 
-	path_manager, err := artifacts.NewArtifactPathManager(ctx,
-		config_obj, client_id, flows_id, artifact)
+	mode, err := GetArtifactMode(ctx, config_obj, artifact, client_id)
 	if err != nil {
 		return err
 	}
 
-	// Just a regular artifact, append to the existing result set.
-	if !path_manager.IsEvent() {
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		config_obj, client_id, flows_id, artifact, mode)
+
+	switch mode {
+	// Event artifacts are written directly to the queue manager
+	case paths.MODE_INTERNAL, paths.MODE_CLIENT_EVENT, paths.MODE_SERVER_EVENT:
+		if self != nil && self.qm != nil {
+			return self.qm.PushEventRows(path_manager, rows)
+		}
+		return errors.New("Filestore not initialized")
+
+		// Real artifacts are written to the filestore.
+	case paths.MODE_CLIENT, paths.MODE_SERVER:
 		path, err := path_manager.GetPathForWriting()
 		if err != nil {
 			return err
 		}
+
 		return self.AppendToResultSet(config_obj, path, rows,
 			services.JournalOptions{})
-	}
 
-	// The Queue manager will manage writing event artifacts to a
-	// timed result set, including multi frontend synchronisation.
-	if self != nil && self.qm != nil {
-		return self.qm.PushEventRows(path_manager, rows)
+	default:
+		return fmt.Errorf("Invalid mode %v for artifact %v",
+			mode, artifact)
 	}
-	return errors.New("Filestore not initialized")
 }
 
 func (self *ReplicationService) pushJsonlToLocalQueueManager(
 	ctx context.Context, config_obj *config_proto.Config,
 	jsonl []byte, row_count int, artifact, client_id, flows_id string) error {
 
-	path_manager, err := artifacts.NewArtifactPathManager(ctx,
-		config_obj, client_id, flows_id, artifact)
+	mode, err := GetArtifactMode(ctx, config_obj, artifact, client_id)
 	if err != nil {
 		return err
 	}
 
-	// Just a regular artifact, append to the existing result set.
-	if !path_manager.IsEvent() {
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		config_obj, client_id, flows_id, artifact, mode)
+
+	switch mode {
+	// Event artifacts are written directly to the queue manager
+	case paths.MODE_INTERNAL, paths.MODE_CLIENT_EVENT, paths.MODE_SERVER_EVENT:
+		if self != nil && self.qm != nil {
+			return self.qm.PushEventJsonl(path_manager, jsonl, row_count)
+		}
+		return errors.New("Filestore not initialized")
+
+		// Real artifacts are written to the filestore.
+	case paths.MODE_CLIENT, paths.MODE_SERVER:
 		path, err := path_manager.GetPathForWriting()
 		if err != nil {
 			return err
 		}
-		return self.AppendJsonlToResultSet(config_obj, path, jsonl, row_count)
-	}
 
-	// The Queue manager will manage writing event artifacts to a
-	// timed result set, including multi frontend synchronisation.
-	if self != nil && self.qm != nil {
-		return self.qm.PushEventJsonl(path_manager, jsonl, row_count)
+		return self.AppendJsonlToResultSet(
+			config_obj, path, jsonl, row_count)
+
+	default:
+		return fmt.Errorf("Invalid mode %v for artifact %v",
+			mode, artifact)
 	}
-	return errors.New("Filestore not initialized")
 }
 
 func (self *ReplicationService) PushJsonlToArtifact(

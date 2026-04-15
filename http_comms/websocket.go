@@ -249,5 +249,7 @@ func PingWait(
 // more than the period of pings so we can be sure that the server has
 // really gone away.
 func PongPeriod(config_obj *config_proto.Config) time.Duration {
-	return (PingWait(config_obj) * 11) / 10
+	// Give an extra minute just to make sure the Ping messages are
+	// getting through on loaded servers.
+	return (PingWait(config_obj)*11)/10 + 60*time.Second
 }
