@@ -79,6 +79,7 @@ func (self SendEventFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Doc:      "Sends an event to a server event monitoring queue.",
 		ArgType:  type_map.AddType(scope, &SendEventArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN, acls.PUBLISH).Build(),
+		Version:  2,
 	}
 }
 

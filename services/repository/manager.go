@@ -565,7 +565,7 @@ func LoadWellKnownArtifacts(ctx context.Context,
 		}
 	}
 
-	return self.metadata.SaveMetadata(ctx, config_obj, global_repository)
+	return nil
 }
 
 var (

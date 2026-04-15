@@ -181,8 +181,11 @@ func (self *ClientInfoTestSuite) TestInFlightMessages() {
 	}
 	runner.Close(self.Ctx)
 
-	client_info, err = client_info_manager.Get(self.Ctx, self.client_id)
-	assert.NoError(self.T(), err)
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		client_info, err = client_info_manager.Get(self.Ctx, self.client_id)
+		assert.NoError(self.T(), err)
+		return len(client_info.InFlightFlows) == 0
+	})
 
 	// Completing the flows removes the flows from the in flight set.
 	assert.Equal(self.T(), len(client_info.InFlightFlows), 0)
