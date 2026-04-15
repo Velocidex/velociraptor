@@ -175,18 +175,19 @@ func (self *OidcClaimsGetter) GetClaims(
 	// If we cant get a valid claim from the token, we fallback to
 	// try using the user info method
 	claims_dict, err = self.getClaimsFromUserInfo(ctx, token)
-	if err == nil {
-		res, err := self.newClaimsFromDict(ctx, self.config_obj, claims_dict)
-		if err == nil {
-			self.Debug("Unwrapped claims from UserInfo: %v", claims_dict)
-			return res, nil
-		}
-
-	} else {
+	if err != nil {
 		self.Debug("Unable to parse claims from user info: %v", err)
+		return nil, err
 	}
 
-	return nil, err
+	res, err := self.newClaimsFromDict(ctx, self.config_obj, claims_dict)
+	if err != nil {
+		self.Debug("Unable to parse claims from user info claims dict: %v", err)
+		return nil, err
+	}
+
+	self.Debug("Unwrapped claims from UserInfo: %v", claims_dict)
+	return res, nil
 }
 
 func (self *OidcClaimsGetter) shouldRequireEmailVerify(
