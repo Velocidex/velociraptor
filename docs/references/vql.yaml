@@ -3970,7 +3970,6 @@
 
     3. Hunt conditions are not additive! A hunt can only be targeted
        to an operating system, or label but not both.
-
   type: Function
   version: 3
   args:
@@ -9587,6 +9586,7 @@
     artifact (either as a VQL query running on the server or perhaps
     an external program waiting for this event via the API.
   type: Function
+  version: 2
   args:
   - name: artifact
     type: string
@@ -13179,3 +13179,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+
