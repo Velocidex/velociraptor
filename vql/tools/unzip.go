@@ -160,6 +160,11 @@ func (self *UnzipPlugin) unpackZip(
 		}
 
 		output_path := utils.Join(output_directory, member.Name)
+		err = file.CheckPath(output_path)
+		if err != nil {
+			return err
+		}
+
 		err = os.MkdirAll(filepath.Dir(output_path), 0700)
 		if err != nil {
 			return err
@@ -241,6 +246,11 @@ func (self *UnzipPlugin) unpackTGZ(
 		// Directory traversal ...
 		if !strings.HasPrefix(output_path, output_directory) {
 			continue
+		}
+
+		err = file.CheckPath(output_path)
+		if err != nil {
+			return err
 		}
 
 		err = os.MkdirAll(filepath.Dir(output_path), 0700)

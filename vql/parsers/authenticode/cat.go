@@ -13,6 +13,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/pkcs7"
 	"www.velocidex.com/golang/go-pe"
+	"www.velocidex.com/golang/velociraptor/accessors/file"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -151,6 +152,11 @@ func ParseCatFile(cat_file string, output *ordereddict.Dict, verbose bool) error
 	// replaced later with the proper parse.
 	output.Update("_ExtraInfo", ordereddict.NewDict().
 		Set("Catalog", cat_file))
+
+	err := file.CheckPath(cat_file)
+	if err != nil {
+		return err
+	}
 
 	cat_fd, err := os.Open(cat_file)
 	if err != nil {

@@ -152,6 +152,12 @@ func (self CopyFunction) Call(ctx context.Context,
 	sub_ctx, cancel := context.WithCancel(ctx)
 	_ = scope.AddDestructor(cancel)
 
+	err = file.CheckPath(arg.Destination)
+	if err != nil {
+		scope.Log("ERROR:copy: %v", err)
+		return vfilter.Null{}
+	}
+
 	to, err := os.OpenFile(arg.Destination, flags, permissions)
 	if err != nil {
 		scope.Log("copy: Failed to open %v for writing: %v",

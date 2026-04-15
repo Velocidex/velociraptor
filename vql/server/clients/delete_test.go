@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -56,6 +57,8 @@ artifacts/Generic.Client.Info/F.C49TC44OSO62E/BasicInformation.json
 artifacts/Generic.Client.Info/F.C49TC44OSO62E/BasicInformation.json.index
 tasks/task1123.db
 ping.db`
+
+	normalizeRegEx = regexp.MustCompile(`\d\d\d\d-\d\d-\d\d\.json`)
 )
 
 type DeleteTestSuite struct {
@@ -165,6 +168,7 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 		func(path string, d fs.DirEntry, err error) error {
 			path = strings.TrimPrefix(path, self.dir)
 			path = strings.ReplaceAll(path, "\\", "/")
+			path = normalizeRegEx.ReplaceAllString(path, "XXXX-XX-XX.json")
 
 			after = append(after, path)
 			return nil

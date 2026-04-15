@@ -64,6 +64,12 @@ func (self *Compress) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = file.CheckPath(arg.Output)
+	if err != nil {
+		scope.Log("compress: %s", err.Error())
+		return vfilter.Null{}
+	}
+
 	fd, err := os.Open(arg.Path)
 	if err != nil {
 		scope.Log("compress: %v", err)
