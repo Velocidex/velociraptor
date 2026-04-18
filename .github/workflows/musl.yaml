@@ -29,7 +29,7 @@ jobs:
       run: |
         go get -v -t -d ./...
         sudo apt-get update
-        sudo apt-get install -y zip build-essential pkg-config libssl-dev gcc-aarch64-linux-gnu
+        sudo apt-get install -y zip build-essential pkg-config libssl-dev gcc-aarch64-linux-gnu docker
 
     - name: Install Musl
       run: |
@@ -63,11 +63,8 @@ jobs:
         go run make.go -v LinuxArm64
 
     - name: Login to GHCR
-      uses: docker/login-action@4907a6d
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
     - name: Build image
       run: |
