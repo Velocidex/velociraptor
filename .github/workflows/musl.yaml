@@ -59,6 +59,17 @@ jobs:
         go run make.go -v Linux
         go run make.go -v LinuxArm64
 
+    - name: Login to GHCR
+      uses: docker/login-action@4907a6d
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build image
+      run: |
+        go run make.go -v Container
+
     - name: StoreBinaries
       uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
       with:

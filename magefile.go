@@ -96,7 +96,7 @@ type Builder struct {
 	extra_name string
 }
 
-func (self *Builder) Name() string {
+func (self Builder) Name() string {
 
 	name := fmt.Sprintf("%s-%s-%s-%s",
 		name, version,
@@ -271,14 +271,18 @@ func LinuxSumo() error {
 		arch:       "amd64"}.Run()
 }
 
-func LinuxMusl() error {
+func getMuslBuilder() Builder {
 	return Builder{
 		extra_tags:    " release yara ",
 		goos:          "linux",
 		cc:            "musl-gcc",
 		extra_name:    "-musl",
 		extra_ldflags: "-linkmode external -extldflags \"-static\"",
-		arch:          "amd64"}.Run()
+		arch:          "amd64"}
+}
+
+func LinuxMusl() error {
+	return getMuslBuilder().Run()
 }
 
 func LinuxMuslDebug() error {
@@ -578,6 +582,11 @@ func hash() string {
 	return hash
 }
 
+func current_branch() string {
+	branch, _ := sh.Output("git", "rev-parse", "--abbrev-ref", "HEAD")
+	return branch
+}
+
 // Build the asset by linking directly to fileb0x
 func fileb0x(asset string) error {
 	return runner.Process(asset)
@@ -813,4 +822,46 @@ func Deadcode() error {
 	fmt.Printf("deadcode reported %v functions, %v were suppressed\n",
 		count, suppressed)
 	return nil
+}
+
+// Build the container
+func Container() error {
+	tag := constants.VERSION
+	if current_branch() == "master" {
+		tag = "latest"
+	}
+
+	builder := getMuslBuilder()
+	_, err := os.Stat("output/" + builder.Name())
+	if os.IsNotExist(err) {
+		err := LinuxMusl()
+		if err != nil {
+			return err
+		}
+
+	} else if err != nil {
+		return err
+	}
+
+	// Copy the binary to the docker directory
+	err = sh.Copy("Docker/bin/velociraptor",
+		"output/"+builder.Name())
+	if err != nil {
+		return err
+	}
+
+	image := "ghcr.io/velocidex/velociraptor-server:" + tag
+
+	// Build the docker image
+	err = sh.Run("docker", "build", "-t", image,
+		"--label", fmt.Sprintf("version=%v", constants.VERSION),
+		"--label", "commit_hash="+hash(),
+		"--label", "build_time="+time.Now().Format(time.RFC3339),
+		"Docker")
+	if err != nil {
+		return err
+	}
+
+	// Upload the image to the repository
+	return sh.Run("docker", "push", image)
 }
