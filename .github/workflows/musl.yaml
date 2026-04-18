@@ -8,8 +8,7 @@ on: [pull_request]
 jobs:
   build:
     permissions:
-      - packages: write
-      - packages: read
+      packages: write
 
     # Only trigger when a PR is committed or manually triggered.
     if: github.event.pull_request.merged || github.event_name == 'workflow_dispatch'
