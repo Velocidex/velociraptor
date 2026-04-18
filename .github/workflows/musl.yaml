@@ -1,12 +1,16 @@
 name: Linux Build Musl Static
-#on: [pull_request]
-on:
-  pull_request:
-    types: [closed]
-  workflow_dispatch:
+on: [pull_request]
+#on:
+#  pull_request:
+#    types: [closed]
+#  workflow_dispatch:
 
 jobs:
   build:
+    permissions:
+      - packages: write
+      - packages: read
+
     # Only trigger when a PR is committed or manually triggered.
     if: github.event.pull_request.merged || github.event_name == 'workflow_dispatch'
     name: Build
