@@ -1,5 +1,5 @@
 name: Linux Build Musl Static
-on: [pull_request]
+on: [ pull_request ]
 #on:
 #  pull_request:
 #    types: [closed]
