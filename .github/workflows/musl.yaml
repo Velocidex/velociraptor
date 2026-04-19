@@ -1,9 +1,9 @@
 name: Linux Build Musl Static
-on: [ pull_request ]
-#on:
-#  pull_request:
-#    types: [closed]
-#  workflow_dispatch:
+#on: [ pull_request ]
+on:
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
       contents: read
 
     # Only trigger when a PR is committed or manually triggered.
-    #if: github.event.pull_request.merged || github.event_name == 'workflow_dispatch'
+    xif: github.event.pull_request.merged || github.event_name == 'workflow_dispatch'
     name: Build
     runs-on: ubuntu-latest
     steps:
@@ -59,9 +59,9 @@ jobs:
         export PATH=$PATH:~/go/bin/:/usr/local/musl/bin
         go run make.go -v UpdateDependentTools
         go run make.go -v LinuxMusl
-        #go run make.go -v LinuxSumo
-        #go run make.go -v Linux
-        #go run make.go -v LinuxArm64
+        go run make.go -v LinuxSumo
+        go run make.go -v Linux
+        go run make.go -v LinuxArm64
 
     - name: Login to GHCR
       run: |
