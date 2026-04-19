@@ -43,6 +43,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -824,11 +825,65 @@ func Deadcode() error {
 	return nil
 }
 
+type container struct {
+	Tags []string `json:"tags"`
+}
+
+type containerMetadata struct {
+	Container container `json:"container"`
+}
+
+type containerResponse struct {
+	Id       uint64            `json:"id"`
+	Metadata containerMetadata `json:"metadata"`
+}
+
+func doesContainerExist(name string) bool {
+	fmt.Printf("checking for container with tag %v\n", name)
+
+	var res []containerResponse
+	out, err := sh.OutputWith(map[string]string{},
+		"gh", "api",
+		"/orgs/velocidex/packages/container/velociraptor-server/versions")
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return false
+	}
+
+	err = json.Unmarshal([]byte(out), &res)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return false
+	}
+
+	fmt.Printf("Res %#v\n", res)
+	for _, entry := range res {
+		if utils.InString(entry.Metadata.Container.Tags, name) {
+			fmt.Printf("Found container: %v\n", entry)
+			return true
+		}
+	}
+
+	return false
+}
+
 // Build the container
 func Container() error {
 	tag := constants.VERSION
+	fmt.Printf("Current_branch %v\n", current_branch())
+
+	// Always update the latest master branch
 	if current_branch() == "master" {
 		tag = "latest"
+
+	} else {
+
+		// For release branches only push the first image after
+		// release.
+		if doesContainerExist(tag) {
+			fmt.Printf("Container with tag %v already exists", tag)
+			return nil
+		}
 	}
 
 	builder := getMuslBuilder()
@@ -844,8 +899,7 @@ func Container() error {
 	}
 
 	// Copy the binary to the docker directory
-	err = sh.Copy("Docker/bin/velociraptor",
-		"output/"+builder.Name())
+	err = sh.Copy("Docker/bin/velociraptor", "output/"+builder.Name())
 	if err != nil {
 		return err
 	}
