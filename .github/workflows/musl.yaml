@@ -12,7 +12,7 @@ jobs:
       contents: read
 
     # Only trigger when a PR is committed or manually triggered.
-    xif: github.event.pull_request.merged || github.event_name == 'workflow_dispatch'
+    if: github.event.pull_request.merged || github.event_name == 'workflow_dispatch'
     name: Build
     runs-on: ubuntu-latest
     steps:
