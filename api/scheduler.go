@@ -79,7 +79,7 @@ func (self *ApiServer) Scheduler(
 		}
 	}()
 
-	// Watch for resoonses and close off any outstanding ones.
+	// Watch for responses and close off any outstanding ones.
 	go func() {
 		for {
 			req, err := stream.Recv()
