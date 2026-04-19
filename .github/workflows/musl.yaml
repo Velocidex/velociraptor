@@ -59,15 +59,15 @@ jobs:
         export PATH=$PATH:~/go/bin/:/usr/local/musl/bin
         go run make.go -v UpdateDependentTools
         go run make.go -v LinuxMusl
-        go run make.go -v LinuxSumo
-        go run make.go -v Linux
-        go run make.go -v LinuxArm64
+        #go run make.go -v LinuxSumo
+        #go run make.go -v Linux
+        #go run make.go -v LinuxArm64
 
     - name: Login to GHCR
       run: |
         echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-    - name: Build image
+    - name: Build and push container image
       run: |
         go run make.go -v Container
 

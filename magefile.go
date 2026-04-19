@@ -43,7 +43,6 @@ import (
 	"gopkg.in/yaml.v2"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -838,6 +837,16 @@ type containerResponse struct {
 	Metadata containerMetadata `json:"metadata"`
 }
 
+func InString(hay []string, needle string) bool {
+	for _, x := range hay {
+		if x == needle {
+			return true
+		}
+	}
+
+	return false
+}
+
 func doesContainerExist(name string) bool {
 	fmt.Printf("checking for container with tag %v\n", name)
 
@@ -858,7 +867,7 @@ func doesContainerExist(name string) bool {
 
 	fmt.Printf("Res %#v\n", res)
 	for _, entry := range res {
-		if utils.InString(entry.Metadata.Container.Tags, name) {
+		if InString(entry.Metadata.Container.Tags, name) {
 			fmt.Printf("Found container: %v\n", entry)
 			return true
 		}
