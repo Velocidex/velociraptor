@@ -1,0 +1,5 @@
+.env
+.gitignore
+Makefile
+datastore/*
+etc/*

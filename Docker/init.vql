@@ -1,0 +1,41 @@
+// This is the initial VQL to bootstrap the container.
+
+LET _Exe <= SELECT * FROM info()
+LET Exe <= _Exe[0].Exe
+LET Hostname <= environ(var="VELOCIRAPTOR_HOSTNAME") || "localhost"
+LET FrontendPort <= environ(var="VELOCIRAPTOR_FRONTEND_PORT") || "8000"
+LET GUIPort <= environ(var="VELOCIRAPTOR_GUI_PORT") || "8889"
+LET Datastore <= environ(var="VELOCIRAPTOR_DATASTORE_PATH") || "/datastore/"
+LET ConfFile <= environ(var="VELOCIRAPTOR_CONFIG_PATH") || "/etc/velociraptor/server.config.yaml"
+LET InitArtifacts <= if(condition=NOT environ(var="VELOCIRAPTOR_NO_INITIALIZE"),
+  then=["Container.InitializeServer",])
+
+LET JsonPatch <= dict(
+Client=dict(
+   server_urls= [
+     url(scheme="wss", host=Hostname + ":" + FrontendPort).String + "/",
+     url(scheme="https", host=Hostname + ":" + FrontendPort).String + "/",
+   ]
+),
+GUI=dict(
+  bind_address="0.0.0.0",
+  public_url= url(scheme="https",
+    host=Hostname + ":" + GUIPort).String + "/app/index.html"
+  ),
+Frontend=dict(initial_server_artifacts=InitArtifacts),
+Datastore=dict(
+  location=Datastore,
+  filestore_directory=Datastore
+  ),
+defaults=dict(
+    artifact_definitions_directories=["/custom_artifacts/",]
+  )
+)
+
+SELECT JsonPatch FROM scope()
+
+// Generate a new base configuration
+SELECT Hostname, write_file(data=Stdout,
+    dest=ConfFile, create_directories=TRUE) AS OutputConfig
+FROM execve(argv=[Exe, "config", "generate",
+   "--merge", JsonPatch], length=100000)
