@@ -1,0 +1,23 @@
+name: Container.InitializeServer
+description: |
+  This is the initial server artifact that will be launched on first start.
+
+  By default we prepare installation packages but you can do anything
+  here if you modify it.
+
+  To modify this artifact, copy it to a new directory, then launch the
+  container with a volume mount over the custom_artifacts directory. e.g.
+
+  docker run ... --mount type=volume,src=my_custom_dir,target=/custom_dir/,ro ...
+
+type: SERVER
+
+sources:
+- query: |
+    LET _ <= log(message="Waiting for server to become ready") AND sleep(time=3)
+
+    SELECT * FROM chain(a={
+     SELECT * FROM Artifact.Server.Utils.CreateMSI()
+    }, b={
+     SELECT * FROM Artifact.Server.Utils.CreateLinuxPackages()
+    })

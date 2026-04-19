@@ -129,3 +129,6 @@ deadcode:
 
 api_check:
 	python ./scripts/api_checker.py .
+
+container:
+	go run make.go -v container

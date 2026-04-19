@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# This script accepts the following environment variables:
+
+# VELOCIRAPTOR_LITERAL_CONFIG: If set we use that as the literal
+#    config and do not generate a new config file.
+
+# VELOCIRAPTOR_HOSTNAME: when generating a config this is the public
+#    accessible hostname of the server (default localhost)
+
+# VELOCIRAPTOR_FRONTEND_PORT: when generating a config this is the
+#    frontend port (default 8000)
+
+# VELOCIRAPTOR_GUI_PORT: when generating a config this is the
+#    GUI port (default 8889)
+
+# VELOCIRAPTOR_DATASTORE_PATH: The path to the datastore inside the
+#   container (use volume mounts to persist this data). Default is
+#   /datastore/.
+
+# VELOCIRAPTOR_CONFIG_PATH: The name of the config file inside the
+#   container. Use volume mounts to persist the generated
+#   config. Default is /etc/velociraptor/server.config.yaml
+
+# VELOCIRAPTOR_INITIAL_ADMIN_PASSWORD: The password for the initial
+#   admin account (default "password")
+
+# VELOCIRAPTOR_NO_INITIALIZE: If this is set, we do not run the
+#   initialization artifact.
+
+# Create the config
+if [[ -z "${VELOCIRAPTOR_LITERAL_CONFIG}" ]]; then
+  echo Creating initial configuration file.
+  /bin/velociraptor query -f /bin/init.vql
+
+  echo Adding initial user admin
+  export PASSWORD="${VELOCIRAPTOR_INITIAL_ADMIN_PASSWORD:-password}"
+  export VELOCIRAPTOR_CONFIG=/etc/velociraptor/server.config.yaml
+  /bin/velociraptor --config "$VELOCIRAPTOR_CONFIG" user add admin "$PASSWORD" --role administrator
+  /bin/velociraptor  --config "${VELOCIRAPTOR_CONFIG}" frontend -v
+
+else
+  /bin/velociraptor frontend -v
+
+fi
