@@ -20,7 +20,7 @@ import (
 type ParseBinaryFunctionArg struct {
 	Filename *accessors.OSPath `vfilter:"required,field=filename,doc=Binary file to open."`
 	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
-	Profile  string            `vfilter:"optional,field=profile,doc=Profile to use (see https://github.com/Velocidex/vtypes)."`
+	Profile  string            `vfilter:"optional,field=profile,doc=Profile to use (see [vfilter](https://github.com/Velocidex/vtypes))."`
 	Struct   string            `vfilter:"required,field=struct,doc=Name of the struct in the profile to instantiate."`
 	Offset   int64             `vfilter:"optional,field=offset,doc=Start parsing from this offset"`
 }
