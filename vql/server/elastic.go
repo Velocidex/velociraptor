@@ -71,7 +71,7 @@ type _ElasticPluginArgs struct {
 	Addresses          []string            `vfilter:"optional,field=addresses,doc=A list of Elasticsearch nodes to use."`
 	Username           string              `vfilter:"optional,field=username,doc=Username for HTTP Basic Authentication."`
 	Password           string              `vfilter:"optional,field=password,doc=Password for HTTP Basic Authentication."`
-	CloudID            string              `vfilter:"optional,field=cloud_id,doc=Endpoint for the Elastic Service (https://elastic.co/cloud)."`
+	CloudID            string              `vfilter:"optional,field=cloud_id,doc=Endpoint for the [Elastic Cloud Service](https://elastic.co/cloud)."`
 	APIKey             string              `vfilter:"optional,field=api_key,doc=Base64-encoded token for authorization; if set, overrides username and password."`
 	WaitTime           int64               `vfilter:"optional,field=wait_time,doc=Batch elastic upload this long (2 sec)."`
 	PipeLine           string              `vfilter:"optional,field=pipeline,doc=Pipeline for uploads"`
