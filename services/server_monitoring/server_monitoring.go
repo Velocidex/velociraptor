@@ -543,7 +543,10 @@ func NewServerMonitoringService(
 	if err != nil || artifacts.Artifacts == nil {
 		// No monitoring rules found, set defaults.
 		artifacts = &flows_proto.ArtifactCollectorArgs{
-			Artifacts: append([]string{"Server.Monitor.Health"},
+			Artifacts: append([]string{
+				"Server.Monitor.Health",
+				"Server.Monitoring.RSSFeeds",
+			},
 				config_obj.Frontend.DefaultServerMonitoringArtifacts...),
 		}
 	}

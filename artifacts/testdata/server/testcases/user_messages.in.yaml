@@ -1,0 +1,15 @@
+Queries:
+# Create a new user to play with
+- LET _ <= user_create(user="Fred", roles="investigator")
+
+# Send the user a message
+- LET _ <= user_message(Foo=1, Bar=2, user="Fred") AND sleep(ms=600)
+
+# Read the user's messages and also clear them
+- SELECT * FROM user_messages(user="Fred", clear=TRUE)
+
+# Messages are cleared.
+- SELECT * FROM user_messages(user="Fred", clear=TRUE)
+
+# Cleanup
+- SELECT user_delete(user="Fred") FROM scope()

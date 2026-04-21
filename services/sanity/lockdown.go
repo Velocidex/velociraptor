@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func (self SanityChecks) CheckForLockdown(
@@ -58,14 +59,15 @@ func (self SanityChecks) CheckForLockdown(
 		acls.DescribePermissions(lockdown_token))
 	logger.Info("%v", msg)
 
-	frontend_service, err := services.GetFrontendManager(config_obj)
-	if err == nil {
-		frontend_service.SetGlobalMessage(
-			&api_proto.GlobalUserMessage{
-				Key:     "Lockdown",
-				Level:   "INFO",
-				Message: msg,
-			})
+	err := services.MessageAllUsers(ctx,
+		utils.GetSuperuserName(config_obj),
+		[]string{config_obj.OrgId},
+		ordereddict.NewDict().
+			Set("Error", "Lockdown").
+			Set("Message", msg),
+	)
+	if err != nil {
+		return err
 	}
 
 	acls.SetLockdownToken(lockdown_token)
