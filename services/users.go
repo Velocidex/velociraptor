@@ -20,6 +20,7 @@ package services
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -131,6 +132,13 @@ type UserManager interface {
 		ctx context.Context,
 		principal, username string,
 		orgs []string) error
+
+	// Send the user a message which will appear in their notification
+	// view.
+	MessageUser(
+		ctx context.Context,
+		username, sender string,
+		message *ordereddict.Dict) error
 }
 
 // A helper

@@ -36,11 +36,12 @@ The course covers many aspects of Velociraptor in detail.
 ## Running Velociraptor via Docker
 
 To run a Velociraptor server via Docker, follow the instructions here:
-https://github.com/weslambert/velociraptor-docker
+https://github.com/Velocidex/velociraptor/tree/master/Docker
 
 ## Running Velociraptor locally
 
-Velociraptor is also useful as a local triage tool. You can create a self contained local collector using the GUI:
+Velociraptor is also useful as a local triage tool. You can create a
+self contained local collector using the GUI:
 
 1. Start the GUI as above (`velociraptor gui`).
 

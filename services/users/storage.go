@@ -13,10 +13,14 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -48,6 +52,10 @@ type IUserStorageManager interface {
 		org_config_obj *config_proto.Config,
 		username string,
 		stats *api_proto.UserStats) error
+
+	WriteUserMessage(ctx context.Context,
+		username, sender string,
+		message *ordereddict.Dict) error
 }
 
 // The NullStorage Manager is used for tools and clients. In this
@@ -98,6 +106,12 @@ func (self *NullStorageManager) SetUserStats(
 	return utils.NotImplementedError
 }
 
+func (self *NullStorageManager) WriteUserMessage(
+	ctx context.Context, username, sender string,
+	message *ordereddict.Dict) error {
+	return utils.NotImplementedError
+}
+
 /*
   The User Manager is responsible for coordinating access to user
   records.
@@ -141,8 +155,8 @@ func (self *UserStorageManager) SetUserStats(
 	}
 
 	// Check the LRU for a cache if it is there
-	lower_user_name := utils.ToLower(username)
-	cache, pres := self.cache[lower_user_name]
+	key := makeKey(username)
+	cache, pres := self.cache[key]
 	if !pres || cache.user_record == nil {
 		return utils.NotFoundError
 	}
@@ -168,7 +182,7 @@ func (self *UserStorageManager) SetUserStats(
 			return err
 		}
 
-		self.cache[lower_user_name] = cache
+		self.cache[key] = cache
 	}
 
 	return nil
@@ -184,8 +198,8 @@ func (self *UserStorageManager) GetUserWithHashes(ctx context.Context, username 
 	}
 
 	// Check the LRU for a cache if it is there
-	lower_user_name := utils.ToLower(username)
-	cache, pres := self.cache[lower_user_name]
+	key := makeKey(username)
+	cache, pres := self.cache[key]
 	if pres && cache.user_record != nil {
 		// Return a copy to protect our version.
 		return proto.Clone(cache.user_record).(*api_proto.VelociraptorUser), nil
@@ -212,8 +226,8 @@ func (self *UserStorageManager) SetUser(
 	var cache *_CachedUserObject
 
 	// Is there an existing cache?
-	lower_user_name := utils.ToLower(user_record.Name)
-	cache, pres := self.cache[lower_user_name]
+	key := makeKey(user_record.Name)
+	cache, pres := self.cache[key]
 	if !pres {
 		cache = &_CachedUserObject{
 			timestamp: utils.GetTime().Now(),
@@ -243,14 +257,17 @@ func (self *UserStorageManager) SetUser(
 		return err
 	}
 
-	self.cache[lower_user_name] = cache
-	return self.notifyChanges(ctx, user_record.Name)
+	self.cache[key] = cache
+	return self.sendMutation(ctx, UserMutation{
+		Op:       "Update",
+		Username: user_record.Name,
+	})
 }
 
 // Advertise the changes. This will force all minions to flush their
 // caches.
-func (self *UserStorageManager) notifyChanges(
-	ctx context.Context, username string) error {
+func (self *UserStorageManager) sendMutation(
+	ctx context.Context, mutation UserMutation) error {
 	journal_service, err := services.GetJournal(self.config_obj)
 	if err != nil {
 		return err
@@ -258,7 +275,13 @@ func (self *UserStorageManager) notifyChanges(
 
 	return journal_service.PushRowsToArtifact(ctx, self.config_obj,
 		[]*ordereddict.Dict{
-			ordereddict.NewDict().Set("id", self.id).Set("username", username),
+			ordereddict.NewDict().
+				Set("id", self.id).
+				Set("op", mutation.Op).
+				Set("message", mutation.Message).
+				Set("username", mutation.Username).
+				Set("timestamp", mutation.Timestamp).
+				Set("sender", mutation.From),
 		},
 		artifacts.USER_MANAGER)
 }
@@ -344,6 +367,13 @@ func (self *UserStorageManager) loadUserRecrodIntoCache(
 		options = &api_proto.SetGUIOptionsRequest{}
 	}
 
+	file_store_factory := file_store.GetFileStore(self.config_obj)
+	reader, err := result_sets.NewResultSetReader(file_store_factory,
+		path_manager.Notifications())
+	if err == nil {
+		options.Messages = reader.TotalRows()
+	}
+
 	setDefaultGUIOptions(options, self.config_obj)
 
 	return &_CachedUserObject{
@@ -355,8 +385,9 @@ func (self *UserStorageManager) loadUserRecrodIntoCache(
 
 // Build an in memory cache of all usernames and their lower cases so
 // we can compare quickly.
-func (self *UserStorageManager) buildCache(ctx context.Context) error {
+func (self *UserStorageManager) BuildCache(ctx context.Context) error {
 
+	// Build the new cache without a lock, and then swap it quickly
 	cache := make(map[string]*_CachedUserObject)
 
 	db, err := datastore.GetDB(self.config_obj)
@@ -376,14 +407,14 @@ func (self *UserStorageManager) buildCache(ctx context.Context) error {
 		}
 
 		username := child.Base()
-		lower_user_name := utils.ToLower(username)
+		key := makeKey(username)
 		cache_obj, err := self.loadUserRecrodIntoCache(ctx, username)
 		if err == nil {
 
 			// Detect User records files with multiple casing - we
 			// reject one to avoid User record confusion. This should
 			// not occur in normal operation!
-			old_record, pres := cache[lower_user_name]
+			old_record, pres := cache[key]
 			if pres && old_record.user_record.Name != username {
 				logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 				logger.Error("<red>UserManager</>: Multiple casing detected for User %v, will use record for %v.",
@@ -391,7 +422,7 @@ func (self *UserStorageManager) buildCache(ctx context.Context) error {
 				continue
 			}
 
-			cache[lower_user_name] = cache_obj
+			cache[key] = cache_obj
 		}
 	}
 
@@ -427,8 +458,8 @@ func (self *UserStorageManager) SetUserOptions(ctx context.Context,
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	lower_user_name := utils.ToLower(username)
-	cache, pres := self.cache[lower_user_name]
+	key := makeKey(username)
+	cache, pres := self.cache[key]
 	if !pres {
 		// User not known - it is a new user
 		cache = &_CachedUserObject{
@@ -512,15 +543,31 @@ func (self *UserStorageManager) SetUserOptions(ctx context.Context,
 	}
 	old_options.DefaultDownloadsLock = options.DefaultDownloadsLock
 
+	path_manager := paths.NewUserPathManager(username)
+	// Means to clear the messages
+	if options.Messages < 0 {
+		file_store_factory := file_store.GetFileStore(self.config_obj)
+
+		rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
+			path_manager.Notifications(), json.DefaultEncOpts(),
+			utils.SyncCompleter, result_sets.TruncateMode)
+		if err == nil {
+			// Just close it - we rely on truncate mode to remove all
+			// rows.
+			rs_writer.Close()
+		}
+		old_options.Messages = 0
+	}
+
 	// Update the cache and write to disk.
 	cache.gui_options = old_options
 	cache.timestamp = utils.GetTime().Now()
 
-	self.cache[lower_user_name] = cache
+	self.cache[key] = cache
 
 	// Store the user records with the original casing - this is
 	// compatible with the old behavior.
-	path_manager := paths.UserPathManager{Name: username}
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -531,7 +578,14 @@ func (self *UserStorageManager) SetUserOptions(ctx context.Context,
 		return err
 	}
 
-	return self.notifyChanges(ctx, lower_user_name)
+	return self.sendMutation(ctx, UserMutation{
+		Op:       "Update",
+		Username: key,
+	})
+}
+
+func (self *UserStorageManager) ClearUserMessages() {
+
 }
 
 func (self *UserStorageManager) GetUserOptions(ctx context.Context, username string) (
@@ -539,9 +593,9 @@ func (self *UserStorageManager) GetUserOptions(ctx context.Context, username str
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	lower_user_name := utils.ToLower(username)
+	key := makeKey(username)
 
-	cache, pres := self.cache[lower_user_name]
+	cache, pres := self.cache[key]
 	if !pres {
 		return nil, fmt.Errorf("%w: %v", services.UserNotFoundError, username)
 	}
@@ -595,7 +649,7 @@ func (self *UserStorageManager) DeleteUser(ctx context.Context, username string)
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	lower_user_name := utils.ToLower(username)
+	key := makeKey(username)
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -608,8 +662,121 @@ func (self *UserStorageManager) DeleteUser(ctx context.Context, username string)
 		return err
 	}
 
-	delete(self.cache, lower_user_name)
-	return self.notifyChanges(ctx, username)
+	delete(self.cache, key)
+	return self.sendMutation(ctx, UserMutation{
+		Op:       "Update",
+		Username: username,
+	})
+}
+
+func (self *UserStorageManager) WriteUserMessage(
+	ctx context.Context, username, sender string,
+	message *ordereddict.Dict) error {
+
+	serialized, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+
+	return self.sendMutation(ctx, UserMutation{
+		Op:        "Message",
+		Username:  username,
+		Message:   string(serialized),
+		Timestamp: utils.GetTime().Now().Unix(),
+		From:      sender,
+	})
+}
+
+// Internal message queue uses user mutations
+type UserMutation struct {
+	Id        int64  `json:"id"`
+	Op        string `json:"op"`
+	Username  string `json:"username"`
+	Message   string `json:"message"`
+	Timestamp int64  `json:"timestamp"`
+	From      string `json:"sender"`
+}
+
+func (self *UserStorageManager) handleMessageEvent(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	event *ordereddict.Dict) error {
+
+	op, _ := event.GetString("op")
+	switch op {
+
+	// Update the user record from disk.
+	case "Update":
+		// Skip our own messages since we already have the freshest
+		// version
+		id, _ := event.GetInt64("id")
+		if id == self.id {
+			return nil
+		}
+
+		username, _ := event.GetString("username")
+		key := makeKey(username)
+
+		cache_obj, err := self.loadUserRecrodIntoCache(ctx, username)
+		if err == nil {
+			self.mu.Lock()
+			self.cache[key] = cache_obj
+			self.mu.Unlock()
+
+			// Delete the user account if we cant load it from disk.
+		} else {
+			self.mu.Lock()
+			delete(self.cache, key)
+			self.mu.Unlock()
+		}
+		return nil
+
+	case "Message":
+		username, _ := event.GetString("username")
+		message_str, _ := event.GetString("message")
+		timestamp, _ := event.GetInt64("timestamp")
+		sender, _ := event.GetString("sender")
+
+		message := ordereddict.NewDict()
+		err := message.UnmarshalJSON([]byte(message_str))
+		if err != nil {
+			return err
+		}
+
+		path_manager := paths.NewUserPathManager(username)
+		journal, err := services.GetJournal(config_obj)
+		if err != nil {
+			return err
+		}
+
+		// Just update the cache - no need to flush it to disk because
+		// Messages will be updated at start up from disk already in
+		// loadUserRecrodIntoCache().
+		self.mu.Lock()
+		key := makeKey(username)
+		cache, pres := self.cache[key]
+		if !pres || cache.user_record == nil {
+			return utils.NotFoundError
+		}
+		if cache.gui_options == nil {
+			cache.gui_options = &api_proto.SetGUIOptionsRequest{}
+		}
+		cache.gui_options.Messages++
+		self.mu.Unlock()
+
+		return journal.AppendToResultSet(self.config_obj,
+			path_manager.Notifications(),
+			[]*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Timestamp", time.Unix(timestamp, 0)).
+					Set("From", sender).
+					Set("Message", message),
+			},
+			artifacts.USER_MANAGER)
+
+	default:
+		return fmt.Errorf("Unhandled message on UserManager queue: %v", event)
+	}
 }
 
 func NewUserStorageManager(
@@ -623,17 +790,16 @@ func NewUserStorageManager(
 	}
 
 	// Get initial mapping between lower case usernames and correct usernames
-	err := result.buildCache(ctx)
+	err := result.BuildCache(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	journal_service, err := services.GetJournal(config_obj)
+	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
+		artifacts.USER_MANAGER, "UserManagerService", result.handleMessageEvent)
 	if err != nil {
 		return nil, err
 	}
-	events, cancel := journal_service.Watch(ctx,
-		artifacts.USER_MANAGER, "UserManagerService")
 
 	refresh_duration := time.Duration(300 * time.Second)
 	if config_obj.Defaults != nil &&
@@ -646,7 +812,6 @@ func NewUserStorageManager(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer cancel()
 
 		for {
 			select {
@@ -654,37 +819,10 @@ func NewUserStorageManager(
 				return
 
 			case <-time.After(utils.Jitter(refresh_duration)):
-				err := result.buildCache(ctx)
+				err := result.BuildCache(ctx)
 				if err != nil {
 					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-					logger.Error("<red>UserManager</>: buildCache %v", err)
-				}
-
-			case event, ok := <-events:
-				if !ok {
-					return
-				}
-
-				// Skip our own messages
-				id, pres := event.GetInt64("id")
-				if !pres || id == result.id {
-					continue
-				}
-
-				username, pres := event.GetString("username")
-				if pres {
-					lower_user_name := utils.ToLower(username)
-
-					cache_obj, err := result.loadUserRecrodIntoCache(ctx, username)
-					if err == nil {
-						result.mu.Lock()
-						result.cache[lower_user_name] = cache_obj
-						result.mu.Unlock()
-					} else {
-						result.mu.Lock()
-						delete(result.cache, lower_user_name)
-						result.mu.Unlock()
-					}
+					logger.Error("<red>UserManager</>: BuildCache %v", err)
 				}
 			}
 		}
@@ -695,4 +833,16 @@ func NewUserStorageManager(
 
 func (self *UserManager) Storage() IUserStorageManager {
 	return self.storage
+}
+
+func NewNullStorageManager() *UserManager {
+	return &UserManager{
+		config_obj: &config_proto.Config{},
+		storage:    &NullStorageManager{},
+	}
+}
+
+// Normalize the username to the cache key
+func makeKey(username string) string {
+	return utils.ToLower(username)
 }

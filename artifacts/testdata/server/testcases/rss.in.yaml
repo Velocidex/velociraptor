@@ -1,0 +1,63 @@
+Parameters:
+  FeedURLs: |
+    URL
+    http://docs.velociraptor.app/announcements/advisories/index.xml
+
+  FirstRSS: |
+    <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+      <channel>
+        <title>First article</title>
+        <link>https://example.com/blog/</link>
+        <description>Blog Posts</description>
+        <item>
+          <title>First</title>
+          <link>https://www.example.com/blob/1.txt/</link>
+          <pubDate>Fri, 10 Aug 2018 04:10:06 +0000</pubDate>
+          <guid>https://www.example.com/blob/1.txt/</guid>
+        </item>
+      </channel>
+    </rss>
+
+  SecondRSS: |
+    <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+      <channel>
+        <title>First article</title>
+        <link>https://example.com/blog/</link>
+        <description>Blog Posts</description>
+        <item>
+          <title>First</title>
+          <link>https://www.example.com/blob/1.txt/</link>
+          <pubDate>Fri, 10 Aug 2018 04:10:06 +0000</pubDate>
+          <guid>https://www.example.com/blob/1.txt/</guid>
+        </item>
+        <item>
+          <title>Second</title>
+          <link>https://www.example.com/blob/2.txt/</link>
+          <pubDate>Fri, 10 Aug 2018 04:10:06 +0000</pubDate>
+          <guid>https://www.example.com/blob/2.txt/</guid>
+        </item>
+      </channel>
+    </rss>
+
+
+
+Queries:
+# Mock the http_client and clock plugins.
+- |
+  LET _ <= SELECT mock(plugin='http_client', results=[
+     (dict(Content= FirstRSS, Response=200),),
+     (dict(Content= SecondRSS, Response=200),)]),
+     mock(plugin='clock', results=[
+     dict(Unix=1), dict(Unix=2)
+   ]), user_create(user="Fred", roles="investigator")
+  FROM scope()
+
+# Check for RSS feeds - should emit the new item (2.txt)
+- |
+  SELECT * FROM Artifact.Server.Monitoring.RSSFeeds(FeedURLs=FeedURLs)
+
+# Now check that the user message was sent
+- SELECT * FROM user_messages(clear=TRUE, user="Fred")
+
+# Clean up
+- SELECT user_delete(user="Fred") FROM scope()

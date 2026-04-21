@@ -64,7 +64,7 @@ class _UserSettings extends React.Component {
 
                     this.setState({
                         traits: traits,
-                        global_messages: response.data.global_messages || []});
+                        messages: response.data.messages || []});
 
                     // Only upate the theme if it changed.
                     if (current_theme !== traits.theme) {
@@ -91,7 +91,7 @@ class _UserSettings extends React.Component {
 
     state = {
         traits: {},
-        global_messages: [],
+        messages: [],
         updateTraits: this.updateTraits,
     }
 

@@ -9,6 +9,11 @@ import T from '../i8n/i8n.jsx';
 import Alert from 'react-bootstrap/Alert';
 import VeloLog from "../widgets/logs.jsx";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import VeloPagedTable from '../core/paged-table.jsx';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import ToolTip from '../widgets/tooltip.jsx';
+import api from '../core/api-service.jsx';
+import {CancelToken} from 'axios';
 
 import "./global-messages.css";
 
@@ -19,19 +24,39 @@ class ShowGlobalMessages extends Component {
         onClose: PropTypes.func.isRequired,
     }
 
-    alertClass = level=>{
-        if (level == "ERROR") {
-            return "danger";
-        }
-        if (level == "INFO") {
-            return "info";
-        }
+    componentDidMount() {
+        this.source = CancelToken.source();
+    }
 
-        return "primary";
-    };
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
+
+    clearMessages = ()=>{
+        api.post("v1/SetGUIOptions", {
+            messages: -1,
+        }, this.source.token).then((response) => {
+            if (response.status === 200) {
+                this.props.onClose();
+            }
+        });
+    }
+
+    getToolbar = ()=>{
+        return <ButtonGroup>
+                 <ToolTip tooltip={T("Clear Notifications")}>
+                   <Button
+                     className="btn btn-default"
+                     onClick={this.clearMessages}
+                   >
+                     <FontAwesomeIcon icon="trash"/>
+                   </Button>
+                 </ToolTip>
+               </ButtonGroup>;
+    }
 
     render() {
-        let messages = this.context.global_messages || [];
         return (
             <Modal show={true}
                    dialogClassName="modal-70w"
@@ -40,17 +65,21 @@ class ShowGlobalMessages extends Component {
                 <Modal.Title>{T("Global Messages")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                { _.map(messages, (x, idx)=>{
-                    return <Alert variant={this.alertClass(x.level)}
-                                  key={idx}>
-                             <VeloLog value={x.message}/>
-                           </Alert>;
-                })}
+                <VeloPagedTable
+                  params={{
+                      type: "USER_MESSAGES",
+                  }}
+                  toolbar={this.getToolbar()}
+                />
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary"
                         onClick={()=>this.props.onClose()}>
                   {T("Close")}
+                </Button>
+                <Button variant="primary"
+                        onClick={this.clearMessages}>
+                  {T("Clear Messages")}
                 </Button>
               </Modal.Footer>
             </Modal>
@@ -66,30 +95,14 @@ export default class GlobalMessages extends Component {
         show_messages: false,
     }
 
-    buttonVariant = ()=>{
-        let res = "primary";
-        let msg = this.context.global_messages || [];
-        for(let i=0;i<msg.length; i++) {
-            if(msg[i].level == "ERROR") {
-                return "danger";
-            }
-
-            if (msg[i].level == "INFO") {
-                res = "info";
-            }
-        }
-
-        return res;
-    }
-
     render() {
-        let msg = this.context.global_messages || [];
+        let msg = this.context.messages || [];
         return (
             <>
               <Button
                 variant="primary"
                 disabled={msg.length == 0}
-                className={this.buttonVariant() + " global-messages"}
+                className={" danger global-messages"}
                 onClick={()=>this.setState({show_messages: true})}
               >
                 <FontAwesomeIcon icon="bell" />

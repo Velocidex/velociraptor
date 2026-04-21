@@ -1,0 +1,49 @@
+# Mock the http_client and clock plugins.
+Query: LET _ <= SELECT mock(plugin='http_client', results=[
+   (dict(Content= FirstRSS, Response=200),),
+   (dict(Content= SecondRSS, Response=200),)]),
+   mock(plugin='clock', results=[
+   dict(Unix=1), dict(Unix=2)
+ ]), user_create(user="Fred", roles="investigator")
+FROM scope()
+
+Output: []
+
+# Check for RSS feeds - should emit the new item (2.txt)
+Query: SELECT * FROM Artifact.Server.Monitoring.RSSFeeds(FeedURLs=FeedURLs)
+
+Output: [
+ {
+  "guid": "https://www.example.com/blob/2.txt/",
+  "title": "Second",
+  "link": "https://www.example.com/blob/2.txt/",
+  "pubDate": "2018-08-10T04:10:06Z",
+  "Users": [
+   "Fred"
+  ],
+  "_Source": "Server.Monitoring.RSSFeeds"
+ }
+]
+
+# Now check that the user message was sent
+Query: SELECT * FROM user_messages(clear=TRUE, user="Fred")
+Output: [
+ {
+  "Timestamp": "2020-05-31T15:28:05Z",
+  "From": "VelociraptorServer",
+  "Message": {
+   "title": "Second",
+   "link": "https://www.example.com/blob/2.txt/",
+   "date": "2018-08-10T04:10:06Z"
+  }
+ }
+]
+
+# Clean up
+Query: SELECT user_delete(user="Fred") FROM scope()
+Output: [
+ {
+  "user_delete(user=\"Fred\")": "Fred"
+ }
+]
+

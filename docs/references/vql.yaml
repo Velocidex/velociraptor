@@ -6606,8 +6606,7 @@
     description: The accessor to use
   - name: profile
     type: string
-    description: Profile to use (see [vfilter](https://github.com/Velocidex/vtypes)
-      ).
+    description: Profile to use (see [vfilter](https://github.com/Velocidex/vtypes)).
   - name: struct
     type: string
     description: Name of the struct in the profile to instantiate.
@@ -11753,6 +11752,34 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: user_message
+  description: Send the user a message which will appear in the user notification
+    view.
+  type: Function
+  version: 1
+  args:
+  - name: user
+    type: string
+    description: The user to create or update.
+    required: true
+  - name: message
+    type: ordereddict.Dict
+    description: The message to deliver to the user.
+    required: true
+  platforms:
+  - linux_amd64_cgo
+- name: user_messages
+  description: Emit the user's console messages.
+  type: Plugin
+  args:
+  - name: clear
+    type: bool
+    description: If set also clear messages.
+  - name: user
+    type: string
+    description: If set we read another user's messages (must be admin).
+  platforms:
+  - linux_amd64_cgo
 - name: user_options
   description: |
     Update and read the user GUI options
