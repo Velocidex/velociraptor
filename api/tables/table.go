@@ -292,6 +292,10 @@ func GetPathSpec(
 			NotebookIndexForUser(principal), nil
 	}
 
+	if in.Type == "USER_MESSAGES" {
+		return paths.NewUserPathManager(principal).Notifications(), nil
+	}
+
 	if in.FlowId != "" && in.Artifact != "" {
 		mode := artifact_modes.MODE_CLIENT
 		if in.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {

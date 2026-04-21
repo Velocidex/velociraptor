@@ -19,6 +19,13 @@ func (self UserPathManager) ACL() api.DSPathSpec {
 		SetTag("UserACLS")
 }
 
+// Where we store the user's Notifications
+func (self UserPathManager) Notifications() api.FSPathSpec {
+	return USERS_ROOT.AddChild(self.Name, "Notifications").
+		AsFilestorePath().
+		SetType(api.PATH_TYPE_FILESTORE_JSON)
+}
+
 // Where we store the user's GUI preferences
 func (self UserPathManager) GUIOptions() api.DSPathSpec {
 	return USERS_ROOT.AddChild("gui", self.Name).SetType(

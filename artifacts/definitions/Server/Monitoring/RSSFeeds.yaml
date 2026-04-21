@@ -1,0 +1,81 @@
+name: Server.Monitoring.RSSFeeds
+description: |
+  Monitor RSS feeds for changes.
+
+  By default this artifact will monitor the Velociraptor RSS feeds to
+  inform users of critical CVEs or blog posts.
+
+type: SERVER_EVENT
+parameters:
+- name: FeedURLs
+  type: csv
+  default: |
+    URL
+    http://docs.velociraptor.app/blog/index.xml
+    http://docs.velociraptor.app/announcements/advisories/index.xml
+- name: Period
+  type: int
+  default: "600"
+  description: How often to check for changes.
+- name: UserRegex
+  default: .
+  description: Send message to all users matching this regex
+
+export: |
+  LET _Send(Message) =
+    SELECT user_message(user=name, message=Message) AS User
+    FROM gui_users()
+    WHERE name =~ UserRegex
+
+  LET Send(Message) =  _Send(Message=Message).User
+
+  // URLs - an array of URLs
+  LET RSS(URLs) = SELECT * FROM foreach(row=URLs,
+    query={
+      SELECT parse_xml(accessor="data", file=Content) AS XML
+      FROM http_client(url=_value)
+      WHERE Response = 200
+    })
+
+  LET GetRSS(URLs) = SELECT *
+      FROM foreach(row={
+        SELECT * FROM RSS(URLs=URLs)
+      },
+                   query={
+        SELECT guid,
+               title,
+               link,
+               timestamp(string=pubDate) AS pubDate
+        FROM foreach(row=XML.rss.channel.item, column="_value")
+      })
+
+sources:
+- query: |
+    LET URLs <= FeedURLs.URL
+
+    // Create the initial cache and watch for changes.
+    LET m <= to_dict(item={
+        SELECT guid AS _key,
+               dict(title=title, link=link, pubDate=pubDate) AS _value
+        FROM GetRSS(URLs=URLs)
+      })
+
+    SELECT *
+    FROM foreach(row={
+        SELECT *
+        FROM clock(period=Period, start=1)
+      },
+                 query={
+        SELECT *,
+               Send(Message=dict(title=title, link=link, date=pubDate)) AS Users
+        FROM GetRSS(URLs=URLs)
+        WHERE NOT get(item=m, field=guid)
+          AND set(item=m,
+                  field=guid,
+                  value=dict(title=title, link=link, pubDate=pubDate))
+          AND log(message="Sending message to %v", args=[Users,])
+      })
+
+column_types:
+- name: link
+  type: url

@@ -14,6 +14,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // This is only used to set the user's own password which is always
@@ -198,20 +199,44 @@ func (self *ApiServer) GetUserRoles(
 	defer Instrument("GetUserRoles")()
 
 	users_manager := services.GetUserManager()
-	_, _, err := users_manager.GetUserFromContext(ctx)
+	user_record, org_config_obj, err := users_manager.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
 	// Allow the user to ask about other orgs.
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
-		return nil, Status(self.verbose, err)
+	if !utils.CompareOrgIds(in.Org, org_config_obj.OrgId) {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return nil, Status(self.verbose, err)
+		}
+
+		org_config_obj, err = org_manager.GetOrgConfig(in.Org)
+		if err != nil {
+			return nil, Status(self.verbose, err)
+		}
 	}
 
-	org_config_obj, err := org_manager.GetOrgConfig(in.Org)
-	if err != nil {
-		return nil, Status(self.verbose, err)
+	// Users need at least read access to see other users in the org.
+	permissions := acls.READ_RESULTS
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
+	if !perm || err != nil {
+		// If the user is org admin they can do anything in any org.
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return nil, Status(self.verbose, err)
+		}
+		root_config_obj, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
+		if err != nil {
+			return nil, Status(self.verbose, err)
+		}
+		permissions := acls.ORG_ADMIN
+		perm, err := services.CheckAccess(
+			root_config_obj, principal, permissions)
+		if !perm || err != nil {
+			return nil, PermissionDenied(err, "User is not allowed to access org.")
+		}
 	}
 
 	acl_manager, err := services.GetACLManager(org_config_obj)

@@ -49,9 +49,6 @@ type FrontendManager interface {
 
 	// The URL to the App.html itself
 	GetPublicUrl(config_obj *config_proto.Config) (res *url.URL, err error)
-
-	SetGlobalMessage(message *api_proto.GlobalUserMessage)
-	GetGlobalMessages() []*api_proto.GlobalUserMessage
 }
 
 // Are we running on the master node?

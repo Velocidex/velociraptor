@@ -122,7 +122,7 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 	configuration := &flows_proto.ArtifactCollectorArgs{}
 	err = db.GetSubject(self.ConfigObj, paths.ServerMonitoringFlowURN, configuration)
 	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), 1, len(configuration.Artifacts))
+	assert.Equal(self.T(), 2, len(configuration.Artifacts))
 	assert.Equal(self.T(), "Server.Monitor.Health", configuration.Artifacts[0])
 
 	// Install the two event artifacts.

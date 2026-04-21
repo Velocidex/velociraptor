@@ -20,6 +20,7 @@ package services
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -131,6 +132,13 @@ type UserManager interface {
 		ctx context.Context,
 		principal, username string,
 		orgs []string) error
+
+	// Send the user a message which will appear in their notification
+	// view.
+	MessageUser(
+		ctx context.Context,
+		username, sender string,
+		message *ordereddict.Dict) error
 }
 
 // A helper
@@ -156,4 +164,26 @@ func GetUserManager() UserManager {
 	defer mu.Unlock()
 
 	return global_user_manager
+}
+
+// Message all users in this org
+func MessageAllUsers(
+	ctx context.Context,
+	principal string, orgs []string,
+	message *ordereddict.Dict) error {
+
+	user_manager := GetUserManager()
+	users, err := user_manager.ListUsers(ctx, principal, orgs)
+	if err != nil {
+		return err
+	}
+
+	for _, u := range users {
+		err = user_manager.MessageUser(ctx, u.Name, principal, message)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

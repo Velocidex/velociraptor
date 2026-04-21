@@ -2,6 +2,7 @@
  "Add artifact": {
   "artifacts": [
    "Server.Monitor.Health",
+   "Server.Monitoring.RSSFeeds",
    "System.Hunt.Creation"
   ],
   "specs": [
@@ -21,7 +22,8 @@
  },
  "Removing artifact from label": {
   "artifacts": [
-   "Server.Monitor.Health"
+   "Server.Monitor.Health",
+   "Server.Monitoring.RSSFeeds"
   ],
   "max_upload_bytes": 1073741824
  }
