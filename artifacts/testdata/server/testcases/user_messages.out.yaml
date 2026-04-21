@@ -1,0 +1,33 @@
+# Create a new user to play with
+Query: LET _ <= user_create(user="Fred", roles="investigator")
+Output: []
+
+# Send the user a message
+Query: LET _ <= user_message(Foo=1, Bar=2, user="Fred") AND sleep(ms=600)
+Output: []
+
+# Read the user's messages and also clear them
+Query: SELECT * FROM user_messages(user="Fred", clear=TRUE)
+Output: [
+ {
+  "Timestamp": "2020-05-31T15:28:05Z",
+  "From": "VelociraptorServer",
+  "Message": {
+   "Foo": 1,
+   "Bar": 2
+  }
+ }
+]
+
+# Messages are cleared.
+Query: SELECT * FROM user_messages(user="Fred", clear=TRUE)
+Output: []
+
+# Cleanup
+Query: SELECT user_delete(user="Fred") FROM scope()
+Output: [
+ {
+  "user_delete(user=\"Fred\")": "Fred"
+ }
+]
+

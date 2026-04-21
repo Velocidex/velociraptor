@@ -65,7 +65,7 @@ jobs:
 
     - name: Login to GHCR
       run: |
-        echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        echo ${{ secrets.GIT_DOCKER_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
     - name: Build and push container image
       run: |

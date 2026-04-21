@@ -434,16 +434,7 @@ func (self *ApiServer) GetUserUITraits(
 		result.InterfaceTraits.Links = user_options.Links
 		result.InterfaceTraits.DisableServerEvents = user_options.DisableServerEvents
 		result.InterfaceTraits.DisableQuarantineButton = user_options.DisableQuarantineButton
-
-		frontend_service, err := services.GetFrontendManager(org_config_obj)
-		if err == nil {
-			url, err := frontend_service.GetBaseURL(org_config_obj)
-			if err == nil {
-				result.InterfaceTraits.BasePath = url.Path
-			}
-
-			result.GlobalMessages = frontend_service.GetGlobalMessages()
-		}
+		result.Messages = user_options.Messages
 	}
 
 	return result, nil

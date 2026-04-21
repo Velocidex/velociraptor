@@ -36,7 +36,7 @@ registry, so all you need to do is copy the `compose.yaml` from this
 directory and simply run:
 
 ```
-docker compose up
+docker-compose up
 ```
 
 The latest image will be fetched from the registry, a default

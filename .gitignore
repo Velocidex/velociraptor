@@ -27,3 +27,4 @@ config/ab0x.go
 __debug*
 debug.test*
 artifacts/testdata/server/hunts/H.*
+artifacts/testdata/server/users/
