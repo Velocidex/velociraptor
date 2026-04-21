@@ -27,8 +27,7 @@ export: |
     FROM gui_users()
     WHERE name =~ UserRegex
 
-  LET Send(Message) =  _Send(message=Message).User
-
+  LET Send(Message) =  _Send(Message=Message).User
 
   // URLs - an array of URLs
   LET RSS(URLs) = SELECT * FROM foreach(row=URLs,
