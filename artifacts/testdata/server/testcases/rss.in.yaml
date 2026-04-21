@@ -53,8 +53,7 @@ Queries:
   FROM scope()
 
 # Check for RSS feeds - should emit the new item (2.txt)
-- |
-  SELECT * FROM Artifact.Server.Monitoring.RSSFeeds(FeedURLs=FeedURLs)
+- SELECT *, Users =~ "Fred" AS Users FROM Artifact.Server.Monitoring.RSSFeeds(FeedURLs=FeedURLs)
 
 # Now check that the user message was sent
 - SELECT * FROM user_messages(clear=TRUE, user="Fred")

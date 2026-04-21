@@ -129,12 +129,6 @@ message ApiUserInterfaceTraits {
     bool disable_quarantine_button = 28;
 };
 
-message GlobalUserMessage {
-    string key = 1;
-    string level = 2;
-    string message = 3;
-}
-
 // Describe the user to the GUI.
 message ApiUser {
     string username = 1 [(sem_type) = {

@@ -268,22 +268,27 @@ func (self *UserStorageManager) SetUser(
 // caches.
 func (self *UserStorageManager) sendMutation(
 	ctx context.Context, mutation UserMutation) error {
+
+	event := ordereddict.NewDict().
+		Set("id", self.id).
+		Set("op", mutation.Op).
+		Set("message", mutation.Message).
+		Set("username", mutation.Username).
+		Set("timestamp", mutation.Timestamp).
+		Set("sender", mutation.From)
+
+	// Shortcircuit mutations for the master node.
+	if services.IsMaster(self.config_obj) {
+		return self.handleMessageEvent(ctx, self.config_obj, event)
+	}
+
 	journal_service, err := services.GetJournal(self.config_obj)
 	if err != nil {
 		return err
 	}
 
 	return journal_service.PushRowsToArtifact(ctx, self.config_obj,
-		[]*ordereddict.Dict{
-			ordereddict.NewDict().
-				Set("id", self.id).
-				Set("op", mutation.Op).
-				Set("message", mutation.Message).
-				Set("username", mutation.Username).
-				Set("timestamp", mutation.Timestamp).
-				Set("sender", mutation.From),
-		},
-		artifacts.USER_MANAGER)
+		[]*ordereddict.Dict{event}, artifacts.USER_MANAGER)
 }
 
 // Update fixed fields in the options to override user choices. This

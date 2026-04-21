@@ -165,3 +165,25 @@ func GetUserManager() UserManager {
 
 	return global_user_manager
 }
+
+// Message all users in this org
+func MessageAllUsers(
+	ctx context.Context,
+	principal string, orgs []string,
+	message *ordereddict.Dict) error {
+
+	user_manager := GetUserManager()
+	users, err := user_manager.ListUsers(ctx, principal, orgs)
+	if err != nil {
+		return err
+	}
+
+	for _, u := range users {
+		err = user_manager.MessageUser(ctx, u.Name, principal, message)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

@@ -10,18 +10,15 @@ FROM scope()
 Output: []
 
 # Check for RSS feeds - should emit the new item (2.txt)
-Query: SELECT * FROM Artifact.Server.Monitoring.RSSFeeds(FeedURLs=FeedURLs)
-
+Query: SELECT *, Users =~ "Fred" AS Users FROM Artifact.Server.Monitoring.RSSFeeds(FeedURLs=FeedURLs)
 Output: [
  {
   "guid": "https://www.example.com/blob/2.txt/",
   "title": "Second",
   "link": "https://www.example.com/blob/2.txt/",
   "pubDate": "2018-08-10T04:10:06Z",
-  "Users": [
-   "Fred"
-  ],
-  "_Source": "Server.Monitoring.RSSFeeds"
+  "_Source": "Server.Monitoring.RSSFeeds",
+  "Users": true
  }
 ]
 
