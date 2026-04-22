@@ -162,6 +162,36 @@ Output: [
   "Line": "  from:"
  },
  {
+  "Line": "    accessor: raw_reg"
+ },
+ {
+  "Line": "  \"on\":"
+ },
+ {
+  "Line": "    accessor: raw_registry"
+ },
+ {
+  "Line": "- type: shadow"
+ },
+ {
+  "Line": "  from:"
+ },
+ {
+  "Line": "    accessor: raw_ntfs"
+ },
+ {
+  "Line": "  \"on\":"
+ },
+ {
+  "Line": "    accessor: ntfs"
+ },
+ {
+  "Line": "- type: shadow"
+ },
+ {
+  "Line": "  from:"
+ },
+ {
   "Line": "    accessor: data"
  },
  {
