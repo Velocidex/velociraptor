@@ -702,7 +702,7 @@
     description: The latest age of the cache.
   - name: filename
     type: string
-    description: Filename for a persistant cache.
+    description: Filename for a persistent cache.
   - name: max_size
     type: uint64
     description: Maximum size of the LRU (default 10000).
@@ -5773,7 +5773,7 @@
     description: The name of this cache.
   - name: filename
     type: string
-    description: Filename for a persistant cache.
+    description: Filename for a persistent cache.
   category: popular
   platforms:
   - darwin_amd64_cgo
