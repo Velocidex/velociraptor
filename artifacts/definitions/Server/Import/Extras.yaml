@@ -31,5 +31,5 @@ sources:
   - query: |
       SELECT * FROM foreach(row=Details,
       query={
-        SELECT * FROM Artifact.Server.Import.ArtifactExchange(ExchangeURL=URL, Tag=Tag)
+        SELECT * FROM Artifact.Server.Import.ArtifactBundle(URL=URL, Tag=Tag)
       })
