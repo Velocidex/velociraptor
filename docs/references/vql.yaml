@@ -11769,12 +11769,13 @@
   - name: message
     type: ordereddict.Dict
     description: The message to deliver to the user.
-    required: true
   platforms:
   - linux_amd64_cgo
+  free_form_args: true
 - name: user_messages
   description: Emit the user's console messages.
   type: Plugin
+  version: 1
   args:
   - name: clear
     type: bool
