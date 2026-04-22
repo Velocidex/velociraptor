@@ -1,4 +1,4 @@
-Query: LET _ <= import(artifact="Server.Import.ArtifactExchange")
+Query: LET _ <= import(artifact="Server.Import.ArtifactBundle")
 Output: []
 
 Query: SELECT ("Exchange",) + Tags(Data=Def), ("Exchange",) + Tags(Data='') FROM scope()
