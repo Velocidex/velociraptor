@@ -8,7 +8,7 @@ description: |
    By default this artifact will automatically import the latest
    artifact exchange bundle into the server's artifact repository.
 
-   ### Security of community exchange artifacts
+   #### Security of community-contributed exchange artifacts
 
    The artifact exchange is not tested or officially supported by the
    Velociraptor team and contains contributions from the community.
@@ -63,7 +63,7 @@ sources:
         FROM foreach(row={
           SELECT Content FROM http_client(
              remove_last=TRUE,
-             tempfile_extension=".zip", url=ExchangeURL)
+             tempfile_extension=".zip", url=URL)
         }, query={
           SELECT read_file(accessor="zip", filename=OSPath) AS Definition
           FROM glob(
