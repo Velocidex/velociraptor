@@ -17,6 +17,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/allocs"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	windows "www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
@@ -68,7 +69,7 @@ func VerifyCatalogSignature(
 	defer windows.CryptCATAdminReleaseContext(CatAdminHandle, 0)
 
 	hash_length := uint32(100)
-	hash := utils.AllocateBuff(100)
+	hash := allocs.AllocateAlignedBuff(100)
 
 	err = windows.CryptCATAdminCalcHashFromFileHandle2(CatAdminHandle, fd.Fd(),
 		&hash_length, &hash[0], 0)

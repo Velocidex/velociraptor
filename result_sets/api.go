@@ -19,12 +19,12 @@ const (
 type ResultSetWriter interface {
 	// Write an already serialized batch of rows. This basically just
 	// appends the data to the output JSONL file so it is very cheap.
-	WriteJSONL(serialized []byte, total_rows uint64)
+	WriteJSONL(serialized []byte, total_rows uint64) error
 
 	// Alternative writing method
 	WriteCompressedJSONL(
 		serialized []byte, byte_offset uint64, uncompressed_size int,
-		total_rows uint64)
+		total_rows uint64) error
 
 	// Provide a hint as to the next row id we are writing. This is
 	// only useful for some implementations of result set writers.

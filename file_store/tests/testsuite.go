@@ -4,6 +4,7 @@ package tests
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -489,6 +490,47 @@ func (self *FileStoreTestSuite) TestCompressedFileReadWrite() {
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), int64(29), size)
 	fd.Close()
+}
+
+// A 10Gb Zip bomb for testing.
+const ZipBomb = "1f8b0808287ce86900036c617267652e64642e677a5f00edc13f2bc4010000d05f39bae964b162632049062229246e67e1d41d5d995828c3a59c81626270590c86cb6238c525130629165784bae10cb7c9bf14bec7f5de6b580f879b975f9341d5dcf4fc6ca22d1e0fca374d919558909e2e5c854a4333c5c6ebf85b7d4de465632b3cb9d2bc162b86439bb1f6abba787fe7dffbf7ddee59efe7574fd76deee4e77da261f5f034973c1aee984a2ffc46f2d9ecc3c1e37e66fbbeb8d81dfaedfd5b1adc5803000000000000000000000000000000000000000000000000000000000000808a739cebb90c05a9c6e0bcbdb67564a06f34d592ff28ef010000000000000000000000000000000054b4a79dc9e7cbb144a63a3a1e2d15ce2f827fd77788cbccc50000"
+
+func (self *FileStoreTestSuite) TestLargeCompressedFileReadWrite() {
+	filename := path_specs.NewSafeFilestorePath("compressed", "large")
+	fd, err := self.filestore.WriteFile(filename)
+	assert.NoError(self.T(), err)
+
+	// Prepare a zip bomb to write. This is a 10gb bomb when uncompressed.
+	zip_bomb, err := hex.DecodeString(ZipBomb)
+	assert.NoError(self.T(), err)
+
+	test_str, err := utils.GzipUncompress(zip_bomb)
+	assert.NoError(self.T(), err)
+
+	test_str, err = utils.GzipUncompress(test_str)
+	assert.NoError(self.T(), err)
+
+	// Write the bomb to the file but lie about its size.
+	_, err = fd.WriteCompressed(test_str, 0, 10)
+	assert.NoError(self.T(), err)
+
+	// Check that size is incremeented by the size we claimed.
+	size, err := fd.Size()
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), int64(10), size)
+
+	fd.Close()
+
+	// Now read some data back.
+	buff := make([]byte, 6)
+	reader, err := self.filestore.ReadFile(filename)
+	assert.NoError(self.T(), err)
+	defer reader.Close()
+
+	// Reading should fail quickly and error out
+	n, err := reader.Read(buff)
+	assert.Error(self.T(), err)
+	assert.Equal(self.T(), n, 0)
 }
 
 func (self *FileStoreTestSuite) TestFileReadWrite() {

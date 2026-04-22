@@ -16,7 +16,11 @@ func TestFSAccessorSecurity(t *testing.T) {
 	sanity_service := &sanity.SanityChecks{}
 
 	// No security set - everything is allowed.
-	config_obj.Security = &config_proto.Security{}
+	config_obj.Security = &config_proto.Security{
+		DeniedFsAccessorPrefix: []string{
+			"XXXXX",
+		},
+	}
 
 	sanity_service.CheckSecuritySettings(config_obj)
 
