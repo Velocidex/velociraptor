@@ -41,7 +41,7 @@ type _CacheFunctionArgs struct {
 	Name     string          `vfilter:"optional,field=name,doc=The global name of this cache (needed when more than one)"`
 	Key      types.Any       `vfilter:"optional,field=key,doc=Cache key to use."`
 	Period   int64           `vfilter:"optional,field=period,doc=The latest age of the cache."`
-	Filename string          `vfilter:"optional,field=filename,doc=Filename for a persistant cache."`
+	Filename string          `vfilter:"optional,field=filename,doc=Filename for a persistent cache."`
 	MaxSize  uint64          `vfilter:"optional,field=max_size,doc=Maximum size of the LRU (default 10000)."`
 }
 
