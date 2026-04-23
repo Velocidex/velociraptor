@@ -91,7 +91,7 @@ type _MemoizeFunctionArgs struct {
 	Key      string            `vfilter:"required,field=key,doc=The name of the column to use as a key."`
 	Period   int64             `vfilter:"optional,field=period,doc=The latest age of the cache."`
 	Name     string            `vfilter:"optional,field=name,doc=The name of this cache."`
-	Filename string            `vfilter:"optional,field=filename,doc=Filename for a persistant cache."`
+	Filename string            `vfilter:"optional,field=filename,doc=Filename for a persistent cache."`
 }
 
 type _MemoizeFunction struct{}
