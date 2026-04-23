@@ -243,7 +243,7 @@ type IndexSearchPluginArgs struct {
 	IndexPath   string   `vfilter:"required,field=path,doc=The file path to the index to open."`
 	SearchQuery string   `vfilter:"required,field=search,doc=A Bleve search query. See https://blevesearch.com/docs/Query-String-Query/"`
 	Fields      []string `vfilter:"optional,field=fields,doc=A list of fields to include from the index."`
-	Sort        []string `vfilter:"optional,field=sort,doc=The field to sort by (preceed with - to sort in descending order)."`
+	Sort        []string `vfilter:"optional,field=sort,doc=The field to sort by (precede with - to sort in descending order)."`
 	Start       uint64   `vfilter:"optional,field=start,doc=Row number to start."`
 }
 

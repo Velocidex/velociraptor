@@ -702,7 +702,7 @@
     description: The latest age of the cache.
   - name: filename
     type: string
-    description: Filename for a persistant cache.
+    description: Filename for a persistent cache.
   - name: max_size
     type: uint64
     description: Maximum size of the LRU (default 10000).
@@ -4553,7 +4553,7 @@
     repeated: true
   - name: sort
     type: string
-    description: The field to sort by (preceed with - to sort in descending order).
+    description: The field to sort by (precede with - to sort in descending order).
     repeated: true
   - name: start
     type: uint64
@@ -5773,7 +5773,7 @@
     description: The name of this cache.
   - name: filename
     type: string
-    description: Filename for a persistant cache.
+    description: Filename for a persistent cache.
   category: popular
   platforms:
   - darwin_amd64_cgo
@@ -11769,12 +11769,13 @@
   - name: message
     type: ordereddict.Dict
     description: The message to deliver to the user.
-    required: true
   platforms:
   - linux_amd64_cgo
+  free_form_args: true
 - name: user_messages
   description: Emit the user's console messages.
   type: Plugin
+  version: 1
   args:
   - name: clear
     type: bool
