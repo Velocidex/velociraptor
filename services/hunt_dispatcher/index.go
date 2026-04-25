@@ -2,6 +2,7 @@ package hunt_dispatcher
 
 import (
 	"context"
+	"encoding/base64"
 	"sort"
 	"strings"
 	"sync/atomic"
@@ -19,33 +20,38 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-func (self *HuntStorageManagerImpl) FlushIndex(ctx context.Context) error {
+func (self *HuntStorageManagerImpl) FlushIndex(ctx context.Context) (int, error) {
 	// Only the master flushes the records
 	if !self.I_am_master {
-		return nil
+		return 0, nil
 	}
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	start := utils.GetTime().Now()
+	self.Debug("FlushIndex: last_flush_time %v now %v",
+		self.last_flush_time.Unix(),
+		start.Unix())
 	if start.Sub(self.last_flush_time) < 5*time.Second {
-		return nil
+		return 0, nil
 	}
 
 	return self._FlushIndex(ctx)
 }
 
-func (self *HuntStorageManagerImpl) _FlushIndex(ctx context.Context) error {
+func (self *HuntStorageManagerImpl) _FlushIndex(ctx context.Context) (int, error) {
 
 	// Nothing to do because none of the records are dirty.
 	if !self.dirty {
-		return nil
+		return 0, nil
 	}
 
 	if atomic.LoadInt64(&self.closed) > 0 {
-		return nil
+		return 0, nil
 	}
+
+	self.Debug("Flushing index with %v items", len(self.hunts))
 
 	// Debounce the flushing a bit so we dont overload the system for
 	// fast events. Note that flushes occur periodically anyway so if
@@ -79,7 +85,7 @@ func (self *HuntStorageManagerImpl) _FlushIndex(ctx context.Context) error {
 		utils.SyncCompleter,
 		result_sets.TruncateMode)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer rs_writer.Close()
 
@@ -87,6 +93,7 @@ func (self *HuntStorageManagerImpl) _FlushIndex(ctx context.Context) error {
 	// table.
 	sort.Sort(sort.Reverse(sort.StringSlice(hunt_ids)))
 
+	count := 0
 	for _, hunt_id := range hunt_ids {
 		hunt_record, pres := self.hunts[hunt_id]
 		if !pres {
@@ -102,6 +109,9 @@ func (self *HuntStorageManagerImpl) _FlushIndex(ctx context.Context) error {
 		// records should be clean.
 		if hunt_record.dirty {
 			hunt_record.dirty = false
+
+			// Update the serialized representation of the object to
+			// speed up flushing the index next time.
 			serialized, err := json.Marshal(hunt_record.Hunt)
 			if err == nil {
 				hunt_record.serialized = serialized
@@ -109,21 +119,26 @@ func (self *HuntStorageManagerImpl) _FlushIndex(ctx context.Context) error {
 			self.hunts[hunt_id] = hunt_record
 		}
 
-		rs_writer.Write(ordereddict.NewDict().
-			Set("HuntId", hunt_record.HuntId).
-			Set("Description", hunt_record.HuntDescription).
+		jsonl := json.Format(
+			`{"HuntId":%q,"Description":%q,"Tags":%q,"Created":%q,"Started":%q,"Expires":%q,"Creator":%q,"Hunt":%q}
+`,
+			hunt_record.HuntId,
+			hunt_record.HuntDescription,
+
 			// Store the tags in the index so we can search for them.
-			Set("Tags", strings.Join(hunt_record.Tags, "\n")).
-			Set("Created", hunt_record.CreateTime).
-			Set("Started", hunt_record.StartTime).
-			Set("Expires", hunt_record.Expires).
-			Set("Creator", hunt_record.Creator).
-			Set("Hunt", hunt_record.serialized))
+			strings.Join(hunt_record.Tags, "\n"),
+			hunt_record.CreateTime,
+			hunt_record.StartTime,
+			hunt_record.Expires,
+			hunt_record.Creator,
+			base64.StdEncoding.EncodeToString(hunt_record.serialized))
+		rs_writer.WriteJSONL([]byte(jsonl), 1)
+		count++
 	}
 
 	self.dirty = false
 
-	return nil
+	return count, nil
 }
 
 // Gets the hunts by pages
@@ -163,8 +178,8 @@ func (self *HuntDispatcher) RebuildHuntIndex(
 }
 
 // RebuildHuntIndex allows external callers to trigger an index
-// rebuild operation. This is not normally needed as the index is
-// rebuilt periodically.
+// rebuild operation. This is only called on demand using the
+// hunt_reindex() VQL plugin.
 func (self *HuntStorageManagerImpl) RebuildHuntIndex(
 	ctx context.Context, hunt_id string, force bool) (*ordereddict.Dict, error) {
 

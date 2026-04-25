@@ -78,7 +78,7 @@ type HuntStorageManager interface {
 		config_obj *config_proto.Config,
 		force bool) error
 
-	FlushIndex(ctx context.Context) error
+	FlushIndex(ctx context.Context) (int, error)
 
 	// Get the latest hunt timestamp
 	GetLastTimestamp() uint64
@@ -90,6 +90,18 @@ type HuntStorageManager interface {
 	// Debug and profile.
 	WriteProfile(ctx context.Context, scope vfilter.Scope,
 		output_chan chan vfilter.Row)
+
+	// Load the hunt cache from the index - this is very fast.
+	LoadHuntsFromIndex(
+		ctx context.Context, config_obj *config_proto.Config) (int, error)
+
+	// Load the hunt cache from reading the database files - very slow.
+	LoadHuntsFromDatastore(
+		ctx context.Context,
+		config_obj *config_proto.Config,
+
+		// When set we force a rebuild even if the index is still fresh.
+		force bool) (*HuntRefreshStats, error)
 }
 
 type HuntStorageManagerImpl struct {
@@ -179,7 +191,10 @@ func (self *HuntStorageManagerImpl) GetLastTimestamp() uint64 {
 func (self *HuntStorageManagerImpl) Close(ctx context.Context) {
 	atomic.SwapUint64(&self.last_timestamp, 0)
 	atomic.SwapInt64(&self.closed, 1)
-	err := self.FlushIndex(ctx)
+
+	// Force the index to be dumped to disk on close, so we do not
+	// lose state.
+	_, err := self.FlushIndex(ctx)
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Error("HuntStorageManager FlushIndex %v", err)
@@ -225,7 +240,8 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 		return services.HuntUnmodified
 
 	default:
-		// Update the hunt object
+		// Update the hunt object in memory and also store it in the
+		// data store.
 		hunt_record.dirty = true
 		self.dirty = true
 
@@ -261,6 +277,10 @@ func (self *HuntStorageManagerImpl) GetHunt(
 	hunt, pres := self.hunts[hunt_id]
 	if !pres || hunt == nil {
 		return nil, fmt.Errorf("%w: %v", services.HuntNotFoundError, hunt_id)
+	}
+
+	if hunt.Stats == nil {
+		hunt.Stats = &api_proto.HuntStats{}
 	}
 
 	return proto.Clone(hunt).(*api_proto.Hunt), nil
@@ -307,7 +327,8 @@ func (self *HuntStorageManagerImpl) SetHunt(
 	self.dirty = true
 	self._MaybeUpdateTimestamp(hunt.StartTime)
 
-	return db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt)
+	return db.SetSubject(
+		self.config_obj, hunt_path_manager.Path(), hunt)
 }
 
 func (self *HuntStorageManagerImpl) GetTags(
@@ -347,7 +368,7 @@ func (self *HuntStorageManagerImpl) ListHunts(
 	if rs_reader.MTime().Before(self.last_update) {
 		rs_reader.Close()
 
-		err := self._FlushIndex(ctx)
+		_, err := self._FlushIndex(ctx)
 		if err != nil {
 			self.mu.Unlock()
 			return nil, 0, err
@@ -410,7 +431,7 @@ func (self *HuntStorageManagerImpl) ListHunts(
 }
 
 func (self *HuntStorageManagerImpl) LoadHuntsFromIndex(
-	ctx context.Context, config_obj *config_proto.Config) error {
+	ctx context.Context, config_obj *config_proto.Config) (int, error) {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -424,10 +445,11 @@ func (self *HuntStorageManagerImpl) LoadHuntsFromIndex(
 		ctx, config_obj, file_store_factory,
 		hunt_path_manager.HuntIndex(), result_sets.ResultSetOptions{})
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer rs_reader.Close()
 
+	count := 0
 	for row := range rs_reader.Rows(ctx) {
 		serialized_b64, pres := row.GetString("Hunt")
 		if !pres {
@@ -452,9 +474,10 @@ func (self *HuntStorageManagerImpl) LoadHuntsFromIndex(
 		}
 
 		self._MaybeUpdateTimestamp(hunt_obj.StartTime)
+		count++
 	}
 
-	return nil
+	return count, nil
 }
 
 // Loads a single hunt object from disk
@@ -464,31 +487,36 @@ func (self *HuntStorageManagerImpl) LoadHuntObjFromDisk(
 	refresh_stats *HuntRefreshStats,
 	force bool) error {
 
-	// Read all the data again from the data store.
-	db, err := datastore.GetDB(config_obj)
+	// Try to get the hunt from the cache.
+	hunt_obj, err := self.GetHunt(ctx, hunt_id)
+
+	// We dont know about this hunt, let's try to read it from disk.
 	if err != nil {
-		return err
-	}
 
-	hunt_obj := &api_proto.Hunt{
-		HuntId: hunt_id,
-	}
+		// Read all the data again from the data store.
+		db, err := datastore.GetDB(config_obj)
+		if err != nil {
+			return err
+		}
 
-	hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
-	err = db.GetSubject(config_obj, hunt_path_manager.Path(), hunt_obj)
-	if err != nil {
-		return err
-	}
+		hunt_obj = &api_proto.Hunt{
+			HuntId: hunt_id,
+		}
 
-	if hunt_obj.Stats == nil {
-		hunt_obj.Stats = &api_proto.HuntStats{}
-	}
+		hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
+		err = db.GetSubject(config_obj, hunt_path_manager.Path(), hunt_obj)
+		if err != nil {
+			return err
+		}
 
-	// Ignore invalid hunts
-	if hunt_obj.HuntId == "" ||
-		hunt_obj.State == api_proto.Hunt_ARCHIVED {
-		hunt_obj.HuntId = ""
-		return ArchivedHuntError
+		// Ignore invalid hunts
+		if hunt_obj.HuntId == "" ||
+			hunt_obj.State == api_proto.Hunt_ARCHIVED {
+			hunt_obj.HuntId = ""
+			return ArchivedHuntError
+		}
+
+		self.UpdateHuntCache(hunt_obj)
 	}
 
 	refresh_stats.Lock()
@@ -512,16 +540,21 @@ func (self *HuntStorageManagerImpl) LoadHuntObjFromDisk(
 	refresh_stats.TotalFlows += hunt_stats.TotalClientsScheduled
 	refresh_stats.Unlock()
 
-	hunt_obj.Stats = hunt_stats
-	if hunt_obj.State == api_proto.Hunt_STOPPED {
-		hunt_obj.Stats.Stopped = true
+	// Re-fetch the hunt obj again from the cache, so we can get the
+	// latest version.
+	hunt_obj, err = self.GetHunt(ctx, hunt_id)
+	if err != nil {
+		return err
 	}
-	self.UpdateHuntCache(hunt_obj)
 
-	// Write to the disk if things have changed
-	if isStatsUpdated(hunt_stats, hunt_obj.Stats) {
-		err = db.SetSubject(self.config_obj,
-			hunt_path_manager.Path(), hunt_obj)
+	// Write to the disk only if things have changed
+	if updateStats(hunt_stats, hunt_obj.Stats) {
+
+		// Update the hunt state
+		if hunt_obj.State == api_proto.Hunt_STOPPED {
+			hunt_obj.Stats.Stopped = true
+		}
+		self.UpdateHuntCache(hunt_obj)
 	}
 
 	refresh_stats.Lock()
@@ -604,13 +637,16 @@ func (self *HuntStorageManagerImpl) LoadHuntsFromDatastore(
 	return refresh_stats, err
 }
 
-func (self *HuntStorageManagerImpl) UpdateHuntCache(
-	hunt_obj *api_proto.Hunt) {
+func (self *HuntStorageManagerImpl) UpdateHuntCache(hunt_obj *api_proto.Hunt) {
 
 	// The below should be very fast so we hold the lock over the
 	// entire operation.
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if hunt_obj.Stats == nil {
+		hunt_obj.Stats = &api_proto.HuntStats{}
+	}
 
 	// Ignore archived hunts.
 	if hunt_obj.State == api_proto.Hunt_ARCHIVED {
@@ -651,35 +687,27 @@ func (self *HuntStorageManagerImpl) UpdateHuntCache(
 	return
 }
 
-// Refreshes the in memory hunt objects from the data store.
+// Refreshes the in memory hunt objects from the data store. This
+// function is called periodically to maintain the hunt dispatchers in
+// sync. Sync may be lost is messages a missed between all the hunt
+// dispatchers (master and minions).
 func (self *HuntStorageManagerImpl) Refresh(
 	ctx context.Context, config_obj *config_proto.Config,
 	force bool) error {
 
-	// The master will load from the raw db files.
+	// The master's in memory cache is the source of truth, we
+	// periodically flush it to the index.
 	if self.I_am_master {
-		// Prepopulate the cache from the index - it is much faster.
-		err := self.LoadHuntsFromIndex(ctx, config_obj)
-		if err != nil {
-			// If we can not load from index, we just continue anyway
-			// to rebuild the index.
-			logger := logging.GetLogger(self.config_obj,
-				&logging.FrontendComponent)
-			logger.Debug("LoadHuntsFromIndex: %v", err)
-
-		}
-
-		_, err = self.LoadHuntsFromDatastore(ctx, config_obj, force)
-		if err != nil {
-			return err
-		}
-
-		// Create a fresh index file with the latest data.
-		return self.FlushIndex(ctx)
+		n, err := self.FlushIndex(ctx)
+		self.Debug("Refresh: FlushIndex with %v items", n)
+		return err
 	}
 
-	// Minion can refresh directly from the index
-	return self.LoadHuntsFromIndex(ctx, config_obj)
+	// Minions need to load hunts directly from the index
+	// periodically in case they missed an update.
+	n, err := self.LoadHuntsFromIndex(ctx, config_obj)
+	self.Debug("Refresh: LoadHuntsFromIndex %v items", n)
+	return err
 }
 
 // Applies a callback on all hunts. The callback is not allowed to
@@ -714,6 +742,8 @@ func (self *HuntStorageManagerImpl) DeleteHunt(
 	self.last_update = utils.GetTime().Now()
 	self.dirty = true
 	self.mu.Unlock()
+
+	self.Debug("DeleteHunt: %v", hunt_id)
 
 	// On the master we also remove the hunts from disk and flush the
 	// index.
@@ -752,7 +782,9 @@ func (self *HuntStorageManagerImpl) DeleteHunt(
 		_ = datastore.RecursiveDelete(self.config_obj, db,
 			hunt_path_manager.HuntParticipationIndexDirectory())
 
-		err = self.FlushIndex(ctx)
+		// Force the index to be dumped when we delete a hunt, so the
+		// GUI can present the new list with the deleted hunt removed.
+		_, err = self.FlushIndex(ctx)
 		if err != nil {
 			return err
 		}
@@ -777,15 +809,39 @@ func incVersion(hunt_record *api_proto.Hunt) {
 	hunt_record.Version = next_version
 }
 
-func isStatsUpdated(new, old *api_proto.HuntStats) bool {
-	if old == nil {
-		return true
+// Merge the new stats into the old stats. Returns if the new stats
+// were modified. Hunt stats can only ever increase, so we only update
+// the old stats if the new stats are greater.
+func updateStats(new, old *api_proto.HuntStats) (modified bool) {
+	if old.TotalClientsScheduled < new.TotalClientsScheduled {
+		old.TotalClientsScheduled = new.TotalClientsScheduled
+		modified = true
 	}
 
-	return old.TotalClientsScheduled != new.TotalClientsScheduled ||
-		old.TotalUploadedBytes != new.TotalUploadedBytes ||
-		old.TotalCollectedRows != new.TotalCollectedRows ||
-		old.TotalFinishedClients != new.TotalFinishedClients ||
-		old.TotalClientsWithErrors != new.TotalClientsWithErrors ||
-		old.TotalClientsWithResults != new.TotalClientsWithResults
+	if old.TotalUploadedBytes < new.TotalUploadedBytes {
+		old.TotalUploadedBytes = new.TotalUploadedBytes
+		modified = true
+	}
+
+	if old.TotalCollectedRows < new.TotalCollectedRows {
+		old.TotalCollectedRows = new.TotalCollectedRows
+		modified = true
+	}
+
+	if old.TotalFinishedClients < new.TotalFinishedClients {
+		old.TotalFinishedClients = new.TotalFinishedClients
+		modified = true
+	}
+
+	if old.TotalClientsWithErrors < new.TotalClientsWithErrors {
+		old.TotalClientsWithErrors = new.TotalClientsWithErrors
+		modified = true
+	}
+
+	if old.TotalClientsWithResults < new.TotalClientsWithResults {
+		old.TotalClientsWithResults = new.TotalClientsWithResults
+		modified = true
+	}
+
+	return modified
 }

@@ -4176,8 +4176,16 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: hunt_reindex
-  description: Reindex a hunt. This is mostly useful for debugging and to force an
-    index operation out of band. Hunts will normally be reindexed periodically automatically.
+  description: |
+    Reindex a hunt.
+
+    This is sometimes necessary if hunt overview stats are
+    incorrect. This plugin will walk all hunt flows and re-tally all
+    the stats to reset the hunt overview into the correct values.
+
+    On some installtions this is a very expensive operation as it
+    generates a lot of IO.
+
   type: Plugin
   args:
   - name: hunt_id
@@ -13212,4 +13220,3 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
-

@@ -8,6 +8,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -113,7 +114,7 @@ func InstrumentWithDelay(
 
 func init() {
 	// Allow the delay to be specified by the env var.
-	delay_str, pres := os.LookupEnv("VELOCIRAPTOR_SLOW_FILESYSTEM")
+	delay_str, pres := os.LookupEnv(constants.VELOCIRAPTOR_SLOW_FILESYSTEM)
 	if pres {
 		delay, err := strconv.Atoi(delay_str)
 		if err == nil {

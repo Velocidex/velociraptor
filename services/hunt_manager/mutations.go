@@ -57,6 +57,10 @@ func (self *HuntManager) processMutation(
 		return err
 	}
 
+	if mutation.Stats == nil {
+		mutation.Stats = &api_proto.HuntStats{}
+	}
+
 	modification := dispatcher.ModifyHuntObject(
 		ctx, mutation.HuntId,
 		func(hunt_obj *api_proto.Hunt) services.HuntModificationAction {
@@ -67,10 +71,6 @@ func (self *HuntManager) processMutation(
 
 			if hunt_obj.Stats == nil {
 				hunt_obj.Stats = &api_proto.HuntStats{}
-			}
-
-			if mutation.Stats == nil {
-				mutation.Stats = &api_proto.HuntStats{}
 			}
 
 			// The following are very frequent modifications that
@@ -94,6 +94,23 @@ func (self *HuntManager) processMutation(
 				hunt_obj.Stats.TotalClientsWithErrors +=
 					mutation.Stats.TotalClientsWithErrors
 
+				modification = services.HuntFlushToDatastoreAsync
+			}
+
+			if mutation.Stats.TotalFinishedClients > 0 {
+				hunt_obj.Stats.TotalFinishedClients +=
+					mutation.Stats.TotalFinishedClients
+
+				modification = services.HuntFlushToDatastoreAsync
+			}
+
+			if mutation.Stats.TotalUploadedBytes > 0 {
+				hunt_obj.Stats.TotalUploadedBytes += mutation.Stats.TotalUploadedBytes
+				modification = services.HuntFlushToDatastoreAsync
+			}
+
+			if mutation.Stats.TotalCollectedRows > 0 {
+				hunt_obj.Stats.TotalCollectedRows += mutation.Stats.TotalCollectedRows
 				modification = services.HuntFlushToDatastoreAsync
 			}
 
@@ -195,7 +212,8 @@ func (self *HuntManager) directlyAssignFlow(
 	if err != nil {
 		return err
 	}
-	_, err = launcher.GetFlowDetails(
+
+	flow_obj, err := launcher.GetFlowDetails(
 		ctx, config_obj, services.GetFlowOptions{},
 		assignment.ClientId, assignment.FlowId)
 	if err != nil {
@@ -227,6 +245,9 @@ func (self *HuntManager) directlyAssignFlow(
 	mutation.Stats = &api_proto.HuntStats{
 		TotalClientsScheduled:   1,
 		TotalClientsWithResults: 1,
+		TotalUploadedBytes:      flow_obj.Context.TotalUploadedBytes,
+		TotalCollectedRows:      flow_obj.Context.TotalCollectedRows,
+		TotalFinishedClients:    1,
 	}
 
 	return self.processMutation(ctx, config_obj, mutation)
