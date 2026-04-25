@@ -23,6 +23,8 @@ func (self *HuntDispatcher) MutateHunt(
 	ctx context.Context, config_obj *config_proto.Config,
 	mutation *api_proto.HuntMutation) error {
 
+	self.Debug("MutateHunt: %v", mutation)
+
 	// Short circuit deletions on the master to directly remove the
 	// hunt.
 	if self.I_am_master && mutation.State == api_proto.Hunt_DELETED {

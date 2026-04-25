@@ -10,7 +10,6 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -36,13 +35,8 @@ func (self *Launcher) ResumeFlow(
 	outstanding := make(map[int64]*actions_proto.UploadTransaction)
 
 	for row := range rs_reader.Rows(ctx) {
-		serialized, err := json.Marshal(row)
-		if err != nil {
-			continue
-		}
-
 		transaction := &actions_proto.UploadTransaction{}
-		err = json.Unmarshal(serialized, transaction)
+		err = utils.ParseIntoProtobuf(row, transaction)
 		if err != nil {
 			continue
 		}

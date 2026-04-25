@@ -11,6 +11,7 @@ import (
 	proto "google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
@@ -163,8 +164,8 @@ func generateGUIConfig(datastore_directory, server_config_path, client_config_pa
 
 func doGUI() error {
 	// Start from a clean slate
-	os.Setenv("VELOCIRAPTOR_CONFIG", "")
-	os.Setenv("VELOCIRAPTOR_LITERAL_CONFIG", "")
+	os.Setenv(constants.VELOCIRAPTOR_CONFIG, "")
+	os.Setenv(constants.VELOCIRAPTOR_LITERAL_CONFIG, "")
 
 	datastore_directory := *gui_command_datastore
 	if datastore_directory == "" {

@@ -29,7 +29,8 @@ sources:
       LET AllHunts <= if(condition=HuntId, then=Hunts + HuntId, else=Hunts)
 
       SELECT * FROM foreach(row={
-        SELECT _value as HuntId FROM items(item=AllHunts)
+        SELECT _value AS HuntId
+        FROM items(item=AllHunts)
       }, query={
         SELECT * FROM cancellations(HuntId=HuntId)
       }, workers=50

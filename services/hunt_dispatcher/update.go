@@ -21,6 +21,8 @@ func (self *HuntDispatcher) ProcessUpdate(
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
 
+	self.Debug("ProcessUpdate %v", row)
+
 	hunt_any, pres := row.Get("Hunt")
 	if !pres {
 		return nil
