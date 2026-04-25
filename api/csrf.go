@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/csrf"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -17,7 +18,7 @@ func csrfProtect(config_obj *config_proto.Config,
 	parent http.Handler) http.Handler {
 
 	// We may need to disabled CSRF for benchmarking tests.
-	disable_csrf, pres := os.LookupEnv("VELOCIRAPTOR_DISABLE_CSRF")
+	disable_csrf, pres := os.LookupEnv(constants.VELOCIRAPTOR_DISABLE_CSRF)
 	if pres && disable_csrf == "1" {
 		logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 		logger.Info("Disabling CSRF protection because environment VELOCIRAPTOR_DISABLE_CSRF is set")

@@ -29,7 +29,7 @@ type RemoteTestSuite struct {
 
 func (self *RemoteTestSuite) SetupTest() {
 	var err error
-	os.Setenv("VELOCIRAPTOR_LITERAL_CONFIG", test_utils.SERVER_CONFIG)
+	os.Setenv(constants.VELOCIRAPTOR_LITERAL_CONFIG, test_utils.SERVER_CONFIG)
 	self.ConfigObj, err = new(config.Loader).
 		WithEnvLiteralLoader(constants.VELOCIRAPTOR_LITERAL_CONFIG).
 		WithRequiredFrontend().

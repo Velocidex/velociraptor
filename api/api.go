@@ -49,6 +49,7 @@ import (
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -1233,7 +1234,7 @@ func StartMonitoringService(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
-	env_inject_time, pres := os.LookupEnv("VELOCIRAPTOR_INJECT_API_SLEEP")
+	env_inject_time, pres := os.LookupEnv(constants.VELOCIRAPTOR_INJECT_API_SLEEP)
 	if pres {
 		logger.Info("Injecting delays for API calls since VELOCIRAPTOR_INJECT_API_SLEEP is set (only used for testing).")
 		result, err := strconv.ParseInt(env_inject_time, 0, 64)

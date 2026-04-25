@@ -55,6 +55,7 @@ func (self *HuntDispatcherTestSuite) SetupTest() {
 	self.ConfigObj.Defaults.HuntDispatcherRefreshSec = -1
 
 	journal.PushRowsToArtifactAsyncIsSynchrnous = true
+	hunt_dispatcher.DEBUG = true
 
 	self.LoadArtifactsIntoConfig([]string{`
 name: Server.Internal.HuntUpdate
@@ -63,6 +64,7 @@ type: INTERNAL
 
 	self.time_closer = utils.MockTime(&utils.IncClock{})
 
+	// Start off with some data in the datastore.
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -92,9 +94,17 @@ type: INTERNAL
 
 	self.master_dispatcher = master_dispatcher.(*hunt_dispatcher.HuntDispatcher)
 
+	// Wait here until the dispatcher is initialized.
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		hunt, pres := self.master_dispatcher.GetHunt(self.Ctx, "H.4")
+		return pres && hunt.HuntId == "H.4"
+	})
+
+	// Now flush the index to disk.
 	err = self.master_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 	assert.NoError(self.T(), err)
 
+	// Start a minion hunt dispatcher
 	config_obj := proto.Clone(self.ConfigObj).(*config_proto.Config)
 	config_obj.Frontend.IsMinion = true
 
@@ -104,19 +114,14 @@ type: INTERNAL
 
 	self.minion_dispatcher = minion_dispatcher.(*hunt_dispatcher.HuntDispatcher)
 
-	err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
-	assert.NoError(self.T(), err)
+	// Check that hunts are loaded in both master and minion dispatchers.
+	hunt, pres := self.master_dispatcher.GetHunt(self.Ctx, "H.4")
+	assert.True(self.T(), pres)
+	assert.Equal(self.T(), hunt.HuntId, "H.4")
 
-	// Wait until the hunt dispatchers are fully loaded.
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		hunt, pres := self.master_dispatcher.GetHunt(self.Ctx, "H.4")
-		return pres && hunt.HuntId == "H.4"
-	})
-
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		hunt, pres := self.minion_dispatcher.GetHunt(self.Ctx, "H.4")
-		return pres && hunt.HuntId == "H.4"
-	})
+	hunt, pres = self.minion_dispatcher.GetHunt(self.Ctx, "H.4")
+	assert.True(self.T(), pres)
+	assert.Equal(self.T(), hunt.HuntId, "H.4")
 }
 
 func (self *HuntDispatcherTestSuite) TestLoadingFromDisk() {
@@ -169,7 +174,11 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntFlushToDatastore() {
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_STOPPED)
 
 	// But not immediately visible in minion
-	hunt_obj, pres = self.minion_dispatcher.GetHunt(self.Ctx, "H.1")
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		hunt_obj, pres = self.minion_dispatcher.GetHunt(self.Ctx, "H.1")
+		return pres && hunt_obj.HuntId == "H.1"
+	})
+
 	assert.True(self.T(), pres)
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_RUNNING)
 }
@@ -186,12 +195,17 @@ func (self *HuntDispatcherTestSuite) TestIndexSerialization() {
 	// Changes should be visible in the data store immediately.
 	assert.Equal(self.T(), modification, services.HuntFlushToDatastore)
 
-	storage := hunt_dispatcher.NewHuntStorageManagerImpl(self.ConfigObj)
+	// Force the master to dump the index.
+	err := self.master_dispatcher.Refresh(ctx, self.ConfigObj, FORCE_REFRESH)
+	assert.NoError(self.T(), err)
 
-	// But not immediately visible in minion
-	err := storage.(*hunt_dispatcher.HuntStorageManagerImpl).
+	// Now read the index from a new storage manager.
+	storage := hunt_dispatcher.NewHuntStorageManagerImpl(self.ConfigObj)
+	n, err := storage.(*hunt_dispatcher.HuntStorageManagerImpl).
 		LoadHuntsFromIndex(self.Ctx, self.ConfigObj)
 	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), n, 5)
+
 	hunts, _, err := storage.ListHunts(self.Ctx,
 		result_sets.ResultSetOptions{}, 0, 100)
 	assert.NoError(self.T(), err)
@@ -210,10 +224,12 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 	assert.NoError(self.T(), err)
 
 	// Check the hunt is running in the data store.
-	hunt_path_manager := paths.NewHuntPathManager("H.2")
-	hunt_obj := &api_proto.Hunt{}
-	err = db.GetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
-	assert.NoError(self.T(), err)
+	hunt_obj, pres := self.minion_dispatcher.GetHunt(self.Ctx, "H.2")
+	assert.True(self.T(), pres)
+	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_RUNNING)
+
+	hunt_obj, pres = self.master_dispatcher.GetHunt(self.Ctx, "H.2")
+	assert.True(self.T(), pres)
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_RUNNING)
 
 	// Now modify a hunt with services.HuntPropagateChanges
@@ -221,6 +237,7 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 	modification := self.master_dispatcher.ModifyHuntObject(ctx, "H.2",
 		func(hunt *api_proto.Hunt) services.HuntModificationAction {
 			hunt.State = api_proto.Hunt_STOPPED
+			self.master_dispatcher.Debug("Sending %v", hunt)
 			return services.HuntPropagateChanges
 		})
 
@@ -228,14 +245,11 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 	assert.Equal(self.T(), modification, services.HuntPropagateChanges)
 
 	// But they should be visible in master
-	hunt_obj, pres := self.master_dispatcher.GetHunt(self.Ctx, "H.2")
+	hunt_obj, pres = self.master_dispatcher.GetHunt(self.Ctx, "H.2")
 	assert.True(self.T(), pres)
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_STOPPED)
 
-	// And eventually also visible in minion
-	err = self.minion_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
-	assert.NoError(self.T(), err)
-
+	// Eventually this should be visible in the minion as well.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		hunt_obj, pres = self.minion_dispatcher.GetHunt(self.Ctx, "H.2")
 		return pres && hunt_obj.State == api_proto.Hunt_STOPPED
@@ -325,11 +339,8 @@ func (self *HuntDispatcherTestSuite) TestDeleteHunts() {
 			State:  api_proto.Hunt_DELETED,
 		})
 
-	// Make sure the changes are written to the disk.
+	// Make sure the changes are written to the disk. This will happen eventually anyway.
 	err := self.master_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
-	assert.NoError(self.T(), err)
-
-	err = self.master_dispatcher.Store.FlushIndex(self.Ctx)
 	assert.NoError(self.T(), err)
 
 	// This will happen in time but we force it now to make the test

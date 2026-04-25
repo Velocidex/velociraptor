@@ -163,7 +163,7 @@ func (self *TestSuite) CreateFlow(client_id, flow_id string) {
 }
 
 func (self *TestSuite) LoadConfig() *config_proto.Config {
-	os.Setenv("VELOCIRAPTOR_LITERAL_CONFIG", SERVER_CONFIG)
+	os.Setenv(constants.VELOCIRAPTOR_LITERAL_CONFIG, SERVER_CONFIG)
 	config_obj, err := new(config.Loader).
 		WithEnvLiteralLoader(constants.VELOCIRAPTOR_LITERAL_CONFIG).
 		WithRequiredFrontend().

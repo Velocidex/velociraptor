@@ -725,7 +725,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 var InstrumentWithDelay = func() {}
 
 func init() {
-	delay_str, pres := os.LookupEnv("VELOCIRAPTOR_SLOW_FILESYSTEM")
+	delay_str, pres := os.LookupEnv(constants.VELOCIRAPTOR_SLOW_FILESYSTEM)
 	if pres {
 		delay, err := strconv.Atoi(delay_str)
 		if err == nil {

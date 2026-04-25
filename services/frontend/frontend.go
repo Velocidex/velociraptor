@@ -22,7 +22,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -188,13 +187,8 @@ func (self *MasterFrontendManager) processMetrics(ctx context.Context,
 		return nil
 	}
 
-	serialized, err := json.Marshal(row_metric)
-	if err != nil {
-		return err
-	}
-
 	metric := &FrontendMetrics{}
-	err = json.Unmarshal(serialized, metric)
+	err := utils.ParseIntoStruct(row_metric, metric)
 	if err != nil {
 		return err
 	}

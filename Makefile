@@ -10,6 +10,9 @@ auto:
 test:
 	go test -race -v --tags server_vql ./...
 
+test_less:
+	go test -race -v --tags server_vql ./... 2>&1 | less
+
 test_light:
 	go test -v --tags server_vql ./...
 

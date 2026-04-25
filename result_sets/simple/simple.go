@@ -394,7 +394,7 @@ func (self *ResultSetReaderImpl) Rows(ctx context.Context) <-chan *ordereddict.D
 		reader := bufio.NewReader(self.fd)
 		for {
 			row_data, err := reader.ReadBytes('\n')
-			if err != nil {
+			if err != nil && err != io.EOF {
 				return
 			}
 
