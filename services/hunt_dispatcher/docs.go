@@ -34,6 +34,15 @@ package hunt_dispatcher
 //    * Maintain hunt index - a fast index for loading hunt objects.
 // 3. Minion only:
 //    * Read hunt index periodically to refresh in memory hunts cache.
+// 4. The hunt object on disk are checkpointed fall back in case the
+//    index is missing.
+
+// Basic assumptions:
+// 1. The in memory cache of hunts is the source of truth.
+// 2. The master flushes these to the hunt objects on disk
+//     periodically.
+// 3. The hunt index is an efficient bulk written version of the data,
+//    flushed by the master.
 
 // Listening Queues:
 // 1. Server.Internal.HuntUpdate:
@@ -56,12 +65,15 @@ package hunt_dispatcher
 //    * Receives mutation to update the hunt. Mutations include,
 //      start/stop, modify description, tags etc.
 // 2. System.Hunt.Participation:
-//    * Receives message from foreman about possible hunt participation
+//    * Receives message from foreman about possible hunt
+//      participation
 //    * considers the client and may add to the hunt.
 // 3. Server.Internal.Label:
-//    * When a label is added to a client, check if a hunt must be scheduled on it.
+//    * When a label is added to a client, check if a hunt must be
+//      scheduled on it.
 // 4. Server.Internal.Interrogation
-//    * When a client is interrogated, check if a hunt must be scheduled on it.
+//    * When a client is interrogated, check if a hunt must be
+//      scheduled on it.
 // 5. System.Flow.Completion:
 //    * When a flow is complete - increment hunt stats
 

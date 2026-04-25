@@ -9,6 +9,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
@@ -163,8 +164,8 @@ func doCollector() error {
 	}
 
 	// Start from a clean slate
-	os.Setenv("VELOCIRAPTOR_CONFIG", "")
-	os.Setenv("VELOCIRAPTOR_LITERAL_CONFIG", "")
+	os.Setenv(constants.VELOCIRAPTOR_CONFIG, "")
+	os.Setenv(constants.VELOCIRAPTOR_LITERAL_CONFIG, "")
 
 	datastore_directory := *collector_command_datastore
 	if datastore_directory == "" {

@@ -41,8 +41,8 @@ func (self *UserManager) AddUserToOrg(
 		return err
 	}
 
-	ok, _ := services.CheckAccess(root_config_obj, principal, acls.ORG_ADMIN)
-	if !ok {
+	ok, err := services.CheckAccess(root_config_obj, principal, acls.ORG_ADMIN)
+	if err != nil || !ok {
 		// Check that all the orgs have ServerAdmin
 		for _, org := range orgs {
 			org_config_obj, err := org_manager.GetOrgConfig(org)
@@ -50,11 +50,17 @@ func (self *UserManager) AddUserToOrg(
 				return err
 			}
 
-			ok, _ := services.CheckAccess(
+			ok, err := services.CheckAccess(
 				org_config_obj, principal, acls.SERVER_ADMIN)
-			if !ok {
-				return fmt.Errorf("Error: %w, User %v is not admin on %v",
-					acls.PermissionDenied, principal, org_config_obj.OrgName)
+			if err != nil || !ok {
+				err_msg := ""
+				if err != nil {
+					err_msg = err.Error()
+				}
+				return fmt.Errorf(
+					"Error: %w, User %v is not admin on %v. %s",
+					acls.PermissionDenied, principal,
+					org_config_obj.OrgName, err_msg)
 			}
 		}
 	}

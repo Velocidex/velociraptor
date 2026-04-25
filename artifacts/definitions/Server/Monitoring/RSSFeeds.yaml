@@ -11,8 +11,8 @@ parameters:
   type: csv
   default: |
     URL
-    http://docs.velociraptor.app/blog/index.xml
-    http://docs.velociraptor.app/announcements/advisories/index.xml
+    https://docs.velociraptor.app/blog/index.xml
+    https://docs.velociraptor.app/announcements/advisories/index.xml
 - name: Period
   type: int
   default: "600"
@@ -20,6 +20,10 @@ parameters:
 - name: UserRegex
   default: .
   description: Send message to all users matching this regex
+- name: AgeDays
+  description: The age in days we report a change
+  type: int
+  default: 7
 
 export: |
   LET _Send(Message) =
@@ -37,6 +41,8 @@ export: |
       WHERE Response = 200
     })
 
+  LET AgeSeconds <= AgeDays * 24 * 60 * 60
+
   LET GetRSS(URLs) = SELECT *
       FROM foreach(row={
         SELECT * FROM RSS(URLs=URLs)
@@ -47,6 +53,7 @@ export: |
                link,
                timestamp(string=pubDate) AS pubDate
         FROM foreach(row=XML.rss.channel.item, column="_value")
+        WHERE now() - AgeSeconds < pubDate.Unix
       })
 
 sources:

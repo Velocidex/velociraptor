@@ -64,7 +64,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
@@ -184,14 +183,9 @@ func (self *HuntManager) ProcessFlowCompletion(
 		return nil
 	}
 
-	flow, ok := flow_any.(*flows_proto.ArtifactCollectorContext)
-	if !ok || flow == nil {
-		serialized, err := json.Marshal(flow_any)
-		if err != nil {
-			return err
-		}
-		flow = &flows_proto.ArtifactCollectorContext{}
-		err = json.Unmarshal(serialized, flow)
+	flow_obj, ok := flow_any.(*flows_proto.ArtifactCollectorContext)
+	if !ok || flow_obj == nil {
+		err := utils.ParseIntoProtobuf(flow_any, flow_obj)
 		if err != nil {
 			return err
 		}
@@ -216,14 +210,17 @@ func (self *HuntManager) ProcessFlowCompletion(
 	// manipulation.
 	mutation := &api_proto.HuntMutation{
 		HuntId: hunt_id,
-		Stats:  &api_proto.HuntStats{},
+		Stats: &api_proto.HuntStats{
+			// All completions increment this counter.
+			TotalClientsWithResults: 1,
+			TotalUploadedBytes:      flow_obj.TotalUploadedBytes,
+			TotalCollectedRows:      flow_obj.TotalCollectedRows,
+			TotalFinishedClients:    1,
+		},
 	}
 
-	// All completions increment this counter.
-	mutation.Stats.TotalClientsWithResults = 1
-
 	// Only errored completions increment this one.
-	if flow.State == flows_proto.ArtifactCollectorContext_ERROR {
+	if flow_obj.State == flows_proto.ArtifactCollectorContext_ERROR {
 		mutation.Stats.TotalClientsWithErrors = 1
 	}
 
@@ -244,12 +241,12 @@ func (self *HuntManager) ProcessFlowCompletion(
 	path_manager := paths.NewHuntPathManager(hunt_id)
 	return journal.AppendToResultSet(config_obj, path_manager.ClientErrors(),
 		[]*ordereddict.Dict{ordereddict.NewDict().
-			Set("ClientId", flow.ClientId).
-			Set("FlowId", flow.SessionId).
-			Set("StartTime", time.Unix(0, int64(flow.StartTime*1000))).
-			Set("EndTime", time.Unix(0, int64(flow.ActiveTime*1000))).
-			Set("Status", flow.State.String()).
-			Set("Error", flow.Status)}, services.JournalOptions{})
+			Set("ClientId", flow_obj.ClientId).
+			Set("FlowId", flow_obj.SessionId).
+			Set("StartTime", time.Unix(0, int64(flow_obj.StartTime*1000))).
+			Set("EndTime", time.Unix(0, int64(flow_obj.ActiveTime*1000))).
+			Set("Status", flow_obj.State.String()).
+			Set("Error", flow_obj.Status)}, services.JournalOptions{})
 }
 
 // When a label is changed we check all the active hunts to see if any
@@ -330,13 +327,8 @@ func (self *HuntManager) ProcessParticipationWithError(
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
 
-	serialized, err := row.MarshalJSON()
-	if err != nil {
-		return err
-	}
-
 	participation_row := &ParticipationRecord{}
-	err = json.Unmarshal(serialized, participation_row)
+	err := utils.ParseIntoStruct(row, participation_row)
 	if err != nil {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Debug("ProcessParticipation: %v", err)
