@@ -24,6 +24,7 @@ import ColumnResizer from "./column-resizer.jsx";
 import InputGroup from 'react-bootstrap/InputGroup';
 import { serializeJSON } from '../utils/json_parse.jsx';
 import { Link }  from "react-router-dom";
+import {getItem, setItem, schema} from '../core/storage.jsx';
 
 import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
@@ -600,7 +601,6 @@ class VeloPagedTable extends Component {
         download: false,
         toggles: {},
         start_row: 0,
-        page_size: 10,
 
         // If the table has an index this will be the total number of
         // rows in the table. If it is -1 then we dont know the total
@@ -632,9 +632,14 @@ class VeloPagedTable extends Component {
 
     componentDidMount = () => {
         this.source = CancelToken.source();
+        if(this.props.initial_page_size>0) {
+            setItem(schema.CurrentPageSizeKey,
+                    this.props.initial_page_size);
+        }
+
         this.setState({
             guid: getID(),
-            page_size: this.props.initial_page_size || 10});
+        });
 
         this.fetchRows();
     }
@@ -661,9 +666,9 @@ class VeloPagedTable extends Component {
             return;
         }
 
+        let page_size = getItem(schema.CurrentPageSizeKey) || 10;
         if (!_.isEqual(prevProps.params, this.props.params) ||
             prevState.start_row !== this.state.start_row ||
-            prevState.page_size !== this.state.page_size ||
             !_.isEqual(prevState.transform, this.state.transform)) {
             this.fetchRows();
         }
@@ -725,6 +730,7 @@ class VeloPagedTable extends Component {
             return;
         }
 
+        let page_size = getItem(schema.CurrentPageSizeKey) || 10;
         let params = Object.assign({}, this.props.params);
         let transform = Object.assign({}, this.state.transform || {});
         if(_.isEmpty(transform) && !_.isEmpty(this.props.transform)) {
@@ -736,7 +742,7 @@ class VeloPagedTable extends Component {
         if (params.start_row < 0) {
             params.start_row = 0;
         }
-        params.rows = this.state.page_size;
+        params.rows = page_size;
         params.sort_direction = params.sort_direction === "Ascending";
 
         let url = this.props.url || "v1/GetTable";
@@ -799,9 +805,11 @@ class VeloPagedTable extends Component {
                 this.props.setPageState({
                     total_size: parseInt(response.data.total_rows || 0),
                     start_row: this.state.start_row,
-                    page_size: this.state.page_size,
-                    onRowChange: row_offset=>this.setState({start_row: row_offset}),
-                    onPageSizeChange: size=>this.setState({page_size: size}),
+                    page_size: page_size,
+                    onRowChange: row_offset=>this.setState({
+                        start_row: row_offset}),
+                    onPageSizeChange: size=>setItem(
+                        schema.CurrentPageSizeKey, size),
                 });
             }
 
@@ -811,6 +819,17 @@ class VeloPagedTable extends Component {
                 this.selectRow(row, this.state.select_on_load, false);
                 this.setState({select_on_load: -1});
             }
+
+            if(this.props.selectRow && this.props.selectRow.isSelectedCB) {
+                _.each(pageData.rows, (row, idx)=>{
+                    if(this.props.selectRow.isSelectedCB(row,idx)) {
+                        this.setState({
+                            selected_row: row,
+                            selected_row_idx: idx,
+                        });
+                    };
+                });
+            };
 
         }).catch(response=>{
             this.setState({loading: false, rows: [], columns: [], stack_path: []});
@@ -1353,13 +1372,14 @@ class VeloPagedTable extends Component {
     }
 
     getLastPage = ()=>{
+        let page_size = getItem(schema.CurrentPageSizeKey) || 10;
         let total_size = parseInt(this.state.total_size || 0);
-        let total_pages = parseInt(total_size / this.state.page_size) + 1;
+        let total_pages = parseInt(total_size / page_size) + 1;
         let last_page = total_pages - 1;
 
         // Ensure the last page has some data - otherwise back up one
         // page.
-        if (last_page * this.state.page_size===this.state.total_size) {
+        if (last_page * page_size===this.state.total_size) {
             last_page -= 1;
         }
 
@@ -1419,12 +1439,13 @@ class VeloPagedTable extends Component {
             e.preventDefault();
             e.stopPropagation();
         }
+        let page_size = getItem(schema.CurrentPageSizeKey) || 10;
         let last_page = this.getLastPage();
-        let current_page = parseInt(this.state.start_row / this.state.page_size);
+        let current_page = parseInt(this.state.start_row / page_size);
         let next_page = current_page + 1;
 
         if ( next_page <= last_page) {
-            this.setState({start_row: next_page * this.state.page_size });
+            this.setState({start_row: next_page * page_size });
         }
 
         if(this.state.selected_row_idx >= 0 && this.props.selectRow) {
@@ -1438,10 +1459,11 @@ class VeloPagedTable extends Component {
             e.stopPropagation();
         }
 
-        let current_page = parseInt(this.state.start_row / this.state.page_size);
+        let page_size = getItem(schema.CurrentPageSizeKey) || 10;
+        let current_page = parseInt(this.state.start_row / page_size);
         let next_page = current_page - 1;
         if ( next_page >= 0) {
-            this.setState({start_row: next_page * this.state.page_size });
+            this.setState({start_row: next_page * page_size });
         }
 
         if(this.state.selected_row_idx >= 0 && this.props.selectRow) {
@@ -1467,8 +1489,9 @@ class VeloPagedTable extends Component {
             e.stopPropagation();
         }
 
+        let page_size = getItem(schema.CurrentPageSizeKey) || 10;
         let last_page = this.getLastPage();
-        this.setState({start_row: last_page * this.state.page_size });
+        this.setState({start_row: last_page * page_size });
 
         if(this.state.selected_row_idx >= 0 && this.props.selectRow) {
             this.setState({select_on_load: 0});
@@ -1476,7 +1499,8 @@ class VeloPagedTable extends Component {
     }
 
     renderPaginator = (direction)=>{
-        let end = this.state.start_row + this.state.page_size;
+        let page_size = getItem(schema.CurrentPageSizeKey) || 10;
+        let end = this.state.start_row + page_size;
         if(end>this.state.total_size) {
             end=this.state.total_size;
         }
@@ -1487,10 +1511,16 @@ class VeloPagedTable extends Component {
                 <TablePaginationControl
                   total_size={this.state.total_size}
                   start_row={this.state.start_row}
-                  page_size={this.state.page_size}
-                  current_page={this.state.start_row / this.state.page_size}
+                  page_size={page_size || this.state.page_size}
+                  current_page={this.state.start_row / page_size}
                   onRowChange={row_offset=>this.setState({start_row: row_offset})}
-                  onPageSizeChange={size=>this.setState({page_size: size})}
+                  onPageSizeChange={size=>{
+                      setItem(schema.CurrentPageSizeKey, size);
+
+                      // We do not use this state but we need to set
+                      // it to get react to redraw.
+                      this.setState({page_size: size});
+                  }}
                   direction={direction}
                 />
               </HotKeys>

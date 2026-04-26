@@ -32,7 +32,7 @@ import DeleteNotebookDialog from '../notebooks/notebook-delete.jsx';
 import ExportNotebook from '../notebooks/export-notebook.jsx';
 import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
-
+import {getItem, setItem} from '../core/storage.jsx';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 
@@ -48,6 +48,8 @@ const SLIDE_STATES = [{
 }];
 
 const POLL_TIME = 5000;
+
+
 
 class ModifyHuntDialog extends React.Component {
     static contextType = UserConfig;
@@ -392,9 +394,6 @@ class HuntList extends React.Component {
             this.props.history.push("/hunts");
         }
         this.interval = setInterval(this.incrementVersion, POLL_TIME);
-
-        let slider = SLIDE_STATES[this.state.slider];
-        this.props.collapseToggle(slider.level);
     }
 
     componentWillUnmount() {
@@ -548,6 +547,7 @@ class HuntList extends React.Component {
     render() {
         let selected_hunt = this.props.selected_hunt &&
             this.props.selected_hunt.hunt_id;
+
         let username = this.context &&
             this.context.traits && this.context.traits.username;
         const selectRow = {
@@ -568,10 +568,13 @@ class HuntList extends React.Component {
                 });
                 this.setState({multiSelectedHunts: hunts});
             },
-            selected: [this.state.selected_row],
+            isSelectedCB: (row, idx)=>{
+                return row.HuntId === selected_hunt;
+            },
         };
 
-        let state = this.props.selected_hunt && this.props.selected_hunt.state;
+        let state = this.props.selected_hunt &&
+            this.props.selected_hunt.state;
         if (this.props.selected_hunt.stats &&
             this.props.selected_hunt.stats.stopped) {
             state = 'STOPPED';

@@ -7,6 +7,7 @@ import HuntInspector from './hunt-inspector.jsx';
 import _ from 'lodash';
 import api from '../core/api-service.jsx';
 
+import {getItem, setItem, schema} from '../core/storage.jsx';
 import  {CancelToken} from 'axios';
 
 import { withRouter }  from "react-router-dom";
@@ -37,6 +38,7 @@ class VeloHunts extends React.Component {
 
     componentDidMount = () => {
         this.get_hunts_source = CancelToken.source();
+        this.fetchSelectedHunt();
     }
 
     componentWillUnmount() {
@@ -44,6 +46,7 @@ class VeloHunts extends React.Component {
     }
 
     collapse = level=> {
+        setItem(schema.HuntSplitKey, level);
         this.setState({topPaneSize: level});
     }
 
@@ -57,12 +60,18 @@ class VeloHunts extends React.Component {
             return;
         }
 
-        let tab = this.props.match && this.props.match.params && this.props.match.params.tab;
+        let tab = this.props.match && this.props.match.params &&
+            this.props.match.params.tab;
+        if(!tab) {
+            tab = getItem(schema.CurrentHuntTabKey);
+        }
+
         if (tab) {
             this.props.history.push("/hunts/" + hunt_id + "/" + tab);
         } else {
             this.props.history.push("/hunts/" + hunt_id);
         }
+        setItem(schema.CurrentHuntIdKey, hunt_id);
         this.setState({selected_hunt_id: hunt_id});
         this.loadFullHunt(hunt_id);
     }
@@ -89,20 +98,32 @@ class VeloHunts extends React.Component {
     }
 
     fetchSelectedHunt = () => {
-        let selected_hunt_id = this.props.match && this.props.match.params &&
+        let selected_hunt_id = this.props.match &&
+            this.props.match.params &&
             this.props.match.params.hunt_id;
 
+        if (!selected_hunt_id) {
+            selected_hunt_id = getItem(schema.CurrentHuntIdKey);
+        }
+
         if (!selected_hunt_id) return;
+
+        setItem(schema.CurrentHuntIdKey, selected_hunt_id);
         this.loadFullHunt(selected_hunt_id);
     }
 
     render() {
+        let size = getItem(schema.HuntSplitKey) || this.state.topPaneSize;
+
         return (
             <>
               <SplitPane
-                size={this.state.topPaneSize}
+                onChange={size=>{
+                    setItem(schema.HuntSplitKey, size + "px");
+                }}
                 split="horizontal"
-                defaultSize="30%">
+                defaultSize="30%"
+                size={size}>
                 <HuntList
                   collapseToggle={this.collapse}
                   updateHunts={this.fetchSelectedHunt}
