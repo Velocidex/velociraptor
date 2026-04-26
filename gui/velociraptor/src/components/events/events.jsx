@@ -21,7 +21,8 @@ import T from '../i8n/i8n.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
 import VeloLog from "../widgets/logs.jsx";
 import { EditNotebook } from '../notebooks/new-notebook.jsx';
-
+import {getItem, setItem, schema} from '../core/storage.jsx';
+import Select from 'react-select';
 import { withRouter }  from "react-router-dom";
 
 import api from '../core/api-service.jsx';
@@ -232,7 +233,8 @@ class EventMonitoring extends React.Component {
         }, this.source.token).then(resp => {
             if (resp.cancel) return;
 
-            let router_artifact = this.props.match && this.props.match.params &&
+            let router_artifact = this.props.match &&
+                this.props.match.params &&
                 this.props.match.params.artifact;
             if (router_artifact) {
                 let logs = resp.data.logs || [];
@@ -248,6 +250,12 @@ class EventMonitoring extends React.Component {
         this.setState({artifact: artifact});
         let client_id = (this.props.client &&
                          this.props.client.client_id) || "server";
+        if(client_id === "server") {
+            setItem(schema.CurrentServerEventArtifactKey, artifact.artifact);
+        } else {
+            setItem(schema.CurrentClientEventArtifactKey, artifact.artifact);
+        }
+
         this.props.history.push('/events/' + client_id + '/' + artifact.artifact);
     }
 
@@ -288,6 +296,21 @@ class EventMonitoring extends React.Component {
 
         let client_id = (this.props.client &&
                          this.props.client.client_id) || "server";
+
+        let options = _.map(this.state.available_artifacts, artifact=>{
+            let name = artifact.artifact;
+            return {value: name,
+                    artifact: artifact,
+                    label: name,
+                    isFixed: true,
+                    color: "#00B8D9"};
+        });
+
+        let selected_artifact = this.state.artifact &&
+            this.state.artifact.artifact;
+
+        let defaultValue = _.filter(options, x=>x.value === selected_artifact);
+
         return (
             <>
               {this.state.showEventMonitoringPopup &&
@@ -342,34 +365,21 @@ class EventMonitoring extends React.Component {
                     </>
                   }
                   { this.state.buttonsRenderer() }
-                  <ToolTip tooltip={this.state.artifact.artifact ||
-                                    T("Select artifact")}>
-                    <Dropdown variant="default">
-                      <Dropdown.Toggle variant="default">
-                        <FontAwesomeIcon icon="book"/>
-                        <span className="button-label">
-                          {this.state.artifact.artifact || T("Select artifact")}
-                        </span>
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu
-                        className="fixed-height"
-                        >
-                        { _.map(this.state.available_artifacts, (x, idx) => {
-                            let active_artifact = this.state.artifact &&
-                                this.state.artifact.artifact;
-                            return <Dropdown.Item
-                            key={idx}
-                            title={x.artifact}
-                            active={x.artifact === active_artifact}
-                            onClick={() => {
-                                this.setArtifact(x);
-                            }}>
-     {x.artifact}
-   </Dropdown.Item>;
-                        })}
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  </ToolTip>
+                  {options.length > 0 &&
+                   <ToolTip tooltip={this.state.artifact.artifact ||
+                                     T("Select artifact")}>
+                     <Select
+                       defaultValue={defaultValue}
+                       className="event-artifacts"
+                       classNamePrefix="velo"
+                       spellCheck="false"
+                       options={options}
+                       placeholder={T("Select artifact")}
+                       onChange={e=>{
+                           this.setArtifact(e.artifact);
+                       }}
+                     />
+                   </ToolTip>}
                 </ButtonGroup>
 
                 <ButtonGroup className="float-right">

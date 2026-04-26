@@ -23,6 +23,7 @@ import T from '../i8n/i8n.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter }  from "react-router-dom";
 import ToolTip from '../widgets/tooltip.jsx';
+import {getItem, setItem, schema} from '../core/storage.jsx';
 
 import SplitPane from 'react-split-pane';
 
@@ -238,6 +239,8 @@ class ArtifactInspector extends React.Component {
             fullSelectedDescriptor: {},
             version: this.state.version+1,
         });
+
+        setItem(schema.CurrentSelectedArtifactKey, row.name);
         this.props.history.push("/artifacts/" + row.name);
         e.preventDefault();
         e.stopPropagation();
@@ -526,6 +529,10 @@ class ArtifactInspector extends React.Component {
               <div className="artifact-search-panel">
                 <SplitPane
                   split="vertical"
+                  onChange={size=>{
+                      setItem(schema.ArtifactSplitKey, size + "px");
+                  }}
+                  size={getItem(schema.ArtifactSplitKey) || "70%"}
                   defaultSize="70%">
                   <div className="artifact-search-report">
                     { this.state.selectedDescriptor ?

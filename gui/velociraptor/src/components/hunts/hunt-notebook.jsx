@@ -9,7 +9,6 @@ import Spinner from '../utils/spinner.jsx';
 
 const POLL_TIME = 5000;
 
-
 export default class HuntNotebook extends React.Component {
     static propTypes = {
         hunt: PropTypes.object,

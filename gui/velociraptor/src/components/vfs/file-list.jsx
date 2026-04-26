@@ -21,6 +21,7 @@ import {CancelToken} from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import VeloForm from "../forms/form.jsx";
 import FlowLink from "../flows/flow-link.jsx";
+import {getItem, setItem, schema} from '../core/storage.jsx';
 
 import T from '../i8n/i8n.jsx';
 
@@ -232,8 +233,11 @@ class VeloFileList extends Component {
         // Update the router with the new path.
         let vfs_path = [...path];
         vfs_path.push(row.Name);
+        let url_path = Join(vfs_path);
+        setItem(schema.CurrentVFSPathKey, url_path);
         this.props.history.push(
-           "/vfs/"+ this.props.client.client_id + EncodePathInURL(Join(vfs_path)));
+            "/vfs/"+ this.props.client.client_id +
+                EncodePathInURL(url_path));
     }
 
     startRecursiveVfsRefreshOperation = () => {

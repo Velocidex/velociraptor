@@ -66,6 +66,7 @@ export default class NotebookRenderer extends React.Component {
             api.post('v1/UpdateNotebook', notebook,
                      this.source.token).then(response=>{
                          if (response.cancel) return;
+
                          this.props.updateVersion();
                          this.setState({loading: false, locked: 0});
                      }).catch(e=> {
