@@ -44,6 +44,7 @@ import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 
 import SidebarKeyNavigator from './components/sidebar/hotkeys.jsx';
+import {getItem, setItem, schema} from './components/core/storage.jsx';
 
 import './themes/no-theme.css';
 import './themes/veloci-light.css';
@@ -95,6 +96,10 @@ class App extends Component {
 
     // Called to update the current client.
     setClient = (client) => {
+        let client_id = client && client.client_id;
+        if(client_id) {
+            setItem(schema.CurrentSelectedClientKey, client_id);
+        }
         this.setState({client: client});
     };
 

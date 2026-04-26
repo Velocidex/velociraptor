@@ -27,12 +27,12 @@ func (self *HuntManager) ProcessMutation(
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
 
-	mutation := &api_proto.HuntMutation{}
 	mutation_cell, pres := row.Get("mutation")
 	if !pres {
 		return errors.New("No mutation")
 	}
 
+	mutation := &api_proto.HuntMutation{}
 	err := utils.ParseIntoProtobuf(mutation_cell, mutation)
 	if err != nil {
 		return err

@@ -20,19 +20,16 @@ import AvailableDownloads from "../notebooks/downloads.jsx";
 import api from '../core/api-service.jsx';
 import UserConfig from '../core/user.jsx';
 
-const POLL_TIME = 5000;
-
 export default class FlowOverview extends React.Component {
     static contextType = UserConfig;
 
     static propTypes = {
         flow: PropTypes.object,
+        refreshFlows: PropTypes.func,
     };
 
     componentDidMount = () => {
         this.source = CancelToken.source();
-        this.interval = setInterval(this.getDetailedFlow, POLL_TIME);
-        this.getDetailedFlow();
 
         // Default state of the lock is set by the user's preferences.
         let lock_password = this.context.traits &&
@@ -42,17 +39,6 @@ export default class FlowOverview extends React.Component {
 
     componentWillUnmount() {
         this.source.cancel("unmounted");
-        clearInterval(this.interval);
-    }
-
-    componentDidUpdate = (prevProps, prevState, rootNode) => {
-        let old_flow_id = prevProps.flow && prevProps.flow.session_id;
-        let new_flow_id = this.props.flow.session_id;
-
-        if (old_flow_id !== new_flow_id) {
-            this.setState({available_downloads: []});
-            this.getDetailedFlow();
-        }
     }
 
     prepareDownload = (opts) => {
@@ -67,33 +53,12 @@ export default class FlowOverview extends React.Component {
 
         api.post("v1/CreateDownload", options,
                  this.source.token).then((response) => {
-                     this.getDetailedFlow();
+                     this.props.refreshFlows();
                  });
     };
 
-    getDetailedFlow = () => {
-        let flow_id = this.props.flow.session_id;
-        let client_id = this.props.flow.client_id;
-
-        if (_.isUndefined(flow_id) || _.isUndefined(client_id) || flow_id === 'new') {
-            return;
-        }
-
-        api.get("v1/GetFlowDetails", {
-            flow_id: flow_id,
-            client_id: client_id,
-        }, this.source.token).then((response) => {
-            if (response.cancel) return;
-
-            let available_downloads = response.data.available_downloads &&
-                response.data.available_downloads.files;
-            this.setState({available_downloads: available_downloads || []});
-        });
-    }
-
     state = {
         loading: false,
-        available_downloads: [],
         lock: false,
         expand_sparse: false,
     };
@@ -112,6 +77,9 @@ export default class FlowOverview extends React.Component {
         let uploaded_files = flow.uploaded_files || [];
         let lock_password = this.context.traits &&
             this.context.traits.default_password;
+
+        let files = flow.available_downloads &&
+            flow.available_downloads.files;
 
         return (
             <>
@@ -315,7 +283,7 @@ export default class FlowOverview extends React.Component {
                       </dl>
                       <dl>
                         <dd>
-                          <AvailableDownloads files={this.state.available_downloads}/>
+                          <AvailableDownloads files={files}/>
                         </dd>
                       </dl>
                     </Card.Body>

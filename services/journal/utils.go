@@ -139,11 +139,12 @@ func GetFlowFromQueue(
 
 		// If we can not open the flow from storage try to recover
 		// something from the row.
-		flow := &flows_proto.ArtifactCollectorContext{}
 		flow_any, pres := row.Get("Flow")
 		if !pres {
 			return nil, errors.New("Flow not found")
 		}
+
+		flow := &flows_proto.ArtifactCollectorContext{}
 		err := utils.ParseIntoProtobuf(flow_any, flow)
 		if err != nil {
 			return nil, err

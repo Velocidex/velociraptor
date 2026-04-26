@@ -12,7 +12,7 @@ import { EncodePathInURL, DecodePathInURL, SplitPathComponents, Join } from '../
 import api from '../core/api-service.jsx';
 import { withRouter }  from "react-router-dom";
 import { JSONparse } from '../utils/json_parse.jsx';
-
+import {getItem, setItem, schema} from '../core/storage.jsx';
 
 class VeloFileTree extends Component {
     static contextType = UserConfig;
@@ -256,7 +256,11 @@ class VeloFileTree extends Component {
 
         // When clicking the tree the user navigates to the directory
         // - file pane is unselected.
-        this.props.history.push("/vfs/" + client_id + EncodePathInURL(path +"/"));
+        let url_path = path +"/";
+
+        setItem(schema.CurrentVFSPathKey, url_path);
+        this.props.history.push("/vfs/" + client_id +
+                                EncodePathInURL(url_path));
 
         node.known = false;
         this.updateComponent(node, node.path, []);

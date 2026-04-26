@@ -196,6 +196,7 @@ func getSignedJWTTokenCookie(
 		Path:     api_utils.GetBaseDirectory(config_obj),
 		Secure:   true,
 		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
 		Expires:  expiry,
 	}, nil
 }
