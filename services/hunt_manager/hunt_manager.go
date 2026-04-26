@@ -185,6 +185,7 @@ func (self *HuntManager) ProcessFlowCompletion(
 
 	flow_obj, ok := flow_any.(*flows_proto.ArtifactCollectorContext)
 	if !ok || flow_obj == nil {
+		flow_obj = &flows_proto.ArtifactCollectorContext{}
 		err := utils.ParseIntoProtobuf(flow_any, flow_obj)
 		if err != nil {
 			return err

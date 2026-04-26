@@ -12,6 +12,7 @@ import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 import Spinner from '../utils/spinner.jsx';
 import { withRouter }  from "react-router-dom";
+import {getItem, setItem, schema} from '../core/storage.jsx';
 
 // Poll for new notebooks list.
 const POLL_TIME = 5000;
@@ -83,6 +84,8 @@ class Notebooks extends React.Component {
 
             if (notebooks.length > 0) {
                 let selected_notebook = notebooks[0];
+                let selected_notebook_id = selected_notebook.notebook_id;
+
                 let current_selected_notebook = this.state.selected_notebook || {};
 
                 // Only modify the notebook if it has changed
@@ -90,7 +93,9 @@ class Notebooks extends React.Component {
                     this.setState({
                         selected_notebook: selected_notebook,
                         loading: false});
-                    this.props.history.push("/notebooks/" + notebooks[0].notebook_id);
+                    this.props.history.push("/notebooks/" +
+                                            selected_notebook_id);
+                    setItem(schema.CurrentNotebookIdKey, selected_notebook_id);
                 }
             }
         });

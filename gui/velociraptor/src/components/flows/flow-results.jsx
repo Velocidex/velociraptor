@@ -30,7 +30,8 @@ export default class FlowResults extends React.Component {
     // 2. The flow active_time has changed.
     // 3. The user selected to view a different artifact result.
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (!_.isEqual(getFlowState(prevProps.flow), getFlowState(this.props.flow))) {
+        if (!_.isEqual(getFlowState(prevProps.flow),
+                       getFlowState(this.props.flow))) {
             this.fetchRows();
         }
     }
@@ -69,7 +70,8 @@ export default class FlowResults extends React.Component {
     }
 
     render() {
-        let artifacts_with_results = this.props.flow && this.props.flow.artifacts_with_results;
+        let artifacts_with_results = this.props.flow &&
+            this.props.flow.artifacts_with_results;
         if (_.isEmpty(artifacts_with_results)) {
             return <div className="no-content">
                      No Data Available.
