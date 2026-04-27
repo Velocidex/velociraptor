@@ -430,12 +430,11 @@ func ArtifactCollectorProcessOneMessage(
 					rowCounter.Inc()
 				}
 
-				// New clients already encode the JSON
-				// as line delimited, so we only need
-				// to append to end of the log file -
-				// much faster!
+				// New clients already encode the JSON as line
+				// delimited, so we only need to append to end of the
+				// log file - much faster!
 			} else if len(response.JSONLResponse) > 0 {
-				rs_writer.WriteJSONL(
+				_ = rs_writer.WriteJSONL(
 					[]byte(response.JSONLResponse), response.TotalRows)
 				rows_written = response.TotalRows
 				rowCounter.Add(float64(response.TotalRows))

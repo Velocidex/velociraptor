@@ -24,6 +24,7 @@ var (
 	SecretsEnforced     = errors.New("Secrets are enforced - you must specify a secret name")
 	PermissionDenied    = errors.New("PermissionDenied")
 	EmbeddedConfigError = errors.New("EmbeddedConfigError")
+	MemoryError         = errors.New("MemoryError")
 )
 
 // This is a custom error type that wraps an inner error but does not

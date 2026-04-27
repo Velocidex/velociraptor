@@ -596,7 +596,7 @@ func (self ImportCollectionFunction) copyResultSet(
 
 	flush := func() {
 		if count > 0 {
-			rs_writer.WriteJSONL(buffer.Bytes(), count)
+			_ = rs_writer.WriteJSONL(buffer.Bytes(), count)
 			count = 0
 			buffer.Reset()
 		}

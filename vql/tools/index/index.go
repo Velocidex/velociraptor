@@ -68,6 +68,7 @@ func (self IndexPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "index", args)()
+		defer utils.RecoverVQL(scope)
 
 		// This plugin just passes the current scope to the subquery
 		// so there is no permissions check - the subquery will
@@ -258,6 +259,7 @@ func (self IndexSearchPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "index_search", args)()
+		defer utils.RecoverVQL(scope)
 
 		// This plugin just passes the current scope to the subquery
 		// so there is no permissions check - the subquery will

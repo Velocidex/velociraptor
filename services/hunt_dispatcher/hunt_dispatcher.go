@@ -226,14 +226,15 @@ func (self *HuntDispatcher) checkForExpiry(
 		// Check if the hunt is expired and adjust its state if so
 		now := uint64(utils.GetTime().Now().UnixNano() / 1000)
 
+		var mutations []*api_proto.HuntMutation
+
+		// Collect mutations as quickly as possible to minimize locks.
 		_ = self.ApplyFuncOnHunts(ctx, services.OnlyRunningHunts,
 			func(hunt_obj *api_proto.Hunt) error {
 				if hunt_obj.State == api_proto.Hunt_RUNNING &&
 					now > hunt_obj.Expires {
 
-					// Even if we fail to stop one hunt, keep going to
-					// try to stop the others.
-					_ = self.MutateHunt(ctx, config_obj,
+					mutations = append(mutations,
 						&api_proto.HuntMutation{
 							HuntId: hunt_obj.HuntId,
 							State:  api_proto.Hunt_STOPPED,
@@ -242,6 +243,12 @@ func (self *HuntDispatcher) checkForExpiry(
 				}
 				return nil
 			})
+
+		for _, m := range mutations {
+			// Even if we fail to stop one hunt, keep going to
+			// try to stop the others.
+			_ = self.MutateHunt(ctx, config_obj, m)
+		}
 	}
 }
 

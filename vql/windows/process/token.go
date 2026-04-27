@@ -15,7 +15,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/allocs"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vwindows "www.velocidex.com/golang/velociraptor/vql/windows"
@@ -169,7 +169,7 @@ func (self TokenFunction) Call(
 func getTokenPrivileges(t windows.Token) (*ordereddict.Dict, error) {
 	n := uint32(1024)
 	for {
-		b := utils.AllocateBuff(int(n))
+		b := allocs.AllocateAlignedBuff(int(n))
 		e := windows.GetTokenInformation(t, windows.TokenPrivileges, &b[0], uint32(len(b)), &n)
 		if n < 4 {
 			return nil, errors.New("GetTokenInformation call too small!")

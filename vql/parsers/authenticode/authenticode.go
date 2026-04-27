@@ -54,6 +54,7 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 
 	defer vql_subsystem.RegisterMonitor(ctx, "authenticode", args)()
+	defer utils.RecoverVQL(scope)
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {

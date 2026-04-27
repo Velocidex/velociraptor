@@ -68,10 +68,10 @@ require (
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
 	golang.org/x/crypto v0.48.0
-	golang.org/x/mod v0.33.0
+	golang.org/x/mod v0.34.0
 	golang.org/x/net v0.51.0
-	golang.org/x/sys v0.42.0
-	golang.org/x/text v0.35.0
+	golang.org/x/sys v0.43.0
+	golang.org/x/text v0.36.0
 	golang.org/x/time v0.14.0
 	google.golang.org/api v0.258.0
 	google.golang.org/genproto v0.0.0-20251222181119-0a764e51fe1b // indirect
@@ -82,7 +82,7 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	howett.net/plist v1.0.0
-	www.velocidex.com/golang/evtx v0.2.1-0.20251107004037-f9f4e4ed0236
+	www.velocidex.com/golang/evtx v0.2.1-0.20260427154223-06ab70045154
 	www.velocidex.com/golang/go-ese v0.2.1-0.20260321072931-b8793d15e573
 	www.velocidex.com/golang/go-ntfs v0.2.1-0.20260331025433-9cce38e8a396
 	www.velocidex.com/golang/go-pe v0.1.1-0.20251107001057-f93001158cd9

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -59,6 +60,10 @@ func (self *DirectoryFileWriter) WriteCompressed(
 	data []byte,
 	logical_offset uint64,
 	uncompressed_size int) (n int, err error) {
+
+	if uncompressed_size > constants.MEMORY_LARGE {
+		return 0, utils.MemoryError
+	}
 
 	// Create the chunk index if needed
 	if self.ChunkFd == nil {

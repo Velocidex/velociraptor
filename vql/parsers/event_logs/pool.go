@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/evtx"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -20,6 +21,7 @@ type workerJob struct {
 
 func (self *workerJob) Run(ctx context.Context) {
 	defer self.wg.Done()
+	defer utils.RecoverVQL(self.scope)
 
 	records, _ := self.chunk.Parse(0)
 	for _, i := range records {

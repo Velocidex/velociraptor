@@ -40,6 +40,7 @@ import (
 
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -110,7 +111,7 @@ func (self *ResultSetWriterImpl) SetSync() {
 // The reader will find the correct row by loading the JSONL file at
 // the indicated offset then reading lines off it until they reach the
 // desired row index.
-func (self *ResultSetWriterImpl) WriteJSONL(serialized []byte, total_rows uint64) {
+func (self *ResultSetWriterImpl) WriteJSONL(serialized []byte, total_rows uint64) error {
 	if total_rows == 0 {
 		total_rows = countLines(serialized)
 	}
@@ -121,7 +122,7 @@ func (self *ResultSetWriterImpl) WriteJSONL(serialized []byte, total_rows uint64
 	// Write an index that spans the serialized range.
 	offset, err := self.fd.Size()
 	if err != nil {
-		return
+		return err
 	}
 
 	// All the index slots will point to the start of the blob
@@ -130,17 +131,25 @@ func (self *ResultSetWriterImpl) WriteJSONL(serialized []byte, total_rows uint64
 		value := uint64(offset) | (i << 40)
 		err = binary.Write(offsets, binary.LittleEndian, value)
 		if err != nil {
-			return
+			return err
 		}
 	}
 
-	_, _ = self.fd.Write(serialized)
-	_, _ = self.index_fd.Write(offsets.Bytes())
+	_, err = self.fd.Write(serialized)
+	if err != nil {
+		return err
+	}
+	_, err = self.index_fd.Write(offsets.Bytes())
+	return err
 }
 
 func (self *ResultSetWriterImpl) WriteCompressedJSONL(
 	serialized []byte, byte_offset uint64, uncompressed_size int,
-	total_rows uint64) {
+	total_rows uint64) error {
+
+	if total_rows > constants.MAX_ROW_LIMIT {
+		return utils.MemoryError
+	}
 
 	// Sync the index with the current buffers.
 	self.Flush()
@@ -148,7 +157,7 @@ func (self *ResultSetWriterImpl) WriteCompressedJSONL(
 	// Write an index that spans the serialized range.
 	offset, err := self.fd.Size()
 	if err != nil {
-		return
+		return err
 	}
 
 	// All the index slots will point to the start of the blob
@@ -157,12 +166,16 @@ func (self *ResultSetWriterImpl) WriteCompressedJSONL(
 		value := uint64(offset) | (i << 40)
 		err = binary.Write(offsets, binary.LittleEndian, value)
 		if err != nil {
-			return
+			return err
 		}
 	}
 
-	_, _ = self.fd.WriteCompressed(serialized, byte_offset, uncompressed_size)
-	_, _ = self.index_fd.Write(offsets.Bytes())
+	_, err = self.fd.WriteCompressed(serialized, byte_offset, uncompressed_size)
+	if err != nil {
+		return err
+	}
+	_, err = self.index_fd.Write(offsets.Bytes())
+	return err
 }
 
 func (self *ResultSetWriterImpl) Write(row *ordereddict.Dict) {

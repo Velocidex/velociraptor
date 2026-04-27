@@ -135,7 +135,7 @@ func syncFlowTables(
 			stats.TotalFinishedClients++
 		}
 
-		rs_writer.WriteJSONL([]byte(
+		err = rs_writer.WriteJSONL([]byte(
 			json.Format(`{"ClientId": %q, "Hostname": %q, "FlowId": %q, "StartedTime": %q, "State": %q, "Duration": %q, "TotalBytes": %q, "TotalRows": %q}
 `,
 				participation_row.ClientId,
@@ -146,6 +146,9 @@ func syncFlowTables(
 				flow.Context.ExecutionDuration/1000000000,
 				flow.Context.TotalUploadedBytes,
 				flow.Context.TotalCollectedRows)), 1)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return stats, nil
 }

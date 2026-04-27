@@ -21,6 +21,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -204,7 +205,12 @@ func (self *MemcacheFileWriter) WriteCompressed(
 	data []byte,
 	logical_offset uint64,
 	uncompressed_size int) (int, error) {
-	uncompressed, err := utils.Uncompress(context.Background(), data)
+	if uncompressed_size > constants.MEMORY_LARGE {
+		return 0, utils.MemoryError
+	}
+
+	uncompressed, err := utils.UncompressWithLimit(
+		context.Background(), data, int64(uncompressed_size))
 	if err != nil {
 		return 0, err
 	}

@@ -33,7 +33,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/allocs"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -340,7 +340,7 @@ func getNetTable(fn uintptr, family int, class int) ([]byte, error) {
 			return ptr, nil
 		} else if err == uintptr(syscall.ERROR_INSUFFICIENT_BUFFER) {
 			// realloc is needed.
-			ptr = utils.AllocateBuff(int(size))
+			ptr = allocs.AllocateAlignedBuff(int(size))
 			addr = uintptr(unsafe.Pointer(&ptr[0]))
 		} else {
 			return nil, fmt.Errorf("getNetTable: %w", syscall.GetLastError())
