@@ -24,6 +24,7 @@ import (
 	"www.velocidex.com/golang/evtx"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -63,7 +64,10 @@ func (self _ParseEvtxPlugin) Call(
 		} else {
 			// If the plugin did not specify a database, use the local
 			// resolver - On windows this will search DLLs for the messages.
-			resolver, err = evtx.GetNativeResolver()
+			resolver, err = evtx.GetNativeResolver(evtx.MessageResolverOpts{
+				LangPreferenceRegeExp: vql_subsystem.GetStringFromRow(
+					scope, scope, constants.EVTX_PREFERRED_LANG),
+			})
 		}
 
 		if err != nil {
