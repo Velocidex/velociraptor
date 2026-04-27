@@ -368,11 +368,16 @@ func ws_send_client_messages(
 		}()
 
 		for {
+			// Process the first time around, then just keep feeding
+			// an empty message_info to drain our client queue.
 			err := send_one_message(ctx, ws, server_obj,
 				org_config_obj, message_info)
 			if err != nil {
 				return err
 			}
+
+			// This ensures the messages are processed only once.
+			message_info.RawCompressed = nil
 		}
 	}
 }
