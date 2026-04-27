@@ -73,6 +73,7 @@ func (self YaraScanPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "yara", args)()
+		defer utils.RecoverVQL(scope)
 
 		arg := &YaraScanPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -589,6 +590,7 @@ func (self YaraProcPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "proc_yara", args)()
+		defer utils.RecoverVQL(scope)
 
 		arg := &YaraProcPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

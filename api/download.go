@@ -41,6 +41,7 @@ import (
 	errors "github.com/go-errors/errors"
 	"github.com/gorilla/schema"
 
+	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
@@ -73,11 +74,25 @@ var (
 			return make([]byte, BUFSIZE)
 		},
 	}
+
+	OkError             = errors.New("Ok")
+	SparseFileError     = errors.New("Sparse file is too sparse - unable to pad")
+	InvalidRequestError = utils.Wrap(utils.InvalidArgError, "Invalid request")
 )
 
-func returnError(w http.ResponseWriter, code int, message string) {
+func returnError(config_obj *config_proto.Config,
+	w http.ResponseWriter, code int, err error) {
+	if errors.Is(err, utils.PermissionDenied) {
+		code = 403
+	}
+
+	message := "Error"
+	if config_obj.Verbose {
+		message = html.EscapeString(err.Error())
+	}
+
 	w.WriteHeader(code)
-	_, _ = w.Write([]byte(html.EscapeString(message)))
+	_, _ = w.Write([]byte(message))
 }
 
 type vfsFileDownloadRequest struct {
@@ -113,7 +128,7 @@ type vfsFileDownloadRequest struct {
 
 // This URL allows the caller to download **any** member of the
 // filestore (providing they have at least read permissions).
-func vfsFileDownloadHandler() http.Handler {
+func vfsFileDownloadHandler(config_obj *config_proto.Config) http.Handler {
 	return api_utils.HandlerFunc(nil,
 		func(w http.ResponseWriter, r *http.Request) {
 			request := vfsFileDownloadRequest{}
@@ -122,7 +137,7 @@ func vfsFileDownloadHandler() http.Handler {
 
 			err := decoder.Decode(&request, r.URL.Query())
 			if err != nil {
-				returnError(w, 403, "Error "+err.Error())
+				returnError(config_obj, w, 403, err)
 				return
 			}
 
@@ -135,27 +150,27 @@ func vfsFileDownloadHandler() http.Handler {
 
 			org_manager, err := services.GetOrgManager()
 			if err != nil {
-				returnError(w, 404, err.Error())
+				returnError(config_obj, w, 404, err)
 				return
 			}
 
 			org_config_obj, err := org_manager.GetOrgConfig(org_id)
 			if err != nil {
-				returnError(w, 404, err.Error())
+				returnError(config_obj, w, 404, err)
 				return
 			}
 
 			users := services.GetUserManager()
 			user_record, err := users.GetUserFromHTTPContext(r.Context())
 			if err != nil {
-				returnError(w, 403, err.Error())
+				returnError(config_obj, w, 403, err)
 				return
 			}
 			principal := user_record.Name
 			permissions := acls.READ_RESULTS
 			perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 			if !perm || err != nil {
-				returnError(w, 403, "PermissionDenied")
+				returnError(config_obj, w, 403, utils.PermissionDenied)
 				return
 			}
 
@@ -179,26 +194,33 @@ func vfsFileDownloadHandler() http.Handler {
 				path_spec, err = client_path_manager.GetUploadsFileFromVFSPath(
 					request.VfsPath)
 				if err != nil {
-					returnError(w, 404, err.Error())
+					returnError(config_obj, w, 404, err)
 					return
 				}
 				filename = path_spec.Base()
 
 			} else {
 				// Just reject the request
-				returnError(w, 404, "")
+				returnError(config_obj, w, 404, utils.PermissionDenied)
 				return
 			}
 
-			file, err := file_store.GetFileStore(org_config_obj).ReadFile(path_spec)
+			err = file_store_accessor.IsFileAccessible(path_spec)
 			if err != nil {
-				returnError(w, 404, err.Error())
+				returnError(config_obj, w, 404, err)
+				return
+			}
+
+			file, err := file_store.GetFileStore(org_config_obj).
+				ReadFile(path_spec)
+			if err != nil {
+				returnError(config_obj, w, 404, err)
 				return
 			}
 			defer file.Close()
 
 			if r.Method == "HEAD" {
-				returnError(w, 200, "Ok")
+				returnError(config_obj, w, 200, OkError)
 				return
 			}
 
@@ -216,7 +238,7 @@ func vfsFileDownloadHandler() http.Handler {
 			// If the file is sparse, we use the sparse reader.
 			if err == nil && request.Padding && len(index.Ranges) > 0 {
 				if !uploads.ShouldPadFile(org_config_obj, index) {
-					returnError(w, 400, "Sparse file is too sparse - unable to pad")
+					returnError(config_obj, w, 400, SparseFileError)
 					return
 				}
 
@@ -233,7 +255,7 @@ func vfsFileDownloadHandler() http.Handler {
 			if request.TextFilter {
 				output, next_offset, err := filterData(reader_at, request)
 				if err != nil {
-					returnError(w, 500, err.Error())
+					returnError(config_obj, w, 500, err)
 					return
 				}
 
@@ -282,7 +304,7 @@ func vfsFileDownloadHandler() http.Handler {
 					// Only send errors if the headers have not yet been
 					// sent.
 					if !headers_sent {
-						returnError(w, 500, err.Error())
+						returnError(config_obj, w, 500, err)
 					}
 					return
 				}
@@ -492,7 +514,8 @@ func getTransformer(
 	return func(row *ordereddict.Dict) *ordereddict.Dict { return row }
 }
 
-func downloadFileStore(prefix []string) http.Handler {
+func downloadFileStore(
+	config_obj *config_proto.Config, prefix []string) http.Handler {
 	return api_utils.HandlerFunc(nil,
 		func(w http.ResponseWriter, r *http.Request) {
 			components := utils.SplitComponents(r.URL.Path)
@@ -500,7 +523,7 @@ func downloadFileStore(prefix []string) http.Handler {
 			// make sure the prefix is correct
 			for i, p := range prefix {
 				if len(components) <= i || p != components[i] {
-					returnError(w, 404, "Not Found")
+					returnError(config_obj, w, 404, utils.NotFoundError)
 					return
 				}
 			}
@@ -510,13 +533,13 @@ func downloadFileStore(prefix []string) http.Handler {
 			org_id := authenticators.GetOrgIdFromRequest(r)
 			org_manager, err := services.GetOrgManager()
 			if err != nil {
-				returnError(w, 404, err.Error())
+				returnError(config_obj, w, 404, err)
 				return
 			}
 
 			org_config_obj, err := org_manager.GetOrgConfig(org_id)
 			if err != nil {
-				returnError(w, 404, err.Error())
+				returnError(config_obj, w, 404, err)
 				return
 			}
 
@@ -529,7 +552,7 @@ func downloadFileStore(prefix []string) http.Handler {
 			users := services.GetUserManager()
 			user_record, err := users.GetUserFromHTTPContext(r.Context())
 			if err != nil {
-				returnError(w, 404, err.Error())
+				returnError(config_obj, w, 404, err)
 				return
 			}
 
@@ -537,14 +560,20 @@ func downloadFileStore(prefix []string) http.Handler {
 			permissions := acls.READ_RESULTS
 			perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 			if !perm || err != nil {
-				returnError(w, 403, "User is not allowed to read files.")
+				returnError(config_obj, w, 403, errors.New("User is not allowed to read files."))
+				return
+			}
+
+			err = file_store_accessor.IsFileAccessible(path_spec)
+			if err != nil {
+				returnError(config_obj, w, 404, err)
 				return
 			}
 
 			file_store_factory := file_store.GetFileStore(org_config_obj)
 			fd, err := file_store_factory.ReadFile(path_spec)
 			if err != nil {
-				returnError(w, 404, err.Error())
+				returnError(config_obj, w, 404, err)
 				return
 			}
 
@@ -554,7 +583,7 @@ func downloadFileStore(prefix []string) http.Handler {
 			// Read the first buffer for mime detection.
 			n, err := fd.Read(buf)
 			if err != nil {
-				returnError(w, 404, err.Error())
+				returnError(config_obj, w, 404, err)
 				return
 			}
 
@@ -607,7 +636,7 @@ func sanitizeFilenameForAttachment(base_filename string) string {
 }
 
 // Download the table as specified by the v1/GetTable API.
-func downloadTable() http.Handler {
+func downloadTable(config_obj *config_proto.Config) http.Handler {
 	return api_utils.HandlerFunc(nil,
 		func(w http.ResponseWriter, r *http.Request) {
 			request := &api_proto.GetTableRequest{}
@@ -617,19 +646,19 @@ func downloadTable() http.Handler {
 			decoder.SetAliasTag("json")
 			err := decoder.Decode(request, r.URL.Query())
 			if err != nil {
-				returnError(w, 404, err.Error())
+				returnError(config_obj, w, 404, err)
 				return
 			}
 
 			org_manager, err := services.GetOrgManager()
 			if err != nil {
-				returnError(w, 404, err.Error())
+				returnError(config_obj, w, 404, err)
 				return
 			}
 
 			org_config_obj, err := org_manager.GetOrgConfig(request.OrgId)
 			if err != nil {
-				returnError(w, 404, err.Error())
+				returnError(config_obj, w, 404, err)
 				return
 			}
 
@@ -638,14 +667,14 @@ func downloadTable() http.Handler {
 
 			// This should never happen!
 			if principal == "" {
-				returnError(w, 403, "Unauthenticated access.")
+				returnError(config_obj, w, 403, UnauthenticatedAccessError)
 				return
 			}
 
 			row_chan, closer, log_path, err := getRows(
 				r.Context(), org_config_obj, request, principal)
 			if err != nil {
-				returnError(w, 400, "Invalid request")
+				returnError(config_obj, w, 400, InvalidRequestError)
 				return
 			}
 			defer closer()
@@ -660,7 +689,7 @@ func downloadTable() http.Handler {
 			permissions := acls.READ_RESULTS
 			perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 			if !perm || err != nil {
-				returnError(w, 403, "Unauthenticated access.")
+				returnError(config_obj, w, 403, UnauthenticatedAccessError)
 				return
 			}
 
@@ -742,6 +771,11 @@ func vfsGetBuffer(config_obj *config_proto.Config, client_id string,
 	vfs_path api.FSPathSpec, offset uint64, length uint32, padding bool) (
 	*api_proto.VFSFileBuffer, error) {
 
+	err := file_store_accessor.IsFileAccessible(vfs_path)
+	if err != nil {
+		return nil, err
+	}
+
 	file, err := file_store.GetFileStore(config_obj).ReadFile(vfs_path)
 	if err != nil {
 		return nil, err
@@ -780,6 +814,11 @@ func vfsGetBuffer(config_obj *config_proto.Config, client_id string,
 func getIndex(config_obj *config_proto.Config,
 	vfs_path api.FSPathSpec) (*actions_proto.Index, error) {
 	index := &actions_proto.Index{}
+
+	err := file_store_accessor.IsFileAccessible(vfs_path)
+	if err != nil {
+		return nil, err
+	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	fd, err := file_store_factory.ReadFile(

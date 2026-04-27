@@ -100,12 +100,12 @@ func (self HuntsPlugin) Call(
 		}
 
 		// Show all hunts.
-		var hunts []*api_proto.Hunt
+		var hunts []*ordereddict.Dict
 
 		err = hunt_dispatcher.ApplyFuncOnHunts(
 			ctx, services.AllHunts,
 			func(hunt *api_proto.Hunt) error {
-				hunts = append(hunts, hunt)
+				hunts = append(hunts, json.ConvertProtoToOrderedDict(hunt))
 				return nil
 			})
 		if err != nil {
@@ -117,7 +117,7 @@ func (self HuntsPlugin) Call(
 			select {
 			case <-ctx.Done():
 				return
-			case output_chan <- json.ConvertProtoToOrderedDict(hunt_obj):
+			case output_chan <- hunt_obj:
 			}
 		}
 	}()

@@ -12,6 +12,7 @@ import (
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
@@ -428,6 +429,7 @@ func (self StarlarkCompileFunction) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 
 	defer vql_subsystem.RegisterMonitor(ctx, "starl", args)()
+	defer utils.RecoverVQL(scope)
 
 	arg := StarlarkCompileArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)

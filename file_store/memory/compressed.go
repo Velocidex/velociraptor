@@ -32,7 +32,8 @@ func (self *CompressedMemoryReader) readPartial(buf []byte) (int, error) {
 		return 0, io.EOF
 	}
 
-	uncompressed, err := utils.Uncompress(context.Background(), compressed)
+	uncompressed, err := utils.UncompressWithLimit(
+		context.Background(), compressed, chunk.UncompressedLength)
 	if err != nil {
 		return 0, io.EOF
 	}

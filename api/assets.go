@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/andybalholm/brotli"
+	errors "github.com/go-errors/errors"
 	"github.com/gorilla/csrf"
 	"github.com/lpar/gzipped"
 	"www.velocidex.com/golang/velociraptor/api/proto"
@@ -39,6 +40,10 @@ import (
 	gui_assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/services"
 	vutils "www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	UnauthenticatedAccessError = errors.New("Unauthenticated access")
 )
 
 func install_static_assets(
@@ -80,7 +85,7 @@ func GetTemplateHandler(
 
 			// This should never happen!
 			if userinfo.Name == "" {
-				returnError(w, 401, "Unauthenticated access.")
+				returnError(config_obj, w, 401, UnauthenticatedAccessError)
 				return
 			}
 

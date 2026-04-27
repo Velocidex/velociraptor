@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	errors "github.com/go-errors/errors"
+	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -52,6 +53,11 @@ func (self *ApiServer) SearchFile(ctx context.Context,
 
 	path_spec := path_specs.NewUnsafeFilestorePath(in.VfsComponents...).
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
+
+	err = file_store_accessor.IsFileAccessible(path_spec)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
 
 	file, err := file_store.GetFileStore(org_config_obj).ReadFile(path_spec)
 	if err != nil {

@@ -292,20 +292,29 @@ func (self *HuntManager) participateInRunningHunts(ctx context.Context,
 		return err
 	}
 
-	return dispatcher.ApplyFuncOnHunts(ctx, services.OnlyRunningHunts,
+	var rows []*ordereddict.Dict
+
+	// Hold the lock on the hunt dispatcher as quickly as possible.
+	err = dispatcher.ApplyFuncOnHunts(ctx, services.OnlyRunningHunts,
 		func(hunt *api_proto.Hunt) error {
-			if !should_participate_cb(hunt) {
-				return nil
-			}
-
-			journal.PushRowsToArtifactAsync(ctx, config_obj,
-				ordereddict.NewDict().
+			if should_participate_cb(hunt) {
+				rows = append(rows, ordereddict.NewDict().
 					Set("HuntId", hunt.HuntId).
-					Set("ClientId", client_id),
-				artifacts.HUNT_PARTICIPATION)
-
+					Set("ClientId", client_id))
+			}
 			return nil
 		})
+	if err != nil {
+		return err
+	}
+
+	// Now send the messages without the lock.
+	for _, r := range rows {
+		journal.PushRowsToArtifactAsync(ctx, config_obj, r,
+			artifacts.HUNT_PARTICIPATION)
+	}
+
+	return nil
 }
 
 // When a client is found to be missing a hunt, the foreman sends the

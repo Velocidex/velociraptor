@@ -393,11 +393,9 @@ func (self *ReplicationService) AppendJsonlToResultSet(
 	if err != nil {
 		return err
 	}
+	defer rs_writer.Close()
 
-	rs_writer.WriteJSONL(jsonl, uint64(row_count))
-	rs_writer.Close()
-
-	return nil
+	return rs_writer.WriteJSONL(jsonl, uint64(row_count))
 }
 
 func (self *ReplicationService) AppendToResultSet(

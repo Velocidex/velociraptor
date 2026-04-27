@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -77,6 +78,10 @@ func (self *MemoryWriter) WriteCompressed(
 	data []byte,
 	logical_offset uint64,
 	uncompressed_size int) (int, error) {
+
+	if uncompressed_size > constants.MEMORY_LARGE {
+		return 0, utils.MemoryError
+	}
 
 	buf := &bytes.Buffer{}
 

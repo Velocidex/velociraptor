@@ -44,7 +44,5 @@ func (self *VFSService) WriteDownloadInfo(
 		return err
 	}
 	serialized = append(serialized, '\n')
-	writer.WriteJSONL(serialized, 1)
-
-	return nil
+	return writer.WriteJSONL(serialized, 1)
 }

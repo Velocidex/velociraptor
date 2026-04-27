@@ -155,29 +155,29 @@ func PrepareGUIMux(
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/DownloadTable"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
-				downloadTable(), acls.READ_RESULTS))))
+				downloadTable(config_obj), acls.READ_RESULTS))))
 
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/DownloadVFSFile"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
-				vfsFileDownloadHandler(), acls.READ_RESULTS))))
+				vfsFileDownloadHandler(config_obj), acls.READ_RESULTS))))
 
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/UploadTool"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
-				toolUploadHandler(), acls.READ_RESULTS))))
+				toolUploadHandler(config_obj), acls.READ_RESULTS))))
 
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/UploadFormFile"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
-				formUploadHandler(), acls.READ_RESULTS))))
+				formUploadHandler(config_obj), acls.READ_RESULTS))))
 
 	// Serve prepared zip files.
 	mux.Handle(api_utils.GetBasePath(config_obj, "/downloads/"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				api_utils.StripPrefix(base_path,
-					downloadFileStore([]string{"downloads"})),
+					downloadFileStore(config_obj, []string{"downloads"})),
 				acls.READ_RESULTS))))
 
 	// Serve notebook items
@@ -185,7 +185,7 @@ func PrepareGUIMux(
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				api_utils.StripPrefix(base_path,
-					downloadFileStore([]string{"notebooks"})),
+					downloadFileStore(config_obj, []string{"notebooks"})),
 				acls.READ_RESULTS))))
 
 	// Serve files from hunt notebooks
@@ -193,7 +193,7 @@ func PrepareGUIMux(
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				api_utils.StripPrefix(base_path,
-					downloadFileStore([]string{"hunts"})),
+					downloadFileStore(config_obj, []string{"hunts"})),
 				acls.READ_RESULTS))))
 
 	// Serve files from client notebooks
@@ -201,7 +201,7 @@ func PrepareGUIMux(
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				api_utils.StripPrefix(base_path,
-					downloadFileStore([]string{"clients"})),
+					downloadFileStore(config_obj, []string{"clients"})),
 				acls.READ_RESULTS))))
 
 	// Enable debug endpoints but only for users with SERVER_ADMIN on

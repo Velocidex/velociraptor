@@ -70,16 +70,26 @@ func (self *SanityChecks) CheckSecuritySettings(
 		}
 	}
 
-	if len(config_obj.Security.DeniedFsAccessorPrefix) > 0 {
-		denied_tree = utils.NewPrefixTree(false)
-		for _, denied := range config_obj.Security.DeniedFsAccessorPrefix {
-			full_path, err := accessors.NewFileStorePath(denied)
-			if err != nil {
-				continue
-			}
-
-			denied_tree.Add(full_path.Components)
+	// Enforce a minimum set of paths denied to the accessor.
+	denied_prefixes := config_obj.Security.DeniedFsAccessorPrefix
+	if len(denied_prefixes) == 0 {
+		denied_prefixes = []string{
+			"acl",
+			"backups",
+			"config",
+			"orgs",
+			"secrets",
+			"users",
 		}
+	}
+
+	denied_tree = utils.NewPrefixTree(false)
+	for _, denied := range denied_prefixes {
+		full_path, err := accessors.NewFileStorePath(denied)
+		if err != nil {
+			continue
+		}
+		denied_tree.Add(full_path.Components)
 	}
 
 	file_store.SetPrefixes(allowed_tree, denied_tree)

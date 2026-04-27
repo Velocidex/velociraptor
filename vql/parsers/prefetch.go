@@ -49,6 +49,7 @@ func (self _PrefetchPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "prefetch", args)()
+		defer utils.RecoverVQL(scope)
 
 		arg := &_PrefetchPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

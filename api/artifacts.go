@@ -25,6 +25,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
+	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -793,6 +794,11 @@ func getZipReader(
 
 	pathspec := path_specs.NewUnsafeFilestorePath(in.VfsPath...).
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
+
+	err := file_store_accessor.IsFileAccessible(pathspec)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	fd, err := file_store_factory.ReadFile(pathspec)

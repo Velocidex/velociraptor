@@ -176,7 +176,6 @@ func (self *ClientFlowRunner) MonitoringLogMessage(
 	payload := artifacts.DeobfuscateString(self.config_obj, response.Jsonl)
 
 	rs_writer.WriteJSONL([]byte(payload), int(response.NumberOfRows))
-
 	if response.Level == logging.ALERT {
 		return self.processMonitoringAlert(ctx, client_id, artifact_name, response)
 	}
@@ -765,17 +764,17 @@ func (self *ClientFlowRunner) VQLResponse(
 	}
 
 	if response.UncompressedSize > 0 {
-		rs_writer.WriteCompressedJSONL(
+		err = rs_writer.WriteCompressedJSONL(
 			response.CompressedJsonResponse,
 			response.ByteOffset, int(response.UncompressedSize),
 			response.TotalRows)
 
 	} else {
-		rs_writer.WriteJSONL(
+		err = rs_writer.WriteJSONL(
 			[]byte(response.JSONLResponse), response.TotalRows)
 	}
 
-	return nil
+	return err
 }
 
 type log_message struct {
@@ -837,13 +836,13 @@ func (self *ClientFlowRunner) LogMessage(
 	// The JSON payload from the client.
 	payload := artifacts.DeobfuscateString(self.config_obj, msg.Jsonl)
 
-	rs_writer.WriteJSONL([]byte(payload), uint64(msg.NumberOfRows))
+	err = rs_writer.WriteJSONL([]byte(payload), uint64(msg.NumberOfRows))
 
 	if msg.Level == logging.ALERT {
-		return self.processAlert(ctx, client_id, flow_id, msg)
+		err = self.processAlert(ctx, client_id, flow_id, msg)
 	}
 
-	return nil
+	return err
 }
 
 func (self *ClientFlowRunner) ProcessMessages(ctx context.Context,

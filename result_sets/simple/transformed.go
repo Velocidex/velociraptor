@@ -284,7 +284,7 @@ type Stacker struct {
 
 func (self *Stacker) Close(ctx context.Context) {
 	if self.count > 0 {
-		self.writer.WriteJSONL(
+		_ = self.writer.WriteJSONL(
 			[]byte(json.Format(`{"value":%q,"idx":%q,"c":%q}
 `, self.value, self.index, self.count)), 1)
 	}
@@ -308,7 +308,7 @@ func (self *Stacker) Start(ctx context.Context) {
 		// Flush the current value
 		if !self.scope.Eq(value, self.value) {
 			if self.count > 0 {
-				self.writer.WriteJSONL(
+				_ = self.writer.WriteJSONL(
 					[]byte(json.Format(`{"value":%q,"idx":%q,"c":%q}
 `, self.value, self.index, self.count)), 1)
 			}

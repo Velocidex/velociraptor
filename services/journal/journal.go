@@ -215,10 +215,10 @@ func (self *JournalService) AppendJsonlToResultSet(
 	if err != nil {
 		return err
 	}
-	rs_writer.WriteJSONL(jsonl, uint64(row_count))
+	err = rs_writer.WriteJSONL(jsonl, uint64(row_count))
 	rs_writer.Close()
 
-	return nil
+	return err
 }
 
 func (self *JournalService) PushRowsToArtifactAsync(

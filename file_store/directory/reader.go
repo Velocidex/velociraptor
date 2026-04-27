@@ -39,7 +39,8 @@ func (self *CompressedDirectoryReader) uncompressChunk(
 		return nil, io.EOF
 	}
 
-	uncompressed, err := utils.Uncompress(context.Background(), compressed)
+	uncompressed, err := utils.UncompressWithLimit(
+		context.Background(), compressed, chunk.UncompressedLength)
 	if err != nil {
 		return nil, io.EOF
 	}
