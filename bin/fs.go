@@ -449,7 +449,8 @@ func doZCat(chunk_fd, file_fd *os.File) error {
 			break
 		}
 
-		uncompressed, err := utils.Uncompress(context.Background(), compressed)
+		uncompressed, err := utils.UncompressWithLimit(
+			context.Background(), compressed, chunk.UncompressedLength)
 		if err != nil {
 			break
 		}

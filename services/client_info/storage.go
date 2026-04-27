@@ -318,9 +318,7 @@ func (self *Store) SaveSnapshot(
 	}
 	defer writer.Close()
 
-	writer.WriteJSONL(buffer.Bytes(), record_count)
-
-	return nil
+	return writer.WriteJSONL(buffer.Bytes(), record_count)
 }
 
 // Load data from the legacy client info data.

@@ -8,6 +8,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
@@ -43,6 +44,7 @@ func (self JournalPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "parse_journald", args)()
+		defer utils.RecoverVQL(scope)
 
 		arg := &JournalPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

@@ -2,6 +2,7 @@ package flows_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -821,6 +822,88 @@ func (self *ServerTestSuite) TestVQLResponse() {
 	assert.NoError(self.T(), err)
 
 	self.RequiredFilestoreContains(flow_path_manager.Path(), self.client_id)
+}
+
+// Test VQLResponse are written correctly.
+func (self *ServerTestSuite) TestCompressedVQLResponse() {
+	t := self.T()
+
+	// Schedule a flow in the database.
+	flow_id, err := self.createArtifactCollection()
+	require.NoError(t, err)
+
+	jsonl_response := fmt.Sprintf(
+		"{\"ClientId\": \"%s\", \"Column1\": \"Foo\"}\n", self.client_id)
+
+	compressed_jsonl, err := utils.Compress([]byte(jsonl_response))
+	assert.NoError(self.T(), err)
+
+	// Emulate a response from this flow.
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	err = runner.ProcessSingleMessage(self.Ctx,
+		&crypto_proto.VeloMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			RequestId: constants.ProcessVQLResponses,
+			VQLResponse: &actions_proto.VQLResponse{
+				Columns:                []string{"ClientId", "Column1"},
+				CompressedJsonResponse: compressed_jsonl,
+				UncompressedSize:       uint64(len(jsonl_response)),
+				TotalRows:              1,
+				Query: &actions_proto.VQLRequest{
+					Name: "Generic.Client.Info",
+				},
+			},
+		})
+	assert.NoError(self.T(), err)
+	runner.Close(self.Ctx)
+
+	flow_path_manager, err := artifacts.NewArtifactPathManager(
+		self.Ctx, self.ConfigObj,
+		self.client_id, flow_id, "Generic.Client.Info")
+	assert.NoError(self.T(), err)
+
+	self.RequiredFilestoreContains(flow_path_manager.Path(), self.client_id)
+}
+
+// Test VQLResponse are written correctly.
+func (self *ServerTestSuite) TestInvalidVQLResponse() {
+	t := self.T()
+
+	// Schedule a flow in the database.
+	flow_id, err := self.createArtifactCollection()
+	require.NoError(t, err)
+
+	jsonl_response := fmt.Sprintf(
+		"{\"ClientId\": \"%s\", \"Column1\": \"Foo\"}\n", self.client_id)
+
+	compressed_jsonl, err := utils.Compress([]byte(jsonl_response))
+	assert.NoError(self.T(), err)
+
+	// Emulate a response from this flow.
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	err = runner.ProcessSingleMessage(self.Ctx,
+		&crypto_proto.VeloMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			RequestId: constants.ProcessVQLResponses,
+			VQLResponse: &actions_proto.VQLResponse{
+				Columns:                []string{"ClientId", "Column1"},
+				CompressedJsonResponse: compressed_jsonl,
+				UncompressedSize:       uint64(len(jsonl_response)),
+
+				// Set a ridiculous number of rows.
+				TotalRows: 100000000,
+				Query: &actions_proto.VQLRequest{
+					Name: "Generic.Client.Info",
+				},
+			},
+		})
+
+	// Should be rejected
+	assert.Error(self.T(), err)
+	assert.True(self.T(), errors.Is(err, utils.MemoryError))
+	runner.Close(self.Ctx)
 }
 
 // Test that VQLResponse can only be written to client artifacts

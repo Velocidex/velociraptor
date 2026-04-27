@@ -70,7 +70,7 @@ sources:
     SELECT *
     FROM foreach(row={
         SELECT *
-        FROM clock(period=Period, start=1)
+        FROM clock(period=Period)
       },
                  query={
         SELECT *,

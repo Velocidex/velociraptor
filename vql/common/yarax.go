@@ -74,6 +74,7 @@ func (self YaraXScanPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "yarax", args)()
+		defer utils.RecoverVQL(scope)
 
 		arg := &YaraXScanPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

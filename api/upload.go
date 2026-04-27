@@ -13,25 +13,32 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-func toolUploadHandler() http.Handler {
+var (
+	ToolError = utils.Wrap(utils.PermissionDenied,
+		"User is not allowed to upload tools.")
+)
+
+func toolUploadHandler(config_obj *config_proto.Config) http.Handler {
 	return api_utils.HandlerFunc(nil,
 		func(w http.ResponseWriter, r *http.Request) {
 			org_id := authenticators.GetOrgIdFromRequest(r)
 			org_manager, err := services.GetOrgManager()
 			if err != nil {
-				returnError(w, http.StatusUnauthorized, err.Error())
+				returnError(config_obj, w, http.StatusUnauthorized, err)
 				return
 			}
 
 			org_config_obj, err := org_manager.GetOrgConfig(org_id)
 			if err != nil {
-				returnError(w, http.StatusUnauthorized, err.Error())
+				returnError(config_obj, w, http.StatusUnauthorized, err)
 				return
 			}
 
@@ -40,8 +47,7 @@ func toolUploadHandler() http.Handler {
 			permissions := acls.ARTIFACT_WRITER
 			perm, err := services.CheckAccess(org_config_obj, userinfo.Name, permissions)
 			if !perm || err != nil {
-				returnError(w, http.StatusUnauthorized,
-					"User is not allowed to upload tools.")
+				returnError(config_obj, w, http.StatusUnauthorized, ToolError)
 				return
 			}
 
@@ -49,7 +55,7 @@ func toolUploadHandler() http.Handler {
 			// upload of 10 MB files.
 			err = r.ParseMultipartForm(10 << 25)
 			if err != nil {
-				returnError(w, http.StatusBadRequest, "Unsupported params")
+				returnError(config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
 				return
 			}
 			defer func() {
@@ -63,13 +69,13 @@ func toolUploadHandler() http.Handler {
 			tool := &artifacts_proto.Tool{}
 			params, pres := r.Form["_params_"]
 			if !pres || len(params) != 1 {
-				returnError(w, http.StatusBadRequest, "Unsupported params")
+				returnError(config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
 				return
 			}
 
 			err = json.Unmarshal([]byte(params[0]), tool)
 			if err != nil {
-				returnError(w, http.StatusBadRequest, "Unsupported params")
+				returnError(config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
 				return
 			}
 
@@ -78,7 +84,7 @@ func toolUploadHandler() http.Handler {
 			// the Header and the size of the file
 			file, handler, err := r.FormFile("file")
 			if err != nil {
-				returnError(w, 403, fmt.Sprintf("Unsupported params: %v", err))
+				returnError(config_obj, w, 403, utils.InvalidArgError)
 				return
 			}
 			defer file.Close()
@@ -89,21 +95,19 @@ func toolUploadHandler() http.Handler {
 			path_manager := paths.NewInventoryPathManager(org_config_obj, tool)
 			pathspec, file_store_factory, err := path_manager.Path()
 			if err != nil {
-				returnError(w, 404, err.Error())
+				returnError(config_obj, w, 404, err)
 			}
 
 			writer, err := file_store_factory.WriteFile(pathspec)
 			if err != nil {
-				returnError(w, http.StatusInternalServerError,
-					fmt.Sprintf("Error: %v", err))
+				returnError(config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 			defer writer.Close()
 
 			err = writer.Truncate()
 			if err != nil {
-				returnError(w, http.StatusInternalServerError,
-					fmt.Sprintf("Error: %v", err))
+				returnError(config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 
@@ -111,8 +115,7 @@ func toolUploadHandler() http.Handler {
 
 			_, err = io.Copy(writer, io.TeeReader(file, sha_sum))
 			if err != nil {
-				returnError(w, http.StatusInternalServerError,
-					fmt.Sprintf("Error: %v", err))
+				returnError(config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 
@@ -120,8 +123,7 @@ func toolUploadHandler() http.Handler {
 
 			inventory, err := services.GetInventory(org_config_obj)
 			if err != nil {
-				returnError(w, http.StatusInternalServerError,
-					fmt.Sprintf("Error: %v", err))
+				returnError(config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 
@@ -131,8 +133,7 @@ func toolUploadHandler() http.Handler {
 					AdminOverride: true,
 				})
 			if err != nil {
-				returnError(w, http.StatusInternalServerError,
-					fmt.Sprintf("Error: %v", err))
+				returnError(config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 
@@ -140,8 +141,7 @@ func toolUploadHandler() http.Handler {
 			tool, err = inventory.GetToolInfo(
 				r.Context(), org_config_obj, tool.Name, tool.Version)
 			if err != nil {
-				returnError(w, http.StatusInternalServerError,
-					fmt.Sprintf("Error: %v", err))
+				returnError(config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 
@@ -154,19 +154,19 @@ func toolUploadHandler() http.Handler {
 		})
 }
 
-func formUploadHandler() http.Handler {
+func formUploadHandler(config_obj *config_proto.Config) http.Handler {
 	return api_utils.HandlerFunc(nil,
 		func(w http.ResponseWriter, r *http.Request) {
 			org_id := authenticators.GetOrgIdFromRequest(r)
 			org_manager, err := services.GetOrgManager()
 			if err != nil {
-				returnError(w, http.StatusUnauthorized, err.Error())
+				returnError(config_obj, w, http.StatusUnauthorized, err)
 				return
 			}
 
 			org_config_obj, err := org_manager.GetOrgConfig(org_id)
 			if err != nil {
-				returnError(w, http.StatusUnauthorized, err.Error())
+				returnError(config_obj, w, http.StatusUnauthorized, err)
 				return
 			}
 
@@ -175,8 +175,7 @@ func formUploadHandler() http.Handler {
 			permissions := acls.COLLECT_CLIENT
 			perm, err := services.CheckAccess(org_config_obj, userinfo.Name, permissions)
 			if !perm || err != nil {
-				returnError(w, http.StatusUnauthorized,
-					"User is not allowed to upload files for forms.")
+				returnError(config_obj, w, http.StatusUnauthorized, ToolError)
 				return
 			}
 
@@ -184,7 +183,7 @@ func formUploadHandler() http.Handler {
 			// upload of 10 MB files.
 			err = r.ParseMultipartForm(10 << 20)
 			if err != nil {
-				returnError(w, http.StatusBadRequest, "Unsupported params")
+				returnError(config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
 				return
 			}
 			defer func() {
@@ -198,13 +197,13 @@ func formUploadHandler() http.Handler {
 			form_desc := &api_proto.FormUploadMetadata{}
 			params, pres := r.Form["_params_"]
 			if !pres || len(params) != 1 {
-				returnError(w, http.StatusBadRequest, "Unsupported params")
+				returnError(config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
 				return
 			}
 
 			err = json.Unmarshal([]byte(params[0]), form_desc)
 			if err != nil {
-				returnError(w, http.StatusBadRequest, "Unsupported params")
+				returnError(config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
 				return
 			}
 
@@ -213,7 +212,8 @@ func formUploadHandler() http.Handler {
 			// the Header and the size of the file
 			file, handler, err := r.FormFile("file")
 			if err != nil {
-				returnError(w, 403, fmt.Sprintf("Unsupported params: %v", err))
+				returnError(config_obj, w, 403,
+					fmt.Errorf("%w: %v", utils.InvalidArgError, err))
 				return
 			}
 			defer file.Close()
@@ -225,7 +225,7 @@ func formUploadHandler() http.Handler {
 
 			pathspec, file_store_factory, err := path_manager.Path()
 			if err != nil {
-				returnError(w, 403, fmt.Sprintf("Error: %v", err))
+				returnError(config_obj, w, 403, err)
 				return
 			}
 
@@ -234,23 +234,20 @@ func formUploadHandler() http.Handler {
 
 			writer, err := file_store_factory.WriteFile(pathspec)
 			if err != nil {
-				returnError(w, http.StatusInternalServerError,
-					fmt.Sprintf("Error: %v", err))
+				returnError(config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 			defer writer.Close()
 
 			err = writer.Truncate()
 			if err != nil {
-				returnError(w, http.StatusInternalServerError,
-					fmt.Sprintf("Error: %v", err))
+				returnError(config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 
 			_, err = io.Copy(writer, file)
 			if err != nil {
-				returnError(w, http.StatusInternalServerError,
-					fmt.Sprintf("Error: %v", err))
+				returnError(config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 

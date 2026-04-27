@@ -8,6 +8,7 @@ import (
 
 	"github.com/Velocidex/amsi"
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -29,6 +30,7 @@ func (self _AMSIFunction) Call(
 	args *ordereddict.Dict) vfilter.Any {
 
 	defer vql_subsystem.RegisterMonitor(ctx, "amsi", args)()
+	defer utils.RecoverVQL(scope)
 
 	arg := &_AMSIFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

@@ -83,7 +83,10 @@ func writeLogMessages(
 		time.Now().UTC().Unix()))
 
 	collection_context.TotalLogs += uint64(msg.NumberOfRows)
-	rs_writer.WriteJSONL([]byte(payload), uint64(msg.NumberOfRows))
+	err = rs_writer.WriteJSONL([]byte(payload), uint64(msg.NumberOfRows))
+	if err != nil {
+		return err
+	}
 
 	if collection_context.State != flows_proto.
 		ArtifactCollectorContext_ERROR {
@@ -163,7 +166,7 @@ func flushContextLogs(
 		}
 
 		collection_context.TotalLogs++
-		rs_writer.WriteJSONL([]byte(json.Format(
+		err = rs_writer.WriteJSONL([]byte(json.Format(
 			"{\"_ts\":%d,\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
 			int(time.Now().Unix()),
 			int64(row.Timestamp)/1000000,
@@ -173,5 +176,5 @@ func flushContextLogs(
 
 	// Clear the logs from the flow object.
 	collection_context.Logs = nil
-	return nil
+	return err
 }

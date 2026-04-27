@@ -148,6 +148,7 @@ func (self _OLEVBAPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "olevba", args)()
+		defer utils.RecoverVQL(scope)
 
 		arg := &_OLEVBAArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

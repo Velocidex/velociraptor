@@ -6,6 +6,7 @@ import (
 	errors "github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -34,7 +35,8 @@ func (self *MessageInfo) IterateJobs(
 		msg *crypto_proto.VeloMessage) error) (rerr error) {
 	for _, raw := range self.RawCompressed {
 		if self.Compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
-			decompressed, err := utils.Uncompress(ctx, raw)
+			decompressed, err := utils.UncompressWithLimit(
+				ctx, raw, constants.MEMORY_LARGE)
 			if err != nil {
 				return errors.New("Unable to decompress MessageList")
 			}

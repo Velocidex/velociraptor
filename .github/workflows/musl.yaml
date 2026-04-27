@@ -63,12 +63,12 @@ jobs:
         go run make.go -v Linux
         go run make.go -v LinuxArm64
 
-    - name: Login to GHCR
-      run: |
-        echo ${{ secrets.GIT_DOCKER_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
     - name: Build and push container image
+      if: env.GIT_DOCKER_PAT
+      env:
+        GIT_DOCKER_PAT: ${{ secrets.GIT_DOCKER_PAT }}
       run: |
+        echo $GIT_DOCKER_PAT | docker login ghcr.io -u ${{ github.actor }} --password-stdin
         go run make.go -v Container
 
     - name: StoreBinaries

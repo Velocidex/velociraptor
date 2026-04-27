@@ -11,7 +11,7 @@ import (
 	"unsafe"
 
 	"golang.org/x/sys/windows"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/allocs"
 )
 
 var (
@@ -112,14 +112,14 @@ func TryToGrantSeSystemEnvironmentPrivilege() error {
 }
 
 func GetEfiVariableValue(namespace string, name string) ([]byte, error) {
-	buff := utils.AllocateBuff(1024)
+	buff := allocs.AllocateAlignedBuff(1024)
 	length, err := GetFirmwareEnvironmentVariable(
 		windows.StringToUTF16Ptr(name),
 		windows.StringToUTF16Ptr(namespace),
 		&buff[0], 1024)
 
 	if errors.Is(err, syscall.ERROR_INSUFFICIENT_BUFFER) {
-		buff = utils.AllocateBuff(32 * 1024)
+		buff = allocs.AllocateAlignedBuff(32 * 1024)
 		length, err = GetFirmwareEnvironmentVariable(
 			windows.StringToUTF16Ptr(name),
 			windows.StringToUTF16Ptr(namespace),
