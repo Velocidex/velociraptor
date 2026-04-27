@@ -1041,6 +1041,7 @@ func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 			result.Job = append(result.Job, &crypto_proto.VeloMessage{
 				SessionId: "F.Monitoring",
 				VQLResponse: &actions_proto.VQLResponse{
+					QueryId:       uint64(utils.GetGUID()),
 					JSONLResponse: string(client_info_data),
 					Query: &actions_proto.VQLRequest{
 						Name: "Server.Internal.ClientInfo",

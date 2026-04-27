@@ -40,14 +40,14 @@ class ClientFlowsView extends React.Component {
 
         if(client_id && flow_id && flow_id !== "new") {
             this.setState({currentFlow: {
-                context: {client_id: client_id,
-                          session_id: flow_id}
-            }});
+                client_id: client_id,
+                session_id: flow_id}});
+
+            this.fetchDetailedFlow(client_id, flow_id);
         }
 
         // Update the flow object periodically
         this.interval = setInterval(this.fetchDetailedFlow, POLL_TIME);
-        this.fetchDetailedFlow(client_id, flow_id);
     }
 
     componentWillUnmount() {
@@ -148,8 +148,7 @@ class ClientFlowsView extends React.Component {
             COLLECT: ()=>this.setState({showWizard: true}),
         };
 
-        let selected_flow = this.state.currentFlow &&
-            this.state.currentFlow.context;
+        let selected_flow = this.state.currentFlow;
 
         return (
             <>
