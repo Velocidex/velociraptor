@@ -9,6 +9,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
@@ -157,6 +158,7 @@ func (self logscalePlugin) Call(ctx context.Context,
 	go func() {
 		defer close(outputChan)
 		defer vql_subsystem.RegisterMonitor(ctx, "logscale", args)()
+		defer utils.RecoverVQL(scope)
 
 		err := vql_subsystem.CheckAccess(scope, acls.NETWORK)
 		if err != nil {

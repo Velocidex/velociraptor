@@ -1119,8 +1119,8 @@ software.sslmate.com/src/go-pkcs12 v0.2.0 h1:nlFkj7bTysH6VkC4fGphtjXRbezREPgrHuJ
 software.sslmate.com/src/go-pkcs12 v0.2.0/go.mod h1:23rNcYsMabIc1otwLpTkCCPwUq6kQsTyowttG/as0kQ=
 www.velocidex.com/golang/binparsergen v0.1.1-0.20240404114946-8f66c7cf586e h1:uf1AsYiIzUMJMIdFsVdrIw/BjrGzZbrsnz9xmeZmlYU=
 www.velocidex.com/golang/binparsergen v0.1.1-0.20240404114946-8f66c7cf586e/go.mod h1:jk+uZGukrJZWgnNH6q9tJLUnbugHEDPCQdIOmBBMXY4=
-www.velocidex.com/golang/evtx v0.2.1-0.20260427071511-4b5870ad3048 h1:I9cJ/39G13BldJ/DWNoUVSvPpygjnExHU7aW+F409+s=
-www.velocidex.com/golang/evtx v0.2.1-0.20260427071511-4b5870ad3048/go.mod h1:eqjy0jz9Q/dy7LOMBuXNPUilcm/pe/6GMOop6CvczkY=
+www.velocidex.com/golang/evtx v0.2.1-0.20260427154223-06ab70045154 h1:DtXlY/onyKgj0YIUFpt7n93Huv2EwssRsT7HV1PSE/k=
+www.velocidex.com/golang/evtx v0.2.1-0.20260427154223-06ab70045154/go.mod h1:eqjy0jz9Q/dy7LOMBuXNPUilcm/pe/6GMOop6CvczkY=
 www.velocidex.com/golang/go-ese v0.2.1-0.20260321072931-b8793d15e573 h1:xlvektWQLJGXwHO6BwE6CeZgr0F2XelQ3je2Y8LfbAY=
 www.velocidex.com/golang/go-ese v0.2.1-0.20260321072931-b8793d15e573/go.mod h1:H1Gw62XkspXEtZPT2ep+L57GgdKIDHwueazxKnn5EXc=
 www.velocidex.com/golang/go-ntfs v0.2.1-0.20260331025433-9cce38e8a396 h1:Y3be+CIWxJvKpNH1YyeExPG8wA0e8ungTsXrxUtEBlc=

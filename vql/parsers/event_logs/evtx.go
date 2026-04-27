@@ -50,6 +50,7 @@ func (self _ParseEvtxPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "parse_evtx", args)()
+		defer utils.RecoverVQL(scope)
 
 		arg := &_ParseEvtxPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)

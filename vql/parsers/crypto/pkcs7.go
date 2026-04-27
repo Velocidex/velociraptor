@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -31,6 +32,7 @@ func (self ParsePKCS7Function) Call(
 	args *ordereddict.Dict) vfilter.Any {
 
 	defer vql_subsystem.RegisterMonitor(ctx, "parse_pkcs7", args)()
+	defer utils.RecoverVQL(scope)
 
 	arg := &ParsePKCS7FunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -66,6 +68,7 @@ func (self ParseX509Function) Call(
 	args *ordereddict.Dict) vfilter.Any {
 
 	defer vql_subsystem.RegisterMonitor(ctx, "parse_x509", args)()
+	defer utils.RecoverVQL(scope)
 
 	arg := &ParseX509FunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
