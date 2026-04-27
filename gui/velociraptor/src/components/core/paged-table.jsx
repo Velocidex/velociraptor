@@ -628,6 +628,10 @@ class VeloPagedTable extends Component {
         start_selection_idx: -1,
 
         guid: "",
+
+        // Maintain the page size in the state as well to get
+        // react to refresh when changed.
+        page_size: 10,
     }
 
     componentDidMount = () => {
@@ -637,8 +641,10 @@ class VeloPagedTable extends Component {
                     this.props.initial_page_size);
         }
 
+        let page_size = getItem(schema.CurrentPageSizeKey) || 10;
         this.setState({
             guid: getID(),
+            page_size: page_size,
         });
 
         this.fetchRows();
@@ -666,10 +672,11 @@ class VeloPagedTable extends Component {
             return;
         }
 
-        let page_size = getItem(schema.CurrentPageSizeKey) || 10;
         if (!_.isEqual(prevProps.params, this.props.params) ||
             prevState.start_row !== this.state.start_row ||
+            prevState.page_size !== this.state.page_size ||
             !_.isEqual(prevState.transform, this.state.transform)) {
+
             this.fetchRows();
         }
     }
