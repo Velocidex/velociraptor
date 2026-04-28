@@ -116,6 +116,19 @@ func verifyData(
 	assert.True(t, len(data.(string)) > 10)
 }
 
+func (self *SecretsTestSuite) TestInvalidSecret() {
+	secrets, err := services.GetSecretsService(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Add an invalid secret - http requires headers to be valid YAML
+	scope := vql_subsystem.MakeScope()
+	err = secrets.AddSecret(self.Ctx, scope,
+		constants.HTTP_SECRETS, "MySecret", ordereddict.NewDict().
+			Set("url", "http://www.example.com/").
+			Set("extra_headers", "   sdkjkdsjh"))
+	assert.Error(self.T(), err)
+}
+
 func getSecretFromStore(
 	t *testing.T,
 	config_obj *config_proto.Config,

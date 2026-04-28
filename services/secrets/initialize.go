@@ -63,6 +63,11 @@ var (
 			"extra_headers",
 			"cookies",
 		},
+		YamlFields: []string{
+			"extra_params",
+			"extra_headers",
+			"cookies",
+		},
 		Template: map[string]string{
 			"skip_verify":   "FALSE",
 			"extra_params":  "# Add extra parameters as YAML strings\n#Foo: Value\n#Baz:Value2\n",

@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/yaml"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -161,6 +162,19 @@ func (self *SecretsService) AddSecret(ctx context.Context,
 		_, pres := secret.Get(field)
 		if !pres {
 			secret.Set(field, "")
+		}
+	}
+
+	// Check that yaml fields are valid yaml.
+	for _, yaml_field := range secrets_definition.YamlFields {
+		tmp := make(map[string]string)
+		field_val, pres := secret.GetString(yaml_field)
+		if pres {
+			err := yaml.Unmarshal([]byte(field_val), tmp)
+			if err != nil {
+				return fmt.Errorf("Unable to verify secret for type %v: "+
+					"While verifying %v: %w", type_name, yaml_field, err)
+			}
 		}
 	}
 
