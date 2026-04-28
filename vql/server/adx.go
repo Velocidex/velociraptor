@@ -24,7 +24,9 @@ package server
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"errors"
+	"net/http"
 	"net/url"
 	"sync"
 	"time"
@@ -176,6 +178,19 @@ func _upload_rows_adx(
 	batchIngestionTime := ""
 	var batchStart time.Time
 
+	// Configure TLS - force TLS 1.2 for Azure Kusto compatibility
+	// Azure Kusto currently has issues with TLS 1.3 from some clients
+	tlsConfig := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+		MaxVersion: tls.VersionTLS12,
+	}
+
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConfig,
+		},
+	}
+
 	// Create connection string with service principal auth
 	kustoConnectionString := azkustodata.NewConnectionStringBuilder(arg.ClusterURL).
 		WithAadAppKey(arg.ClientID, arg.ClientSecret, arg.TenantID)
@@ -184,7 +199,8 @@ func _upload_rows_adx(
 	ingestClient, err := azkustoingest.New(
 		kustoConnectionString,
 		azkustoingest.WithDefaultDatabase(arg.Database),
-		azkustoingest.WithDefaultTable(arg.Table))
+		azkustoingest.WithDefaultTable(arg.Table),
+		azkustoingest.WithHttpClient(httpClient)) // Pass custom HTTP client for TLS config
 	if err != nil {
 		scope.Log("adx_upload: failed to create ingest client: %v", err)
 		return
@@ -449,9 +465,10 @@ func mergeSecretADX(ctx context.Context, scope vfilter.Scope, arg *_ADXPluginArg
 
 	// Allow the user to override these fields
 	s.UpdateString("table", &arg.Table)
+	s.UpdateString("cluster_url", &arg.ClusterURL)
+	s.UpdateString("database", &arg.Database)
 
-	arg.ClusterURL = s.GetString("cluster_url")
-	arg.Database = s.GetString("database")
+	// These always come from secret (credentials)
 	arg.ClientID = s.GetString("client_id")
 	arg.ClientSecret = s.GetString("client_secret")
 	arg.TenantID = s.GetString("tenant_id")

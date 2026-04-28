@@ -74,6 +74,12 @@ parameters:
     type: int
     default: 1000
     description: Batch this many rows for each upload.
+  - name: WaitTime
+    type: int
+    default: 5
+    description: |
+      Maximum time in seconds to wait before flushing buffered rows to ADX.
+      Lower values reduce latency but may increase API calls. Default is 5 seconds.
   - name: MaxMemoryBuffer
     type: int
     default: 104857600
@@ -115,6 +121,7 @@ sources:
             query=documents,
             threads=Threads,
             chunk_size=ChunkSize,
+            wait_time=WaitTime,
             max_memory_buffer=MaxMemoryBuffer,
             cluster_url=ClusterURL,
             database=Database,

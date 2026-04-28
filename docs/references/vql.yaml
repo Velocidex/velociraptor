@@ -66,6 +66,53 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: adx_upload
+  description: Upload rows to Azure Data Explorer (ADX).
+  type: Plugin
+  args:
+  - name: query
+    type: StoredQuery
+    description: Source for rows to upload.
+    required: true
+  - name: threads
+    type: int64
+    description: How many threads to use.
+  - name: cluster_url
+    type: string
+    description: The ADX cluster URL.
+  - name: database
+    type: string
+    description: The ADX database name.
+  - name: table
+    type: string
+    description: The name of the table to upload to.
+  - name: client_id
+    type: string
+    description: Azure Service Principal Client ID.
+  - name: client_secret
+    type: string
+    description: Azure Service Principal Client Secret.
+  - name: tenant_id
+    type: string
+    description: Azure Service Principal Tenant ID.
+  - name: chunk_size
+    type: int64
+    description: The number of rows to send at the time.
+  - name: wait_time
+    type: int64
+    description: Batch ADX upload this long (5 sec).
+  - name: max_memory_buffer
+    type: uint64
+    description: How large we allow the memory buffer to grow to while we are trying
+      to contact the ADX server (default 100mb).
+  - name: secret
+    type: string
+    description: Alternatively use a secret from the secrets service. Secret must
+      be of type 'ADX Creds'
+  metadata:
+    permissions: NETWORK
+  platforms:
+  - linux_amd64_cgo
 - name: alert
   description: |
     Generate an alert message.
