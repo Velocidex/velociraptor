@@ -25,6 +25,10 @@ description: |
       RawData: dynamic
   )
   ```
+  ### KQL Artefact Schemas mappings
+  
+  For KQL Artefact schema mappings for Velociraptor artifacts,
+  see: https://github.com/baseVISION/IR-Velociraptor-Artefact-KQL-Mappings
 
   ## Setup Instructions
 
