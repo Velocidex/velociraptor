@@ -85,7 +85,7 @@ parameters:
       Maximum time in seconds to wait before flushing buffered rows to ADX.
       Lower values reduce latency but may increase API calls. Default is 5 seconds.
   - name: MaxMemoryBuffer
-    type: int
+    type: hidden
     default: 104857600
     description: |
       Maximum size of the memory buffer in bytes before forcing an upload.
