@@ -43,6 +43,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -178,29 +179,28 @@ func _upload_rows_adx(
 	batchIngestionTime := ""
 	var batchStart time.Time
 
-	// Configure TLS - force TLS 1.2 for Azure Kusto compatibility
-	// Azure Kusto currently has issues with TLS 1.3 from some clients
-	tlsConfig := &tls.Config{
-		MinVersion: tls.VersionTLS12,
-		MaxVersion: tls.VersionTLS12,
-	}
-
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: tlsConfig,
-		},
-	}
-
 	// Create connection string with service principal auth
 	kustoConnectionString := azkustodata.NewConnectionStringBuilder(arg.ClusterURL).
 		WithAadAppKey(arg.ClientID, arg.ClientSecret, arg.TenantID)
+
+	// Azure Kusto ingest-* endpoints (e.g. ingest-*.kusto.windows.net) do not
+	// support TLS 1.3, therefore force TLS 1.2 for now
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			Proxy: networking.GetProxy(),
+			TLSClientConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				MaxVersion: tls.VersionTLS12,
+			},
+		},
+	}
 
 	// Create managed ingest client (handles streaming/queued automatically)
 	ingestClient, err := azkustoingest.New(
 		kustoConnectionString,
 		azkustoingest.WithDefaultDatabase(arg.Database),
 		azkustoingest.WithDefaultTable(arg.Table),
-		azkustoingest.WithHttpClient(httpClient)) // Pass custom HTTP client for TLS config
+		azkustoingest.WithHttpClient(httpClient))
 	if err != nil {
 		scope.Log("adx_upload: failed to create ingest client: %v", err)
 		return
@@ -224,7 +224,19 @@ func _upload_rows_adx(
 	}()
 
 	wait_time := time.Duration(arg.WaitTime) * time.Second
-	next_send_time := time.After(wait_time)
+	timer := time.NewTimer(wait_time)
+	defer timer.Stop()
+
+	// resetTimer safely drains and resets the timer.
+	resetTimer := func() {
+		if !timer.Stop() {
+			select {
+			case <-timer.C:
+			default:
+			}
+		}
+		timer.Reset(wait_time)
+	}
 
 	opts := vql_subsystem.EncOptsFromScope(scope)
 
@@ -243,10 +255,10 @@ func _upload_rows_adx(
 			}
 
 			// Check if buffer is getting too large before processing
-			if jsonBuf.Len() > int(arg.MaxMemoryBuffer) {
+			if int64(jsonBuf.Len()) > int64(arg.MaxMemoryBuffer) {
 				scope.Log("adx_upload: buffer exceeded max_memory_buffer (%d bytes), forcing send", arg.MaxMemoryBuffer)
 				flushBuffer("max_memory_buffer")
-				next_send_time = time.After(wait_time)
+				resetTimer()
 			}
 
 			// Set ingestion time once per batch
@@ -266,17 +278,17 @@ func _upload_rows_adx(
 			buf = append(buf, row)
 
 			// Do not allow the buffer to get too large.
-			if int64(len(buf)) > arg.ChunkSize {
+			if int64(len(buf)) >= arg.ChunkSize {
 				flushBuffer("chunk_size")
-				next_send_time = time.After(wait_time)
-			} else if jsonBuf.Len() > int(arg.MaxMemoryBuffer) {
+				resetTimer()
+			} else if int64(jsonBuf.Len()) > int64(arg.MaxMemoryBuffer) {
 				flushBuffer("max_memory_buffer")
-				next_send_time = time.After(wait_time)
+				resetTimer()
 			}
 
-		case <-next_send_time:
+		case <-timer.C:
 			flushBuffer("wait_time")
-			next_send_time = time.After(wait_time)
+			timer.Reset(wait_time)
 		}
 	}
 }
@@ -353,13 +365,6 @@ func send_to_adx(
 	flushReason string,
 	batchStart time.Time) {
 
-	// Check context cancellation before expensive operations
-	select {
-	case <-ctx.Done():
-		return
-	default:
-	}
-
 	if len(buf) == 0 || jsonBuf.Len() == 0 {
 		return
 	}
@@ -371,9 +376,18 @@ func send_to_adx(
 		duration = time.Since(batchStart)
 	}
 
+	// If the caller's context is already cancelled (e.g. final flush on shutdown),
+	// use a short-lived background context so the last batch is not dropped.
+	uploadCtx := ctx
+	if ctx.Err() != nil {
+		var cancel context.CancelFunc
+		uploadCtx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+	}
+
 	// Upload to ADX
 	result, err := ingestClient.FromReader(
-		ctx,
+		uploadCtx,
 		bytes.NewReader(jsonBuf.Bytes()),
 		azkustoingest.FileFormat(azkustoingest.JSON),
 	)
@@ -385,7 +399,7 @@ func send_to_adx(
 		scope.Log("adx_upload: failed to upload %d rows (%d bytes) (reason=%s duration=%v): %v",
 			rowsProcessed, dataSize, flushReason, duration, err)
 		select {
-		case <-ctx.Done():
+		case <-uploadCtx.Done():
 			return
 		case output_chan <- ordereddict.NewDict().
 			Set("Rows", rowsProcessed).
@@ -404,7 +418,7 @@ func send_to_adx(
 		scope.Log("adx_upload: successfully uploaded %d rows (%d bytes) to %s.%s (reason=%s duration=%v)",
 			rowsProcessed, dataSize, arg.Database, arg.Table, flushReason, duration)
 		select {
-		case <-ctx.Done():
+		case <-uploadCtx.Done():
 			return
 		case output_chan <- ordereddict.NewDict().
 			Set("Rows", rowsProcessed).
