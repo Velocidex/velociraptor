@@ -288,7 +288,12 @@ func append_row_to_adx_buffer(
 	flowId, _ := vql_row_dict.GetString("FlowId")
 	organization, _ := vql_row_dict.GetString("Organization")
 	hostname, _ := vql_row_dict.GetString("Hostname")
-	timestamp, _ := vql_row_dict.Get("timestamp")
+
+	// Prefer event's Timestamp (capital T) if it exists, otherwise fallback to artifact's timestamp (lowercase)
+	timestamp, _ := vql_row_dict.Get("Timestamp")
+	if timestamp == nil {
+		timestamp, _ = vql_row_dict.Get("timestamp")
+	}
 
 	// Create RawData by copying vql_row_dict and deleting metadata fields (optimized)
 	rawData := vql_row_dict.Copy()
@@ -297,7 +302,6 @@ func append_row_to_adx_buffer(
 	rawData.Delete("FlowId")
 	rawData.Delete("Organization")
 	rawData.Delete("Hostname")
-	rawData.Delete("timestamp")
 
 	// Create structured row with metadata + RawData
 	structuredRow := ordereddict.NewDict().
