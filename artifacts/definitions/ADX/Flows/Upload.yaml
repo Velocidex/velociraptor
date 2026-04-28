@@ -126,7 +126,7 @@ sources:
             threads=Threads,
             chunk_size=ChunkSize,
             wait_time=WaitTime,
-            max_memory_buffer=MaxMemoryBuffer,
+            max_memory_buffer=int(int=MaxMemoryBuffer),
             cluster_url=ClusterURL,
             database=Database,
             table=Table,
