@@ -1,0 +1,126 @@
+name: ADX.Flows.Upload
+description: |
+  This server side event monitoring artifact waits for new artifacts
+  to be collected from endpoints and automatically uploads those to an
+  Azure Data Explorer (ADX) cluster.
+
+  The artifact uploads data to a raw ingestion table with both structured
+  metadata columns and a RawData column containing the full event data.
+  This allows for efficient querying on structured columns while maintaining
+  full flexibility for complex queries using RawData.
+
+  ## ADX Table Schema
+
+  The table should have the following schema:
+
+  ```
+  .create table RawVelociraptorEvents (
+      IngestionTime: datetime,
+      Artifact: string,
+      ClientId: string,
+      FlowId: string,
+      Organization: string,
+      Hostname: string,
+      Timestamp: datetime,
+      RawData: dynamic
+  )
+  ```
+
+  ## Setup Instructions
+
+  1. Create an Azure Service Principal with permissions to ingest data into your ADX cluster
+  2. Grant the service principal appropriate permissions:
+     - Database User or Database Admin role on the target database
+     - Table Ingestion permissions
+  3. Configure the artifact parameters or use the secrets service to store credentials
+  4. Users can create KQL update policies to route/transform data into specific tables
+     based on the Artifact column or other metadata
+
+  ## Performance Considerations
+
+  - The managed ingestion client automatically switches between streaming and queued
+    ingestion based on data volume
+  - Use multiple threads for higher throughput
+  - Adjust chunk_size and wait_time based on your data volume and latency requirements
+
+type: SERVER_EVENT
+
+parameters:
+  - name: ArtifactNameRegex
+    default: .
+    type: regex
+    description: Only upload these artifacts to ADX
+  - name: ClusterURL
+    default: https://your-cluster.region.kusto.windows.net
+    description: |
+      The full ADX cluster URL (e.g., https://cluster.region.kusto.windows.net)
+  - name: Database
+    default: velo
+    description: The ADX database name
+  - name: Table
+    default: RawVelociraptorEvents
+    description: The name of the table to upload to
+  - name: ClientID
+    description: Azure Service Principal Client ID
+  - name: ClientSecret
+    description: Azure Service Principal Client Secret
+  - name: TenantID
+    description: Azure Service Principal Tenant ID
+  - name: Threads
+    type: int
+    default: 1
+    description: Number of threads to upload with
+  - name: ChunkSize
+    type: int
+    default: 1000
+    description: Batch this many rows for each upload.
+  - name: MaxMemoryBuffer
+    type: int
+    default: 104857600
+    description: |
+      Maximum size of the memory buffer in bytes before forcing an upload.
+      Default is 100MB (104857600 bytes). If ADX is unreachable, this prevents unbounded
+      memory growth.
+  - name: Secret
+    type: hidden
+    description: |
+      Alternatively use a secret from the secrets service. Secret must be
+      of type 'ADX Creds'
+
+sources:
+  - query: |
+      LET completions = SELECT * FROM watch_monitoring(
+               artifact="System.Flow.Completion")
+               WHERE Flow.artifacts_with_results =~ ArtifactNameRegex
+      LET organization <= org().name
+
+      LET documents = SELECT * FROM foreach(row=completions,
+          query={
+             SELECT * FROM foreach(
+                 row=Flow.artifacts_with_results,
+                 query={
+                     SELECT *, _value AS Artifact,
+                            client_info(client_id=ClientId).os_info.hostname AS Hostname,
+                            timestamp(epoch=now()) AS timestamp,
+                            ClientId, Flow.session_id AS FlowId,
+                            organization as Organization
+                     FROM source(
+                        client_id=ClientId,
+                        flow_id=Flow.session_id,
+                        artifact=_value)
+                 })
+          })
+
+      SELECT * FROM adx_upload(
+            query=documents,
+            threads=Threads,
+            chunk_size=ChunkSize,
+            max_memory_buffer=MaxMemoryBuffer,
+            cluster_url=ClusterURL,
+            database=Database,
+            table=Table,
+            client_id=ClientID,
+            client_secret=ClientSecret,
+            tenant_id=TenantID,
+            secret=Secret)
+

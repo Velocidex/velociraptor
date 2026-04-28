@@ -113,6 +113,18 @@ var (
 			"skip_verify": "FALSE",
 		},
 	}, {
+		TypeName:    constants.ADX_CREDS,
+		Description: "Credentials to be used in adx_upload() calls.",
+		Verifier:    "x=>x.cluster_url AND x.database AND x.client_id AND x.client_secret AND x.tenant_id",
+		Fields: []string{
+			"cluster_url",
+			"database",
+			"client_id",
+			"client_secret",
+			"tenant_id",
+			"table",
+		},
+	}, {
 		TypeName:    constants.SMTP_CREDS,
 		Verifier:    "x=>x.server && x.server_port",
 		Description: "Credentials to be used in mail() plugin.",
