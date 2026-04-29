@@ -204,6 +204,7 @@ const (
 	HTTP_SECRETS    = "HTTP Secrets"
 	SPLUNK_CREDS    = "Splunk Creds"
 	ELASTIC_CREDS   = "Elastic Creds"
+	ADX_CREDS       = "ADX Creds"
 	SMTP_CREDS      = "SMTP Creds"
 	EXECVE_SECRET   = "Execve Secrets"
 
