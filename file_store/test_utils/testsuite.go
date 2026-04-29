@@ -46,7 +46,7 @@ name: Server.Internal.ClientInfo
 type: CLIENT_EVENT
 `, `
 name: Server.Internal.ClientDelete
-type: INTERNAL
+type: SERVER_EVENT
 `, `
 name: Server.Internal.Label
 type: INTERNAL

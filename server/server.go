@@ -241,10 +241,16 @@ func (self *Server) Process(
 
 	// Older clients
 	if message_info.Version < constants.CLIENT_API_VERSION_0_6_8 {
+		if config_obj.Security == nil ||
+			!config_obj.Security.AllowAncientClients {
+			// Completely reject the message.
+			return nil, 0, utils.InvalidArgError
+		}
+
 		runner := flows.NewLegacyFlowRunner(config_obj)
 		defer runner.Close(ctx)
-
 		err = runner.ProcessMessages(ctx, message_info)
+
 	} else {
 
 		// Newer clients maintain flow state on the client so need a

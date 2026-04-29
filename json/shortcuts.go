@@ -13,6 +13,15 @@ func AppendJsonlItem(jsonl []byte, name string, value interface{}) []byte {
 		return jsonl
 	}
 
+	if len(jsonl) == 0 {
+		return jsonl
+	}
+
+	// Ensure the jsonl is valid and properly terminated.
+	if jsonl[len(jsonl)-1] != '\n' {
+		jsonl = append(jsonl, '\n')
+	}
+
 	extra := fmt.Sprintf(",%q:%s", name, string(serialized))
 
 	for i := 0; i < len(jsonl); i++ {

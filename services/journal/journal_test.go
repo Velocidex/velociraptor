@@ -53,7 +53,7 @@ name: System.Flow.Completion
 type: CLIENT_EVENT
 `, `
 name: System.Hunt.Participation
-type: SERVER_EVENT
+type: INTERNAL
 `})
 
 	self.TestSuite.SetupTest()

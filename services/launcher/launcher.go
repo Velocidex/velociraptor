@@ -131,6 +131,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -391,7 +392,10 @@ func (self *Launcher) CompileCollectorArgs(
 // the rules at the top of this file. Each single source artifact will
 // be converted to a single client request.
 func expandArtifacts(artifact *artifacts_proto.Artifact) []*artifacts_proto.Artifact {
-	if artifact.Type == "server_event" || artifact.Type == "client_event" {
+	artifact_mode := artifact_modes.ModeNameToMode(artifact.Type)
+
+	// Event artifacts are handled especially.
+	if artifact_mode.IsEvent() {
 		result := []*artifacts_proto.Artifact{}
 		for _, source := range artifact.Sources {
 			new_artifact := proto.Clone(artifact).(*artifacts_proto.Artifact)

@@ -35,21 +35,27 @@ func (self *RekeyFunction) Call(ctx context.Context,
 	arg := &RekeyFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("rekey: %v", err)
+		scope.Log("ERROR:rekey: %v", err)
 		return vfilter.Null{}
 	}
 
 	// This is a privileged operation
 	err = vql_subsystem.CheckAccess(scope, acls.EXECVE)
 	if err != nil {
-		scope.Log("rekey: %v", err)
+		scope.Log("ERROR:rekey: %v", err)
 		return vfilter.Null{}
 	}
 
 	// Check the config if we are allowed to execve at all.
 	client_config_obj, ok := artifacts.GetConfig(scope)
 	if !ok || client_config_obj == nil {
-		scope.Log("rekey: Must be running on a client to rekey")
+		scope.Log("ERROR:rekey: Must be running on a client to rekey")
+		return vfilter.Null{}
+	}
+
+	_, ok = vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("ERROR:rekey: Must be run on client to rekey")
 		return vfilter.Null{}
 	}
 
