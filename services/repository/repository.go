@@ -34,6 +34,8 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -158,6 +160,7 @@ func (self *Repository) LoadProto(
 	}
 
 	// Validate the artifact.
+	// TODO: Reports are deprecated, we should remove them.
 	for _, report := range artifact.Reports {
 		report.Type = strings.ToLower(report.Type)
 		switch report.Type {
@@ -182,18 +185,19 @@ func (self *Repository) LoadProto(
 	}
 
 	// Normalize the type.
-	artifact.Type = strings.ToLower(artifact.Type)
-	switch artifact.Type {
-	case "":
-		// By default use the client type.
-		artifact.Type = "client"
+	artifact_mode := artifact_modes.ModeNameToMode(artifact.Type)
+	if artifact_mode == artifact_modes.MODE_INVALID {
+		return nil, fmt.Errorf("Artifact type %v invalid.", artifact.Type)
+	}
 
-	case "client", "client_event", "server",
-		"server_event", "notebook", "internal":
-		// These types are acceptable.
+	artifact.Type = strings.ToLower(artifact_mode.String())
 
-	default:
-		return nil, errors.New("Artifact type invalid.")
+	// Ensure the artifact does not mask a well known queue
+	wk, pres := artifacts.WELL_KNOWN_QUEUES_MAP[artifact.Name]
+	if pres && wk.ArtifactType != artifact_mode {
+		return nil, fmt.Errorf(
+			"Artifact type invalid: Well Known Artifact %v sholuld be of type %v.",
+			artifact.Name, wk.ArtifactType)
 	}
 
 	// Normalize the artifact by converting the deprecated Queries

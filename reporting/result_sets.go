@@ -21,6 +21,15 @@ func (self *ContainerResultSetWriter) Close() {
 }
 
 func (self *ContainerResultSetWriter) WriteJSONL(b []byte) (int, error) {
+	if len(b) == 0 {
+		return 0, nil
+	}
+
+	// Make sure the jsonl is properly terminated
+	if b[len(b)-1] != '\n' {
+		b = append(b, '\n')
+	}
+
 	value := self.offset | (1 << 40)
 	err := binary.Write(self.idx_fd, binary.LittleEndian, value)
 	if err != nil {

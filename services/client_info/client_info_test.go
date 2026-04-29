@@ -47,7 +47,7 @@ name: Server.Internal.ClientInfoSnapshot
 type: INTERNAL
 `, `
 name: Server.Internal.MetadataModifications
-type: INTERNAL
+type: SERVER_EVENT
 `, `
 name: Server.Audit.Logs
 type: INTERNAL

@@ -34,6 +34,10 @@ func (self ArtifactMode) String() string {
 	}
 }
 
+func (self ArtifactMode) IsEvent() bool {
+	return IsEvent(self)
+}
+
 func IsModeValid(mode ArtifactMode) bool {
 	switch mode {
 	case MODE_CLIENT, MODE_CLIENT_EVENT, MODE_SERVER,
@@ -61,7 +65,7 @@ func IsEvent(mode ArtifactMode) bool {
 func ModeNameToMode(name string) ArtifactMode {
 	name = strings.ToUpper(name)
 	switch name {
-	case "CLIENT":
+	case "CLIENT", "":
 		return MODE_CLIENT
 	case "CLIENT_EVENT":
 		return MODE_CLIENT_EVENT

@@ -277,4 +277,12 @@ var (
 		CLIENT_INFO_SCHEDULED, INVENTORY_UPDATED,
 		MASTER_REGISTRATIONS, USER_MANAGER,
 	}
+
+	WELL_KNOWN_QUEUES_MAP = make(map[string]services.JournalOptions)
 )
+
+func init() {
+	for _, q := range WELL_KNOWN_QUEUES {
+		WELL_KNOWN_QUEUES_MAP[q.ArtifactName] = q
+	}
+}

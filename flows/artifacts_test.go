@@ -3,6 +3,7 @@ package flows
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os/exec"
 	"runtime"
 	"sync"
@@ -15,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -61,14 +63,20 @@ type TestSuite struct {
 }
 
 func (self *TestSuite) SetupTest() {
-	self.TestSuite.SetupTest()
+	self.ConfigObj = self.LoadConfig()
+
 	self.LoadArtifactsIntoConfig([]string{`
 name: System.Upload.Completion
 type: CLIENT_EVENT
 `, `
 name: Generic.Client.Profile
 type: CLIENT
+`, `
+name: Server.Internal.Alerts
+type: SERVER_EVENT
 `})
+
+	self.TestSuite.SetupTest()
 
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -194,6 +202,33 @@ func (self *TestSuite) TestRetransmission() {
 
 	// The flow should have only a single row though.
 	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(1))
+
+}
+
+// Invalid montoring messages
+func (self *TestSuite) TestMonitoringInvalid() {
+	runner := NewLegacyFlowRunner(self.ConfigObj)
+	err := runner.ProcessSingleMessage(self.Ctx,
+		&crypto_proto.VeloMessage{
+			Source:    self.client_id,
+			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
+			VQLResponse: &actions_proto.VQLResponse{
+				Columns: []string{
+					"ClientId", "Timestamp", "Fqdn", "HuntId"},
+				JSONLResponse: fmt.Sprintf(
+					"{\"ClientId\": \"%s\", \"HuntId\": \"H.123\"}\n", self.client_id),
+				TotalRows: 1,
+				Query: &actions_proto.VQLRequest{
+					Name: "Server.Internal.Alerts",
+				},
+			},
+		})
+	assert.NoError(self.T(), err)
+
+	runner.Close(self.Ctx)
+
+	context := runner.context_map["F.Monitoring"].ArtifactCollectorContext
+	assert.Contains(self.T(), context.Status, "Only servers can write")
 
 }
 

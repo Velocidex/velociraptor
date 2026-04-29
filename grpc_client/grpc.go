@@ -281,20 +281,38 @@ func GetAPIConnectionString(config_obj *config_proto.Config) string {
 
 	switch config_obj.API.BindScheme {
 	case "tcp":
-		hostname := config_obj.API.Hostname
-		if config_obj.API.BindAddress == "127.0.0.1" {
-			hostname = config_obj.API.BindAddress
-		}
-		if hostname == "" {
-			hostname = config_obj.API.BindAddress
-		}
-		return fmt.Sprintf("%s:%d", hostname, config_obj.API.BindPort)
+		return fmt.Sprintf("%s:%d", GetAPIHostname(config_obj),
+			config_obj.API.BindPort)
 
 	case "unix":
 		return fmt.Sprintf("unix://%s", config_obj.API.BindAddress)
 	}
 
 	panic("Unknown API.BindScheme")
+}
+
+func GetAPIHostname(config_obj *config_proto.Config) string {
+	hostname := config_obj.API.Hostname
+
+	// Prefer connecting over the loopback if possible.
+	if config_obj.API.BindAddress == "127.0.0.1" {
+		hostname = config_obj.API.BindAddress
+	}
+
+	// If there is not specifically a hostname here, we try the
+	// frontend's hostname
+	if hostname == "" {
+		hostname = config_obj.Frontend.Hostname
+	}
+
+	// Failing that we try to bind to the API BindAddress - this
+	// only works if the interface is routable from here (i.e. it
+	// will fail on minions which are from another server).
+	if hostname == "" {
+		hostname = config_obj.API.BindAddress
+	}
+
+	return hostname
 }
 
 // Make sure the pool is established and running.

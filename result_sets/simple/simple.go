@@ -116,6 +116,15 @@ func (self *ResultSetWriterImpl) WriteJSONL(serialized []byte, total_rows uint64
 		total_rows = countLines(serialized)
 	}
 
+	if len(serialized) == 0 {
+		return nil
+	}
+
+	// Make sure the jsonl is properly terminated
+	if serialized[len(serialized)-1] != '\n' {
+		serialized = append(serialized, '\n')
+	}
+
 	// Sync the index with the current buffers.
 	self.Flush()
 
