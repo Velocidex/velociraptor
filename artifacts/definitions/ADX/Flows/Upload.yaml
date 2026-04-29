@@ -109,11 +109,12 @@ sources:
              SELECT * FROM foreach(
                  row=Flow.artifacts_with_results,
                  query={
-                     SELECT *, _value AS Artifact,
-                            client_info(client_id=ClientId).os_info.hostname AS Hostname,
-                            timestamp(epoch=now()) AS timestamp,
-                            ClientId, Flow.session_id AS FlowId,
-                            organization as Organization
+                     SELECT *, _value AS _Artifact,
+                            client_info(client_id=ClientId).os_info.hostname AS _Hostname,
+                            timestamp(epoch=now()) AS _timestamp,
+                            ClientId AS _ClientId, 
+                            Flow.session_id AS _FlowId,
+                            organization as _Organization
                      FROM source(
                         client_id=ClientId,
                         flow_id=Flow.session_id,

@@ -126,15 +126,15 @@ func (self _ADXPlugin) Call(ctx context.Context,
 			return
 		}
 
-		if arg.Threads == 0 {
+		if arg.Threads <= 0 {
 			arg.Threads = 1
 		}
 
-		if arg.ChunkSize == 0 {
+		if arg.ChunkSize <= 0 {
 			arg.ChunkSize = 1000
 		}
 
-		if arg.WaitTime == 0 {
+		if arg.WaitTime <= 0 {
 			arg.WaitTime = 5
 		}
 
@@ -175,7 +175,7 @@ func _upload_rows_adx(
 	arg *_ADXPluginArgs) {
 	defer wg.Done()
 
-	var buf = make([]vfilter.Row, 0, arg.ChunkSize)
+	var rowCount int64
 	var jsonBuf bytes.Buffer
 
 	// Track ingestion time & start time per batch so all rows flushed together share the same timestamp/metrics.
@@ -188,15 +188,14 @@ func _upload_rows_adx(
 
 	// Azure Kusto ingest-* endpoints (e.g. ingest-*.kusto.windows.net) do not
 	// support TLS 1.3, therefore force TLS 1.2 for now
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			Proxy: networking.GetProxy(),
-			TLSClientConfig: &tls.Config{
-				MinVersion: tls.VersionTLS12,
-				MaxVersion: tls.VersionTLS12,
-			},
-		},
+	transport, err := networking.GetNewHttpTransport(config_obj, "")
+	if err != nil {
+		scope.Log("adx_upload: failed to create http transport: %v", err)
+		return
 	}
+	transport.TLSClientConfig.MinVersion = tls.VersionTLS12
+	transport.TLSClientConfig.MaxVersion = tls.VersionTLS12
+	httpClient := &http.Client{Transport: transport}
 
 	// Create managed ingest client (handles streaming/queued automatically)
 	ingestClient, err := azkustoingest.New(
@@ -211,14 +210,14 @@ func _upload_rows_adx(
 	defer ingestClient.Close()
 
 	flushBuffer := func(reason string) {
-		if len(buf) == 0 || jsonBuf.Len() == 0 {
+		if rowCount == 0 || jsonBuf.Len() == 0 {
 			jsonBuf.Reset()
 			batchIngestionTime = ""
 			batchStart = time.Time{}
 			return
 		}
-		send_to_adx(ctx, scope, output_chan, ingestClient, buf, &jsonBuf, arg, reason, batchStart)
-		buf = buf[:0]
+		send_to_adx(ctx, scope, output_chan, ingestClient, rowCount, &jsonBuf, arg, reason, batchStart)
+		rowCount = 0
 		batchIngestionTime = ""
 		batchStart = time.Time{}
 	}
@@ -277,11 +276,11 @@ func _upload_rows_adx(
 				continue
 			}
 
-			// Only add to buf if successfully processed
-			buf = append(buf, row)
+			// Only count successfully processed rows.
+			rowCount++
 
 			// Do not allow the buffer to get too large.
-			if int64(len(buf)) >= arg.ChunkSize {
+			if rowCount >= arg.ChunkSize {
 				flushBuffer("chunk_size")
 				resetTimer()
 			} else if int64(jsonBuf.Len()) > int64(arg.MaxMemoryBuffer) {
@@ -313,46 +312,36 @@ func append_row_to_adx_buffer(
 
 	vql_row_dict := vfilter.RowToDict(ctx, scope, row)
 
-	// Extract metadata fields
-	artifact, _ := vql_row_dict.GetString("Artifact")
-	clientId, _ := vql_row_dict.GetString("ClientId")
-	flowId, _ := vql_row_dict.GetString("FlowId")
-	organization, _ := vql_row_dict.GetString("Organization")
-	hostname, _ := vql_row_dict.GetString("Hostname")
+	// Extract metadata fields (prefixed with _ to avoid collisions with artifact columns)
+	artifact, _ := vql_row_dict.GetString("_Artifact")
+	clientId, _ := vql_row_dict.GetString("_ClientId")
+	flowId, _ := vql_row_dict.GetString("_FlowId")
+	organization, _ := vql_row_dict.GetString("_Organization")
+	hostname, _ := vql_row_dict.GetString("_Hostname")
 
-	// Prefer event's Timestamp (capital T) if it exists, otherwise fallback to artifact's timestamp (lowercase)
+	// Prefer artifact's own Timestamp column if present, otherwise fall back to injected _timestamp
 	timestamp, _ := vql_row_dict.Get("Timestamp")
 	if timestamp == nil {
-		timestamp, _ = vql_row_dict.Get("timestamp")
+		timestamp, _ = vql_row_dict.Get("_timestamp")
 	}
 
-	// Create RawData by copying vql_row_dict and deleting metadata fields (optimized)
-	rawData := vql_row_dict.Copy()
-	rawData.Delete("Artifact")
-	rawData.Delete("ClientId")
-	rawData.Delete("FlowId")
-	rawData.Delete("Organization")
-	rawData.Delete("Hostname")
+	// Remove metadata fields from the row before storing it as RawData
+	vql_row_dict.Delete("_Artifact")
+	vql_row_dict.Delete("_ClientId")
+	vql_row_dict.Delete("_FlowId")
+	vql_row_dict.Delete("_Organization")
+	vql_row_dict.Delete("_Hostname")
+	vql_row_dict.Delete("_timestamp")
 
-	// Create structured row with metadata + RawData
-	structuredRow := ordereddict.NewDict().
-		Set("IngestionTime", ingestionTime).
-		Set("Artifact", artifact).
-		Set("ClientId", clientId).
-		Set("FlowId", flowId).
-		Set("Organization", organization).
-		Set("Hostname", hostname).
-		Set("Timestamp", timestamp).
-		Set("RawData", rawData)
-
-	// Serialize to JSON
-	data, err := json.MarshalWithOptions(structuredRow, opts)
+	rawData, err := json.MarshalWithOptions(vql_row_dict, opts)
 	if err != nil {
 		return err
 	}
 
-	jsonBuf.Write(data)
-	jsonBuf.WriteString("\n")
+	jsonBuf.WriteString(json.Format(
+		`{"IngestionTime":%q,"Artifact":%q,"ClientId":%q,"FlowId":%q,"Organization":%q,"Hostname":%q,"Timestamp":%q,"RawData":%s}`+"\n",
+		ingestionTime, artifact, clientId, flowId, organization, hostname, timestamp, rawData,
+	))
 
 	return nil
 }
@@ -362,18 +351,18 @@ func send_to_adx(
 	scope vfilter.Scope,
 	output_chan chan vfilter.Row,
 	ingestClient *azkustoingest.Ingestion,
-	buf []vfilter.Row,
+	rowCount int64,
 	jsonBuf *bytes.Buffer,
 	arg *_ADXPluginArgs,
 	flushReason string,
 	batchStart time.Time) {
 
-	if len(buf) == 0 || jsonBuf.Len() == 0 {
+	if rowCount == 0 || jsonBuf.Len() == 0 {
 		return
 	}
 
 	dataSize := jsonBuf.Len()
-	rowsProcessed := len(buf)
+	rowsProcessed := rowCount
 	var duration time.Duration
 	if !batchStart.IsZero() {
 		duration = time.Since(batchStart)

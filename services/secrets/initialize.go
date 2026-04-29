@@ -115,7 +115,7 @@ var (
 	}, {
 		TypeName:    constants.ADX_CREDS,
 		Description: "Credentials to be used in adx_upload() calls.",
-		Verifier:    "x=>x.client_id AND x.client_secret",
+		Verifier:    "x=>x.client_id AND x.client_secret AND x.tenant_id",
 		Fields: []string{
 			"cluster_url",
 			"database",
