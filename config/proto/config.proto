@@ -1500,6 +1500,10 @@ message Security {
     // variables. Environment Vars sometimes may contain secrets and
     // confidential information.
     repeated string shadowed_env_vars = 4;
+
+    // This allows communication with very old clients (pre
+    // 0.68). Definitely not recommended.
+    bool allow_ancient_clients = 61;
 }
 
 

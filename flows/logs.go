@@ -167,7 +167,7 @@ func flushContextLogs(
 
 		collection_context.TotalLogs++
 		err = rs_writer.WriteJSONL([]byte(json.Format(
-			"{\"_ts\":%d,\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
+			`{"_ts":%d,"client_time":%d,"level":%q,"message":%q}`,
 			int(time.Now().Unix()),
 			int64(row.Timestamp)/1000000,
 			row.Level,

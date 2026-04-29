@@ -210,7 +210,7 @@ func (self *MonitoringContext) sendAlertMessage(
 			Id:           int64(id),
 			NumberOfRows: 1,
 			Jsonl: json.Format(
-				"{\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
+				`{"client_time":%d,"level":%q,"message":%q}`+"\n",
 				int(utils.GetTime().Now().Unix()), level, msg),
 			Level:    logging.ALERT,
 			Artifact: self.artifact,
@@ -227,7 +227,7 @@ func (self *MonitoringContext) AddLogMessage(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	message := json.Format("{\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
+	message := json.Format(`{"client_time":%d,"level":%q,"message":%q}`+"\n",
 		int(utils.GetTime().Now().Unix()), level, msg)
 	self.log_message_count++
 	self.log_messages = append(self.log_messages, message...)

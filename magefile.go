@@ -175,6 +175,10 @@ func (self Builder) Run() error {
 	}
 
 	tags := base_tags + self.extra_tags
+	if self.sumo {
+		tags += " sumo "
+	}
+
 	args := []string{
 		"build",
 		"-o", filepath.Join("output", self.Name()),
@@ -265,7 +269,7 @@ func LinuxDebug() error {
 
 func LinuxSumo() error {
 	return Builder{
-		extra_tags: " release yara sumo ",
+		extra_tags: " release yara ",
 		goos:       "linux",
 		sumo:       true,
 		arch:       "amd64"}.Run()
@@ -279,6 +283,12 @@ func getMuslBuilder() Builder {
 		extra_name:    "-musl",
 		extra_ldflags: "-linkmode external -extldflags \"-static\"",
 		arch:          "amd64"}
+}
+
+func LinuxMuslSumo() error {
+	builer := getMuslBuilder()
+	builer.sumo = true
+	return builer.Run()
 }
 
 func LinuxMusl() error {
@@ -401,7 +411,7 @@ func Windows() error {
 
 func WindowsSumo() error {
 	return Builder{
-		extra_tags: " release yara sumo ",
+		extra_tags: " release yara ",
 		goos:       "windows",
 		sumo:       true,
 		arch:       "amd64"}.Run()
@@ -865,10 +875,11 @@ func doesContainerExist(name string) bool {
 		return false
 	}
 
-	fmt.Printf("Res %#v\n", res)
+	//fmt.Printf("Res %#v\n", json.MustMarshalString(res))
 	for _, entry := range res {
 		if InString(entry.Metadata.Container.Tags, name) {
-			fmt.Printf("Found container: %v\n", entry)
+			fmt.Printf("Found container: %v\n",
+				json.MustMarshalString(entry))
 			return true
 		}
 	}
@@ -896,9 +907,13 @@ func Container() error {
 	}
 
 	builder := getMuslBuilder()
+
+	// We really want the sumo build inside the container.
+	builder.sumo = true
+
 	_, err := os.Stat("output/" + builder.Name())
 	if os.IsNotExist(err) {
-		err := LinuxMusl()
+		err := LinuxMuslSumo()
 		if err != nil {
 			return err
 		}

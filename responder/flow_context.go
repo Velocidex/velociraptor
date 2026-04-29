@@ -359,7 +359,7 @@ func (self *FlowContext) sendAlertMessage(
 			Id:           int64(id),
 			NumberOfRows: 1,
 			Jsonl: json.Format(
-				"{\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
+				`{"client_time":%d,"level":%q,"message":%q}`+"\n",
 				int(utils.GetTime().Now().Unix()), level, msg),
 			Level: logging.ALERT,
 		}}
@@ -399,7 +399,7 @@ func (self *FlowContext) AddLogMessage(
 func (self *FlowContext) addLogMessage(level string, msg string) {
 	self.log_message_count++
 	self.log_messages = append(self.log_messages, json.Format(
-		"{\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
+		`{"client_time":%d,"level":%q,"message":%q}`+"\n",
 		int(utils.GetTime().Now().Unix()), level, msg)...)
 }
 

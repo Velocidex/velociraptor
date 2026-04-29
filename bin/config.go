@@ -34,6 +34,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -452,12 +453,10 @@ func doDumpApiClientConfig() error {
 
 	switch config_obj.API.BindScheme {
 	case "tcp":
-		hostname := config_obj.API.Hostname
-		if hostname == "" {
-			hostname = config_obj.API.BindAddress
-		}
+		hostname := grpc_client.GetAPIHostname(config_obj)
 		api_client_config.ApiConnectionString = fmt.Sprintf("%s:%v",
 			hostname, config_obj.API.BindPort)
+
 	case "unix":
 		api_client_config.ApiConnectionString = fmt.Sprintf("unix://%s",
 			config_obj.API.BindAddress)

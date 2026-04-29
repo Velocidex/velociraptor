@@ -382,7 +382,7 @@ func getRotator(
 	// write to the file.
 	now := utils.GetTime().Now().UTC()
 	_, err = result.Write([]byte(json.Format(
-		"{\"level\": \"info\", \"msg\": \"Starting...\", \"time\": %q}\n", now)))
+		`{"level": "info", "msg": "Starting...", "time": %q}`+"\n", now)))
 	return result, err, true
 }
 

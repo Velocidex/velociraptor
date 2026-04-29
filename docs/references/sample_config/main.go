@@ -137,6 +137,9 @@ var (
 		"security.secrets_dek",
 		"security.vql_must_use_secrets",
 		"security.disable_inventory_service_external_access",
+
+		// Fields that should not really be set so they are hidden
+		"security.allow_ancient_clients",
 	}
 )
 
