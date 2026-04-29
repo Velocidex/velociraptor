@@ -4185,7 +4185,6 @@
 
     On some installtions this is a very expensive operation as it
     generates a lot of IO.
-
   type: Plugin
   args:
   - name: hunt_id
@@ -13220,3 +13219,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+

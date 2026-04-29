@@ -47,7 +47,7 @@ func (self *ServerArtifactsTestSuite) SetupTest() {
 
 	self.LoadArtifactsIntoConfig([]string{`
 name: System.Flow.Completion
-type: INTERNAL
+type: CLIENT_EVENT
 `})
 
 	self.TestSuite.SetupTest()

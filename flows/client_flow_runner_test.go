@@ -53,10 +53,10 @@ name: System.Hunt.Creation
 type: SERVER_EVENT
 `, `
 name: Server.Internal.ClientPing
-type: SERVER
+type: INTERNAL
 `, `
 name: Server.Internal.ClientInfoSnapshot
-type: SERVER
+type: INTERNAL
 `, `
 name: System.Flow.Archive
 type: SERVER
@@ -77,7 +77,7 @@ name: Server.Internal.Alerts
 type: SERVER_EVENT
 `, `
 name: Server.Internal.ClientScheduled
-type: SERVER_EVENT
+type: INTERNAL
 `}
 )
 
@@ -632,8 +632,7 @@ func (self *ServerTestSuite) TestMonitoringInvalid() {
 				},
 			},
 		})
-	assert.ErrorContains(
-		self.T(), err, "Only servers can write to a SERVER_EVENT artifact_type")
+	assert.ErrorContains(self.T(), err, "Only servers can write")
 
 	runner.Close(self.Ctx)
 }

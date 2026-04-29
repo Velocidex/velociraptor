@@ -81,6 +81,15 @@ func (self *TimedResultSetWriterImpl) WriteJSONL(jsonl []byte, count int) {
 		return
 	}
 
+	if len(jsonl) == 0 {
+		return
+	}
+
+	// Make sure the jsonl is properly terminated
+	if jsonl[len(jsonl)-1] != '\n' {
+		jsonl = append(jsonl, '\n')
+	}
+
 	self.rows = append(self.rows, rowContainer{
 		serialized: jsonl,
 		count:      count,

@@ -16,7 +16,7 @@ func MakeErrorResponse(
 		LogMessage: &crypto_proto.LogMessage{
 			NumberOfRows: 1,
 			Jsonl: json.Format(
-				"{\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
+				`{"client_time":%d,"level":%q,"message":%q}`+"\n",
 				int(utils.GetTime().Now().Unix()), logging.ERROR, message),
 			ErrorMessage: message,
 		},

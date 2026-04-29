@@ -136,8 +136,7 @@ func syncFlowTables(
 		}
 
 		err = rs_writer.WriteJSONL([]byte(
-			json.Format(`{"ClientId": %q, "Hostname": %q, "FlowId": %q, "StartedTime": %q, "State": %q, "Duration": %q, "TotalBytes": %q, "TotalRows": %q}
-`,
+			json.Format(`{"ClientId": %q, "Hostname": %q, "FlowId": %q, "StartedTime": %q, "State": %q, "Duration": %q, "TotalBytes": %q, "TotalRows": %q}`,
 				participation_row.ClientId,
 				services.GetHostname(ctx, config_obj, participation_row.ClientId),
 				participation_row.FlowId,

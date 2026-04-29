@@ -9,6 +9,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -58,9 +59,10 @@ func (self *AnalysisState) AnalyseCall(
 
 func (self *AnalysisState) AnalyseArtifactRequiredPermissions(
 	artifact *artifacts_proto.Artifact) {
-	switch strings.ToUpper(artifact.Type) {
-	case "", "CLIENT":
-	default:
+	artifact_mode := artifact_modes.ModeNameToMode(artifact.Type)
+
+	// Only client artifacts enforce required permissions
+	if artifact_mode != artifact_modes.MODE_CLIENT {
 		return
 	}
 

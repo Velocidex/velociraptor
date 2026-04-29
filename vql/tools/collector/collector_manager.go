@@ -620,6 +620,6 @@ func (self *logWriter) Write(b []byte) (int, error) {
 	level, msg := logging.SplitIntoLevelAndLog(b)
 	now := int(Clock.Now().Unix())
 	return self.log_file.WriteJSONL([]byte(json.Format(
-		"{\"_ts\":%d,\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
+		`{"_ts":%d,"client_time":%d,"level":%q,"message":%q}`,
 		now, now, level, msg)))
 }

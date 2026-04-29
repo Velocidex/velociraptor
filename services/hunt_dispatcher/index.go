@@ -120,8 +120,7 @@ func (self *HuntStorageManagerImpl) _FlushIndex(ctx context.Context) (int, error
 		}
 
 		jsonl := json.Format(
-			`{"HuntId":%q,"Description":%q,"Tags":%q,"Created":%q,"Started":%q,"Expires":%q,"Creator":%q,"Hunt":%q}
-`,
+			`{"HuntId":%q,"Description":%q,"Tags":%q,"Created":%q,"Started":%q,"Expires":%q,"Creator":%q,"Hunt":%q}`,
 			hunt_record.HuntId,
 			hunt_record.HuntDescription,
 
