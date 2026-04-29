@@ -45,6 +45,7 @@ sources:
               message,
               OSPath as source,
               Executable as file_name,
+              ExecutablePath,
               CreationTime as prefetch_ctime,
               ModificationTime as prefetch_mtime,
               FileSize as prefetch_size,
@@ -72,14 +73,15 @@ sources:
                    Hash,
                    Version,
                    LastRunTimes,
-                   "Evidence of Execution: " + Executable + format(
+                   "Evidence of Execution: " + ExecutablePath + format(
                       format=" Prefetch run count %v", args=RunCount) as message,
                    RunCount,
                    OSPath,
                    PrefetchFileName,
                    CreationTime,
                    ModificationTime,
-                   Binary
+                   Binary,
+                   ExecutablePath
             FROM scope()
           })
         }, b1={
@@ -89,14 +91,15 @@ sources:
                    Hash,
                    Version,
                    CreationTime AS LastRunTimes,
-                   "Evidence of Execution (Btime): " + Executable + format(
+                   "Evidence of Execution (Btime): " + ExecutablePath + format(
                       format=" Prefetch run count %v", args=RunCount) as message,
                    RunCount,
                    OSPath,
                    PrefetchFileName,
                    CreationTime,
                    ModificationTime,
-                   Binary
+                   Binary,
+                   ExecutablePath
             FROM scope()
         })
         -- This group by applies on only a single prefetch file to
