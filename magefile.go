@@ -911,27 +911,27 @@ func Container() error {
 	// We really want the sumo build inside the container.
 	builder.sumo = true
 
-	_, err := os.Stat("output/" + builder.Name())
-	if os.IsNotExist(err) {
+	target := "output/" + builder.Name()
+	fmt.Printf("Getting binary from %v\n", target)
+
+	// Copy the binary to the docker directory
+	err := sh.Copy("Docker/bin/velociraptor", target)
+	if err != nil {
+		// If it is not there, build it.
 		err := LinuxMuslSumo()
 		if err != nil {
 			return err
 		}
-
-	} else if err != nil {
-		return err
-	}
-
-	// Copy the binary to the docker directory
-	err = sh.Copy("Docker/bin/velociraptor", "output/"+builder.Name())
-	if err != nil {
-		return err
+		err = sh.Copy("Docker/bin/velociraptor", target)
+		if err != nil {
+			return err
+		}
 	}
 
 	image := "ghcr.io/velocidex/velociraptor-server:" + tag
 
 	// Build the docker image
-	err = sh.Run("docker", "build", "-t", image,
+	err = sh.Run("docker", "buildx", "build", "-t", image,
 		"--label", fmt.Sprintf("version=%v", constants.VERSION),
 		"--label", "commit_hash="+hash(),
 		"--label", "build_time="+time.Now().Format(time.RFC3339),
