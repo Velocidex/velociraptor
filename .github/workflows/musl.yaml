@@ -69,6 +69,7 @@ jobs:
         GIT_DOCKER_PAT: ${{ secrets.GIT_DOCKER_PAT }}
       run: |
         echo $GIT_DOCKER_PAT | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        export PATH=$PATH:~/go/bin/:/usr/local/musl/bin
         go run make.go -v Container
 
     - name: StoreBinaries
