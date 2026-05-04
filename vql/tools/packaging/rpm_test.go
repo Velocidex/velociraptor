@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/rpmpack"
 	"github.com/stretchr/testify/suite"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -188,5 +189,6 @@ func (self *PackagingTestSuite) TestRPMServerMinion() {
 }
 
 func TestPackaging(t *testing.T) {
+	config.DO_NOT_UPDATE_VERSION = true
 	suite.Run(t, &PackagingTestSuite{})
 }

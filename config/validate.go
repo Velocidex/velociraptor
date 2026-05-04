@@ -12,6 +12,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+var (
+	// Set for tests where we dont want the version to be updated. In
+	// real life the version is updated when the config is loaded and
+	// migrated. The Version field is simply a tag of the version of
+	// the program used to update the config last.
+	DO_NOT_UPDATE_VERSION = false
+)
+
 // Ensures client config is valid, fills in defaults for missing values etc.
 func ValidateClientConfig(config_obj *config_proto.Config) error {
 	migrate(config_obj)
@@ -71,11 +79,13 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 		}
 	}
 
-	config_obj.Version = GetVersion()
+	if !DO_NOT_UPDATE_VERSION {
+		config_obj.Version = GetVersion()
 
-	// The client's config contains the running version of the client
-	// itself.
-	config_obj.Client.Version = GetVersion()
+		// The client's config contains the running version of the client
+		// itself.
+		config_obj.Client.Version = GetVersion()
+	}
 
 	// Ensure the writeback service is configured.
 	writeback_service := writeback.GetWritebackService()
@@ -165,17 +175,19 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 	// The server should always update the client part to ensure new
 	// clients created from this server will keep the correct server
 	// version.
-	if config_obj.Client != nil {
-		version := GetVersion()
+	if !DO_NOT_UPDATE_VERSION {
+		if config_obj.Client != nil {
+			version := GetVersion()
 
-		config_obj.Client.ServerVersion = &config_proto.Version{
-			Version:   version.Version,
-			BuildTime: version.BuildTime,
-			Commit:    version.Commit,
+			config_obj.Client.ServerVersion = &config_proto.Version{
+				Version:   version.Version,
+				BuildTime: version.BuildTime,
+				Commit:    version.Commit,
+			}
 		}
-	}
 
-	config_obj.Version = GetVersion()
+		config_obj.Version = GetVersion()
+	}
 
 	return nil
 }
