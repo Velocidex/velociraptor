@@ -1,0 +1,15 @@
+Query: LET _ <= import(artifact="Generic.Utils.Crypto")
+Output: []
+
+# Cover short key, long keys and key around the blocksize.
+Query: SELECT HexEncode(X=HMac(Key="Secret", Message="My Message")), HexEncode(X=HMac(Key="Secret" * 20, Message="My Message")), HexEncode(X=HMac(Key=("Secret" * 20)[:63], Message="My Message")), HexEncode(X=HMac(Key=("Secret" * 20)[:64], Message="My Message")), HexEncode(X=HMac(Key=("Secret" * 20)[:65], Message="My Message")) FROM scope()
+Output: [
+ {
+  "HexEncode(X=HMac(Key=\"Secret\", Message=\"My Message\"))": "bf66efbe1b6ac6905b805a6e7014dc6342131f43cdc744a8d05ef2227a3c8f1d",
+  "HexEncode(X=HMac(Key=\"Secret\" * 20, Message=\"My Message\"))": "dc9a7797f1680c1a69a408370a1a14bc4d24f503e6421c3efc0fb5c79b9d19fe",
+  "HexEncode(X=HMac(Key=(\"Secret\" * 20)[:63], Message=\"My Message\"))": "5135964920e878545f130f618a864bf04513ffc8acff0baf9439acae78d7897a",
+  "HexEncode(X=HMac(Key=(\"Secret\" * 20)[:64], Message=\"My Message\"))": "b33127af063b4096ecfea33eec0de171b5b72d9cc807efd5e678b4cead045fc7",
+  "HexEncode(X=HMac(Key=(\"Secret\" * 20)[:65], Message=\"My Message\"))": "e66035788fd6d7108044dd98d87eecc332e5b9309a538326da313c038ea2a109"
+ }
+]
+

@@ -71,9 +71,10 @@ func (self *node) Debug() string {
 }
 
 // Lookup a child by name. If not found returns nil
-func (self *node) GetChild(name string) *node {
+func (self *node) GetChild(
+	name string, manipulator PathManipulator) *node {
 	for _, c := range self.children {
-		if c.name == name {
+		if manipulator.ComponentEqual(c.name, name) {
 			return c
 		}
 	}
@@ -83,9 +84,10 @@ func (self *node) GetChild(name string) *node {
 
 // Get the child node for the given name. If the node is not found, we
 // create a new node based on our last mount point.
-func (self *node) MakeChild(name string) *node {
+func (self *node) MakeChild(
+	name string, manipulator PathManipulator) *node {
 	for _, c := range self.children {
-		if c.name == name {
+		if manipulator.ComponentEqual(c.name, name) {
 			return c
 		}
 	}
@@ -193,7 +195,7 @@ func (self *MountFileSystemAccessor) getDelegateNode(os_path *OSPath) (
 
 	for idx, c := range os_path.Components {
 		if c != "" {
-			next_node := node.GetChild(c)
+			next_node := node.GetChild(c, os_path.Manipulator)
 
 			// There is no internal mount point, use the last known
 			// mounted filesystem.
@@ -359,7 +361,7 @@ func (self *MountFileSystemAccessor) AddMapping(
 
 	for _, c := range target.Components {
 		if c != "" {
-			node = node.MakeChild(c)
+			node = node.MakeChild(c, target.Manipulator)
 		}
 	}
 

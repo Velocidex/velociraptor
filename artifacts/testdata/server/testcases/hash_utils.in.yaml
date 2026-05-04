@@ -1,0 +1,10 @@
+Queries:
+- LET _ <= import(artifact="Generic.Utils.Crypto")
+
+# Cover short key, long keys and key around the blocksize.
+- SELECT HexEncode(X=HMac(Key="Secret", Message="My Message")),
+    HexEncode(X=HMac(Key="Secret" * 20, Message="My Message")),
+    HexEncode(X=HMac(Key=("Secret" * 20)[:63], Message="My Message")),
+    HexEncode(X=HMac(Key=("Secret" * 20)[:64], Message="My Message")),
+    HexEncode(X=HMac(Key=("Secret" * 20)[:65], Message="My Message"))
+  FROM scope()

@@ -1,0 +1,49 @@
+name: Generic.Utils.Crypto
+description: |
+  A utility artifact to provide helpful utility functions.
+
+  To use, import this artifact and use the functions.
+
+export: |
+  /* Verify against python
+
+  ```python
+  import hmac
+
+  def HMAC(Key, Message):
+    a = hmac.new(key=Key, digestmod="sha256")
+    a.update(Message)
+    print(a.hexdigest())
+  ```
+
+  */
+  LET Sha256Blocksize <= 64
+
+  // Helper function to hash easier.
+  LET Sha256Hash(X) = unhex(string=hash(accessor="data", path=X).SHA256)
+
+  // The key is hashed if it is longer than blocksize and padded if not.
+  LET HMACGetKey(Key) = if(
+    condition=len(list=Key) <= Sha256Blocksize,
+    then=Key + "\x00" * (Sha256Blocksize - len(list=Key)),
+    else=HMACGetKey(Key=Sha256Hash(X=Key)))
+
+  // HMAC relies on an inner key pad and outer key pad that are
+  // combined with 2 rounds of hashes.
+  LET OKeyPad(Key) = xor(key=HMACGetKey(Key=Key),
+       string="\x5c" * Sha256Blocksize)
+  LET IKeyPad(Key) = xor(key=HMACGetKey(Key=Key),
+       string="\x36" * Sha256Blocksize)
+
+  -- A Helper function to make displaying easier
+  LET HexEncode(X) = format(format="%x", args=[X,])
+
+  -- Finally this is the hmac function
+  LET HMac(Key, Message) = Sha256Hash(X=
+    OKeyPad(Key=Key) + Sha256Hash(X=IKeyPad(Key=Key) + Message))
+
+sources:
+- query: |
+    // Sample usage
+    SELECT HexEncode(X=HMac(Key="Secret", Message="My Message"))
+    FROM scope()

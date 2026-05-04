@@ -30,9 +30,11 @@ import (
 	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
@@ -69,16 +71,24 @@ func doServerDeb() error {
 	// deb on the same system where the logs should go.
 	logging.DisableLogging()
 
-	config_obj, err := makeDefaultConfigLoader().
-		WithRequiredFrontend().LoadAndValidate()
-	if err != nil {
-		return fmt.Errorf("Unable to load config file: %w", err)
+	if *config_path == "" {
+		return fmt.Errorf("A server config must be specified using the --config flag")
 	}
+
+	temp_dir, err := tempfile.TempDir("debian")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(temp_dir)
+
+	blank_config := config.GetDefaultConfig()
+	blank_config.Datastore.Location = temp_dir
+	blank_config.Datastore.FilestoreDirectory = temp_dir
 
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	sm, err := startup.StartToolServices(ctx, config_obj)
+	sm, err := startup.StartToolServices(ctx, blank_config)
 	defer sm.Close()
 
 	if err != nil {
@@ -110,7 +120,8 @@ func doServerDeb() error {
 		Env: ordereddict.NewDict().
 			Set("Release", *debian_command_release).
 			Set("Output", *server_debian_command_output).
-			Set("BinaryToPackage", *server_debian_command_binary),
+			Set("BinaryToPackage", *server_debian_command_binary).
+			Set("ConfigPath", *config_path),
 	}
 
 	query := `
@@ -119,6 +130,7 @@ func doServerDeb() error {
        SELECT OSPath
        FROM deb_create(exe=BinaryToPackage, server=TRUE,
                        directory_name=Output,
+                       config=read_file(filename=ConfigPath, length=1000000),
                        release=Release)`
 
 	err = runQueryWithEnv(query, builder, "json")
@@ -134,16 +146,24 @@ func doClientDeb() error {
 	// deb on the same system where the logs should go.
 	logging.DisableLogging()
 
-	config_obj, err := makeDefaultConfigLoader().
-		WithRequiredClient().LoadAndValidate()
-	if err != nil {
-		return fmt.Errorf("Unable to load config file: %w", err)
+	if *config_path == "" {
+		return fmt.Errorf("A server config must be specified using the --config flag")
 	}
+
+	temp_dir, err := tempfile.TempDir("debian")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(temp_dir)
+
+	blank_config := config.GetDefaultConfig()
+	blank_config.Datastore.Location = temp_dir
+	blank_config.Datastore.FilestoreDirectory = temp_dir
 
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	sm, err := startup.StartToolServices(ctx, config_obj)
+	sm, err := startup.StartToolServices(ctx, blank_config)
 	defer sm.Close()
 
 	if err != nil {
@@ -175,7 +195,8 @@ func doClientDeb() error {
 		Env: ordereddict.NewDict().
 			Set("Release", *debian_command_release).
 			Set("Output", *client_debian_command_output).
-			Set("BinaryToPackage", *client_debian_command_binary),
+			Set("BinaryToPackage", *client_debian_command_binary).
+			Set("ConfigPath", *config_path),
 	}
 
 	query := `
@@ -184,6 +205,7 @@ func doClientDeb() error {
        SELECT OSPath
        FROM deb_create(exe=BinaryToPackage,
                        directory_name=Output,
+                       config=read_file(filename=ConfigPath, length=1000000),
                        release=Release)`
 
 	err = runQueryWithEnv(query, builder, "json")

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"gopkg.in/yaml.v2"
+	"github.com/Velocidex/yaml/v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"

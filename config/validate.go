@@ -173,8 +173,9 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 			BuildTime: version.BuildTime,
 			Commit:    version.Commit,
 		}
-
 	}
+
+	config_obj.Version = GetVersion()
 
 	return nil
 }

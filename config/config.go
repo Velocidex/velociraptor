@@ -64,6 +64,9 @@ func GetDefaultConfig() *config_proto.Config {
 			Level2WritebackSuffix: ".bak",
 			TempdirWindows:        "$ProgramFiles\\Velociraptor\\Tools",
 			MaxPoll:               60,
+			ServerUrls: []string{
+				"https://127.0.0.1:8889/",
+			},
 
 			// By default restart the client if we are unable to
 			// contact the server within this long. (NOTE - even a
