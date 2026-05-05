@@ -18,7 +18,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
@@ -75,7 +74,6 @@ func (self *ArtifactRepositoryPlugin) Call(
 		// Support mocking the artifacts
 		mocks, pres := self.mocks[artifact_name]
 		if pres && len(mocks) > 0 {
-			utils.DlvBreak()
 			result := mocks[mock_call_count%len(mocks)]
 			self.mock_call_count[artifact_name] = mock_call_count + 1
 

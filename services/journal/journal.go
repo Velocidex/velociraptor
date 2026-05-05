@@ -264,7 +264,7 @@ func (self *JournalService) Broadcast(
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
 		config_obj, opts.ClientId, opts.FlowId, opts.ArtifactName, mode)
 
-	self.qm.Broadcast(path_manager, opts.ClientId, rows)
+	self.qm.Broadcast(path_manager, opts.Username, rows)
 	return nil
 }
 
@@ -284,11 +284,18 @@ func (self *JournalService) PushJsonlToArtifact(
 	case artifact_modes.MODE_INTERNAL,
 		artifact_modes.MODE_CLIENT_EVENT,
 		artifact_modes.MODE_SERVER_EVENT:
-		if self != nil && self.qm != nil {
-			return self.qm.PushEventJsonl(
-				path_manager, opts.Username, jsonl, row_count)
+
+		if self == nil || self.qm == nil {
+			return errors.New("Filestore not initialized")
 		}
-		return errors.New("Filestore not initialized")
+
+		err := self.qm.PushEventJsonl(
+			path_manager, opts.Username, jsonl, row_count)
+		if err != nil {
+			return err
+		}
+
+		return nil
 
 		// Real artifacts are written to the filestore.
 	case artifact_modes.MODE_CLIENT,
@@ -338,9 +345,15 @@ func GetArtifactMode(
 		}
 
 	case artifact_modes.MODE_SERVER,
-		artifact_modes.MODE_SERVER_EVENT,
-		artifact_modes.MODE_INTERNAL:
+		artifact_modes.MODE_SERVER_EVENT:
 		if opts.ClientId != constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+			return mode, fmt.Errorf(
+				"Only servers can write to a %v artifact_type",
+				mode.String())
+		}
+
+	case artifact_modes.MODE_INTERNAL:
+		if opts.Username != constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 			return mode, fmt.Errorf(
 				"Only servers can write to a %v artifact_type",
 				mode.String())
@@ -371,10 +384,17 @@ func (self *JournalService) PushRowsToArtifact(
 	case artifact_modes.MODE_INTERNAL,
 		artifact_modes.MODE_CLIENT_EVENT,
 		artifact_modes.MODE_SERVER_EVENT:
-		if self != nil && self.qm != nil {
-			return self.qm.PushEventRows(path_manager, opts.Username, rows)
+		if self == nil || self.qm == nil {
+			return errors.New("Filestore not initialized")
 		}
-		return errors.New("Filestore not initialized")
+
+		err := self.qm.PushEventRows(
+			path_manager, opts.Username, rows)
+		if err != nil {
+			return err
+		}
+
+		return nil
 
 		// Real artifacts are written to the filestore.
 	case artifact_modes.MODE_CLIENT,

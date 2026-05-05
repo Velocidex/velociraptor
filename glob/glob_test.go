@@ -28,7 +28,6 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	"github.com/Velocidex/ordereddict"
@@ -77,7 +76,6 @@ func TestConvertToPathComponent(t *testing.T) {
 			if reflect.DeepEqual(fixture.components, components) {
 				continue
 			}
-			utils.DlvBreak()
 			t.Fatalf("Unexpected %v: %v",
 				fixture.components, components)
 		}

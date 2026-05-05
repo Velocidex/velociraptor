@@ -373,10 +373,6 @@ func (self *NotebookManagerTestSuite) TestInitialNotebook() {
 		req := tc.req
 		golden.Set(req.Name+" Request", proto.Clone(req))
 
-		if req.Name == "Create GlobalNotebook" {
-			utils.DlvBreak()
-		}
-
 		artifact, out, err := notebook.CalculateNotebookArtifact(
 			self.Ctx, self.ConfigObj, req)
 		assert.NoError(self.T(), err)

@@ -299,13 +299,19 @@ func (self *OrgManager) Start(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Org Manager service.")
 
+	err := datastore.StartDatastore(
+		ctx, wg, config_obj)
+	if err != nil {
+		return err
+	}
+
 	nonce := ""
 	if config_obj.Client != nil {
 		nonce = config_obj.Client.Nonce
 	}
 
 	// First start all services for the root org
-	err := self.startOrg(&api_proto.OrgRecord{
+	err = self.startOrg(&api_proto.OrgRecord{
 		Id:    services.ROOT_ORG_ID,
 		Name:  services.ROOT_ORG_NAME,
 		Nonce: nonce,

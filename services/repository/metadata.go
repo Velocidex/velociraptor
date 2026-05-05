@@ -151,15 +151,14 @@ func (self *metadataManager) SaveMetadata(
 	ctx context.Context, config_obj *config_proto.Config,
 	repository services.Repository) error {
 
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		// Not an error - without a datastore run with an in-memory
 		// repository.
+		self.mu.Lock()
 		self.dirty = false
 		self.last_write = utils.GetTime().Now()
+		self.mu.Unlock()
 		return nil
 	}
 
@@ -173,6 +172,8 @@ func (self *metadataManager) SaveMetadata(
 		existing.Metadata = make(map[string]*artifacts_proto.ArtifactMetadata)
 	}
 
+	// Only hold the lock as long as necessary to avoid deadlocks.
+	self.mu.Lock()
 	for k, v := range self.lookup {
 		existing.Metadata[k] = v
 	}
@@ -183,6 +184,7 @@ func (self *metadataManager) SaveMetadata(
 
 	artifacts, err := repository.List(ctx, config_obj)
 	if err != nil {
+		self.mu.Unlock()
 		return err
 	}
 
@@ -203,14 +205,14 @@ func (self *metadataManager) SaveMetadata(
 		Metadata: self.lookup,
 	}
 
-	// Flush the metadata file.
-	err = db.SetSubject(config_obj, path_manager.Metadata(),
-		metadata_proto)
-
 	self.dirty = false
 	self.last_write = utils.GetTime().Now()
 
-	return err
+	self.mu.Unlock()
+
+	// Flush the metadata file in the background.
+	return db.SetSubject(config_obj, path_manager.Metadata(),
+		metadata_proto)
 }
 
 func (self *metadataManager) loadMetadata(

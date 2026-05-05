@@ -25,7 +25,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -266,7 +265,6 @@ func parsePath(
 		return accessors.ParsePath(t, path_type)
 
 	default:
-		utils.DlvBreak()
 		return nil, fmt.Errorf(
 			"Path should be an OSPath or string, not %T", path)
 	}

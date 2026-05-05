@@ -287,6 +287,9 @@ func (self *ReplicationService) Start(
 					timer.ObserveDuration()
 
 					if err != nil {
+						logger := logging.GetLogger(
+							self.config_obj, &logging.FrontendComponent)
+						logger.Error("Sending event to %v: %v", request.Artifact, err)
 						replicationTotalSendErrors.Inc()
 
 						// Attempt to push the events
@@ -491,10 +494,19 @@ func (self *ReplicationService) pushRowsToLocalQueueManager(
 	case artifact_modes.MODE_INTERNAL,
 		artifact_modes.MODE_CLIENT_EVENT,
 		artifact_modes.MODE_SERVER_EVENT:
-		if self != nil && self.qm != nil {
-			return self.qm.PushEventRows(path_manager, opts.ClientId, rows)
+		if self == nil || self.qm == nil {
+			return errors.New("Filestore not initialized")
 		}
-		return errors.New("Filestore not initialized")
+
+		err := self.qm.PushEventRows(
+			path_manager, opts.Username, rows)
+		if err != nil {
+			return err
+		}
+
+		// On the minions the events must also be replicated to the
+		// master.
+		return nil
 
 		// Real artifacts are written to the filestore.
 	case artifact_modes.MODE_CLIENT,
@@ -529,11 +541,19 @@ func (self *ReplicationService) pushJsonlToLocalQueueManager(
 	case artifact_modes.MODE_INTERNAL,
 		artifact_modes.MODE_CLIENT_EVENT,
 		artifact_modes.MODE_SERVER_EVENT:
-		if self != nil && self.qm != nil {
-			return self.qm.PushEventJsonl(
-				path_manager, opts.Username, jsonl, row_count)
+		if self == nil || self.qm == nil {
+			return errors.New("Filestore not initialized")
 		}
-		return errors.New("Filestore not initialized")
+
+		err := self.qm.PushEventJsonl(
+			path_manager, opts.Username, jsonl, row_count)
+		if err != nil {
+			return err
+		}
+
+		// On the minions the events must also be replicated to the
+		// master.
+		return nil
 
 		// Real artifacts are written to the filestore.
 	case artifact_modes.MODE_CLIENT,
@@ -582,7 +602,7 @@ func (self *ReplicationService) PushJsonlToArtifact(
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Debug("<green>ReplicationService %v</> Sending %v bytes to %v for %v.",
 		services.GetOrgName(config_obj),
-		len(jsonl), opts.ArtifactName, opts.ClientId)
+		len(jsonl), opts.ArtifactName, opts.Username)
 
 	// Should not block! If the channel is full we save the event
 	// into the file buffer for later.

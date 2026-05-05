@@ -23,7 +23,7 @@ import (
 
 var (
 	remote_mu             sync.Mutex
-	remote_datastopre_imp = NewRemoteDataStore(context.Background())
+	remote_datastopre_imp *RemoteDataStore
 	RPC_BACKOFF           = 10.0
 	RPC_RETRY             = 10
 	timeoutError          = errors.New("gRPC Timeout in Remote datastore")
@@ -62,7 +62,7 @@ func Retry(ctx context.Context,
 		case codes.DeadlineExceeded, codes.ResourceExhausted,
 			codes.Aborted, codes.Unavailable:
 			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.Error("While connecting to remote datastore: %v", err)
+			logger.Error("While connecting to remote datastore (retry %v): %v", i, err)
 			select {
 			case <-ctx.Done():
 				return timeoutError
@@ -105,7 +105,7 @@ func (self *RemoteDataStore) _GetSubject(
 	defer Instrument("read", "RemoteDataStore", urn)()
 
 	ctx, cancel := utils.WithTimeoutCause(
-		context.Background(), RPCTimeout(config_obj), timeoutError)
+		self.ctx, RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 
 	// Make the call as the superuser
@@ -206,7 +206,7 @@ func (self *RemoteDataStore) _SetSubjectWithCompletion(
 	}
 
 	ctx, cancel := utils.WithTimeoutCause(
-		context.Background(), RPCTimeout(config_obj), timeoutError)
+		self.ctx, RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 
 	// Make the call as the superuser
@@ -250,7 +250,7 @@ func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
 	defer Instrument("delete", "RemoteDataStore", urn)()
 
 	ctx, cancel := utils.WithTimeoutCause(
-		context.Background(), RPCTimeout(config_obj), timeoutError)
+		self.ctx, RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 
 	conn, closer, err := grpc_client.Factory.GetAPIClient(
@@ -297,7 +297,7 @@ func (self *RemoteDataStore) _DeleteSubject(
 	defer Instrument("delete", "RemoteDataStore", urn)()
 
 	ctx, cancel := utils.WithTimeoutCause(
-		context.Background(), RPCTimeout(config_obj), timeoutError)
+		self.ctx, RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 
 	conn, closer, err := grpc_client.Factory.GetAPIClient(
@@ -346,7 +346,7 @@ func (self *RemoteDataStore) _ListChildren(
 	defer Instrument("list", "RemoteDataStore", urn)()
 
 	ctx, cancel := utils.WithTimeoutCause(
-		context.Background(), RPCTimeout(config_obj), timeoutError)
+		self.ctx, RPCTimeout(config_obj), timeoutError)
 	defer cancel()
 
 	conn, closer, err := grpc_client.Factory.GetAPIClient(
@@ -408,7 +408,9 @@ func StartDatastore(
 		return nil
 	}
 
-	if implementation == "RemoteFileDataStore" {
+	switch implementation {
+	// These datastores require starting the remote connection.
+	case "RemoteFileDataStore", "MemcacheFileDataStore":
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> remote datastore service")
 		remote_mu.Lock()
@@ -416,7 +418,7 @@ func StartDatastore(
 		g_impl = nil
 		remote_mu.Unlock()
 
-	} else if implementation == "FileBaseDataStore" {
+	case "FileBaseDataStore":
 		return startFullDiskChecker(ctx, wg, config_obj)
 	}
 	return nil
