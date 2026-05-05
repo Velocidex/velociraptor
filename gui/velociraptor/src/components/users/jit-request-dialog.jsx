@@ -7,9 +7,29 @@ import _ from 'lodash';
 import T from '../i8n/i8n.jsx';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
+import UserConfig from '../core/user.jsx';
 
-// reader, api and org_admin are blocked server-side
-const ALL_ROLES = ["administrator", "analyst", "investigator", "artifact_writer"];
+// org_admin are blocked server-side due to elevated privileges
+const ALL_ROLES = ["analyst", "investigator", "artifact_writer", "administrator"];
+
+function getAvailableRoles(permissions) {
+    if (!permissions) return ALL_ROLES;
+
+    if (permissions.server_admin) return [];
+
+    let hidden = [];
+
+    // Investigator permissions subsume analyst
+    if (permissions.collect_client && permissions.start_hunt) {
+        hidden.push("investigator", "analyst");
+    } else if (permissions.notebook_editor && permissions.any_query) {
+        hidden.push("analyst");
+    }
+
+    if (permissions.artifact_writer) hidden.push("artifact_writer");
+
+    return _.without(ALL_ROLES, ...hidden);
+}
 
 const DURATION_OPTIONS = [
     { value: 1800, label: "30 minutes" },
@@ -19,6 +39,7 @@ const DURATION_OPTIONS = [
 ];
 
 class JITRequestDialog extends Component {
+    static contextType = UserConfig;
     static propTypes = {
         onClose: PropTypes.func.isRequired,
         onSubmit: PropTypes.func,
@@ -82,6 +103,9 @@ class JITRequestDialog extends Component {
     }
 
     render() {
+        let permissions = this.context.traits && this.context.traits.Permissions;
+        let availableRoles = getAvailableRoles(permissions);
+
         return (
             <Modal show={true} onHide={this.props.onClose} size="lg">
               <Modal.Header closeButton>
@@ -91,9 +115,13 @@ class JITRequestDialog extends Component {
                 {this.state.error &&
                  <div className="alert alert-danger">{this.state.error}</div>}
 
-                <Form.Group className="mb-3">
+                {_.isEmpty(availableRoles) ?
+                 <div className="alert alert-info">
+                   {T("You already have all available roles")}
+                 </div> :
+                 <Form.Group className="mb-3">
                   <Form.Label>{T("Select Roles")}</Form.Label>
-                  {_.map(ALL_ROLES, (role) => (
+                  {_.map(availableRoles, (role) => (
                       <Form.Check
                         key={role}
                         type="checkbox"
@@ -104,6 +132,7 @@ class JITRequestDialog extends Component {
                       />
                   ))}
                 </Form.Group>
+                }
 
                 <Form.Group className="mb-3">
                   <Form.Label>{T("Duration")}</Form.Label>
@@ -139,7 +168,7 @@ class JITRequestDialog extends Component {
                 </Button>
                 <Button
                   variant="primary"
-                  disabled={this.state.submitting}
+                  disabled={this.state.submitting || _.isEmpty(availableRoles)}
                   onClick={this.submit}>
                   {this.state.submitting ? T("Submitting...") : T("Submit Request")}
                 </Button>

@@ -331,6 +331,7 @@ const English = {
     "Requested": "Requested",
     "Expires": "Expires",
     "Approver": "Approver",
+    "You already have all available roles": "You already have all available roles",
 };
 
 export default English;

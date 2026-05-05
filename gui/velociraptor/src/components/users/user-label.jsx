@@ -571,13 +571,16 @@ export default class UserLabel extends React.Component {
                   }
                   { this.orgName() }
                 </Button>
-                <ToolTip tooltip={T("Request Temporary Role")}>
-                  <Button variant="default"
-                    onClick={()=>this.setState({showJITRequestDialog: true})}
-                  >
-                    <FontAwesomeIcon icon="clock" />
-                  </Button>
-                </ToolTip>
+                { !(this.context.traits.Permissions &&
+                     this.context.traits.Permissions.server_admin) &&
+                  <ToolTip tooltip={T("Request Temporary Role")}>
+                    <Button variant="default"
+                      onClick={()=>this.setState({showJITRequestDialog: true})}
+                    >
+                      <FontAwesomeIcon icon="clock" />
+                    </Button>
+                  </ToolTip>
+                }
                 <Button variant="default"
                   onClick={()=>this.setState({showUserSettings: true})}
                 >
