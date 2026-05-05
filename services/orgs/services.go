@@ -26,6 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
+	"www.velocidex.com/golang/velociraptor/services/jit_manager"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
@@ -67,6 +68,7 @@ type ServiceContainer struct {
 	backups                 services.BackupService
 	export_manager          services.ExportManager
 	doc_manager             services.DocManager
+	jit_manager             services.JITManager
 }
 
 func (self *ServiceContainer) MockFrontendManager(svc services.FrontendManager) {
@@ -313,6 +315,16 @@ func (self *ServiceContainer) ACLManager() (services.ACLManager, error) {
 	return self.acl_manager, nil
 }
 
+func (self *ServiceContainer) JITManager() (services.JITManager, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.jit_manager == nil {
+		return nil, errors.New("JIT Manager Service not ready")
+	}
+	return self.jit_manager, nil
+}
+
 // Start all the services for the org and install it in the
 // manager. This function is used both in the client and the server to
 // start all the needed services.
@@ -472,6 +484,15 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 		service_container.mu.Lock()
 		service_container.secrets = s
+		service_container.mu.Unlock()
+
+		jm, err := jit_manager.NewJITManager(ctx, wg, org_config)
+		if err != nil {
+			return err
+		}
+
+		service_container.mu.Lock()
+		service_container.jit_manager = jm
 		service_container.mu.Unlock()
 	}
 

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.jsx$|\\\\.tsx$\")",
+      "Bash(go build *)",
+      "Bash(npx vite *)"
+    ]
+  }
+}

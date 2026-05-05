@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+import "proto/semantic.proto";
+
+package proto;
+
+option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
+
+enum JITRequestStatus {
+    JIT_STATUS_PENDING = 0;
+    JIT_STATUS_APPROVED = 1;
+    JIT_STATUS_DENIED = 2;
+    JIT_STATUS_EXPIRED = 3;
+    JIT_STATUS_REVOKED = 4;
+}
+
+message JITRoleRequest {
+    string request_id = 1 [(sem_type) = {
+        description: "Unique identifier for this JIT request"
+    }];
+
+    string requester = 2 [(sem_type) = {
+        description: "Username of the person requesting the role"
+    }];
+
+    repeated string roles = 3 [(sem_type) = {
+        description: "Roles being requested"
+    }];
+
+    string justification = 4 [(sem_type) = {
+        description: "Reason for requesting the role elevation"
+    }];
+
+    // Duration in seconds (max 4 hours = 14400)
+    int64 duration_sec = 5 [(sem_type) = {
+        description: "Requested duration of the grant in seconds"
+    }];
+
+    string org_id = 6 [(sem_type) = {
+        description: "Organization the role is requested for"
+    }];
+
+    JITRequestStatus status = 7;
+
+    string approver = 8 [(sem_type) = {
+        description: "Username of the person who approved/denied the request"
+    }];
+
+    string approver_reason = 9 [(sem_type) = {
+        description: "Reason given by the approver for approval/denial"
+    }];
+
+    int64 created_time = 10 [(sem_type) = {
+        description: "Epoch seconds when the request was created"
+    }];
+
+    int64 approved_time = 11 [(sem_type) = {
+        description: "Epoch seconds when the request was approved"
+    }];
+
+    int64 expires_time = 12 [(sem_type) = {
+        description: "Epoch seconds when the grant expires"
+    }];
+}
+
+message JITRoleRequests {
+    repeated JITRoleRequest items = 1;
+}
+
+message JITApprovalRequest {
+    string request_id = 1;
+    bool approve = 2;
+    string reason = 3;
+}
+
+message JITRequestRoleRequest {
+    repeated string roles = 1;
+    string justification = 2;
+    int64 duration_sec = 3;
+    string org_id = 4;
+}

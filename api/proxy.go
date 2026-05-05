@@ -215,6 +215,32 @@ func PrepareGUIMux(
 						RequireRootOrg()),
 				acls.SERVER_ADMIN))))
 
+	// JIT role management endpoints
+	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/JITRequestRole"),
+		ipFilter(config_obj, csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(
+				jitRequestRoleHandler(), acls.READ_RESULTS))))
+
+	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/JITApprove"),
+		ipFilter(config_obj, csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(
+				jitApproveHandler(), acls.SERVER_ADMIN))))
+
+	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/JITRevoke"),
+		ipFilter(config_obj, csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(
+				jitRevokeHandler(), acls.SERVER_ADMIN))))
+
+	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/JITList"),
+		ipFilter(config_obj, csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(
+				jitListHandler(), acls.READ_RESULTS))))
+
+	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/JITMyGrants"),
+		ipFilter(config_obj, csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(
+				jitMyGrantsHandler(), acls.READ_RESULTS))))
+
 	// Assets etc do not need auth.
 	install_static_assets(ctx, config_obj, mux)
 

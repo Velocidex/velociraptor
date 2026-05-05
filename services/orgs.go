@@ -68,6 +68,7 @@ type ServiceContainer interface {
 	BackupService() (BackupService, error)
 	ExportManager() (ExportManager, error)
 	DocManager() (DocManager, error)
+	JITManager() (JITManager, error)
 }
 
 // The org manager manages multi-tenancies.

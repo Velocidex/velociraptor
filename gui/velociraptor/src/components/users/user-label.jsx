@@ -25,6 +25,8 @@ import Select from 'react-select';
 import ToolTip from '../widgets/tooltip.jsx';
 
 import { JSONparse } from '../utils/json_parse.jsx';
+import JITRequestDialog from './jit-request-dialog.jsx';
+import { JITMyGrants } from './jit-manager.jsx';
 
 class _PasswordChange extends React.Component {
     static propTypes = {
@@ -432,6 +434,7 @@ export default class UserLabel extends React.Component {
 
     state = {
         showUserSettings: false,
+        showJITRequestDialog: false,
     }
 
     componentDidMount() {
@@ -545,6 +548,11 @@ export default class UserLabel extends React.Component {
                   setSetting={this.setSettings}
                   onClose={()=>this.setState({showUserSettings: false})} />
               }
+              { this.state.showJITRequestDialog &&
+                <JITRequestDialog
+                  onClose={()=>this.setState({showJITRequestDialog: false})}
+                />
+              }
               <ButtonGroup className="user-label">
                 <Button href={api.href("/app/logoff.html", {
                     username: this.context.traits.username,
@@ -563,6 +571,13 @@ export default class UserLabel extends React.Component {
                   }
                   { this.orgName() }
                 </Button>
+                <ToolTip tooltip={T("Request Temporary Role")}>
+                  <Button variant="default"
+                    onClick={()=>this.setState({showJITRequestDialog: true})}
+                  >
+                    <FontAwesomeIcon icon="clock" />
+                  </Button>
+                </ToolTip>
                 <Button variant="default"
                   onClick={()=>this.setState({showUserSettings: true})}
                 >

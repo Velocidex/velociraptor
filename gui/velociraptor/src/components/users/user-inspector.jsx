@@ -25,6 +25,7 @@ import EditUserDialog from './edit-user.jsx';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 import ToolTip from '../widgets/tooltip.jsx';
+import { JITApprovalManager } from './jit-manager.jsx';
 
 const POLL_TIME = 5000;
 
@@ -792,6 +793,11 @@ class UserInspector extends Component {
                     <Nav.Link as="button" className="btn btn-default"
                               eventKey="orgs">{T("Orgs")}</Nav.Link>
                   </Nav.Item>
+
+                  <Nav.Item>
+                    <Nav.Link as="button" className="btn btn-default"
+                              eventKey="jit">{T("JIT Requests")}</Nav.Link>
+                  </Nav.Item>
                 </Nav>
                 <div className="card-deck">
                   { this.state.tab === "users" &&
@@ -802,6 +808,8 @@ class UserInspector extends Component {
                     <OrgsOverview
                       updateUsers={this.loadUsers}
                       users={this.state.users} /> }
+                  { this.state.tab === "jit" &&
+                    <JITApprovalManager /> }
                 </div>
               </div>
             </div>
