@@ -88,6 +88,33 @@ func CheckAccess(
 	return acl_manager.CheckAccess(config_obj, principal, permissions...)
 }
 
+// CheckPermanentAccess checks if a user has a permission from their
+// static (permanent) roles only, excluding any JIT-granted roles.
+func CheckPermanentAccess(
+	config_obj *config_proto.Config,
+	principal string,
+	permissions ...acls.ACL_PERMISSION) (bool, error) {
+
+	policy, err := GetPolicy(config_obj, principal)
+	if err != nil {
+		return false, err
+	}
+
+	expanded := &acl_proto.ApiClientACL{}
+	err = acls.GetRolePermissions(config_obj, policy.Roles, expanded)
+	if err != nil {
+		return false, err
+	}
+
+	for _, perm := range permissions {
+		ok, _ := CheckAccessWithToken(expanded, perm)
+		if !ok {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
 func CheckAccessWithToken(
 	token *acl_proto.ApiClientACL,
 	permission acls.ACL_PERMISSION, args ...string) (bool, error) {

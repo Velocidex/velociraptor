@@ -332,6 +332,7 @@ const English = {
     "Expires": "Expires",
     "Approver": "Approver",
     "You already have all available roles": "You already have all available roles",
+    "Date Requested": "Date Requested",
 };
 
 export default English;

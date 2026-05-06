@@ -249,10 +249,11 @@ func (self *JITManager) ApproveOrDeny(
 	approver string,
 	approval *api_proto.JITApprovalRequest) (*api_proto.JITRoleRequest, error) {
 
-	ok, err := services.CheckAccess(
+	ok, err := services.CheckPermanentAccess(
 		config_obj, approver, acls.SERVER_ADMIN)
 	if err != nil || !ok {
-		return nil, fmt.Errorf("only server_admin can approve/deny JIT requests")
+		return nil, fmt.Errorf(
+			"only permanent server_admin can approve/deny JIT requests (temporary JIT-granted admins cannot)")
 	}
 
 	self.mu.Lock()
@@ -303,10 +304,11 @@ func (self *JITManager) RevokeGrant(
 	principal string,
 	request_id string) error {
 
-	ok, err := services.CheckAccess(
+	ok, err := services.CheckPermanentAccess(
 		config_obj, principal, acls.SERVER_ADMIN)
 	if err != nil || !ok {
-		return fmt.Errorf("only server_admin can revoke JIT grants")
+		return fmt.Errorf(
+			"only permanent server_admin can revoke JIT grants (temporary JIT-granted admins cannot)")
 	}
 
 	self.mu.Lock()

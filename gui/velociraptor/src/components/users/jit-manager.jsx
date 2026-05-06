@@ -106,6 +106,8 @@ class JITApprovalManager extends Component {
         showApproveDialog: false,
         showDenyDialog: false,
         selectedRequest: null,
+        sortField: "created_time",
+        sortAsc: false,
     }
 
     componentDidMount() {
@@ -156,6 +158,33 @@ class JITApprovalManager extends Component {
             if (response.cancel) return;
             this.loadRequests();
         });
+    }
+
+    setSort = (field) => {
+        if (this.state.sortField === field) {
+            this.setState({sortAsc: !this.state.sortAsc});
+        } else {
+            this.setState({sortField: field, sortAsc: true});
+        }
+    }
+
+    sortedRequests = (items) => {
+        let {sortField, sortAsc} = this.state;
+        let sorted = _.sortBy(items, r => {
+            let val = r[sortField];
+            if (_.isString(val)) return val.toLowerCase();
+            return val || 0;
+        });
+        return sortAsc ? sorted : sorted.reverse();
+    }
+
+    sortIcon = (field) => {
+        if (this.state.sortField !== field) {
+            return <FontAwesomeIcon icon="sort" className="ms-1 text-muted" />;
+        }
+        return <FontAwesomeIcon
+                 icon={this.state.sortAsc ? "sort-up" : "sort-down"}
+                 className="ms-1" />;
     }
 
     render() {
@@ -238,16 +267,28 @@ class JITApprovalManager extends Component {
                <Table striped bordered size="sm">
                  <thead>
                    <tr>
-                     <th>{T("Requester")}</th>
+                     <th role="button" onClick={() => this.setSort("requester")}>
+                       {T("Requester")}{this.sortIcon("requester")}
+                     </th>
                      <th>{T("Roles")}</th>
-                     <th>{T("Status")}</th>
-                     <th>{T("Approver")}</th>
+                     <th role="button" onClick={() => this.setSort("justification")}>
+                       {T("Justification")}{this.sortIcon("justification")}
+                     </th>
+                     <th role="button" onClick={() => this.setSort("status")}>
+                       {T("Status")}{this.sortIcon("status")}
+                     </th>
+                     <th role="button" onClick={() => this.setSort("created_time")}>
+                       {T("Date Requested")}{this.sortIcon("created_time")}
+                     </th>
+                     <th role="button" onClick={() => this.setSort("approver")}>
+                       {T("Approver")}{this.sortIcon("approver")}
+                     </th>
                      <th>{T("Expires")}</th>
                      <th>{T("Actions")}</th>
                    </tr>
                  </thead>
                  <tbody>
-                   {_.map(others, (req, idx) => (
+                   {_.map(this.sortedRequests(others), (req, idx) => (
                        <tr key={idx}>
                          <td>{req.requester}</td>
                          <td>{(req.roles || []).map(r =>
@@ -255,7 +296,12 @@ class JITApprovalManager extends Component {
                                {T("Role_" + r)}
                              </Badge>)}
                          </td>
+                         <td className="text-truncate" style={{maxWidth: "200px"}}
+                             title={req.justification}>
+                           {req.justification}
+                         </td>
                          <td>{statusBadge(req.status)}</td>
+                         <td>{formatTime(req.created_time)}</td>
                          <td>{req.approver || "-"}</td>
                          <td>{req.status === 1 ?
                               formatTimeRemaining(req.expires_time) : "-"}

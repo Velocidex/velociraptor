@@ -235,8 +235,8 @@ func jitListHandler() http.Handler {
 				return
 			}
 
-			// Non-admins can only see their own requests
-			is_admin, _ := services.CheckAccess(
+			// Only permanent admins can see all requests
+			is_admin, _ := services.CheckPermanentAccess(
 				org_config_obj, user_record.Name, acls.SERVER_ADMIN)
 
 			status_str := r.URL.Query().Get("status")

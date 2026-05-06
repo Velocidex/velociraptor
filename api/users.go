@@ -259,6 +259,14 @@ func (self *ApiServer) SetUserRoles(
 
 	principal := user_record.Name
 
+	// Temporary JIT-granted admins must not assign roles/permissions
+	ok, _ := services.CheckPermanentAccess(
+		org_config_obj, principal, acls.SERVER_ADMIN)
+	if !ok {
+		return nil, status.Error(codes.PermissionDenied,
+			"temporary JIT-granted admins cannot assign roles or permissions")
+	}
+
 	// Prepare an ACL object from the incoming request.
 	acl := &acl_proto.ApiClientACL{}
 
