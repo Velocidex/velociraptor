@@ -303,6 +303,53 @@ func (self *TestSuite) TestImportX509CollectionFromFixture() {
 		context.State)
 }
 
+func (self *TestSuite) TestImportCollectionInvalidClientID() {
+	self.CreateFlow(constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "F.1234")
+	defer utils.SetFlowIdForTests("F.1234")()
+
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
+	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
+	_, err := repository.LoadYaml(CustomTestArtifactDependent,
+		services.ArtifactOptions{
+			ValidateArtifact:  true,
+			ArtifactIsBuiltIn: true})
+
+	assert.NoError(self.T(), err)
+
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
+		Env:        ordereddict.NewDict(),
+	}
+
+	ctx := self.Ctx
+	scope := manager.BuildScope(builder)
+
+	// This file contains an client_info.json file with the real client's
+	// HostID and Hostname.
+	import_file_path, err := filepath.Abs("fixtures/import.zip")
+	assert.NoError(self.T(), err)
+
+	new_client_id := "foobar_invalid_clientid"
+
+	result := collector.ImportCollectionFunction{}.Call(ctx, scope,
+		ordereddict.NewDict().
+			Set("client_id", new_client_id).
+
+			// This will be ingnored as the new client will be added
+			// with the TestHost hostname in the host.json file.
+			Set("hostname", "MyNewHost").
+			Set("filename", import_file_path))
+	assert.True(self.T(), utils.IsNil(result))
+
+	// Check that no data is actually written
+	path := "/clients/" + new_client_id + "/collections/F.1234/uploads.json"
+	_, pres := test_utils.GetMemoryFileStore(
+		self.T(), self.ConfigObj).Get(path)
+	assert.False(self.T(), pres)
+}
+
 func (self *TestSuite) getData(
 	path string,
 	field string,

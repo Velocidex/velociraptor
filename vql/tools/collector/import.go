@@ -402,33 +402,42 @@ func (self ImportCollectionFunction) ensureClientId(
 	scope vfilter.Scope,
 	config_obj *config_proto.Config,
 	client_id string,
-	hostname string) error {
+	hostname string) (string, error) {
 
 	// Check if the client is already known.
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// Check to see if we know about this client id. If we do
 	// then just return the same client id as in the
 	// container.
-	_, err = client_info_manager.Get(ctx, client_id)
+	record, err := client_info_manager.Get(ctx, client_id)
 	if err == nil {
-		return nil
+		return record.ClientId, nil
 	}
 
 	// If we get here we dont know the client so we just create a
 	// new one with this client id
 
 	// Client is not known, create it.
-	clients.NewClientFunction{}.Call(ctx, scope, ordereddict.NewDict().
-		Set("client_id", client_id).
-		Set("first_seen_at", time.Now()).
-		Set("last_seen_at", time.Now()).
-		Set("hostname", hostname))
+	res := clients.NewClientFunction{}.Call(
+		ctx, scope, ordereddict.NewDict().
+			Set("client_id", client_id).
+			Set("first_seen_at", time.Now()).
+			Set("last_seen_at", time.Now()).
+			Set("hostname", hostname))
 
-	return nil
+	res_dict, ok := res.(*ordereddict.Dict)
+	if utils.IsNil(res) || utils.IsNil(res_dict) || !ok {
+		return "", fmt.Errorf("Failed to create client.")
+	}
+	client_id, pres := res_dict.GetString("client_id")
+	if !pres || client_id == "" {
+		return "", fmt.Errorf("Failed to create client.")
+	}
+	return client_id, nil
 }
 
 // Reads the client_info.json and attempts to find a client id that
@@ -518,7 +527,7 @@ func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 		client_id = clients.NewClientId()
 		scope.Log("Creating a new client id '%v'", client_id)
 	}
-	return client_id, self.ensureClientId(
+	return self.ensureClientId(
 		ctx, scope, config_obj, client_id, hostname)
 }
 
