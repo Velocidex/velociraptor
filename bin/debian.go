@@ -75,6 +75,11 @@ func doServerDeb() error {
 		return fmt.Errorf("A server config must be specified using the --config flag")
 	}
 
+	abs_config_path, err := filepath.Abs(*config_path)
+	if err != nil {
+		return err
+	}
+
 	temp_dir, err := tempfile.TempDir("debian")
 	if err != nil {
 		return err
@@ -121,7 +126,7 @@ func doServerDeb() error {
 			Set("Release", *debian_command_release).
 			Set("Output", *server_debian_command_output).
 			Set("BinaryToPackage", *server_debian_command_binary).
-			Set("ConfigPath", *config_path),
+			Set("ConfigPath", abs_config_path),
 	}
 
 	query := `
@@ -148,6 +153,11 @@ func doClientDeb() error {
 
 	if *config_path == "" {
 		return fmt.Errorf("A server config must be specified using the --config flag")
+	}
+
+	abs_config_path, err := filepath.Abs(*config_path)
+	if err != nil {
+		return err
 	}
 
 	temp_dir, err := tempfile.TempDir("debian")
@@ -196,7 +206,7 @@ func doClientDeb() error {
 			Set("Release", *debian_command_release).
 			Set("Output", *client_debian_command_output).
 			Set("BinaryToPackage", *client_debian_command_binary).
-			Set("ConfigPath", *config_path),
+			Set("ConfigPath", abs_config_path),
 	}
 
 	query := `

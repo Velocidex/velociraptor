@@ -8,7 +8,7 @@ require (
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2
 	github.com/Velocidex/etw v0.0.0-20251027041548-6d97883fd588
-	github.com/Velocidex/go-magic v0.0.0-20250203094020-32f94b14f00f
+	github.com/Velocidex/go-magic v0.0.0-20260507053215-ee4782958ce2
 	github.com/Velocidex/go-yara v1.1.10-0.20250823152352-e5fc0843e50e
 	github.com/Velocidex/grpc-go-pool v1.2.2-0.20241016164850-ff0cb80037a8
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
@@ -44,7 +44,7 @@ require (
 	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/juju/ratelimit v1.0.1
 	github.com/lib/pq v1.10.9
-	github.com/magefile/mage v1.17.0
+	github.com/magefile/mage v1.17.2
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
 	github.com/mattn/go-sqlite3 v1.14.37

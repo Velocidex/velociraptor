@@ -60,7 +60,7 @@ func (self *SanityChecks) CheckSecuritySettings(
 	// Load default set of FS accessor prefixs
 	if len(config_obj.Security.AllowedFsAccessorPrefix) > 0 {
 		allowed_tree = utils.NewPrefixTree(false)
-		for _, allowed := range config_obj.Security.AllowedFileAccessorPrefix {
+		for _, allowed := range config_obj.Security.AllowedFsAccessorPrefix {
 			full_path, err := accessors.NewFileStorePath(allowed)
 			if err != nil {
 				continue
