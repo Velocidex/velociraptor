@@ -81,7 +81,7 @@ type ClientEventTable struct {
 // Checks to see if we need to update the client event table. Each
 // client's table version is the timestamp when it received the event
 // table update. Clients need to renew their table if:
-// 1. Their version is behind the the global table version, or
+// 1. Their version is behind the global table version, or
 // 2. Their version is behind the latest label update.
 //
 // When the table is refreshed its version is set to the current

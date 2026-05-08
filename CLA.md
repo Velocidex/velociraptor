@@ -43,7 +43,7 @@ The CLA does not change the terms of the standard open source license
 used by our software such as AGPLv3 or Apache2. You are still free to
 use our projects within your own projects or businesses, republish
 modified source, and more. Please reference the appropriate license
-for the project you're contributing to to learn more.
+for the project you're contributing to, to learn more.
 
 ## Why Require a CLA?
 

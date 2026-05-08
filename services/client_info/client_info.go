@@ -2,7 +2,7 @@
   The client info manager caches client information in memory for
   quick access without having to generate IO for each client record.
 
-  We maintain client stats as as:
+  We maintain client stats as:
 
   - Ping time - When the client was last seen - this is useful for the GUI
 

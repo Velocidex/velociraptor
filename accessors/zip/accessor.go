@@ -211,7 +211,7 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 		// access the members, we need to open the current zipfile (in
 		// full_path) and open i.Name as the path.
 
-		// So if the zip has has a pathspec like:
+		// So if the zip has a pathspec like:
 		// {DelegateAccessor: "auto", DelegatePath: "path/to/zip"}
 
 		// We need to parse the zip members (unescaping as needed into

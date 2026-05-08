@@ -364,7 +364,7 @@ func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 	}, nil
 }
 
-// Raw Registry paths a just just generic paths:
+// Raw Registry paths are just generic paths:
 // 1. Separator can be / or \ when specified.
 // 2. Path are always serialized with /
 // 3. No required hive at first element.

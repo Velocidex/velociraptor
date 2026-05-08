@@ -64,7 +64,7 @@ func InstallSignalHandler(
 	return subctx, cancel
 }
 
-// Turns os.Stdout into into file_store.WriteSeekCloser
+// Turns os.Stdout into file_store.WriteSeekCloser
 type StdoutWrapper struct {
 	io.Writer
 }

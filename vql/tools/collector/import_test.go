@@ -337,7 +337,7 @@ func (self *TestSuite) TestImportCollectionInvalidClientID() {
 		ordereddict.NewDict().
 			Set("client_id", new_client_id).
 
-			// This will be ingnored as the new client will be added
+			// This will be ignored as the new client will be added
 			// with the TestHost hostname in the host.json file.
 			Set("hostname", "MyNewHost").
 			Set("filename", import_file_path))

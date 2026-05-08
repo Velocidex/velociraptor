@@ -223,7 +223,7 @@ type FileBuffer struct {
 	StoredSize uint64 `protobuf:"varint,8,opt,name=stored_size,json=storedSize,proto3" json:"stored_size,omitempty"`
 	IsSparse   bool   `protobuf:"varint,9,opt,name=is_sparse,json=isSparse,proto3" json:"is_sparse,omitempty"`
 	Data       []byte `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
-	// If this is > 0 then then data field contains already compressed
+	// If this is > 0 then the data field contains already compressed
 	// data. The length of the uncompressed data will be given here.
 	UncompressedLength uint64 `protobuf:"varint,17,opt,name=uncompressed_length,json=uncompressedLength,proto3" json:"uncompressed_length,omitempty"`
 	// For uploaders that do not transfer the bulk data inside the
