@@ -442,7 +442,7 @@ func copyUploadFiles(
 			var src api.FSPathSpec
 
 			// We need to figure out where to store the file inside
-			// the zip container. This depends on the the file's
+			// the zip container. This depends on the file's
 			// original path on the endpoint. Since the client's
 			// original path may have characters that need escaping we
 			// need to build a `dest` pathspec that will be expanded

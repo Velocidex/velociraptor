@@ -30,7 +30,7 @@ type OffsetReader struct {
 	// Current offset of the reader in delegate coordinates
 	offset int64
 
-	// Constant offset we add the the delegate reader.
+	// Constant offset we add to the delegate reader.
 	base_offset int64
 
 	// The OSPath object that is required to access this

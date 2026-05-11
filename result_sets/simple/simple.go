@@ -104,7 +104,7 @@ func (self *ResultSetWriterImpl) SetSync() {
 // WriteJSONL writes an entire JSONL blob to the end of the result
 // set. This is supposed to be very fast so we don't have to parse the
 // JSON (Typically the client sends us the complete JSON blob).  Since
-// we do not not know exactly where in the JSON blob each row starts
+// we do not know exactly where in the JSON blob each row starts
 // we update the index to refer to the beginning of the row and the
 // number of rows from there.
 
