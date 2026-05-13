@@ -1,5 +1,7 @@
 name: ADX.Flows.Upload
 description: |
+  Watches for completed artifact collections and uploads their results to an Azure Data Explorer cluster
+
   This server side event monitoring artifact waits for new artifacts
   to be collected from endpoints and automatically uploads those to an
   Azure Data Explorer (ADX) cluster.

@@ -1,5 +1,8 @@
 name: Linux.Ssh.KnownHosts
-description: Finds and parses SSH known hosts files.
+description: |
+  Searches user home directories for SSH known_hosts files and parses their entries
+
+  Finds and parses SSH known hosts files.
 parameters:
   - name: sshKnownHostsFiles
     default: '.ssh/known_hosts*'

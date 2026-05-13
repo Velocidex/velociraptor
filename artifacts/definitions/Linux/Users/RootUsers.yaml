@@ -1,6 +1,8 @@
 name: Linux.Users.RootUsers
 
 description: |
+  Checks each system user for root group membership by running id -Gn
+
   Detects users added in the `sudo` group.
 
 author: George-Andrei Iosif (@iosifache)

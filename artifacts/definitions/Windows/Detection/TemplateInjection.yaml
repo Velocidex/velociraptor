@@ -1,6 +1,8 @@
 name: Windows.Detection.TemplateInjection
 author: Matt Green - @mgreen27
 description: |
+    Scans Office and RTF documents for template injection indicators using YARA and ZIP parsing
+
     Detects injected templates in Office and RTF documents.
 
     Template injection is a form of defense evasion.

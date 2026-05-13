@@ -1,5 +1,7 @@
 name: Windows.Detection.WMIProcessCreation
 description: |
+  Detects WMI-based process creation by subscribing to Win32_Process Create method events
+
   WMI Process creation is a common lateral movement technique. The
   attacker simply uses WMI to call the Create() method on the
   Win32_Process WMI object.

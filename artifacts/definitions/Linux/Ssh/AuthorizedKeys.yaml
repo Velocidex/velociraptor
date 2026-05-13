@@ -1,5 +1,7 @@
 name: Linux.Ssh.AuthorizedKeys
 description: |
+  Searches for SSH authorized_keys files and parses each key entry into structured fields
+
   Finds and parses SSH authorized keys files.
 
   From `man authorized_keys`:

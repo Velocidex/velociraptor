@@ -3,6 +3,8 @@ aliases:
 - Elastic.Events.Clients
 
 description: |
+  Watches client and server event artifacts and forwards new events to an Elasticsearch index
+
   This server monitoring artifact will watch a selection of client or
   server monitoring artifacts for new events and push those to an
   elastic index.

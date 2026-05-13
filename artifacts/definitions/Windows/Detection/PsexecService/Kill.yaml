@@ -1,5 +1,7 @@
 name: Windows.Detection.PsexecService.Kill
 description: |
+    Responds to PsExec service detections by terminating the entire process tree
+
     Psexec can launch a service remotely. This artifact implements a
     client side response plan whereby all the child processes of the
     service are killed.
