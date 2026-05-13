@@ -1,5 +1,7 @@
 name: Windows.Sys.AllUsers
 description: |
+  Lists all user accounts on a Windows system including domain users with cached profiles.
+
   List User accounts. We combine two data sources - the output from
   the `NetUserEnum` API (termed `local` users) and the list of SIDs in
   the registry (termed `remote` users).

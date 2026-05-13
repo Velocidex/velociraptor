@@ -1,6 +1,8 @@
 name: Windows.Forensics.UEFI
 author: Matt Green - @mgreen27
 description: |
+  Analyzes the EFI System Partition (ESP) on a physical disk to enumerate and inspect EFI binaries.
+
   This artifact enables disk analysis over an EFI System Partition (ESP).
 
   The artifact queries the specified physical disk, parses the partition table

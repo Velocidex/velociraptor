@@ -1,5 +1,7 @@
 name: Windows.Forensics.UserAccessLogs
 description: |
+  Parses the Windows User Access Logging (UAL) ESE database to enumerate client connections and server roles.
+
   Parse and collect the SUM database
 
   UAL is a feature that can help server administrators quantify the number of

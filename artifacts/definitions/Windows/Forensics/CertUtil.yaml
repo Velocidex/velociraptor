@@ -1,5 +1,7 @@
 name: Windows.Forensics.CertUtil
 description: |
+  Extracts download metadata from the Windows Certutil CryptnetUrlCache to reveal LOLBin downloads.
+
   The Windows Certutil binary is capable of downloading arbitrary files.
   Attackers typically use it to fetch tools undetected when using "Living off
   the Land" (LOL) techniques.

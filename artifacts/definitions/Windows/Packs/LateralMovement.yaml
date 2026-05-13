@@ -1,5 +1,7 @@
 name: Windows.Packs.LateralMovement
 description: |
+  Queries multiple data sources (event logs, prefetch, shimcache, BAM) for signs of lateral movement.
+
   Detect evidence of lateral movement.
 
 precondition: SELECT OS From info() where OS = 'windows'

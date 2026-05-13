@@ -1,5 +1,7 @@
 name: Windows.Timeline.Registry.RunMRU
 description: |
+    Extracts RunMRU registry entries from user hives and outputs them in timeline format.
+
     # Output all available RunMRU registry keys in timeline format.
 
     RunMRU is when a user enters a command into the START > Run prompt.

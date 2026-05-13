@@ -1,5 +1,7 @@
 name: Windows.Applications.Edge.Favicons
 description: |
+  Enumerates Edge browser favicons including page URLs, favicon URLs, and last updated timestamps.
+
   Enumerate the user's Microsoft Edge favicons.
 
   Also tested against Chrome: replace Microsoft Edge with Google Chrome in

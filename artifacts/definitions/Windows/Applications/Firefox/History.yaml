@@ -1,5 +1,7 @@
 name: Windows.Applications.Firefox.History
 description: |
+  Queries Firefox places.sqlite to extract browsing history from user profiles.
+
   Enumerate the users Firefox history.
 
   ## NOTES:

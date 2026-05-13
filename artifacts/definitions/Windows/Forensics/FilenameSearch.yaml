@@ -1,5 +1,7 @@
 name: Windows.Forensics.FilenameSearch
 description: |
+  Searches the NTFS $MFT using YARA rules to determine if specific filenames ever existed on the system.
+
   Did a specific file exist on this machine in the past or does it
   still exist on this machine?
 

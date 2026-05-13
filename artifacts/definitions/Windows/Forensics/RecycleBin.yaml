@@ -1,5 +1,7 @@
 name: Windows.Forensics.RecycleBin
 description: |
+  Parses Recycle Bin $I metadata files to recover deleted file names, original paths, and deletion timestamps.
+
   This artifact will parse the `$I` files found in the `$Recycle.Bin` folder to
   obtain the time of deletion and the original path and file name.
 

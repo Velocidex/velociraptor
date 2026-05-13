@@ -1,5 +1,7 @@
 name: Windows.System.LocalAdmins
 description: |
+  Retrieves local administrator accounts from a Windows system via PowerShell.
+
    Gets a list of local admin accounts.
 
 reference:

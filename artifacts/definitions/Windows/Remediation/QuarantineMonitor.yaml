@@ -1,5 +1,7 @@
 name: Windows.Remediation.QuarantineMonitor
 description: |
+  Periodically applies and maintains Windows IPsec quarantine policy on the endpoint.
+
   An event query that will ensure the client is quarantined.
 
   We re-calculate the quarantine every 10 minutes by default to

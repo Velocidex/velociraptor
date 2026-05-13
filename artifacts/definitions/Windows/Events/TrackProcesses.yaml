@@ -1,5 +1,7 @@
 name: Windows.Events.TrackProcesses
 description: |
+  Tracks processes using Sysmon ETW events (process creation and termination) with pslist sync.
+
   Uses Sysmon and pslist to keep track of running processes by using the
   Velociraptor Process Tracker.
 

@@ -1,5 +1,8 @@
 name: Windows.Sys.DiskInfo
-description: Retrieve basic information about the physical disks of a system.
+description: |
+  Collects disk drive information including model, serial number, size, and interface type via WMI.
+
+  Retrieve basic information about the physical disks of a system.
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'

@@ -1,5 +1,7 @@
 name: Windows.NTFS.I30
 description: |
+  Carves the $I30 index stream from NTFS directories to recover previously deleted file entries.
+
   Carve the $I30 index stream for a directory.
 
   This can reveal previously deleted files. Optionally upload the I30

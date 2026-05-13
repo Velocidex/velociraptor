@@ -1,5 +1,7 @@
 name: Windows.Sys.Programs
 description: |
+  Enumerates installed Windows applications by reading registry uninstall keys.
+
   Represents products as they are installed by Windows Installer.
 
   A product generally correlates to one installation package on

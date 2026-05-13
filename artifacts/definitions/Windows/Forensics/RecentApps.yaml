@@ -1,5 +1,7 @@
 name: Windows.Forensics.RecentApps
 description: |
+  Enumerates program execution history from the Windows RecentApps registry key.
+
   GUI Program execution launched on the Win10 system is tracked in the
   RecentApps key.
 

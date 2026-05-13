@@ -1,5 +1,7 @@
 name: Windows.Forensics.SRUM
 description: |
+  Parses the Windows SRUM database (srudb.dat) to extract execution stats, resource usage, and network activity.
+
   Process the SRUM database.
 
 reference:

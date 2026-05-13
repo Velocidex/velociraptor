@@ -1,5 +1,7 @@
 name: Windows.Applications.SBECmd
 description: |
+    Executes Eric Zimmerman's SBECmd tool to parse Shellbags and capture the results.
+
     Execute Eric Zimmerman's SBECmd and return output for analysis.
 
     SBECmd is a CLI for analyzing Shellbags data.

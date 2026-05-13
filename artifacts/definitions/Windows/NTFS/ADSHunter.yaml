@@ -1,6 +1,8 @@
 name: Windows.NTFS.ADSHunter
 author: "Matt Green - @mgreen27"
 description: |
+  Scans NTFS volumes for hidden data in Alternate Data Streams with configurable exclusion rules.
+
    This artifact hunts
    for Alternate Data Streams on NTFS file systems.
    Adversaries may use NTFS file attributes for covert storage to evade

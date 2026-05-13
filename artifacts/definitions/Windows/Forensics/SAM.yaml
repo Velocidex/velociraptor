@@ -1,5 +1,7 @@
 name: Windows.Forensics.SAM
 description: |
+  Parses the Windows SAM registry hive to extract user account details, RIDs, and password hashes.
+
    Parses user account information from the SAM hive.
 
    Based on Omer Yampel's parser

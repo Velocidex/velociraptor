@@ -1,5 +1,7 @@
 name: Windows.Forensics.Usn
 description: |
+  Parses the NTFS USN journal ($J data stream) to enumerate recent file creation, modification, and deletion events.
+
   This artifact parses the NTFS USN journal and allows filters to
   assist investigative workflow.
 

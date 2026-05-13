@@ -1,5 +1,7 @@
 name: Windows.Forensics.BulkExtractor
 description: |
+  Deploys the bulk_extractor binary onto the endpoint and runs it against selected drives or directories for data carving.
+
     This content will execute bulk_extractor with record carving plugins from
     4n6ist. Initially developed to carve EventLogs from physical disk and
     unallocated space, this content may also be used for other

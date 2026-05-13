@@ -1,6 +1,8 @@
 name: Windows.Carving.CobaltStrike
 author: Matt Green - @mgreen27
 description: |
+  Extracts Cobalt Strike beacon configuration from byte streams, process memory, or files on disk.
+
   This artifact extracts Cobalt Strike configuration from a byte stream, process
   or file on disk such as a process dump. Best used as a triage step against a
   detection of a Cobalt Strike beacon via a YARA process scan.

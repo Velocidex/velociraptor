@@ -1,5 +1,7 @@
 name: Windows.Applications.OfficeMacros
 description: |
+  Scans directories for Office documents (xls, xlsm, doc, docx, ppt, pptm) and extracts embedded VBA macros via OLE parsing.
+
   Scans through a given directory glob for common office files. Then tries to
   extract any embedded macros by parsing the OLE file structure.
 

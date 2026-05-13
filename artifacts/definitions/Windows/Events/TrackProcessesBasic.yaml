@@ -1,5 +1,7 @@
 name: Windows.Events.TrackProcessesBasic
 description: |
+  Tracks running and exited processes by polling pslist() at a configurable interval.
+
   A basic process tracker which uses a simple polled pslist().
 
   The Process Tracker keeps track of exited processes, and resolves process call

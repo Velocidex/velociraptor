@@ -1,5 +1,7 @@
 name: Windows.Carving.USN
 description: |
+  Recovers USN journal entries from raw disk by carving NTFS update sequence number records.
+
   Carve URN Journal records from the disk.
 
   The USN journal is a very important source of information about when

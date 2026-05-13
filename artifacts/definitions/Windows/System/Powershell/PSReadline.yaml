@@ -1,5 +1,7 @@
 name: Windows.System.Powershell.PSReadline
 description: |
+  Extracts PowerShell command history from PSReadline ConsoleHost_history.txt files.
+
   This Artifact will search and extract lines from PSReadline history file.
 
   PowerShell is commonly used by attackers across all stages of the attack

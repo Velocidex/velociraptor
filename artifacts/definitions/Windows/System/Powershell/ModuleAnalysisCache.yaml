@@ -1,5 +1,7 @@
 name: Windows.System.Powershell.ModuleAnalysisCache
 description: |
+  Parses the PowerShell ModuleAnalysisCache file to enumerate loaded modules and their functions.
+
     ModuleAnalysisCache stores metadata about loaded PowerShell modules.
 
     Recent updates include filters by regex to enable targeted hunting

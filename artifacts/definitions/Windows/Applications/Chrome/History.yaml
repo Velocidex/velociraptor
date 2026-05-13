@@ -1,5 +1,7 @@
 name: Windows.Applications.Chrome.History
 description: |
+  Enumerates visited URLs, titles, and visit timestamps from Chrome/Edge/Brave/Vivaldi/Opera history databases.
+
   Enumerates a targets chrome history.
 
   Source based on Hindsight and code review of

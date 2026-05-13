@@ -1,5 +1,7 @@
 name: Windows.Sysinternals.SysmonLogForward
 description: |
+  Reads Sysmon operational events from ETW and forwards them to the server for analysis.
+
   A client-side event forwarder to forward Sysmon events to the server.
 
 type: CLIENT_EVENT

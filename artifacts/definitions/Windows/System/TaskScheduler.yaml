@@ -1,5 +1,7 @@
 name: Windows.System.TaskScheduler
 description: |
+  Enumerates Windows scheduled tasks and parses their XML definitions to extract commands and user contexts.
+
   The Windows task scheduler is a common mechanism that malware uses
   for persistence. It can be used to run arbitrary programs at a later
   time. Commonly malware installs a scheduled task to run itself

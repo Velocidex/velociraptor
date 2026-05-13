@@ -1,5 +1,7 @@
 name: Windows.Events.ProcessCreation
 description: |
+  Monitors Windows process creation events via WMI Win32_ProcessStartTrace and enriches them with parent and call chain information.
+
   Collect all process creation events.
 
   This artifact relies on WMI to receive process start events. This

@@ -1,5 +1,7 @@
 name: Windows.Remediation.Sinkhole
 description: |
+  Configures DNS sinkholing by editing the Windows hosts file with a backup and restore mechanism.
+
    **Apply a Sinkhole via Windows hosts file modification**
    This content will modify the Windows hosts file by a configurable
    lookup table.

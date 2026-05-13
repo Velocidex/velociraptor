@@ -1,5 +1,7 @@
 name: Windows.NTFS.Recover
 description: |
+  Uploads all data streams from a specified MFT ID on an NTFS volume for file recovery purposes.
+
   Attempt to recover deleted files.
 
   This artifact uploads all streams from an MFTId. If the MFT entry is not

@@ -1,5 +1,7 @@
 name: Windows.Applications.TeamViewer.Incoming
 description: |
+   Parses TeamViewer incoming connection logs to identify remote access events.
+
    Parses the TeamViewer Connections_incoming.txt log file.
 
    When inbound logging enabled, this file will show all inbound TeamViewer

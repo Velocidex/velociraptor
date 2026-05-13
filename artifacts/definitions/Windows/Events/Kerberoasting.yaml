@@ -1,5 +1,7 @@
 name: Windows.Events.Kerberoasting
 description: |
+  Monitors Kerberos TGS ticket requests (EventID 4769) with RC4 encryption as indicators of Kerberoasting attacks.
+
   **Description**:
   This Artifact will monitor all successful Kerberos TGS Ticket events for
   Service Accounts (SPN attribute) implemented with weak encryption. These

@@ -1,6 +1,8 @@
 name: Windows.Forensics.Lnk
 author: Matt Green - @mgreen27
 description: |
+  Parses Windows LNK shortcut files to extract target paths, arguments, timestamps, and metadata.
+
   This artifact parses LNK shortcut files.
 
   A LNK file is a type of Shell Item that serves as a shortcut or reference to a

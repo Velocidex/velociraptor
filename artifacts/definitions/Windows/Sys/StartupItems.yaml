@@ -1,5 +1,7 @@
 name: Windows.Sys.StartupItems
 description: |
+  Enumerates startup applications from registry Run keys and Startup folder locations.
+
     Applications that will be started up from the various run key
     locations.
 

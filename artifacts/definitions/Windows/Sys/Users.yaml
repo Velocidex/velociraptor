@@ -1,5 +1,7 @@
 name: Windows.Sys.Users
 description: |
+  Lists user accounts that have logged on locally by inspecting registry profile list keys for locally-created profiles.
+
   List User accounts by inspecting registry keys. This method is a
   reliable indicator for users who have physically logged into the
   system and thereby created local profiles.

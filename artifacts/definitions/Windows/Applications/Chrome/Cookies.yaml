@@ -1,5 +1,7 @@
 name: Windows.Applications.Chrome.Cookies
 description: |
+  Enumerates Chrome browser cookies including host key, name, timestamps, and encrypted values.
+
   Enumerate the users chrome cookies.
 
   The cookies are typically encrypted by the DPAPI using the user's

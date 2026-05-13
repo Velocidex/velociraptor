@@ -1,6 +1,8 @@
 name: Windows.Forensics.SolarwindsSunburst
 
 description: |
+  Searches for SolarWinds Sunburst backdoor (SolarWinds.Orion.Core.BusinessLayer.dll) across all NTFS drives using YARA.
+
     "SolarWinds.Orion.Core.BusinessLayer.dll is a SolarWinds digitally-signed component of the Orion software framework that contains a backdoor that communicates via HTTP to third party servers."
 
     We can look for evidence of this dll by first performing a YARA search on the MFT across all drives, then applying an additional FireEye-supplied rule against the file found via MFT.

@@ -1,5 +1,7 @@
 name: Windows.Forensics.PartitionTable
 description: |
+  Parses GPT and MBR partition tables from a raw disk image or physical drive.
+
   Parses the raw disk for partition tables.
 
   This artifact also applies a magic() check to indicate the type of

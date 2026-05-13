@@ -1,5 +1,7 @@
 name: Windows.Applications.Firefox.Downloads
 description: |
+  Enumerates Firefox download records (file names, URLs, timestamps) from the places.sqlite database.
+
   Enumerate the users Firefox downloads.
 
   #### NOTES

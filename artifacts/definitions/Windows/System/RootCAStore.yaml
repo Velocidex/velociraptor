@@ -1,5 +1,7 @@
 name: Windows.System.RootCAStore
 description: |
+  Enumerates root CA certificates from the Windows System Certificate store.
+
    Enumerate the root certificates in the Windows Root store.
 
 reference:

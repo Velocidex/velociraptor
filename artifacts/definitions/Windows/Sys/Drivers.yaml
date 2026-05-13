@@ -1,5 +1,7 @@
 name: Windows.Sys.Drivers
 description: |
+  Enumerates running Windows device drivers with optional authenticode signature checking.
+
   Details for in-use Windows device drivers. This does not display
   installed but unused drivers.
 

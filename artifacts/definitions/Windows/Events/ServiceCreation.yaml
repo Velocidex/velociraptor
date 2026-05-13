@@ -1,5 +1,7 @@
 name: Windows.Events.ServiceCreation
 description: |
+  Detects new Windows service installations by monitoring System event log for EventID 7045.
+
   Monitor for creation of new services.
 
   New services are typically created by installing new software or

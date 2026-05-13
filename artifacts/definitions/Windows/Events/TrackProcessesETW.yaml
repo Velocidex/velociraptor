@@ -1,5 +1,7 @@
 name: Windows.Events.TrackProcessesETW
 description: |
+  Tracks process execution using ETW kernel events (CreateProcess, TerminateProcess, LoadImage).
+
   This artifact uses ETW to track process execution using the
   Velociraptor Process Tracker.
 

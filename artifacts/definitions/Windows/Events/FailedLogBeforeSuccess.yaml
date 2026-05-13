@@ -1,5 +1,7 @@
 name: Windows.Events.FailedLogBeforeSuccess
 description: |
+  Detects successful logons preceded by multiple failed logon attempts within a configurable time window.
+
   Sometimes attackers will brute force an local user's account's
   password. If the account password is strong, brute force attacks are
   not effective and might not represent a high value event in

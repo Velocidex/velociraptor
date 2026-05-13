@@ -1,5 +1,7 @@
 name: Windows.Packs.Persistence
 description: |
+  Aggregates results from multiple persistence-related artifacts into a single pack.
+
   This artifact pack collects various persistence mechanisms in Windows.
 
 precondition:

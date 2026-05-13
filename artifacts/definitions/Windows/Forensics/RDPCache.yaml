@@ -1,6 +1,8 @@
 name: Windows.Forensics.RDPCache
 author: Matt Green - @mgreen27
 description: |
+  Parses RDP Bitmap Cache (.BIN) files to extract and reconstruct cached remote desktop screen images.
+
     This artifact parses, views and enables simplified upload of RDP
     cache files.
 

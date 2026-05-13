@@ -1,5 +1,7 @@
 name: Windows.Timeline.MFT
 description: |
+  Parses the MFT and outputs file metadata in timeline format with anomaly detection flags.
+
   Enables querying the MFT with advanced filters such as time, path or other
   NTFS attributes.
 

@@ -1,5 +1,7 @@
 name: Windows.Applications.IISLogs
 description: |
+  Greps IIS log files from specified directories using a search regex and optional whitelist filter.
+
   This artifact enables grep of IISLogs.
 
   Parameters include SearchRegex and WhitelistRegex as regex terms and

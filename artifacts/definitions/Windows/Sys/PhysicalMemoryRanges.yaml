@@ -1,5 +1,8 @@
 name: Windows.Sys.PhysicalMemoryRanges
-description: List Windows physical memory ranges.
+description: |
+  Parses the CM_RESOURCE_LIST from the registry to list physical memory range descriptors.
+
+  List Windows physical memory ranges.
 reference:
   - https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/wdm/ns-wdm-_cm_resource_list
 

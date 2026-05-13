@@ -1,5 +1,7 @@
 name: Windows.Applications.Chrome.Extensions
 description: |
+  Parses Chrome extension manifest files to identify installed extensions and their permissions.
+
   Fetch Chrome extensions.
 
   Chrome extensions are installed into the user's home directory.  We

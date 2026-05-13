@@ -1,5 +1,7 @@
 name: Windows.Applications.NirsoftBrowserViewer
 description: |
+  Wraps the Nirsoft BrowsingHistoryView tool to parse browsing history from Chrome, Firefox, IE, and Safari.
+
   This artifact wraps the Nirsoft BrowsingHistoryView tool - a tool
   for parsing browser history from a variety of browsers.
 
