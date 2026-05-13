@@ -1,5 +1,6 @@
 name: Linux.Events.Journal
 description: |
+  Watches systemd journal binary log files for new log entries in real time
   Watches the binary journal logs. Systemd uses a binary log format to
   store logs.
 

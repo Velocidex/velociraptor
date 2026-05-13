@@ -1,7 +1,5 @@
 name: Windows.Search.VSS
 description: |
-  Find files within Volume Shadow Copies using the ntfs_vss accessor.
-
   This artifact will find all relevant files in the VSS. Typically
   used to out deduplicated paths for processing by other artifacts.
 

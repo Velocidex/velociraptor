@@ -1,6 +1,7 @@
 name: MacOS.Network.PacketCapture
 author: Wes Lambert, @therealwlambert
 description: |
+  Captures network packets using tcpdump with configurable interface, duration, and BPF filter, then uploads the pcap
   This artifact uses tcpdump to natively capture packets.
 
   The `Duration` parameter is used to define how long (in seconds) the capture should be.  Specific interfaces can be defined by using the `Interface` parameter, otherwise the artifact defaults to an interface assignment of `any`.

@@ -1,5 +1,6 @@
 name: Linux.Events.DNS
 description: |
+  Monitors DNS requests in real time using eBPF with process name and destination IP filtering
   This artifact uses eBPF to track DNS requests from various processes.
 
   NOTE: This event is generated from network traffic - it is unable to

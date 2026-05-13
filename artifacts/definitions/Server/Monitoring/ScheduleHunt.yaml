@@ -1,7 +1,5 @@
 name: Server.Monitoring.ScheduleHunt
 description: |
-     Schedule periodic client interrogation hunts on the server.
-
      Run client interrogation periodically. This is a sample event
      artifact to schedule a hunt periodically. You can change it to
      launch other artifacts.

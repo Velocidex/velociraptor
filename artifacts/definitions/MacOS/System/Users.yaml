@@ -1,5 +1,6 @@
 name: MacOS.System.Users
 description: |
+  Enumerates macOS local user accounts by parsing dslocal plist files with Apple ID and login metadata
   This artifact collects information about the local users on the
   system. The information is stored in plist files.
 

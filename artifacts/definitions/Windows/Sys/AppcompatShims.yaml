@@ -1,7 +1,5 @@
 name: Windows.Sys.AppcompatShims
 description: |
-  Parse Application Compatibility shim information from the registry.
-
   Application Compatibility shims are a way to persist malware. This
   table presents the AppCompat Shim information from the registry in a
   nice format.

@@ -1,5 +1,6 @@
 name: Linux.Triage.ProcessMemory
 description: |
+  Dumps a specified process's memory via the process accessor and uploads it
   Dump process memory and upload to the server
 
 precondition: SELECT OS From info() where OS = 'linux'

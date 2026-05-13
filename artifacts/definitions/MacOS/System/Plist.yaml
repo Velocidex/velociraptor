@@ -1,5 +1,6 @@
 name: MacOS.System.Plist
 description: |
+  Searches for macOS plist files by glob pattern and extracts their parsed content and file metadata
   This artifact collects and/or parses MacOS .plist files.  While simple,
   this artifact allows users to specify a .plist glob, and have those plist files
   returned for quick review.  If more advanced parsing is desired, the artifact can be copied

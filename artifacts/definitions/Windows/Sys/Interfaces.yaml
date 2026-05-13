@@ -1,7 +1,5 @@
 name: Windows.Sys.Interfaces
 description: |
-  Collect system network interface configuration details.
-
   Report information about the systems interfaces. This artifact
   simply parses the output from `ipconfig /all`.
 

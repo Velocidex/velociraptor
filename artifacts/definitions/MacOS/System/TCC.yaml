@@ -1,5 +1,6 @@
 name: MacOS.System.TCC
 description: |
+   Parses the Transparency, Consent, and Control database to extract app permission grants and timestamps
    This artifact provides details around the TCC (Transparency,
    Consent, and Control) database, and can help reveal when access to
    system services has been added or modified for an application.

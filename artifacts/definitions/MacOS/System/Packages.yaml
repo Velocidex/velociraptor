@@ -1,5 +1,6 @@
 name: MacOS.System.Packages
 description: |
+  Runs system_profiler to enumerate installed macOS applications with version, path, and signing info
   Parse packages installed on Macs
 
 parameters:

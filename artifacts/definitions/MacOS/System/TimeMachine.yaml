@@ -1,5 +1,6 @@
 name: MacOS.System.TimeMachine
 description: |
+  Parses the Time Machine plist and extracts backup destinations, volume names, and auto-backup settings
   This artifact collects information about MacOS Time Machine backups.
 
 type: CLIENT
