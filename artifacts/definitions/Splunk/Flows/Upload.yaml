@@ -1,6 +1,8 @@
 name: Splunk.Flows.Upload
 
 description: |
+  Sends Velociraptor collected data to Splunk for indexing and analysis.
+
   This server side event monitoring artifact waits for new artifacts
   to be collected from endpoints and automatically uploads those to a
   Splunk server.

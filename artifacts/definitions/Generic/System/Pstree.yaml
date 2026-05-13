@@ -1,5 +1,7 @@
 name: Generic.System.Pstree
 description: |
+  Shows process lineage by following parent PIDs to establish call chains.
+
   This artifact displays the call chain for every process on the
   system by traversing the process's parent ID.
 

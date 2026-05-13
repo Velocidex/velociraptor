@@ -1,5 +1,7 @@
 name: Linux.Events.TrackProcesses
 description: |
+  Subscribes to eBPF process events to track new processes and their parent relationships.
+
   This artifact uses eBPF and pslist to keep track of running
   processes by using the Velociraptor process tracker.
 

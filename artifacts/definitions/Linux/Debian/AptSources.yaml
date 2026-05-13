@@ -1,5 +1,7 @@
 name: Linux.Debian.AptSources
 description: |
+  Extracts package repository configuration from Debian-based systems.
+
   Parse Debian apt sources.
 
   This Artifact searches for all apt sources files and parses all

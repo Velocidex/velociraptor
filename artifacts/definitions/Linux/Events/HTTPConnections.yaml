@@ -1,5 +1,7 @@
 name: Linux.Events.HTTPConnections
 description: |
+  Monitors HTTP traffic on Linux systems using eBPF network tracing.
+
   This artifact uses eBPF to track HTTP and parse connections from
   various processes.
 

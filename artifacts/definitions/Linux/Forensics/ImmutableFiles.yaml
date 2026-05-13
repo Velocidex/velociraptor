@@ -1,5 +1,7 @@
 name: Linux.Forensics.ImmutableFiles
 description: |
+  Locates immutable files on Linux by checking ext4 filesystem flags.
+
   Searches the filesystem for immutable files.
 
   Attackers sometimes enable immutable files in Linux. This prevents files from

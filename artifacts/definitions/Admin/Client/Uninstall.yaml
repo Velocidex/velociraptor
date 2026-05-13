@@ -1,5 +1,7 @@
 name: Admin.Client.Uninstall
 description: |
+  Executes uninstall commands via msiexec, dpkg, or rpm to remove the client.
+
   Uninstall Velociraptor from the endpoint.
 
   This artifact uninstalls a Velociraptor client (or any other MSI

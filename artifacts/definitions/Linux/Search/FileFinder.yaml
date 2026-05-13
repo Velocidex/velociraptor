@@ -1,5 +1,7 @@
 name: Linux.Search.FileFinder
 description: |
+  Locates files by glob patterns or YARA rules with optional uploads and hashing.
+
   Find files on the filesystem using the filename or content.
 
 

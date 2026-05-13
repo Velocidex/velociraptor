@@ -1,5 +1,7 @@
 name: Linux.Events.SSHBruteforce
 description: |
+  Monitors SSH authentication logs to detect successful logins following brute force attempts.
+
   A monitoring artifact which detects a successful SSH login preceded by some
   failed attempts within the last hour.
 

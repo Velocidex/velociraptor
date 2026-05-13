@@ -1,5 +1,7 @@
 name: Server.Utils.Clients
 description: |
+  Provides an interactive notebook for searching and inspecting client details.
+
   View detailed client informations
 
   This template will create an interactive notebook that allows more

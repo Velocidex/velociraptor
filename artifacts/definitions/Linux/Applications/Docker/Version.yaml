@@ -1,5 +1,7 @@
 name: Linux.Applications.Docker.Version
-description: Get Dockers version by connecting to its socket.
+description: Queries Docker API via socket to retrieve version information.
+
+Get Dockers version by connecting to its socket.
 
 parameters:
   - name: dockerSocket

@@ -1,5 +1,7 @@
 name: Linux.Network.Netstat
 description: |
+   Reads Linux /proc/net files to display socket connection states and processes.
+
    This artifact will parse /proc and reveal information
    about current network connections.
 

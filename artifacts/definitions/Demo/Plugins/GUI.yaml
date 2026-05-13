@@ -1,5 +1,7 @@
 name: Demo.Plugins.GUI
 description: |
+  Provides test cases for GUI elements, parameter validation, and notebook rendering.
+
   A demo plugin showing some GUI features.
 
   This plugin is also used for tests.
