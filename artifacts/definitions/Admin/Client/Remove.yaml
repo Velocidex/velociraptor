@@ -1,5 +1,7 @@
 name: Admin.Client.Remove
 description: |
+  Purges inactive clients based on a configurable age threshold
+
   This artifact will remove clients that have not checked in for a
   while.  All data for these clients will be removed.
 

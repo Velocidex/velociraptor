@@ -1,5 +1,7 @@
 name: Generic.Forensic.HashLookup
 description: |
+  Collects file hashes from various sources into a central event stream for external lookup
+
   This artifact is a server event artifact that collects hashes from
   various sources into a central location. It is possible to follow
   this artifact (e.g. with an external program using the API) to

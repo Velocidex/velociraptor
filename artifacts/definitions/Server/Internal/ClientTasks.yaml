@@ -1,5 +1,7 @@
 name: Server.Internal.ClientTasks
 description: |
+  Fires an event when the server schedules new tasks for a client
+
   This event will be fired when a client has new tasks scheduled.
 
 type: INTERNAL

@@ -1,5 +1,7 @@
 name: Server.Enrichment.GeoIPISP
 description: |
+  A utility artifact that enriches an IP address with ISP, organization, and ASN information from a MaxMind GeoIP ISP database
+
   Look up geo-information for an IP address using the MaxMind "GeoIP ISP"
   database.
 

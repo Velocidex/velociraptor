@@ -1,8 +1,10 @@
 name: Server.Hunts.CancelAndDelete
 description: |
-   Velociraptor Hunts are a way of running the same flow on
-   many endpoints at once. Hunts issue very quickly and wait
-   until each endpoint returns results.
+  Cancels all in-flight flows in a hunt, deletes the hunt, and optionally removes collected data
+
+  Velociraptor Hunts are a way of running the same flow on
+  many endpoints at once. Hunts issue very quickly and wait
+  until each endpoint returns results.
 
    Sometimes, the artifacts collected might take a long time and
    have unacceptable performance impact on the endpoint.

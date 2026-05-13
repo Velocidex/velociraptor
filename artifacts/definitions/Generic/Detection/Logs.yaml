@@ -1,6 +1,8 @@
 name: Generic.Detection.Logs
 author: "Matt Green - @mgreen27, Apache groks thanks to Harsh Jaroli and Krishna Patel"
 description: |
+  Searches log files for strings matching a regex pattern across web server and system log paths
+
   This artifact enables grep of Logs to hunt for strings of interest. Default
   target glob includes /var/log/, Apache and Windows IIS paths.
 

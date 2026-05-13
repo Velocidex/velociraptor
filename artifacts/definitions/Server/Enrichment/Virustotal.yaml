@@ -1,6 +1,8 @@
 name: Server.Enrichment.Virustotal
 author: Wes Lambert -- @therealwlambert, Whitney Champion -- @shortxstack
 description: |
+  Enriches a file hash or IP address with VirusTotal threat intelligence results
+
   Submit a file hash or IP to VirusTotal for details.
 
   Note that the default public API rate limit is 4 requests/min.

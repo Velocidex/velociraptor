@@ -1,32 +1,33 @@
 name: Generic.Detection.Yara.Zip
 author: "Matt Green - @mgreen27"
 description: |
-    This artifact enables running YARA on embedded compressed files.
+  Searches for YARA matches inside nested compressed archives up to a
+  configurable recursion depth.
 
-    The artifact:
+  The artifact:
 
-    * firstly searches for compressed zip files (PK header)
-    * then applies YARA on files inside.
-    * files matching ZipFilenameRegex are recursively searched as above.
+  * searches for compressed zip files (PK header)
+  * then applies YARA on files inside.
+  * files matching ZipFilenameRegex are recursively searched as above.
 
-    The artifact is optimized to recursively search through embedded zip,
-    jar,war and ear files by extracting any discovered containers.
-    Select UploadHits to upload Discovered file for further analysis.  It is
-    recommended to increase default artifact timeout for large servers or target
-    glob.
+  The artifact is optimized to recursively search through embedded
+  zip, jar,war and ear files by extracting any discovered containers.
+  Select UploadHits to upload Discovered file for further analysis.
+  It is recommended to increase default artifact timeout for large
+  servers or target glob.
 
-    Some examples of path glob may include:
+  Some examples of path glob may include:
 
-    * Specific container: `/path/here/file.zip`
-    * Wildcards: `/var/www/*.{jar,war,ear}`
-    * More wildcards: `/var/www/**/*.jar`
-    * Windows: `C:/**/*.zip`
+  * Specific container: `/path/here/file.zip`
+  * Wildcards: `/var/www/*.{jar,war,ear}`
+  * More wildcards: `/var/www/**/*.jar`
+  * Windows: `C:/**/*.zip`
 
-    NOTE: this artifact runs the glob plugin with the `nosymlink` switch
-    turned on.  This will NOT follow any symlinks and may cause
-    unexpected results if unknowingly targeting a folder with
-    symlinks. YARA is not applied to the containers, only contained contents
-    that are not containers.
+  NOTE: this artifact runs the glob plugin with the `nosymlink` switch
+  turned on.  This will NOT follow any symlinks and may cause
+  unexpected results if unknowingly targeting a folder with symlinks.
+  YARA is not applied to the containers, only contained contents that
+  are not containers.
 
 parameters:
   - name: TargetGlob

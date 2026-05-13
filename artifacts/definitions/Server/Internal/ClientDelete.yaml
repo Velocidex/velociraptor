@@ -1,5 +1,7 @@
 name: Server.Internal.ClientDelete
 description: |
+  Provides an internal event stream for client deletion notifications
+
   An internal queue that receives events when a client is deleted.
 
 type: SERVER_EVENT

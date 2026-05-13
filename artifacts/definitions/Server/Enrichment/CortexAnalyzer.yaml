@@ -1,5 +1,7 @@
 name: Server.Enrichment.CortexAnalyzer
 description: |
+  Runs Cortex analyzer jobs on observables and retrieves results from all applicable analyzers
+
   Run Cortex analyzer jobs across all enabled and applicable analyzers (based on supported analyzer data types), then retrieve the results.
 
   This artifact can be called from within another artifact (such as one looking for files) to enrich the data made available by that artifact.

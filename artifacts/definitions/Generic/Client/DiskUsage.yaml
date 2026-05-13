@@ -1,5 +1,7 @@
 name: Generic.Client.DiskUsage
 description: |
+  Computes disk usage per directory recursively, similar to the du command
+
   This artifact reports the amount of space used by each directory
   recursively (Similar to the `du` command).
 

@@ -1,5 +1,7 @@
 name: Generic.Client.VQL
 description: |
+  Executes arbitrary VQL queries on the client endpoint
+
   Run arbitrary VQL on the endpoint.
 
 required_permissions:

@@ -1,5 +1,7 @@
 name: Server.Import.Extras
 description: |
+  Downloads and imports artifact bundles from predefined external repositories
+
   This artifact imports additional artifacts maintained outside the
   Velociraptor tree.
 

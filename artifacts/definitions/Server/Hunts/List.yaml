@@ -1,5 +1,7 @@
 name: Server.Hunts.List
 description: |
+  Enumerates scheduled hunts showing hunt IDs, artifacts, and status
+
   List Hunts currently scheduled on the server.
 
 type: SERVER

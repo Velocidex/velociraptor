@@ -1,6 +1,8 @@
 name: Generic.Detection.Yara.Glob
 author: Matt Green - @mgreen27
 description: |
+  Runs YARA rules against files discovered via glob with configurable filters and optional upload of hit context
+
   This artifact returns a list of target files then runs YARA over the target
   list.
 

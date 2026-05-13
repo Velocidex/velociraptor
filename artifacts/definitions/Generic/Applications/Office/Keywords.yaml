@@ -1,5 +1,7 @@
 name: Generic.Applications.Office.Keywords
 description: |
+  Scans Office and OpenDocument files for keyword matches using YARA rules via the zip accessor
+
   Microsoft Office documents among other document format (such as
   LibraOffice) are actually stored in zip files. The zip file contains
   the document encoded as XML in several zip members.

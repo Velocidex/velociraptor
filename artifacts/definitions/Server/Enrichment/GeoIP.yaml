@@ -1,5 +1,7 @@
 name: Server.Enrichment.GeoIP
 description: |
+  A utility artifact that enriches an IP address with country, state, and city information from a MaxMind GeoIP database
+
   This artifact can use the MaxMind database to Geo resolve an IP
   address. You will need to provide a valid GeoIP database.
 

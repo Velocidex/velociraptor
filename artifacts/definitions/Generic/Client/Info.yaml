@@ -1,6 +1,6 @@
 name: Generic.Client.Info
 description: |
-  Collect basic information about the client.
+  Collects basic system details including hostname, OS version, interfaces, and platform info
 
   This artifact is collected when any new client is enrolled into the
   system. Velociraptor will watch for this artifact and populate its

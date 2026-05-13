@@ -1,5 +1,7 @@
 name: Generic.Forensic.LocalHashes.Query
 description: |
+  Searches the local SQLite hash database for files matching a user-supplied hash list
+
   This artifact maintains a local (client side) database of file
   hashes. It is then possible to query this database by using the
   Generic.Forensic.LocalHashes.Query artifact.

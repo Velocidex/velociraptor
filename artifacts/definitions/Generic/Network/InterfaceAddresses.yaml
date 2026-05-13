@@ -1,5 +1,7 @@
 name: Generic.Network.InterfaceAddresses
 description: |
+  Collects interface addresses and metadata such as MAC, MTU, and IP masks across operating systems
+
   Network interfaces and relevant metadata. This artifact works on all
   supported OSs.
 

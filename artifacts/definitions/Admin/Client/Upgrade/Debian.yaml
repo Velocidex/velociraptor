@@ -1,5 +1,7 @@
 name: Admin.Client.Upgrade.Debian
 description: |
+  Upgrades Velociraptor clients on Debian hosts by installing a new Debian package
+
   Remotely push new client updates to Debian hosts.
 
   NOTE: This artifact requires that you supply a client Debian package by using the

@@ -1,5 +1,7 @@
 name: Admin.Client.Upgrade.RedHat
 description: |
+  Upgrades Velociraptor clients on Red Hat hosts by installing a new RPM package
+
   Remotely push new client updates to Red Hat hosts.
 
   NOTE: This artifact requires that you supply a client Red Hat package by using the

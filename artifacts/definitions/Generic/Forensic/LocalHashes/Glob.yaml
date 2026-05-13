@@ -1,5 +1,7 @@
 name: Generic.Forensic.LocalHashes.Glob
 description: |
+  Hashes files matching a glob and stores them in a local SQLite database on the client
+
   This artifact maintains a local (client side) database of file
   hashes. It is then possible to query this database by using the
   `Generic.Forensic.LocalHashes.Query` artifact

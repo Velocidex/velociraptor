@@ -1,6 +1,8 @@
 name: Server.Enrichment.GreyNoise
 author: Wes Lambert -- @therealwlambert
 description: |
+  Enriches an IP address with GreyNoise threat intelligence including classification and noise status
+
   Submit an IP to the GreyNoise API.
 
   https://developer.greynoise.io/reference/community-api

@@ -1,5 +1,7 @@
 name: Server.Hunts.AddFlow
 description: |
+  Links an existing flow to a hunt so it appears in the hunt's results
+
   This artifact adds an existing flow to a running hunt.
 
   This helps in the case where the original flow in the hunt timed

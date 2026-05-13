@@ -1,5 +1,7 @@
 name: Server.Import.PreviousReleases
 description: |
+  Downloads and installs legacy artifact bundles from a specified older Velociraptor release
+
   When upgrading the Velociraptor server, the built-in artifacts may change and
   use newer VQL features that are not present in older clients.
 

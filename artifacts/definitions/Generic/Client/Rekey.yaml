@@ -1,5 +1,7 @@
 name: Generic.Client.Rekey
 description: |
+  Forces the client to regenerate its client ID and restart
+
   This artifact forces the client to regenerate its client id.
 
   This is normally not needed! You will only need to use this artifact in very

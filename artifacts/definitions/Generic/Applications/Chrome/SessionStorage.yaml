@@ -1,5 +1,7 @@
 name: Generic.Applications.Chrome.SessionStorage
 description: |
+  Extracts key-value session storage entries from Chrome, Brave, and Edge browsers
+
   Session storage allows a web site to store permanent data in the
   user's browser.
 

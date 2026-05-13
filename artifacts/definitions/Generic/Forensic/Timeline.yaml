@@ -1,5 +1,7 @@
 name: Generic.Forensic.Timeline
 description: |
+  Creates a bodyfile-format timeline of files matching a glob across the filesystem
+
   This artifact generates a timeline of a file glob in bodyfile
   format. We currently do not calculate the md5 because it is quite
   expensive.

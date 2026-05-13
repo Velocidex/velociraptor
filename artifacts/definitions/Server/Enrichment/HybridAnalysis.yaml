@@ -1,6 +1,8 @@
 name: Server.Enrichment.HybridAnalysis
 author: Wes Lambert -- @therealwlambert
 description: |
+  Enriches a file hash with Hybrid Analysis threat intelligence verdict data
+
   Submit a file hash to Hybrid Analysis for a verdict. Default free API restriction is 200 requests/min or 2000 requests/hour.
 
   This artifact can be called from within another artifact (such as one looking for files) to enrich the data made available by that artifact.

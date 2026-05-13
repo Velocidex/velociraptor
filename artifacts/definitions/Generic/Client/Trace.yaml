@@ -1,5 +1,7 @@
 name: Generic.Client.Trace
 description: |
+  Captures runtime trace information from the client at a specified interval
+
   This artifact collects profiling information about the running
   client. The artifact is automatically added when the GUI selects a
   non zero Trace frequency.

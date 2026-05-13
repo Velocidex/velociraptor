@@ -1,5 +1,7 @@
 name: Generic.Client.LocalLogs
 description: |
+  Writes client logs to an encrypted local file with configurable flush and size limits
+
   Write client logs locally in an encrypted container. This helps when
   we need to access what the client was doing in the past.
 

@@ -1,5 +1,7 @@
 name: LogScale.Events.Clients
 description: |
+  Forwards selected client monitoring events to a LogScale ingestion endpoint
+
   This server side event monitoring artifact will watch a selection of client
   monitoring artifacts for new events and push those to a LogScale (formerly
   Humio) ingestion endpoint
