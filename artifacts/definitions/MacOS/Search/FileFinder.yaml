@@ -1,6 +1,5 @@
 name: MacOS.Search.FileFinder
 description: |
-  Globs for files on macOS with optional YARA content scanning, upload, hashing, and xattr collection
   Find files on the filesystem using the filename or content.
 
 

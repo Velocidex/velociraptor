@@ -1,5 +1,7 @@
 name: Linux.OSQuery.Generic
 description: |
+  Downloads the OSQuery binary, runs a query, and returns the result as structured rows
+
   OSQuery is an excellent tool for querying system state across the
   three supported Velociraptor platform (Windows/Linux/MacOS).
 

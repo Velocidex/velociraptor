@@ -1,6 +1,5 @@
 name: MacOS.Network.Netstat
 description: |
-  Lists active network connections and enriches with process name, path, command line, and user
   Report network connections, and enrich with process information.
 
 type: CLIENT

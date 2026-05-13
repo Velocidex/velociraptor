@@ -1,6 +1,5 @@
 name: Linux.Applications.Chrome.Extensions
 description: |
-  Searches for Chrome extension manifests and extracts name, version, author, permissions, and resolves locale strings
   Fetch Chrome extensions.
 
   Chrome extensions are installed into the user's home directory.  We

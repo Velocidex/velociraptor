@@ -1,6 +1,5 @@
 name: Linux.Applications.Chrome.Extensions.Upload
 description: |
-  Uploads Chrome extension files from each user's home directory
   Upload all users chrome extension.
 
   We don't bother actually parsing anything here, we just grab all the

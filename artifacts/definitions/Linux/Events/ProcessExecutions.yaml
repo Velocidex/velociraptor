@@ -1,6 +1,5 @@
 name: Linux.Events.ProcessExecutions
 description: |
-  Monitors process executions in real time using auditd rules and enriches with user and parent process info
   This artifact collects process execution logs from the Linux kernel.
 
   This artifact relies on the presence of `auditctl` usually included

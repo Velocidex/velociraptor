@@ -1,7 +1,6 @@
 name: MacOS.System.QuarantineEvents
 description: |
 
-  Parses the macOS quarantine database per user to extract download events, origin URLs, and bundle identifiers
   This artifact parses the QuarantineEventsV2 database, which provides
   information on when a file was downloaded from the internet.
 
