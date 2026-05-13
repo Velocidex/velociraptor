@@ -1,7 +1,5 @@
 name: Linux.Syslog.SSHLogin
 description: |
-  Parses /var/log/auth.log and /var/log/secure files for SSH authentication events
-
   Parses the auth logs to determine all SSH login attempts.
 
 reference:

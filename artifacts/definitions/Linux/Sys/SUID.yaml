@@ -2,8 +2,6 @@ name: Linux.Sys.SUID
 aliases:
   - MacOS.Sys.SUID
 description: |
-  Searches the filesystem for executables with elevated privilege bits (SUID/SGID)
-
   Searches for applications that have the `setuid` or `setgid` bits set.
 
   When the `setuid` or `setgid` bits are set on Linux or macOS for an

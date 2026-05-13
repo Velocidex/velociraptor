@@ -1,5 +1,8 @@
 name: Linux.Proc.Arp
-description: ARP table via /proc/net/arp.
+description: |
+  Parses the ARP table from /proc/net/arp into structured records
+
+  ARP table via /proc/net/arp.
 parameters:
   - name: ProcNetArp
     default: /proc/net/arp

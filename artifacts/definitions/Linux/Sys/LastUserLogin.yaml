@@ -1,7 +1,5 @@
 name: Linux.Sys.LastUserLogin
 description: |
-  Parses WTMP binary files to retrieve user login and logout records
-
   Finds and parses system WTMP files.
 
   These indicate when users last logged in.

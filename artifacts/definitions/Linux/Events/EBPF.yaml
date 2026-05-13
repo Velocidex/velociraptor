@@ -1,7 +1,5 @@
 name: Linux.Events.EBPF
 description: |
-  Monitors and reports eBPF events including process, file, and network operations
-
   This artifact forwards EBPF events generated on the endpoint.
 
 precondition: |
