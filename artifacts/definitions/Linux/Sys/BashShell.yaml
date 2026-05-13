@@ -1,5 +1,7 @@
 name: Linux.Sys.BashShell
 description: |
+  Run shell commands via the system shell on Linux endpoints.
+
   This artifact allows running arbitrary commands through the system
   shell.
 

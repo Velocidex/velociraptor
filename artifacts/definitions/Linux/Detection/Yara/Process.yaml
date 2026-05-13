@@ -1,8 +1,6 @@
 name: Linux.Detection.Yara.Process
 author: Matt Green - @mgreen27
 description: |
-  Scans running process memory with YARA rules to detect signatures matching a given rule set.
-
   This artifact enables running YARA over processes in memory.
 
   There are 2 kinds of YARA rules that can be deployed:
