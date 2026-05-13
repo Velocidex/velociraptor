@@ -1,5 +1,8 @@
 name: Linux.Proc.Modules
-description: Module listing via /proc/modules.
+description: |
+  Parses /proc/modules to enumerate loaded kernel modules and their metadata
+
+  Module listing via /proc/modules.
 parameters:
   - name: ProcModules
     default: /proc/modules

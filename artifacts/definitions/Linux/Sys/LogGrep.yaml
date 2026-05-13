@@ -1,6 +1,8 @@
 name: Linux.Sys.LogGrep
 author: "Matt Green - @mgreen27"
 description: |
+  Searches Linux log files including gzipped archives using regex patterns
+
   This artifact enables zgrep-like searching of Linux logs, including gzipped
   log files.
 

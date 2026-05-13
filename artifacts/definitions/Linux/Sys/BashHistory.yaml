@@ -1,6 +1,8 @@
 name: Linux.Sys.BashHistory
 author: "Matt Green - @mgreen27"
 description: |
+  Searches shell history and user profile files using regex patterns with whitelist filtering
+
   This artifact enables grep-like searching of Bash and alternate shell history
   files.
 

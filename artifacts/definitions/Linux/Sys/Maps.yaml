@@ -1,5 +1,7 @@
 name: Linux.Sys.Maps
 description: |
+  Parses /proc/<pid>/maps to list all memory-mapped files for each running process
+
   A running binary may link other binaries into its address
   space. These shared objects contain exported functions which may be
   used by the binary.

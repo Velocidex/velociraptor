@@ -1,5 +1,7 @@
 name: Linux.Sys.Crontab
 description: |
+  Enumerates cron jobs from system crontab files, cron.d directories, and user crontabs
+
   Displays parsed information from crontab.
 parameters:
   - name: cronTabGlob

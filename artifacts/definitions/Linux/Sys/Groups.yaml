@@ -1,6 +1,9 @@
 name: Linux.Sys.Groups
 author: Andreas Misje – @misje
-description: Get system group IDs, names and memberships from /etc/group
+description: |
+  Parses /etc/group to enumerate group names, group IDs, and member users
+
+  Get system group IDs, names and memberships from /etc/group
 parameters:
   - name: GroupFile
     default: /etc/group

@@ -1,5 +1,8 @@
 name: Linux.Sys.Users
-description: Get User specific information like homedir, group, etc. from `/etc/passwd`.
+description: |
+  Parses /etc/passwd to enumerate local user accounts with UID, GID, home directory, and shell
+
+  Get User specific information like homedir, group, etc. from `/etc/passwd`.
 parameters:
   - name: PasswordFile
     default: /etc/passwd

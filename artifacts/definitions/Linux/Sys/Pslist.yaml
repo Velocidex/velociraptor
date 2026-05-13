@@ -1,5 +1,7 @@
 name: Linux.Sys.Pslist
 description: |
+  Enumerates running processes with executable paths, hashes, and memory usage
+
   List processes and their running binaries.
 
 aliases:

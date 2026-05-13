@@ -1,6 +1,8 @@
 name: Linux.Sys.LogHunter
 author: "Matt Green - @mgreen27"
 description: |
+  Searches log files using regex patterns with path exclusion and filter support
+
   Allows grep-like searching of Linux, MacOS and Windows logs.
 
   Parameters include `SearchRegex` and `WhitelistRegex` as regex terms.

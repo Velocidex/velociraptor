@@ -1,5 +1,8 @@
 name: Linux.Sys.Services
-description: Parse services from systemctl
+description: |
+  Enumerates all systemd service units with their load, active, and sub status
+
+  Parse services from systemctl
 
 implied_permissions:
   - EXECVE

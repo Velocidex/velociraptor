@@ -1,5 +1,8 @@
 name: Linux.Mounts
-description: List mounted filesystems by reading /proc/mounts
+description: |
+  Parses /proc/mounts to enumerate mounted filesystems with device, mount point, and type
+
+  List mounted filesystems by reading /proc/mounts
 
 parameters:
   - name: ProcMounts
