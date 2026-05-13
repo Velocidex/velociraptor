@@ -1,5 +1,7 @@
 name: Generic.Client.Stats
 description: |
+    Records CPU and memory statistics for the Velociraptor client process.
+
     An Event artifact which records client's CPU and memory
     statistics.
 

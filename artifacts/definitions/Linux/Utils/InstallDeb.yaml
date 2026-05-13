@@ -1,6 +1,8 @@
 name: Linux.Utils.InstallDeb
 author: Andreas Misje – @misje
 description: |
+   Installs .deb packages on Debian-based systems with optional debconf configuration.
+
    Install a deb package and configure it with debconf answers.
 
    The package may either be specified by name, as an uploaded file or as a

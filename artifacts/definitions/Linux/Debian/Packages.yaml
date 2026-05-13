@@ -1,7 +1,9 @@
 name: Linux.Debian.Packages
 author: Andreas Misje – @Misje
 description: |
- List all packages installed on the system, both deb packages and "snaps".
+  Queries dpkg and snapd to list installed deb and snap packages.
+
+  List all packages installed on the system, both deb packages and "snaps".
 
  The installed deb package information is fetched from the DPKG status file,
  while the snap package list is fetched from the snap daemon through a UNIX

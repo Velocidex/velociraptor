@@ -1,5 +1,7 @@
 name: Generic.Client.LocalLogsRetrieve
 description: |
+  Fetches local log files from endpoints via the upload function.
+
   Retrieves the locally written logs.
 
 type: CLIENT

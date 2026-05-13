@@ -1,5 +1,7 @@
 name: Generic.System.HostsFile
 description: |
+  Parses the system hosts file to extract hostname-to-IP mappings.
+
   The system hosts file maps hostnames to IP addresses. In some cases,
   entries in this file take precedence and overrides the results from
   the system DNS service.

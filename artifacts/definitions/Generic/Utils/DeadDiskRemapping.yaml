@@ -1,5 +1,7 @@
 name: Generic.Utils.DeadDiskRemapping
 description: |
+  Inspects disk images and produces YAML remapping for filesystem access.
+
   Calculate a remapping configuration from a dead disk image.
 
   The artifact uses some heuristics to calculate a suitable remapping

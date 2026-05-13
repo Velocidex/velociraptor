@@ -1,5 +1,7 @@
 name: Admin.Client.Upgrade.Windows
 description: |
+  Pushes client updates to Windows systems by running msiexec with the provided MSI.
+
   Remotely push new client updates.
 
   NOTE: This artifact requires that you supply a client MSI by using the

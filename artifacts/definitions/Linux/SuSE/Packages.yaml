@@ -1,6 +1,8 @@
 name: Linux.SuSE.Packages
 author: Hilko Bengen <bengen@hilluzination.de>
 description: |
+  Queries zypper to retrieve installed packages with version and repository details.
+
   Parse list of installed packages from `zypper` output
 
 implied_permissions:
