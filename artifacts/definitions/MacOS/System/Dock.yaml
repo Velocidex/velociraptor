@@ -1,5 +1,7 @@
 name: MacOS.System.Dock
 description: |
+  Reads and parses the user's Dock plist to extract application entries and their associated metadata.
+
   This artifact examines the contents of the user's dock.  The
   property list entry for each application represented within the dock
   can be modified to point to a malicious application.

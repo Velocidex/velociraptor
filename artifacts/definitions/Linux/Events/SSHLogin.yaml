@@ -1,5 +1,7 @@
 name: Linux.Events.SSHLogin
 description: |
+  Watches auth.log for accepted SSH logins and forwards them as client events.
+
   This monitoring artifact watches the auth.log file for new
   successful SSH login events and relays them back to the server.
 
