@@ -1,7 +1,5 @@
 name: Linux.RHEL.Packages
 description: |
-  Lists installed packages by running dnf or yum and parsing their output
-
   Parse packages installed from dnf or yum
 
 implied_permissions:

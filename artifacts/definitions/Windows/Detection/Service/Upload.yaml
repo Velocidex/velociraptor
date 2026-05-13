@@ -1,7 +1,5 @@
 name: Windows.Detection.Service.Upload
 description: |
-  Uploads the binary associated with any newly installed Windows service
-
   When a new service is installed, upload the service binary to the server
 
 type: CLIENT_EVENT

@@ -1,6 +1,8 @@
 name: Windows.Detection.Yara.Device
 author: Matt Green - @mgreen27
 description: |
+  Scans physical disk sectors with YARA rules at configurable offsets  and uploads hit context.
+
   This artifact enables running YARA over a Physical device and offset
   specific targeting.
 

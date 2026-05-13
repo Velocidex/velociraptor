@@ -1,8 +1,6 @@
 name: Linux.Users.InteractiveUsers
 
 description: |
-  Identifies interactive users on a Linux host by excluding system accounts with nologin or false shells
-
   Gets the interactive users from a Linux host.
 
 author: George-Andrei Iosif (@iosifache)

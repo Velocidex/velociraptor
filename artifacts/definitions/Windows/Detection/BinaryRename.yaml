@@ -1,8 +1,6 @@
 name: Windows.Detection.BinaryRename
 author: "Matt Green - @mgreen27"
 description: |
-    Scans for renamed binaries by comparing filenames against embedded PE version metadata
-
     This artifact will detect renamed binaries commonly abused by adversaries.
 
     Binary rename is a defense evasion technique used to bypass brittle process

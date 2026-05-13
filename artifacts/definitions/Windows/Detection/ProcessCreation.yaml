@@ -1,7 +1,5 @@
 name: Windows.Detection.ProcessCreation
 description: |
-  Logs Windows process creation events by installing Sysmon and forwarding its ETW provider events
-
   This artifact logs specific process creation events to
   Velociraptor. It auto-installs Sysmon and it watches the Sysmon ETW
   provider for new events.
