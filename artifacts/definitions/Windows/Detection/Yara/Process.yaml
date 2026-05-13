@@ -1,6 +1,8 @@
 name: Windows.Detection.Yara.Process
 author: Matt Green - @mgreen27
 description: |
+  Runs YARA over processes in memory and optionally uploads process dumps.
+
   This artifact enables running YARA over processes in memory.
 
   There are 2 kinds of YARA rules that can be deployed:

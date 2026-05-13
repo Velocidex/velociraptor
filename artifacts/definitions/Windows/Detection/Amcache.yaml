@@ -1,6 +1,8 @@
 name: Windows.Detection.Amcache
 author: Matt Green - @mgreen27
 description: |
+    Collects AMCache entries with SHA1 hashes for threat detection.
+
     This artifact collects AMCache entries with a SHA1 hash to enable threat
     detection.
 

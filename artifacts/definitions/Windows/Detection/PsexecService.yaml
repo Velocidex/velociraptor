@@ -1,5 +1,7 @@
 name: Windows.Detection.PsexecService
 description: |
+  Detects PsExec execution by scanning newly created service binaries for PsExec strings.
+
   PsExec works by installing a new service in the system. The service
   can be renamed by using the `-r` flag and therefore it is not enough to
   just watch for a new service called `psexecsvc.exe`. This artifact

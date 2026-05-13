@@ -1,6 +1,8 @@
 name: Windows.ActiveDirectory.SharpHound
 author: Matt Green - @mgreen27
 description: |
+   Deploys SharpHound to collect Active Directory relationship data for BloodHound.
+
    This artifact allows deployment of the BloodHound collection tool Sharphound.
 
    BloodHound is a popular Active Directory Assessment tool that uses graph

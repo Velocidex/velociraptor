@@ -1,6 +1,8 @@
 name: Windows.Detection.Yara.NTFS
 author: Matt Green - @mgreen27
 description: |
+  Searches the MFT, returns a list of target files then runs YARA over the target list.
+
   This artifact searches the MFT, returns a list of target files then runs YARA
   over the target list.
 

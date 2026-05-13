@@ -1,5 +1,7 @@
 name: Windows.Detection.Impersonation
 description: |
+  Enumerates threads with impersonation tokens that differ from their parent process.
+
   An access token is an object that describes the security context of
   a process or thread. The information in a token includes the
   identity and privileges of the user account associated with the

@@ -1,5 +1,7 @@
 name: Windows.Detection.Yara.PhysicalMemory
 description: |
+  Scans physical memory for YARA matches using the WinPmem driver.
+
   This artifact enables running YARA over physical memory.
 
   There are 2 kinds of YARA rules that can be deployed:
