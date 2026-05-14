@@ -1,8 +1,8 @@
 name: Windows.System.Shares
 author: 'Matt Green - @mgreen27'
 description: |
-   Enumerates Windows network shares via the Win32_Share WMI class with regex filtering.
-   This artifact will extract network shares per machine.
+  Enumerates Windows network shares via the Win32_Share WMI class
+  with regex filtering.
 
 type: CLIENT
 

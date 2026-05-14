@@ -1,18 +1,20 @@
 name: Windows.System.UntrustedBinaries
 description: |
-  Checks that common Windows system binaries are signed using authenticode verification.
-  Windows runs several services and binaries as part of the
-  operating system. Sometimes malware pretends to run as those well
-  known names to hide itself in plain sight. For example, a
-  malware service might call itself svchost.exe so it shows up in the
-  process listing as a benign service.
+  Checks that common Windows system binaries are signed using
+  authenticode verification.
+  
+  Windows runs several services and binaries as part of the operating
+  system. Sometimes malware pretends to run as those well known names
+  to hide itself in plain sight. For example, a malware service might
+  call itself `svchost.exe` so it shows up in the process listing as a
+  benign service.
 
-  This artifact checks that the common systems binaries are
-  signed. If a malware replaces these files or names itself in this
-  way their signature might not be correct.
+  This artifact checks that the common system binaries are signed. If
+  a malware replaces these files or names itself in this way their
+  signature might not be correct.
 
   Note that unfortunately Microsoft does not sign all their common
-  binaries so many will not be signed (e.g. conhost.exe).
+  binaries so many will not be signed (e.g. `conhost.exe`).
 
 parameters:
   - name: processNamesRegex

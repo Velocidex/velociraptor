@@ -1,8 +1,7 @@
 name: Windows.Forensics.Pst
 description: |
-  Parses Outlook PST files to extract email messages, attachments, and metadata with regex filtering.
-
-  Parses PST files.
+  Parses Outlook PST files to extract email messages, attachments, and
+  metadata with regex-based targeting.
 
 parameters:
   - name: PSTGlob

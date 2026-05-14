@@ -1,22 +1,23 @@
 name: Windows.NTFS.ADSHunter
 author: "Matt Green - @mgreen27"
 description: |
-  Scans NTFS volumes for hidden data in Alternate Data Streams with configurable exclusion rules.
+  Scans NTFS volumes for data hidden in Alternate Data Streams, using
+  configurable filtering rules.
 
-   This artifact hunts
-   for Alternate Data Streams on NTFS file systems.
-   Adversaries may use NTFS file attributes for covert storage to evade
-   detection.
-   Alternate Data Streams (ADS) are additional $DATA attributes for an MFT entry in
-   NTFS file systems. In NTFS, the primary $DATA attribute is
-   never named but subsequent $DATA attributes must be named.
+  Adversaries may use NTFS file attributes for covert storage to evade
+  detection. Alternate Data Streams (ADS) are additional $DATA
+  attributes for an MFT entry in NTFS file systems. In NTFS, the
+  primary $DATA attribute is never named but subsequent $DATA
+  attributes must be named.
 
-   Targeting is via mix of path globs and include / exclude regex.
+  Targeting is via mix of path globs and include/exclude regex.
 
-   - TargetGlob is a glob to target for ADS. NOTE **\* is recursive. To hit C drive we need to search for C:\*
-   - AdsName is name in glob format: e.g *, Zone.Identifier or Zone.*.
-   - AdsNameExclusion - A regex value, common ADS added to exclusions have been
-   added by default. The artifact also excludes NTFS system files by default.
+  - TargetGlob is a glob to target for ADS. NOTE **\* is recursive. To
+    hit C drive we need to search for C:\*
+  - AdsName is name in glob format: e.g *, Zone.Identifier or Zone.*.
+  - AdsNameExclusion - A regex value, common ADS added to exclusions
+    have been added by default. The artifact also excludes NTFS system
+    files by default.
 
 reference:
   - https://attack.mitre.org/techniques/T1564/004/

@@ -1,8 +1,7 @@
 name: Windows.System.CriticalServices
 description: |
-  Checks that important Windows services like antivirus and update services are currently running.
-  This artifact returns information about any services which are
-  considered critical.
+  Checks that important Windows services like antivirus and update
+  services are currently running.
 
   The default list contains virus scanners. If the software is not
   installed at all, it will not be shown.

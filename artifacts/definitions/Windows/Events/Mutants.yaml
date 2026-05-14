@@ -1,8 +1,7 @@
 name: Windows.Events.Mutants
 description: |
-  Watches for new Mutant objects in the Windows object manager namespace and alerts on matches.
-
-  This artifact detects creation of Mutants and triggers an alert.
+  Watches for new Mutants in the Windows object manager namespace and
+  alerts on detections.
 
 author: Jos Clephas - @DfirJos
 

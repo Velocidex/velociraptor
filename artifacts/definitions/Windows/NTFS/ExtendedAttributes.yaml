@@ -1,18 +1,20 @@
 name: Windows.NTFS.ExtendedAttributes
 author: "Matt Green - @mgreen27"
 description: |
-  Adversaries may use NTFS file attributes for defense evasion to hide malicious
-  data. This artifact parses NTFS Extended attributes ($EA).
-  The artifact firstly queries the MFT, then enriches NTFS data to check for
-  Extended Attributes. Several filters can be applied such as file search,
-  Extended Attribute size, name or content.
+  Parses NTFS Extended Attributes ($EA) from the MFT to detect hidden
+  data.
+  
+  Adversaries may use NTFS file attributes for defense evasion to hide
+  malicious data. This artifact parses NTFS Extended attributes ($EA).
+  The artifact firstly queries the MFT, then enriches NTFS data to
+  check for Extended Attributes. Several filters can be applied such
+  as file search, Extended Attribute size, name or content.
 
-  NOTE:
-  By default an EAName exclusion has been applied to filter some common $EA names
-  found on Windows System. Recommended hunt would be by rare name or $EA size.
-  By default we only parse $EA and discard $EA_INFORMATION. $EA_INFORMATION
-  typically is very small and available in NtfsMetadata field of output.
-
+  NOTE: By default an EAName exclusion has been applied to filter.
+  Some common $EA names found on Windows System. Recommended hunt
+  would be by rare name or $EA size. By default we only parse $EA and
+  discard $EA_INFORMATION. $EA_INFORMATION typically is very small and
+  available in NtfsMetadata field of output.
 
 reference:
   - https://attack.mitre.org/techniques/T1564/004/

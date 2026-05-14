@@ -2,10 +2,8 @@ name: Windows.Remediation.ScheduledTasks
 description: |
   Removes Windows scheduled tasks matching a command and argument regex pattern.
 
-   Remove malicious task from the Windows scheduled task list.
-
-   WARNING: Removing scheduled tasks is potentially dangerous! You need to test
-   this thoroughly before deploying this artifact widely to clients.
+  WARNING: Removing scheduled tasks is potentially dangerous! You need to test
+  this thoroughly before deploying this artifact widely to clients.
 
 type: CLIENT
 

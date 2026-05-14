@@ -1,20 +1,18 @@
 name: Windows.Forensics.RDPCache
 author: Matt Green - @mgreen27
 description: |
-  Parses RDP Bitmap Cache (.BIN) files to extract and reconstruct cached remote desktop screen images.
+  Parses RDP Bitmap Cache (.BIN) files to extract and reconstruct
+  cached remote desktop screen images.
 
-    This artifact parses, views and enables simplified upload of RDP
-    cache files.
+  By default the artifact will parse .BIN RDPcache files.
 
-    By default the artifact will parse .BIN RDPcache files.
+  Filters include `UserRegex` to target a user and `Accessor` to target
+  VSS via ntfs_vss.
 
-    Filters include `UserRegex` to target a user and `Accessor` to target
-    VSS via ntfs_vss.
+  Best combined with:
 
-    Best combined with:
-
-       - Windows.EventLogs.RDPAuth to collect RDP focused event logs.
-       - Windows.Registry.RDP to collect user RDP MRU and server info
+  - `Windows.EventLogs.RDPAuth` to collect RDP focused event logs.
+  - `Windows.Registry.RDP` to collect user RDP MRU and server info.
 
 reference:
    - https://github.com/ANSSI-FR/bmc-tools

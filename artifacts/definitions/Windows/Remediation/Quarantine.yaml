@@ -1,43 +1,42 @@
 name: Windows.Remediation.Quarantine
 description: |
-  Configures Windows IPsec policy to block network traffic except for DNS, DHCP, and Velociraptor server access.
+  Configures Windows IPsec policy to block network traffic except for
+  DNS, DHCP, and Velociraptor server access.
 
-      Applies quarantine via Windows local IPsec policy.
+  - By default the current client configuration is applied as an
+    exclusion using resolved IP address at time of application.
 
-      - By default the current client configuration is applied as an
-        exclusion using resolved IP address at time of application.
+  - A configurable lookup table is also used to generate
+    additional entries using the same syntax as `netsh ipsec`
+    configuration.
 
-      - A configurable lookup table is also used to generate
-        additional entries using the same syntax as `netsh ipsec`
-        configuration.
+    - DNS and DHCP entries are allowed by default.
 
-        - DNS and DHCP entries are allowed by default.
+  - An optional MessageBox may also be configured to alert all
+    logged in users.
 
-      - An optional MessageBox may also be configured to alert all
-        logged in users.
+    - The message will be truncated to 256 characters.
 
-        - The message will be truncated to 256 characters.
+  - After policy application, connection back to the Velociraptor
+    frontend is tested and the policy removed if connection
+    unavailable.
 
-      - After policy application, connection back to the Velociraptor
-        frontend is tested and the policy removed if connection
-        unavailable.
+  - To remove policy, select the RemovePolicy checkbox.
 
-      - To remove policy, select the RemovePolicy checkbox.
+  - To update policy, simply rerun the artifact.
 
-      - To update policy, simply rerun the artifact.
+  NOTE:
 
-      NOTE:
+  - Remember DNS resolution may change. It is highly recommended
+    to plan policy accordingly and not rely on DNS lookups.
 
-      - Remember DNS resolution may change. It is highly recommended
-        to plan policy accordingly and not rely on DNS lookups.
+  - Local IPsec policy cannot be applied when Domain IPsec policy
+    is already enforced. Please configure at GPO level in this case.
 
-      - Local IPsec policy cannot be applied when Domain IPsec policy
-        is already enforced. Please configure at GPO level in this case.
-
-      - This artifact deliberately does not support connecting back on
-        plain HTTP! We only support the HTTPS or WSS protocols because
-        this is the recommended connectivity mechanism between server
-        and client.
+  - This artifact deliberately does not support connecting back on
+    plain HTTP! We only support the HTTPS or WSS protocols because
+    this is the recommended connectivity mechanism between server
+    and client.
 
 author: Matt Green - @mgreen27
 

@@ -2,7 +2,6 @@ name: Windows.Sys.CertificateAuthorities
 description: |
   Enumerates certificate authorities from Windows certificate stores.
 
-  Certificate Authorities installed in Keychains/ca-bundles.
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'

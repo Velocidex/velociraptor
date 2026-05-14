@@ -1,8 +1,7 @@
 name: Windows.System.DLLs
 description: |
-  Lists DLLs loaded by running processes with optional hash computation and certificate verification.
-  Enumerate the DLLs loaded by a running process. It includes hash value
-  and certificate information.
+  Lists DLLs loaded by running processes with optional hash
+  computation and certificate information.
 
 parameters:
   - name: ProcessRegex

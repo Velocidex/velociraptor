@@ -1,7 +1,9 @@
 name: Windows.System.Threads
 description: |
-  Lists threads for processes matching name or PID regex filters using the threads plugin.
-  Enumerates all threads in selected processes.
+  Lists threads for selected processes, matching by name or PID regex
+  filters.
+  
+  This uses Velociraptor's threads plugin.
 
 parameters:
   - name: ProcessRegex

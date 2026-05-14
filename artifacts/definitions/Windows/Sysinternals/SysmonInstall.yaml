@@ -1,14 +1,15 @@
 name: Windows.Sysinternals.SysmonInstall
 description: |
-  Deploys Sysmon with a config file and ensures the Sysmon64 service is running.
+  Deploys Sysmon with a config file and ensures the Sysmon64 service
+  is running.
+  
+  Sysmon is a kernel level system monitor written by Sysinternals.
+  While we are not able to distribute Sysmon ourselves, Velociraptor
+  can help you manage its deployment and installation.
 
-  Sysmon is a kernel level system monitor written by Sysinternals. While we are
-  not able to distribute Sysmon ourselves, Velociraptor can help you manage its
-  deployment and installation.
-
-  NOTE: By default we install the Sysmon config from SwiftOnSecurity - we
-  recommend that you review the config file and, if necessary, override it in
-  the GUI with one that better suits your needs.
+  NOTE: By default we install the Sysmon config from SwiftOnSecurity -
+  we recommend that you review the config file and, if necessary,
+  override it in the GUI with one that better suits your needs.
 
 tools:
   - name: SysmonBinary
