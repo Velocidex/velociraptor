@@ -1,6 +1,8 @@
 name: Server.Utils.KillClient
 description: |
-  This artifact aggressively kills a client.
+   Terminates a Velociraptor client process by sending a kill command to the specified client ID.
+
+   This artifact aggressively kills a client.
 
   If the client runs as a service, it will restart by the service manager.
 

@@ -1,5 +1,7 @@
 name: Server.Slack.Clients.Online
 description: |
+   Sends a Slack notification when clients with a target label appear online.
+
    Send a message to slack when clients come online.
 
    This artifact searches for all clients that carry the label "Slack"

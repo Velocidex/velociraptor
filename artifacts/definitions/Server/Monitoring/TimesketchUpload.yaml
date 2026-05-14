@@ -1,6 +1,8 @@
 name: Server.Monitoring.TimesketchUpload
 description: |
-  This artifact will automatically upload any Velociraptor timelines to Timesketch.
+   Watches for new Velociraptor timelines and automatically uploads matching ones to Timesketch.
+
+   This artifact will automatically upload any Velociraptor timelines to Timesketch.
 
 
 type: SERVER_EVENT

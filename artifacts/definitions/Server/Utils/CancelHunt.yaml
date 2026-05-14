@@ -1,6 +1,8 @@
 name: Server.Utils.CancelHunt
 description: |
-  Sometimes a hunt is issued which is no longer useful. While stopping
+   Cancels all in-progress flows for one or more specified hunts.
+
+   Sometimes a hunt is issued which is no longer useful. While stopping
   the hunt from the GUI prevents new clients from receiving the hunt,
   it does not actively cancel collections currently in flight.
 

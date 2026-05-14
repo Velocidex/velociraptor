@@ -1,6 +1,8 @@
 name: Server.Monitoring.ClientCount
 
 description: |
+   Emails deployment statistics, including the connected client count, on a configurable schedule.
+
    An artifact that sends an email every hour of the current state of
    the deployment.
 

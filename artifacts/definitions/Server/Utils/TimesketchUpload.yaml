@@ -1,6 +1,8 @@
 name: Server.Utils.TimesketchUpload
 description: |
-  Timesketch is an interactive collaborative timeline analysis tool
+   Uploads Velociraptor timelines to Timesketch using the Timesketch client library.
+
+   Timesketch is an interactive collaborative timeline analysis tool
   that can be found at https://timesketch.org/
 
   This artifact uploads Velociraptor's timelines to Timesketch using
