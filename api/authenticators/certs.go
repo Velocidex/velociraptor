@@ -117,7 +117,6 @@ func (self *CertAuthenticator) AddLogoff(mux *api_utils.ServeMux) error {
 				func(w http.ResponseWriter, r *http.Request) {
 					w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
 					http.Error(w, "authorization failed", http.StatusUnauthorized)
-					return
 				})))
 
 	return nil

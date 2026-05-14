@@ -9,7 +9,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
 	utils "www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -42,7 +41,7 @@ func (self PlistFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Name:     "plist",
 		Doc:      "Parse plist file",
 		ArgType:  type_map.AddType(scope, &_PlistFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -115,7 +114,7 @@ func (self _PlistPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 		Name:     "plist",
 		Doc:      "Parses a plist file.",
 		ArgType:  type_map.AddType(scope, &_PlistPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

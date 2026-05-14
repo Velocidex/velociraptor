@@ -5,7 +5,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -48,7 +47,7 @@ func (self WriteFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Name:    "write_file",
 		Doc:     "Writes a string onto a file.",
 		ArgType: type_map.AddType(scope, &WriteFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.FILESYSTEM_WRITE, acls.FILESYSTEM_READ).Build(),
 	}
 }

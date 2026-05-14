@@ -13,7 +13,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/crypto/storage"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -153,7 +152,7 @@ func (self WriteCryptFilePlugin) Info(scope vfilter.Scope, type_map *vfilter.Typ
 		Name:     "write_crypto_file",
 		Doc:      "Write a query into an encrypted local storage file.",
 		ArgType:  type_map.AddType(scope, &WriteCryptFilePluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 	}
 }
 

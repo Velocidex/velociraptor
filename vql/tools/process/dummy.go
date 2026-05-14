@@ -26,8 +26,6 @@ type DummyProcessTracker struct {
 	mu     sync.Mutex
 	lookup map[string]*ProcessEntry
 	age    time.Time
-
-	max_items int64
 }
 
 // Refresh the local cache to avoid having to make too many pslist calls.

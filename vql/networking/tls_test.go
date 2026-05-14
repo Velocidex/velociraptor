@@ -118,7 +118,7 @@ func TestTLSVerification(t *testing.T) {
 			},
 		},
 	}
-	_, data, err = testHTTPConnection(config_obj, "https://www.google.com")
+	_, _, err = testHTTPConnection(config_obj, "https://www.google.com")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Server certificate had no known thumbprint")
 

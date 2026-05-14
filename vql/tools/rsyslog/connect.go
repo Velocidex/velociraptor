@@ -42,16 +42,18 @@ func (self *Logger) Connect() (err error) {
 			KeepAlive: time.Second * 60,
 		}
 		self.netConn, err = tls.DialWithDialer(dialer, "tcp", self.raddr, tls_config)
+		if err != nil {
+			return err
+		}
 
 	case "udp", "tcp":
 		self.netConn, err = net.DialTimeout(self.network, self.raddr, self.connectTimeout)
+		if err != nil {
+			return err
+		}
 
 	default:
 		return fmt.Errorf("Network protocol %s not supported", self.network)
-	}
-
-	if err != nil {
-		return err
 	}
 
 	// Add reference to this connection which should be closed.

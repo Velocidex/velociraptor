@@ -30,7 +30,6 @@ import (
 
 	errors "github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/crypto/utils"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 )
 
@@ -136,13 +135,13 @@ func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBund
 		return nil, err
 	}
 
-	ca_cert, err := utils.ParseX509CertFromPemStr([]byte(
+	ca_cert, err := crypto_utils.ParseX509CertFromPemStr([]byte(
 		config_obj.Client.CaCertificate))
 	if err != nil {
 		return nil, err
 	}
 
-	ca_private_key, err := utils.ParseRsaPrivateKeyFromPemStr(
+	ca_private_key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr(
 		[]byte(config_obj.CA.PrivateKey))
 	if err != nil {
 		return nil, err
@@ -245,13 +244,13 @@ func ReissueServerCert(config_obj *config_proto.Config,
 		return nil, err
 	}
 
-	ca_cert, err := utils.ParseX509CertFromPemStr([]byte(
+	ca_cert, err := crypto_utils.ParseX509CertFromPemStr([]byte(
 		config_obj.Client.CaCertificate))
 	if err != nil {
 		return nil, err
 	}
 
-	ca_private_key, err := utils.ParseRsaPrivateKeyFromPemStr(
+	ca_private_key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr(
 		[]byte(config_obj.CA.PrivateKey))
 	if err != nil {
 		return nil, err

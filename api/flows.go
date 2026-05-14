@@ -10,7 +10,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/api/tables"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/json"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -184,12 +183,12 @@ func (self *ApiServer) GetClientFlows(
 			flow.Request.Creator,
 			flow.TotalUploadedBytes,
 			flow.TotalCollectedRows,
-			json.ConvertProtoToOrderedDict(flow),
+			vjson.ConvertProtoToOrderedDict(flow),
 			flow.Request.Urgent,
 			flow.ArtifactsWithResults,
 		}
 		opts := vjson.DefaultEncOpts()
-		serialized, err := json.MarshalWithOptions(row_data, opts)
+		serialized, err := vjson.MarshalWithOptions(row_data, opts)
 		if err != nil {
 			continue
 		}

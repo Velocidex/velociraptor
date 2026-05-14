@@ -88,7 +88,7 @@ const (
 )
 
 var (
-	validUsernameRegEx = regexp.MustCompile("^[a-zA-Z0-9@.\\-_#+]+$")
+	validUsernameRegEx = regexp.MustCompile(`^[a-zA-Z0-9@.\-_#+]+$`)
 )
 
 type UserManager struct {

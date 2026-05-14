@@ -23,7 +23,7 @@ func (self *QueryTracker) GetStartRow(query *actions_proto.VQLRequest) uint64 {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	start_row, _ := self.queriesToStartRow[query.Name]
+	start_row := self.queriesToStartRow[query.Name]
 	return start_row
 }
 
@@ -32,7 +32,7 @@ func (self *QueryTracker) AddRows(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	start_row, _ := self.queriesToStartRow[query.Name]
+	start_row := self.queriesToStartRow[query.Name]
 	self.queriesToStartRow[query.Name] = start_row + count
 }
 

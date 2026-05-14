@@ -19,7 +19,7 @@ func (self *statsCollector) ProfileWriter(
 	var rows []*ordereddict.Dict
 	self.mu.Lock()
 	for _, k := range utils.Sort(self.throttlers) {
-		t, _ := self.throttlers[k]
+		t := self.throttlers[k]
 		rows = append(rows, t.Stats().
 			Set("AvCPUPercent", int(self.samples[1].average_cpu_load)).
 			Set("AvIOP", int(self.samples[1].average_iops)).

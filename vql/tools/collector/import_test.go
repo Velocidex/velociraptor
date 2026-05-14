@@ -12,7 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
-	"www.velocidex.com/golang/velociraptor/flows/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -148,7 +147,7 @@ func (self *TestSuite) TestCreateAndImportCollection() {
 		Set("Original Flow", self.snapshotHuntFlow())
 
 	// Now delete the old flow
-	for _ = range (&flows.DeleteFlowPlugin{}).Call(ctx, scope,
+	for range (&flows.DeleteFlowPlugin{}).Call(ctx, scope,
 		ordereddict.NewDict().
 			Set("client_id", client_id).
 			Set("flow_id", flow_id).
@@ -208,7 +207,7 @@ func (self *TestSuite) TestImportCollectionFromFixture() {
 			// with the TestHost hostname in the host.json file.
 			Set("hostname", "MyNewHost").
 			Set("filename", import_file_path))
-	context, ok := result.(*proto.ArtifactCollectorContext)
+	context, ok := result.(*flows_proto.ArtifactCollectorContext)
 	assert.True(self.T(), ok)
 
 	// Check the import was successful.
@@ -241,7 +240,7 @@ func (self *TestSuite) TestImportCollectionFromFixture() {
 			Set("client_id", "auto").
 			Set("hostname", "MyNewHost").
 			Set("filename", import_file_path))
-	context2, ok := result2.(*proto.ArtifactCollectorContext)
+	context2, ok := result2.(*flows_proto.ArtifactCollectorContext)
 	assert.True(self.T(), ok)
 
 	// The new flow was created on the same client id as before.
@@ -254,7 +253,7 @@ func (self *TestSuite) TestImportCollectionFromFixture() {
 		ordereddict.NewDict().
 			Set("client_id", spec_client_id).
 			Set("filename", import_file_path))
-	context3, ok := result3.(*proto.ArtifactCollectorContext)
+	context3, ok := result3.(*flows_proto.ArtifactCollectorContext)
 	assert.True(self.T(), ok)
 
 	assert.Equal(self.T(), context3.ClientId, spec_client_id)
@@ -293,7 +292,7 @@ func (self *TestSuite) TestImportX509CollectionFromFixture() {
 			Set("client_id", "auto").
 			Set("hostname", "MyNewHost").
 			Set("filename", import_file_path))
-	context, ok := result.(*proto.ArtifactCollectorContext)
+	context, ok := result.(*flows_proto.ArtifactCollectorContext)
 	assert.True(self.T(), ok)
 
 	assert.Equal(self.T(), []string{"Demo.Plugins.GUI"},

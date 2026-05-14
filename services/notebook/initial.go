@@ -270,9 +270,7 @@ func CalculateNotebookArtifact(
 		}
 
 		// Copy out column types
-		for _, ct := range artifact.ColumnTypes {
-			res.ColumnTypes = append(res.ColumnTypes, ct)
-		}
+		res.ColumnTypes = append(res.ColumnTypes, artifact.ColumnTypes...)
 
 		// Copy out all the parameters
 		for _, p := range artifact.Parameters {

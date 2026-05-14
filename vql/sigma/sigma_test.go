@@ -740,7 +740,7 @@ func (self *SigmaTestSuite) TestSigmaModifiers() {
 
 		if test_case.log_regex != "" {
 			assert.Regexp(self.T(), test_case.log_regex,
-				string(log_collector.Bytes()))
+				log_collector.String())
 		}
 
 		os.Stderr.Write(log_collector.Bytes())
@@ -1124,7 +1124,7 @@ func (self *SigmaTestSuite) TestSigmaCorrelations() {
 
 		if test_case.log_regex != "" {
 			assert.Regexp(self.T(), test_case.log_regex,
-				string(log_collector.Bytes()))
+				log_collector.String())
 		}
 
 		os.Stderr.Write(log_collector.Bytes())

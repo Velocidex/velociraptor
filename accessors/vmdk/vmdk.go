@@ -2,7 +2,6 @@ package vmdk
 
 import (
 	"io"
-	"os"
 	"sync"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -47,9 +46,10 @@ func (self *VMDKFile) Seek(offset int64, whence int) (int64, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if whence == os.SEEK_SET {
+	switch whence {
+	case io.SeekStart:
 		self.offset = offset
-	} else if whence == os.SEEK_CUR {
+	case io.SeekCurrent:
 		self.offset += offset
 	}
 	return self.offset, nil

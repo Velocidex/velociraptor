@@ -147,7 +147,7 @@ func (self *valueCount) addEvent(
 	}
 	field := utils.ToString(field_any[0])
 
-	count, _ := self.value_map[field]
+	count := self.value_map[field]
 	self.value_map[field] = count + 1
 }
 
@@ -161,7 +161,7 @@ func (self *valueCount) evictEvent(
 	}
 	field := utils.ToString(field_any[0])
 
-	count, _ := self.value_map[field]
+	count := self.value_map[field]
 	self.value_map[field] = count - 1
 	if count-1 <= 0 {
 		delete(self.value_map, field)
@@ -194,7 +194,7 @@ func (self *temporal) addEvent(
 		name = rule.ID
 	}
 
-	count, _ := self.value_map[name]
+	count := self.value_map[name]
 	self.value_map[name] = count + 1
 }
 
@@ -206,7 +206,7 @@ func (self *temporal) evictEvent(
 		name = rule.ID
 	}
 
-	count, _ := self.value_map[name]
+	count := self.value_map[name]
 	self.value_map[name] = count - 1
 	if count-1 <= 0 {
 		delete(self.value_map, name)

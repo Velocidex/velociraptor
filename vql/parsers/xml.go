@@ -24,7 +24,7 @@ import (
 	"github.com/clbanning/mxj"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/vql"
+
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -77,7 +77,7 @@ func (self _ParseXMLFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Name:     "parse_xml",
 		Doc:      "Parse an XML document into a map.",
 		ArgType:  type_map.AddType(scope, &_ParseXMLFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 		Version:  2,
 	}
 }

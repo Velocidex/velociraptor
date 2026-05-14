@@ -1,7 +1,7 @@
 package data
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
@@ -18,7 +18,7 @@ func TestAccessorData(t *testing.T) {
 	fd, err := accessor.Open("Hello world")
 	assert.NoError(t, err)
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := io.ReadAll(fd)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "Hello world", string(data))
@@ -34,7 +34,7 @@ func TestAccessorScope(t *testing.T) {
 	fd, err := accessor.Open("Foobar")
 	assert.NoError(t, err)
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := io.ReadAll(fd)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "Hello world", string(data))

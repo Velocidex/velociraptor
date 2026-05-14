@@ -47,6 +47,8 @@ SELECT * FROM %s()
 		rows = append(rows, row)
 	}
 
+	_ = rows
+
 	vtesting.MemoryLogsContain(self.T(), "Plugin .+ is not implemented for this architecture")
 
 	version_check := common.GetVersion{}.Call(

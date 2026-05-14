@@ -39,7 +39,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -428,7 +427,7 @@ func (self *yaraXscanReporter) scanRange(
 		}
 
 		n, err := f.Read(buf[:to_read])
-		if n == 0 {
+		if n == 0 || err != nil {
 			return
 		}
 
@@ -501,9 +500,8 @@ type yaraXscanReporter struct {
 	ctx            context.Context
 
 	// Internal scan state
-	scope            vfilter.Scope
-	rules            *yara_x.Rules
-	fast_buffer_scan bool
+	scope vfilter.Scope
+	rules *yara_x.Rules
 }
 
 func (self *yaraXscanReporter) getMeta(rule *yara_x.Rule) *ordereddict.Dict {
@@ -626,7 +624,7 @@ func (self YaraXScanPlugin) Info(
 		ArgType: type_map.AddType(scope, &YaraXScanPluginArgs{}),
 
 		// EXECVE is needed because we load the yarax DLL dynamically.
-		Metadata: vql.VQLMetadata().Permissions(
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.FILESYSTEM_READ, acls.EXECVE).Build(),
 		Version: 2,
 	}

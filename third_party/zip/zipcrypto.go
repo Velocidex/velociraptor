@@ -35,7 +35,7 @@ func (z *ZipCrypto) updateKeys(byteValue byte) {
 }
 
 func (z *ZipCrypto) magicByte() byte {
-	var t uint32 = z.Keys[2] | 2
+	var t = z.Keys[2] | 2
 	return byte((t * (t ^ 1)) >> 8)
 }
 

@@ -38,14 +38,15 @@ func (self *LoadSheddingListener) Accept() (net.Conn, error) {
 	}
 }
 
-func (self *Server) NewLoadSheddingListener(addr string) (*LoadSheddingListener, error, func() error) {
+func (self *Server) NewLoadSheddingListener(addr string) (
+	*LoadSheddingListener, func() error, error) {
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
-		return nil, err, nil
+		return nil, nil, err
 	}
 
 	return &LoadSheddingListener{
 		Listener:  ln,
 		throttler: self.throttler,
-	}, err, ln.Close
+	}, ln.Close, err
 }

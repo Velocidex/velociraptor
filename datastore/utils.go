@@ -101,6 +101,7 @@ func Walk(config_obj *config_proto.Config,
 		err := Walk(config_obj, datastore, d, with_directories, walkFn)
 		if err != nil {
 			// Do not quit the walk early.
+			_ = err
 		}
 	}
 

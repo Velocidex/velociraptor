@@ -16,7 +16,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -39,7 +38,7 @@ func (self ScannerPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Name:     "parse_lines",
 		Doc:      "Parse a file separated into lines.",
 		ArgType:  type_map.AddType(scope, &ScannerPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -325,7 +324,7 @@ func (self WatchSyslogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Name:     "watch_syslog",
 		Doc:      "Watch a syslog file and stream events from it. ",
 		ArgType:  type_map.AddType(scope, &WatchSyslogPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 		Version:  2,
 	}
 }

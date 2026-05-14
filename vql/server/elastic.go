@@ -55,7 +55,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -461,7 +460,7 @@ func (self _ElasticPlugin) Info(
 	return &vfilter.PluginInfo{
 		Name:     "elastic_upload",
 		Doc:      "Upload rows to elastic.",
-		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.NETWORK).Build(),
 		ArgType:  type_map.AddType(scope, &_ElasticPluginArgs{}),
 		Version:  2,
 	}

@@ -19,7 +19,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -241,7 +240,8 @@ var _Netstat = vfilter.GenericListPlugin{
 	Doc:        "Collect network information.",
 	Function:   runNetstat,
 	ArgType:    &NetstatArgs{},
-	Metadata:   vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+	Metadata: vql_subsystem.VQLMetadata().Permissions(
+		acls.MACHINE_STATE).Build(),
 }
 
 func init() {

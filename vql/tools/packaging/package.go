@@ -17,7 +17,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 	"www.velocidex.com/golang/vfilter"
@@ -355,7 +354,7 @@ func (self CreatePackagePlugin) Info(scope vfilter.Scope, type_map *vfilter.Type
 		Name:    self.name,
 		Doc:     self.description,
 		ArgType: type_map.AddType(scope, &CreatePackageArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.COLLECT_SERVER, acls.FILESYSTEM_WRITE, acls.SERVER_ADMIN).Build(),
 	}
 }

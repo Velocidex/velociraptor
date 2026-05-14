@@ -392,8 +392,6 @@ func Trace(
 	config_obj *config_proto.Config,
 	name string, filename api.DSPathSpec) {
 
-	return
-
 	//fmt.Printf("Trace FileBaseDataStore: %v: %v\n", name,
 	//	AsDatastoreFilename(db, config_obj, filename))
 }
@@ -401,8 +399,6 @@ func Trace(
 func TraceDirectory(
 	db DataStore, config_obj *config_proto.Config,
 	name string, filename api.DSPathSpec) {
-
-	return
 
 	//fmt.Printf("Trace FileBaseDataStore: %v: %v\n", name,
 	//	AsDatastoreDirectory(db, config_obj, filename))

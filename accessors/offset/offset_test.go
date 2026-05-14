@@ -1,8 +1,7 @@
 package offset
 
 import (
-	"io/ioutil"
-	"os"
+	"io"
 	"testing"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -27,13 +26,13 @@ func TestAccessorOffset(t *testing.T) {
 	fd, err := accessor.Open(pathspec.String())
 	assert.NoError(t, err)
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := io.ReadAll(fd)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "bit of text", string(data))
 
 	// Check that Seeking works
-	n, err := fd.Seek(3, os.SEEK_SET)
+	n, err := fd.Seek(3, io.SeekStart)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(3), n)
 

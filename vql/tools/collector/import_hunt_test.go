@@ -172,7 +172,7 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 		Set("Original Flow", self.snapshotHuntFlow())
 
 	// Now delete the old hunt
-	for _ = range (&hunts.DeleteHuntPlugin{}).Call(ctx, scope,
+	for range (&hunts.DeleteHuntPlugin{}).Call(ctx, scope,
 		ordereddict.NewDict().Set("hunt_id", hunt.HuntId).
 			Set("really_do_it", true)) {
 	}

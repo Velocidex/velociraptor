@@ -365,7 +365,8 @@ func StartFrontendHttps(
 
 		atomic.StoreInt32(&server_obj.Healthy, 1)
 
-		listener, err, closer := server_obj.NewLoadSheddingListener(server.Addr)
+		listener, closer, err := server_obj.NewLoadSheddingListener(
+			server.Addr)
 		if err != nil {
 			server_obj.Error("Frontend server: Can not listen on %v: %v",
 				server.Addr, err)
@@ -564,7 +565,7 @@ func StartFrontendWithAutocert(
 		// port for the GUI and clients. If we load shed the
 		// clients we will also load shed the GUI... Does this
 		// makes sense?
-		listener, err, closer := server_obj.NewLoadSheddingListener(server.Addr)
+		listener, closer, err := server_obj.NewLoadSheddingListener(server.Addr)
 		if err != nil {
 			server_obj.Error("Frontend server: Can not listen on %v: %v",
 				server.Addr, err)
@@ -773,8 +774,6 @@ func addClientCerts(config_obj *config_proto.Config, in *tls.Config) error {
 	in.ClientAuth = tls.RequireAndVerifyClientCert
 	in.ClientCAs = client_ca
 
-	in.BuildNameToCertificate()
-
 	return nil
 }
 
@@ -806,7 +805,6 @@ func getTLSConfig(config_obj *config_proto.Config, in *tls.Config) error {
 	in.CurvePreferences = []tls.CurveID{
 		tls.CurveP521, tls.CurveP384, tls.CurveP256}
 	in.ClientSessionCache = tls.NewLRUClientSessionCache(int(expected_clients))
-	in.PreferServerCipherSuites = true
 
 	in.CipherSuites = []uint16{
 		tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,

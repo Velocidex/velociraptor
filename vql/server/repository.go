@@ -10,7 +10,6 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vql_utils "www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -179,7 +178,7 @@ func (self ArtifactSetFunction) Info(
 		Name:    "artifact_set",
 		Doc:     "Sets an artifact into the global repository.",
 		ArgType: type_map.AddType(scope, &ArtifactSetFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.ARTIFACT_WRITER, acls.SERVER_ARTIFACT_WRITER).Build(),
 		Version: 2,
 	}
@@ -263,7 +262,7 @@ func (self ArtifactDeleteFunction) Info(
 		Name:    "artifact_delete",
 		Doc:     "Deletes an artifact from the global repository.",
 		ArgType: type_map.AddType(scope, &ArtifactDeleteFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.ARTIFACT_WRITER, acls.SERVER_ARTIFACT_WRITER).Build(),
 	}
 }
@@ -394,7 +393,7 @@ func (self ArtifactsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 		Name:     "artifact_definitions",
 		Doc:      "Dump artifact definitions.",
 		ArgType:  type_map.AddType(scope, &ArtifactsPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 
@@ -503,7 +502,7 @@ func (self ArtifactSetMetadataFunction) Info(
 		Name:    "artifact_set_metadata",
 		Doc:     "Sets metadata about the artifact.",
 		ArgType: type_map.AddType(scope, &ArtifactSetMetadataFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.ARTIFACT_WRITER, acls.SERVER_ARTIFACT_WRITER).Build(),
 		Version: 2,
 	}
@@ -556,7 +555,7 @@ func (self *ArtifactImportFunction) Call(ctx context.Context,
 		// supposed to actually return rows (they should be only LET
 		// statements).
 		for _, vql := range vqls {
-			for _ = range vql.Eval(ctx, scope) {
+			for range vql.Eval(ctx, scope) {
 			}
 		}
 	}
@@ -570,7 +569,7 @@ func (self ArtifactImportFunction) Info(
 		Name:     "import",
 		Doc:      "Imports an artifact into the current scope. This only works in notebooks!",
 		ArgType:  type_map.AddType(scope, &ArtifactImportFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Build(),
+		Metadata: vql_subsystem.VQLMetadata().Build(),
 	}
 }
 

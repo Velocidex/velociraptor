@@ -14,7 +14,6 @@ import (
 	"github.com/elastic/go-libaudit/v2/auparse"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/utils/dict"
@@ -51,9 +50,10 @@ type AuditPlugin struct{}
 
 func (self AuditPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "audit",
-		Doc:      "Register as an audit daemon in the kernel.",
-		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		Name: "audit",
+		Doc:  "Register as an audit daemon in the kernel.",
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.MACHINE_STATE).Build(),
 	}
 }
 

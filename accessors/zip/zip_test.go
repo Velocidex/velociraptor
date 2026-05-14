@@ -2,7 +2,7 @@ package zip
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -310,7 +310,7 @@ func (self *ZipTestSuite) TestPermissions() {
 	assert.NoError(self.T(), err)
 	defer fd.Close()
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := io.ReadAll(fd)
 	assert.NoError(self.T(), err)
 
 	zip_scope_pathspec := &accessors.PathSpec{

@@ -299,7 +299,7 @@ func (self *OSPath) MarshalYAML() (interface{}, error) {
 	json_string := []byte(self.String())
 	buf := bytes.Buffer{}
 	err := json.Indent(&buf, json_string, " ", "  ")
-	return string(buf.Bytes()), err
+	return buf.String(), err
 }
 
 // MarshalText is used by the YAML marshaller. We indent the text to

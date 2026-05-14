@@ -27,7 +27,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -108,7 +107,7 @@ func (self Compress) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilt
 		Name:     "compress",
 		Doc:      "Compress a file in the server's FileStore. ",
 		ArgType:  type_map.AddType(scope, &CompressArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE, acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE, acls.FILESYSTEM_READ).Build(),
 	}
 }
 

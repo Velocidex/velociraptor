@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	errors "github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
+	//lint:file-ignore U1000 This flag is handled especially.
 	run_flag = app.Flag("run", "Run an artifact as a CLI tool.").
-			Short('r').String()
-
-	stopError = errors.New("Stop")
+		Short('r').String()
 )
 
 type STATE int
@@ -158,9 +156,11 @@ func transformArgv(argv []string) ([]string, error) {
 			runmode_args = append(runmode_args, arg)
 			state.Pop()
 
-			// Something went horrible wrong!
+			// Something went horribly wrong!
 		default:
-			break
+			return nil, fmt.Errorf(
+				"Parsing command line failed at arg %v with state %v",
+				arg, state)
 		}
 	}
 

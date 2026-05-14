@@ -154,7 +154,9 @@ func (self *RemapTestSuite) TestRemapByPlugin() {
 	vql, err := vfilter.Parse(`
 LET _ <= remap(config=RemappingConfig, clear=TRUE)
 `)
-	for _ = range vql.Eval(self.Ctx, scope) {
+	assert.NoError(self.T(), err)
+
+	for range vql.Eval(self.Ctx, scope) {
 	}
 
 	self.checkQueries(scope)

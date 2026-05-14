@@ -8,6 +8,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -18,24 +19,21 @@ const (
 )
 
 type OrgRecord struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Name  string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Nonce string `protobuf:"bytes,2,opt,name=nonce,proto3" json:"nonce,omitempty"`
-	Id    string `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Nonce string                 `protobuf:"bytes,2,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	Id    string                 `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`
 	// Deprecated do not use
-	OrgId string `protobuf:"bytes,4,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	OrgId         string `protobuf:"bytes,4,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *OrgRecord) Reset() {
 	*x = OrgRecord{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_orgs_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_orgs_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *OrgRecord) String() string {
@@ -46,7 +44,7 @@ func (*OrgRecord) ProtoMessage() {}
 
 func (x *OrgRecord) ProtoReflect() protoreflect.Message {
 	mi := &file_orgs_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -91,34 +89,30 @@ func (x *OrgRecord) GetOrgId() string {
 
 var File_orgs_proto protoreflect.FileDescriptor
 
-var file_orgs_proto_rawDesc = []byte{
-	0x0a, 0x0a, 0x6f, 0x72, 0x67, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0x5c, 0x0a, 0x09, 0x4f, 0x72, 0x67, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64,
-	0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
-	0x6e, 0x61, 0x6d, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6e, 0x6f, 0x6e, 0x63, 0x65, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x05, 0x6e, 0x6f, 0x6e, 0x63, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x15, 0x0a, 0x06, 0x6f, 0x72,
-	0x67, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x72, 0x67, 0x49,
-	0x64, 0x42, 0x31, 0x5a, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64,
-	0x65, 0x78, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65,
-	0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+const file_orgs_proto_rawDesc = "" +
+	"\n" +
+	"\n" +
+	"orgs.proto\x12\x05proto\"\\\n" +
+	"\tOrgRecord\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
+	"\x05nonce\x18\x02 \x01(\tR\x05nonce\x12\x0e\n" +
+	"\x02id\x18\x03 \x01(\tR\x02id\x12\x15\n" +
+	"\x06org_id\x18\x04 \x01(\tR\x05orgIdB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
 
 var (
 	file_orgs_proto_rawDescOnce sync.Once
-	file_orgs_proto_rawDescData = file_orgs_proto_rawDesc
+	file_orgs_proto_rawDescData []byte
 )
 
 func file_orgs_proto_rawDescGZIP() []byte {
 	file_orgs_proto_rawDescOnce.Do(func() {
-		file_orgs_proto_rawDescData = protoimpl.X.CompressGZIP(file_orgs_proto_rawDescData)
+		file_orgs_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_orgs_proto_rawDesc), len(file_orgs_proto_rawDesc)))
 	})
 	return file_orgs_proto_rawDescData
 }
 
 var file_orgs_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_orgs_proto_goTypes = []interface{}{
+var file_orgs_proto_goTypes = []any{
 	(*OrgRecord)(nil), // 0: proto.OrgRecord
 }
 var file_orgs_proto_depIdxs = []int32{
@@ -134,25 +128,11 @@ func file_orgs_proto_init() {
 	if File_orgs_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_orgs_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OrgRecord); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_orgs_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_orgs_proto_rawDesc), len(file_orgs_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
@@ -163,7 +143,6 @@ func file_orgs_proto_init() {
 		MessageInfos:      file_orgs_proto_msgTypes,
 	}.Build()
 	File_orgs_proto = out.File
-	file_orgs_proto_rawDesc = nil
 	file_orgs_proto_goTypes = nil
 	file_orgs_proto_depIdxs = nil
 }

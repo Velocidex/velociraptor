@@ -42,9 +42,7 @@ func (self *ProcessAccessor) OpenWithOSPath(
 		handle: fd,
 	}
 
-	for _, r := range ranges {
-		result.ranges = append(result.ranges, r)
-	}
+	result.ranges = append(result.ranges, ranges...)
 
 	return result, nil
 }

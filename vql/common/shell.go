@@ -35,7 +35,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -392,7 +391,7 @@ func (self ShellPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Name:     "execve",
 		Doc:      "Execute the commands given by argv.",
 		ArgType:  type_map.AddType(scope, &ShellPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.EXECVE).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.EXECVE).Build(),
 		Version:  2,
 	}
 }

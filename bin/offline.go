@@ -289,7 +289,7 @@ SELECT * FROM if(condition=Spec.OS, then={
    )
 })
 `
-	err = runQueryWithEnv(query, builder, *collector_format)
+	err = runQueryWithEnv(ctx, query, builder, *collector_format)
 	if err != nil {
 		return err
 	}

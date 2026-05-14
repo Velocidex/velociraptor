@@ -30,7 +30,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/files"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -119,7 +118,7 @@ func (self CreateFlowDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 		Name:     "create_flow_download",
 		Doc:      "Creates a download pack for the flow.",
 		ArgType:  type_map.AddType(scope, &CreateFlowDownloadArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.PREPARE_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.PREPARE_RESULTS).Build(),
 		Version:  2,
 	}
 }
@@ -188,7 +187,7 @@ func (self CreateHuntDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 		Name:     "create_hunt_download",
 		Doc:      "Creates a download pack for a hunt.",
 		ArgType:  type_map.AddType(scope, &CreateHuntDownloadArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.PREPARE_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.PREPARE_RESULTS).Build(),
 		Version:  2,
 	}
 }

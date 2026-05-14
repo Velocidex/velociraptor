@@ -273,7 +273,8 @@ func evaluateScopeQuery(
 			return nil, fmt.Errorf(
 				"While evaluating remapping scope: Only LET statements allowed in this context")
 		}
-		for _ = range vql.Eval(ctx, sub_scope) {
+
+		for range vql.Eval(ctx, sub_scope) {
 		}
 	}
 

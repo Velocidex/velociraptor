@@ -16,7 +16,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -141,10 +140,11 @@ func encryptPGP(recip []*openpgp.Entity,
 	w io.Writer) error {
 
 	wc, err := openpgp.Encrypt(w, recip, signer, nil, nil)
-	defer wc.Close()
 	if err != nil {
 		return err
 	}
+	defer wc.Close()
+
 	if _, err := io.Copy(wc, r); err != nil {
 		return err
 	}
@@ -253,7 +253,7 @@ func (self PKEncryptFunction) Info(
 		Name:     "pk_encrypt",
 		Doc:      "Encrypt files using pubkey encryption",
 		ArgType:  type_map.AddType(scope, &PKEncryptArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

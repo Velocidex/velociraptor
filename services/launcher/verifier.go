@@ -19,9 +19,6 @@ import (
 
 var (
 	api_description = &ApiDescription{}
-	error_messages  = map[string]string{
-		"E001": "",
-	}
 )
 
 type Suppression struct {

@@ -6,9 +6,7 @@ import (
 	"text/template"
 
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
-	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	gui_assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/json"
 )
@@ -16,7 +14,7 @@ import (
 func renderRejectionMessage(
 	config_obj *config_proto.Config,
 	r *http.Request, w http.ResponseWriter, err error,
-	username string, authenticators []velociraptor.AuthenticatorInfo) {
+	username string, authenticators []gui_assets.AuthenticatorInfo) {
 
 	// For API calls we render the error as JSON
 	base_path := api_utils.GetBasePath(config_obj, "/api/")
@@ -39,13 +37,13 @@ func renderRejectionMessage(
 		return
 	}
 
-	err = tmpl.Execute(w, velociraptor.HTMLtemplateArgs{
-		BasePath: utils.GetBasePath(config_obj),
-		ErrState: json.MustMarshalString(velociraptor.ErrState{
+	err = tmpl.Execute(w, gui_assets.HTMLtemplateArgs{
+		BasePath: api_utils.GetBasePath(config_obj),
+		ErrState: json.MustMarshalString(gui_assets.ErrState{
 			Type:           "Login",
 			Username:       username,
 			Authenticators: authenticators,
-			BasePath:       utils.GetBasePath(config_obj),
+			BasePath:       api_utils.GetBasePath(config_obj),
 		}),
 	})
 	if err != nil {
@@ -71,13 +69,13 @@ func renderLogoffMessage(
 		return
 	}
 
-	err = tmpl.Execute(w, velociraptor.HTMLtemplateArgs{
-		BasePath: utils.GetBasePath(config_obj),
-		ErrState: json.MustMarshalString(velociraptor.ErrState{
+	err = tmpl.Execute(w, gui_assets.HTMLtemplateArgs{
+		BasePath: api_utils.GetBasePath(config_obj),
+		ErrState: json.MustMarshalString(gui_assets.ErrState{
 			Type:           "Logoff",
 			Username:       username,
-			BasePath:       utils.GetBaseDirectory(config_obj),
-			Authenticators: []velociraptor.AuthenticatorInfo{},
+			BasePath:       api_utils.GetBaseDirectory(config_obj),
+			Authenticators: []gui_assets.AuthenticatorInfo{},
 		}),
 	})
 	if err != nil {

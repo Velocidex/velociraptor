@@ -23,7 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/utils/tempfile"
+
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
@@ -40,7 +40,7 @@ func (self *Dummy) getTempFile(
 	config_obj *config_proto.Config,
 	filename, url string) (*os.File, error) {
 
-	file, err := tempfile.TempFile("tmp*" + filename + "." + filepath.Ext(url))
+	file, err := utils_tempfile.TempFile("tmp*" + filename + "." + filepath.Ext(url))
 	if err != nil {
 		return nil, err
 	}

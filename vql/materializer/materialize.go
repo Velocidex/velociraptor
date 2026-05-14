@@ -12,7 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/filesystem"
@@ -39,7 +38,7 @@ func NewTempFileMatrializer(
 	name string, rows []types.Row) (*TempFileMatrializer, error) {
 
 	// name is a VQL identifier so should be safe.
-	tmpfile, err := tempfile.TempFile(
+	tmpfile, err := utils_tempfile.TempFile(
 		"VQL_" + utils.SanitizeString(name) + "_.jsonl")
 	if err != nil {
 		return nil, err
@@ -144,11 +143,7 @@ func (self TempFileMatrializer) Eval(
 // Support Associative protocol
 func (self TempFileMatrializer) Applicable(a types.Any, b types.Any) bool {
 	_, ok := a.(*TempFileMatrializer)
-	if !ok {
-		return false
-	}
-
-	return true
+	return ok
 }
 
 // Just delegate to our contained rows array.

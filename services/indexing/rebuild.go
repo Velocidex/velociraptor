@@ -68,7 +68,7 @@ func (self *Indexer) RebuildIndex(
 	}
 
 	logger.Debug("<green>Indexing service</> search index loaded %v items in %v",
-		count, time.Now().Sub(now))
+		count, time.Since(now))
 
 	// Merge the new index quickly and mark ourselves as ready.
 	// Hold a lock on the index while we rebuild it.

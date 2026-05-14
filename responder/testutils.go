@@ -75,9 +75,7 @@ func (self *messageDrain) Messages() []*crypto_proto.VeloMessage {
 	defer self.mu.Unlock()
 
 	result := make([]*crypto_proto.VeloMessage, 0, len(self.messages))
-	for _, i := range self.messages {
-		result = append(result, i)
-	}
+	result = append(result, self.messages...)
 
 	return result
 }

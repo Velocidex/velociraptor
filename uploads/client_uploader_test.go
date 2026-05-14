@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"runtime"
 	"testing"
 	"time"
 
@@ -339,7 +338,7 @@ func TestClientUploaderUploadId(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	resp := responder.TestResponderWithFlowId(nil, fmt.Sprintf("Test22"))
+	resp := responder.TestResponderWithFlowId(nil, "Test22")
 	defer resp.Close()
 
 	uploader := NewVelociraptorUploader(ctx, nil, 0, resp)
@@ -380,7 +379,7 @@ func TestClientUploaderDeduplicateStoreAsName(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
 	defer cancel()
 
-	resp := responder.TestResponderWithFlowId(nil, fmt.Sprintf("Test23"))
+	resp := responder.TestResponderWithFlowId(nil, "Test23")
 	defer resp.Close()
 
 	uploader := NewVelociraptorUploader(ctx, nil, 0, resp)
@@ -459,12 +458,4 @@ func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
 
 	// No idx written when there are no sparse ranges.
 	assert.Equal(t, CombineOutput("/foo.idx", responses), "")
-}
-
-func getOSPath(filename string) *accessors.OSPath {
-	if runtime.GOOS == "windows" {
-		return accessors.MustNewWindowsOSPath(filename)
-	} else {
-		return accessors.MustNewLinuxOSPath(filename)
-	}
 }

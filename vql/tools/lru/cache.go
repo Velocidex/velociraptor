@@ -6,7 +6,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -52,7 +51,7 @@ func (self _CacheFunc) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 		Name:     "cache",
 		Doc:      "Creates a cache object",
 		ArgType:  type_map.AddType(scope, &_CacheFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 		Version:  2,
 	}
 }

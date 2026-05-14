@@ -7,7 +7,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -94,7 +93,7 @@ func (self DeleteTimelineFunction) Info(
 		Name:     "timeline_delete",
 		Doc:      "Delete a super timeline.",
 		ArgType:  type_map.AddType(scope, &DeleteTimelineFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.NOTEBOOK_EDITOR).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.NOTEBOOK_EDITOR).Build(),
 		Version:  2,
 	}
 }

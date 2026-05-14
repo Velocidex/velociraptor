@@ -62,7 +62,7 @@ func (self *CSVUtilsTestSuite) TestCSVUtils() {
 			Set("HuntId", "H.123"))
 
 	golden := fmt.Sprintf("JSONL:\n------\n%v\nCSV:\n------\n%v\n",
-		string(json_buffer.Bytes()), string(csv_buffer.Bytes()))
+		json_buffer.String(), csv_buffer.String())
 
 	goldie.Assert(self.T(), "TestCSVUtils", []byte(golden))
 

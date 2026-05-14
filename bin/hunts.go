@@ -41,11 +41,10 @@ func doHuntReconstruct() error {
 
 	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	logger := &StdoutLogWriter{}
 	builder := services.ScopeBuilder{

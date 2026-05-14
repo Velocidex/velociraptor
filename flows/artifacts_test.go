@@ -86,6 +86,7 @@ type: SERVER_EVENT
 			ClientId: self.client_id,
 		},
 	})
+	assert.NoError(self.T(), err)
 }
 
 func (self *TestSuite) TestGetFlow() {
@@ -133,6 +134,8 @@ func (self *TestSuite) TestGetFlow() {
 
 		flow_ids = append(flow_ids, flow_id)
 	}
+
+	_ = flow_ids
 
 	// Get all the responses - ask for 100 results if available
 	// but only 40 are there.
@@ -961,12 +964,4 @@ func TestArtifactCollection(t *testing.T) {
 		client_id: "C.12312",
 		flow_id:   "F.1232",
 	})
-}
-
-func getFlowIds(in []*flows_proto.ArtifactCollectorContext) []string {
-	res := []string{}
-	for _, i := range in {
-		res = append(res, i.SessionId)
-	}
-	return res
 }

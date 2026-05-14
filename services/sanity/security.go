@@ -95,9 +95,8 @@ func (self *SanityChecks) CheckSecuritySettings(
 	file_store.SetPrefixes(allowed_tree, denied_tree)
 
 	// Populate any additional environ vars that need to be shadowed.
-	for _, s := range config_obj.Security.ShadowedEnvVars {
-		common.ShadowedEnv = append(common.ShadowedEnv, s)
-	}
+	common.ShadowedEnv = append(common.ShadowedEnv,
+		config_obj.Security.ShadowedEnvVars...)
 
 	return nil
 }

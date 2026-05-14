@@ -48,6 +48,8 @@ func (self SecretsPlugin) Call(
 
 		org_config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
+			scope.Log("secrets: Command can only run on the server")
+			return
 		}
 
 		secrets, err := services.GetSecretsService(org_config_obj)

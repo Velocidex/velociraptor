@@ -27,18 +27,21 @@ func StartToolServices(
 
 	err := MaybeEnforceAllowLists(config_obj)
 	if err != nil {
-		return sm, err
+		sm.Close()
+		return nil, err
 	}
 
 	// Start throttling service
 	err = sm.Start(throttler.StartStatsCollectorService)
 	if err != nil {
-		return sm, err
+		sm.Close()
+		return nil, err
 	}
 
 	_, err = orgs.NewOrgManager(sm.Ctx, sm.Wg, config_obj)
 	if err != nil {
-		return sm, err
+		sm.Close()
+		return nil, err
 	}
 
 	return sm, nil

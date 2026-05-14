@@ -374,7 +374,7 @@ func CheckPreconditions(
 	}
 
 	for _, vql := range vqls {
-		for _ = range vql.Eval(ctx, scope) {
+		for range vql.Eval(ctx, scope) {
 			return true, nil
 		}
 	}

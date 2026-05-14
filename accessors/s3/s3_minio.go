@@ -82,6 +82,7 @@ func (self RawS3SystemAccessor) ReadDirWithOSPath(
 	}
 
 	if len(path.Components) == 0 {
+		metricS3OpsListObjects.Inc()
 		resp, err := s3Client.ListBuckets(self.ctx)
 		if err != nil {
 			return nil, err

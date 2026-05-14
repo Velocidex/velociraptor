@@ -40,9 +40,7 @@ func AppendJsonlItem(jsonl []byte, name string, value interface{}) []byte {
 }
 
 func memcat(dest *[]byte, src []byte) {
-	for _, c := range src {
-		*dest = append(*dest, c)
-	}
+	*dest = append(*dest, src...)
 }
 
 // Allows to format a JSON string safely similar to fmt.Sprintf

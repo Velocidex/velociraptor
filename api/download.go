@@ -69,6 +69,7 @@ import (
 const BUFSIZE = 1 * 1024 * 1024
 
 var (
+	//lint:file-ignore SA6002 - Slices are ok.
 	pool = sync.Pool{
 		New: func() interface{} {
 			return make([]byte, BUFSIZE)
@@ -230,7 +231,7 @@ func vfsFileDownloadHandler(config_obj *config_proto.Config) http.Handler {
 			// 1. The file is not sparse
 			// 2. The file is sparse and we are not padding.
 			// 3. The file is sparse and we are padding it.
-			var reader_at io.ReaderAt = utils.MakeReaderAtter(file)
+			var reader_at = utils.MakeReaderAtter(file)
 			var total_size int
 
 			index, err := getIndex(org_config_obj, path_spec)
@@ -782,7 +783,7 @@ func vfsGetBuffer(config_obj *config_proto.Config, client_id string,
 	}
 	defer file.Close()
 
-	var reader_at io.ReaderAt = utils.MakeReaderAtter(file)
+	var reader_at = utils.MakeReaderAtter(file)
 
 	result := &api_proto.VFSFileBuffer{
 		Data: make([]byte, length),

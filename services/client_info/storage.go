@@ -237,7 +237,7 @@ func (self *Store) LoadFromSnapshot(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>ClientInfo Manager</> Loaded snapshot in %v for org %v (%v records)",
-		time.Now().Sub(now), services.GetOrgName(config_obj), len(self.data))
+		time.Since(now), services.GetOrgName(config_obj), len(self.data))
 
 	return nil
 }
@@ -297,7 +297,7 @@ func (self *Store) SaveSnapshot(
 		}
 
 		logger.Info("<green>ClientInfo Manager</> Written snapshot for org %v in %v (%v records)",
-			services.GetOrgName(config_obj), time.Now().Sub(now), record_count)
+			services.GetOrgName(config_obj), time.Since(now), record_count)
 	}
 
 	// The final write must be synchronous because we need to

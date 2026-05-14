@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -56,11 +57,10 @@ func doUnzip() error {
 
 	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	filename, err := filepath.Abs(*unzip_cmd_file)
 	if err != nil {
@@ -86,13 +86,13 @@ func doUnzip() error {
 	}
 
 	if *unzip_cmd_list {
-		err = runUnzipList(builder)
+		err = runUnzipList(ctx, builder)
 
 	} else if *unzip_cmd_print {
-		err = runUnzipPrint(builder)
+		err = runUnzipPrint(ctx, builder)
 
 	} else {
-		err = runUnzipFiles(builder)
+		err = runUnzipFiles(ctx, builder)
 	}
 	if err != nil {
 		return err
@@ -101,7 +101,9 @@ func doUnzip() error {
 	return logger.Error
 }
 
-func runUnzipList(builder services.ScopeBuilder) error {
+func runUnzipList(
+	ctx context.Context,
+	builder services.ScopeBuilder) error {
 	query := `
        SELECT OSPath.Path AS Filename,
               Size
@@ -114,10 +116,12 @@ func runUnzipList(builder services.ScopeBuilder) error {
 		query += " AND " + *unzip_cmd_filter
 	}
 
-	return runQueryWithEnv(query, builder, *unzip_format)
+	return runQueryWithEnv(ctx, query, builder, *unzip_format)
 }
 
-func runUnzipFiles(builder services.ScopeBuilder) error {
+func runUnzipFiles(
+	ctx context.Context,
+	builder services.ScopeBuilder) error {
 	builder.Uploader = &uploads.FileBasedUploader{
 		UploadDir: *unzip_path,
 	}
@@ -135,10 +139,12 @@ func runUnzipFiles(builder services.ScopeBuilder) error {
 		query += " AND " + *unzip_cmd_filter
 	}
 
-	return runQueryWithEnv(query, builder, *unzip_format)
+	return runQueryWithEnv(ctx, query, builder, *unzip_format)
 }
 
-func runUnzipPrint(builder services.ScopeBuilder) error {
+func runUnzipPrint(
+	ctx context.Context,
+	builder services.ScopeBuilder) error {
 	query := `
        SELECT * FROM foreach(
        row={
@@ -157,11 +163,12 @@ func runUnzipPrint(builder services.ScopeBuilder) error {
 		query += " WHERE " + *unzip_cmd_filter
 	}
 
-	return runQueryWithEnv(query, builder, *unzip_format)
+	return runQueryWithEnv(ctx, query, builder, *unzip_format)
 }
 
 func runQueryWithEnv(
-	query string, builder services.ScopeBuilder, format string) error {
+	ctx context.Context, query string,
+	builder services.ScopeBuilder, format string) error {
 	manager, err := services.GetRepositoryManager(builder.Config)
 	if err != nil {
 		return err
@@ -174,9 +181,6 @@ func runQueryWithEnv(
 	if err != nil {
 		return fmt.Errorf("Unable to parse VQL Query: %w", err)
 	}
-
-	ctx, cancel := InstallSignalHandler(nil, scope)
-	defer cancel()
 
 	for _, vql := range vqls {
 		scope.Log("Running query %v", vfilter.FormatToString(scope, vql))

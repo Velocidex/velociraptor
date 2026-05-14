@@ -43,11 +43,10 @@ func (self *BackgroundFunction) Call(ctx context.Context,
 			// We still materialize the entire row but we discard the
 			// results.
 			_ = vfilter.MaterializedLazyRow(ctx, item, scope)
-			select {
-			case <-ctx.Done():
-				return
-			}
 		}
+
+		// Wait for the query to tear down.
+		<-sub_ctx.Done()
 	}()
 
 	return true

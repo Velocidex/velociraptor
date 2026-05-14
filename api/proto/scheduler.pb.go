@@ -8,6 +8,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -18,10 +19,7 @@ const (
 )
 
 type ScheduleRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// The queue we want to receive jobs on
 	Queue string `protobuf:"bytes,1,opt,name=queue,proto3" json:"queue,omitempty"`
 	// First request must be "register" then for each completed job "completion"
@@ -33,16 +31,16 @@ type ScheduleRequest struct {
 	Response string `protobuf:"bytes,4,opt,name=response,proto3" json:"response,omitempty"`
 	OrgId    string `protobuf:"bytes,7,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
 	// An error message or "" for no error.
-	Error string `protobuf:"bytes,5,opt,name=error,proto3" json:"error,omitempty"`
+	Error         string `protobuf:"bytes,5,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ScheduleRequest) Reset() {
 	*x = ScheduleRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_scheduler_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_scheduler_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ScheduleRequest) String() string {
@@ -53,7 +51,7 @@ func (*ScheduleRequest) ProtoMessage() {}
 
 func (x *ScheduleRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_scheduler_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -119,25 +117,22 @@ func (x *ScheduleRequest) GetError() string {
 
 // This represents a job request from the server to the minion,
 type ScheduleResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
+	state protoimpl.MessageState `protogen:"open.v1"`
 	// The id must be matched with the response.
 	Id    uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Queue string `protobuf:"bytes,2,opt,name=queue,proto3" json:"queue,omitempty"`
 	// A json serialized request suitable for the named queue.
-	Job   string `protobuf:"bytes,3,opt,name=job,proto3" json:"job,omitempty"`
-	OrgId string `protobuf:"bytes,7,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	Job           string `protobuf:"bytes,3,opt,name=job,proto3" json:"job,omitempty"`
+	OrgId         string `protobuf:"bytes,7,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ScheduleResponse) Reset() {
 	*x = ScheduleResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_scheduler_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_scheduler_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *ScheduleResponse) String() string {
@@ -148,7 +143,7 @@ func (*ScheduleResponse) ProtoMessage() {}
 
 func (x *ScheduleResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_scheduler_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -193,46 +188,37 @@ func (x *ScheduleResponse) GetOrgId() string {
 
 var File_scheduler_proto protoreflect.FileDescriptor
 
-var file_scheduler_proto_rawDesc = []byte{
-	0x0a, 0x0f, 0x73, 0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x12, 0x05, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xb0, 0x01, 0x0a, 0x0f, 0x53, 0x63, 0x68,
-	0x65, 0x64, 0x75, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05,
-	0x71, 0x75, 0x65, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x71, 0x75, 0x65,
-	0x75, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x72, 0x69, 0x6f, 0x72, 0x69,
-	0x74, 0x79, 0x18, 0x06, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x70, 0x72, 0x69, 0x6f, 0x72, 0x69,
-	0x74, 0x79, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x04,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x15,
-	0x0a, 0x06, 0x6f, 0x72, 0x67, 0x5f, 0x69, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
-	0x6f, 0x72, 0x67, 0x49, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x05,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x22, 0x61, 0x0a, 0x10, 0x53,
-	0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12,
-	0x14, 0x0a, 0x05, 0x71, 0x75, 0x65, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
-	0x71, 0x75, 0x65, 0x75, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x6a, 0x6f, 0x62, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x03, 0x6a, 0x6f, 0x62, 0x12, 0x15, 0x0a, 0x06, 0x6f, 0x72, 0x67, 0x5f, 0x69,
-	0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x72, 0x67, 0x49, 0x64, 0x42, 0x31,
-	0x5a, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64, 0x65, 0x78, 0x2e,
-	0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65, 0x6c, 0x6f, 0x63,
-	0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+const file_scheduler_proto_rawDesc = "" +
+	"\n" +
+	"\x0fscheduler.proto\x12\x05proto\"\xb0\x01\n" +
+	"\x0fScheduleRequest\x12\x14\n" +
+	"\x05queue\x18\x01 \x01(\tR\x05queue\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12\x0e\n" +
+	"\x02id\x18\x03 \x01(\x04R\x02id\x12\x1a\n" +
+	"\bpriority\x18\x06 \x01(\x03R\bpriority\x12\x1a\n" +
+	"\bresponse\x18\x04 \x01(\tR\bresponse\x12\x15\n" +
+	"\x06org_id\x18\a \x01(\tR\x05orgId\x12\x14\n" +
+	"\x05error\x18\x05 \x01(\tR\x05error\"a\n" +
+	"\x10ScheduleResponse\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x14\n" +
+	"\x05queue\x18\x02 \x01(\tR\x05queue\x12\x10\n" +
+	"\x03job\x18\x03 \x01(\tR\x03job\x12\x15\n" +
+	"\x06org_id\x18\a \x01(\tR\x05orgIdB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
 
 var (
 	file_scheduler_proto_rawDescOnce sync.Once
-	file_scheduler_proto_rawDescData = file_scheduler_proto_rawDesc
+	file_scheduler_proto_rawDescData []byte
 )
 
 func file_scheduler_proto_rawDescGZIP() []byte {
 	file_scheduler_proto_rawDescOnce.Do(func() {
-		file_scheduler_proto_rawDescData = protoimpl.X.CompressGZIP(file_scheduler_proto_rawDescData)
+		file_scheduler_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_scheduler_proto_rawDesc), len(file_scheduler_proto_rawDesc)))
 	})
 	return file_scheduler_proto_rawDescData
 }
 
 var file_scheduler_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_scheduler_proto_goTypes = []interface{}{
+var file_scheduler_proto_goTypes = []any{
 	(*ScheduleRequest)(nil),  // 0: proto.ScheduleRequest
 	(*ScheduleResponse)(nil), // 1: proto.ScheduleResponse
 }
@@ -249,37 +235,11 @@ func file_scheduler_proto_init() {
 	if File_scheduler_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_scheduler_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ScheduleRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_scheduler_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ScheduleResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_scheduler_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_scheduler_proto_rawDesc), len(file_scheduler_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
@@ -290,7 +250,6 @@ func file_scheduler_proto_init() {
 		MessageInfos:      file_scheduler_proto_msgTypes,
 	}.Build()
 	File_scheduler_proto = out.File
-	file_scheduler_proto_rawDesc = nil
 	file_scheduler_proto_goTypes = nil
 	file_scheduler_proto_depIdxs = nil
 }

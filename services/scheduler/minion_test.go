@@ -175,7 +175,7 @@ func (self *MinionSchedulerTestSuite) TestNotebookMinionScheduler() {
 	wg.Wait()
 
 	// Check the cell contents
-	cell, err = notebook_manager.GetNotebookCell(
+	_, err = notebook_manager.GetNotebookCell(
 		self.Ctx, notebook.NotebookId, cell_id, cell.CurrentVersion)
 	assert.NoError(self.T(), err)
 

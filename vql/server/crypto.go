@@ -5,7 +5,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -46,7 +45,7 @@ func (self ServerFrontendCertFunction) Info(
 		Name:     "server_frontend_cert",
 		Doc:      "Get Server Frontend Certificate",
 		ArgType:  type_map.AddType(scope, &vfilter.Empty{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

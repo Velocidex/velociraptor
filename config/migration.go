@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
+//lint:file-ignore U1000 func deprecated is unused
 func deprecated(config_obj *config_proto.Config, name string) {
 	logging.Prelog("Config contains deprecated field %v", name)
 }

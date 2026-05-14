@@ -9,7 +9,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -82,7 +81,7 @@ func (self FlowLogsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 		Name:     "flow_logs",
 		Doc:      "Retrieve the query logs of a flow.",
 		ArgType:  type_map.AddType(scope, &FlowLogsPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

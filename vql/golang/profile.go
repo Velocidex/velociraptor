@@ -15,9 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services/debug"
-	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -76,7 +74,7 @@ func writeMetrics(
 func writeProfile(
 	ctx context.Context, scope vfilter.Scope,
 	output_chan chan vfilter.Row, name string, debug int64) {
-	tmpfile, err := tempfile.TempFile("tmp*.tmp")
+	tmpfile, err := utils_tempfile.TempFile("tmp*.tmp")
 	if err != nil {
 		scope.Log("profile: %s", err)
 		return
@@ -120,7 +118,7 @@ func writeCPUProfile(
 	ctx context.Context,
 	scope vfilter.Scope,
 	output_chan chan vfilter.Row, duration int64) {
-	tmpfile, err := tempfile.TempFile("tmp*.tmp")
+	tmpfile, err := utils_tempfile.TempFile("tmp*.tmp")
 	if err != nil {
 		scope.Log("profile: %s", err)
 		return
@@ -159,7 +157,7 @@ func writeTraceProfile(
 	ctx context.Context,
 	scope vfilter.Scope,
 	output_chan chan vfilter.Row, duration int64) {
-	tmpfile, err := tempfile.TempFile("tmp*.tmp")
+	tmpfile, err := utils_tempfile.TempFile("tmp*.tmp")
 	if err != nil {
 		scope.Log("profile: %s", err)
 		return
@@ -294,11 +292,12 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 func (self ProfilePlugin) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "profile",
-		Doc:      "Returns a profile dump from the running process.",
-		ArgType:  type_map.AddType(scope, &ProfilePluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
-		Version:  2,
+		Name:    "profile",
+		Doc:     "Returns a profile dump from the running process.",
+		ArgType: type_map.AddType(scope, &ProfilePluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.MACHINE_STATE).Build(),
+		Version: 2,
 	}
 }
 
@@ -345,7 +344,7 @@ func init() {
 					Set("Query", item.Query)
 				if item.Duration == 0 {
 					row.Update("Status", "RUNNING").
-						Update("Duration", time.Now().Sub(item.Start).
+						Update("Duration", time.Since(item.Start).
 							Round(time.Second).String())
 				} else {
 					row.Update("Status", "FINISHED").
@@ -377,7 +376,7 @@ func init() {
 
 				row := ordereddict.NewDict().
 					Set("Status", "RUNNING").
-					Set("Duration", time.Now().Sub(item.Start).
+					Set("Duration", time.Since(item.Start).
 						Round(time.Millisecond).String()).
 					Set("Started", item.Start).
 					Set("Query", item.Query)

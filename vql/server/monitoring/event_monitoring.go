@@ -10,7 +10,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -64,7 +63,7 @@ func (self GetClientMonitoring) Info(scope vfilter.Scope, type_map *vfilter.Type
 		Name:     "get_client_monitoring",
 		Doc:      "Retrieve the current client monitoring state.",
 		ArgType:  type_map.AddType(scope, &GetClientMonitoringArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 
@@ -149,7 +148,7 @@ func (self SetClientMonitoring) Info(scope vfilter.Scope, type_map *vfilter.Type
 		Name:     "set_client_monitoring",
 		Doc:      "Sets the current client monitoring state.",
 		ArgType:  type_map.AddType(scope, &SetClientMonitoringArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_CLIENT).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.COLLECT_CLIENT).Build(),
 	}
 }
 
@@ -211,7 +210,7 @@ func (self GetServerMonitoring) Info(scope vfilter.Scope, type_map *vfilter.Type
 		Name:     "get_server_monitoring",
 		Doc:      "Retrieve the current client monitoring state.",
 		ArgType:  type_map.AddType(scope, &GetServerMonitoringArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 
@@ -295,7 +294,7 @@ func (self SetServerMonitoring) Info(scope vfilter.Scope, type_map *vfilter.Type
 		Name:     "set_server_monitoring",
 		Doc:      "Sets the current server monitoring state (this function is deprecated, use add_server_monitoring and remove_server_monitoring).",
 		ArgType:  type_map.AddType(scope, &SetServerMonitoringArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
 	}
 }
 

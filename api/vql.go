@@ -24,7 +24,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
-	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
@@ -74,7 +73,7 @@ func RunVQL(
 			new_row = append(new_row, value)
 		}
 
-		opts := vjson.DefaultEncOpts()
+		opts := json.DefaultEncOpts()
 		serialized, err := json.MarshalWithOptions(new_row, opts)
 		if err != nil {
 			continue

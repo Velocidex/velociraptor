@@ -38,11 +38,10 @@ func doVerify() error {
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {

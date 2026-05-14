@@ -73,10 +73,7 @@ func reformatNode(vql_node yaml.NodeContext) (m mutation, err error) {
 
 	reformatted = strings.TrimSpace(reformatted)
 
-	lines := []string{}
-	for _, l := range strings.Split(reformatted, "\n") {
-		lines = append(lines, l)
-	}
+	lines := append([]string{}, strings.Split(reformatted, "\n")...)
 
 	// Indent this block to the start of the previous block
 	indented := []string{}

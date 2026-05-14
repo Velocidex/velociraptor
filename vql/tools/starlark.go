@@ -405,7 +405,7 @@ func makeKwargsTuple(ctx context.Context, scope vfilter.Scope,
 		return t.Items(), nil
 
 	default:
-		return nil, errors.New(fmt.Sprintf("Unsupported Type %T", starlark_args))
+		return nil, fmt.Errorf("Unsupported Type %T", starlark_args)
 	}
 
 	starlark_args.(*starlarkstruct.Struct).ToStringDict(new_string_dict)

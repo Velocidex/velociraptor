@@ -33,7 +33,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	crypto_server "www.velocidex.com/golang/velociraptor/crypto/server"
@@ -194,7 +193,7 @@ func (self *TestSuite) _EncryptMessageListWithSpoofedPackedMessage(
 	}
 
 	compressed_message_lists := [][]byte{plain_text}
-	output_cipher, err := client.NewCipher(self.client_id,
+	output_cipher, err := crypto_client.NewCipher(self.client_id,
 		self.client_private_key, &self.server_private_key.PublicKey)
 	if err != nil {
 		return nil, err
@@ -220,7 +219,7 @@ func (self *TestSuite) _EncryptMessageListWithSpoofedPackedMessage(
 		return nil, errors.Wrap(err, 0)
 	}
 
-	encrypted_serialized_packed_message_list, err := client.EncryptSymmetric(
+	encrypted_serialized_packed_message_list, err := crypto_client.EncryptSymmetric(
 		output_cipher.CipherProperties(),
 		serialized_packed_message_list,
 		comms.PacketIv)
@@ -230,7 +229,7 @@ func (self *TestSuite) _EncryptMessageListWithSpoofedPackedMessage(
 	}
 
 	comms.Encrypted = encrypted_serialized_packed_message_list
-	comms.FullHmac = client.CalcHMAC(comms, output_cipher.CipherProperties())
+	comms.FullHmac = crypto_client.CalcHMAC(comms, output_cipher.CipherProperties())
 
 	result, err := proto.Marshal(comms)
 	if err != nil {

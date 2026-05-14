@@ -140,6 +140,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	}
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(t, err)
+
 	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj, FORCE_REFRESH)
 
 	_, err = hunt_dispatcher.CreateHunt(

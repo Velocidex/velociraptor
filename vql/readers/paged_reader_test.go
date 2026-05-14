@@ -73,7 +73,6 @@ func (self *TestSuite) TearDownTest() {
 
 func (self *TestSuite) TestPagedReader() {
 	// Open 10 paged readers - This should close 5
-	readers := make([]*AccessorReader, 0, 10)
 	buff := make([]byte, 4)
 
 	for i := 0; i < 10; i++ {
@@ -83,7 +82,6 @@ func (self *TestSuite) TestPagedReader() {
 		_, err = reader.ReadAt(buff, 0)
 		assert.NoError(self.T(), err)
 		assert.Equal(self.T(), binary.LittleEndian.Uint32(buff), uint32(i))
-		readers = append(readers, reader)
 	}
 
 	for i := 0; i < 10; i++ {

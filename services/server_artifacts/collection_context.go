@@ -478,7 +478,7 @@ func (self *contextManager) RunQuery(
 		if query.Name == "" {
 			// Drain the query but do not relay any data back. These
 			// are normally LET queries.
-			for _ = range vql.Eval(sub_ctx, scope) {
+			for range vql.Eval(sub_ctx, scope) {
 			}
 			query_log.Close()
 			continue

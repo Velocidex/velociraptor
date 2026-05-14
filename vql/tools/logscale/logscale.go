@@ -508,16 +508,13 @@ func (self *LogScaleQueue) postEvents(ctx context.Context, scope vfilter.Scope,
 		} else {
 			_, err = io.Copy(body, resp.Body)
 			if err != nil {
-				if resp != nil {
-					resp.Body.Close()
-				}
+				resp.Body.Close()
+
 				self.Log(scope, "copy of response failed: %v, %v", resp.Status, err)
 				return err
 			}
 			self.Log(scope, "request failed: %v, %s", resp.Status, body)
-			if resp != nil {
-				resp.Body.Close()
-			}
+			resp.Body.Close()
 		}
 
 		retry, _ := self.shouldRetryRequest(ctx, resp, err)

@@ -58,7 +58,7 @@ func (self AtExitFunction) Call(
 				time.Duration(timeout)*time.Second)
 			defer cancel()
 
-			for _ = range t.Eval(ctx, subscope) {
+			for range t.Eval(ctx, subscope) {
 			}
 		})
 		if err != nil {

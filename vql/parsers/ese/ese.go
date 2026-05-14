@@ -28,7 +28,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	utils "www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -240,7 +239,7 @@ func (self _ESEPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 		Name:     "parse_ese",
 		Doc:      "Opens an ESE file and dump a table.",
 		ArgType:  type_map.AddType(scope, &_ESEArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -318,7 +317,7 @@ func (self _ESECatalogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Name:     "parse_ese_catalog",
 		Doc:      "Opens an ESE file and dump the schema.",
 		ArgType:  type_map.AddType(scope, &_ESECatalogArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

@@ -17,7 +17,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
-	"www.velocidex.com/golang/velociraptor/flows/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -257,7 +256,7 @@ func (self *TestSuite) TestCollectionWithDirectories() {
 
 	scope = self.mockInfo(scope)
 
-	for _ = range (collector.CollectPlugin{}).Call(self.Ctx,
+	for range (collector.CollectPlugin{}).Call(self.Ctx,
 		scope, ordereddict.NewDict().
 			Set("artifacts", []string{"Custom.Uploader"}).
 			Set("args", ordereddict.NewDict().
@@ -367,6 +366,8 @@ func (self *TestSuite) TestCollectionWithArtifacts() {
 		results = append(results, row)
 	}
 
+	_ = results
+
 	zip_contents, err := openZipFile(output_file.Name())
 	assert.NoError(self.T(), err)
 
@@ -408,6 +409,8 @@ func (self *TestSuite) TestCollectionWithTypes() {
 		results = append(results, row)
 	}
 
+	_ = results
+
 	zip_contents, err := openZipFile(output_file.Name())
 	assert.NoError(self.T(), err)
 
@@ -448,6 +451,8 @@ func (self *TestSuite) TestCollectionWithUpload() {
 		results = append(results, row)
 	}
 
+	_ = results
+
 	zip_contents, err := openZipFile(output_file.Name())
 	assert.NoError(self.T(), err)
 
@@ -462,7 +467,7 @@ func (self *TestSuite) TestCollectionWithUpload() {
 			Set("client_id", "C.30b949dd33e1330a").
 			Set("hostname", "MyNewHost").
 			Set("filename", output_file.Name()))
-	context, ok := result.(*proto.ArtifactCollectorContext)
+	context, ok := result.(*flows_proto.ArtifactCollectorContext)
 	assert.True(self.T(), ok)
 
 	golden.Set("artifacts_with_results", context.ArtifactsWithResults)
@@ -471,7 +476,7 @@ func (self *TestSuite) TestCollectionWithUpload() {
 	flow_path_manager := paths.NewFlowPathManager(
 		"C.30b949dd33e1330a", "F.1234")
 
-	data, err := readImportedFile(self.Ctx, scope, self.ConfigObj,
+	data, err := readImportedFile(scope, self.ConfigObj,
 		flow_path_manager.UploadMetadata())
 	assert.NoError(self.T(), err)
 
@@ -484,7 +489,7 @@ func (self *TestSuite) TestCollectionWithUpload() {
 		json.MustMarshalIndent(golden))
 }
 
-func readImportedFile(ctx context.Context,
+func readImportedFile(
 	scope vfilter.Scope,
 	config_obj *config_proto.Config,
 	src api.FSPathSpec) (string, error) {
@@ -495,7 +500,7 @@ func readImportedFile(ctx context.Context,
 		return "", err
 	}
 
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	if err != nil && err != io.EOF {
 		return "", err
 	}

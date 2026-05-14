@@ -212,7 +212,7 @@ func (self *InventoryService) addAllVersions(
 	tool *artifacts_proto.Tool, required_version string) *artifacts_proto.Tool {
 	result := proto.Clone(tool).(*artifacts_proto.Tool)
 
-	versions, _ := self.versions[tool.Name]
+	versions := self.versions[tool.Name]
 	result.Versions = nil
 
 	for _, v := range versions {
@@ -469,7 +469,7 @@ func (self *InventoryService) UpdateVersion(tool_request *artifacts_proto.Tool) 
 
 	// Update the list of versions for this tool, replacing existing
 	// definitions.
-	versions, _ := self.versions[tool_request.Name]
+	versions := self.versions[tool_request.Name]
 	version_known := false
 	for idx, v := range versions {
 		if v.Artifact == tool_request.Artifact {

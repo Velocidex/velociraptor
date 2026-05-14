@@ -28,13 +28,15 @@ func StartFrontendServices(
 	// Potentially restrict server functionality.
 	err := MaybeEnforceAllowLists(config_obj)
 	if err != nil {
-		return sm, err
+		sm.Close()
+		return nil, err
 	}
 
 	// Start throttling service
 	err = sm.Start(throttler.StartStatsCollectorService)
 	if err != nil {
-		return sm, err
+		sm.Close()
+		return nil, err
 	}
 
 	scope := vql_subsystem.MakeScope()
@@ -46,27 +48,37 @@ func StartFrontendServices(
 
 	_, err = orgs.NewOrgManager(sm.Ctx, sm.Wg, config_obj)
 	if err != nil {
-		return sm, err
+		sm.Close()
+		return nil, err
 	}
 
 	// Start the listening server
 	server_builder, err := api.NewServerBuilder(sm.Ctx, config_obj, sm.Wg)
 	if err != nil {
-		return sm, err
+		sm.Close()
+		return nil, err
 	}
 
 	err = networking.MaybeInstallDNSCache(sm.Ctx, sm.Wg, sm.Config)
 	if err != nil {
-		return sm, err
+		sm.Close()
+		return nil, err
 	}
 
 	// Start the gRPC API server on the master only.
 	if services.IsMaster(config_obj) {
 		err = server_builder.WithAPIServer(sm.Ctx, sm.Wg)
 		if err != nil {
-			return sm, err
+			sm.Close()
+			return nil, err
 		}
 	}
 
-	return sm, server_builder.StartServer(sm.Ctx, sm.Wg)
+	err = server_builder.StartServer(sm.Ctx, sm.Wg)
+	if err != nil {
+		sm.Close()
+		return nil, err
+	}
+
+	return sm, nil
 }

@@ -12,7 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
 	"www.velocidex.com/golang/velociraptor/acls"
 	utils "www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -195,7 +194,7 @@ func (self CarveUSNPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 		Doc:      "Carve for the USN journal entries from a device.",
 		ArgType:  type_map.AddType(scope, &CarveUSNPluginArgs{}),
 		Version:  2,
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

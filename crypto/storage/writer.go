@@ -10,7 +10,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/crypto/utils"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
 )
@@ -63,7 +62,7 @@ func (self *CryptoFileWriter) serverPem() ([]byte, error) {
 	}
 
 	self.server_pem = server_pem
-	server_cert, err := utils.ParseX509CertFromPemStr(server_pem)
+	server_cert, err := crypto_utils.ParseX509CertFromPemStr(server_pem)
 	if err != nil {
 		return nil, err
 	}

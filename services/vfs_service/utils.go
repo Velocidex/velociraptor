@@ -8,7 +8,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/flows/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
@@ -29,7 +28,7 @@ func watchForFlowCompletion(
 	handler func(ctx context.Context,
 		config_obj *config_proto.Config,
 		scope vfilter.Scope, row *ordereddict.Dict,
-		flow *proto.ArtifactCollectorContext)) error {
+		flow *flows_proto.ArtifactCollectorContext)) error {
 
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {

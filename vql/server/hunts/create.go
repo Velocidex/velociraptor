@@ -31,7 +31,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
@@ -303,7 +302,7 @@ func (self ScheduleHuntFunction) Info(scope vfilter.Scope, type_map *vfilter.Typ
 		Name:     "hunt",
 		Doc:      "Launch an artifact collection against a client.",
 		ArgType:  type_map.AddType(scope, &ScheduleHuntFunctionArg{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.START_HUNT, acls.ORG_ADMIN).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.START_HUNT, acls.ORG_ADMIN).Build(),
 		Version:  3,
 	}
 }
@@ -450,7 +449,7 @@ func (self AddToHuntFunction) Info(scope vfilter.Scope,
 		Name:     "hunt_add",
 		Doc:      "Assign a client to a hunt.",
 		ArgType:  type_map.AddType(scope, &AddToHuntFunctionArg{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.START_HUNT).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.START_HUNT).Build(),
 		Version:  2,
 	}
 }

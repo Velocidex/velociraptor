@@ -26,7 +26,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/uploads"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
@@ -132,7 +131,7 @@ func (self UploadFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 			"client this will upload the file into the flow and store " +
 			"it in the server's file store.",
 		ArgType:  type_map.AddType(scope, &UploadFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 		Version:  3,
 	}
 }
@@ -245,7 +244,7 @@ func (self UploadDirectoryFunction) Info(scope vfilter.Scope, type_map *vfilter.
 		Name:     "upload_directory",
 		Doc:      "Upload a file to an upload directory. The final filename will be the output directory path followed by the filename path.",
 		ArgType:  type_map.AddType(scope, &UploadDirectoryFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 	}
 }
 

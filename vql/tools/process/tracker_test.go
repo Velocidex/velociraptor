@@ -279,11 +279,14 @@ func (self *ProcessTrackerTestSuite) runTC(
 	scope := manager.BuildScope(builder)
 	rows := make([]*ordereddict.Dict, 0)
 	mvql, err := vfilter.MultiParse(test_case.Query)
+	assert.NoError(self.T(), err)
+
 	for _, vql := range mvql {
 		for row := range vql.Eval(ctx, scope) {
 			rows = append(rows, vfilter.RowToDict(ctx, scope, row))
 		}
 	}
+
 	scope.Close()
 
 	return rows
@@ -360,6 +363,8 @@ FROM scope()
 		scope := manager.BuildScope(builder)
 
 		mvql, err := vfilter.MultiParse(query)
+		assert.NoError(self.T(), err)
+
 		for _, vql := range mvql {
 			for row := range vql.Eval(self.Ctx, scope) {
 				golden += json.StringIndent(row)

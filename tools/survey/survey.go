@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	url_validator = regexp.MustCompile("^[a-z0-9.A-Z\\-]+$")
-	int_validator = regexp.MustCompile("^[0-9]+$")
+	url_validator = regexp.MustCompile(`^[a-z0-9.A-Z\-]+$`)
+	int_validator = regexp.MustCompile(`^[0-9]+$`)
 )
 
 func validate_int(message string) func(in string) error {

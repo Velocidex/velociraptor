@@ -486,7 +486,7 @@ sources:
 	assert.NoError(self.T(), err)
 
 	// Can not launch collection.
-	details, err = self.ScheduleAndWait("Test", "gumby", "F.1234", nil)
+	_, err = self.ScheduleAndWait("Test", "gumby", "F.1234", nil)
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), "COLLECT_SERVER")
 

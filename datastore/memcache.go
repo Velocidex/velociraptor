@@ -596,9 +596,7 @@ func (self *MemcacheDatastore) ListChildren(
 	}
 
 	result := make([]api.DSPathSpec, 0, md.Len())
-	for _, v := range md.Items() {
-		result = append(result, v)
-	}
+	result = append(result, md.Items()...)
 
 	return result, nil
 }
@@ -671,9 +669,7 @@ func (self *MemcacheDatastore) Dump() []api.DSPathSpec {
 
 	for _, key := range self.dir_cache.GetKeys() {
 		md, _ := self.dir_cache.Get(key)
-		for _, spec := range md.Items() {
-			result = append(result, spec)
-		}
+		result = append(result, md.Items()...)
 	}
 	return result
 }

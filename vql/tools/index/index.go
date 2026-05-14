@@ -14,7 +14,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -235,7 +234,7 @@ func (self IndexPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Name:     "index",
 		Doc:      "Create a local index from a query.",
 		ArgType:  type_map.AddType(scope, &IndexPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 		Version:  2,
 	}
 }
@@ -353,7 +352,7 @@ func (self IndexSearchPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Name:     "index_search",
 		Doc:      "Search a previously created index.",
 		ArgType:  type_map.AddType(scope, &IndexSearchPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 		Version:  1,
 	}
 }

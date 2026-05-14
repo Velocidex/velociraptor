@@ -9,7 +9,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
@@ -114,7 +113,7 @@ func (self TimelinePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 		Name:     "timeline",
 		Doc:      "Read a timeline. You can create a timeline with the timeline_add() function",
 		ArgType:  type_map.AddType(scope, &TimelinePluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 		Version:  2,
 	}
 }
@@ -183,10 +182,6 @@ func (self TimelineListPlugin) Call(
 		}
 
 		for _, item := range timelines {
-			timelines := []string{}
-			for _, t := range item.Timelines {
-				timelines = append(timelines, t.Id)
-			}
 			select {
 			case <-ctx.Done():
 				return
@@ -203,7 +198,7 @@ func (self TimelineListPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 		Name:     "timelines",
 		Doc:      "List all timelines in a notebook",
 		ArgType:  type_map.AddType(scope, &TimelineListPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

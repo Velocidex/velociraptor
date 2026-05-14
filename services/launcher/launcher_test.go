@@ -120,14 +120,14 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	compiled, err := launcher.CompileCollectorArgs(ctx, self.ConfigObj,
+	_, err = launcher.CompileCollectorArgs(ctx, self.ConfigObj,
 		acl_manager, repository, services.CompilerOptions{}, request)
 	assert.Error(self.T(), err)
 
 	// Now make the tool download succeed. Compiling should work
 	// and we should calculate the hash.
 	status = 200
-	compiled, err = launcher.CompileCollectorArgs(
+	_, err = launcher.CompileCollectorArgs(
 		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
@@ -136,7 +136,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	// downloading the file ourselves - further compiles will work
 	// automatically.
 	status = 404
-	compiled, err = launcher.CompileCollectorArgs(
+	compiled, err := launcher.CompileCollectorArgs(
 		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
@@ -667,7 +667,7 @@ sources:
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	compiled, err := launcher.CompileCollectorArgs(
+	_, err = launcher.CompileCollectorArgs(
 		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.Error(self.T(), err)
@@ -680,7 +680,7 @@ sources:
 
 	// Should be fine now.
 	acl_manager = acl_managers.NewServerACLManager(self.ConfigObj, "UserX")
-	compiled, err = launcher.CompileCollectorArgs(
+	compiled, err := launcher.CompileCollectorArgs(
 		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
@@ -712,7 +712,7 @@ sources:
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	compiled, err := launcher.CompileCollectorArgs(
+	_, err = launcher.CompileCollectorArgs(
 		self.Ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.Error(self.T(), err)
@@ -725,7 +725,7 @@ sources:
 
 	// Try again - this is not enough though because the artifact is
 	// not marked as "basic"
-	compiled, err = launcher.CompileCollectorArgs(
+	_, err = launcher.CompileCollectorArgs(
 		self.Ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.Error(self.T(), err)
@@ -744,7 +744,7 @@ sources:
 
 	// Should be fine now.
 	acl_manager = acl_managers.NewServerACLManager(self.ConfigObj, "UserX")
-	compiled, err = launcher.CompileCollectorArgs(
+	compiled, err := launcher.CompileCollectorArgs(
 		self.Ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)

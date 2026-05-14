@@ -9,7 +9,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/crypto/storage"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -113,7 +112,7 @@ func (self ReadCryptFilePlugin) Info(scope vfilter.Scope, type_map *vfilter.Type
 		Name:     "read_crypto_file",
 		Doc:      "Read a previously stored encrypted local storage file.",
 		ArgType:  type_map.AddType(scope, &ReadCryptFilePluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 		Version:  2,
 	}
 }

@@ -93,7 +93,7 @@ func InitializeGlobalRepositoryFromFilestore(
 	}
 
 	logger.Info("Loaded %d custom artifacts in %v",
-		atomic.AddUint64(&count, 0), time.Now().Sub(start))
+		atomic.AddUint64(&count, 0), time.Since(start))
 
 	return global_repository, nil
 }

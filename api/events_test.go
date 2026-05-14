@@ -43,9 +43,7 @@ type: SERVER_EVENT
 // Tests the public API endpoints
 type GeneralAPITest struct {
 	test_utils.TestSuite
-
-	client_config *config_proto.Config
-	username      string
+	username string
 }
 
 func (self *GeneralAPITest) SetupTest() {
@@ -100,6 +98,7 @@ func (self *GeneralAPITest) TestQuery() {
 	err := user_manager.SetUser(self.Ctx, &api_proto.VelociraptorUser{
 		Name: self.username,
 	})
+	assert.NoError(self.T(), err)
 
 	// Make the user a reader on the root org.
 	err = services.GrantUserToOrg(self.Ctx,
@@ -218,6 +217,7 @@ func (self *GeneralAPITest) TestVFSGetBuffer() {
 	err = user_manager.SetUser(self.Ctx, &api_proto.VelociraptorUser{
 		Name: self.username,
 	})
+	assert.NoError(self.T(), err)
 
 	// Make the user a reader on the root org.
 	err = services.GrantUserToOrg(self.Ctx,
@@ -240,7 +240,7 @@ func (self *GeneralAPITest) TestVFSGetBuffer() {
 		Length:     100,
 	}
 
-	buf, err := client.VFSGetBuffer(self.Ctx, message)
+	_, err = client.VFSGetBuffer(self.Ctx, message)
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(),
 		"PermissionDenied desc = User is not allowed to view the VFS")
@@ -254,7 +254,7 @@ func (self *GeneralAPITest) TestVFSGetBuffer() {
 		})
 	assert.NoError(self.T(), err)
 
-	buf, err = client.VFSGetBuffer(self.Ctx, message)
+	buf, err := client.VFSGetBuffer(self.Ctx, message)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), string(buf.Data), "Hello")
 }
@@ -312,6 +312,7 @@ func (self *GeneralAPITest) TestVFSGetBufferSparse() {
 	err = user_manager.SetUser(self.Ctx, &api_proto.VelociraptorUser{
 		Name: self.username,
 	})
+	assert.NoError(self.T(), err)
 
 	// Make the user a reader on the root org.
 	err = services.GrantUserToOrg(self.Ctx,
@@ -358,6 +359,7 @@ func (self *GeneralAPITest) TestPushEvents() {
 	err = user_manager.SetUser(self.Ctx, &api_proto.VelociraptorUser{
 		Name: self.username,
 	})
+	assert.NoError(self.T(), err)
 
 	// Make the user a reader on the root org.
 	err = services.GrantUserToOrg(self.Ctx,

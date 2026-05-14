@@ -177,11 +177,10 @@ func doArtifactCollect() error {
 	defer top_cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
@@ -353,11 +352,10 @@ func doArtifactShow() error {
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
@@ -393,11 +391,10 @@ func doArtifactList() error {
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	var name_regex *regexp.Regexp
 	if *artifact_command_list_name != "" {

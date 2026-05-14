@@ -13,7 +13,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -144,7 +143,7 @@ func (self MagicFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Doc:      "Identify a file using magic rules.",
 		ArgType:  type_map.AddType(scope, &MagicFunctionArgs{}),
 		Version:  1,
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

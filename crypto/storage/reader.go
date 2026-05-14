@@ -8,7 +8,6 @@ import (
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/crypto/server"
 	crypto_server "www.velocidex.com/golang/velociraptor/crypto/server"
 )
 
@@ -141,11 +140,14 @@ func NewCryptoFileReader(
 		return nil, errors.New("Invalid file magic")
 	}
 
-	if config_obj.Frontend == nil || config_obj.Frontend.Certificate == "" {
-		return nil, errors.New("Reading Crypto Containers can only happen on the server")
+	if config_obj.Frontend == nil ||
+		config_obj.Frontend.Certificate == "" {
+		return nil, errors.New(
+			"Reading Crypto Containers can only happen on the server")
 	}
 
 	var wg sync.WaitGroup
-	result.crypto_manager, err = server.NewServerCryptoManager(ctx, config_obj, &wg)
+	result.crypto_manager, err = crypto_server.NewServerCryptoManager(
+		ctx, config_obj, &wg)
 	return result, err
 }

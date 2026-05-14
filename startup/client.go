@@ -52,30 +52,35 @@ func StartClientServices(
 	// Start encrypted logs service if possible
 	err = encrypted_logs.StartEncryptedLog(sm.Ctx, sm.Wg, sm.Config)
 	if err != nil {
-		return sm, err
+		sm.Close()
+		return nil, err
 	}
 
 	err = networking.MaybeInstallDNSCache(sm.Ctx, sm.Wg, sm.Config)
 	if err != nil {
-		return sm, err
+		sm.Close()
+		return nil, err
 	}
 
 	// Start the nanny first so we are covered from here on.
 	err = sm.Start(executor.StartNannyService)
 	if err != nil {
-		return sm, err
+		sm.Close()
+		return nil, err
 	}
 
 	// Start throttling service
 	err = sm.Start(throttler.StartStatsCollectorService)
 	if err != nil {
-		return sm, err
+		sm.Close()
+		return nil, err
 	}
 
 	_, err = orgs.NewOrgManager(sm.Ctx, sm.Wg, sm.Config)
 	if err != nil {
-		return sm, err
+		sm.Close()
+		return nil, err
 	}
 
-	return sm, err
+	return sm, nil
 }

@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"www.velocidex.com/golang/velociraptor/config/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
@@ -45,7 +44,7 @@ func (self *TransportCacheType) Set(extra_roots string, t *http.Transport) {
 }
 
 // Try to cache the HTTP Transport to allow it to use connections better.
-func GetHttpTransport(config_obj *proto.ClientConfig, extra_roots string) (*http.Transport, error) {
+func GetHttpTransport(config_obj *config_proto.ClientConfig, extra_roots string) (*http.Transport, error) {
 
 	transport, pres := TransportCache.Get(extra_roots)
 	if pres {
@@ -62,7 +61,7 @@ func GetHttpTransport(config_obj *proto.ClientConfig, extra_roots string) (*http
 }
 
 // Create a new transport without caching it.
-func GetNewHttpTransport(config_obj *proto.ClientConfig, extra_roots string) (
+func GetNewHttpTransport(config_obj *config_proto.ClientConfig, extra_roots string) (
 	*http.Transport, error) {
 	if config_obj == nil {
 		config_obj = &config_proto.ClientConfig{}

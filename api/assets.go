@@ -34,9 +34,7 @@ import (
 	"github.com/lpar/gzipped"
 	"www.velocidex.com/golang/velociraptor/api/proto"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
-	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	gui_assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/services"
 	vutils "www.velocidex.com/golang/velociraptor/utils"
@@ -49,14 +47,14 @@ var (
 func install_static_assets(
 	ctx context.Context,
 	config_obj *config_proto.Config, mux *api_utils.ServeMux) {
-	base := utils.GetBasePath(config_obj)
-	dir := utils.Join(base, "/app/")
+	base := api_utils.GetBasePath(config_obj)
+	dir := api_utils.Join(base, "/app/")
 	mux.Handle(dir, ipFilter(config_obj, api_utils.StripPrefix(
 		dir, fixCSSURLs(config_obj,
 			gzipped.FileServer(NewCachedFilesystem(ctx, gui_assets.NewHTTPFS()))))))
 
 	mux.Handle("/favicon.png",
-		http.RedirectHandler(utils.Join(base, "/favicon.ico"),
+		http.RedirectHandler(api_utils.Join(base, "/favicon.ico"),
 			http.StatusMovedPermanently))
 }
 
@@ -96,10 +94,10 @@ func GetTemplateHandler(
 				user_options = &proto.SetGUIOptionsRequest{}
 			}
 
-			args := velociraptor.HTMLtemplateArgs{
+			args := gui_assets.HTMLtemplateArgs{
 				Timestamp: time.Now().UTC().UnixNano() / 1000,
 				CsrfToken: csrf.Token(r),
-				BasePath:  utils.GetBasePath(config_obj),
+				BasePath:  api_utils.GetBasePath(config_obj),
 				Heading:   "Heading",
 				UserTheme: user_options.Theme,
 				OrgId:     user_options.Org,
@@ -173,7 +171,7 @@ func NewInterceptingResponseWriter(
 				ResponseWriter: w,
 				from:           "url(/app/assets/",
 				to: fmt.Sprintf("url(%v/app/assets/",
-					utils.GetBasePath(config_obj)),
+					api_utils.GetBasePath(config_obj)),
 				br_writer: brotli.NewWriter(w),
 			}
 		}
@@ -184,6 +182,6 @@ func NewInterceptingResponseWriter(
 		ResponseWriter: w,
 		from:           "url(/app/assets/",
 		to: fmt.Sprintf("url(%v/app/assets/",
-			utils.GetBasePath(config_obj)),
+			api_utils.GetBasePath(config_obj)),
 	}
 }
