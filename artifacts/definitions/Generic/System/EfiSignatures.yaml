@@ -1,8 +1,7 @@
 name: Generic.System.EfiSignatures
 description: |
-  Collects UEFI Secure Boot signature variables including PK, db, and dbx from the client
-
-  Collect Efi Signature information from the client.
+  Collects UEFI Secure Boot signature variables including PK, db, and
+  dbx from the client.
 
 type: CLIENT
 export: |

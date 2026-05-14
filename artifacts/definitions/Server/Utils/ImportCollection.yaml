@@ -21,9 +21,6 @@ description: |
   filesystem. It is up to you to arrange for the file to be stored on
   the server (e.g. SCP it over).
 
-  NOTE: This artifact is still experimental - please provide feedback
-  on our issue board.
-
 type: SERVER
 
 parameters:

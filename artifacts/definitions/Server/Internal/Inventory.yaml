@@ -1,6 +1,6 @@
 name: Server.Internal.Inventory
 description: |
-  Fires an event when the server tool inventory is updated or modified.
-  An internal artifact to listen to inventory (tools) changes.
+  Fires an event when the server's tool inventory is updated or
+  modified.
 
 type: INTERNAL

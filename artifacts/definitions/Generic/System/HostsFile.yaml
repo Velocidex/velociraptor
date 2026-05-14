@@ -3,34 +3,36 @@ description: |
   Parses the system hosts file to extract hostname-to-IP mappings.
 
   The system hosts file maps hostnames to IP addresses. In some cases,
-  entries in this file take precedence and overrides the results from
+  entries in this file take precedence and override the results from
   the system DNS service.
 
   The file is a simple text file, with one line per IP address. Each
   whitespace-separated word following the IP address is a hostname.
-  The Linux man page refers to the first hostname as *canonical_hostname*,
-  and any following words as *aliases*. They are treated the same by this
-  artifact.
+  The Linux man page refers to the first hostname as
+  *canonical_hostname*, and any following words as *aliases*. They are
+  treated the same by this artifact.
 
-  The hosts file is typically present on all Linux-based systems (including macOS),
-  with entries for localhost. The same file format is also supported on Windows.
+  The hosts file is typically present on all Linux-based systems
+  (including macOS), with entries for localhost. The same file format
+  is also supported on Windows.
 
   The source *Hosts* returns each line in each hosts file that matches
-  the glob parameters for address and hostname. The hostname and aliases
-  are combined in a single column *Hostnames*. Columns returned:
+  the glob parameters for address and hostname. The hostname and
+  aliases are combined in a single column *Hostnames*. Columns
+  returned:
 
   - OSPath
   - Hostnames
   - Comment
 
-  Only comments that follows the hostname on the same line are captured in Comment.
-  Comments on their own lines are ignored.
+  Only comments that follows the hostname on the same line are
+  captured in Comment. Comments on their own lines are ignored.
 
-  A second source *HostsFlattened* provides a flattened result, with each row
-  containing an IP address and a single hostname.
+  A second source *HostsFlattened* provides a flattened result, with
+  each row containing an IP address and a single hostname.
 
-  This artifact also exports a function `parse_hostsfile()` that returns Hostname
-  and Aliases individually.
+  This artifact also exports a function `parse_hostsfile()` that
+  returns Hostname and Aliases individually.
 
 reference:
   - https://manpages.debian.org/bookworm/manpages/hosts.5.en.html

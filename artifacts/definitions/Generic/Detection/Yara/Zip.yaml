@@ -4,8 +4,6 @@ description: |
   Searches for YARA matches inside nested compressed archives up to a
   configurable recursion depth.
 
-  The artifact:
-
   * searches for compressed zip files (PK header)
   * then applies YARA on files inside.
   * files matching ZipFilenameRegex are recursively searched as above.

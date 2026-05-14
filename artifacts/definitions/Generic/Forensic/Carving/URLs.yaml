@@ -1,9 +1,10 @@
 name: Generic.Forensic.Carving.URLs
 description: |
-  Extracts URLs from files using regex carving without parsing file formats
+  Extracts URLs from files in common user-related locations using
+  regex carving.
 
-  Carve URLs from files located in a glob. Note that we do not parse
-  any files - we simply carve anything that looks like a URL.
+  Note that it does not parse any files - it simply extracts anything
+  that looks like a URL.
 
 
 parameters:

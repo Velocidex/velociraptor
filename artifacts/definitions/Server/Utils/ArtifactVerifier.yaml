@@ -1,8 +1,7 @@
 name: Server.Utils.ArtifactVerifier
 description: |
-   Validates artifact YAML definitions from a file glob and reports errors and warnings in a structured format.
-
-   Verify a set of artifacts and returns results in a structured way.
+  Validates artifact YAML definitions from a file glob and reports
+  errors and warnings in a structured format.
 
   You can run this on the command line like:
   ```

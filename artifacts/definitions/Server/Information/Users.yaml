@@ -1,10 +1,11 @@
 name: Server.Information.Users
 description: |
-  Lists user names and SIDs from collected Windows.Sys.Users results across all clients
+  Lists user names and SIDs from collected `Windows.Sys.Users` results
+  across all clients.
 
-  List the user names and SIDs on each machine. We get this
-  information from the last time we collected Windows.Sys.Users. If we
-  never collected it for this machine, there will be no results.
+  This artifact uses the previously collected data from
+  `Windows.Sys.Users`. If it was never collected for any endpoints
+  then this artifact will not produce any results.
 
 type: SERVER
 

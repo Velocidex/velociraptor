@@ -1,8 +1,7 @@
 name: Windows.Network.Netstat
 description: |
-  Reports open network sockets on Windows including binding time, connection state, and owning process name.
-  Show information about open sockets. On windows the time when the
-  socket was first bound is also shown.
+  Reports open network sockets on Windows including binding time,
+  connection state, and owning process name.
 
 sources:
 - precondition: SELECT OS From info() where OS = 'windows'

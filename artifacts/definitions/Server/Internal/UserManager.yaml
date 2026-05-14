@@ -2,4 +2,3 @@ name: Server.Internal.UserManager
 type: INTERNAL
 description: |
   Fires an event when Velociraptor user accounts are created, modified, or deleted.
-  An internal artifact notifying when user accounts are modified.

@@ -1,18 +1,19 @@
 name: Windows.Persistence.PowershellProfile
 author: Matt Green - @mgreen27
 description: |
-  Searches for and analyzes PowerShell profile scripts across user and system directories for persistence detection.
-  This Artifact will search and parse PowerShell profile scripts.
+  Searches for and parses PowerShell profile scripts across user and
+  system directories for persistence detection.
 
-  PowerShell supports several profiles depending on the user or host program.
-  Adversaries may create or modify these profiles to include arbitrary commands,
-  functions, modules, and/or PowerShell drives to gain persistence. When a
-  backdoored PowerShell session is opened the modified script will be executed
-  unless the -NoProfile flag is used when it is launched.
+  PowerShell supports several profiles depending on the user or host
+  program. Adversaries may create or modify these profiles to include
+  arbitrary commands, functions, modules, and/or PowerShell drives to
+  gain persistence. When a backdoored PowerShell session is opened the
+  modified script will be executed unless the -NoProfile flag is used
+  when it is launched.
 
-  The artifact will by default search both User profiles and System-wide
-  configured profiles. The user can also target and exclude specific content
-  with relevant regex filters.
+  The artifact will by default search both User profiles and
+  System-wide configured profiles. The user can also target and
+  exclude specific content with relevant regex filters.
 
 reference:
   - https://attack.mitre.org/techniques/T1546/013/

@@ -1,25 +1,26 @@
 name: Windows.EventLogs.ScheduledTasks
 description: |
-  Extracts and formats Windows scheduled task events from the TaskScheduler operational and Security logs.
-  This artifact will extract Event Logs related to ScheduledTasks and provide
-  a nice format for simplified review.
+  Extracts and formats Windows scheduled task events from the
+  TaskScheduler operational and Security logs.
+  
+  Adversaries may abuse tasks for execution, persistence, lateral
+  movement or privilege escalation. This artifact collates all events
+  from `Microsoft-Windows-TaskScheduler/Operational` event log channel
+  and scheduled task events from the Security log if configured.
 
-  Adversaries may abuse tasks for execution, persistence, lateral movement or
-  privilege escalation. This artifact collates all events from
-  Microsoft-Windows-TaskScheduler/Operational event log channel and scheduled
-  task events from the Security log if configured.
+  A common hunting use case may be collection all deleted scheduled
+  tasks (EID 141), all modified scheduled tasks (EID 140) then run
+  frequency analysis and chase down any abnormalities for the
+  environment. Similarly task execution (EID 129) and registration
+  (EID 106) can be a good collection hunting for unusual paths.
 
-  A common hunting use case may be collection all deleted scheduled tasks (EID 141),
-  all modified scheduled tasks (EID 140) then run frequency analysis and chase
-  down any abnormalities for the environment. Similarly task execution (EID 129)
-  and registration (EID 106) can be a good collection hunting for unusual paths.
+  Pivoting can be via either: TaskSchedulerEventRegex, TaskName or IOC
+  regex (e.g taskname|delete|created|update)
 
-  Pivoting can be via either: TaskSchedulerEventRegex, TaskName or IOC regex
-  (e.g taskname|delete|created|update)
+  Note: Audit Other Object Access Events is required to be implemented
+  to record scheduled tasks being registered, modified or disabled in
+  the Security event log channel.
 
-  Note: Audit Other Object Access Events is required to be implemented to record
-  scheduled tasks being registered, modified or disabled in the Security event
-  log channel.
   See: Computer Configuration\Policies\Windows Settings\Security Settings\Advanced Audit Policy Configuration\Object Access
 
 author: "@mgreen27 - Matt Green"

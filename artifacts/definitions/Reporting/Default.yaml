@@ -3,14 +3,14 @@ name: Reporting.Default
 type: SERVER
 
 description: |
-  Provides the default HTML template for exporting notebook and report content
+  Provides the default HTML template for exporting notebook and report
+  content.
 
-  A default template for HTML export.  This template will be used to
-  host HTML exports such as the notebook and the reporting
-  templates. Velociraptor will evaluate this template on the following
-  dict:
+  This template will be used to host HTML exports such as the notebook
+  and the reporting templates. Velociraptor will evaluate this
+  template on the following dict:
 
-    - key main: contains a string with all the results of rendering
+  - key main: contains a string with all the results of rendering
                 the notebook inside.
 
   ## Notes

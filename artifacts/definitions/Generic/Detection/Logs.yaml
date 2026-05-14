@@ -1,16 +1,17 @@
 name: Generic.Detection.Logs
 author: "Matt Green - @mgreen27, Apache groks thanks to Harsh Jaroli and Krishna Patel"
 description: |
-  Searches log files for strings matching a regex pattern across web server and system log paths
+  Searches text-based log files for strings matching a regex pattern
+  across common web server and system log paths.
 
-  This artifact enables grep of Logs to hunt for strings of interest. Default
-  target glob includes /var/log/, Apache and Windows IIS paths.
+  This artifact enables grep-like searching of logs to hunt for
+  strings of interest. Default target globs include `/var/log/`,
+  Apache web server and Windows IIS paths.
 
-  Parameters include SearchRegex and WhitelistRegex as regex terms and will
-  return the whole line to assist with scoping.
+  Parameters include SearchRegex and WhitelistRegex as regex terms and
+  will return the whole line to assist with scoping.
 
-  IIS and Apache Groks are available as notebook suggestions - please feel free to PR
-  additions!
+  IIS and Apache groks are available as notebook suggestions.
 
 
 parameters:

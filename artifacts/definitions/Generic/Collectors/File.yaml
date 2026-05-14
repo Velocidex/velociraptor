@@ -1,10 +1,10 @@
 name: Generic.Collectors.File
 description: |
-   Searches filesystem with globs and uploads matching files to the server.
+   Searches a filesystem using a set of glob patterns and uploads
+   matching files to the server.
 
-   Collects files using a set of globs. All globs must be on the same
-   device. The globs will be searched in one pass - so you can provide
-   many globs at the same time.
+   All globs must be on the same device. The globs will be searched in
+   one pass - so you can provide many globs at the same time.
 
 aliases:
   - Windows.Collectors.File

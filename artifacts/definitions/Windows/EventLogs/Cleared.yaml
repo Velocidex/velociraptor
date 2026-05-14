@@ -2,10 +2,8 @@ name: Windows.EventLogs.Cleared
 author: Matt Green - @mgreen27
 
 description: |
-  Detects event log clearing events from the Security (EID 1102) and System (EID 104) logs.
-  Extract Event Logs related to EventLog clearing
-  - Security Log  - EventID 1102
-  - System Log - EventID 104
+  Detects event log clearing events from the Security (EID 1102) and
+  System (EID 104) logs.
 
 reference:
   - https://attack.mitre.org/versions/v6/techniques/T1070/

@@ -1,25 +1,27 @@
 name: Windows.Registry.RecentDocs
 author: Matt Green - @mgreen27
 description: |
-    Extracts Recent Documents MRU entries from Windows NTUSER.DAT registry hives for each user.
-    This artifact extracts RecentDocs MRU from the target.
+  Extracts Recent Documents MRU entries from Windows NTUSER.DAT
+  registry hives for each user.
+  
+  By default the artifact will target all users on the machine when
+  run in live mode but can be targeted directly using the HiveGlob
+  parameter.
 
-    By default the artifact will target all users on the machine when run in
-    live mode but can be targeted directly using the HiveGlob parameter.
+  Output includes LastWriteTime of key and a list of MRU items in the
+  order specified in the MRUListEx key value.
+  MruEntries has the format: [KeyName] := [Parsed Key value]
 
-    Output includes LastWriteTime of key and a list of MRU items in the
-    order specified in the MRUListEx key value.
-    MruEntries has the format: [KeyName] := [Parsed Key value]
+  Available filters include:
+  
+  - Time bounds to select LastWrite timestamp within time ranges.
+  - EntryRegex to target specific entry values
+  - UserRegex to target specific users. Note: this filter does not work
+    when using HiveGlob.
+  - SidRegex to target a specific SID.
 
-    Available filters include:
-        - Time bounds to select LastWrite timestamp within time ranges.
-        - EntryRegex to target specific entry values
-        - UserRegex to target specific users. Note: this filter does not work
-        when using HiveGlob.
-        - SidRegex to target a specific SID.
-
-    Note: both UserRegex and SidRegex does not work when using HiveGlob
-         and all MRU will be returned.
+  Note: both UserRegex and SidRegex does not work when using HiveGlob
+  and all MRU will be returned.
 
 parameters:
   - name: KeyGlob

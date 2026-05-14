@@ -1,6 +1,8 @@
 name: Server.Internal.ArtifactDescription
 description: |
-  Renders a formatted view of any artifact's metadata, parameters, sources, and export code.
+  Renders a formatted view of any artifact's metadata, parameters,
+  sources, exports, etc.
+
 type: INTERNAL
 
 reports:

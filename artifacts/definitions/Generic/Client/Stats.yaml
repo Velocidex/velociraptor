@@ -1,13 +1,10 @@
 name: Generic.Client.Stats
 description: |
-    Records CPU and memory statistics for the Velociraptor client process.
+    Records CPU and memory statistics for the Velociraptor client
+    process.
 
-    An Event artifact which records client's CPU and memory
-    statistics.
-
-    To learn about managing end point performance with Velociraptor
-    see this [blog
-    post](https://docs.velociraptor.app/blog/html/2019/02/10/velociraptor_performance/).
+    To learn about managing endpoint performance with Velociraptor see
+    this [blog post](https://docs.velociraptor.app/blog/html/2019/02/10/velociraptor_performance/).
 
 parameters:
   - name: Frequency

@@ -1,16 +1,18 @@
 name: Generic.Client.Info
 description: |
-  Collects basic system details including hostname, OS version, interfaces, and platform info
+  Collects basic system details including hostname, OS version,
+  interfaces, and platform info
 
   This artifact is collected when any new client is enrolled into the
-  system. Velociraptor will watch for this artifact and populate its
-  internal indexes from this artifact as well.
+  system. The Velociraptor server watches for completions of this
+  artifact and populates its internal client info indexe from this
+  artifact.
 
   You can edit this artifact to enhance the client's interrogation
   information as required, by adding new sources.
 
-  NOTE: Do not modify the BasicInformation source since it is used to
-  interrogate the clients.
+  NOTE: Do not modify the BasicInformation source since its results
+  are required by the server in that exact format.
 
 sources:
   - name: BasicInformation

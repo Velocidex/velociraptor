@@ -1,8 +1,8 @@
 name: Server.Hunts.Results
 description: |
-  Returns the collected data rows for a specified artifact within a hunt
+  Returns the collected data rows for a specified artifact within a
+  hunt.
 
-  Show the results from each artifact collection hunt.
 parameters:
   - name: huntId
     default: H.d05b2482

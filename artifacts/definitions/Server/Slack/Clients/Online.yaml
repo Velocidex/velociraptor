@@ -1,12 +1,12 @@
 name: Server.Slack.Clients.Online
 description: |
-   Sends a Slack notification when clients with a target label appear online.
+   Sends a Slack notification when clients with a target label appear
+   online.
 
-   Send a message to slack when clients come online.
-
-   This artifact searches for all clients that carry the label "Slack"
-   by default, and if they have appeared online in the last 5 minutes,
-   sends a message to Slack and removed the label from the client.
+   By default, this artifact searches for all clients that carry the
+   label "Slack", and if they have appeared online in the last 5
+   minutes, it sends a message to Slack and removes the label from the
+   client.
 
 type: SERVER_EVENT
 

@@ -1,8 +1,7 @@
 name: Server.Utils.RemoveTimeline
 description: |
-   Deletes a child timeline from a specified super timeline in a notebook.
-
-   Remove a child timeline from a super timeline.
+   Deletes a child timeline from a specified super-timeline in a
+   notebook.
 
 type: SERVER
 

@@ -1,7 +1,7 @@
 name: System.VFS.Export
 description: |
-  Exports files from the VFS (Virtual Filesystem) by globbing under a specified path using server-side collection.
-  Exports parts of the VFS in a server side collection.
+  Exports files from the VFS (Virtual Filesystem) by globbing under a
+  specified path in the server-side VFS cache.
 
 type: SERVER
 

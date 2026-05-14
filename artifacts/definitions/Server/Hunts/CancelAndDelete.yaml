@@ -1,24 +1,24 @@
 name: Server.Hunts.CancelAndDelete
 description: |
-  Cancels all in-flight flows in a hunt, deletes the hunt, and optionally removes collected data
+  Cancels all in-flight flows in a hunt, deletes the hunt, and
+  optionally removes collected data.
+  
+  Velociraptor Hunts are a way of running the same flow on many
+  endpoints at once. Hunts issue very quickly and wait until each
+  endpoint returns results.
 
-  Velociraptor Hunts are a way of running the same flow on
-  many endpoints at once. Hunts issue very quickly and wait
-  until each endpoint returns results.
+  Sometimes, the artifacts collected might take a long time and have
+  unacceptable performance impact on the endpoint. In some cases the
+  artifacts end up retrieving too much data that is not needed.
 
-   Sometimes, the artifacts collected might take a long time and
-   have unacceptable performance impact on the endpoint.
-   In some cases the artifacts end up retrieving too much data
-   that is not needed.
+  For those cases you might want to run the following server artifact.
+  It cancels all currently in-flight collections.
 
-   For those cases you might want to run the following server
-   artifact. It cancels all currently in-flight collections.
+  Optionally you can also remove any files already collected if you do
+  not need them.
 
-   Optionally you can also remove any files already collected if you
-   do not need them.
-
-   This artifact is implicitly collected by the GUI when pressing the
-   "Delete Hunt" Button.
+  This artifact is implicitly collected by the GUI when pressing the
+  "Delete Hunt" Button.
 
 type: SERVER
 
