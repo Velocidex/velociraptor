@@ -1,5 +1,6 @@
 name: Windows.Search.FileFinder
 description: |
+  Searches for files on Windows by name glob, content via Yara, with hash and upload options.
   Find files on the filesystem using the filename or content.
 
 

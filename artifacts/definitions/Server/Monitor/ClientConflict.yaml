@@ -1,6 +1,7 @@
 name: Server.Monitor.ClientConflict
 type: SERVER_EVENT
 description: |
+  Detects client ID conflicts on the server and forces affected clients to rekey with a new identity.
   Forces conflicting clients to rekey themselves.
 
   Sometimes the Velociraptor client is installed into a VM template image with

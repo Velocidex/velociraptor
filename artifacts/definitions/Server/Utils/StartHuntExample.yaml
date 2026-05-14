@@ -1,5 +1,6 @@
 name: Server.Utils.StartHuntExample
 description: |
+  Provides a template for granting controlled high-privilege operations to users with limited permissions.
   This example artifact shows how to create a utility artifact to
   provide low privileged users with a controlled ability to perform
   high privileged operations.

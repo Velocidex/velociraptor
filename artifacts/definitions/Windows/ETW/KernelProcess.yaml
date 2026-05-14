@@ -1,5 +1,6 @@
 name: Windows.ETW.KernelProcess
 description: |
+  Monitors process creation, termination, and image load events via the Kernel-Process ETW provider.
   This artifact follows the Microsoft-Windows-Kernel-Process provider.
 
   NOTE: We can only attach to this provider when running as

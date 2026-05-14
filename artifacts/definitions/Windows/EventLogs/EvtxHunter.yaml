@@ -1,5 +1,6 @@
 name: Windows.EventLogs.EvtxHunter
 description: |
+  Searches all Windows EVTX files for events matching a regex IOC in message, EventData, or UserData fields.
   This Artifact will hunt the Event Log message field for a regex value.
   For example and IP, username or string.
 

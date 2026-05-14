@@ -1,5 +1,6 @@
 name: Windows.Memory.Intezer
 description: |
+   Runs the Intezer memory scanner to collect running code for malware analysis via Intezer Analyze.
    Runs an Intezer agent scan on the endpoint.
 
    - Scan: The scanner collects running code from memory and sends it to Intezer Analyze.

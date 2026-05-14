@@ -1,5 +1,6 @@
 name: Server.Utils.DeleteManyFlows
 description: |
+   Removes old or unwanted flows from the server based on configurable filters with a dry-run mode.
    Sometimes the Velociraptor server accumulates a lot of data that is
    no longer needed.
 

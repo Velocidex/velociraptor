@@ -1,5 +1,6 @@
 name: Windows.System.Threads
 description: |
+  Lists threads for processes matching name or PID regex filters using the threads plugin.
   Enumerates all threads in selected processes.
 
 parameters:

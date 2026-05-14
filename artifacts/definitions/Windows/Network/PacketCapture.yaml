@@ -1,6 +1,7 @@
 name: Windows.Network.PacketCapture
 author: Cybereason <omer.yampel@cybereason.com>
 description: |
+  Captures network packets on Windows using netsh trace and converts ETL traces to PCAP format.
   Run this artifact twice, the first time, set the StartTrace flag to
   True to start the PCAP collection, this will have the VQL return a
   single row (the TraceFile generated) When you want to stop

@@ -1,6 +1,7 @@
 name: Windows.Registry.BackupRestore
 author: Matt Green - @mgreen27
 description: |
+    Enumerates Windows BackupRestore registry keys showing applications configured for backup and restore operations.
     This artifact will return BackupRestore configuration.
 
     Applications that request or perform backup and restore operations can use

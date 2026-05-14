@@ -1,5 +1,6 @@
 name: Windows.ETW.WMIProcessCreate
 description: |
+  Monitors process creation events triggered via WMI using the Microsoft-Windows-WMI-Activity ETW provider.
   This artifact the endpoints for process creation through WMI
   events. This is a common attacker lateral movement technique.
 

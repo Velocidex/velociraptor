@@ -1,5 +1,6 @@
 name: Server.Internal.MetadataModifications
 description: |
+  Emits an event when server metadata (such as client labels or host info) is modified.
   This event artifact is an internal event stream over which
   notifications of server metadata modifications are sent.
 

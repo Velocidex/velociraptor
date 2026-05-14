@@ -1,6 +1,7 @@
 name: Windows.Registry.RDP
 author: Matt Green - @mgreen27
 description: |
+   Extracts historical RDP connection server names and MRU entries from each user's NTUSER.DAT registry hive.
    This artifact will collect historical RDP server names and MRU items stored 
    in each users NTUser.dat
    

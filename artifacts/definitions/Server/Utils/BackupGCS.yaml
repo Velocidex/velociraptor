@@ -1,5 +1,6 @@
 name: Server.Utils.BackupGCS
 description: |
+   Automatically zips and uploads collected flow results to a Google Cloud Storage bucket.
    This server monitoring artifact will automatically zip and backup
    any collected artifacts to GCS.
 

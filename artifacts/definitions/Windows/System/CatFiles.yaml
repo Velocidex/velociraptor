@@ -1,5 +1,6 @@
 name: Windows.System.CatFiles
 description: |
+   Parses Windows .cat catalog files and extracts certificate trust list hashes with signer information.
    Windows stores many hashes in .cat files. These catalog files
    contain a set of trusted hashes for drivers and other binaries,
    even if the PE files do not themselves contain Authenticode

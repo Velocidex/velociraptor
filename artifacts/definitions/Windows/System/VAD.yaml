@@ -1,7 +1,7 @@
 name: Windows.System.VAD
 author: "Matt Green - @mgreen27"
 description: |
-  This artifact enables enumeration of process memory sections via the Virtual
+   Enumerates process memory sections using Virtual Address Descriptor (VAD) information.
   Address Descriptor (VAD). The VAD is used by the Windows memory manager to
   describe allocated process memory ranges.
 

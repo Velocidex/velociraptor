@@ -1,5 +1,6 @@
 name: Windows.Registry.NTUser
 description: |
+  Searches for registry keys and values across all users' NTUSER.DAT hives using raw NTFS parsing.
   This artifact searches for keys or values within the user's
   NTUser.dat registry hives.
 

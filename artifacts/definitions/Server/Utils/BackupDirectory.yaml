@@ -1,5 +1,6 @@
 name: Server.Utils.BackupDirectory
 description: |
+   Automatically exports and backs up completed flow results to a specified directory on the server.
    This server monitoring artifact will automatically export and
    backup selected collected artifacts to a directory on the server.
 

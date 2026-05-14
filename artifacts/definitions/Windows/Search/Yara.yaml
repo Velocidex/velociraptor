@@ -1,5 +1,6 @@
 name: Windows.Search.Yara
 description: |
+  Scans the NTFS filesystem for files matching a YARA rule by parsing the MFT to enumerate files.
   Searches for a specific malicious file or set of files by a YARA rule.
 
 parameters:

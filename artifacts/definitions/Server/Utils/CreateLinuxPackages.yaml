@@ -1,5 +1,6 @@
 name: Server.Utils.CreateLinuxPackages
 description: |
+  Builds Debian (.deb) and RPM packages with embedded client config for the current organization.
   Build Deb and RPM packages ready for deployment in the current org.
 
   This artifact depends on the following tool:

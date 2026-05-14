@@ -1,5 +1,6 @@
 name: Server.Orgs.NewOrg
 description: |
+  Creates a new Velociraptor organization and assigns the current user as administrator.
   This server artifact will create a new org and assign the current user as an
   admin to it.
 

@@ -2,6 +2,7 @@ name: Windows.ETW.DNSQueriesServer
 type: CLIENT_EVENT
 
 description: |
+   Captures DNS server query events from the Microsoft-Windows-DNSServer ETW provider.
    Logs DNS queries on DNS servers.
 
    This is useful for identifying the true source system that is initiating

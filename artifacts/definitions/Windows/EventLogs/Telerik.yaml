@@ -1,5 +1,6 @@
 name: Windows.EventLogs.Telerik
 description: |
+  Searches Windows Application Event Log for Telerik UI exploitation indicators (Event ID 1309).
   This Artifact will hunt for evidence of Telerik exploitation in the Application
   Event Log.
 

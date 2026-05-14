@@ -1,6 +1,7 @@
 name: Windows.System.VBScript
 author: Matt Green - @mgreen27
 description: |
+  Runs VBScript code on Windows endpoints using the Windows Script Host
   This artifact allows running VBScript through cscript.exe.
 
   This is a very powerful artifact since it allows for arbitrary command execution

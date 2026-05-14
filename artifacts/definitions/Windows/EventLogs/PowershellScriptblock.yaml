@@ -2,6 +2,7 @@ name: Windows.EventLogs.PowershellScriptblock
 author: Matt Green - @mgreen27
 
 description: |
+  Parses PowerShell script block logging entries (Event ID 4104) to detect potentially malicious script content.
   This Artifact will search and extract ScriptBlock events (Event ID 4104) from
   Powershell-Operational Event Logs.
 

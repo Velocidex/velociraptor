@@ -1,5 +1,6 @@
 name: Windows.ETW.Registry
 description: |
+  Monitors registry create, open, delete, and value modification events via the Kernel-Registry ETW provider.
   Windows Registry access is a great source of visibility into system
   activity.
 

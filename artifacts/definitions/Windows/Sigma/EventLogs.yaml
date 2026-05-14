@@ -1,5 +1,6 @@
 name: Windows.Sigma.EventLogs
 description: |
+  Evaluates Windows event log entries against inline or uploaded Sigma rules for threat detection.
   Parse Windows event logs and matches then against Sigma Rules.
 
   NOTE: This is a very simple artifact for demonstration only. For

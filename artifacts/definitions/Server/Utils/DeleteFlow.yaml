@@ -1,5 +1,6 @@
 name: Server.Utils.DeleteFlow
 description: |
+  Permanently deletes a flow and all its associated metadata and uploaded files from the server.
   This artifact permanently deletes a flow including it's metadata and
   uploaded files.
 

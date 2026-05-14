@@ -1,5 +1,6 @@
 name: Server.Internal.ResumedUploads
 description: |
+  Displays the status and details of all resumed upload operations on the server.
   An internal artifact that display all resumed uploads
 
 column_types:

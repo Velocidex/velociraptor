@@ -1,5 +1,6 @@
 name: Windows.Persistence.PowershellRegistry
 description: |
+  Scans NTUSER.DAT registry hives with YARA rules for PowerShell-based persistence signatures.
   A common method of persistence is to install a hook into a user profile
   registry hive, using PowerShell. When the user logs in, the PowerShell script
   downloads a payload and executes it.

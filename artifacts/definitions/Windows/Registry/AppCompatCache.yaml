@@ -1,6 +1,7 @@
 name: Windows.Registry.AppCompatCache
 author: Matt Green - @mgreen27
 description: |
+  Parses the AppCompatCache (Shimcache) registry value to enumerate recently executed application paths.
   This artifact parses AppCompatCache (shimcache) from target hives.
 
   AppCompatCache, also known as Shimcache, is a component of the Application

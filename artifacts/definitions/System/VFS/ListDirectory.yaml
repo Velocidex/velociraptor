@@ -1,5 +1,6 @@
 name: System.VFS.ListDirectory
 description: |
+  Lists directory contents for VFS browsing, typically triggered by the GUI refresh button.
   This is an internal artifact used by the GUI to populate the
   VFS. You may run it manually if you like, but typically it is
   launched by the GUI when a user clicks the "Refresh this directory"

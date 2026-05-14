@@ -1,5 +1,6 @@
 name: Windows.Memory.PEDump
 description: |
+  Extracts running executables from process memory using VAD region enumeration and PE dumping.
   This artifact dumps a PE file from memory and uploads the file to
   the server.
 

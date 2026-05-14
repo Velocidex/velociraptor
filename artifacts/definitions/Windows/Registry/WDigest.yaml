@@ -1,6 +1,7 @@
 name: Windows.Registry.WDigest
 author: Eduardo Mattos - @eduardfir, Matt Green - @mgreen27
 description: |
+    Scans HKLM\SYSTEM ControlSets for WDigest security provider registry keys that enable credential harvesting.
     Find WDigest registry values on the filesystem. The artifact will also use
     GROUP BY to limit all ControlSet output to a single row.
 

@@ -1,5 +1,6 @@
 name: Windows.System.Handles
 description: |
+  Lists open handles (files, registry keys, etc.) for processes matching a regex pattern
   Enumerate the handles from selected processes.
 
   Uncheck all the handle types below to fetch all handle types.

@@ -2,6 +2,7 @@ name: Windows.EventLogs.Kerberoasting
 author: Matt Green - @mgreen27
 
 description: |
+  Detects Kerberoasting attempts by extracting Kerberos TGS requests (EID 4769) with RC4 encryption from the Security log.
   This Artifact will return all successful Kerberos TGS Ticket events for
   Service Accounts (SPN attribute) implemented with weak encryption. These
   tickets are vulnerable to brute force attack and this event is an indicator

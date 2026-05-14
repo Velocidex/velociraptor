@@ -1,5 +1,6 @@
 name: Windows.Registry.Sysinternals.Eulacheck
 description: |
+  Checks which Sysinternals tools have accepted EULAs by reading the HKCU\Software\Sysinternals registry keys.
   Checks for the Accepted Sysinternals EULA from the registry key
   "HKCU\Software\Sysinternals\[TOOL]\".  When a Sysinternals tool is
   first run on a system, the EULA must be accepted. This writes a

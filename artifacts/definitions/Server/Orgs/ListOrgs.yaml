@@ -1,5 +1,6 @@
 name: Server.Orgs.ListOrgs
 description: |
+  Lists all configured organizations on the Velociraptor server with optional client config download.
   This server artifact will list all currently configured orgs on the server.
 
   NOTE: This artifact is only available to users with the `ORG_ADMIN`

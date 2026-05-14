@@ -1,5 +1,6 @@
 name: Windows.System.CmdShell
 description: |
+  Runs shell commands through cmd.exe and captures or uploads stdout output.
   This artifact allows running arbitrary commands through the system
   shell cmd.exe.
 

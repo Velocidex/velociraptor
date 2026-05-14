@@ -1,5 +1,6 @@
 name: Windows.EventLogs.ScheduledTasks
 description: |
+  Extracts and formats Windows scheduled task events from the TaskScheduler operational and Security logs.
   This artifact will extract Event Logs related to ScheduledTasks and provide
   a nice format for simplified review.
 

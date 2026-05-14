@@ -1,5 +1,6 @@
 name: Server.Utils.ExportHunt
 description: |
+  Exports an entire hunt's results to a downloadable zip archive with configurable data format options.
   Export a hunt to a Zip download.
 
   Sometimes exporting a hunt through the GUI takes longer than the 10

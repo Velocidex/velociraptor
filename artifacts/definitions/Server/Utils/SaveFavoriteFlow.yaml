@@ -1,5 +1,6 @@
 name: Server.Utils.SaveFavoriteFlow
 description: |
+  Saves a collection configuration as a named favorite template for reuse across client or server collections.
   Users may collect various artifacts from hosts. Sometimes it might
   take a bit of effort to setup and configure just the perfect
   combination of parameters and artifacts to collect.

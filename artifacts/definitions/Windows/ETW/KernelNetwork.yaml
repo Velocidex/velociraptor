@@ -1,5 +1,6 @@
 name: Windows.ETW.KernelNetwork
 description: |
+  Monitors network events (connections, data send/receive) via the Kernel-Network ETW provider.
   This artifact follows the Microsoft-Windows-Kernel-Network provider.
 
   NOTE: We can only attach to this provider when running as

@@ -1,5 +1,6 @@
 name: Windows.ETW.ETWSessions
 description: |
+  Watches kernel event tracing ETW events to detect creation and removal of ETW sessions.
   Windows Event Tracing exposes a lot of low level system information
   and events. It is normally employed by security tools to gather
   telemetry, however may also be used maliciously.

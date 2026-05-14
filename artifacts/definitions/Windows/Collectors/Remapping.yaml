@@ -1,6 +1,7 @@
 name: Windows.Collectors.Remapping
 description: |
-  Calculates a remapping config for a collection container (zip).
+  Creates filesystem and registry remappings for offline analysis of
+  Velociraptor collection containers.
 
   The remapping allows Velociraptor to treat the collection container as a dead
   disk image in a similar way to `Generic.Utils.DeadDiskRemapping`. This means

@@ -1,6 +1,7 @@
 name: Windows.EventLogs.RDPAuth
 author: "Matt Green - @mgreen27"
 description: |
+    Extracts RDP authentication and session events from Security, System, and Terminal Services event logs.
     This artifact will extract Event Logs related to Remote Desktop sessions,
     logon and logoff.
 

@@ -1,6 +1,7 @@
 name: Windows.Registry.RecentDocs
 author: Matt Green - @mgreen27
 description: |
+    Extracts Recent Documents MRU entries from Windows NTUSER.DAT registry hives for each user.
     This artifact extracts RecentDocs MRU from the target.
 
     By default the artifact will target all users on the machine when run in

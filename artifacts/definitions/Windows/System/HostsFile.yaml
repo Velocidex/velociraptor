@@ -1,6 +1,7 @@
 name: Windows.System.HostsFile
 author: Matt Green - @mgreen27
 description: |
+   Reads and parses the Windows hosts file, reporting resolution entries, hostnames, and comments.
    Parses the Windows Hostsfile.
 
    Regex searching for Hostname and resolution is enabled over output.

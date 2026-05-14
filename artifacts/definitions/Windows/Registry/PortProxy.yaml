@@ -1,5 +1,6 @@
 name: Windows.Registry.PortProxy
 description: |
+    Enumerates Windows port proxy registry entries configured via netsh or attack tools for network redirection.
     This artifact will return any items in the Windows PortProxy service
     registry path. The most common configuration of this service is via the
     LOLBin `netsh.exe`. Metasploit and other common attack tools also have

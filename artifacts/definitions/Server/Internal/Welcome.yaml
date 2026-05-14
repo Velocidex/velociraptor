@@ -1,5 +1,6 @@
 name: Server.Internal.Welcome
 description: |
+  Renders the server home page showing navigation links to common tasks and dashboards.
   This is the welcome screen in the Velociraptor GUI. You can
   customize this screen by editing this artifact.
 

@@ -1,5 +1,7 @@
 name: Windows.System.Pslist
 description: |
+  Enumerates running processes along with their executable paths and associated details
+  Lists processes on Windows with optional authenticode trust verification and binary hashing.
   List processes and their running binaries.
 
 parameters:

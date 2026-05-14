@@ -1,5 +1,6 @@
 name: Windows.EventLogs.DHCP
 description: |
+  Parses Windows DHCP client event logs (admin and operational) to extract IP address lease assignments and rejections.
 
   This artifact parses the Windows DHCP event log looking for evidence
   of IP address assignments.

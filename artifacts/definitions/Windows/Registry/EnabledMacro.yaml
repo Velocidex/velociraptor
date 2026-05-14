@@ -1,5 +1,6 @@
 name: Windows.Registry.EnabledMacro
 description: |
+  Scans Office Trust Records registry entries for documents with macro-enabled trust flags (FFFFFF7F).
   Checks for Registry key indicating macro was enabled by user.
 
   HKEY_USERS\*\Software\Microsoft\Office\*\Security\Trusted Documents\TrustRecords reg keys for values ending in FFFFFF7F

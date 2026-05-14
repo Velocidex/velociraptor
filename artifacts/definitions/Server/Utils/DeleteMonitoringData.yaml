@@ -1,5 +1,6 @@
 name: Server.Utils.DeleteMonitoringData
 description: |
+   Purges historical monitoring logs from the server filestore with dry-run and confirmation safety.
    Velociraptor collects monitoring data from endpoints all the time.
 
    Sometimes this data is no longer needed and we might want to free

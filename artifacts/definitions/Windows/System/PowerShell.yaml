@@ -1,5 +1,6 @@
 name: Windows.System.PowerShell
 description: |
+  Executes arbitrary commands through PowerShell with output capture and upload support.
   This artifact allows running arbitrary commands through the system
   PowerShell.
 

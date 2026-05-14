@@ -1,5 +1,6 @@
 name: Server.Utils.BackupS3
 description: |
+   Automatically zips and uploads collected flow results to an S3-compatible bucket.
    This server monitoring artifact will automatically zip and backup
    any collected artifacts to s3.
 

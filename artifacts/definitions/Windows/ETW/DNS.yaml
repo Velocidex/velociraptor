@@ -1,6 +1,7 @@
 name: Windows.ETW.DNS
 author: Matt Green - @mgreen27
 description: |
+  Watches real-time DNS queries via ETW and reports query names, types, and answers.
   Monitors DNS queries using ETW.
 
   There are several filters available to filter out and/or target using regular

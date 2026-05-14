@@ -1,5 +1,6 @@
 name: Server.Monitor.Health
 description: |
+  Provides a server overview dashboard showing performance metrics, disk space, and user permissions.
   This is the main server health dashboard. It is shown on the
   homescreen and enabled by default on all new installs.
 

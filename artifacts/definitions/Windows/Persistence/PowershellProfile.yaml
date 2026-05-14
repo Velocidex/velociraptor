@@ -1,6 +1,7 @@
 name: Windows.Persistence.PowershellProfile
 author: Matt Green - @mgreen27
 description: |
+  Searches for and analyzes PowerShell profile scripts across user and system directories for persistence detection.
   This Artifact will search and parse PowerShell profile scripts.
 
   PowerShell supports several profiles depending on the user or host program.

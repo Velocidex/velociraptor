@@ -1,5 +1,6 @@
 name: Server.Utils.CreateCollector
 description: |
+  Builds a standalone Velociraptor offline collector binary with specified artifacts and output target.
   A utility artifact to create a stand alone collector.
 
   This artifact is actually invoked by the Offline collector GUI and

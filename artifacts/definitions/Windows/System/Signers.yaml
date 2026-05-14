@@ -1,5 +1,6 @@
 name: Windows.System.Signers
 description: |
+   Scans executable files and groups them by their authenticode signer subject.
    This artifact searches for all signed files and stacks them by signer.
 
 parameters:

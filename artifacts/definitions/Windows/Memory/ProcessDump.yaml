@@ -1,5 +1,6 @@
 name: Windows.Memory.ProcessDump
 description: |
+  Captures process memory for selected processes via crash dump or Velociraptor-compatible sparse upload.
   Dump process memory and upload to the server.
 
   Previously named Windows.Triage.ProcessMemory

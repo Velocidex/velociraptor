@@ -1,5 +1,6 @@
 name: Windows.Attack.Prefetch
 description: |
+   Enumerates Windows Prefetch directory entries and correlates them with known ATT&CK techniques.
    Maps the MITRE Att&ck framework process executions into artifacts.
 
    This pack was generated from

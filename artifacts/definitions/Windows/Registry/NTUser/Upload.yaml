@@ -1,5 +1,6 @@
 name: Windows.Registry.NTUser.Upload
 description: |
+  Uploads each user's NTUSER.DAT registry hive from disk by bypassing file locking with raw NTFS parsing.
   This artifact collects all the user's NTUser.dat registry hives.
 
   When a user logs into a windows machine the system creates their own

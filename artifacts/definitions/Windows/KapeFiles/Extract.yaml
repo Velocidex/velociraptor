@@ -1,7 +1,7 @@
 name: Windows.KapeFiles.Extract
 description: |
-  Extracts file collected by the `Windows.KapeFiles.Targets` or
-  `Windows.Triage.Targets` artifacts. and restores the original
+  Extracts files collected by the `Windows.KapeFiles.Targets` or
+  `Windows.Triage.Targets` artifacts, and restores the original
   timestamps on the extracted files.
 
   These artifacts collect files from the endpoint into a zip

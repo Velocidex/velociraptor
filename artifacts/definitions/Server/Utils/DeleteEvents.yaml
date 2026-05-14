@@ -1,5 +1,6 @@
 name: Server.Utils.DeleteEvents
 description: |
+  Permanently deletes client event or monitoring event data within a specified time range.
   This artifact permanently deletes Event files for client or
   monitoring events.
 

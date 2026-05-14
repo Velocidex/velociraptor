@@ -1,5 +1,6 @@
 name: Windows.System.UntrustedBinaries
 description: |
+  Checks that common Windows system binaries are signed using authenticode verification.
   Windows runs several services and binaries as part of the
   operating system. Sometimes malware pretends to run as those well
   known names to hide itself in plain sight. For example, a

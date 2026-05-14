@@ -1,5 +1,6 @@
 name: Windows.EventLogs.Modifications
 description: |
+  Checks registry keys for WINEVT channels and WMI autologger providers to detect event log tampering.
   It is possible to disable windows event logs on a per channel or per
   provider basis. Attackers may disable critical log sources to
   prevent detections.

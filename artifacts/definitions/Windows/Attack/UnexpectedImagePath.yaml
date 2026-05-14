@@ -1,6 +1,7 @@
 name: Windows.Attack.UnexpectedImagePath
 
 description: |
+  Detects processes with known system names running from unexpected file paths.
   Some malware are hiding in plain text by masquerading a legitimate
   executable name.
 

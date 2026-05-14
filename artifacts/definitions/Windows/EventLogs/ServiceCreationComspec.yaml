@@ -1,5 +1,6 @@
 name: Windows.EventLogs.ServiceCreationComspec
 description: |
+  Detects SCM lateral movement by searching System event log for service creation events (EID 7045) with COMSPEC or cmd.exe in the image path.
   Detects the string "COMSPEC" (nocase) in Windows Service
   Creation (SCM) events. That is: EventID 7045 from the System event log.
 

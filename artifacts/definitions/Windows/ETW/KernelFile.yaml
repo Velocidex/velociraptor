@@ -1,5 +1,6 @@
 name: Windows.ETW.KernelFile
 description: |
+  Monitors file create, delete, open, and rename events via the Kernel-File ETW provider.
   This artifact follows the Microsoft-Windows-Kernel-File provider.
 
   NOTE: We can only attach to this provider when running as

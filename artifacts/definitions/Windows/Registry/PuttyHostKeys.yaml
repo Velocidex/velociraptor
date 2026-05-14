@@ -1,6 +1,7 @@
 name: Windows.Registry.PuttyHostKeys
 author: Matt Green - @mgreen27
 description: |
+   Extracts PuTTY SSH host keys stored in the Windows registry for each user.
    This artifact extracts PuTTY SSH host keys.
 
    As a security measure PuTTY and its companion utilities PSCP, PSFTP, and Plink

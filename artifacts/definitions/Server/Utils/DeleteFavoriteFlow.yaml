@@ -1,5 +1,6 @@
 name: Server.Utils.DeleteFavoriteFlow
 description: |
+  Removes a specific named favorite collection spec from the current user's saved templates.
   This artifact allows the user to delete a previously saved
   favorite. It will only affect the current user.
 

@@ -1,5 +1,6 @@
 name: Windows.EventLogs.PowershellModule
 description: |
+  Extracts PowerShell module logging events (EID 4103) from the PowerShell Operational log with context and payload filtering.
   This Artifact will search and extract Module events (Event ID 4103) from
   Powershell-Operational Event Logs.
 

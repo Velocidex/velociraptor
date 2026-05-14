@@ -1,6 +1,7 @@
 name: Windows.System.WMIQuery
 author: Matt Green - @mgreen27
 description: |
+    Runs a configurable WMI query on Windows and outputs the result rows.
     This artifact enables querying Windows Management Instrumentation (WMI).
 
     Windows Management Instrumentation (WMI) is the Microsoft implementation of

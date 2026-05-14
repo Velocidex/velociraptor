@@ -1,6 +1,7 @@
 name: Windows.Persistence.PermanentWMIEvents
 author: Matt Green - @mgreen27
 description: |
+    Enumerates permanent WMI event subscriptions including filters, consumers, and their bindings across namespaces.
     This artifact reports currently deployed permanent WMI Event Consumers. The
     artifact collects Binding information, then presents associated Filters
     and Consumers.

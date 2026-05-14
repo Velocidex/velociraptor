@@ -1,5 +1,6 @@
 name: Windows.Analysis.EvidenceOfDownload
 description: |
+   Finds downloaded files by searching for Zone.Identifier alternate data streams across user directories.
    Simple artifact to find evidence of user download activity.
 
    Based on the Zone.Identifier alternate data stream that is created
