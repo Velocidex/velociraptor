@@ -55,11 +55,8 @@ func (self *PSTFile) GetPath(id pst.Identifier) string {
 }
 
 func (self *PSTFile) setPath(parent_id, id pst.Identifier, name string) {
-	root, ok := self.paths[parent_id]
-	if ok {
-		new_path := path.Join(root, name)
-		self.paths[id] = new_path
-	}
+	root := self.paths[parent_id]
+	self.paths[id] = path.Join(root, name)
 }
 
 func (self *PSTFile) walkFolders(folder *pst.Folder) error {

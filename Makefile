@@ -104,9 +104,6 @@ debug_minion:
 debug_client:
 	dlv debug --init ./scripts/dlv.init --build-flags="-tags 'server_vql extras'" ./bin/ -- client -v --debug --debug_port 6061
 
-lint:
-	golangci-lint run
-
 # Do this after fetching the build artifacts with `gh run download <RunID>`
 UpdateCIArtifacts:
 	mv artifact/server/* artifacts/testdata/server/testcases/

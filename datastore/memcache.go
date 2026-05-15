@@ -668,8 +668,10 @@ func (self *MemcacheDatastore) Dump() []api.DSPathSpec {
 	result := make([]api.DSPathSpec, 0)
 
 	for _, key := range self.dir_cache.GetKeys() {
-		md, _ := self.dir_cache.Get(key)
-		result = append(result, md.Items()...)
+		md, ok := self.dir_cache.Get(key)
+		if ok {
+			result = append(result, md.Items()...)
+		}
 	}
 	return result
 }

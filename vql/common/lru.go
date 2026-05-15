@@ -49,7 +49,7 @@ func (self LRUFunction) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	}
 
 	_, b_ok := b.(string)
-	return !b_ok
+	return b_ok
 }
 
 func (self LRUFunction) Associative(
