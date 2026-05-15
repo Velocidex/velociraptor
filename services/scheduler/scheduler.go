@@ -95,7 +95,7 @@ func (self *Scheduler) RegisterWorker(
 		self.mu.Lock()
 		defer self.mu.Unlock()
 
-		queues, _ := self.queues[queue]
+		queues := self.queues[queue]
 		new_queue := make([]*Worker, 0, len(queues))
 		for _, q := range queues {
 			if q.id != worker.id {
@@ -106,7 +106,7 @@ func (self *Scheduler) RegisterWorker(
 	}()
 
 	self.mu.Lock()
-	queues, _ := self.queues[queue]
+	queues := self.queues[queue]
 	queues = append(queues, worker)
 	self.queues[queue] = queues
 	self.mu.Unlock()
@@ -183,7 +183,7 @@ func (self *Scheduler) Schedule(ctx context.Context,
 			self.mu.Lock()
 
 			// Find a ready worker
-			workers, _ := self.queues[job.Queue]
+			workers := self.queues[job.Queue]
 			for _, w := range workers {
 				if !w.IsBusy() {
 					available_workers = append(available_workers, w)

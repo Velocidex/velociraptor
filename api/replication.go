@@ -207,11 +207,13 @@ func (self *replicationTracker) Debug() []*ordereddict.Dict {
 
 	sort.Strings(keys)
 	for _, k := range keys {
-		v, _ := self.currentReplications[k]
-		result = append(result, ordereddict.NewDict().
-			Set("Type", "Replication").
-			Set("Name", k).
-			Set("Stats", v))
+		v, ok := self.currentReplications[k]
+		if ok {
+			result = append(result, ordereddict.NewDict().
+				Set("Type", "Replication").
+				Set("Name", k).
+				Set("Stats", v))
+		}
 	}
 	return result
 }

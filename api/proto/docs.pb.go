@@ -8,6 +8,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -18,22 +19,19 @@ const (
 )
 
 type DocSearchRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Query         string                 `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
+	Start         int64                  `protobuf:"varint,2,opt,name=start,proto3" json:"start,omitempty"`
+	Length        int64                  `protobuf:"varint,3,opt,name=length,proto3" json:"length,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Query  string `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
-	Start  int64  `protobuf:"varint,2,opt,name=start,proto3" json:"start,omitempty"`
-	Length int64  `protobuf:"varint,3,opt,name=length,proto3" json:"length,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *DocSearchRequest) Reset() {
 	*x = DocSearchRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_docs_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_docs_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *DocSearchRequest) String() string {
@@ -44,7 +42,7 @@ func (*DocSearchRequest) ProtoMessage() {}
 
 func (x *DocSearchRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_docs_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -81,21 +79,18 @@ func (x *DocSearchRequest) GetLength() int64 {
 }
 
 type Highlight struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Start         uint64                 `protobuf:"varint,1,opt,name=start,proto3" json:"start,omitempty"`
+	End           uint64                 `protobuf:"varint,2,opt,name=end,proto3" json:"end,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Start uint64 `protobuf:"varint,1,opt,name=start,proto3" json:"start,omitempty"`
-	End   uint64 `protobuf:"varint,2,opt,name=end,proto3" json:"end,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Highlight) Reset() {
 	*x = Highlight{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_docs_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_docs_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *Highlight) String() string {
@@ -106,7 +101,7 @@ func (*Highlight) ProtoMessage() {}
 
 func (x *Highlight) ProtoReflect() protoreflect.Message {
 	mi := &file_docs_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -136,28 +131,25 @@ func (x *Highlight) GetEnd() uint64 {
 }
 
 type DocSearchResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Link       string       `protobuf:"bytes,1,opt,name=link,proto3" json:"link,omitempty"`
-	Title      string       `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	Type       string       `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
-	Fragment   string       `protobuf:"bytes,4,opt,name=fragment,proto3" json:"fragment,omitempty"`
-	FullText   string       `protobuf:"bytes,5,opt,name=full_text,json=fullText,proto3" json:"full_text,omitempty"`
-	Highlights []*Highlight `protobuf:"bytes,6,rep,name=highlights,proto3" json:"highlights,omitempty"`
-	Tags       []string     `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty"`
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	Link       string                 `protobuf:"bytes,1,opt,name=link,proto3" json:"link,omitempty"`
+	Title      string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Type       string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	Fragment   string                 `protobuf:"bytes,4,opt,name=fragment,proto3" json:"fragment,omitempty"`
+	FullText   string                 `protobuf:"bytes,5,opt,name=full_text,json=fullText,proto3" json:"full_text,omitempty"`
+	Highlights []*Highlight           `protobuf:"bytes,6,rep,name=highlights,proto3" json:"highlights,omitempty"`
+	Tags       []string               `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty"`
 	// JSON encoded crumbs structure
-	Crumbs string `protobuf:"bytes,8,opt,name=crumbs,proto3" json:"crumbs,omitempty"`
+	Crumbs        string `protobuf:"bytes,8,opt,name=crumbs,proto3" json:"crumbs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *DocSearchResponse) Reset() {
 	*x = DocSearchResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_docs_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_docs_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *DocSearchResponse) String() string {
@@ -168,7 +160,7 @@ func (*DocSearchResponse) ProtoMessage() {}
 
 func (x *DocSearchResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_docs_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -240,21 +232,18 @@ func (x *DocSearchResponse) GetCrumbs() string {
 }
 
 type DocSearchResponses struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Total         uint64                 `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
+	Items         []*DocSearchResponse   `protobuf:"bytes,2,rep,name=Items,proto3" json:"Items,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Total uint64               `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
-	Items []*DocSearchResponse `protobuf:"bytes,2,rep,name=Items,proto3" json:"Items,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *DocSearchResponses) Reset() {
 	*x = DocSearchResponses{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_docs_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_docs_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *DocSearchResponses) String() string {
@@ -265,7 +254,7 @@ func (*DocSearchResponses) ProtoMessage() {}
 
 func (x *DocSearchResponses) ProtoReflect() protoreflect.Message {
 	mi := &file_docs_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -296,58 +285,46 @@ func (x *DocSearchResponses) GetItems() []*DocSearchResponse {
 
 var File_docs_proto protoreflect.FileDescriptor
 
-var file_docs_proto_rawDesc = []byte{
-	0x0a, 0x0a, 0x64, 0x6f, 0x63, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0x56, 0x0a, 0x10, 0x44, 0x6f, 0x63, 0x53, 0x65, 0x61, 0x72, 0x63, 0x68,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x71, 0x75, 0x65, 0x72, 0x79,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x71, 0x75, 0x65, 0x72, 0x79, 0x12, 0x14, 0x0a,
-	0x05, 0x73, 0x74, 0x61, 0x72, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x73, 0x74,
-	0x61, 0x72, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x6c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x03, 0x52, 0x06, 0x6c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x22, 0x33, 0x0a, 0x09, 0x48,
-	0x69, 0x67, 0x68, 0x6c, 0x69, 0x67, 0x68, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x73, 0x74, 0x61, 0x72,
-	0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x73, 0x74, 0x61, 0x72, 0x74, 0x12, 0x10,
-	0x0a, 0x03, 0x65, 0x6e, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x03, 0x65, 0x6e, 0x64,
-	0x22, 0xe8, 0x01, 0x0a, 0x11, 0x44, 0x6f, 0x63, 0x53, 0x65, 0x61, 0x72, 0x63, 0x68, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6c, 0x69, 0x6e, 0x6b, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6c, 0x69, 0x6e, 0x6b, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x69,
-	0x74, 0x6c, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65,
-	0x12, 0x12, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
-	0x74, 0x79, 0x70, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x66, 0x72, 0x61, 0x67, 0x6d, 0x65, 0x6e, 0x74,
-	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x66, 0x72, 0x61, 0x67, 0x6d, 0x65, 0x6e, 0x74,
-	0x12, 0x1b, 0x0a, 0x09, 0x66, 0x75, 0x6c, 0x6c, 0x5f, 0x74, 0x65, 0x78, 0x74, 0x18, 0x05, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x08, 0x66, 0x75, 0x6c, 0x6c, 0x54, 0x65, 0x78, 0x74, 0x12, 0x30, 0x0a,
-	0x0a, 0x68, 0x69, 0x67, 0x68, 0x6c, 0x69, 0x67, 0x68, 0x74, 0x73, 0x18, 0x06, 0x20, 0x03, 0x28,
-	0x0b, 0x32, 0x10, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x48, 0x69, 0x67, 0x68, 0x6c, 0x69,
-	0x67, 0x68, 0x74, 0x52, 0x0a, 0x68, 0x69, 0x67, 0x68, 0x6c, 0x69, 0x67, 0x68, 0x74, 0x73, 0x12,
-	0x12, 0x0a, 0x04, 0x74, 0x61, 0x67, 0x73, 0x18, 0x07, 0x20, 0x03, 0x28, 0x09, 0x52, 0x04, 0x74,
-	0x61, 0x67, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x63, 0x72, 0x75, 0x6d, 0x62, 0x73, 0x18, 0x08, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x06, 0x63, 0x72, 0x75, 0x6d, 0x62, 0x73, 0x22, 0x5a, 0x0a, 0x12, 0x44,
-	0x6f, 0x63, 0x53, 0x65, 0x61, 0x72, 0x63, 0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x73, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04,
-	0x52, 0x05, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x12, 0x2e, 0x0a, 0x05, 0x49, 0x74, 0x65, 0x6d, 0x73,
-	0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x44,
-	0x6f, 0x63, 0x53, 0x65, 0x61, 0x72, 0x63, 0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x52, 0x05, 0x49, 0x74, 0x65, 0x6d, 0x73, 0x42, 0x31, 0x5a, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x76,
-	0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64, 0x65, 0x78, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c,
-	0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72,
-	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
-}
+const file_docs_proto_rawDesc = "" +
+	"\n" +
+	"\n" +
+	"docs.proto\x12\x05proto\"V\n" +
+	"\x10DocSearchRequest\x12\x14\n" +
+	"\x05query\x18\x01 \x01(\tR\x05query\x12\x14\n" +
+	"\x05start\x18\x02 \x01(\x03R\x05start\x12\x16\n" +
+	"\x06length\x18\x03 \x01(\x03R\x06length\"3\n" +
+	"\tHighlight\x12\x14\n" +
+	"\x05start\x18\x01 \x01(\x04R\x05start\x12\x10\n" +
+	"\x03end\x18\x02 \x01(\x04R\x03end\"\xe8\x01\n" +
+	"\x11DocSearchResponse\x12\x12\n" +
+	"\x04link\x18\x01 \x01(\tR\x04link\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x12\x12\n" +
+	"\x04type\x18\x03 \x01(\tR\x04type\x12\x1a\n" +
+	"\bfragment\x18\x04 \x01(\tR\bfragment\x12\x1b\n" +
+	"\tfull_text\x18\x05 \x01(\tR\bfullText\x120\n" +
+	"\n" +
+	"highlights\x18\x06 \x03(\v2\x10.proto.HighlightR\n" +
+	"highlights\x12\x12\n" +
+	"\x04tags\x18\a \x03(\tR\x04tags\x12\x16\n" +
+	"\x06crumbs\x18\b \x01(\tR\x06crumbs\"Z\n" +
+	"\x12DocSearchResponses\x12\x14\n" +
+	"\x05total\x18\x01 \x01(\x04R\x05total\x12.\n" +
+	"\x05Items\x18\x02 \x03(\v2\x18.proto.DocSearchResponseR\x05ItemsB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
 
 var (
 	file_docs_proto_rawDescOnce sync.Once
-	file_docs_proto_rawDescData = file_docs_proto_rawDesc
+	file_docs_proto_rawDescData []byte
 )
 
 func file_docs_proto_rawDescGZIP() []byte {
 	file_docs_proto_rawDescOnce.Do(func() {
-		file_docs_proto_rawDescData = protoimpl.X.CompressGZIP(file_docs_proto_rawDescData)
+		file_docs_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_docs_proto_rawDesc), len(file_docs_proto_rawDesc)))
 	})
 	return file_docs_proto_rawDescData
 }
 
 var file_docs_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_docs_proto_goTypes = []interface{}{
+var file_docs_proto_goTypes = []any{
 	(*DocSearchRequest)(nil),   // 0: proto.DocSearchRequest
 	(*Highlight)(nil),          // 1: proto.Highlight
 	(*DocSearchResponse)(nil),  // 2: proto.DocSearchResponse
@@ -368,61 +345,11 @@ func file_docs_proto_init() {
 	if File_docs_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_docs_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DocSearchRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_docs_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Highlight); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_docs_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DocSearchResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_docs_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DocSearchResponses); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_docs_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_docs_proto_rawDesc), len(file_docs_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   4,
 			NumExtensions: 0,
@@ -433,7 +360,6 @@ func file_docs_proto_init() {
 		MessageInfos:      file_docs_proto_msgTypes,
 	}.Build()
 	File_docs_proto = out.File
-	file_docs_proto_rawDesc = nil
 	file_docs_proto_goTypes = nil
 	file_docs_proto_depIdxs = nil
 }

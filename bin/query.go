@@ -281,11 +281,10 @@ func doQuery() error {
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	env := ordereddict.NewDict()
 	for k, v := range *env_map {
@@ -401,7 +400,7 @@ func doQuery() error {
 				timed_cancel()
 			case <-timed_ctx.Done():
 				scope.Log("collect: <red>Timeout Error:</> Collection timed out after %v",
-					time.Now().Sub(start))
+					time.Since(start))
 				// Cancel the main context.
 				cancel()
 				timed_cancel()
@@ -432,7 +431,7 @@ func doQuery() error {
 
 	start_time := time.Now()
 	defer func() {
-		scope.Log("Completed query in %v", time.Now().Sub(start_time))
+		scope.Log("Completed query in %v", time.Since(start_time))
 	}()
 
 	if *trace_vql_flag {

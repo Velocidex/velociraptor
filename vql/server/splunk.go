@@ -36,7 +36,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
@@ -423,7 +422,7 @@ func (self _SplunkPlugin) Info(
 		Name:     "splunk_upload",
 		Doc:      "Upload rows to splunk.",
 		ArgType:  type_map.AddType(scope, &_SplunkPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.NETWORK).Build(),
 		Version:  2,
 	}
 }

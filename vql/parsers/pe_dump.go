@@ -13,9 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	utils "www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/filesystem"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -35,7 +33,7 @@ func (self _PEDumpFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 		Name:     "pe_dump",
 		Doc:      "Dump a PE file from process memory.",
 		ArgType:  type_map.AddType(scope, &_PEDumpFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 
@@ -98,7 +96,7 @@ func (self _PEDumpFunction) Call(
 	var memory_buffer *utils.MemoryBuffer
 
 	if arg.InMemory == 0 {
-		tmpfile, err = tempfile.TempFile("tmp*exe")
+		tmpfile, err = utils_tempfile.TempFile("tmp*exe")
 		if err != nil {
 			scope.Log("pe_dump: %v", err)
 			return false

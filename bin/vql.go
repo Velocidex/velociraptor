@@ -29,8 +29,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	logging "www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils"
-	vutils "www.velocidex.com/golang/velociraptor/utils"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -231,7 +230,7 @@ func exportAccessors(old_data []*api_proto.Completion) []*api_proto.Completion {
 			new_item.Metadata = metadata
 		}
 
-		if !vutils.InString(new_item.Platforms, platform) {
+		if !utils.InString(new_item.Platforms, platform) {
 			new_item.Platforms = append(new_item.Platforms, platform)
 			sort.Strings(new_item.Platforms)
 		}
@@ -340,7 +339,7 @@ func doVQLExport() error {
 			new_item.FreeFormArgs = item.FreeFormArgs
 		}
 
-		if !vutils.InString(new_item.Platforms, platform) {
+		if !utils.InString(new_item.Platforms, platform) {
 			new_item.Platforms = append(new_item.Platforms, platform)
 			sort.Strings(new_item.Platforms)
 		}
@@ -388,7 +387,7 @@ func doVQLExport() error {
 			new_item.FreeFormArgs = item.FreeFormArgs
 		}
 
-		if !vutils.InString(new_item.Platforms, platform) {
+		if !utils.InString(new_item.Platforms, platform) {
 			new_item.Platforms = append(new_item.Platforms, platform)
 			sort.Strings(new_item.Platforms)
 		}

@@ -1,7 +1,7 @@
 package zip
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -30,7 +30,7 @@ func TestAccessorGzip(t *testing.T) {
 	fd, err := gzip_accessor.Open(abs_path)
 	assert.NoError(t, err)
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := io.ReadAll(fd)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "hello world\n", string(data))
@@ -49,7 +49,7 @@ func TestAccessorBzip2(t *testing.T) {
 	fd, err := gzip_accessor.Open(abs_path)
 	assert.NoError(t, err)
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := io.ReadAll(fd)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "goodbye world\n", string(data))

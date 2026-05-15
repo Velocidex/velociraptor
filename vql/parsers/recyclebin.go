@@ -8,7 +8,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	utils "www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	recyclebin "www.velocidex.com/golang/velociraptor/vql/parsers/recyclebin"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -42,7 +41,7 @@ func (self _RecycleBinPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Name:     "parse_recyclebin",
 		Doc:      "Parses a $I file found in the $Recycle.Bin",
 		ArgType:  type_map.AddType(scope, &_RecycleBinPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

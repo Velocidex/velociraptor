@@ -10,7 +10,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -19,9 +18,10 @@ type LinuxSysinfoFunction struct{}
 
 func (self LinuxSysinfoFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "sysinfo",
-		Doc:      "Collect system information on Linux clients",
-		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		Name: "sysinfo",
+		Doc:  "Collect system information on Linux clients",
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.MACHINE_STATE).Build(),
 	}
 }
 

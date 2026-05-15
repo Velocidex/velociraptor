@@ -11,7 +11,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -176,7 +175,7 @@ func (self UpdateNotebookCellFunction) Info(scope vfilter.Scope, type_map *vfilt
 		Name:    "notebook_update_cell",
 		Doc:     "Update a notebook cell.",
 		ArgType: type_map.AddType(scope, &UpdateNotebookCellFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.COLLECT_SERVER).Build(),
 		Version: 2,
 	}
@@ -294,7 +293,7 @@ func (self UpdateNotebookFunction) Info(scope vfilter.Scope, type_map *vfilter.T
 		Name:    "notebook_update",
 		Doc:     "Update a notebook metadata.",
 		ArgType: type_map.AddType(scope, &UpdateNotebookFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.COLLECT_SERVER).Build(),
 	}
 }

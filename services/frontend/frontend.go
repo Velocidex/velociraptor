@@ -208,7 +208,7 @@ func (self *MasterFrontendManager) GetMinionCount() int {
 
 	for node_name, metric := range self.stats {
 		if node_name != "master" {
-			if time.Now().Sub(metric.Timestamp) < 60*time.Second {
+			if time.Since(metric.Timestamp) < 60*time.Second {
 				res++
 			}
 		}
@@ -247,7 +247,7 @@ func (self *MasterFrontendManager) prepareOrgStats() (
 
 		for _, v := range self.stats {
 			if now.Sub(v.Timestamp) < 60*time.Second {
-				count, _ := v.ClientCommsCurrentConnections[org.Id]
+				count := v.ClientCommsCurrentConnections[org.Id]
 				total += count
 			}
 		}

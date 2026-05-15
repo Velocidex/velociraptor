@@ -9,7 +9,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -171,7 +170,7 @@ func (self DeleteHuntPlugin) Info(
 		Name:     "hunt_delete",
 		Doc:      "Delete a hunt. ",
 		ArgType:  type_map.AddType(scope, &DeleteHuntArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 		Version:  2,
 	}
 }

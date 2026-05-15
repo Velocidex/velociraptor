@@ -34,11 +34,10 @@ func doReformat() error {
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 
@@ -75,7 +74,7 @@ func doReformat() error {
                AND copy(accessor="data", dest=_value, filename=Result.Artifact))
        AND FALSE
     `
-	err = runQueryWithEnv(query, builder, "json")
+	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {
 		logger.Error("reformat: error running query: %v", query)
 	}

@@ -65,7 +65,7 @@ func (self *Gunzip) Call(ctx context.Context,
 		return false
 	}
 
-	return string(resB.Bytes())
+	return resB.String()
 }
 
 func (self Gunzip) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

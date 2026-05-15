@@ -47,8 +47,8 @@ func (self *Error) Error() string {
 	return fmt.Sprintf(self.Format, self.Args...)
 }
 
-func (e *Error) Unwrap() error {
-	return e.Inner
+func (self *Error) Unwrap() error {
+	return self.Inner
 }
 
 func Wrap(err error, format string, args ...interface{}) error {

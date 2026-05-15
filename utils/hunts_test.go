@@ -16,6 +16,6 @@ func TestExtractHuntId(t *testing.T) {
 	assert.Equal(t, extracted_hunt_id, hunt_id)
 
 	// Regular flow
-	extracted_hunt_id, ok = ExtractHuntId("F.1234")
+	_, ok = ExtractHuntId("F.1234")
 	assert.True(t, !ok)
 }

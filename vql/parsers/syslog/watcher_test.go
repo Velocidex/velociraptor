@@ -136,11 +136,8 @@ func (self *SyslogWatcherTestSuite) clearLines() {
 func (self *SyslogWatcherTestSuite) getLines() []vfilter.Row {
 	self.mu.Lock()
 	defer self.mu.Unlock()
-	result := []vfilter.Row{}
-	for _, i := range self.result {
-		result = append(result, i)
-	}
-	return result
+
+	return append([]vfilter.Row{}, self.result...)
 }
 
 func (self *SyslogWatcherTestSuite) TestSyslogReader() {

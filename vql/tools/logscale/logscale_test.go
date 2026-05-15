@@ -39,7 +39,6 @@ var (
 	validUrl              = "https://cloud.community.humio.com/api"
 	validAuthToken        = "valid-ingest-token"
 	validWorkerCount      = 1
-	invalidWorkerCount    = -11
 	testTimestampStringTZ = "2023-04-05T13:36:51-04:00"
 	testTimestampUNIX     = uint64(1680716211) // json ints are uint64
 	testTimestamp         = "2023-04-05T17:36:51Z"
@@ -56,12 +55,7 @@ type LogScaleQueueTestSuite struct {
 	scope vfilter.Scope
 	ctx   context.Context
 
-	repoManager services.RepositoryManager
-	timestamp   time.Time
-	clients     []string
-
-	server *httptest.Server
-	start  time.Time
+	start time.Time
 
 	restoreClock    func()
 	wantConnRefused bool
@@ -803,7 +797,7 @@ func (self *LogScaleQueueTestSuite) TestQueueEvents_Queued() {
 	require.Equal(self.T(), len(rows), int(atomic.LoadInt64(&self.queue.currentQueueDepth)))
 
 	// Nothing is clearing the queue, so clear it so we don't get stuck during close
-	for _, _ = range rows {
+	for range rows {
 		<-self.queue.listener.Output()
 	}
 }
@@ -1063,6 +1057,7 @@ func (self *LogScaleQueueTestSuite) TestProcessEvents_ShutdownWhileFailing() {
 		self.queue.endpointUrl = "http://localhost:1" + apiEndpoint
 		wg.Done()
 	})
+	assert.NoError(self.T(), err)
 
 	err = self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)
@@ -1106,6 +1101,7 @@ func (self *LogScaleQueueTestSuite) TestProcessEvents_ShutdownAfterRecovery() {
 		self.updateEndpointUrl(server)
 
 	})
+	assert.NoError(self.T(), err)
 
 	err = self.queue.addDebugCallback(26, func(count int) {
 		server.Close()
@@ -1113,10 +1109,12 @@ func (self *LogScaleQueueTestSuite) TestProcessEvents_ShutdownAfterRecovery() {
 		self.updateEndpointUrl(server)
 
 	})
+	assert.NoError(self.T(), err)
 
 	err = self.queue.addDebugCallback(99, func(count int) {
 		wg1.Done()
 	})
+	assert.NoError(self.T(), err)
 
 	err = self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)
@@ -1160,6 +1158,7 @@ func (self *LogScaleQueueTestSuite) TestProcessEvents_4xx() {
 		self.updateEndpointUrl(server)
 
 	})
+	assert.NoError(self.T(), err)
 
 	err = self.queue.addDebugCallback(30, func(count int) {
 		server.Close()
@@ -1167,10 +1166,12 @@ func (self *LogScaleQueueTestSuite) TestProcessEvents_4xx() {
 		self.updateEndpointUrl(server)
 
 	})
+	assert.NoError(self.T(), err)
 
 	err = self.queue.addDebugCallback(99, func(count int) {
 		wg1.Done()
 	})
+	assert.NoError(self.T(), err)
 
 	err = self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)

@@ -8,6 +8,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -18,24 +19,21 @@ const (
 )
 
 type AnnotationRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Timestamp     int64                  `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	SuperTimeline string                 `protobuf:"bytes,2,opt,name=super_timeline,json=superTimeline,proto3" json:"super_timeline,omitempty"`
+	NotebookId    string                 `protobuf:"bytes,3,opt,name=notebook_id,json=notebookId,proto3" json:"notebook_id,omitempty"`
+	Note          string                 `protobuf:"bytes,4,opt,name=note,proto3" json:"note,omitempty"`
+	EventJson     string                 `protobuf:"bytes,5,opt,name=event_json,json=eventJson,proto3" json:"event_json,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	Timestamp     int64  `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	SuperTimeline string `protobuf:"bytes,2,opt,name=super_timeline,json=superTimeline,proto3" json:"super_timeline,omitempty"`
-	NotebookId    string `protobuf:"bytes,3,opt,name=notebook_id,json=notebookId,proto3" json:"notebook_id,omitempty"`
-	Note          string `protobuf:"bytes,4,opt,name=note,proto3" json:"note,omitempty"`
-	EventJson     string `protobuf:"bytes,5,opt,name=event_json,json=eventJson,proto3" json:"event_json,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AnnotationRequest) Reset() {
 	*x = AnnotationRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_timeline_api_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_timeline_api_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *AnnotationRequest) String() string {
@@ -46,7 +44,7 @@ func (*AnnotationRequest) ProtoMessage() {}
 
 func (x *AnnotationRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_timeline_api_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -98,40 +96,32 @@ func (x *AnnotationRequest) GetEventJson() string {
 
 var File_timeline_api_proto protoreflect.FileDescriptor
 
-var file_timeline_api_proto_rawDesc = []byte{
-	0x0a, 0x12, 0x74, 0x69, 0x6d, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x5f, 0x61, 0x70, 0x69, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xac, 0x01, 0x0a, 0x11,
-	0x41, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12,
-	0x25, 0x0a, 0x0e, 0x73, 0x75, 0x70, 0x65, 0x72, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x6c, 0x69, 0x6e,
-	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x73, 0x75, 0x70, 0x65, 0x72, 0x54, 0x69,
-	0x6d, 0x65, 0x6c, 0x69, 0x6e, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x6e, 0x6f, 0x74, 0x65, 0x62, 0x6f,
-	0x6f, 0x6b, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x6e, 0x6f, 0x74,
-	0x65, 0x62, 0x6f, 0x6f, 0x6b, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x6f, 0x74, 0x65, 0x18,
-	0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x6f, 0x74, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x65,
-	0x76, 0x65, 0x6e, 0x74, 0x5f, 0x6a, 0x73, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x09, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x4a, 0x73, 0x6f, 0x6e, 0x42, 0x31, 0x5a, 0x2f, 0x77, 0x77,
-	0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64, 0x65, 0x78, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
-	0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61, 0x70,
-	0x74, 0x6f, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
-}
+const file_timeline_api_proto_rawDesc = "" +
+	"\n" +
+	"\x12timeline_api.proto\x12\x05proto\"\xac\x01\n" +
+	"\x11AnnotationRequest\x12\x1c\n" +
+	"\ttimestamp\x18\x01 \x01(\x03R\ttimestamp\x12%\n" +
+	"\x0esuper_timeline\x18\x02 \x01(\tR\rsuperTimeline\x12\x1f\n" +
+	"\vnotebook_id\x18\x03 \x01(\tR\n" +
+	"notebookId\x12\x12\n" +
+	"\x04note\x18\x04 \x01(\tR\x04note\x12\x1d\n" +
+	"\n" +
+	"event_json\x18\x05 \x01(\tR\teventJsonB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
 
 var (
 	file_timeline_api_proto_rawDescOnce sync.Once
-	file_timeline_api_proto_rawDescData = file_timeline_api_proto_rawDesc
+	file_timeline_api_proto_rawDescData []byte
 )
 
 func file_timeline_api_proto_rawDescGZIP() []byte {
 	file_timeline_api_proto_rawDescOnce.Do(func() {
-		file_timeline_api_proto_rawDescData = protoimpl.X.CompressGZIP(file_timeline_api_proto_rawDescData)
+		file_timeline_api_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_timeline_api_proto_rawDesc), len(file_timeline_api_proto_rawDesc)))
 	})
 	return file_timeline_api_proto_rawDescData
 }
 
 var file_timeline_api_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_timeline_api_proto_goTypes = []interface{}{
+var file_timeline_api_proto_goTypes = []any{
 	(*AnnotationRequest)(nil), // 0: proto.AnnotationRequest
 }
 var file_timeline_api_proto_depIdxs = []int32{
@@ -147,25 +137,11 @@ func file_timeline_api_proto_init() {
 	if File_timeline_api_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_timeline_api_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AnnotationRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_timeline_api_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_timeline_api_proto_rawDesc), len(file_timeline_api_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
@@ -176,7 +152,6 @@ func file_timeline_api_proto_init() {
 		MessageInfos:      file_timeline_api_proto_msgTypes,
 	}.Build()
 	File_timeline_api_proto = out.File
-	file_timeline_api_proto_rawDesc = nil
 	file_timeline_api_proto_goTypes = nil
 	file_timeline_api_proto_depIdxs = nil
 }

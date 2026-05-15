@@ -89,7 +89,7 @@ func (self *ACLTestSuite) TestNotebookPublicACL() {
 		all_rows = test_utils.FileReadRows(
 			self.T(), self.ConfigObj, index_filename)
 
-		return 1 == len(all_rows)
+		return len(all_rows) == 1
 	})
 
 	assert.Equal(self.T(), new_notebook.NotebookId,

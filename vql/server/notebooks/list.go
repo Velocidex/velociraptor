@@ -8,7 +8,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -105,7 +104,7 @@ func (self ListNotebookPlugin) Info(
 		Name:     "notebooks",
 		Doc:      "List all notebooks",
 		ArgType:  type_map.AddType(scope, &ListNotebookArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN, acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN, acls.READ_RESULTS).Build(),
 	}
 }
 

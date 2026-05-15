@@ -48,6 +48,7 @@ func (self *ResultSetTestSuite) TestTransformed() {
 	// Read the rows back out from the start
 	rows := simple.GetAllResults(rs_reader)
 	assert.Equal(self.T(), rs_reader.TotalRows(), int64(50))
+	assert.Equal(self.T(), len(rows), 50)
 
 	golden := ordereddict.NewDict()
 

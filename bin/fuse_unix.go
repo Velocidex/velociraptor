@@ -74,11 +74,10 @@ func doFuseZip() error {
 
 	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	logger := &LogWriter{config_obj: sm.Config}
 	builder := services.ScopeBuilder{

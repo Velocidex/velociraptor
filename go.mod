@@ -47,7 +47,7 @@ require (
 	github.com/magefile/mage v1.17.2
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
-	github.com/mattn/go-sqlite3 v1.14.37
+	github.com/mattn/go-sqlite3 v1.14.44
 	github.com/microcosm-cc/bluemonday v1.0.23
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/panicwrap v1.0.0
@@ -68,10 +68,10 @@ require (
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
 	golang.org/x/crypto v0.50.0
-	golang.org/x/mod v0.34.0
+	golang.org/x/mod v0.35.0
 	golang.org/x/net v0.53.0
 	golang.org/x/sys v0.43.0
-	golang.org/x/text v0.36.0
+	golang.org/x/text v0.37.0
 	golang.org/x/time v0.14.0
 	google.golang.org/api v0.258.0
 	google.golang.org/genproto v0.0.0-20251222181119-0a764e51fe1b // indirect
@@ -89,7 +89,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20251027080408-85407689d0cb
 	www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959
 	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7
-	www.velocidex.com/golang/vfilter v0.0.0-20260325003227-469fc60d0e45
+	www.velocidex.com/golang/vfilter v0.0.0-20260513155414-08c929c15ddb
 )
 
 require (
@@ -136,7 +136,6 @@ require (
 	github.com/go-errors/errors v1.4.2
 	github.com/go-json-experiment/json v0.0.0-20250910080747-cc2cfa0554c3
 	github.com/golang-jwt/jwt/v4 v4.5.2
-	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/websocket v1.5.2-0.20240215025916-695e9095ce87
 	github.com/hanwen/go-fuse/v2 v2.5.1
 	github.com/hashicorp/go-retryablehttp v0.7.7
@@ -270,6 +269,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/golang/gddo v0.0.0-20210115222349-20d68f94ee1f // indirect
 	github.com/golang/glog v1.2.5 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect

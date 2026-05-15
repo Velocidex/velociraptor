@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -365,12 +364,7 @@ func (self BaseTestSuite) TestVeryLongFilename() {
 		// Make sure the resulting filename is very long
 		assert.Equal(self.T(), i.Base(), very_long_filename)
 	}
-}
-
-func benchmarkSearchClient(b *testing.B,
-	data_store datastore.DataStore,
-	config_obj *config_proto.Config) {
-
+	assert.True(self.T(), len(results) > 0)
 }
 
 func asStrings(in []api.DSPathSpec) []string {

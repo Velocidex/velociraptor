@@ -115,11 +115,10 @@ func doRepack() error {
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	output_path, err := filepath.Abs(*repack_command_output)
 	if err != nil {

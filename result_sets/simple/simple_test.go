@@ -408,8 +408,11 @@ func (self *ResultSetTestSuite) TestResultSetWriterWriteJSONL() {
 
 	// Seek into the middle of the JSON blob (last row)
 	err = rs_reader.SeekToRow(2)
+	assert.NoError(self.T(), err)
+
 	rows := simple.GetAllResults(rs_reader)
 	assert.Equal(self.T(), len(rows), 1)
+
 	value, _ := rows[0].GetInt64("Foo")
 	assert.Equal(self.T(), value, int64(3))
 }

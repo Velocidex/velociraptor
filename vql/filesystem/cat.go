@@ -11,7 +11,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -114,8 +113,9 @@ func (self CatPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfil
 		Doc: `Read files in chunks.
 
 This is mostly useful for character devices on Linux or special files which can not be read in blocks.`,
-		ArgType:  type_map.AddType(scope, &CatPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		ArgType: type_map.AddType(scope, &CatPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.FILESYSTEM_READ).Build(),
 	}
 }
 

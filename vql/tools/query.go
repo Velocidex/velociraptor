@@ -9,7 +9,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/executor/throttler"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
@@ -268,7 +267,7 @@ func (self QueryPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Name:     "query",
 		Doc:      "Evaluate a VQL query.",
 		ArgType:  type_map.AddType(scope, &QueryPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.IMPERSONATION).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.IMPERSONATION).Build(),
 		Version:  2,
 	}
 }

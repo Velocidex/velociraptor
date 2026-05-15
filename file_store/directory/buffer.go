@@ -17,7 +17,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
@@ -270,7 +269,7 @@ func (self *FileBasedRingBuffer) getFd() (*os.File, error) {
 		ReadPointer:  FirstRecordOffset,
 	}
 
-	fd, err := tempfile.TempFile(self.base_name)
+	fd, err := utils_tempfile.TempFile(self.base_name)
 	if err != nil {
 		return nil, err
 	}

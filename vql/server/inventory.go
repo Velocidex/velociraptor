@@ -14,7 +14,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -139,7 +138,7 @@ func (self *InventoryAddFunction) Info(
 		Name:     "inventory_add",
 		Doc:      "Add tool to ThirdParty inventory.",
 		ArgType:  type_map.AddType(scope, &InventoryAddFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 		Version:  2,
 	}
 }
@@ -214,7 +213,7 @@ func (self *InventoryGetFunction) Info(
 		Name:     "inventory_get",
 		Doc:      "Get tool info from inventory service.",
 		ArgType:  type_map.AddType(scope, &InventoryGetFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 		Version:  2,
 	}
 }

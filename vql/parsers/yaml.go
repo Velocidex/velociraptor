@@ -10,7 +10,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	json_tools "www.velocidex.com/golang/velociraptor/tools/json"
 	utils "www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -126,7 +125,7 @@ func (self ParseYamlFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Name:     "parse_yaml",
 		Doc:      "Parse yaml into an object.",
 		ArgType:  type_map.AddType(scope, &ParseYamlFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 		Version:  2,
 	}
 }

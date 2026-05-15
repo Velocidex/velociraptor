@@ -8,7 +8,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -111,7 +110,7 @@ func (self CreateNotebookFunction) Info(scope vfilter.Scope, type_map *vfilter.T
 		Name:    "notebook_create",
 		Doc:     "Create a new notebook.",
 		ArgType: type_map.AddType(scope, &CreateNotebookFunctionArg{}),
-		Metadata: vql.VQLMetadata().Permissions(
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.COLLECT_SERVER).Build(),
 	}
 }

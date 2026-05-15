@@ -311,9 +311,8 @@ func (self *HTTPConnector) retryPost(
 			case http.StatusRequestTimeout:
 				logger.Debug("%v: Retrying connection to %v: Status %v",
 					name, handler, resp.StatusCode)
-				if resp != nil {
-					resp.Body.Close()
-				}
+				resp.Body.Close()
+
 				count++
 				continue
 
@@ -323,9 +322,7 @@ func (self *HTTPConnector) retryPost(
 					name, handler, resp.StatusCode, resp.Status)
 
 				count++
-				if resp != nil {
-					resp.Body.Close()
-				}
+				resp.Body.Close()
 				continue
 			}
 		}
@@ -455,7 +452,8 @@ func (self *HTTPConnector) Post(
 			return nil, errors.Wrap(err, 0)
 		}
 
-		self.logger.Error("%s: Error: %v %v", name, resp.Status, string(data.Bytes()))
+		self.logger.Error("%s: Error: %v %v",
+			name, resp.Status, data.String())
 
 		return &bytes.Buffer{}, nil
 

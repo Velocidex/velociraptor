@@ -111,26 +111,6 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 }
 
 var (
-	artifact_definitions = []string{`
-name: Test1
-sources:
-- query: SELECT * FROM Artifact.Test1.Foobar()
-`, `
-name: Test1.Foobar
-sources:
-- query: SELECT * FROM info()
-`, `
-name: Category.Test1
-sources:
-- query: SELECT * FROM Artifact.Test1.Foobar()
-`, `
-name: Category.Test2
-sources:
-- query: SELECT * FROM info()
-`}
-)
-
-var (
 	artifact_definitions_precondition = []string{`
 name: CallArtifactWithFalsePrecondition
 sources:

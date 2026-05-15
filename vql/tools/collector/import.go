@@ -29,7 +29,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/server/clients"
 	"www.velocidex.com/golang/vfilter"
@@ -531,48 +530,6 @@ func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 		ctx, scope, config_obj, client_id, hostname)
 }
 
-func (self ImportCollectionFunction) checkClientIdExists(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	scope vfilter.Scope,
-	client_info *services.ClientInfo) error {
-
-	// This is a well known client
-	if client_info.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
-		return nil
-	}
-
-	client_info_manager, err := services.GetClientInfoManager(config_obj)
-	if err != nil {
-		return err
-	}
-
-	_, err = client_info_manager.Get(ctx, client_info.ClientId)
-	if err == nil {
-		return nil
-	}
-
-	scope.Log("Info: ClientId %v (%v) not found, creating a new client",
-		client_info.ClientId, client_info.Hostname)
-
-	// If we made it here, client id doesn't exist, so then we can
-	// create a new client
-	res := clients.NewClientFunction{}.Call(ctx, scope, ordereddict.NewDict().
-		Set("client_id", client_info.ClientId).
-		Set("first_seen_at", utils.GetTime().Now()).
-		Set("last_seen_at", utils.GetTime().Now()).
-		Set("hostname", client_info.Hostname).
-		Set("labels", client_info.Labels).
-		Set("os", client_info.System).
-		Set("mac_addresses", client_info.MacAddresses))
-
-	if utils.IsNil(res) {
-		return errors.New("Failed to create new client.")
-	}
-
-	return nil
-}
-
 func (self ImportCollectionFunction) copyResultSet(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -714,11 +671,12 @@ func (self ImportCollectionFunction) copyFile(
 
 func (self ImportCollectionFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "import_collection",
-		Doc:      "Imports an offline collection zip file (experimental).",
-		ArgType:  type_map.AddType(scope, &ImportCollectionFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER, acls.FILESYSTEM_READ).Build(),
-		Version:  2,
+		Name:    "import_collection",
+		Doc:     "Imports an offline collection zip file (experimental).",
+		ArgType: type_map.AddType(scope, &ImportCollectionFunctionArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.COLLECT_SERVER, acls.FILESYSTEM_READ).Build(),
+		Version: 2,
 	}
 }
 

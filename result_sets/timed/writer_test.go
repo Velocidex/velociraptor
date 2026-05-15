@@ -116,7 +116,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 	writer.Close()
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		return 1 == len(completion_result)
+		return len(completion_result) == 1
 	})
 
 	assert.Equal(self.T(), "Done", completion_result[0])
@@ -193,7 +193,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingJsonl() {
 	writer.Close()
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		return 1 == len(completion_result)
+		return len(completion_result) == 1
 	})
 
 	assert.Equal(self.T(), "Done", completion_result[0])
@@ -264,7 +264,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingNoFlushing() {
 	writer.Close()
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		return 1 == len(completion_result)
+		return len(completion_result) == 1
 	})
 
 	assert.Equal(self.T(), "Done", completion_result[0])

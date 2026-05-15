@@ -8,7 +8,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -75,7 +74,7 @@ func (self HuntInfoFunction) Info(scope vfilter.Scope,
 		Name:     "hunt_info",
 		Doc:      "Retrieve the hunt information.",
 		ArgType:  type_map.AddType(scope, &HuntInfoFunctionArg{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

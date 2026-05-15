@@ -27,7 +27,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
@@ -235,7 +234,7 @@ func (self *ReplicationService) Start(
 	self.sender = make(chan *api_proto.PushEventRequest)
 	self.SetRetryDuration(5 * time.Second)
 
-	self.tmpfile, err = tempfile.TempFile("replication")
+	self.tmpfile, err = utils_tempfile.TempFile("replication")
 	if err != nil {
 		return err
 	}
@@ -683,6 +682,9 @@ func (self *ReplicationService) WatchArtifact(
 		retry:
 			for {
 				select {
+				case <-self.ctx.Done():
+					return
+
 				case event, ok := <-in_chan:
 					if !ok {
 						break retry

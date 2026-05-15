@@ -73,11 +73,10 @@ func doClientRPM() error {
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, blank_config)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	if *client_rpm_command_binary == "" {
 		*client_rpm_command_binary, err = os.Executable()
@@ -123,7 +122,7 @@ func doClientRPM() error {
                        release=Release)
 `
 
-	err = runQueryWithEnv(query, builder, "json")
+	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {
 		return err
 	}
@@ -160,11 +159,10 @@ func doServerRPM() error {
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, blank_config)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	if *server_rpm_command_binary == "" {
 		*server_rpm_command_binary, err = os.Executable()
@@ -210,7 +208,7 @@ func doServerRPM() error {
                        release=Release)
 `
 
-	err = runQueryWithEnv(query, builder, "json")
+	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {
 		return err
 	}

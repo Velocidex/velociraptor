@@ -65,7 +65,7 @@ func (self *ApiServer) SearchFile(ctx context.Context,
 	}
 	defer file.Close()
 
-	var reader_at io.ReaderAt = utils.MakeReaderAtter(file)
+	var reader_at = utils.MakeReaderAtter(file)
 	index, err := getIndex(org_config_obj, path_spec)
 
 	// If the file is sparse, we use the sparse reader.
@@ -84,6 +84,7 @@ func (self *ApiServer) SearchFile(ctx context.Context,
 	offset := int64(in.Offset)
 	var buf []byte
 
+	//lint:file-ignore SA6002 Slices are OK
 	if in.Forward {
 		buf = pool.Get().([]byte)
 		defer pool.Put(buf)

@@ -28,8 +28,6 @@ import (
 
 type ServicesTestSuite struct {
 	test_utils.TestSuite
-	client_id string
-	flow_id   string
 }
 
 func (self *ServicesTestSuite) SetupTest() {
@@ -89,6 +87,8 @@ func (self *ServicesTestSuite) TestUpgradeTools() {
 
 	// Admin forces Tool1 to non-default
 	inventory_service, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	inventory_service.(*inventory.InventoryService).ClearForTests()
 
 	tool_definition := &artifacts_proto.Tool{

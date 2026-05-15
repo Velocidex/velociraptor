@@ -80,7 +80,7 @@ func (self *ClientInfoTestSuite) TestFastQueueMessages() {
 		tasks, err := client_info_manager.PeekClientTasks(
 			context.Background(), self.client_id)
 		assert.NoError(self.T(), err)
-		return 10 == len(tasks)
+		return len(tasks) == 10
 	})
 
 	tasks, err := client_info_manager.GetClientTasks(
@@ -125,6 +125,8 @@ func (self *ClientInfoTestSuite) TestInFlightMessages() {
 
 		closer()
 	}
+
+	_ = flow_ids
 
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)

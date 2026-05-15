@@ -21,7 +21,6 @@ import (
 type LabelsTestSuite struct {
 	test_utils.TestSuite
 	client_id string
-	flow_id   string
 
 	closer func()
 }

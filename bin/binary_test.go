@@ -240,8 +240,8 @@ func TestCPULimit(t *testing.T) {
 }
 
 var (
-	client_deb_regex = regexp.MustCompile("client.+\\.deb$")
-	server_deb_regex = regexp.MustCompile("server.+\\.deb$")
+	client_deb_regex = regexp.MustCompile(`client.+\.deb$`)
+	server_deb_regex = regexp.MustCompile(`server.+\.deb$`)
 )
 
 func TestBuildDeb(t *testing.T) {
@@ -381,7 +381,8 @@ func TestGenerateConfigWithMerge(t *testing.T) {
 	cmd.Env = append(os.Environ(),
 		"VELOCIRAPTOR_CONFIG="+config_file.Name(),
 	)
-	out, err = cmd.Output()
+
+	_, err = cmd.Output()
 	require.Error(t, err)
 
 	// Create a tempfile for the repacked binary.

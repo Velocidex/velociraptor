@@ -40,9 +40,9 @@ message ArtifactCollectorArgs {
     // If set we send an urgent request to the client.
     bool urgent = 21;
 
-    // Deprecated: Old way of specifying the artifacts consist of
-    // shared parameters within a list of artifacts (i.e. all
-    // artifacts share same scope).
+    // Old way of specifying the artifacts consist of shared
+    // parameters within a list of artifacts (i.e. all artifacts share
+    // same scope).
     repeated string artifacts = 2 [(sem_type) = {
             description: "The artifacts to launch.",
             friendly_name: "Launch",

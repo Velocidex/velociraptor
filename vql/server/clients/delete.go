@@ -8,7 +8,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -105,7 +104,7 @@ func (self DeleteClientPlugin) Info(
 		Name:     "client_delete",
 		Doc:      "Delete all information related to a client. ",
 		ArgType:  type_map.AddType(scope, &DeleteClientArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.DELETE_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.DELETE_RESULTS).Build(),
 	}
 }
 

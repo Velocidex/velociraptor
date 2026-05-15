@@ -56,6 +56,7 @@ func TestLoadingFromFilestore(t *testing.T) {
 	}
 
 	err = orgs.StartTestOrgManager(ctx, wg, config_obj, nil)
+	assert.NoError(t, err)
 
 	manager, err := services.GetRepositoryManager(config_obj)
 	assert.NoError(t, err)
@@ -86,6 +87,7 @@ func TestOverrideBuiltInArtifacts(t *testing.T) {
 	}
 
 	err = orgs.StartTestOrgManager(ctx, wg, config_obj, nil)
+	assert.NoError(t, err)
 
 	manager, err := services.GetRepositoryManager(config_obj)
 	assert.NoError(t, err)
@@ -101,7 +103,7 @@ func TestOverrideBuiltInArtifacts(t *testing.T) {
 		})
 	assert.NoError(t, err)
 
-	artifact, pres := repository.Get(ctx, config_obj, "Custom.BuiltIn")
+	_, pres := repository.Get(ctx, config_obj, "Custom.BuiltIn")
 	assert.True(t, pres)
 
 	// Now try to override it - not a built in should fail
@@ -122,7 +124,7 @@ description: Override
 	})
 	assert.NoError(t, err)
 
-	artifact, pres = repository.Get(ctx, config_obj, "Custom.BuiltIn")
+	artifact, pres := repository.Get(ctx, config_obj, "Custom.BuiltIn")
 	assert.True(t, pres)
 
 	assert.Equal(t, artifact.Name, "Custom.BuiltIn")
@@ -147,6 +149,8 @@ func TestArtifactMetadata(t *testing.T) {
 	}
 
 	err = orgs.StartTestOrgManager(ctx, wg, config_obj, nil)
+	assert.NoError(t, err)
+
 	manager, err := services.GetRepositoryManager(config_obj)
 	assert.NoError(t, err)
 

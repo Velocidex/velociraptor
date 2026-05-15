@@ -33,7 +33,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -118,7 +117,7 @@ func (self ExportNotebookFunction) Info(scope vfilter.Scope, type_map *vfilter.T
 		Name:     "notebook_export",
 		Doc:      "Exports a notebook to a zip file or HTML.",
 		ArgType:  type_map.AddType(scope, &ExportNotebookArg{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.PREPARE_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.PREPARE_RESULTS).Build(),
 	}
 }
 

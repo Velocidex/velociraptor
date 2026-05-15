@@ -50,14 +50,13 @@ func (self *PSTFile) GetPath(id pst.Identifier) string {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	res, _ := self.paths[id]
+	res := self.paths[id]
 	return res
 }
 
 func (self *PSTFile) setPath(parent_id, id pst.Identifier, name string) {
-	root, _ := self.paths[parent_id]
-	new_path := path.Join(root, name)
-	self.paths[id] = new_path
+	root := self.paths[parent_id]
+	self.paths[id] = path.Join(root, name)
 }
 
 func (self *PSTFile) walkFolders(folder *pst.Folder) error {

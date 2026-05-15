@@ -154,7 +154,7 @@ func WritebackLocation(
 }
 
 var (
-	org_id_regex = regexp.MustCompile("\\$NONCE|%NONCE%")
+	org_id_regex = regexp.MustCompile(`\$NONCE|%NONCE%`)
 )
 
 func expandOrgId(path, nonce string) string {

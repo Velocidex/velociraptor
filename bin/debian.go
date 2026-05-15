@@ -94,11 +94,10 @@ func doServerDeb() error {
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, blank_config)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	if *server_debian_command_binary == "" {
 		*server_debian_command_binary, err = os.Executable()
@@ -138,7 +137,7 @@ func doServerDeb() error {
                        config=read_file(filename=ConfigPath, length=1000000),
                        release=Release)`
 
-	err = runQueryWithEnv(query, builder, "json")
+	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {
 		return err
 	}
@@ -174,11 +173,10 @@ func doClientDeb() error {
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, blank_config)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	if *client_debian_command_binary == "" {
 		*client_debian_command_binary, err = os.Executable()
@@ -218,7 +216,7 @@ func doClientDeb() error {
                        config=read_file(filename=ConfigPath, length=1000000),
                        release=Release)`
 
-	err = runQueryWithEnv(query, builder, "json")
+	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {
 		return err
 	}

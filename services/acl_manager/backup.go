@@ -78,7 +78,7 @@ func (self ACLBackupProvider) Restore(ctx context.Context,
 		stat.Message = fmt.Sprintf("ACL backups do not automatically restore. There are %v ACL records which may be restored manually.", count)
 	}()
 
-	for _ = range in {
+	for range in {
 		count++
 	}
 

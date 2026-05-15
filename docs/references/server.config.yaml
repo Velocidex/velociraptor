@@ -1575,13 +1575,16 @@ security:
 
   # The Data Encryptions Key to use for protecting the secrets in
   # storage. This can take a number of forms:
-
-  # 1. If it starts with "env://<VAR>" the secret will be taken from an
+  #
+  # 1. If it starts with `env://<VAR>` the secret will be taken from an
   #    Environment variable.
   # 2. If empty the secret is taken from obfuscation_nonce (which
   #    by default is the hash of the private key).
   #
   # In future further methods may be implemented (e.g. EKMS).
+  #
+  # See the following for more information
+  # http://docs.velociraptor.app/docs/deployment/security/#protecting-stored-secrets
   secrets_dek: ""
 
   # This controls VQL plugins that may accept secrets as well full

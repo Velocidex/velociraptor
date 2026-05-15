@@ -21,8 +21,6 @@ import (
 
 type DatastoreAPITest struct {
 	test_utils.TestSuite
-
-	client_config *config_proto.Config
 }
 
 func (self *DatastoreAPITest) SetupTest() {

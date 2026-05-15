@@ -541,7 +541,5 @@ func read_api_config_from_file(filename string) (*config_proto.Config, error) {
 }
 
 func debug(message string, args ...interface{}) {
-	return
-
 	// logging.Prelog(message, args...)
 }

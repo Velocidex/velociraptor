@@ -28,7 +28,6 @@ import (
 
 type TestBackupProvider struct {
 	name []string
-	rows []*ordereddict.Dict
 
 	// Restored rows from backup
 	restored       []vfilter.Row

@@ -15,7 +15,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/api/tables"
 	"www.velocidex.com/golang/velociraptor/json"
-	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
@@ -88,7 +87,7 @@ func (self *ApiServer) GetHuntFlows(
 			flow.Context.TotalCollectedRows,
 		}
 
-		opts := vjson.DefaultEncOpts()
+		opts := json.DefaultEncOpts()
 		serialized, err := json.MarshalWithOptions(row_data, opts)
 		if err != nil {
 			continue
@@ -166,7 +165,7 @@ func (self *ApiServer) GetHuntTable(
 			total_clients_scheduled,
 			hunt.Creator,
 		}
-		opts := vjson.DefaultEncOpts()
+		opts := json.DefaultEncOpts()
 		serialized, err := json.MarshalWithOptions(row_data, opts)
 		if err != nil {
 			continue

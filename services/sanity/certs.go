@@ -46,7 +46,7 @@ func (self *SanityChecks) CheckCertificates(
 		logger.Error("%v", msg1)
 
 		if config_obj.CA != nil && config_obj.CA.PrivateKey != "" {
-			msg2 := fmt.Sprintf("<green>Found CA private key in config</>, I will automatically rotate keys, but you should consider updating the config file using `velociraptor config rotate_keys`")
+			msg2 := "<green>Found CA private key in config</>, I will automatically rotate keys, but you should consider updating the config file using `velociraptor config rotate_keys`"
 			logger.Info("%s", msg2)
 
 			frontend_cert, err := crypto.GenerateServerCert(

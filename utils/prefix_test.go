@@ -16,10 +16,10 @@ func TestPrefix(t *testing.T) {
 	var depth int
 
 	// A shorter path is not contained.
-	match, depth = tree.Present([]string{"C:"})
+	match, _ = tree.Present([]string{"C:"})
 	assert.False(t, match)
 
-	match, depth = tree.Present([]string{})
+	match, _ = tree.Present([]string{})
 	assert.False(t, match)
 
 	// Matching a deep path will return the length of the prefix
@@ -34,11 +34,11 @@ func TestPrefix(t *testing.T) {
 	assert.Equal(t, depth, 2)
 
 	// A different directory than the prefixes
-	match, depth = tree.Present([]string{"C:", "Program Files"})
+	match, _ = tree.Present([]string{"C:", "Program Files"})
 	assert.False(t, match)
 
 	// Shorter directories do not match
-	match, depth = tree.Present([]string{"C:"})
+	match, _ = tree.Present([]string{"C:"})
 	assert.False(t, match)
 
 	// Exact length match

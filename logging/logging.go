@@ -258,7 +258,7 @@ func (self *LogContext) Error(format string, v ...interface{}) {
 func (self *LogContext) IsEnabled(level string) bool {
 	self.mu.Lock()
 	defer self.mu.Unlock()
-	ok, _ := self.enabled[level]
+	ok := self.enabled[level]
 	return ok
 }
 

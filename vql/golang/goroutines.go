@@ -13,7 +13,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -128,10 +127,11 @@ func PrintProfile(profile *Profile, output_chan chan vfilter.Row, verbose bool) 
 func (self GoRoutinesPlugin) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "profile_goroutines",
-		Doc:      "Enumerates all running goroutines.",
-		ArgType:  type_map.AddType(scope, &GoRoutinesPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		Name:    "profile_goroutines",
+		Doc:     "Enumerates all running goroutines.",
+		ArgType: type_map.AddType(scope, &GoRoutinesPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.MACHINE_STATE).Build(),
 	}
 }
 

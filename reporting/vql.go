@@ -1,9 +1,11 @@
-//+build !codeanalysis
+//go:build !codeanalysis
+// +build !codeanalysis
 
 package reporting
 
 import (
-	. "github.com/alecthomas/chroma" // nolint
+	//lint:file-ignore ST1001 Bring in depedencies
+	. "github.com/alecthomas/chroma"
 	"github.com/alecthomas/chroma/lexers"
 )
 

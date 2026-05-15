@@ -9,7 +9,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -242,7 +241,7 @@ func (self *LinkToFunction) Info(
 		Name:     "link_to",
 		Doc:      "Create a url linking to a particular part in the Velociraptor GUI.",
 		ArgType:  type_map.AddType(scope, &LinkToFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Build(),
+		Metadata: vql_subsystem.VQLMetadata().Build(),
 		Version:  2,
 	}
 }

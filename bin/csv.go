@@ -36,11 +36,10 @@ func doCSV() error {
 
 	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	logger := &LogWriter{config_obj: config_obj}
 	builder := services.ScopeBuilder{

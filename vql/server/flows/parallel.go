@@ -11,7 +11,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -171,7 +170,7 @@ func (self ParallelPlugin) Info(
 		Name:     "parallelize",
 		Doc:      "Runs query on result batches in parallel.",
 		ArgType:  type_map.AddType(scope, &ParallelPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

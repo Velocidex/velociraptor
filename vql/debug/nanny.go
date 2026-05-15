@@ -7,7 +7,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/utils/faults"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -55,7 +54,7 @@ func (self *FaultSetFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Name:     "fault",
 		Doc:      "Set faults in the fault injector.",
 		ArgType:  type_map.AddType(scope, &FaultSetFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions().Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions().Build(),
 	}
 }
 

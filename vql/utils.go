@@ -98,7 +98,7 @@ func GetBoolFromRow(scope vfilter.Scope,
 }
 
 // Sometimes we encode bools in string values
-var boolRegEx = regexp.MustCompile("(?i)^\\s*(true|Y|1)\\s*$")
+var boolRegEx = regexp.MustCompile(`(?i)^\s*(true|Y|1)\s*$`)
 
 func GetBoolFromString(value string) bool {
 	return boolRegEx.MatchString(value)

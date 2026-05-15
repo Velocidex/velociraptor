@@ -191,7 +191,8 @@ func (self *HuntManager) processMutation(
 
 	// Force the dispatcher to write the index.
 	if modification == services.HuntPropagateChanges {
-		// return dispatcher.Refresh(ctx, config_obj)
+		return nil
+		//return dispatcher.Refresh(ctx, config_obj)
 	}
 
 	return nil

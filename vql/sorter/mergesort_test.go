@@ -32,8 +32,9 @@ func TestDataFile(t *testing.T) {
 
 	// Check the content of the backing file.
 	fd, err := os.Open(data_file.fd.Name())
-	defer fd.Close()
 	assert.NoError(t, err)
+
+	defer fd.Close()
 
 	serialized, err := ioutil.ReadAll(fd)
 	assert.NoError(t, err)

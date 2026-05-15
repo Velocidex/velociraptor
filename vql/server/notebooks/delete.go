@@ -6,7 +6,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -78,7 +77,7 @@ func (self DeleteNotebookPlugin) Info(
 		Name:     "notebook_delete",
 		Doc:      "Delete a notebook with all its cells. ",
 		ArgType:  type_map.AddType(scope, &DeleteNotebookArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

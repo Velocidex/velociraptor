@@ -488,8 +488,8 @@ func (self *VFSServiceTestSuite) TestVFSDownload() {
 		value, pres := file_store.Data.GetString(
 			"/clients/C.12312/vfs_files/file/a/b.json")
 		return pres &&
-			`{"name":"B","size":10,"mtime":1000000000,"components":["clients","C.12312","collections","F.1232","uploads","file","a","b","B"],"flow_id":"F.1232"}
-` == value
+			value == `{"name":"B","size":10,"mtime":1000000000,"components":["clients","C.12312","collections","F.1232","uploads","file","a","b","B"],"flow_id":"F.1232"}
+`
 	})
 }
 

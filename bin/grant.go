@@ -68,11 +68,10 @@ func doGrant() error {
 
 	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	principal := *grant_command_principal
 
@@ -162,11 +161,10 @@ func doShow() error {
 
 	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	principal := *show_command_principal
 

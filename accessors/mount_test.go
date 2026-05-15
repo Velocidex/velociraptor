@@ -1,7 +1,7 @@
 package accessors
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -129,7 +129,7 @@ func TestMountFilesystemAccessor(t *testing.T) {
 		fd, err := mount_fs.Open(path)
 		assert.NoError(t, err)
 
-		data, err := ioutil.ReadAll(fd)
+		data, err := io.ReadAll(fd)
 		assert.NoError(t, err)
 
 		return string(data)

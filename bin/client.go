@@ -140,10 +140,10 @@ func runClientOnce(
 	}
 
 	sm, err := startup.StartClientServices(ctx, config_obj, on_error)
-	defer sm.Close()
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	exe, err := executor.NewClientExecutor(ctx, writeback.ClientId, config_obj)
 	if err != nil {

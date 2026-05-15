@@ -46,9 +46,7 @@ func (self _MockPslist) Call(
 	w := plugin_responses_sync
 	mu.Unlock()
 
-	select {
-	case <-w:
-	}
+	<-w
 
 	go func() {
 		defer close(output_chan)

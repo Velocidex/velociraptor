@@ -15,7 +15,6 @@ var (
 // the system during debug and test phases.
 type FaultInjectorService struct {
 	blockHTTPDo     time.Duration
-	timeStep        time.Duration
 	mockTimeRestore func()
 }
 

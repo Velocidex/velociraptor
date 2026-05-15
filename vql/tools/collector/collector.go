@@ -20,7 +20,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
@@ -189,7 +188,7 @@ func (self CollectPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Name:     "collect",
 		Doc:      "Collect artifacts into a local file.",
 		ArgType:  type_map.AddType(scope, &CollectPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 		Version:  2,
 	}
 }

@@ -7,7 +7,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -85,7 +84,7 @@ func (self ModifySecretFunction) Info(
 		Name:     "secret_modify",
 		Doc:      "Modify the secret",
 		ArgType:  type_map.AddType(scope, &ModifySecretFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 		Version:  2,
 	}
 }

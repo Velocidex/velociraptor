@@ -403,7 +403,7 @@ func ConvertRowsToTableResponse(
 
 		json_out := make([]interface{}, 0, len(result.Columns))
 		for _, k := range result.Columns {
-			value, _ := data[k]
+			value := data[k]
 			json_out = append(json_out, value)
 		}
 		serialized, err := json.MarshalWithOptions(json_out, opts)

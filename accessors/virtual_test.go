@@ -2,7 +2,7 @@ package accessors
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 
@@ -46,7 +46,7 @@ func TestVirtualFilesystemAccessor(t *testing.T) {
 		fd, err := fs_accessor.Open(path)
 		assert.NoError(t, err)
 
-		data, err := ioutil.ReadAll(fd)
+		data, err := io.ReadAll(fd)
 		assert.NoError(t, err)
 
 		return string(data)

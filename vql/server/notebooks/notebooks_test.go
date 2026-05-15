@@ -254,7 +254,7 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 
 	// Now export the notebook to html
 	// Export the notebook to html.
-	res_any = ExportNotebookFunction{}.Call(self.Ctx, scope,
+	_ = ExportNotebookFunction{}.Call(self.Ctx, scope,
 		ordereddict.NewDict().
 			Set("notebook_id", notebook.NotebookId).
 			Set("type", "html").

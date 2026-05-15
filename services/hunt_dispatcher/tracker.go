@@ -31,7 +31,7 @@ func (self *HuntRefreshStats) ToDict() *ordereddict.Dict {
 	return ordereddict.NewDict().
 		Set("Type", self.Type).
 		Set("Time", self.Time.UTC().Format(time.RFC3339)).
-		Set("Ago", time.Now().Sub(self.Time).Round(time.Second).String()).
+		Set("Ago", time.Since(self.Time).Round(time.Second).String()).
 		Set("Duration", self.Duration.Round(time.Second).String()).
 		Set("TotalHunts", self.TotalHunts).
 		Set("TotalHuntsSkipped", self.TotalHuntsSkipped).
@@ -67,11 +67,9 @@ func (self *HuntDispatcherTracker) AddRefreshStats(s *HuntRefreshStats) {
 func (self *HuntDispatcherTracker) WriteProfile(
 	ctx context.Context, scope vfilter.Scope,
 	output_chan chan vfilter.Row) {
+
 	self.mu.Lock()
-	var refreshes []*HuntRefreshStats
-	for _, item := range self.RecentRefresh {
-		refreshes = append(refreshes, item)
-	}
+	refreshes := append([]*HuntRefreshStats{}, self.RecentRefresh...)
 	self.mu.Unlock()
 
 	for _, item := range refreshes {

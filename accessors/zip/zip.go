@@ -42,7 +42,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
-	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -87,7 +86,7 @@ func (self *Tracker) Inc(filename string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	prev, _ := self.refs[filename]
+	prev := self.refs[filename]
 	self.refs[filename] = prev + 1
 }
 
@@ -596,7 +595,7 @@ func (self *SeekableZip) Close() error {
 
 		zipAccessorCurrentTmpConversions.Dec()
 		err := os.Remove(self.tmp_file_backing.Name())
-		utils_tempfile.RemoveTmpFile(self.tmp_file_backing.Name(), err)
+		tempfile.RemoveTmpFile(self.tmp_file_backing.Name(), err)
 	}
 
 	err := self.delegate.Close()
@@ -661,7 +660,7 @@ func (self *SeekableZip) createTmpBackup() (err error) {
 	if err != nil {
 		return err
 	}
-	utils_tempfile.AddTmpFile(self.tmp_file_backing.Name())
+	tempfile.AddTmpFile(self.tmp_file_backing.Name())
 
 	zipAccessorCurrentTmpConversions.Inc()
 	zipAccessorTotalTmpConversions.Inc()

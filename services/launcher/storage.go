@@ -283,7 +283,7 @@ func (self *FlowStorageManager) LoadCollectionContext(
 		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if client_info != nil &&
 				client_info.InFlightFlows != nil {
-				in_flight_time, _ = client_info.InFlightFlows[flow_id]
+				in_flight_time = client_info.InFlightFlows[flow_id]
 			}
 			return nil, nil
 		})

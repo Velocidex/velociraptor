@@ -87,7 +87,7 @@ func (self *SecretsTestSuite) TestSecretsService() {
 			"config/secrets/"+constants.SSH_PRIVATE_KEY+"/MySecret"))
 
 	// User2 asks for the secret again - this time denied
-	secret_data, err = secrets.GetSecret(
+	_, err = secrets.GetSecret(
 		self.Ctx, "User2", constants.SSH_PRIVATE_KEY, "MySecret")
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), `Permission Denied`)

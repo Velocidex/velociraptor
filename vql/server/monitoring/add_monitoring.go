@@ -8,7 +8,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vql_utils "www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -135,7 +134,7 @@ func (self AddClientMonitoringFunction) Info(scope vfilter.Scope, type_map *vfil
 		Name:     "add_client_monitoring",
 		Doc:      "Adds a new artifact to the client monitoring table.",
 		ArgType:  type_map.AddType(scope, &AddClientMonitoringFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_CLIENT).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.COLLECT_CLIENT).Build(),
 	}
 }
 
@@ -295,7 +294,7 @@ func (self AddServerMonitoringFunction) Info(scope vfilter.Scope, type_map *vfil
 		Name:     "add_server_monitoring",
 		Doc:      "Adds a new artifact to the server monitoring table.",
 		ArgType:  type_map.AddType(scope, &AddServerMonitoringFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
 	}
 }
 

@@ -375,7 +375,7 @@ func (self *UserStorageManager) loadUserRecrodIntoCache(
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	reader, err := result_sets.NewResultSetReader(file_store_factory,
 		path_manager.Notifications())
-	if err == nil {
+	if err == nil && reader.TotalRows() > 0 {
 		options.Messages = reader.TotalRows()
 	}
 

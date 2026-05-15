@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"www.velocidex.com/golang/go-ntfs/parser"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
@@ -119,7 +118,7 @@ func (self *USNWatcherService) Register(
 
 // Distribute the event to all interested listeners.
 func (self *USNWatcherService) distributeEvent(
-	event *parser.USN_RECORD, key string) {
+	event *ntfs.USN_RECORD, key string) {
 
 	self.mu.Lock()
 	handlers, pres := self.registrations[key]

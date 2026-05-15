@@ -7,7 +7,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/tools/dns"
@@ -123,11 +122,12 @@ func (self *HostFunction) Call(ctx context.Context,
 
 func (self *HostFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "host",
-		Doc:      "Perform a DNS resolution.",
-		ArgType:  type_map.AddType(scope, &HostFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
-		Version:  2,
+		Name:    "host",
+		Doc:     "Perform a DNS resolution.",
+		ArgType: type_map.AddType(scope, &HostFunctionArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.MACHINE_STATE).Build(),
+		Version: 2,
 	}
 }
 

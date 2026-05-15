@@ -34,7 +34,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/server/hunts"
 	"www.velocidex.com/golang/vfilter"
@@ -309,7 +308,7 @@ func (self SourcePlugin) Info(
 		Name:     "source",
 		Doc:      "Retrieve rows from stored result sets. This is a one stop show for retrieving stored result set for post processing.",
 		ArgType:  type_map.AddType(scope, &SourcePluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 		Version:  2,
 	}
 }
@@ -587,7 +586,7 @@ func (self FlowResultsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Name:     "flow_results",
 		Doc:      "Retrieve the results of a flow.",
 		ArgType:  type_map.AddType(scope, &FlowResultsPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

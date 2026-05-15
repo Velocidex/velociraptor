@@ -683,8 +683,6 @@ func (self *HuntStorageManagerImpl) UpdateHuntCache(hunt_obj *api_proto.Hunt) {
 
 	self.hunts[hunt_obj.HuntId] = old_hunt_record
 	self.last_update = utils.GetTime().Now()
-
-	return
 }
 
 // Refreshes the in memory hunt objects from the data store. This

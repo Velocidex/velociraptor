@@ -58,7 +58,8 @@ var (
 	run_as = app.Flag("runas", "Run as this username's ACLs").String()
 
 	artifact_definitions_dir = app.Flag(
-		"definitions", "A directory containing artifact definitions").String()
+		"definitions", "A directory containing artifact definitions").
+		Short('D').String()
 
 	no_color_flag = app.Flag("nocolor", "Disable color output").Bool()
 

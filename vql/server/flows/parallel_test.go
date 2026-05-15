@@ -173,6 +173,7 @@ func (self *TestSuite) TestHuntsSource() {
 	hunt_rs_writer, err := result_sets.NewResultSetWriter(
 		file_store_factory, hunt_path_manager, nil,
 		utils.SyncCompleter, true /* truncate */)
+	assert.NoError(self.T(), err)
 
 	gen := &ConstantIdGenerator{}
 	defer utils.SetIdGenerator(gen)()

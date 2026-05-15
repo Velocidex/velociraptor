@@ -27,7 +27,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	utils "www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -47,7 +46,7 @@ func (self _PEFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Name:     "parse_pe",
 		Doc:      "Parse a PE file.",
 		ArgType:  type_map.AddType(scope, &_PEFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 		Version:  2,
 	}
 }
@@ -75,7 +74,7 @@ func (self _PEFunction) Call(
 	defer paged_reader.Close()
 
 	var reader io.ReaderAt = paged_reader
-	var reader_size int64 = paged_reader.MaxSize()
+	var reader_size = paged_reader.MaxSize()
 
 	if arg.BaseOffset > 0 {
 		reader = utils.NewOffsetReader(reader, arg.BaseOffset,

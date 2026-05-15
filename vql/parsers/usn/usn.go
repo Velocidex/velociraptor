@@ -14,7 +14,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	utils "www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -212,7 +211,7 @@ func (self USNPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfil
 		Doc:      "Parse the USN journal from a device.",
 		ArgType:  type_map.AddType(scope, &USNPluginArgs{}),
 		Version:  2,
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

@@ -3,7 +3,7 @@ package actions_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"sync"
 	"testing"
@@ -279,7 +279,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	fd, err := os.Open(self.writeback)
 	assert.NoError(self.T(), err)
-	data, err := ioutil.ReadAll(fd)
+	data, err := io.ReadAll(fd)
 	assert.NoError(self.T(), err)
 
 	// Make sure the event queries end up in the writeback file

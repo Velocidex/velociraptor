@@ -18,7 +18,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
-	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -360,7 +359,7 @@ func (self *Launcher) DeleteEvents(
 	options services.DeleteFlowOptions) (
 	[]*services.DeleteFlowResponse, error) {
 
-	mode, err := artifacts.GetArtifactMode(ctx, config_obj, artifact)
+	mode, err := artifact_paths.GetArtifactMode(ctx, config_obj, artifact)
 	if err != nil {
 		return nil, err
 	}
@@ -368,7 +367,7 @@ func (self *Launcher) DeleteEvents(
 		return nil, fmt.Errorf("Artifact %v is not an event artifact", artifact)
 	}
 
-	path_manager := artifacts.NewArtifactPathManagerWithMode(
+	path_manager := artifact_paths.NewArtifactPathManagerWithMode(
 		config_obj, client_id, "", artifact, mode)
 	file_store_factory := file_store.GetFileStore(config_obj)
 
@@ -404,7 +403,7 @@ func (self *Launcher) DeleteEvents(
 		}
 	}
 
-	log_path_manager, err := artifacts.NewArtifactLogPathManager(ctx,
+	log_path_manager, err := artifact_paths.NewArtifactLogPathManager(ctx,
 		config_obj, client_id, "", artifact)
 	if err != nil {
 		return nil, err

@@ -114,8 +114,8 @@ func (self *ClientVQLTestSuite) TestDependentArtifacts() {
 	var responses []*crypto_proto.VeloMessage
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		responses = resp.Drain.Messages()
-		return "Target: Query, JSONL: {\"X\":1,\"_Source\":\"Custom.Foo.Bar.Baz.A\"}\n\n" ==
-			getVQLResponse(responses)
+		return getVQLResponse(responses) ==
+			"Target: Query, JSONL: {\"X\":1,\"_Source\":\"Custom.Foo.Bar.Baz.A\"}\n\n"
 	})
 }
 

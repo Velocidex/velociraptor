@@ -97,7 +97,7 @@ func (self *S3TestSuite) TestUpload() {
 	s3.SetPageSize(2)
 
 	result := []string{}
-	result_regex := regexp.MustCompile("/velociraptor/hello_\\d+.txt")
+	result_regex := regexp.MustCompile(`/velociraptor/hello_\d+.txt`)
 	snapshot := vtesting.GetMetrics(self.T(), "s3_ops_list_objects")
 
 	// We upload 10 files to the bucket.

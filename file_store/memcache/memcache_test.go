@@ -138,7 +138,7 @@ func (self *MemcacheTestSuite) TestFileAsyncWrite() {
 	fd.Close()
 
 	// Try to read it again,
-	read_fd, err := file_store.ReadFile(filename)
+	_, err = file_store.ReadFile(filename)
 
 	// Expect an error because the file did not hit the disk yet.
 	assert.Error(self.T(), err)
@@ -147,7 +147,7 @@ func (self *MemcacheTestSuite) TestFileAsyncWrite() {
 	file_store.Flush()
 
 	// Make sure it is flushed now.
-	read_fd, err = file_store.ReadFile(filename)
+	read_fd, err := file_store.ReadFile(filename)
 	assert.NoError(self.T(), err)
 
 	out, err := ioutil.ReadAll(read_fd)

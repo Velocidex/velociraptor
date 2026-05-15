@@ -472,7 +472,7 @@ func (self *collectionManager) SetTimeout(ns float64) {
 
 		case <-time.After(time.Duration(ns) * time.Nanosecond):
 			self.scope.Log("collect: <red>Timeout Error:</> Collection timed out after %v",
-				time.Now().Sub(start))
+				time.Since(start))
 			// Cancel the main context.
 			self.cancel()
 		}

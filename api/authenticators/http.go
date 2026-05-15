@@ -21,10 +21,6 @@ func (self *transformerTransport) RoundTrip(
 	req *http.Request) (*http.Response, error) {
 
 	rt := self.transport.RoundTrip
-	if rt == nil {
-		rt = http.DefaultTransport.RoundTrip
-	}
-
 	for _, t := range self.transformers {
 		rt = t(rt)
 	}
@@ -89,7 +85,7 @@ func traceNetwork(config_obj *config_proto.Config) func(rt RoundTripFunc) RoundT
 			}
 			defer res.Body.Close()
 
-			ct, _ := res.Header["Content-Type"]
+			ct := res.Header["Content-Type"]
 
 			bs, err := io.ReadAll(res.Body)
 			if err != nil {

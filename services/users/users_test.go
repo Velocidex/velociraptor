@@ -1,7 +1,6 @@
 package users_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
@@ -88,7 +87,7 @@ func (self *UserManagerTestSuite) TestMakeUsers() {
 	assert.NoError(self.T(), err)
 	golden.Set("AdminO1 UserO1", user_record)
 
-	user_record, err = users_manager.GetUser(self.Ctx, "AdminO2", "UserO1")
+	_, err = users_manager.GetUser(self.Ctx, "AdminO2", "UserO1")
 	assert.ErrorContains(self.T(), err, "PermissionDenied")
 	golden.Set("AdminO2 UserO1", err.Error())
 
@@ -100,7 +99,7 @@ func (self *UserManagerTestSuite) TestMakeUsers() {
 	assert.NoError(self.T(), err)
 	golden.Set("AdminO2 UserO2", user_record)
 
-	user_record, err = users_manager.GetUser(self.Ctx, "AdminO1", "UserO2")
+	_, err = users_manager.GetUser(self.Ctx, "AdminO1", "UserO2")
 	assert.ErrorContains(self.T(), err, "PermissionDenied")
 	golden.Set("AdminO1 UserO2", err.Error())
 
@@ -110,16 +109,6 @@ func (self *UserManagerTestSuite) TestMakeUsers() {
 	golden.Set("Case insensitive user02", user_record)
 
 	goldie.Assert(self.T(), "TestMakeUsers", json.MustMarshalIndent(golden))
-}
-
-func filterUser(users []*api_proto.VelociraptorUser, username string) (
-	res []*api_proto.VelociraptorUser) {
-	for _, i := range users {
-		if strings.EqualFold(i.Name, username) {
-			res = append(res, i)
-		}
-	}
-	return res
 }
 
 func TestUserManger(t *testing.T) {

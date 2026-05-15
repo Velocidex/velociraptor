@@ -7,7 +7,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -32,7 +31,7 @@ func (self ParseBinaryFunction) Info(scope vfilter.Scope, type_map *vfilter.Type
 		Name:     "parse_binary",
 		Doc:      "Parse a binary file into a datastructure using a profile.",
 		ArgType:  type_map.AddType(scope, &ParseBinaryFunctionArg{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 		Version:  2,
 	}
 }

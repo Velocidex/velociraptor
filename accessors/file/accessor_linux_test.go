@@ -26,7 +26,6 @@ import (
 
 type AccessorLinuxTestSuite struct {
 	suite.Suite
-	tmpdir string
 }
 
 func (self *AccessorLinuxTestSuite) TestLinuxSymlinks() {

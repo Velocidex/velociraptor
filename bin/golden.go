@@ -360,11 +360,10 @@ func doGolden() error {
 	}
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	var file_paths []string
 

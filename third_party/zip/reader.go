@@ -188,7 +188,7 @@ func (f *File) Open() (io.ReadCloser, error) {
 	if dcomp == nil {
 		return nil, ErrAlgorithm
 	}
-	var rc io.ReadCloser = dcomp(r)
+	var rc = dcomp(r)
 	if f.isAE2() {
 		return rc, nil
 	}

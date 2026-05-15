@@ -146,11 +146,10 @@ func doLS(path, accessor string) error {
 
 	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
@@ -215,11 +214,10 @@ func doRM(path, accessor string) error {
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
@@ -278,11 +276,10 @@ func doCp(path, accessor string, dump_dir string) error {
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
@@ -383,11 +380,10 @@ func doCat(path, accessor_name string) error {
 
 	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	logger := &LogWriter{config_obj: config_obj}
 	builder := services.ScopeBuilder{

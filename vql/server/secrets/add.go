@@ -6,7 +6,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -70,7 +69,7 @@ func (self AddSecretFunction) Info(
 		Name:     "secret_add",
 		Doc:      "Add a new secret",
 		ArgType:  type_map.AddType(scope, &AddSecretFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

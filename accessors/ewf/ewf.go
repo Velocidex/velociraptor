@@ -4,7 +4,6 @@ package ewf
 import (
 	"errors"
 	"io"
-	"os"
 
 	"github.com/Velocidex/go-ewf/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -54,9 +53,11 @@ func (self *EWFReader) Read(buff []byte) (int, error) {
 }
 
 func (self *EWFReader) Seek(offset int64, whence int) (int64, error) {
-	if whence == os.SEEK_SET {
+	switch whence {
+	case io.SeekStart:
 		self.offset = offset
-	} else if whence == os.SEEK_CUR {
+
+	case io.SeekCurrent:
 		self.offset += offset
 	}
 	return self.offset, nil

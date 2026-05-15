@@ -46,7 +46,7 @@ func (self *LocalBufferTracker) ProfileWriter(ctx context.Context, scope vfilter
 	})
 
 	for _, id := range ids {
-		rb, _ := self.tracked[id]
+		rb := self.tracked[id]
 		rb.ProfileWriter(ctx, scope, output_chan)
 	}
 }

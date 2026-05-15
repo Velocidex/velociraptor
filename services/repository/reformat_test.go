@@ -10,8 +10,8 @@ import (
 )
 
 type reformatCases_t struct {
-	name    string
-	in, out string
+	name string
+	in   string
 }
 
 var reformatCases = []reformatCases_t{
@@ -71,6 +71,16 @@ sources:
 column_types:
   - name: A
     type: string
+`}, {
+		name: "negative slice",
+		in: `
+name: Negative Slice
+sources:
+- query: |
+    LET X <= 1
+    LET Y <= (1, 2, 3, 4)
+    SELECT Y[-X:]
+    FROM scope()
 `},
 }
 
@@ -89,6 +99,8 @@ func TestReformatMultiple(t *testing.T) {
 	golden := ordereddict.NewDict()
 	for _, c := range reformatCases {
 		first, err := reformatVQL(c.in)
+		assert.NoError(t, err)
+
 		second, err := reformatVQL(first)
 		assert.NoError(t, err)
 		golden.Set(c.name, strings.Split(second, "\n"))

@@ -9,7 +9,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -134,7 +133,7 @@ func (self FlowsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Name:     "flows",
 		Doc:      "Retrieve the flows launched on each client.",
 		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 
@@ -194,7 +193,7 @@ func (self CancelFlowFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 		Name:     "cancel_flow",
 		Doc:      "Cancels the flow.",
 		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER, acls.COLLECT_CLIENT).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.COLLECT_SERVER, acls.COLLECT_CLIENT).Build(),
 	}
 }
 
@@ -266,7 +265,7 @@ func (self EnumerateFlowPlugin) Info(scope vfilter.Scope, type_map *vfilter.Type
 		Name:     "enumerate_flow",
 		Doc:      "Enumerate all the files that make up a flow.",
 		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 
@@ -330,7 +329,7 @@ func (self GetFlowFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 		Name:     "get_flow",
 		Doc:      "Gets flow details.",
 		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_CLIENT, acls.COLLECT_SERVER).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.COLLECT_CLIENT, acls.COLLECT_SERVER).Build(),
 	}
 }
 

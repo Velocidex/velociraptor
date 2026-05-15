@@ -41,11 +41,10 @@ func doDeadDisk() error {
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	// Close the file so we can overwrite it with VQL
 	(*deaddisk_command_output).Close()

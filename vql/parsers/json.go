@@ -38,7 +38,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	json_tools "www.velocidex.com/golang/velociraptor/tools/json"
 	utils "www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/parsers/syslog"
@@ -268,7 +267,7 @@ func (self ParseJsonlPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 		Name:     "parse_jsonl",
 		Doc:      "Parses a line oriented json file.",
 		ArgType:  type_map.AddType(scope, &ParseJsonlPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 		Version:  2,
 	}
 }
@@ -677,7 +676,7 @@ func (self WriteJSONPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 		Name:     "write_jsonl",
 		Doc:      "Write a query into a JSONL file.",
 		ArgType:  type_map.AddType(scope, &WriteJSONPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 		Version:  2,
 	}
 }
@@ -689,7 +688,7 @@ func (self WatchJsonlPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 		Name:     "watch_jsonl",
 		Doc:      "Watch a jsonl file and stream events from it.",
 		ArgType:  type_map.AddType(scope, &syslog.ScannerPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

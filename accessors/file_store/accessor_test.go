@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
@@ -46,8 +45,6 @@ var (
 
 type FSAccessorTest struct {
 	test_utils.TestSuite
-
-	config_obj *config_proto.Config
 }
 
 func (self *FSAccessorTest) TestCaseInsensitive() {

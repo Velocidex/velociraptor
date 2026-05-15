@@ -164,10 +164,6 @@ func compressComponent(
 	// Hash compress the original component
 	hash := sha1.Sum([]byte(component))
 	component_hash := fmt.Sprintf("#%x", hash)
-	db, err := GetDB(config_obj)
-	if err != nil {
-		return component_hash
-	}
 
 	ds_pathspec := &api_proto.DSPathSpec{
 		Components: []string{component},

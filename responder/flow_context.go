@@ -200,7 +200,7 @@ func (self *FlowContext) GetJSONLBytes(name string) uint64 {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	count, _ := self.total_jsonl_bytes[name]
+	count := self.total_jsonl_bytes[name]
 	return count
 }
 
@@ -208,7 +208,7 @@ func (self *FlowContext) ChargeJSONLBytes(name string, bytes uint64) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	count, _ := self.total_jsonl_bytes[name]
+	count := self.total_jsonl_bytes[name]
 	count += bytes
 	self.total_jsonl_bytes[name] = count
 }

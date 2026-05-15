@@ -162,6 +162,8 @@ func (self *ServerTestSuite) TestFlowStates() {
 			flows_proto.ArtifactCollectorContext_RUNNING)
 	}
 
+	_ = flow_ids
+
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -175,6 +177,7 @@ func (self *ServerTestSuite) TestFlowStates() {
 	// Now draine some messages to the client - concurrency is set to
 	// 1 so we will pull 3 messages from the queue.
 	tasks, err := client_info_manager.GetClientTasks(self.Ctx, self.client_id)
+	assert.NoError(self.T(), err)
 
 	// For backwards compatibility tasks are expanded so we only care
 	// about the flow requests in current version.
@@ -697,6 +700,7 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 		acl_managers.NullACLManager{},
 		repository,
 		request, nil)
+	assert.NoError(t, err)
 
 	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(t, err)

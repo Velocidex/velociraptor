@@ -3,7 +3,6 @@ package sparse
 import (
 	"fmt"
 	"io"
-	"os"
 	"sync"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -63,7 +62,7 @@ func (self *SparseReader) readDistinctPages(buf []byte) (int, error) {
 		buf_end := buf_start + PAGE_SIZE
 
 		// Repeat the read with a single page at the time.
-		_, err := self.handle.Seek(self.offset, os.SEEK_SET)
+		_, err := self.handle.Seek(self.offset, io.SeekStart)
 		if err != nil {
 			return 0, err
 		}
@@ -100,7 +99,7 @@ func (self *SparseReader) Read(buf []byte) (int, error) {
 			}
 		} else {
 			// Read memory from process at specified offset.
-			_, err := self.handle.Seek(self.offset, os.SEEK_SET)
+			_, err := self.handle.Seek(self.offset, io.SeekStart)
 			if err != nil {
 				return 0, err
 			}

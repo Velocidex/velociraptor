@@ -15,7 +15,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	utils "www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -175,7 +174,7 @@ func (self SQLPlugin) Call(
 			// item in the columns slice.
 			row_values := make([]interface{}, len(columns))
 			row_pointers := make([]interface{}, len(columns))
-			for i, _ := range columns {
+			for i := range columns {
 				row_pointers[i] = &row_values[i]
 			}
 
@@ -217,7 +216,7 @@ func (self SQLPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfil
 		Name:     "sql",
 		Doc:      "Run queries against sqlite, mysql, and postgres databases",
 		ArgType:  type_map.AddType(scope, &SQLPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

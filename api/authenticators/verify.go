@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	jwt "github.com/golang-jwt/jwt/v4"
@@ -137,68 +136,6 @@ func reject_with_username(
 				ProviderName:   provider,
 			},
 		})
-}
-
-// Create a new JWT cookie embedding the claims in it.
-// The JWT is signed with the server's private key so we can verify it
-// easily and it can not be modified.
-func getSignedJWTTokenCookie(
-	config_obj *config_proto.Config,
-	authenticator *config_proto.Authenticator,
-	claims *Claims, r *http.Request) (*http.Cookie, error) {
-	if config_obj.Frontend == nil {
-		return nil, errors.New("config has no Frontend")
-	}
-
-	expiry_min := authenticator.DefaultSessionExpiryMin
-	if expiry_min == 0 {
-		expiry_min = 60 * 24 // 1 Day by default
-	}
-
-	// We force expiry in the JWT **as well** as the session
-	// cookie. The JWT expiry is most important as the browser can
-	// replay session cookies past expiry.
-	expiry := utils.GetTime().Now().Add(time.Minute * time.Duration(expiry_min))
-
-	// Enforce the JWT to expire
-	claims.Expires = float64(expiry.Unix())
-
-	// Make a JWT and sign it.
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	if authenticator.OidcDebug {
-		logging.GetLogger(config_obj, &logging.GUIComponent).
-			Debug("getSignedJWTTokenCookie: Creating JWT with claims: %#v", claims)
-	}
-
-	tokenString, err := token.SignedString([]byte(config_obj.Frontend.PrivateKey))
-	if err != nil {
-		return nil, err
-	}
-
-	// Log a successful login.
-	err = services.LogAudit(r.Context(),
-		config_obj, claims.Username, "Login",
-		ordereddict.NewDict().
-			Set("remote", r.RemoteAddr).
-			Set("authenticator", authenticator.Type).
-			Set("url", r.URL.Path))
-	if err != nil {
-		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Error("getSignedJWTTokenCookie LogAudit: Login %v %v",
-			claims.Username, r.RemoteAddr)
-	}
-
-	// Sets the cookie on the browser so it is only valid from the
-	// base down.
-	return &http.Cookie{
-		Name:     "VelociraptorAuth",
-		Value:    tokenString,
-		Path:     api_utils.GetBaseDirectory(config_obj),
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
-		Expires:  expiry,
-	}, nil
 }
 
 // Extracts the claims from the VelociraptorAuth cookie:

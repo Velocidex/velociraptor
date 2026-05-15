@@ -20,7 +20,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -211,7 +210,7 @@ func (self *PSTParser) Info(scope vfilter.Scope, typeMap *vfilter.TypeMap) *vfil
 		Name:     "parse_pst",
 		Doc:      "Parse a PST file and extract email data.",
 		ArgType:  typeMap.AddType(scope, &PSTParserArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

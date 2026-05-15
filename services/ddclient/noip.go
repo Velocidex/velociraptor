@@ -68,7 +68,7 @@ func (self NoIPUpdater) UpdateDDNSRecord(
 	if err != nil {
 		return err
 	}
-	url := string(output.Bytes())
+	url := output.String()
 	logger.Debug("DynDns: Submitting update request to %v", url)
 
 	client := &http.Client{

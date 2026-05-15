@@ -54,11 +54,10 @@ func doCollectorDecrypt() error {
 
 	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	filename, err := filepath.Abs(*collector_decrypt_input)
 	if err != nil {
@@ -118,7 +117,7 @@ FROM stat(filename=copy(
    filename=PATHSPEC + "data.zip",
    accessor="zip", dest=OUTPUT))
 `
-		return runQueryWithEnv(query, builder, *collector_decrypt_format)
+		return runQueryWithEnv(ctx, query, builder, *collector_decrypt_format)
 	}
 
 	if *collector_decrypt_show_password {

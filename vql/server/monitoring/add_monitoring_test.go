@@ -160,7 +160,7 @@ func (self *MonitoringTestSuite) TestAddServerMonitoring() {
 
 	log_buffer.Reset()
 
-	res = AddServerMonitoringFunction{}.Call(
+	_ = AddServerMonitoringFunction{}.Call(
 		sub_ctx, scope, ordereddict.NewDict().
 			Set("artifact", "System.Hunt.Creation").
 			Set("parameters", ordereddict.NewDict().

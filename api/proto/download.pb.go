@@ -8,6 +8,7 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -18,13 +19,10 @@ const (
 )
 
 type CreateDownloadRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	FlowId   string `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
-	ClientId string `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	HuntId   string `protobuf:"bytes,3,opt,name=hunt_id,json=huntId,proto3" json:"hunt_id,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	FlowId   string                 `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	ClientId string                 `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	HuntId   string                 `protobuf:"bytes,3,opt,name=hunt_id,json=huntId,proto3" json:"hunt_id,omitempty"`
 	// When set we only create combined hunt output and not individual
 	// flow breakdowns.
 	OnlyCombinedHunt bool `protobuf:"varint,4,opt,name=only_combined_hunt,json=onlyCombinedHunt,proto3" json:"only_combined_hunt,omitempty"`
@@ -35,16 +33,16 @@ type CreateDownloadRequest struct {
 	// If set we lock the file with this password.
 	Password string `protobuf:"bytes,8,opt,name=password,proto3" json:"password,omitempty"`
 	// If set we expand all sparse files in the archive.
-	ExpandSparse bool `protobuf:"varint,9,opt,name=expand_sparse,json=expandSparse,proto3" json:"expand_sparse,omitempty"`
+	ExpandSparse  bool `protobuf:"varint,9,opt,name=expand_sparse,json=expandSparse,proto3" json:"expand_sparse,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateDownloadRequest) Reset() {
 	*x = CreateDownloadRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_download_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_download_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *CreateDownloadRequest) String() string {
@@ -55,7 +53,7 @@ func (*CreateDownloadRequest) ProtoMessage() {}
 
 func (x *CreateDownloadRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_download_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -134,20 +132,17 @@ func (x *CreateDownloadRequest) GetExpandSparse() bool {
 }
 
 type CreateDownloadResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	VfsPath       string                 `protobuf:"bytes,1,opt,name=vfs_path,json=vfsPath,proto3" json:"vfs_path,omitempty"`
 	unknownFields protoimpl.UnknownFields
-
-	VfsPath string `protobuf:"bytes,1,opt,name=vfs_path,json=vfsPath,proto3" json:"vfs_path,omitempty"`
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateDownloadResponse) Reset() {
 	*x = CreateDownloadResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_download_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_download_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *CreateDownloadResponse) String() string {
@@ -158,7 +153,7 @@ func (*CreateDownloadResponse) ProtoMessage() {}
 
 func (x *CreateDownloadResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_download_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -181,23 +176,20 @@ func (x *CreateDownloadResponse) GetVfsPath() string {
 }
 
 type FormUploadMetadata struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Filename string `protobuf:"bytes,1,opt,name=filename,proto3" json:"filename,omitempty"`
-	Url      string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Filename string                 `protobuf:"bytes,1,opt,name=filename,proto3" json:"filename,omitempty"`
+	Url      string                 `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
 	// A list of Path components to the VFS
-	VfsPath []string `protobuf:"bytes,3,rep,name=VfsPath,proto3" json:"VfsPath,omitempty"`
+	VfsPath       []string `protobuf:"bytes,3,rep,name=VfsPath,proto3" json:"VfsPath,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *FormUploadMetadata) Reset() {
 	*x = FormUploadMetadata{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_download_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
+	mi := &file_download_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
 }
 
 func (x *FormUploadMetadata) String() string {
@@ -208,7 +200,7 @@ func (*FormUploadMetadata) ProtoMessage() {}
 
 func (x *FormUploadMetadata) ProtoReflect() protoreflect.Message {
 	mi := &file_download_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
+	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
 			ms.StoreMessageInfo(mi)
@@ -246,58 +238,42 @@ func (x *FormUploadMetadata) GetVfsPath() []string {
 
 var File_download_proto protoreflect.FileDescriptor
 
-var file_download_proto_rawDesc = []byte{
-	0x0a, 0x0e, 0x64, 0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x12, 0x05, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xba, 0x02, 0x0a, 0x15, 0x43, 0x72, 0x65, 0x61,
-	0x74, 0x65, 0x44, 0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x12, 0x17, 0x0a, 0x07, 0x66, 0x6c, 0x6f, 0x77, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x06, 0x66, 0x6c, 0x6f, 0x77, 0x49, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x63, 0x6c,
-	0x69, 0x65, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x63,
-	0x6c, 0x69, 0x65, 0x6e, 0x74, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x68, 0x75, 0x6e, 0x74, 0x5f,
-	0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x68, 0x75, 0x6e, 0x74, 0x49, 0x64,
-	0x12, 0x2c, 0x0a, 0x12, 0x6f, 0x6e, 0x6c, 0x79, 0x5f, 0x63, 0x6f, 0x6d, 0x62, 0x69, 0x6e, 0x65,
-	0x64, 0x5f, 0x68, 0x75, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x10, 0x6f, 0x6e,
-	0x6c, 0x79, 0x43, 0x6f, 0x6d, 0x62, 0x69, 0x6e, 0x65, 0x64, 0x48, 0x75, 0x6e, 0x74, 0x12, 0x1f,
-	0x0a, 0x0b, 0x6a, 0x73, 0x6f, 0x6e, 0x5f, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x18, 0x05, 0x20,
-	0x01, 0x28, 0x08, 0x52, 0x0a, 0x6a, 0x73, 0x6f, 0x6e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x12,
-	0x1d, 0x0a, 0x0a, 0x63, 0x73, 0x76, 0x5f, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x18, 0x06, 0x20,
-	0x01, 0x28, 0x08, 0x52, 0x09, 0x63, 0x73, 0x76, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x12, 0x23,
-	0x0a, 0x0d, 0x64, 0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18,
-	0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x64, 0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x54,
-	0x79, 0x70, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18,
-	0x08, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x12,
-	0x23, 0x0a, 0x0d, 0x65, 0x78, 0x70, 0x61, 0x6e, 0x64, 0x5f, 0x73, 0x70, 0x61, 0x72, 0x73, 0x65,
-	0x18, 0x09, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0c, 0x65, 0x78, 0x70, 0x61, 0x6e, 0x64, 0x53, 0x70,
-	0x61, 0x72, 0x73, 0x65, 0x22, 0x33, 0x0a, 0x16, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x44, 0x6f,
-	0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x19,
-	0x0a, 0x08, 0x76, 0x66, 0x73, 0x5f, 0x70, 0x61, 0x74, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x07, 0x76, 0x66, 0x73, 0x50, 0x61, 0x74, 0x68, 0x22, 0x5c, 0x0a, 0x12, 0x46, 0x6f, 0x72,
-	0x6d, 0x55, 0x70, 0x6c, 0x6f, 0x61, 0x64, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12,
-	0x1a, 0x0a, 0x08, 0x66, 0x69, 0x6c, 0x65, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x08, 0x66, 0x69, 0x6c, 0x65, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x75,
-	0x72, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x75, 0x72, 0x6c, 0x12, 0x18, 0x0a,
-	0x07, 0x56, 0x66, 0x73, 0x50, 0x61, 0x74, 0x68, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07,
-	0x56, 0x66, 0x73, 0x50, 0x61, 0x74, 0x68, 0x42, 0x31, 0x5a, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x76,
-	0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64, 0x65, 0x78, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c,
-	0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72,
-	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
-}
+const file_download_proto_rawDesc = "" +
+	"\n" +
+	"\x0edownload.proto\x12\x05proto\"\xba\x02\n" +
+	"\x15CreateDownloadRequest\x12\x17\n" +
+	"\aflow_id\x18\x01 \x01(\tR\x06flowId\x12\x1b\n" +
+	"\tclient_id\x18\x02 \x01(\tR\bclientId\x12\x17\n" +
+	"\ahunt_id\x18\x03 \x01(\tR\x06huntId\x12,\n" +
+	"\x12only_combined_hunt\x18\x04 \x01(\bR\x10onlyCombinedHunt\x12\x1f\n" +
+	"\vjson_format\x18\x05 \x01(\bR\n" +
+	"jsonFormat\x12\x1d\n" +
+	"\n" +
+	"csv_format\x18\x06 \x01(\bR\tcsvFormat\x12#\n" +
+	"\rdownload_type\x18\a \x01(\tR\fdownloadType\x12\x1a\n" +
+	"\bpassword\x18\b \x01(\tR\bpassword\x12#\n" +
+	"\rexpand_sparse\x18\t \x01(\bR\fexpandSparse\"3\n" +
+	"\x16CreateDownloadResponse\x12\x19\n" +
+	"\bvfs_path\x18\x01 \x01(\tR\avfsPath\"\\\n" +
+	"\x12FormUploadMetadata\x12\x1a\n" +
+	"\bfilename\x18\x01 \x01(\tR\bfilename\x12\x10\n" +
+	"\x03url\x18\x02 \x01(\tR\x03url\x12\x18\n" +
+	"\aVfsPath\x18\x03 \x03(\tR\aVfsPathB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
 
 var (
 	file_download_proto_rawDescOnce sync.Once
-	file_download_proto_rawDescData = file_download_proto_rawDesc
+	file_download_proto_rawDescData []byte
 )
 
 func file_download_proto_rawDescGZIP() []byte {
 	file_download_proto_rawDescOnce.Do(func() {
-		file_download_proto_rawDescData = protoimpl.X.CompressGZIP(file_download_proto_rawDescData)
+		file_download_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_download_proto_rawDesc), len(file_download_proto_rawDesc)))
 	})
 	return file_download_proto_rawDescData
 }
 
 var file_download_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_download_proto_goTypes = []interface{}{
+var file_download_proto_goTypes = []any{
 	(*CreateDownloadRequest)(nil),  // 0: proto.CreateDownloadRequest
 	(*CreateDownloadResponse)(nil), // 1: proto.CreateDownloadResponse
 	(*FormUploadMetadata)(nil),     // 2: proto.FormUploadMetadata
@@ -315,49 +291,11 @@ func file_download_proto_init() {
 	if File_download_proto != nil {
 		return
 	}
-	if !protoimpl.UnsafeEnabled {
-		file_download_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateDownloadRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_download_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateDownloadResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_download_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FormUploadMetadata); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_download_proto_rawDesc,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_download_proto_rawDesc), len(file_download_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
@@ -368,7 +306,6 @@ func file_download_proto_init() {
 		MessageInfos:      file_download_proto_msgTypes,
 	}.Build()
 	File_download_proto = out.File
-	file_download_proto_rawDesc = nil
 	file_download_proto_goTypes = nil
 	file_download_proto_depIdxs = nil
 }

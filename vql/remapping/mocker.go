@@ -79,9 +79,8 @@ func NewMockerPlugin(name string, results []types.Any) *MockerPlugin {
 		ctx:  &_MockerCtx{},
 	}
 
-	for _, item := range results {
-		result.ctx.results = append(result.ctx.results, item)
-	}
+	result.ctx.results = append(result.ctx.results, results...)
+
 	return result
 }
 

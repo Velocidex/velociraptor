@@ -27,7 +27,7 @@ func (self *UserManagerTestSuite) TestGetUsers() {
 	golden.Set("UserO1 GetUser AdminO1", user_record)
 
 	// Can they get a different user in another org? Nope.
-	user_record, err = users_manager.GetUser(self.Ctx, "UserO1", "UserO2")
+	_, err = users_manager.GetUser(self.Ctx, "UserO1", "UserO2")
 	assert.Error(self.T(), err, "PermissionDenied")
 
 	// An admin can get any user in their org - full record
@@ -36,11 +36,11 @@ func (self *UserManagerTestSuite) TestGetUsers() {
 	golden.Set("AdminO1 GetUser UserO1", user_record)
 
 	// But an admin in one org can not see users in another org
-	user_record, err = users_manager.GetUser(self.Ctx, "AdminO1", "AdminO2")
+	_, err = users_manager.GetUser(self.Ctx, "AdminO1", "AdminO2")
 	assert.Error(self.T(), err, "PermissionDenied")
 
 	// Getting an invalid user gives PermissionDenied
-	user_record, err = users_manager.GetUser(self.Ctx, "AdminO1", "InvalidUsername")
+	_, err = users_manager.GetUser(self.Ctx, "AdminO1", "InvalidUsername")
 	assert.Error(self.T(), err, "PermissionDenied")
 
 	// An org admin can see all users

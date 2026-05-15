@@ -22,7 +22,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
@@ -229,7 +228,7 @@ func (self S3UploadFunction) Info(
 		Name:    "upload_s3",
 		Doc:     "Upload files to S3.",
 		ArgType: type_map.AddType(scope, &S3UploadArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.NETWORK, acls.FILESYSTEM_READ).Build(),
 		Version: 3,
 	}

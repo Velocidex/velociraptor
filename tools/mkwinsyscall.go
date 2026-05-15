@@ -521,6 +521,8 @@ func (f *Fn) DLLVar() string {
 }
 
 // DLLFuncName returns DLL function name for function f.
+//
+//lint:file-ignore ST1016 - Receiver is ok
 func (f *Fn) DLLFuncName() string {
 	if f.dllfuncname == "" {
 		return f.Name

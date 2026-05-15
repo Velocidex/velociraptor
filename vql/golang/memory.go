@@ -6,7 +6,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -63,10 +62,11 @@ func (self MemoryAllocationsPlugin) Call(ctx context.Context,
 func (self MemoryAllocationsPlugin) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "profile_memory",
-		Doc:      "Enumerates all in-use memory within the runtime and tie it to allocation sites.",
-		ArgType:  type_map.AddType(scope, &MemoryAllocationsPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		Name:    "profile_memory",
+		Doc:     "Enumerates all in-use memory within the runtime and tie it to allocation sites.",
+		ArgType: type_map.AddType(scope, &MemoryAllocationsPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.MACHINE_STATE).Build(),
 	}
 }
 

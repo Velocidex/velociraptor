@@ -29,11 +29,7 @@ func (self _MFTHighlightAssociative) Applicable(
 	}
 
 	_, b_ok := b.(string)
-	if !b_ok {
-		return false
-	}
-
-	return true
+	return b_ok
 }
 
 func (self _MFTHighlightAssociative) Associative(

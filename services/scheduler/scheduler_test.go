@@ -56,7 +56,7 @@ func (self *SchedulerTestSuite) TestScheduler() {
 
 	result := <-res_chan
 	assert.NoError(self.T(), result.Err)
-	assert.Contains(self.T(), string(received_jobs.Bytes()), "Hello world")
+	assert.Contains(self.T(), received_jobs.String(), "Hello world")
 
 	// The schedule had now exited so we can not schedule any more
 	_, err = scheduler.Schedule(self.Ctx, services.SchedulerJob{

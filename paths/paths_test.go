@@ -92,9 +92,7 @@ func (self *PathManagerTestSuite) getFilestorePath(path_spec api.FSPathSpec) str
 	fd.Close()
 
 	results := []string{}
-	for _, k := range fs.Data.Keys() {
-		results = append(results, k)
-	}
+	results = append(results, fs.Data.Keys()...)
 	assert.Equal(self.T(), 1, len(results))
 
 	return results[0]

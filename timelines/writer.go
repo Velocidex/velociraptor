@@ -18,7 +18,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
-	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
@@ -68,7 +67,7 @@ func (self *TimelineWriter) Write(
 	self.last_time = timestamp
 	self.mu.Unlock()
 
-	serialized, err := vjson.MarshalWithOptions(row, self.opts)
+	serialized, err := json.MarshalWithOptions(row, self.opts)
 	if err != nil {
 		return err
 	}

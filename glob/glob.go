@@ -205,7 +205,7 @@ func (self *Globber) Add(pattern *accessors.OSPath) error {
 // Adds the raw filter into the Globber tree. This is called
 // after any expansion.
 func (self *Globber) _add_filter(components []_PathFilterer, globs []string) error {
-	var current *Globber = self
+	var current = self
 
 	for _, element := range components {
 		next, pres := current.filters[element]

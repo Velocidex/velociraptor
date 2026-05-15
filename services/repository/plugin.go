@@ -69,7 +69,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		artifact_name := strings.Join(self.prefix, ".")
 
-		mock_call_count, _ := self.mock_call_count[artifact_name]
+		mock_call_count := self.mock_call_count[artifact_name]
 
 		// Support mocking the artifacts
 		mocks, pres := self.mocks[artifact_name]
@@ -406,9 +406,7 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) Associative(
 	}
 
 	prefix := make([]string, 0, len(value.prefix)+1)
-	for _, i := range value.prefix {
-		prefix = append(prefix, i)
-	}
+	prefix = append(prefix, value.prefix...)
 
 	return &ArtifactRepositoryPlugin{
 		prefix:          append(prefix, key),

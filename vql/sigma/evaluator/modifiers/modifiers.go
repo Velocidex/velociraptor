@@ -43,6 +43,7 @@ var ValueModifiers = map[string]ValueModifier{
 	"windash":        windash{},
 	"base64":         b64{},
 	"base64offset":   b64offset{},
+	"expand":         expandModifier{},
 	"cidr":           AnyComparator{cidr{}},
 	"wide":           wide{},
 	"gt":             AnyComparator{gt{}},
@@ -129,7 +130,7 @@ func (startswith) Matches(
 
 type windash struct{}
 
-var cmdflagRegex = regexp.MustCompile("\\s-([a-zA-Z0-9])")
+var cmdflagRegex = regexp.MustCompile(`\s-([a-zA-Z0-9])`)
 
 func (windash) Modify(ctx context.Context, scope types.Scope,
 	value []any, expected []any) (new_value []any, new_expected []any, err error) {
