@@ -20,6 +20,9 @@ parameters:
   - name: remoteRegKey
     default: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\*
 
+implied_permissions:
+  - FILESYSTEM_WRITE
+
 export: |
   -- Cache function for lookupSID
   LET LookupSIDCache(SID) = cache(name="SID", key=SID,

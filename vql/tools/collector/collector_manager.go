@@ -493,14 +493,15 @@ func newCollectionManager(
 	}
 
 	return &collectionManager{
-		ctx:                subctx,
-		cancel:             cancel,
-		config_obj:         config_obj,
-		collection_context: flows.NewCollectionContext(ctx, config_obj),
-		concurrency:        utils.NewConcurrencyControl(concurrency, time.Hour),
-		output_chan:        output_chan,
-		scope:              scope,
-		throttler:          &throttler.DummyThrottler{},
+		ctx:        subctx,
+		cancel:     cancel,
+		config_obj: config_obj,
+		collection_context: flows.NewCollectionContext(
+			ctx, config_obj, &flows_proto.ArtifactCollectorContext{}),
+		concurrency: utils.NewConcurrencyControl(concurrency, time.Hour),
+		output_chan: output_chan,
+		scope:       scope,
+		throttler:   &throttler.DummyThrottler{},
 	}
 }
 
@@ -547,7 +548,7 @@ func (self *collectionManager) Close() error {
 		self.collection_context.StartTime = uint64(self.start_time.UnixNano())
 		self.collection_context.CreateTime = uint64(self.start_time.UnixNano())
 
-		launcher.UpdateFlowStats(&self.collection_context.ArtifactCollectorContext)
+		launcher.UpdateFlowStats(self.collection_context.ArtifactCollectorContext)
 
 		// Merge in the container stats
 		container_stats := self.container.Stats()

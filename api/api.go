@@ -123,7 +123,10 @@ func (self *ApiServer) CollectArtifact(
 
 	// Build a request based on user input.
 	request := &flows_proto.ArtifactCollectorArgs{
-		ClientId:        in.ClientId,
+		ClientId: in.ClientId,
+
+		// Flow id may be specified to relaucnh a collection.
+		FlowId:          in.FlowId,
 		Artifacts:       in.Artifacts,
 		Specs:           in.Specs,
 		Creator:         user_record.Name,

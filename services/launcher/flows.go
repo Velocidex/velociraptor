@@ -229,12 +229,6 @@ func (self *Launcher) CancelFlow(
 // collection. We derive this information from the specific results of
 // each query.
 func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
-	// Support older collections which do not have this info
-	if len(collection_context.QueryStats) == 0 &&
-		collection_context.InflightTime == 0 {
-		return
-	}
-
 	// Now update the overall collection statuses based on all the
 	// individual query status. The collection status is a high level
 	// overview of the entire collection.

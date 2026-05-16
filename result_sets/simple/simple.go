@@ -68,16 +68,14 @@ type ResultSetWriterImpl struct {
 	sync bool
 }
 
-// This tells us that we expect to write the next row at this offset.
-// We need to ensure the file is actually as we expect it to be.
-func (self *ResultSetWriterImpl) SetStartRow(start_row int64) error {
+func (self *ResultSetWriterImpl) TotalRows() int64 {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	// Calculate the number of rows currently in the file.
 	idx_size, err := self.index_fd.Size()
 	if err != nil {
-		return err
+		return 0
 	}
 
 	// The number of rows in the underlying file.
@@ -86,8 +84,19 @@ func (self *ResultSetWriterImpl) SetStartRow(start_row int64) error {
 	// Corrent for any rows we have in memory waiting to be flushed.
 	number_of_rows += int64(len(self.rows))
 
+	return number_of_rows
+}
+
+func (self *ResultSetWriterImpl) TotalBytes() int64 {
+	size, _ := self.fd.Size()
+	return size
+}
+
+// This tells us that we expect to write the next row at this offset.
+// We need to ensure the file is actually as we expect it to be.
+func (self *ResultSetWriterImpl) SetStartRow(start_row int64) error {
 	// This is a retransmission
-	if number_of_rows > start_row {
+	if self.TotalRows() > start_row {
 		return retransmissionError
 	}
 

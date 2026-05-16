@@ -9,6 +9,14 @@ func (self NullResultSetWriter) WriteJSONL(
 	return nil
 }
 
+func (self NullResultSetWriter) TotalRows() int64 {
+	return 0
+}
+
+func (self NullResultSetWriter) TotalBytes() int64 {
+	return 0
+}
+
 func (self NullResultSetWriter) WriteCompressedJSONL(
 	serialized []byte, byte_offset uint64, uncompressed_size int,
 	total_rows uint64) error {

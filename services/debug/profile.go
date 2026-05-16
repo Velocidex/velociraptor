@@ -117,7 +117,6 @@ func getChildren(self *CategoryTreeNode) {
 			getChildren(new_node)
 		}
 	}
-
 }
 
 func GetProfileTree() *CategoryTreeNode {

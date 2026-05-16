@@ -134,6 +134,12 @@ message ArtifactCollectorContext {
     string session_id = 13;
     ArtifactCollectorArgs request = 11;
 
+    // When a flow is relaunched, we store the old requests in this
+    // parameter. Relaunching a flow is not common but can be done in
+    // order to fetch new data but still keep the data in the same
+    // flow.
+    repeated ArtifactCollectorContext previous_flows = 38;
+
     // If an error occurs this is the backtrace.
     string backtrace = 1;
 

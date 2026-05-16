@@ -641,6 +641,11 @@ type ArtifactCollectorContext struct {
 	ClientId  string                 `protobuf:"bytes,27,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
 	SessionId string                 `protobuf:"bytes,13,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	Request   *ArtifactCollectorArgs `protobuf:"bytes,11,opt,name=request,proto3" json:"request,omitempty"`
+	// When a flow is relaunched, we store the old requests in this
+	// parameter. Relaunching a flow is not common but can be done in
+	// order to fetch new data but still keep the data in the same
+	// flow.
+	PreviousFlows []*ArtifactCollectorContext `protobuf:"bytes,38,rep,name=previous_flows,json=previousFlows,proto3" json:"previous_flows,omitempty"`
 	// If an error occurs this is the backtrace.
 	Backtrace string `protobuf:"bytes,1,opt,name=backtrace,proto3" json:"backtrace,omitempty"`
 	// When the collection was created.
@@ -733,6 +738,13 @@ func (x *ArtifactCollectorContext) GetSessionId() string {
 func (x *ArtifactCollectorContext) GetRequest() *ArtifactCollectorArgs {
 	if x != nil {
 		return x.Request
+	}
+	return nil
+}
+
+func (x *ArtifactCollectorContext) GetPreviousFlows() []*ArtifactCollectorContext {
+	if x != nil {
+		return x.PreviousFlows
 	}
 	return nil
 }
@@ -1189,12 +1201,13 @@ const file_artifact_collector_proto_rawDesc = "" +
 	"\x04type\x18\x06 \x01(\tR\x04type\".\n" +
 	"\vPingContext\x12\x1f\n" +
 	"\vactive_time\x18\x01 \x01(\x04R\n" +
-	"activeTime\"\xb1\v\n" +
+	"activeTime\"\xf9\v\n" +
 	"\x18ArtifactCollectorContext\x12\x1b\n" +
 	"\tclient_id\x18\x1b \x01(\tR\bclientId\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\r \x01(\tR\tsessionId\x126\n" +
-	"\arequest\x18\v \x01(\v2\x1c.proto.ArtifactCollectorArgsR\arequest\x12\x1c\n" +
+	"\arequest\x18\v \x01(\v2\x1c.proto.ArtifactCollectorArgsR\arequest\x12F\n" +
+	"\x0eprevious_flows\x18& \x03(\v2\x1f.proto.ArtifactCollectorContextR\rpreviousFlows\x12\x1c\n" +
 	"\tbacktrace\x18\x01 \x01(\tR\tbacktrace\x12\x1f\n" +
 	"\vcreate_time\x18\x03 \x01(\x04R\n" +
 	"createTime\x12\x1d\n" +
@@ -1288,19 +1301,20 @@ var file_artifact_collector_proto_depIdxs = []int32{
 	13, // 3: proto.ArtifactCollectorArgs.compiled_collector_args:type_name -> proto.VQLCollectorArgs
 	3,  // 4: proto.ArtifactCollectorResponse.request:type_name -> proto.ArtifactCollectorArgs
 	3,  // 5: proto.ArtifactCollectorContext.request:type_name -> proto.ArtifactCollectorArgs
-	0,  // 6: proto.ArtifactCollectorContext.state:type_name -> proto.ArtifactCollectorContext.State
-	14, // 7: proto.ArtifactCollectorContext.query_stats:type_name -> proto.VeloStatus
-	5,  // 8: proto.ArtifactCollectorContext.uploaded_files:type_name -> proto.ArtifactUploadedFileInfo
-	15, // 9: proto.ArtifactCollectorContext.logs:type_name -> proto.LogMessage
-	3,  // 10: proto.LabelEvents.artifacts:type_name -> proto.ArtifactCollectorArgs
-	3,  // 11: proto.ClientEventTable.artifacts:type_name -> proto.ArtifactCollectorArgs
-	8,  // 12: proto.ClientEventTable.label_events:type_name -> proto.LabelEvents
-	16, // 13: proto.ClientEventTable.client_message:type_name -> proto.VeloMessage
-	14, // [14:14] is the sub-list for method output_type
-	14, // [14:14] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	7,  // 6: proto.ArtifactCollectorContext.previous_flows:type_name -> proto.ArtifactCollectorContext
+	0,  // 7: proto.ArtifactCollectorContext.state:type_name -> proto.ArtifactCollectorContext.State
+	14, // 8: proto.ArtifactCollectorContext.query_stats:type_name -> proto.VeloStatus
+	5,  // 9: proto.ArtifactCollectorContext.uploaded_files:type_name -> proto.ArtifactUploadedFileInfo
+	15, // 10: proto.ArtifactCollectorContext.logs:type_name -> proto.LogMessage
+	3,  // 11: proto.LabelEvents.artifacts:type_name -> proto.ArtifactCollectorArgs
+	3,  // 12: proto.ClientEventTable.artifacts:type_name -> proto.ArtifactCollectorArgs
+	8,  // 13: proto.ClientEventTable.label_events:type_name -> proto.LabelEvents
+	16, // 14: proto.ClientEventTable.client_message:type_name -> proto.VeloMessage
+	15, // [15:15] is the sub-list for method output_type
+	15, // [15:15] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_artifact_collector_proto_init() }

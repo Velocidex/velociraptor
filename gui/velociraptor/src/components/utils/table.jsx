@@ -8,11 +8,15 @@ export function parseTableResponse(response) {
     for(var row=0; row<response.data.rows.length; row++) {
         let item = {};
         let current_row = JSONparse(response.data.rows[row].json);
-        if (!_.isArray(current_row) || current_row.length < columns.length) {
+        if (!_.isArray(current_row)) {
             continue;
         }
 
-        for(let column=0; column<columns.length; column++) {
+        if(current_row.length > columns.length) {
+            current_row = current_row.splice(columns.length);
+        }
+
+        for(let column=0; column<current_row.length; column++) {
             item[columns[column]] = current_row[column];
         }
         data.push(item);

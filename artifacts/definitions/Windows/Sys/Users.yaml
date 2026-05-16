@@ -12,6 +12,9 @@ parameters:
   - name: remoteRegKey
     default: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\*
 
+implied_permissions:
+  - FILESYSTEM_WRITE
+
 imports:
   - Windows.Sys.AllUsers
 

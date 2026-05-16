@@ -123,6 +123,7 @@ import (
 	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -657,9 +658,31 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		return "", err
 	}
 
+	var existing_flow *api_proto.FlowDetails
+
+	// The session Id we use to store the flow.
 	session_id := collector_request.FlowId
+
+	// The session_id we send to the client.
+	var client_session_id string
+
 	if session_id == "" {
 		session_id = utils.NewFlowId(client_id)
+		client_session_id = session_id
+
+	} else {
+		// The user asked for a pre-determined flow id. It might be an
+		// existing flow. In this case we operate if flow append mode.
+		existing_flow, err = self.GetFlowDetails(ctx, config_obj,
+			services.GetFlowOptions{}, client_id, session_id)
+		if err == nil && existing_flow.Context != nil &&
+			existing_flow.Context.Request != nil {
+
+			// When relaunching a flow, we modify the flow id to
+			// distinguish it from its parent flow.
+			client_session_id = fmt.Sprintf("%s/%d", session_id,
+				len(existing_flow.Context.PreviousFlows))
+		}
 	}
 
 	// How long to batch log messages for on the client.
@@ -675,7 +698,7 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 	// Compile all the requests into specific tasks to be sent to the
 	// client.
 	task := &crypto_proto.VeloMessage{
-		SessionId: session_id,
+		SessionId: client_session_id,
 		RequestId: constants.ProcessVQLResponses,
 		FlowRequest: &crypto_proto.FlowRequest{
 			LogBatchTime:   batch_delay,
@@ -727,6 +750,11 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		OutstandingRequests: int64(len(vql_collector_args)),
 	}
 
+	if existing_flow != nil {
+		collection_context.PreviousFlows = append(
+			collection_context.PreviousFlows, existing_flow.Context)
+	}
+
 	// Record the tasks for provenance of what we actually did.
 	err = self.Storage().WriteTask(
 		ctx, config_obj, client_id, redactTask(task))
@@ -774,7 +802,9 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 	}
 
 	// Write the flow on the index.
-	err = self.Storage().WriteFlowIndex(ctx, config_obj, collection_context)
+	if existing_flow == nil {
+		err = self.Storage().WriteFlowIndex(ctx, config_obj, collection_context)
+	}
 	return collection_context.SessionId, err
 }
 

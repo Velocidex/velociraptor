@@ -14,7 +14,6 @@ import (
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -29,15 +28,13 @@ import (
 )
 
 /*
-  This flow runner processes messages from newer clients which support
-  CLIENT_API_VERSION >= 4.
+This flow runner processes messages from newer clients which support
+CLIENT_API_VERSION >= 4.
 
-  These clients maintain the state of the flow on the client
-  itself. This means the server does not need to maintain a lot of
-  information about each flow making it much faster.
-
+These clients maintain the state of the flow on the client
+itself. This means the server does not need to maintain a lot of
+information about each flow making it much faster.
 */
-
 type ClientFlowRunner struct {
 	ctx        context.Context
 	config_obj *config_proto.Config
@@ -294,7 +291,7 @@ func (self *ClientFlowRunner) removeInflightChecks(
 func (self *ClientFlowRunner) ProcessSingleMessage(
 	ctx context.Context, msg *crypto_proto.VeloMessage) error {
 
-	flow_id := msg.SessionId
+	flow_id, child_flow_id := splitSessionIdToParentAndChild(msg.SessionId)
 	client_id := msg.Source
 
 	if flow_id == constants.MONITORING_WELL_KNOWN_FLOW {
@@ -323,7 +320,8 @@ func (self *ClientFlowRunner) ProcessSingleMessage(
 	}
 
 	if msg.VQLResponse != nil {
-		err := self.VQLResponse(ctx, client_id, flow_id, msg.VQLResponse)
+		err := self.VQLResponse(
+			ctx, client_id, flow_id, child_flow_id, msg.VQLResponse)
 		if err != nil {
 			return fmt.Errorf("VQLResponse: %w", err)
 		}
@@ -601,16 +599,13 @@ func (self *ClientFlowRunner) FlowStats(
 	// Recompose the flow context from the QueryStats
 	launcher.UpdateFlowStats(stats)
 
-	// Store the updated flow object in the datastore
-	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	db, err := datastore.GetDB(self.config_obj)
+	launcher_service, err := services.GetLauncher(self.config_obj)
 	if err != nil {
-		return err
+		return nil
 	}
 
-	// Just a blind write will eventually hit the disk.
-	err = db.SetSubjectWithCompletion(self.config_obj,
-		flow_path_manager.Stats(), stats, nil)
+	err = launcher_service.Storage().WriteFlowStats(ctx, self.config_obj,
+		stats, utils.BackgroundWriter)
 	if err != nil {
 		return err
 	}
@@ -703,10 +698,11 @@ func (self *ClientFlowRunner) FlowStats(
 }
 
 func (self *ClientFlowRunner) VQLResponse(
-	ctx context.Context, client_id, flow_id string,
+	ctx context.Context, client_id, flow_id, child_flow_id string,
 	response *actions_proto.VQLResponse) error {
 
-	if response == nil || response.Query == nil || response.Query.Name == "" {
+	if response == nil || response.Query == nil ||
+		response.Query.Name == "" {
 		return nil
 	}
 
@@ -751,7 +747,7 @@ func (self *ClientFlowRunner) VQLResponse(
 		// = 0 but Part > 0 - which means we must ignore QueryStartRow
 		// and NOT set the start row.
 
-	} else {
+	} else if child_flow_id == "" {
 		// Modern clients set the start row properly. We can check it
 		// against the result set index to ensure these rows are
 		// appended at the correct index in the result set.
@@ -761,6 +757,19 @@ func (self *ClientFlowRunner) VQLResponse(
 			// retransmitted - Just drop it on the floor.
 			return err
 		}
+
+	} else {
+		// This flow is a child flow of an existing flow. This allows
+		// it to append results so we turn off restransmission
+		// protections.
+		err := rs_writer.SetStartRow(rs_writer.TotalRows())
+		if err != nil {
+			// Something is wrong - the packet may have been
+			// retransmitted - Just drop it on the floor.
+			return err
+		}
+
+		response.ByteOffset = uint64(rs_writer.TotalBytes())
 	}
 
 	if response.UncompressedSize > 0 {
@@ -856,4 +865,12 @@ func (self *ClientFlowRunner) ProcessMessages(ctx context.Context,
 	}
 
 	return message_info.IterateJobs(ctx, self.config_obj, self.ProcessSingleMessage)
+}
+
+func splitSessionIdToParentAndChild(sesion_id string) (string, string) {
+	parts := strings.SplitN(sesion_id, "/", 2)
+	if len(parts) < 2 {
+		return parts[0], ""
+	}
+	return parts[0], parts[1]
 }

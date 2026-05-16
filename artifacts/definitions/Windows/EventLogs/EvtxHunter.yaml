@@ -72,6 +72,10 @@ parameters:
     type: hidden
     description: "Add message DB path if desired for offline parsing"
 
+implied_permissions:
+  # For imported Windows.Sys.AllUsers
+  - FILESYSTEM_WRITE
+
 imports:
   - Windows.Sys.AllUsers
 

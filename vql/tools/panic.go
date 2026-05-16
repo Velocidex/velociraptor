@@ -13,7 +13,7 @@ func init() {
 	vql_subsystem.RegisterPlugin(
 		vfilter.GenericListPlugin{
 			PluginName: "panic",
-			Metadata:   vql_subsystem.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+			Metadata:   vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 			Function: func(
 				ctx context.Context,
 				scope vfilter.Scope,

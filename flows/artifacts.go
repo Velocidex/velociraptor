@@ -75,7 +75,7 @@ var (
 type CollectionContext struct {
 	mu sync.Mutex
 
-	flows_proto.ArtifactCollectorContext
+	*flows_proto.ArtifactCollectorContext
 
 	// We batch all monitoring JSONL rows and then flush them at the
 	// end.
@@ -96,9 +96,12 @@ type CollectionContext struct {
 }
 
 func NewCollectionContext(
-	ctx context.Context, config_obj *config_proto.Config) *CollectionContext {
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	artifact_collector_ctx *flows_proto.ArtifactCollectorContext,
+) *CollectionContext {
 	self := &CollectionContext{
-		ArtifactCollectorContext: flows_proto.ArtifactCollectorContext{},
+		ArtifactCollectorContext: artifact_collector_ctx,
 		monitoring_batch:         make(map[string]*jsonBatch),
 	}
 
@@ -123,7 +126,7 @@ func NewCollectionContext(
 		// completion.
 		row := ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
-			Set("Flow", proto.Clone(&self.ArtifactCollectorContext)).
+			Set("Flow", proto.Clone(self.ArtifactCollectorContext)).
 			Set("FlowId", self.SessionId).
 			Set("ClientId", self.ClientId)
 
@@ -255,22 +258,40 @@ func closeContext(
 		}
 	}
 
+	if collection_context.State == flows_proto.ArtifactCollectorContext_WAITING {
+		collection_context.State = flows_proto.ArtifactCollectorContext_RUNNING
+	}
+
+	query_status := crypto_proto.VeloStatus_PROGRESS
+	switch collection_context.State {
+	case flows_proto.ArtifactCollectorContext_ERROR:
+		query_status = crypto_proto.VeloStatus_GENERIC_ERROR
+	case flows_proto.ArtifactCollectorContext_FINISHED:
+		query_status = crypto_proto.VeloStatus_OK
+	}
+
 	collection_context.Dirty = false
+
+	// Write a fake stats object - this is for backwards
+	// compatibility. Older clients do not have QueryStats.
+	collection_context.QueryStats = []*crypto_proto.VeloStatus{{
+		Duration:              collection_context.ExecutionDuration,
+		ExpectedUploadedBytes: int64(collection_context.TotalExpectedUploadedBytes),
+		ResultRows:            int64(collection_context.TotalCollectedRows),
+		LogRows:               int64(collection_context.TotalLogs),
+		Status:                query_status,
+	}}
+
+	launcher_service, err := services.GetLauncher(config_obj)
+	if err != nil {
+		return err
+	}
 
 	// Write the data before we fire the event so the data is
 	// available to any listeners of the event.
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
-		collection_context.Status = err.Error()
-	}
-
-	flow_path_manager := paths.NewFlowPathManager(
-		collection_context.ClientId, collection_context.SessionId)
-
-	return db.SetSubjectWithCompletion(
-		config_obj, flow_path_manager.Path(),
-		collection_context, collection_context.completer.GetCompletionFunc())
+	return launcher_service.Storage().WriteFlow(
+		ctx, config_obj, collection_context.ArtifactCollectorContext,
+		collection_context.completer.GetCompletionFunc())
 }
 
 func flushContextUploadedFiles(
@@ -313,32 +334,29 @@ func LoadCollectionContext(
 	ctx context.Context, config_obj *config_proto.Config,
 	client_id, flow_id string) (*CollectionContext, error) {
 
+	// Handle monitoring flows especially.
 	if flow_id == constants.MONITORING_WELL_KNOWN_FLOW {
-		result := NewCollectionContext(ctx, config_obj)
+		result := NewCollectionContext(ctx, config_obj,
+			&flows_proto.ArtifactCollectorContext{})
 		result.SessionId = flow_id
 		result.ClientId = client_id
 
 		return result, nil
 	}
 
-	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	collection_context := NewCollectionContext(ctx, config_obj)
-	db, err := datastore.GetDB(config_obj)
+	launcher_service, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	err = db.GetSubject(config_obj, flow_path_manager.Path(),
-		&collection_context.ArtifactCollectorContext)
+	context_obj, err := launcher_service.Storage().LoadCollectionContext(
+		ctx, config_obj, client_id, flow_id)
 	if err != nil {
 		return nil, err
 	}
 
-	if collection_context.SessionId == "" {
-		return nil, errors.New("Unknown flow " + client_id + " " + flow_id)
-	}
+	collection_context := NewCollectionContext(ctx, config_obj, context_obj)
 	collection_context.TotalLoads++
-	collection_context.Dirty = false
 
 	return collection_context, nil
 }

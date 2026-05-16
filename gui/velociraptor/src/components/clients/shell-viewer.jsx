@@ -30,6 +30,7 @@ const SHELL_POLL_TIME = 5000;
 class _VeloShellCell extends Component {
     static propTypes = {
         flow: PropTypes.object,
+        artifact: PropTypes.string,
         client: PropTypes.object,
         fetchLastShellCollections: PropTypes.func.isRequired,
 
@@ -101,7 +102,6 @@ class _VeloShellCell extends Component {
             if (!response || !response.data || !response.data.rows) {
                 return;
             };
-
             this.setState({output: parseTableResponse(response),
                            artifact: artifact});
         });
@@ -120,6 +120,34 @@ class _VeloShellCell extends Component {
             this.props.fetchLastShellCollections();
         }.bind(this));
     };
+
+
+    // Launch the command within this shell session.
+    launchCommand = e=>{
+        if (!this.props.flow || !this.props.flow.session_id ||
+            !this.props.flow.client_id) {
+            return;
+        }
+
+        var params = {
+            client_id: this.props.client.client_id,
+            flow_id: this.props.flow.session_id,
+            artifacts: [this.props.artifact],
+            specs: [{
+                artifact: this.props.artifact,
+                parameters: {
+                    env: [{key: "Command", value: this.state.command}],
+                }
+            }],
+            urgent: true,
+        };
+
+        api.post('v1/CollectArtifact', params).then(response=>{
+            // Refresh the artifacts immediately.
+            this.props.fetchLastShellCollections();
+        }, this.source.token);
+
+    }
 
     render() {
         let buttons = [];
@@ -231,6 +259,22 @@ class _VeloShellCell extends Component {
             let flow_id = this.props.flow.session_id;
 
             output = [this.state.output.map((item, index) => {
+                let timestamp = item.Timestamp || "";
+                if (item.Stdout) {
+                    return <div className='notebook-output' key={index} >
+                             <pre> {item.Stdout} </pre>
+                           </div>;
+                }
+
+                if (item.Command) {
+                    return <div className='notebook-input' key={index} >
+                             {timestamp && <VeloTimestamp
+                                             usec={ timestamp }
+                                           />}
+                            <pre> {item.Command} </pre>
+                           </div>;
+                }
+
                 if (item.StdoutUpload) {
                     return <div className='notebook-output' key={index} >
                              <PreviewUpload
@@ -239,6 +283,7 @@ class _VeloShellCell extends Component {
                                upload={item.StdoutUpload} />
                            </div>;
                 }
+
                 return <div className='notebook-output' key={index} >
                          <pre> {item.Stdout} </pre>
                        </div>;
@@ -247,13 +292,13 @@ class _VeloShellCell extends Component {
             if (this.props.flow.state  === 'ERROR') {
                 output.push(<Button variant="danger" key="errors"
                                     onClick={e=>{this.viewFlow("logs");}}
-                                    size="lg" block>
+                                    size="lg" >
                               {T('Error')}
                             </Button>);
             } else {
                 output.push(<Button variant="link" key="logs"
                                     onClick={e=>{this.viewFlow("logs");}}
-                                    size="lg" block>
+                                    size="lg" >
                               {T('Logs')}
                             </Button>);
             }
@@ -279,17 +324,33 @@ class _VeloShellCell extends Component {
 
                 <div className='notebook-input'>
                   <div className="cell-toolbar">
-                    <div className="btn-group" role="group">
-                      { buttons }
-                    </div>
-                    <div className="btn-group float-right" role="group">
-                      { flow_status }
-                    </div>
+                    <InputGroup className="mb-3 d-flex">
+                      <div className="btn-group" role="group">
+                        { buttons }
+                      </div>
+                      <textarea rows="1"
+                                className="form-control"
+                                placeholder={this.getInput()}
+                                spellCheck="false"
+                                value={this.state.command}
+                                onChange={(e) =>this.setState({
+                                    command: e.target.value,
+                                })}>
+                      </textarea>
+                      <div className="btn-group float-right" role="group">
+                        <Button
+                          variant="default"
+                          onClick={this.launchCommand}>
+                          {T("Launch")}
+                        </Button>
+                        { flow_status }
+                      </div>
+                    </InputGroup>
                   </div>
-
-                  <pre> { this.getInput() } </pre>
                 </div>
-                {output}
+                <div className="shell-output-container">
+                  {output}
+                </div>
               </div>
             </>
         );
@@ -484,13 +545,13 @@ class _VeloVQLCell extends Component {
             if (this.props.flow.state  === 'ERROR') {
                 output.push(<Button variant="danger" key="ERROR"
                                     onClick={e=>{this.viewFlow("logs");}}
-                                    size="lg" block>
+                                    size="lg" >
                               {T('Error')}
                             </Button>);
             } else {
                 output.push(<Button variant="link" key="Logs"
                                     onClick={e=>{this.viewFlow("logs");}}
-                                    size="lg" block>
+                                    size="lg" >
                               {T('Logs')}
                             </Button>);
             }
@@ -699,6 +760,7 @@ class ShellViewer extends Component {
 
             return (
                 <VeloShellCell key={index}
+                               artifact={artifact}
                                fetchLastShellCollections={
                                    this.fetchLastShellCollections}
                                flow={flow}
