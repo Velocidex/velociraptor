@@ -1,11 +1,11 @@
 name: Server.Utils.Clients
 description: |
-  Provides an interactive notebook for searching and inspecting client details.
+  Provides an interactive notebook for searching and inspecting client
+  details.
 
-  View detailed client informations
-
-  This template will create an interactive notebook that allows more
-  refined inspection of clients.
+  This notebook template will create an interactive notebook that
+  allows more refined inspection of client information than the GUI
+  search page provides.
 
 type: NOTEBOOK
 

@@ -1,7 +1,8 @@
 name: Linux.Applications.Docker.Info
-description: Retrieves Docker daemon status and configuration from the Unix socket.
+description: |
+  Connects to the Docker socket and retrieves daemon information
+  including containers, images, and driver settings.
 
-Get Dockers info by connecting to its socket.
 parameters:
   - name: dockerSocket
     description: |

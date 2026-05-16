@@ -1,6 +1,6 @@
 name: Linux.Network.NetstatEnriched
 description: |
-  Report network connections, and enrich with process information.
+  Reports network connections and enriches with process information.
 
 type: CLIENT
 

@@ -1,8 +1,7 @@
 name: Notebooks.Sigma.Studio
 description: |
-  Creates a development environment for testing Sigma detection rules.
-
-  A notebook to help develop Sigma rules.
+  Sets up a Sigma rule development workspace with live testing against
+  sample events.
 
 type: NOTEBOOK
 

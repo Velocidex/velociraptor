@@ -1,6 +1,6 @@
 name: Linux.Sys.Pslist
 description: |
-  List processes and their running binaries.
+  Lists processes and their associated binaries.
 
 aliases:
   - MacOS.Sys.Pslist

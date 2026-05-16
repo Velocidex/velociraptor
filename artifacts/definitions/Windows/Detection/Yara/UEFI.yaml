@@ -3,9 +3,6 @@ author: Matt Green - @mgreen27
 description: |
   Scans EFI System Partition files with YARA rules for rootkit detection.
 
-  This artifact enables running YARA over files in an EFI System Partition (ESP).
-
-
 parameters:
   - name: ImagePath
     default: \\.\PhysicalDrive0

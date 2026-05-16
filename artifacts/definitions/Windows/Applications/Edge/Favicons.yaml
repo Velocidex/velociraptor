@@ -1,21 +1,20 @@
 name: Windows.Applications.Edge.Favicons
 description: |
-  Enumerates Edge browser favicons including page URLs, favicon URLs, and last updated timestamps.
+  Enumerates Edge browser favicons including page URLs, favicon URLs,
+  and last updated timestamps.
 
-  Enumerate the user's Microsoft Edge favicons.
-
-  Also tested against Chrome: replace Microsoft Edge with Google Chrome in
-  the `faviconsGlob` parameter.
+  Also tested against Chrome: replace `Microsoft Edge` with `Google
+  Chrome` in the `faviconsGlob` parameter.
 
   Chrome Favicons are stored in the 'Favicons' SQLite database, within
   the 'favicons', 'favicon_bitmaps' and 'icon_mapping' tables. Older
   versions of Chrome stored Favicons in a 'Thumbnails' SQLite
   database, within the 'favicons' table.
 
-  ## NOTES:
+  **NOTES**
 
-  - This artifact is deprecated in favor of `Generic.Forensic.SQLiteHunter` and
-    will be removed in future
+  - This artifact is deprecated in favor of `Generic.Forensic.SQLiteHunter`
+    and will be removed in future
 
 references:
   - https://www.foxtonforensics.com/browser-history-examiner/chrome-history-location

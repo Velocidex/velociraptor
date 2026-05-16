@@ -1,6 +1,7 @@
 name: MacOS.Applications.MRU
 description: |
-   Parse the MRU from MacOS users
+  Parses Finder's `FXRecentFolders` plist entries to extract recently
+  accessed items.
 
 reference:
   - https://mac-alias.readthedocs.io/en/latest/bookmark_fmt.html

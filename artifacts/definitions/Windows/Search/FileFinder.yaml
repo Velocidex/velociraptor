@@ -1,7 +1,7 @@
 name: Windows.Search.FileFinder
 description: |
-  Searches for files on Windows by path glob, inspect file content via
-  Yara, and provides file hash and upload options.
+  Searches for files by path glob, inspects file content via YARA, and
+  provides file hash and upload options.
 
   This artifact is useful in the following scenarios:
 

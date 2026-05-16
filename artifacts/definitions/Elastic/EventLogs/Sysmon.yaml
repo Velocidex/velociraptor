@@ -1,8 +1,7 @@
 name: Elastic.EventLogs.Sysmon
 description: |
-  Converts Windows Sysmon event logs to ECS-compliant output for Elasticsearch.
-
-  Ships the Sysmon event log in ECS schema.
+  Converts Windows Sysmon event logs to ECS schema-compliant output
+  for Elasticsearch ingestion.
 
   The Elastic Common Schema (ECS) is an open source specification,
   developed with support from the Elastic user community. ECS defines

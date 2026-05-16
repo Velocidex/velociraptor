@@ -1,6 +1,7 @@
 name: Windows.Detection.ForwardedImports
 description: |
-  Scans DLLs for self-referencing forwarded imports that indicate DLL hijacking.
+  Scans DLLs for self-referencing forwarded imports that could
+  indicate DLL hijacking.
 
   In Windows a common DLL hooking technique is to replace a dll with a
   forwarder dll - i.e. one that forwards all imports to the real

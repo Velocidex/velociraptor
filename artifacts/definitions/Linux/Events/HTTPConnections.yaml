@@ -2,14 +2,13 @@ name: Linux.Events.HTTPConnections
 description: |
   Monitors HTTP traffic on Linux systems using eBPF network tracing.
 
-  This artifact uses eBPF to track HTTP and parse connections from
-  various processes.
+  NOTES:
+  
+  - This event is generated from network traffic - it is unable to
+    view TLS encrypted data.
 
-  NOTE: This event is generated from network traffic - it is unable to
-  view TLS encrypted data.
-
-  If the process tracker is enabled we also show more information
-  about the process.
+  - If the process tracker is enabled we also show more information
+    about the process.
 
 type: CLIENT_EVENT
 

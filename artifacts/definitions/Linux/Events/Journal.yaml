@@ -1,7 +1,6 @@
 name: Linux.Events.Journal
 description: |
-  Watches the binary journal logs. Systemd uses a binary log format to
-  store logs.
+  Forwards events from the Systemd binary journal logs.
 
 type: CLIENT_EVENT
 

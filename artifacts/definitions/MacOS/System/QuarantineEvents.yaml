@@ -1,8 +1,7 @@
 name: MacOS.System.QuarantineEvents
 description: |
-
-  This artifact parses the QuarantineEventsV2 database, which provides
-  information on when a file was downloaded from the internet.
+  Parses the QuarantineEventsV2 database, which provides information
+  on when a file was downloaded from the internet.
 
 type: CLIENT
 

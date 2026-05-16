@@ -1,6 +1,7 @@
 name: Linux.Ssh.PrivateKeys
 description: |
-  Searches filesystem for SSH private keys and detects encryption status.
+  Searches filesystem for SSH private keys and detects encryption
+  status.
 
   SSH Private keys can be either encrypted or unencrypted. Unencrypted
   private keys are more risky because an attacker can use them without

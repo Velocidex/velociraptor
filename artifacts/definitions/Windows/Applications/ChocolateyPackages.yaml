@@ -1,8 +1,8 @@
 name: Windows.Applications.ChocolateyPackages
 description: |
-  Lists Chocolatey packages installed on a Windows system by parsing .nuspec files.
+  Lists Chocolatey packages installed on a Windows system by parsing
+  .nuspec files.
 
-  Chocolatey packages installed in a system.
 parameters:
   - name: ChocolateyInstall
     default: ""

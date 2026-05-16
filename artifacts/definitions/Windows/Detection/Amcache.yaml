@@ -1,31 +1,30 @@
 name: Windows.Detection.Amcache
 author: Matt Green - @mgreen27
 description: |
-    Collects AMCache entries with SHA1 hashes for threat detection.
+  Collects AMCache entries with a SHA1 hash to enable threat
+  detection.
 
-    This artifact collects AMCache entries with a SHA1 hash to enable threat
-    detection.
+  AmCache is an artifact which stores metadata related to PE execution
+  and program installation on Windows 7 and Server 2008 R2 and above.
+  This artifact includes EntryName, EntryPath and SHA1 as great data
+  points for IOC collection. Secondary datapoints include
+  publisher/company, BinaryType and OriginalFileName.
 
-    AmCache is an artifact which stores metadata related to PE execution and
-    program installation on Windows 7 and Server 2008 R2 and above. This artifact
-    includes EntryName, EntryPath and SHA1 as great data points for IOC collection.
-    Secondary datapoints include publisher/company, BinaryType and OriginalFileName.
+  Available filters include:
 
-    Available filters include:
+    - SHA1regex - regex entries to filter by SHA1.
+    - PathRegex - filter on path if available.
+    - NameRegex - filter on EntryName OR OriginalFileName.
+    - VersionRegex - filter on Version
 
-      - SHA1regex - regex entries to filter by SHA1.
-      - PathRegex - filter on path if available.
-      - NameRegex - filter on EntryName OR OriginalFileName.
-      - VersionRegex - filter on Version
+  NOTE:
 
-    NOTE:
-
-      - Secondary fields are not consistent across AMCache types and some legacy
-      versions do not return these fields.
-      - Some enrichment has occurred but any secondary fields should be treated as
-      guidance only.
-      - This artifact collects only entries with a SHA1, for complete AMCache
-      analysis please download raw artifact sets.
+    - Secondary fields are not consistent across AMCache types and
+      some legacy versions do not return these fields.
+    - Some enrichment has occurred but any secondary fields should
+      be treated as guidance only.
+    - This artifact collects only entries with a SHA1, for complete
+      AMCache analysis please download raw artifact sets.
 
 reference:
   - https://www.ssi.gouv.fr/uploads/2019/01/anssi-coriin_2019-analysis_amcache.pdf

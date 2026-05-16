@@ -1,20 +1,21 @@
 name: Windows.Detection.YaraX.Glob
 author: Matt Green - @mgreen27
 description: |
-  This artifact returns a list of target files then runs YARA over the target
-  list.
+  Deploys YARA-X and scans files matching a glob pattern. Supports
+  URL-based or inline rule deployment.
 
   There are 2 kinds of YARA rules that can be deployed:
 
-  1. Url link to a YARA rule.
+  1. URL link to a YARA rule.
   2. or a Standard YARA rule attached as a parameter.
 
-  Only one method of YARA will be applied and search order is as above.
+  Only one YARA rule option will be applied and search order is as
+  listed above.
 
   The artifact uses Glob for search so relevant filters can be applied
-  including Glob, Size and date. Date filters will target files with a timestamp
-  before LatestTime and after EarliestTime. The artifact also has an option to
-  upload any files with YARA hits.
+  including Glob, Size and date. Date filters will target files with a
+  timestamp before LatestTime and after EarliestTime. The artifact
+  also has an option to upload any files with YARA hits.
 
   Some examples of path glob may include:
 
@@ -25,12 +26,14 @@ description: |
   * Windows: `C:/Users/**/*.{exe,dll,ps1,bat}`
   * Windows: `C:\Users\**\*.{exe,dll,ps1,bat}`
 
-  NOTE: this artifact runs the glob plugin with the `nosymlink` switch turned on.
-  This will NOT follow any symlinks and may cause unexpected results if
-  unknowingly targeting a folder with symlinks.
-  If upload is selected NumberOfHits is redundant and not advised as hits are
-  grouped by path to ensure files only downloaded once.
+  NOTE: this artifact runs the glob plugin with the `nosymlink` switch
+  turned on. This will NOT follow any symlinks and may cause
+  unexpected results if unknowingly targeting a folder with symlinks.
+  If upload is selected NumberOfHits is redundant and not advised as
+  hits are grouped by path to ensure files only downloaded once.
 
+reference:
+  - https://github.com/Velocidex/yara-x-go/
 tools:
   - name: YaraXWindowsDLL
     url: https://github.com/Velocidex/yara-x-go/releases/download/0.1/yara_x_capi.dll

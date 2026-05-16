@@ -1,14 +1,11 @@
 name: Windows.Applications.Firefox.History
 description: |
-  Queries Firefox places.sqlite to extract browsing history from user profiles.
+  Queries Firefox `places.sqlite` files to extract browsing history.
 
-  Enumerate the users Firefox history.
-
-  ## NOTES:
+  **NOTES**
 
   This artifact is deprecated in favor of
   Generic.Forensic.SQLiteHunter and will be removed in future
-
 
 author: Zach Stanford @svch0st, Modified by @angry-bender
 parameters:

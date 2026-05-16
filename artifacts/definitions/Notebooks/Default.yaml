@@ -1,6 +1,7 @@
 name: Notebooks.Default
 description: |
-  A default notebook.
+  Creates a new notebook with a welcome message and placeholder VQL
+  cell.
 
 type: NOTEBOOK
 

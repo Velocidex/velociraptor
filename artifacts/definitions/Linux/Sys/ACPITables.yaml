@@ -1,5 +1,8 @@
 name: Linux.Sys.ACPITables
-description: Firmware ACPI functional table common metadata and content.
+description: |
+  Lists ACPI firmware tables with their sizes and cryptographic
+  hashes.
+
 reference:
   - https://osquery.io/schema/3.2.6#acpi_tables
 parameters:

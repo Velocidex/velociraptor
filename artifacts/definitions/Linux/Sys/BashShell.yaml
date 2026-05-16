@@ -8,9 +8,8 @@ description: |
 
   This is a very powerful artifact since it allows for arbitrary
   command execution on the endpoints. Therefore this artifact requires
-  elevated permissions (specifically the `EXECVE`
-  permission). Typically it is only available with the `administrator`
-  role.
+  elevated permissions (specifically the `EXECVE` permission).
+  Typically it is only available with the `administrator` role.
 
 required_permissions:
   - EXECVE

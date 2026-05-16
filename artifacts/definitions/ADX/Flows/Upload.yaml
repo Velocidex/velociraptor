@@ -1,13 +1,14 @@
 name: ADX.Flows.Upload
 description: |
-  This server side event monitoring artifact waits for new artifacts
+  This server-side event monitoring artifact waits for new artifacts
   to be collected from endpoints and automatically uploads those to an
   Azure Data Explorer (ADX) cluster.
 
-  The artifact uploads data to a raw ingestion table with both structured
-  metadata columns and a RawData column containing the full event data.
-  This allows for efficient querying on structured columns while maintaining
-  full flexibility for complex queries using RawData.
+  The artifact uploads data to a raw ingestion table with both
+  structured metadata columns and a RawData column containing the full
+  event data. This allows for efficient querying on structured columns
+  while maintaining full flexibility for complex queries using
+  RawData.
 
   ## ADX Table Schema
 
@@ -32,20 +33,23 @@ description: |
 
   ## Setup Instructions
 
-  1. Create an Azure Service Principal with permissions to ingest data into your ADX cluster
+  1. Create an Azure Service Principal with permissions to ingest data
+     into your ADX cluster
   2. Grant the service principal appropriate permissions:
      - Database User or Database Admin role on the target database
      - Table Ingestion permissions
-  3. Configure the artifact parameters or use the secrets service to store credentials
-  4. Users can create KQL update policies to route/transform data into specific tables
-     based on the Artifact column or other metadata
+  3. Configure the artifact parameters or use the secrets service to
+     store credentials
+  4. Users can create KQL update policies to route/transform data into
+     specific tables based on the Artifact column or other metadata
 
   ## Performance Considerations
 
-  - The managed ingestion client automatically switches between streaming and queued
-    ingestion based on data volume
+  - The managed ingestion client automatically switches between
+    streaming and queued ingestion based on data volume
   - Use multiple threads for higher throughput
-  - Adjust chunk_size and wait_time based on your data volume and latency requirements
+  - Adjust chunk_size and wait_time based on your data volume and
+    latency requirements
 
 type: SERVER_EVENT
 

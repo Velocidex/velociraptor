@@ -1,15 +1,13 @@
 name: Linux.Events.SSHBruteforce
 description: |
-  Monitors SSH authentication logs to detect successful logins following brute force attempts.
+  Monitors SSH authentication logs to detect successful logins
+  following multiple failed attempts within a 1-hour time window.
 
-  A monitoring artifact which detects a successful SSH login preceded by some
-  failed attempts within the last hour.
-
-  This is particularly important in the case of SSH brute force attacks. If one
-  of the brute force password attempts succeeded, the password guessing program
-  will likely report the success and move on. This alert might provide
-  sufficient time for admins to lock down the account before attackers can
-  exploit the weak password.
+  This is particularly important in the case of SSH brute force
+  attacks. If one of the brute force password attempts succeeded, the
+  password guessing program will likely report the success and move
+  on. This alert might provide sufficient time for admins to lock down
+  the account before attackers can exploit the weak password.
 
 reference:
   - https://www.elastic.co/blog/grokking-the-linux-authorization-logs

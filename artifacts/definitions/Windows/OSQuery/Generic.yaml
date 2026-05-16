@@ -1,7 +1,7 @@
 name: Windows.OSQuery.Generic
 description: |
-  Downloads and runs the osquery binary with a user-supplied SQL
-  query, returning structured results.
+  Deploys the osquery binary and runs a user-specified SQL query,
+  returning parsed JSON results.
 
   OSQuery is an excellent tool for querying system state across the
   three main supported Velociraptor platforms: Windows/Linux/MacOS.

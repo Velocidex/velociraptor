@@ -1,6 +1,6 @@
 name: Windows.Detection.EnvironmentVariables
 description: |
-   Find processes with the specified environment variables.
+  Find processes which have the specified environment variables.
 
 parameters:
    - name: ProcessNameRegex

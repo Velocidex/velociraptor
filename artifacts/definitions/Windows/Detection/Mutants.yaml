@@ -1,8 +1,7 @@
 name: Windows.Detection.Mutants
 description: |
-  Searches for named Mutant objects used by processes for malware persistence detection.
-
-  Enumerate the mutants from selected processes.
+  Searches for named Mutant objects used by selected processes for
+  malware persistence detection.
 
   Mutants are often used by malware to prevent re-infection.
 
