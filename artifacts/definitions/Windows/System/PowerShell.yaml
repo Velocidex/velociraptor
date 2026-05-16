@@ -43,23 +43,38 @@ parameters:
 sources:
   - query: |
       LET SizeLimit <= 4096
-      SELECT if(condition=len(list=Stdout) < SizeLimit,
+      LET Now <= str(str=now())
+
+      LET Output = SELECT "" AS Command,
+             timestamp(epoch=now()) AS Timestamp,
+             if(condition=len(list=Stdout) < SizeLimit,
                 then=Stdout) AS Stdout,
              if(condition=len(list=Stdout) >= SizeLimit,
                 then=upload(accessor="data",
                             file=Stdout,
-                            name="Stdout" + str(str=count()))) AS StdoutUpload,
+                            name="Stdout/" + Now)) AS StdoutUpload,
              if(condition=len(list=Stderr) < SizeLimit,
                 then=Stderr) AS Stderr,
              if(condition=len(list=Stderr) >= SizeLimit,
                 then=upload(accessor="data",
                             file=Stderr,
-                            name="Stderr" + str(str=count()))) AS StderrUpload,
+                            name="Stderr/" + Now)) AS StderrUpload,
              *
       FROM execve(argv=[PowerShellExe,
         "-ExecutionPolicy", "Unrestricted", "-encodedCommand",
         base64encode(string=utf16_encode(string=Command))
       ], length=10000000)
+
+      SELECT * FROM chain(a={
+         SELECT Command,
+                timestamp(epoch=now()) AS Timestamp,
+                "" AS Stdout,
+                NULL AS StdoutUpload,
+                "" AS Stderr,
+                NULL AS StderrUpload
+         FROM scope()
+      }, b=Output)
+
 
 column_types:
 - name: StdoutUpload

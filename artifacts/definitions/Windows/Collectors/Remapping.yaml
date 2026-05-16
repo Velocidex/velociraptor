@@ -193,14 +193,17 @@ export: |
                                        path_type="zip",
                                        Path="client_info.json")))
 
-  -- Set the hostname either from the parameters or read it from the file itself
-  LET DerivedHostname = Hostname ||
-                        CollectionHostinfo.Hostname ||
-                        CollectionHostinfo.hostname
+  -- Set the hostname either from the parameters or read it from the
+  -- file itself. Validate the hostname to have only allowed hostname chars.
+  LET DerivedHostname = parse_string_with_regex(
+    string=Hostname || CollectionHostinfo.Hostname || CollectionHostinfo.hostname,
+    regex="([a-z0-9-.]+)"
+  ).g1
 
   LET Remappings = parse_yaml(
                     filename=template(template=CommonRemapping,
-                                      expansion=dict(Hostname=DerivedHostname)),
+                                      expansion=dict(
+                                        Hostname=DerivedHostname || "Unknown")),
                     accessor="data")
 
   -- Normalize the drive name from device to drive. NTFS accessor uses

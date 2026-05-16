@@ -37,6 +37,7 @@ import (
 
 type ScheduleCollectionFunctionArg struct {
 	ClientId     string            `vfilter:"required,field=client_id,doc=The client id to schedule a collection on"`
+	FlowId       string            `vfilter:"optional,field=flow_id,doc=If a flow id is specified we do not create a new flow, but instead add the collection to this flow."`
 	Artifacts    []string          `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
 	Env          *ordereddict.Dict `vfilter:"optional,field=env,doc=Parameters to apply to the artifact (an alternative to a full spec)"`
 	Spec         *ordereddict.Dict `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
@@ -86,7 +87,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	// COLLECT_CLIENT for clients
 	// COLLECT_SERVER for server
 	// COLLECT_BASIC for artifacts with the basic metadata set
-
+	// SERVER_ADMIN to append to a flow
 	acl_manager, ok := artifacts.GetACLManager(scope)
 	if !ok {
 		acl_manager = acl_managers.NullACLManager{}
@@ -140,6 +141,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 
 	request := &flows_proto.ArtifactCollectorArgs{
 		ClientId:       arg.ClientId,
+		FlowId:         arg.FlowId,
 		Artifacts:      arg.Artifacts,
 		Creator:        vql_subsystem.GetPrincipal(scope),
 		OpsPerSecond:   float32(arg.OpsPerSecond),
@@ -202,7 +204,7 @@ func (self ScheduleCollectionFunction) Info(scope vfilter.Scope, type_map *vfilt
 		ArgType: type_map.AddType(scope, &ScheduleCollectionFunctionArg{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.COLLECT_CLIENT, acls.COLLECT_SERVER, acls.COLLECT_BASIC).Build(),
-		Version: 2,
+		Version: 3,
 	}
 }
 

@@ -101,17 +101,24 @@ div.dt-buttons {
     line-height: 1.31;
     word-break: break-all;
     word-wrap: break-word;
-    color: var(--color-foreground);
     background-color: var(--color-canvas-background);
     border: 1px solid var(--color-panel-border);
     border-radius: 4px;
 }
 
+.shell-output-container .notebook-input pre {
+    color: var(--color-sidebar-disabled-foreground);
+    margin: 0;
+    border-radius: 0;
+}
+
+.shell-output-container .notebook-output pre {
+    color: var(--color-foreground);
+    border-radius: 0;
+}
+
 .shell-results {
-    /* Toolbar - padding - host toolbar - shell command controls - footer */
-    max-height: calc(100vh - 50px - 20px - 47px -  66px - 40px);
-    overflow-y: auto;
-    padding-bottom: 100px;
+    overflow-y: none;
 }
 
 .shell-command .velo-ace-editor {
@@ -133,4 +140,10 @@ div.dt-buttons {
 .shell-info {
     white-space: nowrap;
     display: inline-flex;
+}
+
+.shell-output-container {
+    max-height: 50vh;
+    overflow-y: auto;
+    overflow-x: hidden;
 }

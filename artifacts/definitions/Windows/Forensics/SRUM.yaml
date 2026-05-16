@@ -31,6 +31,9 @@ parameters:
     description: Select to Upload the SRUM database file 'srudb.dat'
     type: bool
 
+implied_permissions:
+  - FILESYSTEM_WRITE
+
 export: |
   LET ResolveESEId(OSPath, Accessor, Id) = cache(
       name="ESE",

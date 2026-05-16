@@ -314,7 +314,7 @@ func (self *TestSuite) TestResourceLimits() {
 	// Collection has 1 row and it is still in the running state.
 	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(1))
 	assert.Equal(self.T(), collection_context.State,
-		flows_proto.ArtifactCollectorContext_RUNNING)
+		flows_proto.ArtifactCollectorContext_IN_PROGRESS)
 
 	// Send another row
 	message.ResponseId++
@@ -330,7 +330,7 @@ func (self *TestSuite) TestResourceLimits() {
 	// Collection has 2 rows and it is still in the running state.
 	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(2))
 	assert.Equal(self.T(), collection_context.State,
-		flows_proto.ArtifactCollectorContext_RUNNING)
+		flows_proto.ArtifactCollectorContext_IN_PROGRESS)
 
 	// Now send 5 rows in one message. We should accept the 5 rows
 	// but terminate the flow due to resource exhaustion.
@@ -406,15 +406,14 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 		nilTime, nilTime, nilTime, nilTime, 0, reader)
 
 	// Get a new collection context.
-	collection_context := NewCollectionContext(self.Ctx, self.ConfigObj)
-	collection_context.ArtifactCollectorContext = flows_proto.ArtifactCollectorContext{
-		SessionId:           self.flow_id,
-		ClientId:            self.client_id,
-		OutstandingRequests: 1,
-		Request: &flows_proto.ArtifactCollectorArgs{
-			Artifacts: []string{"Generic.Client.Info"},
-		},
-	}
+	collection_context := NewCollectionContext(self.Ctx, self.ConfigObj,
+		&flows_proto.ArtifactCollectorContext{
+			SessionId:           self.flow_id,
+			ClientId:            self.client_id,
+			OutstandingRequests: 1,
+			Request: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{"Generic.Client.Info"},
+			}})
 
 	for _, response := range resp.Drain.WaitForStatsMessage(self.T()) {
 		response.Source = self.client_id
@@ -652,17 +651,6 @@ func (self *TestSuite) testCollectionCompletion(
 	outstanding_requests int64,
 	requests []*crypto_proto.VeloMessage) *flows_proto.ArtifactCollectorContext {
 	// Get a new collection context.
-	collection_context := NewCollectionContext(self.Ctx, self.ConfigObj)
-	collection_context.ArtifactCollectorContext = flows_proto.ArtifactCollectorContext{
-		SessionId:           self.flow_id,
-		ClientId:            self.client_id,
-		State:               flows_proto.ArtifactCollectorContext_RUNNING,
-		OutstandingRequests: outstanding_requests,
-		Request: &flows_proto.ArtifactCollectorArgs{
-			Artifacts: []string{"Generic.Client.Info"},
-		},
-	}
-
 	runner := NewFlowRunner(self.Ctx, self.ConfigObj)
 
 	wg := &sync.WaitGroup{}
@@ -734,13 +722,13 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 		nilTime, nilTime, nilTime, nilTime, 0, reader)
 
 	// Get a new collection context.
-	collection_context := NewCollectionContext(self.Ctx, self.ConfigObj)
-	collection_context.ArtifactCollectorContext = flows_proto.ArtifactCollectorContext{
-		SessionId:           self.flow_id,
-		ClientId:            self.client_id,
-		OutstandingRequests: 1,
-		Request:             &flows_proto.ArtifactCollectorArgs{},
-	}
+	collection_context := NewCollectionContext(self.Ctx, self.ConfigObj,
+		&flows_proto.ArtifactCollectorContext{
+			SessionId:           self.flow_id,
+			ClientId:            self.client_id,
+			OutstandingRequests: 1,
+			Request:             &flows_proto.ArtifactCollectorArgs{},
+		})
 
 	for _, msg := range resp.Drain.WaitForStatsMessage(self.T()) {
 		msg.Source = self.client_id
@@ -868,12 +856,12 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 		nilTime, nilTime, nilTime, nilTime, 0, fd)
 
 	// Get a new collection context.
-	collection_context := NewCollectionContext(self.Ctx, self.ConfigObj)
-	collection_context.ArtifactCollectorContext = flows_proto.ArtifactCollectorContext{
-		SessionId: self.flow_id,
-		ClientId:  self.client_id,
-		Request:   &flows_proto.ArtifactCollectorArgs{},
-	}
+	collection_context := NewCollectionContext(self.Ctx, self.ConfigObj,
+		&flows_proto.ArtifactCollectorContext{
+			SessionId: self.flow_id,
+			ClientId:  self.client_id,
+			Request:   &flows_proto.ArtifactCollectorArgs{},
+		})
 
 	// Process it.
 	for _, resp := range resp.Drain.WaitForStatsMessage(self.T()) {
