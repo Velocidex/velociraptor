@@ -4,7 +4,7 @@ description: |
   and metrics from the client.
 
   This is useful when you notice a high CPU load in the client and
-  want to understand why.
+  want to understand why that's happening.
 
   The following options are most useful:
 

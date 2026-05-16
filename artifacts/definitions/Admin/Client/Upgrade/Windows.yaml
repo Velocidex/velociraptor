@@ -1,7 +1,7 @@
 name: Admin.Client.Upgrade.Windows
 description: |
-  Pushes client updates to Windows systems by running msiexec with the
-  provided MSI.
+  Upgrades Velociraptor clients on Windows hosts by running msiexec
+  with the provided MSI.
 
   NOTE: This artifact requires that you supply a _repacked_ client MSI
   by using the tools interface. Click on the tool button in the GUI
