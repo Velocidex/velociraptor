@@ -1,6 +1,7 @@
 name: Windows.Applications.Edge.History
 description: |
-  Enumerate the users chrome history.
+  Enumerates Edge browsing history (URLs, visit times, titles) from
+  user profiles.
 
 parameters:
   - name: historyGlobs

@@ -1,11 +1,12 @@
 name: Windows.Sigma.EventLogs
 description: |
-  Parse Windows event logs and matches then against Sigma Rules.
-
-  NOTE: This is a very simple artifact for demonstration only. For
-  more extensive Sigma rules use the `Server.Import.CuratedSigma`
-  artifact to import a curated set of Sigma rules from
-  https://sigma.velocidex.com/
+  Evaluates Windows event log entries against inline or uploaded Sigma
+  rules for threat detection.
+  
+  NOTE: This is a very simple artifact for demonstration purposes
+  only. For more extensive Sigma rules use the
+  `Server.Import.CuratedSigma` artifact to import a curated set of
+  Sigma rules from https://sigma.velocidex.com/
 
 parameters:
 - name: EventLogDirectory

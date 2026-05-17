@@ -1,5 +1,8 @@
 name: Windows.Network.ArpCache
-description: Address resolution cache, both static and dynamic (from ARP, NDP).
+description: |
+  Enumerates the Windows network neighbor cache (ARP/NDP) showing
+  resolved IP and MAC address pairs.
+
 parameters:
   - name: wmiQuery
     default: |

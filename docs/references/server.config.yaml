@@ -235,7 +235,7 @@ Client:
   prevent_execve: false
 
   # The default max time to wait before we send partial VQL
-  # results. This setting is used to ensure we dont send too many
+  # results. This setting is used to ensure we don't send too many
   # small requests by batching the rows into time batches.
   default_max_wait: 60
 
@@ -379,8 +379,8 @@ Client:
   low_resource_max_cpu: 50
 
   # We determine we are running on a low resource machine if the
-  # system has less than 2 cores. This allows to increase the
-  # threadhold. Set to a large number to disable.
+  # system has less than 2 cores. This allows you to increase the
+  # threshold. Set to a large number to disable.
   low_resource_cpu_count: 1
 
   # If greater than 0 we install a local DNS cache. This is usually
@@ -701,7 +701,7 @@ Frontend:
   base_path: "/"
 
   # This allows the frontends to listen on plain HTTP - It is useful
-  # if you have SSL offloading (e.g. ngix). This is not configured by
+  # if you have SSL offloading (e.g. nginx). This is not configured by
   # the wizard - you will need to manually configure it. You better
   # know what you are doing here!
   use_plain_http: false
@@ -723,7 +723,7 @@ Frontend:
 
   # A proxy setting to use - Velociraptor needs to connect to download
   # tools. This setting will force it to go out over this proxy. NOTE-
-  # If you dont want to allow outbound connections, just set this to
+  # If you don't want to allow outbound connections, just set this to
   # an non existent setting (e.g. http://127.0.0.1:3128).
   proxy: "http://127.0.0.1:3128"
 
@@ -1043,7 +1043,7 @@ Logging:
   output_directory: /mnt/data/logs
 
   ## If this is set the logs will be separated into different
-  ## components (eg. Frontend, GUI, Audit etc). This makes it easier
+  ## components (e.g. Frontend, GUI, Audit etc). This makes it easier
   ## to find the source of the log messages
   separate_logs_per_component: true
 
@@ -1388,7 +1388,7 @@ defaults:
 
   # The server maintains an index of all hunts in order to quickly
   # allow the GUI to filter/sort them. This setting controls how often
-  # to rebuild the hunt index (default 600 sec). You probably dont
+  # to rebuild the hunt index (default 600 sec). You probably don't
   # need to change it.
   hunt_dispatcher_refresh_sec: 600
 
@@ -1453,7 +1453,7 @@ defaults:
   indexed_client_metadata:
     - department
 
-  # If this is set we do not actively check the status of inflight
+  # If this is set we do not actively check the status of in-flight
   # collections. This is a new feature to 0.73 and may need to be
   # disabled in some large deployments due to additional overheads.
   disable_active_inflight_checks: false

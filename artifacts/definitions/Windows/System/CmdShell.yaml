@@ -1,10 +1,10 @@
 name: Windows.System.CmdShell
 description: |
-  This artifact allows running arbitrary commands through the system
-  shell cmd.exe.
+  Runs shell commands through cmd.exe and captures or uploads stdout
+  output.
 
-  Since Velociraptor typically runs as system, the commands will also
-  run as System.
+  Since Velociraptor clients typically runs as SYSTEM, the commands
+  will also run as SYSTEM.
 
   This is a very powerful artifact since it allows for arbitrary
   command execution on the endpoints. Therefore this artifact requires

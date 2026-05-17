@@ -1,7 +1,8 @@
 
 name: Notebooks.Demo
 description: |
-  A notebook demonstrating features of notebooks
+  Demonstrates notebook functionality with sample VQL and tool
+  references.
 
 type: NOTEBOOK
 

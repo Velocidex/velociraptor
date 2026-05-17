@@ -1,6 +1,8 @@
 name: Server.Utils.Policy
 description: |
-  This artifact defines a set of security policies.
+  Automates the configuration of Velociraptor server security policies
+  including IP-based GUI access control, plugin restrictions, secrets
+  enforcement, and lockdown mode.
 
 type: SERVER
 

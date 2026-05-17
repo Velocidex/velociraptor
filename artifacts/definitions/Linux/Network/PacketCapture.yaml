@@ -1,13 +1,18 @@
 name: Linux.Network.PacketCapture
 author: Wes Lambert, @therealwlambert
 description: |
-  This artifact uses tcpdump to natively capture packets.
+  Runs tcpdump to capture network packets and upload the PCAP file.
 
-  The `Duration` parameter is used to define how long (in seconds) the capture should be.  Specific interfaces can be defined by using the `Interface` parameter, otherwise the artifact defaults to an interface assignment of `any`.
+  The `Duration` parameter is used to define how long (in seconds) the
+  capture should be.  Specific interfaces can be defined by using the
+  `Interface` parameter, otherwise the artifact defaults to an
+  interface assignment of `any`.
 
-  A `BPF` (Berkeley Packet Filter) expression can also be supplied to filter the captured traffic as desired.
+  A `BPF` (Berkeley Packet Filter) expression can also be supplied to
+  filter the captured traffic as desired.
 
-  Read more about BPF expressions here: https://biot.com/capstats/bpf.html
+  Read more about BPF expressions here:
+  https://biot.com/capstats/bpf.html
 
 required_permissions:
   - EXECVE

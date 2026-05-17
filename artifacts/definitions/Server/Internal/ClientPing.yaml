@@ -1,4 +1,5 @@
 name: Server.Internal.ClientPing
 type: INTERNAL
 description: |
-  An internal event channel for notifying about client pings.
+  Provides an internal event channel for client ping notifications
+

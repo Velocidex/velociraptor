@@ -1,7 +1,10 @@
 name: Generic.Client.LocalLogs
 description: |
-  Write client logs locally in an encrypted container. This helps when
-  we need to access what the client was doing in the past.
+  Writes client logs to an encrypted local container file with
+  configurable row limit (with flush) and size limit.
+
+  To retrieve and decrypt the container, use
+  `Generic.Client.LocalLogsRetrieve`
 
 type: CLIENT_EVENT
 

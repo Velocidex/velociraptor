@@ -1,19 +1,21 @@
 name: Windows.Persistence.PermanentWMIEvents
 author: Matt Green - @mgreen27
 description: |
-    This artifact reports currently deployed permanent WMI Event Consumers. The
-    artifact collects Binding information, then presents associated Filters
-    and Consumers.
+  Enumerates permanent WMI event subscriptions including filters,
+  consumers, and their bindings across namespaces.
+  
+  The artifact collects Binding information, then presents associated
+  Filters and Consumers.
 
-    NOTE: the artifact does not report on individual eventing classes. A separate
-    wmi query will need to be made for unlinked components that may reside in the
-    WMI datastore.
+  NOTE: the artifact does not report on individual eventing classes. A
+  separate WMI query will need to be made for unlinked components that
+  may reside in the WMI datastore.
 
-    WMI Eventing components:
+  WMI Eventing components:
 
-    - __FilterToConsumerBinding - ties together Filter + Consumer
-    - __EventFilter - trigger condition
-    - __EventConsumer - payload
+  - __FilterToConsumerBinding - ties together Filter + Consumer
+  - __EventFilter - trigger condition
+  - __EventConsumer - payload
 
 reference:
   - https://attack.mitre.org/techniques/T1546/003/

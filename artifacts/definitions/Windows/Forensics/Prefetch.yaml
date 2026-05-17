@@ -1,16 +1,20 @@
 name: Windows.Forensics.Prefetch
 description: |
+  Parses Windows prefetch (.pf) files to extract executable execution
+  history and run counts.
+  
   Windows keeps a cache of prefetch files. When an executable is run,
   the system records properties about the executable to make it faster
   to run next time. By parsing this information we are able to
   determine when binaries are run in the past. On Windows10 we can see
-  the last 8 execution times and creation time (9 potential executions).
+  the last 8 execution times and creation time (9 potential
+  executions).
 
   There are several parameters available for this artifact.
-    - dateAfter enables search for prefetch evidence after this date.
-    - dateBefore enables search for prefetch evidence before this date.
-    - binaryRegex enables to filter on binary name, e.g evil.exe.
-    - hashRegex enables to filter on prefetch hash.
+  - dateAfter enables search for prefetch evidence after this date.
+  - dateBefore enables search for prefetch evidence before this date.
+  - binaryRegex enables to filter on binary name, e.g evil.exe.
+  - hashRegex enables to filter on prefetch hash.
 
   NOTE: The Prefetch file format is described extensively in libscca
   and painstakingly reversed by Joachim Metz (Shouts and Thank

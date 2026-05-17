@@ -1,11 +1,11 @@
 name: Windows.Attack.UnexpectedImagePath
 
 description: |
-  Some malware are hiding in plain text by masquerading a legitimate
+  Detects well-known system processes running from unexpected file
+  paths.
+  
+  Some malware hides in plain sight by masquerading a legitimate
   executable name.
-
-  This artifact looks for processes with known names that are being
-  loaded from unexpected locations.
 
 reference:
   - https://www.sans.org/posters/hunt-evil/

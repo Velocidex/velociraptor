@@ -1,8 +1,7 @@
 name: Demo.Plugins.GUI
 description: |
-  A demo plugin showing some GUI features.
-
-  This plugin is also used for tests.
+  Provides test cases for GUI elements, parameter validation, and
+  notebook rendering.
 
 resources:
   timeout: 20

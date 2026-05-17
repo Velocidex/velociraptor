@@ -1,6 +1,7 @@
 name: Windows.System.RootCAStore
 description: |
-   Enumerate the root certificates in the Windows Root store.
+  Enumerates root CA certificates from the Windows System Certificate
+  store.
 
 reference:
    - "ATT&CK: T1553"

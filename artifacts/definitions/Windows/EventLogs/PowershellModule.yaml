@@ -1,18 +1,19 @@
 name: Windows.EventLogs.PowershellModule
 description: |
-  This Artifact will search and extract Module events (Event ID 4103) from
-  Powershell-Operational Event Logs.
+  Extracts PowerShell module logging events (EID 4103) from the
+  PowerShell Operational log with context and payload filtering.
 
-  PowerShell is commonly used by attackers across all stages of the attack
-  lifecycle. Although quite noisy Module logging can provide valuable insight.
+  PowerShell is commonly used by attackers across all stages of the
+  attack lifecycle. Although quite noisy Module logging can provide
+  valuable insight.
 
-  There are several parameters available for search leveraging regex.
-    - DateAfter enables search for events after this date.
-    - DateBefore enables search for events before this date.
-    - ContextRegex enables regex search over ContextInfo text field.
-    - PayloadRegex enables a regex search over Payload text field.
-    - SearchVSS enables VSS search
+  There are several parameters available for search leveraging regex:
 
+  - DateAfter enables search for events after this date.
+  - DateBefore enables search for events before this date.
+  - ContextRegex enables regex search over ContextInfo text field.
+  - PayloadRegex enables a regex search over Payload text field.
+  - SearchVSS enables VSS search
 
 author: Matt Green - @mgreen27
 

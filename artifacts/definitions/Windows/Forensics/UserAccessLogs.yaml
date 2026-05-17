@@ -1,17 +1,20 @@
 name: Windows.Forensics.UserAccessLogs
 description: |
-  Parse and collect the SUM database
+  Parses the Windows User Access Logging (UAL) ESE database to
+  enumerate client connections and server roles.
 
-  UAL is a feature that can help server administrators quantify the number of
-  unique client requests of roles and services on a local server.
+  UAL is a feature that can help server administrators quantify the
+  number of unique client requests of roles and services on a local
+  server.
 
   The UAL only exists on Windows Server edition 2012 and above.
 
-  NOTE: Unlike other tools, Velociraptor DOES NOT use the JET API to access the
-  database because it has a built-in ESE parser. This means that **you do not
-  need to repair the files using `eseutil.exe`** even though this is a commonly
-  recommended step in the references linked below. Velociraptor should have no
-  trouble parsing these files on a live system.
+  NOTE: Unlike other tools, Velociraptor DOES NOT use the JET API to
+  access the database because it has a built-in ESE parser. This means
+  that **you do not need to repair the files using `eseutil.exe`**
+  even though this is a commonly recommended step in the references
+  linked below. Velociraptor should have no trouble parsing these
+  files on a live system.
 
 reference:
   - https://advisory.kpmg.us/blog/2021/digital-forensics-incident-response.html

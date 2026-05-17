@@ -1,14 +1,18 @@
 name: Windows.EventLogs.Symantec
 description: |
-  Query the Symantec Endpoint Protection Event Logs. The default artifact will
-  return EventId 51 and high value strings with goals bubble up some events for
-  triage.
+  Searches Symantec Endpoint Protection Event event logs for
+  high-value detection events like infostealers, backdoors, and
+  exploits.
+  
+  By default, the artifact will return EventId 51 and high value
+  strings with the goal of bubbling up some events for triage
+  purposes.
 
-  Note:
-  EventID selection is controlled by regex to allow multiple EID selections.
-  If running a hunt, consider also hunting EventId 45 - Tamper Protection
-  Detection (this will be noisy so whitelist is required).
-  IgnoreRegex allows filtering out events relevant to the target environment.
+  **NOTE:** EventID selection is controlled by regex to allow multiple
+  EID selections. If running a hunt, consider also hunting EventId 45
+  - Tamper Protection Detection (this will be noisy so whitelist is
+  required). IgnoreRegex allows filtering out events relevant to the
+  target environment.
 
 reference:
     - https://www.nextron-systems.com/wp-content/uploads/2019/10/Antivirus_Event_Analysis_CheatSheet_1.7.2.pdf

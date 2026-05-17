@@ -1,8 +1,7 @@
 name: Windows.Detection.Yara.UEFI
 author: Matt Green - @mgreen27
 description: |
-  This artifact enables running YARA over files in an EFI System Partition (ESP).
-
+  Scans EFI System Partition files with YARA rules for rootkit detection.
 
 parameters:
   - name: ImagePath

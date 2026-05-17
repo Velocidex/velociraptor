@@ -1,6 +1,7 @@
 name: Windows.Detection.Registry
 description: |
-  This artifact detects registry changes and triggers an alert.
+  Monitors selected registry keys for changes and raises alerts on
+  modifications.
 
 author: Jos Clephas - @DfirJos
 

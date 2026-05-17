@@ -1,7 +1,7 @@
 name: MacOS.Forensics.AppleDoubleZip
 description: |
-  Search for zip files containing leaked download URLs included by
-  MacOS users.
+  Searches for zip files containing download URLs inadvertently
+  included in the zip contents.
 
   MacOS filesystem can represent extended attributes. Similarly to
   Windows's ZoneIdentifier, when a file is downloaded on MacOS it also
@@ -18,7 +18,7 @@ description: |
   the source of downloads for a file is being included inside the zip
   file, which they end up sending to other people!
 
-  Therefore this artifact can also work on other platforms because Zip
+  Therefore this artifact can also work on other platforms because zip
   files created by MacOS users can end up on other systems, and
   contain sensitive URLs embedded within them.
 

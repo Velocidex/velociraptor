@@ -1,17 +1,18 @@
 name: Windows.Applications.NirsoftBrowserViewer
 description: |
-  This artifact wraps the Nirsoft BrowsingHistoryView tool - a tool
-  for parsing browser history from a variety of browsers.
+  Wraps the Nirsoft BrowsingHistoryView tool to parse browsing history
+  from Chrome, Firefox, IE, and Safari.
 
   More information about the tool can be found here
   https://www.nirsoft.net/utils/browsing_history_view.html
 
   NOTE: This binary is treated as malware by many detection engines
   since it is capable of dumping user passwords and search history!!!
-  Running it on the endpoint may (hopefully) trigger endpoint defenses.
+  Running it on the endpoint may (hopefully) trigger endpoint
+  defenses.
 
-  BrowsingHistoryView v2.55 - View browsing history of your Web browsers
-  Copyright (c) 2012 - 2023 Nir Sofer
+  BrowsingHistoryView v2.55 - View browsing history of your Web
+  browsers Copyright (c) 2012 - 2023 Nir Sofer
 
 tools:
  - name: NirsoftBrowsingHistoryView64

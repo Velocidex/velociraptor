@@ -1,8 +1,6 @@
 name: Linux.Sys.LastUserLogin
 description: |
-  Finds and parses system WTMP files.
-
-  These indicate when users last logged in.
+  Parses system WTMP files. These indicate when users last logged in.
 
 parameters:
   - name: wtmpGlobs

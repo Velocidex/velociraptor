@@ -1,6 +1,6 @@
 name: Triage.Collection.Upload
 description: |
-  A Generic uploader used by triaging artifacts.
+  A generic uploader used by triaging artifacts.
 
 parameters:
   - name: path

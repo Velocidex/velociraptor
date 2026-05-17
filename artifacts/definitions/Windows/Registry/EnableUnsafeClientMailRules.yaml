@@ -1,11 +1,18 @@
 name: Windows.Registry.EnableUnsafeClientMailRules
 description: |
-  Checks for Outlook EnableUnsafeClientMailRules = 1 (turned on).
-  This registry key enables execution from Outlook inbox rules which can be used as a persistence mechanism.
-  Microsoft has released a patch to disable execution but attackers can reenable by changing this value to 1.
+  Checks Outlook Security registry for EnableUnsafeClientMailRules set
+  to 1 (enabled), indicating potential persistence.
+  
+  This registry key enables execution from Outlook inbox rules which
+  can be used as a persistence mechanism. Microsoft has released a
+  patch to disable execution but attackers can reenable it by changing
+  this value to 1.
 
-  HKEY_USERS\*\Software\Microsoft\Office\*\Outlook\Security\EnableUnsafeClientMailRules = 0 (expected)
-  https://support.microsoft.com/en-us/help/3191893/how-to-control-the-rule-actions-to-start-an-application-or-run-a-macro
+  HKEY_USERS\*\Software\Microsoft\Office\*\Outlook\Security\EnableUnsafeClientMailRules
+  = 0 (expected)
+  
+reference:
+  - https://support.microsoft.com/en-us/help/3191893/how-to-control-the-rule-actions-to-start-an-application-or-run-a-macro
 
 author: "@mgreen27"
 

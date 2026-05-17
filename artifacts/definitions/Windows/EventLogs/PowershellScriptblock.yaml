@@ -2,23 +2,24 @@ name: Windows.EventLogs.PowershellScriptblock
 author: Matt Green - @mgreen27
 
 description: |
-  This Artifact will search and extract ScriptBlock events (Event ID 4104) from
-  Powershell-Operational Event Logs.
+  Parses PowerShell script block logging entries (Event ID 4104) to
+  detect potentially malicious script content.
 
   PowerShell is commonly used by attackers across all stages of the attack
   lifecycle. A valuable hunt is to search Scriptblock logs for signs of
   malicious content.
 
-  There are several parameters available for search leveraging regex.
-    - DateAfter enables search for events after this date.
-    - DateBefore enables search for events before this date.
-    - SearchStrings enables regex search over scriptblock text field.
-    - StringWhiteList enables a regex whitelist for scriptblock text field.
-    - PathWhitelist enables a regex whitelist for path of scriptblock.
-    - LogLevel enables searching on type of log. Default is Warning level which
+  There are several parameters available for search leveraging regex:
+
+  - DateAfter enables search for events after this date.
+  - DateBefore enables search for events before this date.
+  - SearchStrings enables regex search over scriptblock text field.
+  - StringWhiteList enables a regex whitelist for scriptblock text field.
+  - PathWhitelist enables a regex whitelist for path of scriptblock.
+  - LogLevel enables searching on type of log. Default is Warning level which
     is logged even if ScriptBlock logging is turned off when suspicious keywords
     detected in PowerShell interpreter. See second reference for list of keywords.
-    - SearchVSS enables VSS search.
+  - SearchVSS enables VSS search.
 
 reference:
   - https://attack.mitre.org/techniques/T1059/001/

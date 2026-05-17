@@ -1,15 +1,15 @@
 name: Server.Utils.CreateLinuxPackages
 description: |
-  Build Deb and RPM packages ready for deployment in the current org.
+  Builds Debian (.deb) and RPM packages with embedded client config for the current organization.
 
   This artifact depends on the following tool:
 
   * <velo-tool-viewer name="VelociraptorLinux" />
 
-  You can replace this with suitable Velociraptor Linux build, or the
-  current release binary will be used by default.
+  You can replace this with suitable Velociraptor Linux build, or else
+  the current release binary will be used by default.
 
-  Use the following to inspect the RPM and Deb:
+  Use the following shell commands to inspect the resulting RPM and Deb:
   - rpm -qi velociraptor.rpm
   - rpm -qp --scripts velociraptor.rpm
   - dpkg-deb -I velociraptor.deb

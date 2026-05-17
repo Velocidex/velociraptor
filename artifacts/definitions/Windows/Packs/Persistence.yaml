@@ -1,6 +1,7 @@
 name: Windows.Packs.Persistence
 description: |
-  This artifact pack collects various persistence mechanisms in Windows.
+  Aggregates results from multiple persistence-related artifacts into
+  a single artifact "pack".
 
 precondition:
   SELECT OS from info() where OS = "windows"

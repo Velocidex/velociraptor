@@ -1,5 +1,8 @@
 name: Windows.Persistence.Debug
 description: |
+  Detects programs with a debugger configured in Image File Execution
+  Options registry keys.
+
   Windows allows specific configuration of various executables via a
   registry key. Some keys allow defining a debugger to attach to a
   program as it is run. If this debugger is launched for commonly used

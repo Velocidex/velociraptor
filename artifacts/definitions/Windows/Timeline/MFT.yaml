@@ -1,15 +1,15 @@
 name: Windows.Timeline.MFT
 description: |
-  Enables querying the MFT with advanced filters such as time, path or other
-  NTFS attributes.
+  Parses the MFT and outputs file metadata in timeline format with
+  anomaly detection flags and advanced filters.
 
-  Output is to Timeline field format to enable simple review across Timeline
-  queries. The TimeOutput parameter enables configuring which NTFS attribute
-  timestamps are in focus as event_time. for example:
-    STANDARD_INFORMATION (4), FILE_NAME (4) or ALL (8)
+  Output is to Timeline field format to enable simple review across
+  Timeline queries. The TimeOutput parameter enables configuring which
+  NTFS attribute timestamps are in focus as event_time. for example:
+  `STANDARD_INFORMATION (4), FILE_NAME (4) or ALL (8)`
 
   This artifact also has the same anomaly logic as AnalyzeMFT added to
-  each row to aid analysis.
+  each row, to aid analysis.
 
 author: Matt Green - @mgreen27
 

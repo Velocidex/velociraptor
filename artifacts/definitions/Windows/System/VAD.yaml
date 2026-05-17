@@ -1,24 +1,27 @@
 name: Windows.System.VAD
 author: "Matt Green - @mgreen27"
 description: |
-  This artifact enables enumeration of process memory sections via the Virtual
-  Address Descriptor (VAD). The VAD is used by the Windows memory manager to
-  describe allocated process memory ranges.
+  Enumerates process memory sections using Virtual Address Descriptor
+  (VAD) information.
+  
+  The VAD is used by the Windows memory manager to describe allocated
+  process memory ranges.
 
   Available filters include process, mapping path, memory permissions
   or by content with yara.
 
-  Use the UploadSection switch to upload any sections.
+  Use the `UploadSection` switch to upload any sections.
 
-  A notebook suggestion is available for Strings analysis on uploaded sections.
+  A notebook suggestion is available for Strings analysis on uploaded
+  sections.
 
-  NOTE:
+  NOTES:
 
   - ProtectionChoice is a choice to filter on section protection. Default is
   all sections and ProtectionRegex can override selection.
   - To filter on unmapped sections the MappingNameRegex: ^$ can be used.
   - When uploading sections during analysis, its recommended to run once for
-  scoping, then a second time once confirmed for upload.
+    scoping, then a second time once confirmed for upload.
 
 parameters:
   - name: ProcessRegex

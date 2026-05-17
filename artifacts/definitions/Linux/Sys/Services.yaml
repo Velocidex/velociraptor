@@ -1,5 +1,6 @@
 name: Linux.Sys.Services
-description: Parse services from systemctl
+description: |
+  Parses services output from `systemctl`.
 
 implied_permissions:
   - EXECVE

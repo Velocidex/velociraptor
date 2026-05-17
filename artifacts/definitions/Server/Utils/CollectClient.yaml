@@ -1,5 +1,8 @@
 name: Server.Utils.CollectClient
 description: |
+  Automates the full collection workflow of a specified artifact:
+  schedule, wait, and retrieve results from a single client.
+  
   This artifact simplifies collecting from a specific client by
   performing all steps automatically:
 

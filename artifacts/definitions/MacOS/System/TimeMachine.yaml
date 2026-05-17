@@ -1,6 +1,7 @@
 name: MacOS.System.TimeMachine
 description: |
-  This artifact collects information about MacOS Time Machine backups.
+  Collects Time Machine backup settings including volume, auto-backup
+  status, and destinations.
 
 type: CLIENT
 

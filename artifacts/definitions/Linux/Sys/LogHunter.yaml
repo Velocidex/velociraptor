@@ -1,15 +1,18 @@
 name: Linux.Sys.LogHunter
 author: "Matt Green - @mgreen27"
 description: |
-  Allows grep-like searching of Linux, MacOS and Windows logs.
+  Provides grep-like search capabilities for Linux, MacOS and Windows
+  logs.
 
-  Parameters include `SearchRegex` and `WhitelistRegex` as regex terms.
+  Parameters include `SearchRegex` and `WhitelistRegex` as regex
+  terms.
 
-  Also included is a Path exclusion regex (`ExcludePathRegex`) to refine results
-  and automatically exclude hits in commonly unwanted locations such as `/proc`.
+  Also included is a Path exclusion regex (`ExcludePathRegex`) to
+  refine results and automatically exclude hits in commonly unwanted
+  locations such as `/proc`.
 
-  NOTE: The `nosymlink` feature of glob is set so unexpected results may occur
-  if your targets includes symlink files.
+  NOTE: The `nosymlink` feature of glob is set so unexpected results
+  may occur if your targets includes symlink files.
 
 parameters:
   - name: TargetFiles

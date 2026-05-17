@@ -1,15 +1,16 @@
 name: Windows.Sys.Programs
 description: |
-  Represents products as they are installed by Windows Installer.
+  Enumerates installed Windows applications by reading registry
+  uninstall keys.
 
-  A product generally correlates to one installation package on
+  An application generally correlates to one installation package on
   Windows. Some fields may be blank as Windows installation details
   are left to the discretion of the product author.
 
   Limitations: This key parses the live registry hives - if a user is
   not logged in then their data will not be resident in HKU and
-  therefore you should parse the hives on disk (including within
-  VSS/`Regback`).
+  therefore you should instead parse the hives on disk (including
+  within VSS/`Regback`).
 
 reference:
   - https://github.com/facebook/osquery/blob/master/specs/windows/programs.table

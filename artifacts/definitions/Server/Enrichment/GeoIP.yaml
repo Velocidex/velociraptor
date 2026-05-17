@@ -1,17 +1,22 @@
 name: Server.Enrichment.GeoIP
 description: |
-  This artifact can use the MaxMind database to Geo resolve an IP
-  address. You will need to provide a valid GeoIP database.
+  A utility artifact that enriches an IP address with country, state,
+  and city information from a MaxMind GeoIP database.
+
+  You will need to provide a valid licensed GeoIP database.
 
   You can obtain a free to use (gratis but not libre) database from
-  https://www.maxmind.com/ or you can pay for a more accurate option.
+  https://www.maxmind.com/ or you can pay for their more accurate
+  offerings.
 
-  After storing the database somewhere on your server, you should the
-  location in the server metadata screen to it under the key "GeoIPDB"
-  (for example `/usr/shared/GeoLite2-City_20210803/GeoLite2-City.mmdb`)
+  After storing the database file somewhere on your server, you should
+  store the database path in the server metadata under the key
+  "GeoIPDB" (for example
+  `/usr/shared/GeoLite2-City_20210803/GeoLite2-City.mmdb`)
 
-  Alternatively you can import this artifact to gain access to the
-  utility functions (or just copy them into your own artifact).
+  As as alternative to calling this artifact, you can import this
+  artifact to gain access to the utility functions (or just copy them
+  into your own artifact).
 
 export: |
   LET DB = server_metadata().GeoIPDB

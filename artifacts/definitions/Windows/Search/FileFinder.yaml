@@ -1,33 +1,33 @@
 name: Windows.Search.FileFinder
 description: |
-  Find files on the filesystem using the filename or content.
-
-
-  ## Performance Note
-
-  This artifact can be quite expensive, especially if we search file
-  content. It will require opening each file and reading its entire
-  content. To minimize the impact on the endpoint we recommend this
-  artifact is collected with a rate limited way (about 20-50 ops per
-  second).
+  Searches for files by path glob, inspects file content via YARA, and
+  provides file hash and upload options.
 
   This artifact is useful in the following scenarios:
 
-    * We need to locate all the places on our network where customer
-      data has been copied.
+  * We need to locate all the places on our network where customer
+    data has been copied.
 
-    * We’ve identified malware in a data breach, named using short
-      random strings in specific folders and need to search for other
-      instances across the network.
+  * We’ve identified malware in a data breach, named using short
+    random strings in specific folders and need to search for other
+    instances across the network.
 
-    * We believe our user account credentials have been dumped and
-      need to locate them.
+  * We believe our user account credentials have been dumped and
+    need to locate them.
 
-    * We need to search for exposed credit card data to satisfy PCI
-      requirements.
+  * We need to search for exposed credit card data to satisfy PCI
+    requirements.
 
-    * We have a sample of data that has been disclosed and need to
-      locate other similar files
+  * We have a sample of data that has been disclosed and need to
+    locate other similar files
+
+  **Performance Note**
+
+  This artifact can be quite resource intensive, especially if we
+  search file content. It will require opening each file and reading
+  its entire content. To minimize the impact on the endpoint we
+  recommend this artifact is collected with a rate limited applied
+  (about 20-50 ops per second should be reasonable).
 
 
 precondition:

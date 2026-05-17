@@ -1,9 +1,11 @@
 name: System.VFS.ListDirectory
 description: |
-  This is an internal artifact used by the GUI to populate the
-  VFS. You may run it manually if you like, but typically it is
-  launched by the GUI when a user clicks the "Refresh this directory"
-  button.
+  Lists directory contents and populates the server-side
+  VFS cache to enable VFS browsing.
+  
+  You may run it manually if you like, but typically it is launched by
+  the GUI when a user clicks the "Refresh this directory" button in
+  the VFS screen.
 
 parameters:
   - name: Path

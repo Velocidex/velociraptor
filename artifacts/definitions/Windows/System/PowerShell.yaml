@@ -1,10 +1,10 @@
 name: Windows.System.PowerShell
 description: |
-  This artifact allows running arbitrary commands through the system
-  PowerShell.
+  Executes arbitrary commands through PowerShell with output capture
+  and upload support.
 
-  Since Velociraptor typically runs as system, the commands will also
-  run as System.
+  Since Velociraptor typically runs as SYSTEM, the commands will also
+  run as SYSTEM.
 
   This is a very powerful artifact since it allows for arbitrary
   command execution on the endpoints. Therefore this artifact requires

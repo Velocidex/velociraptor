@@ -1,20 +1,21 @@
 name: Generic.Detection.Yara.Glob
 author: Matt Green - @mgreen27
 description: |
-  This artifact returns a list of target files then runs YARA over the target
-  list.
+  Runs YARA rules against files discovered via glob search with
+  configurable filters and optional upload of hit context.
 
   There are 2 kinds of YARA rules that can be deployed:
 
   1. Url link to a YARA rule.
   2. or a Standard YARA rule attached as a parameter.
 
-  Only one method of YARA will be applied and search order is as above.
+  Only one method of YARA will be applied and search order is as
+  above.
 
   The artifact uses Glob for search so relevant filters can be applied
-  including Glob, Size and date. Date filters will target files with a timestamp
-  before LatestTime and after EarliestTime. The artifact also has an option to
-  upload any files with YARA hits.
+  including Glob, Size and date. Date filters will target files with a
+  timestamp before LatestTime and after EarliestTime. The artifact
+  also has an option to upload any files with YARA hits.
 
   Some examples of path glob may include:
 
@@ -25,11 +26,11 @@ description: |
   * Windows: `C:/Users/**/*.{exe,dll,ps1,bat}`
   * Windows: `C:\Users\**\*.{exe,dll,ps1,bat}`
 
-  NOTE: this artifact runs the glob plugin with the `nosymlink` switch turned on.
-  This will NOT follow any symlinks and may cause unexpected results if
-  unknowingly targeting a folder with symlinks.
-  If upload is selected NumberOfHits is redundant and not advised as hits are
-  grouped by path to ensure files only downloaded once.
+  NOTE: this artifact runs the glob plugin with the `nosymlink` switch
+  turned on. This will NOT follow any symlinks and may cause
+  unexpected results if unknowingly targeting a folder with symlinks.
+  If upload is selected NumberOfHits is redundant and not advised as
+  hits are grouped by path to ensure files only downloaded once.
 
 aliases:
   - Windows.Detection.Yara.Glob

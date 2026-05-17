@@ -1,7 +1,7 @@
 name: Windows.Detection.Yara.NTFS
 author: Matt Green - @mgreen27
 description: |
-  This artifact searches the MFT, returns a list of target files then runs YARA
+  Searches the MFT, returns a list of target files, and then runs YARA
   over the target list.
 
   There are 3 kinds of YARA rules that can be deployed:
@@ -10,11 +10,13 @@ description: |
   2. Shorthand YARA in the format `wide nocase ascii:string1,string2,string3`.
   3. or a Standard YARA rule attached as a parameter.
 
-  Only one method of YARA will be applied and search order is as above.
+  Only one method of YARA will be applied and search order is as
+  above.
 
-  The artifact uses Windows.NTFS.MFT so similar regex filters can be applied
-  including Path, Size and date. The artifact also has an option to search across
-  all attached drives and upload any files with YARA hits.
+  The artifact uses Windows.NTFS.MFT so similar regex filters can be
+  applied including Path, Size and date. The artifact also has an
+  option to search across all attached drives and upload any files
+  with YARA hits.
 
   Some examples of path regex may include:
 
@@ -24,9 +26,9 @@ description: |
   * Multiple extensions: `\.(php|aspx|resx|asmx)$`
 
   Note: no drive and forward slashes - these expressions are for paths
-  relative to the root of the filesystem.
-  If upload is selected NumberOfHits is redundant and not advised as hits are
-  grouped by path to ensure files only downloaded once.
+  relative to the root of the filesystem. If upload is selected
+  NumberOfHits is redundant and not advised as hits are grouped by
+  path to ensure files only downloaded once.
 
 type: CLIENT
 parameters:

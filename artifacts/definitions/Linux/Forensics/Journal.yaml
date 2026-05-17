@@ -1,7 +1,9 @@
 name: Linux.Forensics.Journal
 description: |
-  Parses the binary journal logs. Systemd uses a binary log format to
-  store logs.
+  Extracts records from systemd journal files for forensic analysis.
+
+  Systemd uses a binary log format to store logs. This parses the
+  binary journal logs. 
 
 parameters:
 - name: JournalGlob
