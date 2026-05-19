@@ -51,4 +51,5 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/tools/packaging"
 	_ "www.velocidex.com/golang/velociraptor/vql/tools/process"
 	_ "www.velocidex.com/golang/velociraptor/vql/tools/rsyslog"
+	_ "www.velocidex.com/golang/velociraptor/vql/tools/shell"
 )

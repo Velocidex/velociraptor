@@ -1345,12 +1345,16 @@
     you will often need to specify a field name containing full
     stop. You can escape this using the backticks like the example above.
   type: Function
-  version: 2
+  version: 3
   args:
   - name: client_id
     type: string
     description: The client id to schedule a collection on
     required: true
+  - name: flow_id
+    type: string
+    description: If a flow id is specified we do not create a new flow, but instead
+      add the collection to this flow.
   - name: artifacts
     type: string
     description: A list of artifacts to collect
@@ -6307,6 +6311,11 @@
 
     - [timestamp]({{< ref "/vql_reference/popular/timestamp/" >}})
   type: Function
+  version: 2
+  args:
+  - name: ns
+    type: bool
+    description: Return the time in ns
   category: popular
   platforms:
   - darwin_amd64_cgo
@@ -6514,7 +6523,7 @@
   type: Plugin
   category: developer
   metadata:
-    permissions: MACHINE_STATE
+    permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -9874,6 +9883,36 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: shell_session
+  description: Recreate or retrieve a shell session handle.
+  type: Function
+  version: 1
+  metadata:
+    permissions: EXECVE
+  platforms:
+  - linux_amd64_cgo
+- name: shell_session_control
+  description: Control a previously created shell session.
+  type: Function
+  version: 1
+  args:
+  - name: name
+    type: string
+    description: The name of the shell session.
+  - name: stdin
+    type: string
+    description: Write this string to the session stdin.
+  - name: close_stdin
+    type: bool
+    description: If specified we close the stdin of the session. This will usually
+      terminate the session gracefully.
+  - name: kill
+    type: bool
+    description: If specified we kill the session.
+  metadata:
+    permissions: EXECVE
+  platforms:
+  - linux_amd64_cgo
 - name: sigma
   description: |
     Evaluate sigma rules.

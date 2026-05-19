@@ -22,6 +22,7 @@ import FullScreenTable from './components/notebooks/table_view.jsx';
 import FullScreenNotebook from './components/notebooks/full_notebook.jsx';
 import FullScreenHuntNotebook from './components/hunts/hunt-full-notebook.jsx';
 import FullScreenFlowNotebook from './components/flows/flow-full-notebook.jsx';
+import { ShellViewerFullScreen } from "./components/clients/shell-viewer.jsx";
 import ArtifactInspector from './components/artifacts/artifacts.jsx';
 import UserInspector from './components/users/user-inspector.jsx';
 import VeloHunts from './components/hunts/hunts.jsx';
@@ -253,6 +254,10 @@ class App extends Component {
                 <SnackbarProvider>
                   <SidebarKeyNavigator client={this.state.client}/>
                   <Switch>
+                    <Route path="/fullscreen/shell/:artifact/:client_id/:flow_id">
+                      <ShellViewerFullScreen />
+                    </Route>
+
                     <Route path="/fullscreen/notebooks/:notebook_id">
                       <FullScreenNotebook />
                     </Route>

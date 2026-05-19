@@ -115,7 +115,11 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 		}
 
 		if arg.Target == "" {
-			arg.Target = "VelociraptorLinux"
+			if arg.Server {
+				arg.Target = "VelociraptorLinuxSumo"
+			} else {
+				arg.Target = "VelociraptorLinux"
+			}
 		}
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)

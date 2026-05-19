@@ -27,7 +27,7 @@ type EncodeFunction struct{}
 func (self *EncodeFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	defer vql_subsystem.RegisterMonitor(ctx, "encode", args)()
+	defer vql_subsystem.RegisterMonitor(ctx, "serialize", args)()
 
 	arg := &EncodeFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -122,11 +122,24 @@ func (self *EncodeFunction) Call(ctx context.Context,
 func (self EncodeFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "serialize",
-		Doc:     "Encode an object as a string (csv or json).",
+		Doc:     "Encode an object as a string (json, yaml, hex, base64, csv).",
+		ArgType: type_map.AddType(scope, &EncodeFunctionArgs{}),
+	}
+}
+
+type EncodeOverride struct {
+	EncodeFunction
+}
+
+func (self EncodeOverride) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "encode",
+		Doc:     "Encode an object as a string (json, yaml, hex, base64, csv).",
 		ArgType: type_map.AddType(scope, &EncodeFunctionArgs{}),
 	}
 }
 
 func init() {
 	vql_subsystem.RegisterFunction(&EncodeFunction{})
+	vql_subsystem.OverrideFunction(&EncodeOverride{})
 }
