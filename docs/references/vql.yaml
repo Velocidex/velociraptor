@@ -2244,16 +2244,19 @@
   - windows_386_cgo
   - windows_amd64_cgo
 - name: encode
-  description: Encodes a string as a different type. Currently supported types include
-    'hex', 'base64'.
+  description: |
+    Encode an object as a string.
+
+    This function is an alias to `serialize()`
   type: Function
   args:
-  - name: string
+  - name: item
     type: Any
+    description: The item to encode
     required: true
-  - name: type
+  - name: format
     type: string
-    required: true
+    description: Encoding format (csv,json,yaml,hex,base64)
   category: encode
   platforms:
   - darwin_amd64_cgo
@@ -9713,13 +9716,19 @@
       WHERE DNSInfo AND Name
     })
     ```
+
+    NOTE: An alternative to this plugin is a `Sigma Correlation rule`
+
   type: Plugin
   args:
   - name: query
     type: StoredQuery
-    description: Run this query to generate rows. The query should select from SEQUENCE
-      which will contain the current set of rows in the sequence. The query will be
-      run on each new row that is pushed to the sequence.
+    description: |
+      Run this query to generate rows.
+
+      The query should select from SEQUENCE which will contain the
+      current set of rows in the sequence. The query will be run on
+      each new row that is pushed to the sequence.
     required: true
   - name: max_age
     type: int64
@@ -9745,9 +9754,12 @@
     example:
 
     ```vql
-    SELECT * FROM Artifact.Linux.Search.FileFinder(SearchFilesGlobTable=serialize(format="csv",item=tlist),...)
+    SELECT * FROM Artifact.Linux.Search.FileFinder(
+       SearchFilesGlobTable=serialize(format="csv",item=tlist),...)
     ```
-    will pass a list in CSV format to the artifact's `SearchFilesGlobTable` parameter.
+
+    will pass a list in CSV format to the artifact's
+    `SearchFilesGlobTable` parameter.
 
     ### See also
 
@@ -9887,6 +9899,25 @@
   description: Recreate or retrieve a shell session handle.
   type: Function
   version: 1
+  args:
+  - name: argv
+    type: string
+    description: Argv to run the command with.
+    repeated: true
+    required: true
+  - name: env
+    type: ordereddict.Dict
+    description: Environment variables to launch with.
+  - name: cwd
+    type: string
+    description: If specified we change to this working directory first.
+  - name: secret
+    type: string
+    description: The name of a secret to use.
+  - name: name
+    type: string
+    description: The name of the shell session. If the session already exists, we
+      just return a handle to it.
   metadata:
     permissions: EXECVE
   platforms:
@@ -13310,4 +13341,3 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
-

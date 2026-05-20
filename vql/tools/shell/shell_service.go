@@ -284,7 +284,7 @@ func (self StartShellFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 	return &vfilter.FunctionInfo{
 		Name:     "shell_session",
 		Doc:      "Recreate or retrieve a shell session handle.",
-		ArgType:  type_map.AddType(scope, &StartShellFunction{}),
+		ArgType:  type_map.AddType(scope, &StartShellFunctionArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.EXECVE).Build(),
 		Version:  1,
 	}

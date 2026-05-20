@@ -78,14 +78,13 @@ class _VeloShellCell extends Component {
             this.setState({loaded: true});
             this.loadData(true);
         }
+        this.loadData();
     }
 
     componentWillUnmount() {
         this.source.cancel("unmounted");
         clearInterval(this.interval);
     }
-
-
 
     setFullScreen = () => {
         let client_id = this.props.client_id;
@@ -99,16 +98,27 @@ class _VeloShellCell extends Component {
         return "";
     }
 
+    transcriptLink = () => {
+        let client_id = this.props.client_id;
+        let selected_flow = this.props.flow_id;
+        if (client_id && selected_flow) {
+            return "/fullscreen/notebooks/N." + selected_flow +
+                "-" + client_id;
+        }
+        return "";
+    }
+
+
     viewFlow = target=>{
-        if (!this.props.flow_id ||
-            !this.props.flow.client_id) {
+        let client_id = this.props.client_id;
+        let flow_id = this.props.flow_id;
+
+        if (!flow_id || !client_id) {
             return;
         }
 
-        let client_id = this.props.client_id;
-        let session_id = this.props.flow_id;
         this.props.history.push('/collected/' + client_id +
-                                "/" + session_id + "/" + target);
+                                "/" + flow_id + "/" + target);
     }
 
     // Retrieve the flow result from the server and show it.
@@ -139,7 +149,7 @@ class _VeloShellCell extends Component {
             artifact: artifact,
             client_id: this.props.client_id,
             flow_id: this.props.flow_id,
-            rows: 500,
+            rows: 5000,
         }, this.source.token).then(response=>{
             if (!response || !response.data || !response.data.rows) {
                 return;
@@ -149,13 +159,7 @@ class _VeloShellCell extends Component {
             // Only scroll if the length changes.
             if(this.scrollRef.current &&
                this.state.last_length != data.length) {
-                setTimeout(()=>{
-                    this.scrollRef.current.scrollIntoView({
-                        block: 'start',
-                        inline: 'nearest',
-                        behavior: "smooth",
-                    });
-                }, 300);
+                this.scrollToBottom();
             }
 
             // Do not update the state un necessarily
@@ -166,6 +170,18 @@ class _VeloShellCell extends Component {
             }
         });
     };
+
+    scrollToBottom = ()=>{
+        // Inside setTimeout so we can run it outside the render
+        // cycle.
+        setTimeout(()=>{
+            this.scrollRef.current.scrollIntoView({
+                block: 'end',
+                inline: 'nearest',
+                behavior: "smooth",
+            });
+        }, 100);
+    }
 
     cancelFlow = (e) => {
         if (!this.props.flow_id || !this.props.client_id) {
@@ -205,8 +221,11 @@ class _VeloShellCell extends Component {
         api.post('v1/CollectArtifact', params).then(response=>{
             // Refresh the artifacts immediately.
             this.props.fetchLastShellCollections();
+            this.scrollToBottom();
         }, this.source.token);
 
+        // Clear the command after launching it.
+        this.setState({command: ""});
     }
 
     renderCollapsed = ()=>{
@@ -237,6 +256,9 @@ class _VeloShellCell extends Component {
                 <ToolTip tooltip={T("Hide Output")} key="loaded">
                   <Button variant="default"
                           onClick={() => this.setState({"loaded": false})} >
+                    <span className="icon-small">
+                      { this.props.artifact}
+                    </span>
                     <i><FontAwesomeIcon icon="eye-slash"/></i>
                   </Button>
                 </ToolTip>
@@ -249,6 +271,9 @@ class _VeloShellCell extends Component {
                               this.setState({loaded:true});
                               this.loadData(true);
                           }}>
+                    <span className="icon-small">
+                      { this.props.artifact}
+                    </span>
                     <i><FontAwesomeIcon icon="eye"/></i>
                   </Button>
                 </ToolTip>
@@ -292,10 +317,11 @@ class _VeloShellCell extends Component {
 
         if(!_.isEmpty(this.state.flow)) {
             // If the flow is currently running we may be able to stop it.
-            if (this.state.flow.state  === 'RUNNING') {
-                buttons.push(
+            if (this.state.flow.state  === 'RUNNING' ||
+                this.state.flow.state == "IN_PROGRESS") {
+                flow_status.push(
                     <ToolTip tooltip={T("Stop")} key="stop">
-                      <Button variant="default"
+                      <Button variant="outline-info shell-info"
                               onClick={this.cancelFlow}>
                         <i><FontAwesomeIcon icon="stop"/></i>
                       </Button>
@@ -347,19 +373,16 @@ class _VeloShellCell extends Component {
 
     render() {
         let buttons = [];
-        buttons.push(<Button variant="default" key="artifact name">
-                     { this.props.artifact}
-                     </Button>);
-        buttons.push(this.renderExpandAll());
         if(!this.props.fullscreen) {
+            // Button to load the output from the server (it could be
+            // large so we don't fetch it until the user asks)
+            buttons.push(this.renderLoadedButtons());
+            buttons.push(this.renderExpandAll());
+
             // The cell can be collapsed ( inside an inset well) or
             // expanded. These buttons can switch between the two
             // modes.
             buttons.push(this.renderCollapsed());
-
-            // Button to load the output from the server (it could be
-            // large so we don't fetch it until the user asks)
-            buttons.push(this.renderLoadedButtons());
 
             buttons.push(
                 <ToolTip tooltip={T("Full Screen")} key="full screen">
@@ -371,7 +394,24 @@ class _VeloShellCell extends Component {
                   </Link>
                 </ToolTip>
             );
+
+        } else {
+            buttons.push(<Button variant="default" key="artifact name">
+                           { this.props.artifact}
+                         </Button>);
+            buttons.push(this.renderExpandAll());
         }
+
+        buttons.push(
+            <ToolTip tooltip={T("Transcript")} key="transcript">
+              <Link to={this.transcriptLink()}
+                    target="_blank" rel="noopener noreferrer"
+                    role="button" className="btn btn-default">
+                <FontAwesomeIcon icon="terminal"/>
+                <span className="sr-only">{T("Full Screen")}</span>
+              </Link>
+            </ToolTip>
+        );
 
         let output = "";
         if (this.state.loaded) {
@@ -401,9 +441,9 @@ class _VeloShellCell extends Component {
 
                 if(item.Stdout) {
                     current_trans.Out.push(
-                        <div className="stdout" key={idx}>
+                        <span className="stdout" key={"o" + idx}>
                           {item.Stdout}
-                        </div>);
+                        </span>);
                 }
 
                 if(item.StdoutUpload) {
@@ -417,9 +457,9 @@ class _VeloShellCell extends Component {
 
                 if(item.Stderr) {
                     current_trans.Out.push(
-                        <div className="stderr" key={idx}>
-                        {item.Stderr}
-                        </div>);
+                        <span className="stderr" key={"e" + idx}>
+                          {item.Stderr}
+                        </span>);
                 }
             });
 
@@ -427,6 +467,7 @@ class _VeloShellCell extends Component {
                 transactions.push(current_trans);
             }
             output = [<Accordion
+                        ref={this.scrollRef}
                         key="accordion"
                         activeKey={this.state.activeRows}
                         onSelect={rows=>{
@@ -434,28 +475,28 @@ class _VeloShellCell extends Component {
                         }}
                         alwaysOpen>
                         {_.map(transactions, (item, index) => {
-                            let timestamp = item.Timestamp || "";
-                            return  <Accordion.Item
-                                      key={index}
-                                      eventKey={index} >
-                                      <Accordion.Header>
-                                        <Row lg="12">
-                                          <VeloTimestamp
-                                            className="float-right"
-                                            usec={item.Timestamp} />
-                                          <Col lg="9">
-                                            <pre>{item.Command}</pre>
-                                          </Col>
-                                          <Col lg="3">
-                                          </Col>
-                                        </Row>
-                                      </Accordion.Header>
-                                      <Accordion.Body>
-                                        <pre>{item.Out}</pre>
-                                      </Accordion.Body>
-                                    </Accordion.Item>;
-                        })}
-                      </Accordion>];
+                          let timestamp = item.Timestamp || "";
+                          return  <Accordion.Item
+                          key={index}
+                          eventKey={index} >
+    <Accordion.Header>
+      <Row lg="12">
+        <VeloTimestamp
+          className="float-right"
+          usec={item.Timestamp} />
+        <Col lg="9">
+          <pre>{item.Command}</pre>
+        </Col>
+        <Col lg="3">
+        </Col>
+      </Row>
+    </Accordion.Header>
+    <Accordion.Body>
+      <pre>{item.Out}</pre>
+    </Accordion.Body>
+  </Accordion.Item>;
+                      })}
+                    </Accordion>];
         }
 
         return (
@@ -470,10 +511,11 @@ class _VeloShellCell extends Component {
                 />
               }
               <div className={classNames({
-                       collapsed: this.state.collapsed,
-                       expanded: !this.state.collapsed,
-                       'shell-cell': true,
-                   })}>
+                  collapsed: this.state.collapsed,
+                  expanded: !this.state.collapsed,
+                  fullscreen: this.props.fullscreen,
+                  'shell-cell': true,
+              })}>
                 <div className="cell-toolbar">
                   <ButtonToolbar>
                     <ButtonGroup>
@@ -490,10 +532,10 @@ class _VeloShellCell extends Component {
                 <InputGroup className="mb-3 d-flex">
                   <Form.Control as="textarea"
                                 rows={1}
-                                placeholder={T("Launch a command")}
+                                placeholder={T("Launch a command in this session")}
                                 spellCheck="false"
                                 value={this.state.command}
-                                onChange={(e) =>this.setState({
+                                onChange={e=>this.setState({
                                     command: e.target.value,
                                 })} />
                   <Button
@@ -694,6 +736,8 @@ class ShellViewer extends Component {
             simple_textarea = false;
         }
 
+        let client_os = this.state.client_os || this.state.client_os;
+
         return (
             <>
               <div className="shell-command">
@@ -704,9 +748,8 @@ class ShellViewer extends Component {
                                       {shell_type: e})}
                                   id="bg-nested-dropdown">
                     <Dropdown.Item eventKey="Powershell">Powershell</Dropdown.Item>
-                    { (!this.state.client_os || this.state.client_os === "windows") &&
-                      <Dropdown.Item eventKey="Cmd">Cmd</Dropdown.Item> }
-                    { (!this.state.client_os || this.state.client_os !== "windows") &&
+                    { client_os === "windows" ?
+                      <Dropdown.Item eventKey="Cmd">Cmd</Dropdown.Item> :
                       <Dropdown.Item eventKey="Bash">Bash</Dropdown.Item> }
                     <Dropdown.Item eventKey="VQL">VQL</Dropdown.Item>
                   </DropdownButton>

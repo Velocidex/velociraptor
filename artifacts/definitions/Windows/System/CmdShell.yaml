@@ -20,15 +20,57 @@ description: |
 required_permissions:
   - EXECVE
 
-precondition:
-  SELECT OS From info() where OS = 'windows'
-
 parameters:
   - name: Command
     default: "dir C:\\"
 
 sources:
-  - query: |
+  - precondition: |
+      SELECT * FROM info()
+      WHERE OS = 'windows' AND version(function="shell_session")
+    query: |
+      // Get the core flow id to key a unique session off.
+      LET FLOWID <= split(string=_SessionId, sep="/")[0]
+
+      // Newer clients have support for true shell sessions.
+      LET Session <= shell_session(name=FLOWID, argv=["cmd.exe"])
+
+      LET _ <= shell_session_control(name=FLOWID, stdin=Command + "\n")
+
+      SELECT * FROM if(condition=NOT Session.IsRunning,
+      then={
+         SELECT Stdin AS Command,
+             timestamp(epoch=now(ns=TRUE)) AS Timestamp,
+             Stdout,
+             NULL AS StdoutUpload,
+             Stderr,
+             NULL AS StderrUpload
+         FROM foreach(row=Session.Query)
+      })
+
+    notebook:
+      - type: vql
+        name: Transcript
+        template: |
+          /*
+          # View session transcript
+          */
+          LET Transcript = pipe(query={
+             SELECT Command + Stdout AS Line
+             FROM source()
+             WHERE Line
+          })
+
+          SELECT upload(accessor="pipe",
+               file="Transcript", name="transcript.txt") AS Transcript
+          FROM scope()
+
+  - precondition: |
+      SELECT * FROM info()
+      WHERE OS = "windows" AND NOT version(function="shell_session")
+    notebook:
+      - type: none
+    query: |
       LET SizeLimit <= 4096
       LET Now <= str(str=now())
 
@@ -60,4 +102,8 @@ sources:
 
 column_types:
 - name: StdoutUpload
+  type: preview_upload
+- name: StderrUpload
+  type: preview_upload
+- name: Transcript
   type: preview_upload

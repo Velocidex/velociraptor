@@ -44,8 +44,27 @@ sources:
          FROM foreach(row=Session.Query)
       })
 
+    notebook:
+      - type: vql
+        name: Transcript
+        template: |
+          /*
+          # View session transcript
+          */
+          LET Transcript = pipe(query={
+             SELECT Command + Stdout AS Line
+             FROM source()
+             WHERE Line
+          })
+
+          SELECT upload(accessor="pipe",
+               file="Transcript", name="transcript.txt") AS Transcript
+          FROM scope()
+
   - precondition: |
       SELECT * FROM info() WHERE NOT version(function="shell_session")
+    notebook:
+      - type: none
     query: |
       LET SizeLimit <= 4096
       LET Now = str(str=now())
@@ -85,4 +104,8 @@ resources:
 
 column_types:
 - name: StdoutUpload
+  type: preview_upload
+- name: StderrUpload
+  type: preview_upload
+- name: Transcript
   type: preview_upload

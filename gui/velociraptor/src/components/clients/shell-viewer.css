@@ -31,7 +31,6 @@
 .cell-toolbar {
     width: 100%;
     position: static;
-    z-index: 1000;
     background: var(--color-canvas-background);
 }
 
@@ -51,6 +50,16 @@
 
 .notebook-output.expanded {
     max-height: 200em;
+}
+
+.shell-output-container {
+    height: 100%;
+    overflow-y: hidden;
+    width: 100%;
+}
+
+.fullscreen .shell-output-container {
+    height: 85vh;
 }
 
 div.dt-buttons {
@@ -100,12 +109,6 @@ div.dt-buttons {
     display: hidden;
 }
 
-.shell-output-container {
-    overflow-y: auto;
-    max-height: 85vh;
-    width: 100%;
-}
-
 .shell-output-container pre {
     display: block;
     padding: 8px;
@@ -149,6 +152,10 @@ div.dt-buttons {
 .shell-info {
     white-space: nowrap;
     display: inline-flex;
+}
+
+.shell-info i {
+    margin-right: 10px;
 }
 
 .shell-output-container {

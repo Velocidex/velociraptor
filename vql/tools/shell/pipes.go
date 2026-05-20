@@ -4,6 +4,9 @@ import (
 	"context"
 	"io"
 	"sync"
+	"time"
+
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 const (
@@ -40,18 +43,21 @@ func pumpFromPipeToOutput(
 
 	defer wg.Done()
 
-	for {
-		buff := make([]byte, BUFFER_SIZE)
+	buff := make([]byte, BUFFER_SIZE)
+	for !utils.IsCtxDone(ctx) {
 		n, err := pipe.Read(buff)
-		if err != nil && err != io.EOF {
+		if err != nil { // EOF on pipe close.
 			if n > 0 {
 				cb(buff[:n])
 			}
 			return
 		}
 
-		if n == 0 {
-			return
+		// If the buffer is not full, wait for it be filled. Sleep a
+		// small amount to allow the pipe to fill up so we dont end up
+		// making lots of small reads and generating many small rows.
+		if n < BUFFER_SIZE {
+			time.Sleep(300 * time.Millisecond)
 		}
 
 		cb(buff[:n])
