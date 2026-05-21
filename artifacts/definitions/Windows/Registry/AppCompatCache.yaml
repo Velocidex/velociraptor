@@ -16,7 +16,6 @@ description: |
   - The appcompatcache artifact does not currently support execution
     flag in Windows 7 and 8 / 8.1 Systems.
 
-
 reference:
   - https://www.mandiant.com/resources/caching-out-the-val
 
@@ -129,7 +128,8 @@ sources:
       -- when greater than one key we need to extract results and order later
       LET results <= SELECT
             ModificationTime,
-            Name as Path,
+            regex_replace(source=Name,re='''^SYSVOL''',replace="%SystemRoot%") as Path,
+            expand(path=regex_replace(source=Name,re='''^SYSVOL''',replace="%SystemRoot%")) as Expanded,
             ExecutionFlag,
             ControlSet,
             Key
@@ -145,6 +145,7 @@ sources:
                   FROM AppCompatCache(Blob=read_file(
                       accessor='registry', filename=OSPath))
             })
+          WHERE ModificationTime // removes junk build in references
 
       -- find position of entry for each ControlSet. Lower numbers more recent
       LET ControlSetPosition(cs) = SELECT *, count() - 1 as Position
@@ -163,16 +164,17 @@ sources:
                     SELECT * FROM foreach(row=_value)
                 })
 
-      -- output results
+      -- include final test for Path/Expanded to cover dead disk usecases
       SELECT
         Position,
         ModificationTime,
-        Path,
-        ExecutionFlag,
-        ControlSet,
-        Key
+        if(condition = split(string=Path,sep='''%[^%]+%''')[1] = Expanded,
+                then = Path,
+                else = Expanded ) as Path,
+        ExecutionFlag
       FROM if(condition= len(list=AppCompatKeys.OSPath)=1,
         then={
             SELECT *, count() - 1 as Position FROM results
         },
         else= mutli_controlset )
+      GROUP BY Position, Path, ModificationTime
