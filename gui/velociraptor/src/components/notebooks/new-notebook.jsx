@@ -154,7 +154,7 @@ class NewNotebookLaunch extends React.Component {
 
 export class NewNotebook extends React.Component {
     static propTypes = {
-        notebook_paramerers: PropTypes.object,
+        notebook_parameters: PropTypes.object,
         parameters: PropTypes.object,
         closeDialog: PropTypes.func.isRequired,
         updateNotebooks: PropTypes.func.isRequired,
@@ -201,12 +201,10 @@ export class NewNotebook extends React.Component {
     }
 
     setParameters = (params) => {
-        console.log("setParameters", params);
         this.setState({parameters: params});
     }
 
     setNotebookParameters = (params) => {
-        console.log("setNotebookParameters", params);
         this.setState({notebook_parameters: params});
     }
 

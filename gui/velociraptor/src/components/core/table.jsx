@@ -13,7 +13,6 @@ import VeloTimestamp from "../utils/time.jsx";
 import URLViewer from "../utils/url.jsx";
 import VeloAce, { SettingsButton } from '../core/ace.jsx';
 import VeloValueRenderer from '../utils/value.jsx';
-import { NavLink } from "react-router-dom";
 import ClientLink from '../clients/client-link.jsx';
 import FlowLink from '../flows/flow-link.jsx';
 import { HexViewPopup } from '../utils/hex.jsx';

@@ -60,10 +60,6 @@ var (
 		"timeout", "Time collection out after this many seconds.").
 		Default("0").Float64()
 
-	query_org_id = query.Flag(
-		"org", "The Org ID to target with this query").
-		Default("root").String()
-
 	query_command_collect_cpu_limit = query.Flag(
 		"cpu_limit", "A number between 0 to 100 representing maximum CPU utilization.").
 		Default("0").Float64()
@@ -312,16 +308,16 @@ func doQuery() error {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
 			Info("API Client configuration loaded - will make gRPC connection.")
 		return doRemoteQuery(
-			config_obj, *format, *query_org_id, vql_queries, env)
+			config_obj, *format, *org_id, vql_queries, env)
 	}
 
-	if *query_org_id != "" {
+	if *org_id != "" {
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
 			return err
 		}
 
-		org_config_obj, err := org_manager.GetOrgConfig(*query_org_id)
+		org_config_obj, err := org_manager.GetOrgConfig(*org_id)
 		if err != nil {
 			return err
 		}

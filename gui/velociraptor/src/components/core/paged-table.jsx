@@ -642,11 +642,12 @@ class VeloPagedTable extends Component {
         }
 
         let page_size = getItem(schema.CurrentPageSizeKey) || 10;
+        let transform = this.props.params && this.props.params.transform;
         this.setState({
             guid: getID(),
             page_size: page_size,
+            transform: transform || {},
         });
-
         this.fetchRows();
     }
 

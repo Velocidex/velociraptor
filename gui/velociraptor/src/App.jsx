@@ -45,7 +45,7 @@ import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 
 import SidebarKeyNavigator from './components/sidebar/hotkeys.jsx';
-import {getItem, setItem, schema} from './components/core/storage.jsx';
+import {setItem, schema} from './components/core/storage.jsx';
 
 import './themes/no-theme.css';
 import './themes/veloci-light.css';

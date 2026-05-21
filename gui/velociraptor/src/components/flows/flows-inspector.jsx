@@ -10,13 +10,7 @@ import FlowLogs from './flow-logs.jsx';
 import FlowNotebook from './flow-notebook.jsx';
 import { withRouter }  from "react-router-dom";
 import {getItem, setItem, schema} from '../core/storage.jsx';
-
-// Typically subclassable by actual components.
-import api from '../core/api-service.jsx';
-
 import {CancelToken} from 'axios';
-
-const POLL_TIME = 5000;
 
 class FlowInspector extends React.Component {
     static propTypes = {

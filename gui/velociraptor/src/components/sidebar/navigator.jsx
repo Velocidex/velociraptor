@@ -10,7 +10,7 @@ import classNames from "classnames";
 import { NavLink } from "react-router-dom";
 import T from '../i8n/i8n.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
-import {getItem, setItem, schema} from '../core/storage.jsx';
+import {getItem, schema} from '../core/storage.jsx';
 
 import { EncodePathInURL } from '../utils/paths.jsx';
 
@@ -125,11 +125,6 @@ class VeloNavigator extends Component {
         if (!this.props.client || !this.props.client.client_id) {
             disabled = "disabled";
         };
-
-        let vfs_path = "";
-        if (this.props.vfs_path.length) {
-            vfs_path = this.props.vfs_path;
-        }
 
         // Only show the user management screen if the user is an
         // admin in this org.

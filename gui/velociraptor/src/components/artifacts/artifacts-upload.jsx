@@ -9,7 +9,6 @@ import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import InputGroup from 'react-bootstrap/InputGroup';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import classNames from "classnames";
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 import T from '../i8n/i8n.jsx';
@@ -71,7 +70,6 @@ export default class ArtifactsUpload extends React.Component {
                    {file: this.state.pack_file},
                    {name: "ArtifactPack", type: "upload_file"}).then(
                        response=>{
-                           let url = response.data.url;
                            this.setState({
                                loading: false,
                                upload_info: response.data,
@@ -114,7 +112,6 @@ export default class ArtifactsUpload extends React.Component {
                                     vfs_path: response.data.vfs_path,
                                     uploaded: uploaded});
                  }).catch(err=>{
-                     console.log(err);
                      this.setState({loading: false});
                  });
     };
@@ -130,8 +127,6 @@ export default class ArtifactsUpload extends React.Component {
         };
         api.post("v1/LoadArtifactPack", request,
                  this.source.token).then(response => {
-                     console.log(response);
-
                      if (response.data.cancel) {
                          return ;
                      }

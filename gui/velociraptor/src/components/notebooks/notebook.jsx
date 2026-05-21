@@ -12,7 +12,7 @@ import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 import Spinner from '../utils/spinner.jsx';
 import { withRouter }  from "react-router-dom";
-import {getItem, setItem, schema} from '../core/storage.jsx';
+import {setItem, schema} from '../core/storage.jsx';
 
 // Poll for new notebooks list.
 const POLL_TIME = 5000;

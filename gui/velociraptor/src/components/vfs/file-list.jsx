@@ -21,7 +21,7 @@ import {CancelToken} from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import VeloForm from "../forms/form.jsx";
 import FlowLink from "../flows/flow-link.jsx";
-import {getItem, setItem, schema} from '../core/storage.jsx';
+import {setItem, schema} from '../core/storage.jsx';
 
 import T from '../i8n/i8n.jsx';
 

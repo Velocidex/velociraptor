@@ -184,10 +184,12 @@ export default class NotebookRenderer extends React.Component {
     }
 
     getRef = cell_id=>{
-        let res = this.state.refs[cell_id];
+        let refs = this.state.refs;
+        let res = refs[cell_id];
         if(!res) {
             res = React.createRef();
-            this.state.refs[cell_id] = res;
+            refs[cell_id] = res;
+            this.setState({refs: refs});
         }
         return res;
     }

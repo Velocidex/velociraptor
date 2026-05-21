@@ -16,7 +16,6 @@ import Alert from 'react-bootstrap/Alert';
 import Accordion from 'react-bootstrap/Accordion';
 import Badge from 'react-bootstrap/Badge';
 import parseHTML from '../core/sanitize.jsx';
-import { cleanupHTML } from '../core/sanitize.jsx';
 import hljs from 'highlight.js';
 import ToolViewer from '../tools/tool-viewer.jsx';
 import markdownit from 'markdown-it';
@@ -34,6 +33,7 @@ class Admonition extends Component {
     static propTypes = {
         type: PropTypes.string,
         caption: PropTypes.string,
+        children: PropTypes.node,
     }
 
     renderType = ()=>{

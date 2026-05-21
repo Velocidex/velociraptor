@@ -9,7 +9,6 @@ import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
 import T from '../i8n/i8n.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { requestToParameters } from "../flows/utils.jsx";
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 import VeloTimestamp from "../utils/time.jsx";
@@ -18,20 +17,17 @@ import VeloAce from '../core/ace.jsx';
 import Completer from '../artifacts/syntax.jsx';
 import { DeleteFlowDialog } from "../flows/flows-list.jsx";
 import Button from 'react-bootstrap/Button';
-import { withRouter }  from "react-router-dom";
+import { withRouter, Link }  from "react-router-dom";
 import { JSONparse } from '../utils/json_parse.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
 import { parseTableResponse } from '../utils/table.jsx';
 
 import Accordion from 'react-bootstrap/Accordion';
-import Container from  'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import { Link }  from "react-router-dom";
 import  ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import  ButtonGroup from 'react-bootstrap/ButtonGroup';
-import Spinner from '../utils/spinner.jsx';
 import Form from 'react-bootstrap/Form';
 
 // Refresh every 5 seconds
@@ -77,6 +73,7 @@ class _VeloShellCell extends Component {
         if(this.props.fullscreen) {
             this.setState({loaded: true});
             this.loadData(true);
+            return;
         }
         this.loadData();
     }
@@ -102,23 +99,30 @@ class _VeloShellCell extends Component {
         let client_id = this.props.client_id;
         let selected_flow = this.props.flow_id;
         if (client_id && selected_flow) {
-            return "/fullscreen/notebooks/N." + selected_flow +
+            let link = "/fullscreen/notebooks/N." + selected_flow +
                 "-" + client_id;
-        }
-        return "";
-    }
 
+            return <ToolTip tooltip={T("Transcript")} key="transcript">
+                     <Link to={link}
+                           target="_blank" rel="noopener noreferrer"
+                           role="button" className="btn btn-default">
+                       <FontAwesomeIcon icon="terminal"/>
+                       <span className="sr-only">{T("Full Screen")}</span>
+                     </Link>
+                   </ToolTip>;
+        }
+        return <></>;
+    }
 
     viewFlow = target=>{
         let client_id = this.props.client_id;
         let flow_id = this.props.flow_id;
 
         if (!flow_id || !client_id) {
-            return;
+            return "";
         }
 
-        this.props.history.push('/collected/' + client_id +
-                                "/" + flow_id + "/" + target);
+        return '/collected/' + client_id + "/" + flow_id + "/" + target;
     }
 
     // Retrieve the flow result from the server and show it.
@@ -309,11 +313,15 @@ class _VeloShellCell extends Component {
 
     renderFlowStatus = ()=>{
         let flow_status = [
-            <Button variant="outline-info" key="flow_status"
-                    onClick={e=>{this.viewFlow("overview");}}
-            >
-              <i><FontAwesomeIcon icon="external-link-alt"/></i>
-            </Button>];
+            <ToolTip tooltip={T("View Collection")} key="flow_status">
+              <Link role="button"
+                    className="btn btn-default btn-outline-info"
+                    to={this.viewFlow("overview")}
+                >
+             <i><FontAwesomeIcon icon="external-link-alt"/></i>
+            </Link>
+            </ToolTip>
+        ];
 
         if(!_.isEmpty(this.state.flow)) {
             // If the flow is currently running we may be able to stop it.
@@ -360,7 +368,7 @@ class _VeloShellCell extends Component {
 
         flow_status.push(
             <ToolTip tooltip={T("Delete")} key="delete">
-              <Button variant="default"
+              <Button variant="outline-info"
                       disabled={!this.state.flow.session_id}
                       onClick={()=>this.setState({showDeleteWizard: true})}>
                 <i><FontAwesomeIcon icon="trash"/></i>
@@ -371,7 +379,7 @@ class _VeloShellCell extends Component {
         return flow_status;
     }
 
-    render() {
+    renderButtons =()=>{
         let buttons = [];
         if(!this.props.fullscreen) {
             // Button to load the output from the server (it could be
@@ -402,21 +410,14 @@ class _VeloShellCell extends Component {
             buttons.push(this.renderExpandAll());
         }
 
-        buttons.push(
-            <ToolTip tooltip={T("Transcript")} key="transcript">
-              <Link to={this.transcriptLink()}
-                    target="_blank" rel="noopener noreferrer"
-                    role="button" className="btn btn-default">
-                <FontAwesomeIcon icon="terminal"/>
-                <span className="sr-only">{T("Full Screen")}</span>
-              </Link>
-            </ToolTip>
-        );
+        buttons.push(this.transcriptLink());
+        return buttons;
+    }
 
+    render() {
+        let buttons = this.renderButtons();
         let output = "";
         if (this.state.loaded) {
-            let client_id = this.props.client_id;
-            let flow_id = this.props.flow_id;
             let rows = this.state.output || [];
 
             // Break up the data into a sequence of transactions:
@@ -475,28 +476,27 @@ class _VeloShellCell extends Component {
                         }}
                         alwaysOpen>
                         {_.map(transactions, (item, index) => {
-                          let timestamp = item.Timestamp || "";
                           return  <Accordion.Item
-                          key={index}
-                          eventKey={index} >
-    <Accordion.Header>
-      <Row lg="12">
-        <VeloTimestamp
-          className="float-right"
-          usec={item.Timestamp} />
-        <Col lg="9">
-          <pre>{item.Command}</pre>
-        </Col>
-        <Col lg="3">
-        </Col>
-      </Row>
-    </Accordion.Header>
-    <Accordion.Body>
-      <pre>{item.Out}</pre>
-    </Accordion.Body>
-  </Accordion.Item>;
-                      })}
-                    </Accordion>];
+                                    key={index}
+                                    eventKey={index} >
+                                    <Accordion.Header>
+                                      <Row lg="12">
+                                        <VeloTimestamp
+                                          className="float-right"
+                                          usec={item.Timestamp} />
+                                        <Col lg="9">
+                                          <pre>{item.Command}</pre>
+                                        </Col>
+                                        <Col lg="3">
+                                        </Col>
+                                      </Row>
+                                    </Accordion.Header>
+                                    <Accordion.Body>
+                                      <pre>{item.Out}</pre>
+                                    </Accordion.Body>
+                                  </Accordion.Item>;
+                        })}
+                      </Accordion>];
         }
 
         return (
@@ -551,6 +551,182 @@ class _VeloShellCell extends Component {
 };
 
 const VeloShellCell = withRouter(_VeloShellCell);
+
+
+class VeloVQLCell extends _VeloShellCell {
+
+    // Retrieve the flow result from the server and show it.
+    loadData = (load_now) => {
+        if (!this.props.flow_id || !this.props.client_id ||
+            !this.props.artifact) {
+            return;
+        };
+
+        // Get the flow status
+        api.get("v1/GetFlowDetails", {
+            client_id: this.props.client_id,
+            flow_id: this.props.flow_id,
+        }, this.source.token).then((response) => {
+            let context = response.data.context;
+            if(!_.isEqual(this.state.flow, context)) {
+                this.setState({flow: context});
+            }
+        });
+
+        // Dont fetch anything until the user unfolds the view.
+        if (!load_now && !this.state.loaded) {
+            return;
+        }
+
+        // Get the flow overview first - This is the index of all the
+        // VQL queries we sent to this session.
+        let artifact = this.props.artifact;
+        api.get("v1/GetTable", {
+            artifact: artifact + "/Overview",
+            client_id: this.props.client_id,
+            flow_id: this.props.flow_id,
+            rows: 5000,
+        }, this.source.token).then(response=>{
+            if (!response || !response.data || !response.data.rows) {
+                return;
+            };
+            let data = parseTableResponse(response);
+
+            // Only scroll if the length changes.
+            if(this.scrollRef.current &&
+               this.state.last_length != data.length) {
+                this.scrollToBottom();
+            }
+
+            // Do not update the state un necessarily
+            if(this.state.last_length != data.length) {
+                this.setState({output: data,
+                               last_length: data.length,
+                               artifact: artifact});
+            }
+        });
+    };
+
+    // The VQL shell does not show a transcript.
+    transcriptLink = () => {
+        return <span key="transcript"></span>;
+    }
+
+    render() {
+        let buttons = this.renderButtons();
+        let output = "";
+        if (this.state.loaded) {
+            let client_id = this.props.client_id;
+            let flow_id = this.props.flow_id;
+            let artifact = this.props.artifact;
+            let rows = this.state.output || [];
+
+            output = [<Accordion
+                        ref={this.scrollRef}
+                        key="accordion"
+                        activeKey={this.state.activeRows}
+                        onSelect={rows=>{
+                            this.setState({activeRows: rows});
+                        }}
+                        alwaysOpen>
+                        {_.map(rows, (item, index) => {
+                            let session_id = item._SessionId;
+                            if(!session_id) {
+                                return <></>;
+                            }
+                            return  <Accordion.Item
+                                      key={index}
+                                      eventKey={index} >
+                                      <Accordion.Header>
+                                        <Row lg="12">
+                                          <VeloTimestamp
+                                            className="float-right"
+                                            usec={item.Timestamp} />
+                                          <Col lg="9">
+                                            <pre>{item.Command}</pre>
+                                          </Col>
+                                          <Col lg="3">
+                                          </Col>
+                                        </Row>
+                                      </Accordion.Header>
+                                      <Accordion.Body>
+                                        <VeloPagedTable
+                                          params={{
+                                              artifact: artifact,
+                                              flow_id: flow_id,
+                                              client_id: client_id,
+                                              transform: {
+                                                  filter_column: "_SessionId",
+                                                  filter_regex: session_id,
+                                              },
+                                          }}
+                                        />
+                                        <pre>{item.Out || "" }</pre>
+                                      </Accordion.Body>
+                                    </Accordion.Item>;
+                        })}
+                      </Accordion>];
+        }
+
+        return (
+            <>
+              { this.state.showDeleteWizard &&
+                <DeleteFlowDialog
+                  client={{client_id: this.props.client_id}}
+                  flows={[this.state.flow]}
+                  onClose={e=>{
+                      this.setState({showDeleteWizard: false});
+                  }}
+                />
+              }
+              <div className={classNames({
+                  collapsed: this.state.collapsed,
+                  expanded: !this.state.collapsed,
+                  fullscreen: this.props.fullscreen,
+                  'shell-cell': true,
+                  'shell-vql-cell': true,
+              })}>
+                <div className="cell-toolbar">
+                  <ButtonToolbar>
+                    <ButtonGroup>
+                      { buttons }
+                    </ButtonGroup>
+                    <ButtonGroup className="float-right">
+                      { this.renderFlowStatus() }
+                    </ButtonGroup>
+                  </ButtonToolbar>
+                </div>
+                <div className="shell-output-container shell-vql-cell">
+                  {output}
+                </div>
+                <InputGroup className="mb-3 d-flex">
+                  <Button
+                    variant="default"
+                    onClick={this.launchCommand}>
+                    {T("Launch")}
+                  </Button>
+
+                  <VeloAce
+                    mode="vql"
+                    className="vql-shell-input"
+                    placeholder={T("Run VQL query on client")}
+                    aceConfig={this.aceConfig}
+                    text={this.state.command}
+                    onChange={(value) => {this.setState({command: value});}}
+                    commands={[{
+                        name: 'saveAndExit',
+                        bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
+                        exec: (editor) => {
+                            this.launchCommand();
+                        },
+                    }]}
+                  />
+                </InputGroup>
+              </div>
+            </>
+        );
+    };
+}
 
 
 class ShellViewer extends Component {
@@ -697,14 +873,16 @@ class ShellViewer extends Component {
     renderCells(flows) {
         return flows.map((item, index) => {
             let artifact = item.artifact;
-            /*
+
             if (artifact === "Generic.Client.VQL") {
                 return <VeloVQLCell
-                         key={getKey()}
+                         key="vql_cell"
                          fetchLastShellCollections={this.fetchLastShellCollections}
-                         flow={flow} client={this.props.client} />;
+                         flow_id={item.flow_id}
+                         artifact={artifact}
+                         client_id={this.props.client_id} />;
             };
-            */
+
             return (
                 <VeloShellCell key={index}
                                artifact={artifact}
@@ -720,11 +898,12 @@ class ShellViewer extends Component {
         // Attach a completer to ACE.
         let completer = new Completer();
         completer.initializeAceEditor(ace, {});
+        completer.registerCompletions(this.state.local_completions);
 
         ace.setOptions({
             autoScrollEditorIntoView: true,
-            placeholder: T("Run VQL on client"),
-            maxLines: 25
+            maxLines: 25,
+            placeholder: T("Type VQL to run on the client"),
         });
 
         this.setState({ace: ace});
@@ -736,7 +915,7 @@ class ShellViewer extends Component {
             simple_textarea = false;
         }
 
-        let client_os = this.state.client_os || this.state.client_os;
+        let client_os = this.props.system;
 
         return (
             <>
@@ -764,7 +943,7 @@ class ShellViewer extends Component {
                               })}>
                     </textarea> :
                     <VeloAce
-                      mode="VQL"
+                      mode="vql"
                       className="vql-shell-input"
                       aceConfig={this.aceConfig}
                       text={this.state.command}
@@ -825,6 +1004,15 @@ class _ShellViewerFullScreen extends Component {
         let client_id = params.client_id;
         let flow_id = params.flow_id;
         let artifact = params.artifact;
+
+        if (artifact === "Generic.Client.VQL") {
+            return <VeloVQLCell
+                     fetchLastShellCollections={this.fetchLastShellCollections}
+                     flow_id={flow_id}
+                     artifact={artifact}
+                     fullscreen={true}
+                     client_id={client_id} />;
+        };
 
         return (
             <VeloShellCell

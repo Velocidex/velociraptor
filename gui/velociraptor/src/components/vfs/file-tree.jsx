@@ -12,7 +12,7 @@ import { EncodePathInURL, DecodePathInURL, SplitPathComponents, Join } from '../
 import api from '../core/api-service.jsx';
 import { withRouter }  from "react-router-dom";
 import { JSONparse } from '../utils/json_parse.jsx';
-import {getItem, setItem, schema} from '../core/storage.jsx';
+import {setItem, schema} from '../core/storage.jsx';
 
 class VeloFileTree extends Component {
     static contextType = UserConfig;

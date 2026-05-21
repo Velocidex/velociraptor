@@ -32,7 +32,6 @@ import DeleteNotebookDialog from '../notebooks/notebook-delete.jsx';
 import ExportNotebook from '../notebooks/export-notebook.jsx';
 import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
-import {getItem, setItem} from '../core/storage.jsx';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 

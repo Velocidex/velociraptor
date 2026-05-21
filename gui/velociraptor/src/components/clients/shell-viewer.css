@@ -93,10 +93,6 @@ div.dt-buttons {
     display: block;
 }
 
-.shell-cell.expanded {
-    max-height: 200em;
-}
-
 .shell-command {
     padding: 5px;
 }
@@ -178,4 +174,18 @@ div.dt-buttons {
 
 .stderr {
     color: var(--color-warning-color);
+}
+
+.shell-vql-cell .velo-ace-editor {
+    height: 38px;
+    width: 70vw;
+}
+
+.fullscreen .shell-vql-cell.shell-output-container {
+    height: 65vh;
+}
+
+.fullscreen .vql-shell-input.velo-ace-editor {
+    height: 15vh;
+    width: 70vw;
 }

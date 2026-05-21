@@ -1,12 +1,9 @@
-import _ from 'lodash';
-
 import "./notebook-navigator.css";
 import Button from 'react-bootstrap/Button';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import T from '../i8n/i8n.jsx';
 import VeloTable, { getFormatter } from '../core/table.jsx';
-import VeloTimestamp from "../utils/time.jsx";
 import classNames from "classnames";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter }  from "react-router-dom";
