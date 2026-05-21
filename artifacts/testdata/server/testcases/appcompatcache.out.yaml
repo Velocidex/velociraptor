@@ -3,6 +3,7 @@
 Query: LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir + '/artifacts/testdata/files/AppCompatCache/'), clear=TRUE)
 Output: []
 
+Query: SELECT * FROM Artifact.Windows.Registry.AppCompatCache( AppCompatCacheKey="HKEY_LOCAL_MACHINE/System/ControlSet*/Control/Session Manager/AppCompatCache/*")
 Output: [
  {
   "Position": 0,
@@ -154,28 +155,28 @@ Output: [
  {
   "Position": 21,
   "ModificationTime": "2015-03-14T07:39:04Z",
-  "Path": "C:\\$Windows.~BT\\Work\\81859520-B46E-4FE3-9566-E56BD110C270\\DismHost.exe",
+  "Path": "C:\\.~BT\\Work\\81859520-B46E-4FE3-9566-E56BD110C270\\DismHost.exe",
   "ExecutionFlag": 1,
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 22,
   "ModificationTime": "2015-03-26T06:47:26Z",
-  "Path": "C:\\$Windows.~BT\\Work\\FDAA346E-BA9D-420F-9BC6-DEC3E9A20583\\DismHost.exe",
+  "Path": "C:\\.~BT\\Work\\FDAA346E-BA9D-420F-9BC6-DEC3E9A20583\\DismHost.exe",
   "ExecutionFlag": 1,
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 23,
   "ModificationTime": "2015-03-14T07:39:04Z",
-  "Path": "C:\\$Windows.~BT\\Work\\46E6F081-B127-4DD5-9F47-63E02679507B\\DismHost.exe",
+  "Path": "C:\\.~BT\\Work\\46E6F081-B127-4DD5-9F47-63E02679507B\\DismHost.exe",
   "ExecutionFlag": 1,
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 24,
   "ModificationTime": "2015-03-26T06:47:26Z",
-  "Path": "C:\\$Windows.~BT\\Work\\13A559E1-8FE1-4014-9BBE-7BA068A2CC01\\DismHost.exe",
+  "Path": "C:\\.~BT\\Work\\13A559E1-8FE1-4014-9BBE-7BA068A2CC01\\DismHost.exe",
   "ExecutionFlag": 1,
   "_Source": "Windows.Registry.AppCompatCache"
  },
@@ -210,7 +211,7 @@ Output: [
  {
   "Position": 29,
   "ModificationTime": "2015-03-26T05:47:44Z",
-  "Path": "C:\\$Windows.~BT\\Sources\\SetupHost.Exe",
+  "Path": "C:\\.~BT\\Sources\\SetupHost.Exe",
   "ExecutionFlag": 0,
   "_Source": "Windows.Registry.AppCompatCache"
  },
@@ -245,253 +246,240 @@ Output: [
  {
   "Position": 34,
   "ModificationTime": "2012-07-26T03:20:49Z",
-  "Path": "SYSVOL\\Windows\\System32\\LogonUI.exe",
+  "Path": "%SystemRoot%\\Windows\\System32\\LogonUI.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 35,
   "ModificationTime": "2015-04-20T19:59:39Z",
-  "Path": "SYSVOL\\Program Files\\Winamp\\UninstWA.exe",
+  "Path": "%SystemRoot%\\Program Files\\Winamp\\UninstWA.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 36,
   "ModificationTime": "2015-02-23T13:37:00Z",
-  "Path": "SYSVOL\\Program Files\\Just Great Software\\EditPad Lite 7\\EditPadLite7.exe",
+  "Path": "%SystemRoot%\\Program Files\\Just Great Software\\EditPad Lite 7\\EditPadLite7.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 37,
   "ModificationTime": "2013-12-13T02:47:54Z",
-  "Path": "SYSVOL\\Program Files\\Winamp\\winamp.exe",
+  "Path": "%SystemRoot%\\Program Files\\Winamp\\winamp.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 38,
   "ModificationTime": "2012-07-26T03:20:45Z",
-  "Path": "SYSVOL\\Windows\\System32\\dllhost.exe",
+  "Path": "%SystemRoot%\\Windows\\System32\\dllhost.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 39,
   "ModificationTime": "2012-07-26T03:20:55Z",
-  "Path": "SYSVOL\\Windows\\System32\\rundll32.exe",
+  "Path": "%SystemRoot%\\Windows\\System32\\rundll32.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 40,
   "ModificationTime": "2013-12-13T02:47:54Z",
-  "Path": "SYSVOL\\Program Files\\Winamp\\Elevator.exe",
+  "Path": "%SystemRoot%\\Program Files\\Winamp\\Elevator.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 41,
   "ModificationTime": "2012-07-26T03:39:13Z",
-  "Path": "SYSVOL\\Windows\\System32\\consent.exe",
+  "Path": "%SystemRoot%\\Windows\\System32\\consent.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 42,
   "ModificationTime": "2012-07-26T03:20:58Z",
-  "Path": "SYSVOL\\Windows\\System32\\svchost.exe",
+  "Path": "%SystemRoot%\\Windows\\System32\\svchost.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 43,
   "ModificationTime": "2012-07-26T03:21:00Z",
-  "Path": "SYSVOL\\Windows\\System32\\VSSVC.exe",
+  "Path": "%SystemRoot%\\Windows\\System32\\VSSVC.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 44,
   "ModificationTime": "2009-09-05T01:01:08Z",
-  "Path": "SYSVOL\\Users\\eric\\AppData\\Local\\Temp\\nsmADEC.tmp\\d3dx9_31_42_x86\\DXSETUP.exe",
+  "Path": "%SystemRoot%\\Users\\eric\\AppData\\Local\\Temp\\nsmADEC.tmp\\d3dx9_31_42_x86\\DXSETUP.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 45,
   "ModificationTime": "2015-04-20T19:59:35Z",
-  "Path": "SYSVOL\\Users\\eric\\AppData\\Local\\Temp\\nsm6910.tmp\\wadxsetup.exe",
+  "Path": "%SystemRoot%\\Users\\eric\\AppData\\Local\\Temp\\nsm6910.tmp\\wadxsetup.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 46,
   "ModificationTime": "2012-07-26T03:20:52Z",
-  "Path": "SYSVOL\\Windows\\System32\\PING.EXE",
+  "Path": "%SystemRoot%\\Windows\\System32\\PING.EXE",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 47,
   "ModificationTime": "2015-04-20T19:59:32Z",
-  "Path": "SYSVOL\\Users\\eric\\AppData\\Local\\Temp\\nsm6910.tmp\\nsA18E.tmp",
+  "Path": "%SystemRoot%\\Users\\eric\\AppData\\Local\\Temp\\nsm6910.tmp\\nsA18E.tmp",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 48,
   "ModificationTime": "2011-03-04T19:44:14Z",
-  "Path": "SYSVOL\\Users\\eric\\AppData\\Local\\Temp\\nsm6910.tmp\\PrimoRedist\\pxsetup.exe",
+  "Path": "%SystemRoot%\\Users\\eric\\AppData\\Local\\Temp\\nsm6910.tmp\\PrimoRedist\\pxsetup.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 49,
   "ModificationTime": "2012-07-26T03:20:51Z",
-  "Path": "SYSVOL\\Windows\\System32\\netsh.exe",
+  "Path": "%SystemRoot%\\Windows\\System32\\netsh.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 50,
-  "ModificationTime": "1601-01-01T00:00:00Z",
-  "Path": "SYSVOL\\Users\\eric\\AppData\\Local\\Microsoft\\Wi",
+  "ModificationTime": "2013-12-04T23:47:23Z",
+  "Path": "%SystemRoot%\\Program Files\\CrashPlan\\jre\\bin\\java.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 51,
-  "ModificationTime": "2013-12-04T23:47:23Z",
-  "Path": "SYSVOL\\Program Files\\CrashPlan\\jre\\bin\\java.exe",
+  "ModificationTime": "2013-08-22T11:03:41Z",
+  "Path": "%SystemRoot%\\Windows\\System32\\rundll32.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 52,
-  "ModificationTime": "2013-08-22T11:03:41Z",
-  "Path": "SYSVOL\\Windows\\System32\\rundll32.exe",
+  "ModificationTime": "2014-12-18T19:48:38Z",
+  "Path": "%SystemRoot%\\Users\\eric\\AppData\\Roaming\\Spotify\\Data\\SpotifyHelper.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 53,
-  "ModificationTime": "2014-12-18T19:48:38Z",
-  "Path": "SYSVOL\\Users\\eric\\AppData\\Roaming\\Spotify\\Data\\SpotifyHelper.exe",
+  "ModificationTime": "2013-05-07T16:52:24Z",
+  "Path": "%SystemRoot%\\Program Files (x86)\\ATI Technologies\\ATI.ACE\\Core-Static\\CLI.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 54,
-  "ModificationTime": "2013-05-07T16:52:24Z",
-  "Path": "SYSVOL\\Program Files (x86)\\ATI Technologies\\ATI.ACE\\Core-Static\\CLI.exe",
+  "ModificationTime": "2013-08-22T11:32:21Z",
+  "Path": "%SystemRoot%\\Windows\\System32\\LogonUI.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 55,
-  "ModificationTime": "2013-08-22T11:32:21Z",
-  "Path": "SYSVOL\\Windows\\System32\\LogonUI.exe",
+  "ModificationTime": "2014-10-30T22:33:40Z",
+  "Path": "%SystemRoot%\\Windows\\WinSxS\\amd64_microsoft-windows-servicingstack_31bf3856ad364e35_6.3.9600.17477_none_fa2b7d3b9b36c7b4\\TiWorker.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 56,
-  "ModificationTime": "2014-10-30T22:33:40Z",
-  "Path": "SYSVOL\\Windows\\WinSxS\\amd64_microsoft-windows-servicingstack_31bf3856ad364e35_6.3.9600.17477_none_fa2b7d3b9b36c7b4\\TiWorker.exe",
+  "ModificationTime": "2014-03-18T10:05:07Z",
+  "Path": "%SystemRoot%\\Windows\\servicing\\TrustedInstaller.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 57,
-  "ModificationTime": "2014-03-18T10:05:07Z",
-  "Path": "SYSVOL\\Windows\\servicing\\TrustedInstaller.exe",
+  "ModificationTime": "2013-08-22T12:45:17Z",
+  "Path": "%SystemRoot%\\Windows\\System32\\svchost.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 58,
-  "ModificationTime": "2013-08-22T12:45:17Z",
-  "Path": "SYSVOL\\Windows\\System32\\svchost.exe",
+  "ModificationTime": "2013-08-22T12:35:25Z",
+  "Path": "%SystemRoot%\\Windows\\System32\\dllhost.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 59,
-  "ModificationTime": "2013-08-22T12:35:25Z",
-  "Path": "SYSVOL\\Windows\\System32\\dllhost.exe",
+  "ModificationTime": "2013-08-22T11:01:57Z",
+  "Path": "%SystemRoot%\\Windows\\System32\\ThumbnailExtractionHost.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 60,
-  "ModificationTime": "2013-08-22T11:01:57Z",
-  "Path": "SYSVOL\\Windows\\System32\\ThumbnailExtractionHost.exe",
+  "ModificationTime": "2013-08-22T10:03:11Z",
+  "Path": "%SystemRoot%\\Windows\\System32\\sc.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 61,
-  "ModificationTime": "2013-08-22T10:03:11Z",
-  "Path": "SYSVOL\\Windows\\System32\\sc.exe",
+  "ModificationTime": "2014-05-20T14:23:06Z",
+  "Path": "%SystemRoot%\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 62,
-  "ModificationTime": "2014-05-20T14:23:06Z",
-  "Path": "SYSVOL\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe",
+  "ModificationTime": "2014-03-18T10:05:16Z",
+  "Path": "%SystemRoot%\\Windows\\System32\\taskeng.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 63,
-  "ModificationTime": "2014-03-18T10:05:16Z",
-  "Path": "SYSVOL\\Windows\\System32\\taskeng.exe",
-  "ExecutionFlag": "N/A",
-  "_Source": "Windows.Registry.AppCompatCache"
- },
- {
-  "Position": 64,
   "ModificationTime": "2015-02-04T23:01:12Z",
   "Path": "\\??\\F:\\15b25f69aaa0999d37f224116fca\\SetupUtility.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
-  "Position": 65,
+  "Position": 64,
   "ModificationTime": "2014-10-18T09:55:17Z",
-  "Path": "SYSVOL\\Windows\\System32\\wuauclt.exe",
+  "Path": "%SystemRoot%\\Windows\\System32\\wuauclt.exe",
+  "ExecutionFlag": "N/A",
+  "_Source": "Windows.Registry.AppCompatCache"
+ },
+ {
+  "Position": 65,
+  "ModificationTime": "2014-03-13T06:51:36Z",
+  "Path": "%SystemRoot%\\Windows\\SysWOW64\\wusa.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 66,
-  "ModificationTime": "2014-03-13T06:51:36Z",
-  "Path": "SYSVOL\\Windows\\SysWOW64\\wusa.exe",
+  "ModificationTime": "2013-11-26T13:49:20Z",
+  "Path": "%SystemRoot%\\Program Files (x86)\\Stardock\\Fences\\Fences.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
  },
  {
   "Position": 67,
-  "ModificationTime": "2013-11-26T13:49:20Z",
-  "Path": "SYSVOL\\Program Files (x86)\\Stardock\\Fences\\Fences.exe",
-  "ExecutionFlag": "N/A",
-  "_Source": "Windows.Registry.AppCompatCache"
- },
- {
-  "Position": 68,
   "ModificationTime": "2015-02-04T23:01:12Z",
   "Path": "\\??\\F:\\15b25f69aaa0999d37f224116fca\\Setup.exe",
   "ExecutionFlag": "N/A",
   "_Source": "Windows.Registry.AppCompatCache"
- },
- {
-  "Position": 69,
-  "ModificationTime": "1601-01-01T00:00:00Z",
-  "Path": "SYSVOL\\ProgramData\\Package Cache\\4FF9C5BBD102B4816BE0FB4E642AE94BFE4B73A5\\packages\\d",
-  "ExecutionFlag": "N/A",
-  "_Source": "Windows.Registry.AppCompatCache"
  }
 ]
+
