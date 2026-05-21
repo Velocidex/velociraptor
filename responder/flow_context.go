@@ -112,11 +112,12 @@ func newFlowContext(ctx context.Context,
 		config_obj.Frontend != nil &&
 		config_obj.Frontend.Resources != nil &&
 		config_obj.Frontend.Resources.DefaultLogBatchTime > 0 {
-		batch_delay = time.Second *
+		batch_delay = time.Millisecond *
 			time.Duration(config_obj.Frontend.Resources.DefaultLogBatchTime)
 	}
+
 	if req.FlowRequest.LogBatchTime > 0 {
-		batch_delay = time.Second *
+		batch_delay = time.Millisecond *
 			time.Duration(req.FlowRequest.LogBatchTime)
 	}
 

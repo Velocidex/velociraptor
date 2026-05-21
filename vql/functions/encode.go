@@ -36,10 +36,17 @@ func (self *EncodeFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	result := arg.Item
-	switch t := result.(type) {
+	return _encode("serialize", ctx, scope, arg.Item, arg.Format)
+}
+
+func _encode(
+	name string,
+	ctx context.Context, scope vfilter.Scope,
+	item vfilter.Any, format string) vfilter.Any {
+
+	switch t := item.(type) {
 	case types.LazyExpr:
-		result = t.Reduce(ctx)
+		item = t.Reduce(ctx)
 
 	case types.StoredQuery:
 		result_rows := []vfilter.Row{}
@@ -47,53 +54,54 @@ func (self *EncodeFunction) Call(ctx context.Context,
 			result_rows = append(result_rows, row)
 		}
 
-		result = result_rows
+		item = result_rows
 	}
 
-	switch arg.Format {
+	switch format {
 	case "", "json":
 		opts := vql_subsystem.EncOptsFromScope(scope)
-		serialized_content, err := json.MarshalIndentWithOptions(result, opts)
+		serialized_content, err := json.MarshalIndentWithOptions(item, opts)
 		if err != nil {
-			scope.Log("serialize: %v", err)
+			scope.Log("%s: %v", name, err)
 			return vfilter.Null{}
 		}
 
 		return string(serialized_content)
 
 	case "yaml":
-		serialized, err := yaml.Marshal(result)
+		serialized, err := yaml.Marshal(item)
 		if err != nil {
-			scope.Log("serialize: %v", err)
+			scope.Log("%v: %v", name, err)
 			return vfilter.Null{}
 		}
 		return string(serialized)
 
 	case "hex":
-		switch t := result.(type) {
+		switch t := item.(type) {
 		case []byte:
 			return hex.EncodeToString(t)
 		case string:
 			return hex.EncodeToString([]byte(t))
 		default:
-			scope.Log("serialize: Unsupported type for hex encoding %T", result)
+			scope.Log("%s: Unsupported type for hex encoding %T", name, item)
 			return vfilter.Null{}
 		}
 
 	case "base64":
-		switch t := result.(type) {
+		switch t := item.(type) {
 		case []byte:
 			return base64.RawStdEncoding.EncodeToString(t)
 		case string:
 			return base64.RawStdEncoding.EncodeToString([]byte(t))
 		default:
-			scope.Log("serialize: Unsupported type for base64 encoding %T", result)
+			scope.Log("%v: Unsupported type for base64 encoding %T",
+				name, item)
 			return vfilter.Null{}
 		}
 
 	case "csv":
 		// Not actually a slice.
-		if reflect.TypeOf(result).Kind() != reflect.Slice {
+		if reflect.TypeOf(item).Kind() != reflect.Slice {
 			return vfilter.Null{}
 		}
 
@@ -105,7 +113,7 @@ func (self *EncodeFunction) Call(ctx context.Context,
 			true, /* write_headers */
 			json.DefaultEncOpts())
 
-		result_rows_value := reflect.ValueOf(result)
+		result_rows_value := reflect.ValueOf(item)
 		for i := 0; i < result_rows_value.Len(); i++ {
 			csv_writer.Write(result_rows_value.Index(i).Interface())
 		}
@@ -114,7 +122,7 @@ func (self *EncodeFunction) Call(ctx context.Context,
 		return buff.String()
 
 	default:
-		scope.Log("serialize: Unknown format %s", arg.Format)
+		scope.Log("%s: Unknown format %s", name, format)
 	}
 	return vfilter.Null{}
 }
@@ -122,20 +130,37 @@ func (self *EncodeFunction) Call(ctx context.Context,
 func (self EncodeFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "serialize",
-		Doc:     "Encode an object as a string (json, yaml, hex, base64, csv).",
+		Doc:     "Encode an object as a string (json, yaml, hex, base64, csv). This function is an alias to `encode`",
 		ArgType: type_map.AddType(scope, &EncodeFunctionArgs{}),
 	}
 }
 
-type EncodeOverride struct {
-	EncodeFunction
+type _EncodeOverrideArgs struct {
+	String types.Any `vfilter:"required,field=string,doc=The item to encode"`
+	Type   string    `vfilter:"required,field=type,doc=Encoding format (csv,json,yaml,hex,base64)"`
+}
+
+type EncodeOverride struct{}
+
+func (self EncodeOverride) Call(
+	ctx context.Context,
+	scope types.Scope,
+	args *ordereddict.Dict) types.Any {
+	arg := &_EncodeOverrideArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("encode: %s", err.Error())
+		return types.Null{}
+	}
+
+	return _encode("encode", ctx, scope, arg.String, arg.Type)
 }
 
 func (self EncodeOverride) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "encode",
 		Doc:     "Encode an object as a string (json, yaml, hex, base64, csv).",
-		ArgType: type_map.AddType(scope, &EncodeFunctionArgs{}),
+		ArgType: type_map.AddType(scope, &_EncodeOverrideArgs{}),
 		Version: 2,
 	}
 }

@@ -2251,13 +2251,14 @@
   type: Function
   version: 2
   args:
-  - name: item
+  - name: string
     type: Any
     description: The item to encode
     required: true
-  - name: format
+  - name: type
     type: string
     description: Encoding format (csv,json,yaml,hex,base64)
+    required: true
   category: encode
   platforms:
   - darwin_amd64_cgo

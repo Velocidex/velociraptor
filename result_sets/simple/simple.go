@@ -125,6 +125,10 @@ func (self *ResultSetWriterImpl) WriteJSONL(serialized []byte, total_rows uint64
 		total_rows = countLines(serialized)
 	}
 
+	if total_rows > constants.MAX_ROW_LIMIT {
+		return utils.MemoryError
+	}
+
 	if len(serialized) == 0 {
 		return nil
 	}
