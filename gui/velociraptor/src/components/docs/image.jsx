@@ -48,7 +48,7 @@ export default class Image extends Component {
 
     render() {
         return <>
-                 <a className="image-popup"
+                 <a className="image-popup" role="button"
                     onClick={()=>this.setState({expanded: true})}>
                    <span><img alt={this.props.alt} src={this.props.src} /></span>
                    <span className="figcaption">{this.props.alt}</span>

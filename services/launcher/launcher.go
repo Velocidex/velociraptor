@@ -118,7 +118,9 @@ package launcher
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
@@ -200,9 +202,10 @@ func (self *Launcher) CompileCollectorArgs(
 
 		// Batching control
 		var local_cpu_limit float32
-		var max_batch_wait, max_batch_rows uint64
+		var max_batch_wait uint64 // seconds
+		var max_batch_rows uint64
 		var max_batch_row_buffer uint64
-		var local_timeout uint64
+		var local_timeout uint64 // seconds
 
 		if config_obj != nil && config_obj.Defaults != nil {
 			max_batch_rows = config_obj.Defaults.MaxRows
@@ -211,7 +214,8 @@ func (self *Launcher) CompileCollectorArgs(
 		}
 
 		if collector_request.AllowCustomOverrides {
-			artifact, _ = repository.Get(ctx, config_obj, "Custom."+spec.Artifact)
+			artifact, _ = repository.Get(
+				ctx, config_obj, "Custom."+spec.Artifact)
 		}
 
 		if artifact == nil {
@@ -666,7 +670,12 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 	// The session_id we send to the client.
 	var client_session_id string
 
-	if session_id == "" {
+	// If the session_id starts with a / it is a relative child flow.
+	if strings.HasPrefix(session_id, "/S") {
+		session_id = utils.NewFlowId(client_id)
+		client_session_id = session_id + "/S"
+
+	} else if session_id == "" {
 		session_id = utils.NewFlowId(client_id)
 		client_session_id = session_id
 
@@ -686,13 +695,15 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 	}
 
 	// How long to batch log messages for on the client.
-	batch_delay := uint64(2000)
+	batch_delay := time.Second * 2
 	if collector_request.LogBatchTime > 0 {
-		batch_delay = collector_request.LogBatchTime
+		batch_delay = time.Second * time.Duration(
+			collector_request.LogBatchTime)
 	} else if config_obj.Frontend != nil &&
 		config_obj.Frontend.Resources != nil &&
 		config_obj.Frontend.Resources.DefaultLogBatchTime > 0 {
-		batch_delay = config_obj.Frontend.Resources.DefaultLogBatchTime
+		batch_delay = time.Second * time.Duration(
+			config_obj.Frontend.Resources.DefaultLogBatchTime)
 	}
 
 	// Compile all the requests into specific tasks to be sent to the
@@ -701,7 +712,7 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		SessionId: client_session_id,
 		RequestId: constants.ProcessVQLResponses,
 		FlowRequest: &crypto_proto.FlowRequest{
-			LogBatchTime:   batch_delay,
+			LogBatchTime:   uint64(batch_delay.Seconds()),
 			MaxRows:        collector_request.MaxRows,
 			MaxLogs:        collector_request.MaxLogs,
 			MaxUploadBytes: collector_request.MaxUploadBytes,
@@ -751,8 +762,10 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 	}
 
 	if existing_flow != nil {
-		collection_context.PreviousFlows = append(
-			collection_context.PreviousFlows, existing_flow.Context)
+		previous_flows := existing_flow.Context.PreviousFlows
+		existing_flow.Context.PreviousFlows = nil
+		previous_flows = append(previous_flows, existing_flow.Context)
+		collection_context.PreviousFlows = previous_flows
 	}
 
 	// Record the tasks for provenance of what we actually did.

@@ -15,7 +15,7 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package common
+package shell
 
 import (
 	"context"
@@ -51,17 +51,18 @@ type ShellPluginArgs struct {
 }
 
 type ShellResult struct {
+	Stdin      string
 	Stdout     string
 	Stderr     string
 	ReturnCode int64
 	Complete   bool
 }
 
-type ShellPlugin struct {
+type ExecvePlugin struct {
 	pipeReader pipeReaderFunc
 }
 
-func (self *ShellPlugin) maybeForceSecrets(
+func maybeForceSecrets(
 	ctx context.Context, scope vfilter.Scope,
 	arg *ShellPluginArgs) error {
 
@@ -87,7 +88,7 @@ func (self *ShellPlugin) maybeForceSecrets(
 	return utils.SecretsEnforced
 }
 
-func (self ShellPlugin) Call(
+func (self ExecvePlugin) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
@@ -117,7 +118,7 @@ func (self ShellPlugin) Call(
 			return
 		}
 
-		err = self.maybeForceSecrets(ctx, scope, arg)
+		err = maybeForceSecrets(ctx, scope, arg)
 		if err != nil {
 			scope.Error("execve: %v", err)
 			return
@@ -125,7 +126,7 @@ func (self ShellPlugin) Call(
 
 		original_args := append([]string{}, arg.Argv...)
 		if arg.Secret != "" {
-			arg, err = self.mergeSecretToRequest(ctx, scope, arg, arg.Secret)
+			arg, err = mergeSecretToRequest(ctx, scope, arg, arg.Secret)
 			if err != nil {
 				scope.Log("ERROR:execve: %v", err)
 				return
@@ -323,7 +324,7 @@ func (self ShellPlugin) Call(
 	return output_chan
 }
 
-func (self ShellPlugin) mergeSecretToRequest(
+func mergeSecretToRequest(
 	ctx context.Context, scope vfilter.Scope,
 	arg *ShellPluginArgs, secret_name string) (*ShellPluginArgs, error) {
 
@@ -386,7 +387,7 @@ func (self ShellPlugin) mergeSecretToRequest(
 	return new_arg, nil
 }
 
-func (self ShellPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self ExecvePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:     "execve",
 		Doc:      "Execute the commands given by argv.",
@@ -502,7 +503,7 @@ func defaultPipeReader(
 }
 
 func init() {
-	vql_subsystem.RegisterPlugin(&ShellPlugin{
+	vql_subsystem.RegisterPlugin(&ExecvePlugin{
 		pipeReader: defaultPipeReader,
 	})
 }

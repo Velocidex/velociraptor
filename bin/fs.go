@@ -151,6 +151,11 @@ func doLS(path, accessor string) error {
 	}
 	defer sm.Close()
 
+	config_obj, err = maybeGetOrgConfig(*org_id, config_obj)
+	if err != nil {
+		return err
+	}
+
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
 		accessor = matches[1]
@@ -219,6 +224,11 @@ func doRM(path, accessor string) error {
 	}
 	defer sm.Close()
 
+	config_obj, err = maybeGetOrgConfig(*org_id, config_obj)
+	if err != nil {
+		return err
+	}
+
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
 		accessor = matches[1]
@@ -280,6 +290,11 @@ func doCp(path, accessor string, dump_dir string) error {
 		return err
 	}
 	defer sm.Close()
+
+	config_obj, err = maybeGetOrgConfig(*org_id, config_obj)
+	if err != nil {
+		return err
+	}
 
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
@@ -384,6 +399,11 @@ func doCat(path, accessor_name string) error {
 		return err
 	}
 	defer sm.Close()
+
+	config_obj, err = maybeGetOrgConfig(*org_id, config_obj)
+	if err != nil {
+		return err
+	}
 
 	logger := &LogWriter{config_obj: config_obj}
 	builder := services.ScopeBuilder{

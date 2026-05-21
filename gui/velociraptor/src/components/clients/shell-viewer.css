@@ -28,8 +28,14 @@
     width: 100%;
 }
 
-.cell-toolbar.not_selected {
-    display: none;
+.cell-toolbar {
+    width: 100%;
+    position: static;
+    background: var(--color-canvas-background);
+}
+
+.cell-toolbar .btn-toolbar {
+    display: block;
 }
 
 .notebook-output.collapsed {
@@ -44,6 +50,16 @@
 
 .notebook-output.expanded {
     max-height: 200em;
+}
+
+.shell-output-container {
+    height: 100%;
+    overflow-y: hidden;
+    width: 100%;
+}
+
+.fullscreen .shell-output-container {
+    height: 85vh;
 }
 
 div.dt-buttons {
@@ -77,10 +93,6 @@ div.dt-buttons {
     display: block;
 }
 
-.shell-cell.expanded {
-    max-height: 200em;
-}
-
 .shell-command {
     padding: 5px;
 }
@@ -93,10 +105,10 @@ div.dt-buttons {
     display: hidden;
 }
 
-.notebook-output pre, .notebook-input pre {
+.shell-output-container pre {
     display: block;
     padding: 8px;
-    margin: 0 0 8.5px;
+    margin-bottom: 0px;
     font-size: 12px;
     line-height: 1.31;
     word-break: break-all;
@@ -106,19 +118,15 @@ div.dt-buttons {
     border-radius: 4px;
 }
 
-.shell-output-container .notebook-input pre {
+.shell-output-container .accordion-header pre {
     color: var(--color-sidebar-disabled-foreground);
     margin: 0;
     border-radius: 0;
 }
 
-.shell-output-container .notebook-output pre {
+.shell-output-container .accordion-body pre {
     color: var(--color-foreground);
     border-radius: 0;
-}
-
-.shell-results {
-    overflow-y: none;
 }
 
 .shell-command .velo-ace-editor {
@@ -142,8 +150,42 @@ div.dt-buttons {
     display: inline-flex;
 }
 
+.shell-info i {
+    margin-right: 10px;
+}
+
 .shell-output-container {
-    max-height: 50vh;
     overflow-y: auto;
     overflow-x: hidden;
+}
+
+.shell-output-container .row {
+    width: 100%;
+}
+
+.shell-results {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.shell-cell {
+    margin-bottom: 20px;
+}
+
+.stderr {
+    color: var(--color-warning-color);
+}
+
+.shell-vql-cell .velo-ace-editor {
+    height: 38px;
+    width: 70vw;
+}
+
+.fullscreen .shell-vql-cell.shell-output-container {
+    height: 65vh;
+}
+
+.fullscreen .vql-shell-input.velo-ace-editor {
+    height: 15vh;
+    width: 70vw;
 }

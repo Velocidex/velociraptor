@@ -62,10 +62,6 @@ class _UserSettings extends React.Component {
 
                     let current_theme = this.state.traits.theme;
 
-                    this.setState({
-                        traits: traits,
-                        messages: response.data.messages || []});
-
                     // Only update the theme if it changed.
                     if (current_theme !== traits.theme) {
                         document.body.classList.remove('no-theme');
@@ -86,6 +82,14 @@ class _UserSettings extends React.Component {
                             document.body.classList.add("veloci-light");
                         }
                     }
+
+                    if(_.isEqual(traits, this.state.traits)) {
+                        return;
+                    };
+
+                    this.setState({
+                        traits: traits,
+                        messages: response.data.messages || []});
                 });
     }
 

@@ -2,9 +2,10 @@ name: Server.Utils.CreateLinuxPackages
 description: |
   Builds Debian (.deb) and RPM packages with embedded client config for the current organization.
 
-  This artifact depends on the following tool:
+  This artifact depends on the following tools:
 
-  * <velo-tool-viewer name="VelociraptorLinux" />
+  * Clients <velo-tool-viewer name="VelociraptorLinux" />
+  * Server <velo-tool-viewer name="VelociraptorLinuxSumo" />
 
   You can replace this with suitable Velociraptor Linux build, or else
   the current release binary will be used by default.

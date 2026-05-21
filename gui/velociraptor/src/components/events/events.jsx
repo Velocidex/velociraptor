@@ -21,7 +21,7 @@ import T from '../i8n/i8n.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
 import VeloLog from "../widgets/logs.jsx";
 import { EditNotebook } from '../notebooks/new-notebook.jsx';
-import {getItem, setItem, schema} from '../core/storage.jsx';
+import {setItem, schema} from '../core/storage.jsx';
 import Select from 'react-select';
 import { withRouter }  from "react-router-dom";
 

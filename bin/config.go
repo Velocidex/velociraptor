@@ -48,7 +48,7 @@ var (
 	config_command = app.Command(
 		"config", "Manipulate the configuration.")
 
-	config_command_org = config_command.Flag(
+	org_id = app.Flag(
 		"org", "Org ID to show").String()
 
 	config_show_command = config_command.Command(
@@ -163,7 +163,7 @@ func doShowConfig() error {
 	}
 	defer sm.Close()
 
-	config_obj, err = maybeGetOrgConfig(*config_command_org, config_obj)
+	config_obj, err = maybeGetOrgConfig(*org_id, config_obj)
 	if err != nil {
 		return err
 	}
@@ -342,7 +342,7 @@ func doDumpClientConfig() error {
 	}
 	defer sm.Close()
 
-	config_obj, err = maybeGetOrgConfig(*config_command_org, config_obj)
+	config_obj, err = maybeGetOrgConfig(*org_id, config_obj)
 	if err != nil {
 		return err
 	}

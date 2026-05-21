@@ -21,6 +21,11 @@ tools:
     serve_locally: true
     version: 0.76.5
 
+  - name: VelociraptorLinuxSumo
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.76/velociraptor-v0.76.5-linux-amd64-sumo-musl
+    serve_locally: true
+    version: 0.76.5
+
   # On MacOS we cannot embed the config in the binary so we use a
   # shell script stub instead. See
   # https://github.com/Velocidex/velociraptor/issues/2898

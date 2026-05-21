@@ -1,13 +1,9 @@
-import _ from 'lodash';
-
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Button from 'react-bootstrap/Button';
 import UserConfig from '../core/user.jsx';
 import Modal from 'react-bootstrap/Modal';
 import T from '../i8n/i8n.jsx';
-import Alert from 'react-bootstrap/Alert';
-import VeloLog from "../widgets/logs.jsx";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import VeloPagedTable from '../core/paged-table.jsx';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';

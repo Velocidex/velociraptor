@@ -312,7 +312,8 @@ func (self *ClientFlowRunner) ProcessSingleMessage(
 	}
 
 	if msg.LogMessage != nil {
-		err := self.LogMessage(ctx, client_id, flow_id, msg.LogMessage)
+		err := self.LogMessage(
+			ctx, client_id, flow_id, child_flow_id, msg.LogMessage)
 		if err != nil {
 			return fmt.Errorf("LogMessage: %w", err)
 		}
@@ -824,7 +825,7 @@ func (self *ClientFlowRunner) processAlert(
 }
 
 func (self *ClientFlowRunner) LogMessage(
-	ctx context.Context, client_id, flow_id string,
+	ctx context.Context, client_id, flow_id, child_flow_id string,
 	msg *crypto_proto.LogMessage) error {
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id).Log()
@@ -840,7 +841,14 @@ func (self *ClientFlowRunner) LogMessage(
 	}
 	defer rs_writer.Close()
 
-	_ = rs_writer.SetStartRow(int64(msg.Id))
+	// If this is a child flow, append to the result set's end
+	// otherwise, write at the specified offset.
+	if child_flow_id == "" {
+		_ = rs_writer.SetStartRow(int64(msg.Id))
+
+	} else {
+		_ = rs_writer.SetStartRow(rs_writer.TotalRows())
+	}
 
 	// The JSON payload from the client.
 	payload := artifacts.DeobfuscateString(self.config_obj, msg.Jsonl)

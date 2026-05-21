@@ -45,40 +45,59 @@ func (self *Pipe) Stat() (os.FileInfo, error) {
 	return nil, errors.New("Not implemented")
 }
 
+// Read a non empty data from the query.
 func (self *Pipe) Read(buff []byte) (int, error) {
-	select {
-
-	case <-self.ctx.Done():
-		return 0, io.EOF
-
-	case row, ok := <-self.output_chan:
-		if !ok {
+	// Keep trying to read something until the first non empty result
+getrow:
+	for {
+		select {
+		case <-self.ctx.Done():
 			return 0, io.EOF
-		}
 
-		switch t := row.(type) {
-		case *ordereddict.Dict:
-			for _, v := range t.Values() {
-				switch t := v.(type) {
-				case string:
-					out := append([]byte(t), self.sep...)
-					return utils.MemCpy(buff, out), nil
+		case row, ok := <-self.output_chan:
+			if !ok {
+				return 0, io.EOF
+			}
 
-				case []byte:
-					return utils.MemCpy(buff,
-						append(t, self.sep...)), nil
+			switch t := row.(type) {
+			case *ordereddict.Dict:
+				for _, v := range t.Values() {
+					switch t := v.(type) {
+					case string:
+						if t == "" {
+							continue getrow
+						}
 
-				default:
-					data := fmt.Sprintf("%v", v)
-					out := append([]byte(data), self.sep...)
-					return utils.MemCpy(buff, out), nil
+						out := append([]byte(t), self.sep...)
+						return utils.MemCpy(buff, out), nil
+
+					case []byte:
+						if len(t) == 0 {
+							continue getrow
+						}
+
+						return utils.MemCpy(buff,
+							append(t, self.sep...)), nil
+
+					default:
+						data := fmt.Sprintf("%v", v)
+						if len(data) == 0 {
+							continue getrow
+						}
+						out := append([]byte(data), self.sep...)
+						return utils.MemCpy(buff, out), nil
+					}
 				}
 			}
-		}
 
-		data := fmt.Sprintf("%v", row)
-		out := append([]byte(data), self.sep...)
-		return utils.MemCpy(buff, out), nil
+			data := fmt.Sprintf("%v", row)
+			if len(data) == 0 {
+				continue getrow
+			}
+
+			out := append([]byte(data), self.sep...)
+			return utils.MemCpy(buff, out), nil
+		}
 	}
 }
 

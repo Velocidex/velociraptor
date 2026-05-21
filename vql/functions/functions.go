@@ -272,19 +272,36 @@ func (self _ParseFloat) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 	}
 }
 
+type _NowArgs struct {
+	NS bool `vfilter:"optional,field=ns,doc=Return the time in ns"`
+}
+
 type _Now struct{}
 
 func (self _Now) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	arg := &_NowArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("now: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	if arg.NS {
+		return time.Now().UnixNano()
+	}
 	return time.Now().Unix()
 }
 
 func (self _Now) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name: "now",
-		Doc:  "Returns current time in seconds since epoch.",
+		Name:    "now",
+		Doc:     "Returns current time in seconds since epoch.",
+		ArgType: type_map.AddType(scope, &_NowArgs{}),
+		Version: 2,
 	}
 }
 

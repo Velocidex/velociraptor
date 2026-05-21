@@ -17,9 +17,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	// For execve and query
-	_ "www.velocidex.com/golang/velociraptor/vql/common"
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 	_ "www.velocidex.com/golang/velociraptor/vql/tools"
+	_ "www.velocidex.com/golang/velociraptor/vql/tools/shell"
 )
 
 type ClientVQLTestSuite struct {

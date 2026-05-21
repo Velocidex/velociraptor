@@ -25,6 +25,8 @@ class VeloClientSearch extends Component {
     static propTypes = {
         // Update the applications' search parameter.
         setSearch: PropTypes.func.isRequired,
+
+        history: PropTypes.any,
     };
 
     componentDidMount = () => {

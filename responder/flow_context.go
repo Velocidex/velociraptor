@@ -69,7 +69,7 @@ type FlowContext struct {
 	error_message     string // If an error occurs trap the error message
 
 	last_stats_timestamp uint64
-	frequency_msec       uint64
+	frequency_ns         uint64
 
 	// We ensure to only send the final flow complete message
 	// once. This will trigger a System.Flow.Completion event on the
@@ -93,26 +93,32 @@ func newFlowContext(ctx context.Context,
 
 	// How often do we send a FlowStat message to sync the server's
 	// flow progress stat.
-	frequency_msec := uint64(5000)
+	frequency := 5 * time.Second
 	if config_obj != nil &&
 		config_obj.Client != nil &&
 		config_obj.Client.DefaultServerFlowStatsUpdate > 0 {
-		frequency_msec = config_obj.Client.DefaultServerFlowStatsUpdate
+		frequency = time.Second * time.Duration(
+			config_obj.Client.DefaultServerFlowStatsUpdate)
 	}
+
 	if req.FlowRequest.FlowUpdateTime > 0 {
-		frequency_msec = req.FlowRequest.FlowUpdateTime
+		frequency = time.Second * time.Duration(
+			req.FlowRequest.FlowUpdateTime)
 	}
 
 	// Default is set by config file
-	batch_delay := uint64(5000)
+	batch_delay := 5 * time.Second
 	if config_obj != nil &&
 		config_obj.Frontend != nil &&
 		config_obj.Frontend.Resources != nil &&
 		config_obj.Frontend.Resources.DefaultLogBatchTime > 0 {
-		batch_delay = config_obj.Frontend.Resources.DefaultLogBatchTime
+		batch_delay = time.Millisecond *
+			time.Duration(config_obj.Frontend.Resources.DefaultLogBatchTime)
 	}
+
 	if req.FlowRequest.LogBatchTime > 0 {
-		batch_delay = req.FlowRequest.LogBatchTime
+		batch_delay = time.Millisecond *
+			time.Duration(req.FlowRequest.LogBatchTime)
 	}
 
 	// Allow the flow to be cancelled.
@@ -123,7 +129,7 @@ func newFlowContext(ctx context.Context,
 		wg:                &sync.WaitGroup{},
 		output:            output,
 		req:               req.FlowRequest,
-		frequency_msec:    frequency_msec,
+		frequency_ns:      uint64(frequency.Nanoseconds()),
 		config_obj:        config_obj,
 		flow_id:           flow_id,
 		owner:             owner,
@@ -140,7 +146,7 @@ func newFlowContext(ctx context.Context,
 			case <-sub_ctx.Done():
 				return
 
-			case <-time.After(time.Duration(batch_delay) * time.Millisecond):
+			case <-time.After(batch_delay):
 				stats := self.MaybeSendStats()
 				if stats != nil {
 					select {
@@ -436,10 +442,10 @@ func (self *FlowContext) MaybeSendStats() *crypto_proto.VeloMessage {
 		return nil
 	}
 
-	now := uint64(utils.GetTime().Now().UnixNano() / 1000)
+	now := uint64(utils.GetTime().Now().UnixNano())
 	last_timestamp := self.last_stats_timestamp
 	if self.isFlowComplete() ||
-		now-last_timestamp > self.frequency_msec {
+		now-last_timestamp > self.frequency_ns {
 		self.last_stats_timestamp = now
 		return self.getStats()
 	}

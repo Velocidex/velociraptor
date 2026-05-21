@@ -79,7 +79,7 @@ class ServerInfo extends Component {
             return (
                 <div className="client-details shell">
                   <ShellViewer
-                    client={{client_id: "server"}}
+                    client_id={"server"}
                     default_shell="Bash"
                   />
                 </div>

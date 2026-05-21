@@ -415,7 +415,7 @@ class InspectDialog extends React.Component {
                                     size={this.props.size}/>
                     }
                   </Tab>
-                  <Tab eventKey="details" title={T("Details")}>
+                  <Tab eventKey="details" title={T("Download")}>
                     { this.state.tab === "details" &&
                       <>
                         <Download fs_components={components}

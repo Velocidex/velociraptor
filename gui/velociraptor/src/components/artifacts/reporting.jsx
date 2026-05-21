@@ -4,8 +4,7 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 import {CancelToken} from 'axios';
-import { cleanupHTML } from '../core/sanitize.jsx';
-import parseHTML from '../core/sanitize.jsx';
+import parseHTML, { cleanupHTML } from '../core/sanitize.jsx';
 
 import api from '../core/api-service.jsx';
 import { VeloLineChart, VeloTimeChart } from './line-charts.jsx';
