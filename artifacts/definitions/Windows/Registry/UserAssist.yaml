@@ -1,5 +1,8 @@
 name: Windows.Registry.UserAssist
 description: |
+  Decodes UserAssist registry keys from NTUSER.DAT to reveal program
+  execution counts and last run times.
+
   Windows systems maintain a set of keys in the registry database
   (UserAssist keys) to keep track of programs that executed. The
   number of executions and last execution date and time are available
@@ -13,12 +16,12 @@ description: |
   From a forensics perspective, being able to decode this information
   can be very useful.
 
-  Limitations: Additional data not parsed by Velociraptor is the FocusTime
-  and FocusCount however these are not reliable.
-  Also please note that some methods of viewing an executable will update
-  the associated UserAssist key, and some methods of accessing an executable
-  will not update the execution counter or time. Therefore there may be
-  some executions that have a 0 time and 0 runcount.
+  **Limitations:** Additional data not parsed by Velociraptor is the
+  FocusTime and FocusCount however these are not reliable. Also please
+  note that some methods of viewing an executable will update the
+  associated UserAssist key, and some methods of accessing an
+  executable will not update the execution counter or time. Therefore
+  there may be some executions that have a 0 time and 0 runcount.
 
 reference:
   - https://www.aldeid.com/wiki/Windows-userassist-keys
@@ -150,7 +153,7 @@ export:
         `\\{491E922F-5643-4AF4-A7EB-4E7A138D8174\\}\\\\`="%APPDATA%\\Microsoft\\Windows\\Libraries\\Videos.library-ms\\",
         `\\{F38BF404-1D43-42F2-9305-67DE0B28FC23\\}\\\\`="%windir%\\"
     )
-    
+
 sources:
   - query: |
       LET TMP = SELECT OSPath.Path AS _KeyPath,
@@ -176,16 +179,16 @@ sources:
           ParsedUserAssist.NumberOfExecutions AS NumberOfExecutions
         FROM TMP
         ORDER BY LastExecution
-        
+
       LET A1 = SELECT * FROM if(
           condition=UserFilter,
           then={ SELECT * FROM UserAssist WHERE User =~ UserFilter },
           else={ SELECT * FROM UserAssist })
-      
-      
+
+
       LET get_path(path) = regex_transform(source=lowcase(string=path),map=_ExpandedTransforms)
-      
-      LET results = SELECT 
+
+      LET results = SELECT
           get_path(path=Name) as Name,
           expand(path=get_path(path=Name)) as Expanded,
           User,
@@ -200,8 +203,8 @@ sources:
             },
             else={ SELECT * FROM A1})
         WHERE NOT Name =~ '^UEME_'
-      
-      SELECT 
+
+      SELECT
         if(condition = split(string=Name,sep='''%[^%]+%''')[1] = Expanded,
                 then = Name,
                 else = Expanded ) as Name,
