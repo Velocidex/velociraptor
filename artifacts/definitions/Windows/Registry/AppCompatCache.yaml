@@ -128,7 +128,8 @@ sources:
       -- when greater than one key we need to extract results and order later
       LET results <= SELECT
             ModificationTime,
-            expand(path=regex_replace(source=Name,re='''^SYSVOL''',replace="%SystemRoot%")) as Path,
+            regex_replace(source=Name,re='''^SYSVOL''',replace="%SystemRoot%") as Path,
+            expand(path=regex_replace(source=Name,re='''^SYSVOL''',replace="%SystemRoot%")) as Expanded,
             ExecutionFlag,
             ControlSet,
             Key
@@ -163,11 +164,13 @@ sources:
                     SELECT * FROM foreach(row=_value)
                 })
 
-      -- output results
+      -- include final test for Path/Expanded to cover dead disk usecases
       SELECT
         Position,
         ModificationTime,
-        Path,
+        if(condition = split(string=Path,sep='''%[^%]+%''')[1] = Expanded,
+                then = Path,
+                else = Expanded ) as Path,
         ExecutionFlag
       FROM if(condition= len(list=AppCompatKeys.OSPath)=1,
         then={
