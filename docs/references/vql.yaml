@@ -2249,6 +2249,7 @@
 
     This function is an alias to `serialize()`
   type: Function
+  version: 2
   args:
   - name: item
     type: Any
@@ -9718,17 +9719,13 @@
     ```
 
     NOTE: An alternative to this plugin is a `Sigma Correlation rule`
-
   type: Plugin
   args:
   - name: query
     type: StoredQuery
-    description: |
-      Run this query to generate rows.
-
-      The query should select from SEQUENCE which will contain the
-      current set of rows in the sequence. The query will be run on
-      each new row that is pushed to the sequence.
+    description: Run this query to generate rows. The query should select from SEQUENCE
+      which will contain the current set of rows in the sequence. The query will be
+      run on each new row that is pushed to the sequence.
     required: true
   - name: max_age
     type: int64
@@ -13341,3 +13338,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+
