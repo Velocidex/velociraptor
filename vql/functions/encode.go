@@ -161,7 +161,7 @@ func (self EncodeOverride) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 		Name:    "encode",
 		Doc:     "Encode an object as a string (json, yaml, hex, base64, csv).",
 		ArgType: type_map.AddType(scope, &_EncodeOverrideArgs{}),
-		Version: 2,
+		Version: 3,
 	}
 }
 

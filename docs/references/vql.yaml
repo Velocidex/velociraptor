@@ -2249,7 +2249,7 @@
 
     This function is an alias to `serialize()`
   type: Function
-  version: 2
+  version: 3
   args:
   - name: string
     type: Any
