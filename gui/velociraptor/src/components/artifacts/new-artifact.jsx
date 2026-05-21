@@ -15,6 +15,7 @@ import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 import Completer from './syntax.jsx';
 import VeloLog from '../widgets/logs.jsx';
+import ToolTip from '../widgets/tooltip.jsx';
 
 // A dialog showing any errors with the artifact.
 class SetArtifactErrorDialog extends React.Component {
@@ -217,10 +218,13 @@ export default class NewArtifactDialog extends React.Component {
                 <Navbar className="w-100 justify-content-between">
                 <ButtonGroup className="float-left">
                   <SettingsButton ace={this.state.ace}/>
-                  <Button variant="default"
-                          onClick={this.reformatArtifact}>
-                    <FontAwesomeIcon icon="indent"/>
-                  </Button>
+                  <ToolTip tooltip={T("Reformat VQL")}>
+                    <Button variant="default"
+                            onClick={this.reformatArtifact}>
+                        <FontAwesomeIcon icon="indent"/>
+                    <span className="sr-only">{T("Reformat VQL")}</span>
+                    </Button>
+                  </ToolTip>
                 </ButtonGroup>
 
                 <ButtonGroup className="float-right">
