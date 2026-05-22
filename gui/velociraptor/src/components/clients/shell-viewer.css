@@ -131,7 +131,7 @@ div.dt-buttons {
     border-radius: 0;
 }
 
-.accordion-button, .accordion-button:not(.collapsed) {
+.shell-output-container .accordion-button, .accordion-button:not(.collapsed) {
     border-bottom-style: none !important;
 }
 
