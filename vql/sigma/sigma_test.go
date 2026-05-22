@@ -53,6 +53,7 @@ type testCase struct {
 	fieldmappings     *ordereddict.Dict
 	rows              []*ordereddict.Dict
 	log_regex         string
+	expected_count    int // 0 = unchecked; >0 asserts exact row count
 	debug             bool
 }
 
@@ -1063,6 +1064,60 @@ level: high
 					Set("Timestamp", "2024-10-10T12:35:00+10").
 					Set("cs-method", "POST"),
 			},
+		}, {
+			// Two correlations referencing one source rule must both fire.
+			description: "Correlation Test Multiple correlations share one source rule",
+			rule: `
+title: Marker File Created
+id: 11111111-1111-1111-1111-111111111111
+name: marker_file_created
+logsource:
+  product: windows
+  service: security
+detection:
+  selection:
+    EventID: 9999
+  condition: selection
+level: low
+---
+title: Correlation A
+id: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+correlation:
+  type: event_count
+  rules:
+    - marker_file_created
+  group-by:
+    - Computer
+  timespan: 10s
+  condition:
+    gte: 1
+level: high
+---
+title: Correlation B
+id: bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+correlation:
+  type: event_count
+  rules:
+    - marker_file_created
+  group-by:
+    - Computer
+  timespan: 10s
+  condition:
+    gte: 1
+level: high
+`,
+			fieldmappings: ordereddict.NewDict().
+				Set("Timestamp", "x=>x.Timestamp").
+				Set("EventID", "x=>x.EventID").
+				Set("Computer", "x=>x.Computer"),
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Timestamp", "2026-05-18T12:00:00+10:00").
+					Set("EventID", 9999).
+					Set("Computer", "test"),
+			},
+			// One row per correlation rule.
+			expected_count: 2,
 		},
 	}
 )
@@ -1119,6 +1174,12 @@ func (self *SigmaTestSuite) TestSigmaCorrelations() {
 			serialized2 := json.MustMarshalString(rows[j])
 			return string(serialized1) < string(serialized2)
 		})
+
+		if test_case.expected_count > 0 {
+			assert.Equal(self.T(), test_case.expected_count, len(rows),
+				"%s: expected %d rows, got %d",
+				test_case.description, test_case.expected_count, len(rows))
+		}
 
 		result.Set(test_case.description, rows)
 

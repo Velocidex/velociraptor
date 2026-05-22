@@ -224,5 +224,73 @@
    "Details": null
   }
  ],
- "Correlation Test TEMPORAL Expired match should not fire": []
+ "Correlation Test TEMPORAL Expired match should not fire": [],
+ "Correlation Test Multiple correlations share one source rule": [
+  {
+   "Timestamp": "2026-05-18T12:00:00+10:00",
+   "EventID": 9999,
+   "Computer": "test",
+   "_MatchingRule": "Marker File Created",
+   "_Correlations": [
+    {
+     "Timestamp": "2026-05-18T12:00:00+10:00",
+     "EventID": 9999,
+     "Computer": "test",
+     "_MatchingRule": "Marker File Created"
+    }
+   ],
+   "_Rule": {
+    "Title": "Correlation A",
+    "Correlation": {
+     "type": "event_count",
+     "rules": [
+      "marker_file_created"
+     ],
+     "group-by": [
+      "Computer"
+     ],
+     "timespan": "10s",
+     "condition": {
+      "gte": 1
+     }
+    },
+    "Id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "Level": "high"
+   },
+   "Details": null
+  },
+  {
+   "Timestamp": "2026-05-18T12:00:00+10:00",
+   "EventID": 9999,
+   "Computer": "test",
+   "_MatchingRule": "Marker File Created",
+   "_Correlations": [
+    {
+     "Timestamp": "2026-05-18T12:00:00+10:00",
+     "EventID": 9999,
+     "Computer": "test",
+     "_MatchingRule": "Marker File Created"
+    }
+   ],
+   "_Rule": {
+    "Title": "Correlation B",
+    "Correlation": {
+     "type": "event_count",
+     "rules": [
+      "marker_file_created"
+     ],
+     "group-by": [
+      "Computer"
+     ],
+     "timespan": "10s",
+     "condition": {
+      "gte": 1
+     }
+    },
+    "Id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+    "Level": "high"
+   },
+   "Details": null
+  }
+ ]
 }
