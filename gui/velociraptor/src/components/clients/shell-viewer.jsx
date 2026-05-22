@@ -433,7 +433,45 @@ class _VeloShellCell extends Component {
                </InputGroup>;
     }
 
+
+    // Calculate all the requests from the flow object. This is used
+    // to show outstanding requests.
+    getAllRequests = ()=>{
+        let result = _.map(this.state.flow.previous_flows,
+                           flow=>this.getCommand(flow));
+        result.push(this.getCommand(this.state.flow));
+        return result;
+    }
+
+    getCommand = flow=>{
+        let res = {
+            timestamp: flow.create_time,
+        };
+
+        let request = flow.request;
+        if(!request || !request.specs) {
+            return res;
+        }
+
+        res.creator = request.creator;
+
+        let env = [];
+        _.each(request.specs, x=>{
+            if(x.artifact === this.props.artifact &&
+               x.parameters && x.parameters.env) {
+                env = x.parameters.env;
+            }});
+
+        _.each(env, x=>{
+            if(x.key=="Command") {
+                res.command = x.value;
+            }});
+
+        return res;
+    };
+
     render() {
+        let commands = this.getAllRequests();
         let buttons = this.renderButtons();
         let output = "";
         if (this.state.loaded) {
@@ -486,36 +524,63 @@ class _VeloShellCell extends Component {
             if(current_trans.Command) {
                 transactions.push(current_trans);
             }
-            output = [<Accordion
-                        ref={this.scrollRef}
-                        key="accordion"
-                        activeKey={this.state.activeRows}
-                        onSelect={rows=>{
-                            this.setState({activeRows: rows});
-                        }}
-                        alwaysOpen>
-                        {_.map(transactions, (item, index) => {
-                          return  <Accordion.Item
-                                    key={index}
-                                    eventKey={index} >
-                                    <Accordion.Header>
-                                      <Row lg="12">
-                                        <VeloTimestamp
-                                          className="float-right"
-                                          usec={item.Timestamp} />
-                                        <Col lg="9">
-                                          <pre>{item.Command}</pre>
-                                        </Col>
-                                        <Col lg="3">
-                                        </Col>
-                                      </Row>
-                                    </Accordion.Header>
-                                    <Accordion.Body>
-                                      <pre>{item.Out}</pre>
-                                    </Accordion.Body>
-                                  </Accordion.Item>;
-                        })}
-                      </Accordion>];
+
+            let items = _.map(transactions, (item, index) => {
+                let command = {};
+                if(commands.length > index) {
+                    command = commands[index];
+                }
+
+                return  <Accordion.Item
+                          key={index}
+                          eventKey={index} >
+                          <Accordion.Header>
+                            <Row lg="12">
+                              <div className="shell-timestamp-user">
+                                <VeloTimestamp
+                                  className="float-right"
+                                  usec={item.Timestamp} /> ( {command.creator} )
+                              </div>
+                              <pre>{item.Command}</pre>
+                            </Row>
+                          </Accordion.Header>
+                          <Accordion.Body>
+                            <pre>{item.Out}</pre>
+                          </Accordion.Body>
+                        </Accordion.Item>;
+            });
+
+            if(transactions.length < commands.length) {
+                for(let i=transactions.length; i<commands.length;i++) {
+                    let item = commands[i];
+                    items.push(<Accordion.Item key={i} eventKey={i}>
+                                 <Accordion.Header>
+                                   <Row lg="12">
+                                     <div className="shell-timestamp-user">
+                                       <VeloTimestamp
+                                         className="float-right"
+                                         usec={item.timestamp} /> ( {item.creator} ) { T("Pending") }
+                                     </div>
+                                     <pre className="shell-command-pending">
+                                       {item.command}
+                                     </pre>
+                                   </Row>
+                                 </Accordion.Header>
+                               </Accordion.Item>);
+                }
+            }
+
+            output = [
+                <Accordion
+                  ref={this.scrollRef}
+                  key="accordion"
+                  activeKey={this.state.activeRows}
+                  onSelect={rows=>{
+                      this.setState({activeRows: rows});
+                  }}
+                  alwaysOpen>
+                  {items}
+                </Accordion>];
         }
 
         return (
@@ -753,11 +818,14 @@ class ShellViewer extends Component {
 
     componentDidMount() {
         this.source = CancelToken.source();
+        this.interval = setInterval(this.fetchLastShellCollections,
+                                    SHELL_POLL_TIME);
         this.fetchLastShellCollections();
     }
 
     componentWillUnmount() {
         this.source.cancel("unmounted");
+        clearInterval(this.interval);
     }
 
     // Force the flows list to update as soon as the client changes
