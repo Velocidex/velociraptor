@@ -69,8 +69,27 @@ class FullScreenNotebook extends React.Component {
     }
 
     setSelectedNotebook = () => {
-        this.props.history.push("/notebooks/" +
-                                this.state.selected_notebook.notebook_id);
+        let notebook_id = this.state.selected_notebook &&
+            this.state.selected_notebook.notebook_id;
+        if(!notebook_id) {
+            return;
+        }
+        console.log(notebook_id);
+        // Does the notebook id refers to a hunt notebook
+        let parts = /^N.(F.[^-]+)-(.+)$/.exec(notebook_id);
+        if(!_.isEmpty(parts)) {
+            this.props.history.push("/collected/" + parts[2] + "/" +
+                                    parts[1] + "/notebook");
+            return;
+        }
+
+        parts = /^N.(H.[^-]+)$/.exec(notebook_id);
+        if(!_.isEmpty(parts)) {
+            this.props.history.push("/hunts/" + parts[1] + "/notebook");
+            return;
+        }
+
+        this.props.history.push("/notebooks/" + notebook_id);
     }
 
     updateVersion = ()=>{

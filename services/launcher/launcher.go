@@ -670,7 +670,13 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 	// The session_id we send to the client.
 	var client_session_id string
 
-	// If the session_id starts with a / it is a relative child flow.
+	// If the session_id contains a / it is a relative child
+	// flow. Relative flow results will be stored inside the parent's
+	// collection by ClientFlowRunner . However, the client treats
+	// them as separate flows.
+
+	// The special flow ID ending with "/S" will create a new session
+	// and immediately resume it.
 	if strings.HasPrefix(session_id, "/S") {
 		session_id = utils.NewFlowId(client_id)
 		client_session_id = session_id + "/S"

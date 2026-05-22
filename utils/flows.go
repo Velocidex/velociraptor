@@ -86,3 +86,15 @@ func SetIdGenerator(gen IdGenerator) func() {
 		generator_mu.Unlock()
 	}
 }
+
+// For resumaing flows, the client will receive a sesion_id which
+// consists of two parts: The parent flow will receive the collection
+// data and the child flow id is a unique flow that will run on the
+// client.
+func SplitSessionIdToParentAndChild(sesion_id string) (string, string) {
+	parts := strings.SplitN(sesion_id, "/", 2)
+	if len(parts) < 2 {
+		return parts[0], ""
+	}
+	return parts[0], parts[1]
+}

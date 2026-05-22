@@ -170,6 +170,7 @@ div.dt-buttons {
 
 .shell-cell {
     margin-bottom: 20px;
+    border: none;
 }
 
 .stderr {
@@ -188,4 +189,13 @@ div.dt-buttons {
 .fullscreen .vql-shell-input.velo-ace-editor {
     height: 15vh;
     width: 70vw;
+}
+
+.new_session div.card-header {
+    background-color: var(--color-canvas-background);
+}
+
+.new_session .shell-command.card-body,
+.new_session .shell-results.card-body {
+    border: none;
 }

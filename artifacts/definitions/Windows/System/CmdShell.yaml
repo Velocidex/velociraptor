@@ -24,6 +24,11 @@ parameters:
   - name: Command
     default: "dir C:\\"
 
+  - name: Timeout
+    type: int
+    default: "3500"
+    description: How long to leave the session running for.
+
 sources:
   - precondition: |
       SELECT * FROM info()
@@ -37,15 +42,19 @@ sources:
 
       LET _ <= shell_session_control(name=FLOWID, stdin=Command + "\n")
 
-      SELECT * FROM if(condition=NOT Session.IsRunning,
-      then={
-         SELECT Stdin AS Command,
+      // Shut the session down gracefully without timing out the flow.
+      LET SessionSink = SELECT Stdin AS Command,
              timestamp(epoch=now(ns=TRUE)) AS Timestamp,
              Stdout,
              NULL AS StdoutUpload,
              Stderr,
              NULL AS StderrUpload
          FROM foreach(row=Session.Query)
+
+      SELECT * FROM if(condition=NOT Session.IsRunning,
+      then={
+        SELECT *
+        FROM query(query=SessionSink, timeout=Timeout, inherit=TRUE)
       })
 
     notebook:
@@ -107,3 +116,8 @@ column_types:
   type: preview_upload
 - name: Transcript
   type: preview_upload
+
+resources:
+  # By default the shell session is up for an hour or until cancelled
+  # by the GUI.
+  timeout: 3600

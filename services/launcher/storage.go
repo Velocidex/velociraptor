@@ -47,7 +47,8 @@ func (self *FlowStorageManager) WriteFlow(
 		return err
 	}
 
-	flow_path_manager := paths.NewFlowPathManager(flow.ClientId, flow.SessionId)
+	sesion_id, _ := utils.SplitSessionIdToParentAndChild(flow.SessionId)
+	flow_path_manager := paths.NewFlowPathManager(flow.ClientId, sesion_id)
 	return db.SetSubjectWithCompletion(
 		config_obj, flow_path_manager.Path(), flow, completion)
 }
@@ -63,7 +64,8 @@ func (self *FlowStorageManager) WriteFlowStats(
 		return err
 	}
 
-	flow_path_manager := paths.NewFlowPathManager(flow.ClientId, flow.SessionId)
+	sesion_id, _ := utils.SplitSessionIdToParentAndChild(flow.SessionId)
+	flow_path_manager := paths.NewFlowPathManager(flow.ClientId, sesion_id)
 	return db.SetSubjectWithCompletion(
 		config_obj, flow_path_manager.Stats(), flow, completion)
 }
@@ -97,7 +99,10 @@ func (self *FlowStorageManager) WriteTask(
 		return err
 	}
 
-	flow_path_manager := paths.NewFlowPathManager(client_id, msg.SessionId)
+	// The task contains the client's view of the flow id, but we must
+	// store everything in the parent flow.
+	sesion_id, _ := utils.SplitSessionIdToParentAndChild(msg.SessionId)
+	flow_path_manager := paths.NewFlowPathManager(client_id, sesion_id)
 	return db.SetSubjectWithCompletion(
 		config_obj, flow_path_manager.Task(),
 		&api_proto.ApiFlowRequestDetails{
