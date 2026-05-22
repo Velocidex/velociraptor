@@ -42,17 +42,6 @@ export default class FlowNotebook extends React.Component {
         clearInterval(this.interval);
     }
 
-    getCellVQL = (flow) => {
-        var query = "SELECT * \nFROM source(\n";
-        var sources = flow["artifacts_with_results"] || flow["request"]["artifacts"];
-        for (var i=1; i<sources.length; i++) {
-            query += "    -- artifact='" + sources[i] + "',\n";
-        }
-        query += "    artifact='" + sources[0] + "'\n) LIMIT 50";
-
-        return query;
-    }
-
     fetchNotebooks = () => {
         let client_id = this.props.flow && this.props.flow.client_id;
         let flow_id = this.props.flow && this.props.flow.session_id;

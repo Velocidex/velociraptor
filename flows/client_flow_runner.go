@@ -291,7 +291,7 @@ func (self *ClientFlowRunner) removeInflightChecks(
 func (self *ClientFlowRunner) ProcessSingleMessage(
 	ctx context.Context, msg *crypto_proto.VeloMessage) error {
 
-	flow_id, child_flow_id := splitSessionIdToParentAndChild(msg.SessionId)
+	flow_id, child_flow_id := utils.SplitSessionIdToParentAndChild(msg.SessionId)
 	client_id := msg.Source
 
 	if flow_id == constants.MONITORING_WELL_KNOWN_FLOW {
@@ -873,12 +873,4 @@ func (self *ClientFlowRunner) ProcessMessages(ctx context.Context,
 	}
 
 	return message_info.IterateJobs(ctx, self.config_obj, self.ProcessSingleMessage)
-}
-
-func splitSessionIdToParentAndChild(sesion_id string) (string, string) {
-	parts := strings.SplitN(sesion_id, "/", 2)
-	if len(parts) < 2 {
-		return parts[0], ""
-	}
-	return parts[0], parts[1]
 }

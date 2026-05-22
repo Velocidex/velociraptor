@@ -122,6 +122,8 @@ div.dt-buttons {
     color: var(--color-sidebar-disabled-foreground);
     margin: 0;
     border-radius: 0;
+    margin-right: 50px;
+    width: stretch;
 }
 
 .shell-output-container .accordion-body pre {
@@ -170,6 +172,7 @@ div.dt-buttons {
 
 .shell-cell {
     margin-bottom: 20px;
+    border: none;
 }
 
 .stderr {
@@ -188,4 +191,22 @@ div.dt-buttons {
 .fullscreen .vql-shell-input.velo-ace-editor {
     height: 15vh;
     width: 70vw;
+}
+
+.new_session div.card-header {
+    background-color: var(--color-canvas-background);
+}
+
+.new_session .shell-command.card-body,
+.new_session .shell-results.card-body {
+    border: none;
+}
+
+.shell-timestamp-user {
+    display: flex;
+}
+
+.shell-output-container pre.shell-command-pending {
+    background-color: var(--color-accent-25);
+    color: var(--color-warning-color);
 }

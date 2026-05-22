@@ -29,6 +29,7 @@ import Col from 'react-bootstrap/Col';
 import  ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import  ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Form from 'react-bootstrap/Form';
+import Card from 'react-bootstrap/Card';
 
 // Refresh every 5 seconds
 const SHELL_POLL_TIME = 5000;
@@ -99,8 +100,8 @@ class _VeloShellCell extends Component {
         let client_id = this.props.client_id;
         let selected_flow = this.props.flow_id;
         if (client_id && selected_flow) {
-            let link = "/fullscreen/notebooks/N." + selected_flow +
-                "-" + client_id;
+            let link = "/fullscreen/collected/" + client_id + "/" +
+                selected_flow + "/notebook";
 
             return <ToolTip tooltip={T("Transcript")} key="transcript">
                      <Link to={link}
@@ -414,7 +415,63 @@ class _VeloShellCell extends Component {
         return buttons;
     }
 
+    renderLaunchBar = ()=>{
+        return <InputGroup className="mb-3 d-flex">
+                 <Form.Control as="textarea"
+                               rows={1}
+                               placeholder={T("Launch a command in this session")}
+                               spellCheck="false"
+                               value={this.state.command}
+                               onChange={e=>this.setState({
+                                   command: e.target.value,
+                               })} />
+                 <Button
+                   variant="default"
+                   onClick={this.launchCommand}>
+                   {T("Launch")}
+                 </Button>
+               </InputGroup>;
+    }
+
+
+    // Calculate all the requests from the flow object. This is used
+    // to show outstanding requests.
+    getAllRequests = ()=>{
+        let result = _.map(this.state.flow.previous_flows,
+                           flow=>this.getCommand(flow));
+        result.push(this.getCommand(this.state.flow));
+        return result;
+    }
+
+    getCommand = flow=>{
+        let res = {
+            timestamp: flow.create_time,
+        };
+
+        let request = flow.request;
+        if(!request || !request.specs) {
+            return res;
+        }
+
+        res.creator = request.creator;
+
+        let env = [];
+        _.each(request.specs, x=>{
+            if(x.artifact === this.props.artifact &&
+               x.parameters && x.parameters.env) {
+                env = x.parameters.env;
+            }});
+
+        _.each(env, x=>{
+            if(x.key=="Command") {
+                res.command = x.value;
+            }});
+
+        return res;
+    };
+
     render() {
+        let commands = this.getAllRequests();
         let buttons = this.renderButtons();
         let output = "";
         if (this.state.loaded) {
@@ -467,36 +524,63 @@ class _VeloShellCell extends Component {
             if(current_trans.Command) {
                 transactions.push(current_trans);
             }
-            output = [<Accordion
-                        ref={this.scrollRef}
-                        key="accordion"
-                        activeKey={this.state.activeRows}
-                        onSelect={rows=>{
-                            this.setState({activeRows: rows});
-                        }}
-                        alwaysOpen>
-                        {_.map(transactions, (item, index) => {
-                          return  <Accordion.Item
-                                    key={index}
-                                    eventKey={index} >
-                                    <Accordion.Header>
-                                      <Row lg="12">
-                                        <VeloTimestamp
-                                          className="float-right"
-                                          usec={item.Timestamp} />
-                                        <Col lg="9">
-                                          <pre>{item.Command}</pre>
-                                        </Col>
-                                        <Col lg="3">
-                                        </Col>
-                                      </Row>
-                                    </Accordion.Header>
-                                    <Accordion.Body>
-                                      <pre>{item.Out}</pre>
-                                    </Accordion.Body>
-                                  </Accordion.Item>;
-                        })}
-                      </Accordion>];
+
+            let items = _.map(transactions, (item, index) => {
+                let command = {};
+                if(commands.length > index) {
+                    command = commands[index];
+                }
+
+                return  <Accordion.Item
+                          key={index}
+                          eventKey={index} >
+                          <Accordion.Header>
+                            <Row lg="12">
+                              <div className="shell-timestamp-user">
+                                <VeloTimestamp
+                                  className="float-right"
+                                  usec={item.Timestamp} /> ( {command.creator} )
+                              </div>
+                              <pre>{item.Command}</pre>
+                            </Row>
+                          </Accordion.Header>
+                          <Accordion.Body>
+                            <pre>{item.Out}</pre>
+                          </Accordion.Body>
+                        </Accordion.Item>;
+            });
+
+            if(transactions.length < commands.length) {
+                for(let i=transactions.length; i<commands.length;i++) {
+                    let item = commands[i];
+                    items.push(<Accordion.Item key={i} eventKey={i}>
+                                 <Accordion.Header>
+                                   <Row lg="12">
+                                     <div className="shell-timestamp-user">
+                                       <VeloTimestamp
+                                         className="float-right"
+                                         usec={item.timestamp} /> ( {item.creator} ) { T("Pending") }
+                                     </div>
+                                     <pre className="shell-command-pending">
+                                       {item.command}
+                                     </pre>
+                                   </Row>
+                                 </Accordion.Header>
+                               </Accordion.Item>);
+                }
+            }
+
+            output = [
+                <Accordion
+                  ref={this.scrollRef}
+                  key="accordion"
+                  activeKey={this.state.activeRows}
+                  onSelect={rows=>{
+                      this.setState({activeRows: rows});
+                  }}
+                  alwaysOpen>
+                  {items}
+                </Accordion>];
         }
 
         return (
@@ -529,21 +613,7 @@ class _VeloShellCell extends Component {
                 <div className="shell-output-container">
                   {output}
                 </div>
-                <InputGroup className="mb-3 d-flex">
-                  <Form.Control as="textarea"
-                                rows={1}
-                                placeholder={T("Launch a command in this session")}
-                                spellCheck="false"
-                                value={this.state.command}
-                                onChange={e=>this.setState({
-                                    command: e.target.value,
-                                })} />
-                  <Button
-                    variant="default"
-                    onClick={this.launchCommand}>
-                    {T("Launch")}
-                  </Button>
-                </InputGroup>
+                { this.state.loaded && this.renderLaunchBar() }
               </div>
             </>
         );
@@ -610,6 +680,32 @@ class VeloVQLCell extends _VeloShellCell {
     // The VQL shell does not show a transcript.
     transcriptLink = () => {
         return <span key="transcript"></span>;
+    }
+
+    renderLaunchBar = ()=>{
+        return <InputGroup className="mb-3 d-flex">
+                 <Button
+                   variant="default"
+                   onClick={this.launchCommand}>
+                   {T("Launch")}
+                 </Button>
+
+                 <VeloAce
+                   mode="vql"
+                   className="vql-shell-input"
+                   placeholder={T("Run VQL query on client")}
+                   aceConfig={this.aceConfig}
+                   text={this.state.command}
+                   onChange={(value) => {this.setState({command: value});}}
+                   commands={[{
+                       name: 'saveAndExit',
+                       bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
+                       exec: (editor) => {
+                           this.launchCommand();
+                       },
+                   }]}
+                 />
+               </InputGroup>;
     }
 
     render() {
@@ -699,29 +795,7 @@ class VeloVQLCell extends _VeloShellCell {
                 <div className="shell-output-container shell-vql-cell">
                   {output}
                 </div>
-                <InputGroup className="mb-3 d-flex">
-                  <Button
-                    variant="default"
-                    onClick={this.launchCommand}>
-                    {T("Launch")}
-                  </Button>
-
-                  <VeloAce
-                    mode="vql"
-                    className="vql-shell-input"
-                    placeholder={T("Run VQL query on client")}
-                    aceConfig={this.aceConfig}
-                    text={this.state.command}
-                    onChange={(value) => {this.setState({command: value});}}
-                    commands={[{
-                        name: 'saveAndExit',
-                        bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
-                        exec: (editor) => {
-                            this.launchCommand();
-                        },
-                    }]}
-                  />
-                </InputGroup>
+                { this.state.loaded && this.renderLaunchBar() }
               </div>
             </>
         );
@@ -744,18 +818,14 @@ class ShellViewer extends Component {
 
     componentDidMount() {
         this.source = CancelToken.source();
-        let default_shell = this.props.default_shell || 'Powershell';
-        if(this.props.system !== "windows") {
-            default_shell = "Bash";
-        }
-        this.setState({
-            shell_type: default_shell,
-        });
+        this.interval = setInterval(this.fetchLastShellCollections,
+                                    SHELL_POLL_TIME);
         this.fetchLastShellCollections();
     }
 
     componentWillUnmount() {
         this.source.cancel("unmounted");
+        clearInterval(this.interval);
     }
 
     // Force the flows list to update as soon as the client changes
@@ -829,23 +899,45 @@ class ShellViewer extends Component {
         });
     };
 
+    getArtifactForShell = shell=>{
+        switch(shell.toLowerCase()) {
+        case "powershell":
+            return "Windows.System.PowerShell";
+
+        case "cmd":
+            return "Windows.System.CmdShell";
+
+        case "bash" :
+            return "Linux.Sys.BashShell";
+
+        case "vql" :
+            return "Generic.Client.VQL";
+        }
+        return "Generic.Client.VQL";
+    }
+
+    getShell = ()=>{
+        // If the user set the shell selector return that.
+        let shell = this.state.shell_type;
+        if(shell) {
+            return shell;
+        }
+
+        // Otherwise find the best match
+        shell = this.props.default_shell || 'Powershell';
+        if(this.props.system !== "windows") {
+            return "Bash";
+        }
+        return shell;
+    }
+
     launchCommand = () => {
         if (!this.props.client_id) {
             return;
         }
 
-        var artifact = "";
-        if (this.state.shell_type.toLowerCase() === "powershell") {
-            artifact = "Windows.System.PowerShell";
-        } else if(this.state.shell_type.toLowerCase() === "cmd") {
-            artifact = "Windows.System.CmdShell";
-        } else if(this.state.shell_type.toLowerCase() === "bash") {
-            artifact = "Linux.Sys.BashShell";
-        } else if(this.state.shell_type.toLowerCase() === "vql") {
-            artifact = "Generic.Client.VQL";
-        } else {
-            return;
-        };
+        let shell = this.getShell();
+        let artifact = this.getArtifactForShell(shell);
 
         var params = {
             client_id: this.props.client_id,
@@ -911,7 +1003,8 @@ class ShellViewer extends Component {
 
     render() {
         let simple_textarea = true;
-        if (this.state.shell_type === "VQL") {
+        let shell_type = this.getShell();
+        if (shell_type.toLowerCase() === "vql") {
             simple_textarea = false;
         }
 
@@ -919,54 +1012,59 @@ class ShellViewer extends Component {
 
         return (
             <>
-              <div className="shell-command">
-                <InputGroup className="mb-3 d-flex">
-                  <DropdownButton as={InputGroup}
-                                  title={this.state.shell_type}
-                                  onSelect={e=>this.setState(
-                                      {shell_type: e})}
-                                  id="bg-nested-dropdown">
-                    <Dropdown.Item eventKey="Powershell">Powershell</Dropdown.Item>
-                    { client_os === "windows" ?
-                      <Dropdown.Item eventKey="Cmd">Cmd</Dropdown.Item> :
-                      <Dropdown.Item eventKey="Bash">Bash</Dropdown.Item> }
-                    <Dropdown.Item eventKey="VQL">VQL</Dropdown.Item>
-                  </DropdownButton>
-                  { simple_textarea ?
-                    <textarea rows="1"
-                              className="form-control"
-                              placeholder={T("Run command on client")}
-                              spellCheck="false"
-                              value={this.state.command}
-                              onChange={e=>this.setState({
-                                  command: e.target.value,
-                              })}>
-                    </textarea> :
-                    <VeloAce
-                      mode="vql"
-                      className="vql-shell-input"
-                      aceConfig={this.aceConfig}
-                      text={this.state.command}
-                      onChange={(value) => {this.setState({command: value});}}
-                      commands={[{
-                          name: 'saveAndExit',
-                          bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
-                          exec: (editor) => {
-                              this.launchCommand();
-                          },
-                      }]}
-                    />
-                  }
-
-                  <Button disabled={!this.state.command}
-                          onClick={this.launchCommand}
-                  >{T("Launch")}
-                  </Button>
-                </InputGroup>
-              </div>
-              <div className="shell-results">
-                { this.renderCells(this.state.flows) }
-              </div>
+              <Card className="new_session">
+                <Card.Body className="shell-command">
+                    <InputGroup className="">
+                      <DropdownButton as={InputGroup}
+                                      title={shell_type}
+                                      onSelect={e=>this.setState({shell_type: e})}
+                                      id="bg-nested-dropdown">
+                        <Dropdown.Item eventKey="Powershell">
+                          Powershell
+                        </Dropdown.Item>
+                        { client_os === "windows" ?
+                          <Dropdown.Item eventKey="Cmd">Cmd</Dropdown.Item> :
+                          <Dropdown.Item eventKey="Bash">Bash</Dropdown.Item> }
+                        <Dropdown.Item eventKey="VQL">VQL</Dropdown.Item>
+                      </DropdownButton>
+                      { simple_textarea ?
+                        <textarea rows="1"
+                                  className="form-control"
+                                  placeholder={T("Run command in new session")}
+                                  spellCheck="false"
+                                  value={this.state.command}
+                                  onChange={e=>this.setState({
+                                      command: e.target.value,
+                                  })}>
+                        </textarea> :
+                        <VeloAce
+                          mode="vql"
+                          className="vql-shell-input"
+                          aceConfig={this.aceConfig}
+                          text={this.state.command}
+                          onChange={(value) => {this.setState({command: value});}}
+                          commands={[{
+                              name: 'saveAndExit',
+                              bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
+                              exec: (editor) => {
+                                  this.launchCommand();
+                              },
+                          }]}
+                        />
+                      }
+                      <Button disabled={!this.state.command}
+                              onClick={this.launchCommand}
+                      >{T("Launch")}
+                      </Button>
+                    </InputGroup>
+                </Card.Body>
+              </Card>
+              <Card className="new_session">
+                <Card.Header>{T("Existing sessions")}</Card.Header>
+                <Card.Body className="shell-results">
+                  { this.renderCells(this.state.flows) }
+                </Card.Body>
+              </Card>
             </>
         );
     };
