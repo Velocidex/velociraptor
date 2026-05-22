@@ -41,18 +41,18 @@ type VQLRuleEvaluator struct {
 
 	fieldmappings *FieldMappingResolver
 
-	// If this rule has a correlator, then forward the match to the
-	// correlator.
-	Correlator *SigmaCorrelator `json:"correlator,omitempty" yaml:"correlator,omitempty"`
+	// If this rule has correlators, then forward the match to each of
+	// them. A source rule may be referenced by more than one correlation.
+	Correlators []*SigmaCorrelator `json:"correlators,omitempty" yaml:"correlators,omitempty"`
 }
 
 func (self *VQLRuleEvaluator) GetCorrelatorRule() *VQLRuleEvaluator {
-	if self.Correlator == nil {
+	if len(self.Correlators) == 0 {
 		return self
 	}
 
 	res := &VQLRuleEvaluator{
-		Rule:          self.Correlator.Rule,
+		Rule:          self.Correlators[0].Rule,
 		fieldmappings: self.fieldmappings,
 		scope:         self.scope,
 	}
@@ -183,15 +183,16 @@ func (self *VQLRuleEvaluator) Match(ctx context.Context,
 		}
 	}
 
-	// If we get here the base rule would have matched - if there is a
-	// correlator tell it about it.
-	if result.Match && self.Correlator != nil {
+	// If we get here the base rule would have matched. When there are
+	// correlators the pool dispatches the event to each of them and
+	// emits one row per fired correlation.
+	if result.Match && len(self.Correlators) > 0 {
 		// Tag the event with the rule that actually matched it. This
 		// makes it easy to see which rule from the correlation
 		// matched each event.
 		event.Set("_MatchingRule", self.Rule.Title)
 
-		return self.Correlator.Match(ctx, scope, self, event)
+		return &result, nil
 	}
 
 	// Record the total hits

@@ -59,36 +59,74 @@ func (self *workerJob) Run() {
 			continue
 		}
 
-		// The below operates on a copy of the event so as not to
-		// interfere with other threads
-		event_copy := evaluator.NewEvent(event.Copy())
-		if match.CorrelationHits == nil {
-			event_copy.Set("_Match", match)
-		} else {
-			event_copy.Set("_Correlations", match.CorrelationHits)
+		// If this source rule feeds one or more correlations, dispatch
+		// the matching event to each correlator and emit one row per
+		// fired correlation.
+		if len(rule.Correlators) > 0 {
+			for _, correlator := range rule.Correlators {
+				// Only feed the correlator when the base rule actually
+				// matched. Otherwise (in debug mode) we would pollute
+				// the timespan state with non matching events.
+				corr_match := match
+				if match.Match {
+					corr_match, err = correlator.Match(
+						self.ctx, subscope, rule, event)
+					if err != nil {
+						functions.DeduplicatedLog(self.ctx, subscope,
+							"While evaluating correlation %v: %v",
+							correlator.Title, err)
+						continue
+					}
+				}
+
+				if !self.debug && !corr_match.Match {
+					continue
+				}
+
+				// Report the correlation rule as the hit.
+				if !self.emit(subscope, event, corr_match,
+					correlator.VQLRuleEvaluator) {
+					return
+				}
+			}
+			continue
 		}
 
-		// If this is a correlation rule, we report the actual
-		// correlation rule as a hit.
-		if rule.Correlator != nil {
-			// From here on we use the correlation rule to determine
-			// the details or post match enrichment.
-			rule = rule.Correlator.VQLRuleEvaluator
-		}
-
-		event_copy.Set("_Rule", rule)
-
-		self.sigma_context.AddDetail(self.ctx, subscope, event_copy, rule)
-		rule.MaybeEnrichForReporting(self.ctx, subscope, event_copy)
-
-		self.sigma_context.IncHitCount()
-
-		select {
-		case <-self.ctx.Done():
+		if !self.emit(subscope, event, match, rule) {
 			return
-
-		case self.output_chan <- event_copy:
 		}
+	}
+}
+
+// emit writes a single matching row to the output channel. It operates
+// on a copy of the event so as not to interfere with other threads.
+// Returns false if the context was cancelled.
+func (self *workerJob) emit(
+	subscope vfilter.Scope,
+	event *evaluator.Event,
+	match *evaluator.Result,
+	rule *evaluator.VQLRuleEvaluator) bool {
+
+	event_copy := evaluator.NewEvent(event.Copy())
+	if match.CorrelationHits == nil {
+		event_copy.Set("_Match", match)
+	} else {
+		event_copy.Set("_Correlations", match.CorrelationHits)
+	}
+
+	event_copy.Set("_Rule", rule)
+
+	self.sigma_context.AddDetail(self.ctx, subscope, event_copy, rule)
+	rule.MaybeEnrichForReporting(self.ctx, subscope, event_copy)
+
+	self.sigma_context.IncHitCount()
+
+	select {
+	case <-self.ctx.Done():
+		return false
+
+	case self.output_chan <- event_copy:
+		return true
 	}
 }
 
