@@ -8,4 +8,7 @@ const (
 
 	// The absolute max number of rows we accept in a single blob.
 	MAX_ROW_LIMIT = 1000000
+
+	// The GUI will truncate the env to this many chars
+	MAX_ENV_TRUNCATE_LIMIT = 100
 )

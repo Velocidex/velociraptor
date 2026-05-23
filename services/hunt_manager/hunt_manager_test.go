@@ -109,13 +109,15 @@ func (self *HuntTestSuite) TestHuntManager() {
 			return false
 		}
 		_, err = self.storage_manager.LoadCollectionContext(self.Ctx,
-			self.ConfigObj, self.client_id, flow_id)
+			self.ConfigObj, self.client_id, flow_id,
+			services.GetFlowOptions{})
 		return err == nil
 	})
 
 	// Check that a flow was launched.
 	collection_context, err := self.storage_manager.LoadCollectionContext(
-		self.Ctx, self.ConfigObj, self.client_id, flow_id)
+		self.Ctx, self.ConfigObj, self.client_id, flow_id,
+		services.GetFlowOptions{})
 	assert.NoError(t, err)
 	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
@@ -166,7 +168,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	// No flow should be launched.
 	flow_id := hunt_obj.StartRequest.FlowId
 	_, err = self.storage_manager.LoadCollectionContext(self.Ctx,
-		self.ConfigObj, self.client_id, flow_id)
+		self.ConfigObj, self.client_id, flow_id,
+		services.GetFlowOptions{})
 	assert.Error(t, err)
 
 	// Now add the label to the client. The hunt will now be
@@ -188,7 +191,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 
 	// The flow is now created.
 	_, err = self.storage_manager.LoadCollectionContext(self.Ctx,
-		self.ConfigObj, self.client_id, flow_id)
+		self.ConfigObj, self.client_id, flow_id,
+		services.GetFlowOptions{})
 	assert.NoError(t, err)
 }
 
@@ -250,12 +254,14 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 			return false
 		}
 		_, err := self.storage_manager.LoadCollectionContext(self.Ctx,
-			self.ConfigObj, self.client_id, flow_id)
+			self.ConfigObj, self.client_id, flow_id,
+			services.GetFlowOptions{})
 		return err == nil
 	})
 
 	collection_context, err := self.storage_manager.LoadCollectionContext(
-		self.Ctx, self.ConfigObj, self.client_id, flow_id)
+		self.Ctx, self.ConfigObj, self.client_id, flow_id,
+		services.GetFlowOptions{})
 	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
 
@@ -306,12 +312,14 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 		}
 
 		_, err := self.storage_manager.LoadCollectionContext(self.Ctx,
-			self.ConfigObj, self.client_id, flow_id)
+			self.ConfigObj, self.client_id, flow_id,
+			services.GetFlowOptions{})
 		return err == nil
 	})
 
 	collection_context, err := self.storage_manager.LoadCollectionContext(
-		self.Ctx, self.ConfigObj, self.client_id, flow_id)
+		self.Ctx, self.ConfigObj, self.client_id, flow_id,
+		services.GetFlowOptions{})
 	assert.NoError(t, err)
 	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
@@ -374,12 +382,14 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 		}
 
 		_, err := self.storage_manager.LoadCollectionContext(
-			self.Ctx, self.ConfigObj, self.client_id, flow_id)
+			self.Ctx, self.ConfigObj, self.client_id, flow_id,
+			services.GetFlowOptions{})
 		return err == nil
 	})
 
 	collection_context, err := self.storage_manager.LoadCollectionContext(
-		self.Ctx, self.ConfigObj, self.client_id, flow_id)
+		self.Ctx, self.ConfigObj, self.client_id, flow_id,
+		services.GetFlowOptions{})
 	assert.NoError(t, err)
 	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
@@ -443,7 +453,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 
 	// No flow should be launched.
 	_, err = self.storage_manager.LoadCollectionContext(
-		self.Ctx, self.ConfigObj, self.client_id, flow_id)
+		self.Ctx, self.ConfigObj, self.client_id, flow_id,
+		services.GetFlowOptions{})
 	assert.Error(t, err)
 }
 
@@ -500,7 +511,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasOnlyExcludedLabel() {
 
 	// No flow should be launched.
 	_, err = self.storage_manager.LoadCollectionContext(
-		self.Ctx, self.ConfigObj, self.client_id, flow_id)
+		self.Ctx, self.ConfigObj, self.client_id, flow_id,
+		services.GetFlowOptions{})
 	assert.Error(t, err)
 }
 
@@ -575,13 +587,15 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// Flow should be launched on client id because it is a Windows client.
 		_, err = self.storage_manager.LoadCollectionContext(
-			self.Ctx, self.ConfigObj, client_id_1, flow_id)
+			self.Ctx, self.ConfigObj, client_id_1, flow_id,
+			services.GetFlowOptions{})
 		return err == nil
 	})
 
 	// No flow should be launched on client_id_2 because it is a Linux client.
 	_, err = self.storage_manager.LoadCollectionContext(
-		self.Ctx, self.ConfigObj, client_id_2, flow_id)
+		self.Ctx, self.ConfigObj, client_id_2, flow_id,
+		services.GetFlowOptions{})
 	assert.Error(t, err)
 }
 

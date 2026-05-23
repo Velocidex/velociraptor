@@ -15,8 +15,10 @@ import (
 )
 
 type FlowsPluginArgs struct {
-	ClientId string `vfilter:"required,field=client_id"`
-	FlowId   string `vfilter:"optional,field=flow_id"`
+	ClientId           string `vfilter:"required,field=client_id"`
+	FlowId             string `vfilter:"optional,field=flow_id"`
+	IncludeFullRequest bool   `vfilter:"optional,field=full_request,doc=If specified we include the full request in the output. This can be very large."`
+	IncludeDownloads   bool   `vfilter:"optional,field=downloads,doc=If specified we include the flow exports in the output."`
 }
 
 type FlowsPlugin struct{}
@@ -80,7 +82,8 @@ func (self FlowsPlugin) Call(
 		if arg.FlowId != "" {
 			flow_details, err := launcher.GetFlowDetails(
 				ctx, config_obj, services.GetFlowOptions{
-					Downloads: true,
+					Downloads: arg.IncludeDownloads,
+					Request:   arg.IncludeFullRequest,
 				},
 				arg.ClientId, arg.FlowId)
 			if err == nil {
@@ -103,7 +106,12 @@ func (self FlowsPlugin) Call(
 		for {
 			options := result_sets.ResultSetOptions{}
 			result, err := launcher.GetFlows(ctx, config_obj,
-				arg.ClientId, options, offset, length)
+				arg.ClientId, options,
+				services.GetFlowOptions{
+					Downloads: arg.IncludeDownloads,
+					Request:   arg.IncludeFullRequest,
+				},
+				offset, length)
 			if err != nil {
 				scope.Log("flows: %v", err)
 				return
@@ -134,6 +142,7 @@ func (self FlowsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Doc:      "Retrieve the flows launched on each client.",
 		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Version:  2,
 	}
 }
 
@@ -188,12 +197,14 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 	return json.ConvertProtoToOrderedDict(res)
 }
 
-func (self CancelFlowFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self CancelFlowFunction) Info(
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "cancel_flow",
-		Doc:      "Cancels the flow.",
-		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.COLLECT_SERVER, acls.COLLECT_CLIENT).Build(),
+		Name:    "cancel_flow",
+		Doc:     "Cancels the flow.",
+		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.COLLECT_SERVER, acls.COLLECT_CLIENT).Build(),
 	}
 }
 
@@ -260,12 +271,15 @@ func (self EnumerateFlowPlugin) Call(
 	return output_chan
 }
 
-func (self EnumerateFlowPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self EnumerateFlowPlugin) Info(
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "enumerate_flow",
-		Doc:      "Enumerate all the files that make up a flow.",
-		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Name:    "enumerate_flow",
+		Doc:     "Enumerate all the files that make up a flow.",
+		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.READ_RESULTS).Build(),
+		Version: 2,
 	}
 }
 
@@ -312,7 +326,8 @@ func (self *GetFlowFunction) Call(ctx context.Context,
 	}
 	res, err := launcher.GetFlowDetails(
 		ctx, config_obj, services.GetFlowOptions{
-			Downloads: true,
+			Downloads: arg.IncludeDownloads,
+			Request:   arg.IncludeFullRequest,
 		},
 		arg.ClientId, arg.FlowId)
 	if err != nil {
@@ -324,12 +339,15 @@ func (self *GetFlowFunction) Call(ctx context.Context,
 		Set("AvailableDownloads", res.AvailableDownloads)
 }
 
-func (self GetFlowFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self GetFlowFunction) Info(
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "get_flow",
-		Doc:      "Gets flow details.",
-		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.COLLECT_CLIENT, acls.COLLECT_SERVER).Build(),
+		Name:    "get_flow",
+		Doc:     "Gets flow details.",
+		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.COLLECT_CLIENT, acls.COLLECT_SERVER).Build(),
+		Version: 2,
 	}
 }
 

@@ -34,13 +34,13 @@ const (
   need to perform. This is the common usage pattern.
 
   func doStuff() {
-    completer := NewCompleter(func() {
+    completer, closer := NewCompleter(func() {
       fmt.Printf("I am called once")
     })
 
-    // This ensures the completer is not called until we leave this
-    // function.
-    defer completer.GetCompletionFunc()()
+    // The closer must be called after all sub-completer functions are
+    // created with GetCompletionFunc()
+    defer closer()
 
     err := db.SetSubjectWithCompletion(...., completer.GetCompletionFunc())
     ...
@@ -57,10 +57,29 @@ type Completer struct {
 	completion func()
 }
 
-func NewCompleter(completion func()) *Completer {
-	return &Completer{
+// To avoid a race the API has changed to force the completer to close
+// at an opportune time. The closer should be called **after** all the
+// completion functions have been called:
+//
+// completer, closer := NewCompleter(completion)
+// defer closer()
+//
+// ... Code using the completer getting new sub-completions with
+// completer.GetCompletionFunc()
+//
+// When the closer() is called all GetCompletionFunc() have been
+// called on the completer!
+func NewCompleter(completion func()) (completer *Completer, closer func()) {
+	res := &Completer{
 		completion: completion,
 	}
+
+	// Do not actually call the sync completer.
+	if CompareFuncs(completion, SyncCompleter) {
+		return res, func() {}
+	}
+
+	return res, res.GetCompletionFunc()
 }
 
 func (self *Completer) GetCompletionFunc() func() {

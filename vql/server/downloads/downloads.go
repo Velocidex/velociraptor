@@ -337,7 +337,11 @@ func downloadFlowToZip(
 	}
 
 	flow_details, err := launcher.GetFlowDetails(
-		ctx, config_obj, services.GetFlowOptions{},
+		ctx, config_obj,
+		services.GetFlowOptions{
+			// Get the full request so we can export it.
+			Request: true,
+		},
 		client_id, flow_id)
 	if err == nil {
 		err = zip_writer.WriteJSON(
@@ -348,7 +352,7 @@ func downloadFlowToZip(
 		}
 	}
 
-	flow_requests, err := launcher.Storage().GetFlowRequests(
+	flow_requests, err := launcher.Storage().GetFlowTasks(
 		ctx, config_obj, client_id, flow_id, 0, 100)
 	if err == nil {
 		err = zip_writer.WriteJSON(

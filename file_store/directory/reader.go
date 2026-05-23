@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -39,8 +40,13 @@ func (self *CompressedDirectoryReader) uncompressChunk(
 		return nil, io.EOF
 	}
 
+	uncompressed_length := chunk.UncompressedLength
+	if uncompressed_length > constants.MAX_MEMORY {
+		uncompressed_length = constants.MAX_MEMORY
+	}
+
 	uncompressed, err := utils.UncompressWithLimit(
-		context.Background(), compressed, chunk.UncompressedLength)
+		context.Background(), compressed, uncompressed_length)
 	if err != nil {
 		return nil, io.EOF
 	}

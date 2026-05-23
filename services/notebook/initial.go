@@ -534,7 +534,10 @@ func populateDefaultSpecs(
 		}
 
 		flow_obj, err := launcher.GetFlowDetails(ctx, config_obj,
-			services.GetFlowOptions{}, client_id, flow_id)
+			services.GetFlowOptions{
+				// Get all the info
+				Request: true,
+			}, client_id, flow_id)
 		if err != nil {
 			return err
 		}

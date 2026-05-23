@@ -49,7 +49,8 @@ func NewFlowReader(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	storage_manager services.FlowStorer,
-	client_id string) *FlowReader {
+	client_id string,
+	options services.GetFlowOptions) *FlowReader {
 
 	in := make(chan string)
 	out := make(chan *flows_proto.ArtifactCollectorContext)
@@ -75,7 +76,8 @@ func NewFlowReader(
 
 			for session_id := range in {
 				collection_context, err := storage_manager.
-					LoadCollectionContext(ctx, config_obj, client_id, session_id)
+					LoadCollectionContext(ctx, config_obj,
+						client_id, session_id, options)
 				if err == nil &&
 					collection_context != nil &&
 					collection_context.Request != nil {

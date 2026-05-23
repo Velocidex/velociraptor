@@ -40,6 +40,7 @@ func (self *FlowStorageManager) WriteFlow(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	flow *flows_proto.ArtifactCollectorContext,
+	options services.GetFlowOptions,
 	completion func()) error {
 
 	db, err := datastore.GetDB(config_obj)
@@ -49,8 +50,54 @@ func (self *FlowStorageManager) WriteFlow(
 
 	sesion_id, _ := utils.SplitSessionIdToParentAndChild(flow.SessionId)
 	flow_path_manager := paths.NewFlowPathManager(flow.ClientId, sesion_id)
+
+	completer, closer := utils.NewCompleter(completion)
+	defer closer()
+
+	// Write the requests to a separate file to ensure they are not
+	// too large.
+
+	// Make a shallow copy to store.
+	reducted := *flow
+
+	// The request is valid, so we need to overwrite it.
+	if options.Request && flow.Request != nil {
+
+		// Make a smaller representation of the request.
+		reducted.Request = &flows_proto.ArtifactCollectorArgs{
+			Creator:   flow.Request.Creator,
+			ClientId:  flow.Request.ClientId,
+			Artifacts: flow.Request.Artifacts,
+			Urgent:    flow.Request.Urgent,
+
+			// Keep the various limits so we can check them without
+			// loading the large object
+			CpuLimit:        flow.Request.CpuLimit,
+			IopsLimit:       flow.Request.IopsLimit,
+			ProgressTimeout: flow.Request.ProgressTimeout,
+			Timeout:         flow.Request.Timeout,
+			MaxRows:         flow.Request.MaxRows,
+			MaxLogs:         flow.Request.MaxLogs,
+			MaxUploadBytes:  flow.Request.MaxUploadBytes,
+		}
+		reducted.PreviousFlows = nil
+
+		requests := &flows_proto.ArtifactCollectorContext{
+			Request:       flow.Request,
+			PreviousFlows: flow.PreviousFlows,
+		}
+
+		err = db.SetSubjectWithCompletion(
+			config_obj, flow_path_manager.Requests(),
+			requests, completer.GetCompletionFunc())
+		if err != nil {
+			return err
+		}
+	}
+
 	return db.SetSubjectWithCompletion(
-		config_obj, flow_path_manager.Path(), flow, completion)
+		config_obj, flow_path_manager.Path(),
+		&reducted, completer.GetCompletionFunc())
 }
 
 func (self *FlowStorageManager) WriteFlowStats(
@@ -217,7 +264,8 @@ func (self *FlowStorageManager) houseKeeping(
 	delay := time.Second * 60
 	if config_obj.Defaults != nil &&
 		config_obj.Defaults.ClientInfoHousekeepingPeriod > 0 {
-		delay = time.Duration(config_obj.Defaults.ClientInfoHousekeepingPeriod) * time.Second
+		delay = time.Duration(
+			config_obj.Defaults.ClientInfoHousekeepingPeriod) * time.Second
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -247,7 +295,8 @@ func (self *FlowStorageManager) houseKeeping(
 	}
 }
 
-func (self *FlowStorageManager) GetIndexBuilder(client_id string) *flowIndexBuilder {
+func (self *FlowStorageManager) GetIndexBuilder(
+	client_id string) *flowIndexBuilder {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -276,7 +325,9 @@ func (self *FlowStorageManager) buildFlowIndexFromDatastore(
 func (self *FlowStorageManager) LoadCollectionContext(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	client_id, flow_id string) (*flows_proto.ArtifactCollectorContext, error) {
+	client_id, flow_id string,
+	options services.GetFlowOptions) (
+	*flows_proto.ArtifactCollectorContext, error) {
 
 	in_flight_time := int64(0)
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
@@ -313,6 +364,16 @@ func (self *FlowStorageManager) LoadCollectionContext(
 		return nil, err
 	}
 
+	if options.Request {
+		requests := &flows_proto.ArtifactCollectorContext{}
+		err = db.GetSubject(
+			config_obj, flow_path_manager.Requests(), requests)
+		if err == nil {
+			collection_context.Request = requests.Request
+			collection_context.PreviousFlows = requests.PreviousFlows
+		}
+	}
+
 	if collection_context.SessionId == "" {
 		return nil, fmt.Errorf("%w: %v in client '%v'",
 			services.FlowNotFoundError, flow_id, client_id)
@@ -337,10 +398,11 @@ func (self *FlowStorageManager) LoadCollectionContext(
 	}
 
 	UpdateFlowStats(collection_context)
+
 	return collection_context, nil
 }
 
-func (self *FlowStorageManager) GetFlowRequests(
+func (self *FlowStorageManager) GetFlowTasks(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string, flow_id string,
@@ -362,7 +424,7 @@ func (self *FlowStorageManager) GetFlowRequests(
 		config_obj, flow_path_manager.Task(), flow_details)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("%w: %v in client '%v'",
-			services.FlowNotFoundError, flow_id, client_id)
+			services.FlowRequestNotFoundError, flow_id, client_id)
 	}
 
 	if err != nil {

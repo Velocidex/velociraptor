@@ -113,7 +113,10 @@ func syncFlowTables(
 		// error out. We then ignore this row.
 		flow, err := launcher.GetFlowDetails(
 			ctx, config_obj,
-			services.GetFlowOptions{},
+			services.GetFlowOptions{
+				// We only need basic request info.
+				Request: false,
+			},
 			participation_row.ClientId, participation_row.FlowId)
 		if err != nil || flow.Context == nil {
 			continue
@@ -243,7 +246,9 @@ func (self *HuntDispatcher) GetFlows(
 				// information.
 			} else {
 				collection_context, err = launcher.GetFlowDetails(
-					ctx, config_obj, services.GetFlowOptions{},
+					ctx, config_obj, services.GetFlowOptions{
+						Request: false,
+					},
 					client_id, flow_id)
 				if err != nil {
 					continue

@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"regexp"
 
 	errors "github.com/go-errors/errors"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -32,6 +33,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
@@ -286,6 +288,7 @@ func GetAPIHandler(
 
 				return metadata.New(md)
 			}),
+		runtime.WithErrorHandler(grpcErrorHandler),
 	)
 
 	// We use a dedicated gw certificate. The gRPC server will
@@ -357,4 +360,28 @@ func GetAPIHandler(
 func ipFilter(config_obj *config_proto.Config,
 	parent http.Handler) http.Handler {
 	return authenticators.IpFilter(config_obj, parent)
+}
+
+var (
+	rpcSizeError = regexp.MustCompile(`received message larger than max`)
+)
+
+func grpcErrorHandler(ctx context.Context,
+	mux *runtime.ServeMux,
+	marshaler runtime.Marshaler,
+	w http.ResponseWriter, r *http.Request, err error) {
+	st := status.Convert(err)
+	httpStatus := runtime.HTTPStatusFromCode(st.Code())
+
+	message := st.Message()
+	if rpcSizeError.MatchString(message) {
+		message = fmt.Sprintf(
+			"%s: Request %v. Please see "+
+				"https://docs.velociraptor.app/knowledge_base/tips/grpc_errors/",
+			message, r.URL.Path)
+	}
+
+	// Write your own JSON response
+	w.WriteHeader(httpStatus)
+	w.Write([]byte(message))
 }

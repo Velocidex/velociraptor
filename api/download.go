@@ -498,7 +498,11 @@ func getTransformer(
 			}
 
 			flow, err := launcher.Storage().LoadCollectionContext(
-				ctx, config_obj, client_id, flow_id)
+				ctx, config_obj, client_id, flow_id,
+				services.GetFlowOptions{
+					// We only need basic request info.
+					Request: false,
+				})
 			if err != nil {
 				return base.Set("State", fmt.Sprintf("Unknown: %v", err))
 			}

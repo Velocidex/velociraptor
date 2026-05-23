@@ -116,7 +116,11 @@ func (self *flowIndexBuilder) buildFlowIndexFromDatastore(
 	}
 
 	flow_reader := NewFlowReader(
-		ctx, config_obj, storage_manager, self.client_id)
+		ctx, config_obj, storage_manager, self.client_id,
+		services.GetFlowOptions{
+			// We do not need the full flow object
+			Request: false,
+		})
 
 	go func() {
 		defer flow_reader.Close()

@@ -702,9 +702,6 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 		request, nil)
 	assert.NoError(t, err)
 
-	db, err := datastore.GetDB(self.ConfigObj)
-	require.NoError(t, err)
-
 	// Launching the artifact will schedule one query on the client.
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -719,12 +716,14 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 	// The request sends a single FlowRequest task with two queries
 	assert.Equal(t, len(tasks[0].FlowRequest.VQLClientActions), 2)
 
-	collection_context := &flows_proto.ArtifactCollectorContext{}
-	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
-	err = db.GetSubject(self.ConfigObj, path_manager.Path(), collection_context)
-	require.NoError(t, err)
+	collection_context, err := launcher.GetFlowDetails(
+		self.Ctx, self.ConfigObj, services.GetFlowOptions{
+			Request: true,
+		},
+		self.client_id, flow_id)
+	assert.NoError(self.T(), err)
 
-	assert.Equal(t, collection_context.Request, request)
+	assert.Equal(t, collection_context.Context.Request, request)
 }
 
 // Schedule a flow in the database and return its flow id

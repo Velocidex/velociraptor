@@ -29,7 +29,6 @@ import VeloHunts from './components/hunts/hunts.jsx';
 import UserDashboard from './components/sidebar/user-dashboard.jsx';
 import UserLabel from './components/users/user-label.jsx';
 import EventMonitoring from './components/events/events.jsx';
-import SnackbarProvider from 'react-simple-snackbar';
 import Snackbar from './components/core/snackbar.jsx';
 import Welcome from './components/welcome/welcome.jsx';
 import LoginPage from './components/welcome/login.jsx';
@@ -251,31 +250,29 @@ class App extends Component {
         return (
             <div>
               <UserSettings>
-                <SnackbarProvider>
-                  <SidebarKeyNavigator client={this.state.client}/>
-                  <Switch>
-                    <Route path="/fullscreen/shell/:artifact/:client_id/:flow_id">
-                      <ShellViewerFullScreen />
-                    </Route>
+                <SidebarKeyNavigator client={this.state.client}/>
+                <Switch>
+                  <Route path="/fullscreen/shell/:artifact/:client_id/:flow_id">
+                    <ShellViewerFullScreen />
+                  </Route>
 
-                    <Route path="/fullscreen/notebooks/:notebook_id">
-                      <FullScreenNotebook />
-                    </Route>
-                    <Route path="/fullscreen/hunts/:hunt_id/notebook">
-                      <FullScreenHuntNotebook />
-                    </Route>
-                    <Route path="/fullscreen/collected/:client_id/:flow_id/notebook">
-                      <FullScreenFlowNotebook />
-                    </Route>
-                    <Route path="/fullscreen/table/:state">
-                      <FullScreenTable />
-                    </Route>
-                    <Route>
-                      { this.renderApp() }
-                    </Route>
-                  </Switch>
-                  <KeyboardHelp />
-                </SnackbarProvider>
+                  <Route path="/fullscreen/notebooks/:notebook_id">
+                    <FullScreenNotebook />
+                  </Route>
+                  <Route path="/fullscreen/hunts/:hunt_id/notebook">
+                    <FullScreenHuntNotebook />
+                  </Route>
+                  <Route path="/fullscreen/collected/:client_id/:flow_id/notebook">
+                    <FullScreenFlowNotebook />
+                  </Route>
+                  <Route path="/fullscreen/table/:state">
+                    <FullScreenTable />
+                  </Route>
+                  <Route>
+                    { this.renderApp() }
+                  </Route>
+                </Switch>
+                <KeyboardHelp />
               </UserSettings>
             </div>
         );

@@ -1418,7 +1418,9 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 
 	res, err := launcher.GetFlows(self.Ctx, self.ConfigObj,
 		constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
-		result_sets.ResultSetOptions{}, 0, 10)
+		result_sets.ResultSetOptions{},
+		services.GetFlowOptions{},
+		0, 10)
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(res.Items))
 
@@ -1435,7 +1437,9 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 
 	res, err = launcher.GetFlows(self.Ctx, self.ConfigObj,
 		constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
-		result_sets.ResultSetOptions{}, 0, 10)
+		result_sets.ResultSetOptions{},
+		services.GetFlowOptions{},
+		0, 10)
 	assert.NoError(t, err)
 	assert.Equal(t, len(res.Items), 1)
 	assert.Equal(t, res.Items[0].SessionId, flow_id)
@@ -1471,7 +1475,9 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 
 		res, err = launcher.GetFlows(self.Ctx, self.ConfigObj,
 			constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
-			result_sets.ResultSetOptions{}, 0, 10)
+			result_sets.ResultSetOptions{},
+			services.GetFlowOptions{},
+			0, 10)
 		assert.NoError(t, err)
 		time.Sleep(time.Second)
 		return len(res.Items) == 0

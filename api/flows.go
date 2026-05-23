@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/api/tables"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -142,7 +143,13 @@ func (self *ApiServer) GetClientFlows(
 		return nil, Status(self.verbose, err)
 	}
 
-	flows, err := launcher.GetFlows(ctx, org_config_obj, in.ClientId, options,
+	flows, err := launcher.GetFlows(
+		ctx, org_config_obj, in.ClientId, options,
+		services.GetFlowOptions{
+			// Only get basic info - the user can get more details if
+			// needed.
+			Request: false,
+		},
 		int64(in.StartRow), int64(in.Rows))
 	if err != nil {
 		return nil, Status(self.verbose, err)
@@ -198,4 +205,22 @@ func (self *ApiServer) GetClientFlows(
 	}
 
 	return result, nil
+}
+
+func truncateRequestArgs(flow *flows_proto.ArtifactCollectorContext) {
+	if flow == nil || flow.Request == nil {
+		return
+	}
+
+	for _, spec := range flow.Request.Specs {
+		if spec.Parameters == nil {
+			continue
+		}
+		for _, env := range spec.Parameters.Env {
+			if len(env.Value) > constants.MAX_ENV_TRUNCATE_LIMIT {
+				env.Value = env.Value[:constants.MAX_ENV_TRUNCATE_LIMIT] + " ..."
+			}
+		}
+	}
+
 }

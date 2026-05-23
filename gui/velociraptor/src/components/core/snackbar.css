@@ -1,3 +1,19 @@
 div[class^="Snackbar_snackbar-wrapper"] {
     z-index: 3000;
 }
+
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+}
+
+.toast.bg-warning {
+    background-color: var(--color-tooltip-background) !important;
+    color: var(--color-foreground);
+}
+
+.toast.bg-warning .toast-header {
+    background-color: var(--color-accent-25);
+    color: var(--color-code);
+}

@@ -44,7 +44,6 @@
         "react-overlays": "5.2.1",
         "react-router-dom": "^5.3.4",
         "react-select": "^3.2.0",
-        "react-simple-snackbar": "^1.1.11",
         "react-split-pane": "^0.1.92",
         "react-step-wizard": "^5.3.11",
         "recharts": "^2.15.4",

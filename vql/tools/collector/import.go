@@ -264,7 +264,13 @@ func (self ImportCollectionFunction) importFlow(
 
 	// Write the flow and update indexes
 	err = launcher.Storage().WriteFlow(ctx, config_obj,
-		collection_context, utils.BackgroundWriter)
+		collection_context,
+		services.GetFlowOptions{
+			// The Request in the imported collection is full, so
+			// store it.
+			Request: true,
+		},
+		utils.BackgroundWriter)
 	if err != nil {
 		return nil, err
 	}
@@ -510,6 +516,9 @@ func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 		if client_id == "" {
 			client_id, _ = host_info.GetString("client_id")
 		}
+
+		// Remove the org from the client id
+		client_id = utils.ClientIdFromSource(client_id)
 
 		if client_id != "" {
 			scope.Log(
