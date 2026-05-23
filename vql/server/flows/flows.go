@@ -205,6 +205,7 @@ func (self CancelFlowFunction) Info(
 		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.COLLECT_SERVER, acls.COLLECT_CLIENT).Build(),
+		Version: 2,
 	}
 }
 

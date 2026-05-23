@@ -92,6 +92,9 @@ generate:
 check:
 	staticcheck ./...
 
+check_versions:
+	python3 -X utf8 ./scripts/check_versions.py 3
+
 debug:
 	dlv debug --init ./scripts/dlv.init --wd=. --build-flags="-tags 'server_vql extras'" ./bin/ -- frontend --disable-panic-guard -v --debug
 

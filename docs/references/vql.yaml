@@ -784,6 +784,7 @@
     the flow. It also removes any outstanding requests for the client
     if there are any.
   type: Function
+  version: 2
   args:
   - name: client_id
     type: string
