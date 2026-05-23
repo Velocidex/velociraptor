@@ -43,6 +43,12 @@ Output: [
   "vfs_path": "/clients/C.ID/collections"
  },
  {
+  "vfs_path": "/clients/C.ID/collections/F.01"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/F.01"
+ },
+ {
   "vfs_path": "/clients/C.ID/collections/F.01.json.db"
  },
  {
@@ -50,6 +56,9 @@ Output: [
  },
  {
   "vfs_path": "/clients/C.ID/collections/F.01/logs.json.index"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/F.01/requests.json.db"
  },
  {
   "vfs_path": "/clients/C.ID/collections/F.01/uploads.json"
@@ -74,6 +83,9 @@ Output: [
  },
  {
   "vfs_path": "/clients/C.ID/collections/F.CD62UJJO259A4/logs.json.index"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/F.CD62UJJO259A4/requests.json.db"
  },
  {
   "vfs_path": "/clients/C.ID/collections/F.CD62UJJO259A4/task.db"
