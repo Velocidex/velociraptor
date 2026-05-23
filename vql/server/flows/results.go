@@ -532,7 +532,9 @@ func (self FlowResultsPlugin) Call(
 				return
 			}
 			flow, err := launcher.GetFlowDetails(
-				ctx, config_obj, services.GetFlowOptions{},
+				ctx, config_obj,
+				// We only need basic flow info
+				services.GetFlowOptions{},
 				arg.ClientId, arg.FlowId)
 			if err != nil {
 				scope.Log("flow_results: %v", err)

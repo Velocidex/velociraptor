@@ -64,8 +64,9 @@ const (
 )
 
 var (
-	FlowNotFoundError = utils.Wrap(utils.NotFoundError, "Flow not found")
-	DryRunOnly        = DeleteFlowOptions{
+	FlowNotFoundError        = utils.Wrap(utils.NotFoundError, "Flow not found")
+	FlowRequestNotFoundError = utils.Wrap(utils.NotFoundError, "Flow Request not found")
+	DryRunOnly               = DeleteFlowOptions{
 		ReallyDoIt: false,
 	}
 )
@@ -93,6 +94,12 @@ type GetFlowOptions struct {
 
 	// Include the flow downloads (ZIP exports of the flow).
 	Downloads bool
+
+	// Also include the full request data.
+	Request bool
+
+	// Also include the flow stats
+	Stats bool
 }
 
 type DeleteFlowOptions struct {
@@ -134,6 +141,11 @@ type FlowStorer interface {
 		ctx context.Context,
 		config_obj *config_proto.Config,
 		flow *flows_proto.ArtifactCollectorContext,
+
+		// These opts represent which of the fields in the flow object
+		// are valid. For example, if the request is valid, then we
+		// store it, otherwise we do not store it.
+		options GetFlowOptions,
 		completion func()) error
 
 	WriteFlowStats(
@@ -162,7 +174,9 @@ type FlowStorer interface {
 	LoadCollectionContext(
 		ctx context.Context,
 		config_obj *config_proto.Config,
-		client_id, flow_id string) (*flows_proto.ArtifactCollectorContext, error)
+		client_id, flow_id string,
+		options GetFlowOptions,
+	) (*flows_proto.ArtifactCollectorContext, error)
 
 	ListFlows(
 		ctx context.Context,
@@ -173,7 +187,7 @@ type FlowStorer interface {
 
 	// Get the exact requests that were sent for this collection (for
 	// provenance).
-	GetFlowRequests(
+	GetFlowTasks(
 		ctx context.Context,
 		config_obj *config_proto.Config,
 		client_id string, flow_id string,
@@ -245,6 +259,7 @@ type Launcher interface {
 		config_obj *config_proto.Config,
 		client_id string,
 		options result_sets.ResultSetOptions,
+		flow_options GetFlowOptions,
 		offset, length int64) (*api_proto.ApiFlowResponse, error)
 
 	// Get the details of a flow - this has a lot more information

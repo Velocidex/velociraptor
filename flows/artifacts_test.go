@@ -140,7 +140,10 @@ func (self *TestSuite) TestGetFlow() {
 	// Get all the responses - ask for 100 results if available
 	// but only 40 are there.
 	api_response, err := launcher.GetFlows(self.Ctx, self.ConfigObj,
-		self.client_id, result_sets.ResultSetOptions{}, 0, 100)
+		self.client_id,
+		result_sets.ResultSetOptions{},
+		services.GetFlowOptions{},
+		0, 100)
 	assert.NoError(self.T(), err)
 
 	// There should be 40 flows (2 sets of each)
@@ -200,7 +203,7 @@ func (self *TestSuite) TestRetransmission() {
 
 	// Load the collection context and see what happened.
 	collection_context, err := LoadCollectionContext(self.Ctx, self.ConfigObj,
-		self.client_id, flow_id)
+		self.client_id, flow_id, services.GetFlowOptions{})
 	assert.NoError(self.T(), err)
 
 	// The flow should have only a single row though.
@@ -308,7 +311,7 @@ func (self *TestSuite) TestResourceLimits() {
 
 	// Load the collection context and see what happened.
 	collection_context, err := LoadCollectionContext(self.Ctx, self.ConfigObj,
-		self.client_id, flow_id)
+		self.client_id, flow_id, services.GetFlowOptions{})
 	assert.NoError(self.T(), err)
 
 	// Collection has 1 row and it is still in the running state.
@@ -324,7 +327,7 @@ func (self *TestSuite) TestResourceLimits() {
 
 	// Load the collection context and see what happened.
 	collection_context, err = LoadCollectionContext(self.Ctx, self.ConfigObj,
-		self.client_id, flow_id)
+		self.client_id, flow_id, services.GetFlowOptions{})
 	assert.NoError(self.T(), err)
 
 	// Collection has 2 rows and it is still in the running state.
@@ -342,7 +345,9 @@ func (self *TestSuite) TestResourceLimits() {
 
 	// Load the collection context and see what happened.
 	collection_context, err = LoadCollectionContext(self.Ctx, self.ConfigObj,
-		self.client_id, flow_id)
+		self.client_id, flow_id, services.GetFlowOptions{
+			Request: true,
+		})
 	assert.NoError(self.T(), err)
 
 	// Collection has 7 rows and it is still in the running state.
@@ -375,7 +380,7 @@ func (self *TestSuite) TestResourceLimits() {
 	// error state. We do this so we don't lose the last few
 	// messages which are still in flight.
 	collection_context, err = LoadCollectionContext(self.Ctx, self.ConfigObj,
-		self.client_id, flow_id)
+		self.client_id, flow_id, services.GetFlowOptions{})
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(12))

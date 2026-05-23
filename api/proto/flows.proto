@@ -97,6 +97,13 @@ message ApiFlowRequest {
     uint64 count = 4;
     bool include_archived = 5;
 
+    // Include the full request - can be very large.
+    bool include_full_request = 7;
+
+    // If this is specified we truncate each parameter to keep the
+    // request small.
+    bool include_truncated_request = 8;
+
     // If specified we only return flows that collected this artifact.
     string artifact = 6;
 }

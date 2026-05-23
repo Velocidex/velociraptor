@@ -122,7 +122,8 @@ sources:
              OffFlag, StartDate, StartDate2, StartDate3,
              CSVData, JSONData, JSONDataWithObject,
              len(list=FileUpload1) AS FileUpload1Length,
-             stat(filename=FileUpload2) AS FileUpload2Stats
+             if(condition=FileUpload2,
+                then=stat(filename=FileUpload2)) AS FileUpload2Stats
       FROM scope()
 
     notebook:

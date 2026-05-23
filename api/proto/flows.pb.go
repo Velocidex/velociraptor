@@ -579,6 +579,11 @@ type ApiFlowRequest struct {
 	Offset          uint64                 `protobuf:"varint,3,opt,name=offset,proto3" json:"offset,omitempty"`
 	Count           uint64                 `protobuf:"varint,4,opt,name=count,proto3" json:"count,omitempty"`
 	IncludeArchived bool                   `protobuf:"varint,5,opt,name=include_archived,json=includeArchived,proto3" json:"include_archived,omitempty"`
+	// Include the full request - can be very large.
+	IncludeFullRequest bool `protobuf:"varint,7,opt,name=include_full_request,json=includeFullRequest,proto3" json:"include_full_request,omitempty"`
+	// If this is specified we truncate each parameter to keep the
+	// request small.
+	IncludeTruncatedRequest bool `protobuf:"varint,8,opt,name=include_truncated_request,json=includeTruncatedRequest,proto3" json:"include_truncated_request,omitempty"`
 	// If specified we only return flows that collected this artifact.
 	Artifact      string `protobuf:"bytes,6,opt,name=artifact,proto3" json:"artifact,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -646,6 +651,20 @@ func (x *ApiFlowRequest) GetCount() uint64 {
 func (x *ApiFlowRequest) GetIncludeArchived() bool {
 	if x != nil {
 		return x.IncludeArchived
+	}
+	return false
+}
+
+func (x *ApiFlowRequest) GetIncludeFullRequest() bool {
+	if x != nil {
+		return x.IncludeFullRequest
+	}
+	return false
+}
+
+func (x *ApiFlowRequest) GetIncludeTruncatedRequest() bool {
+	if x != nil {
+		return x.IncludeTruncatedRequest
 	}
 	return false
 }
@@ -755,13 +774,15 @@ const file_flows_proto_rawDesc = "" +
 	"\x14ApiFlowResultDetails\x12(\n" +
 	"\x05items\x18\x01 \x03(\v2\x12.proto.VeloMessageR\x05items\"<\n" +
 	"\x11ApiFlowLogDetails\x12'\n" +
-	"\x05items\x18\x01 \x03(\v2\x11.proto.LogMessageR\x05items\"\xbb\x01\n" +
+	"\x05items\x18\x01 \x03(\v2\x11.proto.LogMessageR\x05items\"\xa9\x02\n" +
 	"\x0eApiFlowRequest\x12\x1b\n" +
 	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12\x17\n" +
 	"\aflow_id\x18\x02 \x01(\tR\x06flowId\x12\x16\n" +
 	"\x06offset\x18\x03 \x01(\x04R\x06offset\x12\x14\n" +
 	"\x05count\x18\x04 \x01(\x04R\x05count\x12)\n" +
-	"\x10include_archived\x18\x05 \x01(\bR\x0fincludeArchived\x12\x1a\n" +
+	"\x10include_archived\x18\x05 \x01(\bR\x0fincludeArchived\x120\n" +
+	"\x14include_full_request\x18\a \x01(\bR\x12includeFullRequest\x12:\n" +
+	"\x19include_truncated_request\x18\b \x01(\bR\x17includeTruncatedRequest\x12\x1a\n" +
 	"\bartifact\x18\x06 \x01(\tR\bartifact\"^\n" +
 	"\x0fApiFlowResponse\x12\x14\n" +
 	"\x05total\x18\x01 \x01(\x04R\x05total\x125\n" +

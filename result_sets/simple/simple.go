@@ -289,7 +289,8 @@ func (self ResultSetFactory) NewResultSetWriter(
 	}
 
 	// Call the completion when both files are done.
-	completer := utils.NewCompleter(completion)
+	completer, closer := utils.NewCompleter(completion)
+	defer closer()
 
 	fd, err := file_store_factory.WriteFileWithCompletion(
 		log_path, completer.GetCompletionFunc())

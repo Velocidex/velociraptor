@@ -88,6 +88,12 @@ func (self FlowPathManager) Stats() api.DSPathSpec {
 		SetTag("FlowStats")
 }
 
+func (self FlowPathManager) Requests() api.DSPathSpec {
+	return self.Path().AddChild("requests").
+		SetType(api.PATH_TYPE_DATASTORE_JSON).
+		SetTag("FlowRequests")
+}
+
 func (self FlowPathManager) UploadMetadata() api.FSPathSpec {
 	return self.Path().AddChild("uploads").AsFilestorePath()
 }

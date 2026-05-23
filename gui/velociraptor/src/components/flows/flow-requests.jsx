@@ -38,6 +38,7 @@ export default class FlowRequests extends React.Component {
         api.get("v1/GetFlowRequests", {
             flow_id: this.props.flow.session_id,
             client_id: this.props.flow.client_id,
+            include_truncated_request: true,
         }, this.source.token).then((response) => {
             this.setState({requests: response.data.items});
         });

@@ -6,6 +6,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
@@ -21,6 +22,10 @@ func (self *LauncherTestSuite) TestTransactions() {
 
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(t, err)
+
+	tasks, err := client_info_manager.GetClientTasks(self.Ctx, client_id)
+	assert.NoError(t, err)
+	assert.Equal(self.T(), len(tasks), 0)
 
 	// Create a new client
 	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
@@ -48,7 +53,9 @@ func (self *LauncherTestSuite) TestTransactions() {
 	assert.NoError(t, err)
 
 	// Drain the tasks from the queue
-	tasks, err := client_info_manager.GetClientTasks(self.Ctx, client_id)
+	tasks, err = client_info_manager.GetClientTasks(self.Ctx, client_id)
+	json.Dump(tasks)
+
 	assert.NoError(t, err)
 	assert.Equal(self.T(), len(tasks), 2)
 
@@ -82,7 +89,8 @@ func (self *LauncherTestSuite) TestTransactions() {
 	flow_runner.Close(self.Ctx)
 
 	flow_context, err := launcher.Storage().LoadCollectionContext(
-		self.Ctx, self.ConfigObj, client_id, flow_id)
+		self.Ctx, self.ConfigObj,
+		client_id, flow_id, services.GetFlowOptions{})
 	assert.NoError(t, err)
 
 	// The collection context reports the total number of transactions
@@ -105,7 +113,8 @@ func (self *LauncherTestSuite) TestTransactions() {
 
 	// Check the collection
 	flow_context, err = launcher.Storage().LoadCollectionContext(
-		self.Ctx, self.ConfigObj, client_id, flow_id)
+		self.Ctx, self.ConfigObj, client_id, flow_id,
+		services.GetFlowOptions{})
 	assert.NoError(t, err)
 
 	// collection is moved into the scheduled state now. This means it

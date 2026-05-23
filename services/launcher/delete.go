@@ -38,7 +38,10 @@ func (self *FlowStorageManager) DeleteFlow(
 	}
 
 	collection_details, err := launcher.GetFlowDetails(
-		ctx, config_obj, services.GetFlowOptions{},
+		ctx, config_obj, services.GetFlowOptions{
+			// No need for the full request object
+			Request: false,
+		},
 		client_id, flow_id)
 	if err != nil {
 		return nil, err

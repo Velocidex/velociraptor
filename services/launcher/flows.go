@@ -36,6 +36,7 @@ func (self *Launcher) GetFlows(
 	config_obj *config_proto.Config,
 	client_id string,
 	options result_sets.ResultSetOptions,
+	flow_options services.GetFlowOptions,
 	offset, length int64) (*api_proto.ApiFlowResponse, error) {
 
 	result := &api_proto.ApiFlowResponse{}
@@ -59,7 +60,7 @@ func (self *Launcher) GetFlows(
 	for _, flow_summary := range flow_summaries {
 		collection_context, err := self.Storage().
 			LoadCollectionContext(ctx, config_obj,
-				client_id, flow_summary.FlowId)
+				client_id, flow_summary.FlowId, flow_options)
 		if err == nil {
 			// Remove certain fields that are not necessary.
 			if collection_context.Request != nil {
@@ -86,7 +87,7 @@ func (self *Launcher) GetFlowDetails(
 	}
 
 	collection_context, err := self.Storage().LoadCollectionContext(
-		ctx, config_obj, client_id, flow_id)
+		ctx, config_obj, client_id, flow_id, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +148,11 @@ func (self *Launcher) CancelFlow(
 	}
 
 	collection_context, err := self.Storage().LoadCollectionContext(
-		ctx, config_obj, client_id, flow_id)
+		ctx, config_obj, client_id, flow_id,
+		services.GetFlowOptions{
+			// We dont need the request to cancel the flow.
+			Request: false,
+		})
 	if err == nil {
 		switch collection_context.State {
 		case flows_proto.ArtifactCollectorContext_RUNNING,
@@ -171,7 +176,12 @@ func (self *Launcher) CancelFlow(
 		}
 
 		err := self.Storage().WriteFlow(
-			ctx, config_obj, collection_context, utils.BackgroundWriter)
+			ctx, config_obj, collection_context,
+			services.GetFlowOptions{
+				// Do not update the request - we did not modify it.
+				Request: false,
+			},
+			utils.BackgroundWriter)
 		if err != nil {
 			return nil, err
 		}

@@ -23,6 +23,7 @@ func (self *DummyStorer) WriteFlow(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	flow *flows_proto.ArtifactCollectorContext,
+	options services.GetFlowOptions,
 	completion func()) error {
 	return notAvailableError
 }
@@ -61,7 +62,8 @@ func (self *DummyStorer) DeleteFlow(
 func (self *DummyStorer) LoadCollectionContext(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	client_id, flow_id string) (*flows_proto.ArtifactCollectorContext, error) {
+	client_id, flow_id string,
+	options services.GetFlowOptions) (*flows_proto.ArtifactCollectorContext, error) {
 	return nil, notAvailableError
 }
 
@@ -76,7 +78,7 @@ func (self *DummyStorer) ListFlows(
 
 // Get the exact requests that were sent for this collection (for
 // provenance).
-func (self *DummyStorer) GetFlowRequests(
+func (self *DummyStorer) GetFlowTasks(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string, flow_id string,

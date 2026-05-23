@@ -57,7 +57,10 @@ func (self *Launcher) ResumeFlow(
 	}
 
 	collection_context, err := self.Storage().LoadCollectionContext(
-		ctx, config_obj, client_id, flow_id)
+		ctx, config_obj, client_id, flow_id,
+		services.GetFlowOptions{
+			Request: false,
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +100,12 @@ func (self *Launcher) ResumeFlow(
 	}
 
 	err = self.Storage().WriteFlow(ctx, config_obj,
-		collection_context, utils.SyncCompleter)
+		collection_context,
+		services.GetFlowOptions{
+			// Request was not modified, dont touch it.
+			Request: false,
+		},
+		utils.SyncCompleter)
 	if err != nil {
 		return nil, err
 	}

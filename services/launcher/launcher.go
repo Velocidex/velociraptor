@@ -689,7 +689,10 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		// The user asked for a pre-determined flow id. It might be an
 		// existing flow. In this case we operate if flow append mode.
 		existing_flow, err = self.GetFlowDetails(ctx, config_obj,
-			services.GetFlowOptions{}, client_id, session_id)
+			services.GetFlowOptions{
+				// We need to modify the flow requests for resuming.
+				Request: true,
+			}, client_id, session_id)
 		if err == nil && existing_flow.Context != nil &&
 			existing_flow.Context.Request != nil {
 
@@ -767,6 +770,9 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		OutstandingRequests: int64(len(vql_collector_args)),
 	}
 
+	// If this is a resumale flow:
+	// 1.  Move the previous request to the previous flows list.
+	// 2. Assign the new request to the flow request.
 	if existing_flow != nil {
 		previous_flows := existing_flow.Context.PreviousFlows
 		existing_flow.Context.PreviousFlows = nil
@@ -790,10 +796,15 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		}
 
 		// Write the collection object so the GUI can start tracking
-		// it.
+		// it. Redact the request object from senstive parameters.
 		redacted := redactCollectContext(collection_context)
 		err = self.Storage().WriteFlow(
-			ctx, config_obj, redacted, utils.BackgroundWriter)
+			ctx, config_obj, redacted,
+			services.GetFlowOptions{
+				// The request was updated so write it to storage.
+				Request: true,
+			},
+			utils.BackgroundWriter)
 		if err != nil {
 			return "", err
 		}
@@ -809,10 +820,17 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		return collection_context.SessionId, err
 	}
 
+	// The below are client artifacts
+
 	// Store the collection_context first, then queue all the tasks.
 	err = self.Storage().WriteFlow(ctx, config_obj,
 		redactCollectContext(collection_context),
+		services.GetFlowOptions{
+			// The request was updated so write it to storage.
+			Request: true,
+		},
 
+		// When finally stored, queue the task to the client.
 		func() {
 			completion(task)
 		})
@@ -820,7 +838,8 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		return "", err
 	}
 
-	// Write the flow on the index.
+	// Write the flow on the index only if the flow was not
+	// resumed. Otherwise it should already be in the index.
 	if existing_flow == nil {
 		err = self.Storage().WriteFlowIndex(ctx, config_obj, collection_context)
 	}

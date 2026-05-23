@@ -13,9 +13,6 @@ test:
 test_less:
 	go test -race -v --tags server_vql ./... 2>&1 | less
 
-test_light:
-	go test -v --tags server_vql ./...
-
 golden:
 	./output/velociraptor -v --config artifacts/testdata/windows/test.config.yaml golden artifacts/testdata/server/testcases/ --env srcDir=`pwd` --filter=${GOLDEN}
 
@@ -94,6 +91,9 @@ generate:
 
 check:
 	staticcheck ./...
+
+check_versions:
+	python3 -X utf8 ./scripts/check_versions.py 3
 
 debug:
 	dlv debug --init ./scripts/dlv.init --wd=. --build-flags="-tags 'server_vql extras'" ./bin/ -- frontend --disable-panic-guard -v --debug

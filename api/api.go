@@ -354,11 +354,23 @@ func (self *ApiServer) GetFlowDetails(
 		return nil, Status(self.verbose, err)
 	}
 	result, err := launcher.GetFlowDetails(
-		ctx, org_config_obj, services.GetFlowOptions{Downloads: true},
+		ctx, org_config_obj, services.GetFlowOptions{
+			Request:   in.IncludeFullRequest || in.IncludeTruncatedRequest,
+			Downloads: true,
+		},
 		in.ClientId, in.FlowId)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+
+	// Truncate the parameters
+	if in.IncludeTruncatedRequest && result.Context != nil {
+		truncateRequestArgs(result.Context)
+		for _, previouse_request := range result.Context.PreviousFlows {
+			truncateRequestArgs(previouse_request)
+		}
+	}
+
 	return result, nil
 }
 
@@ -386,8 +398,24 @@ func (self *ApiServer) GetFlowRequests(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
-	result, err := launcher.Storage().GetFlowRequests(
+	result, err := launcher.Storage().GetFlowTasks(
 		ctx, org_config_obj, in.ClientId, in.FlowId, in.Offset, in.Count)
+
+	if in.IncludeTruncatedRequest {
+		for _, item := range result.Items {
+			if item.FlowRequest == nil {
+				continue
+			}
+			for _, action := range item.FlowRequest.VQLClientActions {
+				for _, env := range action.Env {
+					if len(env.Value) > constants.MAX_ENV_TRUNCATE_LIMIT {
+						env.Value = env.Value[:constants.MAX_ENV_TRUNCATE_LIMIT] + " ..."
+					}
+				}
+			}
+		}
+	}
+
 	return result, Status(self.verbose, err)
 }
 

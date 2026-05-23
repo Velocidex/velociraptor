@@ -75,6 +75,7 @@ class ClientFlowsView extends React.Component {
         api.get("v1/GetFlowDetails", {
             flow_id: flow_id,
             client_id: client_id,
+            include_truncated_request: true,
         }, this.source.token).then((response) => {
             if (response.cancel) {
                 return;

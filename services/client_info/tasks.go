@@ -99,7 +99,7 @@ func (self *ClientInfoManager) QueueMessagesForClient(
 	// to update the client record's has_tasks field. On the master
 	// node this information will be flushed on the next snapshot
 	// write.
-	completer := utils.NewCompleter(func() {
+	completer, closer := utils.NewCompleter(func() {
 		err := self.storage.Modify(ctx, self.config_obj, client_id,
 			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
 				if client_info == nil {
@@ -127,7 +127,7 @@ func (self *ClientInfoManager) QueueMessagesForClient(
 			notifier.NotifyDirectListener(client_id)
 		}
 	})
-	defer completer.GetCompletionFunc()()
+	defer closer()
 
 	client_path_manager := paths.NewClientPathManager(client_id)
 
@@ -170,7 +170,7 @@ func (self *ClientInfoManager) QueueMessageForClient(
 		return err
 	}
 
-	completer := utils.NewCompleter(func() {
+	completer, closer := utils.NewCompleter(func() {
 		if completion != nil &&
 			!utils.CompareFuncs(completion, utils.SyncCompleter) {
 			completion()
@@ -205,7 +205,7 @@ func (self *ClientInfoManager) QueueMessageForClient(
 			notifier.NotifyDirectListener(client_id)
 		}
 	})
-	defer completer.GetCompletionFunc()()
+	defer closer()
 
 	client_path_manager := paths.NewClientPathManager(client_id)
 	return db.SetSubjectWithCompletion(self.config_obj,
@@ -499,7 +499,10 @@ func (self *ClientInfoManager) GetClientTasks(
 			// Only request status for flows that have not actually
 			// been completed.
 			flow_obj, err := launcher.GetFlowDetails(ctx, self.config_obj,
-				services.GetFlowOptions{}, client_id, n)
+				services.GetFlowOptions{
+					// Only need basic info here
+					Request: false,
+				}, client_id, n)
 			if err != nil {
 				// The flow can not be loaded - we can not check up on
 				// it any more - remove it from the in flight set.

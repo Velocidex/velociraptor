@@ -275,7 +275,13 @@ func (self *contextManager) Save() error {
 
 	return launcher.Storage().WriteFlow(
 		self.ctx, // Write with parent context as query may have cancelled.
-		self.config_obj, context, utils.BackgroundWriter)
+		self.config_obj, context,
+
+		services.GetFlowOptions{
+			// Request was not modified, dont touch it.
+			Request: false,
+		},
+		utils.BackgroundWriter)
 }
 
 func (self *contextManager) Cancel(ctx context.Context, principal string) {
@@ -321,7 +327,12 @@ func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
 	// Write the context synchronously because listeners may be wait
 	// for the messages.
 	err = launcher.Storage().WriteFlow(
-		ctx, self.config_obj, flow_context, utils.SyncCompleter)
+		ctx, self.config_obj, flow_context,
+		services.GetFlowOptions{
+			// Request was not modified, dont touch it.
+			Request: false,
+		},
+		utils.SyncCompleter)
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Error("<red>maybeSendCompletionMessage WriteFlow</> %v", err)

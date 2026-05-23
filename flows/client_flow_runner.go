@@ -64,8 +64,7 @@ func NewFlowRunner(
 	}
 
 	// Wait for completion until Close() is called.
-	result.completer = utils.NewCompleter(result.Complete)
-	result.closer = result.completer.GetCompletionFunc()
+	result.completer, result.closer = utils.NewCompleter(result.Complete)
 	return result
 }
 
@@ -537,7 +536,10 @@ func (self *ClientFlowRunner) handleUnknwonFlow(
 
 	// If we don't know anything about the flow, ignore it.
 	collection_context, err := launcher_service.Storage().LoadCollectionContext(
-		ctx, self.config_obj, client_id, flow_id)
+		ctx, self.config_obj, client_id, flow_id,
+
+		// We dont care abut the requet since it is immutable.
+		services.GetFlowOptions{})
 	if err != nil {
 		return nil
 	}
@@ -556,8 +558,13 @@ func (self *ClientFlowRunner) handleUnknwonFlow(
 	}
 
 	// Update the flow.
-	return launcher_service.Storage().WriteFlow(ctx, self.config_obj,
-		collection_context, utils.BackgroundWriter)
+	return launcher_service.Storage().WriteFlow(
+		ctx, self.config_obj,
+		collection_context,
+
+		// Request was not modified, dont touch it.
+		services.GetFlowOptions{},
+		utils.BackgroundWriter)
 }
 
 func (self *ClientFlowRunner) FlowStats(
@@ -657,7 +664,8 @@ func (self *ClientFlowRunner) FlowStats(
 			}
 
 			flow_context, err := launcher.Storage().LoadCollectionContext(
-				ctx, self.config_obj, client_id, flow_id)
+				ctx, self.config_obj, client_id, flow_id,
+				services.GetFlowOptions{})
 			if err != nil {
 				return err
 			}
