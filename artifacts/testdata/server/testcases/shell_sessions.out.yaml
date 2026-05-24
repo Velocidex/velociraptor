@@ -1,0 +1,23 @@
+Query: LET Command <= if(condition=info().OS =~ "windows", then=["powershell.exe","-c","-"], else=["bash",])
+Output: []
+
+Query: LET Session <= shell_session(name="testsession", argv=Command)
+Output: []
+
+Query: LET _ <= shell_session_control( name="testsession", close_stdin=TRUE, stdin="echo 'Hello world'")
+Output: []
+
+Query: SELECT Stdin, regex_replace(source=Stdout, re="\\s", replace="") AS Stsout, Stderr FROM foreach(row=Session.Query)
+Output: [
+ {
+  "Stdin": "echo 'Hello world'",
+  "Stsout": "",
+  "Stderr": ""
+ },
+ {
+  "Stdin": "",
+  "Stsout": "Helloworld",
+  "Stderr": ""
+ }
+]
+

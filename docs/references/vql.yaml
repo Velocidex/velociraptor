@@ -4659,6 +4659,14 @@
   platforms:
   - linux_amd64_cgo
 - name: info
+  description: Get information about the running host. This is the function version
+    of the info() plugin
+  type: Function
+  metadata:
+    permissions: MACHINE_STATE
+  platforms:
+  - linux_amd64_cgo
+- name: info
   description: |
     Get information about the running host.
 

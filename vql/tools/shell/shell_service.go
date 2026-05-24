@@ -12,6 +12,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -22,6 +23,8 @@ var (
 	shellManager = &ShellManager{
 		sessions: map[string]*ShellSession{},
 	}
+
+	closeChannelMagic = fmt.Sprintf("%v", utils.GetGUID())
 )
 
 type ShellManager struct {
@@ -143,7 +146,22 @@ func (self *ShellManager) newShellSession(
 		return nil, err
 	}
 
-	wg.Add(3)
+	input_chan := make(chan string, 10)
+
+	res = &ShellSession{
+		Name:    arg.Name,
+		wg:      wg,
+		owner:   self,
+		cancel:  cancel,
+		input:   input_chan,
+		output:  output_chan,
+		command: command,
+		stdin:   stdin_pipe,
+		stdout:  stdout_pipe,
+		stderr:  stderr_pipe,
+	}
+
+	wg.Add(1)
 	go pumpFromPipeToOutput(sub_ctx, wg, stdout_pipe, func(data []byte) {
 		select {
 		case <-sub_ctx.Done():
@@ -154,6 +172,7 @@ func (self *ShellManager) newShellSession(
 		}
 	})
 
+	wg.Add(1)
 	go pumpFromPipeToOutput(sub_ctx, wg, stderr_pipe, func(data []byte) {
 		select {
 		case <-sub_ctx.Done():
@@ -166,8 +185,13 @@ func (self *ShellManager) newShellSession(
 
 	// Also report any stdin messages to the output channel. This
 	// ensures they are delivered in order.
-	input_chan := make(chan string, 10)
+	wg.Add(1)
 	go pumpToPipeFromInput(sub_ctx, wg, input_chan, func(data string) {
+		if data == closeChannelMagic {
+			res.Close()
+			return
+		}
+
 		select {
 		case <-sub_ctx.Done():
 			return
@@ -183,22 +207,22 @@ func (self *ShellManager) newShellSession(
 		return nil, err
 	}
 
-	res = &ShellSession{
-		Name:    arg.Name,
-		wg:      wg,
-		owner:   self,
-		cancel:  cancel,
-		input:   input_chan,
-		output:  output_chan,
-		command: command,
-		stdin:   stdin_pipe,
-		stdout:  stdout_pipe,
-		stderr:  stderr_pipe,
-	}
-
+	// Wait for the command to exit then quit all the contexts and
+	// pumping routines.
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
+
+		command.Wait()
+	}()
+
+	// When all the pumping functions are finished, then close the
+	// output channel to finish the query.
+	go func() {
+		defer cancel()
+
 		wg.Wait()
-		res.Close()
+		close(res.output)
 	}()
 
 	return res, nil
@@ -220,12 +244,20 @@ type ShellSession struct {
 	stdout  io.ReadCloser
 	stderr  io.ReadCloser
 	command *exec.Cmd
+	closed  bool
 
 	input  chan string
 	output chan vfilter.Row
 }
 
 func (self *ShellSession) WriteStdin(ctx context.Context, data string) {
+	self.mu.Lock()
+	closed := self.closed
+	self.mu.Unlock()
+	if closed {
+		return
+	}
+
 	select {
 	case <-ctx.Done():
 		return
@@ -234,7 +266,7 @@ func (self *ShellSession) WriteStdin(ctx context.Context, data string) {
 }
 
 func (self *ShellSession) CloseStdin() {
-	self.stdin.Close()
+	self.input <- closeChannelMagic
 }
 
 type StartShellFunctionArgs struct {
