@@ -61,9 +61,12 @@ func (self *SessionQuery) Eval(
 func (self *ShellSession) Close() {
 	self.owner.Remove(self.Name)
 
+	// Stop new writes
+	self.mu.Lock()
+	self.closed = true
+	self.mu.Unlock()
+
+	// Close pipes
 	self.stdin.Close()
-	self.cancel()
-	self.wg.Wait()
-	self.command.Wait()
-	close(self.output)
+	close(self.input)
 }

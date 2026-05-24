@@ -65,6 +65,42 @@ func GetInfo(host *psutils.InfoStat) *ordereddict.Dict {
 
 }
 
+func info(
+	ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	err := CheckAccess(scope, acls.MACHINE_STATE)
+	if err != nil {
+		scope.Log("info: %s", err)
+		return vfilter.Null{}
+	}
+
+	arg := &vfilter.Empty{}
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("info: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	// It turns out that host.Info() is
+	// actually rather slow so we cache it
+	// in the scope cache.
+	info, ok := CacheGet(scope, "__info").(*psutils.InfoStat)
+	if !ok {
+		info, err = psutils.InfoWithContext(ctx)
+		if err != nil {
+			scope.Log("info: %s", err)
+			return vfilter.Null{}
+		}
+		CacheSet(scope, "__info", info)
+	}
+
+	return GetInfo(info).
+		Set("Fqdn", fqdn.Get()).
+		Set("Architecture", utils.GetArch())
+}
+
 func init() {
 	RegisterPlugin(
 		vfilter.GenericListPlugin{
@@ -74,41 +110,21 @@ func init() {
 				ctx context.Context,
 				scope vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
-				var result []vfilter.Row
-
-				err := CheckAccess(scope, acls.MACHINE_STATE)
-				if err != nil {
-					scope.Log("info: %s", err)
-					return result
+				res := info(ctx, scope, args)
+				if utils.IsNil(res) {
+					return []vfilter.Row{}
 				}
-
-				arg := &vfilter.Empty{}
-				err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
-				if err != nil {
-					scope.Log("info: %s", err.Error())
-					return result
-				}
-
-				// It turns out that host.Info() is
-				// actually rather slow so we cache it
-				// in the scope cache.
-				info, ok := CacheGet(scope, "__info").(*psutils.InfoStat)
-				if !ok {
-					info, err = psutils.InfoWithContext(ctx)
-					if err != nil {
-						scope.Log("info: %s", err)
-						return result
-					}
-					CacheSet(scope, "__info", info)
-				}
-
-				item := GetInfo(info).
-					Set("Fqdn", fqdn.Get()).
-					Set("Architecture", utils.GetArch())
-				result = append(result, item)
-
-				return result
+				return []vfilter.Row{res}
 			},
 			Doc: "Get information about the running host.",
 		})
+
+	RegisterFunction(
+		vfilter.GenericFunction{
+			FunctionName: "info",
+			Metadata:     VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+			Function:     info,
+			Doc:          "Get information about the running host. This is the function version of the info() plugin",
+		})
+
 }
