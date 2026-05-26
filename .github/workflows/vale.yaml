@@ -1,0 +1,22 @@
+name: Vale linter
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  vale:
+    name: Vale
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: vale-cli/vale-action@reviewdog
+        with:
+          # Set to true when we want to start having errors fail the pipeline.
+          fail_on_error: false
+          # Only check lines touched by the PR to avoid reviewdog's "too many annotations" failures on full-corpus scans.
+          filter_mode: added
+          reporter: github-pr-check
+          # Run vale locally to see all alert levels. In CI we only care about errors.
+          vale_flags: "--minAlertLevel=error"
