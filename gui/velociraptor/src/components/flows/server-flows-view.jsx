@@ -77,6 +77,12 @@ class ServerFlowsView extends React.Component {
             setItem(schema.ServerCurrentFlowKey, flow_id);
             this.setState({currentFlow: flow,
                            loading: false});
+        }).catch(response=>{
+            let status = response.response && response.response.status;
+            if(status === 404) {
+                setItem(schema.ServerCurrentFlowKey, "");
+                this.props.history.push("/collected/server");
+            };
         });
     }
 

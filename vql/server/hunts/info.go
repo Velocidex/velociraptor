@@ -60,7 +60,9 @@ func (self *HuntInfoFunction) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
-	hunt_obj, pres := hunt_dispatcher_service.GetHunt(ctx, arg.HuntId)
+	hunt_obj, pres := hunt_dispatcher_service.GetHunt(ctx,
+		services.GetHuntOptions{Request: true},
+		arg.HuntId)
 	if !pres {
 		return &vfilter.Null{}
 	}

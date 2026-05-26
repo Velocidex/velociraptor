@@ -7,9 +7,7 @@ import (
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -111,11 +109,6 @@ func (self *HuntStorageManagerImpl) Restore(ctx context.Context,
 		stat.Message = fmt.Sprintf("Restored %v hunts", count)
 	}()
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return stat, err
-	}
-
 	for {
 		select {
 		case <-ctx.Done():
@@ -139,10 +132,10 @@ func (self *HuntStorageManagerImpl) Restore(ctx context.Context,
 			}
 
 			count++
-			hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
-			_ = db.SetSubjectWithCompletion(config_obj,
-				hunt_path_manager.Path(), hunt_obj,
-				utils.BackgroundWriter)
+			err = self.SetHunt(ctx, hunt_obj)
+			if err != nil {
+				continue
+			}
 		}
 	}
 }

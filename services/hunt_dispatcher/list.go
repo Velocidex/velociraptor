@@ -39,7 +39,9 @@ func FindCollectedArtifacts(
 
 // This function is deprecated.
 func (self *HuntDispatcher) ListHunts(
-	ctx context.Context, config_obj *config_proto.Config,
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	hunt_options services.GetHuntOptions,
 	in *api_proto.ListHuntsRequest) (
 	*api_proto.ListHuntsResponse, error) {
 
@@ -52,7 +54,7 @@ func (self *HuntDispatcher) ListHunts(
 	// creation time. This should be very fast because all hunts
 	// are kept in memory inside the hunt dispatcher.
 	items := make([]*api_proto.Hunt, 0, end)
-	err := self.ApplyFuncOnHunts(ctx, services.AllHunts,
+	err := self.ApplyFuncOnHunts(ctx, services.AllHunts, hunt_options,
 		func(hunt *api_proto.Hunt) error {
 			if in.UserFilter != "" &&
 				in.UserFilter != hunt.Creator {

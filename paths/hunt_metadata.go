@@ -15,6 +15,10 @@ func (self HuntPathManager) Path() api.DSPathSpec {
 	return self.path
 }
 
+func (self HuntPathManager) Request() api.DSPathSpec {
+	return self.path.AddChild("request")
+}
+
 func (self HuntPathManager) HuntDownloadsDirectory() api.FSPathSpec {
 	return DOWNLOADS_ROOT.AddUnsafeChild("hunts", self.hunt_id)
 }

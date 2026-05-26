@@ -775,7 +775,12 @@ func createHuntDownloadFile(
 		return nil, err
 	}
 
-	hunt_details, pres := hunt_dispatcher.GetHunt(ctx, hunt_id)
+	hunt_details, pres := hunt_dispatcher.GetHunt(ctx,
+		services.GetHuntOptions{
+			// Need to get the request so we can store the full hunt
+			// object in the download file.
+			Request: true,
+		}, hunt_id)
 	if !pres {
 		fd.Close()
 		return nil, errors.New("Hunt not found")

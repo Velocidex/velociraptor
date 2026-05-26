@@ -137,7 +137,7 @@ class _VeloShellCell extends Component {
         api.get("v1/GetFlowDetails", {
             client_id: this.props.client_id,
             flow_id: this.props.flow_id,
-            include_request: true,
+            include_full_request: true,
         }, this.source.token).then((response) => {
             let context = response.data.context;
             if(!_.isEqual(this.state.flow, context)) {
@@ -637,7 +637,7 @@ class VeloVQLCell extends _VeloShellCell {
         api.get("v1/GetFlowDetails", {
             client_id: this.props.client_id,
             flow_id: this.props.flow_id,
-            include_request: true,
+            include_full_request: true,
         }, this.source.token).then((response) => {
             let context = response.data.context;
             if(!_.isEqual(this.state.flow, context)) {

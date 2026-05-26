@@ -133,7 +133,8 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 
 	// Wait here until the collection is completed.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		hunt, pres := hunt_dispatcher.GetHunt(self.Ctx, hunt.HuntId)
+		hunt, pres := hunt_dispatcher.GetHunt(self.Ctx,
+			services.GetHuntOptions{}, hunt.HuntId)
 		assert.True(self.T(), pres)
 
 		return hunt.Stats.TotalClientsWithResults >= 1

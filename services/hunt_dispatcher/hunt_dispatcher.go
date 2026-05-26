@@ -120,14 +120,18 @@ func (self *HuntDispatcher) participateAllConnectedClients(
 // Applies a callback on all hunts. The callback is not allowed to
 // modify the hunts since it is getting a copy of the hunt object.
 func (self *HuntDispatcher) ApplyFuncOnHunts(
-	ctx context.Context, options services.HuntSearchOptions,
+	ctx context.Context,
+	options services.HuntSearchOptions,
+	hunt_options services.GetHuntOptions,
 	cb func(hunt *api_proto.Hunt) error) error {
-	return self.Store.ApplyFuncOnHunts(ctx, options, cb)
+	return self.Store.ApplyFuncOnHunts(ctx, options, hunt_options, cb)
 }
 
 func (self *HuntDispatcher) GetHunt(
-	ctx context.Context, hunt_id string) (*api_proto.Hunt, bool) {
-	hunt, err := self.Store.GetHunt(ctx, hunt_id)
+	ctx context.Context,
+	hunt_options services.GetHuntOptions,
+	hunt_id string) (*api_proto.Hunt, bool) {
+	hunt, err := self.Store.GetHunt(ctx, hunt_options, hunt_id)
 	if err != nil {
 		return nil, false
 	}
@@ -151,9 +155,10 @@ func (self *HuntDispatcher) GetHunt(
 // and must send mutations instead.
 func (self *HuntDispatcher) ModifyHuntObject(
 	ctx context.Context, hunt_id string,
+	hunt_options services.GetHuntOptions,
 	cb func(hunt *api_proto.Hunt) services.HuntModificationAction) services.HuntModificationAction {
 
-	return self.Store.ModifyHuntObject(ctx, hunt_id,
+	return self.Store.ModifyHuntObject(ctx, hunt_id, hunt_options,
 		func(hunt_record *HuntRecord) services.HuntModificationAction {
 			if hunt_record == nil || hunt_record.Hunt == nil {
 				return services.HuntUnmodified
@@ -230,6 +235,7 @@ func (self *HuntDispatcher) checkForExpiry(
 
 		// Collect mutations as quickly as possible to minimize locks.
 		_ = self.ApplyFuncOnHunts(ctx, services.OnlyRunningHunts,
+			services.GetHuntOptions{Request: false},
 			func(hunt_obj *api_proto.Hunt) error {
 				if hunt_obj.State == api_proto.Hunt_RUNNING &&
 					now > hunt_obj.Expires {

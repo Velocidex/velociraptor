@@ -777,11 +777,12 @@ func (x *ListHuntsResponse) GetItems() []*Hunt {
 }
 
 type GetHuntRequest struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	HuntId         string                 `protobuf:"bytes,1,opt,name=hunt_id,json=huntId,proto3" json:"hunt_id,omitempty"`
-	IncludeRequest bool                   `protobuf:"varint,2,opt,name=include_request,json=includeRequest,proto3" json:"include_request,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	HuntId                  string                 `protobuf:"bytes,1,opt,name=hunt_id,json=huntId,proto3" json:"hunt_id,omitempty"`
+	IncludeRequest          bool                   `protobuf:"varint,2,opt,name=include_request,json=includeRequest,proto3" json:"include_request,omitempty"`
+	IncludeTruncatedRequest bool                   `protobuf:"varint,3,opt,name=include_truncated_request,json=includeTruncatedRequest,proto3" json:"include_truncated_request,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *GetHuntRequest) Reset() {
@@ -824,6 +825,13 @@ func (x *GetHuntRequest) GetHuntId() string {
 func (x *GetHuntRequest) GetIncludeRequest() bool {
 	if x != nil {
 		return x.IncludeRequest
+	}
+	return false
+}
+
+func (x *GetHuntRequest) GetIncludeTruncatedRequest() bool {
+	if x != nil {
+		return x.IncludeTruncatedRequest
 	}
 	return false
 }
@@ -1179,10 +1187,11 @@ const file_hunts_proto_rawDesc = "" +
 	"userFilter\"L\n" +
 	"\x11ListHuntsResponse\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x03R\x05total\x12!\n" +
-	"\x05items\x18\x01 \x03(\v2\v.proto.HuntR\x05items\"R\n" +
+	"\x05items\x18\x01 \x03(\v2\v.proto.HuntR\x05items\"\x8e\x01\n" +
 	"\x0eGetHuntRequest\x12\x17\n" +
 	"\ahunt_id\x18\x01 \x01(\tR\x06huntId\x12'\n" +
-	"\x0finclude_request\x18\x02 \x01(\bR\x0eincludeRequest\"z\n" +
+	"\x0finclude_request\x18\x02 \x01(\bR\x0eincludeRequest\x12:\n" +
+	"\x19include_truncated_request\x18\x03 \x01(\bR\x17includeTruncatedRequest\"z\n" +
 	"\x15GetHuntResultsRequest\x12\x16\n" +
 	"\x06offset\x18\x01 \x01(\x04R\x06offset\x12\x14\n" +
 	"\x05count\x18\x02 \x01(\x04R\x05count\x12\x17\n" +

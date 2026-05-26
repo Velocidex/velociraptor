@@ -40,7 +40,8 @@ import (
 )
 
 type HuntsPluginArgs struct {
-	HuntId string `vfilter:"optional,field=hunt_id,doc=A hunt id to read, if not specified we list all of them."`
+	HuntId             string `vfilter:"optional,field=hunt_id,doc=A hunt id to read, if not specified we list all of them."`
+	IncludeFullRequest bool   `vfilter:"optional,field=full_request,doc=If specified we include the full request in the output. This can be very large."`
 }
 
 type HuntsPlugin struct{}
@@ -87,7 +88,9 @@ func (self HuntsPlugin) Call(
 
 		// Show a specific hunt
 		if arg.HuntId != "" {
-			hunt_obj, pres := hunt_dispatcher.GetHunt(ctx, arg.HuntId)
+			hunt_obj, pres := hunt_dispatcher.GetHunt(ctx,
+				services.GetHuntOptions{Request: arg.IncludeFullRequest},
+				arg.HuntId)
 			if pres {
 				select {
 				case <-ctx.Done():
@@ -103,6 +106,7 @@ func (self HuntsPlugin) Call(
 
 		err = hunt_dispatcher.ApplyFuncOnHunts(
 			ctx, services.AllHunts,
+			services.GetHuntOptions{Request: arg.IncludeFullRequest},
 			func(hunt *api_proto.Hunt) error {
 				hunts = append(hunts, json.ConvertProtoToOrderedDict(hunt))
 				return nil
@@ -314,7 +318,9 @@ func (self HuntResultsPlugin) GetAvailableArtifacts(
 		return nil, err
 	}
 
-	hunt_obj, pres := hunt_dispatcher_service.GetHunt(ctx, hunt_id)
+	hunt_obj, pres := hunt_dispatcher_service.GetHunt(ctx,
+		services.GetHuntOptions{Request: false},
+		hunt_id)
 	if !pres {
 		return nil, utils.Wrap(utils.NotFoundError, "Hunt not found")
 	}

@@ -296,6 +296,9 @@ func (self *HuntManager) participateInRunningHunts(ctx context.Context,
 
 	// Hold the lock on the hunt dispatcher as quickly as possible.
 	err = dispatcher.ApplyFuncOnHunts(ctx, services.OnlyRunningHunts,
+		services.GetHuntOptions{
+			Request: false,
+		},
 		func(hunt *api_proto.Hunt) error {
 			if should_participate_cb(hunt) {
 				rows = append(rows, ordereddict.NewDict().
@@ -375,7 +378,13 @@ func (self *HuntManager) ProcessParticipationWithError(
 		return err
 	}
 
-	hunt_obj, pres := dispatcher.GetHunt(ctx, participation_row.HuntId)
+	hunt_obj, pres := dispatcher.GetHunt(ctx,
+		services.GetHuntOptions{
+			// Retrieve the full request as we may need to launch the
+			// flow.
+			Request: true,
+		},
+		participation_row.HuntId)
 	if !pres {
 		return fmt.Errorf("Hunt %v not known", participation_row.HuntId)
 	}
