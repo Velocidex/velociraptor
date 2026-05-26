@@ -150,7 +150,7 @@ func (self *Launcher) CancelFlow(
 	collection_context, err := self.Storage().LoadCollectionContext(
 		ctx, config_obj, client_id, flow_id,
 		services.GetFlowOptions{
-			// We dont need the request to cancel the flow.
+			// We don't need the request to cancel the flow.
 			Request: false,
 		})
 	if err == nil {

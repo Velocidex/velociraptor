@@ -87,7 +87,7 @@ func SetIdGenerator(gen IdGenerator) func() {
 	}
 }
 
-// For resumaing flows, the client will receive a sesion_id which
+// For resuming flows, the client will receive a sesion_id which
 // consists of two parts: The parent flow will receive the collection
 // data and the child flow id is a unique flow that will run on the
 // client.

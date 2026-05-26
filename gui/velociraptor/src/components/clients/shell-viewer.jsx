@@ -145,7 +145,7 @@ class _VeloShellCell extends Component {
             }
         });
 
-        // Dont fetch anything until the user unfolds the view.
+        // Don't fetch anything until the user unfolds the view.
         if (!load_now && !this.state.loaded) {
             return;
         }
@@ -645,7 +645,7 @@ class VeloVQLCell extends _VeloShellCell {
             }
         });
 
-        // Dont fetch anything until the user unfolds the view.
+        // Don't fetch anything until the user unfolds the view.
         if (!load_now && !this.state.loaded) {
             return;
         }

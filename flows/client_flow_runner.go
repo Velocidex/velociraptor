@@ -538,7 +538,7 @@ func (self *ClientFlowRunner) handleUnknwonFlow(
 	collection_context, err := launcher_service.Storage().LoadCollectionContext(
 		ctx, self.config_obj, client_id, flow_id,
 
-		// We dont care abut the requet since it is immutable.
+		// We don't care about the request since it is immutable.
 		services.GetFlowOptions{})
 	if err != nil {
 		return nil
@@ -562,7 +562,7 @@ func (self *ClientFlowRunner) handleUnknwonFlow(
 		ctx, self.config_obj,
 		collection_context,
 
-		// Request was not modified, dont touch it.
+		// Request was not modified, don't touch it.
 		services.GetFlowOptions{},
 		utils.BackgroundWriter)
 }
@@ -769,7 +769,7 @@ func (self *ClientFlowRunner) VQLResponse(
 
 	} else {
 		// This flow is a child flow of an existing flow. This allows
-		// it to append results so we turn off restransmission
+		// it to append results so we turn off retransmission
 		// protections.
 		err := rs_writer.SetStartRow(rs_writer.TotalRows())
 		if err != nil {

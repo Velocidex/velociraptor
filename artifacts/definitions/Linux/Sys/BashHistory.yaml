@@ -5,7 +5,7 @@ description: |
   files.
 
   It can also be used to target other files located in user profile
-  directoires such as:
+  directories such as:
 
   - `*_profile` and `*rc` files.
   - shell history: `/{root,home/*}/.*_history`

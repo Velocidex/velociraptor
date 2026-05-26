@@ -217,7 +217,7 @@ func (self *HuntManager) directlyAssignFlow(
 	flow_obj, err := launcher.GetFlowDetails(
 		ctx, config_obj,
 		services.GetFlowOptions{
-			// We dont do anything with the request so dont get it
+			// We don't do anything with the request so don't get it
 			Request: false,
 		},
 		assignment.ClientId, assignment.FlowId)

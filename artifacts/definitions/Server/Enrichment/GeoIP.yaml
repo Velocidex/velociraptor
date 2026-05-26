@@ -14,7 +14,7 @@ description: |
   "GeoIPDB" (for example
   `/usr/shared/GeoLite2-City_20210803/GeoLite2-City.mmdb`)
 
-  As as alternative to calling this artifact, you can import this
+  As an alternative to calling this artifact, you can import this
   artifact to gain access to the utility functions (or just copy them
   into your own artifact).
 
