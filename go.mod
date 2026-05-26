@@ -10,7 +10,7 @@ require (
 	github.com/Velocidex/etw v0.0.0-20251027041548-6d97883fd588
 	github.com/Velocidex/go-magic v0.0.0-20260507053215-ee4782958ce2
 	github.com/Velocidex/go-yara v1.1.10-0.20250823152352-e5fc0843e50e
-	github.com/Velocidex/grpc-go-pool v1.2.2-0.20241016164850-ff0cb80037a8
+	github.com/Velocidex/grpc-go-pool v1.2.2-0.20260526092838-b4e236b2105f
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
 	github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a
 	github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1
@@ -387,8 +387,7 @@ require (
 // replace github.com/Velocidex/sflags => ../sflags
 // replace github.com/Velocidex/etw => ../etw
 // replace github.com/Velocidex/go-ewf => ../go-ewf
-replace github.com/Velocidex/grpc-go-pool => ../grpc-go-pool
-
+// replace github.com/Velocidex/grpc-go-pool => ../grpc-go-pool
 // replace www.velocidex.com/golang/oleparse => ../oleparse
 // replace github.com/go-errors/errors => ../errors
 // replace github.com/Velocidex/ttlcache/v2 => ../ttlcache

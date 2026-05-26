@@ -127,6 +127,8 @@ github.com/Velocidex/go-yara v1.1.10-0.20250823152352-e5fc0843e50e h1:mF+iDZwtXL
 github.com/Velocidex/go-yara v1.1.10-0.20250823152352-e5fc0843e50e/go.mod h1:5KKwF74avzF4GPZg37NoWfJiDgrBF5ASHH27g1p83zk=
 github.com/Velocidex/grok v0.0.1 h1:bOaqowsW9ecfJISQOM9K47Jk/ID9V945BLfKngUZEjo=
 github.com/Velocidex/grok v0.0.1/go.mod h1:tO25ta1WAuru0QA9ajcK0bAsk0gpWiT8so+fR4u3GZE=
+github.com/Velocidex/grpc-go-pool v1.2.2-0.20260526092838-b4e236b2105f h1:nVc9Y69VrGkBVCDKYbrbf4gQYykRzArO6JUD3MOqKcE=
+github.com/Velocidex/grpc-go-pool v1.2.2-0.20260526092838-b4e236b2105f/go.mod h1:Rcpbr2QTlawwUkhHKHX0kOKw1nA++gwuyxAwUDgXdZg=
 github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a h1:AeXPUzhU0yhID/v5JJEIkjaE85ASe+Vh4Kuv1RSLL+4=
 github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a/go.mod h1:ukJBuruT9b24pdgZwWDvOaCYHeS03B7oQPCUWh25bwM=
 github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d/go.mod h1:+MqO5UMBemyFSm+yRXslbpFTwPUDhFHUf7HPV92twg4=
