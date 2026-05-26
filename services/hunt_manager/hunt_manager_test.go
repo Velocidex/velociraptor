@@ -717,7 +717,8 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 
 	// This will schedule a hunt on this client.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		h, pres := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+		h, pres := dispatcher.GetHunt(self.Ctx,
+			services.GetHuntOptions{}, hunt_obj.HuntId)
 		if !pres {
 			return false
 		}
@@ -725,7 +726,8 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 	})
 
 	// However client has not completed yet.
-	h, _ := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+	h, _ := dispatcher.GetHunt(self.Ctx,
+		services.GetHuntOptions{}, hunt_obj.HuntId)
 	assert.Equal(self.T(), h.Stats.TotalClientsWithResults, uint64(0))
 
 	// For client to have completed we send a
@@ -751,7 +753,8 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 		artifacts.FLOW_COMPLETION.WithClientId(self.client_id)))
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		h, pres := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+		h, pres := dispatcher.GetHunt(self.Ctx,
+			services.GetHuntOptions{}, hunt_obj.HuntId)
 		if !pres {
 			return false
 		}
@@ -771,14 +774,16 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 		artifacts.HUNT_MODIFICATIONS))
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		h, pres := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+		h, pres := dispatcher.GetHunt(self.Ctx,
+			services.GetHuntOptions{}, hunt_obj.HuntId)
 		if !pres {
 			return false
 		}
 		return h.State == api_proto.Hunt_STOPPED
 	})
 
-	h, _ = dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+	h, _ = dispatcher.GetHunt(self.Ctx,
+		services.GetHuntOptions{}, hunt_obj.HuntId)
 	assert.Equal(self.T(), h.State, api_proto.Hunt_STOPPED)
 	assert.True(self.T(), h.Stats.Stopped)
 }
@@ -814,7 +819,8 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 
 	// This will schedule a hunt on this client.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		h, pres := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+		h, pres := dispatcher.GetHunt(self.Ctx,
+			services.GetHuntOptions{}, hunt_obj.HuntId)
 		fmt.Printf("hunt %v\n", h)
 		if !pres {
 			return false
@@ -842,7 +848,8 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 	// Both TotalClientsWithResults and TotalClientsWithErrors should
 	// increase.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		h, _ := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
+		h, _ := dispatcher.GetHunt(self.Ctx,
+			services.GetHuntOptions{}, hunt_obj.HuntId)
 		return h.Stats.TotalClientsWithResults == 1 &&
 			h.Stats.TotalClientsWithErrors == 1
 	})

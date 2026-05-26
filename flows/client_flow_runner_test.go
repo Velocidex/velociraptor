@@ -443,16 +443,13 @@ func (self *ServerTestSuite) TestForeman() {
 	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
 	defer runner.Close(self.Ctx)
 
-	db, err := datastore.GetDB(self.ConfigObj)
-	require.NoError(self.T(), err)
+	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(t, err)
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	expected := api.MakeCollectorRequest(
 		self.client_id, "Generic.Client.Info")
 	expected.MaxUploadBytes = 1073741824
-
-	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
-	assert.NoError(self.T(), err)
 
 	new_hunt, err := hunt_dispatcher.CreateHunt(
 		self.Ctx, self.ConfigObj,
@@ -464,10 +461,9 @@ func (self *ServerTestSuite) TestForeman() {
 	assert.NoError(t, err)
 
 	// Check for hunt object in the data store.
-	hunt := &api_proto.Hunt{}
-	hunt_path_manager := paths.NewHuntPathManager(new_hunt.HuntId)
-	err = db.GetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt)
-	require.NoError(t, err)
+	hunt, pres := hunt_dispatcher.GetHunt(self.Ctx,
+		services.GetHuntOptions{Request: true}, new_hunt.HuntId)
+	require.True(self.T(), pres)
 
 	assert.NotNil(t, hunt.StartRequest.CompiledCollectorArgs)
 

@@ -101,7 +101,9 @@ func (self *UpdateHuntFunction) Call(ctx context.Context,
 	}
 
 	if len(arg.AddLabel) > 0 || len(arg.DelLabel) > 0 {
-		hunt_obj, pres := hunt_dispatcher.GetHunt(ctx, arg.HuntId)
+		hunt_obj, pres := hunt_dispatcher.GetHunt(ctx,
+			services.GetHuntOptions{Request: false},
+			arg.HuntId)
 		if !pres {
 			scope.Log("hunt_update: %v", err)
 			return &vfilter.Null{}

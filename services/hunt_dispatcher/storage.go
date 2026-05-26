@@ -53,25 +53,29 @@ type HuntStorageManager interface {
 	ListHunts(
 		ctx context.Context,
 		options result_sets.ResultSetOptions,
+		hunt_options services.GetHuntOptions,
 		offset int64, length int64) ([]*api_proto.Hunt, int64, error)
 
 	ApplyFuncOnHunts(
 		ctx context.Context, options services.HuntSearchOptions,
+		hunt_options services.GetHuntOptions,
 		cb func(hunt *api_proto.Hunt) error) (res_error error)
 
 	// Gets a copy of the hunt object
 	GetHunt(ctx context.Context,
+		hunt_options services.GetHuntOptions,
 		hunt_id string) (*api_proto.Hunt, error)
 
 	SetHunt(ctx context.Context, hunt *api_proto.Hunt) error
 
-	// Remove the hunt from the local storage. On Minion we only
+	// Remove the hunt from the local storage. On Minions we only
 	// remove from the local memory cache.
 	DeleteHunt(ctx context.Context, hunt_id string) error
 
 	ModifyHuntObject(
 		ctx context.Context,
 		hunt_id string,
+		hunt_options services.GetHuntOptions,
 		cb func(hunt *HuntRecord) services.HuntModificationAction) services.HuntModificationAction
 
 	Refresh(ctx context.Context,
@@ -118,6 +122,8 @@ type HuntStorageManagerImpl struct {
 
 	config_obj *config_proto.Config
 
+	// The storage stores bare hunt objects - these do not include the
+	// full request and so should be much smaller.
 	hunts map[string]*HuntRecord
 
 	// The last time the hunts map was updated.
@@ -205,6 +211,7 @@ func (self *HuntStorageManagerImpl) Close(ctx context.Context) {
 func (self *HuntStorageManagerImpl) ModifyHuntObject(
 	ctx context.Context,
 	hunt_id string,
+	hunt_options services.GetHuntOptions,
 	cb func(hunt *HuntRecord) services.HuntModificationAction,
 ) services.HuntModificationAction {
 	self.mu.Lock()
@@ -251,15 +258,7 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 		// The hunts start time could have been modified.
 		self._MaybeUpdateTimestamp(hunt_record.StartTime)
 
-		hunt_path_manager := paths.NewHuntPathManager(hunt_record.HuntId)
-		db, err := datastore.GetDB(self.config_obj)
-		if err != nil {
-			return services.HuntUnmodified
-		}
-
-		err = db.SetSubjectWithCompletion(self.config_obj,
-			hunt_path_manager.Path(), hunt_record.Hunt,
-			utils.BackgroundWriter)
+		err := self._SetHunt(ctx, hunt_record.Hunt)
 		if err != nil {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			logger.Error("Flushing %s to disk: %v", hunt_id, err)
@@ -270,7 +269,9 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 }
 
 func (self *HuntStorageManagerImpl) GetHunt(
-	ctx context.Context, hunt_id string) (*api_proto.Hunt, error) {
+	ctx context.Context,
+	hunt_options services.GetHuntOptions,
+	hunt_id string) (*api_proto.Hunt, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -283,7 +284,21 @@ func (self *HuntStorageManagerImpl) GetHunt(
 		hunt.Stats = &api_proto.HuntStats{}
 	}
 
-	return proto.Clone(hunt).(*api_proto.Hunt), nil
+	res := proto.Clone(hunt).(*api_proto.Hunt)
+	if hunt_options.Request {
+		db, err := datastore.GetDB(self.config_obj)
+		if err != nil {
+			return nil, err
+		}
+		request := &api_proto.Hunt{}
+		hunt_path_manager := paths.NewHuntPathManager(hunt_id)
+		err = db.GetSubject(self.config_obj, hunt_path_manager.Request(), request)
+		if err == nil {
+			res.StartRequest = request.StartRequest
+		}
+	}
+
+	return res, nil
 }
 
 func (self *HuntStorageManagerImpl) SetHunt(
@@ -291,6 +306,11 @@ func (self *HuntStorageManagerImpl) SetHunt(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	return self._SetHunt(ctx, hunt)
+}
+
+func (self *HuntStorageManagerImpl) _SetHunt(
+	ctx context.Context, hunt *api_proto.Hunt) error {
 	if hunt == nil {
 		return utils.InvalidArgError
 	}
@@ -319,22 +339,32 @@ func (self *HuntStorageManagerImpl) SetHunt(
 		atomic.StoreUint64(&self.last_timestamp, hunt.StartTime)
 	}
 
+	// Split the hunt object into request and hunt object
+	hunt_obj, request_obj := splitHuntObject(hunt)
+	err = db.SetSubject(self.config_obj, hunt_path_manager.Request(),
+		request_obj)
+	if err != nil {
+		return err
+	}
+
 	self.last_update = utils.GetTime().Now()
 	self.hunts[hunt.HuntId] = &HuntRecord{
-		Hunt:  hunt,
+		Hunt:  hunt_obj,
 		dirty: true,
 	}
 	self.dirty = true
 	self._MaybeUpdateTimestamp(hunt.StartTime)
 
 	return db.SetSubject(
-		self.config_obj, hunt_path_manager.Path(), hunt)
+		self.config_obj, hunt_path_manager.Path(), hunt_obj)
 }
 
 func (self *HuntStorageManagerImpl) GetTags(
 	ctx context.Context) (res []string) {
 
 	_ = self.ApplyFuncOnHunts(ctx, services.AllHunts,
+		// We dont care about the request, just change the tags.
+		services.GetHuntOptions{Request: false},
 		func(hunt *api_proto.Hunt) error {
 			if hunt != nil {
 				res = append(res, hunt.Tags...)
@@ -351,6 +381,7 @@ func (self *HuntStorageManagerImpl) GetTags(
 func (self *HuntStorageManagerImpl) ListHunts(
 	ctx context.Context,
 	options result_sets.ResultSetOptions,
+	hunt_options services.GetHuntOptions,
 	offset int64, length int64) ([]*api_proto.Hunt, int64, error) {
 
 	hunt_path_manager := paths.NewHuntPathManager("")
@@ -411,7 +442,7 @@ func (self *HuntStorageManagerImpl) ListHunts(
 		}
 
 		// Get the full record from memory cache
-		hunt_obj, err := self.GetHunt(ctx, summary.HuntId)
+		hunt_obj, err := self.GetHunt(ctx, hunt_options, summary.HuntId)
 		if err != nil {
 			// Something is wrong! The index is referring to a hunt we
 			// don't know about - we should re-flush to sync the index.
@@ -488,7 +519,9 @@ func (self *HuntStorageManagerImpl) LoadHuntObjFromDisk(
 	force bool) error {
 
 	// Try to get the hunt from the cache.
-	hunt_obj, err := self.GetHunt(ctx, hunt_id)
+	hunt_obj, err := self.GetHunt(ctx,
+		services.GetHuntOptions{Request: false},
+		hunt_id)
 
 	// We don't know about this hunt, let's try to read it from disk.
 	if err != nil {
@@ -542,7 +575,9 @@ func (self *HuntStorageManagerImpl) LoadHuntObjFromDisk(
 
 	// Re-fetch the hunt obj again from the cache, so we can get the
 	// latest version.
-	hunt_obj, err = self.GetHunt(ctx, hunt_id)
+	hunt_obj, err = self.GetHunt(ctx,
+		services.GetHuntOptions{Request: false},
+		hunt_id)
 	if err != nil {
 		return err
 	}
@@ -711,7 +746,9 @@ func (self *HuntStorageManagerImpl) Refresh(
 // Applies a callback on all hunts. The callback is not allowed to
 // modify the hunts.
 func (self *HuntStorageManagerImpl) ApplyFuncOnHunts(
-	ctx context.Context, options services.HuntSearchOptions,
+	ctx context.Context,
+	options services.HuntSearchOptions,
+	hunt_options services.GetHuntOptions,
 	cb func(hunt *api_proto.Hunt) error) (res_error error) {
 
 	self.mu.Lock()
@@ -752,6 +789,7 @@ func (self *HuntStorageManagerImpl) DeleteHunt(
 			return err
 		}
 		_ = db.DeleteSubject(self.config_obj, hunt_path_manager.Path())
+		_ = db.DeleteSubject(self.config_obj, hunt_path_manager.Request())
 
 		file_store_factory := file_store.GetFileStore(self.config_obj)
 		_ = file_store_factory.Delete(hunt_path_manager.Clients())

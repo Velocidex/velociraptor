@@ -10,10 +10,7 @@ import HuntNotebook from './hunt-notebook.jsx';
 import Spinner from '../utils/spinner.jsx';
 import T from '../i8n/i8n.jsx';
 import { withRouter }  from "react-router-dom";
-import {getItem, setItem} from '../core/storage.jsx';
-
-const CurrentHuntTabKey = "CurrentHuntTab";
-const CurrentSelectedHuntKey = "CurrentSelectedHunt";
+import {getItem, setItem, schema} from '../core/storage.jsx';
 
 class HuntInspector extends React.Component {
     static propTypes = {
@@ -31,16 +28,16 @@ class HuntInspector extends React.Component {
         let tab = this.props.match && this.props.match.params &&
             this.props.match.params.tab;
         if(tab) {
-            setItem(CurrentHuntTabKey, tab);
+            setItem(schema.CurrentHuntTabKey, tab);
         }
     }
 
     setDefaultTab = (tab) => {
         let hunt_id = this.props.hunt.hunt_id ||
-            getItem(CurrentSelectedHuntKey);
+            getItem(schema.CurrentSelectedHuntKey);
         if(!hunt_id) return;
 
-        setItem(CurrentHuntTabKey, tab);
+        setItem(schema.CurrentHuntTabKey, tab);
         this.setState({tab: tab});
         this.props.history.push("/hunts/" + hunt_id + "/" + tab);
     }
@@ -55,7 +52,7 @@ class HuntInspector extends React.Component {
         }
 
         // Default tab comes from the router
-        let tab = getItem(CurrentHuntTabKey) || "overview";
+        let tab = getItem(schema.CurrentHuntTabKey) || "overview";
 
         return (
             <div className="padded">

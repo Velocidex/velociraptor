@@ -12,6 +12,8 @@ import  {CancelToken} from 'axios';
 
 import { withRouter }  from "react-router-dom";
 
+const POLL_TIME = 5000;
+
 class VeloHunts extends React.Component {
     static propTypes = {
         // React router props.
@@ -21,10 +23,10 @@ class VeloHunts extends React.Component {
 
     state = {
         // The currently selected hunt summary.
-        selected_hunt_id: {},
+        selected_hunt_id: undefined,
 
         // The full detail of the current selected hunt.
-        full_selected_hunt: {},
+        selected_hunt: {},
 
         // A list of hunt summary objects - contains just enough info
         // to render tables.
@@ -53,7 +55,7 @@ class VeloHunts extends React.Component {
     setSelectedHuntId = (hunt_id) => {
         if (!hunt_id) {
             this.setState({
-                full_selected_hunt: {},
+                selected_hunt: {},
                 selected_hunt_id: undefined,
             });
             this.props.history.push("/hunts");
@@ -73,13 +75,17 @@ class VeloHunts extends React.Component {
         }
         setItem(schema.CurrentHuntIdKey, hunt_id);
         this.setState({selected_hunt_id: hunt_id});
-        this.loadFullHunt(hunt_id);
+        this.loadHunt(hunt_id);
     }
 
-    loadFullHunt = (hunt_id) => {
+    loadHunt = (hunt_id) => {
         if(!hunt_id){
-            return;
+            hunt_id = this.state.selected_hunt_id;
         };
+
+        if(!hunt_id) {
+            return;
+        }
 
         this.get_hunts_source.cancel();
         this.get_hunts_source = CancelToken.source();
@@ -90,10 +96,18 @@ class VeloHunts extends React.Component {
             if (response.cancel) return;
 
             if(_.isEmpty(response.data)) {
-                this.setState({full_selected_hunt: {}});
+                this.setState({selected_hunt: {}});
             } else {
-                this.setState({full_selected_hunt: response.data});
+                this.setState({selected_hunt: response.data});
             }
+
+        }).catch(response=>{
+            // The current hunt is not found, navigate away from it.
+            let status = response.response && response.response.status;
+            if(status === 404) {
+                setItem(schema.CurrentHuntIdKey, "");
+                this.props.history.push("/hunts");
+            };
         });
     }
 
@@ -109,7 +123,7 @@ class VeloHunts extends React.Component {
         if (!selected_hunt_id) return;
 
         setItem(schema.CurrentHuntIdKey, selected_hunt_id);
-        this.loadFullHunt(selected_hunt_id);
+        this.loadHunt(selected_hunt_id);
     }
 
     render() {
@@ -127,11 +141,11 @@ class VeloHunts extends React.Component {
                 <HuntList
                   collapseToggle={this.collapse}
                   updateHunts={this.fetchSelectedHunt}
-                  selected_hunt={this.state.full_selected_hunt}
+                  selected_hunt={this.state.selected_hunt}
                   setSelectedHuntId={this.setSelectedHuntId} />
                 <HuntInspector
                   fetch_hunts={this.fetchSelectedHunt}
-                  hunt={this.state.full_selected_hunt} />
+                  hunt={this.state.selected_hunt} />
               </SplitPane>
             </>
         );

@@ -97,9 +97,6 @@ type GetFlowOptions struct {
 
 	// Also include the full request data.
 	Request bool
-
-	// Also include the flow stats
-	Stats bool
 }
 
 type DeleteFlowOptions struct {

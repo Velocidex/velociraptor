@@ -357,7 +357,10 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 			return vfilter.Null{}
 		}
 
-		hunt_obj, pres := hunt_dispatcher.GetHunt(ctx, arg.HuntId)
+		hunt_obj, pres := hunt_dispatcher.GetHunt(ctx,
+			// Get the full request as we will launch it below.
+			services.GetHuntOptions{Request: true},
+			arg.HuntId)
 		if !pres || hunt_obj == nil ||
 			hunt_obj.StartRequest == nil ||
 			hunt_obj.StartRequest.CompiledCollectorArgs == nil {
@@ -373,14 +376,16 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 		// Launch the collection against a client. We assume it is
 		// already compiled because hunts always pre-compile their
 		// artifacts.
-		request := proto.Clone(hunt_obj.StartRequest).(*flows_proto.ArtifactCollectorArgs)
+		request := proto.Clone(
+			hunt_obj.StartRequest).(*flows_proto.ArtifactCollectorArgs)
 		request.ClientId = arg.ClientId
 
 		// Generate a new flow id for each request
 		request.FlowId = ""
 
 		arg.FlowId, err = launcher.WriteArtifactCollectionRecord(
-			ctx, config_obj, request, hunt_obj.StartRequest.CompiledCollectorArgs,
+			ctx, config_obj, request,
+			hunt_obj.StartRequest.CompiledCollectorArgs,
 			func(task *crypto_proto.VeloMessage) {
 				client_manager, err := services.GetClientInfoManager(config_obj)
 				if err != nil {

@@ -56,6 +56,7 @@ func (self *HuntDispatcher) ProcessUpdate(
 
 	// Only update the version if it is ahead.
 	action := self.Store.ModifyHuntObject(ctx, hunt_obj.HuntId,
+		services.GetHuntOptions{Request: false},
 		func(existing_hunt *HuntRecord) services.HuntModificationAction {
 			if existing_hunt.Version < hunt_obj.Version {
 				existing_hunt.Hunt = hunt_obj

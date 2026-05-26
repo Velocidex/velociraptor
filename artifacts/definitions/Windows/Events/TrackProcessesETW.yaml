@@ -37,6 +37,7 @@ export: |
                      guid="kernel")
 
     LET LRU <= lru(size=1000)
+    LET S = scope()
 
     -- only used to see what is goinng on.
     LET BuildDebugEvent(System, EventData) = dict(
@@ -108,7 +109,12 @@ export: |
 
     LET UpdateQuery = SELECT * FROM foreach(row=EventSource,
     query={
-      SELECT id, parent_id, update_type, start_time, end_time, data
+      SELECT S.id AS id,
+             S.parent_id AS parent_id,
+             S.update_type AS update_type,
+             S.start_time AS start_time,
+             S.end_time AS end_time,
+             S.data AS data
       FROM foreach(row=EmitEvent(System=System, EventData=EventData))
     })
 

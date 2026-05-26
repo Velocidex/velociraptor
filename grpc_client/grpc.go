@@ -64,6 +64,11 @@ var (
 		Help: "Total number of internal gRPC calls.",
 	})
 
+	grpcStubs = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "grpc_stubs",
+		Help: "Total current number of stubs.",
+	})
+
 	grpcTimeoutCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "grpc_client_timeouts",
 		Help: "Total number of timeouts in getting a connection from the pool.",
@@ -232,12 +237,23 @@ func (self GRPCAPIClient) GetAPIClient(
 		return nil, nil, err
 	}
 
-	grpcCallCounter.Inc()
+	// Channels should be reused so we can return the channel to the
+	// pool immediately.
+	defer channel.Close()
 
-	return api_proto.NewAPIClient(channel.ClientConn), channel.Close, err
+	grpcCallCounter.Inc()
+	grpcStubs.Inc()
+	return api_proto.NewAPIClient(channel.ClientConn),
+		// This is called when the stub is done with.
+		func() error {
+			grpcStubs.Dec()
+			return nil
+		},
+		err
 }
 
-func (self *gRPCPool) getChannel(ctx context.Context) (*grpcpool.ClientConn, error) {
+func (self *gRPCPool) getChannel(ctx context.Context) (
+	*grpcpool.ClientConn, error) {
 
 	// Collect number of callers waiting for a channel - this
 	// indicates backpressure from the grpc pool.
@@ -346,8 +362,8 @@ func (self *gRPCPool) EnsureInit(
 		return grpc.DialContext(ctx, self.address, opts...)
 	}
 
-	max_size := 100
-	max_wait := 60
+	max_size := 10
+	max_wait := 6000
 	if self.config_obj.Frontend != nil {
 		if self.config_obj.Frontend.GRPCPoolMaxSize > 0 {
 			max_size = int(self.config_obj.Frontend.GRPCPoolMaxSize)
@@ -359,7 +375,9 @@ func (self *gRPCPool) EnsureInit(
 	}
 
 	self.pool, err = grpcpool.NewWithContext(ctx,
-		factory, 1, max_size, time.Duration(max_wait)*time.Second)
+		factory, 1, max_size,
+		time.Duration(max_wait)*time.Second,
+		time.Duration(max_wait)*time.Second)
 	if err != nil {
 		return fmt.Errorf(
 			"Unable to connect to gRPC server: %v: %v", self.address, err)

@@ -6,10 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 
@@ -81,13 +79,10 @@ sources:
 
 	assert.NoError(self.T(), err)
 
-	db, err := datastore.GetDB(self.ConfigObj)
-	assert.NoError(self.T(), err)
-
-	hunt_path_manager := paths.NewHuntPathManager(new_hunt.HuntId)
-	hunt_obj := &api_proto.Hunt{}
-	err = db.GetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
-	assert.NoError(self.T(), err)
+	hunt_obj, pres := hunt_dispatcher.GetHunt(self.Ctx,
+		services.GetHuntOptions{Request: true},
+		new_hunt.HuntId)
+	assert.True(self.T(), pres)
 
 	assert.Equal(self.T(), hunt_obj.HuntDescription, request.HuntDescription)
 	assert.NotEqual(self.T(), hunt_obj.CreateTime, uint64(0))

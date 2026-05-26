@@ -17,7 +17,21 @@ const getID = ()=>{
     return "ID" + guid;
 };
 
+// Handle errors - when the server deletes a flow or hunt or client,
+// then we must clear references to them to avoid constantly querying
+// for deleted resources.
+const hunt_not_found = /Hunt not found/i;
+
+
+
 export default class Snackbar extends React.Component {
+    static propTypes = {
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
+    };
+
+
     componentDidMount = () => {
         api.hooks.push(this.warn);
     }
@@ -47,8 +61,15 @@ export default class Snackbar extends React.Component {
     }
 
     warn = (message) => {
+        this.handle_errors(message);
         let toasts = this.addMessage(this.state.toasts || [], message);
         this.setState({toasts: toasts});
+    };
+
+    handle_errors = message=>{
+        if(hunt_not_found.test(message)) {
+            console.log(this.props.match);
+        }
     };
 
     state = {

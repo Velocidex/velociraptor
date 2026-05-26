@@ -525,6 +525,7 @@ class HuntList extends React.Component {
 
         api.get("v1/GetHunt", {
             hunt_id: hunt_id,
+            include_request: true,
         }, this.source.token).then((response) => {
             if (response.cancel) return;
 

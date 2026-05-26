@@ -86,6 +86,14 @@ class ClientFlowsView extends React.Component {
             setItem(schema.ClientsCurrentFlowKey, flow_id);
             this.setState({currentFlow: flow,
                            loading: false});
+
+        }).catch(response=>{
+            let status = response.response && response.response.status;
+            let client_id = this.state.client_id;
+            if(status === 404) {
+                setItem(schema.ClientsCurrentFlowKey, "");
+                this.props.history.push("/collected/" + client_id);
+            };
         });
     }
 

@@ -186,6 +186,7 @@ message ListHuntsResponse {
 message GetHuntRequest {
     string hunt_id = 1;
     bool include_request = 2;
+    bool include_truncated_request = 3;
 }
 
 message GetHuntResultsRequest {

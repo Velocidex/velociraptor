@@ -558,7 +558,10 @@ func populateDefaultSpecs(
 			return err
 		}
 
-		hunt_obj, ok := hunt_dispatcher.GetHunt(ctx, hunt_id)
+		hunt_obj, ok := hunt_dispatcher.GetHunt(ctx,
+			// Get the full request so we know the hunt parameters.
+			services.GetHuntOptions{Request: true},
+			hunt_id)
 		if !ok {
 			return fmt.Errorf("Hunt not found: %v: %w",
 				hunt_id, utils.NotFoundError)

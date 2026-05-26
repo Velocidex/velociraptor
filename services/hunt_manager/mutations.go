@@ -63,6 +63,11 @@ func (self *HuntManager) processMutation(
 
 	modification := dispatcher.ModifyHuntObject(
 		ctx, mutation.HuntId,
+		services.GetHuntOptions{
+			// We do not need to know the request, we just mutate the
+			// hunt.
+			Request: false,
+		},
 		func(hunt_obj *api_proto.Hunt) services.HuntModificationAction {
 			modification := services.HuntUnmodified
 			if hunt_obj == nil {

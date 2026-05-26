@@ -14,6 +14,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/api/tables"
+	"www.velocidex.com/golang/velociraptor/constants"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -134,7 +136,9 @@ func (self *ApiServer) GetHuntTable(
 		return nil, Status(self.verbose, err)
 	}
 
-	hunts, total, err := hunt_dispatcher.GetHunts(ctx, org_config_obj, options,
+	hunts, total, err := hunt_dispatcher.GetHunts(
+		ctx, org_config_obj, options,
+		services.GetHuntOptions{Request: false},
 		int64(in.StartRow), int64(in.Rows))
 	if err != nil {
 		return nil, Status(self.verbose, err)
@@ -399,7 +403,9 @@ func (self *ApiServer) ListHunts(
 	}
 
 	result, err := hunt_dispatcher.ListHunts(
-		ctx, org_config_obj, in)
+		ctx, org_config_obj,
+		services.GetHuntOptions{Request: false},
+		in)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -454,14 +460,19 @@ func (self *ApiServer) GetHunt(
 		return nil, Status(self.verbose, err)
 	}
 
-	result, pres := hunt_dispatcher.GetHunt(ctx, in.HuntId)
+	result, pres := hunt_dispatcher.GetHunt(ctx,
+		services.GetHuntOptions{
+			Request: in.IncludeRequest || in.IncludeTruncatedRequest,
+		},
+		in.HuntId)
 	if !pres {
 		return nil, Status(self.verbose,
 			fmt.Errorf("%w: %v", services.HuntNotFoundError, in.HuntId))
 	}
 
-	if !in.IncludeRequest && result.StartRequest != nil {
+	if in.IncludeTruncatedRequest && result.StartRequest != nil {
 		result.StartRequest.CompiledCollectorArgs = nil
+		truncateHuntRequest(result.StartRequest)
 	}
 
 	return result, nil
@@ -680,4 +691,21 @@ func (self *ApiServer) EstimateHunt(
 	return &api_proto.HuntStats{
 		TotalClientsScheduled: uint64(len(seen)),
 	}, nil
+}
+
+func truncateHuntRequest(req *flows_proto.ArtifactCollectorArgs) {
+	if req == nil {
+		return
+	}
+
+	for _, spec := range req.Specs {
+		if spec.Parameters == nil {
+			continue
+		}
+		for _, env := range spec.Parameters.Env {
+			if len(env.Value) > constants.MAX_ENV_TRUNCATE_LIMIT {
+				env.Value = env.Value[:constants.MAX_ENV_TRUNCATE_LIMIT] + " ..."
+			}
+		}
+	}
 }

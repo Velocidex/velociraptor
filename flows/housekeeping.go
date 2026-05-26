@@ -109,6 +109,9 @@ func CheckClientStatus(
 	// client to reduce the time under lock.
 	hunts := make([]*api_proto.Hunt, 0)
 	err = dispatcher.ApplyFuncOnHunts(ctx, services.OnlyRunningHunts,
+		services.GetHuntOptions{
+			Request: false,
+		},
 		func(hunt *api_proto.Hunt) error {
 			// Hunt is stopped we don't care about it.
 			if hunt.State != api_proto.Hunt_RUNNING {

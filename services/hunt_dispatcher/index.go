@@ -144,25 +144,11 @@ func (self *HuntStorageManagerImpl) _FlushIndex(ctx context.Context) (int, error
 func (self *HuntDispatcher) GetHunts(ctx context.Context,
 	config_obj *config_proto.Config,
 	options result_sets.ResultSetOptions,
+	hunt_options services.GetHuntOptions,
 	start_row, length int64) ([]*api_proto.Hunt, int64, error) {
 
-	hunts, total, err := self.Store.ListHunts(
-		ctx, options, start_row, length)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// Enrich the stored hunt index with live data from the hunt
-	// dispatcher.
-	result := make([]*api_proto.Hunt, 0, len(hunts))
-	for _, hunt := range hunts {
-		full_obj, ok := self.GetHunt(ctx, hunt.HuntId)
-		if ok {
-			result = append(result, full_obj)
-		}
-	}
-
-	return result, total, nil
+	return self.Store.ListHunts(
+		ctx, options, hunt_options, start_row, length)
 }
 
 func (self *HuntDispatcher) RebuildHuntIndex(

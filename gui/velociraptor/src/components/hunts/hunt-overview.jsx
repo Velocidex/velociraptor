@@ -22,6 +22,7 @@ import {CancelToken} from 'axios';
 import { requestToParameters } from "../flows/utils.jsx";
 import AvailableDownloads from "../notebooks/downloads.jsx";
 
+const POLL_TIME = 5000;
 
 export default class HuntOverview extends React.Component {
     static contextType = UserConfig;
@@ -33,11 +34,15 @@ export default class HuntOverview extends React.Component {
 
     state = {
         preparing: false,
+        full_hunt: undefined,
         lock: false,
     }
 
     componentDidMount = () => {
         this.source = CancelToken.source();
+        this.get_hunts_source = CancelToken.source();
+        this.interval = setInterval(this.loadFullHunt, POLL_TIME);
+        this.loadFullHunt();
 
         // Default state of the lock is set by the user's preferences.
         let lock_password = this.context.traits &&
@@ -47,6 +52,8 @@ export default class HuntOverview extends React.Component {
 
     componentWillUnmount() {
         this.source.cancel("unmounted");
+        this.get_hunts_source.cancel();
+        clearInterval(this.interval);
     }
 
     huntState = () => {
@@ -63,6 +70,30 @@ export default class HuntOverview extends React.Component {
             return "PAUSED";
         }
         return "ERROR";
+    }
+
+
+    loadFullHunt = () => {
+        let hunt_id = this.props.hunt && this.props.hunt.hunt_id;
+        if(!hunt_id){
+            return;
+        };
+
+        this.get_hunts_source.cancel();
+        this.get_hunts_source = CancelToken.source();
+
+        api.get("v1/GetHunt", {
+            hunt_id: hunt_id,
+            include_truncated_request: true,
+        }, this.get_hunts_source.token).then((response) => {
+            if (response.cancel) return;
+
+            if(_.isEmpty(response.data)) {
+                this.setState({full_hunt: {}});
+            } else {
+                this.setState({full_hunt: response.data});
+            }
+        });
     }
 
     prepareDownload = (download_type) => {
@@ -112,11 +143,10 @@ export default class HuntOverview extends React.Component {
     }
 
     render() {
-        let hunt = this.props.hunt;
+        let hunt = this.state.full_hunt || this.props.hunt;
         if (!hunt) {
             return <div>{T("Please select a hunt to view above.")}</div>;
         };
-
         let artifacts = hunt.start_request && hunt.start_request.artifacts;
         artifacts = artifacts || [];
 

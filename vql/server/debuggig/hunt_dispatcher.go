@@ -54,7 +54,9 @@ func (self HuntReindex) Call(
 		}
 
 		if arg.HuntId != "" {
-			hunt_obj, pres := hunt_disp.GetHunt(ctx, arg.HuntId)
+			hunt_obj, pres := hunt_disp.GetHunt(ctx,
+				services.GetHuntOptions{Request: false},
+				arg.HuntId)
 			if pres {
 				output_chan <- ordereddict.NewDict().
 					Set("Hunt", hunt_obj).

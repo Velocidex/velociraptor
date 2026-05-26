@@ -38,8 +38,12 @@ func RPCTimeout(config_obj *config_proto.Config) time.Duration {
 }
 
 func Retry(ctx context.Context,
-	config_obj *config_proto.Config, cb func() error) error {
+	config_obj *config_proto.Config,
+	failure_cb func(err error),
+	cb func() error) error {
 	var err error
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	for i := 0; i < RPC_RETRY; i++ {
 		err = cb()
@@ -47,37 +51,41 @@ func Retry(ctx context.Context,
 			return nil
 		}
 
-		// Figure out if the error is retryable - only some errors
-		// mean a retry is appropriate (see
-		// https://pkg.go.dev/google.golang.org/grpc/codes)
-		st, ok := status.FromError(err)
-		if !ok {
+		if !isErrorRetriable(err) {
+			failure_cb(err)
 			return err
 		}
 
-		switch st.Code() {
+		logger.Error("While connecting to remote datastore (retry %v): %v", i, err)
+		select {
+		case <-ctx.Done():
+			return timeoutError
 
-		// These ones are retryable errors - sleep a bit and retry
-		// again.
-		case codes.DeadlineExceeded, codes.ResourceExhausted,
-			codes.Aborted, codes.Unavailable:
-			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.Error("While connecting to remote datastore (retry %v): %v", i, err)
-			select {
-			case <-ctx.Done():
-				return timeoutError
-
-			case <-time.After(time.Duration(RPC_BACKOFF) * time.Second):
-			}
-
-		case codes.Internal, codes.Unknown:
-			return err
-
-		default:
-			return err
+		case <-time.After(time.Duration(RPC_BACKOFF) * time.Second):
 		}
 	}
 	return err
+}
+
+func isErrorRetriable(err error) bool {
+
+	// Figure out if the error is retryable - only some errors
+	// mean a retry is appropriate (see
+	// https://pkg.go.dev/google.golang.org/grpc/codes)
+	st, ok := status.FromError(err)
+	if !ok {
+		return false
+	}
+
+	switch st.Code() {
+	case codes.ResourceExhausted:
+		return false
+
+	case codes.DeadlineExceeded, codes.Aborted, codes.Unavailable:
+		return true
+	default:
+		return false
+	}
 }
 
 type RemoteDataStore struct {
@@ -88,9 +96,14 @@ func (self *RemoteDataStore) GetSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,
 	message proto.Message) error {
-	return Retry(self.ctx, config_obj, func() error {
-		return self._GetSubject(config_obj, urn, message)
-	})
+	return Retry(self.ctx, config_obj,
+		func(err error) {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("RemoteDataStore: GetSubject %s: %v", urn.String(), err)
+		},
+		func() error {
+			return self._GetSubject(config_obj, urn, message)
+		})
 }
 
 func (self *RemoteDataStore) Healthy() error {
@@ -176,10 +189,15 @@ func (self *RemoteDataStore) SetSubjectWithCompletion(
 		}
 	}()
 
-	return Retry(self.ctx, config_obj, func() error {
-		return self._SetSubjectWithCompletion(
-			config_obj, urn, message, completion)
-	})
+	return Retry(self.ctx, config_obj,
+		func(err error) {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("RemoteDataStore: GetSubject %s: %v", urn.String(), err)
+		},
+		func() error {
+			return self._SetSubjectWithCompletion(
+				config_obj, urn, message, completion)
+		})
 }
 
 func (self *RemoteDataStore) _SetSubjectWithCompletion(
@@ -238,9 +256,14 @@ func (self *RemoteDataStore) _SetSubjectWithCompletion(
 func (self *RemoteDataStore) DeleteSubjectWithCompletion(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec, completion func()) error {
-	return Retry(self.ctx, config_obj, func() error {
-		return self._DeleteSubjectWithCompletion(config_obj, urn, completion)
-	})
+	return Retry(self.ctx, config_obj,
+		func(err error) {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("RemoteDataStore: DeleteSubjectWithCompletion %s: %v", urn.String(), err)
+		},
+		func() error {
+			return self._DeleteSubjectWithCompletion(config_obj, urn, completion)
+		})
 }
 
 func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
@@ -285,9 +308,14 @@ func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
 func (self *RemoteDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) error {
-	return Retry(self.ctx, config_obj, func() error {
-		return self._DeleteSubject(config_obj, urn)
-	})
+	return Retry(self.ctx, config_obj,
+		func(err error) {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("RemoteDataStore: DeleteSubject %s: %v", urn.String(), err)
+		},
+		func() error {
+			return self._DeleteSubject(config_obj, urn)
+		})
 }
 
 func (self *RemoteDataStore) _DeleteSubject(
@@ -330,10 +358,15 @@ func (self *RemoteDataStore) ListChildren(
 	var result []api.DSPathSpec
 	var err error
 
-	err = Retry(self.ctx, config_obj, func() error {
-		result, err = self._ListChildren(config_obj, urn)
-		return err
-	})
+	err = Retry(self.ctx, config_obj,
+		func(err error) {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("RemoteDataStore: ListChildren %s: %v", urn.String(), err)
+		},
+		func() error {
+			result, err = self._ListChildren(config_obj, urn)
+			return err
+		})
 
 	return result, err
 }
