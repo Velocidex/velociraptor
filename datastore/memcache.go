@@ -15,6 +15,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -490,6 +491,15 @@ func (self *MemcacheDatastore) SetSubjectWithCompletion(
 func (self *MemcacheDatastore) SetData(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec, data []byte) (err error) {
+
+	max_size := uint64(constants.MAX_DATASTORE_OBJECTS)
+	if config_obj.Datastore.MaxObjectSize > 0 {
+		max_size = config_obj.Datastore.MaxObjectSize
+	}
+
+	if uint64(len(data)) > max_size {
+		return utils.Wrap(utils.MemoryError, "Datastore object exceeded")
+	}
 
 	err = self.data_cache.Set(
 		AsDatastoreFilename(self, config_obj, urn), &BulkData{

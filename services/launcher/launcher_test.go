@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -1529,6 +1530,40 @@ func (self *LauncherTestSuite) getIndex(client_id string) (
 		res = append(res, r)
 	}
 	return res
+}
+
+func (self *LauncherTestSuite) TestScheduleHugeArtifact() {
+	t := self.T()
+
+	flow_id := "F.FlowIdHuge"
+
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(t, err)
+
+	repository := self.LoadArtifacts(DependentArtifacts...)
+	acl_manager := acl_managers.NullACLManager{}
+
+	defer utils.SetFlowIdForTests(flow_id)()
+
+	flow_id, err = launcher.ScheduleArtifactCollection(
+		self.Ctx, self.ConfigObj, acl_manager,
+		repository, &flows_proto.ArtifactCollectorArgs{
+			Creator:   "admin",
+			ClientId:  constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			Artifacts: []string{"Test.Artifact"},
+			Specs: []*flows_proto.ArtifactSpec{{
+				Artifact: "Test.Artifact",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{{
+						Key:   "Foo",
+						Value: strings.Repeat("Hello", 1024*1024),
+					}},
+				},
+			}},
+		}, utils.SyncCompleter)
+
+	assert.Error(t, err)
+	assert.True(self.T(), errors.Is(err, utils.MemoryError))
 }
 
 func TestLauncher(t *testing.T) {

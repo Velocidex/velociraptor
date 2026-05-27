@@ -48,8 +48,8 @@ func (self *FlowStorageManager) WriteFlow(
 		return err
 	}
 
-	sesion_id, _ := utils.SplitSessionIdToParentAndChild(flow.SessionId)
-	flow_path_manager := paths.NewFlowPathManager(flow.ClientId, sesion_id)
+	session_id, _ := utils.SplitSessionIdToParentAndChild(flow.SessionId)
+	flow_path_manager := paths.NewFlowPathManager(flow.ClientId, session_id)
 
 	completer, closer := utils.NewCompleter(completion)
 	defer closer()
@@ -91,7 +91,8 @@ func (self *FlowStorageManager) WriteFlow(
 			config_obj, flow_path_manager.Requests(),
 			requests, completer.GetCompletionFunc())
 		if err != nil {
-			return err
+			return fmt.Errorf(
+				"While writing flow %v: %w", session_id, err)
 		}
 	}
 

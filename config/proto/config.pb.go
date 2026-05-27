@@ -2873,6 +2873,14 @@ type DatastoreConfig struct {
 	// should not happen normally but may happen if the deployment has
 	// been very active or due to a bug!
 	MaxDirSize uint64 `protobuf:"varint,13,opt,name=max_dir_size,json=maxDirSize,proto3" json:"max_dir_size,omitempty"`
+	// The maximum size of stored objects in the datastore. The
+	// Datastore is assumed to contain smallish objects which are read
+	// and written atomically. This setting places a limit on the size
+	// of these objects to mainain efficiency and speed. If you hit
+	// this limit it means that you need to rethink your approach. See
+	// https://docs.velociraptor.app/knowledge_base/tips/grpc_errors/
+	// The default size is 4Mb.
+	MaxObjectSize uint64 `protobuf:"varint,20,opt,name=max_object_size,json=maxObjectSize,proto3" json:"max_object_size,omitempty"`
 	// How long to expire the memcache (default 10 min)
 	MemcacheExpirationSec uint64 `protobuf:"varint,4,opt,name=memcache_expiration_sec,json=memcacheExpirationSec,proto3" json:"memcache_expiration_sec,omitempty"`
 	// How many mutations to queue up ahead of busy writers. By
@@ -2983,6 +2991,13 @@ func (x *DatastoreConfig) GetDiskCheckFrequencySec() int64 {
 func (x *DatastoreConfig) GetMaxDirSize() uint64 {
 	if x != nil {
 		return x.MaxDirSize
+	}
+	return 0
+}
+
+func (x *DatastoreConfig) GetMaxObjectSize() uint64 {
+	if x != nil {
+		return x.MaxObjectSize
 	}
 	return 0
 }
@@ -5402,7 +5417,7 @@ const file_config_proto_rawDesc = "" +
 	"\x15client_event_max_wait\x18\x17 \x01(\x04R\x12clientEventMaxWait\x12D\n" +
 	"\x1eartifact_definitions_directory\x18  \x01(\tR\x1cartifactDefinitionsDirectory\x124\n" +
 	"\x16collection_error_regex\x18# \x01(\tR\x14collectionErrorRegex\x12&\n" +
-	"\x0fdo_not_redirect\x18\x1a \x01(\bR\rdoNotRedirect\"\xc2\b\n" +
+	"\x0fdo_not_redirect\x18\x1a \x01(\bR\rdoNotRedirect\"\xea\b\n" +
 	"\x0fDatastoreConfig\x12&\n" +
 	"\x0eimplementation\x18\x01 \x01(\tR\x0eimplementation\x12\x1a\n" +
 	"\blocation\x18\x02 \x01(\tR\blocation\x12/\n" +
@@ -5411,7 +5426,8 @@ const file_config_proto_rawDesc = "" +
 	"\x19min_allowed_file_space_mb\x18\x0f \x01(\x03R\x15minAllowedFileSpaceMb\x127\n" +
 	"\x18disk_check_frequency_sec\x18\x10 \x01(\x03R\x15diskCheckFrequencySec\x12 \n" +
 	"\fmax_dir_size\x18\r \x01(\x04R\n" +
-	"maxDirSize\x126\n" +
+	"maxDirSize\x12&\n" +
+	"\x0fmax_object_size\x18\x14 \x01(\x04R\rmaxObjectSize\x126\n" +
 	"\x17memcache_expiration_sec\x18\x04 \x01(\x04R\x15memcacheExpirationSec\x12C\n" +
 	"\x1ememcache_write_mutation_buffer\x18\x05 \x01(\x03R\x1bmemcacheWriteMutationBuffer\x12E\n" +
 	"\x1fmemcache_write_mutation_writers\x18\x06 \x01(\x03R\x1cmemcacheWriteMutationWriters\x129\n" +

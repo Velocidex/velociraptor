@@ -983,6 +983,15 @@ message DatastoreConfig {
     // been very active or due to a bug!
     uint64 max_dir_size = 13;
 
+    // The maximum size of stored objects in the datastore. The
+    // Datastore is assumed to contain smallish objects which are read
+    // and written atomically. This setting places a limit on the size
+    // of these objects to mainain efficiency and speed. If you hit
+    // this limit it means that you need to rethink your approach. See
+    // https://docs.velociraptor.app/knowledge_base/tips/grpc_errors/
+    // The default size is 4Mb.
+    uint64 max_object_size = 20;
+
     // How long to expire the memcache (default 10 min)
     uint64 memcache_expiration_sec = 4;
 

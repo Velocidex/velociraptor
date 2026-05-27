@@ -119,6 +119,17 @@ func (self BaseTestSuite) TestSetSubjectWithCompletion() {
 	assert.Equal(self.T(), result[0], "Done")
 }
 
+func (self BaseTestSuite) TestSetSubjectLargeData() {
+	message := &crypto_proto.VeloMessage{
+		Source: strings.Repeat("Server", 1024*1024),
+	}
+	urn := path_specs.NewSafeDatastorePath("a", "b", "c").
+		SetType(api.PATH_TYPE_DATASTORE_PROTO)
+	err := self.datastore.SetSubject(self.config_obj, urn, message)
+	assert.Error(self.T(), err)
+	assert.True(self.T(), errors.Is(err, utils.MemoryError))
+}
+
 func (self BaseTestSuite) TestSetGetSubject() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
 
