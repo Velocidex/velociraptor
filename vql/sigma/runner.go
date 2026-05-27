@@ -43,7 +43,7 @@ func (self *SigmaExecutionContext) ChargeTime(ns int64) {
 // in serial while non-correlations run in parallel
 func (self *SigmaExecutionContext) balance() {
 	for _, r := range self.rules {
-		if r.Correlator == nil {
+		if len(r.Correlators) == 0 {
 			self.non_correlations = append(self.non_correlations, r)
 		} else {
 			self.correlations = append(self.correlations, r)
@@ -300,7 +300,7 @@ func NewSigmaContext(
 					continue
 				}
 
-				rule.Correlator = c
+				rule.Correlators = append(rule.Correlators, c)
 			}
 		}
 	}
