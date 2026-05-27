@@ -278,7 +278,7 @@ func (self *contextManager) Save() error {
 		self.config_obj, context,
 
 		services.GetFlowOptions{
-			// Request was not modified, dont touch it.
+			// Request was not modified, don't touch it.
 			Request: false,
 		},
 		utils.BackgroundWriter)
@@ -329,7 +329,7 @@ func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
 	err = launcher.Storage().WriteFlow(
 		ctx, self.config_obj, flow_context,
 		services.GetFlowOptions{
-			// Request was not modified, dont touch it.
+			// Request was not modified, don't touch it.
 			Request: false,
 		},
 		utils.SyncCompleter)

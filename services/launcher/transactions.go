@@ -102,7 +102,7 @@ func (self *Launcher) ResumeFlow(
 	err = self.Storage().WriteFlow(ctx, config_obj,
 		collection_context,
 		services.GetFlowOptions{
-			// Request was not modified, dont touch it.
+			// Request was not modified, don't touch it.
 			Request: false,
 		},
 		utils.SyncCompleter)

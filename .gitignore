@@ -11,6 +11,7 @@ ab0x.go
 output/
 .velociraptor_history.json
 .idea/
+.opencode/
 node_modules/
 package-lock.json
 __debug_bin

@@ -770,7 +770,7 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		OutstandingRequests: int64(len(vql_collector_args)),
 	}
 
-	// If this is a resumale flow:
+	// If this is a resumable flow:
 	// 1.  Move the previous request to the previous flows list.
 	// 2. Assign the new request to the flow request.
 	if existing_flow != nil {
@@ -796,7 +796,7 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		}
 
 		// Write the collection object so the GUI can start tracking
-		// it. Redact the request object from senstive parameters.
+		// it. Redact the request object from sensitive parameters.
 		redacted := redactCollectContext(collection_context)
 		err = self.Storage().WriteFlow(
 			ctx, config_obj, redacted,

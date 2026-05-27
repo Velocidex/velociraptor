@@ -125,7 +125,7 @@ func (self *ApiServer) CollectArtifact(
 	request := &flows_proto.ArtifactCollectorArgs{
 		ClientId: in.ClientId,
 
-		// Flow id may be specified to relaucnh a collection.
+		// Flow id may be specified to relaunch a collection.
 		FlowId:          in.FlowId,
 		Artifacts:       in.Artifacts,
 		Specs:           in.Specs,

@@ -5,7 +5,7 @@ description: |
 
   This artifact is collected when any new client is enrolled into the
   system. The Velociraptor server watches for completions of this
-  artifact and populates its internal client info indexe from this
+  artifact and populates its internal client info index from this
   artifact.
 
   You can edit this artifact to enhance the client's interrogation

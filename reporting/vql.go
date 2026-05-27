@@ -4,7 +4,7 @@
 package reporting
 
 import (
-	//lint:file-ignore ST1001 Bring in depedencies
+	//lint:file-ignore ST1001 Bring in dependencies
 	. "github.com/alecthomas/chroma"
 	"github.com/alecthomas/chroma/lexers"
 )

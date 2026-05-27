@@ -7,7 +7,7 @@ description: |
   patterns.
 
   If you change the `TopLevelDirectory` to the drive letter
-  (e.g. `C:\\`) it may take a lng time to complete as it will need to
+  (e.g. `C:\\`) it may take a long time to complete as it will need to
   examine every file on the drive.
 
 parameters:

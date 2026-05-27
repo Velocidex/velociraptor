@@ -1,6 +1,6 @@
 name: Windows.EventLogs.Symantec
 description: |
-  Searches Symantec Endpoint Protection Event event logs for
+  Searches Symantec Endpoint Protection event logs for
   high-value detection events like infostealers, backdoors, and
   exploits.
   

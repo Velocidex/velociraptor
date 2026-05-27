@@ -1,9 +1,9 @@
 name: Generic.Client.LocalLogsRetrieve
 description: |
-  Fetches encryted local log files from endpoints via the upload
+  Fetches encrypted local log files from endpoints via the upload
   function.
 
-  Tt is possible to tell the client to log to an encrypted local
+  It is possible to tell the client to log to an encrypted local
   storage file (see `Generic.Client.LocalLogs` for an example).
   
   This artifact allows us to collect the file from the client later

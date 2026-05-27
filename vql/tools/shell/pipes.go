@@ -54,7 +54,7 @@ func pumpFromPipeToOutput(
 		}
 
 		// If the buffer is not full, wait for it be filled. Sleep a
-		// small amount to allow the pipe to fill up so we dont end up
+		// small amount to allow the pipe to fill up so we don't end up
 		// making lots of small reads and generating many small rows.
 		if n < BUFFER_SIZE {
 			time.Sleep(300 * time.Millisecond)
