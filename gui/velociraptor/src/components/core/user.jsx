@@ -82,20 +82,15 @@ class _UserSettings extends React.Component {
                             document.body.classList.add("veloci-light");
                         }
                     }
-
-                    if(_.isEqual(traits, this.state.traits)) {
-                        return;
-                    };
-
                     this.setState({
                         traits: traits,
-                        messages: response.data.messages || []});
+                        messages: response.data.messages || 0});
                 });
     }
 
     state = {
         traits: {},
-        messages: [],
+        messages: 0,
         updateTraits: this.updateTraits,
     }
 

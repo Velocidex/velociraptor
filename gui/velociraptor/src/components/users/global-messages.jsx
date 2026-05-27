@@ -92,12 +92,12 @@ export default class GlobalMessages extends Component {
     }
 
     render() {
-        let msg = this.context.messages || [];
+        let msg = this.context.messages || 0;
         return (
             <>
               <Button
                 variant="primary"
-                disabled={msg.length == 0}
+                disabled={!msg}
                 className={" danger global-messages"}
                 onClick={()=>this.setState({show_messages: true})}
               >
