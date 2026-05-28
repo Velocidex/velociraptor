@@ -23,6 +23,7 @@ import (
 	"encoding/base32"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"path"
 	"strings"
 	"sync"
@@ -376,6 +377,12 @@ func (self *HuntDispatcher) CreateHunt(
 		hunt.StartTime = hunt.CreateTime
 	}
 
+	err = self.Store.SetHunt(ctx, hunt)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"While writing hunt %v: %w", hunt.HuntId, err)
+	}
+
 	row := ordereddict.NewDict().
 		Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
 		Set("Hunt", hunt)
@@ -392,10 +399,6 @@ func (self *HuntDispatcher) CreateHunt(
 		return nil, err
 	}
 
-	err = self.Store.SetHunt(ctx, hunt)
-	if err != nil {
-		return nil, err
-	}
 	return hunt, nil
 }
 

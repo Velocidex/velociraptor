@@ -34,6 +34,13 @@ export default class Snackbar extends React.Component {
 
     componentDidMount = () => {
         api.hooks.push(this.warn);
+        setInterval(()=>{
+            this.setState({now: Date.now()});
+        }, 1000);
+    }
+
+    componentWillUnmount = ()=>{
+        clearInterval(this.interval);
     }
 
     addMessage = (toasts, message)=>{
@@ -43,6 +50,7 @@ export default class Snackbar extends React.Component {
             if(message===toasts[i].body) {
                 toasts[i].key = getID();
                 toasts[i].show = true;
+                toasts[i].timestamp = Date.now();
                 return toasts;
             }
         }
@@ -51,6 +59,7 @@ export default class Snackbar extends React.Component {
             header: "Error",
             body: message,
             key: getID(),
+            timestamp: Date.now(),
         });
 
         // Only keep the last 5 toasts
@@ -74,6 +83,7 @@ export default class Snackbar extends React.Component {
 
     state = {
         toasts: [],
+        now: Date.now(),
     }
 
     dismiss = ()=>{
@@ -84,9 +94,8 @@ export default class Snackbar extends React.Component {
         return <ToastContainer>
                  {_.map(this.state.toasts, (t, idx)=>{
                      return <Toast key={t.key}
-                                   show={t.show}
-                                   delay={TIMEOUT}
-                                   autohide
+                                   show={t.show && (
+                                       (t.timestamp + TIMEOUT) > this.state.now)}
                                    bg="warning"
                                    onClose={()=>{
                          t.show = false,
@@ -94,6 +103,8 @@ export default class Snackbar extends React.Component {
                      }}>
                               <Toast.Header>
                                 <strong className="me-auto">{t.header}</strong>
+                                <small>{ parseInt((t.timestamp + TIMEOUT -
+                                                   this.state.now) / 1000) + 1 }</small>
                               </Toast.Header>
                               <Toast.Body>{t.body}</Toast.Body>
                             </Toast>;

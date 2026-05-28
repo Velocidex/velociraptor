@@ -68,6 +68,9 @@ func GetTable(
 	case "STACK":
 		result, err = getStackTable(ctx, config_obj, in)
 
+	case "USER_MESSAGES":
+		result, err = getUserMessages(ctx, in, principal)
+
 	case "NOTEBOOKS":
 		result, err = getNotebookTable(ctx, config_obj, in, principal)
 
@@ -485,4 +488,24 @@ func GetTableOptions(in *api_proto.GetTableRequest) (
 	options.EndIdx = in.EndIdx
 
 	return options, nil
+}
+
+func getUserMessages(
+	ctx context.Context,
+	in *api_proto.GetTableRequest,
+	principal string) (
+	*api_proto.GetTableResponse, error) {
+
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return nil, err
+	}
+
+	// User messages live in the root org.
+	root_config_obj, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return getTable(ctx, root_config_obj, in, principal)
 }

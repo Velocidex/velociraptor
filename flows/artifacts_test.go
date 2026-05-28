@@ -310,7 +310,8 @@ func (self *TestSuite) TestResourceLimits() {
 	runner.Close(self.Ctx)
 
 	// Load the collection context and see what happened.
-	collection_context, err := LoadCollectionContext(self.Ctx, self.ConfigObj,
+	collection_context, err := LoadCollectionContext(
+		self.Ctx, self.ConfigObj,
 		self.client_id, flow_id, services.GetFlowOptions{})
 	assert.NoError(self.T(), err)
 

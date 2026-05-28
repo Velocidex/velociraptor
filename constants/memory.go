@@ -11,4 +11,7 @@ const (
 
 	// The GUI will truncate the env to this many chars
 	MAX_ENV_TRUNCATE_LIMIT = 100
+
+	// The default max size of datastore objects.
+	MAX_DATASTORE_OBJECTS = 4 * 1024 * 1024
 )

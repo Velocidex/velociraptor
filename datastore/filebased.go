@@ -308,6 +308,15 @@ func writeContentToFile(
 		return datastoreNotConfiguredError
 	}
 
+	max_size := uint64(constants.MAX_DATASTORE_OBJECTS)
+	if config_obj.Datastore.MaxObjectSize > 0 {
+		max_size = config_obj.Datastore.MaxObjectSize
+	}
+
+	if uint64(len(data)) > max_size {
+		return utils.Wrap(utils.MemoryError, "Datastore object exceeded")
+	}
+
 	filename := AsDatastoreFilename(db, config_obj, urn)
 
 	// Truncate the file immediately so we don't need to make a second

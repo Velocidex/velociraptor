@@ -56,6 +56,14 @@ export default class HuntOverview extends React.Component {
         clearInterval(this.interval);
     }
 
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        let current_hunt_id = this.props.hunt && this.props.hunt.hunt_id;
+        let prev_hunt_id = prevProps.hunt && prevProps.hunt.hunt_id;
+        if(current_hunt_id != prev_hunt_id) {
+            this.loadFullHunt();
+        }
+    }
+
     huntState = () => {
         let hunt = this.props.hunt;
         let stopped = hunt.stats && hunt.stats.stopped;
