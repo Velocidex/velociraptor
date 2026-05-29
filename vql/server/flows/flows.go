@@ -145,13 +145,18 @@ func (self FlowsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 	}
 }
 
+type CancelFlowFunctionArgs struct {
+	ClientId string `vfilter:"required,field=client_id"`
+	FlowId   string `vfilter:"optional,field=flow_id"`
+}
+
 type CancelFlowFunction struct{}
 
 func (self *CancelFlowFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	arg := &FlowsPluginArgs{}
+	arg := &CancelFlowFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("cancel_flow: %s", err.Error())
@@ -201,10 +206,10 @@ func (self CancelFlowFunction) Info(
 	return &vfilter.FunctionInfo{
 		Name:    "cancel_flow",
 		Doc:     "Cancels the flow.",
-		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
+		ArgType: type_map.AddType(scope, &CancelFlowFunctionArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.COLLECT_SERVER, acls.COLLECT_CLIENT).Build(),
-		Version: 2,
+		Version: 3,
 	}
 }
 
@@ -276,10 +281,10 @@ func (self EnumerateFlowPlugin) Info(
 	return &vfilter.PluginInfo{
 		Name:    "enumerate_flow",
 		Doc:     "Enumerate all the files that make up a flow.",
-		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
+		ArgType: type_map.AddType(scope, &CancelFlowFunctionArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.READ_RESULTS).Build(),
-		Version: 2,
+		Version: 3,
 	}
 }
 
