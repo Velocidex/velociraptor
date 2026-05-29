@@ -150,9 +150,10 @@ func (self *Launcher) CancelFlow(
 	collection_context, err := self.Storage().LoadCollectionContext(
 		ctx, config_obj, client_id, flow_id,
 		services.GetFlowOptions{
-			// We don't need the request to cancel the flow.
-			Request: false,
+			// Need to send a cancel message for all the child flows.
+			Request: true,
 		})
+
 	if err == nil {
 		switch collection_context.State {
 		case flows_proto.ArtifactCollectorContext_RUNNING,
@@ -220,14 +221,25 @@ func (self *Launcher) CancelFlow(
 		cancel_msg.Principal = username
 	}
 
-	err = client_manager.QueueMessageForClient(ctx, client_id,
-		&crypto_proto.VeloMessage{
-			Urgent:    true,
-			Cancel:    cancel_msg,
-			SessionId: flow_id,
-		}, services.NOTIFY_CLIENT, nil)
-	if err != nil {
-		return nil, err
+	// Gather all the flows to cancel - including any child flows.
+	flows := map[string]bool{flow_id: true}
+	if collection_context != nil {
+		flows[collection_context.Request.FlowId] = true
+		for _, previous := range collection_context.PreviousFlows {
+			if previous.Request == nil || previous.Request.FlowId == "" {
+				continue
+			}
+			flows[previous.Request.FlowId] = true
+		}
+	}
+
+	for flow_id := range flows {
+		_ = client_manager.QueueMessageForClient(ctx, client_id,
+			&crypto_proto.VeloMessage{
+				Urgent:    true,
+				Cancel:    cancel_msg,
+				SessionId: flow_id,
+			}, services.NOTIFY_CLIENT, nil)
 	}
 
 	return &api_proto.StartFlowResponse{

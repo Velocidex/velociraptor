@@ -329,7 +329,8 @@ func (self *ClientFlowRunner) ProcessSingleMessage(
 	}
 
 	if msg.FlowStats != nil {
-		err := self.FlowStats(ctx, client_id, flow_id, msg.FlowStats)
+		err := self.FlowStats(
+			ctx, client_id, flow_id, child_flow_id, msg.FlowStats)
 		if err != nil {
 			return fmt.Errorf("FlowStats: %w", err)
 		}
@@ -568,7 +569,7 @@ func (self *ClientFlowRunner) handleUnknwonFlow(
 }
 
 func (self *ClientFlowRunner) FlowStats(
-	ctx context.Context, client_id, flow_id string,
+	ctx context.Context, client_id, flow_id, child_flow_id string,
 	msg *crypto_proto.FlowStats) error {
 
 	if msg.FlowComplete && len(msg.QueryStatus) == 1 {

@@ -34,6 +34,16 @@ import Card from 'react-bootstrap/Card';
 // Refresh every 5 seconds
 const SHELL_POLL_TIME = 5000;
 
+const getTime = (x)=>{
+    try{
+        let d = new Date(x);
+        return d.getTime();
+    } catch(e) {
+        return 0;
+    }
+}
+
+
 class _VeloShellCell extends Component {
     static propTypes = {
         flow_id: PropTypes.string,
@@ -59,6 +69,7 @@ class _VeloShellCell extends Component {
         loaded: false,
         showDeleteWizard: false,
         activeRows: {},
+        enabled: true,
 
         flow: {},
     }
@@ -181,11 +192,13 @@ class _VeloShellCell extends Component {
         // Inside setTimeout so we can run it outside the render
         // cycle.
         setTimeout(()=>{
-            this.scrollRef.current.scrollIntoView({
-                block: 'end',
-                inline: 'nearest',
-                behavior: "smooth",
-            });
+            if(this.scrollRef.current) {
+                this.scrollRef.current.scrollIntoView({
+                    block: 'end',
+                    inline: 'nearest',
+                    behavior: "smooth",
+                });
+            }
         }, 100);
     }
 
@@ -204,13 +217,14 @@ class _VeloShellCell extends Component {
 
     // Launch the command within this shell session.
     launchCommand = e=>{
-        if (!this.props.flow_id || !this.props.client_id) {
+        if (!this.props.flow_id || !this.props.client_id ||
+            !this.state.command) {
             return;
         }
 
         var params = {
             client_id: this.props.client_id,
-            flow_id: this.props.flow_id,
+            flow_id: this.props.flow_id + "/" + Date.now(),
             artifacts: [this.props.artifact],
             specs: [{
                 artifact: this.props.artifact,
@@ -224,10 +238,16 @@ class _VeloShellCell extends Component {
             urgent: true,
         };
 
+        this.setState({enabled: false});
         api.post('v1/CollectArtifact', params).then(response=>{
             // Refresh the artifacts immediately.
             this.props.fetchLastShellCollections();
             this.scrollToBottom();
+            // Block the launch button for a while for debouncing.
+            setTimeout(()=>{
+                this.setState({enabled: true});
+            }, 1000);
+
         }, this.source.token);
 
         // Clear the command after launching it.
@@ -335,7 +355,7 @@ class _VeloShellCell extends Component {
                               onClick={this.cancelFlow}>
                         <i><FontAwesomeIcon icon="stop"/></i>
                       </Button>
-                    </ToolTip>
+                      </ToolTip>
                 );
 
                 flow_status.push(
@@ -428,6 +448,7 @@ class _VeloShellCell extends Component {
                                })} />
                  <Button
                    variant="default"
+                   disabled={!this.state.enabled}
                    onClick={this.launchCommand}>
                    {T("Launch")}
                  </Button>
@@ -475,6 +496,7 @@ class _VeloShellCell extends Component {
         let commands = this.getAllRequests();
         let buttons = this.renderButtons();
         let output = "";
+        let latest_time = "";
         if (this.state.loaded) {
             let rows = this.state.output || [];
 
@@ -494,7 +516,8 @@ class _VeloShellCell extends Component {
                         };
                     }
                     current_trans.Command = item.Command;
-                    current_trans.Timestamp = item.Timestamp;
+                    current_trans.Timestamp = item.Timestamp;;
+                    latest_time = getTime(current_trans.Timestamp);
                     return;
                 };
 
@@ -551,25 +574,28 @@ class _VeloShellCell extends Component {
                         </Accordion.Item>;
             });
 
-            if(transactions.length < commands.length) {
-                for(let i=transactions.length; i<commands.length;i++) {
-                    let item = commands[i];
-                    items.push(<Accordion.Item key={i} eventKey={i}>
-                                 <Accordion.Header>
-                                   <Row lg="12">
-                                     <div className="shell-timestamp-user">
-                                       <VeloTimestamp
-                                         className="float-right"
-                                         usec={item.timestamp} /> ( {item.creator} ) { T("Pending") }
-                                     </div>
-                                     <pre className="shell-command-pending">
-                                       {item.command}
-                                     </pre>
-                                   </Row>
-                                 </Accordion.Header>
-                               </Accordion.Item>);
+            for(let i=0; i<commands.length;i++) {
+                let item = commands[i];
+                let ts = parseInt(item.timestamp ) / 1000;
+                if(ts < latest_time) {
+                    continue;
                 }
+                items.push(<Accordion.Item key={i} eventKey={i}>
+                                         <Accordion.Header>
+                                           <Row lg="12">
+                                             <div className="shell-timestamp-user">
+                                               <VeloTimestamp
+                                                 className="float-right"
+                                                 usec={item.timestamp} /> ( {item.creator} ) { T("Pending") }
+                                             </div>
+                                             <pre className="shell-command-pending">
+                                               {item.command}
+                                             </pre>
+                                           </Row>
+                                         </Accordion.Header>
+                                       </Accordion.Item>);
             }
+
 
             output = [
                 <Accordion

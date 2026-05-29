@@ -12,6 +12,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -159,10 +160,17 @@ func (self *ShellManager) newShellSession(
 		stdin:   stdin_pipe,
 		stdout:  stdout_pipe,
 		stderr:  stderr_pipe,
+
+		Started: utils.GetTime().Now(),
 	}
+	vql_subsystem.GetRootScope(scope).AddDestructor(res.Close)
 
 	wg.Add(1)
 	go pumpFromPipeToOutput(sub_ctx, wg, stdout_pipe, func(data []byte) {
+		res.updateStat(func(in *ShellSession) {
+			in.TotalBytesStdout += len(data)
+		})
+
 		select {
 		case <-sub_ctx.Done():
 			return
@@ -174,6 +182,10 @@ func (self *ShellManager) newShellSession(
 
 	wg.Add(1)
 	go pumpFromPipeToOutput(sub_ctx, wg, stderr_pipe, func(data []byte) {
+		res.updateStat(func(in *ShellSession) {
+			in.TotalBytesStderr += len(data)
+		})
+
 		select {
 		case <-sub_ctx.Done():
 			return
@@ -191,6 +203,11 @@ func (self *ShellManager) newShellSession(
 			res.Close()
 			return
 		}
+
+		res.updateStat(func(in *ShellSession) {
+			in.TotalBytesStdin += len(data)
+			in.LastCommand = string(data)
+		})
 
 		select {
 		case <-sub_ctx.Done():
@@ -228,6 +245,16 @@ func (self *ShellManager) newShellSession(
 	return res, nil
 }
 
+func (self *ShellManager) WriteProfile(ctx context.Context,
+	scope vfilter.Scope, output_chan chan vfilter.Row) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for _, v := range self.sessions {
+		v.WriteProfile(ctx, scope, output_chan)
+	}
+}
+
 // A shell is a persistent session
 type ShellSession struct {
 	mu sync.Mutex
@@ -246,14 +273,48 @@ type ShellSession struct {
 	command *exec.Cmd
 	closed  bool
 
+	// Stats
+	TotalBytesStdin  int
+	TotalBytesStdout int
+	TotalBytesStderr int
+	LastCommand      string
+	Started          time.Time
+
 	input  chan string
 	output chan vfilter.Row
+}
+
+func (self *ShellSession) updateStat(cb func(in *ShellSession)) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	cb(self)
+}
+
+func (self *ShellSession) WriteProfile(ctx context.Context,
+	scope vfilter.Scope, output_chan chan vfilter.Row) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	select {
+	case <-ctx.Done():
+		return
+	case output_chan <- ordereddict.NewDict().
+		Set("Name", self.Name).
+		Set("StartedAgo", utils.GetTime().Now().
+			Sub(self.Started).Round(time.Second).String()).
+		Set("LastCommand", self.LastCommand).
+		Set("TotalBytesStdin", self.TotalBytesStdin).
+		Set("TotalBytesStdout", self.TotalBytesStdout).
+		Set("TotalBytesStderr", self.TotalBytesStderr):
+	}
 }
 
 func (self *ShellSession) WriteStdin(ctx context.Context, data string) {
 	self.mu.Lock()
 	closed := self.closed
 	self.mu.Unlock()
+
 	if closed {
 		return
 	}
@@ -324,4 +385,10 @@ func (self StartShellFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 
 func init() {
 	vql_subsystem.RegisterFunction(&StartShellFunction{})
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:          "shell_sessions",
+		Description:   "Current state of the Shell sessions",
+		ProfileWriter: shellManager.WriteProfile,
+		Categories:    []string{"Global", "VQL", "Plugins"},
+	})
 }

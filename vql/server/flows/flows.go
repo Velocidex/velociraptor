@@ -15,10 +15,9 @@ import (
 )
 
 type FlowsPluginArgs struct {
-	ClientId           string `vfilter:"required,field=client_id"`
-	FlowId             string `vfilter:"optional,field=flow_id"`
-	IncludeFullRequest bool   `vfilter:"optional,field=full_request,doc=If specified we include the full request in the output. This can be very large."`
-	IncludeDownloads   bool   `vfilter:"optional,field=downloads,doc=If specified we include the flow exports in the output."`
+	ClientId string `vfilter:"required,field=client_id"`
+	FlowId   string `vfilter:"optional,field=flow_id"`
+	Summary  bool   `vfilter:"optional,field=summary,doc=If specified we fetch just the basic summary of the flow. This is a bit faster."`
 }
 
 type FlowsPlugin struct{}
@@ -82,8 +81,8 @@ func (self FlowsPlugin) Call(
 		if arg.FlowId != "" {
 			flow_details, err := launcher.GetFlowDetails(
 				ctx, config_obj, services.GetFlowOptions{
-					Downloads: arg.IncludeDownloads,
-					Request:   arg.IncludeFullRequest,
+					Downloads: !arg.Summary,
+					Request:   !arg.Summary,
 				},
 				arg.ClientId, arg.FlowId)
 			if err == nil {
@@ -108,8 +107,8 @@ func (self FlowsPlugin) Call(
 			result, err := launcher.GetFlows(ctx, config_obj,
 				arg.ClientId, options,
 				services.GetFlowOptions{
-					Downloads: arg.IncludeDownloads,
-					Request:   arg.IncludeFullRequest,
+					Downloads: !arg.Summary,
+					Request:   !arg.Summary,
 				},
 				offset, length)
 			if err != nil {
@@ -142,7 +141,7 @@ func (self FlowsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Doc:      "Retrieve the flows launched on each client.",
 		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
-		Version:  2,
+		Version:  3,
 	}
 }
 
@@ -327,8 +326,8 @@ func (self *GetFlowFunction) Call(ctx context.Context,
 	}
 	res, err := launcher.GetFlowDetails(
 		ctx, config_obj, services.GetFlowOptions{
-			Downloads: arg.IncludeDownloads,
-			Request:   arg.IncludeFullRequest,
+			Downloads: !arg.Summary,
+			Request:   !arg.Summary,
 		},
 		arg.ClientId, arg.FlowId)
 	if err != nil {
@@ -348,7 +347,7 @@ func (self GetFlowFunction) Info(
 		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.COLLECT_CLIENT, acls.COLLECT_SERVER).Build(),
-		Version: 2,
+		Version: 3,
 	}
 }
 

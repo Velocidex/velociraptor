@@ -367,7 +367,7 @@ FROM scope()
 
 		for _, vql := range mvql {
 			for row := range vql.Eval(self.Ctx, scope) {
-				golden += json.StringIndent(row)
+				golden += json.MustStringIndent(row)
 			}
 		}
 		scope.Close()

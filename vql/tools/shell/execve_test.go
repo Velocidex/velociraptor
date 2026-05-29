@@ -13,11 +13,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
-type ShellTestSuite struct {
+type ExecveTestSuite struct {
 	suite.Suite
 }
 
-func (self *ShellTestSuite) TestDefaultPipeReader() {
+func (self *ExecveTestSuite) TestDefaultPipeReader() {
 	parts := []string{}
 	golden := ordereddict.NewDict()
 
@@ -69,7 +69,7 @@ func (self *ShellTestSuite) TestDefaultPipeReader() {
 		json.MustMarshalIndent(golden))
 }
 
-func (self *ShellTestSuite) TestSplit() {
+func (self *ExecveTestSuite) TestSplit() {
 	parts := []string{}
 
 	cb := func(message string) {
@@ -96,5 +96,5 @@ func (self *ShellTestSuite) TestSplit() {
 }
 
 func TestExecvePlugin(t *testing.T) {
-	suite.Run(t, &ShellTestSuite{})
+	suite.Run(t, &ExecveTestSuite{})
 }

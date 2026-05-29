@@ -886,6 +886,10 @@ func (self *NotificationReader) SendToURL(
 		return err
 	}
 
+	if encrypted == nil {
+		return nil
+	}
+
 	message_info, err := self.manager.Decrypt(ctx, encrypted.Bytes())
 	if err != nil {
 		return err
