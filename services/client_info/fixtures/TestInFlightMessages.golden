@@ -1,6 +1,6 @@
 {
  "InFlightFlows": {
-  "client_id": "C.1234",
+  "client_id": "<cliendid>",
   "hostname": "Hostname",
   "has_tasks": true,
   "in_flight_flows": {
@@ -24,12 +24,12 @@
   }
  ],
  "AfterCompletion": {
-  "client_id": "C.1234",
+  "client_id": "<cliendid>",
   "hostname": "Hostname",
   "has_tasks": true
  },
  "SecondSetOfTasks": {
-  "client_id": "C.1234",
+  "client_id": "<cliendid>",
   "hostname": "Hostname",
   "has_tasks": true,
   "in_flight_flows": {

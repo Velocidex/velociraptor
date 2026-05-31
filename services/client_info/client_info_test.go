@@ -2,6 +2,8 @@ package client_info_test
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -19,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
@@ -60,7 +63,7 @@ sources:
 
 	// Create a client in the datastore so we can test initializing
 	// client info manager from legacy datastore records.
-	self.client_id = "C.1234"
+	self.client_id = fmt.Sprintf("C.1234%d", utils.GetId())
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -303,6 +306,10 @@ func (self *ClientInfoTestSuite) TestMetadataIndex() {
 	// We should be able to search for the metadata record.
 	assert.Equal(self.T(), 1, len(response.Names))
 	assert.Equal(self.T(), "dept:accountants", response.Names[0])
+}
+
+func (self *ClientInfoTestSuite) cleanFixture(in []byte) []byte {
+	return []byte(strings.ReplaceAll(string(in), self.client_id, "<cliendid>"))
 }
 
 func TestClientInfoService(t *testing.T) {
