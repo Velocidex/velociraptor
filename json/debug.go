@@ -7,11 +7,11 @@ import (
 )
 
 func Debug(v interface{}) {
-	fmt.Println(StringIndent(v))
+	fmt.Println(MustStringIndent(v))
 }
 
 func Dump(v interface{}) {
-	fmt.Println(StringIndent(v))
+	fmt.Println(MustStringIndent(v))
 }
 
 var g_idx uint64

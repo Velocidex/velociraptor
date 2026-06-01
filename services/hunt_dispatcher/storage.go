@@ -363,7 +363,7 @@ func (self *HuntStorageManagerImpl) GetTags(
 	ctx context.Context) (res []string) {
 
 	_ = self.ApplyFuncOnHunts(ctx, services.AllHunts,
-		// We dont care about the request, just change the tags.
+		// We don't care about the request, just change the tags.
 		services.GetHuntOptions{Request: false},
 		func(hunt *api_proto.Hunt) error {
 			if hunt != nil {

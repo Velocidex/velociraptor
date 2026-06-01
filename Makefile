@@ -132,3 +132,6 @@ api_check:
 
 container:
 	go run make.go -v container
+
+vale:
+	vale .

@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	vfilter_utils "www.velocidex.com/golang/vfilter/utils"
 )
 
 func PrintStack() {
@@ -41,6 +42,7 @@ func DlvBreak() {
 		fmt.Printf("Break")
 		PrintStack()
 	}
+	vfilter_utils.DlvBreak()
 }
 
 var (

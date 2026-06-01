@@ -67,6 +67,7 @@ func (self *FlowStorageManager) WriteFlow(
 		reducted.Request = &flows_proto.ArtifactCollectorArgs{
 			Creator:   flow.Request.Creator,
 			ClientId:  flow.Request.ClientId,
+			FlowId:    flow.SessionId,
 			Artifacts: flow.Request.Artifacts,
 			Urgent:    flow.Request.Urgent,
 

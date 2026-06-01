@@ -784,20 +784,13 @@
     the flow. It also removes any outstanding requests for the client
     if there are any.
   type: Function
-  version: 2
+  version: 3
   args:
   - name: client_id
     type: string
     required: true
   - name: flow_id
     type: string
-  - name: full_request
-    type: bool
-    description: If specified we include the full request in the output. This can
-      be very large.
-  - name: downloads
-    type: bool
-    description: If specified we include the flow exports in the output.
   category: server
   metadata:
     permissions: COLLECT_SERVER,COLLECT_CLIENT
@@ -2321,20 +2314,13 @@
     This plugin is mostly used for archiving or deleting a flow from
     the filestore.
   type: Plugin
-  version: 2
+  version: 3
   args:
   - name: client_id
     type: string
     required: true
   - name: flow_id
     type: string
-  - name: full_request
-    type: bool
-    description: If specified we include the full request in the output. This can
-      be very large.
-  - name: downloads
-    type: bool
-    description: If specified we include the flow exports in the output.
   category: server
   metadata:
     permissions: READ_RESULTS
@@ -3007,20 +2993,17 @@
     Each flow record will include the creator of the flow, the request
     and metadata about the collection.
   type: Plugin
-  version: 2
+  version: 3
   args:
   - name: client_id
     type: string
     required: true
   - name: flow_id
     type: string
-  - name: full_request
+  - name: summary
     type: bool
-    description: If specified we include the full request in the output. This can
-      be very large.
-  - name: downloads
-    type: bool
-    description: If specified we include the flow exports in the output.
+    description: If specified we fetch just the basic summary of the flow. This is
+      a bit faster.
   category: server
   metadata:
     permissions: READ_RESULTS
@@ -3430,20 +3413,17 @@
 - name: get_flow
   description: Gets flow details.
   type: Function
-  version: 2
+  version: 3
   args:
   - name: client_id
     type: string
     required: true
   - name: flow_id
     type: string
-  - name: full_request
+  - name: summary
     type: bool
-    description: If specified we include the full request in the output. This can
-      be very large.
-  - name: downloads
-    type: bool
-    description: If specified we include the flow exports in the output.
+    description: If specified we fetch just the basic summary of the flow. This is
+      a bit faster.
   category: server
   metadata:
     permissions: COLLECT_CLIENT,COLLECT_SERVER
@@ -4361,10 +4341,15 @@
   description: |
     Retrieve the list of hunts.
   type: Plugin
+  version: 2
   args:
   - name: hunt_id
     type: string
     description: A hunt id to read, if not specified we list all of them.
+  - name: summary
+    type: bool
+    description: If specified we fetch just the basic summary of the flow. This is
+      a bit faster.
   category: server
   metadata:
     permissions: READ_RESULTS

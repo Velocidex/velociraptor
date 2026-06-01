@@ -70,7 +70,7 @@ func MarshalString(v interface{}) (string, error) {
 	return string(result), nil
 }
 
-func StringIndent(v interface{}) string {
+func MustStringIndent(v interface{}) string {
 	result, err := MarshalIndent(v)
 	if err != nil {
 		panic(err)

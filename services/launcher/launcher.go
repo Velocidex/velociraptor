@@ -686,22 +686,36 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		client_session_id = session_id
 
 	} else {
+		// session id is e.g "F.1234/4":
+		// 1. The client receives this exact session
+		// 2. The server receives the base session id "F.1234"
+		client_session_id = session_id
+		var child_session_id string
+		session_id, child_session_id = utils.SplitSessionIdToParentAndChild(session_id)
+
 		// The user asked for a pre-determined flow id. It might be an
-		// existing flow. In this case we operate if flow append mode.
+		// existing flow. In this case we operate in flow append
+		// mode. If the child_session_id is empty make a unique one to
+		// create a valid child_session_id.
 		existing_flow, err = self.GetFlowDetails(ctx, config_obj,
 			services.GetFlowOptions{
 				// We need to modify the flow requests for resuming.
 				Request: true,
 			}, client_id, session_id)
-		if err == nil && existing_flow.Context != nil &&
-			existing_flow.Context.Request != nil {
+		if err == nil &&
+			existing_flow.Context != nil &&
+			existing_flow.Context.Request != nil &&
+			child_session_id == "" {
 
-			// When relaunching a flow, we modify the flow id to
-			// distinguish it from its parent flow.
+			// When relaunching a flow, we modify the flow id we send
+			// to the client to distinguish it from its parent flow.
 			client_session_id = fmt.Sprintf("%s/%d", session_id,
 				len(existing_flow.Context.PreviousFlows))
 		}
 	}
+
+	// Record the final client side flow id in the request object.
+	collector_request.FlowId = client_session_id
 
 	// How long to batch log messages for on the client.
 	batch_delay := time.Second * 2

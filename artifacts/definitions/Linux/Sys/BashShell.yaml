@@ -111,6 +111,10 @@ resources:
   # by the GUI.
   timeout: 3600
 
+  # Send responses as soon as they are available.
+  max_batch_wait: 1
+  max_batch_rows: 1
+
 column_types:
 - name: StdoutUpload
   type: preview_upload

@@ -4,6 +4,7 @@
  "request": {
   "creator": "admin",
   "client_id": "server",
+  "flow_id": "F.1234",
   "artifacts": [
    "TestMultiSourceSerial"
   ],

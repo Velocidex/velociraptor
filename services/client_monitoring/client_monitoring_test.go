@@ -122,7 +122,7 @@ func (self *ClientMonitoringTestSuite) TestUpdatingArtifacts() {
 
 	old_table_message := manager.GetClientUpdateEventTableMessage(
 		context.Background(), self.ConfigObj, self.client_id)
-	assert.NotContains(self.T(), json.StringIndent(old_table_message), "Crib")
+	assert.NotContains(self.T(), json.MustStringIndent(old_table_message), "Crib")
 
 	table_version := old_table_message.UpdateEventTable.Version
 
@@ -151,7 +151,7 @@ sources:
 
 		new_table_message = manager.GetClientUpdateEventTableMessage(
 			context.Background(), self.ConfigObj, self.client_id)
-		return strings.Contains(json.StringIndent(new_table_message), "Crib")
+		return strings.Contains(json.MustStringIndent(new_table_message), "Crib")
 	})
 
 	// Make sure the table version is updated
@@ -174,7 +174,7 @@ sources:
 
 		table := manager.GetClientUpdateEventTableMessage(
 			context.Background(), self.ConfigObj, self.client_id)
-		table_json = json.StringIndent(table)
+		table_json = json.MustStringIndent(table)
 
 		// The table should not contain the Crib any more
 		return !strings.Contains(table_json, "TestArtifact")

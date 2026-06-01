@@ -123,6 +123,7 @@ func (self *TestSuite) TestGetFlow() {
 			acl_managers.NullACLManager{},
 			repository, request1, nil)
 		assert.NoError(self.T(), err)
+		request1.FlowId = ""
 
 		flow_ids = append(flow_ids, flow_id)
 
@@ -131,6 +132,7 @@ func (self *TestSuite) TestGetFlow() {
 			acl_managers.NullACLManager{},
 			repository, request2, nil)
 		assert.NoError(self.T(), err)
+		request2.FlowId = ""
 
 		flow_ids = append(flow_ids, flow_id)
 	}

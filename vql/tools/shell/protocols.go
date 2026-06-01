@@ -63,8 +63,11 @@ func (self *ShellSession) Close() {
 
 	// Stop new writes
 	self.mu.Lock()
+	defer self.mu.Unlock()
+	if self.closed {
+		return
+	}
 	self.closed = true
-	self.mu.Unlock()
 
 	// Close pipes
 	self.stdin.Close()

@@ -40,8 +40,8 @@ import (
 )
 
 type HuntsPluginArgs struct {
-	HuntId             string `vfilter:"optional,field=hunt_id,doc=A hunt id to read, if not specified we list all of them."`
-	IncludeFullRequest bool   `vfilter:"optional,field=full_request,doc=If specified we include the full request in the output. This can be very large."`
+	HuntId  string `vfilter:"optional,field=hunt_id,doc=A hunt id to read, if not specified we list all of them."`
+	Summary bool   `vfilter:"optional,field=summary,doc=If specified we fetch just the basic summary of the flow. This is a bit faster."`
 }
 
 type HuntsPlugin struct{}
@@ -89,7 +89,7 @@ func (self HuntsPlugin) Call(
 		// Show a specific hunt
 		if arg.HuntId != "" {
 			hunt_obj, pres := hunt_dispatcher.GetHunt(ctx,
-				services.GetHuntOptions{Request: arg.IncludeFullRequest},
+				services.GetHuntOptions{Request: !arg.Summary},
 				arg.HuntId)
 			if pres {
 				select {
@@ -106,7 +106,7 @@ func (self HuntsPlugin) Call(
 
 		err = hunt_dispatcher.ApplyFuncOnHunts(
 			ctx, services.AllHunts,
-			services.GetHuntOptions{Request: arg.IncludeFullRequest},
+			services.GetHuntOptions{Request: !arg.Summary},
 			func(hunt *api_proto.Hunt) error {
 				hunts = append(hunts, json.ConvertProtoToOrderedDict(hunt))
 				return nil
@@ -134,6 +134,7 @@ func (self HuntsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Doc:      "Retrieve the list of hunts.",
 		ArgType:  type_map.AddType(scope, &HuntsPluginArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Version:  2,
 	}
 }
 

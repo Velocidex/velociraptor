@@ -22,8 +22,6 @@ const getID = ()=>{
 // for deleted resources.
 const hunt_not_found = /Hunt not found/i;
 
-
-
 export default class Snackbar extends React.Component {
     static propTypes = {
         // React router props.
@@ -93,9 +91,13 @@ export default class Snackbar extends React.Component {
     render() {
         return <ToastContainer>
                  {_.map(this.state.toasts, (t, idx)=>{
+                     let timeago = parseInt((t.timestamp + TIMEOUT -
+                                             this.state.now) / 1000) + 1;
+                     if (!t.show || timeago < 0) {
+                         return <></>;
+                     }
                      return <Toast key={t.key}
-                                   show={t.show && (
-                                       (t.timestamp + TIMEOUT) > this.state.now)}
+                                   show={t.show }
                                    bg="warning"
                                    onClose={()=>{
                          t.show = false,
@@ -103,8 +105,7 @@ export default class Snackbar extends React.Component {
                      }}>
                               <Toast.Header>
                                 <strong className="me-auto">{t.header}</strong>
-                                <small>{ parseInt((t.timestamp + TIMEOUT -
-                                                   this.state.now) / 1000) + 1 }</small>
+                                <small>{ timeago }</small>
                               </Toast.Header>
                               <Toast.Body>{t.body}</Toast.Body>
                             </Toast>;

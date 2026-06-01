@@ -21,18 +21,18 @@ func (self *TestSuite) TestWebSocketRetry() {
 		http_comms.WSConnectorFactory = http_comms.WebSocketConnectionFactoryImpl{}
 	}()
 
-	self.client_url = fmt.Sprintf("ws://localhost:%d/", self.port)
+	self.ClientUrl = fmt.Sprintf("ws://localhost:%d/", self.Port)
 	self.ConfigObj.Client.WsPingWaitSec = 1
 
 	// Bring up the server
-	self.ConfigObj.Frontend.BindPort = uint32(self.port)
-	self.ConfigObj.Client.ServerUrls = []string{self.client_url}
+	self.ConfigObj.Frontend.BindPort = uint32(self.Port)
+	self.ConfigObj.Client.ServerUrls = []string{self.ClientUrl}
 
 	server_ctx, server_cancel := context.WithCancel(self.Ctx)
 	defer server_cancel()
 
 	server_wg := &sync.WaitGroup{}
-	self.makeServer(server_ctx, server_wg)
+	self.MakeServer(server_ctx, server_wg)
 
 	client_ctx, client_cancel := context.WithCancel(self.Ctx)
 	defer client_cancel()
@@ -40,7 +40,7 @@ func (self *TestSuite) TestWebSocketRetry() {
 	client_wg := &sync.WaitGroup{}
 
 	// Create a HTTP Client Communicator to play with
-	self.makeClient(client_ctx, client_wg)
+	self.MakeClient(client_ctx, client_wg)
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return strings.Contains(getMemoryLogs(), "reader: Received Ping")

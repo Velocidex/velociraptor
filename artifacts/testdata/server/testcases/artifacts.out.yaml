@@ -59,7 +59,7 @@ Output: [
    "creator": "VelociraptorServer",
    "user_data": "",
    "client_id": "C.4f5e52adf0a337a9",
-   "flow_id": "",
+   "flow_id": "F.01",
    "urgent": false,
    "artifacts": [
     "Windows.Search.FileFinder"
@@ -107,7 +107,7 @@ Output: [
    "creator": "VelociraptorServer",
    "user_data": "",
    "client_id": "C.4f5e52adf0a337a9",
-   "flow_id": "",
+   "flow_id": "F.02",
    "urgent": false,
    "artifacts": [
     "Windows.Search.FileFinder"

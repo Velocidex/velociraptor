@@ -373,7 +373,11 @@ func AddSpecProtobuf(
 
 			case "json", "json_array":
 				if !is_str {
-					value_str = json.StringIndent(value_any)
+					value, err := json.MarshalIndent(value_any)
+					if err != nil {
+						return err
+					}
+					value_str = string(value)
 				}
 			}
 

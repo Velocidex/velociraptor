@@ -207,5 +207,6 @@ func (self *ClientInfoTestSuite) TestInFlightMessages() {
 	assert.NoError(self.T(), err)
 	golden.Set("SecondSetOfTasks", client_info)
 
-	goldie.Assert(self.T(), "TestInFlightMessages", json.MustMarshalIndent(golden))
+	goldie.Assert(self.T(), "TestInFlightMessages", self.cleanFixture(
+		json.MustMarshalIndent(golden)))
 }
