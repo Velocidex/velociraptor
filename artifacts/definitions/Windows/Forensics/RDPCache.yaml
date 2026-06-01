@@ -70,6 +70,12 @@ sources:
   - name: Parsed
     description: Parsed RDP BitmapCache files.
     query: |
+      -- Scope parsing to the requested DateAfter/DateBefore window.
+      LET DateAfterTime <= if(condition=DateAfter,
+        then=DateAfter, else=timestamp(epoch="1600-01-01"))
+      LET DateBeforeTime <= if(condition=DateBefore,
+        then=DateBefore, else=timestamp(epoch="2200-01-01"))
+
       LET PROFILE = '''[
         ["BIN_CONTAINER", 0, [
             [Magic, 0, String, {length: 8, term_hex : "FFFFFF" }],
@@ -114,6 +120,8 @@ sources:
             WHERE OSPath =~ '\.bin$'
                 AND OSPath =~ UserRegex
                 AND NOT IsDir
+                AND Mtime > DateAfterTime
+                AND Mtime < DateBeforeTime
         })
 
       LET find_index_differential = SELECT *, 0 - Parsed.CachedFiles.Index[0] as IndexDif
