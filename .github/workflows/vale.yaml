@@ -15,12 +15,17 @@ jobs:
         run: |
           git submodule update --init --recursive --remote
       - name: Run Vale
-        uses: vale-cli/vale-action@reviewdog
+        # https://github.com/vale-cli/vale-action/releases/tag/2.1.2
+        uses: vale-cli/vale-action@85f9f7f2c5f449ac0ae5b66662961bae3f77ca6a
         with:
-          # Set to true when we want to start having errors fail the pipeline.
+          # Set to true when we want to start having errors fail the
+          # pipeline.
           fail_on_error: false
-          # Only check lines touched by the PR to avoid reviewdog's "too many annotations" failures on full-corpus scans.
+          # Only check lines touched by the PR to avoid reviewdog's
+          # "too many annotations" failures on full-corpus scans.
           filter_mode: added
           reporter: github-pr-check
-          # Run vale locally to see all alert levels. In CI we only care about errors.
+          # Run vale locally to see all alert levels. In CI we only
+          # care about errors.
           vale_flags: "--minAlertLevel=error"
+x

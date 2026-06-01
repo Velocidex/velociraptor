@@ -687,7 +687,7 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 
 	} else {
 		// session id is e.g "F.1234/4":
-		// 1. The client receives this exact sesion
+		// 1. The client receives this exact session
 		// 2. The server receives the base session id "F.1234"
 		client_session_id = session_id
 		var child_session_id string
