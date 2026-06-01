@@ -28,4 +28,3 @@ jobs:
           # Run vale locally to see all alert levels. In CI we only
           # care about errors.
           vale_flags: "--minAlertLevel=error"
-x
