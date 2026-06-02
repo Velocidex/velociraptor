@@ -3,6 +3,8 @@ Transforms:
   Replace: "<srcDir>"
 - Regexp: '"(Size|StoredSize|sha256|md5)": .+'
   Replace: '"$1": <redacted>'
+- Regexp: "<srcDir>\\+"
+  Replace: "<srcDir>"
 
 Queries:
 # Test the remapping file created from Windows.Collectors.Remapping
