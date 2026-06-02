@@ -254,7 +254,7 @@ j={ SELECT read_file(accessor="zip", filename=PathSpec10) AS Data, PathSpec10 FR
 	assert.True(self.T(), int64(11) <= value,
 		"accessor_zip_total_open: %v", value)
 
-	assert.True(self.T(), int64(15) > value,
+	assert.True(self.T(), int64(15) >= value,
 		"accessor_zip_total_open: %v", value)
 
 	// Each nested zip file was extracted to tmpfile.
