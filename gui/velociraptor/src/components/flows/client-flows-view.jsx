@@ -28,7 +28,7 @@ class ClientFlowsView extends React.Component {
 
     componentDidMount = () => {
         this.source = CancelToken.source();
-
+        console.log("componentDidMount")
         let flow_id = this.props.match && this.props.match.params &&
             this.props.match.params.flow_id;
 
@@ -56,11 +56,12 @@ class ClientFlowsView extends React.Component {
     }
 
     fetchDetailedFlow = (client_id, flow_id) => {
+        let currentFlow = this.state.currentFlow || {};
         if(!client_id) {
-            client_id = this.state.client_id;
+            client_id = currentFlow.client_id;
         }
         if(!flow_id) {
-            flow_id = this.state.flow_id;
+            flow_id = currentFlow.session_id;
         }
 
         if(!flow_id || !client_id || flow_id === "new") {
@@ -176,6 +177,7 @@ class ClientFlowsView extends React.Component {
                       setSelectedFlow={this.setSelectedFlow}
                       client={this.props.client}/>
                     <FlowInspector
+                      refreshFlows={this.fetchDetailedFlow}
                       flow={this.state.currentFlow}
                       client={this.props.client}/>
                   </SplitPane>

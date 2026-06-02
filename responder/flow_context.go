@@ -332,9 +332,10 @@ func (self *FlowContext) FlushLogMessages(ctx context.Context) {
 }
 
 func (self *FlowContext) flushLogMessages(ctx context.Context) {
+	var messages []*crypto_proto.VeloMessage
 	buf, id, count, error_message := self.getLogMessages()
 	if len(buf) > 0 {
-		self.output <- &crypto_proto.VeloMessage{
+		messages = append(messages, &crypto_proto.VeloMessage{
 			SessionId: self.flow_id,
 			RequestId: constants.LOG_SINK,
 			LogMessage: &crypto_proto.LogMessage{
@@ -342,8 +343,21 @@ func (self *FlowContext) flushLogMessages(ctx context.Context) {
 				NumberOfRows: count,
 				Jsonl:        string(buf),
 				ErrorMessage: error_message,
-			}}
+			}})
 	}
+
+	// Dump the messages to the output in the background so we do not
+	// block the locks for too long.
+	go func() {
+		for _, msg := range messages {
+			select {
+			case <-ctx.Done():
+				return
+
+			case self.output <- msg:
+			}
+		}
+	}()
 }
 
 // Alert messages are sent in their own packet because the server will

@@ -41,10 +41,6 @@ class FlowInspector extends React.Component {
         this.source.cancel("unmounted");
     }
 
-    XXXcomponentDidUpdate(prevProps, prevState, snapshot) {
-
-    }
-
     setDefaultTab = (tab) => {
         let flow = this.props.flow;
         let client_id = flow.client_id;

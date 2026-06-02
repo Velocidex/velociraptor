@@ -1,0 +1,5 @@
+Queries:
+# Test the remapping file created from Windows.Collectors.Remapping
+- SELECT * FROM Artifact.Windows.Collectors.Remapping(
+    ZipPath=srcDir + "/artifacts/testdata/files/remapping_test.zip",
+    ZIP_PASSWORDS="infected")

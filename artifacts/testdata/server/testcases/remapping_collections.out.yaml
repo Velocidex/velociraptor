@@ -1,0 +1,170 @@
+# Test the remapping file created from Windows.Collectors.Remapping
+Query: SELECT * FROM Artifact.Windows.Collectors.Remapping( ZipPath=srcDir + "/artifacts/testdata/files/remapping_test.zip", ZIP_PASSWORDS="infected")
+Output: [
+ {
+  "CalculateMappings": [
+   {
+    "type": "permissions",
+    "permissions": [
+     "COLLECT_CLIENT",
+     "FILESYSTEM_READ",
+     "FILESYSTEM_WRITE",
+     "READ_RESULTS",
+     "MACHINE_STATE",
+     "SERVER_ADMIN",
+     "COLLECT_SERVER",
+     "EXECVE"
+    ]
+   },
+   {
+    "type": "impersonation",
+    "os": "windows",
+    "hostname": "WIN-SJE0CKQO83P",
+    "env": [
+     {
+      "key": "SystemRoot",
+      "value": "C:\\Windows"
+     },
+     {
+      "key": "WinDir",
+      "value": "C:\\Windows"
+     }
+    ],
+    "disabled_functions": [
+     "amsi",
+     "lookupSID",
+     "token"
+    ],
+    "disabled_plugins": [
+     "execve",
+     "http_client",
+     "users",
+     "certificates",
+     "handles",
+     "pslist",
+     "interfaces",
+     "modules",
+     "netstat",
+     "partitions",
+     "proc_dump",
+     "proc_yara",
+     "vad",
+     "winobj",
+     "wmi"
+    ]
+   },
+   {
+    "type": "shadow",
+    "from": {
+     "accessor": "zip"
+    },
+    "on": {
+     "accessor": "zip"
+    }
+   },
+   {
+    "type": "shadow",
+    "from": {
+     "accessor": "raw_reg"
+    },
+    "on": {
+     "accessor": "raw_reg"
+    }
+   },
+   {
+    "type": "shadow",
+    "from": {
+     "accessor": "data"
+    },
+    "on": {
+     "accessor": "data"
+    }
+   },
+   {
+    "type": "mount",
+    "scope": "\nLET OVERLAY_ACCESSOR_DELEGATES \u003c= dict(\n     accessor=\"collector\",\n     paths=[\n \"{\\\"DelegateAccessor\\\":\\\"collector\\\",\\\"DelegatePath\\\":\\\"{\\\\\\\"DelegateAccessor\\\\\\\":\\\\\\\"file\\\\\\\",\\\\\\\"DelegatePath\\\\\\\":\\\\\\\"/home/mic/projects/velociraptor/artifacts/testdata/files/remapping_test.zip\\\\\\\",\\\\\\\"Path\\\\\\\":\\\\\\\"data.zip\\\\\\\"}\\\",\\\"Path\\\":\\\"/uploads/auto/C%3A\\\"}\"\n])\n\nLET ZIP_PASSWORDS \u003c= \"infected\"\n",
+    "from": {
+     "accessor": "overlay"
+    },
+    "on": {
+     "accessor": "auto",
+     "prefix": "C:",
+     "path_type": "windows"
+    }
+   },
+   {
+    "type": "mount",
+    "scope": "\nLET OVERLAY_ACCESSOR_DELEGATES \u003c= dict(\n     accessor=\"collector\",\n     paths=[\n \"{\\\"DelegateAccessor\\\":\\\"collector\\\",\\\"DelegatePath\\\":\\\"{\\\\\\\"DelegateAccessor\\\\\\\":\\\\\\\"file\\\\\\\",\\\\\\\"DelegatePath\\\\\\\":\\\\\\\"/home/mic/projects/velociraptor/artifacts/testdata/files/remapping_test.zip\\\\\\\",\\\\\\\"Path\\\\\\\":\\\\\\\"data.zip\\\\\\\"}\\\",\\\"Path\\\":\\\"/uploads/auto/C%3A\\\"}\"\n])\n\nLET ZIP_PASSWORDS \u003c= \"infected\"\n",
+    "from": {
+     "accessor": "overlay"
+    },
+    "on": {
+     "accessor": "file",
+     "prefix": "C:",
+     "path_type": "windows"
+    }
+   },
+   {
+    "type": "mount",
+    "scope": "\nLET OVERLAY_ACCESSOR_DELEGATES \u003c= dict(\n     accessor=\"collector\",\n     paths=[\n \"{\\\"DelegateAccessor\\\":\\\"collector\\\",\\\"DelegatePath\\\":\\\"{\\\\\\\"DelegateAccessor\\\\\\\":\\\\\\\"file\\\\\\\",\\\\\\\"DelegatePath\\\\\\\":\\\\\\\"/home/mic/projects/velociraptor/artifacts/testdata/files/remapping_test.zip\\\\\\\",\\\\\\\"Path\\\\\\\":\\\\\\\"data.zip\\\\\\\"}\\\",\\\"Path\\\":\\\"/uploads/auto/C%3A\\\"}\"\n])\n\nLET ZIP_PASSWORDS \u003c= \"infected\"\n",
+    "from": {
+     "accessor": "overlay"
+    },
+    "on": {
+     "accessor": "ntfs",
+     "prefix": "C:",
+     "path_type": "windows"
+    }
+   }
+  ],
+  "Upload": {
+   "Path": "data",
+   "Size": 2408,
+   "UploadId": 0,
+   "StoredSize": 2408,
+   "sha256": "f08b31020ce043271d77b23d60385624ba5f2b40fe65d34f07d6be50e8ac90f9",
+   "md5": "e3a4c4f8aef79f6f84a2df12e6a25f10",
+   "StoredName": "/uploads/data/remapping.yaml",
+   "Components": [
+    "uploads",
+    "data",
+    "remapping.yaml"
+   ]
+  },
+  "RemappingFile": false,
+  "_Source": "Windows.Collectors.Remapping/WriteRemapping"
+ },
+ {
+  "CollectionHostinfo": {
+   "client_id": "C.7289b9e998244f2d-O123",
+   "hostname": "WIN-SJE0CKQO83P",
+   "fqdn": "WIN-SJE0CKQO83P",
+   "system": "windows",
+   "release": "Microsoft Windows Server 2022 Standard Evaluation21H2",
+   "architecture": "amd64",
+   "ip_address": "127.0.0.1:51647",
+   "ping": 1780794077829014,
+   "client_version": "0.76.5",
+   "client_name": "velociraptor",
+   "first_seen_at": 1764049480,
+   "build_time": "2026-06-02T04:30:54Z",
+   "mac_addresses": [
+    "00:0c:29:8c:32:9e"
+   ],
+   "last_interrogate_flow_id": "F.D4IK4I404IAGQ",
+   "last_interrogate_artifact_name": "Generic.Client.Info/BasicInformation",
+   "last_hunt_timestamp": 1779588181029072,
+   "last_event_table_version": 1780791322396615200
+  },
+  "_Source": "Windows.Collectors.Remapping/CollectionHostInfo"
+ },
+ {
+  "OSPath": "C:\\Windows",
+  "_Source": "Windows.Collectors.Remapping/TestFileAccess"
+ },
+ {
+  "OSPath": "C:\\Windows\\test.txt",
+  "_Source": "Windows.Collectors.Remapping/TestFileAccess"
+ }
+]
+
