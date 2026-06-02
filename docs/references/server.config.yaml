@@ -1037,6 +1037,15 @@ Datastore:
   #   default setting when communicating with newer clients.
   compression: "zlib"
 
+  # The maximum size of stored objects in the datastore. The Datastore
+  # is assumed to contain smallish objects which are read and written
+  # atomically. This setting places a limit on the size of these
+  # objects to mainain efficiency and speed. If you hit this limit it
+  # means that you need to rethink your approach. See
+  # https:docs.velociraptor.app/knowledge_base/tips/grpc_errors/ The
+  # default size is 4Mb.
+  max_object_size: 4194304
+
 ## Configure logging behavior
 Logging:
   ## A directory to write log files in .

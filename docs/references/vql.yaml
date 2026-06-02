@@ -22,7 +22,7 @@
 
     This allows artifacts to be nested and call other artifacts.
   type: Plugin
-  category: basic
+  category: popular
 - name: add_client_monitoring
   description: Adds a new artifact to the client monitoring table.
   type: Function
@@ -13364,4 +13364,3 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
-

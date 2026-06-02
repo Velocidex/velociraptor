@@ -240,7 +240,6 @@ class App extends Component {
                    </Nav>
                    <Nav>
                      <VeloLiveClock className="float-right" />
-                     <Snackbar />
                    </Nav>
                  </Navbar>
                </div>;
@@ -273,6 +272,7 @@ class App extends Component {
                   </Route>
                 </Switch>
                 <KeyboardHelp />
+                <Snackbar />
               </UserSettings>
             </div>
         );
