@@ -16,6 +16,13 @@ Output: [
   "Keywords": ""
  },
  {
+  "File": "remapping_test.zip",
+  "Hash": null,
+  "Size": 4229,
+  "Upload": null,
+  "Keywords": ""
+ },
+ {
   "File": "test.vhdx.zip",
   "Hash": null,
   "Size": 192870,
@@ -42,6 +49,17 @@ Output: [
    "SHA256": "8f4a1e6ca6165be96d8cbc621a758a676188f615dae947f695fa8c56273c6cd1"
   },
   "Size": 324724,
+  "Upload": null,
+  "Keywords": ""
+ },
+ {
+  "File": "remapping_test.zip",
+  "Hash": {
+   "MD5": "337739069318e94dd5361b4fe8a3f8b3",
+   "SHA1": "386ef35c2c3c74037a4d5bc8192263abd7859932",
+   "SHA256": "8f564cb73cf8d010791ea9a07703093926f12bc334e56d5aefc6ca25c42c7575"
+  },
+  "Size": 4229,
   "Upload": null,
   "Keywords": ""
  },
@@ -80,6 +98,13 @@ Output: [
   "Keywords": ""
  },
  {
+  "File": "remapping_test.zip",
+  "Hash": null,
+  "Size": 4229,
+  "Upload.md5": "337739069318e94dd5361b4fe8a3f8b3",
+  "Keywords": ""
+ },
+ {
   "File": "test.vhdx.zip",
   "Hash": null,
   "Size": 192870,
@@ -115,6 +140,13 @@ Output: [
   "File": "ext4_tests.zip",
   "Hash": null,
   "Size": 324724,
+  "Upload": null,
+  "Keywords": ""
+ },
+ {
+  "File": "remapping_test.zip",
+  "Hash": null,
+  "Size": 4229,
   "Upload": null,
   "Keywords": ""
  },

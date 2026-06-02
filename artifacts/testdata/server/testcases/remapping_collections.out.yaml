@@ -65,6 +65,24 @@ Output: [
    {
     "type": "shadow",
     "from": {
+     "accessor": "zip_nocase"
+    },
+    "on": {
+     "accessor": "zip_nocase"
+    }
+   },
+   {
+    "type": "shadow",
+    "from": {
+     "accessor": "collector"
+    },
+    "on": {
+     "accessor": "collector"
+    }
+   },
+   {
+    "type": "shadow",
+    "from": {
      "accessor": "raw_reg"
     },
     "on": {
@@ -82,7 +100,7 @@ Output: [
    },
    {
     "type": "mount",
-    "scope": "\nLET OVERLAY_ACCESSOR_DELEGATES \u003c= dict(\n     accessor=\"collector\",\n     paths=[\n \"{\\\"DelegateAccessor\\\":\\\"collector\\\",\\\"DelegatePath\\\":\\\"{\\\\\\\"DelegateAccessor\\\\\\\":\\\\\\\"file\\\\\\\",\\\\\\\"DelegatePath\\\\\\\":\\\\\\\"/home/mic/projects/velociraptor/artifacts/testdata/files/remapping_test.zip\\\\\\\",\\\\\\\"Path\\\\\\\":\\\\\\\"data.zip\\\\\\\"}\\\",\\\"Path\\\":\\\"/uploads/auto/C%3A\\\"}\"\n])\n\nLET ZIP_PASSWORDS \u003c= \"infected\"\n",
+    "scope": "\nLET OVERLAY_ACCESSOR_DELEGATES \u003c= dict(\n     accessor=\"collector\",\n     paths=[\n \"{\\\"DelegateAccessor\\\":\\\"collector\\\",\\\"DelegatePath\\\":\\\"{\\\\\\\"DelegateAccessor\\\\\\\":\\\\\\\"file\\\\\\\",\\\\\\\"DelegatePath\\\\\\\":\\\\\\\"<srcDir>/artifacts/testdata/files/remapping_test.zip\\\\\\\",\\\\\\\"Path\\\\\\\":\\\\\\\"data.zip\\\\\\\"}\\\",\\\"Path\\\":\\\"/uploads/auto/C%3A\\\"}\"\n])\n\nLET ZIP_PASSWORDS \u003c= \"infected\"\n",
     "from": {
      "accessor": "overlay"
     },
@@ -94,7 +112,7 @@ Output: [
    },
    {
     "type": "mount",
-    "scope": "\nLET OVERLAY_ACCESSOR_DELEGATES \u003c= dict(\n     accessor=\"collector\",\n     paths=[\n \"{\\\"DelegateAccessor\\\":\\\"collector\\\",\\\"DelegatePath\\\":\\\"{\\\\\\\"DelegateAccessor\\\\\\\":\\\\\\\"file\\\\\\\",\\\\\\\"DelegatePath\\\\\\\":\\\\\\\"/home/mic/projects/velociraptor/artifacts/testdata/files/remapping_test.zip\\\\\\\",\\\\\\\"Path\\\\\\\":\\\\\\\"data.zip\\\\\\\"}\\\",\\\"Path\\\":\\\"/uploads/auto/C%3A\\\"}\"\n])\n\nLET ZIP_PASSWORDS \u003c= \"infected\"\n",
+    "scope": "\nLET OVERLAY_ACCESSOR_DELEGATES \u003c= dict(\n     accessor=\"collector\",\n     paths=[\n \"{\\\"DelegateAccessor\\\":\\\"collector\\\",\\\"DelegatePath\\\":\\\"{\\\\\\\"DelegateAccessor\\\\\\\":\\\\\\\"file\\\\\\\",\\\\\\\"DelegatePath\\\\\\\":\\\\\\\"<srcDir>/artifacts/testdata/files/remapping_test.zip\\\\\\\",\\\\\\\"Path\\\\\\\":\\\\\\\"data.zip\\\\\\\"}\\\",\\\"Path\\\":\\\"/uploads/auto/C%3A\\\"}\"\n])\n\nLET ZIP_PASSWORDS \u003c= \"infected\"\n",
     "from": {
      "accessor": "overlay"
     },
@@ -106,7 +124,7 @@ Output: [
    },
    {
     "type": "mount",
-    "scope": "\nLET OVERLAY_ACCESSOR_DELEGATES \u003c= dict(\n     accessor=\"collector\",\n     paths=[\n \"{\\\"DelegateAccessor\\\":\\\"collector\\\",\\\"DelegatePath\\\":\\\"{\\\\\\\"DelegateAccessor\\\\\\\":\\\\\\\"file\\\\\\\",\\\\\\\"DelegatePath\\\\\\\":\\\\\\\"/home/mic/projects/velociraptor/artifacts/testdata/files/remapping_test.zip\\\\\\\",\\\\\\\"Path\\\\\\\":\\\\\\\"data.zip\\\\\\\"}\\\",\\\"Path\\\":\\\"/uploads/auto/C%3A\\\"}\"\n])\n\nLET ZIP_PASSWORDS \u003c= \"infected\"\n",
+    "scope": "\nLET OVERLAY_ACCESSOR_DELEGATES \u003c= dict(\n     accessor=\"collector\",\n     paths=[\n \"{\\\"DelegateAccessor\\\":\\\"collector\\\",\\\"DelegatePath\\\":\\\"{\\\\\\\"DelegateAccessor\\\\\\\":\\\\\\\"file\\\\\\\",\\\\\\\"DelegatePath\\\\\\\":\\\\\\\"<srcDir>/artifacts/testdata/files/remapping_test.zip\\\\\\\",\\\\\\\"Path\\\\\\\":\\\\\\\"data.zip\\\\\\\"}\\\",\\\"Path\\\":\\\"/uploads/auto/C%3A\\\"}\"\n])\n\nLET ZIP_PASSWORDS \u003c= \"infected\"\n",
     "from": {
      "accessor": "overlay"
     },
@@ -119,11 +137,11 @@ Output: [
   ],
   "Upload": {
    "Path": "data",
-   "Size": 2408,
+   "Size": <redacted>
    "UploadId": 0,
-   "StoredSize": 2408,
-   "sha256": "f08b31020ce043271d77b23d60385624ba5f2b40fe65d34f07d6be50e8ac90f9",
-   "md5": "e3a4c4f8aef79f6f84a2df12e6a25f10",
+   "StoredSize": <redacted>
+   "sha256": <redacted>
+   "md5": <redacted>
    "StoredName": "/uploads/data/remapping.yaml",
    "Components": [
     "uploads",

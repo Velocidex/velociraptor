@@ -177,6 +177,16 @@ parameters:
           accessor: zip
       - type: shadow
         from:
+          accessor: zip_nocase
+        "on":
+          accessor: zip_nocase
+      - type: shadow
+        from:
+          accessor: collector
+        "on":
+          accessor: collector
+      - type: shadow
+        from:
           accessor: raw_reg
         "on":
           accessor: raw_reg
@@ -346,13 +356,13 @@ sources:
 
 - name: TestRegistryAccess
   query: |
-    LET _ <= remap(config=YamlText)
+    LET _ <= remap(config=YamlText, clear=TRUE)
     SELECT OSPath
     FROM glob(globs="HKEY_LOCAL_MACHINE/Software/*", accessor='registry')
 
 - name: TestFileAccess
   query: |
-    LET _ <= remap(config=YamlText)
+    LET _ <= remap(config=YamlText, clear=TRUE)
     SELECT OSPath
     FROM glob(globs="*/**")
     LIMIT 5
