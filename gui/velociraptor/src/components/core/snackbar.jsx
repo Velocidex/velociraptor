@@ -32,7 +32,7 @@ export default class Snackbar extends React.Component {
 
     componentDidMount = () => {
         api.hooks.push(this.warn);
-        setInterval(()=>{
+        this.interval = setInterval(()=>{
             this.setState({now: Date.now()});
         }, 1000);
     }
@@ -56,6 +56,7 @@ export default class Snackbar extends React.Component {
         toasts.push({
             header: "Error",
             body: message,
+            show: true,
             key: getID(),
             timestamp: Date.now(),
         });
@@ -94,7 +95,7 @@ export default class Snackbar extends React.Component {
                      let timeago = parseInt((t.timestamp + TIMEOUT -
                                              this.state.now) / 1000) + 1;
                      if (!t.show || timeago < 0) {
-                         return <></>;
+                         return <React.Fragment key={t.key}/>;
                      }
                      return <Toast key={t.key}
                                    show={t.show }

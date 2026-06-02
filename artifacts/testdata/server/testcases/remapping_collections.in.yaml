@@ -1,0 +1,14 @@
+Transforms:
+- Scope: "srcDir"
+  Replace: "<srcDir>"
+- Regexp: '"(Size|StoredSize|sha256|md5)": .+'
+  Replace: '"$1": <redacted>'
+- Regexp: "<srcDir>\\\\+"
+  Replace: "<srcDir>"
+
+Queries:
+# Test the remapping file created from Windows.Collectors.Remapping
+- SELECT *
+  FROM Artifact.Windows.Collectors.Remapping(
+    ZipPath=srcDir + "/artifacts/testdata/files/remapping_test.zip",
+    ZIP_PASSWORDS="infected")

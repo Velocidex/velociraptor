@@ -101,11 +101,45 @@ type queryDesc struct {
 	Query   string
 }
 
+type Transform struct {
+	// Search for the content of this scope variable and replace it.
+	Scope string `yaml:"Scope"`
+
+	// Search for the literal string in the output and replace it.
+	Search string `yaml:"Search"`
+
+	// Search for the regular expression in the output and replace it.
+	Regexp  string `yaml:"Regexp"`
+	regexp  *regexp.Regexp
+	Replace string `yaml:"Replace"`
+}
+
 type testFixture struct {
+	Transforms    []Transform
 	Parameters    map[string]string
 	Queries       []queryDesc
 	ConfigPatches []string
 	ConfigMerges  []string
+}
+
+func (self *testFixture) NormalizeOutput(
+	ctx context.Context, scope vfilter.Scope, out []byte) string {
+	res := string(out)
+	for _, t := range self.Transforms {
+		if t.Scope != "" {
+			value, pres := scope.Resolve(t.Scope)
+			if pres {
+				value_str := utils.ToString(
+					vql_subsystem.Materialize(ctx, scope, value))
+				res = strings.ReplaceAll(res, value_str, t.Replace)
+			}
+		} else if t.Search != "" {
+			res = strings.ReplaceAll(res, t.Search, t.Replace)
+		} else if t.regexp != nil {
+			res = t.regexp.ReplaceAllString(res, t.Replace)
+		}
+	}
+	return res
 }
 
 // We want to emulate as closely as possible the logic in the artifact
@@ -300,7 +334,8 @@ func runTest(fixture *testFixture, sm *services.Service,
 			if !ok {
 				break
 			}
-			result += fmt.Sprintf("Output: %v\n\n", string(query_result.Payload))
+			result += fmt.Sprintf("Output: %v\n\n",
+				fixture.NormalizeOutput(ctx, scope, query_result.Payload))
 		}
 	}
 
@@ -430,9 +465,7 @@ func doGolden() error {
 		}
 
 		if !*testonly {
-			err = ioutil.WriteFile(
-				outfile,
-				[]byte(result), 0666)
+			err = ioutil.WriteFile(outfile, []byte(result), 0666)
 			if err != nil {
 				return fmt.Errorf("Unable to write golden file: %w", err)
 			}
@@ -492,7 +525,7 @@ func (self *MemoryLogWriter) Matches(pattern string) (bool, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	re, err := regexp.Compile(pattern)
+	re, err := regexp.Compile("(?i)" + pattern)
 	if err != nil {
 		return false, err
 	}
@@ -631,6 +664,7 @@ func parseFixture(data []byte) (res testFixture, err error) {
 	type tmpType struct {
 		ConfigMerges  []string          `yaml:"ConfigMerges"`
 		ConfigPatches []string          `yaml:"ConfigPatches"`
+		Transforms    []Transform       `yaml:"Transforms"`
 		Parameters    map[string]string `yaml:"Parameters"`
 		Queries       []yaml.Node       `yaml:"Queries"`
 	}
@@ -644,6 +678,7 @@ func parseFixture(data []byte) (res testFixture, err error) {
 	res.ConfigMerges = n.ConfigMerges
 	res.ConfigPatches = n.ConfigPatches
 	res.Parameters = n.Parameters
+	res.Transforms = n.Transforms
 	for _, node := range n.Queries {
 		if node.Kind != yaml.ScalarNode {
 			continue
@@ -654,6 +689,18 @@ func parseFixture(data []byte) (res testFixture, err error) {
 			Comment: node.HeadComment,
 		})
 	}
+
+	var transforms []Transform
+	for _, t := range res.Transforms {
+		if t.Regexp != "" {
+			t.regexp, err = regexp.Compile(t.Regexp)
+			if err != nil {
+				return res, err
+			}
+		}
+		transforms = append(transforms, t)
+	}
+	res.Transforms = transforms
 
 	return res, err
 }

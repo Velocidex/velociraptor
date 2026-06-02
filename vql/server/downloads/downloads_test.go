@@ -254,6 +254,56 @@ func (self *TestSuite) TestExportCollection1() {
 		json.MustMarshalIndent(uploads_json))
 }
 
+func (self *TestSuite) TestExportCollectionWithPassword() {
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
+
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: self.acl_manager,
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
+		Env:        ordereddict.NewDict(),
+	}
+
+	ctx := self.Ctx
+	scope := manager.BuildScope(builder)
+
+	import_file_path, err := filepath.Abs("fixtures/export.zip")
+	assert.NoError(self.T(), err)
+
+	result := collector.ImportCollectionFunction{}.Call(ctx, scope,
+		ordereddict.NewDict().
+			// Set a fixed client id to keep it predictable
+			Set("client_id", self.client_id).
+			Set("hostname", "MyNewHost").
+			Set("filename", import_file_path))
+	context, ok := result.(*flows_proto.ArtifactCollectorContext)
+	assert.True(self.T(), ok)
+	assert.Equal(self.T(), uint64(11), context.TotalUploadedBytes)
+
+	// Now create the download export. The plugin returns a filestore
+	// pathspec to the created download file.
+	result = (&CreateFlowDownload{}).Call(ctx, scope,
+		ordereddict.NewDict().
+			Set("client_id", context.ClientId).
+			Set("flow_id", context.SessionId).
+			Set("wait", true).
+			Set("password", "password").
+			Set("expand_sparse", false).
+			Set("name", "Test"))
+
+	// A zip file was created
+	path_spec, ok := result.(path_specs.FSPathSpec)
+	assert.True(self.T(), ok)
+
+	assert.Equal(self.T(),
+		"fs:/downloads/"+self.client_id+"/F.1234/Test.zip", path_spec.String())
+
+	// Now inspect the zip file
+	_, err = openZipFile(self.ConfigObj, scope, path_spec)
+	assert.Error(self.T(), err)
+	assert.ErrorContains(self.T(), err, "zip: invalid password")
+}
+
 func (self *TestSuite) TestExportHunt() {
 	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	defer closer()

@@ -320,7 +320,7 @@ func downloadFlowToZip(
 	client_info, err := client_info_manager.Get(ctx, client_id)
 	if err != nil {
 		client_info = &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
-		client_info.ClientId = client_id
+		client_info.ClientId = utils.ClientIdFromSource(client_id)
 	}
 
 	err = zip_writer.WriteJSON(
