@@ -2,7 +2,7 @@
 Query: SELECT magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe'), magic(path=srcDir + '/artifacts/testdata/files/test.docx'), magic(path=srcDir + '/artifacts/testdata/files/access.log') FROM scope()
 Output: [
  {
-  "magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe')": "PE32 executable (console) Intel 80386, for MS Windows",
+  "magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe')": "PE32 executable for MS Windows 10.00 (console), Intel i386, 5 sections",
   "magic(path=srcDir + '/artifacts/testdata/files/test.docx')": "Microsoft Word 2007+",
   "magic(path=srcDir + '/artifacts/testdata/files/access.log')": "ASCII text"
  }
@@ -20,7 +20,7 @@ Output: [
 Query: SELECT magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe', accessor="file"), magic(path=sampleLog, accessor="data", magic=ApacheMagic) FROM scope()
 Output: [
  {
-  "magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe', accessor=\"file\")": "PE32 executable (console) Intel 80386, for MS Windows",
+  "magic(path=srcDir + '/artifacts/testdata/files/notnbt.exe', accessor=\"file\")": "PE32 executable for MS Windows 10.00 (console), Intel i386, 5 sections",
   "magic(path=sampleLog, accessor=\"data\", magic=ApacheMagic)": "Apache Logs, ASCII text"
  }
 ]
