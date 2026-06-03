@@ -18,9 +18,10 @@ jobs:
     steps:
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
-    - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe
+    - name: Set up Go 1.25
+      uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
       with:
         go-version: '^1.25'
 
@@ -38,9 +39,7 @@ jobs:
         sudo apt-get install mingw-w64-x86-64-dev gcc-mingw-w64-x86-64 gcc-mingw-w64
 
     - name: Use Node.js
-      uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e
-      with:
-        node-version: 22.19
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
 
     - name: npm install gui
       run: |

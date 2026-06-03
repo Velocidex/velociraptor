@@ -82,6 +82,7 @@ func (self RawS3SystemAccessor) ReadDirWithOSPath(
 	}
 
 	if len(path.Components) == 0 {
+		metricS3OpsListObjects.Inc()
 		resp, err := s3Client.ListBuckets(self.ctx)
 		if err != nil {
 			return nil, err
@@ -256,7 +257,7 @@ func init() {
 	accessors.Register(&RawS3SystemAccessor{})
 }
 
-// Set the page size for tests. Normally we dont need to adjust this
+// Set the page size for tests. Normally we don't need to adjust this
 // at all. Used in tests.
 func SetPageSize(size int) {
 	mu.Lock()

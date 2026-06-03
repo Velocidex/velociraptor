@@ -67,8 +67,7 @@ func NewFlowRunner(
 	}
 
 	// Wait for completion until Close() is called.
-	result.completer = utils.NewCompleter(result.Complete)
-	result.closer = result.completer.GetCompletionFunc()
+	result.completer, result.closer = utils.NewCompleter(result.Complete)
 	return result
 }
 

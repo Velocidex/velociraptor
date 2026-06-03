@@ -7,9 +7,11 @@ import (
 	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
@@ -48,21 +50,33 @@ func doClientRPM() error {
 	// package on the same system where the logs should go.
 	logging.DisableLogging()
 
-	config_obj, err := makeDefaultConfigLoader().
-		WithRequiredClient().LoadAndValidate()
-	if err != nil {
-		return fmt.Errorf("Unable to load config file: %w", err)
+	if *config_path == "" {
+		return fmt.Errorf("A server config must be specified using the --config flag")
 	}
+
+	abs_config_path, err := filepath.Abs(*config_path)
+	if err != nil {
+		return err
+	}
+
+	temp_dir, err := tempfile.TempDir("debian")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(temp_dir)
+
+	blank_config := config.GetDefaultConfig()
+	blank_config.Datastore.Location = temp_dir
+	blank_config.Datastore.FilestoreDirectory = temp_dir
 
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
+	sm, err := startup.StartToolServices(ctx, blank_config)
 	if err != nil {
 		return err
 	}
+	defer sm.Close()
 
 	if *client_rpm_command_binary == "" {
 		*client_rpm_command_binary, err = os.Executable()
@@ -94,7 +108,8 @@ func doClientRPM() error {
 		Env: ordereddict.NewDict().
 			Set("Release", *rpm_command_release).
 			Set("Output", *client_rpm_command_output).
-			Set("BinaryToPackage", *client_rpm_command_binary),
+			Set("BinaryToPackage", *client_rpm_command_binary).
+			Set("ConfigPath", abs_config_path),
 	}
 
 	query := `
@@ -103,10 +118,11 @@ func doClientRPM() error {
        SELECT OSPath
        FROM rpm_create(exe=BinaryToPackage,
                        directory_name=Output,
+                       config=read_file(filename=ConfigPath, length=1000000),
                        release=Release)
 `
 
-	err = runQueryWithEnv(query, builder, "json")
+	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {
 		return err
 	}
@@ -120,20 +136,33 @@ func doServerRPM() error {
 	// package on the same system where the logs should go.
 	logging.DisableLogging()
 
-	config_obj, err := makeDefaultConfigLoader().
-		WithRequiredFrontend().LoadAndValidate()
-	if err != nil {
-		return fmt.Errorf("Unable to load config file: %w", err)
+	if *config_path == "" {
+		return fmt.Errorf("A server config must be specified using the --config flag")
 	}
-	ctx, cancel := install_sig_handler()
-	defer cancel()
 
-	sm, err := startup.StartToolServices(ctx, config_obj)
-	defer sm.Close()
-
+	abs_config_path, err := filepath.Abs(*config_path)
 	if err != nil {
 		return err
 	}
+
+	temp_dir, err := tempfile.TempDir("debian")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(temp_dir)
+
+	blank_config := config.GetDefaultConfig()
+	blank_config.Datastore.Location = temp_dir
+	blank_config.Datastore.FilestoreDirectory = temp_dir
+
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, blank_config)
+	if err != nil {
+		return err
+	}
+	defer sm.Close()
 
 	if *server_rpm_command_binary == "" {
 		*server_rpm_command_binary, err = os.Executable()
@@ -165,7 +194,8 @@ func doServerRPM() error {
 		Env: ordereddict.NewDict().
 			Set("Release", *rpm_command_release).
 			Set("Output", *server_rpm_command_output).
-			Set("BinaryToPackage", *server_rpm_command_binary),
+			Set("BinaryToPackage", *server_rpm_command_binary).
+			Set("ConfigPath", abs_config_path),
 	}
 
 	query := `
@@ -174,10 +204,11 @@ func doServerRPM() error {
        SELECT OSPath
        FROM rpm_create(exe=BinaryToPackage, server=TRUE,
                        directory_name=Output,
+                       config=read_file(filename=ConfigPath, length=1000000),
                        release=Release)
 `
 
-	err = runQueryWithEnv(query, builder, "json")
+	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {
 		return err
 	}

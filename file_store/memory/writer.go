@@ -3,6 +3,7 @@ package memory
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -136,7 +137,7 @@ func (self *MemoryWriter) _Flush() error {
 
 func (self *MemoryWriter) Close() error {
 	if self.closed {
-		// panic("MemoryWriter already closed")
+		return fmt.Errorf("MemoryWriter already closed")
 	}
 	self.closed = true
 

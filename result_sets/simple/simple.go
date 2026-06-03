@@ -102,10 +102,10 @@ func (self *ResultSetWriterImpl) SetSync() {
 }
 
 // WriteJSONL writes an entire JSONL blob to the end of the result
-// set. This is supposed to be very fast so we dont have to parse the
+// set. This is supposed to be very fast so we don't have to parse the
 // JSON (Typically the client sends us the complete JSON blob).  Since
-// we do not not know exactly where in the JSON blob each row starts
-// we update the index to refer to the begining of the row and the
+// we do not know exactly where in the JSON blob each row starts
+// we update the index to refer to the beginning of the row and the
 // number of rows from there.
 
 // The reader will find the correct row by loading the JSONL file at
@@ -114,6 +114,10 @@ func (self *ResultSetWriterImpl) SetSync() {
 func (self *ResultSetWriterImpl) WriteJSONL(serialized []byte, total_rows uint64) error {
 	if total_rows == 0 {
 		total_rows = countLines(serialized)
+	}
+
+	if total_rows > constants.MAX_ROW_LIMIT {
+		return utils.MemoryError
 	}
 
 	if len(serialized) == 0 {
@@ -276,7 +280,8 @@ func (self ResultSetFactory) NewResultSetWriter(
 	}
 
 	// Call the completion when both files are done.
-	completer := utils.NewCompleter(completion)
+	completer, closer := utils.NewCompleter(completion)
+	defer closer()
 
 	fd, err := file_store_factory.WriteFileWithCompletion(
 		log_path, completer.GetCompletionFunc())
@@ -566,7 +571,7 @@ func (self ResultSetFactory) DeleteResultSet(
 	// 3. optionally a chunk file for compressed result sets
 	// 4. A directory hierarchy of transformed cache files.
 
-	// Try to delete these but dont worry if they are missing
+	// Try to delete these but don't worry if they are missing
 	_ = file_store_factory.Delete(path.
 		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
 
@@ -609,7 +614,7 @@ func (self ResultSetFactory) NewResultSetReader(
 	}
 	// Keep the open file until the reader is closed.
 
-	// -1 indicates we dont know how many rows there are
+	// -1 indicates we don't know how many rows there are
 	total_rows := int64(-1)
 	var mtime time.Time
 	idx_fd, err := file_store_factory.ReadFile(log_path.

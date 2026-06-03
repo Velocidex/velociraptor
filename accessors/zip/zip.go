@@ -117,10 +117,10 @@ func (self *Tracker) Dec(filename string) {
 		} else {
 			self.refs[filename] = prev
 		}
-
-	} else {
-		panic(filename)
+		return
 	}
+
+	fmt.Printf("ZipTracker: Close of untracked Open: %v\n", filename)
 }
 
 func (self *Tracker) ProfileWriter(ctx context.Context,
