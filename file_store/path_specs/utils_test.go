@@ -45,6 +45,31 @@ func TestFromGenericComponentList(t *testing.T) {
 			path_type:   api.PATH_TYPE_FILESTORE_ANY,
 		},
 		{
+			// Client collection uploads
+			components: []string{
+				"clients", "C.d7f8859f5e0e01f7", "collections", "F.D55T34A0NIDTC",
+				"uploads", "data", "file.json"},
+			client_path: "/clients/C.d7f8859f5e0e01f7/collections/F.D55T34A0NIDTC/uploads/data/file.json",
+			path_type:   api.PATH_TYPE_FILESTORE_ANY,
+		},
+		{
+			// Client collection jsonl logs
+			components: []string{
+				"clients", "C.d7f8859f5e0e01f7",
+				"collections", "F.D55T34A0NIDTC", "logs.json"},
+			client_path: "/clients/C.d7f8859f5e0e01f7/collections/F.D55T34A0NIDTC/logs.json",
+			path_type:   api.PATH_TYPE_FILESTORE_JSON,
+		},
+		{
+			// Client collection jsonl logs
+			components: []string{
+				"clients", "C.d7f8859f5e0e01f7",
+				"artifacts", "System.VFS.ListDirectory",
+				"F.D55T34A0NIDTC", "Stats.json"},
+			client_path: "/clients/C.d7f8859f5e0e01f7/artifacts/System.VFS.ListDirectory/F.D55T34A0NIDTC/Stats.json",
+			path_type:   api.PATH_TYPE_FILESTORE_JSON,
+		},
+		{
 			// Client notebook attachments are always PATH_TYPE_FILESTORE_ANY
 			components: []string{
 				"clients", "C.d7f8859f5e0e01f7", "collections", "F.D55T34A0NIDTC",

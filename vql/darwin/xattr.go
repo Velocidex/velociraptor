@@ -4,6 +4,7 @@ package darwin
 
 import (
 	"context"
+	"sort"
 
 	"golang.org/x/sys/unix"
 
@@ -126,7 +127,10 @@ func List(path string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return stripPrefix(nullTermToStrings(buf[:size])), nil
+	res := stripPrefix(nullTermToStrings(buf[:size]))
+	sort.Strings(res)
+
+	return res, nil
 }
 
 // Associates data as an extended attribute of path.

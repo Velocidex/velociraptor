@@ -102,11 +102,6 @@ func getTypeFromComponents(components []string) ([]string, api.PathType) {
 		return components, api.PATH_TYPE_FILESTORE_ANY
 	}
 
-	// Client uploads are all untyped
-	if len(components) > 4 && components[0] == "clients" {
-		return components, api.PATH_TYPE_FILESTORE_ANY
-	}
-
 	last_component := components[len(components)-1]
 
 	// Fallback, use the extension to deduce the type.

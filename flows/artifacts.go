@@ -93,6 +93,8 @@ type CollectionContext struct {
 	// only happens once the collection is complete and results are
 	// written. It only happens at most once per collection.
 	send_update bool
+
+	closer func()
 }
 
 func NewCollectionContext(
@@ -105,7 +107,7 @@ func NewCollectionContext(
 	// If we need to send a notification we should wait until all parts of
 	// the collection are fully stored first to avoid a race with any
 	// listeners on System.Flow.Completion.
-	self.completer = utils.NewCompleter(func() {
+	self.completer, self.closer = utils.NewCompleter(func() {
 		self.mu.Lock()
 		defer self.mu.Unlock()
 
@@ -181,10 +183,7 @@ func closeContext(
 	config_obj *config_proto.Config,
 	collection_context *CollectionContext) error {
 
-	// Ensure the completion is not fired until we are done here
-	// completely.
-	completion_func := collection_context.completer.GetCompletionFunc()
-	defer completion_func()
+	defer collection_context.closer()
 
 	// Context is not dirty - nothing to do.
 	if !collection_context.Dirty || collection_context.ClientId == "" {

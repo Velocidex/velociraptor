@@ -49,6 +49,8 @@ type TimedResultSetWriterImpl struct {
 
 	// Set for internal artifact writers to avoid writing to disk at all.
 	internal bool
+
+	closer func()
 }
 
 func (self *TimedResultSetWriterImpl) Write(row *ordereddict.Dict) {
@@ -111,7 +113,7 @@ func (self *TimedResultSetWriterImpl) Flush() {
 	}
 
 	for _, row := range self.rows {
-		writer, err := self.getWriter(row.ts)
+		writer, err := self.getWriter()
 		if err == nil {
 			_ = writer.WriteBuffer(row.ts, row.serialized)
 		}
@@ -122,7 +124,7 @@ func (self *TimedResultSetWriterImpl) Flush() {
 	self.total_rows_cached = 0
 }
 
-func (self *TimedResultSetWriterImpl) getWriter(ts time.Time) (
+func (self *TimedResultSetWriterImpl) getWriter() (
 	*timelines.TimelineWriter, error) {
 	log_path, err := self.path_manager.GetPathForWriting()
 	if err != nil {
@@ -169,6 +171,7 @@ func (self *TimedResultSetWriterImpl) Close() {
 		self.log_path = nil
 		self.writer = nil
 	}
+	self.closer()
 }
 
 func NewTimedResultSetWriter(
@@ -182,6 +185,8 @@ func NewTimedResultSetWriter(
 		return nil, err
 	}
 
+	completer, closer := utils.NewCompleter(completion)
+
 	return &TimedResultSetWriterImpl{
 		config_obj:   config_obj,
 		path_manager: path_manager,
@@ -189,7 +194,8 @@ func NewTimedResultSetWriter(
 
 		// Only call the completion function once all writes
 		// completed.
-		completer: utils.NewCompleter(completion),
+		completer: completer,
+		closer:    closer,
 		internal:  log_path == nil,
 	}, nil
 }

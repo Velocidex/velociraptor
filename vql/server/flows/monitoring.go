@@ -187,7 +187,7 @@ func (self WatchMonitoringPlugin) Call(
 			return
 		}
 
-		journal, _ := services.GetJournal(config_obj)
+		journal, err := services.GetJournal(config_obj)
 		if err != nil {
 			return
 		}
@@ -235,7 +235,8 @@ func (self WatchMonitoringPlugin) Call(
 			case <-ctx.Done():
 				return
 
-			case output_chan <- row:
+			case output_chan <- row.
+				Update("_Source", arg.Artifact):
 			}
 		}
 	}()

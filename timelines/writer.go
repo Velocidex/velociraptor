@@ -146,7 +146,8 @@ func NewTimelineWriter(
 	result := &TimelineWriter{}
 
 	// Call the completer when both index and file are done.
-	completer := utils.NewCompleter(completion)
+	completer, closer := utils.NewCompleter(completion)
+	defer closer()
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 

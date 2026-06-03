@@ -118,7 +118,7 @@ FROM stat(filename=copy(
    filename=PATHSPEC + "data.zip",
    accessor="zip", dest=OUTPUT))
 `
-		return runQueryWithEnv(query, builder, *collector_decrypt_format)
+		return runQueryWithEnv(ctx, query, builder, *collector_decrypt_format)
 	}
 
 	if *collector_decrypt_show_password {

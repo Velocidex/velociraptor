@@ -156,7 +156,7 @@ func (self *ExecutorTestSuite) TestCancellation() {
 	assert.Equal(self.T(), crypto_proto.VeloStatus_GENERIC_ERROR,
 		stats.FlowStats.QueryStatus[0].Status)
 	assert.Contains(self.T(), getLogMessages(received_messages),
-		"Cancelled all inflight queries")
+		"Cancelled all in-flight queries")
 }
 
 // Exceeding flow upload limit will cancel the flow
@@ -226,7 +226,7 @@ func (self *ExecutorTestSuite) TestUploadCancellation() {
 		"Upload bytes 37 exceeded limit 10 for flow")
 
 	assert.Contains(self.T(), getLogMessages(received_messages),
-		"Cancelled all inflight queries")
+		"Cancelled all in-flight queries")
 }
 
 // Exceeding row limit will cancel flow
@@ -295,7 +295,7 @@ func (self *ExecutorTestSuite) TestRowLimitCancellation() {
 	assert.Contains(self.T(), stats.FlowStats.QueryStatus[0].ErrorMessage,
 		"Rows 11 exceeded limit 10 for flow")
 	assert.Contains(self.T(), getLogMessages(received_messages),
-		"Cancelled all inflight queries")
+		"Cancelled all in-flight queries")
 }
 
 // Test the total result row count is accurate
@@ -635,7 +635,7 @@ func (self *ExecutorTestSuite) TestFlowStatsRequest() {
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		// Should be two messages - first is status of the real flow,
 		// second is a "Flow not known - maybe the client crashed?"
-		// message for the not existant flow we dont know about. This
+		// message for the non-existent flow we don't know about. This
 		// should cause the server to error out that outstanding flow.
 		return len(collector.Messages()) == 2
 	})

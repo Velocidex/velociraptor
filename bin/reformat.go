@@ -75,7 +75,7 @@ func doReformat() error {
                AND copy(accessor="data", dest=_value, filename=Result.Artifact))
        AND FALSE
     `
-	err = runQueryWithEnv(query, builder, "json")
+	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {
 		logger.Error("reformat: error running query: %v", query)
 	}
