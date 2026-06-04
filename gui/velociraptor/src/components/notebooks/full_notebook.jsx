@@ -74,7 +74,6 @@ class FullScreenNotebook extends React.Component {
         if(!notebook_id) {
             return;
         }
-        console.log(notebook_id);
         // Does the notebook id refers to a hunt notebook
         let parts = /^N.(F.[^-]+)-(.+)$/.exec(notebook_id);
         if(!_.isEmpty(parts)) {

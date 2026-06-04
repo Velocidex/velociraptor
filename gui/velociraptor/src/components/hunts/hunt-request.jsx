@@ -42,6 +42,10 @@ export default class HuntRequest extends React.Component {
     }
 
     loadFullHunt = (hunt_id) => {
+        if(hunt_id === "new") {
+            return;
+        }
+
         this.source.cancel();
         this.source = CancelToken.source();
 

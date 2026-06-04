@@ -28,7 +28,6 @@ class ClientFlowsView extends React.Component {
 
     componentDidMount = () => {
         this.source = CancelToken.source();
-        console.log("componentDidMount")
         let flow_id = this.props.match && this.props.match.params &&
             this.props.match.params.flow_id;
 
