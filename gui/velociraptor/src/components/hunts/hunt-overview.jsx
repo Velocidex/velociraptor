@@ -83,7 +83,7 @@ export default class HuntOverview extends React.Component {
 
     loadFullHunt = () => {
         let hunt_id = this.props.hunt && this.props.hunt.hunt_id;
-        if(!hunt_id){
+        if(!hunt_id || hunt_id === "new"){
             return;
         };
 

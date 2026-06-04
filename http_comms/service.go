@@ -43,7 +43,6 @@ func StartHttpCommunicatorService(
 		ordereddict.NewDict().
 			Set("server_urls", config_obj.Client.ServerUrls))
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
 		return nil, err
 	}
 

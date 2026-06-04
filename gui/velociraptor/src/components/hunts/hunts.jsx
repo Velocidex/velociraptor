@@ -83,7 +83,7 @@ class VeloHunts extends React.Component {
             hunt_id = this.state.selected_hunt_id;
         };
 
-        if(!hunt_id) {
+        if(!hunt_id || hunt_id === "new") {
             return;
         }
 
