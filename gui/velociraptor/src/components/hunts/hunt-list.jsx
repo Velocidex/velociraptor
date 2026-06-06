@@ -70,6 +70,10 @@ class ModifyHuntDialog extends React.Component {
 
         // Tags to be assigned to the hunt
         tags: [],
+
+        // Take a snapshot of the hunt. We compare the updated status
+        // to this snapshot to figure out the mutation.
+        hunt: {},
     }
 
     // Fetch all available tags to prefill the selector box.
@@ -85,7 +89,10 @@ class ModifyHuntDialog extends React.Component {
                     let hunt = this.props.hunt;
                     if(hunt) {
                         let tags = this.props.hunt.tags || [];
-                        this.setState({tags: [...tags]});
+                        this.setState({
+                            tags: [...tags],
+                            hunt: this.props.hunt,
+                        });
                     }
                 };
         });
@@ -94,6 +101,11 @@ class ModifyHuntDialog extends React.Component {
     componentDidMount = () => {
         this.source = CancelToken.source();
         this.getTags();
+        let tags = this.props.hunt && this.props.hunt.tags;
+        this.setState({
+            tags: tags || [],
+            hunt: this.props.hunt,
+        });
     }
 
     componentWillUnmount() {
@@ -117,9 +129,17 @@ class ModifyHuntDialog extends React.Component {
 
         if (!hunt_id) { return; };
 
+        let tags = this.state.tags;
+        let old_tags = this.props.hunt.tags;
+
+        // The user wants to completely clear the tags.
+        if(tags.length == 0 && old_tags.length > 0) {
+            tags = ["-"];  // Special label means clear all.
+        }
+
         api.post("v1/ModifyHunt", {
             description: description,
-            tags: this.state.tags,
+            tags: tags,
             expires: this.getExpiryEpoch() * 1000000,
             hunt_id: hunt_id,
         }, this.source.token).then((response) => {
@@ -128,6 +148,10 @@ class ModifyHuntDialog extends React.Component {
     }
 
     render() {
+        if(_.isEmpty(this.state.hunt)) {
+            return <></>;
+        }
+
         let description = this.state.description || this.props.hunt.hunt_description;
         let expires = this.getExpiryEpoch();
         let now = Date.now() / 1000;
@@ -136,8 +160,8 @@ class ModifyHuntDialog extends React.Component {
             return {value: x, label: x};
         });
 
-        let tag_defaults = _.map(this.state.tags,
-                                 x=>{return {value: x, label: x};});
+        let tag_defaults = _.map(
+            this.state.tags, x=>{return {value: x, label: x};});
 
         return <Modal show={true}
                       size="lg"
