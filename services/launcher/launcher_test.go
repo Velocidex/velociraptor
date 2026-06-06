@@ -1545,7 +1545,7 @@ func (self *LauncherTestSuite) TestScheduleHugeArtifact() {
 
 	defer utils.SetFlowIdForTests(flow_id)()
 
-	flow_id, err = launcher.ScheduleArtifactCollection(
+	_, err = launcher.ScheduleArtifactCollection(
 		self.Ctx, self.ConfigObj, acl_manager,
 		repository, &flows_proto.ArtifactCollectorArgs{
 			Creator:   "admin",

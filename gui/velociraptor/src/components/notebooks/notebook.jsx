@@ -41,9 +41,13 @@ class Notebooks extends React.Component {
     componentWillUnmount() {
         this.source.cancel();
         clearInterval(this.interval);
+        this.unmounted = true;
     }
 
     updateVersion = ()=>{
+        if(this.unmounted) {
+            return;
+        }
         this.setState({version: this.state.version+1});
         let notebook_id = this.state.selected_notebook &&
             this.state.selected_notebook.notebook_id;
@@ -61,6 +65,10 @@ class Notebooks extends React.Component {
     }
 
     setSelectedNotebook = (notebook_id) => {
+        if(notebook_id === "new") {
+            return;
+        }
+
         // Fetch the data again with more details this time
         this.source.cancel();
         this.source = CancelToken.source();

@@ -382,11 +382,34 @@ class HuntList extends React.Component {
             let name = this.props.match && this.props.match.params &&
                 this.props.match.params.tab;
 
+            let params_json = this.props.match && this.props.match.params &&
+                this.props.match.params.params_json;
+            let flow_params = {};
+
+            if(params_json) {
+                try {
+                    flow_params = JSON.parse(
+                        decodeURIComponent(params_json));
+                } catch(e) {
+                    console.log("Error parsing params_json ", e, params_json);
+                };
+            }
+
+            let specs = flow_params.specs || {};
+            if(_.isEmpty(specs)) {
+                specs[name] = {};
+            }
+
+            let env = _.map(specs[name], (v, k)=>{
+                return {key: k, value: str(v)};
+            });
+
             this.setState({
                 showCopyWizard: true,
                 full_selected_hunt: {
                     start_request: {
                         artifacts: [name],
+                        specs: [{artifact: name, parameters: {env: env}}],
                     },
                 },
             });
@@ -903,4 +926,21 @@ const huntRowRenderer = self=>{
             });
         },
     };
+};
+
+
+const str = x=>{
+    if(_.isNumber(x)) {
+        return x.toString();
+    }
+
+    if(_.isString(x)) {
+        return x;
+    };
+
+    if(_.isUndefined(x)) {
+        return x;
+    }
+
+    return JSON.stringify(x);
 };

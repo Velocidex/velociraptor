@@ -182,7 +182,7 @@ class App extends Component {
                        <ArtifactInspector client={this.state.client}/>
                      </Route>
                      <Route path="/users/:user?" component={UserInspector}/>
-                     <Route path="/hunts/:hunt_id?/:tab?">
+                     <Route path="/hunts/:hunt_id?/:tab?/:params_json?">
                        <VeloHunts/>
                      </Route>
                      <Route path="/host/:client_id([^/]{7,})/:action?">
@@ -212,14 +212,14 @@ class App extends Component {
                        * "server". For now we assume the client_id is
                        * longer than 7 chars
                        */}
-                     <Route path="/collected/:client_id([^/]{7,})/:flow_id?/:tab?">
+                     <Route path="/collected/:client_id([^/]{7,})/:flow_id?/:tab?/:params_json?">
                        <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
                        <ClientFlowsView client={this.state.client} />
                      </Route>
                      <Route path="/collected/server/:flow_id?/:tab?">
                        <ServerFlowsView />
                      </Route>
-                     <Route path="/notebooks/:notebook_id?">
+                     <Route path="/notebooks/:notebook_id?/:artifact?/:params_json?">
                        <Notebook />
                      </Route>
                      <Route path="/events/:client_id([^/]{7,})/:artifact?/:time?">
