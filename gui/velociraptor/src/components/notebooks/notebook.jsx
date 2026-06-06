@@ -109,8 +109,6 @@ class Notebooks extends React.Component {
 
         }).catch(response=>{
             let status = response.response && response.response.status;
-            let notebook_id = this.state.selected_notebook &&
-                this.state.selected_notebook.notebook_id;
             if(status === 404) {
                 setItem(schema.CurrentNotebookIdKey, "");
                 this.props.history.push("/notebooks");

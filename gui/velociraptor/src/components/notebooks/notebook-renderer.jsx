@@ -52,9 +52,10 @@ export default class NotebookRenderer extends React.Component {
     // Ensure that each cell has a ref we can use for scrolling.
     makeCellRefs = ()=>{
         _.each(this.props.notebook.cell_metadata, x=>{
-            let existing = this.state.refs[x.cell_id];
+            let refs = this.state.refs;
+            let existing = refs[x.cell_id];
             if(!existing) {
-                this.state.refs[x.cell_id] = React.createRef();
+                refs[x.cell_id] = React.createRef();
             }
         });
     }
