@@ -99,7 +99,7 @@ class NotebooksList extends React.Component {
         showDeleteNotebookDialog: false,
         showEditNotebookDialog: false,
         showExportNotebookDialog: false,
-        showNotebookUploadsDialog: false,
+        showNewFromRouterWizard: false,
 
         transform: {},
         filter: "",
