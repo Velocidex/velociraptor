@@ -242,7 +242,32 @@ class FlowsList extends React.Component {
     componentDidMount = () => {
         this.source = CancelToken.source();
         this.interval = setInterval(this.incrementVersion, POLL_TIME);
+        this.setStateFromRouter();
+    }
 
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+        if (this.interval) {
+            clearInterval(this.interval);
+        }
+    }
+
+    // Set the table in focus when the component mounts for the first time.
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        let selected_flow = this.props.selected_flow &&
+            this.props.selected_flow.session_id;
+        let prev_selection = prevProps.selected_flow &&
+            prevProps.selected_flow.session_id;
+        let router_flow = this.props.match && this.props.match.params &&
+            this.props.match.params.flow_id;
+
+        if(selected_flow != prev_selection || router_flow == "new") {
+            this.setStateFromRouter();
+        }
+        return false;
+    }
+
+    setStateFromRouter = ()=>{
         let action = this.props.match && this.props.match.params &&
             this.props.match.params.flow_id;
 
@@ -263,12 +288,37 @@ class FlowsList extends React.Component {
                 return;
             }
 
+            let params_json = this.props.match && this.props.match.params &&
+                this.props.match.params.params_json;
+            let flow_params = {};
+
+            if(params_json) {
+                try {
+                    flow_params = JSON.parse(
+                        decodeURIComponent(params_json));
+                } catch(e) {
+                    console.log("Error parsing params_json ", e, params_json);
+                };
+            }
+
+            let specs = flow_params.specs || {};
+            if(_.isEmpty(specs)) {
+                specs[name] = {};
+            }
+
+            let env = _.map(specs[name], (v, k)=>{
+                return {key: k, value: str(v)};
+            });
+
+            // Create a fake flow so we can pretend to copy it.
             let initial_flow = {
                 request: {
                     client_id: client_id,
                     artifacts: [name],
+                    specs: [{artifact: name, parameters: {env: env}}],
                 },
             };
+
             this.setState({
                 showNewFromRouterWizard: true,
                 client_id: client_id,
@@ -276,26 +326,6 @@ class FlowsList extends React.Component {
             });
             this.props.history.push("/collected/" + client_id);
         }
-    }
-
-    componentWillUnmount() {
-        this.source.cancel("unmounted");
-        if (this.interval) {
-            clearInterval(this.interval);
-        }
-    }
-
-    // Set the table in focus when the component mounts for the first time.
-    componentDidUpdate = (prevProps, prevState, rootNode) => {
-        let selected_flow = this.props.selected_flow &&
-            this.props.selected_flow.session_id;
-        let prev_selection = prevProps.selected_flow &&
-            prevProps.selected_flow.session_id;
-
-        if(selected_flow != prev_selection) {
-            return true;
-        }
-        return false;
     }
 
     setCollectionRequest = (request) => {
@@ -806,4 +836,20 @@ export class SimpleFlowsList extends React.Component {
             </>
         );
     }
+};
+
+const str = x=>{
+    if(_.isNumber(x)) {
+        return x.toString();
+    }
+
+    if(_.isString(x)) {
+        return x;
+    };
+
+    if(_.isUndefined(x)) {
+        return x;
+    }
+
+    return JSON.stringify(x);
 };

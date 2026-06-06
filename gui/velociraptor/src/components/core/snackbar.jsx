@@ -39,6 +39,7 @@ export default class Snackbar extends React.Component {
 
     componentWillUnmount = ()=>{
         clearInterval(this.interval);
+        this.unmounted = true;
     }
 
     addMessage = (toasts, message)=>{
@@ -69,6 +70,9 @@ export default class Snackbar extends React.Component {
     }
 
     warn = (message) => {
+        if(this.unmounted) {
+            return;
+        }
         this.handle_errors(message);
         let toasts = this.addMessage(this.state.toasts || [], message);
         this.setState({toasts: toasts});

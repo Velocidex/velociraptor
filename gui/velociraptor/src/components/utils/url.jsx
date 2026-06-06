@@ -9,9 +9,9 @@ import Modal from 'react-bootstrap/Modal';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import api from '../core/api-service.jsx';
+import { withRouter }  from "react-router-dom";
 
-
-export default class URLViewer extends Component {
+class URLViewer extends Component {
     static propTypes = {
         // The URL can be formatted as a markdown URL: [text](url)
         // Alternatively an explicit description can be passed to the link.
@@ -22,6 +22,8 @@ export default class URLViewer extends Component {
         // If specified this is an internal link - so we add org id
         // etc.
         internal: PropTypes.bool,
+
+        history: PropTypes.object,
     }
 
     state = {
@@ -42,6 +44,22 @@ export default class URLViewer extends Component {
         }
 
         if (!this.props.safe) {
+            if(this.props.internal) {
+                return <Button
+                         className="url-link"
+                         size="sm"
+                         variant="outline-info"
+                         onClick={e=>{
+                             let target = new URL(api.href(url, {}, {
+                                 internal: this.props.internal,
+                             }));
+                             this.props.history.push(target.hash.substr(1));
+                         }}>
+                         <FontAwesomeIcon icon="external-link-alt"/>
+                         <span className="button-label">{desc}</span>
+                       </Button>;
+            }
+
             return <Button
                      as="a"
                      className="url-link"
@@ -100,3 +118,5 @@ export default class URLViewer extends Component {
                </>;
     }
 }
+
+export default withRouter(URLViewer);

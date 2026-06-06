@@ -19,6 +19,7 @@ import { NotebookLineChart, NotebookTimeChart,
 import VeloValueRenderer from '../utils/value.jsx';
 import { JSONparse } from '../utils/json_parse.jsx';
 import VeloSigmaEditor from './sigma-editor.jsx';
+import VeloButton from '../widgets/button.jsx';
 
 // Renders a report in the DOM.
 const parse_param = domNode=>JSONparse(decodeURIComponent(
@@ -134,6 +135,18 @@ export default class VeloReportViewer extends React.Component {
     render() {
         let template = parseHTML(cleanupHTML(this.state.template), {
             replace: (domNode) => {
+                if (domNode.name === "velo-button") {
+                    let href = domNode.attribs.href;
+                    if(href) {
+                        return <VeloButton
+                                 href={href}
+                                 text={domNode.attribs.text}
+                                 icon={domNode.attribs.icon}
+                               />;
+                    }
+                    return domNode;
+                }
+
                 if (domNode.name === "velo-csv-viewer") {
                     try {
                         return (
