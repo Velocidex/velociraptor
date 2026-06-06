@@ -398,8 +398,12 @@ func (self *ApiServer) GetFlowRequests(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+
 	result, err := launcher.Storage().GetFlowTasks(
 		ctx, org_config_obj, in.ClientId, in.FlowId, in.Offset, in.Count)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
 
 	if in.IncludeTruncatedRequest {
 		for _, item := range result.Items {

@@ -14,9 +14,11 @@
     overflow: visible;
 }
 
-.notebook-cell.selected {
+.notebook-cell.selected,
+.notebook-cell:hover {
     border-color: #ababab;
 }
+
 
 .notebook-input {
     border-radius: 2px;
