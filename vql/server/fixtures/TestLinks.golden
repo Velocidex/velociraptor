@@ -1,0 +1,90 @@
+{
+ "Link to hunt": {
+  "Args": {
+   "hunt_id": "H.1234",
+   "text": "Link To Hunt"
+  },
+  "Result": "[Link To Hunt](https://localhost:8889/app/index.html?org_id=root#/hunts/H.1234/overview)"
+ },
+ "Link to flow": {
+  "Args": {
+   "client_id": "C.123",
+   "flow_id": "F.123",
+   "text": "Link To Flow"
+  },
+  "Result": "[Link To Flow](https://localhost:8889/app/index.html?org_id=root#/collected/C.123/F.123/overview)"
+ },
+ "Link to client": {
+  "Args": {
+   "client_id": "C.123",
+   "text": "Link To Client"
+  },
+  "Result": "[Link To Client](https://localhost:8889/app/index.html?org_id=root#/host/C.123)"
+ },
+ "Link to event artifact": {
+  "Args": {
+   "client_id": "C.123",
+   "artifact": "Custom.Artifact.Name",
+   "text": "Link To event artifact"
+  },
+  "Result": "[Link To event artifact](https://localhost:8889/app/index.html?org_id=root#/events/C.123/Custom.Artifact.Name)"
+ },
+ "Link to artifact": {
+  "Args": {
+   "artifact": "Custom.Artifact.Name",
+   "text": "Link To Artifact"
+  },
+  "Result": "[Link To Artifact](https://localhost:8889/app/index.html?org_id=root#/artifacts/Custom.Artifact.Name)"
+ },
+ "Link to upload": {
+  "Args": {
+   "upload": {
+    "Components": [
+     "notebooks",
+     "N.123",
+     "NC.123",
+     "uploads",
+     "data",
+     "Hello"
+    ]
+   },
+   "text": "Link To upload"
+  },
+  "Result": "[Link To upload](https://localhost:8889/api/v1/DownloadVFSFile?fs_components=notebooks\u0026fs_components=N.123\u0026fs_components=NC.123\u0026fs_components=uploads\u0026fs_components=data\u0026fs_components=Hello\u0026org_id=root\u0026vfs_path=)"
+ },
+ "Link to create flow": {
+  "Args": {
+   "client_id": "C.123",
+   "flow_id": "new",
+   "artifact": "Demo.Plugins.GUI",
+   "parameters": {
+    "YaraRule": "rule X/Y { ... }"
+   },
+   "text": "Create new collection"
+  },
+  "Result": "[Create new collection](https://localhost:8889/app/index.html?org_id=root#/collected/C.123/new/Demo.Plugins.GUI/%7B%22specs%22%3A%7B%22Demo.Plugins.GUI%22%3A%7B%22YaraRule%22%3A%22rule%20X%2FY%20%7B%20...%20%7D%22%7D%7D%7D)"
+ },
+ "Link to create flow raw": {
+  "Args": {
+   "client_id": "C.123",
+   "flow_id": "new",
+   "artifact": "Demo.Plugins.GUI",
+   "parameters": {
+    "YaraRule": "rule X+/Y { ... }"
+   },
+   "raw": true
+  },
+  "Result": "https://localhost:8889/app/index.html?org_id=root#/collected/C.123/new/Demo.Plugins.GUI/%7B%22specs%22%3A%7B%22Demo.Plugins.GUI%22%3A%7B%22YaraRule%22%3A%22rule%20X%2B%2FY%20%7B%20...%20%7D%22%7D%7D%7D"
+ },
+ "Link to create a new notebook": {
+  "Args": {
+   "notebook_id": "new",
+   "artifact": "Notebook.Demo",
+   "parameters": {
+    "AnInteger": "76"
+   },
+   "text": "Link To Notebook"
+  },
+  "Result": "[Link To Notebook](https://localhost:8889/app/index.html?org_id=root#/notebooks/new/Notebook.Demo/%7B%22name%22%3A%22My%20Notebook%22%2C%22description%22%3A%22A%20lovely%20notebook%22%2C%22specs%22%3A%7B%22Notebook.Demo%22%3A%7B%22AnInteger%22%3A%2276%22%7D%7D%7D)"
+ }
+}

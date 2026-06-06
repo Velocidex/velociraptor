@@ -20,6 +20,7 @@ import NotebookTableRenderer from './notebook-table-renderer.jsx';
 
 import VeloValueRenderer from '../utils/value.jsx';
 import { JSONparse } from '../utils/json_parse.jsx';
+import VeloButton from '../widgets/button.jsx';
 
 import VeloSigmaEditor from '../artifacts/sigma-editor.jsx';
 
@@ -151,6 +152,18 @@ export default class NotebookReportRenderer extends React.Component {
                              notebook_id={this.props.notebook_id}
                              cell={this.props.cell}
                              params={params}/>;
+                }
+
+                if (domNode.name === "velo-button") {
+                    let href = domNode.attribs.href;
+                    if(href) {
+                        return <VeloButton
+                                 href={href}
+                                 text={domNode.attribs.text}
+                                 icon={domNode.attribs.icon}
+                               />;
+                    }
+                    return domNode;
                 }
 
                 if (domNode.name ===  "velo-tool-viewer") {

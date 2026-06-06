@@ -52,7 +52,7 @@ class FullScreenNotebook extends React.Component {
         let notebook_id = this.props.match && this.props.match.params &&
             this.props.match.params.notebook_id;
 
-        if (!notebook_id) {
+        if (!notebook_id || notebook_id == "new") {
             return;
         }
 

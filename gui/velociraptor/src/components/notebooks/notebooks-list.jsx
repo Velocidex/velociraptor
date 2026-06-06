@@ -89,11 +89,13 @@ class NotebooksList extends React.Component {
         hideToolbar: PropTypes.bool,
 
         // React router props.
+        match: PropTypes.object,
         history: PropTypes.object,
     };
 
     state = {
         showNewNotebookDialog: false,
+        showNotebookUploadsDialog: false,
         showDeleteNotebookDialog: false,
         showEditNotebookDialog: false,
         showExportNotebookDialog: false,
@@ -115,10 +117,74 @@ class NotebooksList extends React.Component {
 
     componentDidMount = () => {
         this.source = CancelToken.source();
+        this.setStateFromRouter();
+    }
+
+    // Set the table in focus when the component mounts for the first time.
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        let selected_notebook = this.props.selected_notebook &&
+            this.props.selected_notebook.notebook_id;
+        let prev_selection = prevProps.selected_notebook &&
+            prevProps.selected_notebook.notebook_id;
+        let router_notebook = this.props.match && this.props.match.params &&
+            this.props.match.params.notebook_id;
+
+        if(selected_notebook != prev_selection || router_notebook == "new") {
+            this.setStateFromRouter();
+        }
+        return false;
     }
 
     componentWillUnmount() {
         this.source.cancel();
+    }
+
+    setStateFromRouter = ()=>{
+        let action = this.props.match && this.props.match.params &&
+            this.props.match.params.notebook_id;
+
+        let artifact_name = this.props.match && this.props.match.params &&
+            this.props.match.params.artifact;
+
+        if (action === "new") {
+            let params_json = this.props.match && this.props.match.params &&
+                this.props.match.params.params_json;
+            let flow_params = {};
+
+            if(params_json) {
+                try {
+                    flow_params = JSON.parse(
+                        decodeURIComponent(params_json));
+                } catch(e) {
+                    console.log("Error parsing params_json ", e, params_json);
+                };
+            }
+
+            let notebook_name = flow_params.name || "New Notebook";
+            let description = flow_params.description || "";
+            let specs = flow_params.specs || {};
+            if(_.isEmpty(specs)) {
+                specs[artifact_name] = {};
+            }
+
+            let env = _.map(specs[artifact_name], (v, k)=>{
+                return {key: k, value: str(v)};
+            });
+
+            // Create a fake flow so we can pretend to copy it.
+            let initial_request = {
+                name: notebook_name,
+                description: description,
+                artifacts: [artifact_name],
+                specs: [{artifact: artifact_name, parameters: {env: env}}],
+            };
+
+            this.setState({
+                showNewFromRouterWizard: true,
+                initial_request: initial_request,
+            });
+            this.props.history.push("/notebooks/");
+        }
     }
 
     render() {
@@ -134,6 +200,24 @@ class NotebooksList extends React.Component {
 
         let selected_notebook = this.props.selected_notebook &&
             this.props.selected_notebook.notebook_id;
+
+        let specs = {};
+        let base_notebook = this.props.selected_notebook || {};
+        if(this.state.showNewFromRouterWizard) {
+            base_notebook = this.state.initial_request;
+        }
+
+        _.each(base_notebook.specs, spec=>{
+            let name = spec.artifact;
+            if(name) {
+                let new_spec = {};
+                let env = spec.parameters && spec.parameters.env;
+                _.each(env, item=>{
+                    new_spec[item.key] = item.value;
+                });
+                specs[name] = new_spec;
+            }
+        });
 
         return (
             <>
@@ -154,6 +238,28 @@ class NotebooksList extends React.Component {
                       this.setState({showNewNotebookDialog: false});
                   }}
                   closeDialog={() => this.setState({showNewNotebookDialog: false})}
+                />
+              }
+              { this.state.showNotebookCopyDialog &&
+                <NewNotebook
+                  notebook_parameters={this.props.selected_notebook}
+                  parameters={specs}
+                  updateNotebooks={()=>{
+                      this.props.updateVersion();
+                      this.setState({showNotebookCopyDialog: false});
+                  }}
+                  closeDialog={() => this.setState({showNotebookCopyDialog: false})}
+                />
+              }
+              { this.state.showNewFromRouterWizard &&
+                <NewNotebook
+                  notebook_parameters={this.state.initial_request}
+                  parameters={specs}
+                  updateNotebooks={()=>{
+                      this.props.updateVersion();
+                      this.setState({showNewFromRouterWizard: false});
+                  }}
+                  closeDialog={() => this.setState({showNewFromRouterWizard: false})}
                 />
               }
               { this.state.showEditNotebookDialog &&
@@ -196,6 +302,13 @@ class NotebooksList extends React.Component {
                       <Button onClick={()=>this.setState({showNewNotebookDialog: true})}
                               variant="default">
                         <FontAwesomeIcon icon="plus"/>
+                        <span className="sr-only">{T("New Notebook")}</span>
+                      </Button>
+                    </ToolTip>
+                    <ToolTip tooltip={T("Copy Notebook")}>
+                      <Button onClick={()=>this.setState({showNotebookCopyDialog: true})}
+                              variant="default">
+                        <FontAwesomeIcon icon="copy"/>
                         <span className="sr-only">{T("New Notebook")}</span>
                       </Button>
                     </ToolTip>
@@ -286,3 +399,20 @@ class NotebooksList extends React.Component {
 };
 
 export default withRouter(NotebooksList);
+
+
+const str = x=>{
+    if(_.isNumber(x)) {
+        return x.toString();
+    }
+
+    if(_.isString(x)) {
+        return x;
+    };
+
+    if(_.isUndefined(x)) {
+        return x;
+    }
+
+    return JSON.stringify(x);
+};

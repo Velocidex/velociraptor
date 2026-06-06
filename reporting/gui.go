@@ -134,6 +134,16 @@ func (self *GuiTemplateEngine) Expand(values ...interface{}) interface{} {
 	default:
 		return t
 
+		// Support lambda functions.
+	case string:
+		lambda, err := vfilter.ParseLambda(t)
+		if err != nil {
+			self.Scope.Log("Expand of lambda: %v", err)
+			return t
+		}
+
+		return lambda.Reduce(self.ctx, self.Scope, []vfilter.Any{self.Scope})
+
 	case []*paths.NotebookCellQuery:
 		if len(t) == 0 { // No rows returned.
 			self.Scope.Log("Query produced no rows.")
@@ -662,7 +672,8 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	p.AllowAttrs("value", "params").OnElements("time-chart")
 	p.AllowAttrs("value").OnElements("velo-value")
 
-	//p.AllowNoAttrs().OnElements("accordion")
+	p.AllowAttrs("href", "icon", "style",
+		"t1", "text", "class").OnElements("velo-button")
 	p.AllowAttrs("params").OnElements("notebook-bar-chart")
 	p.AllowAttrs("params").OnElements("notebook-line-chart")
 	p.AllowAttrs("params").OnElements("notebook-scatter-chart")

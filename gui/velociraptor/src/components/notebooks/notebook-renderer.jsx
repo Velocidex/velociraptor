@@ -37,10 +37,26 @@ export default class NotebookRenderer extends React.Component {
 
     componentDidMount = () => {
         this.source = CancelToken.source();
+        this.makeCellRefs();
     }
 
     componentWillUnmount() {
         this.source.cancel();
+        this.unmounted = true;
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        this.makeCellRefs();
+    }
+
+    // Ensure that each cell has a ref we can use for scrolling.
+    makeCellRefs = ()=>{
+        _.each(this.props.notebook.cell_metadata, x=>{
+            let existing = this.state.refs[x.cell_id];
+            if(!existing) {
+                this.state.refs[x.cell_id] = React.createRef();
+            }
+        });
     }
 
     upCell = (cell_id) => {
@@ -189,13 +205,13 @@ export default class NotebookRenderer extends React.Component {
         if(!res) {
             res = React.createRef();
             refs[cell_id] = res;
-            this.setState({refs: refs});
         }
         return res;
     }
 
     render() {
-        if (!this.props.notebook || _.isEmpty(this.props.notebook.cell_metadata)) {
+        if (!this.props.notebook ||
+            _.isEmpty(this.props.notebook.cell_metadata)) {
             return <h5 className="no-content">
                      {T("Select a notebook from the list above.")}
                    </h5>;
@@ -207,7 +223,8 @@ export default class NotebookRenderer extends React.Component {
                 scrollToCell={this.scrollToCell}
                 notebook={this.props.notebook}
               />
-              <Spinner loading={this.state.loading || this.props.notebook.loading} />
+              <Spinner loading={this.state.loading ||
+                                this.props.notebook.loading} />
               <div className="notebook-contents">
               { _.map(this.props.notebook.cell_metadata, (cell_md, idx) => {
                   return <NotebookCellRenderer
@@ -224,12 +241,20 @@ export default class NotebookRenderer extends React.Component {
                            deleteCell={this.deleteCell}
                            addCell={this.addCell}
                            notebookLocked={this.state.locked}
-                           incNotebookLocked={x=>this.setState(
-                               prevState=>{
-                                   // Atomic version of setState
-                                   // https://www.digitalocean.com/community/tutorials/react-getting-atomic-updates-with-setstate
-                                   return {locked: x+prevState.locked};
-                               })}
+                           incNotebookLocked={x=>{
+                               if(this.unmounted) {
+                                   return;
+                               }
+
+                               this.setState(
+                                   prevState=>{
+                                       // Atomic version of setState
+                                       // https://www.digitalocean.com/community/tutorials/react-getting-atomic-updates-with-setstate
+                                       return {
+                                           locked: x+prevState.locked,
+                                       };
+                                   });
+                               }}
                       />;
               })}
               </div>
