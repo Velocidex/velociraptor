@@ -118,11 +118,56 @@ sources:
 reports:
   - type: CLIENT
     template: |
-      {{ $client_info := Query "SELECT * FROM clients(client_id=ClientId) LIMIT 1" | Expand }}
+      {{ define "pre" }}
+      LET Cap(X) = upcase(string=X[0:1]) + X[1:]
 
-      {{ $flow_id := Query "SELECT timestamp(epoch=active_time / 1000000) AS Timestamp FROM flows(client_id=ClientId, flow_id=FlowId)" | Expand }}
+      LET ClientInfo <= SELECT *, Cap(X=os_info.system) AS OS
+        FROM clients(client_id=ClientId)
+        LIMIT 1
 
-      # {{ Get $client_info "0.os_info.fqdn" }} ( {{ Get $client_info "0.client_id" }} ) @ {{ Get $flow_id "0.Timestamp" }}
+      LET Hostname <= ClientInfo[0].os_info.hostname
+      LET OS <= Cap(X=ClientInfo[0].os_info.system)
+
+      LET _Timestamp <= SELECT timestamp(epoch=active_time) AS Timestamp
+         FROM flows(client_id=ClientId, flow_id=FlowId)
+      LET Timestamp <= _Timestamp[0].Timestamp
+
+      LET ArtifactDefined(X) = SELECT * FROM artifact_definitions(names=X)
+
+      {{ end }}
+      {{ $_ := Query "pre" | Expand }}
+
+      {{ if Expand "x=>ArtifactDefined(X=OS + '.Search.FileFinder')" -}}
+      <velo-button text="Search Files" icon="search"
+         href="{{ Expand " \
+           x=>link_to(client_id=ClientId, flow_id='new', \
+                      artifact=OS + '.Search.FileFinder', raw=TRUE)"}}">
+      </velo-button>
+      {{- end -}}
+      {{- if Expand "x=>OS =~ 'Windows' AND ArtifactDefined(X='Windows.Hayabusa.Rules')" -}}
+      <velo-button text="Triage With Sigma" icon="flag"
+         href="{{ Expand " \
+           x=>link_to(client_id=ClientId, flow_id='new', \
+                      artifact='Windows.Hayabusa.Rules', raw=TRUE)"}}" >
+      </velo-button>
+      {{- end -}}
+      {{- if Expand "x=>OS =~ 'Windows' AND ArtifactDefined(X='Windows.Registry.Hunter')" -}}
+      <velo-button text="Analyze Registry" icon="book"
+         href="{{ Expand " \
+           x=>link_to(client_id=ClientId, flow_id='new', \
+                      artifact='Windows.Registry.Hunter', raw=TRUE)"}}" >
+      </velo-button>
+      {{- end -}}
+      {{- if Expand "x=>OS =~ 'Windows' AND ArtifactDefined(X='Windows.Triage.Targets')" -}}
+      <velo-button text="Triage Files" icon="folder"
+         href="{{ Expand " \
+           x=>link_to(client_id=ClientId, flow_id='new', \
+                      artifact='Windows.Triage.Targets', raw=TRUE)"}}" >
+      </velo-button>
+      {{- end }}
+
+
+      # {{ Scope "Hostname" }} ( {{ Scope "ClientId" }} ) @ {{ Scope "Timestamp" }}
 
       {{ Query "SELECT * FROM source(source='BasicInformation')" | Table }}
 

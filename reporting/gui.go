@@ -446,6 +446,10 @@ func (self *GuiTemplateEngine) Execute(report *artifacts_proto.Report) (string, 
 }
 
 func (self *GuiTemplateEngine) getMultiLineQuery(query string) (string, error) {
+	if query == "" {
+		return "", nil
+	}
+
 	t := self.tmpl.Lookup(query)
 	if t == nil {
 		return query, nil
