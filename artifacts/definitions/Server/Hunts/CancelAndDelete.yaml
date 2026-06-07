@@ -2,7 +2,7 @@ name: Server.Hunts.CancelAndDelete
 description: |
   Cancels all in-flight flows in a hunt, deletes the hunt, and
   optionally removes collected data.
-  
+
   Velociraptor Hunts are a way of running the same flow on many
   endpoints at once. Hunts issue very quickly and wait until each
   endpoint returns results.
@@ -63,6 +63,9 @@ sources:
       SELECT * FROM foreach(row={
         SELECT _value as HuntId
         FROM items(item=AllHunts)
+        WHERE if(condition=DeleteAllFiles,
+                 then=hunt_update(hunt_id=HuntId, add_labels="Deleting..."),
+                 else=TRUE)
       }, query={
         SELECT *
         FROM hunt_delete(hunt_id=HuntId, really_do_it=DeleteAllFiles)
