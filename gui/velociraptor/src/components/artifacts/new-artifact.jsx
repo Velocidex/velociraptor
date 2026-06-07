@@ -117,23 +117,27 @@ export default class NewArtifactDialog extends React.Component {
         }
     }
 
-    checkArtifact = () => {
+    checkArtifact = (close) => {
         api.post("v1/SetArtifactFile", {
             artifact: this.state.text,
             op: "CHECK_AND_SET",
         }, this.source.token).then(response=> {
-                if (response.cancel) {
-                    return;
-                }
-                let state = response.data || {};
+            if (response.cancel) {
+                return;
+            }
+            let state = response.data || {};
 
-                // No problems detected!
-                if (_.isEmpty(state.errors) && _.isEmpty(state.warnings)) {
+            // No problems detected!
+            if (_.isEmpty(state.errors) && _.isEmpty(state.warnings)) {
+                if(close) {
                     this.props.onClose();
                 } else {
-                    this.setState({error_state: state});
+                    this.setState({modified:false});
                 }
-            });
+            } else {
+                this.setState({error_state: state});
+            }
+        });
     }
 
     saveArtifact = () => {
@@ -204,7 +208,7 @@ export default class NewArtifactDialog extends React.Component {
                 <VeloAce text={this.state.text}
                          mode="yaml"
                          aceConfig={this.aceConfig}
-                         onChange={(x) => this.setState({text: x})}
+                         onChange={(x) => this.setState({text: x, modified: true})}
                          commands={[{
                              name: 'saveAndExit',
                              bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
@@ -225,6 +229,13 @@ export default class NewArtifactDialog extends React.Component {
                     <span className="sr-only">{T("Reformat VQL")}</span>
                     </Button>
                   </ToolTip>
+                  <ToolTip tooltip={T("Save and keep open")}>
+                    <Button variant="primary"
+                            disabled={!this.state.modified}
+                            onClick={()=>this.checkArtifact(false)}>
+                      <FontAwesomeIcon icon="save"/>
+                    </Button>
+                  </ToolTip>
                 </ButtonGroup>
 
                 <ButtonGroup className="float-right">
@@ -233,8 +244,9 @@ export default class NewArtifactDialog extends React.Component {
                     <FontAwesomeIcon icon="window-close"/>
                     <span className="button-label">{T("Close")}</span>
                   </Button>
-                  <Button variant="primary"
-                          onClick={this.checkArtifact}>
+                  <Button variant="default"
+                          disabled={!this.state.modified}
+                          onClick={()=>this.checkArtifact(true)}>
                     <FontAwesomeIcon icon="save"/>
                     <span className="button-label">{T("Save")}</span>
                   </Button>

@@ -401,7 +401,7 @@ class VeloHostInfo extends Component {
             return <div className="client-details dashboard">
                      <VeloReportViewer
                        artifact={this.props.client.last_interrogate_artifact_name ||
-                                 "Generic.Client.Info"}
+                                 "Custom.Generic.Client.Info"}
                        client={this.props.client}
                        type="CLIENT"
                        flow_id={this.props.client.last_interrogate_flow_id} />
