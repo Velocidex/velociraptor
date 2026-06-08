@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 import "./notebook-navigator.css";
 import Button from 'react-bootstrap/Button';
 import PropTypes from 'prop-types';
@@ -31,14 +33,34 @@ class NotebookNavigator extends Component {
                </Button>;
     }
 
+    setSelectedNotebook = notebook_id=> {
+        if(!notebook_id) {
+            return;
+        }
+        // Does the notebook id refers to a hunt notebook
+        let parts = /^N.(F.[^-]+)-(.+)$/.exec(notebook_id);
+        if(!_.isEmpty(parts)) {
+            this.props.history.push("/collected/" + parts[2] + "/" +
+                                    parts[1] + "/notebook");
+            return;
+        }
+
+        parts = /^N.(H.[^-]+)$/.exec(notebook_id);
+        if(!_.isEmpty(parts)) {
+            this.props.history.push("/hunts/" + parts[1] + "/notebook");
+            return;
+        }
+
+        this.props.history.push("/notebooks/" + notebook_id);
+    }
+
     setFullScreen = () => {
         if (this.props.notebook &&
             this.props.notebook.notebook_id) {
 
             if (this.props.match.path.startsWith("/fullscreen")) {
-                this.props.history.push(
-                    "/notebooks/" +
-                        this.props.notebook.notebook_id);
+                this.setSelectedNotebook(
+                    this.props.notebook.notebook_id);
             } else {
                 this.props.history.push(
                     "/fullscreen/notebooks/" +
