@@ -41,3 +41,5 @@ Queries:
 # Test native parsing with the parse_journald() plugin
 - SELECT * FROM parse_journald(filename='/system.journal') LIMIT 2
 - SELECT * FROM parse_journald(filename='/compact.journal') LIMIT 2
+- SELECT * FROM parse_journald(filename='/2004.journal') WHERE System.Seq = 3
+- SELECT * FROM parse_journald(filename='/2404.journal') WHERE System.Seq = 3
