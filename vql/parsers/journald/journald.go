@@ -69,6 +69,7 @@ func (self JournalPlugin) Call(
 					scope.Log("parse_journald: %v", err)
 					return
 				}
+				defer journal.Close()
 
 				journal.RawLogs = arg.Raw
 				journal.MinTime = arg.StartTime

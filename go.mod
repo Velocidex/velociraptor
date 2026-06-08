@@ -106,7 +106,7 @@ require (
 	github.com/Velocidex/go-ewf v0.0.0-20260301075014-ed09cb7887b6
 	github.com/Velocidex/go-ext4 v0.0.0-20250510085914-b0b955af0359
 	github.com/Velocidex/go-fat v0.0.0-20260301005230-08fb790838a9
-	github.com/Velocidex/go-journalctl v0.0.0-20250902002606-881a5f66df10
+	github.com/Velocidex/go-journalctl v0.0.0-20260608120136-20835635c054
 	github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002
 	github.com/Velocidex/go-vhdx v0.0.0-20250511013458-5cba970cdeda
 	github.com/Velocidex/go-vmdk v0.0.0-20250505140221-bd4633ce2fbf
@@ -286,7 +286,7 @@ require (
 	github.com/kaptinlin/go-i18n v0.2.0 // indirect
 	github.com/kaptinlin/messageformat-go v0.4.6 // indirect
 	github.com/karrick/godirwalk v1.17.0 // indirect
-	github.com/klauspost/compress v1.18.2 // indirect
+	github.com/klauspost/compress v1.18.6 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.11 // indirect
 	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
@@ -316,6 +316,7 @@ require (
 	github.com/nsf/termbox-go v1.1.1 // indirect
 	github.com/paulmach/orb v0.10.0 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
+	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
@@ -401,7 +402,8 @@ require (
 // replace github.com/Velocidex/fileb0x => ../fileb0x
 // replace github.com/Velocidex/go-ext4 => ../go-ext4
 // replace github.com/Velocidex/amsi => ../amsi
-// replace github.com/Velocidex/go-journalctl ../go-journalctl
+// replace github.com/Velocidex/go-journalctl => ../go-journalctl
+
 // replace github.com/Velocidex/velociraptor-site-search => ../velociraptor-site-search
 
 // Remove search for html end block. This allows inserting unbalanced
