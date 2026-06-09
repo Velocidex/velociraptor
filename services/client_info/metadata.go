@@ -57,6 +57,9 @@ func (self *Store) SetMetadata(
 	ctx context.Context, config_obj *config_proto.Config,
 	client_id string, metadata *ordereddict.Dict, principal string) error {
 
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	existing_metadata, err := self.GetMetadata(ctx, config_obj, client_id)
 	if err != nil {
 		return err
