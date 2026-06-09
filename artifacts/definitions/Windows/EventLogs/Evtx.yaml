@@ -104,6 +104,9 @@ sources:
        - name: Simplified view
          type: vql_suggestion
          template: |
+            /*
+            # Simplified log view
+            */
             LET Levels <= dict(
                 `0`='Always',
                 `1`='Critical',
@@ -140,3 +143,34 @@ sources:
             */
 
             LET Dummy <= 42
+
+       - type: vql_suggestion
+         name: Timeline
+         template: |
+          /*
+          # EVTX timeline
+          {{ Timeline "EVTX" }}
+          */
+          LET Levels <= dict(`0`='Always',
+                            `1`='Critical',
+                            `2`='Error',
+                            `3`='Warning',
+                            `4`='Info',
+                            `5`='Verbose')
+
+          LET S = scope()
+
+          LET _ <= timeline_add(key='TimeCreated',
+                          name='evtx',
+                          timeline='EVTX',
+                          query={
+              SELECT TimeCreated,
+                    System AS _System,
+                    EventID,
+                    get(item=Levels, field=str(str=System.Level)) AS Level,
+                    S.System.Execution.ProcessID AS PID,
+                    Message,
+                    S.EventData AS Data
+              FROM source()
+              ORDER BY TimeCreated
+            })

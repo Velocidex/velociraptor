@@ -105,17 +105,77 @@ sources:
 
   notebook:
     - type: vql_suggestion
-      name: Simplified syslog-like view
+      name: Simplified view
       template: |
         /*
         # Simplified log view
         */
-        LET ColumnTypes<=dict(`_ClientId`='client')
+        LET Priorities <= dict(`0`='emerg',
+                              `1`='alert',
+                              `2`='crit',
+                              `3`='err',
+                              `4`='warning',
+                              `5`='notice',
+                              `6`='info',
+                              `7`='debug')
 
         SELECT System.Timestamp AS Timestamp,
-               ClientId AS _ClientId,
-               client_info(client_id=ClientId).os_info.hostname AS Hostname,
-               EventData.SYSLOG_IDENTIFIER AS Unit,
-               EventData.MESSAGE AS Message
+              EventData.SYSLOG_IDENTIFIER AS Unit,
+              get(item=Priorities, field=str(str=EventData.PRIORITY)) AS Level,
+              System._EXE AS Executable,
+              System._CMDLINE AS _Cmdline,
+              System._PID AS PID,
+              EventData.MESSAGE AS Message,
+              System AS _System,
+              EventData AS _EventData
         FROM source()
         ORDER BY Timestamp
+
+    - name: Message count as plot
+      type: vql_suggestion
+      template: |
+        /*
+        # Message count
+
+        {{ define "Messages" }}
+        SELECT int(int=System.Timestamp.Unix / 60) * 60 AS MinBin,
+                                count() AS Count
+          FROM source()
+          GROUP BY MinBin
+          ORDER BY MinBin
+        {{ end }}
+        {{ Query "Messages" | TimeChart }}
+        */
+        LET Dummy <= 42
+
+    - type: vql_suggestion
+      name: Timeline
+      template: |
+        /*
+        # Journal timeline
+        {{ Timeline "Journal" }}
+        */
+        LET Priorities <= dict(`0`='emerg',
+                              `1`='alert',
+                              `2`='crit',
+                              `3`='err',
+                              `4`='warning',
+                              `5`='notice',
+                              `6`='info',
+                              `7`='debug')
+
+        LET _ <= timeline_add(key='Timestamp',
+                              name='journal',
+                              timeline='Journal',
+                              query={
+            SELECT System.Timestamp AS Timestamp,
+                  EventData.SYSLOG_IDENTIFIER AS Unit,
+                  get(item=Priorities, field=str(str=EventData.PRIORITY)) AS Level,
+                  System._EXE AS Executable,
+                  System._CMDLINE AS _Cmdline,
+                  System._PID AS PID,
+                  EventData.MESSAGE AS Message,
+                  System,
+                  EventData
+            FROM source()
+          })
