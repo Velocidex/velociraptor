@@ -116,6 +116,10 @@ resources:
   max_batch_rows: 1
 
 column_types:
+- name: Stdout
+  type: nobreak
+- name: Stderr
+  type: nobreak
 - name: StdoutUpload
   type: preview_upload
 - name: StderrUpload
