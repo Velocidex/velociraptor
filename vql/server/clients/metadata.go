@@ -85,6 +85,7 @@ func (self ClientMetadataFunction) Info(
 type ClientSetMetadataFunctionArgs struct {
 	ClientId string            `vfilter:"required,field=client_id"`
 	Metadata *ordereddict.Dict `vfilter:"optional,field=metadata,doc=A dict containing metadata. If not specified we use kwargs."`
+	Modify   *vfilter.Lambda   `vfilter:"optional,field=modify,doc=A modification callback lambda. This performs an atomic mutation on the client metadata.."`
 }
 
 type ClientSetMetadataFunction struct {
@@ -95,32 +96,26 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	// Collapse lazy args etc.
-	expanded_args := vfilter.RowToDict(ctx, scope, args)
-	client_id, pres := expanded_args.GetString("client_id")
-	if !pres {
-		scope.Log(self.name + ": client_id must be specified")
+	arg := &ClientSetMetadataFunctionArgs{}
+	kw, err := arg_parser.ExtractKWArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log(self.name+": %v", err)
 		return vfilter.Null{}
 	}
 
-	// Allow the metadata to be set.
-	metadata_any, pres := expanded_args.Get("metadata")
-	if pres {
-		metadata := vfilter.RowToDict(ctx, scope, metadata_any)
-		if metadata != nil {
-			expanded_args.MergeFrom(metadata)
-		}
+	if arg.Metadata == nil {
+		arg.Metadata = kw
 	}
 
 	// User needs high permissions to modify the client's metadata.
 	permission := acls.COLLECT_CLIENT
-	if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+	if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		permission = acls.SERVER_ADMIN
 	}
 
-	err := vql_subsystem.CheckAccess(scope, permission)
+	err = vql_subsystem.CheckAccess(scope, permission)
 	if err != nil {
-		scope.Log(self.name+": %s", err)
+		scope.Log(self.name+": %v", err)
 		return vfilter.Null{}
 	}
 
@@ -143,7 +138,23 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	err = client_info_manager.SetMetadata(ctx, client_id, expanded_args, principal)
+	if arg.Modify != nil {
+		err = client_info_manager.ModifyMetadata(
+			ctx, config_obj, arg.ClientId, principal,
+			func(metadata *ordereddict.Dict) (*ordereddict.Dict, error) {
+				result := arg.Modify.Reduce(
+					ctx, scope, []vfilter.Any{metadata})
+				dict, ok := result.(*ordereddict.Dict)
+				if !ok {
+					scope.Log(self.name + ": modify must return a dict")
+					return nil, nil
+				}
+				return dict, nil
+			})
+	} else {
+		err = client_info_manager.SetMetadata(
+			ctx, arg.ClientId, arg.Metadata, principal)
+	}
 	if err != nil {
 		scope.Log(self.name+": %s", err)
 		return vfilter.Null{}
@@ -155,16 +166,19 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 func (self ClientSetMetadataFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "client_set_metadata",
-		Doc:      "Sets client metadata. Client metadata is a set of free form key/value data",
-		ArgType:  type_map.AddType(scope, &ClientSetMetadataFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_CLIENT, acls.SERVER_ADMIN).Build(),
-		Version:  2,
+		Name:         "client_set_metadata",
+		Doc:          "Sets client metadata. Client metadata is a set of free form key/value data",
+		ArgType:      type_map.AddType(scope, &ClientSetMetadataFunctionArgs{}),
+		Metadata:     vql.VQLMetadata().Permissions(acls.COLLECT_CLIENT, acls.SERVER_ADMIN).Build(),
+		Version:      3,
+		FreeFormArgs: true,
 	}
 }
 
 // No args
-type ServerMetadataFunctionArgs struct{}
+type ServerMetadataFunctionArgs struct {
+	Metadata *ordereddict.Dict `vfilter:"optional,field=metadata,doc=A dict containing metadata. If not specified we use kwargs."`
+}
 
 type ServerMetadataFunction struct{}
 
@@ -180,10 +194,12 @@ func (self *ServerMetadataFunction) Call(ctx context.Context,
 func (self ServerMetadataFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "server_metadata",
-		Doc:      "Returns server metadata from the datastore. Server metadata is a set of free form key/value data",
-		ArgType:  type_map.AddType(scope, &ServerMetadataFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Name:         "server_metadata",
+		Doc:          "Returns server metadata from the datastore. Server metadata is a set of free form key/value data",
+		ArgType:      type_map.AddType(scope, &ServerMetadataFunctionArgs{}),
+		Metadata:     vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Version:      3,
+		FreeFormArgs: true,
 	}
 }
 

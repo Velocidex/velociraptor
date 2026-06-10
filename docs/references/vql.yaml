@@ -1098,12 +1098,35 @@
     WHERE os_info.hostname =~ "TRAINING"
     ```
 
+    ### Ensuring atomicity
+
+    This function is atomic and race free only if the field that is
+    modified does not depend on other client metadata. Generally avoid
+    the get/modify/set pattern as this is not thread safe. It is OK to
+    set a field if you are sure that another artifact will not update
+    the same field at the same time.
+
+    If you depend on a previous value in the client metadata you
+    should use the modify callback method. The callback is a lambda
+    which receives the metadata dict under lock and returns a modified
+    dict.
+
+    The following example implements a counter.
+
+    ```vql
+    LET _ <= client_set_metadata(client_id=ClientId,
+          modify="x=>x + dict(Foo=int(int=x.Foo || 0) + 1)")
+
+    SELECT client_metadata(client_id=ClientId) AS MD
+    FROM scope()
+    ```
+
     ### See also
 
     - [client_metadata]({{< ref "/vql_reference/server/client_metadata/" >}}):
       Returns client metadata from the datastore.
   type: Function
-  version: 2
+  version: 3
   args:
   - name: client_id
     type: string
@@ -1111,6 +1134,10 @@
   - name: metadata
     type: ordereddict.Dict
     description: A dict containing metadata. If not specified we use kwargs.
+  - name: modify
+    type: vfilter.Lambda
+    description: A modification callback lambda. This performs an atomic mutation
+      on the client metadata..
   category: server
   metadata:
     permissions: COLLECT_CLIENT,SERVER_ADMIN
@@ -1120,6 +1147,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: clients
   description: |
     Returns client info for one or more clients from the datastore.
@@ -5265,9 +5293,8 @@
     This function makes no effort to check if the link is
     actually valid - i.e. it does not check that the client id refers
     to a real client, flow id to a real flow, etc.
-
   type: Function
-  version: 2
+  version: 3
   args:
   - name: type
     type: string
@@ -5277,6 +5304,8 @@
     type: string
   - name: flow_id
     type: string
+    description: Link to this flow. If this value is 'new', the link will create a
+      new collection with the specified artifact.
   - name: upload
     type: ordereddict.Dict
     description: Upload object for the file to upload (upload object is returned by
@@ -5289,10 +5318,18 @@
     description: If specified we emit a markdown style URL with a text
   - name: hunt_id
     type: string
-    description: The hunt id to read.
+    description: 'The hunt id to read. You can specify ''new'' to create a new hunt
+      based on the template in the ''artifact'' parameter. '
+  - name: notebook_id
+    type: string
+    description: 'The notebook id to read. You can specify ''new'' to create a new
+      notebook based on the template in the ''artifact'' parameter. '
   - name: artifact
     type: string
     description: The artifact to retrieve
+  - name: parameters
+    type: ordereddict.Dict
+    description: artifact parameters to use when creating a new flow/hunt/notebook.
   - name: raw
     type: bool
     description: When specified we emit a raw URL (without autodetected text)
@@ -9844,6 +9881,11 @@
     Returns server metadata from the datastore. Server metadata is a
     set of free form key/value data
   type: Function
+  version: 3
+  args:
+  - name: metadata
+    type: ordereddict.Dict
+    description: A dict containing metadata. If not specified we use kwargs.
   category: server
   metadata:
     permissions: SERVER_ADMIN
@@ -9853,6 +9895,7 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+  free_form_args: true
 - name: server_set_metadata
   description: |
     Sets server metadata. Server metadata is a set of free form
@@ -13388,3 +13431,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+

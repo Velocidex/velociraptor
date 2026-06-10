@@ -77,7 +77,9 @@ type ClientInfoManager interface {
 	// Modify a record or set a new one - if the record is not found,
 	// modifier will receive a nil client_info. The ClientInfoManager
 	// can not be accessed within the modifier function as it is
-	// locked for the duration of the change.
+	// locked for the duration of the change.  The Callback can
+	// indicate no change is needed by returning a nil for
+	// client_info.
 	Modify(ctx context.Context, client_id string,
 		modifier func(client_info *ClientInfo) (new_record *ClientInfo, err error)) error
 
@@ -116,12 +118,26 @@ type ClientInfoManager interface {
 		client_id string,
 		req *crypto_proto.VeloMessage) error
 
-	// Be able to manipulate the client and server metadata.
+	// Gets the client metadata. Generally client should avoid the
+	// get/modify/set pattern and use the ModifyMetadata() function
+	// below instead.
 	GetMetadata(ctx context.Context,
 		client_id string) (*ordereddict.Dict, error)
 
+	// Sets the new metadata into the client metadata. Keys in the
+	// new_metadata will be merged into the existing metadata (dict
+	// addition). If the values are NULL then the keys are removed
+	// from the metadata. This merge operation is done atomically.
 	SetMetadata(ctx context.Context,
-		client_id string, metadata *ordereddict.Dict, principal string) error
+		client_id string, new_metadata *ordereddict.Dict,
+		principal string) error
+
+	// Modify the metadata atomically. This avoids the get/modify/set
+	// pattern and is race free.  The Callback can indicate no change
+	// is needed by returning a nil for metadata.
+	ModifyMetadata(ctx context.Context, config_obj *config_proto.Config,
+		client_id, principal string, cb func(*ordereddict.Dict) (
+			new_metadata *ordereddict.Dict, err error)) error
 
 	ValidateClientId(client_id string) error
 

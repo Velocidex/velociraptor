@@ -347,7 +347,7 @@ func (self *LinkToFunction) Info(
 		Doc:      "Create a url linking to a particular part in the Velociraptor GUI.",
 		ArgType:  type_map.AddType(scope, &LinkToFunctionArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Build(),
-		Version:  2,
+		Version:  3,
 	}
 }
 

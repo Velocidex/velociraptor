@@ -181,6 +181,26 @@ Output: [
  }
 ]
 
+# Test atomic modification
+Query: SELECT client_set_metadata(client_id=ClientId, modify="x=>x + dict(A=1)") FROM scope()
+Output: [
+ {
+  "client_set_metadata(client_id=ClientId, modify=\"x=\u003ex + dict(A=1)\")": true
+ }
+]
+
+Query: SELECT client_metadata(client_id=ClientId) FROM scope()
+Output: [
+ {
+  "client_metadata(client_id=ClientId)": {
+   "Foo": "Bar",
+   "IntConvertedToString": "5",
+   "AnotherItem": "Hello",
+   "A": "1"
+  }
+ }
+]
+
 # Remove the new client.
 Query: SELECT * FROM client_delete( client_id=client_record.client_id, really_do_it=TRUE) GROUP BY 1
 Output: [
