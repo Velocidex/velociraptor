@@ -222,7 +222,7 @@ func (self *Store) ModifyMetadata(
 	}
 
 	// Now store the full metadata dict in the data store. FIXME: We
-	// are stil holding the lock and the below may take a long
+	// are still holding the lock and the below may take a long
 	// time....
 	client_path_manager := paths.NewClientPathManager(client_id)
 	db, err := datastore.GetDB(config_obj)
