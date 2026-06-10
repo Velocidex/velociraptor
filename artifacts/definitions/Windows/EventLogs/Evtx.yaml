@@ -65,6 +65,15 @@ parameters:
     default: "."
     type: regex
 
+export: |
+  LET Levels <= dict(
+    `0`='Always',
+    `1`='Critical',
+    `2`='Error',
+    `3`='Warning',
+    `4`='Info',
+    `5`='Verbose')
+
 sources:
   - query: |
       LET VSS_MAX_AGE_DAYS <= VSSAnalysisAge
@@ -107,13 +116,6 @@ sources:
             /*
             # Simplified log view
             */
-            LET Levels <= dict(
-                `0`='Always',
-                `1`='Critical',
-                `2`='Error',
-                `3`='Warning',
-                `4`='Info',
-                `5`='Verbose')
             LET S = scope()
 
             SELECT TimeCreated,
@@ -151,13 +153,6 @@ sources:
           # EVTX timeline
           {{ Timeline "EVTX" }}
           */
-          LET Levels <= dict(`0`='Always',
-                            `1`='Critical',
-                            `2`='Error',
-                            `3`='Warning',
-                            `4`='Info',
-                            `5`='Verbose')
-
           LET S = scope()
 
           LET _ <= timeline_add(key='TimeCreated',

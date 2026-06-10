@@ -26,6 +26,16 @@ parameters:
   type: bool
   description: If set we also upload the raw files.
 
+export: |
+  LET Priorities <= dict(`0`='emerg',
+                      `1`='alert',
+                      `2`='crit',
+                      `3`='err',
+                      `4`='warning',
+                      `5`='notice',
+                      `6`='info',
+                      `7`='debug')
+
 sources:
 - name: Uploads
   query: |
@@ -36,7 +46,6 @@ sources:
                 upload(file=OSPath) AS Upload
          FROM glob(globs=JournalGlob)
        })
-
 
 - query: |
      LET standard = SELECT *
@@ -110,15 +119,6 @@ sources:
         /*
         # Simplified log view
         */
-        LET Priorities <= dict(`0`='emerg',
-                              `1`='alert',
-                              `2`='crit',
-                              `3`='err',
-                              `4`='warning',
-                              `5`='notice',
-                              `6`='info',
-                              `7`='debug')
-
         SELECT System.Timestamp AS Timestamp,
               EventData.SYSLOG_IDENTIFIER AS Unit,
               get(item=Priorities, field=str(str=EventData.PRIORITY)) AS Level,
@@ -155,15 +155,6 @@ sources:
         # Journal timeline
         {{ Timeline "Journal" }}
         */
-        LET Priorities <= dict(`0`='emerg',
-                              `1`='alert',
-                              `2`='crit',
-                              `3`='err',
-                              `4`='warning',
-                              `5`='notice',
-                              `6`='info',
-                              `7`='debug')
-
         LET _ <= timeline_add(key='Timestamp',
                               name='journal',
                               timeline='Journal',
