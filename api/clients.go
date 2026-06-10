@@ -122,7 +122,8 @@ func (self *ApiServer) SetClientMetadata(
 		}
 	}
 
-	err = client_info_manager.SetMetadata(ctx, in.ClientId, metadata, user_name)
+	err = client_info_manager.SetMetadata(
+		ctx, in.ClientId, metadata, user_name)
 	return &emptypb.Empty{}, Status(self.verbose, err)
 }
 
