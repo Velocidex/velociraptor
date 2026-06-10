@@ -53,6 +53,11 @@ Queries:
          AnotherItem="Hello", Bar=NULL) FROM scope()
   - SELECT client_metadata(client_id=ClientId) FROM scope()
 
+  # Test atomic modification
+  - SELECT client_set_metadata(client_id=ClientId,
+      modify="x=>x + dict(A=1)") FROM scope()
+  - SELECT client_metadata(client_id=ClientId) FROM scope()
+
   # Remove the new client.
   - SELECT * FROM client_delete(
        client_id=client_record.client_id, really_do_it=TRUE)

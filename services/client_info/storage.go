@@ -103,6 +103,14 @@ func (self *Store) Modify(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	return self._Modify(ctx, config_obj, client_id, modifier)
+}
+
+func (self *Store) _Modify(
+	ctx context.Context, config_obj *config_proto.Config, client_id string,
+	modifier func(client_info *services.ClientInfo) (
+		*services.ClientInfo, error)) error {
+
 	client_info, _ := self._GetRecord(client_id)
 	var record *services.ClientInfo
 
@@ -284,7 +292,7 @@ func (self *Store) SaveSnapshot(
 	// Release the lock here as we don't need it for the rest.
 	self.mu.Unlock()
 
-	completion := func() {
+	final_completion := func() {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		journal, err := services.GetJournal(config_obj)
 		if err == nil {
@@ -299,6 +307,8 @@ func (self *Store) SaveSnapshot(
 		logger.Info("<green>ClientInfo Manager</> Written snapshot for org %v in %v (%v records)",
 			services.GetOrgName(config_obj), time.Since(now), record_count)
 	}
+
+	completion := final_completion
 
 	// The final write must be synchronous because we need to
 	// guarantee it hits the disk
