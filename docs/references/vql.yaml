@@ -1125,8 +1125,6 @@
 
     - [client_metadata]({{< ref "/vql_reference/server/client_metadata/" >}}):
       Returns client metadata from the datastore.
-
-
   type: Function
   version: 3
   args:
@@ -1138,10 +1136,8 @@
     description: A dict containing metadata. If not specified we use kwargs.
   - name: modify
     type: vfilter.Lambda
-    description: |
-      A modification callback lambda.
-
-      This performs an atomic mutation on the client metadata..
+    description: A modification callback lambda. This performs an atomic mutation
+      on the client metadata..
   category: server
   metadata:
     permissions: COLLECT_CLIENT,SERVER_ADMIN
@@ -5298,7 +5294,7 @@
     actually valid - i.e. it does not check that the client id refers
     to a real client, flow id to a real flow, etc.
   type: Function
-  version: 2
+  version: 3
   args:
   - name: type
     type: string
@@ -13435,3 +13431,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+
