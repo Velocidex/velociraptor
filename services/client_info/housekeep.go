@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -44,7 +43,7 @@ func (self *Store) StartHouseKeep(
 					continue
 				}
 
-				self.houseKeep(ctx, config_obj)
+				self.HouseKeep(ctx, config_obj)
 				last_run = utils.GetTime().Now()
 			}
 
@@ -59,7 +58,7 @@ func (self *Store) StartHouseKeep(
 // We also check the client's metadata blob for any fields that need
 // indexing. The fields will be synced with the data that exists in
 // the client info index.
-func (self *Store) houseKeep(
+func (self *Store) HouseKeep(
 	ctx context.Context, config_obj *config_proto.Config) {
 
 	start := utils.GetTime().Now()
@@ -72,8 +71,8 @@ func (self *Store) houseKeep(
 	}()
 
 	for _, client_id := range self.Keys() {
-		self.houseKeepOutstandingTasks(ctx, config_obj, client_id)
-		self.houseKeepMetadataIndex(ctx, config_obj, client_id)
+		self.HouseKeepOutstandingTasks(ctx, config_obj, client_id)
+		self.HouseKeepMetadataIndex(ctx, config_obj, client_id)
 	}
 }
 
@@ -81,7 +80,7 @@ func (self *Store) houseKeep(
 // outstanding tasks notify them. This helps catch cases where our
 // client info tasks index is out of sync for some reason so we miss
 // outstanding notifications.
-func (self *Store) houseKeepOutstandingTasks(
+func (self *Store) HouseKeepOutstandingTasks(
 	ctx context.Context, config_obj *config_proto.Config, client_id string) {
 	notifier, err := services.GetNotifier(config_obj)
 	if err != nil {
@@ -109,24 +108,13 @@ func (self *Store) houseKeepOutstandingTasks(
 	}
 }
 
-func (self *Store) houseKeepMetadataIndex(
+// Periodically refresh the metadata index. Reads the indexed metadata
+// fields in the client record and update the search index.
+func (self *Store) HouseKeepMetadataIndex(
 	ctx context.Context, config_obj *config_proto.Config, client_id string) {
-
-	metadata, err := self.GetMetadata(ctx, config_obj, client_id)
-	if err != nil {
-		return
-	}
-
-	_ = self.updateClientMetadataIndex(ctx, config_obj, client_id, metadata)
-}
-
-func (self *Store) updateClientMetadataIndex(
-	ctx context.Context, config_obj *config_proto.Config,
-	client_id string, metadata *ordereddict.Dict) error {
-
 	if config_obj.Defaults == nil ||
 		len(config_obj.Defaults.IndexedClientMetadata) == 0 {
-		return nil
+		return
 	}
 
 	indexed_fields := config_obj.Defaults.IndexedClientMetadata
@@ -134,53 +122,26 @@ func (self *Store) updateClientMetadataIndex(
 	// Optionally update the index service.
 	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
-		return err
+		return
 	}
 
 	// Only update the record if the metadata has changed.
-	return self.Modify(ctx, config_obj, client_id,
+	_ = self.Modify(ctx, config_obj, client_id,
 		func(client_info *services.ClientInfo) (
 			*services.ClientInfo, error) {
 
 			// Client id is not valid: ignore it. This can happen if
 			// the client is deleted.
-			if client_info == nil {
+			if client_info == nil || client_info.Metadata == nil {
 				return client_info, nil
 			}
 
-			changed := false
-
-			if client_info.Metadata == nil {
-				client_info.Metadata = make(map[string]string)
-			}
-
 			for _, k := range indexed_fields {
-				new_v, new_v_pres := metadata.GetString(k)
-				old_v, old_v_pres := client_info.Metadata[k]
-				if new_v_pres && !old_v_pres {
-					client_info.Metadata[k] = new_v
-				} else if old_v_pres && !new_v_pres {
-					delete(client_info.Metadata, k)
-				} else if new_v != old_v {
-					client_info.Metadata[k] = new_v
-				} else {
-					// Value has not changed, skip updates
-					continue
+				v, pres := client_info.Metadata[k]
+				if pres {
+					_ = indexer.SetIndex(client_id, k+":"+v)
 				}
-
-				// Also update the search index with the new data so it is
-				// immediately visible.
-				if indexer != nil {
-					_ = indexer.UnsetIndex(client_id, k+":"+old_v)
-					_ = indexer.SetIndex(client_id, k+":"+new_v)
-				}
-				changed = true
 			}
-
-			if !changed {
-				return nil, nil
-			}
-
 			return client_info, nil
 		})
 }

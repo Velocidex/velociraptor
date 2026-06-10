@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -96,6 +97,13 @@ func (self DummyClientInfoManager) GetMetadata(ctx context.Context,
 
 func (self DummyClientInfoManager) SetMetadata(ctx context.Context,
 	client_id string, metadata *ordereddict.Dict, principal string) error {
+	return utils.NotImplementedError
+}
+
+func (self DummyClientInfoManager) ModifyMetadata(
+	ctx context.Context, config_obj *config_proto.Config,
+	client_id, principal string, cb func(*ordereddict.Dict) (
+		new_metadata *ordereddict.Dict, err error)) error {
 	return utils.NotImplementedError
 }
 

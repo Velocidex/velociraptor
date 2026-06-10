@@ -24,6 +24,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
@@ -201,7 +202,10 @@ func (self *ClientInfoTestSuite) TestMetadataIndex() {
 	// Add some metadata to the client record.
 	err = client_info_manager.SetMetadata(self.Ctx, self.client_id,
 		ordereddict.NewDict().
-			Set("dept", "lawyers").Set("Field", "Value"), "admin")
+			Set("dept", "lawyers").
+			Set("Field", "Value").
+			Set("AnotherField", 23),
+		"admin")
 	assert.NoError(self.T(), err)
 
 	client_info_rec, err := client_info_manager.Get(sub_ctx, self.client_id)
@@ -214,9 +218,25 @@ func (self *ClientInfoTestSuite) TestMetadataIndex() {
 	metadata, err := client_info_manager.GetMetadata(self.Ctx, self.client_id)
 	assert.NoError(self.T(), err)
 
-	assert.Equal(self.T(), 2, metadata.Len())
+	assert.Equal(self.T(), 3, metadata.Len())
 	field, _ := metadata.Get("Field")
 	assert.Equal(self.T(), "Value", field)
+
+	field, _ = metadata.Get("AnotherField")
+	assert.Equal(self.T(), "23", field)
+
+	// Remove the field by setting a NULL
+	err = client_info_manager.SetMetadata(self.Ctx, self.client_id,
+		ordereddict.NewDict().
+			Set("AnotherField", &vfilter.Null{}), "admin")
+	assert.NoError(self.T(), err)
+
+	metadata, err = client_info_manager.GetMetadata(self.Ctx, self.client_id)
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), 2, metadata.Len())
+	_, pres := metadata.Get("AnotherField")
+	assert.Equal(self.T(), pres, false)
 
 	// Now ensure that we can search on the field
 	indexer, err := services.GetIndexer(self.ConfigObj)
