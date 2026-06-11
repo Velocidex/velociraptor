@@ -132,38 +132,48 @@ reports:
          FROM flows(client_id=ClientId, flow_id=FlowId)
       LET Timestamp <= _Timestamp[0].Timestamp
 
-      LET ArtifactDefined(X) = SELECT * FROM artifact_definitions(names=X)
+      // Parse the env part from the notebook definitions.
+      LET GetEnv(X) = to_dict(item={
+          SELECT key AS _key,
+                 value AS _value
+          FROM foreach(row=X)
+        })
+
+      // Look for a special notebook of name "quick_link" - we will
+      // render it here.
+      LET GetSources(X) = SELECT GetEnv(X=env) AS Env
+      FROM foreach(row=X,
+      query={
+        SELECT * FROM foreach(row=notebook)
+        WHERE notebook.name =~ "quick_link"
+      })
+
+      // Returns a list of artifact names and configuration Env
+      LET FindQuickLinks = SELECT *,
+          link_to(client_id=ClientId, flow_id='new',
+                  artifact=artifact_name, raw=TRUE) AS Link,
+          Env.weight || 10 AS Weight
+      FROM foreach(row={
+          SELECT name as artifact_name, sources
+          FROM artifact_definitions()
+          WHERE type =~ "^client$"
+        },
+                   query={
+          SELECT artifact_name, Env
+          FROM GetSources(X=sources)
+          WHERE OS =~ ( Env.os_filter || "." )
+        })
+      ORDER BY Weight
 
       {{ end }}
       {{ $_ := Query "pre" | Expand }}
 
-      {{ if Expand "x=>ArtifactDefined(X=OS + '.Search.FileFinder')" -}}
-      <velo-button text="Search Files" icon="search"
-         href="{{ Expand " \
-           x=>link_to(client_id=ClientId, flow_id='new', \
-                      artifact=OS + '.Search.FileFinder', raw=TRUE)"}}">
-      </velo-button>
-      {{- end -}}
-      {{- if Expand "x=>OS =~ 'Windows' AND ArtifactDefined(X='Windows.Hayabusa.Rules')" -}}
-      <velo-button text="Triage With Sigma" icon="flag"
-         href="{{ Expand " \
-           x=>link_to(client_id=ClientId, flow_id='new', \
-                      artifact='Windows.Hayabusa.Rules', raw=TRUE)"}}" >
-      </velo-button>
-      {{- end -}}
-      {{- if Expand "x=>OS =~ 'Windows' AND ArtifactDefined(X='Windows.Registry.Hunter')" -}}
-      <velo-button text="Analyze Registry" icon="book"
-         href="{{ Expand " \
-           x=>link_to(client_id=ClientId, flow_id='new', \
-                      artifact='Windows.Registry.Hunter', raw=TRUE)"}}" >
-      </velo-button>
-      {{- end -}}
-      {{- if Expand "x=>OS =~ 'Windows' AND ArtifactDefined(X='Windows.Triage.Targets')" -}}
-      <velo-button text="Triage Files" icon="folder"
-         href="{{ Expand " \
-           x=>link_to(client_id=ClientId, flow_id='new', \
-                      artifact='Windows.Triage.Targets', raw=TRUE)"}}" >
-      </velo-button>
+      {{ range Query "SELECT * FROM FindQuickLinks" | Expand -}}
+        <velo-button text="{{ Get . "Env.text" }}"
+                     icon="{{ Get . "Env.icon" }}"
+                     href="{{ Get . "Link" }}">
+        >
+        </velo-button>
       {{- end }}
 
 
