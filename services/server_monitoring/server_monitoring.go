@@ -30,6 +30,13 @@ import (
 )
 
 type EventTable struct {
+	// Serializes StartQueries()/Close(). Always taken before mu.
+	// _Close() releases mu while draining the query goroutines (they
+	// call Tracer() on exit) - update_mu stops a concurrent updater
+	// entering that window and overwriting wg and cancel, which
+	// orphans the queries the other updater started.
+	update_mu sync.Mutex
+
 	mu sync.Mutex
 
 	config_obj *config_proto.Config
@@ -50,7 +57,11 @@ type EventTable struct {
 }
 
 func (self *EventTable) Wait() {
-	self.wg.Wait()
+	self.mu.Lock()
+	wg := self.wg
+	self.mu.Unlock()
+
+	wg.Wait()
 }
 
 func (self *EventTable) Tracer() *QueryTracer {
@@ -61,6 +72,9 @@ func (self *EventTable) Tracer() *QueryTracer {
 }
 
 func (self *EventTable) Close() {
+	self.update_mu.Lock()
+	defer self.update_mu.Unlock()
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -216,6 +230,8 @@ func (self *EventTable) equal(events []*actions_proto.VQLCollectorArgs) bool {
 
 // Start the queries in the request
 func (self *EventTable) StartQueries(config_obj *config_proto.Config) error {
+	self.update_mu.Lock()
+	defer self.update_mu.Unlock()
 
 	request := self.Get()
 

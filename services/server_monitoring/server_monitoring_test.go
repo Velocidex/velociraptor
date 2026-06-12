@@ -74,6 +74,11 @@ type: SERVER_EVENT
 sources:
 - query: SELECT * FROM register_run_count() WHERE log(message="Finished!", dedup=-1)
 `, `
+name: WaitForCancel2
+type: SERVER_EVENT
+sources:
+- query: SELECT * FROM register_run_count() WHERE log(message="Finished2!", dedup=-1)
+`, `
 name: EventTest.Alert
 type: SERVER_EVENT
 sources:
@@ -336,6 +341,74 @@ func (self *ServerMonitoringTestSuite) TestQueriesAreCancelled() {
 
 	// Wait until all queries are done and cancelled.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		return atomic.LoadInt64(&run_count) == 0
+	})
+}
+
+// Concurrent updates must not orphan running queries: every query
+// that is started must be cancellable by a later update.
+func (self *ServerMonitoringTestSuite) TestConcurrentUpdatesDoNotLeakQueries() {
+	run_count := int64(0)
+
+	actions.QueryLog.Clear()
+
+	vql_subsystem.OverridePlugin(
+		vfilter.GenericListPlugin{
+			PluginName: "register_run_count",
+			Function: func(
+				ctx context.Context, scope vfilter.Scope,
+				args *ordereddict.Dict) []vfilter.Row {
+
+				atomic.AddInt64(&run_count, 1)
+
+				// Wait here until we get cancelled.
+				<-ctx.Done()
+				atomic.AddInt64(&run_count, -1)
+
+				return nil
+			},
+		})
+
+	event_table, err := services.GetServerEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Hammer the table from several updaters, alternating between
+	// two artifact sets so every update really reloads the table.
+	var wg sync.WaitGroup
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+
+			for j := 0; j < 10; j++ {
+				name := "WaitForCancel"
+				if (i+j)%2 == 0 {
+					name = "WaitForCancel2"
+				}
+				err := event_table.Update(self.Ctx,
+					self.ConfigObj, "",
+					&flows_proto.ArtifactCollectorArgs{
+						Artifacts: []string{name},
+					})
+				assert.NoError(self.T(), err)
+			}
+		}(i)
+	}
+	wg.Wait()
+
+	// Now install an empty table - every started query must quit. If
+	// an update overwrote another updater's cancel function, the
+	// orphaned queries can never be cancelled and run_count stays
+	// above zero.
+	err = event_table.Update(self.Ctx,
+		self.ConfigObj, "",
+		&flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{},
+			Specs:     []*flows_proto.ArtifactSpec{},
+		})
+	assert.NoError(self.T(), err)
+
+	vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
 		return atomic.LoadInt64(&run_count) == 0
 	})
 }
