@@ -4,11 +4,8 @@
   "total_queries": 1,
   "Query": [
    {
-    "VQL": "LET Custom_CallArtifactWithImports_0_0 = SELECT * FROM Artifact.Custom.TheOneWithTheImport()"
-   },
-   {
     "Name": "Custom.CallArtifactWithImports",
-    "VQL": "SELECT * FROM Custom_CallArtifactWithImports_0_0"
+    "VQL": "SELECT * FROM Artifact.Custom.TheOneWithTheImport()"
    }
   ],
   "max_row": 1000,

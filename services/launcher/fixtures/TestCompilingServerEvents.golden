@@ -19,11 +19,8 @@
     "VQL": "LET Bar \u003c= get(field='Bar') = TRUE OR get(field='Bar') =~ '^(Y|TRUE|YES|OK)$' "
    },
    {
-    "VQL": "LET Server_Events_Source1_0_0 = SELECT Foo FROM info()"
-   },
-   {
     "Name": "Server.Events/Source1",
-    "VQL": "SELECT * FROM Server_Events_Source1_0_0"
+    "VQL": "SELECT Foo FROM info()"
    }
   ],
   "max_row": 1000
@@ -48,11 +45,8 @@
     "VQL": "LET Bar \u003c= get(field='Bar') = TRUE OR get(field='Bar') =~ '^(Y|TRUE|YES|OK)$' "
    },
    {
-    "VQL": "LET Server_Events_Source2_0_0 = SELECT Bar FROM info()"
-   },
-   {
     "Name": "Server.Events/Source2",
-    "VQL": "SELECT * FROM Server_Events_Source2_0_0"
+    "VQL": "SELECT Bar FROM info()"
    }
   ],
   "max_row": 1000

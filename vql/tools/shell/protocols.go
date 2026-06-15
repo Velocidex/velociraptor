@@ -3,6 +3,7 @@ package shell
 import (
 	"context"
 
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -72,4 +73,19 @@ func (self *ShellSession) Close() {
 	// Close pipes
 	self.stdin.Close()
 	close(self.input)
+}
+
+type ShellSessionBool struct{}
+
+func (self ShellSessionBool) Applicable(a types.Any) bool {
+	_, ok := a.(*ShellSession)
+	return ok
+}
+
+func (self ShellSessionBool) Bool(ctx context.Context, scope vfilter.Scope, a types.Any) bool {
+	return true
+}
+
+func init() {
+	vql_subsystem.RegisterProtocol(ShellSessionBool{})
 }

@@ -242,11 +242,8 @@
      "total_queries": "1",
      "Query": [
       {
-       "VQL": "LET Custom_TestArtifactUpload_0_0 = SELECT * FROM info()"
-      },
-      {
        "Name": "Custom.TestArtifactUpload",
-       "VQL": "SELECT * FROM Custom_TestArtifactUpload_0_0"
+       "VQL": "SELECT * FROM info()"
       }
      ],
      "max_row": "1000"

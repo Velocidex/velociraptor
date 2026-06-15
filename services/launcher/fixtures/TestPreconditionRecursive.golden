@@ -5,11 +5,8 @@
    "total_queries": 1,
    "Query": [
     {
-     "VQL": "LET Test_Artifact_Precondition_0_0 = SELECT * FROM Artifact.MultiSourceSerialMode(preconditions=TRUE)"
-    },
-    {
      "Name": "Test.Artifact.Precondition",
-     "VQL": "SELECT * FROM Test_Artifact_Precondition_0_0"
+     "VQL": "SELECT * FROM Artifact.MultiSourceSerialMode(preconditions=TRUE)"
     }
    ],
    "max_row": 1000,

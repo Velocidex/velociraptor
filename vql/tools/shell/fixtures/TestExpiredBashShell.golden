@@ -2,7 +2,7 @@
  "Initial Command": [
   {
    "Command": "",
-   "CommandId": "1",
+   "CommandId": "3",
    "Stdout": ""
   },
   {
@@ -19,7 +19,7 @@
  "Second command": [
   {
    "Command": "",
-   "CommandId": "1",
+   "CommandId": "3",
    "Stdout": ""
   },
   {
@@ -33,13 +33,13 @@
    "Stdout": "hello\n"
   },
   {
-   "Command": "echo goodbye\n",
-   "CommandId": "",
+   "Command": "",
+   "CommandId": "4",
    "Stdout": ""
   },
   {
-   "Command": "",
-   "CommandId": "2",
+   "Command": "echo goodbye\n",
+   "CommandId": "",
    "Stdout": ""
   },
   {

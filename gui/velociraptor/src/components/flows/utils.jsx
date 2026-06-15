@@ -82,6 +82,8 @@ const runArtifact = (client_id, artifact, params, on_success, token)=>{
                 // can stop polling.
                 clearInterval(recursive_download_interval);
                 on_success(context);
+            }).catch(e=>{
+                clearInterval(recursive_download_interval);
             });
         }, POLL_TIME);
     });

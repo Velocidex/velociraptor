@@ -161,6 +161,9 @@ class DeleteClients extends Component {
 
     componentWillUnmount() {
         this.source.cancel("unmounted");
+        if(this.recursive_download_interval) {
+            clearInterval(this.recursive_download_interval);
+        }
     }
 
     deleteClients = () => {
@@ -254,6 +257,9 @@ class KillClients extends Component {
 
     componentWillUnmount() {
         this.source.cancel("unmounted");
+        if(this.recursive_download_interval) {
+            clearInterval(this.recursive_download_interval);
+        }
     }
 
     killClients = () => {

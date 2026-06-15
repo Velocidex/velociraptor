@@ -22,7 +22,6 @@ import { JSONparse } from '../utils/json_parse.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
 import { parseTableResponse } from '../utils/table.jsx';
-
 import Accordion from 'react-bootstrap/Accordion';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
@@ -30,13 +29,17 @@ import  ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import  ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Form from 'react-bootstrap/Form';
 import Card from 'react-bootstrap/Card';
+import { ToStandardTime, FormatRFC3339 } from '../utils/time.jsx';
 
 // Refresh every 5 seconds
 const SHELL_POLL_TIME = 5000;
 
 const getTime = (x)=>{
     try{
-        let d = new Date(x);
+        let d = new Date();
+        if (x) {
+            d = new Date(x);
+        }
         return d.getTime();
     } catch(e) {
         return 0;
@@ -72,6 +75,8 @@ class _VeloShellCell extends Component {
         enabled: true,
 
         flow: {},
+
+        stateful: true,
     }
 
     constructor(props) {
@@ -229,7 +234,11 @@ class _VeloShellCell extends Component {
             specs: [{
                 artifact: this.props.artifact,
                 parameters: {
-                    env: [{key: "Command", value: this.state.command}],
+                    env: [
+                        {key: "Command", value: this.state.command},
+                        {key: "CommandId", value: String(getTime())},
+                        {key: "Stateful", value: this.state.stateful ? "Y" : "N"},
+                    ],
                 },
                 // Prioritise sending the rows quickly
                 max_batch_wait: 1,
@@ -334,6 +343,11 @@ class _VeloShellCell extends Component {
     }
 
     renderFlowStatus = ()=>{
+        let options = [
+            {value: "stateful", label: T("Stateful"), isFixed: true},
+            {value: "unstateful", label: T("Unstateful"), isFixed: true},
+        ];
+
         let flow_status = [
             <ToolTip tooltip={T("View Collection")} key="flow_status">
               <Link role="button"
@@ -437,12 +451,31 @@ class _VeloShellCell extends Component {
     }
 
     renderLaunchBar = ()=>{
+        let stateful_tt = this.state.stateful ?
+            T("Stateful") : T("Unstateful");
+        let stateful_icon = this.state.stateful ?
+            <FontAwesomeIcon icon="list-ol"/> :
+            <FontAwesomeIcon icon="list"/> ;
+
         return <InputGroup className="mb-3 d-flex">
+                 <ToolTip tooltip={stateful_tt} key="state-selector">
+                   <Button
+                     onClick={()=>this.setState({stateful: !this.state.stateful})}
+                     key="stateful-selector">
+                     {stateful_icon}
+                   </Button>
+                 </ToolTip>
                  <Form.Control as="textarea"
                                rows={1}
                                placeholder={T("Launch a command in this session")}
                                spellCheck="false"
                                value={this.state.command}
+                               onKeyDown={e=>{
+                                   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                                       e.preventDefault();
+                                       this.launchCommand();
+                                   }
+                               }}
                                onChange={e=>this.setState({
                                    command: e.target.value,
                                })} />
@@ -485,8 +518,11 @@ class _VeloShellCell extends Component {
             }});
 
         _.each(env, x=>{
-            if(x.key=="Command") {
-                res.command = x.value;
+            switch(x.key) {
+            case "Command":
+                res.command = x.value; break;
+            case "CommandId":
+                res.command_id = x.value; break;
             }});
 
         return res;
@@ -503,23 +539,41 @@ class _VeloShellCell extends Component {
             // Break up the data into a sequence of transactions:
             // command followed by response
             let transactions = [];
+
+            // Lookup for command ids to command.
+            let seen_commands = {};
+            _.each(commands, c=>{
+                seen_commands[c.command_id] = c;
+            });
+
             let current_trans = {
                 Out: [],
             };
             _.each(rows, (item, idx)=>{
-                if(item.Command) {
-                    if(current_trans.Command) {
+                if(item.CommandId) {
+                    if(current_trans.CommandId) {
                         // Flush the previous transaction
                         transactions.push(current_trans);
                         current_trans={
                             Out: [],
+                            Command: "",
                         };
                     }
-                    current_trans.Command = item.Command;
-                    current_trans.Timestamp = item.Timestamp;;
-                    latest_time = getTime(current_trans.Timestamp);
+                    current_trans.CommandId = item.CommandId;
+
+                    // Map this transaction to the known request it came from.
+                    let request = seen_commands[item.CommandId];
+                    if(request) {
+                        current_trans.Request = request;
+                        request.transaction = current_trans;
+                    }
                     return;
                 };
+
+                if(item.Command) {
+                    current_trans.Command += item.Command;
+                    current_trans.Timestamp = item.Timestamp;;
+                }
 
                 if(item.Stdout) {
                     current_trans.Out.push(
@@ -545,14 +599,47 @@ class _VeloShellCell extends Component {
                 }
             });
 
-            if(current_trans.Command) {
+            // Finish the final transaction
+            if(current_trans.CommandId) {
                 transactions.push(current_trans);
             }
 
+            // Now merge pending commands into the transactions.
+            _.each(commands, c=>{
+                if(!c.transaction) {
+                    let new_transaction = {
+                        CommandId: c.command_id,
+                        Pending: true,
+                        Timestamp: FormatRFC3339(
+                            ToStandardTime(c.timestamp), "UTC"),
+                        Request: c,
+                    };
+                    transactions.push(new_transaction);
+                };
+            });
+
+            transactions = _.sortBy(transactions, ["Request.timestamp"]);
+
             let items = _.map(transactions, (item, index) => {
-                let command = {};
-                if(commands.length > index) {
-                    command = commands[index];
+                let creator = item.Request && item.Request.creator;
+                let command = item.Request && item.Request.command;
+                let timestamp = item.Request && item.Request.timestamp;
+
+                if(item.Pending) {
+                    return <Accordion.Item key={index} eventKey={index}>
+                             <Accordion.Header>
+                               <Row lg="12">
+                                 <div className="shell-timestamp-user">
+                                   <VeloTimestamp
+                                     className="float-right"
+                                     usec={timestamp} /> ( {creator} ) { T("Pending") }
+                                 </div>
+                                 <pre className="shell-command-pending">
+                                   {command}
+                                 </pre>
+                               </Row>
+                             </Accordion.Header>
+                           </Accordion.Item>;
                 }
 
                 return  <Accordion.Item
@@ -563,9 +650,9 @@ class _VeloShellCell extends Component {
                               <div className="shell-timestamp-user">
                                 <VeloTimestamp
                                   className="float-right"
-                                  usec={item.Timestamp} /> ( {command.creator} )
+                                  usec={timestamp} /> ( {creator} )
                               </div>
-                              <pre>{item.Command}</pre>
+                              <pre>{command}</pre>
                             </Row>
                           </Accordion.Header>
                           <Accordion.Body>
@@ -573,29 +660,6 @@ class _VeloShellCell extends Component {
                           </Accordion.Body>
                         </Accordion.Item>;
             });
-
-            for(let i=0; i<commands.length;i++) {
-                let item = commands[i];
-                let ts = parseInt(item.timestamp ) / 1000;
-                if(ts < latest_time) {
-                    continue;
-                }
-                items.push(<Accordion.Item key={i} eventKey={i}>
-                                         <Accordion.Header>
-                                           <Row lg="12">
-                                             <div className="shell-timestamp-user">
-                                               <VeloTimestamp
-                                                 className="float-right"
-                                                 usec={item.timestamp} /> ( {item.creator} ) { T("Pending") }
-                                             </div>
-                                             <pre className="shell-command-pending">
-                                               {item.command}
-                                             </pre>
-                                           </Row>
-                                         </Accordion.Header>
-                                       </Accordion.Item>);
-            }
-
 
             output = [
                 <Accordion
@@ -975,7 +1039,8 @@ class ShellViewer extends Component {
             specs: [{
                 artifact: artifact,
                 parameters: {
-                    env: [{key: "Command", value: this.state.command}],
+                    env: [{key: "Command", value: this.state.command},
+                          {key: "CommandId", value: String(getTime())}],
                 },
                 // Prioritise sending the rows quickly
                 max_batch_wait: 1,
@@ -1061,6 +1126,14 @@ class ShellViewer extends Component {
                                   placeholder={T("Run command in new session")}
                                   spellCheck="false"
                                   value={this.state.command}
+                                  onKeyDown={e=>{
+                                      if ((e.ctrlKey || e.metaKey) &&
+                                          e.key === 'Enter') {
+                                          e.preventDefault();
+                                          this.launchCommand();
+                                      }
+                               }}
+
                                   onChange={e=>this.setState({
                                       command: e.target.value,
                                   })}>

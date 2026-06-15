@@ -23,6 +23,7 @@ import (
 	"os"
 	"sync"
 
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
@@ -68,6 +69,10 @@ func doClient() error {
 		return err
 	}
 
+	// Make sure that we have a valid client config. This strips out
+	// any potential non-client elements. Prevents weird services from
+	// starting if we actually got the server config.
+	config_obj = config.GetClientConfig(config_obj)
 	return RunClient(ctx, config_obj)
 }
 
