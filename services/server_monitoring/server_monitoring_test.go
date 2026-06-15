@@ -397,8 +397,8 @@ func (self *ServerMonitoringTestSuite) TestConcurrentUpdatesDoNotLeakQueries() {
 	wg.Wait()
 
 	// Now install an empty table - every started query must quit. If
-	// an update overwrote another updater's cancel function, the
-	// orphaned queries can never be cancelled and run_count stays
+	// an update overwrote the cancel function of a concurrent update,
+	// the orphaned queries can never be cancelled and run_count stays
 	// above zero.
 	err = event_table.Update(self.Ctx,
 		self.ConfigObj, "",
