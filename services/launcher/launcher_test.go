@@ -149,7 +149,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_FILENAME"), "mytool.exe")
 	assert.Equal(self.T(), getEnvValue(compiled[0].Env, "Tool_Tool1_URL"), tool_url)
 
-	assert.Equal(self.T(), len(compiled[0].Query), 2)
+	assert.Equal(self.T(), len(compiled[0].Query), 1)
 
 	// Now serve the tool from Velociraptor's public directory
 	// instead.
@@ -407,8 +407,8 @@ func (self *LauncherTestSuite) TestCompiling() {
 	assert.Equal(self.T(), compiled[0].Timeout, request.Timeout)
 
 	// Compile into 2 queries, the last have a valid Name field.
-	assert.Equal(self.T(), len(compiled[0].Query), 2)
-	assert.NotEqual(self.T(), compiled[0].Query[1].Name, "")
+	assert.Equal(self.T(), len(compiled[0].Query), 1)
+	assert.NotEqual(self.T(), compiled[0].Query[0].Name, "")
 }
 
 var CompilingMultipleArtifacts = []string{
@@ -546,7 +546,8 @@ func (self *LauncherTestSuite) TestCompilingMultipleLimitedArtifacts() {
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
-	json.Dump(compiled)
+	goldie.Assert(self.T(), "TestCompilingMultipleLimitedArtifacts",
+		json.MustMarshalIndent(compiled))
 }
 
 // Server events need to be compiled slightly differently - each source
@@ -605,7 +606,8 @@ sources:
 
 	// The parameters (Env) and type conversion preamble should be
 	// duplicated across both VQLCollectorArgs instances.
-	goldie.Assert(self.T(), "TestCompilingServerEvents", json.MustMarshalIndent(compiled))
+	goldie.Assert(self.T(), "TestCompilingServerEvents",
+		json.MustMarshalIndent(compiled))
 }
 
 func (self *LauncherTestSuite) TestCompilingObfuscation() {
@@ -631,7 +633,8 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 			ObfuscateNames: false,
 		}, request)
 	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), compiled[0].Query[1].Name, "Test.Artifact")
+	assert.Equal(self.T(), 1, len(compiled))
+	assert.Equal(self.T(), compiled[0].Query[0].Name, "Test.Artifact")
 }
 
 func (self *LauncherTestSuite) TestCompilingPermissions() {
@@ -685,7 +688,7 @@ sources:
 		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), len(compiled[0].Query), 2)
+	assert.Equal(self.T(), len(compiled[0].Query), 1)
 }
 
 func (self *LauncherTestSuite) TestBasicPermissions() {
@@ -749,7 +752,7 @@ sources:
 		self.Ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), len(compiled[0].Query), 2)
+	assert.Equal(self.T(), len(compiled[0].Query), 1)
 }
 
 func (self *LauncherTestSuite) TestParameterTypes() {

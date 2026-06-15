@@ -28,25 +28,49 @@ class ClientFlowsView extends React.Component {
 
     componentDidMount = () => {
         this.source = CancelToken.source();
-        let flow_id = this.props.match && this.props.match.params &&
-            this.props.match.params.flow_id;
+        // Update the flow object periodically
+        this.interval = setInterval(this.fetchDetailedFlow, POLL_TIME);
+        this.componentDidUpdate();
+    }
 
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
         let client_id = this.props.match && this.props.match.params &&
             this.props.match.params.client_id;
         if(!client_id) {
             client_id = this.props.client.client_id;
         }
 
-        if(client_id && flow_id && flow_id !== "new") {
+        if(!client_id) {
+            return;
+        }
+
+        let flow_id = this.props.match && this.props.match.params &&
+            this.props.match.params.flow_id;
+
+        // New flow set by URL.
+        if (flow_id === "new") {
+            return;
+        }
+
+        let current_flow_id = this.state.currentFlow &&
+            this.state.currentFlow.session_id;
+
+        let previous_flow_id = prevState && prevState.currentFlow &&
+            prevState.currentFlow.session_id;
+
+        // Current flow was disabled.
+        if(!current_flow_id && previous_flow_id) {
+            return;
+        }
+
+        // Flow is set from the url.
+        if(flow_id && current_flow_id != flow_id)  {
             this.setState({currentFlow: {
                 client_id: client_id,
                 session_id: flow_id}});
 
             this.fetchDetailedFlow(client_id, flow_id);
         }
-
-        // Update the flow object periodically
-        this.interval = setInterval(this.fetchDetailedFlow, POLL_TIME);
     }
 
     componentWillUnmount() {
@@ -89,22 +113,28 @@ class ClientFlowsView extends React.Component {
 
         }).catch(response=>{
             let status = response.response && response.response.status;
-            let client_id = this.state.client_id;
+            let client_id = this.props.client.client_id;
             if(status === 404) {
                 setItem(schema.ClientsCurrentFlowKey, "");
-                this.props.history.push("/collected/" + client_id);
+                this.setState({currentFlow: undefined});
+                if(client_id) {
+                    this.props.history.push("/collected/" + client_id);
+                }
             };
         });
     }
 
     setSelectedFlow = (flow) => {
-        let flow_id = flow.session_id;
-        if(!flow_id) {
-            return;
-        }
-
         let client_id = this.props.client.client_id;
         if(!client_id) return;
+
+        let flow_id = flow.session_id;
+        if(!flow_id) {
+            // When the flow id is cleared, navigate away from the flow.
+            this.props.history.push("/collected/" + client_id);
+            this.setState({currentFlow: {}});
+            return;
+        }
 
         let tab = this.props.match &&
             this.props.match.params && this.props.match.params.tab;

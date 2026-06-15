@@ -1,0 +1,43 @@
+[
+ {
+  "query_id": 1,
+  "total_queries": 2,
+  "env": [
+   {
+    "key": "Foo",
+    "value": "Foo1"
+   }
+  ],
+  "Query": [
+   {
+    "Name": "Test.Artifact",
+    "VQL": "SELECT * FROM info()"
+   }
+  ],
+  "max_row": 200,
+  "max_row_buffer_size": 300,
+  "max_wait": 400,
+  "cpu_limit": 12,
+  "timeout": 500
+ },
+ {
+  "query_id": 2,
+  "total_queries": 2,
+  "env": [
+   {
+    "key": "Foo",
+    "value": "Foo2"
+   }
+  ],
+  "Query": [
+   {
+    "Name": "Test.ArtifactResources",
+    "VQL": "SELECT * FROM info()"
+   }
+  ],
+  "max_row": 256,
+  "max_wait": 101,
+  "cpu_limit": 20,
+  "timeout": 250
+ }
+]

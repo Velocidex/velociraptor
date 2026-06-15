@@ -27,25 +27,46 @@ class ServerFlowsView extends React.Component {
     componentDidMount = () => {
         this.source = CancelToken.source();
 
+        // Update the flow object periodically
+        this.interval = setInterval(this.fetchDetailedFlow, POLL_TIME);
+        this.componentDidUpdate();
+    }
+
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
         let flow_id = this.props.match && this.props.match.params &&
             this.props.match.params.flow_id;
 
         let client_id = "server";
 
-        if(client_id && flow_id && flow_id !== "new") {
-            this.setState({currentFlow: {
-                client_id: "server",
-                session_id: flow_id}
-            });
+        // New flow set by URL.
+        if (flow_id === "new") {
+            return;
         }
 
-        // Update the flow object periodically
-        this.interval = setInterval(this.fetchDetailedFlow, POLL_TIME);
-        this.fetchDetailedFlow(flow_id);
+        let current_flow_id = this.state.currentFlow &&
+            this.state.currentFlow.session_id;
+
+        let previous_flow_id = prevState && prevState.currentFlow &&
+            prevState.currentFlow.session_id;
+
+        // Current flow was disabled.
+        if(!current_flow_id && previous_flow_id) {
+            return;
+        }
+
+        // Flow is set from the url.
+        if(flow_id && current_flow_id != flow_id) {
+            this.setState({currentFlow: {
+                client_id: "server",
+                session_id: flow_id}});
+
+            this.fetchDetailedFlow(flow_id);
+        }
     }
 
     componentWillUnmount() {
         this.source.cancel("unmounted");
+        clearInterval(this.interval);
     }
 
     fetchDetailedFlow = (flow_id) => {
@@ -80,6 +101,7 @@ class ServerFlowsView extends React.Component {
         }).catch(response=>{
             let status = response.response && response.response.status;
             if(status === 404) {
+                this.setState({currentFlow: undefined});
                 setItem(schema.ServerCurrentFlowKey, "");
                 this.props.history.push("/collected/server");
             };
@@ -89,6 +111,9 @@ class ServerFlowsView extends React.Component {
     setSelectedFlow = (flow) => {
         let flow_id = flow.session_id;
         if(!flow_id) {
+            // When the flow id is cleared, navigate away from the flow.
+            this.props.history.push("/collected/server");
+            this.setState({currentFlow: {}});
             return;
         }
 

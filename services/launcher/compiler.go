@@ -12,7 +12,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -44,162 +43,15 @@ func (self *Launcher) CompileSingleArtifact(
 	// Allow the artifact to dictate the effective user.
 	result.EffectivePrincipal = artifact.Impersonate
 
-	for _, parameter := range artifact.Parameters {
-		value := parameter.Default
-		name := parameter.Name
+	queries, envs := compileParametersToVQLPreamble(
+		ctx, config_obj, artifact)
 
-		env := &actions_proto.VQLEnv{
-			Key:   name,
-			Value: value,
-		}
-
-		// If the parameter has a type, convert it
-		// appropriately. Note that parameters are always
-		// passed into the client as strings, so they need to
-		// be converted into their declared types explicitly
-		// in the VQL code.
-
-		// If the variable contains spaces we need to escape
-		// the name in backticks.
-		escaped_name := maybeEscape(name)
-
-		switch parameter.Type {
-		case "", "string", "regex", "yara":
-			// Nothing to do with these types.
-
-		case "redacted":
-			env.Comment = "redacted"
-
-		case "upload":
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf(`LET %v <= if(condition=%v, then={
-   SELECT Content FROM http_client(url=%v)
-})`,
-					maybeEscape(name+"_"), escaped_name, escaped_name),
-			})
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf("LET %v <= %v.Content[0]",
-					escaped_name, maybeEscape(name+"_")),
-			})
-
-		case "upload_file":
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf(`LET %v <= if(condition=%v, then={
-   SELECT Content FROM http_client(url=%v, tempfile_extension='.tmp')
-})`,
-					maybeEscape(name+"_"), escaped_name, escaped_name),
-			})
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf("LET %v <= %v.Content[0]",
-					escaped_name, maybeEscape(name+"_")),
-			})
-
-		case "server_metadata":
-			client_info_manager, err := services.GetClientInfoManager(config_obj)
-			if err == nil {
-				md, err := client_info_manager.GetMetadata(ctx,
-					constants.VELOCIRAPTOR_SERVER_CLIENT_ID)
-				if err == nil {
-					value, pres := md.GetString(name)
-					if pres {
-						env.Value = value
-					}
-				}
-			}
-
-		case "int", "int64", "integer":
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf("LET %v <= int(int=%v)", escaped_name,
-					escaped_name),
-			})
-
-		case "float":
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf("LET %v <= parse_float(string=%v)", escaped_name,
-					escaped_name),
-			})
-
-		case "timestamp":
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf("LET %v <= timestamp(epoch=%v)", escaped_name,
-					escaped_name),
-			})
-		case "starlark":
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf(`
-LET %v <= if(
-    condition=format(format="%%T", args=[%v,]) =~ "string",
-    then=starl(code=%v),
-    else=%v)
-`,
-					escaped_name, escaped_name, escaped_name, escaped_name)})
-		case "csv", "artifactset":
-			// Only parse from CSV if it is a string.
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf(`
-LET %v <= SELECT * FROM if(
-    condition=format(format="%%T", args=[%v,]) =~ "string",
-    then={SELECT * FROM parse_csv(filename=%v, accessor='data')},
-    else=%v)
-`,
-					escaped_name, escaped_name, escaped_name, escaped_name),
-			})
-
-			// Only parse from JSON if it is a string.
-		case "json":
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf(`
-LET %v <= if(
-    condition=format(format="%%T", args=[%v,]) =~ "string",
-    then=parse_json(data=%v),
-    else=%v)
-`,
-					escaped_name, escaped_name, escaped_name, escaped_name),
-			})
-
-		case "json_array", "regex_array", "multichoice":
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf(`
-LET %v <= if(
-    condition=format(format="%%T", args=[%v,]) = "string",
-    then=parse_json_array(data=%v),
-    else=%v)
-`,
-					escaped_name, escaped_name, escaped_name, escaped_name),
-			})
-
-		case "xml":
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf(`
-LET %v <= if(
-    condition=format(format="%%T", args=[%v,]) =~ "string",
-    then=parse_xml(file=%v, accessor="data"),
-    else=%v)
-`,
-					escaped_name, escaped_name, escaped_name, escaped_name),
-			})
-
-		case "yaml":
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf(`
-LET %v <= if(
-    condition=format(format="%%T", args=[%v,]) =~ "string",
-    then=parse_yaml(filename=%v, accessor="data"),
-    else=%v)
-`,
-					escaped_name, escaped_name, escaped_name, escaped_name),
-			})
-
-		case "bool":
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf("LET %v <= get(field='%v') = TRUE OR get(field='%v') =~ '^(Y|TRUE|YES|OK)$' ",
-					escaped_name, name, name),
-			})
-
-		}
-
-		result.Env = append(result.Env, env)
+	for _, q := range queries {
+		result.Query = append(result.Query, &actions_proto.VQLRequest{
+			VQL: q,
+		})
 	}
+	result.Env = envs
 
 	// Apply artifact default resource controls.
 	if artifact.Resources != nil {
@@ -214,7 +66,7 @@ LET %v <= if(
 		return err
 	}
 
-	return mergeSources(config_obj, options, artifact, result)
+	return mergeSources(ctx, config_obj, options, artifact, result)
 }
 
 func resolveImports(
@@ -275,7 +127,9 @@ func resolveImports(
 	return nil
 }
 
+// Convert a single artifact into a VQLCollectorArgs request.
 func mergeSources(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	options services.CompilerOptions,
 	artifact *artifacts_proto.Artifact,
@@ -284,14 +138,19 @@ func mergeSources(
 	scope := vql_subsystem.MakeScope()
 
 	precondition := artifact.Precondition
-	precondition_var := ""
+	// Add compiled VQL statements to convert parameters to correct
+	// types.
+	if precondition != "" {
+		queries, _ := compileParametersToVQLPreamble(ctx, config_obj, artifact)
+		precondition = strings.Join(queries, "\n\n") + precondition
+	}
+
 	if options.DisablePrecondition {
 		precondition = ""
 	}
-
 	result.Precondition = precondition
 
-	for idx, source := range artifact.Sources {
+	for _, source := range artifact.Sources {
 		// If the source has specialized name and description
 		// we use it otherwise take the name and description
 		// from the artifact itself. This allows us to create
@@ -311,21 +170,6 @@ func mergeSources(
 			name = path.Join(name, source.Name)
 		}
 
-		prefix := fmt.Sprintf("%s_%d", escape_name(name), idx)
-		source_result := ""
-
-		// TODO: This is still here for old clients - new
-		// clients do not need it as they will honor the
-		// precondition field directly.
-		if precondition != "" {
-			precondition_var = "precondition_" + prefix
-			result.Query = append(result.Query,
-				&actions_proto.VQLRequest{
-					VQL: "LET " + precondition_var + " = " +
-						precondition,
-				})
-		}
-
 		// An empty query is not an error.
 		if strings.TrimSpace(source.Query) == "" {
 			continue
@@ -339,35 +183,22 @@ func mergeSources(
 				source.Name, err)
 		}
 
-		for idx2, vql := range queries {
-			query_name := fmt.Sprintf("%s_%d", prefix, idx2)
-			if idx2 < len(queries)-1 {
+		var last_query *vfilter.VQL
+		for idx, vql := range queries {
+			if idx < len(queries)-1 {
 				result.Query = append(result.Query,
 					&actions_proto.VQLRequest{
 						VQL: vfilter.FormatToString(scope, vql),
 					})
 			} else {
-				result.Query = append(result.Query,
-					&actions_proto.VQLRequest{
-						VQL: "LET " + query_name +
-							" = " + vfilter.FormatToString(scope, vql),
-					})
+				last_query = vql
 			}
-			source_result = query_name
 		}
 
-		// TODO: Backwards compatibility for older clients.
-		if precondition != "" {
+		if last_query != nil {
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				Name: name,
-				VQL: fmt.Sprintf(
-					"SELECT * FROM if(then=%s, condition=%s, else={SELECT * FROM scope() WHERE log(message='Query skipped due to precondition') AND FALSE})",
-					source_result, precondition_var),
-			})
-		} else {
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				Name: name,
-				VQL:  "SELECT * FROM " + source_result,
+				VQL:  vfilter.FormatToString(scope, last_query),
 			})
 		}
 	}
