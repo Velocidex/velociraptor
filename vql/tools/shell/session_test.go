@@ -64,6 +64,9 @@ func (self *ShellSessionTestSuite) TestBashShell() {
 				Env: []*actions_proto.VQLEnv{{
 					Key:   "Command",
 					Value: "echo hello",
+				}, {
+					Key:   "CommandId",
+					Value: "1",
 				}},
 			},
 			MaxBatchWait: 1,
@@ -98,7 +101,13 @@ func (self *ShellSessionTestSuite) TestBashShell() {
 
 	// Now relaunch the flow with more commands
 	request.FlowId = flow_id + "/1"
-	request.Specs[0].Parameters.Env[0].Value = "echo goodbye"
+	request.Specs[0].Parameters.Env = []*actions_proto.VQLEnv{{
+		Key:   "Command",
+		Value: "echo goodbye",
+	}, {
+		Key:   "CommandId",
+		Value: "2",
+	}}
 
 	_, err = launcher.ScheduleArtifactCollection(self.Ctx,
 		self.ConfigObj,
@@ -118,6 +127,106 @@ func (self *ShellSessionTestSuite) TestBashShell() {
 	})
 	golden.Set("Second command", self.getRows(artifact_name, flow_id))
 	goldie.Assert(self.T(), "TestBashShell", json.MustMarshalIndent(golden))
+}
+
+func (self *ShellSessionTestSuite) TestBashShellUnstateful() {
+	defer self.StartServerAndClient()()
+
+	artifact_name := "Linux.Sys.BashShell"
+
+	// Schedule a collection on the client
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
+	require.NoError(self.T(), err)
+
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	request := &flows_proto.ArtifactCollectorArgs{
+		ClientId:  self.ClientId,
+		FlowId:    "/S",
+		Artifacts: []string{artifact_name},
+		Specs: []*flows_proto.ArtifactSpec{{
+			Artifact: artifact_name,
+			Parameters: &flows_proto.ArtifactParameters{
+				Env: []*actions_proto.VQLEnv{{
+					Key:   "Command",
+					Value: "echo hello",
+				}, {
+					Key:   "CommandId",
+					Value: "2",
+				}, {
+					Key:   "Stateful",
+					Value: "N",
+				}},
+			},
+			MaxBatchWait: 1,
+			MaxBatchRows: 1,
+		}},
+		Creator: utils.GetSuperuserName(self.ConfigObj),
+	}
+
+	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx,
+		self.ConfigObj,
+		acl_managers.NullACLManager{},
+		repository,
+		request, nil)
+	assert.NoError(self.T(), err)
+
+	flow_id, _ = utils.SplitSessionIdToParentAndChild(flow_id)
+
+	var flow *api_proto.FlowDetails
+
+	// Wait until we have two rows from the initial command
+	vtesting.WaitUntil(30*time.Second, self.T(), func() bool {
+		flow, err = launcher.GetFlowDetails(
+			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
+			self.ClientId, flow_id)
+		assert.NoError(self.T(), err)
+
+		return flow.Context.TotalCollectedRows >= 2
+	})
+
+	golden := ordereddict.NewDict().Set(
+		"Initial Command", self.getRows(artifact_name, flow_id))
+
+	// Now relaunch the flow with more commands
+	request.FlowId = flow_id + "/1"
+	request.Specs[0].Parameters.Env = []*actions_proto.VQLEnv{{
+		Key:   "Command",
+		Value: "echo goodbye",
+	}, {
+		Key:   "CommandId",
+		Value: "3",
+	}, {
+		Key:   "Stateful",
+		Value: "N",
+	}}
+
+	_, err = launcher.ScheduleArtifactCollection(self.Ctx,
+		self.ConfigObj,
+		acl_managers.NullACLManager{},
+		repository,
+		request, nil)
+	assert.NoError(self.T(), err)
+
+	// Wait for the new results to be added.
+	/*
+		vtesting.WaitUntil(50*time.Second, self.T(), func() bool {
+			flow, err = launcher.GetFlowDetails(
+				self.Ctx, self.ConfigObj, services.GetFlowOptions{},
+				self.ClientId, flow_id)
+			assert.NoError(self.T(), err)
+
+			return flow.Context.TotalCollectedRows >= 4
+		})
+	*/
+	time.Sleep(time.Second * 4)
+	golden.Set("Second command", self.getRows(artifact_name, flow_id))
+	goldie.Assert(self.T(), "TestBashShellUnstateful",
+		json.MustMarshalIndent(golden))
 }
 
 // Test that if the original session is expired, the new session
@@ -147,6 +256,9 @@ func (self *ShellSessionTestSuite) TestExpiredBashShell() {
 				Env: []*actions_proto.VQLEnv{{
 					Key:   "Command",
 					Value: "echo hello",
+				}, {
+					Key:   "CommandId",
+					Value: "3",
 				}},
 			},
 			MaxBatchWait: 1,
@@ -168,7 +280,7 @@ func (self *ShellSessionTestSuite) TestExpiredBashShell() {
 	var flow *api_proto.FlowDetails
 
 	// Wait until we have two rows from the initial command
-	vtesting.WaitUntil(50*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(30*time.Second, self.T(), func() bool {
 		flow, err = launcher.GetFlowDetails(
 			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
 			self.ClientId, flow_id)
@@ -187,7 +299,7 @@ func (self *ShellSessionTestSuite) TestExpiredBashShell() {
 	assert.NoError(self.T(), err)
 
 	// Wait until the client acks it.
-	vtesting.WaitUntil(50*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(30*time.Second, self.T(), func() bool {
 		flow, err = launcher.GetFlowDetails(
 			self.Ctx, self.ConfigObj, services.GetFlowOptions{},
 			self.ClientId, flow_id)
@@ -200,7 +312,13 @@ func (self *ShellSessionTestSuite) TestExpiredBashShell() {
 
 	// Now relaunch the flow with more commands
 	request.FlowId = fmt.Sprintf("%s/%d", flow_id, utils.GetGUID())
-	request.Specs[0].Parameters.Env[0].Value = "echo goodbye"
+	request.Specs[0].Parameters.Env = []*actions_proto.VQLEnv{{
+		Key:   "Command",
+		Value: "echo goodbye",
+	}, {
+		Key:   "CommandId",
+		Value: "4",
+	}}
 
 	_, err = launcher.ScheduleArtifactCollection(self.Ctx,
 		self.ConfigObj,
@@ -221,7 +339,7 @@ func (self *ShellSessionTestSuite) TestExpiredBashShell() {
 	})
 	//time.Sleep(time.Hour)
 	golden.Set("Second command", self.getRows(artifact_name, flow_id))
-	goldie.Assert(self.T(), "TestBashShell", json.MustMarshalIndent(golden))
+	goldie.Assert(self.T(), "TestExpiredBashShell", json.MustMarshalIndent(golden))
 }
 
 func (self *ShellSessionTestSuite) getRows(
@@ -238,9 +356,12 @@ func (self *ShellSessionTestSuite) getRows(
 
 	for row := range rs_reader.Rows(self.Ctx) {
 		comm, _ := row.GetString("Command")
+		comm_id, _ := row.GetString("CommandId")
 		stdout, _ := row.GetString("Stdout")
 		res = append(res, ordereddict.NewDict().
-			Set("Command", comm).Set("Stdout", stdout))
+			Set("Command", comm).
+			Set("CommandId", comm_id).
+			Set("Stdout", stdout))
 	}
 
 	return res

@@ -70,7 +70,7 @@ func (self *ShellManager) Get(
 
 func (self *ShellManager) mergeSecretToRequest(
 	ctx context.Context, scope vfilter.Scope,
-	arg *StartShellFunctionArgs, secret_name string) (*StartShellFunctionArgs, error) {
+	arg *StartShellFunctionArgs) (*StartShellFunctionArgs, error) {
 	execve_args := &ShellPluginArgs{
 		Argv:   arg.Argv,
 		Env:    arg.Env,
@@ -99,8 +99,7 @@ func (self *ShellManager) newShellSession(
 
 	original_args := append([]string{}, arg.Argv...)
 	if arg.Secret != "" {
-		arg, err = self.mergeSecretToRequest(
-			ctx, scope, arg, arg.Secret)
+		arg, err = self.mergeSecretToRequest(ctx, scope, arg)
 		if err != nil {
 			return nil, err
 		}
@@ -230,7 +229,10 @@ func (self *ShellManager) newShellSession(
 	go func() {
 		defer wg.Done()
 
-		command.Wait()
+		err := command.Wait()
+		if err != nil {
+			scope.Log("shell_session: command exited with %v", err)
+		}
 	}()
 
 	// When all the pumping functions are finished, then close the
