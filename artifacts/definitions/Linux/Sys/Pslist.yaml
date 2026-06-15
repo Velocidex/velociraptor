@@ -17,8 +17,8 @@ sources:
   - query: |
         SELECT Pid, Ppid, Name, CommandLine, Exe,
                hash(path=Exe) as Hash,
-               Username, timestamp(epoch=CreateTime/1000) AS CreatedTime,
-               MemoryInfo.RSS AS RSS,
+               Username, CreateTime,
+               MemoryInfo.rss AS RSS,
                Exe =~ "\\(deleted\\)$" AS Deleted
         FROM process_tracker_pslist()
         WHERE Name =~ processRegex
