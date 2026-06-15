@@ -295,6 +295,9 @@ func (self *Launcher) CompileCollectorArgs(
 			local_timeout = spec.Timeout
 		}
 
+		// Expand the artifact into multiple separate requests
+		// artifacts. Each single artifact will be converted into a
+		// separate request.
 		for _, expanded_artifact := range expandArtifacts(artifact) {
 			vql_collector_args, err := self.GetVQLCollectorArgs(
 				ctx, config_obj, repository, expanded_artifact,

@@ -56,7 +56,7 @@
   "\"",
   "10000000,DEFAULT,\"Uploaded /test2.txt (15 bytes)",
   "\"",
-  "10000000,DEBUG,\"Query Stats: {\"\"RowsScanned\"\":2,\"\"PluginsCalled\"\":1,\"\"FunctionsCalled\"\":3,\"\"ProtocolSearch\"\":0,\"\"ScopeCopy\"\":6}",
+  "10000000,DEBUG,\"Query Stats: {\"\"RowsScanned\"\":1,\"\"PluginsCalled\"\":1,\"\"FunctionsCalled\"\":3,\"\"ProtocolSearch\"\":0,\"\"ScopeCopy\"\":3}",
   "\"",
   ""
  ],
@@ -84,7 +84,7 @@
   {
    "Timestamp": 10000000,
    "Level": "DEBUG",
-   "message": "Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":3,\"ProtocolSearch\":0,\"ScopeCopy\":6}\n"
+   "message": "Query Stats: {\"RowsScanned\":1,\"PluginsCalled\":1,\"FunctionsCalled\":3,\"ProtocolSearch\":0,\"ScopeCopy\":3}\n"
   }
  ],
  "requests.json": {
@@ -100,11 +100,8 @@
        "principal": "VelociraptorServer",
        "Query": [
         {
-         "VQL": "LET TestArtifact_0_0 = SELECT \"Hello\" AS Col, pathspec(parse=\"/bin/ls\", path_type=\"linux\") AS OSPath, upload(accessor=\"data\", file=\"Some Data\", name=\"test.txt\") AS Upload1, upload(accessor=\"data\", file=\"Some Other Data\", name=\"test2.txt\") AS Upload2 FROM scope()"
-        },
-        {
          "Name": "TestArtifact",
-         "VQL": "SELECT * FROM TestArtifact_0_0"
+         "VQL": "SELECT \"Hello\" AS Col, pathspec(parse=\"/bin/ls\", path_type=\"linux\") AS OSPath, upload(accessor=\"data\", file=\"Some Data\", name=\"test.txt\") AS Upload1, upload(accessor=\"data\", file=\"Some Other Data\", name=\"test2.txt\") AS Upload2 FROM scope()"
         }
        ],
        "max_row": 1000

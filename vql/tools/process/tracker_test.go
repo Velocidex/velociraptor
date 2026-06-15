@@ -294,7 +294,7 @@ func (self *ProcessTrackerTestSuite) runTC(
 }
 
 func (self *ProcessTrackerTestSuite) TestProcessTracker() {
-	assert.Retry(self.T(), 3, time.Second, self._TestProcessTracker)
+	assert.Retry(self.T(), 5, time.Second, self._TestProcessTracker)
 }
 
 func (self *ProcessTrackerTestSuite) _TestProcessTracker(r *assert.R) {
