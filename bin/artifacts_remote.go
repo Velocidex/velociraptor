@@ -23,23 +23,22 @@ var (
 		"fetch", "Fetch a collection from the server via the API")
 
 	artifact_command_fetch_client_id = artifact_command_fetch.Flag(
-		"client_id", "Used for remote API calls to specify the client id "+
-			"to collect from. By default this is `server` to server "+
-			"artifacts").
+		"client_id", "The client ID to fetch from. "+
+		    "The default is `server` which fetches server artifacts").
 		Default("server").String()
 
 	artifact_command_fetch_flow_id = artifact_command_fetch.Flag(
-		"flow_id", "Used for remote API calls to specify the client id "+
-			"to collect from. By default this is `server` to server "+
-			"artifacts").Required().String()
+		"flow_id", "The flow ID to fetch from "+
+			"(required).").Required().String()
 
 	artifact_command_fetch_org_id = artifact_command_fetch.Flag(
-		"org_id", "Used for remote API calls to specify the org id "+
+		"org_id", "Fetch from the specified org ID "+
 			"(default `root`)").
 		Default("root").String()
 
 	artifact_command_fetch_output = artifact_command_fetch.Flag(
-		"output", "The path to create a zip file to store the collection into.").
+		"output", "The output zip file path in which to store the "+
+		"collection data.").
 		Required().String()
 )
 
