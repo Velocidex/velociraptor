@@ -17,10 +17,26 @@ import (
 func GetProcess(ctx context.Context, pid int32) (*ordereddict.Dict, error) {
 	process_obj, err := process.NewProcessWithContext(ctx, pid)
 	if err != nil {
-		if direct, directErr := GetProcessDirect(ctx, pid); directErr == nil {
-			return direct, nil
+		p := &process.Process{
+			Pid: pid,
 		}
-		return nil, err
+		p.CreateTimeWithContext(ctx)
+
+		// Check if the process is really there.
+		_, errs := p.Status()
+		if errs != nil {
+			return nil, err
+		}
+
+		// Make the process as hidden
+		return getProcessData(p).
+			Set("Hidden", true), nil
+		/*
+			if direct, directErr := GetProcessDirect(ctx, pid); directErr == nil {
+				return direct, nil
+			}
+			return nil, err
+		*/
 	}
 
 	return getProcessData(process_obj), nil
