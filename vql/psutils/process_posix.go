@@ -17,6 +17,9 @@ import (
 func GetProcess(ctx context.Context, pid int32) (*ordereddict.Dict, error) {
 	process_obj, err := process.NewProcessWithContext(ctx, pid)
 	if err != nil {
+		if direct, directErr := GetProcessDirect(ctx, pid); directErr == nil {
+			return direct, nil
+		}
 		return nil, err
 	}
 
