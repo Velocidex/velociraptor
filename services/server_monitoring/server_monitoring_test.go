@@ -3,7 +3,7 @@ package server_monitoring_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -73,6 +73,11 @@ name: WaitForCancel
 type: SERVER_EVENT
 sources:
 - query: SELECT * FROM register_run_count() WHERE log(message="Finished!", dedup=-1)
+`, `
+name: WaitForCancel2
+type: SERVER_EVENT
+sources:
+- query: SELECT * FROM register_run_count() WHERE log(message="Finished2!", dedup=-1)
 `, `
 name: EventTest.Alert
 type: SERVER_EVENT
@@ -151,7 +156,10 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 	assert.Equal(self.T(), "Server.Clock", configuration.Artifacts[0])
 
 	// Wait here until all the queries are done.
-	event_table.(*server_monitoring.EventTable).Wait()
+	tracer := event_table.(*server_monitoring.EventTable).Tracer()
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		return len(tracer.Dump()) == 0
+	})
 
 	// Expected Server.Clock rows:
 	// {"Foo":"Y","Foo2":"DefaultFoo2","BoolFoo":true,"_ts":1602103388}
@@ -210,8 +218,12 @@ func (self *ServerMonitoringTestSuite) TestAlertEvent() {
 		})
 	assert.NoError(self.T(), err)
 
+	tracer := event_table.(*server_monitoring.EventTable).Tracer()
+
 	// Wait here until all the queries are done.
-	event_table.(*server_monitoring.EventTable).Wait()
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		return len(tracer.Dump()) == 0
+	})
 
 	golden := ordereddict.NewDict()
 
@@ -263,9 +275,8 @@ sources:
 	assert.NoError(self.T(), err)
 
 	// Wait until the query is installed.
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		return len(event_table.(*server_monitoring.EventTable).Tracer().Dump()) > 0
-	})
+	tracer := event_table.(*server_monitoring.EventTable).Tracer()
+	assert.Equal(self.T(), 1, len(tracer.Dump()))
 
 	// Now install an empty table - all queries should quit.
 	err = event_table.Update(self.Ctx,
@@ -278,7 +289,7 @@ sources:
 
 	// Wait until all queries are done.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		return len(event_table.(*server_monitoring.EventTable).Tracer().Dump()) == 0
+		return len(tracer.Dump()) == 0
 	})
 }
 
@@ -336,6 +347,74 @@ func (self *ServerMonitoringTestSuite) TestQueriesAreCancelled() {
 
 	// Wait until all queries are done and cancelled.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		return atomic.LoadInt64(&run_count) == 0
+	})
+}
+
+// Concurrent updates must not orphan running queries: every query
+// that is started must be cancellable by a later update.
+func (self *ServerMonitoringTestSuite) TestConcurrentUpdatesDoNotLeakQueries() {
+	run_count := int64(0)
+
+	actions.QueryLog.Clear()
+
+	vql_subsystem.OverridePlugin(
+		vfilter.GenericListPlugin{
+			PluginName: "register_run_count",
+			Function: func(
+				ctx context.Context, scope vfilter.Scope,
+				args *ordereddict.Dict) []vfilter.Row {
+
+				atomic.AddInt64(&run_count, 1)
+
+				// Wait here until we get cancelled.
+				<-ctx.Done()
+				atomic.AddInt64(&run_count, -1)
+
+				return nil
+			},
+		})
+
+	event_table, err := services.GetServerEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Hammer the table from several updaters, alternating between
+	// two artifact sets so every update really reloads the table.
+	var wg sync.WaitGroup
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+
+			for j := 0; j < 10; j++ {
+				name := "WaitForCancel"
+				if (i+j)%2 == 0 {
+					name = "WaitForCancel2"
+				}
+				err := event_table.Update(self.Ctx,
+					self.ConfigObj, "",
+					&flows_proto.ArtifactCollectorArgs{
+						Artifacts: []string{name},
+					})
+				assert.NoError(self.T(), err)
+			}
+		}(i)
+	}
+	wg.Wait()
+
+	// Now install an empty table - every started query must quit. If
+	// an update overwrote the cancel function of a concurrent update,
+	// the orphaned queries can never be cancelled and run_count stays
+	// above zero.
+	err = event_table.Update(self.Ctx,
+		self.ConfigObj, "",
+		&flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{},
+			Specs:     []*flows_proto.ArtifactSpec{},
+		})
+	assert.NoError(self.T(), err)
+
+	vtesting.WaitUntil(10*time.Second, self.T(), func() bool {
 		return atomic.LoadInt64(&run_count) == 0
 	})
 }
@@ -419,6 +498,73 @@ sources:
 	})
 }
 
+// Test that modifying artifacts quickly results in only one event
+// table restart.
+func (self *ServerMonitoringTestSuite) TestUpdateDebounceWhenArtifactModified() {
+	run_count := int64(0)
+
+	vql_subsystem.OverridePlugin(
+		vfilter.GenericListPlugin{
+			PluginName: "register_run_count",
+			Function: func(
+				ctx context.Context, scope vfilter.Scope,
+				args *ordereddict.Dict) []vfilter.Row {
+
+				atomic.AddInt64(&run_count, 1)
+
+				return nil
+			},
+		})
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	set_artifact := func(i int) {
+		_, err = manager.SetArtifactFile(self.Ctx, self.ConfigObj,
+			utils.GetSuperuserName(self.ConfigObj), fmt.Sprintf(`
+name: TestArtifactCount
+type: SERVER_EVENT
+sources:
+- query: |
+    SELECT * FROM register_run_count()
+    WHERE log(message="Step %%v!", dedup=-1, args=%d)
+`, i), "")
+
+		assert.NoError(self.T(), err)
+	}
+
+	set_artifact(0)
+
+	// Install a table with a an artifact that uses the plugin.
+	event_table, err := services.GetServerEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = event_table.Update(self.Ctx,
+		self.ConfigObj, "",
+		&flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"TestArtifactCount"},
+			Specs:     []*flows_proto.ArtifactSpec{},
+		})
+	assert.NoError(self.T(), err)
+
+	// Wait here until the query is installed.
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		return atomic.LoadInt64(&run_count) == 1
+	})
+
+	// Add the new custom artifacts to the repository many times
+	for i := 0; i < 10; i++ {
+		set_artifact(i)
+	}
+
+	// Wait for the debounce to fire.
+	time.Sleep(time.Second)
+
+	// Overall we should run the query only one more time as all the
+	// others were debounced.
+	assert.Equal(self.T(), int64(2), atomic.LoadInt64(&run_count))
+}
+
 // Make sure watch monitoring can follow server event streams.
 func (self *ServerMonitoringTestSuite) TestWatchMonitoring() {
 	repository := self.LoadArtifacts(`
@@ -480,7 +626,7 @@ func readAll(filename string) string {
 	}
 	defer fd.Close()
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := io.ReadAll(fd)
 	if err != nil {
 		return ""
 	}
