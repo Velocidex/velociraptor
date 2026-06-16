@@ -31,7 +31,6 @@ number_color = "\x1b[37m"
 comment_color = "\x1b[92m"
 arrow_color = "\x1b[93m"
 tab_color = "\x1b[90m"
-max_string_len = 1000
 
 proto_fields = ["state", "sizeCache", "unknownFields"]
 

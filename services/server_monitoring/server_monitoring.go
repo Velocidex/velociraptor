@@ -439,7 +439,7 @@ func (self *EventTable) _RunQuery(
 			}
 
 			// Remove the query from the tracer immediately as well as
-			// on exit. It is safe to call mulitple times.
+			// on exit. It is safe to call multiple times.
 			self.Tracer().Clear(query.VQL)
 		}
 	}()

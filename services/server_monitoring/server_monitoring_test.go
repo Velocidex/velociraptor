@@ -498,7 +498,7 @@ sources:
 	})
 }
 
-// Test that modifiying artifacts quickly results in only one event
+// Test that modifying artifacts quickly results in only one event
 // table restart.
 func (self *ServerMonitoringTestSuite) TestUpdateDebounceWhenArtifactModified() {
 	run_count := int64(0)
