@@ -41,16 +41,10 @@ type EventTable struct {
 	// Wait for all subqueries to finish using this wg
 	wg *sync.WaitGroup
 
-	logger *serverLogger
-
 	tracer *QueryTracer
 
 	request         *flows_proto.ArtifactCollectorArgs
 	current_queries []*actions_proto.VQLCollectorArgs
-}
-
-func (self *EventTable) Wait() {
-	self.wg.Wait()
 }
 
 func (self *EventTable) Tracer() *QueryTracer {
@@ -68,32 +62,26 @@ func (self *EventTable) Close() {
 }
 
 func (self *EventTable) _Close() {
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+
 	// Close the old table.
 	if self.cancel != nil {
-		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Info("<red>Closing</> Server Monitoring Event table for %v",
 			services.GetOrgName(self.config_obj))
 
 		self.cancel()
 		self.cancel = nil
 	}
-
-	// Wait here until all the old queries are cancelled. Do not hold
-	// the lock while we are waiting or the event table will be
-	// deadlocked.
-	wg := self.wg
-	self.mu.Unlock()
-	wg.Wait()
-	self.mu.Lock()
-
-	// Get ready for the next run.
-	self.wg = &sync.WaitGroup{}
 }
 
 func (self *EventTable) Get() *flows_proto.ArtifactCollectorArgs {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	return self._Get()
+}
+
+func (self *EventTable) _Get() *flows_proto.ArtifactCollectorArgs {
 	if self.request == nil {
 		return &flows_proto.ArtifactCollectorArgs{}
 	}
@@ -161,6 +149,9 @@ func (self *EventTable) Update(
 
 	logger.Info("<green>server_monitoring</>: Updating monitoring table")
 
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	// Now store the monitoring table on disk.
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -172,12 +163,10 @@ func (self *EventTable) Update(
 		return err
 	}
 
-	self.mu.Lock()
 	self.request = request
-	self.mu.Unlock()
 
 	// Update the queries immediately
-	return self.StartQueries(config_obj)
+	return self._StartQueries(config_obj, request)
 }
 
 // Compare a new set of queries with the current set to see if they
@@ -214,13 +203,22 @@ func (self *EventTable) equal(events []*actions_proto.VQLCollectorArgs) bool {
 	return true
 }
 
-// Start the queries in the request
-func (self *EventTable) StartQueries(config_obj *config_proto.Config) error {
-
-	request := self.Get()
-
+// Restart the queries in the request
+func (self *EventTable) RestartQueries(config_obj *config_proto.Config) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	request := self._Get()
+
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger.Debug("ServerMonitoring: Restarting %v Queries", len(request.Artifacts))
+
+	return self._StartQueries(config_obj, request)
+}
+
+func (self *EventTable) _StartQueries(
+	config_obj *config_proto.Config,
+	request *flows_proto.ArtifactCollectorArgs) error {
 
 	// Compile the ArtifactCollectorArgs into a list of requests.
 	launcher, err := services.GetLauncher(config_obj)
@@ -241,9 +239,8 @@ func (self *EventTable) StartQueries(config_obj *config_proto.Config) error {
 	// No ACLs enforced on server events.
 	acl_manager := acl_managers.NullACLManager{}
 
-	// Make a context for all the VQL queries.
+	// Make a cancellable context for all the sub VQL queries.
 	subctx, cancel := context.WithCancel(self.parent_ctx)
-	defer cancel()
 
 	// Compile the collection request into multiple
 	// VQLCollectorArgs - each will be collected in a different
@@ -254,6 +251,7 @@ func (self *EventTable) StartQueries(config_obj *config_proto.Config) error {
 			IgnoreMissingArtifacts: true,
 		}, request)
 	if err != nil {
+		cancel()
 		return err
 	}
 
@@ -262,6 +260,7 @@ func (self *EventTable) StartQueries(config_obj *config_proto.Config) error {
 	if self.equal(vql_requests) {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Info("server_monitoring: Skipping table update because queries have not changed.")
+		cancel()
 		return nil
 	}
 
@@ -273,12 +272,11 @@ func (self *EventTable) StartQueries(config_obj *config_proto.Config) error {
 	self.current_queries = vql_requests
 
 	// Create a new ctx for the new run.
-	new_ctx, cancel := context.WithCancel(self.parent_ctx)
 	self.cancel = cancel
 
 	// Run each collection separately in parallel.
 	for _, vql_request := range vql_requests {
-		err = self.RunQuery(new_ctx, config_obj, self.wg, vql_request)
+		err = self._RunQuery(subctx, config_obj, self.wg, vql_request)
 		if err != nil {
 			return err
 		}
@@ -298,7 +296,7 @@ func getArtifactName(vql_request *actions_proto.VQLCollectorArgs) string {
 	return ""
 }
 
-func (self *EventTable) RunQuery(
+func (self *EventTable) _RunQuery(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup,
@@ -346,7 +344,7 @@ func (self *EventTable) RunQuery(
 		config_obj, constants.VELOCIRAPTOR_SERVER_CLIENT_ID, "",
 		artifact_name, artifact_modes.MODE_SERVER_EVENT)
 
-	self.logger = &serverLogger{
+	logger := &serverLogger{
 		config_obj:   self.config_obj,
 		path_manager: log_path_manager,
 		ctx:          ctx,
@@ -363,7 +361,7 @@ func (self *EventTable) RunQuery(
 			self.config_obj, principal),
 		Env:        ordereddict.NewDict(),
 		Repository: repository,
-		Logger:     log.New(self.logger, "", 0),
+		Logger:     log.New(logger, "", 0),
 	}
 
 	for _, env_spec := range vql_request.Env {
@@ -380,24 +378,31 @@ func (self *EventTable) RunQuery(
 
 	scope.Log("server_monitoring: Collecting <green>%v</>", artifact_name)
 
+	// Add the queries to tracer immediately - the goroutines below
+	// will remove them asynchronously as they are completed.
+	for _, query := range vql_request.Query {
+		self.tracer.Set(query.VQL)
+	}
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		//defer rs_writer.Close()
 		defer scope.Close()
+
 		defer scope.Log("server_monitoring: Finished collecting %v", artifact_name)
 
 		for _, query := range vql_request.Query {
 			query_log := actions.QueryLog.AddQuery(query.VQL)
-			query_start := uint64(utils.GetTime().Now().UTC().UnixNano() / 1000)
 
-			// Record the current query.
-			self.Tracer().Set(query.VQL)
+			// Can call multiple times: Cover error paths
+			defer query_log.Close()
 			defer self.Tracer().Clear(query.VQL)
+
+			query_start := uint64(utils.GetTime().Now().UTC().UnixNano() / 1000)
 
 			vql, err := vfilter.Parse(query.VQL)
 			if err != nil {
-				query_log.Close()
 				return
 			}
 
@@ -407,7 +412,6 @@ func (self *EventTable) RunQuery(
 			for {
 				select {
 				case <-ctx.Done():
-					query_log.Close()
 					return
 
 				case <-time.After(utils.Jitter(
@@ -418,6 +422,7 @@ func (self *EventTable) RunQuery(
 
 				case row, ok := <-eval_chan:
 					if !ok {
+						// Remove this query immediately
 						query_log.Close()
 						break one_query
 					}
@@ -432,18 +437,18 @@ func (self *EventTable) RunQuery(
 						ctx, config_obj, event, journal_opts)
 				}
 			}
-			self.tracer.Clear(query.VQL)
-		}
 
+			// Remove the query from the tracer immediately as well as
+			// on exit. It is safe to call multiple times.
+			self.Tracer().Clear(query.VQL)
+		}
 	}()
 
 	return nil
 }
 
 func (self *EventTable) startLoadFileLoop(
-	ctx context.Context,
-	wg *sync.WaitGroup, config_obj *config_proto.Config) error {
-	defer wg.Done()
+	ctx context.Context, config_obj *config_proto.Config) error {
 
 	notifier, err := services.GetNotifier(config_obj)
 	if err != nil {
@@ -465,7 +470,8 @@ func (self *EventTable) startLoadFileLoop(
 
 			notification, remove = notifier.ListenForNotification(
 				loadFileQueue(config_obj))
-			err := self.StartQueries(config_obj)
+
+			err := self.RestartQueries(config_obj)
 			if err != nil {
 				logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 				logger.Error("startLoadFileLoop: %v", err)
@@ -479,8 +485,6 @@ func (self *EventTable) Start(
 	ctx context.Context,
 	wg *sync.WaitGroup, config_obj *config_proto.Config) error {
 
-	defer wg.Done()
-
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
@@ -488,7 +492,9 @@ func (self *EventTable) Start(
 
 	wg.Add(1)
 	go func() {
-		err := self.startLoadFileLoop(ctx, wg, config_obj)
+		defer wg.Done()
+
+		err := self.startLoadFileLoop(ctx, config_obj)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 			logger.Error("startLoadFileLoop: %v", err)
@@ -559,12 +565,13 @@ func NewServerMonitoringService(
 	manager := &EventTable{
 		config_obj: config_obj,
 		parent_ctx: ctx,
-		wg:         &sync.WaitGroup{},
+		wg:         wg,
 		tracer:     NewQueryTracer(),
 	}
 
 	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		defer manager.Close()
 
 		err := manager.Start(ctx, wg, config_obj)
