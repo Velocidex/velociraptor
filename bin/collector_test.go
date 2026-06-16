@@ -341,7 +341,7 @@ func (self *CollectorTestSuite) TestCollectorPlain() {
 		rc, err := f.Open()
 		assert.NoError(t, err)
 
-		data, err := ioutil.ReadAll(rc)
+		data, err := io.ReadAll(rc)
 		assert.NoError(t, err)
 
 		// Make sure the data from the artifact contains the following

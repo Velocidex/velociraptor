@@ -55,6 +55,7 @@ def set_config():
     dlv_command("config source-list-arrow-color " + arrow_color)
     dlv_command("config source-list-tab-color " + tab_color)
     dlv_command("config max-variable-recurse 5")
+    dlv_command("config max-string-len 1000")
 
 def debug_Variable(x):
     print(repr(x))

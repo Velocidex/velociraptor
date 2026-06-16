@@ -261,7 +261,7 @@ func TestBuildDeb(t *testing.T) {
 
 	cmd := exec.Command(
 		binary, "config", "generate", "--merge",
-		`{"Client": {"nonce": "Foo", "writeback_linux": "some_location"}}`)
+		`{"Client": {"nonce": "FooNonce", "writeback_linux": "some_location"}}`)
 	out, err := cmd.Output()
 	require.NoError(t, err)
 
@@ -309,6 +309,16 @@ func TestBuildDeb(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Greater(t, stat.Size(), int64(0))
+
+	features, err := extractDebFeatures(fd)
+	assert.NoError(t, err)
+
+	// Make sure our custom config is the one actually packaged
+	assert.Contains(t, features.ConfigFile, `nonce: FooNonce`)
+	binary_file_stat, err := os.Lstat(binary_file)
+	assert.NoError(t, err)
+
+	assert.Equal(t, binary_file_stat.Size(), int64(len(features.Binary)))
 }
 
 func TestGenerateConfigWithMerge(t *testing.T) {
