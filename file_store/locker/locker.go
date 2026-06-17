@@ -7,8 +7,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
-// A Path locker impletments serialization for writers on filesystem
-// paths. Datastore impletmentations can use it to ensure files are
+// A Path locker implements serialization for writers on filesystem
+// paths. Datastore implementations can use it to ensure files are
 // locked during writes and can be accessed by multiple writers
 // safely.
 type lockWriteWrapper struct {
