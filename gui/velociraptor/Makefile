@@ -15,4 +15,8 @@ lint:
 test: FORCE
 	npm test
 
+clean:
+	rm -rf node_modules/
+	npm ci
+
 FORCE: ;
