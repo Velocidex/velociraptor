@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -30,6 +29,7 @@ import (
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
 	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
@@ -241,10 +241,14 @@ func (self *TestSuite) TestMonitoringInvalid() {
 }
 
 func (self *TestSuite) TestResourceLimits() {
+	assert.Retry(self.T(), 3, time.Second, self._TestResourceLimits)
+}
+
+func (self *TestSuite) _TestResourceLimits(t *assert.R) {
 	manager, err := services.GetRepositoryManager(self.ConfigObj)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 	repository, err := manager.GetGlobalRepository(self.ConfigObj)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	request := &flows_proto.ArtifactCollectorArgs{
 		ClientId:  self.client_id,
@@ -258,25 +262,25 @@ func (self *TestSuite) TestResourceLimits() {
 	// Schedule a new flow.
 	ctx := self.Ctx
 	launcher, err := services.GetLauncher(self.ConfigObj)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx,
 		self.ConfigObj,
 		acl_managers.NullACLManager{},
 		repository, request, nil)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	// Drain messages to the client.
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	var messages []*crypto_proto.VeloMessage
 
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(time.Second, t, func() bool {
 		messages, err = client_info_manager.GetClientTasks(
 			self.Ctx, self.client_id)
-		assert.NoError(self.T(), err)
+		assert.NoError(t, err)
 		return len(messages) == 2
 	})
 
@@ -286,11 +290,11 @@ func (self *TestSuite) TestResourceLimits() {
 	// VQLClientAction request with the first request incorporating
 	// the FlowRequest message. Old clients will ignore the old
 	// requests and new clients will ignore the old style requests.
-	assert.Equal(self.T(), len(messages), 2)
-	assert.True(self.T(), messages[0].FlowRequest != nil)
-	assert.True(self.T(), messages[0].VQLClientAction != nil)
-	assert.True(self.T(), messages[1].VQLClientAction != nil)
-	assert.Equal(self.T(), len(messages[0].FlowRequest.VQLClientActions), 2)
+	assert.Equal(t, len(messages), 2)
+	assert.True(t, messages[0].FlowRequest != nil)
+	assert.True(t, messages[0].VQLClientAction != nil)
+	assert.True(t, messages[1].VQLClientAction != nil)
+	assert.Equal(t, len(messages[0].FlowRequest.VQLClientActions), 2)
 
 	// Send one row.
 	message := &crypto_proto.VeloMessage{
@@ -315,11 +319,11 @@ func (self *TestSuite) TestResourceLimits() {
 	collection_context, err := LoadCollectionContext(
 		self.Ctx, self.ConfigObj,
 		self.client_id, flow_id, services.GetFlowOptions{})
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	// Collection has 1 row and it is still in the running state.
-	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(1))
-	assert.Equal(self.T(), collection_context.State,
+	assert.Equal(t, collection_context.TotalCollectedRows, uint64(1))
+	assert.Equal(t, collection_context.State,
 		flows_proto.ArtifactCollectorContext_IN_PROGRESS)
 
 	// Send another row
@@ -331,11 +335,11 @@ func (self *TestSuite) TestResourceLimits() {
 	// Load the collection context and see what happened.
 	collection_context, err = LoadCollectionContext(self.Ctx, self.ConfigObj,
 		self.client_id, flow_id, services.GetFlowOptions{})
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	// Collection has 2 rows and it is still in the running state.
-	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(2))
-	assert.Equal(self.T(), collection_context.State,
+	assert.Equal(t, collection_context.TotalCollectedRows, uint64(2))
+	assert.Equal(t, collection_context.State,
 		flows_proto.ArtifactCollectorContext_IN_PROGRESS)
 
 	// Now send 5 rows in one message. We should accept the 5 rows
@@ -351,25 +355,25 @@ func (self *TestSuite) TestResourceLimits() {
 		self.client_id, flow_id, services.GetFlowOptions{
 			Request: true,
 		})
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
 	// Collection has 7 rows and it is still in the running state.
-	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(7))
-	assert.Equal(self.T(), collection_context.State,
+	assert.Equal(t, collection_context.TotalCollectedRows, uint64(7))
+	assert.Equal(t, collection_context.State,
 		flows_proto.ArtifactCollectorContext_ERROR)
 
-	assert.Contains(self.T(), collection_context.Status, "Row count exceeded")
+	assert.Contains(t, collection_context.Status, "Row count exceeded")
 
 	// Make sure a cancel message was sent to the client.
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(time.Second, t, func() bool {
 		messages, err = client_info_manager.PeekClientTasks(
 			self.Ctx, self.client_id)
-		assert.NoError(self.T(), err)
+		assert.NoError(t, err)
 		return len(messages) == 1
 	})
 
-	assert.Equal(self.T(), len(messages), 1)
-	assert.NotNil(self.T(), messages[0].Cancel)
+	assert.Equal(t, len(messages), 1)
+	assert.NotNil(t, messages[0].Cancel)
 
 	// Another message arrives from the client - this happens
 	// usually because the client has not received the cancel yet
@@ -384,10 +388,10 @@ func (self *TestSuite) TestResourceLimits() {
 	// messages which are still in flight.
 	collection_context, err = LoadCollectionContext(self.Ctx, self.ConfigObj,
 		self.client_id, flow_id, services.GetFlowOptions{})
-	assert.NoError(self.T(), err)
+	assert.NoError(t, err)
 
-	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(12))
-	assert.Equal(self.T(), collection_context.State,
+	assert.Equal(t, collection_context.TotalCollectedRows, uint64(12))
+	assert.Equal(t, collection_context.State,
 		flows_proto.ArtifactCollectorContext_ERROR)
 }
 

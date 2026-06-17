@@ -22,10 +22,6 @@ var (
 	escape_regex            = regexp.MustCompile("(^[0-9]|[\"' .-])")
 )
 
-func escape_name(name string) string {
-	return regexp.MustCompile("[^a-zA-Z0-9]").ReplaceAllString(name, "_")
-}
-
 func maybeEscape(name string) string {
 	if escape_regex.FindString(name) != "" {
 		return "`" + name + "`"

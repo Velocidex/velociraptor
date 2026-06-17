@@ -27,17 +27,18 @@ func UnzipToFilestore(
 		components := utils.SplitComponents(f.Name)
 		output_path := base.AddChild(components...).
 			SetType(api.PATH_TYPE_FILESTORE_ANY)
-		fd, err := file_store_factory.WriteFile(output_path)
+		out_fd, err := file_store_factory.WriteFile(output_path)
 		if err != nil {
 			return err
 		}
-		infd, err := reader.Open(f.Name)
+		in_fd, err := reader.Open(f.Name)
 		if err != nil {
+			out_fd.Close()
 			continue
 		}
 
-		_, err = io.Copy(fd, infd)
-		fd.Close()
+		_, err = io.Copy(out_fd, in_fd)
+		out_fd.Close()
 
 		if err != nil {
 			return err

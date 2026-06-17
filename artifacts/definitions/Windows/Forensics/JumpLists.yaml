@@ -686,7 +686,7 @@ sources:
         SELECT OSPath AS AutomaticDestinationsPath
         FROM glob(globs=Globs)
       }, query={
-        SELECT AutomaticDestinationsPath, Name,
+        SELECT AutomaticDestinationsPath, OSPath, Name,
             parse_binary(filename=OSPath, accessor="mscfb",
                          profile=Profile, struct="ShellLinkHeader")  AS Parsed
         FROM glob(globs='*', accessor="mscfb",
@@ -700,7 +700,7 @@ sources:
             Parsed.LinkInfo as _LinkInfo,
             ShowLinkTarget(ShellBag=Parsed.LinkTargetIDList.IDList.ShellBag) as _LinkTarget,
             Parsed.StringData as _StringData,
-            ShowExtraData(Parsed=Parsed) as _ExtraData,
+            ShowExtraData(Parsed=Parsed, OSPath=OSPath) as _ExtraData,
             property_store(Parsed=Parsed) as _PropertyStore
       FROM X
 

@@ -1728,8 +1728,8 @@ export: |
          LinkTargetIDList=Parsed.LinkTargetIDList
       )
 
-      LET ShowExtraData(Parsed) = to_dict(item={
-        SELECT  if(condition= BlockClass=~'^0x',
+      LET ShowExtraData(Parsed, OSPath) = to_dict(item={
+        SELECT if(condition= BlockClass=~'^0x',
                   then= 'Overlay',
                   else= BlockClass ) as _key,
             if(condition= Data.DataValue,
@@ -1766,7 +1766,7 @@ sources:
         Parsed.LinkInfo as LinkInfo,
         ShowLinkTarget(ShellBag=Parsed.LinkTargetIDList.IDList.ShellBag) as LinkTarget,
         Parsed.StringData as StringData,
-        ShowExtraData(Parsed=Parsed) as ExtraData,
+        ShowExtraData(Parsed=Parsed, OSPath=OSPath) as ExtraData,
         property_store(Parsed=Parsed) as PropertyStore,
         Parsed.Overlay as Overlay,
         Parsed

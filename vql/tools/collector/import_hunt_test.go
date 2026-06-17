@@ -147,7 +147,7 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 			Set("hunt_id", hunt.HuntId).
 			Set("wait", true))
 
-	download_pathspec, ok := result.(path_specs.FSPathSpec)
+	download_pathspec, ok := result.(*path_specs.FSPathSpec)
 	assert.True(self.T(), ok)
 	assert.NotEmpty(self.T(), download_pathspec.String())
 

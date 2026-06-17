@@ -104,7 +104,8 @@ func (self *ResultSetTestSuite) TestResultSetSimple() {
 
 func (self *ResultSetTestSuite) TestResultSetWriter() {
 	// Write some flow logs.
-	path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id).Log()
+	path_manager := paths.NewFlowPathManager(
+		self.client_id, self.flow_id).Log()
 	rs, err := result_sets.NewResultSetWriter(
 		self.file_store, path_manager, nil, utils.SyncCompleter, true)
 	assert.NoError(self.T(), err)
@@ -147,7 +148,8 @@ func (self *ResultSetTestSuite) TestResultSetWriter() {
 
 func (self *ResultSetTestSuite) TestResultSetUpdaterBulkJSONL() {
 	// Write some flow logs.
-	path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id).Log()
+	path_manager := paths.NewFlowPathManager(
+		self.client_id, self.flow_id).Log()
 	rs, err := result_sets.NewResultSetWriter(
 		self.file_store, path_manager, nil, utils.SyncCompleter, true)
 	assert.NoError(self.T(), err)
@@ -161,6 +163,7 @@ func (self *ResultSetTestSuite) TestResultSetUpdaterBulkJSONL() {
 		self.file_store, path_manager, nil, utils.SyncCompleter,
 		result_sets.AppendMode)
 	assert.NoError(self.T(), err)
+	defer rs.Close()
 
 	// Update a row with a new record which is shorter than the old
 	// record, new record will be slotted inside the existing record
@@ -206,7 +209,8 @@ func (self *ResultSetTestSuite) TestResultSetUpdaterBulkJSONL() {
 
 func (self *ResultSetTestSuite) TestResultSetUpdaterWithAppend() {
 	// Write some flow logs.
-	path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id).Log()
+	path_manager := paths.NewFlowPathManager(
+		self.client_id, self.flow_id).Log()
 	rs, err := result_sets.NewResultSetWriter(
 		self.file_store, path_manager, nil, utils.SyncCompleter, true)
 	assert.NoError(self.T(), err)
@@ -224,6 +228,8 @@ func (self *ResultSetTestSuite) TestResultSetUpdaterWithAppend() {
 	// Update with a long string will push the new record to the end of the result set.
 	err = rs.Update(1, ordereddict.NewDict().Set("Foo", "A very long string"))
 	assert.NoError(self.T(), err)
+
+	rs.Close()
 
 	// Append a new row to the end of the result_set.
 	rs, err = result_sets.NewResultSetWriter(
@@ -249,7 +255,9 @@ func (self *ResultSetTestSuite) TestResultSetUpdaterWithAppend() {
 
 func (self *ResultSetTestSuite) TestResultSetUpdaterSeparateRows() {
 	// Write some flow logs.
-	path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id).Log()
+	path_manager := paths.NewFlowPathManager(
+		self.client_id, self.flow_id).Log()
+
 	rs, err := result_sets.NewResultSetWriter(
 		self.file_store, path_manager, nil, utils.SyncCompleter, true)
 	assert.NoError(self.T(), err)
@@ -264,6 +272,7 @@ func (self *ResultSetTestSuite) TestResultSetUpdaterSeparateRows() {
 		self.file_store, path_manager, nil, utils.SyncCompleter,
 		result_sets.AppendMode)
 	assert.NoError(self.T(), err)
+	defer rs.Close()
 
 	// Update a row with a new record which is shorter than the old
 	// record, new record will be slotted inside the existing record
@@ -303,7 +312,8 @@ func (self *ResultSetTestSuite) TestResultSetWriterWithCompletion() {
 	var mu sync.Mutex
 	result := ordereddict.NewDict()
 
-	path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id).Log()
+	path_manager := paths.NewFlowPathManager(
+		self.client_id, self.flow_id).Log()
 	rs, err := result_sets.NewResultSetWriter(self.file_store, path_manager,
 		nil,
 		func() {
@@ -332,7 +342,8 @@ func (self *ResultSetTestSuite) TestResultSetWriterWithCompletion() {
 
 func (self *ResultSetTestSuite) TestResultSetWriterTruncate() {
 	// Write some flow logs.
-	path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id).Log()
+	path_manager := paths.NewFlowPathManager(
+		self.client_id, self.flow_id).Log()
 	rs, err := result_sets.NewResultSetWriter(self.file_store,
 		path_manager, nil, utils.SyncCompleter, false /* truncate */)
 	assert.NoError(self.T(), err)
@@ -390,7 +401,8 @@ func (self *ResultSetTestSuite) TestResultSetWriterWriteJSONL() {
 	// the data to the file. However we don't know any of the row
 	// indexes in the JSON blob, but we do know how many rows it
 	// is in total.
-	path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id).Log()
+	path_manager := paths.NewFlowPathManager(
+		self.client_id, self.flow_id).Log()
 	rs, err := result_sets.NewResultSetWriter(self.file_store, path_manager,
 		nil, utils.SyncCompleter, result_sets.AppendMode)
 	assert.NoError(self.T(), err)

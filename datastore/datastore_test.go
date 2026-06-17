@@ -45,7 +45,7 @@ type BaseTestSuite struct {
 
 func (self BaseTestSuite) TestSetGetJSON() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
-	for _, path := range []path_specs.DSPathSpec{
+	for _, path := range []api.DSPathSpec{
 		path_specs.NewUnsafeDatastorePath("a", "b/c", "d"),
 		path_specs.NewUnsafeDatastorePath("a", "b/c", "d/a"),
 		path_specs.NewUnsafeDatastorePath("a", "b/c", "d?\""),

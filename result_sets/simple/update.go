@@ -37,7 +37,7 @@ func (self *ResultSetWriterImpl) Update(
 
 	serialized = append(serialized, '\n')
 
-	err = update_row(self.file_store_factory,
+	err = self.update_row(self.file_store_factory,
 		self.log_path, int64(index), serialized)
 
 	return err
@@ -45,22 +45,10 @@ func (self *ResultSetWriterImpl) Update(
 
 // Break a combined JSON blob into line indexes and update the row
 // with new data.
-func update_row(
+func (self *ResultSetWriterImpl) update_row(
 	file_store_factory api.FileStore,
 	log_path api.FSPathSpec, idx int64,
 	serialized []byte) error {
-	idx_writer, err := file_store_factory.WriteFile(log_path.
-		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
-	if err != nil {
-		return err
-	}
-	defer idx_writer.Close()
-
-	fd_writer, err := file_store_factory.WriteFile(log_path)
-	if err != nil {
-		return err
-	}
-	defer fd_writer.Close()
 
 	fd, err := file_store_factory.ReadFile(log_path)
 	if err != nil {
@@ -163,7 +151,7 @@ func update_row(
 					serialized = append(serialized, ' ')
 				}
 
-				err := fd_writer.Update(serialized, block_offset)
+				err := self.fd.Update(serialized, block_offset)
 				if err != nil {
 					return err
 				}
@@ -182,7 +170,7 @@ func update_row(
 				}
 
 				// Write the data at the end of the file.
-				end_offset, err := fd_writer.Size()
+				end_offset, err := self.fd.Size()
 				if err != nil {
 					return err
 				}
@@ -190,7 +178,7 @@ func update_row(
 				replacement_bytes = append([]byte{'@'}, replacement_bytes...)
 				replacement_bytes = append(replacement_bytes, '\n')
 
-				_, err = fd_writer.Write(replacement_bytes)
+				_, err = self.fd.Write(replacement_bytes)
 				if err != nil {
 					return err
 				}
@@ -201,7 +189,7 @@ func update_row(
 					serialized_ptr = append(serialized_ptr, ' ')
 				}
 
-				err = fd_writer.Update(serialized_ptr, block_offset)
+				err = self.fd.Update(serialized_ptr, block_offset)
 				if err != nil {
 					return err
 				}
@@ -216,7 +204,7 @@ func update_row(
 		block_offset += int64(len(line))
 	}
 
-	err = idx_writer.Update(offset_buffer.Bytes(), 8*block_idx)
+	err = self.index_fd.Update(offset_buffer.Bytes(), 8*block_idx)
 	if err != nil {
 		return err
 	}
