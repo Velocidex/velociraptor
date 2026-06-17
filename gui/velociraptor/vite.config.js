@@ -108,4 +108,7 @@ export default defineConfig({
         },
       },
     },
+    legacy: {
+        inconsistentCjsInterop: true,
+    }
 });
