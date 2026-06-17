@@ -111,6 +111,7 @@ func NewServerLogWriter(
 		for {
 			select {
 			case <-ctx.Done():
+				log_writer.Close()
 				return
 
 			case <-time.After(utils.Jitter(time.Second)):

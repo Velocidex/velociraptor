@@ -14,6 +14,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/locker"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -44,6 +45,7 @@ func NewMemoryFileStore(config_obj *config_proto.Config) *MemoryFileStore {
 		Test_memory_file_store = &MemoryFileStore{
 			Data:       ordereddict.NewDict(),
 			Paths:      ordereddict.NewDict(),
+			Locker:     locker.NewPathLocker(),
 			db:         db,
 			config_obj: config_obj,
 		}
@@ -66,6 +68,7 @@ type MemoryFileStore struct {
 	Data       *ordereddict.Dict
 	Paths      *ordereddict.Dict
 	db         datastore.DataStore
+	Locker     *locker.PathLocker
 }
 
 func (self *MemoryFileStore) Debug() {
@@ -139,6 +142,9 @@ func (self *MemoryFileStore) WriteFileWithCompletion(
 
 	defer api.InstrumentWithDelay("write_open", "MemoryFileStore", nil)()
 
+	locker := self.Locker.GetHandle(path)
+	defer locker.Close()
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -151,13 +157,13 @@ func (self *MemoryFileStore) WriteFileWithCompletion(
 	self.Data.Set(filename, buf)
 	self.Paths.Set(filename, path)
 
-	return &MemoryWriter{
+	return locker.WrapWriter(&MemoryWriter{
 		buf:               buf.([]byte),
 		pathSpec_:         path,
 		memory_file_store: self,
 		filename:          filename,
 		completion:        completion,
-	}, nil
+	}), nil
 }
 
 func (self *MemoryFileStore) StatFile(path api.FSPathSpec) (api.FileInfo, error) {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	net_url "net/url"
 	"path"
 	"strings"
 
@@ -356,7 +355,7 @@ func (self *LinkToFunction) Info(
 func makeFragment(parts ...string) string {
 	var res []string
 	for _, p := range parts {
-		escaped := net_url.QueryEscape(p)
+		escaped := url.QueryEscape(p)
 		// QueryEscape converts spaces to + but javascript's
 		// decodeURIComponent does not convert them back so we always
 		// convert spaces to %20

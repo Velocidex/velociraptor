@@ -100,13 +100,13 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 		err = db.DeleteSubject(config_obj, t)
 
 	case path_specs.DSPathSpec:
-		err = db.DeleteSubject(config_obj, t)
+		err = db.DeleteSubject(config_obj, &t)
 
 	case *path_specs.FSPathSpec:
 		err = file_store_factory.Delete(t)
 
 	case path_specs.FSPathSpec:
-		err = file_store_factory.Delete(t)
+		err = file_store_factory.Delete(&t)
 
 	case *accessors.OSPath:
 		path_spec := path_specs.NewSafeFilestorePath(t.Components...).
@@ -189,13 +189,13 @@ func (self *FileStore) Call(ctx context.Context,
 		return datastore.AsFilestoreFilename(db, config_obj, t)
 
 	case path_specs.FSPathSpec:
-		return datastore.AsFilestoreFilename(db, config_obj, t)
+		return datastore.AsFilestoreFilename(db, config_obj, &t)
 
 	case *path_specs.DSPathSpec:
 		return datastore.AsDatastoreFilename(db, config_obj, t)
 
 	case path_specs.DSPathSpec:
-		return datastore.AsDatastoreFilename(db, config_obj, t)
+		return datastore.AsDatastoreFilename(db, config_obj, &t)
 
 	case *accessors.OSPath:
 		return datastore.AsFilestoreFilename(db, config_obj,
