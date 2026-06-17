@@ -436,7 +436,6 @@ func (self *ClientFlowRunner) FileBuffer(
 		if err != nil {
 			return err
 		}
-
 		defer rs_writer.Close()
 
 		rs_writer.Write(ordereddict.NewDict().

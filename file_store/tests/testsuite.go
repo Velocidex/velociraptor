@@ -38,25 +38,25 @@ func Debug(v interface{}) {
 type FileStoreTestSuite struct {
 	suite.Suite
 
-	config_obj *config_proto.Config
-	filestore  api.FileStore
+	ConfigObj *config_proto.Config
+	Filestore api.FileStore
 }
 
 func NewFileStoreTestSuite(config_obj *config_proto.Config,
 	filestore api.FileStore) *FileStoreTestSuite {
 	return &FileStoreTestSuite{
-		config_obj: config_obj,
-		filestore:  filestore,
+		ConfigObj: config_obj,
+		Filestore: filestore,
 	}
 }
 
 func (self *FileStoreTestSuite) TestListChildrenIntermediateDirs() {
 	components := path_specs.NewSafeFilestorePath("a", "b", "c", "d", "Foo")
-	fd, err := self.filestore.WriteFile(components)
+	fd, err := self.Filestore.WriteFile(components)
 	assert.NoError(self.T(), err)
 	fd.Close()
 
-	infos, err := self.filestore.ListDirectory(
+	infos, err := self.Filestore.ListDirectory(
 		path_specs.NewSafeFilestorePath("a"))
 	assert.NoError(self.T(), err)
 
@@ -72,12 +72,12 @@ func (self *FileStoreTestSuite) TestListChildrenIntermediateDirs() {
 func (self *FileStoreTestSuite) TestListChildrenComplicatedNames() {
 	dir_path_spec := path_specs.NewSafeFilestorePath("subdir")
 
-	fd, err := self.filestore.WriteFile(dir_path_spec.AddUnsafeChild("Foo/Bar").
+	fd, err := self.Filestore.WriteFile(dir_path_spec.AddUnsafeChild("Foo/Bar").
 		SetType(api.PATH_TYPE_FILESTORE_JSON))
 	assert.NoError(self.T(), err)
 	fd.Close()
 
-	infos, err := self.filestore.ListDirectory(dir_path_spec)
+	infos, err := self.Filestore.ListDirectory(dir_path_spec)
 	assert.NoError(self.T(), err)
 
 	var golden []*ordereddict.Dict
@@ -102,24 +102,24 @@ func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
 
 	// Store a JSON file type.
 
-	fd, err := self.filestore.WriteFile(dir_path_spec.AddChild("Foo").
+	fd, err := self.Filestore.WriteFile(dir_path_spec.AddChild("Foo").
 		SetType(api.PATH_TYPE_FILESTORE_JSON))
 	assert.NoError(self.T(), err)
 	fd.Close()
 
-	fd, err = self.filestore.WriteFile(dir_path_spec.AddChild("Foo").
+	fd, err = self.Filestore.WriteFile(dir_path_spec.AddChild("Foo").
 		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
 	assert.NoError(self.T(), err)
 	fd.Close()
 
 	// Add an intermediate directory - this will add a directory info
 	// for the intermediate directory.
-	fd, err = self.filestore.WriteFile(dir_path_spec.AddChild("Foo", "dir", "value").
+	fd, err = self.Filestore.WriteFile(dir_path_spec.AddChild("Foo", "dir", "value").
 		SetType(api.PATH_TYPE_FILESTORE_JSON))
 	assert.NoError(self.T(), err)
 	fd.Close()
 
-	infos, err := self.filestore.ListDirectory(dir_path_spec)
+	infos, err := self.Filestore.ListDirectory(dir_path_spec)
 	assert.NoError(self.T(), err)
 
 	var golden []*ordereddict.Dict
@@ -178,11 +178,11 @@ func (self *FileStoreTestSuite) TestListChildrenWithTypes() {
 		filename := path_specs.NewSafeFilestorePath(
 			"a", fmt.Sprintf("b%v", idx)).SetType(t)
 
-		fd, err := self.filestore.WriteFile(filename.AddChild("Foo.txt"))
+		fd, err := self.Filestore.WriteFile(filename.AddChild("Foo.txt"))
 		assert.NoError(self.T(), err)
 		fd.Close()
 
-		infos, err := self.filestore.ListDirectory(filename)
+		infos, err := self.Filestore.ListDirectory(filename)
 		assert.NoError(self.T(), err)
 
 		assert.Equal(self.T(), 1, len(infos))
@@ -196,7 +196,7 @@ func (self *FileStoreTestSuite) TestListChildrenWithTypes() {
 
 		// Now check walk
 		path_specs := []api.FSPathSpec{}
-		err = api.Walk(self.filestore, filename, func(
+		err = api.Walk(self.Filestore, filename, func(
 			path api.FSPathSpec, info os.FileInfo) error {
 			// Ignore directories as they are not important.
 			if !info.IsDir() {
@@ -240,11 +240,11 @@ func (self *FileStoreTestSuite) TestListChildrenUntypedPaths() {
 		filename := path_specs.NewSafeFilestorePath(
 			"public", fmt.Sprintf("b%v", idx)).SetType(t)
 
-		fd, err := self.filestore.WriteFile(filename.AddChild("Foo.txt"))
+		fd, err := self.Filestore.WriteFile(filename.AddChild("Foo.txt"))
 		assert.NoError(self.T(), err)
 		fd.Close()
 
-		infos, err := self.filestore.ListDirectory(filename)
+		infos, err := self.Filestore.ListDirectory(filename)
 		assert.NoError(self.T(), err)
 
 		assert.Equal(self.T(), 1, len(infos))
@@ -260,19 +260,19 @@ func (self *FileStoreTestSuite) TestListChildrenUntypedPaths() {
 
 func (self *FileStoreTestSuite) TestListDirectory() {
 	filename := path_specs.NewSafeFilestorePath("a", "b")
-	fd, err := self.filestore.WriteFile(filename.AddChild("Foo.txt"))
+	fd, err := self.Filestore.WriteFile(filename.AddChild("Foo.txt"))
 	assert.NoError(self.T(), err)
 	fd.Close()
 
-	fd, err = self.filestore.WriteFile(filename.AddChild("Bar.txt"))
+	fd, err = self.Filestore.WriteFile(filename.AddChild("Bar.txt"))
 	assert.NoError(self.T(), err)
 	fd.Close()
 
-	fd, err = self.filestore.WriteFile(filename.AddChild("Bar", "Baz"))
+	fd, err = self.Filestore.WriteFile(filename.AddChild("Bar", "Baz"))
 	assert.NoError(self.T(), err)
 	fd.Close()
 
-	infos, err := self.filestore.ListDirectory(filename)
+	infos, err := self.Filestore.ListDirectory(filename)
 	assert.NoError(self.T(), err)
 
 	names := []string{}
@@ -284,7 +284,7 @@ func (self *FileStoreTestSuite) TestListDirectory() {
 	assert.Equal(self.T(), names, []string{"Bar", "Bar.txt", "Foo.txt"})
 
 	names = nil
-	err = api.Walk(self.filestore, filename, func(
+	err = api.Walk(self.Filestore, filename, func(
 		path api.FSPathSpec, info os.FileInfo) error {
 		names = append(names, path.AsClientPath())
 		return nil
@@ -300,7 +300,7 @@ func (self *FileStoreTestSuite) TestListDirectory() {
 
 	// Walk non-existent directory just returns no results.
 	names = nil
-	err = api.Walk(self.filestore, filename.AddChild("nonexistant"),
+	err = api.Walk(self.Filestore, filename.AddChild("nonexistant"),
 		func(path api.FSPathSpec, info os.FileInfo) error {
 			names = append(names, path.String())
 			return nil
@@ -311,7 +311,7 @@ func (self *FileStoreTestSuite) TestListDirectory() {
 
 func (self *FileStoreTestSuite) TestFileUpdate() {
 	filename := path_specs.NewSafeFilestorePath("test", "foo")
-	fd, err := self.filestore.WriteFile(filename)
+	fd, err := self.Filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
 
 	// Write some data.
@@ -321,14 +321,16 @@ func (self *FileStoreTestSuite) TestFileUpdate() {
 	fd.Close()
 
 	// Now update the data in place
-	fd, err = self.filestore.WriteFile(filename)
+	fd, err = self.Filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
 
 	err = fd.Update([]byte("short"), 13)
 	assert.NoError(self.T(), err)
 
+	fd.Close()
+
 	buff := make([]byte, 60)
-	reader, err := self.filestore.ReadFile(filename)
+	reader, err := self.Filestore.ReadFile(filename)
 	assert.NoError(self.T(), err)
 	defer reader.Close()
 
@@ -340,7 +342,7 @@ func (self *FileStoreTestSuite) TestFileUpdate() {
 
 func (self *FileStoreTestSuite) TestFileUpdatePastEndOfFile() {
 	filename := path_specs.NewSafeFilestorePath("test", "foo")
-	fd, err := self.filestore.WriteFile(filename)
+	fd, err := self.Filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
 
 	// Write some data.
@@ -350,14 +352,16 @@ func (self *FileStoreTestSuite) TestFileUpdatePastEndOfFile() {
 	fd.Close()
 
 	// Now update the data in place
-	fd, err = self.filestore.WriteFile(filename)
+	fd, err = self.Filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
 
 	err = fd.Update([]byte("a long string that should extend the file"), 13)
 	assert.NoError(self.T(), err)
 
+	fd.Close()
+
 	buff := make([]byte, 600)
-	reader, err := self.filestore.ReadFile(filename)
+	reader, err := self.Filestore.ReadFile(filename)
 	assert.NoError(self.T(), err)
 	defer reader.Close()
 
@@ -372,7 +376,7 @@ func (self *FileStoreTestSuite) TestFileUpdatePastEndOfFile() {
 
 func (self *FileStoreTestSuite) TestCompressedFileReadWrite() {
 	filename := path_specs.NewSafeFilestorePath("compressed", "foo")
-	fd, err := self.filestore.WriteFile(filename)
+	fd, err := self.Filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
 
 	// Write some data.
@@ -398,7 +402,7 @@ func (self *FileStoreTestSuite) TestCompressedFileReadWrite() {
 	fd.Close()
 
 	buff := make([]byte, 6)
-	reader, err := self.filestore.ReadFile(filename)
+	reader, err := self.Filestore.ReadFile(filename)
 	assert.NoError(self.T(), err)
 	defer reader.Close()
 
@@ -425,7 +429,7 @@ func (self *FileStoreTestSuite) TestCompressedFileReadWrite() {
 	assert.Equal(self.T(), n, 0)
 
 	// Write some more data to the end of the file.
-	fd, err = self.filestore.WriteFile(filename)
+	fd, err = self.Filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
 
 	test_str3 := []byte("EXTRA EXTRA")
@@ -484,7 +488,7 @@ func (self *FileStoreTestSuite) TestCompressedFileReadWrite() {
 	assert.Equal(self.T(), n, 4)
 
 	// Reopening the file should give the right size.
-	fd, err = self.filestore.WriteFile(filename)
+	fd, err = self.Filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
 	size, err = fd.Size()
 	assert.NoError(self.T(), err)
@@ -497,7 +501,7 @@ const ZipBomb = "1f8b0808287ce86900036c617267652e64642e677a5f00edc13f2bc4010000d
 
 func (self *FileStoreTestSuite) TestLargeCompressedFileReadWrite() {
 	filename := path_specs.NewSafeFilestorePath("compressed", "large")
-	fd, err := self.filestore.WriteFile(filename)
+	fd, err := self.Filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
 
 	// Prepare a zip bomb to write. This is a 10gb bomb when uncompressed.
@@ -523,7 +527,7 @@ func (self *FileStoreTestSuite) TestLargeCompressedFileReadWrite() {
 
 	// Now read some data back.
 	buff := make([]byte, 6)
-	reader, err := self.filestore.ReadFile(filename)
+	reader, err := self.Filestore.ReadFile(filename)
 	assert.NoError(self.T(), err)
 	defer reader.Close()
 
@@ -535,7 +539,7 @@ func (self *FileStoreTestSuite) TestLargeCompressedFileReadWrite() {
 
 func (self *FileStoreTestSuite) TestFileReadWrite() {
 	filename := path_specs.NewSafeFilestorePath("test", "foo")
-	fd, err := self.filestore.WriteFile(filename)
+	fd, err := self.Filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
 
 	// Write some data.
@@ -552,7 +556,7 @@ func (self *FileStoreTestSuite) TestFileReadWrite() {
 	fd.Close()
 
 	buff := make([]byte, 6)
-	reader, err := self.filestore.ReadFile(filename)
+	reader, err := self.Filestore.ReadFile(filename)
 	assert.NoError(self.T(), err)
 	defer reader.Close()
 
@@ -579,7 +583,7 @@ func (self *FileStoreTestSuite) TestFileReadWrite() {
 	assert.Equal(self.T(), n, 0)
 
 	// Write some more data to the end of the file.
-	fd, err = self.filestore.WriteFile(filename)
+	fd, err = self.Filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
 	_, err = fd.Write([]byte("EXTRA EXTRA"))
 	assert.NoError(self.T(), err)
@@ -631,7 +635,7 @@ func (self *FileStoreTestSuite) TestFileReadWrite() {
 	assert.Equal(self.T(), n, 4)
 
 	// Reopening the file should give the right size.
-	fd, err = self.filestore.WriteFile(filename)
+	fd, err = self.Filestore.WriteFile(filename)
 	assert.NoError(self.T(), err)
 	size, err = fd.Size()
 	assert.NoError(self.T(), err)

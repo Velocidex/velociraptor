@@ -30,9 +30,9 @@ func (self *Store) StartHouseKeep(
 	}
 
 	go func() {
-		last_run := utils.GetTime().Now()
-
 		for {
+			last_run := utils.GetTime().Now()
+
 			select {
 			case <-ctx.Done():
 				return

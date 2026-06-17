@@ -143,7 +143,7 @@ func (self *TestSuite) TestExportCollectionServerArtifact() {
 			Set("name", "Test"))
 
 	// A zip file was created
-	path_spec, ok := result.(path_specs.FSPathSpec)
+	path_spec, ok := result.(*path_specs.FSPathSpec)
 	assert.True(self.T(), ok)
 
 	file_details, err := openZipFile(self.ConfigObj, scope, path_spec)
@@ -194,7 +194,7 @@ func (self *TestSuite) TestExportCollection1() {
 			Set("name", "Test"))
 
 	// A zip file was created
-	path_spec, ok := result.(path_specs.FSPathSpec)
+	path_spec, ok := result.(*path_specs.FSPathSpec)
 	assert.True(self.T(), ok)
 
 	assert.Equal(self.T(),
@@ -228,7 +228,7 @@ func (self *TestSuite) TestExportCollection1() {
 			Set("name", "TestExpanded"))
 
 	// A zip file was created
-	path_spec, ok = result.(path_specs.FSPathSpec)
+	path_spec, ok = result.(*path_specs.FSPathSpec)
 	assert.True(self.T(), ok)
 
 	assert.Equal(self.T(),
@@ -292,7 +292,7 @@ func (self *TestSuite) TestExportCollectionWithPassword() {
 			Set("name", "Test"))
 
 	// A zip file was created
-	path_spec, ok := result.(path_specs.FSPathSpec)
+	path_spec, ok := result.(*path_specs.FSPathSpec)
 	assert.True(self.T(), ok)
 
 	assert.Equal(self.T(),
@@ -397,7 +397,7 @@ func (self *TestSuite) TestExportHunt() {
 			Set("format", "csv").
 			Set("wait", true))
 
-	download_pathspec := result.(path_specs.FSPathSpec)
+	download_pathspec := result.(*path_specs.FSPathSpec)
 	assert.Equal(self.T(), "/downloads/hunts/H.123/HuntExportH.123.zip",
 		download_pathspec.AsClientPath())
 

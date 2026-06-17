@@ -105,6 +105,8 @@ func (self *MemcacheTestSuite) TestSizeReporting() {
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), int64(10), size)
 
+	fd.Close()
+
 	// Read from backing store
 	read_fd, err := file_store.ReadFile(filename)
 	assert.NoError(self.T(), err)

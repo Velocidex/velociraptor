@@ -122,9 +122,7 @@ func (self *ClientInfoManager) ModifyMetadata(
 				existing.Delete(item.Key)
 			}
 
-			for _, key := range existing.Keys() {
-				updated_keys = append(updated_keys, key)
-			}
+			updated_keys = append(updated_keys, existing.Keys()...)
 
 			return new_metadata, nil
 		})

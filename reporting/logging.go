@@ -50,6 +50,8 @@ func newNotebookCellLogger(
 		return nil, err
 	}
 
+	scope.AddDestructor(rs_writer.Close)
+
 	return &notebookCellLogger{
 		ctx:        ctx,
 		config_obj: config_obj,
