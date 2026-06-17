@@ -372,7 +372,7 @@ func (self *Loader) WithApiLoader(filename string) *Loader {
 		loader_func: func(self *Loader) (*config_proto.Config, error) {
 			result, err := read_api_config_from_file(filename)
 			if err != nil {
-				// This is a hard error since the user speified an api
+				// This is a hard error since the user specified an api
 				// file but we could not load it.
 				return result, HardError{
 					fmt.Errorf("ApiLoader: %w", err),
