@@ -76,11 +76,16 @@ func (self *ClientInfoTestSuite) TestFastQueueMessages() {
 	}
 
 	// Wait until all messages are visible
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntilWithError(2*time.Second, self.T(), func() bool {
 		tasks, err := client_info_manager.PeekClientTasks(
 			context.Background(), self.client_id)
 		assert.NoError(self.T(), err)
 		return len(tasks) == 10
+	}, func() string {
+		tasks, err := client_info_manager.PeekClientTasks(
+			context.Background(), self.client_id)
+		assert.NoError(self.T(), err)
+		return fmt.Sprintf("Len tasks: %v", len(tasks))
 	})
 
 	tasks, err := client_info_manager.GetClientTasks(

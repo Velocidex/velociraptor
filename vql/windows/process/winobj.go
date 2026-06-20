@@ -15,7 +15,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/hillu/go-ntdll"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/allocs"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -134,7 +133,7 @@ func GetObjects(ctx context.Context,
 		}
 
 		object_directory_infos = append(object_directory_infos, item)
-		full_path := utils.Join(path, item.Name.String())
+		full_path := filepath.Join(path, item.Name.String())
 		info := &WinObjDesc{
 			Name: full_path,
 			Type: item.TypeName.String(),
