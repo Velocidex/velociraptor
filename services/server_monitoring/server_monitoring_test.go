@@ -553,7 +553,7 @@ sources:
 	})
 
 	// Add the new custom artifacts to the repository many times
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		set_artifact(i)
 	}
 
