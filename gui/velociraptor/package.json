@@ -22,7 +22,7 @@
         "highlight.js": "11.11.1",
         "hosted-git-info": "^2.8.9",
         "html-react-parser": "^0.14.3",
-        "http-proxy-middleware": "^2.0.9",
+        "http-proxy-middleware": "^3.0.6",
         "humanize-duration": "^3.33.2",
         "lodash": "^4.18.1",
         "markdown-it": "14.2.0",
