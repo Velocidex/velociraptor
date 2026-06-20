@@ -135,4 +135,4 @@ container:
 
 # Only vale changes from master
 vale:
-	time vale `git diff --name-only origin/master`
+	time vale `git diff --name-only --diff-filter=AM origin/master`
