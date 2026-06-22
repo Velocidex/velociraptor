@@ -177,7 +177,9 @@ func (self *Repository) LoadProto(
 
 	// Make sure none of the aliases already exist
 	for _, alias := range artifact.Aliases {
+		self.mu.Lock()
 		_, pres := self.Data[alias]
+		self.mu.Unlock()
 		if pres && !options.AllowOverridingAlias {
 			return nil, fmt.Errorf("%s: Artifact Alias is already taken %s",
 				artifact.Name, alias)
@@ -309,18 +311,18 @@ func (self *Repository) LoadProto(
 		}
 	}
 
+	self.mu.Lock()
+
 	// Prevent built in artifacts from being overridden.
 	if !options.ArtifactIsBuiltIn {
-		self.mu.Lock()
 		existing_artifact, pres := self.Data[artifact.Name]
-		self.mu.Unlock()
 		if pres && existing_artifact.BuiltIn {
+			self.mu.Unlock()
 			return nil, fmt.Errorf("Unable to override built in artifact %v",
 				artifact.Name)
 		}
 	}
 
-	self.mu.Lock()
 	self.Data[artifact.Name] = artifact
 	for _, alias := range artifact.Aliases {
 		// Make a copy of the artifact definition

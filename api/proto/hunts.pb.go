@@ -970,7 +970,9 @@ type HuntMutation struct {
 	Assignment *FlowAssignment `protobuf:"bytes,6,opt,name=assignment,proto3" json:"assignment,omitempty"`
 	Tags       []string        `protobuf:"bytes,8,rep,name=tags,proto3" json:"tags,omitempty"`
 	// The user who is initiating the mutation.
-	User          string `protobuf:"bytes,9,opt,name=user,proto3" json:"user,omitempty"`
+	User string `protobuf:"bytes,9,opt,name=user,proto3" json:"user,omitempty"`
+	// This performs a scan across the hunt and updates the stats.
+	Recalculate   bool `protobuf:"varint,10,opt,name=recalculate,proto3" json:"recalculate,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1066,6 +1068,13 @@ func (x *HuntMutation) GetUser() string {
 		return x.User
 	}
 	return ""
+}
+
+func (x *HuntMutation) GetRecalculate() bool {
+	if x != nil {
+		return x.Recalculate
+	}
+	return false
 }
 
 type HuntTags struct {
@@ -1199,7 +1208,7 @@ const file_hunts_proto_rawDesc = "" +
 	"\bartifact\x18\x04 \x01(\tR\bartifact\"F\n" +
 	"\x0eFlowAssignment\x12\x1b\n" +
 	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12\x17\n" +
-	"\aflow_id\x18\x02 \x01(\tR\x06flowId\"\xb2\x02\n" +
+	"\aflow_id\x18\x02 \x01(\tR\x06flowId\"\xd4\x02\n" +
 	"\fHuntMutation\x12\x17\n" +
 	"\ahunt_id\x18\x01 \x01(\tR\x06huntId\x12&\n" +
 	"\x05stats\x18\x02 \x01(\v2\x10.proto.HuntStatsR\x05stats\x12 \n" +
@@ -1212,7 +1221,9 @@ const file_hunts_proto_rawDesc = "" +
 	"assignment\x18\x06 \x01(\v2\x15.proto.FlowAssignmentR\n" +
 	"assignment\x12\x12\n" +
 	"\x04tags\x18\b \x03(\tR\x04tags\x12\x12\n" +
-	"\x04user\x18\t \x01(\tR\x04user\"\x1e\n" +
+	"\x04user\x18\t \x01(\tR\x04user\x12 \n" +
+	"\vrecalculate\x18\n" +
+	" \x01(\bR\vrecalculate\"\x1e\n" +
 	"\bHuntTags\x12\x12\n" +
 	"\x04tags\x18\x01 \x03(\tR\x04tagsB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
 

@@ -288,7 +288,6 @@ func (self *FlowStorageManager) houseKeeping(
 				continue
 			}
 
-			logger.Debug("<green>FlowStorageManager</> housekeeping run")
 			err := self.RemoveFlowsFromJournal(ctx, config_obj)
 			if err != nil {
 				logger.Error("RemoveFlowsFromJournal: %v", err)
