@@ -62,7 +62,6 @@ func (self _ParseXMLFunction) Call(
 	}
 	defer file.Close()
 
-	mxj.SetAttrPrefix("Attr")
 	result, err := mxj.NewMapXmlReader(file)
 	if err != nil {
 		scope.Log("NewMapXmlReader: %v", err)
@@ -83,5 +82,6 @@ func (self _ParseXMLFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 }
 
 func init() {
+	mxj.SetAttrPrefix("Attr")
 	vql_subsystem.RegisterFunction(&_ParseXMLFunction{})
 }

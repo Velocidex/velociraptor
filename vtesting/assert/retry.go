@@ -13,6 +13,17 @@ import (
 func Retry(t *testing.T, maxAttempts int, sleep time.Duration, f func(r *R)) bool {
 	error_log := &bytes.Buffer{}
 
+	call_with_panic := func(r *R) {
+		defer func() {
+			recovery := recover()
+			if recovery != nil {
+				r.Fail()
+			}
+		}()
+
+		f(r)
+	}
+
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		r := &R{
 			MaxAttempts: maxAttempts,
@@ -20,7 +31,7 @@ func Retry(t *testing.T, maxAttempts int, sleep time.Duration, f func(r *R)) boo
 			log:         error_log,
 		}
 
-		f(r)
+		call_with_panic(r)
 
 		if !r.failed {
 			// Report all previous failures for the logs so we can
