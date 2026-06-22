@@ -26,26 +26,36 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"golang.org/x/sys/unix"
 )
 
-// On Linux we need xstat() support to get birth time.
 func (self *OSFileInfo) Btime() time.Time {
-	return time.Time{}
+	var stx unix.Statx_t
+	err := unix.Statx(unix.AT_FDCWD, self.FullPath(),
+		unix.AT_SYMLINK_NOFOLLOW, unix.STATX_BTIME, &stx)
+	if err != nil {
+		return time.Time{}
+	}
+	if stx.Mask&unix.STATX_BTIME == 0 {
+		return time.Time{}
+	}
+	return time.Unix(int64(stx.Btime.Sec), int64(stx.Btime.Nsec))
 }
 
 func (self *OSFileInfo) Mtime() time.Time {
-	ts := int64(self._Sys().Mtim.Sec)
-	return time.Unix(ts, 0)
+	ts := self._Sys().Mtim
+	return time.Unix(ts.Sec, ts.Nsec)
 }
 
 func (self *OSFileInfo) Ctime() time.Time {
-	ts := int64(self._Sys().Ctim.Sec)
-	return time.Unix(ts, 0)
+	ts := self._Sys().Ctim
+	return time.Unix(ts.Sec, ts.Nsec)
 }
 
 func (self *OSFileInfo) Atime() time.Time {
-	ts := int64(self._Sys().Atim.Sec)
-	return time.Unix(ts, 0)
+	ts := self._Sys().Atim
+	return time.Unix(ts.Sec, ts.Nsec)
 }
 
 func splitDevNumber(dev uint64) (major, minor uint64) {
