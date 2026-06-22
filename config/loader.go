@@ -253,6 +253,31 @@ func (self *Loader) WithFileLoader(filename string) *Loader {
 	return self
 }
 
+// Try to load it from the filename if it exists.
+func (self *Loader) WithOptionalFileLoader(filename string) *Loader {
+	if filename == "" {
+		return self
+	}
+
+	_, err := os.Lstat(filename)
+	if err != nil {
+		return self
+	}
+
+	self = self.Copy()
+	self.loaders = append(self.loaders, loaderFunction{
+		name: "WithOptionalFileLoader",
+		loader_func: func(self *Loader) (*config_proto.Config, error) {
+			res, err := read_config_from_file(filename)
+			if err == nil {
+				self.Log("Loaded config from file %v", filename)
+			}
+			return res, err
+		}})
+
+	return self
+}
+
 func (self *Loader) WithLiteralLoader(serialized []byte) *Loader {
 	if len(serialized) > 0 {
 		self = self.Copy()

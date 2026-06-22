@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/kaptinlin/messageformat-go/pkg/logger"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -161,6 +162,9 @@ func (self *FlowStorageManager) RemoveFlowsFromJournal(
 			r_err = err
 		}
 	}
+
+	logger.Debug("<green>FlowStorageManager</> housekeeping run (%v): Reindexed %v flows",
+		utils.GetOrgId(config_obj), (id_map))
 
 	// Only clear the journal if all reindex operations are successful.
 	if r_err == nil {
