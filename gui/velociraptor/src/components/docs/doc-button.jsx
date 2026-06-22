@@ -169,6 +169,11 @@ class HelpDialog extends Component {
 
     renderTags = tags=>{
         return _.map(tags, (x, idx)=>{
+            // Limit the number of tags - some pages have a ridiculous
+            // number.
+            if(idx > 4) {
+                return <></>;
+            }
             return <Badge
                      onClick={()=>this.searchTag(x)}
                      className="tag"
