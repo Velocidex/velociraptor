@@ -343,6 +343,8 @@ func GetAPIHandler(
 	}
 
 	bind_addr := grpc_client.GetAPIConnectionString(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+	logger.Debug("GRPC Gateway: Connecting to %s", bind_addr)
 	err = api_proto.RegisterAPIHandlerFromEndpoint(
 		ctx, grpc_proxy_mux, bind_addr, opts)
 	if err != nil {

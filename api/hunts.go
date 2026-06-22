@@ -366,6 +366,7 @@ func (self *ApiServer) ModifyHunt(
 		Expires:     in.Expires,
 		Tags:        in.Tags,
 		User:        principal,
+		Recalculate: in.Recalculate,
 	}
 
 	err = hunt_dispatcher.MutateHunt(ctx, org_config_obj, mutation)

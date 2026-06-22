@@ -14,3 +14,15 @@ func TestRetry(t *testing.T) {
 		i++
 	}))
 }
+
+func TestRetryWithPanic(t *testing.T) {
+	i := -1
+	tests := []bool{false, false, true}
+
+	True(t, Retry(t, 4, time.Millisecond, func(r *R) {
+		i++
+		if !tests[i] {
+			panic("False!")
+		}
+	}))
+}

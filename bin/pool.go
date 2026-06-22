@@ -23,6 +23,7 @@ import (
 	"path"
 	"sync"
 
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
@@ -88,6 +89,11 @@ func doPoolClient() error {
 
 	ctx, cancel := install_sig_handler()
 	defer cancel()
+
+	// Make sure that we have a valid client config. This strips out
+	// any potential non-client elements. Prevents weird services from
+	// starting if we actually got the server config.
+	client_config = config.GetClientConfig(client_config)
 
 	sm := services.NewServiceManager(ctx, client_config)
 	defer sm.Close()
