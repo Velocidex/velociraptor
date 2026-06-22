@@ -455,12 +455,6 @@ func maybeWritePanicFile(name string, config_obj *config_proto.Config) {
 }
 
 func doRun() error {
-	// Forward all audit events to the event log.
-	err := InstallAuditlogger()
-	if err != nil {
-		return err
-	}
-
 	name := "Velociraptor"
 	config_obj, err := loadClientConfig()
 	if err == nil && config_obj != nil &&
