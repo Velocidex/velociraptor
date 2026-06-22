@@ -160,6 +160,12 @@ func (self *ApiServer) CollectArtifact(
 		return nil, Status(self.verbose, err)
 	}
 
+	// Allow a custom artifact to override the specified artifacts.
+	if in.AllowCustomOverrides {
+		ModifyRequestForCustomArtifacts(
+			ctx, org_config_obj, repository, request)
+	}
+
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, org_config_obj, acl_manager, repository, request,
 		utils.BackgroundWriter)

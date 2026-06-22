@@ -199,7 +199,7 @@ reports:
 
       {{ define "computerinfo" }}
       LET X <= SELECT *
-        FROM source(source="LinuxInfo')
+        FROM source(source="LinuxInfo")
         LIMIT 1
 
       SELECT humanize(bytes=TotalPhysicalMemory) AS  TotalPhysicalMemory,

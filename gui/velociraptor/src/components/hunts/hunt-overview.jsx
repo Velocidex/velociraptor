@@ -290,7 +290,7 @@ export default class HuntOverview extends React.Component {
                     onClick={this.recalcStats}
                     variant="outline-default">
                     <FontAwesomeIcon icon="refresh"
-                                     className={this.state.recal && "fa-spin"}/>
+                                     spin={this.state.recalc}/>
                   </Button>
                 </Card.Header>
                 <Card.Body>
