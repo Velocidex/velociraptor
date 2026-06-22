@@ -2,7 +2,7 @@ Queries:
 # Resolve drive letter to kernel device names using winobj.
 - SELECT Name,
      split(sep_string="\\", string=Name)[-1] AS Drive,
-     upcase(string=SymlinkTarget) AS Target,
+     regex_replace(source=upcase(string=SymlinkTarget), re="\\d", replace="_") AS Target,
      len(list=SymlinkTarget) AS Len
   FROM winobj()
   WHERE Name =~ "^\\\\GLOBAL\\?\\?\\\\.:"

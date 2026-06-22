@@ -99,10 +99,6 @@ func (self *EventTable) ProcessArtifactModificationEvent(
 		return
 	}
 
-	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("server_monitoring: Reloading table because artifact %v was updated",
-		modified_name)
-
 	notifier, err := services.GetNotifier(config_obj)
 	if err == nil {
 		notifier.NotifyDirectListener(loadFileQueue(config_obj))
@@ -118,9 +114,6 @@ func (self *EventTable) ProcessServerMetadataModificationEvent(
 	if !pres || client_id != constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		return
 	}
-
-	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("<green>server_monitoring</>: Reloading table because server metadata was updated")
 
 	notifier, err := services.GetNotifier(config_obj)
 	if err == nil {
