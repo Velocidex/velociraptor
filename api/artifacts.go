@@ -851,3 +851,25 @@ func MakeCollectorRequest(
 
 	return result
 }
+
+func ModifyRequestForCustomArtifacts(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	repository services.Repository,
+	request *flows_proto.ArtifactCollectorArgs) {
+	for i, name := range request.Artifacts {
+		custom_name := "Custom." + name
+		_, pres := repository.Get(ctx, config_obj, custom_name)
+		if pres {
+			request.Artifacts[i] = custom_name
+		}
+	}
+
+	for _, spec := range request.Specs {
+		custom_name := "Custom." + spec.Artifact
+		_, pres := repository.Get(ctx, config_obj, custom_name)
+		if pres {
+			spec.Artifact = custom_name
+		}
+	}
+}

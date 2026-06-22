@@ -398,9 +398,6 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(
 		return
 	}
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Debug("<green>Updating Client Event Table</> because %v was updated", modified_name)
-
 	setter, _ := event.GetString("setter")
 
 	// Determine if the modified artifact affects us.
