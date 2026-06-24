@@ -20,7 +20,7 @@ author: Angry-Bender @angry-bender
 
 parameters:
   - name: historyGlobs
-    default: \AppData\{Local,Roaming}\{Google\Chrome\User Data,Microsoft\Edge\User Data,BraveSoftware\Brave-Browser\User Data,Vivaldi\User Data,Opera Software\Opera*Stable}\*\History
+    default: \AppData\{Local,Roaming}\{Google\Chrome\User Data,Microsoft\Edge\User Data,BraveSoftware\Brave-Browser\User Data,Vivaldi\User Data,Opera Software\Opera*Stable,Perplexity\Comet\User Data}\*\History
   - name: urlSQLQuery
     default: |
       SELECT U.id AS id,
