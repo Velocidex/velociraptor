@@ -37,14 +37,14 @@ func StripClientConfig(config_obj *config_proto.Config) *config_proto.Config {
 	return client_config
 }
 
-// Determine if the binaey is running as a frontend. At a minimum we
+// Determine if the binary is running as a frontend. At a minimum we
 // need a valid Frontend and Datastore sections.
 func IsFrontend(config_obj *config_proto.Config) bool {
 	return config_obj.Datastore != nil &&
 		config_obj.Frontend != nil
 }
 
-// Determine if the binaey is running as a client. At a minimum we
+// Determine if the binary is running as a client. At a minimum we
 // need a valid Client section.
 func IsClient(config_obj *config_proto.Config) bool {
 	return config_obj.Client != nil
