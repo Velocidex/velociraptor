@@ -9,6 +9,14 @@ func GetClientConfig(config_obj *config_proto.Config) *config_proto.Config {
 	client_config := &config_proto.Config{
 		Version: config_obj.Version,
 		Client:  config_obj.Client,
+
+		// The below are uncommon but sometimes used.
+		Remappings: config_obj.Remappings,
+		Verbose:    config_obj.Verbose,
+		Autoexec:   config_obj.Autoexec,
+		DebugMode:  config_obj.DebugMode,
+		Security:   config_obj.Security,
+		Logging:    config_obj.Logging,
 	}
 
 	return client_config
