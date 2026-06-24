@@ -106,7 +106,7 @@ func (self *Loader) WithRequiredFrontend() *Loader {
 	self.validators = append(self.validators, validatorFunction{
 		name: "WithRequiredFrontend",
 		validator: func(self *Loader, config_obj *config_proto.Config) error { //
-			if config_obj.Frontend == nil {
+			if !IsFrontend(config_obj) {
 				return errors.New("Frontend config is required")
 			}
 			return nil
@@ -119,7 +119,7 @@ func (self *Loader) WithRequiredClient() *Loader {
 	self.validators = append(self.validators, validatorFunction{
 		name: "WithRequiredClient",
 		validator: func(self *Loader, config_obj *config_proto.Config) error {
-			if config_obj.Client == nil {
+			if !IsClient(config_obj) {
 				return errors.New("Client config is required")
 			}
 			return nil

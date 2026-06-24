@@ -102,9 +102,11 @@ func InitLogging(config_obj *config_proto.Config) error {
 		&GenericComponent, &FrontendComponent, &ClientComponent,
 		&GUIComponent, &ToolComponent, &APICmponent, &Audit}
 
+	logging_config := getLoggingConfig(config_obj)
+
 	// User asked for all components to go in the same log.
-	if config_obj.Logging != nil &&
-		!config_obj.Logging.SeparateLogsPerComponent {
+	if logging_config != nil &&
+		!logging_config.SeparateLogsPerComponent {
 		components = []*string{&GenericComponent}
 	}
 
@@ -303,8 +305,9 @@ func (self *LogManager) GetLogger(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if config_obj.Logging != nil &&
-		!config_obj.Logging.SeparateLogsPerComponent {
+	logging_config := getLoggingConfig(config_obj)
+	if logging_config != nil &&
+		!logging_config.SeparateLogsPerComponent {
 		component = &GenericComponent
 	}
 
@@ -345,10 +348,12 @@ func getRotator(
 	rotator_config *config_proto.LoggingRetentionConfig,
 	base_path string) (io.Writer, error, bool) {
 
+	logging_config := getLoggingConfig(config_obj)
+
 	if rotator_config == nil {
 		rotator_config = &config_proto.LoggingRetentionConfig{
-			RotationTime: config_obj.Logging.RotationTime,
-			MaxAge:       config_obj.Logging.MaxAge,
+			RotationTime: logging_config.RotationTime,
+			MaxAge:       logging_config.MaxAge,
 		}
 	}
 
@@ -399,12 +404,14 @@ func (self *LogManager) makeNewComponent(
 		DisableHTMLEscape: true,
 	}
 
+	logging_config := getLoggingConfig(config_obj)
+
 	if !disable_log_to_files &&
 		config_obj != nil &&
-		config_obj.Logging != nil &&
-		config_obj.Logging.OutputDirectory != "" {
+		logging_config != nil &&
+		logging_config.OutputDirectory != "" {
 
-		output_directory := utils.ExpandEnv(config_obj.Logging.OutputDirectory)
+		output_directory := utils.ExpandEnv(logging_config.OutputDirectory)
 		base_directory := utils.Join(output_directory, node_name)
 		err := os.MkdirAll(base_directory, 0700)
 		if err != nil {
@@ -417,7 +424,7 @@ func (self *LogManager) makeNewComponent(
 		Prelog("Initializing logging for %v\n", base_filename)
 
 		rotator, err, enable := getRotator(
-			config_obj, config_obj.Logging.Debug,
+			config_obj, logging_config.Debug,
 			base_filename+"_debug.log")
 		if err != nil {
 			return nil, err
@@ -426,7 +433,7 @@ func (self *LogManager) makeNewComponent(
 		enabled[DEBUG] = enable
 
 		rotator, err, enable = getRotator(
-			config_obj, config_obj.Logging.Info,
+			config_obj, logging_config.Info,
 			base_filename+"_info.log")
 		if err != nil {
 			return nil, err
@@ -435,7 +442,7 @@ func (self *LogManager) makeNewComponent(
 		enabled[INFO] = enable
 
 		rotator, err, enable = getRotator(
-			config_obj, config_obj.Logging.Error,
+			config_obj, logging_config.Error,
 			base_filename+"_error.log")
 		if err != nil {
 			return nil, err
@@ -583,4 +590,12 @@ func (self inMemoryLogWriter) Write(p []byte) (n int, err error) {
 
 func newInMemoryLogWriter() *inMemoryLogWriter {
 	return &inMemoryLogWriter{}
+}
+
+func getLoggingConfig(config_obj *config_proto.Config) *config_proto.LoggingConfig {
+	logging_config := config_obj.Logging
+	if logging_config == nil && config_obj.Client != nil {
+		logging_config = config_obj.Client.Logging
+	}
+	return logging_config
 }

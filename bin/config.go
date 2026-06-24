@@ -347,7 +347,7 @@ func doDumpClientConfig() error {
 		return err
 	}
 
-	client_config := config.GetClientConfig(config_obj)
+	client_config := config.StripClientConfig(config_obj)
 	res, err := yaml.Marshal(client_config)
 	if err != nil {
 		return fmt.Errorf("Unable to encode config: %w", err)

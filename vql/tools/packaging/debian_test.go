@@ -20,6 +20,7 @@ func (self *PackagingTestSuite) TestDEBClient() {
 
 	builder, err := BuildDeb(spec)
 	assert.NoError(self.T(), err)
+	defer builder.Close()
 
 	goldie.Assert(self.T(), "TestDEBClient",
 		[]byte(builder.Debug()))
@@ -36,6 +37,7 @@ func (self *PackagingTestSuite) TestDEBServer() {
 
 	builder, err := BuildDeb(spec)
 	assert.NoError(self.T(), err)
+	defer builder.Close()
 
 	goldie.Assert(self.T(), "TestDEBServer",
 		[]byte(builder.Debug()))
@@ -57,6 +59,7 @@ func (self *PackagingTestSuite) TestDEBServerMaster() {
 
 	builder, err := BuildDeb(spec)
 	assert.NoError(self.T(), err)
+	defer builder.Close()
 
 	goldie.Assert(self.T(), "TestDEBServerMaster",
 		[]byte(builder.Debug()))
@@ -79,6 +82,7 @@ func (self *PackagingTestSuite) TestDEBServerMinion() {
 
 	builder, err := BuildDeb(spec)
 	assert.NoError(self.T(), err)
+	defer builder.Close()
 
 	goldie.Assert(self.T(), "TestDEBServerMinion",
 		[]byte(builder.Debug()))
