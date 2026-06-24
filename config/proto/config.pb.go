@@ -686,8 +686,12 @@ type ClientConfig struct {
 	// system has less than 2 cores. This allows to increase the
 	// threadhold. Set to a large number to disable.
 	LowResourceCpuCount uint64 `protobuf:"varint,53,opt,name=low_resource_cpu_count,json=lowResourceCpuCount,proto3" json:"low_resource_cpu_count,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	// Client specific logging configuration - this can be different
+	// from the server configuration. Usually the client does not log
+	// anything but you can enable this for debugging.
+	Logging       *LoggingConfig `protobuf:"bytes,55,opt,name=Logging,proto3" json:"Logging,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ClientConfig) Reset() {
@@ -1033,6 +1037,13 @@ func (x *ClientConfig) GetLowResourceCpuCount() uint64 {
 		return x.LowResourceCpuCount
 	}
 	return 0
+}
+
+func (x *ClientConfig) GetLogging() *LoggingConfig {
+	if x != nil {
+		return x.Logging
+	}
+	return nil
 }
 
 type APIConfig struct {
@@ -4864,7 +4875,8 @@ type Config struct {
 	// Deprecated: Marked as deprecated in config.proto.
 	Writeback *Writeback `protobuf:"bytes,9,opt,name=Writeback,proto3" json:"Writeback,omitempty"`
 	// Deprecated - Mail plugin setting are now provided by args.
-	Mail    *MailConfig    `protobuf:"bytes,11,opt,name=Mail,proto3" json:"Mail,omitempty"`
+	Mail *MailConfig `protobuf:"bytes,11,opt,name=Mail,proto3" json:"Mail,omitempty"`
+	// Server specific logging configuration
 	Logging *LoggingConfig `protobuf:"bytes,23,opt,name=Logging,proto3" json:"Logging,omitempty"`
 	// Minion specific overrides
 	Minion            *MinionConfig     `protobuf:"bytes,40,opt,name=Minion,proto3" json:"Minion,omitempty"`
@@ -5186,7 +5198,7 @@ const file_config_proto_rawDesc = "" +
 	"\tdisk_size\x18\x02 \x01(\x04BQ\xe2\xfc\xe3\xc4\x01K\x12IHow many bytes to store in the ring buffer on disk (0 mean no disk file).R\bdiskSize\x12x\n" +
 	"\x0efilename_linux\x18\x04 \x01(\tBQ\xe2\xfc\xe3\xc4\x01K\x12IName of file to store the ring buffer in (if empty we do not use a file).R\rfilenameLinux\x12|\n" +
 	"\x10filename_windows\x18\x05 \x01(\tBQ\xe2\xfc\xe3\xc4\x01K\x12IName of file to store the ring buffer in (if empty we do not use a file).R\x0ffilenameWindows\x12z\n" +
-	"\x0ffilename_darwin\x18\x06 \x01(\tBQ\xe2\xfc\xe3\xc4\x01K\x12IName of file to store the ring buffer in (if empty we do not use a file).R\x0efilenameDarwin\"\xc1\x1c\n" +
+	"\x0ffilename_darwin\x18\x06 \x01(\tBQ\xe2\xfc\xe3\xc4\x01K\x12IName of file to store the ring buffer in (if empty we do not use a file).R\x0efilenameDarwin\"\xf1\x1c\n" +
 	"\fClientConfig\x12\x80\x01\n" +
 	"\x06labels\x18\x06 \x03(\tBh\xe2\xfc\xe3\xc4\x01b\x12`A list of labels the client has. This allows selected groups of clients to be targeted in hunts.R\x06labels\x12a\n" +
 	"\vserver_urls\x18\b \x03(\tB@\xe2\xfc\xe3\xc4\x01:\x128A list of server URLs the client will try to connect to.R\n" +
@@ -5236,7 +5248,8 @@ const file_config_proto_rawDesc = "" +
 	"panic_file\x181 \x01(\tR\tpanicFile\x12=\n" +
 	"\x1binsecure_network_trace_file\x183 \x01(\tR\x18insecureNetworkTraceFile\x12/\n" +
 	"\x14low_resource_max_cpu\x184 \x01(\x04R\x11lowResourceMaxCpu\x123\n" +
-	"\x16low_resource_cpu_count\x185 \x01(\x04R\x13lowResourceCpuCount\x1aD\n" +
+	"\x16low_resource_cpu_count\x185 \x01(\x04R\x13lowResourceCpuCount\x12.\n" +
+	"\aLogging\x187 \x01(\v2\x14.proto.LoggingConfigR\aLogging\x1aD\n" +
 	"\x16FallbackAddressesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xad\x04\n" +
@@ -5718,51 +5731,52 @@ var file_config_proto_depIdxs = []int32{
 	6,  // 7: proto.ClientConfig.local_buffer:type_name -> proto.RingBufferConfig
 	31, // 8: proto.ClientConfig.Crypto:type_name -> proto.CryptoConfig
 	36, // 9: proto.ClientConfig.fallback_addresses:type_name -> proto.ClientConfig.FallbackAddressesEntry
-	37, // 10: proto.ProxyConfig.proxy_url_regexp:type_name -> proto.ProxyConfig.ProxyUrlRegexpEntry
-	38, // 11: proto.OIDCClaims.role_map:type_name -> proto.OIDCClaims.RoleMapEntry
-	39, // 12: proto.Authenticator.oidc_auth_url_params:type_name -> proto.Authenticator.OidcAuthUrlParamsEntry
-	13, // 13: proto.Authenticator.claims:type_name -> proto.OIDCClaims
-	14, // 14: proto.Authenticator.sub_authenticators:type_name -> proto.Authenticator
-	18, // 15: proto.GUIConfig.reverse_proxy:type_name -> proto.ReverseProxyConfig
-	11, // 16: proto.GUIConfig.links:type_name -> proto.GUILink
-	16, // 17: proto.GUIConfig.initial_users:type_name -> proto.GUIUser
-	3,  // 18: proto.GUIConfig.initial_orgs:type_name -> proto.InitialOrgRecord
-	14, // 19: proto.GUIConfig.authenticator:type_name -> proto.Authenticator
-	10, // 20: proto.FrontendConfig.proxy_config:type_name -> proto.ProxyConfig
-	19, // 21: proto.FrontendConfig.dyn_dns:type_name -> proto.DynDNSConfig
-	20, // 22: proto.FrontendConfig.resources:type_name -> proto.FrontendResourceControl
-	25, // 23: proto.LoggingConfig.debug:type_name -> proto.LoggingRetentionConfig
-	25, // 24: proto.LoggingConfig.info:type_name -> proto.LoggingRetentionConfig
-	25, // 25: proto.LoggingConfig.error:type_name -> proto.LoggingRetentionConfig
-	41, // 26: proto.AutoExecConfig.artifact_definitions:type_name -> proto.Artifact
-	32, // 27: proto.RemappingConfig.from:type_name -> proto.MountPoint
-	32, // 28: proto.RemappingConfig.on:type_name -> proto.MountPoint
-	42, // 29: proto.RemappingConfig.env:type_name -> proto.VQLEnv
-	0,  // 30: proto.Config.version:type_name -> proto.Version
-	7,  // 31: proto.Config.Client:type_name -> proto.ClientConfig
-	8,  // 32: proto.Config.API:type_name -> proto.APIConfig
-	15, // 33: proto.Config.GUI:type_name -> proto.GUIConfig
-	17, // 34: proto.Config.CA:type_name -> proto.CAConfig
-	21, // 35: proto.Config.Frontend:type_name -> proto.FrontendConfig
-	21, // 36: proto.Config.ExtraFrontends:type_name -> proto.FrontendConfig
-	22, // 37: proto.Config.Datastore:type_name -> proto.DatastoreConfig
-	2,  // 38: proto.Config.Writeback:type_name -> proto.Writeback
-	24, // 39: proto.Config.Mail:type_name -> proto.MailConfig
-	26, // 40: proto.Config.Logging:type_name -> proto.LoggingConfig
-	23, // 41: proto.Config.Minion:type_name -> proto.MinionConfig
-	27, // 42: proto.Config.Monitoring:type_name -> proto.MonitoringConfig
-	9,  // 43: proto.Config.api_config:type_name -> proto.ApiClientConfig
-	28, // 44: proto.Config.autoexec:type_name -> proto.AutoExecConfig
-	30, // 45: proto.Config.defaults:type_name -> proto.Defaults
-	33, // 46: proto.Config.remappings:type_name -> proto.RemappingConfig
-	29, // 47: proto.Config.services:type_name -> proto.ServerServicesConfig
-	34, // 48: proto.Config.security:type_name -> proto.Security
-	12, // 49: proto.OIDCClaims.RoleMapEntry.value:type_name -> proto.OIDCACL
-	50, // [50:50] is the sub-list for method output_type
-	50, // [50:50] is the sub-list for method input_type
-	50, // [50:50] is the sub-list for extension type_name
-	50, // [50:50] is the sub-list for extension extendee
-	0,  // [0:50] is the sub-list for field type_name
+	26, // 10: proto.ClientConfig.Logging:type_name -> proto.LoggingConfig
+	37, // 11: proto.ProxyConfig.proxy_url_regexp:type_name -> proto.ProxyConfig.ProxyUrlRegexpEntry
+	38, // 12: proto.OIDCClaims.role_map:type_name -> proto.OIDCClaims.RoleMapEntry
+	39, // 13: proto.Authenticator.oidc_auth_url_params:type_name -> proto.Authenticator.OidcAuthUrlParamsEntry
+	13, // 14: proto.Authenticator.claims:type_name -> proto.OIDCClaims
+	14, // 15: proto.Authenticator.sub_authenticators:type_name -> proto.Authenticator
+	18, // 16: proto.GUIConfig.reverse_proxy:type_name -> proto.ReverseProxyConfig
+	11, // 17: proto.GUIConfig.links:type_name -> proto.GUILink
+	16, // 18: proto.GUIConfig.initial_users:type_name -> proto.GUIUser
+	3,  // 19: proto.GUIConfig.initial_orgs:type_name -> proto.InitialOrgRecord
+	14, // 20: proto.GUIConfig.authenticator:type_name -> proto.Authenticator
+	10, // 21: proto.FrontendConfig.proxy_config:type_name -> proto.ProxyConfig
+	19, // 22: proto.FrontendConfig.dyn_dns:type_name -> proto.DynDNSConfig
+	20, // 23: proto.FrontendConfig.resources:type_name -> proto.FrontendResourceControl
+	25, // 24: proto.LoggingConfig.debug:type_name -> proto.LoggingRetentionConfig
+	25, // 25: proto.LoggingConfig.info:type_name -> proto.LoggingRetentionConfig
+	25, // 26: proto.LoggingConfig.error:type_name -> proto.LoggingRetentionConfig
+	41, // 27: proto.AutoExecConfig.artifact_definitions:type_name -> proto.Artifact
+	32, // 28: proto.RemappingConfig.from:type_name -> proto.MountPoint
+	32, // 29: proto.RemappingConfig.on:type_name -> proto.MountPoint
+	42, // 30: proto.RemappingConfig.env:type_name -> proto.VQLEnv
+	0,  // 31: proto.Config.version:type_name -> proto.Version
+	7,  // 32: proto.Config.Client:type_name -> proto.ClientConfig
+	8,  // 33: proto.Config.API:type_name -> proto.APIConfig
+	15, // 34: proto.Config.GUI:type_name -> proto.GUIConfig
+	17, // 35: proto.Config.CA:type_name -> proto.CAConfig
+	21, // 36: proto.Config.Frontend:type_name -> proto.FrontendConfig
+	21, // 37: proto.Config.ExtraFrontends:type_name -> proto.FrontendConfig
+	22, // 38: proto.Config.Datastore:type_name -> proto.DatastoreConfig
+	2,  // 39: proto.Config.Writeback:type_name -> proto.Writeback
+	24, // 40: proto.Config.Mail:type_name -> proto.MailConfig
+	26, // 41: proto.Config.Logging:type_name -> proto.LoggingConfig
+	23, // 42: proto.Config.Minion:type_name -> proto.MinionConfig
+	27, // 43: proto.Config.Monitoring:type_name -> proto.MonitoringConfig
+	9,  // 44: proto.Config.api_config:type_name -> proto.ApiClientConfig
+	28, // 45: proto.Config.autoexec:type_name -> proto.AutoExecConfig
+	30, // 46: proto.Config.defaults:type_name -> proto.Defaults
+	33, // 47: proto.Config.remappings:type_name -> proto.RemappingConfig
+	29, // 48: proto.Config.services:type_name -> proto.ServerServicesConfig
+	34, // 49: proto.Config.security:type_name -> proto.Security
+	12, // 50: proto.OIDCClaims.RoleMapEntry.value:type_name -> proto.OIDCACL
+	51, // [51:51] is the sub-list for method output_type
+	51, // [51:51] is the sub-list for method input_type
+	51, // [51:51] is the sub-list for extension type_name
+	51, // [51:51] is the sub-list for extension extendee
+	0,  // [0:51] is the sub-list for field type_name
 }
 
 func init() { file_config_proto_init() }
