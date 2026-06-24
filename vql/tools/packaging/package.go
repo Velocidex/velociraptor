@@ -243,6 +243,7 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 				scope.Log("ERROR:%v:Unable to create RPM: %w", self.name, err)
 				return
 			}
+			defer builder.Close()
 
 			filename := utils.Join(arg.DirName, package_spec.OutputFilename())
 			scope.Log("DEBUG:%v: writing file %v", self.name, filename)
