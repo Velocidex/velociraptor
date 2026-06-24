@@ -243,6 +243,7 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 				scope.Log("ERROR:%v:Unable to create RPM: %w", self.name, err)
 				return
 			}
+			defer builder.Close()
 
 			filename := utils.Join(arg.DirName, package_spec.OutputFilename())
 			scope.Log("DEBUG:%v: writing file %v", self.name, filename)
@@ -336,7 +337,7 @@ func validateClientConfig(
 
 	// Derive client config from server config
 	if config_yaml == "" {
-		return config.GetClientConfig(config_obj), nil
+		return config.StripClientConfig(config_obj), nil
 	}
 
 	// Load and validate the client config file.
@@ -350,7 +351,7 @@ func validateClientConfig(
 
 	// Strip any unrelated fields for the client config (in case the
 	// user passed a server config accidentally).
-	return config.GetClientConfig(client_config), nil
+	return config.StripClientConfig(client_config), nil
 }
 
 func (self CreatePackagePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
