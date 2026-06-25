@@ -190,7 +190,7 @@ Client:
   ## you can change the location of the writeback to be inside the
   ## tempdir_windows directory (it will be removed on uninstall).
   writeback_darwin: /etc/velociraptor.writeback.yaml
-  writeback_linux: /tmp/velociraptor.writeback.yaml
+  writeback_linux: /etc/velociraptor.writeback.yaml
 
   ## On Windows, if the writeback path starts with HKLM\ the path will
   ## be interpreted as a registry key that will be used to store the
