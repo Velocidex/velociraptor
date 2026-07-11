@@ -558,6 +558,7 @@ Output: [
    "PasswordResetDate": "1601-01-01T00:00:00Z",
    "PasswordFailDate": "1601-01-01T00:00:00Z",
    "RID": 500,
+   "PrimaryGroupID": 513,
    "Flags": [
     "Account Disabled",
     "Normal user account",
@@ -567,7 +568,7 @@ Output: [
    "LoginCount": 0
   },
   "ParsedV": {
-   "AccountType": "0xf4",
+   "AccountType": "Default Admin User",
    "username": "Administrator",
    "fullname": "",
    "comment": "Built-in account for administering the computer/domain",
@@ -575,8 +576,8 @@ Output: [
    "logon_script": "",
    "profile_path": "",
    "workstation": "",
-   "lmpwd_hash": "\u0002\u0002",
-   "ntpwd_hash": "\u0002\u0002"
+   "lmpwd_hash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000\ufffd;\ufffd\ufffdK\ufffdU\ufffd:Vր_\ufffdHb",
+   "ntpwd_hash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000NGHmY\ufffd\ufffd\u0015xj\ufffdj\ufffd\ufffd\ufffd^"
   }
  },
  {
@@ -585,6 +586,7 @@ Output: [
    "PasswordResetDate": "1601-01-01T00:00:00Z",
    "PasswordFailDate": "1601-01-01T00:00:00Z",
    "RID": 501,
+   "PrimaryGroupID": 513,
    "Flags": [
     "Account Disabled",
     "Normal user account",
@@ -595,7 +597,7 @@ Output: [
    "LoginCount": 0
   },
   "ParsedV": {
-   "AccountType": "0xe8",
+   "AccountType": "Default Guest Acct",
    "username": "Guest",
    "fullname": "",
    "comment": "Built-in account for guest access to the computer/domain",
@@ -603,8 +605,8 @@ Output: [
    "logon_script": "",
    "profile_path": "",
    "workstation": "",
-   "lmpwd_hash": "\u0002\u0002",
-   "ntpwd_hash": "\u0002\u0002"
+   "lmpwd_hash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000$M`x\u0001b\ufffd\ufffd\u001c\t0o~\ufffdd\ufffd",
+   "ntpwd_hash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000\ufffdP\ufffd\ufffd\ufffd*\u0011\ufffdg\u0007\ufffd\u0002\ufffd\ufffd\ufffd\u0019"
   }
  },
  {
@@ -613,6 +615,7 @@ Output: [
    "PasswordResetDate": "1601-01-01T00:00:00Z",
    "PasswordFailDate": "1601-01-01T00:00:00Z",
    "RID": 503,
+   "PrimaryGroupID": 513,
    "Flags": [
     "Account Disabled",
     "Normal user account",
@@ -623,7 +626,7 @@ Output: [
    "LoginCount": 0
   },
   "ParsedV": {
-   "AccountType": "0x10c",
+   "AccountType": "Custom Limited Acct",
    "username": "DefaultAccount",
    "fullname": "",
    "comment": "A user account managed by the system.",
@@ -631,8 +634,8 @@ Output: [
    "logon_script": "",
    "profile_path": "",
    "workstation": "",
-   "lmpwd_hash": "\u0002\u0002",
-   "ntpwd_hash": "\u0002\u0002"
+   "lmpwd_hash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000\ufffd\ufffdv}5U\ufffdd\u0014\u001aʺx\u001f\ufffdV",
+   "ntpwd_hash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000\ufffd,H\u0014\ufffd\ufffd\u0004p✋\u0026tVbw"
   }
  },
  {
@@ -641,6 +644,7 @@ Output: [
    "PasswordResetDate": "2021-10-08T00:50:53Z",
    "PasswordFailDate": "1601-01-01T00:00:00Z",
    "RID": 504,
+   "PrimaryGroupID": 513,
    "Flags": [
     "Account Disabled",
     "Normal user account"
@@ -649,7 +653,7 @@ Output: [
    "LoginCount": 0
   },
   "ParsedV": {
-   "AccountType": "0x10c",
+   "AccountType": "Custom Limited Acct",
    "username": "WDAGUtilityAccount",
    "fullname": "",
    "comment": "A user account managed and used by the system for Windows Defender Application Guard scenarios.",
@@ -657,8 +661,8 @@ Output: [
    "logon_script": "",
    "profile_path": "",
    "workstation": "",
-   "lmpwd_hash": "\u0002\u0002",
-   "ntpwd_hash": "\u0002\u0002\u0010"
+   "lmpwd_hash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000i\ufffd\u0026\ufffd\u0013II\ufffdY\ufffd?o\ufffd\u0003\ufffd\ufffd",
+   "ntpwd_hash": "\u0002\u0000\u0002\u0000\u0010\u0000\u0000\u0000\u003c\u0026I\ufffd\ufffd\ufffd_䉫\ufffdur\ufffd\ufffd\u0002sd\u000f\ufffdm{tFo \ufffdC\ufffdA\ufffdF䉁\ufffdR\ufffd\ufffd\ufffd\ufffd\ufffdb\ufffd4=\u0006b"
   }
  },
  {
@@ -667,6 +671,7 @@ Output: [
    "PasswordResetDate": "2021-10-07T08:07:32Z",
    "PasswordFailDate": "2021-10-13T13:33:34Z",
    "RID": 1001,
+   "PrimaryGroupID": 513,
    "Flags": [
     "Normal user account",
     "Password does not expire",
@@ -676,7 +681,7 @@ Output: [
    "LoginCount": 112
   },
   "ParsedV": {
-   "AccountType": "0xf4",
+   "AccountType": "Default Admin User",
    "username": "test",
    "fullname": "",
    "comment": "",
@@ -684,8 +689,8 @@ Output: [
    "logon_script": "",
    "profile_path": "",
    "workstation": "",
-   "lmpwd_hash": "\u0002\u0002",
-   "ntpwd_hash": "\u0002\u0002\u0010"
+   "lmpwd_hash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000̵\u003c\ufffd\ufffd\ufffdHP\ufffd;'%d.dT",
+   "ntpwd_hash": "\u0002\u0000\u0002\u0000\u0010\u0000\u0000\u0000\t\\\ufffd̍\u0010 j\ufffd@\ufffd\\\u0002\ufffdY.Y\u001as9\nU*\ufffd\ufffdg\u0004\ufffdI\ufffd8\ufffdjjH\ufffdU\ufffd\t\ufffd:y1\ufffd}\u0018U\ufffd"
   }
  }
 ]
@@ -716,6 +721,454 @@ Output: [
   "Username": "test",
   "CreatedTime": "2021-10-07T08:07:32Z",
   "_Source": "Windows.Forensics.SAM/CreateTimes"
+ }
+]
+
+# Test Windows.Forensics.SAM.Enriched's sources.
+Query: SELECT * FROM Artifact.Windows.Forensics.SAM.Enriched( SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="Users")
+Output: [
+ {
+  "Key": "\\SAM\\Domains\\Account\\Users\\000001F4",
+  "RID": 500,
+  "Username": "Administrator",
+  "FullName": "",
+  "Comment": "Built-in account for administering the computer/domain",
+  "PrimaryGroupID": 513,
+  "IsLocalAdmin": true,
+  "Flags": [
+   "Account Disabled",
+   "Normal user account",
+   "Password does not expire"
+  ],
+  "LastLoginDate": null,
+  "PasswordResetDate": null,
+  "FailedLoginCount": 0,
+  "LoginCount": 0,
+  "_AccountType": "Default Admin User",
+  "_PasswordFailDate": null,
+  "_DriveLetter": "",
+  "_LogonScript": "",
+  "_ProfilePath": "",
+  "_Workstation": "",
+  "_LMHash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000\ufffd;\ufffd\ufffdK\ufffdU\ufffd:Vր_\ufffdHb",
+  "_NTHash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000NGHmY\ufffd\ufffd\u0015xj\ufffdj\ufffd\ufffd\ufffd^",
+  "_Source": "Windows.Forensics.SAM.Enriched/Users"
+ },
+ {
+  "Key": "\\SAM\\Domains\\Account\\Users\\000001F5",
+  "RID": 501,
+  "Username": "Guest",
+  "FullName": "",
+  "Comment": "Built-in account for guest access to the computer/domain",
+  "PrimaryGroupID": 513,
+  "IsLocalAdmin": false,
+  "Flags": [
+   "Account Disabled",
+   "Normal user account",
+   "Password does not expire",
+   "Password not required"
+  ],
+  "LastLoginDate": null,
+  "PasswordResetDate": null,
+  "FailedLoginCount": 0,
+  "LoginCount": 0,
+  "_AccountType": "Default Guest Acct",
+  "_PasswordFailDate": null,
+  "_DriveLetter": "",
+  "_LogonScript": "",
+  "_ProfilePath": "",
+  "_Workstation": "",
+  "_LMHash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000$M`x\u0001b\ufffd\ufffd\u001c\t0o~\ufffdd\ufffd",
+  "_NTHash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000\ufffdP\ufffd\ufffd\ufffd*\u0011\ufffdg\u0007\ufffd\u0002\ufffd\ufffd\ufffd\u0019",
+  "_Source": "Windows.Forensics.SAM.Enriched/Users"
+ },
+ {
+  "Key": "\\SAM\\Domains\\Account\\Users\\000001F7",
+  "RID": 503,
+  "Username": "DefaultAccount",
+  "FullName": "",
+  "Comment": "A user account managed by the system.",
+  "PrimaryGroupID": 513,
+  "IsLocalAdmin": false,
+  "Flags": [
+   "Account Disabled",
+   "Normal user account",
+   "Password does not expire",
+   "Password not required"
+  ],
+  "LastLoginDate": null,
+  "PasswordResetDate": null,
+  "FailedLoginCount": 0,
+  "LoginCount": 0,
+  "_AccountType": "Custom Limited Acct",
+  "_PasswordFailDate": null,
+  "_DriveLetter": "",
+  "_LogonScript": "",
+  "_ProfilePath": "",
+  "_Workstation": "",
+  "_LMHash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000\ufffd\ufffdv}5U\ufffdd\u0014\u001aʺx\u001f\ufffdV",
+  "_NTHash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000\ufffd,H\u0014\ufffd\ufffd\u0004p✋\u0026tVbw",
+  "_Source": "Windows.Forensics.SAM.Enriched/Users"
+ },
+ {
+  "Key": "\\SAM\\Domains\\Account\\Users\\000001F8",
+  "RID": 504,
+  "Username": "WDAGUtilityAccount",
+  "FullName": "",
+  "Comment": "A user account managed and used by the system for Windows Defender Application Guard scenarios.",
+  "PrimaryGroupID": 513,
+  "IsLocalAdmin": false,
+  "Flags": [
+   "Account Disabled",
+   "Normal user account"
+  ],
+  "LastLoginDate": null,
+  "PasswordResetDate": "2021-10-08T00:50:53Z",
+  "FailedLoginCount": 0,
+  "LoginCount": 0,
+  "_AccountType": "Custom Limited Acct",
+  "_PasswordFailDate": null,
+  "_DriveLetter": "",
+  "_LogonScript": "",
+  "_ProfilePath": "",
+  "_Workstation": "",
+  "_LMHash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000i\ufffd\u0026\ufffd\u0013II\ufffdY\ufffd?o\ufffd\u0003\ufffd\ufffd",
+  "_NTHash": "\u0002\u0000\u0002\u0000\u0010\u0000\u0000\u0000\u003c\u0026I\ufffd\ufffd\ufffd_䉫\ufffdur\ufffd\ufffd\u0002sd\u000f\ufffdm{tFo \ufffdC\ufffdA\ufffdF䉁\ufffdR\ufffd\ufffd\ufffd\ufffd\ufffdb\ufffd4=\u0006b",
+  "_Source": "Windows.Forensics.SAM.Enriched/Users"
+ },
+ {
+  "Key": "\\SAM\\Domains\\Account\\Users\\000003E9",
+  "RID": 1001,
+  "Username": "test",
+  "FullName": "",
+  "Comment": "",
+  "PrimaryGroupID": 513,
+  "IsLocalAdmin": true,
+  "Flags": [
+   "Normal user account",
+   "Password does not expire",
+   "Password not required"
+  ],
+  "LastLoginDate": "2021-12-01T12:40:21Z",
+  "PasswordResetDate": "2021-10-07T08:07:32Z",
+  "FailedLoginCount": 0,
+  "LoginCount": 112,
+  "_AccountType": "Default Admin User",
+  "_PasswordFailDate": "2021-10-13T13:33:34Z",
+  "_DriveLetter": "",
+  "_LogonScript": "",
+  "_ProfilePath": "",
+  "_Workstation": "",
+  "_LMHash": "\u0002\u0000\u0002\u0000\u0000\u0000\u0000\u0000̵\u003c\ufffd\ufffd\ufffdHP\ufffd;'%d.dT",
+  "_NTHash": "\u0002\u0000\u0002\u0000\u0010\u0000\u0000\u0000\t\\\ufffd̍\u0010 j\ufffd@\ufffd\\\u0002\ufffdY.Y\u001as9\nU*\ufffd\ufffdg\u0004\ufffdI\ufffd8\ufffdjjH\ufffdU\ufffd\t\ufffd:y1\ufffd}\u0018U\ufffd",
+  "_Source": "Windows.Forensics.SAM.Enriched/Users"
+ }
+]
+
+Query: SELECT * FROM Artifact.Windows.Forensics.SAM.Enriched( SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="GroupMembers")
+Output: [
+ {
+  "GroupDomain": "Builtin",
+  "GroupName": "Administrators",
+  "GroupDescription": "Administrators have complete and unrestricted access to the computer/domain",
+  "GroupRID": 544,
+  "Member": "Administrator",
+  "MemberSID": "S-1-5-21-3442094626-3791537600-2028639842-500",
+  "MemberRID": 500,
+  "MemberClass": "Local account",
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000220",
+  "_Source": "Windows.Forensics.SAM.Enriched/GroupMembers"
+ },
+ {
+  "GroupDomain": "Builtin",
+  "GroupName": "Administrators",
+  "GroupDescription": "Administrators have complete and unrestricted access to the computer/domain",
+  "GroupRID": 544,
+  "Member": "test",
+  "MemberSID": "S-1-5-21-3442094626-3791537600-2028639842-1001",
+  "MemberRID": 1001,
+  "MemberClass": "Local account",
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000220",
+  "_Source": "Windows.Forensics.SAM.Enriched/GroupMembers"
+ },
+ {
+  "GroupDomain": "Builtin",
+  "GroupName": "Users",
+  "GroupDescription": "Users are prevented from making accidental or intentional system-wide changes and can run most applications",
+  "GroupRID": 545,
+  "Member": "INTERACTIVE",
+  "MemberSID": "S-1-5-4",
+  "MemberRID": 4,
+  "MemberClass": "Well-known SID",
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000221",
+  "_Source": "Windows.Forensics.SAM.Enriched/GroupMembers"
+ },
+ {
+  "GroupDomain": "Builtin",
+  "GroupName": "Users",
+  "GroupDescription": "Users are prevented from making accidental or intentional system-wide changes and can run most applications",
+  "GroupRID": 545,
+  "Member": "Authenticated Users",
+  "MemberSID": "S-1-5-11",
+  "MemberRID": 11,
+  "MemberClass": "Well-known SID",
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000221",
+  "_Source": "Windows.Forensics.SAM.Enriched/GroupMembers"
+ },
+ {
+  "GroupDomain": "Builtin",
+  "GroupName": "Guests",
+  "GroupDescription": "Guests have the same access as members of the Users group by default, except for the Guest account which is further restricted",
+  "GroupRID": 546,
+  "Member": "Guest",
+  "MemberSID": "S-1-5-21-3442094626-3791537600-2028639842-501",
+  "MemberRID": 501,
+  "MemberClass": "Local account",
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000222",
+  "_Source": "Windows.Forensics.SAM.Enriched/GroupMembers"
+ },
+ {
+  "GroupDomain": "Builtin",
+  "GroupName": "IIS_IUSRS",
+  "GroupDescription": "Built-in group used by Internet Information Services.",
+  "GroupRID": 568,
+  "Member": "IUSR",
+  "MemberSID": "S-1-5-17",
+  "MemberRID": 17,
+  "MemberClass": "Well-known SID",
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000238",
+  "_Source": "Windows.Forensics.SAM.Enriched/GroupMembers"
+ },
+ {
+  "GroupDomain": "Builtin",
+  "GroupName": "System Managed Accounts Group",
+  "GroupDescription": "Members of this group are managed by the system.",
+  "GroupRID": 581,
+  "Member": "DefaultAccount",
+  "MemberSID": "S-1-5-21-3442094626-3791537600-2028639842-503",
+  "MemberRID": 503,
+  "MemberClass": "Local account",
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000245",
+  "_Source": "Windows.Forensics.SAM.Enriched/GroupMembers"
+ }
+]
+
+Query: SELECT * FROM Artifact.Windows.Forensics.SAM.Enriched( SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="Aliases")
+Output: [
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000220",
+  "GroupDomain": "Builtin",
+  "GroupRID": 544,
+  "GroupName": "Administrators",
+  "GroupDescription": "Administrators have complete and unrestricted access to the computer/domain",
+  "MemberCount": 2,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000221",
+  "GroupDomain": "Builtin",
+  "GroupRID": 545,
+  "GroupName": "Users",
+  "GroupDescription": "Users are prevented from making accidental or intentional system-wide changes and can run most applications",
+  "MemberCount": 2,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000222",
+  "GroupDomain": "Builtin",
+  "GroupRID": 546,
+  "GroupName": "Guests",
+  "GroupDescription": "Guests have the same access as members of the Users group by default, except for the Guest account which is further restricted",
+  "MemberCount": 1,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000223",
+  "GroupDomain": "Builtin",
+  "GroupRID": 547,
+  "GroupName": "Power Users",
+  "GroupDescription": "Power Users are included for backwards compatibility and possess limited administrative powers",
+  "MemberCount": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000227",
+  "GroupDomain": "Builtin",
+  "GroupRID": 551,
+  "GroupName": "Backup Operators",
+  "GroupDescription": "Backup Operators can override security restrictions for the sole purpose of backing up or restoring files",
+  "MemberCount": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000228",
+  "GroupDomain": "Builtin",
+  "GroupRID": 552,
+  "GroupName": "Replicator",
+  "GroupDescription": "Supports file replication in a domain",
+  "MemberCount": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\0000022B",
+  "GroupDomain": "Builtin",
+  "GroupRID": 555,
+  "GroupName": "Remote Desktop Users",
+  "GroupDescription": "Members in this group are granted the right to logon remotely",
+  "MemberCount": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\0000022C",
+  "GroupDomain": "Builtin",
+  "GroupRID": 556,
+  "GroupName": "Network Configuration Operators",
+  "GroupDescription": "Members in this group can have some administrative privileges to manage configuration of networking features",
+  "MemberCount": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\0000022E",
+  "GroupDomain": "Builtin",
+  "GroupRID": 558,
+  "GroupName": "Performance Monitor Users",
+  "GroupDescription": "Members of this group can access performance counter data locally and remotely",
+  "MemberCount": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\0000022F",
+  "GroupDomain": "Builtin",
+  "GroupRID": 559,
+  "GroupName": "Performance Log Users",
+  "GroupDescription": "Members of this group may schedule logging of performance counters, enable trace providers, and collect event traces both locally and via remote access to this computer",
+  "MemberCount": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000232",
+  "GroupDomain": "Builtin",
+  "GroupRID": 562,
+  "GroupName": "Distributed COM Users",
+  "GroupDescription": "Members are allowed to launch, activate and use Distributed COM objects on this machine.",
+  "MemberCount": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000238",
+  "GroupDomain": "Builtin",
+  "GroupRID": 568,
+  "GroupName": "IIS_IUSRS",
+  "GroupDescription": "Built-in group used by Internet Information Services.",
+  "MemberCount": 1,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000239",
+  "GroupDomain": "Builtin",
+  "GroupRID": 569,
+  "GroupName": "Cryptographic Operators",
+  "GroupDescription": "Members are authorized to perform cryptographic operations.",
+  "MemberCount": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\0000023D",
+  "GroupDomain": "Builtin",
+  "GroupRID": 573,
+  "GroupName": "Event Log Readers",
+  "GroupDescription": "Members of this group can read event logs from local machine",
+  "MemberCount": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000242",
+  "GroupDomain": "Builtin",
+  "GroupRID": 578,
+  "GroupName": "Hyper-V Administrators",
+  "GroupDescription": "Members of this group have complete and unrestricted access to all features of Hyper-V.",
+  "MemberCount": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000243",
+  "GroupDomain": "Builtin",
+  "GroupRID": 579,
+  "GroupName": "Access Control Assistance Operators",
+  "GroupDescription": "Members of this group can remotely query authorization attributes and permissions for resources on this computer.",
+  "MemberCount": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000244",
+  "GroupDomain": "Builtin",
+  "GroupRID": 580,
+  "GroupName": "Remote Management Users",
+  "GroupDescription": "Members of this group can access WMI resources over management protocols (such as WS-Management via the Windows Remote Management service). This applies only to WMI namespaces that grant access to the user.",
+  "MemberCount": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000245",
+  "GroupDomain": "Builtin",
+  "GroupRID": 581,
+  "GroupName": "System Managed Accounts Group",
+  "GroupDescription": "Members of this group are managed by the system.",
+  "MemberCount": 1,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ },
+ {
+  "RegistryKey": "\\SAM\\Domains\\Builtin\\Aliases\\00000247",
+  "GroupDomain": "Builtin",
+  "GroupRID": 583,
+  "GroupName": "Device Owners",
+  "GroupDescription": "Members of this group can change system-wide settings.",
+  "MemberCount": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/Aliases"
+ }
+]
+
+Query: SELECT * FROM Artifact.Windows.Forensics.SAM.Enriched( SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="Groups")
+Output: [
+ {
+  "RegistryKey": "\\SAM\\Domains\\Account\\Groups\\00000201",
+  "GroupRID": 513,
+  "GroupName": "None",
+  "GroupDescription": "Ordinary users",
+  "MemberCount": 5,
+  "MemberRIDs": [
+   500,
+   501,
+   503,
+   504,
+   1001
+  ],
+  "_Source": "Windows.Forensics.SAM.Enriched/Groups"
+ }
+]
+
+Query: SELECT * FROM Artifact.Windows.Forensics.SAM.Enriched( SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="MachineSID")
+Output: [
+ {
+  "SID": "S-1-5-21-3442094626-3791537600-2028639842",
+  "_Source": "Windows.Forensics.SAM.Enriched/MachineSID"
+ }
+]
+
+Query: SELECT * FROM Artifact.Windows.Forensics.SAM.Enriched( SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="AccountPolicy")
+Output: [
+ {
+  "DomainCreationTime": "2021-10-08T00:50:53Z",
+  "MaxPasswordAgeDays": 42,
+  "MinPasswordAgeDays": -0,
+  "LockoutDurationMinutes": 30,
+  "LockoutObservationWindowMinutes": 30,
+  "NextRID": 1002,
+  "PasswordProperties": [],
+  "MinPasswordLength": 0,
+  "PasswordHistoryLength": 0,
+  "LockoutThreshold": 0,
+  "_Source": "Windows.Forensics.SAM.Enriched/AccountPolicy"
  }
 ]
 

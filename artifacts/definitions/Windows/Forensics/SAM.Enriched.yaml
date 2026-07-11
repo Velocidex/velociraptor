@@ -1,0 +1,215 @@
+name: Windows.Forensics.SAM.Enriched
+author: Andreas Misje – @misje
+description: |
+  Extracts everything usefully derivable from the SAM registry hive
+
+  Whereas `Windows.Forensics.SAM` only returns users, this artifact
+  list groups, group memberships, machine SID and the systems' account
+  policy.
+
+  Sources:
+
+  - **Users**: every local user, like `Windows.Forensics.SAM`'s
+    `Parsed` source, plus `PrimaryGroupID` and `IsLocalAdmin` (cross-
+    referenced against the local `Administrators` group).
+  - **GroupMembers**: every local group's members, classified as a
+    local account, a domain account, or a well-known SID.
+  - **Aliases**: every local group, without expanding membership.
+  - **Groups**: global groups (`SAM\Domains\Account\Groups`), only useful
+    if on a domain controller.
+  - **MachineSID**: this machine's own account-domain SID, as a
+    single row.
+  - **AccountPolicy**: password/lockout policy and the domain's own
+    creation time, from `SAM\Domains\Account`.
+
+parameters:
+  - name: SAMPath
+    description: Path to the SAM hive to parse.
+    default: C:/Windows/System32/Config/SAM
+
+required_permissions:
+  - MACHINE_STATE
+
+implied_permissions:
+  - FILESYSTEM_WRITE
+
+imports:
+  - Windows.Forensics.SAM
+
+precondition:
+  SELECT OS From info() where OS = 'windows'
+
+sources:
+  - name: Users
+    query: |
+      // Cache function for lookupSID (copied from Windows.Sys.AllUsers):
+      LET LookupSIDCache(SID) = cache(
+          name="SID",
+          key=SID,
+          func=lookupSID(sid=SID) || pathspec(
+            parse=stat(
+              accessor="registry",
+              filename="HKEY_LOCAL_MACHINE/Software/Microsoft/Windows NT/CurrentVersion/ProfileList/" +
+                SID + "/ProfileImagePath").Data.value).Basename || "")
+
+      LET LocalAdminRIDs <= to_dict(item={
+          SELECT str(str=MemberRID) AS _key,
+                 true AS _value
+          FROM GroupMembers(SAMPath=SAMPath)
+          WHERE GroupRID = 544
+           AND GroupDomain = 'Builtin'
+                AND MemberClass = 'Local account'
+        })
+
+      // Help make timestamps nullable if the raw value is zero:
+      LET NullifyIfZero(Raw, Value) = if(condition=Raw = 0, then=NULL, else=Value)
+
+      SELECT
+          Key.OSPath.Path AS Key,
+          ParsedF.RID AS RID,
+          ParsedV.username AS Username,
+          ParsedV.fullname AS FullName,
+          ParsedV.comment AS Comment,
+          ParsedF.PrimaryGroupID AS PrimaryGroupID,
+          if(condition=get(item=LocalAdminRIDs, field=str(str=ParsedF.RID)),
+             then=true,
+             else=false) AS IsLocalAdmin,
+          ParsedF.Flags AS Flags,
+          NullifyIfZero(Raw=ParsedF.__last_login_raw, Value=ParsedF.LastLoginDate) AS LastLoginDate,
+          NullifyIfZero(
+            Raw=ParsedF.__password_reset_raw,
+            Value=ParsedF.PasswordResetDate) AS PasswordResetDate,
+          ParsedF.FailedLoginCount AS FailedLoginCount,
+          ParsedF.LoginCount AS LoginCount,
+          ParsedV.AccountType AS _AccountType,
+          NullifyIfZero(
+            Raw=ParsedF.__password_fail_raw,
+            Value=ParsedF.PasswordFailDate) AS _PasswordFailDate,
+          ParsedV.driveletter AS _DriveLetter,
+          ParsedV.logon_script AS _LogonScript,
+          ParsedV.profile_path AS _ProfilePath,
+          ParsedV.workstation AS _Workstation,
+          ParsedV.lmpwd_hash AS _LMHash,
+          ParsedV.ntpwd_hash AS _NTHash
+      FROM foreach(
+        row={
+          SELECT
+          Key,
+          parse_binary(
+            accessor="data",
+            filename=get(
+              field="F"),
+            profile=Profile,
+            struct="F") AS ParsedF,
+          parse_binary(
+            accessor="data",
+            filename=get(
+              field="V"),
+            profile=Profile,
+            struct="V") AS ParsedV
+          FROM read_reg_key(
+            globs='SAM\\Domains\\Account\\Users\\0*',
+            root=pathspec(
+              DelegatePath=SAMPath),
+            accessor="raw_reg")
+          WHERE get(
+            field="F")
+           AND get(
+                 field="V")
+        })
+
+  - name: GroupMembers
+    query: |
+      // A domain account's name is never in the SAM; try a live lookup
+      // for one before falling back to its bare SID:
+      LET ResolvedMember(MemberName, MemberClass, MemberSID) =
+          MemberName || if(condition=MemberClass = 'Domain account',
+                           then=LookupSIDCache(SID=MemberSID)) ||
+          MemberSID
+
+      SELECT GroupDomain,
+             GroupName,
+             GroupDescription,
+             GroupRID,
+             ResolvedMember(MemberName=MemberName,
+                            MemberClass=MemberClass,
+                            MemberSID=MemberSID) AS Member,
+             MemberSID,
+             MemberRID,
+             MemberClass,
+             RegistryKey
+      FROM GroupMembers(SAMPath=SAMPath)
+
+  - name: Aliases
+    query: |
+      SELECT RegistryKey,
+             GroupDomain,
+             Group.RID AS GroupRID,
+             Group.Name AS GroupName,
+             Group.Description AS GroupDescription,
+             Group.MembersCount AS MemberCount
+      FROM Aliases(SAMPath=SAMPath)
+
+  - name: Groups
+    query: SELECT * FROM Groups(SAMPath=SAMPath)
+
+  - name: MachineSID
+    query: SELECT * FROM MachineSID(SAMPath=SAMPath)
+
+  - name: AccountPolicy
+    query: |
+      SELECT
+          Policy.CreationTime AS DomainCreationTime,
+          Policy.MaxPasswordAge * -1.0 / 864000000000.0 AS MaxPasswordAgeDays,
+          Policy.MinPasswordAge * -1.0 / 864000000000.0 AS MinPasswordAgeDays,
+          Policy.LockoutDuration * -1.0 / 600000000.0 AS LockoutDurationMinutes,
+          Policy.LockoutObservationWindow * -1.0 / 600000000.0 AS LockoutObservationWindowMinutes,
+          Policy.NextRID AS NextRID,
+          Policy.PasswordProperties AS PasswordProperties,
+          Policy.MinPasswordLength AS MinPasswordLength,
+          Policy.PasswordHistoryLength AS PasswordHistoryLength,
+          Policy.LockoutThreshold AS LockoutThreshold
+      FROM AccountPolicy(
+        SAMPath=SAMPath)
+
+column_types:
+  - name: NextRID
+    description: >-
+      Next RID this domain will assign to a newly created user or
+      group. Useful for estimating how many accounts have ever existed,
+      since RIDs are never reused after an account is deleted.
+  - name: LockoutThreshold
+    description: >-
+      Number of failed logon attempts allowed before an account is
+      locked out. 0 means account lockout is disabled entirely.
+  - name: IsLocalAdmin
+    description: >-
+      True only if the account is a direct member of the local
+      Administrators group. Does not detect admin rights gained through
+      nested/transitive group membership.
+  - name: GroupDomain
+    description: >-
+      Which SAM sub-hive this group is defined in ("Builtin" or
+      "Account") — not an Active Directory domain name.
+  - name: MemberClass
+    description: >-
+      How the member SID was classified: "Local account" (resolved
+      against this machine's own users/groups), "Domain account" (an
+      S-1-5-21 SID), or "Well-known SID" (a fixed OS-defined SID).
+  - name: Member
+    description: >-
+      Best-effort resolved name: local username/groupname if resolvable,
+      else a live SID lookup, else the bare SID.
+  - name: PrimaryGroupID
+    description: >-
+      The RID (not full SID) of the account's primary group, e.g. 513
+      for the default "Domain Users"/"None" group. Cross-reference
+      against GroupRID in the Groups source to resolve a name.
+  - name: _PasswordFailDate
+    description: >-
+      Timestamp of the last failed logon attempt (wrong password) for
+      this account.
+  - name: _LMHash
+    type: hex
+  - name: _NTHash
+    type: hex
