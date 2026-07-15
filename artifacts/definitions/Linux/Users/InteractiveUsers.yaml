@@ -20,12 +20,11 @@ sources:
       WHERE OS = 'linux'
 
     query: |
-      SELECT Fqdn AS Host,
-              User,
-              Description,
-              Uid,
-              Gid,
-              Homedir,
-              Shell 
+      SELECT User,
+             Description,
+             Uid,
+             Gid,
+             Homedir,
+             Shell 
       FROM Artifact.Linux.Sys.Users()
       WHERE NOT Shell IN split(string=NonInteractiveExecutables, sep_string=",")
