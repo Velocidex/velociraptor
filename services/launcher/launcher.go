@@ -336,8 +336,8 @@ func (self *Launcher) CompileCollectorArgs(
 				vql_collector_args.IopsLimit = collector_request.IopsLimit
 			}
 
-			if vql_collector_args.Timeout == 0 &&
-				collector_request.Timeout > 0 {
+			// If there is a timeout set on the collection, use that, otherwise default to the artifact timeout.
+			if collector_request.Timeout > 0 {
 				vql_collector_args.Timeout = collector_request.Timeout
 			}
 
