@@ -341,7 +341,7 @@ func (self *HuntStorageManagerImpl) _SetHunt(
 
 	// If the hunt only have a request summary do not flush it back to
 	// disk!
-	if !hunt.StartRequest.Summary {
+	if hunt.StartRequest != nil && !hunt.StartRequest.Summary {
 		// Split the hunt object into request and hunt object
 		hunt_obj, request_obj := splitHuntObject(hunt)
 		err = db.SetSubject(self.config_obj, hunt_path_manager.Request(),
