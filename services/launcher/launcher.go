@@ -566,11 +566,6 @@ func AddToolDependency(
 	})
 
 	vql_collector_args.Env = upsertVqlEnv(vql_collector_args.Env, &actions_proto.VQLEnv{
-		Key:   fmt.Sprintf("Tool_%v_HASH", tool_info.Name),
-		Value: tool_info.Hash,
-	})
-
-	vql_collector_args.Env = upsertVqlEnv(vql_collector_args.Env, &actions_proto.VQLEnv{
 		Key:   fmt.Sprintf("Tool_%v_FILENAME", tool_info.Name),
 		Value: tool_info.Filename,
 	})
