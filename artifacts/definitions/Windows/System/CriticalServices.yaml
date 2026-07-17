@@ -24,6 +24,10 @@ parameters:
        SavService
        wscsvc
        wuauserv
+       AcronisCyberProtectionService
+       AcronisActiveProtectionService
+       aakore
+       AcrSch2Svc
 
 sources:
      - query: |
