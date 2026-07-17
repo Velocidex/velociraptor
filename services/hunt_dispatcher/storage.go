@@ -339,24 +339,31 @@ func (self *HuntStorageManagerImpl) _SetHunt(
 		atomic.StoreUint64(&self.last_timestamp, hunt.StartTime)
 	}
 
-	// Split the hunt object into request and hunt object
-	hunt_obj, request_obj := splitHuntObject(hunt)
-	err = db.SetSubject(self.config_obj, hunt_path_manager.Request(),
-		request_obj)
-	if err != nil {
-		return err
+	// If the hunt only have a request summary do not flush it back to
+	// disk!
+	if !hunt.StartRequest.Summary {
+		// Split the hunt object into request and hunt object
+		hunt_obj, request_obj := splitHuntObject(hunt)
+		err = db.SetSubject(self.config_obj, hunt_path_manager.Request(),
+			request_obj)
+		if err != nil {
+			return err
+		}
+
+		// Store the hunt object with the summary.
+		hunt = hunt_obj
 	}
 
 	self.last_update = utils.GetTime().Now()
 	self.hunts[hunt.HuntId] = &HuntRecord{
-		Hunt:  hunt_obj,
+		Hunt:  hunt,
 		dirty: true,
 	}
 	self.dirty = true
 	self._MaybeUpdateTimestamp(hunt.StartTime)
 
 	return db.SetSubject(
-		self.config_obj, hunt_path_manager.Path(), hunt_obj)
+		self.config_obj, hunt_path_manager.Path(), hunt)
 }
 
 func (self *HuntStorageManagerImpl) GetTags(

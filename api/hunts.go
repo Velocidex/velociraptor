@@ -332,8 +332,12 @@ func (self *ApiServer) ModifyHunt(
 	principal := user_record.Name
 
 	permissions := acls.COLLECT_CLIENT
-	if in.State == api_proto.Hunt_RUNNING {
+	switch in.State {
+	case api_proto.Hunt_RUNNING:
 		permissions = acls.START_HUNT
+
+	case api_proto.Hunt_DELETED:
+		permissions = acls.DELETE_RESULTS
 	}
 
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)

@@ -43,7 +43,7 @@ func GzipUncompress(raw []byte) ([]byte, error) {
 func Uncompress(
 	ctx context.Context, compressed []byte) ([]byte, error) {
 
-	return UncompressWithLimit(ctx, compressed, constants.MEMORY_LARGE)
+	return UncompressWithLimit(ctx, compressed, constants.MAX_MEMORY_LARGE)
 }
 
 func UncompressWithLimit(

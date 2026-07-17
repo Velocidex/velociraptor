@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/proto"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -60,6 +61,10 @@ func (self *HuntDispatcherTestSuite) SetupTest() {
 	self.LoadArtifactsIntoConfig([]string{`
 name: Server.Internal.HuntUpdate
 type: INTERNAL
+`, `
+name: Artifact.With.Parameters
+parameters:
+- name: Foo
 `})
 
 	self.time_closer = utils.MockTime(&utils.IncClock{})
@@ -149,6 +154,67 @@ func (self *HuntDispatcherTestSuite) TearDownTest() {
 	if self.time_closer != nil {
 		self.time_closer()
 	}
+}
+
+func (self *HuntDispatcherTestSuite) TestModifyingHuntWithRequest() {
+	closer := utils.MockTime(utils.RealClock{})
+	defer closer()
+
+	hunt_id := "H.121222"
+
+	master_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	now := utils.GetTime().Now().Unix()
+	acl_manager := acl_managers.NullACLManager{}
+
+	hunt_obj, err := master_dispatcher.CreateHunt(self.Ctx, self.ConfigObj,
+		acl_manager, &api_proto.Hunt{
+			HuntId:    hunt_id,
+			State:     api_proto.Hunt_RUNNING,
+			Version:   now,
+			StartTime: uint64(now),
+			Expires:   uint64(now+1) * 1000000,
+			StartRequest: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{"Artifact.With.Parameters"},
+				Specs: []*flows_proto.ArtifactSpec{{
+					Artifact: "Artifact.With.Parameters",
+					Parameters: &flows_proto.ArtifactParameters{
+						Env: []*actions_proto.VQLEnv{
+							{Key: "Foo", Value: "ParameterBar"},
+						},
+					},
+				}},
+			},
+		})
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_RUNNING)
+
+	hunt_obj, pres := master_dispatcher.GetHunt(self.Ctx,
+		services.GetHuntOptions{Request: true}, hunt_id)
+	assert.True(self.T(), pres)
+
+	// Make sure the request is set properly.
+	assert.Equal(self.T(), len(hunt_obj.StartRequest.Specs), 1)
+
+	// Modify the hunt without the request.
+	modification := master_dispatcher.ModifyHuntObject(self.Ctx, hunt_id,
+		services.GetHuntOptions{Request: false},
+		func(hunt *api_proto.Hunt) services.HuntModificationAction {
+			hunt.State = api_proto.Hunt_STOPPED
+			return services.HuntFlushToDatastore
+		})
+
+	// Changes should be visible in the data store immediately.
+	assert.Equal(self.T(), modification, services.HuntFlushToDatastore)
+
+	hunt_obj, pres = master_dispatcher.GetHunt(self.Ctx,
+		services.GetHuntOptions{Request: true}, hunt_id)
+	assert.True(self.T(), pres)
+
+	// Make sure the request is still set properly.
+	// Fixes: https://github.com/Velocidex/velociraptor/issues/4912
+	assert.Equal(self.T(), len(hunt_obj.StartRequest.Specs), 1)
 }
 
 func (self *HuntDispatcherTestSuite) TestModifyingHuntFlushToDatastore() {
