@@ -1,10 +1,10 @@
-name: Windows.Forensics.SRUM_new
+name: Windows.Forensics.SRUM
 description: |
   Parses the Windows SRUM database (srudb.dat) to extract execution
   stats, resource usage, and network activity.
   
-  Update:  
-  2026-07-11 Added optional SruDbIdMapTable to selection table. 
+  Update 2026-07-11:  
+  Added optional SruDbIdMapTable to selection table. 
   We have found this table useful searching for binary name strings.   
   Added filters for ExecutableRegex, UserRegex and TimeStamp.
 
