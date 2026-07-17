@@ -32,7 +32,7 @@ import (
 
 type GunzipArgs struct {
 	String   string `vfilter:"required,field=string,doc=Data to apply Gunzip"`
-	MaxBytes int64  `vfilter:"required,field=max_bytes,doc=Maximum length of bytes to read into memory"`
+	MaxBytes int64  `vfilter:"optional,field=max_bytes,doc=Maximum length of bytes to read into memory"`
 }
 
 type Gunzip struct{}
@@ -50,7 +50,7 @@ func (self *Gunzip) Call(ctx context.Context,
 		return false
 	}
 
-	if arg.MaxBytes == 0 || arg.MaxBytes > constants.MAX_MEMORY_LARGE {
+	if arg.MaxBytes <= 0 || arg.MaxBytes > constants.MAX_MEMORY_LARGE {
 		arg.MaxBytes = constants.MAX_MEMORY_LARGE
 	}
 
