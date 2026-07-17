@@ -730,7 +730,7 @@ Frontend:
   # ALL server-initiated outbound HTTP connections, including tool
   # materialization (SetToolInfo with Materialize=true) and VQL's
   # http_client() plugin. Without a proxy or with a permissive proxy,
-  # any user with ARTIFACT_WRITER-equivalent permissions can make the
+  # any user with admin-equivalent permissions can make the
   # server fetch arbitrary URLs, including internal RFC 1918 addresses
   # and cloud metadata endpoints (e.g. 169.254.169.254). Set a
   # restrictive proxy or configure proxy_url_regexp to limit outbound
