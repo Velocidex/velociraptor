@@ -119,6 +119,11 @@ func (self SQLPlugin) Call(
 			return
 
 		case "sqlite":
+			err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+			if err != nil {
+				scope.Log("sql: %v", err)
+				return
+			}
 			handle, err = GetHandleSqlite(ctx, arg, scope)
 			if err == notValidDatabase {
 				return
@@ -130,6 +135,15 @@ func (self SQLPlugin) Call(
 			}
 
 		case "mysql", "postgres":
+			err := vql_subsystem.CheckAccess(scope,
+				acls.FILESYSTEM_READ,
+				acls.NETWORK,
+			)
+			if err != nil {
+				scope.Log("sql: %v", err)
+				return
+			}
+
 			handle, err = self.GetHandleOther(scope, arg.ConnString, arg.Driver)
 			if err != nil {
 				scope.Log("sql: %s", err)
@@ -213,10 +227,11 @@ func (self SQLPlugin) Call(
 
 func (self SQLPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "sql",
-		Doc:      "Run queries against sqlite, mysql, and postgres databases",
-		ArgType:  type_map.AddType(scope, &SQLPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Name:    "sql",
+		Doc:     "Run queries against sqlite, mysql, and postgres databases",
+		ArgType: type_map.AddType(scope, &SQLPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.FILESYSTEM_READ, acls.NETWORK).Build(),
 	}
 }
 

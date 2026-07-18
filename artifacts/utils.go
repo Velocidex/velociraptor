@@ -9,6 +9,11 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+var (
+	ACLManagerNotFound = utils.Wrap(
+		utils.InvalidArgError, "ACL Manager Not Found")
+)
+
 // Gets the client config from the scope.
 func GetConfig(scope vfilter.Scope) (*config_proto.ClientConfig, bool) {
 	scope_config, pres := scope.Resolve(constants.SCOPE_CONFIG)
@@ -37,16 +42,16 @@ func GetUploader(scope vfilter.Scope) (uploads.Uploader, bool) {
 	return config, ok
 }
 
-func GetACLManager(scope vfilter.Scope) (vql_subsystem.ACLManager, bool) {
+func GetACLManager(scope vfilter.Scope) (vql_subsystem.ACLManager, error) {
 	scope_manager, pres := scope.Resolve(vql_subsystem.ACL_MANAGER_VAR)
 	if !pres {
-		return nil, false
+		return nil, ACLManagerNotFound
 	}
 
 	config, ok := scope_manager.(vql_subsystem.ACLManager)
-	if utils.IsNil(config) {
-		return nil, false
+	if utils.IsNil(config) || !ok {
+		return nil, ACLManagerNotFound
 	}
 
-	return config, ok
+	return config, nil
 }

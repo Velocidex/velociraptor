@@ -161,7 +161,7 @@ func (self *CSVEncoder) Encode(obj *fastjson.Object) []byte {
 			// It is already a string
 			b, err := v.StringBytes()
 			if err == nil {
-				self.row[idx] = string(b)
+				self.row[idx] = sanitizeExcelFormulas(string(b))
 			}
 
 			// Nulls should be written as a empty strings
@@ -170,7 +170,7 @@ func (self *CSVEncoder) Encode(obj *fastjson.Object) []byte {
 
 			// Everything else will be JSON encoded.
 		default:
-			self.row[idx] = string(v.MarshalTo(nil))
+			self.row[idx] = sanitizeExcelFormulas(string(v.MarshalTo(nil)))
 		}
 
 	})
@@ -181,7 +181,7 @@ func (self *CSVEncoder) Encode(obj *fastjson.Object) []byte {
 			continue
 		}
 
-		self.row[idx] = self.extra_values[i]
+		self.row[idx] = sanitizeExcelFormulas(self.extra_values[i])
 	}
 
 	_ = self.writer.Write(self.row)
@@ -229,4 +229,15 @@ func writeJsonObject(
 	buf = append(buf, '\n')
 
 	return buf
+}
+
+// https://owasp.org/www-community/attacks/CSV_Injection
+func sanitizeExcelFormulas(in string) string {
+	if len(in) > 0 {
+		switch in[0] {
+		case '=', '+', '@', '\x09', '\x0d', '\x0a':
+			return "\t" + in
+		}
+	}
+	return in
 }

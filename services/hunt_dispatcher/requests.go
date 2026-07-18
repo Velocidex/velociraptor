@@ -26,6 +26,7 @@ func splitHuntObject(hunt_obj *api_proto.Hunt) (
 	summary_hunt_obj.StartRequest = &flows_proto.ArtifactCollectorArgs{
 		Creator:   start_request.Creator,
 		Artifacts: start_request.Artifacts,
+		Summary:   true,
 	}
 
 	return summary_hunt_obj, request_obj

@@ -59,13 +59,13 @@ func (self *CSVUtilsTestSuite) TestCSVUtils() {
 	json.ConvertJSONL(json_chan, json_buffer, csv_buffer,
 		ordereddict.NewDict().
 			Set("ClientId", "C.123").
-			Set("HuntId", "H.123"))
+			Set("HuntId", "H.123").
+			Set("NotFormula", "=1+1"))
 
 	golden := fmt.Sprintf("JSONL:\n------\n%v\nCSV:\n------\n%v\n",
 		json_buffer.String(), csv_buffer.String())
 
 	goldie.Assert(self.T(), "TestCSVUtils", []byte(golden))
-
 }
 
 func TestCSVUtils(t *testing.T) {

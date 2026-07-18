@@ -109,6 +109,7 @@ Output: [
     "client_id": "C.123NewClient",
     "flow_id": "F.01",
     "urgent": false,
+    "summary": false,
     "artifacts": [
      "Windows.Network.Netstat"
     ],
