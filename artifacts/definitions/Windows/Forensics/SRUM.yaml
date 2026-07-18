@@ -44,8 +44,6 @@ parameters:
     description: |
       SRUM tables to parse. The four original artifact sources are
       selected by default. Availability varies by Windows version.
-      SruDbCheckpointTable is the ESE table referred to as
-      SruCheckpointTable in the linked research presentation.
     default: '["Execution Stats", "Application Resource Usage", "Network Connections", "Network Usage"]'
     choices:
       - Execution Stats
