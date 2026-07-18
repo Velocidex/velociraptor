@@ -727,7 +727,15 @@ Frontend:
   # A proxy setting to use - Velociraptor needs to connect to download
   # tools. This setting will force it to go out over this proxy. NOTE-
   # If you don't want to allow outbound connections, just set this to
-  # an non existent setting (e.g. http://127.0.0.1:3128).
+  # an non-existent setting (e.g. http://127.0.0.1:3128).
+  #
+  # SECURITY: This proxy setting and the proxy_config below control
+  # ALL server-initiated outbound HTTP connections, including tool
+  # materialization and VQL's http_client() plugin. Without a proxy or
+  # with a permissive proxy, any user with admin-equivalent
+  # permissions can make the server fetch arbitrary URLs, including
+  # internal RFC 1918 addresses and cloud endpoints. Set a restrictive
+  # proxy or configure proxy_url_regexp to limit outbound destinations
   proxy: "http://127.0.0.1:3128"
 
   # These proxy settings are exactly the same as the
@@ -1299,6 +1307,11 @@ server_type: linux
 ## client. NOTE: This is currently not very robust - i.e. it does not
 ## hide the artifact names very well - you should not name artifacts
 ## in a sensitive way.
+##
+## This value is server-only and is NOT distributed to client
+## configuration files. Do not confuse it with Client.nonce,
+## which is a different value that IS sent to clients for org
+## grouping.
 obfuscation_nonce: zKJDb3KcWh8=
 
 # Path to store autocert certificates.
@@ -1545,9 +1558,10 @@ security:
    - server_artifacts
    - server_artifacts_logs
 
-  # Deny takes precedent over allow. The below shows the default list,
-  # which is used if nothing is set here. You should copy and modify
-  # the entire list to preserve the defaults.
+  # Deny takes precedent over allow. IMPORTANT: Setting this list replaces
+  # the built-in deny list (acl, backups, config, orgs, secrets, users)
+  # rather than merging with it. If you add custom prefixes here, you must
+  # also include any of the built-in prefixes you want to keep.
   denied_fs_accessor_prefix:
    - config
 
