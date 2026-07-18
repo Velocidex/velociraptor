@@ -41,6 +41,25 @@ Queries:
   - SELECT * FROM Artifact.Windows.Forensics.SAM(
        SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="CreateTimes")
 
+  # Test Windows.Forensics.SAM.Enriched's sources.
+  - SELECT * FROM Artifact.Windows.Forensics.SAM.Enriched(
+       SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="Users")
+
+  - SELECT * FROM Artifact.Windows.Forensics.SAM.Enriched(
+       SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="GroupMembers")
+
+  - SELECT * FROM Artifact.Windows.Forensics.SAM.Enriched(
+       SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="Aliases")
+
+  - SELECT * FROM Artifact.Windows.Forensics.SAM.Enriched(
+       SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="Groups")
+
+  - SELECT * FROM Artifact.Windows.Forensics.SAM.Enriched(
+       SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="MachineSID")
+
+  - SELECT * FROM Artifact.Windows.Forensics.SAM.Enriched(
+       SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="AccountPolicy")
+
   # Check raw reg can read values as files - REG_SZ.
   - SELECT utf16(string=read_file(filename=pathspec(
         Path="\\Root\\DeviceCensus\\Processor\\ProcessorIdentifier",
