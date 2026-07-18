@@ -724,17 +724,15 @@ Frontend:
   # A proxy setting to use - Velociraptor needs to connect to download
   # tools. This setting will force it to go out over this proxy. NOTE-
   # If you don't want to allow outbound connections, just set this to
-  # an non existent setting (e.g. http://127.0.0.1:3128).
+  # an non-existent setting (e.g. http://127.0.0.1:3128).
   #
   # SECURITY: This proxy setting and the proxy_config below control
   # ALL server-initiated outbound HTTP connections, including tool
-  # materialization (SetToolInfo with Materialize=true) and VQL's
-  # http_client() plugin. Without a proxy or with a permissive proxy,
-  # any user with admin-equivalent permissions can make the
-  # server fetch arbitrary URLs, including internal RFC 1918 addresses
-  # and cloud metadata endpoints (e.g. 169.254.169.254). Set a
-  # restrictive proxy or configure proxy_url_regexp to limit outbound
-  # destinations in multi-tenant deployments.
+  # materialization and VQL's http_client() plugin. Without a proxy or
+  # with a permissive proxy, any user with admin-equivalent
+  # permissions can make the server fetch arbitrary URLs, including
+  # internal RFC 1918 addresses and cloud endpoints. Set a restrictive
+  # proxy or configure proxy_url_regexp to limit outbound destinations
   proxy: "http://127.0.0.1:3128"
 
   # These proxy settings are exactly the same as the
