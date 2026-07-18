@@ -85,7 +85,6 @@ func newPoolClientMux(ctx context.Context, config_obj *config_proto.Config) (*po
 
 	go func() {
 		for msg := range self.ClientExecutor.ReadResponse() {
-
 			// Maybe cache the results in a transaction.
 			self.maybeCacheResult(msg)
 

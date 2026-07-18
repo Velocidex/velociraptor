@@ -353,6 +353,12 @@ message ClientConfig {
     // system has less than 2 cores. This allows to increase the
     // threadhold. Set to a large number to disable.
     uint64 low_resource_cpu_count = 53;
+
+
+    // Client specific logging configuration - this can be different
+    // from the server configuration. Usually the client does not log
+    // anything but you can enable this for debugging.
+    LoggingConfig Logging = 55;
 }
 
 message APIConfig {
@@ -1549,6 +1555,7 @@ message Config {
     // Deprecated - Mail plugin setting are now provided by args.
     MailConfig Mail = 11;
 
+    // Server specific logging configuration
     LoggingConfig Logging = 23;
 
     // Minion specific overrides

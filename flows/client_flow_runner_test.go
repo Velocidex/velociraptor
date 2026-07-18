@@ -300,11 +300,14 @@ func (self *ServerTestSuite) TestFlowStates() {
 	}
 
 	// The client record should not have any in flight flows now.
-	vtesting.WaitUntil(15*time.Second, self.T(), func() bool {
-		client_info, err = client_info_manager.Get(self.Ctx, self.client_id)
+	vtesting.WaitUntilWithError(15*time.Second, self.T(), func() bool {
+		client_info, err := client_info_manager.Get(self.Ctx, self.client_id)
 		assert.NoError(self.T(), err)
 
 		return len(client_info.InFlightFlows) == 0
+	}, func() string {
+		client_info, _ := client_info_manager.Get(self.Ctx, self.client_id)
+		return json.MustMarshalString(client_info)
 	})
 
 	// Lets get the next batch of flows off the queue. This is now
@@ -323,7 +326,7 @@ func (self *ServerTestSuite) TestFlowStates() {
 	closer = utils.MockTime(clock)
 	defer closer()
 
-	vtesting.WaitUntil(15*time.Second, self.T(), func() bool {
+	vtesting.WaitUntilWithError(15*time.Second, self.T(), func() bool {
 		// Get the next set of tasks for the client.
 		tasks, err = client_info_manager.GetClientTasks(self.Ctx, self.client_id)
 		assert.NoError(self.T(), err)
@@ -332,6 +335,9 @@ func (self *ServerTestSuite) TestFlowStates() {
 		clock.Set(time.Unix(time_origin, 0))
 
 		return len(tasks) == 1
+	}, func() string {
+		client_info, _ := client_info_manager.Get(self.Ctx, self.client_id)
+		return json.MustMarshalString(client_info)
 	})
 
 	// The server will send the client a flow stats request - please

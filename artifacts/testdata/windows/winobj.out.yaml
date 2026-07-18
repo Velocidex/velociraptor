@@ -1,0 +1,16 @@
+# Resolve drive letter to kernel device names using winobj.
+Query: SELECT Name, split(sep_string="\\", string=Name)[-1] AS Drive, regex_replace(source=upcase(string=SymlinkTarget), re="\\d", replace="_") AS Target, len(list=SymlinkTarget) AS Len FROM winobj() WHERE Name =~ "^\\\\GLOBAL\\?\\?\\\\.:"
+Output: [
+ {
+  "Name": "\\GLOBAL??\\D:",
+  "Drive": "D:",
+  "Target": "\\DEVICE\\HARDDISKVOLUME_",
+  "Len": 23
+ },
+ {
+  "Name": "\\GLOBAL??\\C:",
+  "Drive": "C:",
+  "Target": "\\DEVICE\\HARDDISKVOLUME_",
+  "Len": 23
+ }
+]

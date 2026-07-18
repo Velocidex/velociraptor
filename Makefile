@@ -133,5 +133,6 @@ api_check:
 container:
 	go run make.go -v container
 
+# Only vale changes from master
 vale:
-	vale .
+	time vale `git diff --name-only --diff-filter=AM origin/master`

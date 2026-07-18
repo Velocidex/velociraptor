@@ -40,6 +40,9 @@ message ArtifactCollectorArgs {
     // If set we send an urgent request to the client.
     bool urgent = 21;
 
+    // This object is a summary of the full object.
+    bool summary = 33;
+
     // Old way of specifying the artifacts consist of shared
     // parameters within a list of artifacts (i.e. all artifacts share
     // same scope).

@@ -61,6 +61,7 @@ Output: [
    "client_id": "C.4f5e52adf0a337a9",
    "flow_id": "F.01",
    "urgent": false,
+   "summary": false,
    "artifacts": [
     "Windows.Search.FileFinder"
    ],
@@ -109,6 +110,7 @@ Output: [
    "client_id": "C.4f5e52adf0a337a9",
    "flow_id": "F.02",
    "urgent": false,
+   "summary": false,
    "artifacts": [
     "Windows.Search.FileFinder"
    ],

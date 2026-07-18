@@ -14,24 +14,26 @@ func maybeAddRemoteSyslog(
 	ctx context.Context,
 	config_obj *config_proto.Config, manager *LogManager) error {
 
-	if config_obj.Logging == nil ||
-		config_obj.Logging.RemoteSyslogServer == "" {
+	logging_config := getLoggingConfig(config_obj)
+
+	if logging_config == nil ||
+		logging_config.RemoteSyslogServer == "" {
 		return nil
 	}
 
-	protocol := config_obj.Logging.RemoteSyslogProtocol
+	protocol := logging_config.RemoteSyslogProtocol
 	if protocol == "" {
 		protocol = "udp"
 	}
 
-	server := config_obj.Logging.RemoteSyslogServer
+	server := logging_config.RemoteSyslogServer
 	if !strings.Contains(server, ":") {
 		server += ":514"
 	}
 
 	components := make(map[*string]bool)
 
-	for _, c := range config_obj.Logging.RemoteSyslogComponents {
+	for _, c := range logging_config.RemoteSyslogComponents {
 		switch c {
 		case GenericComponent:
 			components[&GenericComponent] = true

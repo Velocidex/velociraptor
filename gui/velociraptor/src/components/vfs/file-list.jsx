@@ -33,7 +33,8 @@ import {
 
 // If the flow in the running state. Flows can be in several states
 // that mean they are still running for our purposes.
-const is_running_re = new RegExp("running|waiting|in_progress", "i");
+const is_running_re = new RegExp(
+    "running|waiting|in_progress|unresponsive", "i");
 const is_running = x=>is_running_re.test(x);
 
 const POLL_TIME = 2000;
@@ -258,7 +259,9 @@ class VeloFileList extends Component {
             }
 
             // Hold onto the flow id so we can track progress.
-            this.setState({lastRecursiveRefreshFlowId: response.data.flow_id});
+            this.setState({
+                lastRecursiveRefreshFlowId: response.data.flow_id,
+            });
 
             if (this.recursive_interval) {
                 clearInterval(this.recursive_interval);
@@ -283,6 +286,13 @@ class VeloFileList extends Component {
 
                     // The node is refreshed with the correct flow id,
                     // we can stop polling.
+                    clearInterval(this.recursive_interval);
+                    this.recursive_interval = undefined;
+                    this.props.bumpVersion();
+                    this.setState({
+                        lastRecursiveRefreshData: {},
+                        lastRecursiveRefreshFlowId: null});
+                }).catch(e=>{
                     clearInterval(this.recursive_interval);
                     this.recursive_interval = undefined;
                     this.props.bumpVersion();
@@ -384,11 +394,8 @@ class VeloFileList extends Component {
 
     // Determine if the recursive SyncDir button should spin.
     shouldSpinRecursiveSyncDir = ()=>{
-        if (_.isEmpty(this.state.lastRecursiveRefreshData)) {
-            return false;
-        };
-
         return _.isEqual(this.state.current_path, this.props.node.path) &&
+            this.state.lastRecursiveRefreshFlowId &&
             _.isEqual(this.state.recursive_sync_dir_version, this.props.version);
     }
 
@@ -417,6 +424,7 @@ class VeloFileList extends Component {
         this.setState({current_path: this.props.node.path,
                        sync_dir_version: this.props.version});
 
+        console.log(this.props.version);
         let path = this.props.node.path || [];
         api.post("v1/VFSRefreshDirectory", {
             client_id: this.props.client.client_id,

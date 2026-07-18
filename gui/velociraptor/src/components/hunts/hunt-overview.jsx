@@ -41,6 +41,7 @@ export default class HuntOverview extends React.Component {
     componentDidMount = () => {
         this.source = CancelToken.source();
         this.get_hunts_source = CancelToken.source();
+        this.recalc_source = CancelToken.source();
         this.interval = setInterval(this.loadFullHunt, POLL_TIME);
         this.loadFullHunt();
 
@@ -53,6 +54,7 @@ export default class HuntOverview extends React.Component {
     componentWillUnmount() {
         this.source.cancel("unmounted");
         this.get_hunts_source.cancel();
+        this.recalc_source.cancel();
         clearInterval(this.interval);
     }
 
@@ -78,6 +80,25 @@ export default class HuntOverview extends React.Component {
             return "PAUSED";
         }
         return "ERROR";
+    }
+
+    recalcStats = () =>{
+        let hunt_id = this.props.hunt && this.props.hunt.hunt_id;
+        if(!hunt_id || hunt_id === "new"){
+            return;
+        };
+
+        this.setState({recalc: true});
+        api.post("v1/ModifyHunt", {
+            hunt_id: hunt_id,
+            recalculate: true,
+        }, this.recalc_source.token).then(response=>{
+            this.setState({recalc: false});
+            this.loadFullHunt();
+        }).catch(err=>{
+            this.setState({recalc: false});
+            this.loadFullHunt();
+        });
     }
 
 
@@ -147,6 +168,7 @@ export default class HuntOverview extends React.Component {
                  this.source.token).then(resp=>{
                      this.setState({preparing: false});
                      this.props.fetch_hunts();
+                     this.loadFullHunt();
         });
     }
 
@@ -261,7 +283,16 @@ export default class HuntOverview extends React.Component {
               </Col>
               <Col sm="6">
               <Card>
-                  <Card.Header>{T("Results")}</Card.Header>
+                <Card.Header>
+                  {T("Results")}
+                  <Button
+                    className="refresh-stats-button"
+                    onClick={this.recalcStats}
+                    variant="outline-default">
+                    <FontAwesomeIcon icon="refresh"
+                                     spin={this.state.recalc}/>
+                  </Button>
+                </Card.Header>
                 <Card.Body>
                   <dl className="row">
                     <dt className="col-4">{T("Total scheduled")}</dt>

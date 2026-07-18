@@ -27,10 +27,20 @@ func (self *HuntDispatcher) MutateHunt(
 
 	// Short circuit deletions on the master to directly remove the
 	// hunt.
-	if self.I_am_master && mutation.State == api_proto.Hunt_DELETED {
-		err := self.Store.DeleteHunt(ctx, mutation.HuntId)
-		if err != nil {
-			return err
+	if self.I_am_master {
+		if mutation.State == api_proto.Hunt_DELETED {
+			err := self.Store.DeleteHunt(ctx, mutation.HuntId)
+			if err != nil {
+				return err
+			}
+		}
+
+		if mutation.Recalculate {
+			_, err := self.RebuildHuntIndex(
+				ctx, mutation.HuntId, FORCE_REFRESH)
+			if err != nil {
+				return err
+			}
 		}
 
 		// Continue to send the mutation to minions as well.

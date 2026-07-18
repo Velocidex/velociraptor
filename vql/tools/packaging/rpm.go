@@ -62,6 +62,10 @@ type RPMBuilder struct {
 	pack     *rpmpack.RPM
 }
 
+func (self *RPMBuilder) Close() error {
+	return nil
+}
+
 func (self *RPMBuilder) AddFile(f rpmpack.RPMFile) {
 	switch f.Name {
 	case "Preun":
@@ -203,4 +207,5 @@ func BuildRPM(spec *PackageSpec) (Builder, error) {
 type Builder interface {
 	Bytes(scope vfilter.Scope) ([]byte, error)
 	Debug() string
+	Close() error
 }

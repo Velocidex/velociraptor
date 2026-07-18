@@ -218,6 +218,9 @@ message HuntMutation {
 
     // The user who is initiating the mutation.
     string user = 9;
+
+    // This performs a scan across the hunt and updates the stats.
+    bool recalculate = 10;
 }
 
 message HuntTags {

@@ -45,6 +45,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/crypto/storage"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/directory"
+	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -480,6 +482,27 @@ func doGolden() error {
 		return fmt.Errorf(
 			"Failed! Some golden files did not match: %s\n", failures)
 	}
+
+	// Check the filestore locker has all files removed.
+	file_store_factory := file_store.GetFileStore(config_obj)
+	switch t := file_store_factory.(type) {
+	case *directory.DirectoryFileStore:
+		stats := t.Locker.Stats()
+		if stats.InProgress != 0 {
+			return fmt.Errorf(
+				"Failed! Some filestore files were left open: %v",
+				stats)
+		}
+
+	case *memory.MemoryFileStore:
+		stats := t.Locker.Stats()
+		if stats.InProgress != 0 {
+			return fmt.Errorf(
+				"Failed! Some filestore files were left open: %v",
+				stats)
+		}
+	}
+
 	return nil
 }
 

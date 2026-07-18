@@ -27,7 +27,7 @@ type RsyslogFunctionArgs struct {
 	Facility       int64             `vfilter:"optional,field=facility,doc=Facility of this message"`
 	Severity       int64             `vfilter:"optional,field=severity,doc=Severity of this message"`
 	Timestamp      time.Time         `vfilter:"optional,field=timestamp,doc=Timestamp of this message, if omitted we use the current time."`
-	SourceHostname string            `vfilter:"optional,field=hostname,doc=Hostname associated with this message. If omitted we use the current hostname."`
+	SourceHostname string            `vfilter:"optional,field=source_hostname,doc=Hostname associated with this message. If omitted we use the current hostname."`
 	AppName        string            `vfilter:"optional,field=app_name,doc=Application that generated the log"`
 	ProcId         string            `vfilter:"optional,field=proc_id,doc=Process ID that generated this log"`
 	SdID           string            `vfilter:"optional,field=sd_id,doc=When sending structured data, this is the Structured Data ID"`
@@ -135,7 +135,7 @@ func (self RsyslogFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 		Name:     "rsyslog",
 		Doc:      "Send an RFC5424 compliant remote syslog message.",
 		ArgType:  type_map.AddType(scope, &RsyslogFunctionArgs{}),
-		Version:  2,
+		Version:  3,
 		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.NETWORK).Build(),
 	}
 }

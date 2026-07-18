@@ -106,7 +106,7 @@ func (self *Loader) WithRequiredFrontend() *Loader {
 	self.validators = append(self.validators, validatorFunction{
 		name: "WithRequiredFrontend",
 		validator: func(self *Loader, config_obj *config_proto.Config) error { //
-			if config_obj.Frontend == nil {
+			if !IsFrontend(config_obj) {
 				return errors.New("Frontend config is required")
 			}
 			return nil
@@ -119,7 +119,7 @@ func (self *Loader) WithRequiredClient() *Loader {
 	self.validators = append(self.validators, validatorFunction{
 		name: "WithRequiredClient",
 		validator: func(self *Loader, config_obj *config_proto.Config) error {
-			if config_obj.Client == nil {
+			if !IsClient(config_obj) {
 				return errors.New("Client config is required")
 			}
 			return nil
@@ -229,23 +229,51 @@ func (self *Loader) WithNullLoader() *Loader {
 }
 
 func (self *Loader) WithFileLoader(filename string) *Loader {
-	if filename != "" {
-		self = self.Copy()
-		self.loaders = append(self.loaders, loaderFunction{
-			name: "WithFileLoader",
-			loader_func: func(self *Loader) (*config_proto.Config, error) {
-				self.Log("Loading config from file %v", filename)
-				result, err := read_config_from_file(filename)
-				if err != nil {
-					// If a filename is specified but it
-					// does not exist or invalid stop
-					// searching immediately.
-					return result, HardError{err}
-				}
-				return result, nil
-
-			}})
+	if filename == "" {
+		return self
 	}
+
+	self = self.Copy()
+	self.loaders = append(self.loaders, loaderFunction{
+		name: "WithFileLoader",
+		loader_func: func(self *Loader) (*config_proto.Config, error) {
+			self.Log("Loading config from file %v", filename)
+			result, err := read_config_from_file(filename)
+			if err != nil {
+				// If a filename is specified but it
+				// does not exist or invalid stop
+				// searching immediately.
+				return result, HardError{
+					fmt.Errorf("FileLoader: %w", err),
+				}
+			}
+			return result, nil
+		}})
+
+	return self
+}
+
+// Try to load it from the filename if it exists.
+func (self *Loader) WithOptionalFileLoader(filename string) *Loader {
+	if filename == "" {
+		return self
+	}
+
+	_, err := os.Lstat(filename)
+	if err != nil {
+		return self
+	}
+
+	self = self.Copy()
+	self.loaders = append(self.loaders, loaderFunction{
+		name: "WithOptionalFileLoader",
+		loader_func: func(self *Loader) (*config_proto.Config, error) {
+			res, err := read_config_from_file(filename)
+			if err == nil {
+				self.Log("Loaded config from file %v", filename)
+			}
+			return res, err
+		}})
 
 	return self
 }
@@ -260,7 +288,9 @@ func (self *Loader) WithLiteralLoader(serialized []byte) *Loader {
 				result := &config_proto.Config{}
 				err := yaml.UnmarshalStrict(serialized, result)
 				if err != nil {
-					return nil, errors.Wrap(err, 0)
+					return nil, HardError{
+						fmt.Errorf("LiteralLoader: %w", err),
+					}
 				}
 				return result, nil
 			}})
@@ -277,7 +307,13 @@ func (self *Loader) WithEnvLoader(env_var string) *Loader {
 			env_config := os.Getenv(env_var)
 			if env_config != "" {
 				self.Log("Loading config from env %v (%v)", env_var, env_config)
-				return read_config_from_file(env_config)
+				result, err := read_config_from_file(env_config)
+				if err != nil {
+					return result, HardError{
+						fmt.Errorf("EnvLoader: %w", err),
+					}
+				}
+				return result, nil
 			}
 			return nil, fmt.Errorf("Env var %v is not set", env_var)
 		}})
@@ -296,7 +332,9 @@ func (self *Loader) WithEnvLiteralLoader(env_var string) *Loader {
 				result := &config_proto.Config{}
 				err := yaml.UnmarshalStrict([]byte(env_config), result)
 				if err != nil {
-					return nil, errors.Wrap(err, 0)
+					return nil, HardError{
+						fmt.Errorf("EnvLiteralLoader: %w", err),
+					}
 				}
 				return result, nil
 			}
@@ -358,10 +396,15 @@ func (self *Loader) WithApiLoader(filename string) *Loader {
 		name: "WithApiLoader",
 		loader_func: func(self *Loader) (*config_proto.Config, error) {
 			result, err := read_api_config_from_file(filename)
-			if err == nil {
-				self.Log("Loaded api config from %v", filename)
+			if err != nil {
+				// This is a hard error since the user specified an api
+				// file but we could not load it.
+				return result, HardError{
+					fmt.Errorf("ApiLoader: %w", err),
+				}
 			}
-			return result, err
+			self.Log("Loaded api config from %v", filename)
+			return result, nil
 		}})
 	return self
 }
@@ -374,7 +417,12 @@ func (self *Loader) WithEnvApiLoader(env_var string) *Loader {
 			env_config := os.Getenv(env_var)
 			if env_config != "" {
 				self.Log("Loading config from env %v (%v)", env_var, env_config)
-				return read_api_config_from_file(env_config)
+				result, err := read_api_config_from_file(env_config)
+				if err != nil {
+					return result, HardError{
+						fmt.Errorf("EnvApiLoader: %w", err),
+					}
+				}
 			}
 			return nil, fmt.Errorf("Env var %v is not set", env_var)
 		}})

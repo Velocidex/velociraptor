@@ -211,11 +211,18 @@ func (self *ClientInfoManager) Start(
 			}()
 
 			for {
+				last_run := utils.GetTime().Now()
+
 				select {
 				case <-ctx.Done():
 					return
 
 				case <-time.After(utils.Jitter(write_time)):
+					if utils.GetTime().Now().Sub(last_run) < 10*time.Second {
+						utils.SleepWithCtx(ctx, time.Minute)
+						continue
+					}
+
 					err := self.storage.SaveSnapshot(ctx, config_obj, !SYNC_UPDATE)
 					if err != nil {
 						logger.Error(

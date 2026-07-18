@@ -65,6 +65,10 @@ type DEBBuilder struct {
 	state *ordereddict.Dict
 }
 
+func (self *DEBBuilder) Close() error {
+	return self.DebPkg.Close()
+}
+
 func (self *DEBBuilder) AddFileString(data, path string) error {
 
 	switch path {

@@ -283,11 +283,25 @@ func (self *TestSuite) TearDownTest() {
 		self.Sm.Close()
 	}
 
+	file_store.FlushFilestore(self.ConfigObj)
+
 	// These may not be memory based in the test switched to other
 	// data stores.
 	file_store_factory, ok := file_store.GetFileStore(
 		self.ConfigObj).(*memory.MemoryFileStore)
 	if ok {
+		// Make sure all the files were closed
+		stats := file_store_factory.Locker.Stats()
+		if stats.InProgress != 0 {
+			// Wait a bit for any goroutines to cleanup
+			vtesting.WaitUntil(time.Second, self.T(), func() bool {
+				stats = file_store_factory.Locker.Stats()
+				return stats.InProgress == 0
+			})
+		}
+
+		assert.Equal(self.T(), 0, stats.InProgress,
+			"Error: Not all files are closed %#v", stats)
 		file_store_factory.Clear()
 	}
 

@@ -7,6 +7,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -130,9 +131,10 @@ func (self *FlowStorageManager) RemoveFlowsFromJournal(
 		file_store_factory, paths.FLOWS_JOUNRNAL)
 
 	// No journal there is nothing to do.
-	if err != nil {
+	if err != nil || journal_reader.TotalRows() == 0 {
 		return nil
 	}
+
 	for row := range journal_reader.Rows(ctx) {
 		client_id, _ := row.GetString("ClientId")
 		if client_id == "" {
@@ -154,6 +156,11 @@ func (self *FlowStorageManager) RemoveFlowsFromJournal(
 	}
 	journal_reader.Close()
 
+	// Nothing to do.
+	if len(id_map) == 0 {
+		return nil
+	}
+
 	var r_err error
 	for client_id, flows := range id_map {
 		err := self.RemoveClientFlowsFromIndex(ctx, config_obj, client_id, flows)
@@ -161,6 +168,10 @@ func (self *FlowStorageManager) RemoveFlowsFromJournal(
 			r_err = err
 		}
 	}
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Debug("<green>FlowStorageManager</> housekeeping run (%v): Reindexed %v flows",
+		utils.GetOrgId(config_obj), len(id_map))
 
 	// Only clear the journal if all reindex operations are successful.
 	if r_err == nil {

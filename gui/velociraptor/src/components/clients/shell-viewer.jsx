@@ -525,6 +525,12 @@ class _VeloShellCell extends Component {
                 res.command_id = x.value; break;
             }});
 
+        // Old style commands do not have a command id so we use the
+        // session id to emulate a command id.
+        if(!res.command_id) {
+            res.command_id = flow.session_id;
+        }
+
         return res;
     };
 
@@ -550,6 +556,12 @@ class _VeloShellCell extends Component {
                 Out: [],
             };
             _.each(rows, (item, idx)=>{
+                // This comes from the old style of collections, we
+                // emulate a new style.
+                if(item.Complete) {
+                    item.CommandId = this.props.flow_id;
+                }
+
                 if(item.CommandId) {
                     if(current_trans.CommandId) {
                         // Flush the previous transaction
@@ -567,7 +579,6 @@ class _VeloShellCell extends Component {
                         current_trans.Request = request;
                         request.transaction = current_trans;
                     }
-                    return;
                 };
 
                 if(item.Command) {

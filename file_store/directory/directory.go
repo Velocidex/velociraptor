@@ -37,6 +37,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/locker"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
@@ -45,6 +46,7 @@ import (
 
 type DirectoryFileStore struct {
 	config_obj *config_proto.Config
+	Locker     *locker.PathLocker
 	db         datastore.DataStore
 }
 
@@ -55,6 +57,7 @@ func NewDirectoryFileStore(config_obj *config_proto.Config) *DirectoryFileStore 
 	}
 	return &DirectoryFileStore{
 		config_obj: config_obj,
+		Locker:     locker.NewPathLocker(),
 		db:         db,
 	}
 }
@@ -212,6 +215,11 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 
 	defer api.InstrumentWithDelay("open_write", "DirectoryFileStore", filename)()
 
+	// Serialized writes to the filesystem to ensure files are not
+	// corrupted.
+	locker := self.Locker.GetHandle(filename)
+	defer locker.Close()
+
 	// Writes are only possible when the datastore is healthy.
 	err := self.db.Healthy()
 	if err != nil {
@@ -261,7 +269,7 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 		}
 	}
 
-	return &DirectoryFileWriter{
+	return locker.WrapWriter(&DirectoryFileWriter{
 		Fd:         file,
 		ChunkFd:    chunk_fd,
 		path:       filename,
@@ -269,7 +277,7 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 		config_obj: self.config_obj,
 
 		completion: completion,
-	}, nil
+	}), nil
 }
 
 func (self *DirectoryFileStore) Delete(filename api.FSPathSpec) error {

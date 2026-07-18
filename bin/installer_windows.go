@@ -39,6 +39,7 @@ import (
 	"golang.org/x/sys/windows/svc/debug"
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
@@ -398,7 +399,7 @@ func loadClientConfig() (*config_proto.Config, error) {
 
 		// If the config path is not specified we look for the config
 		// file next to the service executable.
-		WithFileLoader(strings.TrimSuffix(
+		WithOptionalFileLoader(strings.TrimSuffix(
 			executable, filepath.Ext(executable)) + ".config.yaml").
 		WithRequiredClient().
 		WithWriteback().LoadAndValidate()
@@ -411,6 +412,9 @@ func loadClientConfig() (*config_proto.Config, error) {
 	}
 
 	tempfile.SetTempfile(config_obj)
+
+	// Strip out any non-client related settings.
+	config_obj = config.GetClientConfig(config_obj)
 
 	// Make sure the config is ok.
 	err = crypto_utils.VerifyConfig(config_obj)

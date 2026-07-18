@@ -440,8 +440,8 @@ func (self *HuntDispatcher) StartRefresh(
 			if err != nil {
 				return
 			}
-			self.Debug("StartRefresh: LoadHuntsFromDatastore %#v (%v)",
-				stats, err)
+			self.Debug("StartRefresh: LoadHuntsFromDatastore %v (%v)",
+				json.MustMarshalString(stats), err)
 
 			// Flush the index immediately
 			self.Store.FlushIndex(ctx)

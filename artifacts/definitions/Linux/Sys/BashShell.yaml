@@ -67,8 +67,13 @@ sources:
 
       // Always send the command id to ack we received the command.
       SELECT * FROM chain(a={
-         SELECT CommandId,
-                timestamp(epoch=now(ns=TRUE)) AS Timestamp
+         SELECT "" AS Command,
+                CommandId,
+                timestamp(epoch=now(ns=TRUE)) AS Timestamp,
+                "" AS Stdout,
+                NULL AS StdoutUpload,
+                "" AS Stderr,
+                NULL AS StderrUpload
          FROM scope()
       }, b=Result)
 

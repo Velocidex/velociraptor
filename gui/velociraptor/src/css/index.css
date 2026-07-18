@@ -302,3 +302,18 @@ button.link {
     scrollbar-width: thin;
     scrollbar-color: var(--color-scrollbar-main) var(--color-scrollbar-background);
 }
+
+
+/* Ignore the FontAwesome prefers-reduced-motion setting - it just
+   looks like the page is broken when icons stop spinning.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .fa-spin,
+  .fa-spin-pulse {
+      animation-name: fa-spin;
+      animation-direction: var(--fa-animation-direction, normal);
+      animation-duration: var(--fa-animation-duration, 1s);
+      animation-iteration-count: var(--fa-animation-iteration-count, infinite);
+      animation-timing-function: var(--fa-animation-timing, steps(8));
+  }
+}
