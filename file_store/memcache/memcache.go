@@ -205,7 +205,7 @@ func (self *MemcacheFileWriter) WriteCompressed(
 	data []byte,
 	logical_offset uint64,
 	uncompressed_size int) (int, error) {
-	if uncompressed_size > constants.MEMORY_LARGE {
+	if uncompressed_size > constants.MAX_MEMORY_LARGE {
 		return 0, utils.MemoryError
 	}
 

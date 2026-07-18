@@ -184,7 +184,7 @@ export: |
       path_type="registry",
       prefix=pathspec(
         Path="/",
-        DelegateAccessor="file",
+        DelegateAccessor="file_nocase",
         DelegatePath=Hive)),
     on=dict(accessor="registry", prefix=Key, path_type="registry"))
 
@@ -246,31 +246,31 @@ export: |
     LET CalculateWindowsDirMappings(ImagePath) = Remappings.remappings + (
        dict(type="mount",
             description="Mount Directory " + ImagePath + " on C: drive",
-            `from`=dict(accessor="file", prefix=ImagePath),
+            `from`=dict(accessor="file_nocase", prefix=ImagePath),
             on=dict(accessor="ntfs", prefix="\\\\.\\C:", path_type="ntfs")
       ),
       dict(type="mount",
-            `from`=dict(accessor="file", prefix=ImagePath),
+            `from`=dict(accessor="file_nocase", prefix=ImagePath),
             on=dict(accessor="file", prefix="C:", path_type="windows")
       ),
        dict(type="mount",
-            `from`=dict(accessor="file", prefix=ImagePath),
+            `from`=dict(accessor="file_nocase", prefix=ImagePath),
             on=dict(accessor="auto", prefix="C:", path_type="windows")
       ),
       _MapDirHiveToKey(Name="Map Software Hive",
-                       Hive="/Windows/System32/Config/SOFTWARE",
+                       Hive=ImagePath + "/Windows/System32/Config/SOFTWARE",
                        Key="HKEY_LOCAL_MACHINE/Software"),
       _MapDirHiveToKey(Name="Map Security Hive",
-                       Hive="/Windows/System32/Config/Security",
+                       Hive=ImagePath + "/Windows/System32/Config/Security",
                        Key="HKEY_LOCAL_MACHINE/Security"),
       _MapDirHiveToKey(Name="Map System Hive",
-                       Hive="/Windows/System32/Config/System",
+                       Hive=ImagePath + "/Windows/System32/Config/System",
                        Key="HKEY_LOCAL_MACHINE/System"),
       _MapDirHiveToKey(Name="Map SAM Hive",
-                       Hive="/Windows/System32/Config/SAM",
+                       Hive=ImagePath + "/Windows/System32/Config/SAM",
                        Key="SAM"),
       _MapDirHiveToKey(Name="Map Amcache Hive",
-                       Hive="/Windows/appcompat/Programs/Amcache.hve",
+                       Hive=ImagePath + "/Windows/appcompat/Programs/Amcache.hve",
                        Key="Amcache")
     ) + _FindDirUserHives(ImagePath=ImagePath).Map
 

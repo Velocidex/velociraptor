@@ -36,7 +36,7 @@ func (self *MessageInfo) IterateJobs(
 	for _, raw := range self.RawCompressed {
 		if self.Compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
 			decompressed, err := utils.UncompressWithLimit(
-				ctx, raw, constants.MEMORY_LARGE)
+				ctx, raw, constants.MAX_MEMORY_LARGE)
 			if err != nil {
 				return errors.New("Unable to decompress MessageList")
 			}

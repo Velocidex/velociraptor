@@ -3691,10 +3691,15 @@
     gunzip(string=base64decode(string="H4sIAAAAAAACA3N0pC4AAKAb0QxQAAAA")) -> "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     ```
   type: Function
+  version: 2
   args:
   - name: string
     type: string
     description: Data to apply Gunzip
+    required: true
+  - name: max_bytes
+    type: int64
+    description: Maximum length of bytes to read into memory
     required: true
   category: encode
   platforms:
@@ -9437,8 +9442,12 @@
 - name: rsyslog
   description: Send an RFC5424 compliant remote syslog message.
   type: Function
-  version: 2
+  version: 3
   args:
+  - name: hostname
+    type: string
+    description: Destination host to connect to.
+    required: true
   - name: port
     type: uint64
     description: Destination port to connect to. If not specified we use 514
@@ -9458,7 +9467,7 @@
   - name: timestamp
     type: time.Time
     description: Timestamp of this message, if omitted we use the current time.
-  - name: hostname
+  - name: source_hostname
     type: string
     description: Hostname associated with this message. If omitted we use the current
       hostname.

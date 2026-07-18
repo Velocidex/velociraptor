@@ -245,6 +245,8 @@ type ArtifactCollectorArgs struct {
 	FlowId   string `protobuf:"bytes,31,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
 	// If set we send an urgent request to the client.
 	Urgent bool `protobuf:"varint,21,opt,name=urgent,proto3" json:"urgent,omitempty"`
+	// This object is a summary of the full object.
+	Summary bool `protobuf:"varint,33,opt,name=summary,proto3" json:"summary,omitempty"`
 	// Old way of specifying the artifacts consist of shared
 	// parameters within a list of artifacts (i.e. all artifacts share
 	// same scope).
@@ -345,6 +347,13 @@ func (x *ArtifactCollectorArgs) GetFlowId() string {
 func (x *ArtifactCollectorArgs) GetUrgent() bool {
 	if x != nil {
 		return x.Urgent
+	}
+	return false
+}
+
+func (x *ArtifactCollectorArgs) GetSummary() bool {
+	if x != nil {
+		return x.Summary
 	}
 	return false
 }
@@ -1164,13 +1173,14 @@ const file_artifact_collector_proto_rawDesc = "" +
 	"\x0emax_batch_wait\x18\a \x01(\x04R\fmaxBatchWait\x12$\n" +
 	"\x0emax_batch_rows\x18\b \x01(\x04R\fmaxBatchRows\x121\n" +
 	"\x15max_batch_rows_buffer\x18\t \x01(\x04R\x12maxBatchRowsBuffer\x12\x18\n" +
-	"\atimeout\x18\v \x01(\x04R\atimeout\"\xd6\a\n" +
+	"\atimeout\x18\v \x01(\x04R\atimeout\"\xf0\a\n" +
 	"\x15ArtifactCollectorArgs\x12\x18\n" +
 	"\acreator\x18\x01 \x01(\tR\acreator\x12\x1b\n" +
 	"\tuser_data\x18\x1e \x01(\tR\buserData\x12\x1b\n" +
 	"\tclient_id\x18\x03 \x01(\tR\bclientId\x12\x17\n" +
 	"\aflow_id\x18\x1f \x01(\tR\x06flowId\x12\x16\n" +
-	"\x06urgent\x18\x15 \x01(\bR\x06urgent\x12F\n" +
+	"\x06urgent\x18\x15 \x01(\bR\x06urgent\x12\x18\n" +
+	"\asummary\x18! \x01(\bR\asummary\x12F\n" +
 	"\tartifacts\x18\x02 \x03(\tB(\xe2\xfc\xe3\xc4\x01\"\x12\x18The artifacts to launch.\"\x06LaunchR\tartifacts\x12)\n" +
 	"\x05specs\x18\x18 \x03(\v2\x13.proto.ArtifactSpecR\x05specs\x12\x1b\n" +
 	"\tcpu_limit\x18\x19 \x01(\x02R\bcpuLimit\x12\x1d\n" +
