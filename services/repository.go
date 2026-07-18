@@ -191,8 +191,8 @@ func ScopeBuilderFromScope(scope vfilter.Scope) ScopeBuilder {
 		result.Uploader = uploader
 	}
 
-	acl_manger, ok := artifacts.GetACLManager(scope)
-	if ok {
+	acl_manger, err := artifacts.GetACLManager(scope)
+	if err == nil {
 		result.ACLManager = acl_manger
 	}
 

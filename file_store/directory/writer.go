@@ -61,7 +61,7 @@ func (self *DirectoryFileWriter) WriteCompressed(
 	logical_offset uint64,
 	uncompressed_size int) (n int, err error) {
 
-	if uncompressed_size > constants.MEMORY_LARGE {
+	if uncompressed_size > constants.MAX_MEMORY_LARGE {
 		return 0, utils.MemoryError
 	}
 

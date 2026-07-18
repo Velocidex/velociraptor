@@ -1,9 +1,9 @@
 package authenticators
 
 import (
+	"html/template"
 	"net/http"
 	"strings"
-	"text/template"
 
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

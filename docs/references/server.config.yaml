@@ -2,7 +2,10 @@
 # for all options currently available.
 
 # The values you see are the default values that will be used when the
-# option is omitted.
+# option is omitted. If an item is a list, the default list applies
+# only when the item is empty. If you want to preserve some of the
+# default items in the list, you should copy the entire default list
+# and set it.
 
 ## This is the version of the Velociraptor binary used to generate
 ## this configuration file. It simply annotates the produced file and
@@ -1516,16 +1519,22 @@ security:
   # this is empty the file accessor will work on all
   # directories. If you want to disable access to the server's
   # filesystem you can set this to a non existent directory,
-  # e.g. /nonexistent/ .
+  # e.g. /nonexistent/ . The below shows the default list, which is used
+  # if nothing is set here. You should copy and modify the entire list
+  # to preserve the defaults.
   allowed_file_accessor_prefix:
     - /tmp/
 
-  # Deny takes precedent over allow.
+  # Deny takes precedent over allow. The below shows the default list,
+  # which is used if nothing is set here. You should copy and modify
+  # the entire list to preserve the defaults.
   denied_file_accessor_prefix:
     - /bin/
 
-  # A list of prefixes allowed for the fs accessor. All other
-  # prefixes will be rejected.
+  # A list of prefixes allowed for the fs accessor. All other prefixes
+  # will be rejected. The below shows the default list, which is used
+  # if nothing is set here. You should copy and modify the entire list
+  # to preserve the defaults.
   allowed_fs_accessor_prefix:
    - artifact_definitions
    - clients
@@ -1536,15 +1545,18 @@ security:
    - server_artifacts
    - server_artifacts_logs
 
-  # Deny takes precedent over allow.
+  # Deny takes precedent over allow. The below shows the default list,
+  # which is used if nothing is set here. You should copy and modify
+  # the entire list to preserve the defaults.
   denied_fs_accessor_prefix:
    - config
-
 
   # If these are set we enforce VQL to only have the specified allowed
   # VQL plugins and functions. This is a way to harden the server by
   # removing potentially sensitive functionality to allow only
-  # approved VQL plugins to run.
+  # approved VQL plugins to run. The below shows some examples but the
+  # default is actually an empty list which causes no plugins to be
+  # restricted.
   allowed_plugins:
     - glob
   allowed_functions:
@@ -1553,7 +1565,9 @@ security:
     - auto
 
   # Alternatively, it might be easier to deny specific plugins and
-  # functions and accessors.
+  # functions and accessors. The below shows some examples but the
+  # default is actually an empty list which causes no plugins to be
+  # denied.
   denied_plugins:
     - execve
 
@@ -1563,8 +1577,10 @@ security:
   denied_accessors:
     - s3
 
-  # When the server is in lockdown mode the following permissions
-  # will be denied (Even for administrators).
+  # When the server is in lockdown mode the following permissions will
+  # be denied (Even for administrators). The below shows the default
+  # list, which is used if nothing is set here. You should copy and
+  # modify the entire list to preserve the defaults.
   lockdown_denied_permissions:
    - ARTIFACT_WRITER
    - SERVER_ARTIFACT_WRITER
