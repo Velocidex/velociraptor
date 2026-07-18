@@ -1,12 +1,21 @@
 name: Windows.Forensics.SAM
+author: Mike Cohen & Andreas Misje – @misje
 description: |
   Parses the Windows SAM registry hive to extract user account
   details, RIDs, and password hashes.
-  
-  Based on Omer Yampel's parser.
+
+  Based on Omer Yampel's parser, as well as reverse-engineering efforts
+  from the GitHub projects fortra/impacket and libyal/winreg-kb.
+
+  Although just a single source is provided, Parsed, an extensive SAM
+  binary profile, as well as a number of helper functions, are
+  exported. See the artifact `Windows.Forensics.SAM.Enriched` for an
+  artifact that presents all available data from SAM.
 
 reference:
   - https://github.com/yampelo/samparser/blob/master/samparser.py
+  - https://winreg-kb.readthedocs.io/en/latest/sources/security-accounts-manager-keys/Domains.html
+  - https://github.com/fortra/impacket/blob/master/impacket/examples/secretsdump.py
 
 parameters:
    - name: SAMPath
@@ -14,105 +23,485 @@ parameters:
      default: C:/Windows/System32/Config/SAM
 
 export: |
-     // Reference: https://github.com/yampelo/samparser/blob/master/samparser.py
-     LET Profile = '''
-     [
-       ["F", 0, [
-         ["LastLoginDate", 8, "WinFileTime"],
-         ["PasswordResetDate", 24, "WinFileTime"],
-         ["PasswordFailDate", 40, "WinFileTime"],
-         ["RID", 48, "uint32"],
-         ["Flags", 56, "Flags", {
-             "type": "uint16",
-             "bitmap": {
-              "Account Disabled": 0,
-              "Home directory required": 1,
-              "Password not required": 2,
-              "Temporary duplicate account": 3,
-              "Normal user account": 4,
-              "MNS logon user account": 5,
-              "Interdomain trust account": 6,
-              "Workstation trust account": 7,
-              "Server trust account": 8,
-              "Password does not expire": 9,
-              "Account auto locked": 10
-             }
-         }],
-         ["FailedLoginCount", 64, "uint16"],
-         ["LoginCount", 66, "uint16"],
-       ]],
-       ["V", 0, [
-        ["AccountType", 4, "Enumeration", {
-            "type": "uint32",
-            "choices": {
-               "188" : "Default Admin User",
-               "212" : "Custom Limited Acct",
-               "176" : "Default Guest Acct"
-            }
-        }],
-        ["__username_offset", 12, "uint32"],
-        ["__username_length", 16, "uint32"],
-        ["username", "x=>x.__username_offset + 0xcc", "String", {
-            "length": "x=>x.__username_length",
-            "encoding": "utf16",
-        }],
-        ["__fullname_offset", 24, "uint32"],
-        ["__fullname_length", 28, "uint32"],
-        ["fullname", "x=>x.__fullname_offset + 0xcc", "String", {
-            "length": "x=>x.__fullname_length",
-            "encoding": "utf16",
-        }],
-        ["__comment_offset", 36, "uint32"],
-        ["__comment_length", 40, "uint32"],
-        ["comment", "x=>x.__comment_offset + 0xcc", "String", {
-            encoding: "utf16",
-            length: "x=>x.__comment_length",
-        }],
+  LET Profile = '''
+  [
+    # Reference: https://github.com/yampelo/samparser/blob/master/samparser.py:
+    ["F", 0, [
+      ["LastLoginDate", 8, "WinFileTime"],
+      ["__last_login_raw", 8, "uint64"],
+      ["PasswordResetDate", 24, "WinFileTime"],
+      ["__password_reset_raw", 24, "uint64"],
+      ["PasswordFailDate", 40, "WinFileTime"],
+      ["__password_fail_raw", 40, "uint64"],
+      ["RID", 48, "uint32"],
+      ["PrimaryGroupID", 52, "uint32"],
+      ["Flags", 56, "Flags", {
+          "type": "uint16",
+          "bitmap": {
+           "Account Disabled": 0,
+           "Home directory required": 1,
+           "Password not required": 2,
+           "Temporary duplicate account": 3,
+           "Normal user account": 4,
+           "MNS logon user account": 5,
+           "Interdomain trust account": 6,
+           "Workstation trust account": 7,
+           "Server trust account": 8,
+           "Password does not expire": 9,
+           "Account auto locked": 10
+          }
+      }],
+      ["FailedLoginCount", 64, "uint16"],
+      ["LoginCount", 66, "uint16"],
+    ]],
+    ["V", 0, [
+     ["AccountType", 4, "Enumeration", {
+         "type": "uint32",
+         "choices": {
+            "188": "Default Admin User",
+            "244": "Default Admin User",
+            "176": "Default Guest Acct",
+            "232": "Default Guest Acct",
+            "212": "Custom Limited Acct",
+            "268": "Custom Limited Acct"
+         }
+     }],
+     ["__username_offset", 12, "uint32"],
+     ["__username_length", 16, "uint32"],
+     ["username", "x=>x.__username_offset + 0xcc", "String", {
+         "length": "x=>x.__username_length",
+         "encoding": "utf16",
+     }],
+     ["__fullname_offset", 24, "uint32"],
+     ["__fullname_length", 28, "uint32"],
+     ["fullname", "x=>x.__fullname_offset + 0xcc", "String", {
+         "length": "x=>x.__fullname_length",
+         "encoding": "utf16",
+     }],
+     ["__comment_offset", 36, "uint32"],
+     ["__comment_length", 40, "uint32"],
+     ["comment", "x=>x.__comment_offset + 0xcc", "String", {
+         encoding: "utf16",
+         length: "x=>x.__comment_length",
+     }],
 
-        ["__driveletter_offset", 84, "uint32"],
-        ["__driveletter_length", 88, "uint32"],
-        ["driveletter", "x=>x.__driveletter_offset + 0xcc", "String", {
-            encoding: "utf16",
-            length: "x=>x.__driveletter_length",
-        }],
+     ["__driveletter_offset", 84, "uint32"],
+     ["__driveletter_length", 88, "uint32"],
+     ["driveletter", "x=>x.__driveletter_offset + 0xcc", "String", {
+         encoding: "utf16",
+         length: "x=>x.__driveletter_length",
+     }],
 
-        ["__logon_script_offset", 96, "uint32"],
-        ["__logon_script_length", 100, "uint32"],
-        ["logon_script", "x=>x.__logon_script_offset + 0xcc", "String", {
-            encoding: "utf16",
-            length: "x=>x.__logon_script_length",
-        }],
+     ["__logon_script_offset", 96, "uint32"],
+     ["__logon_script_length", 100, "uint32"],
+     ["logon_script", "x=>x.__logon_script_offset + 0xcc", "String", {
+         encoding: "utf16",
+         length: "x=>x.__logon_script_length",
+     }],
 
-        ["__profile_path_offset", 108, "uint32"],
-        ["__profile_path_length", 112, "uint32"],
-        ["profile_path", "x=>x.__profile_path_offset + 0xcc", "String", {
-            encoding: "utf16",
-            length: "x=>x.__profile_path_length",
-        }],
+     ["__profile_path_offset", 108, "uint32"],
+     ["__profile_path_length", 112, "uint32"],
+     ["profile_path", "x=>x.__profile_path_offset + 0xcc", "String", {
+         encoding: "utf16",
+         length: "x=>x.__profile_path_length",
+     }],
 
-        ["__workstation_offset", 120, "uint32"],
-        ["__workstation_length", 124, "uint32"],
-        ["workstation", "x=>x.__workstation_offset + 0xcc", "String", {
-            encoding: "utf16",
-            length: "x=>x.__workstation_length",
-        }],
+     ["__workstation_offset", 120, "uint32"],
+     ["__workstation_length", 124, "uint32"],
+     ["workstation", "x=>x.__workstation_offset + 0xcc", "String", {
+         encoding: "utf16",
+         length: "x=>x.__workstation_length",
+     }],
 
-        ["__lmpwd_hash_offset", 156, "uint32"],
-        ["__lmpwd_hash_length", 160, "uint32"],
-        ["lmpwd_hash", "x=>x.__lmpwd_hash_offset + 0xcc", "String", {
-            encoding: "utf16",
-            length: "x=>x.__lmpwd_hash_length",
-        }],
+     ["__lmpwd_hash_offset", 156, "uint32"],
+     ["__lmpwd_hash_length", 160, "uint32"],
+     ["lmpwd_hash", "x=>x.__lmpwd_hash_offset + 0xcc", "String", {
+         "length": "x=>x.__lmpwd_hash_length",
+         "term": "",
+     }],
 
-        ["__ntpwd_hash_offset", 168, "uint32"],
-        ["__ntpwd_hash_length", 172, "uint32"],
-        ["ntpwd_hash", "x=>x.__ntpwd_hash_offset + 0xcc", "String", {
-            encoding: "utf16",
-            length: "x=>x.__ntpwd_hash_length",
-        }]
-       ]]
-     ]
-     '''
+     ["__ntpwd_hash_offset", 168, "uint32"],
+     ["__ntpwd_hash_length", 172, "uint32"],
+     ["ntpwd_hash", "x=>x.__ntpwd_hash_offset + 0xcc", "String", {
+         "length": "x=>x.__ntpwd_hash_length",
+         "term": "",
+     }]
+    ]],
+
+    ["SID", "x=>8 + 4 * x.SubAuthorityCount", [
+      ["Revision", 0, "uint8"],
+      ["SubAuthorityCount", 1, "uint8"],
+      ["IdentifierAuthorityHigh", 2, "uint16be"],
+      ["IdentifierAuthorityLow", 4, "uint32be"],
+      ["RID", "x=>8 + 4 * (x.SubAuthorityCount - 1)", "uint32"],
+      ["SubAuthority", 8, "Array", {
+          "type": "uint32",
+          "count": "x=>x.SubAuthorityCount",
+      }],
+    ]],
+
+    ["AliasC", 0, [
+      ["RID", 0, "uint32"],
+      ["NameOffset", 16, "uint32"],
+      ["NameLength", 20, "uint32"],
+      ["DescriptionOffset", 28, "uint32"],
+      ["DescriptionLength", 32, "uint32"],
+      ["MembersOffset", 40, "uint32"],
+      ["MembersCount", 48, "uint32"],
+      ["Name", "x=>x.NameOffset + 52", "String", {
+          "length": "x=>x.NameLength",
+          "encoding": "utf16",
+      }],
+      ["Description", "x=>x.DescriptionOffset + 52", "String", {
+          "length": "x=>x.DescriptionLength",
+          "encoding": "utf16",
+      }],
+      ["Members", "x=>x.MembersOffset + 52", "Array", {
+          "type": "SID",
+          "count": "x=>x.MembersCount",
+      }],
+    ]],
+
+    # Reference: https://winreg-kb.readthedocs.io/en/latest/sources/security-accounts-manager-keys/Domains.html#groups-sub-key:
+    ["GroupC", 0, [
+      ["RID", 4, "uint32"],
+      ["NameOffset", 32, "uint32"],
+      ["NameLength", 36, "uint32"],
+      ["DescriptionOffset", 44, "uint32"],
+      ["DescriptionLength", 48, "uint32"],
+      ["MembersOffset", 56, "uint32"],
+      ["MembersCount", 64, "uint32"],
+      ["Name", "x=>x.NameOffset + 68", "String", {
+          "length": "x=>x.NameLength",
+          "encoding": "utf16",
+      }],
+      ["Description", "x=>x.DescriptionOffset + 68", "String", {
+          "length": "x=>x.DescriptionLength",
+          "encoding": "utf16",
+      }],
+      ["Members", "x=>x.MembersOffset + 68", "Array", {
+          "type": "uint32",
+          "count": "x=>x.MembersCount",
+      }],
+    ]],
+
+    # Reference: https://github.com/fortra/impacket/blob/master/impacket/examples/secretsdump.py
+    # Password properties flags: https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/ns-ntsecapi-domain_password_information:
+    ["DomainF", 0, [
+      ["CreationTime", 8, "WinFileTime"],
+      ["MaxPasswordAge", 24, "int64"],
+      ["MinPasswordAge", 32, "int64"],
+      ["LockoutDuration", 48, "int64"],
+      ["LockoutObservationWindow", 56, "int64"],
+      ["NextRID", 72, "uint32"],
+      ["PasswordProperties", 76, "Flags", {
+          "type": "uint32",
+          "bitmap": {
+             "Complex passwords required": 0,
+             "No anonymous password change": 1,
+             "No clear-text password change": 2,
+             "Built-in Administrator can be locked out": 3,
+             "Passwords stored in reversible encryption": 4,
+             "Machine account password change not required": 5
+          }
+      }],
+      ["MinPasswordLength", 80, "uint16"],
+      ["PasswordHistoryLength", 82, "uint16"],
+      ["LockoutThreshold", 84, "uint16"],
+    ]],
+
+    # Reference: https://winreg-kb.readthedocs.io/en/latest/sources/security-accounts-manager-keys/Domains.html:
+    # The last 12 bytes of SAM\Domains\Account's "V" Value (Windows does
+    # not store the common prefix "S-1-5-21"):
+    ["Uint32Triplet", 0, [
+      ["D1", 0, "uint32"],
+      ["D2", 4, "uint32"],
+      ["D3", 8, "uint32"],
+    ]],
+  ]
+  '''
+
+  // Render a parsed SID object from the profile as the usual "S-1-5-…" form:
+  LET FormatSID(SID) = format(
+      format='S-%d-%d-%v',
+      args=[SID.Revision, SID.IdentifierAuthorityHigh * 4294967296 +
+        SID.IdentifierAuthorityLow, join(array=SID.SubAuthority.Value, sep='-')])
+
+  // Universal well-known SIDs and single-RID NT AUTHORITY SIDs, plus the
+  // S-1-5-32-* BUILTIN local-group SIDs (source:
+  // https://learn.microsoft.com/en-us/windows/win32/secauthz/well-known-sids and
+  // https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers):
+  LET WellKnownSIDs <= dict(
+      // Universal well-known SIDs (SECURITY_NULL/WORLD/LOCAL/CREATOR_SID_AUTHORITY):
+      `S-1-0-0`='NULL SID',
+      `S-1-1-0`='Everyone',
+      `S-1-2-0`='LOCAL',
+      `S-1-2-1`='CONSOLE LOGON',
+      `S-1-3-0`='CREATOR OWNER',
+      `S-1-3-1`='CREATOR GROUP',
+      `S-1-3-2`='CREATOR OWNER SERVER',
+      `S-1-3-3`='CREATOR GROUP SERVER',
+      `S-1-3-4`='OWNER RIGHTS',
+      // Single-RID SECURITY_NT_AUTHORITY (S-1-5-x) SIDs:
+      `S-1-5-1`='DIALUP',
+      `S-1-5-2`='NETWORK',
+      `S-1-5-3`='BATCH',
+      `S-1-5-4`='INTERACTIVE',
+      `S-1-5-6`='SERVICE',
+      `S-1-5-7`='ANONYMOUS LOGON',
+      `S-1-5-8`='PROXY',
+      `S-1-5-9`='ENTERPRISE DOMAIN CONTROLLERS',
+      `S-1-5-10`='SELF',
+      `S-1-5-11`='Authenticated Users',
+      `S-1-5-12`='RESTRICTED CODE',
+      `S-1-5-13`='TERMINAL SERVER USER',
+      `S-1-5-14`='REMOTE INTERACTIVE LOGON',
+      `S-1-5-15`='THIS ORGANIZATION',
+      `S-1-5-17`='IUSR',
+      `S-1-5-18`='SYSTEM',
+      `S-1-5-19`='LOCAL SERVICE',
+      `S-1-5-20`='NETWORK SERVICE',
+      `S-1-5-33`='WRITE RESTRICTED CODE',
+      `S-1-5-99`='RESTRICTED SERVICES',
+      `S-1-5-113`='Local account',
+      `S-1-5-114`='Local account and member of Administrators group',
+      // Two-part fixed SIDs under other NT_AUTHORITY sub-ranges:
+      `S-1-5-64-10`='NTLM Authentication',
+      `S-1-5-64-14`='SChannel Authentication',
+      `S-1-5-64-21`='Digest Authentication',
+      `S-1-5-80-0`='NT SERVICE\\ALL SERVICES',
+      `S-1-5-83-0`='NT VIRTUAL MACHINE\\Virtual Machines',
+      // BUILTIN local-group SIDs (S-1-5-32-<RID>):
+      `S-1-5-32-544`='Administrators',
+      `S-1-5-32-545`='Users',
+      `S-1-5-32-546`='Guests',
+      `S-1-5-32-547`='Power Users',
+      `S-1-5-32-548`='Account Operators',
+      `S-1-5-32-549`='Server Operators',
+      `S-1-5-32-550`='Print Operators',
+      `S-1-5-32-551`='Backup Operators',
+      `S-1-5-32-552`='Replicator',
+      `S-1-5-32-554`='Pre-Windows 2000 Compatible Access',
+      `S-1-5-32-555`='Remote Desktop Users',
+      `S-1-5-32-556`='Network Configuration Operators',
+      `S-1-5-32-557`='Incoming Forest Trust Builders',
+      `S-1-5-32-558`='Performance Monitor Users',
+      `S-1-5-32-559`='Performance Log Users',
+      `S-1-5-32-560`='Windows Authorization Access Group',
+      `S-1-5-32-561`='Terminal Server License Servers',
+      `S-1-5-32-562`='Distributed COM Users',
+      `S-1-5-32-568`='IIS_IUSRS',
+      `S-1-5-32-569`='Cryptographic Operators',
+      `S-1-5-32-571`='Cacheable Principals Group',
+      `S-1-5-32-572`='Non-cacheable Principals Group',
+      `S-1-5-32-573`='Event Log Readers',
+      `S-1-5-32-574`='Certificate Service DCOM Access',
+      `S-1-5-32-575`='RDS Remote Access Servers',
+      `S-1-5-32-576`='RDS Endpoint Servers',
+      `S-1-5-32-577`='RDS Management Servers',
+      `S-1-5-32-578`='Hyper-V Administrators',
+      `S-1-5-32-579`='Access Control Assistance Operators',
+      `S-1-5-32-580`='Remote Management Users',
+      `S-1-5-32-581`='System Managed Accounts Group',
+      `S-1-5-32-582`='Storage Replica Administrators',
+      `S-1-5-32-583`='Device Owners',
+      `S-1-5-32-585`='OpenSSH Users')
+
+  // SAM\Domains\Account's own F/V values (the domain object, distinct
+  // from any SAM\Domains\Account\Users\<RID>\F or V):
+  LET DomainAccount(SAMPath) = SELECT get(field="F") AS DomainF,
+                                      get(field="V") AS DomainV
+    FROM read_reg_key(globs='SAM\\Domains\\Account',
+                      root=pathspec(DelegatePath=SAMPath),
+                      accessor="raw_reg")
+
+  // This machine's own account-domain SID, read as the last three
+  // sub-authorities of SAM\Domains\Account's "V" value (i.e. excluding
+  // the "S-1-5-21" prefix):
+  LET MachineSIDSuffixStruct(SAMPath) = SELECT
+      parse_binary(accessor="data",
+                   filename=DomainV,
+                   profile=Profile,
+                   struct="Uint32Triplet",
+                   offset=stat(filename=DomainV, accessor="data").Size - 12) AS Suffix
+    FROM DomainAccount(
+      SAMPath=SAMPath)
+
+  LET MachineSIDSuffix(SAMPath) = SELECT Suffix.D1 AS D1,
+                                         Suffix.D2 AS D2,
+                                         Suffix.D3 AS D3
+    FROM MachineSIDSuffixStruct(SAMPath=SAMPath)
+
+  LET MachineSID(SAMPath) = SELECT format(
+                                     format='S-1-5-21-%d-%d-%d',
+                                     args=[D1, D2, D3]) AS SID
+    FROM MachineSIDSuffix(SAMPath=SAMPath)
+
+  // Local usernames, keyed by RID, from SAM\Domains\Account\Users:
+  LET LocalUsersByRID(SAMPath) = to_dict(item={
+      SELECT str(str=parse_binary(accessor="data",
+                                  filename=get(field="F"),
+                                  profile=Profile,
+                                  struct="F").RID) AS _key,
+             parse_binary(accessor="data",
+                          filename=get(field="V"),
+                          profile=Profile,
+                          struct="V").username AS _value
+      FROM read_reg_key(globs='SAM\\Domains\\Account\\Users\\0*',
+                        root=pathspec(DelegatePath=SAMPath),
+                        accessor="raw_reg")
+      WHERE get(field="F")
+       AND get(field="V")
+    })
+
+  // Local group names, keyed by RID, from SAM\Domains\Account\Groups:
+  LET LocalGroupsByRID(SAMPath) = to_dict(item={
+      SELECT str(str=parse_binary(accessor="data",
+                                  filename=get(field="C"),
+                                  profile=Profile,
+                                  struct="GroupC").RID) AS _key,
+             parse_binary(accessor="data",
+                          filename=get(field="C"),
+                          profile=Profile,
+                          struct="GroupC").Name AS _value
+      FROM read_reg_key(globs='SAM\\Domains\\Account\\Groups\\0*',
+                        root=pathspec(DelegatePath=SAMPath),
+                        accessor="raw_reg")
+      WHERE get(field="C")
+    })
+
+  // Classify a member SID to this machine (the Suffix), returing either
+  // - "Local account"
+  // - "Domain account" (not found in local accounts)
+  // - "Well-known SID": (not as "S-1-5-21" SID):
+  LET ClassifyMember(SID, Suffix) = if(
+      condition=SID.SubAuthorityCount = 5
+       AND SID.SubAuthority[0] = 21,
+      then=if(condition=SID.SubAuthority[1] = Suffix.D1
+               AND SID.SubAuthority[2] = Suffix.D2
+                    AND SID.SubAuthority[3] = Suffix.D3,
+              then='Local account',
+              else='Domain account'),
+      else='Well-known SID')
+
+  // Resolve a member's name, either by user RID, group RID or from well-known SIDs:
+  LET ResolveMemberName(SID, Class, UsersByRID, GroupsByRID, KnownSIDs) =
+      if(
+        condition=Class = 'Local account',
+        then=if(
+          condition=get(
+            item=UsersByRID,
+            field=str(
+              str=SID.RID)),
+          then=get(
+            item=UsersByRID,
+            field=str(
+              str=SID.RID)),
+          else=get(
+            item=GroupsByRID,
+            field=str(
+              str=SID.RID))),
+        else=if(
+          condition=Class = 'Well-known SID',
+          then=get(
+            item=KnownSIDs,
+            field=FormatSID(
+              SID=SID))))
+
+  // Every local group ("SAM aliases"):
+  LET Aliases(SAMPath) = SELECT
+      Key.OSPath.Path AS RegistryKey,
+      Key.OSPath.Components[-3] AS GroupDomain,
+      parse_binary(accessor="data",
+                   filename=get(field="C"),
+                   profile=Profile,
+                   struct="AliasC") AS Group
+    FROM read_reg_key(globs='SAM\\Domains\\*\\Aliases\\0*',
+                      root=pathspec(DelegatePath=SAMPath),
+                      accessor="raw_reg")
+    WHERE get(field="C")
+
+  // Aliases (local groups) joined against their own member SIDs, flattened:
+  LET AliasMembers(SAMPath) = SELECT *
+    FROM foreach(row=Aliases(SAMPath=SAMPath),
+                 query={
+      SELECT RegistryKey,
+             GroupDomain,
+             Group,
+             dict(Revision=Revision,
+                  SubAuthorityCount=SubAuthorityCount,
+                  IdentifierAuthorityHigh=IdentifierAuthorityHigh,
+                  IdentifierAuthorityLow=IdentifierAuthorityLow,
+                  RID=RID,
+                  SubAuthority=SubAuthority) AS Member
+      FROM foreach(row=Group.Members)
+    })
+
+  LET GroupMembersContext(SAMPath) = SELECT
+      D1,
+      D2,
+      D3,
+      LocalUsersByRID(SAMPath=SAMPath) AS UsersByRID,
+      LocalGroupsByRID(SAMPath=SAMPath) AS GroupsByRID
+    FROM foreach(row=MachineSIDSuffix(SAMPath=SAMPath))
+
+  // Local group membership with enriched information, like usernames:
+  LET GroupMembers(SAMPath) = SELECT *
+    FROM foreach(
+      row=GroupMembersContext(SAMPath=SAMPath),
+      query={
+      SELECT
+      RegistryKey,
+      GroupDomain,
+      Group.RID AS GroupRID,
+      Group.Name AS GroupName,
+      Group.Description AS GroupDescription,
+      FormatSID(SID=Member) AS MemberSID,
+      Member.RID AS MemberRID,
+      ClassifyMember(SID=Member, Suffix=dict(D1=D1, D2=D2, D3=D3)) AS MemberClass,
+      ResolveMemberName(
+        SID=Member,
+        Class=ClassifyMember(
+          SID=Member,
+          Suffix=dict(
+            D1=D1,
+            D2=D2,
+            D3=D3)),
+        UsersByRID=UsersByRID,
+        GroupsByRID=GroupsByRID,
+        KnownSIDs=WellKnownSIDs) AS MemberName
+      FROM AliasMembers(
+        SAMPath=SAMPath)
+    })
+
+  // Global groups:
+  LET Groups(SAMPath) = SELECT Key.OSPath.Path AS RegistryKey,
+                               ParsedGroup.RID AS GroupRID,
+                               ParsedGroup.Name AS GroupName,
+                               ParsedGroup.Description AS GroupDescription,
+                               ParsedGroup.MembersCount AS MemberCount,
+                               ParsedGroup.Members.Value AS MemberRIDs
+    FROM foreach(row={
+      SELECT Key,
+             parse_binary(accessor="data",
+                          filename=get(field="C"),
+                          profile=Profile,
+                          struct="GroupC") AS ParsedGroup
+      FROM read_reg_key(globs='SAM\\Domains\\Account\\Groups\\0*',
+                        root=pathspec(DelegatePath=SAMPath),
+                        accessor="raw_reg")
+      WHERE get(field="C")
+    })
+
+  // Account/lockout policy and the domain's own creation time from
+  // SAM\Domains\Account's "F" value:
+  LET AccountPolicy(SAMPath) = SELECT
+      parse_binary(accessor="data",
+                   filename=DomainF,
+                   profile=Profile,
+                   struct="DomainF") AS Policy
+    FROM DomainAccount(SAMPath=SAMPath)
+    WHERE DomainF
 
 precondition:
   SELECT OS From info() where OS = 'windows'
@@ -120,32 +509,42 @@ precondition:
 sources:
   - name: Parsed
     query: |
-        SELECT Key.OSPath.Path AS Key,
-           Key.OSPath.DelegatePath AS Hive,
-           get(field="F") AS _F,
-           get(field="V") AS _V,
-           get(field="SupplementalCredentials") AS _SupplementalCredentials,
-           parse_binary(accessor="data", filename=F,
-                        profile=Profile, struct="F") AS ParsedF,
-           parse_binary(accessor="data", filename=V,
-                        profile=Profile, struct="V") AS ParsedV
-        FROM read_reg_key(
-           globs='SAM\\Domains\\Account\\Users\\0*',
-           root=pathspec(DelegatePath=SAMPath),
-           accessor="raw_reg")
-        WHERE _F AND _V
+      SELECT
+          Key.OSPath.Path AS Key,
+          Key.OSPath.DelegatePath AS Hive,
+          get(field="F") AS _F,
+          get(field="V") AS _V,
+          get(field="SupplementalCredentials") AS _SupplementalCredentials,
+          parse_binary(accessor="data", filename=F, profile=Profile, struct="F") AS ParsedF,
+          parse_binary(
+            accessor="data",
+            filename=V,
+            profile=Profile,
+            struct="V") AS ParsedV
+      FROM read_reg_key(
+        globs='SAM\\Domains\\Account\\Users\\0*',
+        root=pathspec(
+          DelegatePath=SAMPath),
+        accessor="raw_reg")
+      WHERE _F
+       AND _V
 
   - name: CreateTimes
     description: "Show the modified times of the \\SAM\\Domains\\Account\\Users\\Names keys"
     query: |
-      SELECT Name AS Username, Mtime AS CreatedTime
+      SELECT Name AS Username,
+             Mtime AS CreatedTime
       FROM glob(globs='SAM\\Domains\\Account\\Users\\Names\\*',
                 root=pathspec(DelegatePath=SAMPath),
                 accessor="raw_reg")
       WHERE Data.type =~ "Key"
 
 column_types:
-  - name: F
+  - name: _F
     type: hex
-  - name: V
+  - name: _V
+    type: hex
+  - name: lmpwd_hash
+    type: hex
+  - name: ntpwd_hash
     type: hex
