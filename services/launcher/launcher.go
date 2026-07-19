@@ -534,18 +534,6 @@ func (self *Launcher) EnsureToolsDeclared(
 	return nil
 }
 
-// Update an existing VQLEnv if it exists, otherwise append it.
-func upsertVqlEnv(existing []*actions_proto.VQLEnv, env *actions_proto.VQLEnv) []*actions_proto.VQLEnv {
-	for idx, item := range existing {
-		if item.Key == env.Key {
-			existing[idx] = env
-			return existing
-		}
-	}
-
-	return append(existing, env)
-}
-
 func AddToolDependency(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -560,43 +548,43 @@ func AddToolDependency(
 		return err
 	}
 
-	vql_collector_args.Env = upsertVqlEnv(vql_collector_args.Env, &actions_proto.VQLEnv{
+	vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
 		Key:   fmt.Sprintf("Tool_%v_HASH", tool_info.Name),
 		Value: tool_info.Hash,
 	})
 
-	vql_collector_args.Env = upsertVqlEnv(vql_collector_args.Env, &actions_proto.VQLEnv{
+	vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
 		Key:   fmt.Sprintf("Tool_%v_FILENAME", tool_info.Name),
 		Value: tool_info.Filename,
 	})
 
 	// Support local filesystem access for local tools.
 	if tool_info.ServePath != "" {
-		vql_collector_args.Env = upsertVqlEnv(vql_collector_args.Env, &actions_proto.VQLEnv{
+		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
 			Key:   fmt.Sprintf("Tool_%v_PATH", tool_info.Name),
 			Value: tool_info.ServePath,
 		})
 
 	} else if len(tool_info.ServeUrls) > 0 {
-		vql_collector_args.Env = upsertVqlEnv(vql_collector_args.Env, &actions_proto.VQLEnv{
+		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
 			Key:   fmt.Sprintf("Tool_%v_URL", tool_info.Name),
 			Value: tool_info.ServeUrls[0],
 		})
 
 		serialized_urls := json.MustMarshalString(tool_info.ServeUrls)
-		vql_collector_args.Env = upsertVqlEnv(vql_collector_args.Env, &actions_proto.VQLEnv{
+		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
 			Key:   fmt.Sprintf("Tool_%v_URLs", tool_info.Name),
 			Value: serialized_urls,
 		})
 
 	} else if tool_info.Url != "" {
-		vql_collector_args.Env = upsertVqlEnv(vql_collector_args.Env, &actions_proto.VQLEnv{
+		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
 			Key:   fmt.Sprintf("Tool_%v_URL", tool_info.Name),
 			Value: tool_info.Url,
 		})
 
 		serialized_urls := json.MustMarshalString([]string{tool_info.Url})
-		vql_collector_args.Env = upsertVqlEnv(vql_collector_args.Env, &actions_proto.VQLEnv{
+		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
 			Key:   fmt.Sprintf("Tool_%v_URLs", tool_info.Name),
 			Value: serialized_urls,
 		})
@@ -635,21 +623,6 @@ func (self *Launcher) ScheduleArtifactCollection(
 			return "", err
 		}
 		args = append(args, compiled...)
-	} else {
-		// Collector args are cached for performance but may contain stale tool information.
-		// This ensures that before an artifact is scheduled, it has the most up-to-date tool data.
-		for idx, arg := range args {
-			_artifacts := arg.GetArtifacts()
-
-			for _, artifact := range _artifacts {
-				for _, tool := range artifact.Tools {
-					err := AddToolDependency(ctx, config_obj, tool.Name, tool.Version, args[idx])
-					if err != nil {
-						return "", err
-					}
-				}
-			}
-		}
 	}
 
 	return self.WriteArtifactCollectionRecord(
