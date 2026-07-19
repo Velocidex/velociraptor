@@ -4,7 +4,7 @@
   "url": "http://www.example.com/SampleTool0.6.5-rc2.exe",
   "version": "0.6.5-rc2",
   "artifact": "TestArtifactSemver2",
-  "filestore_path": "2f30b410203dd2aec421b39bad6e2d4f998d8087756d171c22538d40f8a8f559",
+  "filestore_path": "dcd615de21e82e31fbe4b3207971dbd61cc98a5d3a8f5e594ceef41c83c2c868",
   "serve_url": "http://www.example.com/SampleTool0.6.5-rc2.exe",
   "serve_urls": [
    "http://www.example.com/SampleTool0.6.5-rc2.exe"
@@ -31,7 +31,7 @@
   "url": "http://www.example.com/ConflictingVersion.exe",
   "version": "0.6.5-rc2",
   "artifact": "TestArtifactConflictingVersion",
-  "filestore_path": "2f30b410203dd2aec421b39bad6e2d4f998d8087756d171c22538d40f8a8f559",
+  "filestore_path": "dcd615de21e82e31fbe4b3207971dbd61cc98a5d3a8f5e594ceef41c83c2c868",
   "serve_url": "http://www.example.com/ConflictingVersion.exe",
   "serve_urls": [
    "http://www.example.com/ConflictingVersion.exe"
