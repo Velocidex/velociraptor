@@ -407,7 +407,7 @@ func (self *ExecutorTestSuite) TestLogMessages() {
 	// collect the log messages and ensure they are all batched in one response.
 	log_messages := []*crypto_proto.LogMessage{}
 
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntilWithError(2*time.Second, self.T(), func() bool {
 		var total_messages uint64
 		log_messages = nil
 
@@ -423,6 +423,8 @@ func (self *ExecutorTestSuite) TestLogMessages() {
 		}
 
 		return total_messages > 10
+	}, func() string {
+		return string(json.MustMarshalIndent(collector.Messages()))
 	})
 
 	// Log messages should be combined into few messages.
