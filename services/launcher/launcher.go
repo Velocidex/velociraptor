@@ -558,6 +558,11 @@ func AddToolDependency(
 		Value: tool_info.Filename,
 	})
 
+	vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
+		Key:   fmt.Sprintf("Tool_%v_VERSION", tool_info.Name),
+		Value: tool_info.Version,
+	})
+
 	// Support local filesystem access for local tools.
 	if tool_info.ServePath != "" {
 		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{

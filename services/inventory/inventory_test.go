@@ -194,8 +194,8 @@ tools:
 	assert.Equal(self.T(), "TestArtifact", tool.Versions[0].Artifact)
 
 	// Make sure the tool is served directly from upstream.
-	assert.Equal(self.T(), response[0].Env[2].Key, "Tool_SampleTool_URL")
-	assert.Equal(self.T(), response[0].Env[2].Value, "htttp://www.example.com/file.exe")
+	assert.Equal(self.T(), response[0].Env[3].Key, "Tool_SampleTool_URL")
+	assert.Equal(self.T(), response[0].Env[3].Value, "htttp://www.example.com/file.exe")
 
 	assert.Equal(self.T(), response[0].Env[0].Key, "Tool_SampleTool_HASH")
 	assert.Equal(self.T(), response[0].Env[0].Value,
@@ -355,8 +355,8 @@ tools:
 	assert.NoError(self.T(), err)
 
 	// Make sure the tool is served directly from the public directory.
-	assert.Equal(self.T(), response[0].Env[2].Key, "Tool_SampleTool_URL")
-	assert.Contains(self.T(), response[0].Env[2].Value, "https://localhost:8000/")
+	assert.Equal(self.T(), response[0].Env[3].Key, "Tool_SampleTool_URL")
+	assert.Contains(self.T(), response[0].Env[3].Value, "https://localhost:8000/")
 
 	inventory_service, err := services.GetInventory(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -764,7 +764,7 @@ tools:
 
 	assert.Equal(self.T(), response[0].Env[0].Value,
 		getHash("File Content 1"))
-	assert.Equal(self.T(), response[0].Env[2].Value,
+	assert.Equal(self.T(), response[0].Env[3].Value,
 		"http://www.example.com/SampleTool1.exe")
 
 	response, err = launcher.CompileCollectorArgs(
@@ -777,7 +777,7 @@ tools:
 
 	assert.Equal(self.T(), response[0].Env[0].Value,
 		getHash("File Content 2"))
-	assert.Equal(self.T(), response[0].Env[2].Value,
+	assert.Equal(self.T(), response[0].Env[3].Value,
 		"http://www.example.com/SampleTool2.exe")
 }
 

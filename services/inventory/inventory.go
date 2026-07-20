@@ -532,7 +532,12 @@ func (self *InventoryService) AddTool(
 	// Obfuscate the public directory path.
 	// Make a copy to work on.
 	tool := proto.Clone(tool_request).(*artifacts_proto.Tool)
-	tool.FilestorePath = paths.ObfuscateName(config_obj, tool.Name)
+
+	if tool.Version == "" {
+		tool.FilestorePath = paths.ObfuscateName(config_obj, tool.Name)
+	} else {
+		tool.FilestorePath = paths.ObfuscateName(config_obj, fmt.Sprintf("%s:%s", tool.Name, tool.Version))
+	}
 
 	// No client config so we don't know any server urls - therefore we
 	// can not serve locally at all.
