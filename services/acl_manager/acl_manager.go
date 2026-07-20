@@ -182,6 +182,11 @@ func (self *ACLManager) GetEffectivePolicy(
 	// Reserved for the server itself - can not be set by normal means.
 	policy.SuperUser = false
 
+	// OrgAdmin is only relevant for the root org.
+	if !utils.IsRootOrg(config_obj.OrgId) {
+		policy.OrgAdmin = false
+	}
+
 	return policy, nil
 }
 
@@ -192,6 +197,15 @@ func (self *ACLManager) SetPolicy(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	// Make a copy to set
+	acl_obj = proto.Clone(acl_obj).(*acl_proto.ApiClientACL)
+
+	// ORG_ADMIN can only be set on the root org.
+	if !utils.IsRootOrg(config_obj.OrgId) {
+		acl_obj.OrgAdmin = false
+		acl_obj.Roles = utils.FilterSlice(acl_obj.Roles, "org_admin")
+	}
+
 	// Normalize the username casing.
 	lower_user_name := utils.ToLower(principal)
 	cache, pres := self.cache[lower_user_name]
@@ -200,7 +214,7 @@ func (self *ACLManager) SetPolicy(
 	}
 
 	self.cache[lower_user_name] = &_CachedACLObject{
-		policy:   proto.Clone(acl_obj).(*acl_proto.ApiClientACL),
+		policy:   acl_obj,
 		username: principal,
 	}
 
