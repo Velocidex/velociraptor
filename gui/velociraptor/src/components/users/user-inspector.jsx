@@ -137,6 +137,24 @@ class PermissionViewer extends Component {
         }
     }
 
+    // ORG_ADMIN role can only be set on the root org.
+    isRoleDisabled = role=>{
+        if(role === "org_admin") {
+            let org_id = this.props.org && this.props.org.id;
+            return org_id != "root";
+        }
+        return false;
+    }
+
+    // ORG_ADMIN permission can only be set on the root org.
+    isPermissionDisabled = perm=>{
+        if(perm === "ORG_ADMIN") {
+            let org_id = this.props.org && this.props.org.id;
+            return org_id != "root";
+        }
+        return false;
+    }
+
     render() {
         if (!this.props.username) {
             return <></>;
@@ -199,6 +217,7 @@ class PermissionViewer extends Component {
 
                           <div className="form-toggle-control">
                             <Form.Switch
+                              disabled={this.isRoleDisabled(role)}
                               id={"Role_" + role}
                               label={T("Role_" + role)}
                               checked={_.indexOf(this.props.acls.roles, role) >= 0}
@@ -262,8 +281,9 @@ class PermissionViewer extends Component {
                           <Form.Switch
                             id={"Perm2_" + perm}
                             label={T("Perm_" + perm)}
-                            disabled={_.indexOf(
-                                this.props.acls.effective_permissions, perm) >= 0}
+                            disabled={
+                                this.isPermissionDisabled(perm) ||
+                                _.indexOf(this.props.acls.effective_permissions, perm) >= 0}
                             checked={_.indexOf(
                                 this.props.acls.effective_permissions, perm) >= 0}
                             onChange={e=>this.changePermissions(
