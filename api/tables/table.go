@@ -235,6 +235,17 @@ func getStackTable(
 		in.Rows = 100
 	}
 
+	// The caller asked for rows after the last one. We don't really
+	// know the columns because reading past the end of the table will
+	// give no rows. So for this case we read the first row and return
+	// the columns from there.
+	if in.StartRow > uint64(result.TotalRows) {
+		res := ConvertRowsToTableResponse(
+			rs_reader.Rows(ctx), result, in.Timezone, 1)
+		res.Rows = nil
+		return res, nil
+	}
+
 	// Seek to the row we need.
 	err = rs_reader.SeekToRow(int64(in.StartRow))
 	if errors.Is(err, io.EOF) {

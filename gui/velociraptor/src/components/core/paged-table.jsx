@@ -327,7 +327,8 @@ export class TablePaginationControl extends React.Component {
         // The current cursor points beyond the end of the table, seek
         // to the last page. This can happen if the table suddenly
         // shrinks.
-        if (this.props.start_row > this.props.total_size) {
+        if (this.props.total_size >= 0 &&
+            this.props.start_row > this.props.total_size) {
             let last_page = this.getLastPage();
             let last_row = last_page * this.props.page_size;
             if(last_row !== this.props.start_row) {
@@ -407,7 +408,8 @@ export class TablePaginationControl extends React.Component {
                                variant="default"
                                key={i}
                                active={i === current_page}
-                               onClick={ () => this.props.onRowChange(row_offset)} >
+                               onClick={ () => this.props.onRowChange(
+                                   row_offset)} >
                   { row_offset }
                 </Dropdown.Item>);
         };
@@ -568,6 +570,7 @@ class VeloPagedTable extends Component {
         selectRow: PropTypes.object,
 
         initial_page_size: PropTypes.number,
+        initial_start_row: PropTypes.number,
 
         // Additional columns to add (should be formatted with a
         // custom renderer).
@@ -605,7 +608,8 @@ class VeloPagedTable extends Component {
         // If the table has an index this will be the total number of
         // rows in the table. If it is -1 then we don't know the total
         // number.
-        total_size: 0,
+        total_size: -1,   // Initialize to -1 because we don't know the
+                          // size until the first API call.
         loading: true,
 
         // A transform applied on the basic table.
@@ -614,6 +618,8 @@ class VeloPagedTable extends Component {
         last_data: [],
 
         stack_path: [],
+        stack_start_row: 0,
+        stack_page_size: 10,
 
         showStackDialog: false,
 
@@ -632,11 +638,15 @@ class VeloPagedTable extends Component {
         // Maintain the page size in the state as well to get
         // react to refresh when changed.
         page_size: 10,
+
+        // Set to true when the user updated the paginator - in this
+        // case we ignore the initial_start_row.
+        paginator_chaged_row: false,
     }
 
     componentDidMount = () => {
         this.source = CancelToken.source();
-        if(this.props.initial_page_size>0) {
+        if(this.props.initial_page_size > 0) {
             setItem(schema.CurrentPageSizeKey,
                     this.props.initial_page_size);
         }
@@ -728,7 +738,12 @@ class VeloPagedTable extends Component {
         }
         return <TransformViewer
                  transform={transform}
-                 setTransform={t=>this.setState({transform: t})}
+                 setTransform={t=>{
+                     this.setState({transform: t});
+                     if(this.props.setTransform) {
+                         this.props.setTransform(t);
+                     };
+                 }}
                />;
     }
 
@@ -747,6 +762,18 @@ class VeloPagedTable extends Component {
 
         Object.assign(params, transform);
         params.start_row = this.state.start_row || 0;
+
+        // Set the start row to the initial_start_row if the user had
+        // not updated the page yet.
+        if(!this.state.paginator_chaged_row &&
+           this.props.initial_start_row > 0 &&
+           this.props.initial_start_row != params.start_row) {
+            this.setState({
+                start_row: this.props.initial_start_row,
+            });
+            params.start_row = this.props.initial_start_row;
+        }
+
         if (params.start_row < 0) {
             params.start_row = 0;
         }
@@ -764,11 +791,10 @@ class VeloPagedTable extends Component {
             if (response.cancel) {
                 return;
             }
-
             let stack_path = response.data && response.data.stack_path;
             let pageData = PrepareData(response.data);
             let toggles = Object.assign({}, this.state.toggles);
-            let columns = pageData.columns;
+            let columns = pageData.columns || [];
             if (this.props.extra_columns) {
                 columns = columns.concat(this.props.extra_columns);
             };
@@ -800,8 +826,18 @@ class VeloPagedTable extends Component {
                 pageData.rows = _.map(pageData.rows, this.props.row_filter);
             }
 
+            // We are trying to seek past the end of the table, reset
+            // to the start.
+            let total_size = parseInt(response.data.total_rows || 0);
+            if(total_size < params.start_row) {
+                this.setState({start_row: 0});
+                if(this.props.setPageState) {
+                    this.props.setPageState({start_row: 0});
+                }
+            }
+
             this.setState({loading: false,
-                           total_size: parseInt(response.data.total_rows || 0),
+                           total_size: total_size,
                            rows: pageData.rows,
                            all_columns: pageData.columns,
                            toggles: toggles,
@@ -1144,7 +1180,9 @@ class VeloPagedTable extends Component {
                                   className="visible"
                                   target="_blank" rel="noopener noreferrer"
                                   onClick={e=>{
-                                      this.setState({showStackDialog: column});
+                                      this.setState({
+                                          showStackDialog: column,
+                                      });
                                       e.preventDefault();
                                       return false;
                                   }}>
@@ -1380,6 +1418,10 @@ class VeloPagedTable extends Component {
     }
 
     getLastPage = ()=>{
+        if(this.state.total_size < 0) {
+            return 0 ;
+        };
+
         let page_size = getItem(schema.CurrentPageSizeKey) || 10;
         let total_size = parseInt(this.state.total_size || 0);
         let total_pages = parseInt(total_size / page_size) + 1;
@@ -1521,7 +1563,14 @@ class VeloPagedTable extends Component {
                   start_row={this.state.start_row}
                   page_size={page_size || this.state.page_size}
                   current_page={this.state.start_row / page_size}
-                  onRowChange={row_offset=>this.setState({start_row: row_offset})}
+                  onRowChange={(row_offset)=>{
+                      if(this.state.start_row != row_offset) {
+                          this.setState({
+                              start_row: row_offset,
+                              paginator_chaged_row: true,
+                          });
+                      }
+                  }}
                   onPageSizeChange={size=>{
                       setItem(schema.CurrentPageSizeKey, size);
 
@@ -1567,8 +1616,12 @@ class VeloPagedTable extends Component {
               { this.state.showStackDialog &&
                 <StackDialog
                   name={this.state.showStackDialog}
-                  onClose={()=>this.setState({showStackDialog: false})}
-                  navigateToRow={row=>this.setState({start_row: row})}
+                  onClose={()=>this.setState({
+                      showStackDialog: false,
+                  })}
+                  navigateToRow={row=>this.setState({
+                      start_row: row,
+                  })}
                   stack_path={this.state.stack_path}
 
                   transform={this.state.stack_transforms[
@@ -1578,6 +1631,14 @@ class VeloPagedTable extends Component {
                       stack_transforms[this.state.showStackDialog] = t;
                       this.setState({stack_transforms: stack_transforms});
                   }}
+                  setPageState={x=>{
+                      this.setState({
+                          stack_start_row: x.start_row,
+                          stack_page_size: x.page_size,
+                      });
+                  }}
+                  start_row={this.state.stack_start_row}
+                  page_size={this.state.stack_page_size}
                 />
               }
             </>
