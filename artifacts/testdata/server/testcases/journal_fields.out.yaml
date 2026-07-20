@@ -1,0 +1,177 @@
+Query: LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir), copy=["zip", "file"], clear=TRUE)
+Output: []
+
+Query: SELECT Field FROM Artifact.Linux.Forensics.Journal.Fields( JournalGlob='/compact.journal', source='JournalFields') WHERE Field
+Output: [
+ {
+  "Field": "CODE_FILE"
+ },
+ {
+  "Field": "CODE_FUNC"
+ },
+ {
+  "Field": "CODE_LINE"
+ },
+ {
+  "Field": "CPU_USAGE_NSEC"
+ },
+ {
+  "Field": "GLIB_DOMAIN"
+ },
+ {
+  "Field": "GLIB_OLD_LOG_API"
+ },
+ {
+  "Field": "JOB_ID"
+ },
+ {
+  "Field": "JOB_RESULT"
+ },
+ {
+  "Field": "JOB_TYPE"
+ },
+ {
+  "Field": "MESSAGE"
+ },
+ {
+  "Field": "MESSAGE_ID"
+ },
+ {
+  "Field": "N_RESTARTS"
+ },
+ {
+  "Field": "PRIORITY"
+ },
+ {
+  "Field": "SYSLOG_FACILITY"
+ },
+ {
+  "Field": "SYSLOG_IDENTIFIER"
+ },
+ {
+  "Field": "SYSLOG_PID"
+ },
+ {
+  "Field": "SYSLOG_RAW"
+ },
+ {
+  "Field": "SYSLOG_TIMESTAMP"
+ },
+ {
+  "Field": "TID"
+ },
+ {
+  "Field": "UNIT_RESULT"
+ },
+ {
+  "Field": "USERSPACE_USEC"
+ },
+ {
+  "Field": "USER_INVOCATION_ID"
+ },
+ {
+  "Field": "USER_UNIT"
+ },
+ {
+  "Field": "_AUDIT_LOGINUID"
+ },
+ {
+  "Field": "_AUDIT_SESSION"
+ },
+ {
+  "Field": "_BOOT_ID"
+ },
+ {
+  "Field": "_CAP_EFFECTIVE"
+ },
+ {
+  "Field": "_CMDLINE"
+ },
+ {
+  "Field": "_COMM"
+ },
+ {
+  "Field": "_EXE"
+ },
+ {
+  "Field": "_GID"
+ },
+ {
+  "Field": "_HOSTNAME"
+ },
+ {
+  "Field": "_MACHINE_ID"
+ },
+ {
+  "Field": "_PID"
+ },
+ {
+  "Field": "_RUNTIME_SCOPE"
+ },
+ {
+  "Field": "_SELINUX_CONTEXT"
+ },
+ {
+  "Field": "_SOURCE_REALTIME_TIMESTAMP"
+ },
+ {
+  "Field": "_STREAM_ID"
+ },
+ {
+  "Field": "_SYSTEMD_CGROUP"
+ },
+ {
+  "Field": "_SYSTEMD_INVOCATION_ID"
+ },
+ {
+  "Field": "_SYSTEMD_OWNER_UID"
+ },
+ {
+  "Field": "_SYSTEMD_SLICE"
+ },
+ {
+  "Field": "_SYSTEMD_UNIT"
+ },
+ {
+  "Field": "_SYSTEMD_USER_SLICE"
+ },
+ {
+  "Field": "_SYSTEMD_USER_UNIT"
+ },
+ {
+  "Field": "_TRANSPORT"
+ },
+ {
+  "Field": "_UID"
+ }
+]
+
+Query: SELECT Value, Count, First, Last FROM Artifact.Linux.Forensics.Journal.Fields( JournalGlob='/2404.journal', FieldName='_COMM', source='JournalFieldValues')
+Output: [
+ {
+  "Value": "cat",
+  "Count": 1,
+  "First": "2026-06-07T14:44:55.635693Z",
+  "Last": "2026-06-07T14:44:55.635693Z"
+ },
+ {
+  "Value": "systemd-journal",
+  "Count": 2,
+  "First": "2026-06-07T14:44:42.302536Z",
+  "Last": "2026-06-07T14:44:42.302591Z"
+ }
+]
+
+Query: SELECT Value, Count, First, Last FROM Artifact.Linux.Forensics.Journal.Fields( JournalGlob='/2404.journal', FieldName='_BOOT_ID', source='JournalFieldValues')
+Output: [
+ {
+  "Value": "1621aee481fa42ad9693fe91a054f095",
+  "Count": 3,
+  "First": "2026-06-07T14:44:42.302536Z",
+  "Last": "2026-06-07T14:44:55.635693Z"
+ }
+]
+
+Query: SELECT Field FROM Artifact.Linux.Forensics.Journal.Fields( JournalGlob='/system.journal', source='JournalFields') WHERE Field
+Output: []
+
