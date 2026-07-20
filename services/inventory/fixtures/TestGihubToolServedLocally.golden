@@ -10,6 +10,9 @@
     "value": "file.exe"
    },
    {
+    "key": "Tool_SampleTool_VERSION"
+   },
+   {
     "key": "Tool_SampleTool_URL",
     "value": "https://localhost:8000/public/dbdbc5e2ae775342ae9189803757a07b20daf0b04a25cda9d97a99785d75ec3b"
    },

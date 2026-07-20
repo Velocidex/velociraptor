@@ -30,6 +30,9 @@
     "value": "file.exe"
    },
    {
+    "key": "Tool_SampleTool_VERSION"
+   },
+   {
     "key": "Tool_SampleTool_URL",
     "value": "htttp://www.example.com/file.exe"
    },

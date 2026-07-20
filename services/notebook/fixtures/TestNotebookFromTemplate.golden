@@ -60,6 +60,9 @@
       "value": "www.google.com"
      },
      {
+      "key": "Tool_SomeTool_VERSION"
+     },
+     {
       "key": "Tool_SomeTool_URL",
       "value": "https://localhost:8000/public/152038a5bc46cb8fc68ee6eac0269c6a3fba574c4a96a650ed26aa9b02b1cb64"
      },
@@ -171,6 +174,9 @@
      {
       "key": "Tool_SomeTool_FILENAME",
       "value": "www.google.com"
+     },
+     {
+      "key": "Tool_SomeTool_VERSION"
      },
      {
       "key": "Tool_SomeTool_URL",
