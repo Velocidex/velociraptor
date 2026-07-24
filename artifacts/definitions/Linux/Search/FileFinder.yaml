@@ -215,7 +215,14 @@ sources:
           value: Linux
         - key: weight
           value: "010"
+    - type: vql
+      template: |
+        /*
+        # Linux.Search.FileFinder
+        */
 
+        SELECT * FROM source()
+        LIMIT 50
 
 column_types:
   - name: ATime

@@ -20,7 +20,7 @@ require (
 	github.com/alecthomas/assert v1.0.0
 	github.com/alecthomas/chroma v0.7.3
 	github.com/alecthomas/participle v0.7.1
-	github.com/alecthomas/repr v0.5.2 // indirect
+	github.com/alecthomas/repr v0.5.4 // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/clbanning/mxj v1.8.4
@@ -68,10 +68,10 @@ require (
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
 	golang.org/x/crypto v0.52.0
-	golang.org/x/mod v0.36.0
+	golang.org/x/mod v0.37.0
 	golang.org/x/net v0.55.0
 	golang.org/x/sys v0.46.0
-	golang.org/x/text v0.38.0
+	golang.org/x/text v0.40.0
 	golang.org/x/time v0.14.0
 	google.golang.org/api v0.258.0
 	google.golang.org/genproto v0.0.0-20251222181119-0a764e51fe1b // indirect
@@ -84,7 +84,7 @@ require (
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20260612024815-7947209eb310
 	www.velocidex.com/golang/go-ese v0.2.1-0.20260525143345-56639b015799
-	www.velocidex.com/golang/go-ntfs v0.2.1-0.20260331025433-9cce38e8a396
+	www.velocidex.com/golang/go-ntfs v0.2.1-0.20260722055306-c81244c6bcd5
 	www.velocidex.com/golang/go-pe v0.1.1-0.20251107001057-f93001158cd9
 	www.velocidex.com/golang/go-prefetch v0.0.0-20251027080408-85407689d0cb
 	www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959
@@ -163,7 +163,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	software.sslmate.com/src/go-pkcs12 v0.2.0
-	www.velocidex.com/golang/vtypes v0.0.0-20250802153006-821cec8fd392
+	www.velocidex.com/golang/vtypes v0.0.0-20260724151436-b268799719c1
 )
 
 require (
@@ -357,7 +357,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/arch v0.23.0 // indirect
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
-	golang.org/x/sync v0.21.0 // indirect
+	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/term v0.43.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260523011958-0a33c5d7ca68 // indirect
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.71 // indirect

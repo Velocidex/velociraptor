@@ -157,6 +157,14 @@ sources:
             value: Windows
           - key: weight
             value: "010"
+      - type: vql
+        template: |
+          /*
+          # Windows.Search.FileFinder
+          */
+
+          SELECT * FROM source()
+          LIMIT 50
 
 column_types:
   - name: Modified
