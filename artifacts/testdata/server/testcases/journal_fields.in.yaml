@@ -1,0 +1,46 @@
+Parameters:
+  RemappingTemplate: |
+    remappings:
+      - type: mount
+        from:
+          accessor: zip
+          path_type: linux
+          prefix: |
+            {
+              "DelegateAccessor": "file",
+              "DelegatePath": "%v/artifacts/testdata/files/system.journal.zip",
+              "Path": "/"
+            }
+        on:
+          accessor: "auto"
+          prefix: "/"
+          path_type: "linux"
+
+
+Queries:
+- LET _ <= remap(config=format(format=RemappingTemplate, args=srcDir),
+                 copy=["zip", "file"], clear=TRUE)
+
+- SELECT Field
+   FROM Artifact.Linux.Forensics.Journal.Fields(
+     JournalGlob='/compact.journal',
+     source='JournalFields')
+  WHERE Field
+
+- SELECT Value, Count, First, Last
+   FROM Artifact.Linux.Forensics.Journal.Fields(
+     JournalGlob='/2404.journal',
+     FieldName='_COMM',
+     source='JournalFieldValues')
+
+- SELECT Value, Count, First, Last
+   FROM Artifact.Linux.Forensics.Journal.Fields(
+     JournalGlob='/2404.journal',
+     FieldName='_BOOT_ID',
+     source='JournalFieldValues')
+
+- SELECT Field
+   FROM Artifact.Linux.Forensics.Journal.Fields(
+     JournalGlob='/system.journal',
+     source='JournalFields')
+  WHERE Field

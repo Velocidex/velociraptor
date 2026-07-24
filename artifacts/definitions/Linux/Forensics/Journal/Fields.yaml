@@ -1,0 +1,623 @@
+name: Linux.Forensics.Journal.Fields
+author: Andreas Misje – @misje
+description: |
+  Lists the fields and field values recorded in the systemd journal.
+
+  This is the enriched equivalent of `journalctl -N` and `journalctl -F
+  <field>`:
+
+  - `-N` lists the journal's indexed field names
+  - `-F <field>` lists the distinct values of one field
+
+  Rather than reading every log entry (there can be millions), the
+  artifact reads the journal's own index the way `journalctl` does, so
+  gigabytes of journals are listed fast. Note that it does not parse
+  entries, just unique occurrances. Use
+  [`Linux.Forensics.Journal`](/artifact_references/pages/linux.forensics.journal/)
+  for the whole journal. Each distinct value is read straight from the
+  index together with its entry count and the time of its first and
+  last entry (information that `journalctl -F` does not include).
+  Listing a field therefore brackets *when* each value first and last
+  appeared and *how often*, without reading a single entry.
+
+  Journal files that cannot be used (no read access, empty, corrupt, or
+  in the legacy non-compact format) are skipped. By default this only
+  emits a warning and the collection returns what it could read; set
+  `FailIfMissing` to raise those skips to errors instead, marking the
+  collection as failed so that incomplete data capture is visible.
+
+  ## Sources
+
+  - `JournalFields`: every distinct field name across the matched
+    files, like `journalctl -N`. Set `ListFields` to false to drop this
+    source.
+  - `JournalFieldValues`: every distinct value of `FieldName`, with its
+    entry count and first/last entry time, like an enriched
+    `journalctl -F <field>`. The default `FieldName` is only a
+    suggestion; set it to an empty string to drop this source.
+
+  The two are independent, and you normally do not need both. Adapt
+  the default parameter arguments to either list fields or list values
+  for a given field. Both run by default, `JournalFieldValues` with an
+  example value.
+
+  ## Useful fields
+
+  Any field whose values are short enough not to be compressed
+  (systemd compresses payloads over ~512 bytes) can be listed this
+  way. A compressed value cannot be read with a plain string read, so
+  rather than emit rubbish, the artifact reports it as NULL and
+  warns/errors (depending on `FailIfMissing`), so you can see that a
+  value was lost. Fields that are normally present and could be of
+  interest in triage:
+
+  - `_SYSTEMD_UNIT`: the service behind each entry. Listing it is a
+    per-service timeline of when a unit first and last logged and how
+    chatty it was. A unit that logged only in a narrow window, or one
+    you do not recognise, stands out immediately.
+  - `_COMM` and `_EXE`: the process name and executable path. Shows when
+    a given binary first and last logged and how many entries it
+    produced.
+  - `_PID`: the process ID. Handy for pinning activity to a process, but
+    remember that PIDs are reused.
+  - `_BOOT_ID`: one value per boot. This lists all boots recorded in
+    the current journal retention interval, the total message count
+    and approximately when the host was shut down (i.e. its uptime).
+  - `_UID` and `_AUDIT_LOGINUID`: the account, and the login account, an
+    entry belongs to. Brackets when a user was active.
+  - `_HOSTNAME`: hostname changes over the journal's life.
+  - `_KERNEL_DEVICE`: device connections and disconnections: brackets
+    when a disk or USB device was attached.
+  - `MESSAGE_ID`: systemd catalog event class (128-bit IDs for events
+    like a unit start, a session open, or a core dump). A compact way to
+    see which classes of events occurred and when.
+  - `SYSLOG_IDENTIFIER`: the program name most tools log under, often
+    more meaningful than `_COMM` for scripts and daemons.
+
+  ## Scope and limitations
+
+  Only the modern compact journal format is supported (systemd v252 and
+  later, the default since 2022). Legacy non-compact journals are skipped
+  with a warning; parse those with
+  [`Linux.Forensics.Journal`](/artifact_references/pages/linux.forensics.journal/)
+  instead.
+
+  The last entry of a value is read from the tail of the journal's
+  entry index. Its very last slot can be an uncommitted placeholder
+  (an entry that was allocated but never written, such as the
+  in-flight entry when a machine lost power), which has no timestamp
+  and reads as epoch 0. To skip such placeholders the artifact takes
+  the newest real entry among the final `TailWindow` slots. In
+  practice the placeholder run is a single slot, so the default of 64
+  is ample. If every sampled slot is a placeholder the last entry
+  cannot be read — the last entry would then precede the first, which
+  is impossible. The artifact detects that, warns (or errors, per
+  `FailIfMissing`), and leaves `Last` empty rather than report epoch 0.
+  Raise `TailWindow` if you see that warning.
+
+  ## Exported functions
+
+  The parsing is exposed as reusable helpers:
+
+  - `JournalFields(File, Accessor)`: field names in one file.
+  - `JournalFieldValues(File, FieldName, TailWindow, Accessor)`: each
+    distinct value of a field with its count and first/last time.
+  - `FieldValueTimes(File, FieldName, TailWindow, Accessor)`: the same,
+    but returning raw microsecond times (`FirstUsec`, `LastUsec`) rather
+    than formatted timestamps, for aggregating across files.
+  - `ValidJournalFiles(Glob, Accessor)`: the matched files that are
+    readable and in the compact format (warning on the rest).
+
+  Each helper also takes an optional `LogLevel` (default `WARN`), used
+  as log level when journal files cannot be parsed or if compressed
+  fields are encountered.
+
+reference:
+  - https://systemd.io/JOURNAL_FILE_FORMAT/
+
+precondition: |
+  SELECT OS
+  FROM info()
+  WHERE OS = 'linux'
+
+parameters:
+- name: JournalGlob
+  type: glob
+  description: A glob expression for finding journal files.
+  default: /{run,var}/log/journal/*/*.journal{,~}
+
+- name: FieldName
+  description: Field whose values JournalFieldValues lists (journalctl -F). An empty string disables this source.
+  default: _SYSTEMD_UNIT
+
+- name: ListFields
+  type: bool
+  description: List every field name in the journals (journalctl -N). Disable when `FieldName` is set and you only want values.
+  default: true
+
+- name: TailWindow
+  type: int
+  description: Trailing entries to scan for a value's last entry (see description).
+  default: 64
+
+- name: Accessor
+  description: The accessor to read the journal files with.
+  default: auto
+
+- name: FailIfMissing
+  type: bool
+  description: Log skipped (unreadable or non-compact) journals and compressed values as errors, failing the collection.
+  default: false
+
+export: |
+  LET JournalProfile = '''[
+  ["Header", "x=>x.header_size", [
+    ["Signature", 0, "String", {
+        "length": 8,
+    }],
+    # The journal format spec requires a reader to refuse a file whose
+    # incompatible_flags carries a flag it does not understand. We keep
+    # the flag field as context for the error message:
+    ["Incompatible", 12, "uint32"],
+    # Bit 4 = COMPACT: we only parse the compact layout:
+    ["IsCompact", 12, "BitField", {
+        "type": "uint32",
+        "start_bit": 4,
+        "end_bit": 5,
+    }],
+    # Bits 5-31: any of these set means an incompatible flag from a newer
+    # systemd we cannot know about. We will fail if this value is populated:
+    ["UnknownIncompatible", 12, "BitField", {
+        "type": "uint32",
+        "start_bit": 5,
+        "end_bit": 32,
+    }],
+    ["header_size", 88, "uint64"],
+    ["field_hash_table_offset", 120, "uint64"],
+    ["field_hash_table_size", 128, "uint64"],
+    # The field hash table is an array of (head, tail) offset pairs.
+    ["Buckets", "x=>x.field_hash_table_offset", "Array", {
+        "type": "HashItem",
+        "count": "x=>x.field_hash_table_size / 16",
+        "max_count": 10000000
+    }]
+  ]],
+
+  ["HashItem", 16, [
+    ["head", 0, "uint64"]
+  ]],
+
+  # A FieldObject names one journal field (e.g. _BOOT_ID). next_hash
+  # links fields that share a hash bucket. head_data points at the
+  # first DataObject that holds a value for this field.
+  ["FieldObject", "x=>x.size", [
+    ["size", 8, "uint64"],
+    ["next_hash", 24, "uint64"],
+    ["head_data", 32, "uint64"],
+    # See later comment about length guarding:
+    ["Name", 40, "String", {
+        "length": "x=>if(condition=x.size > 40 AND x.size < 1048576, then=x.size - 40, else=0)",
+    }]
+  ]],
+
+  # A DataObject holds one distinct field value (e.g. one boot ID).
+  # next_field links the distinct values of the same field. entry_offset
+  # points at the first entry that references this value, and n_entries
+  # counts them all. In a compact journal, tail_ea_off and tail_ea_n give
+  # the last entry array and how many of its slots are used.
+  ["DataObject", "x=>x.size", [
+    # We need to know whether a payload is compressed or not, since
+    # we do not support reading compressed strings:
+    ["IsCompressed", 1, "BitField", {
+        "type": "uint8",
+        "start_bit": 0,
+        "end_bit": 3,
+    }],
+    ["size", 8, "uint64"],
+    ["next_field", 32, "uint64"],
+    ["entry_offset", 40, "uint64"],
+    ["n_entries", 56, "uint64"],
+    ["tail_ea_off", 64, "uint32"],
+    ["tail_ea_n", 68, "uint32"],
+    # Guard the length: a nonsensical/short size (< 72) would
+    # otherwise make parse_binary compute a negative String length and
+    # cause a panic (#4916), and an absurd size would try a huge
+    # allocation. Real data objects are always larger than the 72-byte
+    # fixed header.
+    ["Payload", 72, "String", {
+        "length": "x=>if(condition=x.size > 72 AND x.size < 1048576, then=x.size - 72, else=0)",
+    }]
+  ]],
+
+  # We only need the entry's realtime clock (microseconds):
+  ["Entry", 40, [
+    ["realtime", 24, "uint64"]
+  ]],
+
+  # A slice of an entry array's items. In a compact journal each item
+  # is a 32-bit absolute offset to an entry. The items start at object
+  # offset 24, right after next_entry_array_offset. ItemCount is passed
+  # in from the calling scope.
+  ["Items", 0, [
+    ["v", 0, "Array", {
+        "type": "uint32",
+        "count": "x=>ItemCount",
+        "max_count": 100000,
+    }]
+  ]]
+  ]'''
+
+  LET Header(File, Accessor) = parse_binary(
+      filename=File,
+      accessor=Accessor,
+      profile=JournalProfile,
+      struct="Header")
+
+  LET FieldAt(File, Accessor, Offset) = parse_binary(
+      filename=File,
+      accessor=Accessor,
+      profile=JournalProfile,
+      struct="FieldObject",
+      offset=Offset)
+
+  LET DataAt(File, Accessor, Offset) = parse_binary(
+      filename=File,
+      accessor=Accessor,
+      profile=JournalProfile,
+      struct="DataObject",
+      offset=Offset)
+
+  LET Realtime(File, Accessor, Offset) = parse_binary(
+      filename=File,
+      accessor=Accessor,
+      profile=JournalProfile,
+      struct="Entry",
+      offset=Offset).realtime
+
+  // Follow a field's hash-bucket chain to its end (the fields sharing a
+  // bucket, linked by next_hash). The recursion stops when next_hash is 0.
+  LET WalkFields(File, Accessor, Offset) = SELECT *
+    FROM chain(
+      here={
+      SELECT FieldAt(File=File, Accessor=Accessor, Offset=Offset) AS Field
+      FROM scope()
+      WHERE Offset
+    },
+      rest={
+      SELECT *
+      FROM if(
+        condition=FieldAt(File=File, Accessor=Accessor, Offset=Offset).next_hash,
+        then=WalkFields(
+          File=File,
+          Accessor=Accessor,
+          Offset=FieldAt(
+            File=File,
+            Accessor=Accessor,
+            Offset=Offset).next_hash))
+    })
+
+  // Every field object in a file. We scan all bucket chains rather than
+  // hashing a field name: the hash is keyed per file and expensive to
+  // reproduce, and we usually want every field anyway:
+  LET AllFieldObjects(File, Accessor) = SELECT Field
+    FROM foreach(row={
+      SELECT head
+      FROM foreach(row=Header(File=File, Accessor=Accessor).Buckets)
+      WHERE head
+    },
+                 query={
+      SELECT *
+      FROM WalkFields(File=File, Accessor=Accessor, Offset=head)
+    })
+
+  // The field names present in a journal file (journalctl -N).
+  LET JournalFields(File, Accessor) = SELECT Field.Name AS Field
+    FROM AllFieldObjects(File=File, Accessor=Accessor)
+    ORDER BY Field
+
+  // The head_data offset of a named field's value chain, or NULL.
+  LET _FieldHead(File, Accessor, FieldName) = SELECT Field.head_data AS HeadData
+    FROM AllFieldObjects(File=File, Accessor=Accessor)
+    WHERE Field.Name = FieldName
+
+  // A field's data chain is a singly-linked list (next_field) whose
+  // length is the field's distinct-value count. Walking it with one
+  // recursive call per node will sometimes fail (for high-cardinality
+  // fields like _KERNEL_DEVICE), since VQL has a fixed scope limit of
+  // 1000. Instead we walk it in fixed-size segments:
+  LET Hop(File, Accessor, Offset, Count) = if(condition=
+                                                Offset
+                                               AND Count > 0,
+                                              then=Hop(
+                                                File=
+                                                  File,
+                                                Accessor=
+                                                  Accessor,
+                                                Offset=
+                                                  DataAt(
+                                                    File=
+                                                      File,
+                                                    Accessor=
+                                                      Accessor,
+                                                    Offset=
+                                                      Offset).next_field,
+                                                Count=
+                                                  Count - 1),
+                                              else=Offset)
+
+  // The head offset of each successive ChunkSize-long segment of the
+  // chain. Recurses once per segment, not per node.
+  LET _ChunkStarts(File, Accessor, Offset, ChunkSize) = SELECT *
+    FROM chain(here={
+      SELECT Offset AS Start
+      FROM scope()
+      WHERE Offset
+    },
+               rest={
+      SELECT *
+      FROM if(condition=Hop(File=File,
+                            Accessor=Accessor,
+                            Offset=Offset,
+                            Count=ChunkSize),
+              then=_ChunkStarts(File=File,
+                                Accessor=Accessor,
+                                Offset=Hop(File=File,
+                                           Accessor=Accessor,
+                                           Offset=Offset,
+                                           Count=ChunkSize),
+                                ChunkSize=ChunkSize))
+    })
+
+  // Walk up to Remaining nodes of the chain from Offset (one segment).
+  LET _WalkChunk(File, Accessor, Offset, Remaining) = SELECT *
+    FROM chain(here={
+      SELECT DataAt(File=File, Accessor=Accessor, Offset=Offset) AS Data
+      FROM scope()
+      WHERE Offset
+       AND Remaining > 0
+    },
+               rest={
+      SELECT *
+      FROM if(
+        condition=Remaining > 1
+         AND DataAt(File=File, Accessor=Accessor, Offset=Offset).next_field,
+        then=_WalkChunk(File=File,
+                        Accessor=Accessor,
+                        Offset=DataAt(File=File,
+                                      Accessor=Accessor,
+                                      Offset=Offset).next_field,
+                        Remaining=Remaining - 1))
+    })
+
+  // Follow the whole data chain, one distinct value per row, without
+  // deep recursion: iterate the segment heads and walk each segment.
+  LET WalkData(File, Accessor, Offset, ChunkSize=200) = SELECT Data
+    FROM foreach(row=_ChunkStarts(File=File,
+                                  Accessor=Accessor,
+                                  Offset=Offset,
+                                  ChunkSize=ChunkSize),
+                 query={
+      SELECT *
+      FROM _WalkChunk(File=File,
+                      Accessor=Accessor,
+                      Offset=Start,
+                      Remaining=ChunkSize)
+    })
+
+  // One row per distinct value of a field in a file. Value is the field
+  // payload with its "KEY=" prefix stripped. A compressed payload cannot
+  // be read this way, so we warn (at LogLevel) and report NULL rather
+  // than rubbish; its Count and times stay valid (they live in the
+  // object structure, which is not compressed). Count is the entry count
+  // straight from the index. TailOffset/ItemCount/WindowStart bound the
+  // slice of the tail entry array we scan to find the last entry. A data
+  // object with no entries (entry_offset 0) is a stale index artifact,
+  // so drop it.
+  LET _FieldValueDataObjects(File, Accessor, FieldName, TailWindow,
+  LogLevel='WARN') = SELECT
+      if(
+        condition=Data.IsCompressed,
+        then=if(
+          condition=log(
+            level=LogLevel,
+            message='%v: value of field %v is compressed (systemd compresses payloads over ~512 bytes) and was not decoded',
+            args=[File, FieldName],
+            dedup=-1),
+          then=NULL),
+        else=regex_replace(
+          source=Data.Payload,
+          re='''^[^=]+=''',
+          replace='')) AS Value,
+      Data.n_entries AS Count,
+      Realtime(
+        File=File,
+        Accessor=Accessor,
+        Offset=Data.entry_offset) AS FirstUsec,
+      Data.tail_ea_off AS TailOffset,
+      if(
+        condition=Data.tail_ea_n > TailWindow,
+        then=TailWindow,
+        else=Data.tail_ea_n) AS ItemCount,
+      if(
+        condition=Data.tail_ea_n > TailWindow,
+        then=Data.tail_ea_n - TailWindow,
+        else=0) AS WindowStart
+    FROM foreach(
+      row=_FieldHead(
+        File=File,
+        Accessor=Accessor,
+        FieldName=FieldName),
+      query={
+      SELECT
+      *
+      FROM WalkData(
+        File=File,
+        Accessor=Accessor,
+        Offset=HeadData)
+    })
+    WHERE Data.entry_offset
+
+  // One row per distinct field value in a file, with the entry count and
+  // the first and last entry times (microseconds). The last entry is the
+  // newest realtime in the tail window; that window's final slot is
+  // occasionally an uncommitted placeholder that reads as 0, so we take
+  // the newest real entry rather than the literal last slot. A value with
+  // no tail array (a single-entry value, so ItemCount is 0) has no window
+  // to scan, so we seed its first entry as the last — otherwise the
+  // GROUP BY over an empty tail would drop the value entirely.
+  LET FieldValueTimes(File, FieldName, TailWindow=64,
+  Accessor='auto', LogLevel='WARN') = SELECT *
+    FROM foreach(
+      row=_FieldValueDataObjects(File=File,
+                                 Accessor=Accessor,
+                                 FieldName=FieldName,
+                                 TailWindow=TailWindow,
+                                 LogLevel=LogLevel),
+      query={
+      SELECT Value,
+             Count,
+             FirstUsec,
+             max(item=RealtimeUsec) AS LastUsec
+      FROM chain(seed={
+      SELECT Value,
+             Count,
+             FirstUsec,
+             FirstUsec AS RealtimeUsec
+      FROM scope()
+      WHERE NOT ItemCount
+    },
+                 tail={
+      SELECT
+      Value,
+      Count,
+      FirstUsec,
+      Realtime(File=File, Accessor=Accessor, Offset=_value) AS RealtimeUsec
+      FROM foreach(row=parse_binary(
+                     filename=File,
+                     accessor=Accessor,
+                     profile=JournalProfile,
+                     struct="Items",
+                     offset=TailOffset + 24 + 4 * WindowStart).v)
+    })
+      GROUP BY Value
+    })
+
+  // journalctl -F <field>, enriched: every distinct value of a field with
+  // its entry count and first/last entry times:
+  LET JournalFieldValues(File, FieldName, TailWindow=64,
+  Accessor='auto', LogLevel='WARN') = SELECT
+      Value,
+      Count,
+      timestamp(epoch=FirstUsec) AS First,
+      timestamp(epoch=LastUsec) AS Last
+    FROM FieldValueTimes(File=File,
+                         FieldName=FieldName,
+                         TailWindow=TailWindow,
+                         Accessor=Accessor,
+                         LogLevel=LogLevel)
+
+  LET ValidJournalFiles(Glob, Accessor='auto', LogLevel='WARN') = SELECT OSPath
+    FROM foreach(row={
+      SELECT OSPath,
+             Size,
+             Header(File=OSPath, Accessor=Accessor) AS H
+      FROM glob(globs=Glob, accessor=Accessor)
+    })
+    WHERE (H.Signature = 'LPKSHHRH' OR NOT log(
+        level=LogLevel,
+        message='Skipping %v (%v bytes): could not read journal header (no read access, empty, or corrupt file)',
+        args=[OSPath, Size],
+        dedup=-1))
+     AND (NOT H.UnknownIncompatible OR NOT log(
+             level=LogLevel,
+             message='Skipping %v: journal header incompatible_flags (%v) sets bits this artifact does not understand',
+             args=[OSPath, H.Incompatible],
+             dedup=-1))
+     AND (H.IsCompact OR NOT log(
+             level=LogLevel,
+             message='Skipping non-compact journal %v (only compact journals are supported)',
+             args=OSPath,
+             dedup=-1))
+
+sources:
+- name: JournalFields
+  description: Distinct field names across the matched journals (journalctl -N).
+  query: |
+    LET LogLevel <= if(condition=FailIfMissing, then='ERROR', else='WARN')
+
+    // ListFields false drops this source: there is nothing to iterate,
+    // so the files are never opened.
+    //
+    // NOTE: workers=1 (serial) is deliberate. Files are independent and
+    // would parallelise well, but parallel workers here trip a
+    // recursion-under-foreach race (velociraptor issue #4918) that
+    // silently drops values. Raise to 10 once that is resolved.
+    SELECT Field
+    FROM foreach(
+      row=if(condition=ListFields,
+             then=ValidJournalFiles(Glob=JournalGlob,
+                                    Accessor=Accessor,
+                                    LogLevel=LogLevel)),
+      query={
+        SELECT *
+        FROM JournalFields(File=OSPath, Accessor=Accessor)
+      },
+      workers=1)
+    GROUP BY Field
+             ORDER BY Field
+
+- name: JournalFieldValues
+  description: Distinct values of FieldName with count and first/last time (journalctl -F).
+  query: |
+    LET LogLevel <= if(condition=FailIfMissing, then='ERROR', else='WARN')
+
+    // An empty FieldName drops this source: with no field to list there
+    // is nothing to iterate, so the files are never opened.
+    //
+    // NOTE: workers=1 (serial) is deliberate — parallel workers trip a
+    // recursion-under-foreach race (velociraptor issue #4918) that
+    // silently drops values. Raise to 10 once that is resolved.
+    LET PerFile = SELECT *
+      FROM foreach(
+        row=if(condition=FieldName,
+               then=ValidJournalFiles(Glob=JournalGlob,
+                                      Accessor=Accessor,
+                                      LogLevel=LogLevel)),
+        query={
+        SELECT *
+        FROM JournalFieldValues(File=OSPath,
+                                FieldName=FieldName,
+                                TailWindow=TailWindow,
+                                Accessor=Accessor,
+                                LogLevel=LogLevel)
+      },
+        workers=1)
+
+    LET Summary = SELECT Value,
+                         sum(item=Count) AS Count,
+                         min(item=First) AS _First,
+                         max(item=Last) AS _Last
+      FROM PerFile
+      GROUP BY Value
+
+    // A value's last entry can never precede its first. If it does, every
+    // sampled tail slot was a placeholder and the last entry could not be
+    // read (a truncated/corrupt journal, or a TailWindow smaller than the
+    // run of trailing placeholders). Warn at LogLevel and leave Last empty
+    // rather than report epoch 0; raising TailWindow fixes it.
+    SELECT
+        Value,
+        Count,
+        _First AS First,
+        if(
+          condition=_Last >= _First,
+          then=_Last,
+          else=if(
+            condition=log(
+              level=LogLevel,
+              message='Field %v value %v: last entry unreadable in the final %v tail slots — raise TailWindow.',
+              args=[FieldName, Value, TailWindow],
+              dedup=-1),
+            then=NULL)) AS Last
+    FROM Summary
+    ORDER BY Value
