@@ -220,8 +220,11 @@ func writeJsonObject(
 		}
 	}
 
-	if len(buf) == 0 {
-		buf = append(buf, '{', '}')
+	// Only the opening brace was written (no object keys and no extra
+	// keys), so close it as an empty object rather than clobbering the
+	// opening brace.
+	if len(buf) == 1 {
+		buf = append(buf, '}', '\n')
 		return buf
 	}
 
