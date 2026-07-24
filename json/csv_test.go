@@ -2,6 +2,7 @@ package json_test
 
 import (
 	"bytes"
+	stdjson "encoding/json"
 	"fmt"
 	"testing"
 
@@ -17,6 +18,24 @@ import (
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
+
+// An empty object with a non-nil (but empty) extra_data Dict used to
+// serialize to a bare "}" which is not valid JSON. It should round
+// trip as "{}".
+func TestConvertJSONLEmptyObject(t *testing.T) {
+	json_in := make(chan []byte, 1)
+	json_in <- []byte("{}\n")
+	close(json_in)
+
+	out := &bytes.Buffer{}
+	json.ConvertJSONL(json_in, out, nil, ordereddict.NewDict())
+
+	assert.Equal(t, "{}\n", out.String())
+
+	var decoded map[string]interface{}
+	err := stdjson.Unmarshal(bytes.TrimSpace(out.Bytes()), &decoded)
+	assert.NoError(t, err)
+}
 
 type CSVUtilsTestSuite struct {
 	test_utils.TestSuite
