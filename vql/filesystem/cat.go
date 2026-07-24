@@ -78,7 +78,9 @@ func (self CatPlugin) Call(
 
 		if arg.Timeout > 0 {
 			go func() {
-				utils.SleepWithCtx(ctx, time.Second*time.Duration(arg.Timeout))
+				_ = utils.SleepWithCtx(
+					ctx, time.Second*time.Duration(arg.Timeout))
+
 				fd.Close()
 			}()
 		}

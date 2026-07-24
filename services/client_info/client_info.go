@@ -219,7 +219,9 @@ func (self *ClientInfoManager) Start(
 
 				case <-time.After(utils.Jitter(write_time)):
 					if utils.GetTime().Now().Sub(last_run) < 10*time.Second {
-						utils.SleepWithCtx(ctx, time.Minute)
+						if !utils.SleepWithCtx(ctx, time.Minute) {
+							return
+						}
 						continue
 					}
 

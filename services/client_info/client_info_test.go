@@ -73,10 +73,20 @@ sources:
 		ClientId: self.client_id,
 		Hostname: "Hostname",
 	}
-	err = db.SetSubject(self.ConfigObj, client_path_manager.Path(), client_info)
+	err = db.SetSubject(self.ConfigObj,
+		client_path_manager.Path(), client_info)
 	assert.NoError(self.T(), err)
 
 	self.TestSuite.SetupTest()
+
+	// Wait until the client is loaded.
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		_, err := client_info_manager.Get(self.Ctx, self.client_id)
+		return err == nil
+	})
 }
 
 func (self *ClientInfoTestSuite) TestClientInfoModify() {
