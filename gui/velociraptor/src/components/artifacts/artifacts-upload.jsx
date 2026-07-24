@@ -35,6 +35,7 @@ export default class ArtifactsUpload extends React.Component {
         // after upload the server will cache the file here.
         vfs_path: [],
         errors: [],
+        imported: [],
     }
 
     componentDidMount() {
@@ -110,7 +111,8 @@ export default class ArtifactsUpload extends React.Component {
 
                      this.setState({loading:false,
                                     vfs_path: response.data.vfs_path,
-                                    uploaded: uploaded});
+                                    uploaded: uploaded,
+                                    errors: response.data.errors || []});
                  }).catch(err=>{
                      this.setState({loading: false});
                  });
@@ -129,6 +131,14 @@ export default class ArtifactsUpload extends React.Component {
                  this.source.token).then(response => {
                      if (response.data.cancel) {
                          return ;
+                     }
+                     let errors = response.data.errors || [];
+                     let imported = response.data.successful_artifacts || [];
+                     if (errors.length > 0) {
+                         this.setState({loading: false,
+                                        errors: errors,
+                                        imported: imported});
+                         return;
                      }
                      this.props.onClose();
                  }).catch(response=>{
@@ -240,6 +250,11 @@ export default class ArtifactsUpload extends React.Component {
                         no_toolbar={true}
                       />
                     </Form> }
+
+                  { this.state.imported.length > 0 &&
+                    <Alert variant="success">
+                      {T("Successfully imported")} {this.state.imported.length}
+                    </Alert> }
 
                   { this.state.errors.length > 0 &&
                     <Container className="artifact-import-errors">
