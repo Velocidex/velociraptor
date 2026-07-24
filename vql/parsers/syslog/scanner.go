@@ -215,7 +215,10 @@ func (self *fileManager) Start() {
 				}
 			}
 			self.AddFiles(files, DUMP_FILES)
-			utils.SleepWithCtx(self.ctx, sleep_time)
+
+			if !utils.SleepWithCtx(self.ctx, sleep_time) {
+				return
+			}
 		}
 	}()
 }

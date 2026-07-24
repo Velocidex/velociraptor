@@ -103,7 +103,10 @@ func (self DelayPlugin) Call(ctx context.Context,
 
 					if row_container.due.After(now) {
 						// Wait until it is time.
-						utils.SleepWithCtx(sub_ctx, row_container.due.Sub(now))
+						if !utils.SleepWithCtx(
+							sub_ctx, row_container.due.Sub(now)) {
+							return
+						}
 					}
 
 					select {
