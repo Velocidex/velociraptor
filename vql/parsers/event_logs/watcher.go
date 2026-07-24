@@ -140,7 +140,9 @@ func (self *EventLogWatcherService) StartMonitoring(
 		eventLogWatchTracker.SetNextScan(
 			filename, accessor_name, utils.GetTime().Now().Add(duration))
 
-		utils.SleepWithCtx(ctx, duration)
+		if !utils.SleepWithCtx(ctx, duration) {
+			return
+		}
 	}
 }
 

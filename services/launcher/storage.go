@@ -284,7 +284,9 @@ func (self *FlowStorageManager) houseKeeping(
 			// tests where the time is mocked for the After(delay)
 			// above does not work.
 			if utils.GetTime().Now().Sub(last_try) < time.Second*10 {
-				utils.SleepWithCtx(ctx, time.Minute)
+				if !utils.SleepWithCtx(ctx, time.Minute) {
+					return
+				}
 				continue
 			}
 

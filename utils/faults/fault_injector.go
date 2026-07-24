@@ -27,7 +27,7 @@ func (self *FaultInjectorService) BlockHTTPDo(ctx context.Context) {
 	if self.blockHTTPDo == 0 {
 		return
 	}
-	utils.SleepWithCtx(ctx, self.blockHTTPDo)
+	_ = utils.SleepWithCtx(ctx, self.blockHTTPDo)
 }
 
 // Force all times to step forward by the specified amount.
