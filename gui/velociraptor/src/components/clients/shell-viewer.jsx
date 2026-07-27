@@ -534,6 +534,13 @@ class _VeloShellCell extends Component {
         return res;
     };
 
+    copyCommand = (e, command)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({command: command});
+        return false;
+    }
+
     render() {
         let commands = this.getAllRequests();
         let buttons = this.renderButtons();
@@ -641,6 +648,14 @@ class _VeloShellCell extends Component {
                              <Accordion.Header>
                                <Row lg="12">
                                  <div className="shell-timestamp-user">
+                                   <ToolTip tooltip={T("Repeat Command")}>
+                                     <a role="button"
+                                        className="btn btn-default repeat-button"
+                                        onClick={e=>this.copyCommand(e, command)}
+                                        variant="outline-info">
+                                       <FontAwesomeIcon icon="repeat"/>
+                                     </a>
+                                   </ToolTip>
                                    <VeloTimestamp
                                      className="float-right"
                                      usec={timestamp} /> ( {creator} ) { T("Pending") }
@@ -659,6 +674,14 @@ class _VeloShellCell extends Component {
                           <Accordion.Header>
                             <Row lg="12">
                               <div className="shell-timestamp-user">
+                                <ToolTip tooltip={T("Repeat Command")}>
+                                  <a role="button"
+                                     onClick={e=>this.copyCommand(e, command)}
+                                     className="btn btn-default repeat-button"
+                                     variant="default">
+                                    <FontAwesomeIcon icon="repeat"/>
+                                  </a>
+                                </ToolTip>
                                 <VeloTimestamp
                                   className="float-right"
                                   usec={timestamp} /> ( {creator} )
@@ -838,6 +861,15 @@ class VeloVQLCell extends _VeloShellCell {
                                       eventKey={index} >
                                       <Accordion.Header>
                                         <Row lg="12">
+                                          <ToolTip tooltip={T("Repeat Command")}>
+                                            <a role="button"
+                                               className="btn btn-default repeat-button"
+                                               onClick={e=>this.copyCommand(
+                                                   e, command)}
+                                               variant="default">
+                                              <FontAwesomeIcon icon="repeat"/>
+                                            </a>
+                                          </ToolTip>
                                           <VeloTimestamp
                                             className="float-right"
                                             usec={item.Timestamp} />
