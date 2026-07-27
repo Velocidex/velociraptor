@@ -51,6 +51,12 @@ func (self *AzureUploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = vql_subsystem.CheckAccess(scope, acls.NETWORK)
+	if err != nil {
+		scope.Log("upload_azure: %v", err)
+		return vfilter.Null{}
+	}
+
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("upload_azure: %v", err)
@@ -143,10 +149,11 @@ func upload_azure(
 func (self AzureUploadFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "upload_azure",
-		Doc:      "Upload files to Azure Blob Storage Service.",
-		ArgType:  type_map.AddType(scope, &AzureUploadArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Name:    "upload_azure",
+		Doc:     "Upload files to Azure Blob Storage Service.",
+		ArgType: type_map.AddType(scope, &AzureUploadArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(
+			acls.FILESYSTEM_READ, acls.NETWORK).Build(),
 	}
 }
 

@@ -103,6 +103,12 @@ func (self *SMBUploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = vql_subsystem.CheckAccess(scope, acls.NETWORK)
+	if err != nil {
+		scope.Log("upload_smb: %s", err)
+		return vfilter.Null{}
+	}
+
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("upload_smb: %v", err)
@@ -212,10 +218,11 @@ func (self *SMBUploadFunction) upload_smb(ctx context.Context, scope vfilter.Sco
 func (self SMBUploadFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "upload_smb",
-		Doc:      "Upload files using the SMB file share protocol.",
-		ArgType:  type_map.AddType(scope, &SMBUploadArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Name:    "upload_smb",
+		Doc:     "Upload files using the SMB file share protocol.",
+		ArgType: type_map.AddType(scope, &SMBUploadArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(
+			acls.FILESYSTEM_READ, acls.NETWORK).Build(),
 	}
 }
 
