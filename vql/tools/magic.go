@@ -79,6 +79,12 @@ func (self MagicFunction) Call(
 
 		// Do we need to load additional magic tests?
 		if arg.Magic != "" {
+			err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+			if err != nil {
+				scope.Log("magic: %s", err)
+				return vfilter.Null{}
+			}
+
 			handle.LoadBuffer(arg.Magic)
 			errors := handle.GetError()
 			if errors != "" {
