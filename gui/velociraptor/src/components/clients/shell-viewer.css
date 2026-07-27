@@ -221,3 +221,9 @@ div.dt-buttons {
     background-color: var(--color-accent-25);
     color: var(--color-warning-color);
 }
+
+.repeat-button {
+    margin-top: -7px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
