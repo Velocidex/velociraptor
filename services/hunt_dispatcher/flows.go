@@ -54,23 +54,24 @@ func syncFlowTables(
 	}
 	defer rs_reader.Close()
 
-	enriched_reader, err := result_sets.NewResultSetReaderWithOptions(
-		ctx, config_obj, file_store_factory,
-		hunt_path_manager.EnrichedClients(), options)
-	if err == nil {
-		enriched_reader.Close()
+	if !force {
+		enriched_reader, err := result_sets.NewResultSetReaderWithOptions(
+			ctx, config_obj, file_store_factory,
+			hunt_path_manager.EnrichedClients(), options)
+		if err == nil {
+			enriched_reader.Close()
 
-		// Skip refreshing the enriched table if it is newer than 10 min
-		// old - this helps to reduce unnecessary updates.
-		if !force &&
-			now.Sub(enriched_reader.MTime()) < HuntDispatcherRefresh(config_obj) {
+			// Skip refreshing the enriched table if it is newer than 10 min
+			// old - this helps to reduce unnecessary updates.
+			if now.Sub(enriched_reader.MTime()) < HuntDispatcherRefresh(config_obj) {
 
-			refresh_stats.Lock()
-			refresh_stats.TotalHuntsSkipped++
-			refresh_stats.Unlock()
+				refresh_stats.Lock()
+				refresh_stats.TotalHuntsSkipped++
+				refresh_stats.Unlock()
 
-			return nil, utils.Wrap(utils.CancelledError,
-				"Hunt reindex cancelled because it is still fresh")
+				return nil, utils.Wrap(utils.CancelledError,
+					"Hunt reindex cancelled because it is still fresh")
+			}
 		}
 	}
 

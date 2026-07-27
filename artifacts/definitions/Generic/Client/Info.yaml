@@ -161,7 +161,7 @@ reports:
                    query={
           SELECT artifact_name, Env
           FROM GetSources(X=sources)
-          WHERE OS =~ ( Env.os_filter || "." )
+          WHERE Env.text AND OS =~ ( Env.os_filter || "." )
         })
       ORDER BY Weight
 
