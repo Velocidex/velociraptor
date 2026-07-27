@@ -82,6 +82,12 @@ func (self *SMBFileSystemAccessor) LstatWithOSPath(
 
 func (self *SMBFileSystemAccessor) getSession(full_path *accessors.OSPath) (
 	*smb2.Session, func(), error) {
+
+	err := vql_subsystem.CheckAccess(self.scope, acls.NETWORK)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	if len(full_path.Components) == 0 {
 		return nil, nil, errors.New("First path component for smb accessor must be a server name or IP")
 	}

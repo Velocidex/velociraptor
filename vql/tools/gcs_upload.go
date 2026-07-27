@@ -61,6 +61,12 @@ func (self *GCSUploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err := vql_subsystem.CheckAccess(scope, acls.NETWORK)
+	if err != nil {
+		scope.Log("upload_gcs: %s", err)
+		return vfilter.Null{}
+	}
+
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("ERROR:upload_gcs: %v", err)
@@ -209,10 +215,11 @@ func upload_gcs(
 func (self GCSUploadFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "upload_gcs",
-		Doc:      "Upload files to GCS.",
-		ArgType:  type_map.AddType(scope, &GCSUploadArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Name:    "upload_gcs",
+		Doc:     "Upload files to GCS.",
+		ArgType: type_map.AddType(scope, &GCSUploadArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(
+			acls.FILESYSTEM_READ, acls.NETWORK).Build(),
 	}
 }
 

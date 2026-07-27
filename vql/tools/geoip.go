@@ -6,7 +6,9 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/oschwald/maxminddb-golang"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -35,6 +37,12 @@ func (self GeoIPFunction) Call(
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("geoip: %v", err)
+		return vfilter.Null{}
+	}
+
+	err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+	if err != nil {
+		scope.Log("geoip: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -95,6 +103,8 @@ func (self GeoIPFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Name:    "geoip",
 		Doc:     "Lookup an IP Address using the MaxMind GeoIP database.",
 		ArgType: type_map.AddType(scope, &GeoIPFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(
+			acls.FILESYSTEM_READ).Build(),
 		Version: 1,
 	}
 }
