@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -67,7 +68,12 @@ func (self InventoryPathManager) Path() (api.FSPathSpec, api.FileStore, error) {
 func NewInventoryPathManager(config_obj *config_proto.Config,
 	tool *artifacts_proto.Tool) *InventoryPathManager {
 	if tool.FilestorePath == "" {
-		tool.FilestorePath = ObfuscateName(config_obj, tool.Name)
+		if tool.Version == "" {
+			tool.FilestorePath = ObfuscateName(config_obj, tool.Name)
+		} else {
+			tool.FilestorePath = ObfuscateName(config_obj,
+				fmt.Sprintf("%s:%s", tool.Name, tool.Version))
+		}
 	}
 
 	return &InventoryPathManager{
