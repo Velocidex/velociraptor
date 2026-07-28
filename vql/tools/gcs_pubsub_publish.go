@@ -43,7 +43,7 @@ func (self *GCSPubsubPublishFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	err := vql_subsystem.CheckAccess(scope, acls.NETWORK)
+	err = vql_subsystem.CheckAccess(scope, acls.NETWORK)
 	if err != nil {
 		scope.Log("gcs_pubsub_publish: %v", err)
 		return vfilter.Null{}

@@ -116,15 +116,21 @@ func (self *WindowsVSSFileSystemAccessor) getVSSRoots(
 func (self *WindowsVSSFileSystemAccessor) ReadDirWithOSPath(
 	fullpath *accessors.OSPath) (res []accessors.FileInfo, err error) {
 
-	root_list, err := self.WindowsNTFSFileSystemAccessor.ReadDirWithOSPath(fullpath)
+	root_list, err := self.WindowsNTFSFileSystemAccessor.
+		ReadDirWithOSPath(fullpath)
 	if err != nil {
-		return nil, err
+		// We do not have any files in the top level drive but maybe
+		// there are files in the vss.
 	}
 
+	// The top level path represents all the drives. Return on the
+	// real drives (like \\.\C: )
 	if len(fullpath.Components) == 0 {
 		return root_list, nil
 	}
 
+	// Create a lookup list by mft id for all the files we found in
+	// the live device.
 	by_mft_id := make(map[string][]accessors.FileInfo)
 	for _, i := range root_list {
 		mft_id, pres := i.Data().GetString("mft")
@@ -138,9 +144,16 @@ func (self *WindowsVSSFileSystemAccessor) ReadDirWithOSPath(
 		}
 	}
 
-	// Now list each of the VSS and merge with the by_mft_id list.
+	// Now list each of the VSS and merge with the by_mft_id list only
+	// if the vss files do not exist in the live device.
+
+	// Take the relative path to the root device:
+	// [\\.\C: Windows System32] -> [Windows System32]
 	relative_path := fullpath.Components[1:]
 	for _, root := range self.vss_roots {
+
+		// root here is the device node for the vss device. Append the
+		// relative path to find the full path in the VSS device.
 		path := root.Append(relative_path...)
 
 		files, err := self.WindowsNTFSFileSystemAccessor.ReadDirWithOSPath(path)
@@ -150,10 +163,12 @@ func (self *WindowsVSSFileSystemAccessor) ReadDirWithOSPath(
 		}
 
 		for _, i := range files {
+			// Get the mft id and see if it is already in the known
+			// list. If it is not then we add it from the VSS.
 			mft_id, pres := i.Data().GetString("mft")
 			if pres {
-				existing, _ := by_mft_id[mft_id]
-				if !self.file_found(existing, i) {
+				existing, pres := by_mft_id[mft_id]
+				if !pres || !self.file_found(existing, i) {
 					existing = append(existing, VSSFileInfo{
 						FileInfo: i,
 						device:   root.Components[0],
@@ -166,12 +181,10 @@ func (self *WindowsVSSFileSystemAccessor) ReadDirWithOSPath(
 
 	result := make([]accessors.FileInfo, 0, len(by_mft_id))
 	for _, v := range by_mft_id {
-		for _, item := range v {
-			result = append(result, item)
-		}
+		result = append(result, v...)
 	}
 
-	return result, err
+	return result, nil
 }
 
 // Search for the file needle in the file haystack
