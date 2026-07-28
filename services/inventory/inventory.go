@@ -536,7 +536,8 @@ func (self *InventoryService) AddTool(
 	if tool.Version == "" {
 		tool.FilestorePath = paths.ObfuscateName(config_obj, tool.Name)
 	} else {
-		tool.FilestorePath = paths.ObfuscateName(config_obj, fmt.Sprintf("%s:%s", tool.Name, tool.Version))
+		tool.FilestorePath = paths.ObfuscateName(config_obj,
+			fmt.Sprintf("%s:%s", tool.Name, tool.Version))
 	}
 
 	// No client config so we don't know any server urls - therefore we

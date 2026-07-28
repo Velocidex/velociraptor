@@ -318,6 +318,10 @@ func writeContentToFile(
 	}
 
 	filename := AsDatastoreFilename(db, config_obj, urn)
+	err := checkPath(filename)
+	if err != nil {
+		return err
+	}
 
 	// Truncate the file immediately so we don't need to make a second
 	// syscall. Empirically on Linux, a truncate call always works,
@@ -362,7 +366,13 @@ func readContentFromFile(
 		return nil, datastoreNotConfiguredError
 	}
 
-	file, err := os.Open(AsDatastoreFilename(db, config_obj, urn))
+	filename := AsDatastoreFilename(db, config_obj, urn)
+	err := checkPath(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := os.Open(filename)
 	if err == nil {
 		defer file.Close()
 
@@ -450,4 +460,14 @@ func (self *FileBaseDataStore) SetBuffer(
 		completion()
 	}
 	return err
+}
+
+// Check for directory traversal sequences. These should never happen
+// but we have a second layer of defence here.
+func checkPath(path string) error {
+	if strings.Contains(path, "/../") {
+		return utils.Wrap(utils.InvalidArgError, "Directory traversal not supported")
+	}
+
+	return nil
 }

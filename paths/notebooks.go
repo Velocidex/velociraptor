@@ -2,11 +2,16 @@ package paths
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	dirTraversalRegex = regexp.MustCompile(`\.\.+`)
 )
 
 type NotebookPathManager struct {
@@ -162,6 +167,9 @@ func rootPathFromNotebookID(notebook_id string) api.DSPathSpec {
 }
 
 func NewNotebookPathManager(notebook_id string) *NotebookPathManager {
+	// Do not allow directory traversal sequences in notebook ids so
+	// we can treat it as safe.
+	notebook_id = dirTraversalRegex.ReplaceAllLiteralString(notebook_id, ".")
 	return &NotebookPathManager{
 		notebook_id: notebook_id,
 		root:        rootPathFromNotebookID(notebook_id),
