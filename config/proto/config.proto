@@ -519,6 +519,18 @@ message Authenticator {
     // When this is set we emit detailed logging.
     bool oidc_debug = 26;
 
+    // In many IdP the email address change be changed and is not
+    // verified. By default Velociraptor OIDC authenticator pins the
+    // email address to the immutable sub GUID reported by the OIDC
+    // server. This stops email addresss hijacking in some situation
+    // but prevents the same email from being used by different IdP
+    // servers. Set this parameter to disable this pinning and allow
+    // the same email address on different OIDC sub IDs. Be careful
+    // that users are not able to set any email address for their
+    // account in the IdP as this allows them to take over other
+    // user's accounts.
+    bool disable_email_to_sub_pin = 28;
+
 
     // Azure requires a tenancy as well.
     string tenant = 7;

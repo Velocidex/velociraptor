@@ -5,7 +5,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Toast from 'react-bootstrap/Toast';
 import ToastContainer from 'react-bootstrap/ToastContainer';
-
+import { withRouter } from 'react-router-dom';
 import api from '../core/api-service.jsx';
 
 const TIMEOUT = 10 * 1000; // 10 Seconds
@@ -22,7 +22,7 @@ const getID = ()=>{
 // for deleted resources.
 const hunt_not_found = /Hunt not found/i;
 
-export default class Snackbar extends React.Component {
+class _Snackbar extends React.Component {
     static propTypes = {
         // React router props.
         match: PropTypes.object,
@@ -35,6 +35,18 @@ export default class Snackbar extends React.Component {
         this.interval = setInterval(()=>{
             this.setState({now: Date.now()});
         }, 1000);
+        this.addURLErrors();
+    }
+
+    addURLErrors = ()=>{
+        const urlParams = new URLSearchParams(window.location.search);
+        let error = urlParams.get('Error');
+        if(error) {
+            this.warn(error);
+            let new_url = new URL(window.location.href);
+            new_url.search = '';
+            window.history.pushState({}, "", new_url);
+        }
     }
 
     componentWillUnmount = ()=>{
@@ -118,3 +130,5 @@ export default class Snackbar extends React.Component {
                </ToastContainer>;
     }
 };
+
+export default withRouter(_Snackbar);

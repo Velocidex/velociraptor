@@ -35,6 +35,12 @@ message VelociraptorUser {
     string picture = 5;
     bool verified_email = 6;
 
+    // Many IdP use a unique ID for the user - we track it with the
+    // username as we can verify against the oid. For example,
+    // changing the user's email will retain the original OID so we
+    // wont be confused.
+    string oid = 14;
+
     bool read_only = 7 [(sem_type) = {
             description: "A read only user can use the GUI but is not allowed to launch flows or hunts.",
         }];
