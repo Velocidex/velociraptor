@@ -507,6 +507,11 @@ func (self *OauthTestSuire) TestProvider() {
 		})
 		assert.NoError(t, err)
 
+		err = user_manager.SetUser(self.Ctx, &api_proto.VelociraptorUser{
+			Name: "gh_user",
+		})
+		assert.NoError(t, err)
+
 		g := ordereddict.NewDict()
 		golden.Set(tc.name, g)
 
@@ -551,10 +556,6 @@ func (self *OauthTestSuire) TestProvider() {
 			assert.Regexp(t, tc.err_regex, err.Error())
 			continue
 		}
-		if err != nil {
-			utils.DlvBreak()
-		}
-
 		assert.NoError(t, err)
 		cookie.Value = fmt.Sprintf("String of length %v", len(cookie.Value))
 
