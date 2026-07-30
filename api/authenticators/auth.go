@@ -132,8 +132,9 @@ func init() {
 			authenticator: auth_config,
 		}
 		claims_getter := &AzureClaimsGetter{
-			config_obj: config_obj,
-			router:     router,
+			config_obj:    config_obj,
+			router:        router,
+			authenticator: auth_config,
 		}
 		return NewOidcAuthenticator(
 			config_obj, auth_config, router, claims_getter), nil
@@ -152,7 +153,8 @@ func init() {
 			config_obj: config_obj,
 		}
 		claims_getter := &GithubClaimsGetter{
-			config_obj: config_obj,
+			config_obj:    config_obj,
+			authenticator: auth_config,
 		}
 		return NewOidcAuthenticator(
 			config_obj, auth_config, router, claims_getter), nil
