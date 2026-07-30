@@ -1580,6 +1580,17 @@ type Authenticator struct {
 	Claims            *OIDCClaims `protobuf:"bytes,25,opt,name=claims,proto3" json:"claims,omitempty"`
 	// When this is set we emit detailed logging.
 	OidcDebug bool `protobuf:"varint,26,opt,name=oidc_debug,json=oidcDebug,proto3" json:"oidc_debug,omitempty"`
+	// In many IdP the email address change be changed and is not
+	// verified. By default Velociraptor OIDC authenticator pins the
+	// email address to the immutable sub GUID reported by the OIDC
+	// server. This stops email addresss hijacking in some situation
+	// but prevents the same email from being used by different IdP
+	// servers. Set this parameter to disable this pinning and allow
+	// the same email address on different OIDC sub IDs. Be careful
+	// that users are not able to set any email address for their
+	// account in the IdP as this allows them to take over other
+	// user's accounts.
+	DisableEmailToSubPin bool `protobuf:"varint,28,opt,name=disable_email_to_sub_pin,json=disableEmailToSubPin,proto3" json:"disable_email_to_sub_pin,omitempty"`
 	// Azure requires a tenancy as well.
 	Tenant string `protobuf:"bytes,7,opt,name=tenant,proto3" json:"tenant,omitempty"`
 	// SAML Authenticator
@@ -1693,6 +1704,13 @@ func (x *Authenticator) GetClaims() *OIDCClaims {
 func (x *Authenticator) GetOidcDebug() bool {
 	if x != nil {
 		return x.OidcDebug
+	}
+	return false
+}
+
+func (x *Authenticator) GetDisableEmailToSubPin() bool {
+	if x != nil {
+		return x.DisableEmailToSubPin
 	}
 	return false
 }
@@ -5300,7 +5318,7 @@ const file_config_proto_rawDesc = "" +
 	"\roverride_acls\x18\x05 \x01(\bR\foverrideAcls\x1aJ\n" +
 	"\fRoleMapEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12$\n" +
-	"\x05value\x18\x02 \x01(\v2\x0e.proto.OIDCACLR\x05value:\x028\x01\"\xae\r\n" +
+	"\x05value\x18\x02 \x01(\v2\x0e.proto.OIDCACLR\x05value:\x028\x01\"\xe6\r\n" +
 	"\rAuthenticator\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12\xb9\x01\n" +
 	"\voidc_issuer\x18\x04 \x01(\tB\x97\x01\xe2\xfc\xe3\xc4\x01\x90\x01\x12\x8d\x01URL to OIDC Configuration Document. The configuration should be available in the 'oidc_issuer + /.well-known/openid-configuration' endpoint. R\n" +
@@ -5312,7 +5330,8 @@ const file_config_proto_rawDesc = "" +
 	"\x13oauth_client_secret\x18\x06 \x01(\tB0\xe2\xfc\xe3\xc4\x01*\x12(If set we use oauth authentication flow.R\x11oauthClientSecret\x12)\n" +
 	"\x06claims\x18\x19 \x01(\v2\x11.proto.OIDCClaimsR\x06claims\x12\x1d\n" +
 	"\n" +
-	"oidc_debug\x18\x1a \x01(\bR\toidcDebug\x12\x16\n" +
+	"oidc_debug\x18\x1a \x01(\bR\toidcDebug\x126\n" +
+	"\x18disable_email_to_sub_pin\x18\x1c \x01(\bR\x14disableEmailToSubPin\x12\x16\n" +
 	"\x06tenant\x18\a \x01(\tR\x06tenant\x12D\n" +
 	"\x10saml_certificate\x18\f \x01(\tB\x19\xe2\xfc\xe3\xc4\x01\x13\x12\x11SAML certificate.R\x0fsamlCertificate\x12C\n" +
 	"\x10saml_private_key\x18\r \x01(\tB\x19\xe2\xfc\xe3\xc4\x01\x13\x12\x11SAML private key.R\x0esamlPrivateKey\x12_\n" +

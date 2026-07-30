@@ -284,10 +284,16 @@ class App extends Component {
         // rendering the main page with this special login page.
         if (window.ErrorState) {
             if (window.ErrorState.Type === "Login") {
-                return <LoginPage/>;
+                return <>
+                         <LoginPage/>
+                         <Snackbar />
+                       </>;
             }
             if (window.ErrorState.Type === "Logoff") {
-                return <LogoffPage/>;
+                return <>
+                         <LogoffPage/>
+                         <Snackbar />
+                       </>;
             }
         }
 
