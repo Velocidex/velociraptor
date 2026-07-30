@@ -77,10 +77,12 @@ func (self *GithubOidcRouter) LoginURL() string {
 type GitHubUser struct {
 	Login     string `json:"login"`
 	AvatarUrl string `json:"avatar_url"`
+	Id        uint64 `json:"id"`
 }
 
 type GithubClaimsGetter struct {
-	config_obj *config_proto.Config
+	config_obj    *config_proto.Config
+	authenticator *config_proto.Authenticator
 }
 
 func (self *GithubClaimsGetter) GetClaims(
@@ -105,6 +107,14 @@ func (self *GithubClaimsGetter) GetClaims(
 	err = json.Unmarshal(contents, &user_info)
 	if err != nil {
 		return nil, err
+	}
+
+	// Azure uses a GUID to identify the user instead of emails.
+	if user_info.Id != 0 && !self.authenticator.DisableEmailToSubPin {
+		err := checkUserOID(ctx, utils.ToString(user_info.Id), user_info.Login)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Update the user picture in the datastore if we can - it

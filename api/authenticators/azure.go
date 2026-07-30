@@ -39,6 +39,7 @@ type AzureUser struct {
 	Mail    string `json:"userPrincipalName"`
 	Name    string `json:"displayName"`
 	Picture string `json:"picture"`
+	Id      string `json:"id"`
 }
 
 type AzureOidcRouter struct {
@@ -81,8 +82,9 @@ func (self *AzureOidcRouter) LoginURL() string {
 }
 
 type AzureClaimsGetter struct {
-	config_obj *config_proto.Config
-	router     OidcRouter
+	config_obj    *config_proto.Config
+	router        OidcRouter
+	authenticator *config_proto.Authenticator
 }
 
 func (self *AzureClaimsGetter) GetClaims(
@@ -115,6 +117,14 @@ func (self *AzureClaimsGetter) GetClaims(
 		picture := self.getAzurePicture(client)
 		if picture != "" {
 			setUserPicture(ctx, username, picture)
+		}
+	}
+
+	// Azure uses a GUID to identify the user instead of emails.
+	if user_info.Id != "" && !self.authenticator.DisableEmailToSubPin {
+		err := checkUserOID(ctx, user_info.Id, username)
+		if err != nil {
+			return nil, err
 		}
 	}
 

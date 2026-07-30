@@ -181,8 +181,8 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 				DefaultTransforms(self.config_obj, self.authenticator))
 			if err != nil {
 				self.Error("OidcAuthenticator: %v", err)
-				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
-					http.StatusTemporaryRedirect)
+				RedirectWithError(w, r,
+					api_utils.Homepage(self.config_obj), err)
 				return
 			}
 
@@ -190,8 +190,8 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 			cookie, claims, err := provider.GetJWT(ctx, code)
 			if err != nil {
 				self.Error("OidcAuthenticator: %v", err)
-				http.Redirect(w, r, api_utils.Homepage(self.config_obj),
-					http.StatusTemporaryRedirect)
+				RedirectWithError(w, r,
+					api_utils.Homepage(self.config_obj), err)
 				return
 			}
 
