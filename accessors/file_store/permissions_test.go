@@ -39,7 +39,7 @@ func TestFSAccessorSecurity(t *testing.T) {
 
 	sanity_service.CheckSecuritySettings(config_obj)
 
-	// Make sure we treat filess with empty components correcrly.
+	// Make sure we treat files with empty components correcrly.
 	filename1 := path_specs.NewUnsafeFilestorePath("backups", "file")
 	assert.Error(t, file_store.IsFileAccessible(filename1))
 
@@ -53,7 +53,7 @@ func TestFSAccessorSecurity(t *testing.T) {
 		datastore.AsFilestoreFilename(db, config_obj, filename1),
 		datastore.AsFilestoreFilename(db, config_obj, filename2))
 
-	// Check permission filtering withint he DeniedFsAccessorPrefix
+	// Check permission filtering within the DeniedFsAccessorPrefix
 	assert.Error(t, file_store.IsFileAccessible(
 		paths.BACKUPS_ROOT.AddChild("File")))
 	assert.NoError(t, file_store.IsFileAccessible(
