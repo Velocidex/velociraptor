@@ -171,3 +171,8 @@ Read more about Velociraptor on our blog:
 https://docs.velociraptor.app/blog/
 
 Follow us on Twitter [@velocidex](https://twitter.com/velocidex)
+
+## Contributing
+
+See [our contributing guide](./CONTRIBUTING.md) for information on
+developing and contributing content.
