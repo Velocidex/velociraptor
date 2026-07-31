@@ -5,7 +5,7 @@
 }
 
 .toast.bg-warning {
-    background-color: var(--color-tooltip-background) !important;
+    background-color: var(--color-canvas-background) !important;
     color: var(--color-foreground);
 }
 

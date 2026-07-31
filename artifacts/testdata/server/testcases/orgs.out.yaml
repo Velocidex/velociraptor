@@ -639,3 +639,52 @@ Output: [
  }
 ]
 
+# Give OrgUser a reader role in root org.
+Query: LET _ <= user_grant(user="OrgUser", roles="reader", orgs=["root"])
+Output: []
+
+# An administrator on ORGID can not impersonate an administrator in
+# another org
+Query: SELECT * FROM query(query={
+   SELECT * FROM query(query={
+      SELECT whoami(), org().id FROM scope()
+  }, runas="OrgAdmin", org_id="root")
+}, runas="OrgUser", org_id="ORGID")
+
+Output: []
+
+Query: SELECT * FROM test_read_logs() WHERE Log =~ "PermissionDenied" AND NOT Log =~ "SELECT"
+Output: [
+ {
+  "Log": "Velociraptor: ERROR:query: User OrgUser (ORGID) impersonation to OrgAdmin (root): PermissionDenied\n"
+ }
+]
+
+# But they can impersonate a user in the org in which they are admins
+Query: SELECT * FROM query(query={
+   SELECT * FROM query(query={
+      SELECT whoami(), org().id FROM scope()
+  }, runas="ReaderUser", org_id="ORGID")
+}, runas="OrgUser", org_id="ORGID")
+
+Output: [
+ {
+  "whoami()": "ReaderUser",
+  "org().id": "ORGID"
+ }
+]
+
+# And they can also run a query on an org with their lower priv/
+Query: SELECT * FROM query(query={
+   SELECT * FROM query(query={
+      SELECT whoami(), org().id FROM scope()
+  }, runas="OrgUser", org_id="root")
+}, runas="OrgUser", org_id="ORGID")
+
+Output: [
+ {
+  "whoami()": "OrgUser",
+  "org().id": "root"
+ }
+]
+

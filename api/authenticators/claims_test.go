@@ -12,6 +12,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/suite"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -491,6 +492,8 @@ func (self *OauthTestSuire) TestProvider() {
 
 	t := self.T()
 
+	user_manager := services.GetUserManager()
+
 	config_obj := config.GetDefaultConfig()
 	golden := ordereddict.NewDict()
 
@@ -498,6 +501,16 @@ func (self *OauthTestSuire) TestProvider() {
 		if false && tc.name != "Azure Authenticator" {
 			continue
 		}
+
+		err := user_manager.SetUser(self.Ctx, &api_proto.VelociraptorUser{
+			Name: "user@example.com",
+		})
+		assert.NoError(t, err)
+
+		err = user_manager.SetUser(self.Ctx, &api_proto.VelociraptorUser{
+			Name: "gh_user",
+		})
+		assert.NoError(t, err)
 
 		g := ordereddict.NewDict()
 		golden.Set(tc.name, g)

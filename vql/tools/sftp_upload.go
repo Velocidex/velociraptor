@@ -51,6 +51,12 @@ func (self *SFTPUploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = vql_subsystem.CheckAccess(scope, acls.NETWORK)
+	if err != nil {
+		scope.Log("upload_sftp: %s", err)
+		return vfilter.Null{}
+	}
+
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("upload_SFTP: %v", err)
@@ -229,10 +235,11 @@ func upload_SFTP(ctx context.Context, scope vfilter.Scope,
 func (self SFTPUploadFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "upload_sftp",
-		Doc:      "Upload files to SFTP.",
-		ArgType:  type_map.AddType(scope, &SFTPUploadArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Name:    "upload_sftp",
+		Doc:     "Upload files to SFTP.",
+		ArgType: type_map.AddType(scope, &SFTPUploadArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(
+			acls.FILESYSTEM_READ, acls.NETWORK).Build(),
 	}
 }
 

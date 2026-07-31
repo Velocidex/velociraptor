@@ -13,6 +13,8 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/api/option"
 
+	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -38,6 +40,12 @@ func (self *GCSPubsubPublishFunction) Call(ctx context.Context,
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("gcs_pubsub_publish: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	err = vql_subsystem.CheckAccess(scope, acls.NETWORK)
+	if err != nil {
+		scope.Log("gcs_pubsub_publish: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -84,9 +92,10 @@ func (self *GCSPubsubPublishFunction) Call(ctx context.Context,
 func (self GCSPubsubPublishFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "gcs_pubsub_publish",
-		Doc:     "Publish a message to Google PubSub.",
-		ArgType: type_map.AddType(scope, &GCSPubsubPublishArgs{}),
+		Name:     "gcs_pubsub_publish",
+		Doc:      "Publish a message to Google PubSub.",
+		ArgType:  type_map.AddType(scope, &GCSPubsubPublishArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.NETWORK).Build(),
 	}
 }
 
