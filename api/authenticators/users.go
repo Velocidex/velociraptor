@@ -2,9 +2,11 @@ package authenticators
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Try to store the picture URL in the datastore to avoid making the
@@ -25,6 +27,13 @@ func checkUserOID(
 	user_manager := services.GetUserManager()
 	user_record, err := user_manager.GetUserWithHashes(
 		ctx, username, username)
+
+	// If the user does not exist, then we unpin the email, this can
+	// be used later to create the user.
+	if errors.Is(err, utils.NotFoundError) {
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}

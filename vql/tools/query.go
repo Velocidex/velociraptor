@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/executor/throttler"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
@@ -71,6 +72,8 @@ func (self QueryPlugin) Call(
 		}
 		org_config_obj := config_obj
 
+		principal := vql_subsystem.GetPrincipal(scope)
+
 		// Build a completely new scope to evaluate the query
 		// in.
 		builder := services.ScopeBuilderFromScope(scope)
@@ -95,11 +98,21 @@ func (self QueryPlugin) Call(
 				org_config_obj, vql_subsystem.GetPrincipal(scope))
 		}
 
-		if arg.Principal != "" {
-			// Impersonation is only allowed for administrator users.
-			err := vql_subsystem.CheckAccess(scope, acls.IMPERSONATION)
-			if err != nil {
-				scope.Log("ERROR:query: Permission required for runas: %v", err)
+		if arg.Principal != "" && arg.Principal != principal {
+			// Impersonation is only allowed for administrator
+			// users. Check the impersonation permission in the target
+			// org, if the user switched orgs.
+			acl_manager := acl_managers.NewServerACLManager(
+				org_config_obj, principal)
+
+			perm, err := acl_manager.CheckAccess(acls.IMPERSONATION)
+			if !perm {
+				if err == nil {
+					err = utils.PermissionDenied
+				}
+				scope.Log("ERROR:query: User %v (%v) impersonation to %v (%v): %v",
+					principal, config_obj.OrgId, arg.Principal,
+					org_config_obj.OrgId, err)
 				return
 			}
 
