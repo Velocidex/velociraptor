@@ -45,7 +45,7 @@ func GetOrgIdFromRequest(r *http.Request) string {
 // Checks to make sure the user has access to the org they
 // requested. If they do not have access to the org they requested we
 // switch them to any org in which they have at least read
-// access. This behaviour ensures that when a user's access is removed
+// access. This behavior ensures that when a user's access is removed
 // from an org the GUI immediately switches to the next available org.
 func CheckOrgAccess(
 	config_obj *config_proto.Config,

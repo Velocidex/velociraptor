@@ -2,7 +2,7 @@
 // allow proper tag and value.
 
 // NOTE: This is also done in the go server using bluemonday but this
-// is a second layer of defence in case something slips in we do it
+// is a second layer of defense in case something slips in we do it
 // again in javascript.
 import parse from 'html-react-parser';
 import DOMPurify from 'dompurify';

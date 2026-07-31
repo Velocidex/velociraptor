@@ -247,7 +247,7 @@ func (self *Launcher) CancelFlow(
 	}, nil
 }
 
-// The collection_context contains high level stats that summarise the
+// The collection_context contains high level stats that summarize the
 // collection. We derive this information from the specific results of
 // each query.
 func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
