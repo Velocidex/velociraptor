@@ -189,3 +189,34 @@ Queries:
     WHERE artifacts =~ "Remove"
     GROUP BY client_id
   }, runas="BasicUser", org_id="ORGID")
+
+
+# Give OrgUser a reader role in root org.
+- LET _ <= user_grant(user="OrgUser", roles="reader", orgs=["root"])
+
+# An administrator on ORGID can not impersonate an administrator in
+# another org
+- |
+  SELECT * FROM query(query={
+     SELECT * FROM query(query={
+        SELECT whoami(), org().id FROM scope()
+    }, runas="OrgAdmin", org_id="root")
+  }, runas="OrgUser", org_id="ORGID")
+
+- SELECT * FROM test_read_logs() WHERE Log =~ "PermissionDenied" AND NOT Log =~ "SELECT"
+
+# But they can impersonate a user in the org in which they are admins
+- |
+  SELECT * FROM query(query={
+     SELECT * FROM query(query={
+        SELECT whoami(), org().id FROM scope()
+    }, runas="ReaderUser", org_id="ORGID")
+  }, runas="OrgUser", org_id="ORGID")
+
+# And they can also run a query on an org with their lower priv/
+- |
+  SELECT * FROM query(query={
+     SELECT * FROM query(query={
+        SELECT whoami(), org().id FROM scope()
+    }, runas="OrgUser", org_id="root")
+  }, runas="OrgUser", org_id="ORGID")

@@ -440,6 +440,17 @@ func getRows(
 			utils.FilterSlice(request.StackPath, "")...).
 			SetType(api.PATH_TYPE_FILESTORE_JSON)
 
+		if len(request.StackPath) == 0 ||
+			request.StackPath[len(request.StackPath)-1] != "stack" {
+			return nil, nil, nil, fmt.Errorf(
+				"stack_path must be the path to a result set stack")
+		}
+
+		err := file_store_accessor.IsFileAccessible(log_path)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
 		options, err := tables.GetTableOptions(request)
 		if err != nil {
 			return nil, nil, nil, err
