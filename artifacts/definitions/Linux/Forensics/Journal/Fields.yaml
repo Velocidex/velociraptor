@@ -54,7 +54,7 @@ description: |
   - `_SYSTEMD_UNIT`: the service behind each entry. Listing it is a
     per-service timeline of when a unit first and last logged and how
     chatty it was. A unit that logged only in a narrow window, or one
-    you do not recognise, stands out immediately.
+    you do not recognize, stands out immediately.
   - `_COMM` and `_EXE`: the process name and executable path. Shows when
     a given binary first and last logged and how many entries it
     produced.

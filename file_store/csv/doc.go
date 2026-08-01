@@ -15,7 +15,7 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-// Velociraptor's flavour of Comma Separated Value (CSV) files.
+// Velociraptor's flavor of Comma Separated Value (CSV) files.
 
 // Velociraptor requires a file format that stores tabulated data. CSV
 // seems like the perfect choice because it is well supported by

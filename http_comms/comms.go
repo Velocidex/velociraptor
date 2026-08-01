@@ -55,7 +55,7 @@ var (
 	RedirectError = errors.New("RedirectError")
 
 	// Can be sent from connector's Post() when the server requires
-	// enrolment (sending HTTP 406 status).
+	// enrollment (sending HTTP 406 status).
 	EnrolError = errors.New("EnrolError")
 
 	mu           sync.Mutex
@@ -84,7 +84,7 @@ func (self *Enroller) MaybeEnrol() {
 	next_enrollment := self.last_enrollment_time.Add(1 * time.Minute)
 	now := self.clock.Now()
 
-	// Only send an enrolment request at most every minute so as
+	// Only send an enrollment request at most every minute so as
 	// not to overwhelm the server if it can not keep up.
 	if now.After(next_enrollment) {
 		csr_pem, err := self.manager.GetCSR()
@@ -101,7 +101,7 @@ func (self *Enroller) MaybeEnrol() {
 				Type: crypto_proto.Certificate_CSR,
 				Pem:  csr_pem,
 			},
-			// Enrolment messages should be sent
+			// Enrollment messages should be sent
 			// immediately and not queued client side.
 			Urgent: true,
 		})
@@ -1065,7 +1065,7 @@ type HTTPCommunicator struct {
 	// Read jobs from the servers notification channel.
 	receiver *NotificationReader
 
-	// Potentially enrols the client.
+	// Potentially enrolls the client.
 	enroller *Enroller
 
 	// Sends results back to the server.

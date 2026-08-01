@@ -26,7 +26,7 @@ This container is designed for a couple of use cases:
 In both cases the `datastore` directory is used as permanent storage
 and remains after the container is terminated. It is safe to delete
 the datastore and start fresh at any time - clients will just
-re-connect and re-enrol.
+re-connect and re-enroll.
 
 
 ## Quick start

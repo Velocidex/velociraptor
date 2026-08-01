@@ -15,7 +15,7 @@ description: |
   - The whole email is sent as a multi-part message
 
   All of the functions used to create the final body of the email are exported
-  and are available for further customisation when sending an email.
+  and are available for further customization when sending an email.
 
 type: SERVER
 

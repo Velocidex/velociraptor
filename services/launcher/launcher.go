@@ -102,7 +102,7 @@
 
   ## Summary
 
-  The following rules summarise if the artifact is collected in
+  The following rules summarize if the artifact is collected in
   parallel mode (i.e. sources in separate requests) or Serial Mode
   (i.e. all sources in the same request).
 

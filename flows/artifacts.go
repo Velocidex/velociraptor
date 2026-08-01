@@ -723,7 +723,7 @@ func (self *FlowRunner) ProcessSingleMessage(
 
 	// json.TraceMessage(job.Source+"_job", job)
 
-	// CSR messages are related to enrolment. By the time the
+	// CSR messages are related to enrollment. By the time the
 	// message arrives here, it is authenticated and the client is
 	// fully enrolled so it serves no purpose here - Just ignore it.
 	if job.CSR != nil {

@@ -136,7 +136,7 @@ func (self *serverPublicKeyResolver) GetPublicKey(
 	client_id string) (*rsa.PublicKey, bool) {
 
 	// Check if we failed to get this key recently - this reduces IO
-	// while clients enrol.
+	// while clients enroll.
 	_, err := self.negative_lru.Get(client_id)
 	if err == nil {
 		return nil, false
