@@ -149,7 +149,7 @@ func ws_receive_client_messages(
 			}
 
 			// We need to indicate to the client to start the
-			// enrolment process. Since the client can not read
+			// enrollment process. Since the client can not read
 			// anything from us (because we can not encrypt for
 			// it), we indicate this by providing it with an HTTP
 			// error code.
@@ -294,7 +294,7 @@ func ws_send_client_messages(
 			return send_error(ws, err, http.StatusServiceUnavailable)
 		}
 
-		// If client is not known, make it enrol. This can happen for
+		// If client is not known, make it enroll. This can happen for
 		// example, when the client was just deleted, but we still
 		// have ciphers cached to it - the client is not known but we
 		// can still verify the comms as authenticated. NOTE: this

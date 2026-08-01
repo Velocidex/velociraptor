@@ -13,7 +13,7 @@ description: |
 
   - MoreRecentThan filter is only applied to the Last
     Modified Time of files returned by the IISLogFiles glob. This
-    improves the artefact's performance on systems with many log
+    improves the artifact's performance on systems with many log
     files. Use the SearchRegex filter for filtering on a per line
     basis.
 

@@ -463,7 +463,7 @@ func (self *FileBaseDataStore) SetBuffer(
 }
 
 // Check for directory traversal sequences. These should never happen
-// but we have a second layer of defence here.
+// but we have a second layer of defense here.
 func checkPath(path string) error {
 	if strings.Contains(path, "/../") {
 		return utils.Wrap(utils.InvalidArgError, "Directory traversal not supported")

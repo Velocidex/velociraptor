@@ -5274,7 +5274,7 @@
 
     A useful feature is to embed collection parameters inside the
     link. This allows you to build a list of links where users can
-    click to initiate pre-determined pre-canned colletions.
+    click to initiate pre-determined pre-canned collections.
 
     For example, the following will create a link to launch the
     `Demo.Plugins.GUI` artifact with a pre-set parameter of
@@ -5402,7 +5402,7 @@
     ```
 
     Thus the log message will be emitted for the 1st, 4th, 7th, and 10th rows.
-    To observe the deduplication behaviour in real time you can run this query
+    To observe the deduplication behavior in real time you can run this query
     in a notebook cell and tweak the arguments to understand their impacts.
 
     ### See also
@@ -8867,7 +8867,7 @@
     The `raw_ntfs` accessor is available in all supported platforms
     (i.e. not only Windows) and uses the same filesystem parser as the
     `ntfs` accessor. You can use this in conjunction with the
-    `remap()` function to analyse raw NTFS volumes on any supported
+    `remap()` function to analyze raw NTFS volumes on any supported
     platform.
   type: Accessor
   platforms:

@@ -51,7 +51,7 @@ type ClaimsGetter interface {
 // claims from:
 //  1. The standard OIDC UserInfo endpoint
 //  2. Attempts to decode the claim from the AccessToken if it is a JWT.
-//     This behaviour was observed on ADFS.
+//     This behavior was observed on ADFS.
 type OidcClaimsGetter struct {
 	config_obj    *config_proto.Config
 	authenticator *config_proto.Authenticator

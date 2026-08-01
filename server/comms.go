@@ -371,13 +371,13 @@ func receive_client_messages(
 			}
 
 			// Very few Unauthenticated client messages are valid
-			// - currently only enrolment requests.
+			// - currently only enrollment requests.
 			if !message_info.Authenticated {
 				err := server_obj.ProcessUnauthenticatedMessages(
 					req.Context(), config_obj, message_info)
 				if err == nil {
 					// We need to indicate to the client
-					// to start the enrolment
+					// to start the enrollment
 					// process. Since the client can not
 					// read anything from us (because we
 					// can not encrypt for it), we
@@ -560,7 +560,7 @@ func send_client_messages(
 				return
 			}
 
-			// If client is not known, make it enrol. This can happen for
+			// If client is not known, make it enroll. This can happen for
 			// example, when the client was just deleted, but we still
 			// have ciphers cached to it - the client is not known but we
 			// can still verify the comms as authenticated. NOTE: this
