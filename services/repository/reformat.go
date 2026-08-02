@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/alecthomas/participle"
+	"github.com/alecthomas/participle/v2"
 	"www.velocidex.com/golang/velociraptor/utils/yaml"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -63,7 +63,7 @@ func reformatNode(vql_node yaml.NodeContext) (m mutation, err error) {
 		message := err.Error()
 		perr, ok := err.(participle.Error)
 		if ok {
-			line = perr.Token().Pos.Line
+			line = perr.Position().Line
 			message = perr.Message()
 		}
 		// Error should be reported to the GUI
