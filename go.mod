@@ -19,7 +19,7 @@ require (
 	github.com/Velocidex/zip v0.0.0-20251027040802-582e676739bd
 	github.com/alecthomas/assert v1.0.0
 	github.com/alecthomas/chroma v0.7.3
-	github.com/alecthomas/participle v0.7.1
+	github.com/alecthomas/participle/v2 v2.1.4
 	github.com/alecthomas/repr v0.5.4 // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
@@ -190,6 +190,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/RoaringBitmap/roaring/v2 v2.14.5 // indirect
 	github.com/alecthomas/colour v0.1.0 // indirect
+	github.com/alecthomas/participle v0.7.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
@@ -367,7 +368,8 @@ require (
 
 // replace github.com/Velocidex/yara-x-go => ../yara-x-go
 // replace github.com/Velocidex/grok => ../grok
-// replace www.velocidex.com/golang/vfilter => ../vfilter
+replace www.velocidex.com/golang/vfilter => ../vfilter
+
 // replace www.velocidex.com/golang/regparser => ../regparser
 // replace www.velocidex.com/golang/go-ntfs => ../go-ntfs
 // replace github.com/Velocidex/go-fat => ../go-fat

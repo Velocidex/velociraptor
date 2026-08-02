@@ -157,6 +157,8 @@ github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6/go.mod h1:nmcW15d
 github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38/go.mod h1:r7bzyVFMNntcxPZXK3/+KdruV1H5KSlyVY0gc+NgInI=
 github.com/alecthomas/assert v1.0.0 h1:3XmGh/PSuLzDbK3W2gUbRXwgW5lqPkuqvRgeQ30FI5o=
 github.com/alecthomas/assert v1.0.0/go.mod h1:va/d2JC+M7F6s+80kl/R3G7FUiW6JzUO+hPhLyJ36ZY=
+github.com/alecthomas/assert/v2 v2.11.0 h1:2Q9r3ki8+JYXvGsDyBXwH3LcJ+WK5D0gc5E8vS6K3D0=
+github.com/alecthomas/assert/v2 v2.11.0/go.mod h1:Bze95FyfUr7x34QZrjL+XP+0qgp/zg8yS+TtBj1WA3k=
 github.com/alecthomas/colour v0.0.0-20160524082231-60882d9e2721/go.mod h1:QO9JBoKquHd+jz9nshCh40fOfO+JzsoXy8qTHF68zU0=
 github.com/alecthomas/colour v0.1.0 h1:nOE9rJm6dsZ66RGWYSFrXw461ZIt9A6+nHgL7FRrDUk=
 github.com/alecthomas/colour v0.1.0/go.mod h1:QO9JBoKquHd+jz9nshCh40fOfO+JzsoXy8qTHF68zU0=
@@ -165,6 +167,8 @@ github.com/alecthomas/kingpin/v2 v2.4.0/go.mod h1:0gyi0zQnjuFk8xrkNKamJoyUo382HR
 github.com/alecthomas/kong v0.2.4/go.mod h1:kQOmtJgV+Lb4aj+I2LEn40cbtawdWJ9Y8QLq+lElKxE=
 github.com/alecthomas/participle v0.7.1 h1:2bN7reTw//5f0cugJcTOnY/NYZcWQOaajW+BwZB5xWs=
 github.com/alecthomas/participle v0.7.1/go.mod h1:HfdmEuwvr12HXQN44HPWXR0lHmVolVYe4dyL6lQ3duY=
+github.com/alecthomas/participle/v2 v2.1.4 h1:W/H79S8Sat/krZ3el6sQMvMaahJ+XcM9WSI2naI7w2U=
+github.com/alecthomas/participle/v2 v2.1.4/go.mod h1:8tqVbpTX20Ru4NfYQgZf4mP18eXPTBViyMWiArNEgGI=
 github.com/alecthomas/repr v0.0.0-20180818092828-117648cd9897/go.mod h1:xTS7Pm1pD1mvyM075QCDSRqH6qRLXylzS24ZTpRiSzQ=
 github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1/go.mod h1:xTS7Pm1pD1mvyM075QCDSRqH6qRLXylzS24ZTpRiSzQ=
 github.com/alecthomas/repr v0.0.0-20200325044227-4184120f674c/go.mod h1:xTS7Pm1pD1mvyM075QCDSRqH6qRLXylzS24ZTpRiSzQ=
@@ -519,6 +523,8 @@ github.com/hashicorp/golang-lru v1.0.2/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uG
 github.com/hashicorp/golang-lru/v2 v2.0.7 h1:a+bsQ5rvGLjzHuww6tVxozPZFVghXaHOwFs4luLUK2k=
 github.com/hashicorp/golang-lru/v2 v2.0.7/go.mod h1:QeFd9opnmA6QUJc5vARoKUSoFhyfM2/ZepoAG6RGpeM=
 github.com/hashicorp/hcl v0.0.0-20170914154624-68e816d1c783/go.mod h1:oZtUIOe8dh44I2q6ScRibXws4Ajl+d+nod3AaR9vL5w=
+github.com/hexops/gotextdiff v1.0.3 h1:gitA9+qJrrTCsiCl7+kh75nPqQt1cx4ZkudSTLoUqJM=
+github.com/hexops/gotextdiff v1.0.3/go.mod h1:pSWU5MAI3yDq+fZBTazCSJysOMbxWL1BSow5/V2vxeg=
 github.com/hillu/go-archive-zip-crypto v0.0.0-20200712202847-bd5cf365dd44 h1:seZZ+imS3iv6i0op0cqgt9K6BETRkXwUV9e8inrF+ws=
 github.com/hillu/go-archive-zip-crypto v0.0.0-20200712202847-bd5cf365dd44/go.mod h1:xUc/S/HgVuP6lhDvD0Wqtu/Npwx93VSXzbdyEDbqBb8=
 github.com/hillu/go-ntdll v0.0.0-20220801201350-0d23f057ef1f h1:es0IoL1/OOoGYUuvRtSzbtG3STd7Fm5LIniUWsfzMHE=
@@ -1146,7 +1152,5 @@ www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959 h1:qJlm0T61
 www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959/go.mod h1:wjOPwI3Vy6TP0AhF6NjjXV/to93E5A1tjA04liHvf5E=
 www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7 h1:BMX/37sYwX+8JhHt+YNbPfbx7dXG1w1L1mXonNBtjt0=
 www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7/go.mod h1:pxSECT5mWM3goJ4sxB4HCJNKnKqiAlpyT8XnvBwkLGU=
-www.velocidex.com/golang/vfilter v0.0.0-20260604071755-26b8340c4bb8 h1:GZtpiG+aB9zmkk++eCzGmbmQjl8Szcz1RTrkPd4t+Og=
-www.velocidex.com/golang/vfilter v0.0.0-20260604071755-26b8340c4bb8/go.mod h1:kEEWSFJUuKEPIEmk+zSoHDVofGJgO5f1vPTVDD9+5wE=
 www.velocidex.com/golang/vtypes v0.0.0-20260724151436-b268799719c1 h1:LwnCu1smnGkBtcAHhEgDUJ0tyNhvlRRKvu8I/U09XFI=
 www.velocidex.com/golang/vtypes v0.0.0-20260724151436-b268799719c1/go.mod h1:tjaJNlBWbvH4cEMrEu678CFR2hrtcdyPINIpRxrOh4U=
