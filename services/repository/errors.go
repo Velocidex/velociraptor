@@ -3,7 +3,7 @@ package repository
 import (
 	"strings"
 
-	"github.com/alecthomas/participle"
+		"github.com/alecthomas/participle/v2"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/utils/yaml"
 )
@@ -20,7 +20,7 @@ func reportError(errToReport error,
 
 		if len(nodes) >= idx+1 {
 			line := nodes[idx].Line
-			err, ok := errToReport.(participle.UnexpectedTokenError)
+			err, ok := errToReport.(*participle.UnexpectedTokenError)
 			if ok {
 				// Correct the line number of the error.
 				err.Unexpected.Pos.Line += line
