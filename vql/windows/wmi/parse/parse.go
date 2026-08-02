@@ -24,34 +24,31 @@ package wmi
 
 import (
 	"github.com/Velocidex/ordereddict"
-	"github.com/alecthomas/participle"
-	"github.com/alecthomas/participle/lexer"
+	"github.com/alecthomas/participle/v2"
+	"github.com/alecthomas/participle/v2/lexer"
 	"www.velocidex.com/golang/vfilter"
 )
 
 var (
-	mofLexer = lexer.Must(lexer.Regexp(
-		`(?ms)` +
-			`(\s+)` +
-			`|(?P<Bool>FALSE|TRUE)` +
-			`|(?P<Null>NULL)` +
-			`|(?i)(?P<Instance>INSTANCE OF)` +
-			`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
-			`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
-			`|(?P<String>'([^'\\]*(\\.[^'\\]*)*)'|"([^"\\]*(\\.[^"\\]*)*)")` +
-			`|(?P<Operators><>|!=|<=|>=|=~|[-;+*/%,.()=<>{}\[\]])`,
-	))
+	mofLexer = lexer.MustSimple([]lexer.SimpleRule{
+		{Name: "whitespace", Pattern: `\s+`},
+		{Name: "Bool", Pattern: `FALSE|TRUE`},
+		{Name: "Null", Pattern: `NULL`},
+		{Name: "Instance", Pattern: `(?i)INSTANCE OF`},
+		{Name: "Ident", Pattern: `[a-zA-Z_][a-zA-Z0-9_]*`},
+		{Name: "Number", Pattern: `[-+]?\d*\.?\d+([eE][-+]?\d+)?`},
+		{Name: "String", Pattern: `'([^'\\]*(\\.[^'\\]*)*)'|"([^"\\]*(\\.[^"\\]*)*)"`},
+		{Name: "Operators", Pattern: `<>|!=|<=|>=|=~|[-;+*/%,.()=<>{}\[\]]`},
+	})
 
-	mofParser = participle.MustBuild(
-		&MOF{},
+	mofParser = participle.MustBuild[MOF](
 		participle.Lexer(mofLexer),
 		participle.Unquote("String"),
 	)
 )
 
 func Parse(expression string) (*MOF, error) {
-	mof := &MOF{}
-	err := mofParser.ParseString(expression, mof)
+	mof, err := mofParser.ParseString("", expression)
 	if err != nil {
 		return nil, err
 	}
