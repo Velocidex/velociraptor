@@ -5,9 +5,10 @@ This document summarizes every test performed on the VQL language server
 migration, the Inspect() and Outline() APIs, the diagnostic engine, the
 artifact registry, the opencode integration, and document symbols.
 
-**Go unit test total:** 18 tests in `vql/lsp/` (10 diagnostic engine + 6
-server lifecycle + 2 document symbols), plus 2 vfilter Inspect() tests,
-2 vfilter Outline() tests, and the full vfilter migration suite.
+**Go unit test total:** 29 tests in `vql/lsp/` (10 diagnostic engine + 6
+server lifecycle + 2 document symbols + 5 hover + 6 completion), plus 2
+vfilter Inspect() tests, 2 vfilter Outline() tests, and the full vfilter
+migration suite.
 
 ---
 
@@ -140,6 +141,43 @@ Kind mapping verified: `let→Variable(13)`, `query/function→Function(12)`,
 `column→Field(8)`. `Initialize` capabilities now advertise
 `DocumentSymbolProvider: true`.
 
+## 3d. Hover unit tests
+
+Location: `velociraptor/vql/lsp/server_test.go` — 5 tests, all pass
+(total 23 in vql/lsp/)
+
+| Test | What it verifies |
+|---|---|
+| `TestServerHoverPluginCall` | Cursor on `pslist` in `SELECT * FROM pslist(pid=1)` → markdown contains `**pslist** (plugin)` and `pid` |
+| `TestServerHoverFunctionCall` | Cursor on `upcase` → contains `**upcase** (function)` and `str` |
+| `TestServerHoverArgument` | Cursor on `pid` arg → contains `**pid**` and `int` |
+| `TestServerHoverUnknownDocument` | Never-opened URI → nil (no crash) |
+| `TestServerHoverUnknownSymbol` | Cursor on a dynamic column (`SomeDynamicColumn`) → nil (no false positive) |
+
+Byte-offset gotcha: cursor positions are computed per document string
+(e.g. `pslist` is at byte 14 in `SELECT * FROM pslist(pid=1)`).
+
+## 3e. Completion unit tests
+
+Location: `velociraptor/vql/lsp/server_test.go` — 6 tests, all pass
+(total 29 in vql/lsp/)
+
+| Test | What it verifies |
+|---|---|
+| `TestServerCompletionPluginPrefix` | `psl` prefix → labels contain `pslist` |
+| `TestServerCompletionFunctionPrefix` | `upc` prefix → labels contain `upcase` |
+| `TestServerCompletionArtifactPrefix` | `Art` prefix → labels contain `Artifact.Linux.Sys.Users` |
+| `TestServerCompletionLetVariable` | After `LET X = 5\nSELECT * FROM ` → some item `X` with kind Variable |
+| `TestServerCompletionArguments` | Inside `pslist(` → some item `pid` with kind Field |
+| `TestServerCompletionUnknownDocument` | Never-opened URI → empty labels |
+
+LET-variable recovery gotcha: when the document ends in an incomplete
+statement (whole-document parse fails), `letNames` falls back to
+`largestParseablePrefix` so LET variables are still offered.
+
+`Initialize` capabilities advertise `CompletionProvider` with
+`TriggerCharacters: [".", "("]`.
+
 ---
 
 ## 4. End-to-end tests against the real binary
@@ -192,6 +230,20 @@ Verified:
   (Function) → `upcase(str=X)` (Field, name from source) → `upcase` (Function),
   and `baz` (Field). (Python client `/tmp/opencode/lsp_symbols_test.py`; note
   the push notification arrives before the response — drain loop required.)
+- **Hover**: `textDocument/hover` on `upcase` in
+  `SELECT upcase(str='x') FROM pslist(pid=1)` returns markdown with the
+  REAL registry doc — `**upcase** (function)` + "Returns the uppercase
+  version of a string." + argument `string` (real name, not `str`); hover
+  on the `pid` argument returns `**pid** — int64` (real type). Capabilities
+  advertise `hoverProvider: true`. (Python client
+  `/tmp/opencode/lsp_hover_test.py`.)
+- **Completion**: `textDocument/completion` with prefix `psl` → `pslist`;
+  `upc` → `upcase`; `Art` → full artifact tree
+  (`Artifact.ADX.Flows.Upload`, `Artifact.Admin.Client.*`, ...); LET
+  variable `X` after `SELECT * FROM `; argument `pid` inside `pslist(`.
+  Capabilities advertise `completionProvider` with trigger characters
+  `.` and `(`. (Python client `/tmp/opencode/lsp_completion_test.py`;
+  ALL OK — see the test file's own output for the 5-case table.)
 
 ---
 
@@ -315,6 +367,8 @@ against a **live Velociraptor instance** (API config at
 | Shutdown/exit lifecycle | — | ✓ | ✓ | — |
 | Initialize capabilities (full sync, provider, serverInfo) | — | ✓ | ✓ | ✓ |
 | Document symbols (hierarchical outline, kinds) | — | ✓ | ✓ | — |
+| Hover (function/plugin/argument docs + types) | — | ✓ | ✓ | — |
+| Completion (plugins, functions, artifacts, LET vars, args) | — | ✓ | ✓ | — |
 
 ---
 

@@ -89,6 +89,16 @@ func (self *Server) Initialize(
 
 			// The server provides a document outline.
 			DocumentSymbolProvider: protocol.Boolean(true),
+
+			// The server provides hover documentation.
+			HoverProvider: protocol.Boolean(true),
+
+			// The server provides autocompletion. Typing '.' (as in
+			// Artifact.Linux.Sys) or '(' (as in pslist() ) should
+			// trigger completion.
+			CompletionProvider: &protocol.CompletionOptions{
+				TriggerCharacters: []string{".", "("},
+			},
 		},
 		ServerInfo: protocol.ServerInfo{
 			Name:    "vql-lsp",
