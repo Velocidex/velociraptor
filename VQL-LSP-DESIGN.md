@@ -13,7 +13,10 @@ Last updated: 2026-08-03
 > implemented and verified end-to-end (CLI, skill, custom opencode tool,
 > mcpls bridge, native MCP tool). Document symbols (`textDocument/documentSymbol`)
 > are implemented and verified end-to-end (see Foundation Work and Current
-> State). Hover and completion remain as follow-on work.
+> State). Hover (`textDocument/hover`) and completion (`textDocument/completion`)
+> are implemented and verified end-to-end (see Current State). Go-to-definition
+> and validating artifact parameters against artifact defaults remain as
+> follow-on work.
 
 ## Goal
 
@@ -236,13 +239,13 @@ them.
   artifact's declared parameters (e.g. `foo=1` on Windows.Sys.Users flags
   `foo` as unknown).
 - Unit tests in `vql/lsp/` (fake registry with a couple of plugins and
-  functions) — 18 tests total: 10 diagnostic-engine tests (clean docs,
+  functions) — 29 tests total: 10 diagnostic-engine tests (clean docs,
   unknown function/plugin/argument, artifact arguments, multiline
   positions, syntax errors, truncate-and-retry recovery), 6 server
   lifecycle tests (initialize capabilities, didOpen+pull, didChange
-  updates, didClose clears, pull unknown doc, shutdown closes Done), and
-  2 document-symbol tests (hierarchical outline, unknown doc → empty).
-  Run with `go test ./vql/lsp/`.
+  updates, didClose clears, pull unknown doc, shutdown closes Done), 2
+  document-symbol tests, 5 hover tests, and 6 completion tests. Run with
+  `go test ./vql/lsp/`.
 - Document symbols implemented: `vfilter.Outline()` (new exported API in
   the vfilter repo) walks the unexported grammar AST and produces a
   hierarchical outline — LET variables, queries (named after their FROM
@@ -252,13 +255,28 @@ them.
   →Function, column→Field. Unaliased columns get their name extracted from
   the source text. Advertised via `DocumentSymbolProvider: true` in
   capabilities. Verified end-to-end over the wire (see VQL-LSP-TESTS.md).
+- Hover implemented: `textDocument/hover` resolves the symbol/argument
+  under the cursor against the registry and returns markdown — function
+  doc, kind (function/plugin), aggregate flag, argument names with types,
+  or an argument's own type. Advertised via `HoverProvider: true`.
+  Verified end-to-end: hovering `upcase` shows its real doc ("Returns the
+  uppercase version of a string.") and real argument `string`; hovering
+  `pid` shows `int64`.
+- Completion implemented: `textDocument/completion` returns LET variables,
+  all registered plugins/functions/artifacts, and (when the cursor is
+  inside call parens) the callee's argument names — filtered by the
+  word/prefix before the cursor. Kind mapping: functions→Function,
+  variables→Variable, arguments→Field. Advertised via
+  `CompletionProvider` with trigger characters `.` and `(`. Verified
+  end-to-end: `psl`→`pslist`, `upc`→`upcase`, `Art`→the full artifact
+  tree, LET vars, and `pid` inside `pslist(`.
 - Agent integration verified: opencode LSP config starts the server when a
   `.vql` file is opened and returns diagnostics as agent feedback; the
   `validate-vql` custom tool (see VQL-LSP-USAGE.md Option 2) is loaded
   inside the live agent and returns structured diagnostics for bad queries
   and `valid: true` for clean ones.
-- Still to do: hover, completion, go-to-definition, and
-  validating artifact parameters against artifact defaults.
+- Still to do: go-to-definition, and validating artifact parameters
+  against artifact defaults.
 
 ## Open Questions
 
