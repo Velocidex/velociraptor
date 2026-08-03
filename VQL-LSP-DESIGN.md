@@ -45,6 +45,17 @@ VQL query string, passed to the server as a virtual document (e.g.
 `untitled:` URI). No workspace folders, no file watching, no YAML
 extraction, no incremental change tracking.
 
+> **Byproduct, not a use case:** Because the server speaks standard LSP it is
+> technically client-agnostic, so a thin editor extension (~100 lines) could
+> wire `velociraptor lsp` into VS Code, Neovim, Zed, etc. and get squiggles,
+> hover docs, autocomplete and an outline for `.vql` files. That is a natural
+> *byproduct* of using a standard protocol — not an intended use case. The
+> point of this project is the agent pre-flight validation loop, not a human
+> IDE experience. Documented in VQL-LSP-USAGE.md as Option 4 (future).
+> One caveat if anyone ever builds it: our positions are byte-based (fine for
+> ASCII VQL) while editors like VS Code use UTF-16 character offsets, so a
+> position-conversion shim would be needed for non-ASCII text.
+
 ## Feature Priority (agent-first)
 
 1. **Diagnostics** — syntax errors (with precise line/column), unknown

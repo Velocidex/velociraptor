@@ -416,6 +416,52 @@ connection work together.
 
 ---
 
+## Option 4 — Editor client (future): VS Code / Neovim / Zed
+
+The LSP server speaks the standard Language Server Protocol, so it is
+client-agnostic. Everything implemented so far — diagnostics, hover,
+completion, and document symbols — will work in any editor that speaks
+LSP: VS Code, Neovim, Emacs, Zed, and others.
+
+This is NOT implemented yet — it is documented here so the path is clear
+for anyone who wants it.
+
+### What it would look like
+
+A thin client extension (on the order of ~100 lines) that:
+
+1. Tells the editor to spawn `velociraptor lsp` for `.vql` files
+   (the language server runs over stdio, exactly as opencode uses it).
+2. Wires the editor's LSP client to that process.
+
+After that, the editor gets the usual IDE experience for VQL for free:
+
+- Red squiggles under syntax errors, unknown plugins/functions/artifacts,
+  and unknown keyword arguments (with exact line/column).
+- Hover documentation for functions, plugins, arguments and their types.
+- Autocomplete for plugins, functions, artifacts, LET variables, and
+  argument names.
+- A document outline of the query structure (LETs, queries, columns).
+
+### Caveat: UTF-16 vs byte offsets
+
+Our position mapping is byte-based, which is correct for the ASCII VQL
+that is overwhelmingly typical. VS Code (and some other editors) use
+UTF-16 character offsets internally, so a string literal containing
+non-ASCII characters (emoji, non-Latin text) could show diagnostics a
+character or two off until a position-conversion shim is added. This is
+a small, well-understood fix, and irrelevant for ordinary VQL.
+
+### Not needed for the AI-agent workflow
+
+The original motivation for this server was giving AI agents a pre-flight
+validation loop (draft → validate → fix → submit via API). Editors are a
+natural byproduct of speaking standard LSP, not a requirement of that
+workflow — which is why this option is documented as future work rather
+than built today.
+
+---
+
 ## Decision guide
 
 | Need | Pick |
@@ -425,6 +471,7 @@ connection work together.
 | Structured, guaranteed tool call in one agent framework | Option 2 (custom tool) |
 | Framework-neutral MCP, reuse full LSP surface | Option 3a (mcpls) |
 | One MCP server for all Velociraptor work incl. validation | Option 3b (mcp-velociraptor `validate_vql`) |
+| Full IDE experience for humans (VS Code, Neovim, Zed) | Option 4 (editor client — future) |
 
 ## Implementation status
 
@@ -435,3 +482,4 @@ connection work together.
 | 2 — custom tool | ✅ implemented and verified (`validate-vql` opencode tool) |
 | 3a — mcpls | ✅ rebuilt from source, config complete, verified end-to-end |
 | 3b — mcp-velociraptor `validate_vql` | ✅ implemented and verified end-to-end against a live instance |
+| 4 — editor client (VS Code etc.) | ⬜ future option — standard LSP means the server already speaks it; a ~100-line client extension wires it up (see Option 4) |
