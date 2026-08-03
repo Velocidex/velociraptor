@@ -47,8 +47,7 @@ func (self *Server) DidChange(
 	if len(params.ContentChanges) > 0 {
 		// We advertise full sync, so the client sends the whole
 		// document in a TextDocumentContentChangeWholeDocument.
-		if change, ok := params.ContentChanges[len(params.ContentChanges)-1].(
-			*protocol.TextDocumentContentChangeWholeDocument); ok {
+		if change, ok := params.ContentChanges[len(params.ContentChanges)-1].(*protocol.TextDocumentContentChangeWholeDocument); ok {
 			self.documents[params.TextDocument.URI] = change.Text
 		}
 	}

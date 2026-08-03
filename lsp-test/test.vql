@@ -1,0 +1,1 @@
+SELECT * FROM Artifact.Windows.Sys.Users()
