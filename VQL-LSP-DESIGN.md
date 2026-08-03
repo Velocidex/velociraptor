@@ -5,8 +5,10 @@ building an LSP server for VQL. Update as the work progresses.
 
 Last updated: 2026-08-03
 
-> Status: diagnostics milestone complete. Hover/completion/artifact-store
-> are optional follow-ons; the artifact store is deferrable (see below).
+> Status: diagnostics milestone complete. The whole-document parse-failure
+> problem is mitigated (truncate-and-retry, see Hurdles) and the artifact
+> registry is implemented (see Artifact store). Hover/completion/document
+> symbols remain as follow-on work.
 
 ## Goal
 
@@ -113,12 +115,41 @@ Participle throws away the entire AST on the first syntax error and returns
 nil. This kills completions and diagnostics exactly when the user (or agent)
 needs them most — in the middle of a half-typed query.
 
-Mitigation strategies to evaluate:
+**Mitigation implemented: truncate-and-retry.** The `Validate()` loop in
+`vql/lsp/diagnostics.go` scans the document segment by segment:
 
-- Progressively truncate the input and retry parsing.
-- Fall back to raw lexer tokens when the parse fails (the token stream is
-  available from the lexer).
-- Position-aware error mapping so diagnostics stay useful even on failure.
+1. Parse the current segment (starting at a byte offset `base`).
+2. On success, validate all statements in it and stop.
+3. On failure, unwrap the error (`errors.Cause` → `*lexer.Error` or
+   `participle.Error`) to get an absolute byte offset, emit a syntax
+   diagnostic at that position, then recover whatever was parseable *before*
+   the error by retrying progressively shorter prefixes (backing up to the
+   previous `\n` or `;` boundary — `largestParseablePrefix`).
+4. Jump past the errored line and continue scanning from the next line.
+
+Result: a garbage line in the middle of a document no longer hides errors on
+either side of it. A doc with `pslist(foo=1)`, a `@@@` garbage line,
+`pslist(bar=2)`, and an unknown plugin reports all four problems with exact
+positions. Retries are capped (`maxParseErrors = 50`).
+
+Positions are mapped from participle's byte offsets back to LSP
+line/character via a `positionMapper` (binary search over line-start
+offsets). This works because participle positions are byte-based and VQL
+documents in the agent use case are ASCII/UTF-8 friendly; multi-byte
+characters are a known caveat.
+
+Fallback strategies considered but deferred:
+
+- Raw lexer-token fallback when the parse fails (the token stream is
+  available from the lexer) — not needed since truncate-and-retry gives
+  useful coverage.
+- Position-aware error mapping — done as part of the above.
+
+### Artifacts are not registered in the base scope
+
+`Artifact.*` names only resolve when the artifact repository is loaded into
+scope, which the base server scope does not do. Solved — see "Artifact
+store" below.
 
 ## Foundation Work Already Done
 
@@ -149,15 +180,35 @@ Added `Pos`/`EndPos lexer.Position` fields to key AST nodes in vfilter,
 auto-populated by participle v2:
 
 - `VQL`, `_Select`, `Plugin`, `_Args`, `_AliasedExpression`,
-  `_MemberExpression`, `_AndExpression`.
+  `_MemberExpression`, `_AndExpression`, `_SymbolRef`.
 
 Verified spans map exactly to source (e.g. plugin `Artifact.Linux.Sys` in a
 SELECT query spans exactly its source offset). This is what makes precise
 diagnostics possible.
 
+### Inspect() API in vfilter (uncommitted on `participle-v2-upgrade`)
+
+The grammar node types in vfilter are unexported, so an external package
+cannot name them. Added a small exported inspection API
+(`~/projects/vfilter/inspect.go` + `inspect_test.go`):
+
+- `vfilter.Inspect(vql *VQL) *Inspection` walks a parsed statement and
+  returns `Inspection{Calls []CallInfo, Symbols []SymbolInfo, Lets []LetInfo}`.
+- `CallInfo{Name, IsPlugin, Pos, EndPos, Args []ArgInfo, FreeForm}` — one per
+  plugin call in a FROM clause and one per `fn(...)` call in an expression.
+- `SymbolInfo{Name, Pos, EndPos}` — bare identifiers (columns, LET refs).
+- `LetInfo{Name, Pos}` — LET definitions.
+
+This keeps the LSP layer decoupled from the grammar internals while giving
+it exactly what validation needs: call sites with names, args, and source
+spans. Distinct from the reformat-oriented `visitor.CallSite` — do not merge
+them.
+
 ## Current State
 
 - Branch: `lsp-server` (created on top of `participle-v2-upgrade`).
+- Checkpoint commit `bb11f145c` "Add VQL language server with diagnostics"
+  — the whole LSP milestone before the truncate-and-retry experiment.
 - LSP server command `velociraptor lsp` implemented and verified
   end-to-end over stdio (initialize, didOpen/didChange/didClose, publish
   diagnostics, shutdown/exit). Also has `--check` flag to validate a query
@@ -168,35 +219,52 @@ diagnostics possible.
   actual binary with a Python LSP client — e.g. `upcase(str='x')` flags
   `str` as unknown, `pslist(foo=1)` flags `foo`, `unknownfunc()` flags the
   function itself.
-- Still to do: hover, document symbols / go-to-definition, completion,
-  and the whole-document parse-failure error-tolerance work
-  (see Hurdles).
+- Whole-document parse failures are mitigated with truncate-and-retry (see
+  Hurdles): a bad line no longer hides diagnostics on either side of it.
+- Artifact names resolve against the global artifact repository (see
+  Artifact store): `SELECT * FROM Artifact.Windows.Sys.Users()` no longer
+  reports "Unknown plugin".
+- Unit tests in `vql/lsp/diagnostics_test.go` (fake registry with a couple
+  of plugins/functions) cover clean docs, unknown function/plugin/argument,
+  multiline positions, syntax errors, and the truncate-and-retry recovery
+  across multiple bad lines. Run with `go test ./vql/lsp/`.
+- Still to do: hover, document symbols / go-to-definition, completion, and
+  validating artifact parameters against artifact defaults.
 
 ## Open Questions
 
-- How to handle the whole-document parse failure (truncate/retry vs lexer
-  fallback vs both).
 - Which plugins/functions to register in the LSP scope — all server-side
-  plugins, or a curated subset?
-- Whether artifact names should be resolved (e.g. `Artifact.Windows.Sys.
-  ...` references) and against which collection scope. See
-  "Artifact store" below — currently considered optional and deferrable.
+  plugins, or a curated subset? (Currently: everything in the base scope
+  plus all artifacts from the global repository.)
+- Artifact validation depth: currently only artifact *names* resolve. The
+  artifact `Call()` implementation validates unknown parameters at runtime
+  against artifact defaults (`parameters:` env) and logs "Unknown parameter
+  %s provided to artifact" — but that check happens inside the plugin at
+  execution time, not statically. Wiring it into the LSP registry would let
+  the agent catch bad artifact parameters before submission. Not yet done.
 
-### Artifact store (optional, deferrable)
+### Artifact store (implemented)
 
 Resolving artifact names (e.g. `Artifact.Windows.Sys.Users()`) requires
 loading the artifact repository into the LSP scope — the base server scope
 only registers built-in plugins and functions, not artifacts.
 
-**Current position: optional feature, not essential for the core
-validation loop.** The diagnostics path is registry-driven: it looks up
-names in a map regardless of where the entries came from. Loading the
-artifact store would add more entries to the same map — it changes registry
-population, not validation logic. So it can be added any time with little
-effort if a use case needs it.
+**Implemented**: `vql/lsp/artifacts.go` `BuildRegistryWithArtifacts(ctx,
+config_obj, scope)` loads the global artifact repository (via
+`startup.StartToolServices` + `services.GetRepositoryManager` →
+`GetGlobalRepository` → `repository.List`/`Get`) and registers each artifact
+as a plugin named `Artifact.<Name>` with its `parameters:` section as the
+argument list (`AddArtifact`). Registry population stays separate from
+validation logic, exactly as predicted — validation is map-lookup driven, so
+artifacts just add entries to the same map.
 
-It becomes genuinely valuable once hover/completion are built (suggesting
-`Artifact.*` names, showing artifact docs, jumping to artifact
-definitions). When implemented it should register each artifact as a
-plugin named `Artifact.<Org>.<Name>` with its YAML `parameters:` section as
-the argument list.
+This is genuinely valuable already for diagnostics: an agent referencing a
+non-existent artifact (or a hallucinated artifact name) now gets an
+"Unknown plugin" diagnostic instead of silence, and `velociraptor vql list`
+alone can't do that. It becomes even more valuable once hover/completion are
+built (suggesting `Artifact.*` names, showing artifact docs, jumping to
+artifact definitions).
+
+Artifact parameter *types* are carried through (name + type string from
+`ArtifactParameter`), so future type-mismatch diagnostics can use them.
+

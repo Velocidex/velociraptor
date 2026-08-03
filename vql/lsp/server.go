@@ -99,6 +99,35 @@ func (self *Server) Initialized(ctx context.Context, params *protocol.Initialize
 	return nil
 }
 
+// Diagnostic implements the pull-based textDocument/diagnostic request
+// (LSP 3.17). Some clients, including opencode, use pull-based diagnostics
+// instead of relying on push-based textDocument/publishDiagnostics.
+func (self *Server) Diagnostic(
+	ctx context.Context, params *protocol.DocumentDiagnosticParams) (protocol.DocumentDiagnosticReport, error) {
+
+	self.mu.Lock()
+	text, pres := self.documents[params.TextDocument.URI]
+	self.mu.Unlock()
+
+	if !pres {
+		return &protocol.RelatedFullDocumentDiagnosticReport{
+			FullDocumentDiagnosticReport: protocol.FullDocumentDiagnosticReport{
+				Kind:  "full",
+				Items: []protocol.Diagnostic{},
+			},
+		}, nil
+	}
+
+	items := self.registry.Validate(text)
+
+	return &protocol.RelatedFullDocumentDiagnosticReport{
+		FullDocumentDiagnosticReport: protocol.FullDocumentDiagnosticReport{
+			Kind:  "full",
+			Items: items,
+		},
+	}, nil
+}
+
 // Shutdown tells the client the server is shutting down and that it will
 // not be accepting new requests.
 func (self *Server) Shutdown(ctx context.Context) error {
