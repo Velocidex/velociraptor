@@ -1,0 +1,202 @@
+# VQL Language Server — Design Notes & Decisions
+
+Living document tracking the design, decisions, and considerations for
+building an LSP server for VQL. Update as the work progresses.
+
+Last updated: 2026-08-03
+
+> Status: diagnostics milestone complete. Hover/completion/artifact-store
+> are optional follow-ons; the artifact store is deferrable (see below).
+
+## Goal
+
+Create a Language Server Protocol (LSP) server for VQL that can be used by
+AI agents (e.g. OpenCode, Claude Code) when they need to formulate VQL
+queries.
+
+Rationale (see https://amirteymoori.com/lsp-language-server-protocol-ai-coding-tools/):
+LSP gives AI tools *semantic* understanding of code instead of text
+matching. For VQL this means the agent gets precise diagnostics, plugin
+lookup, and type information — the difference between an agent that guesses
+and one that knows.
+
+## Target Use Cases
+
+1. **Primary**: An AI agent creates a pure VQL query and submits it to a
+   Velociraptor server via the API query endpoint. The LSP validates the
+   query *before* submission, catching hallucinated plugin names, bad
+   argument names, wrong types, and undefined LET variables.
+2. **Secondary**: An AI agent creates a query and hands it to the user, who
+   decides where to run it (a notebook cell, embedded in a YAML artifact,
+   etc.).
+
+Key implication: **the LSP is NOT file-based.** The "document" is a single
+VQL query string, passed to the server as a virtual document (e.g.
+`untitled:` URI). No workspace folders, no file watching, no YAML
+extraction, no incremental change tracking.
+
+## Feature Priority (agent-first)
+
+1. **Diagnostics** — syntax errors (with precise line/column), unknown
+   plugins/functions, unknown argument names, argument type mismatches,
+   undefined LET variable references.
+2. **Hover** — signature + docs + argument descriptions for a plugin or
+   function under the cursor, so the agent can self-serve API knowledge.
+3. **Document symbols / Go to definition** — LET variables, artifact
+   references, query structure.
+4. **Completion** — mostly useful for the human in the loop; lowest priority
+   for the agent use case.
+
+## Architecture Decisions
+
+### Decision: LSP server lives in the Velociraptor binary
+
+The server is a new command in the Velociraptor binary:
+
+```
+velociraptor lsp
+```
+
+**Why**: the server needs every plugin, function, and artifact name
+registered in the server's VQL scope, and that registry only exists inside
+the full Velociraptor build. A standalone repo would have to import half of
+Velociraptor anyway and would go stale every time a plugin is added.
+
+### Decision: Diagnostics-first implementation strategy
+
+Build the core engine, then prove it with diagnostics alone, then layer on
+hover/completion.
+
+- The engine = scope builder (all plugins/functions registered) + parser +
+  AST walker + position-to-node mapping.
+- Diagnostics is the first handler but forces the whole engine to exist.
+- Hover/completion are the same introspection data queried differently —
+  cheap once the engine exists.
+- De-risks the trickiest subsystem before building features on top of it.
+
+### Decision: LSP library — go.lsp.dev
+
+Use **go.lsp.dev** (`go.lsp.dev/protocol` + `go.lsp.dev/jsonrpc2`) — the
+de-facto standard for Go LSP servers. Actively maintained, LSP 3.18 types
+generated from the official meta-model, fast JSON-RPC layer. Embed
+`UnimplementedServer` and implement the handlers we need. Requires Go 1.26+.
+
+Rejected alternatives:
+
+- **tliron/glsp** — mature SDK, ready-to-run JSON-RPC server supporting
+  stdio/TCP/WebSockets/IPC.
+- **LukasParke/gossip** — newer framework with built-in document store,
+  tree-sitter integration, incremental diagnostics.
+
+### Decision: Bump minimum Go version to 1.26
+
+Velociraptor's go.mod `go` directive was bumped from `1.25.3` to `1.26.4`.
+
+**Why**: go.lsp.dev (`go.lsp.dev/protocol` + `go.lsp.dev/jsonrpc2`)
+requires Go 1.26+, and Go's module resolution bumps the module's `go`
+directive when a dependency needs a newer version. Velociraptor uses a
+single main go.mod (no nested modules), so the bump applies to the whole
+project, not just the LSP command.
+
+Accepted trade-off: raising the project-wide minimum Go build version. The
+current toolchain already runs 1.26.4, so this works locally with no other
+changes; it is purely a build-requirement change.
+
+Rejected alternative: pinning an older go.lsp.dev release that still fit
+Go 1.25, which would forfeit the maintained, current-API version.
+
+## Hurdles
+
+### Participle is a whole-document parser (the big one)
+
+Participle throws away the entire AST on the first syntax error and returns
+nil. This kills completions and diagnostics exactly when the user (or agent)
+needs them most — in the middle of a half-typed query.
+
+Mitigation strategies to evaluate:
+
+- Progressively truncate the input and retry parsing.
+- Fall back to raw lexer tokens when the parse fails (the token stream is
+  available from the lexer).
+- Position-aware error mapping so diagnostics stay useful even on failure.
+
+## Foundation Work Already Done
+
+### participle v2 migration (branch `participle-v2-upgrade`)
+
+- **vfilter** (`~/projects/vfilter`): migrated to
+  `github.com/alecthomas/participle/v2 v2.1.4`.
+  - Lexer rewritten from a single mega-regex to `[]lexer.SimpleRule`.
+  - Generic `MustBuild[T]`, new `ParseString` signature.
+  - Comment elision preserved via custom `droppingLexerDef` wrapper.
+  - Error handling updated for `*lexer.Error` / `participle.Error`.
+  - Commits: `abfe2d4` (migration), `95a1f79` (position capture).
+- **Velociraptor**: migrated its own direct participle usage.
+  - `vql/windows/wmi/parse/parse.go` (MOF parser) — lexer, MustBuild,
+    ParseString.
+  - `services/repository/errors.go` — `UnexpectedTokenError` is now a
+    pointer.
+  - `services/repository/reformat.go` — `participle.Error` now exposes
+    `Position()` instead of `Token()`.
+  - `go.mod`: v2 as direct dep; v0.7.1 remains only as indirect dep of
+    sigma-go. Local `replace www.velocidex.com/golang/vfilter => ../vfilter`
+    enabled.
+  - Commit: `c986183e5`.
+
+### Source position capture (the LSP payoff)
+
+Added `Pos`/`EndPos lexer.Position` fields to key AST nodes in vfilter,
+auto-populated by participle v2:
+
+- `VQL`, `_Select`, `Plugin`, `_Args`, `_AliasedExpression`,
+  `_MemberExpression`, `_AndExpression`.
+
+Verified spans map exactly to source (e.g. plugin `Artifact.Linux.Sys` in a
+SELECT query spans exactly its source offset). This is what makes precise
+diagnostics possible.
+
+## Current State
+
+- Branch: `lsp-server` (created on top of `participle-v2-upgrade`).
+- LSP server command `velociraptor lsp` implemented and verified
+  end-to-end over stdio (initialize, didOpen/didChange/didClose, publish
+  diagnostics, shutdown/exit). Also has `--check` flag to validate a query
+  from the command line without an LSP client.
+- Diagnostics implemented against the real plugin/function registry built
+  from the server scope: syntax errors (precise line/col), unknown
+  plugins/functions, unknown keyword arguments. Verified against the
+  actual binary with a Python LSP client — e.g. `upcase(str='x')` flags
+  `str` as unknown, `pslist(foo=1)` flags `foo`, `unknownfunc()` flags the
+  function itself.
+- Still to do: hover, document symbols / go-to-definition, completion,
+  and the whole-document parse-failure error-tolerance work
+  (see Hurdles).
+
+## Open Questions
+
+- How to handle the whole-document parse failure (truncate/retry vs lexer
+  fallback vs both).
+- Which plugins/functions to register in the LSP scope — all server-side
+  plugins, or a curated subset?
+- Whether artifact names should be resolved (e.g. `Artifact.Windows.Sys.
+  ...` references) and against which collection scope. See
+  "Artifact store" below — currently considered optional and deferrable.
+
+### Artifact store (optional, deferrable)
+
+Resolving artifact names (e.g. `Artifact.Windows.Sys.Users()`) requires
+loading the artifact repository into the LSP scope — the base server scope
+only registers built-in plugins and functions, not artifacts.
+
+**Current position: optional feature, not essential for the core
+validation loop.** The diagnostics path is registry-driven: it looks up
+names in a map regardless of where the entries came from. Loading the
+artifact store would add more entries to the same map — it changes registry
+population, not validation logic. So it can be added any time with little
+effort if a use case needs it.
+
+It becomes genuinely valuable once hover/completion are built (suggesting
+`Artifact.*` names, showing artifact docs, jumping to artifact
+definitions). When implemented it should register each artifact as a
+plugin named `Artifact.<Org>.<Name>` with its YAML `parameters:` section as
+the argument list.
