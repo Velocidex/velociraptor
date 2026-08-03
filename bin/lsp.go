@@ -26,7 +26,10 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"go.lsp.dev/jsonrpc2"
 	"go.lsp.dev/protocol"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/startup"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/lsp"
 )
@@ -57,16 +60,36 @@ func init() {
 func doLSP() error {
 	logging.DisableLogging()
 
+	// Load the configuration and start minimal services. This is needed
+	// to load the artifact repository so that Artifact.* pseudo-plugins
+	// can be validated.
+	config_obj, err := APIConfigLoader.WithNullLoader().
+		LoadAndValidate()
+	if err != nil {
+		return err
+	}
+
+	config_obj.Services = services.GenericToolServices()
+
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
+	if err != nil {
+		return err
+	}
+	defer sm.Close()
+
 	// If we are asked to check a query, do it and exit. This is useful
 	// for testing and for agents that just want validation.
 	if *lsp_check_plugin != "" {
-		return checkQuery(*lsp_check_plugin)
+		return checkQuery(ctx, config_obj, *lsp_check_plugin)
 	}
 
-	scope := vql_subsystem.MakeScope()
-	defer scope.Close()
-
-	registry := lsp.BuildRegistry(scope)
+	registry, err := buildRegistry(ctx, config_obj)
+	if err != nil {
+		return err
+	}
 
 	// The LSP protocol runs over stdio. It is important that nothing
 	// else writes to stdout, so we may redirect logging elsewhere.
@@ -112,14 +135,31 @@ func doLSP() error {
 	return nil
 }
 
-// checkQuery validates a single VQL query and prints diagnostics. This is
-// a convenient non-interactive way to test the validator, and can be used
-// by agents as a pre-flight check.
-func checkQuery(query string) error {
+// buildRegistry loads the VQL scope and registers all plugins, functions
+// and artifacts.
+func buildRegistry(
+	ctx context.Context, config_obj *config_proto.Config) (*lsp.Registry, error) {
+
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
 
-	registry := lsp.BuildRegistry(scope)
+	registry, err := lsp.BuildRegistryWithArtifacts(ctx, config_obj, scope)
+	if err != nil {
+		return nil, err
+	}
+
+	return registry, nil
+}
+
+// checkQuery validates a single VQL query and prints diagnostics. This is
+// a convenient non-interactive way to test the validator, and can be used
+// by agents as a pre-flight check.
+func checkQuery(
+	ctx context.Context, config_obj *config_proto.Config, query string) error {
+	registry, err := buildRegistry(ctx, config_obj)
+	if err != nil {
+		return err
+	}
 
 	for _, diag := range registry.Validate(query) {
 		// Print diagnostics in a simple format:

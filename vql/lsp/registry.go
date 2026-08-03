@@ -126,3 +126,17 @@ func (self *Registry) GetFunction(name string) (*Callable, bool) {
 	callable, pres := self.functions[name]
 	return callable, pres
 }
+
+// AddArtifact registers an artifact as a pseudo-plugin. Artifacts are
+// called from VQL like plugins, e.g. Artifact.Windows.Sys.Users().
+//
+// The artifact's declared parameters become the callable's args.
+func (self *Registry) AddArtifact(
+	name, description string, parameters []Arg) {
+	self.plugins[name] = &Callable{
+		Name: name,
+		Doc:  description,
+		Type: "artifact",
+		Args: parameters,
+	}
+}
