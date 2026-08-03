@@ -86,6 +86,9 @@ func (self *Server) Initialize(
 				WorkspaceDiagnostics:  false,
 				Identifier:            ptr("vql"),
 			},
+
+			// The server provides a document outline.
+			DocumentSymbolProvider: protocol.Boolean(true),
 		},
 		ServerInfo: protocol.ServerInfo{
 			Name:    "vql-lsp",

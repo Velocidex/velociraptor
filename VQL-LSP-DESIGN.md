@@ -11,8 +11,9 @@ Last updated: 2026-08-03
 > (LSP 3.17 `textDocument/diagnostic`) are implemented for opencode
 > compatibility. All five agent-discovery options in VQL-LSP-USAGE.md are
 > implemented and verified end-to-end (CLI, skill, custom opencode tool,
-> mcpls bridge, native MCP tool). Hover/completion/document symbols remain
-> as follow-on work.
+> mcpls bridge, native MCP tool). Document symbols (`textDocument/documentSymbol`)
+> are implemented and verified end-to-end (see Foundation Work and Current
+> State). Hover and completion remain as follow-on work.
 
 ## Goal
 
@@ -49,7 +50,7 @@ extraction, no incremental change tracking.
 2. **Hover** — signature + docs + argument descriptions for a plugin or
    function under the cursor, so the agent can self-serve API knowledge.
 3. **Document symbols / Go to definition** — LET variables, artifact
-   references, query structure.
+   references, query structure. **Implemented** (see Current State).
 4. **Completion** — mostly useful for the human in the loop; lowest priority
    for the agent use case.
 
@@ -235,18 +236,28 @@ them.
   artifact's declared parameters (e.g. `foo=1` on Windows.Sys.Users flags
   `foo` as unknown).
 - Unit tests in `vql/lsp/` (fake registry with a couple of plugins and
-  functions) — 16 tests total: 10 diagnostic-engine tests (clean docs,
+  functions) — 18 tests total: 10 diagnostic-engine tests (clean docs,
   unknown function/plugin/argument, artifact arguments, multiline
-  positions, syntax errors, truncate-and-retry recovery) plus 6 server
+  positions, syntax errors, truncate-and-retry recovery), 6 server
   lifecycle tests (initialize capabilities, didOpen+pull, didChange
-  updates, didClose clears, pull unknown doc, shutdown closes Done).
+  updates, didClose clears, pull unknown doc, shutdown closes Done), and
+  2 document-symbol tests (hierarchical outline, unknown doc → empty).
   Run with `go test ./vql/lsp/`.
+- Document symbols implemented: `vfilter.Outline()` (new exported API in
+  the vfilter repo) walks the unexported grammar AST and produces a
+  hierarchical outline — LET variables, queries (named after their FROM
+  plugin), SELECT columns, and function calls — each with source
+  positions. The LSP server maps that to `textDocument/documentSymbol`
+  (LSP 3.16, hierarchical `DocumentSymbol[]`): let→Variable, query/function
+  →Function, column→Field. Unaliased columns get their name extracted from
+  the source text. Advertised via `DocumentSymbolProvider: true` in
+  capabilities. Verified end-to-end over the wire (see VQL-LSP-TESTS.md).
 - Agent integration verified: opencode LSP config starts the server when a
   `.vql` file is opened and returns diagnostics as agent feedback; the
   `validate-vql` custom tool (see VQL-LSP-USAGE.md Option 2) is loaded
   inside the live agent and returns structured diagnostics for bad queries
   and `valid: true` for clean ones.
-- Still to do: hover, document symbols / go-to-definition, completion, and
+- Still to do: hover, completion, go-to-definition, and
   validating artifact parameters against artifact defaults.
 
 ## Open Questions
@@ -281,7 +292,9 @@ non-existent artifact (or a hallucinated artifact name) now gets an
 "Unknown plugin" diagnostic instead of silence, and `velociraptor vql list`
 alone can't do that. It becomes even more valuable once hover/completion are
 built (suggesting `Artifact.*` names, showing artifact docs, jumping to
-artifact definitions).
+artifact definitions). Document symbols already benefit: the query outline
+is named after the FROM plugin, so `Artifact.Windows.Sys.Users` appears
+directly in the outline.
 
 Artifact parameter *types* are carried through (name + type string from
 `ArtifactParameter`), so future type-mismatch diagnostics can use them.

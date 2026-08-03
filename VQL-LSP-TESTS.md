@@ -2,12 +2,12 @@
 
 This document summarizes every test performed on the VQL language server
 (`velociraptor lsp`) across the prototype milestones: the participle v2
-migration, the Inspect() API, the diagnostic engine, the artifact registry,
-and the opencode integration.
+migration, the Inspect() and Outline() APIs, the diagnostic engine, the
+artifact registry, the opencode integration, and document symbols.
 
-**Go unit test total:** 16 tests in `vql/lsp/` (10 diagnostic engine + 6
-server lifecycle), plus 2 vfilter Inspect() tests and the full vfilter
-migration suite.
+**Go unit test total:** 18 tests in `vql/lsp/` (10 diagnostic engine + 6
+server lifecycle + 2 document symbols), plus 2 vfilter Inspect() tests,
+2 vfilter Outline() tests, and the full vfilter migration suite.
 
 ---
 
@@ -118,6 +118,28 @@ diagnostics per URI) so no real stdio transport is needed.
 | `TestServerPullUnknownDocument` | Pull on a never-opened URI returns empty items (no crash) |
 | `TestServerShutdownClosesDone` | `Shutdown` closes the server's `Done()` channel |
 
+## 3c. Document symbol unit tests
+
+Location: `velociraptor/vql/lsp/server_test.go` + `~/projects/vfilter/outline_test.go`
+
+### vfilter Outline() API — 2 tests, all pass
+
+| Test | What it verifies |
+|---|---|
+| `TestOutline` | `Outline()` produces a hierarchical outline of `LET Y = SELECT Foo FROM pslist(pid=1)\nSELECT upcase(str=X), Bar AS baz FROM Artifact.Linux.Sys.Users() WHERE Foo > 3`: stmt1 root `Y` (let) → `pslist` (query) → `Foo` (column); stmt2 root `Artifact.Linux.Sys.Users` (query) → 2 columns (unaliased `""` with `upcase` function child, aliased `"baz"`) |
+| `TestOutlineNil` | `Outline(nil)` returns nil (no panic) |
+
+### LSP server DocumentSymbol — 2 tests, all pass (total 18 in vql/lsp/)
+
+| Test | What it verifies |
+|---|---|
+| `TestServerDocumentSymbols` | After `didOpen`, `DocumentSymbol` returns the hierarchical outline: `Y` (Variable) → `pslist` (Function) → `Foo` (Field); `Artifact.Linux.Sys.Users` (Function) → unaliased column (Field, name from source text) → `upcase` (Function), and `baz` (Field) |
+| `TestServerDocumentSymbolsUnknownDocument` | `DocumentSymbol` on a never-opened URI returns empty (no crash) |
+
+Kind mapping verified: `let→Variable(13)`, `query/function→Function(12)`,
+`column→Field(8)`. `Initialize` capabilities now advertise
+`DocumentSymbolProvider: true`.
+
 ---
 
 ## 4. End-to-end tests against the real binary
@@ -163,6 +185,13 @@ Verified:
 - A bad doc (`Artifact.Windows.Sys.Users(foo=1)`) returns
   `Unknown argument 'foo' for artifact 'Artifact.Windows.Sys.Users'` at
   0:41 through BOTH push and pull channels.
+- **Document symbols**: `textDocument/documentSymbol` returns the
+  hierarchical outline for a two-statement doc
+  (`LET Y = SELECT Foo FROM pslist(pid=1)\nSELECT upcase(str=X), Bar AS baz FROM Artifact.Linux.Sys.Users() WHERE Foo > 3`):
+  `Y` (Variable) → `pslist` (Function) → `Foo` (Field); `Artifact.Linux.Sys.Users`
+  (Function) → `upcase(str=X)` (Field, name from source) → `upcase` (Function),
+  and `baz` (Field). (Python client `/tmp/opencode/lsp_symbols_test.py`; note
+  the push notification arrives before the response — drain loop required.)
 
 ---
 
@@ -285,6 +314,7 @@ against a **live Velociraptor instance** (API config at
 | didClose clears diagnostics | — | ✓ | ✓ | — |
 | Shutdown/exit lifecycle | — | ✓ | ✓ | — |
 | Initialize capabilities (full sync, provider, serverInfo) | — | ✓ | ✓ | ✓ |
+| Document symbols (hierarchical outline, kinds) | — | ✓ | ✓ | — |
 
 ---
 
