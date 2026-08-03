@@ -201,6 +201,72 @@ Verified:
 
 ---
 
+## 6. Agent-discovery option tests (see VQL-LSP-USAGE.md)
+
+### 6a. `validate-vql` custom opencode tool (Option 2)
+
+The custom tool at `~/.config/opencode/tools/validate-vql.ts` shells out to
+`velociraptor lsp --check` and parses the output into structured JSON.
+After an opencode restart, the tool appears in the agent's function list.
+Verified from inside the live agent:
+
+| Query | Result |
+|---|---|
+| `SELECT upcase(str='x'), bogusfunc() FROM Artifact.Windows.Sys.Users(foo=1)` | `valid: false`, 3 diagnostics (1:15 str/upcase, 1:25 bogusfunc, 1:69 foo/artifact) |
+| `SELECT * FROM Artifact.Windows.Sys.Users()` | `valid: true`, diagnostics [] |
+| `SELECT * FROM pslist(pid=1)` | `valid: true`, diagnostics [] |
+
+Also `bun build tools/validate-vql.ts` compiles cleanly (74 modules,
+0.42 MB).
+
+### 6b. velociraptor-vql-validation skill (Option 1)
+
+Skill file created at
+`~/.config/opencode/skills/velociraptor-vql-validation/SKILL.md`; its
+quick-start command (`velociraptor lsp --check`) is the same path proven in
+sections 4 and 6a. Skill frontmatter auto-matches when a task mentions
+writing/checking/debugging VQL.
+
+### 6c. mcpls LSP→MCP bridge (Option 3a)
+
+mcpls v0.3.8 (rebuilt from source — prebuilt binary required glibc 2.39,
+system has 2.35) wraps the vql LSP server and exposes MCP tools. Verified
+with a newline-delimited-JSON MCP client:
+
+- initialize → protocolVersion 2024-11-05, serverInfo {name mcpls, title
+  "MCPLS - MCP to LSP Bridge", version 0.3.8}.
+- tools/list → 20 tools including `get_diagnostics`.
+- `tools/call get_diagnostics` on
+  `/home/me/projects/velociraptor/lsp-test/bridge-test.vql` (2-line bad
+  file) returned both diagnostics as JSON:
+  `Unknown argument 'foo' for artifact 'Artifact.Windows.Sys.Users'`
+  (1:42) and `Unknown argument 'badarg' for plugin 'pslist'` (2:22).
+
+Config in `/home/me/.config/mcpls/mcpls.toml` (roots restricted to
+`/home/me/projects/velociraptor`; `[[workspace.language_extensions]]` for
+vql; `[[lsp_servers]]` entry running `velociraptor lsp` with
+`handles = ["diagnostics"]`).
+
+### 6d. Native MCP tool `validate_vql` in mcp-velociraptor (Option 3b)
+
+Tool implemented in `/home/me/projects/mcp-velociraptor` at
+`internal/tools/validate_vql.go` (lazy cached registry via
+`lsp.BuildRegistryWithArtifacts`; no API connection required for
+validation itself, though the server requires an API config at startup).
+Verified with a newline-delimited-JSON MCP client both standalone and
+against a **live Velociraptor instance** (API config at
+`/velociraptor/datastore5/api.config.yaml`, `localhost:8001`):
+
+- tools/list → [`list_clients`, `validate_vql`].
+- `validate_vql` bad query → `valid: false`, 3 diagnostics (1:15, 1:25,
+  1:69) exactly matching the LSP/CLI/tool results.
+- `validate_vql` good query → `valid: true`, diagnostics [].
+- `list_clients` against the live instance returned 3 real clients
+  (hostname `1oca1host`, linux linuxmint21.3), proving the shared registry
+  and API connection work together.
+
+---
+
 ## Summary of coverage
 
 | Error class | Unit test | CLI test | LSP test | opencode |

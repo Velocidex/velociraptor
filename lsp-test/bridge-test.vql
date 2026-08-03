@@ -1,0 +1,2 @@
+SELECT * FROM Artifact.Windows.Sys.Users(foo=1)
+SELECT * FROM pslist(badarg=1)
