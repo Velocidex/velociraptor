@@ -23,7 +23,7 @@ func (self *UserManagerTestSuite) TestSetUserPassword() {
 	// Can a user update an admin's password?
 	err = users_manager.SetUserPassword(
 		self.Ctx, self.ConfigObj, "UserO1", "AdminO1", "MyPassword", "")
-	assert.Error(self.T(), err, "PermissionDenied")
+	assert.ErrorContains(self.T(), err, "PermissionDenied")
 
 	// Can an admin update a user's password?
 	err = users_manager.SetUserPassword(
@@ -33,5 +33,16 @@ func (self *UserManagerTestSuite) TestSetUserPassword() {
 	// Can a user set current org to a different org?
 	err = users_manager.SetUserPassword(
 		self.Ctx, self.ConfigObj, "UserO1", "UserO1", "", "O2")
-	assert.Error(self.T(), err, "PermissionDenied")
+	assert.ErrorContains(self.T(), err, "PermissionDenied")
+
+	// Can an admin user update a non-existing user password?
+	err = users_manager.SetUserPassword(
+		self.Ctx, self.ConfigObj, "AdminO1", "XXXXX", "MyPassword", "")
+	assert.ErrorContains(self.T(), err, "User not found")
+
+	// Can a user update a non-existing user password?
+	err = users_manager.SetUserPassword(
+		self.Ctx, self.ConfigObj, "UserO1", "XXXXX", "MyPassword", "")
+	assert.ErrorContains(self.T(), err, "User not found")
+
 }
