@@ -49,8 +49,10 @@ func (self *UserManager) SetUserPassword(
 
 	user_manager := services.GetUserManager()
 
-	// Hold on to the error until after ACL check
-	user_record, user_err := user_manager.GetUser(ctx, principal, username)
+	user_record, err := user_manager.GetUser(ctx, principal, username)
+	if err != nil {
+		return err
+	}
 
 	// Update the password if needed.
 	if password != "" {
@@ -70,9 +72,6 @@ func (self *UserManager) SetUserPassword(
 	// A user can always get their own user record regardless of
 	// permissions.
 	if principal == username {
-		if user_err != nil {
-			return user_err
-		}
 		err := services.LogAudit(ctx,
 			config_obj, principal, "Update password",
 			ordereddict.NewDict().
@@ -88,10 +87,6 @@ func (self *UserManager) SetUserPassword(
 	// ORG_ADMINs can see everything
 	ok, _ := services.CheckAccess(root_config_obj, principal, acls.ORG_ADMIN)
 	if ok {
-		if user_err != nil {
-			return user_err
-		}
-
 		err := services.LogAudit(ctx,
 			config_obj, principal, "Update password",
 			ordereddict.NewDict().
@@ -115,9 +110,6 @@ func (self *UserManager) SetUserPassword(
 		ok, _ := services.CheckAccess(
 			org_config_obj, principal, acls.SERVER_ADMIN)
 		if ok {
-			if user_err != nil {
-				return user_err
-			}
 			err := services.LogAudit(ctx,
 				config_obj, principal, "Update password",
 				ordereddict.NewDict().
