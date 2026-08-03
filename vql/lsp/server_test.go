@@ -83,6 +83,11 @@ func TestServerInitializeCapabilities(t *testing.T) {
 	require.True(t, ok, "DiagnosticProvider should be *DiagnosticOptions")
 	assert.Equal(t, "vql", *opts.Identifier)
 	assert.Equal(t, "vql-lsp", result.ServerInfo.Name)
+
+	// Document symbol support should be advertised.
+	assert.NotNil(t, result.Capabilities.DocumentSymbolProvider)
+	_, ok = result.Capabilities.DocumentSymbolProvider.(protocol.Boolean)
+	require.True(t, ok, "DocumentSymbolProvider should be protocol.Boolean")
 }
 
 func TestServerDidOpenAndPullDiagnostic(t *testing.T) {
@@ -218,4 +223,93 @@ func reportItems(t *testing.T, report protocol.DocumentDiagnosticReport) []proto
 		t.Fatalf("unexpected report type %T", report)
 		return nil
 	}
+}
+
+// symbolsFromResult extracts the hierarchical symbol list from a
+// documentSymbol result (a union).
+func symbolsFromResult(t *testing.T, result protocol.DocumentSymbolResult) []protocol.DocumentSymbol {
+	t.Helper()
+	switch r := result.(type) {
+	case protocol.DocumentSymbolSlice:
+		return []protocol.DocumentSymbol(r)
+	case protocol.SymbolInformationSlice:
+		t.Fatalf("expected hierarchical symbols, got flat SymbolInformation")
+		return nil
+	default:
+		t.Fatalf("unexpected DocumentSymbolResult type %T", result)
+		return nil
+	}
+}
+
+// findSymbol returns the first symbol with the given name at the top
+// level of the tree.
+func findSymbol(t *testing.T, symbols []protocol.DocumentSymbol, name string) *protocol.DocumentSymbol {
+	t.Helper()
+	for i := range symbols {
+		if symbols[i].Name == name {
+			return &symbols[i]
+		}
+	}
+	t.Fatalf("symbol %q not found", name)
+	return nil
+}
+
+func TestServerDocumentSymbols(t *testing.T) {
+	server, _ := newTestServer()
+	ctx := context.Background()
+
+	doc_uri := uri.MustParse("file:///tmp/symbols.vql")
+	err := server.DidOpen(ctx, &protocol.DidOpenTextDocumentParams{
+		TextDocument: protocol.TextDocumentItem{
+			URI: doc_uri,
+			Text: "LET Y = SELECT Foo FROM pslist(pid=1)\n" +
+				"SELECT upcase(str=X), Bar AS baz FROM Artifact.Linux.Sys.Users() WHERE Foo > 3",
+			Version: 1,
+		},
+	})
+	require.NoError(t, err)
+
+	result, err := server.DocumentSymbol(ctx, &protocol.DocumentSymbolParams{
+		TextDocument: protocol.TextDocumentIdentifier{URI: doc_uri},
+	})
+	require.NoError(t, err)
+
+	symbols := symbolsFromResult(t, result)
+	require.Len(t, symbols, 2)
+
+	// Statement 1: LET Y = SELECT ... - a variable wrapping a query.
+	let := findSymbol(t, symbols, "Y")
+	assert.Equal(t, protocol.SymbolKindVariable, let.Kind)
+	require.Len(t, let.Children, 1)
+	assert.Equal(t, "pslist", let.Children[0].Name)
+	assert.Equal(t, protocol.SymbolKindFunction, let.Children[0].Kind)
+
+	// Statement 2: the main query.
+	query := findSymbol(t, symbols, "Artifact.Linux.Sys.Users")
+	assert.Equal(t, protocol.SymbolKindFunction, query.Kind)
+	require.Len(t, query.Children, 2)
+
+	// Column 0: unaliased upcase(...) - name from source text, child
+	// function upcase.
+	col0 := query.Children[0]
+	assert.Equal(t, protocol.SymbolKindField, col0.Kind)
+	require.Len(t, col0.Children, 1)
+	assert.Equal(t, "upcase", col0.Children[0].Name)
+
+	// Column 1: aliased Bar AS baz.
+	col1 := query.Children[1]
+	assert.Equal(t, "baz", col1.Name)
+	assert.Equal(t, protocol.SymbolKindField, col1.Kind)
+}
+
+func TestServerDocumentSymbolsUnknownDocument(t *testing.T) {
+	server, _ := newTestServer()
+
+	result, err := server.DocumentSymbol(context.Background(), &protocol.DocumentSymbolParams{
+		TextDocument: protocol.TextDocumentIdentifier{
+			URI: uri.MustParse("file:///tmp/never-opened.vql"),
+		},
+	})
+	require.NoError(t, err)
+	require.Empty(t, symbolsFromResult(t, result))
 }
