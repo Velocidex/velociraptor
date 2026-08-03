@@ -28,6 +28,11 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+// maxParseErrors caps how many syntax errors we report from a single
+// document. Each error triggers a re-parse of a truncated segment so
+// this also bounds the number of retries.
+const maxParseErrors = 50
+
 // Validate parses a VQL document and returns diagnostics.
 //
 // It reports:
@@ -35,21 +40,88 @@ import (
 //   - unknown plugins in FROM clauses
 //   - unknown function calls
 //   - unknown keyword arguments on known plugins/functions
-//   - references to undefined LET variables
+//
+// Participle is a whole-document parser: on the first syntax error it
+// returns nil and discards the entire AST. To keep diagnostics useful
+// for half-typed or partially wrong queries we use truncate-and-retry:
+// when a segment fails to parse we report the error, validate the
+// largest valid prefix before it, then continue from the next line to
+// look for more errors.
 func (self *Registry) Validate(document string) []protocol.Diagnostic {
 	diagnostics := []protocol.Diagnostic{}
+	defined := make(map[string]bool)
+	line_starts := lineStarts(document)
 
-	statements, err := vfilter.MultiParseWithComments(document)
-	if err != nil {
-		diag := syntaxErrorDiagnostic(err, document)
-		if diag != nil {
-			diagnostics = append(diagnostics, *diag)
+	base := 0
+	errors_found := 0
+	for base < len(document) && errors_found < maxParseErrors {
+		segment := document[base:]
+
+		statements, err := vfilter.MultiParseWithComments(segment)
+		if err == nil {
+			// Clean parse of the rest of the document.
+			mapper := positionMapper{
+				document:    document,
+				line_starts: line_starts,
+				base:        base,
+			}
+			self.validateStatements(statements, defined, mapper, &diagnostics)
+			break
 		}
-		return diagnostics
+
+		// The segment failed to parse. Find where.
+		abs, message := parseErrorPosition(err, base)
+		if abs < 0 {
+			// No position information at all - report and stop.
+			diagnostics = append(diagnostics, fallbackDiagnostic(err))
+			break
+		}
+
+		diagnostics = append(diagnostics, syntaxDiagnostic(
+			document, line_starts, abs, message))
+		errors_found++
+
+		rel := abs - base
+
+		// Validate the largest valid prefix before the error. It
+		// starts at the same base so positions map to the document
+		// exactly. If truncating exactly at the error fails (the
+		// error may be mid-statement) we back up to the previous
+		// statement boundary.
+		if prefix_statements := largestParseablePrefix(segment, rel); prefix_statements != nil {
+			mapper := positionMapper{
+				document:    document,
+				line_starts: line_starts,
+				base:        base,
+			}
+			self.validateStatements(
+				prefix_statements, defined, mapper, &diagnostics)
+		}
+
+		// Advance past the error, skipping to the next line so we
+		// don't re-trip on the same construct.
+		next := abs
+		for next < len(document) && document[next] != '\n' {
+			next++
+		}
+		if next < len(document) {
+			next++ // skip the newline itself
+		}
+		if next <= abs {
+			next = abs + 1
+		}
+		base = next
 	}
 
-	// Track LET definitions so we can validate references.
-	defined := make(map[string]bool)
+	return diagnostics
+}
+
+// validateStatements collects LET definitions from all statements in the
+// segment, then validates calls and symbols against them.
+func (self *Registry) validateStatements(
+	statements []*vfilter.VQL, defined map[string]bool,
+	mapper positionMapper, diagnostics *[]protocol.Diagnostic) {
+
 	for _, statement := range statements {
 		inspection := vfilter.Inspect(statement)
 		for _, let := range inspection.Lets {
@@ -60,20 +132,18 @@ func (self *Registry) Validate(document string) []protocol.Diagnostic {
 	for _, statement := range statements {
 		inspection := vfilter.Inspect(statement)
 		for _, call := range inspection.Calls {
-			self.validateCall(call, defined, &diagnostics)
+			self.validateCall(call, defined, mapper, diagnostics)
 		}
 		for _, symbol := range inspection.Symbols {
-			self.validateSymbol(symbol, defined, &diagnostics)
+			self.validateSymbol(symbol, defined, mapper, diagnostics)
 		}
 	}
-
-	return diagnostics
 }
 
 // validateCall checks a plugin/function call site against the registry.
 func (self *Registry) validateCall(
 	call vfilter.CallInfo, defined map[string]bool,
-	diagnostics *[]protocol.Diagnostic) {
+	mapper positionMapper, diagnostics *[]protocol.Diagnostic) {
 
 	// The first dotted component is the scope where the callable
 	// should be resolved. Plugins are registered under their full
@@ -103,7 +173,7 @@ func (self *Registry) validateCall(
 			kind = "plugin"
 		}
 		*diagnostics = append(*diagnostics, protocol.Diagnostic{
-			Range:    rangeFromPositions(call.Pos, call.EndPos),
+			Range:    mapper.rangeOf(call.Pos, call.EndPos),
 			Severity: protocol.DiagnosticSeverityError,
 			Source:   protocol.NewOptional("vql"),
 			Message:  protocol.String("Unknown " + kind + " '" + call.Name + "'"),
@@ -127,7 +197,7 @@ func (self *Registry) validateCall(
 		}
 		if !known[arg.Name] {
 			*diagnostics = append(*diagnostics, protocol.Diagnostic{
-				Range:    rangeFromPositions(arg.Pos, arg.EndPos),
+				Range:    mapper.rangeOf(arg.Pos, arg.EndPos),
 				Severity: protocol.DiagnosticSeverityError,
 				Source:   protocol.NewOptional("vql"),
 				Message: protocol.String(
@@ -141,13 +211,11 @@ func (self *Registry) validateCall(
 // validateSymbol checks a bare symbol reference against LET definitions.
 //
 // Bare symbols can be column names (dynamic, from the row), LET variables
-// or function names used without call parens. We only flag symbols that
-// are certainly not columns - i.e. we only warn when a symbol matches no
-// known function and no LET definition but is used as if it were a stored
-// query variable. Columns are dynamic so we never flag them.
+// or function names used without call parens. Columns are dynamic so we
+// never flag them; we only resolve against known LET vars and functions.
 func (self *Registry) validateSymbol(
 	symbol vfilter.SymbolInfo, defined map[string]bool,
-	diagnostics *[]protocol.Diagnostic) {
+	mapper positionMapper, diagnostics *[]protocol.Diagnostic) {
 
 	// If it is a defined LET var it is fine.
 	if defined[symbol.Name] {
@@ -173,12 +241,71 @@ func firstComponent(name string) string {
 	return name[:idx]
 }
 
-// syntaxErrorDiagnostic converts a parse error into an LSP diagnostic.
-//
-// vfilter wraps parse errors with pkg/errors so we need to unwrap to the
-// root cause to find the *lexer.Error or participle.Error carrying the
-// position.
-func syntaxErrorDiagnostic(err error, document string) *protocol.Diagnostic {
+// largestParseablePrefix returns the largest prefix of segment[:end] that
+// parses cleanly, backing up to previous statement boundaries (newline or
+// semicolon) if the exact prefix fails to parse. Returns nil if no
+// non-empty prefix parses.
+func largestParseablePrefix(segment string, end int) []*vfilter.VQL {
+	for end > 0 {
+		prefix := segment[:end]
+		statements, err := vfilter.MultiParseWithComments(prefix)
+		if err == nil {
+			return statements
+		}
+
+		// Back up to the previous statement boundary.
+		newline := strings.LastIndex(prefix, "\n")
+		semicolon := strings.LastIndex(prefix, ";")
+		boundary := newline
+		if semicolon > boundary {
+			boundary = semicolon
+		}
+		if boundary <= 0 {
+			// Only whole-line candidates left; stop.
+			return nil
+		}
+		end = boundary
+	}
+	return nil
+}
+
+// positionMapper converts lexer positions that are relative to a segment
+// of the document (starting at byte offset base) into absolute LSP
+// positions in the document.
+type positionMapper struct {
+	document    string
+	line_starts []int
+	base        int
+}
+
+func (self positionMapper) mapPos(pos lexer.Position) protocol.Position {
+	// Prefer the byte offset - it survives truncation exactly.
+	if pos.Offset > 0 {
+		return offsetToPosition(self.document, self.line_starts, self.base+pos.Offset)
+	}
+	// Fall back to line/column math.
+	line := uint32(0)
+	if pos.Line > 0 {
+		line = uint32(pos.Line - 1)
+	}
+	col := uint32(0)
+	if pos.Column > 0 {
+		col = uint32(pos.Column - 1)
+	}
+	return protocol.Position{Line: line, Character: col}
+}
+
+func (self positionMapper) rangeOf(pos, end_pos lexer.Position) protocol.Range {
+	return protocol.Range{
+		Start: self.mapPos(pos),
+		End:   self.mapPos(end_pos),
+	}
+}
+
+// parseErrorPosition unwraps a vfilter parse error and returns the
+// absolute byte offset of the failure (document-relative, given base) and
+// its message. Returns abs=-1 if no position could be recovered.
+func parseErrorPosition(err error, base int) (int, string) {
 	cause := errors.Cause(err)
 
 	var pos lexer.Position
@@ -192,24 +319,28 @@ func syntaxErrorDiagnostic(err error, document string) *protocol.Diagnostic {
 		pos = t.Position()
 		message = t.Message()
 	default:
-		// No position available; fall back to the message text.
-		return &protocol.Diagnostic{
-			Range:    protocol.Range{Start: protocol.Position{}, End: protocol.Position{}},
-			Severity: protocol.DiagnosticSeverityError,
-			Source:   protocol.NewOptional("vql"),
-			Message:  protocol.String(err.Error()),
-		}
+		return -1, ""
 	}
 
-	start := protocol.Position{
-		Line:      uint32(pos.Line - 1),
-		Character: uint32(pos.Column - 1),
+	if pos.Offset > 0 {
+		return base + pos.Offset, message
 	}
-	// Give the diagnostic a small width on the offending line.
+	if pos.Line > 0 && pos.Column > 0 {
+		// No byte offset; approximate from line/column (rare).
+		// Fall back to the offset of the line start.
+		return -1, message
+	}
+	return -1, message
+}
+
+// syntaxDiagnostic builds a syntax error diagnostic at an absolute byte
+// offset in the document.
+func syntaxDiagnostic(document string, line_starts []int, abs int, message string) protocol.Diagnostic {
+	start := offsetToPosition(document, line_starts, abs)
 	end := start
-	end.Character = start.Character + 1
+	end.Character++
 
-	return &protocol.Diagnostic{
+	return protocol.Diagnostic{
 		Range:    protocol.Range{Start: start, End: end},
 		Severity: protocol.DiagnosticSeverityError,
 		Source:   protocol.NewOptional("vql"),
@@ -217,18 +348,54 @@ func syntaxErrorDiagnostic(err error, document string) *protocol.Diagnostic {
 	}
 }
 
-// rangeFromPositions converts a vfilter position pair into an LSP range.
-//
-// lexer.Position is 1-based; LSP is 0-based.
-func rangeFromPositions(pos, end_pos lexer.Position) protocol.Range {
-	return protocol.Range{
-		Start: protocol.Position{
-			Line:      uint32(pos.Line - 1),
-			Character: uint32(pos.Column - 1),
-		},
-		End: protocol.Position{
-			Line:      uint32(end_pos.Line - 1),
-			Character: uint32(end_pos.Column - 1),
-		},
+// fallbackDiagnostic builds a diagnostic when no position information is
+// available at all.
+func fallbackDiagnostic(err error) protocol.Diagnostic {
+	return protocol.Diagnostic{
+		Range:    protocol.Range{Start: protocol.Position{}, End: protocol.Position{}},
+		Severity: protocol.DiagnosticSeverityError,
+		Source:   protocol.NewOptional("vql"),
+		Message:  protocol.String(err.Error()),
+	}
+}
+
+// lineStarts returns the byte offset of the start of each line in the
+// document. line_starts[i] is the offset of the first byte of line i
+// (0-based).
+func lineStarts(document string) []int {
+	starts := []int{0}
+	for i := 0; i < len(document); i++ {
+		if document[i] == '\n' {
+			starts = append(starts, i+1)
+		}
+	}
+	return starts
+}
+
+// offsetToPosition converts an absolute byte offset into a 0-based LSP
+// line/column position. Column is measured in bytes from the line start,
+// which matches participle for ASCII input.
+func offsetToPosition(document string, line_starts []int, abs int) protocol.Position {
+	if abs < 0 {
+		abs = 0
+	}
+	if abs > len(document) {
+		abs = len(document)
+	}
+
+	// Binary search for the line containing abs.
+	lo, hi := 0, len(line_starts)-1
+	for lo < hi {
+		mid := (lo + hi + 1) / 2
+		if line_starts[mid] <= abs {
+			lo = mid
+		} else {
+			hi = mid - 1
+		}
+	}
+
+	return protocol.Position{
+		Line:      uint32(lo),
+		Character: uint32(abs - line_starts[lo]),
 	}
 }
