@@ -88,6 +88,17 @@ func TestServerInitializeCapabilities(t *testing.T) {
 	assert.NotNil(t, result.Capabilities.DocumentSymbolProvider)
 	_, ok = result.Capabilities.DocumentSymbolProvider.(protocol.Boolean)
 	require.True(t, ok, "DocumentSymbolProvider should be protocol.Boolean")
+
+	// Hover support should be advertised.
+	assert.NotNil(t, result.Capabilities.HoverProvider)
+	_, ok = result.Capabilities.HoverProvider.(protocol.Boolean)
+	require.True(t, ok, "HoverProvider should be protocol.Boolean")
+
+	// Completion support should be advertised with trigger characters.
+	completion_opts := result.Capabilities.CompletionProvider
+	require.NotNil(t, completion_opts)
+	assert.Contains(t, completion_opts.TriggerCharacters, ".")
+	assert.Contains(t, completion_opts.TriggerCharacters, "(")
 }
 
 func TestServerDidOpenAndPullDiagnostic(t *testing.T) {
@@ -312,4 +323,302 @@ func TestServerDocumentSymbolsUnknownDocument(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Empty(t, symbolsFromResult(t, result))
+}
+
+func TestServerHoverPluginCall(t *testing.T) {
+	server, _ := newTestServer()
+	doc_uri := uri.MustParse("file:///tmp/hover.vql")
+	document := "SELECT * FROM pslist(pid=1)"
+
+	// DidOpen so the document is known.
+	err := server.DidOpen(context.Background(), &protocol.DidOpenTextDocumentParams{
+		TextDocument: protocol.TextDocumentItem{
+			URI: doc_uri, LanguageID: "vql", Version: 1, Text: document,
+		},
+	})
+	require.NoError(t, err)
+
+	// Cursor on the pslist name (byte 28, line 0).
+	hover, err := server.Hover(context.Background(), &protocol.HoverParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{URI: doc_uri},
+			Position:     protocol.Position{Line: 0, Character: 14},
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, hover)
+
+	content := hoverContents(t, hover)
+	assert.Contains(t, content, "**pslist** (plugin)")
+	assert.Contains(t, content, "`pid`")
+}
+
+func TestServerHoverFunctionCall(t *testing.T) {
+	server, _ := newTestServer()
+	doc_uri := uri.MustParse("file:///tmp/hover.vql")
+	document := "SELECT upcase(str='x') FROM pslist()"
+
+	err := server.DidOpen(context.Background(), &protocol.DidOpenTextDocumentParams{
+		TextDocument: protocol.TextDocumentItem{
+			URI: doc_uri, LanguageID: "vql", Version: 1, Text: document,
+		},
+	})
+	require.NoError(t, err)
+
+	// Cursor on the upcase name (byte 7).
+	hover, err := server.Hover(context.Background(), &protocol.HoverParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{URI: doc_uri},
+			Position:     protocol.Position{Line: 0, Character: 7},
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, hover)
+
+	content := hoverContents(t, hover)
+	assert.Contains(t, content, "**upcase** (function)")
+	assert.Contains(t, content, "`str`")
+}
+
+func TestServerHoverArgument(t *testing.T) {
+	server, _ := newTestServer()
+	doc_uri := uri.MustParse("file:///tmp/hover.vql")
+	document := "SELECT upcase(str='x') FROM pslist(pid=1)"
+
+	err := server.DidOpen(context.Background(), &protocol.DidOpenTextDocumentParams{
+		TextDocument: protocol.TextDocumentItem{
+			URI: doc_uri, LanguageID: "vql", Version: 1, Text: document,
+		},
+	})
+	require.NoError(t, err)
+
+	// Cursor on the pid argument name (byte 35) inside pslist().
+	hover, err := server.Hover(context.Background(), &protocol.HoverParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{URI: doc_uri},
+			Position:     protocol.Position{Line: 0, Character: 35},
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, hover)
+
+	content := hoverContents(t, hover)
+	assert.Contains(t, content, "**pid**")
+	assert.Contains(t, content, "`int`")
+}
+
+func TestServerHoverUnknownDocument(t *testing.T) {
+	server, _ := newTestServer()
+
+	hover, err := server.Hover(context.Background(), &protocol.HoverParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{
+				URI: uri.MustParse("file:///tmp/never-opened.vql"),
+			},
+			Position: protocol.Position{Line: 0, Character: 0},
+		},
+	})
+	require.NoError(t, err)
+	assert.Nil(t, hover)
+}
+
+func TestServerHoverUnknownSymbol(t *testing.T) {
+	server, _ := newTestServer()
+	doc_uri := uri.MustParse("file:///tmp/hover.vql")
+	document := "SELECT * FROM pslist() WHERE SomeDynamicColumn > 3"
+
+	err := server.DidOpen(context.Background(), &protocol.DidOpenTextDocumentParams{
+		TextDocument: protocol.TextDocumentItem{
+			URI: doc_uri, LanguageID: "vql", Version: 1, Text: document,
+		},
+	})
+	require.NoError(t, err)
+
+	// Cursor on the dynamic column (byte 33) - no info to show.
+	hover, err := server.Hover(context.Background(), &protocol.HoverParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{URI: doc_uri},
+			Position:     protocol.Position{Line: 0, Character: 29},
+		},
+	})
+	require.NoError(t, err)
+	assert.Nil(t, hover)
+}
+
+// hoverContents extracts the markdown value from a hover result.
+func hoverContents(t *testing.T, hover *protocol.Hover) string {
+	contents := hover.Contents
+	switch v := contents.(type) {
+	case *protocol.MarkupContent:
+		return v.Value
+	case protocol.String:
+		return string(v)
+	default:
+		t.Fatalf("unexpected hover contents type %T", contents)
+		return ""
+	}
+}
+
+// completionLabels extracts the completion item labels from a result.
+func completionLabels(t *testing.T, result protocol.CompletionResult) []string {
+	slice, ok := result.(protocol.CompletionItemSlice)
+	require.True(t, ok, "CompletionResult should be CompletionItemSlice")
+	items := []protocol.CompletionItem(slice)
+	labels := make([]string, len(items))
+	for i, item := range items {
+		labels[i] = item.Label
+	}
+	return labels
+}
+
+func TestServerCompletionPluginPrefix(t *testing.T) {
+	server, _ := newTestServer()
+	doc_uri := uri.MustParse("file:///tmp/completion.vql")
+	document := "SELECT * FROM psl"
+
+	err := server.DidOpen(context.Background(), &protocol.DidOpenTextDocumentParams{
+		TextDocument: protocol.TextDocumentItem{
+			URI: doc_uri, LanguageID: "vql", Version: 1, Text: document,
+		},
+	})
+	require.NoError(t, err)
+
+	result, err := server.Completion(context.Background(), &protocol.CompletionParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{URI: doc_uri},
+			Position:     protocol.Position{Line: 0, Character: uint32(len(document))},
+		},
+	})
+	require.NoError(t, err)
+
+	labels := completionLabels(t, result)
+	assert.Contains(t, labels, "pslist")
+}
+
+func TestServerCompletionFunctionPrefix(t *testing.T) {
+	server, _ := newTestServer()
+	doc_uri := uri.MustParse("file:///tmp/completion.vql")
+	document := "SELECT upc FROM pslist()"
+
+	err := server.DidOpen(context.Background(), &protocol.DidOpenTextDocumentParams{
+		TextDocument: protocol.TextDocumentItem{
+			URI: doc_uri, LanguageID: "vql", Version: 1, Text: document,
+		},
+	})
+	require.NoError(t, err)
+
+	result, err := server.Completion(context.Background(), &protocol.CompletionParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{URI: doc_uri},
+			Position:     protocol.Position{Line: 0, Character: uint32(len(document))},
+		},
+	})
+	require.NoError(t, err)
+
+	labels := completionLabels(t, result)
+	assert.Contains(t, labels, "upcase")
+}
+
+func TestServerCompletionArtifactPrefix(t *testing.T) {
+	server, _ := newTestServer()
+	doc_uri := uri.MustParse("file:///tmp/completion.vql")
+	document := "SELECT * FROM Art"
+
+	err := server.DidOpen(context.Background(), &protocol.DidOpenTextDocumentParams{
+		TextDocument: protocol.TextDocumentItem{
+			URI: doc_uri, LanguageID: "vql", Version: 1, Text: document,
+		},
+	})
+	require.NoError(t, err)
+
+	result, err := server.Completion(context.Background(), &protocol.CompletionParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{URI: doc_uri},
+			Position:     protocol.Position{Line: 0, Character: uint32(len(document))},
+		},
+	})
+	require.NoError(t, err)
+
+	labels := completionLabels(t, result)
+	assert.Contains(t, labels, "Artifact.Linux.Sys.Users")
+}
+
+func TestServerCompletionLetVariable(t *testing.T) {
+	server, _ := newTestServer()
+	doc_uri := uri.MustParse("file:///tmp/completion.vql")
+	document := "LET X = 5\nSELECT * FROM "
+
+	err := server.DidOpen(context.Background(), &protocol.DidOpenTextDocumentParams{
+		TextDocument: protocol.TextDocumentItem{
+			URI: doc_uri, LanguageID: "vql", Version: 1, Text: document,
+		},
+	})
+	require.NoError(t, err)
+
+	result, err := server.Completion(context.Background(), &protocol.CompletionParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{URI: doc_uri},
+			Position:     protocol.Position{Line: 1, Character: 14},
+		},
+	})
+	require.NoError(t, err)
+
+	slice, ok := result.(protocol.CompletionItemSlice)
+	require.True(t, ok, "CompletionResult should be CompletionItemSlice")
+	items := []protocol.CompletionItem(slice)
+	found := false
+	for _, item := range items {
+		if item.Label == "X" && item.Kind == protocol.CompletionItemKindVariable {
+			found = true
+		}
+	}
+	assert.True(t, found, "expected LET variable X in completion items")
+}
+
+func TestServerCompletionArguments(t *testing.T) {
+	server, _ := newTestServer()
+	doc_uri := uri.MustParse("file:///tmp/completion.vql")
+	document := "SELECT * FROM pslist("
+
+	err := server.DidOpen(context.Background(), &protocol.DidOpenTextDocumentParams{
+		TextDocument: protocol.TextDocumentItem{
+			URI: doc_uri, LanguageID: "vql", Version: 1, Text: document,
+		},
+	})
+	require.NoError(t, err)
+
+	result, err := server.Completion(context.Background(), &protocol.CompletionParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{URI: doc_uri},
+			Position:     protocol.Position{Line: 0, Character: uint32(len(document))},
+		},
+	})
+	require.NoError(t, err)
+
+	slice, ok := result.(protocol.CompletionItemSlice)
+	require.True(t, ok, "CompletionResult should be CompletionItemSlice")
+	items := []protocol.CompletionItem(slice)
+	found := false
+	for _, item := range items {
+		if item.Label == "pid" && item.Kind == protocol.CompletionItemKindField {
+			found = true
+		}
+	}
+	assert.True(t, found, "expected argument pid in completion items")
+}
+
+func TestServerCompletionUnknownDocument(t *testing.T) {
+	server, _ := newTestServer()
+	doc_uri := uri.MustParse("file:///tmp/never-opened.vql")
+
+	result, err := server.Completion(context.Background(), &protocol.CompletionParams{
+		TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+			TextDocument: protocol.TextDocumentIdentifier{URI: doc_uri},
+			Position:     protocol.Position{Line: 0, Character: 0},
+		},
+	})
+	require.NoError(t, err)
+
+	labels := completionLabels(t, result)
+	assert.Empty(t, labels)
 }

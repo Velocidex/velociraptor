@@ -140,3 +140,17 @@ func (self *Registry) AddArtifact(
 		Args: parameters,
 	}
 }
+
+// AllCallables returns a merged view of all plugins and functions keyed by
+// name. The registry is immutable after startup, so the returned map is
+// safe for concurrent reads.
+func (self *Registry) AllCallables() map[string]*Callable {
+	result := make(map[string]*Callable, len(self.plugins)+len(self.functions))
+	for name, callable := range self.plugins {
+		result[name] = callable
+	}
+	for name, callable := range self.functions {
+		result[name] = callable
+	}
+	return result
+}
