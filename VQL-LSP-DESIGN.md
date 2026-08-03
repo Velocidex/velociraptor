@@ -7,8 +7,12 @@ Last updated: 2026-08-03
 
 > Status: diagnostics milestone complete. The whole-document parse-failure
 > problem is mitigated (truncate-and-retry, see Hurdles) and the artifact
-> registry is implemented (see Artifact store). Hover/completion/document
-> symbols remain as follow-on work.
+> registry is implemented (see Artifact store). Pull-based diagnostics
+> (LSP 3.17 `textDocument/diagnostic`) are implemented for opencode
+> compatibility. All five agent-discovery options in VQL-LSP-USAGE.md are
+> implemented and verified end-to-end (CLI, skill, custom opencode tool,
+> mcpls bridge, native MCP tool). Hover/completion/document symbols remain
+> as follow-on work.
 
 ## Goal
 
@@ -207,12 +211,16 @@ them.
 ## Current State
 
 - Branch: `lsp-server` (created on top of `participle-v2-upgrade`).
-- Checkpoint commit `bb11f145c` "Add VQL language server with diagnostics"
-  — the whole LSP milestone before the truncate-and-retry experiment.
+- Two commits on `lsp-server`:
+  - `bb11f145c` "Add VQL language server with diagnostics" — the whole LSP
+    milestone before the truncate-and-retry experiment.
+  - `48b513d1d` "Add artifact registry, pull diagnostics and lifecycle
+    tests to VQL LSP" — artifact store, LSP 3.17 pull diagnostics, and the
+    server lifecycle + artifact unit tests.
 - LSP server command `velociraptor lsp` implemented and verified
   end-to-end over stdio (initialize, didOpen/didChange/didClose, publish
-  diagnostics, shutdown/exit). Also has `--check` flag to validate a query
-  from the command line without an LSP client.
+  diagnostics, pull diagnostics, shutdown/exit). Also has `--check` flag to
+  validate a query from the command line without an LSP client.
 - Diagnostics implemented against the real plugin/function registry built
   from the server scope: syntax errors (precise line/col), unknown
   plugins/functions, unknown keyword arguments. Verified against the
@@ -223,11 +231,21 @@ them.
   Hurdles): a bad line no longer hides diagnostics on either side of it.
 - Artifact names resolve against the global artifact repository (see
   Artifact store): `SELECT * FROM Artifact.Windows.Sys.Users()` no longer
-  reports "Unknown plugin".
-- Unit tests in `vql/lsp/diagnostics_test.go` (fake registry with a couple
-  of plugins/functions) cover clean docs, unknown function/plugin/argument,
-  multiline positions, syntax errors, and the truncate-and-retry recovery
-  across multiple bad lines. Run with `go test ./vql/lsp/`.
+  reports "Unknown plugin". Artifact parameters are validated against the
+  artifact's declared parameters (e.g. `foo=1` on Windows.Sys.Users flags
+  `foo` as unknown).
+- Unit tests in `vql/lsp/` (fake registry with a couple of plugins and
+  functions) — 16 tests total: 10 diagnostic-engine tests (clean docs,
+  unknown function/plugin/argument, artifact arguments, multiline
+  positions, syntax errors, truncate-and-retry recovery) plus 6 server
+  lifecycle tests (initialize capabilities, didOpen+pull, didChange
+  updates, didClose clears, pull unknown doc, shutdown closes Done).
+  Run with `go test ./vql/lsp/`.
+- Agent integration verified: opencode LSP config starts the server when a
+  `.vql` file is opened and returns diagnostics as agent feedback; the
+  `validate-vql` custom tool (see VQL-LSP-USAGE.md Option 2) is loaded
+  inside the live agent and returns structured diagnostics for bad queries
+  and `valid: true` for clean ones.
 - Still to do: hover, document symbols / go-to-definition, completion, and
   validating artifact parameters against artifact defaults.
 
