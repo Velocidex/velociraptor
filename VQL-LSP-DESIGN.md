@@ -3,7 +3,7 @@
 Living document tracking the design, decisions, and considerations for
 building an LSP server for VQL. Update as the work progresses.
 
-Last updated: 2026-08-03
+Last updated: 2026-08-04
 
 > Status: diagnostics milestone complete. The whole-document parse-failure
 > problem is mitigated (truncate-and-retry, see Hurdles) and the artifact
@@ -15,8 +15,13 @@ Last updated: 2026-08-03
 > are implemented and verified end-to-end (see Foundation Work and Current
 > State). Hover (`textDocument/hover`) and completion (`textDocument/completion`)
 > are implemented and verified end-to-end (see Current State). Go-to-definition
-> and validating artifact parameters against artifact defaults remain as
-> follow-on work.
+> and validating artifact parameters against artifact defaults are possible
+> future extensions, not planned work. The `lsp` command now runs in
+> **hybrid mode**: it boots a
+> local gRPC API server (like the `gui` command) and connects to it as the
+> superuser, so the registry is built from the *repository* — including
+> custom artifacts stored in the datastore — rather than only the built-in
+> scope (see "Decision: hybrid mode").
 
 ## Goal
 
@@ -82,6 +87,57 @@ velociraptor lsp
 registered in the server's VQL scope, and that registry only exists inside
 the full Velociraptor build. A standalone repo would have to import half of
 Velociraptor anyway and would go stale every time a plugin is added.
+
+### Decision: Hybrid mode — the `lsp` command is a local API client
+
+One design approach considered was to make the LSP an *API endpoint* so it could
+work directly with internal services (repository manager etc.) and see custom
+artifacts in addition to built-ins. After analysis we landed on a hybrid that
+gets the same benefit without changing the API surface:
+
+- The `lsp` command bootstraps like the `gui`/`collector` commands: it
+  accepts an optional `--datastore` flag, defaults to a temp datastore
+  (`gui_datastore`), generates a fresh `server.config.yaml` +
+  `client.config.yaml` if none exists, and starts `StartToolServices`.
+- It then starts a **local gRPC API server** via
+  `api.NewServerBuilder(...)` + `server_builder.WithAPIServer(...)` (the
+  same machinery the GUI uses for its API service), skipping
+  `StartServer` so no frontend/GUI listeners come up.
+- It connects to that local server as the **superuser** identity
+  (`grpc_client.Factory.GetAPIClient(ctx, grpc_client.SuperUser, config_obj)`),
+  presenting the generated frontend certificate. No password, no auth
+  ceremony — the server treats a client holding the frontend cert as
+  superuser (`services/users/grpc.go` `GetUserFromContext`).
+- The artifact registry is then built by calling the existing `GetArtifacts`
+  API method over gRPC (`BuildRegistryFromAPIClient`), which pulls from the
+  repository manager — so **custom artifacts stored in the datastore are
+  visible to the LSP**, not just the built-ins in the base scope.
+
+Why this is the right shape:
+
+- **No API change.** The proto, the server, and the RPC surface are all
+  untouched. The team's "API endpoint" idea would have meant adding a new
+  bidi-streaming RPC to the public API; the hybrid achieves the same
+  repository access locally with zero API surface change.
+- **Custom artifacts work.** Anyone who puts an artifact YAML in the
+  datastore (or uploads it via the GUI) gets it validated by the LSP
+  immediately.
+- **Port-collision avoidance is automatic.** The lsp command tries the
+  default API port (8001); if it is already taken (e.g. a production server
+  on the same machine as the MCP+LSP), it picks a free ephemeral port on the
+  same address. No flags needed.
+- **Local deployment modes.** If the agent/MCP/LSP and Velociraptor are on
+  different machines, custom artifacts can be copied into a local "fake"
+  datastore, or the LSP can run on the same machine as the server/datastore
+  (e.g. a production box) where it shares the real datastore. The default
+  temp datastore path means a bare `velociraptor lsp` always works even with
+  no configuration at all. The LSP server deliberately avoids implementing
+  remote API access because that adds too much overhead (configuration,
+  auth+ACLs, potential troubleshooting, etc.) - the overriding goal is to
+  keep the LSP server as simple as possible, plus avoid the potential
+  security risk of encouraging users to copy a file containing API credentials
+  to their workstation just for the convenience of having access to custom
+  artifacts.
 
 ### Decision: Diagnostics-first implementation strategy
 
@@ -193,7 +249,7 @@ store" below.
     enabled.
   - Commit: `c986183e5`.
 
-### Source position capture (the LSP payoff)
+### Source position capture (the LSP enabler)
 
 Added `Pos`/`EndPos lexer.Position` fields to key AST nodes in vfilter,
 auto-populated by participle v2:
@@ -226,16 +282,31 @@ them.
 ## Current State
 
 - Branch: `lsp-server` (created on top of `participle-v2-upgrade`).
-- Two commits on `lsp-server`:
+- Commits on `lsp-server`:
   - `bb11f145c` "Add VQL language server with diagnostics" — the whole LSP
     milestone before the truncate-and-retry experiment.
   - `48b513d1d` "Add artifact registry, pull diagnostics and lifecycle
     tests to VQL LSP" — artifact store, LSP 3.17 pull diagnostics, and the
     server lifecycle + artifact unit tests.
+  - `5c73049e8` "Add document symbols to the VQL language server".
+  - `002fb2dee` "Add hover and completion to the VQL language server".
+  - `1e7ddb593` "Document editor-client byproduct of the standard LSP protocol".
+  - (Hybrid mode changes — `bin/lsp.go`, `vql/lsp/artifacts.go`,
+    `vql/lsp/artifacts_test.go` — are in the working tree, not yet committed.)
 - LSP server command `velociraptor lsp` implemented and verified
   end-to-end over stdio (initialize, didOpen/didChange/didClose, publish
   diagnostics, pull diagnostics, shutdown/exit). Also has `--check` flag to
-  validate a query from the command line without an LSP client.
+  validate a query from the command line without an LSP client. Supports an
+  optional `--datastore` flag; defaults to a temp datastore and generates a
+  fresh local config if none exists (mirroring `gui`/`collector`).
+- **Hybrid mode implemented** (see "Decision: hybrid mode"): the command
+  starts a local API server, connects as superuser, and builds the registry
+  over gRPC via `GetArtifacts`. Custom artifacts stored in the datastore
+  (e.g. `artifact_definitions/Custom/Test.yaml`) are resolved by the LSP —
+  verified end-to-end: a query referencing `Artifact.Custom.Test(flavor=...)`
+  validates clean, an unknown param is flagged at the exact position, and a
+  bogus artifact is reported as "Unknown plugin". Port-collision avoidance
+  is automatic (no flags): if 8001 is taken, a free ephemeral port is used.
 - Diagnostics implemented against the real plugin/function registry built
   from the server scope: syntax errors (precise line/col), unknown
   plugins/functions, unknown keyword arguments. Verified against the
@@ -244,19 +315,19 @@ them.
   function itself.
 - Whole-document parse failures are mitigated with truncate-and-retry (see
   Hurdles): a bad line no longer hides diagnostics on either side of it.
-- Artifact names resolve against the global artifact repository (see
-  Artifact store): `SELECT * FROM Artifact.Windows.Sys.Users()` no longer
-  reports "Unknown plugin". Artifact parameters are validated against the
-  artifact's declared parameters (e.g. `foo=1` on Windows.Sys.Users flags
-  `foo` as unknown).
+- Artifact names resolve against the repository (see Artifact store):
+  `SELECT * FROM Artifact.Windows.Sys.Users()` no longer reports "Unknown
+  plugin". Artifact parameters are validated against the artifact's declared
+  parameters (e.g. `foo=1` on Windows.Sys.Users flags `foo` as unknown).
 - Unit tests in `vql/lsp/` (fake registry with a couple of plugins and
-  functions) — 29 tests total: 10 diagnostic-engine tests (clean docs,
+  functions) — 30 tests total: 10 diagnostic-engine tests (clean docs,
   unknown function/plugin/argument, artifact arguments, multiline
   positions, syntax errors, truncate-and-retry recovery), 6 server
   lifecycle tests (initialize capabilities, didOpen+pull, didChange
   updates, didClose clears, pull unknown doc, shutdown closes Done), 2
-  document-symbol tests, 5 hover tests, and 6 completion tests. Run with
-  `go test ./vql/lsp/`.
+  document-symbol tests, 5 hover tests, 6 completion tests, and 1
+  API-client registry test (`BuildRegistryFromAPIClient` with a gomock
+  mock client). Run with `go test ./vql/lsp/`.
 - Document symbols implemented: `vfilter.Outline()` (new exported API in
   the vfilter repo) walks the unexported grammar AST and produces a
   hierarchical outline — LET variables, queries (named after their FROM
@@ -286,20 +357,23 @@ them.
   `validate-vql` custom tool (see VQL-LSP-USAGE.md Option 2) is loaded
   inside the live agent and returns structured diagnostics for bad queries
   and `valid: true` for clean ones.
-- Still to do: go-to-definition, and validating artifact parameters
-  against artifact defaults.
+- Possible future extensions (not currently planned): go-to-definition, and
+  validating artifact parameters against artifact defaults.
 
 ## Open Questions
 
 - Which plugins/functions to register in the LSP scope — all server-side
-  plugins, or a curated subset? (Currently: everything in the base scope
-  plus all artifacts from the global repository.)
-- Artifact validation depth: currently only artifact *names* resolve. The
-  artifact `Call()` implementation validates unknown parameters at runtime
-  against artifact defaults (`parameters:` env) and logs "Unknown parameter
-  %s provided to artifact" — but that check happens inside the plugin at
-  execution time, not statically. Wiring it into the LSP registry would let
-  the agent catch bad artifact parameters before submission. Not yet done.
+  plugins, or a curated subset? (Resolved for now: everything in the base
+  scope plus all artifacts from the repository. Only worth revisiting if
+  registry size ever becomes a startup-cost problem.)
+- Artifact validation depth: only artifact *names* and parameter *names*
+  resolve. The artifact `Call()` implementation validates unknown
+  parameters at runtime against artifact defaults (`parameters:` env) and
+  logs "Unknown parameter %s provided to artifact" — but that check happens
+  inside the plugin at execution time, not statically. Wiring it into the
+  LSP registry was considered and deliberately not built: for the agent
+  pre-flight use case, name/type checking is enough, and deep value
+  validation is a possible future extension, not planned work.
 
 ### Artifact store (implemented)
 
@@ -307,14 +381,23 @@ Resolving artifact names (e.g. `Artifact.Windows.Sys.Users()`) requires
 loading the artifact repository into the LSP scope — the base server scope
 only registers built-in plugins and functions, not artifacts.
 
-**Implemented**: `vql/lsp/artifacts.go` `BuildRegistryWithArtifacts(ctx,
-config_obj, scope)` loads the global artifact repository (via
-`startup.StartToolServices` + `services.GetRepositoryManager` →
-`GetGlobalRepository` → `repository.List`/`Get`) and registers each artifact
-as a plugin named `Artifact.<Name>` with its `parameters:` section as the
-argument list (`AddArtifact`). Registry population stays separate from
-validation logic, exactly as predicted — validation is map-lookup driven, so
-artifacts just add entries to the same map.
+Two implementations exist in `vql/lsp/artifacts.go`:
+
+1. **`BuildRegistryWithArtifacts(ctx, config_obj, scope)`** — loads the
+   global artifact repository directly via `startup.StartToolServices` +
+   `services.GetRepositoryManager` → `GetGlobalRepository` →
+   `repository.List`/`Get`. Used by the unit tests and the earlier
+   non-hybrid builds.
+2. **`BuildRegistryFromAPIClient(ctx, api_client, scope)`** — fetches
+   artifacts over the gRPC API via `GetArtifacts` (the same endpoint the
+   GUI uses). Used by the hybrid `lsp` command, so the registry matches
+   what the repository actually contains (including custom artifacts).
+
+Both register each artifact as a plugin named `Artifact.<Name>` with its
+`parameters:` section as the argument list (`AddArtifact`). Registry
+population stays separate from validation logic, exactly as predicted —
+validation is map-lookup driven, so artifacts just add entries to the same
+map.
 
 This is genuinely valuable already for diagnostics: an agent referencing a
 non-existent artifact (or a hallucinated artifact name) now gets an

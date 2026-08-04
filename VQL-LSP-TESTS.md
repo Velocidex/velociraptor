@@ -5,10 +5,10 @@ This document summarizes every test performed on the VQL language server
 migration, the Inspect() and Outline() APIs, the diagnostic engine, the
 artifact registry, the opencode integration, and document symbols.
 
-**Go unit test total:** 29 tests in `vql/lsp/` (10 diagnostic engine + 6
-server lifecycle + 2 document symbols + 5 hover + 6 completion), plus 2
-vfilter Inspect() tests, 2 vfilter Outline() tests, and the full vfilter
-migration suite.
+**Go unit test total:** 30 tests in `vql/lsp/` (10 diagnostic engine + 6
+server lifecycle + 2 document symbols + 5 hover + 6 completion + 1
+API-client artifact registry), plus 2 vfilter Inspect() tests, 2 vfilter
+Outline() tests, and the full vfilter migration suite.
 
 ---
 
@@ -178,6 +178,20 @@ statement (whole-document parse fails), `letNames` falls back to
 `Initialize` capabilities advertise `CompletionProvider` with
 `TriggerCharacters: [".", "("]`.
 
+## 3f. Hybrid-mode artifact registry unit test
+
+Location: `velociraptor/vql/lsp/artifacts_test.go` — 1 test, all pass
+(total 30 in vql/lsp/)
+
+| Test | What it verifies |
+|---|---|
+| `TestBuildRegistryFromAPIClient` | `BuildRegistryFromAPIClient` with a gomock `MockAPIClient` (`api/mock`) that returns two artifact descriptors (`Windows.Sys.Users` with param `remoteRegKey`, `Generic.Client.VQL` with param `Command`) — the registry resolves `Artifact.Windows.Sys.Users` (Doc `"Enumerate users"`, Type `"artifact"`, arg `remoteRegKey`), `Artifact.Generic.Client.VQL` (arg `Command`), and correctly reports `Artifact.Bogus.Nope` as absent |
+
+Uses `github.com/golang/mock/gomock` (already in go.mod as an indirect dep)
+and a real `vfilter.NewScope()`. This locks in the hybrid-mode registry
+builder: artifacts are fetched over the gRPC API rather than directly from
+the repository, so the exact plumbing the `lsp` command uses is covered.
+
 ---
 
 ## 4. End-to-end tests against the real binary
@@ -244,6 +258,25 @@ Verified:
   Capabilities advertise `completionProvider` with trigger characters
   `.` and `(`. (Python client `/tmp/opencode/lsp_completion_test.py`;
   ALL OK — see the test file's own output for the 5-case table.)
+
+### 4c. Hybrid-mode e2e tests (`--datastore` + local API server)
+
+Binary built ad-hoc to `/tmp/opencode/velociraptor-hybrid` during
+development (`go build -o /tmp/opencode/velociraptor-hybrid ./bin/`).
+
+| Scenario | Command / setup | Result |
+|---|---|---|
+| Default port free | `lsp --check "SELECT * FROM Artifact.Windows.Sys.Users()"` on a fresh datastore | clean, exit 0 (~2.3s: config gen + local API start) |
+| Error diagnostics | `--check "SELECT upcase(str='x'), bogusfunc() FROM pslist(badarg=1)"` | 3 diags (1:15 str/upcase, 1:25 bogusfunc, 1:49 badarg/pslist) |
+| **Custom artifact resolves** | placed `Custom/Test.yaml` (name `Custom.Test`, param `flavor`) in `<datastore>/artifact_definitions/`; `--check "SELECT * FROM Artifact.Custom.Test(flavor='chocolate')"` | clean, exit 0 — **custom artifacts visible through hybrid mode** |
+| Custom artifact unknown param | `--check "SELECT * FROM Artifact.Custom.Test(badparam=1)"` | `Unknown argument 'badparam' for artifact 'Artifact.Custom.Test'` at 1:36 |
+| Custom artifact missing | `--check "SELECT * FROM Artifact.Bogus.Nope()"` | `Unknown plugin 'Artifact.Bogus.Nope'` at 1:15 |
+| **Port collision avoided** | a dummy process held `127.0.0.1:8001`; ran the same custom-artifact check | clean, exit 0 — LSP silently picked a free ephemeral port |
+
+Datastore layout fact: with the generated config
+(`FilestoreDirectory = datastore_directory`), custom artifacts live at
+`<datastore>/artifact_definitions/<OrgPath>/<Artifact>.yaml` (the same
+layout `paths.GetArtifactDefintionPath` produces).
 
 ---
 
@@ -369,6 +402,9 @@ against a **live Velociraptor instance** (API config at
 | Document symbols (hierarchical outline, kinds) | — | ✓ | ✓ | — |
 | Hover (function/plugin/argument docs + types) | — | ✓ | ✓ | — |
 | Completion (plugins, functions, artifacts, LET vars, args) | — | ✓ | ✓ | — |
+| Hybrid mode: custom artifacts in datastore resolve | ✓ | ✓ | — | — |
+| Hybrid mode: unknown param on custom artifact | ✓ | ✓ | — | — |
+| Hybrid mode: automatic port-collision avoidance | — | ✓ | — | — |
 
 ---
 
@@ -382,3 +418,10 @@ against a **live Velociraptor instance** (API config at
 - Real artifact parameter examples: `Generic.Client.Info` → 0 params,
   `Windows.Sys.Users` → 1 (`remoteRegKey`), `Generic.Client.VQL` → 1
   (`Command`).
+- Hybrid mode fetches artifacts over the API (`GetArtifacts`); custom
+  artifacts on disk are stored under `<datastore>/artifact_definitions/`.
+- A real-world port conflict was observed during development: a running
+  `velociraptor gui` on `127.0.0.1:8001` caused `lsp` to fail with
+  `bind: address already in use` — this motivated the automatic
+  port-collision avoidance (the command now picks a free ephemeral port
+  instead of failing).
