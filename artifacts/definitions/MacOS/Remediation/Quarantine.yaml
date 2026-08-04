@@ -14,9 +14,46 @@ description: |
 
   To unquarantine the system, set `RemovePolicy` to `True`.
 
+  Manual emergency removal:
+
+  Use the following commands locally if the client can no longer receive the
+  removal collection. They flush only the Velociraptor quarantine anchor; do
+  not use `pfctl -F all` without `-a`, and do not use `pfctl -d`.
+
+  ```sh
+  TOKEN_FILE=/var/run/velociraptor-quarantine.pf-token
+
+  # 1. Flush only the quarantine anchor.
+  sudo /sbin/pfctl -a com.apple/velociraptor.quarantine -F all
+
+  # 2. Release the PF enable reference when a token is present.
+  if sudo test -s "$TOKEN_FILE"; then
+    TOKEN="$(sudo cat "$TOKEN_FILE")"
+    sudo /sbin/pfctl -X "$TOKEN"
+  fi
+
+  # 3. Remove the token file.
+  sudo rm -f "$TOKEN_FILE"
+
+  # 4. Review remaining PF enable references.
+  sudo /sbin/pfctl -s References
+
+  # 5. Verify that the quarantine anchor contains no filter rules.
+  sudo /sbin/pfctl -a com.apple/velociraptor.quarantine -sr
+
+  # 6. Test network connectivity.
+  ping -c 1 8.8.8.8
+  ```
+
+  `token invalid` or `pf not enabled` indicates a stale reference token and
+  the token file may be removed after the anchor is flushed. Other errors
+  should be investigated before deleting the token. A failed ping is not
+  conclusive because upstream networks may block ICMP; test an expected HTTPS
+  destination as well.
+
   macOS version notes:
 
-  - Artifact revision: 1.0.6.
+  - Artifact revision: 1.0.8.
   - Designed for macOS releases that provide `/sbin/pfctl` and the standard
     `anchor "com.apple/*"` attachment point in `/etc/pf.conf`.
   - Runtime capability checks are used instead of relying on the macOS
@@ -40,6 +77,9 @@ description: |
   - PF is enabled using a reference token. Removal releases only the reference
     acquired by this artifact and does not disable PF while another macOS
     service still holds a reference.
+  - A saved reference token is reused only when PF currently reports itself
+    enabled. If PF is disabled, the token file is treated as stale and
+    replaced with a newly acquired reference.
   - The forbidden destination probe uses curl with a bounded timeout because
     PF silently drops blocked connections and `http_client` has no
     artifact-configurable connection timeout.
@@ -294,6 +334,11 @@ sources:
 
       LET enable_pf_cmd = (PfctlPath, "-E")
 
+      LET existing_pf_enabled = SELECT *
+        FROM execve(argv=(PfctlPath, "-s", "info"), length=10000)
+        WHERE ReturnCode = 0
+         AND (Stdout + "\n" + Stderr) =~ '(?i)Status:\\s+Enabled'
+
       LET flush_anchor = SELECT *
         FROM run_command(Cmd=flush_anchor_cmd,
                          Message=AnchorName + " anchor flushed.")
@@ -313,7 +358,8 @@ sources:
           SELECT *
           FROM run_command(Cmd=(PfctlPath, "-X", CurrentToken),
                            Message="PF enable reference released.")
-          WHERE if(condition=ReturnCode = 0 OR Result =~ 'token invalid',
+          WHERE if(condition=ReturnCode = 0
+                     OR Result =~ '(?i)(token invalid|pf not enabled)',
                    then=SetReleaseComplete,
                    else=log(level="ERROR",
                             message="Failed to release PF enable reference: %v",
@@ -387,7 +433,12 @@ sources:
         WHERE ReturnCode = 0
          AND Token =~ '^[0-9]+$'
               AND SetToken(Token=Token)
-                   AND copy(accessor="data", filename=Token, dest=TokenFile)
+                   AND if(condition=stat(filename=TokenFile),
+                          then=rm(filename=TokenFile),
+                          else=TRUE)
+                        AND copy(accessor="data",
+                                 filename=Token,
+                                 dest=TokenFile)
                         AND SetInstalled
 
       LET reuse_pf_token = SELECT
@@ -404,7 +455,12 @@ sources:
                 then={
           SELECT *
           FROM if(condition=ExistingToken =~ '^[0-9]+$',
-                  then=reuse_pf_token,
+                  then={
+                    SELECT *
+                    FROM if(condition=existing_pf_enabled,
+                            then=reuse_pf_token,
+                            else=store_pf_token)
+                  },
                   else=store_pf_token)
         })
 
