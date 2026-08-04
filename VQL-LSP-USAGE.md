@@ -29,6 +29,30 @@ validate → submit via the Velociraptor API). But an agent only knows a
 capability exists if it is discoverable. Right now `--check` is invisible:
 nothing in the agent's context advertises it.
 
+### How the LSP gets its artifact registry (hybrid mode)
+
+The `lsp` command runs in hybrid mode: like the `gui`/`collector` commands it
+accepts an optional `--datastore` flag (defaults to a temp datastore), starts
+a local gRPC API server, connects to it as the superuser, and fetches the
+artifact registry over the API. Consequences worth knowing:
+
+- **Custom artifacts work.** Any artifact stored in the datastore (uploaded
+  via the GUI, or placed at `<datastore>/artifact_definitions/...`) is visible
+  to validation. A bare `velociraptor lsp` with no config works too — it
+  generates a fresh local config in a temp datastore and validates against
+  the built-in artifacts.
+- **Local-only.** Validation is a local process — no external Velociraptor
+  server or authentication is needed. The local API server binds loopback
+  only and the superuser connection uses the generated frontend certificate.
+- **Port collisions are handled automatically.** The command tries the
+  default API port (8001) and, if it is already taken (e.g. a production
+  server on the same machine as the MCP+LSP), silently uses a free port
+  instead. No flags to set.
+- **Deployment options.** If the agent/MCP/LSP must run on a different
+  machine from Velociraptor, copy custom artifacts into a local datastore
+  (e.g. `velociraptor lsp --datastore /path/to/datastore`) or run the
+  LSP on the server box where it shares the real datastore.
+
 This document catalogs the ways to make VQL validation discoverable to agents.
 Every option below is real — implemented, tested, and verified in this
 repository — with working examples you can copy. The full source of each
@@ -57,11 +81,19 @@ building block every other option wraps.
 # Syntax / unknown plugin / unknown function / unknown argument / artifact param
 velociraptor lsp --check "SELECT * FROM pslist(foo=1)"
 velociraptor lsp --check "SELECT * FROM Artifact.Windows.Sys.Users(badparam=1)"
+
+# Point at a datastore containing custom artifacts (optional)
+velociraptor lsp --datastore /path/to/datastore --check "SELECT * FROM Artifact.Custom.Test()"
 ```
 
+Without `--datastore`, the command uses (or generates) a config in a temp
+datastore and validates against the built-in artifacts — zero setup. With
+`--datastore`, custom artifacts in that datastore are validated too.
+
 - **Pros**: zero infrastructure, scriptable, precise line/col output, no
-  network.
-- **Cons**: invisible to agents unless wrapped.
+  external network or auth (local loopback API only).
+- **Cons**: invisible to agents unless wrapped; first run generates a local
+  config + starts a local API server (a few seconds).
 - **Status**: ✅ implemented and tested.
 
 ---
@@ -371,10 +403,11 @@ srv.AddTool(tools.ValidateVQLTool, tools.HandleValidateVQL)
 ```
 
 The `validate_vql` handler builds a lazy, cached validation registry from
-the built-in plugins and the full artifact repository (via the same
-`BuildRegistryWithArtifacts` path the LSP server uses), then runs the query
-through it. The registry is built once per process and reused, so repeated
-calls are fast after the first.
+the built-in plugins and the full artifact repository (via
+`lsp.BuildRegistryWithArtifacts` — the in-process sibling of the hybrid
+LSP server's `BuildRegistryFromAPIClient`), then runs the query through it.
+The registry is built once per process and reused, so repeated calls are
+fast after the first.
 
 Note: importing the `vql/lsp` package requires the same `replace` directives
 as the Velociraptor module (`participle/v2`, the local vfilter checkout).
