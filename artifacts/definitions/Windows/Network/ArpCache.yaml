@@ -45,8 +45,8 @@ sources:
                     then="Active",
                   else="?")) as Store,
 
-               get(item=parse_json(data=kMapOfState),
-                   member=encode(string=State, type='string')) AS State,
+               get(item=parse_json(data=kMapOfState), member=State) AS State,
+
                InterfaceIndex, IPAddress,
                InterfaceAlias, LinkLayerAddress
             FROM wmi(query=wmiQuery, namespace=wmiNamespace)
