@@ -53,7 +53,7 @@ description: |
 
   macOS version notes:
 
-  - Artifact revision: 1.0.8.
+  - Artifact revision: 1.0.9.
   - Designed for macOS releases that provide `/sbin/pfctl` and the standard
     `anchor "com.apple/*"` attachment point in `/etc/pf.conf`.
   - Runtime capability checks are used instead of relying on the macOS
@@ -629,7 +629,10 @@ sources:
         FROM chain(a=validate_rules,
                    b=load_rules,
                    c=ensure_pf_enabled,
-                   d=installation_check,
+                   d={
+          SELECT *
+          FROM if(condition=State.rules_valid, then=installation_check)
+        },
                    e={
           SELECT *
           FROM if(condition=State.installed, then=final_forbidden_check)

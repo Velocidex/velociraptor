@@ -21,6 +21,7 @@ Query: SELECT count() AS ResultRows
 FROM Artifact.MacOS.Remediation.Quarantine(
   PfctlPath=srcDir + "/artifacts/testdata/files/pf.conf",
   PFConfigPath=srcDir + "/artifacts/testdata/files/pf.conf",
+  CurlPath=srcDir + "/artifacts/testdata/files/pf.conf",
   TokenFile=TokenPath,
   ForbiddenTestURL="https://forbidden.example",
   VelociraptorURL="https://frontend.example:443/")
@@ -160,7 +161,7 @@ Query: LET _ <= SELECT
   mock(plugin="execve", results=[
     dict(Stdout="", Stderr="synthetic pfctl failure", ReturnCode=1)
   ]),
-  mock(plugin="http_client", results=[])
+  mock(plugin="http_client", results=[dict()])
 FROM scope()
 
 Output: []
@@ -176,15 +177,6 @@ FROM Artifact.MacOS.Remediation.Quarantine(
 Output: [
  {
   "ResultRows": 1
- },
- {
-  "ResultRows": 2
- },
- {
-  "ResultRows": 3
- },
- {
-  "ResultRows": 4
  }
 ]
 
@@ -196,7 +188,7 @@ FROM scope()
 
 Output: [
  {
-  "ExecveCallCount": 2,
+  "ExecveCallCount": 1,
   "HTTPCallCount": 0,
   "TokenPresent": false
  }
@@ -204,7 +196,7 @@ Output: [
 
 Query: SELECT *
 FROM test_read_logs()
-WHERE Log =~ "PF quarantine rule validation failed"
+WHERE Log =~ "PF quarantine rule validation failed|PF quarantine installation failed|Failed to flush PF quarantine anchor"
   AND NOT Log =~ "SELECT"
 
 Output: [
