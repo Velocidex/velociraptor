@@ -45,7 +45,8 @@ sources:
                     then="Active",
                   else="?")) as Store,
 
-               get(item=parse_json(data=kMapOfState), member=State) AS State,
+               get(item=parse_json(data=kMapOfState), 
+                   member=str(str=State)) AS State,
 
                InterfaceIndex, IPAddress,
                InterfaceAlias, LinkLayerAddress
