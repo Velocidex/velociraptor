@@ -1,0 +1,112 @@
+# Test MacOS.Remediation.Quarantine without changing the host firewall.
+Queries:
+  - LET TokenPath <= tempfile()
+
+  - |
+    LET _ <= SELECT
+      mock(plugin="info", results=[dict(OS="darwin")]),
+      mock(function="host", results=[("192.0.2.10",)]),
+      mock(plugin="execve", results=[
+        dict(Stdout="",
+             Stderr="pf enabled\nToken : 12345\n", ReturnCode=0)
+      ]),
+      mock(plugin="http_client", results=[
+        (dict(Response=500, Url="https://www.velociraptor.server.com/server.pem"),),
+        (dict(Response=200, Url="https://frontend.example/server.pem"),),
+        (dict(Response=500, Url="https://forbidden.example"),)
+      ])
+    FROM scope()
+
+  - |
+    SELECT count() AS ResultRows
+    FROM Artifact.MacOS.Remediation.Quarantine(
+      PfctlPath=srcDir + "/artifacts/testdata/files/pf.conf",
+      PFConfigPath=srcDir + "/artifacts/testdata/files/pf.conf",
+      CurlPath=srcDir + "/artifacts/testdata/files/pf.conf",
+      TokenFile=TokenPath,
+      ForbiddenTestURL="https://forbidden.example",
+      VelociraptorURL="https://frontend.example:443/")
+
+  - |
+    SELECT count() AS ResultRows
+    FROM Artifact.MacOS.Remediation.Quarantine(
+      TokenFile=TokenPath,
+      RemovePolicy=TRUE)
+
+  - |
+    SELECT len(list=mock_replay(plugin="execve")) AS ExecveCallCount,
+           mock_replay(plugin="http_client") AS HTTPCalls
+    FROM scope()
+
+  - LET _ <= mock_clear()
+
+  - |
+    LET _ <= SELECT
+      mock(plugin="info", results=[dict(OS="darwin")]),
+      mock(function="host", results=[("192.0.2.10",)]),
+      mock(plugin="execve", results=[
+        dict(Stdout="",
+             Stderr="pf enabled\nToken : 67890\n", ReturnCode=0)
+      ]),
+      mock(plugin="http_client", results=[
+        (dict(Response=500, Url="https://www.velociraptor.server.com/server.pem"),),
+        (dict(Response=500, Url="https://frontend.example/server.pem"),)
+      ])
+    FROM scope()
+
+  - |
+    SELECT count() AS ResultRows
+    FROM Artifact.MacOS.Remediation.Quarantine(
+      PfctlPath=srcDir + "/artifacts/testdata/files/pf.conf",
+      PFConfigPath=srcDir + "/artifacts/testdata/files/pf.conf",
+      TokenFile=TokenPath,
+      ForbiddenTestURL="",
+      VelociraptorURL="https://frontend.example:443/")
+
+  - |
+    SELECT len(list=mock_replay(plugin="execve")) AS ExecveCallCount,
+           if(condition=stat(filename=TokenPath),
+              then=TRUE, else=FALSE) AS TokenPresent
+    FROM scope()
+
+  - |
+    SELECT *
+    FROM test_read_logs()
+    WHERE Log =~ "failed connection test. Removing quarantine policy."
+      AND NOT Log =~ "SELECT"
+
+  - LET _ <= mock_clear()
+
+  - |
+    LET _ <= SELECT
+      mock(plugin="info", results=[dict(OS="darwin")]),
+      mock(function="host", results=[("192.0.2.10",)]),
+      mock(plugin="execve", results=[
+        dict(Stdout="", Stderr="synthetic pfctl failure", ReturnCode=1)
+      ]),
+      mock(plugin="http_client", results=[dict()])
+    FROM scope()
+
+  - |
+    SELECT count() AS ResultRows
+    FROM Artifact.MacOS.Remediation.Quarantine(
+      PfctlPath=srcDir + "/artifacts/testdata/files/pf.conf",
+      PFConfigPath=srcDir + "/artifacts/testdata/files/pf.conf",
+      TokenFile=TokenPath,
+      ForbiddenTestURL="",
+      VelociraptorURL="https://frontend.example:443/")
+
+  - |
+    SELECT len(list=mock_replay(plugin="execve")) AS ExecveCallCount,
+           len(list=mock_replay(plugin="http_client")) AS HTTPCallCount,
+           if(condition=stat(filename=TokenPath),
+              then=TRUE, else=FALSE) AS TokenPresent
+    FROM scope()
+
+  - |
+    SELECT *
+    FROM test_read_logs()
+    WHERE Log =~ "PF quarantine rule validation failed|PF quarantine installation failed|Failed to flush PF quarantine anchor"
+      AND NOT Log =~ "SELECT"
+
+  - LET _ <= mock_clear()
