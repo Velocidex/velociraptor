@@ -1,0 +1,681 @@
+name: MacOS.Remediation.Quarantine
+author: Matt Green - @mgreen27
+description: |
+  Applies network quarantine to a macOS system using Packet Filter (PF).
+
+  The artifact loads an isolated ruleset into the
+  `com.apple/velociraptor.quarantine` PF anchor. It permits loopback, DNS,
+  DHCP, configured Velociraptor frontend endpoints, and optional explicitly
+  allowed destinations. All other IPv4 and IPv6 traffic is blocked.
+
+  After applying the policy, the artifact tests connectivity to a
+  Velociraptor frontend. If that test fails, or the optional forbidden URL
+  remains reachable, the policy is automatically removed.
+
+  To unquarantine the system, set `RemovePolicy` to `True`.
+
+  Manual emergency removal:
+
+  Use the following commands locally if the client can no longer receive the
+  removal collection. They flush only the Velociraptor quarantine anchor; do
+  not use `pfctl -F all` without `-a`, and do not use `pfctl -d`.
+
+  ```sh
+  TOKEN_FILE=/var/run/velociraptor-quarantine.pf-token
+
+  # 1. Flush only the quarantine anchor.
+  sudo /sbin/pfctl -a com.apple/velociraptor.quarantine -F all
+
+  # 2. Release the PF enable reference when a token is present.
+  if sudo test -s "$TOKEN_FILE"; then
+    TOKEN="$(sudo cat "$TOKEN_FILE")"
+    sudo /sbin/pfctl -X "$TOKEN"
+  fi
+
+  # 3. Remove the token file.
+  sudo rm -f "$TOKEN_FILE"
+
+  # 4. Review remaining PF enable references.
+  sudo /sbin/pfctl -s References
+
+  # 5. Verify that the quarantine anchor contains no filter rules.
+  sudo /sbin/pfctl -a com.apple/velociraptor.quarantine -sr
+
+  # 6. Test network connectivity.
+  ping -c 1 8.8.8.8
+  ```
+
+  `token invalid` or `pf not enabled` indicates a stale reference token and
+  the token file may be removed after the anchor is flushed. Other errors
+  should be investigated before deleting the token. A failed ping is not
+  conclusive because upstream networks may block ICMP; test an expected HTTPS
+  destination as well.
+
+  macOS version notes:
+
+  - Artifact revision: 1.0.9.
+  - Designed for macOS releases that provide `/sbin/pfctl` and the standard
+    `anchor "com.apple/*"` attachment point in `/etc/pf.conf`.
+  - Runtime capability checks are used instead of relying on the macOS
+    version string because Apple has changed PF internals between releases.
+  - Loopback is permitted with an explicit PF pass rule because an anchor-local
+    `set skip on lo0` does not reliably exempt traffic from the anchor ruleset.
+  - The policy is held in a dynamic PF anchor and does not persist across a
+    reboot or a reload of the main PF ruleset.
+
+  Safety and operational notes:
+
+  - The artifact does not modify `/etc/pf.conf`, `/etc/hosts`, interface
+    addressing, DHCP configuration, or the default route.
+  - A gateway allowlist entry is not normally required because PF filters the
+    routed destination address, not the layer-2 next hop. Add infrastructure
+    destinations explicitly only when required.
+  - DNS names are resolved before the policy is loaded. If frontend DNS
+    records change while quarantine is active, rerun the artifact to refresh
+    the allowed addresses.
+  - Only HTTPS and WSS Velociraptor frontend URLs are accepted.
+  - PF is enabled using a reference token. Removal releases only the reference
+    acquired by this artifact and does not disable PF while another macOS
+    service still holds a reference.
+  - A saved reference token is reused only when PF currently reports itself
+    enabled. If PF is disabled, the token file is treated as stale and
+    replaced with a newly acquired reference.
+  - The forbidden destination probe uses curl with a bounded timeout because
+    PF silently drops blocked connections and `http_client` has no
+    artifact-configurable connection timeout.
+
+  Expected macOS pfctl diagnostics:
+
+  - `Use of -f option, could result in flushing of rules` is a generic pfctl
+    warning. This artifact combines `-f` with `-a
+    com.apple/velociraptor.quarantine`, so only the named dynamic anchor is
+    validated or loaded; the main PF ruleset is not replaced.
+  - `No ALTQ support in kernel` is informational. Apple kernels do not provide
+    the legacy ALTQ traffic-shaping subsystem, and this artifact does not use
+    ALTQ.
+  - `pf enabled` and `Token : ...` confirm that pfctl acquired a PF enable
+    reference. The token is stored and released with `pfctl -X` during
+    removal.
+  - These diagnostics are benign only when the command ReturnCode is zero.
+    Any non-zero ReturnCode is treated as a failure.
+
+type: CLIENT
+
+precondition: SELECT OS FROM info() WHERE OS = 'darwin'
+
+required_permissions:
+  - EXECVE
+  - FILESYSTEM_WRITE
+  - NETWORK
+
+parameters:
+  - name: PfctlPath
+    default: /sbin/pfctl
+    description: Path to the macOS pfctl utility.
+
+  - name: PFConfigPath
+    default: /etc/pf.conf
+    description: |
+      Main PF configuration inspected for the standard com.apple anchor.
+      This file is not modified.
+
+  - name: AnchorName
+    default: com.apple/velociraptor.quarantine
+    description: |
+      Dynamic PF anchor used for the quarantine rules. For safety, the name
+      must remain beneath the `com.apple/velociraptor` anchor namespace.
+
+  - name: TokenFile
+    default: /var/run/velociraptor-quarantine.pf-token
+    description: |
+      Stores the PF enable reference token acquired by this artifact.
+
+  - name: ForbiddenTestURL
+    default: https://www.google.com
+    description: |
+      URL that should not remain reachable after quarantine. Leave empty to
+      skip this check.
+
+  - name: ForbiddenTestTimeout
+    default: "15"
+    description: |
+      Maximum number of seconds allowed for the forbidden destination probe.
+      Valid values are 1 through 30.
+
+  - name: CurlPath
+    default: /usr/bin/curl
+    description: Path to the macOS curl utility used for the bounded probe.
+
+  - name: AdditionalAllowedDestinations
+    type: csv
+    default: |
+      Address,Port,Protocol,Description
+    description: |
+      Optional additional destinations. Address may be an IP address or DNS
+      name. Protocol must be tcp or udp when Port is specified. If Protocol
+      and Port are both empty, all IP traffic to the resolved address is
+      permitted.
+
+  - name: MessageBox
+    description: |
+      Optional macOS Notification Center message sent to the active console
+      user's GUI session. The message is truncated to 256 characters. Display
+      may be suppressed by the user's notification or Focus settings.
+
+  - name: RemovePolicy
+    type: bool
+    description: Tickbox to remove the quarantine policy.
+
+  - name: VelociraptorURL
+    description: |
+      Additional Velociraptor frontend URL to allow. If empty, frontend URLs
+      are read from the client configuration.
+
+sources:
+  - query: |
+      LET State <= dict(installed=FALSE,
+                        rules_valid=FALSE,
+                        anchor_loaded=FALSE,
+                        anchor_flushed=FALSE,
+                        release_complete=FALSE)
+
+      LET SetInstalled = set(item=State, field="installed", value=TRUE)
+
+      LET ClearInstalled = set(item=State, field="installed", value=FALSE)
+
+      LET SetRulesValid = set(item=State, field="rules_valid", value=TRUE)
+
+      LET SetAnchorLoaded = set(item=State, field="anchor_loaded", value=TRUE)
+
+      LET SetAnchorFlushed = set(item=State, field="anchor_flushed", value=TRUE)
+
+      LET SetReleaseComplete = set(item=State, field="release_complete", value=TRUE)
+
+      LET SetToken(Token) = set(item=State, field="token", value=Token)
+
+      LET AllURLs <= filter(list=config.server_urls + VelociraptorURL, regex='.+')
+
+      LET MessageBox <= parse_string_with_regex(regex='^(?P<Message>.{0,255}).*',
+                                                string=MessageBox).Message
+
+      LET parse_host(URL) = parse_string_with_regex(
+          string=url(parse=URL).Host,
+          regex=['^\\[(?P<Host>[^\\]]+)\\](?::(?P<Port>[0-9]+))?$', '^(?P<Host>[^:]+)(?::(?P<Port>[0-9]+))?$'])
+
+      LET get_domain(URL) = parse_host(URL=URL).Host
+
+      LET get_port(URL) = if(condition=parse_host(URL=URL).Port,
+                             then=parse_host(URL=URL).Port,
+                             else="443")
+
+      LET get_authority(Host, Port) = if(
+          condition=Host =~ ':',
+          then="[" + Host + "]:" + Port,
+          else=Host + ":" + Port)
+
+      LET configured_frontends <= SELECT _value AS URL,
+                                         url(parse=_value).Scheme AS Scheme,
+                                         get_domain(URL=_value) AS Host,
+                                         get_port(URL=_value) AS Port
+        FROM foreach(row=AllURLs)
+        WHERE Scheme =~ '^(https|wss)$'
+         AND Host
+              AND Port =~ '^[0-9]+$'
+
+      LET resolved_frontends <= SELECT *
+        FROM foreach(row=configured_frontends,
+                     query={
+          SELECT _value AS Address,
+                 Port,
+                 "tcp" AS Protocol,
+                 URL,
+                 "VelociraptorFrontEnd" AS Description
+          FROM foreach(row=host(name=Host))
+          WHERE Address
+        })
+
+      LET resolved_additional <= SELECT *
+        FROM foreach(row={
+          SELECT Address,
+                 Port,
+                 lowcase(string=Protocol) AS Protocol,
+                 Description
+          FROM AdditionalAllowedDestinations
+          WHERE Address
+           AND (NOT Port OR Port =~ '^[0-9]+$')
+                AND (NOT Protocol OR Protocol =~ '^(tcp|udp)$')
+                     AND (NOT Port OR Protocol)
+        },
+                     query={
+          SELECT _value AS Address,
+                 Port,
+                 Protocol,
+                 Description
+          FROM foreach(row=host(name=Address))
+          WHERE Address
+        })
+
+      LET endpoint_rule(Address, Port, Protocol) = if(
+          condition=Port,
+          then=format(
+            format="pass out quick proto %v from any to %v port %v keep state",
+            args=[Protocol, Address, Port]),
+          else=if(condition=Protocol,
+                  then=format(
+                    format="pass out quick proto %v from any to %v keep state",
+                    args=[Protocol, Address]),
+                  else=format(format="pass out quick from any to %v keep state",
+                              args=[Address])))
+
+      LET allow_rules <= SELECT Rule
+        FROM chain(a={
+          SELECT endpoint_rule(Address=Address, Port=Port, Protocol=Protocol) AS Rule
+          FROM resolved_frontends
+        },
+                   b={
+          SELECT endpoint_rule(Address=Address, Port=Port, Protocol=Protocol) AS Rule
+          FROM resolved_additional
+        })
+        WHERE Rule
+        GROUP BY Rule
+
+      LET Rules <= join(
+          array=("# Managed by Velociraptor MacOS.Remediation.Quarantine", "pass quick on lo0 all", "pass out quick proto udp from any to any port 53 keep state", "pass out quick proto tcp from any to any port 53 keep state", "pass out quick proto udp from any port 68 to any port 67 keep state", "pass in quick proto udp from any port 67 to any port 68 keep state",
+              join(
+                array=allow_rules.Rule,
+                sep="\n"), "block drop quick all"),
+          sep="\n") + "\n"
+
+      LET RulesFile <= tempfile(extension=".pf.conf", data=Rules)
+
+      LET combine_results(Stdout, Stderr, ReturnCode, Message) =
+          if(
+            condition=ReturnCode = 0
+             AND Message,
+            then=Message,
+            else=if(
+              condition=Stdout =~ "[^\\s]",
+              then=Stdout,
+              else=if(condition=Stderr =~ "[^\\s]",
+                      then=Stderr,
+                      else=Message)))
+
+      LET run_command(Cmd, Message) = SELECT
+          timestamp(epoch=now()) AS Time,
+          ReturnCode,
+          combine_results(Stdout=Stdout,
+                          Stderr=Stderr,
+                          ReturnCode=ReturnCode,
+                          Message=Message) AS Result
+        FROM execve(argv=Cmd, length=10000)
+
+      LET ExistingToken <= if(condition=stat(filename=TokenFile),
+                              then=strip(string=read_file(
+                                           filename=TokenFile,
+                                           length=100)))
+
+      // This is intentionally not materialized. Rollback must read a token
+      // that may have been written earlier in the same artifact execution.
+      LET CurrentToken = if(condition=State.token,
+                            then=State.token,
+                            else=if(
+                              condition=stat(filename=TokenFile),
+                              then=strip(string=read_file(
+                                           filename=TokenFile,
+                                           length=100))))
+
+      LET flush_anchor_cmd = (PfctlPath, "-a", AnchorName, "-F", "all")
+
+      LET validate_rules_cmd = (PfctlPath, "-n", "-a", AnchorName, "-f",
+            RulesFile)
+
+      LET load_rules_cmd = (PfctlPath, "-a", AnchorName, "-f",
+            RulesFile)
+
+      LET enable_pf_cmd = (PfctlPath, "-E")
+
+      LET existing_pf_enabled = SELECT *
+        FROM execve(argv=(PfctlPath, "-s", "info"), length=10000)
+        WHERE ReturnCode = 0
+         AND (Stdout + "\n" + Stderr) =~ '(?i)Status:\\s+Enabled'
+
+      LET flush_anchor = SELECT *
+        FROM run_command(Cmd=flush_anchor_cmd,
+                         Message=AnchorName + " anchor flushed.")
+        WHERE if(condition=ReturnCode = 0,
+                 then=SetAnchorFlushed,
+                 else=log(level="ERROR",
+                          message="Failed to flush PF quarantine anchor: %v",
+                          args=Result))
+
+      LET release_pf = SELECT *
+        FROM if(
+          condition=State.anchor_flushed,
+          then={
+          SELECT *
+          FROM if(condition=CurrentToken =~ '^[0-9]+$',
+                  then={
+          SELECT *
+          FROM run_command(Cmd=(PfctlPath, "-X", CurrentToken),
+                           Message="PF enable reference released.")
+          WHERE if(condition=ReturnCode = 0
+                     OR Result =~ '(?i)(token invalid|pf not enabled)',
+                   then=SetReleaseComplete,
+                   else=log(level="ERROR",
+                            message="Failed to release PF enable reference: %v",
+                            args=Result))
+        },
+                  else={
+          SELECT timestamp(epoch=now()) AS Time,
+                 0 AS ReturnCode,
+                 "No PF enable reference token was present." AS Result
+          FROM scope()
+          WHERE SetReleaseComplete
+        })
+        },
+          else={
+          SELECT
+          timestamp(epoch=now()) AS Time,
+          1 AS ReturnCode,
+          "PF enable reference retained because the anchor could not be flushed." AS Result
+          FROM scope()
+        })
+
+      LET remove_token = SELECT timestamp(epoch=now()) AS Time,
+                                0 AS ReturnCode,
+                                "PF enable reference token file removed." AS Result
+        FROM scope()
+        WHERE State.release_complete
+         AND if(condition=stat(filename=TokenFile),
+                then=rm(filename=TokenFile),
+                else=TRUE)
+
+      LET remove_policy = SELECT *
+        FROM chain(a=flush_anchor, b=release_pf, c=remove_token)
+        WHERE ClearInstalled OR TRUE
+
+      LET validate_rules = SELECT *
+        FROM run_command(Cmd=validate_rules_cmd,
+                         Message="PF quarantine rules validated.")
+        WHERE if(condition=ReturnCode = 0,
+                 then=SetRulesValid,
+                 else=log(level="ERROR",
+                          message="PF quarantine rule validation failed: %v",
+                          args=Result))
+
+      LET load_rules = SELECT *
+        FROM if(condition=State.rules_valid,
+                then={
+          SELECT *
+          FROM run_command(Cmd=load_rules_cmd,
+                           Message=AnchorName + " anchor loaded.")
+          WHERE if(condition=ReturnCode = 0,
+                   then=SetAnchorLoaded,
+                   else=log(level="ERROR",
+                            message="Failed to load PF quarantine anchor: %v",
+                            args=Result))
+        })
+
+      LET enable_pf = SELECT
+          *, parse_string_with_regex(
+            string=Stdout + "\n" + Stderr,
+            regex='Token\\s*:\\s*(?P<Token>[0-9]+)').Token AS Token
+        FROM execve(argv=enable_pf_cmd, length=10000)
+
+      LET store_pf_token = SELECT
+          timestamp(epoch=now()) AS Time,
+          ReturnCode,
+          combine_results(Stdout=Stdout,
+                          Stderr=Stderr,
+                          ReturnCode=ReturnCode,
+                          Message="PF enabled and reference token stored.") AS Result
+        FROM enable_pf
+        WHERE ReturnCode = 0
+         AND Token =~ '^[0-9]+$'
+              AND SetToken(Token=Token)
+                   AND if(condition=stat(filename=TokenFile),
+                          then=rm(filename=TokenFile),
+                          else=TRUE)
+                        AND copy(accessor="data",
+                                 filename=Token,
+                                 dest=TokenFile)
+                        AND SetInstalled
+
+      LET reuse_pf_token = SELECT
+          timestamp(epoch=now()) AS Time,
+          0 AS ReturnCode,
+          "Existing PF enable reference token reused." AS Result
+        FROM scope()
+        WHERE ExistingToken =~ '^[0-9]+$'
+         AND SetToken(Token=ExistingToken)
+              AND SetInstalled
+
+      LET ensure_pf_enabled = SELECT *
+        FROM if(condition=State.anchor_loaded,
+                then={
+          SELECT *
+          FROM if(condition=ExistingToken =~ '^[0-9]+$',
+                  then={
+                    SELECT *
+                    FROM if(condition=existing_pf_enabled,
+                            then=reuse_pf_token,
+                            else=store_pf_token)
+                  },
+                  else=store_pf_token)
+        })
+
+      LET test_connection = SELECT *
+        FROM foreach(row=configured_frontends,
+                     query={
+          SELECT URL,
+                 Response
+          FROM http_client(url=url(scheme="https",
+                                   host=get_authority(Host=Host, Port=Port),
+                                   path="/server.pem").String)
+          WHERE Response = 200
+          LIMIT 1
+        })
+        LIMIT 1
+
+      LET test_forbidden_connection = SELECT *
+        FROM execve(
+          argv=(CurlPath,
+                "--silent",
+                "--show-error",
+                "--insecure",
+                "--output", "/dev/null",
+                "--connect-timeout", ForbiddenTestTimeout,
+                "--max-time", ForbiddenTestTimeout,
+                "--write-out", "%{http_code}",
+                ForbiddenTestURL),
+          length=10000)
+        WHERE ForbiddenTestURL
+         AND ReturnCode = 0
+              AND Stdout =~ '^[1-5][0-9][0-9]$'
+        LIMIT 1
+
+      LET console_uid = SELECT
+          parse_string_with_regex(
+            string=Stdout,
+            regex='^(?P<UID>[0-9]+)').UID AS UID
+        FROM execve(argv=("/usr/bin/stat", "-f", "%u", "/dev/console"),
+                    length=10000)
+        WHERE ReturnCode = 0
+         AND UID =~ '^[0-9]+$'
+
+      LET gui_notification = SELECT *
+        FROM foreach(
+          row=console_uid,
+          query={
+            SELECT *
+            FROM execve(
+              argv=("/bin/launchctl", "asuser", UID,
+                    "/usr/bin/osascript",
+                    "-e", "on run argv",
+                    "-e", "display notification (item 1 of argv) with title \"Velociraptor\"",
+                    "-e", "end run",
+                    "--", MessageBox),
+              length=10000)
+          })
+
+      LET send_message_box(Msg) = SELECT
+          timestamp(epoch=now()) AS Time,
+          ReturnCode,
+          if(
+            condition=MessageBox,
+            then=if(
+              condition=ReturnCode = 0,
+              then=Msg + " GUI notification submitted.",
+              else=Msg + " GUI notification failed: " +
+                combine_results(Stdout=Stdout,
+                                Stderr=Stderr,
+                                ReturnCode=ReturnCode,
+                                Message="Unknown notification error.")),
+            else=Msg) AS Result
+        FROM if(
+          condition=MessageBox,
+          then={
+            SELECT *
+            FROM if(
+              condition=gui_notification,
+              then=gui_notification,
+              else={
+                SELECT "" AS Stdout,
+                       "No active console user was found." AS Stderr,
+                       1 AS ReturnCode
+                FROM scope()
+              })
+          },
+          else={
+            SELECT "" AS Stdout,
+                   "" AS Stderr,
+                   0 AS ReturnCode
+            FROM scope()
+          })
+
+      LET final_connection_check = SELECT *
+        FROM if(
+          condition=test_connection,
+          then=send_message_box(Msg=AnchorName + " connection test successful."),
+          else={
+          SELECT *
+          FROM chain(
+            a={
+          SELECT
+          timestamp(epoch=now()) AS Time,
+          1 AS ReturnCode,
+          AnchorName + " failed connection test. Removing quarantine policy." AS Result
+          FROM scope()
+          WHERE log(
+            level="ERROR",
+            message="%v failed connection test. Removing quarantine policy.",
+            args=AnchorName)
+        },
+            b=remove_policy)
+        })
+
+      LET installation_check = SELECT *
+        FROM if(condition=State.installed,
+                then=final_connection_check,
+                else={
+          SELECT *
+          FROM chain(a={
+          SELECT
+          timestamp(epoch=now()) AS Time,
+          1 AS ReturnCode,
+          "PF quarantine installation failed. Removing partial policy." AS Result
+          FROM scope()
+          WHERE log(
+            level="ERROR",
+            message="PF quarantine installation failed. Removing partial policy.")
+        },
+                     b=remove_policy)
+        })
+
+      LET final_forbidden_check = SELECT *
+        FROM if(
+          condition=State.installed
+           AND ForbiddenTestURL
+                AND test_forbidden_connection,
+          then={
+          SELECT *
+          FROM chain(
+            a={
+          SELECT
+          timestamp(epoch=now()) AS Time,
+          1 AS ReturnCode,
+          AnchorName + " failed forbidden connection test. Removing quarantine policy." AS Result
+          FROM scope()
+          WHERE log(
+            level="ERROR",
+            message="%v failed forbidden connection test for %v. Removing quarantine policy.",
+            args=[AnchorName, ForbiddenTestURL])
+        },
+            b=remove_policy)
+        },
+          else={
+          SELECT
+          timestamp(
+            epoch=now()) AS Time,
+          0 AS ReturnCode,
+          if(
+            condition=ForbiddenTestURL,
+            then=AnchorName + " forbidden connection test successful.",
+            else="Forbidden connection test skipped.") AS Result
+          FROM scope()
+        })
+
+      LET apply_policy = SELECT *
+        FROM chain(a=validate_rules,
+                   b=load_rules,
+                   c=ensure_pf_enabled,
+                   d={
+          SELECT *
+          FROM if(condition=State.rules_valid, then=installation_check)
+        },
+                   e={
+          SELECT *
+          FROM if(condition=State.installed, then=final_forbidden_check)
+        })
+
+      LET pfctl_check = SELECT *
+        FROM stat(filename=PfctlPath)
+        WHERE NOT IsDir
+
+      LET curl_check = SELECT *
+        FROM stat(filename=CurlPath)
+        WHERE NOT IsDir
+
+      LET anchor_check = read_file(filename=PFConfigPath, length=100000) =~ 'anchor\\s+"com\\.apple/\\*"'
+
+      LET anchor_name_check = AnchorName =~ '^com\\.apple/velociraptor[0-9A-Za-z._/-]*$'
+
+      LET forbidden_test_check = NOT ForbiddenTestURL
+          OR (curl_check
+              AND ForbiddenTestTimeout =~ '^([1-9]|[12][0-9]|30)$')
+
+      SELECT *
+      FROM if(
+        condition=RemovePolicy,
+        then=remove_policy,
+        else={
+          SELECT *
+          FROM if(
+            condition=pfctl_check
+             AND anchor_check
+                  AND anchor_name_check
+                       AND resolved_frontends
+                            AND forbidden_test_check,
+            then=apply_policy,
+            else={
+          SELECT timestamp(epoch=now()) AS Time,
+                 1 AS ReturnCode,
+                 "macOS PF quarantine preflight failed. No policy applied." AS Result
+          FROM scope()
+          WHERE log(
+            level="ERROR",
+            message="macOS PF quarantine preflight failed: pfctl=%v, com.apple anchor=%v, anchor name=%v, resolved frontends=%v, forbidden test=%v",
+            args=[PfctlPath, anchor_check, anchor_name_check,
+              resolved_frontends, forbidden_test_check])
+        })
+        })
