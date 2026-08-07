@@ -8,8 +8,8 @@ require (
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2
 	github.com/Velocidex/etw v0.0.0-20251027041548-6d97883fd588
-	github.com/Velocidex/go-magic v0.0.0-20260507053215-ee4782958ce2
-	github.com/Velocidex/go-yara v1.1.10-0.20250823152352-e5fc0843e50e
+	github.com/Velocidex/go-magic v0.0.0-20260623224109-5dd5a41c69ac
+	github.com/Velocidex/go-yara v1.1.10-0.20260806050527-f3bfad52e4eb
 	github.com/Velocidex/grpc-go-pool v1.2.2-0.20260526092838-b4e236b2105f
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
 	github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a

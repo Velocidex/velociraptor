@@ -28,17 +28,22 @@
 # VELOCIRAPTOR_NO_INITIALIZE: If this is set, we do not run the
 #   initialization artifact.
 
+VELOCIRAPTOR_CONFIG="${VELOCIRAPTOR_CONFIG_PATH:-/etc/velociraptor/server.config.yaml}"
+
 # Create the config
 if [[ -z "${VELOCIRAPTOR_LITERAL_CONFIG}" ]]; then
-  echo Creating initial configuration file.
-  /bin/velociraptor query -f /bin/init.vql
+  if [[ ! -f "${VELOCIRAPTOR_CONFIG}" ]]; then
+    echo Creating initial configuration file at "$VELOCIRAPTOR_CONFIG".
+    /bin/velociraptor query -f /bin/init.vql
 
-  echo Adding initial user admin
-  export PASSWORD="${VELOCIRAPTOR_INITIAL_ADMIN_PASSWORD:-password}"
-  export VELOCIRAPTOR_CONFIG=/etc/velociraptor/server.config.yaml
-  /bin/velociraptor --config "$VELOCIRAPTOR_CONFIG" user add admin "$PASSWORD" --role administrator
+    echo Adding initial user admin
+    export PASSWORD="${VELOCIRAPTOR_INITIAL_ADMIN_PASSWORD:-password}"
+    /bin/velociraptor --config "$VELOCIRAPTOR_CONFIG" user add admin "$PASSWORD" --role administrator
+  else
+      echo Reusing config file at "$VELOCIRAPTOR_CONFIG"
+      ls -l "$VELOCIRAPTOR_CONFIG"
+  fi
   /bin/velociraptor  --config "${VELOCIRAPTOR_CONFIG}" frontend -v
-
 else
   /bin/velociraptor frontend -v
 

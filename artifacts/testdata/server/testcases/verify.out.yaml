@@ -1,5 +1,5 @@
 # Basic verification of some artifacts.
-Query: SELECT verify(artifact=Broken1) AS Broken1, verify(artifact=Broken2) AS Broken2, verify(artifact=Broken3) AS Broken3, verify(artifact=Warn1) AS Warn1, verify(artifact=KWArgs) AS KWArgs, verify(artifact=NotCalled) AS NotCalled, verify(artifact=Suppressions) AS Suppressions FROM scope()
+Query: SELECT verify(artifact=Broken1) AS Broken1, verify(artifact=Broken2) AS Broken2, verify(artifact=Broken3) AS Broken3, verify(artifact=Warn1) AS Warn1, verify(artifact=KWArgs) AS KWArgs, verify(artifact=NotCalled) AS NotCalled, verify(artifact=Suppressions, repository="local") AS Suppressions FROM scope()
 Output: [
  {
   "Broken1": {
@@ -125,6 +125,11 @@ Output: [
   }
  }
 ]
+
+# Make sure the verified artifacts are not loaded into the global
+# repository.
+Query: SELECT * FROM artifact_definitions(names=["BrokenQuery", "Suppressions"])
+Output: []
 
 # Check the Server.Utils.ArtifactVerifier works on some bad
 # artifacts. Filter out the absolute path to make test reproducible

@@ -50,6 +50,7 @@ This is the one stop shop for managing everything about users except
 ACLs (which are managed within in org separately)
 */
 type UserManager interface {
+	// TODO: Implement atomic modification to avoid get/set pattern.
 	SetUser(ctx context.Context,
 		user_record *api_proto.VelociraptorUser) error
 
