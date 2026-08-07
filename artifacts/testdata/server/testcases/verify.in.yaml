@@ -76,8 +76,12 @@ Queries:
            verify(artifact=Warn1) AS Warn1,
            verify(artifact=KWArgs) AS KWArgs,
            verify(artifact=NotCalled) AS NotCalled,
-           verify(artifact=Suppressions) AS Suppressions
+           verify(artifact=Suppressions, repository="local") AS Suppressions
     FROM scope()
+
+  # Make sure the verified artifacts are not loaded into the global
+  # repository.
+  - SELECT * FROM artifact_definitions(names=["BrokenQuery", "Suppressions"])
 
   # Check the Server.Utils.ArtifactVerifier works on some bad
   # artifacts. Filter out the absolute path to make test reproducible

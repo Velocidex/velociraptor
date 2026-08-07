@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/sigma-go"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -119,6 +120,14 @@ func (self SigmaPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Name:    "sigma",
 		Doc:     "Evaluate sigma rules.",
 		ArgType: type_map.AddType(scope, &SigmaPluginArgs{}),
+		// Sigma rules may contain lambda functions which can do
+		// pretty much anything.
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.MACHINE_STATE,
+			acls.EXECVE,
+			acls.FILESYSTEM_READ,
+			acls.FILESYSTEM_WRITE,
+		).Build(),
 	}
 }
 

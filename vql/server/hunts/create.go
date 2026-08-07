@@ -25,6 +25,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -39,6 +40,11 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 
 	"www.velocidex.com/golang/vfilter"
+)
+
+var (
+	// Set for tests only
+	AllowHuntsOnServer = false
 )
 
 type ScheduleHuntFunctionArg struct {
@@ -347,6 +353,12 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 
 	journal, _ := services.GetJournal(config_obj)
 	if journal == nil {
+		return vfilter.Null{}
+	}
+
+	if !AllowHuntsOnServer &&
+		arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+		scope.Log("hunt_add: The server can not participate in a hunt")
 		return vfilter.Null{}
 	}
 

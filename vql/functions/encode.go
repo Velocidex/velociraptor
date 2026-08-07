@@ -11,6 +11,7 @@ import (
 	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -67,6 +68,9 @@ func _encode(
 		}
 
 		return string(serialized_content)
+
+	case "string":
+		return utils.ToString(item)
 
 	case "yaml":
 		serialized, err := yaml.Marshal(item)

@@ -3358,6 +3358,8 @@
     type: string
     description: Path to the MaxMind GeoIP Database.
     required: true
+  metadata:
+    permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -3700,7 +3702,6 @@
   - name: max_bytes
     type: int64
     description: Maximum length of bytes to read into memory
-    required: true
   category: encode
   platforms:
   - darwin_amd64_cgo
@@ -10100,6 +10101,8 @@
     description: If specified we use this callback to determine a details column if
       the sigma rule does not specify it.
   category: popular
+  metadata:
+    permissions: MACHINE_STATE,EXECVE,FILESYSTEM_READ,FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -10510,7 +10513,7 @@
   - name: args
     type: Any
   metadata:
-    permissions: FILESYSTEM_READ
+    permissions: FILESYSTEM_READ,NETWORK
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -11514,7 +11517,7 @@
     description: A SAS URL to use for upload to the container.
     required: true
   metadata:
-    permissions: FILESYSTEM_READ
+    permissions: FILESYSTEM_READ,NETWORK
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -11708,7 +11711,7 @@
     type: string
     description: Host key to verify. Blank to disable
   metadata:
-    permissions: FILESYSTEM_READ
+    permissions: FILESYSTEM_READ,NETWORK
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -11743,7 +11746,7 @@
       name (e.g. \\192.168.1.1:445\ShareName)
     required: true
   metadata:
-    permissions: FILESYSTEM_READ
+    permissions: FILESYSTEM_READ,NETWORK
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -11905,7 +11908,7 @@
   description: Creates a new user from the server, or updates their permissions or
     reset their password.
   type: Function
-  version: 2
+  version: 3
   args:
   - name: user
     type: string
@@ -11919,6 +11922,9 @@
   - name: password
     type: string
     description: A password to set for the user (If not using SSO this might be needed).
+  - name: sub
+    type: string
+    description: A sub value for OIDC pinning.
   - name: orgs
     type: string
     description: One or more org IDs to grant access to. If empty we use the current
