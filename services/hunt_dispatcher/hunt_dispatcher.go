@@ -301,6 +301,9 @@ func (self *HuntDispatcher) CreateHunt(
 		return nil, errors.New("No artifacts to collect.")
 	}
 
+	// This is a private field - do not allow the caller to set it.
+	hunt.StartRequest.CompiledCollectorArgs = nil
+
 	if hunt.CreateTime == 0 {
 		hunt.CreateTime = uint64(utils.GetTime().Now().UTC().UnixNano() / 1000)
 	}
@@ -362,8 +365,7 @@ func (self *HuntDispatcher) CreateHunt(
 	// Set the collection ID already on the hunt request - all flows
 	// from this hunt will have the same flow id.
 	hunt.StartRequest.FlowId = utils.CreateFlowIdFromHuntId(hunt.HuntId)
-	hunt.StartRequest.CompiledCollectorArgs = append(
-		hunt.StartRequest.CompiledCollectorArgs, compiled...)
+	hunt.StartRequest.CompiledCollectorArgs = compiled
 	hunt.StartRequest.Creator = hunt.Creator
 
 	// We allow our caller to determine if hunts are created in

@@ -16,6 +16,7 @@ type UserCreateFunctionArgs struct {
 	Username string   `vfilter:"required,field=user,doc=The user to create or update."`
 	Roles    []string `vfilter:"required,field=roles,doc=List of roles to give the user."`
 	Password string   `vfilter:"optional,field=password,doc=A password to set for the user (If not using SSO this might be needed)."`
+	Oid      string   `vfilter:"optional,field=sub,doc=A sub value for OIDC pinning."`
 	OrgIds   []string `vfilter:"optional,field=orgs,doc=One or more org IDs to grant access to. If empty we use the current org."`
 }
 
@@ -86,6 +87,27 @@ func (self UserCreateFunction) Call(
 		}
 	}
 
+	if arg.Oid != "" {
+		record, err := users_manager.GetUserWithHashes(
+			ctx, principal, arg.Username)
+		if err != nil {
+			scope.Log("user_create: %s", err)
+			return vfilter.Null{}
+		}
+
+		record.Oid = arg.Oid
+		// Allow clearing the Oid so it can be set by the IdP
+		// automatically.
+		if arg.Oid == "-" {
+			record.Oid = ""
+		}
+		err = users_manager.SetUser(ctx, record)
+		if err != nil {
+			scope.Log("user_create: %s", err)
+			return vfilter.Null{}
+		}
+	}
+
 	return arg.Username
 }
 
@@ -94,7 +116,7 @@ func (self UserCreateFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 		Name:    "user_create",
 		Doc:     "Creates a new user from the server, or updates their permissions or reset their password.",
 		ArgType: type_map.AddType(scope, &UserCreateFunctionArgs{}),
-		Version: 2,
+		Version: 3,
 	}
 }
 

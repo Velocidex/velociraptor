@@ -112,7 +112,7 @@ func GetGRPCUserInfo(
 					md, ok := metadata.FromIncomingContext(ctx)
 					if ok {
 						userinfo := md.Get("USER")
-						if len(userinfo) > 0 {
+						if len(userinfo) == 1 {
 							// gRPC metadata can only contain ASCII so
 							// we recover the UTF8 string from there.
 							data := []byte(utils.UnQuote(userinfo[0]))
@@ -128,7 +128,7 @@ func GetGRPCUserInfo(
 						// Corresponds to the Grpc-Metadata-OrgId
 						// header added by api-service.js
 						org_id := md.Get("OrgId")
-						if len(org_id) > 0 {
+						if len(org_id) == 1 {
 							result.CurrentOrg = org_id[0]
 							if utils.IsRootOrg(result.CurrentOrg) {
 								result.CurrentOrg = ""

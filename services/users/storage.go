@@ -351,7 +351,7 @@ func setDefaultGUIOptions(
 	}
 }
 
-func (self *UserStorageManager) loadUserRecrodIntoCache(
+func (self *UserStorageManager) loadUserRecordIntoCache(
 	ctx context.Context, username string) (*_CachedUserObject, error) {
 	path_manager := paths.UserPathManager{Name: username}
 
@@ -413,7 +413,7 @@ func (self *UserStorageManager) BuildCache(ctx context.Context) error {
 
 		username := child.Base()
 		key := makeKey(username)
-		cache_obj, err := self.loadUserRecrodIntoCache(ctx, username)
+		cache_obj, err := self.loadUserRecordIntoCache(ctx, username)
 		if err == nil {
 
 			// Detect User records files with multiple casing - we
@@ -585,7 +585,7 @@ func (self *UserStorageManager) SetUserOptions(ctx context.Context,
 
 	return self.sendMutation(ctx, UserMutation{
 		Op:       "Update",
-		Username: key,
+		Username: username,
 	})
 }
 
@@ -722,7 +722,7 @@ func (self *UserStorageManager) handleMessageEvent(
 		username, _ := event.GetString("username")
 		key := makeKey(username)
 
-		cache_obj, err := self.loadUserRecrodIntoCache(ctx, username)
+		cache_obj, err := self.loadUserRecordIntoCache(ctx, username)
 		if err == nil {
 			self.mu.Lock()
 			self.cache[key] = cache_obj
@@ -761,7 +761,8 @@ func (self *UserStorageManager) handleMessageEvent(
 		key := makeKey(username)
 		cache, pres := self.cache[key]
 		if !pres || cache.user_record == nil {
-			return utils.NotFoundError
+			self.mu.Unlock()
+			return fmt.Errorf("%w: %v", utils.NotFoundError, username)
 		}
 		if cache.gui_options == nil {
 			cache.gui_options = &api_proto.SetGUIOptionsRequest{}

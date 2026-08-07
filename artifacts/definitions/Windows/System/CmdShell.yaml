@@ -20,6 +20,9 @@ description: |
 required_permissions:
   - EXECVE
 
+implied_permissions:
+  - IMPERSONATION
+
 parameters:
   - name: Command
     default: "dir C:\\"
