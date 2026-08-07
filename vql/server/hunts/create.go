@@ -42,6 +42,11 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+var (
+	// Set for tests only
+	AllowHuntsOnServer = false
+)
+
 type ScheduleHuntFunctionArg struct {
 	Description   string           `vfilter:"optional,field=description,doc=Description of the hunt"`
 	Tags          []string         `vfilter:"optional,field=tags,doc=A list of tags to add to the hunt"`
@@ -351,7 +356,8 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+	if !AllowHuntsOnServer &&
+		arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		scope.Log("hunt_add: The server can not participate in a hunt")
 		return vfilter.Null{}
 	}

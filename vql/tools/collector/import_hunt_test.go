@@ -124,6 +124,12 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 		return flow.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
 	})
 
+	// Set for tests
+	hunts.AllowHuntsOnServer = true
+	defer func() {
+		hunts.AllowHuntsOnServer = false
+	}()
+
 	flow_update := (&hunts.AddToHuntFunction{}).Call(
 		ctx, scope, ordereddict.NewDict().
 			Set("hunt_id", hunt.HuntId).
