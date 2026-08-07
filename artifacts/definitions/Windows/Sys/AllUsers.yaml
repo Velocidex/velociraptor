@@ -3,14 +3,16 @@ description: |
   Lists all user accounts on a Windows system including domain users
   with cached profiles.
 
-  Combines data from two data sources - the output from the
-  `NetUserEnum` API (termed `local` users) and the list of SIDs in the
-  registry (termed `remote` users).
+  Combines data from three data sources - the output from the
+  `NetUserEnum` API (termed `local` users), the list of SIDs in the
+  registry (termed `remote` users) and the SAM.
 
   In this artifact, 'remote' means that user profile was cached in the
   registry, but the user does not appear in the output of the
   `NetUserEnum` API - this normally happens for users remotely logging
   into the system using domain credentials.
+  'sam' means that the user account was declared in
+  the SAM hive but was not already listed by the other sources.
 
   On Domain Controllers the `NetUserEnum` API will return the contents
   of the entire ActiveDirectory as a list of 'local' users, however
@@ -22,6 +24,10 @@ description: |
 parameters:
   - name: remoteRegKey
     default: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\*
+
+  - name: SAMPath
+    description: Path to the SAM file to parse.
+    default: C:/Windows/System32/Config/SAM
 
 implied_permissions:
   - FILESYSTEM_WRITE
@@ -90,15 +96,75 @@ sources:
             UUID,
             RoamingData.Mtime As Mtime,
             RoamingData.HomedirMtime AS HomedirMtime,
-            RoamingData.Data || dict() AS Data
+            RoamingData.Data || dict() AS Data,
+            "api" as source
         FROM local_users
+
+        -- Use the existing SAM parser to catch accounts declared in SAM
+        -- but absent from users() and ProfileList.
+        LET sam_records <=
+          SELECT *
+          FROM Artifact.Windows.Forensics.SAM(
+              SAMPath=SAMPath,
+              source="Parsed",
+              preconditions=TRUE)
+
+        -- SAM records give us a RID. Derive the account-domain SID prefix
+        -- from an existing S-1-5-21 user SID when one is available.
+        LET sid_prefix_candidates <=
+          SELECT regex_replace(
+              source=UUID,
+              re="-[0-9]+$",
+              replace="") AS SIDPrefix
+          FROM local_users
+          WHERE UUID =~ "^S-1-5-21-[0-9]+-[0-9]+-[0-9]+-[0-9]+$"
+          LIMIT 1
+
+        LET sid_prefix = get(item=sid_prefix_candidates[0], field="SIDPrefix")
+
+        LET SAMUUID(RID, Hive) = if(
+          condition=sid_prefix,
+          then=format(format="%v-%v", args=[sid_prefix, RID]),
+          else=format(format="SAM:%v:%v", args=[Hive, RID]))
+
+        LET SAMRoamingData(RID, Hive) = get(
+          item=roaming_users_lookup,
+          field=SAMUUID(RID=RID, Hive=Hive))
+
+        LET sam_users <=
+          SELECT
+             ParsedF.RID AS Uid,
+             "" AS Gid,
+             ParsedV.username AS Name,
+             ParsedV.comment || ParsedV.fullname AS Description,
+             SAMRoamingData(RID=ParsedF.RID, Hive=Hive).Directory ||
+                ParsedV.profile_path AS Directory,
+             SAMUUID(RID=ParsedF.RID, Hive=Hive) AS UUID,
+             SAMRoamingData(RID=ParsedF.RID, Hive=Hive).Mtime AS Mtime,
+             SAMRoamingData(RID=ParsedF.RID, Hive=Hive).HomedirMtime AS HomedirMtime,
+             dict(
+                SAMSource="Windows.Forensics.SAM",
+                SAMKey=Key,
+                SAMHive=Hive,
+                SAMF=ParsedF,
+                SAMV=ParsedV,
+                ProfileData=SAMRoamingData(RID=ParsedF.RID, Hive=Hive).Data
+             ) AS Data
+          FROM sam_records
+          WHERE ParsedF.RID AND ParsedV.username
 
         SELECT * from chain(
            q1=local_users_with_mtime,
            q2={
-             SELECT * FROM roaming_users
+             SELECT *, "roaming" as source FROM roaming_users
              -- Only show records who were not shown before
              WHERE NOT get(item=local_users_lookup, field=UUID)
+           },
+           q3={
+             SELECT *, "sam" as source FROM sam_users
+             -- Only show SAM records if not already shown before
+             WHERE NOT get(item=local_users_lookup, field=UUID)
+               AND NOT get(item=roaming_users_lookup, field=UUID)
            })
          --ORDER BY Gid DESC
     notebook:
