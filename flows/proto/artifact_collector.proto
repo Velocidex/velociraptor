@@ -93,6 +93,8 @@ message ArtifactCollectorArgs {
     // do not compile the artifacts at all, we just use it as is. This
     // is used by hunts which repeat the same collection multiple
     // times, so we can avoid the compiler overheads at scale.
+
+    // This is a private field - Callers can not set it.
     repeated VQLCollectorArgs compiled_collector_args = 20;
 
 
