@@ -267,13 +267,29 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 		return result, err
 	}
 
-	paged_reader := self.paged_reader
+	// Hold the lock for the duration of the read.
+	//
+	// This used to grab self.paged_reader and then RELEASE the lock before
+	// reading through it. Close() may be called concurrently - by the pool's
+	// size-limit eviction callback, by the lifetime alarm, or by another VQL
+	// function's `defer reader.Close()` on the same pooled object - and it
+	// closes the underlying file handle. A read that had already released the
+	// lock then failed with os.ErrClosed. Callers that treat a read error as
+	// "not present" rather than "try again" silently produced wrong evidence:
+	// authenticode() turned it into SubjectName/IssuerName null and Trusted
+	// "untrusted" for a validly signed binary, with nothing logged and no
+	// change in row count.
+	//
+	// Reopening after a close is fine and by design - what is not fine is
+	// closing the handle *during* a read.
+	//
+	// This costs no extra parallelism: readers are per accessor+path, so
+	// distinct files still read concurrently, and go-ntfs' PagedReader already
+	// serialises every read through its own mutex - so two callers sharing one
+	// AccessorReader were serialised before this change too.
+	defer self.mu.Unlock()
 
-	// Reading from the paged reader may trigger another reader due to
-	// LRU so we release the lock before we do it.
-	self.mu.Unlock()
-
-	return paged_reader.ReadAt(buf, offset)
+	return self.paged_reader.ReadAt(buf, offset)
 }
 
 func GetReaderPool(scope vfilter.Scope, lru_size int64) *ReaderPool {
