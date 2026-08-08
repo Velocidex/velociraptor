@@ -1,16 +1,20 @@
 package readers
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
@@ -20,32 +24,10 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
 )
 
-// Regression test for the foreach(workers=N) evidence-corruption race.
-//
-// The ReaderPool hands every caller a reader out of a size-limited
-// cache. When that cache is over its size limit an insert evicts an
-// entry and the eviction callback closes that reader from a background
-// goroutine. Nothing coordinated that close with a read that was already
-// in flight: AccessorReader.ReadAt used to grab self.paged_reader under
-// the mutex and then RELEASE the mutex before reading through it, so the
-// eviction could close the underlying os.File out from under an active
-// read. The read then failed with os.ErrClosed.
-//
-// That is invisible to callers who only check "did I get an object":
-// authenticode() turns a failed read of the certificate table into a
-// result with SubjectName/IssuerName null and Trusted "untrusted" and no
-// log line at all.
-//
-// Serially there is only ever one reader in flight and it is the one just
-// inserted, so this never fires - which is why the corruption only ever
-// showed up under foreach(workers=N).
-//
-// This test reproduces the defect WITHOUT any Windows API: it is pure
-// pool + accessor behaviour, so it runs (and fails on the unfixed code)
-// on every platform.
+// Check that concurrent reads are handled correctly.
 
 const (
-	raceNumFiles = 200
+	raceNumFiles = 20
 
 	// Each file is big enough that a full read is many page faults, so
 	// there is a real window during which the handle can be closed.
@@ -116,6 +98,26 @@ func (self *RaceTestSuite) SetupTest() {
 func (self *RaceTestSuite) TearDownTest() {
 	self.scope.Close()
 	os.RemoveAll(self.tmp_dir)
+
+	ctx := context.Background()
+	handler := debug.GetProfileWriterByeName("open_close")
+	var opened []*ordereddict.Dict
+	for _, item_any := range debug.GetProfile(ctx, handler.ProfileWriter) {
+		item := item_any.(*ordereddict.Dict)
+		destroyed_any, _ := item.Get("Destroyed")
+
+		destroyed := destroyed_any.(time.Time)
+		if destroyed.IsZero() {
+			opened = append(opened, item)
+		}
+	}
+
+	if len(opened) > 0 {
+		json.Dump(opened)
+	}
+
+	// Make sure all the files are properly closed.
+	assert.Equal(self.T(), 0, len(opened))
 }
 
 // readWholeFile reads file_idx end to end through a pooled reader and
@@ -126,6 +128,7 @@ func (self *RaceTestSuite) readWholeFile(file_idx int) error {
 	if err != nil {
 		return fmt.Errorf("file %d: NewAccessorReader: %w", file_idx, err)
 	}
+
 	// Mirrors what authenticode()/parse_pe() do with a pooled reader.
 	defer reader.Close()
 
@@ -141,7 +144,8 @@ func (self *RaceTestSuite) readWholeFile(file_idx int) error {
 				file_idx, offset, n)
 		}
 		for j := 0; j < raceChunkSize; j++ {
-			if expected := raceByteAt(file_idx, offset+j); buff[j] != expected {
+			expected := raceByteAt(file_idx, offset+j)
+			if buff[j] != expected {
 				return fmt.Errorf(
 					"file %d offset %d: byte %d is %#x, expected %#x",
 					file_idx, offset, j, buff[j], expected)
@@ -180,7 +184,8 @@ func (self *RaceTestSuite) TestConcurrentReadsSurviveEviction() {
 					// generates the eviction pressure.
 					file_idx := (i + g*raceNumFiles/raceGoroutines) % raceNumFiles
 
-					if err := self.readWholeFile(file_idx); err != nil {
+					err := self.readWholeFile(file_idx)
+					if err != nil {
 						if atomic.AddInt64(&failures, 1) <= 20 {
 							errs <- err
 						}

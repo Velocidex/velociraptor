@@ -41,6 +41,7 @@ import (
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/files"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -87,6 +88,9 @@ type AccessorReader struct {
 
 	key      string
 	max_size int64
+
+	// Atomic reference count for in flight readers
+	ref int
 
 	reader       accessors.ReadSeekCloser
 	paged_reader *ntfs.PagedReader
@@ -172,6 +176,14 @@ func (self *AccessorReader) Flush() {
 func (self *AccessorReader) Close() error {
 	self.mu.Lock()
 
+	if self.ref > 0 {
+		self.ref--
+		self.mu.Unlock()
+		return nil
+	}
+
+	self.ref = 0
+
 	cancel := self.cancel
 	self.cancel = nil
 
@@ -188,6 +200,8 @@ func (self *AccessorReader) Close() error {
 	}
 
 	if reader != nil {
+		// Track opens and closes
+		files.Remove(self.File.String())
 		reader.Close()
 	}
 
@@ -222,9 +236,21 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 		paged_reader, err := ntfs.NewPagedReader(
 			utils.MakeReaderAtter(reader), 1024*8, lru_size)
 		if err != nil {
+			reader.Close()
 			self.mu.Unlock()
 			return 0, err
 		}
+
+		// Try to read this buffer from the new reader
+		result, err := paged_reader.ReadAt(buf, offset)
+		if err != nil {
+			reader.Close()
+			self.mu.Unlock()
+			return 0, err
+		}
+
+		// Track opens and closed
+		files.Add(self.File.String())
 
 		// Set an alarm to close the file in the future - this
 		// ensures we don't hold open handles for long running
@@ -252,10 +278,12 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 			}
 		}()
 
-		result, err := paged_reader.ReadAt(buf, offset)
 		self.paged_reader = paged_reader
 		self.reader = reader
 		self.last_opened = utils.GetTime().Now()
+
+		// We are te first user of this reader.
+		self.ref = 1
 
 		self.mu.Unlock()
 
@@ -267,29 +295,23 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 		return result, err
 	}
 
-	// Hold the lock for the duration of the read.
-	//
-	// This used to grab self.paged_reader and then RELEASE the lock before
-	// reading through it. Close() may be called concurrently - by the pool's
-	// size-limit eviction callback, by the lifetime alarm, or by another VQL
-	// function's `defer reader.Close()` on the same pooled object - and it
-	// closes the underlying file handle. A read that had already released the
-	// lock then failed with os.ErrClosed. Callers that treat a read error as
-	// "not present" rather than "try again" silently produced wrong evidence:
-	// authenticode() turned it into SubjectName/IssuerName null and Trusted
-	// "untrusted" for a validly signed binary, with nothing logged and no
-	// change in row count.
-	//
-	// Reopening after a close is fine and by design - what is not fine is
-	// closing the handle *during* a read.
-	//
-	// This costs no extra parallelism: readers are per accessor+path, so
-	// distinct files still read concurrently, and go-ntfs' PagedReader already
-	// serialises every read through its own mutex - so two callers sharing one
-	// AccessorReader were serialised before this change too.
-	defer self.mu.Unlock()
+	paged_reader := self.paged_reader
 
-	return self.paged_reader.ReadAt(buf, offset)
+	// Manager the reference count across the read to prevent the file
+	// from closing during the read.
+	self.ref++
+	defer func() {
+		self.mu.Lock()
+		defer self.mu.Unlock()
+
+		self.ref--
+	}()
+
+	// Reading from the paged reader may trigger another reader due to
+	// LRU so we release the lock before we do it.
+	self.mu.Unlock()
+
+	return paged_reader.ReadAt(buf, offset)
 }
 
 func GetReaderPool(scope vfilter.Scope, lru_size int64) *ReaderPool {
