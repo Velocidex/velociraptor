@@ -105,7 +105,7 @@ func (self *PrefixTree) Add(components []string) {
 // Returns if the path matches any prefix in the prefix tree, as well
 // as the depth of the tree at which a match is made.
 func (self *PrefixTree) Present(components []string) (bool, int) {
-	return self.root.Present(components)
+	return self.root.Present(FilterSlice(components, ""))
 }
 
 func (self *PrefixTree) DebugString() string {

@@ -54,9 +54,19 @@ func (self VerifyFunction) Call(ctx context.Context,
 	if arg.Repository != "" {
 		cached_any := vql_subsystem.CacheGet(scope, vql_server.REPOSITORY_CACHE_TAG+arg.Repository)
 
-		if cached_repository, ok := cached_any.(services.Repository); ok {
+		cached_repository, ok := cached_any.(services.Repository)
+		if ok {
 			repository = cached_repository
+		} else {
+			// Make a local copy.
+			repository = repository.Copy()
+
+			// Cache for next time.
+			vql_subsystem.CacheSet(scope,
+				vql_server.REPOSITORY_CACHE_TAG+arg.Repository, repository)
 		}
+	} else {
+		repository = repository.Copy()
 	}
 
 	artifact, pres := repository.Get(ctx, config_obj, arg.Artifact)

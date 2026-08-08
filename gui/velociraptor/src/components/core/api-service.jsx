@@ -326,6 +326,18 @@ const href = function(url, params, options) {
 
     let parsed = parse_url(url);
 
+    // Only support http and https schemes.
+    switch(parsed.protocol) {
+    case "":
+    case "http:":
+    case "https:":
+        break;
+
+        // Unsupported protocols.
+    default:
+        return "#";
+    }
+
     // The params form the query string (after ? and before #)
     params = Object.assign(parsed.params, params || {});
 

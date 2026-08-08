@@ -29,7 +29,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	vql_utils "www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -372,9 +371,9 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 	// When run within an ACL context, copy the ACL manager to the
 	// subscope - otherwise the user can bypass the ACL manager and
 	// get more permissions.
-	acl_manager, ok := artifacts.GetACLManager(scope)
-	if !ok {
-		acl_manager = acl_managers.NullACLManager{}
+	acl_manager, err := artifacts.GetACLManager(scope)
+	if err != nil {
+		return err
 	}
 
 	launcher, err := services.GetLauncher(self.config_obj)

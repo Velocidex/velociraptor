@@ -107,7 +107,9 @@ func (self *Logger) _Write(message string) (err error) {
 		if self.netConn == nil {
 			err = self.Connect()
 			if err != nil {
-				utils.SleepWithCtx(self.ctx, time.Second)
+				if !utils.SleepWithCtx(self.ctx, time.Second) {
+					return
+				}
 				continue
 			}
 		}
@@ -138,7 +140,9 @@ func (self *Logger) _Write(message string) (err error) {
 		// We had an error -- we need to close the connection and try again
 		self.netConn.Close()
 
-		utils.SleepWithCtx(self.ctx, time.Second)
+		if !utils.SleepWithCtx(self.ctx, time.Second) {
+			return utils.CancelledError
+		}
 		err = self.Connect()
 		if err != nil {
 			continue

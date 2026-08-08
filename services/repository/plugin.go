@@ -20,7 +20,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
@@ -159,9 +158,10 @@ func (self *ArtifactRepositoryPlugin) Call(
 			}
 		}
 
-		acl_manager, ok := artifacts.GetACLManager(scope)
-		if !ok {
-			acl_manager = acl_managers.NullACLManager{}
+		acl_manager, err := artifacts.GetACLManager(scope)
+		if err != nil {
+			scope.Log("GetACLManager: %v", err)
+			return
 		}
 
 		launcher, err := services.GetLauncher(self.config_obj)

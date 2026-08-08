@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"golang.org/x/crypto/ssh"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -28,6 +29,11 @@ func GetSSHClient(scope vfilter.Scope) (
 
 	// TODO: Extract the context from the scope.
 	ctx := context.TODO()
+
+	err = vql_subsystem.CheckAccess(scope, acls.NETWORK)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	setting, pres := scope.Resolve(constants.SSH_CONFIG)
 	if !pres {

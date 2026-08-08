@@ -13,6 +13,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/api/option"
 
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -38,6 +39,12 @@ func (self *GCSPubsubPublishFunction) Call(ctx context.Context,
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("gcs_pubsub_publish: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	err = vql_subsystem.CheckAccess(scope, acls.NETWORK)
+	if err != nil {
+		scope.Log("gcs_pubsub_publish: %v", err)
 		return vfilter.Null{}
 	}
 

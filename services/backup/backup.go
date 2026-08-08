@@ -54,7 +54,9 @@ func (self *BackupService) Start() {
 			// tests where the time is mocked for the After(delay)
 			// above does not work.
 			if utils.GetTime().Now().Sub(last_run) < time.Second {
-				utils.SleepWithCtx(self.ctx, time.Minute)
+				if !utils.SleepWithCtx(self.ctx, time.Minute) {
+					return
+				}
 				continue
 			}
 
