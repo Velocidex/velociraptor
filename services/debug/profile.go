@@ -7,6 +7,7 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type ProfileWriter func(
@@ -135,4 +136,33 @@ func GetProfileWriters() (result []ProfileWriterInfo) {
 	defer mu.Unlock()
 
 	return append(result, handlers...)
+}
+
+func GetProfileWriterByeName(name string) *ProfileWriterInfo {
+	mu.Lock()
+	defer mu.Unlock()
+
+	for _, h := range handlers {
+		if h.Name == name {
+			return &h
+		}
+	}
+	return nil
+}
+
+func GetProfile(
+	ctx context.Context, handler ProfileWriter) (res []vfilter.Row) {
+	output_chan := make(chan types.Row)
+	scope := vfilter.NewScope()
+
+	go func() {
+		defer close(output_chan)
+		handler(ctx, scope, output_chan)
+	}()
+
+	for row := range output_chan {
+		res = append(res, row)
+	}
+
+	return res
 }
