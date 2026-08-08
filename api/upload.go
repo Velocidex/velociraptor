@@ -96,6 +96,7 @@ func toolUploadHandler(config_obj *config_proto.Config) http.Handler {
 			pathspec, file_store_factory, err := path_manager.Path()
 			if err != nil {
 				returnError(config_obj, w, 404, err)
+				return
 			}
 
 			writer, err := file_store_factory.WriteFile(pathspec)

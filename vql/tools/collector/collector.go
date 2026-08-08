@@ -399,9 +399,9 @@ func CheckArtifactModification(
 	var ok bool
 	var err error
 
-	acl_manager, ok := artifacts.GetACLManager(scope)
-	if !ok {
-		return nil
+	acl_manager, err := artifacts.GetACLManager(scope)
+	if err != nil {
+		return err
 	}
 
 	switch strings.ToUpper(artifact.Type) {
@@ -432,9 +432,9 @@ func CheckArtifactCollection(
 	var ok bool
 	var err error
 
-	acl_manager, ok := artifacts.GetACLManager(scope)
-	if !ok {
-		return nil
+	acl_manager, err := artifacts.GetACLManager(scope)
+	if err != nil {
+		return err
 	}
 
 	switch strings.ToUpper(artifact.Type) {

@@ -19,6 +19,7 @@ package tables
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"regexp"
@@ -39,6 +40,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 
+	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -183,6 +185,11 @@ func getStackTable(
 		in.Rows = 2000
 	}
 
+	if len(in.StackPath) == 0 ||
+		in.StackPath[len(in.StackPath)-1] != "stack" {
+		return nil, fmt.Errorf("stack_path must be the path to a result set stack")
+	}
+
 	result := &api_proto.GetTableResponse{
 		ColumnTypes: getColumnTypes(ctx, config_obj, in),
 	}
@@ -190,6 +197,12 @@ func getStackTable(
 	path_spec := path_specs.NewUnsafeFilestorePath(
 		utils.FilterSlice(in.StackPath, "")...).
 		SetType(api.PATH_TYPE_FILESTORE_JSON)
+
+	err := file_store_accessor.IsFileAccessible(path_spec)
+	if err != nil {
+		return nil, err
+	}
+
 	file_store_factory := file_store.GetFileStore(config_obj)
 
 	options, err := GetTableOptions(in)
@@ -281,6 +294,28 @@ func getColumnTypes(
 // stored.
 func GetPathSpec(
 	ctx context.Context, config_obj *config_proto.Config,
+	in *api_proto.GetTableRequest, principal string) (api.FSPathSpec, error) {
+
+	res, err := _getPathSpec(config_obj, in, principal)
+	if err != nil {
+		return nil, err
+	}
+
+	// The users area is normally blocked but we need to read the user                                                                                           // messages so bypass any deny blocks.
+	if in.Type == "USER_MESSAGES" {
+		return res, nil
+	}
+
+	// Make sure users are actually allowed to read from this area.
+	err = file_store_accessor.IsFileAccessible(res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func _getPathSpec(config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest, principal string) (api.FSPathSpec, error) {
 
 	if in.Type == "CLIENT_FLOWS" && in.ClientId != "" {

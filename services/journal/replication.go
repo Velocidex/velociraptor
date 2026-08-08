@@ -685,7 +685,9 @@ func (self *ReplicationService) WatchArtifact(
 				// tests where the time is mocked for the After(delay)
 				// above does not work.
 				if utils.GetTime().Now().Sub(last_try) < time.Minute {
-					utils.SleepWithCtx(ctx, time.Minute)
+					if !utils.SleepWithCtx(ctx, time.Minute) {
+						return
+					}
 				}
 			}
 

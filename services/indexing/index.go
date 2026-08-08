@@ -170,7 +170,9 @@ func (self *Indexer) Start(
 				// tests where the time is mocked for the After(delay)
 				// above does not work.
 				if utils.GetTime().Now().Sub(last_run) < time.Minute {
-					utils.SleepWithCtx(ctx, time.Minute)
+					if !utils.SleepWithCtx(ctx, time.Minute) {
+						return
+					}
 					continue
 				}
 

@@ -36,7 +36,7 @@ func ShouldPadFile(
 
 	// The total size is within a small factor of the actual data
 	// size, we should expand it.
-	if total_size/data_size <= 2 {
+	if data_size > 0 && total_size/data_size <= 2 {
 		return true
 	}
 

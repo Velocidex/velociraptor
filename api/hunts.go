@@ -208,8 +208,12 @@ func (self *ApiServer) CreateHunt(
 	// To actually start the hunt we need the START_HUNT
 	// permission. This allows for division of responsibility between
 	// hunt proposers and hunt starters.
-	if in.State == api_proto.Hunt_RUNNING {
+	switch in.State {
+	case api_proto.Hunt_RUNNING:
 		permissions = acls.START_HUNT
+
+	case api_proto.Hunt_DELETED:
+		permissions = acls.DELETE_RESULTS
 	}
 
 	perm, err := services.CheckAccess(org_config_obj, in.Creator, permissions)

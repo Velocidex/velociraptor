@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 
 	errors "github.com/go-errors/errors"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -286,6 +287,14 @@ func GetAPIHandler(
 
 				return metadata.New(md)
 			}),
+
+		// Allow the http client to specify the orgid in a header.
+		runtime.WithIncomingHeaderMatcher(func(in string) (string, bool) {
+			if strings.ToLower(in) == "grpc-metadata-orgid" {
+				return "OrgId", true
+			}
+			return "", false
+		}),
 	)
 
 	// We use a dedicated gw certificate. The gRPC server will

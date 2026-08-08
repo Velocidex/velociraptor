@@ -103,6 +103,12 @@ func (self *SMBUploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = vql_subsystem.CheckAccess(scope, acls.NETWORK)
+	if err != nil {
+		scope.Log("upload_smb: %s", err)
+		return vfilter.Null{}
+	}
+
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("upload_smb: %v", err)

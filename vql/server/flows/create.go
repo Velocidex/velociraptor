@@ -29,7 +29,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
 	vql_utils "www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -88,9 +87,10 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	// COLLECT_SERVER for server
 	// COLLECT_BASIC for artifacts with the basic metadata set
 
-	acl_manager, ok := artifacts.GetACLManager(scope)
-	if !ok {
-		acl_manager = acl_managers.NullACLManager{}
+	acl_manager, err := artifacts.GetACLManager(scope)
+	if err != nil {
+		scope.Log("collect_client: %v", err)
+		return vfilter.Null{}
 	}
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)

@@ -200,7 +200,12 @@ func BuildRPM(spec *PackageSpec) (Builder, error) {
 	return r, nil
 }
 
+func (self *RPMBuilder) Close() error {
+	return nil
+}
+
 type Builder interface {
 	Bytes(scope vfilter.Scope) ([]byte, error)
 	Debug() string
+	Close() error
 }
