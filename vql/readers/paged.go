@@ -90,7 +90,8 @@ type AccessorReader struct {
 	max_size int64
 
 	// Atomic reference count for in flight readers
-	ref int
+	ref              int
+	waiting_to_close bool
 
 	reader       accessors.ReadSeekCloser
 	paged_reader *ntfs.PagedReader
@@ -172,17 +173,32 @@ func (self *AccessorReader) Flush() {
 	self.Close()
 }
 
+func (self *AccessorReader) decRef() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.ref--
+	if self.ref == 0 && self.waiting_to_close {
+		self._Close()
+	}
+}
+
 // Close all references to the underlying reader.
 func (self *AccessorReader) Close() error {
 	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	if self.ref > 0 {
-		self.ref--
-		self.mu.Unlock()
+		self.waiting_to_close = true
 		return nil
 	}
 
+	return self._Close()
+}
+
+func (self *AccessorReader) _Close() error {
 	self.ref = 0
+	self.waiting_to_close = false
 
 	cancel := self.cancel
 	self.cancel = nil
@@ -191,8 +207,6 @@ func (self *AccessorReader) Close() error {
 	self.reader = nil
 	self.paged_reader = nil
 	self.last_opened = time.Time{}
-
-	self.mu.Unlock()
 
 	// Cancel any future alarms
 	if cancel != nil {
@@ -282,9 +296,6 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 		self.reader = reader
 		self.last_opened = utils.GetTime().Now()
 
-		// We are te first user of this reader.
-		self.ref = 1
-
 		self.mu.Unlock()
 
 		// Add ourselves to the active list - this might
@@ -300,12 +311,7 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 	// Manager the reference count across the read to prevent the file
 	// from closing during the read.
 	self.ref++
-	defer func() {
-		self.mu.Lock()
-		defer self.mu.Unlock()
-
-		self.ref--
-	}()
+	defer self.decRef()
 
 	// Reading from the paged reader may trigger another reader due to
 	// LRU so we release the lock before we do it.
