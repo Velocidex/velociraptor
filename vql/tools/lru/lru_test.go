@@ -37,6 +37,5 @@ func TestLRU(t *testing.T) {
 		})
 	}
 
-	goldie.Assert(t, "TestLRU",
-		json.MustMarshalIndent(evicted))
+	goldie.Assert(t, "TestLRU", json.MustMarshalIndent(evicted))
 }
