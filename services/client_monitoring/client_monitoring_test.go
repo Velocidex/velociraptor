@@ -245,7 +245,7 @@ sources:
 
 	// Set the initial table.
 	err = manager.SetClientMonitoringState(
-		context.Background(), self.ConfigObj, self.investigator_username,
+		self.Ctx, self.ConfigObj, self.investigator_username,
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"TestArtifact"},
@@ -259,7 +259,8 @@ sources:
 
 	// Now update the monitoring state
 	err = manager.SetClientMonitoringState(
-		context.Background(), self.ConfigObj, self.investigator_username,
+		context.Background(), self.ConfigObj,
+		self.investigator_username,
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"TestArtifact"},
@@ -294,7 +295,7 @@ sources:
 
 	// Set the initial table.
 	err = manager1.SetClientMonitoringState(
-		context.Background(), self.ConfigObj, self.investigator_username,
+		self.Ctx, self.ConfigObj, self.investigator_username,
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"TestArtifact"},
@@ -313,7 +314,7 @@ sources:
 
 	// Now update the monitoring state
 	err = manager2.SetClientMonitoringState(
-		context.Background(), self.ConfigObj, self.investigator_username,
+		self.Ctx, self.ConfigObj, self.investigator_username,
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"TestArtifact"},
@@ -344,7 +345,7 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 
 	// Install an initial monitoring table: Everyone gets ServiceCreation.
 	err = manager.SetClientMonitoringState(
-		context.Background(), self.ConfigObj, self.investigator_username,
+		self.Ctx, self.ConfigObj, self.investigator_username,
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"Windows.Events.ServiceCreation"},
@@ -387,8 +388,7 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 
 	// Now lets install a new label rule for this label and another label.
 	manager.SetClientMonitoringState(
-		context.Background(),
-		self.ConfigObj, self.investigator_username,
+		self.Ctx, self.ConfigObj, self.investigator_username,
 		&flows_proto.ClientEventTable{
 			// All clients should have ServiceCreation
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
@@ -471,8 +471,8 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompilingMultipleArti
 
 	// Install an initial monitoring table: Everyone gets ServiceCreation.
 	manager.SetClientMonitoringState(
-		context.Background(),
-		self.ConfigObj, self.investigator_username, &flows_proto.ClientEventTable{
+		self.Ctx, self.ConfigObj, self.investigator_username,
+		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{
 					"Windows.Events.ServiceCreation",
