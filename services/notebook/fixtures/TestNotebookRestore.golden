@@ -1,0 +1,3 @@
+<p>Recalculate this cell:</p>
+<pre><span class="chromaln">1</span><span class="chromak">SELECT</span> <span class="chromao">*</span> <span class="chromak">FROM</span> <span class="chromanf">info</span><span class="chromao">(</span><span class="chromao">)</span> <span class="chromao">{</span><span class="chromao">{</span> <span class="chromanv">add</span> <span class="chromam">1</span> <span class="chromam">1</span> <span class="chromao">}</span><span class="chromao">}</span>
+</pre>

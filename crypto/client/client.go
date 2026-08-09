@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rsa"
 	"crypto/x509"
+	"time"
 
 	"github.com/Velocidex/ttlcache/v2"
 	"github.com/go-errors/errors"
@@ -104,5 +105,6 @@ func NewClientCryptoManager(
 		result.unauthenticated_lru.Close()
 	}()
 
+	result.unauthenticated_lru.SetTTL(time.Hour)
 	return result, nil
 }

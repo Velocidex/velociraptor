@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -47,13 +48,29 @@ type: CLIENT_EVENT
 sources:
 - precondition: SELECT OS from info() where OS = "windows"
   query: SELECT * FROM info()
+`, `
+name: Client.Artifact
+type: CLIENT
+sources:
+- precondition: SELECT OS from info() where OS = "windows"
+  query: SELECT * FROM info()
+`, `
+name: Restricted.Permission
+required_permissions:
+- EXECVE
+type: CLIENT_EVENT
+sources:
+- precondition: SELECT OS from info() where OS = "windows"
+  query: SELECT * FROM info()
 `,
 	}
 )
 
 type ClientMonitoringTestSuite struct {
 	test_utils.TestSuite
-	client_id string
+	client_id             string
+	investigator_username string
+	admin_user            string
 }
 
 func (self *ClientMonitoringTestSuite) SetupTest() {
@@ -73,6 +90,7 @@ func (self *ClientMonitoringTestSuite) SetupTest() {
 
 	_, err = repository.LoadYaml(`
 name: TestArtifact
+type: CLIENT_EVENT
 sources:
 - query:
     SELECT * FROM info()
@@ -83,6 +101,7 @@ sources:
 	assert.NoError(self.T(), err)
 	_, err = repository.LoadYaml(`
 name: SomethingElse
+type: CLIENT_EVENT
 sources:
 - query:
     SELECT * FROM info()
@@ -100,6 +119,29 @@ sources:
 			ClientId: self.client_id,
 		},
 	})
+
+	user_manager := services.GetUserManager()
+	self.investigator_username = "UserInvestigator"
+	err = user_manager.SetUser(self.Sm.Ctx,
+		&api_proto.VelociraptorUser{
+			Name: self.investigator_username,
+		})
+	assert.NoError(self.T(), err)
+
+	err = services.GrantRoles(self.ConfigObj, self.investigator_username,
+		[]string{"investigator"})
+	assert.NoError(self.T(), err)
+
+	self.admin_user = "admin"
+	err = user_manager.SetUser(self.Sm.Ctx,
+		&api_proto.VelociraptorUser{
+			Name: self.admin_user,
+		})
+	assert.NoError(self.T(), err)
+
+	err = services.GrantRoles(self.ConfigObj, self.admin_user,
+		[]string{"administrator"})
+	assert.NoError(self.T(), err)
 }
 
 // Check that monitoring tables eventually follow when artifact
@@ -112,7 +154,7 @@ func (self *ClientMonitoringTestSuite) TestUpdatingArtifacts() {
 	assert.NoError(self.T(), err)
 
 	err = manager.SetClientMonitoringState(
-		context.Background(), self.ConfigObj, "",
+		self.Ctx, self.ConfigObj, self.investigator_username,
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"TestArtifact", "SomethingElse"},
@@ -121,7 +163,7 @@ func (self *ClientMonitoringTestSuite) TestUpdatingArtifacts() {
 	assert.NoError(self.T(), err)
 
 	old_table_message := manager.GetClientUpdateEventTableMessage(
-		context.Background(), self.ConfigObj, self.client_id)
+		self.Ctx, self.ConfigObj, self.client_id)
 	assert.NotContains(self.T(), json.MustStringIndent(old_table_message), "Crib")
 
 	table_version := old_table_message.UpdateEventTable.Version
@@ -134,6 +176,7 @@ func (self *ClientMonitoringTestSuite) TestUpdatingArtifacts() {
 	_, err = repository_manager.SetArtifactFile(ctx,
 		self.ConfigObj, "", `
 name: TestArtifact
+type: CLIENT_EVENT
 sources:
 - query:
     SELECT *, Crib FROM info()
@@ -191,6 +234,7 @@ func (self *ClientMonitoringTestSuite) TestUpdatingClientTable() {
 	repository_manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository_manager.SetArtifactFile(self.Ctx, self.ConfigObj, "", `
 name: TestArtifact
+type: CLIENT_EVENT
 sources:
 - query:
     SELECT * FROM info()
@@ -201,7 +245,7 @@ sources:
 
 	// Set the initial table.
 	err = manager.SetClientMonitoringState(
-		context.Background(), self.ConfigObj, "",
+		context.Background(), self.ConfigObj, self.investigator_username,
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"TestArtifact"},
@@ -215,7 +259,7 @@ sources:
 
 	// Now update the monitoring state
 	err = manager.SetClientMonitoringState(
-		context.Background(), self.ConfigObj, "",
+		context.Background(), self.ConfigObj, self.investigator_username,
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"TestArtifact"},
@@ -239,6 +283,7 @@ func (self *ClientMonitoringTestSuite) TestUpdatingClientTableMultiFrontend() {
 	repository_manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository_manager.SetArtifactFile(self.Ctx, self.ConfigObj, "", `
 name: TestArtifact
+type: CLIENT_EVENT
 sources:
 - query:
     SELECT * FROM info()
@@ -249,7 +294,7 @@ sources:
 
 	// Set the initial table.
 	err = manager1.SetClientMonitoringState(
-		context.Background(), self.ConfigObj, "",
+		context.Background(), self.ConfigObj, self.investigator_username,
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"TestArtifact"},
@@ -268,7 +313,7 @@ sources:
 
 	// Now update the monitoring state
 	err = manager2.SetClientMonitoringState(
-		context.Background(), self.ConfigObj, "",
+		context.Background(), self.ConfigObj, self.investigator_username,
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"TestArtifact"},
@@ -298,13 +343,14 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	labeler := services.GetLabeler(self.ConfigObj)
 
 	// Install an initial monitoring table: Everyone gets ServiceCreation.
-	manager.SetClientMonitoringState(
-		context.Background(), self.ConfigObj, "",
+	err = manager.SetClientMonitoringState(
+		context.Background(), self.ConfigObj, self.investigator_username,
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"Windows.Events.ServiceCreation"},
 			},
 		})
+	assert.NoError(self.T(), err)
 
 	table := manager.GetClientUpdateEventTableMessage(
 		context.Background(), self.ConfigObj, self.client_id)
@@ -342,7 +388,8 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	// Now lets install a new label rule for this label and another label.
 	manager.SetClientMonitoringState(
 		context.Background(),
-		self.ConfigObj, "", &flows_proto.ClientEventTable{
+		self.ConfigObj, self.investigator_username,
+		&flows_proto.ClientEventTable{
 			// All clients should have ServiceCreation
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"Windows.Events.ServiceCreation"},
@@ -425,7 +472,7 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompilingMultipleArti
 	// Install an initial monitoring table: Everyone gets ServiceCreation.
 	manager.SetClientMonitoringState(
 		context.Background(),
-		self.ConfigObj, "", &flows_proto.ClientEventTable{
+		self.ConfigObj, self.investigator_username, &flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{
 					"Windows.Events.ServiceCreation",
@@ -501,6 +548,82 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoring() {
 		self.Ctx, self.ConfigObj,
 		self.client_id, uint64(10000000000)))
 
+}
+
+func (self *ClientMonitoringTestSuite) TestPermissions() {
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 0)))
+	defer closer()
+
+	// If no table exists, we will get a default table.
+	manager, err := services.ClientEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Install an initial monitoring table: an investigator can
+	// install it.
+	err = manager.SetClientMonitoringState(
+		self.Ctx, self.ConfigObj, self.investigator_username,
+		&flows_proto.ClientEventTable{
+			Artifacts: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{
+					"Windows.Events.DNSQueries",
+				},
+			},
+		})
+	assert.NoError(self.T(), err)
+
+	// Try to install a client artifact - not acceptable
+	err = manager.SetClientMonitoringState(
+		self.Ctx, self.ConfigObj, self.investigator_username,
+		&flows_proto.ClientEventTable{
+			Artifacts: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{
+					"Client.Artifact",
+				},
+			},
+		})
+	assert.Error(self.T(), err)
+	assert.ErrorContains(self.T(), err, "not a client event artifact")
+
+	// Try to install a client event artifact with a required permission.
+	err = manager.SetClientMonitoringState(
+		self.Ctx, self.ConfigObj, self.investigator_username,
+		&flows_proto.ClientEventTable{
+			Artifacts: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{
+					"Restricted.Permission",
+				},
+			},
+		})
+	assert.Error(self.T(), err)
+	assert.ErrorContains(self.T(), err, "permission denied EXECVE")
+
+	// Admin can install it
+	err = manager.SetClientMonitoringState(
+		self.Ctx, self.ConfigObj, self.admin_user,
+		&flows_proto.ClientEventTable{
+			Artifacts: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{
+					"Restricted.Permission",
+				},
+			},
+		})
+	assert.NoError(self.T(), err)
+
+	// The investigator_username can not install into a label.
+	err = manager.SetClientMonitoringState(
+		self.Ctx, self.ConfigObj, self.investigator_username,
+		&flows_proto.ClientEventTable{
+			LabelEvents: []*flows_proto.LabelEvents{{
+				Label: "Foo",
+				Artifacts: &flows_proto.ArtifactCollectorArgs{
+					Artifacts: []string{
+						"Restricted.Permission",
+					},
+				}},
+			},
+		})
+	assert.Error(self.T(), err)
+	assert.ErrorContains(self.T(), err, "permission denied EXECVE")
 }
 
 func TestClientMonitoringService(t *testing.T) {

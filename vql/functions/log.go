@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/ttlcache/v2"
@@ -120,6 +121,7 @@ func (self *LogFunction) ShouldMessageBeSuppressed(
 		log_cache = &logCache{
 			lru: ttlcache.NewCache(),
 		}
+		log_cache.lru.SetTTL(time.Hour)
 		log_cache.lru.SetCacheSizeLimit(100)
 
 		err := vql_subsystem.GetRootScope(scope).AddDestructor(func() {

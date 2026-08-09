@@ -32,6 +32,8 @@ type NotebookManager struct {
 	SuperTimelineWriterFactory timelines.ISuperTimelineWriter
 	SuperTimelineAnnotator     timelines.ISuperTimelineAnnotator
 	AttachmentManager          AttachmentManager
+
+	BackupProvider NotebookBackupProvider
 }
 
 func (self *NotebookManager) GetNotebook(
@@ -290,13 +292,15 @@ func NewNotebookManagerService(
 		NewAttachmentManager(config_obj, store),
 	)
 
+	notebook_service.BackupProvider = NotebookBackupProvider{
+		notebook_manager: notebook_service,
+		config_obj:       config_obj,
+	}
+
 	// Global Notebooks can be backed up.
 	backup_service, err := services.GetBackupService(config_obj)
 	if err == nil {
-		backup_service.Register(&NotebookBackupProvider{
-			notebook_manager: notebook_service,
-			config_obj:       config_obj,
-		})
+		backup_service.Register(&notebook_service.BackupProvider)
 	}
 
 	return notebook_service, notebook_service.Start(ctx, config_obj, wg)
