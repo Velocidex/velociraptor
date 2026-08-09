@@ -32,6 +32,7 @@ func TestLRU(t *testing.T) {
 		})
 
 	for i := 0; i < 10; i++ {
+		time.Sleep(50 * time.Millisecond)
 		lru.Set(fmt.Sprintf("%v", i), &cacheItem{
 			Id: i,
 		})
