@@ -44,6 +44,7 @@ func NewDeduplicatedLogger(dedup_time time.Duration) (
 		dedup_time: dedup_time,
 	}
 
+	res.lru.SetTTL(time.Hour)
 	res.lru.SetCacheSizeLimit(100)
 	return res, res.lru.Close
 }

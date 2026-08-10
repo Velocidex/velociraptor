@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/ttlcache/v2"
@@ -339,6 +340,7 @@ func (self *Labeler) Start(ctx context.Context,
 	}
 
 	self.lru = ttlcache.NewCache()
+	self.lru.SetTTL(time.Hour)
 	self.lru.SetCacheSizeLimit(int(expected_clients))
 	self.lru.SetNewItemCallback(
 		func(key string, value interface{}) error {

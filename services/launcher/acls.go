@@ -5,16 +5,13 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 func CheckAccess(
-	config_obj *config_proto.Config,
 	artifact *artifacts_proto.Artifact,
-	collector_request *flows_proto.ArtifactCollectorArgs,
+	client_id string,
 	acl_manager vql_subsystem.ACLManager) error {
 
 	// Check if the user has COLLECT_BASIC permission, as we will need
@@ -28,8 +25,7 @@ func CheckAccess(
 		// users to also contain higher permissions it would defeat
 		// the purpose of the COLLECT_BASIC mechanism because the user
 		// will also need to be given extra permissions.
-		err := checkBasicPermission(
-			config_obj, artifact, collector_request, acl_manager)
+		err := checkBasicPermission(artifact)
 		if err == nil {
 			return nil
 		}
@@ -37,7 +33,7 @@ func CheckAccess(
 	}
 
 	permissions := acls.COLLECT_CLIENT
-	if collector_request.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+	if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		permissions = acls.COLLECT_SERVER
 	}
 
@@ -70,8 +66,7 @@ func CheckAccess(
 	}
 
 	if artifact.RequiredPermissions != nil {
-		err := checkRequiredPermissions(config_obj,
-			artifact, acl_manager)
+		err := checkRequiredPermissions(artifact, acl_manager)
 		if err != nil {
 			return err
 		}
@@ -82,7 +77,6 @@ func CheckAccess(
 }
 
 func checkRequiredPermissions(
-	config_obj *config_proto.Config,
 	artifact *artifacts_proto.Artifact,
 	acl_manager vql_subsystem.ACLManager) error {
 	// Principal must have ALL permissions to succeed.
@@ -104,11 +98,7 @@ func checkRequiredPermissions(
 	return nil
 }
 
-func checkBasicPermission(
-	config_obj *config_proto.Config,
-	artifact *artifacts_proto.Artifact,
-	collector_request *flows_proto.ArtifactCollectorArgs,
-	acl_manager vql_subsystem.ACLManager) error {
+func checkBasicPermission(artifact *artifacts_proto.Artifact) error {
 
 	if artifact.Metadata != nil && artifact.Metadata.Basic {
 		return nil
