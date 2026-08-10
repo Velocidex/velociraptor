@@ -285,6 +285,7 @@ func NewDirectoryLRUCache(
 		result.Cache.Close()
 	}()
 
+	result.Cache.SetTTL(time.Hour)
 	result.Cache.SetCacheSizeLimit(max_size)
 	return result
 }

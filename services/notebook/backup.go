@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -13,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -76,7 +78,7 @@ func (self NotebookBackupProvider) BackupResults(
 	return output_chan, nil
 }
 
-func (self NotebookBackupProvider) renderCell(
+func (self NotebookBackupProvider) RenderCell_(
 	ctx context.Context,
 	cell *api_proto.NotebookCell) error {
 
@@ -96,8 +98,12 @@ func (self NotebookBackupProvider) renderCell(
 
 	notebook_path_manager := paths.NewNotebookPathManager(
 		cell.NotebookId)
+
+	scope := vql_subsystem.MakeScope()
+	scope.AppendVars(ordereddict.NewDict().
+		Set("In", cell.Input))
 	tmpl, err := reporting.NewGuiTemplateEngine(
-		self.config_obj, ctx, nil, acl_manager, repository,
+		self.config_obj, ctx, scope, acl_manager, repository,
 		notebook_path_manager.Cell(cell.CellId, cell.CurrentVersion),
 		"Server.Internal.ArtifactDescription")
 	if err != nil {
@@ -107,7 +113,7 @@ func (self NotebookBackupProvider) renderCell(
 
 	data := "Recalculate this cell:\n" +
 		"```vql\n" +
-		cell.Input +
+		`{{ Scope "In" }}` +
 		"\n```\n"
 
 	cell.Output, err = tmpl.Execute(&artifacts_proto.Report{
@@ -173,7 +179,7 @@ func (self NotebookBackupProvider) Restore(ctx context.Context,
 			if record.NotebookCellMetadata != nil {
 				cell := record.NotebookCellMetadata
 
-				err = self.renderCell(ctx, cell)
+				err = self.RenderCell_(ctx, cell)
 				if err != nil {
 					stat.Warnings = append(stat.Warnings,
 						fmt.Sprintf("NewNotebookCell %s: %v",

@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -41,6 +42,9 @@ name: EventArtifact2
 type: CLIENT_EVENT
 sources:
 - query: SELECT * FROM info()
+`, `
+name: Windows.Remediation.QuarantineMonitor
+type: CLIENT_EVENT
 `}
 )
 
@@ -50,9 +54,9 @@ type EventsTestSuite struct {
 	responder *responder.TestResponderType
 	writeback string
 
-	event_table *actions.EventTable
-
-	closer func()
+	event_table           *actions.EventTable
+	investigator_username string
+	closer                func()
 }
 
 func (self *EventsTestSuite) SetupTest() {
@@ -100,6 +104,18 @@ func (self *EventsTestSuite) SetupTest() {
 		self.Ctx, self.Wg, self.ConfigObj,
 		self.responder.Output(),
 		&actions_proto.VQLEventTable{})
+
+	user_manager := services.GetUserManager()
+	self.investigator_username = "UserInvestigator"
+	err = user_manager.SetUser(self.Sm.Ctx,
+		&api_proto.VelociraptorUser{
+			Name: self.investigator_username,
+		})
+	assert.NoError(self.T(), err)
+
+	err = services.GrantRoles(self.ConfigObj, self.investigator_username,
+		[]string{"investigator"})
+	assert.NoError(self.T(), err)
 }
 
 func (self *EventsTestSuite) InitializeEventTable(ctx context.Context,
@@ -154,7 +170,8 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	table := self.InitializeEventTable(ctx, wg, output_chan)
 
 	require.NoError(self.T(), client_manager.SetClientMonitoringState(
-		ctx, self.ConfigObj, "", server_state()))
+		ctx, self.ConfigObj,
+		self.investigator_username, server_state()))
 
 	// Check the version of the initial Event table it should be 0
 	version := table.Version()
@@ -306,7 +323,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 		})
 
 	require.NoError(self.T(), client_manager.SetClientMonitoringState(
-		ctx, self.ConfigObj, "", new_state))
+		ctx, self.ConfigObj, self.investigator_username, new_state))
 
 	new_message = client_manager.GetClientUpdateEventTableMessage(
 		self.Ctx, self.ConfigObj, self.client_id)
@@ -338,7 +355,7 @@ func (self *EventsTestSuite) TestEventEqual() {
 	_ = table
 
 	require.NoError(self.T(), client_manager.SetClientMonitoringState(
-		ctx, self.ConfigObj, "", server_state()))
+		ctx, self.ConfigObj, self.investigator_username, server_state()))
 
 	message := client_manager.GetClientUpdateEventTableMessage(
 		self.Ctx, self.ConfigObj, self.client_id)

@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/ttlcache/v2"
@@ -110,6 +111,7 @@ func (self LRUFunction) Call(ctx context.Context, scope vfilter.Scope,
 	result := &LRUCache{
 		lru: ttlcache.NewCache(),
 	}
+	result.lru.SetTTL(time.Hour)
 	err = scope.AddDestructor(func() {
 		result.lru.Close()
 	})

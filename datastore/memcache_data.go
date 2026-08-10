@@ -3,6 +3,7 @@ package datastore
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/Velocidex/ttlcache/v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -66,6 +67,7 @@ func NewDataLRUCache(
 		max_item_size: data_max_item_size,
 	}
 
+	result.SetTTL(time.Hour)
 	result.SetCacheSizeLimit(data_max_size)
 
 	go func() {
