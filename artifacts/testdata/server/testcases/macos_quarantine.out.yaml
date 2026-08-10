@@ -207,3 +207,4 @@ Output: [
 
 Query: LET _ <= mock_clear()
 Output: []
+

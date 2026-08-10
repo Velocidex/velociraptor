@@ -90,7 +90,9 @@ type AccessorReader struct {
 	max_size int64
 
 	// Atomic reference count for in flight readers
-	ref              int
+	ref int
+
+	// Delay close until all concurrent readers are done.
 	waiting_to_close bool
 
 	reader       accessors.ReadSeekCloser
@@ -188,6 +190,7 @@ func (self *AccessorReader) Close() error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	// Delay the close until all the readers are done.
 	if self.ref > 0 {
 		self.waiting_to_close = true
 		return nil
@@ -332,6 +335,7 @@ func GetReaderPool(scope vfilter.Scope, lru_size int64) *ReaderPool {
 		pool := &ReaderPool{
 			lru: ttlcache.NewCache(),
 		}
+		pool.lru.SetTTL(time.Hour)
 		pool.lru.SetCacheSizeLimit(int(lru_size))
 
 		// Close the item on expiration

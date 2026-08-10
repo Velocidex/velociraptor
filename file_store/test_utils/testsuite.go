@@ -78,6 +78,9 @@ type: INTERNAL
 name: Server.Monitor.Health
 type: SERVER_EVENT
 `, `
+name: Windows.Remediation.QuarantineMonitor
+type: CLIENT_EVENT
+`, `
 name: Generic.Client.Stats
 type: CLIENT_EVENT
 `, `

@@ -47,7 +47,7 @@ import (
 var (
 	mock_definitions = []string{`
 name: Windows.Remediation.QuarantineMonitor
-type: SERVER_EVENT
+type: CLIENT_EVENT
 `, `
 name: System.Hunt.Creation
 type: SERVER_EVENT
@@ -83,9 +83,10 @@ type: INTERNAL
 
 type ServerTestSuite struct {
 	test_utils.TestSuite
-	server        *server.Server
-	client_crypto *crypto_client.ClientCryptoManager
-	client_id     string
+	server                *server.Server
+	client_crypto         *crypto_client.ClientCryptoManager
+	client_id             string
+	investigator_username string
 }
 
 type MockAPIClientFactory struct {
@@ -130,6 +131,18 @@ func (self *ServerTestSuite) SetupTest() {
 	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
 		ClientInfo: &actions_proto.ClientInfo{ClientId: self.client_id},
 	})
+	assert.NoError(self.T(), err)
+
+	user_manager := services.GetUserManager()
+	self.investigator_username = "UserInvestigator"
+	err = user_manager.SetUser(self.Sm.Ctx,
+		&api_proto.VelociraptorUser{
+			Name: self.investigator_username,
+		})
+	assert.NoError(self.T(), err)
+
+	err = services.GrantRoles(self.ConfigObj, self.investigator_username,
+		[]string{"investigator"})
 	assert.NoError(self.T(), err)
 }
 
@@ -403,7 +416,7 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	assert.NoError(self.T(), err)
 
 	err = client_event_manager.SetClientMonitoringState(self.Ctx,
-		self.ConfigObj, "",
+		self.ConfigObj, self.investigator_username,
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"Generic.Client.Stats"},
