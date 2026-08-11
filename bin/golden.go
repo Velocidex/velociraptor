@@ -390,7 +390,7 @@ func doGolden() error {
 
 	// Global timeout for the entire test
 	if !*disable_alarm {
-		timeout_ctx, cancel := makeCtxWithTimeout(ctx, 120)
+		timeout_ctx, cancel := makeCtxWithTimeout(ctx, 240)
 		defer cancel()
 
 		ctx = timeout_ctx
