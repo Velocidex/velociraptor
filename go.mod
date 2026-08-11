@@ -89,7 +89,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20251027080408-85407689d0cb
 	www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959
 	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7
-	www.velocidex.com/golang/vfilter v0.0.0-20260604071755-26b8340c4bb8
+	www.velocidex.com/golang/vfilter v0.0.0-20260811011156-d89b560d22c2
 )
 
 require (
@@ -371,8 +371,7 @@ require (
 
 // replace github.com/Velocidex/yara-x-go => ../yara-x-go
 // replace github.com/Velocidex/grok => ../grok
-replace www.velocidex.com/golang/vfilter => ../vfilter
-
+// replace www.velocidex.com/golang/vfilter => ../vfilter
 // replace www.velocidex.com/golang/regparser => ../regparser
 // replace www.velocidex.com/golang/go-ntfs => ../go-ntfs
 // replace github.com/Velocidex/go-fat => ../go-fat
