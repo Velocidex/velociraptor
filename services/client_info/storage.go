@@ -185,6 +185,8 @@ func (self *Store) SetDirty() {
 func (self *Store) _SetDirty() {
 	self.dirty = true
 	clientInfoDirty.WithLabelValues(self.config_obj.OrgId).Set(1.0)
+
+	self.dirty = true
 }
 
 func (self *Store) Keys() []string {
