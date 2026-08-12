@@ -246,3 +246,23 @@ Output: [
  }
 ]
 
+# Make sure MULTI_SZ are parsed correctly https://github.com/Velocidex/velociraptor/issues/4970
+Query: SELECT Name, Data.value FROM glob(globs='software/test*', root='HKEY_CURRENT_USER', accessor='registry') WHERE Name =~ 'test' ORDER BY Name
+Output: [
+ {
+  "Name": "Test",
+  "Data.value": null
+ },
+ {
+  "Name": "TestEmptySZ",
+  "Data.value": []
+ },
+ {
+  "Name": "TestSZ",
+  "Data.value": [
+   "Hello World",
+   "Goodbye World"
+  ]
+ }
+]
+
