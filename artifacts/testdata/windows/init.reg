@@ -25,3 +25,11 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Test\KeyWithValue]
 @="Default Value Data"
 "Value"="Value content"
+
+[HKEY_CURRENT_USER\Software]
+"StringValue"="this is a long string value which may overflow the bufffer"
+"TestEmptySZ"=hex(7):00,00
+"dword test"=dword:00000005
+"TestSZ"=hex(7):48,00,65,00,6c,00,6c,00,6f,00,20,00,57,00,6f,00,72,00,6c,00,64,\
+  00,00,00,47,00,6f,00,6f,00,64,00,62,00,79,00,65,00,20,00,57,00,6f,00,72,00,\
+  6c,00,64,00,00,00,00,00
