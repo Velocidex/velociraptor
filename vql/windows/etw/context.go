@@ -229,7 +229,15 @@ func (self *SessionContext) _Session(
 	go func() {
 		defer self.wg.Done()
 
-		err := self.session.Process()
+		self.mu.Lock()
+		session := self.session
+		self.mu.Unlock()
+
+		if session == nil {
+			return
+		}
+
+		err := session.Process()
 		if err != nil {
 			scope.Log("etw: Can not start session %v: %v", self.name, err)
 		}
