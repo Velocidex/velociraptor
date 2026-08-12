@@ -212,11 +212,12 @@ func getCredentials(
 		return nil, fmt.Errorf("Invalid credentials provided for %v", hostname)
 	}
 
-	// if no domain is given go-smb2 uses the targetname of the server response
-	// you can now specify ".\" to use local authentication,
-	// this fills the domain and workstation with your current hostname just as
-	// the native windows implementation does;
-	// if the password starts with 'ntlm:' treat it as a hash instead
+	// if no domain is given go-smb2 uses the target name of the
+	// server response you can now specify ".\" to use local
+	// authentication, this fills the domain and workstation with your
+	// current hostname just as the native windows implementation
+	// does; if the password starts with `ntlm:` treat it as a hash
+	// instead
 	var domain string
 	if strings.HasPrefix(parts[0], ".\\") {
 		parts[0] = parts[0][2:]
