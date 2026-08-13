@@ -199,14 +199,15 @@ const (
 	DISABLE_DANGEROUS_API_CALLS = "DISABLE_DANGEROUS_API_CALLS"
 
 	// Fixed secret types - definitions in the sanity service
-	AWS_S3_CREDS    = "AWS S3 Creds"
-	SSH_PRIVATE_KEY = "SSH PrivateKey"
-	HTTP_SECRETS    = "HTTP Secrets"
-	SPLUNK_CREDS    = "Splunk Creds"
-	ELASTIC_CREDS   = "Elastic Creds"
-	ADX_CREDS       = "ADX Creds"
-	SMTP_CREDS      = "SMTP Creds"
-	EXECVE_SECRET   = "Execve Secrets"
+	AWS_S3_CREDS        = "AWS S3 Creds"
+	SSH_PRIVATE_KEY     = "SSH PrivateKey"
+	HTTP_SECRETS        = "HTTP Secrets"
+	SPLUNK_CREDS        = "Splunk Creds"
+	ELASTIC_CREDS       = "Elastic Creds"
+	ADX_CREDS           = "ADX Creds"
+	AZURE_MONITOR_CREDS = "Azure Monitor Creds"
+	SMTP_CREDS          = "SMTP Creds"
+	EXECVE_SECRET       = "Execve Secrets"
 
 	// The name of the annotation timeline
 	TIMELINE_ANNOTATION      = "Annotation"

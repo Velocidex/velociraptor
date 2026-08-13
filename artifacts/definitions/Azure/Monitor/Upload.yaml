@@ -1,0 +1,190 @@
+name: Azure.Monitor.Upload
+description: |
+  This server-side event monitoring artifact waits for new artifacts to
+  be collected from endpoints and automatically uploads those to an
+  Azure Log Analytics workspace using the **Azure Monitor Logs Ingestion
+  API** (the modern Data Collection Rule based API).
+
+  Although Azure Data Explorer (ADX) and Log Analytics share the Kusto
+  (KQL) query engine, they use completely different *ingestion* APIs and
+  the `ADX.Flows.Upload` artifact can NOT be pointed at a Log Analytics
+  workspace. This artifact uses the dedicated Logs Ingestion path
+  instead.
+
+  Each row is uploaded with structured metadata columns and a `RawData`
+  column containing the full event, allowing efficient queries on the
+  structured columns while keeping full flexibility via `RawData`.
+
+  ## 1. Create the custom table
+
+  In the Log Analytics workspace create a custom table (the name must end
+  in `_CL`) with this schema (every Log Analytics table requires a
+  `TimeGenerated` column):
+
+  ```
+  TimeGenerated:  datetime
+  Artifact:       string
+  ClientId:       string
+  FlowId:         string
+  Organization:   string
+  Hostname:       string
+  RawData:        dynamic
+  ```
+
+  ## 2. Create a Data Collection Rule (DCR)
+
+  Create a DCR that declares an input **stream** named
+  `Custom-RawVelociraptorEvents_CL` (stream names must start with
+  `Custom-`) whose schema matches the table, and routes it to the table.
+  Note the DCR's **immutableId** (e.g. `dcr-xxxxxxxxxxxxxxxx`) and its
+  **logs ingestion endpoint** (`logsIngestion.endpoint`), or attach a
+  Data Collection Endpoint (DCE) and use its URI.
+
+  ## 3. Configure authentication
+
+  Several options are supported:
+
+  - **Service principal** - create an Entra app registration with a
+    client secret and supply `TenantID`, `ClientID`, `ClientSecret`.
+  - **Environment variables** - leave the service principal fields empty
+    and set `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`
+    in the server's environment (the SDK `EnvironmentCredential`
+    behaviour). This path still honors the server's proxy / CA settings.
+  - **Managed identity** - set `ManagedIdentity` to TRUE (server must run
+    in Azure; requires a `sumo` build).
+  - **Default credential chain** - set `DefaultCredential` to TRUE to use
+    the Azure SDK `DefaultAzureCredential` (env vars, workload identity,
+    managed identity, Azure CLI; requires a `sumo` build).
+
+  Whichever identity is used, assign it the **Monitoring Metrics
+  Publisher** role on the **DCR** (scope = the DCR resource).
+
+  Credentials may also be stored in the secrets service as a secret of
+  type `Azure Monitor Creds` and referenced via the `Secret` parameter.
+
+  ## Notes
+
+  - `StreamName` MUST exactly match the DCR's declared input stream name.
+  - The Logs Ingestion API caps a single request at ~1MB uncompressed;
+    `MaxMemoryBuffer` defaults well under that.
+
+type: SERVER_EVENT
+
+parameters:
+  - name: ArtifactNameRegex
+    default: .
+    type: regex
+    description: Only upload these artifacts to Azure Monitor.
+  - name: LogsIngestionEndpoint
+    default: https://your-dce-or-dcr.region.ingest.monitor.azure.com
+    description: |
+      The Logs Ingestion endpoint URI of the Data Collection Rule (or a
+      Data Collection Endpoint).
+  - name: DCRImmutableID
+    description: The immutable ID of the Data Collection Rule (e.g. dcr-xxxxxxxx).
+  - name: StreamName
+    default: Custom-RawVelociraptorEvents_CL
+    description: |
+      The DCR input stream name. Must match the stream declared in the
+      DCR exactly.
+  - name: Table
+    default: RawVelociraptorEvents_CL
+    description: |
+      Only used to derive StreamName as 'Custom-<Table>' when StreamName
+      is left empty. Ignored otherwise.
+  - name: TenantID
+    description: Azure Service Principal Tenant ID (or set AZURE_TENANT_ID).
+  - name: ClientID
+    description: Azure Service Principal Client ID (or set AZURE_CLIENT_ID).
+  - name: ClientSecret
+    description: Azure Service Principal Client Secret (or set AZURE_CLIENT_SECRET).
+  - name: ManagedIdentity
+    type: bool
+    description: |
+      Use an Azure managed identity instead of a service principal
+      (requires a 'sumo' build and that the server runs in Azure).
+  - name: ManagedIdentityClientID
+    description: Optional client ID of a user-assigned managed identity.
+  - name: DefaultCredential
+    type: bool
+    description: |
+      Use the Azure SDK DefaultAzureCredential chain (AZURE_* env vars,
+      workload identity, managed identity, Azure CLI). Requires a 'sumo'
+      build.
+  - name: Threads
+    type: int
+    default: 1
+    description: Number of threads to upload with.
+  - name: ChunkSize
+    type: int
+    default: 1000
+    description: Batch this many rows for each upload.
+  - name: WaitTime
+    type: int
+    default: 5
+    description: |
+      Maximum time in seconds to wait before flushing buffered rows.
+  - name: MaxMemoryBuffer
+    type: hidden
+    default: 921600
+    description: |
+      Maximum uncompressed request body in bytes before forcing an
+      upload. Keep under the ~1MB Azure limit. Default is 900KB.
+  - name: MaxRetries
+    type: int
+    default: 3
+    description: Maximum number of retries for failed uploads.
+  - name: RetryWait
+    type: int
+    default: 2
+    description: Base wait time in seconds for exponential backoff between retries.
+  - name: Secret
+    type: hidden
+    description: |
+      Alternatively use a secret from the secrets service. Secret must be
+      of type 'Azure Monitor Creds'.
+
+sources:
+  - query: |
+      LET completions = SELECT * FROM watch_monitoring(
+               artifact="System.Flow.Completion")
+               WHERE Flow.artifacts_with_results =~ ArtifactNameRegex
+      LET organization <= org().name
+
+      LET documents = SELECT * FROM foreach(row=completions,
+          query={
+             SELECT * FROM foreach(
+                 row=Flow.artifacts_with_results,
+                 query={
+                     SELECT *, _value AS _Artifact,
+                            client_info(client_id=ClientId).os_info.hostname AS _Hostname,
+                            timestamp(epoch=now()) AS _timestamp,
+                            ClientId AS _ClientId,
+                            Flow.session_id AS _FlowId,
+                            organization as _Organization
+                     FROM source(
+                        client_id=ClientId,
+                        flow_id=Flow.session_id,
+                        artifact=_value)
+                 })
+          })
+
+      SELECT * FROM azure_monitor_upload(
+            query=documents,
+            threads=Threads,
+            chunk_size=ChunkSize,
+            wait_time=WaitTime,
+            max_memory_buffer=int(int=MaxMemoryBuffer),
+            max_retries=MaxRetries,
+            retry_wait=RetryWait,
+            logs_ingestion_endpoint=LogsIngestionEndpoint,
+            dcr_immutable_id=DCRImmutableID,
+            stream_name=StreamName,
+            table=Table,
+            tenant_id=TenantID,
+            client_id=ClientID,
+            client_secret=ClientSecret,
+            managed_identity=ManagedIdentity,
+            managed_identity_client_id=ManagedIdentityClientID,
+            default_credential=DefaultCredential,
+            secret=Secret)
