@@ -1,0 +1,84 @@
+
+Test case 0: Invalid plugin
+SELECT * FROM scopeXXX()
+[
+ {
+  "range": {
+   "start": {
+    "line": 1,
+    "character": 15
+   },
+   "end": {
+    "line": 1,
+    "character": 25
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(1,15) unknown_plugin: Unknown plugin scopeXXX()"
+ }
+]
+
+Test case 1: Invalid arg
+SELECT * FROM scope(Foo=1)
+[
+ {
+  "range": {
+   "start": {
+    "line": 1,
+    "character": 21
+   },
+   "end": {
+    "line": 1,
+    "character": 26
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(1,21) invalid_arg: Invalid arg Foo for plugin scope()"
+ }
+]
+
+Test case 2: Valid query
+SELECT * FROM scope()
+[]
+
+Test case 3: Invalid syntax
+SELECT *
+[
+ {
+  "range": {
+   "start": {
+    "line": 0,
+    "character": 0
+   },
+   "end": {
+    "line": 0,
+    "character": 0
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(0,0) Generic Error: SELECT |: 1:9: unexpected token \"<EOF>\" (expected <from> _From (<where> _CommaExpression)? (<groupby> _CommaExpression)? (<orderby> <ident> <desc>?)? (<limit> <number>)?)"
+ }
+]
+
+Test case 4: Missing required arg
+SELECT * FROM parse_evtx()
+[
+ {
+  "range": {
+   "start": {
+    "line": 1,
+    "character": 15
+   },
+   "end": {
+    "line": 1,
+    "character": 27
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(1,15) required_arg_missing: While calling plugin parse_evtx(), required arg filename is not provided"
+ }
+]

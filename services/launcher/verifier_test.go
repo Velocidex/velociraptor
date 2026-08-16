@@ -93,27 +93,27 @@ var (
 		{"Invalid artifact precondition", `
 name: Test
 precondition: SELECT * FROM infox()
-`, "Test: precondition: unknown_plugin:Unknown plugin infox.+"},
+`, "Test: precondition: .+ unknown_plugin: Unknown plugin infox.+"},
 
 		{"Invalid source precondition", `
 name: Test
 sources:
 - name: Source
   precondition: SELECT * FROM infox()
-`, "Test/Source: precondition: unknown_plugin:Unknown plugin infox.+"},
+`, "Test/Source: precondition: .+ unknown_plugin: Unknown plugin infox.+"},
 
 		{"Invalid export", `
 name: TestExport
 export:
   SELECT * FROM infox()
-`, "TestExport: export: unknown_plugin:Unknown plugin infox.+"},
+`, "TestExport: export: .+ unknown_plugin: Unknown plugin infox.+"},
 
 		{"Invalid source query", `
 name: Test
 sources:
 - name: Source
   query: SELECT * FROM infox()
-`, "Test/Source: query: unknown_plugin:Unknown plugin infox.+"},
+`, "Test/Source: query: .+ unknown_plugin: Unknown plugin infox.+"},
 
 		{"Define in export, use in query", `
 name: TestExport

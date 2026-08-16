@@ -154,7 +154,7 @@ func doShowConfig() error {
 
 	config_obj.Services = services.GenericToolServices()
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
@@ -332,7 +332,7 @@ func doDumpClientConfig() error {
 		return err
 	}
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	config_obj.Services = services.GenericToolServices()
@@ -379,7 +379,7 @@ func doDumpApiClientConfig() error {
 
 	config_obj.Services = services.GenericToolServices()
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)

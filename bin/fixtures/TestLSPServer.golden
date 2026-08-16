@@ -1,0 +1,78 @@
+
+Test Case 1 Initialize call:
+{
+    "jsonrpc": "2.0",
+    "id" : 1,
+    "method": "initialize",
+    "params": {}
+}
+
+{
+ "jsonrpc": "2.0",
+ "id": 1,
+ "result": {
+  "capabilities": {
+   "textDocumentSync": 1,
+   "completionProvider": {
+    "triggerCharacters": [
+     ".",
+     "("
+    ]
+   },
+   "hoverProvider": true,
+   "documentSymbolProvider": true,
+   "diagnosticProvider": {
+    "identifier": "vql",
+    "interFileDependencies": false,
+    "workspaceDiagnostics": false
+   }
+  },
+  "serverInfo": {
+   "name": "vql-lsp",
+   "version": "0.1"
+  }
+ }
+}
+
+Test Case 2 Add doc:
+{
+    "jsonrpc": "2.0",
+    "id" : 2,
+    "method": "textDocument/didOpen",
+    "params": {
+        "textDocument": {
+           "uri": "file://XXXX",
+           "text": "SELECT * FROM infoXXX()"
+        }
+    }
+}
+
+{
+ "jsonrpc": "2.0",
+ "method": "textDocument/publishDiagnostics",
+ "params": {
+  "uri": "file://xxxx/",
+  "diagnostics": [
+   {
+    "range": {
+     "start": {
+      "line": 1,
+      "character": 15
+     },
+     "end": {
+      "line": 1,
+      "character": 24
+     }
+    },
+    "severity": 1,
+    "source": "vql",
+    "message": "unknown_plugin:Unknown plugin infoXXX()"
+   }
+  ]
+ }
+}
+{
+ "jsonrpc": "2.0",
+ "id": 2,
+ "result": null
+}

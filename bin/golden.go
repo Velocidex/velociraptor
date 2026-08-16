@@ -385,7 +385,7 @@ func doGolden() error {
 
 	config_obj.Services = services.GoldenServicesSpec()
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	// Global timeout for the entire test

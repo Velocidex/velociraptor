@@ -25,6 +25,7 @@ import "vfs_api.proto";
 import "scheduler.proto";
 import "secrets.proto";
 import "timeline_api.proto";
+import "lsp.proto";
 
 package proto;
 
@@ -649,4 +650,7 @@ service API {
 
     // Health check protocol as in https://github.com/grpc/grpc/blob/master/doc/health-checking.md
     rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
+
+    // LSP only accessible over the API
+    rpc LSP(LSPRequest) returns (LSPResponse);
 }

@@ -143,6 +143,8 @@ type APIClient interface {
 	ListChildren(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*ListChildrenResponse, error)
 	// Health check protocol as in https://github.com/grpc/grpc/blob/master/doc/health-checking.md
 	Check(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error)
+	// LSP only accessible over the API
+	LSP(ctx context.Context, in *LSPRequest, opts ...grpc.CallOption) (*LSPResponse, error)
 }
 
 type aPIClient struct {
@@ -968,6 +970,15 @@ func (c *aPIClient) Check(ctx context.Context, in *HealthCheckRequest, opts ...g
 	return out, nil
 }
 
+func (c *aPIClient) LSP(ctx context.Context, in *LSPRequest, opts ...grpc.CallOption) (*LSPResponse, error) {
+	out := new(LSPResponse)
+	err := c.cc.Invoke(ctx, "/proto.API/LSP", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // APIServer is the server API for API service.
 // All implementations must embed UnimplementedAPIServer
 // for forward compatibility
@@ -1092,6 +1103,8 @@ type APIServer interface {
 	ListChildren(context.Context, *DataRequest) (*ListChildrenResponse, error)
 	// Health check protocol as in https://github.com/grpc/grpc/blob/master/doc/health-checking.md
 	Check(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error)
+	// LSP only accessible over the API
+	LSP(context.Context, *LSPRequest) (*LSPResponse, error)
 	mustEmbedUnimplementedAPIServer()
 }
 
@@ -1347,6 +1360,9 @@ func (UnimplementedAPIServer) ListChildren(context.Context, *DataRequest) (*List
 }
 func (UnimplementedAPIServer) Check(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Check not implemented")
+}
+func (UnimplementedAPIServer) LSP(context.Context, *LSPRequest) (*LSPResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LSP not implemented")
 }
 func (UnimplementedAPIServer) mustEmbedUnimplementedAPIServer() {}
 
@@ -2869,6 +2885,24 @@ func _API_Check_Handler(srv interface{}, ctx context.Context, dec func(interface
 	return interceptor(ctx, in, info, handler)
 }
 
+func _API_LSP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LSPRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).LSP(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/LSP",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).LSP(ctx, req.(*LSPRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // API_ServiceDesc is the grpc.ServiceDesc for API service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -3195,6 +3229,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Check",
 			Handler:    _API_Check_Handler,
+		},
+		{
+			MethodName: "LSP",
+			Handler:    _API_LSP_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

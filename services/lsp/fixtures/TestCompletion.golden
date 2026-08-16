@@ -1,0 +1,267 @@
+
+Test case 0: Complete VQL function
+SELECT geoip(db='Foo', ip='127.0.0.1') AS Foo FROM scope()
+SELECT geoi<--
+Diagnostics:
+[]
+Completions:
+[
+ {
+  "label": "geoip",
+  "labelDetails": {
+   "detail": "Function",
+   "description": "Lookup an IP Address using the MaxMind GeoIP database"
+  },
+  "kind": 1,
+  "detail": "Built in Function"
+ }
+]
+
+Test case 1: Complete VQL plugin
+SELECT * FROM scope()
+SELECT * FROM sco<--
+Diagnostics:
+[]
+Completions:
+[
+ {
+  "label": "scope",
+  "labelDetails": {
+   "detail": "Plugin",
+   "description": "The scope plugin returns the current scope as a single row"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin"
+ }
+]
+
+Test case 2: Complete VQL nested function
+SELECT * FROM glob(globs=lowcase(string='*'))
+SELECT * FROM glob(globs=lowc<--
+Diagnostics:
+[]
+Completions:
+[
+ {
+  "label": "lowcase",
+  "labelDetails": {
+   "detail": "Function",
+   "description": "Returns the lowercase version of a string"
+  },
+  "kind": 1,
+  "detail": "Built in Function"
+ }
+]
+
+Test case 3: Complete plugin all args
+SELECT * FROM glob()
+SELECT * FROM glob(<--
+Diagnostics:
+[
+ {
+  "range": {
+   "start": {
+    "line": 1,
+    "character": 15
+   },
+   "end": {
+    "line": 1,
+    "character": 21
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(1,15) required_arg_missing: While calling plugin glob(), required arg globs is not provided"
+ }
+]
+Completions:
+[
+ {
+  "label": "globs",
+  "labelDetails": {
+   "detail": "globs",
+   "description": "One or more glob patterns to apply to the filesystem."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
+ {
+  "label": "root",
+  "labelDetails": {
+   "detail": "root",
+   "description": "The root directory to glob from (default '')."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
+ {
+  "label": "accessor",
+  "labelDetails": {
+   "detail": "accessor",
+   "description": "An accessor to use."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
+ {
+  "label": "nosymlink",
+  "labelDetails": {
+   "detail": "nosymlink",
+   "description": "If set we do not follow symlinks."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
+ {
+  "label": "recursion_callback",
+  "labelDetails": {
+   "detail": "recursion_callback",
+   "description": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
+ {
+  "label": "one_filesystem",
+  "labelDetails": {
+   "detail": "one_filesystem",
+   "description": "If set we do not follow links to other filesystems."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ }
+]
+
+Test case 4: Complete a plugin args
+SELECT * FROM glob(gloXXX='*')
+SELECT * FROM glob(gl<--
+Diagnostics:
+[
+ {
+  "range": {
+   "start": {
+    "line": 1,
+    "character": 20
+   },
+   "end": {
+    "line": 1,
+    "character": 30
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(1,20) invalid_arg: Invalid arg gloXXX for plugin glob()"
+ },
+ {
+  "range": {
+   "start": {
+    "line": 1,
+    "character": 15
+   },
+   "end": {
+    "line": 1,
+    "character": 31
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(1,15) required_arg_missing: While calling plugin glob(), required arg globs is not provided"
+ }
+]
+Completions:
+[
+ {
+  "label": "globs",
+  "labelDetails": {
+   "detail": "globs",
+   "description": "One or more glob patterns to apply to the filesystem."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ }
+]
+
+Test case 5: Complete some plugin args (accessor already exists, so should not be completed) 
+SELECT * FROM glob(gloXXX='*', accessor='file')
+SELECT * FROM glob(<--
+Diagnostics:
+[
+ {
+  "range": {
+   "start": {
+    "line": 1,
+    "character": 20
+   },
+   "end": {
+    "line": 1,
+    "character": 30
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(1,20) invalid_arg: Invalid arg gloXXX for plugin glob()"
+ },
+ {
+  "range": {
+   "start": {
+    "line": 1,
+    "character": 15
+   },
+   "end": {
+    "line": 1,
+    "character": 48
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(1,15) required_arg_missing: While calling plugin glob(), required arg globs is not provided"
+ }
+]
+Completions:
+[
+ {
+  "label": "globs",
+  "labelDetails": {
+   "detail": "globs",
+   "description": "One or more glob patterns to apply to the filesystem."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
+ {
+  "label": "root",
+  "labelDetails": {
+   "detail": "root",
+   "description": "The root directory to glob from (default '')."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
+ {
+  "label": "nosymlink",
+  "labelDetails": {
+   "detail": "nosymlink",
+   "description": "If set we do not follow symlinks."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
+ {
+  "label": "recursion_callback",
+  "labelDetails": {
+   "detail": "recursion_callback",
+   "description": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
+ {
+  "label": "one_filesystem",
+  "labelDetails": {
+   "detail": "one_filesystem",
+   "description": "If set we do not follow links to other filesystems."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ }
+]

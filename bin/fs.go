@@ -141,7 +141,7 @@ func doLS(path, accessor string) error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	config_obj.Services = services.GenericToolServices()
@@ -215,7 +215,7 @@ func doRM(path, accessor string) error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
@@ -282,7 +282,7 @@ func doCp(path, accessor string, dump_dir string) error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
@@ -390,7 +390,7 @@ func doCat(path, accessor_name string) error {
 		path = matches[2]
 	}
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	config_obj.Services = services.GenericToolServices()

@@ -881,6 +881,26 @@ func (mr *MockAPIClientMockRecorder) GetUsers(arg0, arg1 interface{}, arg2 ...in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockAPIClient)(nil).GetUsers), varargs...)
 }
 
+// LSP mocks base method.
+func (m *MockAPIClient) LSP(arg0 context.Context, arg1 *proto0.LSPRequest, arg2 ...grpc.CallOption) (*proto0.LSPResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "LSP", varargs...)
+	ret0, _ := ret[0].(*proto0.LSPResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LSP indicates an expected call of LSP.
+func (mr *MockAPIClientMockRecorder) LSP(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LSP", reflect.TypeOf((*MockAPIClient)(nil).LSP), varargs...)
+}
+
 // LabelClients mocks base method.
 func (m *MockAPIClient) LabelClients(arg0 context.Context, arg1 *proto0.LabelClientsRequest, arg2 ...grpc.CallOption) (*proto0.APIResponse, error) {
 	m.ctrl.T.Helper()
