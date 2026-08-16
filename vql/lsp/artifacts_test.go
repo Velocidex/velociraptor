@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 /*
    Velociraptor - Dig Deeper
    Copyright (C) 2019-2025 Rapid7 Inc.
