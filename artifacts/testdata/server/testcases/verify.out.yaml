@@ -6,7 +6,7 @@ Output: [
    "Artifact": "name: BrokenYaml\nsomeweirdfield: 1\n",
    "Permissions": null,
    "Errors": [
-    "yaml_error:YAML Error: yaml: unmarshal errors:\n  line 2: field someweirdfield not found in type proto.Artifact"
+    "(0,0) yaml_error: YAML Error: yaml: unmarshal errors:\n  line 2: field someweirdfield not found in type proto.Artifact"
    ],
    "Warnings": null,
    "Definitions": {},
@@ -16,7 +16,7 @@ Output: [
    "Artifact": "name: BrokenQuery\nsources:\n- query: SELECT * FROM nosuchplugin()\n",
    "Permissions": null,
    "Errors": [
-    "artifact_vql_error:BrokenQuery: query: unknown_plugin:Unknown plugin nosuchplugin()"
+    "(0,0) artifact_vql_error: BrokenQuery: query: (1,15) unknown_plugin: Unknown plugin nosuchplugin()"
    ],
    "Warnings": null,
    "Definitions": {},
@@ -26,7 +26,7 @@ Output: [
    "Artifact": "name: BrokenSubArtifact\nsources:\n- query: SELECT * FROM Artifact.No.Such.Artifact()\n",
    "Permissions": null,
    "Errors": [
-    "artifact_vql_error:BrokenSubArtifact: query: Unknown artifact reference No.Such.Artifact"
+    "(0,0) artifact_vql_error: BrokenSubArtifact: query: Unknown artifact reference No.Such.Artifact"
    ],
    "Warnings": null,
    "Definitions": {},
@@ -39,7 +39,27 @@ Output: [
    ],
    "Errors": null,
    "Warnings": [
-    "required_permissions:Add EXECVE to artifact's required_permissions or implied_permissions fields"
+    {
+     "Name": "required_permissions",
+     "Message": "Add %[1]v to artifact's required_permissions or implied_permissions fields",
+     "Args": [
+      "EXECVE"
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      }
+     }
+    }
    ],
    "Definitions": {},
    "Suppressions": null
@@ -50,29 +70,94 @@ Output: [
     "FILESYSTEM_READ"
    ],
    "Errors": [
-    "artifact_vql_error:KWArgs: query: required_arg_missing:While calling function alert(), required arg name is not provided",
-    "artifact_vql_error:KWArgs: query: kwargs_mixed_call:Calling plugin `switch` with kwargs (**) as well as with arg `a`",
-    "artifact_vql_error:KWArgs: query: kwargs_mixed_call:Calling function `Foo` with kwargs (**) as well as with arg `X`",
-    "artifact_vql_error:KWArgs: query: kwargs_mixed_call:Calling function `dict` with kwargs (**) as well as with arg `A`",
-    "artifact_vql_error:KWArgs: query: kwargs_mixed_call:Calling plugin `Artifact.Generic.Client.Info` with kwargs (**) as well as with arg `X`"
+    "(0,0) artifact_vql_error: KWArgs: query: (5,32) required_arg_missing: While calling function alert(), required arg name is not provided",
+    "(0,0) artifact_vql_error: KWArgs: query: (10,15) kwargs_mixed_call: Calling plugin `switch` with kwargs (**) as well as with arg `{a {10:22 14:2}}`",
+    "(0,0) artifact_vql_error: KWArgs: query: (11,10) kwargs_mixed_call: Calling function `Foo` with kwargs (**) as well as with arg `{X {11:30 11:33}}`",
+    "(0,0) artifact_vql_error: KWArgs: query: (12,10) kwargs_mixed_call: Calling function `dict` with kwargs (**) as well as with arg `{A {12:15 12:18}}`",
+    "(0,0) artifact_vql_error: KWArgs: query: (13,8) kwargs_mixed_call: Calling plugin `Artifact.Generic.Client.Info` with kwargs (**) as well as with arg `{X {13:53 13:56}}`"
    ],
    "Warnings": [
-    "symbol_mask_warn:Use of symbol `Foo` which might mask a LET definition of the same name"
+    {
+     "Name": "symbol_mask_warn",
+     "Message": "Use of symbol `%[1]v` which might mask a %[2]v of the same name",
+     "Args": [
+      "Foo",
+      "LET definition"
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 197,
+       "Line": 7,
+       "Column": 11
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 201,
+       "Line": 7,
+       "Column": 15
+      }
+     }
+    }
    ],
    "Definitions": {
     "Foo": {
      "Type": "definition",
      "Name": "Foo",
      "Args": [
-      "X"
+      {
+       "Name": "X",
+       "Pos": {
+        "Pos": {
+         "Filename": "",
+         "Offset": 8,
+         "Line": 1,
+         "Column": 9
+        },
+        "EndPos": {
+         "Filename": "",
+         "Offset": 9,
+         "Line": 1,
+         "Column": 10
+        }
+       }
+      }
      ],
-     "Defaults": null
+     "Defaults": null,
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 1,
+       "Column": 1
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 116,
+       "Line": 5,
+       "Column": 1
+      }
+     }
     },
     "X": {
      "Type": "definition",
      "Name": "X",
      "Args": null,
-     "Defaults": null
+     "Defaults": null,
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 116,
+       "Line": 5,
+       "Column": 1
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 237,
+       "Line": 10,
+       "Column": 1
+      }
+     }
     }
    },
    "Suppressions": null
@@ -82,28 +167,107 @@ Output: [
    "Permissions": null,
    "Errors": null,
    "Warnings": [
-    "symbol_mask_warn:Use of symbol `Foo` which might mask a LET definition of the same name"
+    {
+     "Name": "symbol_mask_warn",
+     "Message": "Use of symbol `%[1]v` which might mask a %[2]v of the same name",
+     "Args": [
+      "Foo",
+      "LET definition"
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 53,
+       "Line": 5,
+       "Column": 8
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 56,
+       "Line": 5,
+       "Column": 11
+      }
+     }
+    }
    ],
    "Definitions": {
     "Bar": {
      "Type": "definition",
      "Name": "Bar",
      "Args": null,
-     "Defaults": null
+     "Defaults": null,
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 19,
+       "Line": 2,
+       "Column": 1
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 31,
+       "Line": 3,
+       "Column": 1
+      }
+     }
     },
     "Baz": {
      "Type": "definition",
      "Name": "Baz",
      "Args": [],
-     "Defaults": null
+     "Defaults": null,
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 31,
+       "Line": 3,
+       "Column": 1
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 46,
+       "Line": 5,
+       "Column": 1
+      }
+     }
     },
     "Foo": {
      "Type": "definition",
      "Name": "Foo",
      "Args": [
-      "X"
+      {
+       "Name": "X",
+       "Pos": {
+        "Pos": {
+         "Filename": "",
+         "Offset": 8,
+         "Line": 1,
+         "Column": 9
+        },
+        "EndPos": {
+         "Filename": "",
+         "Offset": 9,
+         "Line": 1,
+         "Column": 10
+        }
+       }
+      }
      ],
-     "Defaults": null
+     "Defaults": null,
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 1,
+       "Column": 1
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 19,
+       "Line": 2,
+       "Column": 1
+      }
+     }
     }
    },
    "Suppressions": null
@@ -113,7 +277,28 @@ Output: [
    "Permissions": null,
    "Errors": null,
    "Warnings": [
-    "symbol_mask_warn:Use of symbol `all` which might mask a function of the same name"
+    {
+     "Name": "symbol_mask_warn",
+     "Message": "Use of symbol `%[1]v` which might mask a %[2]v of the same name",
+     "Args": [
+      "all",
+      "function"
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 48,
+       "Line": 2,
+       "Column": 14
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 52,
+       "Line": 2,
+       "Column": 18
+      }
+     }
+    }
    ],
    "Definitions": {},
    "Suppressions": [
@@ -176,7 +361,7 @@ Output: [
     "name": "BrokenYaml",
     "passed": false,
     "errors": [
-     "yaml_error:YAML Error: yaml: unmarshal errors:\n  line 2: field someweirdfield not found in type proto.Artifact"
+     "(0,0) yaml_error: YAML Error: yaml: unmarshal errors:\n  line 2: field someweirdfield not found in type proto.Artifact"
     ],
     "warnings": [],
     "path": "invalid1.yaml"
@@ -185,7 +370,7 @@ Output: [
     "name": "BrokenQuery",
     "passed": false,
     "errors": [
-     "artifact_vql_error:BrokenQuery: query: unknown_plugin:Unknown plugin nosuchplugin()"
+     "(0,0) artifact_vql_error: BrokenQuery: query: (1,15) unknown_plugin: Unknown plugin nosuchplugin()"
     ],
     "warnings": [],
     "path": "invalid2.yaml"
@@ -195,7 +380,7 @@ Output: [
     "passed": true,
     "errors": [],
     "warnings": [
-     "required_permissions:Add EXECVE to artifact's required_permissions or implied_permissions fields"
+     "(0,0) required_permissions: Add EXECVE to artifact's required_permissions or implied_permissions fields"
     ],
     "path": "invalid3.yaml"
    }
@@ -212,7 +397,7 @@ Output: [
    "Artifact": "name: Generic.Client.Info\nsources:\n- query: SELECT * FROM scope()\n",
    "Permissions": null,
    "Errors": [
-    "yaml_error:YAML Error: Unable to override built in artifact Generic.Client.Info"
+    "(0,0) yaml_error: YAML Error: Unable to override built in artifact Generic.Client.Info"
    ],
    "Warnings": null,
    "Definitions": {},
