@@ -90,7 +90,7 @@ func doServerDeb() error {
 	blank_config.Datastore.Location = temp_dir
 	blank_config.Datastore.FilestoreDirectory = temp_dir
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, blank_config)
@@ -169,7 +169,7 @@ func doClientDeb() error {
 	blank_config.Datastore.Location = temp_dir
 	blank_config.Datastore.FilestoreDirectory = temp_dir
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, blank_config)

@@ -258,10 +258,8 @@ class FlowsList extends React.Component {
             this.props.selected_flow.session_id;
         let prev_selection = prevProps.selected_flow &&
             prevProps.selected_flow.session_id;
-        let router_flow = this.props.match && this.props.match.params &&
-            this.props.match.params.flow_id;
 
-        if(selected_flow != prev_selection || router_flow == "new") {
+        if(selected_flow != prev_selection) {
             this.setStateFromRouter();
         }
         return false;
@@ -283,7 +281,7 @@ class FlowsList extends React.Component {
 
         if (action === "new") {
             // Special handling for the offline collector builder.
-            if (name==="Server.Utils.CreateCollector") {
+            if(name==="Server.Utils.CreateCollector") {
                 this.setState({showOfflineWizard: true});
                 return;
             }

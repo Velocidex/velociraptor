@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
+
+message LSPRequest {
+    string operation = 1;
+    string json = 2;
+}
+
+message LSPResponse {
+    string json = 2;
+}

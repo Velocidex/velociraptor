@@ -1,0 +1,54 @@
+
+Test case 0: Query with errors
+
+LET X = 1
+SELECT geoip(db='Foo', ip='127.0.0.1', XXX=1) AS Foo
+FROM glob(globs='*')
+
+Document URI file:///XXX0
+Errors
+(3,40) invalid_arg: Invalid arg XXX for function geoip()
+Analysis State :
+TopLevelQueries:
+(2,1)-(3,1) LET X = 1
+(3,1)-(5,1) SELECT geoip(db='Foo', ip='127.0.0.1', XXX=1) AS Foo FROM glob(globs='*')
+Definitions:
+(2,1)-(3,1) X (definition)
+Callsites:
+(3,8)-(3,47) geoip (function)
+   (3,14)-(3,22) db
+   (3,24)-(3,38) ip
+   (3,40)-(3,45) XXX
+(4,6)-(5,1) glob (plugin)
+   (4,11)-(4,20) globs
+
+Test case 1: Sub Query
+
+LET Add(X) = X + 1
+
+SELECT {
+   SELECT geoip(db='Foo', ip='127.0.0.1', XXX=1) AS Foo
+   FROM glob(globs='*', accessor=Add(X='file'))
+} AS B
+FROM scope()
+
+Document URI file:///XXX1
+Errors
+(5,43) invalid_arg: Invalid arg XXX for function geoip()
+Analysis State :
+TopLevelQueries:
+(2,1)-(4,1) LET Add(X) = X + 1
+(4,1)-(9,1) SELECT { SELECT geoip(db='Foo', ip='127.0.0.1', XXX=1) AS Foo FROM glob(globs='*', accessor=Add(X='f ...
+Definitions:
+(2,1)-(4,1) Add (definition)
+Callsites:
+(5,11)-(5,50) geoip (function)
+   (5,17)-(5,25) db
+   (5,27)-(5,41) ip
+   (5,43)-(5,48) XXX
+(6,9)-(7,1) glob (plugin)
+   (6,14)-(6,23) globs
+   (6,25)-(6,47) accessor
+(6,34)-(6,47) Add (function)
+   (6,38)-(6,46) X
+(8,6)-(9,1) scope (plugin)

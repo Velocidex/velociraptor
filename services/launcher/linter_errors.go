@@ -51,6 +51,8 @@ const (
 	INVALID_SUPPRESSION             = "invalid_suppression"
 	INVALID_SUPPRESSION_MSG         = "Suppression %[1]v not valid: %[2]v"
 	INVALID_SUPPRESSION_UNKNOWN_MSG = "Suppression %[1]v not known"
+
+	GENERIC_ERROR = "Generic Error"
 )
 
 func validLinterDirectives(name string) bool {

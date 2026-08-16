@@ -275,10 +275,7 @@ type ArtifactCollectorArgs struct {
 	// before forwarding them to the server. If this is 0, no updates
 	// will be sent until he very end of the query.
 	LogBatchTime uint64 `protobuf:"varint,28,opt,name=log_batch_time,json=logBatchTime,proto3" json:"log_batch_time,omitempty"`
-	// A place to cache the compiled request. If this is provided we
-	// do not compile the artifacts at all, we just use it as is. This
-	// is used by hunts which repeat the same collection multiple
-	// times, so we can avoid the compiler overheads at scale.
+	// This is a private field - Callers can not set it.
 	CompiledCollectorArgs []*proto.VQLCollectorArgs `protobuf:"bytes,20,rep,name=compiled_collector_args,json=compiledCollectorArgs,proto3" json:"compiled_collector_args,omitempty"`
 	// DEPRECATED:
 	OpsPerSecond  float32 `protobuf:"fixed32,6,opt,name=ops_per_second,json=opsPerSecond,proto3" json:"ops_per_second,omitempty"`

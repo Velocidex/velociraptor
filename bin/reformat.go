@@ -30,7 +30,7 @@ func doReformat() error {
 
 	config_obj.Services = services.GenericToolServices()
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)

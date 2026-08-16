@@ -51,7 +51,7 @@ func doClient() error {
 		}
 	}
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	// Include the writeback in the client's configuration.

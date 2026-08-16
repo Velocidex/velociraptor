@@ -466,7 +466,7 @@ func NewVelociraptorServerService(name string) (
 				config_obj.Services = services.AllServerServicesSpec()
 			}
 
-			ctx, cancel := install_sig_handler()
+			ctx, cancel := Install_sig_handler()
 			defer cancel()
 
 			// Now start the frontend services

@@ -173,7 +173,7 @@ func doArtifactCollect() error {
 
 	config_obj.Services = services.GenericToolServices()
 
-	ctx, top_cancel := install_sig_handler()
+	ctx, top_cancel := Install_sig_handler()
 	defer top_cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
@@ -348,7 +348,7 @@ func doArtifactShow() error {
 		return fmt.Errorf("Unable to create config: %w", err)
 	}
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
@@ -387,7 +387,7 @@ func doArtifactList() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
