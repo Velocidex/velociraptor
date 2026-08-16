@@ -81,6 +81,19 @@ func (self *LSPServer) LSP(
 		}
 		return self.returnRespose(result)
 
+	case client.HoverOp:
+		req := &protocol.HoverParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.Hover(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
 	}
 	return nil, utils.NotImplementedError
 }

@@ -105,59 +105,15 @@ Output: [
      "Type": "definition",
      "Name": "Foo",
      "Args": [
-      {
-       "Name": "X",
-       "Pos": {
-        "Pos": {
-         "Filename": "",
-         "Offset": 8,
-         "Line": 1,
-         "Column": 9
-        },
-        "EndPos": {
-         "Filename": "",
-         "Offset": 9,
-         "Line": 1,
-         "Column": 10
-        }
-       }
-      }
+      "X"
      ],
-     "Defaults": null,
-     "Pos": {
-      "Pos": {
-       "Filename": "",
-       "Offset": 0,
-       "Line": 1,
-       "Column": 1
-      },
-      "EndPos": {
-       "Filename": "",
-       "Offset": 116,
-       "Line": 5,
-       "Column": 1
-      }
-     }
+     "Defaults": null
     },
     "X": {
      "Type": "definition",
      "Name": "X",
      "Args": null,
-     "Defaults": null,
-     "Pos": {
-      "Pos": {
-       "Filename": "",
-       "Offset": 116,
-       "Line": 5,
-       "Column": 1
-      },
-      "EndPos": {
-       "Filename": "",
-       "Offset": 237,
-       "Line": 10,
-       "Column": 1
-      }
-     }
+     "Defaults": null
     }
    },
    "Suppressions": null
@@ -195,79 +151,21 @@ Output: [
      "Type": "definition",
      "Name": "Bar",
      "Args": null,
-     "Defaults": null,
-     "Pos": {
-      "Pos": {
-       "Filename": "",
-       "Offset": 19,
-       "Line": 2,
-       "Column": 1
-      },
-      "EndPos": {
-       "Filename": "",
-       "Offset": 31,
-       "Line": 3,
-       "Column": 1
-      }
-     }
+     "Defaults": null
     },
     "Baz": {
      "Type": "definition",
      "Name": "Baz",
-     "Args": [],
-     "Defaults": null,
-     "Pos": {
-      "Pos": {
-       "Filename": "",
-       "Offset": 31,
-       "Line": 3,
-       "Column": 1
-      },
-      "EndPos": {
-       "Filename": "",
-       "Offset": 46,
-       "Line": 5,
-       "Column": 1
-      }
-     }
+     "Args": null,
+     "Defaults": null
     },
     "Foo": {
      "Type": "definition",
      "Name": "Foo",
      "Args": [
-      {
-       "Name": "X",
-       "Pos": {
-        "Pos": {
-         "Filename": "",
-         "Offset": 8,
-         "Line": 1,
-         "Column": 9
-        },
-        "EndPos": {
-         "Filename": "",
-         "Offset": 9,
-         "Line": 1,
-         "Column": 10
-        }
-       }
-      }
+      "X"
      ],
-     "Defaults": null,
-     "Pos": {
-      "Pos": {
-       "Filename": "",
-       "Offset": 0,
-       "Line": 1,
-       "Column": 1
-      },
-      "EndPos": {
-       "Filename": "",
-       "Offset": 19,
-       "Line": 2,
-       "Column": 1
-      }
-     }
+     "Defaults": null
     }
    },
    "Suppressions": null

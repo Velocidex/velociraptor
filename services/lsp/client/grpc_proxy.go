@@ -12,6 +12,7 @@ const (
 	InitializeOp = "Initialize"
 	DidOpenOp    = "DidOpen"
 	CompletionOp = "CompletionOp"
+	HoverOp      = "HoverOp"
 )
 
 var (
@@ -66,6 +67,13 @@ func (self *LSPProxy) Completion(
 		return nil, err
 	}
 	return protocol.CompletionItemSlice(result), nil
+}
+
+func (self *LSPProxy) Hover(
+	ctx context.Context, params *protocol.HoverParams) (
+	*protocol.Hover, error) {
+	result := &protocol.Hover{}
+	return result, self.forwardCall(ctx, HoverOp, params, result)
 }
 
 func (self *LSPProxy) DidOpen(
