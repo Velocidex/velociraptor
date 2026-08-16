@@ -65,7 +65,7 @@ func doFrontend() error {
 		return fmt.Errorf("loading config file: %w", err)
 	}
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	// Come up with a suitable services plan depending on the frontend

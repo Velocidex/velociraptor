@@ -106,7 +106,7 @@ func on_error(ctx context.Context, config_obj *config_proto.Config) {
 	}
 }
 
-func install_sig_handler() (context.Context, context.CancelFunc) {
+func Install_sig_handler() (context.Context, context.CancelFunc) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGHUP,
 		syscall.SIGINT,

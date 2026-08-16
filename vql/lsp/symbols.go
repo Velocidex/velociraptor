@@ -1,3 +1,6 @@
+//go:build ignore
+// +build ignore
+
 /*
    Velociraptor - Dig Deeper
    Copyright (C) 2019-2025 Rapid7 Inc.
@@ -75,11 +78,11 @@ func (self *Server) outlineToSymbol(
 	info *vfilter.OutlineInfo, document string, mapper positionMapper) protocol.DocumentSymbol {
 
 	symbol := protocol.DocumentSymbol{
-		Name:          self.outlineName(info, document, mapper),
-		Kind:          outlineKindToSymbolKind(info.Kind),
-		Range:         mapper.rangeOf(info.Pos, info.EndPos),
+		Name:           self.outlineName(info, document, mapper),
+		Kind:           outlineKindToSymbolKind(info.Kind),
+		Range:          mapper.rangeOf(info.Pos, info.EndPos),
 		SelectionRange: mapper.rangeOf(info.Pos, info.EndPos),
-		Children:      []protocol.DocumentSymbol{},
+		Children:       []protocol.DocumentSymbol{},
 	}
 
 	for _, child := range info.Children {

@@ -29,6 +29,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/lsp"
 	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
@@ -67,6 +68,7 @@ type ServiceContainer struct {
 	backups                 services.BackupService
 	export_manager          services.ExportManager
 	doc_manager             services.DocManager
+	lsp_server              services.LSPServer
 }
 
 func (self *ServiceContainer) MockFrontendManager(svc services.FrontendManager) {
@@ -187,6 +189,17 @@ func (self *ServiceContainer) Indexer() (services.Indexer, error) {
 	}
 
 	return self.indexer, nil
+}
+
+func (self *ServiceContainer) LSPServer() (services.LSPServer, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.lsp_server == nil {
+		return nil, errors.New("LSP service not initialized")
+	}
+
+	return self.lsp_server, nil
 }
 
 func (self *ServiceContainer) RepositoryManager() (services.RepositoryManager, error) {
@@ -590,9 +603,12 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 			return err
 		}
 
+		lsp_server := lsp.NewLSPServer(org_config)
+
 		service_container.mu.Lock()
 		service_container.repository = repo_manager
 		service_container.doc_manager = dm
+		service_container.lsp_server = lsp_server
 		service_container.mu.Unlock()
 	}
 

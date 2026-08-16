@@ -202,8 +202,10 @@ func checkArtifact(
 
 	if err != nil {
 		return &launcher.AnalysisState{
-			Errors: []string{err.Error()},
-		}, nil
+			Errors: []*launcher.VerifierError{{
+				Name:    launcher.YAML_ERROR,
+				Message: err.Error(),
+			}}}, nil
 	}
 
 	// Verify the artifact
