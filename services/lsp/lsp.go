@@ -185,6 +185,32 @@ func (self *LSPServer) LSP(
 		}
 		return self.returnRespose(result)
 
+	case client.PrepareRenameOp:
+		req := &protocol.PrepareRenameParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.PrepareRename(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.RenameOp:
+		req := &protocol.RenameParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.Rename(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
 	}
 	return nil, utils.NotImplementedError
 }

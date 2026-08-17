@@ -26,6 +26,10 @@ const (
 	CodeActionOp = "CodeActionOp"
 
 	ReferencesOp = "ReferencesOp"
+
+	PrepareRenameOp = "PrepareRenameOp"
+
+	RenameOp = "RenameOp"
 )
 
 var (
@@ -183,6 +187,28 @@ func (self *LSPProxy) References(
 	[]protocol.Location, error) {
 	result := []protocol.Location{}
 	err := self.forwardCall(ctx, ReferencesOp, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (self *LSPProxy) PrepareRename(
+	ctx context.Context, params *protocol.PrepareRenameParams) (
+	protocol.PrepareRenameResult, error) {
+	result := protocol.Range{}
+	err := self.forwardCall(ctx, PrepareRenameOp, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (self *LSPProxy) Rename(
+	ctx context.Context, params *protocol.RenameParams) (
+	*protocol.WorkspaceEdit, error) {
+	result := &protocol.WorkspaceEdit{}
+	err := self.forwardCall(ctx, RenameOp, params, result)
 	if err != nil {
 		return nil, err
 	}

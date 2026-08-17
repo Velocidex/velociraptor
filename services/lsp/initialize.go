@@ -57,6 +57,9 @@ func (self *LSPServer) Initialize(
 
 			// The server provides references.
 			ReferencesProvider: protocol.Boolean(true),
+
+			// The server provides rename.
+			RenameProvider: protocol.Boolean(true),
 		},
 		ServerInfo: protocol.ServerInfo{
 			Name:    "vql-lsp",
