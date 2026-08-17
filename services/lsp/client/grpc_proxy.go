@@ -24,6 +24,8 @@ const (
 	InlayHintOp = "InlayHintOp"
 
 	CodeActionOp = "CodeActionOp"
+
+	ReferencesOp = "ReferencesOp"
 )
 
 var (
@@ -170,6 +172,17 @@ func (self *LSPProxy) CodeAction(
 	[]protocol.CommandOrCodeAction, error) {
 	result := []protocol.CommandOrCodeAction{}
 	err := self.forwardCall(ctx, CodeActionOp, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (self *LSPProxy) References(
+	ctx context.Context, params *protocol.ReferenceParams) (
+	[]protocol.Location, error) {
+	result := []protocol.Location{}
+	err := self.forwardCall(ctx, ReferencesOp, params, &result)
 	if err != nil {
 		return nil, err
 	}

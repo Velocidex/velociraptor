@@ -54,6 +54,9 @@ func (self *LSPServer) Initialize(
 
 			// The server provides code actions.
 			CodeActionProvider: protocol.Boolean(true),
+
+			// The server provides references.
+			ReferencesProvider: protocol.Boolean(true),
 		},
 		ServerInfo: protocol.ServerInfo{
 			Name:    "vql-lsp",
