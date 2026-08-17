@@ -22,6 +22,8 @@ const (
 	WorkspaceSymbolsOp = "WorkspaceSymbolsOp"
 
 	InlayHintOp = "InlayHintOp"
+
+	CodeActionOp = "CodeActionOp"
 )
 
 var (
@@ -157,6 +159,17 @@ func (self *LSPProxy) InlayHint(
 	[]protocol.InlayHint, error) {
 	result := []protocol.InlayHint{}
 	err := self.forwardCall(ctx, InlayHintOp, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (self *LSPProxy) CodeAction(
+	ctx context.Context, params *protocol.CodeActionParams) (
+	[]protocol.CommandOrCodeAction, error) {
+	result := []protocol.CommandOrCodeAction{}
+	err := self.forwardCall(ctx, CodeActionOp, params, &result)
 	if err != nil {
 		return nil, err
 	}

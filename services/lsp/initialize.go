@@ -51,6 +51,9 @@ func (self *LSPServer) Initialize(
 
 			// The server provides inlay hints.
 			InlayHintProvider: protocol.Boolean(true),
+
+			// The server provides code actions.
+			CodeActionProvider: protocol.Boolean(true),
 		},
 		ServerInfo: protocol.ServerInfo{
 			Name:    "vql-lsp",
