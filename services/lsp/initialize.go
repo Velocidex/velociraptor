@@ -34,6 +34,9 @@ func (self *LSPServer) Initialize(
 			CompletionProvider: &protocol.CompletionOptions{
 				TriggerCharacters: []string{".", "("},
 			},
+
+			// The server provides document formatting.
+			DocumentFormattingProvider: protocol.Boolean(true),
 		},
 		ServerInfo: protocol.ServerInfo{
 			Name:    "vql-lsp",

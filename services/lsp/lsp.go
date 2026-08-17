@@ -94,6 +94,19 @@ func (self *LSPServer) LSP(
 		}
 		return self.returnRespose(result)
 
+	case client.FormattingOp:
+		req := &protocol.DocumentFormattingParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.Formatting(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
 	}
 	return nil, utils.NotImplementedError
 }

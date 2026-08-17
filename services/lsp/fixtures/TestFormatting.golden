@@ -1,0 +1,45 @@
+
+Test case 0: Reformat a query with long lines
+LET X = SELECT * FROM pslist(pid=1)
+SELECT X FROM scope()
+
+Formatting:
+[
+ {
+  "range": {
+   "start": {
+    "line": 0,
+    "character": 0
+   },
+   "end": {
+    "line": 2,
+    "character": 0
+   }
+  },
+  "newText": "LET X = SELECT *\n  FROM pslist(pid=1)\n\nSELECT X\nFROM scope()"
+ }
+]
+
+Test case 1: Reformat a nested function
+SELECT * FROM glob(globs=lowcase(string='*'))
+Formatting:
+[
+ {
+  "range": {
+   "start": {
+    "line": 0,
+    "character": 0
+   },
+   "end": {
+    "line": 0,
+    "character": 45
+   }
+  },
+  "newText": "SELECT *\nFROM glob(globs=lowcase(string='*'))"
+ }
+]
+
+Test case 2: Refuse unparseable query
+SELECT * FROM
+Formatting:
+[]

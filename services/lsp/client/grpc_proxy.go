@@ -13,6 +13,7 @@ const (
 	DidOpenOp    = "DidOpen"
 	CompletionOp = "CompletionOp"
 	HoverOp      = "HoverOp"
+	FormattingOp = "FormattingOp"
 )
 
 var (
@@ -97,6 +98,17 @@ func (self *LSPProxy) DidOpen(
 			URI:         uri,
 			Diagnostics: diagnostics,
 		})
+}
+
+func (self *LSPProxy) Formatting(
+	ctx context.Context, params *protocol.DocumentFormattingParams) (
+	[]protocol.TextEdit, error) {
+	result := []protocol.TextEdit{}
+	err := self.forwardCall(ctx, FormattingOp, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func NewLSPProxy(api_client api_proto.APIClient) protocol.Server {
