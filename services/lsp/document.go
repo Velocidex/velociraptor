@@ -32,21 +32,14 @@ func (self *Document) Debug() string {
 }
 
 func (self *Document) Diagnostics() (res []*protocol.Diagnostic) {
+	position_mapper := newPositionMapper(self.Text)
+
 	for _, verify_error := range self.Errors {
 		diag := &protocol.Diagnostic{
 			Severity: protocol.DiagnosticSeverityError,
 			Source:   protocol.NewOptional("vql"),
 			Message:  protocol.String(verify_error.Error()),
-			Range: protocol.Range{
-				Start: protocol.Position{
-					Line:      uint32(verify_error.Pos.Pos.Line),
-					Character: uint32(verify_error.Pos.Pos.Column),
-				},
-				End: protocol.Position{
-					Line:      uint32(verify_error.Pos.EndPos.Line),
-					Character: uint32(verify_error.Pos.EndPos.Column),
-				},
-			},
+			Range:    position_mapper.mapRange(verify_error.Pos),
 		}
 		res = append(res, diag)
 	}

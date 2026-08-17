@@ -75,7 +75,7 @@ func (self *LSPTestSuite) TestHover() {
 					URI: doc,
 				},
 				Position: protocol.Position{
-					Line:      1,
+					Line:      0,
 					Character: tc.Column,
 				},
 			},

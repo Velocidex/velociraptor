@@ -5,12 +5,12 @@ SELECT * FROM scopeXXX()
  {
   "range": {
    "start": {
-    "line": 1,
-    "character": 15
+    "line": 0,
+    "character": 14
    },
    "end": {
-    "line": 1,
-    "character": 25
+    "line": 0,
+    "character": 24
    }
   },
   "severity": 1,
@@ -25,12 +25,12 @@ SELECT * FROM scope(Foo=1)
  {
   "range": {
    "start": {
-    "line": 1,
-    "character": 21
+    "line": 0,
+    "character": 20
    },
    "end": {
-    "line": 1,
-    "character": 26
+    "line": 0,
+    "character": 25
    }
   },
   "severity": 1,
@@ -69,12 +69,12 @@ SELECT * FROM parse_evtx()
  {
   "range": {
    "start": {
-    "line": 1,
-    "character": 15
+    "line": 0,
+    "character": 14
    },
    "end": {
-    "line": 1,
-    "character": 27
+    "line": 0,
+    "character": 26
    }
   },
   "severity": 1,

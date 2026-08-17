@@ -19,11 +19,13 @@ func (self *LSPServer) Hover(
 		return nil, utils.NotFoundError
 	}
 
-	// Find the function at point
-	line := int(params.Position.Line)
-	column := int(params.Position.Character)
+	position_mapper := newPositionMapper(doc.Text)
 
-	cs, offset_at_point, err := doc.matchCallsite(line, column)
+	// Find the function at point.
+	offset_at_point := position_mapper.positionToOffset(
+		int(params.Position.Line), int(params.Position.Character))
+
+	cs, err := doc.matchCallsite(offset_at_point)
 
 	// The position is sitting inside a call site.
 	// The call site covers the function name and arg list.
@@ -39,14 +41,9 @@ func (self *LSPServer) Hover(
 			// hover info about the function.
 			return &protocol.Hover{
 				Range: &protocol.Range{
-					Start: protocol.Position{
-						Line:      uint32(cs.Pos.Pos.Line),
-						Character: uint32(cs.Pos.Pos.Column),
-					},
-					End: protocol.Position{
-						Line:      uint32(cs.Pos.Pos.Line),
-						Character: uint32(cs.Pos.Pos.Column + len(cs.Name)),
-					},
+					Start: position_mapper.mapPos(cs.Pos.Pos),
+					End: position_mapper.mapOffset(
+						cs.Pos.Pos.Offset + len(cs.Name)),
 				},
 				Contents: &protocol.MarkupContent{
 					Kind:  protocol.MarkupKind(desc.Type),
@@ -63,19 +60,13 @@ func (self *LSPServer) Hover(
 					return &protocol.Hover{}, nil
 				}
 
-				if arg.Pos.Pos.Line == line &&
-					arg.Pos.Pos.Column <= column &&
-					column <= arg.Pos.Pos.Column+len(arg.Name) {
+				if offset_at_point >= arg.Pos.Pos.Offset &&
+					offset_at_point <= arg.Pos.Pos.Offset+len(arg.Name) {
 					return &protocol.Hover{
 						Range: &protocol.Range{
-							Start: protocol.Position{
-								Line:      uint32(cs.Pos.Pos.Line),
-								Character: uint32(cs.Pos.Pos.Column),
-							},
-							End: protocol.Position{
-								Line:      uint32(cs.Pos.Pos.Line),
-								Character: uint32(cs.Pos.Pos.Column + len(cs.Name)),
-							},
+							Start: position_mapper.mapPos(cs.Pos.Pos),
+							End: position_mapper.mapOffset(
+								cs.Pos.Pos.Offset + len(cs.Name)),
 						},
 						Contents: &protocol.MarkupContent{
 							Kind:  protocol.MarkupKind("Arg"),

@@ -5,7 +5,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/alecthomas/participle/v2/lexer"
 	"go.lsp.dev/protocol"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -22,8 +21,8 @@ import (
 //
 // If point is at the inner callsite we want to retrieve the most
 // specific callsite - in this case bar().
-func (self *Document) matchCallsite(line, column int) (
-	callsite *vfilter.CallSite, offset_at_point int, err error) {
+func (self *Document) matchCallsite(offset_at_point int) (
+	callsite *vfilter.CallSite, err error) {
 
 	type prospect_t struct {
 		distance int
@@ -33,23 +32,11 @@ func (self *Document) matchCallsite(line, column int) (
 	// Find potential overlapping callsites
 	var prospects []*prospect_t
 
-	offset_at_point = -1
-
 	for _, cs := range self.AnalysisState.Callsites {
 		cs_pos := cs.Pos
 
 		// Potential prospect - the point is inside the callsite.
-		if isPosBetween(cs_pos, line, column) {
-			if offset_at_point < 0 {
-				offset_at_point, err = getNextOffset(
-					self.Text, cs_pos.Pos, line, column)
-				if err != nil {
-					// If we can not get the exact offset, then the
-					// text does not match the offset.
-					break
-				}
-			}
-
+		if rngContains(cs_pos, offset_at_point) {
 			prospects = append(prospects, &prospect_t{
 				distance: offset_at_point - cs_pos.Pos.Offset,
 				cs:       &cs,
@@ -58,10 +45,10 @@ func (self *Document) matchCallsite(line, column int) (
 	}
 
 	if len(prospects) == 0 {
-		return nil, 0, utils.Wrap(
+		return nil, utils.Wrap(
 			utils.NotFoundError,
-			"matchCallsite: Coordinate %v,%v are not found in text",
-			line, column)
+			"matchCallsite: Offset %v is not found in text",
+			offset_at_point)
 	}
 
 	sort.Slice(prospects, func(i, j int) bool {
@@ -70,7 +57,7 @@ func (self *Document) matchCallsite(line, column int) (
 
 	// Minimize the distance
 	best_cs := prospects[0].cs
-	return best_cs, offset_at_point, nil
+	return best_cs, nil
 }
 
 // Complete possible function names on callsite.
@@ -98,7 +85,7 @@ func (self *LSPServer) complete_function_names(
 func (self *LSPServer) complete_arg_names(
 	doc *Document,
 	cs *vfilter.CallSite,
-	line, column, offset_at_point int) (items []protocol.CompletionItem) {
+	offset_at_point int) (items []protocol.CompletionItem) {
 
 	// Find the description for the function
 	desc := doc.getVQLFunctionDescription(cs)
@@ -175,10 +162,11 @@ func (self *LSPServer) Completion(
 	}
 
 	// Find the function at point
-	line := int(params.Position.Line)
-	column := int(params.Position.Character)
+	position_mapper := newPositionMapper(doc.Text)
+	offset_at_point := position_mapper.positionToOffset(
+		int(params.Position.Line), int(params.Position.Character))
 
-	cs, offset_at_point, err := doc.matchCallsite(line, column)
+	cs, err := doc.matchCallsite(offset_at_point)
 
 	// The position is sitting inside a call site.
 	// The call site covers the function name and arg list.
@@ -193,7 +181,7 @@ func (self *LSPServer) Completion(
 				cs, match)...)
 		} else {
 			items = append(items, self.complete_arg_names(
-				doc, cs, line, column, offset_at_point)...)
+				doc, cs, offset_at_point)...)
 		}
 	}
 	return items, nil
@@ -208,54 +196,6 @@ func getKind(desc *api_proto.Completion) protocol.CompletionItemKind {
 	default:
 		return protocol.CompletionItemKindText
 	}
-}
-
-func isPosBetween(rng vfilter.RangePosition, line, column int) bool {
-	left := rng.Pos
-	right := rng.EndPos
-
-	// Line falls outside the range of interest.
-	if left.Line < line || right.Line > line {
-		return false
-	}
-
-	// Falls to the left of the range.
-	if left.Line == line && left.Column > column {
-		return false
-	}
-
-	if right.Line == line && right.Column < column {
-		return false
-	}
-
-	return true
-}
-
-// Find the absolute offset in the text of the line and character
-// specified.
-func getNextOffset(
-	text string,
-	start lexer.Position,
-	line, column int) (offset int, err error) {
-
-	cur_line := start.Line
-	cur_col := start.Column
-	for idx, char := range text {
-		if char == '\n' {
-			cur_line++
-			cur_col = 0
-		}
-
-		if cur_col == column && cur_line == line {
-			return idx + 1 + start.Offset, nil
-		}
-
-		if cur_line > line {
-			break
-		}
-		cur_col++
-	}
-	return 0, utils.NotFoundError
 }
 
 func (self *Document) getVQLFunctionDescription(

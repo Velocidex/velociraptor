@@ -12,12 +12,12 @@ Hover:
  },
  "range": {
   "start": {
-   "line": 1,
-   "character": 8
+   "line": 0,
+   "character": 7
   },
   "end": {
-   "line": 1,
-   "character": 13
+   "line": 0,
+   "character": 12
   }
  }
 }
@@ -35,12 +35,12 @@ Hover:
  },
  "range": {
   "start": {
-   "line": 1,
-   "character": 15
+   "line": 0,
+   "character": 14
   },
   "end": {
-   "line": 1,
-   "character": 20
+   "line": 0,
+   "character": 19
   }
  }
 }
@@ -58,12 +58,12 @@ Hover:
  },
  "range": {
   "start": {
-   "line": 1,
-   "character": 26
+   "line": 0,
+   "character": 25
   },
   "end": {
-   "line": 1,
-   "character": 33
+   "line": 0,
+   "character": 32
   }
  }
 }
@@ -76,12 +76,12 @@ Diagnostics:
  {
   "range": {
    "start": {
-    "line": 1,
-    "character": 15
+    "line": 0,
+    "character": 14
    },
    "end": {
-    "line": 1,
-    "character": 21
+    "line": 0,
+    "character": 20
    }
   },
   "severity": 1,
@@ -107,12 +107,12 @@ Hover:
  },
  "range": {
   "start": {
-   "line": 1,
-   "character": 15
+   "line": 0,
+   "character": 14
   },
   "end": {
-   "line": 1,
-   "character": 19
+   "line": 0,
+   "character": 18
   }
  }
 }
