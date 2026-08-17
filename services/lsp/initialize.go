@@ -42,6 +42,9 @@ func (self *LSPServer) Initialize(
 			SignatureHelpProvider: &protocol.SignatureHelpOptions{
 				TriggerCharacters: []string{"(", ","},
 			},
+
+			// The server provides folding ranges.
+			FoldingRangeProvider: protocol.Boolean(true),
 		},
 		ServerInfo: protocol.ServerInfo{
 			Name:    "vql-lsp",

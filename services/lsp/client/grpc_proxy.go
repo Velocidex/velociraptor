@@ -16,6 +16,8 @@ const (
 	FormattingOp = "FormattingOp"
 
 	SignatureHelpOp = "SignatureHelpOp"
+
+	FoldingRangesOp = "FoldingRangesOp"
 )
 
 var (
@@ -118,6 +120,17 @@ func (self *LSPProxy) SignatureHelp(
 	*protocol.SignatureHelp, error) {
 	result := &protocol.SignatureHelp{}
 	err := self.forwardCall(ctx, SignatureHelpOp, params, result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (self *LSPProxy) FoldingRanges(
+	ctx context.Context, params *protocol.FoldingRangeParams) (
+	[]protocol.FoldingRange, error) {
+	result := []protocol.FoldingRange{}
+	err := self.forwardCall(ctx, FoldingRangesOp, params, &result)
 	if err != nil {
 		return nil, err
 	}

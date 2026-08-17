@@ -120,6 +120,19 @@ func (self *LSPServer) LSP(
 		}
 		return self.returnRespose(result)
 
+	case client.FoldingRangesOp:
+		req := &protocol.FoldingRangeParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.FoldingRanges(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
 	}
 	return nil, utils.NotImplementedError
 }
