@@ -60,6 +60,15 @@ func (self *LSPServer) Initialize(
 
 			// The server provides rename.
 			RenameProvider: protocol.Boolean(true),
+
+			// The server provides semantic highlighting.
+			SemanticTokensProvider: &protocol.SemanticTokensOptions{
+				Legend: protocol.SemanticTokensLegend{
+					TokenTypes:     tokenTypesLegend,
+					TokenModifiers: tokenModifiersLegend,
+				},
+				Full: protocol.Boolean(true),
+			},
 		},
 		ServerInfo: protocol.ServerInfo{
 			Name:    "vql-lsp",

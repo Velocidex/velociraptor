@@ -30,6 +30,8 @@ const (
 	PrepareRenameOp = "PrepareRenameOp"
 
 	RenameOp = "RenameOp"
+
+	SemanticTokensOp = "SemanticTokensOp"
 )
 
 var (
@@ -209,6 +211,17 @@ func (self *LSPProxy) Rename(
 	*protocol.WorkspaceEdit, error) {
 	result := &protocol.WorkspaceEdit{}
 	err := self.forwardCall(ctx, RenameOp, params, result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (self *LSPProxy) SemanticTokensFull(
+	ctx context.Context, params *protocol.SemanticTokensParams) (
+	*protocol.SemanticTokens, error) {
+	result := &protocol.SemanticTokens{}
+	err := self.forwardCall(ctx, SemanticTokensOp, params, result)
 	if err != nil {
 		return nil, err
 	}
