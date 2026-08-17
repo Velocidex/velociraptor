@@ -48,6 +48,9 @@ func (self *LSPServer) Initialize(
 
 			// The server provides workspace symbols.
 			WorkspaceSymbolProvider: protocol.Boolean(true),
+
+			// The server provides inlay hints.
+			InlayHintProvider: protocol.Boolean(true),
 		},
 		ServerInfo: protocol.ServerInfo{
 			Name:    "vql-lsp",

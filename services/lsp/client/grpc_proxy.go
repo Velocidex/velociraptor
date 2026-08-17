@@ -20,6 +20,8 @@ const (
 	FoldingRangesOp = "FoldingRangesOp"
 
 	WorkspaceSymbolsOp = "WorkspaceSymbolsOp"
+
+	InlayHintOp = "InlayHintOp"
 )
 
 var (
@@ -148,6 +150,17 @@ func (self *LSPProxy) Symbols(
 		return nil, err
 	}
 	return protocol.WorkspaceSymbolSlice(result), nil
+}
+
+func (self *LSPProxy) InlayHint(
+	ctx context.Context, params *protocol.InlayHintParams) (
+	[]protocol.InlayHint, error) {
+	result := []protocol.InlayHint{}
+	err := self.forwardCall(ctx, InlayHintOp, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func NewLSPProxy(api_client api_proto.APIClient) protocol.Server {
