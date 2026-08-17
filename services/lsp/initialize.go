@@ -37,6 +37,11 @@ func (self *LSPServer) Initialize(
 
 			// The server provides document formatting.
 			DocumentFormattingProvider: protocol.Boolean(true),
+
+			// The server provides signature help.
+			SignatureHelpProvider: &protocol.SignatureHelpOptions{
+				TriggerCharacters: []string{"(", ","},
+			},
 		},
 		ServerInfo: protocol.ServerInfo{
 			Name:    "vql-lsp",

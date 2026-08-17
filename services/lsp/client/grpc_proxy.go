@@ -14,6 +14,8 @@ const (
 	CompletionOp = "CompletionOp"
 	HoverOp      = "HoverOp"
 	FormattingOp = "FormattingOp"
+
+	SignatureHelpOp = "SignatureHelpOp"
 )
 
 var (
@@ -105,6 +107,17 @@ func (self *LSPProxy) Formatting(
 	[]protocol.TextEdit, error) {
 	result := []protocol.TextEdit{}
 	err := self.forwardCall(ctx, FormattingOp, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (self *LSPProxy) SignatureHelp(
+	ctx context.Context, params *protocol.SignatureHelpParams) (
+	*protocol.SignatureHelp, error) {
+	result := &protocol.SignatureHelp{}
+	err := self.forwardCall(ctx, SignatureHelpOp, params, result)
 	if err != nil {
 		return nil, err
 	}
