@@ -1,0 +1,2148 @@
+
+Workspace symbols for query: 
+[
+ {
+  "name": "Artifact",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "MyVar",
+  "kind": 13,
+  "location": {
+   "uri": "file:///XXX",
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 0
+    },
+    "end": {
+     "line": 1,
+     "character": 0
+    }
+   }
+  }
+ },
+ {
+  "name": "OtherVar",
+  "kind": 13,
+  "location": {
+   "uri": "file:///XXX",
+   "range": {
+    "start": {
+     "line": 1,
+     "character": 0
+    },
+    "end": {
+     "line": 2,
+     "character": 0
+    }
+   }
+  }
+ },
+ {
+  "name": "add_client_monitoring",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "add_server_monitoring",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "adx_upload",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "alert",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "all",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "amsi",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "any",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "array",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "artifact_definitions",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "artifact_delete",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "artifact_set",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "artifact_set_metadata",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "atexit",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "atoi",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "audit",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "authenticode",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "auto",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "background",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "backup",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "backup_restore",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "base64decode",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "base64encode",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "base85decode",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "basename",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "batch",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "bzip2",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "cache",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "cache_dns",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "cancel_flow",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "carve_usn",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "cat",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "certificates",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "chain",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "cidr_contains",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "client_create",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "client_delete",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "client_info",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "client_metadata",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "client_set_metadata",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "clients",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "clock",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "collect",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "collect_client",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "collector",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "collector_sparse",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "column_filter",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "combine",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "commandline_split",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "compress",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "connections",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "copy",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "count",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "create_flow_download",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "create_hunt_download",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "create_notebook_download",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "crypto_rc4",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "data",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "deb_create",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "dedup",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "delay",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "delete_events",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "delete_flow",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "describe_address",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "dict",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "diff",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "dirname",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "ebpf_events",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "efivariables",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "elastic_upload",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "encode",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "entropy",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "enumerate",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "enumerate_flow",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "environ",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "environ",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "etw_sessions",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "eval",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "ewf",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "execve",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "expand",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "ext4",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "fat",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "favorites_delete",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "favorites_list",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "favorites_save",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "fifo",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "file",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "file_links",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "file_nocase",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "file_store",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "file_store_delete",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "filesystems",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "filter",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "flatten",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "flow_logs",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "flow_results",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "flows",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "for",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "foreach",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "format",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "fs",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "fs_sparse",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "gcs_pubsub_publish",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "generate",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "geoip",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "get",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "get_client_monitoring",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "get_flow",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "get_server_monitoring",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "getpid",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "glob",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "grok",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "gui_users",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "gunzip",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "gzip",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "handles",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "hash",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "help",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "host",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "http_client",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "humanize",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "hunt",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "hunt_add",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "hunt_delete",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "hunt_flows",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "hunt_info",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "hunt_reindex",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "hunt_results",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "hunt_update",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "hunts",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "if",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "if",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "import",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "import_collection",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "index",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "index_search",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "info",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "info",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "int",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "interfaces",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "inventory",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "inventory_add",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "inventory_get",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "ip",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "items",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "items",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "join",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "js",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "js_call",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "js_get",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "js_set",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "killkillkill",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "label",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "lazy_dict",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "lazy_ntfs",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "len",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "leveldb",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "link_to",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "log",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "logging",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "logscale_upload",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "lookupSID",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "lowcase",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "lru",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "lzxpress_decompress",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "magic",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "mail",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "mail",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "max",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "me",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "memoize",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "mft",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "min",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "mock",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "mock_check",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "mock_clear",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "mock_replay",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "modules",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "monitoring",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "monitoring_logs",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "mscfb",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "netcat",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "netstat",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "notebook_create",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "notebook_delete",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "notebook_export",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "notebook_get",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "notebook_update",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "notebook_update_cell",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "notebooks",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "now",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "ntfs",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "ntfs_vss",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "offset",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "olevba",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "org",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "org_create",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "org_delete",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "orgs",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "overlay",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "panic",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parallelize",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_auditd",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_binary",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "parse_csv",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_ese",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_ese_catalog",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_evtx",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_float",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "parse_journald",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_json",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "parse_json_array",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "parse_json_array",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_jsonl",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_lines",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_mft",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_ntfs",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "parse_ntfs_i30",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_ntfs_ranges",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_pe",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "parse_pkcs7",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "parse_pst",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_records_with_regex",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_recyclebin",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_string_with_regex",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "parse_usn",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "parse_x509",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "parse_xml",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "parse_yaml",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "partitions",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "passwd",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "patch",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "path_join",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "path_split",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "pathspec",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "pe_dump",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "pipe",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "pipe",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "pk_decrypt",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "pk_encrypt",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "plist",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "plist",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "prefetch",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "proc_dump",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "proc_yara",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "process",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "process_tracker",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "process_tracker_all",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "process_tracker_callchain",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "process_tracker_children",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "process_tracker_get",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "process_tracker_pslist",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "process_tracker_tree",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "process_tracker_updates",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "profile",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "profile_goroutines",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "profile_memory",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "pskill",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "pslist",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "pst",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "query",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "rand",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "range",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "ranged",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "rate",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "raw_ext4",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "raw_file",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "raw_ntfs",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "raw_reg",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "read_crypto_file",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "read_file",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "read_file",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "read_reg_key",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "reformat",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "reg",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "reg_rm_key",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "reg_rm_value",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "reg_set_value",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "regex_replace",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "regex_transform",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "registry",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "rekey",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "relpath",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "remap",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "repack",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "rm",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "rm_client_monitoring",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "rm_server_monitoring",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "rot13",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "rpm_create",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "rsyslog",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "s3",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "sample",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "scope",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "scope",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "scope",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "secret_add",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "secret_modify",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "secrets",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "semver",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "send_event",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "sequence",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "serialize",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "server_frontend_cert",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "server_metadata",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "server_set_metadata",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "set",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "set_client_monitoring",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "set_server_monitoring",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "shell_session",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "shell_session_control",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "sigma",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "sigma_log_sources",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "similarity",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "sleep",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "slice",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "smb",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "source",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "sparse",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "split",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "split_records",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "splunk_upload",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "sql",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "sqlite",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "srum_lookup_id",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "ssh",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "starl",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "stat",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "stat",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "str",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "strip",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "substr",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "sum",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "switch",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "sysinfo",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "tempdir",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "tempfile",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "template",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "threads",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "timeline",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "timeline_add",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "timeline_delete",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "timelines",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "timestamp",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "timestamp_format",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "tlsh_hash",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "to_dict",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "token",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "trace",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "typeof",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "unhex",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "unzip",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "upcase",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "upload",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "upload_azure",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "upload_directory",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "upload_gcs",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "upload_s3",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "upload_sftp",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "upload_smb",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "upload_transactions",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "upload_webdav",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "uploads",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "url",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "user",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "user_create",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "user_delete",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "user_grant",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "user_message",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "user_messages",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "user_options",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "users",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "utf16",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "utf16_encode",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "uuid",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "vad",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "verify",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "version",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "vfs",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "vfs_ls",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "vhdx",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "vmdk",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "watch_auditd",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "watch_csv",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "watch_ebpf",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "watch_etw",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "watch_evtx",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "watch_journald",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "watch_jsonl",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "watch_monitoring",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "watch_syslog",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "watch_usn",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "whoami",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "winobj",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "winpmem",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "winpmem",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "wmi",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "wmi_events",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "write_crypto_file",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "write_csv",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "write_file",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "write_jsonl",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "xattr",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "xor",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "yara",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "yara_lint",
+  "kind": 12,
+  "location": null
+ },
+ {
+  "name": "yarax",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "zip",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "zip_nocase",
+  "kind": 5,
+  "location": null
+ }
+]
+
+Workspace symbols for query: Var
+[
+ {
+  "name": "MyVar",
+  "kind": 13,
+  "location": {
+   "uri": "file:///XXX",
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 0
+    },
+    "end": {
+     "line": 1,
+     "character": 0
+    }
+   }
+  }
+ },
+ {
+  "name": "OtherVar",
+  "kind": 13,
+  "location": {
+   "uri": "file:///XXX",
+   "range": {
+    "start": {
+     "line": 1,
+     "character": 0
+    },
+    "end": {
+     "line": 2,
+     "character": 0
+    }
+   }
+  }
+ },
+ {
+  "name": "efivariables",
+  "kind": 5,
+  "location": null
+ }
+]
+
+Workspace symbols for query: pslist
+[
+ {
+  "name": "process_tracker_pslist",
+  "kind": 5,
+  "location": null
+ },
+ {
+  "name": "pslist",
+  "kind": 5,
+  "location": null
+ }
+]
+
+Workspace symbols for query: XXXXXX
+[]

@@ -45,6 +45,9 @@ func (self *LSPServer) Initialize(
 
 			// The server provides folding ranges.
 			FoldingRangeProvider: protocol.Boolean(true),
+
+			// The server provides workspace symbols.
+			WorkspaceSymbolProvider: protocol.Boolean(true),
 		},
 		ServerInfo: protocol.ServerInfo{
 			Name:    "vql-lsp",

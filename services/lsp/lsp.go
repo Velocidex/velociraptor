@@ -133,6 +133,19 @@ func (self *LSPServer) LSP(
 		}
 		return self.returnRespose(result)
 
+	case client.WorkspaceSymbolsOp:
+		req := &protocol.WorkspaceSymbolParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.Symbols(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
 	}
 	return nil, utils.NotImplementedError
 }

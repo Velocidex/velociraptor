@@ -18,6 +18,8 @@ const (
 	SignatureHelpOp = "SignatureHelpOp"
 
 	FoldingRangesOp = "FoldingRangesOp"
+
+	WorkspaceSymbolsOp = "WorkspaceSymbolsOp"
 )
 
 var (
@@ -135,6 +137,17 @@ func (self *LSPProxy) FoldingRanges(
 		return nil, err
 	}
 	return result, nil
+}
+
+func (self *LSPProxy) Symbols(
+	ctx context.Context, params *protocol.WorkspaceSymbolParams) (
+	protocol.WorkspaceSymbolResult, error) {
+	result := []protocol.WorkspaceSymbol{}
+	err := self.forwardCall(ctx, WorkspaceSymbolsOp, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return protocol.WorkspaceSymbolSlice(result), nil
 }
 
 func NewLSPProxy(api_client api_proto.APIClient) protocol.Server {
