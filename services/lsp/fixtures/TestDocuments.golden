@@ -42,6 +42,7 @@ TopLevelQueries:
 Definitions:
 (2,1)-(4,1) Add (definition)
 Callsites:
+(2,14)-(2,16) X (symbol)
 (5,11)-(5,50) geoip (function)
    (5,17)-(5,25) db
    (5,27)-(5,41) ip
@@ -52,3 +53,70 @@ Callsites:
 (6,34)-(6,47) Add (function)
    (6,38)-(6,46) X
 (8,6)-(9,1) scope (plugin)
+
+Test case 2: Columns
+
+LET Session <= shell_session(argv=["XXXbash"])
+
+SELECT Session.IsRunning, version(function="shell_session")
+FROM scope()
+
+LET _ <= background(query={
+  SELECT * FROM chain(a={
+    SELECT sleep(time=1), shell_session_control(
+       stdin=format(format="echo hello %v\n\n", args=_value)) AS Session
+    FROM range(end=10)
+    WHERE log(dedup= -1,
+       message="Session.IsRunning = %v", args=Session.IsRunning)
+ }, b={
+   SELECT shell_session_control(close_stdin=TRUE)
+   FROM scope()
+ })
+})
+
+SELECT * FROM foreach(row=Session.Query)
+
+Document URI file:///XXX2
+Errors
+Analysis State :
+TopLevelQueries:
+(2,1)-(4,1) LET Session <= shell_session(argv=["XXXbash"])
+(4,1)-(7,1) SELECT Session.IsRunning, version(function="shell_session") FROM scope()
+(7,1)-(20,1) LET _ <= background(query={ SELECT * FROM chain(a={ SELECT sleep(time=1), shell_session_control(stdi ...
+(20,1)-(21,1) SELECT * FROM foreach(row=Session.Query)
+Definitions:
+(2,1)-(4,1) Session (definition)
+(7,1)-(20,1) _ (definition)
+Callsites:
+(2,16)-(4,1) shell_session (function)
+   (2,30)-(2,46) argv
+(4,8)-(4,25) Session.IsRunning (symbol)
+(4,27)-(5,1) version (function)
+   (4,35)-(4,59) function
+(5,6)-(7,1) scope (plugin)
+(7,10)-(20,1) background (function)
+   (7,21)-(18,2) query
+(8,17)-(18,1) chain (plugin)
+   (8,23)-(14,3) a
+   (14,5)-(17,3) b
+(9,12)-(9,25) sleep (function)
+   (9,18)-(9,24) time
+(9,27)-(10,63) shell_session_control (function)
+   (10,8)-(10,61) stdin
+(10,14)-(10,61) format (function)
+   (10,21)-(10,47) format
+   (10,49)-(10,60) args
+(10,54)-(10,60) _value (symbol)
+(11,10)-(12,5) range (plugin)
+   (11,16)-(11,22) end
+(12,11)-(14,2) log (function)
+   (12,15)-(12,24) dedup
+   (13,8)-(13,40) message
+   (13,42)-(13,64) args
+(13,47)-(13,64) Session.IsRunning (symbol)
+(15,11)-(16,4) shell_session_control (function)
+   (15,33)-(15,49) close_stdin
+(16,9)-(17,2) scope (plugin)
+(20,15)-(21,1) foreach (plugin)
+   (20,23)-(20,40) row
+(20,27)-(20,40) Session.Query (symbol)
